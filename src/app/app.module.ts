@@ -26,12 +26,12 @@ import { TimelineViewerComponent } from './components/timeline-viewer/timeline-v
 export const COMPONENTS = [
   AppComponent,
   PageNotFoundComponent,
-  TimelineViewerComponent
+  TimelineViewerComponent,
 ];
 
 @NgModule({
   bootstrap: [
-    AppComponent
+    AppComponent,
   ],
   declarations: COMPONENTS,
   exports: COMPONENTS,
@@ -70,7 +70,7 @@ export const COMPONENTS = [
      */
     !environment.production
       ? StoreDevtoolsModule.instrument({
-          maxAge: 25
+          maxAge: 25,
         })
       : [],
 
@@ -81,7 +81,7 @@ export const COMPONENTS = [
      *
      * See: https://github.com/ngrx/platform/blob/master/docs/effects/api.md#forroot
      */
-    EffectsModule.forRoot([])
+    EffectsModule.forRoot([]),
   ],
   providers: [
     /**
@@ -91,11 +91,11 @@ export const COMPONENTS = [
      */
     {
       provide: RouterStateSerializer,
-      useClass: CustomRouterStateSerializer
+      useClass: CustomRouterStateSerializer,
     },
   ],
   schemas: [
-    CUSTOM_ELEMENTS_SCHEMA
-  ]
+    CUSTOM_ELEMENTS_SCHEMA,
+  ],
 })
 export class AppModule {}

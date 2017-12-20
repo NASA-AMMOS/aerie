@@ -1,7 +1,7 @@
 import {
   ActionReducerMap,
   ActionReducer,
-  MetaReducer
+  MetaReducer,
 } from '@ngrx/store';
 import { environment } from '../environments/environment';
 import { RouterStateUrl } from './routes';

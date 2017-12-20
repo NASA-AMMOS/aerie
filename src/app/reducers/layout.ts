@@ -40,5 +40,5 @@ export const getLayoutState = createFeatureSelector<LayoutState>('layout');
  */
 export const getShowLeftDrawer = createSelector(
   getLayoutState,
-  (state: LayoutState) => state.showLeftDrawer
+  (state: LayoutState) => state.showLeftDrawer,
 );

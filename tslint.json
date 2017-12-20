@@ -116,7 +116,8 @@
       "check-decl",
       "check-operator",
       "check-separator",
-      "check-type"
+      "check-type",
+      "check-module"
     ],
     "directive-selector": [
       true,
@@ -129,6 +130,13 @@
       "element",
       "app",
       "kebab-case"
+    ],
+    "trailing-comma": [
+      true,
+      {
+        "multiline": "always",
+        "singleline": "never"
+      }
     ],
     "no-output-on-prefix": true,
     "use-input-property-decorator": true,

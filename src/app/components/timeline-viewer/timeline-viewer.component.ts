@@ -8,7 +8,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
     <div class="mui-panel">
       <falcon-timeline [bands]="bands" label-width="200"></falcon-timeline>
     </div>
-  `
+  `,
 })
 export class TimelineViewerComponent {
   bands: any;

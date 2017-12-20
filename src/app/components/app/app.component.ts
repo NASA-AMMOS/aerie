@@ -9,7 +9,7 @@ import * as layout from '../../actions/layout';
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-root',
   styleUrls: ['./app.component.css'],
-  templateUrl: './app.component.html'
+  templateUrl: './app.component.html',
 })
 export class AppComponent {
   showLeftDrawer$: Observable<boolean>;

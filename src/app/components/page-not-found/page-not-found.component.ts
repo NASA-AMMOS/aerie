@@ -6,6 +6,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   styles: [],
   template: `
     <page-not-found></page-not-found>
-  `
+  `,
 })
 export class PageNotFoundComponent {}

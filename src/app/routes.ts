@@ -11,7 +11,7 @@ export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'timeline'
+    redirectTo: 'timeline',
   },
   {
     component: TimelineViewerComponent,
