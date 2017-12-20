@@ -1,0 +1,13 @@
+{
+  "persistent": true,
+  "plugins": {
+    "local": {
+      "browsers": [
+        "chrome"
+      ]
+    }
+  },
+  "quiet": true,
+  "suites": ["test"],
+  "verbose": true
+}

@@ -1,0 +1,59 @@
+<link rel="import" href="./../../../../bower_components/polymer/polymer.html" />
+<link rel="import" href="./../../../../bower_components/paper-input/paper-input.html" />
+<link rel="import" href="./../../../falcon-polymer-utils/falcon-polymer-utils.html" />
+<link rel="import" href="./../falcon-source-explorer-tree-node/falcon-source-explorer-tree-node.html" />
+<link rel="import" href="./../../behaviors/falcon-source-explorer-utils/falcon-source-explorer-utils.html" />
+<link rel="import" href="./../../mixins/generic-tree/generic-tree.html" />
+
+<dom-module id="falcon-source-explorer-tree">
+  <template>
+    <style>
+      :host {
+        display: block;
+        font-size: var(--falcon-source-explorer-font-size, 15px);
+      }
+
+      .falcon-source-explorer-tree-search {
+        padding-bottom: 25px;
+      }
+    </style>
+
+    <div class="falcon-source-explorer-tree-search">
+      <paper-input label="Filter..." value="{{searchTerm::input}}"></paper-input>
+    </div>
+
+    <!-- If we are the root node then show children. -->
+    <template is="dom-if" if="[[_equal(data.name, 'root')]]">
+      <template is="dom-repeat" items="[[getDataChildren(data.*)]]" filter="[[_filter(searchTerm)]]">
+        <falcon-source-explorer-tree-node
+          children-key="[[childrenKey]]"
+          draggable$="[[_stringifyBool(item.draggable)]]"
+          data="[[item]]"
+          global-actions="[[globalActions]]"
+          id$="falcon-source-explorer-tree-node-[[item.id]]"
+          search-term="[[searchTerm]]"
+          on-drop-falcon-source-explorer-tree-node="_onDrop"
+          on-select-falcon-source-explorer-tree-node="_onSelect"
+        >
+        </falcon-source-explorer-tree-node>
+      </template>
+    </template>
+
+    <!-- Otherwise, just show the current node. This way we see the parent node on pinned tabs. -->
+    <template is="dom-if" if="[[!_equal(data.name, 'root')]]">
+      <falcon-source-explorer-tree-node
+        children-key="[[childrenKey]]"
+        draggable$="[[_stringifyBool(data.draggable)]]"
+        data="[[data]]"
+        global-actions="[[globalActions]]"
+        id$="falcon-source-explorer-tree-node-[[data.id]]"
+        search-term="[[searchTerm]]"
+        on-drop-falcon-source-explorer-tree-node="_onDrop"
+        on-select-falcon-source-explorer-tree-node="_onSelect"
+      >
+      </falcon-source-explorer-tree-node>
+    </template>
+  </template>
+
+  <script src="./falcon-source-explorer-tree.js"></script>
+</dom-module>

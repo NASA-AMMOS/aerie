@@ -1,12 +1,22 @@
 import { Routes, RouterStateSnapshot, Params } from '@angular/router';
 import { RouterStateSerializer } from '@ngrx/router-store';
 
-import { PageNotFoundComponent } from './core/containers/page-not-found/page-not-found.component';
+import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
+import { TimelineViewerComponent } from './components/timeline-viewer/timeline-viewer.component';
 
 /**
  * Application level routes.
  */
 export const routes: Routes = [
+  {
+    path: '',
+    pathMatch: 'full',
+    redirectTo: 'timeline'
+  },
+  {
+    component: TimelineViewerComponent,
+    path: 'timeline',
+  },
   {
     component: PageNotFoundComponent,
     path: '**',

@@ -1,0 +1,49 @@
+<link rel="import" href="./../../../../../bower_components/polymer/polymer.html" />
+<link rel="import" href="./../../../../falcon-polymer-utils/falcon-polymer-utils.html" />
+<link rel="import" href="./../../../mixins/falcon-settings/falcon-settings.html" />
+
+<dom-module id="falcon-state-settings-band">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+
+    <div class="mui-row">
+      <!-- Band Label. -->
+      <div class="mui-col-md-4">
+        <div class="mui-textfield">
+          <label class="falcon-settings-band-label">Label</label>
+          <input id="falcon-settings-band-label-input" type="text" value="[[selectedBand.label]]">
+        </div>
+      </div>
+
+      <!-- Align Label. -->
+      <div class="mui-col-md-2">
+        <div class="mui-select">
+          <label class="falcon-resource-settings-band-label">Horizontally Align Label</label>
+          <select on-change="_onAlignLabel">
+            <option selected="[[_equal(1, selectedBand.alignLabel)]]" value="1">Left</option>
+            <option selected="[[_equal(2, selectedBand.alignLabel)]]" value="2">Right</option>
+            <option selected="[[_equal(3, selectedBand.alignLabel)]]" value="3">Center</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Baseline Label. -->
+      <div class="mui-col-md-2">
+        <div class="mui-select">
+          <label class="falcon-resource-settings-band-label">Vertically Align Label</label>
+          <select on-change="_onBaselineLabel">
+            <option selected="[[_equal(1, selectedBand.baselineLabel)]]" value="1">Top</option>
+            <option selected="[[_equal(2, selectedBand.baselineLabel)]]" value="2">Bottom</option>
+            <option selected="[[_equal(3, selectedBand.baselineLabel)]]" value="3">Center</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script src="./falcon-state-settings-band.js"></script>
+</dom-module>

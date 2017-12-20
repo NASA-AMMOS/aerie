@@ -1,0 +1,49 @@
+<!doctype html>
+
+<html>
+  <head>
+    <title>falcon tests</title>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+
+    <script>window.ShadyDOM = { force: true };</script>
+    <script src="./../../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="./../../../bower_components/web-component-tester/browser.js"></script>
+
+    <link rel="import" href="./../elements/falcon-timeline/falcon-timeline.html" />
+    <link rel="import" href="./../demo/data/bands.html" />
+
+    <style>
+      test-fixture {
+        display: block;
+      }
+    </style>
+  </head>
+
+  <body>
+    <test-fixture id="BasicTestFixture">
+      <template>
+        <falcon-timeline label-width="220"></falcon-timeline>
+      </template>
+    </test-fixture>
+
+    <script>
+      suite('<falcon-timeline>', function() {
+        const el = fixture('BasicTestFixture');
+
+        test('setting the bands property on the element works', function() {
+          assert.deepEqual(el.bands, []);
+          el.set('bands', bands);
+          assert.equal(el.bands.length, 5);
+        });
+
+        test('setting the labelWidth property on the element works', function() {
+          assert.equal(el.labelWidth, 220);
+          el.set('labelWidth', 250);
+          assert.equal(el.labelWidth, 250);
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,155 @@
+<!doctype html>
+
+<html>
+  <head>
+    <title>falcon-resource-band tests</title>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+
+    <script>window.ShadyDOM = { force: true };</script>
+    <script src="./../../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="./../../../bower_components/web-component-tester/browser.js"></script>
+
+    <link rel="import" href="./../elements/falcon-resource-band/falcon-resource-band.html" />
+    <link rel="import" href="./../demo/data/bands.html" />
+
+    <script src="./util/falcon-band-tests.js"></script>
+
+    <style>
+      test-fixture {
+        display: block;
+      }
+    </style>
+  </head>
+
+  <body>
+    <test-fixture id="BasicTestFixture">
+      <template>
+        <falcon-resource-band></falcon-resource-band>
+      </template>
+    </test-fixture>
+
+    <test-fixture id="CtlBandPropertyTestFixture">
+      <template>
+        <falcon-resource-band
+          auto-tick-values="true"
+          color="[255, 255, 255]"
+          fill-color="[255, 255, 255]"
+          height="100"
+          height-padding="10"
+          hide-ticks
+          interpolation="constant"
+          label="thatWasEasy"
+          name="someName"
+          show-icon="true"
+          tick-values="[0]">
+        </falcon-resource-band>
+      </template>
+    </test-fixture>
+
+    <script>
+      suite('<falcon-resource-band>', function() {
+        window.falconBandTests('resourceBand');
+
+        test('instantiating the element with default resource band properties works', function() {
+          const el = fixture('BasicTestFixture');
+          const ctlBand = el.resourceBand;
+
+          // Element Props.
+          assert.equal(el.autoTickValues, true);
+          assert.deepEqual(el.color, [0, 0, 0]);
+          assert.equal(el.fill, false);
+          assert.deepEqual(el.fillColor, [0, 0, 0]);
+          assert.equal(el.hideTicks, false);
+          assert.equal(el.interpolation, 'linear');
+          assert.deepEqual(el.points, []);
+          assert.equal(el.rescale, true);
+          assert.equal(el.showIcon, false);
+          assert.deepEqual(el.tickValues, ['0']);
+
+          // CTL Options.
+          assert.equal(ctlBand.autoTickValues, true);
+          assert.deepEqual(ctlBand.painter.color, [0, 0, 0]);
+          assert.equal(ctlBand.painter.fill, false);
+          assert.deepEqual(ctlBand.painter.fillColor, [0, 0, 0]);
+          assert.equal(ctlBand.hideTicks, false);
+          assert.equal(ctlBand.interpolation, 2); // 2 === 'linear' in CTL.
+          assert.equal(ctlBand.rescale, true);
+          assert.equal(ctlBand.painter.showIcon, false);
+          assert.deepEqual(ctlBand.tickValues, ['0']);
+        });
+
+        test('setting the autoTickValues property on the element works', function() {
+          const el = fixture('CtlBandPropertyTestFixture');
+          const ctlBand = el.resourceBand;
+
+          testPropChange(el, ctlBand, 'autoTickValues', true, false);
+        });
+
+        test('setting the autoTickValues property on the element works', function() {
+          const el = fixture('CtlBandPropertyTestFixture');
+          const ctlBand = el.resourceBand;
+
+          testPropChange(el, ctlBand.painter, 'color', [255, 255, 255], [1, 1, 1]);
+        });
+
+        test('setting the fill property on the element works', function() {
+          const el = fixture('CtlBandPropertyTestFixture');
+          const ctlBand = el.resourceBand;
+
+          testPropChange(el, ctlBand.painter, 'fill', false, true);
+        });
+
+        test('setting the fillColor property on the element works', function() {
+          const el = fixture('CtlBandPropertyTestFixture');
+          const ctlBand = el.resourceBand;
+
+          testPropChange(el, ctlBand.painter, 'fillColor', [255, 255, 255], [1, 1, 1]);
+        });
+
+        test('setting the hideTicks property on the element works', function() {
+          const el = fixture('CtlBandPropertyTestFixture');
+          const ctlBand = el.resourceBand;
+
+          testPropChange(el, ctlBand, 'hideTicks', true, false);
+        });
+
+        test('setting the interpolation property on the element works', function() {
+          const el = fixture('CtlBandPropertyTestFixture');
+          const ctlBand = el.resourceBand;
+
+          // Prop set via attribute to x is correct in Polymer and CTL.
+          assert.deepEqual(el.interpolation, 'constant');
+          assert.deepEqual(ctlBand.interpolation, 1);
+
+          // Prop set programatically to y is correct in Polymer and CTL.
+          el.interpolation = 'linear';
+          assert.deepEqual(el.interpolation, 'linear');
+          assert.deepEqual(ctlBand.interpolation, 2);
+        });
+
+        test('setting the rescale property on the element works', function() {
+          const el = fixture('CtlBandPropertyTestFixture');
+          const ctlBand = el.resourceBand;
+
+          testPropChange(el, ctlBand, 'rescale', true, false);
+        });
+
+        test('setting the showIcon property on the element works', function() {
+          const el = fixture('CtlBandPropertyTestFixture');
+          const ctlBand = el.resourceBand;
+
+          testPropChange(el, ctlBand.painter, 'showIcon', true, false);
+        });
+
+        test('setting the tickValues property on the element works', function() {
+          const el = fixture('CtlBandPropertyTestFixture');
+          const ctlBand = el.resourceBand;
+
+          testPropChange(el, ctlBand, 'tickValues', ['0'], ['a', 'b', 'c']);
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,45 @@
+<link href="./bower_components/polymer/polymer.html" rel="import">
+<link href="./bower_components/paper-input/paper-input.html" rel="import">
+
+<dom-module id="page-not-found">
+  <template>
+    <style>
+      :host {
+        display: block;
+        margin: 16px 0;
+        border: 1px solid var(--primary-color);
+        border-radius: 2px;
+        padding: 16px;
+      }
+    </style>
+
+    <p>This is a Polymer component defined in an Angular project! {{model}}</p>
+
+    <p>404 Page Not Found</p>
+
+    <paper-input label="[[label]]" value="{{model}}"></paper-input>
+  </template>
+
+  <script>
+    class PageNotFound extends Polymer.Element {
+      static get is() {
+        return 'page-not-found';
+      }
+
+      static get properties() {
+        return {
+          label: {
+            type: String,
+            value: 'Model'
+          },
+          model: {
+            type: String,
+            notify: true
+          }
+        };
+      }
+    }
+
+    customElements.define(PageNotFound.is, PageNotFound);
+  </script>
+</dom-module>

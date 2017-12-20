@@ -1,9 +1,11 @@
-import { NgModule } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
+
+import { PolymerModule } from '@codebakery/origami';
 
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
@@ -13,20 +15,33 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { CustomRouterStateSerializer, routes } from './routes';
 import { reducers, metaReducers } from './store';
 
-import { CoreModule } from './core/core.module';
-
-import { AppComponent } from './core/containers/app/app.component';
 import { environment } from '../environments/environment';
+
+import { MaterialModule } from './shared/material';
+
+import { AppComponent } from './components/app/app.component';
+import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
+import { TimelineViewerComponent } from './components/timeline-viewer/timeline-viewer.component';
+
+export const COMPONENTS = [
+  AppComponent,
+  PageNotFoundComponent,
+  TimelineViewerComponent
+];
 
 @NgModule({
   bootstrap: [
     AppComponent
   ],
+  declarations: COMPONENTS,
+  exports: COMPONENTS,
   imports: [
     CommonModule,
     BrowserModule,
     BrowserAnimationsModule,
     HttpClientModule,
+    MaterialModule,
+    PolymerModule.forRoot(),
     RouterModule.forRoot(routes, { useHash: true }),
 
     /**
@@ -66,9 +81,7 @@ import { environment } from '../environments/environment';
      *
      * See: https://github.com/ngrx/platform/blob/master/docs/effects/api.md#forroot
      */
-    EffectsModule.forRoot([]),
-
-    CoreModule.forRoot()
+    EffectsModule.forRoot([])
   ],
   providers: [
     /**
@@ -81,5 +94,8 @@ import { environment } from '../environments/environment';
       useClass: CustomRouterStateSerializer
     },
   ],
+  schemas: [
+    CUSTOM_ELEMENTS_SCHEMA
+  ]
 })
 export class AppModule {}

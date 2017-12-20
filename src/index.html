@@ -1,15 +1,32 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Raven2</title>
-  <base href="/">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-</head>
-<body>
-  <app-root></app-root>
-</body>
+<html lang="en">
+  <head>
+    <!-- Meta. -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Title. -->
+    <title>Raven2</title>
+
+    <!-- Base ref for routing. -->
+    <base href="/">
+
+    <!-- Favicon (dummy for now). -->
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
+
+    <!-- Styles. -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- JS. -->
+    <script>window.ShadyDOM = { force: true };</script>
+    <script src="assets/bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+
+    <!-- Elements. -->
+    <link rel="import" href="assets/elements.html">
+  </head>
+
+  <body>
+    <app-root></app-root>
+  </body>
 </html>

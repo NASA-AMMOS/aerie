@@ -1,0 +1,132 @@
+<link rel="import" href="./../../../../bower_components/polymer/polymer.html" />
+<link rel="import" href="./../../../../bower_components/paper-slider/paper-slider.html" />
+<link rel="import" href="./../../../falcon-polymer-utils/falcon-polymer-utils.html" />
+
+<link rel="import" href="./../../mixins/falcon-settings/falcon-settings.html" />
+
+<link rel="import" href="./falcon-activity-settings-band/falcon-activity-settings-band.html" />
+<link rel="import" href="./falcon-composite-settings-band/falcon-composite-settings-band.html" />
+<link rel="import" href="./falcon-divider-settings-band/falcon-divider-settings-band.html" />
+<link rel="import" href="./falcon-divider-settings-band/falcon-divider-settings-band.html" />
+<link rel="import" href="./falcon-resource-settings-band/falcon-resource-settings-band.html" />
+<link rel="import" href="./falcon-state-settings-band/falcon-state-settings-band.html" />
+
+<link rel="stylesheet" href="./../../../../bower_components/mui/packages/npm/dist/css/mui-noglobals.min.css" />
+
+<dom-module id="falcon-settings-band">
+  <template>
+    <style>
+      .falcon-settings-band-label {
+        color: rgba(0,0,0,.54);
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      .falcon-settings-band-globals {
+        padding-bottom: 12px;
+      }
+
+      .falcon-settings-band-title {
+        padding-bottom: 12px;
+      }
+
+      paper-slider {
+        width: 100%;
+      }
+
+      paper-slider#bandHeight ::slotted() #sliderContainer {
+        margin-left: 0px;
+      }
+
+      paper-slider#labelWidth ::slotted() #sliderContainer {
+        margin-left: 0px;
+      }
+
+      paper-slider {
+        --paper-slider-input: {
+          width: 60px;
+        }
+      }
+    </style>
+
+    <div class="mui-container-fluid">
+      <div class="mui--text-title falcon-settings-band-title">Band Settings</div>
+
+      <div class="mui-row">
+        <div class="mui-col-md-12">
+          <div class="mui-select">
+            <label class="falcon-settings-band-label">Selected Band Name</label>
+            <template is="dom-if" if="[[selectedBand]]">
+              [[selectedBand.name]]
+            </template>
+            <template is="dom-if" if="[[!selectedBand]]">
+              No Band Selected
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- Global Settings for All Bands. -->
+      <div class="mui-row falcon-settings-band-globals">
+        <!-- Label Width. -->
+        <div class="mui-col-md-3">
+          <label class="falcon-settings-band-label">Label Width</label>
+          <paper-slider id="labelWidth" value="[[labelWidth]]" on-change="_onLabelWidthChanged" min="10" max="500" step="1" noink editable></paper-slider>
+        </div>
+
+        <!-- Band Height. -->
+        <template is="dom-if" if="[[selectedBand]]">
+          <div class="mui-col-md-3">
+            <label class="falcon-settings-band-label">Band Height</label>
+            <paper-slider id="bandHeight" value="[[selectedBand.height]]" on-change="_onBandHeightChanged" min="2" max="500" step="1" noink editable></paper-slider>
+          </div>
+        </template>
+
+        <!-- Show Tooltip. -->
+        <template is="dom-if" if="[[selectedBand]]">
+          <div class="mui-col-md-2">
+            <div class="mui-select">
+              <label class="falcon-resource-settings-band-label">Show Tooltip</label>
+              <select on-change="_onShowTooltip">
+                <option selected="[[selectedBand.showTooltip]]" value="true">On</option>
+                <option selected="[[!selectedBand.showTooltip]]" value="false">Off</option>
+              </select>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Activity. -->
+      <template is="dom-if" if="{{_equal('activity', selectedBand.type)}}">
+        <falcon-activity-settings-band selected-band={{selectedBand}}>
+        </falcon-activity-settings-band>
+      </template>
+
+      <!-- Composite. -->
+      <template is="dom-if" if="{{_equal('composite', selectedBand.type)}}">
+        <falcon-composite-settings-band selected-band={{selectedBand}}>
+        </falcon-composite-settings-band>
+      </template>
+
+      <!-- Divider. -->
+      <template is="dom-if" if="{{_equal('divider', selectedBand.type)}}">
+        <falcon-divider-settings-band selected-band={{selectedBand}}>
+        </falcon-divider-settings-band>
+      </template>
+
+      <!-- Resource. -->
+      <template is="dom-if" if="{{_equal('resource', selectedBand.type)}}">
+        <falcon-resource-settings-band selected-band={{selectedBand}}>
+        </falcon-resource-settings-band>
+      </template>
+
+      <!-- State. -->
+      <template is="dom-if" if="{{_equal('state', selectedBand.type)}}">
+        <falcon-state-settings-band selected-band={{selectedBand}}>
+        </falcon-state-settings-band>
+      </template>
+    </div>
+  </template>
+
+  <script src="./falcon-settings-band.js"></script>
+</dom-module>
