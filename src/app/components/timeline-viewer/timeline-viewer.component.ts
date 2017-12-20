@@ -11,7 +11,9 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   `
 })
 export class TimelineViewerComponent {
+  bands: any;
+
   constructor() {
-    this.bands = window.bands; // TODO. Remove. Just for demo purposes.
+    this.bands = (window as any).bands; // TODO. Remove. Just for demo purposes.
   }
 }
