@@ -1,0 +1,16 @@
+<mat-sidenav-container fullscreen>
+  <mat-sidenav
+    mode="side"
+    [opened]="showLeftDrawer$ | async"
+  >
+  </mat-sidenav>
+
+  <mat-toolbar color="primary">
+    <button mat-icon-button (click)="toggleLeftDrawer()">
+      <mat-icon>menu</mat-icon>
+    </button>
+    Raven
+  </mat-toolbar>
+
+  <router-outlet></router-outlet>
+</mat-sidenav-container>
