@@ -6,7 +6,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   styles: [],
   template: `
     <div class="mui-panel">
-      <falcon-timeline [bands]="bands" label-width="200"></falcon-timeline>
+      Hi
     </div>
   `,
 })
@@ -14,6 +14,5 @@ export class TimelineViewerComponent {
   bands: any;
 
   constructor() {
-    this.bands = (window as any).bands; // TODO. Remove. Just for demo purposes.
   }
 }
