@@ -1,0 +1,11 @@
+{
+  "name": "raven2",
+  "authors": [
+    "Chris Camargo <ccamargo@jpl.nasa.gov>"
+  ],
+  "description": "Resource and Activity Visualization Engine v2.",
+  "dependencies": {
+    "paper-input": "2.0.2",
+    "polymer": "2.0.1"
+  }
+}

@@ -9,7 +9,6 @@
     "install-all": "bash install.sh",
     "lint": "ng lint",
     "ng": "ng",
-    "postinstall": "bower install",
     "start": "ng serve",
     "test": "ng test"
   },
