@@ -7,26 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs/Observable';
-// import { map } from 'rxjs/operators';
+import { MpsServerActivityPoint } from './mps-server-activity-point';
 
-import { MpsServerSource } from './../models';
-
-@Injectable()
-export class MpsServerApi {
-  // private API_PATH = 'https://san-nicolas.jpl.nasa.gov:8443/mpsserver/api/v2/fs';
-
-  /**
-   * Default Constructor.
-   */
-  constructor(private http: HttpClient) {}
-
-  /**
-   * Fetch sources from MPS Server.
-   */
-  fetchSources(url: string): Observable<MpsServerSource> {
-    return this.http.get<MpsServerSource>(url);
-  }
-}
+export type MpsServerPoint =
+  MpsServerActivityPoint;

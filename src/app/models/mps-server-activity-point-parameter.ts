@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export interface RavenActivityPointMetadata {
+export interface MpsServerActivityPointParameter {
   Name: string;
   Value: string;
 }

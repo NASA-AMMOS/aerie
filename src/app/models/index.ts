@@ -8,10 +8,14 @@
  */
 
 export * from './map';
+export * from './mps-server-activity-point-metadata';
+export * from './mps-server-activity-point-parameter';
+export * from './mps-server-activity-point';
+export * from './mps-server-annotation';
 export * from './mps-server-content';
+export * from './mps-server-point';
 export * from './mps-server-source';
 export * from './raven-activity-band';
-export * from './raven-activity-point-metadata';
 export * from './raven-activity-point';
 export * from './raven-band';
 export * from './raven-composite-band';

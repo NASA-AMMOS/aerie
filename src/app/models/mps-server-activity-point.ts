@@ -9,25 +9,21 @@
 
 import { MpsServerActivityPointMetadata } from './mps-server-activity-point-metadata';
 import { MpsServerActivityPointParameter } from './mps-server-activity-point-parameter';
+import { MpsServerAnnotation } from './mps-server-annotation';
 
-export interface RavenActivityPoint {
-  activityId: string;
-  activityName: string;
-  activityParameters: MpsServerActivityPointParameter[];
-  activityType: string;
+export interface MpsServerActivityPoint {
+  __document_id: string;
+  __file_id: string;
+  __kind: string;
   ancestors: string[];
   childrenUrl: string;
-  color: number[];
   descendantsUrl: string;
-  duration: number;
-  end: number;
-  endTimestamp: string;
-  hasLegend: boolean;
-  id: string;
-  legend: string;
-  metadata: MpsServerActivityPointMetadata[];
-  sourceId: string;
-  start: number;
-  startTimestamp: string;
-  uniqueId: string;
+  'Activity ID': string;
+  'Activity Name': string;
+  'Activity Parameters': MpsServerActivityPointParameter[];
+  'Activity Type': string;
+  'Annotations': MpsServerAnnotation[];
+  'Metadata': MpsServerActivityPointMetadata[];
+  'Tend Assigned': string;
+  'Tstart Assigned': string;
 }

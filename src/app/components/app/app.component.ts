@@ -16,8 +16,6 @@ export class AppComponent {
 
   /**
    * Default Constructor.
-   *
-   * @param store
    */
   constructor(private store: Store<fromLayout.LayoutState>) {
     this.showLeftDrawer$ = this.store.select(fromLayout.getShowLeftDrawer);
