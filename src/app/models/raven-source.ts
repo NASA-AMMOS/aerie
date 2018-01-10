@@ -7,4 +7,33 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './material.module';
+import { MpsServerContent } from './mps-server-content';
+import { StringTMap } from './map';
+
+export interface RavenSource {
+  // actions: [],
+  bandIds: StringTMap<boolean>;
+  childIds: string[];
+  content: MpsServerContent[];
+  dbType: string;
+  draggable: boolean;
+  expandable: boolean;
+  expanded: boolean;
+  hasContent: boolean;
+  icon: string;
+  id: string;
+  isServer: boolean;
+  kind: string;
+  label: string;
+  menu: boolean;
+  name: string;
+  openable: boolean;
+  opened: boolean;
+  parentId: string;
+  permissions: string;
+  pinnable: boolean;
+  pinned: boolean;
+  selectable: boolean;
+  selected: boolean;
+  url: string;
+}

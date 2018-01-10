@@ -7,4 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './material.module';
+import { RavenActivityBand } from './raven-activity-band';
+import { RavenCompositeBand } from './raven-composite-band';
+import { RavenDividerBand } from './raven-divider-band';
+import { RavenResourceBand } from './raven-resource-band';
+
+export type RavenBand =
+  RavenActivityBand |
+  RavenCompositeBand |
+  RavenDividerBand |
+  RavenResourceBand;

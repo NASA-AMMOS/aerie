@@ -3,16 +3,13 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-timeline-viewer',
-  styles: [],
+  styleUrls: ['./timeline-viewer.component.css'],
   template: `
-    <div class="mui-panel">
-      Hi
+    <div class="pad">
+      <mat-card>
+        Simple card
+      </mat-card>
     </div>
   `,
 })
-export class TimelineViewerComponent {
-  bands: any;
-
-  constructor() {
-  }
-}
+export class TimelineViewerComponent {}

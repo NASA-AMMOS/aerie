@@ -7,4 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './material.module';
+export interface MpsServerSource {
+  __db_type: string;
+  __kind__: string;
+  contents_url: string;
+  created?: string;
+  label: string;
+  name: string;
+  modified?: string;
+  permissions: string;
+}

@@ -7,4 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './material.module';
+export interface RavenDividerBand {
+  color: number[];
+  height: number;
+  id: string;
+  label: string;
+  labelColor: number[];
+  minorLabels: string[];
+  name: string;
+  showTooltip: boolean;
+  type: string;
+}

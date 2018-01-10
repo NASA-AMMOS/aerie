@@ -14,6 +14,11 @@ import * as layout from '../../actions/layout';
 export class AppComponent {
   showLeftDrawer$: Observable<boolean>;
 
+  /**
+   * Default Constructor.
+   *
+   * @param store
+   */
   constructor(private store: Store<fromLayout.LayoutState>) {
     this.showLeftDrawer$ = this.store.select(fromLayout.getShowLeftDrawer);
   }

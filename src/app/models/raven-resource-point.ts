@@ -7,4 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './material.module';
+export interface RavenResourcePoint {
+  id: string;
+  sourceId: string;
+  start: number;
+  uniqueId: string;
+  value: number;
+}

@@ -7,4 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './material.module';
+export interface RavenStatePoint {
+  duration: number;
+  end: number;
+  id: string;
+  interpolateEnding: boolean;
+  sourceId: string;
+  start: number;
+  uniqueId: string;
+  value: string;
+}

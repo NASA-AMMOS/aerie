@@ -1,7 +1,16 @@
 mat-sidenav-container {
-  background: rgba(0, 0, 0, 0.03);
+  margin-top: 70px !important;
 }
 
 mat-sidenav {
   width: 300px;
 }
+
+.mat-toolbar.mat-primary{
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 9;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.24);
+ }

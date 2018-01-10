@@ -7,4 +7,26 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './material.module';
+import { RavenActivityPointMetadata } from './raven-activity-point-metadata';
+
+export interface RavenActivityPoint {
+  activityId: string;
+  activityName: string;
+  activityParameters: string;
+  activityType: string;
+  ancestors: string[];
+  childrenUrl: string;
+  color: number[];
+  descendantsUrl: string;
+  duration: number;
+  end: number;
+  endTimestamp: string;
+  hasLegend: boolean;
+  id: string;
+  legend: string;
+  metadata: RavenActivityPointMetadata[];
+  sourceId: string;
+  start: number;
+  startTimestamp: string;
+  uniqueId: string;
+}

@@ -7,4 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './material.module';
+export interface MpsServerContent {
+  data_url: string;
+  label: string;
+  name: string;
+}

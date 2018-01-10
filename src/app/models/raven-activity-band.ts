@@ -7,4 +7,27 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './material.module';
+import { RavenActivityPoint } from './raven-activity-point';
+import { RavenTimeRange } from './raven-time-range';
+import { StringTMap } from './map';
+
+export interface RavenActivityBand {
+  activityStyle: number;
+  alignLabel: number;
+  baselineLabel: number;
+  height: number;
+  heightPadding: number;
+  id: string;
+  label: string;
+  labelColor: number[];
+  layout: number;
+  maxTimeRange: RavenTimeRange;
+  minorLabels: string[];
+  name: string;
+  points: RavenActivityPoint[];
+  showLabel: boolean;
+  showTooltip: boolean;
+  sourceIds: StringTMap<boolean>;
+  trimLabel: boolean;
+  type: string;
+}

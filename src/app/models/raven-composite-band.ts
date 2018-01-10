@@ -7,4 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './material.module';
+import { RavenBand } from './raven-band';
+
+export interface RavenCompositeBand {
+  bands: RavenBand[];
+  height: number;
+  heightPadding: number;
+  id: string;
+  name: string;
+  showTooltip: boolean;
+  type: string;
+}

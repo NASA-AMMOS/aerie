@@ -1,16 +1,30 @@
-<mat-sidenav-container fullscreen>
+<mat-toolbar
+  color="primary"
+  layout="row"
+  style="position: fixed;">
+  <button
+    mat-icon-button
+    class="menu-icon">
+      <mat-icon
+        (click)="toggleLeftDrawer()"
+        class="mat-24"
+        aria-label="Menu">
+        menu
+      </mat-icon>
+  </button>
+  Raven
+</mat-toolbar>
+
+<mat-sidenav-container
+  fullscreen>
   <mat-sidenav
-    mode="side"
     [opened]="showLeftDrawer$ | async"
-  >
+    mode="side"
+    class="sidenav">
+    Source Explorer Here
   </mat-sidenav>
 
-  <mat-toolbar color="primary">
-    <button mat-icon-button (click)="toggleLeftDrawer()">
-      <mat-icon>menu</mat-icon>
-    </button>
-    Raven
-  </mat-toolbar>
-
-  <router-outlet></router-outlet>
+  <div class="content">
+    <router-outlet></router-outlet>
+  </div>
 </mat-sidenav-container>
