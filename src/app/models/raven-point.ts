@@ -7,15 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { RavenBand } from './index';
+import {
+  RavenActivityPoint,
+  RavenResourcePoint,
+  RavenStatePoint,
+} from './index';
 
-export interface RavenCompositeBand {
-  bands: RavenBand[];
-  height: number;
-  heightPadding: number;
-  id: string;
-  name: string;
-  parentUniqueId: string | null;
-  showTooltip: boolean;
-  type: string;
-}
+export type RavenPoint =
+  RavenActivityPoint |
+  RavenResourcePoint |
+  RavenStatePoint;

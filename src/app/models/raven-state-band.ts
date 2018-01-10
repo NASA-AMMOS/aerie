@@ -7,9 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { RavenStatePoint } from './raven-state-point';
-import { RavenTimeRange } from './raven-time-range';
-import { StringTMap } from './map';
+import {
+  RavenStatePoint,
+  RavenTimeRange,
+  StringTMap,
+} from './index';
 
 export interface RavenStateBand {
   alignLabel: number;
@@ -22,6 +24,7 @@ export interface RavenStateBand {
   maxTimeRange: RavenTimeRange;
   minorLabels: string[];
   name: string;
+  parentUniqueId: string | null;
   points: RavenStatePoint[];
   showTooltip: boolean;
   sourceIds: StringTMap<boolean>;

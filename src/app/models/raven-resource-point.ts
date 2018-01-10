@@ -9,6 +9,7 @@
 
 export interface RavenResourcePoint {
   id: string;
+  duration: number | null;
   sourceId: string;
   start: number;
   uniqueId: string;

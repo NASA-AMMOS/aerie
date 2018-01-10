@@ -7,10 +7,12 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { RavenActivityBand } from './raven-activity-band';
-import { RavenCompositeBand } from './raven-composite-band';
-import { RavenDividerBand } from './raven-divider-band';
-import { RavenResourceBand } from './raven-resource-band';
+import {
+  RavenActivityBand,
+  RavenCompositeBand,
+  RavenDividerBand,
+  RavenResourceBand,
+} from './index';
 
 export type RavenBand =
   RavenActivityBand |

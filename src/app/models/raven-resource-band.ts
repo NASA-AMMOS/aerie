@@ -7,9 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { RavenResourcePoint } from './raven-resource-point';
-import { RavenTimeRange } from './raven-time-range';
-import { StringTMap } from './map';
+import {
+  RavenResourcePoint,
+  RavenTimeRange,
+  StringTMap,
+} from './index';
 
 export interface RavenResourceBand {
   autoTickValues: boolean;
@@ -25,6 +27,7 @@ export interface RavenResourceBand {
   maxTimeRange: RavenTimeRange;
   minorLabels: string[];
   name: string;
+  parentUniqueId: string | null;
   points: RavenResourcePoint[];
   rescale: boolean;
   showIcon: boolean;

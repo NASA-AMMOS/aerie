@@ -7,15 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { RavenBand } from './index';
-
-export interface RavenCompositeBand {
-  bands: RavenBand[];
-  height: number;
-  heightPadding: number;
-  id: string;
-  name: string;
-  parentUniqueId: string | null;
-  showTooltip: boolean;
-  type: string;
+export interface MpsServerStatePoint {
+  __document_id: string;
+  'Data Timestamp': string;
+  'Data Value': string;
 }

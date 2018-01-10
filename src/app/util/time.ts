@@ -1,3 +1,12 @@
+/*
+ * Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+ * Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.
+ * This software may be subject to U.S. export control laws and regulations.
+ * By accepting this document, the user agrees to comply with all applicable U.S. export laws and regulations.
+ * User has the responsibility to obtain export licenses, or other export authority as may be required
+ * before exporting such information to foreign countries or providing access to foreign persons
+ */
+
 /**
  * Converts a duration to a DHMS (days, hours, minutes, seconds) string.
  */
@@ -64,7 +73,6 @@ export function getDOY(date: Date): number {
   const d = Date.UTC(date.getUTCFullYear(), 0, 0);
   return Math.floor((date.getTime() - d) / 8.64e+7);
 }
-
 
 /**
  * Get a timestamp string from a time.

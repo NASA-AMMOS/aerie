@@ -7,8 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { MpsServerContent } from './mps-server-content';
-import { StringTMap } from './map';
+import {
+  MpsServerContent,
+  StringTMap,
+} from './index';
 
 export interface RavenSource {
   // actions: [],

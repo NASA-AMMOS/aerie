@@ -1,13 +1,31 @@
+/*
+ * Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+ * Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.
+ * This software may be subject to U.S. export control laws and regulations.
+ * By accepting this document, the user agrees to comply with all applicable U.S. export laws and regulations.
+ * User has the responsibility to obtain export licenses, or other export authority as may be required
+ * before exporting such information to foreign countries or providing access to foreign persons
+ */
+
 import { v4 } from 'uuid';
 
 import {
   MpsServerActivityPoint,
   MpsServerActivityPointMetadata,
+  MpsServerResourcePoint,
+  MpsServerStatePoint,
   RavenActivityPoint,
+  RavenPoint,
+  RavenResourcePoint,
+  RavenStatePoint,
+  RavenTimeRange,
   StringTMap,
 } from './../models';
 
-import { utc } from './time';
+import {
+  timestamp,
+  utc,
+} from './time';
 
 /**
  * Transforms activity point timeline data from MPS Server to activity points consumable by Raven.
@@ -15,7 +33,7 @@ import { utc } from './time';
 export function mpsServerToRavenActivityPoints(sourceId: string, timelineData: MpsServerActivityPoint[]): RavenActivityPoint[] {
   const points: RavenActivityPoint[] = [];
 
-  timelineData.forEach((data) => {
+  timelineData.forEach((data: MpsServerActivityPoint) => {
     const activityId = data['Activity ID'];
     const activityName = data['Activity Name'];
     const activityParameters = data['Activity Parameters'];
@@ -65,6 +83,66 @@ export function mpsServerToRavenActivityPoints(sourceId: string, timelineData: M
       start,
       startTimestamp,
       uniqueId,
+    });
+  });
+
+  return points;
+}
+
+/**
+ * Transforms resource point timeline data from MPS Server to resource points consumable by Raven.
+ */
+export function mpsServerToRavenResourcePoints(sourceId: string, timelineData: MpsServerResourcePoint[]): RavenResourcePoint[] {
+  const points: RavenResourcePoint[] = [];
+
+  timelineData.forEach((data) => {
+    const id = data.__document_id;
+    const start = utc(data['Data Timestamp']);
+    const uniqueId = v4();
+    const value = data['Data Value'];
+
+    points.push({
+      duration: null,
+      id,
+      sourceId,
+      start,
+      uniqueId,
+      value,
+    });
+  });
+
+  return points;
+}
+
+/**
+ * Transforms state point timeline data from MPS Server to state points consumable by Raven.
+ */
+export function mpsServerToRavenStatePoints(sourceId: string, timelineData: MpsServerStatePoint[]): RavenStatePoint[] {
+  const points: RavenStatePoint[] = [];
+
+  timelineData.forEach((data, i) => {
+    const id = data.__document_id;
+    const start = utc(data['Data Timestamp']);
+    const startTimestamp = data['Data Timestamp'];
+    const uniqueId = v4();
+    const value = data['Data Value'];
+
+    // This may or may not be correct. We're making an assumption that if there's no end,
+    // we're going to draw to the end of the day.
+    const startTimePlusDelta = utc(startTimestamp) + 30;
+    const endTimestamp = timelineData[i + 1] !== undefined ? timelineData[i + 1]['Data Timestamp'] : timestamp(startTimePlusDelta);
+    const duration = utc(endTimestamp) - utc(startTimestamp);
+    const end = start + duration;
+
+    points.push({
+      duration,
+      end,
+      id,
+      interpolateEnding: true,
+      sourceId,
+      start,
+      uniqueId,
+      value,
     });
   });
 
@@ -123,4 +201,30 @@ export function getColor(color: string): number[] {
   }
 
   return [0, 0, 0];
+}
+
+/**
+ * Finds a max time range for a list of points.
+ */
+export function getMaxTimeRangeForPoints(points: RavenPoint[]): RavenTimeRange {
+  let maxTime = Number.MIN_SAFE_INTEGER;
+  let minTime = Number.MAX_SAFE_INTEGER;
+
+  points.forEach((point: RavenPoint) => {
+    const end = point.duration ? point.start + point.duration : point.start;
+    const start = point.start;
+
+    if (start < minTime) {
+      minTime = start;
+    }
+
+    if (end > maxTime) {
+      maxTime = end;
+    }
+  });
+
+  return {
+    end: maxTime,
+    start: minTime,
+  };
 }

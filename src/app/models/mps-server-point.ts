@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { MpsServerActivityPoint } from './mps-server-activity-point';
+import { MpsServerActivityPoint } from './index';
 
 export type MpsServerPoint =
   MpsServerActivityPoint;

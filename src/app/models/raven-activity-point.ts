@@ -7,8 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { MpsServerActivityPointMetadata } from './mps-server-activity-point-metadata';
-import { MpsServerActivityPointParameter } from './mps-server-activity-point-parameter';
+import {
+  MpsServerActivityPointMetadata,
+  MpsServerActivityPointParameter,
+} from './index';
 
 export interface RavenActivityPoint {
   activityId: string;

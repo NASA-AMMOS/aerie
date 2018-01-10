@@ -7,9 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { MpsServerActivityPointMetadata } from './mps-server-activity-point-metadata';
-import { MpsServerActivityPointParameter } from './mps-server-activity-point-parameter';
-import { MpsServerAnnotation } from './mps-server-annotation';
+import {
+  MpsServerActivityPointMetadata,
+  MpsServerActivityPointParameter,
+} from './index';
 
 export interface MpsServerActivityPoint {
   __document_id: string;
@@ -22,7 +23,6 @@ export interface MpsServerActivityPoint {
   'Activity Name': string;
   'Activity Parameters': MpsServerActivityPointParameter[];
   'Activity Type': string;
-  'Annotations': MpsServerAnnotation[];
   'Metadata': MpsServerActivityPointMetadata[];
   'Tend Assigned': string;
   'Tstart Assigned': string;

@@ -15,6 +15,7 @@ export interface RavenDividerBand {
   labelColor: number[];
   minorLabels: string[];
   name: string;
+  parentUniqueId: string | null;
   showTooltip: boolean;
   type: string;
 }
