@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
  * Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.
  * This software may be subject to U.S. export control laws and regulations.
@@ -12,16 +12,20 @@ import { v4 } from 'uuid';
 
 import {
   MpsServerActivityPoint,
+  MpsServerResourcePointMetadata,
+  MpsServerResourcePoint,
   RavenActivityBand,
   RavenActivityPoint,
   RavenBand,
   RavenCompositeBand,
   RavenDividerBand,
+  RavenResourceBand,
 } from '../models/index';
 
 import {
   getMaxTimeRangeForPoints,
   mpsServerToRavenActivityPoints,
+  mpsServerToRavenResourcePoints,
 } from './points';
 
 /**
@@ -124,4 +128,38 @@ export function toDividerBand(): RavenDividerBand {
   };
 
   return dividerBand;
+}
+
+/**
+ * Returns a resource band given metadata and timelineData.
+ */
+export function toResourceBand(sourceId: string, metadata: MpsServerResourcePointMetadata, timelineData: MpsServerResourcePoint[]): RavenResourceBand {
+  // Map raw resource timeline data to points for a band.
+  const points = mpsServerToRavenResourcePoints(sourceId, timelineData);
+
+  // Resource band schema.
+  const resourceBand = {
+    autoTickValues: true,
+    color: [0, 0, 0],
+    fill: false,
+    fillColor: [0, 0, 0],
+    height: 100,
+    heightPadding: 10,
+    id: v4(),
+    interpolation: 'linear',
+    label: metadata.hasObjectName,
+    labelColor: [0, 0, 0],
+    maxTimeRange: getMaxTimeRangeForPoints(points),
+    minorLabels: [],
+    name: metadata.hasObjectName,
+    parentUniqueId: null,
+    points,
+    rescale: true,
+    showIcon: false,
+    showTooltip: true,
+    sourceIds: {}, // Map of source ids this band has data from.
+    type: 'resource',
+  };
+
+  return resourceBand;
 }

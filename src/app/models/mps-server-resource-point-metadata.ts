@@ -7,15 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { RavenBand } from './index';
-
-export interface RavenCompositeBand {
-  bands: RavenBand[];
-  height: number;
-  heightPadding: number;
-  id: string;
-  name: string;
-  parentUniqueId: string | null;
-  showTooltip: boolean;
-  type: string;
+export interface MpsServerResourcePointMetadata {
+  decimatedData: boolean;
+  hasInterpolatorType: string;
+  hasObjectName: string;
+  hasObjectNamespace: string;
+  hasObjectType: string;
+  hasTimeSystem: string;
+  hasTimelineType: string;
+  hasUnits: boolean;
+  hasValueType: string;
 }

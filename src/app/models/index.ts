@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
  * Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.
  * This software may be subject to U.S. export control laws and regulations.
@@ -14,6 +14,7 @@ export * from './mps-server-activity-point';
 export * from './mps-server-annotation';
 export * from './mps-server-content';
 export * from './mps-server-point';
+export * from './mps-server-resource-point-metadata';
 export * from './mps-server-resource-point';
 export * from './mps-server-source';
 export * from './mps-server-state-point';
