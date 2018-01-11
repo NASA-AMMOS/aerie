@@ -7,15 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  MpsServerSourceCategory,
-  MpsServerSourceDir,
-  MpsServerSourceFile,
-  MpsServerSourceGraphable,
-} from './index';
-
-export type MpsServerSource =
-  MpsServerSourceCategory |
-  MpsServerSourceDir |
-  MpsServerSourceFile |
-  MpsServerSourceGraphable;
+export interface MpsServerStatePointMetadata {
+  decimatedData: boolean;
+  hasInterpolatorType: string;
+  hasObjectName: string;
+  hasObjectNamespace: string;
+  hasObjectType: string;
+  hasTimeSystem: string;
+  hasTimelineType: string;
+  hasValueType: string;
+}

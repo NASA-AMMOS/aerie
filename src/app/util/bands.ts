@@ -14,18 +14,22 @@ import {
   MpsServerActivityPoint,
   MpsServerResourcePointMetadata,
   MpsServerResourcePoint,
+  MpsServerStatePointMetadata,
+  MpsServerStatePoint,
   RavenActivityBand,
   RavenActivityPoint,
   RavenBand,
   RavenCompositeBand,
   RavenDividerBand,
   RavenResourceBand,
+  RavenStateBand,
 } from '../models/index';
 
 import {
   getMaxTimeRangeForPoints,
   mpsServerToRavenActivityPoints,
   mpsServerToRavenResourcePoints,
+  mpsServerToRavenStatePoints,
 } from './points';
 
 /**
@@ -48,8 +52,7 @@ export function toActivityBands(sourceId: string, timelineData: MpsServerActivit
  * Returns an activity band given a name and points.
  */
 export function toActivityBand(name: string, points: RavenActivityPoint[]): RavenActivityBand {
-  // Activity band schema.
-  const activityBand = {
+  const activityBand: RavenActivityBand = {
     activityStyle: 1,
     alignLabel: 3,
     baselineLabel: 3,
@@ -94,7 +97,7 @@ export function toCompositeBand(bands: RavenBand[]): RavenCompositeBand {
     return band;
   });
 
-  const compositeBand = {
+  const compositeBand: RavenCompositeBand = {
     bands,
     height: 100,
     heightPadding: 10,
@@ -114,7 +117,7 @@ export function toCompositeBand(bands: RavenBand[]): RavenCompositeBand {
 export function toDividerBand(): RavenDividerBand {
   const id = v4();
 
-  const dividerBand = {
+  const dividerBand: RavenDividerBand = {
     color: [255, 255, 255],
     height: 7,
     id,
@@ -137,8 +140,7 @@ export function toResourceBand(sourceId: string, metadata: MpsServerResourcePoin
   // Map raw resource timeline data to points for a band.
   const points = mpsServerToRavenResourcePoints(sourceId, timelineData);
 
-  // Resource band schema.
-  const resourceBand = {
+  const resourceBand: RavenResourceBand = {
     autoTickValues: true,
     color: [0, 0, 0],
     fill: false,
@@ -162,4 +164,32 @@ export function toResourceBand(sourceId: string, metadata: MpsServerResourcePoin
   };
 
   return resourceBand;
+}
+
+/**
+ * Returns a state band given metadata and timelineData.
+ */
+export function toStateBand(sourceId: string, metadata: MpsServerStatePointMetadata, timelineData: MpsServerStatePoint[]): RavenStateBand {
+  // Map raw state timeline data (stringXdr type in MPS Server) to points for a band.
+  const points = mpsServerToRavenStatePoints(sourceId, timelineData);
+
+  const stateBand: RavenStateBand = {
+    alignLabel: 3,
+    baselineLabel: 3,
+    height: 50,
+    heightPadding: 0,
+    id: v4(),
+    label: metadata.hasObjectName,
+    labelColor: [0, 0, 0],
+    maxTimeRange: getMaxTimeRangeForPoints(points),
+    minorLabels: [],
+    name: metadata.hasObjectName,
+    parentUniqueId: null,
+    points,
+    showTooltip: true,
+    sourceIds: {}, // Map of source ids this band has data from.
+    type: 'state',
+  };
+
+  return stateBand;
 }

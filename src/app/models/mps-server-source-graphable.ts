@@ -7,15 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  MpsServerSourceCategory,
-  MpsServerSourceDir,
-  MpsServerSourceFile,
-  MpsServerSourceGraphable,
-} from './index';
-
-export type MpsServerSource =
-  MpsServerSourceCategory |
-  MpsServerSourceDir |
-  MpsServerSourceFile |
-  MpsServerSourceGraphable;
+export interface MpsServerSourceGraphable {
+  __kind: string;
+  __kind_sub: string;
+  data_url: string;
+  label: string;
+  name: string;
+}

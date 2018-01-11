@@ -7,8 +7,16 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export interface MpsServerContent {
-  data_url: string;
+export interface MpsServerSourceFile {
+  __db_type: string;
+  __kind: string;
+  __kind_sub: string;
+  contents_url: string;
+  created: string;
+  file_data_url: string;
+  importJobStatus: string;
   label: string;
   name: string;
+  modified: string;
+  permissions: string;
 }
