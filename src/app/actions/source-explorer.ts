@@ -9,6 +9,8 @@
 
 import { Action } from '@ngrx/store';
 
+import { RavenSource } from './../models';
+
 // Action Types.
 export enum SourceExplorerActionTypes {
   FetchGraphData =             '[source-explorer] fetch_graph_data',
@@ -30,7 +32,6 @@ export enum SourceExplorerActionTypes {
 }
 
 // Actions.
-
 export class FetchGraphData implements Action {
   readonly type = SourceExplorerActionTypes.FetchGraphData;
 
@@ -47,8 +48,6 @@ export class FetchGraphDataSuccess implements Action {
 
 export class FetchInitialSources implements Action {
   readonly type = SourceExplorerActionTypes.FetchInitialSources;
-
-  constructor(public url: string) {}
 }
 
 export class FetchInitialSourcesFailure implements Action {
@@ -57,6 +56,8 @@ export class FetchInitialSourcesFailure implements Action {
 
 export class FetchInitialSourcesSuccess implements Action {
   readonly type = SourceExplorerActionTypes.FetchInitialSourcesSuccess;
+
+  constructor(public sources: RavenSource[]) {}
 }
 
 export class FetchSources implements Action {
@@ -74,7 +75,7 @@ export class FetchSourcesSuccess implements Action {
 }
 
 // Union type of all Source Explorer actions.
-export type SourceExplorerActions =
+export type SourceExplorerAction =
   FetchGraphData |
   FetchGraphDataFailure |
   FetchGraphDataSuccess |

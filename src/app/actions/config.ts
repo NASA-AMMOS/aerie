@@ -7,14 +7,15 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Action } from '@ngrx/store';
 
-@Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  selector: 'app-page-not-found',
-  styles: [],
-  template: `
-    <page-not-found></page-not-found>
-  `,
-})
-export class PageNotFoundComponent {}
+// Action Types.
+export enum ConfigActionTypes {
+  ChangeBaseUrl = '[config] change_base_url',
+}
+
+// Actions.
+export class ChangeBaseUrl implements Action { readonly type = ConfigActionTypes.ChangeBaseUrl; }
+
+// Union type of all Config actions.
+export type ConfigAction = ChangeBaseUrl;

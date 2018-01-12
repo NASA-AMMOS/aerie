@@ -9,20 +9,31 @@
 
 import { Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs/Observable';
 
-import * as fromSourceExplorer from './../../reducers/source-explorer';
-import * as sourceExplorer from './../../actions/source-explorer';
+import * as fromConfig from '../../reducers/config';
+import * as fromLayout from '../../reducers/layout';
+import * as layout from '../../actions/layout';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  selector: 'app-source-explorer',
-  styleUrls: ['./source-explorer.component.css'],
-  templateUrl: './source-explorer.component.html',
+  selector: 'app-timeline',
+  styleUrls: ['./timeline.component.css'],
+  templateUrl: './timeline.component.html',
 })
-export class SourceExplorerComponent implements OnInit {
-  constructor(private store: Store<fromSourceExplorer.SourceExplorerState>) {}
+export class TimelineComponent implements OnInit {
+  showLeftDrawer$: Observable<boolean>;
+  baseUrl$: Observable<string>;
+
+  constructor(private store: Store<fromLayout.LayoutState | fromConfig.ConfigState>) {
+    this.showLeftDrawer$ = this.store.select(fromLayout.getShowLeftDrawer);
+    this.baseUrl$ = this.store.select(fromConfig.getBaseUrl);
+  }
+
+  toggleLeftDrawer() {
+    this.store.dispatch(new layout.ToggleLeftDrawer());
+  }
 
   ngOnInit() {
-    this.store.dispatch(new sourceExplorer.FetchInitialSources());
   }
 }

@@ -7,26 +7,18 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs/Observable';
-// import { map } from 'rxjs/operators';
+import { TestBed, inject } from '@angular/core/testing';
 
-import { MpsServerSource } from './../models';
+import { MpsServerApiService } from './mps-server-api.service';
 
-@Injectable()
-export class MpsServerApi {
-  // private API_PATH = 'https://san-nicolas.jpl.nasa.gov:8443/mpsserver/api/v2/fs';
+describe('MpsServerApiService', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [ MpsServerApiService ],
+    });
+  });
 
-  /**
-   * Default Constructor.
-   */
-  constructor(private http: HttpClient) {}
-
-  /**
-   * Fetch sources from MPS Server.
-   */
-  fetchSources(url: string): Observable<MpsServerSource> {
-    return this.http.get<MpsServerSource>(url);
-  }
-}
+  it('should be created', inject([MpsServerApiService], (service: MpsServerApiService) => {
+    expect(service).toBeTruthy();
+  }));
+});

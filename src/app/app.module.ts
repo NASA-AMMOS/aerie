@@ -14,6 +14,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 
+import { AngularSplitModule } from 'angular-split';
 import { PolymerModule } from '@codebakery/origami';
 
 import { StoreModule } from '@ngrx/store';
@@ -30,12 +31,22 @@ import { MaterialModule } from './shared/material';
 
 import { AppComponent } from './components/app/app.component';
 import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
-import { TimelineViewerComponent } from './components/timeline-viewer/timeline-viewer.component';
+import { SourceExplorerComponent } from './components/source-explorer/source-explorer.component';
+import { TimelineComponent } from './components/timeline/timeline.component';
+
+import { MpsServerApiService } from './services/mps-server-api.service';
+
+import { SourceExplorerEffects } from './effects/source-explorer';
 
 export const COMPONENTS = [
   AppComponent,
   PageNotFoundComponent,
-  TimelineViewerComponent,
+  SourceExplorerComponent,
+  TimelineComponent,
+];
+
+export const EFFECTS = [
+  SourceExplorerEffects,
 ];
 
 @NgModule({
@@ -50,6 +61,7 @@ export const COMPONENTS = [
     BrowserAnimationsModule,
     HttpClientModule,
     MaterialModule,
+    AngularSplitModule,
     PolymerModule.forRoot(),
     RouterModule.forRoot(routes, { useHash: true }),
 
@@ -90,7 +102,7 @@ export const COMPONENTS = [
      *
      * See: https://github.com/ngrx/platform/blob/master/docs/effects/api.md#forroot
      */
-    EffectsModule.forRoot([]),
+    EffectsModule.forRoot(EFFECTS),
   ],
   providers: [
     /**
@@ -102,6 +114,8 @@ export const COMPONENTS = [
       provide: RouterStateSerializer,
       useClass: CustomRouterStateSerializer,
     },
+
+    MpsServerApiService,
   ],
   schemas: [
     CUSTOM_ELEMENTS_SCHEMA,

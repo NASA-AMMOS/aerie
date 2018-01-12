@@ -1,0 +1,40 @@
+<mat-toolbar color="primary" layout="row">
+  <button mat-icon-button class="menu-icon">
+    <mat-icon (click)="toggleLeftDrawer()" class="mat-24" aria-label="Menu">
+      menu
+    </mat-icon>
+  </button>
+  Raven
+</mat-toolbar>
+
+<div style="height: 900px;">
+  <split direction="horizontal">
+    <split-area size="30">
+      <div>
+        <app-source-explorer></app-source-explorer>
+      </div>
+    </split-area>
+
+    <split-area size="70">
+      <split direction="vertical">
+        <split-area size="30">
+          <div>
+            Timeline Viewer North Bands
+          </div>
+        </split-area>
+
+        <split-area size="30">
+          <div>
+            Timeline Viewer South Bands
+          </div>
+        </split-area>
+
+        <split-area size="30">
+          <div>
+            Details
+          </div>
+        </split-area>
+      </split>
+    </split-area>
+  </split>
+</div>

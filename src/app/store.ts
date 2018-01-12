@@ -30,15 +30,19 @@ import { storeFreeze } from 'ngrx-store-freeze';
  * notation packages up all of the exports into a single object.
  */
 
+import * as fromConfig from './reducers/config';
 import * as fromLayout from './reducers/layout';
+import * as fromSourceExplorer from './reducers/source-explorer';
 
 /**
  * As mentioned, we treat each reducer like a table in a database. This means
  * our top level state interface is just a map of keys to inner state types.
  */
 export interface State {
+  config: fromConfig.ConfigState;
   layout: fromLayout.LayoutState;
   routerReducer: fromRouter.RouterReducerState<RouterStateUrl>;
+  sourceExplorer: fromSourceExplorer.SourceExplorerState;
 }
 
 /**
@@ -47,8 +51,10 @@ export interface State {
  * and the current or initial state and return a new immutable state.
  */
 export const reducers: ActionReducerMap<State> = {
+  config: fromConfig.reducer,
   layout: fromLayout.reducer,
   routerReducer: fromRouter.routerReducer,
+  sourceExplorer: fromSourceExplorer.reducer,
 };
 
 /**

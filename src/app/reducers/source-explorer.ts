@@ -7,14 +7,30 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { keyBy, map } from 'lodash';
+import { v4 } from 'uuid';
+
 import { createSelector, createFeatureSelector } from '@ngrx/store';
-import { SourceExplorerActionTypes, SourceExplorerActions } from '../actions/source-explorer';
+
+import {
+  FetchInitialSourcesSuccess,
+  SourceExplorerActionTypes,
+  SourceExplorerAction,
+} from '../actions/source-explorer';
+
+import {
+  // RavenBand,
+  RavenSource,
+  StringTMap,
+} from '../models/index';
 
 // Source Explorer Interface.
 export interface SourceExplorerState {
   fetchGraphDataRequestPending: boolean;
   fetchInitialSourcesRequestPending: boolean;
   fetchSourcesRequestPending: boolean;
+  initialSourcesLoaded: boolean;
+  treeBySourceId: StringTMap<RavenSource>;
 }
 
 // Source Explorer Initial State.
@@ -22,13 +38,44 @@ const initialState: SourceExplorerState = {
   fetchGraphDataRequestPending: false,
   fetchInitialSourcesRequestPending: false,
   fetchSourcesRequestPending: false,
+  initialSourcesLoaded: false,
+  treeBySourceId: {
+    // Note: The root source in the source explorer tree is never displayed.
+    '0': {
+      actions: [],
+      bandIds: {},
+      childIds: [],
+      content: [],
+      dbType: '',
+      draggable: false,
+      expandable: false,
+      expanded: false,
+      hasContent: false,
+      icon: '',
+      id: v4(),
+      isServer: false,
+      kind: '',
+      label: 'root',
+      menu: false,
+      name: 'root',
+      openable: false,
+      opened: false,
+      parentId: '',
+      permissions: '',
+      pinnable: false,
+      pinned: false,
+      selectable: false,
+      selected: false,
+      url: '',
+    },
+  },
 };
 
 /**
  * Reducer.
  * If a case takes more than one line then it should be in it's own helper function.
  */
-export function reducer(state: SourceExplorerState = initialState, action: SourceExplorerActions): SourceExplorerState {
+export function reducer(state: SourceExplorerState = initialState, action: SourceExplorerAction): SourceExplorerState {
   switch (action.type) {
     case SourceExplorerActionTypes.FetchGraphData:
       return { ...state, fetchGraphDataRequestPending: true };
@@ -37,7 +84,7 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
     case SourceExplorerActionTypes.FetchInitialSourcesFailure:
       return { ...state, fetchInitialSourcesRequestPending: false };
     case SourceExplorerActionTypes.FetchInitialSourcesSuccess:
-      return { ...state, fetchInitialSourcesRequestPending: false };
+      return fetchInitialSourcesSuccess(state, action);
     case SourceExplorerActionTypes.FetchSources:
       return { ...state, fetchSourcesRequestPending: true };
     case SourceExplorerActionTypes.FetchSourcesFailure:
@@ -47,6 +94,82 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
     default:
       return state;
   }
+}
+
+
+/**
+ * Reduction Helper. Called when reducing the 'AddBands' action.
+ *
+ * This action is defined in the timelineViewer actions.
+ * Called when we need to associate one source with one or more band.
+ *
+ * @param {Object} state
+ * @param {Object} action
+ * @return {Object}
+ */
+// export function addBands(state: SourceExplorerState, action) {
+//   return {
+//     ...state,
+//     treeBySourceId: {
+//       ...state.treeBySourceId,
+//       [action.sourceId]: {
+//         ...state.treeBySourceId[action.sourceId],
+//         bandIds: {
+//           ...state.treeBySourceId[action.sourceId].bandIds,
+//           ...action.bands.reduce((bandIds: string[], band: RavenBand) => {
+//             bandIds[band.id] = true;
+//             return bandIds;
+//           }, {}),
+//         },
+//       },
+//     },
+//   };
+// }
+
+/**
+ * Reduction Helper. Called when reducing the 'FetchInitialSourcesSuccess' action.
+ *
+ * Generates a new treeBySourceId data structure with updated childIds for the root source,
+ * and the new child sources keyed off of their id.
+ * Sets fetchInitialSourcesRequestPending to false, and initialSourcesLoaded to true.
+ */
+export function fetchInitialSourcesSuccess(state: SourceExplorerState, action: FetchInitialSourcesSuccess): SourceExplorerState {
+  return {
+    ...state,
+    fetchInitialSourcesRequestPending: false,
+    initialSourcesLoaded: true,
+    treeBySourceId: newTreeSources(state.treeBySourceId, action.sources, '0'),
+  };
+}
+
+/**
+ * Helper. Updates the treeSourceById object with new child sources for a given source.
+ */
+export function newTreeSources(treeBySourceId: StringTMap<RavenSource>, sources: RavenSource[], id: string): StringTMap<RavenSource> {
+  return {
+    ...treeBySourceId,
+    ...keyBy(sources, 'id'),
+    [id]: {
+      ...treeBySourceId[id],
+      childIds: map(sources, 'id'),
+    },
+  };
+}
+
+/**
+ * Helper. Updates a source prop with a value.
+ */
+export function updateTreeSource(state: SourceExplorerState, id: string, prop: string, value: string | number | boolean): SourceExplorerState {
+  return {
+    ...state,
+    treeBySourceId: {
+      ...state.treeBySourceId,
+      [id]: {
+        ...state.treeBySourceId[id],
+        [prop]: value,
+      },
+    },
+  };
 }
 
 /**

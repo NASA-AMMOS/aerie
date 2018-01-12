@@ -7,14 +7,28 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-@Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  selector: 'app-page-not-found',
-  styles: [],
-  template: `
-    <page-not-found></page-not-found>
-  `,
-})
-export class PageNotFoundComponent {}
+import { TimelineComponent } from './timeline.component';
+
+describe('TimelineComponent', () => {
+  let component: TimelineComponent;
+  let fixture: ComponentFixture<TimelineComponent>;
+
+  beforeEach(async(() => {
+    TestBed.configureTestingModule({
+      declarations: [ TimelineComponent ],
+    })
+    .compileComponents();
+  }));
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(TimelineComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});

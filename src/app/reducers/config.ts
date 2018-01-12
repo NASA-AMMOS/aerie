@@ -8,35 +8,35 @@
  */
 
 import { createSelector, createFeatureSelector } from '@ngrx/store';
-import { LayoutActionTypes, LayoutAction } from '../actions/layout';
+import { ConfigAction } from '../actions/Config';
 
-// Layout Interface.
-export interface LayoutState {
-  showLeftDrawer: boolean;
+import ravenConfig from './../ravenConfig';
+
+// Config Interface.
+export interface ConfigState {
+  baseSourcesUrl: string;
+  baseUrl: string;
+  itarMessage: string;
 }
 
-// Layout State.
-const initialState: LayoutState = {
-  showLeftDrawer: true,
-};
+// Config State.
+const initialState: ConfigState = ravenConfig;
 
 /**
  * Reducer.
  * If a case takes more than one line then it should be in it's own helper function.
  */
-export function reducer(state: LayoutState = initialState, action: LayoutAction): LayoutState {
+export function reducer(state: ConfigState = initialState, action: ConfigAction): ConfigState {
   switch (action.type) {
-    case LayoutActionTypes.ToggleLeftDrawer:
-      return { showLeftDrawer: !state.showLeftDrawer };
     default:
       return state;
   }
 }
 
 /**
- * Layout state selector helper.
+ * Config state selector helper.
  */
-export const getLayoutState = createFeatureSelector<LayoutState>('layout');
+export const getConfigState = createFeatureSelector<ConfigState>('config');
 
 /**
  * Create selector helper for selecting state slice.
@@ -49,4 +49,6 @@ export const getLayoutState = createFeatureSelector<LayoutState>('layout');
  * only recompute when arguments change. The created selectors can also be composed
  * together to select different pieces of state.
  */
-export const getShowLeftDrawer = createSelector(getLayoutState, (state: LayoutState) => state.showLeftDrawer);
+export const getBaseSourcesUrl = createSelector(getConfigState, (state: ConfigState) => state.baseSourcesUrl);
+export const getBaseUrl = createSelector(getConfigState, (state: ConfigState) => state.baseUrl);
+export const getItarMessage = createSelector(getConfigState, (state: ConfigState) => state.itarMessage);

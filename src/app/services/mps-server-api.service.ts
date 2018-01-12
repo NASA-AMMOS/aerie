@@ -7,14 +7,20 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs/Observable';
 
-@Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  selector: 'app-page-not-found',
-  styles: [],
-  template: `
-    <page-not-found></page-not-found>
-  `,
-})
-export class PageNotFoundComponent {}
+import { MpsServerSource } from './../models';
+
+@Injectable()
+export class MpsServerApiService {
+  constructor(private http: HttpClient) {}
+
+  /**
+   * Fetch sources from MPS Server.
+   */
+  fetchSources(url: string): Observable<MpsServerSource[]> {
+    return this.http.get<MpsServerSource[]>(url);
+  }
+}
