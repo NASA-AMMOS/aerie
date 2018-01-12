@@ -38,7 +38,7 @@ import * as fromSourceExplorer from './reducers/source-explorer';
  * As mentioned, we treat each reducer like a table in a database. This means
  * our top level state interface is just a map of keys to inner state types.
  */
-export interface State {
+export interface AppState {
   config: fromConfig.ConfigState;
   layout: fromLayout.LayoutState;
   routerReducer: fromRouter.RouterReducerState<RouterStateUrl>;
@@ -50,7 +50,7 @@ export interface State {
  * These reducer functions are called with each dispatched action
  * and the current or initial state and return a new immutable state.
  */
-export const reducers: ActionReducerMap<State> = {
+export const reducers: ActionReducerMap<AppState> = {
   config: fromConfig.reducer,
   layout: fromLayout.reducer,
   routerReducer: fromRouter.routerReducer,
@@ -60,8 +60,8 @@ export const reducers: ActionReducerMap<State> = {
 /**
  * console.log all actions for debugging purposes.
  */
-export function logger(reducer: ActionReducer<State>): ActionReducer<State> {
-  return function(state: State, action: any): State {
+export function logger(reducer: ActionReducer<AppState>): ActionReducer<AppState> {
+  return function(state: AppState, action: any): AppState {
     console.log('state before update', state);
     console.log('action', action);
 
@@ -74,6 +74,6 @@ export function logger(reducer: ActionReducer<State>): ActionReducer<State> {
  * the root meta-reducer. To add more meta-reducers, provide an array of meta-reducers
  * that will be composed to form the root meta-reducer.
  */
-export const metaReducers: MetaReducer<State>[] = !environment.production
+export const metaReducers: MetaReducer<AppState>[] = !environment.production
   ? [logger, storeFreeze]
   : [];

@@ -19,7 +19,7 @@ import { Effect, Actions } from '@ngrx/effects';
 import { Observable } from 'rxjs/Observable';
 import { of } from 'rxjs/observable/of';
 
-import { State } from './../../app/store';
+import { AppState } from './../../app/store';
 import { MpsServerApiService } from './../services/mps-server-api.service';
 import * as sourceExplorer from '../actions/source-explorer';
 
@@ -40,7 +40,7 @@ export class SourceExplorerEffects {
 
   constructor(
     private actions$: Actions,
-    private store$: Store<State>,
+    private store$: Store<AppState>,
     private mpsServerApi: MpsServerApiService,
   ) {}
 }
