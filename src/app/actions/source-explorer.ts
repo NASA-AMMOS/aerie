@@ -74,6 +74,48 @@ export class FetchSourcesSuccess implements Action {
   readonly type = SourceExplorerActionTypes.FetchSourcesSuccess;
 }
 
+export class LoadSourceWithContent implements Action {
+  readonly type = SourceExplorerActionTypes.LoadSourceWithContent;
+
+  constructor(public sources: RavenSource[], public source: RavenSource) {}
+}
+
+export class SourceExplorerCollapse implements Action {
+  readonly type = SourceExplorerActionTypes.SourceExplorerCollapse;
+
+  constructor(public source: RavenSource) {}
+}
+
+export class SourceExplorerExpand implements Action {
+  readonly type = SourceExplorerActionTypes.SourceExplorerExpand;
+
+  constructor(public source: RavenSource) {}
+}
+
+export class SourceExplorerClose implements Action {
+  readonly type = SourceExplorerActionTypes.SourceExplorerClose;
+
+  constructor(public source: RavenSource) {}
+}
+
+export class SourceExplorerOpen implements Action {
+  readonly type = SourceExplorerActionTypes.SourceExplorerOpen;
+
+  constructor(public source: RavenSource) {}
+}
+
+export class SourceExplorerPin implements Action {
+  readonly type = SourceExplorerActionTypes.SourceExplorerPin;
+
+  constructor(public source: RavenSource) {}
+}
+
+export class SourceExplorerUnpin implements Action {
+  readonly type = SourceExplorerActionTypes.SourceExplorerUnpin;
+
+  constructor(public source: RavenSource) {}
+}
+
 // Union type of all Source Explorer actions.
 export type SourceExplorerAction =
   FetchGraphData |
@@ -84,4 +126,11 @@ export type SourceExplorerAction =
   FetchInitialSourcesSuccess |
   FetchSources |
   FetchSourcesFailure |
-  FetchSourcesSuccess;
+  FetchSourcesSuccess |
+  LoadSourceWithContent |
+  SourceExplorerCollapse |
+  SourceExplorerExpand |
+  SourceExplorerClose |
+  SourceExplorerOpen |
+  SourceExplorerPin |
+  SourceExplorerUnpin;

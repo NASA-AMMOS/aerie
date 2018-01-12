@@ -30,7 +30,6 @@ import { environment } from '../environments/environment';
 import { MaterialModule } from './shared/material';
 
 import { AppComponent } from './components/app/app.component';
-import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
 import { SourceExplorerComponent } from './components/source-explorer/source-explorer.component';
 import { TimelineComponent } from './components/timeline/timeline.component';
 
@@ -40,7 +39,6 @@ import { SourceExplorerEffects } from './effects/source-explorer';
 
 export const COMPONENTS = [
   AppComponent,
-  PageNotFoundComponent,
   SourceExplorerComponent,
   TimelineComponent,
 ];

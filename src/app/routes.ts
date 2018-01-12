@@ -10,7 +10,6 @@
 import { Routes, RouterStateSnapshot, Params } from '@angular/router';
 import { RouterStateSerializer } from '@ngrx/router-store';
 
-import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
 import { TimelineComponent } from './components/timeline/timeline.component';
 
 /**
@@ -27,7 +26,7 @@ export const routes: Routes = [
     path: 'timeline',
   },
   {
-    component: PageNotFoundComponent,
+    component: TimelineComponent,
     path: '**',
   },
 ];

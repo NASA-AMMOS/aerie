@@ -79,6 +79,10 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
   switch (action.type) {
     case SourceExplorerActionTypes.FetchGraphData:
       return { ...state, fetchGraphDataRequestPending: true };
+    case SourceExplorerActionTypes.FetchGraphDataFailure:
+      return { ...state, fetchGraphDataRequestPending: false };
+    case SourceExplorerActionTypes.FetchGraphDataSuccess:
+      return { ...state, fetchGraphDataRequestPending: false };
     case SourceExplorerActionTypes.FetchInitialSources:
       return { ...state, fetchInitialSourcesRequestPending: true };
     case SourceExplorerActionTypes.FetchInitialSourcesFailure:
@@ -91,11 +95,24 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
       return { ...state, fetchSourcesRequestPending: false };
     case SourceExplorerActionTypes.FetchSourcesSuccess:
       return { ...state, fetchSourcesRequestPending: false };
+    case SourceExplorerActionTypes.LoadSourceWithContent:
+      return { ...state, treeBySourceId: newTreeSources(state.treeBySourceId, action.sources, action.source.id) };
+    case SourceExplorerActionTypes.SourceExplorerCollapse:
+      return updateTreeSource(state, action.source.id, 'expanded', false);
+    case SourceExplorerActionTypes.SourceExplorerExpand:
+      return updateTreeSource(state, action.source.id, 'expanded', true);
+    case SourceExplorerActionTypes.SourceExplorerClose:
+      return updateTreeSource(state, action.source.id, 'opened', false);
+    case SourceExplorerActionTypes.SourceExplorerOpen:
+      return updateTreeSource(state, action.source.id, 'opened', true);
+    case SourceExplorerActionTypes.SourceExplorerPin:
+      return updateTreeSource(state, action.source.id, 'pinned', true);
+    case SourceExplorerActionTypes.SourceExplorerUnpin:
+      return updateTreeSource(state, action.source.id, 'pinned', false);
     default:
       return state;
   }
 }
-
 
 /**
  * Reduction Helper. Called when reducing the 'AddBands' action.
