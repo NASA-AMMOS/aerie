@@ -190,9 +190,9 @@ export function updateTreeSource(state: SourceExplorerState, id: string, prop: s
 }
 
 /**
- * Layout state selector helper.
+ * Source Explorer state selector helper.
  */
-export const getSourceExplorerState = createFeatureSelector<SourceExplorerState>('source-explorer');
+export const getSourceExplorerState = createFeatureSelector<SourceExplorerState>('sourceExplorer');
 
 /**
  * Create selector helper for selecting state slice.
@@ -206,3 +206,4 @@ export const getSourceExplorerState = createFeatureSelector<SourceExplorerState>
  * together to select different pieces of state.
  */
 export const getFetchGraphDataRequestPending = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.fetchGraphDataRequestPending);
+export const getTreeBySourceId = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.treeBySourceId);

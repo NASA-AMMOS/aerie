@@ -5,6 +5,30 @@
   ],
   "description": "Resource and Activity Visualization Engine v2.",
   "dependencies": {
-    "polymer": "2.3.1"
+    "components-font-awesome": "4.7.0",
+    "d3": "^4.12.2",
+    "ibm-tabs": "IBMResearch/ibm-tabs#^2.0.1",
+    "iron-icon": "2.0.1",
+    "iron-icons": "2.0.1",
+    "iron-pages": "^2.0.0",
+    "iron-resizable-behavior": "^2.0.1",
+    "jquery": "^3.2.1",
+    "jquery-ui": "^1.12.1",
+    "lodash": "^4.17.4",
+    "moment": "^2.18.1",
+    "moment-timezone": "^0.5.13",
+    "mui": "^0.9.35",
+    "paper-button": "2.0.0",
+    "paper-icon-button": "2.0.1",
+    "paper-input": "2.0.2",
+    "paper-item": "2.0.0",
+    "paper-listbox": "2.0.0",
+    "paper-menu-button": "2.0.0",
+    "paper-slider": "^2.0.2",
+    "paper-swatch-picker": "^2.0.0",
+    "polymer": "2.0.1",
+    "tinycolor": "^1.4.1",
+    "web-animations-js": "2.3.1",
+    "webcomponentsjs": "1.0.1"
   }
 }

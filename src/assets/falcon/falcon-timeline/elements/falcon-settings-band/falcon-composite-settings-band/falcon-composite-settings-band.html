@@ -1,0 +1,73 @@
+<link rel="import" href="./../../../../../bower_components/polymer/polymer.html" />
+<link rel="import" href="./../../../../../bower_components/iron-pages/iron-pages.html" />
+<link rel="import" href="./../../../../../bower_components/ibm-tabs/ibm-tabs.html" />
+<link rel="import" href="./../../../../falcon-polymer-utils/falcon-polymer-utils.html" />
+
+<link rel="import" href="./../../../mixins/falcon-settings/falcon-settings.html" />
+
+<link rel="import" href="./../falcon-activity-settings-band/falcon-activity-settings-band.html" />
+<link rel="import" href="./../falcon-resource-settings-band/falcon-resource-settings-band.html" />
+<link rel="import" href="./../falcon-state-settings-band/falcon-state-settings-band.html" />
+
+<dom-module id="falcon-composite-settings-band">
+  <template>
+    <style>
+      falcon-composite-settings-band {
+        display: block;
+      }
+
+      iron-pages {
+        padding-top: 20px;
+      }
+
+      .falcon-composite-settings-band-name {
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+    </style>
+
+    <div class="mui-row">
+      <div class="mui-col-md-12">
+        <ibm-tabs selected="{{selectedTabIndex}}">
+          <template is="dom-repeat" items="{{selectedBand.bands}}" as="band">
+            <ibm-tab>
+              <div class="falcon-composite-settings-band-name">
+                {{band.name}}
+              </div>
+            </ibm-tab>
+          </template>
+        </ibm-tabs>
+
+        <iron-pages selected="{{selectedTabIndex}}">
+          <template is="dom-repeat" items="{{selectedBand.bands}}" as="band">
+            <!-- Activity. -->
+            <template is="dom-if" if="{{_equal('activity', band.type)}}">
+              <div>
+                <falcon-activity-settings-band selected-band="{{_getSelectedSubBand(band)}}">
+                </falcon-activity-settings-band>
+              </div>
+            </template>
+
+            <!-- Resource. -->
+            <template is="dom-if" if="{{_equal('resource', band.type)}}">
+              <div>
+                <falcon-resource-settings-band selected-band="{{_getSelectedSubBand(band)}}">
+                </falcon-resource-settings-band>
+              </div>
+            </template>
+
+            <!-- State. -->
+            <template is="dom-if" if="{{_equal('state', band.type)}}">
+              <div>
+                <falcon-state-settings-band selected-band="{{_getSelectedSubBand(band)}}">
+                </falcon-state-settings-band>
+              </div>
+            </template>
+          </template>
+        </iron-pages>
+      </div>
+    </div>
+  </template>
+
+  <script src="./falcon-composite-settings-band.js"></script>
+</dom-module>

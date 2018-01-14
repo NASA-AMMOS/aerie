@@ -1,1 +1,6 @@
-Source Explorer
+<falcon-source-explorer-tree
+  [data]="tree$ | async"
+  (collapse-falcon-source-explorer-tree-node)="onCollapse($event)"
+  (expand-falcon-source-explorer-tree-node)="onExpand($event)"
+>
+</falcon-source-explorer-tree>

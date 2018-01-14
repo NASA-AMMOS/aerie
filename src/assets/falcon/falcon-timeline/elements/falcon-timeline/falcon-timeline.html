@@ -1,0 +1,227 @@
+<link rel="stylesheet" href="./falcon-timeline.css" />
+
+<link rel="import" href="./../../../../bower_components/polymer/polymer.html" />
+<link rel="import" href="./../../../../bower_components/iron-resizable-behavior/iron-resizable-behavior.html" />
+<link rel="import" href="./../../../falcon-polymer-utils/falcon-polymer-utils.html" />
+<link rel="import" href="./../falcon-activity-band/falcon-activity-band.html" />
+<link rel="import" href="./../falcon-composite-band/falcon-composite-band.html" />
+<link rel="import" href="./../falcon-divider-band/falcon-divider-band.html" />
+<link rel="import" href="./../falcon-resource-band/falcon-resource-band.html" />
+<link rel="import" href="./../falcon-state-band/falcon-state-band.html" />
+<link rel="import" href="./../falcon-time-band/falcon-time-band.html" />
+<link rel="import" href="./../falcon-time-range-selector/falcon-time-range-selector.html" />
+<link rel="import" href="./../falcon-time-scroll-bar/falcon-time-scroll-bar.html" />
+
+<dom-module id="falcon-timeline">
+  <template>
+    <style>
+      .falcon-timeline-bands {
+        padding-bottom: 10px;
+      }
+    </style>
+
+    <div>
+      <!-- Time Range Selector. -->
+      <falcon-time-range-selector max-time-range="[[maxTimeRange]]"
+                                  view-time-range="{{viewTimeRange}}">
+      </falcon-time-range-selector>
+
+      <!-- Time Scroll Bar. -->
+      <falcon-time-scroll-bar label-width="[[labelWidth]]"
+                              max-time-range="[[maxTimeRange]]"
+                              view-time-range="{{viewTimeRange}}">
+      </falcon-time-scroll-bar>
+
+      <!-- Time Band. -->
+      <falcon-time-band label-width="[[labelWidth]]"
+                        max-time-range="[[maxTimeRange]]"
+                        view-time-range="{{viewTimeRange}}">
+      </falcon-time-band>
+    </div>
+
+    <div class="falcon-timeline-bands">
+      <template is="dom-repeat" items="{{bands}}" as="band">
+        <!-- Activity Bands. -->
+        <template is="dom-if" if="{{_equal('activity', band.type)}}">
+          <falcon-activity-band class="falcon-band"
+                                activity-style="[[band.activityStyle]]"
+                                align-label="[[band.alignLabel]]"
+                                band="{{band}}"
+                                baseline-label="[[band.baselineLabel]]"
+                                height="[[band.height]]"
+                                height-padding="[[band.heightPadding]]"
+                                id="[[band.id]]"
+                                label="[[band.label]]"
+                                label-color="[[band.labelColor]]"
+                                label-width="[[labelWidth]]"
+                                layout="[[band.layout]]"
+                                max-time-range="[[maxTimeRange]]"
+                                minor-labels="[[band.minorLabels]]"
+                                name="[[band.name]]"
+                                points="[[band.points]]"
+                                show-label="[[band.showLabel]]"
+                                show-tooltip="[[band.showTooltip]]"
+                                trim-label="[[band.trimLabel]]"
+                                view-time-range="[[viewTimeRange]]">
+          </falcon-activity-band>
+        </template>
+
+        <!-- Composite Bands. -->
+        <template is="dom-if" if="{{_equal('composite', band.type)}}">
+          <falcon-composite-band class="falcon-band"
+                                 band="{{band}}"
+                                 height="[[band.height]]"
+                                 height-padding="[[band.heightPadding]]"
+                                 id="[[band.id]]"
+                                 label-width="[[labelWidth]]"
+                                 max-time-range="[[maxTimeRange]]"
+                                 show-tooltip="[[band.showTooltip]]"
+                                 view-time-range="[[viewTimeRange]]">
+            <template is="dom-repeat" items="{{band.bands}}" as="subBand">
+              <!-- Activity Bands. -->
+              <template is="dom-if" if="{{_equal('activity', subBand.type)}}">
+                <falcon-activity-band activity-style="[[subBand.activityStyle]]"
+                                      align-label="[[subBand.alignLabel]]"
+                                      band="{{subBand}}"
+                                      baseline-label="[[subBand.baselineLabel]]"
+                                      height="[[subBand.height]]"
+                                      height-padding="[[subBand.heightPadding]]"
+                                      id="[[subBand.id]]"
+                                      label="[[subBand.label]]"
+                                      label-color="[[subBand.labelColor]]"
+                                      label-width="[[labelWidth]]"
+                                      layout="[[subBand.layout]]"
+                                      max-time-range="[[maxTimeRange]]"
+                                      minor-labels="[[subBand.minorLabels]]"
+                                      name="[[subBand.name]]"
+                                      no-draw
+                                      points="[[subBand.points]]"
+                                      show-label="[[subBand.showLabel]]"
+                                      show-tooltip="[[subBand.showTooltip]]"
+                                      trim-label="[[subBand.trimLabel]]"
+                                      view-time-range="[[viewTimeRange]]">
+                </falcon-activity-band>
+              </template>
+
+              <!-- Resource Bands. -->
+              <template is="dom-if" if="{{_equal('resource', subBand.type)}}">
+                <falcon-resource-band auto-tick-values="[[subBand.autoTickValues]]"
+                                      band="{{subBand}}"
+                                      color="[[subBand.color]]"
+                                      fill="[[subBand.fill]]"
+                                      fill-color="[[subBand.fillColor]]"
+                                      font="[[subBand.font]]"
+                                      height="[[subBand.height]]"
+                                      height-padding="[[subBand.heightPadding]]"
+                                      id="[[subBand.id]]"
+                                      interpolation="[[subBand.interpolation]]"
+                                      label="[[subBand.label]]"
+                                      label-color="[[subBand.labelColor]]"
+                                      label-width="[[labelWidth]]"
+                                      max-time-range="[[maxTimeRange]]"
+                                      minor-labels="[[subBand.minorLabels]]"
+                                      name="[[subBand.name]]"
+                                      no-draw
+                                      points="[[subBand.points]]"
+                                      rescale="[[subBand.rescale]]"
+                                      show-icon="[[subBand.showIcon]]"
+                                      show-tooltip="[[subBand.showTooltip]]"
+                                      view-time-range="[[viewTimeRange]]">
+                </falcon-resource-band>
+              </template>
+
+              <!-- State Bands. -->
+              <template is="dom-if" if="{{_equal('state', subBand.type)}}">
+                <falcon-state-band align-label="[[subBand.alignLabel]]"
+                                   band="{{subBand}}"
+                                   baseline-label="[[subBand.baselineLabel]]"
+                                   border-width="[[subBand.borderWidth]]"
+                                   height="[[subBand.height]]"
+                                   height-padding="[[subBand.heightPadding]]"
+                                   id="[[subBand.id]]"
+                                   label="[[subBand.label]]"
+                                   label-color="[[subBand.labelColor]]"
+                                   label-width="[[labelWidth]]"
+                                   max-time-range="[[maxTimeRange]]"
+                                   minor-labels="[[subBand.minorLabels]]"
+                                   name="[[subBand.name]]"
+                                   no-draw
+                                   points="[[subBand.points]]"
+                                   show-tooltip="[[subBand.showTooltip]]"
+                                   view-time-range="[[viewTimeRange]]">
+                </falcon-state-band>
+              </template>
+            </template>
+          </falcon-composite-band>
+        </template>
+
+        <!-- Divider Bands. -->
+        <template is="dom-if" if="{{_equal('divider', band.type)}}">
+          <falcon-divider-band class="falcon-band"
+                               band="{{band}}"
+                               color="[[band.color]]"
+                               height="[[band.height]]"
+                               id="[[band.id]]"
+                               label="[[band.label]]"
+                               label-color="[[band.labelColor]]"
+                               label-width="[[labelWidth]]"
+                               minor-labels="[[band.minorLabels]]"
+                               name="[[band.name]]"
+                               show-tooltip="[[band.showTooltip]]">
+          </falcon-divider-band>
+        </template>
+
+        <!-- Resource Bands. -->
+        <template is="dom-if" if="{{_equal('resource', band.type)}}">
+          <falcon-resource-band class="falcon-band"
+                                auto-tick-values="[[band.autoTickValues]]"
+                                band="{{band}}"
+                                color="[[band.color]]"
+                                fill="[[band.fill]]"
+                                fill-color="[[band.fillColor]]"
+                                font="[[band.font]]"
+                                height="[[band.height]]"
+                                height-padding="[[band.heightPadding]]"
+                                id="[[band.id]]"
+                                interpolation="[[band.interpolation]]"
+                                label="[[band.label]]"
+                                label-color="[[band.labelColor]]"
+                                label-width="[[labelWidth]]"
+                                max-time-range="[[maxTimeRange]]"
+                                minor-labels="[[band.minorLabels]]"
+                                name="[[band.name]]"
+                                points="[[band.points]]"
+                                rescale="[[band.rescale]]"
+                                show-icon="[[band.showIcon]]"
+                                show-tooltip="[[band.showTooltip]]"
+                                view-time-range="[[viewTimeRange]]">
+          </falcon-resource-band>
+        </template>
+
+        <!-- State Bands. -->
+        <template is="dom-if" if="{{_equal('state', band.type)}}">
+          <falcon-state-band class="falcon-band"
+                             align-label="[[band.alignLabel]]"
+                             band="{{band}}"
+                             baseline-label="[[band.baselineLabel]]"
+                             border-width="[[band.borderWidth]]"
+                             height="[[band.height]]"
+                             height-padding="[[band.heightPadding]]"
+                             id="[[band.id]]"
+                             label="[[band.label]]"
+                             label-color="[[band.labelColor]]"
+                             label-width="[[labelWidth]]"
+                             max-time-range="[[maxTimeRange]]"
+                             minor-labels="[[band.minorLabels]]"
+                             name="[[band.name]]"
+                             points="[[band.points]]"
+                             show-tooltip="[[band.showTooltip]]"
+                             view-time-range="[[viewTimeRange]]">
+          </falcon-state-band>
+        </template>
+      </template>
+    </div>
+  </template>
+
+  <script src="./falcon-timeline.js"></script>
+</dom-module>

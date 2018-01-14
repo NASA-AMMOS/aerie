@@ -9,9 +9,15 @@
 
 import { Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs/Observable';
 
 import * as fromSourceExplorer from './../../reducers/source-explorer';
 import * as sourceExplorer from './../../actions/source-explorer';
+
+import {
+  RavenSource,
+  StringTMap,
+} from './../../models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -20,9 +26,47 @@ import * as sourceExplorer from './../../actions/source-explorer';
   templateUrl: './source-explorer.component.html',
 })
 export class SourceExplorerComponent implements OnInit {
-  constructor(private store: Store<fromSourceExplorer.SourceExplorerState>) {}
+  tree$: Observable<RavenSource>;
+
+  constructor(private store: Store<fromSourceExplorer.SourceExplorerState>) {
+    this.tree$ = this.store
+      .select(fromSourceExplorer.getTreeBySourceId)
+      .map(treeBySourceId => this.treeFromTreeBySourceId(treeBySourceId));
+  }
 
   ngOnInit() {
     this.store.dispatch(new sourceExplorer.FetchInitialSources());
+  }
+
+  /**
+   * Event. Called when `collapse-falcon-source-explorer-tree-node` event is fired from falcon-source-explorer-tree.
+   */
+  onCollapse(e: Event) {
+    // TODO.
+    console.log('onCollapse: ', e);
+  }
+
+  /**
+   * Event. Called when `expand-falcon-source-explorer-tree-node` event is fired from falcon-source-explorer-tree.
+   */
+  onExpand(e: Event) {
+    // TODO.
+    console.log('onExpand ', e);
+  }
+
+  /**
+   * Helper. Convert a treeBySourceId to a tree so it can be consumed by falcon-source-explorer-tree.
+   */
+  treeFromTreeBySourceId(treeBySourceId: StringTMap<RavenSource>): RavenSource {
+    const rootNode: RavenSource = { ...treeBySourceId['0'] }; // Return a new rootNode object so falcon-source-explorer-tree properly updates.
+
+    (function dfs(node: RavenSource): void {
+      if (node && node.childIds.length > 0) {
+        node.children = node.childIds.map(id => ({ ...treeBySourceId[id] })); // Build a nodes children based on it's childIds.
+        node.children.forEach((child: RavenSource) => dfs(child)); // Now recurse via depth-first-search to build each child's children (ha).
+      }
+    }(rootNode));
+
+    return rootNode;
   }
 }
