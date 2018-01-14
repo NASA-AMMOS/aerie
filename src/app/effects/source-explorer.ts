@@ -25,6 +25,10 @@ import * as sourceExplorer from '../actions/source-explorer';
 
 import { fromSources } from './../util/source';
 
+import {
+  MpsServerSource,
+} from './../models';
+
 @Injectable()
 export class SourceExplorerEffects {
   @Effect()
@@ -32,10 +36,25 @@ export class SourceExplorerEffects {
     .ofType<sourceExplorer.FetchInitialSources>(sourceExplorer.SourceExplorerActionTypes.FetchInitialSources)
     .withLatestFrom(this.store$)
     .map(([action, state]) => state)
-    .mergeMap(state =>
+    .switchMap(state =>
       this.mpsServerApi.fetchSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`)
         .map(sources => new sourceExplorer.FetchInitialSourcesSuccess(fromSources('0', true, sources)))
         .catch(() => of(new sourceExplorer.FetchInitialSourcesFailure())),
+    );
+
+  @Effect()
+  sourceExplorerExpandWithFetchSources$: Observable<Action> = this.actions$
+    .ofType<sourceExplorer.SourceExplorerExpandWithFetchSources>(sourceExplorer.SourceExplorerActionTypes.SourceExplorerExpandWithFetchSources)
+    .switchMap(action =>
+      this.mpsServerApi.fetchSources(action.source.url)
+        .mergeMap((sources: MpsServerSource[]) => [
+          new sourceExplorer.FetchSourcesSuccess(action.source, fromSources(action.source.id, false, sources)),
+          new sourceExplorer.SourceExplorerExpand(action.source),
+        ])
+        .catch(() => [
+          new sourceExplorer.FetchSourcesFailure(),
+          new sourceExplorer.SourceExplorerCollapse(action.source),
+        ]),
     );
 
   constructor(

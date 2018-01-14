@@ -16,6 +16,7 @@ import {
   FetchInitialSourcesSuccess,
   SourceExplorerActionTypes,
   SourceExplorerAction,
+  FetchSourcesSuccess,
 } from '../actions/source-explorer';
 
 import {
@@ -77,8 +78,6 @@ const initialState: SourceExplorerState = {
  */
 export function reducer(state: SourceExplorerState = initialState, action: SourceExplorerAction): SourceExplorerState {
   switch (action.type) {
-    case SourceExplorerActionTypes.FetchGraphData:
-      return { ...state, fetchGraphDataRequestPending: true };
     case SourceExplorerActionTypes.FetchGraphDataFailure:
       return { ...state, fetchGraphDataRequestPending: false };
     case SourceExplorerActionTypes.FetchGraphDataSuccess:
@@ -89,18 +88,18 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
       return { ...state, fetchInitialSourcesRequestPending: false };
     case SourceExplorerActionTypes.FetchInitialSourcesSuccess:
       return fetchInitialSourcesSuccess(state, action);
-    case SourceExplorerActionTypes.FetchSources:
-      return { ...state, fetchSourcesRequestPending: true };
     case SourceExplorerActionTypes.FetchSourcesFailure:
       return { ...state, fetchSourcesRequestPending: false };
     case SourceExplorerActionTypes.FetchSourcesSuccess:
-      return { ...state, fetchSourcesRequestPending: false };
+      return fetchSourcesSuccess(state, action);
     case SourceExplorerActionTypes.LoadSourceWithContent:
       return { ...state, treeBySourceId: newTreeSources(state.treeBySourceId, action.sources, action.source.id) };
     case SourceExplorerActionTypes.SourceExplorerCollapse:
       return updateTreeSource(state, action.source.id, 'expanded', false);
     case SourceExplorerActionTypes.SourceExplorerExpand:
       return updateTreeSource(state, action.source.id, 'expanded', true);
+    case SourceExplorerActionTypes.SourceExplorerExpandWithFetchSources:
+      return { ...state, fetchSourcesRequestPending: true };
     case SourceExplorerActionTypes.SourceExplorerClose:
       return updateTreeSource(state, action.source.id, 'opened', false);
     case SourceExplorerActionTypes.SourceExplorerOpen:
@@ -119,10 +118,6 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
  *
  * This action is defined in the timelineViewer actions.
  * Called when we need to associate one source with one or more band.
- *
- * @param {Object} state
- * @param {Object} action
- * @return {Object}
  */
 // export function addBands(state: SourceExplorerState, action) {
 //   return {
@@ -156,6 +151,21 @@ export function fetchInitialSourcesSuccess(state: SourceExplorerState, action: F
     fetchInitialSourcesRequestPending: false,
     initialSourcesLoaded: true,
     treeBySourceId: newTreeSources(state.treeBySourceId, action.sources, '0'),
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'FetchSourcesSuccess' or 'LoadSourceWithContent' action.
+ *
+ * Generates a new treeBySourceId data structure with updated childIds for the action.source,
+ * and the new child sources keyed off of their id.
+ * Sets fetchSourcesRequestPending to false.
+ */
+export function fetchSourcesSuccess(state: SourceExplorerState, action: FetchSourcesSuccess) {
+  return {
+    ...state,
+    fetchSourcesRequestPending: false,
+    treeBySourceId: newTreeSources(state.treeBySourceId, action.sources, action.source.id),
   };
 }
 

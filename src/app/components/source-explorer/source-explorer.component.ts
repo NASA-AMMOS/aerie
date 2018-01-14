@@ -19,6 +19,14 @@ import {
   StringTMap,
 } from './../../models';
 
+interface FalconSourceExplorerTreeNode extends HTMLElement {
+  data: RavenSource;
+}
+
+interface FalconSourceExplorerTreeEvent extends Event {
+  detail: FalconSourceExplorerTreeNode;
+}
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-source-explorer',
@@ -41,17 +49,19 @@ export class SourceExplorerComponent implements OnInit {
   /**
    * Event. Called when `collapse-falcon-source-explorer-tree-node` event is fired from falcon-source-explorer-tree.
    */
-  onCollapse(e: Event) {
-    // TODO.
-    console.log('onCollapse: ', e);
+  onCollapse(e: FalconSourceExplorerTreeEvent) {
+    this.store.dispatch(new sourceExplorer.SourceExplorerCollapse(e.detail.data));
   }
 
   /**
    * Event. Called when `expand-falcon-source-explorer-tree-node` event is fired from falcon-source-explorer-tree.
    */
-  onExpand(e: Event) {
-    // TODO.
-    console.log('onExpand ', e);
+  onExpand(e: FalconSourceExplorerTreeEvent) {
+    if (e.detail.data.children && e.detail.data.children.length > 0) {
+      this.store.dispatch(new sourceExplorer.SourceExplorerExpand(e.detail.data));
+    } else {
+      this.store.dispatch(new sourceExplorer.SourceExplorerExpandWithFetchSources(e.detail.data));
+    }
   }
 
   /**

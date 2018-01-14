@@ -13,29 +13,21 @@ import { RavenSource } from './../models';
 
 // Action Types.
 export enum SourceExplorerActionTypes {
-  FetchGraphData =             '[source-explorer] fetch_graph_data',
-  FetchGraphDataFailure =      '[source-explorer] fetch_graph_data_failure',
-  FetchGraphDataSuccess =      '[source-explorer] fetch_graph_data_success',
-  FetchInitialSources =        '[source-explorer] fetch_initial_sources',
-  FetchInitialSourcesFailure = '[source-explorer] fetch_initial_sources_failure',
-  FetchInitialSourcesSuccess = '[source-explorer] fetch_initial_sources_success',
-  FetchSources =               '[source-explorer] fetch_sources',
-  FetchSourcesFailure =        '[source-explorer] fetch_sources_failure',
-  FetchSourcesSuccess =        '[source-explorer] fetch_sources_success',
-  LoadSourceWithContent =      '[source-explorer] load_source_with_content',
-  SourceExplorerCollapse =     '[source-explorer] source_explorer_collapse',
-  SourceExplorerExpand =       '[source-explorer] source_explorer_expand',
-  SourceExplorerClose =        '[source-explorer] source_explorer_close',
-  SourceExplorerOpen =         '[source-explorer] source_explorer_open',
-  SourceExplorerPin =          '[source-explorer] source_explorer_pin',
-  SourceExplorerUnpin =        '[source-explorer] source_explorer_unpin',
-}
-
-// Actions.
-export class FetchGraphData implements Action {
-  readonly type = SourceExplorerActionTypes.FetchGraphData;
-
-  constructor(public url: string) {}
+  FetchGraphDataFailure =                '[source-explorer] fetch_graph_data_failure',
+  FetchGraphDataSuccess =                '[source-explorer] fetch_graph_data_success',
+  FetchInitialSources =                  '[source-explorer] fetch_initial_sources',
+  FetchInitialSourcesFailure =           '[source-explorer] fetch_initial_sources_failure',
+  FetchInitialSourcesSuccess =           '[source-explorer] fetch_initial_sources_success',
+  FetchSourcesFailure =                  '[source-explorer] fetch_sources_failure',
+  FetchSourcesSuccess =                  '[source-explorer] fetch_sources_success',
+  LoadSourceWithContent =                '[source-explorer] load_source_with_content',
+  SourceExplorerCollapse =               '[source-explorer] source_explorer_collapse',
+  SourceExplorerExpand =                 '[source-explorer] source_explorer_expand',
+  SourceExplorerExpandWithFetchSources = '[source-explorer] source_explorer_expand_with_fetch_sources',
+  SourceExplorerClose =                  '[source-explorer] source_explorer_close',
+  SourceExplorerOpen =                   '[source-explorer] source_explorer_open',
+  SourceExplorerPin =                    '[source-explorer] source_explorer_pin',
+  SourceExplorerUnpin =                  '[source-explorer] source_explorer_unpin',
 }
 
 export class FetchGraphDataFailure implements Action {
@@ -60,24 +52,20 @@ export class FetchInitialSourcesSuccess implements Action {
   constructor(public sources: RavenSource[]) {}
 }
 
-export class FetchSources implements Action {
-  readonly type = SourceExplorerActionTypes.FetchSources;
-
-  constructor(public url: string) {}
-}
-
 export class FetchSourcesFailure implements Action {
   readonly type = SourceExplorerActionTypes.FetchSourcesFailure;
 }
 
 export class FetchSourcesSuccess implements Action {
   readonly type = SourceExplorerActionTypes.FetchSourcesSuccess;
+
+  constructor(public source: RavenSource, public sources: RavenSource[]) {}
 }
 
 export class LoadSourceWithContent implements Action {
   readonly type = SourceExplorerActionTypes.LoadSourceWithContent;
 
-  constructor(public sources: RavenSource[], public source: RavenSource) {}
+  constructor(public source: RavenSource, public sources: RavenSource[]) {}
 }
 
 export class SourceExplorerCollapse implements Action {
@@ -88,6 +76,12 @@ export class SourceExplorerCollapse implements Action {
 
 export class SourceExplorerExpand implements Action {
   readonly type = SourceExplorerActionTypes.SourceExplorerExpand;
+
+  constructor(public source: RavenSource) {}
+}
+
+export class SourceExplorerExpandWithFetchSources implements Action {
+  readonly type = SourceExplorerActionTypes.SourceExplorerExpandWithFetchSources;
 
   constructor(public source: RavenSource) {}
 }
@@ -118,18 +112,17 @@ export class SourceExplorerUnpin implements Action {
 
 // Union type of all Source Explorer actions.
 export type SourceExplorerAction =
-  FetchGraphData |
   FetchGraphDataFailure |
   FetchGraphDataSuccess |
   FetchInitialSources |
   FetchInitialSourcesFailure |
   FetchInitialSourcesSuccess |
-  FetchSources |
   FetchSourcesFailure |
   FetchSourcesSuccess |
   LoadSourceWithContent |
   SourceExplorerCollapse |
   SourceExplorerExpand |
+  SourceExplorerExpandWithFetchSources |
   SourceExplorerClose |
   SourceExplorerOpen |
   SourceExplorerPin |
