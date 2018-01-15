@@ -1,4 +1,9 @@
 :host {
   display: block;
-  margin: 48px 0;
+  height: 100%;
+  width: 100%;
+}
+
+.timeline {
+  width: 100%;
 }

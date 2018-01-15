@@ -1,5 +1,6 @@
 :host {
   display: block;
+  height: 100%;
 }
 
 .mat-toolbar {
@@ -11,4 +12,10 @@
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.24);
   height: 40px;
   background-color: #039be5;
+}
+
+.outlet {
+  padding-top: 45px;
+  height: 100%;
+  width: 100%;
 }

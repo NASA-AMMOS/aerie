@@ -1,35 +1,34 @@
-<div style="height: 900px;">
-  <split direction="horizontal">
-    <split-area size="30">
-      <div>
-        <app-source-explorer></app-source-explorer>
-      </div>
-    </split-area>
+<split direction="horizontal">
+  <split-area size="30">
+    <div>
+      <app-source-explorer></app-source-explorer>
+    </div>
+  </split-area>
 
-    <split-area size="70">
-      <split direction="vertical">
-        <split-area size="30">
-          <div>
-            <falcon-timeline
-              [bands]="bands$ | async"
-              [labelWidth]="labelWidth$ | async"
-            >
-            </falcon-timeline>
-          </div>
-        </split-area>
+  <split-area size="70">
+    <split direction="vertical">
+      <split-area size="30">
+        <div class="timeline">
+          <falcon-timeline
+            [bands]="bands$ | async"
+            [labelWidth]="labelWidth$ | async"
+          >
+          </falcon-timeline>
+        </div>
+      </split-area>
 
-        <split-area size="30">
-          <div>
-            Timeline Viewer South Bands
-          </div>
-        </split-area>
+      <split-area size="30">
+        <div>
+          Timeline Viewer South Bands
+        </div>
+      </split-area>
 
-        <split-area size="30">
-          <div>
-            Details
-          </div>
-        </split-area>
-      </split>
-    </split-area>
-  </split>
-</div>
+      <split-area size="30">
+        <div>
+          Details
+        </div>
+      </split-area>
+    </split>
+  </split-area>
+</split>
+
