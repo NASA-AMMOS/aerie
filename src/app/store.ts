@@ -33,6 +33,7 @@ import { storeFreeze } from 'ngrx-store-freeze';
 import * as fromConfig from './reducers/config';
 import * as fromLayout from './reducers/layout';
 import * as fromSourceExplorer from './reducers/source-explorer';
+import * as fromTimeline from './reducers/timeline';
 
 /**
  * As mentioned, we treat each reducer like a table in a database. This means
@@ -43,6 +44,7 @@ export interface AppState {
   layout: fromLayout.LayoutState;
   routerReducer: fromRouter.RouterReducerState<RouterStateUrl>;
   sourceExplorer: fromSourceExplorer.SourceExplorerState;
+  timeline: fromTimeline.TimelineState;
 }
 
 /**
@@ -55,6 +57,7 @@ export const reducers: ActionReducerMap<AppState> = {
   layout: fromLayout.reducer,
   routerReducer: fromRouter.routerReducer,
   sourceExplorer: fromSourceExplorer.reducer,
+  timeline: fromTimeline.reducer,
 };
 
 /**

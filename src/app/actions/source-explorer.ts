@@ -20,10 +20,10 @@ export enum SourceExplorerActionTypes {
   FetchInitialSourcesSuccess =           '[source-explorer] fetch_initial_sources_success',
   FetchSourcesFailure =                  '[source-explorer] fetch_sources_failure',
   FetchSourcesSuccess =                  '[source-explorer] fetch_sources_success',
-  LoadSourceWithContent =                '[source-explorer] load_source_with_content',
   SourceExplorerCollapse =               '[source-explorer] source_explorer_collapse',
   SourceExplorerExpand =                 '[source-explorer] source_explorer_expand',
   SourceExplorerExpandWithFetchSources = '[source-explorer] source_explorer_expand_with_fetch_sources',
+  SourceExplorerExpandWithLoadContent =  '[source-explorer] source_explorer_expand_with_load_content',
   SourceExplorerClose =                  '[source-explorer] source_explorer_close',
   SourceExplorerOpen =                   '[source-explorer] source_explorer_open',
   SourceExplorerPin =                    '[source-explorer] source_explorer_pin',
@@ -64,12 +64,6 @@ export class FetchSourcesSuccess implements Action {
   constructor(public source: RavenSource, public sources: RavenSource[]) {}
 }
 
-export class LoadSourceWithContent implements Action {
-  readonly type = SourceExplorerActionTypes.LoadSourceWithContent;
-
-  constructor(public source: RavenSource, public sources: RavenSource[]) {}
-}
-
 export class SourceExplorerCollapse implements Action {
   readonly type = SourceExplorerActionTypes.SourceExplorerCollapse;
 
@@ -86,6 +80,12 @@ export class SourceExplorerExpandWithFetchSources implements Action {
   readonly type = SourceExplorerActionTypes.SourceExplorerExpandWithFetchSources;
 
   constructor(public source: RavenSource) {}
+}
+
+export class SourceExplorerExpandWithLoadContent implements Action {
+  readonly type = SourceExplorerActionTypes.SourceExplorerExpandWithLoadContent;
+
+  constructor(public source: RavenSource, public sources: RavenSource[]) {}
 }
 
 export class SourceExplorerClose implements Action {
@@ -121,10 +121,10 @@ export type SourceExplorerAction =
   FetchInitialSourcesSuccess |
   FetchSourcesFailure |
   FetchSourcesSuccess |
-  LoadSourceWithContent |
   SourceExplorerCollapse |
   SourceExplorerExpand |
   SourceExplorerExpandWithFetchSources |
+  SourceExplorerExpandWithLoadContent |
   SourceExplorerClose |
   SourceExplorerOpen |
   SourceExplorerPin |

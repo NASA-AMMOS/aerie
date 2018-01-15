@@ -23,7 +23,7 @@ import { AppState } from './../../app/store';
 import { MpsServerApiService } from './../services/mps-server-api.service';
 import * as sourceExplorer from '../actions/source-explorer';
 
-import { fromSources } from './../util/source';
+import { toSources } from './../util/source';
 
 import {
   MpsServerSource,
@@ -38,7 +38,7 @@ export class SourceExplorerEffects {
     .map(([action, state]) => state)
     .switchMap(state =>
       this.mpsServerApi.fetchSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`)
-        .map(sources => new sourceExplorer.FetchInitialSourcesSuccess(fromSources('0', true, sources)))
+        .map(sources => new sourceExplorer.FetchInitialSourcesSuccess(toSources('0', true, sources)))
         .catch(() => of(new sourceExplorer.FetchInitialSourcesFailure())),
     );
 
@@ -48,7 +48,7 @@ export class SourceExplorerEffects {
     .switchMap(action =>
       this.mpsServerApi.fetchSources(action.source.url)
         .switchMap((sources: MpsServerSource[]) => [
-          new sourceExplorer.FetchSourcesSuccess(action.source, fromSources(action.source.id, false, sources)),
+          new sourceExplorer.FetchSourcesSuccess(action.source, toSources(action.source.id, false, sources)),
           new sourceExplorer.SourceExplorerExpand(action.source),
         ])
         .catch(() => [
@@ -56,6 +56,13 @@ export class SourceExplorerEffects {
           new sourceExplorer.SourceExplorerCollapse(action.source),
         ]),
     );
+
+  @Effect()
+  sourceExplorerExpandWithLoadContent$: Observable<Action> = this.actions$
+    .ofType<sourceExplorer.SourceExplorerExpandWithLoadContent>(sourceExplorer.SourceExplorerActionTypes.SourceExplorerExpandWithLoadContent)
+    .switchMap(action => [
+      new sourceExplorer.SourceExplorerExpand(action.source),
+    ]);
 
   constructor(
     private actions$: Actions,

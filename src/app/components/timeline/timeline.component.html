@@ -1,12 +1,3 @@
-<mat-toolbar color="primary" layout="row">
-  <button mat-icon-button class="menu-icon">
-    <mat-icon (click)="toggleLeftDrawer()" class="mat-24" aria-label="Menu">
-      menu
-    </mat-icon>
-  </button>
-  Raven
-</mat-toolbar>
-
 <div style="height: 900px;">
   <split direction="horizontal">
     <split-area size="30">
@@ -19,7 +10,11 @@
       <split direction="vertical">
         <split-area size="30">
           <div>
-            <falcon-timeline></falcon-timeline>
+            <falcon-timeline
+              [bands]="bands$ | async"
+              [labelWidth]="labelWidth$ | async"
+            >
+            </falcon-timeline>
           </div>
         </split-area>
 

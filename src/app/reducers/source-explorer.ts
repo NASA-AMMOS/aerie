@@ -51,7 +51,6 @@ const initialState: SourceExplorerState = {
       draggable: false,
       expandable: false,
       expanded: false,
-      hasContent: false,
       icon: '',
       id: v4(),
       isServer: false,
@@ -92,14 +91,14 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
       return { ...state, fetchSourcesRequestPending: false };
     case SourceExplorerActionTypes.FetchSourcesSuccess:
       return fetchSourcesSuccess(state, action);
-    case SourceExplorerActionTypes.LoadSourceWithContent:
-      return { ...state, treeBySourceId: newTreeSources(state.treeBySourceId, action.sources, action.source.id) };
     case SourceExplorerActionTypes.SourceExplorerCollapse:
       return updateTreeSource(state, action.source.id, 'expanded', false);
     case SourceExplorerActionTypes.SourceExplorerExpand:
       return updateTreeSource(state, action.source.id, 'expanded', true);
     case SourceExplorerActionTypes.SourceExplorerExpandWithFetchSources:
       return { ...state, fetchSourcesRequestPending: true };
+    case SourceExplorerActionTypes.SourceExplorerExpandWithLoadContent:
+      return { ...state, treeBySourceId: newTreeSources(state.treeBySourceId, action.sources, action.source.id) };
     case SourceExplorerActionTypes.SourceExplorerClose:
       return updateTreeSource(state, action.source.id, 'opened', false);
     case SourceExplorerActionTypes.SourceExplorerOpen:

@@ -23,7 +23,6 @@ export interface RavenSource {
   draggable: boolean;
   expandable: boolean;
   expanded: boolean;
-  hasContent: boolean;
   icon: string;
   id: string;
   isServer: boolean;

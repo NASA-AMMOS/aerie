@@ -14,6 +14,8 @@ import { Observable } from 'rxjs/Observable';
 import * as fromSourceExplorer from './../../reducers/source-explorer';
 import * as sourceExplorer from './../../actions/source-explorer';
 
+import { toSources } from './../../util/source';
+
 import {
   RavenSource,
   StringTMap,
@@ -57,10 +59,18 @@ export class SourceExplorerComponent implements OnInit {
    * Event. Called when `expand-falcon-source-explorer-tree-node` event is fired from falcon-source-explorer-tree.
    */
   onExpand(e: FalconSourceExplorerTreeEvent) {
-    if (e.detail.data.children && e.detail.data.children.length > 0) {
-      this.store.dispatch(new sourceExplorer.SourceExplorerExpand(e.detail.data));
+    const source = e.detail.data;
+
+    // Only fetch sources or load content if there are no children (i.e. sources have not been fetched or content has not been loaded yet).
+    if (!source.childIds.length) {
+      if (source.content.length > 0) {
+        this.store.dispatch(new sourceExplorer.SourceExplorerExpandWithLoadContent(source, toSources(source.id, false, source.content)));
+      } else {
+        this.store.dispatch(new sourceExplorer.SourceExplorerExpandWithFetchSources(source));
+      }
     } else {
-      this.store.dispatch(new sourceExplorer.SourceExplorerExpandWithFetchSources(e.detail.data));
+      // Otherwise if there are children (i.e. sources have already been fetched or content has already been loaded), then simply expand the source.
+      this.store.dispatch(new sourceExplorer.SourceExplorerExpand(source));
     }
   }
 

@@ -21,7 +21,7 @@ import {
 /**
  * Transform form an MPS Server source to a Raven source.
  */
-export function fromSource(parentId: string, isServer: boolean, source: MpsServerSource) {
+export function toSource(parentId: string, isServer: boolean, source: MpsServerSource): RavenSource {
   const newSource: RavenSource = {
     actions: [],
     bandIds: {}, // Map of band ids that this source contributes data to.
@@ -31,7 +31,6 @@ export function fromSource(parentId: string, isServer: boolean, source: MpsServe
     draggable: false,
     expandable: true,
     expanded: false,
-    hasContent: false,
     icon: '',
     id: v4(),
     isServer,
@@ -66,8 +65,8 @@ export function fromSource(parentId: string, isServer: boolean, source: MpsServe
 /**
  * Transform an array of MPS Server sources to Raven sources.
  */
-export function fromSources(parentId: string, isServer: boolean, sources: MpsServerSource[]): RavenSource[] {
-  return sources.map(source => fromSource(parentId, isServer, source));
+export function toSources(parentId: string, isServer: boolean, sources: MpsServerSource[]): RavenSource[] {
+  return sources.map((source: MpsServerSource) => toSource(parentId, isServer, source));
 }
 
 /**
@@ -77,10 +76,6 @@ export function fromSources(parentId: string, isServer: boolean, sources: MpsSer
 export function fromCategory(mSource: MpsServerSourceCategory, rSource: RavenSource): void {
   rSource.icon = 'fa fa-file-o';
   rSource.content = mSource.contents;
-
-  if (rSource.content.length > 0) {
-    rSource.hasContent = true;
-  }
 }
 
 /**

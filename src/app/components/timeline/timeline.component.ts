@@ -11,9 +11,11 @@ import { Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
 
-import * as fromConfig from '../../reducers/config';
-import * as fromLayout from '../../reducers/layout';
-import * as layout from '../../actions/layout';
+import * as fromTimeline from '../../reducers/timeline';
+
+import {
+  RavenBand,
+} from './../../models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -22,16 +24,12 @@ import * as layout from '../../actions/layout';
   templateUrl: './timeline.component.html',
 })
 export class TimelineComponent implements OnInit {
-  showLeftDrawer$: Observable<boolean>;
-  baseUrl$: Observable<string>;
+  bands$: Observable<RavenBand[]>;
+  labelWidth$: Observable<number>;
 
-  constructor(private store: Store<fromLayout.LayoutState | fromConfig.ConfigState>) {
-    this.showLeftDrawer$ = this.store.select(fromLayout.getShowLeftDrawer);
-    this.baseUrl$ = this.store.select(fromConfig.getBaseUrl);
-  }
-
-  toggleLeftDrawer() {
-    this.store.dispatch(new layout.ToggleLeftDrawer());
+  constructor(private store: Store<fromTimeline.TimelineState>) {
+    this.bands$ = this.store.select(fromTimeline.getBands);
+    this.labelWidth$ = this.store.select(fromTimeline.getLabelWidth);
   }
 
   ngOnInit() {
