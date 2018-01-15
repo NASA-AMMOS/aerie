@@ -47,7 +47,7 @@ export class SourceExplorerEffects {
     .ofType<sourceExplorer.SourceExplorerExpandWithFetchSources>(sourceExplorer.SourceExplorerActionTypes.SourceExplorerExpandWithFetchSources)
     .switchMap(action =>
       this.mpsServerApi.fetchSources(action.source.url)
-        .mergeMap((sources: MpsServerSource[]) => [
+        .switchMap((sources: MpsServerSource[]) => [
           new sourceExplorer.FetchSourcesSuccess(action.source, fromSources(action.source.id, false, sources)),
           new sourceExplorer.SourceExplorerExpand(action.source),
         ])

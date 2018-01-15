@@ -7,7 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { RavenBand } from './index';
+import {
+  RavenBand,
+  StringTMap,
+} from './index';
 
 export interface RavenCompositeBand {
   bands: RavenBand[];
@@ -16,6 +19,7 @@ export interface RavenCompositeBand {
   id: string;
   name: string;
   parentUniqueId: string | null;
+  sourceIds: StringTMap<boolean> | null;
   showTooltip: boolean;
   type: string;
 }

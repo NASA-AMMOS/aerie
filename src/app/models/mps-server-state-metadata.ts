@@ -7,13 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  MpsServerActivityPoint,
-  MpsServerResourcePoint,
-  MpsServerStatePoint,
-} from './index';
-
-export type MpsServerPoint =
-  MpsServerActivityPoint |
-  MpsServerResourcePoint |
-  MpsServerStatePoint;
+export interface MpsServerStateMetadata {
+  decimatedData: boolean;
+  hasInterpolatorType: string;
+  hasObjectName: string;
+  hasObjectNamespace: string;
+  hasObjectType: string;
+  hasTimeSystem: string;
+  hasTimelineType: string;
+  hasValueType: string;
+}

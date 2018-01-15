@@ -8,12 +8,13 @@
  */
 
 import {
-  MpsServerActivityPoint,
-  MpsServerResourcePoint,
-  MpsServerStatePoint,
+  MpsServerAnnotation,
+  MpsServerMetadata,
+  MpsServerPoint,
 } from './index';
 
-export type MpsServerPoint =
-  MpsServerActivityPoint |
-  MpsServerResourcePoint |
-  MpsServerStatePoint;
+export interface MpsServerGraphData {
+  Annotations: MpsServerAnnotation;
+  'Timeline Data': MpsServerPoint[];
+  'Timeline Metadata': MpsServerMetadata;
+}

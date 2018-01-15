@@ -7,14 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export interface MpsServerResourcePointMetadata {
+export interface MpsServerActivityMetadata {
   decimatedData: boolean;
-  hasInterpolatorType: string;
   hasObjectName: string;
   hasObjectNamespace: string;
   hasObjectType: string;
   hasTimeSystem: string;
   hasTimelineType: string;
-  hasUnits: boolean;
-  hasValueType: string;
 }

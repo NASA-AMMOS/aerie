@@ -30,6 +30,8 @@ export enum SourceExplorerActionTypes {
   SourceExplorerUnpin =                  '[source-explorer] source_explorer_unpin',
 }
 
+// Actions.
+
 export class FetchGraphDataFailure implements Action {
   readonly type = SourceExplorerActionTypes.FetchGraphDataFailure;
 }

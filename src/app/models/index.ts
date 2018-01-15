@@ -8,19 +8,22 @@
  */
 
 export * from './map';
+export * from './mps-server-activity-metadata';
 export * from './mps-server-activity-point-metadata';
 export * from './mps-server-activity-point-parameter';
 export * from './mps-server-activity-point';
 export * from './mps-server-annotation';
+export * from './mps-server-graph-data';
+export * from './mps-server-metadata';
 export * from './mps-server-point';
-export * from './mps-server-resource-point-metadata';
+export * from './mps-server-resource-metadata';
 export * from './mps-server-resource-point';
 export * from './mps-server-source-category';
 export * from './mps-server-source-dir';
 export * from './mps-server-source-file';
 export * from './mps-server-source-graphable';
 export * from './mps-server-source';
-export * from './mps-server-state-point-metadata';
+export * from './mps-server-state-metadata';
 export * from './mps-server-state-point';
 export * from './raven-activity-band';
 export * from './raven-activity-point';

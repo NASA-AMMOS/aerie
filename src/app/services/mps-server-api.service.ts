@@ -17,9 +17,6 @@ import { MpsServerSource } from './../models';
 export class MpsServerApiService {
   constructor(private http: HttpClient) {}
 
-  /**
-   * Fetch sources from MPS Server.
-   */
   fetchSources(url: string): Observable<MpsServerSource[]> {
     return this.http.get<MpsServerSource[]>(url);
   }

@@ -73,7 +73,7 @@ export class SourceExplorerComponent implements OnInit {
     (function dfs(node: RavenSource): void {
       if (node && node.childIds.length > 0) {
         node.children = node.childIds.map(id => ({ ...treeBySourceId[id] })); // Build a nodes children based on it's childIds.
-        node.children.forEach((child: RavenSource) => dfs(child)); // Now recurse via depth-first-search to build each child's children (ha).
+        node.children.forEach((child: RavenSource) => dfs(child)); // Now recurse via depth-first-search to build each child's children.
       }
     }(rootNode));
 

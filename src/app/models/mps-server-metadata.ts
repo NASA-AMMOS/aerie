@@ -8,12 +8,12 @@
  */
 
 import {
-  MpsServerActivityPoint,
-  MpsServerResourcePoint,
-  MpsServerStatePoint,
+  MpsServerActivityMetadata,
+  MpsServerResourceMetadata,
+  MpsServerStateMetadata,
 } from './index';
 
-export type MpsServerPoint =
-  MpsServerActivityPoint |
-  MpsServerResourcePoint |
-  MpsServerStatePoint;
+export type MpsServerMetadata =
+  MpsServerActivityMetadata |
+  MpsServerResourceMetadata |
+  MpsServerStateMetadata;

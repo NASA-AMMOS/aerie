@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export interface MpsServerStatePointMetadata {
+export interface MpsServerResourceMetadata {
   decimatedData: boolean;
   hasInterpolatorType: string;
   hasObjectName: string;
@@ -15,5 +15,6 @@ export interface MpsServerStatePointMetadata {
   hasObjectType: string;
   hasTimeSystem: string;
   hasTimelineType: string;
+  hasUnits: boolean;
   hasValueType: string;
 }

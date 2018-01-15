@@ -12,9 +12,10 @@ import { v4 } from 'uuid';
 
 import {
   MpsServerActivityPoint,
-  MpsServerResourcePointMetadata,
+  MpsServerGraphData,
+  MpsServerResourceMetadata,
   MpsServerResourcePoint,
-  MpsServerStatePointMetadata,
+  MpsServerStateMetadata,
   MpsServerStatePoint,
   RavenActivityBand,
   RavenActivityPoint,
@@ -33,9 +34,100 @@ import {
 } from './points';
 
 /**
+ * This is a helper function that takes a list of bands and a sourceId that was just clicked to "close".
+ *
+ * If a band has a reference to the sourceId then we check:
+ * 1. If the band has only one source reference, then we want to remove it, so push it's id to removeBandIds.
+ * 2. If the band has more than one source reference, then we just want to remove only
+ *    the points from that sourceId, so push it's id to removePointsBandIds.
+ */
+export function removeBandsOrPoints(sourceId: string, bands: RavenBand[]) {
+  const removeBandIds: string[] = [];
+  const removePointsBandIds: string[] = [];
+
+  bands.forEach((band: RavenBand) => {
+    // If the band has the source id we are closing.
+    if (band.sourceIds && band.sourceIds[sourceId]) {
+      const sourceIds = Object.keys(band.sourceIds);
+
+      // If the source id we are closing is the only id this band references,
+      // then we can safely remove the entire band.
+      if (sourceIds.length === 1) {
+        removeBandIds.push(band.id);
+      } else if (sourceIds.length > 1) {
+        // Otherwise this band has points from more than one source.
+        // So remove points in this band only for the source we are closing.
+        removePointsBandIds.push(band.id);
+      }
+    }
+  });
+
+  return {
+    removeBandIds,
+    removePointsBandIds,
+  };
+}
+
+/**
+ * Helper that removes same-legend activity bands from potential bands if necessary.
+ *
+ * If an current and potential band are activity bands with the same name (and thus the same legend),
+ * then remove the band from the potential band list, and add it's points to a hash: current band id => points.
+ */
+export function removeSameLegendActivityBands(currentBands: RavenBand[], potentialBands: RavenBand[]) {
+  const newBands = [...potentialBands];
+  const bandIdsToPoints = {};
+
+  currentBands.forEach((currentBand: RavenBand) => {
+    if (currentBand.type === 'activity') {
+      newBands.forEach((potentialBand, i) => {
+        if (potentialBand.type === 'activity' && currentBand.name === potentialBand.name) {
+          bandIdsToPoints[currentBand.id] = (potentialBand as RavenActivityBand).points; // This will be used in a reducer to add the potential band points to the current band.
+          newBands.splice(i, 1); // Remove the potential band since it's points will be added to the current band in the reducer.
+        }
+      });
+    }
+  });
+
+  return {
+    bandIdsToPoints,
+    newBands,
+  };
+}
+
+/**
+ * Returns a list of bands based on graphData from the server.
+ */
+export function graphDataToBands(sourceId: string, graphData: MpsServerGraphData): RavenBand[] {
+  let bands: RavenBand[] = [];
+
+  if (graphData) {
+    const metadata = graphData['Timeline Metadata'];
+    const timelineData = graphData['Timeline Data'];
+
+    if (metadata && timelineData) {
+      if (metadata.hasTimelineType === 'measurement') {
+        if ((metadata as MpsServerResourceMetadata | MpsServerStateMetadata).hasValueType === 'string_xdr') {
+          // State (graphData only maps to a single band so we push it).
+          bands.push(toStateBand(sourceId, metadata as MpsServerStateMetadata, timelineData as MpsServerStatePoint[]));
+        } else {
+          // Resource (graphData only maps to a single band so we push it).
+          bands.push(toResourceBand(sourceId, metadata as MpsServerResourceMetadata, timelineData as MpsServerResourcePoint[]));
+        }
+      } else if (metadata.hasTimelineType === 'activity') {
+        // Activity (graphData may map to many bands so we concat them to bands).
+        bands = bands.concat(toActivityBands(sourceId, timelineData as MpsServerActivityPoint[]));
+      }
+    }
+  }
+
+  return bands;
+}
+
+/**
  * Returns a list of bands based on timelineData and point legends.
  */
-export function toActivityBands(sourceId: string, timelineData: MpsServerActivityPoint[]) {
+export function toActivityBands(sourceId: string, timelineData: MpsServerActivityPoint[]): RavenActivityBand[] {
   const bands: RavenActivityBand[] = [];
   const points: RavenActivityPoint[] = mpsServerToRavenActivityPoints(sourceId, timelineData);
   const legends = groupBy(points, 'legend');
@@ -105,6 +197,7 @@ export function toCompositeBand(bands: RavenBand[]): RavenCompositeBand {
     name: compositeBandName,
     parentUniqueId: null,
     showTooltip: true,
+    sourceIds: null,
     type: 'composite',
   };
 
@@ -127,6 +220,7 @@ export function toDividerBand(): RavenDividerBand {
     name: `Divider ${id}`,
     parentUniqueId: null,
     showTooltip: true,
+    sourceIds: null,
     type: 'divider',
   };
 
@@ -136,7 +230,7 @@ export function toDividerBand(): RavenDividerBand {
 /**
  * Returns a resource band given metadata and timelineData.
  */
-export function toResourceBand(sourceId: string, metadata: MpsServerResourcePointMetadata, timelineData: MpsServerResourcePoint[]): RavenResourceBand {
+export function toResourceBand(sourceId: string, metadata: MpsServerResourceMetadata, timelineData: MpsServerResourcePoint[]): RavenResourceBand {
   // Map raw resource timeline data to points for a band.
   const points = mpsServerToRavenResourcePoints(sourceId, timelineData);
 
@@ -169,7 +263,7 @@ export function toResourceBand(sourceId: string, metadata: MpsServerResourcePoin
 /**
  * Returns a state band given metadata and timelineData.
  */
-export function toStateBand(sourceId: string, metadata: MpsServerStatePointMetadata, timelineData: MpsServerStatePoint[]): RavenStateBand {
+export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, timelineData: MpsServerStatePoint[]): RavenStateBand {
   // Map raw state timeline data (stringXdr type in MPS Server) to points for a band.
   const points = mpsServerToRavenStatePoints(sourceId, timelineData);
 
