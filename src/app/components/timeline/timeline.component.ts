@@ -11,7 +11,8 @@ import { Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
 
-import * as fromTimeline from '../../reducers/timeline';
+import * as fromConfig from './../../reducers/config';
+import * as fromTimeline from './../../reducers/timeline';
 
 import {
   RavenBand,
@@ -25,10 +26,12 @@ import {
 })
 export class TimelineComponent implements OnInit {
   bands$: Observable<RavenBand[]>;
+  itarMessage$: Observable<string>;
   labelWidth$: Observable<number>;
 
-  constructor(private store: Store<fromTimeline.TimelineState>) {
+  constructor(private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState>) {
     this.bands$ = this.store.select(fromTimeline.getBands);
+    this.itarMessage$ = this.store.select(fromConfig.getItarMessage);
     this.labelWidth$ = this.store.select(fromTimeline.getLabelWidth);
   }
 

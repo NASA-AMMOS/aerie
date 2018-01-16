@@ -21,13 +21,27 @@ import { of } from 'rxjs/observable/of';
 
 import { AppState } from './../../app/store';
 import { MpsServerApiService } from './../services/mps-server-api.service';
-import * as sourceExplorer from '../actions/source-explorer';
 
-import { toSources } from './../util/source';
+import * as sourceExplorer from './../actions/source-explorer';
+import * as timeline from './../actions/timeline';
 
 import {
+  toSources,
+} from './../util/source';
+
+import {
+  graphDataToBands,
+  removeBandsOrPoints,
+  removeSameLegendActivityBands,
+} from './../util/bands';
+
+import {
+  MpsServerGraphData,
   MpsServerSource,
 } from './../models';
+
+import { SourceExplorerAction } from './../actions/source-explorer';
+import { TimelineAction } from './../actions/timeline';
 
 @Injectable()
 export class SourceExplorerEffects {
@@ -63,6 +77,62 @@ export class SourceExplorerEffects {
     .switchMap(action => [
       new sourceExplorer.SourceExplorerExpand(action.source),
     ]);
+
+  @Effect()
+  sourceExplorerOpenWithFetchGraphData$: Observable<Action> = this.actions$
+    .ofType<sourceExplorer.SourceExplorerOpenWithFetchGraphData>(sourceExplorer.SourceExplorerActionTypes.SourceExplorerOpenWithFetchGraphData)
+    .withLatestFrom(this.store$)
+    .map(([action, state]) => ({ action, state }))
+    .switchMap(context => {
+      const { state, action } = context;
+
+      return this.mpsServerApi.fetchGraphData(action.source.url)
+        .switchMap((graphData: MpsServerGraphData) => {
+          const actions: (SourceExplorerAction | TimelineAction)[] = [];
+          const potentialBands = graphDataToBands(action.source.id, graphData);
+          const { bandIdsToPoints = {}, newBands = [] } = removeSameLegendActivityBands(state.timeline.bands, potentialBands);
+          const bandIdsToPointsKeys = Object.keys(bandIdsToPoints);
+
+          if (newBands.length > 0 || bandIdsToPointsKeys.length > 0) {
+            if (newBands.length > 0) {
+              actions.push(new timeline.AddBands(action.source.id, newBands));
+            }
+
+            if (bandIdsToPointsKeys.length > 0) {
+              actions.push(new timeline.AddPointsToBands(action.source.id, bandIdsToPoints));
+            }
+
+            actions.push(new sourceExplorer.SourceExplorerOpen(action.source));
+          }
+
+          return actions;
+        });
+    });
+
+  @Effect()
+  sourceExplorerCloseWithRemoveBands$: Observable<Action> = this.actions$
+    .ofType<sourceExplorer.SourceExplorerCloseWithRemoveBands>(sourceExplorer.SourceExplorerActionTypes.SourceExplorerCloseWithRemoveBands)
+    .withLatestFrom(this.store$)
+    .map(([action, state]) => ({ action, state }))
+    .switchMap(context => {
+      const actions: (SourceExplorerAction | TimelineAction)[] = [];
+      const { state, action } = context;
+      const { removeBandIds = [], removePointsBandIds = [] } = removeBandsOrPoints(action.source.id, state.timeline.bands);
+
+      if (removeBandIds.length > 0 || removePointsBandIds.length > 0) {
+        if (removeBandIds.length > 0) {
+          actions.push(new timeline.RemoveBands(action.source.id, removeBandIds));
+        }
+
+        if (removePointsBandIds.length > 0) {
+          actions.push(new timeline.RemovePointsFromBands(action.source.id, removePointsBandIds));
+        }
+
+        actions.push(new sourceExplorer.SourceExplorerClose(action.source));
+      }
+
+      return actions;
+    });
 
   constructor(
     private actions$: Actions,

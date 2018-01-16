@@ -4,6 +4,21 @@
   width: 100%;
 }
 
+mat-card {
+  padding: 10px;
+}
+
+.itar-message {
+  padding: 0.5em;
+  text-align: center;
+  font-size: x-small;
+}
+
+.get-started {
+  padding: 0.5em;
+  text-align: center;
+}
+
 .timeline {
-  width: 100%;
+  padding: 0.5em;
 }

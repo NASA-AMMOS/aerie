@@ -1,29 +1,43 @@
 <split direction="horizontal">
-  <split-area size="30">
+  <split-area size="25">
     <div>
       <app-source-explorer></app-source-explorer>
     </div>
   </split-area>
 
-  <split-area size="70">
+  <split-area size="75">
     <split direction="vertical">
-      <split-area size="30">
-        <div class="timeline">
-          <falcon-timeline
-            [bands]="bands$ | async"
-            [labelWidth]="labelWidth$ | async"
-          >
-          </falcon-timeline>
+      <split-area size="60">
+        <div class="itar-message">
+          <mat-card>
+            {{itarMessage$ | async}}
+          </mat-card>
+        </div>
+
+        <div *ngIf="(bands$ | async)?.length === 0" class="get-started">
+          <mat-card>
+            To get started, select some <i class="fa fa-area-chart" style="color: #17a923" aria-hidden="true"></i> Data Sources from the source explorer.
+          </mat-card>
+        </div>
+
+        <div *ngIf="(bands$ | async)?.length > 0" class="timeline">
+          <mat-card>
+            <falcon-timeline
+              [bands]="bands$ | async"
+              [labelWidth]="labelWidth$ | async"
+            >
+            </falcon-timeline>
+          </mat-card>
         </div>
       </split-area>
 
-      <split-area size="30">
+      <split-area size="20">
         <div>
           Timeline Viewer South Bands
         </div>
       </split-area>
 
-      <split-area size="30">
+      <split-area size="20">
         <div>
           Details
         </div>

@@ -195,9 +195,7 @@ export function toCompositeBand(bands: RavenBand[]): RavenCompositeBand {
     heightPadding: 10,
     id: compositeBandUniqueId,
     name: compositeBandName,
-    parentUniqueId: null,
     showTooltip: true,
-    sourceIds: null,
     type: 'composite',
   };
 
@@ -218,9 +216,7 @@ export function toDividerBand(): RavenDividerBand {
     labelColor: [0, 0, 0],
     minorLabels: [],
     name: `Divider ${id}`,
-    parentUniqueId: null,
     showTooltip: true,
-    sourceIds: null,
     type: 'divider',
   };
 

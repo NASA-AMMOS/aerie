@@ -7,10 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  StringTMap,
-} from './index';
-
 export interface RavenDividerBand {
   color: number[];
   height: number;
@@ -19,8 +15,6 @@ export interface RavenDividerBand {
   labelColor: number[];
   minorLabels: string[];
   name: string;
-  parentUniqueId: string | null;
-  sourceIds: StringTMap<boolean> | null;
   showTooltip: boolean;
   type: string;
 }

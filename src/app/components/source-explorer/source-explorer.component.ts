@@ -52,7 +52,8 @@ export class SourceExplorerComponent implements OnInit {
    * Event. Called when `collapse-falcon-source-explorer-tree-node` event is fired from falcon-source-explorer-tree.
    */
   onCollapse(e: FalconSourceExplorerTreeEvent) {
-    this.store.dispatch(new sourceExplorer.SourceExplorerCollapse(e.detail.data));
+    const source = e.detail.data;
+    this.store.dispatch(new sourceExplorer.SourceExplorerCollapse(source));
   }
 
   /**
@@ -72,6 +73,22 @@ export class SourceExplorerComponent implements OnInit {
       // Otherwise if there are children (i.e. sources have already been fetched or content has already been loaded), then simply expand the source.
       this.store.dispatch(new sourceExplorer.SourceExplorerExpand(source));
     }
+  }
+
+  /**
+   * Event. Called when `open-falcon-source-explorer-tree-node` event is fired from falcon-source-explorer-tree.
+   */
+  onOpen(e: FalconSourceExplorerTreeEvent) {
+    const source = e.detail.data;
+    this.store.dispatch(new sourceExplorer.SourceExplorerOpenWithFetchGraphData(source));
+  }
+
+  /**
+   * Event. Called when `close-falcon-source-explorer-tree-node` event is fired from falcon-source-explorer-tree.
+   */
+  onClose(e: FalconSourceExplorerTreeEvent) {
+    const source = e.detail.data;
+    this.store.dispatch(new sourceExplorer.SourceExplorerCloseWithRemoveBands(source));
   }
 
   /**

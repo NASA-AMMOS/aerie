@@ -9,7 +9,6 @@
 
 import {
   RavenBand,
-  StringTMap,
 } from './index';
 
 export interface RavenCompositeBand {
@@ -18,8 +17,6 @@ export interface RavenCompositeBand {
   heightPadding: number;
   id: string;
   name: string;
-  parentUniqueId: string | null;
-  sourceIds: StringTMap<boolean> | null;
   showTooltip: boolean;
   type: string;
 }

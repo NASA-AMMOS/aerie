@@ -9,6 +9,12 @@
 
 import { Action } from '@ngrx/store';
 
+import {
+  RavenBand,
+  RavenPoint,
+  StringTMap,
+} from './../models/';
+
 // Action Types.
 export enum TimelineActionTypes {
   AddBands =                      '[timeline] add_bands',
@@ -25,30 +31,44 @@ export enum TimelineActionTypes {
 
 export class AddBands implements Action {
   readonly type = TimelineActionTypes.AddBands;
+
+  constructor(public sourceId: string, public bands: RavenBand[]) {}
 }
 
 export class RemoveBands implements Action {
   readonly type = TimelineActionTypes.RemoveBands;
+
+  constructor(public sourceId: string, public bandIds: string[]) {}
 }
 
 export class AddPointsToBands implements Action {
   readonly type = TimelineActionTypes.AddPointsToBands;
+
+  constructor(public sourceId: string, public bandIdsToPoints: StringTMap<RavenPoint[]>) {}
 }
 
 export class RemovePointsFromBands implements Action {
   readonly type = TimelineActionTypes.RemovePointsFromBands;
+
+  constructor(public sourceId: string, public bandIds: string[]) {}
 }
 
 export class SelectBand implements Action {
   readonly type = TimelineActionTypes.SelectBand;
+
+  constructor(public bandId: string) {}
 }
 
 export class SettingsUpdateGlobal implements Action {
   readonly type = TimelineActionTypes.SettingsUpdateGlobal;
+
+  constructor(public prop: string, public value: string | number | boolean) {}
 }
 
 export class SettingsUpdateSelectedBand implements Action {
   readonly type = TimelineActionTypes.SettingsUpdateSelectedBand;
+
+  constructor(public prop: string, public value: string | number | boolean) {}
 }
 
 export class SettingsUpdateSelectedSubBand implements Action {

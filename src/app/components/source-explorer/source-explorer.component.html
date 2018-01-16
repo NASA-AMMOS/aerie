@@ -2,5 +2,7 @@
   [data]="tree$ | async"
   (collapse-falcon-source-explorer-tree-node)="onCollapse($event)"
   (expand-falcon-source-explorer-tree-node)="onExpand($event)"
+  (open-falcon-source-explorer-tree-node)="onOpen($event)"
+  (close-falcon-source-explorer-tree-node)="onClose($event)"
 >
 </falcon-source-explorer-tree>

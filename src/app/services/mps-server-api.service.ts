@@ -11,11 +11,18 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 
-import { MpsServerSource } from './../models';
+import {
+  MpsServerGraphData,
+  MpsServerSource,
+} from './../models';
 
 @Injectable()
 export class MpsServerApiService {
   constructor(private http: HttpClient) {}
+
+  fetchGraphData(url: string): Observable<MpsServerGraphData> {
+    return this.http.get<MpsServerGraphData>(url);
+  }
 
   fetchSources(url: string): Observable<MpsServerSource[]> {
     return this.http.get<MpsServerSource[]>(url);

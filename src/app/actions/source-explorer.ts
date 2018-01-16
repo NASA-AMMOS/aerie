@@ -25,7 +25,9 @@ export enum SourceExplorerActionTypes {
   SourceExplorerExpandWithFetchSources = '[source-explorer] source_explorer_expand_with_fetch_sources',
   SourceExplorerExpandWithLoadContent =  '[source-explorer] source_explorer_expand_with_load_content',
   SourceExplorerClose =                  '[source-explorer] source_explorer_close',
+  SourceExplorerCloseWithRemoveBands =   '[source-explorer] source_explorer_close_with_remove_bands',
   SourceExplorerOpen =                   '[source-explorer] source_explorer_open',
+  SourceExplorerOpenWithFetchGraphData = '[source-explorer] source_explorer_open_with_fetch_graph_data',
   SourceExplorerPin =                    '[source-explorer] source_explorer_pin',
   SourceExplorerUnpin =                  '[source-explorer] source_explorer_unpin',
 }
@@ -94,8 +96,20 @@ export class SourceExplorerClose implements Action {
   constructor(public source: RavenSource) {}
 }
 
+export class SourceExplorerCloseWithRemoveBands implements Action {
+  readonly type = SourceExplorerActionTypes.SourceExplorerCloseWithRemoveBands;
+
+  constructor(public source: RavenSource) {}
+}
+
 export class SourceExplorerOpen implements Action {
   readonly type = SourceExplorerActionTypes.SourceExplorerOpen;
+
+  constructor(public source: RavenSource) {}
+}
+
+export class SourceExplorerOpenWithFetchGraphData implements Action {
+  readonly type = SourceExplorerActionTypes.SourceExplorerOpenWithFetchGraphData;
 
   constructor(public source: RavenSource) {}
 }
@@ -127,5 +141,6 @@ export type SourceExplorerAction =
   SourceExplorerExpandWithLoadContent |
   SourceExplorerClose |
   SourceExplorerOpen |
+  SourceExplorerOpenWithFetchGraphData |
   SourceExplorerPin |
   SourceExplorerUnpin;

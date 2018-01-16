@@ -7,23 +7,32 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { keyBy, map } from 'lodash';
+import { keyBy, map, omit } from 'lodash';
 import { v4 } from 'uuid';
 
 import { createSelector, createFeatureSelector } from '@ngrx/store';
+
+import {
+  AddBands,
+  AddPointsToBands,
+  RemoveBands,
+  TimelineActionTypes,
+  TimelineAction,
+  RemovePointsFromBands,
+} from './../actions/timeline';
 
 import {
   FetchInitialSourcesSuccess,
   SourceExplorerActionTypes,
   SourceExplorerAction,
   FetchSourcesSuccess,
-} from '../actions/source-explorer';
+} from './../actions/source-explorer';
 
 import {
-  // RavenBand,
+  RavenBand,
   RavenSource,
   StringTMap,
-} from '../models/index';
+} from './../models/index';
 
 // Source Explorer Interface.
 export interface SourceExplorerState {
@@ -75,8 +84,15 @@ const initialState: SourceExplorerState = {
  * Reducer.
  * If a case takes more than one line then it should be in it's own helper function.
  */
-export function reducer(state: SourceExplorerState = initialState, action: SourceExplorerAction): SourceExplorerState {
+export function reducer(state: SourceExplorerState = initialState, action: SourceExplorerAction | TimelineAction): SourceExplorerState {
   switch (action.type) {
+    case TimelineActionTypes.AddBands:
+      return addBands(state, action);
+    case TimelineActionTypes.RemoveBands:
+    case TimelineActionTypes.RemovePointsFromBands:
+      return removeBands(state, action);
+    case TimelineActionTypes.AddPointsToBands:
+      return addPointsToBands(state, action);
     case SourceExplorerActionTypes.FetchGraphDataFailure:
       return { ...state, fetchGraphDataRequestPending: false };
     case SourceExplorerActionTypes.FetchGraphDataSuccess:
@@ -118,24 +134,69 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
  * This action is defined in the timelineViewer actions.
  * Called when we need to associate one source with one or more band.
  */
-// export function addBands(state: SourceExplorerState, action) {
-//   return {
-//     ...state,
-//     treeBySourceId: {
-//       ...state.treeBySourceId,
-//       [action.sourceId]: {
-//         ...state.treeBySourceId[action.sourceId],
-//         bandIds: {
-//           ...state.treeBySourceId[action.sourceId].bandIds,
-//           ...action.bands.reduce((bandIds: string[], band: RavenBand) => {
-//             bandIds[band.id] = true;
-//             return bandIds;
-//           }, {}),
-//         },
-//       },
-//     },
-//   };
-// }
+export function addBands(state: SourceExplorerState, action: AddBands): SourceExplorerState {
+  return {
+    ...state,
+    treeBySourceId: {
+      ...state.treeBySourceId,
+      [action.sourceId]: {
+        ...state.treeBySourceId[action.sourceId],
+        bandIds: {
+          ...state.treeBySourceId[action.sourceId].bandIds,
+          ...action.bands.reduce((bandIds: string[], band: RavenBand) => {
+            bandIds[band.id] = true;
+            return bandIds;
+          }, {}),
+        },
+      },
+    },
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'RemoveBands' or 'RemovePointsFromBands' action.
+ *
+ * This action is defined in the timelineViewer actions.
+ * Called when we need to de-associate one source with one or more band.
+ */
+export function removeBands(state: SourceExplorerState, action: RemoveBands | RemovePointsFromBands): SourceExplorerState {
+  return {
+    ...state,
+    treeBySourceId: {
+      ...state.treeBySourceId,
+      [action.sourceId]: {
+        ...state.treeBySourceId[action.sourceId],
+        bandIds: omit(state.treeBySourceId[action.sourceId].bandIds, action.bandIds),
+      },
+    },
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'AddPointsToBands' action.
+ *
+ * This action is defined in the timelineViewer actions.
+ * Called when we need to associate one sources with one or more new band ids.
+ * This is very similar to addBands() expect for the action.bandIdsToPoints Object.keys() reduction.
+ */
+export function addPointsToBands(state: SourceExplorerState, action: AddPointsToBands): SourceExplorerState {
+  return {
+    ...state,
+    treeBySourceId: {
+      ...state.treeBySourceId,
+      [action.sourceId]: {
+        ...state.treeBySourceId[action.sourceId],
+        bandIds: {
+          ...state.treeBySourceId[action.sourceId].bandIds,
+          ...Object.keys(action.bandIdsToPoints).reduce((bandIds, bandId) => {
+            bandIds[bandId] = true;
+            return bandIds;
+          }, {}),
+        },
+      },
+    },
+  };
+}
 
 /**
  * Reduction Helper. Called when reducing the 'FetchInitialSourcesSuccess' action.
