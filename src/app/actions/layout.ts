@@ -15,7 +15,10 @@ export enum LayoutActionTypes {
 }
 
 // Actions.
-export class ToggleLeftDrawer implements Action { readonly type = LayoutActionTypes.ToggleLeftDrawer; }
+export class ToggleLeftDrawer implements Action {
+  readonly type = LayoutActionTypes.ToggleLeftDrawer;
+}
 
-// Union type of all Layout actions.
-export type LayoutAction = ToggleLeftDrawer;
+// Union type of all actions.
+export type LayoutAction =
+  ToggleLeftDrawer;

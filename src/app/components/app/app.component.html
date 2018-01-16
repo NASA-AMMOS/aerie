@@ -1,6 +1,12 @@
-<mat-toolbar color="primary" layout="row">
+<mat-toolbar color="primary">
   Raven
 </mat-toolbar>
+
+<div *ngIf="pending$ | async">
+  <mat-progress-bar
+    mode="query">
+  </mat-progress-bar>
+</div>
 
 <div class="outlet">
   <router-outlet></router-outlet>

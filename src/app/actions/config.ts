@@ -11,11 +11,26 @@ import { Action } from '@ngrx/store';
 
 // Action Types.
 export enum ConfigActionTypes {
-  ChangeBaseUrl = '[config] change_base_url',
+  ChangeBaseSourcesUrl = '[config] change_base_sources_url',
+  ChangeBaseUrl =        '[config] change_base_url',
+  ChangeItarMessage =    '[config] change_itar_message',
 }
 
 // Actions.
-export class ChangeBaseUrl implements Action { readonly type = ConfigActionTypes.ChangeBaseUrl; }
+export class ChangeBaseSourcesUrl implements Action {
+  readonly type = ConfigActionTypes.ChangeBaseSourcesUrl;
+}
 
-// Union type of all Config actions.
-export type ConfigAction = ChangeBaseUrl;
+export class ChangeBaseUrl implements Action {
+  readonly type = ConfigActionTypes.ChangeBaseUrl;
+}
+
+export class ChangeItarMessage implements Action {
+  readonly type = ConfigActionTypes.ChangeItarMessage;
+}
+
+// Union type of all actions.
+export type ConfigAction =
+  ChangeBaseSourcesUrl |
+  ChangeBaseUrl |
+  ChangeItarMessage;

@@ -165,39 +165,30 @@ class FalconTimeline extends Polymer.mixinBehaviors([Polymer.IronResizableBehavi
    * @memberof FalconTimeline
    */
   _bandsChanged() {
-    if (this.bands.length > 0) {
-      let endTime = Number.MIN_SAFE_INTEGER;
-      let startTime = Number.MAX_SAFE_INTEGER;
+    let endTime = Number.MIN_SAFE_INTEGER;
+    let startTime = Number.MAX_SAFE_INTEGER;
 
-      // Calculate the maxTimeRange out of every band (including composite bands).
-      this.bands.forEach((band) => {
-        if (!band.bands && band.maxTimeRange) {
-          if (band.maxTimeRange.start < startTime) startTime = band.maxTimeRange.start;
-          if (band.maxTimeRange.end > endTime) endTime = band.maxTimeRange.end;
-        }
-        else if (band.bands) {
-          band.bands.forEach((subBand) => {
-            if (subBand.maxTimeRange) {
-              if (subBand.maxTimeRange.start < startTime) startTime = subBand.maxTimeRange.start;
-              if (subBand.maxTimeRange.end > endTime) endTime = subBand.maxTimeRange.end;
-            }
-          });
-        }
-      });
-
-      // Set the newly calculated maxTimeRange.
-      this.set('maxTimeRange', { end: endTime, start: startTime });
-
-      // Only re-set viewTimeRange if both start and end are 0.
-      if (this.viewTimeRange.start === 0 && this.viewTimeRange.end === 0) {
-        this.set('viewTimeRange', { end: endTime, start: startTime });
+    // Calculate the maxTimeRange out of every band (including composite bands).
+    this.bands.forEach((band) => {
+      if (!band.bands && band.maxTimeRange) {
+        if (band.maxTimeRange.start < startTime) startTime = band.maxTimeRange.start;
+        if (band.maxTimeRange.end > endTime) endTime = band.maxTimeRange.end;
       }
-    }
-    else {
-      this.set('maxTimeRange', { end: 0, start: 0 });
-      this.set('selectedBand', null);
-      this.set('viewTimeRange', { end: 0, start: 0 });
-    }
+      else if (band.bands) {
+        band.bands.forEach((subBand) => {
+          if (subBand.maxTimeRange) {
+            if (subBand.maxTimeRange.start < startTime) startTime = subBand.maxTimeRange.start;
+            if (subBand.maxTimeRange.end > endTime) endTime = subBand.maxTimeRange.end;
+          }
+        });
+      }
+    });
+
+    this.set('maxTimeRange', { end: endTime, start: startTime });
+    this.set('viewTimeRange', { end: endTime, start: startTime });
+
+    // Dispatch a full window resize event (which triggers an iron resize) to make sure all bands are sized properly.
+    window.dispatchEvent(new Event('resize'));
   }
 
   /**

@@ -24,8 +24,9 @@ import {
 } from '../actions/timeline';
 
 import {
+  RavenActivityBand,
   RavenBand,
-  // RavenPoint,
+  RavenActivityPoint,
 } from './../models';
 
 // Timeline Interface.
@@ -117,12 +118,12 @@ export function removeBands(state: TimelineState, action: RemoveBands): Timeline
 export function addPointsToBands(state: TimelineState, action: AddPointsToBands): TimelineState {
   return {
     ...state,
-    bands: state.bands.map((band: RavenBand) => {
+    bands: state.bands.map((band: RavenActivityBand) => {
       // If there is a band that has new points, then add the points and update the corresponding source id.
       if (action.bandIdsToPoints[band.id]) {
         return {
           ...band,
-          // points: concat(band.points, action.bandIdsToPoints[band.id]),
+          points: band.points.concat(action.bandIdsToPoints[band.id] as RavenActivityPoint[]),
           sourceIds: {
             ...band.sourceIds,
             [action.sourceId]: true,
@@ -146,12 +147,12 @@ export function addPointsToBands(state: TimelineState, action: AddPointsToBands)
 export function removePointsFromBands(state: TimelineState, action: RemovePointsFromBands): TimelineState {
   return {
     ...state,
-    bands: state.bands.map((band: RavenBand) => {
+    bands: state.bands.map((band: RavenActivityBand) => {
       // Remove points from bands with ids in the bandsIds list, and also update the source ids.
       if (action.bandIds.includes(band.id)) {
         return {
           ...band,
-          // points: filter(band.points, point => point.sourceId !== action.sourceId),
+          points: band.points.filter(point => point.sourceId !== action.sourceId),
           sourceIds: omit(band.sourceIds, action.sourceId),
         };
       }

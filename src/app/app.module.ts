@@ -11,7 +11,7 @@ import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { HttpClientModule } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 
 import { AngularSplitModule } from 'angular-split';
@@ -34,6 +34,7 @@ import { SourceExplorerComponent } from './components/source-explorer/source-exp
 import { TimelineComponent } from './components/timeline/timeline.component';
 
 import { MpsServerApiService } from './services/mps-server-api.service';
+import { RequestInterceptor } from './interceptors/request.interceptor';
 
 import { SourceExplorerEffects } from './effects/source-explorer';
 
@@ -111,6 +112,12 @@ export const EFFECTS = [
     {
       provide: RouterStateSerializer,
       useClass: CustomRouterStateSerializer,
+    },
+
+    {
+      multi: true,
+      provide: HTTP_INTERCEPTORS,
+      useClass: RequestInterceptor,
     },
 
     MpsServerApiService,

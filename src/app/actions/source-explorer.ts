@@ -13,12 +13,8 @@ import { RavenSource } from './../models';
 
 // Action Types.
 export enum SourceExplorerActionTypes {
-  FetchGraphDataFailure =                '[source-explorer] fetch_graph_data_failure',
-  FetchGraphDataSuccess =                '[source-explorer] fetch_graph_data_success',
   FetchInitialSources =                  '[source-explorer] fetch_initial_sources',
-  FetchInitialSourcesFailure =           '[source-explorer] fetch_initial_sources_failure',
   FetchInitialSourcesSuccess =           '[source-explorer] fetch_initial_sources_success',
-  FetchSourcesFailure =                  '[source-explorer] fetch_sources_failure',
   FetchSourcesSuccess =                  '[source-explorer] fetch_sources_success',
   SourceExplorerCollapse =               '[source-explorer] source_explorer_collapse',
   SourceExplorerExpand =                 '[source-explorer] source_explorer_expand',
@@ -33,31 +29,14 @@ export enum SourceExplorerActionTypes {
 }
 
 // Actions.
-
-export class FetchGraphDataFailure implements Action {
-  readonly type = SourceExplorerActionTypes.FetchGraphDataFailure;
-}
-
-export class FetchGraphDataSuccess implements Action {
-  readonly type = SourceExplorerActionTypes.FetchGraphDataSuccess;
-}
-
 export class FetchInitialSources implements Action {
   readonly type = SourceExplorerActionTypes.FetchInitialSources;
-}
-
-export class FetchInitialSourcesFailure implements Action {
-  readonly type = SourceExplorerActionTypes.FetchInitialSourcesFailure;
 }
 
 export class FetchInitialSourcesSuccess implements Action {
   readonly type = SourceExplorerActionTypes.FetchInitialSourcesSuccess;
 
   constructor(public sources: RavenSource[]) {}
-}
-
-export class FetchSourcesFailure implements Action {
-  readonly type = SourceExplorerActionTypes.FetchSourcesFailure;
 }
 
 export class FetchSourcesSuccess implements Action {
@@ -126,14 +105,10 @@ export class SourceExplorerUnpin implements Action {
   constructor(public source: RavenSource) {}
 }
 
-// Union type of all Source Explorer actions.
+// Union type of all actions.
 export type SourceExplorerAction =
-  FetchGraphDataFailure |
-  FetchGraphDataSuccess |
   FetchInitialSources |
-  FetchInitialSourcesFailure |
   FetchInitialSourcesSuccess |
-  FetchSourcesFailure |
   FetchSourcesSuccess |
   SourceExplorerCollapse |
   SourceExplorerExpand |

@@ -14,6 +14,13 @@
   background-color: #039be5;
 }
 
+.mat-progress-bar {
+  position: absolute;
+  top: 40px;
+  height: 3px;
+  z-index: 10;
+}
+
 .outlet {
   padding-top: 42px;
   height: 100%;

@@ -7,22 +7,20 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs/Observable';
+import { Action } from '@ngrx/store';
 
-import * as fromRequest from './../../reducers/request';
-
-@Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  selector: 'app-root',
-  styleUrls: ['./app.component.css'],
-  templateUrl: './app.component.html',
-})
-export class AppComponent {
-  pending$: Observable<boolean>;
-
-  constructor(private store: Store<fromRequest.RequestState>) {
-    this.pending$ = this.store.select(fromRequest.getPending);
-  }
+// Action Types.
+export enum RequestActionTypes {
+  Pending = '[request] pending',
 }
+
+// Actions.
+export class Pending implements Action {
+  readonly type = RequestActionTypes.Pending;
+
+  constructor(public pending: boolean) {}
+}
+
+// Union type of all actions.
+export type RequestAction =
+  Pending;

@@ -28,7 +28,6 @@ export enum TimelineActionTypes {
 }
 
 // Actions.
-
 export class AddBands implements Action {
   readonly type = TimelineActionTypes.AddBands;
 
@@ -75,7 +74,7 @@ export class SettingsUpdateSelectedSubBand implements Action {
   readonly type = TimelineActionTypes.SettingsUpdateSelectedSubBand;
 }
 
-// Union type of all Source Explorer actions.
+// Union type of all actions.
 export type TimelineAction =
   AddBands |
   RemoveBands |

@@ -12,7 +12,7 @@ import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
 
 import * as fromSourceExplorer from './../../reducers/source-explorer';
-import * as sourceExplorer from './../../actions/source-explorer';
+import * as sourceExplorerActions from './../../actions/source-explorer';
 
 import { toSources } from './../../util/source';
 
@@ -45,7 +45,7 @@ export class SourceExplorerComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.store.dispatch(new sourceExplorer.FetchInitialSources());
+    this.store.dispatch(new sourceExplorerActions.FetchInitialSources());
   }
 
   /**
@@ -53,7 +53,7 @@ export class SourceExplorerComponent implements OnInit {
    */
   onCollapse(e: FalconSourceExplorerTreeEvent) {
     const source = e.detail.data;
-    this.store.dispatch(new sourceExplorer.SourceExplorerCollapse(source));
+    this.store.dispatch(new sourceExplorerActions.SourceExplorerCollapse(source));
   }
 
   /**
@@ -65,13 +65,13 @@ export class SourceExplorerComponent implements OnInit {
     // Only fetch sources or load content if there are no children (i.e. sources have not been fetched or content has not been loaded yet).
     if (!source.childIds.length) {
       if (source.content.length > 0) {
-        this.store.dispatch(new sourceExplorer.SourceExplorerExpandWithLoadContent(source, toSources(source.id, false, source.content)));
+        this.store.dispatch(new sourceExplorerActions.SourceExplorerExpandWithLoadContent(source, toSources(source.id, false, source.content)));
       } else {
-        this.store.dispatch(new sourceExplorer.SourceExplorerExpandWithFetchSources(source));
+        this.store.dispatch(new sourceExplorerActions.SourceExplorerExpandWithFetchSources(source));
       }
     } else {
       // Otherwise if there are children (i.e. sources have already been fetched or content has already been loaded), then simply expand the source.
-      this.store.dispatch(new sourceExplorer.SourceExplorerExpand(source));
+      this.store.dispatch(new sourceExplorerActions.SourceExplorerExpand(source));
     }
   }
 
@@ -80,7 +80,7 @@ export class SourceExplorerComponent implements OnInit {
    */
   onOpen(e: FalconSourceExplorerTreeEvent) {
     const source = e.detail.data;
-    this.store.dispatch(new sourceExplorer.SourceExplorerOpenWithFetchGraphData(source));
+    this.store.dispatch(new sourceExplorerActions.SourceExplorerOpenWithFetchGraphData(source));
   }
 
   /**
@@ -88,7 +88,7 @@ export class SourceExplorerComponent implements OnInit {
    */
   onClose(e: FalconSourceExplorerTreeEvent) {
     const source = e.detail.data;
-    this.store.dispatch(new sourceExplorer.SourceExplorerCloseWithRemoveBands(source));
+    this.store.dispatch(new sourceExplorerActions.SourceExplorerCloseWithRemoveBands(source));
   }
 
   /**

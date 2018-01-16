@@ -36,18 +36,12 @@ import {
 
 // Source Explorer Interface.
 export interface SourceExplorerState {
-  fetchGraphDataRequestPending: boolean;
-  fetchInitialSourcesRequestPending: boolean;
-  fetchSourcesRequestPending: boolean;
   initialSourcesLoaded: boolean;
   treeBySourceId: StringTMap<RavenSource>;
 }
 
 // Source Explorer Initial State.
 const initialState: SourceExplorerState = {
-  fetchGraphDataRequestPending: false,
-  fetchInitialSourcesRequestPending: false,
-  fetchSourcesRequestPending: false,
   initialSourcesLoaded: false,
   treeBySourceId: {
     // Note: The root source in the source explorer tree is never displayed.
@@ -93,26 +87,14 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
       return removeBands(state, action);
     case TimelineActionTypes.AddPointsToBands:
       return addPointsToBands(state, action);
-    case SourceExplorerActionTypes.FetchGraphDataFailure:
-      return { ...state, fetchGraphDataRequestPending: false };
-    case SourceExplorerActionTypes.FetchGraphDataSuccess:
-      return { ...state, fetchGraphDataRequestPending: false };
-    case SourceExplorerActionTypes.FetchInitialSources:
-      return { ...state, fetchInitialSourcesRequestPending: true };
-    case SourceExplorerActionTypes.FetchInitialSourcesFailure:
-      return { ...state, fetchInitialSourcesRequestPending: false };
     case SourceExplorerActionTypes.FetchInitialSourcesSuccess:
       return fetchInitialSourcesSuccess(state, action);
-    case SourceExplorerActionTypes.FetchSourcesFailure:
-      return { ...state, fetchSourcesRequestPending: false };
     case SourceExplorerActionTypes.FetchSourcesSuccess:
       return fetchSourcesSuccess(state, action);
     case SourceExplorerActionTypes.SourceExplorerCollapse:
       return updateTreeSource(state, action.source.id, 'expanded', false);
     case SourceExplorerActionTypes.SourceExplorerExpand:
       return updateTreeSource(state, action.source.id, 'expanded', true);
-    case SourceExplorerActionTypes.SourceExplorerExpandWithFetchSources:
-      return { ...state, fetchSourcesRequestPending: true };
     case SourceExplorerActionTypes.SourceExplorerExpandWithLoadContent:
       return { ...state, treeBySourceId: newTreeSources(state.treeBySourceId, action.sources, action.source.id) };
     case SourceExplorerActionTypes.SourceExplorerClose:
@@ -203,12 +185,11 @@ export function addPointsToBands(state: SourceExplorerState, action: AddPointsTo
  *
  * Generates a new treeBySourceId data structure with updated childIds for the root source,
  * and the new child sources keyed off of their id.
- * Sets fetchInitialSourcesRequestPending to false, and initialSourcesLoaded to true.
+ * Sets initialSourcesLoaded to true.
  */
 export function fetchInitialSourcesSuccess(state: SourceExplorerState, action: FetchInitialSourcesSuccess): SourceExplorerState {
   return {
     ...state,
-    fetchInitialSourcesRequestPending: false,
     initialSourcesLoaded: true,
     treeBySourceId: newTreeSources(state.treeBySourceId, action.sources, '0'),
   };
@@ -275,5 +256,4 @@ export const getSourceExplorerState = createFeatureSelector<SourceExplorerState>
  * only recompute when arguments change. The created selectors can also be composed
  * together to select different pieces of state.
  */
-export const getFetchGraphDataRequestPending = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.fetchGraphDataRequestPending);
 export const getTreeBySourceId = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.treeBySourceId);

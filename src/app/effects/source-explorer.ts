@@ -17,13 +17,15 @@ import { Injectable } from '@angular/core';
 import { Action, Store } from '@ngrx/store';
 import { Effect, Actions } from '@ngrx/effects';
 import { Observable } from 'rxjs/Observable';
-import { of } from 'rxjs/observable/of';
 
 import { AppState } from './../../app/store';
 import { MpsServerApiService } from './../services/mps-server-api.service';
 
-import * as sourceExplorer from './../actions/source-explorer';
-import * as timeline from './../actions/timeline';
+import { SourceExplorerActionTypes, SourceExplorerAction } from './../actions/source-explorer';
+import { TimelineAction } from './../actions/timeline';
+
+import * as sourceExplorerActions from './../actions/source-explorer';
+import * as timelineActions from './../actions/timeline';
 
 import {
   toSources,
@@ -40,53 +42,52 @@ import {
   MpsServerSource,
 } from './../models';
 
-import { SourceExplorerAction } from './../actions/source-explorer';
-import { TimelineAction } from './../actions/timeline';
-
 @Injectable()
 export class SourceExplorerEffects {
   @Effect()
   fetchInitialSources$: Observable<Action> = this.actions$
-    .ofType<sourceExplorer.FetchInitialSources>(sourceExplorer.SourceExplorerActionTypes.FetchInitialSources)
+    .ofType<sourceExplorerActions.FetchInitialSources>(SourceExplorerActionTypes.FetchInitialSources)
     .withLatestFrom(this.store$)
     .map(([action, state]) => state)
     .switchMap(state =>
       this.mpsServerApi.fetchSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`)
-        .map(sources => new sourceExplorer.FetchInitialSourcesSuccess(toSources('0', true, sources)))
-        .catch(() => of(new sourceExplorer.FetchInitialSourcesFailure())),
+        .switchMap((sources: MpsServerSource[]) => [
+          new sourceExplorerActions.FetchInitialSourcesSuccess(toSources('0', true, sources)),
+        ])
+        .catch(() => [
+          // TODO: Dispatch error action.
+        ]),
     );
 
   @Effect()
   sourceExplorerExpandWithFetchSources$: Observable<Action> = this.actions$
-    .ofType<sourceExplorer.SourceExplorerExpandWithFetchSources>(sourceExplorer.SourceExplorerActionTypes.SourceExplorerExpandWithFetchSources)
+    .ofType<sourceExplorerActions.SourceExplorerExpandWithFetchSources>(SourceExplorerActionTypes.SourceExplorerExpandWithFetchSources)
     .switchMap(action =>
       this.mpsServerApi.fetchSources(action.source.url)
         .switchMap((sources: MpsServerSource[]) => [
-          new sourceExplorer.FetchSourcesSuccess(action.source, toSources(action.source.id, false, sources)),
-          new sourceExplorer.SourceExplorerExpand(action.source),
+          new sourceExplorerActions.FetchSourcesSuccess(action.source, toSources(action.source.id, false, sources)),
+          new sourceExplorerActions.SourceExplorerExpand(action.source),
         ])
         .catch(() => [
-          new sourceExplorer.FetchSourcesFailure(),
-          new sourceExplorer.SourceExplorerCollapse(action.source),
+          new sourceExplorerActions.SourceExplorerCollapse(action.source),
+          // TODO: Dispatch error action.
         ]),
     );
 
   @Effect()
   sourceExplorerExpandWithLoadContent$: Observable<Action> = this.actions$
-    .ofType<sourceExplorer.SourceExplorerExpandWithLoadContent>(sourceExplorer.SourceExplorerActionTypes.SourceExplorerExpandWithLoadContent)
+    .ofType<sourceExplorerActions.SourceExplorerExpandWithLoadContent>(SourceExplorerActionTypes.SourceExplorerExpandWithLoadContent)
     .switchMap(action => [
-      new sourceExplorer.SourceExplorerExpand(action.source),
+      new sourceExplorerActions.SourceExplorerExpand(action.source),
     ]);
 
   @Effect()
   sourceExplorerOpenWithFetchGraphData$: Observable<Action> = this.actions$
-    .ofType<sourceExplorer.SourceExplorerOpenWithFetchGraphData>(sourceExplorer.SourceExplorerActionTypes.SourceExplorerOpenWithFetchGraphData)
+    .ofType<sourceExplorerActions.SourceExplorerOpenWithFetchGraphData>(SourceExplorerActionTypes.SourceExplorerOpenWithFetchGraphData)
     .withLatestFrom(this.store$)
     .map(([action, state]) => ({ action, state }))
-    .switchMap(context => {
-      const { state, action } = context;
-
-      return this.mpsServerApi.fetchGraphData(action.source.url)
+    .switchMap(({ state, action }) =>
+      this.mpsServerApi.fetchGraphData(action.source.url)
         .switchMap((graphData: MpsServerGraphData) => {
           const actions: (SourceExplorerAction | TimelineAction)[] = [];
           const potentialBands = graphDataToBands(action.source.id, graphData);
@@ -95,44 +96,49 @@ export class SourceExplorerEffects {
 
           if (newBands.length > 0 || bandIdsToPointsKeys.length > 0) {
             if (newBands.length > 0) {
-              actions.push(new timeline.AddBands(action.source.id, newBands));
+              actions.push(new timelineActions.AddBands(action.source.id, newBands));
             }
 
             if (bandIdsToPointsKeys.length > 0) {
-              actions.push(new timeline.AddPointsToBands(action.source.id, bandIdsToPoints));
+              actions.push(new timelineActions.AddPointsToBands(action.source.id, bandIdsToPoints));
             }
 
-            actions.push(new sourceExplorer.SourceExplorerOpen(action.source));
+            actions.push(new sourceExplorerActions.SourceExplorerOpen(action.source));
           }
 
           return actions;
-        });
-    });
+        })
+        .catch(() => [
+          // TODO: Dispatch error action.
+        ]),
+    );
 
   @Effect()
   sourceExplorerCloseWithRemoveBands$: Observable<Action> = this.actions$
-    .ofType<sourceExplorer.SourceExplorerCloseWithRemoveBands>(sourceExplorer.SourceExplorerActionTypes.SourceExplorerCloseWithRemoveBands)
+    .ofType<sourceExplorerActions.SourceExplorerCloseWithRemoveBands>(SourceExplorerActionTypes.SourceExplorerCloseWithRemoveBands)
     .withLatestFrom(this.store$)
     .map(([action, state]) => ({ action, state }))
-    .switchMap(context => {
+    .switchMap(({ state, action }) => {
       const actions: (SourceExplorerAction | TimelineAction)[] = [];
-      const { state, action } = context;
       const { removeBandIds = [], removePointsBandIds = [] } = removeBandsOrPoints(action.source.id, state.timeline.bands);
 
       if (removeBandIds.length > 0 || removePointsBandIds.length > 0) {
         if (removeBandIds.length > 0) {
-          actions.push(new timeline.RemoveBands(action.source.id, removeBandIds));
+          actions.push(new timelineActions.RemoveBands(action.source.id, removeBandIds));
         }
 
         if (removePointsBandIds.length > 0) {
-          actions.push(new timeline.RemovePointsFromBands(action.source.id, removePointsBandIds));
+          actions.push(new timelineActions.RemovePointsFromBands(action.source.id, removePointsBandIds));
         }
 
-        actions.push(new sourceExplorer.SourceExplorerClose(action.source));
+        actions.push(new sourceExplorerActions.SourceExplorerClose(action.source));
       }
 
       return actions;
-    });
+    })
+    .catch(() => [
+      // TODO: Dispatch error action.
+    ]);
 
   constructor(
     private actions$: Actions,
