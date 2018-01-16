@@ -37,4 +37,11 @@ export class TimelineComponent implements OnInit {
 
   ngOnInit() {
   }
+
+  /**
+   * After a split pane drag, trigger a window resize event so the bands are properly sized.
+   */
+  onDragEnd() {
+    window.dispatchEvent(new Event('resize'));
+  }
 }

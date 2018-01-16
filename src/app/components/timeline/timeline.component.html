@@ -1,4 +1,6 @@
-<split direction="horizontal">
+<split
+  direction="horizontal"
+  (dragEnd)="onDragEnd($event)">
   <split-area size="25">
     <div>
       <app-source-explorer></app-source-explorer>
