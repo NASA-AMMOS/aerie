@@ -11,6 +11,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
 
+import * as layoutActions from './../../actions/layout';
 import * as fromRequest from './../../reducers/request';
 
 @Component({
@@ -24,5 +25,9 @@ export class AppComponent {
 
   constructor(private store: Store<fromRequest.RequestState>) {
     this.pending$ = this.store.select(fromRequest.getPending);
+  }
+
+  toggleLeftDrawer() {
+    this.store.dispatch(new layoutActions.ToggleLeftDrawer());
   }
 }

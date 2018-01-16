@@ -1,13 +1,18 @@
 <split
   direction="horizontal"
   (dragEnd)="onDragEnd($event)">
-  <split-area size="25">
+  <split-area
+    [visible]="showLeftDrawer$ | async"
+    [order]="0"
+    size="25">
     <div>
       <app-source-explorer></app-source-explorer>
     </div>
   </split-area>
 
-  <split-area size="75">
+  <split-area
+    [order]="1"
+    size="75">
     <split direction="vertical">
       <split-area size="60">
         <div class="itar-message">

@@ -7,11 +7,12 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
 
 import * as fromConfig from './../../reducers/config';
+import * as fromLayout from './../../reducers/layout';
 import * as fromTimeline from './../../reducers/timeline';
 
 import {
@@ -24,18 +25,17 @@ import {
   styleUrls: ['./timeline.component.css'],
   templateUrl: './timeline.component.html',
 })
-export class TimelineComponent implements OnInit {
+export class TimelineComponent {
   bands$: Observable<RavenBand[]>;
   itarMessage$: Observable<string>;
   labelWidth$: Observable<number>;
+  showLeftDrawer$: Observable<boolean>;
 
   constructor(private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState>) {
     this.bands$ = this.store.select(fromTimeline.getBands);
     this.itarMessage$ = this.store.select(fromConfig.getItarMessage);
     this.labelWidth$ = this.store.select(fromTimeline.getLabelWidth);
-  }
-
-  ngOnInit() {
+    this.showLeftDrawer$ = this.store.select(fromLayout.getShowLeftDrawer);
   }
 
   /**
