@@ -112,6 +112,7 @@ export function removeBands(state: TimelineState, action: RemoveBands): Timeline
 
 /**
  * Reduction Helper. Called when reducing the 'AddPointsToBands' action.
+ * TODO: Remove the 'any' type in favor of a RavenBand type.
  */
 export function addPointsToBands(state: TimelineState, action: AddPointsToBands): TimelineState {
   return {
@@ -141,6 +142,8 @@ export function addPointsToBands(state: TimelineState, action: AddPointsToBands)
  * Reduction Helper. Called when reducing the 'RemovePointsFromBands' action.
  *
  * Note this does not actually remove a band, only points from potentially multiple bands.
+ *
+ * TODO: Remove the 'any' type in favor of a RavenBand type.
  */
 export function removePointsFromBands(state: TimelineState, action: RemovePointsFromBands): TimelineState {
   return {

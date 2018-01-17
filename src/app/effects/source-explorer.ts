@@ -44,12 +44,21 @@ import {
 
 @Injectable()
 export class SourceExplorerEffects {
+  // @Effect()
+  // fetchSources$: Observable<Action> = this.actions$
+  //   .ofType<sourceExplorerActions.FetchSources>(SourceExplorerActionTypes.FetchSources)
+  //   .switchMap(action =>
+  //     this.mpsServerApi.fetchSources(action.url)
+  //       .map(sources => new sourceExplorerActions.FetchSourcesSuccess(sources))
+  //       .catch((error) => of(new sourceExplorerActions.FetchSourcesFailure(error)))
+  //   );
+
   @Effect()
   fetchInitialSources$: Observable<Action> = this.actions$
     .ofType<sourceExplorerActions.FetchInitialSources>(SourceExplorerActionTypes.FetchInitialSources)
     .withLatestFrom(this.store$)
     .map(([action, state]) => state)
-    .switchMap(state =>
+    .switchMap((state: AppState) =>
       this.mpsServerApi.fetchSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`)
         .switchMap((sources: MpsServerSource[]) => [
           new sourceExplorerActions.FetchInitialSourcesSuccess(toSources('0', true, sources)),
