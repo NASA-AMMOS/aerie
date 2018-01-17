@@ -29,6 +29,7 @@ export class AppComponent {
 
   toggleDetailsDrawer() {
     this.store.dispatch(new layoutActions.ToggleDetailsDrawer());
+    window.dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize.
   }
 
   toggleLeftDrawer() {
@@ -38,5 +39,6 @@ export class AppComponent {
 
   toggleSouthBandsDrawer() {
     this.store.dispatch(new layoutActions.ToggleSouthBandsDrawer());
+    window.dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize.
   }
 }
