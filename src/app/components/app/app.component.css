@@ -21,8 +21,17 @@
   z-index: 10;
 }
 
+.spacer {
+  flex: 1 1 auto;
+}
+
 .outlet {
   padding-top: 42px;
   height: 100%;
   width: 100%;
+}
+
+.grid-button {
+  width: 64px;
+  height: 64px;
 }

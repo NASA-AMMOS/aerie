@@ -12,6 +12,7 @@ import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
 
 import * as fromSourceExplorer from './../../reducers/source-explorer';
+
 import * as sourceExplorerActions from './../../actions/source-explorer';
 
 import { toSources } from './../../util/source';

@@ -8,44 +8,21 @@
  */
 
 import { Injectable } from '@angular/core';
-import { Store } from '@ngrx/store';
 
 import {
   HttpEvent,
-  HttpErrorResponse,
   HttpHandler,
   HttpInterceptor,
   HttpRequest,
-  HttpResponse,
 } from '@angular/common/http';
 
 import { Observable } from 'rxjs/Observable';
 
-import * as fromRequest from './../reducers/request';
-import * as requestAction from './../actions/request';
-
 @Injectable()
 export class RequestInterceptor implements HttpInterceptor {
-  constructor(private store: Store<fromRequest.RequestState>) {}
+  constructor() {}
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    this.store.dispatch(new requestAction.Pending(true));
-
-    return next
-      .handle(request)
-      .map((ev: HttpEvent<any>) => {
-        if (ev instanceof HttpResponse) {
-          this.store.dispatch(new requestAction.Pending(false));
-        }
-
-        return ev;
-      })
-      .catch(response => {
-        if (response instanceof HttpErrorResponse) {
-          console.error('Processing http error', response);
-        }
-
-        return Observable.throw(response);
-      });
+    return next.handle(request);
   }
 }

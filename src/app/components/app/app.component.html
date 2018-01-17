@@ -1,7 +1,6 @@
 <mat-toolbar color="primary">
   <button
     mat-icon-button
-    class="menu-icon"
     (click)="toggleLeftDrawer()">
     <mat-icon
       class="mat-24"
@@ -11,9 +10,57 @@
   </button>
 
   Raven
+
+  <span class="spacer"></span>
+
+  <button
+    [matMenuTriggerFor]="menu"
+    mat-icon-button>
+    <mat-icon
+      class="mat-24"
+      aria-label="List">
+      list
+    </mat-icon>
+  </button>
+
+  <mat-menu
+    #menu="matMenu"
+    [overlapTrigger]="false"
+    [yPosition]="below">
+    <button mat-menu-item>
+      <mat-icon
+        class="mat-24"
+        aria-label="New">
+        create_new_folder
+      </mat-icon>
+      New
+    </button>
+
+    <button
+      mat-menu-item
+      (click)="toggleSouthBandsDrawer()">
+      <mat-icon
+        class="mat-24"
+        aria-label="South Bands">
+        view_agenda
+      </mat-icon>
+      Toggle South Bands
+    </button>
+
+    <button
+      mat-menu-item
+      (click)="toggleDetailsDrawer()">
+      <mat-icon
+        class="mat-24"
+        aria-label="Details">
+        assessment
+      </mat-icon>
+      Toggle Details
+    </button>
+  </mat-menu>
 </mat-toolbar>
 
-<div *ngIf="pending$ | async">
+<div *ngIf="loading$ | async">
   <mat-progress-bar
     mode="query">
   </mat-progress-bar>

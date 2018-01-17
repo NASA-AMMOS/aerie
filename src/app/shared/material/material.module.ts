@@ -10,15 +10,17 @@
 import { NgModule } from '@angular/core';
 
 import {
-  MatInputModule,
-  MatCardModule,
   MatButtonModule,
-  MatSidenavModule,
-  MatListModule,
+  MatCardModule,
+  MatGridListModule,
   MatIconModule,
-  MatToolbarModule,
+  MatInputModule,
+  MatListModule,
+  MatMenuModule,
   MatProgressBarModule,
   MatProgressSpinnerModule,
+  MatSidenavModule,
+  MatToolbarModule,
 } from '@angular/material';
 
 /**
@@ -27,26 +29,30 @@ import {
  */
 @NgModule({
   exports: [
-    MatInputModule,
-    MatCardModule,
     MatButtonModule,
-    MatSidenavModule,
-    MatListModule,
+    MatCardModule,
+    MatGridListModule,
     MatIconModule,
-    MatToolbarModule,
+    MatInputModule,
+    MatListModule,
+    MatMenuModule,
     MatProgressBarModule,
     MatProgressSpinnerModule,
+    MatSidenavModule,
+    MatToolbarModule,
   ],
   imports: [
-    MatInputModule,
-    MatCardModule,
     MatButtonModule,
-    MatSidenavModule,
-    MatListModule,
+    MatCardModule,
+    MatGridListModule,
     MatIconModule,
-    MatToolbarModule,
+    MatInputModule,
+    MatListModule,
+    MatMenuModule,
     MatProgressBarModule,
     MatProgressSpinnerModule,
+    MatSidenavModule,
+    MatToolbarModule,
   ],
 })
 export class MaterialModule {}

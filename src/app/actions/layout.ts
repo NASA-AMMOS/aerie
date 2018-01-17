@@ -11,14 +11,35 @@ import { Action } from '@ngrx/store';
 
 // Action Types.
 export enum LayoutActionTypes {
-  ToggleLeftDrawer = '[layout] toggle_left_drawer',
+  Loading                = '[layout] loading',
+  ToggleDetailsDrawer    = '[layout] toggle_details_drawer',
+  ToggleLeftDrawer       = '[layout] toggle_left_drawer',
+  ToggleSouthBandsDrawer = '[layout] toggle_south_bands_drawer',
 }
 
 // Actions.
+export class Loading implements Action {
+  readonly type = LayoutActionTypes.Loading;
+
+  constructor(public loading: boolean) {}
+}
+
+export class ToggleDetailsDrawer implements Action {
+  readonly type = LayoutActionTypes.ToggleDetailsDrawer;
+}
+
+
 export class ToggleLeftDrawer implements Action {
   readonly type = LayoutActionTypes.ToggleLeftDrawer;
 }
 
+export class ToggleSouthBandsDrawer implements Action {
+  readonly type = LayoutActionTypes.ToggleSouthBandsDrawer;
+}
+
 // Union type of all actions.
 export type LayoutAction =
-  ToggleLeftDrawer;
+  Loading |
+  ToggleDetailsDrawer |
+  ToggleLeftDrawer |
+  ToggleSouthBandsDrawer;

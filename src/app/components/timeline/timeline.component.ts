@@ -29,13 +29,17 @@ export class TimelineComponent {
   bands$: Observable<RavenBand[]>;
   itarMessage$: Observable<string>;
   labelWidth$: Observable<number>;
+  showDetailsDrawer$: Observable<boolean>;
   showLeftDrawer$: Observable<boolean>;
+  showSouthBandsDrawer$: Observable<boolean>;
 
   constructor(private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState>) {
     this.bands$ = this.store.select(fromTimeline.getBands);
     this.itarMessage$ = this.store.select(fromConfig.getItarMessage);
     this.labelWidth$ = this.store.select(fromTimeline.getLabelWidth);
+    this.showDetailsDrawer$ = this.store.select(fromLayout.getShowDetailsDrawer);
     this.showLeftDrawer$ = this.store.select(fromLayout.getShowLeftDrawer);
+    this.showSouthBandsDrawer$ = this.store.select(fromLayout.getShowSouthBandsDrawer);
   }
 
   /**

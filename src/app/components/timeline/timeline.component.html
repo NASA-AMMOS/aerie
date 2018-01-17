@@ -14,7 +14,9 @@
     [order]="1"
     size="75">
     <split direction="vertical">
-      <split-area size="60">
+      <split-area
+        [order]="2"
+        size="60">
         <div class="itar-message">
           <mat-card>
             {{itarMessage$ | async}}
@@ -38,13 +40,19 @@
         </div>
       </split-area>
 
-      <split-area size="20">
+      <split-area
+        [visible]="showSouthBandsDrawer$ | async"
+        [order]="3"
+        size="20">
         <div>
           Timeline Viewer South Bands
         </div>
       </split-area>
 
-      <split-area size="20">
+      <split-area
+        [visible]="showDetailsDrawer$ | async"
+        [order]="4"
+        size="20">
         <div>
           Details
         </div>
