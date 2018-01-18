@@ -75,9 +75,9 @@ export function reducer(state: TimelineState = initialState, action: SourceExplo
 export function addBands(state: TimelineState, action: FetchGraphDataSuccess): TimelineState {
   return {
     ...state,
-    bands:
+    bands: state.bands
       // 1. Map over existing bands and add any points from the action.
-      state.bands.map((band: any) => {
+      .map((band: any) => {
         // If there is a band that has new points, then add the points and update the corresponding source id.
         if (action.bandIdsToPoints[band.id]) {
           return {
@@ -116,36 +116,30 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
  * If bands is empty, or if we remove a band that is selected, make sure to set selectedBand to null.
  */
 export function removeBands(state: TimelineState, action: RemoveBands): TimelineState {
-  const bands = state.bands
-    .filter(band => !action.removeBandIds.includes(band.id))
-    .map((band: any) => {
-      // Remove points from bands with ids in the bandsIds list, and also update the source ids.
-      if (action.removePointsBandIds.includes(band.id)) {
-        return {
-          ...band,
-          points: band.points.filter((point: any) => point.sourceId !== action.source.id),
-          sourceIds: omit(band.sourceIds, action.source.id),
-        };
-      }
-
-      // Otherwise if the band id is not included in the bandIds list, then return it as-is.
-      return {
-        ...band,
-      };
-    });
-
-  if (bands.length > 0) {
-    return {
-      ...state,
-      bands,
-      selectedBand: state.selectedBand && action.removeBandIds.includes(state.selectedBand.id) ? null : state.selectedBand,
-    };
-  }
-
   return {
     ...state,
-    bands: [],
-    selectedBand: null,
+    bands: state.bands
+      // 1. Filter and bands with an id in removeBandIds.
+      .filter(band => {
+        return !action.removeBandIds.includes(band.id);
+      })
+      // 2. Remove points from bands with an id in removePointsBandIds.
+      .map((band: any) => {
+        // Remove points from bands with ids in the bandsIds list, and also update the source ids.
+        if (action.removePointsBandIds.includes(band.id)) {
+          return {
+            ...band,
+            points: band.points.filter((point: any) => point.sourceId !== action.source.id),
+            sourceIds: omit(band.sourceIds, action.source.id),
+          };
+        }
+
+        // Otherwise if the band id is not included in the bandIds list, then return it as-is.
+        return {
+          ...band,
+        };
+      }),
+    selectedBand: state.selectedBand && action.removeBandIds.includes(state.selectedBand.id) ? null : state.selectedBand,
   };
 }
 

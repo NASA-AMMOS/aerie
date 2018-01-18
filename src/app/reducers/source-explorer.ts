@@ -121,7 +121,7 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
 /**
  * Reduction Helper. Called when reducing the 'FetchGraphDataSuccess' action.
  *
- * Called when we need to associate one sources with one or more new band ids.
+ * Called when we need to associate one sources with one or more band ids.
  */
 export function addBands(state: SourceExplorerState, action: FetchGraphDataSuccess): SourceExplorerState {
   return {
