@@ -8,7 +8,7 @@
  */
 
 import { createSelector, createFeatureSelector } from '@ngrx/store';
-import { LayoutActionTypes, LayoutAction } from '../actions/layout';
+import { LayoutActionTypes, LayoutAction } from './../actions/layout';
 
 // Layout Interface.
 export interface LayoutState {

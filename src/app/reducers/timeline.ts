@@ -119,7 +119,7 @@ export function removeBands(state: TimelineState, action: RemoveBands): Timeline
   return {
     ...state,
     bands: state.bands
-      // 1. Filter and bands with an id in removeBandIds.
+      // 1. Filter any bands with an id in removeBandIds.
       .filter(band => {
         return !action.removeBandIds.includes(band.id);
       })

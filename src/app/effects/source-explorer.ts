@@ -14,13 +14,13 @@ import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/toArray';
 import 'rxjs/add/operator/withLatestFrom';
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Action, Store } from '@ngrx/store';
 import { Effect, Actions } from '@ngrx/effects';
 import { Observable } from 'rxjs/Observable';
 import { of } from 'rxjs/observable/of';
 
 import { AppState } from './../../app/store';
-import { MpsServerApiService } from './../services/mps-server-api.service';
 
 import { SourceExplorerActionTypes } from './../actions/source-explorer';
 
@@ -49,7 +49,7 @@ export class SourceExplorerEffects {
     .withLatestFrom(this.store$)
     .map(([action, state]) => ({ action, state }))
     .switchMap(({ state, action }) =>
-      this.mpsServerApi.fetchGraphData(action.source.url)
+      this.http.get<MpsServerGraphData>(action.source.url)
         .map((graphData: MpsServerGraphData) => toRavenBandData(action.source.id, graphData, state.timeline.bands))
         .map((bandData: RavenBandData) => new sourceExplorerActions.FetchGraphDataSuccess(action.source, bandData.bands, bandData.bandIdsToPoints))
         .catch(() => of(new sourceExplorerActions.FetchGraphDataFailure())),
@@ -61,7 +61,7 @@ export class SourceExplorerEffects {
     .withLatestFrom(this.store$)
     .map(([action, state]) => state)
     .switchMap((state: AppState) =>
-      this.mpsServerApi.fetchSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`)
+      this.http.get<MpsServerSource[]>(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`)
         .map((mpsServerSources: MpsServerSource[]) => toRavenSources('0', true, mpsServerSources))
         .map((sources: RavenSource[]) =>  new sourceExplorerActions.FetchInitialSourcesSuccess(sources))
         .catch(() => of(new sourceExplorerActions.FetchInitialSourcesFailure())),
@@ -71,15 +71,15 @@ export class SourceExplorerEffects {
   fetchSources$: Observable<Action> = this.actions$
     .ofType<sourceExplorerActions.FetchSources>(SourceExplorerActionTypes.FetchSources)
     .switchMap(action =>
-      this.mpsServerApi.fetchSources(action.source.url)
+      this.http.get<MpsServerSource[]>(action.source.url)
         .map((mpsServerSources: MpsServerSource[]) => toRavenSources(action.source.id, false, mpsServerSources))
         .map((sources: RavenSource[]) => new sourceExplorerActions.FetchSourcesSuccess(action.source, sources))
         .catch(() => of(new sourceExplorerActions.FetchSourcesFailure())),
     );
 
   constructor(
+    private http: HttpClient,
     private actions$: Actions,
     private store$: Store<AppState>,
-    private mpsServerApi: MpsServerApiService,
   ) {}
 }

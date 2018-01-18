@@ -10,6 +10,7 @@
 import { Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/operator/take';
 
 import * as fromSourceExplorer from './../../reducers/source-explorer';
 import * as fromTimeline from './../../reducers/timeline';
@@ -41,14 +42,15 @@ interface FalconSourceExplorerTreeEvent extends Event {
 })
 export class SourceExplorerComponent implements OnInit {
   bands: RavenBand[];
+  bands$: Observable<RavenBand[]>;
   tree$: Observable<RavenSource>;
 
   constructor(private store: Store<fromSourceExplorer.SourceExplorerState>) {
+    this.bands$ = this.store.select(fromTimeline.getBands);
+
     this.tree$ = this.store
       .select(fromSourceExplorer.getTreeBySourceId)
       .map(treeBySourceId => this.treeFromTreeBySourceId(treeBySourceId));
-
-    this.store.select(fromTimeline.getBands).subscribe(bands => this.bands = bands);
   }
 
   ngOnInit() {
@@ -95,6 +97,8 @@ export class SourceExplorerComponent implements OnInit {
    */
   onClose(e: FalconSourceExplorerTreeEvent) {
     const source = e.detail.data;
+
+    this.bands$.take(1).subscribe(bands => this.bands = bands); // Synchronously get bands from state.
     const { removeBandIds = [], removePointsBandIds = [] } = removeBandsOrPoints(source.id, this.bands);
 
     this.store.dispatch(new sourceExplorerActions.RemoveBands(source, removeBandIds, removePointsBandIds));
