@@ -121,7 +121,7 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
 /**
  * Reduction Helper. Called when reducing the 'FetchGraphDataSuccess' action.
  *
- * Called when we need to associate one sources with one or more band ids.
+ * Called when we need to associate one source with one or more band ids.
  */
 export function addBands(state: SourceExplorerState, action: FetchGraphDataSuccess): SourceExplorerState {
   return {
@@ -133,11 +133,11 @@ export function addBands(state: SourceExplorerState, action: FetchGraphDataSucce
         ...state.treeBySourceId[action.source.id],
         bandIds: {
           ...state.treeBySourceId[action.source.id].bandIds,
-          ...action.bands.reduce((bandIds: string[], band: RavenBand) => {
+          ...action.bands.reduce((bandIds: StringTMap<boolean>, band: RavenBand) => {
             bandIds[band.id] = true;
             return bandIds;
           }, {}),
-          ...Object.keys(action.bandIdsToPoints).reduce((bandIds: string[], bandId: string) => {
+          ...Object.keys(action.bandIdsToPoints).reduce((bandIds: StringTMap<boolean>, bandId: string) => {
             bandIds[bandId] = true;
             return bandIds;
           }, {}),
