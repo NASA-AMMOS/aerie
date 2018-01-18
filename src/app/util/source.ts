@@ -65,7 +65,7 @@ export function toSource(parentId: string, isServer: boolean, source: MpsServerS
 /**
  * Transform an array of MPS Server sources to Raven sources.
  */
-export function toSources(parentId: string, isServer: boolean, sources: MpsServerSource[]): RavenSource[] {
+export function toRavenSources(parentId: string, isServer: boolean, sources: MpsServerSource[]): RavenSource[] {
   return sources.map((source: MpsServerSource) => toSource(parentId, isServer, source));
 }
 

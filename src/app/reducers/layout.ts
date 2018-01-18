@@ -12,7 +12,6 @@ import { LayoutActionTypes, LayoutAction } from '../actions/layout';
 
 // Layout Interface.
 export interface LayoutState {
-  loading: boolean;
   showDetailsDrawer: boolean;
   showLeftDrawer: boolean;
   showSouthBandsDrawer: boolean;
@@ -20,7 +19,6 @@ export interface LayoutState {
 
 // Layout State.
 const initialState: LayoutState = {
-  loading: false,
   showDetailsDrawer: true,
   showLeftDrawer: true,
   showSouthBandsDrawer: true,
@@ -32,8 +30,6 @@ const initialState: LayoutState = {
  */
 export function reducer(state: LayoutState = initialState, action: LayoutAction): LayoutState {
   switch (action.type) {
-    case LayoutActionTypes.Loading:
-      return { ...state, loading: action.loading };
     case LayoutActionTypes.ToggleDetailsDrawer:
       return { ...state, showDetailsDrawer: !state.showDetailsDrawer };
     case LayoutActionTypes.ToggleLeftDrawer:
@@ -61,7 +57,6 @@ export const getLayoutState = createFeatureSelector<LayoutState>('layout');
  * only recompute when arguments change. The created selectors can also be composed
  * together to select different pieces of state.
  */
-export const getLoading = createSelector(getLayoutState, (state: LayoutState) => state.loading);
 export const getShowDetailsDrawer = createSelector(getLayoutState, (state: LayoutState) => state.showDetailsDrawer);
 export const getShowLeftDrawer = createSelector(getLayoutState, (state: LayoutState) => state.showLeftDrawer);
 export const getShowSouthBandsDrawer = createSelector(getLayoutState, (state: LayoutState) => state.showSouthBandsDrawer);

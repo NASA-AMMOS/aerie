@@ -12,15 +12,18 @@ import { omit } from 'lodash';
 import { createSelector, createFeatureSelector } from '@ngrx/store';
 
 import {
-  AddBands,
-  AddPointsToBands,
+  FetchGraphDataSuccess,
   RemoveBands,
-  RemovePointsFromBands,
+  SourceExplorerAction,
+  SourceExplorerActionTypes,
+} from './../actions/source-explorer';
+
+import {
   SelectBand,
   SettingsUpdateGlobal,
   SettingsUpdateSelectedBand,
-  TimelineActionTypes,
   TimelineAction,
+  TimelineActionTypes,
 } from '../actions/timeline';
 
 import {
@@ -45,16 +48,12 @@ const initialState: TimelineState = {
  * Reducer.
  * If a case takes more than one line then it should be in it's own helper function.
  */
-export function reducer(state: TimelineState = initialState, action: TimelineAction): TimelineState {
+export function reducer(state: TimelineState = initialState, action: SourceExplorerAction | TimelineAction): TimelineState {
   switch (action.type) {
-    case TimelineActionTypes.AddBands:
+    case SourceExplorerActionTypes.FetchGraphDataSuccess:
       return addBands(state, action);
-    case TimelineActionTypes.RemoveBands:
+    case SourceExplorerActionTypes.RemoveBands:
       return removeBands(state, action);
-    case TimelineActionTypes.AddPointsToBands:
-      return addPointsToBands(state, action);
-    case TimelineActionTypes.RemovePointsFromBands:
-      return removePointsFromBands(state, action);
     case TimelineActionTypes.SelectBand:
       return selectBand(state, action);
     case TimelineActionTypes.SettingsUpdateGlobal:
@@ -67,94 +66,65 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
 }
 
 /**
- * Reduction Helper. Called when reducing the 'AddBands' action.
- * Associates each band with the given source id.
+ * Reduction Helper. Called when reducing the 'FetchGraphDataSuccess' action.
+ * Associates each band with the given source id, and adds any new band.
+ * This action is defined in the sourceExplorer actions.
+ *
+ * TODO: Remove the 'any' type in favor of a RavenBand type.
  */
-export function addBands(state: TimelineState, action: AddBands): TimelineState {
+export function addBands(state: TimelineState, action: FetchGraphDataSuccess): TimelineState {
   return {
     ...state,
-    bands: state.bands.concat(action.bands.map((band: RavenBand) => {
-      return {
-        ...band,
-        sourceIds: {
-          ...band.sourceIds,
-          [action.sourceId]: true,
-        },
-      };
-    })),
+    bands:
+      // 1. Map over existing bands and add any points from the action.
+      state.bands.map((band: any) => {
+        // If there is a band that has new points, then add the points and update the corresponding source id.
+        if (action.bandIdsToPoints[band.id]) {
+          return {
+            ...band,
+            points: band.points.concat(action.bandIdsToPoints[band.id] as any[]),
+            sourceIds: {
+              ...band.sourceIds,
+              [action.source.id]: true,
+            },
+          };
+        }
+
+        // Otherwise just return the band as-is.
+        return {
+          ...band,
+        };
+      })
+      // 2. Add and new bands from the action.
+      .concat(action.bands.map((band: RavenBand) => {
+        return {
+          ...band,
+          sourceIds: {
+            ...band.sourceIds,
+            [action.source.id]: true,
+          },
+        };
+      })),
   };
 }
 
-
 /**
  * Reduction Helper. Called when reducing the 'RemoveBands' action.
+ * This action is defined in the sourceExplorer actions.
  *
  * When we remove bands we also have to account for the selectedBand.
  * If bands is empty, or if we remove a band that is selected, make sure to set selectedBand to null.
  */
 export function removeBands(state: TimelineState, action: RemoveBands): TimelineState {
-  const bands = state.bands.filter(band => !action.bandIds.includes(band.id));
-
-  if (bands.length > 0) {
-    return {
-      ...state,
-      bands,
-      selectedBand: state.selectedBand && action.bandIds.includes(state.selectedBand.id) ? null : state.selectedBand,
-    };
-  }
-
-  return {
-    ...state,
-    bands: [],
-    selectedBand: null,
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'AddPointsToBands' action.
- * TODO: Remove the 'any' type in favor of a RavenBand type.
- */
-export function addPointsToBands(state: TimelineState, action: AddPointsToBands): TimelineState {
-  return {
-    ...state,
-    bands: state.bands.map((band: any) => {
-      // If there is a band that has new points, then add the points and update the corresponding source id.
-      if (action.bandIdsToPoints[band.id]) {
-        return {
-          ...band,
-          points: band.points.concat(action.bandIdsToPoints[band.id] as any[]),
-          sourceIds: {
-            ...band.sourceIds,
-            [action.sourceId]: true,
-          },
-        };
-      }
-
-      // Otherwise just return the band as-is.
-      return {
-        ...band,
-      };
-    }),
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'RemovePointsFromBands' action.
- *
- * Note this does not actually remove a band, only points from potentially multiple bands.
- *
- * TODO: Remove the 'any' type in favor of a RavenBand type.
- */
-export function removePointsFromBands(state: TimelineState, action: RemovePointsFromBands): TimelineState {
-  return {
-    ...state,
-    bands: state.bands.map((band: any) => {
+  const bands = state.bands
+    .filter(band => !action.removeBandIds.includes(band.id))
+    .map((band: any) => {
       // Remove points from bands with ids in the bandsIds list, and also update the source ids.
-      if (action.bandIds.includes(band.id)) {
+      if (action.removePointsBandIds.includes(band.id)) {
         return {
           ...band,
-          points: band.points.filter((point: any) => point.sourceId !== action.sourceId),
-          sourceIds: omit(band.sourceIds, action.sourceId),
+          points: band.points.filter((point: any) => point.sourceId !== action.source.id),
+          sourceIds: omit(band.sourceIds, action.source.id),
         };
       }
 
@@ -162,7 +132,20 @@ export function removePointsFromBands(state: TimelineState, action: RemovePoints
       return {
         ...band,
       };
-    }),
+    });
+
+  if (bands.length > 0) {
+    return {
+      ...state,
+      bands,
+      selectedBand: state.selectedBand && action.removeBandIds.includes(state.selectedBand.id) ? null : state.selectedBand,
+    };
+  }
+
+  return {
+    ...state,
+    bands: [],
+    selectedBand: null,
   };
 }
 

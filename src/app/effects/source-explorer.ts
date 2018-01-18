@@ -17,41 +17,43 @@ import { Injectable } from '@angular/core';
 import { Action, Store } from '@ngrx/store';
 import { Effect, Actions } from '@ngrx/effects';
 import { Observable } from 'rxjs/Observable';
+import { of } from 'rxjs/observable/of';
 
 import { AppState } from './../../app/store';
 import { MpsServerApiService } from './../services/mps-server-api.service';
 
-import { SourceExplorerActionTypes, SourceExplorerAction } from './../actions/source-explorer';
-import { TimelineAction } from './../actions/timeline';
+import { SourceExplorerActionTypes } from './../actions/source-explorer';
 
 import * as sourceExplorerActions from './../actions/source-explorer';
-import * as timelineActions from './../actions/timeline';
 
 import {
-  toSources,
+  toRavenSources,
 } from './../util/source';
 
 import {
-  graphDataToBands,
-  removeBandsOrPoints,
-  removeSameLegendActivityBands,
+  toRavenBandData,
 } from './../util/bands';
 
 import {
   MpsServerGraphData,
   MpsServerSource,
+  RavenBandData,
+  RavenSource,
 } from './../models';
 
 @Injectable()
 export class SourceExplorerEffects {
-  // @Effect()
-  // fetchSources$: Observable<Action> = this.actions$
-  //   .ofType<sourceExplorerActions.FetchSources>(SourceExplorerActionTypes.FetchSources)
-  //   .switchMap(action =>
-  //     this.mpsServerApi.fetchSources(action.url)
-  //       .map(sources => new sourceExplorerActions.FetchSourcesSuccess(sources))
-  //       .catch((error) => of(new sourceExplorerActions.FetchSourcesFailure(error)))
-  //   );
+  @Effect()
+  fetchGraphData$: Observable<Action> = this.actions$
+    .ofType<sourceExplorerActions.FetchGraphData>(SourceExplorerActionTypes.FetchGraphData)
+    .withLatestFrom(this.store$)
+    .map(([action, state]) => ({ action, state }))
+    .switchMap(({ state, action }) =>
+      this.mpsServerApi.fetchGraphData(action.source.url)
+        .map((graphData: MpsServerGraphData) => toRavenBandData(action.source.id, graphData, state.timeline.bands))
+        .map((bandData: RavenBandData) => new sourceExplorerActions.FetchGraphDataSuccess(action.source, bandData.bands, bandData.bandIdsToPoints))
+        .catch(() => of(new sourceExplorerActions.FetchGraphDataFailure())),
+    );
 
   @Effect()
   fetchInitialSources$: Observable<Action> = this.actions$
@@ -60,94 +62,20 @@ export class SourceExplorerEffects {
     .map(([action, state]) => state)
     .switchMap((state: AppState) =>
       this.mpsServerApi.fetchSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`)
-        .switchMap((sources: MpsServerSource[]) => [
-          new sourceExplorerActions.FetchInitialSourcesSuccess(toSources('0', true, sources)),
-        ])
-        .catch(() => [
-          // TODO: Dispatch error action.
-        ]),
+        .map((mpsServerSources: MpsServerSource[]) => toRavenSources('0', true, mpsServerSources))
+        .map((sources: RavenSource[]) =>  new sourceExplorerActions.FetchInitialSourcesSuccess(sources))
+        .catch(() => of(new sourceExplorerActions.FetchInitialSourcesFailure())),
     );
 
   @Effect()
-  sourceExplorerExpandWithFetchSources$: Observable<Action> = this.actions$
-    .ofType<sourceExplorerActions.SourceExplorerExpandWithFetchSources>(SourceExplorerActionTypes.SourceExplorerExpandWithFetchSources)
+  fetchSources$: Observable<Action> = this.actions$
+    .ofType<sourceExplorerActions.FetchSources>(SourceExplorerActionTypes.FetchSources)
     .switchMap(action =>
       this.mpsServerApi.fetchSources(action.source.url)
-        .switchMap((sources: MpsServerSource[]) => [
-          new sourceExplorerActions.FetchSourcesSuccess(action.source, toSources(action.source.id, false, sources)),
-          new sourceExplorerActions.SourceExplorerExpand(action.source),
-        ])
-        .catch(() => [
-          new sourceExplorerActions.SourceExplorerCollapse(action.source),
-          // TODO: Dispatch error action.
-        ]),
+        .map((mpsServerSources: MpsServerSource[]) => toRavenSources(action.source.id, false, mpsServerSources))
+        .map((sources: RavenSource[]) => new sourceExplorerActions.FetchSourcesSuccess(action.source, sources))
+        .catch(() => of(new sourceExplorerActions.FetchSourcesFailure())),
     );
-
-  @Effect()
-  sourceExplorerExpandWithLoadContent$: Observable<Action> = this.actions$
-    .ofType<sourceExplorerActions.SourceExplorerExpandWithLoadContent>(SourceExplorerActionTypes.SourceExplorerExpandWithLoadContent)
-    .switchMap(action => [
-      new sourceExplorerActions.SourceExplorerExpand(action.source),
-    ]);
-
-  @Effect()
-  sourceExplorerOpenWithFetchGraphData$: Observable<Action> = this.actions$
-    .ofType<sourceExplorerActions.SourceExplorerOpenWithFetchGraphData>(SourceExplorerActionTypes.SourceExplorerOpenWithFetchGraphData)
-    .withLatestFrom(this.store$)
-    .map(([action, state]) => ({ action, state }))
-    .switchMap(({ state, action }) =>
-      this.mpsServerApi.fetchGraphData(action.source.url)
-        .switchMap((graphData: MpsServerGraphData) => {
-          const actions: (SourceExplorerAction | TimelineAction)[] = [];
-          const potentialBands = graphDataToBands(action.source.id, graphData);
-          const { bandIdsToPoints = {}, newBands = [] } = removeSameLegendActivityBands(state.timeline.bands, potentialBands);
-          const bandIdsToPointsKeys = Object.keys(bandIdsToPoints);
-
-          if (newBands.length > 0 || bandIdsToPointsKeys.length > 0) {
-            if (newBands.length > 0) {
-              actions.push(new timelineActions.AddBands(action.source.id, newBands));
-            }
-
-            if (bandIdsToPointsKeys.length > 0) {
-              actions.push(new timelineActions.AddPointsToBands(action.source.id, bandIdsToPoints));
-            }
-
-            actions.push(new sourceExplorerActions.SourceExplorerOpen(action.source));
-          }
-
-          return actions;
-        })
-        .catch(() => [
-          // TODO: Dispatch error action.
-        ]),
-    );
-
-  @Effect()
-  sourceExplorerCloseWithRemoveBands$: Observable<Action> = this.actions$
-    .ofType<sourceExplorerActions.SourceExplorerCloseWithRemoveBands>(SourceExplorerActionTypes.SourceExplorerCloseWithRemoveBands)
-    .withLatestFrom(this.store$)
-    .map(([action, state]) => ({ action, state }))
-    .switchMap(({ state, action }) => {
-      const actions: (SourceExplorerAction | TimelineAction)[] = [];
-      const { removeBandIds = [], removePointsBandIds = [] } = removeBandsOrPoints(action.source.id, state.timeline.bands);
-
-      if (removeBandIds.length > 0 || removePointsBandIds.length > 0) {
-        if (removeBandIds.length > 0) {
-          actions.push(new timelineActions.RemoveBands(action.source.id, removeBandIds));
-        }
-
-        if (removePointsBandIds.length > 0) {
-          actions.push(new timelineActions.RemovePointsFromBands(action.source.id, removePointsBandIds));
-        }
-
-        actions.push(new sourceExplorerActions.SourceExplorerClose(action.source));
-      }
-
-      return actions;
-    })
-    .catch(() => [
-      // TODO: Dispatch error action.
-    ]);
 
   constructor(
     private actions$: Actions,

@@ -9,18 +9,8 @@
 
 import { Action } from '@ngrx/store';
 
-import {
-  RavenBand,
-  RavenPoint,
-  StringTMap,
-} from './../models/';
-
 // Action Types.
 export enum TimelineActionTypes {
-  AddBands =                      '[timeline] add_bands',
-  RemoveBands =                   '[timeline] remove_bands',
-  AddPointsToBands =              '[timeline] add_points_to_bands',
-  RemovePointsFromBands =         '[timeline] remove_points_from_bands',
   SelectBand =                    '[timeline] select_band',
   SettingsUpdateGlobal =          '[timeline] settings_update_global',
   SettingsUpdateSelectedBand =    '[timeline] settings_update_selected_band',
@@ -28,30 +18,6 @@ export enum TimelineActionTypes {
 }
 
 // Actions.
-export class AddBands implements Action {
-  readonly type = TimelineActionTypes.AddBands;
-
-  constructor(public sourceId: string, public bands: RavenBand[]) {}
-}
-
-export class RemoveBands implements Action {
-  readonly type = TimelineActionTypes.RemoveBands;
-
-  constructor(public sourceId: string, public bandIds: string[]) {}
-}
-
-export class AddPointsToBands implements Action {
-  readonly type = TimelineActionTypes.AddPointsToBands;
-
-  constructor(public sourceId: string, public bandIdsToPoints: StringTMap<RavenPoint[]>) {}
-}
-
-export class RemovePointsFromBands implements Action {
-  readonly type = TimelineActionTypes.RemovePointsFromBands;
-
-  constructor(public sourceId: string, public bandIds: string[]) {}
-}
-
 export class SelectBand implements Action {
   readonly type = TimelineActionTypes.SelectBand;
 
@@ -76,10 +42,6 @@ export class SettingsUpdateSelectedSubBand implements Action {
 
 // Union type of all actions.
 export type TimelineAction =
-  AddBands |
-  RemoveBands |
-  AddPointsToBands |
-  RemovePointsFromBands |
   SelectBand |
   SettingsUpdateGlobal |
   SettingsUpdateSelectedBand |

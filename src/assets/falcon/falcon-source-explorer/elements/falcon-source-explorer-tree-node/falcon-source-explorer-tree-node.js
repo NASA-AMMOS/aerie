@@ -219,7 +219,6 @@
      * @memberof FalconSourceExplorerTreeNode
      */
     _collapse() {
-      this.set('data.expanded', false);
       this._fire('collapse-falcon-source-explorer-tree-node', this);
     }
 
@@ -229,7 +228,6 @@
      * @memberof FalconSourceExplorerTreeNode
      */
     _expand() {
-      this.set('data.expanded', true);
       this._fire('expand-falcon-source-explorer-tree-node', this);
     }
 
@@ -239,7 +237,6 @@
      * @memberof FalconSourceExplorerTreeNode
      */
     _close() {
-      this.set('data.opened', false);
       this._fire('close-falcon-source-explorer-tree-node', this);
     }
 
@@ -249,7 +246,6 @@
      * @memberof FalconSourceExplorerTreeNode
      */
     _open() {
-      this.set('data.opened', true);
       this._fire('open-falcon-source-explorer-tree-node', this);
     }
 
@@ -259,7 +255,6 @@
      * @memberof FalconSourceExplorerTreeNode
      */
     _pin() {
-      this.set('data.pinned', true);
       this._fire('pin-falcon-source-explorer-tree-node', this);
     }
 
@@ -280,7 +275,6 @@
      * @memberof FalconSourceExplorerTreeNode
      */
     _unpin() {
-      this.set('data.pinned', false);
       this._fire('unpin-falcon-source-explorer-tree-node', this);
     }
 

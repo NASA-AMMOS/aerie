@@ -12,12 +12,15 @@ import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
 
 import * as fromSourceExplorer from './../../reducers/source-explorer';
+import * as fromTimeline from './../../reducers/timeline';
 
 import * as sourceExplorerActions from './../../actions/source-explorer';
 
-import { toSources } from './../../util/source';
+import { toRavenSources } from './../../util/source';
+import { removeBandsOrPoints } from './../../util/bands';
 
 import {
+  RavenBand,
   RavenSource,
   StringTMap,
 } from './../../models';
@@ -37,12 +40,15 @@ interface FalconSourceExplorerTreeEvent extends Event {
   templateUrl: './source-explorer.component.html',
 })
 export class SourceExplorerComponent implements OnInit {
+  bands: RavenBand[];
   tree$: Observable<RavenSource>;
 
   constructor(private store: Store<fromSourceExplorer.SourceExplorerState>) {
     this.tree$ = this.store
       .select(fromSourceExplorer.getTreeBySourceId)
       .map(treeBySourceId => this.treeFromTreeBySourceId(treeBySourceId));
+
+    this.store.select(fromTimeline.getBands).subscribe(bands => this.bands = bands);
   }
 
   ngOnInit() {
@@ -66,9 +72,9 @@ export class SourceExplorerComponent implements OnInit {
     // Only fetch sources or load content if there are no children (i.e. sources have not been fetched or content has not been loaded yet).
     if (!source.childIds.length) {
       if (source.content.length > 0) {
-        this.store.dispatch(new sourceExplorerActions.SourceExplorerExpandWithLoadContent(source, toSources(source.id, false, source.content)));
+        this.store.dispatch(new sourceExplorerActions.LoadContent(source, toRavenSources(source.id, false, source.content)));
       } else {
-        this.store.dispatch(new sourceExplorerActions.SourceExplorerExpandWithFetchSources(source));
+        this.store.dispatch(new sourceExplorerActions.FetchSources(source));
       }
     } else {
       // Otherwise if there are children (i.e. sources have already been fetched or content has already been loaded), then simply expand the source.
@@ -81,7 +87,7 @@ export class SourceExplorerComponent implements OnInit {
    */
   onOpen(e: FalconSourceExplorerTreeEvent) {
     const source = e.detail.data;
-    this.store.dispatch(new sourceExplorerActions.SourceExplorerOpenWithFetchGraphData(source));
+    this.store.dispatch(new sourceExplorerActions.FetchGraphData(source));
   }
 
   /**
@@ -89,7 +95,9 @@ export class SourceExplorerComponent implements OnInit {
    */
   onClose(e: FalconSourceExplorerTreeEvent) {
     const source = e.detail.data;
-    this.store.dispatch(new sourceExplorerActions.SourceExplorerCloseWithRemoveBands(source));
+    const { removeBandIds = [], removePointsBandIds = [] } = removeBandsOrPoints(source.id, this.bands);
+
+    this.store.dispatch(new sourceExplorerActions.RemoveBands(source, removeBandIds, removePointsBandIds));
   }
 
   /**

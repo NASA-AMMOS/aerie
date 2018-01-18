@@ -20,10 +20,12 @@ import {
   RavenActivityBand,
   RavenActivityPoint,
   RavenBand,
+  RavenBandData,
   RavenCompositeBand,
   RavenDividerBand,
   RavenResourceBand,
   RavenStateBand,
+  StringTMap,
 } from '../models/index';
 
 import {
@@ -74,9 +76,9 @@ export function removeBandsOrPoints(sourceId: string, bands: RavenBand[]) {
  * If an current and potential band are activity bands with the same name (and thus the same legend),
  * then remove the band from the potential band list, and add it's points to a hash: current band id => points.
  */
-export function removeSameLegendActivityBands(currentBands: RavenBand[], potentialBands: RavenBand[]) {
-  const newBands = [...potentialBands];
-  const bandIdsToPoints = {};
+export function removeSameLegendActivityBands(currentBands: RavenBand[], potentialBands: RavenBand[]): RavenBandData {
+  const newBands: RavenBand[] = [...potentialBands];
+  const bandIdsToPoints: StringTMap<RavenActivityPoint[]> = {};
 
   currentBands.forEach((currentBand: RavenBand) => {
     if (currentBand.type === 'activity') {
@@ -91,15 +93,17 @@ export function removeSameLegendActivityBands(currentBands: RavenBand[], potenti
 
   return {
     bandIdsToPoints,
-    newBands,
+    bands: newBands,
   };
 }
 
 /**
- * Returns a list of bands based on graphData from the server.
+ * Takes the list of currentBands in Raven and builds a list of new bands based on the graphData.
+ * These new bands need further processing to determine if they will actually be displayed in Raven because
+ * some potentialBands may just contribute their data to already existing bands.
  */
-export function graphDataToBands(sourceId: string, graphData: MpsServerGraphData): RavenBand[] {
-  let bands: RavenBand[] = [];
+export function getPotentialBands(sourceId: string, graphData: MpsServerGraphData, currentBands: RavenBand[]): RavenBand[] {
+  let potentialBands: RavenBand[] = [];
 
   if (graphData) {
     const metadata = graphData['Timeline Metadata'];
@@ -109,19 +113,35 @@ export function graphDataToBands(sourceId: string, graphData: MpsServerGraphData
       if (metadata.hasTimelineType === 'measurement') {
         if ((metadata as MpsServerResourceMetadata | MpsServerStateMetadata).hasValueType === 'string_xdr') {
           // State (graphData only maps to a single band so we push it).
-          bands.push(toStateBand(sourceId, metadata as MpsServerStateMetadata, timelineData as MpsServerStatePoint[]));
+          potentialBands.push(toStateBand(sourceId, metadata as MpsServerStateMetadata, timelineData as MpsServerStatePoint[]));
         } else {
           // Resource (graphData only maps to a single band so we push it).
-          bands.push(toResourceBand(sourceId, metadata as MpsServerResourceMetadata, timelineData as MpsServerResourcePoint[]));
+          potentialBands.push(toResourceBand(sourceId, metadata as MpsServerResourceMetadata, timelineData as MpsServerResourcePoint[]));
         }
       } else if (metadata.hasTimelineType === 'activity') {
         // Activity (graphData may map to many bands so we concat them to bands).
-        bands = bands.concat(toActivityBands(sourceId, timelineData as MpsServerActivityPoint[]));
+        potentialBands = potentialBands.concat(toActivityBands(sourceId, timelineData as MpsServerActivityPoint[]));
       }
     }
   }
 
-  return bands;
+  return potentialBands;
+}
+
+/**
+ * Returns a data structure that transforms MpsServerGraphData to bands or points displayed in Raven.
+ * 1. bandIdsToPoints: This is a hash that maps current band ids that are displayed in Raven to new points we need to display in those bands.
+ * 2. bandIdsToPointsKeys: Just all the keys from 'bandIdsToPoints'.
+ * 3. newBands: Any new bands we need to display.
+ */
+export function toRavenBandData(sourceId: string, graphData: MpsServerGraphData, currentBands: RavenBand[]): RavenBandData {
+  const potentialBands: RavenBand[] = getPotentialBands(sourceId, graphData, currentBands);
+  const { bandIdsToPoints = {}, bands = [] } = removeSameLegendActivityBands(currentBands, potentialBands);
+
+  return {
+    bandIdsToPoints,
+    bands,
+  };
 }
 
 /**
