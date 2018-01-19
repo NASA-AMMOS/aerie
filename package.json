@@ -4,6 +4,7 @@
   "license": "MIT",
   "scripts": {
     "build": "ng build",
+    "build-prod": "ng build -prod",
     "clean": "bash clean.sh",
     "e2e": "ng e2e",
     "install-all": "bash install.sh",
