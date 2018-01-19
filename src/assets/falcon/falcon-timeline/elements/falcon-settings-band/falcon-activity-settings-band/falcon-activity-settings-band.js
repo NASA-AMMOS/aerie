@@ -43,7 +43,7 @@ class FalconActivitySettingsBand extends FalconSettings(Polymer.mixinBehaviors([
     const newValue = this._getElement(event).value;
 
     if (newValue) {
-      this._onSelectedBandPropChanged('activityStyle', parseInt(newValue, 10.0));
+      this._updateBand('activityStyle', parseInt(newValue, 10.0));
     }
   }
 
@@ -57,7 +57,7 @@ class FalconActivitySettingsBand extends FalconSettings(Polymer.mixinBehaviors([
     const newValue = this._getElement(event).value;
 
     if (newValue) {
-      this._onSelectedBandPropChanged('alignLabel', parseInt(newValue, 10.0));
+      this._updateBand('alignLabel', parseInt(newValue, 10.0));
     }
   }
 
@@ -71,7 +71,7 @@ class FalconActivitySettingsBand extends FalconSettings(Polymer.mixinBehaviors([
     const newValue = this._getElement(event).value;
 
     if (newValue) {
-      this._onSelectedBandPropChanged('baselineLabel', parseInt(newValue, 10.0));
+      this._updateBand('baselineLabel', parseInt(newValue, 10.0));
     }
   }
 
@@ -85,7 +85,7 @@ class FalconActivitySettingsBand extends FalconSettings(Polymer.mixinBehaviors([
     const newValue = this._getElement(event).value;
 
     if (newValue) {
-      this._onSelectedBandPropChanged('layout', parseInt(newValue, 10.0));
+      this._updateBand('layout', parseInt(newValue, 10.0));
     }
   }
 
@@ -99,7 +99,7 @@ class FalconActivitySettingsBand extends FalconSettings(Polymer.mixinBehaviors([
     const newValue = this._getElement(event).value;
 
     if (newValue) {
-      this._onSelectedBandPropChanged('showLabel', newValue === 'true');
+      this._updateBand('showLabel', newValue === 'true');
     }
   }
 
@@ -113,7 +113,7 @@ class FalconActivitySettingsBand extends FalconSettings(Polymer.mixinBehaviors([
     const newValue = this._getElement(event).value;
 
     if (newValue) {
-      this._onSelectedBandPropChanged('trimLabel', newValue === 'true');
+      this._updateBand('trimLabel', newValue === 'true');
     }
   }
 }

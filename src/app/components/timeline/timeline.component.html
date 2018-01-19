@@ -16,7 +16,7 @@
     <split direction="vertical">
       <split-area
         [order]="2"
-        size="60">
+        size="50">
         <div class="itar-message">
           <mat-card>
             {{itarMessage$ | async}}
@@ -34,7 +34,8 @@
             <falcon-timeline
               [bands]="bands$ | async"
               [labelWidth]="labelWidth$ | async"
-            >
+              [selectedBand]="selectedBand$ | async"
+              (falcon-timeline-band-click)="onBandClick($event)">
             </falcon-timeline>
           </mat-card>
         </div>
@@ -52,12 +53,19 @@
       <split-area
         [visible]="showDetailsDrawer$ | async"
         [order]="4"
-        size="20">
-        <div>
-          Details
+        size="30">
+        <div class="settings">
+          <mat-card>
+            <falcon-settings-band
+              [bands]="bands$ | async"
+              [labelWidth]="labelWidth$ | async"
+              [selectedBand]="selectedBand$ | async"
+              (falcon-settings-update-all-bands)="onUpdateAllBands($event)"
+              (falcon-settings-update-band)="onUpdateBand($event)">
+            </falcon-settings-band>
+          </mat-card>
         </div>
       </split-area>
     </split>
   </split-area>
 </split>
-

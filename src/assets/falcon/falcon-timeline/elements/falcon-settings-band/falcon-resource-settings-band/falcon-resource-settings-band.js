@@ -43,7 +43,7 @@ class FalconResourceSettingsBand extends FalconSettings(Polymer.mixinBehaviors([
     const newValue = this._getElement(event).value;
 
     if (newValue) {
-      this._onSelectedBandPropChanged('fill', newValue === 'true');
+      this._updateBand('fill', newValue === 'true');
     }
   }
 
@@ -57,7 +57,7 @@ class FalconResourceSettingsBand extends FalconSettings(Polymer.mixinBehaviors([
     const newValue = this._getElement(event).value;
 
     if (newValue) {
-      this._onSelectedBandPropChanged('interpolation', newValue);
+      this._updateBand('interpolation', newValue);
     }
   }
 
@@ -71,7 +71,7 @@ class FalconResourceSettingsBand extends FalconSettings(Polymer.mixinBehaviors([
     const newValue = this._getElement(event).value;
 
     if (newValue) {
-      this._onSelectedBandPropChanged('rescale', newValue === 'true');
+      this._updateBand('rescale', newValue === 'true');
     }
   }
 
@@ -85,7 +85,7 @@ class FalconResourceSettingsBand extends FalconSettings(Polymer.mixinBehaviors([
     const newValue = this._getElement(event).value;
 
     if (newValue) {
-      this._onSelectedBandPropChanged('showIcon', newValue === 'true');
+      this._updateBand('showIcon', newValue === 'true');
     }
   }
 }

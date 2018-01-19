@@ -43,7 +43,7 @@ class FalconStateSettingsBand extends FalconSettings(Polymer.mixinBehaviors([Fal
     const newValue = this._getElement(event).value;
 
     if (newValue) {
-      this._onSelectedBandPropChanged('alignLabel', parseInt(newValue, 10.0));
+      this._updateBand('alignLabel', parseInt(newValue, 10.0));
     }
   }
 
@@ -57,7 +57,7 @@ class FalconStateSettingsBand extends FalconSettings(Polymer.mixinBehaviors([Fal
     const newValue = this._getElement(event).value;
 
     if (newValue) {
-      this._onSelectedBandPropChanged('baselineLabel', parseInt(newValue, 10.0));
+      this._updateBand('baselineLabel', parseInt(newValue, 10.0));
     }
   }
 }

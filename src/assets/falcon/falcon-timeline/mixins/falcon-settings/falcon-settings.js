@@ -42,7 +42,6 @@ const FalconSettings = superClass => class extends superClass {
    */
   connectedCallback() {
     super.connectedCallback();
-
     this._addEventListeners();
   }
 
@@ -53,7 +52,6 @@ const FalconSettings = superClass => class extends superClass {
    */
   disconnectedCallback() {
     super.disconnectedCallback();
-
     this._removeEventListeners();
   }
 
@@ -88,16 +86,16 @@ const FalconSettings = superClass => class extends superClass {
 
     switch (element.id) {
       case 'falcon-settings-band-label-input':
-        this._onSelectedBandPropChanged('label', value);
+        this._updateBand('label', value);
         break;
       case 'falcon-divider-settings-band-color-input':
       case 'falcon-resource-settings-band-color-input':
         color = tinycolor(value);
-        this._onSelectedBandPropChanged('color', [color._r, color._g, color._b]);
+        this._updateBand('color', [color._r, color._g, color._b]);
         break;
       case 'falcon-resource-settings-band-fill-color-input':
         color = tinycolor(value);
-        this._onSelectedBandPropChanged('fillColor', [color._r, color._g, color._b]);
+        this._updateBand('fillColor', [color._r, color._g, color._b]);
         break;
       default:
         break;
@@ -114,19 +112,30 @@ const FalconSettings = superClass => class extends superClass {
     const newValue = this._getElement(event).value;
 
     if (newValue) {
-      this._onSelectedBandPropChanged('showTooltip', newValue === 'true');
+      this._updateBand('showTooltip', newValue === 'true');
     }
+  }
+
+  /**
+   * Fire event to change all bands.
+   *
+   * @param {any} prop
+   * @param {any} value
+   * @memberof FalconSettings
+   */
+  _updateAllBands(prop, value) {
+    this._fire('falcon-settings-update-all-bands', { prop, value });
   }
 
   /**
    * Fire event when selected band prop changes for any listening parents.
    *
-   * @param {any} name
+   * @param {any} prop
    * @param {any} value
    * @memberof FalconSettings
    */
-  _onSelectedBandPropChanged(name, value) {
-    this._fire('falcon-settings-band-selected-band-prop-changed', { name, value });
+  _updateBand(prop, value) {
+    this._fire('falcon-settings-update-band', { prop, value });
   }
 
   /**

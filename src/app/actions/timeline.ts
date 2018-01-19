@@ -11,10 +11,9 @@ import { Action } from '@ngrx/store';
 
 // Action Types.
 export enum TimelineActionTypes {
-  SelectBand =                    '[timeline] select_band',
-  SettingsUpdateGlobal =          '[timeline] settings_update_global',
-  SettingsUpdateSelectedBand =    '[timeline] settings_update_selected_band',
-  SettingsUpdateSelectedSubBand = '[timeline] settings_update_selected_sub_band', // TODO.
+  SelectBand =               '[timeline] select_band',
+  SettingsUpdateAllBands =   '[timeline] settings_update_all_bands',
+  SettingsUpdateBand =       '[timeline] settings_update_band',
 }
 
 // Actions.
@@ -24,25 +23,20 @@ export class SelectBand implements Action {
   constructor(public bandId: string) {}
 }
 
-export class SettingsUpdateGlobal implements Action {
-  readonly type = TimelineActionTypes.SettingsUpdateGlobal;
+export class SettingsUpdateAllBands implements Action {
+  readonly type = TimelineActionTypes.SettingsUpdateAllBands;
 
-  constructor(public prop: string, public value: string | number | boolean) {}
+  constructor(public prop: string, public value: any) {}
 }
 
-export class SettingsUpdateSelectedBand implements Action {
-  readonly type = TimelineActionTypes.SettingsUpdateSelectedBand;
+export class SettingsUpdateBand implements Action {
+  readonly type = TimelineActionTypes.SettingsUpdateBand;
 
-  constructor(public prop: string, public value: string | number | boolean) {}
-}
-
-export class SettingsUpdateSelectedSubBand implements Action {
-  readonly type = TimelineActionTypes.SettingsUpdateSelectedSubBand;
+  constructor(public prop: string, public value: any) {}
 }
 
 // Union type of all actions.
 export type TimelineAction =
   SelectBand |
-  SettingsUpdateGlobal |
-  SettingsUpdateSelectedBand |
-  SettingsUpdateSelectedSubBand;
+  SettingsUpdateAllBands |
+  SettingsUpdateBand;

@@ -20,8 +20,8 @@ import {
 
 import {
   SelectBand,
-  SettingsUpdateGlobal,
-  SettingsUpdateSelectedBand,
+  SettingsUpdateAllBands,
+  SettingsUpdateBand,
   TimelineAction,
   TimelineActionTypes,
 } from '../actions/timeline';
@@ -40,7 +40,7 @@ export interface TimelineState {
 // Timeline Initial State.
 const initialState: TimelineState = {
   bands: [],
-  labelWidth: 190,
+  labelWidth: 99,
   selectedBand: null,
 };
 
@@ -56,10 +56,10 @@ export function reducer(state: TimelineState = initialState, action: SourceExplo
       return removeBands(state, action);
     case TimelineActionTypes.SelectBand:
       return selectBand(state, action);
-    case TimelineActionTypes.SettingsUpdateGlobal:
-      return settingsUpdateGlobal(state, action);
-    case TimelineActionTypes.SettingsUpdateSelectedBand:
-      return settingsUpdateSelectedBand(state, action);
+    case TimelineActionTypes.SettingsUpdateAllBands:
+      return settingsUpdateAllBands(state, action);
+    case TimelineActionTypes.SettingsUpdateBand:
+      return settingsUpdateBand(state, action);
     default:
       return state;
   }
@@ -91,9 +91,7 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
         }
 
         // Otherwise just return the band as-is.
-        return {
-          ...band,
-        };
+        return band;
       })
       // 2. Add and new bands from the action.
       .concat(action.bands.map((band: RavenBand) => {
@@ -135,9 +133,7 @@ export function removeBands(state: TimelineState, action: RemoveBands): Timeline
         }
 
         // Otherwise if the band id is not included in the bandIds list, then return it as-is.
-        return {
-          ...band,
-        };
+        return band;
       }),
     selectedBand: state.selectedBand && action.removeBandIds.includes(state.selectedBand.id) ? null : state.selectedBand,
   };
@@ -154,9 +150,9 @@ export function selectBand(state: TimelineState, action: SelectBand): TimelineSt
 }
 
 /**
- * Reduction Helper. Called when reducing the 'SettingsUpdateGlobal' action.
+ * Reduction Helper. Called when reducing the 'SettingsUpdateAllBands' action.
  */
-export function settingsUpdateGlobal(state: TimelineState, action: SettingsUpdateGlobal): TimelineState {
+export function settingsUpdateAllBands(state: TimelineState, action: SettingsUpdateAllBands): TimelineState {
   return {
     ...state,
     [action.prop]: action.value,
@@ -164,9 +160,11 @@ export function settingsUpdateGlobal(state: TimelineState, action: SettingsUpdat
 }
 
 /**
- * Reduction Helper. Called when reducing the 'SettingsUpdateSelectedBand' action.
+ * Reduction Helper. Called when reducing the 'SettingsUpdateBand' action.
+ *
+ * TODO: Remove 'any' for actual RavenBand.
  */
-export function settingsUpdateSelectedBand(state: TimelineState, action: SettingsUpdateSelectedBand): TimelineState {
+export function settingsUpdateBand(state: TimelineState, action: SettingsUpdateBand): TimelineState {
   return {
     ...state,
     bands: state.bands.map((band: RavenBand) => {
@@ -177,10 +175,12 @@ export function settingsUpdateSelectedBand(state: TimelineState, action: Setting
         };
       }
 
-      return {
-        ...band,
-      };
+      return band;
     }),
+    selectedBand: ({
+      ...state.selectedBand,
+      [action.prop]: action.value,
+    } as any),
   };
 }
 

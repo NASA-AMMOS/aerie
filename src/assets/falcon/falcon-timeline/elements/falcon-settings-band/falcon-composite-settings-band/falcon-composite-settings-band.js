@@ -50,7 +50,6 @@ class FalconCompositeSettingsBand extends FalconSettings(Polymer.mixinBehaviors(
    */
   connectedCallback() {
     super.connectedCallback();
-
     this._addEventListeners();
   }
 
@@ -61,9 +60,9 @@ class FalconCompositeSettingsBand extends FalconSettings(Polymer.mixinBehaviors(
    */
   _addEventListeners() {
     // Get selected band prop change and notify of sub-band change.
-    this.addEventListener('falcon-settings-band-selected-band-prop-changed', (e) => {
+    this.addEventListener('falcon-settings-update-band', (e) => {
       e.detail.subBandIndex = this.selectedTabIndex;
-      this._fire('falcon-settings-band-selected-sub-band-prop-changed', e.detail);
+      this._fire('falcon-settings-update-sub-band', e.detail);
     });
   }
 

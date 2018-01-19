@@ -129,7 +129,6 @@ class FalconTimeline extends Polymer.mixinBehaviors([Polymer.IronResizableBehavi
    */
   connectedCallback() {
     super.connectedCallback();
-
     this._addEventListeners();
   }
 
@@ -141,7 +140,6 @@ class FalconTimeline extends Polymer.mixinBehaviors([Polymer.IronResizableBehavi
    */
   disconnectedCallback() {
     super.disconnectedCallback();
-
     this._removeEventListeners();
   }
 
@@ -184,8 +182,14 @@ class FalconTimeline extends Polymer.mixinBehaviors([Polymer.IronResizableBehavi
       }
     });
 
+    // Set the newly calculated maxTimeRange.
     this.set('maxTimeRange', { end: endTime, start: startTime });
-    this.set('viewTimeRange', { end: endTime, start: startTime });
+
+    // Only re-set viewTimeRange if both start and end are 0.
+    if (this.viewTimeRange.start === 0  || this.viewTimeRange.start === Number.MAX_SAFE_INTEGER &&
+        this.viewTimeRange.end === 0 || this.viewTimeRange.end === Number.MIN_SAFE_INTEGER) {
+      this.set('viewTimeRange', { end: endTime, start: startTime });
+    }
 
     // Dispatch a full window resize event (which triggers an iron resize) to make sure all bands are sized properly.
     window.dispatchEvent(new Event('resize'));
@@ -204,9 +208,6 @@ class FalconTimeline extends Polymer.mixinBehaviors([Polymer.IronResizableBehavi
           this.linkPaths('selectedBand', `bands.${index}`);
         }
       });
-
-      // Notify listeners of the newly selected band.
-      this.fire('falcon-timeline-selected-band-changed', { selectedBand: this.selectedBand });
     }
   }
 
@@ -217,7 +218,6 @@ class FalconTimeline extends Polymer.mixinBehaviors([Polymer.IronResizableBehavi
    */
   _addEventListeners() {
     this.addEventListener('iron-resize', this._onIronResize.bind(this));
-    document.addEventListener('falcon-on-band-click', this._onBandClick.bind(this)); // Listen on document in case the band has moved out of this element.
   }
 
   /**
@@ -227,26 +227,6 @@ class FalconTimeline extends Polymer.mixinBehaviors([Polymer.IronResizableBehavi
    */
   _removeEventListeners() {
     this.removeEventListener('iron-resize', this._onIronResize.bind(this));
-    document.removeEventListener('falcon-on-band-click', this._onBandClick.bind(this));
-  }
-
-  /**
-   * Event listener. Called when a band is clicked.
-   *
-   * @param {Event} e
-   * @memberof FalconTimeline
-   */
-  _onBandClick(e) {
-    const bandElement = e.detail.element;
-
-    if (bandElement && bandElement.id) {
-      this.bands.forEach((band, index) => {
-        if (bandElement.id === band.id) {
-          this.set('selectedBand', this.bands[index]);
-          this.linkPaths('selectedBand', `bands.${index}`);
-        }
-      });
-    }
   }
 
   /**

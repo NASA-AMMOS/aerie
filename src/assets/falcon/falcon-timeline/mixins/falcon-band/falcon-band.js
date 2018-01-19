@@ -506,17 +506,20 @@ const FalconBand = superClass => class extends superClass {
 
   /**
    * Event. Called when a band is clicked.
+   * We don't need click events for timeBand or timeScrollBar - those should emit their own events if needed.
    *
    * @param {any} e
    *
    * @memberof FalconBand
    */
   _onBandClick() {
-    this.dispatchEvent(new CustomEvent('falcon-on-band-click', {
-      bubbles: true,
-      composed: true,
-      detail: { element: this },
-    }));
+    if (!this.timeBand && !this.timeScrollBar) {
+      this.dispatchEvent(new CustomEvent('falcon-timeline-band-click', {
+        bubbles: true,
+        composed: true,
+        detail: { band: this.band },
+      }));
+    }
   }
 
   /**
@@ -529,7 +532,7 @@ const FalconBand = superClass => class extends superClass {
    */
   _onDblLeftClick(e, ctlData) {
     if (ctlData.interval) {
-      this.dispatchEvent(new CustomEvent(`${this.localName}-on-dbl-left-click`, {
+      this.dispatchEvent(new CustomEvent(`${this.localName}-dbl-left-click`, {
         bubbles: true,
         composed: true,
         detail: { ctlData },
@@ -597,7 +600,7 @@ const FalconBand = superClass => class extends superClass {
     if (ctlData.interval) {
       this._selectPoint(ctlData.interval);
 
-      this.dispatchEvent(new CustomEvent(`${this.localName}-on-left-click`, {
+      this.dispatchEvent(new CustomEvent(`${this.localName}-left-click`, {
         bubbles: true,
         composed: true,
         detail: { ctlData },
@@ -615,7 +618,7 @@ const FalconBand = superClass => class extends superClass {
    */
   _onRightClick(e, ctlData) {
     if (ctlData.interval) {
-      this.dispatchEvent(new CustomEvent(`${this.localName}-on-right-click`, {
+      this.dispatchEvent(new CustomEvent(`${this.localName}-right-click`, {
         bubbles: true,
         composed: true,
         detail: { ctlData },

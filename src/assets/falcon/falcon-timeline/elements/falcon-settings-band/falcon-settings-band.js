@@ -71,7 +71,7 @@ class FalconSettingsBand extends FalconSettings(Polymer.mixinBehaviors([FalconPo
   _onBandHeightChanged(e) {
     const newValue = this._getElement(e).value;
 
-    this._onSelectedBandPropChanged('height', parseInt(newValue, 10.0));
+    this._updateBand('height', parseInt(newValue, 10.0));
   }
 
   /**
@@ -84,8 +84,7 @@ class FalconSettingsBand extends FalconSettings(Polymer.mixinBehaviors([FalconPo
   _onLabelWidthChanged(e) {
     const newValue = this._getElement(e).value;
 
-    // Fire global event since labelWidth needs to change for all bands.
-    this._fire('falcon-settings-band-prop-changed', { name: 'labelWidth', value: parseInt(newValue, 10.0) });
+    this._updateAllBands('labelWidth', parseInt(newValue, 10.0));
   }
 }
 

@@ -11,6 +11,8 @@
 <link rel="import" href="./falcon-resource-settings-band/falcon-resource-settings-band.html" />
 <link rel="import" href="./falcon-state-settings-band/falcon-state-settings-band.html" />
 
+<link rel="stylesheet" href="./../../../../bower_components/mui/packages/npm/dist/css/mui-noglobals.min.css" />
+
 <dom-module id="falcon-settings-band">
   <template>
     <style>
@@ -67,10 +69,12 @@
       <!-- Global Settings for All Bands. -->
       <div class="mui-row falcon-settings-band-globals">
         <!-- Label Width. -->
-        <div class="mui-col-md-3">
-          <label class="falcon-settings-band-label">Label Width</label>
-          <paper-slider id="labelWidth" value="[[labelWidth]]" on-change="_onLabelWidthChanged" min="10" max="500" step="1" noink editable></paper-slider>
-        </div>
+        <template is="dom-if" if="[[!_equal(bands.length, 0)]]">
+          <div class="mui-col-md-3">
+            <label class="falcon-settings-band-label">Label Width</label>
+            <paper-slider id="labelWidth" value="[[labelWidth]]" on-change="_onLabelWidthChanged" min="10" max="500" step="1" noink editable></paper-slider>
+          </div>
+        </template>
 
         <!-- Band Height. -->
         <template is="dom-if" if="[[selectedBand]]">

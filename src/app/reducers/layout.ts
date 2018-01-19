@@ -21,7 +21,7 @@ export interface LayoutState {
 const initialState: LayoutState = {
   showDetailsDrawer: true,
   showLeftDrawer: true,
-  showSouthBandsDrawer: true,
+  showSouthBandsDrawer: false,
 };
 
 /**

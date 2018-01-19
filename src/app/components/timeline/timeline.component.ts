@@ -15,6 +15,8 @@ import * as fromConfig from './../../reducers/config';
 import * as fromLayout from './../../reducers/layout';
 import * as fromTimeline from './../../reducers/timeline';
 
+import * as timelineActions from './../../actions/timeline';
+
 import {
   RavenBand,
 } from './../../models';
@@ -29,6 +31,7 @@ export class TimelineComponent {
   bands$: Observable<RavenBand[]>;
   itarMessage$: Observable<string>;
   labelWidth$: Observable<number>;
+  selectedBand$: Observable<RavenBand | null>;
   showDetailsDrawer$: Observable<boolean>;
   showLeftDrawer$: Observable<boolean>;
   showSouthBandsDrawer$: Observable<boolean>;
@@ -37,9 +40,33 @@ export class TimelineComponent {
     this.bands$ = this.store.select(fromTimeline.getBands);
     this.itarMessage$ = this.store.select(fromConfig.getItarMessage);
     this.labelWidth$ = this.store.select(fromTimeline.getLabelWidth);
+    this.selectedBand$ = this.store.select(fromTimeline.getSelectedBand);
     this.showDetailsDrawer$ = this.store.select(fromLayout.getShowDetailsDrawer);
     this.showLeftDrawer$ = this.store.select(fromLayout.getShowLeftDrawer);
     this.showSouthBandsDrawer$ = this.store.select(fromLayout.getShowSouthBandsDrawer);
+  }
+
+  /**
+   * Event. Called when a `falcon-timeline-band-click` event is fired from falcon-timeline.
+   */
+  onBandClick(e: any) {
+    this.store.dispatch(new timelineActions.SelectBand(e.detail.band.id));
+  }
+
+  /**
+   * Event. Called when a `falcon-settings-update-all-bands` event is fired from the falcon-settings-band.
+   */
+  onUpdateAllBands(e: any) {
+    const { prop, value } = e.detail;
+    this.store.dispatch(new timelineActions.SettingsUpdateAllBands(prop, value));
+  }
+
+  /**
+   * Event. Called when a `falcon-settings-update-band` event is fired from the falcon-settings-band.
+   */
+  onUpdateBand(e: any) {
+    const { prop, value } = e.detail;
+    this.store.dispatch(new timelineActions.SettingsUpdateBand(prop, value));
   }
 
   /**
