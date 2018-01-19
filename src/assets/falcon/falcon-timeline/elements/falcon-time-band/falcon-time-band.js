@@ -1,4 +1,4 @@
-/* global FalconBand, TimeBand */
+/* global FalconBand, FalconPolymerUtils, TimeBand */
 
 /**
  * Falcon Time Band.
@@ -7,7 +7,7 @@
  * @customElement
  * @appliesMixin FalconBand
  */
-class FalconTimeBand extends FalconBand(Polymer.Element) {
+class FalconTimeBand extends Polymer.mixinBehaviors([FalconPolymerUtils], FalconBand(Polymer.Element)) {
   /**
    * Get the name of this element.
    *
@@ -118,7 +118,7 @@ class FalconTimeBand extends FalconBand(Polymer.Element) {
    */
   _onUpdateView(start, end) {
     if (start !== 0 && end !== 0 && start < end) {
-      this.set('viewTimeRange', { end, start });
+      this._fire('falcon-timeline-update-view-time-range', { end, start });
     }
   }
 }

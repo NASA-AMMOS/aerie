@@ -9,11 +9,16 @@
 
 import { Action } from '@ngrx/store';
 
+import {
+  RavenTimeRange,
+} from './../models';
+
 // Action Types.
 export enum TimelineActionTypes {
   SelectBand =               '[timeline] select_band',
   SettingsUpdateAllBands =   '[timeline] settings_update_all_bands',
   SettingsUpdateBand =       '[timeline] settings_update_band',
+  UpdateViewTimeRange =      '[timeline] update_view_time_range',
 }
 
 // Actions.
@@ -35,8 +40,15 @@ export class SettingsUpdateBand implements Action {
   constructor(public prop: string, public value: any) {}
 }
 
+export class UpdateViewTimeRange implements Action {
+  readonly type = TimelineActionTypes.UpdateViewTimeRange;
+
+  constructor(public viewTimeRange: RavenTimeRange) {}
+}
+
 // Union type of all actions.
 export type TimelineAction =
   SelectBand |
   SettingsUpdateAllBands |
-  SettingsUpdateBand;
+  SettingsUpdateBand |
+  UpdateViewTimeRange;

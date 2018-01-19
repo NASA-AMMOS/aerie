@@ -198,31 +198,31 @@ class FalconTimeRangeSelector extends Polymer.mixinBehaviors([FalconPolymerUtils
   _updateViewTimeRange() {
     switch (this.selectedZoom) {
       case 'All':
-        this.set('viewTimeRange', { end: this.maxTimeRange.end, start: this.maxTimeRange.start });
+        this._fire('falcon-timeline-update-view-time-range', { end: this.maxTimeRange.end, start: this.maxTimeRange.start });
         break;
       case '1y':
-        this.set('viewTimeRange', { end: this.maxTimeRange.start + TimeUnit.YEAR, start: this.maxTimeRange.start });
+        this._fire('falcon-timeline-update-view-time-range', { end: this.maxTimeRange.start + TimeUnit.YEAR, start: this.maxTimeRange.start });
         break;
       case '3m':
-        this.set('viewTimeRange', { end: this.maxTimeRange.start + TimeUnit.THREE_MONTH, start: this.maxTimeRange.start });
+        this._fire('falcon-timeline-update-view-time-range', { end: this.maxTimeRange.start + TimeUnit.THREE_MONTH, start: this.maxTimeRange.start });
         break;
       case '4w':
-        this.set('viewTimeRange', { end: this.maxTimeRange.start + TimeUnit.FOUR_WEEK, start: this.maxTimeRange.start });
+        this._fire('falcon-timeline-update-view-time-range', { end: this.maxTimeRange.start + TimeUnit.FOUR_WEEK, start: this.maxTimeRange.start });
         break;
       case '1w':
-        this.set('viewTimeRange', { end: this.maxTimeRange.start + TimeUnit.WEEK, start: this.maxTimeRange.start });
+        this._fire('falcon-timeline-update-view-time-range', { end: this.maxTimeRange.start + TimeUnit.WEEK, start: this.maxTimeRange.start });
         break;
       case '1d':
-        this.set('viewTimeRange', { end: this.maxTimeRange.start + TimeUnit.DAY, start: this.maxTimeRange.start });
+        this._fire('falcon-timeline-update-view-time-range', { end: this.maxTimeRange.start + TimeUnit.DAY, start: this.maxTimeRange.start });
         break;
       case '1h':
-        this.set('viewTimeRange', { end: this.maxTimeRange.start + TimeUnit.HOUR, start: this.maxTimeRange.start });
+        this._fire('falcon-timeline-update-view-time-range', { end: this.maxTimeRange.start + TimeUnit.HOUR, start: this.maxTimeRange.start });
         break;
       case '1m':
-        this.set('viewTimeRange', { end: this.maxTimeRange.start + TimeUnit.MINUTE, start: this.maxTimeRange.start });
+        this._fire('falcon-timeline-update-view-time-range', { end: this.maxTimeRange.start + TimeUnit.MINUTE, start: this.maxTimeRange.start });
         break;
       case '1s':
-        this.set('viewTimeRange', { end: this.maxTimeRange.start + TimeUnit.SECOND, start: this.maxTimeRange.start });
+        this._fire('falcon-timeline-update-view-time-range', { end: this.maxTimeRange.start + TimeUnit.SECOND, start: this.maxTimeRange.start });
         break;
       default:
         break;

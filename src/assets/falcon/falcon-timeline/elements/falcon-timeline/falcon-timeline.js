@@ -163,34 +163,6 @@ class FalconTimeline extends Polymer.mixinBehaviors([Polymer.IronResizableBehavi
    * @memberof FalconTimeline
    */
   _bandsChanged() {
-    let endTime = Number.MIN_SAFE_INTEGER;
-    let startTime = Number.MAX_SAFE_INTEGER;
-
-    // Calculate the maxTimeRange out of every band (including composite bands).
-    this.bands.forEach((band) => {
-      if (!band.bands && band.maxTimeRange) {
-        if (band.maxTimeRange.start < startTime) startTime = band.maxTimeRange.start;
-        if (band.maxTimeRange.end > endTime) endTime = band.maxTimeRange.end;
-      }
-      else if (band.bands) {
-        band.bands.forEach((subBand) => {
-          if (subBand.maxTimeRange) {
-            if (subBand.maxTimeRange.start < startTime) startTime = subBand.maxTimeRange.start;
-            if (subBand.maxTimeRange.end > endTime) endTime = subBand.maxTimeRange.end;
-          }
-        });
-      }
-    });
-
-    // Set the newly calculated maxTimeRange.
-    this.set('maxTimeRange', { end: endTime, start: startTime });
-
-    // Only re-set viewTimeRange if both start and end are 0.
-    if (this.viewTimeRange.start === 0  || this.viewTimeRange.start === Number.MAX_SAFE_INTEGER &&
-        this.viewTimeRange.end === 0 || this.viewTimeRange.end === Number.MIN_SAFE_INTEGER) {
-      this.set('viewTimeRange', { end: endTime, start: startTime });
-    }
-
     // Dispatch a full window resize event (which triggers an iron resize) to make sure all bands are sized properly.
     window.dispatchEvent(new Event('resize'));
   }
@@ -241,8 +213,7 @@ class FalconTimeline extends Polymer.mixinBehaviors([Polymer.IronResizableBehavi
       this._onIronResizeDebouncer,
       Polymer.Async.timeOut.after(this.ironResizeDebounceTime),
       () => {
-        this._resize(this);
-        this._resize(document); // Also resize on document root if a band has been moved outside of this element.
+        this._resize(document); // Resize on document root in-case a band has been moved outside of this element.
       },
     );
   }

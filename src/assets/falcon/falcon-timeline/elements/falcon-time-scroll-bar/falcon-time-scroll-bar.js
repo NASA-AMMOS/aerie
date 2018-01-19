@@ -1,4 +1,4 @@
-/* global FalconBand, TimeScrollBar */
+/* global FalconBand, FalconPolymerUtils, TimeScrollBar */
 
 /**
  * Falcon Time Scroll Bar.
@@ -7,7 +7,7 @@
  * @customElement
  * @appliesMixin FalconBand
  */
-class FalconTimeScrollBar extends FalconBand(Polymer.Element) {
+class FalconTimeScrollBar extends Polymer.mixinBehaviors([FalconPolymerUtils], FalconBand(Polymer.Element)) {
   /**
    * Get the name of this element.
    *
@@ -89,7 +89,7 @@ class FalconTimeScrollBar extends FalconBand(Polymer.Element) {
    */
   _onUpdateView(start, end) {
     if (start !== 0 && end !== 0 && start < end) {
-      this.set('viewTimeRange', { end, start });
+      this._fire('falcon-timeline-update-view-time-range', { end, start });
     }
   }
 }

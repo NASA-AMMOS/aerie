@@ -19,6 +19,7 @@ import * as timelineActions from './../../actions/timeline';
 
 import {
   RavenBand,
+  RavenTimeRange,
 } from './../../models';
 
 @Component({
@@ -31,23 +32,29 @@ export class TimelineComponent {
   bands$: Observable<RavenBand[]>;
   itarMessage$: Observable<string>;
   labelWidth$: Observable<number>;
+  maxTimeRange$: Observable<RavenTimeRange>;
   selectedBand$: Observable<RavenBand | null>;
   showDetailsDrawer$: Observable<boolean>;
   showLeftDrawer$: Observable<boolean>;
   showSouthBandsDrawer$: Observable<boolean>;
+  viewTimeRange$: Observable<RavenTimeRange>;
 
   constructor(private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState>) {
     this.bands$ = this.store.select(fromTimeline.getBands);
     this.itarMessage$ = this.store.select(fromConfig.getItarMessage);
     this.labelWidth$ = this.store.select(fromTimeline.getLabelWidth);
+    this.maxTimeRange$ = this.store.select(fromTimeline.getMaxTimeRange);
     this.selectedBand$ = this.store.select(fromTimeline.getSelectedBand);
     this.showDetailsDrawer$ = this.store.select(fromLayout.getShowDetailsDrawer);
     this.showLeftDrawer$ = this.store.select(fromLayout.getShowLeftDrawer);
     this.showSouthBandsDrawer$ = this.store.select(fromLayout.getShowSouthBandsDrawer);
+    this.viewTimeRange$ = this.store.select(fromTimeline.getViewTimeRange);
   }
 
   /**
    * Event. Called when a `falcon-timeline-band-click` event is fired from falcon-timeline.
+   *
+   * TODO: Replace 'any' with a concrete type.
    */
   onBandClick(e: any) {
     this.store.dispatch(new timelineActions.SelectBand(e.detail.band.id));
@@ -55,6 +62,8 @@ export class TimelineComponent {
 
   /**
    * Event. Called when a `falcon-settings-update-all-bands` event is fired from the falcon-settings-band.
+   *
+   * TODO: Replace 'any' with a concrete type.
    */
   onUpdateAllBands(e: any) {
     const { prop, value } = e.detail;
@@ -63,10 +72,21 @@ export class TimelineComponent {
 
   /**
    * Event. Called when a `falcon-settings-update-band` event is fired from the falcon-settings-band.
+   *
+   * TODO: Replace 'any' with a concrete type.
    */
   onUpdateBand(e: any) {
     const { prop, value } = e.detail;
     this.store.dispatch(new timelineActions.SettingsUpdateBand(prop, value));
+  }
+
+  /**
+   * Event. Called when a `falcon-timeline-update-view-time-range` event is fired from the falcon-timeline.
+   *
+   * TODO: Replace 'any' with a concrete type.
+   */
+  onUpdateViewTimeRange(e: any) {
+    this.store.dispatch(new timelineActions.UpdateViewTimeRange(e.detail));
   }
 
   /**

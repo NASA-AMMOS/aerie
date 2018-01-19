@@ -27,21 +27,30 @@ import {
 } from '../actions/timeline';
 
 import {
+  getTimeRanges,
+} from './../util/bands';
+
+import {
   RavenBand,
+  RavenTimeRange,
 } from './../models';
 
 // Timeline Interface.
 export interface TimelineState {
   bands: RavenBand[];
   labelWidth: number;
+  maxTimeRange: RavenTimeRange;
   selectedBand: RavenBand | null;
+  viewTimeRange: RavenTimeRange;
 }
 
 // Timeline Initial State.
 const initialState: TimelineState = {
   bands: [],
   labelWidth: 99,
+  maxTimeRange: { end: 0, start: 0 },
   selectedBand: null,
+  viewTimeRange: { end: 0, start: 0 },
 };
 
 /**
@@ -60,6 +69,8 @@ export function reducer(state: TimelineState = initialState, action: SourceExplo
       return settingsUpdateAllBands(state, action);
     case TimelineActionTypes.SettingsUpdateBand:
       return settingsUpdateBand(state, action);
+    case TimelineActionTypes.UpdateViewTimeRange:
+      return { ...state, viewTimeRange: { ...action.viewTimeRange } };
     default:
       return state;
   }
@@ -73,36 +84,39 @@ export function reducer(state: TimelineState = initialState, action: SourceExplo
  * TODO: Remove the 'any' type in favor of a RavenBand type.
  */
 export function addBands(state: TimelineState, action: FetchGraphDataSuccess): TimelineState {
-  return {
-    ...state,
-    bands: state.bands
-      // 1. Map over existing bands and add any points from the action.
-      .map((band: any) => {
-        // If there is a band that has new points, then add the points and update the corresponding source id.
-        if (action.bandIdsToPoints[band.id]) {
-          return {
-            ...band,
-            points: band.points.concat(action.bandIdsToPoints[band.id] as any[]),
-            sourceIds: {
-              ...band.sourceIds,
-              [action.source.id]: true,
-            },
-          };
-        }
-
-        // Otherwise just return the band as-is.
-        return band;
-      })
-      // 2. Add and new bands from the action.
-      .concat(action.bands.map((band: RavenBand) => {
+  const bands = state.bands
+    // 1. Map over existing bands and add any points from the action.
+    .map((band: any) => {
+      // If there is a band that has new points, then add the points and update the corresponding source id.
+      if (action.bandIdsToPoints[band.id]) {
         return {
           ...band,
+          points: band.points.concat(action.bandIdsToPoints[band.id] as any[]),
           sourceIds: {
             ...band.sourceIds,
             [action.source.id]: true,
           },
         };
-      })),
+      }
+
+      // Otherwise just return the band as-is.
+      return band;
+    })
+    // 2. Add and new bands from the action.
+    .concat(action.bands.map((band: RavenBand) => {
+      return {
+        ...band,
+        sourceIds: {
+          ...band.sourceIds,
+          [action.source.id]: true,
+        },
+      };
+    }));
+
+  return {
+    ...state,
+    bands,
+    ...getTimeRanges(state.viewTimeRange, bands),
   };
 }
 
@@ -114,28 +128,31 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
  * If bands is empty, or if we remove a band that is selected, make sure to set selectedBand to null.
  */
 export function removeBands(state: TimelineState, action: RemoveBands): TimelineState {
+  const bands = state.bands
+    // 1. Filter any bands with an id in removeBandIds.
+    .filter(band => {
+      return !action.removeBandIds.includes(band.id);
+    })
+    // 2. Remove points from bands with an id in removePointsBandIds.
+    .map((band: any) => {
+      // Remove points from bands with ids in the bandsIds list, and also update the source ids.
+      if (action.removePointsBandIds.includes(band.id)) {
+        return {
+          ...band,
+          points: band.points.filter((point: any) => point.sourceId !== action.source.id),
+          sourceIds: omit(band.sourceIds, action.source.id),
+        };
+      }
+
+      // Otherwise if the band id is not included in the bandIds list, then return it as-is.
+      return band;
+    });
+
   return {
     ...state,
-    bands: state.bands
-      // 1. Filter any bands with an id in removeBandIds.
-      .filter(band => {
-        return !action.removeBandIds.includes(band.id);
-      })
-      // 2. Remove points from bands with an id in removePointsBandIds.
-      .map((band: any) => {
-        // Remove points from bands with ids in the bandsIds list, and also update the source ids.
-        if (action.removePointsBandIds.includes(band.id)) {
-          return {
-            ...band,
-            points: band.points.filter((point: any) => point.sourceId !== action.source.id),
-            sourceIds: omit(band.sourceIds, action.source.id),
-          };
-        }
-
-        // Otherwise if the band id is not included in the bandIds list, then return it as-is.
-        return band;
-      }),
+    bands,
     selectedBand: state.selectedBand && action.removeBandIds.includes(state.selectedBand.id) ? null : state.selectedBand,
+    ...getTimeRanges(state.viewTimeRange, bands),
   };
 }
 
@@ -161,8 +178,6 @@ export function settingsUpdateAllBands(state: TimelineState, action: SettingsUpd
 
 /**
  * Reduction Helper. Called when reducing the 'SettingsUpdateBand' action.
- *
- * TODO: Remove 'any' for actual RavenBand.
  */
 export function settingsUpdateBand(state: TimelineState, action: SettingsUpdateBand): TimelineState {
   return {
@@ -180,7 +195,7 @@ export function settingsUpdateBand(state: TimelineState, action: SettingsUpdateB
     selectedBand: ({
       ...state.selectedBand,
       [action.prop]: action.value,
-    } as any),
+    } as RavenBand),
   };
 }
 
@@ -202,4 +217,6 @@ export const getTimelineState = createFeatureSelector<TimelineState>('timeline')
  */
 export const getBands = createSelector(getTimelineState, (state: TimelineState) => state.bands);
 export const getLabelWidth = createSelector(getTimelineState, (state: TimelineState) => state.labelWidth);
+export const getMaxTimeRange = createSelector(getTimelineState, (state: TimelineState) => state.maxTimeRange);
 export const getSelectedBand = createSelector(getTimelineState, (state: TimelineState) => state.selectedBand);
+export const getViewTimeRange = createSelector(getTimelineState, (state: TimelineState) => state.viewTimeRange);

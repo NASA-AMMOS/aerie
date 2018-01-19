@@ -13,7 +13,9 @@
   <split-area
     [order]="1"
     size="75">
-    <split direction="vertical">
+    <split
+      direction="vertical"
+      (dragEnd)="onDragEnd()">
       <split-area
         [order]="2"
         size="50">
@@ -34,8 +36,11 @@
             <falcon-timeline
               [bands]="bands$ | async"
               [labelWidth]="labelWidth$ | async"
+              [maxTimeRange]="maxTimeRange$ | async"
               [selectedBand]="selectedBand$ | async"
-              (falcon-timeline-band-click)="onBandClick($event)">
+              [viewTimeRange]="viewTimeRange$ | async"
+              (falcon-timeline-band-click)="onBandClick($event)"
+              (falcon-timeline-update-view-time-range)="onUpdateViewTimeRange($event)">
             </falcon-timeline>
           </mat-card>
         </div>

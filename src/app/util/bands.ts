@@ -26,6 +26,7 @@ import {
   RavenResourceBand,
   RavenStateBand,
   StringTMap,
+  RavenTimeRange,
 } from '../models/index';
 
 import {
@@ -34,6 +35,61 @@ import {
   mpsServerToRavenResourcePoints,
   mpsServerToRavenStatePoints,
 } from './points';
+
+/**
+ * Helper that gets new time ranges based on the current view time range and the list of given bands.
+ *
+ * TODO: Remove 'any' bands type for concrete type.
+ */
+export function getTimeRanges(currentViewTimeRange: RavenTimeRange, bands: RavenBand[]) {
+  let maxTimeRange: RavenTimeRange = { end: 0, start: 0 };
+  let viewTimeRange: RavenTimeRange = { end: 0, start: 0 };
+
+  if (bands.length > 0) {
+    let endTime = Number.MIN_SAFE_INTEGER;
+    let startTime = Number.MAX_SAFE_INTEGER;
+
+    // Calculate the maxTimeRange out of every band (including composite bands).
+    bands.forEach((band: RavenBand) => {
+      if (band.type !== 'composite') {
+        if (band.maxTimeRange.start < startTime) { startTime = band.maxTimeRange.start; }
+        if (band.maxTimeRange.end > endTime) { endTime = band.maxTimeRange.end; }
+      } else if (band.type === 'composite') {
+        (band as any).bands.forEach((subBand: RavenBand) => {
+          if (subBand.maxTimeRange) {
+            if (subBand.maxTimeRange.start < startTime) { startTime = subBand.maxTimeRange.start; }
+            if (subBand.maxTimeRange.end > endTime) { endTime = subBand.maxTimeRange.end; }
+          }
+        });
+      } else {
+        // TODO: Error case.
+      }
+    });
+
+    maxTimeRange = { end: endTime, start: startTime };
+    viewTimeRange = { ...currentViewTimeRange };
+
+    // Re-set viewTimeRange to maxTimeRange if both start and end are 0 (i.e. they have never been set).
+    if (viewTimeRange.start === 0 && viewTimeRange.end === 0) {
+      viewTimeRange = { ...maxTimeRange };
+    } else {
+      // Clamp new viewTimeRange start.
+      if (viewTimeRange.start < maxTimeRange.start) {
+        viewTimeRange.start = maxTimeRange.start;
+      }
+
+      // Clamp new viewTimeRange end.
+      if (viewTimeRange.end > maxTimeRange.end) {
+        viewTimeRange.end = maxTimeRange.end;
+      }
+    }
+  }
+
+  return {
+    maxTimeRange,
+    viewTimeRange,
+  };
+}
 
 /**
  * This is a helper function that takes a list of bands and a sourceId that was just clicked to "close".
