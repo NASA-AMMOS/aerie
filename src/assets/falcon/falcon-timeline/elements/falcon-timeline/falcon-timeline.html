@@ -8,9 +8,8 @@
 <link rel="import" href="./../falcon-divider-band/falcon-divider-band.html" />
 <link rel="import" href="./../falcon-resource-band/falcon-resource-band.html" />
 <link rel="import" href="./../falcon-state-band/falcon-state-band.html" />
-<link rel="import" href="./../falcon-time-band/falcon-time-band.html" />
-<link rel="import" href="./../falcon-time-range-selector/falcon-time-range-selector.html" />
-<link rel="import" href="./../falcon-time-scroll-bar/falcon-time-scroll-bar.html" />
+
+<script src="./../../libs/sortablejs/Sortable.js"></script>
 
 <dom-module id="falcon-timeline">
   <template>
@@ -19,25 +18,6 @@
         padding-bottom: 10px;
       }
     </style>
-
-    <div>
-      <!-- Time Range Selector. -->
-      <falcon-time-range-selector max-time-range="[[maxTimeRange]]"
-                                  view-time-range="{{viewTimeRange}}">
-      </falcon-time-range-selector>
-
-      <!-- Time Scroll Bar. -->
-      <falcon-time-scroll-bar label-width="[[labelWidth]]"
-                              max-time-range="[[maxTimeRange]]"
-                              view-time-range="{{viewTimeRange}}">
-      </falcon-time-scroll-bar>
-
-      <!-- Time Band. -->
-      <falcon-time-band label-width="[[labelWidth]]"
-                        max-time-range="[[maxTimeRange]]"
-                        view-time-range="{{viewTimeRange}}">
-      </falcon-time-band>
-    </div>
 
     <div class="falcon-timeline-bands">
       <template is="dom-repeat" items="{{bands}}" as="band">

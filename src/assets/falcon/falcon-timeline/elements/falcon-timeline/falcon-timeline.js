@@ -1,4 +1,4 @@
-/* global FalconPolymerUtils */
+/* global FalconPolymerUtils, Sortable */
 
 /**
  * Falcon Timeline Web Component.
@@ -129,6 +129,7 @@ class FalconTimeline extends Polymer.mixinBehaviors([Polymer.IronResizableBehavi
    */
   connectedCallback() {
     super.connectedCallback();
+    this._createSortableContainer();
     this._addEventListeners();
   }
 
@@ -140,6 +141,7 @@ class FalconTimeline extends Polymer.mixinBehaviors([Polymer.IronResizableBehavi
    */
   disconnectedCallback() {
     super.disconnectedCallback();
+    this._destroySortableContainer();
     this._removeEventListeners();
   }
 
@@ -216,6 +218,44 @@ class FalconTimeline extends Polymer.mixinBehaviors([Polymer.IronResizableBehavi
         this._resize(document); // Resize on document root in-case a band has been moved outside of this element.
       },
     );
+  }
+
+  /**
+   * Helper that creates the main sortable container.
+   *
+   * @memberof FalconTimeline
+   */
+  _createSortableContainer() {
+    const bandsDiv = Polymer.dom(this).querySelector('.falcon-timeline-bands');
+
+    this._sortableContainer = Sortable.create(bandsDiv, {
+      animation: 100,
+      delay: 0,
+      ghostClass: 'falcon-timeline-sortable-placeholder',
+      group: {
+        name: 'falcon-timeline-bands',
+        put: [
+          'falcon-timeline-south-bands',
+        ],
+      },
+      onEnd: event => this.fire('falcon-timeline-sortable-on-end', { event }),
+      onUpdate: event => this.fire('falcon-timeline-sortable-on-update', { event }),
+      scroll: true,
+      scrollSensitivity: 30,
+      scrollSpeed: 10,
+      sort: true,
+    });
+  }
+
+  /**
+   * Helper that destroys the main sortable container.
+   *
+   * @memberof FalconTimeline
+   */
+  _destroySortableContainer() {
+    if (this._sortableContainer) {
+      this._sortableContainer.destroy();
+    }
   }
 
   /**

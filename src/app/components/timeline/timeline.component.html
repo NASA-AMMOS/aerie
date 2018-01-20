@@ -33,14 +33,33 @@
 
         <div *ngIf="(bands$ | async)?.length > 0" class="timeline">
           <mat-card>
+            <falcon-time-range-selector
+              [maxTimeRange]="maxTimeRange$ | async"
+              [viewTimeRange]="viewTimeRange$ | async"
+              (falcon-timeline-update-view-time-range)="onUpdateViewTimeRange($event)">
+            </falcon-time-range-selector>
+
+            <falcon-time-scroll-bar
+              [labelWidth]="labelWidth$ | async"
+              [maxTimeRange]="maxTimeRange$ | async"
+              [viewTimeRange]="viewTimeRange$ | async"
+              (falcon-timeline-update-view-time-range)="onUpdateViewTimeRange($event)">
+            </falcon-time-scroll-bar>
+
+            <falcon-time-band
+              [labelWidth]="labelWidth$ | async"
+              [maxTimeRange]="maxTimeRange$ | async"
+              [viewTimeRange]="viewTimeRange$ | async"
+              (falcon-timeline-update-view-time-range)="onUpdateViewTimeRange($event)">
+            </falcon-time-band>
+
             <falcon-timeline
               [bands]="bands$ | async"
               [labelWidth]="labelWidth$ | async"
               [maxTimeRange]="maxTimeRange$ | async"
               [selectedBand]="selectedBand$ | async"
               [viewTimeRange]="viewTimeRange$ | async"
-              (falcon-timeline-band-click)="onBandClick($event)"
-              (falcon-timeline-update-view-time-range)="onUpdateViewTimeRange($event)">
+              (falcon-timeline-band-click)="onBandClick($event)">
             </falcon-timeline>
           </mat-card>
         </div>

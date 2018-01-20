@@ -12,9 +12,12 @@ import {
   ActionReducer,
   MetaReducer,
 } from '@ngrx/store';
+
 import { environment } from '../environments/environment';
 import { RouterStateUrl } from './routes';
 import * as fromRouter from '@ngrx/router-store';
+
+import { RootActionTypes } from './actions/root';
 
 /**
  * storeFreeze prevents state from being mutated. When mutation occurs, an
@@ -73,10 +76,30 @@ export function logger(reducer: ActionReducer<AppState>): ActionReducer<AppState
 }
 
 /**
+ * Root reducer that gets called before all other reducers.
+ */
+export function rootReducer(reducer: ActionReducer<AppState>): ActionReducer<AppState> {
+  return function(state: AppState, action: any): AppState {
+    switch (action.type) {
+      case RootActionTypes.ResetState:
+        state = undefined as any;
+        break;
+      case RootActionTypes.ResetStateFromObject:
+        state = { ...action.state };
+        break;
+      default:
+        break;
+    }
+
+    return reducer(state, action);
+  };
+}
+
+/**
  * By default, @ngrx/store uses combineReducers with the reducer map to compose
  * the root meta-reducer. To add more meta-reducers, provide an array of meta-reducers
  * that will be composed to form the root meta-reducer.
  */
 export const metaReducers: MetaReducer<AppState>[] = !environment.production
-  ? [logger, storeFreeze]
+  ? [logger, storeFreeze, rootReducer]
   : [];
