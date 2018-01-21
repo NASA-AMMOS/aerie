@@ -99,32 +99,32 @@
       </div>
 
       <!-- Activity. -->
-      <template is="dom-if" if="{{_equal('activity', selectedBand.type)}}">
-        <falcon-activity-settings-band selected-band={{selectedBand}}>
+      <template is="dom-if" if="[[_equal('activity', selectedBand.type)]]">
+        <falcon-activity-settings-band selected-band=[[selectedBand]]>
         </falcon-activity-settings-band>
       </template>
 
       <!-- Composite. -->
-      <template is="dom-if" if="{{_equal('composite', selectedBand.type)}}">
-        <falcon-composite-settings-band selected-band={{selectedBand}}>
+      <template is="dom-if" if="[[_equal('composite', selectedBand.type)]]">
+        <falcon-composite-settings-band selected-band=[[selectedBand]]>
         </falcon-composite-settings-band>
       </template>
 
       <!-- Divider. -->
-      <template is="dom-if" if="{{_equal('divider', selectedBand.type)}}">
-        <falcon-divider-settings-band selected-band={{selectedBand}}>
+      <template is="dom-if" if="[[_equal('divider', selectedBand.type)]]">
+        <falcon-divider-settings-band selected-band=[[selectedBand]]>
         </falcon-divider-settings-band>
       </template>
 
       <!-- Resource. -->
-      <template is="dom-if" if="{{_equal('resource', selectedBand.type)}}">
-        <falcon-resource-settings-band selected-band={{selectedBand}}>
+      <template is="dom-if" if="[[_equal('resource', selectedBand.type)]]">
+        <falcon-resource-settings-band selected-band=[[selectedBand]]>
         </falcon-resource-settings-band>
       </template>
 
       <!-- State. -->
-      <template is="dom-if" if="{{_equal('state', selectedBand.type)}}">
-        <falcon-state-settings-band selected-band={{selectedBand}}>
+      <template is="dom-if" if="[[_equal('state', selectedBand.type)]]">
+        <falcon-state-settings-band selected-band=[[selectedBand]]>
         </falcon-state-settings-band>
       </template>
     </div>

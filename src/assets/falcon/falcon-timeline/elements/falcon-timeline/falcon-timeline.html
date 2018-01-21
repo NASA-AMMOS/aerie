@@ -1,7 +1,6 @@
 <link rel="stylesheet" href="./falcon-timeline.css" />
 
 <link rel="import" href="./../../../../bower_components/polymer/polymer.html" />
-<link rel="import" href="./../../../../bower_components/iron-resizable-behavior/iron-resizable-behavior.html" />
 <link rel="import" href="./../../../falcon-polymer-utils/falcon-polymer-utils.html" />
 <link rel="import" href="./../falcon-activity-band/falcon-activity-band.html" />
 <link rel="import" href="./../falcon-composite-band/falcon-composite-band.html" />
@@ -20,13 +19,12 @@
     </style>
 
     <div class="falcon-timeline-bands">
-      <template is="dom-repeat" items="{{bands}}" as="band">
+      <template is="dom-repeat" items="[[bands]]" as="band">
         <!-- Activity Bands. -->
-        <template is="dom-if" if="{{_equal('activity', band.type)}}">
+        <template is="dom-if" if="[[_equal('activity', band.type)]]">
           <falcon-activity-band class="falcon-band"
                                 activity-style="[[band.activityStyle]]"
                                 align-label="[[band.alignLabel]]"
-                                band="{{band}}"
                                 baseline-label="[[band.baselineLabel]]"
                                 height="[[band.height]]"
                                 height-padding="[[band.heightPadding]]"
@@ -47,9 +45,8 @@
         </template>
 
         <!-- Composite Bands. -->
-        <template is="dom-if" if="{{_equal('composite', band.type)}}">
+        <template is="dom-if" if="[[_equal('composite', band.type)]]">
           <falcon-composite-band class="falcon-band"
-                                 band="{{band}}"
                                  height="[[band.height]]"
                                  height-padding="[[band.heightPadding]]"
                                  id="[[band.id]]"
@@ -57,12 +54,11 @@
                                  max-time-range="[[maxTimeRange]]"
                                  show-tooltip="[[band.showTooltip]]"
                                  view-time-range="[[viewTimeRange]]">
-            <template is="dom-repeat" items="{{band.bands}}" as="subBand">
+            <template is="dom-repeat" items="[[band.bands]]" as="subBand">
               <!-- Activity Bands. -->
-              <template is="dom-if" if="{{_equal('activity', subBand.type)}}">
+              <template is="dom-if" if="[[_equal('activity', subBand.type)]]">
                 <falcon-activity-band activity-style="[[subBand.activityStyle]]"
                                       align-label="[[subBand.alignLabel]]"
-                                      band="{{subBand}}"
                                       baseline-label="[[subBand.baselineLabel]]"
                                       height="[[subBand.height]]"
                                       height-padding="[[subBand.heightPadding]]"
@@ -84,9 +80,8 @@
               </template>
 
               <!-- Resource Bands. -->
-              <template is="dom-if" if="{{_equal('resource', subBand.type)}}">
+              <template is="dom-if" if="[[_equal('resource', subBand.type)]]">
                 <falcon-resource-band auto-tick-values="[[subBand.autoTickValues]]"
-                                      band="{{subBand}}"
                                       color="[[subBand.color]]"
                                       fill="[[subBand.fill]]"
                                       fill-color="[[subBand.fillColor]]"
@@ -111,9 +106,8 @@
               </template>
 
               <!-- State Bands. -->
-              <template is="dom-if" if="{{_equal('state', subBand.type)}}">
+              <template is="dom-if" if="[[_equal('state', subBand.type)]]">
                 <falcon-state-band align-label="[[subBand.alignLabel]]"
-                                   band="{{subBand}}"
                                    baseline-label="[[subBand.baselineLabel]]"
                                    border-width="[[subBand.borderWidth]]"
                                    height="[[subBand.height]]"
@@ -136,9 +130,8 @@
         </template>
 
         <!-- Divider Bands. -->
-        <template is="dom-if" if="{{_equal('divider', band.type)}}">
+        <template is="dom-if" if="[[_equal('divider', band.type)]]">
           <falcon-divider-band class="falcon-band"
-                               band="{{band}}"
                                color="[[band.color]]"
                                height="[[band.height]]"
                                id="[[band.id]]"
@@ -152,10 +145,9 @@
         </template>
 
         <!-- Resource Bands. -->
-        <template is="dom-if" if="{{_equal('resource', band.type)}}">
+        <template is="dom-if" if="[[_equal('resource', band.type)]]">
           <falcon-resource-band class="falcon-band"
                                 auto-tick-values="[[band.autoTickValues]]"
-                                band="{{band}}"
                                 color="[[band.color]]"
                                 fill="[[band.fill]]"
                                 fill-color="[[band.fillColor]]"
@@ -179,10 +171,9 @@
         </template>
 
         <!-- State Bands. -->
-        <template is="dom-if" if="{{_equal('state', band.type)}}">
+        <template is="dom-if" if="[[_equal('state', band.type)]]">
           <falcon-state-band class="falcon-band"
                              align-label="[[band.alignLabel]]"
-                             band="{{band}}"
                              baseline-label="[[band.baselineLabel]]"
                              border-width="[[band.borderWidth]]"
                              height="[[band.height]]"

@@ -1,4 +1,4 @@
-/* global FalconUtils, Painter, ResourceBand, TimeAxis, TimeBand, TimeScrollBar, Tooltip */
+/* global FalconPolymerUtils, FalconUtils, Painter, Polymer, ResourceBand, TimeAxis, TimeBand, TimeScrollBar, Tooltip */
 
 /**
  * Falcon Band Mixin.
@@ -8,8 +8,10 @@
  *
  * @polymer
  * @mixinFunction
+ * @appliesMixin Polymer.IronResizableBehavior
+ * @appliesMixin FalconPolymerUtils
  */
-const FalconBand = superClass => class extends superClass {
+const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.IronResizableBehavior, FalconPolymerUtils], superClass) {
   /**
    * Get the properties of this mixin.
    *
@@ -20,6 +22,17 @@ const FalconBand = superClass => class extends superClass {
    */
   static get properties() {
     return {
+      /**
+       * The Polymer debounce object for de-bouncing iron resize events.
+       */
+      _onIronResizeDebouncer: {
+        readOnly: true,
+        type: Object,
+        value: () => {
+          return new Polymer.Debouncer();
+        },
+      },
+
       /**
        * The time axis internal to CTL.
        */
@@ -65,17 +78,6 @@ const FalconBand = superClass => class extends superClass {
       },
 
       /**
-       * The entire band object with all parameters used in this component.
-       */
-      band: {
-        notify: true,
-        type: Object,
-        value: () => {
-          return {};
-        },
-      },
-
-      /**
        * How to vertically align the activity or state label.
        *
        * Top: 1, Bottom: 2, Center: 3.
@@ -117,6 +119,14 @@ const FalconBand = superClass => class extends superClass {
       id: {
         type: String,
         value: '',
+      },
+
+      /**
+       * The debounce time for iron resize.
+       */
+      ironResizeDebounceTime: {
+        type: Number,
+        value: 200,
       },
 
       /**
@@ -292,7 +302,8 @@ const FalconBand = superClass => class extends superClass {
    * @memberof FalconBand
    */
   _addEventListeners() {
-    this.addEventListener('click', this._onBandClick.bind(this));
+    this.addEventListener('click', this._onBandClick);
+    this.addEventListener('iron-resize', this._onIronResize);
   }
 
   /**
@@ -301,7 +312,25 @@ const FalconBand = superClass => class extends superClass {
    * @memberof FalconBand
    */
   _removeEventListeners() {
-    this.removeEventListener('click', this._onBandClick.bind(this));
+    this.removeEventListener('click', this._onBandClick);
+    this.removeEventListener('iron-resize', this._onIronResize);
+  }
+
+  /**
+   * Event listener. Called after component resizes.
+   * Debounce the resize since it's redraws.
+   * We don't want to redraw too much or CTL might freeze and crash.
+   *
+   * @memberof FalconBand
+   */
+  _onIronResize() {
+    Polymer.Debouncer.debounce(
+      this._onIronResizeDebouncer,
+      Polymer.Async.timeOut.after(this.ironResizeDebounceTime),
+      () => {
+        this.resize();
+      },
+    );
   }
 
   /**
@@ -514,11 +543,7 @@ const FalconBand = superClass => class extends superClass {
    */
   _onBandClick() {
     if (!this.timeBand && !this.timeScrollBar) {
-      this.dispatchEvent(new CustomEvent('falcon-timeline-band-click', {
-        bubbles: true,
-        composed: true,
-        detail: { band: this.band },
-      }));
+      this._fire('falcon-timeline-band-click', { bandId: this.id });
     }
   }
 
@@ -532,11 +557,7 @@ const FalconBand = superClass => class extends superClass {
    */
   _onDblLeftClick(e, ctlData) {
     if (ctlData.interval) {
-      this.dispatchEvent(new CustomEvent(`${this.localName}-dbl-left-click`, {
-        bubbles: true,
-        composed: true,
-        detail: { ctlData },
-      }));
+      this._fire(`${this.localName}-dbl-left-click`, { ctlData });
     }
   }
 
@@ -599,12 +620,7 @@ const FalconBand = superClass => class extends superClass {
   _onLeftClick(e, ctlData) {
     if (ctlData.interval) {
       this._selectPoint(ctlData.interval);
-
-      this.dispatchEvent(new CustomEvent(`${this.localName}-left-click`, {
-        bubbles: true,
-        composed: true,
-        detail: { ctlData },
-      }));
+      this._fire(`${this.localName}-left-click`, { ctlData });
     }
   }
 
@@ -618,11 +634,7 @@ const FalconBand = superClass => class extends superClass {
    */
   _onRightClick(e, ctlData) {
     if (ctlData.interval) {
-      this.dispatchEvent(new CustomEvent(`${this.localName}-right-click`, {
-        bubbles: true,
-        composed: true,
-        detail: { ctlData },
-      }));
+      this._fire(`${this.localName}-right-click`, { ctlData });
     }
   }
 
@@ -761,7 +773,7 @@ const FalconBand = superClass => class extends superClass {
     const band = this._getBand();
 
     if (band) {
-      this.dispatchEvent(new CustomEvent(`${this.localName}-redraw`));
+      this._fire(`${this.localName}-redraw`, null);
 
       if (!this.noDraw) {
         band.revalidate();
@@ -776,6 +788,7 @@ const FalconBand = superClass => class extends superClass {
    * @memberof FalconBand
    */
   resize() {
+    this._calculateTickValues();
     this._updateTimeAxisXCoordinates();
     this.redraw();
   }

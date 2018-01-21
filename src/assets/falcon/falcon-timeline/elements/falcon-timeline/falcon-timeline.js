@@ -6,10 +6,9 @@
  * @demo demo/index.html
  * @polymer
  * @customElement
- * @appliesMixin Polymer.IronResizableBehavior
  * @appliesMixin FalconPolymerUtils
  */
-class FalconTimeline extends Polymer.mixinBehaviors([Polymer.IronResizableBehavior, FalconPolymerUtils], Polymer.Element) {
+class FalconTimeline extends Polymer.mixinBehaviors([FalconPolymerUtils], Polymer.Element) {
   /**
    * Get the name of this element.
    *
@@ -33,31 +32,12 @@ class FalconTimeline extends Polymer.mixinBehaviors([Polymer.IronResizableBehavi
   static get properties() {
     return {
       /**
-       * The Polymer debounce object for de-bouncing iron resize events.
-       */
-      _onIronResizeDebouncer: {
-        readOnly: true,
-        type: Object,
-        value: () => {
-          return new Polymer.Debouncer();
-        },
-      },
-
-      /**
        * The list of bands displayed in the timeline.
        * To push a newBand to this list use: this.push('bands', newBand).
        */
       bands: {
         type: Array,
         value: () => [],
-      },
-
-      /**
-       * The debounce time for iron resize.
-       */
-      ironResizeDebounceTime: {
-        type: Number,
-        value: 200,
       },
 
       /**
@@ -117,7 +97,6 @@ class FalconTimeline extends Polymer.mixinBehaviors([Polymer.IronResizableBehavi
   static get observers() {
     return [
       '_bandsChanged(bands)',
-      '_selectedBandChanged(selectedBand)',
     ];
   }
 
@@ -130,7 +109,6 @@ class FalconTimeline extends Polymer.mixinBehaviors([Polymer.IronResizableBehavi
   connectedCallback() {
     super.connectedCallback();
     this._createSortableContainer();
-    this._addEventListeners();
   }
 
   /**
@@ -142,7 +120,6 @@ class FalconTimeline extends Polymer.mixinBehaviors([Polymer.IronResizableBehavi
   disconnectedCallback() {
     super.disconnectedCallback();
     this._destroySortableContainer();
-    this._removeEventListeners();
   }
 
   /**
@@ -167,57 +144,6 @@ class FalconTimeline extends Polymer.mixinBehaviors([Polymer.IronResizableBehavi
   _bandsChanged() {
     // Dispatch a full window resize event (which triggers an iron resize) to make sure all bands are sized properly.
     window.dispatchEvent(new Event('resize'));
-  }
-
-  /**
-   * Observer. Called when selectedBand property changes.
-   *
-   * @memberof FalconTimeline
-   */
-  _selectedBandChanged() {
-    if (this.selectedBand) {
-      // Link the new selectedBand to the correct band in the bands list.
-      this.bands.forEach((band, index) => {
-        if (this.selectedBand.id === band.id) {
-          this.linkPaths('selectedBand', `bands.${index}`);
-        }
-      });
-    }
-  }
-
-  /**
-   * Add all event listeners.
-   *
-   * @memberof FalconTimeline
-   */
-  _addEventListeners() {
-    this.addEventListener('iron-resize', this._onIronResize.bind(this));
-  }
-
-  /**
-   * Remove all event listeners.
-   *
-   * @memberof FalconTimeline
-   */
-  _removeEventListeners() {
-    this.removeEventListener('iron-resize', this._onIronResize.bind(this));
-  }
-
-  /**
-   * Event listener. Called after component resizes.
-   * Debounce the resize since it's redraws.
-   * We don't want to redraw too much or CTL might freeze and crash.
-   *
-   * @memberof FalconTimeline
-   */
-  _onIronResize() {
-    Polymer.Debouncer.debounce(
-      this._onIronResizeDebouncer,
-      Polymer.Async.timeOut.after(this.ironResizeDebounceTime),
-      () => {
-        this._resize(document); // Resize on document root in-case a band has been moved outside of this element.
-      },
-    );
   }
 
   /**
@@ -255,35 +181,6 @@ class FalconTimeline extends Polymer.mixinBehaviors([Polymer.IronResizableBehavi
   _destroySortableContainer() {
     if (this._sortableContainer) {
       this._sortableContainer.destroy();
-    }
-  }
-
-  /**
-   * Helper that resizes bands based on an element root.
-   *
-   * @param {any} root
-   * @memberof FalconTimeline
-   */
-  _resize(root) {
-    const timeBand = Polymer.dom(root).querySelector('falcon-time-band');
-    const timeScrollBar = Polymer.dom(root).querySelector('falcon-time-scroll-bar');
-    const allBandElements = Polymer.dom(root).querySelectorAll('.falcon-band');
-
-    if (timeBand) {
-      timeBand.resize();
-    }
-
-    if (timeScrollBar) {
-      timeScrollBar.resize();
-    }
-
-    if (allBandElements) {
-      allBandElements.forEach((band) => {
-        if (band.resize) {
-          band.resize();
-          band._calculateTickValues();
-        }
-      });
     }
   }
 }

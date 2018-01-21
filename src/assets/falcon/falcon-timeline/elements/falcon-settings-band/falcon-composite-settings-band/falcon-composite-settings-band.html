@@ -39,27 +39,27 @@
         </ibm-tabs>
 
         <iron-pages selected="{{selectedTabIndex}}">
-          <template is="dom-repeat" items="{{selectedBand.bands}}" as="band">
+          <template is="dom-repeat" items="[[selectedBand.bands]]" as="band">
             <!-- Activity. -->
-            <template is="dom-if" if="{{_equal('activity', band.type)}}">
+            <template is="dom-if" if="[[_equal('activity', band.type)]]">
               <div>
-                <falcon-activity-settings-band selected-band="{{_getSelectedSubBand(band)}}">
+                <falcon-activity-settings-band selected-band="[[_getSelectedSubBand(band)]]">
                 </falcon-activity-settings-band>
               </div>
             </template>
 
             <!-- Resource. -->
-            <template is="dom-if" if="{{_equal('resource', band.type)}}">
+            <template is="dom-if" if="[[_equal('resource', band.type)]]">
               <div>
-                <falcon-resource-settings-band selected-band="{{_getSelectedSubBand(band)}}">
+                <falcon-resource-settings-band selected-band="[[_getSelectedSubBand(band)]]">
                 </falcon-resource-settings-band>
               </div>
             </template>
 
             <!-- State. -->
-            <template is="dom-if" if="{{_equal('state', band.type)}}">
+            <template is="dom-if" if="[[_equal('state', band.type)]]">
               <div>
-                <falcon-state-settings-band selected-band="{{_getSelectedSubBand(band)}}">
+                <falcon-state-settings-band selected-band="[[_getSelectedSubBand(band)]]">
                 </falcon-state-settings-band>
               </div>
             </template>

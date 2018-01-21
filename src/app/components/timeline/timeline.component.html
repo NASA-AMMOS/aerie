@@ -5,9 +5,7 @@
     [visible]="showLeftDrawer$ | async"
     [order]="0"
     size="25">
-    <div>
-      <app-source-explorer></app-source-explorer>
-    </div>
+    <app-source-explorer></app-source-explorer>
   </split-area>
 
   <split-area
@@ -25,40 +23,36 @@
           </mat-card>
         </div>
 
-        <div *ngIf="(bands$ | async)?.length === 0" class="get-started">
+        <div *ngIf="bands.length === 0" class="get-started">
           <mat-card>
             To get started, select some <i class="fa fa-area-chart" style="color: #17a923" aria-hidden="true"></i> Data Sources from the source explorer.
           </mat-card>
         </div>
 
-        <div *ngIf="(bands$ | async)?.length > 0" class="timeline">
+        <div *ngIf="bands.length > 0" class="timeline">
           <mat-card>
             <falcon-time-range-selector
-              [maxTimeRange]="maxTimeRange$ | async"
-              [viewTimeRange]="viewTimeRange$ | async"
-              (falcon-timeline-update-view-time-range)="onUpdateViewTimeRange($event)">
+              [maxTimeRange]="maxTimeRange"
+              [viewTimeRange]="viewTimeRange">
             </falcon-time-range-selector>
 
             <falcon-time-scroll-bar
-              [labelWidth]="labelWidth$ | async"
-              [maxTimeRange]="maxTimeRange$ | async"
-              [viewTimeRange]="viewTimeRange$ | async"
-              (falcon-timeline-update-view-time-range)="onUpdateViewTimeRange($event)">
+              [labelWidth]="labelWidth"
+              [maxTimeRange]="maxTimeRange"
+              [viewTimeRange]="viewTimeRange">
             </falcon-time-scroll-bar>
 
             <falcon-time-band
-              [labelWidth]="labelWidth$ | async"
-              [maxTimeRange]="maxTimeRange$ | async"
-              [viewTimeRange]="viewTimeRange$ | async"
-              (falcon-timeline-update-view-time-range)="onUpdateViewTimeRange($event)">
+              [labelWidth]="labelWidth"
+              [maxTimeRange]="maxTimeRange"
+              [viewTimeRange]="viewTimeRange">
             </falcon-time-band>
 
             <falcon-timeline
-              [bands]="bands$ | async"
-              [labelWidth]="labelWidth$ | async"
-              [maxTimeRange]="maxTimeRange$ | async"
-              [selectedBand]="selectedBand$ | async"
-              [viewTimeRange]="viewTimeRange$ | async"
+              [bands]="bands"
+              [labelWidth]="labelWidth"
+              [maxTimeRange]="maxTimeRange"
+              [viewTimeRange]="viewTimeRange"
               (falcon-timeline-band-click)="onBandClick($event)">
             </falcon-timeline>
           </mat-card>
@@ -81,8 +75,8 @@
         <div class="settings">
           <mat-card>
             <falcon-settings-band
-              [bands]="bands$ | async"
-              [labelWidth]="labelWidth$ | async"
+              [bands]="bands"
+              [labelWidth]="labelWidth"
               [selectedBand]="selectedBand$ | async"
               (falcon-settings-update-all-bands)="onUpdateAllBands($event)"
               (falcon-settings-update-band)="onUpdateBand($event)">

@@ -108,9 +108,9 @@ export function removeBandsOrPoints(sourceId: string, bands: RavenBand[]) {
     if (band.sourceIds && band.sourceIds[sourceId]) {
       const sourceIds = Object.keys(band.sourceIds);
 
-      // If the source id we are closing is the only id this band references,
-      // then we can safely remove the entire band.
       if (sourceIds.length === 1) {
+        // If the source id we are closing is the only id this band references,
+        // then we can safely remove the entire band.
         removeBandIds.push(band.id);
       } else if (sourceIds.length > 1) {
         // Otherwise this band has points from more than one source.

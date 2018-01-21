@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, HostListener } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
 
@@ -29,26 +29,28 @@ import {
   templateUrl: './timeline.component.html',
 })
 export class TimelineComponent {
-  bands$: Observable<RavenBand[]>;
+  bands: RavenBand[];
+  labelWidth: number;
+  maxTimeRange: RavenTimeRange;
+  viewTimeRange: RavenTimeRange;
+
   itarMessage$: Observable<string>;
-  labelWidth$: Observable<number>;
-  maxTimeRange$: Observable<RavenTimeRange>;
   selectedBand$: Observable<RavenBand | null>;
   showDetailsDrawer$: Observable<boolean>;
   showLeftDrawer$: Observable<boolean>;
   showSouthBandsDrawer$: Observable<boolean>;
-  viewTimeRange$: Observable<RavenTimeRange>;
 
   constructor(private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState>) {
-    this.bands$ = this.store.select(fromTimeline.getBands);
+    this.store.select(fromTimeline.getBands).subscribe(bands => this.bands = bands);
+    this.store.select(fromTimeline.getLabelWidth).subscribe(labelWidth => this.labelWidth = labelWidth);
+    this.store.select(fromTimeline.getMaxTimeRange).subscribe(maxTimeRange => this.maxTimeRange = maxTimeRange);
+    this.store.select(fromTimeline.getViewTimeRange).subscribe(viewTimeRange => this.viewTimeRange = viewTimeRange);
+
     this.itarMessage$ = this.store.select(fromConfig.getItarMessage);
-    this.labelWidth$ = this.store.select(fromTimeline.getLabelWidth);
-    this.maxTimeRange$ = this.store.select(fromTimeline.getMaxTimeRange);
     this.selectedBand$ = this.store.select(fromTimeline.getSelectedBand);
     this.showDetailsDrawer$ = this.store.select(fromLayout.getShowDetailsDrawer);
     this.showLeftDrawer$ = this.store.select(fromLayout.getShowLeftDrawer);
     this.showSouthBandsDrawer$ = this.store.select(fromLayout.getShowSouthBandsDrawer);
-    this.viewTimeRange$ = this.store.select(fromTimeline.getViewTimeRange);
   }
 
   /**
@@ -57,7 +59,8 @@ export class TimelineComponent {
    * TODO: Replace 'any' with a concrete type.
    */
   onBandClick(e: any) {
-    this.store.dispatch(new timelineActions.SelectBand(e.detail.band.id));
+    e.stopPropagation();
+    this.store.dispatch(new timelineActions.SelectBand(e.detail.bandId));
   }
 
   /**
@@ -66,8 +69,8 @@ export class TimelineComponent {
    * TODO: Replace 'any' with a concrete type.
    */
   onUpdateAllBands(e: any) {
-    const { prop, value } = e.detail;
-    this.store.dispatch(new timelineActions.SettingsUpdateAllBands(prop, value));
+    e.stopPropagation();
+    this.store.dispatch(new timelineActions.SettingsUpdateAllBands(e.detail.prop, e.detail.value));
   }
 
   /**
@@ -76,21 +79,24 @@ export class TimelineComponent {
    * TODO: Replace 'any' with a concrete type.
    */
   onUpdateBand(e: any) {
-    const { prop, value } = e.detail;
-    this.store.dispatch(new timelineActions.SettingsUpdateBand(prop, value));
+    e.stopPropagation();
+    this.store.dispatch(new timelineActions.SettingsUpdateBand(e.detail.prop, e.detail.value));
   }
 
   /**
    * Event. Called when a `falcon-timeline-update-view-time-range` event is fired from the falcon-timeline.
+   * Using a HostListener here instead of a template event binding because multiple elements subscribe to this event.
    *
    * TODO: Replace 'any' with a concrete type.
    */
+  @HostListener('falcon-timeline-update-view-time-range', ['$event'])
   onUpdateViewTimeRange(e: any) {
+    e.stopPropagation();
     this.store.dispatch(new timelineActions.UpdateViewTimeRange(e.detail));
   }
 
   /**
-   * After a split pane drag, trigger a window resize event so the bands are properly sized.
+   * Event. After a split pane drag, trigger a window resize event so the bands are properly sized.
    */
   onDragEnd() {
     window.dispatchEvent(new Event('resize'));
