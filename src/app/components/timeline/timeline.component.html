@@ -48,13 +48,13 @@
               [viewTimeRange]="viewTimeRange">
             </falcon-time-band>
 
-            <falcon-timeline
+            <app-bands
               [bands]="bands"
+              [containerId]="'0'"
               [labelWidth]="labelWidth"
               [maxTimeRange]="maxTimeRange"
-              [viewTimeRange]="viewTimeRange"
-              (falcon-timeline-band-click)="onBandClick($event)">
-            </falcon-timeline>
+              [viewTimeRange]="viewTimeRange">
+            </app-bands>
           </mat-card>
         </div>
       </split-area>

@@ -99,7 +99,6 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
         };
       }
 
-      // Otherwise just return the band as-is.
       return band;
     })
     // 2. Add and new bands from the action.
@@ -111,7 +110,15 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
           [action.source.id]: true,
         },
       };
-    }));
+    }))
+    // 3. Add sort order and container id to all bands.
+    .map((band, index) => {
+      return {
+        ...band,
+        containerId: '0',
+        sortOrder: index,
+      };
+    });
 
   return {
     ...state,
@@ -146,6 +153,13 @@ export function removeBands(state: TimelineState, action: RemoveBands): Timeline
 
       // Otherwise if the band id is not included in the bandIds list, then return it as-is.
       return band;
+    })
+    // 3. Update sort order and container id to all bands.
+    .map((band, index) => {
+      return {
+        ...band,
+        sortOrder: index,
+      };
     });
 
   return {

@@ -1,0 +1,7 @@
+:host {
+  display: block;
+}
+
+.sortable-placeholder {
+  background-color: rgb(230,230,250);
+}

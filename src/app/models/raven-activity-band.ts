@@ -17,6 +17,7 @@ export interface RavenActivityBand {
   activityStyle: number;
   alignLabel: number;
   baselineLabel: number;
+  containerId: string;
   height: number;
   heightPadding: number;
   id: string;
@@ -30,6 +31,7 @@ export interface RavenActivityBand {
   points: RavenActivityPoint[];
   showLabel: boolean;
   showTooltip: boolean;
+  sortOrder: number;
   sourceIds: StringTMap<boolean>;
   trimLabel: boolean;
   type: string;

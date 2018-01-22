@@ -2,10 +2,6 @@
   display: block;
 }
 
-.falcon-timeline-sortable-placeholder {
-  background-color: rgb(230,230,250);
-}
-
 .timebanddiv {
   overflow: hidden;
   position: relative;

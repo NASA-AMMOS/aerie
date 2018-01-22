@@ -58,6 +58,7 @@ export class TimelineComponent {
    *
    * TODO: Replace 'any' with a concrete type.
    */
+  @HostListener('falcon-timeline-band-click', ['$event'])
   onBandClick(e: any) {
     e.stopPropagation();
     this.store.dispatch(new timelineActions.SelectBand(e.detail.bandId));
@@ -85,7 +86,7 @@ export class TimelineComponent {
 
   /**
    * Event. Called when a `falcon-timeline-update-view-time-range` event is fired from the falcon-timeline.
-   * Using a HostListener here instead of a template event binding because multiple elements subscribe to this event.
+   * Using a HostListener here instead of a template event binding because multiple elements emit this event.
    *
    * TODO: Replace 'any' with a concrete type.
    */

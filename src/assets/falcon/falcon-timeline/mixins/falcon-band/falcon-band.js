@@ -685,18 +685,14 @@ const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.I
    * @memberof FalconBand
    */
   _updateTimeAxisXCoordinates() {
-    const falcon = document.querySelector('falcon-timeline');
-    const domNode = Polymer.dom(this).node;
+    const falcon = document.querySelector('.timeline');
     let offsetWidth = 0;
 
     if (falcon) {
       offsetWidth = falcon.parentElement.offsetWidth;
     }
-    else if (domNode.parentElement) {
-      offsetWidth = domNode.parentElement.offsetWidth;
-    }
     else {
-      offsetWidth = domNode.offsetWidth;
+      console.warn('falcon-timeline: falcon-band: _updateTimeAxisXCoordinates: falcon is null: ', falcon);
     }
 
     // Update main band.

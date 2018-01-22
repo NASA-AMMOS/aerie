@@ -1,0 +1,95 @@
+<div [sortablejs]="sortedAndFilteredBands" [sortablejsOptions]="sortablejsOptions">
+  <div *ngFor="let band of sortedAndFilteredBands" class="bands">
+    <!-- Activity Bands. -->
+    <div *ngIf="band.type === 'activity'">
+      <falcon-activity-band
+        class="falcon-band"
+        [activityStyle]="band.activityStyle"
+        [alignLabel]="band.alignLabel"
+        [baselineLabel]="band.baselineLabel"
+        [height]="band.height"
+        [heightPadding]="band.heightPadding"
+        [id]="band.id"
+        [label]="band.label"
+        [labelColor]="band.labelColor"
+        [labelWidth]="labelWidth"
+        [layout]="band.layout"
+        [maxTimeRange]="maxTimeRange"
+        [minorLabels]="band.minorLabels"
+        [name]="band.name"
+        [points]="band.points"
+        [showLabel]="band.showLabel"
+        [showTooltip]="band.showTooltip"
+        [trimLabel]="band.trimLabel"
+        [viewTimeRange]="viewTimeRange">
+      </falcon-activity-band>
+    </div>
+
+    <!-- Composite Bands. -->
+    <!-- TODO. -->
+
+    <!-- Divider Bands. -->
+    <div *ngIf="band.type === 'divider'">
+      <falcon-divider-band
+        class="falcon-band"
+        [color]="band.color"
+        [height]="band.height"
+        [id]="band.id"
+        [label]="band.label"
+        [labelColor]="band.labelColor"
+        [labelWidth]="labelWidth"
+        [minorLabels]="band.minorLabels"
+        [name]="band.name"
+        [showTooltip]="band.showTooltip">
+      </falcon-divider-band>
+    </div>
+
+    <!-- Resource Bands. -->
+    <div *ngIf="band.type === 'resource'">
+      <falcon-resource-band
+        class="falcon-band"
+        [autoTickValues]="band.autoTickValues"
+        [color]="band.color"
+        [fill]="band.fill"
+        [fillColor]="band.fillColor"
+        [font]="band.font"
+        [height]="band.height"
+        [heightPadding]="band.heightPadding"
+        [id]="band.id"
+        [interpolation]="band.interpolation"
+        [label]="band.label"
+        [labelWidth]="labelWidth"
+        [maxTimeRange]="maxTimeRange"
+        [minorLabels]="band.minorLabels"
+        [name]="band.name"
+        [points]="band.points"
+        [rescale]="band.rescale"
+        [showIcon]="band.showIcon"
+        [showTooltip]="band.showTooltip"
+        [viewTimeRange]="viewTimeRange">
+      </falcon-resource-band>
+    </div>
+
+    <!-- State Bands. -->
+    <div *ngIf="band.type === 'state'">
+      <falcon-state-band
+        class="falcon-band"
+        [alignLabel]="band.alignLabel"
+        [baselineLabel]="band.baselineLabel"
+        [borderWidth]="band.borderWidth"
+        [height]="band.height"
+        [heightPadding]="band.heightPadding"
+        [id]="band.id"
+        [label]="band.label"
+        [labelColor]="band.labelColor"
+        [labelWidth]="labelWidth"
+        [maxTimeRange]="maxTimeRange"
+        [minorLabels]="band.minorLabels"
+        [name]="band.name"
+        [points]="band.points"
+        [showTooltip]="band.showTooltip"
+        [viewTimeRange]="viewTimeRange">
+      </falcon-state-band>
+    </div>
+  </div>
+</div>

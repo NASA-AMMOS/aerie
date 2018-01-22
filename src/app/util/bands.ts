@@ -224,6 +224,7 @@ export function toActivityBand(name: string, points: RavenActivityPoint[]): Rave
     activityStyle: 1,
     alignLabel: 3,
     baselineLabel: 3,
+    containerId: '0',
     height: 50,
     heightPadding: 10,
     id: v4(),
@@ -237,6 +238,7 @@ export function toActivityBand(name: string, points: RavenActivityPoint[]): Rave
     points,
     showLabel: true,
     showTooltip: true,
+    sortOrder: 0,
     sourceIds: {}, // Map of source ids this band has data from.
     trimLabel: true,
     type: 'activity',
@@ -309,6 +311,7 @@ export function toResourceBand(sourceId: string, metadata: MpsServerResourceMeta
   const resourceBand: RavenResourceBand = {
     autoTickValues: true,
     color: [0, 0, 0],
+    containerId: '0',
     fill: false,
     fillColor: [0, 0, 0],
     height: 100,
@@ -325,6 +328,7 @@ export function toResourceBand(sourceId: string, metadata: MpsServerResourceMeta
     rescale: true,
     showIcon: false,
     showTooltip: true,
+    sortOrder: 0,
     sourceIds: {}, // Map of source ids this band has data from.
     type: 'resource',
   };
@@ -342,6 +346,7 @@ export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, 
   const stateBand: RavenStateBand = {
     alignLabel: 3,
     baselineLabel: 3,
+    containerId: '0',
     height: 50,
     heightPadding: 0,
     id: v4(),
@@ -353,6 +358,7 @@ export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, 
     parentUniqueId: null,
     points,
     showTooltip: true,
+    sortOrder: 0,
     sourceIds: {}, // Map of source ids this band has data from.
     type: 'state',
   };
