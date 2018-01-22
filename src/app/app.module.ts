@@ -62,7 +62,7 @@ export const EFFECTS = [
     MaterialModule,
     AngularSplitModule,
     PolymerModule.forRoot(),
-    SortablejsModule.forRoot(),
+    SortablejsModule.forRoot({}),
     RouterModule.forRoot(routes, { useHash: true }),
 
     /**
