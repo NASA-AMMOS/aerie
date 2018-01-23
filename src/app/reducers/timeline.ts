@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { omit, sortBy } from 'lodash';
+import { omit } from 'lodash';
 
 import { createSelector, createFeatureSelector } from '@ngrx/store';
 
@@ -29,6 +29,7 @@ import {
 
 import {
   getTimeRanges,
+  resetSortOrder,
 } from './../util/bands';
 
 import {
@@ -105,6 +106,7 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
       return band;
     })
     // 2. Add and new bands from the action.
+    //    Make sure sortOrder is set here. Assumes new bands are appended to the end of the '0' container.
     .concat(action.bands.map((band: RavenBand, index: number) => {
       return {
         ...band,
@@ -152,16 +154,8 @@ export function removeBands(state: TimelineState, action: RemoveBands): Timeline
       return band;
     });
 
-    bands =
-      // 3. Re-sort by sortOrder with the newly filtered bands.
-      sortBy(bands, 'containerId', 'sortOrder')
-      // 4. Update all bands to make sure there are no gaps in sortOrder.
-      .map((band, index) => {
-          return {
-            ...band,
-            sortOrder: index,
-          };
-        });
+  // Reset the sort order in all the containers for the list of bands.
+  bands = resetSortOrder(bands);
 
   return {
     ...state,

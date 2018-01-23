@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { groupBy } from 'lodash';
+import { groupBy, sortBy } from 'lodash';
 import { v4 } from 'uuid';
 
 import {
@@ -364,4 +364,53 @@ export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, 
   };
 
   return stateBand;
+}
+
+/**
+ * Helper. Resets the sortOrder for the given bands for each containerId.
+ * Does not change the displayed sort order, only shifts the indices so they count up from 0.
+ *
+ * For example if the following bands array is given (other non-necessary band props excluded):
+ *
+ * let bands = [
+ *    { containerId: '0', sortOrder: 100 },
+ *    { containerId: '1', sortOrder: 20 },
+ *    { containerId: '0', sortOrder: 10 },
+ *    { containerId: '1', sortOrder: 10 },
+ * ];
+ *
+ * First we do a sortBy containerId and sortOrder which gives:
+ *
+ * bands === [
+ *    { containerId: '0', sortOrder: 10 },
+ *    { containerId: '0', sortOrder: 100 },
+ *    { containerId: '1', sortOrder: 10 },
+ *    { containerId: '1', sortOrder: 20 },
+ * ];
+ *
+ * Then we reset the sortOrder for each given containerId to start at 0:
+ *
+ * bands === [
+ *    { containerId: '0', sortOrder: 0 },
+ *    { containerId: '0', sortOrder: 1 },
+ *    { containerId: '1', sortOrder: 0 },
+ *    { containerId: '1', sortOrder: 1 },
+ * ];
+ */
+export function resetSortOrder(bands: RavenBand[]): RavenBand[] {
+  const sortByBands = sortBy(bands, 'containerId', 'sortOrder');
+  const index = {}; // Hash of containerIds to a given index (indices start at 0).
+
+  return sortByBands.map((band: RavenBand) => {
+    if (index[band.containerId] === undefined) {
+      index[band.containerId] = 0;
+    } else {
+      index[band.containerId]++;
+    }
+
+    return {
+      ...band,
+      sortOrder: index[band.containerId],
+    };
+  });
 }
