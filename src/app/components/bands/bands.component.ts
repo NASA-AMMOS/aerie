@@ -68,8 +68,6 @@ export class BandsComponent implements OnChanges, OnInit {
         [...this.bands]
         .filter(band => band.containerId === this.containerId)
         .sort((a, b) =>  a.sortOrder - b.sortOrder);
-
-      this.asyncResize();
     }
   }
 
@@ -100,13 +98,5 @@ export class BandsComponent implements OnChanges, OnInit {
     });
 
     this.newSort.emit(sort);
-  }
-
-  /**
-   * CTL is really bad at redrawing when scroll-bars appear.
-   * So we add a setTimeout to make sure we resize some time after a scroll-bar potentially appears.
-   */
-  asyncResize() {
-    setTimeout(() => dispatchEvent(new Event('resize')), 0);
   }
 }

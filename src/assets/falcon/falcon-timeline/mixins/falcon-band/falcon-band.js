@@ -275,7 +275,7 @@ const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.I
     if (!this.noDraw && band && band.div) {
       band.div.appendChild(this._tooltip.div);
       Polymer.dom(this).appendChild(band.div);
-      this.resize();
+      this._asyncResize();
     }
   }
 
@@ -662,6 +662,14 @@ const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.I
    */
   _onUpdateView() {
     // TODO.
+  }
+
+  /**
+   * CTL is really bad at redrawing itself when it's attached to the document.
+   * So we add a setTimeout to make sure we resize some time after a band is attached.
+   */
+  _asyncResize() {
+    setTimeout(() => dispatchEvent(new Event('resize')), 0);
   }
 
   /**
