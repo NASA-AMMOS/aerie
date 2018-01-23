@@ -52,12 +52,6 @@ export class BandsComponent implements OnChanges, OnInit {
       scroll: true,
       scrollSensitivity: 50,
       scrollSpeed: 10,
-      setData: (dataTransfer: any, dragEl: any) => {
-        // Set a blank ghost drag image.
-        const fakeGhost = dragEl.cloneNode(true);
-        fakeGhost.style.opacity = 0;
-        dataTransfer.setDragImage(fakeGhost, 0, 0);
-      },
       sort: true,
     };
   }
