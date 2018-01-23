@@ -534,7 +534,7 @@ const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.I
   }
 
   /**
-   * Event. Called when a band is clicked.
+   * Event. Called when band is clicked.
    * We don't need click events for timeBand or timeScrollBar - those should emit their own events if needed.
    *
    * @param {any} e
@@ -543,7 +543,7 @@ const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.I
    */
   _onBandClick() {
     if (!this.timeBand && !this.timeScrollBar) {
-      this._fire('falcon-timeline-band-click', { bandId: this.id });
+      this._fire('falcon-band-click', { bandId: this.id });
     }
   }
 

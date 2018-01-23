@@ -19,7 +19,9 @@ import * as timelineActions from './../../actions/timeline';
 
 import {
   RavenBand,
+  RavenSortMessage,
   RavenTimeRange,
+  StringTMap,
 } from './../../models';
 
 @Component({
@@ -54,14 +56,17 @@ export class TimelineComponent {
   }
 
   /**
-   * Event. Called when a `falcon-timeline-band-click` event is fired from falcon-timeline.
-   *
-   * TODO: Replace 'any' with a concrete type.
+   * Event. Called when a band is clicked in an app-bands component.
    */
-  @HostListener('falcon-timeline-band-click', ['$event'])
-  onBandClick(e: any) {
-    e.stopPropagation();
-    this.store.dispatch(new timelineActions.SelectBand(e.detail.bandId));
+  onBandClick(bandId: string) {
+    this.store.dispatch(new timelineActions.SelectBand(bandId));
+  }
+
+  /**
+   * Event. Called when a `newSort` event is fired from app-bands.
+   */
+  onSort(sort: StringTMap<RavenSortMessage>) {
+    this.store.dispatch(new timelineActions.SortBands(sort));
   }
 
   /**
@@ -85,12 +90,12 @@ export class TimelineComponent {
   }
 
   /**
-   * Event. Called when a `falcon-timeline-update-view-time-range` event is fired from the falcon-timeline.
+   * Event. Called when a `falcon-update-view-time-range` event is fired from the falcon-timeline.
    * Using a HostListener here instead of a template event binding because multiple elements emit this event.
    *
    * TODO: Replace 'any' with a concrete type.
    */
-  @HostListener('falcon-timeline-update-view-time-range', ['$event'])
+  @HostListener('falcon-update-view-time-range', ['$event'])
   onUpdateViewTimeRange(e: any) {
     e.stopPropagation();
     this.store.dispatch(new timelineActions.UpdateViewTimeRange(e.detail));
@@ -100,6 +105,6 @@ export class TimelineComponent {
    * Event. After a split pane drag, trigger a window resize event so the bands are properly sized.
    */
   onDragEnd() {
-    window.dispatchEvent(new Event('resize'));
+    dispatchEvent(new Event('resize'));
   }
 }

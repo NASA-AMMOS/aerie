@@ -1,11 +1,25 @@
-import { ChangeDetectionStrategy, Component, Input, SimpleChanges } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  HostListener,
+  Input,
+  Output,
+  SimpleChanges,
+} from '@angular/core';
 import { OnChanges, OnInit } from '@angular/core/src/metadata/lifecycle_hooks';
 import { SortablejsOptions } from 'angular-sortablejs';
 
 import {
   RavenBand,
+  RavenSortMessage,
   RavenTimeRange,
+  StringTMap,
 } from './../../models';
+
+export interface BandClickEvent extends Event {
+  detail: StringTMap<string>;
+}
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -20,6 +34,9 @@ export class BandsComponent implements OnChanges, OnInit {
   @Input() maxTimeRange: RavenTimeRange;
   @Input() viewTimeRange: RavenTimeRange;
 
+  @Output() bandClick: EventEmitter<string> = new EventEmitter<string>();
+  @Output() newSort: EventEmitter<StringTMap<RavenSortMessage>> = new EventEmitter<StringTMap<RavenSortMessage>>();
+
   sortablejsOptions: SortablejsOptions;
   sortedAndFilteredBands: RavenBand[];
 
@@ -28,16 +45,10 @@ export class BandsComponent implements OnChanges, OnInit {
       animation: 100,
       delay: 0,
       ghostClass: 'sortable-placeholder',
-      group: {
-        name: `falcon-timeline-bands-${this.containerId}`,
-        put: [],
-      },
-      onEnd: (event: any) => {
-        // TODO.
-      },
-      onUpdate: (event: any) => {
-        // TODO.
-      },
+      group: 'bands',
+      onAdd: this.onSort.bind(this),
+      onEnd: this.onSort.bind(this),
+      onRemove: this.onSort.bind(this),
       scroll: true,
       scrollSensitivity: 50,
       scrollSpeed: 10,
@@ -55,11 +66,38 @@ export class BandsComponent implements OnChanges, OnInit {
     if (changes.bands) {
       this.sortedAndFilteredBands =
         [...this.bands]
-        .sort((a, b) =>  a.sortOrder - b.sortOrder)
-        .filter(band => band.containerId === this.containerId);
+        .filter(band => band.containerId === this.containerId)
+        .sort((a, b) =>  a.sortOrder - b.sortOrder);
 
       this.asyncResize();
     }
+  }
+
+  /**
+   * Event. Called when a `falcon-band-click` event is fired from a falcon band.
+   */
+  @HostListener('falcon-band-click', ['$event'])
+  onBandClick(e: BandClickEvent) {
+    e.stopPropagation();
+    this.bandClick.emit(e.detail.bandId);
+  }
+
+  /**
+   * Helper to sort bands after a sortablejs message.
+   * By the time sortedAndFiltered bands gets to this function they should be in their new order.
+   * We use that new order to build a dictionary of bands by id to update the store.
+   */
+  onSort(e: any) {
+    const sort: StringTMap<RavenSortMessage> = {};
+
+    this.sortedAndFilteredBands.forEach((b, index) => {
+      sort[b.id] = {
+        containerId: this.containerId,
+        sortOrder: index,
+      };
+    });
+
+    this.newSort.emit(sort);
   }
 
   /**
@@ -67,6 +105,6 @@ export class BandsComponent implements OnChanges, OnInit {
    * So we add a setTimeout to make sure we resize some time after a scroll-bar potentially appears.
    */
   asyncResize() {
-    setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 0);
+    setTimeout(() => dispatchEvent(new Event('resize')), 0);
   }
 }

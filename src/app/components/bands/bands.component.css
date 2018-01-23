@@ -1,5 +1,10 @@
 :host {
   display: block;
+  padding-bottom: 10px;
+}
+
+.sortable-bands {
+  padding-bottom: 10px;
 }
 
 .sortable-placeholder {

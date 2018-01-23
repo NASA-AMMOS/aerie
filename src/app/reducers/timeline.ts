@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { omit } from 'lodash';
+import { omit, sortBy } from 'lodash';
 
 import { createSelector, createFeatureSelector } from '@ngrx/store';
 
@@ -22,6 +22,7 @@ import {
   SelectBand,
   SettingsUpdateAllBands,
   SettingsUpdateBand,
+  SortBands,
   TimelineAction,
   TimelineActionTypes,
 } from '../actions/timeline';
@@ -69,6 +70,8 @@ export function reducer(state: TimelineState = initialState, action: SourceExplo
       return settingsUpdateAllBands(state, action);
     case TimelineActionTypes.SettingsUpdateBand:
       return settingsUpdateBand(state, action);
+    case TimelineActionTypes.SortBands:
+      return sortBands(state, action);
     case TimelineActionTypes.UpdateViewTimeRange:
       return { ...state, viewTimeRange: { ...action.viewTimeRange } };
     default:
@@ -102,23 +105,17 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
       return band;
     })
     // 2. Add and new bands from the action.
-    .concat(action.bands.map((band: RavenBand) => {
+    .concat(action.bands.map((band: RavenBand, index: number) => {
       return {
         ...band,
+        containerId: '0',
+        sortOrder: state.bands.length + index,
         sourceIds: {
           ...band.sourceIds,
           [action.source.id]: true,
         },
       };
-    }))
-    // 3. Add sort order and container id to all bands.
-    .map((band, index) => {
-      return {
-        ...band,
-        containerId: '0',
-        sortOrder: index,
-      };
-    });
+    }));
 
   return {
     ...state,
@@ -135,7 +132,7 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
  * If bands is empty, or if we remove a band that is selected, make sure to set selectedBand to null.
  */
 export function removeBands(state: TimelineState, action: RemoveBands): TimelineState {
-  const bands = state.bands
+  let bands = state.bands
     // 1. Filter any bands with an id in removeBandIds.
     .filter(band => {
       return !action.removeBandIds.includes(band.id);
@@ -153,8 +150,12 @@ export function removeBands(state: TimelineState, action: RemoveBands): Timeline
 
       // Otherwise if the band id is not included in the bandIds list, then return it as-is.
       return band;
-    })
-    // 3. Update sort order and container id to all bands.
+    });
+
+  bands =
+    // 3. Re-sort by sortOrder with the newly filtered bands.
+    sortBy(bands, 'containerId', 'sortOrder')
+    // 4. Update all bands to make sure there are no gaps in sortOrder.
     .map((band, index) => {
       return {
         ...band,
@@ -210,6 +211,26 @@ export function settingsUpdateBand(state: TimelineState, action: SettingsUpdateB
       ...state.selectedBand,
       [action.prop]: action.value,
     } as RavenBand),
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'NewSortOrder' action.
+ */
+export function sortBands(state: TimelineState, action: SortBands): TimelineState {
+  return {
+    ...state,
+    bands: state.bands.map((band: RavenBand) => {
+      if (action.sort[band.id]) {
+        return {
+          ...band,
+          containerId: action.sort[band.id].containerId,
+          sortOrder: action.sort[band.id].sortOrder,
+        };
+      }
+
+      return band;
+    }),
   };
 }
 

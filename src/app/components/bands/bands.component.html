@@ -1,5 +1,8 @@
-<div [sortablejs]="sortedAndFilteredBands" [sortablejsOptions]="sortablejsOptions">
-  <div *ngFor="let band of sortedAndFilteredBands" class="bands">
+<div
+  class="sortable-bands"
+  [sortablejs]="sortedAndFilteredBands"
+  [sortablejsOptions]="sortablejsOptions">
+  <div *ngFor="let band of sortedAndFilteredBands">
     <!-- Activity Bands. -->
     <div *ngIf="band.type === 'activity'">
       <falcon-activity-band

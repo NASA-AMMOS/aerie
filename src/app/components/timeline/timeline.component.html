@@ -53,7 +53,9 @@
               [containerId]="'0'"
               [labelWidth]="labelWidth"
               [maxTimeRange]="maxTimeRange"
-              [viewTimeRange]="viewTimeRange">
+              [viewTimeRange]="viewTimeRange"
+              (bandClick)="onBandClick($event)"
+              (newSort)="onSort($event)">
             </app-bands>
           </mat-card>
         </div>
@@ -63,8 +65,18 @@
         [visible]="showSouthBandsDrawer$ | async"
         [order]="3"
         size="20">
-        <div>
-          Timeline Viewer South Bands
+        <div class="timeline">
+          <mat-card>
+            <app-bands
+              [bands]="bands"
+              [containerId]="'1'"
+              [labelWidth]="labelWidth"
+              [maxTimeRange]="maxTimeRange"
+              [viewTimeRange]="viewTimeRange"
+              (bandClick)="onBandClick($event)"
+              (newSort)="onSort($event)">
+            </app-bands>
+          </mat-card>
         </div>
       </split-area>
 

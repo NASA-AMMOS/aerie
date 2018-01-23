@@ -10,7 +10,9 @@
 import { Action } from '@ngrx/store';
 
 import {
+  RavenSortMessage,
   RavenTimeRange,
+  StringTMap,
 } from './../models';
 
 // Action Types.
@@ -18,6 +20,7 @@ export enum TimelineActionTypes {
   SelectBand =             '[timeline] select_band',
   SettingsUpdateAllBands = '[timeline] settings_update_all_bands',
   SettingsUpdateBand =     '[timeline] settings_update_band',
+  SortBands =              '[timeline] sort_bands',
   UpdateViewTimeRange =    '[timeline] update_view_time_range',
 }
 
@@ -40,6 +43,12 @@ export class SettingsUpdateBand implements Action {
   constructor(public prop: string, public value: any) {}
 }
 
+export class SortBands implements Action {
+  readonly type = TimelineActionTypes.SortBands;
+
+  constructor(public sort: StringTMap<RavenSortMessage>) {}
+}
+
 export class UpdateViewTimeRange implements Action {
   readonly type = TimelineActionTypes.UpdateViewTimeRange;
 
@@ -51,4 +60,5 @@ export type TimelineAction =
   SelectBand |
   SettingsUpdateAllBands |
   SettingsUpdateBand |
+  SortBands |
   UpdateViewTimeRange;

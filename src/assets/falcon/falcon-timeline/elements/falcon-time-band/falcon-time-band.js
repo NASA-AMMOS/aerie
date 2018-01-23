@@ -118,7 +118,7 @@ class FalconTimeBand extends Polymer.mixinBehaviors([FalconPolymerUtils], Falcon
    */
   _onUpdateView(start, end) {
     if (start !== 0 && end !== 0 && start < end) {
-      this._fire('falcon-timeline-update-view-time-range', { end, start });
+      this._fire('falcon-update-view-time-range', { end, start });
     }
   }
 }

@@ -52,16 +52,16 @@ export class AppComponent implements AfterViewChecked {
 
   toggleDetailsDrawer() {
     this.store.dispatch(new layoutActions.ToggleDetailsDrawer());
-    window.dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize.
+    dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize.
   }
 
   toggleLeftDrawer() {
     this.store.dispatch(new layoutActions.ToggleLeftDrawer());
-    window.dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize.
+    dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize.
   }
 
   toggleSouthBandsDrawer() {
     this.store.dispatch(new layoutActions.ToggleSouthBandsDrawer());
-    window.dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize.
+    dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize.
   }
 }

@@ -386,32 +386,36 @@
      * @memberof FalconSourceExplorerTreeNode
      */
     _dragIsValid() {
-      const src = dragHelper.src.data;
-      const dest = this.data;
+      if (dragHelper && dragHelper.src) {
+        const src = dragHelper.src.data;
+        const dest = this.data;
 
-      // 1.
-      if (src.id === dest.id) {
-        return false;
-      }
-
-      // 2.
-      if (src.parentId === dest.id) {
-        return false;
-      }
-
-      // 3.
-      if (!dest[this.childrenKey]) {
-        return false;
-      }
-
-      // 3.
-      let valid = true;
-      this.dfs((node) => {
-        if (dest.id === node.id) {
-          valid = false;
+        // 1.
+        if (src.id === dest.id) {
+          return false;
         }
-      }, src); // Start from src node.
-      return valid;
+
+        // 2.
+        if (src.parentId === dest.id) {
+          return false;
+        }
+
+        // 3.
+        if (!dest[this.childrenKey]) {
+          return false;
+        }
+
+        // 3.
+        let valid = true;
+        this.dfs((node) => {
+          if (dest.id === node.id) {
+            valid = false;
+          }
+        }, src); // Start from src node.
+        return valid;
+      }
+
+      return false;
     }
 
     /**
