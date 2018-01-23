@@ -86,6 +86,8 @@ export class BandsComponent implements OnChanges, OnInit {
    * Helper to sort bands after a sortablejs message.
    * By the time sortedAndFiltered bands gets to this function they should be in their new order.
    * We use that new order to build a dictionary of bands by id to update the store.
+   *
+   * TODO: Replace 'any' with a concrete type.
    */
   onSort(e: any) {
     const sort: StringTMap<RavenSortMessage> = {};
