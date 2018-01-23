@@ -367,8 +367,9 @@ export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, 
 }
 
 /**
- * Helper. Resets the sortOrder for the given bands for each containerId.
+ * Helper. Updates the sortOrder for the given bands within each containerId.
  * Does not change the displayed sort order, only shifts the indices so they count up from 0.
+ * When we remove bands, this is good at making sure the sortOrder is always maintained.
  *
  * For example if the following bands array is given (other non-necessary band props excluded):
  *
@@ -397,7 +398,7 @@ export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, 
  *    { containerId: '1', sortOrder: 1 },
  * ];
  */
-export function resetSortOrder(bands: RavenBand[]): RavenBand[] {
+export function updateSortOrder(bands: RavenBand[]): RavenBand[] {
   const sortByBands = sortBy(bands, 'containerId', 'sortOrder');
   const index = {}; // Hash of containerIds to a given index (indices start at 0).
 

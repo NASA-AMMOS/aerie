@@ -29,7 +29,7 @@ import {
 
 import {
   getTimeRanges,
-  resetSortOrder,
+  updateSortOrder,
 } from './../util/bands';
 
 import {
@@ -154,8 +154,8 @@ export function removeBands(state: TimelineState, action: RemoveBands): Timeline
       return band;
     });
 
-  // Reset the sort order in all the containers for the list of bands.
-  bands = resetSortOrder(bands);
+  // Update the sort order of all the bands per each container.
+  bands = updateSortOrder(bands);
 
   return {
     ...state,
