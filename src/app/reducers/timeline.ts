@@ -109,7 +109,7 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
       return {
         ...band,
         containerId: '0',
-        sortOrder: state.bands.length + index,
+        sortOrder: state.bands.filter(b => b.containerId === '0').length + index,
         sourceIds: {
           ...band.sourceIds,
           [action.source.id]: true,
@@ -152,16 +152,16 @@ export function removeBands(state: TimelineState, action: RemoveBands): Timeline
       return band;
     });
 
-  bands =
-    // 3. Re-sort by sortOrder with the newly filtered bands.
-    sortBy(bands, 'containerId', 'sortOrder')
-    // 4. Update all bands to make sure there are no gaps in sortOrder.
-    .map((band, index) => {
-      return {
-        ...band,
-        sortOrder: index,
-      };
-    });
+    bands =
+      // 3. Re-sort by sortOrder with the newly filtered bands.
+      sortBy(bands, 'containerId', 'sortOrder')
+      // 4. Update all bands to make sure there are no gaps in sortOrder.
+      .map((band, index) => {
+          return {
+            ...band,
+            sortOrder: index,
+          };
+        });
 
   return {
     ...state,
