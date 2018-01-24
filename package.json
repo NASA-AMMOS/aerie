@@ -5,6 +5,7 @@
   "scripts": {
     "build": "ng build",
     "build-prod": "ng build -prod",
+    "build-prod-mpsserver": "ng build -prod --base-href /mpsserver/raven/ --deploy-url /mpsserver/raven/",
     "clean": "bash clean.sh",
     "e2e": "ng e2e",
     "install-all": "bash install.sh",
