@@ -8,19 +8,20 @@
  */
 
 import { createSelector, createFeatureSelector } from '@ngrx/store';
-import { ConfigAction } from '../actions/Config';
+import { ConfigAction } from './../actions/Config';
 
-import ravenConfig from './../ravenConfig';
+import { environment } from './../../environments/environment';
 
 // Config Interface.
 export interface ConfigState {
   baseSourcesUrl: string;
   baseUrl: string;
   itarMessage: string;
+  production: boolean;
 }
 
 // Config State.
-const initialState: ConfigState = ravenConfig;
+const initialState: ConfigState = environment;
 
 /**
  * Reducer.
