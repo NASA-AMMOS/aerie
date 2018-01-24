@@ -22,7 +22,6 @@ export interface ConfigState {
 
 // Config State.
 const initialState: ConfigState = environment;
-// console.log('initialState: ' + JSON.stringify(initialState));
 
 /**
  * Reducer.
