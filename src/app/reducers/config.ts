@@ -14,10 +14,10 @@ import { environment } from '../../environments/environment';
 
 // Config Interface.
 export interface ConfigState {
-  production: boolean;
   baseSourcesUrl: string;
   baseUrl: string;
   itarMessage: string;
+  production: boolean;
 }
 
 // Config State.
