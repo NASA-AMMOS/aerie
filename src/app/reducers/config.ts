@@ -8,9 +8,9 @@
  */
 
 import { createSelector, createFeatureSelector } from '@ngrx/store';
-import { ConfigAction } from '../actions/Config';
+import { ConfigAction } from './../actions/Config';
 
-import { environment } from '../../environments/environment';
+import { environment } from './../../environments/environment';
 
 // Config Interface.
 export interface ConfigState {
