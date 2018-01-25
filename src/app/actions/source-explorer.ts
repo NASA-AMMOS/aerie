@@ -18,23 +18,23 @@ import {
 
 // Action Types.
 export enum SourceExplorerActionTypes {
-  FetchGraphData =             '[source-explorer] fetch_graph_data',
-  FetchGraphDataFailure =      '[source-explorer] fetch_graph_data_failure',
-  FetchGraphDataSuccess =      '[source-explorer] fetch_graph_data_success',
-  FetchInitialSources =        '[source-explorer] fetch_initial_sources',
+  FetchGraphData             = '[source-explorer] fetch_graph_data',
+  FetchGraphDataFailure      = '[source-explorer] fetch_graph_data_failure',
+  FetchGraphDataSuccess      = '[source-explorer] fetch_graph_data_success',
+  FetchInitialSources        = '[source-explorer] fetch_initial_sources',
   FetchInitialSourcesFailure = '[source-explorer] fetch_initial_sources_failure',
   FetchInitialSourcesSuccess = '[source-explorer] fetch_initial_sources_success',
-  FetchSources =               '[source-explorer] fetch_sources',
-  FetchSourcesFailure =        '[source-explorer] fetch_sources_failure',
-  FetchSourcesSuccess =        '[source-explorer] fetch_sources_success',
-  LoadContent =                '[source-explorer] load_content',
-  RemoveBands =                '[source-explorer] remove_bands',
-  SourceExplorerCollapse =     '[source-explorer] source_explorer_collapse',
-  SourceExplorerExpand =       '[source-explorer] source_explorer_expand',
-  SourceExplorerClose =        '[source-explorer] source_explorer_close',
-  SourceExplorerOpen =         '[source-explorer] source_explorer_open',
-  SourceExplorerPin =          '[source-explorer] source_explorer_pin',
-  SourceExplorerUnpin =        '[source-explorer] source_explorer_unpin',
+  FetchSources               = '[source-explorer] fetch_sources',
+  FetchSourcesFailure        = '[source-explorer] fetch_sources_failure',
+  FetchSourcesSuccess        = '[source-explorer] fetch_sources_success',
+  LoadContent                = '[source-explorer] load_content',
+  RemoveBands                = '[source-explorer] remove_bands',
+  SourceExplorerCollapse     = '[source-explorer] source_explorer_collapse',
+  SourceExplorerExpand       = '[source-explorer] source_explorer_expand',
+  SourceExplorerClose        = '[source-explorer] source_explorer_close',
+  SourceExplorerOpen         = '[source-explorer] source_explorer_open',
+  SourceExplorerPin          = '[source-explorer] source_explorer_pin',
+  SourceExplorerUnpin        = '[source-explorer] source_explorer_unpin',
 }
 
 // Actions.

@@ -12,8 +12,8 @@ import { Action } from '@ngrx/store';
 // Action Types.
 export enum ConfigActionTypes {
   ChangeBaseSourcesUrl = '[config] change_base_sources_url',
-  ChangeBaseUrl =        '[config] change_base_url',
-  ChangeItarMessage =    '[config] change_itar_message',
+  ChangeBaseUrl        = '[config] change_base_url',
+  ChangeItarMessage    = '[config] change_itar_message',
 }
 
 // Actions.
