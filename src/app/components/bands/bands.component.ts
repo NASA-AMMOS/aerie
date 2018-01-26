@@ -42,7 +42,7 @@ export class BandsComponent implements OnChanges, OnInit {
 
   ngOnInit() {
     this.sortablejsOptions = {
-      animation: 100,
+      animation: 0,
       delay: 0,
       ghostClass: 'sortable-placeholder',
       group: 'bands',
@@ -50,7 +50,7 @@ export class BandsComponent implements OnChanges, OnInit {
       onEnd: this.onSort.bind(this),
       onRemove: this.onSort.bind(this),
       scroll: true,
-      scrollSensitivity: 50,
+      scrollSensitivity: 30,
       scrollSpeed: 10,
       sort: true,
     };
