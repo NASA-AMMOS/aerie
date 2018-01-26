@@ -35,7 +35,7 @@ import { BandsComponent } from './components/bands/bands.component';
 import { SourceExplorerComponent } from './components/source-explorer/source-explorer.component';
 import { TimelineComponent } from './components/timeline/timeline.component';
 
-import { SourceExplorerEffects } from './effects/source-explorer';
+import { SourceExplorerEffects } from './effects/source-explorer.effect';
 
 export const COMPONENTS = [
   AppComponent,

@@ -17,11 +17,11 @@ import {
 
 // Action Types.
 export enum TimelineActionTypes {
-  SelectBand =             '[timeline] select_band',
+  SelectBand             = '[timeline] select_band',
   SettingsUpdateAllBands = '[timeline] settings_update_all_bands',
-  SettingsUpdateBand =     '[timeline] settings_update_band',
-  SortBands =              '[timeline] sort_bands',
-  UpdateViewTimeRange =    '[timeline] update_view_time_range',
+  SettingsUpdateBand     = '[timeline] settings_update_band',
+  SortBands              = '[timeline] sort_bands',
+  UpdateViewTimeRange    = '[timeline] update_view_time_range',
 }
 
 // Actions.

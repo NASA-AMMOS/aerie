@@ -7,8 +7,8 @@ describe('raven2 App', () => {
     page = new AppPage();
   });
 
-  it('should display welcome message', () => {
+  it('the app title should be correct', () => {
     page.navigateTo();
-    expect(page.getParagraphText()).toEqual('Welcome to app!');
+    expect(page.getAppTitle()).toEqual('Raven2');
   });
 });

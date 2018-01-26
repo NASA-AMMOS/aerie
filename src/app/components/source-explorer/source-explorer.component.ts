@@ -10,6 +10,7 @@
 import { Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/take';
 
 import * as fromSourceExplorer from './../../reducers/source-explorer';
