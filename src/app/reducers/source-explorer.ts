@@ -10,7 +10,7 @@
 import { keyBy, map, omit } from 'lodash';
 import { v4 } from 'uuid';
 
-import { createSelector, createFeatureSelector } from '@ngrx/store';
+import { createFeatureSelector, createSelector } from '@ngrx/store';
 
 import {
   FetchGraphDataSuccess,
@@ -18,15 +18,15 @@ import {
   FetchSourcesSuccess,
   LoadContent,
   RemoveBands,
-  SourceExplorerActionTypes,
   SourceExplorerAction,
+  SourceExplorerActionTypes,
 } from './../actions/source-explorer';
 
 import {
   RavenBand,
   RavenSource,
   StringTMap,
-} from './../models/index';
+} from './../shared/models/index';
 
 // Source Explorer Interface.
 export interface SourceExplorerState {

@@ -48,7 +48,7 @@
               [viewTimeRange]="viewTimeRange">
             </falcon-time-band>
 
-            <app-bands
+            <raven-bands
               [bands]="bands"
               [containerId]="'0'"
               [labelWidth]="labelWidth"
@@ -56,7 +56,7 @@
               [viewTimeRange]="viewTimeRange"
               (bandClick)="onBandClick($event)"
               (newSort)="onSort($event)">
-            </app-bands>
+            </raven-bands>
           </mat-card>
         </div>
       </split-area>
@@ -67,7 +67,7 @@
         size="20">
         <div class="timeline">
           <mat-card>
-            <app-bands
+            <raven-bands
               [bands]="bands"
               [containerId]="'1'"
               [labelWidth]="labelWidth"
@@ -75,7 +75,7 @@
               [viewTimeRange]="viewTimeRange"
               (bandClick)="onBandClick($event)"
               (newSort)="onSort($event)">
-            </app-bands>
+            </raven-bands>
           </mat-card>
         </div>
       </split-area>

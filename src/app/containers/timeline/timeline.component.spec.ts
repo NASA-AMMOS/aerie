@@ -9,24 +9,30 @@
 
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { StoreModule } from '@ngrx/store';
 
-import { SourceExplorerComponent } from './source-explorer.component';
+import { SortablejsModule } from 'angular-sortablejs';
+import { AngularSplitModule } from 'angular-split';
 
-import { reducers, metaReducers } from './../../store';
+import { BandsComponent } from './../../components';
+import { TimelineComponent } from './timeline.component';
 
-describe('SourceExplorerComponent', () => {
-  let component: SourceExplorerComponent;
-  let fixture: ComponentFixture<SourceExplorerComponent>;
+import { metaReducers, reducers } from './../../store';
+
+describe('TimelineComponent', () => {
+  let component: TimelineComponent;
+  let fixture: ComponentFixture<TimelineComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [
-        SourceExplorerComponent,
+        BandsComponent,
+        TimelineComponent,
       ],
       imports: [
+        AngularSplitModule,
         StoreModule.forRoot(reducers, { metaReducers }),
+        SortablejsModule,
       ],
       schemas: [
         CUSTOM_ELEMENTS_SCHEMA,
@@ -36,7 +42,7 @@ describe('SourceExplorerComponent', () => {
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(SourceExplorerComponent);
+    fixture = TestBed.createComponent(TimelineComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Component, ChangeDetectionStrategy, HostListener } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
 
@@ -22,7 +22,7 @@ import {
   RavenSortMessage,
   RavenTimeRange,
   StringTMap,
-} from './../../models';
+} from './../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -56,14 +56,14 @@ export class TimelineComponent {
   }
 
   /**
-   * Event. Called when a band is clicked in an app-bands component.
+   * Event. Called when a band is clicked in an raven-bands component.
    */
   onBandClick(bandId: string) {
     this.store.dispatch(new timelineActions.SelectBand(bandId));
   }
 
   /**
-   * Event. Called when a `newSort` event is fired from app-bands.
+   * Event. Called when a `newSort` event is fired from raven-bands.
    */
   onSort(sort: StringTMap<RavenSortMessage>) {
     this.store.dispatch(new timelineActions.SortBands(sort));

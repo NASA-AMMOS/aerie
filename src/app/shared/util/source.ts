@@ -10,11 +10,11 @@
 import { v4 } from 'uuid';
 
 import {
+  MpsServerSource,
   MpsServerSourceCategory,
   MpsServerSourceDir,
   MpsServerSourceFile,
   MpsServerSourceGraphable,
-  MpsServerSource,
   RavenSource,
 } from './../models';
 

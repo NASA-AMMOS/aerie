@@ -83,6 +83,7 @@
       "check-else",
       "check-whitespace"
     ],
+    "ordered-imports": true,
     "prefer-const": true,
     "quotemark": [
       true,
@@ -122,13 +123,13 @@
     "directive-selector": [
       true,
       "attribute",
-      "app",
+      ["app", "raven"],
       "camelCase"
     ],
     "component-selector": [
       true,
       "element",
-      "app",
+      ["app", "raven"],
       "kebab-case"
     ],
     "trailing-comma": [

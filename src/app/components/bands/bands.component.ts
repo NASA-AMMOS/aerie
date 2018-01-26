@@ -15,7 +15,7 @@ import {
   RavenSortMessage,
   RavenTimeRange,
   StringTMap,
-} from './../../models';
+} from './../../shared/models';
 
 export interface BandClickEvent extends Event {
   detail: StringTMap<string>;
@@ -23,7 +23,7 @@ export interface BandClickEvent extends Event {
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  selector: 'app-bands',
+  selector: 'raven-bands',
   styleUrls: ['./bands.component.css'],
   templateUrl: './bands.component.html',
 })
