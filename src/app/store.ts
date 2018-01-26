@@ -8,13 +8,14 @@
  */
 
 import {
-  ActionReducerMap,
   ActionReducer,
+  ActionReducerMap,
   MetaReducer,
 } from '@ngrx/store';
 
-import { environment } from '../environments/environment';
+import { environment } from './../environments/environment';
 import { RouterStateUrl } from './routes';
+
 import * as fromRouter from '@ngrx/router-store';
 
 import { RootActionTypes } from './actions/root';

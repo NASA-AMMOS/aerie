@@ -7,39 +7,36 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/catch';
-import 'rxjs/add/operator/switchMap';
-import 'rxjs/add/operator/mergeMap';
-import 'rxjs/add/operator/toArray';
-import 'rxjs/add/operator/withLatestFrom';
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Actions, Effect } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
-import { Effect, Actions } from '@ngrx/effects';
 import { Observable } from 'rxjs/Observable';
 import { of } from 'rxjs/observable/of';
+
+import 'rxjs/add/operator/catch';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/mergeMap';
+import 'rxjs/add/operator/switchMap';
+import 'rxjs/add/operator/toArray';
+import 'rxjs/add/operator/withLatestFrom';
 
 import { AppState } from './../../app/store';
 
 import { SourceExplorerActionTypes } from './../actions/source-explorer';
-
 import * as sourceExplorerActions from './../actions/source-explorer';
 
 import {
-  toRavenSources,
-} from './../util/source';
-
-import {
   toRavenBandData,
-} from './../util/bands';
+  toRavenSources,
+} from './../shared/util';
 
 import {
   MpsServerGraphData,
   MpsServerSource,
   RavenBandData,
   RavenSource,
-} from './../models';
+} from './../shared/models';
 
 @Injectable()
 export class SourceExplorerEffects {

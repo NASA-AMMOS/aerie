@@ -14,7 +14,7 @@ import {
   RavenBand,
   RavenSource,
   StringTMap,
-} from './../models';
+} from './../shared/models';
 
 // Action Types.
 export enum SourceExplorerActionTypes {

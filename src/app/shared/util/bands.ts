@@ -25,9 +25,9 @@ import {
   RavenDividerBand,
   RavenResourceBand,
   RavenStateBand,
-  StringTMap,
   RavenTimeRange,
-} from '../models/index';
+  StringTMap,
+} from './../models';
 
 import {
   getMaxTimeRangeForPoints,

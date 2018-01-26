@@ -13,7 +13,7 @@ import {
   RavenSortMessage,
   RavenTimeRange,
   StringTMap,
-} from './../models';
+} from './../shared/models';
 
 // Action Types.
 export enum TimelineActionTypes {

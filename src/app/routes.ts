@@ -10,7 +10,7 @@
 import { Routes, RouterStateSnapshot, Params } from '@angular/router';
 import { RouterStateSerializer } from '@ngrx/router-store';
 
-import { TimelineComponent } from './components/timeline/timeline.component';
+import { TimelineComponent } from './containers';
 
 /**
  * Application level routes.

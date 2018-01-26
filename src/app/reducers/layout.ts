@@ -7,8 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { createSelector, createFeatureSelector } from '@ngrx/store';
-import { LayoutActionTypes, LayoutAction } from './../actions/layout';
+import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { LayoutAction, LayoutActionTypes } from './../actions/layout';
 
 // Layout Interface.
 export interface LayoutState {

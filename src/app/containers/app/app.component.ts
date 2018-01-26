@@ -7,10 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ChangeDetectorRef, ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AfterViewChecked } from '@angular/core/src/metadata/lifecycle_hooks';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
+
 import 'rxjs/add/observable/combineLatest';
 
 import * as fromSourceExplorer from './../../reducers/source-explorer';

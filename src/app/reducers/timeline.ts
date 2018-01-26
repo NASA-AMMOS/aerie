@@ -9,7 +9,7 @@
 
 import { omit } from 'lodash';
 
-import { createSelector, createFeatureSelector } from '@ngrx/store';
+import { createFeatureSelector, createSelector } from '@ngrx/store';
 
 import {
   FetchGraphDataSuccess,
@@ -30,12 +30,12 @@ import {
 import {
   getTimeRanges,
   updateSortOrder,
-} from './../util/bands';
+} from './../shared/util';
 
 import {
   RavenBand,
   RavenTimeRange,
-} from './../models';
+} from './../shared/models';
 
 // Timeline Interface.
 export interface TimelineState {

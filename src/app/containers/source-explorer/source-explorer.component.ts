@@ -7,9 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
+
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/take';
 
@@ -18,14 +19,16 @@ import * as fromTimeline from './../../reducers/timeline';
 
 import * as sourceExplorerActions from './../../actions/source-explorer';
 
-import { toRavenSources } from './../../util/source';
-import { removeBandsOrPoints } from './../../util/bands';
+import {
+  removeBandsOrPoints,
+  toRavenSources,
+} from './../../shared/util';
 
 import {
   RavenBand,
   RavenSource,
   StringTMap,
-} from './../../models';
+} from './../../shared/models';
 
 interface FalconSourceExplorerTreeNode extends HTMLElement {
   data: RavenSource;
