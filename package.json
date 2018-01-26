@@ -56,6 +56,7 @@
     "bower": "1.8.2",
     "codelyzer": "^4.0.1",
     "jasmine-core": "~2.6.2",
+    "jasmine-marbles": "^0.2.0",
     "jasmine-spec-reporter": "~4.1.0",
     "karma": "~1.7.0",
     "karma-chrome-launcher": "~2.1.1",
