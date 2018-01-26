@@ -7,9 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { StoreModule } from '@ngrx/store';
+
 import { SourceExplorerComponent } from './source-explorer.component';
+
+import { reducers, metaReducers } from './../../store';
 
 describe('SourceExplorerComponent', () => {
   let component: SourceExplorerComponent;
@@ -17,7 +22,15 @@ describe('SourceExplorerComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ SourceExplorerComponent ],
+      declarations: [
+        SourceExplorerComponent,
+      ],
+      imports: [
+        StoreModule.forRoot(reducers, { metaReducers }),
+      ],
+      schemas: [
+        CUSTOM_ELEMENTS_SCHEMA,
+      ],
     })
     .compileComponents();
   }));

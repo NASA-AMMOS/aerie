@@ -1,5 +1,7 @@
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { SortablejsModule } from 'angular-sortablejs';
 import { BandsComponent } from './bands.component';
 
 describe('BandsComponent', () => {
@@ -8,7 +10,15 @@ describe('BandsComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ BandsComponent ],
+      declarations: [
+        BandsComponent,
+      ],
+      imports: [
+        SortablejsModule,
+      ],
+      schemas: [
+        CUSTOM_ELEMENTS_SCHEMA,
+      ],
     })
     .compileComponents();
   }));

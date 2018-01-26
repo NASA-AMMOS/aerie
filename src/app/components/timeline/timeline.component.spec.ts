@@ -7,9 +7,17 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { AngularSplitModule } from 'angular-split';
+import { StoreModule } from '@ngrx/store';
+import { SortablejsModule } from 'angular-sortablejs';
+
+import { BandsComponent } from './../bands/bands.component';
 import { TimelineComponent } from './timeline.component';
+
+import { reducers, metaReducers } from './../../store';
 
 describe('TimelineComponent', () => {
   let component: TimelineComponent;
@@ -17,7 +25,18 @@ describe('TimelineComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ TimelineComponent ],
+      declarations: [
+        BandsComponent,
+        TimelineComponent,
+      ],
+      imports: [
+        AngularSplitModule,
+        StoreModule.forRoot(reducers, { metaReducers }),
+        SortablejsModule,
+      ],
+      schemas: [
+        CUSTOM_ELEMENTS_SCHEMA,
+      ],
     })
     .compileComponents();
   }));
