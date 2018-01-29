@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Routes, RouterStateSnapshot, Params } from '@angular/router';
+import { Params, RouterStateSnapshot, Routes } from '@angular/router';
 import { RouterStateSerializer } from '@ngrx/router-store';
 
 import { TimelineComponent } from './containers';
