@@ -37,7 +37,7 @@ import {
   RavenTimeRange,
 } from './../shared/models';
 
-// Timeline Interface.
+// Timeline State Interface.
 export interface TimelineState {
   bands: RavenBand[];
   labelWidth: number;
@@ -47,7 +47,7 @@ export interface TimelineState {
 }
 
 // Timeline Initial State.
-const initialState: TimelineState = {
+export const initialState: TimelineState = {
   bands: [],
   labelWidth: 99,
   maxTimeRange: { end: 0, start: 0 },

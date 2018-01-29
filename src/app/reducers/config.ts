@@ -12,7 +12,7 @@ import { ConfigAction } from './../actions/Config';
 
 import { environment } from './../../environments/environment';
 
-// Config Interface.
+// Config State Interface.
 export interface ConfigState {
   baseSourcesUrl: string;
   baseUrl: string;
@@ -21,7 +21,7 @@ export interface ConfigState {
 }
 
 // Config State.
-const initialState: ConfigState = environment;
+export const initialState: ConfigState = environment;
 
 /**
  * Reducer.
