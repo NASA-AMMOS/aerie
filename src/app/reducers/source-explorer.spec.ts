@@ -64,8 +64,8 @@ describe('source-explorer reducer', () => {
 
   it('handle FetchGraphDataSuccess', () => {
     const source: RavenSource = rootSource;
-    const bandIdsToPoints = { [activityBand.id]: [] };
     const bands: RavenBand[] = [stateBand];
+    const bandIdsToPoints = { [activityBand.id]: [] };
 
     sourceExplorerState = reducer(sourceExplorerState, new FetchGraphDataSuccess(source, bands, bandIdsToPoints));
     expect(sourceExplorerState).toEqual({
@@ -171,8 +171,8 @@ describe('source-explorer reducer', () => {
 
   it('handle RemoveBands', () => {
     const source: RavenSource = rootSource;
-    const bandIdsToPoints = { [activityBand.id]: [] };
     const bands: RavenBand[] = [stateBand];
+    const bandIdsToPoints = { [activityBand.id]: [] };
 
     // Add some bands first so we have something to remove.
     sourceExplorerState = reducer(sourceExplorerState, new FetchGraphDataSuccess(source, bands, bandIdsToPoints));
