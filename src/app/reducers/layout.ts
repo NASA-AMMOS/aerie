@@ -10,7 +10,7 @@
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { LayoutAction, LayoutActionTypes } from './../actions/layout';
 
-// Layout Interface.
+// Layout State Interface.
 export interface LayoutState {
   showDetailsDrawer: boolean;
   showLeftDrawer: boolean;
@@ -18,7 +18,7 @@ export interface LayoutState {
 }
 
 // Layout State.
-const initialState: LayoutState = {
+export const initialState: LayoutState = {
   showDetailsDrawer: true,
   showLeftDrawer: true,
   showSouthBandsDrawer: true,

@@ -28,7 +28,7 @@ import {
   StringTMap,
 } from './../shared/models/index';
 
-// Source Explorer Interface.
+// Source Explorer State Interface.
 export interface SourceExplorerState {
   fetchGraphDataRequestPending: boolean;
   fetchInitialSourcesRequestPending: boolean;
@@ -38,7 +38,7 @@ export interface SourceExplorerState {
 }
 
 // Source Explorer Initial State.
-const initialState: SourceExplorerState = {
+export const initialState: SourceExplorerState = {
   fetchGraphDataRequestPending: false,
   fetchInitialSourcesRequestPending: false,
   fetchSourcesRequestPending: false,

@@ -26,7 +26,7 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { CustomRouterStateSerializer, routes } from './routes';
 import { metaReducers, reducers } from './store';
 
-import { environment } from '../environments/environment';
+import { environment } from './../environments/environment';
 
 import { MaterialModule } from './shared/material';
 

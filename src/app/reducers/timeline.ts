@@ -28,8 +28,8 @@ import {
 } from '../actions/timeline';
 
 import {
-  getTimeRanges,
   updateSortOrder,
+  updateTimeRanges,
 } from './../shared/util';
 
 import {
@@ -37,7 +37,7 @@ import {
   RavenTimeRange,
 } from './../shared/models';
 
-// Timeline Interface.
+// Timeline State Interface.
 export interface TimelineState {
   bands: RavenBand[];
   labelWidth: number;
@@ -47,7 +47,7 @@ export interface TimelineState {
 }
 
 // Timeline Initial State.
-const initialState: TimelineState = {
+export const initialState: TimelineState = {
   bands: [],
   labelWidth: 99,
   maxTimeRange: { end: 0, start: 0 },
@@ -122,7 +122,7 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
   return {
     ...state,
     bands,
-    ...getTimeRanges(state.viewTimeRange, bands),
+    ...updateTimeRanges(state.viewTimeRange, bands),
   };
 }
 
@@ -161,7 +161,7 @@ export function removeBands(state: TimelineState, action: RemoveBands): Timeline
     ...state,
     bands,
     selectedBand: state.selectedBand && action.removeBandIds.includes(state.selectedBand.id) ? null : state.selectedBand,
-    ...getTimeRanges(state.viewTimeRange, bands),
+    ...updateTimeRanges(state.viewTimeRange, bands),
   };
 }
 
@@ -201,10 +201,7 @@ export function settingsUpdateBand(state: TimelineState, action: SettingsUpdateB
 
       return band;
     }),
-    selectedBand: ({
-      ...state.selectedBand,
-      [action.prop]: action.value,
-    } as RavenBand),
+    selectedBand: state.selectedBand ? { ...state.selectedBand, [action.prop]: action.value } as RavenBand : null,
   };
 }
 
