@@ -103,12 +103,12 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
       return newSources(state, action);
     case SourceExplorerActionTypes.RemoveBands:
       return removeBands(state, action);
+    case SourceExplorerActionTypes.SourceExplorerClose:
+      return updateTreeSource(state, action.source.id, 'opened', false);
     case SourceExplorerActionTypes.SourceExplorerCollapse:
       return updateTreeSource(state, action.source.id, 'expanded', false);
     case SourceExplorerActionTypes.SourceExplorerExpand:
       return updateTreeSource(state, action.source.id, 'expanded', true);
-    case SourceExplorerActionTypes.SourceExplorerClose:
-      return updateTreeSource(state, action.source.id, 'opened', false);
     case SourceExplorerActionTypes.SourceExplorerOpen:
       return updateTreeSource(state, action.source.id, 'opened', true);
     case SourceExplorerActionTypes.SourceExplorerPin:
@@ -217,13 +217,14 @@ export function newSources(state: SourceExplorerState, action: FetchSourcesSucce
 
 /**
  * Reduction Helper. Called when reducing the 'SourceExplorerSelect' action.
+ * Note that in some cases state.selectedSourceId === '' so we just omit '' keys from treeBySourceId.
  */
 export function selectSource(state: SourceExplorerState, action: SourceExplorerSelect): SourceExplorerState {
   if (state.treeBySourceId[action.source.id].selectable) {
     return {
       ...state,
       selectedSourceId: action.source.id === state.selectedSourceId ? '' : action.source.id,
-      treeBySourceId: {
+      treeBySourceId: omit({
         ...state.treeBySourceId,
         [action.source.id]: {
           ...state.treeBySourceId[action.source.id],
@@ -233,7 +234,7 @@ export function selectSource(state: SourceExplorerState, action: SourceExplorerS
           ...state.treeBySourceId[state.selectedSourceId],
           selected: false,
         },
-      },
+      }, ''),
     };
   }
 

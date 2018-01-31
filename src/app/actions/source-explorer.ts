@@ -29,9 +29,9 @@ export enum SourceExplorerActionTypes {
   FetchSourcesSuccess        = '[sourceExplorer] fetch_sources_success',
   LoadContent                = '[sourceExplorer] load_content',
   RemoveBands                = '[sourceExplorer] remove_bands',
+  SourceExplorerClose        = '[sourceExplorer] source_explorer_close',
   SourceExplorerCollapse     = '[sourceExplorer] source_explorer_collapse',
   SourceExplorerExpand       = '[sourceExplorer] source_explorer_expand',
-  SourceExplorerClose        = '[sourceExplorer] source_explorer_close',
   SourceExplorerOpen         = '[sourceExplorer] source_explorer_open',
   SourceExplorerPin          = '[sourceExplorer] source_explorer_pin',
   SourceExplorerSelect       = '[sourceExplorer] source_explorer_select',
@@ -105,6 +105,12 @@ export class RemoveBands implements Action {
   ) {}
 }
 
+export class SourceExplorerClose implements Action {
+  readonly type = SourceExplorerActionTypes.SourceExplorerClose;
+
+  constructor(public source: RavenSource) {}
+}
+
 export class SourceExplorerCollapse implements Action {
   readonly type = SourceExplorerActionTypes.SourceExplorerCollapse;
 
@@ -113,12 +119,6 @@ export class SourceExplorerCollapse implements Action {
 
 export class SourceExplorerExpand implements Action {
   readonly type = SourceExplorerActionTypes.SourceExplorerExpand;
-
-  constructor(public source: RavenSource) {}
-}
-
-export class SourceExplorerClose implements Action {
-  readonly type = SourceExplorerActionTypes.SourceExplorerClose;
 
   constructor(public source: RavenSource) {}
 }
@@ -160,9 +160,9 @@ export type SourceExplorerAction =
   FetchSourcesSuccess |
   LoadContent |
   RemoveBands |
+  SourceExplorerClose |
   SourceExplorerCollapse |
   SourceExplorerExpand |
-  SourceExplorerClose |
   SourceExplorerOpen |
   SourceExplorerPin |
   SourceExplorerSelect |
