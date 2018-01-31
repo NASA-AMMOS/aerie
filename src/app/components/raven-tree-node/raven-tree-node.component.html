@@ -1,29 +1,29 @@
-
-<div class="node" [ngClass]="{'selected': tree[id].selected}">
+<div class="node" [ngClass]="{
+  'selected': tree[id].selected,
+  'highlight': tree[id].expanded || tree[id].opened,
+  'no-highlight': !tree[id].expanded && !tree[id].opened
+}">
   <span *ngIf="tree[id].expandable">
     <span *ngIf="tree[id].expanded">
-      <mat-icon (click)="onCollapse($event)">remove</mat-icon>
+      <mat-icon (click)="collapse.emit(tree[id])">remove</mat-icon>
     </span>
 
     <span *ngIf="!tree[id].expanded">
-      <mat-icon (click)="onExpand($event)">add</mat-icon>
+      <mat-icon (click)="expand.emit(tree[id])">add</mat-icon>
     </span>
   </span>
 
   <span *ngIf="tree[id].openable">
     <span *ngIf="tree[id].opened">
-      <mat-icon (click)="onClose($event)">radio_button_checked</mat-icon>
+      <mat-icon (click)="close.emit(tree[id])">radio_button_checked</mat-icon>
     </span>
 
     <span *ngIf="!tree[id].opened">
-      <mat-icon (click)="onOpen($event)">radio_button_unchecked</mat-icon>
+      <mat-icon (click)="open.emit(tree[id])">radio_button_unchecked</mat-icon>
     </span>
   </span>
 
-  <span (click)="onSelect($event)" class="name" [ngClass]="{
-    'highlight': tree[id].expanded || tree[id].opened,
-    'no-highlight': !tree[id].expanded && !tree[id].opened
-  }">
+  <span (click)="select.emit(tree[id])" class="name">
     <i [ngClass]="tree[id].icon" aria-hidden="true"></i> {{tree[id].name}}
   </span>
 
@@ -35,7 +35,7 @@
     <button mat-menu-item>System settings</button>
   </mat-menu>
 
-  <button *ngIf="tree[id].selected" mat-icon-button [matMenuTriggerFor]="actionsMenu">
+  <button class="menu-icon" *ngIf="tree[id].selected" mat-icon-button [matMenuTriggerFor]="actionsMenu">
     <mat-icon>more_vert</mat-icon>
   </button>
 </div>
@@ -47,11 +47,11 @@
         <raven-tree-node
           [id]="childId"
           [tree]="tree"
-          (close)="onClose($event)"
-          (collapse)="onCollapse($event)"
-          (expand)="onExpand($event)"
-          (open)="onOpen($event)"
-          (select)="onSelect($event)">
+          (close)="close.emit($event)"
+          (collapse)="collapse.emit($event)"
+          (expand)="expand.emit($event)"
+          (open)="open.emit($event)"
+          (select)="select.emit($event)">
         </raven-tree-node>
       </li>
     </div>

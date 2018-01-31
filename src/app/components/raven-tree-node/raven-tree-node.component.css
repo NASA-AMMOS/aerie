@@ -1,10 +1,19 @@
 .node {
   white-space: nowrap;
   cursor: pointer;
+  padding-left: 10px;
 }
 
 mat-icon {
   font-size: 16px;
+}
+
+.menu-icon {
+  line-height: 0;
+  height: 25px;
+  width: 25px;
+  float: right;
+  color: #000000;
 }
 
 .highlight {
