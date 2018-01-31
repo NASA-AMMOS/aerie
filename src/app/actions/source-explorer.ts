@@ -34,6 +34,7 @@ export enum SourceExplorerActionTypes {
   SourceExplorerClose        = '[sourceExplorer] source_explorer_close',
   SourceExplorerOpen         = '[sourceExplorer] source_explorer_open',
   SourceExplorerPin          = '[sourceExplorer] source_explorer_pin',
+  SourceExplorerSelect       = '[sourceExplorer] source_explorer_select',
   SourceExplorerUnpin        = '[sourceExplorer] source_explorer_unpin',
 }
 
@@ -134,6 +135,12 @@ export class SourceExplorerPin implements Action {
   constructor(public source: RavenSource) {}
 }
 
+export class SourceExplorerSelect implements Action {
+  readonly type = SourceExplorerActionTypes.SourceExplorerSelect;
+
+  constructor(public source: RavenSource) {}
+}
+
 export class SourceExplorerUnpin implements Action {
   readonly type = SourceExplorerActionTypes.SourceExplorerUnpin;
 
@@ -158,4 +165,5 @@ export type SourceExplorerAction =
   SourceExplorerClose |
   SourceExplorerOpen |
   SourceExplorerPin |
+  SourceExplorerSelect |
   SourceExplorerUnpin;

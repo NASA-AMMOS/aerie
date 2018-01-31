@@ -79,6 +79,7 @@ export class BandsComponent implements OnChanges, OnInit {
    */
   @HostListener('falcon-band-click', ['$event'])
   onBandClick(e: BandClickEvent) {
+    e.preventDefault();
     e.stopPropagation();
     this.bandClick.emit(e.detail.bandId);
   }

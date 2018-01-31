@@ -1,0 +1,59 @@
+
+<div class="node" [ngClass]="{'selected': tree[id].selected}">
+  <span *ngIf="tree[id].expandable">
+    <span *ngIf="tree[id].expanded">
+      <mat-icon (click)="onCollapse($event)">remove</mat-icon>
+    </span>
+
+    <span *ngIf="!tree[id].expanded">
+      <mat-icon (click)="onExpand($event)">add</mat-icon>
+    </span>
+  </span>
+
+  <span *ngIf="tree[id].openable">
+    <span *ngIf="tree[id].opened">
+      <mat-icon (click)="onClose($event)">radio_button_checked</mat-icon>
+    </span>
+
+    <span *ngIf="!tree[id].opened">
+      <mat-icon (click)="onOpen($event)">radio_button_unchecked</mat-icon>
+    </span>
+  </span>
+
+  <span (click)="onSelect($event)" class="name" [ngClass]="{
+    'highlight': tree[id].expanded || tree[id].opened,
+    'no-highlight': !tree[id].expanded && !tree[id].opened
+  }">
+    <i [ngClass]="tree[id].icon" aria-hidden="true"></i> {{tree[id].name}}
+  </span>
+
+  <mat-menu
+    #actionsMenu="matMenu"
+    [overlapTrigger]="false"
+    y-position="below">
+    <button mat-menu-item>Power</button>
+    <button mat-menu-item>System settings</button>
+  </mat-menu>
+
+  <button *ngIf="tree[id].selected" mat-icon-button [matMenuTriggerFor]="actionsMenu">
+    <mat-icon>more_vert</mat-icon>
+  </button>
+</div>
+
+<div *ngIf="tree[id].expanded">
+  <ul>
+    <div *ngFor="let childId of tree[id].childIds">
+      <li>
+        <raven-tree-node
+          [id]="childId"
+          [tree]="tree"
+          (close)="onClose($event)"
+          (collapse)="onCollapse($event)"
+          (expand)="onExpand($event)"
+          (open)="onOpen($event)"
+          (select)="onSelect($event)">
+        </raven-tree-node>
+      </li>
+    </div>
+  </ul>
+</div>

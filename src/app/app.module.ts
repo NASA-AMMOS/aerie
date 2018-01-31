@@ -38,15 +38,17 @@ import {
 
 import {
   BandsComponent,
+  RavenTreeNodeComponent,
 } from './components';
 
 import {
   SourceExplorerEffects,
 } from './effects';
 
-export const COMPONENTS = [
+export const DECLARATIONS = [
   AppComponent,
   BandsComponent,
+  RavenTreeNodeComponent,
   SourceExplorerComponent,
   TimelineComponent,
 ];
@@ -86,8 +88,8 @@ export const SCHEMAS = [
   bootstrap: [
     AppComponent,
   ],
-  declarations: COMPONENTS,
-  exports: COMPONENTS,
+  declarations: DECLARATIONS,
+  exports: DECLARATIONS,
   imports: MODULES,
   providers: PROVIDERS,
   schemas: SCHEMAS,

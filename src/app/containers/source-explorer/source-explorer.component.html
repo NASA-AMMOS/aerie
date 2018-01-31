@@ -1,8 +1,11 @@
-<falcon-source-explorer-tree
-  [data]="tree$ | async"
-  (collapse-falcon-source-explorer-tree-node)="onCollapse($event)"
-  (expand-falcon-source-explorer-tree-node)="onExpand($event)"
-  (open-falcon-source-explorer-tree-node)="onOpen($event)"
-  (close-falcon-source-explorer-tree-node)="onClose($event)"
->
-</falcon-source-explorer-tree>
+<div *ngFor="let childId of tree['0'].childIds">
+  <raven-tree-node
+    [id]="childId"
+    [tree]="tree"
+    (close)="onClose($event)"
+    (collapse)="onCollapse($event)"
+    (expand)="onExpand($event)"
+    (open)="onOpen($event)"
+    (select)="onSelect($event)">
+  </raven-tree-node>
+</div>

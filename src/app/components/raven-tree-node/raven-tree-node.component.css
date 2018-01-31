@@ -1,0 +1,29 @@
+.node {
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+mat-icon {
+  font-size: 16px;
+}
+
+.highlight {
+  color: #688ad8;
+}
+
+.no-highlight {
+  color: #000000;
+}
+
+.selected {
+  background-color: rgba(200, 200, 200, 0.5);
+}
+
+ul {
+  margin: 0;
+  padding-left: 25px;
+}
+
+li {
+  list-style-type: none;
+}

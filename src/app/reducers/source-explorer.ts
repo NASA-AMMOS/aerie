@@ -8,7 +8,6 @@
  */
 
 import { keyBy, map, omit } from 'lodash';
-import { v4 } from 'uuid';
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 
@@ -20,6 +19,7 @@ import {
   RemoveBands,
   SourceExplorerAction,
   SourceExplorerActionTypes,
+  SourceExplorerSelect,
 } from './../actions/source-explorer';
 
 import {
@@ -34,6 +34,7 @@ export interface SourceExplorerState {
   fetchInitialSourcesRequestPending: boolean;
   fetchSourcesRequestPending: boolean;
   initialSourcesLoaded: boolean;
+  selectedSourceId: string;
   treeBySourceId: StringTMap<RavenSource>;
 }
 
@@ -43,6 +44,7 @@ export const initialState: SourceExplorerState = {
   fetchInitialSourcesRequestPending: false,
   fetchSourcesRequestPending: false,
   initialSourcesLoaded: false,
+  selectedSourceId: '',
   treeBySourceId: {
     // Note: The root source in the source explorer tree is never displayed.
     '0': {
@@ -55,7 +57,7 @@ export const initialState: SourceExplorerState = {
       expandable: false,
       expanded: false,
       icon: '',
-      id: v4(),
+      id: '0',
       isServer: false,
       kind: '',
       label: 'root',
@@ -111,6 +113,8 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
       return updateTreeSource(state, action.source.id, 'opened', true);
     case SourceExplorerActionTypes.SourceExplorerPin:
       return updateTreeSource(state, action.source.id, 'pinned', true);
+    case SourceExplorerActionTypes.SourceExplorerSelect:
+      return selectSource(state, action);
     case SourceExplorerActionTypes.SourceExplorerUnpin:
       return updateTreeSource(state, action.source.id, 'pinned', false);
     default:
@@ -209,6 +213,31 @@ export function newSources(state: SourceExplorerState, action: FetchSourcesSucce
       },
     },
   };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'SourceExplorerSelect' action.
+ */
+export function selectSource(state: SourceExplorerState, action: SourceExplorerSelect): SourceExplorerState {
+  if (state.treeBySourceId[action.source.id].selectable) {
+    return {
+      ...state,
+      selectedSourceId: action.source.id === state.selectedSourceId ? '' : action.source.id,
+      treeBySourceId: {
+        ...state.treeBySourceId,
+        [action.source.id]: {
+          ...state.treeBySourceId[action.source.id],
+          selected: true,
+        },
+        [state.selectedSourceId]: {
+          ...state.treeBySourceId[state.selectedSourceId],
+          selected: false,
+        },
+      },
+    };
+  }
+
+  return state;
 }
 
 /**

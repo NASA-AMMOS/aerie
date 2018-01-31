@@ -15,7 +15,6 @@ import {
   ToggleSouthBandsDrawer,
 } from './../actions/layout';
 
-
 describe('layout reducer', () => {
   let layoutState: LayoutState;
 
