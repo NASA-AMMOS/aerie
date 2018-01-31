@@ -20,39 +20,31 @@ import {
   MatProgressBarModule,
   MatProgressSpinnerModule,
   MatSidenavModule,
+  MatTabsModule,
   MatToolbarModule,
 } from '@angular/material';
+
+export const MODULES = [
+  MatButtonModule,
+  MatCardModule,
+  MatGridListModule,
+  MatIconModule,
+  MatInputModule,
+  MatListModule,
+  MatMenuModule,
+  MatProgressBarModule,
+  MatProgressSpinnerModule,
+  MatSidenavModule,
+  MatTabsModule,
+  MatToolbarModule,
+];
 
 /**
  * This is a helper module that imports Angular Material components in bulk so
  * we don't have to import them individually everywhere.
  */
 @NgModule({
-  exports: [
-    MatButtonModule,
-    MatCardModule,
-    MatGridListModule,
-    MatIconModule,
-    MatInputModule,
-    MatListModule,
-    MatMenuModule,
-    MatProgressBarModule,
-    MatProgressSpinnerModule,
-    MatSidenavModule,
-    MatToolbarModule,
-  ],
-  imports: [
-    MatButtonModule,
-    MatCardModule,
-    MatGridListModule,
-    MatIconModule,
-    MatInputModule,
-    MatListModule,
-    MatMenuModule,
-    MatProgressBarModule,
-    MatProgressSpinnerModule,
-    MatSidenavModule,
-    MatToolbarModule,
-  ],
+  exports: MODULES,
+  imports: MODULES,
 })
 export class MaterialModule {}
