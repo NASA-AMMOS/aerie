@@ -1,3 +1,7 @@
 :host {
   display: block;
 }
+
+.tab-content {
+  padding: 15px 0px 0px 10px;
+}
