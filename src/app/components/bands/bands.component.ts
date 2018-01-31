@@ -7,6 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { isEmpty } from 'lodash';
+
 import {
   ChangeDetectionStrategy,
   Component,
@@ -101,6 +103,8 @@ export class BandsComponent implements OnChanges, OnInit {
       };
     });
 
-    this.newSort.emit(sort);
+    if (!isEmpty(sort)) {
+      this.newSort.emit(sort);
+    }
   }
 }
