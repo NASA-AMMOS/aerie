@@ -8,4 +8,4 @@
  */
 
 export * from './bands/bands.component';
-export * from './raven-tree-node/raven-tree-node.component';
+export * from './raven-tree/raven-tree.component';

@@ -45,10 +45,7 @@ export class SourceExplorerComponent implements OnInit {
   constructor(private changeDetector: ChangeDetectorRef, private store: Store<fromSourceExplorer.SourceExplorerState>) {
     this.bands$ = this.store.select(fromTimeline.getBands);
 
-    this.store.select(fromSourceExplorer.getTreeBySourceId).subscribe(tree => {
-      this.tree = tree;
-      this.changeDetector.markForCheck();
-    });
+    this.store.select(fromSourceExplorer.getTreeBySourceId).subscribe(tree => { this.tree = tree; this.changeDetector.markForCheck(); });
   }
 
   ngOnInit() {
@@ -56,7 +53,7 @@ export class SourceExplorerComponent implements OnInit {
   }
 
   /**
-   * Event. Called when a `close` event is fired from a raven-tree-node.
+   * Event. Called when a `close` event is fired from a raven-tree.
    */
   onClose(source: RavenSource): void {
     this.bands$.take(1).subscribe(bands => this.bands = bands); // Synchronously get bands from state.
@@ -66,14 +63,14 @@ export class SourceExplorerComponent implements OnInit {
   }
 
   /**
-   * Event. Called when a `collapse` event is fired from a raven-tree-node.
+   * Event. Called when a `collapse` event is fired from a raven-tree.
    */
   onCollapse(source: RavenSource): void {
     this.store.dispatch(new sourceExplorerActions.SourceExplorerCollapse(source));
   }
 
   /**
-   * Event. Called when an `expand` event is fired from a raven-tree-node.
+   * Event. Called when an `expand` event is fired from a raven-tree.
    */
   onExpand(source: RavenSource): void {
     // Only fetch sources or load content if there are no children (i.e. sources have not been fetched or content has not been loaded yet).
@@ -90,14 +87,14 @@ export class SourceExplorerComponent implements OnInit {
   }
 
   /**
-   * Event. Called when an `open` event is fired from a raven-tree-node.
+   * Event. Called when an `open` event is fired from a raven-tree.
    */
   onOpen(source: RavenSource): void {
     this.store.dispatch(new sourceExplorerActions.FetchGraphData(source));
   }
 
   /**
-   * Event. Called when a `select` event is fired from a raven-tree-node.
+   * Event. Called when a `select` event is fired from a raven-tree.
    */
   onSelect(source: RavenSource): void {
     this.store.dispatch(new sourceExplorerActions.SourceExplorerSelect(source));

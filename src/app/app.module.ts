@@ -38,7 +38,7 @@ import {
 
 import {
   BandsComponent,
-  RavenTreeNodeComponent,
+  RavenTreeComponent,
 } from './components';
 
 import {
@@ -48,7 +48,7 @@ import {
 export const DECLARATIONS = [
   AppComponent,
   BandsComponent,
-  RavenTreeNodeComponent,
+  RavenTreeComponent,
   SourceExplorerComponent,
   TimelineComponent,
 ];

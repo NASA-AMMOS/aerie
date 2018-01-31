@@ -1,5 +1,5 @@
 <div *ngFor="let childId of tree['0'].childIds">
-  <raven-tree-node
+  <raven-tree
     [id]="childId"
     [tree]="tree"
     (close)="onClose($event)"
@@ -7,5 +7,5 @@
     (expand)="onExpand($event)"
     (open)="onOpen($event)"
     (select)="onSelect($event)">
-  </raven-tree-node>
+  </raven-tree>
 </div>

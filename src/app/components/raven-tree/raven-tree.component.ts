@@ -8,6 +8,7 @@
  */
 
 import {
+  ChangeDetectionStrategy,
   Component,
   EventEmitter,
   Input,
@@ -20,11 +21,12 @@ import {
 } from './../../shared/models';
 
 @Component({
-  selector: 'raven-tree-node',
-  styleUrls: ['./raven-tree-node.component.css'],
-  templateUrl: './raven-tree-node.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  selector: 'raven-tree',
+  styleUrls: ['./raven-tree.component.css'],
+  templateUrl: './raven-tree.component.html',
 })
-export class RavenTreeNodeComponent {
+export class RavenTreeComponent {
   @Input() id: string;
   @Input() tree: StringTMap<RavenSource>;
 

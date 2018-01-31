@@ -1,4 +1,4 @@
-<div class="node" [ngClass]="{
+<div class="tree" [ngClass]="{
   'selected': tree[id].selected,
   'highlight': tree[id].expanded || tree[id].opened,
   'no-highlight': !tree[id].expanded && !tree[id].opened
@@ -32,7 +32,7 @@
 
 <ul *ngIf="tree[id].expanded">
   <li *ngFor="let childId of tree[id].childIds">
-    <raven-tree-node
+    <raven-tree
       [id]="childId"
       [tree]="tree"
       (close)="close.emit($event)"
@@ -40,6 +40,6 @@
       (expand)="expand.emit($event)"
       (open)="open.emit($event)"
       (select)="select.emit($event)">
-    </raven-tree-node>
+    </raven-tree>
   </li>
 </ul>
