@@ -75,6 +75,7 @@ export class TimelineComponent {
    * TODO: Replace 'any' with a concrete type.
    */
   onUpdateAllBands(e: any) {
+    e.preventDefault();
     e.stopPropagation();
     this.store.dispatch(new timelineActions.SettingsUpdateAllBands(e.detail.prop, e.detail.value));
   }
@@ -85,6 +86,7 @@ export class TimelineComponent {
    * TODO: Replace 'any' with a concrete type.
    */
   onUpdateBand(e: any) {
+    e.preventDefault();
     e.stopPropagation();
     this.store.dispatch(new timelineActions.SettingsUpdateBand(e.detail.prop, e.detail.value));
   }
@@ -97,6 +99,7 @@ export class TimelineComponent {
    */
   @HostListener('falcon-update-view-time-range', ['$event'])
   onUpdateViewTimeRange(e: any) {
+    e.preventDefault();
     e.stopPropagation();
     this.store.dispatch(new timelineActions.UpdateViewTimeRange(e.detail));
   }

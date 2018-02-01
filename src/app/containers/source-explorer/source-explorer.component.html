@@ -1,8 +1,41 @@
-<falcon-source-explorer-tree
-  [data]="tree$ | async"
-  (collapse-falcon-source-explorer-tree-node)="onCollapse($event)"
-  (expand-falcon-source-explorer-tree-node)="onExpand($event)"
-  (open-falcon-source-explorer-tree-node)="onOpen($event)"
-  (close-falcon-source-explorer-tree-node)="onClose($event)"
->
-</falcon-source-explorer-tree>
+<mat-tab-group>
+  <mat-tab label="Home">
+    <div class="tab-content">
+      <div *ngFor="let childId of tree['0'].childIds">
+        <raven-tree
+          [id]="childId"
+          [tree]="tree"
+          (close)="onClose($event)"
+          (collapse)="onCollapse($event)"
+          (expand)="onExpand($event)"
+          (open)="onOpen($event)"
+          (select)="onSelect($event)">
+        </raven-tree>
+      </div>
+    </div>
+  </mat-tab>
+
+  <mat-tab>
+    <ng-template mat-tab-label>
+      <mat-menu #tabMenu="matMenu">
+        <button mat-menu-item>Rename</button>
+        <button mat-menu-item>Delete</button>
+      </mat-menu>
+
+      <span>
+        <button mat-icon-button [matMenuTriggerFor]="tabMenu">
+          <i class="fa fa-bars" aria-hidden="true"></i>
+        </button>
+
+        SubTree
+      </span>
+    </ng-template>
+    <div class="tab-content">
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla venenatis ante augue.
+      Phasellus volutpat neque ac dui mattis vulputate. Etiam consequat aliquam cursus.
+      In sodales pretium ultrices. Maecenas lectus est, sollicitudin consectetur felis nec,
+      feugiat ultricies mi. Aliquam erat volutpat. Nam placerat, tortor in ultrices porttitor,
+      orci enim rutrum enim, vel tempor sapien arcu a tellus.
+    </div>
+  </mat-tab>
+</mat-tab-group>

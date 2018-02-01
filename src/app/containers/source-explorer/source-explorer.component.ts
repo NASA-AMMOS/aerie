@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
 
@@ -30,14 +30,6 @@ import {
   StringTMap,
 } from './../../shared/models';
 
-interface FalconSourceExplorerTreeNode extends HTMLElement {
-  data: RavenSource;
-}
-
-interface FalconSourceExplorerTreeEvent extends Event {
-  detail: FalconSourceExplorerTreeNode;
-}
-
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-source-explorer',
@@ -45,16 +37,15 @@ interface FalconSourceExplorerTreeEvent extends Event {
   templateUrl: './source-explorer.component.html',
 })
 export class SourceExplorerComponent implements OnInit {
-  bands: RavenBand[];
   bands$: Observable<RavenBand[]>;
-  tree$: Observable<RavenSource>;
 
-  constructor(private store: Store<fromSourceExplorer.SourceExplorerState>) {
+  bands: RavenBand[];
+  tree: StringTMap<RavenSource>;
+
+  constructor(private changeDetector: ChangeDetectorRef, private store: Store<fromSourceExplorer.SourceExplorerState>) {
     this.bands$ = this.store.select(fromTimeline.getBands);
 
-    this.tree$ = this.store
-      .select(fromSourceExplorer.getTreeBySourceId)
-      .map(treeBySourceId => this.treeFromTreeBySourceId(treeBySourceId));
+    this.store.select(fromSourceExplorer.getTreeBySourceId).subscribe(tree => { this.tree = tree; this.changeDetector.markForCheck(); });
   }
 
   ngOnInit() {
@@ -62,19 +53,26 @@ export class SourceExplorerComponent implements OnInit {
   }
 
   /**
-   * Event. Called when `collapse-falcon-source-explorer-tree-node` event is fired from falcon-source-explorer-tree.
+   * Event. Called when a `close` event is fired from a raven-tree.
    */
-  onCollapse(e: FalconSourceExplorerTreeEvent) {
-    const source = e.detail.data;
+  onClose(source: RavenSource): void {
+    this.bands$.take(1).subscribe(bands => this.bands = bands); // Synchronously get bands from state.
+    const { removeBandIds = [], removePointsBandIds = [] } = removeBandsOrPoints(source.id, this.bands);
+
+    this.store.dispatch(new sourceExplorerActions.RemoveBands(source, removeBandIds, removePointsBandIds));
+  }
+
+  /**
+   * Event. Called when a `collapse` event is fired from a raven-tree.
+   */
+  onCollapse(source: RavenSource): void {
     this.store.dispatch(new sourceExplorerActions.SourceExplorerCollapse(source));
   }
 
   /**
-   * Event. Called when `expand-falcon-source-explorer-tree-node` event is fired from falcon-source-explorer-tree.
+   * Event. Called when an `expand` event is fired from a raven-tree.
    */
-  onExpand(e: FalconSourceExplorerTreeEvent) {
-    const source = e.detail.data;
-
+  onExpand(source: RavenSource): void {
     // Only fetch sources or load content if there are no children (i.e. sources have not been fetched or content has not been loaded yet).
     if (!source.childIds.length) {
       if (source.content.length > 0) {
@@ -89,38 +87,16 @@ export class SourceExplorerComponent implements OnInit {
   }
 
   /**
-   * Event. Called when `open-falcon-source-explorer-tree-node` event is fired from falcon-source-explorer-tree.
+   * Event. Called when an `open` event is fired from a raven-tree.
    */
-  onOpen(e: FalconSourceExplorerTreeEvent) {
-    const source = e.detail.data;
+  onOpen(source: RavenSource): void {
     this.store.dispatch(new sourceExplorerActions.FetchGraphData(source));
   }
 
   /**
-   * Event. Called when `close-falcon-source-explorer-tree-node` event is fired from falcon-source-explorer-tree.
+   * Event. Called when a `select` event is fired from a raven-tree.
    */
-  onClose(e: FalconSourceExplorerTreeEvent) {
-    const source = e.detail.data;
-
-    this.bands$.take(1).subscribe(bands => this.bands = bands); // Synchronously get bands from state.
-    const { removeBandIds = [], removePointsBandIds = [] } = removeBandsOrPoints(source.id, this.bands);
-
-    this.store.dispatch(new sourceExplorerActions.RemoveBands(source, removeBandIds, removePointsBandIds));
-  }
-
-  /**
-   * Helper. Convert a treeBySourceId to a tree so it can be consumed by falcon-source-explorer-tree.
-   */
-  treeFromTreeBySourceId(treeBySourceId: StringTMap<RavenSource>): RavenSource {
-    const rootNode: RavenSource = { ...treeBySourceId['0'] }; // Return a new rootNode object so falcon-source-explorer-tree properly updates.
-
-    (function dfs(node: RavenSource): void {
-      if (node && node.childIds.length > 0) {
-        node.children = node.childIds.map(id => ({ ...treeBySourceId[id] })); // Build a nodes children based on it's childIds.
-        node.children.forEach((child: RavenSource) => dfs(child)); // Now recurse via depth-first-search to build each child's children.
-      }
-    }(rootNode));
-
-    return rootNode;
+  onSelect(source: RavenSource): void {
+    this.store.dispatch(new sourceExplorerActions.SourceExplorerSelect(source));
   }
 }

@@ -2,7 +2,6 @@
   display: block;
 }
 
-falcon-source-explorer-tree {
-  margin-left: 10px;
-  margin-right: 20px;
+.tab-content {
+  padding: 15px 0px 0px 10px;
 }

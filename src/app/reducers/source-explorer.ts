@@ -8,7 +8,6 @@
  */
 
 import { keyBy, map, omit } from 'lodash';
-import { v4 } from 'uuid';
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 
@@ -20,6 +19,7 @@ import {
   RemoveBands,
   SourceExplorerAction,
   SourceExplorerActionTypes,
+  SourceExplorerSelect,
 } from './../actions/source-explorer';
 
 import {
@@ -34,6 +34,7 @@ export interface SourceExplorerState {
   fetchInitialSourcesRequestPending: boolean;
   fetchSourcesRequestPending: boolean;
   initialSourcesLoaded: boolean;
+  selectedSourceId: string;
   treeBySourceId: StringTMap<RavenSource>;
 }
 
@@ -43,6 +44,7 @@ export const initialState: SourceExplorerState = {
   fetchInitialSourcesRequestPending: false,
   fetchSourcesRequestPending: false,
   initialSourcesLoaded: false,
+  selectedSourceId: '',
   treeBySourceId: {
     // Note: The root source in the source explorer tree is never displayed.
     '0': {
@@ -55,7 +57,7 @@ export const initialState: SourceExplorerState = {
       expandable: false,
       expanded: false,
       icon: '',
-      id: v4(),
+      id: '0',
       isServer: false,
       kind: '',
       label: 'root',
@@ -101,16 +103,18 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
       return newSources(state, action);
     case SourceExplorerActionTypes.RemoveBands:
       return removeBands(state, action);
+    case SourceExplorerActionTypes.SourceExplorerClose:
+      return updateTreeSource(state, action.source.id, 'opened', false);
     case SourceExplorerActionTypes.SourceExplorerCollapse:
       return updateTreeSource(state, action.source.id, 'expanded', false);
     case SourceExplorerActionTypes.SourceExplorerExpand:
       return updateTreeSource(state, action.source.id, 'expanded', true);
-    case SourceExplorerActionTypes.SourceExplorerClose:
-      return updateTreeSource(state, action.source.id, 'opened', false);
     case SourceExplorerActionTypes.SourceExplorerOpen:
       return updateTreeSource(state, action.source.id, 'opened', true);
     case SourceExplorerActionTypes.SourceExplorerPin:
       return updateTreeSource(state, action.source.id, 'pinned', true);
+    case SourceExplorerActionTypes.SourceExplorerSelect:
+      return selectSource(state, action);
     case SourceExplorerActionTypes.SourceExplorerUnpin:
       return updateTreeSource(state, action.source.id, 'pinned', false);
     default:
@@ -209,6 +213,32 @@ export function newSources(state: SourceExplorerState, action: FetchSourcesSucce
       },
     },
   };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'SourceExplorerSelect' action.
+ * Note that in some cases state.selectedSourceId === '' so we just omit '' keys from treeBySourceId.
+ */
+export function selectSource(state: SourceExplorerState, action: SourceExplorerSelect): SourceExplorerState {
+  if (state.treeBySourceId[action.source.id].selectable) {
+    return {
+      ...state,
+      selectedSourceId: action.source.id === state.selectedSourceId ? '' : action.source.id,
+      treeBySourceId: omit({
+        ...state.treeBySourceId,
+        [action.source.id]: {
+          ...state.treeBySourceId[action.source.id],
+          selected: true,
+        },
+        [state.selectedSourceId]: {
+          ...state.treeBySourceId[state.selectedSourceId],
+          selected: false,
+        },
+      }, ''),
+    };
+  }
+
+  return state;
 }
 
 /**

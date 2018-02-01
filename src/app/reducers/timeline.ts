@@ -132,6 +132,8 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
  *
  * When we remove bands we also have to account for the selectedBand.
  * If bands is empty, or if we remove a band that is selected, make sure to set selectedBand to null.
+ *
+ * TODO: Remove the 'any' type in favor of a RavenBand type.
  */
 export function removeBands(state: TimelineState, action: RemoveBands): TimelineState {
   let bands = state.bands
