@@ -20,6 +20,8 @@ import {
   MatProgressBarModule,
   MatProgressSpinnerModule,
   MatSidenavModule,
+  MatSliderModule,
+  MatSlideToggleModule,
   MatTabsModule,
   MatToolbarModule,
 } from '@angular/material';
@@ -35,6 +37,8 @@ export const MODULES = [
   MatProgressBarModule,
   MatProgressSpinnerModule,
   MatSidenavModule,
+  MatSliderModule,
+  MatSlideToggleModule,
   MatTabsModule,
   MatToolbarModule,
 ];

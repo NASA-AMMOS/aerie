@@ -1,0 +1,43 @@
+<div>
+  Band Settings
+</div>
+
+<div *ngIf="selectedBandId !== ''">
+  <mat-grid-list cols="4" rowHeight="100px">
+    <mat-grid-tile
+      colspan="1"
+      rowspan="1">
+      <mat-slider
+        max="500"
+        min="2"
+        step="1"
+        thumb-label="true"
+        tick-interval="50"
+        [value]="bands[selectedBandIndex].height"
+        (change)="updateBand.emit({ prop: 'height', value: $event.value })">
+      </mat-slider>
+      <label>Height</label>
+    </mat-grid-tile>
+
+    <mat-grid-tile
+      colspan="1"
+      rowspan="1">
+      <mat-slide-toggle
+        color="accent"
+        [checked]="bands[selectedBandIndex].showTooltip"
+        (change)="updateBand.emit({ prop: 'showTooltip', value: $event.checked })">
+        Show Tooltip
+      </mat-slide-toggle>
+    </mat-grid-tile>
+
+    <mat-grid-tile
+      colspan="1"
+      rowspan="1">
+    </mat-grid-tile>
+
+    <mat-grid-tile
+      colspan="1"
+      rowspan="1">
+    </mat-grid-tile>
+  </mat-grid-list>
+</div>

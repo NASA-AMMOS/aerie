@@ -38,6 +38,7 @@ import {
 
 import {
   BandsComponent,
+  RavenSettingsComponent,
   RavenTreeComponent,
 } from './components';
 
@@ -48,6 +49,7 @@ import {
 export const DECLARATIONS = [
   AppComponent,
   BandsComponent,
+  RavenSettingsComponent,
   RavenTreeComponent,
   SourceExplorerComponent,
   TimelineComponent,

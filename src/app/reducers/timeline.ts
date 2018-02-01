@@ -42,7 +42,7 @@ export interface TimelineState {
   bands: RavenBand[];
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
-  selectedBand: RavenBand | null;
+  selectedBandId: string;
   viewTimeRange: RavenTimeRange;
 }
 
@@ -51,7 +51,7 @@ export const initialState: TimelineState = {
   bands: [],
   labelWidth: 99,
   maxTimeRange: { end: 0, start: 0 },
-  selectedBand: null,
+  selectedBandId: '',
   viewTimeRange: { end: 0, start: 0 },
 };
 
@@ -162,7 +162,7 @@ export function removeBands(state: TimelineState, action: RemoveBands): Timeline
   return {
     ...state,
     bands,
-    selectedBand: state.selectedBand && action.removeBandIds.includes(state.selectedBand.id) ? null : state.selectedBand,
+    selectedBandId: state.selectedBandId && action.removeBandIds.includes(state.selectedBandId) ? '' : state.selectedBandId,
     ...updateTimeRanges(state.viewTimeRange, bands),
   };
 }
@@ -173,7 +173,7 @@ export function removeBands(state: TimelineState, action: RemoveBands): Timeline
 export function selectBand(state: TimelineState, action: SelectBand): TimelineState {
   return {
     ...state,
-    selectedBand: state.bands.find(band => band.id === action.bandId) || null,
+    selectedBandId: action.bandId,
   };
 }
 
@@ -194,7 +194,7 @@ export function settingsUpdateBand(state: TimelineState, action: SettingsUpdateB
   return {
     ...state,
     bands: state.bands.map((band: RavenBand) => {
-      if (state.selectedBand && state.selectedBand.id === band.id) {
+      if (state.selectedBandId && state.selectedBandId === band.id) {
         return {
           ...band,
           [action.prop]: action.value,
@@ -203,7 +203,6 @@ export function settingsUpdateBand(state: TimelineState, action: SettingsUpdateB
 
       return band;
     }),
-    selectedBand: state.selectedBand ? { ...state.selectedBand, [action.prop]: action.value } as RavenBand : null,
   };
 }
 
@@ -246,5 +245,5 @@ export const getTimelineState = createFeatureSelector<TimelineState>('timeline')
 export const getBands = createSelector(getTimelineState, (state: TimelineState) => state.bands);
 export const getLabelWidth = createSelector(getTimelineState, (state: TimelineState) => state.labelWidth);
 export const getMaxTimeRange = createSelector(getTimelineState, (state: TimelineState) => state.maxTimeRange);
-export const getSelectedBand = createSelector(getTimelineState, (state: TimelineState) => state.selectedBand);
+export const getSelectedBandId = createSelector(getTimelineState, (state: TimelineState) => state.selectedBandId);
 export const getViewTimeRange = createSelector(getTimelineState, (state: TimelineState) => state.viewTimeRange);

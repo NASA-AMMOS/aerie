@@ -86,13 +86,11 @@
         size="30">
         <div class="settings">
           <mat-card>
-            <falcon-settings-band
+            <raven-settings
               [bands]="bands"
-              [labelWidth]="labelWidth"
-              [selectedBand]="selectedBand$ | async"
-              (falcon-settings-update-all-bands)="onUpdateAllBands($event)"
-              (falcon-settings-update-band)="onUpdateBand($event)">
-            </falcon-settings-band>
+              [selectedBandId]="selectedBandId$ | async"
+              (updateBand)="onUpdateBand($event)">
+            </raven-settings>
           </mat-card>
         </div>
       </split-area>

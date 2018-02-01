@@ -19,6 +19,7 @@ import * as timelineActions from './../../actions/timeline';
 
 import {
   RavenBand,
+  RavenSettingsUpdate,
   RavenSortMessage,
   RavenTimeRange,
   StringTMap,
@@ -37,7 +38,7 @@ export class TimelineComponent {
   viewTimeRange: RavenTimeRange;
 
   itarMessage$: Observable<string>;
-  selectedBand$: Observable<RavenBand | null>;
+  selectedBandId$: Observable<string>;
   showDetailsDrawer$: Observable<boolean>;
   showLeftDrawer$: Observable<boolean>;
   showSouthBandsDrawer$: Observable<boolean>;
@@ -49,7 +50,7 @@ export class TimelineComponent {
     this.store.select(fromTimeline.getViewTimeRange).subscribe(viewTimeRange => this.viewTimeRange = viewTimeRange);
 
     this.itarMessage$ = this.store.select(fromConfig.getItarMessage);
-    this.selectedBand$ = this.store.select(fromTimeline.getSelectedBand);
+    this.selectedBandId$ = this.store.select(fromTimeline.getSelectedBandId);
     this.showDetailsDrawer$ = this.store.select(fromLayout.getShowDetailsDrawer);
     this.showLeftDrawer$ = this.store.select(fromLayout.getShowLeftDrawer);
     this.showSouthBandsDrawer$ = this.store.select(fromLayout.getShowSouthBandsDrawer);
@@ -70,25 +71,19 @@ export class TimelineComponent {
   }
 
   /**
-   * Event. Called when a `falcon-settings-update-all-bands` event is fired from the falcon-settings-band.
-   *
-   * TODO: Replace 'any' with a concrete type.
+   * Event. Called when a `` event is fired from the ...
    */
   onUpdateAllBands(e: any) {
-    e.preventDefault();
-    e.stopPropagation();
-    this.store.dispatch(new timelineActions.SettingsUpdateAllBands(e.detail.prop, e.detail.value));
+    // e.preventDefault();
+    // e.stopPropagation();
+    // this.store.dispatch(new timelineActions.SettingsUpdateAllBands(e.detail.prop, e.detail.value));
   }
 
   /**
-   * Event. Called when a `falcon-settings-update-band` event is fired from the falcon-settings-band.
-   *
-   * TODO: Replace 'any' with a concrete type.
+   * Event. Called when an `update-band` event is fired from the raven-settings component.
    */
-  onUpdateBand(e: any) {
-    e.preventDefault();
-    e.stopPropagation();
-    this.store.dispatch(new timelineActions.SettingsUpdateBand(e.detail.prop, e.detail.value));
+  onUpdateBand(update: RavenSettingsUpdate) {
+    this.store.dispatch(new timelineActions.SettingsUpdateBand(update.prop, update.value));
   }
 
   /**

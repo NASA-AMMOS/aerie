@@ -7,6 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './bands/bands.component';
-export * from './raven-settings/raven-settings.component';
-export * from './raven-tree/raven-tree.component';
+export interface RavenSettingsUpdate {
+  prop: string;
+  value: boolean | number | string | boolean[] | number[] | string[];
+}
