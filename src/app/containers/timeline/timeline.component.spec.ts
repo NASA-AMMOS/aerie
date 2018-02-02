@@ -17,6 +17,8 @@ import { AngularSplitModule } from 'angular-split';
 import { BandsComponent } from './../../components';
 import { TimelineComponent } from './timeline.component';
 
+import { KeyByPipe } from './../../pipes';
+
 import { metaReducers, reducers } from './../../store';
 
 describe('TimelineComponent', () => {
@@ -27,6 +29,7 @@ describe('TimelineComponent', () => {
     TestBed.configureTestingModule({
       declarations: [
         BandsComponent,
+        KeyByPipe,
         TimelineComponent,
       ],
       imports: [

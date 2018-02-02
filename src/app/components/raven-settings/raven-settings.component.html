@@ -1,43 +1,206 @@
-<div>
+<div class="heading">
   Band Settings
 </div>
 
 <div *ngIf="selectedBandId !== ''">
-  <mat-grid-list cols="4" rowHeight="100px">
-    <mat-grid-tile
-      colspan="1"
-      rowspan="1">
+  <!-- All Bands Settings. -->
+  <div
+    fxLayout="row"
+    fxLayoutAlign="space-evenly center"
+    fxLayoutWrap>
+    <div fxFlex="40" class="field">
+      <mat-form-field class="label">
+        <input
+          matInput
+          placeholder="Label"
+          [value]="bandsById[selectedBandId].label"
+          (change)="updateBand.emit({ prop: 'label', value: $event.target.value })">
+      </mat-form-field>
+    </div>
+
+    <div class="field">
       <mat-slider
+        color="primary"
         max="500"
         min="2"
         step="1"
         thumb-label="true"
         tick-interval="50"
-        [value]="bands[selectedBandIndex].height"
+        [value]="bandsById[selectedBandId].height"
         (change)="updateBand.emit({ prop: 'height', value: $event.value })">
       </mat-slider>
       <label>Height</label>
-    </mat-grid-tile>
+    </div>
 
-    <mat-grid-tile
-      colspan="1"
-      rowspan="1">
+    <div class="field">
       <mat-slide-toggle
-        color="accent"
-        [checked]="bands[selectedBandIndex].showTooltip"
+        color="primary"
+        [checked]="bandsById[selectedBandId].showTooltip"
         (change)="updateBand.emit({ prop: 'showTooltip', value: $event.checked })">
         Show Tooltip
       </mat-slide-toggle>
-    </mat-grid-tile>
+    </div>
+  </div>
 
-    <mat-grid-tile
-      colspan="1"
-      rowspan="1">
-    </mat-grid-tile>
+  <!-- Activity Settings. -->
+  <div
+    *ngIf="bandsById[selectedBandId].type === 'activity'"
+    fxLayout="row"
+    fxLayoutAlign="space-evenly center"
+    fxLayoutWrap>
 
-    <mat-grid-tile
-      colspan="1"
-      rowspan="1">
-    </mat-grid-tile>
-  </mat-grid-list>
+    <div class="field">
+      <mat-form-field>
+        <mat-select
+          placeholder="Activity Style"
+          [value]="bandsById[selectedBandId].activityStyle"
+          (selectionChange)="updateBand.emit({ prop: 'activityStyle', value: $event.value })">
+          <mat-option [value]="1">Bar</mat-option>
+          <mat-option [value]="2">Line</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="field">
+      <mat-form-field>
+        <mat-select
+          placeholder="Horizontally Align Label"
+          [value]="bandsById[selectedBandId].alignLabel"
+          (selectionChange)="updateBand.emit({ prop: 'alignLabel', value: $event.value })">
+          <mat-option [value]="1">Left</mat-option>
+          <mat-option [value]="2">Right</mat-option>
+          <mat-option [value]="3">Center</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="field">
+      <mat-form-field>
+        <mat-select
+          placeholder="Vertically Align Label"
+          [value]="bandsById[selectedBandId].baselineLabel"
+          (selectionChange)="updateBand.emit({ prop: 'baselineLabel', value: $event.value })">
+          <mat-option [value]="1">Top</mat-option>
+          <mat-option [value]="2">Bottom</mat-option>
+          <mat-option [value]="3">Center</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="field">
+      <mat-form-field>
+        <mat-select
+          placeholder="Layout"
+          [value]="bandsById[selectedBandId].layout"
+          (selectionChange)="updateBand.emit({ prop: 'layout', value: $event.value })">
+          <mat-option [value]="1">Compact</mat-option>
+          <mat-option [value]="2">Waterfall</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="field">
+      <mat-slide-toggle
+        color="primary"
+        [checked]="bandsById[selectedBandId].showLabel"
+        (change)="updateBand.emit({ prop: 'showLabel', value: $event.checked })">
+        Show Labels
+      </mat-slide-toggle>
+    </div>
+
+    <div class="field">
+      <mat-slide-toggle
+        color="primary"
+        [checked]="bandsById[selectedBandId].trimLabel"
+        (change)="updateBand.emit({ prop: 'trimLabel', value: $event.checked })">
+        Trim Labels
+      </mat-slide-toggle>
+    </div>
+  </div>
+
+  <!-- Composite Settings. -->
+  <!-- TODO. -->
+
+  <!-- Resource Settings. -->
+  <div
+    *ngIf="bandsById[selectedBandId].type === 'resource'"
+    fxLayout="row"
+    fxLayoutAlign="space-evenly center"
+    fxLayoutWrap>
+
+    <!-- TODO: Color. -->
+
+    <div class="field">
+      <mat-slide-toggle
+        color="primary"
+        [checked]="bandsById[selectedBandId].fill"
+        (change)="updateBand.emit({ prop: 'fill', value: $event.checked })">
+        Fill
+      </mat-slide-toggle>
+    </div>
+
+    <div class="field">
+      <mat-form-field>
+        <mat-select
+          placeholder="Interpolation"
+          [value]="bandsById[selectedBandId].interpolation"
+          (selectionChange)="updateBand.emit({ prop: 'interpolation', value: $event.value })">
+          <mat-option value="linear">Linear</mat-option>
+          <mat-option value="constant">Constant</mat-option>
+          <mat-option value="none">None</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="field">
+      <mat-slide-toggle
+        color="primary"
+        [checked]="bandsById[selectedBandId].rescale"
+        (change)="updateBand.emit({ prop: 'rescale', value: $event.checked })">
+        Rescale Y-Axis Ticks
+      </mat-slide-toggle>
+    </div>
+
+    <div class="field">
+      <mat-slide-toggle
+        color="primary"
+        [checked]="bandsById[selectedBandId].showIcon"
+        (change)="updateBand.emit({ prop: 'showIcon', value: $event.checked })">
+        Show Icon
+      </mat-slide-toggle>
+    </div>
+  </div>
+
+  <!-- State Settings. -->
+  <div
+    *ngIf="bandsById[selectedBandId].type === 'state'"
+    fxLayout="row"
+    fxLayoutAlign="space-evenly center"
+    fxLayoutWrap>
+    <div class="field">
+      <mat-form-field>
+        <mat-select
+          placeholder="Horizontally Align Label"
+          [value]="bandsById[selectedBandId].alignLabel"
+          (selectionChange)="updateBand.emit({ prop: 'alignLabel', value: $event.value })">
+          <mat-option [value]="1">Left</mat-option>
+          <mat-option [value]="2">Right</mat-option>
+          <mat-option [value]="3">Center</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="field">
+      <mat-form-field>
+        <mat-select
+          placeholder="Vertically Align Label"
+          [value]="bandsById[selectedBandId].baselineLabel"
+          (selectionChange)="updateBand.emit({ prop: 'baselineLabel', value: $event.value })">
+          <mat-option [value]="1">Top</mat-option>
+          <mat-option [value]="2">Bottom</mat-option>
+          <mat-option [value]="3">Center</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </div>
 </div>

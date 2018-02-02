@@ -1,3 +1,15 @@
 :host {
   display: block;
 }
+
+.heading {
+  padding-bottom: 10px;
+}
+
+.field {
+  padding: 20px;
+}
+
+.label {
+  width: 100%;
+}

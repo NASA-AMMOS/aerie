@@ -10,6 +10,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
+import { FlexLayoutModule } from '@angular/flex-layout';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
@@ -46,9 +47,14 @@ import {
   SourceExplorerEffects,
 } from './effects';
 
+import {
+  KeyByPipe,
+} from './pipes';
+
 export const DECLARATIONS = [
   AppComponent,
   BandsComponent,
+  KeyByPipe,
   RavenSettingsComponent,
   RavenTreeComponent,
   SourceExplorerComponent,
@@ -66,6 +72,7 @@ export const MODULES = [
   HttpClientModule,
   MaterialModule,
   AngularSplitModule,
+  FlexLayoutModule,
   PolymerModule.forRoot(),
   SortablejsModule.forRoot({}),
   RouterModule.forRoot(routes, { useHash: true }),

@@ -7,29 +7,4 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  ChangeDetectionStrategy,
-  Component,
-  EventEmitter,
-  Input,
-  Output,
-} from '@angular/core';
-
-import {
-  RavenBand,
-  RavenSettingsUpdate,
-  StringTMap,
-} from './../../shared/models';
-
-@Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  selector: 'raven-settings',
-  styleUrls: ['./raven-settings.component.css'],
-  templateUrl: './raven-settings.component.html',
-})
-export class RavenSettingsComponent {
-  @Input() bandsById: StringTMap<RavenBand>;
-  @Input() selectedBandId: string;
-
-  @Output() updateBand: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
-}
+export * from './key-by.pipe';

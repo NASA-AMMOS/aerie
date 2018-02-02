@@ -87,7 +87,7 @@
         <div class="settings">
           <mat-card>
             <raven-settings
-              [bands]="bands"
+              [bandsById]="bands | keyBy:'id'"
               [selectedBandId]="selectedBandId$ | async"
               (updateBand)="onUpdateBand($event)">
             </raven-settings>

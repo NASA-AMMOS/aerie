@@ -138,11 +138,6 @@ describe('timeline reducer', () => {
     });
   });
 
-  it('handle SelectBand (bad band id)', () => {
-    timelineState = reducer(timelineState, new SelectBand('10000'));
-    expect(timelineState).toEqual({ ...initialState });
-  });
-
   it('handle SelectBand', () => {
     const source: RavenSource = rootSource;
     const bands: RavenBand[] = [stateBand];
@@ -154,9 +149,7 @@ describe('timeline reducer', () => {
     timelineState = reducer(timelineStateWithBand, new SelectBand(stateBand.id));
     expect(timelineState).toEqual({
       ...timelineStateWithBand,
-      selectedBand: {
-        ...timelineStateWithBand.bands[0],
-      },
+      selectedBandId: stateBand.id,
     });
   });
 
@@ -188,11 +181,7 @@ describe('timeline reducer', () => {
       bands: [{
         ...timelineStateWithBand.bands[0],
         label: '42',
-      } as RavenStateBand],
-      selectedBand: {
-        ...timelineStateWithBand.selectedBand,
-        label: '42',
-      } as RavenStateBand,
+      }],
     });
   });
 

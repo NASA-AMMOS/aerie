@@ -7,29 +7,15 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  ChangeDetectionStrategy,
-  Component,
-  EventEmitter,
-  Input,
-  Output,
-} from '@angular/core';
+import { keyBy } from 'lodash';
 
-import {
-  RavenBand,
-  RavenSettingsUpdate,
-  StringTMap,
-} from './../../shared/models';
+import { Pipe, PipeTransform } from '@angular/core';
 
-@Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  selector: 'raven-settings',
-  styleUrls: ['./raven-settings.component.css'],
-  templateUrl: './raven-settings.component.html',
+@Pipe({
+  name: 'keyBy',
 })
-export class RavenSettingsComponent {
-  @Input() bandsById: StringTMap<RavenBand>;
-  @Input() selectedBandId: string;
-
-  @Output() updateBand: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
+export class KeyByPipe implements PipeTransform {
+  transform(value: any, args?: any): any {
+    return keyBy(value, args);
+  }
 }
