@@ -5,12 +5,14 @@
 <div *ngIf="selectedBandId !== ''">
   <!-- All Bands Settings. -->
   <div
+    id="raven-settings-all-bands"
     fxLayout="row"
     fxLayoutAlign="space-evenly center"
     fxLayoutWrap>
     <div fxFlex="40" class="field">
       <mat-form-field class="label">
         <input
+          id="raven-settings-label"
           matInput
           placeholder="Label"
           [value]="bandsById[selectedBandId].label"
@@ -20,6 +22,7 @@
 
     <div class="field">
       <mat-slider
+        id="raven-settings-height"
         color="primary"
         max="500"
         min="2"
@@ -34,6 +37,7 @@
 
     <div class="field">
       <mat-slide-toggle
+        id="raven-settings-show-tooltip"
         color="primary"
         [checked]="bandsById[selectedBandId].showTooltip"
         (change)="updateBand.emit({ prop: 'showTooltip', value: $event.checked })">
@@ -45,6 +49,7 @@
   <!-- Activity Settings. -->
   <div
     *ngIf="bandsById[selectedBandId].type === 'activity'"
+    id="raven-settings-activity-band"
     fxLayout="row"
     fxLayoutAlign="space-evenly center"
     fxLayoutWrap>
@@ -124,6 +129,7 @@
   <!-- Resource Settings. -->
   <div
     *ngIf="bandsById[selectedBandId].type === 'resource'"
+    id="raven-settings-resource-band"
     fxLayout="row"
     fxLayoutAlign="space-evenly center"
     fxLayoutWrap>
@@ -132,6 +138,7 @@
 
     <div class="field">
       <mat-slide-toggle
+        id="raven-settings-fill"
         color="primary"
         [checked]="bandsById[selectedBandId].fill"
         (change)="updateBand.emit({ prop: 'fill', value: $event.checked })">
@@ -174,6 +181,7 @@
   <!-- State Settings. -->
   <div
     *ngIf="bandsById[selectedBandId].type === 'state'"
+    id="raven-settings-state-band"
     fxLayout="row"
     fxLayoutAlign="space-evenly center"
     fxLayoutWrap>

@@ -3,11 +3,31 @@
   'highlight': tree[id].expanded || tree[id].opened,
   'no-highlight': !tree[id].expanded && !tree[id].opened
 }">
-  <mat-icon *ngIf="tree[id].expandable && tree[id].expanded" (click)="collapse.emit(tree[id])">remove</mat-icon>
-  <mat-icon *ngIf="tree[id].expandable && !tree[id].expanded" (click)="expand.emit(tree[id])">add</mat-icon>
+  <mat-icon
+    *ngIf="tree[id].expandable && tree[id].expanded"
+    [id]="'raven-tree-'+tree[id].name+'-collapse'"
+    (click)="collapse.emit(tree[id])">
+    remove
+  </mat-icon>
+  <mat-icon
+    *ngIf="tree[id].expandable && !tree[id].expanded"
+    [id]="'raven-tree-'+tree[id].name+'-expand'"
+    (click)="expand.emit(tree[id])">
+    add
+  </mat-icon>
 
-  <mat-icon *ngIf="tree[id].openable && tree[id].opened" (click)="close.emit(tree[id])">radio_button_checked</mat-icon>
-  <mat-icon *ngIf="tree[id].openable && !tree[id].opened" (click)="open.emit(tree[id])">radio_button_unchecked</mat-icon>
+  <mat-icon
+    *ngIf="tree[id].openable && tree[id].opened"
+    [id]="'raven-tree-'+tree[id].name+'-close'"
+    (click)="close.emit(tree[id])">
+    radio_button_checked
+  </mat-icon>
+  <mat-icon
+    *ngIf="tree[id].openable && !tree[id].opened"
+    [id]="'raven-tree-'+tree[id].name+'-open'"
+    (click)="open.emit(tree[id])">
+    radio_button_unchecked
+  </mat-icon>
 
   <span (click)="select.emit(tree[id])" class="name">
     <i [ngClass]="tree[id].icon" aria-hidden="true"></i> {{tree[id].name}}
