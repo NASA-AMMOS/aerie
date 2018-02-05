@@ -20,8 +20,11 @@ export class AppPage {
   settingsAllBands = element(by.id('raven-settings-all-bands'));
   settingsFill = element(by.id('raven-settings-fill'));
   settingsHeight = element(by.id('raven-settings-height'));
+  settingsInterpolation = element(by.id('raven-settings-interpolation'));
   settingsLabel = element(by.id('raven-settings-label'));
+  settingsRescale = element(by.id('raven-settings-rescale'));
   settingsResourceBand = element(by.id('raven-settings-resource-band'));
+  settingsShowIcon = element(by.id('raven-settings-show-icon'));
   settingsShowTooltip = element(by.id('raven-settings-show-tooltip'));
   settingsStateBand = element(by.id('raven-settings-state-band'));
 

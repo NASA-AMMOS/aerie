@@ -95,6 +95,7 @@
     <div class="field">
       <mat-form-field>
         <mat-select
+          id="raven-settings-layout"
           placeholder="Layout"
           [value]="bandsById[selectedBandId].layout"
           (selectionChange)="updateBand.emit({ prop: 'layout', value: $event.value })">
@@ -106,6 +107,7 @@
 
     <div class="field">
       <mat-slide-toggle
+        id="raven-settings-show-label"
         color="primary"
         [checked]="bandsById[selectedBandId].showLabel"
         (change)="updateBand.emit({ prop: 'showLabel', value: $event.checked })">
@@ -115,6 +117,7 @@
 
     <div class="field">
       <mat-slide-toggle
+        id="raven-settings-trim-label"
         color="primary"
         [checked]="bandsById[selectedBandId].trimLabel"
         (change)="updateBand.emit({ prop: 'trimLabel', value: $event.checked })">
@@ -149,6 +152,7 @@
     <div class="field">
       <mat-form-field>
         <mat-select
+          id="raven-settings-interpolation"
           placeholder="Interpolation"
           [value]="bandsById[selectedBandId].interpolation"
           (selectionChange)="updateBand.emit({ prop: 'interpolation', value: $event.value })">
@@ -161,6 +165,7 @@
 
     <div class="field">
       <mat-slide-toggle
+        id="raven-settings-rescale"
         color="primary"
         [checked]="bandsById[selectedBandId].rescale"
         (change)="updateBand.emit({ prop: 'rescale', value: $event.checked })">
@@ -170,6 +175,7 @@
 
     <div class="field">
       <mat-slide-toggle
+        id="raven-settings-show-icon"
         color="primary"
         [checked]="bandsById[selectedBandId].showIcon"
         (change)="updateBand.emit({ prop: 'showIcon', value: $event.checked })">
@@ -188,6 +194,7 @@
     <div class="field">
       <mat-form-field>
         <mat-select
+          id="raven-settings-align-label"
           placeholder="Horizontally Align Label"
           [value]="bandsById[selectedBandId].alignLabel"
           (selectionChange)="updateBand.emit({ prop: 'alignLabel', value: $event.value })">
@@ -201,6 +208,7 @@
     <div class="field">
       <mat-form-field>
         <mat-select
+          id="raven-settings-baseline-label"
           placeholder="Vertically Align Label"
           [value]="bandsById[selectedBandId].baselineLabel"
           (selectionChange)="updateBand.emit({ prop: 'baselineLabel', value: $event.value })">

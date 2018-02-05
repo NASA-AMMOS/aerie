@@ -37,15 +37,15 @@ import {
   templateUrl: './source-explorer.component.html',
 })
 export class SourceExplorerComponent implements OnInit {
-  bands$: Observable<RavenBand[]>;
-
   bands: RavenBand[];
   tree: StringTMap<RavenSource>;
 
-  constructor(private changeDetector: ChangeDetectorRef, private store: Store<fromSourceExplorer.SourceExplorerState>) {
-    this.bands$ = this.store.select(fromTimeline.getBands);
+  bands$: Observable<RavenBand[]>;
 
+  constructor(private changeDetector: ChangeDetectorRef, private store: Store<fromSourceExplorer.SourceExplorerState>) {
     this.store.select(fromSourceExplorer.getTreeBySourceId).subscribe(tree => { this.tree = tree; this.changeDetector.markForCheck(); });
+
+    this.bands$ = this.store.select(fromTimeline.getBands);
   }
 
   ngOnInit() {
