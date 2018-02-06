@@ -17,9 +17,11 @@
       <split-area
         [order]="2"
         size="50">
-        <div class="itar-message">
+        <div
+          *ngIf="itarMessage !== ''"
+          class="itar-message">
           <mat-card>
-            {{itarMessage$ | async}}
+            {{itarMessage}}
           </mat-card>
         </div>
 

@@ -7,10 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import ravenConfig from './../ravenConfig';
-
-export const environment = {
-  ...ravenConfig,
-  baseUrl: 'https://leucadia.jpl.nasa.gov:8443',
-  production: false,
+const ravenConfig = {
+  baseSourcesUrl: 'mpsserver/api/v2/fs',
+  itarMessage: '',
 };
+
+export default ravenConfig;

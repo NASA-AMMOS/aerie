@@ -33,11 +33,11 @@ import {
 })
 export class TimelineComponent {
   bands: RavenBand[];
+  itarMessage: string;
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
   viewTimeRange: RavenTimeRange;
 
-  itarMessage$: Observable<string>;
   selectedBandId$: Observable<string>;
   showDetailsDrawer$: Observable<boolean>;
   showLeftDrawer$: Observable<boolean>;
@@ -45,11 +45,11 @@ export class TimelineComponent {
 
   constructor(private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState>) {
     this.store.select(fromTimeline.getBands).subscribe(bands => this.bands = bands);
+    this.store.select(fromConfig.getItarMessage).subscribe(itarMessage => this.itarMessage = itarMessage);
     this.store.select(fromTimeline.getLabelWidth).subscribe(labelWidth => this.labelWidth = labelWidth);
     this.store.select(fromTimeline.getMaxTimeRange).subscribe(maxTimeRange => this.maxTimeRange = maxTimeRange);
     this.store.select(fromTimeline.getViewTimeRange).subscribe(viewTimeRange => this.viewTimeRange = viewTimeRange);
 
-    this.itarMessage$ = this.store.select(fromConfig.getItarMessage);
     this.selectedBandId$ = this.store.select(fromTimeline.getSelectedBandId);
     this.showDetailsDrawer$ = this.store.select(fromLayout.getShowDetailsDrawer);
     this.showLeftDrawer$ = this.store.select(fromLayout.getShowLeftDrawer);
