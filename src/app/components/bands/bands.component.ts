@@ -7,8 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { isEmpty } from 'lodash';
-
 import {
   ChangeDetectionStrategy,
   Component,
@@ -96,14 +94,16 @@ export class BandsComponent implements OnChanges, OnInit {
   onSort(e: any) {
     const sort: StringTMap<RavenSortMessage> = {};
 
-    this.sortedAndFilteredBands.forEach((b, index) => {
-      sort[b.id] = {
-        containerId: this.containerId,
-        sortOrder: index,
-      };
-    });
+    for (let i = 0, l = this.sortedAndFilteredBands.length; i < l; ++i) {
+      const band = this.sortedAndFilteredBands[i];
 
-    if (!isEmpty(sort)) {
+      sort[band.id] = {
+        containerId: this.containerId,
+        sortOrder: i,
+      };
+    }
+
+    if (Object.keys(sort).length) {
       this.newSort.emit(sort);
     }
   }

@@ -7,168 +7,15 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { v4 } from 'uuid';
-
 import {
-  MpsServerActivityPoint,
   MpsServerActivityPointMetadata,
-  MpsServerResourcePoint,
-  MpsServerStatePoint,
-  RavenActivityPoint,
-  RavenPoint,
-  RavenResourcePoint,
-  RavenStatePoint,
-  RavenTimeRange,
   StringTMap,
 } from './../models';
 
-import {
-  timestamp,
-  utc,
-} from './time';
-
 /**
- * Transforms activity point timeline data from MPS Server to activity points consumable by Raven.
+ * Helper that gets a color from metadata.
  */
-export function mpsServerToRavenActivityPoints(sourceId: string, timelineData: MpsServerActivityPoint[]): RavenActivityPoint[] {
-  const points: RavenActivityPoint[] = [];
-
-  timelineData.forEach((data: MpsServerActivityPoint) => {
-    const activityId = data['Activity ID'];
-    const activityName = data['Activity Name'];
-    const activityParameters = data['Activity Parameters'];
-    const activityType = data['Activity Type'];
-    const ancestors = data.ancestors;
-    const childrenUrl = data.childrenUrl;
-    const color = getActivityColorFromMetadata(data.Metadata);
-    const descendantsUrl = data.descendantsUrl;
-    const endTimestamp = data['Tend Assigned'];
-    const id = data.__document_id;
-    const metadata = data.Metadata;
-    const startTimestamp = data['Tstart Assigned'];
-    const uniqueId = v4();
-
-    const start = utc(startTimestamp);
-    const end = utc(endTimestamp);
-    const duration = end - start;
-
-    let hasLegend = false;
-    let legend = '';
-    if (data.Metadata) {
-      data.Metadata.forEach((d) => {
-        if (d.Name === 'legend') {
-          legend = d.Value;
-          hasLegend = true;
-        }
-      });
-    }
-
-    points.push({
-      activityId,
-      activityName,
-      activityParameters,
-      activityType,
-      ancestors,
-      childrenUrl,
-      color,
-      descendantsUrl,
-      duration,
-      end,
-      endTimestamp,
-      hasLegend,
-      id,
-      legend,
-      metadata,
-      sourceId,
-      start,
-      startTimestamp,
-      uniqueId,
-    });
-  });
-
-  return points;
-}
-
-/**
- * Transforms resource point timeline data from MPS Server to resource points consumable by Raven.
- */
-export function mpsServerToRavenResourcePoints(sourceId: string, timelineData: MpsServerResourcePoint[]): RavenResourcePoint[] {
-  const points: RavenResourcePoint[] = [];
-
-  timelineData.forEach((data) => {
-    const id = data.__document_id;
-    const start = utc(data['Data Timestamp']);
-    const uniqueId = v4();
-    const value = data['Data Value'];
-
-    points.push({
-      duration: null,
-      id,
-      sourceId,
-      start,
-      uniqueId,
-      value,
-    });
-  });
-
-  return points;
-}
-
-/**
- * Transforms state point timeline data from MPS Server to state points consumable by Raven.
- */
-export function mpsServerToRavenStatePoints(sourceId: string, timelineData: MpsServerStatePoint[]): RavenStatePoint[] {
-  const points: RavenStatePoint[] = [];
-
-  timelineData.forEach((data, i) => {
-    const id = data.__document_id;
-    const start = utc(data['Data Timestamp']);
-    const startTimestamp = data['Data Timestamp'];
-    const uniqueId = v4();
-    const value = data['Data Value'];
-
-    // This may or may not be correct. We're making an assumption that if there's no end,
-    // we're going to draw to the end of the day.
-    const startTimePlusDelta = utc(startTimestamp) + 30;
-    const endTimestamp = timelineData[i + 1] !== undefined ? timelineData[i + 1]['Data Timestamp'] : timestamp(startTimePlusDelta);
-    const duration = utc(endTimestamp) - utc(startTimestamp);
-    const end = start + duration;
-
-    points.push({
-      duration,
-      end,
-      id,
-      interpolateEnding: true,
-      sourceId,
-      start,
-      uniqueId,
-      value,
-    });
-  });
-
-  return points;
-}
-
-/**
- * Helper that gets a color from activity metadata.
- */
-export function getActivityColorFromMetadata(metadata: MpsServerActivityPointMetadata[]): number[] {
-  let color = [0, 0, 0];
-
-  metadata.forEach((data) => {
-    if (data.Name.toLowerCase() === 'color') {
-      color = getColor(data.Value);
-    }
-  });
-
-  return color;
-}
-
-/**
- * Takes a string of a color name and returns an RGB representation of that color.
- */
-export function getColor(color: string): number[] {
-  // Helpful map of Activity and/or State colors.
+export function getColorFromMetadata(metadata: MpsServerActivityPointMetadata[]): number[] {
   const colorMap: StringTMap<number[]> = {
     'Aquamarine': [193, 226, 236],
     'Cadet Blue': [92, 144, 198],
@@ -196,35 +43,19 @@ export function getColor(color: string): number[] {
     'color8': [0x57, 0x57, 0x57],
   };
 
-  if (colorMap[color]) {
-    return colorMap[color];
+  let color = [0, 0, 0];
+
+  for (let i = 0, l = metadata.length; i < l; ++i) {
+    const data: MpsServerActivityPointMetadata = metadata[i];
+
+    if (data.Name.toLowerCase() === 'color') {
+      const newColor = colorMap[data.Value];
+
+      if (newColor) {
+        color = newColor;
+      }
+    }
   }
 
-  return [0, 0, 0];
-}
-
-/**
- * Finds a max time range for a list of points.
- */
-export function getMaxTimeRangeForPoints(points: RavenPoint[]): RavenTimeRange {
-  let maxTime = Number.MIN_SAFE_INTEGER;
-  let minTime = Number.MAX_SAFE_INTEGER;
-
-  points.forEach((point: RavenPoint) => {
-    const end = point.duration ? point.start + point.duration : point.start;
-    const start = point.start;
-
-    if (start < minTime) {
-      minTime = start;
-    }
-
-    if (end > maxTime) {
-      maxTime = end;
-    }
-  });
-
-  return {
-    end: maxTime,
-    start: minTime,
-  };
+  return color;
 }

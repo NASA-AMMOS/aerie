@@ -33,6 +33,21 @@
 
         <div *ngIf="bands.length > 0" class="timeline">
           <mat-card>
+            <div>
+              <mat-slider
+                id="raven-settings-label-width"
+                color="primary"
+                max="500"
+                min="2"
+                step="1"
+                thumb-label="true"
+                tick-interval="50"
+                [value]="labelWidth"
+                (change)="updateAllBands({ prop: 'labelWidth', value: $event.value })">
+              </mat-slider>
+              <label>Label Width</label>
+            </div>
+
             <falcon-time-range-selector
               [maxTimeRange]="maxTimeRange"
               [viewTimeRange]="viewTimeRange">

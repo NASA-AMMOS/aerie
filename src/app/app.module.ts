@@ -78,7 +78,7 @@ export const MODULES = [
   RouterModule.forRoot(routes, { useHash: true }),
   StoreModule.forRoot(reducers, { metaReducers }),
   StoreRouterConnectingModule,
-  !environment.production ? StoreDevtoolsModule.instrument({ maxAge: 25 }) : [],
+  !environment.production ? StoreDevtoolsModule.instrument({ maxAge: 10 }) : [],
   EffectsModule.forRoot(EFFECTS),
 ];
 

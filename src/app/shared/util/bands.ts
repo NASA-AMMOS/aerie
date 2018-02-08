@@ -24,17 +24,21 @@ import {
   RavenCompositeBand,
   RavenDividerBand,
   RavenResourceBand,
+  RavenResourcePoint,
   RavenStateBand,
+  RavenStatePoint,
   RavenTimeRange,
   StringTMap,
 } from './../models';
 
 import {
-  getMaxTimeRangeForPoints,
-  mpsServerToRavenActivityPoints,
-  mpsServerToRavenResourcePoints,
-  mpsServerToRavenStatePoints,
+  getColorFromMetadata,
 } from './points';
+
+import {
+  timestamp,
+  utc,
+} from './time';
 
 /**
  * This is a helper function that takes a list of bands and a sourceId that was just clicked to "close".
@@ -48,7 +52,9 @@ export function removeBandsOrPoints(sourceId: string, bands: RavenBand[]) {
   const removeBandIds: string[] = [];
   const removePointsBandIds: string[] = [];
 
-  bands.forEach((band: RavenBand) => {
+  for (let i = 0, l = bands.length; i < l; ++i) {
+    const band: RavenBand = bands[i];
+
     // If the band has the source id we are closing.
     if (band.sourceIds && band.sourceIds[sourceId]) {
       const sourceIds = Object.keys(band.sourceIds);
@@ -63,7 +69,7 @@ export function removeBandsOrPoints(sourceId: string, bands: RavenBand[]) {
         removePointsBandIds.push(band.id);
       }
     }
-  });
+  }
 
   return {
     removeBandIds,
@@ -81,16 +87,20 @@ export function removeSameLegendActivityBands(currentBands: RavenBand[], potenti
   const newBands: RavenBand[] = [...potentialBands];
   const bandIdsToPoints: StringTMap<RavenActivityPoint[]> = {};
 
-  currentBands.forEach((currentBand: RavenBand) => {
+  for (let i = 0, l = currentBands.length; i < l; ++i) {
+    const currentBand: RavenBand = currentBands[i];
+
     if (currentBand.type === 'activity') {
-      newBands.forEach((potentialBand, i) => {
+      for (let j = 0, len = currentBands.length; j < len; ++j) {
+        const potentialBand = currentBands[j];
+
         if (potentialBand.type === 'activity' && currentBand.name === potentialBand.name) {
           bandIdsToPoints[currentBand.id] = (potentialBand as RavenActivityBand).points; // This will be used in a reducer to add the potential band points to the current band.
-          newBands.splice(i, 1); // Remove the potential band since it's points will be added to the current band in the reducer.
+          newBands.splice(j, 1); // Remove the potential band since it's points will be added to the current band in the reducer.
         }
-      });
+      }
     }
-  });
+  }
 
   return {
     bandIdsToPoints,
@@ -150,46 +160,109 @@ export function toRavenBandData(sourceId: string, graphData: MpsServerGraphData,
  */
 export function toActivityBands(sourceId: string, timelineData: MpsServerActivityPoint[]): RavenActivityBand[] {
   const bands: RavenActivityBand[] = [];
-  const points: RavenActivityPoint[] = mpsServerToRavenActivityPoints(sourceId, timelineData);
+  const points: RavenActivityPoint[] = [];
+
+  let maxTime = Number.MIN_SAFE_INTEGER;
+  let minTime = Number.MAX_SAFE_INTEGER;
+
+  for (let i = 0, l = timelineData.length; i < l; ++i) {
+    const data: MpsServerActivityPoint = timelineData[i];
+
+    const activityId = data['Activity ID'];
+    const activityName = data['Activity Name'];
+    const activityParameters = data['Activity Parameters'];
+    const activityType = data['Activity Type'];
+    const ancestors = data.ancestors;
+    const childrenUrl = data.childrenUrl;
+    const color = getColorFromMetadata(data.Metadata);
+    const descendantsUrl = data.descendantsUrl;
+    const endTimestamp = data['Tend Assigned'];
+    const id = data.__document_id;
+    const metadata = data.Metadata;
+    const startTimestamp = data['Tstart Assigned'];
+    const uniqueId = v4();
+
+    const start = utc(startTimestamp);
+    const end = utc(endTimestamp);
+    const duration = end - start;
+
+    let hasLegend = false;
+    let legend = '';
+    if (data.Metadata) {
+      for (let j = 0, len = data.Metadata.length; j < len; ++j) {
+        const d = data.Metadata[j];
+
+        if (d.Name === 'legend') {
+          legend = d.Value;
+          hasLegend = true;
+        }
+      }
+    }
+
+    if (start < minTime) { minTime = start; }
+    if (end > maxTime) { maxTime = end; }
+
+    points.push({
+      activityId,
+      activityName,
+      activityParameters,
+      activityType,
+      ancestors,
+      childrenUrl,
+      color,
+      descendantsUrl,
+      duration,
+      end,
+      endTimestamp,
+      hasLegend,
+      id,
+      legend,
+      metadata,
+      sourceId,
+      start,
+      startTimestamp,
+      uniqueId,
+    });
+  }
+
   const legends = groupBy(points, 'legend');
+  const legendKeys = Object.keys(legends);
 
   // Map each legend to a band.
-  Object.keys(legends).forEach((legend) => {
-    bands.push(toActivityBand(legend, legends[legend]));
-  });
+  for (let i = 0, l = legendKeys.length; i < l; ++i) {
+    const legend = legendKeys[i];
+
+    const activityBand: RavenActivityBand = {
+      activityStyle: 1,
+      alignLabel: 3,
+      baselineLabel: 3,
+      containerId: '0',
+      height: 50,
+      heightPadding: 10,
+      id: v4(),
+      label: legend,
+      labelColor: [0, 0, 0],
+      layout: 1,
+      maxTimeRange: {
+        end: maxTime,
+        start: minTime,
+      },
+      minorLabels: [],
+      name: legend,
+      parentUniqueId: null,
+      points: legends[legend],
+      showLabel: true,
+      showTooltip: true,
+      sortOrder: 0,
+      sourceIds: {}, // Map of source ids this band has data from.
+      trimLabel: true,
+      type: 'activity',
+    };
+
+    bands.push(activityBand);
+  }
 
   return bands;
-}
-
-/**
- * Returns an activity band given a name and points.
- */
-export function toActivityBand(name: string, points: RavenActivityPoint[]): RavenActivityBand {
-  const activityBand: RavenActivityBand = {
-    activityStyle: 1,
-    alignLabel: 3,
-    baselineLabel: 3,
-    containerId: '0',
-    height: 50,
-    heightPadding: 10,
-    id: v4(),
-    label: name,
-    labelColor: [0, 0, 0],
-    layout: 1,
-    maxTimeRange: getMaxTimeRangeForPoints(points),
-    minorLabels: [],
-    name,
-    parentUniqueId: null,
-    points,
-    showLabel: true,
-    showTooltip: true,
-    sortOrder: 0,
-    sourceIds: {}, // Map of source ids this band has data from.
-    trimLabel: true,
-    type: 'activity',
-  };
-
-  return activityBand;
 }
 
 /**
@@ -250,8 +323,31 @@ export function toDividerBand(): RavenDividerBand {
  * Returns a resource band given metadata and timelineData.
  */
 export function toResourceBand(sourceId: string, metadata: MpsServerResourceMetadata, timelineData: MpsServerResourcePoint[]): RavenResourceBand {
-  // Map raw resource timeline data to points for a band.
-  const points = mpsServerToRavenResourcePoints(sourceId, timelineData);
+  const points: RavenResourcePoint[] = [];
+
+  let maxTime = Number.MIN_SAFE_INTEGER;
+  let minTime = Number.MAX_SAFE_INTEGER;
+
+  for (let i = 0, l = timelineData.length; i < l; ++i) {
+    const data: MpsServerResourcePoint = timelineData[i];
+
+    const id = data.__document_id;
+    const start = utc(data['Data Timestamp']);
+    const uniqueId = v4();
+    const value = data['Data Value'];
+
+    if (start < minTime) { minTime = start; }
+    if (start > maxTime) { maxTime = start; }
+
+    points.push({
+      duration: null,
+      id,
+      sourceId,
+      start,
+      uniqueId,
+      value,
+    });
+  }
 
   const resourceBand: RavenResourceBand = {
     autoTickValues: true,
@@ -265,7 +361,10 @@ export function toResourceBand(sourceId: string, metadata: MpsServerResourceMeta
     interpolation: 'linear',
     label: metadata.hasObjectName,
     labelColor: [0, 0, 0],
-    maxTimeRange: getMaxTimeRangeForPoints(points),
+    maxTimeRange: {
+      end: maxTime,
+      start: minTime,
+    },
     minorLabels: [],
     name: metadata.hasObjectName,
     parentUniqueId: null,
@@ -285,8 +384,41 @@ export function toResourceBand(sourceId: string, metadata: MpsServerResourceMeta
  * Returns a state band given metadata and timelineData.
  */
 export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, timelineData: MpsServerStatePoint[]): RavenStateBand {
-  // Map raw state timeline data (stringXdr type in MPS Server) to points for a band.
-  const points = mpsServerToRavenStatePoints(sourceId, timelineData);
+  const points: RavenStatePoint[] = [];
+
+  let maxTime = Number.MIN_SAFE_INTEGER;
+  let minTime = Number.MAX_SAFE_INTEGER;
+
+  for (let i = 0, l = timelineData.length; i < l; ++i) {
+    const data: MpsServerStatePoint = timelineData[i];
+
+    const id = data.__document_id;
+    const start = utc(data['Data Timestamp']);
+    const startTimestamp = data['Data Timestamp'];
+    const uniqueId = v4();
+    const value = data['Data Value'];
+
+    // This may or may not be correct. We're making an assumption that if there's no end,
+    // we're going to draw to the end of the day.
+    const startTimePlusDelta = utc(startTimestamp) + 30;
+    const endTimestamp = timelineData[i + 1] !== undefined ? timelineData[i + 1]['Data Timestamp'] : timestamp(startTimePlusDelta);
+    const duration = utc(endTimestamp) - utc(startTimestamp);
+    const end = start + duration;
+
+    if (start < minTime) { minTime = start; }
+    if (end > maxTime) { maxTime = end; }
+
+    points.push({
+      duration,
+      end,
+      id,
+      interpolateEnding: true,
+      sourceId,
+      start,
+      uniqueId,
+      value,
+    });
+  }
 
   const stateBand: RavenStateBand = {
     alignLabel: 3,
@@ -297,7 +429,10 @@ export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, 
     id: v4(),
     label: metadata.hasObjectName,
     labelColor: [0, 0, 0],
-    maxTimeRange: getMaxTimeRangeForPoints(points),
+    maxTimeRange: {
+      end: maxTime,
+      start: minTime,
+    },
     minorLabels: [],
     name: metadata.hasObjectName,
     parentUniqueId: null,

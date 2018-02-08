@@ -57,32 +57,30 @@ export class TimelineComponent {
   }
 
   /**
+   * Call to update a setting in all bands.
+   */
+  updateAllBands(update: RavenSettingsUpdate): void {
+    this.store.dispatch(new timelineActions.SettingsUpdateAllBands(update.prop, update.value));
+  }
+
+  /**
    * Event. Called when a band is clicked in an raven-bands component.
    */
-  onBandClick(bandId: string) {
+  onBandClick(bandId: string): void {
     this.store.dispatch(new timelineActions.SelectBand(bandId));
   }
 
   /**
    * Event. Called when a `newSort` event is fired from raven-bands.
    */
-  onSort(sort: StringTMap<RavenSortMessage>) {
+  onSort(sort: StringTMap<RavenSortMessage>): void {
     this.store.dispatch(new timelineActions.SortBands(sort));
-  }
-
-  /**
-   * Event. Called when a `` event is fired from the ...
-   */
-  onUpdateAllBands(e: any) {
-    // e.preventDefault();
-    // e.stopPropagation();
-    // this.store.dispatch(new timelineActions.SettingsUpdateAllBands(e.detail.prop, e.detail.value));
   }
 
   /**
    * Event. Called when an `update-band` event is fired from the raven-settings component.
    */
-  onUpdateBand(update: RavenSettingsUpdate) {
+  onUpdateBand(update: RavenSettingsUpdate): void {
     this.store.dispatch(new timelineActions.SettingsUpdateBand(update.prop, update.value));
   }
 
@@ -93,7 +91,7 @@ export class TimelineComponent {
    * TODO: Replace 'any' with a concrete type.
    */
   @HostListener('falcon-update-view-time-range', ['$event'])
-  onUpdateViewTimeRange(e: any) {
+  onUpdateViewTimeRange(e: any): void {
     e.preventDefault();
     e.stopPropagation();
     this.store.dispatch(new timelineActions.UpdateViewTimeRange(e.detail));
@@ -102,7 +100,7 @@ export class TimelineComponent {
   /**
    * Event. After a split pane drag, trigger a window resize event so the bands are properly sized.
    */
-  onDragEnd() {
+  onDragEnd(): void {
     dispatchEvent(new Event('resize'));
   }
 }

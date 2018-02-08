@@ -219,9 +219,10 @@ class FalconResourceBand extends FalconBand(Polymer.Element) {
       this.resourceBand.painter.color = this.color;
 
       // Setting each interval color actually sets the color.
-      this.resourceBand.intervalsList[0].forEach((interval) => {
+      for (let i = 0, l = this.resourceBand.intervalsList[0].length; i < l; ++i) {
+        const interval = this.resourceBand.intervalsList[0][i];
         interval.color = this.color;
-      });
+      }
 
       this.redraw();
     }
@@ -284,7 +285,9 @@ class FalconResourceBand extends FalconBand(Polymer.Element) {
   _pointsChanged() {
     const intervals = [];
 
-    this.points.forEach((point) => {
+    for (let i = 0, l = this.points.length; i < l; ++i) {
+      const point = this.points[i];
+
       const interval = new DrawableInterval({
         color: this.color,
         end: point.start,
@@ -304,7 +307,7 @@ class FalconResourceBand extends FalconBand(Polymer.Element) {
       interval.uniqueId = point.uniqueId;
 
       intervals.push(interval);
-    });
+    }
 
     intervals.sort(DrawableInterval.earlyStartEarlyEnd);
 

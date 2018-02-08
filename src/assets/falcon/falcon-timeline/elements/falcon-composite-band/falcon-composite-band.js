@@ -110,7 +110,9 @@ class FalconCompositeBand extends FalconBand(Polymer.Element) {
    * @memberof FalconCompositeBand
    */
   _processNewNodes(addedNodes) {
-    addedNodes.forEach((node) => {
+    for (let i = 0, l = addedNodes.length; i < l; ++i) {
+      const node = addedNodes[i];
+
       switch (node.localName) {
         case 'falcon-activity-band':
           if (!this._hasBand(node.activityBand)) {
@@ -136,7 +138,7 @@ class FalconCompositeBand extends FalconBand(Polymer.Element) {
         default:
           break;
       }
-    });
+    }
   }
 
   /**
@@ -162,11 +164,13 @@ class FalconCompositeBand extends FalconBand(Polymer.Element) {
     let found = false;
 
     if (band) {
-      this.compositeBand.bands.forEach((b) => {
+      for (let i = 0, l = this.compositeBand.bands.length; i < l; ++i) {
+        const b = this.compositeBand.bands[i];
+
         if (b.id === band.id) {
           found = true;
         }
-      });
+      }
     }
 
     return found;
