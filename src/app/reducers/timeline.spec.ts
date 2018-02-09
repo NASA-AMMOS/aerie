@@ -51,9 +51,10 @@ describe('timeline reducer', () => {
   it('handle FetchGraphDataSuccess (no existing bands)', () => {
     const source: RavenSource = rootSource;
     const bands: RavenBand[] = [stateBand];
-    const bandIdsToPoints = {};
+    const bandIdToName = {};
+    const bandIdToPoints = {};
 
-    timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, bands, bandIdsToPoints));
+    timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, bands, bandIdToName, bandIdToPoints));
     expect(timelineState).toEqual({
       ...initialState,
       bands: [{
@@ -62,7 +63,7 @@ describe('timeline reducer', () => {
         sortOrder: 0,
         sourceIds: {
           ...stateBand.sourceIds,
-          [source.id]: true,
+          [source.id]: source.name,
         },
       } as RavenStateBand],
       maxTimeRange: { end: 100, start: 0 },
@@ -74,12 +75,13 @@ describe('timeline reducer', () => {
     const source: RavenSource = rootSource;
     const child: RavenSource = childSource;
     const bands: RavenBand[] = [activityBand];
-    const bandIdsToPoints = { '100': [activityPoint] };
+    const bandIdToName = { '100': 'test-activity-band' };
+    const bandIdToPoints = { '100': [activityPoint] };
 
     // First add a band that we can add points to it in the next reducer call.
-    timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, bands, bandIdsToPoints));
+    timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, bands, bandIdToName, bandIdToPoints));
 
-    timelineState = reducer(timelineState, new FetchGraphDataSuccess(child, [], bandIdsToPoints));
+    timelineState = reducer(timelineState, new FetchGraphDataSuccess(child, [], bandIdToName, bandIdToPoints));
     expect(timelineState).toEqual({
       ...initialState,
       bands: [{
@@ -87,8 +89,8 @@ describe('timeline reducer', () => {
         points: [activityPoint],
         sourceIds: {
           ...activityBand.sourceIds,
-          [source.id]: true,
-          [child.id]: true,
+          [source.id]: source.name,
+          [child.id]: child.name,
         },
       } as RavenActivityBand],
       maxTimeRange: { end: 200, start: 50 },
@@ -99,10 +101,11 @@ describe('timeline reducer', () => {
   it('handle RemoveBands (remove entire band)', () => {
     const source: RavenSource = rootSource;
     const bands: RavenBand[] = [activityBand];
-    const bandIdsToPoints = {};
+    const bandIdToName = {};
+    const bandIdToPoints = {};
 
     // First add a band so we can remove it.
-    timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, bands, bandIdsToPoints));
+    timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, bands, bandIdToName, bandIdToPoints));
 
     timelineState = reducer(timelineState, new RemoveBands(source, ['100'], []));
     expect(timelineState).toEqual(initialState);
@@ -112,13 +115,14 @@ describe('timeline reducer', () => {
     const source: RavenSource = rootSource;
     const child: RavenSource = childSource;
     const bands: RavenBand[] = [activityBand];
+    const bandIdToName = { '100': 'test-activity-band' };
 
     activityPoint.sourceId = child.id;
-    const bandIdsToPoints = { '100': [activityPoint] };
+    const bandIdToPoints = { '100': [activityPoint] };
 
     // First add a band with extra points that we can remove.
-    timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, bands, bandIdsToPoints));
-    timelineState = reducer(timelineState, new FetchGraphDataSuccess(child, [], bandIdsToPoints));
+    timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, bands, bandIdToName, bandIdToPoints));
+    timelineState = reducer(timelineState, new FetchGraphDataSuccess(child, [], bandIdToName, bandIdToPoints));
 
     timelineState = reducer(timelineState, new RemoveBands(child, [], ['100']));
 
@@ -130,7 +134,7 @@ describe('timeline reducer', () => {
         sortOrder: 0,
         sourceIds: {
           ...activityBand.sourceIds,
-          [source.id]: true,
+          [source.id]: source.name,
         },
       } as RavenActivityBand],
       maxTimeRange: { end: 200, start: 50 },
@@ -141,10 +145,11 @@ describe('timeline reducer', () => {
   it('handle SelectBand', () => {
     const source: RavenSource = rootSource;
     const bands: RavenBand[] = [stateBand];
-    const bandIdsToPoints = {};
+    const bandIdToName = {};
+    const bandIdToPoints = {};
 
     // First add a band we can select.
-    const timelineStateWithBand = reducer(timelineState, new FetchGraphDataSuccess(source, bands, bandIdsToPoints));
+    const timelineStateWithBand = reducer(timelineState, new FetchGraphDataSuccess(source, bands, bandIdToName, bandIdToPoints));
 
     timelineState = reducer(timelineStateWithBand, new SelectBand(stateBand.id));
     expect(timelineState).toEqual({
@@ -169,10 +174,11 @@ describe('timeline reducer', () => {
   it('handle SettingsUpdateBand', () => {
     const source: RavenSource = rootSource;
     const bands: RavenBand[] = [stateBand];
-    const bandIdsToPoints = {};
+    const bandIdToName = {};
+    const bandIdToPoints = {};
 
     // First add a band and select it so we can update it.
-    let timelineStateWithBand = reducer(timelineState, new FetchGraphDataSuccess(source, bands, bandIdsToPoints));
+    let timelineStateWithBand = reducer(timelineState, new FetchGraphDataSuccess(source, bands, bandIdToName, bandIdToPoints));
     timelineStateWithBand = reducer(timelineStateWithBand, new SelectBand(stateBand.id));
 
     timelineState = reducer(timelineStateWithBand, new SettingsUpdateBand('label', '42'));
@@ -193,7 +199,7 @@ describe('timeline reducer', () => {
       '102': { containerId: '0', sortOrder: 0 },
     };
 
-    const timelineStateWithBands = reducer(timelineState, new FetchGraphDataSuccess(source, bands, {}));
+    const timelineStateWithBands = reducer(timelineState, new FetchGraphDataSuccess(source, bands, {}, {}));
 
     timelineState = reducer(timelineStateWithBands, new SortBands(sort));
     expect(timelineState).toEqual({

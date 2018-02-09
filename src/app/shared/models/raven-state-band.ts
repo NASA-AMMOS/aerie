@@ -29,6 +29,6 @@ export interface RavenStateBand {
   points: RavenStatePoint[];
   showTooltip: boolean;
   sortOrder: number;
-  sourceIds: StringTMap<boolean>;
+  sourceIds: StringTMap<string>;
   type: string;
 }

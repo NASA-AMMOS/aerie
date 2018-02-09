@@ -55,7 +55,8 @@ export class FetchGraphDataSuccess implements Action {
   constructor(
     public source: RavenSource,
     public bands: RavenBand[],
-    public bandIdsToPoints: StringTMap<RavenActivityPoint[]>,
+    public bandIdToName: StringTMap<string>,
+    public bandIdToPoints: StringTMap<RavenActivityPoint[]>,
   ) {}
 }
 

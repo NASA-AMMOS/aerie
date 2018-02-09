@@ -3,10 +3,14 @@
   padding-bottom: 10px;
 }
 
+.selected {
+  background-color: rgba(0, 0, 255, 0.04);
+}
+
 .sortable-bands {
   padding-bottom: 20px;
 }
 
 .sortable-placeholder {
-  background-color: rgb(230,230,250);
+  background-color: rgb(230, 230, 250);
 }

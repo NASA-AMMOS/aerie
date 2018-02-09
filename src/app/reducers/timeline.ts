@@ -92,13 +92,13 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
     // 1. Map over existing bands and add any points from the action.
     .map((band: any) => {
       // If there is a band that has new points, then add the points and update the corresponding source id.
-      if (action.bandIdsToPoints[band.id]) {
+      if (action.bandIdToPoints[band.id]) {
         return {
           ...band,
-          points: band.points.concat(action.bandIdsToPoints[band.id] as any[]),
+          points: band.points.concat(action.bandIdToPoints[band.id] as any[]),
           sourceIds: {
             ...band.sourceIds,
-            [action.source.id]: true,
+            [action.source.id]: action.source.name,
           },
         };
       }
@@ -114,7 +114,7 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
         sortOrder: state.bands.filter(b => b.containerId === '0').length + index,
         sourceIds: {
           ...band.sourceIds,
-          [action.source.id]: true,
+          [action.source.id]: action.source.name,
         },
       };
     }));
@@ -169,11 +169,13 @@ export function removeBands(state: TimelineState, action: RemoveBands): Timeline
 
 /**
  * Reduction Helper. Called when reducing the 'SelectBand' action.
+ *
+ * If we click on a band that's already selected, just de-select it.
  */
 export function selectBand(state: TimelineState, action: SelectBand): TimelineState {
   return {
     ...state,
-    selectedBandId: action.bandId,
+    selectedBandId: action.bandId === state.selectedBandId ? '' : action.bandId,
   };
 }
 

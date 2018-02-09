@@ -7,12 +7,20 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
 
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/take';
+import 'rxjs/add/operator/takeUntil';
 
 import * as fromSourceExplorer from './../../reducers/source-explorer';
 import * as fromTimeline from './../../reducers/timeline';
@@ -36,16 +44,26 @@ import {
   styleUrls: ['./source-explorer.component.css'],
   templateUrl: './source-explorer.component.html',
 })
-export class SourceExplorerComponent implements OnInit {
+export class SourceExplorerComponent implements OnDestroy, OnInit {
   bands: RavenBand[];
   tree: StringTMap<RavenSource>;
 
   bands$: Observable<RavenBand[]>;
 
-  constructor(private changeDetector: ChangeDetectorRef, private store: Store<fromSourceExplorer.SourceExplorerState>) {
-    this.store.select(fromSourceExplorer.getTreeBySourceId).subscribe(tree => { this.tree = tree; this.changeDetector.markForCheck(); });
+  private ngUnsubscribe: Subject<{}> = new Subject();
 
-    this.bands$ = this.store.select(fromTimeline.getBands);
+  constructor(private changeDetector: ChangeDetectorRef, private store: Store<fromSourceExplorer.SourceExplorerState>) {
+    this.store
+      .select(fromSourceExplorer.getTreeBySourceId)
+      .takeUntil(this.ngUnsubscribe)
+      .subscribe(tree => { this.tree = tree; this.changeDetector.markForCheck(); });
+
+    this.bands$ = this.store.select(fromTimeline.getBands).takeUntil(this.ngUnsubscribe);
+  }
+
+  ngOnDestroy() {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
   }
 
   ngOnInit() {
@@ -56,7 +74,7 @@ export class SourceExplorerComponent implements OnInit {
    * Event. Called when a `close` event is fired from a raven-tree.
    */
   onClose(source: RavenSource): void {
-    this.bands$.take(1).subscribe(bands => this.bands = bands); // Synchronously get bands from state.
+    this.bands$.take(1).takeUntil(this.ngUnsubscribe).subscribe(bands => this.bands = bands); // Synchronously get bands from state.
     const { removeBandIds = [], removePointsBandIds = [] } = removeBandsOrPoints(source.id, this.bands);
 
     this.store.dispatch(new sourceExplorerActions.RemoveBands(source, removeBandIds, removePointsBandIds));

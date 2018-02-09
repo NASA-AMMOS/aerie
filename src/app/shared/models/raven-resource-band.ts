@@ -34,6 +34,6 @@ export interface RavenResourceBand {
   showIcon: boolean;
   showTooltip: boolean;
   sortOrder: number;
-  sourceIds: StringTMap<boolean>;
+  sourceIds: StringTMap<string>;
   type: string;
 }

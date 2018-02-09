@@ -7,9 +7,17 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ChangeDetectionStrategy, Component, HostListener } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  HostListener,
+  OnDestroy,
+} from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
+
+import 'rxjs/add/operator/takeUntil';
 
 import * as fromConfig from './../../reducers/config';
 import * as fromLayout from './../../reducers/layout';
@@ -31,29 +39,36 @@ import {
   styleUrls: ['./timeline.component.css'],
   templateUrl: './timeline.component.html',
 })
-export class TimelineComponent {
+export class TimelineComponent implements OnDestroy {
   bands: RavenBand[];
   itarMessage: string;
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
+  selectedBandId: string;
   viewTimeRange: RavenTimeRange;
 
-  selectedBandId$: Observable<string>;
   showDetailsDrawer$: Observable<boolean>;
   showLeftDrawer$: Observable<boolean>;
   showSouthBandsDrawer$: Observable<boolean>;
 
-  constructor(private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState>) {
-    this.store.select(fromTimeline.getBands).subscribe(bands => this.bands = bands);
-    this.store.select(fromConfig.getItarMessage).subscribe(itarMessage => this.itarMessage = itarMessage);
-    this.store.select(fromTimeline.getLabelWidth).subscribe(labelWidth => this.labelWidth = labelWidth);
-    this.store.select(fromTimeline.getMaxTimeRange).subscribe(maxTimeRange => this.maxTimeRange = maxTimeRange);
-    this.store.select(fromTimeline.getViewTimeRange).subscribe(viewTimeRange => this.viewTimeRange = viewTimeRange);
+  private ngUnsubscribe: Subject<{}> = new Subject();
 
-    this.selectedBandId$ = this.store.select(fromTimeline.getSelectedBandId);
-    this.showDetailsDrawer$ = this.store.select(fromLayout.getShowDetailsDrawer);
-    this.showLeftDrawer$ = this.store.select(fromLayout.getShowLeftDrawer);
-    this.showSouthBandsDrawer$ = this.store.select(fromLayout.getShowSouthBandsDrawer);
+  constructor(private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState>) {
+    this.store.select(fromTimeline.getBands).takeUntil(this.ngUnsubscribe).subscribe(bands => this.bands = bands);
+    this.store.select(fromConfig.getItarMessage).takeUntil(this.ngUnsubscribe).subscribe(itarMessage => this.itarMessage = itarMessage);
+    this.store.select(fromTimeline.getLabelWidth).takeUntil(this.ngUnsubscribe).subscribe(labelWidth => this.labelWidth = labelWidth);
+    this.store.select(fromTimeline.getMaxTimeRange).takeUntil(this.ngUnsubscribe).subscribe(maxTimeRange => this.maxTimeRange = maxTimeRange);
+    this.store.select(fromTimeline.getSelectedBandId).takeUntil(this.ngUnsubscribe).subscribe(selectedBandId => this.selectedBandId = selectedBandId);
+    this.store.select(fromTimeline.getViewTimeRange).takeUntil(this.ngUnsubscribe).subscribe(viewTimeRange => this.viewTimeRange = viewTimeRange);
+
+    this.showDetailsDrawer$ = this.store.select(fromLayout.getShowDetailsDrawer).takeUntil(this.ngUnsubscribe);
+    this.showLeftDrawer$ = this.store.select(fromLayout.getShowLeftDrawer).takeUntil(this.ngUnsubscribe);
+    this.showSouthBandsDrawer$ = this.store.select(fromLayout.getShowSouthBandsDrawer).takeUntil(this.ngUnsubscribe);
+  }
+
+  ngOnDestroy() {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
   }
 
   /**

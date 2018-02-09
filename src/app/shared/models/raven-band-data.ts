@@ -14,6 +14,7 @@ import {
 } from './index';
 
 export interface RavenBandData {
-  bandIdsToPoints: StringTMap<RavenActivityPoint[]>;
+  bandIdToName: StringTMap<string>;
+  bandIdToPoints: StringTMap<RavenActivityPoint[]>;
   bands: RavenBand[];
 }

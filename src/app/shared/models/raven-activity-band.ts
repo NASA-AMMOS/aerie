@@ -32,7 +32,7 @@ export interface RavenActivityBand {
   showLabel: boolean;
   showTooltip: boolean;
   sortOrder: number;
-  sourceIds: StringTMap<boolean>;
+  sourceIds: StringTMap<string>;
   trimLabel: boolean;
   type: string;
 }

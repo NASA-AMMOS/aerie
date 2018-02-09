@@ -85,25 +85,24 @@ export function removeBandsOrPoints(sourceId: string, bands: RavenBand[]) {
  */
 export function removeSameLegendActivityBands(currentBands: RavenBand[], potentialBands: RavenBand[]): RavenBandData {
   const newBands: RavenBand[] = [...potentialBands];
-  const bandIdsToPoints: StringTMap<RavenActivityPoint[]> = {};
+  const bandIdToName: StringTMap<string> = {};
+  const bandIdToPoints: StringTMap<RavenActivityPoint[]> = {};
 
-  for (let i = 0, l = currentBands.length; i < l; ++i) {
-    const currentBand: RavenBand = currentBands[i];
-
+  currentBands.forEach((currentBand) => {
     if (currentBand.type === 'activity') {
-      for (let j = 0, len = currentBands.length; j < len; ++j) {
-        const potentialBand = currentBands[j];
-
+      newBands.forEach((potentialBand, i) => {
         if (potentialBand.type === 'activity' && currentBand.name === potentialBand.name) {
-          bandIdsToPoints[currentBand.id] = (potentialBand as RavenActivityBand).points; // This will be used in a reducer to add the potential band points to the current band.
-          newBands.splice(j, 1); // Remove the potential band since it's points will be added to the current band in the reducer.
+          bandIdToName[currentBand.id] = potentialBand.name;
+          bandIdToPoints[currentBand.id] = (potentialBand as any).points; // This will be used in a reducer to add the potential band points to the current band.
+          newBands.splice(i, 1); // Remove the potential band since it's points will be added to the current band in the reducer.
         }
-      }
+      });
     }
-  }
+  });
 
   return {
-    bandIdsToPoints,
+    bandIdToName,
+    bandIdToPoints,
     bands: newBands,
   };
 }
@@ -141,16 +140,16 @@ export function getPotentialBands(sourceId: string, graphData: MpsServerGraphDat
 
 /**
  * Returns a data structure that transforms MpsServerGraphData to bands or points displayed in Raven.
- * 1. bandIdsToPoints: This is a hash that maps current band ids that are displayed in Raven to new points we need to display in those bands.
- * 2. bandIdsToPointsKeys: Just all the keys from 'bandIdsToPoints'.
- * 3. newBands: Any new bands we need to display.
+ * 1. bandIdToPoints: This is a hash that maps current band ids that are displayed in Raven to new points we need to display in those bands.
+ * 2. bands: Any new bands we need to display.
  */
 export function toRavenBandData(sourceId: string, graphData: MpsServerGraphData, currentBands: RavenBand[]): RavenBandData {
   const potentialBands: RavenBand[] = getPotentialBands(sourceId, graphData, currentBands);
-  const { bandIdsToPoints = {}, bands = [] } = removeSameLegendActivityBands(currentBands, potentialBands);
+  const { bandIdToName = {}, bandIdToPoints = {}, bands = [] } = removeSameLegendActivityBands(currentBands, potentialBands);
 
   return {
-    bandIdsToPoints,
+    bandIdToName,
+    bandIdToPoints,
     bands,
   };
 }

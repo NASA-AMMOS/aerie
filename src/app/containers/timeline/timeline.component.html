@@ -70,6 +70,7 @@
               [containerId]="'0'"
               [labelWidth]="labelWidth"
               [maxTimeRange]="maxTimeRange"
+              [selectedBandId]="selectedBandId"
               [viewTimeRange]="viewTimeRange"
               (bandClick)="onBandClick($event)"
               (newSort)="onSort($event)">
@@ -89,6 +90,7 @@
               [containerId]="'1'"
               [labelWidth]="labelWidth"
               [maxTimeRange]="maxTimeRange"
+              [selectedBandId]="selectedBandId"
               [viewTimeRange]="viewTimeRange"
               (bandClick)="onBandClick($event)"
               (newSort)="onSort($event)">
@@ -105,7 +107,7 @@
           <mat-card>
             <raven-settings
               [bandsById]="bands | keyBy:'id'"
-              [selectedBandId]="selectedBandId$ | async"
+              [selectedBandId]="selectedBandId"
               (updateBand)="onUpdateBand($event)">
             </raven-settings>
           </mat-card>

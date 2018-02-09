@@ -7,12 +7,19 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+} from '@angular/core';
 import { AfterViewChecked } from '@angular/core/src/metadata/lifecycle_hooks';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
 
 import 'rxjs/add/observable/combineLatest';
+import 'rxjs/add/operator/takeUntil';
 
 import * as fromSourceExplorer from './../../reducers/source-explorer';
 
@@ -24,16 +31,18 @@ import * as layoutActions from './../../actions/layout';
   styleUrls: ['./app.component.css'],
   templateUrl: './app.component.html',
 })
-export class AppComponent implements AfterViewChecked {
+export class AppComponent implements AfterViewChecked, OnDestroy {
   fetchGraphDataRequestPending$: Observable<boolean>;
   fetchInitialSourcesRequestPending$: Observable<boolean>;
   fetchSourcesRequestPending$: Observable<boolean>;
   loading$: Observable<boolean>;
 
+  private ngUnsubscribe: Subject<{}> = new Subject();
+
   constructor(private changeDetector: ChangeDetectorRef, private store: Store<fromSourceExplorer.SourceExplorerState>) {
-    this.fetchGraphDataRequestPending$ = this.store.select(fromSourceExplorer.getFetchGraphDataRequestPending);
-    this.fetchInitialSourcesRequestPending$ = this.store.select(fromSourceExplorer.getFetchInitialSourcesRequestPending);
-    this.fetchSourcesRequestPending$ = this.store.select(fromSourceExplorer.getFetchSourcesRequestPending);
+    this.fetchGraphDataRequestPending$ = this.store.select(fromSourceExplorer.getFetchGraphDataRequestPending).takeUntil(this.ngUnsubscribe);
+    this.fetchInitialSourcesRequestPending$ = this.store.select(fromSourceExplorer.getFetchInitialSourcesRequestPending).takeUntil(this.ngUnsubscribe);
+    this.fetchSourcesRequestPending$ = this.store.select(fromSourceExplorer.getFetchSourcesRequestPending).takeUntil(this.ngUnsubscribe);
 
     // Combine fetch pending observables for use in progress bar.
     this.loading$ = Observable.combineLatest(
@@ -41,7 +50,7 @@ export class AppComponent implements AfterViewChecked {
       this.fetchInitialSourcesRequestPending$,
       this.fetchSourcesRequestPending$,
       (fetchGraphData, fetchInitialSources, fetchSources) => fetchGraphData || fetchInitialSources || fetchSources,
-    );
+    ).takeUntil(this.ngUnsubscribe);
   }
 
   /**
@@ -49,6 +58,11 @@ export class AppComponent implements AfterViewChecked {
    */
   ngAfterViewChecked() {
     this.changeDetector.detectChanges();
+  }
+
+  ngOnDestroy() {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
   }
 
   toggleDetailsDrawer() {

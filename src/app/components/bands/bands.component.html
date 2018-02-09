@@ -7,6 +7,7 @@
     <div *ngIf="band.type === 'activity'">
       <falcon-activity-band
         class="falcon-band"
+        [ngClass]="{'selected': band.id === selectedBandId}"
         [activityStyle]="band.activityStyle"
         [alignLabel]="band.alignLabel"
         [baselineLabel]="band.baselineLabel"
@@ -35,6 +36,7 @@
     <div *ngIf="band.type === 'divider'">
       <falcon-divider-band
         class="falcon-band"
+        [ngClass]="{'selected': band.id === selectedBandId}"
         [color]="band.color"
         [height]="band.height"
         [id]="band.id"
@@ -51,6 +53,7 @@
     <div *ngIf="band.type === 'resource'">
       <falcon-resource-band
         class="falcon-band"
+        [ngClass]="{'selected': band.id === selectedBandId}"
         [autoTickValues]="band.autoTickValues"
         [color]="band.color"
         [fill]="band.fill"
@@ -77,6 +80,7 @@
     <div *ngIf="band.type === 'state'">
       <falcon-state-band
         class="falcon-band"
+        [ngClass]="{'selected': band.id === selectedBandId}"
         [alignLabel]="band.alignLabel"
         [baselineLabel]="band.baselineLabel"
         [borderWidth]="band.borderWidth"

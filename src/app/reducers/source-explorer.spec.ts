@@ -66,9 +66,10 @@ describe('source-explorer reducer', () => {
   it('handle FetchGraphDataSuccess', () => {
     const source: RavenSource = rootSource;
     const bands: RavenBand[] = [stateBand];
-    const bandIdsToPoints = { [activityBand.id]: [] };
+    const bandIdToName = { [activityBand.id]: 'test-activity-band' };
+    const bandIdToPoints = { [activityBand.id]: [] };
 
-    sourceExplorerState = reducer(sourceExplorerState, new FetchGraphDataSuccess(source, bands, bandIdsToPoints));
+    sourceExplorerState = reducer(sourceExplorerState, new FetchGraphDataSuccess(source, bands, bandIdToName, bandIdToPoints));
     expect(sourceExplorerState).toEqual({
       ...initialState,
       fetchGraphDataRequestPending: false,
@@ -78,8 +79,8 @@ describe('source-explorer reducer', () => {
           ...initialState.treeBySourceId[source.id],
           bandIds: {
             ...initialState.treeBySourceId[source.id].bandIds,
-            '100': true,
-            '102': true,
+            '100': 'test-activity-band',
+            '102': 'test-state-band',
           },
           opened: true,
         },
@@ -173,10 +174,11 @@ describe('source-explorer reducer', () => {
   it('handle RemoveBands', () => {
     const source: RavenSource = rootSource;
     const bands: RavenBand[] = [stateBand];
-    const bandIdsToPoints = { [activityBand.id]: [] };
+    const bandIdToName = { [activityBand.id]: 'test-activity-band' };
+    const bandIdToPoints = { [activityBand.id]: [] };
 
     // Add some bands first so we have something to remove.
-    sourceExplorerState = reducer(sourceExplorerState, new FetchGraphDataSuccess(source, bands, bandIdsToPoints));
+    sourceExplorerState = reducer(sourceExplorerState, new FetchGraphDataSuccess(source, bands, bandIdToName, bandIdToPoints));
 
     sourceExplorerState = reducer(sourceExplorerState, new RemoveBands(source, ['100', '102'], []));
     expect(sourceExplorerState).toEqual(initialState);

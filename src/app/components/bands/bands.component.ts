@@ -41,6 +41,7 @@ export class BandsComponent implements OnChanges, OnInit {
   @Input() containerId: string;
   @Input() labelWidth: number;
   @Input() maxTimeRange: RavenTimeRange;
+  @Input() selectedBandId: string;
   @Input() viewTimeRange: RavenTimeRange;
 
   @Output() bandClick: EventEmitter<string> = new EventEmitter<string>();
