@@ -11,7 +11,7 @@
     "jquery-ui": "^1.12.1",
     "moment": "^2.18.1",
     "moment-timezone": "^0.5.13",
-    "polymer": "2.0.1",
-    "webcomponentsjs": "1.0.1"
+    "polymer": "^2.5.0",
+    "webcomponentsjs": "^1.1.0"
   }
 }
