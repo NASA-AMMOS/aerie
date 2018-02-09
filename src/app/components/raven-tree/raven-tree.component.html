@@ -52,6 +52,7 @@
 <ul *ngIf="tree[id].expanded">
   <li *ngFor="let childId of tree[id].childIds">
     <raven-tree
+      [class]="tree[childId].name"
       [id]="childId"
       [tree]="tree"
       (close)="close.emit($event)"

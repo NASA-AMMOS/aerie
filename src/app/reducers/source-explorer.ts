@@ -158,13 +158,15 @@ export function addBands(state: SourceExplorerState, action: FetchGraphDataSucce
  * Called when we need to de-associate one source with one or more band.
  */
 export function removeBands(state: SourceExplorerState, action: RemoveBands): SourceExplorerState {
+  const removeBandIds = action.removeBandIds.concat(action.removePointsBandIds);
+
   return {
     ...state,
     treeBySourceId: {
       ...state.treeBySourceId,
       [action.source.id]: {
         ...state.treeBySourceId[action.source.id],
-        bandIds: omit(state.treeBySourceId[action.source.id].bandIds, action.removeBandIds),
+        bandIds: omit(state.treeBySourceId[action.source.id].bandIds, removeBandIds),
         opened: false,
       },
     },

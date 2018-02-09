@@ -7,14 +7,19 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { AppPage } from './app.po';
-
 import {
   browser,
   by,
   element,
   Key,
 } from 'protractor';
+
+import {
+  AppPage,
+  clickByCss,
+  clickById,
+  clickByIds,
+} from './utils';
 
 describe('raven2 - settings - resource band', () => {
   const initialResourceHeight = '100';
@@ -33,9 +38,9 @@ describe('raven2 - settings - resource band', () => {
   beforeAll(() => {
     page = new AppPage();
     page.navigateTo();
-    page.clickByIds(ids);
-    page.clickById(`raven-tree-${resourceName}-open`);
-    page.clickByCss('.falcon-band');
+    clickByIds(ids);
+    clickById(`raven-tree-${resourceName}-open`);
+    clickByCss('.falcon-band');
   });
 
   it('all band settings and resource band settings should be present', () => {
@@ -85,7 +90,7 @@ describe('raven2 - settings - resource band', () => {
   it('changing the height in the settings should change the height in the band', async () => {
     // Setting x: 1 for the dragAndDrop action changes height from 100 -> 251.
     // This test could possibly fail if this 100 -> 251 mapping changes depending on the browser.
-    // TODO: Find a more deterministic way to do this.
+    // TODO: Find a more deterministic way to do this. Commenting expect() out for now.
     browser.actions().dragAndDrop(page.settingsHeight, { x: 1, y: 0 }).perform();
 
     // const newHeight = 251;

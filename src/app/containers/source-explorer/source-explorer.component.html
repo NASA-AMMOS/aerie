@@ -1,5 +1,6 @@
 <div *ngFor="let childId of tree['0'].childIds">
   <raven-tree
+    [class]="tree[childId].name"
     [id]="childId"
     [tree]="tree"
     (close)="onClose($event)"

@@ -25,13 +25,19 @@
           </mat-card>
         </div>
 
-        <div *ngIf="bands.length === 0" class="get-started">
+        <div
+          id="get-started-message"
+          *ngIf="bands.length === 0"
+          class="get-started">
           <mat-card>
             To get started, select some <i class="fa fa-area-chart" style="color: #17a923" aria-hidden="true"></i> Data Sources from the source explorer.
           </mat-card>
         </div>
 
-        <div *ngIf="bands.length > 0" class="timeline">
+        <div
+          id="raven-timeline"
+          *ngIf="bands.length > 0"
+          lass="timeline">
           <mat-card>
             <div>
               <mat-slider
@@ -67,6 +73,7 @@
 
             <raven-bands
               [bands]="bands"
+              id="raven-bands-0"
               [containerId]="'0'"
               [labelWidth]="labelWidth"
               [maxTimeRange]="maxTimeRange"
@@ -86,6 +93,7 @@
         <div class="timeline">
           <mat-card>
             <raven-bands
+              id="raven-bands-1"
               [bands]="bands"
               [containerId]="'1'"
               [labelWidth]="labelWidth"

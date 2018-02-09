@@ -35,27 +35,4 @@ export class AppPage {
   getAppTitle(): promise.Promise<string> {
     return element(by.id('app-title')).getText();
   }
-
-  /**
-   * Helper. Click via css class.
-   */
-  clickByCss(cssClass: string): void {
-    element(by.css(cssClass)).click();
-  }
-
-  /**
-   * Helper. Click via id.
-   */
-  clickById(id: string): void {
-    element(by.id(id)).click();
-  }
-
-  /**
-   * Helper. Clicks all ids given in the 'ids' parameter.
-   */
-  clickByIds(ids: string[]): void {
-    ids.forEach(id => {
-      element(by.id(id)).click();
-    });
-  }
 }

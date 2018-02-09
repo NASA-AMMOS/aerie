@@ -7,19 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  AppPage,
-} from './utils';
-
-describe('raven2 App', () => {
-  let page: AppPage;
-
-  beforeEach(() => {
-    page = new AppPage();
-  });
-
-  it('the app title should be correct', () => {
-    page.navigateTo();
-    expect(page.getAppTitle()).toEqual('Raven2');
-  });
-});
+export * from './app.po';
+export * from './functions';
+export * from './raven-tree.po';
