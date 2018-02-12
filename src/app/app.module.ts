@@ -48,12 +48,14 @@ import {
 } from './effects';
 
 import {
+  HasKeysPipe,
   KeyByPipe,
 } from './pipes';
 
 export const DECLARATIONS = [
   AppComponent,
   BandsComponent,
+  HasKeysPipe,
   KeyByPipe,
   RavenSettingsComponent,
   RavenTreeComponent,

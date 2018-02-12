@@ -7,7 +7,20 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-const ravenConfig = {
+
+/**
+ * Type interface schema for Raven's configuration.
+ * This object is loaded into the store's `config` reducer upon application load.
+ *
+ * @export
+ * @interface RavenConfig
+ */
+export interface RavenConfig {
+  baseSourcesUrl: string;
+  itarMessage: string;
+}
+
+const ravenConfig: RavenConfig = {
   baseSourcesUrl: 'mpsserver/api/v2/fs',
   itarMessage: '',
 };

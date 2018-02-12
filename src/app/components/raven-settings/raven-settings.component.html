@@ -2,6 +2,11 @@
   Band Settings
 </div>
 
+<!-- Global Settings. -->
+<div *ngIf="bandsById | hasKeys">
+</div>
+
+<!-- Selected Settings. -->
 <div *ngIf="selectedBandId !== ''">
   <!-- All Bands Settings. -->
   <div

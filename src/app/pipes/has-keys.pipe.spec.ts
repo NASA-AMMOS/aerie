@@ -7,6 +7,21 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './app.po';
-export * from './helpers';
-export * from './raven-tree.po';
+import { HasKeysPipe } from './has-keys.pipe';
+
+describe('HasKeysPipe', () => {
+  it('create an instance', () => {
+    const pipe = new HasKeysPipe();
+    expect(pipe).toBeTruthy();
+  });
+
+  it('should return true', () => {
+    const pipe = new HasKeysPipe();
+    expect(pipe.transform({ a: 1, b: 2 })).toEqual(true);
+  });
+
+  it('should return false', () => {
+    const pipe = new HasKeysPipe();
+    expect(pipe.transform({})).toEqual(false);
+  });
+});

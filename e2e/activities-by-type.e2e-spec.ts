@@ -19,11 +19,13 @@ import {
   RavenTree,
 } from './utils';
 
+/**
+ * Note: Source0 and Source1 need to have the same legends for these tests.
+ */
 describe('raven2 - activities by type', () => {
   let bands: any;
   let page: AppPage;
 
-  // Source0 and Source1 need to have the same legend count for most of the tests in this file.
   const source0: RavenTree = new RavenTree(3, 'PostCal');
   const source1: RavenTree = new RavenTree(3, 'PreCal');
 

@@ -7,6 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './app.po';
-export * from './helpers';
-export * from './raven-tree.po';
+import { Pipe, PipeTransform } from '@angular/core';
+
+@Pipe({
+  name: 'hasKeys',
+})
+export class HasKeysPipe implements PipeTransform {
+  transform(value: any, args?: any): boolean {
+    return Object.keys(value).length > 0;
+  }
+}

@@ -16,7 +16,7 @@ import {
 import {
   clickById,
   probe,
-} from './functions';
+} from './helpers';
 
 export class RavenTree {
   element: ElementFinder;

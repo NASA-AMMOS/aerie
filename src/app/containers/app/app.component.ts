@@ -9,11 +9,9 @@
 
 import {
   ChangeDetectionStrategy,
-  ChangeDetectorRef,
   Component,
   OnDestroy,
 } from '@angular/core';
-import { AfterViewChecked } from '@angular/core/src/metadata/lifecycle_hooks';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
@@ -31,7 +29,7 @@ import * as layoutActions from './../../actions/layout';
   styleUrls: ['./app.component.css'],
   templateUrl: './app.component.html',
 })
-export class AppComponent implements AfterViewChecked, OnDestroy {
+export class AppComponent implements OnDestroy {
   fetchGraphDataRequestPending$: Observable<boolean>;
   fetchInitialSourcesRequestPending$: Observable<boolean>;
   fetchSourcesRequestPending$: Observable<boolean>;
@@ -39,7 +37,7 @@ export class AppComponent implements AfterViewChecked, OnDestroy {
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
-  constructor(private changeDetector: ChangeDetectorRef, private store: Store<fromSourceExplorer.SourceExplorerState>) {
+  constructor(private store: Store<fromSourceExplorer.SourceExplorerState>) {
     this.fetchGraphDataRequestPending$ = this.store.select(fromSourceExplorer.getFetchGraphDataRequestPending).takeUntil(this.ngUnsubscribe);
     this.fetchInitialSourcesRequestPending$ = this.store.select(fromSourceExplorer.getFetchInitialSourcesRequestPending).takeUntil(this.ngUnsubscribe);
     this.fetchSourcesRequestPending$ = this.store.select(fromSourceExplorer.getFetchSourcesRequestPending).takeUntil(this.ngUnsubscribe);
@@ -51,13 +49,6 @@ export class AppComponent implements AfterViewChecked, OnDestroy {
       this.fetchSourcesRequestPending$,
       (fetchGraphData, fetchInitialSources, fetchSources) => fetchGraphData || fetchInitialSources || fetchSources,
     ).takeUntil(this.ngUnsubscribe);
-  }
-
-  /**
-   * This is necessary because of issue: https://github.com/angular/angular/issues/17572.
-   */
-  ngAfterViewChecked() {
-    this.changeDetector.detectChanges();
   }
 
   ngOnDestroy() {
