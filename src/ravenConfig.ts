@@ -7,7 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-
 /**
  * Type interface schema for Raven's configuration.
  * This object is loaded into the store's `config` reducer upon application load.

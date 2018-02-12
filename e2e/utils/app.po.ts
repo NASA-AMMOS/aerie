@@ -17,7 +17,7 @@ import {
 export class AppPage {
   band = element(by.css('.falcon-band'));
   settingsActivityBand = element(by.id('raven-settings-activity-band'));
-  settingsAllBands = element(by.id('raven-settings-all-bands'));
+  settingsCommonBands = element(by.id('raven-settings-common-bands'));
   settingsFill = element(by.id('raven-settings-fill'));
   settingsHeight = element(by.id('raven-settings-height'));
   settingsInterpolation = element(by.id('raven-settings-interpolation'));

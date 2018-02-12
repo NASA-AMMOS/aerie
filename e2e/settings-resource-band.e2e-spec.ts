@@ -44,7 +44,7 @@ describe('raven2 - settings - resource band', () => {
   });
 
   it('all band settings and resource band settings should be present', () => {
-    expect(page.settingsAllBands.isPresent()).toBeTruthy();
+    expect(page.settingsCommonBands.isPresent()).toBeTruthy();
     expect(page.settingsResourceBand.isPresent()).toBeTruthy();
   });
 
