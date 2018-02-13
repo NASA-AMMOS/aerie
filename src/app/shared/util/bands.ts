@@ -23,6 +23,7 @@ import {
   RavenBandData,
   RavenCompositeBand,
   RavenDividerBand,
+  RavenRemoveBandIds,
   RavenResourceBand,
   RavenResourcePoint,
   RavenStateBand,
@@ -44,13 +45,13 @@ import {
  * This is a helper function that takes a list of bands and a sourceId that was just clicked to "close".
  *
  * If a band has a reference to the sourceId then we check:
- * 1. If the band has only one source reference, then we want to remove it, so push it's id to removeBandIds.
+ * 1. If the band has only one source reference, then we want to remove it, so push it's id to bandIds.
  * 2. If the band has more than one source reference, then we just want to remove only
- *    the points from that sourceId, so push it's id to removePointsBandIds.
+ *    the points from that sourceId, so push it's id to pointsBandIds.
  */
-export function removeBandsOrPoints(sourceId: string, bands: RavenBand[]) {
-  const removeBandIds: string[] = [];
-  const removePointsBandIds: string[] = [];
+export function removeBandsOrPoints(sourceId: string, bands: RavenBand[]): RavenRemoveBandIds {
+  const bandIds: string[] = [];
+  const pointsBandIds: string[] = [];
 
   for (let i = 0, l = bands.length; i < l; ++i) {
     const band: RavenBand = bands[i];
@@ -62,18 +63,18 @@ export function removeBandsOrPoints(sourceId: string, bands: RavenBand[]) {
       if (sourceIds.length === 1) {
         // If the source id we are closing is the only id this band references,
         // then we can safely remove the entire band.
-        removeBandIds.push(band.id);
+        bandIds.push(band.id);
       } else if (sourceIds.length > 1) {
         // Otherwise this band has points from more than one source.
         // So remove points in this band only for the source we are closing.
-        removePointsBandIds.push(band.id);
+        pointsBandIds.push(band.id);
       }
     }
   }
 
   return {
-    removeBandIds,
-    removePointsBandIds,
+    bandIds,
+    pointsBandIds,
   };
 }
 

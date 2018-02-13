@@ -29,7 +29,10 @@ import {
 })
 export class RavenSettingsComponent {
   @Input() bandsById: StringTMap<RavenBand>;
+  @Input() labelWidth: number;
+  @Input() overlayMode: boolean;
   @Input() selectedBandId: string;
 
+  @Output() updateAllBands: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
   @Output() updateBand: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
 }

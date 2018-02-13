@@ -44,6 +44,7 @@ export class TimelineComponent implements OnDestroy {
   itarMessage: string;
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
+  overlayMode: boolean;
   selectedBandId: string;
   viewTimeRange: RavenTimeRange;
 
@@ -58,6 +59,7 @@ export class TimelineComponent implements OnDestroy {
     this.store.select(fromConfig.getItarMessage).takeUntil(this.ngUnsubscribe).subscribe(itarMessage => this.itarMessage = itarMessage);
     this.store.select(fromTimeline.getLabelWidth).takeUntil(this.ngUnsubscribe).subscribe(labelWidth => this.labelWidth = labelWidth);
     this.store.select(fromTimeline.getMaxTimeRange).takeUntil(this.ngUnsubscribe).subscribe(maxTimeRange => this.maxTimeRange = maxTimeRange);
+    this.store.select(fromTimeline.getOverlayMode).takeUntil(this.ngUnsubscribe).subscribe(overlayMode => this.overlayMode = overlayMode);
     this.store.select(fromTimeline.getSelectedBandId).takeUntil(this.ngUnsubscribe).subscribe(selectedBandId => this.selectedBandId = selectedBandId);
     this.store.select(fromTimeline.getViewTimeRange).takeUntil(this.ngUnsubscribe).subscribe(viewTimeRange => this.viewTimeRange = viewTimeRange);
 
@@ -72,13 +74,6 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
-   * Call to update a setting in all bands.
-   */
-  updateAllBands(update: RavenSettingsUpdate): void {
-    this.store.dispatch(new timelineActions.SettingsUpdateAllBands(update.prop, update.value));
-  }
-
-  /**
    * Event. Called when a band is clicked in an raven-bands component.
    */
   onBandClick(bandId: string): void {
@@ -90,6 +85,13 @@ export class TimelineComponent implements OnDestroy {
    */
   onSort(sort: StringTMap<RavenSortMessage>): void {
     this.store.dispatch(new timelineActions.SortBands(sort));
+  }
+
+  /**
+   * Event. Called when an `update-all-bands` event is fired from the raven-settings component.
+   */
+  onUpdateAllBands(update: RavenSettingsUpdate): void {
+    this.store.dispatch(new timelineActions.SettingsUpdateAllBands(update.prop, update.value));
   }
 
   /**

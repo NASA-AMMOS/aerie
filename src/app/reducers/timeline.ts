@@ -42,6 +42,7 @@ export interface TimelineState {
   bands: RavenBand[];
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
+  overlayMode: boolean;
   selectedBandId: string;
   viewTimeRange: RavenTimeRange;
 }
@@ -51,6 +52,7 @@ export const initialState: TimelineState = {
   bands: [],
   labelWidth: 99,
   maxTimeRange: { end: 0, start: 0 },
+  overlayMode: false,
   selectedBandId: '',
   viewTimeRange: { end: 0, start: 0 },
 };
@@ -139,12 +141,12 @@ export function removeBands(state: TimelineState, action: RemoveBands): Timeline
   let bands = state.bands
     // 1. Filter any bands with an id in removeBandIds.
     .filter(band => {
-      return !action.removeBandIds.includes(band.id);
+      return !action.remove.bandIds.includes(band.id);
     })
     // 2. Remove points from bands with an id in removePointsBandIds.
     .map((band: any) => {
       // Remove points from bands with ids in the bandsIds list, and also update the source ids.
-      if (action.removePointsBandIds.includes(band.id)) {
+      if (action.remove.pointsBandIds.includes(band.id)) {
         return {
           ...band,
           points: band.points.filter((point: any) => point.sourceId !== action.source.id),
@@ -162,7 +164,7 @@ export function removeBands(state: TimelineState, action: RemoveBands): Timeline
   return {
     ...state,
     bands,
-    selectedBandId: state.selectedBandId && action.removeBandIds.includes(state.selectedBandId) ? '' : state.selectedBandId,
+    selectedBandId: state.selectedBandId && action.remove.bandIds.includes(state.selectedBandId) ? '' : state.selectedBandId,
     ...updateTimeRanges(state.viewTimeRange, bands),
   };
 }
@@ -247,5 +249,6 @@ export const getTimelineState = createFeatureSelector<TimelineState>('timeline')
 export const getBands = createSelector(getTimelineState, (state: TimelineState) => state.bands);
 export const getLabelWidth = createSelector(getTimelineState, (state: TimelineState) => state.labelWidth);
 export const getMaxTimeRange = createSelector(getTimelineState, (state: TimelineState) => state.maxTimeRange);
+export const getOverlayMode = createSelector(getTimelineState, (state: TimelineState) => state.overlayMode);
 export const getSelectedBandId = createSelector(getTimelineState, (state: TimelineState) => state.selectedBandId);
 export const getViewTimeRange = createSelector(getTimelineState, (state: TimelineState) => state.viewTimeRange);

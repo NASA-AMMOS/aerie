@@ -28,7 +28,6 @@ import * as fromTimeline from './../../reducers/timeline';
 import * as sourceExplorerActions from './../../actions/source-explorer';
 
 import {
-  removeBandsOrPoints,
   toRavenSources,
 } from './../../shared/util';
 
@@ -56,7 +55,10 @@ export class SourceExplorerComponent implements OnDestroy, OnInit {
     this.store
       .select(fromSourceExplorer.getTreeBySourceId)
       .takeUntil(this.ngUnsubscribe)
-      .subscribe(tree => { this.tree = tree; this.changeDetector.markForCheck(); });
+      .subscribe(tree => {
+        this.tree = tree;
+        this.changeDetector.markForCheck();
+      });
 
     this.bands$ = this.store.select(fromTimeline.getBands).takeUntil(this.ngUnsubscribe);
   }
@@ -74,10 +76,7 @@ export class SourceExplorerComponent implements OnDestroy, OnInit {
    * Event. Called when a `close` event is fired from a raven-tree.
    */
   onClose(source: RavenSource): void {
-    this.bands$.take(1).takeUntil(this.ngUnsubscribe).subscribe(bands => this.bands = bands); // Synchronously get bands from state.
-    const { removeBandIds = [], removePointsBandIds = [] } = removeBandsOrPoints(source.id, this.bands);
-
-    this.store.dispatch(new sourceExplorerActions.RemoveBands(source, removeBandIds, removePointsBandIds));
+    this.store.dispatch(new sourceExplorerActions.SourceExplorerCloseEvent(source));
   }
 
   /**

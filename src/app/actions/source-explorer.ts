@@ -12,6 +12,7 @@ import { Action } from '@ngrx/store';
 import {
   RavenActivityPoint,
   RavenBand,
+  RavenRemoveBandIds,
   RavenSource,
   StringTMap,
 } from './../shared/models';
@@ -30,6 +31,7 @@ export enum SourceExplorerActionTypes {
   LoadContent                = '[sourceExplorer] load_content',
   RemoveBands                = '[sourceExplorer] remove_bands',
   SourceExplorerClose        = '[sourceExplorer] source_explorer_close',
+  SourceExplorerCloseEvent   = '[sourceExplorer] source_explorer_close_event',
   SourceExplorerCollapse     = '[sourceExplorer] source_explorer_collapse',
   SourceExplorerExpand       = '[sourceExplorer] source_explorer_expand',
   SourceExplorerOpen         = '[sourceExplorer] source_explorer_open',
@@ -99,15 +101,17 @@ export class LoadContent implements Action {
 export class RemoveBands implements Action {
   readonly type = SourceExplorerActionTypes.RemoveBands;
 
-  constructor(
-    public source: RavenSource,
-    public removeBandIds: string[],
-    public removePointsBandIds: string[],
-  ) {}
+  constructor(public source: RavenSource, public remove: RavenRemoveBandIds) {}
 }
 
 export class SourceExplorerClose implements Action {
   readonly type = SourceExplorerActionTypes.SourceExplorerClose;
+
+  constructor(public source: RavenSource) {}
+}
+
+export class SourceExplorerCloseEvent implements Action {
+  readonly type = SourceExplorerActionTypes.SourceExplorerCloseEvent;
 
   constructor(public source: RavenSource) {}
 }
@@ -162,6 +166,7 @@ export type SourceExplorerAction =
   LoadContent |
   RemoveBands |
   SourceExplorerClose |
+  SourceExplorerCloseEvent |
   SourceExplorerCollapse |
   SourceExplorerExpand |
   SourceExplorerOpen |

@@ -4,6 +4,26 @@
 
 <!-- Global Settings. -->
 <div *ngIf="bandsById | hasKeys">
+  <div
+    id="raven-settings-label-width"
+    fxLayout="row"
+    fxLayoutAlign="start center"
+    fxLayoutWrap>
+    <div class="field">
+      <mat-slider
+        id="raven-settings-label-width"
+        color="primary"
+        max="500"
+        min="2"
+        step="1"
+        thumb-label="true"
+        tick-interval="50"
+        [value]="labelWidth"
+        (change)="updateAllBands.emit({ prop: 'labelWidth', value: $event.value })">
+      </mat-slider>
+      <label>Label Width</label>
+    </div>
+  </div>
 </div>
 
 <!-- Selected Settings. -->
@@ -12,7 +32,7 @@
   <div
     id="raven-settings-common-bands"
     fxLayout="row"
-    fxLayoutAlign="space-evenly center"
+    fxLayoutAlign="start center"
     fxLayoutWrap>
     <div fxFlex="40" class="field">
       <mat-form-field class="label">
@@ -23,6 +43,16 @@
           [value]="bandsById[selectedBandId].label"
           (change)="updateBand.emit({ prop: 'label', value: $event.target.value })">
       </mat-form-field>
+    </div>
+
+    <div class="field">
+      <mat-slide-toggle
+        id="raven-settings-overlay"
+        color="primary"
+        [checked]="overlayMode"
+        (change)="updateAllBands.emit({ prop: 'overlayMode', value: $event.checked })">
+        Overlay
+      </mat-slide-toggle>
     </div>
 
     <div class="field">
@@ -56,7 +86,7 @@
     *ngIf="bandsById[selectedBandId].type === 'activity'"
     id="raven-settings-activity-band"
     fxLayout="row"
-    fxLayoutAlign="space-evenly center"
+    fxLayoutAlign="start center"
     fxLayoutWrap>
 
     <div class="field">
@@ -139,7 +169,7 @@
     *ngIf="bandsById[selectedBandId].type === 'resource'"
     id="raven-settings-resource-band"
     fxLayout="row"
-    fxLayoutAlign="space-evenly center"
+    fxLayoutAlign="start center"
     fxLayoutWrap>
 
     <!-- TODO: Color. -->
@@ -194,7 +224,7 @@
     *ngIf="bandsById[selectedBandId].type === 'state'"
     id="raven-settings-state-band"
     fxLayout="row"
-    fxLayoutAlign="space-evenly center"
+    fxLayoutAlign="start center"
     fxLayoutWrap>
     <div class="field">
       <mat-form-field>
