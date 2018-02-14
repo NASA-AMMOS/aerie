@@ -18,6 +18,7 @@ import {
   MpsServerStateMetadata,
   MpsServerStatePoint,
   RavenActivityBand,
+  RavenActivityBandUpdate,
   RavenActivityPoint,
   RavenBand,
   RavenBandData,
@@ -79,80 +80,57 @@ export function removeBandsOrPoints(sourceId: string, bands: RavenBand[]): Raven
 }
 
 /**
- * Helper that removes same-legend activity bands from potential bands if necessary.
- *
- * If an current and potential band are activity bands with the same name (and thus the same legend),
- * then remove the band from the potential band list, and add it's points to a hash: current band id => points.
- */
-export function removeSameLegendActivityBands(currentBands: RavenBand[], potentialBands: RavenBand[]): RavenBandData {
-  const newBands: RavenBand[] = [...potentialBands];
-  const bandIdToName: StringTMap<string> = {};
-  const bandIdToPoints: StringTMap<RavenActivityPoint[]> = {};
-
-  currentBands.forEach((currentBand) => {
-    if (currentBand.type === 'activity') {
-      newBands.forEach((potentialBand, i) => {
-        if (potentialBand.type === 'activity' && currentBand.name === potentialBand.name) {
-          bandIdToName[currentBand.id] = potentialBand.name;
-          bandIdToPoints[currentBand.id] = (potentialBand as any).points; // This will be used in a reducer to add the potential band points to the current band.
-          newBands.splice(i, 1); // Remove the potential band since it's points will be added to the current band in the reducer.
-        }
-      });
-    }
-  });
-
-  return {
-    bandIdToName,
-    bandIdToPoints,
-    bands: newBands,
-  };
-}
-
-/**
- * Takes the list of currentBands in Raven and builds a list of new bands based on the graphData.
- * These new bands need further processing to determine if they will actually be displayed in Raven because
- * some potentialBands may just contribute their data to already existing bands.
- */
-export function getPotentialBands(sourceId: string, graphData: MpsServerGraphData, currentBands: RavenBand[]): RavenBand[] {
-  let potentialBands: RavenBand[] = [];
-
-  if (graphData) {
-    const metadata = graphData['Timeline Metadata'];
-    const timelineData = graphData['Timeline Data'];
-
-    if (metadata && timelineData) {
-      if (metadata.hasTimelineType === 'measurement') {
-        if ((metadata as MpsServerResourceMetadata | MpsServerStateMetadata).hasValueType === 'string_xdr') {
-          // State (graphData only maps to a single band so we push it).
-          potentialBands.push(toStateBand(sourceId, metadata as MpsServerStateMetadata, timelineData as MpsServerStatePoint[]));
-        } else {
-          // Resource (graphData only maps to a single band so we push it).
-          potentialBands.push(toResourceBand(sourceId, metadata as MpsServerResourceMetadata, timelineData as MpsServerResourcePoint[]));
-        }
-      } else if (metadata.hasTimelineType === 'activity') {
-        // Activity (graphData may map to many bands so we concat them to bands).
-        potentialBands = potentialBands.concat(toActivityBands(sourceId, timelineData as MpsServerActivityPoint[]));
-      }
-    }
-  }
-
-  return potentialBands;
-}
-
-/**
  * Returns a data structure that transforms MpsServerGraphData to bands or points displayed in Raven.
- * 1. bandIdToPoints: This is a hash that maps current band ids that are displayed in Raven to new points we need to display in those bands.
- * 2. bands: Any new bands we need to display.
  */
 export function toRavenBandData(sourceId: string, graphData: MpsServerGraphData, currentBands: RavenBand[]): RavenBandData {
-  const potentialBands: RavenBand[] = getPotentialBands(sourceId, graphData, currentBands);
-  const { bandIdToName = {}, bandIdToPoints = {}, bands = [] } = removeSameLegendActivityBands(currentBands, potentialBands);
+  const metadata = graphData['Timeline Metadata'];
+  const timelineData = graphData['Timeline Data'];
 
-  return {
-    bandIdToName,
-    bandIdToPoints,
-    bands,
-  };
+  if (metadata.hasTimelineType === 'measurement' && (metadata as MpsServerStateMetadata).hasValueType === 'string_xdr') {
+    // Resource.
+    return {
+      newBands: [toStateBand(sourceId, metadata as MpsServerStateMetadata, timelineData as MpsServerStatePoint[])],
+      updateActivityBands: {},
+    };
+  } else if (metadata.hasTimelineType === 'measurement') {
+    // State.
+    return {
+      newBands: [toResourceBand(sourceId, metadata as MpsServerResourceMetadata, timelineData as MpsServerResourcePoint[])],
+      updateActivityBands: {},
+    };
+  } else if (metadata.hasTimelineType === 'activity') {
+    // Activity.
+    const updateActivityBands: StringTMap<RavenActivityBandUpdate> = {};
+
+    const newBands = toActivityBands(sourceId, timelineData as MpsServerActivityPoint[])
+      .filter((activityBand: RavenActivityBand) => {
+        for (let i = 0, l = currentBands.length; i < l; ++i) {
+          const currentBand = currentBands[i];
+
+          if (activityBand.name === currentBand.name) {
+            updateActivityBands[currentBand.id] = {
+              name: activityBand.name,
+              points: activityBand.points,
+            } as RavenActivityBandUpdate;
+
+            return false;
+          }
+        }
+        return true;
+      });
+
+    return {
+      newBands,
+      updateActivityBands,
+    };
+  } else {
+    console.warn('raven2 - bands.ts - toRavenBandData: graphData has a type we do not recognize: ', metadata.hasTimelineType);
+
+    return {
+      newBands: [],
+      updateActivityBands: {},
+    };
+  }
 }
 
 /**

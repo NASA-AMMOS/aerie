@@ -25,6 +25,7 @@ export * from './mps-server-source-graphable';
 export * from './mps-server-source';
 export * from './mps-server-state-metadata';
 export * from './mps-server-state-point';
+export * from './raven-activity-band-update';
 export * from './raven-activity-band';
 export * from './raven-activity-point';
 export * from './raven-band-data';

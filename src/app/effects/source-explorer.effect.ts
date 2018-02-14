@@ -49,7 +49,7 @@ export class SourceExplorerEffects {
     .switchMap(({ state, action }) =>
       this.http.get<MpsServerGraphData>(action.source.url)
         .map((graphData: MpsServerGraphData) => toRavenBandData(action.source.id, graphData, state.timeline.bands))
-        .map((bandData: RavenBandData) => new sourceExplorerActions.FetchGraphDataSuccess(action.source, bandData.bands, bandData.bandIdToName, bandData.bandIdToPoints))
+        .map((bandData: RavenBandData) => new sourceExplorerActions.FetchGraphDataSuccess(action.source, bandData))
         .catch(() => of(new sourceExplorerActions.FetchGraphDataFailure())),
     );
 

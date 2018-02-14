@@ -11,7 +11,6 @@ import { initialState, reducer, TimelineState } from './timeline';
 
 import {
   RavenActivityBand,
-  RavenBand,
   RavenSource,
   RavenStateBand,
 } from './../shared/models';
@@ -50,11 +49,13 @@ describe('timeline reducer', () => {
 
   it('handle FetchGraphDataSuccess (no existing bands)', () => {
     const source: RavenSource = rootSource;
-    const bands: RavenBand[] = [stateBand];
-    const bandIdToName = {};
-    const bandIdToPoints = {};
 
-    timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, bands, bandIdToName, bandIdToPoints));
+    const bandData = {
+      newBands: [stateBand],
+      updateActivityBands: {},
+    };
+
+    timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, bandData));
     expect(timelineState).toEqual({
       ...initialState,
       bands: [{
@@ -74,14 +75,23 @@ describe('timeline reducer', () => {
   it('handle FetchGraphDataSuccess (to existing band)', () => {
     const source: RavenSource = rootSource;
     const child: RavenSource = childSource;
-    const bands: RavenBand[] = [activityBand];
-    const bandIdToName = { '100': 'test-activity-band' };
-    const bandIdToPoints = { '100': [activityPoint] };
+
+    const bandData = {
+      newBands: [activityBand],
+      updateActivityBands: {
+        '100': {
+          name: 'test-activity-band',
+          points: [activityPoint]
+        }
+      },
+    };
 
     // First add a band that we can add points to it in the next reducer call.
-    timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, bands, bandIdToName, bandIdToPoints));
+    timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, bandData));
 
-    timelineState = reducer(timelineState, new FetchGraphDataSuccess(child, [], bandIdToName, bandIdToPoints));
+    bandData.newBands = [];
+
+    timelineState = reducer(timelineState, new FetchGraphDataSuccess(child, bandData));
     expect(timelineState).toEqual({
       ...initialState,
       bands: [{
@@ -100,12 +110,14 @@ describe('timeline reducer', () => {
 
   it('handle RemoveBands (remove entire band)', () => {
     const source: RavenSource = rootSource;
-    const bands: RavenBand[] = [activityBand];
-    const bandIdToName = {};
-    const bandIdToPoints = {};
+
+    const bandData = {
+      newBands: [activityBand],
+      updateActivityBands: {},
+    };
 
     // First add a band so we can remove it.
-    timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, bands, bandIdToName, bandIdToPoints));
+    timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, bandData));
 
     timelineState = reducer(timelineState, new RemoveBands(source, { bandIds: ['100'], pointsBandIds: [] }));
     expect(timelineState).toEqual(initialState);
@@ -114,15 +126,26 @@ describe('timeline reducer', () => {
   it('handle RemoveBands (remove points from band)', () => {
     const source: RavenSource = rootSource;
     const child: RavenSource = childSource;
-    const bands: RavenBand[] = [activityBand];
-    const bandIdToName = { '100': 'test-activity-band' };
-
     activityPoint.sourceId = child.id;
-    const bandIdToPoints = { '100': [activityPoint] };
+
+    const bandData = {
+      newBands: [activityBand],
+      updateActivityBands: {},
+    };
+
+    const bandDataUpdate = {
+      newBands: [],
+      updateActivityBands: {
+        '100': {
+          name: 'test-activity-band',
+          points: [activityPoint],
+        }
+      },
+    };
 
     // First add a band with extra points that we can remove.
-    timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, bands, bandIdToName, bandIdToPoints));
-    timelineState = reducer(timelineState, new FetchGraphDataSuccess(child, [], bandIdToName, bandIdToPoints));
+    timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, bandData));
+    timelineState = reducer(timelineState, new FetchGraphDataSuccess(child, bandDataUpdate));
 
     timelineState = reducer(timelineState, new RemoveBands(child, { bandIds: [], pointsBandIds: ['100'] }));
 
@@ -144,12 +167,14 @@ describe('timeline reducer', () => {
 
   it('handle SelectBand', () => {
     const source: RavenSource = rootSource;
-    const bands: RavenBand[] = [stateBand];
-    const bandIdToName = {};
-    const bandIdToPoints = {};
+
+    const bandData = {
+      newBands: [stateBand],
+      updateActivityBands: {},
+    };
 
     // First add a band we can select.
-    const timelineStateWithBand = reducer(timelineState, new FetchGraphDataSuccess(source, bands, bandIdToName, bandIdToPoints));
+    const timelineStateWithBand = reducer(timelineState, new FetchGraphDataSuccess(source, bandData));
 
     timelineState = reducer(timelineStateWithBand, new SelectBand(stateBand.id));
     expect(timelineState).toEqual({
@@ -173,12 +198,14 @@ describe('timeline reducer', () => {
 
   it('handle SettingsUpdateBand', () => {
     const source: RavenSource = rootSource;
-    const bands: RavenBand[] = [stateBand];
-    const bandIdToName = {};
-    const bandIdToPoints = {};
+
+    const bandData = {
+      newBands: [stateBand],
+      updateActivityBands: {},
+    };
 
     // First add a band and select it so we can update it.
-    let timelineStateWithBand = reducer(timelineState, new FetchGraphDataSuccess(source, bands, bandIdToName, bandIdToPoints));
+    let timelineStateWithBand = reducer(timelineState, new FetchGraphDataSuccess(source, bandData));
     timelineStateWithBand = reducer(timelineStateWithBand, new SelectBand(stateBand.id));
 
     timelineState = reducer(timelineStateWithBand, new SettingsUpdateBand('label', '42'));
@@ -193,13 +220,18 @@ describe('timeline reducer', () => {
 
   it('handle SortBands', () => {
     const source: RavenSource = rootSource;
-    const bands: RavenBand[] = [activityBand, stateBand];
+
+    const bandData = {
+      newBands: [activityBand, stateBand],
+      updateActivityBands: {},
+    };
+
     const sort = {
       '100': { containerId: '0', sortOrder: 1 },
       '102': { containerId: '0', sortOrder: 0 },
     };
 
-    const timelineStateWithBands = reducer(timelineState, new FetchGraphDataSuccess(source, bands, {}, {}));
+    const timelineStateWithBands = reducer(timelineState, new FetchGraphDataSuccess(source, bandData));
 
     timelineState = reducer(timelineStateWithBands, new SortBands(sort));
     expect(timelineState).toEqual({

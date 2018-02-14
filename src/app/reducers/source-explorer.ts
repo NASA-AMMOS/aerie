@@ -137,12 +137,12 @@ export function addBands(state: SourceExplorerState, action: FetchGraphDataSucce
         ...state.treeBySourceId[action.source.id],
         bandIds: {
           ...state.treeBySourceId[action.source.id].bandIds,
-          ...action.bands.reduce((bandIds: StringTMap<string>, band: RavenBand) => {
+          ...action.bandData.newBands.reduce((bandIds: StringTMap<string>, band: RavenBand) => {
             bandIds[band.id] = band.name;
             return bandIds;
           }, {}),
-          ...Object.keys(action.bandIdToPoints).reduce((bandIds: StringTMap<string>, bandId: string) => {
-            bandIds[bandId] = action.bandIdToName[bandId];
+          ...Object.keys(action.bandData.updateActivityBands).reduce((bandIds: StringTMap<string>, bandId: string) => {
+            bandIds[bandId] = action.bandData.updateActivityBands[bandId].name;
             return bandIds;
           }, {}),
         },

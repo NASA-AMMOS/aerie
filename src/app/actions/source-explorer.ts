@@ -10,11 +10,9 @@
 import { Action } from '@ngrx/store';
 
 import {
-  RavenActivityPoint,
-  RavenBand,
+  RavenBandData,
   RavenRemoveBandIds,
   RavenSource,
-  StringTMap,
 } from './../shared/models';
 
 // Action Types.
@@ -54,12 +52,7 @@ export class FetchGraphDataFailure implements Action {
 export class FetchGraphDataSuccess implements Action {
   readonly type = SourceExplorerActionTypes.FetchGraphDataSuccess;
 
-  constructor(
-    public source: RavenSource,
-    public bands: RavenBand[],
-    public bandIdToName: StringTMap<string>,
-    public bandIdToPoints: StringTMap<RavenActivityPoint[]>,
-  ) {}
+  constructor(public source: RavenSource, public bandData: RavenBandData) {}
 }
 
 export class FetchInitialSources implements Action {

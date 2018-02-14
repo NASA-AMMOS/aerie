@@ -33,6 +33,8 @@ import {
 } from './../shared/util';
 
 import {
+  RavenActivityBand,
+  RavenActivityPoint,
   RavenBand,
   RavenTimeRange,
 } from './../shared/models';
@@ -86,30 +88,28 @@ export function reducer(state: TimelineState = initialState, action: SourceExplo
  * Reduction Helper. Called when reducing the 'FetchGraphDataSuccess' action.
  * Associates each band with the given source id, and adds any new band.
  * This action is defined in the sourceExplorer actions.
- *
- * TODO: Remove the 'any' type in favor of a RavenBand type.
  */
 export function addBands(state: TimelineState, action: FetchGraphDataSuccess): TimelineState {
   const bands = state.bands
     // 1. Map over existing bands and add any points from the action.
-    .map((band: any) => {
+    .map((band: RavenBand) => {
       // If there is a band that has new points, then add the points and update the corresponding source id.
-      if (action.bandIdToPoints[band.id]) {
+      if (action.bandData.updateActivityBands[band.id]) {
         return {
           ...band,
-          points: band.points.concat(action.bandIdToPoints[band.id] as any[]),
+          points: (band as RavenActivityBand).points.concat(action.bandData.updateActivityBands[band.id].points),
           sourceIds: {
             ...band.sourceIds,
             [action.source.id]: action.source.name,
           },
-        };
+        } as RavenActivityBand;
       }
 
       return band;
     })
     // 2. Add and new bands from the action.
     //    Make sure sortOrder is set here. Assumes new bands are appended to the end of the '0' container.
-    .concat(action.bands.map((band: RavenBand, index: number) => {
+    .concat(action.bandData.newBands.map((band: RavenBand, index: number) => {
       return {
         ...band,
         containerId: '0',
@@ -134,24 +134,22 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
  *
  * When we remove bands we also have to account for the selectedBand.
  * If bands is empty, or if we remove a band that is selected, make sure to set selectedBand to null.
- *
- * TODO: Remove the 'any' type in favor of a RavenBand type.
  */
 export function removeBands(state: TimelineState, action: RemoveBands): TimelineState {
   let bands = state.bands
     // 1. Filter any bands with an id in removeBandIds.
-    .filter(band => {
+    .filter((band: RavenBand) => {
       return !action.remove.bandIds.includes(band.id);
     })
     // 2. Remove points from bands with an id in removePointsBandIds.
-    .map((band: any) => {
+    .map((band: RavenBand) => {
       // Remove points from bands with ids in the bandsIds list, and also update the source ids.
       if (action.remove.pointsBandIds.includes(band.id)) {
         return {
           ...band,
-          points: band.points.filter((point: any) => point.sourceId !== action.source.id),
+          points: (band as RavenActivityBand).points.filter((point: RavenActivityPoint) => point.sourceId !== action.source.id),
           sourceIds: omit(band.sourceIds, action.source.id),
-        };
+        } as RavenActivityBand;
       }
 
       // Otherwise if the band id is not included in the bandIds list, then return it as-is.
