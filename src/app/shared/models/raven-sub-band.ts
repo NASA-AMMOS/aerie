@@ -8,10 +8,12 @@
  */
 
 import {
-  RavenActivityPoint,
+  RavenActivityBand,
+  RavenResourceBand,
+  RavenStateBand,
 } from './index';
 
-export interface RavenActivityBandUpdate {
-  name: string;
-  points: RavenActivityPoint[];
-}
+export type RavenSubBand =
+  RavenActivityBand |
+  RavenResourceBand |
+  RavenStateBand

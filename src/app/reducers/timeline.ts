@@ -7,8 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { omit } from 'lodash';
-
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 
 import {
@@ -28,20 +26,23 @@ import {
 } from '../actions/timeline';
 
 import {
+  hasId,
+  hasLegend,
+  legendExists,
+  toCompositeBand,
   updateSortOrder,
   updateTimeRanges,
 } from './../shared/util';
 
 import {
   RavenActivityBand,
-  RavenActivityPoint,
-  RavenBand,
+  RavenCompositeBand,
   RavenTimeRange,
 } from './../shared/models';
 
 // Timeline State Interface.
 export interface TimelineState {
-  bands: RavenBand[];
+  bands: RavenCompositeBand[];
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
   overlayMode: boolean;
@@ -52,7 +53,7 @@ export interface TimelineState {
 // Timeline Initial State.
 export const initialState: TimelineState = {
   bands: [],
-  labelWidth: 99,
+  labelWidth: 150,
   maxTimeRange: { end: 0, start: 0 },
   overlayMode: false,
   selectedBandId: '',
@@ -86,39 +87,55 @@ export function reducer(state: TimelineState = initialState, action: SourceExplo
 
 /**
  * Reduction Helper. Called when reducing the 'FetchGraphDataSuccess' action.
- * Associates each band with the given source id, and adds any new band.
+ * Associates each sub-band with the given source id and source name, and adds any new band.
  * This action is defined in the sourceExplorer actions.
  */
 export function addBands(state: TimelineState, action: FetchGraphDataSuccess): TimelineState {
   const bands = state.bands
-    // 1. Map over existing bands and add any points from the action.
-    .map((band: RavenBand) => {
-      // If there is a band that has new points, then add the points and update the corresponding source id.
-      if (action.bandData.updateActivityBands[band.id]) {
-        return {
-          ...band,
-          points: (band as RavenActivityBand).points.concat(action.bandData.updateActivityBands[band.id].points),
-          sourceIds: {
-            ...band.sourceIds,
-            [action.source.id]: action.source.name,
-          },
-        } as RavenActivityBand;
-      }
+    // Update current bands.
+    .reduce((prevBands: RavenCompositeBand[], currentBand: RavenCompositeBand) => {
+      for (let i = action.newBands.length - 1; i >= 0; --i) { // Running backwards since we are splicing.
+        const newBand = action.newBands[i];
 
-      return band;
-    })
-    // 2. Add and new bands from the action.
-    //    Make sure sortOrder is set here. Assumes new bands are appended to the end of the '0' container.
-    .concat(action.bandData.newBands.map((band: RavenBand, index: number) => {
+        // Overlay new bands if we are in overlay mode.
+        // Or update legend bands if that legend has bands that already exists.
+        if (state.overlayMode &&
+            state.selectedBandId === currentBand.id &&
+            !legendExists(state.bands, newBand as RavenActivityBand) ||
+            hasLegend(currentBand, newBand as RavenActivityBand)) {
+          currentBand = {
+            ...currentBand,
+            bands: currentBand.bands.concat({
+              ...newBand,
+              parentUniqueId: currentBand.id,
+              sourceId: action.source.id,
+              sourceName: action.source.name,
+            }),
+          };
+          action.newBands.splice(i, 1);
+        }
+      };
+
+      prevBands.push(currentBand);
+
+      return prevBands;
+    }, [])
+    // Add new bands.
+    .concat(action.newBands.map((newBand, index) => {
+      const newCompositeBand = toCompositeBand(newBand);
+
       return {
-        ...band,
+        ...newCompositeBand,
+        bands: newCompositeBand.bands.map(subBand => {
+          return {
+            ...subBand,
+            sourceId: action.source.id,
+            sourceName: action.source.name,
+          };
+        }),
         containerId: '0',
         sortOrder: state.bands.filter(b => b.containerId === '0').length + index,
-        sourceIds: {
-          ...band.sourceIds,
-          [action.source.id]: action.source.name,
-        },
-      };
+      }
     }));
 
   return {
@@ -132,37 +149,24 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
  * Reduction Helper. Called when reducing the 'RemoveBands' action.
  * This action is defined in the sourceExplorer actions.
  *
- * When we remove bands we also have to account for the selectedBand.
- * If bands is empty, or if we remove a band that is selected, make sure to set selectedBand to null.
+ * When we remove bands we also have to account for the selectedBandId.
+ * If bands is empty, or if we remove a band that is selected, make sure to set selectedBandId to empty.
  */
 export function removeBands(state: TimelineState, action: RemoveBands): TimelineState {
   let bands = state.bands
-    // 1. Filter any bands with an id in removeBandIds.
-    .filter((band: RavenBand) => {
-      return !action.remove.bandIds.includes(band.id);
-    })
-    // 2. Remove points from bands with an id in removePointsBandIds.
-    .map((band: RavenBand) => {
-      // Remove points from bands with ids in the bandsIds list, and also update the source ids.
-      if (action.remove.pointsBandIds.includes(band.id)) {
-        return {
-          ...band,
-          points: (band as RavenActivityBand).points.filter((point: RavenActivityPoint) => point.sourceId !== action.source.id),
-          sourceIds: omit(band.sourceIds, action.source.id),
-        } as RavenActivityBand;
-      }
+    .map(band => ({
+        ...band,
+        bands: band.bands.filter(subBand => !action.bandIds.includes(subBand.id)),
+    }))
+    .filter(band => band.bands.length !== 0);
 
-      // Otherwise if the band id is not included in the bandIds list, then return it as-is.
-      return band;
-    });
-
-  // Update the sort order of all the bands per each container.
+  // Update the sort order of all the bands for each container.
   bands = updateSortOrder(bands);
 
   return {
     ...state,
     bands,
-    selectedBandId: state.selectedBandId && action.remove.bandIds.includes(state.selectedBandId) ? '' : state.selectedBandId,
+    selectedBandId: hasId(bands, state.selectedBandId) ? state.selectedBandId : '',
     ...updateTimeRanges(state.viewTimeRange, bands),
   };
 }
@@ -195,11 +199,19 @@ export function settingsUpdateAllBands(state: TimelineState, action: SettingsUpd
 export function settingsUpdateBand(state: TimelineState, action: SettingsUpdateBand): TimelineState {
   return {
     ...state,
-    bands: state.bands.map((band: RavenBand) => {
+    bands: state.bands.map((band: RavenCompositeBand) => {
       if (state.selectedBandId && state.selectedBandId === band.id) {
         return {
           ...band,
-          [action.prop]: action.value,
+          bands: band.bands.map(subBand => {
+            if (subBand.id === action.bandId) {
+              return {
+                ...subBand,
+                [action.prop]: action.value,
+              };
+            }
+            return subBand;
+          }),
         };
       }
 
@@ -214,7 +226,7 @@ export function settingsUpdateBand(state: TimelineState, action: SettingsUpdateB
 export function sortBands(state: TimelineState, action: SortBands): TimelineState {
   return {
     ...state,
-    bands: state.bands.map((band: RavenBand) => {
+    bands: state.bands.map((band: RavenCompositeBand) => {
       if (action.sort[band.id]) {
         return {
           ...band,

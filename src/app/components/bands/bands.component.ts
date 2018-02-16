@@ -20,7 +20,7 @@ import { OnChanges, OnInit } from '@angular/core/src/metadata/lifecycle_hooks';
 import { SortablejsOptions } from 'angular-sortablejs';
 
 import {
-  RavenBand,
+  RavenCompositeBand,
   RavenSortMessage,
   RavenTimeRange,
   StringTMap,
@@ -37,7 +37,7 @@ export interface BandClickEvent extends Event {
   templateUrl: './bands.component.html',
 })
 export class BandsComponent implements OnChanges, OnInit {
-  @Input() bands: RavenBand[];
+  @Input() bands: RavenCompositeBand[];
   @Input() containerId: string;
   @Input() labelWidth: number;
   @Input() maxTimeRange: RavenTimeRange;
@@ -48,7 +48,7 @@ export class BandsComponent implements OnChanges, OnInit {
   @Output() newSort: EventEmitter<StringTMap<RavenSortMessage>> = new EventEmitter<StringTMap<RavenSortMessage>>();
 
   sortablejsOptions: SortablejsOptions;
-  sortedAndFilteredBands: RavenBand[];
+  sortedAndFilteredBands: RavenCompositeBand[];
 
   ngOnInit() {
     this.sortablejsOptions = {

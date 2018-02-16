@@ -10,7 +10,6 @@
 import { initialState, reducer, SourceExplorerState } from './source-explorer';
 
 import {
-  RavenBand,
   RavenSource,
 } from './../shared/models';
 
@@ -66,17 +65,7 @@ describe('source-explorer reducer', () => {
   it('handle FetchGraphDataSuccess', () => {
     const source: RavenSource = rootSource;
 
-    const bandData = {
-      newBands: [stateBand],
-      updateActivityBands: {
-        [activityBand.id]: {
-          name: 'test-activity-band',
-          points: [],
-        },
-      },
-    };
-
-    sourceExplorerState = reducer(sourceExplorerState, new FetchGraphDataSuccess(source, bandData));
+    sourceExplorerState = reducer(sourceExplorerState, new FetchGraphDataSuccess(source, [stateBand, activityBand]));
     expect(sourceExplorerState).toEqual({
       ...initialState,
       fetchGraphDataRequestPending: false,
@@ -181,20 +170,10 @@ describe('source-explorer reducer', () => {
   it('handle RemoveBands', () => {
     const source: RavenSource = rootSource;
 
-    const bandData = {
-      newBands: [stateBand],
-      updateActivityBands: {
-        [activityBand.id]: {
-          name: 'test-activity-band',
-          points: [],
-        },
-      },
-    };
-
     // Add some bands first so we have something to remove.
-    sourceExplorerState = reducer(sourceExplorerState, new FetchGraphDataSuccess(source, bandData));
+    sourceExplorerState = reducer(sourceExplorerState, new FetchGraphDataSuccess(source, [stateBand, activityBand]));
 
-    sourceExplorerState = reducer(sourceExplorerState, new RemoveBands(source, { bandIds: ['100', '102'], pointsBandIds: [] }));
+    sourceExplorerState = reducer(sourceExplorerState, new RemoveBands(source, ['100', '102']));
     expect(sourceExplorerState).toEqual(initialState);
   });
 

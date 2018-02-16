@@ -35,8 +35,8 @@ import {
 import {
   MpsServerGraphData,
   MpsServerSource,
-  RavenBandData,
   RavenSource,
+  RavenSubBand,
 } from './../shared/models';
 
 @Injectable()
@@ -48,8 +48,8 @@ export class SourceExplorerEffects {
     .map(([action, state]) => ({ action, state }))
     .switchMap(({ state, action }) =>
       this.http.get<MpsServerGraphData>(action.source.url)
-        .map((graphData: MpsServerGraphData) => toRavenBandData(action.source.id, graphData, state.timeline.bands))
-        .map((bandData: RavenBandData) => new sourceExplorerActions.FetchGraphDataSuccess(action.source, bandData))
+        .map((graphData: MpsServerGraphData) => toRavenBandData(action.source, graphData))
+        .map((newBands: RavenSubBand[]) => new sourceExplorerActions.FetchGraphDataSuccess(action.source, newBands))
         .catch(() => of(new sourceExplorerActions.FetchGraphDataFailure())),
     );
 
@@ -80,7 +80,7 @@ export class SourceExplorerEffects {
     .ofType<sourceExplorerActions.SourceExplorerCloseEvent>(SourceExplorerActionTypes.SourceExplorerCloseEvent)
     .withLatestFrom(this.store$)
     .map(([action, state]) => ({ action, state }))
-    .map(({ state, action }) => new sourceExplorerActions.RemoveBands(action.source, removeBandsOrPoints(action.source.id, state.timeline.bands)));
+    .map(({ state, action }) => new sourceExplorerActions.RemoveBands(action.source, removeBandsOrPoints(action.source, state.timeline.bands)));
 
   constructor(
     private http: HttpClient,

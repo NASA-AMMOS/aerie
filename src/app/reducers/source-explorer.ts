@@ -23,8 +23,8 @@ import {
 } from './../actions/source-explorer';
 
 import {
-  RavenBand,
   RavenSource,
+  RavenSubBand,
   StringTMap,
 } from './../shared/models/index';
 
@@ -137,12 +137,8 @@ export function addBands(state: SourceExplorerState, action: FetchGraphDataSucce
         ...state.treeBySourceId[action.source.id],
         bandIds: {
           ...state.treeBySourceId[action.source.id].bandIds,
-          ...action.bandData.newBands.reduce((bandIds: StringTMap<string>, band: RavenBand) => {
+          ...action.newBands.reduce((bandIds: StringTMap<string>, band: RavenSubBand) => {
             bandIds[band.id] = band.name;
-            return bandIds;
-          }, {}),
-          ...Object.keys(action.bandData.updateActivityBands).reduce((bandIds: StringTMap<string>, bandId: string) => {
-            bandIds[bandId] = action.bandData.updateActivityBands[bandId].name;
             return bandIds;
           }, {}),
         },
@@ -158,16 +154,13 @@ export function addBands(state: SourceExplorerState, action: FetchGraphDataSucce
  * Called when we need to de-associate one source with one or more band.
  */
 export function removeBands(state: SourceExplorerState, action: RemoveBands): SourceExplorerState {
-  const { bandIds, pointsBandIds } = action.remove;
-  const removeBandIds = bandIds.concat(pointsBandIds);
-
   return {
     ...state,
     treeBySourceId: {
       ...state.treeBySourceId,
       [action.source.id]: {
         ...state.treeBySourceId[action.source.id],
-        bandIds: omit(state.treeBySourceId[action.source.id].bandIds, removeBandIds),
+        bandIds: omit(state.treeBySourceId[action.source.id].bandIds, action.bandIds),
         opened: false,
       },
     },

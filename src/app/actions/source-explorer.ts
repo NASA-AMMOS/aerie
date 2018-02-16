@@ -10,9 +10,8 @@
 import { Action } from '@ngrx/store';
 
 import {
-  RavenBandData,
-  RavenRemoveBandIds,
   RavenSource,
+  RavenSubBand,
 } from './../shared/models';
 
 // Action Types.
@@ -52,7 +51,7 @@ export class FetchGraphDataFailure implements Action {
 export class FetchGraphDataSuccess implements Action {
   readonly type = SourceExplorerActionTypes.FetchGraphDataSuccess;
 
-  constructor(public source: RavenSource, public bandData: RavenBandData) {}
+  constructor(public source: RavenSource, public newBands: RavenSubBand[]) {}
 }
 
 export class FetchInitialSources implements Action {
@@ -94,7 +93,7 @@ export class LoadContent implements Action {
 export class RemoveBands implements Action {
   readonly type = SourceExplorerActionTypes.RemoveBands;
 
-  constructor(public source: RavenSource, public remove: RavenRemoveBandIds) {}
+  constructor(public source: RavenSource, public bandIds: string[]) {}
 }
 
 export class SourceExplorerClose implements Action {

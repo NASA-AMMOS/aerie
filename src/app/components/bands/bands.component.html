@@ -3,34 +3,8 @@
   [sortablejs]="sortedAndFilteredBands"
   [sortablejsOptions]="sortablejsOptions">
   <div *ngFor="let band of sortedAndFilteredBands">
-    <!-- Activity Band. -->
-    <falcon-activity-band
-      *ngIf="band.type === 'activity'"
-      class="falcon-band"
-      [ngClass]="{'selected': band.id === selectedBandId}"
-      [activityStyle]="band.activityStyle"
-      [alignLabel]="band.alignLabel"
-      [baselineLabel]="band.baselineLabel"
-      [height]="band.height"
-      [heightPadding]="band.heightPadding"
-      [id]="band.id"
-      [label]="band.label"
-      [labelColor]="band.labelColor"
-      [labelWidth]="labelWidth"
-      [layout]="band.layout"
-      [maxTimeRange]="maxTimeRange"
-      [minorLabels]="band.minorLabels"
-      [name]="band.name"
-      [points]="band.points"
-      [showLabel]="band.showLabel"
-      [showTooltip]="band.showTooltip"
-      [trimLabel]="band.trimLabel"
-      [viewTimeRange]="viewTimeRange">
-    </falcon-activity-band>
-
     <!-- Composite Band. -->
     <falcon-composite-band
-      *ngIf="band.type === 'composite'"
       class="falcon-band"
       [ngClass]="{'selected': band.id === selectedBandId}"
       [height]="band.height"
@@ -40,9 +14,11 @@
       [maxTimeRange]="maxTimeRange"
       [showTooltip]="band.showTooltip"
       [viewTimeRange]="viewTimeRange">
-      <span *ngFor="let subBand of band.bands">
+      <ng-container *ngFor="let subBand of band.bands">
+        <!-- Activity Band. -->
         <falcon-activity-band
           *ngIf="subBand.type === 'activity'"
+          no-draw
           [activityStyle]="subBand.activityStyle"
           [alignLabel]="subBand.alignLabel"
           [baselineLabel]="subBand.baselineLabel"
@@ -56,7 +32,6 @@
           [maxTimeRange]="maxTimeRange"
           [minorLabels]="subBand.minorLabels"
           [name]="subBand.name"
-          [noDraw]="true"
           [points]="subBand.points"
           [showLabel]="subBand.showLabel"
           [showTooltip]="subBand.showTooltip"
@@ -64,8 +39,25 @@
           [viewTimeRange]="viewTimeRange">
         </falcon-activity-band>
 
+        <!-- Divider Band. -->
+        <falcon-divider-band
+          *ngIf="subBand.type === 'divider'"
+          no-draw
+          [color]="subBand.color"
+          [height]="subBand.height"
+          [id]="subBand.id"
+          [label]="subBand.label"
+          [labelColor]="subBand.labelColor"
+          [labelWidth]="labelWidth"
+          [minorLabels]="subBand.minorLabels"
+          [name]="subBand.name"
+          [showTooltip]="subBand.showTooltip">
+        </falcon-divider-band>
+
+        <!-- Resource Band. -->
         <falcon-resource-band
           *ngIf="subBand.type === 'resource'"
+          no-draw
           [autoTickValues]="subBand.autoTickValues"
           [color]="subBand.color"
           [fill]="subBand.fill"
@@ -80,7 +72,6 @@
           [maxTimeRange]="maxTimeRange"
           [minorLabels]="subBand.minorLabels"
           [name]="subBand.name"
-          [noDraw]="true"
           [points]="subBand.points"
           [rescale]="subBand.rescale"
           [showIcon]="subBand.showIcon"
@@ -88,8 +79,10 @@
           [viewTimeRange]="viewTimeRange">
         </falcon-resource-band>
 
+        <!-- State Band. -->
         <falcon-state-band
           *ngIf="subBand.type === 'state'"
+          no-draw
           [alignLabel]="subBand.alignLabel"
           [baselineLabel]="subBand.baselineLabel"
           [borderWidth]="subBand.borderWidth"
@@ -102,76 +95,11 @@
           [maxTimeRange]="maxTimeRange"
           [minorLabels]="subBand.minorLabels"
           [name]="subBand.name"
-          [noDraw]="true"
           [points]="subBand.points"
           [showTooltip]="subBand.showTooltip"
           [viewTimeRange]="viewTimeRange">
         </falcon-state-band>
-      </span>
+      </ng-container>
     </falcon-composite-band>
-
-    <!-- Divider Band. -->
-    <falcon-divider-band
-      *ngIf="band.type === 'divider'"
-      class="falcon-band"
-      [ngClass]="{'selected': band.id === selectedBandId}"
-      [color]="band.color"
-      [height]="band.height"
-      [id]="band.id"
-      [label]="band.label"
-      [labelColor]="band.labelColor"
-      [labelWidth]="labelWidth"
-      [minorLabels]="band.minorLabels"
-      [name]="band.name"
-      [showTooltip]="band.showTooltip">
-    </falcon-divider-band>
-
-    <!-- Resource Band. -->
-    <falcon-resource-band
-      *ngIf="band.type === 'resource'"
-      class="falcon-band"
-      [ngClass]="{'selected': band.id === selectedBandId}"
-      [autoTickValues]="band.autoTickValues"
-      [color]="band.color"
-      [fill]="band.fill"
-      [fillColor]="band.fillColor"
-      [font]="band.font"
-      [height]="band.height"
-      [heightPadding]="band.heightPadding"
-      [id]="band.id"
-      [interpolation]="band.interpolation"
-      [label]="band.label"
-      [labelWidth]="labelWidth"
-      [maxTimeRange]="maxTimeRange"
-      [minorLabels]="band.minorLabels"
-      [name]="band.name"
-      [points]="band.points"
-      [rescale]="band.rescale"
-      [showIcon]="band.showIcon"
-      [showTooltip]="band.showTooltip"
-      [viewTimeRange]="viewTimeRange">
-    </falcon-resource-band>
-
-    <!-- State Band. -->
-    <falcon-state-band
-      *ngIf="band.type === 'state'"
-      class="falcon-band"
-      [ngClass]="{'selected': band.id === selectedBandId}"
-      [alignLabel]="band.alignLabel"
-      [baselineLabel]="band.baselineLabel"
-      [borderWidth]="band.borderWidth"
-      [height]="band.height"
-      [heightPadding]="band.heightPadding"
-      [id]="band.id"
-      [label]="band.label"
-      [labelColor]="band.labelColor"
-      [labelWidth]="labelWidth"
-      [maxTimeRange]="maxTimeRange"
-      [minorLabels]="band.minorLabels"
-      [name]="band.name"
-      [points]="band.points"
-      [showTooltip]="band.showTooltip"
-      [viewTimeRange]="viewTimeRange">
-    </falcon-state-band>
   </div>
 </div>

@@ -8,20 +8,23 @@
  */
 
 import {
-  RavenBand,
+  RavenActivityBand,
+  RavenCompositeBand,
+  RavenResourceBand,
+  RavenStateBand,
 } from './../models';
 
-export const activityBand: RavenBand = {
+export const activityBand: RavenActivityBand = {
   activityStyle: 1,
   alignLabel: 3,
   baselineLabel: 3,
-  containerId: '0',
   height: 50,
   heightPadding: 10,
   id: '100',
   label: 'test-activity-band',
   labelColor: [0, 0, 0],
   layout: 1,
+  legend: '',
   maxTimeRange: { end: 200, start: 50 },
   minorLabels: [],
   name: 'test-activity-band',
@@ -29,19 +32,30 @@ export const activityBand: RavenBand = {
   points: [],
   showLabel: true,
   showTooltip: true,
-  sortOrder: 0,
-  sourceIds: {},
+  sourceId: '',
+  sourceName: '',
   trimLabel: true,
   type: 'activity',
 };
 
-export const resourceBand: RavenBand = {
+export const compositeBand: RavenCompositeBand = {
+  bands: [],
+  containerId: '0',
+  height: 50,
+  heightPadding: 0,
+  id: '200',
+  name: 'test-composite-band',
+  showTooltip: true,
+  sortOrder: 0,
+  type: 'composite',
+};
+
+export const resourceBand: RavenResourceBand = {
   autoTickValues: true,
   color: [0, 0, 0],
-  containerId: '0',
   fill: false,
   fillColor: [0, 0, 0],
-  height: 100,
+  height: 50,
   heightPadding: 10,
   id: '101',
   interpolation: 'linear',
@@ -55,15 +69,14 @@ export const resourceBand: RavenBand = {
   rescale: true,
   showIcon: false,
   showTooltip: true,
-  sortOrder: 0,
-  sourceIds: {},
+  sourceId: '',
+  sourceName: '',
   type: 'resource',
 };
 
-export const stateBand: RavenBand = {
+export const stateBand: RavenStateBand = {
   alignLabel: 3,
   baselineLabel: 3,
-  containerId: '0',
   height: 50,
   heightPadding: 0,
   id: '102',
@@ -75,7 +88,7 @@ export const stateBand: RavenBand = {
   parentUniqueId: null,
   points: [],
   showTooltip: true,
-  sortOrder: 0,
-  sourceIds: {},
+  sourceId: '',
+  sourceName: '',
   type: 'state',
 };

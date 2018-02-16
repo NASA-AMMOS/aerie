@@ -40,7 +40,7 @@ export class SettingsUpdateAllBands implements Action {
 export class SettingsUpdateBand implements Action {
   readonly type = TimelineActionTypes.SettingsUpdateBand;
 
-  constructor(public prop: string, public value: any) {}
+  constructor(public bandId: string, public prop: string, public value: any) {}
 }
 
 export class SortBands implements Action {

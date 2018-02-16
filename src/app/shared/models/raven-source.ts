@@ -17,7 +17,6 @@ export interface RavenSource {
   actions: RavenSourceAction[];
   bandIds: StringTMap<string>;
   childIds: string[];
-  children?: RavenSource[];
   content: MpsServerSourceGraphable[];
   dbType: string;
   draggable: boolean;

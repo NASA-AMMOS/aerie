@@ -10,13 +10,11 @@
 import {
   RavenResourcePoint,
   RavenTimeRange,
-  StringTMap,
 } from './index';
 
 export interface RavenResourceBand {
   autoTickValues: boolean;
   color: number[];
-  containerId: string;
   fill: boolean;
   fillColor: number[];
   height: number;
@@ -33,7 +31,7 @@ export interface RavenResourceBand {
   rescale: boolean;
   showIcon: boolean;
   showTooltip: boolean;
-  sortOrder: number;
-  sourceIds: StringTMap<string>;
+  sourceId: string;
+  sourceName: string;
   type: string;
 }

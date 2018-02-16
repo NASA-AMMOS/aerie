@@ -26,7 +26,7 @@ import * as fromTimeline from './../../reducers/timeline';
 import * as timelineActions from './../../actions/timeline';
 
 import {
-  RavenBand,
+  RavenCompositeBand,
   RavenSettingsUpdate,
   RavenSortMessage,
   RavenTimeRange,
@@ -40,7 +40,7 @@ import {
   templateUrl: './timeline.component.html',
 })
 export class TimelineComponent implements OnDestroy {
-  bands: RavenBand[];
+  bands: RavenCompositeBand[];
   itarMessage: string;
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
@@ -98,7 +98,7 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when an `update-band` event is fired from the raven-settings component.
    */
   onUpdateBand(update: RavenSettingsUpdate): void {
-    this.store.dispatch(new timelineActions.SettingsUpdateBand(update.prop, update.value));
+    this.store.dispatch(new timelineActions.SettingsUpdateBand(update.bandId, update.prop, update.value));
   }
 
   /**

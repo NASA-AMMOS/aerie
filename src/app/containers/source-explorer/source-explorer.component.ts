@@ -32,7 +32,7 @@ import {
 } from './../../shared/util';
 
 import {
-  RavenBand,
+  RavenCompositeBand,
   RavenSource,
   StringTMap,
 } from './../../shared/models';
@@ -44,10 +44,10 @@ import {
   templateUrl: './source-explorer.component.html',
 })
 export class SourceExplorerComponent implements OnDestroy, OnInit {
-  bands: RavenBand[];
+  bands: RavenCompositeBand[];
   tree: StringTMap<RavenSource>;
 
-  bands$: Observable<RavenBand[]>;
+  bands$: Observable<RavenCompositeBand[]>;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 

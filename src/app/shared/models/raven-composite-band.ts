@@ -8,15 +8,17 @@
  */
 
 import {
-  RavenBand,
+  RavenSubBand,
 } from './index';
 
 export interface RavenCompositeBand {
-  bands: RavenBand[];
+  bands: RavenSubBand[];
+  containerId: string;
   height: number;
   heightPadding: number;
   id: string;
   name: string;
   showTooltip: boolean;
+  sortOrder: number;
   type: string;
 }

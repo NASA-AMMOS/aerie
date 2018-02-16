@@ -8,6 +8,7 @@
  */
 
 export interface RavenSettingsUpdate {
+  bandId: string;
   prop: string;
   value: boolean | number | string | boolean[] | number[] | string[];
 }

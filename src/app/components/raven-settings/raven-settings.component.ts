@@ -16,7 +16,7 @@ import {
 } from '@angular/core';
 
 import {
-  RavenBand,
+  RavenCompositeBand,
   RavenSettingsUpdate,
   StringTMap,
 } from './../../shared/models';
@@ -28,7 +28,7 @@ import {
   templateUrl: './raven-settings.component.html',
 })
 export class RavenSettingsComponent {
-  @Input() bandsById: StringTMap<RavenBand>;
+  @Input() bandsById: StringTMap<RavenCompositeBand>;
   @Input() labelWidth: number;
   @Input() overlayMode: boolean;
   @Input() selectedBandId: string;

@@ -18,17 +18,15 @@ import {
   MpsServerStateMetadata,
   MpsServerStatePoint,
   RavenActivityBand,
-  RavenActivityBandUpdate,
   RavenActivityPoint,
-  RavenBand,
-  RavenBandData,
   RavenCompositeBand,
   RavenDividerBand,
-  RavenRemoveBandIds,
   RavenResourceBand,
   RavenResourcePoint,
+  RavenSource,
   RavenStateBand,
   RavenStatePoint,
+  RavenSubBand,
   RavenTimeRange,
   StringTMap,
 } from './../models';
@@ -43,102 +41,56 @@ import {
 } from './time';
 
 /**
- * This is a helper function that takes a list of bands and a sourceId that was just clicked to "close".
- *
- * If a band has a reference to the sourceId then we check:
- * 1. If the band has only one source reference, then we want to remove it, so push it's id to bandIds.
- * 2. If the band has more than one source reference, then we just want to remove only
- *    the points from that sourceId, so push it's id to pointsBandIds.
+ * This is a helper function that takes a list of current bands and a sourceId that was just clicked to "close",
+ * and returns a list of band ids that we want to remove.
  */
-export function removeBandsOrPoints(sourceId: string, bands: RavenBand[]): RavenRemoveBandIds {
+export function removeBandsOrPoints(source: RavenSource, bands: RavenCompositeBand[]): string[] {
   const bandIds: string[] = [];
-  const pointsBandIds: string[] = [];
 
-  for (let i = 0, l = bands.length; i < l; ++i) {
-    const band: RavenBand = bands[i];
-
-    // If the band has the source id we are closing.
-    if (band.sourceIds && band.sourceIds[sourceId]) {
-      const sourceIds = Object.keys(band.sourceIds);
-
-      if (sourceIds.length === 1) {
-        // If the source id we are closing is the only id this band references,
-        // then we can safely remove the entire band.
-        bandIds.push(band.id);
-      } else if (sourceIds.length > 1) {
-        // Otherwise this band has points from more than one source.
-        // So remove points in this band only for the source we are closing.
-        pointsBandIds.push(band.id);
+  bands.forEach((band: RavenCompositeBand) => {
+    band.bands.forEach((subBand: RavenSubBand) => {
+      if (subBand.sourceId === source.id) {
+        bandIds.push(subBand.id);
       }
-    }
-  }
+    });
+  });
 
-  return {
-    bandIds,
-    pointsBandIds,
-  };
+  return bandIds;
 }
 
 /**
- * Returns a data structure that transforms MpsServerGraphData to bands or points displayed in Raven.
+ * Returns a data structure that transforms MpsServerGraphData to bands displayed in Raven.
+ * Note that we do not worry about how these bands are display here. That is the job of the reducer.
  */
-export function toRavenBandData(sourceId: string, graphData: MpsServerGraphData, currentBands: RavenBand[]): RavenBandData {
+export function toRavenBandData(source: RavenSource, graphData: MpsServerGraphData): RavenSubBand[] {
   const metadata = graphData['Timeline Metadata'];
   const timelineData = graphData['Timeline Data'];
 
   if (metadata.hasTimelineType === 'measurement' && (metadata as MpsServerStateMetadata).hasValueType === 'string_xdr') {
-    // Resource.
-    return {
-      newBands: [toStateBand(sourceId, metadata as MpsServerStateMetadata, timelineData as MpsServerStatePoint[])],
-      updateActivityBands: {},
-    };
-  } else if (metadata.hasTimelineType === 'measurement') {
     // State.
-    return {
-      newBands: [toResourceBand(sourceId, metadata as MpsServerResourceMetadata, timelineData as MpsServerResourcePoint[])],
-      updateActivityBands: {},
-    };
+    const stateBand = toStateBand(source, metadata as MpsServerStateMetadata, timelineData as MpsServerStatePoint[]);
+    return [stateBand];
+  } else if (metadata.hasTimelineType === 'measurement') {
+    // Resource.
+    const resourceBand = toResourceBand(source, metadata as MpsServerResourceMetadata, timelineData as MpsServerResourcePoint[]);
+    return [resourceBand];
   } else if (metadata.hasTimelineType === 'activity') {
     // Activity.
-    const updateActivityBands: StringTMap<RavenActivityBandUpdate> = {};
-
-    const newBands = toActivityBands(sourceId, timelineData as MpsServerActivityPoint[])
-      .filter((activityBand: RavenActivityBand) => {
-        for (let i = 0, l = currentBands.length; i < l; ++i) {
-          const currentBand = currentBands[i];
-
-          if (activityBand.name === currentBand.name) {
-            updateActivityBands[currentBand.id] = {
-              name: activityBand.name,
-              points: activityBand.points,
-            } as RavenActivityBandUpdate;
-
-            return false;
-          }
-        }
-        return true;
-      });
-
-    return {
-      newBands,
-      updateActivityBands,
-    };
+    const activityBands = toActivityBands(source, timelineData as MpsServerActivityPoint[]);
+    return activityBands;
   } else {
-    console.warn('raven2 - bands.ts - toRavenBandData: graphData has a type we do not recognize: ', metadata.hasTimelineType);
-
-    return {
-      newBands: [],
-      updateActivityBands: {},
-    };
+    console.error(`raven2 - bands.ts - toRavenBandData - parameter 'graphData' has a timeline type we do not recognize: ${metadata.hasTimelineType}`);
+    return [];
   }
 }
 
 /**
  * Returns a list of bands based on timelineData and point legends.
  */
-export function toActivityBands(sourceId: string, timelineData: MpsServerActivityPoint[]): RavenActivityBand[] {
+export function toActivityBands(source: RavenSource, timelineData: MpsServerActivityPoint[]): RavenActivityBand[] {
   const bands: RavenActivityBand[] = [];
   const points: RavenActivityPoint[] = [];
+  let legends: StringTMap<RavenActivityPoint[]> = {};
 
   let maxTime = Number.MIN_SAFE_INTEGER;
   let minTime = Number.MAX_SAFE_INTEGER;
@@ -196,31 +148,28 @@ export function toActivityBands(sourceId: string, timelineData: MpsServerActivit
       id,
       legend,
       metadata,
-      sourceId,
+      sourceId: source.id,
       start,
       startTimestamp,
       uniqueId,
     });
   }
 
-  const legends = groupBy(points, 'legend');
-  const legendKeys = Object.keys(legends);
+  legends = groupBy(points, 'legend');
 
   // Map each legend to a band.
-  for (let i = 0, l = legendKeys.length; i < l; ++i) {
-    const legend = legendKeys[i];
-
+  Object.keys(legends).forEach(legend => {
     const activityBand: RavenActivityBand = {
       activityStyle: 1,
       alignLabel: 3,
       baselineLabel: 3,
-      containerId: '0',
       height: 50,
       heightPadding: 10,
       id: v4(),
-      label: legend,
+      label: `${legend} - ${source.name}`,
       labelColor: [0, 0, 0],
       layout: 1,
+      legend,
       maxTimeRange: {
         end: maxTime,
         start: minTime,
@@ -231,45 +180,36 @@ export function toActivityBands(sourceId: string, timelineData: MpsServerActivit
       points: legends[legend],
       showLabel: true,
       showTooltip: true,
-      sortOrder: 0,
-      sourceIds: {}, // Map of source ids this band has data from.
+      sourceId: '',
+      sourceName: '',
       trimLabel: true,
       type: 'activity',
     };
 
     bands.push(activityBand);
-  }
+  });
 
   return bands;
 }
 
 /**
- * Returns a composite band given a list of bands.
- * Bands should already be preformatted to their correct schema by the time they arrive here.
+ * Returns a composite band.
  */
-export function toCompositeBand(bands: RavenBand[]): RavenCompositeBand {
+export function toCompositeBand(band: RavenSubBand): RavenCompositeBand {
   const compositeBandUniqueId = v4();
-  let compositeBandName = '';
-
-  bands = bands.map((band, index) => {
-    band.parentUniqueId = compositeBandUniqueId;
-
-    // Make the initial composite band name just an '&' separated list of band names.
-    compositeBandName += `${band.name}`;
-    if (bands[index + 1]) {
-      compositeBandName += ' & ';
-    }
-
-    return band;
-  });
 
   const compositeBand: RavenCompositeBand = {
-    bands,
-    height: 100,
-    heightPadding: 10,
+    bands: [{
+      ...band,
+      parentUniqueId: compositeBandUniqueId,
+    }],
+    containerId: '0',
+    height: band.height,
+    heightPadding: band.heightPadding,
     id: compositeBandUniqueId,
-    name: compositeBandName,
-    showTooltip: true,
+    name: band.name,
+    showTooltip: band.showTooltip,
+    sortOrder: 0,
     type: 'composite',
   };
 
@@ -284,6 +224,7 @@ export function toDividerBand(): RavenDividerBand {
 
   const dividerBand: RavenDividerBand = {
     color: [255, 255, 255],
+    containerId: '0',
     height: 7,
     id,
     label: `Divider ${id}`,
@@ -291,6 +232,7 @@ export function toDividerBand(): RavenDividerBand {
     minorLabels: [],
     name: `Divider ${id}`,
     showTooltip: true,
+    sortOrder: 0,
     type: 'divider',
   };
 
@@ -300,7 +242,7 @@ export function toDividerBand(): RavenDividerBand {
 /**
  * Returns a resource band given metadata and timelineData.
  */
-export function toResourceBand(sourceId: string, metadata: MpsServerResourceMetadata, timelineData: MpsServerResourcePoint[]): RavenResourceBand {
+export function toResourceBand(source: RavenSource, metadata: MpsServerResourceMetadata, timelineData: MpsServerResourcePoint[]): RavenResourceBand {
   const points: RavenResourcePoint[] = [];
 
   let maxTime = Number.MIN_SAFE_INTEGER;
@@ -320,7 +262,7 @@ export function toResourceBand(sourceId: string, metadata: MpsServerResourceMeta
     points.push({
       duration: null,
       id,
-      sourceId,
+      sourceId: source.id,
       start,
       uniqueId,
       value,
@@ -330,7 +272,6 @@ export function toResourceBand(sourceId: string, metadata: MpsServerResourceMeta
   const resourceBand: RavenResourceBand = {
     autoTickValues: true,
     color: [0, 0, 0],
-    containerId: '0',
     fill: false,
     fillColor: [0, 0, 0],
     height: 100,
@@ -350,8 +291,8 @@ export function toResourceBand(sourceId: string, metadata: MpsServerResourceMeta
     rescale: true,
     showIcon: false,
     showTooltip: true,
-    sortOrder: 0,
-    sourceIds: {}, // Map of source ids this band has data from.
+    sourceId: '',
+    sourceName: '',
     type: 'resource',
   };
 
@@ -361,7 +302,7 @@ export function toResourceBand(sourceId: string, metadata: MpsServerResourceMeta
 /**
  * Returns a state band given metadata and timelineData.
  */
-export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, timelineData: MpsServerStatePoint[]): RavenStateBand {
+export function toStateBand(source: RavenSource, metadata: MpsServerStateMetadata, timelineData: MpsServerStatePoint[]): RavenStateBand {
   const points: RavenStatePoint[] = [];
 
   let maxTime = Number.MIN_SAFE_INTEGER;
@@ -391,7 +332,7 @@ export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, 
       end,
       id,
       interpolateEnding: true,
-      sourceId,
+      sourceId: source.id,
       start,
       uniqueId,
       value,
@@ -401,7 +342,6 @@ export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, 
   const stateBand: RavenStateBand = {
     alignLabel: 3,
     baselineLabel: 3,
-    containerId: '0',
     height: 50,
     heightPadding: 0,
     id: v4(),
@@ -416,8 +356,8 @@ export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, 
     parentUniqueId: null,
     points,
     showTooltip: true,
-    sortOrder: 0,
-    sourceIds: {}, // Map of source ids this band has data from.
+    sourceId: '',
+    sourceName: '',
     type: 'state',
   };
 
@@ -456,11 +396,11 @@ export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, 
  *    { containerId: '1', sortOrder: 1 },
  * ];
  */
-export function updateSortOrder(bands: RavenBand[]): RavenBand[] {
+export function updateSortOrder(bands: RavenCompositeBand[]): RavenCompositeBand[] {
   const sortByBands = sortBy(bands, 'containerId', 'sortOrder');
   const index = {}; // Hash of containerIds to a given index (indices start at 0).
 
-  return sortByBands.map((band: RavenBand) => {
+  return sortByBands.map((band: RavenCompositeBand) => {
     if (index[band.containerId] === undefined) {
       index[band.containerId] = 0;
     } else {
@@ -479,7 +419,7 @@ export function updateSortOrder(bands: RavenBand[]): RavenBand[] {
  *
  * TODO: Remove 'any' bands type for concrete type.
  */
-export function updateTimeRanges(currentViewTimeRange: RavenTimeRange, bands: RavenBand[]) {
+export function updateTimeRanges(currentViewTimeRange: RavenTimeRange, bands: RavenCompositeBand[]) {
   let maxTimeRange: RavenTimeRange = { end: 0, start: 0 };
   let viewTimeRange: RavenTimeRange = { end: 0, start: 0 };
 
@@ -487,21 +427,12 @@ export function updateTimeRanges(currentViewTimeRange: RavenTimeRange, bands: Ra
     let endTime = Number.MIN_SAFE_INTEGER;
     let startTime = Number.MAX_SAFE_INTEGER;
 
-    // Calculate the maxTimeRange out of every band (including composite bands).
-    bands.forEach((band: RavenBand) => {
-      if (band.type !== 'composite') {
-        if (band.maxTimeRange.start < startTime) { startTime = band.maxTimeRange.start; }
-        if (band.maxTimeRange.end > endTime) { endTime = band.maxTimeRange.end; }
-      } else if (band.type === 'composite') {
-        (band as any).bands.forEach((subBand: RavenBand) => {
-          if (subBand.maxTimeRange) {
-            if (subBand.maxTimeRange.start < startTime) { startTime = subBand.maxTimeRange.start; }
-            if (subBand.maxTimeRange.end > endTime) { endTime = subBand.maxTimeRange.end; }
-          }
-        });
-      } else {
-        // TODO: Error case.
-      }
+    // Calculate the maxTimeRange out of every band.
+    bands.forEach((band: RavenCompositeBand) => {
+      band.bands.forEach((subBand: RavenSubBand) => {
+        if (subBand.maxTimeRange.start < startTime) { startTime = subBand.maxTimeRange.start; }
+        if (subBand.maxTimeRange.end > endTime) { endTime = subBand.maxTimeRange.end; }
+      });
     });
 
     maxTimeRange = { end: endTime, start: startTime };
@@ -527,4 +458,50 @@ export function updateTimeRanges(currentViewTimeRange: RavenTimeRange, bands: Ra
     maxTimeRange,
     viewTimeRange,
   };
+}
+
+/**
+ * Helper. Returns true of bands contain a given id. False otherwise.
+ */
+export function hasId(bands: RavenCompositeBand[], id: string): boolean {
+  for (let i = 0, l = bands.length; i < l; ++i) {
+    if (bands[i].id === id) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Helper. Returns true if composite sub-bands have a band with a given legend. False otherwise.
+ */
+export function hasLegend(compositeBand: RavenCompositeBand, band: RavenActivityBand): boolean {
+  if (band.type === 'activity') {
+    for (let i = 0, l = compositeBand.bands.length; i < l; ++i) {
+      const subBand = compositeBand.bands[i] as RavenActivityBand;
+
+      if (subBand.type === 'activity' && subBand.legend === band.legend) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * Helper. Returns true if a legend exists in any sub-band out of a list of composite bands. False otherwise.
+ */
+export function legendExists(compositeBands: RavenCompositeBand[], band: RavenActivityBand): boolean {
+  if (band.type === 'activity') {
+    for (let i = 0, l = compositeBands.length; i < l; ++i) {
+      for (let j = 0, k = compositeBands[i].bands.length; j < k; ++j) {
+        const subBand = compositeBands[i].bands[j] as RavenActivityBand;
+
+        if (subBand.type === 'activity' && subBand.legend === band.legend) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
 }

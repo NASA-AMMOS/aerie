@@ -10,13 +10,11 @@
 import {
   RavenStatePoint,
   RavenTimeRange,
-  StringTMap,
 } from './index';
 
 export interface RavenStateBand {
   alignLabel: number;
   baselineLabel: number;
-  containerId: string;
   height: number;
   heightPadding: number;
   id: string;
@@ -28,7 +26,7 @@ export interface RavenStateBand {
   parentUniqueId: string | null;
   points: RavenStatePoint[];
   showTooltip: boolean;
-  sortOrder: number;
-  sourceIds: StringTMap<string>;
+  sourceId: string;
+  sourceName: string;
   type: string;
 }

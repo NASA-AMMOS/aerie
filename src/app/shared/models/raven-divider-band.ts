@@ -9,6 +9,7 @@
 
 export interface RavenDividerBand {
   color: number[];
+  containerId: string;
   height: number;
   id: string;
   label: string;
@@ -16,5 +17,6 @@ export interface RavenDividerBand {
   minorLabels: string[];
   name: string;
   showTooltip: boolean;
+  sortOrder: number;
   type: string;
 }

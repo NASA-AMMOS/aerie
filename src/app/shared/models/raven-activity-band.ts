@@ -10,20 +10,19 @@
 import {
   RavenActivityPoint,
   RavenTimeRange,
-  StringTMap,
 } from './index';
 
 export interface RavenActivityBand {
   activityStyle: number;
   alignLabel: number;
   baselineLabel: number;
-  containerId: string;
   height: number;
   heightPadding: number;
   id: string;
   label: string;
   labelColor: number[];
   layout: number;
+  legend: string;
   maxTimeRange: RavenTimeRange;
   minorLabels: string[];
   name: string;
@@ -31,8 +30,8 @@ export interface RavenActivityBand {
   points: RavenActivityPoint[];
   showLabel: boolean;
   showTooltip: boolean;
-  sortOrder: number;
-  sourceIds: StringTMap<string>;
+  sourceId: string;
+  sourceName: string;
   trimLabel: boolean;
   type: string;
 }
