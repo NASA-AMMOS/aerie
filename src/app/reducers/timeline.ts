@@ -93,21 +93,20 @@ export function reducer(state: TimelineState = initialState, action: SourceExplo
 export function addBands(state: TimelineState, action: FetchGraphDataSuccess): TimelineState {
   const bands = state.bands
     // Update current bands.
-    .reduce((prevBands: RavenCompositeBand[], currentBand: RavenCompositeBand) => {
+    .map((band: RavenCompositeBand) => {
       for (let i = action.newBands.length - 1; i >= 0; --i) { // Running backwards since we are splicing.
         const newBand = action.newBands[i];
 
-        // Overlay new bands if we are in overlay mode.
-        // Or update legend bands if that legend has bands that already exists.
+        // Add new band to a currently existing band.
         if (state.overlayMode &&
-            state.selectedBandId === currentBand.id &&
+            state.selectedBandId === band.id &&
             !legendExists(state.bands, newBand as RavenActivityBand) ||
-            hasLegend(currentBand, newBand as RavenActivityBand)) {
-          currentBand = {
-            ...currentBand,
-            bands: currentBand.bands.concat({
+            hasLegend(band, newBand as RavenActivityBand)) {
+          band = {
+            ...band,
+            bands: band.bands.concat({
               ...newBand,
-              parentUniqueId: currentBand.id,
+              parentUniqueId: band.id,
               sourceId: action.source.id,
               sourceName: action.source.name,
             }),
@@ -116,10 +115,8 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
         }
       };
 
-      prevBands.push(currentBand);
-
-      return prevBands;
-    }, [])
+      return band;
+    })
     // Add new bands.
     .concat(action.newBands.map((newBand, index) => {
       const newCompositeBand = toCompositeBand(newBand);
