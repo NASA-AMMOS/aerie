@@ -61,7 +61,7 @@ export class SourceExplorerEffects {
     .switchMap((state: AppState) =>
       this.http.get<MpsServerSource[]>(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`)
         .map((mpsServerSources: MpsServerSource[]) => toRavenSources('0', true, mpsServerSources))
-        .map((sources: RavenSource[]) =>  new sourceExplorerActions.FetchInitialSourcesSuccess(sources))
+        .map((sources: RavenSource[]) => new sourceExplorerActions.FetchInitialSourcesSuccess(sources))
         .catch(() => of(new sourceExplorerActions.FetchInitialSourcesFailure())),
     );
 
