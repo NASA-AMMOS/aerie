@@ -27,7 +27,7 @@ import { SourceExplorerActionTypes } from './../actions/source-explorer';
 import * as sourceExplorerActions from './../actions/source-explorer';
 
 import {
-  removeBandsOrPoints,
+  removeBands,
   toRavenBandData,
   toRavenSources,
 } from './../shared/util';
@@ -80,7 +80,7 @@ export class SourceExplorerEffects {
     .ofType<sourceExplorerActions.SourceExplorerCloseEvent>(SourceExplorerActionTypes.SourceExplorerCloseEvent)
     .withLatestFrom(this.store$)
     .map(([action, state]) => ({ action, state }))
-    .map(({ state, action }) => new sourceExplorerActions.RemoveBands(action.source, removeBandsOrPoints(action.source, state.timeline.bands)));
+    .map(({ state, action }) => new sourceExplorerActions.RemoveBands(action.source, removeBands(action.source, state.timeline.bands)));
 
   constructor(
     private http: HttpClient,

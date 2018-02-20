@@ -28,7 +28,7 @@ import {
 import {
   hasId,
   hasLegend,
-  legendExists,
+  shouldOverlay,
   toCompositeBand,
   updateSortOrder,
   updateTimeRanges,
@@ -87,21 +87,19 @@ export function reducer(state: TimelineState = initialState, action: SourceExplo
 
 /**
  * Reduction Helper. Called when reducing the 'FetchGraphDataSuccess' action.
- * Associates each sub-band with the given source id and source name, and adds any new band.
+ * Handles overlaying on existing bands, or adding new bands to the list.
  * This action is defined in the sourceExplorer actions.
  */
 export function addBands(state: TimelineState, action: FetchGraphDataSuccess): TimelineState {
   const bands = state.bands
-    // Update current bands.
+    // Add new bands to current bands.
     .map((band: RavenCompositeBand) => {
       for (let i = action.newBands.length - 1; i >= 0; --i) { // Running backwards since we are splicing.
         const newBand = action.newBands[i];
 
         // Add new band to a currently existing band.
-        if (state.overlayMode &&
-            state.selectedBandId === band.id &&
-            !legendExists(state.bands, newBand as RavenActivityBand) ||
-            hasLegend(band, newBand as RavenActivityBand)) {
+        if (shouldOverlay(state.overlayMode, state.selectedBandId, band.id) && !hasLegend(state.bands, newBand as RavenActivityBand) ||
+            hasLegend([band], newBand as RavenActivityBand)) {
           band = {
             ...band,
             bands: band.bands.concat({

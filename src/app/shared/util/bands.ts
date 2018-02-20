@@ -44,7 +44,7 @@ import {
  * This is a helper function that takes a list of current bands and a sourceId that was just clicked to "close",
  * and returns a list of band ids that we want to remove.
  */
-export function removeBandsOrPoints(source: RavenSource, bands: RavenCompositeBand[]): string[] {
+export function removeBands(source: RavenSource, bands: RavenCompositeBand[]): string[] {
   const bandIds: string[] = [];
 
   bands.forEach((band: RavenCompositeBand) => {
@@ -60,7 +60,7 @@ export function removeBandsOrPoints(source: RavenSource, bands: RavenCompositeBa
 
 /**
  * Returns a data structure that transforms MpsServerGraphData to bands displayed in Raven.
- * Note that we do not worry about how these bands are display here. That is the job of the reducer.
+ * Note that we do not worry about how these bands are displayed here. That is the job of the reducer.
  */
 export function toRavenBandData(source: RavenSource, graphData: MpsServerGraphData): RavenSubBand[] {
   const metadata = graphData['Timeline Metadata'];
@@ -473,25 +473,9 @@ export function hasId(bands: RavenCompositeBand[], id: string): boolean {
 }
 
 /**
- * Helper. Returns true if composite sub-bands have a band with a given legend. False otherwise.
- */
-export function hasLegend(compositeBand: RavenCompositeBand, band: RavenActivityBand): boolean {
-  if (band.type === 'activity') {
-    for (let i = 0, l = compositeBand.bands.length; i < l; ++i) {
-      const subBand = compositeBand.bands[i] as RavenActivityBand;
-
-      if (subBand.type === 'activity' && subBand.legend === band.legend) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-/**
  * Helper. Returns true if a legend exists in any sub-band out of a list of composite bands. False otherwise.
  */
-export function legendExists(compositeBands: RavenCompositeBand[], band: RavenActivityBand): boolean {
+export function hasLegend(compositeBands: RavenCompositeBand[], band: RavenActivityBand): boolean {
   if (band.type === 'activity') {
     for (let i = 0, l = compositeBands.length; i < l; ++i) {
       for (let j = 0, k = compositeBands[i].bands.length; j < k; ++j) {
@@ -504,4 +488,12 @@ export function legendExists(compositeBands: RavenCompositeBand[], band: RavenAc
     }
   }
   return false;
+}
+
+
+/**
+ * Helper. Returns true of we are in overlay mode and should overlay on a band with `bandId`. False otherwise.
+ */
+export function shouldOverlay(overlayMode: boolean, selectedBandId: string, bandId: string): boolean {
+  return overlayMode && selectedBandId === bandId;
 }
