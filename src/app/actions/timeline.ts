@@ -20,6 +20,7 @@ export enum TimelineActionTypes {
   SelectBand             = '[timeline] select_band',
   SettingsUpdateAllBands = '[timeline] settings_update_all_bands',
   SettingsUpdateBand     = '[timeline] settings_update_band',
+  SettingsUpdateSubBand  = '[timeline] settings_update_sub_band',
   SortBands              = '[timeline] sort_bands',
   UpdateViewTimeRange    = '[timeline] update_view_time_range',
 }
@@ -43,6 +44,12 @@ export class SettingsUpdateBand implements Action {
   constructor(public bandId: string, public prop: string, public value: any) {}
 }
 
+export class SettingsUpdateSubBand implements Action {
+  readonly type = TimelineActionTypes.SettingsUpdateSubBand;
+
+  constructor(public bandId: string, public subBandId: string, public prop: string, public value: any) {}
+}
+
 export class SortBands implements Action {
   readonly type = TimelineActionTypes.SortBands;
 
@@ -60,5 +67,6 @@ export type TimelineAction =
   SelectBand |
   SettingsUpdateAllBands |
   SettingsUpdateBand |
+  SettingsUpdateSubBand |
   SortBands |
   UpdateViewTimeRange;

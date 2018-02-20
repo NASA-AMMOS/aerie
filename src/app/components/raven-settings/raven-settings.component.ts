@@ -35,4 +35,5 @@ export class RavenSettingsComponent {
 
   @Output() updateAllBands: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
   @Output() updateBand: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
+  @Output() updateSubBand: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
 }

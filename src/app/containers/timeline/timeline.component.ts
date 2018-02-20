@@ -102,6 +102,13 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
+   * Event. Called when an `update-sub-band` event is fired from the raven-settings component.
+   */
+  onUpdateSubBand(update: RavenSettingsUpdate): void {
+    this.store.dispatch(new timelineActions.SettingsUpdateSubBand(update.bandId, update.subBandId, update.prop, update.value));
+  }
+
+  /**
    * Event. Called when a `falcon-update-view-time-range` event is fired from the falcon-timeline.
    * Using a HostListener here instead of a template event binding because multiple elements emit this event.
    *

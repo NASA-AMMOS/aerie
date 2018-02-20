@@ -46,3 +46,10 @@ export function clickByIds(ids: string[]): void {
 export function probe(elem: ElementFinder, prop: string): any {
   return browser.executeScript('return ng.probe(arguments[0]).componentInstance[arguments[1]]', elem, prop);
 }
+
+/**
+ * Get a property from an element. Good for using on custom elements.
+ */
+export function get(elem: ElementFinder, prop: string): any {
+  return browser.executeScript('return arguments[0][arguments[1]]', elem, prop);
+}

@@ -16,14 +16,15 @@ import {
 
 export class AppPage {
   band = element(by.css('.falcon-band'));
-  settingsActivityBand = element(by.id('raven-settings-activity-band'));
-  settingsCommonBands = element(by.id('raven-settings-common-bands'));
+  compositeBand = element(by.tagName('falcon-composite-band'));
+  resourceBand = element(by.tagName('falcon-resource-band'));
   settingsFill = element(by.id('raven-settings-fill'));
   settingsHeight = element(by.id('raven-settings-height'));
   settingsInterpolation = element(by.id('raven-settings-interpolation'));
   settingsLabel = element(by.id('raven-settings-label'));
   settingsRescale = element(by.id('raven-settings-rescale'));
   settingsResourceBand = element(by.id('raven-settings-resource-band'));
+  settingsSelectedBand = element(by.id('raven-settings-selected-band'));
   settingsShowIcon = element(by.id('raven-settings-show-icon'));
   settingsShowTooltip = element(by.id('raven-settings-show-tooltip'));
   settingsStateBand = element(by.id('raven-settings-state-band'));

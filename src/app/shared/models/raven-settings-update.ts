@@ -9,6 +9,7 @@
 
 export interface RavenSettingsUpdate {
   bandId: string;
+  subBandId: string;
   prop: string;
   value: boolean | number | string | boolean[] | number[] | string[];
 }

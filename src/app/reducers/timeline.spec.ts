@@ -22,6 +22,7 @@ import {
   SelectBand,
   SettingsUpdateAllBands,
   SettingsUpdateBand,
+  SettingsUpdateSubBand,
   SortBands,
   UpdateViewTimeRange,
 } from './../actions/timeline';
@@ -181,11 +182,30 @@ describe('timeline reducer', () => {
     // First add a band and select it so we can update it.
     let timelineStateWithBand = reducer(timelineState, new FetchGraphDataSuccess(source, [stateBand]));
     const band = { ...timelineStateWithBand.bands[0] };
+
+    timelineStateWithBand = reducer(timelineStateWithBand, new SelectBand(band.id));
+    timelineState = reducer(timelineStateWithBand, new SettingsUpdateBand(band.id, 'height', 42));
+
+    expect(timelineState).toEqual({
+      ...timelineStateWithBand,
+      bands: [{
+        ...timelineStateWithBand.bands[0],
+        height: 42
+      }],
+    });
+  });
+
+  it('handle SettingsUpdateSubBand', () => {
+    const source: RavenSource = rootSource;
+
+    // First add a band and select it so we can update it.
+    let timelineStateWithBand = reducer(timelineState, new FetchGraphDataSuccess(source, [stateBand]));
+    const band = { ...timelineStateWithBand.bands[0] };
     const subBand = { ...band.bands[0] };
 
     timelineStateWithBand = reducer(timelineStateWithBand, new SelectBand(band.id));
+    timelineState = reducer(timelineStateWithBand, new SettingsUpdateSubBand(band.id, subBand.id, 'label', '42'));
 
-    timelineState = reducer(timelineStateWithBand, new SettingsUpdateBand(subBand.id, 'label', '42'));
     expect(timelineState).toEqual({
       ...timelineStateWithBand,
       bands: [{

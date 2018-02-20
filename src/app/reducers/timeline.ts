@@ -20,6 +20,7 @@ import {
   SelectBand,
   SettingsUpdateAllBands,
   SettingsUpdateBand,
+  SettingsUpdateSubBand,
   SortBands,
   TimelineAction,
   TimelineActionTypes,
@@ -76,6 +77,8 @@ export function reducer(state: TimelineState = initialState, action: SourceExplo
       return settingsUpdateAllBands(state, action);
     case TimelineActionTypes.SettingsUpdateBand:
       return settingsUpdateBand(state, action);
+    case TimelineActionTypes.SettingsUpdateSubBand:
+      return settingsUpdateSubBand(state, action);
     case TimelineActionTypes.SortBands:
       return sortBands(state, action);
     case TimelineActionTypes.UpdateViewTimeRange:
@@ -195,11 +198,30 @@ export function settingsUpdateBand(state: TimelineState, action: SettingsUpdateB
   return {
     ...state,
     bands: state.bands.map((band: RavenCompositeBand) => {
-      if (state.selectedBandId && state.selectedBandId === band.id) {
+      if (action.bandId === band.id) {
+        return {
+          ...band,
+          [action.prop]: action.value,
+        };
+      }
+
+      return band;
+    }),
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'SettingsUpdateSubBand' action.
+ */
+export function settingsUpdateSubBand(state: TimelineState, action: SettingsUpdateSubBand): TimelineState {
+  return {
+    ...state,
+    bands: state.bands.map((band: RavenCompositeBand) => {
+      if (action.bandId === band.id) {
         return {
           ...band,
           bands: band.bands.map(subBand => {
-            if (subBand.id === action.bandId) {
+            if (action.subBandId === subBand.id) {
               return {
                 ...subBand,
                 [action.prop]: action.value,
