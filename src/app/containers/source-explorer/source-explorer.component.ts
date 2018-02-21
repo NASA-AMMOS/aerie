@@ -12,7 +12,6 @@ import {
   ChangeDetectorRef,
   Component,
   OnDestroy,
-  OnInit,
 } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
@@ -43,7 +42,7 @@ import {
   styleUrls: ['./source-explorer.component.css'],
   templateUrl: './source-explorer.component.html',
 })
-export class SourceExplorerComponent implements OnDestroy, OnInit {
+export class SourceExplorerComponent implements OnDestroy {
   bands: RavenCompositeBand[];
   tree: StringTMap<RavenSource>;
 
@@ -66,10 +65,6 @@ export class SourceExplorerComponent implements OnDestroy, OnInit {
   ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
-  }
-
-  ngOnInit() {
-    this.store.dispatch(new sourceExplorerActions.FetchInitialSources());
   }
 
   /**

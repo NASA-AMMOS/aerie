@@ -11,6 +11,7 @@ import { Params, RouterStateSnapshot, Routes } from '@angular/router';
 import { RouterStateSerializer } from '@ngrx/router-store';
 
 import { TimelineComponent } from './containers';
+import { TimelineGuard } from './guards';
 
 /**
  * Application level routes.
@@ -24,6 +25,7 @@ export const routes: Routes = [
   {
     component: TimelineComponent,
     path: 'timeline',
+    canActivate: [TimelineGuard],
   },
   {
     component: TimelineComponent,

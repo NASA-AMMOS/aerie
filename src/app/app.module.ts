@@ -48,6 +48,10 @@ import {
 } from './effects';
 
 import {
+  TimelineGuard,
+} from './guards';
+
+import {
   HasKeysPipe,
   KeyByPipe,
 } from './pipes';
@@ -89,6 +93,7 @@ export const PROVIDERS = [
     provide: RouterStateSerializer,
     useClass: CustomRouterStateSerializer,
   },
+  TimelineGuard,
 ];
 
 export const SCHEMAS = [

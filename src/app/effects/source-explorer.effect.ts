@@ -17,8 +17,6 @@ import { of } from 'rxjs/observable/of';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/mergeMap';
-import 'rxjs/add/operator/switchMap';
-import 'rxjs/add/operator/toArray';
 import 'rxjs/add/operator/withLatestFrom';
 
 import { AppState } from './../../app/store';
@@ -46,7 +44,7 @@ export class SourceExplorerEffects {
     .ofType<sourceExplorerActions.FetchGraphData>(SourceExplorerActionTypes.FetchGraphData)
     .withLatestFrom(this.store$)
     .map(([action, state]) => ({ action, state }))
-    .switchMap(({ state, action }) =>
+    .mergeMap(({ state, action }) =>
       this.http.get<MpsServerGraphData>(action.source.url)
         .map((graphData: MpsServerGraphData) => toRavenBandData(action.source, graphData))
         .map((newBands: RavenSubBand[]) => new sourceExplorerActions.FetchGraphDataSuccess(action.source, newBands))
@@ -58,7 +56,7 @@ export class SourceExplorerEffects {
     .ofType<sourceExplorerActions.FetchInitialSources>(SourceExplorerActionTypes.FetchInitialSources)
     .withLatestFrom(this.store$)
     .map(([action, state]) => state)
-    .switchMap((state: AppState) =>
+    .mergeMap((state: AppState) =>
       this.http.get<MpsServerSource[]>(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`)
         .map((mpsServerSources: MpsServerSource[]) => toRavenSources('0', true, mpsServerSources))
         .map((sources: RavenSource[]) => new sourceExplorerActions.FetchInitialSourcesSuccess(sources))
@@ -68,7 +66,7 @@ export class SourceExplorerEffects {
   @Effect()
   fetchSources$: Observable<Action> = this.actions$
     .ofType<sourceExplorerActions.FetchSources>(SourceExplorerActionTypes.FetchSources)
-    .switchMap(action =>
+    .mergeMap(action =>
       this.http.get<MpsServerSource[]>(action.source.url)
         .map((mpsServerSources: MpsServerSource[]) => toRavenSources(action.source.id, false, mpsServerSources))
         .map((sources: RavenSource[]) => new sourceExplorerActions.FetchSourcesSuccess(action.source, sources))

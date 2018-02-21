@@ -272,4 +272,5 @@ export const getSourceExplorerState = createFeatureSelector<SourceExplorerState>
 export const getFetchGraphDataRequestPending = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.fetchGraphDataRequestPending);
 export const getFetchInitialSourcesRequestPending = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.fetchInitialSourcesRequestPending);
 export const getFetchSourcesRequestPending = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.fetchSourcesRequestPending);
+export const getInitialSourcesLoaded = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.initialSourcesLoaded);
 export const getTreeBySourceId = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.treeBySourceId);
