@@ -27,8 +27,8 @@ import {
 } from '../actions/timeline';
 
 import {
+  hasActivityLegend,
   hasId,
-  hasLegend,
   shouldOverlay,
   toCompositeBand,
   updateSortOrder,
@@ -101,8 +101,8 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
         const newBand = action.newBands[i];
 
         // Add new band to a currently existing band.
-        if (shouldOverlay(state.overlayMode, state.selectedBandId, band.id) && !hasLegend(state.bands, newBand as RavenActivityBand) ||
-            hasLegend([band], newBand as RavenActivityBand)) {
+        if (shouldOverlay(state.overlayMode, state.selectedBandId, band.id) && !hasActivityLegend(state.bands, newBand as RavenActivityBand) ||
+            hasActivityLegend([band], newBand as RavenActivityBand)) {
           band = {
             ...band,
             bands: band.bands.concat({
