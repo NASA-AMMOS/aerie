@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { groupBy, sortBy } from 'lodash';
+import { sortBy } from 'lodash';
 import { v4 } from 'uuid';
 
 import {
@@ -90,7 +90,6 @@ export function toRavenBandData(source: RavenSource, graphData: MpsServerGraphDa
  */
 export function toActivityBands(source: RavenSource, timelineData: MpsServerActivityPoint[]): RavenActivityBand[] {
   const bands: RavenActivityBand[] = [];
-  const points: RavenActivityPoint[] = [];
   let legends: StringTMap<RavenActivityPoint[]> = {};
 
   let maxTime = Number.MIN_SAFE_INTEGER;
@@ -131,7 +130,7 @@ export function toActivityBands(source: RavenSource, timelineData: MpsServerActi
     if (start < minTime) { minTime = start; }
     if (end > maxTime) { maxTime = end; }
 
-    points.push({
+    const point: RavenActivityPoint = {
       activityId,
       activityName,
       activityParameters,
@@ -150,10 +149,15 @@ export function toActivityBands(source: RavenSource, timelineData: MpsServerActi
       start,
       startTimestamp,
       uniqueId,
-    });
-  }
+    };
 
-  legends = groupBy(points, 'legend');
+    // Group points by legend manually so we don't have to loop through timelineData twice.
+    if (legends[legend]) {
+      legends[legend].push(point);
+    } else {
+      legends[legend] = [point];
+    }
+  }
 
   // Map each legend to a band.
   Object.keys(legends).forEach(legend => {
