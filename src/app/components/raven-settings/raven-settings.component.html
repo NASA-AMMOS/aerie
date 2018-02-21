@@ -28,6 +28,7 @@
       <mat-slide-toggle
         id="raven-settings-overlay"
         color="primary"
+        [disabled]="selectedBandId === ''"
         [checked]="overlayMode && selectedBandId !== ''"
         (change)="updateAllBands.emit({ prop: 'overlayMode', value: $event.checked })">
         Overlay

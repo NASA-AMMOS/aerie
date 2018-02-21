@@ -9,6 +9,7 @@ exports.config = {
     './e2e/**/*.e2e-spec.ts',
     // './e2e/activities-by-type.e2e-spec.ts',
     // './e2e/app.e2e-spec.ts',
+    // './e2e/overlay-mode.e2e-spec.ts',
     // './e2e/settings-resource-band.e2e-spec.ts',
   ],
   capabilities: {

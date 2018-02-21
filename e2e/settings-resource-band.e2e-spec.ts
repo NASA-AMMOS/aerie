@@ -41,7 +41,7 @@ describe('raven2 - settings - resource band', () => {
     page.navigateTo();
     clickByIds(ids);
     clickById(`raven-tree-${resourceName}-open`);
-    clickByCss('.falcon-band');
+    clickByCss('.raven-band-0');
   });
 
   it('selected band settings should be present', () => {

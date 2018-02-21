@@ -2,10 +2,10 @@
   class="sortable-bands"
   [sortablejs]="sortedAndFilteredBands"
   [sortablejsOptions]="sortablejsOptions">
-  <div *ngFor="let band of sortedAndFilteredBands">
+  <div *ngFor="let band of sortedAndFilteredBands; let i = index">
     <!-- Composite Band. -->
     <falcon-composite-band
-      class="falcon-band"
+      [class]="'raven-band-' + i"
       [ngClass]="{'selected': band.id === selectedBandId}"
       [height]="band.height"
       [heightPadding]="band.heightPadding"
@@ -14,10 +14,11 @@
       [maxTimeRange]="maxTimeRange"
       [showTooltip]="band.showTooltip"
       [viewTimeRange]="viewTimeRange">
-      <ng-container *ngFor="let subBand of band.bands">
+      <ng-container *ngFor="let subBand of band.bands; let j = index">
         <!-- Activity Band. -->
         <falcon-activity-band
           *ngIf="subBand.type === 'activity'"
+          [class]="'raven-sub-band-' + i + '-' + j"
           no-draw
           [activityStyle]="subBand.activityStyle"
           [alignLabel]="subBand.alignLabel"
@@ -42,6 +43,7 @@
         <!-- Divider Band. -->
         <falcon-divider-band
           *ngIf="subBand.type === 'divider'"
+          [class]="'raven-sub-band-' + i + '-' + j"
           no-draw
           [color]="subBand.color"
           [height]="subBand.height"
@@ -57,6 +59,7 @@
         <!-- Resource Band. -->
         <falcon-resource-band
           *ngIf="subBand.type === 'resource'"
+          [class]="'raven-sub-band-' + i + '-' + j"
           no-draw
           [autoTickValues]="subBand.autoTickValues"
           [color]="subBand.color"
@@ -82,6 +85,7 @@
         <!-- State Band. -->
         <falcon-state-band
           *ngIf="subBand.type === 'state'"
+          [class]="'raven-sub-band-' + i + '-' + j"
           no-draw
           [alignLabel]="subBand.alignLabel"
           [baselineLabel]="subBand.baselineLabel"

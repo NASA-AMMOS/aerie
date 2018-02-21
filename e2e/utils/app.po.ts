@@ -22,6 +22,7 @@ export class AppPage {
   settingsHeight = element(by.id('raven-settings-height'));
   settingsInterpolation = element(by.id('raven-settings-interpolation'));
   settingsLabel = element(by.id('raven-settings-label'));
+  settingsOverlay = element(by.id('raven-settings-overlay'));
   settingsRescale = element(by.id('raven-settings-rescale'));
   settingsResourceBand = element(by.id('raven-settings-resource-band'));
   settingsSelectedBand = element(by.id('raven-settings-selected-band'));

@@ -490,7 +490,6 @@ export function hasLegend(compositeBands: RavenCompositeBand[], band: RavenActiv
   return false;
 }
 
-
 /**
  * Helper. Returns true of we are in overlay mode and should overlay on a band with `bandId`. False otherwise.
  */
