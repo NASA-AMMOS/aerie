@@ -66,7 +66,8 @@ export function toRavenBandData(source: RavenSource, graphData: MpsServerGraphDa
   const metadata = graphData['Timeline Metadata'];
   const timelineData = graphData['Timeline Data'];
 
-  if (metadata.hasTimelineType === 'measurement' && (metadata as MpsServerStateMetadata).hasValueType === 'string_xdr') {
+  if (metadata.hasTimelineType === 'state' ||
+    (metadata.hasTimelineType === 'measurement' && (metadata as MpsServerStateMetadata).hasValueType === 'string_xdr')) {
     // State.
     const stateBand = toStateBand(source, metadata as MpsServerStateMetadata, timelineData as MpsServerStatePoint[]);
     return [stateBand];
