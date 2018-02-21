@@ -116,7 +116,6 @@ export function toActivityBands(source: RavenSource, timelineData: MpsServerActi
     const end = utc(endTimestamp);
     const duration = end - start;
 
-    let hasLegend = false;
     let legend = '';
     if (data.Metadata) {
       for (let j = 0, len = data.Metadata.length; j < len; ++j) {
@@ -124,7 +123,6 @@ export function toActivityBands(source: RavenSource, timelineData: MpsServerActi
 
         if (d.Name === 'legend') {
           legend = d.Value;
-          hasLegend = true;
         }
       }
     }
@@ -144,7 +142,6 @@ export function toActivityBands(source: RavenSource, timelineData: MpsServerActi
       duration,
       end,
       endTimestamp,
-      hasLegend,
       id,
       legend,
       metadata,
@@ -481,7 +478,7 @@ export function hasLegend(compositeBands: RavenCompositeBand[], band: RavenActiv
       for (let j = 0, k = compositeBands[i].bands.length; j < k; ++j) {
         const subBand = compositeBands[i].bands[j] as RavenActivityBand;
 
-        if (subBand.type === 'activity' && subBand.legend === band.legend) {
+        if (subBand.type === 'activity' && subBand.legend !== '' && subBand.legend === band.legend) {
           return true;
         }
       }

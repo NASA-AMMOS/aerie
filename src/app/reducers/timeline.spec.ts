@@ -70,11 +70,17 @@ describe('timeline reducer', () => {
     const source: RavenSource = rootSource;
     const child: RavenSource = childSource;
 
-    const activityBand1 = { ...activityBand };
-    const activityBand2 = { ...activityBand };
+    const activityBand1 = {
+      ...activityBand,
+      id: '400',
+      legend: 'a',
+    };
 
-    activityBand1.id = '400';
-    activityBand2.id = '500';
+    const activityBand2 = {
+      ...activityBand,
+      id: '500',
+      legend: 'a',
+    };
 
     timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, [activityBand1]));
     timelineState = reducer(timelineState, new FetchGraphDataSuccess(child, [activityBand2]));

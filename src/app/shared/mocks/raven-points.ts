@@ -25,7 +25,6 @@ export const activityPoint: RavenActivityPoint = {
   duration: 10,
   end: 500,
   endTimestamp: '',
-  hasLegend: true,
   id: '400',
   legend: '',
   metadata: [],
