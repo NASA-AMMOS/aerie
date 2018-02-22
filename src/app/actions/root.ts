@@ -21,7 +21,6 @@ export class ResetState implements Action {
   readonly type = RootActionTypes.ResetState;
 }
 
-
 export class ResetStateFromObject implements Action {
   readonly type = RootActionTypes.ResetStateFromObject;
 

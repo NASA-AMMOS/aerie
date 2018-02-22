@@ -8,7 +8,7 @@
  */
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { ConfigAction } from './../actions/Config';
+import { ConfigAction } from './../actions/config';
 
 import { environment } from './../../environments/environment';
 

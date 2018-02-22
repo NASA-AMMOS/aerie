@@ -44,6 +44,7 @@ import {
 } from './components';
 
 import {
+  RouterEffects,
   SourceExplorerEffects,
 } from './effects';
 
@@ -68,6 +69,7 @@ export const DECLARATIONS = [
 ];
 
 export const EFFECTS = [
+  RouterEffects,
   SourceExplorerEffects,
 ];
 

@@ -11,16 +11,27 @@ import { Action } from '@ngrx/store';
 
 // Action Types.
 export enum LayoutActionTypes {
+  SetMode                = '[layout] set_custom_mode',
   ToggleDetailsDrawer    = '[layout] toggle_details_drawer',
   ToggleLeftDrawer       = '[layout] toggle_left_drawer',
   ToggleSouthBandsDrawer = '[layout] toggle_south_bands_drawer',
 }
 
 // Actions.
+export class SetMode implements Action {
+  readonly type = LayoutActionTypes.SetMode;
+
+  constructor(
+    public mode: string,
+    public showDetailsDrawer: boolean,
+    public showLeftDrawer: boolean,
+    public showSouthBandsDrawer: boolean,
+  ) {}
+}
+
 export class ToggleDetailsDrawer implements Action {
   readonly type = LayoutActionTypes.ToggleDetailsDrawer;
 }
-
 
 export class ToggleLeftDrawer implements Action {
   readonly type = LayoutActionTypes.ToggleLeftDrawer;
@@ -32,6 +43,7 @@ export class ToggleSouthBandsDrawer implements Action {
 
 // Union type of all actions.
 export type LayoutAction =
+  SetMode |
   ToggleDetailsDrawer |
   ToggleLeftDrawer |
   ToggleSouthBandsDrawer;

@@ -8,10 +8,16 @@
  */
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { LayoutAction, LayoutActionTypes } from './../actions/layout';
+
+import {
+  LayoutAction,
+  LayoutActionTypes,
+  SetMode,
+} from './../actions/layout';
 
 // Layout State Interface.
 export interface LayoutState {
+  mode: string;
   showDetailsDrawer: boolean;
   showLeftDrawer: boolean;
   showSouthBandsDrawer: boolean;
@@ -19,6 +25,7 @@ export interface LayoutState {
 
 // Layout State.
 export const initialState: LayoutState = {
+  mode: 'default',
   showDetailsDrawer: true,
   showLeftDrawer: true,
   showSouthBandsDrawer: true,
@@ -30,15 +37,30 @@ export const initialState: LayoutState = {
  */
 export function reducer(state: LayoutState = initialState, action: LayoutAction): LayoutState {
   switch (action.type) {
+    case LayoutActionTypes.SetMode:
+      return setMode(state, action);
     case LayoutActionTypes.ToggleDetailsDrawer:
       return { ...state, showDetailsDrawer: !state.showDetailsDrawer };
     case LayoutActionTypes.ToggleLeftDrawer:
       return { ...state, showLeftDrawer: !state.showLeftDrawer };
-      case LayoutActionTypes.ToggleSouthBandsDrawer:
+    case LayoutActionTypes.ToggleSouthBandsDrawer:
       return { ...state, showSouthBandsDrawer: !state.showSouthBandsDrawer };
     default:
       return state;
   }
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'SetMode' action.
+ */
+export function setMode(state: LayoutState, action: SetMode): LayoutState {
+  return {
+    ...state,
+    mode: action.mode,
+    showDetailsDrawer: action.showDetailsDrawer,
+    showLeftDrawer: action.showLeftDrawer,
+    showSouthBandsDrawer: action.showSouthBandsDrawer,
+  };
 }
 
 /**
@@ -57,6 +79,7 @@ export const getLayoutState = createFeatureSelector<LayoutState>('layout');
  * only recompute when arguments change. The created selectors can also be composed
  * together to select different pieces of state.
  */
+export const getMode = createSelector(getLayoutState, (state: LayoutState) => state.mode);
 export const getShowDetailsDrawer = createSelector(getLayoutState, (state: LayoutState) => state.showDetailsDrawer);
 export const getShowLeftDrawer = createSelector(getLayoutState, (state: LayoutState) => state.showLeftDrawer);
 export const getShowSouthBandsDrawer = createSelector(getLayoutState, (state: LayoutState) => state.showSouthBandsDrawer);
