@@ -13,7 +13,8 @@
     "ng": "ng",
     "postinstall": "bower install",
     "start": "ng serve",
-    "test": "ng test"
+    "test": "ng test",
+    "test_for_build": "ng test --single-run --browsers FirefoxHeadless"
   },
   "private": true,
   "dependencies": {
@@ -65,8 +66,10 @@
     "karma-chrome-launcher": "~2.1.1",
     "karma-cli": "~1.0.1",
     "karma-coverage-istanbul-reporter": "^1.2.1",
+    "karma-firefox-launcher": "^1.1.0",
     "karma-jasmine": "~1.1.0",
     "karma-jasmine-html-reporter": "^0.2.2",
+    "karma-junit-reporter": "^1.2.0",
     "ngrx-store-freeze": "^0.2.1",
     "protractor": "~5.3.0",
     "ts-node": "~3.2.0",
