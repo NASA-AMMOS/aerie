@@ -54,7 +54,9 @@ export class TimelineGuard implements CanActivate {
     return this.store$
       .select(fromSourceExplorer.getInitialSourcesLoaded)
       .do((initialSourcesLoaded: boolean) => {
-        if (!initialSourcesLoaded) { this.store$.dispatch(new sourceExplorerActions.FetchInitialSources()); }
+        if (!initialSourcesLoaded) {
+          this.store$.dispatch(new sourceExplorerActions.FetchInitialSources());
+        }
       })
       .filter((initialSourcesLoaded: boolean) => initialSourcesLoaded)
       .take(1);

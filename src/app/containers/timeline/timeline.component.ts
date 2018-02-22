@@ -63,6 +63,10 @@ export class TimelineComponent implements OnDestroy {
     this.store.select(fromTimeline.getSelectedBandId).takeUntil(this.ngUnsubscribe).subscribe(selectedBandId => this.selectedBandId = selectedBandId);
     this.store.select(fromTimeline.getViewTimeRange).takeUntil(this.ngUnsubscribe).subscribe(viewTimeRange => this.viewTimeRange = viewTimeRange);
 
+    this.store.select(fromLayout.getMode).takeUntil(this.ngUnsubscribe).subscribe(layoutMode => {
+      dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize anytime our mode changes.
+    });
+
     this.showDetailsDrawer$ = this.store.select(fromLayout.getShowDetailsDrawer).takeUntil(this.ngUnsubscribe);
     this.showLeftDrawer$ = this.store.select(fromLayout.getShowLeftDrawer).takeUntil(this.ngUnsubscribe);
     this.showSouthBandsDrawer$ = this.store.select(fromLayout.getShowSouthBandsDrawer).takeUntil(this.ngUnsubscribe);
