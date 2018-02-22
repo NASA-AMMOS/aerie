@@ -11,7 +11,7 @@ import { Action } from '@ngrx/store';
 
 // Action Types.
 export enum LayoutActionTypes {
-  SetMode                = '[layout] set_custom_mode',
+  SetMode                = '[layout] set_mode',
   ToggleDetailsDrawer    = '[layout] toggle_details_drawer',
   ToggleLeftDrawer       = '[layout] toggle_left_drawer',
   ToggleSouthBandsDrawer = '[layout] toggle_south_bands_drawer',
