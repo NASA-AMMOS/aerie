@@ -8,6 +8,7 @@
  */
 
 import { Injectable } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 import { Actions, Effect } from '@ngrx/effects';
 import { RouterNavigationAction } from '@ngrx/router-store';
@@ -25,19 +26,22 @@ import * as layoutActions from './../actions/layout';
 export class RouterEffects {
   @Effect()
   routerNavigation$: Observable<Action> = this.actions$
-    .ofType<RouterNavigationAction>('ROUTER_NAVIGATION')
+    .ofType<RouterNavigationAction<ActivatedRouteSnapshot>>('ROUTER_NAVIGATION')
     .withLatestFrom(this.store$)
     .map(([action, state]) => ({ action, state }))
-    .map(({ state, action }) => {
-      const { layout } = (action.payload.routerState as any).queryParams; // TODO: See if we can remove 'any' here.
+    .flatMap(({ state, action }) => {
+      const actions = [];
+      const { layout } = action.payload.routerState.queryParams;
 
       if (layout === 'minimal') {
-        return new layoutActions.SetMode('minimal', false, false, false);
+        actions.push(new layoutActions.SetMode('minimal', false, false, false));
       } else if (layout === 'default') {
-        return new layoutActions.SetMode('default', true, true, true);
+        actions.push(new layoutActions.SetMode('default', true, true, true));
       } else {
-        return new layoutActions.SetMode('custom', state.layout.showDetailsDrawer, state.layout.showLeftDrawer, state.layout.showSouthBandsDrawer);
+        actions.push(new layoutActions.SetMode('custom', state.layout.showDetailsDrawer, state.layout.showLeftDrawer, state.layout.showSouthBandsDrawer));
       }
+
+      return actions;
     });
 
   constructor(
