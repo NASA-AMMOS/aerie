@@ -10,8 +10,8 @@
 import { Injectable } from '@angular/core';
 
 import {
-  CanActivate,
   ActivatedRouteSnapshot,
+  CanActivate,
   RouterStateSnapshot,
 } from '@angular/router';
 
@@ -26,8 +26,9 @@ import 'rxjs/add/operator/switchMap';
 import 'rxjs/add/operator/take';
 
 import { AppState } from './../../app/store';
-import * as fromSourceExplorer from './../reducers/source-explorer';
+
 import * as sourceExplorerActions from './../actions/source-explorer';
+import * as fromSourceExplorer from './../reducers/source-explorer';
 
 @Injectable()
 export class TimelineGuard implements CanActivate {
@@ -53,7 +54,7 @@ export class TimelineGuard implements CanActivate {
     return this.store$
       .select(fromSourceExplorer.getInitialSourcesLoaded)
       .do((initialSourcesLoaded: boolean) => {
-        if (!initialSourcesLoaded) this.store$.dispatch(new sourceExplorerActions.FetchInitialSources());
+        if (!initialSourcesLoaded) { this.store$.dispatch(new sourceExplorerActions.FetchInitialSources()); }
       })
       .filter((initialSourcesLoaded: boolean) => initialSourcesLoaded)
       .take(1);

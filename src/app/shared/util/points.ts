@@ -79,7 +79,7 @@ export function getColorFromActivityMetadata(metadata: MpsServerActivityPointMet
  * Note that for performance we are only looping through timelineData once.
  */
 export function getActivityPointsByLegend(source: RavenSource, timelineData: MpsServerActivityPoint[]) {
-  let legends: StringTMap<RavenActivityPoint[]> = {};
+  const legends: StringTMap<RavenActivityPoint[]> = {};
 
   let maxTime = Number.MIN_SAFE_INTEGER;
   let minTime = Number.MAX_SAFE_INTEGER;

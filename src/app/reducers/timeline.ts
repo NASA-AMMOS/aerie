@@ -114,7 +114,7 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
           };
           action.newBands.splice(i, 1);
         }
-      };
+      }
 
       return band;
     })
@@ -133,7 +133,7 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
         }),
         containerId: '0',
         sortOrder: state.bands.filter(b => b.containerId === '0').length + index,
-      }
+      };
     }));
 
   return {

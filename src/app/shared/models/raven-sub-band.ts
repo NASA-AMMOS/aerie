@@ -16,4 +16,4 @@ import {
 export type RavenSubBand =
   RavenActivityBand |
   RavenResourceBand |
-  RavenStateBand
+  RavenStateBand;

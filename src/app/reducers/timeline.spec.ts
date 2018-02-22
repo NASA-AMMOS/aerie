@@ -100,7 +100,7 @@ describe('timeline reducer', () => {
         parentUniqueId: band.id,
         sourceId: child.id,
         sourceName: child.name,
-      }
+      },
     ];
 
     expect(timelineState).toEqual({
@@ -143,7 +143,7 @@ describe('timeline reducer', () => {
         parentUniqueId: band.id,
         sourceId: child.id,
         sourceName: child.name,
-      }
+      },
     ];
 
     expect(timelineState).toEqual({
@@ -196,7 +196,7 @@ describe('timeline reducer', () => {
       ...timelineStateWithBand,
       bands: [{
         ...timelineStateWithBand.bands[0],
-        height: 42
+        height: 42,
       }],
     });
   });

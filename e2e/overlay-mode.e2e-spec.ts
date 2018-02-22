@@ -36,7 +36,7 @@ describe('raven2 - overlay mode', () => {
     'raven-tree-EuropaSimulations-expand',
     'raven-tree-15F10_Cruise_Simulation_CheckoutActivities-expand',
     'raven-tree-Resources-expand',
-    'raven-tree-Array-expand'
+    'raven-tree-Array-expand',
   ];
 
   beforeAll(async () => {

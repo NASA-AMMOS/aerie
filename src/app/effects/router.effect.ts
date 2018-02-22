@@ -10,8 +10,8 @@
 import { Injectable } from '@angular/core';
 
 import { Actions, Effect } from '@ngrx/effects';
-import { Action, Store } from '@ngrx/store';
 import { RouterNavigationAction } from '@ngrx/router-store';
+import { Action, Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
 
 import 'rxjs/add/operator/map';
@@ -42,6 +42,6 @@ export class RouterEffects {
 
   constructor(
     private actions$: Actions,
-    private store$: Store<AppState>
+    private store$: Store<AppState>,
   ) {}
 }

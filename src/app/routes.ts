@@ -23,9 +23,9 @@ export const routes: Routes = [
     redirectTo: 'timeline',
   },
   {
+    canActivate: [TimelineGuard],
     component: TimelineComponent,
     path: 'timeline',
-    canActivate: [TimelineGuard],
   },
   {
     component: TimelineComponent,
