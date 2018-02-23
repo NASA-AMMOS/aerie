@@ -103,6 +103,7 @@
               [labelWidth]="labelWidth"
               [overlayMode]="overlayMode"
               [selectedBandId]="selectedBandId"
+              (deleteBand)="onDeleteBand($event)"
               (updateAllBands)="onUpdateAllBands($event)"
               (updateBand)="onUpdateBand($event)"
               (updateSubBand)="onUpdateSubBand($event)">

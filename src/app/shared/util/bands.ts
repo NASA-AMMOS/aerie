@@ -34,10 +34,10 @@ import {
 } from './points';
 
 /**
- * This is a helper function that takes a list of current bands and a sourceId that was just clicked to "close",
+ * This is a helper function that takes a list of current bands and their associated sourceId,
  * and returns a list of band ids that we want to remove.
  */
-export function removeBands(source: RavenSource, bands: RavenCompositeBand[]): string[] {
+export function removeBands(sourceId: string, bands: RavenCompositeBand[]): string[] {
   const bandIds: string[] = [];
 
   for (let i = 0, l = bands.length; i < l; ++i) {
@@ -46,7 +46,7 @@ export function removeBands(source: RavenSource, bands: RavenCompositeBand[]): s
     for (let j = 0, ll = band.bands.length; j < ll; ++j) {
       const subBand = band.bands[j];
 
-      if (subBand.sourceId === source.id) {
+      if (subBand.sourceId === sourceId) {
         bandIds.push(subBand.id);
       }
     }

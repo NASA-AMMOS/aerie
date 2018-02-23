@@ -79,7 +79,7 @@ export class SourceExplorerEffects {
     .ofType<sourceExplorerActions.SourceExplorerCloseEvent>(SourceExplorerActionTypes.SourceExplorerCloseEvent)
     .withLatestFrom(this.store$)
     .map(([action, state]) => ({ action, state }))
-    .map(({ state, action }) => new sourceExplorerActions.RemoveBands(action.source, removeBands(action.source, state.timeline.bands)));
+    .map(({ state, action }) => new sourceExplorerActions.RemoveBands(action.sourceId, removeBands(action.sourceId, state.timeline.bands)));
 
   constructor(
     private http: HttpClient,

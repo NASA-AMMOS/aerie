@@ -30,11 +30,11 @@ export class RouterEffects {
     .withLatestFrom(this.store$)
     .map(([action, state]) => ({ action, state }))
     .flatMap(({ state, action }) => {
-      const actions = [];
+      const actions: Action[] = [];
       const { layout } = action.payload.routerState.queryParams;
 
       if (layout === 'minimal') {
-        actions.push(new layoutActions.SetMode('minimal', false, false, false));
+        actions.push(new layoutActions.SetMode('minimal', false, false, true));
       } else if (layout === 'default') {
         actions.push(new layoutActions.SetMode('default', true, true, true));
       } else {

@@ -117,7 +117,7 @@ describe('timeline reducer', () => {
     // First add a band so we can remove it.
     timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, [activityBand]));
 
-    timelineState = reducer(timelineState, new RemoveBands(source, ['100']));
+    timelineState = reducer(timelineState, new RemoveBands(source.id, ['100']));
     expect(timelineState).toEqual(initialState);
   });
 
@@ -133,7 +133,7 @@ describe('timeline reducer', () => {
 
     timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, [activityBand1]));
     timelineState = reducer(timelineState, new FetchGraphDataSuccess(child, [activityBand2]));
-    timelineState = reducer(timelineState, new RemoveBands(child, ['400']));
+    timelineState = reducer(timelineState, new RemoveBands(child.id, ['400']));
 
     const band = { ...timelineState.bands[0] };
     band.bands = [

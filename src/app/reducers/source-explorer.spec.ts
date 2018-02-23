@@ -173,7 +173,7 @@ describe('source-explorer reducer', () => {
     // Add some bands first so we have something to remove.
     sourceExplorerState = reducer(sourceExplorerState, new FetchGraphDataSuccess(source, [stateBand, activityBand]));
 
-    sourceExplorerState = reducer(sourceExplorerState, new RemoveBands(source, ['100', '102']));
+    sourceExplorerState = reducer(sourceExplorerState, new RemoveBands(source.id, ['100', '102']));
     expect(sourceExplorerState).toEqual(initialState);
   });
 

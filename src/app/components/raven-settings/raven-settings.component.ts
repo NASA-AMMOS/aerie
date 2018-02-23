@@ -18,6 +18,7 @@ import {
 import {
   RavenCompositeBand,
   RavenSettingsUpdate,
+  RavenSubBand,
   StringTMap,
 } from './../../shared/models';
 
@@ -33,6 +34,7 @@ export class RavenSettingsComponent {
   @Input() overlayMode: boolean;
   @Input() selectedBandId: string;
 
+  @Output() deleteBand: EventEmitter<RavenSubBand> = new EventEmitter<RavenSubBand>();
   @Output() updateAllBands: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
   @Output() updateBand: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
   @Output() updateSubBand: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();

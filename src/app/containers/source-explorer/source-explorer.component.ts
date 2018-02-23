@@ -71,7 +71,7 @@ export class SourceExplorerComponent implements OnDestroy {
    * Event. Called when a `close` event is fired from a raven-tree.
    */
   onClose(source: RavenSource): void {
-    this.store.dispatch(new sourceExplorerActions.SourceExplorerCloseEvent(source));
+    this.store.dispatch(new sourceExplorerActions.SourceExplorerCloseEvent(source.id));
   }
 
   /**

@@ -93,7 +93,7 @@ export class LoadContent implements Action {
 export class RemoveBands implements Action {
   readonly type = SourceExplorerActionTypes.RemoveBands;
 
-  constructor(public source: RavenSource, public bandIds: string[]) {}
+  constructor(public sourceId: string, public bandIds: string[]) {}
 }
 
 export class SourceExplorerClose implements Action {
@@ -105,7 +105,7 @@ export class SourceExplorerClose implements Action {
 export class SourceExplorerCloseEvent implements Action {
   readonly type = SourceExplorerActionTypes.SourceExplorerCloseEvent;
 
-  constructor(public source: RavenSource) {}
+  constructor(public sourceId: string) {}
 }
 
 export class SourceExplorerCollapse implements Action {

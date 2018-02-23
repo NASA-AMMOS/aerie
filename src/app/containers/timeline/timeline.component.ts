@@ -23,12 +23,14 @@ import * as fromConfig from './../../reducers/config';
 import * as fromLayout from './../../reducers/layout';
 import * as fromTimeline from './../../reducers/timeline';
 
+import * as sourceExplorerActions from './../../actions/source-explorer';
 import * as timelineActions from './../../actions/timeline';
 
 import {
   RavenCompositeBand,
   RavenSettingsUpdate,
   RavenSortMessage,
+  RavenSubBand,
   RavenTimeRange,
   StringTMap,
 } from './../../shared/models';
@@ -85,7 +87,14 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
-   * Event. Called when a `newSort` event is fired from raven-bands.
+   * Event. Called when a `delete-band` event is fired from the raven-settings component.
+   */
+  onDeleteBand(subBand: RavenSubBand): void {
+    this.store.dispatch(new sourceExplorerActions.RemoveBands(subBand.sourceId, [subBand.id]));
+  }
+
+  /**
+   * Event. Called when a `new-sort` event is fired from raven-bands.
    */
   onSort(sort: StringTMap<RavenSortMessage>): void {
     this.store.dispatch(new timelineActions.SortBands(sort));

@@ -5,10 +5,10 @@
 <!-- Global Settings. -->
 <div *ngIf="bandsById | hasKeys">
   <div
-    id="raven-settings-label-width"
     fxLayout="row"
     fxLayoutAlign="start center"
     fxLayoutWrap>
+    <!-- Label Width. -->
     <div class="field">
       <mat-slider
         id="raven-settings-label-width"
@@ -24,6 +24,7 @@
       <label>Label Width</label>
     </div>
 
+    <!-- Overlay. -->
     <div class="field">
       <mat-slide-toggle
         id="raven-settings-overlay"
@@ -33,6 +34,15 @@
         (change)="updateAllBands.emit({ prop: 'overlayMode', value: $event.checked })">
         Overlay
       </mat-slide-toggle>
+    </div>
+
+    <!-- Add Divider Band. -->
+    <div class="field">
+      <button
+        id="settings-add-divider-band"
+        mat-raised-button>
+        Add Divider Band
+      </button>
     </div>
   </div>
 </div>
@@ -44,6 +54,7 @@
   fxLayout="row"
   fxLayoutAlign="start center"
   fxLayoutWrap>
+  <!-- Height. -->
   <div class="field">
     <mat-slider
       id="raven-settings-height"
@@ -59,6 +70,7 @@
     <label>Height</label>
   </div>
 
+  <!-- Show Tooltip. -->
   <div class="field">
     <mat-slide-toggle
       id="raven-settings-show-tooltip"
@@ -69,169 +81,209 @@
     </mat-slide-toggle>
   </div>
 
+  <!-- Selected Sub Band. -->
+  <div class="field">
+    <mat-form-field>
+      <mat-select
+        #selectBand
+        [value]="bandsById[selectedBandId].bands[0].id"
+        placeholder="Selected Band">
+        <ng-container *ngFor="let subBand of bandsById[selectedBandId].bands">
+          <mat-option [value]="subBand.id">{{subBand.label}}</mat-option>
+        </ng-container>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
   <ng-container *ngFor="let subBand of bandsById[selectedBandId].bands">
-    <div fxFlex="40" class="field">
-      <mat-form-field class="label">
-        <input
-          id="raven-settings-label"
-          matInput
-          placeholder="Label"
-          [value]="subBand.label"
-          (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'label', value: $event.target.value })">
-      </mat-form-field>
-    </div>
-
-    <!-- Activity Settings. -->
-    <ng-container *ngIf="subBand.type === 'activity'">
-      <div class="field">
-        <mat-form-field>
-          <mat-select
-            placeholder="Activity Style"
-            [value]="subBand.activityStyle"
-            (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'activityStyle', value: $event.value })">
-            <mat-option [value]="1">Bar</mat-option>
-            <mat-option [value]="2">Line</mat-option>
-          </mat-select>
+    <ng-container *ngIf="selectBand.value === subBand.id">
+      <!-- Label -->
+      <div fxFlex="40" class="field">
+        <mat-form-field class="label">
+          <input
+            id="raven-settings-label"
+            matInput
+            placeholder="Label"
+            [value]="subBand.label"
+            (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'label', value: $event.target.value })">
         </mat-form-field>
       </div>
 
-      <div class="field">
-        <mat-form-field>
-          <mat-select
-            placeholder="Horizontally Align Label"
-            [value]="subBand.alignLabel"
-            (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'alignLabel', value: $event.value })">
-            <mat-option [value]="1">Left</mat-option>
-            <mat-option [value]="2">Right</mat-option>
-            <mat-option [value]="3">Center</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
+      <!-- Activity Settings. -->
+      <ng-container *ngIf="subBand.type === 'activity'">
+        <!-- Activity Style. -->
+        <div class="field">
+          <mat-form-field>
+            <mat-select
+              placeholder="Activity Style"
+              [value]="subBand.activityStyle"
+              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'activityStyle', value: $event.value })">
+              <mat-option [value]="1">Bar</mat-option>
+              <mat-option [value]="2">Line</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
 
-      <div class="field">
-        <mat-form-field>
-          <mat-select
-            placeholder="Vertically Align Label"
-            [value]="subBand.baselineLabel"
-            (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'baselineLabel', value: $event.value })">
-            <mat-option [value]="1">Top</mat-option>
-            <mat-option [value]="2">Bottom</mat-option>
-            <mat-option [value]="3">Center</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
+        <!-- Align Label. -->
+        <div class="field">
+          <mat-form-field>
+            <mat-select
+              placeholder="Horizontally Align Label"
+              [value]="subBand.alignLabel"
+              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'alignLabel', value: $event.value })">
+              <mat-option [value]="1">Left</mat-option>
+              <mat-option [value]="2">Right</mat-option>
+              <mat-option [value]="3">Center</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
 
-      <div class="field">
-        <mat-form-field>
-          <mat-select
-            id="raven-settings-layout"
-            placeholder="Layout"
-            [value]="subBand.layout"
-            (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'layout', value: $event.value })">
-            <mat-option [value]="1">Compact</mat-option>
-            <mat-option [value]="2">Waterfall</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
+        <!-- Baseline Label. -->
+        <div class="field">
+          <mat-form-field>
+            <mat-select
+              placeholder="Vertically Align Label"
+              [value]="subBand.baselineLabel"
+              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'baselineLabel', value: $event.value })">
+              <mat-option [value]="1">Top</mat-option>
+              <mat-option [value]="2">Bottom</mat-option>
+              <mat-option [value]="3">Center</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
 
-      <div class="field">
-        <mat-slide-toggle
-          id="raven-settings-show-label"
-          color="primary"
-          [checked]="subBand.showLabel"
-          (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'showLabel', value: $event.checked })">
-          Show Labels
-        </mat-slide-toggle>
-      </div>
+        <!-- Layout. -->
+        <div class="field">
+          <mat-form-field>
+            <mat-select
+              id="raven-settings-layout"
+              placeholder="Layout"
+              [value]="subBand.layout"
+              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'layout', value: $event.value })">
+              <mat-option [value]="1">Compact</mat-option>
+              <mat-option [value]="2">Waterfall</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
 
-      <div class="field">
-        <mat-slide-toggle
-          id="raven-settings-trim-label"
-          color="primary"
-          [checked]="subBand.trimLabel"
-          (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'trimLabel', value: $event.checked })">
-          Trim Labels
-        </mat-slide-toggle>
-      </div>
-    </ng-container>
+        <!-- Show Label. -->
+        <div class="field">
+          <mat-slide-toggle
+            id="raven-settings-show-label"
+            color="primary"
+            [checked]="subBand.showLabel"
+            (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'showLabel', value: $event.checked })">
+            Show Labels
+          </mat-slide-toggle>
+        </div>
 
-    <!-- Resource Settings. -->
-    <ng-container *ngIf="subBand.type === 'resource'">
-      <!-- TODO: Color. -->
+        <!-- Trim Label. -->
+        <div class="field">
+          <mat-slide-toggle
+            id="raven-settings-trim-label"
+            color="primary"
+            [checked]="subBand.trimLabel"
+            (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'trimLabel', value: $event.checked })">
+            Trim Labels
+          </mat-slide-toggle>
+        </div>
+      </ng-container>
 
-      <div class="field">
-        <mat-slide-toggle
-          id="raven-settings-fill"
-          color="primary"
-          [checked]="subBand.fill"
-          (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'fill', value: $event.checked })">
-          Fill
-        </mat-slide-toggle>
-      </div>
+      <!-- Resource Settings. -->
+      <ng-container *ngIf="subBand.type === 'resource'">
+        <!-- TODO: Color. -->
 
-      <div class="field">
-        <mat-form-field>
-          <mat-select
-            id="raven-settings-interpolation"
-            placeholder="Interpolation"
-            [value]="subBand.interpolation"
-            (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'interpolation', value: $event.value })">
-            <mat-option value="linear">Linear</mat-option>
-            <mat-option value="constant">Constant</mat-option>
-            <mat-option value="none">None</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
+        <!-- Fill. -->
+        <div class="field">
+          <mat-slide-toggle
+            id="raven-settings-fill"
+            color="primary"
+            [checked]="subBand.fill"
+            (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'fill', value: $event.checked })">
+            Fill
+          </mat-slide-toggle>
+        </div>
 
-      <div class="field">
-        <mat-slide-toggle
-          id="raven-settings-rescale"
-          color="primary"
-          [checked]="subBand.rescale"
-          (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'rescale', value: $event.checked })">
-          Rescale Y-Axis Ticks
-        </mat-slide-toggle>
-      </div>
+        <!-- Interpolation. -->
+        <div class="field">
+          <mat-form-field>
+            <mat-select
+              id="raven-settings-interpolation"
+              placeholder="Interpolation"
+              [value]="subBand.interpolation"
+              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'interpolation', value: $event.value })">
+              <mat-option value="linear">Linear</mat-option>
+              <mat-option value="constant">Constant</mat-option>
+              <mat-option value="none">None</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
 
-      <div class="field">
-        <mat-slide-toggle
-          id="raven-settings-show-icon"
-          color="primary"
-          [checked]="subBand.showIcon"
-          (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'showIcon', value: $event.checked })">
-          Show Icon
-        </mat-slide-toggle>
-      </div>
-    </ng-container>
+        <!-- Rescale. -->
+        <div class="field">
+          <mat-slide-toggle
+            id="raven-settings-rescale"
+            color="primary"
+            [checked]="subBand.rescale"
+            (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'rescale', value: $event.checked })">
+            Rescale Y-Axis Ticks
+          </mat-slide-toggle>
+        </div>
 
-    <!-- State Settings. -->
-    <ng-container *ngIf="subBand.type === 'state'">
-      <div class="field">
-        <mat-form-field>
-          <mat-select
-            id="raven-settings-align-label"
-            placeholder="Horizontally Align Label"
-            [value]="subBand.alignLabel"
-            (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'alignLabel', value: $event.value })">
-            <mat-option [value]="1">Left</mat-option>
-            <mat-option [value]="2">Right</mat-option>
-            <mat-option [value]="3">Center</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
+        <!-- Show Icon. -->
+        <div class="field">
+          <mat-slide-toggle
+            id="raven-settings-show-icon"
+            color="primary"
+            [checked]="subBand.showIcon"
+            (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'showIcon', value: $event.checked })">
+            Show Icon
+          </mat-slide-toggle>
+        </div>
+      </ng-container>
 
+      <!-- State Settings. -->
+      <ng-container *ngIf="subBand.type === 'state'">
+        <!-- Align Label. -->
+        <div class="field">
+          <mat-form-field>
+            <mat-select
+              id="raven-settings-align-label"
+              placeholder="Horizontally Align Label"
+              [value]="subBand.alignLabel"
+              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'alignLabel', value: $event.value })">
+              <mat-option [value]="1">Left</mat-option>
+              <mat-option [value]="2">Right</mat-option>
+              <mat-option [value]="3">Center</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <!-- Baseline Label. -->
+        <div class="field">
+          <mat-form-field>
+            <mat-select
+              id="raven-settings-baseline-label"
+              placeholder="Vertically Align Label"
+              [value]="subBand.baselineLabel"
+              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'baselineLabel', value: $event.value })">
+              <mat-option [value]="1">Top</mat-option>
+              <mat-option [value]="2">Bottom</mat-option>
+              <mat-option [value]="3">Center</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </ng-container>
+
+      <!-- Delete Band. -->
       <div class="field">
-        <mat-form-field>
-          <mat-select
-            id="raven-settings-baseline-label"
-            placeholder="Vertically Align Label"
-            [value]="subBand.baselineLabel"
-            (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'baselineLabel', value: $event.value })">
-            <mat-option [value]="1">Top</mat-option>
-            <mat-option [value]="2">Bottom</mat-option>
-            <mat-option [value]="3">Center</mat-option>
-          </mat-select>
-        </mat-form-field>
+        <button
+          id="settings-delete-band"
+          mat-raised-button
+          color="warn"
+          (click)="deleteBand.emit(subBand)">
+          Delete Band
+        </button>
       </div>
     </ng-container>
   </ng-container>
