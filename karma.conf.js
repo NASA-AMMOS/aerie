@@ -8,8 +8,10 @@ module.exports = function (config) {
     plugins: [
       require('karma-jasmine'),
       require('karma-chrome-launcher'),
+      require('karma-firefox-launcher'),
       require('karma-jasmine-html-reporter'),
       require('karma-coverage-istanbul-reporter'),
+      require('karma-junit-reporter'),
       require('@angular/cli/plugins/karma')
     ],
     client:{
@@ -22,7 +24,10 @@ module.exports = function (config) {
     angularCli: {
       environment: 'dev'
     },
-    reporters: ['progress', 'kjhtml'],
+    reporters: ['progress', 'kjhtml', 'junit'],
+    junitReporter : {
+      outputFile: 'karma-test-results.xml'
+    },
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
