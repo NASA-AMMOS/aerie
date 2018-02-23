@@ -14,7 +14,7 @@
     "postinstall": "bower install",
     "start": "ng serve",
     "test": "ng test",
-    "test_for_build": "ng test --single-run --browsers FirefoxHeadless"
+    "test-for-build": "ng test --single-run --browsers FirefoxHeadless"
   },
   "private": true,
   "dependencies": {
