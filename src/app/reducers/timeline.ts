@@ -105,7 +105,7 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
             hasActivityLegend([band], newBand as RavenActivityBand)) {
           band = {
             ...band,
-            bands: band.bands.concat({
+            subBands: band.subBands.concat({
               ...newBand,
               parentUniqueId: band.id,
               sourceId: action.source.id,
@@ -124,15 +124,15 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
 
       return {
         ...newCompositeBand,
-        bands: newCompositeBand.bands.map(subBand => {
+        containerId: '0',
+        sortOrder: state.bands.filter(b => b.containerId === '0').length + index,
+        subBands: newCompositeBand.subBands.map(subBand => {
           return {
             ...subBand,
             sourceId: action.source.id,
             sourceName: action.source.name,
           };
         }),
-        containerId: '0',
-        sortOrder: state.bands.filter(b => b.containerId === '0').length + index,
       };
     }));
 
@@ -154,9 +154,9 @@ export function removeBands(state: TimelineState, action: RemoveBands): Timeline
   let bands = state.bands
     .map(band => ({
         ...band,
-        bands: band.bands.filter(subBand => !action.bandIds.includes(subBand.id)),
+        subBands: band.subBands.filter(subBand => !action.bandIds.includes(subBand.id)),
     }))
-    .filter(band => band.bands.length !== 0);
+    .filter(band => band.subBands.length !== 0);
 
   // Update the sort order of all the bands for each container.
   bands = updateSortOrder(bands);
@@ -220,7 +220,7 @@ export function settingsUpdateSubBand(state: TimelineState, action: SettingsUpda
       if (action.bandId === band.id) {
         return {
           ...band,
-          bands: band.bands.map(subBand => {
+          subBands: band.subBands.map(subBand => {
             if (action.subBandId === subBand.id) {
               return {
                 ...subBand,

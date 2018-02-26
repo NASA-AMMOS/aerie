@@ -84,24 +84,24 @@ describe('raven2 - overlay mode', () => {
     source2.open();
     bands = await probe(element(by.id('raven-bands-0')), 'bands');
     expect(bands.length).toEqual(2);
-    expect(bands[0].bands.length).toEqual(2);
-    expect(bands[1].bands.length).toEqual(1);
-    expect(bands[0].bands[0].name).toEqual(source0.name);
-    expect(bands[0].bands[1].name).toEqual(source2.name);
+    expect(bands[0].subBands.length).toEqual(2);
+    expect(bands[1].subBands.length).toEqual(1);
+    expect(bands[0].subBands[0].name).toEqual(source0.name);
+    expect(bands[0].subBands[1].name).toEqual(source2.name);
   });
 
   it('closing source1 should remove a band', async () => {
     source1.close();
     bands = await probe(element(by.id('raven-bands-0')), 'bands');
     expect(bands.length).toEqual(1);
-    expect(bands[0].bands.length).toEqual(2);
+    expect(bands[0].subBands.length).toEqual(2);
   });
 
   it('closing source0 should remove a band from the first band', async () => {
     source0.close();
     bands = await probe(element(by.id('raven-bands-0')), 'bands');
     expect(bands.length).toEqual(1);
-    expect(bands[0].bands.length).toEqual(1);
+    expect(bands[0].subBands.length).toEqual(1);
   });
 
   it('overlaying a 3-legend source should add 3 sub-bands to the selected band (as long as those legends are not already displayed in other bands)', async () => {
@@ -113,28 +113,28 @@ describe('raven2 - overlay mode', () => {
     source3.open();
     bands = await probe(element(by.id('raven-bands-0')), 'bands');
     expect(bands.length).toEqual(1);
-    expect(bands[0].bands.length).toEqual(4);
+    expect(bands[0].subBands.length).toEqual(4);
   });
 
   it('overlaying a same 3-legend source should add 3 more sub-bands to the selected band', async () => {
     source4.open();
     bands = await probe(element(by.id('raven-bands-0')), 'bands');
     expect(bands.length).toEqual(1);
-    expect(bands[0].bands.length).toEqual(7);
+    expect(bands[0].subBands.length).toEqual(7);
   });
 
   it('closing source3 should remove 3 sub-bands from the selected band', async () => {
     source3.close();
     bands = await probe(element(by.id('raven-bands-0')), 'bands');
     expect(bands.length).toEqual(1);
-    expect(bands[0].bands.length).toEqual(4);
+    expect(bands[0].subBands.length).toEqual(4);
   });
 
   it('closing source4 should remove 3 more sub-bands from the selected band', async () => {
     source4.close();
     bands = await probe(element(by.id('raven-bands-0')), 'bands');
     expect(bands.length).toEqual(1);
-    expect(bands[0].bands.length).toEqual(1);
+    expect(bands[0].subBands.length).toEqual(1);
   });
 
   it('turning off overlay mode and drawing a 3-legend source should add 3 new bands', async () => {
@@ -142,10 +142,10 @@ describe('raven2 - overlay mode', () => {
     source3.open();
     bands = await probe(element(by.id('raven-bands-0')), 'bands');
     expect(bands.length).toEqual(4);
-    expect(bands[0].bands.length).toEqual(1);
-    expect(bands[1].bands.length).toEqual(1);
-    expect(bands[2].bands.length).toEqual(1);
-    expect(bands[3].bands.length).toEqual(1);
+    expect(bands[0].subBands.length).toEqual(1);
+    expect(bands[1].subBands.length).toEqual(1);
+    expect(bands[2].subBands.length).toEqual(1);
+    expect(bands[3].subBands.length).toEqual(1);
   });
 
   it('turning back on overlay mode and drawing another 3-legend source should add those bands to the existing legend bands and NOT overlay them', async () => {
@@ -153,9 +153,9 @@ describe('raven2 - overlay mode', () => {
     source4.open();
     bands = await probe(element(by.id('raven-bands-0')), 'bands');
     expect(bands.length).toEqual(4);
-    expect(bands[0].bands.length).toEqual(1);
-    expect(bands[1].bands.length).toEqual(2);
-    expect(bands[2].bands.length).toEqual(2);
-    expect(bands[3].bands.length).toEqual(2);
+    expect(bands[0].subBands.length).toEqual(1);
+    expect(bands[1].subBands.length).toEqual(2);
+    expect(bands[2].subBands.length).toEqual(2);
+    expect(bands[3].subBands.length).toEqual(2);
   });
 });

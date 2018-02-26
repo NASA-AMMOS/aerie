@@ -39,7 +39,6 @@ export const activityBand: RavenActivityBand = {
 };
 
 export const compositeBand: RavenCompositeBand = {
-  bands: [],
   containerId: '0',
   height: 50,
   heightPadding: 0,
@@ -47,6 +46,7 @@ export const compositeBand: RavenCompositeBand = {
   name: 'test-composite-band',
   showTooltip: true,
   sortOrder: 0,
+  subBands: [],
   type: 'composite',
 };
 

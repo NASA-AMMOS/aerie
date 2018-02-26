@@ -14,7 +14,7 @@
       [maxTimeRange]="maxTimeRange"
       [showTooltip]="band.showTooltip"
       [viewTimeRange]="viewTimeRange">
-      <ng-container *ngFor="let subBand of band.bands; let j = index">
+      <ng-container *ngFor="let subBand of band.subBands; let j = index">
         <!-- Activity Band. -->
         <falcon-activity-band
           *ngIf="subBand.type === 'activity'"

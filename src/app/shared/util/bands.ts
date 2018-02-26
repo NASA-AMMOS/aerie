@@ -43,8 +43,8 @@ export function removeBands(sourceId: string, bands: RavenCompositeBand[]): stri
   for (let i = 0, l = bands.length; i < l; ++i) {
     const band = bands[i];
 
-    for (let j = 0, ll = band.bands.length; j < ll; ++j) {
-      const subBand = band.bands[j];
+    for (let j = 0, ll = band.subBands.length; j < ll; ++j) {
+      const subBand = band.subBands[j];
 
       if (subBand.sourceId === sourceId) {
         bandIds.push(subBand.id);
@@ -127,21 +127,21 @@ export function toActivityBands(source: RavenSource, timelineData: MpsServerActi
 /**
  * Returns a composite band.
  */
-export function toCompositeBand(band: RavenSubBand): RavenCompositeBand {
+export function toCompositeBand(subBand: RavenSubBand): RavenCompositeBand {
   const compositeBandUniqueId = v4();
 
   const compositeBand: RavenCompositeBand = {
-    bands: [{
-      ...band,
+    containerId: '0',
+    height: subBand.height,
+    heightPadding: subBand.heightPadding,
+    id: compositeBandUniqueId,
+    name: subBand.name,
+    showTooltip: subBand.showTooltip,
+    sortOrder: 0,
+    subBands: [{
+      ...subBand,
       parentUniqueId: compositeBandUniqueId,
     }],
-    containerId: '0',
-    height: band.height,
-    heightPadding: band.heightPadding,
-    id: compositeBandUniqueId,
-    name: band.name,
-    showTooltip: band.showTooltip,
-    sortOrder: 0,
     type: 'composite',
   };
 
@@ -305,8 +305,8 @@ export function updateTimeRanges(currentViewTimeRange: RavenTimeRange, bands: Ra
     for (let i = 0, l = bands.length; i < l; ++i) {
       const band = bands[i];
 
-      for (let j = 0, ll = band.bands.length; j < ll; ++j) {
-        const subBand = band.bands[j];
+      for (let j = 0, ll = band.subBands.length; j < ll; ++j) {
+        const subBand = band.subBands[j];
 
         if (subBand.maxTimeRange.start < startTime) { startTime = subBand.maxTimeRange.start; }
         if (subBand.maxTimeRange.end > endTime) { endTime = subBand.maxTimeRange.end; }
@@ -356,8 +356,8 @@ export function hasId(bands: RavenCompositeBand[], id: string): boolean {
 export function hasActivityLegend(compositeBands: RavenCompositeBand[], band: RavenActivityBand): boolean {
   if (band.type === 'activity') {
     for (let i = 0, l = compositeBands.length; i < l; ++i) {
-      for (let j = 0, ll = compositeBands[i].bands.length; j < ll; ++j) {
-        const subBand = compositeBands[i].bands[j] as RavenActivityBand;
+      for (let j = 0, ll = compositeBands[i].subBands.length; j < ll; ++j) {
+        const subBand = compositeBands[i].subBands[j] as RavenActivityBand;
 
         if (subBand.type === 'activity' && subBand.legend !== '' && subBand.legend === band.legend) {
           return true;

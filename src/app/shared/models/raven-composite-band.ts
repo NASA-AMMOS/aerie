@@ -12,7 +12,6 @@ import {
 } from './index';
 
 export interface RavenCompositeBand {
-  bands: RavenSubBand[];
   containerId: string;
   height: number;
   heightPadding: number;
@@ -20,5 +19,6 @@ export interface RavenCompositeBand {
   name: string;
   showTooltip: boolean;
   sortOrder: number;
+  subBands: RavenSubBand[];
   type: string;
 }

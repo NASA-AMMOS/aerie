@@ -51,7 +51,7 @@ describe('timeline reducer', () => {
     timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, [stateBand]));
 
     const band = { ...timelineState.bands[0] };
-    band.bands = [{
+    band.subBands = [{
       ...stateBand,
       parentUniqueId: band.id,
       sourceId: source.id,
@@ -86,7 +86,7 @@ describe('timeline reducer', () => {
     timelineState = reducer(timelineState, new FetchGraphDataSuccess(child, [activityBand2]));
 
     const band = { ...timelineState.bands[0] };
-    band.bands = [
+    band.subBands = [
       {
         ...activityBand1,
         id: '400',
@@ -136,7 +136,7 @@ describe('timeline reducer', () => {
     timelineState = reducer(timelineState, new RemoveBands(child.id, ['400']));
 
     const band = { ...timelineState.bands[0] };
-    band.bands = [
+    band.subBands = [
       {
         ...activityBand2,
         id: '500',
@@ -207,7 +207,7 @@ describe('timeline reducer', () => {
     // First add a band and select it so we can update it.
     let timelineStateWithBand = reducer(timelineState, new FetchGraphDataSuccess(source, [stateBand]));
     const band = { ...timelineStateWithBand.bands[0] };
-    const subBand = { ...band.bands[0] };
+    const subBand = { ...band.subBands[0] };
 
     timelineStateWithBand = reducer(timelineStateWithBand, new SelectBand(band.id));
     timelineState = reducer(timelineStateWithBand, new SettingsUpdateSubBand(band.id, subBand.id, 'label', '42'));
@@ -216,8 +216,8 @@ describe('timeline reducer', () => {
       ...timelineStateWithBand,
       bands: [{
         ...timelineStateWithBand.bands[0],
-        bands: [{
-          ...timelineStateWithBand.bands[0].bands[0],
+        subBands: [{
+          ...timelineStateWithBand.bands[0].subBands[0],
           label: '42',
         }],
       }],

@@ -82,24 +82,24 @@
   </div>
 
   <!-- Selected Sub Band. -->
-  <div class="field">
-    <mat-form-field>
+  <div fxFlex="40" class="field">
+    <mat-form-field class="full-width">
       <mat-select
         #selectBand
-        [value]="bandsById[selectedBandId].bands[0].id"
+        [value]="bandsById[selectedBandId].subBands[0].id"
         placeholder="Selected Band">
-        <ng-container *ngFor="let subBand of bandsById[selectedBandId].bands">
+        <ng-container *ngFor="let subBand of bandsById[selectedBandId].subBands">
           <mat-option [value]="subBand.id">{{subBand.label}}</mat-option>
         </ng-container>
       </mat-select>
     </mat-form-field>
   </div>
 
-  <ng-container *ngFor="let subBand of bandsById[selectedBandId].bands">
+  <ng-container *ngFor="let subBand of bandsById[selectedBandId].subBands">
     <ng-container *ngIf="selectBand.value === subBand.id">
       <!-- Label -->
       <div fxFlex="40" class="field">
-        <mat-form-field class="label">
+        <mat-form-field class="full-width">
           <input
             id="raven-settings-label"
             matInput
