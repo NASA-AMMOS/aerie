@@ -6,14 +6,6 @@ pipeline {
 
 	stages {
 
-		stage ('checkout') {
-			steps {
-				cleanWs()
-				echo "Getting source code for branch ${BRANCH_NAME}"
-				checkout scm
-			}
-		}
-
 		stage ('build') {
 			steps {
 				script {
