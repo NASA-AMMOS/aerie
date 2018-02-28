@@ -63,8 +63,8 @@ export function toRavenBandData(source: RavenSource, graphData: MpsServerGraphDa
   const metadata = graphData['Timeline Metadata'];
   const timelineData = graphData['Timeline Data'];
 
-  if (metadata.hasTimelineType === 'state' ||
-      metadata.hasTimelineType === 'measurement' && (metadata as MpsServerStateMetadata).hasValueType === 'string_xdr') {
+  if (metadata.hasTimelineType === 'measurement' && (metadata as MpsServerStateMetadata).hasValueType === 'string_xdr' ||
+      metadata.hasTimelineType === 'state') {
     // State.
     const stateBand = toStateBand(source, metadata as MpsServerStateMetadata, timelineData as MpsServerStatePoint[]);
     return [stateBand];
@@ -86,7 +86,7 @@ export function toRavenBandData(source: RavenSource, graphData: MpsServerGraphDa
  * Returns a list of bands based on timelineData and point legends.
  */
 export function toActivityBands(source: RavenSource, timelineData: MpsServerActivityPoint[]): RavenActivityBand[] {
-  const { legends, maxTime, minTime } = getActivityPointsByLegend(source, timelineData);
+  const { legends, maxTimeRange } = getActivityPointsByLegend(source.id, timelineData);
   const bands: RavenActivityBand[] = [];
 
   // Map each legend to a band.
@@ -102,18 +102,16 @@ export function toActivityBands(source: RavenSource, timelineData: MpsServerActi
       labelColor: [0, 0, 0],
       layout: 1,
       legend,
-      maxTimeRange: {
-        end: maxTime,
-        start: minTime,
-      },
+      maxTimeRange,
       minorLabels: [],
       name: legend,
       parentUniqueId: null,
       points: legends[legend],
       showLabel: true,
       showTooltip: true,
-      sourceId: '',
-      sourceName: '',
+      sourceId: source.id,
+      sourceName: source.name,
+      sourceUrl: source.url,
       trimLabel: true,
       type: 'activity',
     };
@@ -175,7 +173,7 @@ export function toDividerBand(): RavenDividerBand {
  * Returns a resource band given metadata and timelineData.
  */
 export function toResourceBand(source: RavenSource, metadata: MpsServerResourceMetadata, timelineData: MpsServerResourcePoint[]): RavenResourceBand {
-  const { maxTime, minTime, points } = getResourcePoints(source, timelineData);
+  const { maxTimeRange, points } = getResourcePoints(source.id, timelineData);
 
   const resourceBand: RavenResourceBand = {
     autoTickValues: true,
@@ -188,10 +186,7 @@ export function toResourceBand(source: RavenSource, metadata: MpsServerResourceM
     interpolation: 'linear',
     label: metadata.hasObjectName,
     labelColor: [0, 0, 0],
-    maxTimeRange: {
-      end: maxTime,
-      start: minTime,
-    },
+    maxTimeRange,
     minorLabels: [],
     name: metadata.hasObjectName,
     parentUniqueId: null,
@@ -199,8 +194,9 @@ export function toResourceBand(source: RavenSource, metadata: MpsServerResourceM
     rescale: true,
     showIcon: false,
     showTooltip: true,
-    sourceId: '',
-    sourceName: '',
+    sourceId: source.id,
+    sourceName: source.name,
+    sourceUrl: source.url,
     type: 'resource',
   };
 
@@ -211,7 +207,7 @@ export function toResourceBand(source: RavenSource, metadata: MpsServerResourceM
  * Returns a state band given metadata and timelineData.
  */
 export function toStateBand(source: RavenSource, metadata: MpsServerStateMetadata, timelineData: MpsServerStatePoint[]): RavenStateBand {
-  const { maxTime, minTime, points } = getStatePoints(source, timelineData);
+  const { maxTimeRange, points } = getStatePoints(source.id, timelineData);
 
   const stateBand: RavenStateBand = {
     alignLabel: 3,
@@ -221,17 +217,15 @@ export function toStateBand(source: RavenSource, metadata: MpsServerStateMetadat
     id: v4(),
     label: metadata.hasObjectName,
     labelColor: [0, 0, 0],
-    maxTimeRange: {
-      end: maxTime,
-      start: minTime,
-    },
+    maxTimeRange,
     minorLabels: [],
     name: metadata.hasObjectName,
     parentUniqueId: null,
     points,
     showTooltip: true,
-    sourceId: '',
-    sourceName: '',
+    sourceId: source.id,
+    sourceName: source.name,
+    sourceUrl: source.url,
     type: 'state',
   };
 

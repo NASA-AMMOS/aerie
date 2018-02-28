@@ -46,6 +46,7 @@ import {
 import {
   RouterEffects,
   SourceExplorerEffects,
+  TimelineEffects,
 } from './effects';
 
 import {
@@ -71,6 +72,7 @@ export const DECLARATIONS = [
 export const EFFECTS = [
   RouterEffects,
   SourceExplorerEffects,
+  TimelineEffects,
 ];
 
 export const MODULES = [

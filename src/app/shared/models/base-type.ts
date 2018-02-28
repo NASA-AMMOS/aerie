@@ -8,12 +8,14 @@
  */
 
 import {
-  RavenActivityPoint,
-  RavenResourcePoint,
-  RavenStatePoint,
+  StringTMap,
 } from './index';
 
-export type RavenPoint =
-  RavenActivityPoint |
-  RavenResourcePoint |
-  RavenStatePoint;
+export type BaseType =
+  boolean |
+  number |
+  string |
+  boolean[] |
+  number[] |
+  string[] |
+  StringTMap<any>;

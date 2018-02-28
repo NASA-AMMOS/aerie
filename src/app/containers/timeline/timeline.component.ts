@@ -9,6 +9,7 @@
 
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   HostListener,
   OnDestroy,
@@ -56,8 +57,8 @@ export class TimelineComponent implements OnDestroy {
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
-  constructor(private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState>) {
-    this.store.select(fromTimeline.getBands).takeUntil(this.ngUnsubscribe).subscribe(bands => this.bands = bands);
+  constructor(private changeDetector: ChangeDetectorRef, private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState>) {
+    this.store.select(fromTimeline.getBands).takeUntil(this.ngUnsubscribe).subscribe(bands => { this.bands = bands; this.changeDetector.markForCheck(); });
     this.store.select(fromConfig.getItarMessage).takeUntil(this.ngUnsubscribe).subscribe(itarMessage => this.itarMessage = itarMessage);
     this.store.select(fromTimeline.getLabelWidth).takeUntil(this.ngUnsubscribe).subscribe(labelWidth => this.labelWidth = labelWidth);
     this.store.select(fromTimeline.getMaxTimeRange).takeUntil(this.ngUnsubscribe).subscribe(maxTimeRange => this.maxTimeRange = maxTimeRange);
@@ -101,24 +102,24 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
-   * Event. Called when an `update-all-bands` event is fired from the raven-settings component.
-   */
-  onUpdateAllBands(update: RavenSettingsUpdate): void {
-    this.store.dispatch(new timelineActions.SettingsUpdateAllBands(update.prop, update.value));
-  }
-
-  /**
    * Event. Called when an `update-band` event is fired from the raven-settings component.
    */
-  onUpdateBand(update: RavenSettingsUpdate): void {
-    this.store.dispatch(new timelineActions.SettingsUpdateBand(update.bandId, update.prop, update.value));
+  onUpdateBand(e: RavenSettingsUpdate): void {
+    this.store.dispatch(new timelineActions.UpdateBand(e.bandId, e.update));
   }
 
   /**
    * Event. Called when an `update-sub-band` event is fired from the raven-settings component.
    */
-  onUpdateSubBand(update: RavenSettingsUpdate): void {
-    this.store.dispatch(new timelineActions.SettingsUpdateSubBand(update.bandId, update.subBandId, update.prop, update.value));
+  onUpdateSubBand(e: RavenSettingsUpdate): void {
+    this.store.dispatch(new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update));
+  }
+
+  /**
+   * Event. Called when an `update-timeline` event is fired from the raven-settings component.
+   */
+  onUpdateTimeline(e: RavenSettingsUpdate): void {
+    this.store.dispatch(new timelineActions.UpdateTimeline(e.update));
   }
 
   /**

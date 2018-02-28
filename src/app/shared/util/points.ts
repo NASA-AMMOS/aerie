@@ -12,12 +12,14 @@ import { v4 } from 'uuid';
 import {
   MpsServerActivityPoint,
   MpsServerActivityPointMetadata,
+  MpsServerPoint,
   MpsServerResourcePoint,
   MpsServerStatePoint,
+  RavenActivityBand,
   RavenActivityPoint,
   RavenResourcePoint,
-  RavenSource,
   RavenStatePoint,
+  RavenSubBand,
   StringTMap,
 } from './../models';
 
@@ -75,10 +77,58 @@ export function getColorFromActivityMetadata(metadata: MpsServerActivityPointMet
 }
 
 /**
+ * Helper that returns points for a given sub-band type.
+ */
+export function getPointsByType(subBand: RavenSubBand, timelineData: MpsServerPoint[]) {
+  switch (subBand.type) {
+    case 'activity':
+      return getActivityPointsForLegend(subBand.sourceId, timelineData as MpsServerActivityPoint[], (subBand as RavenActivityBand).legend);
+    case 'resource':
+      return getResourcePoints(subBand.sourceId, timelineData as MpsServerResourcePoint[]);
+    case 'state':
+      return getStatePoints(subBand.sourceId, timelineData as MpsServerStatePoint[]);
+    default:
+      return {
+        maxTimeRange: {
+          end: 0,
+          start: 0,
+        },
+        points: [],
+      };
+  }
+}
+
+/**
+ * Gets activity points for a specific legend returned by `getActivityPointsByLegend`.
+ * Also returns the max and min point times.
+ * Returns no points if the given legend is not defined.
+ */
+export function getActivityPointsForLegend(sourceId: string, timelineData: MpsServerPoint[], legend?: string) {
+  const { maxTimeRange, legends } = getActivityPointsByLegend(sourceId, timelineData as MpsServerActivityPoint[]);
+
+  if (legend && legends[legend]) {
+    // TODO: maxTimeRange may be wrong here so fix.
+    return {
+      maxTimeRange,
+      points: legends[legend],
+    };
+  } else {
+    console.error(`points.ts - getActivityPointsForLegend: an incorrect legend was given: ${legend}`);
+    return {
+      maxTimeRange: {
+        end: 0,
+        start: 0,
+      },
+      points: [],
+    };
+  }
+}
+
+/**
  * Transforms MPS Server activity points to Raven activity points bucketed by legend. Also returns the max and min point times.
  * Note that for performance we are only looping through timelineData once.
  */
-export function getActivityPointsByLegend(source: RavenSource, timelineData: MpsServerActivityPoint[]) {
+export function getActivityPointsByLegend(sourceId: string, timelineData: MpsServerActivityPoint[]) {
   const legends: StringTMap<RavenActivityPoint[]> = {};
 
   let maxTime = Number.MIN_SAFE_INTEGER;
@@ -134,7 +184,7 @@ export function getActivityPointsByLegend(source: RavenSource, timelineData: Mps
       id,
       legend,
       metadata,
-      sourceId: source.id,
+      sourceId,
       start,
       startTimestamp,
       uniqueId,
@@ -150,8 +200,10 @@ export function getActivityPointsByLegend(source: RavenSource, timelineData: Mps
 
   return {
     legends,
-    maxTime,
-    minTime,
+    maxTimeRange: {
+      end: maxTime,
+      start: minTime,
+    },
   };
 }
 
@@ -159,7 +211,7 @@ export function getActivityPointsByLegend(source: RavenSource, timelineData: Mps
  * Transforms MPS Server resource points to Raven resource points. Also returns the max and min point times.
  * Note that for performance we are only looping through timelineData once.
  */
-export function getResourcePoints(source: RavenSource, timelineData: MpsServerResourcePoint[]) {
+export function getResourcePoints(sourceId: string, timelineData: MpsServerResourcePoint[]) {
   const points: RavenResourcePoint[] = [];
 
   let maxTime = Number.MIN_SAFE_INTEGER;
@@ -179,7 +231,7 @@ export function getResourcePoints(source: RavenSource, timelineData: MpsServerRe
     points.push({
       duration: null,
       id,
-      sourceId: source.id,
+      sourceId,
       start,
       uniqueId,
       value,
@@ -187,8 +239,10 @@ export function getResourcePoints(source: RavenSource, timelineData: MpsServerRe
   }
 
   return {
-    maxTime,
-    minTime,
+    maxTimeRange: {
+      end: maxTime,
+      start: minTime,
+    },
     points,
   };
 }
@@ -197,7 +251,7 @@ export function getResourcePoints(source: RavenSource, timelineData: MpsServerRe
  * Transforms MPS Server state points to Raven state points. Also returns the max and min point times.
  * Note that for performance we are only looping through timelineData once.
  */
-export function getStatePoints(source: RavenSource, timelineData: MpsServerStatePoint[]) {
+export function getStatePoints(sourceId: string, timelineData: MpsServerStatePoint[]) {
   const points: RavenStatePoint[] = [];
 
   let maxTime = Number.MIN_SAFE_INTEGER;
@@ -227,7 +281,7 @@ export function getStatePoints(source: RavenSource, timelineData: MpsServerState
       end,
       id,
       interpolateEnding: true,
-      sourceId: source.id,
+      sourceId,
       start,
       uniqueId,
       value,
@@ -235,8 +289,10 @@ export function getStatePoints(source: RavenSource, timelineData: MpsServerState
   }
 
   return {
-    maxTime,
-    minTime,
+    maxTimeRange: {
+      end: maxTime,
+      start: minTime,
+    },
     points,
   };
 }

@@ -20,6 +20,7 @@ import {
   SourceExplorerAction,
   SourceExplorerActionTypes,
   SourceExplorerSelect,
+  UpdateSourceExplorer,
 } from './../actions/source-explorer';
 
 import {
@@ -117,6 +118,8 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
       return selectSource(state, action);
     case SourceExplorerActionTypes.SourceExplorerUnpin:
       return updateTreeSource(state, action.source.id, 'pinned', false);
+    case SourceExplorerActionTypes.UpdateSourceExplorer:
+      return updateSourceExplorer(state, action);
     default:
       return state;
   }
@@ -253,6 +256,17 @@ export function updateTreeSource(state: SourceExplorerState, id: string, prop: s
         [prop]: value,
       },
     },
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'UpdateSourceExplorer' action.
+ * This is just a top level reducer for the sourceExplorer state (top level meaning it updates base sourceExplorer state props).
+ */
+export function updateSourceExplorer(state: SourceExplorerState, action: UpdateSourceExplorer): SourceExplorerState {
+  return {
+    ...state,
+    ...action.update,
   };
 }
 

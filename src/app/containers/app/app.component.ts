@@ -9,6 +9,7 @@
 
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   OnDestroy,
 } from '@angular/core';
@@ -20,8 +21,10 @@ import 'rxjs/add/observable/combineLatest';
 import 'rxjs/add/operator/takeUntil';
 
 import * as fromSourceExplorer from './../../reducers/source-explorer';
+import * as fromTimeline from './../../reducers/timeline';
 
 import * as layoutActions from './../../actions/layout';
+import * as timelineActions from './../../actions/timeline';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,27 +36,44 @@ export class AppComponent implements OnDestroy {
   fetchGraphDataRequestPending$: Observable<boolean>;
   fetchInitialSourcesRequestPending$: Observable<boolean>;
   fetchSourcesRequestPending$: Observable<boolean>;
-  loading$: Observable<boolean>;
+  stateLoadPending$: Observable<boolean>;
+
+  loading: boolean;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
-  constructor(private store: Store<fromSourceExplorer.SourceExplorerState>) {
+  constructor(private changeDetector: ChangeDetectorRef, private store: Store<fromSourceExplorer.SourceExplorerState>) {
     this.fetchGraphDataRequestPending$ = this.store.select(fromSourceExplorer.getFetchGraphDataRequestPending).takeUntil(this.ngUnsubscribe);
     this.fetchInitialSourcesRequestPending$ = this.store.select(fromSourceExplorer.getFetchInitialSourcesRequestPending).takeUntil(this.ngUnsubscribe);
     this.fetchSourcesRequestPending$ = this.store.select(fromSourceExplorer.getFetchSourcesRequestPending).takeUntil(this.ngUnsubscribe);
+    this.stateLoadPending$ = this.store.select(fromTimeline.getStateLoadPending).takeUntil(this.ngUnsubscribe);
 
     // Combine fetch pending observables for use in progress bar.
-    this.loading$ = Observable.combineLatest(
+    Observable.combineLatest(
       this.fetchGraphDataRequestPending$,
       this.fetchInitialSourcesRequestPending$,
       this.fetchSourcesRequestPending$,
-      (fetchGraphData, fetchInitialSources, fetchSources) => fetchGraphData || fetchInitialSources || fetchSources,
-    ).takeUntil(this.ngUnsubscribe);
+      this.stateLoadPending$,
+      (fetchGraphData, fetchInitialSources, fetchSources, stateLoadPending) => {
+        return fetchGraphData || fetchInitialSources || fetchSources || stateLoadPending;
+      },
+    ).takeUntil(this.ngUnsubscribe).subscribe(loading => {
+      this.loading = loading;
+      this.changeDetector.markForCheck();
+    });
   }
 
   ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
+  }
+
+  stateLoad() {
+    this.store.dispatch(new timelineActions.StateLoad());
+  }
+
+  stateSave() {
+    this.store.dispatch(new timelineActions.StateSave());
   }
 
   toggleDetailsDrawer() {

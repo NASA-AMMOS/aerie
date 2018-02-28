@@ -9,3 +9,4 @@
 
 export * from './router.effect';
 export * from './source-explorer.effect';
+export * from './timeline.effect';

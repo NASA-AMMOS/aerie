@@ -7,27 +7,12 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
-import { AppState } from './../store';
+import {
+  RavenTimeRange,
+} from './index';
 
-// Action Types.
-export enum RootActionTypes {
-  ResetState           = '[root] reset_state',
-  ResetStateFromObject = '[root] reset_state_from_object',
+export interface RavenSubBandPointData {
+  maxTimeRange: RavenTimeRange;
+  points: any[];
+  subBandId: string;
 }
-
-// Actions.
-export class ResetState implements Action {
-  readonly type = RootActionTypes.ResetState;
-}
-
-export class ResetStateFromObject implements Action {
-  readonly type = RootActionTypes.ResetStateFromObject;
-
-  constructor(public state: AppState) {}
-}
-
-// Union type of all actions.
-export type RootAction =
-  ResetState |
-  ResetStateFromObject;

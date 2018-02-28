@@ -48,10 +48,32 @@
       </mat-icon>
       Toggle Details
     </button>
+
+    <button
+      mat-menu-item
+      (click)="stateSave()">
+      <mat-icon
+        class="mat-24"
+        aria-label="State Save">
+        save
+      </mat-icon>
+      Save State
+    </button>
+
+    <button
+      mat-menu-item
+      (click)="stateLoad()">
+      <mat-icon
+        class="mat-24"
+        aria-label="State Load">
+        file_upload
+      </mat-icon>
+      Load State
+    </button>
   </mat-menu>
 </mat-toolbar>
 
-<div *ngIf="loading$ | async">
+<div *ngIf="loading">
   <mat-progress-bar
     mode="query">
   </mat-progress-bar>

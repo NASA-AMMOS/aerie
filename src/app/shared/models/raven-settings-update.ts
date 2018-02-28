@@ -7,9 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import {
+  BaseType,
+  StringTMap,
+} from './index';
+
 export interface RavenSettingsUpdate {
   bandId: string;
   subBandId: string;
-  prop: string;
-  value: boolean | number | string | boolean[] | number[] | string[];
+  update: StringTMap<BaseType>;
 }

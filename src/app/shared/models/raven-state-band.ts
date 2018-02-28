@@ -28,5 +28,6 @@ export interface RavenStateBand {
   showTooltip: boolean;
   sourceId: string;
   sourceName: string;
+  sourceUrl: string;
   type: string;
 }
