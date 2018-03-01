@@ -56,14 +56,14 @@ export class TimelineEffects {
         return of({});
       }
     })
-    .mergeMap((state: AppState) => {
-      return forkJoin([
+    .mergeMap((state: AppState) =>
+      forkJoin([
         of(state),
         ...this.getPointDataForSubBands(state.timeline.bands),
-      ]);
-    })
-    .mergeMap((data: any[]) => {
-      const [state, ...pointData] = data;
+      ]),
+    )
+    .map(([state, ...pointData]) => ({ state, pointData }))
+    .mergeMap(({ state, pointData }) => {
       const bands = this.updateSubBandsWithPointData(state.timeline.bands, pointData);
 
       return [
