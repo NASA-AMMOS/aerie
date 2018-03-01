@@ -49,6 +49,7 @@ export interface TimelineState {
   overlayMode: boolean;
   selectedBandId: string;
   stateLoadPending: boolean;
+  stateSavePending: boolean;
   viewTimeRange: RavenTimeRange;
 }
 
@@ -60,6 +61,7 @@ export const initialState: TimelineState = {
   overlayMode: false,
   selectedBandId: '',
   stateLoadPending: false,
+  stateSavePending: false,
   viewTimeRange: { end: 0, start: 0 },
 };
 
@@ -79,8 +81,14 @@ export function reducer(state: TimelineState = initialState, action: SourceExplo
       return sortBands(state, action);
     case TimelineActionTypes.StateLoad:
       return { ...state, stateLoadPending: true };
+    case TimelineActionTypes.StateLoadFailure:
     case TimelineActionTypes.StateLoadSuccess:
       return { ...state, stateLoadPending: false };
+    case TimelineActionTypes.StateSave:
+      return { ...state, stateSavePending: true };
+    case TimelineActionTypes.StateSaveFailure:
+    case TimelineActionTypes.StateSaveSuccess:
+      return { ...state, stateSavePending: false };
     case TimelineActionTypes.UpdateBand:
       return updateBand(state, action);
     case TimelineActionTypes.UpdateSubBand:
