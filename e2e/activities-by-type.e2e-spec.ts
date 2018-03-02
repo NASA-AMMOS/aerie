@@ -8,11 +8,6 @@
  */
 
 import {
-  by,
-  element,
-} from 'protractor';
-
-import {
   AppPage,
   clickByIds,
   probe,
@@ -45,7 +40,7 @@ describe('raven2 - activities by type', () => {
   });
 
   it('opening source0 that has 3 legends should draw 3 bands', async () => {
-    bands = await probe(element(by.id('raven-bands-0')), 'bands');
+    bands = await probe(page.bands, 'bands');
     expect(bands.length).toEqual(source0.legendCount);
   });
 
@@ -69,7 +64,7 @@ describe('raven2 - activities by type', () => {
 
   it('opening source1 which has the same legends as source0 should not draw any additional bands', async () => {
     source1.open();
-    bands = await probe(element(by.id('raven-bands-0')), 'bands');
+    bands = await probe(page.bands, 'bands');
     expect(bands.length).toEqual(3);
   });
 
@@ -102,7 +97,7 @@ describe('raven2 - activities by type', () => {
 
   it('after closing source0, 3 bands should still be drawn', async () => {
     source0.close();
-    bands = await probe(element(by.id('raven-bands-0')), 'bands');
+    bands = await probe(page.bands, 'bands');
     expect(bands.length).toEqual(3);
   });
 
@@ -136,10 +131,7 @@ describe('raven2 - activities by type', () => {
   it('after closing source1, no bands should be drawn', async () => {
     source1.close();
 
-    // TODO: This is a hack to see if no bands are drawn.
-    // We should actually get bands data and check it here.
-    expect(element(by.id('get-started-message')).isPresent()).toBeTruthy();
-    expect(element(by.id('raven-timeline')).isPresent()).toBeFalsy();
+    expect(page.timeline0.isPresent()).toBeFalsy();
   });
 
   it('source1 should not point to any bandIds', async () => {

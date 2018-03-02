@@ -689,18 +689,19 @@ const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.I
 
   /**
    * Resizes the Time Axis and View Time Axis based on the labelWidth and parent offsetWidth.
+   * Note: It is very important that the `.timeline-0` class correctly references the parent container.
    *
    * @memberof FalconBand
    */
   _updateTimeAxisXCoordinates() {
-    const falcon = document.querySelector('.timeline');
+    const falcon = document.querySelector('.timeline-0');
     let offsetWidth = 0;
 
     if (falcon) {
       offsetWidth = falcon.parentElement.offsetWidth;
     }
     else {
-      console.warn('falcon-timeline: falcon-band: _updateTimeAxisXCoordinates: falcon is null: ', falcon);
+      console.error('falcon-timeline: falcon-band: _updateTimeAxisXCoordinates: falcon is null: ', falcon);
     }
 
     // Update main band.

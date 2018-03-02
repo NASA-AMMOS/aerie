@@ -26,7 +26,6 @@
         </div>
 
         <div
-          id="get-started-message"
           *ngIf="bands.length === 0"
           class="get-started">
           <mat-card>
@@ -35,9 +34,8 @@
         </div>
 
         <div
-          id="raven-timeline"
           *ngIf="bands.length > 0"
-          class="timeline">
+          class="timeline-0">
           <mat-card>
             <falcon-time-range-selector
               [maxTimeRange]="maxTimeRange"
@@ -57,8 +55,8 @@
             </falcon-time-band>
 
             <raven-bands
+              class="raven-bands-0"
               [bands]="bands"
-              id="raven-bands-0"
               [containerId]="'0'"
               [labelWidth]="labelWidth"
               [maxTimeRange]="maxTimeRange"
@@ -75,10 +73,10 @@
         [visible]="showSouthBandsDrawer$ | async"
         [order]="3"
         size="20">
-        <div class="timeline">
+        <div class="timeline-1">
           <mat-card>
             <raven-bands
-              id="raven-bands-1"
+              class="raven-bands-1"
               [bands]="bands"
               [containerId]="'1'"
               [labelWidth]="labelWidth"

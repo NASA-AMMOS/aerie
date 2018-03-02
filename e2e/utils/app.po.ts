@@ -15,26 +15,31 @@ import {
 } from 'protractor';
 
 export class AppPage {
-  band = element(by.css('.falcon-band'));
-  compositeBand = element(by.tagName('falcon-composite-band'));
-  resourceBand = element(by.tagName('falcon-resource-band'));
-  settingsFill = element(by.id('raven-settings-fill'));
-  settingsHeight = element(by.id('raven-settings-height'));
+  appTile =               element(by.css('.app-title'));
+  bands =                 element(by.css('.raven-bands-0'));
+  band0 =                 element(by.css('.raven-band-0'));
+  band1 =                 element(by.css('.raven-band-1'));
+  band2 =                 element(by.css('.raven-band-2'));
+  timeline0 =             element(by.css('.timeline-0'));
+  timeline1 =             element(by.css('.timeline-1'));
+
+  activityBand =          element(by.tagName('falcon-activity-band'));
+  compositeBand =         element(by.tagName('falcon-composite-band'));
+  resourceBand =          element(by.tagName('falcon-resource-band'));
+  stateBand =             element(by.tagName('falcon-state-band'));
+
+  settingsDeleteBand =    element(by.id('raven-settings-delete-band'));
+  settingsFill =          element(by.id('raven-settings-fill'));
+  settingsHeight =        element(by.id('raven-settings-height'));
   settingsInterpolation = element(by.id('raven-settings-interpolation'));
-  settingsLabel = element(by.id('raven-settings-label'));
-  settingsOverlay = element(by.id('raven-settings-overlay'));
-  settingsRescale = element(by.id('raven-settings-rescale'));
-  settingsResourceBand = element(by.id('raven-settings-resource-band'));
-  settingsSelectedBand = element(by.id('raven-settings-selected-band'));
-  settingsShowIcon = element(by.id('raven-settings-show-icon'));
-  settingsShowTooltip = element(by.id('raven-settings-show-tooltip'));
-  settingsStateBand = element(by.id('raven-settings-state-band'));
+  settingsLabel =         element(by.id('raven-settings-label'));
+  settingsOverlay =       element(by.id('raven-settings-overlay'));
+  settingsRescale =       element(by.id('raven-settings-rescale'));
+  settingsSelectedBand =  element(by.id('raven-settings-selected-band'));
+  settingsShowIcon =      element(by.id('raven-settings-show-icon'));
+  settingsShowTooltip =   element(by.id('raven-settings-show-tooltip'));
 
   navigateTo(): promise.Promise<any> {
     return browser.get('/');
-  }
-
-  getAppTitle(): promise.Promise<string> {
-    return element(by.id('app-title')).getText();
   }
 }
