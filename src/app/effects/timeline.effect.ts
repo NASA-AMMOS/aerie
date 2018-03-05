@@ -48,6 +48,7 @@ export class TimelineEffects {
   stateLoad$: Observable<Action> = this.actions$
     .ofType<timelineActions.StateLoad>(TimelineActionTypes.StateLoad)
     .mergeMap(() => {
+      // TODO: HTTP call to get saved state.
       const serializedState = localStorage.getItem('state');
 
       if (serializedState) {
@@ -83,8 +84,6 @@ export class TimelineEffects {
     .withLatestFrom(this.store$)
     .map(([action, state]) => state)
     .mergeMap((state: AppState) => {
-      const actions: Action[] = [];
-
       const stateToSave: AppState = {
         ...state,
         timeline: {
@@ -102,7 +101,7 @@ export class TimelineEffects {
       // TODO: HTTP call to save.
       localStorage.setItem('state', JSON.stringify(stateToSave));
 
-      return actions;
+      return [];
     });
 
   constructor(
