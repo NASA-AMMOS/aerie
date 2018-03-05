@@ -45,6 +45,9 @@ export function reducer(state: LayoutState = initialState, action: LayoutAction)
       return { ...state, showDetailsDrawer: !state.showDetailsDrawer };
     case LayoutActionTypes.ToggleLeftDrawer:
       return { ...state, showLeftDrawer: !state.showLeftDrawer };
+      case LayoutActionTypes.ToggleDataItemDrawer:
+      console.log('reducer toggleDataItemDrwaer');
+      return { ...state, showDataItemDrawer: !state.showDataItemDrawer };
     case LayoutActionTypes.ToggleSouthBandsDrawer:
       return { ...state, showSouthBandsDrawer: !state.showSouthBandsDrawer };
     default:

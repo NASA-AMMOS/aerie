@@ -56,7 +56,6 @@ export class TimelineComponent implements OnDestroy {
   showDetailsDrawer$: Observable<boolean>;
   showLeftDrawer$: Observable<boolean>;
   showSouthBandsDrawer$: Observable<boolean>;
-  // selectedDataItem$: Observable<RavenDataItem>;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -67,6 +66,7 @@ export class TimelineComponent implements OnDestroy {
     this.store.select(fromTimeline.getMaxTimeRange).takeUntil(this.ngUnsubscribe).subscribe(maxTimeRange => this.maxTimeRange = maxTimeRange);
     this.store.select(fromTimeline.getOverlayMode).takeUntil(this.ngUnsubscribe).subscribe(overlayMode => this.overlayMode = overlayMode);
     this.store.select(fromTimeline.getSelectedBandId).takeUntil(this.ngUnsubscribe).subscribe(selectedBandId => this.selectedBandId = selectedBandId);
+    this.store.select(fromTimeline.getViewTimeRange).takeUntil(this.ngUnsubscribe).subscribe(viewTimeRange => this.viewTimeRange = viewTimeRange);
     this.store.select(fromTimeline.getSelectedDataItem).takeUntil(this.ngUnsubscribe).subscribe(selectedDataItem => this.selectedDataItem = selectedDataItem);
 
     this.store.select(fromLayout.getMode).takeUntil(this.ngUnsubscribe).subscribe(layoutMode => {

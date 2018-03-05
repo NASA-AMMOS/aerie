@@ -66,6 +66,11 @@ export class AppComponent implements OnDestroy {
     dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize.
   }
 
+  toggleDataItemDrawer() {
+    this.store.dispatch(new layoutActions.ToggleDataItemDrawer());
+    dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize.
+  }
+
   toggleSouthBandsDrawer() {
     this.store.dispatch(new layoutActions.ToggleSouthBandsDrawer());
     dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize.
