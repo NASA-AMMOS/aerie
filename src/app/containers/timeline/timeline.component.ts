@@ -33,6 +33,7 @@ import {
   RavenSubBand,
   RavenTimeRange,
   StringTMap,
+  RavenDataItem,
 } from './../../shared/models';
 
 @Component({
@@ -49,10 +50,13 @@ export class TimelineComponent implements OnDestroy {
   overlayMode: boolean;
   selectedBandId: string;
   viewTimeRange: RavenTimeRange;
+  selectedDataItem: RavenDataItem;
 
+  showDataItemDrawer$: Observable<boolean>;
   showDetailsDrawer$: Observable<boolean>;
   showLeftDrawer$: Observable<boolean>;
   showSouthBandsDrawer$: Observable<boolean>;
+  // selectedDataItem$: Observable<RavenDataItem>;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -63,15 +67,16 @@ export class TimelineComponent implements OnDestroy {
     this.store.select(fromTimeline.getMaxTimeRange).takeUntil(this.ngUnsubscribe).subscribe(maxTimeRange => this.maxTimeRange = maxTimeRange);
     this.store.select(fromTimeline.getOverlayMode).takeUntil(this.ngUnsubscribe).subscribe(overlayMode => this.overlayMode = overlayMode);
     this.store.select(fromTimeline.getSelectedBandId).takeUntil(this.ngUnsubscribe).subscribe(selectedBandId => this.selectedBandId = selectedBandId);
-    this.store.select(fromTimeline.getViewTimeRange).takeUntil(this.ngUnsubscribe).subscribe(viewTimeRange => this.viewTimeRange = viewTimeRange);
+    this.store.select(fromTimeline.getSelectedDataItem).takeUntil(this.ngUnsubscribe).subscribe(selectedDataItem => this.selectedDataItem = selectedDataItem);
 
     this.store.select(fromLayout.getMode).takeUntil(this.ngUnsubscribe).subscribe(layoutMode => {
       dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize anytime our mode changes.
     });
-
+    this.showDataItemDrawer$ = this.store.select(fromLayout.getShowDataItemDrawer).takeUntil(this.ngUnsubscribe);
     this.showDetailsDrawer$ = this.store.select(fromLayout.getShowDetailsDrawer).takeUntil(this.ngUnsubscribe);
     this.showLeftDrawer$ = this.store.select(fromLayout.getShowLeftDrawer).takeUntil(this.ngUnsubscribe);
     this.showSouthBandsDrawer$ = this.store.select(fromLayout.getShowSouthBandsDrawer).takeUntil(this.ngUnsubscribe);
+    // this.selectedDataItem$ = this.store.select(fromTimeline.getSelectedDataItem).takeUntil(this.ngUnsubscribe);
   }
 
   ngOnDestroy() {

@@ -40,3 +40,5 @@ export * from './raven-state-band';
 export * from './raven-state-point';
 export * from './raven-sub-band';
 export * from './raven-time-range';
+export * from './raven-data-item';
+

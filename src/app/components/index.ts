@@ -8,5 +8,6 @@
  */
 
 export * from './bands/bands.component';
+export * from './raven-data-item/raven-data-item.component';
 export * from './raven-settings/raven-settings.component';
 export * from './raven-tree/raven-tree.component';

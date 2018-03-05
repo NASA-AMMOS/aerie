@@ -9,3 +9,4 @@
 
 export * from './has-keys.pipe';
 export * from './key-by.pipe';
+export * from './key-value.pipe';

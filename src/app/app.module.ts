@@ -39,6 +39,7 @@ import {
 
 import {
   BandsComponent,
+  RavenDataItemComponent,
   RavenSettingsComponent,
   RavenTreeComponent,
 } from './components';
@@ -55,6 +56,7 @@ import {
 import {
   HasKeysPipe,
   KeyByPipe,
+  KeyValuePipe,
 } from './pipes';
 
 export const DECLARATIONS = [
@@ -62,8 +64,10 @@ export const DECLARATIONS = [
   BandsComponent,
   HasKeysPipe,
   KeyByPipe,
+  KeyValuePipe,
   RavenSettingsComponent,
   RavenTreeComponent,
+  RavenDataItemComponent,
   SourceExplorerComponent,
   TimelineComponent,
 ];

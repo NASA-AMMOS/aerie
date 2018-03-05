@@ -38,6 +38,7 @@ import {
 import {
   RavenActivityBand,
   RavenCompositeBand,
+  RavenDataItem,
   RavenTimeRange,
 } from './../shared/models';
 
@@ -49,7 +50,18 @@ export interface TimelineState {
   overlayMode: boolean;
   selectedBandId: string;
   viewTimeRange: RavenTimeRange;
+  selectedDataItem: RavenDataItem;
 }
+
+const defaultDataItem: RavenDataItem  = {
+  activityName: 'Act1',
+  activityType: 'Act',
+  duration: '',
+  endTime: '2018-143T12:00:00.000',
+  id: '__1234',
+  startTime: '2018-100T12:00:00.000',
+  value: '',
+};
 
 // Timeline Initial State.
 export const initialState: TimelineState = {
@@ -58,6 +70,7 @@ export const initialState: TimelineState = {
   maxTimeRange: { end: 0, start: 0 },
   overlayMode: false,
   selectedBandId: '',
+  selectedDataItem: defaultDataItem,
   viewTimeRange: { end: 0, start: 0 },
 };
 
@@ -279,3 +292,4 @@ export const getMaxTimeRange = createSelector(getTimelineState, (state: Timeline
 export const getOverlayMode = createSelector(getTimelineState, (state: TimelineState) => state.overlayMode);
 export const getSelectedBandId = createSelector(getTimelineState, (state: TimelineState) => state.selectedBandId);
 export const getViewTimeRange = createSelector(getTimelineState, (state: TimelineState) => state.viewTimeRange);
+export const getSelectedDataItem = createSelector(getTimelineState, (state: TimelineState) => state.selectedDataItem);

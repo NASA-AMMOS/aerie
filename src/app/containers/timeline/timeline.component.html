@@ -10,7 +10,7 @@
 
   <split-area
     [order]="1"
-    size="75">
+    size="60">
     <split
       direction="vertical"
       (dragEnd)="onDragEnd()">
@@ -113,4 +113,13 @@
       </split-area>
     </split>
   </split-area>
+  <split-area
+    [visible]="showDataItemDrawer$ | async"
+    [order]="5"
+    size="15">
+    <raven-data-item
+      [dataItem]="selectedDataItem">
+    </raven-data-item>
+  </split-area>
+
 </split>
