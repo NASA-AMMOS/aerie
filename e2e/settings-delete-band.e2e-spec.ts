@@ -39,17 +39,40 @@ describe('raven2 - settings - delete band', () => {
     source2.open();
   });
 
-  it('should initially have 3 bands drawn', async () => {
+  it('should initially have 3 bands drawn with the correct sources opened', async () => {
     bands = await probe(page.bands, 'bands');
+
     expect(bands.length).toEqual(3);
+    expect(source0.getProp('opened')).toBe(true);
+    expect(source1.getProp('opened')).toBe(true);
+    expect(source2.getProp('opened')).toBe(true);
   });
 
-  it('should properly delete the 3rd band', async () => {
+  it('should properly delete the 3rd band and close the corresponding source', async () => {
     page.band2.click();
     page.settingsDeleteBand.click();
 
     bands = await probe(page.bands, 'bands');
+
     expect(bands.length).toEqual(2);
-    // TODO: Expect source2 to be closed.
+    expect(source0.getProp('opened')).toBe(true);
+    expect(source1.getProp('opened')).toBe(true);
+    expect(source2.getProp('opened')).toBe(false);
+  });
+
+  it('should properly delete an overlay band and close the corresponding source', async () => {
+    page.band1.click();
+    page.settingsOverlay.click();
+    source2.open();
+    page.settingsDeleteBand.click();
+
+    bands = await probe(page.bands, 'bands');
+
+    expect(bands.length).toEqual(2);
+    expect(bands[0].subBands.length).toEqual(1);
+    expect(bands[1].subBands.length).toEqual(1);
+    expect(source0.getProp('opened')).toBe(true);
+    expect(source1.getProp('opened')).toBe(false);
+    expect(source2.getProp('opened')).toBe(true);
   });
 });
