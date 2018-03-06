@@ -12,6 +12,7 @@
     "lint": "ng lint",
     "ng": "ng",
     "postinstall": "bower install",
+    "sonarqube": "sonar-scanner",
     "start": "ng serve",
     "test": "ng test",
     "test-for-build": "ng test --single-run --browsers FirefoxHeadless"
@@ -72,6 +73,8 @@
     "karma-junit-reporter": "^1.2.0",
     "ngrx-store-freeze": "^0.2.1",
     "protractor": "~5.3.0",
+    "sonar-scanner": "^3.0.3",
+    "sonarjs": "^1.0.0",
     "ts-node": "~3.2.0",
     "tslint": "~5.7.0",
     "typescript": "~2.4.2"
