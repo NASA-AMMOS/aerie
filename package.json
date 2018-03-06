@@ -14,7 +14,8 @@
     "postinstall": "bower install",
     "start": "ng serve",
     "test": "ng test",
-    "test-for-build": "ng test --single-run --browsers FirefoxHeadless"
+    "test-for-build": "ng test --single-run --browsers FirefoxHeadless",
+    "sonarqube": "sonar-scanner"
   },
   "private": true,
   "dependencies": {
@@ -43,6 +44,8 @@
     "lodash": "^4.17.5",
     "material-design-icons": "^3.0.1",
     "rxjs": "^5.5.6",
+    "sonar-scanner": "^3.0.3",
+    "sonarjs": "^1.0.0",
     "sortablejs": "^1.7.0",
     "uuid": "^3.2.1",
     "web-animations-js": "^2.3.1",
