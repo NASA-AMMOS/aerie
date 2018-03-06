@@ -12,10 +12,10 @@
     "lint": "ng lint",
     "ng": "ng",
     "postinstall": "bower install",
+    "sonarqube": "sonar-scanner",
     "start": "ng serve",
     "test": "ng test",
-    "test-for-build": "ng test --single-run --browsers FirefoxHeadless",
-    "sonarqube": "sonar-scanner"
+    "test-for-build": "ng test --single-run --browsers FirefoxHeadless"
   },
   "private": true,
   "dependencies": {
