@@ -19,7 +19,8 @@ pipeline {
 						export LD_LIBRARY_PATH=/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib
 						export FIREFOX_BIN=/home/seqbamboo/build_dependencies/firefox-58.0.2/firefox
 						export REPO_REV_SHORT=`git rev-parse --short HEAD`
-						export SEQBASETAG="$BRANCH_NAME-B$BUILD_NUMBER-R$REPO_REV_SHORT"
+						# replace forward slashes in branch name to prevent problems
+						export SEQBASETAG="${BRANCH_NAME//\\//_}-B$BUILD_NUMBER-R$REPO_REV_SHORT"
 
 						# setup nvm/node
 						export NVM_DIR="$HOME/.nvm"
