@@ -67,6 +67,7 @@ pipeline {
         }
       }
     }
+
 		stage ('publish') {
 			steps {
 				echo "Archiving artifacts in Jenkins..."
