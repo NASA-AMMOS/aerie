@@ -57,6 +57,12 @@ pipeline {
 			}
 		}
 
+    stage ('publish') {
+      steps {
+        echo "Starting Static Code Analysis"
+        sh "npm run sonarqube"
+      }
+    }
 		stage ('publish') {
 			steps {
 				echo "Archiving artifacts in Jenkins..."
