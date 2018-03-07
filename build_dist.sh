@@ -14,6 +14,9 @@ rm -rf dist
 # install dependencies
 npm install
 
+# static code analysis
+npm run sonarqube
+
 # build
 npm run build-prod-mpsserver
 
