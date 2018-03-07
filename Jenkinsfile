@@ -57,10 +57,14 @@ pipeline {
 			}
 		}
 
-    stage ('publish') {
+    stage ('analyze') {
       steps {
-        echo "Starting Static Code Analysis"
-        sh "npm run sonarqube"
+        script {
+          if [[ $BRANCH_NAME == release* ] || [$BRANCH_NAME == develop] || [$BRANCH_NAME == master]]; then
+            echo "Starting Static Code Analysis"
+            npm run sonarqube
+          fi
+        }
       }
     }
 		stage ('publish') {
