@@ -60,10 +60,10 @@ pipeline {
     stage ('analyze') {
       steps {
         script {
-          if [[ $BRANCH_NAME == release* ] || [$BRANCH_NAME == develop] || [$BRANCH_NAME == master]]; then
+          if(env.BRANCH_NAME == 'release*' || env.BRANCH_NAME == 'develop' || env.BRANCH_NAME == 'master') {
             echo "Starting Static Code Analysis"
-            npm run sonarqube
-          fi
+            sh 'npm run sonarqube'
+          }
         }
       }
     }
