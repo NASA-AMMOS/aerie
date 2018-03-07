@@ -65,7 +65,7 @@ pipeline {
 					# don't echo commands by default
 					set +x
 
-					#if [[ $BRANCH_NAME == 'develop' || $BRANCH_NAME == release* ]]; then
+					if [[ $BRANCH_NAME == 'develop' || $BRANCH_NAME == release* ]]; then
 						echo "Anaylsis branch detected. Performing code analysis..."
 
 						# setup nvm/node
@@ -81,9 +81,9 @@ pipeline {
 
 						# run sonarqube analysis
 						npm run sonarqube
-					#else
-					#	echo "Skipping analysis."
-					#fi
+					else
+						echo "Skipping analysis."
+					fi
 				'''
 				if (statusCode > 0) {
 					error "Analysis failure detected. See log."
