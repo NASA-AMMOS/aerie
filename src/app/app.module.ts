@@ -44,9 +44,9 @@ import {
 } from './components';
 
 import {
+  DisplayEffects,
   RouterEffects,
   SourceExplorerEffects,
-  TimelineEffects,
 } from './effects';
 
 import {
@@ -70,9 +70,9 @@ export const DECLARATIONS = [
 ];
 
 export const EFFECTS = [
+  DisplayEffects,
   RouterEffects,
   SourceExplorerEffects,
-  TimelineEffects,
 ];
 
 export const MODULES = [

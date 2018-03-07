@@ -24,8 +24,9 @@ import 'rxjs/add/operator/withLatestFrom';
 
 import { AppState } from './../../app/store';
 
-import { TimelineActionTypes } from './../actions/timeline';
+import { DisplayActionTypes } from './../actions/display';
 
+import * as displayActions from './../actions/display';
 import * as sourceExplorerActions from './../actions/source-explorer';
 import * as timelineActions from './../actions/timeline';
 
@@ -43,10 +44,10 @@ import {
 } from './../shared/util';
 
 @Injectable()
-export class TimelineEffects {
+export class DisplayEffects {
   @Effect()
   stateLoad$: Observable<Action> = this.actions$
-    .ofType<timelineActions.StateLoad>(TimelineActionTypes.StateLoad)
+    .ofType<displayActions.StateLoad>(DisplayActionTypes.StateLoad)
     .mergeMap(() => {
       // TODO: HTTP call to get saved state.
       const serializedState = localStorage.getItem('state');
@@ -74,13 +75,13 @@ export class TimelineEffects {
           ...updateTimeRanges({ end: 0, start: 0 }, bands),
         }),
         new sourceExplorerActions.UpdateSourceExplorer({ ...state.sourceExplorer }),
-        new timelineActions.StateLoadSuccess(),
+        new displayActions.StateLoadSuccess(),
       ];
     });
 
   @Effect({ dispatch: false })
   stateSave$: Observable<Action> = this.actions$
-    .ofType<timelineActions.StateSave>(TimelineActionTypes.StateSave)
+    .ofType<displayActions.StateSave>(DisplayActionTypes.StateSave)
     .withLatestFrom(this.store$)
     .map(([action, state]) => state)
     .mergeMap((state: AppState) => {
@@ -125,7 +126,7 @@ export class TimelineEffects {
               subBandId: subBand.id,
             }))
             .catch((e) => {
-              console.error(`TimelineEffects - getPointDataForSubBands - failure to GET ${subBand.sourceUrl}: `, e);
+              console.error(`DisplayEffects - getPointDataForSubBands - failure to GET ${subBand.sourceUrl}: `, e);
               return of(null);
             }),
         );

@@ -24,6 +24,7 @@ import 'rxjs/add/operator/takeUntil';
 import * as fromSourceExplorer from './../../reducers/source-explorer';
 import * as fromTimeline from './../../reducers/timeline';
 
+import * as displayActions from './../../actions/display';
 import * as sourceExplorerActions from './../../actions/source-explorer';
 
 import {
@@ -65,6 +66,24 @@ export class SourceExplorerComponent implements OnDestroy {
   ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
+  }
+
+  /**
+   * Event. Called when an `action` event is fired from the raven-tree.
+   *
+   * TODO: Remove any.
+   */
+  onAction(e: any): void {
+    switch (e.event) {
+      case 'state-load':
+        this.store.dispatch(new displayActions.StateLoad());
+        break;
+      case 'state-save':
+        this.store.dispatch(new displayActions.StateSave());
+        break;
+      default:
+        break;
+    }
   }
 
   /**

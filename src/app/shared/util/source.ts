@@ -86,6 +86,16 @@ export function fromCategory(mSource: MpsServerSourceCategory, rSource: RavenSou
 export function fromDir(isServer: boolean, mSource: MpsServerSourceDir, rSource: RavenSource): RavenSource {
   return {
     ...rSource,
+    actions: [
+      {
+        event: 'state-load',
+        name: 'Load State',
+      },
+      {
+        event: 'state-save',
+        name: 'Save State',
+      },
+    ],
     dbType: mSource.__db_type,
     icon: isServer ? 'fa fa-database' : 'fa fa-folder',
     permissions: mSource.permissions,

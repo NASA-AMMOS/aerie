@@ -20,11 +20,10 @@ import { Subject } from 'rxjs/Subject';
 import 'rxjs/add/observable/combineLatest';
 import 'rxjs/add/operator/takeUntil';
 
+import * as fromDisplay from './../../reducers/display';
 import * as fromSourceExplorer from './../../reducers/source-explorer';
-import * as fromTimeline from './../../reducers/timeline';
 
 import * as layoutActions from './../../actions/layout';
-import * as timelineActions from './../../actions/timeline';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,7 +45,7 @@ export class AppComponent implements OnDestroy {
     this.fetchGraphDataRequestPending$ = this.store.select(fromSourceExplorer.getFetchGraphDataRequestPending).takeUntil(this.ngUnsubscribe);
     this.fetchInitialSourcesRequestPending$ = this.store.select(fromSourceExplorer.getFetchInitialSourcesRequestPending).takeUntil(this.ngUnsubscribe);
     this.fetchSourcesRequestPending$ = this.store.select(fromSourceExplorer.getFetchSourcesRequestPending).takeUntil(this.ngUnsubscribe);
-    this.stateLoadPending$ = this.store.select(fromTimeline.getStateLoadPending).takeUntil(this.ngUnsubscribe);
+    this.stateLoadPending$ = this.store.select(fromDisplay.getStateLoadPending).takeUntil(this.ngUnsubscribe);
 
     // Combine fetch pending observables for use in progress bar.
     Observable.combineLatest(
@@ -66,14 +65,6 @@ export class AppComponent implements OnDestroy {
   ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
-  }
-
-  stateLoad() {
-    this.store.dispatch(new timelineActions.StateLoad());
-  }
-
-  stateSave() {
-    this.store.dispatch(new timelineActions.StateSave());
   }
 
   toggleDetailsDrawer() {

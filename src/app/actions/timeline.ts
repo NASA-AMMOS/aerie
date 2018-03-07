@@ -18,57 +18,15 @@ import {
 
 // Action Types.
 export enum TimelineActionTypes {
-  SelectBand             = '[timeline] select_band',
-  SortBands              = '[timeline] sort_bands',
-  StateLoad              = '[timeline] state_load',
-  StateLoadFailure       = '[timeline] state_load_failure',
-  StateLoadSuccess       = '[timeline] state_load_success',
-  StateSave              = '[timeline] state_save',
-  StateSaveFailure       = '[timeline] state_save_failure',
-  StateSaveSuccess       = '[timeline] state_save_success',
-  UpdateBand             = '[timeline] update_band',
-  UpdateSubBand          = '[timeline] update_sub_band',
-  UpdateTimeline         = '[timeline] update_timeline',
-  UpdateViewTimeRange    = '[timeline] update_view_time_range',
+  SelectBand          = '[timeline] select_band',
+  SortBands           = '[timeline] sort_bands',
+  UpdateBand          = '[timeline] update_band',
+  UpdateSubBand       = '[timeline] update_sub_band',
+  UpdateTimeline      = '[timeline] update_timeline',
+  UpdateViewTimeRange = '[timeline] update_view_time_range',
 }
 
 // Actions.
-export class StateLoad implements Action {
-  readonly type = TimelineActionTypes.StateLoad;
-
-  constructor() {}
-}
-
-export class StateLoadFailure implements Action {
-  readonly type = TimelineActionTypes.StateLoadFailure;
-
-  constructor() {}
-}
-
-export class StateLoadSuccess implements Action {
-  readonly type = TimelineActionTypes.StateLoadSuccess;
-
-  constructor() {}
-}
-
-export class StateSave implements Action {
-  readonly type = TimelineActionTypes.StateSave;
-
-  constructor() {}
-}
-
-export class StateSaveFailure implements Action {
-  readonly type = TimelineActionTypes.StateSaveFailure;
-
-  constructor() {}
-}
-
-export class StateSaveSuccess implements Action {
-  readonly type = TimelineActionTypes.StateSaveSuccess;
-
-  constructor() {}
-}
-
 export class SelectBand implements Action {
   readonly type = TimelineActionTypes.SelectBand;
 
@@ -108,12 +66,6 @@ export class UpdateViewTimeRange implements Action {
 // Union type of all actions.
 export type TimelineAction =
   SelectBand |
-  StateLoad |
-  StateLoadFailure |
-  StateLoadSuccess |
-  StateSave |
-  StateSaveFailure |
-  StateSaveSuccess |
   SortBands |
   UpdateBand |
   UpdateSubBand |

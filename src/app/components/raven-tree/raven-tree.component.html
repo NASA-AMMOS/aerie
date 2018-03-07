@@ -45,7 +45,9 @@
     #actionsMenu="matMenu"
     [overlapTrigger]="false"
     y-position="below">
-    <button mat-menu-item>Pin</button>
+    <ng-container *ngFor="let a of tree[id].actions">
+      <button mat-menu-item (click)="action.emit({ event: a.event, sourceUrl: tree[id].url })">{{a.name}}</button>
+    </ng-container>
   </mat-menu>
 </div>
 
@@ -55,6 +57,7 @@
       [class]="tree[childId].name"
       [id]="childId"
       [tree]="tree"
+      (action)="action.emit($event)"
       (close)="close.emit($event)"
       (collapse)="collapse.emit($event)"
       (expand)="expand.emit($event)"

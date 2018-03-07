@@ -48,8 +48,6 @@ export interface TimelineState {
   maxTimeRange: RavenTimeRange;
   overlayMode: boolean;
   selectedBandId: string;
-  stateLoadPending: boolean;
-  stateSavePending: boolean;
   viewTimeRange: RavenTimeRange;
 }
 
@@ -60,8 +58,6 @@ export const initialState: TimelineState = {
   maxTimeRange: { end: 0, start: 0 },
   overlayMode: false,
   selectedBandId: '',
-  stateLoadPending: false,
-  stateSavePending: false,
   viewTimeRange: { end: 0, start: 0 },
 };
 
@@ -79,16 +75,6 @@ export function reducer(state: TimelineState = initialState, action: SourceExplo
       return selectBand(state, action);
     case TimelineActionTypes.SortBands:
       return sortBands(state, action);
-    case TimelineActionTypes.StateLoad:
-      return { ...state, stateLoadPending: true };
-    case TimelineActionTypes.StateLoadFailure:
-    case TimelineActionTypes.StateLoadSuccess:
-      return { ...state, stateLoadPending: false };
-    case TimelineActionTypes.StateSave:
-      return { ...state, stateSavePending: true };
-    case TimelineActionTypes.StateSaveFailure:
-    case TimelineActionTypes.StateSaveSuccess:
-      return { ...state, stateSavePending: false };
     case TimelineActionTypes.UpdateBand:
       return updateBand(state, action);
     case TimelineActionTypes.UpdateSubBand:
@@ -284,5 +270,4 @@ export const getLabelWidth = createSelector(getTimelineState, (state: TimelineSt
 export const getMaxTimeRange = createSelector(getTimelineState, (state: TimelineState) => state.maxTimeRange);
 export const getOverlayMode = createSelector(getTimelineState, (state: TimelineState) => state.overlayMode);
 export const getSelectedBandId = createSelector(getTimelineState, (state: TimelineState) => state.selectedBandId);
-export const getStateLoadPending = createSelector(getTimelineState, (state: TimelineState) => state.stateLoadPending);
 export const getViewTimeRange = createSelector(getTimelineState, (state: TimelineState) => state.viewTimeRange);

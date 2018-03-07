@@ -25,12 +25,6 @@ import {
 import {
   SelectBand,
   SortBands,
-  StateLoad,
-  StateLoadFailure,
-  StateLoadSuccess,
-  StateSave,
-  StateSaveFailure,
-  StateSaveSuccess,
   UpdateBand,
   UpdateSubBand,
   UpdateTimeline,
@@ -204,60 +198,6 @@ describe('timeline reducer', () => {
           sortOrder: 0,
         },
       ],
-    });
-  });
-
-  it('handle StateLoad', () => {
-    timelineState = reducer(timelineState, new StateLoad());
-
-    expect(timelineState).toEqual({
-      ...timelineState,
-      stateLoadPending: true,
-    });
-  });
-
-  it('handle StateLoadFailure', () => {
-    timelineState = reducer(timelineState, new StateLoadFailure());
-
-    expect(timelineState).toEqual({
-      ...timelineState,
-      stateLoadPending: false,
-    });
-  });
-
-  it('handle StateLoadSuccess', () => {
-    timelineState = reducer(timelineState, new StateLoadSuccess());
-
-    expect(timelineState).toEqual({
-      ...timelineState,
-      stateLoadPending: false,
-    });
-  });
-
-  it('handle StateSave', () => {
-    timelineState = reducer(timelineState, new StateSave());
-
-    expect(timelineState).toEqual({
-      ...timelineState,
-      stateSavePending: true,
-    });
-  });
-
-  it('handle StateSaveFailure', () => {
-    timelineState = reducer(timelineState, new StateSaveFailure());
-
-    expect(timelineState).toEqual({
-      ...timelineState,
-      stateSavePending: false,
-    });
-  });
-
-  it('handle StateSaveSuccess', () => {
-    timelineState = reducer(timelineState, new StateSaveSuccess());
-
-    expect(timelineState).toEqual({
-      ...timelineState,
-      stateSavePending: false,
     });
   });
 
