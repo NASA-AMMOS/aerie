@@ -39,7 +39,7 @@ import {
 } from './../shared/models';
 
 import {
-  getPointsByType,
+  getPointsBySubBandType,
   updateTimeRanges,
 } from './../shared/util';
 
@@ -53,7 +53,7 @@ export class DisplayEffects {
       const serializedState = localStorage.getItem('state');
 
       if (serializedState) {
-        return of(JSON.parse(serializedState));
+        return of(JSON.parse(serializedState).state);
       } else {
         return of({});
       }
@@ -85,17 +85,19 @@ export class DisplayEffects {
     .withLatestFrom(this.store$)
     .map(([action, state]) => state)
     .mergeMap((state: AppState) => {
-      const stateToSave: AppState = {
-        ...state,
-        timeline: {
-          ...state.timeline,
-          bands: state.timeline.bands.map(band => ({
-            ...band,
-            subBands: band.subBands.map(subBand => ({
-              ...subBand,
-              points: [],
+      const stateToSave = {
+        state: {
+          ...state,
+          timeline: {
+            ...state.timeline,
+            bands: state.timeline.bands.map(band => ({
+              ...band,
+              subBands: band.subBands.map(subBand => ({
+                ...subBand,
+                points: [],
+              })),
             })),
-          })),
+          },
         },
       };
 
@@ -122,7 +124,7 @@ export class DisplayEffects {
         pointData.push(
           this.http.get<MpsServerGraphData>(subBand.sourceUrl)
             .map((graphData: MpsServerGraphData) => ({
-              ...getPointsByType(subBand, graphData['Timeline Data']),
+              ...getPointsBySubBandType(subBand, graphData['Timeline Data']),
               subBandId: subBand.id,
             }))
             .catch((e) => {

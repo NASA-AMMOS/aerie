@@ -79,10 +79,14 @@ export function getColorFromActivityMetadata(metadata: MpsServerActivityPointMet
 /**
  * Helper that returns points for a given sub-band type.
  */
-export function getPointsByType(subBand: RavenSubBand, timelineData: MpsServerPoint[]) {
+export function getPointsBySubBandType(subBand: RavenSubBand, timelineData: MpsServerPoint[]) {
   switch (subBand.type) {
     case 'activity':
-      return getActivityPointsForLegend(subBand.sourceId, timelineData as MpsServerActivityPoint[], (subBand as RavenActivityBand).legend);
+      const { legends, maxTimeRange } = getActivityPointsByLegend(subBand.sourceId, timelineData as MpsServerActivityPoint[]);
+      return {
+        maxTimeRange,
+        points: legends[(subBand as RavenActivityBand).legend],
+      };
     case 'resource':
       return getResourcePoints(subBand.sourceId, timelineData as MpsServerResourcePoint[]);
     case 'state':
@@ -99,33 +103,64 @@ export function getPointsByType(subBand: RavenSubBand, timelineData: MpsServerPo
 }
 
 /**
- * Gets activity points for a specific legend returned by `getActivityPointsByLegend`.
- * Also returns the max and min point times.
- * Returns no points if the given legend is not defined.
+ * Transforms an MpsServerActivityPoint to a RavenActivityPoint.
  */
-export function getActivityPointsForLegend(sourceId: string, timelineData: MpsServerPoint[], legend?: string) {
-  const { maxTimeRange, legends } = getActivityPointsByLegend(sourceId, timelineData as MpsServerActivityPoint[]);
+export function getActivityPoint(sourceId: string, data: MpsServerActivityPoint): RavenActivityPoint {
+  const activityId = data['Activity ID'];
+  const activityName = data['Activity Name'];
+  const activityParameters = data['Activity Parameters'];
+  const activityType = data['Activity Type'];
+  const ancestors = data.ancestors;
+  const childrenUrl = data.childrenUrl;
+  const color = getColorFromActivityMetadata(data.Metadata);
+  const descendantsUrl = data.descendantsUrl;
+  const endTimestamp = data['Tend Assigned'];
+  const id = data.__document_id;
+  const metadata = data.Metadata;
+  const startTimestamp = data['Tstart Assigned'];
+  const uniqueId = v4();
 
-  if (legend && legends[legend]) {
-    // TODO: maxTimeRange may be wrong here so fix.
-    return {
-      maxTimeRange,
-      points: legends[legend],
-    };
-  } else {
-    console.error(`points.ts - getActivityPointsForLegend: an incorrect legend was given: ${legend}`);
-    return {
-      maxTimeRange: {
-        end: 0,
-        start: 0,
-      },
-      points: [],
-    };
+  const start = utc(startTimestamp);
+  const end = utc(endTimestamp);
+  const duration = end - start;
+
+  let legend = '';
+  if (data.Metadata) {
+    for (let j = 0, ll = data.Metadata.length; j < ll; ++j) {
+      const d = data.Metadata[j];
+
+      if (d.Name === 'legend') {
+        legend = d.Value;
+      }
+    }
   }
+
+  const point: RavenActivityPoint = {
+    activityId,
+    activityName,
+    activityParameters,
+    activityType,
+    ancestors,
+    childrenUrl,
+    color,
+    descendantsUrl,
+    duration,
+    end,
+    endTimestamp,
+    id,
+    legend,
+    metadata,
+    sourceId,
+    start,
+    startTimestamp,
+    uniqueId,
+  };
+
+  return point;
 }
 
 /**
- * Transforms MPS Server activity points to Raven activity points bucketed by legend. Also returns the max and min point times.
+ * Transforms MPS Server activity points of a given type to Raven activity points bucketed by legend. Also returns the max and min point times.
  * Note that for performance we are only looping through timelineData once.
  */
 export function getActivityPointsByLegend(sourceId: string, timelineData: MpsServerActivityPoint[]) {
@@ -136,65 +171,16 @@ export function getActivityPointsByLegend(sourceId: string, timelineData: MpsSer
 
   for (let i = 0, l = timelineData.length; i < l; ++i) {
     const data: MpsServerActivityPoint = timelineData[i];
+    const point: RavenActivityPoint = getActivityPoint(sourceId, data);
 
-    const activityId = data['Activity ID'];
-    const activityName = data['Activity Name'];
-    const activityParameters = data['Activity Parameters'];
-    const activityType = data['Activity Type'];
-    const ancestors = data.ancestors;
-    const childrenUrl = data.childrenUrl;
-    const color = getColorFromActivityMetadata(data.Metadata);
-    const descendantsUrl = data.descendantsUrl;
-    const endTimestamp = data['Tend Assigned'];
-    const id = data.__document_id;
-    const metadata = data.Metadata;
-    const startTimestamp = data['Tstart Assigned'];
-    const uniqueId = v4();
-
-    const start = utc(startTimestamp);
-    const end = utc(endTimestamp);
-    const duration = end - start;
-
-    let legend = '';
-    if (data.Metadata) {
-      for (let j = 0, ll = data.Metadata.length; j < ll; ++j) {
-        const d = data.Metadata[j];
-
-        if (d.Name === 'legend') {
-          legend = d.Value;
-        }
-      }
-    }
-
-    if (start < minTime) { minTime = start; }
-    if (end > maxTime) { maxTime = end; }
-
-    const point: RavenActivityPoint = {
-      activityId,
-      activityName,
-      activityParameters,
-      activityType,
-      ancestors,
-      childrenUrl,
-      color,
-      descendantsUrl,
-      duration,
-      end,
-      endTimestamp,
-      id,
-      legend,
-      metadata,
-      sourceId,
-      start,
-      startTimestamp,
-      uniqueId,
-    };
+    if (point.start < minTime) { minTime = point.start; }
+    if (point.end > maxTime) { maxTime = point.end; }
 
     // Group points by legend manually so we don't have to loop through timelineData twice.
-    if (legends[legend]) {
-      legends[legend].push(point);
+    if (legends[point.legend]) {
+      legends[point.legend].push(point);
     } else {
-      legends[legend] = [point];
+      legends[point.legend] = [point];
     }
   }
 
