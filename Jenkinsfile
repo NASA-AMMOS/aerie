@@ -62,6 +62,9 @@ pipeline {
 			script {
 				def statusCode = sh returnStatus: true, script:
 				'''
+					# don't echo commands by default
+					set +x
+
 					if [[ $BRANCH_NAME == 'develop' || $BRANCH_NAME == release* ]]; then
 						echo "Anaylsis branch detected. Performing code analysis..."
 
