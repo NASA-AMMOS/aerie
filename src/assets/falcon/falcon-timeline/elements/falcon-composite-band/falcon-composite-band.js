@@ -97,7 +97,6 @@ class FalconCompositeBand extends FalconBand(Polymer.Element) {
     if (!this._nodeObserver) {
       this._nodeObserver = Polymer.dom(this).observeNodes((nodes) => {
         this._processNewNodes(nodes.addedNodes);
-        this._processRemovedNodes(nodes.removedNodes);
       });
     }
   }
@@ -139,17 +138,6 @@ class FalconCompositeBand extends FalconBand(Polymer.Element) {
           break;
       }
     }
-  }
-
-  /**
-   * Non-Prop Observer. Called when new child nodes are removed to this component.
-   *
-   * @param {any} removedNodes
-   *
-   * @memberof FalconCompositeBand
-   */
-  _processRemovedNodes(/* removedNodes */) {
-    // TODO.
   }
 
   /**
