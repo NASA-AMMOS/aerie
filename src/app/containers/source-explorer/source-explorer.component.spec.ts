@@ -10,10 +10,15 @@
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { MatMenuModule } from '@angular/material';
+import { MatDialogModule, MatMenuModule } from '@angular/material';
 import { StoreModule } from '@ngrx/store';
 
 import { SourceExplorerComponent } from './source-explorer.component';
+
+import {
+  RavenStateLoadDialogComponent,
+  RavenStateSaveDialogComponent,
+} from './../../components';
 
 import { metaReducers, reducers } from './../../store';
 
@@ -24,9 +29,12 @@ describe('SourceExplorerComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [
+        RavenStateLoadDialogComponent,
+        RavenStateSaveDialogComponent,
         SourceExplorerComponent,
       ],
       imports: [
+        MatDialogModule,
         MatMenuModule,
         StoreModule.forRoot(reducers, { metaReducers }),
       ],

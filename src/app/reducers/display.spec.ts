@@ -22,6 +22,10 @@ import {
   StateSaveSuccess,
 } from './../actions/display';
 
+import {
+  rootSource,
+} from './../shared/mocks';
+
 describe('display reducer', () => {
   let displayState: DisplayState;
 
@@ -34,7 +38,7 @@ describe('display reducer', () => {
   });
 
   it('handle StateLoad', () => {
-    displayState = reducer(displayState, new StateLoad());
+    displayState = reducer(displayState, new StateLoad(rootSource));
 
     expect(displayState).toEqual({
       ...displayState,
@@ -61,7 +65,7 @@ describe('display reducer', () => {
   });
 
   it('handle StateSave', () => {
-    displayState = reducer(displayState, new StateSave());
+    displayState = reducer(displayState, new StateSave(rootSource));
 
     expect(displayState).toEqual({
       ...displayState,
