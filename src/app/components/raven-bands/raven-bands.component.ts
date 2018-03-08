@@ -33,10 +33,10 @@ export interface BandClickEvent extends Event {
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'raven-bands',
-  styleUrls: ['./bands.component.css'],
-  templateUrl: './bands.component.html',
+  styleUrls: ['./raven-bands.component.css'],
+  templateUrl: './raven-bands.component.html',
 })
-export class BandsComponent implements OnChanges, OnInit {
+export class RavenBandsComponent implements OnChanges, OnInit {
   @Input() bands: RavenCompositeBand[];
   @Input() containerId: string;
   @Input() labelWidth: number;

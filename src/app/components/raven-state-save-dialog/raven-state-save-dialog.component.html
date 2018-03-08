@@ -1,0 +1,14 @@
+<div mat-dialog-content>
+  <div class="save-to">
+    Save To: {{data.source.name}}
+  </div>
+
+  <mat-form-field>
+    <input matInput placeholder="Name" required>
+  </mat-form-field>
+</div>
+
+<div mat-dialog-actions>
+  <button mat-button [mat-dialog-close]="false">Cancel</button>
+  <button mat-button [mat-dialog-close]="true">Save</button>
+</div>

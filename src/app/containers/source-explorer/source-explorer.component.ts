@@ -17,6 +17,8 @@ import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 
+import { MatDialog } from '@angular/material';
+
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/take';
 import 'rxjs/add/operator/takeUntil';
@@ -28,12 +30,18 @@ import * as displayActions from './../../actions/display';
 import * as sourceExplorerActions from './../../actions/source-explorer';
 
 import {
+  RavenStateLoadDialogComponent,
+  RavenStateSaveDialogComponent,
+} from './../../components';
+
+import {
   toRavenSources,
 } from './../../shared/util';
 
 import {
   RavenCompositeBand,
   RavenSource,
+  RavenSourceActionEvent,
   StringTMap,
 } from './../../shared/models';
 
@@ -51,7 +59,11 @@ export class SourceExplorerComponent implements OnDestroy {
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
-  constructor(private changeDetector: ChangeDetectorRef, private store: Store<fromSourceExplorer.SourceExplorerState>) {
+  constructor(
+    private changeDetector: ChangeDetectorRef,
+    private dialog: MatDialog,
+    private store: Store<fromSourceExplorer.SourceExplorerState>,
+  ) {
     this.store
       .select(fromSourceExplorer.getTreeBySourceId)
       .takeUntil(this.ngUnsubscribe)
@@ -70,19 +82,14 @@ export class SourceExplorerComponent implements OnDestroy {
 
   /**
    * Event. Called when an `action` event is fired from the raven-tree.
-   *
-   * TODO: Remove any.
    */
-  onAction(e: any): void {
-    switch (e.event) {
-      case 'state-load':
-        this.store.dispatch(new displayActions.StateLoad());
-        break;
-      case 'state-save':
-        this.store.dispatch(new displayActions.StateSave());
-        break;
-      default:
-        break;
+  onAction(action: RavenSourceActionEvent): void {
+    const { event, source } = action;
+
+    if (event === 'state-load') {
+      this.openStateLoadDialog(source);
+    } else if (event === 'state-save') {
+      this.openStateSaveDialog(source);
     }
   }
 
@@ -129,5 +136,36 @@ export class SourceExplorerComponent implements OnDestroy {
    */
   onSelect(source: RavenSource): void {
     this.store.dispatch(new sourceExplorerActions.SourceExplorerSelect(source));
+  }
+
+  /**
+   * Dialog trigger. Opens the load state dialog.
+   */
+  openStateLoadDialog(source: RavenSource) {
+    const stateLoadDialog = this.dialog.open(RavenStateLoadDialogComponent, {
+      width: '250px',
+    });
+
+    stateLoadDialog.afterClosed().subscribe(load => {
+      if (load) {
+        this.store.dispatch(new displayActions.StateLoad(source));
+      }
+    });
+  }
+
+  /**
+   * Dialog trigger. Opens the save state dialog.
+   */
+  openStateSaveDialog(source: RavenSource): void {
+    const stateSaveDialog = this.dialog.open(RavenStateSaveDialogComponent, {
+      data: { source },
+      width: '250px',
+    });
+
+    stateSaveDialog.afterClosed().subscribe(save => {
+      if (save) {
+        this.store.dispatch(new displayActions.StateSave(source));
+      }
+    });
   }
 }

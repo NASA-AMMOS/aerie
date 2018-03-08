@@ -9,6 +9,10 @@
 
 import { Action } from '@ngrx/store';
 
+import {
+  RavenSource,
+} from './../shared/models';
+
 // Action Types.
 export enum DisplayActionTypes {
   StateLoad        = '[display] state_load',
@@ -23,7 +27,7 @@ export enum DisplayActionTypes {
 export class StateLoad implements Action {
   readonly type = DisplayActionTypes.StateLoad;
 
-  constructor() {}
+  constructor(source: RavenSource) {}
 }
 
 export class StateLoadFailure implements Action {
@@ -41,7 +45,7 @@ export class StateLoadSuccess implements Action {
 export class StateSave implements Action {
   readonly type = DisplayActionTypes.StateSave;
 
-  constructor() {}
+  constructor(source: RavenSource) {}
 }
 
 export class StateSaveFailure implements Action {

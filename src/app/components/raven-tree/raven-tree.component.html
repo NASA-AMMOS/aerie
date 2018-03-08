@@ -46,7 +46,7 @@
     [overlapTrigger]="false"
     y-position="below">
     <ng-container *ngFor="let a of tree[id].actions">
-      <button mat-menu-item (click)="action.emit({ event: a.event, sourceUrl: tree[id].url })">{{a.name}}</button>
+      <button mat-menu-item (click)="action.emit({ event: a.event, source: tree[id] })">{{a.name}}</button>
     </ng-container>
   </mat-menu>
 </div>

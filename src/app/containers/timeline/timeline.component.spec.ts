@@ -14,7 +14,7 @@ import { StoreModule } from '@ngrx/store';
 import { SortablejsModule } from 'angular-sortablejs';
 import { AngularSplitModule } from 'angular-split';
 
-import { BandsComponent } from './../../components';
+import { RavenBandsComponent } from './../../components';
 import { TimelineComponent } from './timeline.component';
 
 import { KeyByPipe } from './../../pipes';
@@ -28,7 +28,7 @@ describe('TimelineComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [
-        BandsComponent,
+        RavenBandsComponent,
         KeyByPipe,
         TimelineComponent,
       ],

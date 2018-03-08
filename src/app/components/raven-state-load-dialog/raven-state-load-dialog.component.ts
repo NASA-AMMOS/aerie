@@ -7,8 +7,19 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './raven-bands/raven-bands.component';
-export * from './raven-settings/raven-settings.component';
-export * from './raven-state-load-dialog/raven-state-load-dialog.component';
-export * from './raven-state-save-dialog/raven-state-save-dialog.component';
-export * from './raven-tree/raven-tree.component';
+import {
+  Component,
+} from '@angular/core';
+
+import {
+  MatDialogRef,
+} from '@angular/material';
+
+@Component({
+  selector: 'raven-state-load-dialog',
+  styleUrls: ['./raven-state-load-dialog.component.css'],
+  templateUrl: './raven-state-load-dialog.component.html',
+})
+export class RavenStateLoadDialogComponent {
+  constructor(public dialogRef: MatDialogRef<RavenStateLoadDialogComponent>) {}
+}

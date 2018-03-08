@@ -38,8 +38,10 @@ import {
 } from './containers';
 
 import {
-  BandsComponent,
+  RavenBandsComponent,
   RavenSettingsComponent,
+  RavenStateLoadDialogComponent,
+  RavenStateSaveDialogComponent,
   RavenTreeComponent,
 } from './components';
 
@@ -60,13 +62,20 @@ import {
 
 export const DECLARATIONS = [
   AppComponent,
-  BandsComponent,
   HasKeysPipe,
   KeyByPipe,
+  RavenBandsComponent,
   RavenSettingsComponent,
+  RavenStateLoadDialogComponent,
+  RavenStateSaveDialogComponent,
   RavenTreeComponent,
   SourceExplorerComponent,
   TimelineComponent,
+];
+
+export const ENTRY_COMPONENTS = [
+  RavenStateLoadDialogComponent,
+  RavenStateSaveDialogComponent,
 ];
 
 export const EFFECTS = [
@@ -109,6 +118,7 @@ export const SCHEMAS = [
     AppComponent,
   ],
   declarations: DECLARATIONS,
+  entryComponents: ENTRY_COMPONENTS,
   exports: DECLARATIONS,
   imports: MODULES,
   providers: PROVIDERS,

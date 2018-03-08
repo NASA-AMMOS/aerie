@@ -34,6 +34,7 @@ export * from './raven-resource-band';
 export * from './raven-resource-point';
 export * from './raven-settings-update';
 export * from './raven-sort-message';
+export * from './raven-source-action-event';
 export * from './raven-source-action';
 export * from './raven-source';
 export * from './raven-state-band';
