@@ -655,13 +655,15 @@ const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.I
   /**
    * CTL Event. Called after view is updated.
    *
-   * @param {any} e
-   * @param {any} ctlData
+   * @param {Number} start
+   * @param {Number} end
    *
    * @memberof FalconBand
    */
-  _onUpdateView() {
-    // TODO.
+  _onUpdateView(start, end) {
+    if (start !== 0 && end !== 0 && start < end) {
+      this._fire('falcon-update-view-time-range', { end, start });
+    }
   }
 
   /**
