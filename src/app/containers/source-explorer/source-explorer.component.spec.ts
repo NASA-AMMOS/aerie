@@ -10,6 +10,7 @@
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MatMenuModule } from '@angular/material';
 import { StoreModule } from '@ngrx/store';
 
@@ -34,6 +35,7 @@ describe('SourceExplorerComponent', () => {
         SourceExplorerComponent,
       ],
       imports: [
+        FormsModule,
         MatDialogModule,
         MatMenuModule,
         StoreModule.forRoot(reducers, { metaReducers }),

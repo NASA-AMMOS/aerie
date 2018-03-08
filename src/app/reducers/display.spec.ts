@@ -65,7 +65,7 @@ describe('display reducer', () => {
   });
 
   it('handle StateSave', () => {
-    displayState = reducer(displayState, new StateSave(rootSource));
+    displayState = reducer(displayState, new StateSave('hello', rootSource));
 
     expect(displayState).toEqual({
       ...displayState,
