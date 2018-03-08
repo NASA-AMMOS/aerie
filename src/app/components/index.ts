@@ -8,7 +8,7 @@
  */
 
 export * from './raven-bands/raven-bands.component';
+export * from './raven-confirm-dialog/raven-confirm-dialog.component';
 export * from './raven-settings/raven-settings.component';
-export * from './raven-state-load-dialog/raven-state-load-dialog.component';
 export * from './raven-state-save-dialog/raven-state-save-dialog.component';
 export * from './raven-tree/raven-tree.component';

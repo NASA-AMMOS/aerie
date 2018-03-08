@@ -46,17 +46,28 @@ import {
 @Injectable()
 export class DisplayEffects {
   @Effect()
+  stateDelete$: Observable<Action> = this.actions$
+    .ofType<displayActions.StateDelete>(DisplayActionTypes.StateDelete)
+    .withLatestFrom(this.store$)
+    .map(([action, state]) => action)
+    .map(action => action.source.url)
+    .mergeMap(url => {
+      return this.http
+        .delete(url.substring(0, url.indexOf('?')).replace(/generic-mongodb/i, 'fs-mongodb')) // TODO: Make this better.
+        .map(() => new displayActions.StateDeleteSuccess())
+        .catch(() => of(new displayActions.StateDeleteFailure()));
+    });
+
+  @Effect()
   stateLoad$: Observable<Action> = this.actions$
     .ofType<displayActions.StateLoad>(DisplayActionTypes.StateLoad)
-    .mergeMap(() => {
-      // TODO: HTTP call to get saved state.
-      const serializedState = localStorage.getItem('state');
-
-      if (serializedState) {
-        return of(JSON.parse(serializedState).state);
-      } else {
-        return of({});
-      }
+    .withLatestFrom(this.store$)
+    .map(([action, state]) => ({ action, state }))
+    .mergeMap(({ state, action }) => {
+      return this.http
+        .get(action.source.url)
+        .map(res => res[0])
+        .map(data => data.state);
     })
     .mergeMap((state: AppState) =>
       forkJoin([
@@ -79,13 +90,14 @@ export class DisplayEffects {
       ];
     });
 
-  @Effect({ dispatch: false })
+  @Effect()
   stateSave$: Observable<Action> = this.actions$
     .ofType<displayActions.StateSave>(DisplayActionTypes.StateSave)
     .withLatestFrom(this.store$)
-    .map(([action, state]) => state)
-    .mergeMap((state: AppState) => {
+    .map(([action, state]) => ({ action, state }))
+    .mergeMap(({ state, action }) => {
       const stateToSave = {
+        name: `raven2-state-${action.name}`,
         state: {
           ...state,
           timeline: {
@@ -101,10 +113,10 @@ export class DisplayEffects {
         },
       };
 
-      // TODO: HTTP call to save.
-      localStorage.setItem('state', JSON.stringify(stateToSave));
-
-      return [];
+      return this.http
+        .put(`${action.source.url}/${action.name}`,  stateToSave)
+        .map(() => new displayActions.StateSaveSuccess())
+        .catch(() => of(new displayActions.StateLoadFailure()));
     });
 
   constructor(

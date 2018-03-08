@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
@@ -39,8 +40,8 @@ import {
 
 import {
   RavenBandsComponent,
+  RavenConfirmDialogComponent,
   RavenSettingsComponent,
-  RavenStateLoadDialogComponent,
   RavenStateSaveDialogComponent,
   RavenTreeComponent,
 } from './components';
@@ -65,8 +66,8 @@ export const DECLARATIONS = [
   HasKeysPipe,
   KeyByPipe,
   RavenBandsComponent,
+  RavenConfirmDialogComponent,
   RavenSettingsComponent,
-  RavenStateLoadDialogComponent,
   RavenStateSaveDialogComponent,
   RavenTreeComponent,
   SourceExplorerComponent,
@@ -74,7 +75,7 @@ export const DECLARATIONS = [
 ];
 
 export const ENTRY_COMPONENTS = [
-  RavenStateLoadDialogComponent,
+  RavenConfirmDialogComponent,
   RavenStateSaveDialogComponent,
 ];
 
@@ -89,6 +90,7 @@ export const MODULES = [
   BrowserModule,
   BrowserAnimationsModule,
   HttpClientModule,
+  FormsModule,
   MaterialModule,
   AngularSplitModule,
   FlexLayoutModule,

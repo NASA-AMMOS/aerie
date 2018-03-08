@@ -15,19 +15,40 @@ import {
 
 // Action Types.
 export enum DisplayActionTypes {
-  StateLoad        = '[display] state_load',
-  StateLoadFailure = '[display] state_load_failure',
-  StateLoadSuccess = '[display] state_load_success',
-  StateSave        = '[display] state_save',
-  StateSaveFailure = '[display] state_save_failure',
-  StateSaveSuccess = '[display] state_save_success',
+  StateDelete        = '[display] state_delete',
+  StateDeleteFailure = '[display] state_delete_failure',
+  StateDeleteSuccess = '[display] state_delete_success',
+  StateLoad          = '[display] state_load',
+  StateLoadFailure   = '[display] state_load_failure',
+  StateLoadSuccess   = '[display] state_load_success',
+  StateSave          = '[display] state_save',
+  StateSaveFailure   = '[display] state_save_failure',
+  StateSaveSuccess   = '[display] state_save_success',
 }
 
 // Actions.
+export class StateDelete implements Action {
+  readonly type = DisplayActionTypes.StateDelete;
+
+  constructor(public source: RavenSource) {}
+}
+
+export class StateDeleteFailure implements Action {
+  readonly type = DisplayActionTypes.StateDeleteFailure;
+
+  constructor() {}
+}
+
+export class StateDeleteSuccess implements Action {
+  readonly type = DisplayActionTypes.StateDeleteSuccess;
+
+  constructor() {}
+}
+
 export class StateLoad implements Action {
   readonly type = DisplayActionTypes.StateLoad;
 
-  constructor(source: RavenSource) {}
+  constructor(public source: RavenSource) {}
 }
 
 export class StateLoadFailure implements Action {
@@ -45,7 +66,7 @@ export class StateLoadSuccess implements Action {
 export class StateSave implements Action {
   readonly type = DisplayActionTypes.StateSave;
 
-  constructor(source: RavenSource) {}
+  constructor(public name: string, public source: RavenSource) {}
 }
 
 export class StateSaveFailure implements Action {
@@ -62,6 +83,9 @@ export class StateSaveSuccess implements Action {
 
 // Union type of all actions.
 export type DisplayAction =
+  StateDelete |
+  StateDeleteFailure |
+  StateDeleteSuccess |
   StateLoad |
   StateLoadFailure |
   StateLoadSuccess |

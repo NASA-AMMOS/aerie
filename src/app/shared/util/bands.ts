@@ -284,8 +284,6 @@ export function updateSortOrder(bands: RavenCompositeBand[]): RavenCompositeBand
 
 /**
  * Helper that gets new time ranges based on the current view time range and the list of given bands.
- *
- * TODO: Remove 'any' bands type for concrete type.
  */
 export function updateTimeRanges(currentViewTimeRange: RavenTimeRange, bands: RavenCompositeBand[]) {
   let maxTimeRange: RavenTimeRange = { end: 0, start: 0 };

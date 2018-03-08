@@ -4,11 +4,15 @@
   </div>
 
   <mat-form-field>
-    <input matInput placeholder="Name" required>
+    <input
+      [(ngModel)]="name"
+      matInput
+      placeholder="Name"
+      required>
   </mat-form-field>
 </div>
 
 <div mat-dialog-actions>
-  <button mat-button [mat-dialog-close]="false">Cancel</button>
-  <button mat-button [mat-dialog-close]="true">Save</button>
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-button (click)="onSave()">Save</button>
 </div>

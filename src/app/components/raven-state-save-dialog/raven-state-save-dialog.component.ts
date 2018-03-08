@@ -23,8 +23,18 @@ import {
   templateUrl: './raven-state-save-dialog.component.html',
 })
 export class RavenStateSaveDialogComponent {
+  name: string;
+
   constructor(
     public dialogRef: MatDialogRef<RavenStateSaveDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
   ) {}
+
+  onCancel() {
+    this.dialogRef.close({ save: false });
+  }
+
+  onSave() {
+    this.dialogRef.close({ name: this.name, save: true });
+  }
 }

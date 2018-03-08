@@ -9,17 +9,30 @@
 
 import {
   Component,
+  Inject,
 } from '@angular/core';
 
 import {
+  MAT_DIALOG_DATA,
   MatDialogRef,
 } from '@angular/material';
 
 @Component({
-  selector: 'raven-state-load-dialog',
-  styleUrls: ['./raven-state-load-dialog.component.css'],
-  templateUrl: './raven-state-load-dialog.component.html',
+  selector: 'raven-confirm-dialog',
+  styleUrls: ['./raven-confirm-dialog.component.css'],
+  templateUrl: './raven-confirm-dialog.component.html',
 })
-export class RavenStateLoadDialogComponent {
-  constructor(public dialogRef: MatDialogRef<RavenStateLoadDialogComponent>) {}
+export class RavenConfirmDialogComponent {
+  constructor(
+    public dialogRef: MatDialogRef<RavenConfirmDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any,
+  ) {}
+
+  onCancel() {
+    this.dialogRef.close({ confirm: false });
+  }
+
+  onConfirm() {
+    this.dialogRef.close({ confirm: true });
+  }
 }

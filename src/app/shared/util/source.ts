@@ -56,7 +56,11 @@ export function toSource(parentId: string, isServer: boolean, source: MpsServerS
   } else if (newSource.kind === 'fs_file') {
     return fromFile(source as MpsServerSourceFile, newSource);
   } else if (newSource.kind === 'fs_graphable') {
-    return fromGraphable(source as MpsServerSourceGraphable, newSource);
+    if (newSource.name.includes('raven2-state')) {
+      return fromState(source as any, newSource);
+    } else {
+      return fromGraphable(source as MpsServerSourceGraphable, newSource);
+    }
   } else {
     return newSource;
   }
@@ -87,10 +91,6 @@ export function fromDir(isServer: boolean, mSource: MpsServerSourceDir, rSource:
   return {
     ...rSource,
     actions: [
-      {
-        event: 'state-load',
-        name: 'Load State',
-      },
       {
         event: 'state-save',
         name: 'Save State',
@@ -126,6 +126,30 @@ export function fromGraphable(mSource: MpsServerSourceGraphable, rSource: RavenS
     icon: 'fa fa-area-chart',
     openable: true,
     selectable: false,
+    url: mSource.data_url,
+  };
+}
+
+/**
+ * Convert an MPS Server 'fs_state' source to a Raven source.
+ */
+export function fromState(mSource: any, rSource: RavenSource): RavenSource {
+  return {
+    ...rSource,
+    actions: [
+      {
+        event: 'state-delete',
+        name: 'Delete State',
+      },
+      {
+        event: 'state-load',
+        name: 'Load State',
+      },
+    ],
+    expandable: false,
+    icon: 'fa fa-area-chart',
+    openable: false,
+    selectable: true,
     url: mSource.data_url,
   };
 }

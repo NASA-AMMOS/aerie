@@ -30,7 +30,7 @@ import * as displayActions from './../../actions/display';
 import * as sourceExplorerActions from './../../actions/source-explorer';
 
 import {
-  RavenStateLoadDialogComponent,
+  RavenConfirmDialogComponent,
   RavenStateSaveDialogComponent,
 } from './../../components';
 
@@ -86,7 +86,9 @@ export class SourceExplorerComponent implements OnDestroy {
   onAction(action: RavenSourceActionEvent): void {
     const { event, source } = action;
 
-    if (event === 'state-load') {
+    if (event === 'state-delete') {
+      this.openStateDeleteDialog(source);
+    } else if (event === 'state-load') {
       this.openStateLoadDialog(source);
     } else if (event === 'state-save') {
       this.openStateSaveDialog(source);
@@ -139,15 +141,40 @@ export class SourceExplorerComponent implements OnDestroy {
   }
 
   /**
-   * Dialog trigger. Opens the load state dialog.
+   * Dialog trigger. Opens the delete state dialog.
    */
-  openStateLoadDialog(source: RavenSource) {
-    const stateLoadDialog = this.dialog.open(RavenStateLoadDialogComponent, {
+  openStateDeleteDialog(source: RavenSource) {
+    const stateDeleteDialog = this.dialog.open(RavenConfirmDialogComponent, {
+      data: {
+        cancelText: 'No',
+        confirmText: 'Yes',
+        message: 'Are you sure you want to delete this state?',
+      },
       width: '250px',
     });
 
-    stateLoadDialog.afterClosed().subscribe(load => {
-      if (load) {
+    stateDeleteDialog.afterClosed().subscribe(result => {
+      if (result.confirm) {
+        this.store.dispatch(new displayActions.StateDelete(source));
+      }
+    });
+  }
+
+  /**
+   * Dialog trigger. Opens the load state dialog.
+   */
+  openStateLoadDialog(source: RavenSource) {
+    const stateLoadDialog = this.dialog.open(RavenConfirmDialogComponent, {
+      data: {
+        cancelText: 'No',
+        confirmText: 'Yes',
+        message: 'Loading this state will clear your current workspace. Are you sure you want to do this?',
+      },
+      width: '250px',
+    });
+
+    stateLoadDialog.afterClosed().subscribe(result => {
+      if (result.confirm) {
         this.store.dispatch(new displayActions.StateLoad(source));
       }
     });
@@ -162,9 +189,9 @@ export class SourceExplorerComponent implements OnDestroy {
       width: '250px',
     });
 
-    stateSaveDialog.afterClosed().subscribe(save => {
-      if (save) {
-        this.store.dispatch(new displayActions.StateSave(source));
+    stateSaveDialog.afterClosed().subscribe(result => {
+      if (result.save) {
+        this.store.dispatch(new displayActions.StateSave(result.name, source));
       }
     });
   }

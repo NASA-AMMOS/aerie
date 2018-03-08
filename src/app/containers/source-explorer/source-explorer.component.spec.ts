@@ -16,7 +16,7 @@ import { StoreModule } from '@ngrx/store';
 import { SourceExplorerComponent } from './source-explorer.component';
 
 import {
-  RavenStateLoadDialogComponent,
+  RavenConfirmDialogComponent,
   RavenStateSaveDialogComponent,
 } from './../../components';
 
@@ -29,7 +29,7 @@ describe('SourceExplorerComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [
-        RavenStateLoadDialogComponent,
+        RavenConfirmDialogComponent,
         RavenStateSaveDialogComponent,
         SourceExplorerComponent,
       ],

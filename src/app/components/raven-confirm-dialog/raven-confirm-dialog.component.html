@@ -1,0 +1,8 @@
+<div mat-dialog-content>
+  {{data.message}}
+</div>
+
+<div mat-dialog-actions>
+  <button mat-button (click)="onCancel()" cdkFocusInitial>{{data.cancelText}}</button>
+  <button mat-button (click)="onConfirm()">{{data.confirmText}}</button>
+</div>
