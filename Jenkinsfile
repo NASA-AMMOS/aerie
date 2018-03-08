@@ -57,6 +57,41 @@ pipeline {
 			}
 		}
 
+	stage ('analyze') {
+		steps {
+			script {
+				def statusCode = sh returnStatus: true, script:
+				'''
+					# don't echo commands by default
+					set +x
+
+					if [[ $BRANCH_NAME == 'develop' || $BRANCH_NAME == release* ]]; then
+						echo "Anaylsis branch detected. Performing code analysis..."
+
+						# setup nvm/node
+						export NVM_DIR="$HOME/.nvm"
+						# install nvm if necessary
+						if [ ! -d $NVM_DIR ]; then
+							curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
+						fi
+						# load nvm shell commands
+						[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+						# install/use proper node version
+						nvm install v8.9.4
+
+						# run sonarqube analysis
+						npm run sonarqube
+					else
+						echo "Skipping analysis."
+					fi
+				'''
+				if (statusCode > 0) {
+					error "Analysis failure detected. See log."
+				}
+			}
+		}
+	}
+
 		stage ('publish') {
 			steps {
 				echo "Archiving artifacts in Jenkins..."
