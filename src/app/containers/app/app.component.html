@@ -51,7 +51,7 @@
   </mat-menu>
 </mat-toolbar>
 
-<div *ngIf="loading">
+<div *ngIf="loading$ | async">
   <mat-progress-bar
     mode="query">
   </mat-progress-bar>

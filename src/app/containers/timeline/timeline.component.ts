@@ -12,13 +12,8 @@ import {
   ChangeDetectorRef,
   Component,
   HostListener,
-  OnDestroy,
 } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
-
-import 'rxjs/add/operator/takeUntil';
 
 import * as fromConfig from './../../reducers/config';
 import * as fromLayout from './../../reducers/layout';
@@ -42,42 +37,52 @@ import {
   styleUrls: ['./timeline.component.css'],
   templateUrl: './timeline.component.html',
 })
-export class TimelineComponent implements OnDestroy {
-  bands: RavenCompositeBand[];
+export class TimelineComponent {
+  // Config state.
   itarMessage: string;
+
+  // Layout state.
+  showDetailsDrawer: boolean;
+  showLeftDrawer: boolean;
+  showSouthBandsDrawer: boolean;
+
+  // Timeline state.
+  bands: RavenCompositeBand[];
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
   overlayMode: boolean;
   selectedBandId: string;
   viewTimeRange: RavenTimeRange;
 
-  showDetailsDrawer$: Observable<boolean>;
-  showLeftDrawer$: Observable<boolean>;
-  showSouthBandsDrawer$: Observable<boolean>;
+  constructor(
+    private changeDetector: ChangeDetectorRef,
+    private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState>,
+  ) {
+    // Config state.
+    this.store.select(fromConfig.getItarMessage).subscribe(itarMessage => {
+      this.itarMessage = itarMessage;
+      this.changeDetector.markForCheck();
+    });
 
-  private ngUnsubscribe: Subject<{}> = new Subject();
-
-  constructor(private changeDetector: ChangeDetectorRef, private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState>) {
-    this.store.select(fromTimeline.getBands).takeUntil(this.ngUnsubscribe).subscribe(bands => { this.bands = bands; this.changeDetector.markForCheck(); });
-    this.store.select(fromConfig.getItarMessage).takeUntil(this.ngUnsubscribe).subscribe(itarMessage => this.itarMessage = itarMessage);
-    this.store.select(fromTimeline.getLabelWidth).takeUntil(this.ngUnsubscribe).subscribe(labelWidth => this.labelWidth = labelWidth);
-    this.store.select(fromTimeline.getMaxTimeRange).takeUntil(this.ngUnsubscribe).subscribe(maxTimeRange => this.maxTimeRange = maxTimeRange);
-    this.store.select(fromTimeline.getOverlayMode).takeUntil(this.ngUnsubscribe).subscribe(overlayMode => this.overlayMode = overlayMode);
-    this.store.select(fromTimeline.getSelectedBandId).takeUntil(this.ngUnsubscribe).subscribe(selectedBandId => this.selectedBandId = selectedBandId);
-    this.store.select(fromTimeline.getViewTimeRange).takeUntil(this.ngUnsubscribe).subscribe(viewTimeRange => this.viewTimeRange = viewTimeRange);
-
-    this.store.select(fromLayout.getMode).takeUntil(this.ngUnsubscribe).subscribe(layoutMode => {
+    // Layout state.
+    this.store.select(fromLayout.getShowDrawers).subscribe(state => {
+      this.showDetailsDrawer = state.showDetailsDrawer;
+      this.showLeftDrawer = state.showLeftDrawer;
+      this.showSouthBandsDrawer = state.showSouthBandsDrawer;
+      this.changeDetector.markForCheck();
       dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize anytime our mode changes.
     });
 
-    this.showDetailsDrawer$ = this.store.select(fromLayout.getShowDetailsDrawer).takeUntil(this.ngUnsubscribe);
-    this.showLeftDrawer$ = this.store.select(fromLayout.getShowLeftDrawer).takeUntil(this.ngUnsubscribe);
-    this.showSouthBandsDrawer$ = this.store.select(fromLayout.getShowSouthBandsDrawer).takeUntil(this.ngUnsubscribe);
-  }
-
-  ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
+    // Timeline state.
+    this.store.select(fromTimeline.getTimelineState).subscribe(state => {
+      this.bands = state.bands;
+      this.labelWidth = state.labelWidth;
+      this.maxTimeRange = state.maxTimeRange;
+      this.overlayMode = state.overlayMode;
+      this.selectedBandId = state.selectedBandId;
+      this.viewTimeRange = state.viewTimeRange;
+      this.changeDetector.markForCheck();
+    });
   }
 
   /**

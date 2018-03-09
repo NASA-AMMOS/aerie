@@ -11,20 +11,12 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  OnDestroy,
 } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
 
 import { MatDialog } from '@angular/material';
 
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/take';
-import 'rxjs/add/operator/takeUntil';
-
 import * as fromSourceExplorer from './../../reducers/source-explorer';
-import * as fromTimeline from './../../reducers/timeline';
 
 import * as displayActions from './../../actions/display';
 import * as sourceExplorerActions from './../../actions/source-explorer';
@@ -39,7 +31,6 @@ import {
 } from './../../shared/util';
 
 import {
-  RavenCompositeBand,
   RavenSource,
   RavenSourceActionEvent,
   StringTMap,
@@ -51,33 +42,20 @@ import {
   styleUrls: ['./source-explorer.component.css'],
   templateUrl: './source-explorer.component.html',
 })
-export class SourceExplorerComponent implements OnDestroy {
-  bands: RavenCompositeBand[];
+export class SourceExplorerComponent {
+  // Source Explorer state.
   tree: StringTMap<RavenSource>;
-
-  bands$: Observable<RavenCompositeBand[]>;
-
-  private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(
     private changeDetector: ChangeDetectorRef,
     private dialog: MatDialog,
     private store: Store<fromSourceExplorer.SourceExplorerState>,
   ) {
-    this.store
-      .select(fromSourceExplorer.getTreeBySourceId)
-      .takeUntil(this.ngUnsubscribe)
-      .subscribe(tree => {
-        this.tree = tree;
-        this.changeDetector.markForCheck();
-      });
-
-    this.bands$ = this.store.select(fromTimeline.getBands).takeUntil(this.ngUnsubscribe);
-  }
-
-  ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
+    // Source Explorer state.
+    this.store.select(fromSourceExplorer.getTreeBySourceId).subscribe(tree => {
+      this.tree = tree;
+      this.changeDetector.markForCheck();
+    });
   }
 
   /**

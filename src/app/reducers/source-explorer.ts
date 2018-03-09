@@ -286,8 +286,6 @@ export const getSourceExplorerState = createFeatureSelector<SourceExplorerState>
  * only recompute when arguments change. The created selectors can also be composed
  * together to select different pieces of state.
  */
-export const getFetchGraphDataRequestPending = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.fetchGraphDataRequestPending);
-export const getFetchInitialSourcesRequestPending = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.fetchInitialSourcesRequestPending);
-export const getFetchSourcesRequestPending = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.fetchSourcesRequestPending);
 export const getInitialSourcesLoaded = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.initialSourcesLoaded);
+export const getPending = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.fetchGraphDataRequestPending || state.fetchInitialSourcesRequestPending || state.fetchSourcesRequestPending);
 export const getTreeBySourceId = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.treeBySourceId);

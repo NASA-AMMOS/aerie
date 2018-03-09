@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { createFeatureSelector } from '@ngrx/store';
 
 import {
   FetchGraphDataSuccess,
@@ -265,9 +265,4 @@ export const getTimelineState = createFeatureSelector<TimelineState>('timeline')
  * only recompute when arguments change. The created selectors can also be composed
  * together to select different pieces of state.
  */
-export const getBands = createSelector(getTimelineState, (state: TimelineState) => state.bands);
-export const getLabelWidth = createSelector(getTimelineState, (state: TimelineState) => state.labelWidth);
-export const getMaxTimeRange = createSelector(getTimelineState, (state: TimelineState) => state.maxTimeRange);
-export const getOverlayMode = createSelector(getTimelineState, (state: TimelineState) => state.overlayMode);
-export const getSelectedBandId = createSelector(getTimelineState, (state: TimelineState) => state.selectedBandId);
-export const getViewTimeRange = createSelector(getTimelineState, (state: TimelineState) => state.viewTimeRange);
+// TODO: Add more specific selectors if needed.

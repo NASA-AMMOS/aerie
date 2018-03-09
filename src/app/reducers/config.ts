@@ -50,6 +50,4 @@ export const getConfigState = createFeatureSelector<ConfigState>('config');
  * only recompute when arguments change. The created selectors can also be composed
  * together to select different pieces of state.
  */
-export const getBaseSourcesUrl = createSelector(getConfigState, (state: ConfigState) => state.baseSourcesUrl);
-export const getBaseUrl = createSelector(getConfigState, (state: ConfigState) => state.baseUrl);
 export const getItarMessage = createSelector(getConfigState, (state: ConfigState) => state.itarMessage);

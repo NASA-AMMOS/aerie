@@ -2,7 +2,7 @@
   direction="horizontal"
   (dragEnd)="onDragEnd()">
   <split-area
-    [visible]="showLeftDrawer$ | async"
+    [visible]="showLeftDrawer"
     [order]="0"
     size="25">
     <app-source-explorer></app-source-explorer>
@@ -70,7 +70,7 @@
       </split-area>
 
       <split-area
-        [visible]="showSouthBandsDrawer$ | async"
+        [visible]="showSouthBandsDrawer"
         [order]="3"
         size="20">
         <div class="timeline-1">
@@ -91,7 +91,7 @@
       </split-area>
 
       <split-area
-        [visible]="showDetailsDrawer$ | async"
+        [visible]="showDetailsDrawer"
         [order]="4"
         size="30">
         <div class="settings">

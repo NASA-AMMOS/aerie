@@ -63,4 +63,4 @@ export const getDisplayState = createFeatureSelector<DisplayState>('display');
  * only recompute when arguments change. The created selectors can also be composed
  * together to select different pieces of state.
  */
-export const getStateLoadPending = createSelector(getDisplayState, (state: DisplayState) => state.stateLoadPending);
+export const getPending = createSelector(getDisplayState, (state: DisplayState) => state.stateLoadPending || state.stateSavePending);
