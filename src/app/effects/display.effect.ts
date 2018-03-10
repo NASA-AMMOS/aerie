@@ -12,15 +12,17 @@ import { keyBy } from 'lodash';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
-import { Actions, Effect } from '@ngrx/effects';
+import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
+
 import { Observable } from 'rxjs/Observable';
 import { forkJoin } from 'rxjs/observable/forkJoin';
 import { of } from 'rxjs/observable/of';
 
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/switchMap';
-import 'rxjs/add/operator/withLatestFrom';
+import { catchError } from 'rxjs/operators/catchError';
+import { map } from 'rxjs/operators/map';
+import { mergeMap } from 'rxjs/operators/mergeMap';
+import { withLatestFrom } from 'rxjs/operators/withLatestFrom';
 
 import { AppState } from './../../app/store';
 
@@ -46,37 +48,39 @@ import {
 @Injectable()
 export class DisplayEffects {
   @Effect()
-  stateDelete$: Observable<Action> = this.actions$
-    .ofType<displayActions.StateDelete>(DisplayActionTypes.StateDelete)
-    .withLatestFrom(this.store$)
-    .map(([action, state]) => action)
-    .map(action => action.source.url)
-    .mergeMap(url => {
-      return this.http
-        .delete(url.substring(0, url.indexOf('?')).replace(/generic-mongodb/i, 'fs-mongodb')) // TODO: Make this better.
-        .map(() => new displayActions.StateDeleteSuccess())
-        .catch(() => of(new displayActions.StateDeleteFailure()));
-    });
+  stateDelete$: Observable<Action> = this.actions$.pipe(
+    ofType<displayActions.StateDelete>(DisplayActionTypes.StateDelete),
+    withLatestFrom(this.store$),
+    map(([action, state]) => action),
+    map(action => action.source.url),
+    mergeMap(url =>
+      // TODO: Make this better.
+      this.http.delete(url.substring(0, url.indexOf('?')).replace(/generic-mongodb/i, 'fs-mongodb')).pipe(
+        map(() => new displayActions.StateDeleteSuccess()),
+        catchError(() => of(new displayActions.StateDeleteFailure())),
+      ),
+    ),
+  );
 
   @Effect()
-  stateLoad$: Observable<Action> = this.actions$
-    .ofType<displayActions.StateLoad>(DisplayActionTypes.StateLoad)
-    .withLatestFrom(this.store$)
-    .map(([action, state]) => ({ action, state }))
-    .mergeMap(({ state, action }) => {
-      return this.http
-        .get(action.source.url)
-        .map(res => res[0])
-        .map(data => data.state);
-    })
-    .mergeMap((state: AppState) =>
+  stateLoad$: Observable<Action> = this.actions$.pipe(
+    ofType<displayActions.StateLoad>(DisplayActionTypes.StateLoad),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    mergeMap(({ state, action }) =>
+      this.http.get(action.source.url).pipe(
+        map(res => res[0]),
+        map(data => data.state),
+      ),
+    ),
+    mergeMap((state: AppState) =>
       forkJoin([
         of(state),
         ...this.getPointDataForSubBands(state.timeline.bands),
       ]),
-    )
-    .map(([state, ...pointData]) => ({ state, pointData }))
-    .mergeMap(({ state, pointData }) => {
+    ),
+    map(([state, ...pointData]) => ({ state, pointData })),
+    mergeMap(({ state, pointData }) => {
       const bands = this.updateSubBandsWithPointData(state.timeline.bands, pointData);
 
       return [
@@ -88,14 +92,15 @@ export class DisplayEffects {
         new sourceExplorerActions.UpdateSourceExplorer({ ...state.sourceExplorer }),
         new displayActions.StateLoadSuccess(),
       ];
-    });
+    }),
+  );
 
   @Effect()
-  stateSave$: Observable<Action> = this.actions$
-    .ofType<displayActions.StateSave>(DisplayActionTypes.StateSave)
-    .withLatestFrom(this.store$)
-    .map(([action, state]) => ({ action, state }))
-    .mergeMap(({ state, action }) => {
+  stateSave$: Observable<Action> = this.actions$.pipe(
+    ofType<displayActions.StateSave>(DisplayActionTypes.StateSave),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    mergeMap(({ state, action }) => {
       const stateToSave = {
         name: `raven2-state-${action.name}`,
         state: {
@@ -113,11 +118,12 @@ export class DisplayEffects {
         },
       };
 
-      return this.http
-        .put(`${action.source.url}/${action.name}`,  stateToSave)
-        .map(() => new displayActions.StateSaveSuccess())
-        .catch(() => of(new displayActions.StateLoadFailure()));
-    });
+      return this.http.put(`${action.source.url}/${action.name}`,  stateToSave).pipe(
+        map(() => new displayActions.StateSaveSuccess()),
+        catchError(() => of(new displayActions.StateLoadFailure())),
+      );
+    }),
+  );
 
   constructor(
     private http: HttpClient,
@@ -134,15 +140,16 @@ export class DisplayEffects {
     bands.forEach((band: RavenCompositeBand) => {
       band.subBands.forEach((subBand: RavenSubBand) => {
         pointData.push(
-          this.http.get<MpsServerGraphData>(subBand.sourceUrl)
-            .map((graphData: MpsServerGraphData) => ({
+          this.http.get<MpsServerGraphData>(subBand.sourceUrl).pipe(
+            map((graphData: MpsServerGraphData) => ({
               ...getPointsBySubBandType(subBand, graphData['Timeline Data']),
               subBandId: subBand.id,
-            }))
-            .catch((e) => {
+            })),
+            catchError((e) => {
               console.error(`DisplayEffects - getPointDataForSubBands - failure to GET ${subBand.sourceUrl}: `, e);
               return of(null);
             }),
+          ),
         );
       });
     });

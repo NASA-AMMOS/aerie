@@ -10,15 +10,16 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
-import { Actions, Effect } from '@ngrx/effects';
+import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
+
 import { Observable } from 'rxjs/Observable';
 import { of } from 'rxjs/observable/of';
 
-import 'rxjs/add/operator/catch';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/mergeMap';
-import 'rxjs/add/operator/withLatestFrom';
+import { catchError } from 'rxjs/operators/catchError';
+import { map } from 'rxjs/operators/map';
+import { mergeMap } from 'rxjs/operators/mergeMap';
+import { withLatestFrom } from 'rxjs/operators/withLatestFrom';
 
 import { AppState } from './../../app/store';
 
@@ -41,45 +42,52 @@ import {
 @Injectable()
 export class SourceExplorerEffects {
   @Effect()
-  fetchGraphData$: Observable<Action> = this.actions$
-    .ofType<sourceExplorerActions.FetchGraphData>(SourceExplorerActionTypes.FetchGraphData)
-    .withLatestFrom(this.store$)
-    .map(([action, state]) => ({ action, state }))
-    .mergeMap(({ state, action }) =>
-      this.http.get<MpsServerGraphData>(action.source.url)
-        .map((graphData: MpsServerGraphData) => toRavenBandData(action.source, graphData))
-        .map((newBands: RavenSubBand[]) => new sourceExplorerActions.FetchGraphDataSuccess(action.source, newBands))
-        .catch(() => of(new sourceExplorerActions.FetchGraphDataFailure())),
-    );
+  fetchGraphData$: Observable<Action> = this.actions$.pipe(
+    ofType<sourceExplorerActions.FetchGraphData>(SourceExplorerActionTypes.FetchGraphData),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    mergeMap(({ state, action }) =>
+      this.http.get<MpsServerGraphData>(action.source.url).pipe(
+        map((graphData: MpsServerGraphData) => toRavenBandData(action.source, graphData)),
+        map((newBands: RavenSubBand[]) => new sourceExplorerActions.FetchGraphDataSuccess(action.source, newBands)),
+        catchError(() => of(new sourceExplorerActions.FetchGraphDataFailure())),
+      ),
+    ),
+  );
 
   @Effect()
-  fetchInitialSources$: Observable<Action> = this.actions$
-    .ofType<sourceExplorerActions.FetchInitialSources>(SourceExplorerActionTypes.FetchInitialSources)
-    .withLatestFrom(this.store$)
-    .map(([action, state]) => state)
-    .mergeMap((state: AppState) =>
-      this.http.get<MpsServerSource[]>(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`)
-        .map((mpsServerSources: MpsServerSource[]) => toRavenSources('0', true, mpsServerSources))
-        .map((sources: RavenSource[]) => new sourceExplorerActions.FetchInitialSourcesSuccess(sources))
-        .catch(() => of(new sourceExplorerActions.FetchInitialSourcesFailure())),
-    );
+  fetchInitialSources$: Observable<Action> = this.actions$.pipe(
+    ofType<sourceExplorerActions.FetchInitialSources>(SourceExplorerActionTypes.FetchInitialSources),
+    withLatestFrom(this.store$),
+    map(([action, state]) => state),
+    mergeMap((state: AppState) =>
+      this.http.get<MpsServerSource[]>(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`).pipe(
+        map((mpsServerSources: MpsServerSource[]) => toRavenSources('0', true, mpsServerSources)),
+        map((sources: RavenSource[]) => new sourceExplorerActions.FetchInitialSourcesSuccess(sources)),
+        catchError(() => of(new sourceExplorerActions.FetchInitialSourcesFailure())),
+      ),
+    ),
+  );
 
   @Effect()
-  fetchSources$: Observable<Action> = this.actions$
-    .ofType<sourceExplorerActions.FetchSources>(SourceExplorerActionTypes.FetchSources)
-    .mergeMap(action =>
-      this.http.get<MpsServerSource[]>(action.source.url)
-        .map((mpsServerSources: MpsServerSource[]) => toRavenSources(action.source.id, false, mpsServerSources))
-        .map((sources: RavenSource[]) => new sourceExplorerActions.FetchSourcesSuccess(action.source, sources))
-        .catch(() => of(new sourceExplorerActions.FetchSourcesFailure())),
-    );
+  fetchSources$: Observable<Action> = this.actions$.pipe(
+    ofType<sourceExplorerActions.FetchSources>(SourceExplorerActionTypes.FetchSources),
+    mergeMap(action =>
+      this.http.get<MpsServerSource[]>(action.source.url).pipe(
+        map((mpsServerSources: MpsServerSource[]) => toRavenSources(action.source.id, false, mpsServerSources)),
+        map((sources: RavenSource[]) => new sourceExplorerActions.FetchSourcesSuccess(action.source, sources)),
+        catchError(() => of(new sourceExplorerActions.FetchSourcesFailure())),
+      ),
+    ),
+  );
 
   @Effect()
-  sourceExplorerCloseEvent$: Observable<Action> = this.actions$
-    .ofType<sourceExplorerActions.SourceExplorerCloseEvent>(SourceExplorerActionTypes.SourceExplorerCloseEvent)
-    .withLatestFrom(this.store$)
-    .map(([action, state]) => ({ action, state }))
-    .map(({ state, action }) => new sourceExplorerActions.RemoveBands(action.sourceId, removeBands(action.sourceId, state.timeline.bands)));
+  sourceExplorerCloseEvent$: Observable<Action> = this.actions$.pipe(
+    ofType<sourceExplorerActions.SourceExplorerCloseEvent>(SourceExplorerActionTypes.SourceExplorerCloseEvent),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    map(({ state, action }) => new sourceExplorerActions.RemoveBands(action.sourceId, removeBands(action.sourceId, state.timeline.bands))),
+  );
 
   constructor(
     private http: HttpClient,

@@ -15,15 +15,16 @@ import {
   RouterStateSnapshot,
 } from '@angular/router';
 
-import { Store } from '@ngrx/store';
+import { select, Store } from '@ngrx/store';
+
 import { Observable } from 'rxjs/Observable';
 import { of } from 'rxjs/observable/of';
 
-import 'rxjs/add/operator/catch';
-import 'rxjs/add/operator/do';
-import 'rxjs/add/operator/filter';
-import 'rxjs/add/operator/switchMap';
-import 'rxjs/add/operator/take';
+import { catchError } from 'rxjs/operators/catchError';
+import { filter } from 'rxjs/operators/filter';
+import { switchMap } from 'rxjs/operators/switchMap';
+import { take } from 'rxjs/operators/take';
+import { tap } from 'rxjs/operators/tap';
 
 import { AppState } from './../../app/store';
 
@@ -40,9 +41,10 @@ export class TimelineGuard implements CanActivate {
   canActivate(
     next: ActivatedRouteSnapshot,
     state: RouterStateSnapshot): Observable<boolean> | Promise<boolean> | boolean {
-    return this.initialSourcesLoaded()
-      .switchMap(() => of(true))
-      .catch(() => of(false));
+    return this.initialSourcesLoaded().pipe(
+      switchMap(() => of(true)),
+      catchError(() => of(false)),
+    );
   }
 
   /**
@@ -51,14 +53,15 @@ export class TimelineGuard implements CanActivate {
    * Note that whenever the `fromSourceExplorer.getInitialSourcesLoaded` selector changes this stream is re-triggered.
    */
   initialSourcesLoaded(): Observable<boolean> {
-    return this.store$
-      .select(fromSourceExplorer.getInitialSourcesLoaded)
-      .do((initialSourcesLoaded: boolean) => {
+    return this.store$.pipe(
+      select(fromSourceExplorer.getInitialSourcesLoaded),
+      tap((initialSourcesLoaded: boolean) => {
         if (!initialSourcesLoaded) {
           this.store$.dispatch(new sourceExplorerActions.FetchInitialSources());
         }
-      })
-      .filter((initialSourcesLoaded: boolean) => initialSourcesLoaded)
-      .take(1);
+      }),
+      filter((initialSourcesLoaded: boolean) => initialSourcesLoaded),
+      take(1),
+    );
   }
 }
