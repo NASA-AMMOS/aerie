@@ -16,10 +16,12 @@ import { Action, Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
 import { of } from 'rxjs/observable/of';
 
-import { catchError } from 'rxjs/operators/catchError';
-import { map } from 'rxjs/operators/map';
-import { mergeMap } from 'rxjs/operators/mergeMap';
-import { withLatestFrom } from 'rxjs/operators/withLatestFrom';
+import {
+  catchError,
+  map,
+  mergeMap,
+  withLatestFrom,
+} from 'rxjs/operators';
 
 import { AppState } from './../../app/store';
 

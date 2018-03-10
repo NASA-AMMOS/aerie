@@ -20,11 +20,13 @@ import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
 import { of } from 'rxjs/observable/of';
 
-import { catchError } from 'rxjs/operators/catchError';
-import { filter } from 'rxjs/operators/filter';
-import { switchMap } from 'rxjs/operators/switchMap';
-import { take } from 'rxjs/operators/take';
-import { tap } from 'rxjs/operators/tap';
+import {
+  catchError,
+  filter,
+  switchMap,
+  take,
+  tap,
+} from 'rxjs/operators';
 
 import { AppState } from './../../app/store';
 

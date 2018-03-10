@@ -19,10 +19,12 @@ import { Observable } from 'rxjs/Observable';
 import { forkJoin } from 'rxjs/observable/forkJoin';
 import { of } from 'rxjs/observable/of';
 
-import { catchError } from 'rxjs/operators/catchError';
-import { map } from 'rxjs/operators/map';
-import { mergeMap } from 'rxjs/operators/mergeMap';
-import { withLatestFrom } from 'rxjs/operators/withLatestFrom';
+import {
+  catchError,
+  map,
+  mergeMap,
+  withLatestFrom,
+} from 'rxjs/operators';
 
 import { AppState } from './../../app/store';
 
@@ -118,7 +120,7 @@ export class DisplayEffects {
         },
       };
 
-      return this.http.put(`${action.source.url}/${action.name}`,  stateToSave).pipe(
+      return this.http.put(`${action.source.url}/${action.name}`, stateToSave).pipe(
         map(() => new displayActions.StateSaveSuccess()),
         catchError(() => of(new displayActions.StateLoadFailure())),
       );
