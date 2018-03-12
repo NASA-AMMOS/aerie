@@ -18,7 +18,7 @@ import {
 // Layout State Interface.
 export interface LayoutState {
   mode: string;
-  showDataItemDrawer: boolean;
+  showDataPointDrawer: boolean;
   showDetailsDrawer: boolean;
   showLeftDrawer: boolean;
   showSouthBandsDrawer: boolean;
@@ -27,7 +27,7 @@ export interface LayoutState {
 // Layout State.
 export const initialState: LayoutState = {
   mode: 'default',
-  showDataItemDrawer: true,
+  showDataPointDrawer: false,
   showDetailsDrawer: true,
   showLeftDrawer: true,
   showSouthBandsDrawer: true,
@@ -45,9 +45,8 @@ export function reducer(state: LayoutState = initialState, action: LayoutAction)
       return { ...state, showDetailsDrawer: !state.showDetailsDrawer };
     case LayoutActionTypes.ToggleLeftDrawer:
       return { ...state, showLeftDrawer: !state.showLeftDrawer };
-      case LayoutActionTypes.ToggleDataItemDrawer:
-      console.log('reducer toggleDataItemDrwaer');
-      return { ...state, showDataItemDrawer: !state.showDataItemDrawer };
+    case LayoutActionTypes.ToggleDataPointDrawer:
+      return { ...state, showDataPointDrawer: !state.showDataPointDrawer };
     case LayoutActionTypes.ToggleSouthBandsDrawer:
       return { ...state, showSouthBandsDrawer: !state.showSouthBandsDrawer };
     default:
@@ -85,7 +84,7 @@ export const getLayoutState = createFeatureSelector<LayoutState>('layout');
  * together to select different pieces of state.
  */
 export const getMode = createSelector(getLayoutState, (state: LayoutState) => state.mode);
-export const getShowDataItemDrawer = createSelector(getLayoutState, (state: LayoutState) => state.showDataItemDrawer);
+export const getShowDataPointDrawer = createSelector(getLayoutState, (state: LayoutState) => state.showDataPointDrawer);
 export const getShowDetailsDrawer = createSelector(getLayoutState, (state: LayoutState) => state.showDetailsDrawer);
 export const getShowLeftDrawer = createSelector(getLayoutState, (state: LayoutState) => state.showLeftDrawer);
 export const getShowSouthBandsDrawer = createSelector(getLayoutState, (state: LayoutState) => state.showSouthBandsDrawer);

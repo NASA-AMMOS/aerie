@@ -34,11 +34,11 @@ export class RouterEffects {
       const { layout } = action.payload.routerState.queryParams;
 
       if (layout === 'minimal') {
-        actions.push(new layoutActions.SetMode('minimal', false, false, true));
+        actions.push(new layoutActions.SetMode('minimal', true, false, false, true));
       } else if (layout === 'default') {
-        actions.push(new layoutActions.SetMode('default', true, true, true));
+        actions.push(new layoutActions.SetMode('default', true, true, true, true));
       } else {
-        actions.push(new layoutActions.SetMode('custom', state.layout.showDetailsDrawer, state.layout.showLeftDrawer, state.layout.showSouthBandsDrawer));
+        actions.push(new layoutActions.SetMode('custom', true, state.layout.showDetailsDrawer, state.layout.showLeftDrawer, state.layout.showSouthBandsDrawer));
       }
 
       return actions;

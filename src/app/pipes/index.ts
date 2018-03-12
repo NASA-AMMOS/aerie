@@ -10,3 +10,6 @@
 export * from './has-keys.pipe';
 export * from './key-by.pipe';
 export * from './key-value.pipe';
+export * from './map-data-item-key.pipe';
+export * from './doy.pipe';
+export * from './dhms.pipe';

@@ -1,0 +1,27 @@
+:host {
+  display: block;
+}
+
+.dataLabel {
+  padding-top: 1em;
+  font-weight: bold;
+}
+.dataValue {
+  padding-left: 1em;
+}
+.metaLabel {
+  background-color: #dcdfe5;
+  padding-left: 1em;
+}
+.metaValue {
+  background-color: #dcdfe5;
+  padding-left: 2em;
+}
+.paramLabel {
+  background-color: #eaebed;
+  padding-left: 1em;
+}
+.paramValue {
+  background-color: #eaebed;
+  padding-left: 2em;
+}

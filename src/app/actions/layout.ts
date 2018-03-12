@@ -12,7 +12,7 @@ import { Action } from '@ngrx/store';
 // Action Types.
 export enum LayoutActionTypes {
   SetMode                = '[layout] set_mode',
-  ToggleDataItemDrawer    = '[layout] toggle_data_item_drawer',
+  ToggleDataPointDrawer    = '[layout] toggle_data_point_drawer',
   ToggleDetailsDrawer    = '[layout] toggle_details_drawer',
   ToggleLeftDrawer       = '[layout] toggle_left_drawer',
   ToggleSouthBandsDrawer = '[layout] toggle_south_bands_drawer',
@@ -24,15 +24,15 @@ export class SetMode implements Action {
 
   constructor(
     public mode: string,
-    public showDataItemDrawer: boolean,
+    public showDataPointDrawer: boolean,
     public showDetailsDrawer: boolean,
     public showLeftDrawer: boolean,
     public showSouthBandsDrawer: boolean,
   ) {}
 }
 
-export class ToggleDataItemDrawer implements Action {
-  readonly type = LayoutActionTypes.ToggleDataItemDrawer;
+export class ToggleDataPointDrawer implements Action {
+  readonly type = LayoutActionTypes.ToggleDataPointDrawer;
 }
 
 export class ToggleDetailsDrawer implements Action {
@@ -50,7 +50,7 @@ export class ToggleSouthBandsDrawer implements Action {
 // Union type of all actions.
 export type LayoutAction =
   SetMode |
-  ToggleDataItemDrawer |
+  ToggleDataPointDrawer |
   ToggleDetailsDrawer |
   ToggleLeftDrawer |
   ToggleSouthBandsDrawer;

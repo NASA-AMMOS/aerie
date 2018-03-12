@@ -18,6 +18,7 @@ import {
 
 import {
   SelectBand,
+  SelectDataPoint,
   SettingsUpdateAllBands,
   SettingsUpdateBand,
   SettingsUpdateSubBand,
@@ -30,6 +31,7 @@ import {
   hasActivityLegend,
   hasId,
   shouldOverlay,
+  timestamp,
   toCompositeBand,
   updateSortOrder,
   updateTimeRanges,
@@ -37,8 +39,10 @@ import {
 
 import {
   RavenActivityBand,
+  RavenActivityPoint,
   RavenCompositeBand,
-  RavenDataItem,
+  RavenPoint,
+  RavenResourcePoint,
   RavenTimeRange,
 } from './../shared/models';
 
@@ -50,17 +54,16 @@ export interface TimelineState {
   overlayMode: boolean;
   selectedBandId: string;
   viewTimeRange: RavenTimeRange;
-  selectedDataItem: RavenDataItem;
+  selectedDataPoint: RavenPoint;
 }
 
-const defaultDataItem: RavenDataItem  = {
-  activityName: 'Act1',
-  activityType: 'Act',
-  duration: '',
-  endTime: '2018-143T12:00:00.000',
-  id: '__1234',
-  startTime: '2018-100T12:00:00.000',
-  value: '',
+const defaultDataPoint: RavenResourcePoint = {
+  duration: 0,
+  id: '',
+  sourceId: '',
+  start: 0,
+  uniqueId: '',
+  value: 0,
 };
 
 // Timeline Initial State.
@@ -70,7 +73,7 @@ export const initialState: TimelineState = {
   maxTimeRange: { end: 0, start: 0 },
   overlayMode: false,
   selectedBandId: '',
-  selectedDataItem: defaultDataItem,
+  selectedDataPoint: defaultDataPoint,
   viewTimeRange: { end: 0, start: 0 },
 };
 
@@ -86,6 +89,8 @@ export function reducer(state: TimelineState = initialState, action: SourceExplo
       return removeBands(state, action);
     case TimelineActionTypes.SelectBand:
       return selectBand(state, action);
+    case TimelineActionTypes.SelectDataPoint:
+      return selectDataPoint(state, action);
     case TimelineActionTypes.SettingsUpdateAllBands:
       return settingsUpdateAllBands(state, action);
     case TimelineActionTypes.SettingsUpdateBand:
@@ -115,7 +120,7 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
 
         // Add new band to a currently existing band.
         if (shouldOverlay(state.overlayMode, state.selectedBandId, band.id) && !hasActivityLegend(state.bands, newBand as RavenActivityBand) ||
-            hasActivityLegend([band], newBand as RavenActivityBand)) {
+          hasActivityLegend([band], newBand as RavenActivityBand)) {
           band = {
             ...band,
             subBands: band.subBands.concat({
@@ -166,8 +171,8 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
 export function removeBands(state: TimelineState, action: RemoveBands): TimelineState {
   let bands = state.bands
     .map(band => ({
-        ...band,
-        subBands: band.subBands.filter(subBand => !action.bandIds.includes(subBand.id)),
+      ...band,
+      subBands: band.subBands.filter(subBand => !action.bandIds.includes(subBand.id)),
     }))
     .filter(band => band.subBands.length !== 0);
 
@@ -191,6 +196,31 @@ export function selectBand(state: TimelineState, action: SelectBand): TimelineSt
   return {
     ...state,
     selectedBandId: action.bandId === state.selectedBandId ? '' : action.bandId,
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'SelectDataPoint' action.
+ */
+export function selectDataPoint(state: TimelineState, action: SelectDataPoint): TimelineState {
+  // get the activityPoint from uniqueId and band; action.bandId is the composite bandId containing the band of action.interval
+  let dataPoint = state.selectedDataPoint;
+  for (let i = 0, l = state.bands.length; i < l; ++i) {
+    if (state.bands[i].id === action.bandId) {
+      for (let j = 0, ll = state.bands[i].subBands.length; j < ll; ++j) {
+        const subBand = state.bands[i].subBands[j];
+        for (let k = 0, lll = subBand.points.length; k < lll; ++k) {
+          if (subBand.points[k].uniqueId === action.interval.uniqueId) {
+            dataPoint = subBand.points[k];
+          }
+        }
+      }
+    }
+  }
+
+  return {
+    ...state,
+    selectedDataPoint: dataPoint,
   };
 }
 
@@ -292,4 +322,4 @@ export const getMaxTimeRange = createSelector(getTimelineState, (state: Timeline
 export const getOverlayMode = createSelector(getTimelineState, (state: TimelineState) => state.overlayMode);
 export const getSelectedBandId = createSelector(getTimelineState, (state: TimelineState) => state.selectedBandId);
 export const getViewTimeRange = createSelector(getTimelineState, (state: TimelineState) => state.viewTimeRange);
-export const getSelectedDataItem = createSelector(getTimelineState, (state: TimelineState) => state.selectedDataItem);
+export const getSelectedDataPoint = createSelector(getTimelineState, (state: TimelineState) => state.selectedDataPoint);

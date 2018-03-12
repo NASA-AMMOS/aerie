@@ -10,6 +10,7 @@
 import { Action } from '@ngrx/store';
 
 import {
+  RavenPoint,
   RavenSortMessage,
   RavenTimeRange,
   StringTMap,
@@ -18,6 +19,7 @@ import {
 // Action Types.
 export enum TimelineActionTypes {
   SelectBand             = '[timeline] select_band',
+  SelectDataPoint         = '[timeline] select_data_point',
   SettingsUpdateAllBands = '[timeline] settings_update_all_bands',
   SettingsUpdateBand     = '[timeline] settings_update_band',
   SettingsUpdateSubBand  = '[timeline] settings_update_sub_band',
@@ -32,6 +34,11 @@ export class SelectBand implements Action {
   constructor(public bandId: string) {}
 }
 
+export class SelectDataPoint implements Action {
+  readonly type = TimelineActionTypes.SelectDataPoint;
+
+  constructor(public interval: any, public bandId: string) {}
+}
 export class SettingsUpdateAllBands implements Action {
   readonly type = TimelineActionTypes.SettingsUpdateAllBands;
 
@@ -65,6 +72,7 @@ export class UpdateViewTimeRange implements Action {
 // Union type of all actions.
 export type TimelineAction =
   SelectBand |
+  SelectDataPoint |
   SettingsUpdateAllBands |
   SettingsUpdateBand |
   SettingsUpdateSubBand |

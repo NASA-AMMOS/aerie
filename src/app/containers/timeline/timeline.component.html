@@ -1,111 +1,59 @@
-<split
-  direction="horizontal"
-  (dragEnd)="onDragEnd()">
-  <split-area
-    [visible]="showLeftDrawer$ | async"
-    [order]="0"
-    size="25">
+<split direction="horizontal" (dragEnd)="onDragEnd()">
+  <split-area [visible]="showLeftDrawer$ | async" [order]="0" size="25">
     <app-source-explorer></app-source-explorer>
   </split-area>
 
-  <split-area
-    [order]="1"
-    size="60">
-    <split
-      direction="vertical"
-      (dragEnd)="onDragEnd()">
-      <split-area
-        [order]="2"
-        size="50">
-        <div
-          *ngIf="itarMessage !== ''"
-          class="itar-message">
+  <split-area [order]="1" size="{{chartSize}}">
+    <split direction="vertical" (dragEnd)="onDragEnd()">
+      <split-area [order]="2" size="50">
+        <div *ngIf="itarMessage !== ''" class="itar-message">
           <mat-card>
             {{itarMessage}}
           </mat-card>
         </div>
 
-        <div
-          id="get-started-message"
-          *ngIf="bands.length === 0"
-          class="get-started">
+        <div id="get-started-message" *ngIf="bands.length === 0" class="get-started">
           <mat-card>
-            To get started, select some <i class="fa fa-area-chart" style="color: #17a923" aria-hidden="true"></i> Data Sources from the source explorer.
+            To get started, select some
+            <i class="fa fa-area-chart" style="color: #17a923" aria-hidden="true"></i> Data Sources from the source explorer.
           </mat-card>
         </div>
 
-        <div
-          id="raven-timeline"
-          *ngIf="bands.length > 0"
-          class="timeline">
+        <div id="raven-timeline" *ngIf="bands.length > 0" class="timeline">
           <mat-card>
-            <falcon-time-range-selector
-              [maxTimeRange]="maxTimeRange"
-              [viewTimeRange]="viewTimeRange">
+            <falcon-time-range-selector [maxTimeRange]="maxTimeRange" [viewTimeRange]="viewTimeRange">
             </falcon-time-range-selector>
 
-            <falcon-time-scroll-bar
-              [labelWidth]="labelWidth"
-              [maxTimeRange]="maxTimeRange"
-              [viewTimeRange]="viewTimeRange">
+            <falcon-time-scroll-bar [labelWidth]="labelWidth" [maxTimeRange]="maxTimeRange" [viewTimeRange]="viewTimeRange">
             </falcon-time-scroll-bar>
 
-            <falcon-time-band
-              [labelWidth]="labelWidth"
-              [maxTimeRange]="maxTimeRange"
-              [viewTimeRange]="viewTimeRange">
+            <falcon-time-band [labelWidth]="labelWidth" [maxTimeRange]="maxTimeRange" [viewTimeRange]="viewTimeRange">
             </falcon-time-band>
 
-            <raven-bands
-              [bands]="bands"
-              id="raven-bands-0"
-              [containerId]="'0'"
-              [labelWidth]="labelWidth"
-              [maxTimeRange]="maxTimeRange"
-              [selectedBandId]="selectedBandId"
-              [viewTimeRange]="viewTimeRange"
-              (bandClick)="onBandClick($event)"
+            <raven-bands [bands]="bands" id="raven-bands-0" [containerId]="'0'" [labelWidth]="labelWidth" [maxTimeRange]="maxTimeRange"
+              [selectedBandId]="selectedBandId" [viewTimeRange]="viewTimeRange" (bandClick)="onBandClick($event)" (dataPointClick)="onDataPointClick($event)"
               (newSort)="onSort($event)">
             </raven-bands>
           </mat-card>
         </div>
       </split-area>
 
-      <split-area
-        [visible]="showSouthBandsDrawer$ | async"
-        [order]="3"
-        size="20">
+      <split-area [visible]="showSouthBandsDrawer$ | async" [order]="3" size="20">
         <div class="timeline">
           <mat-card>
-            <raven-bands
-              id="raven-bands-1"
-              [bands]="bands"
-              [containerId]="'1'"
-              [labelWidth]="labelWidth"
-              [maxTimeRange]="maxTimeRange"
-              [selectedBandId]="selectedBandId"
-              [viewTimeRange]="viewTimeRange"
-              (bandClick)="onBandClick($event)"
+            <raven-bands id="raven-bands-1" [bands]="bands" [containerId]="'1'" [labelWidth]="labelWidth" [maxTimeRange]="maxTimeRange"
+              [selectedBandId]="selectedBandId" [viewTimeRange]="viewTimeRange" (bandClick)="onBandClick($event)" (dataPointClick)="onDataPointClick($event)"
               (newSort)="onSort($event)">
             </raven-bands>
           </mat-card>
         </div>
       </split-area>
 
-      <split-area
-        [visible]="showDetailsDrawer$ | async"
-        [order]="4"
-        size="30">
+      <split-area [visible]="showDetailsDrawer$ | async" [order]="4" size="30">
         <div class="settings">
           <mat-card>
-            <raven-settings
-              [bandsById]="bands | keyBy:'id'"
-              [labelWidth]="labelWidth"
-              [overlayMode]="overlayMode"
-              [selectedBandId]="selectedBandId"
-              (deleteBand)="onDeleteBand($event)"
-              (updateAllBands)="onUpdateAllBands($event)"
-              (updateBand)="onUpdateBand($event)"
+            <raven-settings [bandsById]="bands | keyBy:'id'" [labelWidth]="labelWidth" [overlayMode]="overlayMode" [selectedBandId]="selectedBandId"
+              (deleteBand)="onDeleteBand($event)" (updateAllBands)="onUpdateAllBands($event)" (updateBand)="onUpdateBand($event)"
               (updateSubBand)="onUpdateSubBand($event)">
             </raven-settings>
           </mat-card>
@@ -113,13 +61,20 @@
       </split-area>
     </split>
   </split-area>
-  <split-area
-    [visible]="showDataItemDrawer$ | async"
-    [order]="5"
-    size="15">
-    <raven-data-item
-      [dataItem]="selectedDataItem">
-    </raven-data-item>
+  <split-area [visible]="showDataPointDrawer" [order]="5" size="15">
+    <div *ngIf="selectedDataPointIsActivity(); else resourceOrStatePoint">
+      <raven-activity-point [dataPoint]="selectedDataPoint">
+      </raven-activity-point>
+    </div>
+    <ng-template #resourceOrStatePoint>
+      <ng-container *ngIf="selectedDataPointIsState(); else resourcePoint">
+        <raven-state-point [dataPoint]="selectedDataPoint">
+        </raven-state-point>
+      </ng-container>
+    </ng-template>
+    <ng-template #resourcePoint>
+      <raven-resource-point [dataPoint]="selectedDataPoint">
+      </raven-resource-point>
+    </ng-template>
   </split-area>
-
 </split>

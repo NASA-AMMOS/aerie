@@ -39,8 +39,10 @@ import {
 
 import {
   BandsComponent,
-  RavenDataItemComponent,
+  RavenActivityPointComponent,
+  RavenResourcePointComponent,
   RavenSettingsComponent,
+  RavenStatePointComponent,
   RavenTreeComponent,
 } from './components';
 
@@ -54,20 +56,28 @@ import {
 } from './guards';
 
 import {
+  DhmsPipe,
+  DOYPipe,
   HasKeysPipe,
   KeyByPipe,
   KeyValuePipe,
+  MapKeyPipe,
 } from './pipes';
 
 export const DECLARATIONS = [
   AppComponent,
   BandsComponent,
+  DhmsPipe,
+  DOYPipe,
   HasKeysPipe,
   KeyByPipe,
   KeyValuePipe,
+  MapKeyPipe,
+  RavenActivityPointComponent,
   RavenSettingsComponent,
   RavenTreeComponent,
-  RavenDataItemComponent,
+  RavenResourcePointComponent,
+  RavenStatePointComponent,
   SourceExplorerComponent,
   TimelineComponent,
 ];

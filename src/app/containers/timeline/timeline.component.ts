@@ -23,17 +23,20 @@ import * as fromConfig from './../../reducers/config';
 import * as fromLayout from './../../reducers/layout';
 import * as fromTimeline from './../../reducers/timeline';
 
+import * as layoutActions from './../../actions/layout';
 import * as sourceExplorerActions from './../../actions/source-explorer';
 import * as timelineActions from './../../actions/timeline';
 
 import {
+  RavenActivityPoint,
   RavenCompositeBand,
+  RavenPoint,
   RavenSettingsUpdate,
   RavenSortMessage,
+  RavenStatePoint,
   RavenSubBand,
   RavenTimeRange,
   StringTMap,
-  RavenDataItem,
 } from './../../shared/models';
 
 @Component({
@@ -43,6 +46,9 @@ import {
   templateUrl: './timeline.component.html',
 })
 export class TimelineComponent implements OnDestroy {
+
+  chartSize = 75;
+
   bands: RavenCompositeBand[];
   itarMessage: string;
   labelWidth: number;
@@ -50,9 +56,9 @@ export class TimelineComponent implements OnDestroy {
   overlayMode: boolean;
   selectedBandId: string;
   viewTimeRange: RavenTimeRange;
-  selectedDataItem: RavenDataItem;
+  selectedDataPoint: RavenPoint;
+  showDataPointDrawer: boolean;
 
-  showDataItemDrawer$: Observable<boolean>;
   showDetailsDrawer$: Observable<boolean>;
   showLeftDrawer$: Observable<boolean>;
   showSouthBandsDrawer$: Observable<boolean>;
@@ -67,21 +73,33 @@ export class TimelineComponent implements OnDestroy {
     this.store.select(fromTimeline.getOverlayMode).takeUntil(this.ngUnsubscribe).subscribe(overlayMode => this.overlayMode = overlayMode);
     this.store.select(fromTimeline.getSelectedBandId).takeUntil(this.ngUnsubscribe).subscribe(selectedBandId => this.selectedBandId = selectedBandId);
     this.store.select(fromTimeline.getViewTimeRange).takeUntil(this.ngUnsubscribe).subscribe(viewTimeRange => this.viewTimeRange = viewTimeRange);
-    this.store.select(fromTimeline.getSelectedDataItem).takeUntil(this.ngUnsubscribe).subscribe(selectedDataItem => this.selectedDataItem = selectedDataItem);
+    this.store.select(fromTimeline.getSelectedDataPoint).takeUntil(this.ngUnsubscribe).subscribe(selectedDataPoint => this.selectedDataPoint = selectedDataPoint);
+    this.store.select(fromLayout.getShowDataPointDrawer).takeUntil(this.ngUnsubscribe).subscribe(showDataPointDrawer => this.showDataPointDrawer = showDataPointDrawer);
 
     this.store.select(fromLayout.getMode).takeUntil(this.ngUnsubscribe).subscribe(layoutMode => {
       dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize anytime our mode changes.
     });
-    this.showDataItemDrawer$ = this.store.select(fromLayout.getShowDataItemDrawer).takeUntil(this.ngUnsubscribe);
+    // this.showDataPointDrawer$ = this.store.select(fromLayout.getShowDataPointDrawer).takeUntil(this.ngUnsubscribe);
     this.showDetailsDrawer$ = this.store.select(fromLayout.getShowDetailsDrawer).takeUntil(this.ngUnsubscribe);
     this.showLeftDrawer$ = this.store.select(fromLayout.getShowLeftDrawer).takeUntil(this.ngUnsubscribe);
     this.showSouthBandsDrawer$ = this.store.select(fromLayout.getShowSouthBandsDrawer).takeUntil(this.ngUnsubscribe);
-    // this.selectedDataItem$ = this.store.select(fromTimeline.getSelectedDataItem).takeUntil(this.ngUnsubscribe);
   }
 
   ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
+  }
+
+  getChartSize(): number {
+    console.log('in getChartSize');
+    return this.showDataPointDrawer ? 60 : 75;
+  }
+  selectedDataPointIsActivity(): boolean {
+    return (<RavenActivityPoint>this.selectedDataPoint).activityName !== undefined;
+  }
+
+  selectedDataPointIsState(): boolean {
+    return (<RavenStatePoint>this.selectedDataPoint).end !== undefined;
   }
 
   /**
@@ -91,6 +109,14 @@ export class TimelineComponent implements OnDestroy {
     this.store.dispatch(new timelineActions.SelectBand(bandId));
   }
 
+  onDataPointClick(detail: any): void {
+    this.store.dispatch(new timelineActions.SelectDataPoint(detail.ctlData.interval, detail.ctlData.band.id));
+    if (!this.showDataPointDrawer) {
+      this.store.dispatch(new layoutActions.ToggleDataPointDrawer());
+      this.chartSize = 60;
+      dispatchEvent(new Event('resize'));
+    }
+  }
   /**
    * Event. Called when a `delete-band` event is fired from the raven-settings component.
    */

@@ -1,0 +1,22 @@
+<ng-container>
+  <div class="dataLabel">Activity Name</div>
+  <div class="dataValue">{{dataPoint['activityName']}}</div>
+  <div class="dataLabel">Activity Type</div>
+  <div class="dataValue">{{dataPoint['activityType']}}</div>
+  <div class="dataLabel">Activity Start Time</div>
+  <div class="dataValue">{{dataPoint['startTimestamp']}}</div>
+  <div class="dataLabel">Activity End Time</div>
+  <div class="dataValue">{{dataPoint['endTimestamp']}}</div>
+  <div class="dataLabel">Duration</div>
+  <div class="dataValue">{{dataPoint['duration'] | dhms}}</div>
+  <div class="dataLabel">Parameters</div>
+  <ng-container *ngFor="let param of dataPoint['activityParameters']">
+      <div class="paramLabel">{{param.Name}}</div>
+      <div class="paramValue">{{param.Value}}</div>
+    </ng-container>
+  <div class="dataLabel">metadata</div>
+  <ng-container *ngFor="let meta of dataPoint['metadata']">
+    <div class="metaLabel">{{meta.Name}}</div>
+    <div class="metaValue">{{meta.Value}}</div>
+  </ng-container>
+</ng-container>

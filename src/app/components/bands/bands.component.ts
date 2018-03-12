@@ -45,6 +45,7 @@ export class BandsComponent implements OnChanges, OnInit {
   @Input() viewTimeRange: RavenTimeRange;
 
   @Output() bandClick: EventEmitter<string> = new EventEmitter<string>();
+  @Output() dataPointClick: EventEmitter<any> = new EventEmitter<any>();
   @Output() newSort: EventEmitter<StringTMap<RavenSortMessage>> = new EventEmitter<StringTMap<RavenSortMessage>>();
 
   sortablejsOptions: SortablejsOptions;
@@ -70,8 +71,8 @@ export class BandsComponent implements OnChanges, OnInit {
     if (changes.bands) {
       this.sortedAndFilteredBands =
         [...this.bands]
-        .filter(band => band.containerId === this.containerId)
-        .sort((a, b) =>  a.sortOrder - b.sortOrder);
+          .filter(band => band.containerId === this.containerId)
+          .sort((a, b) => a.sortOrder - b.sortOrder);
     }
   }
 
@@ -83,6 +84,13 @@ export class BandsComponent implements OnChanges, OnInit {
     e.preventDefault();
     e.stopPropagation();
     this.bandClick.emit(e.detail.bandId);
+  }
+
+  @HostListener('falcon-composite-band-left-click', ['$event'])
+  onDataItemLeftClick(e: BandClickEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.dataPointClick.emit(e.detail);
   }
 
   /**
