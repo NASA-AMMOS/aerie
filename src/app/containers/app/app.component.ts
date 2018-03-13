@@ -8,6 +8,8 @@
  */
 
 import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   OnDestroy,
 } from '@angular/core';
@@ -16,7 +18,7 @@ import { Store } from '@ngrx/store';
 
 import { Observable } from 'rxjs/Observable';
 import { combineLatest } from 'rxjs/observable/combineLatest';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, tap } from 'rxjs/operators';
 import { Subject } from 'rxjs/Subject';
 
 import * as fromDisplay from './../../reducers/display';
@@ -25,6 +27,7 @@ import * as fromSourceExplorer from './../../reducers/source-explorer';
 import * as layoutActions from './../../actions/layout';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-root',
   styleUrls: ['./app.component.css'],
   templateUrl: './app.component.html',
@@ -34,7 +37,10 @@ export class AppComponent implements OnDestroy {
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
-  constructor(private store: Store<fromSourceExplorer.SourceExplorerState>) {
+  constructor(
+    private changeDetector: ChangeDetectorRef,
+    private store: Store<fromSourceExplorer.SourceExplorerState>,
+  ) {
     // Combine all fetch pending observables for use in progress bar.
     this.loading$ = combineLatest(
       this.store.select(fromDisplay.getPending),
@@ -43,6 +49,7 @@ export class AppComponent implements OnDestroy {
         return displayPending || sourceExplorerPending;
       },
     ).pipe(
+      tap(() => this.changeDetector.markForCheck()),
       takeUntil(this.ngUnsubscribe),
     );
   }
