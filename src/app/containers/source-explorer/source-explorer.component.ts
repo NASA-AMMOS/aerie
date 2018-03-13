@@ -11,8 +11,13 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  OnDestroy,
 } from '@angular/core';
+
 import { Store } from '@ngrx/store';
+
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs/Subject';
 
 import { MatDialog } from '@angular/material';
 
@@ -42,9 +47,11 @@ import {
   styleUrls: ['./source-explorer.component.css'],
   templateUrl: './source-explorer.component.html',
 })
-export class SourceExplorerComponent {
+export class SourceExplorerComponent implements OnDestroy {
   // Source Explorer state.
   tree: StringTMap<RavenSource>;
+
+  private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(
     private changeDetector: ChangeDetectorRef,
@@ -52,10 +59,17 @@ export class SourceExplorerComponent {
     private store: Store<fromSourceExplorer.SourceExplorerState>,
   ) {
     // Source Explorer state.
-    this.store.select(fromSourceExplorer.getTreeBySourceId).subscribe(tree => {
+    this.store.select(fromSourceExplorer.getTreeBySourceId).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(tree => {
       this.tree = tree;
       this.changeDetector.markForCheck();
     });
+  }
+
+  ngOnDestroy() {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
   }
 
   /**

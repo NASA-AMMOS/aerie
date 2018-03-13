@@ -7,10 +7,17 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Component } from '@angular/core';
+import {
+  Component,
+  OnDestroy,
+} from '@angular/core';
+
 import { Store } from '@ngrx/store';
+
 import { Observable } from 'rxjs/Observable';
 import { combineLatest } from 'rxjs/observable/combineLatest';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs/Subject';
 
 import * as fromDisplay from './../../reducers/display';
 import * as fromSourceExplorer from './../../reducers/source-explorer';
@@ -22,8 +29,10 @@ import * as layoutActions from './../../actions/layout';
   styleUrls: ['./app.component.css'],
   templateUrl: './app.component.html',
 })
-export class AppComponent {
+export class AppComponent implements OnDestroy {
   loading$: Observable<boolean>;
+
+  private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(private store: Store<fromSourceExplorer.SourceExplorerState>) {
     // Combine all fetch pending observables for use in progress bar.
@@ -33,7 +42,14 @@ export class AppComponent {
       (displayPending, sourceExplorerPending) => {
         return displayPending || sourceExplorerPending;
       },
+    ).pipe(
+      takeUntil(this.ngUnsubscribe),
     );
+  }
+
+  ngOnDestroy() {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
   }
 
   toggleDetailsDrawer() {

@@ -12,8 +12,13 @@ import {
   ChangeDetectorRef,
   Component,
   HostListener,
+  OnDestroy,
 } from '@angular/core';
+
 import { Store } from '@ngrx/store';
+
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs/Subject';
 
 import * as fromConfig from './../../reducers/config';
 import * as fromLayout from './../../reducers/layout';
@@ -37,7 +42,7 @@ import {
   styleUrls: ['./timeline.component.css'],
   templateUrl: './timeline.component.html',
 })
-export class TimelineComponent {
+export class TimelineComponent implements OnDestroy {
   // Config state.
   itarMessage: string;
 
@@ -54,27 +59,35 @@ export class TimelineComponent {
   selectedBandId: string;
   viewTimeRange: RavenTimeRange;
 
+  private ngUnsubscribe: Subject<{}> = new Subject();
+
   constructor(
     private changeDetector: ChangeDetectorRef,
     private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState>,
   ) {
     // Config state.
-    this.store.select(fromConfig.getItarMessage).subscribe(itarMessage => {
+    this.store.select(fromConfig.getItarMessage).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(itarMessage => {
       this.itarMessage = itarMessage;
       this.changeDetector.markForCheck();
     });
 
     // Layout state.
-    this.store.select(fromLayout.getShowDrawers).subscribe(state => {
+    this.store.select(fromLayout.getShowDrawers).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(state => {
       this.showDetailsDrawer = state.showDetailsDrawer;
       this.showLeftDrawer = state.showLeftDrawer;
       this.showSouthBandsDrawer = state.showSouthBandsDrawer;
       this.changeDetector.markForCheck();
-      dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize anytime our mode changes.
+      dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize anytime our layout changes.
     });
 
     // Timeline state.
-    this.store.select(fromTimeline.getTimelineState).subscribe(state => {
+    this.store.select(fromTimeline.getTimelineState).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(state => {
       this.bands = state.bands;
       this.labelWidth = state.labelWidth;
       this.maxTimeRange = state.maxTimeRange;
@@ -83,6 +96,11 @@ export class TimelineComponent {
       this.viewTimeRange = state.viewTimeRange;
       this.changeDetector.markForCheck();
     });
+  }
+
+  ngOnDestroy() {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
   }
 
   /**
