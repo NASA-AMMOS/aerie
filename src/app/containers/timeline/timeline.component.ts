@@ -55,7 +55,6 @@ export class TimelineComponent implements OnDestroy {
   bands: RavenCompositeBand[];
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
-  overlayMode: boolean;
   selectedBandId: string;
   viewTimeRange: RavenTimeRange;
 
@@ -91,7 +90,6 @@ export class TimelineComponent implements OnDestroy {
       this.bands = state.bands;
       this.labelWidth = state.labelWidth;
       this.maxTimeRange = state.maxTimeRange;
-      this.overlayMode = state.overlayMode;
       this.selectedBandId = state.selectedBandId;
       this.viewTimeRange = state.viewTimeRange;
       this.changeDetector.markForCheck();

@@ -16,6 +16,7 @@ import {
 
 export const activityBand: RavenActivityBand = {
   activityStyle: 1,
+  addTo: false,
   alignLabel: 3,
   baselineLabel: 3,
   height: 50,
@@ -45,6 +46,7 @@ export const compositeBand: RavenCompositeBand = {
   heightPadding: 0,
   id: '200',
   name: 'test-composite-band',
+  overlay: false,
   showTooltip: true,
   sortOrder: 0,
   subBands: [],
@@ -52,6 +54,7 @@ export const compositeBand: RavenCompositeBand = {
 };
 
 export const resourceBand: RavenResourceBand = {
+  addTo: false,
   autoTickValues: true,
   color: [0, 0, 0],
   fill: false,
@@ -77,6 +80,7 @@ export const resourceBand: RavenResourceBand = {
 };
 
 export const stateBand: RavenStateBand = {
+  addTo: false,
   alignLabel: 3,
   baselineLabel: 3,
   height: 50,

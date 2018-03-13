@@ -14,6 +14,7 @@ import {
 
 export interface RavenResourceBand {
   autoTickValues: boolean;
+  addTo: boolean;
   color: number[];
   fill: boolean;
   fillColor: number[];

@@ -93,6 +93,7 @@ export function toActivityBands(source: RavenSource, timelineData: MpsServerActi
   Object.keys(legends).forEach(legend => {
     const activityBand: RavenActivityBand = {
       activityStyle: 1,
+      addTo: false,
       alignLabel: 3,
       baselineLabel: 3,
       height: 50,
@@ -134,6 +135,7 @@ export function toCompositeBand(subBand: RavenSubBand): RavenCompositeBand {
     heightPadding: subBand.heightPadding,
     id: compositeBandUniqueId,
     name: subBand.name,
+    overlay: false,
     showTooltip: subBand.showTooltip,
     sortOrder: 0,
     subBands: [{
@@ -176,6 +178,7 @@ export function toResourceBand(source: RavenSource, metadata: MpsServerResourceM
   const { maxTimeRange, points } = getResourcePoints(source.id, timelineData);
 
   const resourceBand: RavenResourceBand = {
+    addTo: false,
     autoTickValues: true,
     color: [0, 0, 0],
     fill: false,
@@ -210,6 +213,7 @@ export function toStateBand(source: RavenSource, metadata: MpsServerStateMetadat
   const { maxTimeRange, points } = getStatePoints(source.id, timelineData);
 
   const stateBand: RavenStateBand = {
+    addTo: false,
     alignLabel: 3,
     baselineLabel: 3,
     height: 50,
@@ -358,11 +362,4 @@ export function hasActivityLegend(compositeBands: RavenCompositeBand[], band: Ra
     }
   }
   return false;
-}
-
-/**
- * Helper. Returns true of we are in overlay mode and should overlay on a band with `bandId`. False otherwise.
- */
-export function shouldOverlay(overlayMode: boolean, selectedBandId: string, bandId: string): boolean {
-  return overlayMode && selectedBandId === bandId;
 }

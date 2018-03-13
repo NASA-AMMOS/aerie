@@ -24,23 +24,11 @@
       <label>Label Width</label>
     </div>
 
-    <!-- Overlay. -->
-    <div class="field">
-      <mat-slide-toggle
-        id="raven-settings-overlay"
-        color="primary"
-        [disabled]="selectedBandId === ''"
-        [checked]="overlayMode && selectedBandId !== ''"
-        (change)="updateTimeline.emit({ update: { overlayMode: $event.checked } })">
-        Overlay
-      </mat-slide-toggle>
-    </div>
-
     <!-- Add Divider Band. -->
     <div class="field">
       <button
         id="raven-settings-add-divider-band"
-        mat-raised-button>
+        mat-button>
         Add Divider Band
       </button>
     </div>
@@ -81,12 +69,25 @@
     </mat-slide-toggle>
   </div>
 
+  <!-- Overlay. -->
+  <div class="field">
+    <mat-slide-toggle
+      id="raven-settings-overlay"
+      color="primary"
+      [checked]="bandsById[selectedBandId].overlay"
+      (change)="updateBand.emit({ bandId: selectedBandId, update: { overlay: $event.checked } })">
+      Overlay
+    </mat-slide-toggle>
+  </div>
+
   <!-- Selected Sub Band. -->
-  <div fxFlex="40" class="field">
+  <div
+    *ngIf="bandsById[selectedBandId].subBands.length > 1"
+    fxFlex="40"
+    class="field">
     <mat-form-field class="full-width">
       <mat-select
-        #selectBand
-        [value]="bandsById[selectedBandId].subBands[0].id"
+        [(value)]="selectedSubBandId"
         placeholder="Selected Band">
         <ng-container *ngFor="let subBand of bandsById[selectedBandId].subBands">
           <mat-option [value]="subBand.id">{{subBand.label}}</mat-option>
@@ -96,7 +97,7 @@
   </div>
 
   <ng-container *ngFor="let subBand of bandsById[selectedBandId].subBands">
-    <ng-container *ngIf="selectBand.value === subBand.id">
+    <ng-container *ngIf="subBand.id === selectedSubBandId">
       <!-- Label -->
       <div fxFlex="40" class="field">
         <mat-form-field class="full-width">
@@ -279,7 +280,7 @@
       <div class="field">
         <button
           id="raven-settings-delete-band"
-          mat-raised-button
+          mat-button
           color="warn"
           (click)="deleteBand.emit(subBand)">
           Delete Band

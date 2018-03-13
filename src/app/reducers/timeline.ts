@@ -29,7 +29,6 @@ import {
 import {
   hasActivityLegend,
   hasId,
-  shouldOverlay,
   toCompositeBand,
   updateSortOrder,
   updateTimeRanges,
@@ -46,7 +45,6 @@ export interface TimelineState {
   bands: RavenCompositeBand[];
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
-  overlayMode: boolean;
   selectedBandId: string;
   viewTimeRange: RavenTimeRange;
 }
@@ -56,7 +54,6 @@ export const initialState: TimelineState = {
   bands: [],
   labelWidth: 150,
   maxTimeRange: { end: 0, start: 0 },
-  overlayMode: false,
   selectedBandId: '',
   viewTimeRange: { end: 0, start: 0 },
 };
@@ -101,7 +98,7 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
         const newBand = action.newBands[i];
 
         // Add new band to a currently existing band.
-        if (shouldOverlay(state.overlayMode, state.selectedBandId, band.id) && !hasActivityLegend(state.bands, newBand as RavenActivityBand) ||
+        if (band.overlay && state.selectedBandId === band.id && !hasActivityLegend(state.bands, newBand as RavenActivityBand) ||
             hasActivityLegend([band], newBand as RavenActivityBand)) {
           band = {
             ...band,
