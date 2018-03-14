@@ -10,8 +10,10 @@
 import { Action } from '@ngrx/store';
 
 import {
+  BaseType,
   RavenSource,
   RavenSubBand,
+  StringTMap,
 } from './../shared/models';
 
 // Action Types.
@@ -35,6 +37,7 @@ export enum SourceExplorerActionTypes {
   SourceExplorerPin          = '[sourceExplorer] source_explorer_pin',
   SourceExplorerSelect       = '[sourceExplorer] source_explorer_select',
   SourceExplorerUnpin        = '[sourceExplorer] source_explorer_unpin',
+  UpdateSourceExplorer       = '[sourceExplorer] update_source_explorer',
 }
 
 // Actions.
@@ -144,6 +147,12 @@ export class SourceExplorerUnpin implements Action {
   constructor(public source: RavenSource) {}
 }
 
+export class UpdateSourceExplorer implements Action {
+  readonly type = SourceExplorerActionTypes.UpdateSourceExplorer;
+
+  constructor(public update: StringTMap<BaseType>) {}
+}
+
 // Union type of all actions.
 export type SourceExplorerAction =
   FetchGraphData |
@@ -164,4 +173,5 @@ export type SourceExplorerAction =
   SourceExplorerOpen |
   SourceExplorerPin |
   SourceExplorerSelect |
-  SourceExplorerUnpin;
+  SourceExplorerUnpin |
+  UpdateSourceExplorer;

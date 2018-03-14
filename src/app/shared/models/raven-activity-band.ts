@@ -32,6 +32,7 @@ export interface RavenActivityBand {
   showTooltip: boolean;
   sourceId: string;
   sourceName: string;
+  sourceUrl: string;
   trimLabel: boolean;
   type: string;
 }

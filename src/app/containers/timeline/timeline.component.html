@@ -1,5 +1,10 @@
-<split direction="horizontal" (dragEnd)="onDragEnd()">
-  <split-area [visible]="showLeftDrawer$ | async" [order]="0" size="25">
+<split
+  direction="horizontal"
+  (dragEnd)="onDragEnd()">
+  <split-area
+    [visible]="showLeftDrawer"
+    [order]="0"
+    size="25">
     <app-source-explorer></app-source-explorer>
   </split-area>
 
@@ -12,14 +17,18 @@
           </mat-card>
         </div>
 
-        <div id="get-started-message" *ngIf="bands.length === 0" class="get-started">
+        <div
+          *ngIf="bands.length === 0"
+          class="get-started">
           <mat-card>
             To get started, select some
             <i class="fa fa-area-chart" style="color: #17a923" aria-hidden="true"></i> Data Sources from the source explorer.
           </mat-card>
         </div>
 
-        <div id="raven-timeline" *ngIf="bands.length > 0" class="timeline">
+        <div
+          *ngIf="bands.length > 0"
+          class="timeline-0">
           <mat-card>
             <falcon-time-range-selector [maxTimeRange]="maxTimeRange" [viewTimeRange]="viewTimeRange">
             </falcon-time-range-selector>
@@ -30,31 +39,59 @@
             <falcon-time-band [labelWidth]="labelWidth" [maxTimeRange]="maxTimeRange" [viewTimeRange]="viewTimeRange">
             </falcon-time-band>
 
-            <raven-bands [bands]="bands" id="raven-bands-0" [containerId]="'0'" [labelWidth]="labelWidth" [maxTimeRange]="maxTimeRange"
-              [selectedBandId]="selectedBandId" [viewTimeRange]="viewTimeRange" (bandClick)="onBandClick($event)" (dataPointClick)="onDataPointClick($event)"
+            <raven-bands
+              class="raven-bands-0"
+              [bands]="bands"
+              [containerId]="'0'"
+              [labelWidth]="labelWidth"
+              [maxTimeRange]="maxTimeRange"
+              [selectedBandId]="selectedBandId"
+              [viewTimeRange]="viewTimeRange"
+              (bandClick)="onBandClick($event)"
+              (dataPointClick)="onDataPointClick($event)"
               (newSort)="onSort($event)">
             </raven-bands>
           </mat-card>
         </div>
       </split-area>
 
-      <split-area [visible]="showSouthBandsDrawer$ | async" [order]="3" size="20">
-        <div class="timeline">
+      <split-area
+        [visible]="showSouthBandsDrawer"
+        [order]="3"
+        size="20">
+        <div class="timeline-1">
           <mat-card>
-            <raven-bands id="raven-bands-1" [bands]="bands" [containerId]="'1'" [labelWidth]="labelWidth" [maxTimeRange]="maxTimeRange"
-              [selectedBandId]="selectedBandId" [viewTimeRange]="viewTimeRange" (bandClick)="onBandClick($event)" (dataPointClick)="onDataPointClick($event)"
+            <raven-bands
+              class="raven-bands-1"
+              [bands]="bands"
+              [containerId]="'1'"
+              [labelWidth]="labelWidth"
+              [maxTimeRange]="maxTimeRange"
+              [selectedBandId]="selectedBandId"
+              [viewTimeRange]="viewTimeRange"
+              (bandClick)="onBandClick($event)"
+              (dataPointClick)="onDataPointClick($event)"
               (newSort)="onSort($event)">
             </raven-bands>
           </mat-card>
         </div>
       </split-area>
 
-      <split-area [visible]="showDetailsDrawer$ | async" [order]="4" size="30">
+      <split-area
+        [visible]="showDetailsDrawer"
+        [order]="4"
+        size="30">
         <div class="settings">
           <mat-card>
-            <raven-settings [bandsById]="bands | keyBy:'id'" [labelWidth]="labelWidth" [overlayMode]="overlayMode" [selectedBandId]="selectedBandId"
-              (deleteBand)="onDeleteBand($event)" (updateAllBands)="onUpdateAllBands($event)" (updateBand)="onUpdateBand($event)"
-              (updateSubBand)="onUpdateSubBand($event)">
+            <raven-settings
+              [bandsById]="bands | keyBy:'id'"
+              [labelWidth]="labelWidth"
+              [overlayMode]="overlayMode"
+              [selectedBandId]="selectedBandId"
+              (deleteBand)="onDeleteBand($event)"
+              (updateBand)="onUpdateBand($event)"
+              (updateSubBand)="onUpdateSubBand($event)"
+              (updateTimeline)="onUpdateTimeline($event)">
             </raven-settings>
           </mat-card>
         </div>

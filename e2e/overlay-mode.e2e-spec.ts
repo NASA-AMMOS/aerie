@@ -8,11 +8,6 @@
  */
 
 import {
-  by,
-  element,
-} from 'protractor';
-
-import {
   AppPage,
   clickByIds,
   probe,
@@ -28,8 +23,6 @@ describe('raven2 - overlay mode', () => {
   const source2: RavenTree = new RavenTree(1, 'SolarArrayRotationAngle');
   const source3: RavenTree = new RavenTree(3, 'PostCal');
   const source4: RavenTree = new RavenTree(3, 'PreCal');
-
-  const band0 = element(by.css('.raven-band-0'));
 
   const ids: string[] = [
     'raven-tree-leucadia-expand',
@@ -47,13 +40,13 @@ describe('raven2 - overlay mode', () => {
   });
 
   it('after opening source0 there should be only one band', async () => {
-    bands = await probe(element(by.id('raven-bands-0')), 'bands');
+    bands = await probe(page.bands, 'bands');
     expect(bands.length).toEqual(1);
   });
 
   it('after opening source1 there should be two bands since we are not in overlay mode', async () => {
     source1.open();
-    bands = await probe(element(by.id('raven-bands-0')), 'bands');
+    bands = await probe(page.bands, 'bands');
     expect(bands.length).toEqual(2);
   });
 
@@ -65,7 +58,7 @@ describe('raven2 - overlay mode', () => {
   });
 
   it('selecting band0 should enable the overlay toggle, however it should still be unchecked', async () => {
-    band0.click();
+    page.band0.click();
     const checked = await page.settingsOverlay.getAttribute('ng-reflect-checked');
     const disabled = await page.settingsOverlay.getAttribute('ng-reflect-disabled');
     expect(checked).toBe('false');
@@ -82,7 +75,7 @@ describe('raven2 - overlay mode', () => {
 
   it('opening source2 should overlay a new band on the selected band (band0)', async () => {
     source2.open();
-    bands = await probe(element(by.id('raven-bands-0')), 'bands');
+    bands = await probe(page.bands, 'bands');
     expect(bands.length).toEqual(2);
     expect(bands[0].subBands.length).toEqual(2);
     expect(bands[1].subBands.length).toEqual(1);
@@ -92,14 +85,14 @@ describe('raven2 - overlay mode', () => {
 
   it('closing source1 should remove a band', async () => {
     source1.close();
-    bands = await probe(element(by.id('raven-bands-0')), 'bands');
+    bands = await probe(page.bands, 'bands');
     expect(bands.length).toEqual(1);
     expect(bands[0].subBands.length).toEqual(2);
   });
 
   it('closing source0 should remove a band from the first band', async () => {
     source0.close();
-    bands = await probe(element(by.id('raven-bands-0')), 'bands');
+    bands = await probe(page.bands, 'bands');
     expect(bands.length).toEqual(1);
     expect(bands[0].subBands.length).toEqual(1);
   });
@@ -111,28 +104,28 @@ describe('raven2 - overlay mode', () => {
       'raven-tree-DSN-expand',
     ]);
     source3.open();
-    bands = await probe(element(by.id('raven-bands-0')), 'bands');
+    bands = await probe(page.bands, 'bands');
     expect(bands.length).toEqual(1);
     expect(bands[0].subBands.length).toEqual(4);
   });
 
   it('overlaying a same 3-legend source should add 3 more sub-bands to the selected band', async () => {
     source4.open();
-    bands = await probe(element(by.id('raven-bands-0')), 'bands');
+    bands = await probe(page.bands, 'bands');
     expect(bands.length).toEqual(1);
     expect(bands[0].subBands.length).toEqual(7);
   });
 
   it('closing source3 should remove 3 sub-bands from the selected band', async () => {
     source3.close();
-    bands = await probe(element(by.id('raven-bands-0')), 'bands');
+    bands = await probe(page.bands, 'bands');
     expect(bands.length).toEqual(1);
     expect(bands[0].subBands.length).toEqual(4);
   });
 
   it('closing source4 should remove 3 more sub-bands from the selected band', async () => {
     source4.close();
-    bands = await probe(element(by.id('raven-bands-0')), 'bands');
+    bands = await probe(page.bands, 'bands');
     expect(bands.length).toEqual(1);
     expect(bands[0].subBands.length).toEqual(1);
   });
@@ -140,7 +133,7 @@ describe('raven2 - overlay mode', () => {
   it('turning off overlay mode and drawing a 3-legend source should add 3 new bands', async () => {
     page.settingsOverlay.click();
     source3.open();
-    bands = await probe(element(by.id('raven-bands-0')), 'bands');
+    bands = await probe(page.bands, 'bands');
     expect(bands.length).toEqual(4);
     expect(bands[0].subBands.length).toEqual(1);
     expect(bands[1].subBands.length).toEqual(1);
@@ -151,7 +144,7 @@ describe('raven2 - overlay mode', () => {
   it('turning back on overlay mode and drawing another 3-legend source should add those bands to the existing legend bands and NOT overlay them', async () => {
     page.settingsOverlay.click();
     source4.open();
-    bands = await probe(element(by.id('raven-bands-0')), 'bands');
+    bands = await probe(page.bands, 'bands');
     expect(bands.length).toEqual(4);
     expect(bands[0].subBands.length).toEqual(1);
     expect(bands[1].subBands.length).toEqual(2);

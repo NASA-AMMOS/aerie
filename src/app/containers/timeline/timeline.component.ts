@@ -9,15 +9,16 @@
 
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   HostListener,
   OnDestroy,
 } from '@angular/core';
-import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
 
-import 'rxjs/add/operator/takeUntil';
+import { Store } from '@ngrx/store';
+
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs/Subject';
 
 import * as fromConfig from './../../reducers/config';
 import * as fromLayout from './../../reducers/layout';
@@ -46,11 +47,17 @@ import {
   templateUrl: './timeline.component.html',
 })
 export class TimelineComponent implements OnDestroy {
-
   chartSize = 75;
-
-  bands: RavenCompositeBand[];
+  // Config state.
   itarMessage: string;
+
+  // Layout state.
+  showDetailsDrawer: boolean;
+  showLeftDrawer: boolean;
+  showSouthBandsDrawer: boolean;
+
+  // Timeline state.
+  bands: RavenCompositeBand[];
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
   overlayMode: boolean;
@@ -59,30 +66,45 @@ export class TimelineComponent implements OnDestroy {
   selectedDataPoint: RavenPoint;
   showDataPointDrawer: boolean;
 
-  showDetailsDrawer$: Observable<boolean>;
-  showLeftDrawer$: Observable<boolean>;
-  showSouthBandsDrawer$: Observable<boolean>;
-
   private ngUnsubscribe: Subject<{}> = new Subject();
 
-  constructor(private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState>) {
-    this.store.select(fromTimeline.getBands).takeUntil(this.ngUnsubscribe).subscribe(bands => this.bands = bands);
-    this.store.select(fromConfig.getItarMessage).takeUntil(this.ngUnsubscribe).subscribe(itarMessage => this.itarMessage = itarMessage);
-    this.store.select(fromTimeline.getLabelWidth).takeUntil(this.ngUnsubscribe).subscribe(labelWidth => this.labelWidth = labelWidth);
-    this.store.select(fromTimeline.getMaxTimeRange).takeUntil(this.ngUnsubscribe).subscribe(maxTimeRange => this.maxTimeRange = maxTimeRange);
-    this.store.select(fromTimeline.getOverlayMode).takeUntil(this.ngUnsubscribe).subscribe(overlayMode => this.overlayMode = overlayMode);
-    this.store.select(fromTimeline.getSelectedBandId).takeUntil(this.ngUnsubscribe).subscribe(selectedBandId => this.selectedBandId = selectedBandId);
-    this.store.select(fromTimeline.getViewTimeRange).takeUntil(this.ngUnsubscribe).subscribe(viewTimeRange => this.viewTimeRange = viewTimeRange);
-    this.store.select(fromTimeline.getSelectedDataPoint).takeUntil(this.ngUnsubscribe).subscribe(selectedDataPoint => this.selectedDataPoint = selectedDataPoint);
-    this.store.select(fromLayout.getShowDataPointDrawer).takeUntil(this.ngUnsubscribe).subscribe(showDataPointDrawer => this.showDataPointDrawer = showDataPointDrawer);
-
-    this.store.select(fromLayout.getMode).takeUntil(this.ngUnsubscribe).subscribe(layoutMode => {
-      dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize anytime our mode changes.
+  constructor(
+    private changeDetector: ChangeDetectorRef,
+    private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState>,
+  ) {
+    // Config state.
+    this.store.select(fromConfig.getItarMessage).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(itarMessage => {
+      this.itarMessage = itarMessage;
+      this.changeDetector.markForCheck();
     });
-    // this.showDataPointDrawer$ = this.store.select(fromLayout.getShowDataPointDrawer).takeUntil(this.ngUnsubscribe);
-    this.showDetailsDrawer$ = this.store.select(fromLayout.getShowDetailsDrawer).takeUntil(this.ngUnsubscribe);
-    this.showLeftDrawer$ = this.store.select(fromLayout.getShowLeftDrawer).takeUntil(this.ngUnsubscribe);
-    this.showSouthBandsDrawer$ = this.store.select(fromLayout.getShowSouthBandsDrawer).takeUntil(this.ngUnsubscribe);
+
+    // Layout state.
+    this.store.select(fromLayout.getShowDrawers).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(state => {
+      this.showDetailsDrawer = state.showDetailsDrawer;
+      this.showLeftDrawer = state.showLeftDrawer;
+      this.showSouthBandsDrawer = state.showSouthBandsDrawer;
+      this.showDataPointDrawer = state.showDataPointDrawer;
+      this.changeDetector.markForCheck();
+      dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize anytime our layout changes.
+    });
+
+    // Timeline state.
+    this.store.select(fromTimeline.getTimelineState).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(state => {
+      this.bands = state.bands;
+      this.labelWidth = state.labelWidth;
+      this.maxTimeRange = state.maxTimeRange;
+      this.overlayMode = state.overlayMode;
+      this.selectedBandId = state.selectedBandId;
+      this.viewTimeRange = state.viewTimeRange;
+      this.selectedDataPoint = state.selectedDataPoint;
+      this.changeDetector.markForCheck();
+    });
   }
 
   ngOnDestroy() {
@@ -132,24 +154,24 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
-   * Event. Called when an `update-all-bands` event is fired from the raven-settings component.
-   */
-  onUpdateAllBands(update: RavenSettingsUpdate): void {
-    this.store.dispatch(new timelineActions.SettingsUpdateAllBands(update.prop, update.value));
-  }
-
-  /**
    * Event. Called when an `update-band` event is fired from the raven-settings component.
    */
-  onUpdateBand(update: RavenSettingsUpdate): void {
-    this.store.dispatch(new timelineActions.SettingsUpdateBand(update.bandId, update.prop, update.value));
+  onUpdateBand(e: RavenSettingsUpdate): void {
+    this.store.dispatch(new timelineActions.UpdateBand(e.bandId, e.update));
   }
 
   /**
    * Event. Called when an `update-sub-band` event is fired from the raven-settings component.
    */
-  onUpdateSubBand(update: RavenSettingsUpdate): void {
-    this.store.dispatch(new timelineActions.SettingsUpdateSubBand(update.bandId, update.subBandId, update.prop, update.value));
+  onUpdateSubBand(e: RavenSettingsUpdate): void {
+    this.store.dispatch(new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update));
+  }
+
+  /**
+   * Event. Called when an `update-timeline` event is fired from the raven-settings component.
+   */
+  onUpdateTimeline(e: RavenSettingsUpdate): void {
+    this.store.dispatch(new timelineActions.UpdateTimeline(e.update));
   }
 
   /**

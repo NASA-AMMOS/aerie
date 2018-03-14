@@ -19,7 +19,8 @@ pipeline {
 						export LD_LIBRARY_PATH=/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib
 						export FIREFOX_BIN=/home/seqbamboo/build_dependencies/firefox-58.0.2/firefox
 						export REPO_REV_SHORT=`git rev-parse --short HEAD`
-						export SEQBASETAG="$BRANCH_NAME-B$BUILD_NUMBER-R$REPO_REV_SHORT"
+						# replace forward slashes in branch name to prevent problems
+						export SEQBASETAG="${BRANCH_NAME//\\//_}-B$BUILD_NUMBER-R$REPO_REV_SHORT"
 
 						# setup nvm/node
 						export NVM_DIR="$HOME/.nvm"
@@ -55,6 +56,41 @@ pipeline {
 				junit healthScaleFactor: 10.0, keepLongStdio: true, testResults: '*/karma-test-results.xml'
 			}
 		}
+
+	stage ('analyze') {
+		steps {
+			script {
+				def statusCode = sh returnStatus: true, script:
+				'''
+					# don't echo commands by default
+					set +x
+
+					if [[ $BRANCH_NAME == 'develop' || $BRANCH_NAME == release* ]]; then
+						echo "Anaylsis branch detected. Performing code analysis..."
+
+						# setup nvm/node
+						export NVM_DIR="$HOME/.nvm"
+						# install nvm if necessary
+						if [ ! -d $NVM_DIR ]; then
+							curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
+						fi
+						# load nvm shell commands
+						[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+						# install/use proper node version
+						nvm install v8.9.4
+
+						# run sonarqube analysis
+						npm run sonarqube
+					else
+						echo "Skipping analysis."
+					fi
+				'''
+				if (statusCode > 0) {
+					error "Analysis failure detected. See log."
+				}
+			}
+		}
+	}
 
 		stage ('publish') {
 			steps {

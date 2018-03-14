@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { createFeatureSelector } from '@ngrx/store';
 
 import {
   FetchGraphDataSuccess,
@@ -19,19 +19,18 @@ import {
 import {
   SelectBand,
   SelectDataPoint,
-  SettingsUpdateAllBands,
-  SettingsUpdateBand,
-  SettingsUpdateSubBand,
   SortBands,
   TimelineAction,
   TimelineActionTypes,
+  UpdateBand,
+  UpdateSubBand,
+  UpdateTimeline,
 } from '../actions/timeline';
 
 import {
   hasActivityLegend,
   hasId,
   shouldOverlay,
-  timestamp,
   toCompositeBand,
   updateSortOrder,
   updateTimeRanges,
@@ -39,7 +38,6 @@ import {
 
 import {
   RavenActivityBand,
-  RavenActivityPoint,
   RavenCompositeBand,
   RavenPoint,
   RavenResourcePoint,
@@ -91,14 +89,14 @@ export function reducer(state: TimelineState = initialState, action: SourceExplo
       return selectBand(state, action);
     case TimelineActionTypes.SelectDataPoint:
       return selectDataPoint(state, action);
-    case TimelineActionTypes.SettingsUpdateAllBands:
-      return settingsUpdateAllBands(state, action);
-    case TimelineActionTypes.SettingsUpdateBand:
-      return settingsUpdateBand(state, action);
-    case TimelineActionTypes.SettingsUpdateSubBand:
-      return settingsUpdateSubBand(state, action);
     case TimelineActionTypes.SortBands:
       return sortBands(state, action);
+    case TimelineActionTypes.UpdateBand:
+      return updateBand(state, action);
+    case TimelineActionTypes.UpdateSubBand:
+      return updateSubBand(state, action);
+    case TimelineActionTypes.UpdateTimeline:
+      return updateTimeline(state, action);
     case TimelineActionTypes.UpdateViewTimeRange:
       return { ...state, viewTimeRange: { ...action.viewTimeRange } };
     default:
@@ -126,8 +124,6 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
             subBands: band.subBands.concat({
               ...newBand,
               parentUniqueId: band.id,
-              sourceId: action.source.id,
-              sourceName: action.source.name,
             }),
           };
           action.newBands.splice(i, 1);
@@ -144,13 +140,6 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
         ...newCompositeBand,
         containerId: '0',
         sortOrder: state.bands.filter(b => b.containerId === '0').length + index,
-        subBands: newCompositeBand.subBands.map(subBand => {
-          return {
-            ...subBand,
-            sourceId: action.source.id,
-            sourceName: action.source.name,
-          };
-        }),
       };
     }));
 
@@ -225,62 +214,6 @@ export function selectDataPoint(state: TimelineState, action: SelectDataPoint): 
 }
 
 /**
- * Reduction Helper. Called when reducing the 'SettingsUpdateAllBands' action.
- */
-export function settingsUpdateAllBands(state: TimelineState, action: SettingsUpdateAllBands): TimelineState {
-  return {
-    ...state,
-    [action.prop]: action.value,
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'SettingsUpdateBand' action.
- */
-export function settingsUpdateBand(state: TimelineState, action: SettingsUpdateBand): TimelineState {
-  return {
-    ...state,
-    bands: state.bands.map((band: RavenCompositeBand) => {
-      if (action.bandId === band.id) {
-        return {
-          ...band,
-          [action.prop]: action.value,
-        };
-      }
-
-      return band;
-    }),
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'SettingsUpdateSubBand' action.
- */
-export function settingsUpdateSubBand(state: TimelineState, action: SettingsUpdateSubBand): TimelineState {
-  return {
-    ...state,
-    bands: state.bands.map((band: RavenCompositeBand) => {
-      if (action.bandId === band.id) {
-        return {
-          ...band,
-          subBands: band.subBands.map(subBand => {
-            if (action.subBandId === subBand.id) {
-              return {
-                ...subBand,
-                [action.prop]: action.value,
-              };
-            }
-            return subBand;
-          }),
-        };
-      }
-
-      return band;
-    }),
-  };
-}
-
-/**
  * Reduction Helper. Called when reducing the 'NewSortOrder' action.
  */
 export function sortBands(state: TimelineState, action: SortBands): TimelineState {
@@ -301,6 +234,63 @@ export function sortBands(state: TimelineState, action: SortBands): TimelineStat
 }
 
 /**
+ * Reduction Helper. Called when reducing the 'UpdateBand' action.
+ */
+export function updateBand(state: TimelineState, action: UpdateBand): TimelineState {
+  return {
+    ...state,
+    bands: state.bands.map((band: RavenCompositeBand) => {
+      if (action.bandId === band.id) {
+        return {
+          ...band,
+          ...action.update,
+        };
+      }
+
+      return band;
+    }),
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'UpdateSubBand' action.
+ */
+export function updateSubBand(state: TimelineState, action: UpdateSubBand): TimelineState {
+  return {
+    ...state,
+    bands: state.bands.map((band: RavenCompositeBand) => {
+      if (action.bandId === band.id) {
+        return {
+          ...band,
+          subBands: band.subBands.map(subBand => {
+            if (action.subBandId === subBand.id) {
+              return {
+                ...subBand,
+                ...action.update,
+              };
+            }
+            return subBand;
+          }),
+        };
+      }
+
+      return band;
+    }),
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'UpdateTimeline' action.
+ * This is just a top level reducer for the timeline state (top level meaning it updates base timeline state props).
+ */
+export function updateTimeline(state: TimelineState, action: UpdateTimeline): TimelineState {
+  return {
+    ...state,
+    ...action.update,
+  };
+}
+
+/**
  * Timeline state selector helper.
  */
 export const getTimelineState = createFeatureSelector<TimelineState>('timeline');
@@ -316,10 +306,4 @@ export const getTimelineState = createFeatureSelector<TimelineState>('timeline')
  * only recompute when arguments change. The created selectors can also be composed
  * together to select different pieces of state.
  */
-export const getBands = createSelector(getTimelineState, (state: TimelineState) => state.bands);
-export const getLabelWidth = createSelector(getTimelineState, (state: TimelineState) => state.labelWidth);
-export const getMaxTimeRange = createSelector(getTimelineState, (state: TimelineState) => state.maxTimeRange);
-export const getOverlayMode = createSelector(getTimelineState, (state: TimelineState) => state.overlayMode);
-export const getSelectedBandId = createSelector(getTimelineState, (state: TimelineState) => state.selectedBandId);
-export const getViewTimeRange = createSelector(getTimelineState, (state: TimelineState) => state.viewTimeRange);
-export const getSelectedDataPoint = createSelector(getTimelineState, (state: TimelineState) => state.selectedDataPoint);
+// TODO: Add more specific selectors if needed.

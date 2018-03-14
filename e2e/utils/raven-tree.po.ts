@@ -30,19 +30,28 @@ export class RavenTree {
     this.name = name;
   }
 
-  async close() {
+  close() {
     clickById(`raven-tree-${this.name}-close`);
     this.setElement();
   }
 
-  async open() {
+  open() {
     clickById(`raven-tree-${this.name}-open`);
     this.setElement();
+  }
+
+  async getProp(prop: string) {
+    await this.setTree();
+    return this.tree[this.id][prop];
   }
 
   async setElement() {
     this.element = element(by.css(`raven-tree[class=${this.name}]`));
     this.id = await probe(this.element, 'id');
-    this.tree =  await probe(this.element, 'tree');
+    await this.setTree();
+  }
+
+  async setTree() {
+    this.tree = await probe(this.element, 'tree');
   }
 }

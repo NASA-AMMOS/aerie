@@ -7,7 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { initialState, reducer, TimelineState } from './timeline';
+import {
+  initialState,
+  reducer,
+  TimelineState,
+} from './timeline';
 
 import {
   RavenSource,
@@ -20,10 +24,10 @@ import {
 
 import {
   SelectBand,
-  SettingsUpdateAllBands,
-  SettingsUpdateBand,
-  SettingsUpdateSubBand,
   SortBands,
+  UpdateBand,
+  UpdateSubBand,
+  UpdateTimeline,
   UpdateViewTimeRange,
 } from './../actions/timeline';
 
@@ -54,8 +58,6 @@ describe('timeline reducer', () => {
     band.subBands = [{
       ...stateBand,
       parentUniqueId: band.id,
-      sourceId: source.id,
-      sourceName: source.name,
     }];
 
     expect(timelineState).toEqual({
@@ -91,15 +93,11 @@ describe('timeline reducer', () => {
         ...activityBand1,
         id: '400',
         parentUniqueId: band.id,
-        sourceId: source.id,
-        sourceName: source.name,
       },
       {
         ...activityBand2,
         id: '500',
         parentUniqueId: band.id,
-        sourceId: child.id,
-        sourceName: child.name,
       },
     ];
 
@@ -141,8 +139,6 @@ describe('timeline reducer', () => {
         ...activityBand2,
         id: '500',
         parentUniqueId: band.id,
-        sourceId: child.id,
-        sourceName: child.name,
       },
     ];
 
@@ -166,61 +162,6 @@ describe('timeline reducer', () => {
     expect(timelineState).toEqual({
       ...timelineStateWithBand,
       selectedBandId: band.id,
-    });
-  });
-
-  it('handle SettingsUpdateAllBands', () => {
-    timelineState = reducer(timelineState, new SettingsUpdateAllBands('labelWidth', 200));
-    expect(timelineState).toEqual({
-      ...initialState,
-      labelWidth: 200,
-    });
-  });
-
-  it('handle SettingsUpdateBand (with no selected band)', () => {
-    timelineState = reducer(timelineState, new SettingsUpdateBand('', 'label', '42'));
-    expect(timelineState).toEqual({ ...initialState });
-  });
-
-  it('handle SettingsUpdateBand', () => {
-    const source: RavenSource = rootSource;
-
-    // First add a band and select it so we can update it.
-    let timelineStateWithBand = reducer(timelineState, new FetchGraphDataSuccess(source, [stateBand]));
-    const band = { ...timelineStateWithBand.bands[0] };
-
-    timelineStateWithBand = reducer(timelineStateWithBand, new SelectBand(band.id));
-    timelineState = reducer(timelineStateWithBand, new SettingsUpdateBand(band.id, 'height', 42));
-
-    expect(timelineState).toEqual({
-      ...timelineStateWithBand,
-      bands: [{
-        ...timelineStateWithBand.bands[0],
-        height: 42,
-      }],
-    });
-  });
-
-  it('handle SettingsUpdateSubBand', () => {
-    const source: RavenSource = rootSource;
-
-    // First add a band and select it so we can update it.
-    let timelineStateWithBand = reducer(timelineState, new FetchGraphDataSuccess(source, [stateBand]));
-    const band = { ...timelineStateWithBand.bands[0] };
-    const subBand = { ...band.subBands[0] };
-
-    timelineStateWithBand = reducer(timelineStateWithBand, new SelectBand(band.id));
-    timelineState = reducer(timelineStateWithBand, new SettingsUpdateSubBand(band.id, subBand.id, 'label', '42'));
-
-    expect(timelineState).toEqual({
-      ...timelineStateWithBand,
-      bands: [{
-        ...timelineStateWithBand.bands[0],
-        subBands: [{
-          ...timelineStateWithBand.bands[0].subBands[0],
-          label: '42',
-        }],
-      }],
     });
   });
 
@@ -257,6 +198,61 @@ describe('timeline reducer', () => {
           sortOrder: 0,
         },
       ],
+    });
+  });
+
+  it('handle UpdateBand (with no selected band)', () => {
+    timelineState = reducer(timelineState, new UpdateBand('', { label: '42' }));
+    expect(timelineState).toEqual({ ...initialState });
+  });
+
+  it('handle UpdateBand', () => {
+    const source: RavenSource = rootSource;
+
+    // First add a band and select it so we can update it.
+    let timelineStateWithBand = reducer(timelineState, new FetchGraphDataSuccess(source, [stateBand]));
+    const band = { ...timelineStateWithBand.bands[0] };
+
+    timelineStateWithBand = reducer(timelineStateWithBand, new SelectBand(band.id));
+    timelineState = reducer(timelineStateWithBand, new UpdateBand(band.id, { height: 42 }));
+
+    expect(timelineState).toEqual({
+      ...timelineStateWithBand,
+      bands: [{
+        ...timelineStateWithBand.bands[0],
+        height: 42,
+      }],
+    });
+  });
+
+  it('handle UpdateSubBand', () => {
+    const source: RavenSource = rootSource;
+
+    // First add a band and select it so we can update it.
+    let timelineStateWithBand = reducer(timelineState, new FetchGraphDataSuccess(source, [stateBand]));
+    const band = { ...timelineStateWithBand.bands[0] };
+    const subBand = { ...band.subBands[0] };
+
+    timelineStateWithBand = reducer(timelineStateWithBand, new SelectBand(band.id));
+    timelineState = reducer(timelineStateWithBand, new UpdateSubBand(band.id, subBand.id, { label: '42' }));
+
+    expect(timelineState).toEqual({
+      ...timelineStateWithBand,
+      bands: [{
+        ...timelineStateWithBand.bands[0],
+        subBands: [{
+          ...timelineStateWithBand.bands[0].subBands[0],
+          label: '42',
+        }],
+      }],
+    });
+  });
+
+  it('handle UpdateTimeline', () => {
+    timelineState = reducer(timelineState, new UpdateTimeline({ labelWidth: 200 }));
+    expect(timelineState).toEqual({
+      ...initialState,
+      labelWidth: 200,
     });
   });
 

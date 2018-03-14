@@ -17,6 +17,7 @@ import {
 
 import {
   RavenSource,
+  RavenSourceActionEvent,
   StringTMap,
 } from './../../shared/models';
 
@@ -30,6 +31,7 @@ export class RavenTreeComponent {
   @Input() id: string;
   @Input() tree: StringTMap<RavenSource>;
 
+  @Output() action: EventEmitter<RavenSourceActionEvent> = new EventEmitter<RavenSourceActionEvent>();
   @Output() close: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
   @Output() collapse: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
   @Output() expand: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();

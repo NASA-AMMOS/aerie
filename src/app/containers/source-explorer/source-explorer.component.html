@@ -3,6 +3,7 @@
     [class]="tree[childId].name"
     [id]="childId"
     [tree]="tree"
+    (action)="onAction($event)"
     (close)="onClose($event)"
     (collapse)="onCollapse($event)"
     (expand)="onExpand($event)"

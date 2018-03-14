@@ -19,7 +19,7 @@
         thumb-label="true"
         tick-interval="50"
         [value]="labelWidth"
-        (change)="updateAllBands.emit({ prop: 'labelWidth', value: $event.value })">
+        (change)="updateTimeline.emit({ update: { labelWidth: $event.value } })">
       </mat-slider>
       <label>Label Width</label>
     </div>
@@ -31,7 +31,7 @@
         color="primary"
         [disabled]="selectedBandId === ''"
         [checked]="overlayMode && selectedBandId !== ''"
-        (change)="updateAllBands.emit({ prop: 'overlayMode', value: $event.checked })">
+        (change)="updateTimeline.emit({ update: { overlayMode: $event.checked } })">
         Overlay
       </mat-slide-toggle>
     </div>
@@ -39,7 +39,7 @@
     <!-- Add Divider Band. -->
     <div class="field">
       <button
-        id="settings-add-divider-band"
+        id="raven-settings-add-divider-band"
         mat-raised-button>
         Add Divider Band
       </button>
@@ -65,7 +65,7 @@
       thumb-label="true"
       tick-interval="50"
       [value]="bandsById[selectedBandId].height"
-      (change)="updateBand.emit({ bandId: selectedBandId, prop: 'height', value: $event.value })">
+      (change)="updateBand.emit({ bandId: selectedBandId, update: { height: $event.value } })">
     </mat-slider>
     <label>Height</label>
   </div>
@@ -76,7 +76,7 @@
       id="raven-settings-show-tooltip"
       color="primary"
       [checked]="bandsById[selectedBandId].showTooltip"
-      (change)="updateBand.emit({ bandId: selectedBandId, prop: 'showTooltip', value: $event.checked })">
+      (change)="updateBand.emit({ bandId: selectedBandId, update: { showTooltip: $event.checked } })">
       Show Tooltip
     </mat-slide-toggle>
   </div>
@@ -105,7 +105,7 @@
             matInput
             placeholder="Label"
             [value]="subBand.label"
-            (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'label', value: $event.target.value })">
+            (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { label: $event.target.value } })">
         </mat-form-field>
       </div>
 
@@ -117,7 +117,7 @@
             <mat-select
               placeholder="Activity Style"
               [value]="subBand.activityStyle"
-              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'activityStyle', value: $event.value })">
+              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { activityStyle: $event.value } })">
               <mat-option [value]="1">Bar</mat-option>
               <mat-option [value]="2">Line</mat-option>
             </mat-select>
@@ -130,7 +130,7 @@
             <mat-select
               placeholder="Horizontally Align Label"
               [value]="subBand.alignLabel"
-              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'alignLabel', value: $event.value })">
+              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { alignLabel: $event.value } })">
               <mat-option [value]="1">Left</mat-option>
               <mat-option [value]="2">Right</mat-option>
               <mat-option [value]="3">Center</mat-option>
@@ -144,7 +144,7 @@
             <mat-select
               placeholder="Vertically Align Label"
               [value]="subBand.baselineLabel"
-              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'baselineLabel', value: $event.value })">
+              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
               <mat-option [value]="1">Top</mat-option>
               <mat-option [value]="2">Bottom</mat-option>
               <mat-option [value]="3">Center</mat-option>
@@ -159,7 +159,7 @@
               id="raven-settings-layout"
               placeholder="Layout"
               [value]="subBand.layout"
-              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'layout', value: $event.value })">
+              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { layout: $event.value } })">
               <mat-option [value]="1">Compact</mat-option>
               <mat-option [value]="2">Waterfall</mat-option>
             </mat-select>
@@ -172,7 +172,7 @@
             id="raven-settings-show-label"
             color="primary"
             [checked]="subBand.showLabel"
-            (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'showLabel', value: $event.checked })">
+            (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { showLabel: $event.checked } })">
             Show Labels
           </mat-slide-toggle>
         </div>
@@ -183,7 +183,7 @@
             id="raven-settings-trim-label"
             color="primary"
             [checked]="subBand.trimLabel"
-            (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'trimLabel', value: $event.checked })">
+            (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { trimLabel: $event.checked } })">
             Trim Labels
           </mat-slide-toggle>
         </div>
@@ -199,7 +199,7 @@
             id="raven-settings-fill"
             color="primary"
             [checked]="subBand.fill"
-            (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'fill', value: $event.checked })">
+            (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { fill: $event.checked } })">
             Fill
           </mat-slide-toggle>
         </div>
@@ -211,7 +211,7 @@
               id="raven-settings-interpolation"
               placeholder="Interpolation"
               [value]="subBand.interpolation"
-              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'interpolation', value: $event.value })">
+              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { interpolation: $event.value } })">
               <mat-option value="linear">Linear</mat-option>
               <mat-option value="constant">Constant</mat-option>
               <mat-option value="none">None</mat-option>
@@ -225,7 +225,7 @@
             id="raven-settings-rescale"
             color="primary"
             [checked]="subBand.rescale"
-            (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'rescale', value: $event.checked })">
+            (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { rescale: $event.checked } })">
             Rescale Y-Axis Ticks
           </mat-slide-toggle>
         </div>
@@ -236,7 +236,7 @@
             id="raven-settings-show-icon"
             color="primary"
             [checked]="subBand.showIcon"
-            (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'showIcon', value: $event.checked })">
+            (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { showIcon: $event.checked } })">
             Show Icon
           </mat-slide-toggle>
         </div>
@@ -251,7 +251,7 @@
               id="raven-settings-align-label"
               placeholder="Horizontally Align Label"
               [value]="subBand.alignLabel"
-              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'alignLabel', value: $event.value })">
+              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { alignLabel: $event.value } })">
               <mat-option [value]="1">Left</mat-option>
               <mat-option [value]="2">Right</mat-option>
               <mat-option [value]="3">Center</mat-option>
@@ -266,7 +266,7 @@
               id="raven-settings-baseline-label"
               placeholder="Vertically Align Label"
               [value]="subBand.baselineLabel"
-              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, prop: 'baselineLabel', value: $event.value })">
+              (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
               <mat-option [value]="1">Top</mat-option>
               <mat-option [value]="2">Bottom</mat-option>
               <mat-option [value]="3">Center</mat-option>
@@ -278,7 +278,7 @@
       <!-- Delete Band. -->
       <div class="field">
         <button
-          id="settings-delete-band"
+          id="raven-settings-delete-band"
           mat-raised-button
           color="warn"
           (click)="deleteBand.emit(subBand)">

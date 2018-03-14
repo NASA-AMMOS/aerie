@@ -8,18 +8,31 @@
  */
 
 import {
-  AppPage,
-} from './utils';
+  Component,
+  Inject,
+} from '@angular/core';
 
-describe('raven2 App', () => {
-  let page: AppPage;
+import {
+  MAT_DIALOG_DATA,
+  MatDialogRef,
+} from '@angular/material';
 
-  beforeEach(() => {
-    page = new AppPage();
-  });
+@Component({
+  selector: 'raven-confirm-dialog',
+  styleUrls: ['./raven-confirm-dialog.component.css'],
+  templateUrl: './raven-confirm-dialog.component.html',
+})
+export class RavenConfirmDialogComponent {
+  constructor(
+    public dialogRef: MatDialogRef<RavenConfirmDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any,
+  ) {}
 
-  it('the app title should be correct', () => {
-    page.navigateTo();
-    expect(page.appTile.getText()).toEqual('Raven2');
-  });
-});
+  onCancel() {
+    this.dialogRef.close({ confirm: false });
+  }
+
+  onConfirm() {
+    this.dialogRef.close({ confirm: true });
+  }
+}

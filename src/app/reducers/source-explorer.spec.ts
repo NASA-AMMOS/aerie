@@ -32,6 +32,7 @@ import {
   SourceExplorerPin,
   SourceExplorerSelect,
   SourceExplorerUnpin,
+  UpdateSourceExplorer,
 } from './../actions/source-explorer';
 
 import {
@@ -316,6 +317,15 @@ describe('source-explorer reducer', () => {
           pinned: false,
         },
       },
+    });
+  });
+
+  it('handle UpdateSourceExplorer', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new UpdateSourceExplorer({ selectedSourceId: '42' }));
+
+    expect(sourceExplorerState).toEqual({
+      ...initialState,
+      selectedSourceId: '42',
     });
   });
 });

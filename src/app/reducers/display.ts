@@ -8,36 +8,49 @@
  */
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { ConfigAction } from './../actions/config';
 
-import { environment } from './../../environments/environment';
+import {
+  DisplayAction,
+  DisplayActionTypes,
+} from './../actions/display';
 
-// Config State Interface.
-export interface ConfigState {
-  baseSourcesUrl: string;
-  baseUrl: string;
-  itarMessage: string;
-  production: boolean;
+// Display State Interface.
+export interface DisplayState {
+  stateLoadPending: boolean;
+  stateSavePending: boolean;
 }
 
-// Config State.
-export const initialState: ConfigState = environment;
+// Display Initial State.
+export const initialState: DisplayState = {
+  stateLoadPending: false,
+  stateSavePending: false,
+};
 
 /**
  * Reducer.
  * If a case takes more than one line then it should be in it's own helper function.
  */
-export function reducer(state: ConfigState = initialState, action: ConfigAction): ConfigState {
+export function reducer(state: DisplayState = initialState, action: DisplayAction): DisplayState {
   switch (action.type) {
+    case DisplayActionTypes.StateLoad:
+      return { ...state, stateLoadPending: true };
+    case DisplayActionTypes.StateLoadFailure:
+    case DisplayActionTypes.StateLoadSuccess:
+      return { ...state, stateLoadPending: false };
+    case DisplayActionTypes.StateSave:
+      return { ...state, stateSavePending: true };
+    case DisplayActionTypes.StateSaveFailure:
+    case DisplayActionTypes.StateSaveSuccess:
+      return { ...state, stateSavePending: false };
     default:
       return state;
   }
 }
 
 /**
- * Config state selector helper.
+ * Display state selector helper.
  */
-export const getConfigState = createFeatureSelector<ConfigState>('config');
+export const getDisplayState = createFeatureSelector<DisplayState>('display');
 
 /**
  * Create selector helper for selecting state slice.
@@ -50,4 +63,4 @@ export const getConfigState = createFeatureSelector<ConfigState>('config');
  * only recompute when arguments change. The created selectors can also be composed
  * together to select different pieces of state.
  */
-export const getItarMessage = createSelector(getConfigState, (state: ConfigState) => state.itarMessage);
+export const getPending = createSelector(getDisplayState, (state: DisplayState) => state.stateLoadPending || state.stateSavePending);

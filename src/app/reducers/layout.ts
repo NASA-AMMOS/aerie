@@ -83,8 +83,9 @@ export const getLayoutState = createFeatureSelector<LayoutState>('layout');
  * only recompute when arguments change. The created selectors can also be composed
  * together to select different pieces of state.
  */
-export const getMode = createSelector(getLayoutState, (state: LayoutState) => state.mode);
-export const getShowDataPointDrawer = createSelector(getLayoutState, (state: LayoutState) => state.showDataPointDrawer);
-export const getShowDetailsDrawer = createSelector(getLayoutState, (state: LayoutState) => state.showDetailsDrawer);
-export const getShowLeftDrawer = createSelector(getLayoutState, (state: LayoutState) => state.showLeftDrawer);
-export const getShowSouthBandsDrawer = createSelector(getLayoutState, (state: LayoutState) => state.showSouthBandsDrawer);
+export const getShowDrawers = createSelector(getLayoutState, (state: LayoutState) => ({
+  showDataPointDrawer: state.showDataPointDrawer,
+  showDetailsDrawer: state.showDetailsDrawer,
+  showLeftDrawer: state.showLeftDrawer,
+  showSouthBandsDrawer: state.showSouthBandsDrawer,
+}));

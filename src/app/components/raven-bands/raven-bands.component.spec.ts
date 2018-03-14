@@ -11,16 +11,16 @@ import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { SortablejsModule } from 'angular-sortablejs';
-import { BandsComponent } from './bands.component';
+import { RavenBandsComponent } from './raven-bands.component';
 
-describe('BandsComponent', () => {
-  let component: BandsComponent;
-  let fixture: ComponentFixture<BandsComponent>;
+describe('RavenBandsComponent', () => {
+  let component: RavenBandsComponent;
+  let fixture: ComponentFixture<RavenBandsComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [
-        BandsComponent,
+        RavenBandsComponent,
       ],
       imports: [
         SortablejsModule,
@@ -33,7 +33,7 @@ describe('BandsComponent', () => {
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(BandsComponent);
+    fixture = TestBed.createComponent(RavenBandsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

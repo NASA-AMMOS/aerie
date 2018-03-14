@@ -7,5 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+export * from './display.effect';
 export * from './router.effect';
 export * from './source-explorer.effect';

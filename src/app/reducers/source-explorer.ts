@@ -20,6 +20,7 @@ import {
   SourceExplorerAction,
   SourceExplorerActionTypes,
   SourceExplorerSelect,
+  UpdateSourceExplorer,
 } from './../actions/source-explorer';
 
 import {
@@ -117,6 +118,8 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
       return selectSource(state, action);
     case SourceExplorerActionTypes.SourceExplorerUnpin:
       return updateTreeSource(state, action.source.id, 'pinned', false);
+    case SourceExplorerActionTypes.UpdateSourceExplorer:
+      return updateSourceExplorer(state, action);
     default:
       return state;
   }
@@ -257,6 +260,17 @@ export function updateTreeSource(state: SourceExplorerState, id: string, prop: s
 }
 
 /**
+ * Reduction Helper. Called when reducing the 'UpdateSourceExplorer' action.
+ * This is just a top level reducer for the sourceExplorer state (top level meaning it updates base sourceExplorer state props).
+ */
+export function updateSourceExplorer(state: SourceExplorerState, action: UpdateSourceExplorer): SourceExplorerState {
+  return {
+    ...state,
+    ...action.update,
+  };
+}
+
+/**
  * Source Explorer state selector helper.
  */
 export const getSourceExplorerState = createFeatureSelector<SourceExplorerState>('sourceExplorer');
@@ -272,8 +286,6 @@ export const getSourceExplorerState = createFeatureSelector<SourceExplorerState>
  * only recompute when arguments change. The created selectors can also be composed
  * together to select different pieces of state.
  */
-export const getFetchGraphDataRequestPending = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.fetchGraphDataRequestPending);
-export const getFetchInitialSourcesRequestPending = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.fetchInitialSourcesRequestPending);
-export const getFetchSourcesRequestPending = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.fetchSourcesRequestPending);
 export const getInitialSourcesLoaded = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.initialSourcesLoaded);
+export const getPending = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.fetchGraphDataRequestPending || state.fetchInitialSourcesRequestPending || state.fetchSourcesRequestPending);
 export const getTreeBySourceId = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.treeBySourceId);

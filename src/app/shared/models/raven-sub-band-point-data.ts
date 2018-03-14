@@ -8,18 +8,11 @@
  */
 
 import {
-  AppPage,
-} from './utils';
+  RavenTimeRange,
+} from './index';
 
-describe('raven2 App', () => {
-  let page: AppPage;
-
-  beforeEach(() => {
-    page = new AppPage();
-  });
-
-  it('the app title should be correct', () => {
-    page.navigateTo();
-    expect(page.appTile.getText()).toEqual('Raven2');
-  });
-});
+export interface RavenSubBandPointData {
+  maxTimeRange: RavenTimeRange;
+  points: any[];
+  subBandId: string;
+}
