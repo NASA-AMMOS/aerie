@@ -96,16 +96,20 @@ ActivityBand.prototype.computeNumRowsWaterfallLayout = function() {
 ActivityBand.prototype.computeNumRowsCompactLayout = function() {
   var ctx = this.canvas.getContext('2d');
   var painter = this.painter;
-  var viewTimeAxis = this.viewTimeAxis;
   var start = this.timeAxis.start;
   var end = this.timeAxis.end;
+  var viewTimeAxis = this.viewTimeAxis;
+  // always only consider VISIBLE_INTERVALS
+  start = viewTimeAxis.start;
+  end = viewTimeAxis.end;
 
   // compute a more compact view, which ensures that activities
   // don't overlap.  If there is overlap (including label), then
   // render the activity on the next row
   var maxRows = 1;
-  for(var i=0, ilength=this.intervalsList.length; i<ilength; ++i) {
-    var intervals = this.intervalsList[i];
+  var actsList = this.getIntervalsInTimeRange(start, end);
+  for(var i=0, ilength=actsList.length; i<ilength; ++i) {
+    var intervals = actsList[i];
 
     var rows = 0;
     var openIntervals = intervals.slice(0);
@@ -124,13 +128,13 @@ ActivityBand.prototype.computeNumRowsCompactLayout = function() {
         }
         else {
           prevDrawEnd = interval.end;
-          if(!painter.trimLabel && interval.label !== null) {
+          if(this.painter.autoFit && !this.painter.trimLabel && interval.label !== null) {
             // since we using the viewtime axis, tracks may be computed off the canvas so
             // we need to use the no clamping function to compute the x value
             var labelX1 = viewTimeAxis.getXFromTimeNoClamping(interval.start) + painter.labelPadding;
             var labelWidth = ctx.measureText(interval.label).width;
             prevDrawEnd = Math.max(prevDrawEnd, viewTimeAxis.getTimeFromX(labelX1+labelWidth));
-            }
+          }
         }
       }
       openIntervals = newOpenIntervals;
@@ -171,6 +175,8 @@ ActivityBand.prototype.mousedown = function(e) {
 
   var x = e.pageX - $(e.target).offset().left;
   var y = e.pageY - $(e.target).offset().top;
+  var mouseTime = this.viewTimeAxis.getTimeFromX(x);
+
   var interval = null;
   var intervals = this.findIntervals(x, y);
   if(intervals.length !== 0) {
@@ -179,10 +185,10 @@ ActivityBand.prototype.mousedown = function(e) {
 
   if(e.which === 1) {
     // left click
-    if(this.onLeftClick !== null) { this.onLeftClick(e, {band:this, interval:interval}); }
+    if(this.onLeftClick !== null) { this.onLeftClick(e, {band:this, interval:interval, time:mouseTime}); }
 
     if(interval !== null) {
-      if(this.onIsDraggable && this.onIsDraggable(interval.source)) {
+      if(this.onIsDraggable && this.onIsDraggable(e, {band:this, interval:interval})) {
         // store the act being dragged, enable the draggable component and fire
         // trigger the event so that dragging can begin
         var left = x - this.viewTimeAxis.getXFromTime(interval.start);
@@ -208,7 +214,7 @@ ActivityBand.prototype.mousedown = function(e) {
         interval = backgroundIntervals[0];
       }
     }
-    this.onRightClick(e, {band:this, interval:interval});
+    this.onRightClick(e, {band:this, interval:interval, time:mouseTime});
   }
   return true;
 };
@@ -248,11 +254,10 @@ ActivityBand.prototype.getHelperAct = function() {
 // hook for when dragging starts
 ActivityBand.prototype.handleActDragStart = function(e, ui) {
   if(this.onDragStart) {
-    this.onDragStart(this.draggedAct.source);
+    this.onDragStart(e, {band:this, interval:this.draggedAct});
     var dragType = this.getDragType(e, ui);
     this.draggableHelper.setDragType(dragType);
     this.draggableHelper.dragStart(e, ui);
-    //this.draggableHelper.dragging(e, ui);
   }
 };
 
@@ -267,13 +272,13 @@ ActivityBand.prototype.handleActDrag = function(e, ui) {
 ActivityBand.prototype.handleActDragStop = function(e, ui) {
   if(this.onDragStop) {
     this.draggableHelper.dragStop(e, ui);
-    this.onDragStop();
+    this.onDragStop(e, {band:this, interval:this.draggedAct});
   }
 };
 
 // enable this band as droppable
 ActivityBand.prototype.enableDroppable = function() {
-  if(this.onIsDroppable && this.onIsDroppable()) {
+  if(this.onIsDroppable && this.onIsDroppable({band:this, interval:this.draggedAct})) {
     $(this.div).droppable({
       activeClass: "ui-state-highlight",
       tolerance: "pointer",
@@ -299,7 +304,7 @@ ActivityBand.prototype.handleActDrop = function(e, ui) {
 
   var dropStart = draggableHelper.intervalStart;
   var dropEnd = draggableHelper.intervalEnd;
-  this.onDrop({dropBand:this, dropStart:dropStart, dropEnd:dropEnd});
+  this.onDrop(e, {band:this, interval:this.draggedAct, dropStart:dropStart, dropEnd:dropEnd});
 };
 
 ActivityBand.prototype.repaint = function() {
@@ -341,6 +346,7 @@ function DraggableHelper(obj) {
   // indicates the start/end time of the interval we're dragging
   this.intervalStart = 0;
   this.intervalEnd = 0;
+  this.intervalCoords = this.band.findIntervalCoords(this.band.draggedAct.id);
   this.snap = this.band.snap;
 
   this.interval = document.createElement("div");
@@ -364,22 +370,15 @@ DraggableHelper.prototype.setDragType = function(type) {
 
 DraggableHelper.prototype.dragStart = function(e, ui) {
   var band = this.band;
+  var painter = this.band.painter;
   var draggedAct = this.band.draggedAct;
 
   // update the interval times
   this.intervalStart = draggedAct.start;
   this.intervalEnd = draggedAct.end;
 
-  // correct the y position based on where the interval was drawn
-  var intervalCoords = band.findIntervalCoords(band.draggedAct.id);
-  var intervalY = intervalCoords[2] - band.height;
-  var mouseY = (e.pageY - $(e.target).offset().top);
-  var dy = (intervalY - mouseY);
-  this.interval.style.top = dy;
-  this.caption.style.top = dy;
-
   // update the interval to look like the dragged act
-  var bgColor = Util.rgbaToString(draggedAct.color, draggedAct.opacity);
+  var bgColor = Util.rgbaToString(painter.getColor(draggedAct), draggedAct.opacity);
   $(this.interval).css("backgroundColor", bgColor);
   $(this.interval).css("height", band.painter.activityHeight);
 };
@@ -419,7 +418,6 @@ DraggableHelper.prototype.dragging = function(e, ui) {
       helperLeft = viewTimeAxis.getXFromTime(helperStart - snapOffset) - viewTimeAxis.getXFromTime(helperStart);
       helperStart -= snapOffset;
       helperEnd -= snapOffset;
-
       break;
     case ActivityBand.DRAG_START_TIME:
       helperStart = viewTimeAxis.getTimeFromX(helperStartX);
@@ -513,6 +511,11 @@ DraggableHelper.prototype.dragging = function(e, ui) {
   $(this.caption).css({width: helperWidth,
                        left: helperLeft});
 
+  if (axis === "x") {
+    // fix the y-position for x-axis dragging
+    ui.position.top = $(this.band.div).offset().top + this.intervalCoords[2];
+  }
+
   // update the label and caption text
   if(band.painter.showLabel) {
     this.interval.innerHTML = draggedAct.label;
@@ -579,7 +582,7 @@ function ActivityPainter(obj) {
   // the height to render the end range of an activity
   this.endRangeHeight    = ("endRangeHeight" in obj) ? obj.endRangeHeight : 4;
   // if true, automatically determines the rowHeight to ensure that all the activites are visible
-  this.autoFit           = ("autoFit" in obj) ? obj.autoFit : false;
+  this.autoFit           = ("autoFit" in obj) ? obj.autoFit : null;
 
   // determines if activities are rendered as a line or a bar
   this.style = ActivityPainter.BAR_STYLE;
@@ -592,6 +595,7 @@ function ActivityPainter(obj) {
 
 ActivityPainter.BAR_STYLE  = 1;
 ActivityPainter.LINE_STYLE = 2;
+ActivityPainter.ICON_STYLE = 3;
 
 ActivityPainter.COMPACT_LAYOUT = 1;
 ActivityPainter.WATERFALL_LAYOUT = 2;
@@ -602,6 +606,9 @@ ActivityPainter.prototype.setStyle = function(style) {
   }
   else if(style === ActivityPainter.LINE_STYLE || style === "line") {
     this.style = ActivityPainter.LINE_STYLE;
+  }
+  else if(style === ActivityPainter.ICON_STYLE || style === "icon") {
+    this.style = ActivityPainter.ICON_STYLE;
   }
 };
 
@@ -631,7 +638,7 @@ ActivityPainter.prototype.computeAutoFit = function() {
     return this.band.height;
   }
 
-  var rowHeight = (this.band.height - this.activityHeight - 2*this.rowPadding) / (numRows - 1);
+  var rowHeight = (this.band.height - this.activityHeight - 1*this.rowPadding) / (numRows - 1);
   return Math.max(0, rowHeight);
 };
 
@@ -647,7 +654,7 @@ ActivityPainter.prototype.getColor = function(act) {
   }
 };
 
-ActivityPainter.prototype.paintActivityAsBar = function(rowY, act) {
+ActivityPainter.prototype.paintActivityAsBar = function(rowY, act, previousAct, previousActX1, previousActX2, lastPaintedTimeX2, lastPaintedTime) {
   var ctx = this.band.canvas.getContext('2d');
   rowY = rowY - this.rowPadding;
 
@@ -657,14 +664,26 @@ ActivityPainter.prototype.paintActivityAsBar = function(rowY, act) {
   var actX2 = viewTimeAxis.getXFromTime(act.end);
   var actY1 = rowY - this.activityHeight;
   var actY2 = rowY;
-  var actWidth = Math.max(0.5, actX2 - actX1);
+  var actWidth = Math.max(1.0, actX2 - actX1);
   var actHeight = this.activityHeight;
 
   // draw the colored activity
   var actColor = this.getColor(act);
-  var color = Util.rgbaToString(actColor, act.opacity);
+  // RAVEN -- if activity width is very small, don't draw the border and set opacity to 1.0
+  var opacity = act.opacity;
+  if(this.borderWidth > 0 && actWidth < this.borderWidth *2) {
+      opacity = 1.0;
+      // double the width since border won't be drawn
+      actWidth = actWidth*1.5;
+  }
+
+  var color = Util.rgbaToString(actColor, opacity);
   ctx.fillStyle = color;
-  ctx.fillRect(actX1, actY1, actWidth, actHeight);
+
+  // raven; draw box if style is bar
+  if (this.style === ActivityPainter.BAR_STYLE) {
+      ctx.fillRect(actX1, actY1, actWidth, actHeight);
+  }
 
   // draw the black box representing the start range
   if(act.latestStart !== null) {
@@ -687,10 +706,10 @@ ActivityPainter.prototype.paintActivityAsBar = function(rowY, act) {
     ctx.fillRect(actX1, actY1 + actHeight - 2, actWidth, 2);
   }
 
-  // paint the icon if specified
-  if(this.showIcon && act.icon !== null && (act.icon in this.iconPainters)) {
+  // paint the icon if icon on or style is icon and icon specified
+  if((this.showIcon || this.style === ActivityPainter.ICON_STYLE) && act.icon !== null && (act.icon in this.iconPainters)) {
     var iconPainter = this.iconPainters[act.icon];
-    var iconColor = iconPainter.color ? Util.rgbaToString(iconPainter.color, act.opacity) : color;
+    var iconColor = iconPainter.color ? Util.rgbaToString(iconPainter.color, 1.0) : Util.rgbaToString(actColor, 1.0);
     var iconWidth = iconPainter.width;
     iconPainter.paint({band:this.band,
                        interval:act,
@@ -702,13 +721,42 @@ ActivityPainter.prototype.paintActivityAsBar = function(rowY, act) {
                        lr:{x:actX2, y:actY2}});
   }
 
-  // paint the label
-  if(this.showLabel && act.label !== null) {
-    this.paintLabel({interval:act,
+  if (this.showLabel) {
+      // autofit already includes space for label
+      if (this.autoFit) {
+          if (act.label !== null) {
+              this.paintLabel({interval:act,
                      ll:{x:actX1, y:actY2},
                      ul:{x:actX1, y:actY1},
                      ur:{x:actX2, y:actY1},
                      lr:{x:actX2, y:actY2}});
+          }
+      }
+      // paint the label of the previous act in the row
+      else if (previousAct && previousAct.label !== null) {
+          // paint previous activity label if there is room
+          this.paintLabel({interval:previousAct,
+                     ll:{x:previousActX1, y:actY2},
+                     ul:{x:previousActX1, y:actY1},
+                     ur:{x:previousActX2, y:actY1},
+                     lr:{x:previousActX2, y:actY2},
+                     maxr: {x:actX1, y:actY2}});
+      }
+  }
+
+  // paint start and end times of activity
+  if (this.showActivityTimes && this.rowPadding > 12) {
+      paintedTimeX2 = this.paintActivityTimes({interval:act,
+                     ll:{x:actX1, y:actY2},
+                     ul:{x:actX1, y:actY1},
+                     ur:{x:actX2, y:actY1},
+                      lr:{x:actX2, y:actY2},
+                     lastPaintedTimeX2: lastPaintedTimeX2,
+                     lastPaintedTime: lastPaintedTime});
+      if (paintedTimeX2 !== lastPaintedTimeX2) {
+        lastPaintedTimeX2 = paintedTimeX2;
+        lastPaintedTime = act.start;
+      }
   }
 
   // check to see if it was selected
@@ -725,10 +773,10 @@ ActivityPainter.prototype.paintActivityAsBar = function(rowY, act) {
     ctx.stroke();
   }
 
-  // draw the border of the track
-  if(this.borderWidth > 0) {
+  // draw the border of the track (RAVEN -- if activity length not too short)
+  if(this.style === ActivityPainter.BAR_STYLE && this.borderWidth > 0) {
     ctx.lineWidth = this.borderWidth;
-    ctx.strokeStyle = Util.rgbaToString([0, 0, 0], act.opacity);
+    ctx.strokeStyle = Util.rgbaToString([0, 0, 0], 0.5);
     ctx.strokeRect(actX1, actY1, actWidth, actHeight);
   }
 
@@ -739,7 +787,7 @@ ActivityPainter.prototype.paintActivityAsBar = function(rowY, act) {
     drawCoord[1] = Math.max(drawCoord[1], actX1+labelWidth+this.labelPadding);
   }
 
-  return {actCoord:actCoord, drawCoord:drawCoord};
+  return {actCoord:actCoord, drawCoord:drawCoord, lastPaintedTimeX2: lastPaintedTimeX2, lastPaintedTime: lastPaintedTime};
 };
 
 ActivityPainter.prototype.paintActivityAsLine = function(rowY, act) {
@@ -760,7 +808,8 @@ ActivityPainter.prototype.paintActivityAsLine = function(rowY, act) {
 
   var actColor = this.getColor(act);
   if(act.isConflicted) { actColor = [255,0,0]; }
-  var color = Util.rgbaToString(actColor, act.opacity);
+  //??var color = Util.rgbaToString(actColor, act.opacity);
+  var color = Util.rgbaToString(actColor, 1.0);
   ctx.strokeStyle = color;
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -827,25 +876,41 @@ ActivityPainter.prototype.paintActivityAsLine = function(rowY, act) {
   return {actCoord:actCoord, drawCoord:drawCoord};
 };
 
-ActivityPainter.prototype.paintActivity = function(rowY, act) {
-  if(this.style === ActivityPainter.BAR_STYLE) {
-    return this.paintActivityAsBar(rowY, act);
+ActivityPainter.prototype.paintActivity = function(rowY, act, previousAct, previousActX1, previousActX2, lastPaintedTimeX2, lastPaintedTime) {
+  if(this.style === ActivityPainter.LINE_STYLE) {
+    return this.paintActivityAsLine(rowY, act, previousAct, previousActX1, previousActX2, lastPaintedTimeX2, lastPaintedTime);
   }
-  else if(this.style === ActivityPainter.LINE_STYLE) {
-    return this.paintActivityAsLine(rowY, act);
+  else { // ActivityPainter.BAR_STYLE or ICON_STYLE
+    return this.paintActivityAsBar(rowY, act, previousAct, previousActX1, previousActX2, lastPaintedTimeX2, lastPaintedTime);
   }
-  return null;
 };
 
 ActivityPainter.prototype.paintActivitiesWaterfallLayout = function(acts) {
   // 0,0 corresponds to the upper left hand corner.
+  //this.showLabel = true;
+  this.trimLabel = false;
+  this.showActivityTimes = true;
+  // set min row height to 5
+  this.rowHeight = Math.max(5,Math.floor(this.band.height/acts.length));
+  this.rowPadding = Math.ceil(this.rowHeight/3);
+  this.activityHeight = Math.min (20, this.rowHeight - this.rowPadding);
+  this.rowPadding = this.rowHeight - this.activityHeight;
   var rowY = this.rowHeight;
   var actCoords = [];
   for(var i=0, ilength=acts.length; i<ilength; ++i) {
     var act = acts[i];
     var coord = this.paintActivity(rowY, act);
+    if (this.activityHeight > 5 && act.label) {
+        this.paintLabel({interval:act,
+                     ll:{x:coord.drawCoord[0], y:coord.drawCoord[3]},
+                     ul:{x:coord.drawCoord[0], y:coord.drawCoord[2]},
+                     ur:{x:coord.drawCoord[1], y:coord.drawCoord[2]},
+                     lr:{x:coord.drawCoord[1], y:coord.drawCoord[3]}});
+    }
     actCoords.push([act].concat(coord.actCoord));
-    rowY += this.rowHeight;
+    if (rowY + this.rowHeight <= this.band.height) {
+       rowY += this.rowHeight;
+    }
   }
   return actCoords;
 };
@@ -862,10 +927,22 @@ ActivityPainter.prototype.paintActivitiesCompactLayout = function(acts) {
 
   var actCoords = [];
   var openActs = acts.slice(0);
+  var showLabels = this.showLabel;
+  //this.showLabel = false;
   while(openActs.length > 0) {
+    if (!this.autoFit) { // packed
+        this.trimLabel = true;
+    }
+    else
+        this.trimLabel = false;
     var prevDrawEnd = null;
     var newOpenActs = [];
 
+    var previousAct = null;
+    var previousActX1 = null;
+    var previousActX2 = null;
+    var lastPaintedTimeX2 = null;
+    var lastPaintedTime = null;
     for(var i=0, ilength=openActs.length; i<ilength; ++i) {
       var act = openActs[i];
       if(prevDrawEnd !== null && prevDrawEnd > act.start) {
@@ -877,15 +954,42 @@ ActivityPainter.prototype.paintActivitiesCompactLayout = function(acts) {
           prevDrawEnd = act.end;
         }
         else {
-          var coord = this.paintActivity(rowY, act);
+          var coord = this.paintActivity(rowY, act, previousAct, previousActX1, previousActX2, lastPaintedTimeX2, lastPaintedTime);
+          // save previous act and where it is drawn
+          previousAct = act;
+          previousActX1 = coord.drawCoord[0];
+          previousActX2 = coord.drawCoord[1];
+          lastPaintedTimeX2 = coord.lastPaintedTimeX2;
+          lastPaintedTime = coord.lastPaintedTime;
           actCoords.push([act].concat(coord.actCoord));
           prevDrawEnd = viewTimeAxis.getTimeFromX(coord.drawCoord[1]);
         }
       }
     }
 
+    // put label on the last activity in this row
+    if (!this.autoFit && previousAct && this.showLabel && this.rowHeight > 5) {
+        this.trimLabel = false;
+        // paint previous activity label if there is room
+        this.paintLabel({interval:act,
+                     ll:{x:previousActX1, y:coord.drawCoord[3]},
+                     ul:{x:previousActX1, y:coord.drawCoord[2]},
+                     ur:{x:previousActX2, y:coord.drawCoord[2]},
+                     lr:{x:previousActX2, y:coord.drawCoord[3]},
+                   maxr:{x:coord.drawCoord[1], y:coord.drawCoord[3]}});
+
+        this.trimLabel = true;
+    }
+
+
     openActs = newOpenActs;
     rowY -= this.rowHeight;
+
+    // RAVEN -- don't draw off screen; clamp at the top
+    // clamp activities in the top row if it is going to be off the screen
+    if (rowY < 0) {
+        rowY = this.activityHeight -5;
+    }
   }
 
   for(var j=0, jlength=selectedActs.length; j<jlength; ++j) {
@@ -894,7 +998,8 @@ ActivityPainter.prototype.paintActivitiesCompactLayout = function(acts) {
     actCoords.push([selectedAct.act].concat(selectedCoord.actCoord));
   }
   return actCoords;
-};
+}
+
 
 ActivityPainter.prototype.paintActivities = function(acts) {
   if(this.layout === ActivityPainter.COMPACT_LAYOUT) {
@@ -1029,6 +1134,8 @@ function Band(obj) {
 }
 
 Band.DEFAULT_HEIGHT = 35;
+Band.INITIAL_WATERFALL_HEIGHT = 200;
+MAX_CANVAS_HEIGHT = 32767;
 
 Band.localID = -1;
 Band.getNextLocalID = function() {
@@ -1056,6 +1163,10 @@ Band.prototype.revalidate = function() {
     ctx.scale(ratio, ratio);
   }
   else {
+    // cap height to max canvas limit 32767, bad things happened when height was 35000
+    if (height > MAX_CANVAS_HEIGHT)
+      height = MAX_CANVAS_HEIGHT;
+
     this.canvas.width = width;
     this.canvas.height = height;
   }
@@ -1162,10 +1273,11 @@ Band.prototype.findIntervals = function(x, y) {
   for(var i=0, length=this._intervalCoords.length; i<length; ++i) {
     var coord = this._intervalCoords[i];
     var interval = coord[0];
-    var x1 = coord[1];
-    var x2 = coord[2];
-    var y1 = coord[3];
-    var y2 = coord[4];
+    // RAVEN look within +/- 2 pixels
+    var x1 = coord[1]-2;
+    var x2 = coord[2]+2;
+    var y1 = coord[3]-2;
+    var y2 = coord[4]+2;
     if(x >= x1 && x <= x2 && y >= y1 && y <= y2) {
       matchingIntervals.push(interval);
     }
@@ -1369,21 +1481,50 @@ Band.prototype._mousemove = function(e) {
     return true;
   }
 
-  // check to see if we're over a interval
-  var intervals = this.findIntervals(x, y);
-  // callback to filter out intervals that match the x,y position
-  if(this.onFilterTooltipIntervals !== null) {
-    intervals = this.onFilterTooltipIntervals({band:this, intervals:intervals, time:mouseTime});
+  // RAVEN -- only get one interval from each band
+  if (this instanceof CompositeBand) {
+      let bands = this.bands;
+      let first = true;
+      bands.forEach((band) => {
+          // check to see if we're over a interval
+          var intervals = band.findIntervals(x, y);
+          // callback to filter out intervals that match the x,y position
+          if(band.onFilterTooltipIntervals !== null) {
+            intervals = band.onFilterTooltipIntervals({band:band, intervals:intervals, time:mouseTime});
+            if (intervals.length !== 0) {
+              let interval = intervals[0];
+              if(first)
+                 first = false;
+              else {
+                  tooltipText += separator;
+              }
+              if (interval.properties && interval.properties.message)
+                  tooltipText = '<p>'+Util.toDOYDate(interval.start)+'</p>'+interval.properties.message;
+              else if(interval.onGetTooltipText !== null) {
+                  tooltipText += interval.onGetTooltipText(e, {band:band, interval:interval, time:mouseTime});
+              }
+            }
+          }
+      });
   }
-  if(intervals.length !== 0) {
-    // walking in reverse order so that the top interval is displayed first
-    for(length=intervals.length-1, i=length; i>=0; --i) {
-      if(i!==length) { tooltipText += separator; }
-      var interval = intervals[i];
-      if(interval.onGetTooltipText !== null) {
-        tooltipText += interval.onGetTooltipText(e, {band:this, interval:interval, time:mouseTime});
+  else {
+      // check to see if we're over a interval
+      var intervals = this.findIntervals(x, y);
+      // callback to filter out intervals that match the x,y position
+      if(this.onFilterTooltipIntervals !== null) {
+        intervals = this.onFilterTooltipIntervals({band:this, intervals:intervals, time:mouseTime});
       }
-    }
+      if (intervals.length !== 0) {
+        var interval = intervals[0];
+        if (interval.properties && interval.properties.message)
+          tooltipText = '<p>'+Util.toDOYDate(interval.start)+'</p>'+interval.properties.message;
+        else if(interval.onGetTooltipText !== null) {
+          tooltipText += interval.onGetTooltipText(e, {band:this, interval:interval, time:mouseTime});
+        }
+      }
+  }
+
+  if (tooltipText !== '') {
     this.onShowTooltip(e, tooltipText);
     return true;
   }
@@ -1413,12 +1554,26 @@ Band.prototype.mousemove = function(e) {
     clearTimeout(this._tooltipTimeout);
     if(this.onHideTooltip) { this.onHideTooltip(); }
   }
-  if(this.tooltipDelay > 0) {
-    this._tooltipTimeout = setTimeout(this._mousemove.bind(this, e), this.tooltipDelay);
+
+  // RAVEN -- display annotation
+  // Make sure not to show other tooltop is annotationTooltipShown is true.
+  // This is a hacky fix for Chrome issue: mousemove event is getting fired right after dblclick event.
+  if (!this.annotationTooltipShown) {
+    if(this._tooltipTimeout !== null) {
+      if(this.onHideTooltip) { this.onHideTooltip(); }
+    }
+
+    if(this.tooltipDelay > 0) {
+      this._tooltipTimeout = setTimeout(this._mousemove.bind(this, e), this.tooltipDelay);
+    }
+    else {
+      this._mousemove(e);
+    }
   }
   else {
-    this._mousemove(e);
+      this.annotationTooltipShown = false;
   }
+
   return true;
 };
 
@@ -1438,6 +1593,8 @@ Band.prototype.mousedown = function(e) {
 
   var x = e.pageX - $(e.target).offset().left;
   var y = e.pageY - $(e.target).offset().top;
+  var mouseTime = this.viewTimeAxis.getTimeFromX(x);
+
   var interval = null;
   var intervals = this.findIntervals(x, y);
   if(intervals.length !== 0) {
@@ -1445,7 +1602,7 @@ Band.prototype.mousedown = function(e) {
   }
 
   if(e.which === 1) {
-    if(this.onLeftClick !== null) { this.onLeftClick(e, {band:this, interval:interval}); }
+    if(this.onLeftClick !== null) { this.onLeftClick(e, {band:this, interval:interval, time:mouseTime}); }
 
     if(x >= this.viewTimeAxis.x1 && this.onUpdateView !== null) {
       // enable dragging if on timeline area
@@ -1464,7 +1621,7 @@ Band.prototype.mousedown = function(e) {
         interval = backgroundIntervals[0];
       }
     }
-    this.onRightClick(e, {band:this, interval:interval});
+    this.onRightClick(e, {band:this, interval:interval, time:mouseTime});
   }
   return true;
 };
@@ -1479,6 +1636,39 @@ Band.prototype.click = function(e) {
 };
 
 Band.prototype.dblclick = function(e) {
+  // RAVEN -- dbl click to show annotation text
+  var x = e.pageX - $(e.target).offset().left;
+  var y = e.pageY - $(e.target).offset().top;
+
+  // search the background intervals
+  var backgroundIntervals = this.findBackgroundIntervals(x, y);
+  if (backgroundIntervals.length !== 0) {
+      interval = backgroundIntervals[0];
+      this.onDblLeftClick(e, {band:this, backgroundInterval:interval});
+
+      let lines = interval.properties.text.split('\n');
+
+      let htmlText = `
+        <span class="header">
+          ${interval.label}
+        </span>
+      `;
+
+      lines.forEach((line) => {
+          htmlText += `
+            <p>
+              ${line}
+            </p>
+          `;
+      });
+
+      this.annotationTooltipShown = true;
+      this.onShowTooltip(e, htmlText);
+  }
+  else {
+      this.annotationTooltipShown = false;
+      if (this.onDblLeftClick !== null) { this.onDblLeftClick(e, {band:this}); }
+  }
 };
 
 Band.prototype.addChildBand = function(childBand) {
@@ -1651,7 +1841,7 @@ CompositeBand.prototype.repaint = function() {
 
   this.decorator.paintTimeTicks();
 
-  var labelY = 5; // Changed (6/19/2017) - Label offset at 0 rubs against the border of the band.
+  var labelY = 0;
   var valueTicksX = this.viewTimeAxis.x1;
   this._intervalCoords = [];
   for(var i=0, length=this.bands.length; i<length; ++i) {
@@ -1659,11 +1849,11 @@ CompositeBand.prototype.repaint = function() {
     if(band.decorator !== null) {
       labelY = band.decorator.paintLabel(labelY);
       if(band.decorator.paintValueTicks) {
-        valueTicksX = band.decorator.paintValueTicks(valueTicksX, width); // Changed (8/24/2017) - Composite band divs don't have offsetWidth.
+        valueTicksX = band.decorator.paintValueTicks(valueTicksX);
       }
     }
     var coords = band.painter.paint();
-    this._intervalCoords = this._intervalCoords.concat(coords);
+    band._intervalCoords = coords;
   }
 
   for(var id in this.childBands) {
@@ -1676,6 +1866,7 @@ CompositeBand.prototype.repaint = function() {
   if(this.decorator !== null) {
     this.decorator.paintForegroundIntervals();
     this.decorator.paintGuideTimes();
+    this.decorator.paintNow();
   }
 };
 
@@ -1683,11 +1874,13 @@ function Decorator(obj) {
   if(typeof obj === "undefined") { return; }
 
   this.font = ("font" in obj) ? obj.font : "normal 9px Verdana";
+  this.labelFontSize = ("labelFontSize" in obj) ?obj.labelFontSize : 10;
   this.guideColor = ("guideColor" in obj) ? obj.guideColor : [34,139,34];
   this.showIcon = ("showIcon" in obj) ? obj.showIcon : false;
 
   // set when assigned to a band
   this.band = null;
+  this.hideBackgroundIntervals = false;
 }
 
 Decorator.prototype._paintInterval = function(interval) {
@@ -1701,19 +1894,33 @@ Decorator.prototype._paintInterval = function(interval) {
 
   ctx.fillStyle = Util.rgbaToString(interval.color, interval.opacity);
   ctx.fillRect(bgX1, 0, bgWidth, this.band.height);
+
+  return { x1: bgX1, x2: bgX2 };
 };
 
 Decorator.prototype.paintBackgroundIntervals = function() {
-  // paint the highlight
-  var backgroundIntervalsList = this.band.backgroundIntervalsList;
-  for(var i=0, ilength=backgroundIntervalsList.length; i<ilength; ++i) {
-    var intervals = backgroundIntervalsList[i];
-    if(intervals === undefined || intervals === null) { continue; }
+  if (!this.hideBackgroundIntervals) {
+      // paint the highlight
+      var backgroundIntervalsList = this.band.backgroundIntervalsList;
+      for(var i=0, ilength=backgroundIntervalsList.length; i<ilength; ++i) {
+        var intervals = backgroundIntervalsList[i];
+        if(intervals === undefined || intervals === null) { continue; }
 
-    for(var j=0, jlength=intervals.length; j<jlength; ++j) {
-      var interval = intervals[j];
-      this._paintInterval(interval);
-    }
+        for(var j=0, jlength=intervals.length; j<jlength; ++j) {
+          var interval = intervals[j];
+          let rect = this._paintInterval(interval);
+
+          // Paint background interval label.
+          this.band.painter.paintLabel({
+            interval,
+            ll: { x: rect.x1, y: 18 },
+            ul: { x: 0, y: 10 },
+            ur: { x: 0, y: 10 },
+            lr: { x: rect.x2, y: 30 },
+            annotationLabel: true
+          });
+        }
+      }
   }
 };
 
@@ -1803,8 +2010,8 @@ Decorator.prototype.paintNow = function() {
     var bandHeight = this.band.height + this.band.heightPadding;
 
     var nowX = viewTimeAxis.getXFromTime(now);
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = Util.rgbaToString([255,0,0], 0.8);
+    ctx.lineWidth = this.timeCursorWidth || 4;
+    ctx.strokeStyle = Util.rgbaToString(this.timeCursorColor || [255,0,0], 0.8);
     ctx.beginPath();
     ctx.moveTo(nowX, 0);
     ctx.lineTo(nowX, bandHeight);
@@ -1814,67 +2021,38 @@ Decorator.prototype.paintNow = function() {
 };
 
 Decorator.prototype.paintLabel = function(yStart) {
-  var band = this.band;
-  var ctx = band.canvas.getContext('2d');
-  var level = band.getLevel();
+  var ctx = this.band.canvas.getContext('2d');
+  let originalFont = ctx.font;
+  ctx.font = this.labelFontSize+"px Georgia";
+  ctx.textAlign = "left";
+  var labelWidth = this.band.viewTimeAxis.x1;
 
-  var xStart = 2;
-  var x = xStart + 7*level;
-  var y = yStart + 7;
-
-  // Changed (8/24/2017) - Re-set context. If we are drawing composite bands then the context might be reset to something bad between draws.
-  ctx.font = '10px sans-serif';
-  ctx.lineWidth = 0.5;
-  ctx.textAlign = 'start';
-  ctx.textBaseline = 'alphabetic';
-
-  // show the icons indicating the children bands can be expanded or collapsed
-  if(this.showIcon) {
-    var iconWidth = 4;
-    // shift to the right to allow the triangle to render
-    x += iconWidth*2;
-    if(Object.keys(band.childBands).length !== 0) {
-      ctx.fillStyle = Util.rgbaToString([128,128,128], 0.8);
-      if(band.isExpanded()) {
-        // arrow down
-        ctx.moveTo(x-iconWidth, y-iconWidth);
-        ctx.lineTo(x+iconWidth, y-iconWidth);
-        ctx.lineTo(x,           y+iconWidth);
-        ctx.lineTo(x-iconWidth, y-iconWidth);
-      }
-      else {
-        // arrow right
-        ctx.moveTo(x-iconWidth, y-iconWidth);
-        ctx.lineTo(x-iconWidth, y+iconWidth);
-        ctx.lineTo(x+iconWidth, y          );
-        ctx.lineTo(x-iconWidth, y-iconWidth);
-      }
-      ctx.fill();
-    }
-    // shift again for the position of the label
-    x += iconWidth*2;
-  }
-
-  ctx.fillStyle = Util.rgbaToString(band.labelColor, 1);
-  var labelWidth = band.viewTimeAxis.x1;
+  var x = 2;
+  var y = this.labelFontSize + yStart;
+  var yDelta = this.labelFontSize;
+  ctx.fillStyle = Util.rgbaToString(this.band.labelColor, 1);
   if(labelWidth > 2) {
-    var label = Util.trimToWidth(band.label, labelWidth - x, ctx);
+    var label = Util.trimToWidth(this.band.label, labelWidth - x, ctx);
     ctx.fillText(label, x, y);
 
     x += 5;
-    y += 12;
-    for(var k=0, klength=band.minorLabels.length; k<klength; ++k) {
-      var minorLabel = Util.trimToWidth(band.minorLabels[k], labelWidth - x, ctx);
+    y += yDelta;
+    for(var k=0, klength=this.band.minorLabels.length; k<klength; ++k) {
+      var minorLabel = Util.trimToWidth(this.band.minorLabels[k], labelWidth - x, ctx);
       ctx.fillText(minorLabel, x, y);
-      y += 12;
+      y += yDelta;
     }
   }
   else {
     // if there is no label area, print the text near the top
-    ctx.fillText(band.label, x, y);
+    ctx.fillText(this.band.label, x, y);
   }
+
+  // restore orignal font
+  ctx.font = originalFont;
   return y;
 };
+
 
 Decorator.prototype.paint = function() {
   if(this.band === null) { return; }
@@ -1885,7 +2063,7 @@ Decorator.prototype.paint = function() {
   ctx.textBaseline = "middle";
 
   this.paintTimeTicks();
-  this.paintLabel(5); // Changed (8/24/2017) - Add some pad to the top of the label.
+  this.paintLabel(0);
   this.paintBackgroundIntervals();
 };
 
@@ -1974,6 +2152,28 @@ DrawableInterval.getTooltipText = function(e, obj) {
 // compareFunction(a, b) must always return the same value when given a specific
 //      pair of elements a and b as its two arguments. If inconsistent results
 //      are returned then the sort order is undefined
+
+// RAVEN -- comparator
+var Comparator = {
+  drawableInterval: function(a, b) {
+    return a.end - b.start;
+  },
+
+  drawableIntervalStart: function(a, b) {
+    if(a.start == b.start) {
+      return a.end - b.end;
+    }
+    return a.start - b.start;
+  },
+
+  drawableIntervalEnd: function(a, b) {
+    if(a.end == b.end) {
+      return a.start - b.start;
+    }
+    return a.end - b.end;
+  }
+};
+
 DrawableInterval.earlyStartEarlyEnd = function(a, b) {
   if(a.start == b.start) {
     return a.end - b.end;
@@ -1981,11 +2181,142 @@ DrawableInterval.earlyStartEarlyEnd = function(a, b) {
   return a.start - b.start;
 };
 
+function EditableGrid(obj) {
+  SimpleGrid.prototype.constructor.call(this, obj);
+  SimpleGrid.prototype.initTableRows.call(this);
+
+  this.editableCell = null;
+}
+
+EditableGrid.prototype = Object.create(SimpleGrid.prototype);
+EditableGrid.prototype.constructor = EditableGrid;
+
+EditableGrid.prototype.mousedown = function(e) {
+  var target = e.target;
+  if(target.nodeName !== "TD") { return true; }
+  if($(target).hasClass("filter")) { return true; }
+  var parent = target.parentNode;
+  if(parent.nodeName !== "TR") { return true; }
+  if($(parent).hasClass("filters")) { return true; }
+  var row = parent;
+
+  // use setTimeout so we don't perform this operation in the event thread
+  this.clearEditableRow();
+
+  this.selectRow(row, false);
+  return true;
+};
+
+EditableGrid.prototype.clearEditableRow = function() {
+  if(this.editableCell === null) { return; }
+
+  var event = new Event("onchange");
+  this.editableCell.dispatchEvent(event);
+
+  var rowSpec = this.rowSpecs[this.editableCell.parentNode.sectionRowIndex];
+  this.initRow(this.editableCell.parentNode, rowSpec.data);
+  this.editableCell = null;
+  this.resizeStickyHeaders();
+};
+
+EditableGrid.prototype.dblclick = function(e) {
+  var target = e.target;
+  if(target.nodeName !== "TD") { return true; }
+  if($(target).hasClass("filter")) { return true; }
+  var parent = target.parentNode;
+  if(parent.nodeName !== "TR") { return true; }
+  if($(parent).hasClass("filters")) { return true; }
+  var cell = target;
+  var row = parent;
+
+  if(cell === this.editableCell) { return true; }
+  var rowSpec = this.rowSpecs[row.sectionRowIndex];
+
+  this.clearEditableRow();
+  this.editableCell = this.initEditableCell(cell);
+  return true;
+};
+
+EditableGrid.prototype.initEditableCell = function(cell) {
+  var row = cell.parentNode;
+  var rowSpec = this.rowSpecs[row.sectionRowIndex];
+
+  if (!rowSpec.editableFields) { return null; }
+  if (!rowSpec.editableFields[cell.cellIndex]) { return null; }
+  if (!rowSpec.editableFields[cell.cellIndex].factory) { return null; }
+
+  var factory = rowSpec.editableFields[cell.cellIndex].factory;
+  var editableField = factory(rowSpec.data[cell.cellIndex]);
+  editableField.onchange = this.editObjectOnChange.bind(this);
+  $(editableField).addClass("editable-cell");
+
+  var cellIndex = cell.cellIndex;
+  $(row).empty();
+  var result = null;
+  for(var i=0; i<rowSpec.data.length; ++i) {
+    var value;
+    if(i === cellIndex) {
+      value = editableField;
+    }
+    else {
+      value = rowSpec.data[i];
+    }
+    var td = document.createElement("td");
+    if(typeof value === "string" || typeof value === "number") {
+      td.innerHTML = value;
+    }
+    else {
+      td.appendChild(value);
+    }
+
+    if(i<this.columnSpecs.length) {
+      var columnSpec = this.columnSpecs[i];
+      $(td).addClass(columnSpec.css);
+      $(td).attr("width", columnSpec.width);
+    }
+
+    row.appendChild(td);
+
+    if (i === cellIndex) {
+      result = td;
+    }
+  }
+
+  return result;
+};
+
+EditableGrid.prototype.editObjectOnChange = function(e) {
+  var target = e.target;
+  var rowSpec = this.rowSpecs[this.editableCell.parentNode.sectionRowIndex];
+  var originalValue = rowSpec.data[this.editableCell.cellIndex];
+
+  var value = target.value.trim();
+  var result = rowSpec.editableFields[this.editableCell.cellIndex].parse(value);
+  parsedValue = result[0];
+  newCell = result[1];
+  if(parsedValue === null) {
+    target.value = origValue;
+    $(target).addClass("inputerror");
+  }
+  else {
+    $(target).removeClass("inputerror");
+    rowSpec.data[this.editableCell.cellIndex] = newCell;
+
+    rowSpec.editableFields[this.editableCell.cellIndex].onchange(rowSpec, parsedValue);
+    this.clearEditableRow();
+  }
+  return true;
+};
+
 var KeyCode = {
   UP: 38,
   DOWN: 40,
   LEFT: 37,
   RIGHT: 39,
+
+  CTRL: 17,
+  OSLEFT: 91,
+  OSRIGHT: 92,
 
   0: 48,
   1: 49,
@@ -2047,8 +2378,10 @@ function Painter(obj) {
     "cross":    {paint:Painter.paintCross, width:12},
     "circle":   {paint:Painter.paintCircle, width:8},
     "triangle": {paint:Painter.paintTriangle, width:10},
+    "Triangle": {paint:Painter.paintTriangle, width:10},
     "square":   {paint:Painter.paintSquare, width:10},
-    "diamond":  {paint:Painter.paintDiamond, width:10}
+    "diamond":  {paint:Painter.paintDiamond, width:10},
+    "Diamond":  {paint:Painter.paintDiamond, width:10}
   };
   if("iconPainters" in obj) {
     $.extend(this.iconPainters, obj.iconPainters);
@@ -2113,6 +2446,7 @@ Painter.prototype.setIconWidth = function(icon, width) {
 };
 
 Painter.prototype.paintLabel = function(obj) {
+  // RAVEN -- include annotation label
   var interval = obj.interval;
   var ll = obj.ll;
   var ul = obj.ul;
@@ -2120,49 +2454,150 @@ Painter.prototype.paintLabel = function(obj) {
   var lr = obj.lr;
   var width = lr.x - ll.x;
 
+  if (!this.autoFit) { // packed
+      width = obj.maxr ? obj.maxr.x - ll.x : lr.x - ll.x;
+  }
+  var annotationLabel = obj.annotationLabel;
+
   // return early if nothing to paint
   if(interval.label === null) return;
 
   var ctx = this.band.canvas.getContext('2d');
-  var padding = this.labelPadding;
-  var alignLabel = this.alignLabel;
-  var baselineLabel = this.baselineLabel;
+  if(this.showLabel && interval.label !== null) {
+    var padding = this.labelPadding;
+    var alignLabel = this.alignLabel;
+    var baselineLabel = this.baselineLabel;
 
-  var label = this.trimLabel ? Util.trimToWidth(interval.label, width-padding*2, ctx) : interval.label;
-  if(label === "") return;
+    var label = this.trimLabel ? Util.trimToWidth(interval.label, width-padding*2, ctx) : interval.label;
+    if(label !== "") {
+      var labelColor = (interval.labelColor!==null) ? interval.labelColor : [0,0,0];
+      ctx.fillStyle = Util.rgbaToString(labelColor, interval.labelOpacity);
 
-  var labelColor = (interval.labelColor!==null) ? interval.labelColor : [0,0,0];
-  ctx.fillStyle = Util.rgbaToString(labelColor, interval.labelOpacity);
+      var labelX1 = null;
+      var labelY1 = null;
+      if (annotationLabel) {
+        labelX1 = ll.x + ctx.measureText(label).width + padding;
+      }
+      else if(alignLabel === Painter.ALIGN_CENTER) {
+        // Ensure text does not appear over band label area
+        labelX1 = Math.max(ll.x + (lr.x-ll.x)/2 - ctx.measureText(label).width/2, ll.x + padding);
+      }
+      else if(alignLabel === Painter.ALIGN_RIGHT){
+        labelX1 = Math.max(lr.x - ctx.measureText(label).width - padding, ll.x + padding);
+      }
+      else {
+        //default is left aligned
+        labelX1 = ll.x + padding;
+      }
 
-  var labelX1 = null;
-  var labelY1 = null;
-  if(alignLabel === Painter.ALIGN_CENTER) {
-    // Ensure text does not appear over band label area
-    labelX1 = Math.max(ll.x + (lr.x-ll.x)/2 - ctx.measureText(label).width/2, ll.x + padding);
+      if(baselineLabel === Painter.BASELINE_CENTER) {
+        ctx.textBaseline = "middle";
+        labelY1 = ul.y + ((ll.y-ul.y) / 2);
+      }
+      else if(baselineLabel === Painter.BASELINE_TOP) {
+        ctx.textBaseline = "top";
+        labelY1 = ul.y;
+      }
+      else {
+        //default is bottom baselined
+        ctx.textBaseline = "bottom";
+        labelY1 = ll.y;
+      }
+      ctx.fillText(label, labelX1, labelY1);
+    }
   }
-  else if(alignLabel === Painter.ALIGN_RIGHT){
-    labelX1 = Math.max(lr.x - ctx.measureText(label).width - padding, ll.x + padding);
-  }
-  else {
-    //default is left aligned
-    labelX1 = ll.x + padding;
-  }
-
-  if(baselineLabel === Painter.BASELINE_CENTER) {
-    ctx.textBaseline = "middle";
-    labelY1 = ul.y + ((ll.y-ul.y) / 2);
-  }
-  else if(baselineLabel === Painter.BASELINE_TOP) {
-    ctx.textBaseline = "top";
-    labelY1 = ul.y;
-  }
-  else {
-    //default is bottom baselined
-    ctx.textBaseline = "bottom";
-    labelY1 = ll.y;
-  }
-  ctx.fillText(label, labelX1, labelY1);
 };
+
+// RAVEN -- display activity times
+Painter.prototype.paintActivityTimes = function (obj) {
+  var interval = obj.interval;
+  var ll = obj.ll;
+  var ul = obj.ul;
+  var ur = obj.ur;
+  var lr = obj.lr;
+  var lastPaintedTimeX2 = obj.lastPaintedTimeX2;
+  var lastPaintedTime = obj.lastPaintedTime;
+  var width = lr.x - ll.x;
+
+  if (!lastPaintedTimeX2 || (ll.x > lastPaintedTimeX2+5)) {
+      var ctx = this.band.canvas.getContext('2d');
+      var labelColor = (interval.labelColor!==null) ? interval.labelColor : [0,0,0];
+      ctx.fillStyle = Util.rgbaToString(labelColor, interval.labelOpacity);
+
+      if (!lastPaintedTime || (lastPaintedTime && lastPaintedTime < interval.start)) {
+        // if activity area is large enough paint start and end times (hh:mm)
+        if (width > ctx.measureText("hh:mm:ss  hh:mm:ss").width) {
+            let startTimeStr = Util.toDOYDate(interval.start, false);
+            startTimeStr = startTimeStr.substring (startTimeStr.length-8);
+            let endTimeStr = Util.toDOYDate(interval.end, false);
+            endTimeStr = endTimeStr.substring (endTimeStr.length-8);
+            ctx.fillText(startTimeStr, ll.x, ll.y+8);
+            ctx.fillText(endTimeStr, lr.x-ctx.measureText("hh:mm:s").width, lr.y+8);
+            return ll.x+ctx.measureText("hh:mm:ss  hh:mm:ss").width;
+        }
+        else {
+            let startTimeStr = Util.toDOYDate(interval.start, false);
+            if (lastPaintedTime) {
+              let lastPaintTimeStr = Util.toDOYDate(lastPaintedTime, false);
+              const regExp = /(\d\d\d\d)-(\d\d\d)T(\d\d):(\d\d):(\d\d)/;
+              let matStart = startTimeStr.match(regExp);
+              let matLastPaintTime = lastPaintTimeStr.match(regExp);
+              if (matStart[1] === matLastPaintTime[1] && matStart[2] === matLastPaintTime[2]) {
+                  // if less than a day, just show hours, mins, secs
+                  startTimeStr = `${matStart[3]}:${matStart[4]}:${matStart[5]}`;
+              }
+              else if (matStart[1] === matLastPaintTime[1]) {
+                  // if less than a year, just show days, hours etc
+                  startTimeStr = `${matStart[2]}T${matStart[3]}:${matStart[4]}:${matStart[5]}`;
+              }
+            }
+            ctx.fillText(startTimeStr, ll.x, ll.y+8);
+            return ll.x+ctx.measureText(startTimeStr).width;
+        }
+      }
+  }
+
+  return lastPaintedTimeX2;
+};
+
+Painter.prototype.paintStateChangeTime = function (obj) {
+  var interval = obj.interval;
+  var ll = obj.ll;
+  var ul = obj.ul;
+  var ur = obj.ur;
+  var lr = obj.lr;
+  var lastPaintedTimeX2 = obj.lastPaintedTimeX2;
+  var lastPaintedTime = obj.lastPaintedTime;
+  var width = lr.x - ll.x;
+
+  if (!lastPaintedTimeX2 || (ll.x > lastPaintedTimeX2+5)) {
+      var ctx = this.band.canvas.getContext('2d');
+      var labelColor = (interval.labelColor!==null) ? interval.labelColor : [0,0,0];
+      ctx.fillStyle = Util.rgbaToString(labelColor, interval.labelOpacity);
+
+      if (!lastPaintedTime || (lastPaintedTime && lastPaintedTime < interval.start)) {
+        let startTimeStr = Util.toDOYDate(interval.start, false);
+        if (lastPaintedTime) {
+          let lastPaintTimeStr = Util.toDOYDate(lastPaintedTime, false);
+          const regExp = /(\d\d\d\d)-(\d\d\d)T(\d\d):(\d\d):(\d\d)/;
+          let matStart = startTimeStr.match(regExp);
+          let matLastPaintTime = lastPaintTimeStr.match(regExp);
+          if (matStart[1] === matLastPaintTime[1] && matStart[2] === matLastPaintTime[2]) {
+              // if less than a day, just show hours, mins, secs
+              startTimeStr = `${matStart[3]}:${matStart[4]}:${matStart[5]}`;
+          }
+          else if (matStart[1] === matLastPaintTime[1]) {
+              // if less than a year, just show days, hours etc
+              startTimeStr = `${matStart[2]}T${matStart[3]}:${matStart[4]}:${matStart[5]}`;
+          }
+        }
+        ctx.fillText(startTimeStr, ll.x, ll.y+8);
+        return ll.x+ctx.measureText(startTimeStr).width;
+      }
+  }
+  return lastPaintedTimeX2;
+};
+
 
 Painter.prototype.paint = function() {
   // implemented by derived classes
@@ -2425,6 +2860,10 @@ function ResourceBand(obj) {
   // indicates if tick values should be hidden
   this.hideTicks = ("hideTicks" in obj) ? obj.hideTicks : false;
 
+  // RAVEN -- log ticks
+  this.logTicks = ("logTicks" in obj) ? obj.logTicks : false; // If true, use Log ticks. False otherwise.
+  this.logTickToCanvasHeight = {};                            // Maps log tick values to height drawn on Canvas.
+
   // callbacks
   this.onGetInterpolatedTooltipText = ("onGetInterpolatedTooltipText" in obj) ? obj.onGetInterpolatedTooltipText : ResourceBand.getInterpolatedTooltipText;
   this.onFilterTooltipIntervals = ("onFilterTooltipIntervals" in obj) ? obj.onFilterTooltipIntervals : ResourceBand.filterTooltipIntervals;
@@ -2493,6 +2932,42 @@ ResourceBand.prototype.getInterpolation = function() {
   return this.interpolation;
 };
 
+// RAVEN log ticks
+ResourceBand.prototype.getYFromValueLog = function(value) {
+  if (value > 0) {
+    let ticks = Object.keys(this.logTickToCanvasHeight).sort();
+    let minTick = 0;
+    let maxTick = 0;
+
+    // Find which ticks the value is within.
+    // I.e. minTick <= value <= maxTick.
+    for (let i = 0; i < ticks.length; ++i) {
+      let tick = ticks[i];
+      let nextTick =  ticks[i + 1];
+
+      if (i < ticks.length - 1 && value >= tick && value <= nextTick) {
+        minTick = tick;
+        maxTick = nextTick;
+        break;
+      }
+      else {
+        minTick = ticks[i - 1];
+        maxTick = tick;
+      }
+    }
+
+    // Feature scaling.
+    // This moves value to a number in [0, 1].
+    let b = (value - minTick) / (maxTick - minTick);
+
+    // Find the height on the canvas that the value should be located at.
+    // This uses a logTickToCanvasHeight dictionary that gets the height of a log tick on the Canvas.
+    let y = this.logTickToCanvasHeight[minTick] + b * (this.logTickToCanvasHeight[maxTick] - this.logTickToCanvasHeight[minTick]);
+
+    return y;
+  }
+}
+
 ResourceBand.prototype.getYFromValue = function(value) {
   var range = this.maxPaintValue - this.minPaintValue;
   if(range === 0)
@@ -2506,23 +2981,33 @@ ResourceBand.prototype.computeMinMaxValues = function() {
   // defaultValue may be null at this point
   var maxValue = this.defaultValue;
   var minValue = this.defaultValue;
-  for(var i=0, ilength=this.intervalsList.length; i<ilength; ++i) {
-    var intervals = this.intervalsList[i];
-    for(var j=0, jlength=intervals.length; j<jlength; ++j) {
-      var interval = intervals[j];
-      var startValue = interval.startValue;
-      var endValue = interval.endValue;
 
-      var maxIntervalValue = Math.max(startValue, endValue);
-      var minIntervalValue = Math.min(startValue, endValue);
-      if(maxValue === null || maxIntervalValue > maxValue) {
-        maxValue = maxIntervalValue;
-      }
-      if(minValue === null || minIntervalValue < minValue) {
-        minValue = minIntervalValue;
-      }
+  // Log scale.
+  if (this.logTicks && this.tickValues.length > 0) {
+      maxValue = this.tickValues[this.tickValues.length - 1];
+      minValue = this.tickValues[0];
+  }
+  // Linear scale.
+  else {
+    for(var i=0, ilength=this.intervalsList.length; i<ilength; ++i) {
+        var intervals = this.intervalsList[i];
+        for(var j=0, jlength=intervals.length; j<jlength; ++j) {
+            var interval = intervals[j];
+            var startValue = interval.startValue;
+            var endValue = interval.endValue;
+
+            var maxIntervalValue = Math.max(startValue, endValue);
+            var minIntervalValue = Math.min(startValue, endValue);
+            if(maxValue === null || maxIntervalValue > maxValue) {
+                maxValue = maxIntervalValue;
+            }
+            if(minValue === null || minIntervalValue < minValue) {
+                minValue = minIntervalValue;
+            }
+        }
     }
   }
+
   this.minValue = minValue;
   this.maxValue = maxValue;
   this.computeMinMaxPaintValues();
@@ -2535,64 +3020,71 @@ ResourceBand.prototype.computeMinMaxPaintValues = function() {
   var start = this.viewTimeAxis.start;
   var end = this.viewTimeAxis.end;
 
-  if(this.autoScale === ResourceBand.VISIBLE_INTERVALS &&
-     (start !== this.timeAxis.start || end !== this.timeAxis.end)) {
+  // Log scale.
+  if (this.logTicks && this.tickValues.length > 0) {
+      maxPaintValue = this.tickValues[this.tickValues.length - 1];
+      minPaintValue = this.tickValues[0];
+  }
+  else {
+    if(this.autoScale === ResourceBand.VISIBLE_INTERVALS &&
+       (start !== this.timeAxis.start || end !== this.timeAxis.end)) {
 
-    // find the intervals in view and determine the min/max values.  These become the min/max paint values.
-    for(var i=0, ilength=this.intervalsList.length; i<ilength; ++i) {
-      var intervals = this.intervalsList[i];
-      for(var j=0, jlength=intervals.length; j<jlength; ++j) {
-        var interval = intervals[j];
-        if(interval.start > end) { break; } // break since remaining intervals are out of view
-        if(interval.end < start || interval.start > end) { continue; } // skip if no intersection
+      // find the intervals in view and determine the min/max values.  These become the min/max paint values.
+      for(var i=0, ilength=this.intervalsList.length; i<ilength; ++i) {
+        var intervals = this.intervalsList[i];
+        for(var j=0, jlength=intervals.length; j<jlength; ++j) {
+          var interval = intervals[j];
+          if(interval.start > end) { break; } // break since remaining intervals are out of view
+          if(interval.end < start || interval.start > end) { continue; } // skip if no intersection
 
-        var startValue = interval.startValue;
-        var endValue = interval.endValue;
-        if(startValue !== endValue) {
-          // interpolate if the start/end values differ
-          if(interval.start < start) {
-            startValue = Util.interpolateY3(interval.start, interval.startValue, interval.end, interval.endValue, start);
+          var startValue = interval.startValue;
+          var endValue = interval.endValue;
+          if(startValue !== endValue) {
+            // interpolate if the start/end values differ
+            if(interval.start < start) {
+              startValue = Util.interpolateY3(interval.start, interval.startValue, interval.end, interval.endValue, start);
+            }
+            if(interval.end > end) {
+              endValue = Util.interpolateY3(interval.start, interval.startValue, interval.end, interval.endValue, end);
+            }
           }
-          if(interval.end > end) {
-            endValue = Util.interpolateY3(interval.start, interval.startValue, interval.end, interval.endValue, end);
-          }
-        }
 
-        var maxIntervalValue = Math.max(startValue, endValue);
-        var minIntervalValue = Math.min(startValue, endValue);
-        if(maxPaintValue === null || maxIntervalValue > maxPaintValue) {
-          maxPaintValue = maxIntervalValue;
-        }
-        if(minPaintValue === null || minIntervalValue < minPaintValue) {
-          minPaintValue = minIntervalValue;
+          var maxIntervalValue = Math.max(startValue, endValue);
+          var minIntervalValue = Math.min(startValue, endValue);
+          if(maxPaintValue === null || maxIntervalValue > maxPaintValue) {
+            maxPaintValue = maxIntervalValue;
+          }
+          if(minPaintValue === null || minIntervalValue < minPaintValue) {
+            minPaintValue = minIntervalValue;
+          }
         }
       }
     }
-  }
-  else {
-    // autoScale is either null or all_intervals
-    minPaintValue = this.minValue;
-    maxPaintValue = this.maxValue;
-
-    // if not auto scaling, consider the min and max limit as well
-    if(this.autoScale === null && this.minLimit !== null) {
-      minPaintValue = Math.min(this.minValue, this.minLimit);
-    }
-    if(this.autoScale === null && this.maxLimit !== null) {
-      maxPaintValue = Math.max(this.maxValue, this.maxLimit);
-    }
-  }
-
-  // handle special case where min/max are the same.  Add some padding
-  // so that value is rendered in the middle of the band
-  if(minPaintValue === maxPaintValue) {
-    if(minPaintValue === 0) {
-      minPaintValue = -1;
-      maxPaintValue = 1;
-    }
     else {
-      minPaintValue = minPaintValue - Math.abs(minPaintValue*0.1);
-      maxPaintValue = maxPaintValue + Math.abs(maxPaintValue*0.1);
+      // autoScale is either null or all_intervals
+      minPaintValue = this.minValue;
+      maxPaintValue = this.maxValue;
+
+      // if not auto scaling, consider the min and max limit as well
+      if(this.autoScale === null && this.minLimit !== null) {
+        minPaintValue = Math.min(this.minValue, this.minLimit);
+      }
+      if(this.autoScale === null && this.maxLimit !== null) {
+        maxPaintValue = Math.max(this.maxValue, this.maxLimit);
+      }
+    }
+
+    // handle special case where min/max are the same.  Add some padding
+    // so that value is rendered in the middle of the band
+    if(minPaintValue === maxPaintValue) {
+      if(minPaintValue === 0) {
+        minPaintValue = -1;
+        maxPaintValue = 1;
+      }
+      else {
+        minPaintValue = minPaintValue - Math.abs(minPaintValue*0.1);
+        maxPaintValue = maxPaintValue + Math.abs(maxPaintValue*0.1);
+      }
     }
   }
 
@@ -2751,10 +3243,8 @@ function ResourceDecorator(obj) {
   Decorator.prototype.constructor.call(this, obj);
 }
 
-ResourceDecorator.prototype.paintValueTicks = function(xStart, width) {
-  if (this.band.hideTicks) {
-    return xStart;
-  }
+ResourceDecorator.prototype.paintValueTicks = function(xStart) {
+  // RAVEN -- include an additional value tick if max value > last value tick
   var ctx = this.band.canvas.getContext('2d');
   ctx.lineWidth = 0.5;
   ctx.font = this.font;
@@ -2764,7 +3254,8 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart, width) {
   ctx.strokeStyle = Util.rgbaToString(this.band.labelColor, 0.5);
 
   var labelWidth = this.band.viewTimeAxis.x1;
-  var bandWidth = width || this.band.div.offsetWidth; // Changed (8/24/2017) - Composite band divs don't have offsetWidth.
+  //??var bandWidth = this.band.div.offsetWidth;
+  var bandWidth = this.band.canvas.width;
 
   var autoPadding = 2;
   var axisLabelsXVal = xStart - autoPadding;
@@ -2774,9 +3265,13 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart, width) {
     // handle custom tick values
     for(var i=0, ilength=this.band.tickValues.length; i<ilength; ++i) {
       var tickValue = this.band.tickValues[i];
-      if(this.band.maxPaintValue >= tickValue && this.band.minPaintValue <= tickValue) {
-        tickValues.push(tickValue);
+      if (Number(tickValue) > this.band.maxPaintValue) {
+          this.band.maxPaintValue = Number(tickValue);
       }
+      else if (Number(tickValue) < this.band.minPaintValue) {
+          this.band.minPaintValue = Number(tickValue);
+      }
+      tickValues.push(tickValue);
     }
   }
   else if(this.band.autoTickValues) {
@@ -2798,15 +3293,27 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart, width) {
     }
   }
 
+  if (this.band.hideTicks) {
+    return xStart;
+  }
+
   // if no tick values to render, return early and return the original
   // xStart location
   if(tickValues.length === 0) {
     return xStart;
   }
 
+  // RAVEN -- composite Y-axis should be black
+  // labels should be black for composite labels
+  if (this.band.parent instanceof CompositeBand && this.band.parent.compositeLabel)
+      ctx.fillStyle = Util.rgbaToString([0,0,0], 1);
+
   // render the values if its in the renderable range
   var maxTickLabelWidth = 0;
   var seen = {};
+  var yVal = 0;
+  var yValue = 0;
+  var step = this.band.height / tickValues.length;
   for(var j=0, jlength=tickValues.length; j<jlength; ++j) {
     var value = tickValues[j];
 
@@ -2817,19 +3324,35 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart, width) {
     // render tick value label
     if(value !== null) {
       var renderedValue = this.band.onFormatTickValue !== null ? this.band.onFormatTickValue(value) : value;
-      var yVal = this.band.getYFromValue(value);
-      ctx.fillText(renderedValue, axisLabelsXVal, yVal);
+
+      if (this.band.logTicks) {
+        ctx.fillText(renderedValue, axisLabelsXVal, this.band.height - yVal);
+        this.band.logTickToCanvasHeight[value] = this.band.height - yVal; // Maps tick values to Canvas positions.
+        yVal += step;
+      }
+      else {
+        var yVal = this.band.getYFromValue(value);
+        ctx.fillText(renderedValue, axisLabelsXVal, yVal);
+      }
 
       var valueWidth = ctx.measureText(renderedValue).width;
       maxTickLabelWidth = Math.max(valueWidth, maxTickLabelWidth);
     }
 
-    var yValue = this.band.getYFromValue(value);
+    var tmpYVal;
+    if (this.band.logTicks) {
+      tmpYVal = this.band.height - yValue;
+      yValue += step;
+    }
+    else {
+      tmpYVal = this.band.getYFromValue(value);
+    }
+
     ctx.beginPath();
     var delta = 4;
     for(var x=labelWidth; x<=labelWidth+bandWidth; x+=delta*2) {
-      ctx.moveTo(x,       yValue);
-      ctx.lineTo(x+delta, yValue);
+      ctx.moveTo(x,       tmpYVal);
+      ctx.lineTo(x+delta, tmpYVal);
     }
     ctx.stroke();
     ctx.closePath();
@@ -2857,7 +3380,7 @@ ResourceDecorator.prototype.paint = function() {
   ctx.textBaseline = "middle";
 
   this.paintTimeTicks();
-  this.paintLabel(5); // Changed (8/24/2017) - Add some pad to the top of the label.
+  this.paintLabel(0);
   this.paintValueTicks(this.band.viewTimeAxis.x1);
   this.paintBackgroundIntervals();
 };
@@ -2928,11 +3451,11 @@ ResourcePainter.prototype.paintUnit = function(prevUnit, unit) {
   }
   var drawX1 = viewTimeAxis.getXFromTime(drawStartTime);
   var drawX2 = viewTimeAxis.getXFromTime(drawEndTime);
-  var drawY1 = this.band.getYFromValue(drawStartVal);
-  var drawY2 = this.band.getYFromValue(drawEndVal);
+  var drawY1 = this.band.logTicks ? this.band.getYFromValueLog(drawStartVal) : this.band.getYFromValue(drawStartVal);
+  var drawY2 = this.band.logTicks ? this.band.getYFromValueLog(drawEndVal) : this.band.getYFromValue(drawEndVal);
 
   if(this.fill) {
-    var yZero = this.band.getYFromValue(0);
+    var yZero = this.band.logTicks ? this.band.getYFromValueLog(0) : this.band.getYFromValue(0);
     // draw the unit
     ctx.fillStyle = this.fillColor ? Util.rgbaToString(this.fillColor, unit.opacity) : color;
     ctx.beginPath();
@@ -2952,14 +3475,14 @@ ResourcePainter.prototype.paintUnit = function(prevUnit, unit) {
   }
 
   // draw the line connecting the startValue to the endValue
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 2;
   ctx.strokeStyle = color;
   ctx.beginPath();
   ctx.moveTo(drawX1, drawY1);
   ctx.lineTo(drawX2, drawY2);
   if(prevUnit !== null && this.band.interpolation === ResourceBand.CONSTANT) {
     // draw the line at the start from the startValue to the prevUnit endValue
-    var drawY3 = this.band.getYFromValue(prevUnit.endValue);
+    var drawY3 = this.band.logTicks ? this.band.getYFromValueLog(prevUnit.endValue) : this.band.getYFromValue(prevUnit.endValue);
     ctx.moveTo(drawX1, drawY1);
     ctx.lineTo(drawX1, drawY3);
   }
@@ -3362,6 +3885,7 @@ SimpleGrid.prototype.initTableSorter = function() {
       headers[i] = {sorter: columnSpec.sorter};
     }
   }
+
   var tableSorterOptions = {
     cssAsc: "tablesorterHeaderSortUp",
     cssDesc: "tablesorterHeaderSortDown",
@@ -3439,15 +3963,13 @@ SimpleGrid.prototype.initStickyHeader = function() {
   // bind the events for the sticky headers to invoke the hidden ones
   var tableHeaderCells = $(this.thead).find("tr th");
   var stickyHeaderCells = $(this.stickyHeader).find("thead tr th");
-  stickyHeaderCells
-  .each(function(i) {
-          var cell = tableHeaderCells.eq(i);
-          $(this).attr("width", cell.attr("width"));
-          $(this).bind("click",
-                       function(e) { cell.trigger(e); });
-          $(this).bind("mousedown",
-                       function() { this.onselectstart = function() { return false; }; return false; });
-        });
+  stickyHeaderCells.each(function(i) {
+    var cell = tableHeaderCells.eq(i);
+    $(this).attr("width", cell.attr("width"));
+    $(this).bind("click", function(e) { cell.trigger(e); });
+    $(this).bind("mousedown", function(e) { cell.trigger(e); });
+    $(this).bind("mouseup", function(e) { cell.trigger(e); });
+  });
 
   // bind the events for the filter input boxes
   var tableHeaderFilters = $(this.thead).find("tr td input");
@@ -3482,7 +4004,11 @@ SimpleGrid.prototype.initRow = function(row, data) {
   var values = data;
   for(var i=0, length=values.length; i<length; ++i) {
     var td = document.createElement("td");
-    td.innerHTML = values[i];
+    if (values[i] instanceof Element) {
+      td.appendChild(values[i]);
+    } else {
+      td.innerHTML = values[i];
+    }
 
     if(i<this.columnSpecs.length) {
       var columnSpec = this.columnSpecs[i];
@@ -3555,6 +4081,52 @@ SimpleGrid.prototype.mousedown = function(e) {
 SimpleGrid.prototype.dblclick = function(e) {
   return true;
 };
+
+//
+// if($.tablesorter) {
+//   // add some custom time parsers
+//   $.tablesorter.addParser({
+//     id: "YYYY-DDDD/HH:mm:ss",
+//     is: function(s) { return false; },
+//     format: function(s) { return Util.fromTimeString(s, {format:"YYYY-DDDD/HH:mm:ss"}); },
+//     type: "numeric"
+//   });
+//
+//   $.tablesorter.addParser({
+//     id: "YYYY-DDDDTHH:mm:ss",
+//     is: function(s) { return false; },
+//     format: function(s) { return Util.fromTimeString(s, {format:"YYYY-DDDDTHH:mm:ss"}); },
+//     type: "numeric"
+//   });
+//
+//   $.tablesorter.addParser({
+//     id: "YYYY-MM-DD/HH:mm:ss",
+//     is: function(s) { return false; },
+//     format: function(s) { return Util.fromTimeString(s, {format:"YYYY-MM-DD/HH:mm:ss"}); },
+//     type: "numeric"
+//   });
+//
+//   $.tablesorter.addParser({
+//     id: "YYYY-MM-DD (DDDD) HH:mm:ss",
+//     is: function(s) { return false; },
+//     format: function(s) { return Util.fromTimeString(s, {format:"YYYY-MM-DD (DDDD) HH:mm:ss"}); },
+//     type: "numeric"
+//   });
+//
+//   $.tablesorter.addParser({
+//     id: "dhm",
+//     is: function(s) { return false; },
+//     format: function(s) { return Util.fromDHMString(s); },
+//     type: "numeric"
+//   });
+//
+//   $.tablesorter.addParser({
+//     id: "HH:mm:ss",
+//     is: function(s) { return false; },
+//   format: function(s) { return Util.fromDurationString(s); },
+//     type: "numeric"
+//   });
+// }
 
 StateBand.prototype = new Band();
 StateBand.prototype.constructor = StateBand;
@@ -3721,7 +4293,7 @@ StatePainter.prototype.getColor = function(unit) {
   }
 };
 
-StatePainter.prototype.paintUnit = function(unit) {
+StatePainter.prototype.paintUnit = function(unit, lastPaintedTimeX2, lastPaintedTime) {
   var ctx = this.band.canvas.getContext('2d');
 
   // paint the unit
@@ -3782,7 +4354,23 @@ StatePainter.prototype.paintUnit = function(unit) {
                      lr:{x:unitX2, y:unitY2}});
   }
 
-  return [unitX1, unitX2, 0, this.band.height + this.band.heightPadding];
+  // paint time of state change
+  if (this.showStateChangeTimes) {
+    let paintedTimeX2 = this.paintStateChangeTime({interval:unit,
+                     ll:{x:unitX1, y:unitY2},
+                     ul:{x:unitX1, y:unitY1},
+                     ur:{x:unitX2, y:unitY1},
+                     lr:{x:unitX2, y:unitY2},
+                     lastPaintedTimeX2: lastPaintedTimeX2,
+                     lastPaintedTime: lastPaintedTime});
+    if (paintedTimeX2 !== lastPaintedTimeX2) {
+        lastPaintedTimeX2 = paintedTimeX2;
+        lastPaintedTime = unit.start;
+      }
+  }
+
+
+  return {coord: [unitX1, unitX2, 0, this.band.height + this.band.heightPadding], lastPaintedTimeX2, lastPaintedTime};
 };
 
 StatePainter.prototype.paint = function() {
@@ -3801,15 +4389,134 @@ StatePainter.prototype.paint = function() {
   var unitsList = this.band.getIntervalsInTimeRange(viewStart, viewEnd);
 
   var unitCoords = [];
+  var lastPaintedTimeX2 = null;
+  var lastPaintedTime = null;
   for(var i=0, ilength=unitsList.length; i<ilength; ++i) {
     var units = unitsList[i];
     for(var j=0, jlength=units.length; j<jlength; ++j) {
       var unit = units[j];
-      var coord = this.paintUnit(unit);
-      unitCoords.push([unit].concat(coord));
+      var coordPlus = this.paintUnit(unit, lastPaintedTimeX2, lastPaintedTime);
+      unitCoords.push([unit].concat(coordPlus.coord));
+      lastPaintedTimeX2 = coordPlus.lastPaintedTimeX2;
+      lastPaintedTime = coordPlus.lastPaintedTime;
     }
   }
   return unitCoords;
+};
+
+function TabSet(tabs) {
+  var tabListElement, tabHeaderElement;
+  this.tabs = tabs;
+
+  this.div = document.createElement("div");
+  this.div.setAttribute("class", "tabset");
+
+  this.header = document.createElement("ul");
+  this.tabsDiv = document.createElement("div");
+  for (var i = 0; i < this.tabs.length; i++) {
+    tabHeaderElement = TabSet.generateTabHeaderElement(this.tabs[i]);
+    tabListElement = TabSet.generateTabListElement(this.tabs[i]);
+    this.header.appendChild(tabHeaderElement);
+    this.tabsDiv.appendChild(tabListElement);
+  }
+  this.div.appendChild(this.header);
+  this.div.appendChild(this.tabsDiv);
+
+  $(this.div).tabs({activate: this.tabSelected.bind(this)});
+}
+
+TabSet.generateTabHeaderElement = function(tab) {
+  var tabHeaderLink, tabHeaderElement;
+
+  tabHeaderLink = document.createElement("a");
+  tabHeaderLink.setAttribute("href", "#" + tab.tabId);
+  tabHeaderLink.innerHTML = tab.tabName;
+  tabHeaderElement = document.createElement("li");
+  tabHeaderElement.appendChild(tabHeaderLink);
+  tabHeaderElement.ondragstart = this.cancelDrag;
+
+  return tabHeaderElement;
+};
+
+TabSet.generateTabListElement = function(tab) {
+  var tabListElement;
+
+  tabListElement = document.createElement("div");
+  tabListElement.setAttribute("id", tab.tabId);
+  tabListElement.appendChild(tab.div);
+
+  return tabListElement;
+};
+
+TabSet.prototype.cancelDrag = function() { return false; };
+
+TabSet.prototype.resize = function(height) {
+  for (var i = 0; i < this.tabs.length; i++) {
+    var tab = this.tabs[i];
+    if (tab.resize) {
+      tab.resize(height);
+    }
+  }
+};
+
+TabSet.prototype.tabSelected = function(event, ui) {
+  var tab = this.tabs[ui.newTab.index()];
+  if (tab.tabSelected) {
+    tab.tabSelected();
+  }
+};
+
+TabSet.prototype.addTab = function(index, tab) {
+  var tablist = this.div.childNodes[0];
+  var tabset = this.div.childNodes[1];
+
+  var tabHeaderElement = TabSet.generateTabHeaderElement(tab);
+  var tabListElement = TabSet.generateTabListElement(tab);
+
+  if (index === tablist.childNodes.length) {
+    tablist.appendChild(tabHeaderElement);
+    tabset.appendChild(tabListElement);
+  } else {
+    tablist.insertBefore(tabHeaderElement, tablist.childNodes[index]);
+    tabset.insertBefore(tabListElement, tabset.childNodes[index]);
+  }
+  this.tabs.splice(index, 0, tab);
+  $(this.div).tabs("refresh");
+};
+
+TabSet.prototype.removeTab = function(index) {
+  var tablist = this.div.childNodes[0];
+  var tabset = this.div.childNodes[1];
+
+  tablist.removeChild(tablist.childNodes[index]);
+  tabset.removeChild(tabset.childNodes[index]);
+  this.tabs.splice(index, 1);
+  $(this.div).tabs("refresh");
+};
+
+TabSet.prototype.replaceTab = function(index, tab) {
+  var tablist = this.div.childNodes[0];
+  var tabset = this.div.childNodes[1];
+
+  var active = false;
+  if ($(this.div).tabs("option", "active") === index) {
+    active = true;
+  }
+
+  var tabHeaderElement = TabSet.generateTabHeaderElement(tab);
+  var tabListElement = TabSet.generateTabListElement(tab);
+
+  tablist.insertBefore(tabHeaderElement, tablist.childNodes[index]);
+  tablist.removeChild(tablist.childNodes[index + 1]);
+  tabset.insertBefore(tabListElement, tabset.childNodes[index]);
+  tabset.removeChild(tabset.childNodes[index + 1]);
+
+  this.tabs.splice(index, 1, tab);
+  $(this.div).tabs("refresh");
+
+  if (active) {
+    $(this.div).tabs("option", "active", index);
+  }
 };
 
 function TimeAxis(obj) {
@@ -3837,13 +4544,13 @@ function TimeAxis(obj) {
   // then if the viewport is a week, ast most day tick times are shown, though additional times such
   // as 12 hour times would fit.  If the viewport is a day, at most 2 hour tick times are shown.
   this.minTickUnits = ("minTickUnits" in obj) ? obj.minTickUnits : {};
+  // the times to draw vertical lines
+  this.guideTimes = ("guideTimes" in obj) ? obj.guideTimes : [];
 
   // the time unit between tick times
   this.tickUnit = null;
   // the times to draw ticks marks
   this.tickTimes = [];
-  // the times to draw vertical lines
-  this.guideTimes = [];
 }
 
 TimeAxis.prototype.reinit = function(obj) {
@@ -3851,6 +4558,7 @@ TimeAxis.prototype.reinit = function(obj) {
   this.end = obj.end;
   this.x1 = obj.x1;
   this.x2 = obj.x2;
+  this.now = ("now" in obj) ? obj.now : null;
 
   this.computeTickTimes();
 };
@@ -4183,8 +4891,8 @@ TimeBand.prototype.repaint = function() {
   if(now !== null && now >= viewStart && now < viewEnd) {
     // paint the now line
     var nowX = this.viewTimeAxis.getXFromTime(now);
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = Util.rgbaToString([255,0,0], 0.8);
+    ctx.lineWidth = this.timeCursorWidth || 4;
+    ctx.strokeStyle = Util.rgbaToString(this.timeCursorColor || [255,0,0], 0.8);
     ctx.beginPath();
     ctx.moveTo(nowX, 0);
     ctx.lineTo(nowX, bandHeight);
@@ -4192,12 +4900,12 @@ TimeBand.prototype.repaint = function() {
     ctx.closePath();
 
     if(this.onFormatNow !== null) {
-      ctx.fillStyle = "red";
+      ctx.fillStyle = this.timeCursorColor?  Util.rgbaToString(this.timeCursorColor, 0.8) : "red";
       var formattedTimes = this.onFormatNow({timeBand:this, time:now});
       for(var j=0, jlength=formattedTimes.length; j<jlength; ++j) {
         var obj = formattedTimes[j];
         var formattedTime = obj.formattedTime;
-        var x = ("x" in obj) ? obj.x : nowX+2;
+        var x = ("x" in obj) ? obj.x : nowX+ctx.lineWidth+1;
         var y = ("y" in obj) ? obj.y : 10*(j+1);
         ctx.fillText(formattedTime, x, y);
       }
@@ -5006,7 +5714,7 @@ Timer.prototype.getDuration = function() {
 };
 
 function Tooltip(obj) {
-  if(obj === undefined) obj = {};
+  if(obj === 'undefined') obj = {};
 
   // create the div that shows the tooltip
   this.div = document.createElement("div");
@@ -5216,6 +5924,15 @@ var Util = {
     return moment.duration(dur, "seconds").format(format, {trim:trim});
   },
 
+  fromDurationString: function(durStr, options) {
+    // is this safe?
+    // we're using the moment time library in order to compute the duration
+    if(!options) { options = {}; }
+    //var format = ("format" in options) ? options.format : "HH:mm:ss";
+    //var trim = ("trim" in options) ? options.trim : false;
+    return moment.duration(durStr).as("seconds");
+  },
+
   // See http://momentjs.com/docs/#/displaying for format specs
   toTimeString: function(utcTime, options) {
     if(!options) { options = {}; }
@@ -5246,6 +5963,16 @@ var Util = {
     return startStr+' - '+endStr+' ('+durStr+')';
   },
 
+  // RAVEN -- DOY format
+  toDOYDate: function(date){
+    var dateOb = new Date(date*1000);
+    var doy = Util.zeroPad(Util.getDOY(dateOb), 3);
+    var hour = dateOb.getUTCHours();
+    var min = dateOb.getUTCMinutes();
+    var sec = dateOb.getUTCSeconds();
+    return dateOb.getUTCFullYear() +"-" + doy + "T" + Util.zeroPad(hour, 2) + ":" + Util.zeroPad(min, 2) + ":" + Util.zeroPad(sec, 2);
+  },
+
   trimToWidth: function(text, width, cxt) {
     width = Math.max(width, 0);
     // Trim based on the width ratio
@@ -5255,6 +5982,12 @@ var Util = {
     if(textWidth > width) {
       var newLength = Math.floor(trimmed.length * (width / textWidth));
       trimmed = trimmed.substring(0, newLength - 2);
+      if (trimmed.length > 2) {
+        // replace last two chars with '..'
+        trimmed = trimmed.substring(0, trimmed.length -2)+'..';
+      }
+      else
+          trimmed = '';
     }
     return trimmed;
   },
@@ -5373,3 +6106,5 @@ var Util = {
     }
   }
 };
+
+//# sourceMappingURL=ctl.js.map
