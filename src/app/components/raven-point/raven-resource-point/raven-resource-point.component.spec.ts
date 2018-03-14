@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { RavenDataItemComponent } from './raven-data-item.component';
+import { RavenResourcePointComponent } from './raven-resource-point.component';
 
 describe('RavenDataItemComponent', () => {
-  let component: RavenDataItemComponent;
-  let fixture: ComponentFixture<RavenDataItemComponent>;
+  let component: RavenResourcePointComponent;
+  let fixture: ComponentFixture<RavenResourcePointComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ RavenDataItemComponent ]
+      declarations: [ RavenResourcePointComponent ],
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(RavenDataItemComponent);
+    fixture = TestBed.createComponent(RavenResourcePointComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
