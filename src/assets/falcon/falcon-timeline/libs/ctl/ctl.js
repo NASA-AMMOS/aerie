@@ -1267,22 +1267,49 @@ Band.prototype.findForegroundIntervals = function(x, y) {
 };
 
 Band.prototype.findIntervals = function(x, y) {
-  if(this._intervalCoords === null) { return []; }
-
-  var matchingIntervals = [];
-  for(var i=0, length=this._intervalCoords.length; i<length; ++i) {
-    var coord = this._intervalCoords[i];
-    var interval = coord[0];
-    // RAVEN look within +/- 2 pixels
-    var x1 = coord[1]-2;
-    var x2 = coord[2]+2;
-    var y1 = coord[3]-2;
-    var y2 = coord[4]+2;
-    if(x >= x1 && x <= x2 && y >= y1 && y <= y2) {
-      matchingIntervals.push(interval);
-    }
+  if (this instanceof CompositeBand) {
+      let bands = this.bands;
+      let first = true;
+      var matchingIntervals = [];
+      for (let k=0; k<bands.length; k++) {
+          let band = bands[k];
+          if(band._intervalCoords === null) { return []; }
+    
+          for(var i=0, length=band._intervalCoords.length; i<length; ++i) {
+            var coord = band._intervalCoords[i];
+            var interval = coord[0];
+            // RAVEN look within +/- 2 pixels
+            var x1 = coord[1]-2;
+            var x2 = coord[2]+2;
+            var y1 = coord[3]-2;
+            var y2 = coord[4]+2;
+            if(x >= x1 && x <= x2 && y >= y1 && y <= y2) {
+              matchingIntervals.push(interval);
+            }
+          }
+          if (matchingIntervals.length > 0) {
+              return matchingIntervals;
+          }
+      }
   }
-  return matchingIntervals;
+  else {
+      if(this._intervalCoords === null) { return []; }
+
+      var matchingIntervals = [];
+      for(var i=0, length=this._intervalCoords.length; i<length; ++i) {
+        var coord = this._intervalCoords[i];
+        var interval = coord[0];
+        // RAVEN look within +/- 2 pixels
+        var x1 = coord[1]-2;
+        var x2 = coord[2]+2;
+        var y1 = coord[3]-2;
+        var y2 = coord[4]+2;
+        if(x >= x1 && x <= x2 && y >= y1 && y <= y2) {
+          matchingIntervals.push(interval);
+        }
+      }
+      return matchingIntervals;
+    }
 };
 
 Band.prototype.findIntervalCoords = function(id) {
