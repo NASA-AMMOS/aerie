@@ -47,7 +47,6 @@ import {
   templateUrl: './timeline.component.html',
 })
 export class TimelineComponent implements OnDestroy {
-  chartSize = 75;
   // Config state.
   itarMessage: string;
 
@@ -55,6 +54,7 @@ export class TimelineComponent implements OnDestroy {
   showDetailsDrawer: boolean;
   showLeftDrawer: boolean;
   showSouthBandsDrawer: boolean;
+  chartSize: number;
 
   // Timeline state.
   bands: RavenCompositeBand[];
@@ -90,6 +90,7 @@ export class TimelineComponent implements OnDestroy {
       this.showLeftDrawer = state.showLeftDrawer;
       this.showSouthBandsDrawer = state.showSouthBandsDrawer;
       this.showDataPointDrawer = state.showDataPointDrawer;
+      this.chartSize = state.chartSize;
       this.changeDetector.markForCheck();
       dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize anytime our layout changes.
     });

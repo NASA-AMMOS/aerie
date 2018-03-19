@@ -22,10 +22,12 @@ export interface LayoutState {
   showDetailsDrawer: boolean;
   showLeftDrawer: boolean;
   showSouthBandsDrawer: boolean;
+  chartSize: number;
 }
 
 // Layout State.
 export const initialState: LayoutState = {
+  chartSize: 75,
   mode: 'default',
   showDataPointDrawer: false,
   showDetailsDrawer: true,
@@ -46,7 +48,7 @@ export function reducer(state: LayoutState = initialState, action: LayoutAction)
     case LayoutActionTypes.ToggleLeftDrawer:
       return { ...state, showLeftDrawer: !state.showLeftDrawer };
     case LayoutActionTypes.ToggleDataPointDrawer:
-      return { ...state, showDataPointDrawer: !state.showDataPointDrawer };
+      return { ...state, showDataPointDrawer: !state.showDataPointDrawer, chartSize: state.showDataPointDrawer ? 75 : 60};
     case LayoutActionTypes.ToggleSouthBandsDrawer:
       return { ...state, showSouthBandsDrawer: !state.showSouthBandsDrawer };
     default:
@@ -84,6 +86,7 @@ export const getLayoutState = createFeatureSelector<LayoutState>('layout');
  * together to select different pieces of state.
  */
 export const getShowDrawers = createSelector(getLayoutState, (state: LayoutState) => ({
+  chartSize: state.chartSize,
   showDataPointDrawer: state.showDataPointDrawer,
   showDetailsDrawer: state.showDetailsDrawer,
   showLeftDrawer: state.showLeftDrawer,
