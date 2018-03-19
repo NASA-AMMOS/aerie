@@ -1274,7 +1274,7 @@ Band.prototype.findIntervals = function(x, y) {
       for (let k=0; k<bands.length; k++) {
           let band = bands[k];
           if(band._intervalCoords === null) { return []; }
-    
+
           for(var i=0, length=band._intervalCoords.length; i<length; ++i) {
             var coord = band._intervalCoords[i];
             var interval = coord[0];
@@ -4303,9 +4303,11 @@ StatePainter.prototype = new Painter();
 StatePainter.prototype.constructor = StatePainter;
 
 function StatePainter(obj) {
+  console.log('new StatePainter');
   if(typeof obj === "undefined") { obj = {}; }
 
   Painter.prototype.constructor.call(this, obj);
+  console.log('new this.borderWidth:'+this.borderWidth);
 }
 
 StatePainter.prototype.getColor = function(unit) {
@@ -4348,9 +4350,11 @@ StatePainter.prototype.paintUnit = function(unit, lastPaintedTimeX2, lastPainted
     ctx.fillStyle = color;
     ctx.fillRect(unitX1, unitY1, unitWidth, unitHeight);
 
+    console.log('borderWidth:'+this.borderWidth +' band.id:'+this.band.id);
     // draw the border of the unit
     if(this.borderWidth > 0) {
-      ctx.strokeStyle = Util.rgbaToString([0,0,0], unit.opacity);
+      //??ctx.strokeStyle = Util.rgbaToString([0,0,0], unit.opacity);
+      ctx.strokeStyle = Util.rgbaToString([0,0,0], 1.0);
       ctx.strokeRect(unitX1, unitY1, unitWidth, unitHeight);
     }
   }

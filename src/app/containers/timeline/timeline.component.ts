@@ -65,6 +65,8 @@ export class TimelineComponent implements OnDestroy {
   viewTimeRange: RavenTimeRange;
   selectedDataPoint: RavenPoint;
   showDataPointDrawer: boolean;
+  viewParameter: boolean;
+  viewMetadata: boolean;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -101,6 +103,8 @@ export class TimelineComponent implements OnDestroy {
       this.maxTimeRange = state.maxTimeRange;
       this.overlayMode = state.overlayMode;
       this.selectedBandId = state.selectedBandId;
+      this.viewMetadata = state.viewMetadata;
+      this.viewParameter = state.viewParameter;
       this.viewTimeRange = state.viewTimeRange;
       this.selectedDataPoint = state.selectedDataPoint;
       this.changeDetector.markForCheck();
@@ -192,5 +196,13 @@ export class TimelineComponent implements OnDestroy {
    */
   onDragEnd(): void {
     dispatchEvent(new Event('resize'));
+  }
+
+  onToggleViewParameter() {
+    this.store.dispatch(new timelineActions.ToggleViewParameter());
+  }
+
+  onToggleViewMetadata() {
+    this.store.dispatch(new timelineActions.ToggleViewMetadata());
   }
 }

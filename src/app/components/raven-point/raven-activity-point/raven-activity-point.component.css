@@ -25,3 +25,7 @@
   background-color: #eaebed;
   padding-left: 2em;
 }
+.dataIcon {
+  float: right;
+  margin: 5px;
+}

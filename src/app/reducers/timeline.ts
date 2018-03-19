@@ -53,6 +53,8 @@ export interface TimelineState {
   selectedBandId: string;
   viewTimeRange: RavenTimeRange;
   selectedDataPoint: RavenPoint;
+  viewParameter: boolean;
+  viewMetadata: boolean;
 }
 
 const defaultDataPoint: RavenResourcePoint = {
@@ -72,6 +74,8 @@ export const initialState: TimelineState = {
   overlayMode: false,
   selectedBandId: '',
   selectedDataPoint: defaultDataPoint,
+  viewMetadata: false,
+  viewParameter: true,
   viewTimeRange: { end: 0, start: 0 },
 };
 
@@ -99,6 +103,10 @@ export function reducer(state: TimelineState = initialState, action: SourceExplo
       return updateTimeline(state, action);
     case TimelineActionTypes.UpdateViewTimeRange:
       return { ...state, viewTimeRange: { ...action.viewTimeRange } };
+    case TimelineActionTypes.ToggleViewParameter:
+      return { ...state, viewParameter: !state.viewParameter };
+    case TimelineActionTypes.ToggleViewMetadata:
+      return { ...state, viewMetadata: !state.viewMetadata };
     default:
       return state;
   }

@@ -25,6 +25,8 @@ export enum TimelineActionTypes {
   UpdateSubBand       = '[timeline] update_sub_band',
   UpdateTimeline      = '[timeline] update_timeline',
   UpdateViewTimeRange = '[timeline] update_view_time_range',
+  ToggleViewParameter = '[timeline] toggle-view-parameter',
+  ToggleViewMetadata = '[timeline] toggle-view-metadata',
 }
 
 // Actions.
@@ -69,6 +71,17 @@ export class UpdateViewTimeRange implements Action {
   constructor(public viewTimeRange: RavenTimeRange) {}
 }
 
+export class ToggleViewParameter implements Action {
+  readonly type = TimelineActionTypes.ToggleViewParameter;
+
+  constructor() {}
+}
+
+export class ToggleViewMetadata implements Action {
+  readonly type = TimelineActionTypes.ToggleViewMetadata;
+
+  constructor() {}
+}
 // Union type of all actions.
 export type TimelineAction =
   SelectBand |
@@ -77,4 +90,6 @@ export type TimelineAction =
   UpdateBand |
   UpdateSubBand |
   UpdateTimeline |
-  UpdateViewTimeRange;
+  UpdateViewTimeRange |
+  ToggleViewParameter |
+  ToggleViewMetadata;

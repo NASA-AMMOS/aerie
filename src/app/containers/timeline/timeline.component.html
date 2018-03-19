@@ -100,7 +100,11 @@
   </split-area>
   <split-area [visible]="showDataPointDrawer" [order]="5" size="15">
     <div *ngIf="selectedDataPointIsActivity(); else resourceOrStatePoint">
-      <raven-activity-point [dataPoint]="selectedDataPoint">
+      <raven-activity-point [dataPoint]="selectedDataPoint"
+      (toggleViewParameter)="onToggleViewParameter()"
+      (toggleViewMetadata)="onToggleViewMetadata()"
+      [viewParameter]="viewParameter"
+      [viewMetadata]="viewMetadata">
       </raven-activity-point>
     </div>
     <ng-template #resourceOrStatePoint>

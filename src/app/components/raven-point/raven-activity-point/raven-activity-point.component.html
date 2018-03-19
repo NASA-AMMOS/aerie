@@ -9,14 +9,36 @@
   <div class="dataValue">{{dataPoint['endTimestamp']}}</div>
   <div class="dataLabel">Duration</div>
   <div class="dataValue">{{dataPoint['duration'] | dhms}}</div>
-  <div class="dataLabel">Parameters</div>
-  <ng-container *ngFor="let param of dataPoint['activityParameters']">
+  <div class="dataLabel">Parameters
+    <mat-icon *ngIf="dataPoint['activityParameters'].length > 0 && !viewParameter" [id]="view-parameter-add" (click)="toggleViewParameter.emit()"
+      class="dataIcon">
+      add
+    </mat-icon>
+    <mat-icon *ngIf="dataPoint['activityParameters'].length > 0 && viewParameter" [id]="view-parameter-remove" (click)="toggleViewParameter.emit()"
+      class="dataIcon">
+      remove
+    </mat-icon>
+  </div>
+  <ng-container *ngIf="viewParameter">
+    <ng-container *ngFor="let param of dataPoint['activityParameters']">
       <div class="paramLabel">{{param.Name}}</div>
       <div class="paramValue">{{param.Value}}</div>
     </ng-container>
-  <div class="dataLabel">metadata</div>
-  <ng-container *ngFor="let meta of dataPoint['metadata']">
-    <div class="metaLabel">{{meta.Name}}</div>
-    <div class="metaValue">{{meta.Value}}</div>
+  </ng-container>
+  <div class="dataLabel">metadata
+    <mat-icon *ngIf="dataPoint['metadata'].length > 0 && !viewMetadata" [id]="view-metadata-add" (click)="toggleViewMetadata.emit()"
+      class="dataIcon">
+      add
+    </mat-icon>
+    <mat-icon *ngIf="dataPoint['metadata'].length > 0 && viewMetadata" [id]="view-metadata-remove" (click)="toggleViewMetadata.emit()"
+      class="dataIcon">
+      remove
+    </mat-icon>
+  </div>
+  <ng-container *ngIf="viewMetadata">
+    <ng-container *ngFor="let meta of dataPoint['metadata']">
+      <div class="metaLabel">{{meta.Name}}</div>
+      <div class="metaValue">{{meta.Value}}</div>
+    </ng-container>
   </ng-container>
 </ng-container>

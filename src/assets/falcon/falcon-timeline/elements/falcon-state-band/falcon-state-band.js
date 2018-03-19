@@ -60,6 +60,7 @@ class FalconStateBand extends FalconBand(Polymer.Element) {
    * @memberof FalconStateBand
    */
   constructor() {
+
     super();
 
     // Member Vars.
@@ -115,7 +116,7 @@ class FalconStateBand extends FalconBand(Polymer.Element) {
         id: point.id,
         label: point.value,
         onGetTooltipText: this._onGetTooltipText.bind(this),
-        opacity: 0.5,
+        opacity: 0.6,
         properties: {
           Value: point.value,
         },

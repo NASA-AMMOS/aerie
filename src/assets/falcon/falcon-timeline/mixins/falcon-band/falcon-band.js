@@ -382,6 +382,7 @@ const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.I
 
     if (band && band.painter) {
       band.painter.borderWidth = this.borderWidth;
+      console.log('falcon borderWidth changed: '+band.painter.borderWidth);
       this.redraw();
     }
   }
