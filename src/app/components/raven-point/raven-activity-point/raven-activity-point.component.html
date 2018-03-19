@@ -12,11 +12,11 @@
   <div class="dataLabel">Parameters
     <mat-icon *ngIf="dataPoint['activityParameters'].length > 0 && !viewParameter" [id]="view-parameter-add" (click)="toggleViewParameter.emit()"
       class="dataIcon">
-      add
+      add_circle_outline
     </mat-icon>
     <mat-icon *ngIf="dataPoint['activityParameters'].length > 0 && viewParameter" [id]="view-parameter-remove" (click)="toggleViewParameter.emit()"
       class="dataIcon">
-      remove
+      remove_circle_outline
     </mat-icon>
   </div>
   <ng-container *ngIf="viewParameter">
@@ -28,11 +28,11 @@
   <div class="dataLabel">metadata
     <mat-icon *ngIf="dataPoint['metadata'].length > 0 && !viewMetadata" [id]="view-metadata-add" (click)="toggleViewMetadata.emit()"
       class="dataIcon">
-      add
+      add_circle_outline
     </mat-icon>
     <mat-icon *ngIf="dataPoint['metadata'].length > 0 && viewMetadata" [id]="view-metadata-remove" (click)="toggleViewMetadata.emit()"
       class="dataIcon">
-      remove
+      remove_circle_outline
     </mat-icon>
   </div>
   <ng-container *ngIf="viewMetadata">

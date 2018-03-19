@@ -27,5 +27,6 @@
 }
 .dataIcon {
   float: right;
-  margin: 5px;
+  margin-right: 5px;
+  margin-bottom: 15px;
 }
