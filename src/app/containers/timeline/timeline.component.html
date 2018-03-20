@@ -1,109 +1,57 @@
-<split
-  direction="horizontal"
-  (dragEnd)="onDragEnd()">
-  <split-area
-    [visible]="showLeftDrawer"
-    [order]="0"
-    size="25">
+<split direction="horizontal" (dragEnd)="onDragEnd()">
+  <split-area [visible]="showLeftDrawer" [order]="0" size="25">
     <app-source-explorer></app-source-explorer>
   </split-area>
 
-  <split-area
-    [order]="1"
-    size="75">
-    <split
-      direction="vertical"
-      (dragEnd)="onDragEnd()">
-      <split-area
-        [order]="2"
-        size="50">
-        <div
-          *ngIf="itarMessage !== ''"
-          class="itar-message">
+  <split-area [order]="1" size="75">
+    <split direction="vertical" (dragEnd)="onDragEnd()">
+      <split-area [order]="2" size="50">
+        <div *ngIf="itarMessage !== ''" class="itar-message">
           <mat-card>
             {{itarMessage}}
           </mat-card>
         </div>
 
-        <div
-          *ngIf="bands.length === 0"
-          class="get-started">
+        <div *ngIf="bands.length === 0" class="get-started">
           <mat-card>
-            To get started, select some <i class="fa fa-area-chart" style="color: #17a923" aria-hidden="true"></i> Data Sources from the source explorer.
+            To get started, select some
+            <i class="fa fa-area-chart" style="color: #17a923" aria-hidden="true"></i> Data Sources from the source explorer.
           </mat-card>
         </div>
 
-        <div
-          *ngIf="bands.length > 0"
-          class="timeline-0">
+        <div *ngIf="bands.length > 0" class="timeline-0">
           <mat-card>
-            <falcon-time-range-selector
-              [maxTimeRange]="maxTimeRange"
-              [viewTimeRange]="viewTimeRange">
+            <falcon-time-range-selector [maxTimeRange]="maxTimeRange" [viewTimeRange]="viewTimeRange">
             </falcon-time-range-selector>
 
-            <falcon-time-scroll-bar
-              [labelWidth]="labelWidth"
-              [maxTimeRange]="maxTimeRange"
-              [viewTimeRange]="viewTimeRange">
+            <falcon-time-scroll-bar [labelWidth]="labelWidth" [maxTimeRange]="maxTimeRange" [viewTimeRange]="viewTimeRange">
             </falcon-time-scroll-bar>
 
-            <falcon-time-band
-              [labelWidth]="labelWidth"
-              [maxTimeRange]="maxTimeRange"
-              [viewTimeRange]="viewTimeRange">
+            <falcon-time-band [labelWidth]="labelWidth" [maxTimeRange]="maxTimeRange" [viewTimeRange]="viewTimeRange">
             </falcon-time-band>
 
-            <raven-bands
-              class="raven-bands-0"
-              [bands]="bands"
-              [containerId]="'0'"
-              [labelWidth]="labelWidth"
-              [maxTimeRange]="maxTimeRange"
-              [selectedBandId]="selectedBandId"
-              [viewTimeRange]="viewTimeRange"
-              (bandClick)="onBandClick($event)"
-              (newSort)="onSort($event)">
+            <raven-bands class="raven-bands-0" [bands]="bands" [containerId]="'0'" [labelWidth]="labelWidth" [maxTimeRange]="maxTimeRange"
+              [selectedBandId]="selectedBandId" [viewTimeRange]="viewTimeRange" (bandClick)="onBandClick($event)" (newSort)="onSort($event)">
             </raven-bands>
           </mat-card>
         </div>
       </split-area>
 
-      <split-area
-        [visible]="showSouthBandsDrawer"
-        [order]="3"
-        size="20">
+      <split-area [visible]="showSouthBandsDrawer" [order]="3" size="20">
         <div class="timeline-1">
           <mat-card>
-            <raven-bands
-              class="raven-bands-1"
-              [bands]="bands"
-              [containerId]="'1'"
-              [labelWidth]="labelWidth"
-              [maxTimeRange]="maxTimeRange"
-              [selectedBandId]="selectedBandId"
-              [viewTimeRange]="viewTimeRange"
-              (bandClick)="onBandClick($event)"
-              (newSort)="onSort($event)">
+            <raven-bands class="raven-bands-1" [bands]="bands" [containerId]="'1'" [labelWidth]="labelWidth" [maxTimeRange]="maxTimeRange"
+              [selectedBandId]="selectedBandId" [viewTimeRange]="viewTimeRange" (bandClick)="onBandClick($event)" (newSort)="onSort($event)">
             </raven-bands>
           </mat-card>
         </div>
       </split-area>
 
-      <split-area
-        [visible]="showDetailsDrawer"
-        [order]="4"
-        size="30">
+      <split-area [visible]="showDetailsDrawer" [order]="4" size="30">
         <div class="settings">
           <mat-card>
-            <raven-settings
-              [bandsById]="bands | keyBy:'id'"
-              [labelWidth]="labelWidth"
-              [overlayMode]="overlayMode"
-              [selectedBandId]="selectedBandId"
-              (deleteBand)="onDeleteBand($event)"
-              (updateBand)="onUpdateBand($event)"
-              (updateSubBand)="onUpdateSubBand($event)"
+            <raven-settings [bandsById]="bands | keyBy:'id'" [labelWidth]="labelWidth" [overlayMode]="overlayMode" [selectedBandId]="selectedBandId"
+              (deleteBand)="onDeleteBand($event)" (updateBand)="onUpdateBand($event)" (updateSubBand)="onUpdateSubBand($event)"
               (updateTimeline)="onUpdateTimeline($event)">
             </raven-settings>
           </mat-card>

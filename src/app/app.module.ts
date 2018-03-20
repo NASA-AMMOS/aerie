@@ -41,6 +41,7 @@ import {
 import {
   RavenBandsComponent,
   RavenConfirmDialogComponent,
+  RavenGlobalSettingsComponent,
   RavenSettingsComponent,
   RavenStateSaveDialogComponent,
   RavenTreeComponent,
@@ -67,6 +68,7 @@ export const DECLARATIONS = [
   KeyByPipe,
   RavenBandsComponent,
   RavenConfirmDialogComponent,
+  RavenGlobalSettingsComponent,
   RavenSettingsComponent,
   RavenStateSaveDialogComponent,
   RavenTreeComponent,

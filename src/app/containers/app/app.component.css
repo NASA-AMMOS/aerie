@@ -35,3 +35,11 @@
   width: 64px;
   height: 64px;
 }
+
+mat-sidenav.mat-sidenav {
+  width: 300 px;
+}
+
+.done-button {
+  margin-top: 60px;
+}

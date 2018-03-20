@@ -12,3 +12,4 @@ export * from './raven-confirm-dialog/raven-confirm-dialog.component';
 export * from './raven-settings/raven-settings.component';
 export * from './raven-state-save-dialog/raven-state-save-dialog.component';
 export * from './raven-tree/raven-tree.component';
+export * from './raven-global-settings/raven-global-settings.component';

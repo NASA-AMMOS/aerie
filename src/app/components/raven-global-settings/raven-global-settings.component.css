@@ -1,0 +1,14 @@
+
+:host {
+  display: block;
+}
+.field {
+  margin-left: 30px;
+  margin-right: 30px;
+}
+h2.settings {
+  text-align: center;
+}
+.buttondiv {
+  margin-top: 50px;
+}
