@@ -28,23 +28,35 @@
       </mat-select>
     </mat-form-field>
   </div>
+
   <div fxLayout="row" fxLayoutGap="50px" fxLayoutAlign="start center">
-    <mat-form-field>
-      <mat-select placeholder="Resource Color" [value]="[0,0,0]" (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
-        <color-picker ng-model="color"></color-picker>
-      </mat-select>
-    </mat-form-field>
+    <!--/mat-form-field-->
     <mat-form-field>
       <mat-select placeholder="Font Style" [value]="On" (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
         <mat-option [value]="1">Arial</mat-option>
         <mat-option [value]="2">Helvetica</mat-option>
         <mat-option [value]="3">Times New Roman</mat-option>
         <mat-option [value]="4">Courier</mat-option>
+        <mat-option [value]="4">Georgia</mat-option>
       </mat-select>
     </mat-form-field>
   </div>
-  <!--div class="buttondiv" fxLayout="row" fxLayoutGap="50px">
+</div>
+<div class="fieldLabel">
+  <!--mat-form-field>
+      <mat-select placeholder="Resource Color" [value]="[0,0,0]" (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
+        <color-picker ng-model="color"></color-picker>
+      </mat-select-->
+
+  <span>Resource Color</span>
+</div>
+<div class="field">
+  <input [(colorPicker)]="color" [style.background]="color" [cpCancelButton]="true" (colorPickerOpen)="onEventLog('colorPickerOpen', $event)"
+    (colorPickerClose)="onEventLog('colorPickerClose', $event)" (cpInputChange)="onEventLog('cpInputChange', $event)" (cpSliderDragStart)="onEventLog('cpSliderDragStart', $event)"
+    (cpSliderDragEnd)="onEventLog('cpSliderDragEnd', $event)" [cpPresetColors]="colorPalette" [value]="color" (colorPickerChange)="color=$event"
+  />
+</div>
+<!--div class="buttondiv" fxLayout="row" fxLayoutGap="50px">
     <button mat-raised-button>Clear All Guides</button>
     <button mat-raised-button>something else</button>
   </div-->
-</div>

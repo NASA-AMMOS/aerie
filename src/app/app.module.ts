@@ -32,6 +32,8 @@ import { environment } from './../environments/environment';
 
 import { MaterialModule } from './shared/material';
 
+import { ColorPickerModule } from 'ngx-color-picker';
+
 import {
   AppComponent,
   SourceExplorerComponent,
@@ -103,6 +105,7 @@ export const MODULES = [
   StoreRouterConnectingModule,
   !environment.production ? StoreDevtoolsModule.instrument({ maxAge: 10 }) : [],
   EffectsModule.forRoot(EFFECTS),
+  ColorPickerModule,
 ];
 
 export const PROVIDERS = [

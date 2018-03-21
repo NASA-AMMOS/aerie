@@ -44,9 +44,12 @@ import {
 // Timeline State Interface.
 export interface TimelineState {
   bands: RavenCompositeBand[];
+  fontSize: number;
+  fontStyle: string;
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
   overlayMode: boolean;
+  resourceColor: string;
   selectedBandId: string;
   viewTimeRange: RavenTimeRange;
 }
@@ -54,9 +57,12 @@ export interface TimelineState {
 // Timeline Initial State.
 export const initialState: TimelineState = {
   bands: [],
+  fontSize: 9,
+  fontStyle: 'Georgia',
   labelWidth: 150,
   maxTimeRange: { end: 0, start: 0 },
   overlayMode: false,
+  resourceColor: '#000000',
   selectedBandId: '',
   viewTimeRange: { end: 0, start: 0 },
 };
