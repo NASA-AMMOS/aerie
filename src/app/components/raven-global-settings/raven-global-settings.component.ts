@@ -1,6 +1,5 @@
-import { Component, ViewContainerRef } from '@angular/core';
-
-import { Cmyk, ColorPickerService } from 'ngx-color-picker';
+import { Component, EventEmitter, Input, Output, ViewContainerRef } from '@angular/core';
+import { Cmyk } from 'ngx-color-picker';
 
 @Component({
   selector: 'raven-global-settings',
@@ -9,38 +8,70 @@ import { Cmyk, ColorPickerService } from 'ngx-color-picker';
 })
 export class RavenGlobalSettingsComponent {
 
-  color = '#2889e9';
+  // resourceColor = '#2889e9';
+  @Input() labelWidth: number;
+  @Input() tooltip: boolean;
+  @Input() currentTimeCursor: boolean;
+  @Input() labelFontSize: number;
+  @Input() labelFontStyle: string;
+  @Input() resourceColor: string;
 
-  colorPalette = ['#2889e9',
-    '#e920e9',
-    '#fff500',
-    'rgb(236,64,64)',
-    'rgba(45,208,45,1)',
-    '#1973c0',
-    '#f200bd',
-    '#a8ff00',
-    '#278ce2',
-    '#0a6211',
-    '#f2ff00'];
+  @Output() changeResourceColor: EventEmitter<string> = new EventEmitter<string>();
+  @Output() changeLabelWidth: EventEmitter<number> = new EventEmitter<number>();
+  @Output() changeLabelFontSize: EventEmitter<number> = new EventEmitter<number>();
+  @Output() changeLabelFontStyle: EventEmitter<string> = new EventEmitter<string>();
+  @Output() changeTooltip: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() changeCurrentTimeCursor: EventEmitter<boolean> = new EventEmitter<boolean>();
+
 
   public cmykColor: Cmyk = new Cmyk(0, 0, 0, 0);
-  constructor(public vcRef: ViewContainerRef, private cpService: ColorPickerService) { }
+
+  constructor(public vcRef: ViewContainerRef) {}
 
   public onEventLog(event: string, data: any): void {
-    console.log(event, data);
+    console.log('log: ' + event, data);
+    console.log('color:' + this.resourceColor);
   }
 
-  public onChangeColor(color: string): Cmyk {
-    const hsva = this.cpService.stringToHsva(color);
+  public onChangeColor(color: string): void {
+    console.log('color changed color:' + color);
 
-    const rgba = this.cpService.hsvaToRgba(hsva);
-
-    return this.cpService.rgbaToCmyk(rgba);
+    // emit new color
+    this.changeResourceColor.emit(color);
   }
 
-  public onChangeColorHex8(color: string): string {
-    const hsva = this.cpService.stringToHsva(color, true);
+  public onLabelWidthChange() {
+    console.log('label width changed' + this.labelWidth);
 
-    return this.cpService.outputFormat(hsva, 'rgba', '');
+    // emit new labelWidth
+    this.changeLabelWidth.emit(this.labelWidth);
+  }
+
+  public onLabelFontSizeChange() {
+    console.log('label width changed' + this.labelWidth);
+
+    // emit new labelWidth
+    this.changeLabelFontSize.emit(this.labelFontSize);
+  }
+
+  public onLabelFontStyleChange() {
+    console.log('label width changed' + this.labelWidth);
+
+    // emit new labelWidth
+    this.changeLabelFontStyle.emit(this.labelFontStyle);
+  }
+
+  public onTooltipChange() {
+    console.log('tooltip changed' + this.tooltip);
+
+    // emit new labelWidth
+    this.changeTooltip.emit(this.tooltip);
+  }
+
+  public onCurrentTimeCursorChange() {
+    console.log('current time cursor changed' + this.currentTimeCursor);
+
+    // emit new labelWidth
+    this.changeCurrentTimeCursor.emit(this.currentTimeCursor);
   }
 }

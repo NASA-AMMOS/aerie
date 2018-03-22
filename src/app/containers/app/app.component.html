@@ -44,8 +44,9 @@
   <router-outlet></router-outlet>
 </div>
 <mat-sidenav-container class="global-settings-drawer-container">
-  <mat-sidenav position="end"  [fixedInViewport]="true" [fixedTopGap]="40" #globalSettingsDrawer mode="over">
-    <raven-global-settings></raven-global-settings>
+  <mat-sidenav position="end" [fixedInViewport]="true" [fixedTopGap]="40" #globalSettingsDrawer mode="over">
+    <raven-global-settings [currentTimeCursor]="currentTimeCursor" [tooltip]="tooltip" [labelFontSize]="labelFontSize" [labelFontStyle]="labelFontStyle"
+      [labelWidth]="labelWidth" [resourceColor]="resourceColor" (changeResourceColor)="onChangeResourceColor" (changeLabelWidth)="onChangeLabelWidth"></raven-global-settings>
     <div style="text-align:center;">
       <button mat-raised-button class="done-button" (click)="globalSettingsDrawer.toggle()">Done</button>
     </div>

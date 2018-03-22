@@ -23,6 +23,11 @@ input {
   margin-bottom: 16px;
 }
 
+input.labelWidth {
+  width: 150px;
+  margin-bottom: 16px;
+  margin-left: 20px;
+}
 .cmyk-text {
   float: left;
 

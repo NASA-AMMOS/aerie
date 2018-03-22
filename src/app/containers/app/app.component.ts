@@ -23,6 +23,7 @@ import { Subject } from 'rxjs/Subject';
 
 import * as fromDisplay from './../../reducers/display';
 import * as fromSourceExplorer from './../../reducers/source-explorer';
+import * as fromTimeline from './../../reducers/timeline';
 
 import * as layoutActions from './../../actions/layout';
 
@@ -35,11 +36,18 @@ import * as layoutActions from './../../actions/layout';
 export class AppComponent implements OnDestroy {
   loading$: Observable<boolean>;
 
+  resourceColor: string;
+  labelWidth: number;
+  tooltip: boolean;
+  currentTimeCursor: boolean;
+  labelFontStyle: string;
+  labelFontSize: number;
+
   private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(
     private changeDetector: ChangeDetectorRef,
-    private store: Store<fromSourceExplorer.SourceExplorerState>,
+    private store: Store<fromSourceExplorer.SourceExplorerState | fromTimeline.TimelineState>,
   ) {
     // Combine all fetch pending observables for use in progress bar.
     this.loading$ = combineLatest(
@@ -52,6 +60,19 @@ export class AppComponent implements OnDestroy {
       tap(() => this.changeDetector.markForCheck()),
       takeUntil(this.ngUnsubscribe),
     );
+
+    // Timeline state.
+    this.store.select(fromTimeline.getTimelineState).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(state => {
+      this.resourceColor = state.resourceColor;
+      this.labelWidth = state.labelWidth;
+      this.tooltip = state.tooltip;
+      this.currentTimeCursor = state.currentTimeCursor;
+      this.labelFontSize = state.labelFontSize;
+      this.labelFontStyle = state.labelFontStyle;
+      this.changeDetector.markForCheck();
+    });
   }
 
   ngOnDestroy() {
@@ -69,5 +90,17 @@ export class AppComponent implements OnDestroy {
 
   toggleSouthBandsDrawer() {
     this.store.dispatch(new layoutActions.ToggleSouthBandsDrawer());
+  }
+
+  onChangeLabelWidth(labelWidth: number) {
+    console.log('label width to store:' + labelWidth);
+  }
+
+  onChangeResourceColor(resourceColor: string) {
+    console.log('resource color to store:' + resourceColor);
+  }
+
+  onChangeTooltip(tooltip: boolean) {
+    console.log('tooltip to store:' + tooltip);
   }
 }

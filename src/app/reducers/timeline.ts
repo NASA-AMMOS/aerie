@@ -44,26 +44,30 @@ import {
 // Timeline State Interface.
 export interface TimelineState {
   bands: RavenCompositeBand[];
-  fontSize: number;
-  fontStyle: string;
+  currentTimeCursor: boolean;
+  labelFontSize: number;
+  labelFontStyle: string;
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
   overlayMode: boolean;
   resourceColor: string;
   selectedBandId: string;
+  tooltip: boolean;
   viewTimeRange: RavenTimeRange;
 }
 
 // Timeline Initial State.
 export const initialState: TimelineState = {
   bands: [],
-  fontSize: 9,
-  fontStyle: 'Georgia',
+  currentTimeCursor: false,
+  labelFontSize: 9,
+  labelFontStyle: 'Georgia',
   labelWidth: 150,
   maxTimeRange: { end: 0, start: 0 },
   overlayMode: false,
   resourceColor: '#000000',
   selectedBandId: '',
+  tooltip: true,
   viewTimeRange: { end: 0, start: 0 },
 };
 

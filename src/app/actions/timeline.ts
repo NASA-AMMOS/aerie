@@ -24,6 +24,12 @@ export enum TimelineActionTypes {
   UpdateSubBand       = '[timeline] update_sub_band',
   UpdateTimeline      = '[timeline] update_timeline',
   UpdateViewTimeRange = '[timeline] update_view_time_range',
+  ChangeCurrentTimeCursor = '[timeline] change_current_time_cursor',
+  ChangeTooltip       = '[timeline] change_tooltip',
+  ChangeLabelFontSize = '[timeline] change_label_fonr_size',
+  ChangeLabelFontStyle= '[timeline] change_label_font_style',
+  ChangeLabelWidth    = '[timeline] change_label_width',
+  ChangeResourceColor = '[timeline] change_resource_color',
 }
 
 // Actions.
@@ -63,8 +69,50 @@ export class UpdateViewTimeRange implements Action {
   constructor(public viewTimeRange: RavenTimeRange) {}
 }
 
+export class ChangeCurrentTimeCursor implements Action {
+  readonly type = TimelineActionTypes.ChangeCurrentTimeCursor;
+
+  constructor(public currentTimeCursor: boolean) {}
+}
+
+export class ChangeTooltip implements Action {
+  readonly type = TimelineActionTypes.ChangeTooltip;
+
+  constructor(public tooltip: boolean) {}
+}
+
+export class ChangeLabelFontSize implements Action {
+  readonly type = TimelineActionTypes.ChangeLabelFontSize;
+
+  constructor(public labelFontSize: number) {}
+}
+
+export class ChangeLabelFontStyle implements Action {
+  readonly type = TimelineActionTypes.ChangeLabelFontStyle;
+
+  constructor(public labelFontStyle: string) {}
+}
+
+export class ChangeLabelWidth implements Action {
+  readonly type = TimelineActionTypes.ChangeLabelWidth;
+
+  constructor(public labelWidth: number) {}
+}
+
+export class ChangeResourceColor implements Action {
+  readonly type = TimelineActionTypes.ChangeResourceColor;
+
+  constructor(public resourceColor: string) {}
+}
+
 // Union type of all actions.
 export type TimelineAction =
+ChangeCurrentTimeCursor |
+  ChangeTooltip |
+  ChangeLabelFontSize |
+  ChangeLabelFontStyle |
+  ChangeLabelWidth |
+  ChangeResourceColor |
   SelectBand |
   SortBands |
   UpdateBand |

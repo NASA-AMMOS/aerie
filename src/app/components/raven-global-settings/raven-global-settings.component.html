@@ -16,21 +16,11 @@
   </div>
   <div fxLayout="row" fxLayoutGap="50px" fxLayoutAlign="start center">
     <mat-form-field>
-      <mat-select placeholder="Label Width" [value]="On" (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
-        <mat-option [value]="1">+</mat-option>
-        <mat-option [value]="2">-</mat-option>
-      </mat-select>
-    </mat-form-field>
-    <mat-form-field>
       <mat-select placeholder="Label Font Size" [value]="On" (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
-        <mat-option [value]="1">+</mat-option>
-        <mat-option [value]="2">-</mat-option>
+        <mat-option [value]="8">+</mat-option>
+        <mat-option [value]="10">-</mat-option>
       </mat-select>
     </mat-form-field>
-  </div>
-
-  <div fxLayout="row" fxLayoutGap="50px" fxLayoutAlign="start center">
-    <!--/mat-form-field-->
     <mat-form-field>
       <mat-select placeholder="Font Style" [value]="On" (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
         <mat-option [value]="1">Arial</mat-option>
@@ -43,17 +33,17 @@
   </div>
 </div>
 <div class="fieldLabel">
-  <!--mat-form-field>
-      <mat-select placeholder="Resource Color" [value]="[0,0,0]" (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
-        <color-picker ng-model="color"></color-picker>
-      </mat-select-->
-
+    <span>Label Width</span>
+    <input mat-input [(ngModel)]="labelWidth" class="labelWidth" type="number" name="labelWidth" step="5" min="5" max="300" (click)="onLabelWidthChange()">
+</div>
+<div class="fieldLabel">
   <span>Resource Color</span>
 </div>
 <div class="field">
-  <input [(colorPicker)]="color" [style.background]="color" [cpCancelButton]="true" (colorPickerOpen)="onEventLog('colorPickerOpen', $event)"
+  <input [(colorPicker)]="resourceColor" [style.background]="resourceColor" [cpCancelButton]="true" (colorPickerOpen)="onEventLog('colorPickerOpen', $event)"
     (colorPickerClose)="onEventLog('colorPickerClose', $event)" (cpInputChange)="onEventLog('cpInputChange', $event)" (cpSliderDragStart)="onEventLog('cpSliderDragStart', $event)"
-    (cpSliderDragEnd)="onEventLog('cpSliderDragEnd', $event)" [cpPresetColors]="colorPalette" [value]="color" (colorPickerChange)="color=$event"
+    (cpSliderDragEnd)="onEventLog('cpSliderDragEnd', $event)" [cpPresetColors]="colorPalette" [value]="resourceColor"
+    (colorPickerChange)="onChangeColor($event);resourceColor=$event"
   />
 </div>
 <!--div class="buttondiv" fxLayout="row" fxLayoutGap="50px">
