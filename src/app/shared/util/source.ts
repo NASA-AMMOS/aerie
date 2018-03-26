@@ -7,8 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { v4 } from 'uuid';
-
 import {
   MpsServerSource,
   MpsServerSourceCategory,
@@ -16,7 +14,26 @@ import {
   MpsServerSourceFile,
   MpsServerSourceGraphable,
   RavenSource,
+  StringTMap,
 } from './../models';
+
+/**
+ * Helper. Returns true if a source has any children that are opened. False otherwise.
+ */
+export function hasOpenedChildren(tree: StringTMap<RavenSource>, childIds: string[]): boolean {
+  for (let i = 0, l = childIds.length; i < l; ++i) {
+    const childId = childIds[i];
+    const child = tree[childId];
+
+    if (child.opened) {
+      return true;
+    } else if (childIds.length) {
+      return hasOpenedChildren(tree, child.childIds);
+    }
+  }
+
+  return false;
+}
 
 /**
  * Transform form an MPS Server source to a Raven source.
@@ -24,7 +41,6 @@ import {
 export function toSource(parentId: string, isServer: boolean, source: MpsServerSource): RavenSource {
   const newSource: RavenSource = {
     actions: [],
-    bandIds: {}, // Map of band ids that this source contributes data to.
     childIds: [],
     content: [],
     dbType: '',
@@ -32,7 +48,7 @@ export function toSource(parentId: string, isServer: boolean, source: MpsServerS
     expandable: true,
     expanded: false,
     icon: '',
-    id: v4(),
+    id: `${parentId}${source.name}/`,
     isServer,
     kind: source.__kind,
     label: source.label,
@@ -46,6 +62,7 @@ export function toSource(parentId: string, isServer: boolean, source: MpsServerS
     pinned: false,
     selectable: true,
     selected: false,
+    subBandIds: {}, // Map of band ids that this source contributes data to.
     url: '',
   };
 
@@ -152,4 +169,18 @@ export function fromState(mSource: any, rSource: RavenSource): RavenSource {
     selectable: true,
     url: mSource.data_url,
   };
+}
+
+/**
+ * Helper that returns a source type based on a given source id. Empty otherwise.
+ */
+export function getSourceType(sourceId: string): string {
+  if (sourceId.includes('Activities by Legend')) {
+    return 'byLegend';
+  } else if (sourceId.includes('Activities by Type')) {
+    return 'byType';
+  } else {
+    console.warn('source.ts - getSourceType: unknown source type: ', sourceId);
+    return '';
+  }
 }

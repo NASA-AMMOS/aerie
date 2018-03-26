@@ -17,6 +17,7 @@ export interface RavenCompositeBand {
   heightPadding: number;
   id: string;
   name: string;
+  overlay: boolean;
   showTooltip: boolean;
   sortOrder: number;
   subBands: RavenSubBand[];

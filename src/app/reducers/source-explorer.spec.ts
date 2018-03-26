@@ -7,39 +7,32 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { initialState, reducer, SourceExplorerState } from './source-explorer';
+import {
+  initialState,
+  reducer,
+  SourceExplorerState,
+} from './source-explorer';
 
 import {
   RavenSource,
 } from './../shared/models';
 
 import {
-  FetchGraphData,
-  FetchGraphDataFailure,
-  FetchGraphDataSuccess,
   FetchInitialSources,
-  FetchInitialSourcesFailure,
-  FetchInitialSourcesSuccess,
-  FetchSources,
-  FetchSourcesFailure,
-  FetchSourcesSuccess,
-  LoadContent,
-  RemoveBands,
-  SourceExplorerClose,
-  SourceExplorerCollapse,
-  SourceExplorerExpand,
-  SourceExplorerOpen,
-  SourceExplorerPin,
+  NewSources,
+  SourceExplorerCloseEvent,
+  SourceExplorerCollapseEvent,
+  SourceExplorerExpandEvent,
+  SourceExplorerOpenEvent,
   SourceExplorerSelect,
-  SourceExplorerUnpin,
+  SubBandIdAdd,
   UpdateSourceExplorer,
+  UpdateTreeSource,
 } from './../actions/source-explorer';
 
 import {
-  activityBand,
   childSource,
   rootSource,
-  stateBand,
 } from './../shared/mocks';
 
 describe('source-explorer reducer', () => {
@@ -53,208 +46,60 @@ describe('source-explorer reducer', () => {
     expect(sourceExplorerState).toEqual(initialState);
   });
 
-  it('handle FetchGraphData', () => {
-    sourceExplorerState = reducer(sourceExplorerState, new FetchGraphData(childSource));
-    expect(sourceExplorerState).toEqual({ ...initialState, fetchGraphDataRequestPending: true });
-  });
-
-  it('handle FetchGraphDataFailure', () => {
-    sourceExplorerState = reducer(sourceExplorerState, new FetchGraphDataFailure());
-    expect(sourceExplorerState).toEqual({ ...initialState, fetchGraphDataRequestPending: false });
-  });
-
-  it('handle FetchGraphDataSuccess', () => {
-    const source: RavenSource = rootSource;
-
-    sourceExplorerState = reducer(sourceExplorerState, new FetchGraphDataSuccess(source, [stateBand, activityBand]));
-    expect(sourceExplorerState).toEqual({
-      ...initialState,
-      fetchGraphDataRequestPending: false,
-      treeBySourceId: {
-        ...initialState.treeBySourceId,
-        [source.id]: {
-          ...initialState.treeBySourceId[source.id],
-          bandIds: {
-            ...initialState.treeBySourceId[source.id].bandIds,
-            '100': 'test-activity-band',
-            '102': 'test-state-band',
-          },
-          opened: true,
-        },
-      },
-    });
-  });
-
   it('handle FetchInitialSources', () => {
     sourceExplorerState = reducer(sourceExplorerState, new FetchInitialSources());
-    expect(sourceExplorerState).toEqual({ ...initialState, fetchInitialSourcesRequestPending: true });
-  });
-
-  it('handle FetchInitialSourcesFailure', () => {
-    sourceExplorerState = reducer(sourceExplorerState, new FetchInitialSourcesFailure());
-    expect(sourceExplorerState).toEqual({ ...initialState, fetchInitialSourcesRequestPending: false });
-  });
-
-  it('handle FetchInitialSourcesSuccess', () => {
-    const sources = [childSource];
-
-    sourceExplorerState = reducer(sourceExplorerState, new FetchInitialSourcesSuccess(sources));
     expect(sourceExplorerState).toEqual({
       ...initialState,
-      fetchInitialSourcesRequestPending: false,
-      initialSourcesLoaded: true,
+      fetchPending: true,
+    });
+  });
+
+  it('handle NewSources', () => {
+    const sources = [childSource];
+
+    sourceExplorerState = reducer(sourceExplorerState, new NewSources(rootSource.id, sources));
+    expect(sourceExplorerState).toEqual({
+      ...initialState,
       treeBySourceId: {
         ...initialState.treeBySourceId,
-        '0': {
-          ...initialState.treeBySourceId['0'],
-          childIds: ['1'],
+        '/': {
+          ...initialState.treeBySourceId['/'],
+          childIds: ['/child'],
         },
-        '1': {
+        '/child': {
           ...childSource,
         },
       },
     });
   });
 
-  it('handle FetchSources', () => {
-    sourceExplorerState = reducer(sourceExplorerState, new FetchSources(childSource));
-    expect(sourceExplorerState).toEqual({ ...initialState, fetchSourcesRequestPending: true });
-  });
-
-  it('handle FetchSourcesFailure', () => {
-    sourceExplorerState = reducer(sourceExplorerState, new FetchSourcesFailure());
-    expect(sourceExplorerState).toEqual({ ...initialState, fetchSourcesRequestPending: false });
-  });
-
-  it('handle FetchSourcesSuccess', () => {
-    const sources = [childSource];
-
-    sourceExplorerState = reducer(sourceExplorerState, new FetchSourcesSuccess(rootSource, sources));
+  it('handle SourceExplorerCloseEvent', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new SourceExplorerCloseEvent(rootSource.id));
     expect(sourceExplorerState).toEqual({
       ...initialState,
-      fetchSourcesRequestPending: false,
-      treeBySourceId: {
-        ...initialState.treeBySourceId,
-        '0': {
-          ...initialState.treeBySourceId['0'],
-          childIds: ['1'],
-          expanded: true,
-        },
-        '1': {
-          ...childSource,
-        },
-      },
     });
   });
 
-  it('handle LoadContent', () => {
-    const sources = [childSource];
-
-    sourceExplorerState = reducer(sourceExplorerState, new LoadContent(rootSource, sources));
+  it('handle SourceExplorerCollapseEvent', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new SourceExplorerCollapseEvent(rootSource.id));
     expect(sourceExplorerState).toEqual({
       ...initialState,
-      fetchSourcesRequestPending: false,
-      treeBySourceId: {
-        ...initialState.treeBySourceId,
-        '0': {
-          ...initialState.treeBySourceId['0'],
-          childIds: ['1'],
-          expanded: true,
-        },
-        '1': {
-          ...childSource,
-        },
-      },
     });
   });
 
-  it('handle RemoveBands', () => {
-    const source: RavenSource = rootSource;
-
-    // Add some bands first so we have something to remove.
-    sourceExplorerState = reducer(sourceExplorerState, new FetchGraphDataSuccess(source, [stateBand, activityBand]));
-
-    sourceExplorerState = reducer(sourceExplorerState, new RemoveBands(source.id, ['100', '102']));
-    expect(sourceExplorerState).toEqual(initialState);
-  });
-
-  it('handle SourceExplorerCollapse', () => {
-    const source: RavenSource = childSource;
-
-    sourceExplorerState = reducer(sourceExplorerState, new SourceExplorerCollapse(source));
+  it('handle SourceExplorerExpandEvent', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new SourceExplorerExpandEvent(rootSource.id));
     expect(sourceExplorerState).toEqual({
       ...initialState,
-      treeBySourceId: {
-        ...initialState.treeBySourceId,
-        '1': {
-          ...initialState.treeBySourceId['1'],
-          expanded: false,
-        },
-      },
+      fetchPending: true,
     });
   });
 
-  it('handle SourceExplorerExpand', () => {
-    const source: RavenSource = childSource;
-
-    sourceExplorerState = reducer(sourceExplorerState, new SourceExplorerExpand(source));
+  it('handle SourceExplorerOpenEvent', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new SourceExplorerOpenEvent(rootSource.id));
     expect(sourceExplorerState).toEqual({
       ...initialState,
-      treeBySourceId: {
-        ...initialState.treeBySourceId,
-        '1': {
-          ...initialState.treeBySourceId['1'],
-          expanded: true,
-        },
-      },
-    });
-  });
-
-  it('handle SourceExplorerClose', () => {
-    const source: RavenSource = childSource;
-
-    sourceExplorerState = reducer(sourceExplorerState, new SourceExplorerClose(source));
-    expect(sourceExplorerState).toEqual({
-      ...initialState,
-      treeBySourceId: {
-        ...initialState.treeBySourceId,
-        '1': {
-          ...initialState.treeBySourceId['1'],
-          opened: false,
-        },
-      },
-    });
-  });
-
-  it('handle SourceExplorerOpen', () => {
-    const source: RavenSource = childSource;
-
-    sourceExplorerState = reducer(sourceExplorerState, new SourceExplorerOpen(source));
-    expect(sourceExplorerState).toEqual({
-      ...initialState,
-      treeBySourceId: {
-        ...initialState.treeBySourceId,
-        '1': {
-          ...initialState.treeBySourceId['1'],
-          opened: true,
-        },
-      },
-    });
-  });
-
-  it('handle SourceExplorerPin', () => {
-    const source: RavenSource = childSource;
-
-    sourceExplorerState = reducer(sourceExplorerState, new SourceExplorerPin(source));
-    expect(sourceExplorerState).toEqual({
-      ...initialState,
-      treeBySourceId: {
-        ...initialState.treeBySourceId,
-        '1': {
-          ...initialState.treeBySourceId['1'],
-          pinned: true,
-        },
-      },
+      fetchPending: true,
     });
   });
 
@@ -304,17 +149,17 @@ describe('source-explorer reducer', () => {
     });
   });
 
-  it('handle SourceExplorerUnpin', () => {
-    const source: RavenSource = childSource;
-
-    sourceExplorerState = reducer(sourceExplorerState, new SourceExplorerUnpin(source));
+  it('handle SubBandIdAdd', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new SubBandIdAdd(rootSource.id, '100'));
     expect(sourceExplorerState).toEqual({
       ...initialState,
       treeBySourceId: {
         ...initialState.treeBySourceId,
-        '1': {
-          ...initialState.treeBySourceId['1'],
-          pinned: false,
+        '/': {
+          ...initialState.treeBySourceId['/'],
+          subBandIds: {
+            '100': '100',
+          },
         },
       },
     });
@@ -326,6 +171,20 @@ describe('source-explorer reducer', () => {
     expect(sourceExplorerState).toEqual({
       ...initialState,
       selectedSourceId: '42',
+    });
+  });
+
+  it('handle UpdateTreeSource', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new UpdateTreeSource(rootSource.id, 'opened', true));
+    expect(sourceExplorerState).toEqual({
+      ...initialState,
+      treeBySourceId: {
+        ...initialState.treeBySourceId,
+        '/': {
+          ...initialState.treeBySourceId['/'],
+          opened: true,
+        },
+      },
     });
   });
 });
