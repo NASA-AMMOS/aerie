@@ -1,4 +1,4 @@
-[![Build Status](https://cae-jenkins2.jpl.nasa.gov/job/MPSA/job/SEQ/job/raven2/job/raven2%20build/job/master/badge/icon)](https://cae-jenkins2.jpl.nasa.gov/job/MPSA/job/SEQ/job/raven2/job/raven2%20build/job/master/) 
+[![Build Status](https://cae-jenkins2.jpl.nasa.gov/buildStatus/icon?job=MPSA/SEQ/raven2/raven2 build/master)](https://cae-jenkins2.jpl.nasa.gov/job/MPSA/SEQ/raven2/raven2 build/master) 
 
 
 
