@@ -28,7 +28,7 @@ export class AppPage {
   resourceBand =          element(by.tagName('falcon-resource-band'));
   stateBand =             element(by.tagName('falcon-state-band'));
 
-  settingsDeleteBand =    element(by.id('raven-settings-delete-band'));
+  settingsDeleteSubBand = element(by.id('raven-settings-delete-sub-band'));
   settingsFill =          element(by.id('raven-settings-fill'));
   settingsHeight =        element(by.id('raven-settings-height'));
   settingsInterpolation = element(by.id('raven-settings-interpolation'));

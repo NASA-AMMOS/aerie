@@ -31,11 +31,18 @@ import {
 export class RavenSettingsComponent {
   @Input() bandsById: StringTMap<RavenCompositeBand>;
   @Input() labelWidth: number;
-  @Input() overlayMode: boolean;
   @Input() selectedBandId: string;
+  @Input() selectedSubBandId: string;
 
-  @Output() deleteBand: EventEmitter<RavenSubBand> = new EventEmitter<RavenSubBand>();
+  @Output() deleteSubBand: EventEmitter<RavenSubBand> = new EventEmitter<RavenSubBand>();
   @Output() updateBand: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
   @Output() updateSubBand: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
   @Output() updateTimeline: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
+
+  /**
+   * trackBy for subBands.
+   */
+  trackByFn(index: number, item: RavenSubBand) {
+    return item.id;
+  }
 }

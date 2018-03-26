@@ -12,3 +12,11 @@ All a pure components state is passed in the `Inputs`.
 Anytime a component needs to communicate to it's parent it should emit an `Output`.
 Pure components should use the `OnPush` [change detection strategy](https://angular.io/api/core/ChangeDetectionStrategy).
 It should be easy to move a pure component into another application with little to no work at all.
+
+## Alphabetical
+
+All code in this application is alphabetized for clarity. The linter picks up some of these rules, but some rules are up to the developer to maintain. For example arranging action types alphabetically across different files is up to the developer. This should be a focus of code-reviews to maintain.
+
+## Immutability
+
+Most functions in this application should be pure. Meaning they should accept input parameters and return new outputs without any side-effects. This makes the application much easier to test and maintain. More info on pure functions can be found [here](https://en.wikipedia.org/wiki/Pure_function).

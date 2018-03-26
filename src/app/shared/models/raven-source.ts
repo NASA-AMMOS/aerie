@@ -15,7 +15,6 @@ import {
 
 export interface RavenSource {
   actions: RavenSourceAction[];
-  bandIds: StringTMap<string>;
   childIds: string[];
   content: MpsServerSourceGraphable[];
   dbType: string;
@@ -37,5 +36,6 @@ export interface RavenSource {
   pinned: boolean;
   selectable: boolean;
   selected: boolean;
+  subBandIds: StringTMap<string>;
   url: string;
 }
