@@ -50,27 +50,16 @@ describe('raven2 - overlay mode', () => {
     expect(bands.length).toEqual(2);
   });
 
-  it('overlay mode should unchecked and disabled', async () => {
-    const checked = await page.settingsOverlay.getAttribute('ng-reflect-checked');
-    const disabled = await page.settingsOverlay.getAttribute('ng-reflect-disabled');
-    expect(checked).toBe('false');
-    expect(disabled).toEqual('true');
-  });
-
-  it('selecting band0 should enable the overlay toggle, however it should still be unchecked', async () => {
+  it('selecting band0 should show the overlay toggle for that band, and it should be unchecked', async () => {
     page.band0.click();
     const checked = await page.settingsOverlay.getAttribute('ng-reflect-checked');
-    const disabled = await page.settingsOverlay.getAttribute('ng-reflect-disabled');
     expect(checked).toBe('false');
-    expect(disabled).toEqual('false');
   });
 
   it('clicking the overlay toggle should enable overlay mode', async () => {
     page.settingsOverlay.click();
     const checked = await page.settingsOverlay.getAttribute('ng-reflect-checked');
-    const disabled = await page.settingsOverlay.getAttribute('ng-reflect-disabled');
     expect(checked).toBe('true');
-    expect(disabled).toEqual('false');
   });
 
   it('opening source2 should overlay a new band on the selected band (band0)', async () => {
@@ -109,14 +98,14 @@ describe('raven2 - overlay mode', () => {
     expect(bands[0].subBands.length).toEqual(4);
   });
 
-  it('overlaying a same 3-legend source should add 3 more sub-bands to the selected band', async () => {
+  it('overlaying a same 3-legend source should not add any additional sub-bands to the selected band', async () => {
     source4.open();
     bands = await probe(page.bands, 'bands');
     expect(bands.length).toEqual(1);
-    expect(bands[0].subBands.length).toEqual(7);
+    expect(bands[0].subBands.length).toEqual(4);
   });
 
-  it('closing source3 should remove 3 sub-bands from the selected band', async () => {
+  it('closing source3 (which has the same legends as source4) should not remove 3 sub-bands from the selected band', async () => {
     source3.close();
     bands = await probe(page.bands, 'bands');
     expect(bands.length).toEqual(1);
@@ -141,14 +130,14 @@ describe('raven2 - overlay mode', () => {
     expect(bands[3].subBands.length).toEqual(1);
   });
 
-  it('turning back on overlay mode and drawing another 3-legend source should add those bands to the existing legend bands and NOT overlay them', async () => {
+  it('turning back on overlay mode and drawing another 3-legend source should add those points to the existing legend sub-bands and NOT overlay them', async () => {
     page.settingsOverlay.click();
     source4.open();
     bands = await probe(page.bands, 'bands');
     expect(bands.length).toEqual(4);
     expect(bands[0].subBands.length).toEqual(1);
-    expect(bands[1].subBands.length).toEqual(2);
-    expect(bands[2].subBands.length).toEqual(2);
-    expect(bands[3].subBands.length).toEqual(2);
+    expect(bands[1].subBands.length).toEqual(1);
+    expect(bands[2].subBands.length).toEqual(1);
+    expect(bands[3].subBands.length).toEqual(1);
   });
 });

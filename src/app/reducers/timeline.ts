@@ -7,16 +7,18 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { createFeatureSelector } from '@ngrx/store';
+import { omit } from 'lodash';
 
 import {
-  FetchGraphDataSuccess,
-  RemoveBands,
-  SourceExplorerAction,
-  SourceExplorerActionTypes,
-} from './../actions/source-explorer';
+  createFeatureSelector,
+} from '@ngrx/store';
 
 import {
+  AddBand,
+  AddPointsToSubBand,
+  AddSubBand,
+  RemoveBandsOrPointsForSource,
+  RemoveSubBand,
   SelectBand,
   SortBands,
   TimelineAction,
@@ -24,20 +26,19 @@ import {
   UpdateBand,
   UpdateSubBand,
   UpdateTimeline,
-} from '../actions/timeline';
+} from './../actions/timeline';
 
 import {
-  hasActivityLegend,
-  hasId,
-  shouldOverlay,
-  toCompositeBand,
+  bandById,
+  getMaxTimeRange,
+  updateSelectedBandIds,
   updateSortOrder,
   updateTimeRanges,
 } from './../shared/util';
 
 import {
-  RavenActivityBand,
   RavenCompositeBand,
+  RavenSubBand,
   RavenTimeRange,
 } from './../shared/models';
 
@@ -46,8 +47,8 @@ export interface TimelineState {
   bands: RavenCompositeBand[];
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
-  overlayMode: boolean;
   selectedBandId: string;
+  selectedSubBandId: string;
   viewTimeRange: RavenTimeRange;
 }
 
@@ -56,8 +57,8 @@ export const initialState: TimelineState = {
   bands: [],
   labelWidth: 150,
   maxTimeRange: { end: 0, start: 0 },
-  overlayMode: false,
   selectedBandId: '',
+  selectedSubBandId: '',
   viewTimeRange: { end: 0, start: 0 },
 };
 
@@ -65,12 +66,18 @@ export const initialState: TimelineState = {
  * Reducer.
  * If a case takes more than one line then it should be in it's own helper function.
  */
-export function reducer(state: TimelineState = initialState, action: SourceExplorerAction | TimelineAction): TimelineState {
+export function reducer(state: TimelineState = initialState, action: TimelineAction): TimelineState {
   switch (action.type) {
-    case SourceExplorerActionTypes.FetchGraphDataSuccess:
-      return addBands(state, action);
-    case SourceExplorerActionTypes.RemoveBands:
-      return removeBands(state, action);
+    case TimelineActionTypes.AddBand:
+      return addBand(state, action);
+    case TimelineActionTypes.AddPointsToSubBand:
+      return addPointsToSubBand(state, action);
+    case TimelineActionTypes.AddSubBand:
+      return addSubBand(state, action);
+    case TimelineActionTypes.RemoveBandsOrPointsForSource:
+      return removeBandsOrPointsForSource(state, action);
+    case TimelineActionTypes.RemoveSubBand:
+      return removeSubBand(state, action);
     case TimelineActionTypes.SelectBand:
       return selectBand(state, action);
     case TimelineActionTypes.SortBands:
@@ -89,86 +96,174 @@ export function reducer(state: TimelineState = initialState, action: SourceExplo
 }
 
 /**
- * Reduction Helper. Called when reducing the 'FetchGraphDataSuccess' action.
- * Handles overlaying on existing bands, or adding new bands to the list.
- * This action is defined in the sourceExplorer actions.
+ * Reduction Helper. Called when reducing the 'AddBand' action.
  */
-export function addBands(state: TimelineState, action: FetchGraphDataSuccess): TimelineState {
-  const bands = state.bands
-    // Add new bands to current bands.
-    .map((band: RavenCompositeBand) => {
-      for (let i = action.newBands.length - 1; i >= 0; --i) { // Running backwards since we are splicing.
-        const newBand = action.newBands[i];
-
-        // Add new band to a currently existing band.
-        if (shouldOverlay(state.overlayMode, state.selectedBandId, band.id) && !hasActivityLegend(state.bands, newBand as RavenActivityBand) ||
-            hasActivityLegend([band], newBand as RavenActivityBand)) {
-          band = {
-            ...band,
-            subBands: band.subBands.concat({
-              ...newBand,
-              parentUniqueId: band.id,
-            }),
-          };
-          action.newBands.splice(i, 1);
-        }
-      }
-
-      return band;
-    })
-    // Add new bands.
-    .concat(action.newBands.map((newBand, index) => {
-      const newCompositeBand = toCompositeBand(newBand);
-
-      return {
-        ...newCompositeBand,
-        containerId: '0',
-        sortOrder: state.bands.filter(b => b.containerId === '0').length + index,
-      };
-    }));
+export function addBand(state: TimelineState, action: AddBand): TimelineState {
+  const bands = state.bands.concat({
+    ...action.band,
+    containerId: '0',
+    sortOrder: state.bands.filter(b => b.containerId === '0').length,
+    subBands: action.band.subBands.map(subBand => ({
+      ...subBand,
+      parentUniqueId: action.band.id,
+      sourceIds: {
+        ...subBand.sourceIds,
+        [action.sourceId]: action.sourceId,
+      },
+    })),
+  });
 
   return {
     ...state,
     bands,
-    ...updateTimeRanges(state.viewTimeRange, bands),
+    ...updateTimeRanges(bands, state.viewTimeRange),
   };
 }
 
 /**
- * Reduction Helper. Called when reducing the 'RemoveBands' action.
- * This action is defined in the sourceExplorer actions.
+ * Reduction Helper. Called when reducing the 'AddPointsToSubBand' action.
  *
- * When we remove bands we also have to account for the selectedBandId.
- * If bands is empty, or if we remove a band that is selected, make sure to set selectedBandId to empty.
+ * TODO: Replace 'any' with a concrete type.
  */
-export function removeBands(state: TimelineState, action: RemoveBands): TimelineState {
+export function addPointsToSubBand(state: TimelineState, action: AddPointsToSubBand): TimelineState {
+  const bands = state.bands.map((band: RavenCompositeBand) => {
+    if (action.bandId === band.id) {
+      return {
+        ...band,
+        subBands: band.subBands.map(subBand => {
+          if (action.subBandId === subBand.id) {
+            const points = (subBand as any).points.concat(action.points);
+            const maxTimeRange = getMaxTimeRange(points);
+
+            return {
+              ...subBand,
+              maxTimeRange,
+              points,
+              sourceIds: {
+                ...subBand.sourceIds,
+                [action.sourceId]: action.sourceId,
+              },
+            };
+          }
+
+          return subBand;
+        }),
+      };
+    }
+
+    return band;
+  });
+
+  return {
+    ...state,
+    bands,
+    ...updateTimeRanges(bands, state.viewTimeRange),
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'AddSubBand' action.
+ */
+export function addSubBand(state: TimelineState, action: AddSubBand): TimelineState {
+  const bands = state.bands.map((band: RavenCompositeBand) => {
+    if (action.bandId === band.id) {
+      return {
+        ...band,
+        subBands: band.subBands.concat({
+          ...action.subBand,
+          parentUniqueId: band.id,
+          sourceIds: {
+            ...action.subBand.sourceIds,
+            [action.sourceId]: action.sourceId,
+          },
+        }),
+      };
+    }
+    return band;
+  });
+
+  return {
+    ...state,
+    bands,
+    ...updateTimeRanges(bands, state.viewTimeRange),
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'RemoveBandsOrPointsForSource' action.
+ * Removes all bands or points that reference the given source.
+ *
+ * TODO: Replace 'any' with a concrete type.
+ */
+export function removeBandsOrPointsForSource(state: TimelineState, action: RemoveBandsOrPointsForSource): TimelineState {
   let bands = state.bands
     .map(band => ({
-        ...band,
-        subBands: band.subBands.filter(subBand => !action.bandIds.includes(subBand.id)),
-    }))
-    .filter(band => band.subBands.length !== 0);
+      ...band,
+      subBands: band.subBands.reduce((subBands: RavenSubBand[], subBand: RavenSubBand) => {
+        const subBandHasSource = subBand.sourceIds[action.sourceId];
+        const sourceIdsCount = Object.keys(subBand.sourceIds).length;
 
-  // Update the sort order of all the bands for each container.
+        if (!subBandHasSource) {
+          subBands.push(subBand);
+        } else if (subBandHasSource && sourceIdsCount > 1) {
+          subBands.push({
+            ...subBand,
+            points: (subBand as any).points.filter((point: any) => point.sourceId !== action.sourceId),
+            sourceIds: omit(subBand.sourceIds, action.sourceId),
+          });
+        }
+
+        return subBands;
+      }, []),
+    }))
+    .filter(
+      band => band.subBands.length !== 0,
+    );
+
   bands = updateSortOrder(bands);
 
   return {
     ...state,
     bands,
-    selectedBandId: hasId(bands, state.selectedBandId) ? state.selectedBandId : '',
-    ...updateTimeRanges(state.viewTimeRange, bands),
+    ...updateSelectedBandIds(bands, state.selectedBandId, state.selectedSubBandId),
+    ...updateTimeRanges(bands, state.viewTimeRange),
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'RemoveSubBand' action.
+ */
+export function removeSubBand(state: TimelineState, action: RemoveSubBand): TimelineState {
+  let bands = state.bands
+    .map(band => ({
+      ...band,
+      subBands: band.subBands.filter(subBand => subBand.id !== action.subBandId),
+    }))
+    .filter(
+      band => band.subBands.length !== 0,
+    );
+
+  bands = updateSortOrder(bands);
+
+  return {
+    ...state,
+    bands,
+    ...updateSelectedBandIds(bands, state.selectedBandId, state.selectedSubBandId),
+    ...updateTimeRanges(bands, state.viewTimeRange),
   };
 }
 
 /**
  * Reduction Helper. Called when reducing the 'SelectBand' action.
- *
- * If we click on a band that's already selected, just de-select it.
  */
 export function selectBand(state: TimelineState, action: SelectBand): TimelineState {
+  const selectedBandId = action.bandId === state.selectedBandId ? '' : action.bandId;
+  const band = bandById(state.bands, selectedBandId);
+
   return {
     ...state,
-    selectedBandId: action.bandId === state.selectedBandId ? '' : action.bandId,
+    selectedBandId,
+    selectedSubBandId: band && band.subBands.length && selectedBandId !== '' ? band.subBands[0].id : '',
   };
 }
 

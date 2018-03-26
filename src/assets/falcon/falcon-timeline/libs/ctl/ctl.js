@@ -5639,9 +5639,7 @@ TimeUnit.quantizeUpByTimeUnit = function(time, quantum, timeUnit) {
     d2.setUTCSeconds(0);
   }
   diff = (d2.getTime() - d1.getTime()) / 1000;
-  //console.log("d1 = " + d1);
-  //console.log("d2 = " + d2);
-  //console.log("diff = " + diff);
+
   return time + diff;
 };
 

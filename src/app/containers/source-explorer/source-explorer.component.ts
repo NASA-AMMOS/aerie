@@ -32,10 +32,6 @@ import {
 } from './../../components';
 
 import {
-  toRavenSources,
-} from './../../shared/util';
-
-import {
   RavenSource,
   RavenSourceActionEvent,
   StringTMap,
@@ -98,31 +94,21 @@ export class SourceExplorerComponent implements OnDestroy {
    * Event. Called when a `collapse` event is fired from a raven-tree.
    */
   onCollapse(source: RavenSource): void {
-    this.store.dispatch(new sourceExplorerActions.SourceExplorerCollapse(source));
+    this.store.dispatch(new sourceExplorerActions.SourceExplorerCollapseEvent(source.id));
   }
 
   /**
    * Event. Called when an `expand` event is fired from a raven-tree.
    */
   onExpand(source: RavenSource): void {
-    // Only fetch sources or load content if there are no children (i.e. sources have not been fetched or content has not been loaded yet).
-    if (!source.childIds.length) {
-      if (source.content.length > 0) {
-        this.store.dispatch(new sourceExplorerActions.LoadContent(source, toRavenSources(source.id, false, source.content)));
-      } else {
-        this.store.dispatch(new sourceExplorerActions.FetchSources(source));
-      }
-    } else {
-      // Otherwise if there are children (i.e. sources have already been fetched or content has already been loaded), then simply expand the source.
-      this.store.dispatch(new sourceExplorerActions.SourceExplorerExpand(source));
-    }
+    this.store.dispatch(new sourceExplorerActions.SourceExplorerExpandEvent(source.id));
   }
 
   /**
    * Event. Called when an `open` event is fired from a raven-tree.
    */
   onOpen(source: RavenSource): void {
-    this.store.dispatch(new sourceExplorerActions.FetchGraphData(source));
+    this.store.dispatch(new sourceExplorerActions.SourceExplorerOpenEvent(source.id));
   }
 
   /**

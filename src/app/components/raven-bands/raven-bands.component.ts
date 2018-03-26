@@ -22,6 +22,7 @@ import { SortablejsOptions } from 'angular-sortablejs';
 import {
   RavenCompositeBand,
   RavenSortMessage,
+  RavenSubBand,
   RavenTimeRange,
   StringTMap,
 } from './../../shared/models';
@@ -73,6 +74,29 @@ export class RavenBandsComponent implements OnChanges, OnInit {
         .filter(band => band.containerId === this.containerId)
         .sort((a, b) =>  a.sortOrder - b.sortOrder);
     }
+  }
+
+  /**
+   * trackBy for bands list.
+   * Returns a custom id that is just the band id concatenated with all the subBand ids,
+   * separated by a forward-slash.
+   * This is so anytime subBands change (i.e. added/removed) we re-render the band.
+   */
+  bandsTrackByFn(index: number, item: RavenCompositeBand) {
+    let id = item.id;
+
+    for (let i = 0, l = item.subBands.length; i < l; ++i) {
+      id += `/${item.subBands[i].id}`;
+    }
+
+    return id;
+  }
+
+  /**
+   * trackBy for subBands list.
+   */
+  subBandsTrackByFn(index: number, item: RavenSubBand) {
+    return item.id;
   }
 
   /**
