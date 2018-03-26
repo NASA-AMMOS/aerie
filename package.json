@@ -14,7 +14,7 @@
     "postinstall": "bower install",
     "sonarqube": "sonar-scanner",
     "start": "ng serve",
-    "test": "ng test",
+    "test": "ng test --code-coverage",
     "test-for-build": "ng test --single-run --browsers FirefoxHeadless"
   },
   "private": true,
