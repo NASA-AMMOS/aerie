@@ -338,7 +338,7 @@ export function updateSelectedBandIds(bands: RavenCompositeBand[], selectedBandI
  * `null` otherwise.
  */
 export function hasActivityByTypeBand(bands: RavenCompositeBand[], band: RavenSubBand) {
-  if (band.type === 'activity') {
+  if (band.type === 'activity' && (band as RavenActivityBand).sourceType === 'byType') {
     for (let i = 0, l = bands.length; i < l; ++i) {
       for (let j = 0, ll = bands[i].subBands.length; j < ll; ++j) {
         const subBand = bands[i].subBands[j] as RavenActivityBand;
