@@ -1,6 +1,9 @@
 [![Build Status](https://cae-jenkins2.jpl.nasa.gov/job/MPSA/job/SEQ/job/raven2/job/raven2%20build/job/master/badge/icon)](https://cae-jenkins2.jpl.nasa.gov/job/MPSA/job/SEQ/job/raven2/job/raven2%20build/job/master/)
+
 [![Quality Gate](http://100.64.92.84:9000/api/badges/measure?key=mgss.seq%3Araven2&metric=ncloc)](http://100.64.92.84:9000/dashboard/index/com.qualinsight.plugins.sonarqube:qualinsight-plugins-sonarqube-badges)
+
 [![Quality Gate](http://100.64.92.84:9000/api/badges/measure?key=mgss.seq%3Araven2&metric=bugs)](http://100.64.92.84:9000/dashboard/index/com.qualinsight.plugins.sonarqube:qualinsight-plugins-sonarqube-badges)
+
 [![Quality Gate](http://100.64.92.84:9000/api/badges/measure?key=mgss.seq%3Araven2&metric=critical_violations)](http://100.64.92.84:9000/dashboard/index/com.qualinsight.plugins.sonarqube:qualinsight-plugins-sonarqube-badges)
 
 
