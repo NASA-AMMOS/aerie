@@ -115,7 +115,7 @@ export class TimelineComponent implements OnDestroy {
    */
   onDeleteSubBand(subBand: RavenSubBand): void {
     this.store.dispatch(new timelineActions.RemoveSubBand(subBand.id));
-    this.store.dispatch(new sourceExplorerActions.SubBandIdRemove(subBand.id, subBand.sourceIds));
+    this.store.dispatch(new sourceExplorerActions.SubBandIdRemove(subBand.sourceIds, subBand.id));
   }
 
   /**

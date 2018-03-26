@@ -80,7 +80,7 @@ export class SubBandIdAdd implements Action {
 export class SubBandIdRemove implements Action {
   readonly type = SourceExplorerActionTypes.SubBandIdRemove;
 
-  constructor(public subBandId: string, public sourceIds: StringTMap<string>) {}
+  constructor(public sourceIds: StringTMap<string>, public subBandId: string) {}
 }
 
 export class UpdateSourceExplorer implements Action {
