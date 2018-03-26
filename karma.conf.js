@@ -14,7 +14,6 @@ module.exports = function (config) {
       require('karma-junit-reporter'),
       require('@angular/cli/plugins/karma')
     ],
-
     files: [
       { pattern: './src/test.ts', watched: false }
       ],
@@ -23,7 +22,6 @@ module.exports = function (config) {
     },    client:{
       clearContext: false // leave Jasmine Spec Runner output visible in browser
     },
-
     coverageIstanbulReporter: {
       reports: [ 'html', 'lcovonly' ],
       fixWebpackSourcePaths: true,
