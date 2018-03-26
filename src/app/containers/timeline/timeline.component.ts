@@ -56,6 +56,7 @@ export class TimelineComponent implements OnDestroy {
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
   selectedBandId: string;
+  selectedSubBandId: string;
   viewTimeRange: RavenTimeRange;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
@@ -91,6 +92,7 @@ export class TimelineComponent implements OnDestroy {
       this.labelWidth = state.labelWidth;
       this.maxTimeRange = state.maxTimeRange;
       this.selectedBandId = state.selectedBandId;
+      this.selectedSubBandId = state.selectedSubBandId;
       this.viewTimeRange = state.viewTimeRange;
       this.changeDetector.markForCheck();
     });
@@ -109,10 +111,11 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
-   * Event. Called when a `delete-band` event is fired from the raven-settings component.
+   * Event. Called when a `delete-sub-band` event is fired from the raven-settings component.
    */
-  onDeleteBand(subBand: RavenSubBand): void {
-    this.store.dispatch(new sourceExplorerActions.RemoveBands(subBand.sourceId, [subBand.id]));
+  onDeleteSubBand(subBand: RavenSubBand): void {
+    this.store.dispatch(new timelineActions.RemoveSubBand(subBand.id));
+    this.store.dispatch(new sourceExplorerActions.SubBandIdRemove(subBand.id, subBand.sourceIds));
   }
 
   /**

@@ -1,7 +1,7 @@
 {
   "name": "raven2",
   "version": "0.0.0",
-  "license": "MIT",
+  "private": true,
   "scripts": {
     "build": "ng build --dev --env=dev",
     "build-prod": "ng build --prod --env=prod",
@@ -17,14 +17,13 @@
     "test": "ng test",
     "test-for-build": "ng test --single-run --browsers FirefoxHeadless"
   },
-  "private": true,
   "dependencies": {
     "@angular/animations": "^5.2.4",
     "@angular/cdk": "^5.2.0",
     "@angular/common": "^5.2.4",
     "@angular/compiler": "^5.2.4",
     "@angular/core": "^5.2.4",
-    "@angular/flex-layout": "^2.0.0-beta.12",
+    "@angular/flex-layout": "2.0.0-beta.12",
     "@angular/forms": "^5.2.4",
     "@angular/http": "^5.2.4",
     "@angular/material": "^5.2.0",
@@ -45,7 +44,6 @@
     "material-design-icons": "^3.0.1",
     "rxjs": "^5.5.6",
     "sortablejs": "^1.7.0",
-    "uuid": "^3.2.1",
     "web-animations-js": "^2.3.1",
     "zone.js": "^0.8.20"
   },
@@ -57,7 +55,6 @@
     "@types/jasminewd2": "~2.0.2",
     "@types/lodash": "^4.14.89",
     "@types/node": "~6.0.60",
-    "@types/uuid": "^3.4.3",
     "bower": "1.8.2",
     "codelyzer": "^4.1.0",
     "jasmine-core": "~2.6.2",

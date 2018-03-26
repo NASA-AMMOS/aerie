@@ -100,7 +100,8 @@
               [bandsById]="bands | keyBy:'id'"
               [labelWidth]="labelWidth"
               [selectedBandId]="selectedBandId"
-              (deleteBand)="onDeleteBand($event)"
+              [selectedSubBandId]="selectedSubBandId"
+              (deleteSubBand)="onDeleteSubBand($event)"
               (updateBand)="onUpdateBand($event)"
               (updateSubBand)="onUpdateSubBand($event)"
               (updateTimeline)="onUpdateTimeline($event)">

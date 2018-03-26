@@ -1,4 +1,4 @@
-<div *ngFor="let childId of tree['0'].childIds">
+<ng-container *ngFor="let childId of tree['/'].childIds">
   <raven-tree
     [class]="tree[childId].name"
     [id]="childId"
@@ -10,4 +10,4 @@
     (open)="onOpen($event)"
     (select)="onSelect($event)">
   </raven-tree>
-</div>
+</ng-container>

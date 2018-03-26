@@ -12,9 +12,7 @@ import {
   Component,
   EventEmitter,
   Input,
-  OnChanges,
   Output,
-  SimpleChanges,
 } from '@angular/core';
 
 import {
@@ -30,32 +28,21 @@ import {
   styleUrls: ['./raven-settings.component.css'],
   templateUrl: './raven-settings.component.html',
 })
-export class RavenSettingsComponent implements OnChanges {
+export class RavenSettingsComponent {
   @Input() bandsById: StringTMap<RavenCompositeBand>;
   @Input() labelWidth: number;
   @Input() selectedBandId: string;
+  @Input() selectedSubBandId: string;
 
-  @Output() deleteBand: EventEmitter<RavenSubBand> = new EventEmitter<RavenSubBand>();
+  @Output() deleteSubBand: EventEmitter<RavenSubBand> = new EventEmitter<RavenSubBand>();
   @Output() updateBand: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
   @Output() updateSubBand: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
   @Output() updateTimeline: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
 
-  selectedSubBandId: string;
-
-  ngOnChanges(changes: SimpleChanges) {
-    const selectedBand = this.bandsById[this.selectedBandId];
-
-    if (changes.selectedBandId && selectedBand) {
-      // Set the selected sub-band to be the first band in the selected band's sub-bands.
-      this.selectedSubBandId = selectedBand.subBands[0].id;
-    } else if (changes.bandsById && selectedBand) {
-      // Every time our bands change, make sure the selected sub-band is still there.
-      // If it was removed, reset it to be the first band in the selected band's sub-bands.
-      const subBandIds = selectedBand.subBands.map(subBand => subBand.id);
-
-      if (!subBandIds.includes(this.selectedSubBandId)) {
-        this.selectedSubBandId = selectedBand.subBands[0].id;
-      }
-    }
+  /**
+   * trackBy for subBands.
+   */
+  trackByFn(index: number, item: RavenSubBand) {
+    return item.id;
   }
 }

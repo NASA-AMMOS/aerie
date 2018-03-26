@@ -28,7 +28,7 @@
     <div class="field">
       <button
         id="raven-settings-add-divider-band"
-        mat-button>
+        mat-raised-button>
         Add Divider Band
       </button>
     </div>
@@ -87,16 +87,17 @@
     class="field">
     <mat-form-field class="full-width">
       <mat-select
-        [(value)]="selectedSubBandId"
+        [value]="selectedSubBandId"
+        (change)="updateTimeline.emit({ update: { selectedSubBandId: $event.value } })"
         placeholder="Selected Band">
-        <ng-container *ngFor="let subBand of bandsById[selectedBandId].subBands">
+        <ng-container *ngFor="let subBand of bandsById[selectedBandId].subBands; trackBy: trackByFn">
           <mat-option [value]="subBand.id">{{subBand.label}}</mat-option>
         </ng-container>
       </mat-select>
     </mat-form-field>
   </div>
 
-  <ng-container *ngFor="let subBand of bandsById[selectedBandId].subBands">
+  <ng-container *ngFor="let subBand of bandsById[selectedBandId].subBands; trackBy: trackByFn">
     <ng-container *ngIf="subBand.id === selectedSubBandId">
       <!-- Label -->
       <div fxFlex="40" class="field">
@@ -287,14 +288,14 @@
         </mat-slide-toggle>
       </div>
 
-      <!-- Delete Band. -->
+      <!-- Delete Sub-Band. -->
       <div class="field">
         <button
-          id="raven-settings-delete-band"
-          mat-button
+          id="raven-settings-delete-sub-band"
+          mat-raised-button
           color="warn"
-          (click)="deleteBand.emit(subBand)">
-          Delete Band
+          (click)="deleteSubBand.emit(subBand)">
+          Delete Sub-Band
         </button>
       </div>
     </ng-container>

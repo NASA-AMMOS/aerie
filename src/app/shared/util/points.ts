@@ -7,19 +7,16 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { v4 } from 'uuid';
+import { uniqueId } from 'lodash';
 
 import {
   MpsServerActivityPoint,
   MpsServerActivityPointMetadata,
-  MpsServerPoint,
   MpsServerResourcePoint,
   MpsServerStatePoint,
-  RavenActivityBand,
   RavenActivityPoint,
   RavenResourcePoint,
   RavenStatePoint,
-  RavenSubBand,
   StringTMap,
 } from './../models';
 
@@ -77,32 +74,6 @@ export function getColorFromActivityMetadata(metadata: MpsServerActivityPointMet
 }
 
 /**
- * Helper that returns points for a given sub-band type.
- */
-export function getPointsBySubBandType(subBand: RavenSubBand, timelineData: MpsServerPoint[]) {
-  switch (subBand.type) {
-    case 'activity':
-      const { legends, maxTimeRange } = getActivityPointsByLegend(subBand.sourceId, timelineData as MpsServerActivityPoint[]);
-      return {
-        maxTimeRange,
-        points: legends[(subBand as RavenActivityBand).legend],
-      };
-    case 'resource':
-      return getResourcePoints(subBand.sourceId, timelineData as MpsServerResourcePoint[]);
-    case 'state':
-      return getStatePoints(subBand.sourceId, timelineData as MpsServerStatePoint[]);
-    default:
-      return {
-        maxTimeRange: {
-          end: 0,
-          start: 0,
-        },
-        points: [],
-      };
-  }
-}
-
-/**
  * Transforms an MpsServerActivityPoint to a RavenActivityPoint.
  */
 export function getActivityPoint(sourceId: string, data: MpsServerActivityPoint): RavenActivityPoint {
@@ -118,7 +89,6 @@ export function getActivityPoint(sourceId: string, data: MpsServerActivityPoint)
   const id = data.__document_id;
   const metadata = data.Metadata;
   const startTimestamp = data['Tstart Assigned'];
-  const uniqueId = v4();
 
   const start = utc(startTimestamp);
   const end = utc(endTimestamp);
@@ -153,7 +123,7 @@ export function getActivityPoint(sourceId: string, data: MpsServerActivityPoint)
     sourceId,
     start,
     startTimestamp,
-    uniqueId,
+    uniqueId: uniqueId(),
   };
 
   return point;
@@ -208,7 +178,6 @@ export function getResourcePoints(sourceId: string, timelineData: MpsServerResou
 
     const id = data.__document_id;
     const start = utc(data['Data Timestamp']);
-    const uniqueId = v4();
     const value = data['Data Value'];
 
     if (start < minTime) { minTime = start; }
@@ -219,7 +188,7 @@ export function getResourcePoints(sourceId: string, timelineData: MpsServerResou
       id,
       sourceId,
       start,
-      uniqueId,
+      uniqueId: uniqueId(),
       value,
     });
   }
@@ -249,7 +218,6 @@ export function getStatePoints(sourceId: string, timelineData: MpsServerStatePoi
     const id = data.__document_id;
     const start = utc(data['Data Timestamp']);
     const startTimestamp = data['Data Timestamp'];
-    const uniqueId = v4();
     const value = data['Data Value'];
 
     // This may or may not be correct. We're making an assumption that if there's no end,
@@ -269,7 +237,7 @@ export function getStatePoints(sourceId: string, timelineData: MpsServerStatePoi
       interpolateEnding: true,
       sourceId,
       start,
-      uniqueId,
+      uniqueId: uniqueId(),
       value,
     });
   }
@@ -280,5 +248,31 @@ export function getStatePoints(sourceId: string, timelineData: MpsServerStatePoi
       start: minTime,
     },
     points,
+  };
+}
+
+/**
+ * Helper. Recalculates the max time-range from a list of points.
+ *
+ * TODO: Replace 'any' with a concrete type.
+ */
+export function getMaxTimeRange(points: any[]) {
+  let maxTime = Number.MIN_SAFE_INTEGER;
+  let minTime = Number.MAX_SAFE_INTEGER;
+
+  for (let i = 0, l = points.length; i < l; ++i) {
+    const point = points[i];
+    const start = point.start;
+    let end = point.end;
+
+    if (!point.duration) { end = start; }
+
+    if (start < minTime) { minTime = start; }
+    if (end > maxTime) { maxTime = end; }
+  }
+
+  return {
+    end: maxTime,
+    start: minTime,
   };
 }

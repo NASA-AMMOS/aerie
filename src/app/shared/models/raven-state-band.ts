@@ -10,6 +10,7 @@
 import {
   RavenStatePoint,
   RavenTimeRange,
+  StringTMap,
 } from './index';
 
 export interface RavenStateBand {
@@ -27,8 +28,6 @@ export interface RavenStateBand {
   parentUniqueId: string | null;
   points: RavenStatePoint[];
   showTooltip: boolean;
-  sourceId: string;
-  sourceName: string;
-  sourceUrl: string;
+  sourceIds: StringTMap<string>;
   type: string;
 }
