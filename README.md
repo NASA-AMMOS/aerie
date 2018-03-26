@@ -1,6 +1,13 @@
+[![Build Status](https://cae-jenkins2.jpl.nasa.gov/buildStatus/icon?job=MPSA/SEQ/raven2/raven2%20build/master)](https://cae-jenkins2.jpl.nasa.gov/buildStatus/icon?job=MPSA/SEQ/raven2/raven2%20build/master) 
+
+
+
 # Raven2
 
 Resource and Activity Visualization Engine v2.
+
+RAVEN is a web-based platform included in the SEQ subsystem of the Advanced Multimission Operations System (AMMOS) and managed by the Multimission Ground System and Services (MGSS). It allows users to view science planning, spacecraft activities, resource usage and predicted data, or any time -based data, displayed in a timeline format via web browser. Subsequently, it can be viewed simultaneously by distributed users/teams for collaboration when creating, updating and validating activity plans and command sequences.
+
 
 ## Develop
 

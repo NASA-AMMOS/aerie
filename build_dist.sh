@@ -17,6 +17,9 @@ npm install
 # build
 npm run build-prod-mpsserver
 
+# static code analysis
+npm run sonarqube
+
 # tar up dist
 cd dist
 tar -czf raven2-$SEQBASETAG.tar.gz `ls -A`
