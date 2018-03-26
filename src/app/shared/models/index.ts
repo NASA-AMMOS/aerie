@@ -30,6 +30,7 @@ export * from './raven-activity-band';
 export * from './raven-activity-point';
 export * from './raven-composite-band';
 export * from './raven-divider-band';
+export * from './raven-point';
 export * from './raven-resource-band';
 export * from './raven-resource-point';
 export * from './raven-settings-update';

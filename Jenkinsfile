@@ -97,7 +97,7 @@ pipeline {
 				echo "Archiving artifacts in Jenkins..."
 				archiveArtifacts 'dist/*.tar.gz,*-src-*.tar.gz,*-cloc-*.txt,*/karma-test-results.xml'
 				script {
-					if (env.BRANCH_NAME.startsWith('release') || env.BRANCH_NAME.startsWith('PR-')) {
+					if ( env.BRANCH_NAME.equals('develop') || env.BRANCH_NAME.startsWith('release') || env.BRANCH_NAME.startsWith('PR-') ) {
 						echo "Release branch detected. Publishing files to Artifactory..."
 						// credentialsId refers to cmci account
 						def server = Artifactory.newServer url: 'https://cae-artifactory.jpl.nasa.gov/artifactory', credentialsId: '9db65bd3-f8f0-4de0-b344-449ae2782b86'
