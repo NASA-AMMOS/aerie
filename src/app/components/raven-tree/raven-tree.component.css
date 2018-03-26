@@ -1,6 +1,8 @@
 .tree {
   white-space: nowrap;
   cursor: pointer;
+  min-height: 25px;
+  padding-left: 5px;
 }
 
 mat-icon {

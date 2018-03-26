@@ -207,7 +207,7 @@ class FalconActivityBand extends FalconBand(Polymer.Element) {
         color: point.color,
         end: point.end,
         id: point.id,
-        label: this.label,
+        label: point.activityName,
         onGetTooltipText: this._onGetTooltipText.bind(this),
         opacity: 0.5,
         properties: {},

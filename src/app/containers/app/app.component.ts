@@ -9,16 +9,19 @@
 
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   OnDestroy,
 } from '@angular/core';
+
 import { Store } from '@ngrx/store';
+
 import { Observable } from 'rxjs/Observable';
+import { combineLatest } from 'rxjs/observable/combineLatest';
+import { takeUntil, tap } from 'rxjs/operators';
 import { Subject } from 'rxjs/Subject';
 
-import 'rxjs/add/observable/combineLatest';
-import 'rxjs/add/operator/takeUntil';
-
+import * as fromDisplay from './../../reducers/display';
 import * as fromSourceExplorer from './../../reducers/source-explorer';
 
 import * as layoutActions from './../../actions/layout';
@@ -30,25 +33,25 @@ import * as layoutActions from './../../actions/layout';
   templateUrl: './app.component.html',
 })
 export class AppComponent implements OnDestroy {
-  fetchGraphDataRequestPending$: Observable<boolean>;
-  fetchInitialSourcesRequestPending$: Observable<boolean>;
-  fetchSourcesRequestPending$: Observable<boolean>;
   loading$: Observable<boolean>;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
-  constructor(private store: Store<fromSourceExplorer.SourceExplorerState>) {
-    this.fetchGraphDataRequestPending$ = this.store.select(fromSourceExplorer.getFetchGraphDataRequestPending).takeUntil(this.ngUnsubscribe);
-    this.fetchInitialSourcesRequestPending$ = this.store.select(fromSourceExplorer.getFetchInitialSourcesRequestPending).takeUntil(this.ngUnsubscribe);
-    this.fetchSourcesRequestPending$ = this.store.select(fromSourceExplorer.getFetchSourcesRequestPending).takeUntil(this.ngUnsubscribe);
-
-    // Combine fetch pending observables for use in progress bar.
-    this.loading$ = Observable.combineLatest(
-      this.fetchGraphDataRequestPending$,
-      this.fetchInitialSourcesRequestPending$,
-      this.fetchSourcesRequestPending$,
-      (fetchGraphData, fetchInitialSources, fetchSources) => fetchGraphData || fetchInitialSources || fetchSources,
-    ).takeUntil(this.ngUnsubscribe);
+  constructor(
+    private changeDetector: ChangeDetectorRef,
+    private store: Store<fromSourceExplorer.SourceExplorerState>,
+  ) {
+    // Combine all fetch pending observables for use in progress bar.
+    this.loading$ = combineLatest(
+      this.store.select(fromDisplay.getPending),
+      this.store.select(fromSourceExplorer.getPending),
+      (displayPending, sourceExplorerPending) => {
+        return displayPending || sourceExplorerPending;
+      },
+    ).pipe(
+      tap(() => this.changeDetector.markForCheck()),
+      takeUntil(this.ngUnsubscribe),
+    );
   }
 
   ngOnDestroy() {
@@ -58,16 +61,13 @@ export class AppComponent implements OnDestroy {
 
   toggleDetailsDrawer() {
     this.store.dispatch(new layoutActions.ToggleDetailsDrawer());
-    dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize.
   }
 
   toggleLeftDrawer() {
     this.store.dispatch(new layoutActions.ToggleLeftDrawer());
-    dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize.
   }
 
   toggleSouthBandsDrawer() {
     this.store.dispatch(new layoutActions.ToggleSouthBandsDrawer());
-    dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize.
   }
 }

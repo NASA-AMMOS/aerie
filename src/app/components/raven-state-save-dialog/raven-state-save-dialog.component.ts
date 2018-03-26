@@ -7,27 +7,34 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
-import { AppState } from './../store';
+import {
+  Component,
+  Inject,
+} from '@angular/core';
 
-// Action Types.
-export enum RootActionTypes {
-  ResetState           = '[root] reset_state',
-  ResetStateFromObject = '[root] reset_state_from_object',
+import {
+  MAT_DIALOG_DATA,
+  MatDialogRef,
+} from '@angular/material';
+
+@Component({
+  selector: 'raven-state-save-dialog',
+  styleUrls: ['./raven-state-save-dialog.component.css'],
+  templateUrl: './raven-state-save-dialog.component.html',
+})
+export class RavenStateSaveDialogComponent {
+  name: string;
+
+  constructor(
+    public dialogRef: MatDialogRef<RavenStateSaveDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any,
+  ) {}
+
+  onCancel() {
+    this.dialogRef.close({ save: false });
+  }
+
+  onSave() {
+    this.dialogRef.close({ name: this.name, save: true });
+  }
 }
-
-// Actions.
-export class ResetState implements Action {
-  readonly type = RootActionTypes.ResetState;
-}
-
-export class ResetStateFromObject implements Action {
-  readonly type = RootActionTypes.ResetStateFromObject;
-
-  constructor(public state: AppState) {}
-}
-
-// Union type of all actions.
-export type RootAction =
-  ResetState |
-  ResetStateFromObject;

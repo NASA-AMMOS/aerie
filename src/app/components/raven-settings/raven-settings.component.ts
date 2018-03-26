@@ -35,7 +35,7 @@ export class RavenSettingsComponent {
   @Input() selectedBandId: string;
 
   @Output() deleteBand: EventEmitter<RavenSubBand> = new EventEmitter<RavenSubBand>();
-  @Output() updateAllBands: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
   @Output() updateBand: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
   @Output() updateSubBand: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
+  @Output() updateTimeline: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
 }

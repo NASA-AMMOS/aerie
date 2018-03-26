@@ -10,13 +10,17 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot } from '@angular/router';
 
-import { Actions, Effect } from '@ngrx/effects';
+import { Actions, Effect, ofType } from '@ngrx/effects';
 import { RouterNavigationAction } from '@ngrx/router-store';
 import { Action, Store } from '@ngrx/store';
+
 import { Observable } from 'rxjs/Observable';
 
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/withLatestFrom';
+import {
+  map,
+  mergeMap,
+  withLatestFrom,
+} from 'rxjs/operators';
 
 import { AppState } from './../../app/store';
 
@@ -25,11 +29,11 @@ import * as layoutActions from './../actions/layout';
 @Injectable()
 export class RouterEffects {
   @Effect()
-  routerNavigation$: Observable<Action> = this.actions$
-    .ofType<RouterNavigationAction<ActivatedRouteSnapshot>>('ROUTER_NAVIGATION')
-    .withLatestFrom(this.store$)
-    .map(([action, state]) => ({ action, state }))
-    .flatMap(({ state, action }) => {
+  routerNavigation$: Observable<Action> = this.actions$.pipe(
+    ofType<RouterNavigationAction<ActivatedRouteSnapshot>>('ROUTER_NAVIGATION'),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    mergeMap(({ state, action }) => {
       const actions: Action[] = [];
       const { layout } = action.payload.routerState.queryParams;
 
@@ -42,7 +46,8 @@ export class RouterEffects {
       }
 
       return actions;
-    });
+    }),
+  );
 
   constructor(
     private actions$: Actions,

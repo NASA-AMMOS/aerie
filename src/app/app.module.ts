@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
@@ -38,12 +39,15 @@ import {
 } from './containers';
 
 import {
-  BandsComponent,
+  RavenBandsComponent,
+  RavenConfirmDialogComponent,
   RavenSettingsComponent,
+  RavenStateSaveDialogComponent,
   RavenTreeComponent,
 } from './components';
 
 import {
+  DisplayEffects,
   RouterEffects,
   SourceExplorerEffects,
 } from './effects';
@@ -59,16 +63,24 @@ import {
 
 export const DECLARATIONS = [
   AppComponent,
-  BandsComponent,
   HasKeysPipe,
   KeyByPipe,
+  RavenBandsComponent,
+  RavenConfirmDialogComponent,
   RavenSettingsComponent,
+  RavenStateSaveDialogComponent,
   RavenTreeComponent,
   SourceExplorerComponent,
   TimelineComponent,
 ];
 
+export const ENTRY_COMPONENTS = [
+  RavenConfirmDialogComponent,
+  RavenStateSaveDialogComponent,
+];
+
 export const EFFECTS = [
+  DisplayEffects,
   RouterEffects,
   SourceExplorerEffects,
 ];
@@ -78,6 +90,7 @@ export const MODULES = [
   BrowserModule,
   BrowserAnimationsModule,
   HttpClientModule,
+  FormsModule,
   MaterialModule,
   AngularSplitModule,
   FlexLayoutModule,
@@ -107,6 +120,7 @@ export const SCHEMAS = [
     AppComponent,
   ],
   declarations: DECLARATIONS,
+  entryComponents: ENTRY_COMPONENTS,
   exports: DECLARATIONS,
   imports: MODULES,
   providers: PROVIDERS,

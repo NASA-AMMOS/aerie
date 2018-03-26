@@ -10,6 +10,7 @@
 import { Action } from '@ngrx/store';
 
 import {
+  BaseType,
   RavenSortMessage,
   RavenTimeRange,
   StringTMap,
@@ -17,12 +18,12 @@ import {
 
 // Action Types.
 export enum TimelineActionTypes {
-  SelectBand             = '[timeline] select_band',
-  SettingsUpdateAllBands = '[timeline] settings_update_all_bands',
-  SettingsUpdateBand     = '[timeline] settings_update_band',
-  SettingsUpdateSubBand  = '[timeline] settings_update_sub_band',
-  SortBands              = '[timeline] sort_bands',
-  UpdateViewTimeRange    = '[timeline] update_view_time_range',
+  SelectBand          = '[timeline] select_band',
+  SortBands           = '[timeline] sort_bands',
+  UpdateBand          = '[timeline] update_band',
+  UpdateSubBand       = '[timeline] update_sub_band',
+  UpdateTimeline      = '[timeline] update_timeline',
+  UpdateViewTimeRange = '[timeline] update_view_time_range',
 }
 
 // Actions.
@@ -32,28 +33,28 @@ export class SelectBand implements Action {
   constructor(public bandId: string) {}
 }
 
-export class SettingsUpdateAllBands implements Action {
-  readonly type = TimelineActionTypes.SettingsUpdateAllBands;
-
-  constructor(public prop: string, public value: any) {}
-}
-
-export class SettingsUpdateBand implements Action {
-  readonly type = TimelineActionTypes.SettingsUpdateBand;
-
-  constructor(public bandId: string, public prop: string, public value: any) {}
-}
-
-export class SettingsUpdateSubBand implements Action {
-  readonly type = TimelineActionTypes.SettingsUpdateSubBand;
-
-  constructor(public bandId: string, public subBandId: string, public prop: string, public value: any) {}
-}
-
 export class SortBands implements Action {
   readonly type = TimelineActionTypes.SortBands;
 
   constructor(public sort: StringTMap<RavenSortMessage>) {}
+}
+
+export class UpdateBand implements Action {
+  readonly type = TimelineActionTypes.UpdateBand;
+
+  constructor(public bandId: string, public update: StringTMap<BaseType>) {}
+}
+
+export class UpdateSubBand implements Action {
+  readonly type = TimelineActionTypes.UpdateSubBand;
+
+  constructor(public bandId: string, public subBandId: string, public update: StringTMap<BaseType>) {}
+}
+
+export class UpdateTimeline implements Action {
+  readonly type = TimelineActionTypes.UpdateTimeline;
+
+  constructor(public update: StringTMap<BaseType>) {}
 }
 
 export class UpdateViewTimeRange implements Action {
@@ -65,8 +66,8 @@ export class UpdateViewTimeRange implements Action {
 // Union type of all actions.
 export type TimelineAction =
   SelectBand |
-  SettingsUpdateAllBands |
-  SettingsUpdateBand |
-  SettingsUpdateSubBand |
   SortBands |
+  UpdateBand |
+  UpdateSubBand |
+  UpdateTimeline |
   UpdateViewTimeRange;

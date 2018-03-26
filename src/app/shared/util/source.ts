@@ -50,16 +50,20 @@ export function toSource(parentId: string, isServer: boolean, source: MpsServerS
   };
 
   if (newSource.kind === 'fs_category') {
-    fromCategory(source as MpsServerSourceCategory, newSource);
+    return fromCategory(source as MpsServerSourceCategory, newSource);
   } else if (newSource.kind === 'fs_dir') {
-    fromDir(isServer, source as MpsServerSourceDir, newSource);
+    return fromDir(isServer, source as MpsServerSourceDir, newSource);
   } else if (newSource.kind === 'fs_file') {
-    fromFile(source as MpsServerSourceFile, newSource);
+    return fromFile(source as MpsServerSourceFile, newSource);
   } else if (newSource.kind === 'fs_graphable') {
-    fromGraphable(source as MpsServerSourceGraphable, newSource);
+    if (newSource.name.includes('raven2-state')) {
+      return fromState(source as any, newSource);
+    } else {
+      return fromGraphable(source as MpsServerSourceGraphable, newSource);
+    }
+  } else {
+    return newSource;
   }
-
-  return newSource;
 }
 
 /**
@@ -71,48 +75,81 @@ export function toRavenSources(parentId: string, isServer: boolean, sources: Mps
 
 /**
  * Convert an MPS Server 'fs_category' source to a Raven source.
- * Mutates rSource.
  */
-export function fromCategory(mSource: MpsServerSourceCategory, rSource: RavenSource): void {
-  rSource.icon = 'fa fa-file-o';
-  rSource.content = mSource.contents;
+export function fromCategory(mSource: MpsServerSourceCategory, rSource: RavenSource): RavenSource {
+  return {
+    ...rSource,
+    content: mSource.contents,
+    icon: 'fa fa-file-o',
+  };
 }
 
 /**
  * Convert an MPS Server 'fs_dir' source to a Raven source.
- * Mutates rSource.
  */
-export function fromDir(isServer: boolean, mSource: MpsServerSourceDir, rSource: RavenSource): void {
-  if (isServer) {
-    rSource.icon = 'fa fa-database';
-  } else {
-    rSource.icon = 'fa fa-folder';
-  }
-
-  rSource.dbType = mSource.__db_type;
-  rSource.permissions = mSource.permissions;
-  rSource.url = mSource.contents_url;
+export function fromDir(isServer: boolean, mSource: MpsServerSourceDir, rSource: RavenSource): RavenSource {
+  return {
+    ...rSource,
+    actions: [
+      {
+        event: 'state-save',
+        name: 'Save State',
+      },
+    ],
+    dbType: mSource.__db_type,
+    icon: isServer ? 'fa fa-database' : 'fa fa-folder',
+    permissions: mSource.permissions,
+    url: mSource.contents_url,
+  };
 }
 
 /**
  * Convert an MPS Server 'fs_file' source to a Raven source.
- * Mutates rSource.
  */
-export function fromFile(mSource: MpsServerSourceFile, rSource: RavenSource): void {
-  rSource.dbType = mSource.__db_type;
-  rSource.icon = 'fa fa-file';
-  rSource.permissions = mSource.permissions;
-  rSource.url = mSource.contents_url;
+export function fromFile(mSource: MpsServerSourceFile, rSource: RavenSource): RavenSource {
+  return {
+    ...rSource,
+    dbType: mSource.__db_type,
+    icon: 'fa fa-file',
+    permissions: mSource.permissions,
+    url: mSource.contents_url,
+  };
 }
 
 /**
  * Convert an MPS Server 'fs_graphable' source to a Raven source.
- * Mutates rSource.
  */
-export function fromGraphable(mSource: MpsServerSourceGraphable, rSource: RavenSource): void {
-  rSource.expandable = false;
-  rSource.icon = 'fa fa-area-chart';
-  rSource.openable = true;
-  rSource.selectable = false;
-  rSource.url = mSource.data_url;
+export function fromGraphable(mSource: MpsServerSourceGraphable, rSource: RavenSource): RavenSource {
+  return {
+    ...rSource,
+    expandable: false,
+    icon: 'fa fa-area-chart',
+    openable: true,
+    selectable: false,
+    url: mSource.data_url,
+  };
+}
+
+/**
+ * Convert an MPS Server 'fs_state' source to a Raven source.
+ */
+export function fromState(mSource: any, rSource: RavenSource): RavenSource {
+  return {
+    ...rSource,
+    actions: [
+      {
+        event: 'state-delete',
+        name: 'Delete State',
+      },
+      {
+        event: 'state-load',
+        name: 'Load State',
+      },
+    ],
+    expandable: false,
+    icon: 'fa fa-area-chart',
+    openable: false,
+    selectable: true,
+    url: mSource.data_url,
+  };
 }

@@ -655,13 +655,15 @@ const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.I
   /**
    * CTL Event. Called after view is updated.
    *
-   * @param {any} e
-   * @param {any} ctlData
+   * @param {Number} start
+   * @param {Number} end
    *
    * @memberof FalconBand
    */
-  _onUpdateView() {
-    // TODO.
+  _onUpdateView(start, end) {
+    if (start !== 0 && end !== 0 && start < end) {
+      this._fire('falcon-update-view-time-range', { end, start });
+    }
   }
 
   /**
@@ -689,18 +691,19 @@ const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.I
 
   /**
    * Resizes the Time Axis and View Time Axis based on the labelWidth and parent offsetWidth.
+   * Note: It is very important that the `.timeline-0` class correctly references the parent container.
    *
    * @memberof FalconBand
    */
   _updateTimeAxisXCoordinates() {
-    const falcon = document.querySelector('.timeline');
+    const falcon = document.querySelector('.timeline-0');
     let offsetWidth = 0;
 
     if (falcon) {
       offsetWidth = falcon.parentElement.offsetWidth;
     }
     else {
-      console.warn('falcon-timeline: falcon-band: _updateTimeAxisXCoordinates: falcon is null: ', falcon);
+      console.error('falcon-timeline: falcon-band: _updateTimeAxisXCoordinates: falcon is null: ', falcon);
     }
 
     // Update main band.

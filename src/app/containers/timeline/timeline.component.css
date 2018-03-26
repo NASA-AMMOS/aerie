@@ -19,7 +19,8 @@ mat-card {
   text-align: center;
 }
 
-.timeline {
+.timeline-0,
+.timeline-1 {
   padding: 0.5em;
 }
 

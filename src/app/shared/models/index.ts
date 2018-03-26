@@ -7,6 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+export * from './base-type';
 export * from './map';
 export * from './mps-server-activity-metadata';
 export * from './mps-server-activity-point-metadata';
@@ -34,9 +35,11 @@ export * from './raven-resource-band';
 export * from './raven-resource-point';
 export * from './raven-settings-update';
 export * from './raven-sort-message';
+export * from './raven-source-action-event';
 export * from './raven-source-action';
 export * from './raven-source';
 export * from './raven-state-band';
 export * from './raven-state-point';
+export * from './raven-sub-band-point-data';
 export * from './raven-sub-band';
 export * from './raven-time-range';

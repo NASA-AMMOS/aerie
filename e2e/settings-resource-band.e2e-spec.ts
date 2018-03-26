@@ -8,7 +8,6 @@
  */
 
 import {
-  browser,
   by,
   element,
   Key,
@@ -16,7 +15,6 @@ import {
 
 import {
   AppPage,
-  clickByCss,
   clickById,
   clickByIds,
   get,
@@ -41,7 +39,7 @@ describe('raven2 - settings - resource band', () => {
     page.navigateTo();
     clickByIds(ids);
     clickById(`raven-tree-${resourceName}-open`);
-    clickByCss('.raven-band-0');
+    page.band0.click();
   });
 
   it('selected band settings should be present', () => {
@@ -80,19 +78,6 @@ describe('raven2 - settings - resource band', () => {
     const settingsHeight = await page.settingsHeight.getAttribute('aria-valuenow');
     expect(bandHeight.toString()).toEqual(initialResourceHeight);
     expect(settingsHeight).toEqual(initialResourceHeight);
-  });
-
-  it('changing the height in the settings should change the height in the band', async () => {
-    // Setting x: 1 for the dragAndDrop action changes height from 100 -> 251.
-    // This test could possibly fail if this 100 -> 251 mapping changes depending on the browser.
-    // TODO: Find a more deterministic way to do this. Commenting expect() out for now.
-    browser.actions().dragAndDrop(page.settingsHeight, { x: 1, y: 0 }).perform();
-
-    // const newHeight = 251;
-    // const bandHeight = await page.band.getAttribute('height');
-    // const settingsHeight = await page.settingsHeight.getAttribute('aria-valuenow');
-    // expect(bandHeight.toString()).toEqual(newHeight.toString());
-    // expect(settingsHeight).toEqual(newHeight.toString());
   });
 
   it('showTooltip in the settings should equal showTooltip in the band', async () => {
