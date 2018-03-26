@@ -1,12 +1,4 @@
-[![Build Status](https://cae-jenkins2.jpl.nasa.gov/job/MPSA/job/SEQ/job/raven2/job/raven2%20build/job/master/badge/icon)](https://cae-jenkins2.jpl.nasa.gov/job/MPSA/job/SEQ/job/raven2/job/raven2%20build/job/master/)
-
-[![Quality Gate](http://100.64.92.84:9000/api/badges/measure?key=mgss.seq%3Araven2&metric=ncloc)]()
-
-[![Quality Gate](http://100.64.92.84:9000/api/badges/measure?key=mgss.seq%3Araven2&metric=bugs)]()
-
-[![Quality Gate](http://100.64.92.84:9000/api/badges/measure?key=mgss.seq%3Araven2&metric=critical_violations)]()
-
-[![Lines of Code](http://100.64.92.84:9000/api/badges/measure?key=mgss.seq%3Araven2&metric=ncloc)](https://sonarqube.com/dashboard/index/mgss.seq%3Araven2)
+[![Quality Gate](http://100.64.92.84:9000/api/badges/measure?key=mgss.seq%3Araven2&metric=bugs)]() [![Quality Gate](http://100.64.92.84:9000/api/badges/measure?key=mgss.seq%3Araven2&metric=critical_violations)]() [![Lines of Code](http://100.64.92.84:9000/api/badges/measure?key=mgss.seq%3Araven2&metric=ncloc)](https://100.64.92.84:9000/dashboard/index/mgss.seq%3Araven2)
 
 
 
