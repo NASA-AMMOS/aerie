@@ -40,9 +40,10 @@
   <span>Resource Color</span>
 </div>
 <div class="field">
-  <input [(colorPicker)]="resourceColor" [style.background]="resourceColor" [cpCancelButton]="true" (colorPickerOpen)="onEventLog('colorPickerOpen', $event)"
-    (colorPickerClose)="onEventLog('colorPickerClose', $event)" (cpInputChange)="onEventLog('cpInputChange', $event)" (cpSliderDragStart)="onEventLog('cpSliderDragStart', $event)"
-    (cpSliderDragEnd)="onEventLog('cpSliderDragEnd', $event)" [cpPresetColors]="colorPalette" [value]="resourceColor" (colorPickerChange)="changeResourceColor.emit($event);resourceColor=$event"
+  <input [value]="resourceColor" [(colorPicker)]="resourceColor" [style.background]="resourceColor" [cpCancelButton]="true" (colorPickerOpen)="onEventLog('colorPickerOpen', $event)"
+    (cpInputChange)="onEventLog('cpInputChange', $event)" (cpSliderDragStart)="onEventLog('cpSliderDragStart', $event)"
+    (cpSliderDragEnd)="onEventLog('cpSliderDragEnd', $event)" [cpPresetColors]="colorPalette" (colorPickerChange)="onEventLog('colorPickerChange', $event)"
+    (colorPickerClose)="onColorPickerClose()" (colorPickerCancel)="onEventLog('Cancel', $event)"
   />
 </div>
 <!--div class="buttondiv" fxLayout="row" fxLayoutGap="50px">

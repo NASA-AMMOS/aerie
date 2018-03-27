@@ -45,6 +45,7 @@ import {
 // Timeline State Interface.
 export interface TimelineState {
   bands: RavenCompositeBand[];
+  colorPalette: string[];
   currentTimeCursor: boolean;
   labelFontSize: number;
   labelFontStyle: string;
@@ -60,6 +61,14 @@ export interface TimelineState {
 // Timeline Initial State.
 export const initialState: TimelineState = {
   bands: [],
+  colorPalette: [
+    '#000000', // black
+    '#ff0000', // red
+    '#00ff00', // green
+    '#0000ff', // blue
+    '#ffa500', // orange
+    '#ffff00', // yellow
+    ],
   currentTimeCursor: false,
   labelFontSize: 9,
   labelFontStyle: 'Georgia',
@@ -111,7 +120,11 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
     case TimelineActionTypes.ChangeLabelFontStyle:
       return { ...state, labelFontStyle: action.labelFontStyle };
     case TimelineActionTypes.ChangeResourceColor:
-      return { ...state, resourceColor: action.resourceColor };
+      const colors = state.colorPalette.slice(0);
+      if (!colors.includes(action.resourceColor)) {
+        colors.push(action.resourceColor);
+      }
+      return { ...state, resourceColor: action.resourceColor, colorPalette: colors };
     default:
       return state;
   }
@@ -239,8 +252,8 @@ export function removeBandsOrPointsForSource(state: TimelineState, action: Remov
       }, []),
     }))
     .filter(
-      band => band.subBands.length !== 0,
-    );
+    band => band.subBands.length !== 0,
+  );
 
   bands = updateSortOrder(bands);
 
@@ -262,8 +275,8 @@ export function removeSubBand(state: TimelineState, action: RemoveSubBand): Time
       subBands: band.subBands.filter(subBand => subBand.id !== action.subBandId),
     }))
     .filter(
-      band => band.subBands.length !== 0,
-    );
+    band => band.subBands.length !== 0,
+  );
 
   bands = updateSortOrder(bands);
 

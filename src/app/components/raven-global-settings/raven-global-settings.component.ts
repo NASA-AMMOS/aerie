@@ -15,6 +15,7 @@ export class RavenGlobalSettingsComponent {
   @Input() labelFontSize: number;
   @Input() labelFontStyle: string;
   @Input() resourceColor: string;
+  @Input() colorPalette: string[];
 
   @Output() changeResourceColor: EventEmitter<string> = new EventEmitter<string>();
   @Output() changeLabelWidth: EventEmitter<number> = new EventEmitter<number>();
@@ -31,6 +32,10 @@ export class RavenGlobalSettingsComponent {
   public onEventLog(event: string, data: any): void {
     console.log('log: ' + event, data);
     console.log('color:' + this.resourceColor);
+  }
+
+  public onColorPickerClose() {
+    this.changeResourceColor.emit(this.resourceColor);
   }
 
   public onChangeLabelWidth() {

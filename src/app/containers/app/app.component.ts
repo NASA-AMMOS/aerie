@@ -38,6 +38,7 @@ export class AppComponent implements OnDestroy {
   loading$: Observable<boolean>;
 
   resourceColor: string;
+  colorPalette: string[];
   labelWidth: number;
   tooltip: boolean;
   currentTimeCursor: boolean;
@@ -67,6 +68,7 @@ export class AppComponent implements OnDestroy {
       takeUntil(this.ngUnsubscribe),
     ).subscribe(state => {
       this.resourceColor = state.resourceColor;
+      this.colorPalette = state.colorPalette;
       this.labelWidth = state.labelWidth;
       this.tooltip = state.tooltip;
       this.currentTimeCursor = state.currentTimeCursor;
