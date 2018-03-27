@@ -26,6 +26,7 @@ import * as fromSourceExplorer from './../../reducers/source-explorer';
 import * as fromTimeline from './../../reducers/timeline';
 
 import * as layoutActions from './../../actions/layout';
+import * as timelineActions from './../../actions/timeline';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -93,14 +94,25 @@ export class AppComponent implements OnDestroy {
   }
 
   onChangeLabelWidth(labelWidth: number) {
-    console.log('label width to store:' + labelWidth);
+    this.store.dispatch(new timelineActions.ChangeLabelWidth(labelWidth));
   }
 
+  onChangeLabelFontSize(labelFontSize: number) {
+    this.store.dispatch(new timelineActions.ChangeLabelFontSize(labelFontSize));
+  }
+
+  onChangeLabelFontStyle(labelFontStyle: string) {
+    this.store.dispatch(new timelineActions.ChangeLabelFontStyle(labelFontStyle));
+  }
   onChangeResourceColor(resourceColor: string) {
-    console.log('resource color to store:' + resourceColor);
+    this.store.dispatch(new timelineActions.ChangeResourceColor(resourceColor));
   }
 
   onChangeTooltip(tooltip: boolean) {
-    console.log('tooltip to store:' + tooltip);
+    this.store.dispatch(new timelineActions.ChangeTooltip(tooltip));
+  }
+
+  onChangeCurrentTimeCursor(currentTimeCursor: boolean) {
+    this.store.dispatch(new timelineActions.ChangeCurrentTimeCursor(currentTimeCursor));
   }
 }

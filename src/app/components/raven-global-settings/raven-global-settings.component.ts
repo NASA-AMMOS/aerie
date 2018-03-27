@@ -33,45 +33,15 @@ export class RavenGlobalSettingsComponent {
     console.log('color:' + this.resourceColor);
   }
 
-  public onChangeColor(color: string): void {
-    console.log('color changed color:' + color);
-
-    // emit new color
-    this.changeResourceColor.emit(color);
-  }
-
-  public onLabelWidthChange() {
-    console.log('label width changed' + this.labelWidth);
-
+  public onChangeLabelWidth() {
     // emit new labelWidth
     this.changeLabelWidth.emit(this.labelWidth);
   }
 
-  public onLabelFontSizeChange() {
-    console.log('label width changed' + this.labelWidth);
-
+  public onChangeLabelFontSize(size: number) {
+    console.log('label font size changed' + size);
+    console.log('2. label font size changed' + this.labelFontSize);
     // emit new labelWidth
     this.changeLabelFontSize.emit(this.labelFontSize);
-  }
-
-  public onLabelFontStyleChange() {
-    console.log('label width changed' + this.labelWidth);
-
-    // emit new labelWidth
-    this.changeLabelFontStyle.emit(this.labelFontStyle);
-  }
-
-  public onTooltipChange() {
-    console.log('tooltip changed' + this.tooltip);
-
-    // emit new labelWidth
-    this.changeTooltip.emit(this.tooltip);
-  }
-
-  public onCurrentTimeCursorChange() {
-    console.log('current time cursor changed' + this.currentTimeCursor);
-
-    // emit new labelWidth
-    this.changeCurrentTimeCursor.emit(this.currentTimeCursor);
   }
 }

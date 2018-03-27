@@ -2,39 +2,39 @@
 <div fxLayout="column" class="field">
   <div fxLayout="row" fxLayoutGap="50px" fxLayoutAlign="start center">
     <mat-form-field>
-      <mat-select placeholder="Current Time Cursor" [value]="Disable" (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
-        <mat-option [value]="1">Enable</mat-option>
-        <mat-option [value]="2">Disable</mat-option>
+      <mat-select placeholder="Current Time Cursor" [value]="currentTimeCursor" (selectionChange)="changeCurrentTimeCursor.emit($event.value)">
+        <mat-option [value]="true">Enable</mat-option>
+        <mat-option [value]="false">Disable</mat-option>
       </mat-select>
     </mat-form-field>
     <mat-form-field>
-      <mat-select placeholder="Tooltip" [value]="On" (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
-        <mat-option [value]="1">On</mat-option>
-        <mat-option [value]="2">Off</mat-option>
+      <mat-select placeholder="Tooltip" [value]="tooltip" (selectionChange)="changeTooltip.emit($event.value)">
+        <mat-option [value]="true">Enable</mat-option>
+        <mat-option [value]="false">Disable</mat-option>
       </mat-select>
     </mat-form-field>
   </div>
   <div fxLayout="row" fxLayoutGap="50px" fxLayoutAlign="start center">
     <mat-form-field>
-      <mat-select placeholder="Label Font Size" [value]="On" (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
-        <mat-option [value]="8">+</mat-option>
-        <mat-option [value]="10">-</mat-option>
-      </mat-select>
-    </mat-form-field>
-    <mat-form-field>
-      <mat-select placeholder="Font Style" [value]="On" (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
-        <mat-option [value]="1">Arial</mat-option>
-        <mat-option [value]="2">Helvetica</mat-option>
-        <mat-option [value]="3">Times New Roman</mat-option>
-        <mat-option [value]="4">Courier</mat-option>
-        <mat-option [value]="4">Georgia</mat-option>
+      <mat-select placeholder="Font Style" [value]="labelFontStyle" (selectionChange)="changeLabelFontStyle.emit($event.value)">
+        <mat-option [value]="'Arial'">Arial</mat-option>
+        <mat-option [value]="'Helvetica'">Helvetica</mat-option>
+        <mat-option [value]="'Times New Roman'">Times New Roman</mat-option>
+        <mat-option [value]="'Courier'">Courier</mat-option>
+        <mat-option [value]="'Georgia'">Georgia</mat-option>
       </mat-select>
     </mat-form-field>
   </div>
 </div>
 <div class="fieldLabel">
-    <span>Label Width</span>
-    <input mat-input [(ngModel)]="labelWidth" class="labelWidth" type="number" name="labelWidth" step="5" min="5" max="300" (click)="onLabelWidthChange()">
+  <span>Label Font Size</span>
+  <input mat-input [(ngModel)]="labelFontSize" class="labelFontSize" type="number" name="labelFontSize" step="1" min="5" max="32"
+    (click)="onChangeLabelFontSize()" />
+</div>
+<div class="fieldLabel">
+  <span>Label Width</span>
+  <input mat-input [(ngModel)]="labelWidth" class="labelWidth" type="number" name="labelWidth" step="5" min="5" max="300" (click)="onChangeLabelWidth()"
+  />
 </div>
 <div class="fieldLabel">
   <span>Resource Color</span>
@@ -42,8 +42,7 @@
 <div class="field">
   <input [(colorPicker)]="resourceColor" [style.background]="resourceColor" [cpCancelButton]="true" (colorPickerOpen)="onEventLog('colorPickerOpen', $event)"
     (colorPickerClose)="onEventLog('colorPickerClose', $event)" (cpInputChange)="onEventLog('cpInputChange', $event)" (cpSliderDragStart)="onEventLog('cpSliderDragStart', $event)"
-    (cpSliderDragEnd)="onEventLog('cpSliderDragEnd', $event)" [cpPresetColors]="colorPalette" [value]="resourceColor"
-    (colorPickerChange)="onChangeColor($event);resourceColor=$event"
+    (cpSliderDragEnd)="onEventLog('cpSliderDragEnd', $event)" [cpPresetColors]="colorPalette" [value]="resourceColor" (colorPickerChange)="changeResourceColor.emit($event);resourceColor=$event"
   />
 </div>
 <!--div class="buttondiv" fxLayout="row" fxLayoutGap="50px">

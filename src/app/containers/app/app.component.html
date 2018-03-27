@@ -46,7 +46,9 @@
 <mat-sidenav-container class="global-settings-drawer-container">
   <mat-sidenav position="end" [fixedInViewport]="true" [fixedTopGap]="40" #globalSettingsDrawer mode="over">
     <raven-global-settings [currentTimeCursor]="currentTimeCursor" [tooltip]="tooltip" [labelFontSize]="labelFontSize" [labelFontStyle]="labelFontStyle"
-      [labelWidth]="labelWidth" [resourceColor]="resourceColor" (changeResourceColor)="onChangeResourceColor" (changeLabelWidth)="onChangeLabelWidth"></raven-global-settings>
+      [labelWidth]="labelWidth" [resourceColor]="resourceColor" (changeResourceColor)="onChangeResourceColor($event)" (changeLabelWidth)="onChangeLabelWidth($event)"
+      (changeLabelFontSize)="onChangeLabelFontSize($event)" (changeLabelFontStyle)="onChangeLabelFontStyle($event)" (changeTooltip)="onChangeTooltip($event)"
+      (changeCurrentTimeCursor)="onChangeCurrentTimeCursor($event)"></raven-global-settings>
     <div style="text-align:center;">
       <button mat-raised-button class="done-button" (click)="globalSettingsDrawer.toggle()">Done</button>
     </div>

@@ -62,7 +62,7 @@ export const initialState: TimelineState = {
   currentTimeCursor: false,
   labelFontSize: 9,
   labelFontStyle: 'Georgia',
-  labelWidth: 150,
+  labelWidth: 100,
   maxTimeRange: { end: 0, start: 0 },
   overlayMode: false,
   resourceColor: '#000000',
@@ -93,6 +93,18 @@ export function reducer(state: TimelineState = initialState, action: SourceExplo
       return updateTimeline(state, action);
     case TimelineActionTypes.UpdateViewTimeRange:
       return { ...state, viewTimeRange: { ...action.viewTimeRange } };
+    case TimelineActionTypes.ChangeCurrentTimeCursor:
+      return { ...state, currentTimeCursor: action.currentTimeCursor };
+    case TimelineActionTypes.ChangeTooltip:
+      return { ...state, tooltip: action.tooltip };
+    case TimelineActionTypes.ChangeLabelFontSize:
+      return { ...state, labelFontSize: action.labelFontSize };
+    case TimelineActionTypes.ChangeLabelWidth:
+      return { ...state, labelWidth: action.labelWidth };
+    case TimelineActionTypes.ChangeLabelFontStyle:
+      return { ...state, labelFontStyle: action.labelFontStyle };
+    case TimelineActionTypes.ChangeResourceColor:
+      return { ...state, resourceColor: action.resourceColor };
     default:
       return state;
   }
@@ -112,7 +124,7 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
 
         // Add new band to a currently existing band.
         if (shouldOverlay(state.overlayMode, state.selectedBandId, band.id) && !hasActivityLegend(state.bands, newBand as RavenActivityBand) ||
-            hasActivityLegend([band], newBand as RavenActivityBand)) {
+          hasActivityLegend([band], newBand as RavenActivityBand)) {
           band = {
             ...band,
             subBands: band.subBands.concat({
@@ -154,8 +166,8 @@ export function addBands(state: TimelineState, action: FetchGraphDataSuccess): T
 export function removeBands(state: TimelineState, action: RemoveBands): TimelineState {
   let bands = state.bands
     .map(band => ({
-        ...band,
-        subBands: band.subBands.filter(subBand => !action.bandIds.includes(subBand.id)),
+      ...band,
+      subBands: band.subBands.filter(subBand => !action.bandIds.includes(subBand.id)),
     }))
     .filter(band => band.subBands.length !== 0);
 
