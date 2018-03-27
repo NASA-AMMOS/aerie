@@ -7,33 +7,35 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { keyBy, map, omit } from 'lodash';
-
-import { createFeatureSelector, createSelector } from '@ngrx/store';
+import {
+  keyBy,
+  map,
+  omit,
+} from 'lodash';
 
 import {
-  FetchGraphDataSuccess,
-  FetchInitialSourcesSuccess,
-  FetchSourcesSuccess,
-  LoadContent,
-  RemoveBands,
+  createFeatureSelector,
+  createSelector,
+} from '@ngrx/store';
+
+import {
+  NewSources,
   SourceExplorerAction,
   SourceExplorerActionTypes,
   SourceExplorerSelect,
+  SubBandIdAdd,
+  SubBandIdRemove,
   UpdateSourceExplorer,
 } from './../actions/source-explorer';
 
 import {
   RavenSource,
-  RavenSubBand,
   StringTMap,
 } from './../shared/models/index';
 
 // Source Explorer State Interface.
 export interface SourceExplorerState {
-  fetchGraphDataRequestPending: boolean;
-  fetchInitialSourcesRequestPending: boolean;
-  fetchSourcesRequestPending: boolean;
+  fetchPending: boolean;
   initialSourcesLoaded: boolean;
   selectedSourceId: string;
   treeBySourceId: StringTMap<RavenSource>;
@@ -41,16 +43,13 @@ export interface SourceExplorerState {
 
 // Source Explorer Initial State.
 export const initialState: SourceExplorerState = {
-  fetchGraphDataRequestPending: false,
-  fetchInitialSourcesRequestPending: false,
-  fetchSourcesRequestPending: false,
+  fetchPending: false,
   initialSourcesLoaded: false,
   selectedSourceId: '',
   treeBySourceId: {
     // Note: The root source in the source explorer tree is never displayed.
-    '0': {
+    '/': {
       actions: [],
-      bandIds: {},
       childIds: [],
       content: [],
       dbType: '',
@@ -58,7 +57,7 @@ export const initialState: SourceExplorerState = {
       expandable: false,
       expanded: false,
       icon: '',
-      id: '0',
+      id: '/',
       isServer: false,
       kind: '',
       label: 'root',
@@ -72,6 +71,7 @@ export const initialState: SourceExplorerState = {
       pinned: false,
       selectable: false,
       selected: false,
+      subBandIds: {},
       url: '',
     },
   },
@@ -83,135 +83,43 @@ export const initialState: SourceExplorerState = {
  */
 export function reducer(state: SourceExplorerState = initialState, action: SourceExplorerAction): SourceExplorerState {
   switch (action.type) {
-    case SourceExplorerActionTypes.FetchGraphData:
-      return { ...state, fetchGraphDataRequestPending: true };
-    case SourceExplorerActionTypes.FetchGraphDataFailure:
-      return { ...state, fetchGraphDataRequestPending: false };
-    case SourceExplorerActionTypes.FetchGraphDataSuccess:
-      return addBands(state, action);
     case SourceExplorerActionTypes.FetchInitialSources:
-      return { ...state, fetchInitialSourcesRequestPending: true };
-    case SourceExplorerActionTypes.FetchInitialSourcesFailure:
-      return { ...state, fetchInitialSourcesRequestPending: false };
-    case SourceExplorerActionTypes.FetchInitialSourcesSuccess:
-      return fetchInitialSourcesSuccess(state, action);
-    case SourceExplorerActionTypes.FetchSources:
-      return { ...state, fetchSourcesRequestPending: true };
-    case SourceExplorerActionTypes.FetchSourcesFailure:
-      return { ...state, fetchSourcesRequestPending: false };
-    case SourceExplorerActionTypes.FetchSourcesSuccess:
-    case SourceExplorerActionTypes.LoadContent:
+      return { ...state, fetchPending: true };
+    case SourceExplorerActionTypes.NewSources:
       return newSources(state, action);
-    case SourceExplorerActionTypes.RemoveBands:
-      return removeBands(state, action);
-    case SourceExplorerActionTypes.SourceExplorerClose:
-      return updateTreeSource(state, action.source.id, 'opened', false);
-    case SourceExplorerActionTypes.SourceExplorerCollapse:
-      return updateTreeSource(state, action.source.id, 'expanded', false);
-    case SourceExplorerActionTypes.SourceExplorerExpand:
-      return updateTreeSource(state, action.source.id, 'expanded', true);
-    case SourceExplorerActionTypes.SourceExplorerOpen:
-      return updateTreeSource(state, action.source.id, 'opened', true);
-    case SourceExplorerActionTypes.SourceExplorerPin:
-      return updateTreeSource(state, action.source.id, 'pinned', true);
+    case SourceExplorerActionTypes.SourceExplorerExpandEvent:
+    case SourceExplorerActionTypes.SourceExplorerOpenEvent:
+      return { ...state, fetchPending: true };
     case SourceExplorerActionTypes.SourceExplorerSelect:
       return selectSource(state, action);
-    case SourceExplorerActionTypes.SourceExplorerUnpin:
-      return updateTreeSource(state, action.source.id, 'pinned', false);
+    case SourceExplorerActionTypes.SubBandIdAdd:
+      return subBandIdAdd(state, action);
+    case SourceExplorerActionTypes.SubBandIdRemove:
+      return subBandIdRemove(state, action);
     case SourceExplorerActionTypes.UpdateSourceExplorer:
       return updateSourceExplorer(state, action);
+    case SourceExplorerActionTypes.UpdateTreeSource:
+      return updateTreeSource(state, action.sourceId, action.prop, action.value);
     default:
       return state;
   }
 }
 
 /**
- * Reduction Helper. Called when reducing the 'FetchGraphDataSuccess' action.
+ * Reduction Helper. Called when reducing the 'NewSources' action.
  *
- * Called when we need to associate one source with one or more band ids.
+ * Generates a new treeBySourceId data structure with updated childIds for the action.sourceId,
+ * and the new child sources keyed off of their id.
  */
-export function addBands(state: SourceExplorerState, action: FetchGraphDataSuccess): SourceExplorerState {
-  return {
-    ...state,
-    fetchGraphDataRequestPending: false,
-    treeBySourceId: {
-      ...state.treeBySourceId,
-      [action.source.id]: {
-        ...state.treeBySourceId[action.source.id],
-        bandIds: {
-          ...state.treeBySourceId[action.source.id].bandIds,
-          ...action.newBands.reduce((bandIds: StringTMap<string>, band: RavenSubBand) => {
-            bandIds[band.id] = band.name;
-            return bandIds;
-          }, {}),
-        },
-        opened: true,
-      },
-    },
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'RemoveBands' action.
- *
- * Called when we need to de-associate one source with one or more band.
- */
-export function removeBands(state: SourceExplorerState, action: RemoveBands): SourceExplorerState {
-  const bandIds = omit(state.treeBySourceId[action.sourceId].bandIds, action.bandIds);
-  const opened = Object.keys(bandIds).length > 0 ? true : false;
-
+export function newSources(state: SourceExplorerState, action: NewSources): SourceExplorerState {
   return {
     ...state,
     treeBySourceId: {
       ...state.treeBySourceId,
+      ...keyBy(action.sources, 'id'),
       [action.sourceId]: {
         ...state.treeBySourceId[action.sourceId],
-        bandIds,
-        opened,
-      },
-    },
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'FetchInitialSourcesSuccess' action.
- *
- * Generates a new treeBySourceId data structure with updated childIds for the root source,
- * and the new child sources keyed off of their id.
- */
-export function fetchInitialSourcesSuccess(state: SourceExplorerState, action: FetchInitialSourcesSuccess): SourceExplorerState {
-  return {
-    ...state,
-    fetchInitialSourcesRequestPending: false,
-    initialSourcesLoaded: true,
-    treeBySourceId: {
-      ...state.treeBySourceId,
-      ...keyBy(action.sources, 'id'),
-      '0': {
-        ...state.treeBySourceId['0'],
         childIds: map(action.sources, 'id'),
-      },
-    },
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'FetchSourcesSuccess' or 'LoadContent' action.
- *
- * Generates a new treeBySourceId data structure with updated childIds for the action.source,
- * and the new child sources keyed off of their id.
- */
-export function newSources(state: SourceExplorerState, action: FetchSourcesSuccess | LoadContent): SourceExplorerState {
-  return {
-    ...state,
-    fetchSourcesRequestPending: false,
-    treeBySourceId: {
-      ...state.treeBySourceId,
-      ...keyBy(action.sources, 'id'),
-      [action.source.id]: {
-        ...state.treeBySourceId[action.source.id],
-        childIds: map(action.sources, 'id'),
-        expanded: true,
       },
     },
   };
@@ -244,9 +152,52 @@ export function selectSource(state: SourceExplorerState, action: SourceExplorerS
 }
 
 /**
+ * Reduction Helper. Called when reducing the 'SubBandIdAdd' action.
+ */
+export function subBandIdAdd(state: SourceExplorerState, action: SubBandIdAdd): SourceExplorerState {
+  return {
+    ...state,
+    treeBySourceId: {
+      ...state.treeBySourceId,
+      [action.sourceId]: {
+        ...state.treeBySourceId[action.sourceId],
+        subBandIds: {
+          ...state.treeBySourceId[action.sourceId].subBandIds,
+          [action.subBandId]: action.subBandId,
+        },
+      },
+    },
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'SubBandIdRemove' action.
+ */
+export function subBandIdRemove(state: SourceExplorerState, action: SubBandIdRemove): SourceExplorerState {
+  return {
+    ...state,
+    treeBySourceId: {
+      ...state.treeBySourceId,
+      ...Object.keys(action.sourceIds).reduce((sourceIds, sourceId) => {
+        const subBandIds = omit(state.treeBySourceId[sourceId].subBandIds, action.subBandId);
+        const opened = Object.keys(subBandIds).length > 0 ? true : false;
+
+        sourceIds[sourceId] = {
+          ...state.treeBySourceId[sourceId],
+          opened,
+          subBandIds,
+        };
+
+        return sourceIds;
+      }, {}),
+    },
+  };
+}
+
+/**
  * Helper. Updates a source prop with a value.
  */
-export function updateTreeSource(state: SourceExplorerState, id: string, prop: string, value: string | number | boolean): SourceExplorerState {
+export function updateTreeSource(state: SourceExplorerState, id: string, prop: string, value: string | number | boolean | string[]): SourceExplorerState {
   return {
     ...state,
     treeBySourceId: {
@@ -287,5 +238,5 @@ export const getSourceExplorerState = createFeatureSelector<SourceExplorerState>
  * together to select different pieces of state.
  */
 export const getInitialSourcesLoaded = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.initialSourcesLoaded);
-export const getPending = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.fetchGraphDataRequestPending || state.fetchInitialSourcesRequestPending || state.fetchSourcesRequestPending);
+export const getPending = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.fetchPending);
 export const getTreeBySourceId = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.treeBySourceId);

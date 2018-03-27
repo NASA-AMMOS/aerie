@@ -2,11 +2,10 @@
   class="sortable-bands"
   [sortablejs]="sortedAndFilteredBands"
   [sortablejsOptions]="sortablejsOptions">
-  <div *ngFor="let band of sortedAndFilteredBands; let i = index">
+  <ng-container *ngFor="let band of sortedAndFilteredBands; index as i; trackBy: bandsTrackByFn">
     <!-- Composite Band. -->
     <falcon-composite-band
       [class]="'raven-band-' + i"
-      [ngClass]="{'selected': band.id === selectedBandId}"
       [height]="band.height"
       [heightPadding]="band.heightPadding"
       [id]="band.id"
@@ -14,7 +13,7 @@
       [maxTimeRange]="maxTimeRange"
       [showTooltip]="band.showTooltip"
       [viewTimeRange]="viewTimeRange">
-      <ng-container *ngFor="let subBand of band.subBands; let j = index">
+      <ng-container *ngFor="let subBand of band.subBands; index as j; trackBy: subBandsTrackByFn">
         <!-- Activity Band. -->
         <falcon-activity-band
           *ngIf="subBand.type === 'activity'"
@@ -105,5 +104,5 @@
         </falcon-state-band>
       </ng-container>
     </falcon-composite-band>
-  </div>
+  </ng-container>
 </div>

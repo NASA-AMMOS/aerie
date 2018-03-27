@@ -14,17 +14,27 @@ module.exports = function (config) {
       require('karma-junit-reporter'),
       require('@angular/cli/plugins/karma')
     ],
-    client:{
+    files: [
+      { pattern: './src/test.ts', watched: false }
+      ],
+    mime: {
+      'text/x-typescript': ['ts','tsx']
+    },    client:{
       clearContext: false // leave Jasmine Spec Runner output visible in browser
     },
     coverageIstanbulReporter: {
       reports: [ 'html', 'lcovonly' ],
-      fixWebpackSourcePaths: true
+      fixWebpackSourcePaths: true,
+      dir: './reports/coverage', // base output directory
+      'report-config': {
+        html: {},
+        lcovonly: { file: 'coverage.lcov' }
+      }
     },
     angularCli: {
       environment: 'dev'
     },
-    reporters: ['progress', 'kjhtml', 'junit'],
+    reporters: ['coverage-istanbul', 'progress', 'kjhtml', 'junit'],
     junitReporter : {
       outputFile: 'karma-test-results.xml'
     },

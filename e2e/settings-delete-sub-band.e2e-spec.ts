@@ -14,7 +14,7 @@ import {
   RavenTree,
 } from './utils';
 
-describe('raven2 - settings - delete band', () => {
+describe('raven2 - settings - delete sub-band', () => {
   let bands: any;
   let page: AppPage;
 
@@ -50,7 +50,7 @@ describe('raven2 - settings - delete band', () => {
 
   it('should properly delete the 3rd band and close the corresponding source', async () => {
     page.band2.click();
-    page.settingsDeleteBand.click();
+    page.settingsDeleteSubBand.click();
 
     bands = await probe(page.bands, 'bands');
 
@@ -64,7 +64,7 @@ describe('raven2 - settings - delete band', () => {
     page.band1.click();
     page.settingsOverlay.click();
     source2.open();
-    page.settingsDeleteBand.click();
+    page.settingsDeleteSubBand.click();
 
     bands = await probe(page.bands, 'bands');
 

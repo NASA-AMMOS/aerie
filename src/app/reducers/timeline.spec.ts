@@ -18,11 +18,11 @@ import {
 } from './../shared/models';
 
 import {
-  FetchGraphDataSuccess,
-  RemoveBands,
-} from './../actions/source-explorer';
-
-import {
+  AddBand,
+  AddPointsToSubBand,
+  AddSubBand,
+  RemoveBandsOrPointsForSource,
+  RemoveSubBand,
   SelectBand,
   SortBands,
   UpdateBand,
@@ -33,7 +33,8 @@ import {
 
 import {
   activityBand,
-  childSource,
+  activityPoint,
+  compositeBand,
   rootSource,
   stateBand,
 } from './../shared/mocks';
@@ -49,203 +50,305 @@ describe('timeline reducer', () => {
     expect(timelineState).toEqual(initialState);
   });
 
-  it('handle FetchGraphDataSuccess (no existing bands)', () => {
+  it('handle AddBand', () => {
     const source: RavenSource = rootSource;
-
-    timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, [stateBand]));
-
-    const band = { ...timelineState.bands[0] };
-    band.subBands = [{
-      ...stateBand,
-      parentUniqueId: band.id,
-    }];
+    const newBand = {
+      ...compositeBand,
+      subBands: [{
+        ...stateBand,
+      }],
+    };
+    timelineState = reducer(timelineState, new AddBand(source.id, newBand));
 
     expect(timelineState).toEqual({
       ...initialState,
-      bands: [band],
+      bands: [{
+        ...compositeBand,
+        containerId: '0',
+        sortOrder: 0,
+        subBands: [{
+          ...stateBand,
+          parentUniqueId: compositeBand.id,
+          sourceIds: {
+            [source.id]: source.id,
+          },
+        }],
+      }],
       maxTimeRange: { end: 100, start: 0 },
       viewTimeRange: { end: 100, start: 0 },
     });
   });
 
-  it('handle FetchGraphDataSuccess (to existing band)', () => {
+  it('handle AddPointsToSubBand', () => {
     const source: RavenSource = rootSource;
-    const child: RavenSource = childSource;
-
-    const activityBand1 = {
-      ...activityBand,
-      id: '400',
-      legend: 'a',
+    const newBand = {
+      ...compositeBand,
+      subBands: [{
+        ...activityBand,
+      }],
     };
 
-    const activityBand2 = {
-      ...activityBand,
-      id: '500',
-      legend: 'a',
+    // First add band to state so we have something to add points to.
+    timelineState = reducer(timelineState, new AddBand(source.id, newBand));
+
+    expect(timelineState.bands[0].subBands[0].points).toEqual([]);
+    timelineState = reducer(timelineState, new AddPointsToSubBand(source.id, newBand.id, activityBand.id, [activityPoint]));
+    expect(timelineState.bands[0].subBands[0].points).toEqual([activityPoint]);
+  });
+
+  it('handle AddSubBand', () => {
+    const source: RavenSource = rootSource;
+    const newBand = {
+      ...compositeBand,
+      subBands: [{
+        ...stateBand,
+      }],
     };
 
-    timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, [activityBand1]));
-    timelineState = reducer(timelineState, new FetchGraphDataSuccess(child, [activityBand2]));
+    // First add band to state so we have something to add a sub-band to.
+    timelineState = reducer(timelineState, new AddBand(source.id, newBand));
 
-    const band = { ...timelineState.bands[0] };
-    band.subBands = [
-      {
-        ...activityBand1,
-        id: '400',
-        parentUniqueId: band.id,
-      },
-      {
-        ...activityBand2,
-        id: '500',
-        parentUniqueId: band.id,
-      },
-    ];
-
+    expect(timelineState.bands[0].subBands.length).toEqual(1);
+    timelineState = reducer(timelineState, new AddSubBand(source.id, newBand.id, activityBand));
+    expect(timelineState.bands[0].subBands.length).toEqual(2);
     expect(timelineState).toEqual({
       ...initialState,
-      bands: [band],
-      maxTimeRange: { end: 200, start: 50 },
-      viewTimeRange: { end: 200, start: 50 },
+      bands: [{
+        ...compositeBand,
+        containerId: '0',
+        sortOrder: 0,
+        subBands: [
+          {
+            ...stateBand,
+            parentUniqueId: compositeBand.id,
+            sourceIds: {
+              [source.id]: source.id,
+            },
+          },
+          {
+            ...activityBand,
+            parentUniqueId: compositeBand.id,
+            sourceIds: {
+              [source.id]: source.id,
+            },
+          },
+        ],
+      }],
+      maxTimeRange: { end: 200, start: 0 },
+      viewTimeRange: { end: 100, start: 0 },
     });
   });
 
-  it('handle RemoveBands (remove entire band)', () => {
+  it('handle RemoveBandsOrPointsForSource', () => {
     const source: RavenSource = rootSource;
 
-    // First add a band so we can remove it.
-    timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, [activityBand]));
+    const band = {
+      ...compositeBand,
+      id: '0',
+      subBands: [{
+        ...activityBand,
+        id: '1',
+        parentUniqueId: '0',
+        points: [
+          {
+            ...activityPoint,
+            id: '100',
+            sourceId: '/',
+          },
+          {
+            ...activityPoint,
+            id: '101',
+            sourceId: '/child',
+          },
+        ],
+        sourceIds: {
+          '/': '/',
+          '/child': '/child',
+        },
+      }],
+    };
 
-    timelineState = reducer(timelineState, new RemoveBands(source.id, ['100']));
-    expect(timelineState).toEqual(initialState);
+    timelineState = reducer(timelineState, new AddBand(source.id, band));
+    expect(timelineState.bands[0].subBands[0].points.length).toEqual(2);
+
+    timelineState = reducer(timelineState, new RemoveBandsOrPointsForSource('/'));
+    expect(timelineState.bands[0].subBands[0].points[0].id).toEqual('101');
+    expect(timelineState.bands[0].subBands[0].points.length).toEqual(1);
+
+    timelineState = reducer(timelineState, new RemoveBandsOrPointsForSource('/child'));
+    expect(timelineState.bands.length).toEqual(0);
   });
 
-  it('handle RemoveBands (remove points from band)', () => {
+  it('handle RemoveSubBand', () => {
     const source: RavenSource = rootSource;
-    const child: RavenSource = childSource;
+    const band = {
+      ...compositeBand,
+      id: '0',
+      subBands: [
+        {
+          ...stateBand,
+          id: '1',
+          parentUniqueId: '0',
+          sourceIds: {
+            '/': '/',
+          },
+        },
+        {
+          ...activityBand,
+          id: '2',
+          parentUniqueId: '0',
+          sourceIds: {
+            '/': '/',
+          },
+        },
+      ],
+    };
 
-    const activityBand1 = { ...activityBand };
-    const activityBand2 = { ...activityBand };
+    // First add a band with some sub-bands so we can remove them.
+    timelineState = reducer(timelineState, new AddBand(source.id, band));
+    expect(timelineState.bands[0].subBands.length).toEqual(2);
+    expect(timelineState.bands[0].subBands[0].id).toEqual('1');
+    expect(timelineState.bands[0].subBands[1].id).toEqual('2');
 
-    activityBand1.id = '400';
-    activityBand2.id = '500';
+    timelineState = reducer(timelineState, new RemoveSubBand('1'));
+    expect(timelineState.bands[0].subBands.length).toEqual(1);
+    expect(timelineState.bands[0].subBands[0].id).toEqual('2');
 
-    timelineState = reducer(timelineState, new FetchGraphDataSuccess(source, [activityBand1]));
-    timelineState = reducer(timelineState, new FetchGraphDataSuccess(child, [activityBand2]));
-    timelineState = reducer(timelineState, new RemoveBands(child.id, ['400']));
-
-    const band = { ...timelineState.bands[0] };
-    band.subBands = [
-      {
-        ...activityBand2,
-        id: '500',
-        parentUniqueId: band.id,
-      },
-    ];
-
-    expect(timelineState).toEqual({
-      ...initialState,
-      bands: [band],
-      maxTimeRange: { end: 200, start: 50 },
-      viewTimeRange: { end: 200, start: 50 },
-    });
+    timelineState = reducer(timelineState, new RemoveSubBand('2'));
+    expect(timelineState.bands.length).toEqual(0);
   });
 
   it('handle SelectBand', () => {
     const source: RavenSource = rootSource;
 
-    // First add a band we can select.
-    const timelineStateWithBand = reducer(timelineState, new FetchGraphDataSuccess(source, [stateBand]));
+    const newBand = {
+      ...compositeBand,
+      id: '0',
+      subBands: [{
+        ...stateBand,
+        id: '1',
+        parentUniqueId: '0',
+        sourceIds: {
+          '/': '/',
+        },
+      }],
+    };
 
-    const band = { ...timelineState.bands[0] };
+    expect(timelineState.selectedBandId).toEqual('');
+    expect(timelineState.selectedSubBandId).toEqual('');
 
-    timelineState = reducer(timelineStateWithBand, new SelectBand(band.id));
-    expect(timelineState).toEqual({
-      ...timelineStateWithBand,
-      selectedBandId: band.id,
-    });
+    // Add a band and select it.
+    timelineState = reducer(timelineState, new AddBand(source.id, newBand));
+    timelineState = reducer(timelineState, new SelectBand('0'));
+
+    expect(timelineState.selectedBandId).toEqual('0');
+    expect(timelineState.selectedSubBandId).toEqual('1');
   });
 
   it('handle SortBands', () => {
     const source: RavenSource = rootSource;
-    const stateBand1 = { ...stateBand };
-    const stateBand2 = { ...stateBand };
 
-    stateBand1.id = '400';
-    stateBand2.id = '500';
-
-    const timelineStateWithBands = reducer(timelineState, new FetchGraphDataSuccess(source, [stateBand1, stateBand2]));
-
-    const band0 = { ...timelineStateWithBands.bands[0] };
-    const band1 = { ...timelineStateWithBands.bands[1] };
-
-    const sort = {
-      [band0.id]: { containerId: '0', sortOrder: 1 },
-      [band1.id]: { containerId: '0', sortOrder: 0 },
+    const stateBand1 = {
+      ...compositeBand,
+      id: '0',
+      subBands: [{
+        ...stateBand,
+        id: '400',
+        parentUniqueId: '0',
+        sourceIds: {
+          '/': '/',
+        },
+      }],
     };
 
-    timelineState = reducer(timelineStateWithBands, new SortBands(sort));
+    const stateBand2 = {
+      ...compositeBand,
+      id: '1',
+      subBands: [{
+        ...stateBand,
+        id: '500',
+        parentUniqueId: '1',
+        sourceIds: {
+          '/': '/',
+        },
+      }],
+    };
+
+    // First add some bands we can sort.
+    timelineState = reducer(timelineState, new AddBand(source.id, stateBand1));
+    timelineState = reducer(timelineState, new AddBand(source.id, stateBand2));
+
+    const sort = {
+      [stateBand1.id]: { containerId: '0', sortOrder: 1 },
+      [stateBand2.id]: { containerId: '1', sortOrder: 0 },
+    };
+
+    timelineState = reducer(timelineState, new SortBands(sort));
+
     expect(timelineState).toEqual({
-      ...timelineStateWithBands,
+      ...timelineState,
       bands: [
         {
-          ...band0,
+          ...stateBand1,
           containerId: '0',
           sortOrder: 1,
         },
         {
-          ...band1,
-          containerId: '0',
+          ...stateBand2,
+          containerId: '1',
           sortOrder: 0,
         },
       ],
     });
   });
 
-  it('handle UpdateBand (with no selected band)', () => {
-    timelineState = reducer(timelineState, new UpdateBand('', { label: '42' }));
-    expect(timelineState).toEqual({ ...initialState });
-  });
-
   it('handle UpdateBand', () => {
     const source: RavenSource = rootSource;
 
-    // First add a band and select it so we can update it.
-    let timelineStateWithBand = reducer(timelineState, new FetchGraphDataSuccess(source, [stateBand]));
-    const band = { ...timelineStateWithBand.bands[0] };
-
-    timelineStateWithBand = reducer(timelineStateWithBand, new SelectBand(band.id));
-    timelineState = reducer(timelineStateWithBand, new UpdateBand(band.id, { height: 42 }));
-
-    expect(timelineState).toEqual({
-      ...timelineStateWithBand,
-      bands: [{
-        ...timelineStateWithBand.bands[0],
-        height: 42,
+    const band = {
+      ...compositeBand,
+      height: 50,
+      id: '0',
+      subBands: [{
+        ...stateBand,
+        id: '1',
+        parentUniqueId: '0',
+        sourceIds: {
+          '/': '/',
+        },
       }],
-    });
+    };
+
+    timelineState = reducer(timelineState, new AddBand(source.id, band));
+    expect(timelineState.bands[0].height).toEqual(50);
+
+    timelineState = reducer(timelineState, new UpdateBand(band.id, { height: 42 }));
+    expect(timelineState.bands[0].height).toEqual(42);
   });
 
   it('handle UpdateSubBand', () => {
     const source: RavenSource = rootSource;
 
-    // First add a band and select it so we can update it.
-    let timelineStateWithBand = reducer(timelineState, new FetchGraphDataSuccess(source, [stateBand]));
-    const band = { ...timelineStateWithBand.bands[0] };
-    const subBand = { ...band.subBands[0] };
-
-    timelineStateWithBand = reducer(timelineStateWithBand, new SelectBand(band.id));
-    timelineState = reducer(timelineStateWithBand, new UpdateSubBand(band.id, subBand.id, { label: '42' }));
-
-    expect(timelineState).toEqual({
-      ...timelineStateWithBand,
-      bands: [{
-        ...timelineStateWithBand.bands[0],
-        subBands: [{
-          ...timelineStateWithBand.bands[0].subBands[0],
-          label: '42',
-        }],
+    const band = {
+      ...compositeBand,
+      height: 50,
+      id: '0',
+      subBands: [{
+        ...stateBand,
+        height: 50,
+        id: '1',
+        parentUniqueId: '0',
+        sourceIds: {
+          '/': '/',
+        },
       }],
-    });
+    };
+
+    timelineState = reducer(timelineState, new AddBand(source.id, band));
+    expect(timelineState.bands[0].subBands[0].height).toEqual(50);
+
+    timelineState = reducer(timelineState, new UpdateSubBand(band.id, '1', { height: 42 }));
+    expect(timelineState.bands[0].subBands[0].height).toEqual(42);
   });
 
   it('handle UpdateTimeline', () => {

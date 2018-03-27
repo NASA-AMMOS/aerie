@@ -7,8 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { keyBy } from 'lodash';
-
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
@@ -31,21 +29,6 @@ import { AppState } from './../../app/store';
 import { DisplayActionTypes } from './../actions/display';
 
 import * as displayActions from './../actions/display';
-import * as sourceExplorerActions from './../actions/source-explorer';
-import * as timelineActions from './../actions/timeline';
-
-import {
-  MpsServerGraphData,
-  RavenCompositeBand,
-  RavenSubBand,
-  RavenSubBandPointData,
-  StringTMap,
-} from './../shared/models';
-
-import {
-  getPointsBySubBandType,
-  updateTimeRanges,
-} from './../shared/util';
 
 @Injectable()
 export class DisplayEffects {
@@ -78,22 +61,13 @@ export class DisplayEffects {
     mergeMap((state: AppState) =>
       forkJoin([
         of(state),
-        ...this.getPointDataForSubBands(state.timeline.bands),
+        // TODO: Collect all source URLS and fetch them.
       ]),
     ),
-    map(([state, ...pointData]) => ({ state, pointData })),
-    mergeMap(({ state, pointData }) => {
-      const bands = this.updateSubBandsWithPointData(state.timeline.bands, pointData);
-
-      return [
-        new timelineActions.UpdateTimeline({
-          bands,
-          labelWidth: state.timeline.labelWidth,
-          ...updateTimeRanges({ end: 0, start: 0 }, bands),
-        }),
-        new sourceExplorerActions.UpdateSourceExplorer({ ...state.sourceExplorer }),
-        new displayActions.StateLoadSuccess(),
-      ];
+    map(([state]) => ({ state })),
+    mergeMap(({ state }) => {
+      // TODO: Map fetched source point data to bands.
+      return [];
     }),
   );
 
@@ -122,7 +96,7 @@ export class DisplayEffects {
 
       return this.http.put(`${action.source.url}/${action.name}`, stateToSave).pipe(
         map(() => new displayActions.StateSaveSuccess()),
-        catchError(() => of(new displayActions.StateLoadFailure())),
+        catchError(() => of(new displayActions.StateSaveFailure())),
       );
     }),
   );
@@ -132,54 +106,4 @@ export class DisplayEffects {
     private actions$: Actions,
     private store$: Store<AppState>,
   ) {}
-
-  /**
-   * Helper. Returns an Observable that resolves to all sub-band points for the given list of bands.
-   */
-  getPointDataForSubBands(bands: RavenCompositeBand[]): Observable<RavenSubBandPointData | null>[] {
-    const pointData: Observable<RavenSubBandPointData | null>[] = [];
-
-    bands.forEach((band: RavenCompositeBand) => {
-      band.subBands.forEach((subBand: RavenSubBand) => {
-        pointData.push(
-          this.http.get<MpsServerGraphData>(subBand.sourceUrl).pipe(
-            map((graphData: MpsServerGraphData) => ({
-              ...getPointsBySubBandType(subBand, graphData['Timeline Data']),
-              subBandId: subBand.id,
-            })),
-            catchError((e) => {
-              console.error(`DisplayEffects - getPointDataForSubBands - failure to GET ${subBand.sourceUrl}: `, e);
-              return of(null);
-            }),
-          ),
-        );
-      });
-    });
-
-    return pointData;
-  }
-
-  /**
-   * Helper. Returns a new list of bands with sub-bands updated by the given point data.
-   */
-  updateSubBandsWithPointData(bands: RavenCompositeBand[], pointData: RavenSubBandPointData[]): RavenCompositeBand[] {
-    const pointDataBySubBandId: StringTMap<RavenSubBandPointData> = keyBy(pointData, 'subBandId');
-
-    return bands.map((band: RavenCompositeBand) => ({
-      ...band,
-      subBands: band.subBands.map((subBand: RavenSubBand) => {
-        if (pointDataBySubBandId[subBand.id]) {
-          const { maxTimeRange, points } = pointDataBySubBandId[subBand.id];
-
-          return {
-            ...subBand,
-            maxTimeRange,
-            points,
-          };
-        }
-
-        return subBand;
-      }),
-    }));
-  }
 }

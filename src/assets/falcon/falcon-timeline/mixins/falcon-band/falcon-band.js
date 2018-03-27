@@ -23,6 +23,14 @@ const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.I
   static get properties() {
     return {
       /**
+       * The parent container class name for the band.
+       */
+      _container: {
+        type: String,
+        value: '.timeline-0',
+      },
+
+      /**
        * The Polymer debounce object for de-bouncing iron resize events.
        */
       _onIronResizeDebouncer: {
@@ -126,7 +134,7 @@ const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.I
        */
       ironResizeDebounceTime: {
         type: Number,
-        value: 200,
+        value: 300,
       },
 
       /**
@@ -697,7 +705,8 @@ const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.I
    * @memberof FalconBand
    */
   _updateTimeAxisXCoordinates() {
-    const falcon = document.querySelector('.timeline-0');
+    const band = this._getBand();
+    const falcon = document.querySelector(this._container);
     let offsetWidth = 0;
 
     if (falcon) {
@@ -778,9 +787,10 @@ const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.I
    * @memberof FalconBand
    */
   redraw() {
+    const falcon = document.querySelector(this._container);
     const band = this._getBand();
 
-    if (band) {
+    if (falcon && band) {
       this._fire(`${this.localName}-redraw`, null);
 
       if (!this.noDraw) {
@@ -796,9 +806,13 @@ const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.I
    * @memberof FalconBand
    */
   resize() {
-    this._calculateTickValues();
-    this._updateTimeAxisXCoordinates();
-    this.redraw();
+    const falcon = document.querySelector(this._container);
+
+    if (falcon) {
+      this._calculateTickValues();
+      this._updateTimeAxisXCoordinates();
+      this.redraw();
+    }
   }
 };
 

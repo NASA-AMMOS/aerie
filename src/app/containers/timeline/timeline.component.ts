@@ -60,8 +60,8 @@ export class TimelineComponent implements OnDestroy {
   bands: RavenCompositeBand[];
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
-  overlayMode: boolean;
   selectedBandId: string;
+  selectedSubBandId: string;
   viewTimeRange: RavenTimeRange;
   selectedDataPoint: RavenPoint;
   showDataPointDrawer: boolean;
@@ -102,10 +102,10 @@ export class TimelineComponent implements OnDestroy {
       this.bands = state.bands;
       this.labelWidth = state.labelWidth;
       this.maxTimeRange = state.maxTimeRange;
-      this.overlayMode = state.overlayMode;
       this.selectedBandId = state.selectedBandId;
       this.viewMetadata = state.viewMetadata;
       this.viewParameter = state.viewParameter;
+      this.selectedSubBandId = state.selectedSubBandId;
       this.viewTimeRange = state.viewTimeRange;
       this.selectedDataPoint = state.selectedDataPoint;
       this.changeDetector.markForCheck();
@@ -145,10 +145,11 @@ export class TimelineComponent implements OnDestroy {
     }
   }
   /**
-   * Event. Called when a `delete-band` event is fired from the raven-settings component.
+   * Event. Called when a `delete-sub-band` event is fired from the raven-settings component.
    */
-  onDeleteBand(subBand: RavenSubBand): void {
-    this.store.dispatch(new sourceExplorerActions.RemoveBands(subBand.sourceId, [subBand.id]));
+  onDeleteSubBand(subBand: RavenSubBand): void {
+    this.store.dispatch(new timelineActions.RemoveSubBand(subBand.id));
+    this.store.dispatch(new sourceExplorerActions.SubBandIdRemove(subBand.sourceIds, subBand.id));
   }
 
   /**
