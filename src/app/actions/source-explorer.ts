@@ -12,97 +12,33 @@ import { Action } from '@ngrx/store';
 import {
   BaseType,
   RavenSource,
-  RavenSubBand,
   StringTMap,
 } from './../shared/models';
 
 // Action Types.
 export enum SourceExplorerActionTypes {
-  FetchGraphData             = '[sourceExplorer] fetch_graph_data',
-  FetchGraphDataFailure      = '[sourceExplorer] fetch_graph_data_failure',
-  FetchGraphDataSuccess      = '[sourceExplorer] fetch_graph_data_success',
-  FetchInitialSources        = '[sourceExplorer] fetch_initial_sources',
-  FetchInitialSourcesFailure = '[sourceExplorer] fetch_initial_sources_failure',
-  FetchInitialSourcesSuccess = '[sourceExplorer] fetch_initial_sources_success',
-  FetchSources               = '[sourceExplorer] fetch_sources',
-  FetchSourcesFailure        = '[sourceExplorer] fetch_sources_failure',
-  FetchSourcesSuccess        = '[sourceExplorer] fetch_sources_success',
-  LoadContent                = '[sourceExplorer] load_content',
-  RemoveBands                = '[sourceExplorer] remove_bands',
-  SourceExplorerClose        = '[sourceExplorer] source_explorer_close',
-  SourceExplorerCloseEvent   = '[sourceExplorer] source_explorer_close_event',
-  SourceExplorerCollapse     = '[sourceExplorer] source_explorer_collapse',
-  SourceExplorerExpand       = '[sourceExplorer] source_explorer_expand',
-  SourceExplorerOpen         = '[sourceExplorer] source_explorer_open',
-  SourceExplorerPin          = '[sourceExplorer] source_explorer_pin',
-  SourceExplorerSelect       = '[sourceExplorer] source_explorer_select',
-  SourceExplorerUnpin        = '[sourceExplorer] source_explorer_unpin',
-  UpdateSourceExplorer       = '[sourceExplorer] update_source_explorer',
+  FetchInitialSources         = '[sourceExplorer] fetch_initial_sources',
+  NewSources                  = '[sourceExplorer] new_sources',
+  SourceExplorerCloseEvent    = '[sourceExplorer] source_explorer_close_event',
+  SourceExplorerCollapseEvent = '[sourceExplorer] source_explorer_collapse_event',
+  SourceExplorerExpandEvent   = '[sourceExplorer] source_explorer_expand_event',
+  SourceExplorerOpenEvent     = '[sourceExplorer] source_explorer_open_event',
+  SourceExplorerSelect        = '[sourceExplorer] source_explorer_select',
+  SubBandIdAdd                = '[sourceExplorer] sub_band_id_add',
+  SubBandIdRemove             = '[sourceExplorer] sub_band_id_remove',
+  UpdateSourceExplorer        = '[sourceExplorer] update_source_explorer',
+  UpdateTreeSource            = '[sourceExplorer] update_tree_source',
 }
 
 // Actions.
-export class FetchGraphData implements Action {
-  readonly type = SourceExplorerActionTypes.FetchGraphData;
-
-  constructor(public source: RavenSource) {}
-}
-
-export class FetchGraphDataFailure implements Action {
-  readonly type = SourceExplorerActionTypes.FetchGraphDataFailure;
-}
-
-export class FetchGraphDataSuccess implements Action {
-  readonly type = SourceExplorerActionTypes.FetchGraphDataSuccess;
-
-  constructor(public source: RavenSource, public newBands: RavenSubBand[]) {}
-}
-
 export class FetchInitialSources implements Action {
   readonly type = SourceExplorerActionTypes.FetchInitialSources;
 }
 
-export class FetchInitialSourcesFailure implements Action {
-  readonly type = SourceExplorerActionTypes.FetchInitialSourcesFailure;
-}
+export class NewSources implements Action {
+  readonly type = SourceExplorerActionTypes.NewSources;
 
-export class FetchInitialSourcesSuccess implements Action {
-  readonly type = SourceExplorerActionTypes.FetchInitialSourcesSuccess;
-
-  constructor(public sources: RavenSource[]) {}
-}
-
-export class FetchSources implements Action {
-  readonly type = SourceExplorerActionTypes.FetchSources;
-
-  constructor(public source: RavenSource) {}
-}
-
-export class FetchSourcesFailure implements Action {
-  readonly type = SourceExplorerActionTypes.FetchSourcesFailure;
-}
-
-export class FetchSourcesSuccess implements Action {
-  readonly type = SourceExplorerActionTypes.FetchSourcesSuccess;
-
-  constructor(public source: RavenSource, public sources: RavenSource[]) {}
-}
-
-export class LoadContent implements Action {
-  readonly type = SourceExplorerActionTypes.LoadContent;
-
-  constructor(public source: RavenSource, public sources: RavenSource[]) {}
-}
-
-export class RemoveBands implements Action {
-  readonly type = SourceExplorerActionTypes.RemoveBands;
-
-  constructor(public sourceId: string, public bandIds: string[]) {}
-}
-
-export class SourceExplorerClose implements Action {
-  readonly type = SourceExplorerActionTypes.SourceExplorerClose;
-
-  constructor(public source: RavenSource) {}
+  constructor(public sourceId: string, public sources: RavenSource[]) {}
 }
 
 export class SourceExplorerCloseEvent implements Action {
@@ -111,28 +47,22 @@ export class SourceExplorerCloseEvent implements Action {
   constructor(public sourceId: string) {}
 }
 
-export class SourceExplorerCollapse implements Action {
-  readonly type = SourceExplorerActionTypes.SourceExplorerCollapse;
+export class SourceExplorerCollapseEvent implements Action {
+  readonly type = SourceExplorerActionTypes.SourceExplorerCollapseEvent;
 
-  constructor(public source: RavenSource) {}
+  constructor(public sourceId: string) {}
 }
 
-export class SourceExplorerExpand implements Action {
-  readonly type = SourceExplorerActionTypes.SourceExplorerExpand;
+export class SourceExplorerExpandEvent implements Action {
+  readonly type = SourceExplorerActionTypes.SourceExplorerExpandEvent;
 
-  constructor(public source: RavenSource) {}
+  constructor(public sourceId: string) {}
 }
 
-export class SourceExplorerOpen implements Action {
-  readonly type = SourceExplorerActionTypes.SourceExplorerOpen;
+export class SourceExplorerOpenEvent implements Action {
+  readonly type = SourceExplorerActionTypes.SourceExplorerOpenEvent;
 
-  constructor(public source: RavenSource) {}
-}
-
-export class SourceExplorerPin implements Action {
-  readonly type = SourceExplorerActionTypes.SourceExplorerPin;
-
-  constructor(public source: RavenSource) {}
+  constructor(public sourceId: string) {}
 }
 
 export class SourceExplorerSelect implements Action {
@@ -141,10 +71,16 @@ export class SourceExplorerSelect implements Action {
   constructor(public source: RavenSource) {}
 }
 
-export class SourceExplorerUnpin implements Action {
-  readonly type = SourceExplorerActionTypes.SourceExplorerUnpin;
+export class SubBandIdAdd implements Action {
+  readonly type = SourceExplorerActionTypes.SubBandIdAdd;
 
-  constructor(public source: RavenSource) {}
+  constructor(public sourceId: string, public subBandId: string) {}
+}
+
+export class SubBandIdRemove implements Action {
+  readonly type = SourceExplorerActionTypes.SubBandIdRemove;
+
+  constructor(public sourceIds: StringTMap<string>, public subBandId: string) {}
 }
 
 export class UpdateSourceExplorer implements Action {
@@ -153,25 +89,26 @@ export class UpdateSourceExplorer implements Action {
   constructor(public update: StringTMap<BaseType>) {}
 }
 
+export class UpdateTreeSource implements Action {
+  readonly type = SourceExplorerActionTypes.UpdateTreeSource;
+
+  constructor(
+    public sourceId: string,
+    public prop: string,
+    public value: any,
+  ) {}
+}
+
 // Union type of all actions.
 export type SourceExplorerAction =
-  FetchGraphData |
-  FetchGraphDataFailure |
-  FetchGraphDataSuccess |
   FetchInitialSources |
-  FetchInitialSourcesFailure |
-  FetchInitialSourcesSuccess |
-  FetchSources |
-  FetchSourcesFailure |
-  FetchSourcesSuccess |
-  LoadContent |
-  RemoveBands |
-  SourceExplorerClose |
+  NewSources |
   SourceExplorerCloseEvent |
-  SourceExplorerCollapse |
-  SourceExplorerExpand |
-  SourceExplorerOpen |
-  SourceExplorerPin |
+  SourceExplorerCollapseEvent |
+  SourceExplorerExpandEvent |
+  SourceExplorerOpenEvent |
   SourceExplorerSelect |
-  SourceExplorerUnpin |
-  UpdateSourceExplorer;
+  SubBandIdAdd |
+  SubBandIdRemove |
+  UpdateSourceExplorer |
+  UpdateTreeSource;

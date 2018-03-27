@@ -11,28 +11,77 @@ import { Action } from '@ngrx/store';
 
 import {
   BaseType,
+  RavenCompositeBand,
   RavenSortMessage,
+  RavenSubBand,
   RavenTimeRange,
   StringTMap,
 } from './../shared/models';
 
 // Action Types.
 export enum TimelineActionTypes {
-  SelectBand          = '[timeline] select_band',
-  SortBands           = '[timeline] sort_bands',
-  UpdateBand          = '[timeline] update_band',
-  UpdateSubBand       = '[timeline] update_sub_band',
-  UpdateTimeline      = '[timeline] update_timeline',
-  UpdateViewTimeRange = '[timeline] update_view_time_range',
-  ChangeCurrentTimeCursor = '[timeline] change_current_time_cursor',
-  ChangeTooltip       = '[timeline] change_tooltip',
-  ChangeLabelFontSize = '[timeline] change_label_fonr_size',
-  ChangeLabelFontStyle= '[timeline] change_label_font_style',
-  ChangeLabelWidth    = '[timeline] change_label_width',
-  ChangeResourceColor = '[timeline] change_resource_color',
+  AddBand                      = '[timeline] add_band',
+  AddPointsToSubBand           = '[timeline] add_points_to_sub_band',
+  AddSubBand                   = '[timeline] add_sub_band',
+  ChangeCurrentTimeCursor      = '[timeline] change_current_time_cursor',
+  ChangeTooltip                = '[timeline] change_tooltip',
+  ChangeLabelFontSize          = '[timeline] change_label_fonr_size',
+  ChangeLabelFontStyle         = '[timeline] change_label_font_style',
+  ChangeLabelWidth             = '[timeline] change_label_width',
+  ChangeResourceColor          = '[timeline] change_resource_color',
+  RemoveBandsOrPointsForSource = '[timeline] remove_bands_or_points_for_source',
+  RemoveSubBand                = '[timeline] remove_sub_band',
+  SelectBand                   = '[timeline] select_band',
+  SortBands                    = '[timeline] sort_bands',
+  UpdateBand                   = '[timeline] update_band',
+  UpdateSubBand                = '[timeline] update_sub_band',
+  UpdateTimeline               = '[timeline] update_timeline',
+  UpdateViewTimeRange          = '[timeline] update_view_time_range',
 }
 
 // Actions.
+export class AddBand implements Action {
+  readonly type = TimelineActionTypes.AddBand;
+
+  constructor(
+    public sourceId: string,
+    public band: RavenCompositeBand,
+  ) {}
+}
+
+export class AddPointsToSubBand implements Action {
+  readonly type = TimelineActionTypes.AddPointsToSubBand;
+
+  constructor(
+    public sourceId: string,
+    public bandId: string,
+    public subBandId: string,
+    public points: any[],
+  ) {}
+}
+
+export class AddSubBand implements Action {
+  readonly type = TimelineActionTypes.AddSubBand;
+
+  constructor(
+    public sourceId: string,
+    public bandId: string,
+    public subBand: RavenSubBand,
+  ) {}
+}
+
+export class RemoveBandsOrPointsForSource implements Action {
+  readonly type = TimelineActionTypes.RemoveBandsOrPointsForSource;
+
+  constructor(public sourceId: string) {}
+}
+
+export class RemoveSubBand implements Action {
+  readonly type = TimelineActionTypes.RemoveSubBand;
+
+  constructor(public subBandId: string) {}
+}
+
 export class SelectBand implements Action {
   readonly type = TimelineActionTypes.SelectBand;
 
@@ -107,12 +156,17 @@ export class ChangeResourceColor implements Action {
 
 // Union type of all actions.
 export type TimelineAction =
-ChangeCurrentTimeCursor |
+  AddBand |
+  AddPointsToSubBand |
+  AddSubBand |
+  ChangeCurrentTimeCursor |
   ChangeTooltip |
   ChangeLabelFontSize |
   ChangeLabelFontStyle |
   ChangeLabelWidth |
   ChangeResourceColor |
+  RemoveBandsOrPointsForSource |
+  RemoveSubBand |
   SelectBand |
   SortBands |
   UpdateBand |

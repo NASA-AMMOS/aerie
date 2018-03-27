@@ -13,7 +13,6 @@ import {
 
 export const rootSource: RavenSource = {
   actions: [],
-  bandIds: {},
   childIds: [],
   content: [],
   dbType: '',
@@ -21,7 +20,7 @@ export const rootSource: RavenSource = {
   expandable: false,
   expanded: false,
   icon: '',
-  id: '0',
+  id: '/',
   isServer: false,
   kind: '',
   label: 'root',
@@ -35,12 +34,12 @@ export const rootSource: RavenSource = {
   pinned: false,
   selectable: false,
   selected: false,
+  subBandIds: {},
   url: '',
 };
 
 export const childSource: RavenSource = {
   actions: [],
-  bandIds: {},
   childIds: [],
   content: [],
   dbType: '',
@@ -48,7 +47,7 @@ export const childSource: RavenSource = {
   expandable: true,
   expanded: false,
   icon: '',
-  id: '1',
+  id: '/child',
   isServer: false,
   kind: 'db',
   label: 'test-child-source',
@@ -62,5 +61,6 @@ export const childSource: RavenSource = {
   pinned: false,
   selectable: true,
   selected: false,
+  subBandIds: {},
   url: '',
 };

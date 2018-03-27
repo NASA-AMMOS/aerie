@@ -3,10 +3,6 @@
   padding-bottom: 10px;
 }
 
-.selected {
-  background-color: rgba(0, 0, 255, 0.04);
-}
-
 .sortable-bands {
   padding-bottom: 20px;
 }
