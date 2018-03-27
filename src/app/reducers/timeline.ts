@@ -74,9 +74,9 @@ export const initialState: TimelineState = {
   maxTimeRange: { end: 0, start: 0 },
   selectedBandId: '',
   selectedDataPoint: defaultDataPoint,
+  selectedSubBandId: '',
   viewMetadata: false,
   viewParameter: true,
-  selectedSubBandId: '',
   viewTimeRange: { end: 0, start: 0 },
 };
 
