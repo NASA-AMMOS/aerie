@@ -18,28 +18,10 @@ import {
 } from './../models';
 
 /**
- * Helper. Returns true if a source has any children that are opened. False otherwise.
- */
-export function hasOpenedChildren(tree: StringTMap<RavenSource>, childIds: string[]): boolean {
-  for (let i = 0, l = childIds.length; i < l; ++i) {
-    const childId = childIds[i];
-    const child = tree[childId];
-
-    if (child.opened) {
-      return true;
-    } else if (childIds.length) {
-      return hasOpenedChildren(tree, child.childIds);
-    }
-  }
-
-  return false;
-}
-
-/**
  * Transform form an MPS Server source to a Raven source.
  */
-export function toSource(parentId: string, isServer: boolean, source: MpsServerSource): RavenSource {
-  const newSource: RavenSource = {
+export function toSource(parentId: string, isServer: boolean, mSource: MpsServerSource): RavenSource {
+  const rSource: RavenSource = {
     actions: [],
     childIds: [],
     content: [],
@@ -48,12 +30,12 @@ export function toSource(parentId: string, isServer: boolean, source: MpsServerS
     expandable: true,
     expanded: false,
     icon: '',
-    id: `${parentId}${source.name}/`,
+    id: `${parentId}${mSource.name}/`,
     isServer,
-    kind: source.__kind,
-    label: source.label,
+    kind: mSource.__kind,
+    label: mSource.label,
     menu: true,
-    name: source.name,
+    name: mSource.name,
     openable: false,
     opened: false,
     parentId,
@@ -66,20 +48,21 @@ export function toSource(parentId: string, isServer: boolean, source: MpsServerS
     url: '',
   };
 
-  if (newSource.kind === 'fs_category') {
-    return fromCategory(source as MpsServerSourceCategory, newSource);
-  } else if (newSource.kind === 'fs_dir') {
-    return fromDir(isServer, source as MpsServerSourceDir, newSource);
-  } else if (newSource.kind === 'fs_file') {
-    return fromFile(source as MpsServerSourceFile, newSource);
-  } else if (newSource.kind === 'fs_graphable') {
-    if (newSource.name.includes('raven2-state')) {
-      return fromState(source as any, newSource);
+  if (rSource.kind === 'fs_category') {
+    return fromCategory(mSource as MpsServerSourceCategory, rSource);
+  } else if (rSource.kind === 'fs_dir') {
+    return fromDir(isServer, mSource as MpsServerSourceDir, rSource);
+  } else if (rSource.kind === 'fs_file') {
+    return fromFile(mSource as MpsServerSourceFile, rSource);
+  } else if (rSource.kind === 'fs_graphable') {
+    if (rSource.name.includes('raven2-state')) {
+      // TODO: Replace 'any' with a concrete type.
+      return fromState(mSource as any, rSource);
     } else {
-      return fromGraphable(source as MpsServerSourceGraphable, newSource);
+      return fromGraphable(mSource as MpsServerSourceGraphable, rSource);
     }
   } else {
-    return newSource;
+    return rSource;
   }
 }
 
@@ -109,8 +92,8 @@ export function fromDir(isServer: boolean, mSource: MpsServerSourceDir, rSource:
     ...rSource,
     actions: [
       {
-        event: 'state-save',
-        name: 'Save State',
+        event: 'save',
+        name: 'Save',
       },
     ],
     dbType: mSource.__db_type,
@@ -126,6 +109,12 @@ export function fromDir(isServer: boolean, mSource: MpsServerSourceDir, rSource:
 export function fromFile(mSource: MpsServerSourceFile, rSource: RavenSource): RavenSource {
   return {
     ...rSource,
+    actions: [
+      {
+        event: 'delete',
+        name: 'Delete',
+      },
+    ],
     dbType: mSource.__db_type,
     icon: 'fa fa-file',
     permissions: mSource.permissions,
@@ -155,20 +144,49 @@ export function fromState(mSource: any, rSource: RavenSource): RavenSource {
     ...rSource,
     actions: [
       {
-        event: 'state-delete',
-        name: 'Delete State',
-      },
-      {
-        event: 'state-load',
-        name: 'Load State',
+        event: 'load',
+        name: 'Load',
       },
     ],
     expandable: false,
-    icon: 'fa fa-area-chart',
+    icon: 'fa fa-table',
     openable: false,
     selectable: true,
     url: mSource.data_url,
   };
+}
+
+/**
+ * Helper that returns a list of all child ids (recursively) for a given source id.
+ */
+export function getAllChildIds(tree: StringTMap<RavenSource>, sourceId: string): string[] {
+  const source = tree[sourceId];
+  let childIds = source.childIds;
+
+  childIds.forEach(childId => {
+    const childSource = tree[childId];
+    childIds = childIds.concat(getAllChildIds(tree, childSource.id));
+  });
+
+  return childIds;
+}
+
+/**
+ * Helper that returns the parent node for a given sourceId. Null otherwise.
+ */
+export function getParent(tree: StringTMap<RavenSource>, sourceId: string): RavenSource | null {
+  const treeIds = Object.keys(tree);
+
+  for (let i = 0, l = treeIds.length; i < l; ++i) {
+    const treeId = treeIds[i];
+    const source = tree[treeId];
+
+    if (source.childIds.includes(sourceId)) {
+      return source;
+    }
+  }
+
+  return null;
 }
 
 /**

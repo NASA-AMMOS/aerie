@@ -18,13 +18,13 @@ import {
 } from './../shared/models';
 
 import {
+  CloseEvent,
+  CollapseEvent,
+  ExpandEvent,
   FetchInitialSources,
   NewSources,
-  SourceExplorerCloseEvent,
-  SourceExplorerCollapseEvent,
-  SourceExplorerExpandEvent,
-  SourceExplorerOpenEvent,
-  SourceExplorerSelect,
+  OpenEvent,
+  SelectSource,
   SubBandIdAdd,
   UpdateSourceExplorer,
   UpdateTreeSource,
@@ -44,6 +44,28 @@ describe('source-explorer reducer', () => {
 
   it('handle default', () => {
     expect(sourceExplorerState).toEqual(initialState);
+  });
+
+  it('handle CloseEvent', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new CloseEvent(rootSource.id));
+    expect(sourceExplorerState).toEqual({
+      ...initialState,
+    });
+  });
+
+  it('handle CollapseEvent', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new CollapseEvent(rootSource.id));
+    expect(sourceExplorerState).toEqual({
+      ...initialState,
+    });
+  });
+
+  it('handle ExpandEvent', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new ExpandEvent(rootSource.id));
+    expect(sourceExplorerState).toEqual({
+      ...initialState,
+      fetchPending: true,
+    });
   });
 
   it('handle FetchInitialSources', () => {
@@ -73,37 +95,15 @@ describe('source-explorer reducer', () => {
     });
   });
 
-  it('handle SourceExplorerCloseEvent', () => {
-    sourceExplorerState = reducer(sourceExplorerState, new SourceExplorerCloseEvent(rootSource.id));
-    expect(sourceExplorerState).toEqual({
-      ...initialState,
-    });
-  });
-
-  it('handle SourceExplorerCollapseEvent', () => {
-    sourceExplorerState = reducer(sourceExplorerState, new SourceExplorerCollapseEvent(rootSource.id));
-    expect(sourceExplorerState).toEqual({
-      ...initialState,
-    });
-  });
-
-  it('handle SourceExplorerExpandEvent', () => {
-    sourceExplorerState = reducer(sourceExplorerState, new SourceExplorerExpandEvent(rootSource.id));
+  it('handle OpenEvent', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new OpenEvent(rootSource.id));
     expect(sourceExplorerState).toEqual({
       ...initialState,
       fetchPending: true,
     });
   });
 
-  it('handle SourceExplorerOpenEvent', () => {
-    sourceExplorerState = reducer(sourceExplorerState, new SourceExplorerOpenEvent(rootSource.id));
-    expect(sourceExplorerState).toEqual({
-      ...initialState,
-      fetchPending: true,
-    });
-  });
-
-  it('handle SourceExplorerSelect', () => {
+  it('handle SelectSource', () => {
     const source: RavenSource = rootSource;
 
     // Make the rootSource node selectable in the initial state.
@@ -119,7 +119,7 @@ describe('source-explorer reducer', () => {
     };
 
     // Select node.
-    sourceExplorerState = reducer(initState, new SourceExplorerSelect(source));
+    sourceExplorerState = reducer(initState, new SelectSource(source));
 
     expect(sourceExplorerState).toEqual({
       ...initState,
@@ -134,7 +134,7 @@ describe('source-explorer reducer', () => {
     });
 
     // Deselect node.
-    sourceExplorerState = reducer(sourceExplorerState, new SourceExplorerSelect(source));
+    sourceExplorerState = reducer(sourceExplorerState, new SelectSource(source));
 
     expect(sourceExplorerState).toEqual({
       ...initState,
@@ -175,13 +175,17 @@ describe('source-explorer reducer', () => {
   });
 
   it('handle UpdateTreeSource', () => {
-    sourceExplorerState = reducer(sourceExplorerState, new UpdateTreeSource(rootSource.id, 'opened', true));
+    sourceExplorerState = reducer(sourceExplorerState, new UpdateTreeSource(rootSource.id, {
+      label: 'hi',
+      opened: true,
+    }));
     expect(sourceExplorerState).toEqual({
       ...initialState,
       treeBySourceId: {
         ...initialState.treeBySourceId,
-        '/': {
-          ...initialState.treeBySourceId['/'],
+        [rootSource.id]: {
+          ...initialState.treeBySourceId[rootSource.id],
+          label: 'hi',
           opened: true,
         },
       },

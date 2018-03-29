@@ -28,12 +28,15 @@ import {
 import { AppState } from './../../app/store';
 
 import {
+  CloseEvent,
+  CollapseEvent,
+  ExpandEvent,
   FetchInitialSources,
+  LoadFromSource,
+  OpenEvent,
+  RemoveSourceEvent,
+  SaveToSource,
   SourceExplorerActionTypes,
-  SourceExplorerCloseEvent,
-  SourceExplorerCollapseEvent,
-  SourceExplorerExpandEvent,
-  SourceExplorerOpenEvent,
 } from './../actions/source-explorer';
 
 import * as sourceExplorerActions from './../actions/source-explorer';
@@ -58,12 +61,43 @@ import {
 @Injectable()
 export class SourceExplorerEffects {
   @Effect()
+  closeEvent$: Observable<Action> = this.actions$.pipe(
+    ofType<CloseEvent>(SourceExplorerActionTypes.CloseEvent),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    concatMap(({ state, action }) => {
+      return [
+        new timelineActions.RemoveBandsOrPointsForSource(action.sourceId),
+        new sourceExplorerActions.UpdateTreeSource(action.sourceId, {
+          opened: false,
+          subBandIds: {},
+        }),
+      ];
+    }),
+  );
+
+  @Effect()
+  collapseEvent$: Observable<Action> = this.actions$.pipe(
+    ofType<CollapseEvent>(SourceExplorerActionTypes.CollapseEvent),
+    map(action => new sourceExplorerActions.UpdateTreeSource(action.sourceId, { expanded: false })),
+  );
+
+  @Effect()
+  expandEvent$: Observable<Action> = this.actions$.pipe(
+    ofType<ExpandEvent>(SourceExplorerActionTypes.ExpandEvent),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    concatMap(({ state, action }) => this.expand(state, action)),
+    concatMap(actions => actions),
+  );
+
+  @Effect()
   fetchInitialSources$: Observable<Action> = this.actions$.pipe(
     ofType<FetchInitialSources>(SourceExplorerActionTypes.FetchInitialSources),
     withLatestFrom(this.store$),
     map(([action, state]) => state),
     concatMap((state: AppState) => [
-      this.fetchSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`, '/', true),
+      this.fetchNewSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`, '/', true),
       of(new sourceExplorerActions.UpdateSourceExplorer({
         fetchPending: false,
         initialSourcesLoaded: true,
@@ -73,41 +107,26 @@ export class SourceExplorerEffects {
   );
 
   @Effect()
-  sourceExplorerCloseEvent$: Observable<Action> = this.actions$.pipe(
-    ofType<SourceExplorerCloseEvent>(SourceExplorerActionTypes.SourceExplorerCloseEvent),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(({ state, action }) => {
-      return [
-        new timelineActions.RemoveBandsOrPointsForSource(action.sourceId),
-        new sourceExplorerActions.UpdateTreeSource(action.sourceId, 'subBandIds', {}),
-        new sourceExplorerActions.UpdateTreeSource(action.sourceId, 'opened', false),
-      ];
+  loadFromSource$: Observable<Action> = this.actions$.pipe(
+    ofType<LoadFromSource>(SourceExplorerActionTypes.LoadFromSource),
+    concatMap(action =>
+      this.http.get(action.sourceUrl).pipe(
+        map(res => res[0].state),
+        catchError(e => {
+          console.error('SourceExplorerEffects - loadFromSource$ error: ', e);
+          return of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }));
+        }),
+      ),
+    ),
+    concatMap((state: AppState) => {
+      // TODO.
+      return of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }));
     }),
   );
 
   @Effect()
-  sourceExplorerCollapseEvent$: Observable<Action> = this.actions$.pipe(
-    ofType<SourceExplorerCollapseEvent>(SourceExplorerActionTypes.SourceExplorerCollapseEvent),
-    withLatestFrom(this.store$),
-    map(([action, state]) => action),
-    map(action => new sourceExplorerActions.UpdateTreeSource(action.sourceId, 'expanded', false)),
-  );
-
-  @Effect()
-  sourceExplorerExpandEvent$: Observable<Action> = this.actions$.pipe(
-    ofType<SourceExplorerExpandEvent>(SourceExplorerActionTypes.SourceExplorerExpandEvent),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(({ state, action }) =>
-      this.sourceExplorerExpand(state, action),
-    ),
-    concatMap(actions => actions),
-  );
-
-  @Effect()
-  sourceExplorerOpenEvent$: Observable<Action> = this.actions$.pipe(
-    ofType<SourceExplorerOpenEvent>(SourceExplorerActionTypes.SourceExplorerOpenEvent),
+  openEvent$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenEvent>(SourceExplorerActionTypes.OpenEvent),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     concatMap(({ state, action }) =>
@@ -119,8 +138,47 @@ export class SourceExplorerEffects {
     ),
     map(([state, action, bands]) => ({ state, action, bands })),
     concatMap(({ state, action, bands }) =>
-      this.sourceExplorerOpen(state, action, bands),
+      this.open(state, action, bands),
     ),
+  );
+
+  @Effect()
+  removeSourceEvent$: Observable<Action> = this.actions$.pipe(
+    ofType<RemoveSourceEvent>(SourceExplorerActionTypes.RemoveSourceEvent),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    concatMap(({ state, action }) => [
+      this.removeSource(action.source.url, action.source.id),
+      of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+    ]),
+    concatMap(actions => actions),
+  );
+
+  @Effect()
+  saveToSource$: Observable<Action> = this.actions$.pipe(
+    ofType<SaveToSource>(SourceExplorerActionTypes.SaveToSource),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    concatMap(({ state, action }) => [
+      this.saveToSource(action.source.url, action.source.id, action.name, {
+        name: `raven2-state-${action.name}`,
+        state: {
+          ...state,
+          timeline: {
+            ...state.timeline,
+            bands: state.timeline.bands.map(band => ({
+              ...band,
+              subBands: band.subBands.map(subBand => ({
+                ...subBand,
+                points: [],
+              })),
+            })),
+          },
+        },
+      }),
+      of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+    ]),
+    concatMap(actions => actions),
   );
 
   constructor(
@@ -132,7 +190,7 @@ export class SourceExplorerEffects {
   /**
    * Helper. Returns a stream of actions that need to occur when expanding a source explorer source.
    */
-  sourceExplorerExpand(state: AppState, action: SourceExplorerExpandEvent): Observable<Action>[] {
+  expand(state: AppState, action: ExpandEvent): Observable<Action>[] {
     const sourceId = action.sourceId;
     const source = state.sourceExplorer.treeBySourceId[sourceId];
     const actions: Observable<Action>[] = [];
@@ -144,13 +202,13 @@ export class SourceExplorerEffects {
         );
       } else {
         actions.push(
-          this.fetchSources(source.url, sourceId, false),
+          this.fetchNewSources(source.url, sourceId, false),
         );
       }
     }
 
     actions.push(
-      of(new sourceExplorerActions.UpdateTreeSource(sourceId, 'expanded', true)),
+      of(new sourceExplorerActions.UpdateTreeSource(sourceId, { expanded: true })),
       of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
     );
 
@@ -160,7 +218,7 @@ export class SourceExplorerEffects {
   /**
    * Helper. Returns a stream of actions that need to occur when opening a source explorer source.
    */
-  sourceExplorerOpen(state: AppState, action: SourceExplorerOpenEvent, bands: RavenSubBand[]): Action[] {
+  open(state: AppState, action: OpenEvent, bands: RavenSubBand[]): Action[] {
     const actions: Action[] = [];
 
     bands.forEach((subBand: RavenSubBand) => {
@@ -190,7 +248,7 @@ export class SourceExplorerEffects {
     });
 
     actions.push(
-      new sourceExplorerActions.UpdateTreeSource(action.sourceId, 'opened', true),
+      new sourceExplorerActions.UpdateTreeSource(action.sourceId, { opened: true }),
       new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }),
     );
 
@@ -204,7 +262,7 @@ export class SourceExplorerEffects {
     return this.http.get<MpsServerGraphData>(sourceUrl).pipe(
       map((graphData: MpsServerGraphData) => toRavenBandData(sourceId, graphData)),
       catchError(e => {
-        console.error('SourceExplorerEffects - fetchGraphData error: ', e);
+        console.error('SourceExplorerEffects - fetchBands error: ', e);
         return of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }));
       }),
     );
@@ -213,12 +271,43 @@ export class SourceExplorerEffects {
   /**
    * Fetch helper. Fetches sources from MPS Server and maps them to Raven sources.
    */
-  fetchSources(url: string, sourceId: string, isServer: boolean) {
+  fetchNewSources(url: string, parentId: string, isServer: boolean) {
     return this.http.get<MpsServerSource[]>(url).pipe(
-      map((mpsServerSources: MpsServerSource[]) => toRavenSources(sourceId, isServer, mpsServerSources)),
-      map((sources: RavenSource[]) => new sourceExplorerActions.NewSources(sourceId, sources)),
+      map((mpsServerSources: MpsServerSource[]) => toRavenSources(parentId, isServer, mpsServerSources)),
+      map((sources: RavenSource[]) => new sourceExplorerActions.NewSources(parentId, sources)),
       catchError(e => {
-        console.error('SourceExplorerEffects - fetchSources error: ', e);
+        console.error('SourceExplorerEffects - fetchNewSources error: ', e);
+        return of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }));
+      }),
+    );
+  }
+
+  /**
+   * Fetch helper. Deletes a source from MPS Server.
+   */
+  removeSource(sourceUrl: string, sourceId: string) {
+    // TODO: Make this better so we don't have to change the URL.
+    const url = sourceUrl.replace(/(list_)?generic-mongodb/i, 'fs-mongodb');
+
+    return this.http.delete(url, { responseType: 'text' }).pipe(
+      map(() => new sourceExplorerActions.RemoveSource(sourceId)),
+      catchError(e => {
+        console.error('SourceExplorerEffects - removeSource error: ', e);
+        return of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }));
+      }),
+    );
+  }
+
+  /**
+   * Helper. Save some data to an MPS Server source.
+   *
+   * TODO: Replace 'any' with a concrete type.
+   */
+  saveToSource(sourceUrl: string, sourceId: string, name: string, data: any) {
+    return this.http.put(`${sourceUrl}/${name}`, data).pipe(
+      concatMap(() => this.fetchNewSources(sourceUrl, sourceId, false)),
+      catchError(e => {
+        console.error('SourceExplorerEffects - saveToSource error: ', e);
         return of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }));
       }),
     );
