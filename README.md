@@ -1,6 +1,7 @@
-[![Build Status](https://cae-jenkins2.jpl.nasa.gov/buildStatus/icon?job=MPSA/SEQ/raven2/raven2%20build/master)](https://cae-jenkins2.jpl.nasa.gov/buildStatus/icon?job=MPSA/SEQ/raven2/raven2%20build/master) 
-
-
+[![Build Status](https://cae-jenkins2.jpl.nasa.gov/buildStatus/icon?job=MPSA/SEQ/raven2/raven2%20build/master)](https://cae-jenkins2.jpl.nasa.gov/job/MPSA/job/SEQ/job/raven2/job/raven2%20build/job/master/) 
+[![Quality Gate](https://seq-sca-mgss.jpl.nasa.gov/api/badges/measure?key=mgss.seq%3Araven2&metric=ncloc)](https://seq-sca-mgss.jpl.nasa.gov/dashboard/index/com.qualinsight.plugins.sonarqube:qualinsight-plugins-sonarqube-badges)
+[![Quality Gate](https://seq-sca-mgss.jpl.nasa.gov/api/badges/measure?key=mgss.seq%3Araven2&metric=bugs)](https://seq-sca-mgss.jpl.nasa.gov/dashboard/index/com.qualinsight.plugins.sonarqube:qualinsight-plugins-sonarqube-badges)
+[![Quality Gate](https://seq-sca-mgss.jpl.nasa.gov/api/badges/measure?key=mgss.seq%3Araven2&metric=critical_violations)](https://seq-sca-mgss.jpl.nasa.gov/dashboard/index/com.qualinsight.plugins.sonarqube:qualinsight-plugins-sonarqube-badges)
 
 # Raven2
 
