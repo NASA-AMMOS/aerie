@@ -21,7 +21,6 @@ import { combineLatest } from 'rxjs/observable/combineLatest';
 import { takeUntil, tap } from 'rxjs/operators';
 import { Subject } from 'rxjs/Subject';
 
-import * as fromDisplay from './../../reducers/display';
 import * as fromSourceExplorer from './../../reducers/source-explorer';
 
 import * as layoutActions from './../../actions/layout';
@@ -43,10 +42,9 @@ export class AppComponent implements OnDestroy {
   ) {
     // Combine all fetch pending observables for use in progress bar.
     this.loading$ = combineLatest(
-      this.store.select(fromDisplay.getPending),
       this.store.select(fromSourceExplorer.getPending),
-      (displayPending, sourceExplorerPending) => {
-        return displayPending || sourceExplorerPending;
+      sourceExplorerPending => {
+        return sourceExplorerPending;
       },
     ).pipe(
       tap(() => this.changeDetector.markForCheck()),

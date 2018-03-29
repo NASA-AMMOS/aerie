@@ -47,7 +47,6 @@ import {
 } from './components';
 
 import {
-  DisplayEffects,
   RouterEffects,
   SourceExplorerEffects,
 } from './effects';
@@ -80,7 +79,6 @@ export const ENTRY_COMPONENTS = [
 ];
 
 export const EFFECTS = [
-  DisplayEffects,
   RouterEffects,
   SourceExplorerEffects,
 ];
