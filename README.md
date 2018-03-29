@@ -1,6 +1,14 @@
+[![Build Status](https://cae-jenkins2.jpl.nasa.gov/buildStatus/icon?job=MPSA/SEQ/raven2/raven2%20build/master)](https://cae-jenkins2.jpl.nasa.gov/job/MPSA/job/SEQ/job/raven2/job/raven2%20build/job/master/) 
+[![Quality Gate](https://seq-sca-mgss.jpl.nasa.gov/api/badges/measure?key=mgss.seq%3Araven2&metric=ncloc)](https://seq-sca-mgss.jpl.nasa.gov/dashboard/index/com.qualinsight.plugins.sonarqube:qualinsight-plugins-sonarqube-badges)
+[![Quality Gate](https://seq-sca-mgss.jpl.nasa.gov/api/badges/measure?key=mgss.seq%3Araven2&metric=bugs)](https://seq-sca-mgss.jpl.nasa.gov/dashboard/index/com.qualinsight.plugins.sonarqube:qualinsight-plugins-sonarqube-badges)
+[![Quality Gate](https://seq-sca-mgss.jpl.nasa.gov/api/badges/measure?key=mgss.seq%3Araven2&metric=critical_violations)](https://seq-sca-mgss.jpl.nasa.gov/dashboard/index/com.qualinsight.plugins.sonarqube:qualinsight-plugins-sonarqube-badges)
+
 # Raven2
 
 Resource and Activity Visualization Engine v2.
+
+RAVEN is a web-based platform included in the SEQ subsystem of the Advanced Multimission Operations System (AMMOS) and managed by the Multimission Ground System and Services (MGSS). It allows users to view science planning, spacecraft activities, resource usage and predicted data, or any time -based data, displayed in a timeline format via web browser. Subsequently, it can be viewed simultaneously by distributed users/teams for collaboration when creating, updating and validating activity plans and command sequences.
+
 
 ## Develop
 
