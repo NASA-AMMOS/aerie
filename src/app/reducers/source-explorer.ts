@@ -91,6 +91,7 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
   switch (action.type) {
     case SourceExplorerActionTypes.ExpandEvent:
     case SourceExplorerActionTypes.FetchInitialSources:
+    case SourceExplorerActionTypes.LoadFromSource:
       return { ...state, fetchPending: true };
     case SourceExplorerActionTypes.NewSources:
       return newSources(state, action);

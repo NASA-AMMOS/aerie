@@ -13,7 +13,9 @@ import {
   MpsServerSourceDir,
   MpsServerSourceFile,
   MpsServerSourceGraphable,
+  RavenCompositeBand,
   RavenSource,
+  RavenSubBand,
   StringTMap,
 } from './../models';
 
@@ -187,6 +189,47 @@ export function getParent(tree: StringTMap<RavenSource>, sourceId: string): Rave
   }
 
   return null;
+}
+
+/**
+ * Helper that returns all the individual source id parent paths for a given source id.
+ *
+ * So if a source has path: '/hello/world/goodbye/'.
+ * This function will break up that path into: ['/hello/', '/hello/world/'],
+ * which are just the individual source id parent paths up to (but not including) the given source.
+ */
+export function getParentPaths(sourceId: string): string[] {
+  const sources = sourceId.split('/').filter(p => p !== '');
+  sources.pop();
+
+  const paths: string[] = [];
+
+  for (let i = 0, l = sources.length; i < l; ++i) {
+    if (paths[i - 1]) {
+      paths.push(`${paths[i - 1]}${sources[i]}/`);
+    } else {
+      paths.push(`/${sources[i]}/`);
+    }
+  }
+
+  return paths;
+}
+
+/**
+ * Helper that returns a list of ALL parent source ids for a list of bands.
+ */
+export function getParentSourceIds(bands: RavenCompositeBand[]): string[] {
+  const sourceIds = {};
+
+  bands.forEach((band: RavenCompositeBand) => {
+    band.subBands.forEach((subBand: RavenSubBand) => {
+      Object.keys(subBand.sourceIds).forEach(sourceId => {
+        getParentPaths(sourceId).forEach(id => sourceIds[id] = id);
+      });
+    });
+  });
+
+  return Object.keys(sourceIds);
 }
 
 /**
