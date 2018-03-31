@@ -192,44 +192,46 @@ export function getParent(tree: StringTMap<RavenSource>, sourceId: string): Rave
 }
 
 /**
- * Helper that returns all the individual source id parent paths for a given source id.
+ * Helper that returns all the individual parent source ids for a given source id.
  *
- * So if a source has path: '/hello/world/goodbye/'.
- * This function will break up that path into: ['/hello/', '/hello/world/'],
- * which are just the individual source id parent paths up to (but not including) the given source.
+ * So if a source has id: '/hello/world/goodbye/'.
+ * This function will break up that id into: ['/hello/', '/hello/world/'],
+ * which are just the individual parent source ids up to (but not including) the given source id.
  */
-export function getParentPaths(sourceId: string): string[] {
-  const sources = sourceId.split('/').filter(p => p !== '');
-  sources.pop();
+export function getParentSourceIds(sourceId: string): string[] {
+  const parentSourceIds: string[] = [];
 
-  const paths: string[] = [];
-
-  for (let i = 0, l = sources.length; i < l; ++i) {
-    if (paths[i - 1]) {
-      paths.push(`${paths[i - 1]}${sources[i]}/`);
-    } else {
-      paths.push(`/${sources[i]}/`);
-    }
+  while (sourceId.length > 1) {
+      sourceId = sourceId.replace(/([^\/]+)\/?$/, ''); // Removes last id name up to '/'.
+      parentSourceIds.push(sourceId);
   }
 
-  return paths;
+  parentSourceIds.pop(); // Remove root id '/'.
+
+  return parentSourceIds.reverse();
 }
 
 /**
- * Helper that returns a list of ALL parent source ids for a list of bands.
+ * Helper that returns a list of ALL source ids for a list of bands,
+ * separated by parent ids and leaf source ids.
  */
-export function getParentSourceIds(bands: RavenCompositeBand[]): string[] {
+export function getSourceIds(bands: RavenCompositeBand[]) {
+  const parentSourceIds = {};
   const sourceIds = {};
 
   bands.forEach((band: RavenCompositeBand) => {
     band.subBands.forEach((subBand: RavenSubBand) => {
       Object.keys(subBand.sourceIds).forEach(sourceId => {
-        getParentPaths(sourceId).forEach(id => sourceIds[id] = id);
+        getParentSourceIds(sourceId).forEach(id => parentSourceIds[id] = id);
+        sourceIds[sourceId] = sourceId;
       });
     });
   });
 
-  return Object.keys(sourceIds);
+  return {
+    parentSourceIds: Object.keys(parentSourceIds),
+    sourceIds: Object.keys(sourceIds),
+  };
 }
 
 /**

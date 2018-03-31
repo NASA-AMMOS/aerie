@@ -49,7 +49,7 @@ import * as fromSourceExplorer from './../reducers/source-explorer';
 import * as fromTimeline from './../reducers/timeline';
 
 import {
-  getParentSourceIds,
+  getSourceIds,
   hasActivityByTypeBand,
   isAddTo,
   isOverlay,
@@ -230,6 +230,8 @@ export class SourceExplorerEffects {
    * Helper. Returns a stream of actions that need to occur when loading a state.
    */
   load(bands: RavenCompositeBand[], initialSources: RavenSource[]) {
+    const { parentSourceIds } = getSourceIds(bands);
+
     return [
       of(new sourceExplorerActions.UpdateSourceExplorer({
         ...fromSourceExplorer.initialState,
@@ -239,7 +241,7 @@ export class SourceExplorerEffects {
         ...fromTimeline.initialState,
       })),
       of(new sourceExplorerActions.NewSources('/', initialSources)),
-      ...getParentSourceIds(bands).map((sourceId: string) =>
+      ...parentSourceIds.map((sourceId: string) =>
         combineLatest(this.store$, state => state.sourceExplorer.treeBySourceId[sourceId]).pipe(
           take(1),
           concatMap(source =>
