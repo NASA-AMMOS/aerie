@@ -95,10 +95,12 @@ export class SourceExplorerEffects {
     ofType<ExpandEvent>(SourceExplorerActionTypes.ExpandEvent),
     withLatestFrom(this.store$),
     map(([action, state]) => state.sourceExplorer.treeBySourceId[action.sourceId]),
-    concatMap(source => concat(
-      ...this.expand(source),
-      of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
-    )),
+    concatMap(source =>
+      concat(
+        ...this.expand(source),
+        of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+      ),
+    ),
   );
 
   @Effect()
@@ -132,9 +134,7 @@ export class SourceExplorerEffects {
     ),
     map(([action, state, sources]) => ({ action, state, sources })),
     concatMap(({ action, state: { bands }, sources }) =>
-      of(action).pipe(
-        concatMap(() => concat(...this.load(bands, sources))),
-      ),
+      concat(...this.load(bands, sources)),
     ),
   );
 
@@ -230,34 +230,28 @@ export class SourceExplorerEffects {
    * Helper. Returns a stream of actions that need to occur when loading a state.
    */
   load(bands: RavenCompositeBand[], initialSources: RavenSource[]) {
-    const actions: Observable<Action>[] = [
+    return [
       of(new sourceExplorerActions.UpdateSourceExplorer({
         ...fromSourceExplorer.initialState,
         fetchPending: true,
       })),
-      of(new sourceExplorerActions.NewSources('/', initialSources)),
-    ];
-
-    getParentSourceIds(bands).forEach((sourceId: string) => {
-      actions.push(
-        combineLatest(this.store$, state => state.sourceExplorer.treeBySourceId[sourceId]).pipe(
-          take(1),
-          concatMap(source => concat(
-            ...this.expand(source),
-          )),
-        ),
-      );
-    });
-
-    actions.push(
       of(new timelineActions.UpdateTimeline({
         ...fromTimeline.initialState,
+      })),
+      of(new sourceExplorerActions.NewSources('/', initialSources)),
+      ...getParentSourceIds(bands).map((sourceId: string) =>
+        combineLatest(this.store$, state => state.sourceExplorer.treeBySourceId[sourceId]).pipe(
+          take(1),
+          concatMap(source =>
+            concat(...this.expand(source)),
+          ),
+        ),
+      ),
+      of(new timelineActions.UpdateTimeline({
         bands,
       })),
       of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
-    );
-
-    return actions;
+    ];
   }
 
   /**
