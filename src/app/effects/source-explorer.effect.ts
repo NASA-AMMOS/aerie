@@ -134,7 +134,9 @@ export class SourceExplorerEffects {
     ),
     map(([action, state, sources]) => ({ action, state, sources })),
     concatMap(({ action, state: { bands }, sources }) =>
-      concat(...this.load(bands, sources)),
+      concat(
+        ...this.load(bands, sources),
+      ),
     ),
   );
 
@@ -245,7 +247,9 @@ export class SourceExplorerEffects {
         combineLatest(this.store$, state => state.sourceExplorer.treeBySourceId[sourceId]).pipe(
           take(1),
           concatMap(source =>
-            concat(...this.expand(source)),
+            concat(
+              ...this.expand(source),
+            ),
           ),
         ),
       ),
