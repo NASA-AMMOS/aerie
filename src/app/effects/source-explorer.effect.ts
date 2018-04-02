@@ -51,6 +51,7 @@ import * as fromTimeline from './../reducers/timeline';
 import {
   getSourceIds,
   hasActivityByTypeBand,
+  hasSourceId,
   isAddTo,
   isOverlay,
   toCompositeBand,
@@ -108,16 +109,17 @@ export class SourceExplorerEffects {
     ofType<FetchInitialSources>(SourceExplorerActionTypes.FetchInitialSources),
     withLatestFrom(this.store$),
     map(([action, state]) => state),
-    concatMap((state: AppState) => [
-      this.fetchNewSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`, '/', true).pipe(
-        map((sources: RavenSource[]) => new sourceExplorerActions.NewSources('/', sources) as Action),
+    concatMap((state: AppState) =>
+      concat(
+        this.fetchNewSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`, '/', true).pipe(
+          map((sources: RavenSource[]) => new sourceExplorerActions.NewSources('/', sources) as Action),
+        ),
+        of(new sourceExplorerActions.UpdateSourceExplorer({
+          fetchPending: false,
+          initialSourcesLoaded: true,
+        })),
       ),
-      of(new sourceExplorerActions.UpdateSourceExplorer({
-        fetchPending: false,
-        initialSourcesLoaded: true,
-      })),
-    ]),
-    concatMap(actions => actions),
+    ),
   );
 
   @Effect()
@@ -152,9 +154,12 @@ export class SourceExplorerEffects {
         this.fetchBands(state.sourceExplorer.treeBySourceId[action.sourceId].url, action.sourceId),
       ]),
     ),
-    map(([state, action, bands]) => ({ state, action, bands })),
-    concatMap(({ state, action, bands }) =>
-      this.open(state, action, bands),
+    map(([state, action, newSubBands]) => ({ state, action, newSubBands })),
+    concatMap(({ state: { timeline }, action: { sourceId }, newSubBands }) =>
+      concat(
+        ...this.open(sourceId, timeline.bands, timeline.selectedBandId, timeline.selectedSubBandId, newSubBands),
+        of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+      ),
     ),
   );
 
@@ -163,11 +168,12 @@ export class SourceExplorerEffects {
     ofType<RemoveSourceEvent>(SourceExplorerActionTypes.RemoveSourceEvent),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
-    concatMap(({ state, action }) => [
-      this.removeSource(action.source.url, action.source.id),
-      of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
-    ]),
-    concatMap(actions => actions),
+    concatMap(({ state, action }) =>
+      concat(
+        this.removeSource(action.source.url, action.source.id),
+        of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+      ),
+    ),
   );
 
   @Effect()
@@ -175,22 +181,23 @@ export class SourceExplorerEffects {
     ofType<SaveToSource>(SourceExplorerActionTypes.SaveToSource),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
-    concatMap(({ state, action }) => [
-      this.saveToSource(action.source.url, action.source.id, action.name, {
-        name: `raven2-state-${action.name}`,
-        state: {
-          bands: state.timeline.bands.map(band => ({
-            ...band,
-            subBands: band.subBands.map(subBand => ({
-              ...subBand,
-              points: [],
+    concatMap(({ state, action }) =>
+      concat(
+        this.saveToSource(action.source.url, action.source.id, action.name, {
+          name: `raven2-state-${action.name}`,
+          state: {
+            bands: state.timeline.bands.map(band => ({
+              ...band,
+              subBands: band.subBands.map(subBand => ({
+                ...subBand,
+                points: [],
+              })),
             })),
-          })),
-        },
-      }),
-      of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
-    ]),
-    concatMap(actions => actions),
+          },
+        }),
+        of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+      ),
+    ),
   );
 
   constructor(
@@ -231,8 +238,8 @@ export class SourceExplorerEffects {
   /**
    * Helper. Returns a stream of actions that need to occur when loading a state.
    */
-  load(bands: RavenCompositeBand[], initialSources: RavenSource[]) {
-    const { parentSourceIds } = getSourceIds(bands);
+  load(bands: RavenCompositeBand[], initialSources: RavenSource[]): Observable<Action>[] {
+    const { parentSourceIds, sourceIds } = getSourceIds(bands);
 
     return [
       of(new sourceExplorerActions.UpdateSourceExplorer({
@@ -241,6 +248,7 @@ export class SourceExplorerEffects {
       })),
       of(new timelineActions.UpdateTimeline({
         ...fromTimeline.initialState,
+        bands,
       })),
       of(new sourceExplorerActions.NewSources('/', initialSources)),
       ...parentSourceIds.map((sourceId: string) =>
@@ -253,50 +261,68 @@ export class SourceExplorerEffects {
           ),
         ),
       ),
-      of(new timelineActions.UpdateTimeline({
-        bands,
-      })),
+      ...sourceIds.map((sourceId: string) =>
+        combineLatest(this.store$, state => state).pipe(
+          take(1),
+          concatMap(state =>
+            forkJoin([
+              of(state),
+              this.fetchBands(state.sourceExplorer.treeBySourceId[sourceId].url, sourceId),
+            ]),
+          ),
+          map(([state, newBands]) => ({ state, newBands })),
+          concatMap(({ state: { timeline }, newBands }) =>
+            concat(
+              ...this.open(sourceId, bands, null, null, newBands),
+            ),
+          ),
+        ),
+      ),
       of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
     ];
   }
 
   /**
    * Helper. Returns a stream of actions that need to occur when opening a source explorer source.
+   * The order of the cases in this function are very important. Do not change the order.
    */
-  open(state: AppState, action: OpenEvent, bands: RavenSubBand[]): Action[] {
-    const actions: Action[] = [
-      new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: true }),
-    ];
+  open(sourceId: string, currentBands: RavenCompositeBand[], bandId: string | null, subBandId: string | null, newSubBands: RavenSubBand[]): Observable<Action>[] {
+    const actions: Observable<Action>[] = [];
 
-    bands.forEach((subBand: RavenSubBand) => {
-      const activityByTypeBand = hasActivityByTypeBand(state.timeline.bands, subBand);
+    newSubBands.forEach((subBand: RavenSubBand) => {
+      const activityByTypeBand = hasActivityByTypeBand(currentBands, subBand);
+      const existingBand = hasSourceId(currentBands, sourceId);
 
       if (activityByTypeBand) {
         actions.push(
-          new sourceExplorerActions.SubBandIdAdd(action.sourceId, activityByTypeBand.subBandId),
-          new timelineActions.AddPointsToSubBand(action.sourceId, activityByTypeBand.bandId, activityByTypeBand.subBandId, subBand.points),
+          of(new sourceExplorerActions.SubBandIdAdd(sourceId, activityByTypeBand.subBandId)),
+          of(new timelineActions.AddPointsToSubBand(sourceId, activityByTypeBand.bandId, activityByTypeBand.subBandId, subBand.points)),
         );
-      } else if (isAddTo(state.timeline.bands, state.timeline.selectedBandId, state.timeline.selectedSubBandId, subBand.type)) {
+      } else if (existingBand) {
         actions.push(
-          new sourceExplorerActions.SubBandIdAdd(action.sourceId, state.timeline.selectedSubBandId),
-          new timelineActions.AddPointsToSubBand(action.sourceId, state.timeline.selectedBandId, state.timeline.selectedSubBandId, subBand.points),
+          of(new sourceExplorerActions.SubBandIdAdd(sourceId, existingBand.subBandId)),
+          of(new timelineActions.AddPointsToSubBand(sourceId, existingBand.bandId, existingBand.subBandId, subBand.points)),
         );
-      } else if (isOverlay(state.timeline.bands, state.timeline.selectedBandId)) {
+      } else if (bandId && subBandId && isAddTo(currentBands, bandId, subBandId, subBand.type)) {
         actions.push(
-          new sourceExplorerActions.SubBandIdAdd(action.sourceId, subBand.id),
-          new timelineActions.AddSubBand(action.sourceId, state.timeline.selectedBandId, subBand),
+          of(new sourceExplorerActions.SubBandIdAdd(sourceId, subBandId)),
+          of(new timelineActions.AddPointsToSubBand(sourceId, bandId, subBandId, subBand.points)),
+        );
+      } else if (bandId && isOverlay(currentBands, bandId)) {
+        actions.push(
+          of(new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id)),
+          of(new timelineActions.AddSubBand(sourceId, bandId, subBand)),
         );
       } else {
         actions.push(
-          new sourceExplorerActions.SubBandIdAdd(action.sourceId, subBand.id),
-          new timelineActions.AddBand(action.sourceId, toCompositeBand(action.sourceId, subBand)),
+          of(new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id)),
+          of(new timelineActions.AddBand(sourceId, toCompositeBand(sourceId, subBand))),
         );
       }
     });
 
     actions.push(
-      new sourceExplorerActions.UpdateTreeSource(action.sourceId, { opened: true }),
-      new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }),
+      of(new sourceExplorerActions.UpdateTreeSource(sourceId, { opened: true })),
     );
 
     return actions;

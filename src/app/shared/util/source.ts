@@ -207,8 +207,9 @@ export function getParentSourceIds(sourceId: string): string[] {
   }
 
   parentSourceIds.pop(); // Remove root id '/'.
+  parentSourceIds.reverse(); // Return the ids starting from the top.
 
-  return parentSourceIds.reverse();
+  return parentSourceIds;
 }
 
 /**

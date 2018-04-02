@@ -8,14 +8,22 @@
  */
 
 import {
-  getParentPaths,
+  getParentSourceIds,
   getSourceType,
 } from './source';
 
 describe('source.ts', () => {
-  describe('getParentPaths', () => {
+  describe('getParentSourceIds', () => {
     it(`should split a source correctly into it's parent paths`, () => {
-      expect(getParentPaths('/hello/world/goodbye/')).toEqual(['/hello/', '/hello/world/']);
+      expect(getParentSourceIds('/hello/world/goodbye/what/is/going/on/')).toEqual([
+        '/hello/',
+        '/hello/world/',
+        '/hello/world/goodbye/',
+        '/hello/world/goodbye/what/',
+        '/hello/world/goodbye/what/is/',
+        '/hello/world/goodbye/what/is/going/',
+        '/hello/world/goodbye/what/is/going/on/',
+      ]);
     });
   });
 
