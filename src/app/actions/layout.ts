@@ -11,14 +11,24 @@ import { Action } from '@ngrx/store';
 
 // Action Types.
 export enum LayoutActionTypes {
-  SetMode                = '[layout] set_mode',
-  ToggleDataPointDrawer    = '[layout] toggle_data_point_drawer',
-  ToggleDetailsDrawer    = '[layout] toggle_details_drawer',
-  ToggleLeftDrawer       = '[layout] toggle_left_drawer',
-  ToggleSouthBandsDrawer = '[layout] toggle_south_bands_drawer',
+  CloseDataPointDrawer    = '[layout] close_data_point_drawer',
+  OpenDataPointDrawer     = '[layout] open_data_point_drawer',
+  SetMode                 = '[layout] set_mode',
+  SetTimelinePanelSize    = '[layout] set_timeline_panel_size',
+  ToggleDataPointDrawer   = '[layout] toggle_data_point_drawer',
+  ToggleDetailsDrawer     = '[layout] toggle_details_drawer',
+  ToggleLeftDrawer        = '[layout] toggle_left_drawer',
+  ToggleSouthBandsDrawer  = '[layout] toggle_south_bands_drawer',
 }
 
 // Actions.
+export class CloseDataPointDrawer implements Action {
+  readonly type = LayoutActionTypes.CloseDataPointDrawer;
+}
+
+export class OpenDataPointDrawer implements Action {
+  readonly type = LayoutActionTypes.OpenDataPointDrawer;
+}
 export class SetMode implements Action {
   readonly type = LayoutActionTypes.SetMode;
 
@@ -28,6 +38,14 @@ export class SetMode implements Action {
     public showDetailsDrawer: boolean,
     public showLeftDrawer: boolean,
     public showSouthBandsDrawer: boolean,
+  ) { }
+}
+
+export class SetTimelinePanelSize implements Action {
+  readonly type = LayoutActionTypes.SetTimelinePanelSize;
+
+  constructor(
+    public panelSize: number,
   ) {}
 }
 
@@ -49,7 +67,10 @@ export class ToggleSouthBandsDrawer implements Action {
 
 // Union type of all actions.
 export type LayoutAction =
+  CloseDataPointDrawer |
+  OpenDataPointDrawer |
   SetMode |
+  SetTimelinePanelSize |
   ToggleDataPointDrawer |
   ToggleDetailsDrawer |
   ToggleLeftDrawer |

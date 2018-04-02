@@ -11,7 +11,9 @@ import { Action } from '@ngrx/store';
 
 import {
   BaseType,
+  CtlData,
   RavenCompositeBand,
+  RavenPoint,
   RavenSortMessage,
   RavenSubBand,
   RavenTimeRange,
@@ -23,17 +25,18 @@ export enum TimelineActionTypes {
   AddBand                      = '[timeline] add_band',
   AddPointsToSubBand           = '[timeline] add_points_to_sub_band',
   AddSubBand                   = '[timeline] add_sub_band',
+  ClickDataPoint               = '[timeline] click_data_point',
   RemoveBandsOrPointsForSource = '[timeline] remove_bands_or_points_for_source',
   RemoveSubBand                = '[timeline] remove_sub_band',
   SelectBand                   = '[timeline] select_band',
-  SelectDataPoint         = '[timeline] select_data_point',
+  SelectDataPoint              = '[timeline] select_data_point',
   SortBands                    = '[timeline] sort_bands',
+  ToggleViewParameter          = '[timeline] toggle-view-parameter',
+  ToggleViewMetadata           = '[timeline] toggle-view-metadata',
   UpdateBand                   = '[timeline] update_band',
   UpdateSubBand                = '[timeline] update_sub_band',
   UpdateTimeline               = '[timeline] update_timeline',
   UpdateViewTimeRange          = '[timeline] update_view_time_range',
-  ToggleViewParameter = '[timeline] toggle-view-parameter',
-  ToggleViewMetadata = '[timeline] toggle-view-metadata',
 }
 
 // Actions.
@@ -67,6 +70,12 @@ export class AddSubBand implements Action {
   ) {}
 }
 
+export class ClickDataPoint implements Action {
+  readonly type = TimelineActionTypes.ClickDataPoint;
+
+  constructor(public ctlData: CtlData) {}
+}
+
 export class RemoveBandsOrPointsForSource implements Action {
   readonly type = TimelineActionTypes.RemoveBandsOrPointsForSource;
 
@@ -88,12 +97,25 @@ export class SelectBand implements Action {
 export class SelectDataPoint implements Action {
   readonly type = TimelineActionTypes.SelectDataPoint;
 
-  constructor(public interval: any, public bandId: string) {}
+  constructor(public selectedDataPoint: RavenPoint) {}
 }
+
 export class SortBands implements Action {
   readonly type = TimelineActionTypes.SortBands;
 
   constructor(public sort: StringTMap<RavenSortMessage>) {}
+}
+
+export class ToggleViewParameter implements Action {
+  readonly type = TimelineActionTypes.ToggleViewParameter;
+
+  constructor() {}
+}
+
+export class ToggleViewMetadata implements Action {
+  readonly type = TimelineActionTypes.ToggleViewMetadata;
+
+  constructor() {}
 }
 
 export class UpdateBand implements Action {
@@ -120,30 +142,20 @@ export class UpdateViewTimeRange implements Action {
   constructor(public viewTimeRange: RavenTimeRange) {}
 }
 
-export class ToggleViewParameter implements Action {
-  readonly type = TimelineActionTypes.ToggleViewParameter;
-
-  constructor() {}
-}
-
-export class ToggleViewMetadata implements Action {
-  readonly type = TimelineActionTypes.ToggleViewMetadata;
-
-  constructor() {}
-}
 // Union type of all actions.
 export type TimelineAction =
   AddBand |
   AddPointsToSubBand |
   AddSubBand |
+  ClickDataPoint |
   RemoveBandsOrPointsForSource |
   RemoveSubBand |
   SelectBand |
   SelectDataPoint |
   SortBands |
+  ToggleViewParameter |
+  ToggleViewMetadata |
   UpdateBand |
   UpdateSubBand |
   UpdateTimeline |
-  UpdateViewTimeRange |
-  ToggleViewParameter |
-  ToggleViewMetadata;
+  UpdateViewTimeRange;

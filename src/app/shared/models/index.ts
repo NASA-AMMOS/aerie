@@ -8,6 +8,7 @@
  */
 
 export * from './base-type';
+export * from './ctl-data';
 export * from './map';
 export * from './mps-server-activity-metadata';
 export * from './mps-server-activity-point-metadata';

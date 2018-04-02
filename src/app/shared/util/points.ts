@@ -10,11 +10,13 @@
 import { uniqueId } from 'lodash';
 
 import {
+  CtlData,
   MpsServerActivityPoint,
   MpsServerActivityPointMetadata,
   MpsServerResourcePoint,
   MpsServerStatePoint,
   RavenActivityPoint,
+  RavenCompositeBand,
   RavenResourcePoint,
   RavenStatePoint,
   StringTMap,
@@ -161,6 +163,27 @@ export function getActivityPointsByLegend(sourceId: string, timelineData: MpsSer
       start: minTime,
     },
   };
+}
+
+/**
+ * get the corresponding RavenPoint for the ctl interval
+ * @param bands
+ * @param ctlData
+ */
+export function getRavenPoint(bands: RavenCompositeBand[], ctlData: CtlData) {
+  for (let i = 0, l = bands.length; i < l; ++i) {
+    if (bands[i].id === ctlData.band.id) {
+      for (let j = 0, ll = bands[i].subBands.length; j < ll; ++j) {
+        const subBand = bands[i].subBands[j];
+        for (let k = 0, lll = subBand.points.length; k < lll; ++k) {
+          if (subBand.points[k].uniqueId === ctlData.interval.uniqueId) {
+            return subBand.points[k];
+          }
+        }
+      }
+    }
+  }
+  return null;
 }
 
 /**

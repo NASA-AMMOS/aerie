@@ -40,19 +40,21 @@ import {
 
 import {
   RavenActivityPointComponent,
-  RavenResourcePointComponent,
-  RavenStatePointComponent,
   RavenBandsComponent,
   RavenConfirmDialogComponent,
+  RavenResourcePointComponent,
   RavenSettingsComponent,
+  RavenStatePointComponent,
   RavenStateSaveDialogComponent,
   RavenTreeComponent,
 } from './components';
 
 import {
   DisplayEffects,
+  LayoutEffects,
   RouterEffects,
   SourceExplorerEffects,
+  TimelineEffects,
 } from './effects';
 
 import {
@@ -95,8 +97,10 @@ export const ENTRY_COMPONENTS = [
 
 export const EFFECTS = [
   DisplayEffects,
+  LayoutEffects,
   RouterEffects,
   SourceExplorerEffects,
+  TimelineEffects,
 ];
 
 export const MODULES = [

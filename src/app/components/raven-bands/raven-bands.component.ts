@@ -20,6 +20,7 @@ import { OnChanges, OnInit } from '@angular/core/src/metadata/lifecycle_hooks';
 import { SortablejsOptions } from 'angular-sortablejs';
 
 import {
+  CtlData,
   RavenCompositeBand,
   RavenSortMessage,
   RavenSubBand,
@@ -29,6 +30,12 @@ import {
 
 export interface BandClickEvent extends Event {
   detail: StringTMap<string>;
+}
+
+export interface BandLeftClickEvent extends Event {
+  detail: {
+    ctlData: CtlData,
+  };
 }
 
 @Component({
@@ -46,7 +53,7 @@ export class RavenBandsComponent implements OnChanges, OnInit {
   @Input() viewTimeRange: RavenTimeRange;
 
   @Output() bandClick: EventEmitter<string> = new EventEmitter<string>();
-  @Output() dataPointClick: EventEmitter<any> = new EventEmitter<any>();
+  @Output() dataPointClick: EventEmitter<CtlData> = new EventEmitter<CtlData>();
   @Output() newSort: EventEmitter<StringTMap<RavenSortMessage>> = new EventEmitter<StringTMap<RavenSortMessage>>();
 
   sortablejsOptions: SortablejsOptions;
@@ -111,10 +118,10 @@ export class RavenBandsComponent implements OnChanges, OnInit {
   }
 
   @HostListener('falcon-composite-band-left-click', ['$event'])
-  onDataItemLeftClick(e: BandClickEvent) {
+  onDataItemLeftClick(e: BandLeftClickEvent) {
     e.preventDefault();
     e.stopPropagation();
-    this.dataPointClick.emit(e.detail);
+    this.dataPointClick.emit(e.detail.ctlData);
   }
 
   /**

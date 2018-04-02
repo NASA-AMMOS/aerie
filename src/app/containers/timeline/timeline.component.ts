@@ -24,11 +24,11 @@ import * as fromConfig from './../../reducers/config';
 import * as fromLayout from './../../reducers/layout';
 import * as fromTimeline from './../../reducers/timeline';
 
-import * as layoutActions from './../../actions/layout';
 import * as sourceExplorerActions from './../../actions/source-explorer';
 import * as timelineActions from './../../actions/timeline';
 
 import {
+  CtlData,
   RavenActivityPoint,
   RavenCompositeBand,
   RavenPoint,
@@ -47,6 +47,8 @@ import {
   templateUrl: './timeline.component.html',
 })
 export class TimelineComponent implements OnDestroy {
+
+
   // Config state.
   itarMessage: string;
 
@@ -54,19 +56,19 @@ export class TimelineComponent implements OnDestroy {
   showDetailsDrawer: boolean;
   showLeftDrawer: boolean;
   showSouthBandsDrawer: boolean;
-  chartSize: number;
+  timelinePanelSize: number;
 
   // Timeline state.
   bands: RavenCompositeBand[];
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
   selectedBandId: string;
+  selectedDataPoint: RavenPoint | null;
   selectedSubBandId: string;
-  viewTimeRange: RavenTimeRange;
-  selectedDataPoint: RavenPoint;
   showDataPointDrawer: boolean;
-  viewParameter: boolean;
   viewMetadata: boolean;
+  viewParameter: boolean;
+  viewTimeRange: RavenTimeRange;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -90,7 +92,7 @@ export class TimelineComponent implements OnDestroy {
       this.showLeftDrawer = state.showLeftDrawer;
       this.showSouthBandsDrawer = state.showSouthBandsDrawer;
       this.showDataPointDrawer = state.showDataPointDrawer;
-      this.chartSize = state.chartSize;
+      this.timelinePanelSize = state.timelinePanelSize;
       this.changeDetector.markForCheck();
       dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize anytime our layout changes.
     });
@@ -103,11 +105,11 @@ export class TimelineComponent implements OnDestroy {
       this.labelWidth = state.labelWidth;
       this.maxTimeRange = state.maxTimeRange;
       this.selectedBandId = state.selectedBandId;
+      this.selectedDataPoint = state.selectedDataPoint;
+      this.selectedSubBandId = state.selectedSubBandId;
       this.viewMetadata = state.viewMetadata;
       this.viewParameter = state.viewParameter;
-      this.selectedSubBandId = state.selectedSubBandId;
       this.viewTimeRange = state.viewTimeRange;
-      this.selectedDataPoint = state.selectedDataPoint;
       this.changeDetector.markForCheck();
     });
   }
@@ -117,16 +119,18 @@ export class TimelineComponent implements OnDestroy {
     this.ngUnsubscribe.complete();
   }
 
-  getChartSize(): number {
-    console.log('in getChartSize');
-    return this.showDataPointDrawer ? 60 : 75;
-  }
+  /**
+   * Check if selected point is an activity
+   */
   selectedDataPointIsActivity(): boolean {
-    return (<RavenActivityPoint>this.selectedDataPoint).activityName !== undefined;
+    return (this.selectedDataPoint as RavenActivityPoint).activityName !== undefined;
   }
 
+  /**
+   * check if selected point is state
+   */
   selectedDataPointIsState(): boolean {
-    return (<RavenStatePoint>this.selectedDataPoint).end !== undefined;
+    return (this.selectedDataPoint as RavenStatePoint).end !== undefined;
   }
 
   /**
@@ -136,14 +140,13 @@ export class TimelineComponent implements OnDestroy {
     this.store.dispatch(new timelineActions.SelectBand(bandId));
   }
 
-  onDataPointClick(detail: any): void {
-    this.store.dispatch(new timelineActions.SelectDataPoint(detail.ctlData.interval, detail.ctlData.band.id));
-    if (!this.showDataPointDrawer) {
-      this.store.dispatch(new layoutActions.ToggleDataPointDrawer());
-      this.chartSize = 60;
-      dispatchEvent(new Event('resize'));
-    }
+  /**
+   * Event. Called when a data point is clicked in an raven-bands component.
+   */
+  onDataPointClick(ctlData: CtlData): void {
+    this.store.dispatch(new timelineActions.ClickDataPoint(ctlData));
   }
+
   /**
    * Event. Called when a `delete-sub-band` event is fired from the raven-settings component.
    */
@@ -157,6 +160,20 @@ export class TimelineComponent implements OnDestroy {
    */
   onSort(sort: StringTMap<RavenSortMessage>): void {
     this.store.dispatch(new timelineActions.SortBands(sort));
+  }
+
+  /**
+   * Event. Called when '+/-' parameter button is clicked
+   */
+  onToggleViewParameter() {
+    this.store.dispatch(new timelineActions.ToggleViewParameter());
+  }
+
+  /**
+   * Event. Called when '+/-' metadata button is clicked
+   */
+  onToggleViewMetadata() {
+    this.store.dispatch(new timelineActions.ToggleViewMetadata());
   }
 
   /**
@@ -200,11 +217,4 @@ export class TimelineComponent implements OnDestroy {
     dispatchEvent(new Event('resize'));
   }
 
-  onToggleViewParameter() {
-    this.store.dispatch(new timelineActions.ToggleViewParameter());
-  }
-
-  onToggleViewMetadata() {
-    this.store.dispatch(new timelineActions.ToggleViewMetadata());
-  }
 }

@@ -20,7 +20,6 @@ import {
   RemoveBandsOrPointsForSource,
   RemoveSubBand,
   SelectBand,
-  SelectDataPoint,
   SortBands,
   TimelineAction,
   TimelineActionTypes,
@@ -40,7 +39,6 @@ import {
 import {
   RavenCompositeBand,
   RavenPoint,
-  RavenResourcePoint,
   RavenSubBand,
   RavenTimeRange,
 } from './../shared/models';
@@ -51,21 +49,12 @@ export interface TimelineState {
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
   selectedBandId: string;
+  selectedDataPoint: RavenPoint | null;
   selectedSubBandId: string;
-  viewTimeRange: RavenTimeRange;
-  selectedDataPoint: RavenPoint;
-  viewParameter: boolean;
   viewMetadata: boolean;
+  viewParameter: boolean;
+  viewTimeRange: RavenTimeRange;
 }
-
-const defaultDataPoint: RavenResourcePoint = {
-  duration: 0,
-  id: '',
-  sourceId: '',
-  start: 0,
-  uniqueId: '',
-  value: 0,
-};
 
 // Timeline Initial State.
 export const initialState: TimelineState = {
@@ -73,7 +62,7 @@ export const initialState: TimelineState = {
   labelWidth: 150,
   maxTimeRange: { end: 0, start: 0 },
   selectedBandId: '',
-  selectedDataPoint: defaultDataPoint,
+  selectedDataPoint: null,
   selectedSubBandId: '',
   viewMetadata: false,
   viewParameter: true,
@@ -99,9 +88,13 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
     case TimelineActionTypes.SelectBand:
       return selectBand(state, action);
     case TimelineActionTypes.SelectDataPoint:
-      return selectDataPoint(state, action);
+      return { ...state, selectedDataPoint: action.selectedDataPoint};
     case TimelineActionTypes.SortBands:
       return sortBands(state, action);
+    case TimelineActionTypes.ToggleViewMetadata:
+      return { ...state, viewMetadata: !state.viewMetadata };
+    case TimelineActionTypes.ToggleViewParameter:
+      return { ...state, viewParameter: !state.viewParameter };
     case TimelineActionTypes.UpdateBand:
       return updateBand(state, action);
     case TimelineActionTypes.UpdateSubBand:
@@ -110,10 +103,6 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
       return updateTimeline(state, action);
     case TimelineActionTypes.UpdateViewTimeRange:
       return { ...state, viewTimeRange: { ...action.viewTimeRange } };
-    case TimelineActionTypes.ToggleViewParameter:
-      return { ...state, viewParameter: !state.viewParameter };
-    case TimelineActionTypes.ToggleViewMetadata:
-      return { ...state, viewMetadata: !state.viewMetadata };
     default:
       return state;
   }
@@ -264,8 +253,8 @@ export function removeSubBand(state: TimelineState, action: RemoveSubBand): Time
       subBands: band.subBands.filter(subBand => subBand.id !== action.subBandId),
     }))
     .filter(
-      band => band.subBands.length !== 0,
-    );
+    band => band.subBands.length !== 0,
+  );
 
   bands = updateSortOrder(bands);
 
@@ -288,31 +277,6 @@ export function selectBand(state: TimelineState, action: SelectBand): TimelineSt
     ...state,
     selectedBandId,
     selectedSubBandId: band && band.subBands.length && selectedBandId !== '' ? band.subBands[0].id : '',
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'SelectDataPoint' action.
- */
-export function selectDataPoint(state: TimelineState, action: SelectDataPoint): TimelineState {
-  // get the activityPoint from uniqueId and band; action.bandId is the composite bandId containing the band of action.interval
-  let dataPoint = state.selectedDataPoint;
-  for (let i = 0, l = state.bands.length; i < l; ++i) {
-    if (state.bands[i].id === action.bandId) {
-      for (let j = 0, ll = state.bands[i].subBands.length; j < ll; ++j) {
-        const subBand = state.bands[i].subBands[j];
-        for (let k = 0, lll = subBand.points.length; k < lll; ++k) {
-          if (subBand.points[k].uniqueId === action.interval.uniqueId) {
-            dataPoint = subBand.points[k];
-          }
-        }
-      }
-    }
-  }
-
-  return {
-    ...state,
-    selectedDataPoint: dataPoint,
   };
 }
 

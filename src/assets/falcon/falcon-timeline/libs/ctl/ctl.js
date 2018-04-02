@@ -4303,11 +4303,9 @@ StatePainter.prototype = new Painter();
 StatePainter.prototype.constructor = StatePainter;
 
 function StatePainter(obj) {
-  console.log('new StatePainter');
   if(typeof obj === "undefined") { obj = {}; }
 
   Painter.prototype.constructor.call(this, obj);
-  console.log('new this.borderWidth:'+this.borderWidth);
 }
 
 StatePainter.prototype.getColor = function(unit) {
@@ -4350,7 +4348,6 @@ StatePainter.prototype.paintUnit = function(unit, lastPaintedTimeX2, lastPainted
     ctx.fillStyle = color;
     ctx.fillRect(unitX1, unitY1, unitWidth, unitHeight);
 
-    console.log('borderWidth:'+this.borderWidth +' band.id:'+this.band.id);
     // draw the border of the unit
     if(this.borderWidth > 0) {
       //??ctx.strokeStyle = Util.rgbaToString([0,0,0], unit.opacity);
