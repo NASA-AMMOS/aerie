@@ -13,6 +13,8 @@ import {
 import { AppState } from './../../app/store';
 
 import {
+  CloseDataPointDrawer,
+  OpenDataPointDrawer,
   ToggleDataPointDrawer,
 } from './../actions/layout';
 
@@ -24,7 +26,7 @@ import { LayoutActionTypes } from './../actions/layout';
 export class LayoutEffects {
   @Effect()
   closeDataPointDrawer$: Observable<Action> = this.actions$.pipe(
-    ofType<ToggleDataPointDrawer>(LayoutActionTypes.CloseDataPointDrawer),
+    ofType<CloseDataPointDrawer>(LayoutActionTypes.CloseDataPointDrawer),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     map(({ action }) => new layoutActions.SetTimelinePanelSize(75),
@@ -33,7 +35,7 @@ export class LayoutEffects {
 
   @Effect()
   openDataPointDrawer$: Observable<Action> = this.actions$.pipe(
-    ofType<ToggleDataPointDrawer>(LayoutActionTypes.OpenDataPointDrawer),
+    ofType<OpenDataPointDrawer>(LayoutActionTypes.OpenDataPointDrawer),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     map(({ action }) => new layoutActions.SetTimelinePanelSize(60),

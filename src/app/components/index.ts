@@ -7,9 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './raven-point/raven-activity-point/raven-activity-point.component';
-export * from './raven-point/raven-resource-point/raven-resource-point.component';
-export * from './raven-point/raven-state-point/raven-state-point.component';
+export * from './raven-activity-point/raven-activity-point.component';
+export * from './raven-resource-point/raven-resource-point.component';
+export * from './raven-state-point/raven-state-point.component';
 export * from './raven-bands/raven-bands.component';
 export * from './raven-confirm-dialog/raven-confirm-dialog.component';
 export * from './raven-settings/raven-settings.component';
