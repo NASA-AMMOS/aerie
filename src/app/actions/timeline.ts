@@ -25,11 +25,11 @@ export enum TimelineActionTypes {
   AddBand                      = '[timeline] add_band',
   AddPointsToSubBand           = '[timeline] add_points_to_sub_band',
   AddSubBand                   = '[timeline] add_sub_band',
-  ClickDataPoint               = '[timeline] click_data_point',
   RemoveBandsOrPointsForSource = '[timeline] remove_bands_or_points_for_source',
   RemoveSubBand                = '[timeline] remove_sub_band',
   SelectBand                   = '[timeline] select_band',
   SelectDataPoint              = '[timeline] select_data_point',
+  SelectDataPointEvent         = '[timeline] seletc_data_point_event',
   SortBands                    = '[timeline] sort_bands',
   ToggleViewParameter          = '[timeline] toggle-view-parameter',
   ToggleViewMetadata           = '[timeline] toggle-view-metadata',
@@ -70,8 +70,8 @@ export class AddSubBand implements Action {
   ) {}
 }
 
-export class ClickDataPoint implements Action {
-  readonly type = TimelineActionTypes.ClickDataPoint;
+export class SelectDataPointEvent implements Action {
+  readonly type = TimelineActionTypes.SelectDataPointEvent;
 
   constructor(public ctlData: CtlData) {}
 }
@@ -147,11 +147,11 @@ export type TimelineAction =
   AddBand |
   AddPointsToSubBand |
   AddSubBand |
-  ClickDataPoint |
   RemoveBandsOrPointsForSource |
   RemoveSubBand |
   SelectBand |
   SelectDataPoint |
+  SelectDataPointEvent |
   SortBands |
   ToggleViewParameter |
   ToggleViewMetadata |

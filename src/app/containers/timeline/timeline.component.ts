@@ -144,7 +144,7 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when a data point is clicked in an raven-bands component.
    */
   onDataPointClick(ctlData: CtlData): void {
-    this.store.dispatch(new timelineActions.ClickDataPoint(ctlData));
+    this.store.dispatch(new timelineActions.SelectDataPointEvent(ctlData));
   }
 
   /**

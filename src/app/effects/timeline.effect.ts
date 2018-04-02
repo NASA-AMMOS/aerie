@@ -17,14 +17,14 @@ import * as layoutActions from './../actions/layout';
 import * as timelineActions from './../actions/timeline';
 import { TimelineActionTypes } from './../actions/timeline';
 
-import { ClickDataPoint } from '../actions/timeline';
+import { SelectDataPointEvent } from '../actions/timeline';
 
 import { getRavenPoint } from './../shared/util/points';
 @Injectable()
 export class TimelineEffects {
   @Effect()
-  clickDataPoint$: Observable<Action> = this.actions$.pipe(
-    ofType<ClickDataPoint>(TimelineActionTypes.ClickDataPoint),
+  selectDataPointEvent$: Observable<Action> = this.actions$.pipe(
+    ofType<SelectDataPointEvent>(TimelineActionTypes.SelectDataPointEvent),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     concatMap(({ action, state }) => {
