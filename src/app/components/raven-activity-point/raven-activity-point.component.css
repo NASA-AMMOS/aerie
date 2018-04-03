@@ -16,14 +16,6 @@
   padding-top: 1em;
 }
 
-.name {
-  background-color: #dcdfe5;
-}
-
-.value {
-  background-color: #dcdfe5;
-}
-
 table {
   table-layout: fixed;
   width: 100%;
@@ -32,4 +24,5 @@ table {
 td {
   word-break: break-all;
   padding: 0.5em;
+  background-color: #dcdfe5;
 }
