@@ -17,7 +17,7 @@ export class KeyValuePipe implements PipeTransform {
     const keys: any[] = []; // TODO: Replace 'any' for a concrete type.
 
     Object.keys(value).forEach(key => {
-      keys.push({ key, value: value[key]});
+      keys.push({ key, value: value[key] });
     });
 
     return keys;
