@@ -66,8 +66,6 @@ import {
   DOYPipe,
   HasKeysPipe,
   KeyByPipe,
-  KeyValuePipe,
-  MapKeyPipe,
 } from './pipes';
 
 export const DECLARATIONS = [
@@ -76,8 +74,6 @@ export const DECLARATIONS = [
   DOYPipe,
   HasKeysPipe,
   KeyByPipe,
-  KeyValuePipe,
-  MapKeyPipe,
   RavenActivityPointComponent,
   RavenBandsComponent,
   RavenConfirmDialogComponent,
