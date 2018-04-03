@@ -116,7 +116,7 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
-   * Event. Called when a band is clicked in an raven-bands component.
+   * Event. Called when a band is clicked in a raven-bands component.
    */
   onBandClick(bandId: string): void {
     this.store.dispatch(new timelineActions.SelectBand(bandId));

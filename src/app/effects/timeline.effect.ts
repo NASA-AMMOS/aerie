@@ -33,8 +33,8 @@ export class TimelineEffects {
   selectPoint$: Observable<Action> = this.actions$.pipe(
     ofType<SelectPoint>(TimelineActionTypes.SelectPoint),
     withLatestFrom(this.store$),
-    map(([action, state]) => ({ state, action })),
-    concatMap(({ state, action }) => {
+    map(([action, state]) => state),
+    concatMap(state => {
       const actions: Action[] = [];
 
       if (state.timeline.selectedPoint && !state.layout.showPointDrawer) {
