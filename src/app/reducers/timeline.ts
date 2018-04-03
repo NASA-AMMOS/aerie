@@ -251,8 +251,8 @@ export function removeSubBand(state: TimelineState, action: RemoveSubBand): Time
       subBands: band.subBands.filter(subBand => subBand.id !== action.subBandId),
     }))
     .filter(
-    band => band.subBands.length !== 0,
-  );
+      band => band.subBands.length !== 0,
+    );
 
   bands = updateSortOrder(bands);
 
@@ -282,11 +282,9 @@ export function selectBand(state: TimelineState, action: SelectBand): TimelineSt
  * Reduction Helper. Called when reducing the 'SelectPoint' action.
  */
 export function selectPoint(state: TimelineState, action: SelectPoint): TimelineState {
-  const point = getPoint(state.bands, action.bandId, action.pointId);
-
   return {
     ...state,
-    selectedPoint: point,
+    selectedPoint: getPoint(state.bands, action.bandId, action.pointId),
   };
 }
 
