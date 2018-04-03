@@ -20,6 +20,7 @@ import {
   RemoveBandsOrPointsForSource,
   RemoveSubBand,
   SelectBand,
+  SelectPoint,
   SortBands,
   TimelineAction,
   TimelineActionTypes,
@@ -31,6 +32,7 @@ import {
 import {
   bandById,
   getMaxTimeRange,
+  getPoint,
   updateSelectedBandIds,
   updateSortOrder,
   updateTimeRanges,
@@ -49,7 +51,7 @@ export interface TimelineState {
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
   selectedBandId: string;
-  selectedDataPoint: RavenPoint | null;
+  selectedPoint: RavenPoint | null;
   selectedSubBandId: string;
   viewMetadata: boolean;
   viewParameter: boolean;
@@ -62,7 +64,7 @@ export const initialState: TimelineState = {
   labelWidth: 150,
   maxTimeRange: { end: 0, start: 0 },
   selectedBandId: '',
-  selectedDataPoint: null,
+  selectedPoint: null,
   selectedSubBandId: '',
   viewMetadata: false,
   viewParameter: true,
@@ -87,14 +89,10 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
       return removeSubBand(state, action);
     case TimelineActionTypes.SelectBand:
       return selectBand(state, action);
-    case TimelineActionTypes.SelectDataPoint:
-      return { ...state, selectedDataPoint: action.selectedDataPoint};
+    case TimelineActionTypes.SelectPoint:
+      return selectPoint(state, action);
     case TimelineActionTypes.SortBands:
       return sortBands(state, action);
-    case TimelineActionTypes.ToggleViewMetadata:
-      return { ...state, viewMetadata: !state.viewMetadata };
-    case TimelineActionTypes.ToggleViewParameter:
-      return { ...state, viewParameter: !state.viewParameter };
     case TimelineActionTypes.UpdateBand:
       return updateBand(state, action);
     case TimelineActionTypes.UpdateSubBand:
@@ -277,6 +275,18 @@ export function selectBand(state: TimelineState, action: SelectBand): TimelineSt
     ...state,
     selectedBandId,
     selectedSubBandId: band && band.subBands.length && selectedBandId !== '' ? band.subBands[0].id : '',
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'SelectPoint' action.
+ */
+export function selectPoint(state: TimelineState, action: SelectPoint): TimelineState {
+  const point = getPoint(state.bands, action.bandId, action.pointId);
+
+  return {
+    ...state,
+    selectedPoint: point,
   };
 }
 

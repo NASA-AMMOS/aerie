@@ -1,3 +1,12 @@
+/**
+ * Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+ * Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.
+ * This software may be subject to U.S. export control laws and regulations.
+ * By accepting this document, the user agrees to comply with all applicable U.S. export laws and regulations.
+ * User has the responsibility to obtain export licenses, or other export authority as may be required
+ * before exporting such information to foreign countries or providing access to foreign persons
+ */
+
 import { Injectable } from '@angular/core';
 
 import { Actions, Effect, ofType } from '@ngrx/effects';
@@ -13,46 +22,30 @@ import {
 import { AppState } from './../../app/store';
 
 import {
-  CloseDataPointDrawer,
-  OpenDataPointDrawer,
-  ToggleDataPointDrawer,
+  LayoutActionTypes,
+  TogglePointDrawer,
 } from './../actions/layout';
 
 import * as layoutActions from './../actions/layout';
 
-import { LayoutActionTypes } from './../actions/layout';
-
 @Injectable()
 export class LayoutEffects {
   @Effect()
-  closeDataPointDrawer$: Observable<Action> = this.actions$.pipe(
-    ofType<CloseDataPointDrawer>(LayoutActionTypes.CloseDataPointDrawer),
+  togglePointDrawer$: Observable<Action> = this.actions$.pipe(
+    ofType<TogglePointDrawer>(LayoutActionTypes.TogglePointDrawer),
     withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    map(({ action }) => new layoutActions.SetTimelinePanelSize(75),
-    ),
-  );
-
-  @Effect()
-  openDataPointDrawer$: Observable<Action> = this.actions$.pipe(
-    ofType<OpenDataPointDrawer>(LayoutActionTypes.OpenDataPointDrawer),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    map(({ action }) => new layoutActions.SetTimelinePanelSize(60),
-    ),
-  );
-
-  @Effect()
-  toggleDataPointDrawer$: Observable<Action> = this.actions$.pipe(
-    ofType<ToggleDataPointDrawer>(LayoutActionTypes.ToggleDataPointDrawer),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    map(({ action, state }) => state.layout.showDataPointDrawer ? new layoutActions.CloseDataPointDrawer() : new layoutActions.OpenDataPointDrawer(),
-    ),
+    map(([action, state]) => state.layout.showPointDrawer),
+    map((showPointDrawer: boolean) => {
+      if (showPointDrawer) {
+        return new layoutActions.UpdateLayout({ timelinePanelSize: 60 });
+      } else {
+        return new layoutActions.UpdateLayout({ timelinePanelSize: 75 });
+      }
+    }),
   );
 
   constructor(
     private actions$: Actions,
     private store$: Store<AppState>,
-  ) { }
+  ) {}
 }

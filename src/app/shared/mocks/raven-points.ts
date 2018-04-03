@@ -31,5 +31,6 @@ export const activityPoint: RavenActivityPoint = {
   sourceId: '',
   start: 0,
   startTimestamp: '',
+  type: 'activity',
   uniqueId: '400',
 };

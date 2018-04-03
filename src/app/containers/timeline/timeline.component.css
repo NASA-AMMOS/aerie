@@ -20,10 +20,8 @@ mat-card {
 }
 
 .timeline-0,
-.timeline-1 {
-  padding: 0.5em;
-}
-
-.settings {
+.timeline-1,
+.settings,
+.selected-point {
   padding: 0.5em;
 }

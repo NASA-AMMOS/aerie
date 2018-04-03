@@ -42,7 +42,9 @@ export class RouterEffects {
       } else if (layout === 'default') {
         actions.push(new layoutActions.SetMode('default', true, true, true, true));
       } else {
-        actions.push(new layoutActions.SetMode('custom', true, state.layout.showDetailsDrawer, state.layout.showLeftDrawer, state.layout.showSouthBandsDrawer));
+        actions.push(
+          new layoutActions.SetMode('custom', state.layout.showDetailsDrawer, state.layout.showLeftDrawer, state.layout.showPointDrawer, state.layout.showSouthBandsDrawer),
+        );
       }
 
       return actions;

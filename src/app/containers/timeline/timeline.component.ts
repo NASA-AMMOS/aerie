@@ -28,13 +28,11 @@ import * as sourceExplorerActions from './../../actions/source-explorer';
 import * as timelineActions from './../../actions/timeline';
 
 import {
-  CtlData,
-  RavenActivityPoint,
+  RavenBandLeftClick,
   RavenCompositeBand,
   RavenPoint,
   RavenSettingsUpdate,
   RavenSortMessage,
-  RavenStatePoint,
   RavenSubBand,
   RavenTimeRange,
   StringTMap,
@@ -47,14 +45,13 @@ import {
   templateUrl: './timeline.component.html',
 })
 export class TimelineComponent implements OnDestroy {
-
-
   // Config state.
   itarMessage: string;
 
   // Layout state.
   showDetailsDrawer: boolean;
   showLeftDrawer: boolean;
+  showPointDrawer: boolean;
   showSouthBandsDrawer: boolean;
   timelinePanelSize: number;
 
@@ -63,9 +60,8 @@ export class TimelineComponent implements OnDestroy {
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
   selectedBandId: string;
-  selectedDataPoint: RavenPoint | null;
+  selectedPoint: RavenPoint | null;
   selectedSubBandId: string;
-  showDataPointDrawer: boolean;
   viewMetadata: boolean;
   viewParameter: boolean;
   viewTimeRange: RavenTimeRange;
@@ -90,8 +86,8 @@ export class TimelineComponent implements OnDestroy {
     ).subscribe(state => {
       this.showDetailsDrawer = state.showDetailsDrawer;
       this.showLeftDrawer = state.showLeftDrawer;
+      this.showPointDrawer = state.showPointDrawer;
       this.showSouthBandsDrawer = state.showSouthBandsDrawer;
-      this.showDataPointDrawer = state.showDataPointDrawer;
       this.timelinePanelSize = state.timelinePanelSize;
       this.changeDetector.markForCheck();
       dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize anytime our layout changes.
@@ -105,7 +101,7 @@ export class TimelineComponent implements OnDestroy {
       this.labelWidth = state.labelWidth;
       this.maxTimeRange = state.maxTimeRange;
       this.selectedBandId = state.selectedBandId;
-      this.selectedDataPoint = state.selectedDataPoint;
+      this.selectedPoint = state.selectedPoint;
       this.selectedSubBandId = state.selectedSubBandId;
       this.viewMetadata = state.viewMetadata;
       this.viewParameter = state.viewParameter;
@@ -120,20 +116,6 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
-   * Check if selected point is an activity
-   */
-  selectedDataPointIsActivity(): boolean {
-    return (this.selectedDataPoint as RavenActivityPoint).activityName !== undefined;
-  }
-
-  /**
-   * check if selected point is state
-   */
-  selectedDataPointIsState(): boolean {
-    return (this.selectedDataPoint as RavenStatePoint).end !== undefined;
-  }
-
-  /**
    * Event. Called when a band is clicked in an raven-bands component.
    */
   onBandClick(bandId: string): void {
@@ -141,10 +123,10 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
-   * Event. Called when a data point is clicked in an raven-bands component.
+   * Event. Called when a band is left clicked in a raven-bands component.
    */
-  onDataPointClick(ctlData: CtlData): void {
-    this.store.dispatch(new timelineActions.SelectDataPointEvent(ctlData));
+  onBandLeftClick(e: RavenBandLeftClick): void {
+    this.store.dispatch(new timelineActions.SelectPoint(e.bandId, e.pointId));
   }
 
   /**
@@ -160,20 +142,6 @@ export class TimelineComponent implements OnDestroy {
    */
   onSort(sort: StringTMap<RavenSortMessage>): void {
     this.store.dispatch(new timelineActions.SortBands(sort));
-  }
-
-  /**
-   * Event. Called when '+/-' parameter button is clicked
-   */
-  onToggleViewParameter() {
-    this.store.dispatch(new timelineActions.ToggleViewParameter());
-  }
-
-  /**
-   * Event. Called when '+/-' metadata button is clicked
-   */
-  onToggleViewMetadata() {
-    this.store.dispatch(new timelineActions.ToggleViewMetadata());
   }
 
   /**
@@ -216,5 +184,4 @@ export class TimelineComponent implements OnDestroy {
   onDragEnd(): void {
     dispatchEvent(new Event('resize'));
   }
-
 }

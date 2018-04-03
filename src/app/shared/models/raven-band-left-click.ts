@@ -7,29 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  MpsServerActivityPointMetadata,
-  MpsServerActivityPointParameter,
-} from './index';
-
-export interface RavenActivityPoint {
-  activityId: string;
-  activityName: string;
-  activityParameters: MpsServerActivityPointParameter[];
-  activityType: string;
-  ancestors: string[];
-  childrenUrl: string;
-  color: number[];
-  descendantsUrl: string;
-  duration: number;
-  end: number;
-  endTimestamp: string;
-  id: string;
-  legend: string;
-  metadata: MpsServerActivityPointMetadata[];
-  sourceId: string;
-  start: number;
-  startTimestamp: string;
-  type: string;
-  uniqueId: string;
+export interface RavenBandLeftClick {
+  bandId: string;
+  pointId: string;
 }

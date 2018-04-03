@@ -8,7 +8,8 @@
  */
 
 export * from './base-type';
-export * from './ctl-data';
+export * from './falcon-band-click-event';
+export * from './falcon-composite-band-left-click-event';
 export * from './map';
 export * from './mps-server-activity-metadata';
 export * from './mps-server-activity-point-metadata';
@@ -29,6 +30,7 @@ export * from './mps-server-state-metadata';
 export * from './mps-server-state-point';
 export * from './raven-activity-band';
 export * from './raven-activity-point';
+export * from './raven-band-left-click';
 export * from './raven-composite-band';
 export * from './raven-divider-band';
 export * from './raven-point';
@@ -44,4 +46,3 @@ export * from './raven-state-point';
 export * from './raven-sub-band-point-data';
 export * from './raven-sub-band';
 export * from './raven-time-range';
-

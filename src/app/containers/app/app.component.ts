@@ -67,8 +67,8 @@ export class AppComponent implements OnDestroy {
     this.store.dispatch(new layoutActions.ToggleLeftDrawer());
   }
 
-  toggleDataPointDrawer() {
-    this.store.dispatch(new layoutActions.ToggleDataPointDrawer());
+  togglePointDrawer() {
+    this.store.dispatch(new layoutActions.TogglePointDrawer());
   }
 
   toggleSouthBandsDrawer() {

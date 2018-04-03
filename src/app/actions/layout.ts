@@ -9,48 +9,32 @@
 
 import { Action } from '@ngrx/store';
 
+import {
+  BaseType,
+  StringTMap,
+} from './../shared/models';
+
 // Action Types.
 export enum LayoutActionTypes {
-  CloseDataPointDrawer    = '[layout] close_data_point_drawer',
-  OpenDataPointDrawer     = '[layout] open_data_point_drawer',
   SetMode                 = '[layout] set_mode',
-  SetTimelinePanelSize    = '[layout] set_timeline_panel_size',
-  ToggleDataPointDrawer   = '[layout] toggle_data_point_drawer',
   ToggleDetailsDrawer     = '[layout] toggle_details_drawer',
   ToggleLeftDrawer        = '[layout] toggle_left_drawer',
+  TogglePointDrawer       = '[layout] toggle_point_drawer',
   ToggleSouthBandsDrawer  = '[layout] toggle_south_bands_drawer',
+  UpdateLayout            = '[layout] update_layout',
 }
 
 // Actions.
-export class CloseDataPointDrawer implements Action {
-  readonly type = LayoutActionTypes.CloseDataPointDrawer;
-}
-
-export class OpenDataPointDrawer implements Action {
-  readonly type = LayoutActionTypes.OpenDataPointDrawer;
-}
 export class SetMode implements Action {
   readonly type = LayoutActionTypes.SetMode;
 
   constructor(
     public mode: string,
-    public showDataPointDrawer: boolean,
     public showDetailsDrawer: boolean,
     public showLeftDrawer: boolean,
+    public showPointDrawer: boolean,
     public showSouthBandsDrawer: boolean,
-  ) { }
-}
-
-export class SetTimelinePanelSize implements Action {
-  readonly type = LayoutActionTypes.SetTimelinePanelSize;
-
-  constructor(
-    public panelSize: number,
   ) {}
-}
-
-export class ToggleDataPointDrawer implements Action {
-  readonly type = LayoutActionTypes.ToggleDataPointDrawer;
 }
 
 export class ToggleDetailsDrawer implements Action {
@@ -61,17 +45,25 @@ export class ToggleLeftDrawer implements Action {
   readonly type = LayoutActionTypes.ToggleLeftDrawer;
 }
 
+export class TogglePointDrawer implements Action {
+  readonly type = LayoutActionTypes.TogglePointDrawer;
+}
+
 export class ToggleSouthBandsDrawer implements Action {
   readonly type = LayoutActionTypes.ToggleSouthBandsDrawer;
 }
 
+export class UpdateLayout implements Action {
+  readonly type = LayoutActionTypes.UpdateLayout;
+
+  constructor(public update: StringTMap<BaseType>) {}
+}
+
 // Union type of all actions.
 export type LayoutAction =
-  CloseDataPointDrawer |
-  OpenDataPointDrawer |
   SetMode |
-  SetTimelinePanelSize |
-  ToggleDataPointDrawer |
   ToggleDetailsDrawer |
   ToggleLeftDrawer |
-  ToggleSouthBandsDrawer;
+  TogglePointDrawer |
+  ToggleSouthBandsDrawer |
+  UpdateLayout;

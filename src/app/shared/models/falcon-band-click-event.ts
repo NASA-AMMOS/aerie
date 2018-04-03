@@ -7,11 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export interface CtlData {
-  band: {
-    id: string,
-  };
-  interval: {
-    uniqueId: string,
-  } ;
+import {
+  StringTMap,
+} from './index';
+
+export interface FalconBandClickEvent extends Event {
+  detail: StringTMap<string>;
 }

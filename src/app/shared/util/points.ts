@@ -10,13 +10,13 @@
 import { uniqueId } from 'lodash';
 
 import {
-  CtlData,
   MpsServerActivityPoint,
   MpsServerActivityPointMetadata,
   MpsServerResourcePoint,
   MpsServerStatePoint,
   RavenActivityPoint,
   RavenCompositeBand,
+  RavenPoint,
   RavenResourcePoint,
   RavenStatePoint,
   StringTMap,
@@ -125,6 +125,7 @@ export function getActivityPoint(sourceId: string, data: MpsServerActivityPoint)
     sourceId,
     start,
     startTimestamp,
+    type: 'activity',
     uniqueId: uniqueId(),
   };
 
@@ -166,27 +167,6 @@ export function getActivityPointsByLegend(sourceId: string, timelineData: MpsSer
 }
 
 /**
- * get the corresponding RavenPoint for the ctl interval
- * @param bands
- * @param ctlData
- */
-export function getRavenPoint(bands: RavenCompositeBand[], ctlData: CtlData) {
-  for (let i = 0, l = bands.length; i < l; ++i) {
-    if (bands[i].id === ctlData.band.id) {
-      for (let j = 0, ll = bands[i].subBands.length; j < ll; ++j) {
-        const subBand = bands[i].subBands[j];
-        for (let k = 0, lll = subBand.points.length; k < lll; ++k) {
-          if (subBand.points[k].uniqueId === ctlData.interval.uniqueId) {
-            return subBand.points[k];
-          }
-        }
-      }
-    }
-  }
-  return null;
-}
-
-/**
  * Transforms MPS Server resource points to Raven resource points. Also returns the max and min point times.
  * Note that for performance we are only looping through timelineData once.
  */
@@ -211,6 +191,7 @@ export function getResourcePoints(sourceId: string, timelineData: MpsServerResou
       id,
       sourceId,
       start,
+      type: 'resource',
       uniqueId: uniqueId(),
       value,
     });
@@ -260,6 +241,7 @@ export function getStatePoints(sourceId: string, timelineData: MpsServerStatePoi
       interpolateEnding: true,
       sourceId,
       start,
+      type: 'state',
       uniqueId: uniqueId(),
       value,
     });
@@ -298,4 +280,23 @@ export function getMaxTimeRange(points: any[]) {
     end: maxTime,
     start: minTime,
   };
+}
+
+/**
+ * Get a raven point from a list of bands.
+ */
+export function getPoint(bands: RavenCompositeBand[], bandId: string, pointId: string): RavenPoint | null {
+  for (let i = 0, l = bands.length; i < l; ++i) {
+    if (bands[i].id === bandId) {
+      for (let j = 0, ll = bands[i].subBands.length; j < ll; ++j) {
+        const subBand = bands[i].subBands[j];
+        for (let k = 0, lll = subBand.points.length; k < lll; ++k) {
+          if (subBand.points[k].uniqueId === pointId) {
+            return subBand.points[k];
+          }
+        }
+      }
+    }
+  }
+  return null;
 }

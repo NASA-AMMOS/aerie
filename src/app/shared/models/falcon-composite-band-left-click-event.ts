@@ -8,28 +8,16 @@
  */
 
 import {
-  MpsServerActivityPointMetadata,
-  MpsServerActivityPointParameter,
+  RavenCompositeBand,
 } from './index';
 
-export interface RavenActivityPoint {
-  activityId: string;
-  activityName: string;
-  activityParameters: MpsServerActivityPointParameter[];
-  activityType: string;
-  ancestors: string[];
-  childrenUrl: string;
-  color: number[];
-  descendantsUrl: string;
-  duration: number;
-  end: number;
-  endTimestamp: string;
-  id: string;
-  legend: string;
-  metadata: MpsServerActivityPointMetadata[];
-  sourceId: string;
-  start: number;
-  startTimestamp: string;
-  type: string;
-  uniqueId: string;
+export interface FalconCompositeBandLeftClickEvent extends Event {
+  detail: {
+    ctlData: {
+      band: RavenCompositeBand,
+      interval: {
+        uniqueId: string,
+      },
+    },
+  };
 }

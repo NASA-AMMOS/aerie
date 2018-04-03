@@ -11,9 +11,7 @@ import { Action } from '@ngrx/store';
 
 import {
   BaseType,
-  CtlData,
   RavenCompositeBand,
-  RavenPoint,
   RavenSortMessage,
   RavenSubBand,
   RavenTimeRange,
@@ -28,11 +26,8 @@ export enum TimelineActionTypes {
   RemoveBandsOrPointsForSource = '[timeline] remove_bands_or_points_for_source',
   RemoveSubBand                = '[timeline] remove_sub_band',
   SelectBand                   = '[timeline] select_band',
-  SelectDataPoint              = '[timeline] select_data_point',
-  SelectDataPointEvent         = '[timeline] seletc_data_point_event',
+  SelectPoint                  = '[timeline] select_point',
   SortBands                    = '[timeline] sort_bands',
-  ToggleViewParameter          = '[timeline] toggle-view-parameter',
-  ToggleViewMetadata           = '[timeline] toggle-view-metadata',
   UpdateBand                   = '[timeline] update_band',
   UpdateSubBand                = '[timeline] update_sub_band',
   UpdateTimeline               = '[timeline] update_timeline',
@@ -70,12 +65,6 @@ export class AddSubBand implements Action {
   ) {}
 }
 
-export class SelectDataPointEvent implements Action {
-  readonly type = TimelineActionTypes.SelectDataPointEvent;
-
-  constructor(public ctlData: CtlData) {}
-}
-
 export class RemoveBandsOrPointsForSource implements Action {
   readonly type = TimelineActionTypes.RemoveBandsOrPointsForSource;
 
@@ -94,28 +83,16 @@ export class SelectBand implements Action {
   constructor(public bandId: string) {}
 }
 
-export class SelectDataPoint implements Action {
-  readonly type = TimelineActionTypes.SelectDataPoint;
+export class SelectPoint implements Action {
+  readonly type = TimelineActionTypes.SelectPoint;
 
-  constructor(public selectedDataPoint: RavenPoint) {}
+  constructor(public bandId: string, public pointId: string) {}
 }
 
 export class SortBands implements Action {
   readonly type = TimelineActionTypes.SortBands;
 
   constructor(public sort: StringTMap<RavenSortMessage>) {}
-}
-
-export class ToggleViewParameter implements Action {
-  readonly type = TimelineActionTypes.ToggleViewParameter;
-
-  constructor() {}
-}
-
-export class ToggleViewMetadata implements Action {
-  readonly type = TimelineActionTypes.ToggleViewMetadata;
-
-  constructor() {}
 }
 
 export class UpdateBand implements Action {
@@ -150,11 +127,8 @@ export type TimelineAction =
   RemoveBandsOrPointsForSource |
   RemoveSubBand |
   SelectBand |
-  SelectDataPoint |
-  SelectDataPointEvent |
+  SelectPoint |
   SortBands |
-  ToggleViewParameter |
-  ToggleViewMetadata |
   UpdateBand |
   UpdateSubBand |
   UpdateTimeline |
