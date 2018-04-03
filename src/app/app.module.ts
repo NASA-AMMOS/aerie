@@ -81,11 +81,11 @@ export const DECLARATIONS = [
   RavenActivityPointComponent,
   RavenBandsComponent,
   RavenConfirmDialogComponent,
+  RavenResourcePointComponent,
   RavenSettingsComponent,
+  RavenStatePointComponent,
   RavenStateSaveDialogComponent,
   RavenTreeComponent,
-  RavenResourcePointComponent,
-  RavenStatePointComponent,
   SourceExplorerComponent,
   TimelineComponent,
 ];

@@ -7,11 +7,20 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './raven-activity-point/raven-activity-point.component';
-export * from './raven-bands/raven-bands.component';
-export * from './raven-confirm-dialog/raven-confirm-dialog.component';
-export * from './raven-resource-point/raven-resource-point.component';
-export * from './raven-settings/raven-settings.component';
-export * from './raven-state-point/raven-state-point.component';
-export * from './raven-state-save-dialog/raven-state-save-dialog.component';
-export * from './raven-tree/raven-tree.component';
+import {
+  Component,
+  Input,
+} from '@angular/core';
+
+import {
+  RavenStatePoint,
+} from './../../shared/models';
+
+@Component({
+  selector: 'raven-state-point',
+  styleUrls: ['./raven-state-point.component.css'],
+  templateUrl: './raven-state-point.component.html',
+})
+export class RavenStatePointComponent {
+  @Input() selectedPoint: RavenStatePoint;
+}
