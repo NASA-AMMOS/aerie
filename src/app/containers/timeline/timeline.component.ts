@@ -24,6 +24,7 @@ import * as fromConfig from './../../reducers/config';
 import * as fromLayout from './../../reducers/layout';
 import * as fromTimeline from './../../reducers/timeline';
 
+import * as layoutActions from './../../actions/layout';
 import * as sourceExplorerActions from './../../actions/source-explorer';
 import * as timelineActions from './../../actions/timeline';
 
@@ -49,6 +50,8 @@ export class TimelineComponent implements OnDestroy {
   itarMessage: string;
 
   // Layout state.
+  showActivityPointMetadata: boolean;
+  showActivityPointParameters: boolean;
   showDetailsDrawer: boolean;
   showLeftDrawer: boolean;
   showPointDrawer: boolean;
@@ -62,8 +65,6 @@ export class TimelineComponent implements OnDestroy {
   selectedBandId: string;
   selectedPoint: RavenPoint | null;
   selectedSubBandId: string;
-  viewMetadata: boolean;
-  viewParameter: boolean;
   viewTimeRange: RavenTimeRange;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
@@ -84,6 +85,8 @@ export class TimelineComponent implements OnDestroy {
     this.store.select(fromLayout.getShowDrawers).pipe(
       takeUntil(this.ngUnsubscribe),
     ).subscribe(state => {
+      this.showActivityPointMetadata = state.showActivityPointMetadata;
+      this.showActivityPointParameters = state.showActivityPointParameters;
       this.showDetailsDrawer = state.showDetailsDrawer;
       this.showLeftDrawer = state.showLeftDrawer;
       this.showPointDrawer = state.showPointDrawer;
@@ -103,8 +106,6 @@ export class TimelineComponent implements OnDestroy {
       this.selectedBandId = state.selectedBandId;
       this.selectedPoint = state.selectedPoint;
       this.selectedSubBandId = state.selectedSubBandId;
-      this.viewMetadata = state.viewMetadata;
-      this.viewParameter = state.viewParameter;
       this.viewTimeRange = state.viewTimeRange;
       this.changeDetector.markForCheck();
     });
@@ -142,6 +143,20 @@ export class TimelineComponent implements OnDestroy {
    */
   onSort(sort: StringTMap<RavenSortMessage>): void {
     this.store.dispatch(new timelineActions.SortBands(sort));
+  }
+
+  /**
+   * Event. Called when a `toggle-show-activity-point-metadata` event is fired from a raven-activity-point.
+   */
+  onToggleShowActivityPointMetadata(show: boolean) {
+    this.store.dispatch(new layoutActions.UpdateLayout({ showActivityPointMetadata: show }));
+  }
+
+  /**
+   * Event. Called when a `toggle-show-activity-point-parameters` event is fired from a raven-activity-point.
+   */
+  onToggleShowActivityPointParameters(show: boolean) {
+    this.store.dispatch(new layoutActions.UpdateLayout({ showActivityPointParameters: show }));
   }
 
   /**

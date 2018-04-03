@@ -28,9 +28,9 @@ import {
 
 export class RavenActivityPointComponent {
   @Input() selectedPoint: RavenActivityPoint;
-  @Input() viewMetadata: boolean;
-  @Input() viewParameter: boolean;
+  @Input() showActivityPointMetadata: boolean;
+  @Input() showActivityPointParameters: boolean;
 
-  @Output() toggleViewMetadata: EventEmitter<boolean> = new EventEmitter<boolean>();
-  @Output() toggleViewParameter: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() toggleShowActivityPointMetadata: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() toggleShowActivityPointParameters: EventEmitter<boolean> = new EventEmitter<boolean>();
 }

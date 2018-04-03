@@ -22,6 +22,8 @@ import {
 // Layout State Interface.
 export interface LayoutState {
   mode: string;
+  showActivityPointMetadata: boolean;
+  showActivityPointParameters: boolean;
   showDetailsDrawer: boolean;
   showLeftDrawer: boolean;
   showPointDrawer: boolean;
@@ -32,6 +34,8 @@ export interface LayoutState {
 // Layout State.
 export const initialState: LayoutState = {
   mode: 'default',
+  showActivityPointMetadata: false,
+  showActivityPointParameters: true,
   showDetailsDrawer: true,
   showLeftDrawer: true,
   showPointDrawer: false,
@@ -104,6 +108,8 @@ export const getLayoutState = createFeatureSelector<LayoutState>('layout');
  * together to select different pieces of state.
  */
 export const getShowDrawers = createSelector(getLayoutState, (state: LayoutState) => ({
+  showActivityPointMetadata: state.showActivityPointMetadata,
+  showActivityPointParameters: state.showActivityPointParameters,
   showDetailsDrawer: state.showDetailsDrawer,
   showLeftDrawer: state.showLeftDrawer,
   showPointDrawer: state.showPointDrawer,

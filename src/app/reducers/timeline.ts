@@ -53,8 +53,6 @@ export interface TimelineState {
   selectedBandId: string;
   selectedPoint: RavenPoint | null;
   selectedSubBandId: string;
-  viewMetadata: boolean;
-  viewParameter: boolean;
   viewTimeRange: RavenTimeRange;
 }
 
@@ -66,8 +64,6 @@ export const initialState: TimelineState = {
   selectedBandId: '',
   selectedPoint: null,
   selectedSubBandId: '',
-  viewMetadata: false,
-  viewParameter: true,
   viewTimeRange: { end: 0, start: 0 },
 };
 

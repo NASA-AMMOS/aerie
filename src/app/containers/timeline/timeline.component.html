@@ -129,10 +129,10 @@
         <ng-container *ngIf="selectedPoint.type === 'activity'">
           <raven-activity-point
             [selectedPoint]="selectedPoint"
-            (toggleViewParameter)="onToggleViewParameter()"
-            (toggleViewMetadata)="onToggleViewMetadata()"
-            [viewParameter]="viewParameter"
-            [viewMetadata]="viewMetadata">
+            [showActivityPointMetadata]="showActivityPointMetadata"
+            [showActivityPointParameters]="showActivityPointParameters"
+            (toggleShowActivityPointMetadata)="onToggleShowActivityPointMetadata($event)"
+            (toggleShowActivityPointParameters)="onToggleShowActivityPointParameters($event)">
           </raven-activity-point>
         </ng-container>
 

@@ -11,28 +11,25 @@
   padding-left: 1em;
 }
 
-.metaLabel {
+.parameters,
+.metadata {
+  padding-top: 1em;
+}
+
+.name {
   background-color: #dcdfe5;
-  padding-left: 1em;
 }
 
-.metaValue {
+.value {
   background-color: #dcdfe5;
-  padding-left: 2em;
 }
 
-.paramLabel {
-  background-color: #eaebed;
-  padding-left: 1em;
+table {
+  table-layout: fixed;
+  width: 100%;
 }
 
-.paramValue {
-  background-color: #eaebed;
-  padding-left: 2em;
-}
-
-.dataIcon {
-  float: right;
-  margin-right: 5px;
-  margin-bottom: 15px;
+td {
+  word-break: break-all;
+  padding: 0.5em;
 }

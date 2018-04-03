@@ -7,9 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Pipe, PipeTransform } from '@angular/core';
+import {
+  Pipe,
+  PipeTransform,
+} from '@angular/core';
 
-import { dhms } from '../shared/util';
+import { dhms } from './../shared/util';
+
 @Pipe({
   name: 'dhms',
 })
