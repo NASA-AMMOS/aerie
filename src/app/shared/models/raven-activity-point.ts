@@ -30,6 +30,7 @@ export interface RavenActivityPoint {
   sourceId: string;
   start: number;
   startTimestamp: string;
+  subBandId: string;
   type: string;
   uniqueId: string;
 }

@@ -125,6 +125,7 @@ export function getActivityPoint(sourceId: string, data: MpsServerActivityPoint)
     sourceId,
     start,
     startTimestamp,
+    subBandId: '',
     type: 'activity',
     uniqueId: uniqueId(),
   };
@@ -191,6 +192,7 @@ export function getResourcePoints(sourceId: string, timelineData: MpsServerResou
       id,
       sourceId,
       start,
+      subBandId: '',
       type: 'resource',
       uniqueId: uniqueId(),
       value,
@@ -241,6 +243,7 @@ export function getStatePoints(sourceId: string, timelineData: MpsServerStatePoi
       interpolateEnding: true,
       sourceId,
       start,
+      subBandId: '',
       type: 'state',
       uniqueId: uniqueId(),
       value,
@@ -292,11 +295,32 @@ export function getPoint(bands: RavenCompositeBand[], bandId: string, pointId: s
         const subBand = bands[i].subBands[j];
         for (let k = 0, lll = subBand.points.length; k < lll; ++k) {
           if (subBand.points[k].uniqueId === pointId) {
-            return subBand.points[k];
+            return {
+              ...subBand.points[k],
+              subBandId: subBand.id,
+            };
           }
         }
       }
     }
   }
   return null;
+}
+
+/**
+ * Helper that either returns a new selectedPoint or null.
+ */
+export function updateSelectedPoint(selectedPoint: RavenPoint | null, sourceId: string | null, subBandId: string | null) {
+  const pointInSubBand = selectedPoint && selectedPoint.subBandId === subBandId;
+  const pointFromSourceId = selectedPoint && selectedPoint.sourceId === sourceId;
+
+  if (pointInSubBand || pointFromSourceId) {
+    return {
+      selectedPoint: null,
+    };
+  } else {
+    return {
+      selectedPoint,
+    };
+  }
 }

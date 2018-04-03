@@ -34,6 +34,7 @@ import {
   getMaxTimeRange,
   getPoint,
   updateSelectedBandIds,
+  updateSelectedPoint,
   updateSortOrder,
   updateTimeRanges,
 } from './../shared/util';
@@ -233,6 +234,7 @@ export function removeBandsOrPointsForSource(state: TimelineState, action: Remov
     ...state,
     bands,
     ...updateSelectedBandIds(bands, state.selectedBandId, state.selectedSubBandId),
+    ...updateSelectedPoint(state.selectedPoint, action.sourceId, null),
     ...updateTimeRanges(bands, state.viewTimeRange),
   };
 }
@@ -256,6 +258,7 @@ export function removeSubBand(state: TimelineState, action: RemoveSubBand): Time
     ...state,
     bands,
     ...updateSelectedBandIds(bands, state.selectedBandId, state.selectedSubBandId),
+    ...updateSelectedPoint(state.selectedPoint, null, action.subBandId),
     ...updateTimeRanges(bands, state.viewTimeRange),
   };
 }
@@ -276,11 +279,14 @@ export function selectBand(state: TimelineState, action: SelectBand): TimelineSt
 
 /**
  * Reduction Helper. Called when reducing the 'SelectPoint' action.
+ * Make sure if a point is already selected that we de-select it if it's clicked again.
  */
 export function selectPoint(state: TimelineState, action: SelectPoint): TimelineState {
+  const alreadySelected = state.selectedPoint && state.selectedPoint.uniqueId === action.pointId;
+
   return {
     ...state,
-    selectedPoint: getPoint(state.bands, action.bandId, action.pointId),
+    selectedPoint: alreadySelected ? null : getPoint(state.bands, action.bandId, action.pointId),
   };
 }
 
