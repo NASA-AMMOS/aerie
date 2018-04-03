@@ -1624,7 +1624,7 @@ Band.prototype.mousedown = function(e) {
 
   var interval = null;
   var intervals = this.findIntervals(x, y);
-  if(intervals.length !== 0) {
+  if(intervals && intervals.length !== 0) {
     interval = intervals[intervals.length-1];
   }
 
