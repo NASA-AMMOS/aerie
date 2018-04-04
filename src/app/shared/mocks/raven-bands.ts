@@ -14,6 +14,10 @@ import {
   RavenStateBand,
 } from './../models';
 
+import {
+  activityPoint,
+} from './raven-points';
+
 export const activityBand: RavenActivityBand = {
   activityStyle: 1,
   addTo: false,
@@ -187,6 +191,12 @@ export const bands: RavenCompositeBand[] = [
         legend: 'a',
         name: 'test-activity-sub-band-4',
         parentUniqueId: '104',
+        points: [{
+          ...activityPoint,
+          sourceId: '/a/b/c/d/e/v/',
+          subBandId: '4',
+          uniqueId: '400',
+        }],
         sourceIds: {
           '/a/b/c/d/e/v/': '/a/b/c/d/e/v/',
         },
