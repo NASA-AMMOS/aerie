@@ -62,17 +62,17 @@ import {
 
 import {
   DhmsPipe,
-  DOYPipe,
   HasKeysPipe,
   KeyByPipe,
+  TimestampPipe,
 } from './pipes';
 
 export const DECLARATIONS = [
   AppComponent,
   DhmsPipe,
-  DOYPipe,
   HasKeysPipe,
   KeyByPipe,
+  TimestampPipe,
   RavenActivityPointComponent,
   RavenBandsComponent,
   RavenConfirmDialogComponent,

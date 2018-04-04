@@ -7,7 +7,18 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './dhms.pipe';
-export * from './has-keys.pipe';
-export * from './key-by.pipe';
-export * from './timestamp.pipe';
+import {
+  Pipe,
+  PipeTransform,
+} from '@angular/core';
+
+import { timestamp } from './../shared/util';
+
+@Pipe({
+  name: 'timestamp',
+})
+export class TimestampPipe implements PipeTransform {
+  transform(value: number): string {
+    return timestamp(value);
+  }
+}

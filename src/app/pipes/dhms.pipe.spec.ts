@@ -7,7 +7,17 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './dhms.pipe';
-export * from './has-keys.pipe';
-export * from './key-by.pipe';
-export * from './timestamp.pipe';
+import { DhmsPipe } from './dhms.pipe';
+
+describe('DhmsPipe', () => {
+  it('create an instance', () => {
+    const pipe = new DhmsPipe();
+    expect(pipe).toBeTruthy();
+  });
+
+  it('should properly convert a duration to dhms format', () => {
+    const pipe = new DhmsPipe();
+    expect(pipe.transform(216)).toBe('3m36s0ms');
+    expect(pipe.transform(528)).toBe('8m48s0ms');
+  });
+});
