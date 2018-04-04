@@ -37,9 +37,14 @@ describe('points.ts', () => {
           end: 50,
           start: 5,
         },
+        {
+          ...activityPoint,
+          end: 400,
+          start: 6,
+        },
       ];
       expect(getMaxTimeRange(points)).toEqual({
-        end: 200,
+        end: 400,
         start: 5,
       });
     });
