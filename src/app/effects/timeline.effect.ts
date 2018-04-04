@@ -8,43 +8,37 @@
  */
 
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot } from '@angular/router';
 
 import { Actions, Effect, ofType } from '@ngrx/effects';
-import { RouterNavigationAction } from '@ngrx/router-store';
 import { Action, Store } from '@ngrx/store';
 
 import { Observable } from 'rxjs/Observable';
 
 import {
+  concatMap,
   map,
-  mergeMap,
   withLatestFrom,
 } from 'rxjs/operators';
 
 import { AppState } from './../../app/store';
 
 import * as layoutActions from './../actions/layout';
+import { TimelineActionTypes } from './../actions/timeline';
+
+import { SelectPoint } from '../actions/timeline';
 
 @Injectable()
-export class RouterEffects {
+export class TimelineEffects {
   @Effect()
-  routerNavigation$: Observable<Action> = this.actions$.pipe(
-    ofType<RouterNavigationAction<ActivatedRouteSnapshot>>('ROUTER_NAVIGATION'),
+  selectPoint$: Observable<Action> = this.actions$.pipe(
+    ofType<SelectPoint>(TimelineActionTypes.SelectPoint),
     withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    mergeMap(({ state, action }) => {
+    map(([action, state]) => state),
+    concatMap(state => {
       const actions: Action[] = [];
-      const { layout } = action.payload.routerState.queryParams;
 
-      if (layout === 'minimal') {
-        actions.push(new layoutActions.SetMode('minimal', false, false, false, true));
-      } else if (layout === 'default') {
-        actions.push(new layoutActions.SetMode('default', true, true, false, true));
-      } else {
-        actions.push(
-          new layoutActions.SetMode('custom', state.layout.showDetailsDrawer, state.layout.showLeftDrawer, state.layout.showPointDrawer, state.layout.showSouthBandsDrawer),
-        );
+      if (state.timeline.selectedPoint && !state.layout.showPointDrawer) {
+        actions.push(new layoutActions.TogglePointDrawer());
       }
 
       return actions;

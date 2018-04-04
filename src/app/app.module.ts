@@ -39,17 +39,22 @@ import {
 } from './containers';
 
 import {
+  RavenActivityPointComponent,
   RavenBandsComponent,
   RavenConfirmDialogComponent,
+  RavenResourcePointComponent,
   RavenSettingsComponent,
+  RavenStatePointComponent,
   RavenStateSaveDialogComponent,
   RavenTreeComponent,
 } from './components';
 
 import {
   DisplayEffects,
+  LayoutEffects,
   RouterEffects,
   SourceExplorerEffects,
+  TimelineEffects,
 } from './effects';
 
 import {
@@ -57,17 +62,24 @@ import {
 } from './guards';
 
 import {
+  DhmsPipe,
+  DOYPipe,
   HasKeysPipe,
   KeyByPipe,
 } from './pipes';
 
 export const DECLARATIONS = [
   AppComponent,
+  DhmsPipe,
+  DOYPipe,
   HasKeysPipe,
   KeyByPipe,
+  RavenActivityPointComponent,
   RavenBandsComponent,
   RavenConfirmDialogComponent,
+  RavenResourcePointComponent,
   RavenSettingsComponent,
+  RavenStatePointComponent,
   RavenStateSaveDialogComponent,
   RavenTreeComponent,
   SourceExplorerComponent,
@@ -81,8 +93,10 @@ export const ENTRY_COMPONENTS = [
 
 export const EFFECTS = [
   DisplayEffects,
+  LayoutEffects,
   RouterEffects,
   SourceExplorerEffects,
+  TimelineEffects,
 ];
 
 export const MODULES = [

@@ -26,6 +26,7 @@ export enum TimelineActionTypes {
   RemoveBandsOrPointsForSource = '[timeline] remove_bands_or_points_for_source',
   RemoveSubBand                = '[timeline] remove_sub_band',
   SelectBand                   = '[timeline] select_band',
+  SelectPoint                  = '[timeline] select_point',
   SortBands                    = '[timeline] sort_bands',
   UpdateBand                   = '[timeline] update_band',
   UpdateSubBand                = '[timeline] update_sub_band',
@@ -82,6 +83,12 @@ export class SelectBand implements Action {
   constructor(public bandId: string) {}
 }
 
+export class SelectPoint implements Action {
+  readonly type = TimelineActionTypes.SelectPoint;
+
+  constructor(public bandId: string, public pointId: string) {}
+}
+
 export class SortBands implements Action {
   readonly type = TimelineActionTypes.SortBands;
 
@@ -120,6 +127,7 @@ export type TimelineAction =
   RemoveBandsOrPointsForSource |
   RemoveSubBand |
   SelectBand |
+  SelectPoint |
   SortBands |
   UpdateBand |
   UpdateSubBand |

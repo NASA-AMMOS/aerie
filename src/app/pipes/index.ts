@@ -7,5 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+export * from './dhms.pipe';
+export * from './doy.pipe';
 export * from './has-keys.pipe';
 export * from './key-by.pipe';

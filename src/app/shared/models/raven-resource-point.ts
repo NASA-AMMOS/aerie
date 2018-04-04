@@ -12,6 +12,8 @@ export interface RavenResourcePoint {
   duration: number | null;
   sourceId: string;
   start: number;
+  subBandId: string;
+  type: string;
   uniqueId: string;
   value: number;
 }

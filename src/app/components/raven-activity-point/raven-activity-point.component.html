@@ -1,0 +1,48 @@
+<div class="label">Activity Name</div>
+<div class="value">{{selectedPoint.activityName}}</div>
+<div class="label">Activity Type</div>
+<div class="value">{{selectedPoint.activityType}}</div>
+<div class="label">Activity Start Time</div>
+<div class="value">{{selectedPoint.startTimestamp}}</div>
+<div class="label">Activity End Time</div>
+<div class="value">{{selectedPoint.endTimestamp}}</div>
+<div class="label">Duration</div>
+<div class="value">{{selectedPoint.duration | dhms}}</div>
+
+<div class="parameters">
+  <mat-expansion-panel
+    [expanded]="showActivityPointParameters"
+    (opened)="toggleShowActivityPointParameters.emit(true)"
+    (closed)="toggleShowActivityPointParameters.emit(false)">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Parameters
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <table>
+      <tr *ngFor="let param of selectedPoint.activityParameters">
+        <td>{{param.Name}}</td>
+        <td>{{param.Value}}</td>
+      </tr>
+    </table>
+  </mat-expansion-panel>
+</div>
+
+<div class="metadata">
+  <mat-expansion-panel
+    [expanded]="showActivityPointMetadata"
+    (opened)="toggleShowActivityPointMetadata.emit(true)"
+    (closed)="toggleShowActivityPointMetadata.emit(false)">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Metadata
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <table>
+      <tr *ngFor="let meta of selectedPoint.metadata">
+        <td>{{meta.Name}}</td>
+        <td>{{meta.Value}}</td>
+      </tr>
+    </table>
+  </mat-expansion-panel>
+</div>

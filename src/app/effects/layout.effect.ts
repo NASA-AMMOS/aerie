@@ -8,46 +8,39 @@
  */
 
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot } from '@angular/router';
 
 import { Actions, Effect, ofType } from '@ngrx/effects';
-import { RouterNavigationAction } from '@ngrx/router-store';
 import { Action, Store } from '@ngrx/store';
 
 import { Observable } from 'rxjs/Observable';
 
 import {
   map,
-  mergeMap,
   withLatestFrom,
 } from 'rxjs/operators';
 
 import { AppState } from './../../app/store';
 
+import {
+  LayoutActionTypes,
+  TogglePointDrawer,
+} from './../actions/layout';
+
 import * as layoutActions from './../actions/layout';
 
 @Injectable()
-export class RouterEffects {
+export class LayoutEffects {
   @Effect()
-  routerNavigation$: Observable<Action> = this.actions$.pipe(
-    ofType<RouterNavigationAction<ActivatedRouteSnapshot>>('ROUTER_NAVIGATION'),
+  togglePointDrawer$: Observable<Action> = this.actions$.pipe(
+    ofType<TogglePointDrawer>(LayoutActionTypes.TogglePointDrawer),
     withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    mergeMap(({ state, action }) => {
-      const actions: Action[] = [];
-      const { layout } = action.payload.routerState.queryParams;
-
-      if (layout === 'minimal') {
-        actions.push(new layoutActions.SetMode('minimal', false, false, false, true));
-      } else if (layout === 'default') {
-        actions.push(new layoutActions.SetMode('default', true, true, false, true));
+    map(([action, state]) => state.layout.showPointDrawer),
+    map((showPointDrawer: boolean) => {
+      if (showPointDrawer) {
+        return new layoutActions.UpdateLayout({ timelinePanelSize: 60 });
       } else {
-        actions.push(
-          new layoutActions.SetMode('custom', state.layout.showDetailsDrawer, state.layout.showLeftDrawer, state.layout.showPointDrawer, state.layout.showSouthBandsDrawer),
-        );
+        return new layoutActions.UpdateLayout({ timelinePanelSize: 75 });
       }
-
-      return actions;
     }),
   );
 
