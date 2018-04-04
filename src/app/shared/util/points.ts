@@ -308,7 +308,7 @@ export function getPoint(bands: RavenCompositeBand[], bandId: string, pointId: s
 }
 
 /**
- * Helper that check if we need to reset the selectedPoint.
+ * Helper that checks if we need to reset the selectedPoint.
  * If we don't need to reset just return the original selectedPoint.
  */
 export function updateSelectedPoint(selectedPoint: RavenPoint | null, sourceId: string | null, subBandId: string | null) {
