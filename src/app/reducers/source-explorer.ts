@@ -36,7 +36,6 @@ import {
 
 import {
   getAllChildIds,
-  getParent,
 } from './../shared/util';
 
 // Source Explorer State Interface.
@@ -146,8 +145,8 @@ export function newSources(state: SourceExplorerState, action: NewSources): Sour
  * Make sure we reset the selected source id if we remove the selected source.
  */
 export function removeSource(state: SourceExplorerState, action: RemoveSource): SourceExplorerState {
-  const parentSource = getParent(state.treeBySourceId, action.sourceId);
   const source = state.treeBySourceId[action.sourceId];
+  const parentSource = state.treeBySourceId[source.parentId];
   const allChildIds = getAllChildIds(state.treeBySourceId, source.id);
 
   if (parentSource) {

@@ -163,7 +163,7 @@ export function fromState(mSource: any, rSource: RavenSource): RavenSource {
  */
 export function getAllChildIds(tree: StringTMap<RavenSource>, sourceId: string): string[] {
   const source = tree[sourceId];
-  let childIds = source.childIds;
+  let childIds: string[] = source && source.childIds || [];
 
   childIds.forEach(childId => {
     const childSource = tree[childId];
@@ -171,24 +171,6 @@ export function getAllChildIds(tree: StringTMap<RavenSource>, sourceId: string):
   });
 
   return childIds;
-}
-
-/**
- * Helper that returns the parent node for a given sourceId. Null otherwise.
- */
-export function getParent(tree: StringTMap<RavenSource>, sourceId: string): RavenSource | null {
-  const treeIds = Object.keys(tree);
-
-  for (let i = 0, l = treeIds.length; i < l; ++i) {
-    const treeId = treeIds[i];
-    const source = tree[treeId];
-
-    if (source.childIds.includes(sourceId)) {
-      return source;
-    }
-  }
-
-  return null;
 }
 
 /**

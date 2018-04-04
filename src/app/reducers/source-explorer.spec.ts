@@ -86,9 +86,9 @@ describe('source-explorer reducer', () => {
         ...initialState.treeBySourceId,
         '/': {
           ...initialState.treeBySourceId['/'],
-          childIds: ['/child'],
+          childIds: ['/child/'],
         },
-        '/child': {
+        '/child/': {
           ...childSource,
         },
       },

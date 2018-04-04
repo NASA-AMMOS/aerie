@@ -9,6 +9,7 @@
 
 import {
   RavenSource,
+  StringTMap,
 } from './../models';
 
 export const rootSource: RavenSource = {
@@ -47,7 +48,7 @@ export const childSource: RavenSource = {
   expandable: true,
   expanded: false,
   icon: '',
-  id: '/child',
+  id: '/child/',
   isServer: false,
   kind: 'db',
   label: 'test-child-source',
@@ -55,7 +56,7 @@ export const childSource: RavenSource = {
   name: 'test-child-source',
   openable: false,
   opened: false,
-  parentId: '0',
+  parentId: '/',
   permissions: '',
   pinnable: true,
   pinned: false,
@@ -63,4 +64,29 @@ export const childSource: RavenSource = {
   selected: false,
   subBandIds: {},
   url: '',
+};
+
+export const treeBySourceId: StringTMap<RavenSource> = {
+  '/': {
+    ...rootSource,
+    childIds: ['/child/0/', '/child/1/'],
+  },
+  '/child/0/': {
+    ...childSource,
+    childIds: [],
+    id: '/child/0/',
+    parentId: '/',
+  },
+  '/child/1/': {
+    ...childSource,
+    childIds: ['/child/child/0/'],
+    id: '/child/1/',
+    parentId: '/',
+  },
+  '/child/child/0/': {
+    ...childSource,
+    childIds: [],
+    id: '/child/child/0/',
+    parentId: '/child/1/',
+  },
 };

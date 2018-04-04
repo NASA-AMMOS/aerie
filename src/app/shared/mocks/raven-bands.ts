@@ -94,3 +94,104 @@ export const stateBand: RavenStateBand = {
   sourceIds: {},
   type: 'state',
 };
+
+/**
+ * This is a list of mock bands built from bands above for use in unit tests.
+ */
+export const bands: RavenCompositeBand[] = [
+  {
+    ...compositeBand,
+    id: '100',
+    name: 'test-composite-band-0',
+    sortOrder: 0,
+    subBands: [
+      {
+        ...activityBand,
+        addTo: true,
+        id: '0',
+        legend: 'a',
+        name: 'test-activity-sub-band-0',
+        parentUniqueId: '100',
+        sourceIds: {
+          '/a/b/c/d/e/w/': '/a/b/c/d/e/w/',
+        },
+        sourceType: 'byType',
+      },
+    ],
+  },
+  {
+    ...compositeBand,
+    id: '101',
+    name: 'test-composite-band-1',
+    overlay: false,
+    sortOrder: 1,
+    subBands: [
+      {
+        ...stateBand,
+        id: '1',
+        name: 'test-state-sub-band-0',
+        parentUniqueId: '101',
+        sourceIds: {
+          '/a/b/c/d/e/x/y/': '/a/b/c/d/e/x/y/',
+        },
+      },
+    ],
+  },
+  {
+    ...compositeBand,
+    id: '102',
+    name: 'test-composite-band-2',
+    overlay: true,
+    sortOrder: 2,
+    subBands: [
+      {
+        ...resourceBand,
+        id: '2',
+        name: 'test-resource-sub-band-0',
+        parentUniqueId: '102',
+        sourceIds: {
+          '/a/b/c/d/e/x/z/': '/a/b/c/d/e/x/z/',
+        },
+      },
+    ],
+  },
+  {
+    ...compositeBand,
+    id: '103',
+    name: 'test-composite-band-3',
+    sortOrder: 3,
+    subBands: [
+      {
+        ...activityBand,
+        addTo: true,
+        id: '3',
+        name: 'test-activity-sub-band-3',
+        parentUniqueId: '103',
+        sourceIds: {
+          '/a/b/c/d/e/u/': '/a/b/c/d/e/u/',
+        },
+        sourceType: 'byLegend',
+      },
+    ],
+  },
+  {
+    ...compositeBand,
+    id: '104',
+    name: 'test-composite-band-4',
+    sortOrder: 4,
+    subBands: [
+      {
+        ...activityBand,
+        addTo: true,
+        id: '4',
+        legend: 'a',
+        name: 'test-activity-sub-band-4',
+        parentUniqueId: '104',
+        sourceIds: {
+          '/a/b/c/d/e/v/': '/a/b/c/d/e/v/',
+        },
+        sourceType: 'byType',
+      },
+    ],
+  },
+];
