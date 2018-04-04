@@ -2,11 +2,13 @@
   display: block;
 }
 
-.dataLabel {
+.label {
   padding-top: 1em;
+  font-family: Roboto,"Helvetica Neue",sans-serif;
+  font-size: 15px;
   font-weight: bold;
 }
 
-.dataValue {
+.value {
   padding-left: 1em;
 }

@@ -2,12 +2,14 @@
   display: block;
 }
 
-.dataLabel {
+.label {
   padding-top: 1em;
+  font-family: Roboto,"Helvetica Neue",sans-serif;
+  font-size: 15px;
   font-weight: bold;
 }
 
-.dataValue {
+.value {
   padding-left: 1em;
 }
 
@@ -22,7 +24,7 @@ table {
 }
 
 td {
-  word-break: break-all;
-  padding: 0.5em;
   background-color: #dcdfe5;
+  padding: 0.5em;
+  word-break: break-all;
 }
