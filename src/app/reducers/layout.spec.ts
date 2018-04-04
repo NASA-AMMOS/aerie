@@ -14,9 +14,12 @@ import {
 } from './layout';
 
 import {
+  SetMode,
   ToggleDetailsDrawer,
   ToggleLeftDrawer,
+  TogglePointDrawer,
   ToggleSouthBandsDrawer,
+  UpdateLayout,
 } from './../actions/layout';
 
 describe('layout reducer', () => {
@@ -30,6 +33,18 @@ describe('layout reducer', () => {
     expect(layoutState).toEqual(initialState);
   });
 
+  it('handle SetMode', () => {
+    layoutState = reducer(layoutState, new SetMode('custom', false, false, true, false));
+    expect(layoutState).toEqual({
+      ...initialState,
+      mode: 'custom',
+      showDetailsDrawer: false,
+      showLeftDrawer: false,
+      showPointDrawer: true,
+      showSouthBandsDrawer: false,
+    });
+  });
+
   it('handle ToggleDetailsDrawer', () => {
     layoutState = reducer(layoutState, new ToggleDetailsDrawer());
     expect(layoutState).toEqual({ ...initialState, showDetailsDrawer: !initialState.showDetailsDrawer });
@@ -40,8 +55,18 @@ describe('layout reducer', () => {
     expect(layoutState).toEqual({ ...initialState, showLeftDrawer: !initialState.showLeftDrawer });
   });
 
+  it('handle TogglePointDrawer', () => {
+    layoutState = reducer(layoutState, new TogglePointDrawer());
+    expect(layoutState).toEqual({ ...initialState, showPointDrawer: !initialState.showPointDrawer });
+  });
+
   it('handle ToggleSouthBandsDrawer', () => {
     layoutState = reducer(layoutState, new ToggleSouthBandsDrawer());
     expect(layoutState).toEqual({ ...initialState, showSouthBandsDrawer: !initialState.showSouthBandsDrawer });
+  });
+
+  it('handle UpdateLayout', () => {
+    layoutState = reducer(layoutState, new UpdateLayout({ timelinePanelSize: 50 }));
+    expect(layoutState).toEqual({ ...initialState, timelinePanelSize: 50 });
   });
 });
