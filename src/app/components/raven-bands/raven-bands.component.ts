@@ -20,16 +20,15 @@ import { OnChanges, OnInit } from '@angular/core/src/metadata/lifecycle_hooks';
 import { SortablejsOptions } from 'angular-sortablejs';
 
 import {
+  FalconBandClickEvent,
+  FalconCompositeBandLeftClickEvent,
+  RavenBandLeftClick,
   RavenCompositeBand,
   RavenSortMessage,
   RavenSubBand,
   RavenTimeRange,
   StringTMap,
 } from './../../shared/models';
-
-export interface BandClickEvent extends Event {
-  detail: StringTMap<string>;
-}
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,6 +45,7 @@ export class RavenBandsComponent implements OnChanges, OnInit {
   @Input() viewTimeRange: RavenTimeRange;
 
   @Output() bandClick: EventEmitter<string> = new EventEmitter<string>();
+  @Output() bandLeftClick: EventEmitter<RavenBandLeftClick> = new EventEmitter<RavenBandLeftClick>();
   @Output() newSort: EventEmitter<StringTMap<RavenSortMessage>> = new EventEmitter<StringTMap<RavenSortMessage>>();
 
   sortablejsOptions: SortablejsOptions;
@@ -71,8 +71,8 @@ export class RavenBandsComponent implements OnChanges, OnInit {
     if (changes.bands) {
       this.sortedAndFilteredBands =
         [...this.bands]
-        .filter(band => band.containerId === this.containerId)
-        .sort((a, b) =>  a.sortOrder - b.sortOrder);
+          .filter(band => band.containerId === this.containerId)
+          .sort((a, b) => a.sortOrder - b.sortOrder);
     }
   }
 
@@ -103,10 +103,21 @@ export class RavenBandsComponent implements OnChanges, OnInit {
    * Event. Called when a `falcon-band-click` event is fired from a falcon band.
    */
   @HostListener('falcon-band-click', ['$event'])
-  onBandClick(e: BandClickEvent) {
+  onBandClick(e: FalconBandClickEvent) {
     e.preventDefault();
     e.stopPropagation();
     this.bandClick.emit(e.detail.bandId);
+  }
+
+  /**
+   * Event. Called when a `falcon-composite-band-left-click` event is fired from a falcon band.
+   */
+  @HostListener('falcon-composite-band-left-click', ['$event'])
+  onDataItemLeftClick(e: FalconCompositeBandLeftClickEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const { band, interval } = e.detail.ctlData;
+    this.bandLeftClick.emit({ bandId: band.id, pointId: interval.uniqueId });
   }
 
   /**

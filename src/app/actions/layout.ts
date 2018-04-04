@@ -9,12 +9,19 @@
 
 import { Action } from '@ngrx/store';
 
+import {
+  BaseType,
+  StringTMap,
+} from './../shared/models';
+
 // Action Types.
 export enum LayoutActionTypes {
-  SetMode                = '[layout] set_mode',
-  ToggleDetailsDrawer    = '[layout] toggle_details_drawer',
-  ToggleLeftDrawer       = '[layout] toggle_left_drawer',
-  ToggleSouthBandsDrawer = '[layout] toggle_south_bands_drawer',
+  SetMode                 = '[layout] set_mode',
+  ToggleDetailsDrawer     = '[layout] toggle_details_drawer',
+  ToggleLeftDrawer        = '[layout] toggle_left_drawer',
+  TogglePointDrawer       = '[layout] toggle_point_drawer',
+  ToggleSouthBandsDrawer  = '[layout] toggle_south_bands_drawer',
+  UpdateLayout            = '[layout] update_layout',
 }
 
 // Actions.
@@ -25,6 +32,7 @@ export class SetMode implements Action {
     public mode: string,
     public showDetailsDrawer: boolean,
     public showLeftDrawer: boolean,
+    public showPointDrawer: boolean,
     public showSouthBandsDrawer: boolean,
   ) {}
 }
@@ -37,8 +45,18 @@ export class ToggleLeftDrawer implements Action {
   readonly type = LayoutActionTypes.ToggleLeftDrawer;
 }
 
+export class TogglePointDrawer implements Action {
+  readonly type = LayoutActionTypes.TogglePointDrawer;
+}
+
 export class ToggleSouthBandsDrawer implements Action {
   readonly type = LayoutActionTypes.ToggleSouthBandsDrawer;
+}
+
+export class UpdateLayout implements Action {
+  readonly type = LayoutActionTypes.UpdateLayout;
+
+  constructor(public update: StringTMap<BaseType>) {}
 }
 
 // Union type of all actions.
@@ -46,4 +64,6 @@ export type LayoutAction =
   SetMode |
   ToggleDetailsDrawer |
   ToggleLeftDrawer |
-  ToggleSouthBandsDrawer;
+  TogglePointDrawer |
+  ToggleSouthBandsDrawer |
+  UpdateLayout;

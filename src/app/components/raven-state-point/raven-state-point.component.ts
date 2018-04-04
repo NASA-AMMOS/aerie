@@ -8,30 +8,19 @@
  */
 
 import {
-  RavenActivityPoint,
-} from './../models';
+  Component,
+  Input,
+} from '@angular/core';
 
-export const activityPoint: RavenActivityPoint = {
-  activityId: '',
-  activityName: 'test-activity-point',
-  activityParameters: [
-    { Name: '', Value: '' },
-  ],
-  activityType: '',
-  ancestors: [],
-  childrenUrl: '',
-  color: [0, 0, 0],
-  descendantsUrl: '',
-  duration: 10,
-  end: 500,
-  endTimestamp: '',
-  id: '400',
-  legend: '',
-  metadata: [],
-  sourceId: '',
-  start: 0,
-  startTimestamp: '',
-  subBandId: '',
-  type: 'activity',
-  uniqueId: '400',
-};
+import {
+  RavenStatePoint,
+} from './../../shared/models';
+
+@Component({
+  selector: 'raven-state-point',
+  styleUrls: ['./raven-state-point.component.css'],
+  templateUrl: './raven-state-point.component.html',
+})
+export class RavenStatePointComponent {
+  @Input() selectedPoint: RavenStatePoint;
+}

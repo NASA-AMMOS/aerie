@@ -8,30 +8,16 @@
  */
 
 import {
-  RavenActivityPoint,
-} from './../models';
+  RavenCompositeBand,
+} from './index';
 
-export const activityPoint: RavenActivityPoint = {
-  activityId: '',
-  activityName: 'test-activity-point',
-  activityParameters: [
-    { Name: '', Value: '' },
-  ],
-  activityType: '',
-  ancestors: [],
-  childrenUrl: '',
-  color: [0, 0, 0],
-  descendantsUrl: '',
-  duration: 10,
-  end: 500,
-  endTimestamp: '',
-  id: '400',
-  legend: '',
-  metadata: [],
-  sourceId: '',
-  start: 0,
-  startTimestamp: '',
-  subBandId: '',
-  type: 'activity',
-  uniqueId: '400',
-};
+export interface FalconCompositeBandLeftClickEvent extends Event {
+  detail: {
+    ctlData: {
+      band: RavenCompositeBand,
+      interval: {
+        uniqueId: string,
+      },
+    },
+  };
+}

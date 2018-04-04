@@ -1,0 +1,30 @@
+:host {
+  display: block;
+}
+
+.label {
+  padding-top: 1em;
+  font-family: Roboto,"Helvetica Neue",sans-serif;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.value {
+  padding-left: 1em;
+}
+
+.parameters,
+.metadata {
+  padding-top: 1em;
+}
+
+table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+td {
+  background-color: #dcdfe5;
+  padding: 0.5em;
+  word-break: break-all;
+}

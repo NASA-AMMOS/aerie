@@ -7,28 +7,40 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { createFeatureSelector, createSelector } from '@ngrx/store';
+import {
+  createFeatureSelector,
+  createSelector,
+} from '@ngrx/store';
 
 import {
   LayoutAction,
   LayoutActionTypes,
   SetMode,
+  UpdateLayout,
 } from './../actions/layout';
 
 // Layout State Interface.
 export interface LayoutState {
   mode: string;
+  showActivityPointMetadata: boolean;
+  showActivityPointParameters: boolean;
   showDetailsDrawer: boolean;
   showLeftDrawer: boolean;
+  showPointDrawer: boolean;
   showSouthBandsDrawer: boolean;
+  timelinePanelSize: number;
 }
 
 // Layout State.
 export const initialState: LayoutState = {
   mode: 'default',
+  showActivityPointMetadata: false,
+  showActivityPointParameters: true,
   showDetailsDrawer: true,
   showLeftDrawer: true,
+  showPointDrawer: false,
   showSouthBandsDrawer: true,
+  timelinePanelSize: 75,
 };
 
 /**
@@ -43,8 +55,12 @@ export function reducer(state: LayoutState = initialState, action: LayoutAction)
       return { ...state, showDetailsDrawer: !state.showDetailsDrawer };
     case LayoutActionTypes.ToggleLeftDrawer:
       return { ...state, showLeftDrawer: !state.showLeftDrawer };
+    case LayoutActionTypes.TogglePointDrawer:
+      return { ...state, showPointDrawer: !state.showPointDrawer };
     case LayoutActionTypes.ToggleSouthBandsDrawer:
       return { ...state, showSouthBandsDrawer: !state.showSouthBandsDrawer };
+    case LayoutActionTypes.UpdateLayout:
+      return updateLayout(state, action);
     default:
       return state;
   }
@@ -59,7 +75,19 @@ export function setMode(state: LayoutState, action: SetMode): LayoutState {
     mode: action.mode,
     showDetailsDrawer: action.showDetailsDrawer,
     showLeftDrawer: action.showLeftDrawer,
+    showPointDrawer: action.showPointDrawer,
     showSouthBandsDrawer: action.showSouthBandsDrawer,
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'UpdateLayout' action.
+ * This is just a top level reducer for the layout state (top level meaning it updates base layout state props).
+ */
+export function updateLayout(state: LayoutState, action: UpdateLayout): LayoutState {
+  return {
+    ...state,
+    ...action.update,
   };
 }
 
@@ -80,7 +108,11 @@ export const getLayoutState = createFeatureSelector<LayoutState>('layout');
  * together to select different pieces of state.
  */
 export const getShowDrawers = createSelector(getLayoutState, (state: LayoutState) => ({
+  showActivityPointMetadata: state.showActivityPointMetadata,
+  showActivityPointParameters: state.showActivityPointParameters,
   showDetailsDrawer: state.showDetailsDrawer,
   showLeftDrawer: state.showLeftDrawer,
+  showPointDrawer: state.showPointDrawer,
   showSouthBandsDrawer: state.showSouthBandsDrawer,
+  timelinePanelSize: state.timelinePanelSize,
 }));

@@ -10,7 +10,7 @@
 
   <split-area
     [order]="1"
-    size="75">
+    [size]="timelinePanelSize">
     <split
       direction="vertical"
       (dragEnd)="onDragEnd()">
@@ -63,6 +63,7 @@
               [selectedBandId]="selectedBandId"
               [viewTimeRange]="viewTimeRange"
               (bandClick)="onBandClick($event)"
+              (bandLeftClick)="onBandLeftClick($event)"
               (newSort)="onSort($event)">
             </raven-bands>
           </mat-card>
@@ -84,6 +85,7 @@
               [selectedBandId]="selectedBandId"
               [viewTimeRange]="viewTimeRange"
               (bandClick)="onBandClick($event)"
+              (bandLeftClick)="onBandLeftClick($event)"
               (newSort)="onSort($event)">
             </raven-bands>
           </mat-card>
@@ -110,5 +112,42 @@
         </div>
       </split-area>
     </split>
+  </split-area>
+
+  <split-area
+    [visible]="showPointDrawer"
+    [order]="5"
+    size="15">
+    <div class="selected-point">
+      <ng-container *ngIf="!selectedPoint">
+        <mat-card>
+          No point selected.
+        </mat-card>
+      </ng-container>
+
+      <ng-container *ngIf="selectedPoint">
+        <ng-container *ngIf="selectedPoint.type === 'activity'">
+          <raven-activity-point
+            [selectedPoint]="selectedPoint"
+            [showActivityPointMetadata]="showActivityPointMetadata"
+            [showActivityPointParameters]="showActivityPointParameters"
+            (toggleShowActivityPointMetadata)="onToggleShowActivityPointMetadata($event)"
+            (toggleShowActivityPointParameters)="onToggleShowActivityPointParameters($event)">
+          </raven-activity-point>
+        </ng-container>
+
+        <ng-container *ngIf="selectedPoint.type === 'state'">
+          <raven-state-point
+            [selectedPoint]="selectedPoint">
+          </raven-state-point>
+        </ng-container>
+
+        <ng-container *ngIf="selectedPoint.type === 'resource'">
+          <raven-resource-point
+            [selectedPoint]="selectedPoint">
+          </raven-resource-point>
+        </ng-container>
+      </ng-container>
+    </div>
   </split-area>
 </split>

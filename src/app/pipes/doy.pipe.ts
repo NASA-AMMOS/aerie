@@ -8,30 +8,17 @@
  */
 
 import {
-  RavenActivityPoint,
-} from './../models';
+  Pipe,
+  PipeTransform,
+} from '@angular/core';
 
-export const activityPoint: RavenActivityPoint = {
-  activityId: '',
-  activityName: 'test-activity-point',
-  activityParameters: [
-    { Name: '', Value: '' },
-  ],
-  activityType: '',
-  ancestors: [],
-  childrenUrl: '',
-  color: [0, 0, 0],
-  descendantsUrl: '',
-  duration: 10,
-  end: 500,
-  endTimestamp: '',
-  id: '400',
-  legend: '',
-  metadata: [],
-  sourceId: '',
-  start: 0,
-  startTimestamp: '',
-  subBandId: '',
-  type: 'activity',
-  uniqueId: '400',
-};
+import { timestamp } from './../shared/util';
+
+@Pipe({
+  name: 'DOY',
+})
+export class DOYPipe implements PipeTransform {
+  transform(value: number): string {
+    return timestamp(value);
+  }
+}

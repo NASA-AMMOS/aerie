@@ -14,6 +14,8 @@ export interface RavenStatePoint {
   interpolateEnding: boolean;
   sourceId: string;
   start: number;
+  subBandId: string;
+  type: string;
   uniqueId: string;
   value: string;
 }

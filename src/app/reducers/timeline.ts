@@ -20,6 +20,7 @@ import {
   RemoveBandsOrPointsForSource,
   RemoveSubBand,
   SelectBand,
+  SelectPoint,
   SortBands,
   TimelineAction,
   TimelineActionTypes,
@@ -31,13 +32,16 @@ import {
 import {
   bandById,
   getMaxTimeRange,
+  getPoint,
   updateSelectedBandIds,
+  updateSelectedPoint,
   updateSortOrder,
   updateTimeRanges,
 } from './../shared/util';
 
 import {
   RavenCompositeBand,
+  RavenPoint,
   RavenSubBand,
   RavenTimeRange,
 } from './../shared/models';
@@ -48,6 +52,7 @@ export interface TimelineState {
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
   selectedBandId: string;
+  selectedPoint: RavenPoint | null;
   selectedSubBandId: string;
   viewTimeRange: RavenTimeRange;
 }
@@ -58,6 +63,7 @@ export const initialState: TimelineState = {
   labelWidth: 150,
   maxTimeRange: { end: 0, start: 0 },
   selectedBandId: '',
+  selectedPoint: null,
   selectedSubBandId: '',
   viewTimeRange: { end: 0, start: 0 },
 };
@@ -80,6 +86,8 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
       return removeSubBand(state, action);
     case TimelineActionTypes.SelectBand:
       return selectBand(state, action);
+    case TimelineActionTypes.SelectPoint:
+      return selectPoint(state, action);
     case TimelineActionTypes.SortBands:
       return sortBands(state, action);
     case TimelineActionTypes.UpdateBand:
@@ -226,6 +234,7 @@ export function removeBandsOrPointsForSource(state: TimelineState, action: Remov
     ...state,
     bands,
     ...updateSelectedBandIds(bands, state.selectedBandId, state.selectedSubBandId),
+    ...updateSelectedPoint(state.selectedPoint, action.sourceId, null),
     ...updateTimeRanges(bands, state.viewTimeRange),
   };
 }
@@ -249,6 +258,7 @@ export function removeSubBand(state: TimelineState, action: RemoveSubBand): Time
     ...state,
     bands,
     ...updateSelectedBandIds(bands, state.selectedBandId, state.selectedSubBandId),
+    ...updateSelectedPoint(state.selectedPoint, null, action.subBandId),
     ...updateTimeRanges(bands, state.viewTimeRange),
   };
 }
@@ -264,6 +274,19 @@ export function selectBand(state: TimelineState, action: SelectBand): TimelineSt
     ...state,
     selectedBandId,
     selectedSubBandId: band && band.subBands.length && selectedBandId !== '' ? band.subBands[0].id : '',
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'SelectPoint' action.
+ * Make sure if a point is already selected that we de-select it if it's clicked again.
+ */
+export function selectPoint(state: TimelineState, action: SelectPoint): TimelineState {
+  const alreadySelected = state.selectedPoint && state.selectedPoint.uniqueId === action.pointId;
+
+  return {
+    ...state,
+    selectedPoint: alreadySelected ? null : getPoint(state.bands, action.bandId, action.pointId),
   };
 }
 

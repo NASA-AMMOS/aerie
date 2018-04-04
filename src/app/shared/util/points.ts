@@ -15,6 +15,8 @@ import {
   MpsServerResourcePoint,
   MpsServerStatePoint,
   RavenActivityPoint,
+  RavenCompositeBand,
+  RavenPoint,
   RavenResourcePoint,
   RavenStatePoint,
   StringTMap,
@@ -123,6 +125,8 @@ export function getActivityPoint(sourceId: string, data: MpsServerActivityPoint)
     sourceId,
     start,
     startTimestamp,
+    subBandId: '',
+    type: 'activity',
     uniqueId: uniqueId(),
   };
 
@@ -188,6 +192,8 @@ export function getResourcePoints(sourceId: string, timelineData: MpsServerResou
       id,
       sourceId,
       start,
+      subBandId: '',
+      type: 'resource',
       uniqueId: uniqueId(),
       value,
     });
@@ -237,6 +243,8 @@ export function getStatePoints(sourceId: string, timelineData: MpsServerStatePoi
       interpolateEnding: true,
       sourceId,
       start,
+      subBandId: '',
+      type: 'state',
       uniqueId: uniqueId(),
       value,
     });
@@ -275,4 +283,45 @@ export function getMaxTimeRange(points: any[]) {
     end: maxTime,
     start: minTime,
   };
+}
+
+/**
+ * Get a raven point from a list of bands by bandId and pointId. Returns null if no point is found.
+ */
+export function getPoint(bands: RavenCompositeBand[], bandId: string, pointId: string): RavenPoint | null {
+  for (let i = 0, l = bands.length; i < l; ++i) {
+    if (bands[i].id === bandId) {
+      for (let j = 0, ll = bands[i].subBands.length; j < ll; ++j) {
+        const subBand = bands[i].subBands[j];
+        for (let k = 0, lll = subBand.points.length; k < lll; ++k) {
+          if (subBand.points[k].uniqueId === pointId) {
+            return {
+              ...subBand.points[k],
+              subBandId: subBand.id,
+            };
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Helper that checks if we need to reset the selectedPoint.
+ * If we don't need to reset just return the original selectedPoint.
+ */
+export function updateSelectedPoint(selectedPoint: RavenPoint | null, sourceId: string | null, subBandId: string | null) {
+  const pointInSubBand = selectedPoint && selectedPoint.subBandId === subBandId;
+  const pointFromSourceId = selectedPoint && selectedPoint.sourceId === sourceId;
+
+  if (pointInSubBand || pointFromSourceId) {
+    return {
+      selectedPoint: null,
+    };
+  } else {
+    return {
+      selectedPoint,
+    };
+  }
 }
