@@ -1,12 +1,19 @@
 :host {
   display: block;
+  font-family: Roboto,"Helvetica Neue",sans-serif;
+}
+
+div.label,
+div.value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .label {
-  padding-top: 1em;
-  font-family: Roboto,"Helvetica Neue",sans-serif;
   font-size: 15px;
   font-weight: bold;
+  padding-top: 1em;
 }
 
 .value {
