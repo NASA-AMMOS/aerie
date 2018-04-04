@@ -166,9 +166,7 @@ export class SourceExplorerEffects {
   @Effect()
   removeSourceEvent$: Observable<Action> = this.actions$.pipe(
     ofType<RemoveSourceEvent>(SourceExplorerActionTypes.RemoveSourceEvent),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(({ state, action }) =>
+    concatMap(action =>
       concat(
         this.removeSource(action.source.url, action.source.id),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),

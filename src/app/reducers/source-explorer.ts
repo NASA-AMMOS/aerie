@@ -152,7 +152,7 @@ export function removeSource(state: SourceExplorerState, action: RemoveSource): 
   if (parentSource) {
     return {
       ...state,
-      selectedSourceId: action.sourceId === state.selectedSourceId ? '' : action.sourceId,
+      selectedSourceId: action.sourceId === state.selectedSourceId ? '' : state.selectedSourceId,
       treeBySourceId: {
         ...omit(state.treeBySourceId, action.sourceId, allChildIds),
         [parentSource.id]: {
