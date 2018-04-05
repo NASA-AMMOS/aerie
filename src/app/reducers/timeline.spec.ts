@@ -14,6 +14,7 @@ import {
 } from './timeline';
 
 import {
+  RavenActivityPoint,
   RavenSource,
 } from './../shared/models';
 
@@ -24,6 +25,7 @@ import {
   RemoveBandsOrPointsForSource,
   RemoveSubBand,
   SelectBand,
+  SelectPoint,
   SortBands,
   UpdateBand,
   UpdateSubBand,
@@ -243,6 +245,41 @@ describe('timeline reducer', () => {
 
     expect(timelineState.selectedBandId).toEqual('0');
     expect(timelineState.selectedSubBandId).toEqual('1');
+  });
+
+  it('handle SelectPoint', () => {
+    const source: RavenSource = rootSource;
+
+    const point: RavenActivityPoint = {
+      ...activityPoint,
+      subBandId: '1',
+      uniqueId: '400',
+    };
+
+    const newBand = {
+      ...compositeBand,
+      id: '0',
+      subBands: [{
+        ...activityBand,
+        id: '1',
+        parentUniqueId: '0',
+        points: [{
+          ...point,
+        }],
+        sourceIds: {
+          '/': '/',
+        },
+      }],
+    };
+
+    expect(timelineState.selectedBandId).toEqual('');
+    expect(timelineState.selectedSubBandId).toEqual('');
+
+    // Add a band and and select a point from it.
+    timelineState = reducer(timelineState, new AddBand(source.id, newBand));
+    timelineState = reducer(timelineState, new SelectPoint('0', '400'));
+
+    expect(timelineState.selectedPoint).toEqual(point);
   });
 
   it('handle SortBands', () => {

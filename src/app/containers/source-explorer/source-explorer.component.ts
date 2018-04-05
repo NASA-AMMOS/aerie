@@ -14,16 +14,15 @@ import {
   OnDestroy,
 } from '@angular/core';
 
+import { MatDialog } from '@angular/material';
+
 import { Store } from '@ngrx/store';
 
 import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs/Subject';
 
-import { MatDialog } from '@angular/material';
-
 import * as fromSourceExplorer from './../../reducers/source-explorer';
 
-import * as displayActions from './../../actions/display';
 import * as sourceExplorerActions from './../../actions/source-explorer';
 
 import {
@@ -74,12 +73,12 @@ export class SourceExplorerComponent implements OnDestroy {
   onAction(action: RavenSourceActionEvent): void {
     const { event, source } = action;
 
-    if (event === 'state-delete') {
-      this.openStateDeleteDialog(source);
-    } else if (event === 'state-load') {
-      this.openStateLoadDialog(source);
-    } else if (event === 'state-save') {
-      this.openStateSaveDialog(source);
+    if (event === 'delete') {
+      this.openDeleteDialog(source);
+    } else if (event === 'load') {
+      this.openLoadDialog(source);
+    } else if (event === 'save') {
+      this.openSaveDialog(source);
     }
   }
 
@@ -87,73 +86,77 @@ export class SourceExplorerComponent implements OnDestroy {
    * Event. Called when a `close` event is fired from a raven-tree.
    */
   onClose(source: RavenSource): void {
-    this.store.dispatch(new sourceExplorerActions.SourceExplorerCloseEvent(source.id));
+    this.store.dispatch(new sourceExplorerActions.CloseEvent(source.id));
   }
 
   /**
    * Event. Called when a `collapse` event is fired from a raven-tree.
    */
   onCollapse(source: RavenSource): void {
-    this.store.dispatch(new sourceExplorerActions.SourceExplorerCollapseEvent(source.id));
+    this.store.dispatch(new sourceExplorerActions.CollapseEvent(source.id));
   }
 
   /**
    * Event. Called when an `expand` event is fired from a raven-tree.
    */
   onExpand(source: RavenSource): void {
-    this.store.dispatch(new sourceExplorerActions.SourceExplorerExpandEvent(source.id));
+    this.store.dispatch(new sourceExplorerActions.ExpandEvent(source.id));
   }
 
   /**
    * Event. Called when an `open` event is fired from a raven-tree.
    */
   onOpen(source: RavenSource): void {
-    this.store.dispatch(new sourceExplorerActions.SourceExplorerOpenEvent(source.id));
+    this.store.dispatch(new sourceExplorerActions.OpenEvent(source.id));
   }
 
   /**
    * Event. Called when a `select` event is fired from a raven-tree.
    */
   onSelect(source: RavenSource): void {
-    this.store.dispatch(new sourceExplorerActions.SourceExplorerSelect(source));
+    this.store.dispatch(new sourceExplorerActions.SelectSource(source));
   }
 
   /**
-   * Dialog trigger. Opens the delete state dialog.
+   * Dialog trigger. Opens the delete dialog.
    */
-  openStateDeleteDialog(source: RavenSource) {
+  openDeleteDialog(source: RavenSource) {
     const stateDeleteDialog = this.dialog.open(RavenConfirmDialogComponent, {
       data: {
         cancelText: 'No',
         confirmText: 'Yes',
-        message: 'Are you sure you want to delete this state?',
+        message: 'Are you sure you want to delete this source?',
       },
       width: '250px',
     });
 
-    stateDeleteDialog.afterClosed().subscribe(result => {
+    stateDeleteDialog.afterClosed().pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(result => {
       if (result.confirm) {
-        this.store.dispatch(new displayActions.StateDelete(source));
+        this.store.dispatch(new sourceExplorerActions.RemoveSourceEvent(source));
       }
     });
   }
 
   /**
-   * Dialog trigger. Opens the load state dialog.
+   * Dialog trigger. Opens the load dialog.
    */
-  openStateLoadDialog(source: RavenSource) {
+  openLoadDialog(source: RavenSource) {
     const stateLoadDialog = this.dialog.open(RavenConfirmDialogComponent, {
       data: {
         cancelText: 'No',
         confirmText: 'Yes',
-        message: 'Loading this state will clear your current workspace. Are you sure you want to do this?',
+        message: 'Applying this state will clear your current workspace. Are you sure you want to do this?',
       },
       width: '250px',
     });
 
-    stateLoadDialog.afterClosed().subscribe(result => {
+    stateLoadDialog.afterClosed().pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(result => {
       if (result.confirm) {
-        this.store.dispatch(new displayActions.StateLoad(source));
+        this.store.dispatch(new sourceExplorerActions.LoadFromSource(source.url));
       }
     });
   }
@@ -161,15 +164,17 @@ export class SourceExplorerComponent implements OnDestroy {
   /**
    * Dialog trigger. Opens the save state dialog.
    */
-  openStateSaveDialog(source: RavenSource): void {
+  openSaveDialog(source: RavenSource): void {
     const stateSaveDialog = this.dialog.open(RavenStateSaveDialogComponent, {
       data: { source },
       width: '250px',
     });
 
-    stateSaveDialog.afterClosed().subscribe(result => {
+    stateSaveDialog.afterClosed().pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(result => {
       if (result.save) {
-        this.store.dispatch(new displayActions.StateSave(result.name, source));
+        this.store.dispatch(new sourceExplorerActions.SaveToSource(source, result.name));
       }
     });
   }

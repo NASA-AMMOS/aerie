@@ -7,10 +7,17 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import ravenConfig from './../ravenConfig';
+import { DhmsPipe } from './dhms.pipe';
 
-export const environment = {
-  ...ravenConfig,
-  baseUrl: 'https://leucadia.jpl.nasa.gov:8443',
-  production: false,
-};
+describe('DhmsPipe', () => {
+  it('create an instance', () => {
+    const pipe = new DhmsPipe();
+    expect(pipe).toBeTruthy();
+  });
+
+  it('should properly convert a duration to dhms format', () => {
+    const pipe = new DhmsPipe();
+    expect(pipe.transform(216)).toBe('3m36s0ms');
+    expect(pipe.transform(528)).toBe('8m48s0ms');
+  });
+});

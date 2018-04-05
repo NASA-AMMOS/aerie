@@ -10,10 +10,14 @@ mat-icon {
 }
 
 .menu-icon {
+  height: 16px;
+  width: 16px;
   line-height: 0;
-  height: 25px;
-  width: 25px;
   color: #000000;
+}
+
+.name {
+  line-height: 25px;
 }
 
 .highlight {

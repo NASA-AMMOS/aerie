@@ -9,7 +9,6 @@
 
 import {
   keyBy,
-  map,
   omit,
 } from 'lodash';
 
@@ -20,18 +19,24 @@ import {
 
 import {
   NewSources,
+  RemoveSource,
+  SelectSource,
   SourceExplorerAction,
   SourceExplorerActionTypes,
-  SourceExplorerSelect,
   SubBandIdAdd,
   SubBandIdRemove,
   UpdateSourceExplorer,
+  UpdateTreeSource,
 } from './../actions/source-explorer';
 
 import {
   RavenSource,
   StringTMap,
-} from './../shared/models/index';
+} from './../shared/models';
+
+import {
+  getAllChildIds,
+} from './../shared/util';
 
 // Source Explorer State Interface.
 export interface SourceExplorerState {
@@ -83,14 +88,20 @@ export const initialState: SourceExplorerState = {
  */
 export function reducer(state: SourceExplorerState = initialState, action: SourceExplorerAction): SourceExplorerState {
   switch (action.type) {
+    case SourceExplorerActionTypes.ExpandEvent:
     case SourceExplorerActionTypes.FetchInitialSources:
+    case SourceExplorerActionTypes.LoadFromSource:
       return { ...state, fetchPending: true };
     case SourceExplorerActionTypes.NewSources:
       return newSources(state, action);
-    case SourceExplorerActionTypes.SourceExplorerExpandEvent:
-    case SourceExplorerActionTypes.SourceExplorerOpenEvent:
+    case SourceExplorerActionTypes.OpenEvent:
       return { ...state, fetchPending: true };
-    case SourceExplorerActionTypes.SourceExplorerSelect:
+    case SourceExplorerActionTypes.RemoveSource:
+      return removeSource(state, action);
+    case SourceExplorerActionTypes.RemoveSourceEvent:
+    case SourceExplorerActionTypes.SaveToSource:
+      return { ...state, fetchPending: true };
+    case SourceExplorerActionTypes.SelectSource:
       return selectSource(state, action);
     case SourceExplorerActionTypes.SubBandIdAdd:
       return subBandIdAdd(state, action);
@@ -99,7 +110,7 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
     case SourceExplorerActionTypes.UpdateSourceExplorer:
       return updateSourceExplorer(state, action);
     case SourceExplorerActionTypes.UpdateTreeSource:
-      return updateTreeSource(state, action.sourceId, action.prop, action.value);
+      return updateTreeSource(state, action);
     default:
       return state;
   }
@@ -112,24 +123,58 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
  * and the new child sources keyed off of their id.
  */
 export function newSources(state: SourceExplorerState, action: NewSources): SourceExplorerState {
+  const parentSource = state.treeBySourceId[action.sourceId];
+  const sources = action.sources.filter(source => !state.treeBySourceId[source.id]); // Exclude sources that already exist.
+
   return {
     ...state,
     treeBySourceId: {
       ...state.treeBySourceId,
-      ...keyBy(action.sources, 'id'),
+      ...keyBy(sources, 'id'),
       [action.sourceId]: {
-        ...state.treeBySourceId[action.sourceId],
-        childIds: map(action.sources, 'id'),
+        ...parentSource,
+        childIds: parentSource.childIds.concat(sources.map(source => source.id)),
       },
     },
   };
 }
 
 /**
- * Reduction Helper. Called when reducing the 'SourceExplorerSelect' action.
+ * Reduction Helper. Called when reducing the 'RemoveSource' action.
+ * Removes a source and all it's children from the source tree.
+ * Make sure we reset the selected source id if we remove the selected source.
+ */
+export function removeSource(state: SourceExplorerState, action: RemoveSource): SourceExplorerState {
+  const source = state.treeBySourceId[action.sourceId];
+  const parentSource = state.treeBySourceId[source.parentId];
+  const allChildIds = getAllChildIds(state.treeBySourceId, source.id);
+
+  if (parentSource) {
+    return {
+      ...state,
+      selectedSourceId: action.sourceId === state.selectedSourceId ? '' : state.selectedSourceId,
+      treeBySourceId: {
+        ...omit(state.treeBySourceId, action.sourceId, allChildIds),
+        [parentSource.id]: {
+          ...parentSource,
+          childIds: parentSource.childIds.filter(childId => childId !== action.sourceId),
+        },
+      },
+    };
+  } else {
+    console.error('source-explorer.ts - removeSource: you cannot remove a source without a parent: ', action.sourceId);
+
+    return {
+      ...state,
+    };
+  }
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'SelectSource' action.
  * Note that in some cases state.selectedSourceId === '' so we just omit '' keys from treeBySourceId.
  */
-export function selectSource(state: SourceExplorerState, action: SourceExplorerSelect): SourceExplorerState {
+export function selectSource(state: SourceExplorerState, action: SelectSource): SourceExplorerState {
   if (state.treeBySourceId[action.source.id].selectable) {
     return {
       ...state,
@@ -197,14 +242,14 @@ export function subBandIdRemove(state: SourceExplorerState, action: SubBandIdRem
 /**
  * Helper. Updates a source prop with a value.
  */
-export function updateTreeSource(state: SourceExplorerState, id: string, prop: string, value: string | number | boolean | string[]): SourceExplorerState {
+export function updateTreeSource(state: SourceExplorerState, action: UpdateTreeSource): SourceExplorerState {
   return {
     ...state,
     treeBySourceId: {
       ...state.treeBySourceId,
-      [id]: {
-        ...state.treeBySourceId[id],
-        [prop]: value,
+      [action.sourceId]: {
+        ...state.treeBySourceId[action.sourceId],
+        ...action.update,
       },
     },
   };

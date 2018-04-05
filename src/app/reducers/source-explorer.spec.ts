@@ -18,14 +18,19 @@ import {
 } from './../shared/models';
 
 import {
+  CloseEvent,
+  CollapseEvent,
+  ExpandEvent,
   FetchInitialSources,
+  LoadFromSource,
   NewSources,
-  SourceExplorerCloseEvent,
-  SourceExplorerCollapseEvent,
-  SourceExplorerExpandEvent,
-  SourceExplorerOpenEvent,
-  SourceExplorerSelect,
+  OpenEvent,
+  RemoveSource,
+  RemoveSourceEvent,
+  SaveToSource,
+  SelectSource,
   SubBandIdAdd,
+  SubBandIdRemove,
   UpdateSourceExplorer,
   UpdateTreeSource,
 } from './../actions/source-explorer';
@@ -46,8 +51,38 @@ describe('source-explorer reducer', () => {
     expect(sourceExplorerState).toEqual(initialState);
   });
 
+  it('handle CloseEvent', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new CloseEvent(rootSource.id));
+    expect(sourceExplorerState).toEqual({
+      ...initialState,
+    });
+  });
+
+  it('handle CollapseEvent', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new CollapseEvent(rootSource.id));
+    expect(sourceExplorerState).toEqual({
+      ...initialState,
+    });
+  });
+
+  it('handle ExpandEvent', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new ExpandEvent(rootSource.id));
+    expect(sourceExplorerState).toEqual({
+      ...initialState,
+      fetchPending: true,
+    });
+  });
+
   it('handle FetchInitialSources', () => {
     sourceExplorerState = reducer(sourceExplorerState, new FetchInitialSources());
+    expect(sourceExplorerState).toEqual({
+      ...initialState,
+      fetchPending: true,
+    });
+  });
+
+  it('handle LoadFromSource', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new LoadFromSource(rootSource.url));
     expect(sourceExplorerState).toEqual({
       ...initialState,
       fetchPending: true,
@@ -64,46 +99,49 @@ describe('source-explorer reducer', () => {
         ...initialState.treeBySourceId,
         '/': {
           ...initialState.treeBySourceId['/'],
-          childIds: ['/child'],
+          childIds: ['/child/'],
         },
-        '/child': {
+        '/child/': {
           ...childSource,
         },
       },
     });
   });
 
-  it('handle SourceExplorerCloseEvent', () => {
-    sourceExplorerState = reducer(sourceExplorerState, new SourceExplorerCloseEvent(rootSource.id));
-    expect(sourceExplorerState).toEqual({
-      ...initialState,
-    });
-  });
-
-  it('handle SourceExplorerCollapseEvent', () => {
-    sourceExplorerState = reducer(sourceExplorerState, new SourceExplorerCollapseEvent(rootSource.id));
-    expect(sourceExplorerState).toEqual({
-      ...initialState,
-    });
-  });
-
-  it('handle SourceExplorerExpandEvent', () => {
-    sourceExplorerState = reducer(sourceExplorerState, new SourceExplorerExpandEvent(rootSource.id));
+  it('handle OpenEvent', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new OpenEvent(rootSource.id));
     expect(sourceExplorerState).toEqual({
       ...initialState,
       fetchPending: true,
     });
   });
 
-  it('handle SourceExplorerOpenEvent', () => {
-    sourceExplorerState = reducer(sourceExplorerState, new SourceExplorerOpenEvent(rootSource.id));
+  it('handle RemoveSource', () => {
+    // First add a source we can remove.
+    sourceExplorerState = reducer(sourceExplorerState, new NewSources(rootSource.id, [childSource]));
+    sourceExplorerState = reducer(sourceExplorerState, new RemoveSource(childSource.id));
+    expect(sourceExplorerState).toEqual({
+      ...initialState,
+    });
+  });
+
+  it('handle RemoveSourceEvent', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new RemoveSourceEvent(rootSource));
     expect(sourceExplorerState).toEqual({
       ...initialState,
       fetchPending: true,
     });
   });
 
-  it('handle SourceExplorerSelect', () => {
+  it('handle SaveToSource', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new SaveToSource(rootSource, 'hello'));
+    expect(sourceExplorerState).toEqual({
+      ...initialState,
+      fetchPending: true,
+    });
+  });
+
+  it('handle SelectSource', () => {
     const source: RavenSource = rootSource;
 
     // Make the rootSource node selectable in the initial state.
@@ -119,7 +157,7 @@ describe('source-explorer reducer', () => {
     };
 
     // Select node.
-    sourceExplorerState = reducer(initState, new SourceExplorerSelect(source));
+    sourceExplorerState = reducer(initState, new SelectSource(source));
 
     expect(sourceExplorerState).toEqual({
       ...initState,
@@ -134,7 +172,7 @@ describe('source-explorer reducer', () => {
     });
 
     // Deselect node.
-    sourceExplorerState = reducer(sourceExplorerState, new SourceExplorerSelect(source));
+    sourceExplorerState = reducer(sourceExplorerState, new SelectSource(source));
 
     expect(sourceExplorerState).toEqual({
       ...initState,
@@ -165,6 +203,22 @@ describe('source-explorer reducer', () => {
     });
   });
 
+  it('handle SubBandIdRemove', () => {
+    // First add a sub-band id we can remove.
+    sourceExplorerState = reducer(sourceExplorerState, new SubBandIdAdd(rootSource.id, '100'));
+    sourceExplorerState = reducer(sourceExplorerState, new SubBandIdRemove({ '/': '/'}, '100'));
+    expect(sourceExplorerState).toEqual({
+      ...initialState,
+      treeBySourceId: {
+        ...initialState.treeBySourceId,
+        '/': {
+          ...initialState.treeBySourceId['/'],
+          subBandIds: {},
+        },
+      },
+    });
+  });
+
   it('handle UpdateSourceExplorer', () => {
     sourceExplorerState = reducer(sourceExplorerState, new UpdateSourceExplorer({ selectedSourceId: '42' }));
 
@@ -175,13 +229,17 @@ describe('source-explorer reducer', () => {
   });
 
   it('handle UpdateTreeSource', () => {
-    sourceExplorerState = reducer(sourceExplorerState, new UpdateTreeSource(rootSource.id, 'opened', true));
+    sourceExplorerState = reducer(sourceExplorerState, new UpdateTreeSource(rootSource.id, {
+      label: 'hi',
+      opened: true,
+    }));
     expect(sourceExplorerState).toEqual({
       ...initialState,
       treeBySourceId: {
         ...initialState.treeBySourceId,
-        '/': {
-          ...initialState.treeBySourceId['/'],
+        [rootSource.id]: {
+          ...initialState.treeBySourceId[rootSource.id],
+          label: 'hi',
           opened: true,
         },
       },

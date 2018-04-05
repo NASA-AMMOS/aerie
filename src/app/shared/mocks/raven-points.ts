@@ -20,7 +20,9 @@ export const activityPoint: RavenActivityPoint = {
   activityType: '',
   ancestors: [],
   childrenUrl: '',
-  color: [0, 0, 0],
+  color: [
+    0, 0, 0,
+  ],
   descendantsUrl: '',
   duration: 10,
   end: 500,
@@ -28,10 +30,10 @@ export const activityPoint: RavenActivityPoint = {
   id: '400',
   legend: '',
   metadata: [],
-  sourceId: '',
+  sourceId: '/a/b/c/',
   start: 0,
   startTimestamp: '',
-  subBandId: '',
+  subBandId: '4',
   type: 'activity',
   uniqueId: '400',
 };

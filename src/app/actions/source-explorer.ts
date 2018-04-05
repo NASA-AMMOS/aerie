@@ -17,22 +17,50 @@ import {
 
 // Action Types.
 export enum SourceExplorerActionTypes {
-  FetchInitialSources         = '[sourceExplorer] fetch_initial_sources',
-  NewSources                  = '[sourceExplorer] new_sources',
-  SourceExplorerCloseEvent    = '[sourceExplorer] source_explorer_close_event',
-  SourceExplorerCollapseEvent = '[sourceExplorer] source_explorer_collapse_event',
-  SourceExplorerExpandEvent   = '[sourceExplorer] source_explorer_expand_event',
-  SourceExplorerOpenEvent     = '[sourceExplorer] source_explorer_open_event',
-  SourceExplorerSelect        = '[sourceExplorer] source_explorer_select',
-  SubBandIdAdd                = '[sourceExplorer] sub_band_id_add',
-  SubBandIdRemove             = '[sourceExplorer] sub_band_id_remove',
-  UpdateSourceExplorer        = '[sourceExplorer] update_source_explorer',
-  UpdateTreeSource            = '[sourceExplorer] update_tree_source',
+  CloseEvent           = '[sourceExplorer] close_event',
+  CollapseEvent        = '[sourceExplorer] collapse_event',
+  ExpandEvent          = '[sourceExplorer] expand_event',
+  FetchInitialSources  = '[sourceExplorer] fetch_initial_sources',
+  LoadFromSource       = '[sourceExplorer] load_from_source',
+  NewSources           = '[sourceExplorer] new_sources',
+  OpenEvent            = '[sourceExplorer] open_event',
+  RemoveSource         = '[sourceExplorer] remove_source',
+  RemoveSourceEvent    = '[sourceExplorer] remove_source_event',
+  SaveToSource         = '[sourceExplorer] save_to_source',
+  SelectSource         = '[sourceExplorer] select_source',
+  SubBandIdAdd         = '[sourceExplorer] sub_band_id_add',
+  SubBandIdRemove      = '[sourceExplorer] sub_band_id_remove',
+  UpdateSourceExplorer = '[sourceExplorer] update_source_explorer',
+  UpdateTreeSource     = '[sourceExplorer] update_tree_source',
 }
 
 // Actions.
+export class CloseEvent implements Action {
+  readonly type = SourceExplorerActionTypes.CloseEvent;
+
+  constructor(public sourceId: string) {}
+}
+
+export class CollapseEvent implements Action {
+  readonly type = SourceExplorerActionTypes.CollapseEvent;
+
+  constructor(public sourceId: string) {}
+}
+
+export class ExpandEvent implements Action {
+  readonly type = SourceExplorerActionTypes.ExpandEvent;
+
+  constructor(public sourceId: string) {}
+}
+
 export class FetchInitialSources implements Action {
   readonly type = SourceExplorerActionTypes.FetchInitialSources;
+}
+
+export class LoadFromSource implements Action {
+  readonly type = SourceExplorerActionTypes.LoadFromSource;
+
+  constructor(public sourceUrl: string) {}
 }
 
 export class NewSources implements Action {
@@ -41,32 +69,35 @@ export class NewSources implements Action {
   constructor(public sourceId: string, public sources: RavenSource[]) {}
 }
 
-export class SourceExplorerCloseEvent implements Action {
-  readonly type = SourceExplorerActionTypes.SourceExplorerCloseEvent;
+export class OpenEvent implements Action {
+  readonly type = SourceExplorerActionTypes.OpenEvent;
 
   constructor(public sourceId: string) {}
 }
 
-export class SourceExplorerCollapseEvent implements Action {
-  readonly type = SourceExplorerActionTypes.SourceExplorerCollapseEvent;
+export class RemoveSource implements Action {
+  readonly type = SourceExplorerActionTypes.RemoveSource;
 
   constructor(public sourceId: string) {}
 }
 
-export class SourceExplorerExpandEvent implements Action {
-  readonly type = SourceExplorerActionTypes.SourceExplorerExpandEvent;
+export class RemoveSourceEvent implements Action {
+  readonly type = SourceExplorerActionTypes.RemoveSourceEvent;
 
-  constructor(public sourceId: string) {}
+  constructor(public source: RavenSource) {}
 }
 
-export class SourceExplorerOpenEvent implements Action {
-  readonly type = SourceExplorerActionTypes.SourceExplorerOpenEvent;
+export class SaveToSource implements Action {
+  readonly type = SourceExplorerActionTypes.SaveToSource;
 
-  constructor(public sourceId: string) {}
+  constructor(
+    public source: RavenSource,
+    public name: string,
+  ) {}
 }
 
-export class SourceExplorerSelect implements Action {
-  readonly type = SourceExplorerActionTypes.SourceExplorerSelect;
+export class SelectSource implements Action {
+  readonly type = SourceExplorerActionTypes.SelectSource;
 
   constructor(public source: RavenSource) {}
 }
@@ -94,20 +125,23 @@ export class UpdateTreeSource implements Action {
 
   constructor(
     public sourceId: string,
-    public prop: string,
-    public value: any,
+    public update: StringTMap<BaseType>,
   ) {}
 }
 
 // Union type of all actions.
 export type SourceExplorerAction =
+  CloseEvent |
+  CollapseEvent |
+  ExpandEvent |
   FetchInitialSources |
+  LoadFromSource |
   NewSources |
-  SourceExplorerCloseEvent |
-  SourceExplorerCollapseEvent |
-  SourceExplorerExpandEvent |
-  SourceExplorerOpenEvent |
-  SourceExplorerSelect |
+  OpenEvent |
+  RemoveSource |
+  RemoveSourceEvent |
+  SaveToSource |
+  SelectSource |
   SubBandIdAdd |
   SubBandIdRemove |
   UpdateSourceExplorer |

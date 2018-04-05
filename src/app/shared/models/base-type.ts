@@ -18,4 +18,5 @@ export type BaseType =
   boolean[] |
   number[] |
   string[] |
-  StringTMap<any>;
+  StringTMap<any> |
+  null;

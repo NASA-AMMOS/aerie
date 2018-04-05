@@ -95,7 +95,9 @@ export function toActivityBands(sourceId: string, timelineData: MpsServerActivit
       points: legends[legend],
       showLabel: true,
       showTooltip: true,
-      sourceIds: {},
+      sourceIds: {
+        [sourceId]: sourceId,
+      },
       sourceType,
       trimLabel: true,
       type: 'activity',
@@ -180,7 +182,9 @@ export function toResourceBand(sourceId: string, metadata: MpsServerResourceMeta
     rescale: true,
     showIcon: false,
     showTooltip: true,
-    sourceIds: {},
+    sourceIds: {
+      [sourceId]: sourceId,
+    },
     type: 'resource',
   };
 
@@ -208,7 +212,9 @@ export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, 
     parentUniqueId: null,
     points,
     showTooltip: true,
-    sourceIds: {},
+    sourceIds: {
+      [sourceId]: sourceId,
+    },
     type: 'state',
   };
 
@@ -353,6 +359,26 @@ export function hasActivityByTypeBand(bands: RavenCompositeBand[], band: RavenSu
             subBandId: subBand.id,
           };
         }
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Helper. Returns a sub-band locator if a given band has a source id.
+ * `null` otherwise.
+ */
+export function hasSourceId(bands: RavenCompositeBand[], sourceId: string) {
+  for (let i = 0, l = bands.length; i < l; ++i) {
+    for (let j = 0, ll = bands[i].subBands.length; j < ll; ++j) {
+      const subBand = bands[i].subBands[j];
+
+      if (subBand.sourceIds[sourceId]) {
+        return {
+          bandId: bands[i].id,
+          subBandId: subBand.id,
+        };
       }
     }
   }

@@ -7,10 +7,18 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import ravenConfig from './../ravenConfig';
+import {
+  Pipe,
+  PipeTransform,
+} from '@angular/core';
 
-export const environment = {
-  ...ravenConfig,
-  baseUrl: 'https://leucadia.jpl.nasa.gov:8443',
-  production: false,
-};
+import { timestamp } from './../shared/util';
+
+@Pipe({
+  name: 'timestamp',
+})
+export class TimestampPipe implements PipeTransform {
+  transform(value: number): string {
+    return timestamp(value);
+  }
+}
