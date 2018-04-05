@@ -43,9 +43,7 @@ export class AppComponent implements OnDestroy {
     // Combine all fetch pending observables for use in progress bar.
     this.loading$ = combineLatest(
       this.store.select(fromSourceExplorer.getPending),
-      sourceExplorerPending => {
-        return sourceExplorerPending;
-      },
+      sourceExplorerPending => sourceExplorerPending,
     ).pipe(
       tap(() => this.changeDetector.markForCheck()),
       takeUntil(this.ngUnsubscribe),
