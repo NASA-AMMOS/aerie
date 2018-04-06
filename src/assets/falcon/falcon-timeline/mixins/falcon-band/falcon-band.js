@@ -31,6 +31,16 @@ const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.I
       },
 
       /**
+       * A list of CTL intervals by id for quick lookup.
+       */
+      _intervalById: {
+        type: Object,
+        value: () => {
+          return {};
+        },
+      },
+
+      /**
        * The Polymer debounce object for de-bouncing iron resize events.
        */
       _onIronResizeDebouncer: {
@@ -204,10 +214,14 @@ const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.I
        * The current point that's selected in the band.
        * The selected point should be highlighted.
        * This object is a reference to a DrawableInterval in CTL.
+       *
+       * Observing directly on the property here so we can get the old and new values,
+       * to properly update the underlying CTL interval.
        */
       selectedPoint: {
         type: Object,
         value: null,
+        observer: '_selectedPointChanged',
       },
 
       /**
@@ -524,6 +538,48 @@ const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.I
   }
 
   /**
+   * Observer. Called when the selectedPoint property changes.
+   *
+   * @memberof FalconBand
+   */
+  _selectedPointChanged(newSelectedPoint, oldSelectedPoint) {
+    if (newSelectedPoint && oldSelectedPoint) {
+      const newInterval = this._intervalById[newSelectedPoint.uniqueId];
+      const oldInterval = this._intervalById[oldSelectedPoint.uniqueId];
+
+      if (newInterval) {
+        // Set the new interval to the highlight color.
+        newInterval.originalColor = newInterval.color;
+        newInterval.color = this.selectedPointColor;
+      }
+
+      if (oldInterval) {
+        // Reset the old interval to it's original color.
+        oldInterval.color = oldInterval.originalColor;
+      }
+
+      this.redraw();
+    } else if (!newSelectedPoint && oldSelectedPoint) {
+      const interval = this._intervalById[oldSelectedPoint.uniqueId];
+
+      if (interval) {
+        // Set the interval to it's original color.
+        interval.color = interval.originalColor;
+        this.redraw();
+      }
+    } else if (newSelectedPoint && !oldSelectedPoint) {
+      const interval = this._intervalById[newSelectedPoint.uniqueId];
+
+      if (interval) {
+        // Set the interval to the highlight color.
+        interval.originalColor = interval.color;
+        interval.color = this.selectedPointColor;
+        this.redraw();
+      }
+    }
+  }
+
+  /**
    * Observer. Called when viewTimeRange property changes.
    *
    * @param {Number} start
@@ -627,7 +683,6 @@ const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.I
    */
   _onLeftClick(e, ctlData) {
     if (ctlData.interval) {
-      this._selectPoint(ctlData.interval);
       this._fire(`${this.localName}-left-click`, { ctlData });
     }
   }
@@ -725,42 +780,6 @@ const FalconBand = superClass => class extends Polymer.mixinBehaviors([Polymer.I
         band.timeAxis.updateXCoordinates(this.labelWidth, offsetWidth);
         band.viewTimeAxis.updateXCoordinates(this.labelWidth, offsetWidth);
       });
-    }
-  }
-
-  /**
-   * Helper to select a point in this band.
-   *
-   * @param {any} interval
-   *
-   * @memberof FalconBand
-   */
-  _selectPoint(interval) {
-    if (interval) {
-      // Don't consider interpolated intervals
-      // i.e. intervals that have numbered id's < 0.
-      if (typeof interval.id === 'number' && interval.id < 0) {
-        return;
-      }
-
-      // Reset the selectedPoints original color.
-      if (this.selectedPoint) {
-        this.selectedPoint.color = this.selectedPoint.originalColor;
-      }
-
-      // If the clicked on interval is the same as the selectedPoint,
-      // then deselect the point.
-      if (this.selectedPoint && this.selectedPoint.id === interval.id) {
-        this.selectedPoint = null;
-      }
-      // Otherwise set the new selectedPoint.
-      else {
-        this.selectedPoint = interval;
-        this.selectedPoint.originalColor = interval.color;
-        this.selectedPoint.color = this.selectedPointColor;
-      }
-
-      this.redraw();
     }
   }
 

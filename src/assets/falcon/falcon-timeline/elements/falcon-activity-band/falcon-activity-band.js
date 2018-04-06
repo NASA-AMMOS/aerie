@@ -198,6 +198,7 @@ class FalconActivityBand extends FalconBand(Polymer.Element) {
    * @memberof FalconActivityBand
    */
   _pointsChanged() {
+    this._intervalById = {};
     const intervals = [];
 
     for (let i = 0, l = this.points.length; i < l; ++i) {
@@ -217,7 +218,8 @@ class FalconActivityBand extends FalconBand(Polymer.Element) {
       // Set the unique ID separately since it is not a DrawableInterval prop.
       interval.uniqueId = point.uniqueId;
 
-      intervals.push(interval);
+      this._intervalById[interval.uniqueId] = interval;
+      intervals.push(this._intervalById[interval.uniqueId]);
     }
 
     intervals.sort(DrawableInterval.earlyStartEarlyEnd);

@@ -82,7 +82,7 @@ export class TimelineComponent implements OnDestroy {
     });
 
     // Layout state.
-    this.store.select(fromLayout.getShowDrawers).pipe(
+    this.store.select(fromLayout.getLayoutState).pipe(
       takeUntil(this.ngUnsubscribe),
     ).subscribe(state => {
       this.showActivityPointMetadata = state.showActivityPointMetadata;

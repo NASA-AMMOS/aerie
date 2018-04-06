@@ -9,7 +9,6 @@
 
 import {
   createFeatureSelector,
-  createSelector,
 } from '@ngrx/store';
 
 import {
@@ -107,12 +106,4 @@ export const getLayoutState = createFeatureSelector<LayoutState>('layout');
  * only recompute when arguments change. The created selectors can also be composed
  * together to select different pieces of state.
  */
-export const getShowDrawers = createSelector(getLayoutState, (state: LayoutState) => ({
-  showActivityPointMetadata: state.showActivityPointMetadata,
-  showActivityPointParameters: state.showActivityPointParameters,
-  showDetailsDrawer: state.showDetailsDrawer,
-  showLeftDrawer: state.showLeftDrawer,
-  showPointDrawer: state.showPointDrawer,
-  showSouthBandsDrawer: state.showSouthBandsDrawer,
-  timelinePanelSize: state.timelinePanelSize,
-}));
+// TODO: Add more specific selectors if needed.
