@@ -47,6 +47,7 @@ export interface TimelineState {
   bands: RavenCompositeBand[];
   colorPalette: string[];
   currentTimeCursor: boolean;
+  dateFormat: string;
   labelFontSize: number;
   labelFontStyle: string;
   labelWidth: number;
@@ -68,8 +69,9 @@ export const initialState: TimelineState = {
     '#0000ff', // blue
     '#ffa500', // orange
     '#ffff00', // yellow
-    ],
+  ],
   currentTimeCursor: false,
+  dateFormat: 'Day-Month-Year',
   labelFontSize: 9,
   labelFontStyle: 'Georgia',
   labelWidth: 100,
@@ -111,6 +113,8 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
       return { ...state, viewTimeRange: { ...action.viewTimeRange } };
     case TimelineActionTypes.ChangeCurrentTimeCursor:
       return { ...state, currentTimeCursor: action.currentTimeCursor };
+    case TimelineActionTypes.ChangeDateFormat:
+      return { ...state, dateFormat: action.dateFormat };
     case TimelineActionTypes.ChangeTooltip:
       return { ...state, tooltip: action.tooltip };
     case TimelineActionTypes.ChangeLabelFontSize:

@@ -1,0 +1,36 @@
+<div class="epochs mat-elevation-z8">
+  <mat-form-field class="epoch-filter" >
+    <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Epoch Filter">
+  </mat-form-field>
+  <mat-table #table [dataSource]="epochs" matSort (matSortChange)="sortData($event)">
+    <!-- Checkbox Column -->
+    <ng-container matColumnDef="select">
+      <mat-header-cell *matHeaderCellDef> Select</mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <mat-radio-button name="radioButton" (change)="onSelect(row)">
+        </mat-radio-button>
+      </mat-cell>
+    </ng-container>
+
+    <!-- name Column -->
+    <ng-container matColumnDef="name">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>name</mat-header-cell>
+      <mat-cell *matCellDef="let element"> {{element.name}} </mat-cell>
+    </ng-container>
+
+    <!-- value Column -->
+    <ng-container matColumnDef="value">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>value </mat-header-cell>
+      <mat-cell *matCellDef="let element"> {{element.value}} </mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+  </mat-table>
+</div>
+
+<div class="button-container">
+  <label>Import epochs
+    <input type="file" (change)="getContent($event)" />
+  </label>
+</div>

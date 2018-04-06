@@ -7,6 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+export * from './raven-epochs/raven-epochs.component';
 export * from './raven-bands/raven-bands.component';
 export * from './raven-confirm-dialog/raven-confirm-dialog.component';
 export * from './raven-settings/raven-settings.component';

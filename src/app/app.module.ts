@@ -43,6 +43,7 @@ import {
 import {
   RavenBandsComponent,
   RavenConfirmDialogComponent,
+  RavenEpochsComponent,
   RavenGlobalSettingsComponent,
   RavenSettingsComponent,
   RavenStateSaveDialogComponent,
@@ -51,6 +52,7 @@ import {
 
 import {
   DisplayEffects,
+  EpochsEffects,
   RouterEffects,
   SourceExplorerEffects,
 } from './effects';
@@ -70,6 +72,7 @@ export const DECLARATIONS = [
   KeyByPipe,
   RavenBandsComponent,
   RavenConfirmDialogComponent,
+  RavenEpochsComponent,
   RavenGlobalSettingsComponent,
   RavenSettingsComponent,
   RavenStateSaveDialogComponent,
@@ -85,6 +88,7 @@ export const ENTRY_COMPONENTS = [
 
 export const EFFECTS = [
   DisplayEffects,
+  EpochsEffects,
   RouterEffects,
   SourceExplorerEffects,
 ];

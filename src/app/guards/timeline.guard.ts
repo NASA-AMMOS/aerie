@@ -30,6 +30,7 @@ import {
 
 import { AppState } from './../../app/store';
 
+import * as epochsActions from './../actions/epochs';
 import * as sourceExplorerActions from './../actions/source-explorer';
 import * as fromSourceExplorer from './../reducers/source-explorer';
 
@@ -60,6 +61,7 @@ export class TimelineGuard implements CanActivate {
       tap((initialSourcesLoaded: boolean) => {
         if (!initialSourcesLoaded) {
           this.store$.dispatch(new sourceExplorerActions.FetchInitialSources());
+          this.store$.dispatch(new epochsActions.FetchEpochs());
         }
       }),
       filter((initialSourcesLoaded: boolean) => initialSourcesLoaded),

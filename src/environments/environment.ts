@@ -12,5 +12,7 @@ import ravenConfig from './../ravenConfig';
 export const environment = {
   ...ravenConfig,
   baseUrl: 'https://pismo.jpl.nasa.gov:9001',
+  // epochsUrl: 'mpsserver/api/v2/epochs',
+  epochsUrl: 'https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/fs-mongodb/leucadia/taifunTest/europaEpoch.csv',
   production: false,
 };

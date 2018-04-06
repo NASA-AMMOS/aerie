@@ -8,5 +8,6 @@
  */
 
 export * from './display.effect';
+export * from './epochs.effect';
 export * from './router.effect';
 export * from './source-explorer.effect';

@@ -9,6 +9,7 @@ import { Cmyk } from 'ngx-color-picker';
 export class RavenGlobalSettingsComponent {
 
   // resourceColor = '#2889e9';
+  @Input() dateFormat: string;
   @Input() labelWidth: number;
   @Input() tooltip: boolean;
   @Input() currentTimeCursor: boolean;
@@ -17,6 +18,7 @@ export class RavenGlobalSettingsComponent {
   @Input() resourceColor: string;
   @Input() colorPalette: string[];
 
+  @Output() changeDateFormat: EventEmitter<string> = new EventEmitter<string>();
   @Output() changeResourceColor: EventEmitter<string> = new EventEmitter<string>();
   @Output() changeLabelWidth: EventEmitter<number> = new EventEmitter<number>();
   @Output() changeLabelFontSize: EventEmitter<number> = new EventEmitter<number>();

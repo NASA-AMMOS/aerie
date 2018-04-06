@@ -24,6 +24,13 @@
         <mat-option [value]="'Georgia'">Georgia</mat-option>
       </mat-select>
     </mat-form-field>
+    <mat-form-field>
+        <mat-select placeholder="Date Format" [value]="dateFormat" (selectionChange)="changeDateFormat.emit($event.value)">
+          <mat-option [value]="'Epoch Relative'">Epoch Relative</mat-option>
+          <mat-option [value]="'Julian'">Julian</mat-option>
+          <mat-option [value]="'Day-Month-Year'">Day-Month-Year</mat-option>
+        </mat-select>
+      </mat-form-field>
   </div>
 </div>
 <div class="fieldLabel">

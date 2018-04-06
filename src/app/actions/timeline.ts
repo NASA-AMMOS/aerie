@@ -24,6 +24,7 @@ export enum TimelineActionTypes {
   AddPointsToSubBand           = '[timeline] add_points_to_sub_band',
   AddSubBand                   = '[timeline] add_sub_band',
   ChangeCurrentTimeCursor      = '[timeline] change_current_time_cursor',
+  ChangeDateFormat             = '[timeline] change_date_format',
   ChangeTooltip                = '[timeline] change_tooltip',
   ChangeLabelFontSize          = '[timeline] change_label_fonr_size',
   ChangeLabelFontStyle         = '[timeline] change_label_font_style',
@@ -118,6 +119,12 @@ export class UpdateViewTimeRange implements Action {
   constructor(public viewTimeRange: RavenTimeRange) {}
 }
 
+export class ChangeDateFormat implements Action {
+  readonly type = TimelineActionTypes.ChangeDateFormat;
+
+  constructor(public dateFormat: string) {}
+}
+
 export class ChangeCurrentTimeCursor implements Action {
   readonly type = TimelineActionTypes.ChangeCurrentTimeCursor;
 
@@ -160,6 +167,7 @@ export type TimelineAction =
   AddPointsToSubBand |
   AddSubBand |
   ChangeCurrentTimeCursor |
+  ChangeDateFormat |
   ChangeTooltip |
   ChangeLabelFontSize |
   ChangeLabelFontStyle |

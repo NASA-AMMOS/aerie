@@ -8,12 +8,14 @@
  */
 
 export * from './base-type';
+export * from './raven-epoch';
 export * from './map';
 export * from './mps-server-activity-metadata';
 export * from './mps-server-activity-point-metadata';
 export * from './mps-server-activity-point-parameter';
 export * from './mps-server-activity-point';
 export * from './mps-server-annotation';
+export * from './mps-server-epoch';
 export * from './mps-server-graph-data';
 export * from './mps-server-metadata';
 export * from './mps-server-point';
