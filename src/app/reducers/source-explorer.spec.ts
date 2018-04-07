@@ -70,6 +70,13 @@ describe('source-explorer reducer', () => {
     expect(sourceExplorerState).toEqual({
       ...initialState,
       fetchPending: true,
+      treeBySourceId: {
+        ...initialState.treeBySourceId,
+        [rootSource.id]: {
+          ...initialState.treeBySourceId[rootSource.id],
+          expanded: true,
+        },
+      },
     });
   });
 
@@ -113,6 +120,13 @@ describe('source-explorer reducer', () => {
     expect(sourceExplorerState).toEqual({
       ...initialState,
       fetchPending: true,
+      treeBySourceId: {
+        ...initialState.treeBySourceId,
+        [rootSource.id]: {
+          ...initialState.treeBySourceId[rootSource.id],
+          opened: true,
+        },
+      },
     });
   });
 

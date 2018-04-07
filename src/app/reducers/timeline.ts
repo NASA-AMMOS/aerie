@@ -26,7 +26,6 @@ import {
   TimelineActionTypes,
   UpdateBand,
   UpdateSubBand,
-  UpdateTimeline,
 } from './../actions/timeline';
 
 import {
@@ -95,7 +94,7 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
     case TimelineActionTypes.UpdateSubBand:
       return updateSubBand(state, action);
     case TimelineActionTypes.UpdateTimeline:
-      return updateTimeline(state, action);
+      return { ...state, ...action.update };
     case TimelineActionTypes.UpdateViewTimeRange:
       return { ...state, viewTimeRange: { ...action.viewTimeRange } };
     default:
@@ -353,17 +352,6 @@ export function updateSubBand(state: TimelineState, action: UpdateSubBand): Time
 
       return band;
     }),
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'UpdateTimeline' action.
- * This is just a top level reducer for the timeline state (top level meaning it updates base timeline state props).
- */
-export function updateTimeline(state: TimelineState, action: UpdateTimeline): TimelineState {
-  return {
-    ...state,
-    ...action.update,
   };
 }
 

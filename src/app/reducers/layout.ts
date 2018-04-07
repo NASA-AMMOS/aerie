@@ -15,7 +15,6 @@ import {
   LayoutAction,
   LayoutActionTypes,
   SetMode,
-  UpdateLayout,
 } from './../actions/layout';
 
 // Layout State Interface.
@@ -59,7 +58,7 @@ export function reducer(state: LayoutState = initialState, action: LayoutAction)
     case LayoutActionTypes.ToggleSouthBandsDrawer:
       return { ...state, showSouthBandsDrawer: !state.showSouthBandsDrawer };
     case LayoutActionTypes.UpdateLayout:
-      return updateLayout(state, action);
+      return { ...state, ...action.update };
     default:
       return state;
   }
@@ -76,17 +75,6 @@ export function setMode(state: LayoutState, action: SetMode): LayoutState {
     showLeftDrawer: action.showLeftDrawer,
     showPointDrawer: action.showPointDrawer,
     showSouthBandsDrawer: action.showSouthBandsDrawer,
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'UpdateLayout' action.
- * This is just a top level reducer for the layout state (top level meaning it updates base layout state props).
- */
-export function updateLayout(state: LayoutState, action: UpdateLayout): LayoutState {
-  return {
-    ...state,
-    ...action.update,
   };
 }
 

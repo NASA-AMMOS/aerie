@@ -18,18 +18,21 @@ import {
 } from '@ngrx/store';
 
 import {
+  CloseEvent,
+  CollapseEvent,
+  ExpandEvent,
   NewSources,
+  OpenEvent,
   RemoveSource,
   SelectSource,
   SourceExplorerAction,
   SourceExplorerActionTypes,
   SubBandIdAdd,
   SubBandIdRemove,
-  UpdateSourceExplorer,
-  UpdateTreeSource,
 } from './../actions/source-explorer';
 
 import {
+  BaseType,
   RavenSource,
   StringTMap,
 } from './../shared/models';
@@ -88,14 +91,19 @@ export const initialState: SourceExplorerState = {
  */
 export function reducer(state: SourceExplorerState = initialState, action: SourceExplorerAction): SourceExplorerState {
   switch (action.type) {
+    case SourceExplorerActionTypes.CloseEvent:
+      return closeEvent(state, action);
+    case SourceExplorerActionTypes.CollapseEvent:
+      return collapseEvent(state, action);
     case SourceExplorerActionTypes.ExpandEvent:
+      return expandEvent(state, action);
     case SourceExplorerActionTypes.FetchInitialSources:
     case SourceExplorerActionTypes.LoadFromSource:
       return { ...state, fetchPending: true };
     case SourceExplorerActionTypes.NewSources:
       return newSources(state, action);
     case SourceExplorerActionTypes.OpenEvent:
-      return { ...state, fetchPending: true };
+      return openEvent(state, action);
     case SourceExplorerActionTypes.RemoveSource:
       return removeSource(state, action);
     case SourceExplorerActionTypes.RemoveSourceEvent:
@@ -108,12 +116,50 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
     case SourceExplorerActionTypes.SubBandIdRemove:
       return subBandIdRemove(state, action);
     case SourceExplorerActionTypes.UpdateSourceExplorer:
-      return updateSourceExplorer(state, action);
+      return { ...state, ...action.update };
     case SourceExplorerActionTypes.UpdateTreeSource:
-      return updateTreeSource(state, action);
+      return { ...state, ...updateTreeSource(state, action.sourceId, action.update) };
     default:
       return state;
   }
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'CloseEvent' action.
+ */
+export function closeEvent(state: SourceExplorerState, action: CloseEvent): SourceExplorerState {
+  return {
+    ...state,
+    ...updateTreeSource(state, action.sourceId, {
+      opened: false,
+      subBandIds: {},
+    }),
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'CollapseEvent' action.
+ */
+export function collapseEvent(state: SourceExplorerState, action: CollapseEvent): SourceExplorerState {
+  return {
+    ...state,
+    ...updateTreeSource(state, action.sourceId, {
+      expanded: false,
+    }),
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'ExpandEvent' action.
+ */
+export function expandEvent(state: SourceExplorerState, action: ExpandEvent): SourceExplorerState {
+  return {
+    ...state,
+    fetchPending: true,
+    ...updateTreeSource(state, action.sourceId, {
+      expanded: true,
+    }),
+  };
 }
 
 /**
@@ -136,6 +182,19 @@ export function newSources(state: SourceExplorerState, action: NewSources): Sour
         childIds: parentSource.childIds.concat(sources.map(source => source.id)),
       },
     },
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'OpenEvent' action.
+ */
+export function openEvent(state: SourceExplorerState, action: OpenEvent): SourceExplorerState {
+  return {
+    ...state,
+    fetchPending: true,
+    ...updateTreeSource(state, action.sourceId, {
+      opened: true,
+    }),
   };
 }
 
@@ -240,29 +299,17 @@ export function subBandIdRemove(state: SourceExplorerState, action: SubBandIdRem
 }
 
 /**
- * Helper. Updates a source prop with a value.
+ * Helper. Return an updated tree source object. Can be used to spread over the state to update it.
  */
-export function updateTreeSource(state: SourceExplorerState, action: UpdateTreeSource): SourceExplorerState {
+export function updateTreeSource(state: SourceExplorerState, sourceId: string, update: StringTMap<BaseType>) {
   return {
-    ...state,
     treeBySourceId: {
       ...state.treeBySourceId,
-      [action.sourceId]: {
-        ...state.treeBySourceId[action.sourceId],
-        ...action.update,
+      [sourceId]: {
+        ...state.treeBySourceId[sourceId],
+        ...update,
       },
     },
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'UpdateSourceExplorer' action.
- * This is just a top level reducer for the sourceExplorer state (top level meaning it updates base sourceExplorer state props).
- */
-export function updateSourceExplorer(state: SourceExplorerState, action: UpdateSourceExplorer): SourceExplorerState {
-  return {
-    ...state,
-    ...action.update,
   };
 }
 

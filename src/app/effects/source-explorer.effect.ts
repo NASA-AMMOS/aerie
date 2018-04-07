@@ -18,6 +18,7 @@ import { Observable } from 'rxjs/Observable';
 import { combineLatest } from 'rxjs/observable/combineLatest';
 import { concat } from 'rxjs/observable/concat';
 import { forkJoin } from 'rxjs/observable/forkJoin';
+import { merge } from 'rxjs/observable/merge';
 import { of } from 'rxjs/observable/of';
 
 import {
@@ -32,7 +33,6 @@ import { AppState } from './../../app/store';
 
 import {
   CloseEvent,
-  CollapseEvent,
   ExpandEvent,
   FetchInitialSources,
   LoadFromSource,
@@ -72,23 +72,7 @@ export class SourceExplorerEffects {
   @Effect()
   closeEvent$: Observable<Action> = this.actions$.pipe(
     ofType<CloseEvent>(SourceExplorerActionTypes.CloseEvent),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(({ state, action }) => {
-      return [
-        new timelineActions.RemoveBandsOrPointsForSource(action.sourceId),
-        new sourceExplorerActions.UpdateTreeSource(action.sourceId, {
-          opened: false,
-          subBandIds: {},
-        }),
-      ];
-    }),
-  );
-
-  @Effect()
-  collapseEvent$: Observable<Action> = this.actions$.pipe(
-    ofType<CollapseEvent>(SourceExplorerActionTypes.CollapseEvent),
-    map(action => new sourceExplorerActions.UpdateTreeSource(action.sourceId, { expanded: false })),
+    map(action => new timelineActions.RemoveBandsOrPointsForSource(action.sourceId)),
   );
 
   @Effect()
@@ -100,6 +84,8 @@ export class SourceExplorerEffects {
       concat(
         ...this.expand(source),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+      ).pipe(
+        catchError(this.errorExpandEvent(source.id)),
       ),
     ),
   );
@@ -118,6 +104,8 @@ export class SourceExplorerEffects {
           fetchPending: false,
           initialSourcesLoaded: true,
         })),
+      ).pipe(
+        catchError(this.errorFetchInitialSources()),
       ),
     ),
   );
@@ -151,7 +139,7 @@ export class SourceExplorerEffects {
       forkJoin([
         of(state),
         of(action),
-        this.fetchBands(state.sourceExplorer.treeBySourceId[action.sourceId].url, action.sourceId),
+        this.fetchSubBands(state.sourceExplorer.treeBySourceId[action.sourceId].url, action.sourceId),
       ]),
     ),
     map(([state, action, newSubBands]) => ({ state, action, newSubBands })),
@@ -224,10 +212,6 @@ export class SourceExplorerEffects {
           );
         }
       }
-
-      actions.push(
-        of(new sourceExplorerActions.UpdateTreeSource(source.id, { expanded: true })),
-      );
     }
 
     return actions;
@@ -255,6 +239,7 @@ export class SourceExplorerEffects {
           concatMap(source =>
             concat(
               ...this.expand(source),
+              of(new sourceExplorerActions.UpdateTreeSource(source.id, { expanded: true })),
             ),
           ),
         ),
@@ -265,13 +250,14 @@ export class SourceExplorerEffects {
           concatMap(state =>
             forkJoin([
               of(state),
-              this.fetchBands(state.sourceExplorer.treeBySourceId[sourceId].url, sourceId),
+              this.fetchSubBands(state.sourceExplorer.treeBySourceId[sourceId].url, sourceId),
             ]),
           ),
           map(([state, newBands]) => ({ state, newBands })),
           concatMap(({ state: { timeline }, newBands }) =>
             concat(
               ...this.open(sourceId, bands, null, null, newBands),
+              of(new sourceExplorerActions.UpdateTreeSource(sourceId, { opened: true })),
             ),
           ),
         ),
@@ -319,23 +305,56 @@ export class SourceExplorerEffects {
       }
     });
 
-    actions.push(
-      of(new sourceExplorerActions.UpdateTreeSource(sourceId, { opened: true })),
-    );
-
     return actions;
   }
 
   /**
-   * Fetch helper. Fetches graph data from MPS Server and maps it to Raven band data.
+   * Error Helper. Called when there is an error in expandEvent$.
    */
-  fetchBands(sourceUrl: string, sourceId: string) {
+  errorExpandEvent(sourceId: string) {
+    return (e: Error) => {
+      console.error('SourceExplorerEffects - errorExpandEvent: ', e);
+      return merge(
+        of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+        of(new sourceExplorerActions.UpdateTreeSource(sourceId, { expanded: false })),
+      );
+    };
+  }
+
+  /**
+   * Error Helper. Called when there is an error in fetchInitialSources$.
+   */
+  errorFetchInitialSources() {
+    return (e: Error) => {
+      console.error('SourceExplorerEffects - errorFetchInitialSources error: ', e);
+      return merge(
+        of(new sourceExplorerActions.UpdateSourceExplorer({
+          fetchPending: false,
+          initialSourcesLoaded: false,
+        })),
+      );
+    };
+  }
+
+  /**
+   * Error Helper. Called when there is an error in openEvent$.
+   */
+  errorOpenEvent(sourceId: string) {
+    return (e: Error) => {
+      console.error('SourceExplorerEffects - errorOpenEvent: ', e);
+      return merge(
+        of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+        of(new sourceExplorerActions.UpdateTreeSource(sourceId, { opened: false })),
+      );
+    };
+  }
+
+  /**
+   * Fetch helper. Fetches graph data from MPS Server and maps it to Raven sub-band data.
+   */
+  fetchSubBands(sourceUrl: string, sourceId: string) {
     return this.http.get<MpsServerGraphData>(sourceUrl).pipe(
       map((graphData: MpsServerGraphData) => toRavenBandData(sourceId, graphData)),
-      catchError(e => {
-        console.error('SourceExplorerEffects - fetchBands error: ', e);
-        return of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }));
-      }),
     );
   }
 
@@ -345,10 +364,6 @@ export class SourceExplorerEffects {
   fetchNewSources(url: string, parentId: string, isServer: boolean) {
     return this.http.get<MpsServerSource[]>(url).pipe(
       map((mpsServerSources: MpsServerSource[]) => toRavenSources(parentId, isServer, mpsServerSources)),
-      catchError(e => {
-        console.error('SourceExplorerEffects - fetchNewSources error: ', e);
-        return of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }));
-      }),
     );
   }
 
@@ -358,10 +373,6 @@ export class SourceExplorerEffects {
   fetchSavedState(url: string) {
     return this.http.get(url).pipe(
       map(res => res[0].state),
-      catchError(e => {
-        console.error('SourceExplorerEffects - fetchSavedState error: ', e);
-        return of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }));
-      }),
     );
   }
 
@@ -374,10 +385,6 @@ export class SourceExplorerEffects {
 
     return this.http.delete(url, { responseType: 'text' }).pipe(
       map(() => new sourceExplorerActions.RemoveSource(sourceId)),
-      catchError(e => {
-        console.error('SourceExplorerEffects - removeSource error: ', e);
-        return of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }));
-      }),
     );
   }
 
@@ -393,10 +400,6 @@ export class SourceExplorerEffects {
           map((sources: RavenSource[]) => new sourceExplorerActions.NewSources(sourceId, sources)),
         ),
       ),
-      catchError(e => {
-        console.error('SourceExplorerEffects - saveToSource error: ', e);
-        return of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }));
-      }),
     );
   }
 }
