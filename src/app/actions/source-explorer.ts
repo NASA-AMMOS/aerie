@@ -90,10 +90,7 @@ export class RemoveSourceEvent implements Action {
 export class SaveToSource implements Action {
   readonly type = SourceExplorerActionTypes.SaveToSource;
 
-  constructor(
-    public source: RavenSource,
-    public name: string,
-  ) {}
+  constructor(public source: RavenSource, public name: string) {}
 }
 
 export class SelectSource implements Action {
@@ -123,10 +120,7 @@ export class UpdateSourceExplorer implements Action {
 export class UpdateTreeSource implements Action {
   readonly type = SourceExplorerActionTypes.UpdateTreeSource;
 
-  constructor(
-    public sourceId: string,
-    public update: StringTMap<BaseType>,
-  ) {}
+  constructor(public sourceId: string, public update: StringTMap<BaseType>) {}
 }
 
 // Union type of all actions.
