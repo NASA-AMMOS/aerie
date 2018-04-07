@@ -65,6 +65,7 @@ import {
   RavenCompositeBand,
   RavenSource,
   RavenSubBand,
+  StringTMap,
 } from './../shared/models';
 
 @Injectable()
@@ -136,17 +137,11 @@ export class SourceExplorerEffects {
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     concatMap(({ state, action }) =>
-      forkJoin([
-        of(state),
-        of(action),
-        this.fetchSubBands(state.sourceExplorer.treeBySourceId[action.sourceId].url, action.sourceId),
-      ]),
-    ),
-    map(([state, action, newSubBands]) => ({ state, action, newSubBands })),
-    concatMap(({ state: { timeline }, action: { sourceId }, newSubBands }) =>
       concat(
-        ...this.open(sourceId, timeline.bands, timeline.selectedBandId, timeline.selectedSubBandId, newSubBands),
+        ...this.open(state.sourceExplorer.treeBySourceId, action.sourceId, state.timeline.bands, state.timeline.selectedBandId, state.timeline.selectedSubBandId),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+      ).pipe(
+        catchError(this.errorOpenEvent(action.sourceId)),
       ),
     ),
   );
@@ -248,15 +243,8 @@ export class SourceExplorerEffects {
         combineLatest(this.store$, state => state).pipe(
           take(1),
           concatMap(state =>
-            forkJoin([
-              of(state),
-              this.fetchSubBands(state.sourceExplorer.treeBySourceId[sourceId].url, sourceId),
-            ]),
-          ),
-          map(([state, newBands]) => ({ state, newBands })),
-          concatMap(({ state: { timeline }, newBands }) =>
             concat(
-              ...this.open(sourceId, bands, null, null, newBands),
+              ...this.open(state.sourceExplorer.treeBySourceId, sourceId, bands, null, null),
               of(new sourceExplorerActions.UpdateTreeSource(sourceId, { opened: true })),
             ),
           ),
@@ -270,42 +258,48 @@ export class SourceExplorerEffects {
    * Helper. Returns a stream of actions that need to occur when opening a source explorer source.
    * The order of the cases in this function are very important. Do not change the order.
    */
-  open(sourceId: string, currentBands: RavenCompositeBand[], bandId: string | null, subBandId: string | null, newSubBands: RavenSubBand[]): Observable<Action>[] {
-    const actions: Observable<Action>[] = [];
+  open(treeBySourceId: StringTMap<RavenSource>, sourceId: string, currentBands: RavenCompositeBand[], bandId: string | null, subBandId: string | null) {
+    return [
+      this.fetchSubBands(treeBySourceId[sourceId].url, sourceId).pipe(
+        concatMap((newSubBands: RavenSubBand[]) => {
+          const actions: Action[] = [];
 
-    newSubBands.forEach((subBand: RavenSubBand) => {
-      const activityByTypeBand = hasActivityByTypeBand(currentBands, subBand);
-      const existingBand = hasSourceId(currentBands, sourceId);
+          newSubBands.forEach((subBand: RavenSubBand) => {
+            const activityByTypeBand = hasActivityByTypeBand(currentBands, subBand);
+            const existingBand = hasSourceId(currentBands, sourceId);
 
-      if (activityByTypeBand) {
-        actions.push(
-          of(new sourceExplorerActions.SubBandIdAdd(sourceId, activityByTypeBand.subBandId)),
-          of(new timelineActions.AddPointsToSubBand(sourceId, activityByTypeBand.bandId, activityByTypeBand.subBandId, subBand.points)),
-        );
-      } else if (existingBand) {
-        actions.push(
-          of(new sourceExplorerActions.SubBandIdAdd(sourceId, existingBand.subBandId)),
-          of(new timelineActions.AddPointsToSubBand(sourceId, existingBand.bandId, existingBand.subBandId, subBand.points)),
-        );
-      } else if (bandId && subBandId && isAddTo(currentBands, bandId, subBandId, subBand.type)) {
-        actions.push(
-          of(new sourceExplorerActions.SubBandIdAdd(sourceId, subBandId)),
-          of(new timelineActions.AddPointsToSubBand(sourceId, bandId, subBandId, subBand.points)),
-        );
-      } else if (bandId && isOverlay(currentBands, bandId)) {
-        actions.push(
-          of(new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id)),
-          of(new timelineActions.AddSubBand(sourceId, bandId, subBand)),
-        );
-      } else {
-        actions.push(
-          of(new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id)),
-          of(new timelineActions.AddBand(sourceId, toCompositeBand(sourceId, subBand))),
-        );
-      }
-    });
+            if (activityByTypeBand) {
+              actions.push(
+                new sourceExplorerActions.SubBandIdAdd(sourceId, activityByTypeBand.subBandId),
+                new timelineActions.AddPointsToSubBand(sourceId, activityByTypeBand.bandId, activityByTypeBand.subBandId, subBand.points),
+              );
+            } else if (existingBand) {
+              actions.push(
+                new sourceExplorerActions.SubBandIdAdd(sourceId, existingBand.subBandId),
+                new timelineActions.AddPointsToSubBand(sourceId, existingBand.bandId, existingBand.subBandId, subBand.points),
+              );
+            } else if (bandId && subBandId && isAddTo(currentBands, bandId, subBandId, subBand.type)) {
+              actions.push(
+                new sourceExplorerActions.SubBandIdAdd(sourceId, subBandId),
+                new timelineActions.AddPointsToSubBand(sourceId, bandId, subBandId, subBand.points),
+              );
+            } else if (bandId && isOverlay(currentBands, bandId)) {
+              actions.push(
+                new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id),
+                new timelineActions.AddSubBand(sourceId, bandId, subBand),
+              );
+            } else {
+              actions.push(
+                new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id),
+                new timelineActions.AddBand(sourceId, toCompositeBand(sourceId, subBand)),
+              );
+            }
+          });
 
-    return actions;
+          return actions;
+        }),
+      ),
+    ];
   }
 
   /**
