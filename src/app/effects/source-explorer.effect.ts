@@ -138,7 +138,7 @@ export class SourceExplorerEffects {
     map(([action, state]) => ({ action, state })),
     concatMap(({ state, action }) =>
       concat(
-        ...this.open(state.sourceExplorer.treeBySourceId, action.sourceId, state.timeline.bands, state.timeline.selectedBandId, state.timeline.selectedSubBandId),
+        this.open(state.sourceExplorer.treeBySourceId, action.sourceId, state.timeline.bands, state.timeline.selectedBandId, state.timeline.selectedSubBandId),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
       ).pipe(
         catchError(this.errorOpenEvent(action.sourceId)),
@@ -244,7 +244,7 @@ export class SourceExplorerEffects {
           take(1),
           concatMap(state =>
             concat(
-              ...this.open(state.sourceExplorer.treeBySourceId, sourceId, bands, null, null),
+              this.open(state.sourceExplorer.treeBySourceId, sourceId, bands, null, null),
               of(new sourceExplorerActions.UpdateTreeSource(sourceId, { opened: true })),
             ),
           ),
@@ -259,47 +259,45 @@ export class SourceExplorerEffects {
    * The order of the cases in this function are very important. Do not change the order.
    */
   open(treeBySourceId: StringTMap<RavenSource>, sourceId: string, currentBands: RavenCompositeBand[], bandId: string | null, subBandId: string | null) {
-    return [
-      this.fetchSubBands(treeBySourceId[sourceId].url, sourceId).pipe(
-        concatMap((newSubBands: RavenSubBand[]) => {
-          const actions: Action[] = [];
+    return this.fetchSubBands(treeBySourceId[sourceId].url, sourceId).pipe(
+      concatMap((newSubBands: RavenSubBand[]) => {
+        const actions: Action[] = [];
 
-          newSubBands.forEach((subBand: RavenSubBand) => {
-            const activityByTypeBand = hasActivityByTypeBand(currentBands, subBand);
-            const existingBand = hasSourceId(currentBands, sourceId);
+        newSubBands.forEach((subBand: RavenSubBand) => {
+          const activityByTypeBand = hasActivityByTypeBand(currentBands, subBand);
+          const existingBand = hasSourceId(currentBands, sourceId);
 
-            if (activityByTypeBand) {
-              actions.push(
-                new sourceExplorerActions.SubBandIdAdd(sourceId, activityByTypeBand.subBandId),
-                new timelineActions.AddPointsToSubBand(sourceId, activityByTypeBand.bandId, activityByTypeBand.subBandId, subBand.points),
-              );
-            } else if (existingBand) {
-              actions.push(
-                new sourceExplorerActions.SubBandIdAdd(sourceId, existingBand.subBandId),
-                new timelineActions.AddPointsToSubBand(sourceId, existingBand.bandId, existingBand.subBandId, subBand.points),
-              );
-            } else if (bandId && subBandId && isAddTo(currentBands, bandId, subBandId, subBand.type)) {
-              actions.push(
-                new sourceExplorerActions.SubBandIdAdd(sourceId, subBandId),
-                new timelineActions.AddPointsToSubBand(sourceId, bandId, subBandId, subBand.points),
-              );
-            } else if (bandId && isOverlay(currentBands, bandId)) {
-              actions.push(
-                new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id),
-                new timelineActions.AddSubBand(sourceId, bandId, subBand),
-              );
-            } else {
-              actions.push(
-                new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id),
-                new timelineActions.AddBand(sourceId, toCompositeBand(sourceId, subBand)),
-              );
-            }
-          });
+          if (activityByTypeBand) {
+            actions.push(
+              new sourceExplorerActions.SubBandIdAdd(sourceId, activityByTypeBand.subBandId),
+              new timelineActions.AddPointsToSubBand(sourceId, activityByTypeBand.bandId, activityByTypeBand.subBandId, subBand.points),
+            );
+          } else if (existingBand) {
+            actions.push(
+              new sourceExplorerActions.SubBandIdAdd(sourceId, existingBand.subBandId),
+              new timelineActions.AddPointsToSubBand(sourceId, existingBand.bandId, existingBand.subBandId, subBand.points),
+            );
+          } else if (bandId && subBandId && isAddTo(currentBands, bandId, subBandId, subBand.type)) {
+            actions.push(
+              new sourceExplorerActions.SubBandIdAdd(sourceId, subBandId),
+              new timelineActions.AddPointsToSubBand(sourceId, bandId, subBandId, subBand.points),
+            );
+          } else if (bandId && isOverlay(currentBands, bandId)) {
+            actions.push(
+              new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id),
+              new timelineActions.AddSubBand(sourceId, bandId, subBand),
+            );
+          } else {
+            actions.push(
+              new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id),
+              new timelineActions.AddBand(sourceId, toCompositeBand(sourceId, subBand)),
+            );
+          }
+        });
 
-          return actions;
-        }),
-      ),
-    ];
+        return actions;
+      }),
+    );
   }
 
   /**
