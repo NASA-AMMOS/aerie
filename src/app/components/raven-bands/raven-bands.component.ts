@@ -81,8 +81,8 @@ export class RavenBandsComponent implements OnChanges, OnInit {
   /**
    * trackBy for bands list.
    * Returns a custom id that is just the band id concatenated with all the subBand ids,
-   * separated by a forward-slash.
-   * This is so anytime subBands change (i.e. added/removed) we re-render the band.
+   * and the sort order, separated by a forward-slash.
+   * This is so anytime subBands change (i.e. added/removed) or the sort order changes, we re-render the band.
    */
   bandsTrackByFn(index: number, item: RavenCompositeBand) {
     let id = item.id;
@@ -90,6 +90,8 @@ export class RavenBandsComponent implements OnChanges, OnInit {
     for (let i = 0, l = item.subBands.length; i < l; ++i) {
       id += `/${item.subBands[i].id}`;
     }
+
+    id += `/${item.sortOrder}`;
 
     return id;
   }
