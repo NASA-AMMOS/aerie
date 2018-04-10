@@ -8,10 +8,10 @@
  */
 
 import {
+  ApplicationRef,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  HostListener,
   OnDestroy,
 } from '@angular/core';
 
@@ -70,6 +70,7 @@ export class TimelineComponent implements OnDestroy {
   private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(
+    private app: ApplicationRef,
     private changeDetector: ChangeDetectorRef,
     private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState>,
   ) {
@@ -107,7 +108,7 @@ export class TimelineComponent implements OnDestroy {
       this.selectedPoint = state.selectedPoint;
       this.selectedSubBandId = state.selectedSubBandId;
       this.viewTimeRange = state.viewTimeRange;
-      this.changeDetector.markForCheck();
+      this.app.tick();
     });
   }
 
@@ -181,16 +182,10 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
-   * Event. Called when a `falcon-update-view-time-range` event is fired from the falcon-timeline.
-   * Using a HostListener here instead of a template event binding because multiple elements emit this event.
-   *
-   * TODO: Replace 'any' with a concrete type.
+   * Event. Called when catching an `update-view-time-range` event.
    */
-  @HostListener('falcon-update-view-time-range', ['$event'])
-  onUpdateViewTimeRange(e: any): void {
-    e.preventDefault();
-    e.stopPropagation();
-    this.store.dispatch(new timelineActions.UpdateViewTimeRange(e.detail));
+  onUpdateViewTimeRange(viewTimeRange: RavenTimeRange): void {
+    this.store.dispatch(new timelineActions.UpdateViewTimeRange(viewTimeRange));
   }
 
   /**

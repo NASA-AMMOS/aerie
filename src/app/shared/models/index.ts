@@ -8,7 +8,6 @@
  */
 
 export * from './base-type';
-export * from './falcon-band-click-event';
 export * from './falcon-composite-band-left-click-event';
 export * from './map';
 export * from './mps-server-activity-metadata';

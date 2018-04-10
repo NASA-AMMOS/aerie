@@ -31,7 +31,6 @@
     "@angular/platform-browser": "^5.2.4",
     "@angular/platform-browser-dynamic": "^5.2.4",
     "@angular/router": "^5.2.4",
-    "@codebakery/origami": "^2.0.2",
     "@ngrx/effects": "^5.0.1",
     "@ngrx/router-store": "^5.0.1",
     "@ngrx/store": "^5.0.0",

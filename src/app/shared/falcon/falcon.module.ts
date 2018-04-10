@@ -7,14 +7,24 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { enableProdMode } from '@angular/core';
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import {
+  NgModule,
+} from '@angular/core';
 
-import { AppModule } from './app/app.module';
-import { environment } from './environments/environment';
+import {
+  FalconCompositeBandComponent,
+  FalconTimeBandComponent,
+  FalconTimeScrollBarComponent,
+} from './components';
 
-if (environment.production) {
-  enableProdMode();
-}
+export const COMPONENTS = [
+  FalconCompositeBandComponent,
+  FalconTimeBandComponent,
+  FalconTimeScrollBarComponent,
+];
 
-platformBrowserDynamic().bootstrapModule(AppModule);
+@NgModule({
+  declarations: COMPONENTS,
+  exports: COMPONENTS,
+})
+export class FalconModule {}

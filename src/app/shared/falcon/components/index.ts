@@ -7,10 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  StringTMap,
-} from './index';
-
-export interface FalconBandClickEvent extends Event {
-  detail: StringTMap<string>;
-}
+export * from './falcon-composite-band/falcon-composite-band.component';
+export * from './falcon-time-band/falcon-time-band.component';
+export * from './falcon-time-scroll-bar/falcon-time-scroll-bar.component';

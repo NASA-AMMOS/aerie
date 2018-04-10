@@ -37,21 +37,23 @@
           *ngIf="bands.length > 0"
           class="timeline-0">
           <mat-card>
-            <falcon-time-range-selector
+            <!-- <falcon-time-range-selector
               [maxTimeRange]="maxTimeRange"
               [viewTimeRange]="viewTimeRange">
-            </falcon-time-range-selector>
+            </falcon-time-range-selector> -->
 
             <falcon-time-scroll-bar
               [labelWidth]="labelWidth"
               [maxTimeRange]="maxTimeRange"
-              [viewTimeRange]="viewTimeRange">
+              [viewTimeRange]="viewTimeRange"
+              (updateViewTimeRange)="onUpdateViewTimeRange($event)">
             </falcon-time-scroll-bar>
 
             <falcon-time-band
               [labelWidth]="labelWidth"
               [maxTimeRange]="maxTimeRange"
-              [viewTimeRange]="viewTimeRange">
+              [viewTimeRange]="viewTimeRange"
+              (updateViewTimeRange)="onUpdateViewTimeRange($event)">
             </falcon-time-band>
 
             <raven-bands

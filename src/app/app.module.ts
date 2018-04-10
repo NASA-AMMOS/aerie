@@ -16,7 +16,6 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
 
-import { PolymerModule } from '@codebakery/origami';
 import { SortablejsModule } from 'angular-sortablejs';
 import { AngularSplitModule } from 'angular-split';
 
@@ -30,6 +29,7 @@ import { metaReducers, reducers } from './store';
 
 import { environment } from './../environments/environment';
 
+import { FalconModule } from './shared/falcon';
 import { MaterialModule } from './shared/material';
 
 import {
@@ -103,10 +103,10 @@ export const MODULES = [
   BrowserAnimationsModule,
   HttpClientModule,
   FormsModule,
+  FalconModule,
   MaterialModule,
   AngularSplitModule,
   FlexLayoutModule,
-  PolymerModule.forRoot(),
   SortablejsModule.forRoot({}),
   RouterModule.forRoot(routes, { useHash: true }),
   StoreModule.forRoot(reducers, { metaReducers }),

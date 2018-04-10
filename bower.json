@@ -5,12 +5,9 @@
   ],
   "description": "Resource and Activity Visualization Engine v2.",
   "dependencies": {
-    "iron-resizable-behavior": "^2.1.0",
     "jquery": "^3.3.1",
     "jquery-ui": "^1.12.1",
     "moment": "^2.21.0",
-    "moment-timezone": "^0.5.14",
-    "polymer": "^2.6.0",
-    "webcomponentsjs": "^1.1.0"
+    "moment-timezone": "^0.5.14"
   }
 }

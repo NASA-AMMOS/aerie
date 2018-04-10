@@ -13,20 +13,22 @@ import {
   EventEmitter,
   HostListener,
   Input,
+  OnChanges,
+  OnInit,
   Output,
   SimpleChanges,
 } from '@angular/core';
-import { OnChanges, OnInit } from '@angular/core/src/metadata/lifecycle_hooks';
-import { SortablejsOptions } from 'angular-sortablejs';
 
 import {
-  FalconBandClickEvent,
+  SortablejsOptions,
+} from 'angular-sortablejs';
+
+import {
   FalconCompositeBandLeftClickEvent,
   RavenBandLeftClick,
   RavenCompositeBand,
   RavenPoint,
   RavenSortMessage,
-  RavenSubBand,
   RavenTimeRange,
   StringTMap,
 } from './../../shared/models';
@@ -81,8 +83,8 @@ export class RavenBandsComponent implements OnChanges, OnInit {
   /**
    * trackBy for bands list.
    * Returns a custom id that is just the band id concatenated with all the subBand ids,
-   * and the sort order, separated by a forward-slash.
-   * This is so anytime subBands change (i.e. added/removed) or the sort order changes, we re-render the band.
+   * separated by a forward-slash.
+   * This is so anytime subBands change (i.e. added/removed) we re-render the band.
    */
   bandsTrackByFn(index: number, item: RavenCompositeBand) {
     let id = item.id;
@@ -91,26 +93,14 @@ export class RavenBandsComponent implements OnChanges, OnInit {
       id += `/${item.subBands[i].id}`;
     }
 
-    id += `/${item.sortOrder}`;
-
     return id;
   }
 
   /**
-   * trackBy for subBands list.
+   * Event. Called when a falcon band is clicked.
    */
-  subBandsTrackByFn(index: number, item: RavenSubBand) {
-    return item.id;
-  }
-
-  /**
-   * Event. Called when a `falcon-band-click` event is fired from a falcon band.
-   */
-  @HostListener('falcon-band-click', ['$event'])
-  onBandClick(e: FalconBandClickEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    this.bandClick.emit(e.detail.bandId);
+  onBandClick(bandId: string) {
+    this.bandClick.emit(bandId);
   }
 
   /**
