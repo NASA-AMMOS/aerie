@@ -110,7 +110,7 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
       for (let i = 0, l = this.ctlCompositeBand.bands.length; i < l; ++i) {
         const subBand = this.ctlCompositeBand.bands[i];
 
-        if (newSelectedPoint && oldSelectedPoint) {
+        if (newSelectedPoint && oldSelectedPoint && subBand.intervalsById) {
           const newInterval = subBand.intervalsById[newSelectedPoint.uniqueId];
           const oldInterval = subBand.intervalsById[oldSelectedPoint.uniqueId];
 
@@ -126,7 +126,7 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
             oldInterval.color = oldInterval.originalColor;
             shouldRedraw = true;
           }
-        } else if (!newSelectedPoint && oldSelectedPoint) {
+        } else if (!newSelectedPoint && oldSelectedPoint && subBand.intervalsById) {
           const interval = subBand.intervalsById[oldSelectedPoint.uniqueId];
 
           if (interval) {
@@ -134,7 +134,7 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
             interval.color = interval.originalColor;
             shouldRedraw = true;
           }
-        } else if (newSelectedPoint && !oldSelectedPoint) {
+        } else if (newSelectedPoint && !oldSelectedPoint && subBand.intervalsById) {
           const interval = subBand.intervalsById[newSelectedPoint.uniqueId];
 
           if (interval) {
