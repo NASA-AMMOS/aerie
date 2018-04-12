@@ -286,7 +286,7 @@ export function getMaxTimeRange(points: any[]) {
 }
 
 /**
- * Get a raven point from a list of bands by bandId and pointId. Returns null if no point is found.
+ * Get a raven point from a list of bands by bandId, subBandId, and pointId. Returns null if no point is found.
  */
 export function getPoint(bands: RavenCompositeBand[], bandId: string, subBandId: string, pointId: string): RavenPoint | null {
   for (let i = 0, l = bands.length; i < l; ++i) {
