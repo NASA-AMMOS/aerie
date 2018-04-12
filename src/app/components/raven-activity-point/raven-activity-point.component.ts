@@ -25,7 +25,6 @@ import {
   styleUrls: ['./raven-activity-point.component.css'],
   templateUrl: './raven-activity-point.component.html',
 })
-
 export class RavenActivityPointComponent {
   @Input() selectedPoint: RavenActivityPoint;
   @Input() showActivityPointMetadata: boolean;

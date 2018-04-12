@@ -21,7 +21,6 @@ import {
   styleUrls: ['./raven-resource-point.component.css'],
   templateUrl: './raven-resource-point.component.html',
 })
-
 export class RavenResourcePointComponent {
   @Input() selectedPoint: RavenResourcePoint;
 }
