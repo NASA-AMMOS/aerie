@@ -21,7 +21,6 @@ import {
 
 import {
   RavenActivityPoint,
-  RavenPoint,
 } from './../../../models';
 
 @Component({
@@ -47,7 +46,6 @@ export class FalconActivityBandComponent implements OnChanges, OnDestroy, OnInit
   @Input() minorLabels: string[];
   @Input() name: string;
   @Input() points: RavenActivityPoint[];
-  @Input() selectedPoint: RavenPoint;
   @Input() showLabel: boolean;
   @Input() showTooltip: boolean;
   @Input() type: string;

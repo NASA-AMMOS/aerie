@@ -20,7 +20,6 @@ import {
 } from '@angular/core';
 
 import {
-  RavenPoint,
   RavenResourcePoint,
 } from './../../../models';
 
@@ -47,7 +46,6 @@ export class FalconResourceBandComponent implements OnChanges, OnDestroy, OnInit
   @Input() name: string;
   @Input() points: RavenResourcePoint[];
   @Input() rescale: boolean;
-  @Input() selectedPoint: RavenPoint;
   @Input() showIcon: boolean;
   @Input() showTooltip: boolean;
   @Input() type: string;

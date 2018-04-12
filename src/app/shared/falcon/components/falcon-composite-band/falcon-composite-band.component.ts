@@ -23,6 +23,7 @@ import {
 
 import {
   RavenBandLeftClick,
+  RavenPoint,
   RavenSubBand,
   RavenTimeRange,
 } from './../../../models';
@@ -39,6 +40,7 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
   @Input() id: string;
   @Input() labelWidth: number;
   @Input() maxTimeRange: RavenTimeRange;
+  @Input() selectedPoint: RavenPoint;
   @Input() showTooltip: boolean;
   @Input() subBands: RavenSubBand[];
   @Input() viewTimeRange: RavenTimeRange;
@@ -48,6 +50,7 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
   ctlCompositeBand: any;
   ctlTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
   ctlViewTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
+  selectedPointColor = [255, 254, 13];
 
   constructor(public elementRef: ElementRef) {}
 
@@ -96,6 +99,51 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
           previousMaxTimeRange.end !== currentMaxTimeRange.end) {
         this.ctlViewTimeAxis.updateTimes(currentMaxTimeRange.start, currentMaxTimeRange.end);
         shouldRedraw = true;
+      }
+    }
+
+    // Selected Point.
+    if (changes.selectedPoint && !changes.selectedPoint.firstChange) {
+      const newSelectedPoint = changes.selectedPoint.currentValue;
+      const oldSelectedPoint = changes.selectedPoint.previousValue;
+
+      for (let i = 0, l = this.ctlCompositeBand.bands.length; i < l; ++i) {
+        const subBand = this.ctlCompositeBand.bands[i];
+
+        if (newSelectedPoint && oldSelectedPoint) {
+          const newInterval = subBand.intervalsById[newSelectedPoint.uniqueId];
+          const oldInterval = subBand.intervalsById[oldSelectedPoint.uniqueId];
+
+          if (newInterval) {
+            // Set the new interval to the highlight color.
+            newInterval.originalColor = newInterval.color;
+            newInterval.color = this.selectedPointColor;
+            shouldRedraw = true;
+          }
+
+          if (oldInterval) {
+            // Reset the old interval to it's original color.
+            oldInterval.color = oldInterval.originalColor;
+            shouldRedraw = true;
+          }
+        } else if (!newSelectedPoint && oldSelectedPoint) {
+          const interval = subBand.intervalsById[oldSelectedPoint.uniqueId];
+
+          if (interval) {
+            // Set the interval to it's original color.
+            interval.color = interval.originalColor;
+            shouldRedraw = true;
+          }
+        } else if (newSelectedPoint && !oldSelectedPoint) {
+          const interval = subBand.intervalsById[newSelectedPoint.uniqueId];
+
+          if (interval) {
+            // Set the interval to the highlight color.
+            interval.originalColor = interval.color;
+            interval.color = this.selectedPointColor;
+            shouldRedraw = true;
+          }
+        }
       }
     }
 

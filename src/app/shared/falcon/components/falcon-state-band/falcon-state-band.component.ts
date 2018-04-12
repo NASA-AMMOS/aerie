@@ -20,7 +20,6 @@ import {
 } from '@angular/core';
 
 import {
-  RavenPoint,
   RavenStatePoint,
 } from './../../../models';
 
@@ -44,7 +43,6 @@ export class FalconStateBandComponent implements OnChanges, OnDestroy, OnInit {
   @Input() minorLabels: string[];
   @Input() name: string;
   @Input() points: RavenStatePoint[];
-  @Input() selectedPoint: RavenPoint;
   @Input() showTooltip: boolean;
   @Input() type: string;
 
