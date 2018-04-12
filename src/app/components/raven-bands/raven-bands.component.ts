@@ -48,6 +48,7 @@ export class RavenBandsComponent implements OnChanges, OnInit {
 
   @Output() bandLeftClick: EventEmitter<RavenBandLeftClick> = new EventEmitter<RavenBandLeftClick>();
   @Output() newSort: EventEmitter<StringTMap<RavenSortMessage>> = new EventEmitter<StringTMap<RavenSortMessage>>();
+  @Output() updateViewTimeRange: EventEmitter<RavenTimeRange> = new EventEmitter<RavenTimeRange>();
 
   sortablejsOptions: SortablejsOptions;
   sortedAndFilteredBands: RavenCompositeBand[];

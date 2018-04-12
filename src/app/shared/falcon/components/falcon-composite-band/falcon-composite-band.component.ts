@@ -46,6 +46,7 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
   @Input() viewTimeRange: RavenTimeRange;
 
   @Output() bandLeftClick: EventEmitter<RavenBandLeftClick> = new EventEmitter<RavenBandLeftClick>();
+  @Output() updateViewTimeRange: EventEmitter<RavenTimeRange> = new EventEmitter<RavenTimeRange>();
 
   ctlCompositeBand: any;
   ctlTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
@@ -246,8 +247,11 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
   /**
    * CTL Event. Called when the view is updated.
    */
-  onUpdateView() {
-    // TODO.
+  onUpdateView(start: number, end: number) {
+    if (this.viewTimeRange.end !== end || this.viewTimeRange.start !== start &&
+        start !== 0 && end !== 0 && start < end) {
+      this.updateViewTimeRange.emit({ end, start });
+    }
   }
 
   /**

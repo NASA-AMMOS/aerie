@@ -14,7 +14,8 @@
       [showTooltip]="showTooltip"
       [subBands]="band.subBands"
       [viewTimeRange]="viewTimeRange"
-      (bandLeftClick)="bandLeftClick.emit($event)">
+      (bandLeftClick)="bandLeftClick.emit($event)"
+      (updateViewTimeRange)="updateViewTimeRange.emit($event)">
     </falcon-composite-band>
   </div>
 </div>
