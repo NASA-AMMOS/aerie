@@ -13,8 +13,10 @@ import {
   Component,
   ElementRef,
   EventEmitter,
+  HostListener,
   Input,
   OnChanges,
+  OnInit,
   Output,
   SimpleChanges,
 } from '@angular/core';
@@ -29,8 +31,7 @@ import {
   styleUrls: ['./falcon-time-band.component.css'],
   templateUrl: './falcon-time-band.component.html',
 })
-
-export class FalconTimeBandComponent implements OnChanges, AfterViewInit {
+export class FalconTimeBandComponent implements AfterViewInit, OnChanges, OnInit {
   @Input() labelWidth: number;
   @Input() maxTimeRange: RavenTimeRange;
   @Input() showTooltip: boolean;
@@ -43,23 +44,7 @@ export class FalconTimeBandComponent implements OnChanges, AfterViewInit {
   ctlTooltip = new (window as any).Tooltip({});
   ctlViewTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
 
-  constructor(public elementRef: ElementRef) {
-    this.ctlTimeBand = new (window as any).TimeBand({
-      font: 'normal 9px Verdana',
-      height: 37,
-      label: 'UTC',
-      minorLabels: [],
-      onHideTooltip: this.onHideTooltip.bind(this),
-      onShowTooltip: this.onShowTooltip.bind(this),
-      onUpdateView: this.onUpdateView.bind(this),
-      scrollDelta: 21600,
-      timeAxis: this.ctlTimeAxis,
-      viewTimeAxis: this.ctlViewTimeAxis,
-      zoomDelta: 21600,
-    });
-
-    elementRef.nativeElement.appendChild(this.ctlTimeBand.div);
-  }
+  constructor(public elementRef: ElementRef) {}
 
   ngAfterViewInit() {
     this.resize();
@@ -75,41 +60,32 @@ export class FalconTimeBandComponent implements OnChanges, AfterViewInit {
     }
 
     // Max Time Range.
-    if (changes.maxTimeRange) {
+    if (changes.maxTimeRange && !changes.maxTimeRange.firstChange) {
       const currentMaxTimeRange = changes.maxTimeRange.currentValue;
+      const previousMaxTimeRange = changes.maxTimeRange.previousValue;
 
-      if (changes.maxTimeRange.firstChange) {
-        this.ctlTimeAxis.updateTimes(currentMaxTimeRange.start, currentMaxTimeRange.end);
-      } else {
-        const previousMaxTimeRange = changes.maxTimeRange.previousValue;
-
-        // Make sure we don't redraw or update times unless the times actually changed.
-        if (previousMaxTimeRange.start !== currentMaxTimeRange.start ||
+      // Make sure we don't redraw or update times unless the times actually changed.
+      if (previousMaxTimeRange.start !== currentMaxTimeRange.start ||
           previousMaxTimeRange.end !== currentMaxTimeRange.end) {
-          this.ctlViewTimeAxis.updateTimes(currentMaxTimeRange.start, currentMaxTimeRange.end);
-          shouldRedraw = true;
-        }
+        this.ctlViewTimeAxis.updateTimes(currentMaxTimeRange.start, currentMaxTimeRange.end);
+        shouldRedraw = true;
       }
     }
 
     // View Time Range.
-    if (changes.viewTimeRange) {
+    if (changes.viewTimeRange && !changes.viewTimeRange.firstChange) {
       const currentViewTimeRange = changes.viewTimeRange.currentValue;
+      const previousViewTimeRange = changes.viewTimeRange.previousValue;
 
-      if (changes.viewTimeRange.firstChange) {
+      // Make sure we don't redraw or update times unless the times actually changed.
+      if (previousViewTimeRange.start !== currentViewTimeRange.start ||
+          previousViewTimeRange.end !== currentViewTimeRange.end) {
         this.ctlViewTimeAxis.updateTimes(currentViewTimeRange.start, currentViewTimeRange.end);
-      } else {
-        const previousViewTimeRange = changes.viewTimeRange.previousValue;
-
-        // Make sure we don't redraw or update times unless the times actually changed.
-        if (previousViewTimeRange.start !== currentViewTimeRange.start ||
-            previousViewTimeRange.end !== currentViewTimeRange.end) {
-          this.ctlViewTimeAxis.updateTimes(currentViewTimeRange.start, currentViewTimeRange.end);
-          shouldRedraw = true;
-        }
+        shouldRedraw = true;
       }
     }
 
+    // Only resize OR redraw once to maintain performance.
     if (shouldResize) {
       this.resize();
     } else if (shouldRedraw) {
@@ -117,24 +93,53 @@ export class FalconTimeBandComponent implements OnChanges, AfterViewInit {
     }
   }
 
+  ngOnInit() {
+    this.ctlTimeBand = new (window as any).TimeBand({
+      font: 'normal 9px Verdana',
+      height: 37,
+      label: 'UTC',
+      minorLabels: [],
+      onHideTooltip: this.onHideTooltip.bind(this),
+      onShowTooltip: this.onShowTooltip.bind(this),
+      onUpdateView: this.onUpdateView.bind(this),
+      scrollDelta: 21600,
+      timeAxis: this.ctlTimeAxis,
+      viewTimeAxis: this.ctlViewTimeAxis,
+      zoomDelta: 21600,
+    });
+
+    this.ctlTimeAxis.updateTimes(this.maxTimeRange.start, this.maxTimeRange.end);
+    this.ctlViewTimeAxis.updateTimes(this.viewTimeRange.start, this.viewTimeRange.end);
+
+    this.elementRef.nativeElement.appendChild(this.ctlTimeBand.div);
+  }
+
   /**
-   *
+   * Global Event. Called on window resize.
+   */
+  @HostListener('window:resize', ['$event'])
+  onResize(e: Event): void {
+    this.resize();
+  }
+
+  /**
+   * CTL Event. Called when tooltip is hidden.
    */
   onHideTooltip() {
     this.ctlTooltip.hide();
   }
 
   /**
-   *
+   * CTL Event. Called when tooltip is shown.
    */
-  onShowTooltip(e: any, text: string) {
+  onShowTooltip(e: MouseEvent, text: string) {
     if (this.showTooltip) {
       this.ctlTooltip.show(text, e.clientX, e.clientY);
     }
   }
 
   /**
-   *
+   * CTL Event. Called when the view is updated.
    */
   onUpdateView(start: number, end: number) {
     if (start !== 0 && end !== 0 && start < end) {
@@ -143,7 +148,7 @@ export class FalconTimeBandComponent implements OnChanges, AfterViewInit {
   }
 
   /**
-   *
+   * Helper. Recalculates x-coordinates of the band based on the label width.
    */
   updateTimeAxisXCoordinates() {
     const container = document.querySelector('.timeline-0');
@@ -158,19 +163,18 @@ export class FalconTimeBandComponent implements OnChanges, AfterViewInit {
   }
 
   /**
-   *
+   * Helper. Call when a time-band should be redrawn.
    */
   redraw() {
-    console.log('time-band redraw');
     this.ctlTimeBand.revalidate();
     this.ctlTimeBand.repaint();
   }
 
   /**
-   *
+   * Helper. Call when a time-band should be resized.
+   * Note that this triggers a redraw.
    */
   resize() {
-    console.log('time-band resize');
     this.updateTimeAxisXCoordinates();
     this.redraw();
   }

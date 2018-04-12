@@ -28,7 +28,8 @@
     <div class="field">
       <button
         id="raven-settings-add-divider-band"
-        mat-raised-button>
+        mat-raised-button
+        (click)="addDividerBand.emit(subBand)">
         Add Divider Band
       </button>
     </div>
@@ -176,17 +177,6 @@
             [checked]="subBand.showLabel"
             (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { showLabel: $event.checked } })">
             Show Labels
-          </mat-slide-toggle>
-        </div>
-
-        <!-- Trim Label. -->
-        <div class="field">
-          <mat-slide-toggle
-            id="raven-settings-trim-label"
-            color="primary"
-            [checked]="subBand.trimLabel"
-            (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { trimLabel: $event.checked } })">
-            Trim Labels
           </mat-slide-toggle>
         </div>
       </ng-container>

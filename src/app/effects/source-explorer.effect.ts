@@ -65,6 +65,7 @@ import {
   RavenCompositeBand,
   RavenSource,
   RavenSubBand,
+  RavenTimeRange,
   StringTMap,
 } from './../shared/models';
 
@@ -124,9 +125,9 @@ export class SourceExplorerEffects {
       ]),
     ),
     map(([action, state, sources]) => ({ action, state, sources })),
-    concatMap(({ action, state: { bands }, sources }) =>
+    concatMap(({ action, state: { bands, labelWidth, maxTimeRange, viewTimeRange }, sources }) =>
       concat(
-        ...this.load(bands, sources),
+        ...this.load(bands, labelWidth, maxTimeRange, viewTimeRange, sources),
       ),
     ),
   );
@@ -174,6 +175,9 @@ export class SourceExplorerEffects {
                 points: [],
               })),
             })),
+            labelWidth: state.timeline.labelWidth,
+            maxTimeRange: state.timeline.maxTimeRange,
+            viewTimeRange: state.timeline.viewTimeRange,
           },
         }),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
@@ -215,7 +219,13 @@ export class SourceExplorerEffects {
   /**
    * Helper. Returns a stream of actions that need to occur when loading a state.
    */
-  load(bands: RavenCompositeBand[], initialSources: RavenSource[]): Observable<Action>[] {
+  load(
+    bands: RavenCompositeBand[],
+    labelWidth: number,
+    maxTimeRange: RavenTimeRange,
+    viewTimeRange: RavenTimeRange,
+    initialSources: RavenSource[],
+  ): Observable<Action>[] {
     const { parentSourceIds, sourceIds } = getSourceIds(bands);
 
     return [
@@ -226,6 +236,9 @@ export class SourceExplorerEffects {
       of(new timelineActions.UpdateTimeline({
         ...fromTimeline.initialState,
         bands,
+        labelWidth,
+        maxTimeRange,
+        viewTimeRange,
       })),
       of(new sourceExplorerActions.NewSources('/', initialSources)),
       ...parentSourceIds.map((sourceId: string) =>
@@ -290,7 +303,7 @@ export class SourceExplorerEffects {
           } else {
             actions.push(
               new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id),
-              new timelineActions.AddBand(sourceId, toCompositeBand(sourceId, subBand)),
+              new timelineActions.AddBand(sourceId, toCompositeBand(subBand)),
             );
           }
         });

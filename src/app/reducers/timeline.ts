@@ -95,8 +95,6 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
       return updateSubBand(state, action);
     case TimelineActionTypes.UpdateTimeline:
       return { ...state, ...action.update };
-    case TimelineActionTypes.UpdateViewTimeRange:
-      return { ...state, viewTimeRange: { ...action.viewTimeRange } };
     default:
       return state;
   }
@@ -110,14 +108,23 @@ export function addBand(state: TimelineState, action: AddBand): TimelineState {
     ...action.band,
     containerId: '0',
     sortOrder: state.bands.filter(b => b.containerId === '0').length,
-    subBands: action.band.subBands.map(subBand => ({
-      ...subBand,
-      parentUniqueId: action.band.id,
-      sourceIds: {
-        ...subBand.sourceIds,
-        [action.sourceId]: action.sourceId,
-      },
-    })),
+    subBands: action.band.subBands.map(subBand => {
+      if (action.sourceId) {
+        return {
+          ...subBand,
+          parentUniqueId: action.band.id,
+          sourceIds: {
+            ...subBand.sourceIds,
+            [action.sourceId]: action.sourceId,
+          },
+        };
+      } else {
+        return {
+          ...subBand,
+          parentUniqueId: action.band.id,
+        };
+      }
+    }),
   });
 
   return {
@@ -285,7 +292,7 @@ export function selectPoint(state: TimelineState, action: SelectPoint): Timeline
 
   return {
     ...state,
-    selectedPoint: alreadySelected ? null : getPoint(state.bands, action.bandId, action.pointId),
+    selectedPoint: alreadySelected ? null : getPoint(state.bands, action.bandId, action.subBandId, action.pointId),
   };
 }
 

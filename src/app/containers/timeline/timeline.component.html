@@ -65,7 +65,6 @@
               [selectedBandId]="selectedBandId"
               [selectedPoint]="selectedPoint"
               [viewTimeRange]="viewTimeRange"
-              (bandClick)="onBandClick($event)"
               (bandLeftClick)="onBandLeftClick($event)"
               (newSort)="onSort($event)">
             </raven-bands>
@@ -88,7 +87,6 @@
               [selectedBandId]="selectedBandId"
               [selectedPoint]="selectedPoint"
               [viewTimeRange]="viewTimeRange"
-              (bandClick)="onBandClick($event)"
               (bandLeftClick)="onBandLeftClick($event)"
               (newSort)="onSort($event)">
             </raven-bands>
@@ -107,6 +105,7 @@
               [labelWidth]="labelWidth"
               [selectedBandId]="selectedBandId"
               [selectedSubBandId]="selectedSubBandId"
+              (addDividerBand)="onAddDividerBand($event)"
               (deleteSubBand)="onDeleteSubBand($event)"
               (updateBand)="onUpdateBand($event)"
               (updateSubBand)="onUpdateSubBand($event)"

@@ -7,16 +7,29 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import {
+  RavenTimeRange,
+  StringTMap,
+} from './index';
+
+/**
+ * Note: Divider bands don't use all of these properties.
+ * They are just here for easier typing of sub-bands.
+ */
+
 export interface RavenDividerBand {
+  addTo: boolean;
   color: number[];
-  containerId: string;
   height: number;
+  heightPadding: number;
   id: string;
   label: string;
   labelColor: number[];
+  maxTimeRange: RavenTimeRange;
   minorLabels: string[];
   name: string;
+  points: any[]; // A divider bands should never actually have points.
   showTooltip: boolean;
-  sortOrder: number;
+  sourceIds: StringTMap<string>;
   type: string;
 }

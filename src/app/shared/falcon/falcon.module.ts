@@ -12,19 +12,36 @@ import {
 } from '@angular/core';
 
 import {
+  CommonModule,
+} from '@angular/common';
+
+import {
+  FalconActivityBandComponent,
   FalconCompositeBandComponent,
+  FalconDividerBandComponent,
+  FalconResourceBandComponent,
+  FalconStateBandComponent,
   FalconTimeBandComponent,
   FalconTimeScrollBarComponent,
 } from './components';
 
 export const COMPONENTS = [
+  FalconActivityBandComponent,
   FalconCompositeBandComponent,
+  FalconDividerBandComponent,
+  FalconResourceBandComponent,
+  FalconStateBandComponent,
   FalconTimeBandComponent,
   FalconTimeScrollBarComponent,
+];
+
+export const MODULES = [
+  CommonModule,
 ];
 
 @NgModule({
   declarations: COMPONENTS,
   exports: COMPONENTS,
+  imports: MODULES,
 })
 export class FalconModule {}

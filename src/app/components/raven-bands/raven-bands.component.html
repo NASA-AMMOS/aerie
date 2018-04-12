@@ -2,7 +2,7 @@
   class="sortable-bands"
   [sortablejs]="sortedAndFilteredBands"
   [sortablejsOptions]="sortablejsOptions">
-  <ng-container *ngFor="let band of sortedAndFilteredBands; index as i; trackBy: bandsTrackByFn">
+  <div *ngFor="let band of sortedAndFilteredBands; index as i; trackBy: bandsTrackByFn">
     <falcon-composite-band
       [class]="'raven-band-' + i"
       [height]="band.height"
@@ -13,7 +13,7 @@
       [showTooltip]="showTooltip"
       [subBands]="band.subBands"
       [viewTimeRange]="viewTimeRange"
-      (bandClick)="onBandClick($event)">
+      (bandLeftClick)="bandLeftClick.emit($event)">
     </falcon-composite-band>
-  </ng-container>
+  </div>
 </div>

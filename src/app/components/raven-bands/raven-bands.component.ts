@@ -11,7 +11,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   EventEmitter,
-  HostListener,
   Input,
   OnChanges,
   OnInit,
@@ -24,7 +23,6 @@ import {
 } from 'angular-sortablejs';
 
 import {
-  FalconCompositeBandLeftClickEvent,
   RavenBandLeftClick,
   RavenCompositeBand,
   RavenPoint,
@@ -48,7 +46,6 @@ export class RavenBandsComponent implements OnChanges, OnInit {
   @Input() selectedPoint: RavenPoint;
   @Input() viewTimeRange: RavenTimeRange;
 
-  @Output() bandClick: EventEmitter<string> = new EventEmitter<string>();
   @Output() bandLeftClick: EventEmitter<RavenBandLeftClick> = new EventEmitter<RavenBandLeftClick>();
   @Output() newSort: EventEmitter<StringTMap<RavenSortMessage>> = new EventEmitter<StringTMap<RavenSortMessage>>();
 
@@ -82,36 +79,9 @@ export class RavenBandsComponent implements OnChanges, OnInit {
 
   /**
    * trackBy for bands list.
-   * Returns a custom id that is just the band id concatenated with all the subBand ids,
-   * separated by a forward-slash.
-   * This is so anytime subBands change (i.e. added/removed) we re-render the band.
    */
   bandsTrackByFn(index: number, item: RavenCompositeBand) {
-    let id = item.id;
-
-    for (let i = 0, l = item.subBands.length; i < l; ++i) {
-      id += `/${item.subBands[i].id}`;
-    }
-
-    return id;
-  }
-
-  /**
-   * Event. Called when a falcon band is clicked.
-   */
-  onBandClick(bandId: string) {
-    this.bandClick.emit(bandId);
-  }
-
-  /**
-   * Event. Called when a `falcon-composite-band-left-click` event is fired from a falcon band.
-   */
-  @HostListener('falcon-composite-band-left-click', ['$event'])
-  onDataItemLeftClick(e: FalconCompositeBandLeftClickEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    const { band, interval } = e.detail.ctlData;
-    this.bandLeftClick.emit({ bandId: band.id, pointId: interval.uniqueId });
+    return item.id;
   }
 
   /**

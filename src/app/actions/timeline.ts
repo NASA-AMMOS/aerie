@@ -14,7 +14,6 @@ import {
   RavenCompositeBand,
   RavenSortMessage,
   RavenSubBand,
-  RavenTimeRange,
   StringTMap,
 } from './../shared/models';
 
@@ -31,7 +30,6 @@ export enum TimelineActionTypes {
   UpdateBand                   = '[timeline] update_band',
   UpdateSubBand                = '[timeline] update_sub_band',
   UpdateTimeline               = '[timeline] update_timeline',
-  UpdateViewTimeRange          = '[timeline] update_view_time_range',
 }
 
 // Actions.
@@ -39,7 +37,7 @@ export class AddBand implements Action {
   readonly type = TimelineActionTypes.AddBand;
 
   constructor(
-    public sourceId: string,
+    public sourceId: string | null,
     public band: RavenCompositeBand,
   ) {}
 }
@@ -86,7 +84,7 @@ export class SelectBand implements Action {
 export class SelectPoint implements Action {
   readonly type = TimelineActionTypes.SelectPoint;
 
-  constructor(public bandId: string, public pointId: string) {}
+  constructor(public bandId: string, public subBandId: string, public pointId: string) {}
 }
 
 export class SortBands implements Action {
@@ -113,12 +111,6 @@ export class UpdateTimeline implements Action {
   constructor(public update: StringTMap<BaseType>) {}
 }
 
-export class UpdateViewTimeRange implements Action {
-  readonly type = TimelineActionTypes.UpdateViewTimeRange;
-
-  constructor(public viewTimeRange: RavenTimeRange) {}
-}
-
 // Union type of all actions.
 export type TimelineAction =
   AddBand |
@@ -131,5 +123,4 @@ export type TimelineAction =
   SortBands |
   UpdateBand |
   UpdateSubBand |
-  UpdateTimeline |
-  UpdateViewTimeRange;
+  UpdateTimeline;

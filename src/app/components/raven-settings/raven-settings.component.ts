@@ -34,6 +34,7 @@ export class RavenSettingsComponent {
   @Input() selectedBandId: string;
   @Input() selectedSubBandId: string;
 
+  @Output() addDividerBand: EventEmitter<null> = new EventEmitter<null>();
   @Output() deleteSubBand: EventEmitter<RavenSubBand> = new EventEmitter<RavenSubBand>();
   @Output() updateBand: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
   @Output() updateSubBand: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();

@@ -30,7 +30,6 @@ import {
   UpdateBand,
   UpdateSubBand,
   UpdateTimeline,
-  UpdateViewTimeRange,
 } from './../actions/timeline';
 
 import {
@@ -277,7 +276,7 @@ describe('timeline reducer', () => {
 
     // Add a band and and select a point from it.
     timelineState = reducer(timelineState, new AddBand(source.id, newBand));
-    timelineState = reducer(timelineState, new SelectPoint('0', '400'));
+    timelineState = reducer(timelineState, new SelectPoint('0', '1', '400'));
 
     expect(timelineState.selectedPoint).toEqual(point);
   });
@@ -389,17 +388,13 @@ describe('timeline reducer', () => {
   });
 
   it('handle UpdateTimeline', () => {
-    timelineState = reducer(timelineState, new UpdateTimeline({ labelWidth: 200 }));
+    timelineState = reducer(timelineState, new UpdateTimeline({
+      labelWidth: 200,
+      viewTimeRange: { end: 314, start: 272 },
+    }));
     expect(timelineState).toEqual({
       ...initialState,
       labelWidth: 200,
-    });
-  });
-
-  it('handle UpdateViewTimeRange', () => {
-    timelineState = reducer(timelineState, new UpdateViewTimeRange({ end: 314, start: 272 }));
-    expect(timelineState).toEqual({
-      ...initialState,
       viewTimeRange: { end: 314, start: 272 },
     });
   });

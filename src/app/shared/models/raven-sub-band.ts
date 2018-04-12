@@ -9,11 +9,13 @@
 
 import {
   RavenActivityBand,
+  RavenDividerBand,
   RavenResourceBand,
   RavenStateBand,
 } from './index';
 
 export type RavenSubBand =
   RavenActivityBand |
+  RavenDividerBand |
   RavenResourceBand |
   RavenStateBand;

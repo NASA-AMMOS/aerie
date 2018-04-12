@@ -13,8 +13,10 @@ import {
   Component,
   ElementRef,
   EventEmitter,
+  HostListener,
   Input,
   OnChanges,
+  OnInit,
   Output,
   SimpleChanges,
 } from '@angular/core';
@@ -29,8 +31,7 @@ import {
   styleUrls: ['./falcon-time-scroll-bar.component.css'],
   templateUrl: './falcon-time-scroll-bar.component.html',
 })
-
-export class FalconTimeScrollBarComponent implements OnChanges, AfterViewInit {
+export class FalconTimeScrollBarComponent implements AfterViewInit, OnChanges, OnInit {
   @Input() labelWidth: number;
   @Input() maxTimeRange: RavenTimeRange;
   @Input() viewTimeRange: RavenTimeRange;
@@ -41,21 +42,7 @@ export class FalconTimeScrollBarComponent implements OnChanges, AfterViewInit {
   ctlTimeScrollBar: any;
   ctlViewTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
 
-  label = '';
-
-  constructor(public elementRef: ElementRef) {
-    this.ctlTimeScrollBar = new (window as any).TimeScrollBar({
-      font: 'normal 9px Verdana',
-      height: 15,
-      label: this.label,
-      onUpdateView: this.onUpdateView.bind(this),
-      timeAxis: this.ctlTimeAxis,
-      updateOnDrag: false,
-      viewTimeAxis: this.ctlViewTimeAxis,
-    });
-
-    elementRef.nativeElement.appendChild(this.ctlTimeScrollBar.div);
-  }
+  constructor(public elementRef: ElementRef) {}
 
   ngAfterViewInit() {
     this.resize();
@@ -71,41 +58,32 @@ export class FalconTimeScrollBarComponent implements OnChanges, AfterViewInit {
     }
 
     // Max Time Range.
-    if (changes.maxTimeRange) {
+    if (changes.maxTimeRange && !changes.maxTimeRange.firstChange) {
       const currentMaxTimeRange = changes.maxTimeRange.currentValue;
+      const previousMaxTimeRange = changes.maxTimeRange.previousValue;
 
-      if (changes.maxTimeRange.firstChange) {
-        this.ctlTimeAxis.updateTimes(currentMaxTimeRange.start, currentMaxTimeRange.end);
-      } else {
-        const previousMaxTimeRange = changes.maxTimeRange.previousValue;
-
-        // Make sure we don't redraw or update times unless the times actually changed.
-        if (previousMaxTimeRange.start !== currentMaxTimeRange.start ||
+      // Make sure we don't redraw or update times unless the times actually changed.
+      if (previousMaxTimeRange.start !== currentMaxTimeRange.start ||
           previousMaxTimeRange.end !== currentMaxTimeRange.end) {
-          this.ctlViewTimeAxis.updateTimes(currentMaxTimeRange.start, currentMaxTimeRange.end);
-          shouldRedraw = true;
-        }
+        this.ctlViewTimeAxis.updateTimes(currentMaxTimeRange.start, currentMaxTimeRange.end);
+        shouldRedraw = true;
       }
     }
 
     // View Time Range.
-    if (changes.viewTimeRange) {
+    if (changes.viewTimeRange && !changes.viewTimeRange.firstChange) {
       const currentViewTimeRange = changes.viewTimeRange.currentValue;
+      const previousViewTimeRange = changes.viewTimeRange.previousValue;
 
-      if (changes.viewTimeRange.firstChange) {
+      // Make sure we don't redraw or update times unless the times actually changed.
+      if (previousViewTimeRange.start !== currentViewTimeRange.start ||
+          previousViewTimeRange.end !== currentViewTimeRange.end) {
         this.ctlViewTimeAxis.updateTimes(currentViewTimeRange.start, currentViewTimeRange.end);
-      } else {
-        const previousViewTimeRange = changes.viewTimeRange.previousValue;
-
-        // Make sure we don't redraw or update times unless the times actually changed.
-        if (previousViewTimeRange.start !== currentViewTimeRange.start ||
-            previousViewTimeRange.end !== currentViewTimeRange.end) {
-          this.ctlViewTimeAxis.updateTimes(currentViewTimeRange.start, currentViewTimeRange.end);
-          shouldRedraw = true;
-        }
+        shouldRedraw = true;
       }
     }
 
+    // Only resize OR redraw once to maintain performance.
     if (shouldResize) {
       this.resize();
     } else if (shouldRedraw) {
@@ -113,8 +91,33 @@ export class FalconTimeScrollBarComponent implements OnChanges, AfterViewInit {
     }
   }
 
+  ngOnInit() {
+    this.ctlTimeScrollBar = new (window as any).TimeScrollBar({
+      font: 'normal 9px Verdana',
+      height: 15,
+      label: '',
+      onUpdateView: this.onUpdateView.bind(this),
+      timeAxis: this.ctlTimeAxis,
+      updateOnDrag: false,
+      viewTimeAxis: this.ctlViewTimeAxis,
+    });
+
+    this.ctlTimeAxis.updateTimes(this.maxTimeRange.start, this.maxTimeRange.end);
+    this.ctlViewTimeAxis.updateTimes(this.viewTimeRange.start, this.viewTimeRange.end);
+
+    this.elementRef.nativeElement.appendChild(this.ctlTimeScrollBar.div);
+  }
+
   /**
-   *
+   * Global Event. Called on window resize.
+   */
+  @HostListener('window:resize', ['$event'])
+  onResize(e: Event): void {
+    this.resize();
+  }
+
+  /**
+   * CTL Event. Called when the view is updated.
    */
   onUpdateView(start: number, end: number) {
     if (start !== 0 && end !== 0 && start < end) {
@@ -123,7 +126,7 @@ export class FalconTimeScrollBarComponent implements OnChanges, AfterViewInit {
   }
 
   /**
-   *
+   * Helper. Recalculates x-coordinates of the band based on the label width.
    */
   updateTimeAxisXCoordinates() {
     const container = document.querySelector('.timeline-0');
@@ -138,19 +141,18 @@ export class FalconTimeScrollBarComponent implements OnChanges, AfterViewInit {
   }
 
   /**
-   *
+   * Helper. Call when a time-scroll-bar should be redrawn.
    */
   redraw() {
-    console.log('time-scroll-bar redraw');
     this.ctlTimeScrollBar.revalidate();
     this.ctlTimeScrollBar.repaint();
   }
 
   /**
-   *
+   * Helper. Call when a time-scroll-bar should be resized.
+   * Note that this triggers a redraw.
    */
   resize() {
-    console.log('time-scroll-bar resize');
     this.updateTimeAxisXCoordinates();
     this.redraw();
   }

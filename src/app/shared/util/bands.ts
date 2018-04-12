@@ -77,10 +77,12 @@ export function toActivityBands(sourceId: string, timelineData: MpsServerActivit
   // Map each legend to a band.
   Object.keys(legends).forEach(legend => {
     const activityBand: RavenActivityBand = {
+      activityHeight: 20,
       activityStyle: 1,
       addTo: false,
       alignLabel: 3,
       baselineLabel: 3,
+      borderWidth: 1,
       height: 50,
       heightPadding: 10,
       id: uniqueId(),
@@ -112,7 +114,7 @@ export function toActivityBands(sourceId: string, timelineData: MpsServerActivit
 /**
  * Returns a list of new composite bands.
  */
-export function toCompositeBand(sourceId: string, subBand: RavenSubBand): RavenCompositeBand {
+export function toCompositeBand(subBand: RavenSubBand): RavenCompositeBand {
   const compositeBandUniqueId = uniqueId();
 
   const compositeBand: RavenCompositeBand = {
@@ -140,16 +142,19 @@ export function toDividerBand(): RavenDividerBand {
   const id = uniqueId();
 
   const dividerBand: RavenDividerBand = {
+    addTo: false,
     color: [255, 255, 255],
-    containerId: '0',
     height: 7,
+    heightPadding: 10,
     id,
     label: `Divider ${id}`,
     labelColor: [0, 0, 0],
+    maxTimeRange: { start: 0, end: 0 },
     minorLabels: [],
     name: `Divider ${id}`,
+    points: [],
     showTooltip: true,
-    sortOrder: 0,
+    sourceIds: {},
     type: 'divider',
   };
 
@@ -201,6 +206,7 @@ export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, 
     addTo: false,
     alignLabel: 3,
     baselineLabel: 3,
+    borderWidth: 1,
     height: 50,
     heightPadding: 0,
     id: uniqueId(),
@@ -289,16 +295,22 @@ export function updateTimeRanges(bands: RavenCompositeBand[], currentViewTimeRan
       for (let j = 0, ll = band.subBands.length; j < ll; ++j) {
         const subBand = band.subBands[j];
 
-        if (subBand.maxTimeRange.start < startTime) { startTime = subBand.maxTimeRange.start; }
-        if (subBand.maxTimeRange.end > endTime) { endTime = subBand.maxTimeRange.end; }
+        // Special case!
+        // Since dividers don't really have a time range, make sure we do not re-calc time for them.
+        if (subBand.type !== 'divider') {
+          if (subBand.maxTimeRange.start < startTime) { startTime = subBand.maxTimeRange.start; }
+          if (subBand.maxTimeRange.end > endTime) { endTime = subBand.maxTimeRange.end; }
+        }
       }
     }
 
     maxTimeRange = { end: endTime, start: startTime };
     viewTimeRange = { ...currentViewTimeRange };
 
-    // Re-set viewTimeRange to maxTimeRange if both start and end are 0 (i.e. they have never been set).
-    if (viewTimeRange.start === 0 && viewTimeRange.end === 0) {
+    // Re-set viewTimeRange to maxTimeRange if both start and end are 0 (e.g. they have never been set),
+    // or they are MIN/MAX values (e.g. if we only have dividers on screen).
+    if (viewTimeRange.start === 0 && viewTimeRange.end === 0 ||
+        viewTimeRange.start === Number.MAX_SAFE_INTEGER && viewTimeRange.end === Number.MIN_SAFE_INTEGER) {
       viewTimeRange = { ...maxTimeRange };
     } else {
       // Clamp new viewTimeRange start.

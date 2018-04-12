@@ -17,6 +17,7 @@ export interface RavenStateBand {
   alignLabel: number;
   addTo: boolean;
   baselineLabel: number;
+  borderWidth: number;
   height: number;
   heightPadding: number;
   id: string;

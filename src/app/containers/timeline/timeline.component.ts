@@ -39,6 +39,11 @@ import {
   StringTMap,
 } from './../../shared/models';
 
+import {
+  toCompositeBand,
+  toDividerBand,
+} from './../../shared/util';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-timeline',
@@ -80,6 +85,7 @@ export class TimelineComponent implements OnDestroy {
     ).subscribe(itarMessage => {
       this.itarMessage = itarMessage;
       this.changeDetector.markForCheck();
+      this.app.tick();
     });
 
     // Layout state.
@@ -94,6 +100,7 @@ export class TimelineComponent implements OnDestroy {
       this.showSouthBandsDrawer = state.showSouthBandsDrawer;
       this.timelinePanelSize = state.timelinePanelSize;
       this.changeDetector.markForCheck();
+      this.app.tick();
       dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize anytime our layout changes.
     });
 
@@ -108,6 +115,7 @@ export class TimelineComponent implements OnDestroy {
       this.selectedPoint = state.selectedPoint;
       this.selectedSubBandId = state.selectedSubBandId;
       this.viewTimeRange = state.viewTimeRange;
+      this.changeDetector.markForCheck();
       this.app.tick();
     });
   }
@@ -118,17 +126,21 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
-   * Event. Called when a band is clicked in a raven-bands component.
+   * Event. Called when a `add-divider-band` event is fired from the raven-settings component.
    */
-  onBandClick(bandId: string): void {
-    this.store.dispatch(new timelineActions.SelectBand(bandId));
+  onAddDividerBand(): void {
+    this.store.dispatch(new timelineActions.AddBand(null, toCompositeBand(toDividerBand())));
   }
 
   /**
    * Event. Called when a band is left clicked in a raven-bands component.
    */
   onBandLeftClick(e: RavenBandLeftClick): void {
-    this.store.dispatch(new timelineActions.SelectPoint(e.bandId, e.pointId));
+    this.store.dispatch(new timelineActions.SelectBand(e.bandId));
+
+    if (e.subBandId && e.pointId) {
+      this.store.dispatch(new timelineActions.SelectPoint(e.bandId, e.subBandId, e.pointId));
+    }
   }
 
   /**
@@ -185,7 +197,7 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when catching an `update-view-time-range` event.
    */
   onUpdateViewTimeRange(viewTimeRange: RavenTimeRange): void {
-    this.store.dispatch(new timelineActions.UpdateViewTimeRange(viewTimeRange));
+    this.store.dispatch(new timelineActions.UpdateTimeline({ viewTimeRange }));
   }
 
   /**

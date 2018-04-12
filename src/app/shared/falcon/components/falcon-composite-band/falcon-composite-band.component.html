@@ -1,1 +1,107 @@
-<!-- No Template Needed. -->
+<ng-container *ngFor="let subBand of subBands; index as j; trackBy: subBandsTrackByFn">
+  <!-- Activity Band. -->
+  <falcon-activity-band
+    *ngIf="subBand.type === 'activity'"
+    [activityHeight]="subBand.activityHeight"
+    [activityStyle]="subBand.activityStyle"
+    [alignLabel]="subBand.alignLabel"
+    [baselineLabel]="subBand.baselineLabel"
+    [borderWidth]="subBand.borderWidth"
+    [class]="'falcon-sub-band-' + i + '-' + j"
+    [ctlTimeAxis]="ctlTimeAxis"
+    [ctlViewTimeAxis]="ctlViewTimeAxis"
+    [height]="subBand.height"
+    [heightPadding]="subBand.heightPadding"
+    [id]="subBand.id"
+    [label]="subBand.label"
+    [labelColor]="subBand.labelColor"
+    [layout]="subBand.layout"
+    [minorLabels]="subBand.minorLabels"
+    [name]="subBand.name"
+    [points]="subBand.points"
+    [selectedPoint]="selectedPoint"
+    [showLabel]="subBand.showLabel"
+    [showTooltip]="subBand.showTooltip"
+    [type]="subBand.type"
+    (addSubBand)="onAddSubBand($event)"
+    (removeSubBand)="onRemoveSubBand($event)"
+    (updateIntervals)="onUpdateIntervals($event)"
+    (updateSubBand)="onUpdateSubBand($event)">
+  </falcon-activity-band>
+
+  <!-- Divider Band. -->
+  <falcon-divider-band
+    *ngIf="subBand.type === 'divider'"
+    [class]="'falcon-sub-band-' + i + '-' + j"
+    [color]="subBand.color"
+    [ctlTimeAxis]="ctlTimeAxis"
+    [ctlViewTimeAxis]="ctlViewTimeAxis"
+    [height]="subBand.height"
+    [id]="subBand.id"
+    [label]="subBand.label"
+    [labelColor]="subBand.labelColor"
+    [minorLabels]="subBand.minorLabels"
+    [name]="subBand.name"
+    [showTooltip]="subBand.showTooltip"
+    (addSubBand)="onAddSubBand($event)"
+    (removeSubBand)="onRemoveSubBand($event)"
+    (updateSubBand)="onUpdateSubBand($event)">
+  </falcon-divider-band>
+
+  <!-- Resource Band. -->
+  <falcon-resource-band
+    *ngIf="subBand.type === 'resource'"
+    [autoTickValues]="subBand.autoTickValues"
+    [class]="'falcon-sub-band-' + i + '-' + j"
+    [color]="subBand.color"
+    [ctlTimeAxis]="ctlTimeAxis"
+    [ctlViewTimeAxis]="ctlViewTimeAxis"
+    [fill]="subBand.fill"
+    [fillColor]="subBand.fillColor"
+    [font]="subBand.font"
+    [height]="height"
+    [heightPadding]="heightPadding"
+    [id]="subBand.id"
+    [interpolation]="subBand.interpolation"
+    [label]="subBand.label"
+    [minorLabels]="subBand.minorLabels"
+    [name]="subBand.name"
+    [points]="subBand.points"
+    [rescale]="subBand.rescale"
+    [selectedPoint]="selectedPoint"
+    [showIcon]="subBand.showIcon"
+    [showTooltip]="subBand.showTooltip"
+    [type]="subBand.type"
+    (addSubBand)="onAddSubBand($event)"
+    (removeSubBand)="onRemoveSubBand($event)"
+    (updateInterpolation)="onUpdateInterpolation($event)"
+    (updateIntervals)="onUpdateIntervals($event)"
+    (updateSubBand)="onUpdateSubBand($event)">
+  </falcon-resource-band>
+
+  <!-- State Band. -->
+  <falcon-state-band
+    *ngIf="subBand.type === 'state'"
+    [alignLabel]="subBand.alignLabel"
+    [baselineLabel]="subBand.baselineLabel"
+    [borderWidth]="subBand.borderWidth"
+    [class]="'falcon-sub-band-' + i + '-' + j"
+    [ctlTimeAxis]="ctlTimeAxis"
+    [ctlViewTimeAxis]="ctlViewTimeAxis"
+    [height]="subBand.height"
+    [heightPadding]="subBand.heightPadding"
+    [id]="subBand.id"
+    [label]="subBand.label"
+    [labelColor]="subBand.labelColor"
+    [minorLabels]="subBand.minorLabels"
+    [name]="subBand.name"
+    [points]="subBand.points"
+    [selectedPoint]="selectedPoint"
+    [showTooltip]="subBand.showTooltip"
+    [type]="subBand.type"
+    (addSubBand)="onAddSubBand($event)"
+    (removeSubBand)="onRemoveSubBand($event)"
+    (updateIntervals)="onUpdateIntervals($event)"
+    (updateSubBand)="onUpdateSubBand($event)">
+  </falcon-state-band>
+</ng-container>

@@ -19,10 +19,12 @@ import {
 } from './raven-points';
 
 export const activityBand: RavenActivityBand = {
+  activityHeight: 20,
   activityStyle: 1,
   addTo: false,
   alignLabel: 3,
   baselineLabel: 3,
+  borderWidth: 1,
   height: 50,
   heightPadding: 10,
   id: '100',
@@ -84,6 +86,7 @@ export const stateBand: RavenStateBand = {
   addTo: false,
   alignLabel: 3,
   baselineLabel: 3,
+  borderWidth: 1,
   height: 50,
   heightPadding: 0,
   id: '102',

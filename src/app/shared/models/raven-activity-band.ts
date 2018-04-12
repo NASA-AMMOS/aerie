@@ -14,10 +14,12 @@ import {
 } from './index';
 
 export interface RavenActivityBand {
+  activityHeight: number;
   activityStyle: number;
   addTo: boolean;
   alignLabel: number;
   baselineLabel: number;
+  borderWidth: number;
   height: number;
   heightPadding: number;
   id: string;

@@ -7,6 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+export * from './falcon-activity-band/falcon-activity-band.component';
 export * from './falcon-composite-band/falcon-composite-band.component';
+export * from './falcon-divider-band/falcon-divider-band.component';
+export * from './falcon-resource-band/falcon-resource-band.component';
+export * from './falcon-state-band/falcon-state-band.component';
 export * from './falcon-time-band/falcon-time-band.component';
 export * from './falcon-time-scroll-bar/falcon-time-scroll-bar.component';
