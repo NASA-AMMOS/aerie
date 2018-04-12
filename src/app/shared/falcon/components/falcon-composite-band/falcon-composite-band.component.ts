@@ -62,6 +62,7 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
   ngOnChanges(changes: SimpleChanges) {
     let shouldResize = false;
     let shouldRedraw = false;
+    let shouldUpdateTicks = false;
 
     // Height.
     if (changes.height && !changes.height.firstChange) {
@@ -72,6 +73,7 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
       }
 
       shouldRedraw = true;
+      shouldUpdateTicks = true;
     }
 
     // Height Padding.
@@ -83,6 +85,7 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
       }
 
       shouldRedraw = true;
+      shouldUpdateTicks = true;
     }
 
     // Label Width.
@@ -158,7 +161,13 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
           previousViewTimeRange.end !== currentViewTimeRange.end) {
         this.ctlViewTimeAxis.updateTimes(currentViewTimeRange.start, currentViewTimeRange.end);
         shouldRedraw = true;
+        shouldUpdateTicks = true;
       }
+    }
+
+    // Only update ticks for resource bands once to maintain performance.
+    if (shouldUpdateTicks) {
+      this.updateTickValues();
     }
 
     // Only resize OR redraw once to maintain performance.
@@ -259,6 +268,7 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
    */
   onAddSubBand(subBand: any) {
     this.ctlCompositeBand.addBand(subBand);
+    this.updateTickValues();
 
     // Only redraw if we have more than one sub-band since the first
     // added sub-band will have already been drawn upon component creation.
@@ -344,6 +354,21 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
         return;
       }
     }
+  }
+
+  /**
+   * Helper. Updates tick values for a resource band.
+   * Make sure this is only called when needed.
+   */
+  updateTickValues() {
+    for (let i = 0, l = this.ctlCompositeBand.bands.length; i < l; ++i) {
+      const subBand = this.ctlCompositeBand.bands[i];
+
+      if (subBand.type === 'resource') {
+        subBand.computeMinMaxPaintValues();
+        subBand.tickValues = (window as any).Util.getLinearTickValues(subBand.minPaintValue, subBand.maxPaintValue, this.height);
+      }
+     }
   }
 
   /**
