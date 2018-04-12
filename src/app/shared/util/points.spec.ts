@@ -51,20 +51,24 @@ describe('points.ts', () => {
   });
 
   describe('getPoint', () => {
-    it(`should return null given an unknown band id and an unknown unique point id`, () => {
-      expect(getPoint(bands, '42', '42')).toEqual(null);
+    it(`should return null given an unknown band id, sub-band id and an unknown unique point id`, () => {
+      expect(getPoint(bands, '42', '42', '42')).toEqual(null);
     });
 
     it(`should return null given an unknown band id`, () => {
-      expect(getPoint(bands, '42', '400')).toEqual(null);
+      expect(getPoint(bands, '42', '4', '400')).toEqual(null);
+    });
+
+    it(`should return null given an unknown sub-band id`, () => {
+      expect(getPoint(bands, '104', '42', '400')).toEqual(null);
     });
 
     it(`should return null given an unknown unique point id`, () => {
-      expect(getPoint(bands, '104', '42')).toEqual(null);
+      expect(getPoint(bands, '104', '4', '42')).toEqual(null);
     });
 
     it(`should get the correct point given the band id and unique point id`, () => {
-      expect(getPoint(bands, '104', '400')).toEqual({
+      expect(getPoint(bands, '104', '4', '400')).toEqual({
         ...bands[4].subBands[0].points[0],
       });
     });

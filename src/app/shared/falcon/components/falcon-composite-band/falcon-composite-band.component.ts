@@ -299,7 +299,7 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
    * Event. Called when a (non-resource) sub-band emits intervals.
    */
   onUpdateIntervals(update: any) {
-    const { type, subBandId, intervals, intervalsById } = update;
+    const { subBandId, intervals, intervalsById } = update;
 
     for (let i = 0, l = this.ctlCompositeBand.bands.length; i < l; ++i) {
       const subBand = this.ctlCompositeBand.bands[i];
@@ -308,7 +308,7 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
         subBand.setIntervals(intervals);
         subBand.intervalsById = intervalsById;
 
-        if (type === 'resource') {
+        if (subBand.type === 'resource') {
           // Note: setIntervals resets interpolation for resources in CTL,
           // so we must re-set it on the next line.
           subBand.setInterpolation(subBand.interpolation);

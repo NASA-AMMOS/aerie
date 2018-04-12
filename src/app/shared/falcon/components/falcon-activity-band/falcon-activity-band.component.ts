@@ -93,7 +93,7 @@ export class FalconActivityBandComponent implements OnChanges, OnDestroy, OnInit
 
     // Points.
     if (changes.points && !changes.points.firstChange) {
-      this.updateIntervals.emit({ type: this.type, subBandId: this.id, ...this.getIntervals() });
+      this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals() });
     }
 
     // Show Label.
@@ -131,6 +131,7 @@ export class FalconActivityBandComponent implements OnChanges, OnDestroy, OnInit
 
     ctlActivityBand.setIntervals(intervals); // This resets interpolation in CTL so we must re-set it on the next line.
     ctlActivityBand.intervalsById = intervalsById;
+    ctlActivityBand.type = 'activity';
 
     // Send the newly created activity band to the parent composite band so it can be added.
     // All subsequent updates should be made to the parent composite sub-band via events.

@@ -80,6 +80,32 @@ describe('timeline reducer', () => {
     });
   });
 
+  it('handle AddBand (no source)', () => {
+    const newBand = {
+      ...compositeBand,
+      subBands: [{
+        ...stateBand,
+      }],
+    };
+    timelineState = reducer(timelineState, new AddBand(null, newBand));
+
+    expect(timelineState).toEqual({
+      ...initialState,
+      bands: [{
+        ...compositeBand,
+        containerId: '0',
+        sortOrder: 0,
+        subBands: [{
+          ...stateBand,
+          parentUniqueId: compositeBand.id,
+          sourceIds: {},
+        }],
+      }],
+      maxTimeRange: { end: 100, start: 0 },
+      viewTimeRange: { end: 100, start: 0 },
+    });
+  });
+
   it('handle AddPointsToSubBand', () => {
     const source: RavenSource = rootSource;
     const newBand = {

@@ -90,7 +90,7 @@ export class FalconResourceBandComponent implements OnChanges, OnDestroy, OnInit
 
     // Points.
     if (changes.points && !changes.points.firstChange) {
-      this.updateIntervals.emit({ type: this.type, subBandId: this.id, ...this.getIntervals() });
+      this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals() });
     }
 
     // Show Icon.
@@ -132,6 +132,7 @@ export class FalconResourceBandComponent implements OnChanges, OnDestroy, OnInit
     ctlResourceBand.setIntervals(intervals); // This resets interpolation in CTL so we must re-set it on the next line.
     ctlResourceBand.setInterpolation(this.interpolation);
     ctlResourceBand.intervalsById = intervalsById;
+    ctlResourceBand.type = 'resource';
 
     // Send the newly created resource band to the parent composite band so it can be added.
     // All subsequent updates should be made to the parent composite sub-band via events.
