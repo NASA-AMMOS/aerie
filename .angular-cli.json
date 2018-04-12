@@ -20,10 +20,14 @@
       "prefix": "app",
       "styles": [
         "styles.css",
+        "./../libs/ctl/ctl.css",
         "./../node_modules/font-awesome/css/font-awesome.min.css",
         "./../node_modules/material-design-icons/iconfont/material-icons.css"
       ],
-      "scripts": [],
+      "scripts": [
+        "./../libs/ctl/ctl.libs.min.js",
+        "./../libs/ctl/ctl.js"
+      ],
       "environmentSource": "environments/environment.ts",
       "environments": {
         "dev": "environments/environment.ts",
