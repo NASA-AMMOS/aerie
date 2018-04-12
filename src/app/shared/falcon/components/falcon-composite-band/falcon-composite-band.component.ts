@@ -60,8 +60,8 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    let shouldResize = false;
     let shouldRedraw = false;
+    let shouldResize = false;
     let shouldUpdateTicks = false;
 
     // Height.

@@ -49,8 +49,8 @@ export class FalconTimeScrollBarComponent implements AfterViewInit, OnChanges, O
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    let shouldResize = false;
     let shouldRedraw = false;
+    let shouldResize = false;
 
     // Label Width.
     if (changes.labelWidth && !changes.labelWidth.firstChange) {

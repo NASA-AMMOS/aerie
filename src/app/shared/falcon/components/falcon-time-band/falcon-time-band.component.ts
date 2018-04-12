@@ -51,8 +51,8 @@ export class FalconTimeBandComponent implements AfterViewInit, OnChanges, OnInit
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    let shouldResize = false;
     let shouldRedraw = false;
+    let shouldResize = false;
 
     // Label Width.
     if (changes.labelWidth && !changes.labelWidth.firstChange) {
