@@ -23,21 +23,8 @@ export class AppPage {
   timeline0 =             element(by.css('.timeline-0'));
   timeline1 =             element(by.css('.timeline-1'));
 
-  activityBand =          element(by.tagName('falcon-activity-band'));
-  compositeBand =         element(by.tagName('falcon-composite-band'));
-  resourceBand =          element(by.tagName('falcon-resource-band'));
-  stateBand =             element(by.tagName('falcon-state-band'));
-
   settingsDeleteSubBand = element(by.id('raven-settings-delete-sub-band'));
-  settingsFill =          element(by.id('raven-settings-fill'));
-  settingsHeight =        element(by.id('raven-settings-height'));
-  settingsInterpolation = element(by.id('raven-settings-interpolation'));
-  settingsLabel =         element(by.id('raven-settings-label'));
   settingsOverlay =       element(by.id('raven-settings-overlay'));
-  settingsRescale =       element(by.id('raven-settings-rescale'));
-  settingsSelectedBand =  element(by.id('raven-settings-selected-band'));
-  settingsShowIcon =      element(by.id('raven-settings-show-icon'));
-  settingsShowTooltip =   element(by.id('raven-settings-show-tooltip'));
 
   navigateTo(): promise.Promise<any> {
     return browser.get('/');
