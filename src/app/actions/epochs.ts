@@ -3,21 +3,33 @@ import { RavenEpoch } from '../shared/models';
 
 // Action Types.
 export enum EpochsActionTypes {
-  AddEpochs            = '[epochs] add_epochs',
-  FetchEpochs          = '[epochs] fetch_epochs',
-  SelectEpoch          = '[epochs] select_epoch',
+  AddEpochs                = '[epochs] add_epochs',
+  ChangeDayCode            = '[epochs] change_day_code',
+  ChangeEarthSecToEpochSec = '[epochs] change_earth_sec_to_epoch_sec',
+  FetchEpochs              = '[epochs] fetch_epochs',
+  SelectEpoch              = '[epochs] select_epoch',
 }
 
 // Actions.
 export class AddEpochs implements Action {
   readonly type = EpochsActionTypes.AddEpochs;
+
   constructor(public epochs: RavenEpoch[]) { }
 }
 
+export class ChangeDayCode implements Action {
+  readonly type = EpochsActionTypes.ChangeDayCode;
+  constructor(public code: string) { }
+}
+
+export class ChangeEarthSecToEpochSec implements Action {
+  readonly type = EpochsActionTypes.ChangeEarthSecToEpochSec;
+  constructor(public earthSecToEpochSec: number) { }
+}
 
 export class FetchEpochs implements Action {
   readonly type = EpochsActionTypes.FetchEpochs;
-  constructor() {}
+  constructor(public url: string) { }
 }
 
 export class SelectEpoch implements Action {
@@ -28,5 +40,7 @@ export class SelectEpoch implements Action {
 // Union type of all actions.
 export type EpochsAction =
   AddEpochs |
+  ChangeDayCode |
+  ChangeEarthSecToEpochSec |
   FetchEpochs |
   SelectEpoch;

@@ -2,23 +2,31 @@
   <mat-form-field class="epoch-filter" >
     <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Epoch Filter">
   </mat-form-field>
+  <mat-form-field>
+    <input matInput (keyup)="changeDayCode.emit($event.target.value)" [value]="dayCode" placeholder="Day Code">
+  </mat-form-field>
+  <mat-form-field>
+    <input matInput (keyup)="changeEarthSecToEpochSec.emit($event.target.value)" [value]="earthSecToEpochSec" placeholder="Earth Sec to Epoch Sec">
+  </mat-form-field>
   <mat-table #table [dataSource]="epochs" matSort (matSortChange)="sortData($event)">
-    <!-- Checkbox Column -->
+    <!-- radio button Column -->
     <ng-container matColumnDef="select">
       <mat-header-cell *matHeaderCellDef> Select</mat-header-cell>
       <mat-cell *matCellDef="let row">
-        <mat-radio-button name="radioButton" (change)="onSelect(row)">
+        <mat-radio-button name="radioButton"
+          [checked]="inUseEpoch?row.name==inUseEpoch.name:false"
+          (change)="selectEpoch.emit(row)">
         </mat-radio-button>
       </mat-cell>
     </ng-container>
 
-    <!-- name Column -->
+    <!-- epoch name Column -->
     <ng-container matColumnDef="name">
       <mat-header-cell *matHeaderCellDef mat-sort-header>name</mat-header-cell>
       <mat-cell *matCellDef="let element"> {{element.name}} </mat-cell>
     </ng-container>
 
-    <!-- value Column -->
+    <!-- epoch value Column -->
     <ng-container matColumnDef="value">
       <mat-header-cell *matHeaderCellDef mat-sort-header>value </mat-header-cell>
       <mat-cell *matCellDef="let element"> {{element.value}} </mat-cell>

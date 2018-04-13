@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
 import { Actions, Effect, ofType } from '@ngrx/effects';
@@ -28,7 +28,9 @@ import {
 import { AppState } from './../../app/store';
 
 import {
+  DeleteSource,
   FetchInitialSources,
+  ImportSource,
   SourceExplorerActionTypes,
   SourceExplorerCloseEvent,
   SourceExplorerCollapseEvent,
@@ -58,6 +60,25 @@ import {
 @Injectable()
 export class SourceExplorerEffects {
   @Effect()
+  deleteSource$: Observable<Action> = this.actions$.pipe(
+    ofType<DeleteSource>(SourceExplorerActionTypes.DeleteSource),
+    withLatestFrom(this.store$),
+    map(([action, state]) => action),
+    map(action => action.source),
+    concatMap(source => {
+      let sourceUrl = source.url;
+      sourceUrl = sourceUrl.replace(/list_(.*)-mongodb/, 'fs-mongodb');
+      return this.http.delete(sourceUrl, { responseType: 'text' }).pipe(
+        map(() => new sourceExplorerActions.DeleteSourceSuccess(source)),
+        catchError((e) => {
+          console.error('SourceExplorerEffects - delete Source error: ', e);
+          return of(new sourceExplorerActions.DeleteSourceFailure(source));
+        }),
+      );
+    }),
+  );
+
+  @Effect()
   fetchInitialSources$: Observable<Action> = this.actions$.pipe(
     ofType<FetchInitialSources>(SourceExplorerActionTypes.FetchInitialSources),
     withLatestFrom(this.store$),
@@ -70,6 +91,44 @@ export class SourceExplorerEffects {
       })),
     ]),
     concatMap(actions => actions),
+  );
+
+  /**
+   * Listen for ImportSource and perform PUT for the data. Metadata for file is sent using POST to the collection after the collection is successfully created
+   */
+  @Effect()
+  importSource$: Observable<Action> = this.actions$.pipe(
+    ofType<ImportSource>(SourceExplorerActionTypes.ImportSource),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    concatMap(({ state, action }) => {
+      let headers = new HttpHeaders();
+      headers = headers.set('Content-Type', 'text/csv');
+      return this.http.put(`${action.source.url}/${action.importData.name}?timeline_type=${action.importData.fileType}`, action.importData.fileData,
+        { headers: headers, responseType: 'text' }).pipe(
+        concatMap(() => {
+          if (action.importData.mappingData) {
+            headers = headers.set('Content-Type', 'application/json');
+            let sourceUrl = action.source.url;
+            sourceUrl = sourceUrl.replace('fs-mongodb', 'metadata-mongodb');
+            return this.http.post(`${sourceUrl}/${action.importData.name}`, action.importData.mappingData, { headers: headers, responseType: 'text' }).pipe(
+              map(() => new sourceExplorerActions.ImportSourceSuccess()),
+              catchError((e) => {
+                console.error('SourceExplorerEffects - importSource metadata error: ', e);
+                return of(new sourceExplorerActions.ImportSourceFailure());
+              }),
+            );
+          } else {
+            // no need to send mapping data
+            return of(new sourceExplorerActions.ImportSourceSuccess());
+          }
+        }),
+        catchError((e) => {
+          console.error('SourceExplorerEffects - importSource error: ', e);
+          return of(new sourceExplorerActions.ImportSourceFailure());
+        }),
+      );
+    }),
   );
 
   @Effect()
@@ -127,7 +186,7 @@ export class SourceExplorerEffects {
     private http: HttpClient,
     private actions$: Actions,
     private store$: Store<AppState>,
-  ) {}
+  ) { }
 
   /**
    * Helper. Returns a stream of actions that need to occur when expanding a source explorer source.
@@ -137,17 +196,17 @@ export class SourceExplorerEffects {
     const source = state.sourceExplorer.treeBySourceId[sourceId];
     const actions: Observable<Action>[] = [];
 
-    if (!source.childIds.length) {
-      if (source.content.length > 0) {
-        actions.push(
-          of(new sourceExplorerActions.NewSources(sourceId, toRavenSources(sourceId, false, source.content))),
-        );
-      } else {
-        actions.push(
-          this.fetchSources(source.url, sourceId, false),
-        );
-      }
+    // if (!source.childIds.length) {
+    if (source.content.length > 0) {
+      actions.push(
+        of(new sourceExplorerActions.NewSources(sourceId, toRavenSources(sourceId, false, source.content))),
+      );
+    } else {
+      actions.push(
+        this.fetchSources(source.url, sourceId, false),
+      );
     }
+    // }
 
     actions.push(
       of(new sourceExplorerActions.UpdateTreeSource(sourceId, 'expanded', true)),

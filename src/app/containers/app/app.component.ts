@@ -52,7 +52,8 @@ export class AppComponent implements OnDestroy {
   labelFontSize: number;
 
   // epochs
-  currentSelectedEpoch: RavenEpoch | null;
+  dayCode: string;
+  earthSecToEpochSec: number;
   epochs: RavenEpoch[];
   inUseEpoch: RavenEpoch | null;
 
@@ -80,6 +81,8 @@ export class AppComponent implements OnDestroy {
     this.store.select(fromEpochs.getEpochsState).pipe(
       takeUntil(this.ngUnsubscribe),
     ).subscribe(state => {
+      this.dayCode = state.dayCode;
+      this.earthSecToEpochSec = state.earthSecToEpochSec;
       this.epochs = state.epochs;
       this.inUseEpoch = state.inUseEpoch;
       this.changeDetector.markForCheck();
@@ -122,6 +125,13 @@ export class AppComponent implements OnDestroy {
     this.store.dispatch(new timelineActions.ChangeDateFormat(dateFormat));
   }
 
+  onChangeDayCode (code: string) {
+    this.store.dispatch(new epochsActions.ChangeDayCode(code));
+  }
+
+  onChangeEarthSecToEpochSec(earthSecToEpochSec: number) {
+    this.store.dispatch(new epochsActions.ChangeEarthSecToEpochSec(earthSecToEpochSec));
+  }
   onChangeLabelWidth(labelWidth: number) {
     this.store.dispatch(new timelineActions.ChangeLabelWidth(labelWidth));
   }

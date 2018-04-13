@@ -1,0 +1,14 @@
+host {
+  display: block;
+}
+
+.save-to {
+  padding-bottom: 20px;
+}
+
+/**
+input[type='file'] {
+  color: transparent;
+}
+*/
+

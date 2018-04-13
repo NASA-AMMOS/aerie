@@ -112,6 +112,14 @@ export function fromDir(isServer: boolean, mSource: MpsServerSourceDir, rSource:
         event: 'state-save',
         name: 'Save State',
       },
+      {
+        event: 'file-import',
+        name: 'Import ..',
+      },
+      {
+        event: 'file-delete',
+        name: 'Delete',
+      },
     ],
     dbType: mSource.__db_type,
     icon: isServer ? 'fa fa-database' : 'fa fa-folder',
@@ -126,6 +134,19 @@ export function fromDir(isServer: boolean, mSource: MpsServerSourceDir, rSource:
 export function fromFile(mSource: MpsServerSourceFile, rSource: RavenSource): RavenSource {
   return {
     ...rSource,
+    actions: mSource.__kind_sub === 'file_epoch' ? [
+      {
+        event: 'epoch-load',
+        name: 'Load Epoch',
+      },
+      {
+        event: 'file-delete',
+        name: 'Delete',
+      },
+    ] : [{
+      event: 'file-delete',
+      name: 'Delete',
+    }],
     dbType: mSource.__db_type,
     icon: 'fa fa-file',
     permissions: mSource.permissions,

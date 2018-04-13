@@ -18,16 +18,22 @@ import { Store } from '@ngrx/store';
 
 import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs/Subject';
+import { Subscription } from 'rxjs/Subscription';
 
 import { MatDialog } from '@angular/material';
 
+import * as fromConfig from './../../reducers/config';
 import * as fromSourceExplorer from './../../reducers/source-explorer';
 
 import * as displayActions from './../../actions/display';
+import * as epochsActions from './../../actions/epochs';
 import * as sourceExplorerActions from './../../actions/source-explorer';
+
+import { CollectionChangeService } from './../../services';
 
 import {
   RavenConfirmDialogComponent,
+  RavenFileImportDialogComponent,
   RavenStateSaveDialogComponent,
 } from './../../components';
 
@@ -44,8 +50,13 @@ import {
   templateUrl: './source-explorer.component.html',
 })
 export class SourceExplorerComponent implements OnDestroy {
+  // Config state
+  baseUrl: string;
+
   // Source Explorer state.
   tree: StringTMap<RavenSource>;
+
+  subscription: Subscription;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -53,13 +64,30 @@ export class SourceExplorerComponent implements OnDestroy {
     private changeDetector: ChangeDetectorRef,
     private dialog: MatDialog,
     private store: Store<fromSourceExplorer.SourceExplorerState>,
+    private collectionChangeService: CollectionChangeService,
   ) {
+    // Config state.
+    this.store.select(fromConfig.getConfigState).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(state => {
+      this.baseUrl = state.baseUrl;
+      this.changeDetector.markForCheck();
+    });
+
     // Source Explorer state.
     this.store.select(fromSourceExplorer.getTreeBySourceId).pipe(
       takeUntil(this.ngUnsubscribe),
     ).subscribe(tree => {
       this.tree = tree;
       this.changeDetector.markForCheck();
+    });
+
+    this.collectionChangeService.messages.subscribe((msg: any) => {
+      const data = JSON.parse(msg.data);
+      if (data.detail === 'data source changed') {
+        console.log(`${data.subject} data source changed`);
+        this.store.dispatch(new sourceExplorerActions.SourceExplorerExpandEvent('/leucadia/taifunTest/'));
+      }
     });
   }
 
@@ -80,6 +108,12 @@ export class SourceExplorerComponent implements OnDestroy {
       this.openStateLoadDialog(source);
     } else if (event === 'state-save') {
       this.openStateSaveDialog(source);
+    } else if (event === 'file-import') {
+      this.openFileImportDialog(source);
+    } else if (event === 'epoch-load') {
+      this.onLoadEpochs(source);
+    } else if (event === 'file-delete') {
+      this.openSourceDeleteDialog(source);
     }
   }
 
@@ -102,6 +136,10 @@ export class SourceExplorerComponent implements OnDestroy {
    */
   onExpand(source: RavenSource): void {
     this.store.dispatch(new sourceExplorerActions.SourceExplorerExpandEvent(source.id));
+  }
+
+  onLoadEpochs(source: RavenSource): void {
+    this.store.dispatch(new epochsActions.FetchEpochs(source.url));
   }
 
   /**
@@ -138,6 +176,23 @@ export class SourceExplorerComponent implements OnDestroy {
     });
   }
 
+
+  openSourceDeleteDialog(source: RavenSource) {
+    const sourceDeleteDialog = this.dialog.open(RavenConfirmDialogComponent, {
+      data: {
+        cancelText: 'No',
+        confirmText: 'Yes',
+        message: `Are you sure you want to delete ${source.name} at ${source.url}?`,
+      },
+      width: '500px',
+    });
+
+    sourceDeleteDialog.afterClosed().subscribe(result => {
+      if (result.confirm) {
+        this.store.dispatch(new sourceExplorerActions.DeleteSource(source));
+      }
+    });
+  }
   /**
    * Dialog trigger. Opens the load state dialog.
    */
@@ -170,6 +225,20 @@ export class SourceExplorerComponent implements OnDestroy {
     stateSaveDialog.afterClosed().subscribe(result => {
       if (result.save) {
         this.store.dispatch(new displayActions.StateSave(result.name, source));
+      }
+    });
+  }
+
+  openFileImportDialog(source: RavenSource): void {
+    const fileImportDialog = this.dialog.open(RavenFileImportDialogComponent, {
+      data: { source },
+      height: '600px',
+      width: '500px',
+    });
+
+    fileImportDialog.afterClosed().subscribe(result => {
+      if (result.import) {
+        this.store.dispatch(new sourceExplorerActions.ImportSource({ name: result.name, fileData: result.fileData, fileType: result.fileType, mappingData: result.mappingData }, source));
       }
     });
   }

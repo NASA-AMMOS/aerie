@@ -20,11 +20,14 @@ import { OnInit } from '@angular/core/src/metadata/lifecycle_hooks';
   templateUrl: './raven-epochs.component.html',
 })
 export class RavenEpochsComponent implements OnInit {
-  @Input() currentSelectedEpoch: RavenEpoch | null;
   @Input() epochs: RavenEpoch[];
   @Input() inUseEpoch: RavenEpoch | null;
+  @Input() earthSecToEpochSec: number;
+  @Input() dayCode: string;
 
   @Output() selectEpoch: EventEmitter<RavenEpoch> = new EventEmitter<RavenEpoch>();
+  @Output() changeDayCode: EventEmitter<string> = new EventEmitter<string>();
+  @Output() changeEarthSecToEpochSec: EventEmitter<number> = new EventEmitter<number>();
   @Output() importEpochs: EventEmitter<RavenEpoch[]> = new EventEmitter<RavenEpoch[]>();
 
   selection = new SelectionModel<RavenEpoch>(true, []);
@@ -61,17 +64,13 @@ export class RavenEpochsComponent implements OnInit {
   }
 
   applyFilter(filterValue: string) {
-    filterValue = filterValue.trim(); // Remove whitespace
-    filterValue = filterValue.toLowerCase(); // MatTableDataSource defaults to lowercase matches
+    filterValue = filterValue.trim();
     const copy = this.originalEpochs.slice(0);
+
+    // match either name or value
     this.epochs = copy.filter(epoch =>
       (epoch.name.indexOf(filterValue) > -1) || (epoch.value.indexOf(filterValue) > -1),
     );
-  }
-
-  onSelect(epoch: RavenEpoch): void {
-    console.log('in onSelect epoch:' + JSON.stringify(epoch));
-    this.selectEpoch.emit(epoch);
   }
 
   getContent($event: any): void {
@@ -80,7 +79,6 @@ export class RavenEpochsComponent implements OnInit {
 
   addEpochs(content: any): void {
     const newEpochs: RavenEpoch[] = JSON.parse(content);
-    console.log('newEpochs: ' + JSON.stringify(newEpochs));
     this.importEpochs.emit(newEpochs);
   }
 

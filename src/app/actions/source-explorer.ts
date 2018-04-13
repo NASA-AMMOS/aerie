@@ -11,13 +11,20 @@ import { Action } from '@ngrx/store';
 
 import {
   BaseType,
+  ImportData,
   RavenSource,
   StringTMap,
 } from './../shared/models';
 
 // Action Types.
 export enum SourceExplorerActionTypes {
+  DeleteSource                = '[sourceExplorer] delete_source',
+  DeleteSourceFailure         = '[sourceExplorer] delete_source_failure',
+  DeleteSourceSuccess         = '[sourceExplorer] delete_source_success',
   FetchInitialSources         = '[sourceExplorer] fetch_initial_sources',
+  ImportSource                = '[sourceExplorer] import_source',
+  ImportSourceFailure         = '[sourceExplorer] import_source_failure',
+  ImportSourceSuccess         = '[sourceExplorer] import_source_success',
   NewSources                  = '[sourceExplorer] new_sources',
   SourceExplorerCloseEvent    = '[sourceExplorer] source_explorer_close_event',
   SourceExplorerCollapseEvent = '[sourceExplorer] source_explorer_collapse_event',
@@ -31,8 +38,40 @@ export enum SourceExplorerActionTypes {
 }
 
 // Actions.
+export class DeleteSource implements Action {
+  readonly type = SourceExplorerActionTypes.DeleteSource;
+
+  constructor(public source: RavenSource) {}
+}
+
+export class DeleteSourceFailure implements Action {
+  readonly type = SourceExplorerActionTypes.DeleteSourceFailure;
+
+  constructor(public source: RavenSource) {}
+}
+
+export class DeleteSourceSuccess implements Action {
+  readonly type = SourceExplorerActionTypes.DeleteSourceSuccess;
+
+  constructor(public source: RavenSource) {}
+}
+
 export class FetchInitialSources implements Action {
   readonly type = SourceExplorerActionTypes.FetchInitialSources;
+}
+
+export class ImportSource implements Action {
+  readonly type = SourceExplorerActionTypes.ImportSource;
+
+  constructor(public importData: ImportData, public source: RavenSource) {}
+}
+
+export class ImportSourceFailure implements Action {
+  readonly type = SourceExplorerActionTypes.ImportSourceFailure;
+}
+
+export class ImportSourceSuccess implements Action {
+  readonly type = SourceExplorerActionTypes.ImportSourceSuccess;
 }
 
 export class NewSources implements Action {
@@ -101,7 +140,13 @@ export class UpdateTreeSource implements Action {
 
 // Union type of all actions.
 export type SourceExplorerAction =
+  DeleteSource |
+  DeleteSourceFailure |
+  DeleteSourceSuccess |
   FetchInitialSources |
+  ImportSource |
+  ImportSourceFailure |
+  ImportSourceSuccess |
   NewSources |
   SourceExplorerCloseEvent |
   SourceExplorerCollapseEvent |

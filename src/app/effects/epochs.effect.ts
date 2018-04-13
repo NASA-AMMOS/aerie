@@ -47,8 +47,8 @@ export class EpochsEffects {
     ofType<epochsActions.FetchEpochs>(EpochsActionTypes.FetchEpochs),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
-    concatMap(action =>
-      this.http.get<MpsServerEpoch[]>('https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/fs-mongodb/leucadia/taifunTest/europaEpoch.csv').pipe (
+    concatMap(({action}) =>
+      this.http.get<MpsServerEpoch[]>(action.url).pipe (
       map(serverEpochs => toRavenEpochs(serverEpochs)),
       map((epochs: RavenEpoch[]) => new epochsActions.AddEpochs(epochs))),
     ),

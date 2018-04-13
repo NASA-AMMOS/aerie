@@ -34,6 +34,8 @@ import { MaterialModule } from './shared/material';
 
 import { ColorPickerModule } from 'ngx-color-picker';
 
+import { CollectionChangeService, WebsocketService } from './services';
+
 import {
   AppComponent,
   SourceExplorerComponent,
@@ -44,6 +46,7 @@ import {
   RavenBandsComponent,
   RavenConfirmDialogComponent,
   RavenEpochsComponent,
+  RavenFileImportDialogComponent,
   RavenGlobalSettingsComponent,
   RavenSettingsComponent,
   RavenStateSaveDialogComponent,
@@ -73,6 +76,7 @@ export const DECLARATIONS = [
   RavenBandsComponent,
   RavenConfirmDialogComponent,
   RavenEpochsComponent,
+  RavenFileImportDialogComponent,
   RavenGlobalSettingsComponent,
   RavenSettingsComponent,
   RavenStateSaveDialogComponent,
@@ -83,6 +87,7 @@ export const DECLARATIONS = [
 
 export const ENTRY_COMPONENTS = [
   RavenConfirmDialogComponent,
+  RavenFileImportDialogComponent,
   RavenStateSaveDialogComponent,
 ];
 
@@ -118,6 +123,8 @@ export const PROVIDERS = [
     useClass: CustomRouterStateSerializer,
   },
   TimelineGuard,
+  CollectionChangeService,
+  WebsocketService,
 ];
 
 export const SCHEMAS = [

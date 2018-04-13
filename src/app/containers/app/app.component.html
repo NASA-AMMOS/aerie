@@ -58,7 +58,15 @@
       (changeCurrentTimeCursor)="onChangeCurrentTimeCursor($event)" (changeDateFormat)="onChangeDateFormat($event)"></raven-global-settings>
     </div>
     <div *ngIf="drawer=='epochs'">
-      <raven-epochs [epochs]="epochs" [inUseEpoch]="inUseEpoch" (selectEpoch)="onSelectEpoch($event)" (importEpochs)="onImportEpochs($event)"></raven-epochs>
+      <raven-epochs
+      [epochs]="epochs"
+      [dayCode]="dayCode"
+      [earthSecToEpochSec]="earthSecToEpochSec"
+      [inUseEpoch]="inUseEpoch"
+      (changeDayCode)="onChangeDayCode($event)"
+      (changeEarthSecToEpochSec)="onChangeEarthSecToEpochSec($event)"
+      (selectEpoch)="onSelectEpoch($event)"
+      (importEpochs)="onImportEpochs($event)"></raven-epochs>
     </div>
     <div style="text-align:center;">
       <button mat-raised-button class="done-button" (click)="globalSettingsDrawer.toggle()">Done</button>

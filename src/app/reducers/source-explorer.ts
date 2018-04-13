@@ -85,6 +85,13 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
   switch (action.type) {
     case SourceExplorerActionTypes.FetchInitialSources:
       return { ...state, fetchPending: true };
+    case SourceExplorerActionTypes.ImportSource:
+      return state;
+    case SourceExplorerActionTypes.ImportSourceFailure:
+      console.log('in reducer import source failed');
+      return state;
+    case SourceExplorerActionTypes.ImportSourceSuccess:
+      return state;
     case SourceExplorerActionTypes.NewSources:
       return newSources(state, action);
     case SourceExplorerActionTypes.SourceExplorerExpandEvent:
