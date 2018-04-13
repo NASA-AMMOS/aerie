@@ -42,6 +42,35 @@ export class RavenEpochsComponent implements OnInit {
     this.originalEpochs = this.epochs.slice(0);
   }
 
+  addEpochs(content: any): void {
+    const newEpochs: RavenEpoch[] = JSON.parse(content);
+    this.importEpochs.emit(newEpochs);
+  }
+
+  applyFilter(filterValue: string) {
+    filterValue = filterValue.trim();
+    const copy = this.originalEpochs.slice(0);
+
+    // match either name or value
+    this.epochs = copy.filter(epoch =>
+      (epoch.name.indexOf(filterValue) > -1) || (epoch.value.indexOf(filterValue) > -1),
+    );
+  }
+
+  getContent($event: any): void {
+    this.readFile($event.target);
+  }
+
+  readFile(inputValue: any): void {
+    const file: File = inputValue.files[0];
+    const reader: FileReader = new FileReader();
+    reader.onloadend = (e) => {
+      this.addEpochs(reader.result);
+    };
+
+    reader.readAsText(file);
+  }
+
   sortData(sort: Sort) {
     const data = this.epochs.slice();
     if (!sort.active || sort.direction === '') {
@@ -61,35 +90,6 @@ export class RavenEpochsComponent implements OnInit {
     function compare(a: string, b: string, isAsc: boolean) {
       return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
     }
-  }
-
-  applyFilter(filterValue: string) {
-    filterValue = filterValue.trim();
-    const copy = this.originalEpochs.slice(0);
-
-    // match either name or value
-    this.epochs = copy.filter(epoch =>
-      (epoch.name.indexOf(filterValue) > -1) || (epoch.value.indexOf(filterValue) > -1),
-    );
-  }
-
-  getContent($event: any): void {
-    this.readFile($event.target);
-  }
-
-  addEpochs(content: any): void {
-    const newEpochs: RavenEpoch[] = JSON.parse(content);
-    this.importEpochs.emit(newEpochs);
-  }
-
-  readFile(inputValue: any): void {
-    const file: File = inputValue.files[0];
-    const reader: FileReader = new FileReader();
-    reader.onloadend = (e) => {
-      this.addEpochs(reader.result);
-    };
-
-    reader.readAsText(file);
   }
 }
 

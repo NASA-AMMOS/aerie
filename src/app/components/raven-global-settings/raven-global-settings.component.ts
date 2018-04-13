@@ -46,8 +46,6 @@ export class RavenGlobalSettingsComponent {
   }
 
   public onChangeLabelFontSize(size: number) {
-    console.log('label font size changed' + size);
-    console.log('2. label font size changed' + this.labelFontSize);
     // emit new labelWidth
     this.changeLabelFontSize.emit(this.labelFontSize);
   }
