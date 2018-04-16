@@ -17,6 +17,8 @@ import {
   AddBand,
   AddPointsToSubBand,
   AddSubBand,
+  ChangeDefaultFillColor,
+  ChangeDefaultResourceColor,
   RemoveBandsOrPointsForSource,
   RemoveSubBand,
   SelectBand,
@@ -48,22 +50,45 @@ import {
 // Timeline State Interface.
 export interface TimelineState {
   bands: RavenCompositeBand[];
+  colorPalette: string[];
+  currentTimeCursor: boolean;
+  dateFormat: string;
+  defaultFillColor: string;
+  defaultResourceColor: string;
+  labelFontSize: number;
+  labelFontStyle: string;
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
   selectedBandId: string;
   selectedPoint: RavenPoint | null;
   selectedSubBandId: string;
+  tooltip: boolean;
   viewTimeRange: RavenTimeRange;
 }
 
 // Timeline Initial State.
 export const initialState: TimelineState = {
   bands: [],
-  labelWidth: 150,
+  colorPalette: [
+    '#000000', // black
+    '#ff0000', // red
+    '#00ff00', // green
+    '#0000ff', // blue
+    '#ffa500', // orange
+    '#ffff00', // yellow
+  ],
+  currentTimeCursor: false,
+  dateFormat: 'Day-Month-Year',
+  defaultFillColor: '#000000',
+  defaultResourceColor: '#000000',
+  labelFontSize: 9,
+  labelFontStyle: 'Georgia',
+  labelWidth: 100,
   maxTimeRange: { end: 0, start: 0 },
   selectedBandId: '',
   selectedPoint: null,
   selectedSubBandId: '',
+  tooltip: true,
   viewTimeRange: { end: 0, start: 0 },
 };
 
@@ -95,6 +120,22 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
       return updateSubBand(state, action);
     case TimelineActionTypes.UpdateTimeline:
       return { ...state, ...action.update };
+    case TimelineActionTypes.ChangeCurrentTimeCursor:
+      return { ...state, currentTimeCursor: action.currentTimeCursor };
+    case TimelineActionTypes.ChangeDateFormat:
+      return { ...state, dateFormat: action.dateFormat };
+    case TimelineActionTypes.ChangeTooltip:
+      return { ...state, tooltip: action.tooltip };
+    case TimelineActionTypes.ChangeLabelFontSize:
+      return { ...state, labelFontSize: action.labelFontSize };
+    case TimelineActionTypes.ChangeLabelWidth:
+      return { ...state, labelWidth: action.labelWidth };
+    case TimelineActionTypes.ChangeLabelFontStyle:
+      return { ...state, labelFontStyle: action.labelFontStyle };
+    case TimelineActionTypes.ChangeDefaultFillColor:
+      return changeDefaultFillColor (state, action);
+    case TimelineActionTypes.ChangeDefaultResourceColor:
+      return changeDefaultResourceColor (state, action);
     default:
       return state;
   }
@@ -203,6 +244,28 @@ export function addSubBand(state: TimelineState, action: AddSubBand): TimelineSt
   };
 }
 
+/** Reduction Helper. Called when reducing the 'ChangeDefaultFillColor' action.
+ *  Adds color to colorPalette if not exists already
+ */
+export function changeDefaultFillColor (state: TimelineState, action: ChangeDefaultFillColor): TimelineState {
+  const colors = state.colorPalette.slice(0);
+  if (!colors.includes(action.defaultFillColor)) {
+    colors.push(action.defaultFillColor);
+  }
+  return { ...state, defaultFillColor: action.defaultFillColor, colorPalette: colors };
+}
+
+/** Reduction Helper. Called when reducing the 'ChangeDefaultResourceColor' action.
+ *  Adds color to colorPalette if not exists already
+ */
+export function changeDefaultResourceColor(state: TimelineState, action: ChangeDefaultResourceColor): TimelineState {
+  const colors = state.colorPalette.slice(0);
+      if (!colors.includes(action.defaultResourceColor)) {
+        colors.push(action.defaultResourceColor);
+      }
+      return { ...state, defaultResourceColor: action.defaultResourceColor, colorPalette: colors };
+}
+
 /**
  * Reduction Helper. Called when reducing the 'RemoveBandsOrPointsForSource' action.
  * Removes all bands or points that reference the given source.
@@ -231,8 +294,8 @@ export function removeBandsOrPointsForSource(state: TimelineState, action: Remov
       }, []),
     }))
     .filter(
-      band => band.subBands.length !== 0,
-    );
+    band => band.subBands.length !== 0,
+  );
 
   bands = updateSortOrder(bands);
 
@@ -255,8 +318,8 @@ export function removeSubBand(state: TimelineState, action: RemoveSubBand): Time
       subBands: band.subBands.filter(subBand => subBand.id !== action.subBandId),
     }))
     .filter(
-      band => band.subBands.length !== 0,
-    );
+    band => band.subBands.length !== 0,
+  );
 
   bands = updateSortOrder(bands);
 

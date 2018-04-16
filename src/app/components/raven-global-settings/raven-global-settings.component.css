@@ -1,0 +1,55 @@
+
+:host {
+  display: block;
+}
+.field {
+  margin-left: 30px;
+  margin-right: 30px;
+}
+.fieldLabel {
+  margin-left: 30px;
+  margin-right: 30px;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+h2.settings {
+  text-align: center;
+}
+.buttondiv {
+  margin-top: 50px;
+}
+input {
+  width: 150px;
+  margin-bottom: 16px;
+}
+
+input.labelWidth {
+  width: 150px;
+  margin-bottom: 16px;
+  margin-left: 20px;
+}
+.cmyk-text {
+  float: left;
+
+  width: 72px;
+  height: 72px;
+
+  font-weight: bolder;
+  line-height: 72px;
+  text-align: center;
+  text-shadow: 1px 1px 2px #bbb;
+}
+
+.color-box {
+  width: 100px;
+  height: 25px;
+  margin: 16px auto;
+
+  cursor: pointer;
+}
+
+.change-me {
+  cursor: pointer;
+  font-size: 30px;
+  font-weight: bolder;
+}

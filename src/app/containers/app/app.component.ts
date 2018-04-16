@@ -21,9 +21,15 @@ import { combineLatest } from 'rxjs/observable/combineLatest';
 import { takeUntil, tap } from 'rxjs/operators';
 import { Subject } from 'rxjs/Subject';
 
+import * as fromEpochs from './../../reducers/epochs';
 import * as fromSourceExplorer from './../../reducers/source-explorer';
+import * as fromTimeline from './../../reducers/timeline';
 
+import * as epochsActions from './../../actions/epochs';
 import * as layoutActions from './../../actions/layout';
+import * as timelineActions from './../../actions/timeline';
+
+import { RavenEpoch } from './../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,11 +40,30 @@ import * as layoutActions from './../../actions/layout';
 export class AppComponent implements OnDestroy {
   loading$: Observable<boolean>;
 
+  // global settinga
+  dateFormat: string;
+  defaultFillColor: string;
+  defaultResourceColor: string;
+  colorPalette: string[];
+  labelWidth: number;
+  tooltip: boolean;
+  currentTimeCursor: boolean;
+  labelFontStyle: string;
+  labelFontSize: number;
+
+  // epochs
+  dayCode: string;
+  earthSecToEpochSec: number;
+  epochs: RavenEpoch[];
+  inUseEpoch: RavenEpoch | null;
+
+  drawer = 'globals';
+
   private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(
     private changeDetector: ChangeDetectorRef,
-    private store: Store<fromSourceExplorer.SourceExplorerState>,
+    private store: Store<fromEpochs.EpochsState | fromSourceExplorer.SourceExplorerState | fromTimeline.TimelineState>,
   ) {
     // Combine all fetch pending observables for use in progress bar.
     this.loading$ = combineLatest(
@@ -48,6 +73,33 @@ export class AppComponent implements OnDestroy {
       tap(() => this.changeDetector.markForCheck()),
       takeUntil(this.ngUnsubscribe),
     );
+
+    // Epoch state.
+    this.store.select(fromEpochs.getEpochsState).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(state => {
+      this.dayCode = state.dayCode;
+      this.earthSecToEpochSec = state.earthSecToEpochSec;
+      this.epochs = state.epochs;
+      this.inUseEpoch = state.inUseEpoch;
+      this.changeDetector.markForCheck();
+    });
+
+    // Timeline state.
+    this.store.select(fromTimeline.getTimelineState).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(state => {
+      this.defaultFillColor = state.defaultFillColor;
+      this.defaultResourceColor = state.defaultResourceColor;
+      this.colorPalette = state.colorPalette;
+      this.dateFormat = state.dateFormat;
+      this.labelWidth = state.labelWidth;
+      this.tooltip = state.tooltip;
+      this.currentTimeCursor = state.currentTimeCursor;
+      this.labelFontSize = state.labelFontSize;
+      this.labelFontStyle = state.labelFontStyle;
+      this.changeDetector.markForCheck();
+    });
   }
 
   ngOnDestroy() {
@@ -69,5 +121,52 @@ export class AppComponent implements OnDestroy {
 
   toggleSouthBandsDrawer() {
     this.store.dispatch(new layoutActions.ToggleSouthBandsDrawer());
+  }
+
+  onChangeDateFormat(dateFormat: string) {
+    this.store.dispatch(new timelineActions.ChangeDateFormat(dateFormat));
+  }
+
+  onChangeDayCode (code: string) {
+    this.store.dispatch(new epochsActions.ChangeDayCode(code));
+  }
+
+  onChangeEarthSecToEpochSec(earthSecToEpochSec: number) {
+    this.store.dispatch(new epochsActions.ChangeEarthSecToEpochSec(earthSecToEpochSec));
+  }
+  onChangeLabelWidth(labelWidth: number) {
+    this.store.dispatch(new timelineActions.ChangeLabelWidth(labelWidth));
+  }
+
+  onChangeLabelFontSize(labelFontSize: number) {
+    this.store.dispatch(new timelineActions.ChangeLabelFontSize(labelFontSize));
+  }
+
+  onChangeLabelFontStyle(labelFontStyle: string) {
+    this.store.dispatch(new timelineActions.ChangeLabelFontStyle(labelFontStyle));
+  }
+
+  onChangeDefaultFillColor(resourceColor: string) {
+    this.store.dispatch(new timelineActions.ChangeDefaultFillColor(resourceColor));
+  }
+
+  onChangeDefaultResourceColor(resourceColor: string) {
+    this.store.dispatch(new timelineActions.ChangeDefaultResourceColor(resourceColor));
+  }
+
+  onChangeTooltip(tooltip: boolean) {
+    this.store.dispatch(new timelineActions.ChangeTooltip(tooltip));
+  }
+
+  onChangeCurrentTimeCursor(currentTimeCursor: boolean) {
+    this.store.dispatch(new timelineActions.ChangeCurrentTimeCursor(currentTimeCursor));
+  }
+
+  onImportEpochs(epochs: RavenEpoch[]) {
+    this.store.dispatch(new epochsActions.AddEpochs(epochs));
+  }
+
+  onSelectEpoch (epoch: RavenEpoch) {
+    this.store.dispatch(new epochsActions.SelectEpoch(epoch));
   }
 }

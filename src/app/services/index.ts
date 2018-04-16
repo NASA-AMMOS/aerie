@@ -7,24 +7,5 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-/**
- * Type interface schema for Raven's configuration.
- * This object is loaded into the store's `config` reducer upon application load.
- *
- * @export
- * @interface RavenConfig
- */
-export interface RavenConfig {
-  baseSourcesUrl: string;
-  epochsUrl: string;
-  itarMessage: string;
-}
-
-const ravenConfig: RavenConfig = {
-  baseSourcesUrl: 'mpsserver/api/v2/fs',
-  // epochsUrl: 'mpsserver/api/v2/epochs',
-  epochsUrl: 'mpsserver/api/v2/fs-mongodb/leucadia/taifunTest/europaEpoch.csv',
-  itarMessage: '',
-};
-
-export default ravenConfig;
+export * from './collection-change.service';
+export * from './websocket.service';

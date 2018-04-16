@@ -16,6 +16,7 @@ import { environment } from './../../environments/environment';
 export interface ConfigState {
   baseSourcesUrl: string;
   baseUrl: string;
+  epochsUrl: string;
   itarMessage: string;
   production: boolean;
 }

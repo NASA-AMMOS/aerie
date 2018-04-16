@@ -11,6 +11,7 @@ import { Action } from '@ngrx/store';
 
 import {
   BaseType,
+  ImportData,
   RavenSource,
   StringTMap,
 } from './../shared/models';
@@ -21,6 +22,9 @@ export enum SourceExplorerActionTypes {
   CollapseEvent        = '[sourceExplorer] collapse_event',
   ExpandEvent          = '[sourceExplorer] expand_event',
   FetchInitialSources  = '[sourceExplorer] fetch_initial_sources',
+  ImportSourceEvent    = '[sourceExplorer] import_source_event',
+  ImportSourceFailure  = '[sourceExplorer] import_source_failure',
+  ImportSourceSuccess  = '[sourceExplorer] import_source_success',
   LoadFromSource       = '[sourceExplorer] load_from_source',
   NewSources           = '[sourceExplorer] new_sources',
   OpenEvent            = '[sourceExplorer] open_event',
@@ -61,6 +65,20 @@ export class LoadFromSource implements Action {
   readonly type = SourceExplorerActionTypes.LoadFromSource;
 
   constructor(public sourceUrl: string) {}
+}
+
+export class ImportSourceEvent implements Action {
+  readonly type = SourceExplorerActionTypes.ImportSourceEvent;
+
+  constructor(public importData: ImportData, public source: RavenSource) {}
+}
+
+export class ImportSourceFailure implements Action {
+  readonly type = SourceExplorerActionTypes.ImportSourceFailure;
+}
+
+export class ImportSourceSuccess implements Action {
+  readonly type = SourceExplorerActionTypes.ImportSourceSuccess;
 }
 
 export class NewSources implements Action {
@@ -129,6 +147,9 @@ export type SourceExplorerAction =
   CollapseEvent |
   ExpandEvent |
   FetchInitialSources |
+  ImportSourceEvent |
+  ImportSourceFailure |
+  ImportSourceSuccess |
   LoadFromSource |
   NewSources |
   OpenEvent |

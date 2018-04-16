@@ -71,6 +71,8 @@ export class TimelineComponent implements OnDestroy {
   selectedPoint: RavenPoint | null;
   selectedSubBandId: string;
   viewTimeRange: RavenTimeRange;
+  defaultResourceColor: string;
+  defaultFillColor: string;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -115,6 +117,8 @@ export class TimelineComponent implements OnDestroy {
       this.selectedPoint = state.selectedPoint;
       this.selectedSubBandId = state.selectedSubBandId;
       this.viewTimeRange = state.viewTimeRange;
+      this.defaultFillColor = state.defaultFillColor;
+      this.defaultResourceColor = state.defaultResourceColor;
       this.changeDetector.markForCheck();
       this.app.tick();
     });

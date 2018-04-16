@@ -33,6 +33,7 @@ import { storeFreeze } from 'ngrx-store-freeze';
  */
 
 import * as fromConfig from './reducers/config';
+import * as fromEpochs from './reducers/epochs';
 import * as fromLayout from './reducers/layout';
 import * as fromSourceExplorer from './reducers/source-explorer';
 import * as fromTimeline from './reducers/timeline';
@@ -43,6 +44,7 @@ import * as fromTimeline from './reducers/timeline';
  */
 export interface AppState {
   config: fromConfig.ConfigState;
+  epochs: fromEpochs.EpochsState;
   layout: fromLayout.LayoutState;
   routerReducer: fromRouter.RouterReducerState<RouterStateUrl>;
   sourceExplorer: fromSourceExplorer.SourceExplorerState;
@@ -56,6 +58,7 @@ export interface AppState {
  */
 export const reducers: ActionReducerMap<AppState> = {
   config: fromConfig.reducer,
+  epochs: fromEpochs.reducer,
   layout: fromLayout.reducer,
   routerReducer: fromRouter.routerReducer,
   sourceExplorer: fromSourceExplorer.reducer,

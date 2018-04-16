@@ -22,6 +22,14 @@ export enum TimelineActionTypes {
   AddBand                      = '[timeline] add_band',
   AddPointsToSubBand           = '[timeline] add_points_to_sub_band',
   AddSubBand                   = '[timeline] add_sub_band',
+  ChangeCurrentTimeCursor      = '[timeline] change_current_time_cursor',
+  ChangeDateFormat             = '[timeline] change_date_format',
+  ChangeTooltip                = '[timeline] change_tooltip',
+  ChangeLabelFontSize          = '[timeline] change_label_fonr_size',
+  ChangeLabelFontStyle         = '[timeline] change_label_font_style',
+  ChangeLabelWidth             = '[timeline] change_label_width',
+  ChangeDefaultFillColor       = '[timeline] change_default_fill_color',
+  ChangeDefaultResourceColor   = '[timeline] change_default_resource_color',
   RemoveBandsOrPointsForSource = '[timeline] remove_bands_or_points_for_source',
   RemoveSubBand                = '[timeline] remove_sub_band',
   SelectBand                   = '[timeline] select_band',
@@ -61,6 +69,54 @@ export class AddSubBand implements Action {
     public bandId: string,
     public subBand: RavenSubBand,
   ) {}
+}
+
+export class ChangeCurrentTimeCursor implements Action {
+  readonly type = TimelineActionTypes.ChangeCurrentTimeCursor;
+
+  constructor(public currentTimeCursor: boolean) {}
+}
+
+export class ChangeDateFormat implements Action {
+  readonly type = TimelineActionTypes.ChangeDateFormat;
+
+  constructor(public dateFormat: string) {}
+}
+
+export class ChangeDefaultFillColor implements Action {
+  readonly type = TimelineActionTypes.ChangeDefaultFillColor;
+
+  constructor(public defaultFillColor: string) {}
+}
+
+export class ChangeDefaultResourceColor implements Action {
+  readonly type = TimelineActionTypes.ChangeDefaultResourceColor;
+
+  constructor(public defaultResourceColor: string) {}
+}
+
+export class ChangeLabelFontSize implements Action {
+  readonly type = TimelineActionTypes.ChangeLabelFontSize;
+
+  constructor(public labelFontSize: number) {}
+}
+
+export class ChangeLabelFontStyle implements Action {
+  readonly type = TimelineActionTypes.ChangeLabelFontStyle;
+
+  constructor(public labelFontStyle: string) {}
+}
+
+export class ChangeLabelWidth implements Action {
+  readonly type = TimelineActionTypes.ChangeLabelWidth;
+
+  constructor(public labelWidth: number) {}
+}
+
+export class ChangeTooltip implements Action {
+  readonly type = TimelineActionTypes.ChangeTooltip;
+
+  constructor(public tooltip: boolean) {}
 }
 
 export class RemoveBandsOrPointsForSource implements Action {
@@ -111,11 +167,21 @@ export class UpdateTimeline implements Action {
   constructor(public update: StringTMap<BaseType>) {}
 }
 
+
+
 // Union type of all actions.
 export type TimelineAction =
   AddBand |
   AddPointsToSubBand |
   AddSubBand |
+  ChangeCurrentTimeCursor |
+  ChangeDateFormat |
+  ChangeTooltip |
+  ChangeLabelFontSize |
+  ChangeLabelFontStyle |
+  ChangeLabelWidth |
+  ChangeDefaultFillColor |
+  ChangeDefaultResourceColor |
   RemoveBandsOrPointsForSource |
   RemoveSubBand |
   SelectBand |

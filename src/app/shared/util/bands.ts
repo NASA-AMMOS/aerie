@@ -43,7 +43,7 @@ import {
  * Note that we do not worry about how these bands are displayed here.
  * We are just generating the band types for use elsewhere.
  */
-export function toRavenBandData(sourceId: string, graphData: MpsServerGraphData): RavenSubBand[] {
+export function toRavenBandData(sourceId: string, graphData: MpsServerGraphData, resourceColor: string, fillColor: string): RavenSubBand[] {
   const metadata = graphData['Timeline Metadata'];
   const timelineData = graphData['Timeline Data'];
 
@@ -54,7 +54,7 @@ export function toRavenBandData(sourceId: string, graphData: MpsServerGraphData)
     return [stateBand];
   } else if (metadata.hasTimelineType === 'measurement') {
     // Resource.
-    const resourceBand = toResourceBand(sourceId, metadata as MpsServerResourceMetadata, timelineData as MpsServerResourcePoint[]);
+    const resourceBand = toResourceBand(sourceId, metadata as MpsServerResourceMetadata, timelineData as MpsServerResourcePoint[], resourceColor, fillColor);
     return [resourceBand];
   } else if (metadata.hasTimelineType === 'activity') {
     // Activity.
@@ -164,15 +164,14 @@ export function toDividerBand(): RavenDividerBand {
 /**
  * Returns a resource band given metadata and timelineData.
  */
-export function toResourceBand(sourceId: string, metadata: MpsServerResourceMetadata, timelineData: MpsServerResourcePoint[]): RavenResourceBand {
+export function toResourceBand(sourceId: string, metadata: MpsServerResourceMetadata, timelineData: MpsServerResourcePoint[], resourceColor: string, fillColor: string): RavenResourceBand {
   const { maxTimeRange, points } = getResourcePoints(sourceId, timelineData);
-
   const resourceBand: RavenResourceBand = {
     addTo: false,
     autoTickValues: true,
-    color: [0, 0, 0],
+    color: hexToColorArray (resourceColor),
     fill: false,
-    fillColor: [0, 0, 0],
+    fillColor: hexToColorArray (fillColor),
     height: 100,
     heightPadding: 10,
     id: uniqueId(),
@@ -449,4 +448,16 @@ export function isOverlay(bands: RavenCompositeBand[], bandId: string): boolean 
   }
 
   return false;
+}
+
+export function hexToColorArray(rgb: string) {
+  const color = [];
+  const pattern = new RegExp ('#(.{2})(.{2})(.{2})');
+  const  match = rgb.match (pattern);
+  if (match) {
+    color[0] = parseInt(match [1], 16);
+    color[1] = parseInt(match [2], 16);
+    color[2] = parseInt(match [3], 16);
+  }
+  return color;
 }
