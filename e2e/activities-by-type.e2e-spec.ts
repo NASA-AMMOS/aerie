@@ -46,8 +46,8 @@ describe('raven2 - activities by type', () => {
 
   it('band source ids and names should point to source0', async () => {
     for (let i = 0, l = source0.legendCount; i < l; ++i) {
-      expect(bands[i].subBands[0].sourceIds).toBeDefined();
-      expect(bands[i].subBands[0].sourceIds[source0.id]).toEqual(source0.id);
+      expect(bands[i].subBands[0].sourceIds[0]).toBeDefined();
+      expect(bands[i].subBands[0].sourceIds[0]).toEqual(source0.id);
     }
   });
 
@@ -56,8 +56,8 @@ describe('raven2 - activities by type', () => {
 
     for (let i = 0, l = source0.legendCount; i < l; ++i) {
       const subBandId = bands[i].subBands[0].id;
-      expect(sourceSubBandIds[subBandId]).toBeDefined();
-      expect(sourceSubBandIds[subBandId]).toEqual(subBandId);
+      expect(sourceSubBandIds[i]).toBeDefined();
+      expect(sourceSubBandIds[i]).toEqual(subBandId);
     }
   });
 
@@ -69,9 +69,10 @@ describe('raven2 - activities by type', () => {
 
   it('bands source ids and names should point to source0 and source1 correctly', async () => {
     for (let i = 0, l = source0.legendCount; i < l; ++i) {
-      expect(bands[i].subBands[0].sourceIds).toBeDefined();
-      expect(bands[i].subBands[0].sourceIds[source0.id]).toEqual(source0.id);
-      expect(bands[i].subBands[0].sourceIds[source1.id]).toEqual(source1.id);
+      expect(bands[i].subBands[0].sourceIds[0]).toBeDefined();
+      expect(bands[i].subBands[0].sourceIds[1]).toBeDefined();
+      expect(bands[i].subBands[0].sourceIds[0]).toEqual(source0.id);
+      expect(bands[i].subBands[0].sourceIds[1]).toEqual(source1.id);
     }
   });
 
@@ -80,8 +81,8 @@ describe('raven2 - activities by type', () => {
 
     for (let i = 0, l = source1.legendCount; i < l; ++i) {
       const subBandId = bands[i].subBands[0].id;
-      expect(sourceSubBandIds[subBandId]).toBeDefined();
-      expect(sourceSubBandIds[subBandId]).toEqual(subBandId);
+      expect(sourceSubBandIds[i]).toBeDefined();
+      expect(sourceSubBandIds[i]).toEqual(subBandId);
     }
   });
 
@@ -97,14 +98,14 @@ describe('raven2 - activities by type', () => {
     }
 
     for (let i = 0, l = source1.legendCount; i < l; ++i) {
-      expect(bands[i].subBands[0].sourceIds).toBeDefined();
-      expect(bands[i].subBands[0].sourceIds[source1.id]).toEqual(source1.id);
+      expect(bands[i].subBands[0].sourceIds[0]).toBeDefined();
+      expect(bands[i].subBands[0].sourceIds[0]).toEqual(source1.id);
     }
   });
 
   it('source0 should not point to any subBandIds', async () => {
     const sourceSubBandIds = source0.tree[source0.id].subBandIds;
-    expect(sourceSubBandIds).toEqual({});
+    expect(sourceSubBandIds).toEqual([]);
   });
 
   it('source1 should still point to the correct subBandIds', async () => {
@@ -112,8 +113,8 @@ describe('raven2 - activities by type', () => {
 
     for (let i = 0, l = source1.legendCount; i < l; ++i) {
       const subBandId = bands[i].subBands[0].id;
-      expect(sourceSubBandIds[subBandId]).toBeDefined();
-      expect(sourceSubBandIds[subBandId]).toEqual(subBandId);
+      expect(sourceSubBandIds[i]).toBeDefined();
+      expect(sourceSubBandIds[i]).toEqual(subBandId);
     }
   });
 
@@ -124,6 +125,6 @@ describe('raven2 - activities by type', () => {
 
   it('source1 should not point to any subBandIds', async () => {
     const sourceSubBandIds = source1.tree[source1.id].subBandIds;
-    expect(sourceSubBandIds).toEqual({});
+    expect(sourceSubBandIds).toEqual([]);
   });
 });

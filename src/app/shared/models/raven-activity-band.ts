@@ -10,7 +10,6 @@
 import {
   RavenActivityPoint,
   RavenTimeRange,
-  StringTMap,
 } from './index';
 
 export interface RavenActivityBand {
@@ -34,7 +33,7 @@ export interface RavenActivityBand {
   points: RavenActivityPoint[];
   showLabel: boolean;
   showTooltip: boolean;
-  sourceIds: StringTMap<string>;
+  sourceIds: string[];
   sourceType: string;
   trimLabel: boolean;
   type: string;

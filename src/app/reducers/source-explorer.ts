@@ -10,6 +10,7 @@
 import {
   keyBy,
   omit,
+  without,
 } from 'lodash';
 
 import {
@@ -33,6 +34,7 @@ import {
 
 import {
   BaseType,
+  RavenPin,
   RavenSource,
   StringTMap,
 } from './../shared/models';
@@ -45,6 +47,7 @@ import {
 export interface SourceExplorerState {
   fetchPending: boolean;
   initialSourcesLoaded: boolean;
+  pins: RavenPin[];
   selectedSourceId: string;
   treeBySourceId: StringTMap<RavenSource>;
 }
@@ -53,6 +56,7 @@ export interface SourceExplorerState {
 export const initialState: SourceExplorerState = {
   fetchPending: false,
   initialSourcesLoaded: false,
+  pins: [],
   selectedSourceId: '',
   treeBySourceId: {
     // Note: The root source in the source explorer tree is never displayed.
@@ -79,7 +83,7 @@ export const initialState: SourceExplorerState = {
       pinned: false,
       selectable: false,
       selected: false,
-      subBandIds: {},
+      subBandIds: [],
       url: '',
     },
   },
@@ -91,6 +95,8 @@ export const initialState: SourceExplorerState = {
  */
 export function reducer(state: SourceExplorerState = initialState, action: SourceExplorerAction): SourceExplorerState {
   switch (action.type) {
+    case SourceExplorerActionTypes.ApplyState:
+      return { ...state, fetchPending: true };
     case SourceExplorerActionTypes.CloseEvent:
       return closeEvent(state, action);
     case SourceExplorerActionTypes.CollapseEvent:
@@ -98,7 +104,6 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
     case SourceExplorerActionTypes.ExpandEvent:
       return expandEvent(state, action);
     case SourceExplorerActionTypes.FetchInitialSources:
-    case SourceExplorerActionTypes.LoadFromSource:
       return { ...state, fetchPending: true };
     case SourceExplorerActionTypes.NewSources:
       return newSources(state, action);
@@ -107,7 +112,7 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
     case SourceExplorerActionTypes.RemoveSource:
       return removeSource(state, action);
     case SourceExplorerActionTypes.RemoveSourceEvent:
-    case SourceExplorerActionTypes.SaveToSource:
+    case SourceExplorerActionTypes.SaveState:
       return { ...state, fetchPending: true };
     case SourceExplorerActionTypes.SelectSource:
       return selectSource(state, action);
@@ -132,7 +137,7 @@ export function closeEvent(state: SourceExplorerState, action: CloseEvent): Sour
     ...state,
     ...updateTreeSource(state, action.sourceId, {
       opened: false,
-      subBandIds: {},
+      subBandIds: [],
     }),
   };
 }
@@ -259,16 +264,15 @@ export function selectSource(state: SourceExplorerState, action: SelectSource): 
  * Reduction Helper. Called when reducing the 'SubBandIdAdd' action.
  */
 export function subBandIdAdd(state: SourceExplorerState, action: SubBandIdAdd): SourceExplorerState {
+  const subBandIds = without(state.treeBySourceId[action.sourceId].subBandIds, action.subBandId).concat(action.subBandId);
+
   return {
     ...state,
     treeBySourceId: {
       ...state.treeBySourceId,
       [action.sourceId]: {
         ...state.treeBySourceId[action.sourceId],
-        subBandIds: {
-          ...state.treeBySourceId[action.sourceId].subBandIds,
-          [action.subBandId]: action.subBandId,
-        },
+        subBandIds,
       },
     },
   };
@@ -282,9 +286,9 @@ export function subBandIdRemove(state: SourceExplorerState, action: SubBandIdRem
     ...state,
     treeBySourceId: {
       ...state.treeBySourceId,
-      ...Object.keys(action.sourceIds).reduce((sourceIds, sourceId) => {
-        const subBandIds = omit(state.treeBySourceId[sourceId].subBandIds, action.subBandId);
-        const opened = Object.keys(subBandIds).length > 0 ? true : false;
+      ...action.sourceIds.reduce((sourceIds, sourceId) => {
+        const subBandIds = state.treeBySourceId[sourceId].subBandIds.filter(subBandId => subBandId !== action.subBandId);
+        const opened = subBandIds.length > 0 ? true : false;
 
         sourceIds[sourceId] = {
           ...state.treeBySourceId[sourceId],

@@ -39,7 +39,7 @@ export const activityBand: RavenActivityBand = {
   points: [],
   showLabel: true,
   showTooltip: true,
-  sourceIds: {},
+  sourceIds: [],
   sourceType: '',
   trimLabel: true,
   type: 'activity',
@@ -78,7 +78,7 @@ export const resourceBand: RavenResourceBand = {
   rescale: true,
   showIcon: false,
   showTooltip: true,
-  sourceIds: {},
+  sourceIds: [],
   type: 'resource',
 };
 
@@ -98,7 +98,7 @@ export const stateBand: RavenStateBand = {
   parentUniqueId: null,
   points: [],
   showTooltip: true,
-  sourceIds: {},
+  sourceIds: [],
   type: 'state',
 };
 
@@ -119,9 +119,7 @@ export const bands: RavenCompositeBand[] = [
         legend: 'a',
         name: 'test-activity-sub-band-0',
         parentUniqueId: '100',
-        sourceIds: {
-          '/a/b/c/d/e/w/': '/a/b/c/d/e/w/',
-        },
+        sourceIds: ['/a/b/c/d/e/w'],
         sourceType: 'byType',
       },
     ],
@@ -138,9 +136,7 @@ export const bands: RavenCompositeBand[] = [
         id: '1',
         name: 'test-state-sub-band-0',
         parentUniqueId: '101',
-        sourceIds: {
-          '/a/b/c/d/e/x/y/': '/a/b/c/d/e/x/y/',
-        },
+        sourceIds: ['/a/b/c/d/e/x/y'],
       },
     ],
   },
@@ -156,9 +152,7 @@ export const bands: RavenCompositeBand[] = [
         id: '2',
         name: 'test-resource-sub-band-0',
         parentUniqueId: '102',
-        sourceIds: {
-          '/a/b/c/d/e/x/z/': '/a/b/c/d/e/x/z/',
-        },
+        sourceIds: ['/a/b/c/d/e/x/z'],
       },
     ],
   },
@@ -174,9 +168,7 @@ export const bands: RavenCompositeBand[] = [
         id: '3',
         name: 'test-activity-sub-band-3',
         parentUniqueId: '103',
-        sourceIds: {
-          '/a/b/c/d/e/u/': '/a/b/c/d/e/u/',
-        },
+        sourceIds: ['/a/b/c/d/e/u'],
         sourceType: 'byLegend',
       },
     ],
@@ -196,13 +188,11 @@ export const bands: RavenCompositeBand[] = [
         parentUniqueId: '104',
         points: [{
           ...activityPoint,
-          sourceId: '/a/b/c/d/e/v/',
+          sourceId: '/a/b/c/d/e/v',
           subBandId: '4',
           uniqueId: '400',
         }],
-        sourceIds: {
-          '/a/b/c/d/e/v/': '/a/b/c/d/e/v/',
-        },
+        sourceIds: ['/a/b/c/d/e/v'],
         sourceType: 'byType',
       },
     ],

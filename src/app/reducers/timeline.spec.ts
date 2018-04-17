@@ -70,9 +70,7 @@ describe('timeline reducer', () => {
         subBands: [{
           ...stateBand,
           parentUniqueId: compositeBand.id,
-          sourceIds: {
-            [source.id]: source.id,
-          },
+          sourceIds: [source.id],
         }],
       }],
       maxTimeRange: { end: 100, start: 0 },
@@ -98,7 +96,7 @@ describe('timeline reducer', () => {
         subBands: [{
           ...stateBand,
           parentUniqueId: compositeBand.id,
-          sourceIds: {},
+          sourceIds: [],
         }],
       }],
       maxTimeRange: { end: 100, start: 0 },
@@ -148,16 +146,12 @@ describe('timeline reducer', () => {
           {
             ...stateBand,
             parentUniqueId: compositeBand.id,
-            sourceIds: {
-              [source.id]: source.id,
-            },
+            sourceIds: [source.id],
           },
           {
             ...activityBand,
             parentUniqueId: compositeBand.id,
-            sourceIds: {
-              [source.id]: source.id,
-            },
+            sourceIds: [source.id],
           },
         ],
       }],
@@ -188,10 +182,7 @@ describe('timeline reducer', () => {
             sourceId: '/child',
           },
         ],
-        sourceIds: {
-          '/': '/',
-          '/child': '/child',
-        },
+        sourceIds: ['/', '/child'],
       }],
     };
 
@@ -216,17 +207,13 @@ describe('timeline reducer', () => {
           ...stateBand,
           id: '1',
           parentUniqueId: '0',
-          sourceIds: {
-            '/': '/',
-          },
+          sourceIds: ['/'],
         },
         {
           ...activityBand,
           id: '2',
           parentUniqueId: '0',
-          sourceIds: {
-            '/': '/',
-          },
+          sourceIds: ['/'],
         },
       ],
     };
@@ -255,9 +242,7 @@ describe('timeline reducer', () => {
         ...stateBand,
         id: '1',
         parentUniqueId: '0',
-        sourceIds: {
-          '/': '/',
-        },
+        sourceIds: ['/'],
       }],
     };
 
@@ -291,9 +276,7 @@ describe('timeline reducer', () => {
         points: [{
           ...point,
         }],
-        sourceIds: {
-          '/': '/',
-        },
+        sourceIds: ['/'],
       }],
     };
 
@@ -317,9 +300,7 @@ describe('timeline reducer', () => {
         ...stateBand,
         id: '400',
         parentUniqueId: '0',
-        sourceIds: {
-          '/': '/',
-        },
+        sourceIds: ['/'],
       }],
     };
 
@@ -330,9 +311,7 @@ describe('timeline reducer', () => {
         ...stateBand,
         id: '500',
         parentUniqueId: '1',
-        sourceIds: {
-          '/': '/',
-        },
+        sourceIds: ['/'],
       }],
     };
 
@@ -375,9 +354,7 @@ describe('timeline reducer', () => {
         ...stateBand,
         id: '1',
         parentUniqueId: '0',
-        sourceIds: {
-          '/': '/',
-        },
+        sourceIds: ['/'],
       }],
     };
 
@@ -400,9 +377,7 @@ describe('timeline reducer', () => {
         height: 50,
         id: '1',
         parentUniqueId: '0',
-        sourceIds: {
-          '/': '/',
-        },
+        sourceIds: ['/'],
       }],
     };
 

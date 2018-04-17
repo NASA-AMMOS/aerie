@@ -10,7 +10,6 @@
 import {
   RavenResourcePoint,
   RavenTimeRange,
-  StringTMap,
 } from './index';
 
 export interface RavenResourceBand {
@@ -33,6 +32,6 @@ export interface RavenResourceBand {
   rescale: boolean;
   showIcon: boolean;
   showTooltip: boolean;
-  sourceIds: StringTMap<string>;
+  sourceIds: string[];
   type: string;
 }

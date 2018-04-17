@@ -23,13 +23,13 @@ describe('source.ts', () => {
   describe('getAllChildIds', () => {
     it(`should return a list of all child ids (recursively) for a given source id`, () => {
       expect(getAllChildIds(treeBySourceId, '/')).toEqual([
-        '/child/0/',
-        '/child/1/',
-        '/child/child/0/',
+        '/child/0',
+        '/child/1',
+        '/child/child/0',
       ]);
 
-      expect(getAllChildIds(treeBySourceId, '/child/1/')).toEqual([
-        '/child/child/0/',
+      expect(getAllChildIds(treeBySourceId, '/child/1')).toEqual([
+        '/child/child/0',
       ]);
     });
 
@@ -40,13 +40,13 @@ describe('source.ts', () => {
 
   describe('getParentSourceIds', () => {
     it(`should split a source correctly into it's parent source ids, in the correct order`, () => {
-      expect(getParentSourceIds('/hello/world/goodbye/what/is/going/on/')).toEqual([
-        '/hello/',
-        '/hello/world/',
-        '/hello/world/goodbye/',
-        '/hello/world/goodbye/what/',
-        '/hello/world/goodbye/what/is/',
-        '/hello/world/goodbye/what/is/going/',
+      expect(getParentSourceIds('/hello/world/goodbye/what/is/going/on')).toEqual([
+        '/hello',
+        '/hello/world',
+        '/hello/world/goodbye',
+        '/hello/world/goodbye/what',
+        '/hello/world/goodbye/what/is',
+        '/hello/world/goodbye/what/is/going',
       ]);
     });
   });
@@ -55,19 +55,19 @@ describe('source.ts', () => {
     it(`should split sources from a list of bands into parent source ids and leaf source ids`, () => {
       expect(getSourceIds(bands)).toEqual({
         parentSourceIds: [
-          '/a/',
-          '/a/b/',
-          '/a/b/c/',
-          '/a/b/c/d/',
-          '/a/b/c/d/e/',
-          '/a/b/c/d/e/x/',
+          '/a',
+          '/a/b',
+          '/a/b/c',
+          '/a/b/c/d',
+          '/a/b/c/d/e',
+          '/a/b/c/d/e/x',
         ],
         sourceIds: [
-          '/a/b/c/d/e/w/',
-          '/a/b/c/d/e/x/y/',
-          '/a/b/c/d/e/x/z/',
-          '/a/b/c/d/e/u/',
-          '/a/b/c/d/e/v/',
+          '/a/b/c/d/e/w',
+          '/a/b/c/d/e/x/y',
+          '/a/b/c/d/e/x/z',
+          '/a/b/c/d/e/u',
+          '/a/b/c/d/e/v',
         ],
       });
     });

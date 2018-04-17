@@ -10,7 +10,6 @@
 import {
   MpsServerSourceGraphable,
   RavenSourceAction,
-  StringTMap,
 } from './index';
 
 export interface RavenSource {
@@ -36,6 +35,6 @@ export interface RavenSource {
   pinned: boolean;
   selectable: boolean;
   selected: boolean;
-  subBandIds: StringTMap<string>;
+  subBandIds: string[];
   url: string;
 }

@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { omit } from 'lodash';
+import { without } from 'lodash';
 
 import {
   createFeatureSelector,
@@ -110,13 +110,11 @@ export function addBand(state: TimelineState, action: AddBand): TimelineState {
     sortOrder: state.bands.filter(b => b.containerId === '0').length,
     subBands: action.band.subBands.map(subBand => {
       if (action.sourceId) {
+        const sourceIds = without(subBand.sourceIds, action.sourceId).concat(action.sourceId);
         return {
           ...subBand,
           parentUniqueId: action.band.id,
-          sourceIds: {
-            ...subBand.sourceIds,
-            [action.sourceId]: action.sourceId,
-          },
+          sourceIds,
         };
       } else {
         return {
@@ -148,15 +146,13 @@ export function addPointsToSubBand(state: TimelineState, action: AddPointsToSubB
           if (action.subBandId === subBand.id) {
             const points = (subBand as any).points.concat(action.points);
             const maxTimeRange = getMaxTimeRange(points);
+            const sourceIds = without(subBand.sourceIds, action.sourceId).concat(action.sourceId);
 
             return {
               ...subBand,
               maxTimeRange,
               points,
-              sourceIds: {
-                ...subBand.sourceIds,
-                [action.sourceId]: action.sourceId,
-              },
+              sourceIds,
             };
           }
 
@@ -186,10 +182,7 @@ export function addSubBand(state: TimelineState, action: AddSubBand): TimelineSt
         subBands: band.subBands.concat({
           ...action.subBand,
           parentUniqueId: band.id,
-          sourceIds: {
-            ...action.subBand.sourceIds,
-            [action.sourceId]: action.sourceId,
-          },
+          sourceIds: [action.sourceId],
         }),
       };
     }
@@ -214,8 +207,8 @@ export function removeBandsOrPointsForSource(state: TimelineState, action: Remov
     .map(band => ({
       ...band,
       subBands: band.subBands.reduce((subBands: RavenSubBand[], subBand: RavenSubBand) => {
-        const subBandHasSource = subBand.sourceIds[action.sourceId];
-        const sourceIdsCount = Object.keys(subBand.sourceIds).length;
+        const subBandHasSource = subBand.sourceIds.includes(action.sourceId);
+        const sourceIdsCount = subBand.sourceIds.length;
 
         if (!subBandHasSource) {
           subBands.push(subBand);
@@ -223,7 +216,7 @@ export function removeBandsOrPointsForSource(state: TimelineState, action: Remov
           subBands.push({
             ...subBand,
             points: (subBand as any).points.filter((point: any) => point.sourceId !== action.sourceId),
-            sourceIds: omit(subBand.sourceIds, action.sourceId),
+            sourceIds: subBand.sourceIds.filter(sourceId => sourceId !== action.sourceId),
           });
         }
 

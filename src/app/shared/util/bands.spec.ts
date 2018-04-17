@@ -112,11 +112,11 @@ describe('bands.ts', () => {
 
   describe('hasSourceId', () => {
     it(`should return null if a given source id does not exist`, () => {
-      expect(hasSourceId(bands, '/wtf/')).toBe(null);
+      expect(hasSourceId(bands, '/wtf')).toBe(null);
     });
 
     it(`should return a sub-band locator for the first sub-band that has the given source id`, () => {
-      expect(hasSourceId(bands, '/a/b/c/d/e/w/')).toEqual({
+      expect(hasSourceId(bands, '/a/b/c/d/e/w')).toEqual({
         bandId: '100',
         subBandId: '0',
       });

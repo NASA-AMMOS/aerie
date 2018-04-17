@@ -7,27 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  RavenStatePoint,
-  RavenTimeRange,
-} from './index';
-
-export interface RavenStateBand {
-  alignLabel: number;
-  addTo: boolean;
-  baselineLabel: number;
-  borderWidth: number;
-  height: number;
-  heightPadding: number;
-  id: string;
-  label: string;
-  labelColor: number[];
-  maxTimeRange: RavenTimeRange;
-  minorLabels: string[];
+export interface RavenPin {
   name: string;
-  parentUniqueId: string | null;
-  points: RavenStatePoint[];
-  showTooltip: boolean;
-  sourceIds: string[];
-  type: string;
+  sourceId: string;
 }
