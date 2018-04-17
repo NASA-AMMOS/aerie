@@ -110,6 +110,7 @@
     size="25">
     <mat-tab-group
       #rightDrawerTabGroup
+      [@.disabled]="true"
       [selectedIndex]="rightDrawerSelectedTabIndex"
       (selectedTabChange)="onSelectedTabChange($event)">
       <!-- Selected Point. -->

@@ -58,8 +58,12 @@ export class SourceExplorerComponent implements OnDestroy {
       takeUntil(this.ngUnsubscribe),
     ).subscribe(tree => {
       this.tree = tree;
+
+      // TODO. Find out how to remove this checking.
       this.changeDetector.markForCheck();
-      setTimeout(() => this.changeDetector.detectChanges()); // Bad Firefox.
+      setTimeout(() =>
+        this.changeDetector.detectChanges(),
+      );
     });
   }
 

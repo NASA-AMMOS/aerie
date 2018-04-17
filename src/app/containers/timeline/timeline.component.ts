@@ -86,8 +86,12 @@ export class TimelineComponent implements OnDestroy {
       takeUntil(this.ngUnsubscribe),
     ).subscribe(itarMessage => {
       this.itarMessage = itarMessage;
+
+      // TODO. Find out how to remove this checking.
       this.changeDetector.markForCheck();
-      setTimeout(() => this.changeDetector.detectChanges()); // Bad Firefox.
+      setTimeout(() =>
+        this.changeDetector.detectChanges(),
+      );
     });
 
     // Layout state.
@@ -102,9 +106,13 @@ export class TimelineComponent implements OnDestroy {
       this.showRightDrawer = state.showRightDrawer;
       this.showSouthBandsDrawer = state.showSouthBandsDrawer;
       this.timelinePanelSize = state.timelinePanelSize;
+
+      // TODO. Find out how to remove this checking.
       this.changeDetector.markForCheck();
-      setTimeout(() => this.changeDetector.detectChanges()); // Bad Firefox.
-      dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize anytime our layout changes.
+      setTimeout(() => {
+        this.changeDetector.detectChanges();
+        dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize anytime our layout changes.
+      });
     });
 
     // Timeline state.
@@ -118,8 +126,12 @@ export class TimelineComponent implements OnDestroy {
       this.selectedPoint = state.selectedPoint;
       this.selectedSubBandId = state.selectedSubBandId;
       this.viewTimeRange = state.viewTimeRange;
+
+      // TODO. Find out how to remove this checking.
       this.changeDetector.markForCheck();
-      setTimeout(() => this.changeDetector.detectChanges()); // Bad Firefox.
+      setTimeout(() =>
+        this.changeDetector.detectChanges(),
+      );
     });
   }
 

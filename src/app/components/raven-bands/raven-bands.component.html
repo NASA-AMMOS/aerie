@@ -10,6 +10,7 @@
       [id]="band.id"
       [labelWidth]="labelWidth"
       [maxTimeRange]="maxTimeRange"
+      [ngClass]="{ 'selected': band.id === selectedBandId }"
       [selectedPoint]="selectedPoint"
       [showTooltip]="showTooltip"
       [subBands]="band.subBands"
