@@ -1,14 +1,20 @@
 <div class="epochs mat-elevation-z8">
   <mat-form-field class="epoch-filter" >
-    <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Epoch Filter">
+    <input matInput (keyup)="applyFilter($event.target.value)"
+      placeholder="Epoch Filter">
   </mat-form-field>
   <mat-form-field>
-    <input matInput (keyup)="changeDayCode.emit($event.target.value)" [value]="dayCode" placeholder="Day Code">
+    <input matInput (keyup)="changeDayCode.emit($event.target.value)" [
+      value]="dayCode"
+      placeholder="Day Code">
   </mat-form-field>
   <mat-form-field>
-    <input matInput (keyup)="changeEarthSecToEpochSec.emit($event.target.value)" [value]="earthSecToEpochSec" placeholder="Earth Sec to Epoch Sec">
+    <input matInput (keyup)="changeEarthSecToEpochSec.emit($event.target.value)"
+      [value]="earthSecToEpochSec"
+      placeholder="Earth Sec to Epoch Sec">
   </mat-form-field>
-  <mat-table #table [dataSource]="epochs" matSort (matSortChange)="sortData($event)">
+  <mat-table #table [dataSource]="epochs"
+    matSort (matSortChange)="sortData($event)">
     <!-- radio button Column -->
     <ng-container matColumnDef="select">
       <mat-header-cell *matHeaderCellDef> Select</mat-header-cell>

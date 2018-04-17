@@ -64,6 +64,7 @@ import {
   MpsServerGraphData,
   MpsServerSource,
   RavenCompositeBand,
+  RavenDefaultSettings,
   RavenSource,
   RavenSubBand,
   RavenTimeRange,
@@ -171,7 +172,7 @@ export class SourceExplorerEffects {
     map(([action, state]) => ({ action, state })),
     concatMap(({ state, action }) =>
       concat(
-        this.open(state.sourceExplorer.treeBySourceId, action.sourceId, state.timeline.bands, state.timeline.selectedBandId, state.timeline.selectedSubBandId, state.timeline.defaultResourceColor, state.timeline.defaultFillColor),
+        this.open(state.sourceExplorer.treeBySourceId, action.sourceId, state.timeline.bands, state.timeline.selectedBandId, state.timeline.selectedSubBandId, state.timeline.defaultSettings),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
       ).pipe(
         catchError(this.errorOpenEvent(action.sourceId)),
@@ -290,7 +291,7 @@ export class SourceExplorerEffects {
           take(1),
           concatMap(state =>
             concat(
-              this.open(state.sourceExplorer.treeBySourceId, sourceId, bands, null, null, state.timeline.defaultResourceColor, state.timeline.defaultFillColor),
+              this.open(state.sourceExplorer.treeBySourceId, sourceId, bands, null, null, state.timeline.defaultSettings),
               of(new sourceExplorerActions.UpdateTreeSource(sourceId, { opened: true })),
             ),
           ),
@@ -304,8 +305,8 @@ export class SourceExplorerEffects {
    * Helper. Returns a stream of actions that need to occur when opening a source explorer source.
    * The order of the cases in this function are very important. Do not change the order.
    */
-  open(treeBySourceId: StringTMap<RavenSource>, sourceId: string, currentBands: RavenCompositeBand[], bandId: string | null, subBandId: string | null, resourceColor: string, fillColor: string) {
-    return this.fetchSubBands(treeBySourceId[sourceId].url, sourceId, resourceColor, fillColor).pipe(
+  open(treeBySourceId: StringTMap<RavenSource>, sourceId: string, currentBands: RavenCompositeBand[], bandId: string | null, subBandId: string | null, defaultSettings: RavenDefaultSettings) {
+    return this.fetchSubBands(treeBySourceId[sourceId].url, sourceId, defaultSettings).pipe(
       concatMap((newSubBands: RavenSubBand[]) => {
         const actions: Action[] = [];
 
@@ -390,10 +391,9 @@ export class SourceExplorerEffects {
   /**
    * Fetch helper. Fetches graph data from MPS Server and maps it to Raven sub-band data.
    */
-  fetchSubBands(sourceUrl: string, sourceId: string, resourceColor: string, fillColor: string) {
-    console.log('resourceColor:' + resourceColor);
+  fetchSubBands(sourceUrl: string, sourceId: string, defaultSettings: RavenDefaultSettings) {
     return this.http.get<MpsServerGraphData>(sourceUrl).pipe(
-      map((graphData: MpsServerGraphData) => toRavenBandData(sourceId, graphData, resourceColor, fillColor)),
+      map((graphData: MpsServerGraphData) => toRavenBandData(sourceId, graphData, defaultSettings)),
     );
   }
 

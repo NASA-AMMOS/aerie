@@ -21,6 +21,7 @@ import {
   MpsServerStatePoint,
   RavenActivityBand,
   RavenCompositeBand,
+  RavenDefaultSettings,
   RavenDividerBand,
   RavenResourceBand,
   RavenStateBand,
@@ -43,7 +44,7 @@ import {
  * Note that we do not worry about how these bands are displayed here.
  * We are just generating the band types for use elsewhere.
  */
-export function toRavenBandData(sourceId: string, graphData: MpsServerGraphData, resourceColor: string, fillColor: string): RavenSubBand[] {
+export function toRavenBandData(sourceId: string, graphData: MpsServerGraphData, defaultSettings: RavenDefaultSettings): RavenSubBand[] {
   const metadata = graphData['Timeline Metadata'];
   const timelineData = graphData['Timeline Data'];
 
@@ -54,7 +55,7 @@ export function toRavenBandData(sourceId: string, graphData: MpsServerGraphData,
     return [stateBand];
   } else if (metadata.hasTimelineType === 'measurement') {
     // Resource.
-    const resourceBand = toResourceBand(sourceId, metadata as MpsServerResourceMetadata, timelineData as MpsServerResourcePoint[], resourceColor, fillColor);
+    const resourceBand = toResourceBand(sourceId, metadata as MpsServerResourceMetadata, timelineData as MpsServerResourcePoint[], defaultSettings);
     return [resourceBand];
   } else if (metadata.hasTimelineType === 'activity') {
     // Activity.
@@ -164,14 +165,14 @@ export function toDividerBand(): RavenDividerBand {
 /**
  * Returns a resource band given metadata and timelineData.
  */
-export function toResourceBand(sourceId: string, metadata: MpsServerResourceMetadata, timelineData: MpsServerResourcePoint[], resourceColor: string, fillColor: string): RavenResourceBand {
+export function toResourceBand(sourceId: string, metadata: MpsServerResourceMetadata, timelineData: MpsServerResourcePoint[], defaultSettings: RavenDefaultSettings): RavenResourceBand {
   const { maxTimeRange, points } = getResourcePoints(sourceId, timelineData);
   const resourceBand: RavenResourceBand = {
     addTo: false,
     autoTickValues: true,
-    color: hexToColorArray (resourceColor),
+    color: hexToColorArray (defaultSettings.resourceColor),
     fill: false,
-    fillColor: hexToColorArray (fillColor),
+    fillColor: hexToColorArray (defaultSettings.fillColor),
     height: 100,
     heightPadding: 10,
     id: uniqueId(),

@@ -42,6 +42,7 @@ import {
 
 import {
   RavenCompositeBand,
+  RavenDefaultSettings,
   RavenPoint,
   RavenSubBand,
   RavenTimeRange,
@@ -53,8 +54,7 @@ export interface TimelineState {
   colorPalette: string[];
   currentTimeCursor: boolean;
   dateFormat: string;
-  defaultFillColor: string;
-  defaultResourceColor: string;
+  defaultSettings: RavenDefaultSettings;
   labelFontSize: number;
   labelFontStyle: string;
   labelWidth: number;
@@ -79,8 +79,10 @@ export const initialState: TimelineState = {
   ],
   currentTimeCursor: false,
   dateFormat: 'Day-Month-Year',
-  defaultFillColor: '#000000',
-  defaultResourceColor: '#000000',
+  defaultSettings: {
+    fillColor: '#000000',
+    resourceColor: '#000000',
+  },
   labelFontSize: 9,
   labelFontStyle: 'Georgia',
   labelWidth: 100,
@@ -252,7 +254,7 @@ export function changeDefaultFillColor (state: TimelineState, action: ChangeDefa
   if (!colors.includes(action.defaultFillColor)) {
     colors.push(action.defaultFillColor);
   }
-  return { ...state, defaultFillColor: action.defaultFillColor, colorPalette: colors };
+  return { ...state, defaultSettings: { ...state.defaultSettings, fillColor: action.defaultFillColor }, colorPalette: colors };
 }
 
 /** Reduction Helper. Called when reducing the 'ChangeDefaultResourceColor' action.
@@ -263,7 +265,7 @@ export function changeDefaultResourceColor(state: TimelineState, action: ChangeD
       if (!colors.includes(action.defaultResourceColor)) {
         colors.push(action.defaultResourceColor);
       }
-      return { ...state, defaultResourceColor: action.defaultResourceColor, colorPalette: colors };
+      return { ...state, defaultSettings: { ...state.defaultSettings, resourceColor: action.defaultResourceColor }, colorPalette: colors };
 }
 
 /**

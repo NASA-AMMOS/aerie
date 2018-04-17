@@ -63,7 +63,7 @@
   <mat-sidenav position="end" [fixedInViewport]="true" [fixedTopGap]="40" #globalSettingsDrawer mode="over">
     <div *ngIf="drawer=='globals'">
     <raven-global-settings [currentTimeCursor]="currentTimeCursor" [tooltip]="tooltip" [labelFontSize]="labelFontSize" [labelFontStyle]="labelFontStyle"
-      [labelWidth]="labelWidth" [defaultFillColor]="defaultFillColor" [defaultResourceColor]="defaultResourceColor" [colorPalette]="colorPalette" [dateFormat]="dateFormat"
+      [labelWidth]="labelWidth" [defaultFillColor]="defaultSettings.fillColor" [defaultResourceColor]="defaultSettings.resourceColor" [colorPalette]="colorPalette" [dateFormat]="dateFormat"
       (changeDefaultFillColor)="onChangeDefaultFillColor($event)" (changeDefaultResourceColor)="onChangeDefaultResourceColor($event)" (changeLabelWidth)="onChangeLabelWidth($event)"
       (changeLabelFontSize)="onChangeLabelFontSize($event)" (changeLabelFontStyle)="onChangeLabelFontStyle($event)" (changeTooltip)="onChangeTooltip($event)"
       (changeCurrentTimeCursor)="onChangeCurrentTimeCursor($event)" (changeDateFormat)="onChangeDateFormat($event)"></raven-global-settings>

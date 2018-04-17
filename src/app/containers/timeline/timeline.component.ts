@@ -31,6 +31,7 @@ import * as timelineActions from './../../actions/timeline';
 import {
   RavenBandLeftClick,
   RavenCompositeBand,
+  RavenDefaultSettings,
   RavenPoint,
   RavenSettingsUpdate,
   RavenSortMessage,
@@ -65,14 +66,13 @@ export class TimelineComponent implements OnDestroy {
 
   // Timeline state.
   bands: RavenCompositeBand[];
+  defaultSettings: RavenDefaultSettings;
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
   selectedBandId: string;
   selectedPoint: RavenPoint | null;
   selectedSubBandId: string;
   viewTimeRange: RavenTimeRange;
-  defaultResourceColor: string;
-  defaultFillColor: string;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -117,8 +117,7 @@ export class TimelineComponent implements OnDestroy {
       this.selectedPoint = state.selectedPoint;
       this.selectedSubBandId = state.selectedSubBandId;
       this.viewTimeRange = state.viewTimeRange;
-      this.defaultFillColor = state.defaultFillColor;
-      this.defaultResourceColor = state.defaultResourceColor;
+      this.defaultSettings = state.defaultSettings;
       this.changeDetector.markForCheck();
       this.app.tick();
     });

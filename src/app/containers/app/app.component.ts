@@ -29,7 +29,10 @@ import * as epochsActions from './../../actions/epochs';
 import * as layoutActions from './../../actions/layout';
 import * as timelineActions from './../../actions/timeline';
 
-import { RavenEpoch } from './../../shared/models';
+import {
+  RavenDefaultSettings,
+  RavenEpoch,
+ } from './../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,7 +45,7 @@ export class AppComponent implements OnDestroy {
 
   // global settinga
   dateFormat: string;
-  defaultFillColor: string;
+  defaultSettings: RavenDefaultSettings;
   defaultResourceColor: string;
   colorPalette: string[];
   labelWidth: number;
@@ -89,8 +92,7 @@ export class AppComponent implements OnDestroy {
     this.store.select(fromTimeline.getTimelineState).pipe(
       takeUntil(this.ngUnsubscribe),
     ).subscribe(state => {
-      this.defaultFillColor = state.defaultFillColor;
-      this.defaultResourceColor = state.defaultResourceColor;
+      this.defaultSettings = state.defaultSettings;
       this.colorPalette = state.colorPalette;
       this.dateFormat = state.dateFormat;
       this.labelWidth = state.labelWidth;
