@@ -34,6 +34,7 @@ export enum SourceExplorerActionTypes {
   SelectSource         = '[sourceExplorer] select_source',
   SubBandIdAdd         = '[sourceExplorer] sub_band_id_add',
   SubBandIdRemove      = '[sourceExplorer] sub_band_id_remove',
+  UpdateBranch         = '[sourceExplorer] update_branch',
   UpdateSourceExplorer = '[sourceExplorer] update_source_explorer',
   UpdateTreeSource     = '[sourceExplorer] update_tree_source',
 }
@@ -129,6 +130,11 @@ export class SubBandIdRemove implements Action {
   constructor(public sourceIds: StringTMap<string>, public subBandId: string) {}
 }
 
+export class UpdateBranch implements Action {
+  readonly type = SourceExplorerActionTypes.UpdateBranch;
+
+  constructor(public sourceUrl: string, public sourceId: string) {}
+}
 export class UpdateSourceExplorer implements Action {
   readonly type = SourceExplorerActionTypes.UpdateSourceExplorer;
 
@@ -159,5 +165,6 @@ export type SourceExplorerAction =
   SelectSource |
   SubBandIdAdd |
   SubBandIdRemove |
+  UpdateBranch |
   UpdateSourceExplorer |
   UpdateTreeSource;

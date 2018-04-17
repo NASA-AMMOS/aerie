@@ -41,6 +41,7 @@ import {
   RemoveSourceEvent,
   SaveToSource,
   SourceExplorerActionTypes,
+  UpdateBranch,
 } from './../actions/source-explorer';
 
 import * as sourceExplorerActions from './../actions/source-explorer';
@@ -130,7 +131,7 @@ export class SourceExplorerEffects {
         concatMap(() => {
           if (action.importData.mappingData) {
             return this.importMappingData(action.importData.name, action.importData.mappingData, action.source.url).pipe(
-                map(() => new sourceExplorerActions.ImportSourceSuccess()));
+              map(() => new sourceExplorerActions.ImportSourceSuccess()));
           } else {
             // no need to send mapping data
             return of(new sourceExplorerActions.ImportSourceSuccess());
@@ -218,6 +219,21 @@ export class SourceExplorerEffects {
     ),
   );
 
+  @Effect()
+  updateBranch$: Observable<Action> = this.actions$.pipe(
+    ofType<UpdateBranch>(SourceExplorerActionTypes.UpdateBranch),
+    concatMap(action =>
+      concat(
+        this.fetchNewSources(action.sourceUrl, action.sourceId, false).pipe(
+              map((sources: RavenSource[]) => new sourceExplorerActions.NewSources(action.sourceId, sources)),
+            ),
+        of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+      ).pipe(
+        catchError(this.errorUpdateBranch(action.sourceId)),
+      ),
+    ),
+  );
+
   constructor(
     private http: HttpClient,
     private actions$: Actions,
@@ -231,19 +247,19 @@ export class SourceExplorerEffects {
     const actions: Observable<Action>[] = [];
 
     if (source) {
-      // if (!source.childIds.length) {
-      if (source.content.length > 0) {
-        actions.push(
-          of(new sourceExplorerActions.NewSources(source.id, toRavenSources(source.id, false, source.content))),
-        );
-      } else {
-        actions.push(
-          this.fetchNewSources(source.url, source.id, false).pipe(
-            map((sources: RavenSource[]) => new sourceExplorerActions.NewSources(source.id, sources)),
-          ),
-        );
+      if (!source.childIds.length) {
+        if (source.content.length > 0) {
+          actions.push(
+            of(new sourceExplorerActions.NewSources(source.id, toRavenSources(source.id, false, source.content))),
+          );
+        } else {
+          actions.push(
+            this.fetchNewSources(source.url, source.id, false).pipe(
+              map((sources: RavenSource[]) => new sourceExplorerActions.NewSources(source.id, sources)),
+            ),
+          );
+        }
       }
-      // }
     }
     // }
 
@@ -389,6 +405,16 @@ export class SourceExplorerEffects {
   }
 
   /**
+   * Error Helper. Called when there is an error in expandEvent$.
+   */
+  errorUpdateBranch(sourceId: string) {
+    return (e: Error) => {
+      console.error('SourceExplorerEffects - errorUpdateBranch: ', e);
+      return of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }));
+    };
+  }
+
+  /**
    * Fetch helper. Fetches graph data from MPS Server and maps it to Raven sub-band data.
    */
   fetchSubBands(sourceUrl: string, sourceId: string, defaultSettings: RavenDefaultSettings) {
@@ -445,8 +471,5 @@ export class SourceExplorerEffects {
   importMappingData(name: string, mappingData: string, dataUrl: string) {
     dataUrl = dataUrl.replace('fs-mongodb', 'metadata-mongodb');
     return this.http.post(`${dataUrl}/${name}`, mappingData, { responseType: 'text' });
-    // return this.http.post(`${dataUrl}/${name}`, mappingData, { responseType: 'text' }).pipe(
-    //   map(() => new sourceExplorerActions.ImportSourceSuccess()),
-    // );
   }
 }

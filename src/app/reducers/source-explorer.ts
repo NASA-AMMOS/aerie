@@ -103,7 +103,6 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
     case SourceExplorerActionTypes.ImportSourceEvent:
       return state;
     case SourceExplorerActionTypes.ImportSourceFailure:
-      console.log('in reducer import source failed');
       return state;
     case SourceExplorerActionTypes.ImportSourceSuccess:
       return state;

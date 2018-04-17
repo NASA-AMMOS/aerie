@@ -85,7 +85,11 @@ export class SourceExplorerComponent implements OnDestroy {
     this.collectionChangeService.messages.subscribe((msg: any) => {
       const data = JSON.parse(msg.data);
       if (data.detail === 'data source changed') {
-        this.store.dispatch(new sourceExplorerActions.ExpandEvent('/leucadia/taifunTest/'));
+        const pattern = new RegExp ('(.*/fs-mongodb)(/.*)/(.*)');
+        const match = data.subject.match (pattern);
+        const url = `${match[1]}${match[2]}`;
+        const sourceId = `${match[2]}/`;
+        this.store.dispatch(new sourceExplorerActions.UpdateBranch(url, sourceId));
       }
     });
   }
@@ -161,7 +165,7 @@ export class SourceExplorerComponent implements OnDestroy {
       data: {
         cancelText: 'No',
         confirmText: 'Yes',
-        message: 'Are you sure you want to delete this source?',
+        message: `Are you sure you want to delete ${source.name}?`,
       },
       width: '250px',
     });
@@ -175,23 +179,6 @@ export class SourceExplorerComponent implements OnDestroy {
     });
   }
 
-
-  // ??openSourceDeleteDialog(source: RavenSource) {
-    // ??const sourceDeleteDialog = this.dialog.open(RavenConfirmDialogComponent, {
-      // ??data: {
-        // ??cancelText: 'No',
-        // ??confirmText: 'Yes',
-        // ??message: `Are you sure you want to delete ${source.name} at ${source.url}?`,
-      // ??},
-      // ??width: '500px',
-    // ??});
-// ??
-    // ??sourceDeleteDialog.afterClosed().subscribe(result => {
-      // ??if (result.confirm) {
-        // ??this.store.dispatch(new sourceExplorerActions.DeleteSource(source));
-      // ??}
-    // ??});
-  // ??}
   /**
    * Dialog trigger. Opens the load dialog.
    */
