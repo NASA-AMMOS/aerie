@@ -43,7 +43,13 @@ export class RouterEffects {
         actions.push(new layoutActions.SetMode('default', true, true, false, true));
       } else {
         actions.push(
-          new layoutActions.SetMode('custom', state.layout.showDetailsDrawer, state.layout.showLeftDrawer, state.layout.showPointDrawer, state.layout.showSouthBandsDrawer),
+          new layoutActions.SetMode(
+            'custom',
+            state.layout.showDetailsDrawer,
+            state.layout.showLeftDrawer,
+            state.layout.showRightDrawer,
+            state.layout.showSouthBandsDrawer,
+          ),
         );
       }
 

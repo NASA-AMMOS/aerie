@@ -37,9 +37,13 @@ export class TimelineEffects {
     concatMap(state => {
       const actions: Action[] = [];
 
-      if (state.timeline.selectedPoint && !state.layout.showPointDrawer) {
-        actions.push(new layoutActions.TogglePointDrawer());
+      if (state.timeline.selectedPoint && !state.layout.showRightDrawer) {
+        actions.push(new layoutActions.ToggleRightDrawer());
       }
+
+      actions.push(new layoutActions.UpdateLayout({
+        rightDrawerSelectedTabIndex: 1,
+      }));
 
       return actions;
     }),

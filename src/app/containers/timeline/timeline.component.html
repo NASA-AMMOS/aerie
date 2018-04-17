@@ -16,7 +16,7 @@
       (dragEnd)="onDragEnd()">
       <split-area
         [order]="2"
-        size="50">
+        size="80">
         <div
           *ngIf="itarMessage !== ''"
           class="itar-message">
@@ -94,20 +94,10 @@
       <split-area
         [visible]="showDetailsDrawer"
         [order]="4"
-        size="30">
-        <div class="settings">
+        size="20">
+        <div class="details">
           <mat-card>
-            <raven-settings
-              [bandsById]="bands | keyBy:'id'"
-              [labelWidth]="labelWidth"
-              [selectedBandId]="selectedBandId"
-              [selectedSubBandId]="selectedSubBandId"
-              (addDividerBand)="onAddDividerBand()"
-              (deleteSubBand)="onDeleteSubBand($event)"
-              (updateBand)="onUpdateBand($event)"
-              (updateSubBand)="onUpdateSubBand($event)"
-              (updateTimeline)="onUpdateTimeline($event)">
-            </raven-settings>
+            Nothing here yet.
           </mat-card>
         </div>
       </split-area>
@@ -115,39 +105,76 @@
   </split-area>
 
   <split-area
-    [visible]="showPointDrawer"
+    [visible]="showRightDrawer"
     [order]="5"
-    size="15">
-    <div class="selected-point">
-      <ng-container *ngIf="!selectedPoint">
-        <mat-card>
-          No point selected.
-        </mat-card>
-      </ng-container>
+    size="25">
+    <mat-tab-group
+      #rightDrawerTabGroup
+      [selectedIndex]="rightDrawerSelectedTabIndex"
+      (selectedTabChange)="onSelectedTabChange($event)">
+      <!-- Selected Point. -->
+      <mat-tab
+        class="selected-band-tab"
+        label="Selected Band">
+        <div
+          *ngIf="rightDrawerTabGroup.selectedIndex === 0"
+          class="selected-band">
+          <ng-container *ngIf="selectedBandId === ''">
+            <mat-card>
+              No band is currently selected.
+            </mat-card>
+          </ng-container>
 
-      <ng-container *ngIf="selectedPoint">
-        <ng-container *ngIf="selectedPoint.type === 'activity'">
-          <raven-activity-point
-            [selectedPoint]="selectedPoint"
-            [showActivityPointMetadata]="showActivityPointMetadata"
-            [showActivityPointParameters]="showActivityPointParameters"
-            (toggleShowActivityPointMetadata)="onToggleShowActivityPointMetadata($event)"
-            (toggleShowActivityPointParameters)="onToggleShowActivityPointParameters($event)">
-          </raven-activity-point>
-        </ng-container>
+          <ng-container *ngIf="selectedBandId !== ''">
+            <raven-settings
+              [bandsById]="bands | keyBy:'id'"
+              [selectedBandId]="selectedBandId"
+              [selectedSubBandId]="selectedSubBandId"
+              (deleteSubBand)="onDeleteSubBand($event)"
+              (updateBand)="onUpdateBand($event)"
+              (updateSubBand)="onUpdateSubBand($event)"
+              (updateTimeline)="onUpdateTimeline($event)">
+            </raven-settings>
+          </ng-container>
+        </div>
+      </mat-tab>
 
-        <ng-container *ngIf="selectedPoint.type === 'state'">
-          <raven-state-point
-            [selectedPoint]="selectedPoint">
-          </raven-state-point>
-        </ng-container>
+      <!-- Selected Band. -->
+      <mat-tab label="Selected Point">
+        <div
+          *ngIf="rightDrawerTabGroup.selectedIndex === 1"
+          class="selected-point">
+          <ng-container *ngIf="!selectedPoint">
+            <mat-card>
+              No point is currently selected.
+            </mat-card>
+          </ng-container>
 
-        <ng-container *ngIf="selectedPoint.type === 'resource'">
-          <raven-resource-point
-            [selectedPoint]="selectedPoint">
-          </raven-resource-point>
-        </ng-container>
-      </ng-container>
-    </div>
+          <ng-container *ngIf="selectedPoint">
+            <ng-container *ngIf="selectedPoint.type === 'activity'">
+              <raven-activity-point
+                [selectedPoint]="selectedPoint"
+                [showActivityPointMetadata]="showActivityPointMetadata"
+                [showActivityPointParameters]="showActivityPointParameters"
+                (toggleShowActivityPointMetadata)="onToggleShowActivityPointMetadata($event)"
+                (toggleShowActivityPointParameters)="onToggleShowActivityPointParameters($event)">
+              </raven-activity-point>
+            </ng-container>
+
+            <ng-container *ngIf="selectedPoint.type === 'state'">
+              <raven-state-point
+                [selectedPoint]="selectedPoint">
+              </raven-state-point>
+            </ng-container>
+
+            <ng-container *ngIf="selectedPoint.type === 'resource'">
+              <raven-resource-point
+                [selectedPoint]="selectedPoint">
+              </raven-resource-point>
+            </ng-container>
+          </ng-container>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
   </split-area>
 </split>

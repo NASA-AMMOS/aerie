@@ -19,7 +19,7 @@ export enum LayoutActionTypes {
   SetMode                 = '[layout] set_mode',
   ToggleDetailsDrawer     = '[layout] toggle_details_drawer',
   ToggleLeftDrawer        = '[layout] toggle_left_drawer',
-  TogglePointDrawer       = '[layout] toggle_point_drawer',
+  ToggleRightDrawer       = '[layout] toggle_right_drawer',
   ToggleSouthBandsDrawer  = '[layout] toggle_south_bands_drawer',
   UpdateLayout            = '[layout] update_layout',
 }
@@ -32,7 +32,7 @@ export class SetMode implements Action {
     public mode: string,
     public showDetailsDrawer: boolean,
     public showLeftDrawer: boolean,
-    public showPointDrawer: boolean,
+    public showRightDrawer: boolean,
     public showSouthBandsDrawer: boolean,
   ) {}
 }
@@ -45,8 +45,8 @@ export class ToggleLeftDrawer implements Action {
   readonly type = LayoutActionTypes.ToggleLeftDrawer;
 }
 
-export class TogglePointDrawer implements Action {
-  readonly type = LayoutActionTypes.TogglePointDrawer;
+export class ToggleRightDrawer implements Action {
+  readonly type = LayoutActionTypes.ToggleRightDrawer;
 }
 
 export class ToggleSouthBandsDrawer implements Action {
@@ -64,6 +64,6 @@ export type LayoutAction =
   SetMode |
   ToggleDetailsDrawer |
   ToggleLeftDrawer |
-  TogglePointDrawer |
+  ToggleRightDrawer |
   ToggleSouthBandsDrawer |
   UpdateLayout;

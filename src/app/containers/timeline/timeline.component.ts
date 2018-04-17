@@ -8,12 +8,14 @@
  */
 
 import {
-  ApplicationRef,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  HostListener,
   OnDestroy,
 } from '@angular/core';
+
+import { MatTabChangeEvent } from '@angular/material';
 
 import { Store } from '@ngrx/store';
 
@@ -55,11 +57,12 @@ export class TimelineComponent implements OnDestroy {
   itarMessage: string;
 
   // Layout state.
+  rightDrawerSelectedTabIndex: number | null;
   showActivityPointMetadata: boolean;
   showActivityPointParameters: boolean;
   showDetailsDrawer: boolean;
   showLeftDrawer: boolean;
-  showPointDrawer: boolean;
+  showRightDrawer: boolean;
   showSouthBandsDrawer: boolean;
   timelinePanelSize: number;
 
@@ -75,7 +78,6 @@ export class TimelineComponent implements OnDestroy {
   private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(
-    private app: ApplicationRef,
     private changeDetector: ChangeDetectorRef,
     private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState>,
   ) {
@@ -85,22 +87,23 @@ export class TimelineComponent implements OnDestroy {
     ).subscribe(itarMessage => {
       this.itarMessage = itarMessage;
       this.changeDetector.markForCheck();
-      this.app.tick();
+      setTimeout(() => this.changeDetector.detectChanges()); // Bad Firefox.
     });
 
     // Layout state.
     this.store.select(fromLayout.getLayoutState).pipe(
       takeUntil(this.ngUnsubscribe),
     ).subscribe(state => {
+      this.rightDrawerSelectedTabIndex = state.rightDrawerSelectedTabIndex;
       this.showActivityPointMetadata = state.showActivityPointMetadata;
       this.showActivityPointParameters = state.showActivityPointParameters;
       this.showDetailsDrawer = state.showDetailsDrawer;
       this.showLeftDrawer = state.showLeftDrawer;
-      this.showPointDrawer = state.showPointDrawer;
+      this.showRightDrawer = state.showRightDrawer;
       this.showSouthBandsDrawer = state.showSouthBandsDrawer;
       this.timelinePanelSize = state.timelinePanelSize;
       this.changeDetector.markForCheck();
-      this.app.tick();
+      setTimeout(() => this.changeDetector.detectChanges()); // Bad Firefox.
       dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize anytime our layout changes.
     });
 
@@ -116,7 +119,7 @@ export class TimelineComponent implements OnDestroy {
       this.selectedSubBandId = state.selectedSubBandId;
       this.viewTimeRange = state.viewTimeRange;
       this.changeDetector.markForCheck();
-      this.app.tick();
+      setTimeout(() => this.changeDetector.detectChanges()); // Bad Firefox.
     });
   }
 
@@ -152,6 +155,13 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
+   * Event. Called when a tab is changed.
+   */
+  onSelectedTabChange(e: MatTabChangeEvent) {
+    this.store.dispatch(new layoutActions.UpdateLayout({ rightDrawerSelectedTabIndex: e.index }));
+  }
+
+  /**
    * Event. Called when a `new-sort` event is fired from raven-bands.
    */
   onSort(sort: StringTMap<RavenSortMessage>): void {
@@ -176,14 +186,18 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when an `update-band` event is fired from the raven-settings component.
    */
   onUpdateBand(e: RavenSettingsUpdate): void {
-    this.store.dispatch(new timelineActions.UpdateBand(e.bandId, e.update));
+    if (e.bandId) {
+      this.store.dispatch(new timelineActions.UpdateBand(e.bandId, e.update));
+    }
   }
 
   /**
    * Event. Called when an `update-sub-band` event is fired from the raven-settings component.
    */
   onUpdateSubBand(e: RavenSettingsUpdate): void {
-    this.store.dispatch(new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update));
+    if (e.bandId && e.subBandId) {
+      this.store.dispatch(new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update));
+    }
   }
 
   /**
@@ -205,5 +219,19 @@ export class TimelineComponent implements OnDestroy {
    */
   onDragEnd(): void {
     dispatchEvent(new Event('resize'));
+  }
+
+  /**
+   * Event. Called when a keyboard key is pressed.
+   */
+  @HostListener('window:keyup', ['$event'])
+  keyEvent(event: KeyboardEvent) {
+    if (event.keyCode === 49) { // 1 key.
+      this.store.dispatch(new layoutActions.UpdateLayout({ rightDrawerSelectedTabIndex: 0 }));
+    }
+
+    if (event.keyCode === 50) { // 2 key.
+      this.store.dispatch(new layoutActions.UpdateLayout({ rightDrawerSelectedTabIndex: 1 }));
+    }
   }
 }

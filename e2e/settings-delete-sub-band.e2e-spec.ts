@@ -50,7 +50,8 @@ describe('raven2 - settings - delete sub-band', () => {
 
   it('should properly delete the 3rd band and close the corresponding source', async () => {
     page.band2.click();
-    page.settingsDeleteSubBand.click();
+    page.selectedBandTab.click();
+    page.settingsDeleteBand.click();
 
     bands = await probe(page.bands, 'bands');
 
@@ -64,7 +65,7 @@ describe('raven2 - settings - delete sub-band', () => {
     page.band1.click();
     page.settingsOverlay.click();
     source2.open();
-    page.settingsDeleteSubBand.click();
+    page.settingsDeleteBand.click();
 
     bands = await probe(page.bands, 'bands');
 
