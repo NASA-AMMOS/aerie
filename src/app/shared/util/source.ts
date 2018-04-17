@@ -32,7 +32,7 @@ export function toSource(parentId: string, isServer: boolean, mSource: MpsServer
     expandable: true,
     expanded: false,
     icon: '',
-    id: `${parentId}${mSource.name}/`,
+    id: parentId === '/' ? `/${mSource.name}` : `${parentId}/${mSource.name}`,
     isServer,
     kind: mSource.__kind,
     label: mSource.label,
@@ -46,7 +46,7 @@ export function toSource(parentId: string, isServer: boolean, mSource: MpsServer
     pinned: false,
     selectable: true,
     selected: false,
-    subBandIds: {}, // Map of band ids that this source contributes data to.
+    subBandIds: [], // List of band ids that this source contributes data to.
     url: '',
   };
 
@@ -146,8 +146,8 @@ export function fromState(mSource: any, rSource: RavenSource): RavenSource {
     ...rSource,
     actions: [
       {
-        event: 'load',
-        name: 'Load',
+        event: 'apply',
+        name: 'Apply',
       },
     ],
     expandable: false,
@@ -176,16 +176,16 @@ export function getAllChildIds(tree: StringTMap<RavenSource>, sourceId: string):
 /**
  * Helper that returns all the individual parent source ids for a given source id.
  *
- * So if a source has id: '/hello/world/goodbye/'.
- * This function will break up that id into: ['/hello/', '/hello/world/'],
+ * So if a source has id: '/hello/world/goodbye'.
+ * This function will break up that id into: ['/hello', '/hello/world'],
  * which are just the individual parent source ids up to (but not including) the given source id.
  */
 export function getParentSourceIds(sourceId: string): string[] {
   const parentSourceIds: string[] = [];
 
   while (sourceId.length > 1) {
-      sourceId = sourceId.replace(/([^\/]+)\/?$/, ''); // Removes last id name up to '/'.
-      parentSourceIds.push(sourceId);
+    sourceId = sourceId.replace(/\/([^\/]+)\/?$/, ''); // Removes last id name up to '/'.
+    parentSourceIds.push(sourceId);
   }
 
   parentSourceIds.pop(); // Remove root id '/'.
@@ -197,6 +197,7 @@ export function getParentSourceIds(sourceId: string): string[] {
 /**
  * Helper that returns a list of ALL source ids for a list of bands,
  * separated by parent ids and leaf source ids.
+ * Using a hash here so we don't have to filter out repeats later.
  */
 export function getSourceIds(bands: RavenCompositeBand[]) {
   const parentSourceIds = {};
@@ -204,7 +205,7 @@ export function getSourceIds(bands: RavenCompositeBand[]) {
 
   bands.forEach((band: RavenCompositeBand) => {
     band.subBands.forEach((subBand: RavenSubBand) => {
-      Object.keys(subBand.sourceIds).forEach(sourceId => {
+      subBand.sourceIds.forEach(sourceId => {
         getParentSourceIds(sourceId).forEach(id => parentSourceIds[id] = id);
         sourceIds[sourceId] = sourceId;
       });

@@ -97,9 +97,7 @@ export function toActivityBands(sourceId: string, timelineData: MpsServerActivit
       points: legends[legend],
       showLabel: true,
       showTooltip: true,
-      sourceIds: {
-        [sourceId]: sourceId,
-      },
+      sourceIds: [sourceId],
       sourceType,
       trimLabel: true,
       type: 'activity',
@@ -154,7 +152,7 @@ export function toDividerBand(): RavenDividerBand {
     name: `Divider ${id}`,
     points: [],
     showTooltip: true,
-    sourceIds: {},
+    sourceIds: [],
     type: 'divider',
   };
 
@@ -187,9 +185,7 @@ export function toResourceBand(sourceId: string, metadata: MpsServerResourceMeta
     rescale: true,
     showIcon: false,
     showTooltip: true,
-    sourceIds: {
-      [sourceId]: sourceId,
-    },
+    sourceIds: [sourceId],
     type: 'resource',
   };
 
@@ -218,9 +214,7 @@ export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, 
     parentUniqueId: null,
     points,
     showTooltip: true,
-    sourceIds: {
-      [sourceId]: sourceId,
-    },
+    sourceIds: [sourceId],
     type: 'state',
   };
 
@@ -386,7 +380,7 @@ export function hasSourceId(bands: RavenCompositeBand[], sourceId: string) {
     for (let j = 0, ll = bands[i].subBands.length; j < ll; ++j) {
       const subBand = bands[i].subBands[j];
 
-      if (subBand.sourceIds[sourceId]) {
+      if (subBand.sourceIds.includes(sourceId)) {
         return {
           bandId: bands[i].id,
           subBandId: subBand.id,

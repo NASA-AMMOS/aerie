@@ -32,13 +32,14 @@ import {
 import { AppState } from './../../app/store';
 
 import {
+  ApplyLayout,
+  ApplyState,
   CloseEvent,
   ExpandEvent,
   FetchInitialSources,
-  LoadFromSource,
   OpenEvent,
   RemoveSourceEvent,
-  SaveToSource,
+  SaveState,
   SourceExplorerActionTypes,
 } from './../actions/source-explorer';
 
@@ -71,6 +72,31 @@ import {
 
 @Injectable()
 export class SourceExplorerEffects {
+  @Effect()
+  applyLayout$: Observable<Action> = this.actions$.pipe(
+    ofType<ApplyLayout>(SourceExplorerActionTypes.ApplyLayout),
+  );
+
+  @Effect()
+  applyState$: Observable<Action> = this.actions$.pipe(
+    ofType<ApplyState>(SourceExplorerActionTypes.ApplyState),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    concatMap(({ action, state }) =>
+      forkJoin([
+        of(action),
+        this.fetchSavedState(action.sourceUrl),
+        this.fetchNewSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`, '/', true),
+      ]),
+    ),
+    map(([action, state, sources]) => ({ action, state, sources })),
+    concatMap(({ action, state: { bands, labelWidth, maxTimeRange, viewTimeRange }, sources }) =>
+      concat(
+        ...this.load(bands, labelWidth, maxTimeRange, viewTimeRange, sources),
+      ),
+    ),
+  );
+
   @Effect()
   closeEvent$: Observable<Action> = this.actions$.pipe(
     ofType<CloseEvent>(SourceExplorerActionTypes.CloseEvent),
@@ -113,26 +139,6 @@ export class SourceExplorerEffects {
   );
 
   @Effect()
-  loadFromSource$: Observable<Action> = this.actions$.pipe(
-    ofType<LoadFromSource>(SourceExplorerActionTypes.LoadFromSource),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(({ action, state }) =>
-      forkJoin([
-        of(action),
-        this.fetchSavedState(action.sourceUrl),
-        this.fetchNewSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`, '/', true),
-      ]),
-    ),
-    map(([action, state, sources]) => ({ action, state, sources })),
-    concatMap(({ action, state: { bands, labelWidth, maxTimeRange, viewTimeRange }, sources }) =>
-      concat(
-        ...this.load(bands, labelWidth, maxTimeRange, viewTimeRange, sources),
-      ),
-    ),
-  );
-
-  @Effect()
   openEvent$: Observable<Action> = this.actions$.pipe(
     ofType<OpenEvent>(SourceExplorerActionTypes.OpenEvent),
     withLatestFrom(this.store$),
@@ -159,13 +165,13 @@ export class SourceExplorerEffects {
   );
 
   @Effect()
-  saveToSource$: Observable<Action> = this.actions$.pipe(
-    ofType<SaveToSource>(SourceExplorerActionTypes.SaveToSource),
+  saveState$: Observable<Action> = this.actions$.pipe(
+    ofType<SaveState>(SourceExplorerActionTypes.SaveState),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     concatMap(({ state, action }) =>
       concat(
-        this.saveToSource(action.source.url, action.source.id, action.name, {
+        this.saveState(action.source.url, action.source.id, action.name, {
           name: `raven2-state-${action.name}`,
           state: {
             bands: state.timeline.bands.map(band => ({
@@ -177,6 +183,7 @@ export class SourceExplorerEffects {
             })),
             labelWidth: state.timeline.labelWidth,
             maxTimeRange: state.timeline.maxTimeRange,
+            pins: state.sourceExplorer.pins,
             viewTimeRange: state.timeline.viewTimeRange,
           },
         }),
@@ -394,11 +401,12 @@ export class SourceExplorerEffects {
   }
 
   /**
-   * Helper. Save some data to an MPS Server source.
+   * Helper. Save state to an MPS Server source.
+   * Fetches new sources and updates the source after the save.
    *
    * TODO: Replace 'any' with a concrete type.
    */
-  saveToSource(sourceUrl: string, sourceId: string, name: string, data: any) {
+  saveState(sourceUrl: string, sourceId: string, name: string, data: any) {
     return this.http.put(`${sourceUrl}/${name}`, data).pipe(
       concatMap(() =>
         this.fetchNewSources(sourceUrl, sourceId, false).pipe(

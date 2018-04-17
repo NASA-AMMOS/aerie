@@ -35,7 +35,7 @@ export const rootSource: RavenSource = {
   pinned: false,
   selectable: false,
   selected: false,
-  subBandIds: {},
+  subBandIds: [],
   url: '',
 };
 
@@ -48,7 +48,7 @@ export const childSource: RavenSource = {
   expandable: true,
   expanded: false,
   icon: '',
-  id: '/child/',
+  id: '/child',
   isServer: false,
   kind: 'db',
   label: 'test-child-source',
@@ -62,31 +62,31 @@ export const childSource: RavenSource = {
   pinned: false,
   selectable: true,
   selected: false,
-  subBandIds: {},
+  subBandIds: [],
   url: '',
 };
 
 export const treeBySourceId: StringTMap<RavenSource> = {
   '/': {
     ...rootSource,
-    childIds: ['/child/0/', '/child/1/'],
+    childIds: ['/child/0', '/child/1'],
   },
-  '/child/0/': {
+  '/child/0': {
     ...childSource,
     childIds: [],
-    id: '/child/0/',
+    id: '/child/0',
     parentId: '/',
   },
-  '/child/1/': {
+  '/child/1': {
     ...childSource,
-    childIds: ['/child/child/0/'],
-    id: '/child/1/',
+    childIds: ['/child/child/0'],
+    id: '/child/1',
     parentId: '/',
   },
-  '/child/child/0/': {
+  '/child/child/0': {
     ...childSource,
     childIds: [],
-    id: '/child/child/0/',
-    parentId: '/child/1/',
+    id: '/child/child/0',
+    parentId: '/child/1',
   },
 };

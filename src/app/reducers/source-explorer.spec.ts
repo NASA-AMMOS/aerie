@@ -18,16 +18,16 @@ import {
 } from './../shared/models';
 
 import {
+  ApplyState,
   CloseEvent,
   CollapseEvent,
   ExpandEvent,
   FetchInitialSources,
-  LoadFromSource,
   NewSources,
   OpenEvent,
   RemoveSource,
   RemoveSourceEvent,
-  SaveToSource,
+  SaveState,
   SelectSource,
   SubBandIdAdd,
   SubBandIdRemove,
@@ -49,6 +49,14 @@ describe('source-explorer reducer', () => {
 
   it('handle default', () => {
     expect(sourceExplorerState).toEqual(initialState);
+  });
+
+  it('handle ApplyState', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new ApplyState(rootSource.url));
+    expect(sourceExplorerState).toEqual({
+      ...initialState,
+      fetchPending: true,
+    });
   });
 
   it('handle CloseEvent', () => {
@@ -88,14 +96,6 @@ describe('source-explorer reducer', () => {
     });
   });
 
-  it('handle LoadFromSource', () => {
-    sourceExplorerState = reducer(sourceExplorerState, new LoadFromSource(rootSource.url));
-    expect(sourceExplorerState).toEqual({
-      ...initialState,
-      fetchPending: true,
-    });
-  });
-
   it('handle NewSources', () => {
     const sources = [childSource];
 
@@ -106,9 +106,9 @@ describe('source-explorer reducer', () => {
         ...initialState.treeBySourceId,
         '/': {
           ...initialState.treeBySourceId['/'],
-          childIds: ['/child/'],
+          childIds: ['/child'],
         },
-        '/child/': {
+        '/child': {
           ...childSource,
         },
       },
@@ -147,8 +147,8 @@ describe('source-explorer reducer', () => {
     });
   });
 
-  it('handle SaveToSource', () => {
-    sourceExplorerState = reducer(sourceExplorerState, new SaveToSource(rootSource, 'hello'));
+  it('handle SaveState', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new SaveState(rootSource, 'hello'));
     expect(sourceExplorerState).toEqual({
       ...initialState,
       fetchPending: true,
@@ -209,9 +209,7 @@ describe('source-explorer reducer', () => {
         ...initialState.treeBySourceId,
         '/': {
           ...initialState.treeBySourceId['/'],
-          subBandIds: {
-            '100': '100',
-          },
+          subBandIds: ['100'],
         },
       },
     });
@@ -220,14 +218,14 @@ describe('source-explorer reducer', () => {
   it('handle SubBandIdRemove', () => {
     // First add a sub-band id we can remove.
     sourceExplorerState = reducer(sourceExplorerState, new SubBandIdAdd(rootSource.id, '100'));
-    sourceExplorerState = reducer(sourceExplorerState, new SubBandIdRemove({ '/': '/'}, '100'));
+    sourceExplorerState = reducer(sourceExplorerState, new SubBandIdRemove(['/'], '100'));
     expect(sourceExplorerState).toEqual({
       ...initialState,
       treeBySourceId: {
         ...initialState.treeBySourceId,
         '/': {
           ...initialState.treeBySourceId['/'],
-          subBandIds: {},
+          subBandIds: [],
         },
       },
     });

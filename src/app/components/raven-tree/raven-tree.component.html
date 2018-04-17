@@ -46,8 +46,22 @@
     [overlapTrigger]="false"
     y-position="below">
     <ng-container *ngFor="let a of source.actions">
-      <button mat-menu-item (click)="action.emit({ event: a.event, source: source })">{{a.name}}</button>
+      <ng-container *ngIf="a.name === 'Apply'">
+        <button mat-menu-item [matMenuTriggerFor]="applyMenu">{{a.name}}</button>
+      </ng-container>
+
+      <ng-container *ngIf="a.name !== 'Apply'">
+        <button mat-menu-item (click)="action.emit({ event: a.event, source: source })">{{a.name}}</button>
+      </ng-container>
     </ng-container>
+  </mat-menu>
+
+  <mat-menu
+    #applyMenu="matMenu"
+    [overlapTrigger]="false"
+    y-position="below">
+    <button mat-menu-item (click)="action.emit({ event: 'apply-layout', source: source })">Layout</button>
+    <button mat-menu-item (click)="action.emit({ event: 'apply-state', source: source })">State</button>
   </mat-menu>
 </div>
 

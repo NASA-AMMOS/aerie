@@ -9,7 +9,6 @@
 
 import {
   RavenTimeRange,
-  StringTMap,
 } from './index';
 
 /**
@@ -30,6 +29,6 @@ export interface RavenDividerBand {
   name: string;
   points: any[]; // A divider bands should never actually have points.
   showTooltip: boolean;
-  sourceIds: StringTMap<string>;
+  sourceIds: string[];
   type: string;
 }

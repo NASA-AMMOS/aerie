@@ -78,12 +78,14 @@ export class SourceExplorerComponent implements OnDestroy {
   onAction(action: RavenSourceActionEvent): void {
     const { event, source } = action;
 
-    if (event === 'delete') {
+    if (event === 'apply-layout') {
+      this.openApplyLayoutDialog(source);
+    } else if (event === 'apply-state') {
+      this.openApplyStateDialog(source);
+    } else if (event === 'delete') {
       this.openDeleteDialog(source);
-    } else if (event === 'load') {
-      this.openLoadDialog(source);
     } else if (event === 'save') {
-      this.openSaveDialog(source);
+      this.openStateSaveDialog(source);
     }
   }
 
@@ -123,6 +125,35 @@ export class SourceExplorerComponent implements OnDestroy {
   }
 
   /**
+   * Dialog trigger. Opens the apply layout dialog.
+   */
+  openApplyLayoutDialog(source: RavenSource) {
+    // TODO.
+  }
+
+  /**
+   * Dialog trigger. Opens the apply state dialog.
+   */
+  openApplyStateDialog(source: RavenSource) {
+    const applyStateDialog = this.dialog.open(RavenConfirmDialogComponent, {
+      data: {
+        cancelText: 'No',
+        confirmText: 'Yes',
+        message: 'Applying this state will clear your current workspace. Are you sure you want to do this?',
+      },
+      width: '250px',
+    });
+
+    applyStateDialog.afterClosed().pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(result => {
+      if (result.confirm) {
+        this.store.dispatch(new sourceExplorerActions.ApplyState(source.url));
+      }
+    });
+  }
+
+  /**
    * Dialog trigger. Opens the delete dialog.
    */
   openDeleteDialog(source: RavenSource) {
@@ -145,41 +176,19 @@ export class SourceExplorerComponent implements OnDestroy {
   }
 
   /**
-   * Dialog trigger. Opens the load dialog.
-   */
-  openLoadDialog(source: RavenSource) {
-    const stateLoadDialog = this.dialog.open(RavenConfirmDialogComponent, {
-      data: {
-        cancelText: 'No',
-        confirmText: 'Yes',
-        message: 'Applying this state will clear your current workspace. Are you sure you want to do this?',
-      },
-      width: '250px',
-    });
-
-    stateLoadDialog.afterClosed().pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(result => {
-      if (result.confirm) {
-        this.store.dispatch(new sourceExplorerActions.LoadFromSource(source.url));
-      }
-    });
-  }
-
-  /**
    * Dialog trigger. Opens the save state dialog.
    */
-  openSaveDialog(source: RavenSource): void {
-    const stateSaveDialog = this.dialog.open(RavenStateSaveDialogComponent, {
+  openStateSaveDialog(source: RavenSource): void {
+    const stateStateSaveDialog = this.dialog.open(RavenStateSaveDialogComponent, {
       data: { source },
       width: '250px',
     });
 
-    stateSaveDialog.afterClosed().pipe(
+    stateStateSaveDialog.afterClosed().pipe(
       takeUntil(this.ngUnsubscribe),
     ).subscribe(result => {
       if (result.save) {
-        this.store.dispatch(new sourceExplorerActions.SaveToSource(source, result.name));
+        this.store.dispatch(new sourceExplorerActions.SaveState(source, result.name));
       }
     });
   }

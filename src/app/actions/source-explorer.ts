@@ -17,16 +17,17 @@ import {
 
 // Action Types.
 export enum SourceExplorerActionTypes {
+  ApplyLayout          = '[sourceExplorer] apply-layout',
+  ApplyState           = '[sourceExplorer] apply-state',
   CloseEvent           = '[sourceExplorer] close_event',
   CollapseEvent        = '[sourceExplorer] collapse_event',
   ExpandEvent          = '[sourceExplorer] expand_event',
   FetchInitialSources  = '[sourceExplorer] fetch_initial_sources',
-  LoadFromSource       = '[sourceExplorer] load_from_source',
   NewSources           = '[sourceExplorer] new_sources',
   OpenEvent            = '[sourceExplorer] open_event',
   RemoveSource         = '[sourceExplorer] remove_source',
   RemoveSourceEvent    = '[sourceExplorer] remove_source_event',
-  SaveToSource         = '[sourceExplorer] save_to_source',
+  SaveState            = '[sourceExplorer] save_state',
   SelectSource         = '[sourceExplorer] select_source',
   SubBandIdAdd         = '[sourceExplorer] sub_band_id_add',
   SubBandIdRemove      = '[sourceExplorer] sub_band_id_remove',
@@ -35,6 +36,18 @@ export enum SourceExplorerActionTypes {
 }
 
 // Actions.
+export class ApplyLayout implements Action {
+  readonly type = SourceExplorerActionTypes.ApplyLayout;
+
+  constructor(public sourceUrl: string) {}
+}
+
+export class ApplyState implements Action {
+  readonly type = SourceExplorerActionTypes.ApplyState;
+
+  constructor(public sourceUrl: string) {}
+}
+
 export class CloseEvent implements Action {
   readonly type = SourceExplorerActionTypes.CloseEvent;
 
@@ -55,12 +68,6 @@ export class ExpandEvent implements Action {
 
 export class FetchInitialSources implements Action {
   readonly type = SourceExplorerActionTypes.FetchInitialSources;
-}
-
-export class LoadFromSource implements Action {
-  readonly type = SourceExplorerActionTypes.LoadFromSource;
-
-  constructor(public sourceUrl: string) {}
 }
 
 export class NewSources implements Action {
@@ -87,8 +94,8 @@ export class RemoveSourceEvent implements Action {
   constructor(public source: RavenSource) {}
 }
 
-export class SaveToSource implements Action {
-  readonly type = SourceExplorerActionTypes.SaveToSource;
+export class SaveState implements Action {
+  readonly type = SourceExplorerActionTypes.SaveState;
 
   constructor(public source: RavenSource, public name: string) {}
 }
@@ -108,7 +115,7 @@ export class SubBandIdAdd implements Action {
 export class SubBandIdRemove implements Action {
   readonly type = SourceExplorerActionTypes.SubBandIdRemove;
 
-  constructor(public sourceIds: StringTMap<string>, public subBandId: string) {}
+  constructor(public sourceIds: string[], public subBandId: string) {}
 }
 
 export class UpdateSourceExplorer implements Action {
@@ -125,16 +132,17 @@ export class UpdateTreeSource implements Action {
 
 // Union type of all actions.
 export type SourceExplorerAction =
+  ApplyLayout |
+  ApplyState |
   CloseEvent |
   CollapseEvent |
   ExpandEvent |
   FetchInitialSources |
-  LoadFromSource |
   NewSources |
   OpenEvent |
   RemoveSource |
   RemoveSourceEvent |
-  SaveToSource |
+  SaveState |
   SelectSource |
   SubBandIdAdd |
   SubBandIdRemove |
