@@ -2,6 +2,7 @@
   <raven-tree
     [class]="tree[childId].name"
     [id]="childId"
+    [source]="tree[childId]"
     [tree]="tree"
     (action)="onAction($event)"
     (close)="onClose($event)"

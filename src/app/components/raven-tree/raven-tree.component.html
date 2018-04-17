@@ -1,40 +1,40 @@
 <div class="tree" [ngClass]="{
-  'selected': tree[id].selected,
-  'highlight': tree[id].expanded || tree[id].opened,
-  'no-highlight': !tree[id].expanded && !tree[id].opened
+  'selected': source.selected,
+  'highlight': source.expanded || source.opened,
+  'no-highlight': !source.expanded && !source.opened
 }">
   <mat-icon
-    *ngIf="tree[id].expandable && tree[id].expanded"
-    [id]="'raven-tree-'+tree[id].name+'-collapse'"
-    (click)="collapse.emit(tree[id])">
+    *ngIf="source.expandable && source.expanded"
+    [id]="'raven-tree-'+source.name+'-collapse'"
+    (click)="collapse.emit(source)">
     remove
   </mat-icon>
   <mat-icon
-    *ngIf="tree[id].expandable && !tree[id].expanded"
-    [id]="'raven-tree-'+tree[id].name+'-expand'"
-    (click)="expand.emit(tree[id])">
+    *ngIf="source.expandable && !source.expanded"
+    [id]="'raven-tree-'+source.name+'-expand'"
+    (click)="expand.emit(source)">
     add
   </mat-icon>
 
   <mat-icon
-    *ngIf="tree[id].openable && tree[id].opened"
-    [id]="'raven-tree-'+tree[id].name+'-close'"
-    (click)="close.emit(tree[id])">
+    *ngIf="source.openable && source.opened"
+    [id]="'raven-tree-'+source.name+'-close'"
+    (click)="close.emit(source)">
     radio_button_checked
   </mat-icon>
   <mat-icon
-    *ngIf="tree[id].openable && !tree[id].opened"
-    [id]="'raven-tree-'+tree[id].name+'-open'"
-    (click)="open.emit(tree[id])">
+    *ngIf="source.openable && !source.opened"
+    [id]="'raven-tree-'+source.name+'-open'"
+    (click)="open.emit(source)">
     radio_button_unchecked
   </mat-icon>
 
-  <span (click)="select.emit(tree[id])" class="name">
-    <i [ngClass]="tree[id].icon" aria-hidden="true"></i> {{tree[id].name}}
+  <span (click)="select.emit(source)" class="name">
+    <i [ngClass]="source.icon" aria-hidden="true"></i> {{source.name}}
   </span>
 
   <button
-    *ngIf="tree[id].selected"
+    *ngIf="source.selected"
     class="menu-icon"
     mat-icon-button
     [matMenuTriggerFor]="actionsMenu">
@@ -45,17 +45,18 @@
     #actionsMenu="matMenu"
     [overlapTrigger]="false"
     y-position="below">
-    <ng-container *ngFor="let a of tree[id].actions">
-      <button mat-menu-item (click)="action.emit({ event: a.event, source: tree[id] })">{{a.name}}</button>
+    <ng-container *ngFor="let a of source.actions">
+      <button mat-menu-item (click)="action.emit({ event: a.event, source: source })">{{a.name}}</button>
     </ng-container>
   </mat-menu>
 </div>
 
-<ul *ngIf="tree[id].expanded">
-  <li *ngFor="let childId of tree[id].childIds">
+<ul *ngIf="source.expanded">
+  <li *ngFor="let childId of source.childIds; trackBy: trackByFn">
     <raven-tree
       [class]="tree[childId].name"
       [id]="childId"
+      [source]="tree[childId]"
       [tree]="tree"
       (action)="action.emit($event)"
       (close)="close.emit($event)"

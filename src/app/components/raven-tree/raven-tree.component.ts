@@ -29,6 +29,7 @@ import {
 })
 export class RavenTreeComponent {
   @Input() id: string;
+  @Input() source: RavenSource;
   @Input() tree: StringTMap<RavenSource>;
 
   @Output() action: EventEmitter<RavenSourceActionEvent> = new EventEmitter<RavenSourceActionEvent>();
