@@ -19,9 +19,10 @@ mat-card {
   text-align: center;
 }
 
+.details,
 .timeline-0,
 .timeline-1,
-.settings,
+.selected-band,
 .selected-point {
   padding: 0.5em;
 }

@@ -13,7 +13,7 @@ import {
 } from './index';
 
 export interface RavenSettingsUpdate {
-  bandId: string;
-  subBandId: string;
+  bandId?: string;
+  subBandId?: string;
   update: StringTMap<BaseType>;
 }

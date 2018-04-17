@@ -52,6 +52,7 @@ describe('raven2 - overlay mode', () => {
 
   it('selecting band0 should show the overlay toggle for that band, and it should be unchecked', async () => {
     page.band0.click();
+    page.selectedBandTab.click();
     const checked = await page.settingsOverlay.getAttribute('ng-reflect-checked');
     expect(checked).toBe('false');
   });

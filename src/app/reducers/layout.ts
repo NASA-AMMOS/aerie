@@ -20,11 +20,12 @@ import {
 // Layout State Interface.
 export interface LayoutState {
   mode: string;
+  rightDrawerSelectedTabIndex: number | null;
   showActivityPointMetadata: boolean;
   showActivityPointParameters: boolean;
   showDetailsDrawer: boolean;
   showLeftDrawer: boolean;
-  showPointDrawer: boolean;
+  showRightDrawer: boolean;
   showSouthBandsDrawer: boolean;
   timelinePanelSize: number;
 }
@@ -32,13 +33,14 @@ export interface LayoutState {
 // Layout State.
 export const initialState: LayoutState = {
   mode: 'default',
+  rightDrawerSelectedTabIndex: 0,
   showActivityPointMetadata: false,
   showActivityPointParameters: true,
-  showDetailsDrawer: true,
+  showDetailsDrawer: false,
   showLeftDrawer: true,
-  showPointDrawer: false,
+  showRightDrawer: true,
   showSouthBandsDrawer: true,
-  timelinePanelSize: 75,
+  timelinePanelSize: 50,
 };
 
 /**
@@ -53,8 +55,8 @@ export function reducer(state: LayoutState = initialState, action: LayoutAction)
       return { ...state, showDetailsDrawer: !state.showDetailsDrawer };
     case LayoutActionTypes.ToggleLeftDrawer:
       return { ...state, showLeftDrawer: !state.showLeftDrawer };
-    case LayoutActionTypes.TogglePointDrawer:
-      return { ...state, showPointDrawer: !state.showPointDrawer };
+    case LayoutActionTypes.ToggleRightDrawer:
+      return { ...state, showRightDrawer: !state.showRightDrawer };
     case LayoutActionTypes.ToggleSouthBandsDrawer:
       return { ...state, showSouthBandsDrawer: !state.showSouthBandsDrawer };
     case LayoutActionTypes.UpdateLayout:
@@ -73,7 +75,7 @@ export function setMode(state: LayoutState, action: SetMode): LayoutState {
     mode: action.mode,
     showDetailsDrawer: action.showDetailsDrawer,
     showLeftDrawer: action.showLeftDrawer,
-    showPointDrawer: action.showPointDrawer,
+    showRightDrawer: action.showRightDrawer,
     showSouthBandsDrawer: action.showSouthBandsDrawer,
   };
 }

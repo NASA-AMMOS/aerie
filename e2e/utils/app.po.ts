@@ -23,7 +23,8 @@ export class AppPage {
   timeline0 =             element(by.css('.timeline-0'));
   timeline1 =             element(by.css('.timeline-1'));
 
-  settingsDeleteSubBand = element(by.id('raven-settings-delete-sub-band'));
+  selectedBandTab =       element(by.id('mat-tab-label-0-0'));
+  settingsDeleteBand =    element(by.id('raven-settings-delete-band'));
   settingsOverlay =       element(by.id('raven-settings-overlay'));
 
   navigateTo(): promise.Promise<any> {

@@ -273,14 +273,19 @@ export function removeSubBand(state: TimelineState, action: RemoveSubBand): Time
  * Reduction Helper. Called when reducing the 'SelectBand' action.
  */
 export function selectBand(state: TimelineState, action: SelectBand): TimelineState {
-  const selectedBandId = action.bandId === state.selectedBandId ? '' : action.bandId;
-  const band = bandById(state.bands, selectedBandId);
+  if (action.bandId !== state.selectedBandId) {
+    const band = bandById(state.bands, action.bandId);
 
-  return {
-    ...state,
-    selectedBandId,
-    selectedSubBandId: band && band.subBands.length && selectedBandId !== '' ? band.subBands[0].id : '',
-  };
+    return {
+      ...state,
+      selectedBandId: action.bandId,
+      selectedSubBandId: band && band.subBands.length && action.bandId !== '' ? band.subBands[0].id : '',
+    };
+  } else {
+    return {
+      ...state,
+    };
+  }
 }
 
 /**

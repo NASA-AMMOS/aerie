@@ -23,7 +23,7 @@ import { AppState } from './../../app/store';
 
 import {
   LayoutActionTypes,
-  TogglePointDrawer,
+  ToggleRightDrawer,
 } from './../actions/layout';
 
 import * as layoutActions from './../actions/layout';
@@ -31,13 +31,13 @@ import * as layoutActions from './../actions/layout';
 @Injectable()
 export class LayoutEffects {
   @Effect()
-  togglePointDrawer$: Observable<Action> = this.actions$.pipe(
-    ofType<TogglePointDrawer>(LayoutActionTypes.TogglePointDrawer),
+  toggleRightDrawer$: Observable<Action> = this.actions$.pipe(
+    ofType<ToggleRightDrawer>(LayoutActionTypes.ToggleRightDrawer),
     withLatestFrom(this.store$),
-    map(([action, state]) => state.layout.showPointDrawer),
-    map((showPointDrawer: boolean) => {
-      if (showPointDrawer) {
-        return new layoutActions.UpdateLayout({ timelinePanelSize: 60 });
+    map(([action, state]) => state.layout.showRightDrawer),
+    map((showRightDrawer: boolean) => {
+      if (showRightDrawer) {
+        return new layoutActions.UpdateLayout({ timelinePanelSize: 50 });
       } else {
         return new layoutActions.UpdateLayout({ timelinePanelSize: 75 });
       }

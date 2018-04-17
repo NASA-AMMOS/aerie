@@ -17,7 +17,7 @@ import {
   SetMode,
   ToggleDetailsDrawer,
   ToggleLeftDrawer,
-  TogglePointDrawer,
+  ToggleRightDrawer,
   ToggleSouthBandsDrawer,
   UpdateLayout,
 } from './../actions/layout';
@@ -40,7 +40,7 @@ describe('layout reducer', () => {
       mode: 'custom',
       showDetailsDrawer: false,
       showLeftDrawer: false,
-      showPointDrawer: true,
+      showRightDrawer: true,
       showSouthBandsDrawer: false,
     });
   });
@@ -55,9 +55,9 @@ describe('layout reducer', () => {
     expect(layoutState).toEqual({ ...initialState, showLeftDrawer: !initialState.showLeftDrawer });
   });
 
-  it('handle TogglePointDrawer', () => {
-    layoutState = reducer(layoutState, new TogglePointDrawer());
-    expect(layoutState).toEqual({ ...initialState, showPointDrawer: !initialState.showPointDrawer });
+  it('handle ToggleRightDrawer', () => {
+    layoutState = reducer(layoutState, new ToggleRightDrawer());
+    expect(layoutState).toEqual({ ...initialState, showRightDrawer: !initialState.showRightDrawer });
   });
 
   it('handle ToggleSouthBandsDrawer', () => {

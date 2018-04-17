@@ -59,6 +59,7 @@ export class SourceExplorerComponent implements OnDestroy {
     ).subscribe(tree => {
       this.tree = tree;
       this.changeDetector.markForCheck();
+      setTimeout(() => this.changeDetector.detectChanges()); // Bad Firefox.
     });
   }
 

@@ -9,7 +9,6 @@
 
 import {
   ChangeDetectionStrategy,
-  ChangeDetectorRef,
   Component,
   OnDestroy,
 } from '@angular/core';
@@ -18,7 +17,7 @@ import { Store } from '@ngrx/store';
 
 import { Observable } from 'rxjs/Observable';
 import { combineLatest } from 'rxjs/observable/combineLatest';
-import { takeUntil, tap } from 'rxjs/operators';
+import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs/Subject';
 
 import * as fromSourceExplorer from './../../reducers/source-explorer';
@@ -37,7 +36,6 @@ export class AppComponent implements OnDestroy {
   private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(
-    private changeDetector: ChangeDetectorRef,
     private store: Store<fromSourceExplorer.SourceExplorerState>,
   ) {
     // Combine all fetch pending observables for use in progress bar.
@@ -45,7 +43,6 @@ export class AppComponent implements OnDestroy {
       this.store.select(fromSourceExplorer.getPending),
       sourceExplorerPending => sourceExplorerPending,
     ).pipe(
-      tap(() => this.changeDetector.markForCheck()),
       takeUntil(this.ngUnsubscribe),
     );
   }
@@ -63,8 +60,8 @@ export class AppComponent implements OnDestroy {
     this.store.dispatch(new layoutActions.ToggleLeftDrawer());
   }
 
-  togglePointDrawer() {
-    this.store.dispatch(new layoutActions.TogglePointDrawer());
+  toggleRightDrawer() {
+    this.store.dispatch(new layoutActions.ToggleRightDrawer());
   }
 
   toggleSouthBandsDrawer() {
