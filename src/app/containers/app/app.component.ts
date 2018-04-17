@@ -32,7 +32,7 @@ import * as timelineActions from './../../actions/timeline';
 import {
   RavenDefaultSettings,
   RavenEpoch,
- } from './../../shared/models';
+} from './../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -129,7 +129,7 @@ export class AppComponent implements OnDestroy {
     this.store.dispatch(new timelineActions.ChangeDateFormat(dateFormat));
   }
 
-  onChangeDayCode (code: string) {
+  onChangeDayCode(code: string) {
     this.store.dispatch(new epochsActions.ChangeDayCode(code));
   }
 
@@ -168,7 +168,7 @@ export class AppComponent implements OnDestroy {
     this.store.dispatch(new epochsActions.AddEpochs(epochs));
   }
 
-  onSelectEpoch (epoch: RavenEpoch) {
+  onSelectEpoch(epoch: RavenEpoch) {
     this.store.dispatch(new epochsActions.SelectEpoch(epoch));
   }
 }
