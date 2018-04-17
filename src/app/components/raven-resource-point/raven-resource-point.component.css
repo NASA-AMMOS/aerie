@@ -13,6 +13,9 @@ div.value {
 .label {
   font-size: 15px;
   font-weight: bold;
+}
+
+.pad-top {
   padding-top: 1em;
 }
 

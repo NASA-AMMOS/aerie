@@ -1,13 +1,15 @@
-<div class="label">Activity Name</div>
-<div class="value">{{selectedPoint.activityName}}</div>
-<div class="label">Activity Type</div>
-<div class="value">{{selectedPoint.activityType}}</div>
-<div class="label">Activity Start Time</div>
-<div class="value">{{selectedPoint.startTimestamp}}</div>
-<div class="label">Activity End Time</div>
-<div class="value">{{selectedPoint.endTimestamp}}</div>
-<div class="label">Duration</div>
-<div class="value">{{selectedPoint.duration | dhms}}</div>
+<mat-card>
+  <div class="label">Activity Name</div>
+  <div class="value">{{selectedPoint.activityName}}</div>
+  <div class="label pad-top">Activity Type</div>
+  <div class="value">{{selectedPoint.activityType}}</div>
+  <div class="label pad-top">Activity Start Time</div>
+  <div class="value">{{selectedPoint.startTimestamp}}</div>
+  <div class="label pad-top">Activity End Time</div>
+  <div class="value">{{selectedPoint.endTimestamp}}</div>
+  <div class="label pad-top">Duration</div>
+  <div class="value">{{selectedPoint.duration | dhms}}</div>
+</mat-card>
 
 <div class="parameters">
   <mat-expansion-panel
