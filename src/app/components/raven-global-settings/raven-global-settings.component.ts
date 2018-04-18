@@ -1,5 +1,10 @@
-import { Component, EventEmitter, Input, Output, ViewContainerRef } from '@angular/core';
-import { Cmyk } from 'ngx-color-picker';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  ViewContainerRef,
+} from '@angular/core';
 
 @Component({
   selector: 'raven-global-settings',
@@ -27,9 +32,6 @@ export class RavenGlobalSettingsComponent {
   @Output() changeLabelFontStyle: EventEmitter<string> = new EventEmitter<string>();
   @Output() changeTooltip: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-
-  public cmykColor: Cmyk = new Cmyk(0, 0, 0, 0);
-
   constructor(public vcRef: ViewContainerRef) {}
 
   public onChangeLabelWidth() {
@@ -42,16 +44,13 @@ export class RavenGlobalSettingsComponent {
     this.changeLabelFontSize.emit(this.labelFontSize);
   }
 
-  public onEventLog(event: string, data: any): void {
-    console.log('log: ' + event, data);
-    console.log('color:' + this.defaultResourceColor);
-  }
-
   public onFillColorPickerClose() {
+    // emit new fill color
     this.changeDefaultFillColor.emit(this.defaultFillColor);
   }
 
   public onResourceColorPickerClose() {
+    // emit new default resource color
     this.changeDefaultResourceColor.emit(this.defaultResourceColor);
   }
 }

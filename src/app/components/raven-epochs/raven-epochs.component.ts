@@ -6,14 +6,14 @@ import {
   ViewChild,
 } from '@angular/core';
 
-import { RavenEpoch } from '../../shared/models';
-
-import { MatSort, Sort } from '@angular/material';
-
 import { SelectionModel } from '@angular/cdk/collections';
-
 import { OnInit } from '@angular/core/src/metadata/lifecycle_hooks';
+import {
+  MatSort,
+  Sort,
+} from '@angular/material';
 
+import { RavenEpoch } from '../../shared/models';
 @Component({
   selector: 'raven-epochs',
   styleUrls: ['./raven-epochs.component.css'],

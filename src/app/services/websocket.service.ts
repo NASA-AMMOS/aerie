@@ -24,7 +24,6 @@ export class WebsocketService {
       (obs: Observer<MessageEvent>) => {
         ws.onmessage = obs.next.bind(obs);
         ws.onerror = obs.error.bind(obs);
-        // ws.onclose = obs.complete.bind(obs);
         const self = this;
         ws.onclose = function() {
           // try to reconnect

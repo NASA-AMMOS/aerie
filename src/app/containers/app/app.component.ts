@@ -125,27 +125,16 @@ export class AppComponent implements OnDestroy {
     this.store.dispatch(new layoutActions.ToggleSouthBandsDrawer());
   }
 
+  onChangeCurrentTimeCursor(currentTimeCursor: boolean) {
+    this.store.dispatch(new timelineActions.ChangeCurrentTimeCursor(currentTimeCursor));
+  }
+
   onChangeDateFormat(dateFormat: string) {
     this.store.dispatch(new timelineActions.ChangeDateFormat(dateFormat));
   }
 
   onChangeDayCode(code: string) {
     this.store.dispatch(new epochsActions.ChangeDayCode(code));
-  }
-
-  onChangeEarthSecToEpochSec(earthSecToEpochSec: number) {
-    this.store.dispatch(new epochsActions.ChangeEarthSecToEpochSec(earthSecToEpochSec));
-  }
-  onChangeLabelWidth(labelWidth: number) {
-    this.store.dispatch(new timelineActions.ChangeLabelWidth(labelWidth));
-  }
-
-  onChangeLabelFontSize(labelFontSize: number) {
-    this.store.dispatch(new timelineActions.ChangeLabelFontSize(labelFontSize));
-  }
-
-  onChangeLabelFontStyle(labelFontStyle: string) {
-    this.store.dispatch(new timelineActions.ChangeLabelFontStyle(labelFontStyle));
   }
 
   onChangeDefaultFillColor(resourceColor: string) {
@@ -156,12 +145,24 @@ export class AppComponent implements OnDestroy {
     this.store.dispatch(new timelineActions.ChangeDefaultResourceColor(resourceColor));
   }
 
-  onChangeTooltip(tooltip: boolean) {
-    this.store.dispatch(new timelineActions.ChangeTooltip(tooltip));
+  onChangeEarthSecToEpochSec(earthSecToEpochSec: number) {
+    this.store.dispatch(new epochsActions.ChangeEarthSecToEpochSec(earthSecToEpochSec));
   }
 
-  onChangeCurrentTimeCursor(currentTimeCursor: boolean) {
-    this.store.dispatch(new timelineActions.ChangeCurrentTimeCursor(currentTimeCursor));
+  onChangeLabelFontSize(labelFontSize: number) {
+    this.store.dispatch(new timelineActions.ChangeLabelFontSize(labelFontSize));
+  }
+
+  onChangeLabelFontStyle(labelFontStyle: string) {
+    this.store.dispatch(new timelineActions.ChangeLabelFontStyle(labelFontStyle));
+  }
+
+  onChangeLabelWidth(labelWidth: number) {
+    this.store.dispatch(new timelineActions.ChangeLabelWidth(labelWidth));
+  }
+
+  onChangeTooltip(tooltip: boolean) {
+    this.store.dispatch(new timelineActions.ChangeTooltip(tooltip));
   }
 
   onImportEpochs(epochs: RavenEpoch[]) {

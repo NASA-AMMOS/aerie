@@ -25,6 +25,13 @@ export class RavenFileImportDialogComponent {
     @Inject(MAT_DIALOG_DATA) public data: any,
   ) { }
 
+  getFile($event: any): void {
+    this.readFile($event.target, false);
+  }
+
+  getMapping($event: any): void {
+    this.readFile($event.target, true);
+  }
   onCancel() {
     this.dialogRef.close({ import: false });
   }
@@ -37,16 +44,7 @@ export class RavenFileImportDialogComponent {
     this.dialogRef.close({ name: this.name, fileType: this.fileType, fileData: this.fileData, mappingData: this.mappingData, import: true });
   }
 
-  getFileContent($event: any): void {
-    this.readFile($event.target, false);
-  }
-
-  getMappingFile($event: any): void {
-    this.readFile($event.target, true);
-  }
-
   readFile(inputValue: any, mapping: boolean): void {
-    const file: File = inputValue.files[0];
     const reader: FileReader = new FileReader();
     reader.onloadend = (e) => {
       if (mapping) {
@@ -56,7 +54,7 @@ export class RavenFileImportDialogComponent {
       }
     };
 
-    reader.readAsText(file);
+    reader.readAsText(inputValue.files[0]);
   }
 
 }

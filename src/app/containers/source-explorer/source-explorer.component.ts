@@ -71,6 +71,7 @@ export class SourceExplorerComponent implements OnDestroy {
       takeUntil(this.ngUnsubscribe),
     ).subscribe(state => {
       this.baseUrl = state.baseUrl;
+      this.changeDetector.markForCheck();
     });
 
     // Source Explorer state.

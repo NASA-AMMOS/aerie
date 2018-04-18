@@ -1,4 +1,8 @@
-import { EpochsAction, EpochsActionTypes } from '../actions/epochs';
+import {
+  EpochsAction,
+  EpochsActionTypes,
+} from '../actions/epochs';
+
 import { RavenEpoch } from '../shared/models/raven-epoch';
 
 import { createFeatureSelector } from '@ngrx/store';

@@ -24,12 +24,12 @@ export enum TimelineActionTypes {
   AddSubBand                   = '[timeline] add_sub_band',
   ChangeCurrentTimeCursor      = '[timeline] change_current_time_cursor',
   ChangeDateFormat             = '[timeline] change_date_format',
-  ChangeTooltip                = '[timeline] change_tooltip',
+  ChangeDefaultFillColor       = '[timeline] change_default_fill_color',
+  ChangeDefaultResourceColor   = '[timeline] change_default_resource_color',
   ChangeLabelFontSize          = '[timeline] change_label_fonr_size',
   ChangeLabelFontStyle         = '[timeline] change_label_font_style',
   ChangeLabelWidth             = '[timeline] change_label_width',
-  ChangeDefaultFillColor       = '[timeline] change_default_fill_color',
-  ChangeDefaultResourceColor   = '[timeline] change_default_resource_color',
+  ChangeTooltip                = '[timeline] change_tooltip',
   RemoveBandsOrPointsForSource = '[timeline] remove_bands_or_points_for_source',
   RemoveSubBand                = '[timeline] remove_sub_band',
   SelectBand                   = '[timeline] select_band',
@@ -176,12 +176,12 @@ export type TimelineAction =
   AddSubBand |
   ChangeCurrentTimeCursor |
   ChangeDateFormat |
-  ChangeTooltip |
+  ChangeDefaultFillColor |
+  ChangeDefaultResourceColor |
   ChangeLabelFontSize |
   ChangeLabelFontStyle |
   ChangeLabelWidth |
-  ChangeDefaultFillColor |
-  ChangeDefaultResourceColor |
+  ChangeTooltip |
   RemoveBandsOrPointsForSource |
   RemoveSubBand |
   SelectBand |

@@ -22,6 +22,14 @@ import {
   AddBand,
   AddPointsToSubBand,
   AddSubBand,
+  ChangeCurrentTimeCursor,
+  ChangeDateFormat,
+  ChangeDefaultFillColor,
+  ChangeDefaultResourceColor,
+  ChangeLabelFontSize,
+  ChangeLabelFontStyle,
+  ChangeLabelWidth,
+  ChangeTooltip,
   RemoveBandsOrPointsForSource,
   RemoveSubBand,
   SelectBand,
@@ -165,6 +173,101 @@ describe('timeline reducer', () => {
       viewTimeRange: { end: 100, start: 0 },
     });
   });
+
+  it('handle ChangeCurrentTimeCursor', () => {
+    timelineState = reducer(timelineState, new ChangeCurrentTimeCursor(true));
+    expect(timelineState).toEqual({
+      ...initialState,
+      currentTimeCursor: true,
+    });
+  });
+
+  it('handle ChangeDateFormat', () => {
+    timelineState = reducer(timelineState, new ChangeDateFormat('Julian'));
+    expect(timelineState).toEqual({
+      ...initialState,
+      dateFormat: 'Julian',
+    });
+  });
+
+  it('handle ChangeDefaultFillColor', () => {
+    timelineState = reducer(timelineState, new ChangeDefaultFillColor('#ff0000'));
+    expect(timelineState).toEqual({
+      ...initialState,
+      defaultSettings: {
+        fillColor: '#ff0000',
+        labelFontSize: 9,
+        labelFontStyle: 'Georgia',
+        labelWidth: 100,
+        resourceColor: '#000000',
+      },
+    });
+  });
+
+  it('handle ChangeDefaultResourceColor', () => {
+    timelineState = reducer(timelineState, new ChangeDefaultResourceColor('#00ff00'));
+    expect(timelineState).toEqual({
+      ...initialState,
+      defaultSettings: {
+        fillColor: '#000000',
+        labelFontSize: 9,
+        labelFontStyle: 'Georgia',
+        labelWidth: 100,
+        resourceColor: '#00ff00',
+      },
+    });
+  });
+
+  it('handle ChangeTooltip', () => {
+    timelineState = reducer(timelineState, new ChangeTooltip(true));
+    expect(timelineState).toEqual({
+      ...initialState,
+      tooltip: true,
+    });
+  });
+
+  it('handle ChangeLabelFontSize', () => {
+    timelineState = reducer(timelineState, new ChangeLabelFontSize(11));
+    expect(timelineState).toEqual({
+      ...initialState,
+      defaultSettings: {
+        fillColor: '#000000',
+        labelFontSize: 11,
+        labelFontStyle: 'Georgia',
+        labelWidth: 100,
+        resourceColor: '#000000',
+      },
+    });
+  });
+
+  it('handle ChangeLabelFontStyle', () => {
+    timelineState = reducer(timelineState, new ChangeLabelFontStyle('Courier'));
+    expect(timelineState).toEqual({
+      ...initialState,
+      defaultSettings: {
+        fillColor: '#000000',
+        labelFontSize: 9,
+        labelFontStyle: 'Courier',
+        labelWidth: 100,
+        resourceColor: '#000000',
+      },
+    });
+  });
+
+  it('handle ChangeLabelWidth', () => {
+    timelineState = reducer(timelineState, new ChangeLabelWidth(48));
+    expect(timelineState).toEqual({
+      ...initialState,
+      defaultSettings: {
+        fillColor: '#000000',
+        labelFontSize: 9,
+        labelFontStyle: 'Georgia',
+        labelWidth: 48,
+        resourceColor: '#000000',
+      },
+    });
+  });
+
 
   it('handle RemoveBandsOrPointsForSource', () => {
     const source: RavenSource = rootSource;

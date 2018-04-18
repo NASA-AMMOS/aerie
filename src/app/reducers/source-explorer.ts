@@ -100,12 +100,6 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
     case SourceExplorerActionTypes.FetchInitialSources:
     case SourceExplorerActionTypes.LoadFromSource:
       return { ...state, fetchPending: true };
-    case SourceExplorerActionTypes.ImportSourceEvent:
-      return state;
-    case SourceExplorerActionTypes.ImportSourceFailure:
-      return state;
-    case SourceExplorerActionTypes.ImportSourceSuccess:
-      return state;
     case SourceExplorerActionTypes.NewSources:
       return newSources(state, action);
     case SourceExplorerActionTypes.OpenEvent:

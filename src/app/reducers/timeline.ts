@@ -19,6 +19,9 @@ import {
   AddSubBand,
   ChangeDefaultFillColor,
   ChangeDefaultResourceColor,
+  ChangeLabelFontSize,
+  ChangeLabelFontStyle,
+  ChangeLabelWidth,
   RemoveBandsOrPointsForSource,
   RemoveSubBand,
   SelectBand,
@@ -55,9 +58,6 @@ export interface TimelineState {
   currentTimeCursor: boolean;
   dateFormat: string;
   defaultSettings: RavenDefaultSettings;
-  labelFontSize: number;
-  labelFontStyle: string;
-  labelWidth: number;
   maxTimeRange: RavenTimeRange;
   selectedBandId: string;
   selectedPoint: RavenPoint | null;
@@ -81,11 +81,11 @@ export const initialState: TimelineState = {
   dateFormat: 'Day-Month-Year',
   defaultSettings: {
     fillColor: '#000000',
+    labelFontSize: 9,
+    labelFontStyle: 'Georgia',
+    labelWidth: 100,
     resourceColor: '#000000',
   },
-  labelFontSize: 9,
-  labelFontStyle: 'Georgia',
-  labelWidth: 100,
   maxTimeRange: { end: 0, start: 0 },
   selectedBandId: '',
   selectedPoint: null,
@@ -129,11 +129,11 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
     case TimelineActionTypes.ChangeTooltip:
       return { ...state, tooltip: action.tooltip };
     case TimelineActionTypes.ChangeLabelFontSize:
-      return { ...state, labelFontSize: action.labelFontSize };
+      return changeLabelFontSize(state, action);
     case TimelineActionTypes.ChangeLabelWidth:
-      return { ...state, labelWidth: action.labelWidth };
+      return changeLabelWidth(state, action);
     case TimelineActionTypes.ChangeLabelFontStyle:
-      return { ...state, labelFontStyle: action.labelFontStyle };
+      return changeLabelFontStyle(state, action);
     case TimelineActionTypes.ChangeDefaultFillColor:
       return changeDefaultFillColor (state, action);
     case TimelineActionTypes.ChangeDefaultResourceColor:
@@ -266,6 +266,18 @@ export function changeDefaultResourceColor(state: TimelineState, action: ChangeD
         colors.push(action.defaultResourceColor);
       }
       return { ...state, defaultSettings: { ...state.defaultSettings, resourceColor: action.defaultResourceColor }, colorPalette: colors };
+}
+
+export function changeLabelFontSize (state: TimelineState, action: ChangeLabelFontSize): TimelineState {
+  return { ...state, defaultSettings: { ...state.defaultSettings, labelFontSize: action.labelFontSize}};
+}
+
+export function changeLabelFontStyle (state: TimelineState, action: ChangeLabelFontStyle): TimelineState {
+  return { ...state, defaultSettings: { ...state.defaultSettings, labelFontStyle: action.labelFontStyle}};
+}
+
+export function changeLabelWidth (state: TimelineState, action: ChangeLabelWidth): TimelineState {
+  return { ...state, defaultSettings: { ...state.defaultSettings, labelWidth: action.labelWidth}};
 }
 
 /**
