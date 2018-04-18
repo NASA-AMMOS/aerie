@@ -27,7 +27,6 @@ export enum SourceExplorerActionTypes {
   ImportSourceEvent    = '[sourceExplorer] import_source_event',
   ImportSourceFailure  = '[sourceExplorer] import_source_failure',
   ImportSourceSuccess  = '[sourceExplorer] import_source_success',
-  LoadFromSource       = '[sourceExplorer] load_from_source',
   NewSources           = '[sourceExplorer] new_sources',
   OpenEvent            = '[sourceExplorer] open_event',
   RemoveSource         = '[sourceExplorer] remove_source',
@@ -74,12 +73,6 @@ export class ExpandEvent implements Action {
 
 export class FetchInitialSources implements Action {
   readonly type = SourceExplorerActionTypes.FetchInitialSources;
-}
-
-export class LoadFromSource implements Action {
-  readonly type = SourceExplorerActionTypes.LoadFromSource;
-
-  constructor(public sourceUrl: string) {}
 }
 
 export class ImportSourceEvent implements Action {
@@ -172,7 +165,6 @@ export type SourceExplorerAction =
   ImportSourceEvent |
   ImportSourceFailure |
   ImportSourceSuccess |
-  LoadFromSource |
   NewSources |
   OpenEvent |
   RemoveSource |
