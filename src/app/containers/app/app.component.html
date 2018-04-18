@@ -9,12 +9,14 @@
 
   <span class="spacer"></span>
 
-  <button mat-icon-button (click)="drawer='globals'; globalSettingsDrawer.toggle()">
+  <button mat-icon-button matTooltip="global settings"
+    (click)="drawer='globals'; globalSettingsDrawer.toggle()">
     <mat-icon class="mat-24" aria-label="List">
       settings
     </mat-icon>
   </button>
-  <button mat-icon-button (click)="drawer='epochs'; globalSettingsDrawer.toggle()">
+  <button mat-icon-button matTooltip="manage epochs"
+    (click)="drawer='epochs'; globalSettingsDrawer.toggle()">
       <mat-icon class="mat-24" aria-label="List">
         query_builder
       </mat-icon>

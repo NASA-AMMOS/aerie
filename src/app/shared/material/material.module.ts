@@ -30,6 +30,7 @@ import {
   MatTableModule,
   MatTabsModule,
   MatToolbarModule,
+  MatTooltipModule,
 } from '@angular/material';
 
 export const MODULES = [
@@ -53,6 +54,7 @@ export const MODULES = [
   MatTableModule,
   MatTabsModule,
   MatToolbarModule,
+  MatTooltipModule,
 ];
 
 /**
