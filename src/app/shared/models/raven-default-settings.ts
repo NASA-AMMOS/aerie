@@ -3,5 +3,5 @@ export interface RavenDefaultSettings {
   resourceColor: string;
   fillColor: string;
   labelFontSize: number;
-  labelFontStyle: string;
+  labelFont: string;
 }

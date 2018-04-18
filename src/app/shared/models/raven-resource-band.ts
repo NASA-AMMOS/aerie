@@ -25,6 +25,8 @@ export interface RavenResourceBand {
   interpolation: string;
   label: string;
   labelColor: number[];
+  labelFontSize: number;
+  labelFont: string;
   maxTimeRange: RavenTimeRange;
   minorLabels: string[];
   name: string;

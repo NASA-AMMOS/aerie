@@ -26,9 +26,9 @@ import {
   ChangeDateFormat,
   ChangeDefaultActivityLayout,
   ChangeDefaultFillColor,
+  ChangeDefaultLabelFont,
+  ChangeDefaultLabelFontSize,
   ChangeDefaultResourceColor,
-  ChangeLabelFontSize,
-  ChangeLabelFontStyle,
   ChangeLabelWidth,
   ChangeTooltip,
   RemoveBandsOrPointsForSource,
@@ -198,8 +198,8 @@ describe('timeline reducer', () => {
       defaultSettings: {
         activityLayout: 2,
         fillColor: '#000000',
+        labelFont: 'Georgia',
         labelFontSize: 9,
-        labelFontStyle: 'Georgia',
         resourceColor: '#000000',
       },
     });
@@ -212,8 +212,8 @@ describe('timeline reducer', () => {
       defaultSettings: {
         activityLayout: 0,
         fillColor: '#ff0000',
+        labelFont: 'Georgia',
         labelFontSize: 9,
-        labelFontStyle: 'Georgia',
         resourceColor: '#000000',
       },
     });
@@ -226,8 +226,8 @@ describe('timeline reducer', () => {
       defaultSettings: {
         activityLayout: 0,
         fillColor: '#000000',
+        labelFont: 'Georgia',
         labelFontSize: 9,
-        labelFontStyle: 'Georgia',
         resourceColor: '#00ff00',
       },
     });
@@ -242,28 +242,28 @@ describe('timeline reducer', () => {
   });
 
   it('handle ChangeLabelFontSize', () => {
-    timelineState = reducer(timelineState, new ChangeLabelFontSize(11));
+    timelineState = reducer(timelineState, new ChangeDefaultLabelFontSize(11));
     expect(timelineState).toEqual({
       ...initialState,
       defaultSettings: {
         activityLayout: 0,
         fillColor: '#000000',
+        labelFont: 'Georgia',
         labelFontSize: 11,
-        labelFontStyle: 'Georgia',
         resourceColor: '#000000',
       },
     });
   });
 
-  it('handle ChangeLabelFontStyle', () => {
-    timelineState = reducer(timelineState, new ChangeLabelFontStyle('Courier'));
+  it('handle ChangeLabelFont', () => {
+    timelineState = reducer(timelineState, new ChangeDefaultLabelFont('Courier'));
     expect(timelineState).toEqual({
       ...initialState,
       defaultSettings: {
         activityLayout: 0,
         fillColor: '#000000',
+        labelFont: 'Courier',
         labelFontSize: 9,
-        labelFontStyle: 'Courier',
         resourceColor: '#000000',
       },
     });

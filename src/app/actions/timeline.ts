@@ -26,9 +26,9 @@ export enum TimelineActionTypes {
   ChangeDateFormat             = '[timeline] change_date_format',
   ChangeDefaultActivityLayout  = '[timeline] change_default_activity_layout',
   ChangeDefaultFillColor       = '[timeline] change_default_fill_color',
+  ChangeDefaultLabelFontSize   = '[timeline] change_default_label_fonr_size',
+  ChangeDefaultLabelFont  = '[timeline] change_default_label_font',
   ChangeDefaultResourceColor   = '[timeline] change_default_resource_color',
-  ChangeLabelFontSize          = '[timeline] change_label_fonr_size',
-  ChangeLabelFontStyle         = '[timeline] change_label_font_style',
   ChangeLabelWidth             = '[timeline] change_label_width',
   ChangeTooltip                = '[timeline] change_tooltip',
   RemoveBandsOrPointsForSource = '[timeline] remove_bands_or_points_for_source',
@@ -95,22 +95,22 @@ export class ChangeDefaultFillColor implements Action {
   constructor(public defaultFillColor: string) {}
 }
 
-export class ChangeDefaultResourceColor implements Action {
-  readonly type = TimelineActionTypes.ChangeDefaultResourceColor;
-
-  constructor(public defaultResourceColor: string) {}
-}
-
-export class ChangeLabelFontSize implements Action {
-  readonly type = TimelineActionTypes.ChangeLabelFontSize;
+export class ChangeDefaultLabelFontSize implements Action {
+  readonly type = TimelineActionTypes.ChangeDefaultLabelFontSize;
 
   constructor(public labelFontSize: number) {}
 }
 
-export class ChangeLabelFontStyle implements Action {
-  readonly type = TimelineActionTypes.ChangeLabelFontStyle;
+export class ChangeDefaultLabelFont implements Action {
+  readonly type = TimelineActionTypes.ChangeDefaultLabelFont;
 
-  constructor(public labelFontStyle: string) {}
+  constructor(public labelFont: string) {}
+}
+
+export class ChangeDefaultResourceColor implements Action {
+  readonly type = TimelineActionTypes.ChangeDefaultResourceColor;
+
+  constructor(public defaultResourceColor: string) {}
 }
 
 export class ChangeLabelWidth implements Action {
@@ -185,8 +185,8 @@ export type TimelineAction =
   ChangeDateFormat |
   ChangeDefaultFillColor |
   ChangeDefaultResourceColor |
-  ChangeLabelFontSize |
-  ChangeLabelFontStyle |
+  ChangeDefaultLabelFontSize |
+  ChangeDefaultLabelFont |
   ChangeLabelWidth |
   ChangeTooltip |
   RemoveBandsOrPointsForSource |

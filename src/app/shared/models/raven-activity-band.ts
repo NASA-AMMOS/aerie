@@ -26,6 +26,8 @@ export interface RavenActivityBand {
   id: string;
   label: string;
   labelColor: number[];
+  labelFontSize: number;
+  labelFont: string;
   layout: number;
   legend: string;
   maxTimeRange: RavenTimeRange;

@@ -46,13 +46,10 @@ export class AppComponent implements OnDestroy {
   // global settinga
   dateFormat: string;
   defaultSettings: RavenDefaultSettings;
-  defaultResourceColor: string;
   colorPalette: string[];
   labelWidth: number;
   tooltip: boolean;
   currentTimeCursor: boolean;
-  labelFontStyle: string;
-  labelFontSize: number;
 
   // epochs
   dayCode: string;
@@ -98,8 +95,6 @@ export class AppComponent implements OnDestroy {
       this.labelWidth = state.labelWidth;
       this.tooltip = state.tooltip;
       this.currentTimeCursor = state.currentTimeCursor;
-      this.labelFontSize = state.defaultSettings.labelFontSize;
-      this.labelFontStyle = state.defaultSettings.labelFontStyle;
       this.changeDetector.markForCheck();
     });
   }
@@ -145,20 +140,20 @@ export class AppComponent implements OnDestroy {
     this.store.dispatch(new timelineActions.ChangeDefaultFillColor(resourceColor));
   }
 
+  onChangeDefaultLabelFontSize(labelFontSize: number) {
+    this.store.dispatch(new timelineActions.ChangeDefaultLabelFontSize(labelFontSize));
+  }
+
+  onChangeDefaultLabelFont(labelFont: string) {
+    this.store.dispatch(new timelineActions.ChangeDefaultLabelFont(labelFont));
+  }
+
   onChangeDefaultResourceColor(resourceColor: string) {
     this.store.dispatch(new timelineActions.ChangeDefaultResourceColor(resourceColor));
   }
 
   onChangeEarthSecToEpochSec(earthSecToEpochSec: number) {
     this.store.dispatch(new epochsActions.ChangeEarthSecToEpochSec(earthSecToEpochSec));
-  }
-
-  onChangeLabelFontSize(labelFontSize: number) {
-    this.store.dispatch(new timelineActions.ChangeLabelFontSize(labelFontSize));
-  }
-
-  onChangeLabelFontStyle(labelFontStyle: string) {
-    this.store.dispatch(new timelineActions.ChangeLabelFontStyle(labelFontStyle));
   }
 
   onChangeLabelWidth(labelWidth: number) {

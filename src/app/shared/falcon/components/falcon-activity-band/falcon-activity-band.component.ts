@@ -42,6 +42,8 @@ export class FalconActivityBandComponent implements OnChanges, OnDestroy, OnInit
   @Input() id: string;
   @Input() label: string;
   @Input() labelColor: number[];
+  @Input() labelFont: string;
+  @Input() labelFontSize: number;
   @Input() layout: number;
   @Input() minorLabels: string[];
   @Input() name: string;
@@ -116,6 +118,8 @@ export class FalconActivityBandComponent implements OnChanges, OnDestroy, OnInit
       intervals: [],
       label: this.label,
       labelColor: this.labelColor,
+      labelFont: this.labelFont,
+      labelFontSize: this.labelFontSize,
       layout: this.layout,
       minorLabels: this.minorLabels,
       name: this.name,

@@ -37,6 +37,8 @@ export class FalconResourceBandComponent implements OnChanges, OnDestroy, OnInit
   @Input() fill: boolean;
   @Input() fillColor: number[];
   @Input() font: string;
+  @Input() labelFont: string;
+  @Input() labelFontSize: number;
   @Input() height: number;
   @Input() heightPadding: number;
   @Input() id: string;
@@ -111,7 +113,9 @@ export class FalconResourceBandComponent implements OnChanges, OnDestroy, OnInit
       interpolation: this.interpolation,
       intervals: [],
       label: this.label,
-      labelColor: [0, 0, 0],
+      labelColor: this.color,
+      labelFont: this.labelFont,
+      labelFontSize: this.labelFontSize,
       minorLabels: this.minorLabels,
       name: this.name,
       painter: new (window as any).ResourcePainter({

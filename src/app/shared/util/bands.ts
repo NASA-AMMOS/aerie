@@ -51,7 +51,7 @@ export function toRavenBandData(sourceId: string, graphData: MpsServerGraphData,
   if (metadata.hasTimelineType === 'measurement' && (metadata as MpsServerStateMetadata).hasValueType === 'string_xdr' ||
       metadata.hasTimelineType === 'state') {
     // State.
-    const stateBand = toStateBand(sourceId, metadata as MpsServerStateMetadata, timelineData as MpsServerStatePoint[]);
+    const stateBand = toStateBand(sourceId, metadata as MpsServerStateMetadata, timelineData as MpsServerStatePoint[], defaultSettings);
     return [stateBand];
   } else if (metadata.hasTimelineType === 'measurement') {
     // Resource.
@@ -90,6 +90,8 @@ export function toActivityBands(sourceId: string, timelineData: MpsServerActivit
       id: uniqueId(),
       label: `${legend}`,
       labelColor: [0, 0, 0],
+      labelFont: defaultSettings.labelFont,
+      labelFontSize: defaultSettings.labelFontSize,
       layout: defaultSettings.activityLayout,
       legend,
       maxTimeRange,
@@ -180,6 +182,8 @@ export function toResourceBand(sourceId: string, metadata: MpsServerResourceMeta
     interpolation: 'linear',
     label: metadata.hasObjectName,
     labelColor: [0, 0, 0],
+    labelFont: defaultSettings.labelFont,
+    labelFontSize: defaultSettings.labelFontSize,
     maxTimeRange,
     minorLabels: [],
     name: metadata.hasObjectName,
@@ -200,7 +204,7 @@ export function toResourceBand(sourceId: string, metadata: MpsServerResourceMeta
 /**
  * Returns a state band given metadata and timelineData.
  */
-export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, timelineData: MpsServerStatePoint[]): RavenStateBand {
+export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, timelineData: MpsServerStatePoint[], defaultSettings: RavenDefaultSettings): RavenStateBand {
   const { maxTimeRange, points } = getStatePoints(sourceId, timelineData);
 
   const stateBand: RavenStateBand = {
@@ -213,6 +217,8 @@ export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, 
     id: uniqueId(),
     label: metadata.hasObjectName,
     labelColor: [0, 0, 0],
+    labelFont: defaultSettings.labelFont,
+    labelFontSize: defaultSettings.labelFontSize,
     maxTimeRange,
     minorLabels: [],
     name: metadata.hasObjectName,

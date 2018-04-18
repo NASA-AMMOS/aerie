@@ -17,10 +17,10 @@ export class RavenGlobalSettingsComponent {
   @Input() currentTimeCursor: boolean;
   @Input() dateFormat: string;
   @Input() defaultActivityLayout: number;
-  @Input() defaultResourceColor: string;
   @Input() defaultFillColor: string;
-  @Input() labelFontSize: number;
-  @Input() labelFontStyle: string;
+  @Input() defaultLabelFontSize: number;
+  @Input() defaultLabelFont: string;
+  @Input() defaultResourceColor: string;
   @Input() labelWidth: number;
   @Input() tooltip: boolean;
 
@@ -28,10 +28,10 @@ export class RavenGlobalSettingsComponent {
   @Output() changeCurrentTimeCursor: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() changeDateFormat: EventEmitter<string> = new EventEmitter<string>();
   @Output() changeDefaultFillColor: EventEmitter<string> = new EventEmitter<string>();
+  @Output() changeDefaultLabelFontSize: EventEmitter<number> = new EventEmitter<number>();
+  @Output() changeDefaultLabelFont: EventEmitter<string> = new EventEmitter<string>();
   @Output() changeDefaultResourceColor: EventEmitter<string> = new EventEmitter<string>();
   @Output() changeLabelWidth: EventEmitter<number> = new EventEmitter<number>();
-  @Output() changeLabelFontSize: EventEmitter<number> = new EventEmitter<number>();
-  @Output() changeLabelFontStyle: EventEmitter<string> = new EventEmitter<string>();
   @Output() changeTooltip: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   constructor(public vcRef: ViewContainerRef) {}
@@ -41,9 +41,9 @@ export class RavenGlobalSettingsComponent {
     this.changeLabelWidth.emit(this.labelWidth);
   }
 
-  public onChangeLabelFontSize(size: number) {
+  public onChangeDefaultLabelFontSize(size: number) {
     // emit new labelWidth
-    this.changeLabelFontSize.emit(this.labelFontSize);
+    this.changeDefaultLabelFontSize.emit(this.defaultLabelFontSize);
   }
 
   public onFillColorPickerClose() {
