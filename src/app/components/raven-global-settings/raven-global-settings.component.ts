@@ -41,7 +41,7 @@ export class RavenGlobalSettingsComponent {
     this.changeLabelWidth.emit(this.labelWidth);
   }
 
-  public onChangeDefaultLabelFontSize(size: number) {
+  public onChangeDefaultLabelFontSize() {
     // emit new labelWidth
     this.changeDefaultLabelFontSize.emit(this.defaultLabelFontSize);
   }
