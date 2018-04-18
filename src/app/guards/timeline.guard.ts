@@ -9,6 +9,9 @@
 
 import { Injectable } from '@angular/core';
 
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs/Subject';
+
 import {
   ActivatedRouteSnapshot,
   CanActivate,
@@ -30,12 +33,28 @@ import {
 
 import { AppState } from './../../app/store';
 
+import * as epochsActions from './../actions/epochs';
 import * as sourceExplorerActions from './../actions/source-explorer';
+import * as fromConfig from './../reducers/config';
 import * as fromSourceExplorer from './../reducers/source-explorer';
 
 @Injectable()
 export class TimelineGuard implements CanActivate {
-  constructor(private store$: Store<AppState>) {}
+  // config state
+  baseUrl: string;
+  epochsUrl: string;
+
+  private ngUnsubscribe: Subject<{}> = new Subject();
+
+  constructor(private store$: Store<AppState>) {
+    // Config state.
+    this.store$.select(fromConfig.getConfigState).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(state => {
+      this.epochsUrl = state.epochsUrl;
+      this.baseUrl = state.baseUrl;
+    });
+  }
 
   /**
    * Returns a true boolean Observable if we can activate the route.
@@ -60,6 +79,7 @@ export class TimelineGuard implements CanActivate {
       tap((initialSourcesLoaded: boolean) => {
         if (!initialSourcesLoaded) {
           this.store$.dispatch(new sourceExplorerActions.FetchInitialSources());
+          this.store$.dispatch(new epochsActions.FetchEpochs(`${this.baseUrl}/${this.epochsUrl}`));
         }
       }),
       filter((initialSourcesLoaded: boolean) => initialSourcesLoaded),

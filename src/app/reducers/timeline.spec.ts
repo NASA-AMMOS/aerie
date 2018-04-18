@@ -22,6 +22,16 @@ import {
   AddBand,
   AddPointsToSubBand,
   AddSubBand,
+  ChangeCurrentTimeCursor,
+  ChangeDateFormat,
+  ChangeDefaultActivityLayout,
+  ChangeDefaultFillColor,
+  ChangeDefaultIcon,
+  ChangeDefaultLabelFont,
+  ChangeDefaultLabelFontSize,
+  ChangeDefaultResourceColor,
+  ChangeLabelWidth,
+  ChangeTooltip,
   RemoveBandsOrPointsForSource,
   RemoveSubBand,
   SelectBand,
@@ -159,6 +169,129 @@ describe('timeline reducer', () => {
       viewTimeRange: { end: 100, start: 0 },
     });
   });
+
+  it('handle ChangeCurrentTimeCursor', () => {
+    timelineState = reducer(timelineState, new ChangeCurrentTimeCursor(true));
+    expect(timelineState).toEqual({
+      ...initialState,
+      currentTimeCursor: true,
+    });
+  });
+
+  it('handle ChangeDateFormat', () => {
+    timelineState = reducer(timelineState, new ChangeDateFormat('Julian'));
+    expect(timelineState).toEqual({
+      ...initialState,
+      dateFormat: 'Julian',
+    });
+  });
+
+  it('handle ChangeDefaultActivityLayout', () => {
+    timelineState = reducer(timelineState, new ChangeDefaultActivityLayout(2));
+    expect(timelineState).toEqual({
+      ...initialState,
+      defaultSettings: {
+        activityLayout: 2,
+        fillColor: '#000000',
+        icon: 'circle',
+        labelFont: 'Georgia',
+        labelFontSize: 9,
+        resourceColor: '#000000',
+      },
+    });
+  });
+
+  it('handle ChangeDefaultFillColor', () => {
+    timelineState = reducer(timelineState, new ChangeDefaultFillColor('#ff0000'));
+    expect(timelineState).toEqual({
+      ...initialState,
+      defaultSettings: {
+        activityLayout: 0,
+        fillColor: '#ff0000',
+        icon: 'circle',
+        labelFont: 'Georgia',
+        labelFontSize: 9,
+        resourceColor: '#000000',
+      },
+    });
+  });
+
+  it('handle ChangeDefaultIcon', () => {
+    timelineState = reducer(timelineState, new ChangeDefaultIcon('triangle'));
+    expect(timelineState).toEqual({
+      ...initialState,
+      defaultSettings: {
+        activityLayout: 0,
+        fillColor: '#000000',
+        icon: 'triangle',
+        labelFont: 'Georgia',
+        labelFontSize: 9,
+        resourceColor: '#000000',
+      },
+    });
+  });
+
+  it('handle ChangeDefaultResourceColor', () => {
+    timelineState = reducer(timelineState, new ChangeDefaultResourceColor('#00ff00'));
+    expect(timelineState).toEqual({
+      ...initialState,
+      defaultSettings: {
+        activityLayout: 0,
+        fillColor: '#000000',
+        icon: 'circle',
+        labelFont: 'Georgia',
+        labelFontSize: 9,
+        resourceColor: '#00ff00',
+      },
+    });
+  });
+
+  it('handle ChangeTooltip', () => {
+    timelineState = reducer(timelineState, new ChangeTooltip(true));
+    expect(timelineState).toEqual({
+      ...initialState,
+      tooltip: true,
+    });
+  });
+
+  it('handle ChangeLabelFontSize', () => {
+    timelineState = reducer(timelineState, new ChangeDefaultLabelFontSize(11));
+    expect(timelineState).toEqual({
+      ...initialState,
+      defaultSettings: {
+        activityLayout: 0,
+        fillColor: '#000000',
+        icon: 'circle',
+        labelFont: 'Georgia',
+        labelFontSize: 11,
+        resourceColor: '#000000',
+      },
+    });
+  });
+
+  it('handle ChangeLabelFont', () => {
+    timelineState = reducer(timelineState, new ChangeDefaultLabelFont('Courier'));
+    expect(timelineState).toEqual({
+      ...initialState,
+      defaultSettings: {
+        activityLayout: 0,
+        fillColor: '#000000',
+        icon: 'circle',
+        labelFont: 'Courier',
+        labelFontSize: 9,
+        resourceColor: '#000000',
+      },
+    });
+  });
+
+  it('handle ChangeLabelWidth', () => {
+    timelineState = reducer(timelineState, new ChangeLabelWidth(48));
+    expect(timelineState).toEqual({
+      ...initialState,
+      labelWidth: 48,
+    });
+  });
+
 
   it('handle RemoveBandsOrPointsForSource', () => {
     const source: RavenSource = rootSource;

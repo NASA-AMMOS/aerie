@@ -1,0 +1,121 @@
+<mat-card>
+  <mat-card-title>Global Settings</mat-card-title>
+  <mat-card-content>
+    <div fxLayout="column"
+      class="field">
+      <div fxLayout="row"
+        fxLayoutGap="50px"
+        fxLayoutAlign="start center">
+        <mat-form-field>
+          <mat-select placeholder="Current Time Cursor"
+            [value]="currentTimeCursor"
+            (selectionChange)="changeCurrentTimeCursor.emit($event.value)">
+            <mat-option [value]="true">Enable</mat-option>
+            <mat-option [value]="false">Disable</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-select placeholder="Tooltip"
+            [value]="tooltip"
+            (selectionChange)="changeTooltip.emit($event.value)">
+            <mat-option [value]="true">Enable</mat-option>
+            <mat-option [value]="false">Disable</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div fxLayout="row" fxLayoutGap="50px" fxLayoutAlign="start center">
+       <mat-form-field>
+         <mat-select placeholder="Default Label Font"
+            [value]="defaultLabelFont"
+            (selectionChange)="changeDefaultLabelFont.emit($event.value)">
+            <mat-option [value]="'Arial'">Arial</mat-option>
+            <mat-option [value]="'Helvetica'">Helvetica</mat-option>
+            <mat-option [value]="'Times New Roman'">Times New Roman</mat-option>
+            <mat-option [value]="'Courier'">Courier</mat-option>
+            <mat-option [value]="'Georgia'">Georgia</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-select placeholder="Date Format"
+            [value]="dateFormat"
+            (selectionChange)="changeDateFormat.emit($event.value)">
+            <mat-option [value]="'Epoch Relative'">Epoch Relative</mat-option>
+            <mat-option [value]="'Julian'">Julian</mat-option>
+            <mat-option [value]="'Day-Month-Year'">Day-Month-Year</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div fxLayout="row" fxLayoutGap="50px" fxLayoutAlign="start center">
+        <mat-form-field>
+          <mat-select placeholder="Default Activity Layout"
+            [value]="defaultActivityLayout"
+            (selectionChange)="changeDefaultActivityLayout.emit($event.value)">
+            <mat-option [value]="0">Auto-fit</mat-option>
+            <mat-option [value]="1">Packed</mat-option>
+            <mat-option [value]="2">Waterfall</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-select placeholder="Default Icon"
+            [value]="defaultIcon"
+            (selectionChange)="changeDefaultIcon.emit($event.value)">
+            <mat-option [value]="'plus'">plus</mat-option>
+            <mat-option [value]="'cross'">cross</mat-option>
+            <mat-option [value]="'circle'">circle</mat-option>
+            <mat-option [value]="'triangle'">triangle</mat-option>
+            <mat-option [value]="'square'">square</mat-option>
+            <mat-option [value]="'diamond'">diamond</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+    <div class="fieldLabel">
+      <span>Default Label Font Size</span>
+      <input mat-input
+        [(ngModel)]="defaultLabelFontSize"
+        class="defaultLabelFontSize"
+        type="number"
+        name="defaultLabelFontSize"
+        step="1"
+        min="5"
+        max="32"
+        (click)="onChangeDefaultLabelFontSize()"/>
+    </div>
+    <div class="fieldLabel">
+      <span>Label Width</span>
+      <input mat-input
+        [(ngModel)]="labelWidth"
+        class="labelWidth"
+        type="number"
+        name="labelWidth"
+        step="5"
+        min="5"
+        max="300"
+        (click)="onChangeLabelWidth()"/>
+    </div>
+    <div class="fieldLabel">
+      <span>Default Resource Color</span>
+    </div>
+    <div class="field">
+      <input [value]="defaultResourceColor"
+        [(colorPicker)]="defaultResourceColor"
+        [style.background]="defaultResourceColor"
+        [cpCancelButton]="true"
+        [cpPresetColors]="colorPalette"
+        [cpOutputFormat]="'hex'"
+        (colorPickerClose)="onResourceColorPickerClose()"/>
+    </div>
+    <div class="fieldLabel">
+      <span>Default Fill Color</span>
+    </div>
+    <div class="field">
+      <input [value]="defaultFillColor"
+        [(colorPicker)]="defaultFillColor"
+        [style.background]="defaultFillColor"
+        [cpCancelButton]="true"
+        [cpPresetColors]="colorPalette"
+        [cpOutputFormat]="'hex'"
+        (colorPickerClose)="onFillColorPickerClose()"/>
+    </div>
+  </mat-card-content>
+</mat-card>

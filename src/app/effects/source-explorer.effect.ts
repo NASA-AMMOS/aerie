@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
 import { Actions, Effect, ofType } from '@ngrx/effects';
@@ -37,10 +37,12 @@ import {
   CloseEvent,
   ExpandEvent,
   FetchInitialSources,
+  ImportSourceEvent,
   OpenEvent,
   RemoveSourceEvent,
   SaveState,
   SourceExplorerActionTypes,
+  UpdateBranch,
 } from './../actions/source-explorer';
 
 import * as sourceExplorerActions from './../actions/source-explorer';
@@ -64,6 +66,7 @@ import {
   MpsServerGraphData,
   MpsServerSource,
   RavenCompositeBand,
+  RavenDefaultSettings,
   RavenSource,
   RavenSubBand,
   RavenTimeRange,
@@ -138,6 +141,37 @@ export class SourceExplorerEffects {
     ),
   );
 
+  /**
+   * Listen for ImportSource and perform PUT for the data. Metadata for file is sent using POST to the collection after the collection is successfully created
+   */
+  @Effect()
+  importSource$: Observable<Action> = this.actions$.pipe(
+    ofType<ImportSourceEvent>(SourceExplorerActionTypes.ImportSourceEvent),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    concatMap(({ state, action }) => {
+      let headers = new HttpHeaders();
+      headers = headers.set('Content-Type', 'text/csv');
+      return this.http.put(`${action.source.url}/${action.importData.name}?timeline_type=${action.importData.fileType}`, action.importData.fileData,
+        { headers: headers, responseType: 'text' }).pipe(
+        concatMap(() => {
+          if (action.importData.mappingData) {
+            return this.importMappingData(action.importData.name, action.importData.mappingData, action.source.url).pipe(
+              map(() => new sourceExplorerActions.ImportSourceSuccess()));
+          } else {
+            // no need to send mapping data
+            return of(new sourceExplorerActions.ImportSourceSuccess());
+          }
+        }),
+        catchError((e) => {
+          console.error('SourceExplorerEffects - importSource error: ', e);
+          return of(new sourceExplorerActions.ImportSourceFailure());
+        }),
+      );
+    }),
+
+  );
+
   @Effect()
   openEvent$: Observable<Action> = this.actions$.pipe(
     ofType<OpenEvent>(SourceExplorerActionTypes.OpenEvent),
@@ -145,7 +179,7 @@ export class SourceExplorerEffects {
     map(([action, state]) => ({ action, state })),
     concatMap(({ state, action }) =>
       concat(
-        this.open(state.sourceExplorer.treeBySourceId, action.sourceId, state.timeline.bands, state.timeline.selectedBandId, state.timeline.selectedSubBandId),
+        this.open(state.sourceExplorer.treeBySourceId, action.sourceId, state.timeline.bands, state.timeline.selectedBandId, state.timeline.selectedSubBandId, state.timeline.defaultSettings),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
       ).pipe(
         catchError(this.errorOpenEvent(action.sourceId)),
@@ -192,11 +226,26 @@ export class SourceExplorerEffects {
     ),
   );
 
+  @Effect()
+  updateBranch$: Observable<Action> = this.actions$.pipe(
+    ofType<UpdateBranch>(SourceExplorerActionTypes.UpdateBranch),
+    concatMap(action =>
+      concat(
+        this.fetchNewSources(action.sourceUrl, action.sourceId, false).pipe(
+              map((sources: RavenSource[]) => new sourceExplorerActions.NewSources(action.sourceId, sources)),
+            ),
+        of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+      ).pipe(
+        catchError(this.errorUpdateBranch(action.sourceId)),
+      ),
+    ),
+  );
+
   constructor(
     private http: HttpClient,
     private actions$: Actions,
     private store$: Store<AppState>,
-  ) {}
+  ) { }
 
   /**
    * Helper. Returns a stream of actions that need to occur when expanding a source explorer source.
@@ -219,6 +268,7 @@ export class SourceExplorerEffects {
         }
       }
     }
+    // }
 
     return actions;
   }
@@ -264,7 +314,7 @@ export class SourceExplorerEffects {
           take(1),
           concatMap(state =>
             concat(
-              this.open(state.sourceExplorer.treeBySourceId, sourceId, bands, null, null),
+              this.open(state.sourceExplorer.treeBySourceId, sourceId, bands, null, null, state.timeline.defaultSettings),
               of(new sourceExplorerActions.UpdateTreeSource(sourceId, { opened: true })),
             ),
           ),
@@ -278,8 +328,8 @@ export class SourceExplorerEffects {
    * Helper. Returns a stream of actions that need to occur when opening a source explorer source.
    * The order of the cases in this function are very important. Do not change the order.
    */
-  open(treeBySourceId: StringTMap<RavenSource>, sourceId: string, currentBands: RavenCompositeBand[], bandId: string | null, subBandId: string | null) {
-    return this.fetchSubBands(treeBySourceId[sourceId].url, sourceId).pipe(
+  open(treeBySourceId: StringTMap<RavenSource>, sourceId: string, currentBands: RavenCompositeBand[], bandId: string | null, subBandId: string | null, defaultSettings: RavenDefaultSettings) {
+    return this.fetchSubBands(treeBySourceId[sourceId].url, sourceId, defaultSettings).pipe(
       concatMap((newSubBands: RavenSubBand[]) => {
         const actions: Action[] = [];
 
@@ -362,11 +412,21 @@ export class SourceExplorerEffects {
   }
 
   /**
+   * Error Helper. Called when there is an error in expandEvent$.
+   */
+  errorUpdateBranch(sourceId: string) {
+    return (e: Error) => {
+      console.error('SourceExplorerEffects - errorUpdateBranch: ', e);
+      return of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }));
+    };
+  }
+
+  /**
    * Fetch helper. Fetches graph data from MPS Server and maps it to Raven sub-band data.
    */
-  fetchSubBands(sourceUrl: string, sourceId: string) {
+  fetchSubBands(sourceUrl: string, sourceId: string, defaultSettings: RavenDefaultSettings) {
     return this.http.get<MpsServerGraphData>(sourceUrl).pipe(
-      map((graphData: MpsServerGraphData) => toRavenBandData(sourceId, graphData)),
+      map((graphData: MpsServerGraphData) => toRavenBandData(sourceId, graphData, defaultSettings)),
     );
   }
 
@@ -414,5 +474,10 @@ export class SourceExplorerEffects {
         ),
       ),
     );
+  }
+
+  importMappingData(name: string, mappingData: string, dataUrl: string) {
+    dataUrl = dataUrl.replace('fs-mongodb', 'metadata-mongodb');
+    return this.http.post(`${dataUrl}/${name}`, mappingData, { responseType: 'text' });
   }
 }

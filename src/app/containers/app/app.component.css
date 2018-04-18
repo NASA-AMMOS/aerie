@@ -35,3 +35,15 @@
   width: 64px;
   height: 64px;
 }
+
+mat-sidenav,
+mat-sidenav.md-locked-open,
+mat-sidenav.md-closed.md-locked-open-add-active {
+    min-width: 500px !important;
+    width: 85vw !important;
+    max-width: 600px !important;
+}
+
+.done-button {
+  margin-top: 20px;
+}

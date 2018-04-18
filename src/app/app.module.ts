@@ -32,6 +32,10 @@ import { environment } from './../environments/environment';
 import { FalconModule } from './shared/falcon';
 import { MaterialModule } from './shared/material';
 
+import { ColorPickerModule } from 'ngx-color-picker';
+
+import { CollectionChangeService, WebsocketService } from './services';
+
 import {
   AppComponent,
   SourceExplorerComponent,
@@ -42,6 +46,9 @@ import {
   RavenActivityPointComponent,
   RavenBandsComponent,
   RavenConfirmDialogComponent,
+  RavenEpochsComponent,
+  RavenFileImportDialogComponent,
+  RavenGlobalSettingsComponent,
   RavenResourcePointComponent,
   RavenSettingsComponent,
   RavenStatePointComponent,
@@ -50,6 +57,7 @@ import {
 } from './components';
 
 import {
+  EpochsEffects,
   LayoutEffects,
   RouterEffects,
   SourceExplorerEffects,
@@ -76,6 +84,9 @@ export const DECLARATIONS = [
   RavenActivityPointComponent,
   RavenBandsComponent,
   RavenConfirmDialogComponent,
+  RavenEpochsComponent,
+  RavenFileImportDialogComponent,
+  RavenGlobalSettingsComponent,
   RavenResourcePointComponent,
   RavenSettingsComponent,
   RavenStatePointComponent,
@@ -87,10 +98,12 @@ export const DECLARATIONS = [
 
 export const ENTRY_COMPONENTS = [
   RavenConfirmDialogComponent,
+  RavenFileImportDialogComponent,
   RavenStateSaveDialogComponent,
 ];
 
 export const EFFECTS = [
+  EpochsEffects,
   LayoutEffects,
   RouterEffects,
   SourceExplorerEffects,
@@ -98,6 +111,7 @@ export const EFFECTS = [
 ];
 
 export const MODULES = [
+  ColorPickerModule,
   CommonModule,
   BrowserModule,
   BrowserAnimationsModule,
@@ -121,6 +135,8 @@ export const PROVIDERS = [
     useClass: CustomRouterStateSerializer,
   },
   TimelineGuard,
+  CollectionChangeService,
+  WebsocketService,
 ];
 
 export const SCHEMAS = [

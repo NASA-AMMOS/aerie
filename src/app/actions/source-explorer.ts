@@ -11,6 +11,7 @@ import { Action } from '@ngrx/store';
 
 import {
   BaseType,
+  ImportData,
   RavenSource,
   StringTMap,
 } from './../shared/models';
@@ -23,6 +24,10 @@ export enum SourceExplorerActionTypes {
   CollapseEvent        = '[sourceExplorer] collapse_event',
   ExpandEvent          = '[sourceExplorer] expand_event',
   FetchInitialSources  = '[sourceExplorer] fetch_initial_sources',
+  ImportSourceEvent    = '[sourceExplorer] import_source_event',
+  ImportSourceFailure  = '[sourceExplorer] import_source_failure',
+  ImportSourceSuccess  = '[sourceExplorer] import_source_success',
+  LoadFromSource       = '[sourceExplorer] load_from_source',
   NewSources           = '[sourceExplorer] new_sources',
   OpenEvent            = '[sourceExplorer] open_event',
   RemoveSource         = '[sourceExplorer] remove_source',
@@ -31,6 +36,7 @@ export enum SourceExplorerActionTypes {
   SelectSource         = '[sourceExplorer] select_source',
   SubBandIdAdd         = '[sourceExplorer] sub_band_id_add',
   SubBandIdRemove      = '[sourceExplorer] sub_band_id_remove',
+  UpdateBranch         = '[sourceExplorer] update_branch',
   UpdateSourceExplorer = '[sourceExplorer] update_source_explorer',
   UpdateTreeSource     = '[sourceExplorer] update_tree_source',
 }
@@ -68,6 +74,26 @@ export class ExpandEvent implements Action {
 
 export class FetchInitialSources implements Action {
   readonly type = SourceExplorerActionTypes.FetchInitialSources;
+}
+
+export class LoadFromSource implements Action {
+  readonly type = SourceExplorerActionTypes.LoadFromSource;
+
+  constructor(public sourceUrl: string) {}
+}
+
+export class ImportSourceEvent implements Action {
+  readonly type = SourceExplorerActionTypes.ImportSourceEvent;
+
+  constructor(public importData: ImportData, public source: RavenSource) {}
+}
+
+export class ImportSourceFailure implements Action {
+  readonly type = SourceExplorerActionTypes.ImportSourceFailure;
+}
+
+export class ImportSourceSuccess implements Action {
+  readonly type = SourceExplorerActionTypes.ImportSourceSuccess;
 }
 
 export class NewSources implements Action {
@@ -118,6 +144,11 @@ export class SubBandIdRemove implements Action {
   constructor(public sourceIds: string[], public subBandId: string) {}
 }
 
+export class UpdateBranch implements Action {
+  readonly type = SourceExplorerActionTypes.UpdateBranch;
+
+  constructor(public sourceUrl: string, public sourceId: string) {}
+}
 export class UpdateSourceExplorer implements Action {
   readonly type = SourceExplorerActionTypes.UpdateSourceExplorer;
 
@@ -138,6 +169,10 @@ export type SourceExplorerAction =
   CollapseEvent |
   ExpandEvent |
   FetchInitialSources |
+  ImportSourceEvent |
+  ImportSourceFailure |
+  ImportSourceSuccess |
+  LoadFromSource |
   NewSources |
   OpenEvent |
   RemoveSource |
@@ -146,5 +181,6 @@ export type SourceExplorerAction =
   SelectSource |
   SubBandIdAdd |
   SubBandIdRemove |
+  UpdateBranch |
   UpdateSourceExplorer |
   UpdateTreeSource;

@@ -20,13 +20,20 @@ import { Store } from '@ngrx/store';
 
 import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs/Subject';
+import { Subscription } from 'rxjs/Subscription';
 
+
+import * as fromConfig from './../../reducers/config';
 import * as fromSourceExplorer from './../../reducers/source-explorer';
 
+import * as epochsActions from './../../actions/epochs';
 import * as sourceExplorerActions from './../../actions/source-explorer';
+
+import { CollectionChangeService } from './../../services';
 
 import {
   RavenConfirmDialogComponent,
+  RavenFileImportDialogComponent,
   RavenStateSaveDialogComponent,
 } from './../../components';
 
@@ -43,8 +50,13 @@ import {
   templateUrl: './source-explorer.component.html',
 })
 export class SourceExplorerComponent implements OnDestroy {
+  // Config state
+  baseUrl: string;
+
   // Source Explorer state.
   tree: StringTMap<RavenSource>;
+
+  subscription: Subscription;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -52,7 +64,16 @@ export class SourceExplorerComponent implements OnDestroy {
     private changeDetector: ChangeDetectorRef,
     private dialog: MatDialog,
     private store: Store<fromSourceExplorer.SourceExplorerState>,
+    private collectionChangeService: CollectionChangeService,
   ) {
+    // Config state.
+    this.store.select(fromConfig.getConfigState).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(state => {
+      this.baseUrl = state.baseUrl;
+      this.changeDetector.markForCheck();
+    });
+
     // Source Explorer state.
     this.store.select(fromSourceExplorer.getTreeBySourceId).pipe(
       takeUntil(this.ngUnsubscribe),
@@ -64,6 +85,17 @@ export class SourceExplorerComponent implements OnDestroy {
       setTimeout(() =>
         this.changeDetector.detectChanges(),
       );
+    });
+
+    this.collectionChangeService.messages.subscribe((msg: any) => {
+      const data = JSON.parse(msg.data);
+      if (data.detail === 'data source changed') {
+        const pattern = new RegExp ('(.*/fs-mongodb)(/.*)/(.*)');
+        const match = data.subject.match (pattern);
+        const url = `${match[1]}${match[2]}`;
+        const sourceId = `${match[2]}`;
+        this.store.dispatch(new sourceExplorerActions.UpdateBranch(url, sourceId));
+      }
     });
   }
 
@@ -86,6 +118,10 @@ export class SourceExplorerComponent implements OnDestroy {
       this.openDeleteDialog(source);
     } else if (event === 'save') {
       this.openStateSaveDialog(source);
+    } else if (event === 'file-import') {
+      this.openFileImportDialog(source);
+    } else if (event === 'epoch-load') {
+      this.onLoadEpochs(source);
     }
   }
 
@@ -108,6 +144,10 @@ export class SourceExplorerComponent implements OnDestroy {
    */
   onExpand(source: RavenSource): void {
     this.store.dispatch(new sourceExplorerActions.ExpandEvent(source.id));
+  }
+
+  onLoadEpochs(source: RavenSource): void {
+    this.store.dispatch(new epochsActions.FetchEpochs(source.url));
   }
 
   /**
@@ -161,7 +201,7 @@ export class SourceExplorerComponent implements OnDestroy {
       data: {
         cancelText: 'No',
         confirmText: 'Yes',
-        message: 'Are you sure you want to delete this source?',
+        message: `Are you sure you want to delete ${source.name}?`,
       },
       width: '250px',
     });
@@ -189,6 +229,20 @@ export class SourceExplorerComponent implements OnDestroy {
     ).subscribe(result => {
       if (result.save) {
         this.store.dispatch(new sourceExplorerActions.SaveState(source, result.name));
+      }
+    });
+  }
+
+  openFileImportDialog(source: RavenSource): void {
+    const fileImportDialog = this.dialog.open(RavenFileImportDialogComponent, {
+      data: { source },
+      height: '600px',
+      width: '500px',
+    });
+
+    fileImportDialog.afterClosed().subscribe(result => {
+      if (result.import) {
+        this.store.dispatch(new sourceExplorerActions.ImportSourceEvent({ name: result.name, fileData: result.fileData, fileType: result.fileType, mappingData: result.mappingData }, source));
       }
     });
   }

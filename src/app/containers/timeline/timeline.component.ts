@@ -33,6 +33,7 @@ import * as timelineActions from './../../actions/timeline';
 import {
   RavenBandLeftClick,
   RavenCompositeBand,
+  RavenDefaultSettings,
   RavenPoint,
   RavenSettingsUpdate,
   RavenSortMessage,
@@ -68,6 +69,7 @@ export class TimelineComponent implements OnDestroy {
 
   // Timeline state.
   bands: RavenCompositeBand[];
+  defaultSettings: RavenDefaultSettings;
   labelWidth: number;
   maxTimeRange: RavenTimeRange;
   selectedBandId: string;
@@ -120,6 +122,7 @@ export class TimelineComponent implements OnDestroy {
       takeUntil(this.ngUnsubscribe),
     ).subscribe(state => {
       this.bands = state.bands;
+      this.defaultSettings = state.defaultSettings;
       this.labelWidth = state.labelWidth;
       this.maxTimeRange = state.maxTimeRange;
       this.selectedBandId = state.selectedBandId;

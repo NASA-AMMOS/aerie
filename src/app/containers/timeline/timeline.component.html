@@ -1,10 +1,5 @@
-<split
-  direction="horizontal"
-  (dragEnd)="onDragEnd()">
-  <split-area
-    [visible]="showLeftDrawer"
-    [order]="0"
-    size="25">
+<split direction="horizontal" (dragEnd)="onDragEnd()">
+  <split-area [visible]="showLeftDrawer" [order]="0" size="25">
     <app-source-explorer></app-source-explorer>
   </split-area>
 
@@ -25,17 +20,14 @@
           </mat-card>
         </div>
 
-        <div
-          *ngIf="bands.length === 0"
-          class="get-started">
+        <div *ngIf="bands.length === 0" class="get-started">
           <mat-card>
-            To get started, select some <i class="fa fa-area-chart" style="color: #17a923" aria-hidden="true"></i> Data Sources from the source explorer.
+            To get started, select some
+            <i class="fa fa-area-chart" style="color: #17a923" aria-hidden="true"></i> Data Sources from the source explorer.
           </mat-card>
         </div>
 
-        <div
-          *ngIf="bands.length > 0"
-          class="timeline-0">
+        <div *ngIf="bands.length > 0" class="timeline-0">
           <mat-card>
             <falcon-time-scroll-bar
               [labelWidth]="labelWidth"
@@ -55,6 +47,9 @@
               class="raven-bands-0"
               [bands]="bands"
               [containerId]="'0'"
+              [defaultActivityLayout]="defaultSettings.activityLayout"
+              [defaultFillColor]="defaultSettings.fillColor"
+              [defaultResourceColor]="defaultSettings.resourceColor"
               [labelWidth]="labelWidth"
               [maxTimeRange]="maxTimeRange"
               [selectedBandId]="selectedBandId"
@@ -68,16 +63,16 @@
         </div>
       </split-area>
 
-      <split-area
-        [visible]="showSouthBandsDrawer"
-        [order]="3"
-        size="20">
+      <split-area [visible]="showSouthBandsDrawer" [order]="3" size="20">
         <div class="timeline-1">
           <mat-card>
             <raven-bands
               class="raven-bands-1"
               [bands]="bands"
               [containerId]="'1'"
+              [defaultActivityLayout]="defaultSettings.activityLayout"
+              [defaultFillColor]="defaultSettings.fillColor"
+              [defaultResourceColor]="defaultSettings.resourceColor"
               [labelWidth]="labelWidth"
               [maxTimeRange]="maxTimeRange"
               [selectedBandId]="selectedBandId"
