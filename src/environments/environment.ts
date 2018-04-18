@@ -11,7 +11,6 @@ import ravenConfig from './../ravenConfig';
 
 export const environment = {
   ...ravenConfig,
-  // baseUrl: 'https://leucadia.jpl.nasa.gov:8443',
-  baseUrl: 'https://localhost:8443',
+  baseUrl: 'https://leucadia.jpl.nasa.gov:8443',
   production: false,
 };
