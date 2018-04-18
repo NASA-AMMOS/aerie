@@ -16,6 +16,7 @@ export class RavenGlobalSettingsComponent {
   @Input() colorPalette: string[];
   @Input() currentTimeCursor: boolean;
   @Input() dateFormat: string;
+  @Input() defaultActivityLayout: number;
   @Input() defaultResourceColor: string;
   @Input() defaultFillColor: string;
   @Input() labelFontSize: number;
@@ -23,6 +24,7 @@ export class RavenGlobalSettingsComponent {
   @Input() labelWidth: number;
   @Input() tooltip: boolean;
 
+  @Output() changeDefaultActivityLayout: EventEmitter<number> = new EventEmitter<number>();
   @Output() changeCurrentTimeCursor: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() changeDateFormat: EventEmitter<string> = new EventEmitter<string>();
   @Output() changeDefaultFillColor: EventEmitter<string> = new EventEmitter<string>();

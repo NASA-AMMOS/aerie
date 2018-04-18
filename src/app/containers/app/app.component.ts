@@ -98,8 +98,8 @@ export class AppComponent implements OnDestroy {
       this.labelWidth = state.labelWidth;
       this.tooltip = state.tooltip;
       this.currentTimeCursor = state.currentTimeCursor;
-      this.labelFontSize = state.labelFontSize;
-      this.labelFontStyle = state.labelFontStyle;
+      this.labelFontSize = state.defaultSettings.labelFontSize;
+      this.labelFontStyle = state.defaultSettings.labelFontStyle;
       this.changeDetector.markForCheck();
     });
   }
@@ -135,6 +135,10 @@ export class AppComponent implements OnDestroy {
 
   onChangeDayCode(code: string) {
     this.store.dispatch(new epochsActions.ChangeDayCode(code));
+  }
+
+  onChangeDefaultActivityLayout(activityLayout: number) {
+    this.store.dispatch(new timelineActions.ChangeDefaultActivityLayout(activityLayout));
   }
 
   onChangeDefaultFillColor(resourceColor: string) {

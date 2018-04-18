@@ -107,7 +107,7 @@ export class FalconActivityBandComponent implements OnChanges, OnDestroy, OnInit
     const ctlActivityBand = new (window as any).ActivityBand({
       activityHeight: this.activityHeight,
       alignLabel: this.alignLabel,
-      autoFit: false,
+      autoFit: this.layout === 0 ? 1 : null,
       baselineLabel: this.baselineLabel,
       borderWidth: this.borderWidth,
       height: this.height,

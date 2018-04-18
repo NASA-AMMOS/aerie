@@ -24,6 +24,7 @@ export enum TimelineActionTypes {
   AddSubBand                   = '[timeline] add_sub_band',
   ChangeCurrentTimeCursor      = '[timeline] change_current_time_cursor',
   ChangeDateFormat             = '[timeline] change_date_format',
+  ChangeDefaultActivityLayout  = '[timeline] change_default_activity_layout',
   ChangeDefaultFillColor       = '[timeline] change_default_fill_color',
   ChangeDefaultResourceColor   = '[timeline] change_default_resource_color',
   ChangeLabelFontSize          = '[timeline] change_label_fonr_size',
@@ -83,6 +84,11 @@ export class ChangeDateFormat implements Action {
   constructor(public dateFormat: string) {}
 }
 
+export class ChangeDefaultActivityLayout implements Action {
+  readonly type = TimelineActionTypes.ChangeDefaultActivityLayout;
+
+  constructor(public defaultActivityLayout: number) {}
+}
 export class ChangeDefaultFillColor implements Action {
   readonly type = TimelineActionTypes.ChangeDefaultFillColor;
 
@@ -174,6 +180,7 @@ export type TimelineAction =
   AddBand |
   AddPointsToSubBand |
   AddSubBand |
+  ChangeDefaultActivityLayout |
   ChangeCurrentTimeCursor |
   ChangeDateFormat |
   ChangeDefaultFillColor |

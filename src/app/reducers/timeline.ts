@@ -17,6 +17,7 @@ import {
   AddBand,
   AddPointsToSubBand,
   AddSubBand,
+  ChangeDefaultActivityLayout,
   ChangeDefaultFillColor,
   ChangeDefaultResourceColor,
   ChangeLabelFontSize,
@@ -58,6 +59,7 @@ export interface TimelineState {
   currentTimeCursor: boolean;
   dateFormat: string;
   defaultSettings: RavenDefaultSettings;
+  labelWidth: number;
   maxTimeRange: RavenTimeRange;
   selectedBandId: string;
   selectedPoint: RavenPoint | null;
@@ -80,12 +82,13 @@ export const initialState: TimelineState = {
   currentTimeCursor: false,
   dateFormat: 'Day-Month-Year',
   defaultSettings: {
+    activityLayout: 0,
     fillColor: '#000000',
     labelFontSize: 9,
     labelFontStyle: 'Georgia',
-    labelWidth: 100,
     resourceColor: '#000000',
   },
+  labelWidth: 100,
   maxTimeRange: { end: 0, start: 0 },
   selectedBandId: '',
   selectedPoint: null,
@@ -134,10 +137,12 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
       return changeLabelWidth(state, action);
     case TimelineActionTypes.ChangeLabelFontStyle:
       return changeLabelFontStyle(state, action);
+    case TimelineActionTypes.ChangeDefaultActivityLayout:
+      return changeDefaultActivityLayout(state, action);
     case TimelineActionTypes.ChangeDefaultFillColor:
-      return changeDefaultFillColor (state, action);
+      return changeDefaultFillColor(state, action);
     case TimelineActionTypes.ChangeDefaultResourceColor:
-      return changeDefaultResourceColor (state, action);
+      return changeDefaultResourceColor(state, action);
     default:
       return state;
   }
@@ -246,10 +251,14 @@ export function addSubBand(state: TimelineState, action: AddSubBand): TimelineSt
   };
 }
 
+export function changeDefaultActivityLayout(state: TimelineState, action: ChangeDefaultActivityLayout): TimelineState {
+  return { ...state, defaultSettings: { ...state.defaultSettings, activityLayout: action.defaultActivityLayout } };
+}
+
 /** Reduction Helper. Called when reducing the 'ChangeDefaultFillColor' action.
  *  Adds color to colorPalette if not exists already
  */
-export function changeDefaultFillColor (state: TimelineState, action: ChangeDefaultFillColor): TimelineState {
+export function changeDefaultFillColor(state: TimelineState, action: ChangeDefaultFillColor): TimelineState {
   const colors = state.colorPalette.slice(0);
   if (!colors.includes(action.defaultFillColor)) {
     colors.push(action.defaultFillColor);
@@ -262,22 +271,22 @@ export function changeDefaultFillColor (state: TimelineState, action: ChangeDefa
  */
 export function changeDefaultResourceColor(state: TimelineState, action: ChangeDefaultResourceColor): TimelineState {
   const colors = state.colorPalette.slice(0);
-      if (!colors.includes(action.defaultResourceColor)) {
-        colors.push(action.defaultResourceColor);
-      }
-      return { ...state, defaultSettings: { ...state.defaultSettings, resourceColor: action.defaultResourceColor }, colorPalette: colors };
+  if (!colors.includes(action.defaultResourceColor)) {
+    colors.push(action.defaultResourceColor);
+  }
+  return { ...state, defaultSettings: { ...state.defaultSettings, resourceColor: action.defaultResourceColor }, colorPalette: colors };
 }
 
-export function changeLabelFontSize (state: TimelineState, action: ChangeLabelFontSize): TimelineState {
-  return { ...state, defaultSettings: { ...state.defaultSettings, labelFontSize: action.labelFontSize}};
+export function changeLabelFontSize(state: TimelineState, action: ChangeLabelFontSize): TimelineState {
+  return { ...state, defaultSettings: { ...state.defaultSettings, labelFontSize: action.labelFontSize } };
 }
 
-export function changeLabelFontStyle (state: TimelineState, action: ChangeLabelFontStyle): TimelineState {
-  return { ...state, defaultSettings: { ...state.defaultSettings, labelFontStyle: action.labelFontStyle}};
+export function changeLabelFontStyle(state: TimelineState, action: ChangeLabelFontStyle): TimelineState {
+  return { ...state, defaultSettings: { ...state.defaultSettings, labelFontStyle: action.labelFontStyle } };
 }
 
-export function changeLabelWidth (state: TimelineState, action: ChangeLabelWidth): TimelineState {
-  return { ...state, defaultSettings: { ...state.defaultSettings, labelWidth: action.labelWidth}};
+export function changeLabelWidth(state: TimelineState, action: ChangeLabelWidth): TimelineState {
+  return { ...state, labelWidth: action.labelWidth };
 }
 
 /**
@@ -308,7 +317,7 @@ export function removeBandsOrPointsForSource(state: TimelineState, action: Remov
       }, []),
     }))
     .filter(
-    band => band.subBands.length !== 0,
+      band => band.subBands.length !== 0,
   );
 
   bands = updateSortOrder(bands);
@@ -332,7 +341,7 @@ export function removeSubBand(state: TimelineState, action: RemoveSubBand): Time
       subBands: band.subBands.filter(subBand => subBand.id !== action.subBandId),
     }))
     .filter(
-    band => band.subBands.length !== 0,
+      band => band.subBands.length !== 0,
   );
 
   bands = updateSortOrder(bands);

@@ -59,7 +59,7 @@ export function toRavenBandData(sourceId: string, graphData: MpsServerGraphData,
     return [resourceBand];
   } else if (metadata.hasTimelineType === 'activity') {
     // Activity.
-    const activityBands = toActivityBands(sourceId, timelineData as MpsServerActivityPoint[]);
+    const activityBands = toActivityBands(sourceId, timelineData as MpsServerActivityPoint[], defaultSettings);
     return activityBands;
   } else {
     console.error(`raven2 - bands.ts - toRavenBandData - parameter 'graphData' has a timeline type we do not recognize: ${metadata.hasTimelineType}`);
@@ -70,7 +70,7 @@ export function toRavenBandData(sourceId: string, graphData: MpsServerGraphData,
 /**
  * Returns a list of bands based on timelineData and point legends.
  */
-export function toActivityBands(sourceId: string, timelineData: MpsServerActivityPoint[]): RavenActivityBand[] {
+export function toActivityBands(sourceId: string, timelineData: MpsServerActivityPoint[], defaultSettings: RavenDefaultSettings): RavenActivityBand[] {
   const { legends, maxTimeRange } = getActivityPointsByLegend(sourceId, timelineData);
   const sourceType = getSourceType(sourceId);
   const bands: RavenActivityBand[] = [];
@@ -82,6 +82,7 @@ export function toActivityBands(sourceId: string, timelineData: MpsServerActivit
       activityStyle: 1,
       addTo: false,
       alignLabel: 3,
+      autoFit: defaultSettings.activityLayout === 0 ? 1 : null,
       baselineLabel: 3,
       borderWidth: 1,
       height: 50,
@@ -89,7 +90,7 @@ export function toActivityBands(sourceId: string, timelineData: MpsServerActivit
       id: uniqueId(),
       label: `${legend}`,
       labelColor: [0, 0, 0],
-      layout: 1,
+      layout: defaultSettings.activityLayout,
       legend,
       maxTimeRange,
       minorLabels: [],

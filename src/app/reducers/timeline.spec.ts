@@ -24,6 +24,7 @@ import {
   AddSubBand,
   ChangeCurrentTimeCursor,
   ChangeDateFormat,
+  ChangeDefaultActivityLayout,
   ChangeDefaultFillColor,
   ChangeDefaultResourceColor,
   ChangeLabelFontSize,
@@ -190,15 +191,29 @@ describe('timeline reducer', () => {
     });
   });
 
+  it('handle ChangeDefaultActivityLayout', () => {
+    timelineState = reducer(timelineState, new ChangeDefaultActivityLayout(2));
+    expect(timelineState).toEqual({
+      ...initialState,
+      defaultSettings: {
+        activityLayout: 2,
+        fillColor: '#000000',
+        labelFontSize: 9,
+        labelFontStyle: 'Georgia',
+        resourceColor: '#000000',
+      },
+    });
+  });
+
   it('handle ChangeDefaultFillColor', () => {
     timelineState = reducer(timelineState, new ChangeDefaultFillColor('#ff0000'));
     expect(timelineState).toEqual({
       ...initialState,
       defaultSettings: {
+        activityLayout: 0,
         fillColor: '#ff0000',
         labelFontSize: 9,
         labelFontStyle: 'Georgia',
-        labelWidth: 100,
         resourceColor: '#000000',
       },
     });
@@ -209,10 +224,10 @@ describe('timeline reducer', () => {
     expect(timelineState).toEqual({
       ...initialState,
       defaultSettings: {
+        activityLayout: 0,
         fillColor: '#000000',
         labelFontSize: 9,
         labelFontStyle: 'Georgia',
-        labelWidth: 100,
         resourceColor: '#00ff00',
       },
     });
@@ -231,10 +246,10 @@ describe('timeline reducer', () => {
     expect(timelineState).toEqual({
       ...initialState,
       defaultSettings: {
+        activityLayout: 0,
         fillColor: '#000000',
         labelFontSize: 11,
         labelFontStyle: 'Georgia',
-        labelWidth: 100,
         resourceColor: '#000000',
       },
     });
@@ -245,10 +260,10 @@ describe('timeline reducer', () => {
     expect(timelineState).toEqual({
       ...initialState,
       defaultSettings: {
+        activityLayout: 0,
         fillColor: '#000000',
         labelFontSize: 9,
         labelFontStyle: 'Courier',
-        labelWidth: 100,
         resourceColor: '#000000',
       },
     });
@@ -258,13 +273,7 @@ describe('timeline reducer', () => {
     timelineState = reducer(timelineState, new ChangeLabelWidth(48));
     expect(timelineState).toEqual({
       ...initialState,
-      defaultSettings: {
-        fillColor: '#000000',
-        labelFontSize: 9,
-        labelFontStyle: 'Georgia',
-        labelWidth: 48,
-        resourceColor: '#000000',
-      },
+      labelWidth: 48,
     });
   });
 
