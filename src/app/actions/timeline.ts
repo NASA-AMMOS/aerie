@@ -26,8 +26,9 @@ export enum TimelineActionTypes {
   ChangeDateFormat             = '[timeline] change_date_format',
   ChangeDefaultActivityLayout  = '[timeline] change_default_activity_layout',
   ChangeDefaultFillColor       = '[timeline] change_default_fill_color',
+  ChangeDefaultIcon            = '[timeline] change_default_icon',
   ChangeDefaultLabelFontSize   = '[timeline] change_default_label_fonr_size',
-  ChangeDefaultLabelFont  = '[timeline] change_default_label_font',
+  ChangeDefaultLabelFont       = '[timeline] change_default_label_font',
   ChangeDefaultResourceColor   = '[timeline] change_default_resource_color',
   ChangeLabelWidth             = '[timeline] change_label_width',
   ChangeTooltip                = '[timeline] change_tooltip',
@@ -93,6 +94,12 @@ export class ChangeDefaultFillColor implements Action {
   readonly type = TimelineActionTypes.ChangeDefaultFillColor;
 
   constructor(public defaultFillColor: string) {}
+}
+
+export class ChangeDefaultIcon implements Action {
+  readonly type = TimelineActionTypes.ChangeDefaultIcon;
+
+  constructor(public defaultIcon: string) {}
 }
 
 export class ChangeDefaultLabelFontSize implements Action {
@@ -184,9 +191,10 @@ export type TimelineAction =
   ChangeCurrentTimeCursor |
   ChangeDateFormat |
   ChangeDefaultFillColor |
-  ChangeDefaultResourceColor |
+  ChangeDefaultIcon |
   ChangeDefaultLabelFontSize |
   ChangeDefaultLabelFont |
+  ChangeDefaultResourceColor |
   ChangeLabelWidth |
   ChangeTooltip |
   RemoveBandsOrPointsForSource |

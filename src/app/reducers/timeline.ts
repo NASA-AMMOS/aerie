@@ -19,6 +19,7 @@ import {
   AddSubBand,
   ChangeDefaultActivityLayout,
   ChangeDefaultFillColor,
+  ChangeDefaultIcon,
   ChangeDefaultLabelFont,
   ChangeDefaultLabelFontSize,
   ChangeDefaultResourceColor,
@@ -84,6 +85,7 @@ export const initialState: TimelineState = {
   defaultSettings: {
     activityLayout: 0,
     fillColor: '#000000',
+    icon: 'circle',
     labelFont: 'Georgia',
     labelFontSize: 9,
     resourceColor: '#000000',
@@ -133,6 +135,8 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
       return changeDefaultActivityLayout(state, action);
     case TimelineActionTypes.ChangeDefaultFillColor:
       return changeDefaultFillColor(state, action);
+    case TimelineActionTypes.ChangeDefaultIcon:
+      return changeDefaultIcon(state, action);
     case TimelineActionTypes.ChangeDefaultLabelFontSize:
       return changeDefaultLabelFontSize(state, action);
     case TimelineActionTypes.ChangeDefaultLabelFont:
@@ -267,6 +271,13 @@ export function changeDefaultFillColor(state: TimelineState, action: ChangeDefau
     colors.push(action.defaultFillColor);
   }
   return { ...state, defaultSettings: { ...state.defaultSettings, fillColor: action.defaultFillColor }, colorPalette: colors };
+}
+
+/** Reduction Helper. Called when reducing the 'ChangeDefaultIcon' action.
+ *  Changes icon in defaultSettings
+ */
+export function changeDefaultIcon(state: TimelineState, action: ChangeDefaultIcon): TimelineState {
+  return { ...state, defaultSettings: { ...state.defaultSettings, icon: action.defaultIcon } };
 }
 
 /** Reduction Helper. Called when reducing the 'ChangeDefaultLabelFontSize' action.

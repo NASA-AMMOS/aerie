@@ -140,6 +140,10 @@ export class AppComponent implements OnDestroy {
     this.store.dispatch(new timelineActions.ChangeDefaultFillColor(resourceColor));
   }
 
+  onChangeDefaultIcon(icon: string) {
+    this.store.dispatch(new timelineActions.ChangeDefaultIcon(icon));
+  }
+
   onChangeDefaultLabelFontSize(labelFontSize: number) {
     this.store.dispatch(new timelineActions.ChangeDefaultLabelFontSize(labelFontSize));
   }

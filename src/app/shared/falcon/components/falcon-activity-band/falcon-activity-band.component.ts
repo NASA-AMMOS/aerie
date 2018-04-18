@@ -39,6 +39,7 @@ export class FalconActivityBandComponent implements OnChanges, OnDestroy, OnInit
   @Input() ctlViewTimeAxis: any;
   @Input() height: number;
   @Input() heightPadding: number;
+  @Input() icon: string;
   @Input() id: string;
   @Input() label: string;
   @Input() labelColor: number[];
@@ -114,6 +115,7 @@ export class FalconActivityBandComponent implements OnChanges, OnDestroy, OnInit
       borderWidth: this.borderWidth,
       height: this.height,
       heightPadding: this.heightPadding,
+      icon: this.icon,
       id: this.id,
       intervals: [],
       label: this.label,
@@ -159,6 +161,7 @@ export class FalconActivityBandComponent implements OnChanges, OnDestroy, OnInit
       const interval = new (window as any).DrawableInterval({
         color: point.color,
         end: point.end,
+        icon: this.icon,
         id: point.id,
         label: point.activityName,
         opacity: 0.5,

@@ -21,6 +21,7 @@ export interface RavenResourceBand {
   fillColor: number[];
   height: number;
   heightPadding: number;
+  icon: string;
   id: string;
   interpolation: string;
   label: string;

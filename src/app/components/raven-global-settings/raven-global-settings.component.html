@@ -55,6 +55,18 @@
             <mat-option [value]="2">Waterfall</mat-option>
           </mat-select>
         </mat-form-field>
+        <mat-form-field>
+          <mat-select placeholder="Default Icon"
+            [value]="defaultIcon"
+            (selectionChange)="changeDefaultIcon.emit($event.value)">
+            <mat-option [value]="'plus'">plus</mat-option>
+            <mat-option [value]="'cross'">cross</mat-option>
+            <mat-option [value]="'circle'">circle</mat-option>
+            <mat-option [value]="'triangle'">triangle</mat-option>
+            <mat-option [value]="'square'">square</mat-option>
+            <mat-option [value]="'diamond'">diamond</mat-option>
+          </mat-select>
+        </mat-form-field>
       </div>
     </div>
     <div class="fieldLabel">

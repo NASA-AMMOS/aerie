@@ -26,6 +26,7 @@ import {
   ChangeDateFormat,
   ChangeDefaultActivityLayout,
   ChangeDefaultFillColor,
+  ChangeDefaultIcon,
   ChangeDefaultLabelFont,
   ChangeDefaultLabelFontSize,
   ChangeDefaultResourceColor,
@@ -198,6 +199,7 @@ describe('timeline reducer', () => {
       defaultSettings: {
         activityLayout: 2,
         fillColor: '#000000',
+        icon: 'circle',
         labelFont: 'Georgia',
         labelFontSize: 9,
         resourceColor: '#000000',
@@ -212,6 +214,22 @@ describe('timeline reducer', () => {
       defaultSettings: {
         activityLayout: 0,
         fillColor: '#ff0000',
+        icon: 'circle',
+        labelFont: 'Georgia',
+        labelFontSize: 9,
+        resourceColor: '#000000',
+      },
+    });
+  });
+
+  it('handle ChangeDefaultIcon', () => {
+    timelineState = reducer(timelineState, new ChangeDefaultIcon('triangle'));
+    expect(timelineState).toEqual({
+      ...initialState,
+      defaultSettings: {
+        activityLayout: 0,
+        fillColor: '#000000',
+        icon: 'triangle',
         labelFont: 'Georgia',
         labelFontSize: 9,
         resourceColor: '#000000',
@@ -226,6 +244,7 @@ describe('timeline reducer', () => {
       defaultSettings: {
         activityLayout: 0,
         fillColor: '#000000',
+        icon: 'circle',
         labelFont: 'Georgia',
         labelFontSize: 9,
         resourceColor: '#00ff00',
@@ -248,6 +267,7 @@ describe('timeline reducer', () => {
       defaultSettings: {
         activityLayout: 0,
         fillColor: '#000000',
+        icon: 'circle',
         labelFont: 'Georgia',
         labelFontSize: 11,
         resourceColor: '#000000',
@@ -262,6 +282,7 @@ describe('timeline reducer', () => {
       defaultSettings: {
         activityLayout: 0,
         fillColor: '#000000',
+        icon: 'circle',
         labelFont: 'Courier',
         labelFontSize: 9,
         resourceColor: '#000000',

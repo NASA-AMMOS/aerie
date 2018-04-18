@@ -18,6 +18,7 @@ export class RavenGlobalSettingsComponent {
   @Input() dateFormat: string;
   @Input() defaultActivityLayout: number;
   @Input() defaultFillColor: string;
+  @Input() defaultIcon: string;
   @Input() defaultLabelFontSize: number;
   @Input() defaultLabelFont: string;
   @Input() defaultResourceColor: string;
@@ -28,6 +29,7 @@ export class RavenGlobalSettingsComponent {
   @Output() changeCurrentTimeCursor: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() changeDateFormat: EventEmitter<string> = new EventEmitter<string>();
   @Output() changeDefaultFillColor: EventEmitter<string> = new EventEmitter<string>();
+  @Output() changeDefaultIcon: EventEmitter<string> = new EventEmitter<string>();
   @Output() changeDefaultLabelFontSize: EventEmitter<number> = new EventEmitter<number>();
   @Output() changeDefaultLabelFont: EventEmitter<string> = new EventEmitter<string>();
   @Output() changeDefaultResourceColor: EventEmitter<string> = new EventEmitter<string>();

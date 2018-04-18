@@ -37,6 +37,7 @@ export class FalconResourceBandComponent implements OnChanges, OnDestroy, OnInit
   @Input() fill: boolean;
   @Input() fillColor: number[];
   @Input() font: string;
+  @Input() icon: string;
   @Input() labelFont: string;
   @Input() labelFontSize: number;
   @Input() height: number;
@@ -109,6 +110,7 @@ export class FalconResourceBandComponent implements OnChanges, OnDestroy, OnInit
       height: this.height,
       heightPadding: this.heightPadding,
       hideTicks: false,
+      icon: this.icon,
       id: this.id,
       interpolation: this.interpolation,
       intervals: [],
@@ -122,6 +124,7 @@ export class FalconResourceBandComponent implements OnChanges, OnDestroy, OnInit
         color: this.color,
         fill: this.fill,
         fillColor: this.fillColor,
+        icon: this.icon,
         showIcon: this.showIcon,
       }),
       rescale: this.rescale,
@@ -161,7 +164,7 @@ export class FalconResourceBandComponent implements OnChanges, OnDestroy, OnInit
         color: this.color,
         end: point.start,
         endValue: point.value,
-        icon: 'circle',
+        icon: this.icon,
         id: point.id,
         opacity: 0.9,
         properties: {
