@@ -22,22 +22,13 @@ export enum TimelineActionTypes {
   AddBand                      = '[timeline] add_band',
   AddPointsToSubBand           = '[timeline] add_points_to_sub_band',
   AddSubBand                   = '[timeline] add_sub_band',
-  ChangeCurrentTimeCursor      = '[timeline] change_current_time_cursor',
-  ChangeDateFormat             = '[timeline] change_date_format',
-  ChangeDefaultActivityLayout  = '[timeline] change_default_activity_layout',
-  ChangeDefaultFillColor       = '[timeline] change_default_fill_color',
-  ChangeDefaultIcon            = '[timeline] change_default_icon',
-  ChangeDefaultLabelFontSize   = '[timeline] change_default_label_fonr_size',
-  ChangeDefaultLabelFont       = '[timeline] change_default_label_font',
-  ChangeDefaultResourceColor   = '[timeline] change_default_resource_color',
-  ChangeLabelWidth             = '[timeline] change_label_width',
-  ChangeTooltip                = '[timeline] change_tooltip',
   RemoveBandsOrPointsForSource = '[timeline] remove_bands_or_points_for_source',
   RemoveSubBand                = '[timeline] remove_sub_band',
   SelectBand                   = '[timeline] select_band',
   SelectPoint                  = '[timeline] select_point',
   SortBands                    = '[timeline] sort_bands',
   UpdateBand                   = '[timeline] update_band',
+  UpdateDefaultSettings        = '[timeline] update_default_settings',
   UpdateSubBand                = '[timeline] update_sub_band',
   UpdateTimeline               = '[timeline] update_timeline',
 }
@@ -71,65 +62,6 @@ export class AddSubBand implements Action {
     public bandId: string,
     public subBand: RavenSubBand,
   ) {}
-}
-
-export class ChangeCurrentTimeCursor implements Action {
-  readonly type = TimelineActionTypes.ChangeCurrentTimeCursor;
-
-  constructor(public currentTimeCursor: boolean) {}
-}
-
-export class ChangeDateFormat implements Action {
-  readonly type = TimelineActionTypes.ChangeDateFormat;
-
-  constructor(public dateFormat: string) {}
-}
-
-export class ChangeDefaultActivityLayout implements Action {
-  readonly type = TimelineActionTypes.ChangeDefaultActivityLayout;
-
-  constructor(public defaultActivityLayout: number) {}
-}
-export class ChangeDefaultFillColor implements Action {
-  readonly type = TimelineActionTypes.ChangeDefaultFillColor;
-
-  constructor(public defaultFillColor: string) {}
-}
-
-export class ChangeDefaultIcon implements Action {
-  readonly type = TimelineActionTypes.ChangeDefaultIcon;
-
-  constructor(public defaultIcon: string) {}
-}
-
-export class ChangeDefaultLabelFontSize implements Action {
-  readonly type = TimelineActionTypes.ChangeDefaultLabelFontSize;
-
-  constructor(public labelFontSize: number) {}
-}
-
-export class ChangeDefaultLabelFont implements Action {
-  readonly type = TimelineActionTypes.ChangeDefaultLabelFont;
-
-  constructor(public labelFont: string) {}
-}
-
-export class ChangeDefaultResourceColor implements Action {
-  readonly type = TimelineActionTypes.ChangeDefaultResourceColor;
-
-  constructor(public defaultResourceColor: string) {}
-}
-
-export class ChangeLabelWidth implements Action {
-  readonly type = TimelineActionTypes.ChangeLabelWidth;
-
-  constructor(public labelWidth: number) {}
-}
-
-export class ChangeTooltip implements Action {
-  readonly type = TimelineActionTypes.ChangeTooltip;
-
-  constructor(public tooltip: boolean) {}
 }
 
 export class RemoveBandsOrPointsForSource implements Action {
@@ -168,6 +100,12 @@ export class UpdateBand implements Action {
   constructor(public bandId: string, public update: StringTMap<BaseType>) {}
 }
 
+export class UpdateDefaultSettings implements Action {
+  readonly type = TimelineActionTypes.UpdateDefaultSettings;
+
+  constructor(public update: StringTMap<BaseType>) {}
+}
+
 export class UpdateSubBand implements Action {
   readonly type = TimelineActionTypes.UpdateSubBand;
 
@@ -185,21 +123,12 @@ export type TimelineAction =
   AddBand |
   AddPointsToSubBand |
   AddSubBand |
-  ChangeDefaultActivityLayout |
-  ChangeCurrentTimeCursor |
-  ChangeDateFormat |
-  ChangeDefaultFillColor |
-  ChangeDefaultIcon |
-  ChangeDefaultLabelFontSize |
-  ChangeDefaultLabelFont |
-  ChangeDefaultResourceColor |
-  ChangeLabelWidth |
-  ChangeTooltip |
   RemoveBandsOrPointsForSource |
   RemoveSubBand |
   SelectBand |
   SelectPoint |
   SortBands |
   UpdateBand |
+  UpdateDefaultSettings |
   UpdateSubBand |
   UpdateTimeline;

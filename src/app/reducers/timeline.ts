@@ -17,13 +17,6 @@ import {
   AddBand,
   AddPointsToSubBand,
   AddSubBand,
-  ChangeDefaultActivityLayout,
-  ChangeDefaultFillColor,
-  ChangeDefaultIcon,
-  ChangeDefaultLabelFont,
-  ChangeDefaultLabelFontSize,
-  ChangeDefaultResourceColor,
-  ChangeLabelWidth,
   RemoveBandsOrPointsForSource,
   RemoveSubBand,
   SelectBand,
@@ -65,7 +58,7 @@ export interface TimelineState {
   selectedBandId: string;
   selectedPoint: RavenPoint | null;
   selectedSubBandId: string;
-  tooltip: boolean;
+  showTooltip: boolean;
   viewTimeRange: RavenTimeRange;
 }
 
@@ -95,7 +88,7 @@ export const initialState: TimelineState = {
   selectedBandId: '',
   selectedPoint: null,
   selectedSubBandId: '',
-  tooltip: true,
+  showTooltip: true,
   viewTimeRange: { end: 0, start: 0 },
 };
 
@@ -123,30 +116,12 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
       return sortBands(state, action);
     case TimelineActionTypes.UpdateBand:
       return updateBand(state, action);
+    case TimelineActionTypes.UpdateDefaultSettings:
+      return {...state, defaultSettings: { ... state.defaultSettings, ...action.update}};
     case TimelineActionTypes.UpdateSubBand:
       return updateSubBand(state, action);
     case TimelineActionTypes.UpdateTimeline:
       return { ...state, ...action.update };
-    case TimelineActionTypes.ChangeCurrentTimeCursor:
-      return { ...state, currentTimeCursor: action.currentTimeCursor };
-    case TimelineActionTypes.ChangeDateFormat:
-      return { ...state, dateFormat: action.dateFormat };
-    case TimelineActionTypes.ChangeDefaultActivityLayout:
-      return changeDefaultActivityLayout(state, action);
-    case TimelineActionTypes.ChangeDefaultFillColor:
-      return changeDefaultFillColor(state, action);
-    case TimelineActionTypes.ChangeDefaultIcon:
-      return changeDefaultIcon(state, action);
-    case TimelineActionTypes.ChangeDefaultLabelFontSize:
-      return changeDefaultLabelFontSize(state, action);
-    case TimelineActionTypes.ChangeDefaultLabelFont:
-      return changeDefaultLabelFont(state, action);
-    case TimelineActionTypes.ChangeDefaultResourceColor:
-      return changeDefaultResourceColor(state, action);
-    case TimelineActionTypes.ChangeLabelWidth:
-      return changeLabelWidth(state, action);
-    case TimelineActionTypes.ChangeTooltip:
-      return { ...state, tooltip: action.tooltip };
     default:
       return state;
   }
@@ -246,63 +221,6 @@ export function addSubBand(state: TimelineState, action: AddSubBand): TimelineSt
     bands,
     ...updateTimeRanges(bands, state.viewTimeRange),
   };
-}
-
-/** Reduction Helper. Called when reducing the 'ChangeDefaultActivityLayout' action.
- *  Changes activityLayout in defaultSettings
- */
-export function changeDefaultActivityLayout(state: TimelineState, action: ChangeDefaultActivityLayout): TimelineState {
-  return { ...state, defaultSettings: { ...state.defaultSettings, activityLayout: action.defaultActivityLayout } };
-}
-
-/** Reduction Helper. Called when reducing the 'ChangeDefaultFillColor' action.
- *  Adds color to colorPalette if not exists already
- */
-export function changeDefaultFillColor(state: TimelineState, action: ChangeDefaultFillColor): TimelineState {
-  const colors = state.colorPalette.slice(0);
-  if (!colors.includes(action.defaultFillColor)) {
-    colors.push(action.defaultFillColor);
-  }
-  return { ...state, defaultSettings: { ...state.defaultSettings, fillColor: action.defaultFillColor }, colorPalette: colors };
-}
-
-/** Reduction Helper. Called when reducing the 'ChangeDefaultIcon' action.
- *  Changes icon in defaultSettings
- */
-export function changeDefaultIcon(state: TimelineState, action: ChangeDefaultIcon): TimelineState {
-  return { ...state, defaultSettings: { ...state.defaultSettings, icon: action.defaultIcon } };
-}
-
-/** Reduction Helper. Called when reducing the 'ChangeDefaultLabelFontSize' action.
- *  Changes labelFontSize in defaultSettings
- */
-export function changeDefaultLabelFontSize(state: TimelineState, action: ChangeDefaultLabelFontSize): TimelineState {
-  return { ...state, defaultSettings: { ...state.defaultSettings, labelFontSize: action.labelFontSize } };
-}
-
-/** Reduction Helper. Called when reducing the 'ChangeDefaultLabelFontStyle' action.
- *  Changes labelFontStyle in defaultSettings
- */
-export function changeDefaultLabelFont(state: TimelineState, action: ChangeDefaultLabelFont): TimelineState {
-  return { ...state, defaultSettings: { ...state.defaultSettings, labelFont: action.labelFont } };
-}
-
-/** Reduction Helper. Called when reducing the 'ChangeDefaultResourceColor' action.
- *  Adds color to colorPalette if not exists already
- */
-export function changeDefaultResourceColor(state: TimelineState, action: ChangeDefaultResourceColor): TimelineState {
-  const colors = state.colorPalette.slice(0);
-  if (!colors.includes(action.defaultResourceColor)) {
-    colors.push(action.defaultResourceColor);
-  }
-  return { ...state, defaultSettings: { ...state.defaultSettings, resourceColor: action.defaultResourceColor }, colorPalette: colors };
-}
-
-/** Reduction Helper. Called when reducing the 'ChangeLabelWidth' action.
- *  Changes labelWidth
- */
-export function changeLabelWidth(state: TimelineState, action: ChangeLabelWidth): TimelineState {
-  return { ...state, labelWidth: action.labelWidth };
 }
 
 /**

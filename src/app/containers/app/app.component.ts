@@ -92,7 +92,7 @@ export class AppComponent implements OnDestroy {
       this.colorPalette = state.colorPalette;
       this.dateFormat = state.dateFormat;
       this.labelWidth = state.labelWidth;
-      this.tooltip = state.tooltip;
+      this.tooltip = state.showTooltip;
       this.currentTimeCursor = state.currentTimeCursor;
       this.changeDetector.markForCheck();
     });
@@ -120,11 +120,11 @@ export class AppComponent implements OnDestroy {
   }
 
   onChangeCurrentTimeCursor(currentTimeCursor: boolean) {
-    this.store.dispatch(new timelineActions.ChangeCurrentTimeCursor(currentTimeCursor));
+    this.store.dispatch(new timelineActions.UpdateTimeline({currentTimeCursor}));
   }
 
   onChangeDateFormat(dateFormat: string) {
-    this.store.dispatch(new timelineActions.ChangeDateFormat(dateFormat));
+    this.store.dispatch(new timelineActions.UpdateTimeline({dateFormat}));
   }
 
   onChangeDayCode(code: string) {
@@ -132,27 +132,27 @@ export class AppComponent implements OnDestroy {
   }
 
   onChangeDefaultActivityLayout(activityLayout: number) {
-    this.store.dispatch(new timelineActions.ChangeDefaultActivityLayout(activityLayout));
+    this.store.dispatch(new timelineActions.UpdateDefaultSettings({activityLayout}));
   }
 
-  onChangeDefaultFillColor(resourceColor: string) {
-    this.store.dispatch(new timelineActions.ChangeDefaultFillColor(resourceColor));
+  onChangeDefaultFillColor(fillColor: string) {
+    this.store.dispatch(new timelineActions.UpdateDefaultSettings({fillColor}));
   }
 
   onChangeDefaultIcon(icon: string) {
-    this.store.dispatch(new timelineActions.ChangeDefaultIcon(icon));
+    this.store.dispatch(new timelineActions.UpdateDefaultSettings({icon}));
   }
 
   onChangeDefaultLabelFontSize(labelFontSize: number) {
-    this.store.dispatch(new timelineActions.ChangeDefaultLabelFontSize(labelFontSize));
+    this.store.dispatch(new timelineActions.UpdateDefaultSettings({labelFontSize}));
   }
 
   onChangeDefaultLabelFont(labelFont: string) {
-    this.store.dispatch(new timelineActions.ChangeDefaultLabelFont(labelFont));
+    this.store.dispatch(new timelineActions.UpdateDefaultSettings({labelFont}));
   }
 
   onChangeDefaultResourceColor(resourceColor: string) {
-    this.store.dispatch(new timelineActions.ChangeDefaultResourceColor(resourceColor));
+    this.store.dispatch(new timelineActions.UpdateDefaultSettings({resourceColor}));
   }
 
   onChangeEarthSecToEpochSec(earthSecToEpochSec: number) {
@@ -160,11 +160,11 @@ export class AppComponent implements OnDestroy {
   }
 
   onChangeLabelWidth(labelWidth: number) {
-    this.store.dispatch(new timelineActions.ChangeLabelWidth(labelWidth));
+    this.store.dispatch(new timelineActions.UpdateTimeline({labelWidth}));
   }
 
-  onChangeTooltip(tooltip: boolean) {
-    this.store.dispatch(new timelineActions.ChangeTooltip(tooltip));
+  onChangeTooltip(showTooltip: boolean) {
+    this.store.dispatch(new timelineActions.UpdateTimeline({showTooltip}));
   }
 
   onImportEpochs(epochs: RavenEpoch[]) {

@@ -411,7 +411,7 @@ export class SourceExplorerEffects {
   }
 
   /**
-   * Error Helper. Called when there is an error in expandEvent$.
+   * Error Helper. Called when there is an error in updateBranch.
    */
   errorUpdateBranch(sourceId: string) {
     return (e: Error) => {

@@ -1,38 +1,38 @@
 <div mat-dialog-content>
-    <div class="save-to">
-      Save To: {{data.source.name}}
-    </div>
+  <div class="save-to">
+    Save To: {{data.source.name}}
+  </div>
 
+  <mat-form-field>
+    <input class="save-to"
+      [(ngModel)]="name"
+      matInput
+      placeholder="Name"
+      required>
     <mat-form-field>
-      <input class="save-to"
-        [(ngModel)]="name"
-        matInput
-        placeholder="Name"
-        required>
-      <mat-form-field>
-        <mat-select placeholder="File Type"
-          [value]="fileType"
-          (selectionChange)="onChangeFileType($event.value)">
-          <mat-option [value]="'epoch'">Epoch</mat-option>
-          <mat-option [value]="'generic'">Generic CSV</mat-option>
-          <mat-option [value]="'pef'">PEF</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <label>Import File
-        <input type="file"
-          (change)="getFile($event)" />
-      </label>
-      <ng-container *ngIf="fileType=='generic'">
-          <label>Mapping File
-           <input type="file"
-            (change)="getMapping($event)" />
-          </label>
-       </ng-container>
+      <mat-select placeholder="File Type"
+        [value]="fileType"
+        (selectionChange)="onChangeFileType($event.value)">
+        <mat-option [value]="'epoch'">Epoch</mat-option>
+        <mat-option [value]="'generic'">Generic CSV</mat-option>
+        <mat-option [value]="'pef'">PEF</mat-option>
+      </mat-select>
     </mat-form-field>
-  </div>
 
-  <div mat-dialog-actions>
-    <button mat-button (click)="onCancel()">Cancel</button>
-    <button mat-button (click)="onFileImport()">Import</button>
-  </div>
+    <label>Import File
+      <input type="file"
+        (change)="getFile($event)" />
+    </label>
+    <ng-container *ngIf="fileType=='generic'">
+      <label>Mapping File
+        <input type="file"
+          (change)="getMapping($event)" />
+      </label>
+    </ng-container>
+  </mat-form-field>
+</div>
+
+<div mat-dialog-actions>
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-button (click)="onFileImport()">Import</button>
+</div>

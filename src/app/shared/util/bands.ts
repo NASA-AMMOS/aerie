@@ -172,9 +172,9 @@ export function toResourceBand(sourceId: string, metadata: MpsServerResourceMeta
   const resourceBand: RavenResourceBand = {
     addTo: false,
     autoTickValues: true,
-    color: hexToColorArray (defaultSettings.resourceColor),
+    color: hexToColorArray(defaultSettings.resourceColor),
     fill: false,
-    fillColor: hexToColorArray (defaultSettings.fillColor),
+    fillColor: hexToColorArray(defaultSettings.fillColor),
     height: 100,
     heightPadding: 10,
     icon: defaultSettings.icon,
