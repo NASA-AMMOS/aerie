@@ -245,7 +245,7 @@ export class SourceExplorerEffects {
     private http: HttpClient,
     private actions$: Actions,
     private store$: Store<AppState>,
-  ) { }
+  ) {}
 
   /**
    * Helper. Returns a stream of actions that need to occur when expanding a source explorer source.

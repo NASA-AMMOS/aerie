@@ -13,9 +13,6 @@
   margin-bottom: 10px;
 }
 
-.buttondiv {
-  margin-top: 50px;
-}
 input {
   width: 150px;
   margin-bottom: 16px;
@@ -26,6 +23,7 @@ input.labelWidth {
   margin-bottom: 16px;
   margin-left: 20px;
 }
+
 .cmyk-text {
   float: left;
 
@@ -38,16 +36,3 @@ input.labelWidth {
   text-shadow: 1px 1px 2px #bbb;
 }
 
-.color-box {
-  width: 100px;
-  height: 25px;
-  margin: 16px auto;
-
-  cursor: pointer;
-}
-
-.change-me {
-  cursor: pointer;
-  font-size: 30px;
-  font-weight: bolder;
-}

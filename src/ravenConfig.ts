@@ -22,7 +22,6 @@ export interface RavenConfig {
 
 const ravenConfig: RavenConfig = {
   baseSourcesUrl: 'mpsserver/api/v2/fs',
-  // epochsUrl: 'mpsserver/api/v2/epochs',
   epochsUrl: 'mpsserver/api/v2/fs-mongodb/leucadia/taifunTest/europaEpoch.csv',
   itarMessage: '',
 };

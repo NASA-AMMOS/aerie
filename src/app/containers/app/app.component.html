@@ -1,6 +1,10 @@
 <mat-toolbar color="primary">
-  <button mat-icon-button (click)="toggleLeftDrawer()">
-    <mat-icon class="mat-24" aria-label="Menu">
+  <button
+    mat-icon-button
+    (click)="toggleLeftDrawer()">
+    <mat-icon
+      class="mat-24"
+      aria-label="Menu">
       menu
     </mat-icon>
   </button>
@@ -9,7 +13,8 @@
 
   <span class="spacer"></span>
 
-  <button mat-icon-button matTooltip="global settings"
+  <button mat-icon-button
+    matTooltip="global settings"
     (click)="drawer='globals'; globalSettingsDrawer.toggle()">
     <mat-icon class="mat-24" aria-label="List">
       settings
@@ -21,22 +26,37 @@
         query_builder
       </mat-icon>
     </button>
-  <button [matMenuTriggerFor]="menu" mat-icon-button>
-    <mat-icon class="mat-24" aria-label="List">
+  <button
+    [matMenuTriggerFor]="menu"
+    mat-icon-button>
+    <mat-icon
+      class="mat-24"
+      aria-label="List">
       list
     </mat-icon>
   </button>
 
-  <mat-menu #menu="matMenu" [overlapTrigger]="false" y-position="below">
-    <button mat-menu-item (click)="toggleSouthBandsDrawer()">
-      <mat-icon class="mat-24" aria-label="South Bands">
+  <mat-menu
+    #menu="matMenu"
+    [overlapTrigger]="false"
+    y-position="below">
+    <button
+      mat-menu-item
+      (click)="toggleSouthBandsDrawer()">
+      <mat-icon
+        class="mat-24"
+        aria-label="South Bands">
         view_agenda
       </mat-icon>
       Toggle South Bands
     </button>
 
-    <button mat-menu-item (click)="toggleDetailsDrawer()">
-      <mat-icon class="mat-24" aria-label="Details">
+    <button
+      mat-menu-item
+      (click)="toggleDetailsDrawer()">
+      <mat-icon
+        class="mat-24"
+        aria-label="Details">
         assessment
       </mat-icon>
       Toggle Details
@@ -55,7 +75,8 @@
   </mat-menu>
 </mat-toolbar>
 <div *ngIf="loading$ | async">
-  <mat-progress-bar mode="query">
+  <mat-progress-bar
+    mode="query">
   </mat-progress-bar>
 </div>
 <div class="outlet">
@@ -103,7 +124,8 @@
       (importEpochs)="onImportEpochs($event)"></raven-epochs>
     </div>
     <div style="text-align:center;">
-      <button mat-raised-button class="done-button" (click)="globalSettingsDrawer.toggle()">Done</button>
+      <button mat-raised-button class="done-button"
+        (click)="globalSettingsDrawer.toggle()">Done</button>
     </div>
   </mat-sidenav>
   <mat-sidenav-content>
