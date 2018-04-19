@@ -7,5 +7,4 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './collection-change.service';
 export * from './websocket.service';

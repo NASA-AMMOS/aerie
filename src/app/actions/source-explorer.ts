@@ -24,6 +24,7 @@ export enum SourceExplorerActionTypes {
   CollapseEvent        = '[sourceExplorer] collapse_event',
   ExpandEvent          = '[sourceExplorer] expand_event',
   FetchInitialSources  = '[sourceExplorer] fetch_initial_sources',
+  FetchSources         = '[sourceExplorer] fetch_sources',
   ImportSourceEvent    = '[sourceExplorer] import_source_event',
   ImportSourceFailure  = '[sourceExplorer] import_source_failure',
   ImportSourceSuccess  = '[sourceExplorer] import_source_success',
@@ -35,7 +36,6 @@ export enum SourceExplorerActionTypes {
   SelectSource         = '[sourceExplorer] select_source',
   SubBandIdAdd         = '[sourceExplorer] sub_band_id_add',
   SubBandIdRemove      = '[sourceExplorer] sub_band_id_remove',
-  UpdateBranch         = '[sourceExplorer] update_branch',
   UpdateSourceExplorer = '[sourceExplorer] update_source_explorer',
   UpdateTreeSource     = '[sourceExplorer] update_tree_source',
 }
@@ -73,6 +73,12 @@ export class ExpandEvent implements Action {
 
 export class FetchInitialSources implements Action {
   readonly type = SourceExplorerActionTypes.FetchInitialSources;
+}
+
+export class FetchSources implements Action {
+  readonly type = SourceExplorerActionTypes.FetchSources;
+
+  constructor(public sourceId: string, public sourceUrl: string) {}
 }
 
 export class ImportSourceEvent implements Action {
@@ -137,11 +143,6 @@ export class SubBandIdRemove implements Action {
   constructor(public sourceIds: string[], public subBandId: string) {}
 }
 
-export class UpdateBranch implements Action {
-  readonly type = SourceExplorerActionTypes.UpdateBranch;
-
-  constructor(public sourceUrl: string, public sourceId: string) {}
-}
 export class UpdateSourceExplorer implements Action {
   readonly type = SourceExplorerActionTypes.UpdateSourceExplorer;
 
@@ -162,6 +163,7 @@ export type SourceExplorerAction =
   CollapseEvent |
   ExpandEvent |
   FetchInitialSources |
+  FetchSources |
   ImportSourceEvent |
   ImportSourceFailure |
   ImportSourceSuccess |
@@ -173,6 +175,5 @@ export type SourceExplorerAction =
   SelectSource |
   SubBandIdAdd |
   SubBandIdRemove |
-  UpdateBranch |
   UpdateSourceExplorer |
   UpdateTreeSource;

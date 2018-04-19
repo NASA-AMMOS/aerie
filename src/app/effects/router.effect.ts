@@ -22,7 +22,7 @@ import {
   withLatestFrom,
 } from 'rxjs/operators';
 
-import { AppState } from './../../app/store';
+import { AppState } from './../store';
 
 import * as layoutActions from './../actions/layout';
 

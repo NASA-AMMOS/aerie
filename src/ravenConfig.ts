@@ -15,12 +15,14 @@
  * @interface RavenConfig
  */
 export interface RavenConfig {
+  baseSocketUrl: string;
   baseSourcesUrl: string;
   epochsUrl: string;
   itarMessage: string;
 }
 
 const ravenConfig: RavenConfig = {
+  baseSocketUrl: 'mpsserver/websocket/v1/topic/main',
   baseSourcesUrl: 'mpsserver/api/v2/fs',
   epochsUrl: 'mpsserver/api/v2/fs-mongodb/leucadia/taifunTest/europaEpoch.csv',
   itarMessage: '',

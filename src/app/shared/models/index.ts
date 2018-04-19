@@ -8,7 +8,6 @@
  */
 
 export * from './base-type';
-export * from './raven-epoch';
 export * from './import-data';
 export * from './map';
 export * from './mps-server-activity-metadata';
@@ -36,6 +35,7 @@ export * from './raven-band-left-click';
 export * from './raven-composite-band';
 export * from './raven-default-settings';
 export * from './raven-divider-band';
+export * from './raven-epoch';
 export * from './raven-pin';
 export * from './raven-point';
 export * from './raven-resource-band';

@@ -1,13 +1,21 @@
+/**
+ * Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+ * Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.
+ * This software may be subject to U.S. export control laws and regulations.
+ * By accepting this document, the user agrees to comply with all applicable U.S. export laws and regulations.
+ * User has the responsibility to obtain export licenses, or other export authority as may be required
+ * before exporting such information to foreign countries or providing access to foreign persons
+ */
+
 import {
   Component,
   EventEmitter,
   Input,
+  OnInit,
   Output,
   ViewChild,
 } from '@angular/core';
 
-import { SelectionModel } from '@angular/cdk/collections';
-import { OnInit } from '@angular/core/src/metadata/lifecycle_hooks';
 import {
   MatSort,
   Sort,
@@ -30,66 +38,76 @@ export class RavenEpochsComponent implements OnInit {
   @Output() importEpochs: EventEmitter<RavenEpoch[]> = new EventEmitter<RavenEpoch[]>();
   @Output() selectEpoch: EventEmitter<RavenEpoch> = new EventEmitter<RavenEpoch>();
 
-  selection = new SelectionModel<RavenEpoch>(true, []);
-
   displayedColumns = ['select', 'name', 'value'];
-
-  originalEpochs: RavenEpoch[];
+  sortedAndFilteredEpochs: RavenEpoch[];
 
   @ViewChild(MatSort) sort: MatSort;
 
   ngOnInit() {
-    this.originalEpochs = this.epochs.slice(0);
+    this.sortedAndFilteredEpochs = [...this.epochs];
   }
 
-  addEpochs(content: any): void {
-    const newEpochs: RavenEpoch[] = JSON.parse(content);
-    this.importEpochs.emit(newEpochs);
-  }
+  /**
+   * Filter the table of Epochs.
+   */
+  applyFilter(filter: string) {
+    const filterValue = filter.trim();
+    const copy = [...this.epochs];
 
-  applyFilter(filterValue: string) {
-    filterValue = filterValue.trim();
-    const copy = this.originalEpochs.slice(0);
-
-    // match either name or value
-    this.epochs = copy.filter(epoch =>
+    // Match either name or value.
+    this.sortedAndFilteredEpochs = copy.filter(epoch =>
       (epoch.name.indexOf(filterValue) > -1) || (epoch.value.indexOf(filterValue) > -1),
     );
   }
 
-  getContent($event: any): void {
-    this.readFile($event.target);
+  /**
+   * Helper. Compare function for use in sorting epochs.
+   *
+   * TODO: Move this to a util lib eventually.
+   */
+  compare(a: string, b: string, isAsc: boolean) {
+    return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
   }
 
-  readFile(inputValue: any): void {
-    const file: File = inputValue.files[0];
+  /**
+   * Read an input Epoch file. Emit new epochs if read is successful.
+   *
+   * TODO: Replace 'any' with a concrete type.
+   */
+  readFile(files: any): void {
+    const file: File = files[0];
     const reader: FileReader = new FileReader();
+
     reader.onloadend = (e) => {
-      this.addEpochs(reader.result);
+      const newEpochs: RavenEpoch[] = JSON.parse(reader.result);
+      this.importEpochs.emit(newEpochs);
     };
 
     reader.readAsText(file);
   }
 
+  /**
+   * Sort the table of epochs.
+   */
   sortData(sort: Sort) {
-    const data = this.epochs.slice();
+    const epochs = [...this.epochs];
+
     if (!sort.active || sort.direction === '') {
-      this.epochs = data;
+      this.sortedAndFilteredEpochs = epochs;
       return;
     }
 
-    this.epochs = data.sort((a, b) => {
+    this.sortedAndFilteredEpochs = epochs.sort((a, b) => {
       const isAsc = sort.direction === 'asc';
+
       switch (sort.active) {
-        case 'name': return compare(a.name, b.name, isAsc);
-        case 'value': return compare(a.value, b.value, isAsc);
-        default: return 0;
+        case 'name':
+          return this.compare(a.name, b.name, isAsc);
+        case 'value':
+          return this.compare(a.value, b.value, isAsc);
+        default:
+          return 0;
       }
     });
-
-    function compare(a: string, b: string, isAsc: boolean) {
-      return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
-    }
   }
 }
-

@@ -14,6 +14,7 @@ import { environment } from './../../environments/environment';
 
 // Config State Interface.
 export interface ConfigState {
+  baseSocketUrl: string;
   baseSourcesUrl: string;
   baseUrl: string;
   epochsUrl: string;

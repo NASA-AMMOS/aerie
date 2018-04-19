@@ -16,8 +16,8 @@ export interface RavenActivityBand {
   activityHeight: number;
   activityStyle: number;
   addTo: boolean;
-  autoFit: number | null;
   alignLabel: number;
+  autoFit: number | null;
   baselineLabel: number;
   borderWidth: number;
   height: number;

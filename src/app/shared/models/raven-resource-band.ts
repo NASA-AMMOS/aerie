@@ -13,8 +13,8 @@ import {
 } from './index';
 
 export interface RavenResourceBand {
-  autoTickValues: boolean;
   addTo: boolean;
+  autoTickValues: boolean;
   color: number[];
   fill: boolean;
   fillColor: number[];

@@ -34,7 +34,7 @@ import { MaterialModule } from './shared/material';
 
 import { ColorPickerModule } from 'ngx-color-picker';
 
-import { CollectionChangeService, WebsocketService } from './services';
+import { WebsocketService } from './services';
 
 import {
   AppComponent,
@@ -135,7 +135,6 @@ export const PROVIDERS = [
     useClass: CustomRouterStateSerializer,
   },
   TimelineGuard,
-  CollectionChangeService,
   WebsocketService,
 ];
 

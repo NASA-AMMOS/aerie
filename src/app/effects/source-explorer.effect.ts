@@ -37,12 +37,12 @@ import {
   CloseEvent,
   ExpandEvent,
   FetchInitialSources,
+  FetchSources,
   ImportSourceEvent,
   OpenEvent,
   RemoveSourceEvent,
   SaveState,
   SourceExplorerActionTypes,
-  UpdateBranch,
 } from './../actions/source-explorer';
 
 import * as sourceExplorerActions from './../actions/source-explorer';
@@ -141,25 +141,38 @@ export class SourceExplorerEffects {
     ),
   );
 
-  /**
-   * Listen for ImportSource and perform PUT for the data. Metadata for file is sent using POST to the collection after the collection is successfully created
-   */
+  @Effect()
+  fetchSources$: Observable<Action> = this.actions$.pipe(
+    ofType<FetchSources>(SourceExplorerActionTypes.FetchSources),
+    concatMap(action =>
+      concat(
+        this.fetchNewSources(action.sourceUrl, action.sourceId, false).pipe(
+          map((sources: RavenSource[]) => new sourceExplorerActions.NewSources(action.sourceId, sources)),
+        ),
+        of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+      ).pipe(
+        catchError(this.errorFetchSources(action.sourceId)),
+      ),
+    ),
+  );
+
   @Effect()
   importSource$: Observable<Action> = this.actions$.pipe(
     ofType<ImportSourceEvent>(SourceExplorerActionTypes.ImportSourceEvent),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     concatMap(({ state, action }) => {
-      let headers = new HttpHeaders();
-      headers = headers.set('Content-Type', 'text/csv');
-      return this.http.put(`${action.source.url}/${action.importData.name}?timeline_type=${action.importData.fileType}`, action.importData.fileData,
-        { headers: headers, responseType: 'text' }).pipe(
+      const headers = new HttpHeaders().set('Content-Type', 'text/csv');
+      const url = `${action.source.url}/${action.importData.name}?timeline_type=${action.importData.fileType}`;
+
+      return this.http.put(url, action.importData.fileData, { headers: headers, responseType: 'text' }).pipe(
         concatMap(() => {
           if (action.importData.mappingData) {
             return this.importMappingData(action.importData.name, action.importData.mappingData, action.source.url).pipe(
-              map(() => new sourceExplorerActions.ImportSourceSuccess()));
+              map(() => new sourceExplorerActions.ImportSourceSuccess()),
+            );
           } else {
-            // no need to send mapping data
+            // No need to send mapping data.
             return of(new sourceExplorerActions.ImportSourceSuccess());
           }
         }),
@@ -169,7 +182,6 @@ export class SourceExplorerEffects {
         }),
       );
     }),
-
   );
 
   @Effect()
@@ -222,21 +234,6 @@ export class SourceExplorerEffects {
           },
         }),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
-      ),
-    ),
-  );
-
-  @Effect()
-  updateBranch$: Observable<Action> = this.actions$.pipe(
-    ofType<UpdateBranch>(SourceExplorerActionTypes.UpdateBranch),
-    concatMap(action =>
-      concat(
-        this.fetchNewSources(action.sourceUrl, action.sourceId, false).pipe(
-              map((sources: RavenSource[]) => new sourceExplorerActions.NewSources(action.sourceId, sources)),
-            ),
-        of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
-      ).pipe(
-        catchError(this.errorUpdateBranch(action.sourceId)),
       ),
     ),
   );
@@ -398,6 +395,16 @@ export class SourceExplorerEffects {
   }
 
   /**
+   * Error Helper. Called when there is an error in fetchSources.
+   */
+  errorFetchSources(sourceId: string) {
+    return (e: Error) => {
+      console.error('SourceExplorerEffects - errorFetchSources: ', e);
+      return of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }));
+    };
+  }
+
+  /**
    * Error Helper. Called when there is an error in openEvent$.
    */
   errorOpenEvent(sourceId: string) {
@@ -407,16 +414,6 @@ export class SourceExplorerEffects {
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
         of(new sourceExplorerActions.UpdateTreeSource(sourceId, { opened: false })),
       );
-    };
-  }
-
-  /**
-   * Error Helper. Called when there is an error in updateBranch.
-   */
-  errorUpdateBranch(sourceId: string) {
-    return (e: Error) => {
-      console.error('SourceExplorerEffects - errorUpdateBranch: ', e);
-      return of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }));
     };
   }
 
@@ -453,6 +450,7 @@ export class SourceExplorerEffects {
   removeSource(sourceUrl: string, sourceId: string) {
     // TODO: Make this better so we don't have to change the URL.
     const url = sourceUrl.replace(/list_(generic|.*custom.*)-mongodb/i, 'fs-mongodb');
+
     return this.http.delete(url, { responseType: 'text' }).pipe(
       map(() => new sourceExplorerActions.RemoveSource(sourceId)),
     );
@@ -474,8 +472,13 @@ export class SourceExplorerEffects {
     );
   }
 
+  /**
+   * Helper. Import mapping data into MPS Server.
+   */
   importMappingData(name: string, mappingData: string, dataUrl: string) {
-    dataUrl = dataUrl.replace('fs-mongodb', 'metadata-mongodb');
-    return this.http.post(`${dataUrl}/${name}`, mappingData, { responseType: 'text' });
+    // TODO: Make this better so we don't have to change the URL.
+    const url = dataUrl.replace('fs-mongodb', 'metadata-mongodb');
+
+    return this.http.post(`${url}/${name}`, mappingData, { responseType: 'text' });
   }
 }

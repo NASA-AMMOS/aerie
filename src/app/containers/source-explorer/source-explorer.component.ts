@@ -14,14 +14,16 @@ import {
   OnDestroy,
 } from '@angular/core';
 
-import { MatDialog } from '@angular/material';
+import {
+  MatDialog,
+} from '@angular/material';
 
-import { Store } from '@ngrx/store';
+import {
+  Store,
+} from '@ngrx/store';
 
 import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs/Subject';
-import { Subscription } from 'rxjs/Subscription';
-
 
 import * as fromConfig from './../../reducers/config';
 import * as fromSourceExplorer from './../../reducers/source-explorer';
@@ -29,7 +31,7 @@ import * as fromSourceExplorer from './../../reducers/source-explorer';
 import * as epochsActions from './../../actions/epochs';
 import * as sourceExplorerActions from './../../actions/source-explorer';
 
-import { CollectionChangeService } from './../../services';
+import { WebsocketService } from './../../services';
 
 import {
   RavenConfirmDialogComponent,
@@ -56,15 +58,13 @@ export class SourceExplorerComponent implements OnDestroy {
   // Source Explorer state.
   tree: StringTMap<RavenSource>;
 
-  subscription: Subscription;
-
   private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(
     private changeDetector: ChangeDetectorRef,
     private dialog: MatDialog,
     private store: Store<fromSourceExplorer.SourceExplorerState>,
-    private collectionChangeService: CollectionChangeService,
+    private webSocketService: WebsocketService,
   ) {
     // Config state.
     this.store.select(fromConfig.getConfigState).pipe(
@@ -87,21 +87,30 @@ export class SourceExplorerComponent implements OnDestroy {
       );
     });
 
-    this.collectionChangeService.messages.subscribe((msg: any) => {
-      const data = JSON.parse(msg.data);
-      if (data.detail === 'data source changed') {
-        const pattern = new RegExp ('(.*/fs-mongodb)(/.*)/(.*)');
-        const match = data.subject.match (pattern);
-        const url = `${match[1]}${match[2]}`;
-        const sourceId = `${match[2]}`;
-        this.store.dispatch(new sourceExplorerActions.UpdateBranch(url, sourceId));
-      }
-    });
+    // Connect to web socket to update new sources when they change on the server.
+    this.connectToWebsocket();
   }
 
   ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
+  }
+
+  /**
+   * Helper that connects to the MPS Server websocket.
+   * When a data sources changes we fetch new sources to update the source explorer.
+   */
+  connectToWebsocket() {
+    this.webSocketService.connection.subscribe((msg: any) => {
+      const data = JSON.parse(msg.data);
+      if (data.detail === 'data source changed') {
+        const pattern = new RegExp('(.*/fs-mongodb)(/.*)/(.*)');
+        const match = data.subject.match(pattern);
+        const sourceId = `${match[2]}`;
+        const sourceUrl = `${match[1]}${match[2]}`;
+        this.store.dispatch(new sourceExplorerActions.FetchSources(sourceId, sourceUrl));
+      }
+    });
   }
 
   /**

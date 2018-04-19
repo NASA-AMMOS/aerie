@@ -32,26 +32,26 @@ describe('raven2 - activities by type', () => {
     'raven-tree-DSN-expand',
   ];
 
-  beforeAll(async () => {
+  beforeAll(async() => {
     page = new AppPage();
     page.navigateTo();
     clickByIds(ids);
     source0.open();
   });
 
-  it('opening source0 that has 3 legends should draw 3 bands', async () => {
+  it('opening source0 that has 3 legends should draw 3 bands', async() => {
     bands = await probe(page.bands, 'bands');
     expect(bands.length).toEqual(source0.legendCount);
   });
 
-  it('band source ids and names should point to source0', async () => {
+  it('band source ids and names should point to source0', async() => {
     for (let i = 0, l = source0.legendCount; i < l; ++i) {
       expect(bands[i].subBands[0].sourceIds[0]).toBeDefined();
       expect(bands[i].subBands[0].sourceIds[0]).toEqual(source0.id);
     }
   });
 
-  it('the source0 band ids should be defined for the correct band id and point to the correct band name', async () => {
+  it('the source0 band ids should be defined for the correct band id and point to the correct band name', async() => {
     const sourceSubBandIds = source0.tree[source0.id].subBandIds;
 
     for (let i = 0, l = source0.legendCount; i < l; ++i) {
@@ -61,13 +61,13 @@ describe('raven2 - activities by type', () => {
     }
   });
 
-  it('opening source1 which has the same legends as source0 should not draw any additional bands', async () => {
+  it('opening source1 which has the same legends as source0 should not draw any additional bands', async() => {
     source1.open();
     bands = await probe(page.bands, 'bands');
     expect(bands.length).toEqual(3);
   });
 
-  it('bands source ids and names should point to source0 and source1 correctly', async () => {
+  it('bands source ids and names should point to source0 and source1 correctly', async() => {
     for (let i = 0, l = source0.legendCount; i < l; ++i) {
       expect(bands[i].subBands[0].sourceIds[0]).toBeDefined();
       expect(bands[i].subBands[0].sourceIds[1]).toBeDefined();
@@ -76,7 +76,7 @@ describe('raven2 - activities by type', () => {
     }
   });
 
-  it('the source1 band ids should be defined for the correct band id and point to the correct band name', async () => {
+  it('the source1 band ids should be defined for the correct band id and point to the correct band name', async() => {
     const sourceSubBandIds = source1.tree[source1.id].subBandIds;
 
     for (let i = 0, l = source1.legendCount; i < l; ++i) {
@@ -86,13 +86,13 @@ describe('raven2 - activities by type', () => {
     }
   });
 
-  it('after closing source0, 3 bands should still be drawn', async () => {
+  it('after closing source0, 3 bands should still be drawn', async() => {
     source0.close();
     bands = await probe(page.bands, 'bands');
     expect(bands.length).toEqual(3);
   });
 
-  it('bands source ids and names should be defined for source1, they should not be defined for source0 anymore', async () => {
+  it('bands source ids and names should be defined for source1, they should not be defined for source0 anymore', async() => {
     for (let i = 0, l = source0.legendCount; i < l; ++i) {
       expect(bands[i].subBands[1]).toBeUndefined();
     }
@@ -103,12 +103,12 @@ describe('raven2 - activities by type', () => {
     }
   });
 
-  it('source0 should not point to any subBandIds', async () => {
+  it('source0 should not point to any subBandIds', async() => {
     const sourceSubBandIds = source0.tree[source0.id].subBandIds;
     expect(sourceSubBandIds).toEqual([]);
   });
 
-  it('source1 should still point to the correct subBandIds', async () => {
+  it('source1 should still point to the correct subBandIds', async() => {
     const sourceSubBandIds = source1.tree[source1.id].subBandIds;
 
     for (let i = 0, l = source1.legendCount; i < l; ++i) {
@@ -118,12 +118,12 @@ describe('raven2 - activities by type', () => {
     }
   });
 
-  it('after closing source1, no bands should be drawn', async () => {
+  it('after closing source1, no bands should be drawn', async() => {
     source1.close();
     expect(page.timeline0.isPresent()).toBeFalsy();
   });
 
-  it('source1 should not point to any subBandIds', async () => {
+  it('source1 should not point to any subBandIds', async() => {
     const sourceSubBandIds = source1.tree[source1.id].subBandIds;
     expect(sourceSubBandIds).toEqual([]);
   });
