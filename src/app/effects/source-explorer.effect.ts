@@ -268,7 +268,6 @@ export class SourceExplorerEffects {
         }
       }
     }
-    // }
 
     return actions;
   }
@@ -453,7 +452,7 @@ export class SourceExplorerEffects {
    */
   removeSource(sourceUrl: string, sourceId: string) {
     // TODO: Make this better so we don't have to change the URL.
-    const url = sourceUrl.replace(/(list_)?generic-mongodb/i, 'fs-mongodb');
+    const url = sourceUrl.replace(/(list_)?(generic|.*custom.*)-mongodb/i, 'fs-mongodb');
 
     return this.http.delete(url, { responseType: 'text' }).pipe(
       map(() => new sourceExplorerActions.RemoveSource(sourceId)),

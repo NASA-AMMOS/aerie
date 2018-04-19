@@ -20,11 +20,13 @@
       </mat-form-field>
 
       <label>Import File
-        <input type="file" (change)="getFile($event)" />
+        <input type="file"
+          (change)="getFile($event)" />
       </label>
       <ng-container *ngIf="fileType=='generic'">
           <label>Mapping File
-           <input type="file" (change)="getMapping($event)" />
+           <input type="file"
+            (change)="getMapping($event)" />
           </label>
        </ng-container>
     </mat-form-field>

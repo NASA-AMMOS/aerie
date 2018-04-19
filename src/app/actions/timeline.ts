@@ -180,8 +180,6 @@ export class UpdateTimeline implements Action {
   constructor(public update: StringTMap<BaseType>) {}
 }
 
-
-
 // Union type of all actions.
 export type TimelineAction =
   AddBand |
