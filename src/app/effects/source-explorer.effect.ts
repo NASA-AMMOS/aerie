@@ -143,7 +143,7 @@ export class SourceExplorerEffects {
         })),
       ).pipe(
         catchError((e: Error) => {
-          console.error('SourceExplorerEffects - fetchInitialSources$ error: ', e);
+          console.error('SourceExplorerEffects - fetchInitialSources$: ', e);
           return of(new sourceExplorerActions.UpdateSourceExplorer({
             fetchPending: false,
             initialSourcesLoaded: false,
@@ -192,7 +192,7 @@ export class SourceExplorerEffects {
           }
         }),
         catchError((e: Error) => {
-          console.error('SourceExplorerEffects - importFile$ error: ', e);
+          console.error('SourceExplorerEffects - importFile$: ', e);
           return of(new sourceExplorerActions.ImportFileFailure());
         }),
       );

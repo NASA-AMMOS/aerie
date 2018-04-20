@@ -7,7 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-
 export interface MpsServerEpoch {
   __document_id: string;
   __file_id: string;

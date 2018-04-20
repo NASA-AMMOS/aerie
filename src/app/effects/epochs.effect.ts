@@ -23,7 +23,6 @@ import {
 
 import { Observable } from 'rxjs/Observable';
 import { of } from 'rxjs/observable/of';
-import { AppState } from './../../app/store';
 
 import {
   catchError,
@@ -31,6 +30,8 @@ import {
   map,
   withLatestFrom,
 } from 'rxjs/operators';
+
+import { AppState } from './../../app/store';
 
 import {
   EpochsActionTypes,
@@ -59,16 +60,15 @@ export class EpochsEffects {
       map(serverEpochs => toRavenEpochs(serverEpochs)),
       map((epochs: RavenEpoch[]) => new epochsActions.AddEpochs(epochs))),
     ),
-    catchError((e) => {
-      console.error('epoch fetch error:', e);
+    catchError((e: Error) => {
+      console.error('EpochsEffects - fetchEpochs$: ', e);
       return of(new epochsActions.AddEpochs([]));
     }),
   );
-
 
   constructor(
     private http: HttpClient,
     private actions$: Actions,
     private store$: Store<AppState>,
-  ) { }
+  ) {}
 }

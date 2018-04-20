@@ -454,14 +454,19 @@ export function isOverlay(bands: RavenCompositeBand[], bandId: string): boolean 
   return false;
 }
 
-export function hexToColorArray(rgb: string) {
-  const color = [];
-  const pattern = new RegExp ('#(.{2})(.{2})(.{2})');
-  const  match = rgb.match (pattern);
+/**
+ * Helper. Converts an rgb hex color string to a color array.
+ */
+export function hexToColorArray(rgb: string): number[] {
+  const color = [0, 0, 0];
+  const pattern = new RegExp('#(.{2})(.{2})(.{2})');
+  const  match = rgb.match(pattern);
+
   if (match) {
     color[0] = parseInt(match [1], 16);
     color[1] = parseInt(match [2], 16);
     color[2] = parseInt(match [3], 16);
   }
+
   return color;
 }
