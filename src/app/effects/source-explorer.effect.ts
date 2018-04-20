@@ -37,8 +37,8 @@ import {
   CloseEvent,
   ExpandEvent,
   FetchInitialSources,
-  FetchSources,
-  ImportSourceEvent,
+  FetchNewSources,
+  ImportFile,
   OpenEvent,
   RemoveSourceEvent,
   SaveState,
@@ -116,7 +116,13 @@ export class SourceExplorerEffects {
         ...this.expand(source),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
       ).pipe(
-        catchError(this.errorExpandEvent(source.id)),
+        catchError((e: Error) => {
+          console.error('SourceExplorerEffects - expandEvent$: ', e);
+          return merge(
+            of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+            of(new sourceExplorerActions.UpdateTreeSource(source.id, { expanded: false })),
+          );
+        }),
       ),
     ),
   );
@@ -136,14 +142,20 @@ export class SourceExplorerEffects {
           initialSourcesLoaded: true,
         })),
       ).pipe(
-        catchError(this.errorFetchInitialSources()),
+        catchError((e: Error) => {
+          console.error('SourceExplorerEffects - fetchInitialSources$ error: ', e);
+          return of(new sourceExplorerActions.UpdateSourceExplorer({
+            fetchPending: false,
+            initialSourcesLoaded: false,
+          }));
+        }),
       ),
     ),
   );
 
   @Effect()
-  fetchSources$: Observable<Action> = this.actions$.pipe(
-    ofType<FetchSources>(SourceExplorerActionTypes.FetchSources),
+  fetchNewSources$: Observable<Action> = this.actions$.pipe(
+    ofType<FetchNewSources>(SourceExplorerActionTypes.FetchNewSources),
     concatMap(action =>
       concat(
         this.fetchNewSources(action.sourceUrl, action.sourceId, false).pipe(
@@ -151,34 +163,37 @@ export class SourceExplorerEffects {
         ),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
       ).pipe(
-        catchError(this.errorFetchSources(action.sourceId)),
+        catchError((e: Error) => {
+          console.error('SourceExplorerEffects - fetchNewSources$: ', e);
+          return of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }));
+        }),
       ),
     ),
   );
 
   @Effect()
-  importSource$: Observable<Action> = this.actions$.pipe(
-    ofType<ImportSourceEvent>(SourceExplorerActionTypes.ImportSourceEvent),
+  importFile$: Observable<Action> = this.actions$.pipe(
+    ofType<ImportFile>(SourceExplorerActionTypes.ImportFile),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     concatMap(({ state, action }) => {
       const headers = new HttpHeaders().set('Content-Type', 'text/csv');
-      const url = `${action.source.url}/${action.importData.name}?timeline_type=${action.importData.fileType}`;
+      const url = `${action.source.url}/${action.file.name}?timeline_type=${action.file.type}`;
 
-      return this.http.put(url, action.importData.fileData, { headers: headers, responseType: 'text' }).pipe(
+      return this.http.put(url, action.file.data, { headers: headers, responseType: 'text' }).pipe(
         concatMap(() => {
-          if (action.importData.mappingData) {
-            return this.importMappingData(action.importData.name, action.importData.mappingData, action.source.url).pipe(
-              map(() => new sourceExplorerActions.ImportSourceSuccess()),
+          if (action.file.mapping) {
+            return this.importMappingFile(action.source.url, action.file.name, action.file.mapping).pipe(
+              map(() => new sourceExplorerActions.ImportFileSuccess()),
             );
           } else {
             // No need to send mapping data.
-            return of(new sourceExplorerActions.ImportSourceSuccess());
+            return of(new sourceExplorerActions.ImportFileSuccess());
           }
         }),
-        catchError((e) => {
-          console.error('SourceExplorerEffects - importSource error: ', e);
-          return of(new sourceExplorerActions.ImportSourceFailure());
+        catchError((e: Error) => {
+          console.error('SourceExplorerEffects - importFile$ error: ', e);
+          return of(new sourceExplorerActions.ImportFileFailure());
         }),
       );
     }),
@@ -194,7 +209,13 @@ export class SourceExplorerEffects {
         this.open(state.sourceExplorer.treeBySourceId, action.sourceId, state.timeline.bands, state.timeline.selectedBandId, state.timeline.selectedSubBandId, state.timeline.defaultSettings),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
       ).pipe(
-        catchError(this.errorOpenEvent(action.sourceId)),
+        catchError((e: Error) => {
+          console.error('SourceExplorerEffects - openEvent$: ', e);
+          return merge(
+            of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+            of(new sourceExplorerActions.UpdateTreeSource(action.sourceId, { opened: false })),
+          );
+        }),
       ),
     ),
   );
@@ -367,57 +388,6 @@ export class SourceExplorerEffects {
   }
 
   /**
-   * Error Helper. Called when there is an error in expandEvent$.
-   */
-  errorExpandEvent(sourceId: string) {
-    return (e: Error) => {
-      console.error('SourceExplorerEffects - errorExpandEvent: ', e);
-      return merge(
-        of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
-        of(new sourceExplorerActions.UpdateTreeSource(sourceId, { expanded: false })),
-      );
-    };
-  }
-
-  /**
-   * Error Helper. Called when there is an error in fetchInitialSources$.
-   */
-  errorFetchInitialSources() {
-    return (e: Error) => {
-      console.error('SourceExplorerEffects - errorFetchInitialSources error: ', e);
-      return merge(
-        of(new sourceExplorerActions.UpdateSourceExplorer({
-          fetchPending: false,
-          initialSourcesLoaded: false,
-        })),
-      );
-    };
-  }
-
-  /**
-   * Error Helper. Called when there is an error in fetchSources.
-   */
-  errorFetchSources(sourceId: string) {
-    return (e: Error) => {
-      console.error('SourceExplorerEffects - errorFetchSources: ', e);
-      return of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }));
-    };
-  }
-
-  /**
-   * Error Helper. Called when there is an error in openEvent$.
-   */
-  errorOpenEvent(sourceId: string) {
-    return (e: Error) => {
-      console.error('SourceExplorerEffects - errorOpenEvent: ', e);
-      return merge(
-        of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
-        of(new sourceExplorerActions.UpdateTreeSource(sourceId, { opened: false })),
-      );
-    };
-  }
-
-  /**
    * Fetch helper. Fetches graph data from MPS Server and maps it to Raven sub-band data.
    */
   fetchSubBands(sourceUrl: string, sourceId: string, defaultSettings: RavenDefaultSettings) {
@@ -465,20 +435,18 @@ export class SourceExplorerEffects {
   saveState(sourceUrl: string, sourceId: string, name: string, data: any) {
     return this.http.put(`${sourceUrl}/${name}`, data).pipe(
       concatMap(() =>
-        this.fetchNewSources(sourceUrl, sourceId, false).pipe(
-          map((sources: RavenSource[]) => new sourceExplorerActions.NewSources(sourceId, sources)),
-        ),
+        of(new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl)),
       ),
     );
   }
 
   /**
-   * Helper. Import mapping data into MPS Server.
+   * Helper. Import mapping file into MPS Server for a given source URL.
    */
-  importMappingData(name: string, mappingData: string, dataUrl: string) {
+  importMappingFile(sourceUrl: string, name: string, mapping: string) {
     // TODO: Make this better so we don't have to change the URL.
-    const url = dataUrl.replace('fs-mongodb', 'metadata-mongodb');
+    const url = sourceUrl.replace('fs-mongodb', 'metadata-mongodb');
 
-    return this.http.post(`${url}/${name}`, mappingData, { responseType: 'text' });
+    return this.http.post(`${url}/${name}`, mapping, { responseType: 'text' });
   }
 }

@@ -1,38 +1,50 @@
 <div mat-dialog-content>
-  <div class="save-to">
-    Save To: {{data.source.name}}
+  <div class="import-to">
+    Import To: {{data.source.name}}
   </div>
 
-  <mat-form-field>
-    <input class="save-to"
-      [(ngModel)]="name"
-      matInput
-      placeholder="Name"
-      required>
+  <div class="example-container">
     <mat-form-field>
-      <mat-select placeholder="File Type"
-        [value]="fileType"
-        (selectionChange)="onChangeFileType($event.value)">
+      <input
+        [(ngModel)]="file.name"
+        matInput
+        placeholder="Name"
+        required>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-select
+        placeholder="File Type"
+        [(value)]="file.type">
         <mat-option [value]="'epoch'">Epoch</mat-option>
         <mat-option [value]="'generic'">Generic CSV</mat-option>
         <mat-option [value]="'pef'">PEF</mat-option>
       </mat-select>
     </mat-form-field>
 
-    <label>Import File
-      <input type="file"
-        (change)="getFile($event)" />
-    </label>
-    <ng-container *ngIf="fileType=='generic'">
-      <label>Mapping File
-        <input type="file"
-          (change)="getMapping($event)" />
+    <div class="file">
+      <label>
+        File
+        <input
+          type="file"
+          (change)="readFile($event.target.files[0], false)">
       </label>
-    </ng-container>
-  </mat-form-field>
+    </div>
+
+    <div
+      *ngIf="file.type === 'generic'"
+      class="mapping-file">
+      <label>
+        Mapping File
+        <input
+          type="file"
+          (change)="readFile($event.target.files[0], true)">
+      </label>
+    </div>
+  </div>
 </div>
 
 <div mat-dialog-actions>
   <button mat-button (click)="onCancel()">Cancel</button>
-  <button mat-button (click)="onFileImport()">Import</button>
+  <button mat-button (click)="onImport()">Import</button>
 </div>

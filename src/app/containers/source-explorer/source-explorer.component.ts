@@ -108,7 +108,7 @@ export class SourceExplorerComponent implements OnDestroy {
         const match = data.subject.match(pattern);
         const sourceId = `${match[2]}`;
         const sourceUrl = `${match[1]}${match[2]}`;
-        this.store.dispatch(new sourceExplorerActions.FetchSources(sourceId, sourceUrl));
+        this.store.dispatch(new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl));
       }
     });
   }
@@ -225,6 +225,22 @@ export class SourceExplorerComponent implements OnDestroy {
   }
 
   /**
+   * Dialog trigger. Opens the file import dialog.
+   */
+  openFileImportDialog(source: RavenSource): void {
+    const fileImportDialog = this.dialog.open(RavenFileImportDialogComponent, {
+      data: { source },
+      width: '250px',
+    });
+
+    fileImportDialog.afterClosed().subscribe(result => {
+      if (result.import) {
+        this.store.dispatch(new sourceExplorerActions.ImportFile(source, result.file));
+      }
+    });
+  }
+
+  /**
    * Dialog trigger. Opens the save state dialog.
    */
   openStateSaveDialog(source: RavenSource): void {
@@ -238,20 +254,6 @@ export class SourceExplorerComponent implements OnDestroy {
     ).subscribe(result => {
       if (result.save) {
         this.store.dispatch(new sourceExplorerActions.SaveState(source, result.name));
-      }
-    });
-  }
-
-  openFileImportDialog(source: RavenSource): void {
-    const fileImportDialog = this.dialog.open(RavenFileImportDialogComponent, {
-      data: { source },
-      height: '600px',
-      width: '500px',
-    });
-
-    fileImportDialog.afterClosed().subscribe(result => {
-      if (result.import) {
-        this.store.dispatch(new sourceExplorerActions.ImportSourceEvent({ name: result.name, fileData: result.fileData, fileType: result.fileType, mappingData: result.mappingData }, source));
       }
     });
   }

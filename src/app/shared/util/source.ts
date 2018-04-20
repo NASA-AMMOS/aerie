@@ -99,7 +99,7 @@ export function fromDir(isServer: boolean, mSource: MpsServerSourceDir, rSource:
       },
       {
         event: 'file-import',
-        name: 'Import ..',
+        name: 'Import',
       },
       {
         event: 'file-delete',

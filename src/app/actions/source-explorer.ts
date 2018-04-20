@@ -11,7 +11,7 @@ import { Action } from '@ngrx/store';
 
 import {
   BaseType,
-  ImportData,
+  RavenFile,
   RavenSource,
   StringTMap,
 } from './../shared/models';
@@ -24,10 +24,10 @@ export enum SourceExplorerActionTypes {
   CollapseEvent        = '[sourceExplorer] collapse_event',
   ExpandEvent          = '[sourceExplorer] expand_event',
   FetchInitialSources  = '[sourceExplorer] fetch_initial_sources',
-  FetchSources         = '[sourceExplorer] fetch_sources',
-  ImportSourceEvent    = '[sourceExplorer] import_source_event',
-  ImportSourceFailure  = '[sourceExplorer] import_source_failure',
-  ImportSourceSuccess  = '[sourceExplorer] import_source_success',
+  FetchNewSources      = '[sourceExplorer] fetch_new_sources',
+  ImportFile           = '[sourceExplorer] import_file',
+  ImportFileFailure    = '[sourceExplorer] import_file_failure',
+  ImportFileSuccess    = '[sourceExplorer] import_file_success',
   NewSources           = '[sourceExplorer] new_sources',
   OpenEvent            = '[sourceExplorer] open_event',
   RemoveSource         = '[sourceExplorer] remove_source',
@@ -75,24 +75,24 @@ export class FetchInitialSources implements Action {
   readonly type = SourceExplorerActionTypes.FetchInitialSources;
 }
 
-export class FetchSources implements Action {
-  readonly type = SourceExplorerActionTypes.FetchSources;
+export class FetchNewSources implements Action {
+  readonly type = SourceExplorerActionTypes.FetchNewSources;
 
   constructor(public sourceId: string, public sourceUrl: string) {}
 }
 
-export class ImportSourceEvent implements Action {
-  readonly type = SourceExplorerActionTypes.ImportSourceEvent;
+export class ImportFile implements Action {
+  readonly type = SourceExplorerActionTypes.ImportFile;
 
-  constructor(public importData: ImportData, public source: RavenSource) {}
+  constructor(public source: RavenSource, public file: RavenFile) {}
 }
 
-export class ImportSourceFailure implements Action {
-  readonly type = SourceExplorerActionTypes.ImportSourceFailure;
+export class ImportFileFailure implements Action {
+  readonly type = SourceExplorerActionTypes.ImportFileFailure;
 }
 
-export class ImportSourceSuccess implements Action {
-  readonly type = SourceExplorerActionTypes.ImportSourceSuccess;
+export class ImportFileSuccess implements Action {
+  readonly type = SourceExplorerActionTypes.ImportFileSuccess;
 }
 
 export class NewSources implements Action {
@@ -163,10 +163,10 @@ export type SourceExplorerAction =
   CollapseEvent |
   ExpandEvent |
   FetchInitialSources |
-  FetchSources |
-  ImportSourceEvent |
-  ImportSourceFailure |
-  ImportSourceSuccess |
+  FetchNewSources |
+  ImportFile |
+  ImportFileFailure |
+  ImportFileSuccess |
   NewSources |
   OpenEvent |
   RemoveSource |

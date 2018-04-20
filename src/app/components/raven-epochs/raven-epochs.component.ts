@@ -71,11 +71,8 @@ export class RavenEpochsComponent implements OnInit {
 
   /**
    * Read an input Epoch file. Emit new epochs if read is successful.
-   *
-   * TODO: Replace 'any' with a concrete type.
    */
-  readFile(files: any): void {
-    const file: File = files[0];
+  readFile(file: File): void {
     const reader: FileReader = new FileReader();
 
     reader.onloadend = (e) => {
