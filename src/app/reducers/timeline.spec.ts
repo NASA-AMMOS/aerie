@@ -28,7 +28,6 @@ import {
   SelectPoint,
   SortBands,
   UpdateBand,
-  UpdateDefaultSettings,
   UpdateSubBand,
   UpdateTimeline,
 } from './../actions/timeline';
@@ -158,30 +157,6 @@ describe('timeline reducer', () => {
       }],
       maxTimeRange: { end: 200, start: 0 },
       viewTimeRange: { end: 100, start: 0 },
-    });
-  });
-
-  it('handle UpdateTimeline dateFormat', () => {
-    timelineState = reducer(timelineState, new UpdateTimeline({ dateFormat: 'Julian' }));
-    expect(timelineState).toEqual({
-      ...initialState,
-      dateFormat: 'Julian',
-    });
-  });
-
-  it('handle UpdateTimeline showTimeCursor', () => {
-    timelineState = reducer(timelineState, new UpdateTimeline({ showTimeCursor: true }));
-    expect(timelineState).toEqual({
-      ...initialState,
-      showTimeCursor: true,
-    });
-  });
-
-  it('handle UpdateTimeline showTooltip', () => {
-    timelineState = reducer(timelineState, new UpdateTimeline({ showTooltip: true }));
-    expect(timelineState).toEqual({
-      ...initialState,
-      showTooltip: true,
     });
   });
 
