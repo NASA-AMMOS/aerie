@@ -40,7 +40,7 @@ import * as fromSourceExplorer from './../reducers/source-explorer';
 
 @Injectable()
 export class TimelineGuard implements CanActivate {
-  // config state
+  // Config state.
   baseUrl: string;
   epochsUrl: string;
 
