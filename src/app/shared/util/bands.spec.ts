@@ -11,6 +11,7 @@ import {
   bandById,
   hasActivityByTypeBand,
   hasSourceId,
+  hexToColorArray,
   isAddTo,
   isOverlay,
   subBandById,
@@ -120,6 +121,16 @@ describe('bands.ts', () => {
         bandId: '100',
         subBandId: '0',
       });
+    });
+  });
+
+  describe('hexToColorArray', () => {
+    it(`should properly convert a hex color to an array of colors`, () => {
+      expect(hexToColorArray('#000000')).toEqual([0, 0, 0]);
+      expect(hexToColorArray('#FF0000')).toEqual([255, 0, 0]);
+      expect(hexToColorArray('#00FF00')).toEqual([0, 255, 0]);
+      expect(hexToColorArray('#0000FF')).toEqual([0, 0, 255]);
+      expect(hexToColorArray('#FFFFFF')).toEqual([255, 255, 255]);
     });
   });
 

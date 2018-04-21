@@ -44,7 +44,11 @@ import {
  * Note that we do not worry about how these bands are displayed here.
  * We are just generating the band types for use elsewhere.
  */
-export function toRavenBandData(sourceId: string, graphData: MpsServerGraphData, defaultBandSettings: RavenDefaultBandSettings): RavenSubBand[] {
+export function toRavenBandData(
+  sourceId: string,
+  graphData: MpsServerGraphData,
+  defaultBandSettings: RavenDefaultBandSettings,
+): RavenSubBand[] {
   const metadata = graphData['Timeline Metadata'];
   const timelineData = graphData['Timeline Data'];
 
