@@ -223,7 +223,7 @@ export function removeBandsOrPointsForSource(state: TimelineState, action: Remov
     }))
     .filter(
       band => band.subBands.length !== 0,
-  );
+    );
 
   bands = updateSortOrder(bands);
 
@@ -247,7 +247,7 @@ export function removeSubBand(state: TimelineState, action: RemoveSubBand): Time
     }))
     .filter(
       band => band.subBands.length !== 0,
-  );
+    );
 
   bands = updateSortOrder(bands);
 
