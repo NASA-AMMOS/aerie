@@ -12,7 +12,7 @@
   <mat-form-field>
     <input
       matInput
-      (keyup)="changeDayCode.emit($event.target.value)"
+      (keyup)="updateEpochs.emit({ update: { dayCode: $event.target.value } })"
       [value]="dayCode"
       placeholder="Day Code">
   </mat-form-field>
@@ -21,7 +21,8 @@
   <mat-form-field>
     <input
       matInput
-      (keyup)="changeEarthSecToEpochSec.emit($event.target.value)"
+      type="number"
+      (keyup)="updateEpochs.emit({ update: { earthSecToEpochSec: $event.target.valueAsNumber } })"
       [value]="earthSecToEpochSec"
       placeholder="Earth Sec to Epoch Sec">
   </mat-form-field>
@@ -46,7 +47,7 @@
         <mat-radio-button
           name="radioButton"
           [checked]="inUseEpoch ? row.name === inUseEpoch.name:false"
-          (change)="selectEpoch.emit(row)">
+          (change)="updateEpochs.emit({ update: { inUseEpoch: row } })">
         </mat-radio-button>
       </mat-cell>
     </ng-container>

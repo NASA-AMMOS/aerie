@@ -42,12 +42,8 @@ export function reducer(state: EpochsState = initialState, action: EpochsAction)
   switch (action.type) {
     case EpochsActionTypes.AddEpochs:
       return { ...state, epochs: state.epochs.concat(action.epochs) };
-    case EpochsActionTypes.ChangeDayCode:
-      return { ...state, dayCode: action.code };
-    case EpochsActionTypes.ChangeEarthSecToEpochSec:
-      return { ...state, earthSecToEpochSec: action.earthSecToEpochSec };
-    case EpochsActionTypes.SelectEpoch:
-      return { ...state, inUseEpoch: action.epoch };
+    case EpochsActionTypes.UpdateEpochs:
+      return { ...state, ...action.update };
     default:
       return state;
   }

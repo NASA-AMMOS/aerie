@@ -10,16 +10,16 @@
 import { Action } from '@ngrx/store';
 
 import {
+  BaseType,
   RavenEpoch,
+  StringTMap,
 } from './../shared/models';
 
 // Action Types.
 export enum EpochsActionTypes {
-  AddEpochs                = '[epochs] add_epochs',
-  ChangeDayCode            = '[epochs] change_day_code',
-  ChangeEarthSecToEpochSec = '[epochs] change_earth_sec_to_epoch_sec',
-  FetchEpochs              = '[epochs] fetch_epochs',
-  SelectEpoch              = '[epochs] select_epoch',
+  AddEpochs    = '[epochs] add_epochs',
+  FetchEpochs  = '[epochs] fetch_epochs',
+  UpdateEpochs = '[epochs] update_epochs',
 }
 
 // Actions.
@@ -29,34 +29,20 @@ export class AddEpochs implements Action {
   constructor(public epochs: RavenEpoch[]) {}
 }
 
-export class ChangeDayCode implements Action {
-  readonly type = EpochsActionTypes.ChangeDayCode;
-
-  constructor(public code: string) {}
-}
-
-export class ChangeEarthSecToEpochSec implements Action {
-  readonly type = EpochsActionTypes.ChangeEarthSecToEpochSec;
-
-  constructor(public earthSecToEpochSec: number) {}
-}
-
 export class FetchEpochs implements Action {
   readonly type = EpochsActionTypes.FetchEpochs;
 
   constructor(public url: string) {}
 }
 
-export class SelectEpoch implements Action {
-  readonly type = EpochsActionTypes.SelectEpoch;
+export class UpdateEpochs implements Action {
+  readonly type = EpochsActionTypes.UpdateEpochs;
 
-  constructor(public epoch: RavenEpoch) {}
+  constructor(public update: StringTMap<BaseType>) {}
 }
 
 // Union type of all actions.
 export type EpochsAction =
   AddEpochs |
-  ChangeDayCode |
-  ChangeEarthSecToEpochSec |
   FetchEpochs |
-  SelectEpoch;
+  UpdateEpochs;

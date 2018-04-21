@@ -199,10 +199,8 @@
             [dayCode]="dayCode"
             [earthSecToEpochSec]="earthSecToEpochSec"
             [inUseEpoch]="inUseEpoch"
-            (changeDayCode)="onChangeDayCode($event)"
-            (changeEarthSecToEpochSec)="onChangeEarthSecToEpochSec($event)"
-            (selectEpoch)="onSelectEpoch($event)"
-            (importEpochs)="onImportEpochs($event)">
+            (importEpochs)="onImportEpochs($event)"
+            (updateEpochs)="onUpdateEpochs($event)">
           </raven-epochs>
         </div>
       </mat-tab>

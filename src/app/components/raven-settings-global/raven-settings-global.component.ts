@@ -16,7 +16,7 @@ import {
 
 import {
   RavenDefaultBandSettings,
-  RavenSettingsUpdate,
+  RavenUpdate,
 } from '../../shared/models';
 
 @Component({
@@ -28,5 +28,5 @@ export class RavenSettingsGlobalComponent {
   @Input() defaultBandSettings: RavenDefaultBandSettings;
 
   @Output() addDividerBand: EventEmitter<null> = new EventEmitter<null>();
-  @Output() updateDefaultBandSettings: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
+  @Output() updateDefaultBandSettings: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
 }

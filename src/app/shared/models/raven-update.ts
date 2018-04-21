@@ -12,7 +12,7 @@ import {
   StringTMap,
 } from './index';
 
-export interface RavenSettingsUpdate {
+export interface RavenUpdate {
   bandId?: string;
   subBandId?: string;
   update: StringTMap<BaseType>;

@@ -38,10 +38,10 @@ import {
   RavenDefaultBandSettings,
   RavenEpoch,
   RavenPoint,
-  RavenSettingsUpdate,
   RavenSortMessage,
   RavenSubBand,
   RavenTimeRange,
+  RavenUpdate,
   StringTMap,
 } from './../../shared/models';
 
@@ -198,6 +198,13 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
+   * Event. Called when a `import-epochs` event is fired from the raven-epochs component.
+   */
+  onImportEpochs(epochs: RavenEpoch[]) {
+    this.store.dispatch(new epochsActions.AddEpochs(epochs));
+  }
+
+  /**
    * Event. Called when a tab is changed.
    */
   onSelectedTabChange(e: MatTabChangeEvent) {
@@ -228,7 +235,7 @@ export class TimelineComponent implements OnDestroy {
   /**
    * Event. Called when an `update-band` event is fired from the raven-settings component.
    */
-  onUpdateBand(e: RavenSettingsUpdate): void {
+  onUpdateBand(e: RavenUpdate): void {
     if (e.bandId) {
       this.store.dispatch(new timelineActions.UpdateBand(e.bandId, e.update));
     }
@@ -237,14 +244,21 @@ export class TimelineComponent implements OnDestroy {
   /**
    * Event. Called when an `update-default-band-settings` event is fired from the raven-settings-global component.
    */
-  onUpdateDefaultBandSettings(e: RavenSettingsUpdate): void {
+  onUpdateDefaultBandSettings(e: RavenUpdate): void {
     this.store.dispatch(new configActions.UpdateDefaultBandSettings(e.update));
+  }
+
+  /**
+   * Event. Called when an `update-epochs` event is fired from the raven-epochs component.
+   */
+  onUpdateEpochs(e: RavenUpdate): void {
+    this.store.dispatch(new epochsActions.UpdateEpochs(e.update));
   }
 
   /**
    * Event. Called when an `update-sub-band` event is fired from the raven-settings component.
    */
-  onUpdateSubBand(e: RavenSettingsUpdate): void {
+  onUpdateSubBand(e: RavenUpdate): void {
     if (e.bandId && e.subBandId) {
       this.store.dispatch(new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update));
     }
@@ -253,7 +267,7 @@ export class TimelineComponent implements OnDestroy {
   /**
    * Event. Called when an `update-timeline` event is fired from the raven-settings component.
    */
-  onUpdateTimeline(e: RavenSettingsUpdate): void {
+  onUpdateTimeline(e: RavenUpdate): void {
     this.store.dispatch(new timelineActions.UpdateTimeline(e.update));
   }
 
@@ -269,17 +283,5 @@ export class TimelineComponent implements OnDestroy {
    */
   onDragEnd(): void {
     dispatchEvent(new Event('resize'));
-  }
-
-  onChangeEarthSecToEpochSec(earthSecToEpochSec: number) {
-    this.store.dispatch(new epochsActions.ChangeEarthSecToEpochSec(earthSecToEpochSec));
-  }
-
-  onImportEpochs(epochs: RavenEpoch[]) {
-    this.store.dispatch(new epochsActions.AddEpochs(epochs));
-  }
-
-  onSelectEpoch(epoch: RavenEpoch) {
-    this.store.dispatch(new epochsActions.SelectEpoch(epoch));
   }
 }

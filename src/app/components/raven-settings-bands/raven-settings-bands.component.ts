@@ -17,8 +17,8 @@ import {
 
 import {
   RavenCompositeBand,
-  RavenSettingsUpdate,
   RavenSubBand,
+  RavenUpdate,
   StringTMap,
 } from './../../shared/models';
 
@@ -34,9 +34,9 @@ export class RavenSettingsBandsComponent {
   @Input() selectedSubBandId: string;
 
   @Output() deleteSubBand: EventEmitter<RavenSubBand> = new EventEmitter<RavenSubBand>();
-  @Output() updateBand: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
-  @Output() updateSubBand: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
-  @Output() updateTimeline: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
+  @Output() updateBand: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
+  @Output() updateSubBand: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
+  @Output() updateTimeline: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
 
   /**
    * trackBy for subBands.

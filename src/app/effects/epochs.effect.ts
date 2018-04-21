@@ -18,7 +18,6 @@ import {
 
 import {
   Action,
-  Store,
 } from '@ngrx/store';
 
 import { Observable } from 'rxjs/Observable';
@@ -28,13 +27,11 @@ import {
   catchError,
   concatMap,
   map,
-  withLatestFrom,
 } from 'rxjs/operators';
-
-import { AppState } from './../../app/store';
 
 import {
   EpochsActionTypes,
+  FetchEpochs,
 } from './../actions/epochs';
 
 import {
@@ -52,13 +49,11 @@ import * as epochsActions from './../actions/epochs';
 export class EpochsEffects {
   @Effect()
   fetchEpochs$: Observable<Action> = this.actions$.pipe(
-    ofType<epochsActions.FetchEpochs>(EpochsActionTypes.FetchEpochs),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(({action}) =>
-      this.http.get<MpsServerEpoch[]>(action.url).pipe (
-      map(serverEpochs => toRavenEpochs(serverEpochs)),
-      map((epochs: RavenEpoch[]) => new epochsActions.AddEpochs(epochs))),
+    ofType<FetchEpochs>(EpochsActionTypes.FetchEpochs),
+    concatMap(action =>
+      this.http.get(action.url).pipe(
+        map((mpsServerEpochs: MpsServerEpoch[]) => toRavenEpochs(mpsServerEpochs)),
+        map((ravenEpochs: RavenEpoch[]) => new epochsActions.AddEpochs(ravenEpochs))),
     ),
     catchError((e: Error) => {
       console.error('EpochsEffects - fetchEpochs$: ', e);
@@ -69,6 +64,5 @@ export class EpochsEffects {
   constructor(
     private http: HttpClient,
     private actions$: Actions,
-    private store$: Store<AppState>,
   ) {}
 }

@@ -21,7 +21,11 @@ import {
   Sort,
 } from '@angular/material';
 
-import { RavenEpoch } from '../../shared/models';
+import {
+  RavenEpoch,
+  RavenUpdate,
+} from '../../shared/models';
+
 @Component({
   selector: 'raven-epochs',
   styleUrls: ['./raven-epochs.component.css'],
@@ -33,10 +37,8 @@ export class RavenEpochsComponent implements OnInit {
   @Input() epochs: RavenEpoch[];
   @Input() inUseEpoch: RavenEpoch | null;
 
-  @Output() changeDayCode: EventEmitter<string> = new EventEmitter<string>();
-  @Output() changeEarthSecToEpochSec: EventEmitter<number> = new EventEmitter<number>();
   @Output() importEpochs: EventEmitter<RavenEpoch[]> = new EventEmitter<RavenEpoch[]>();
-  @Output() selectEpoch: EventEmitter<RavenEpoch> = new EventEmitter<RavenEpoch>();
+  @Output() updateEpochs: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
 
   displayedColumns = ['select', 'name', 'value'];
   sortedAndFilteredEpochs: RavenEpoch[];

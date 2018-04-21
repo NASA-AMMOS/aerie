@@ -15,17 +15,17 @@ import {
 /**
  * Transform an array of MPS Server epochs to Raven epochs.
  */
-export function toRavenEpochs(serverEpochs: MpsServerEpoch[]) {
-  const epochs: RavenEpoch[] = [];
+export function toRavenEpochs(mpsServerEpochs: MpsServerEpoch[]) {
+  const ravenEpochs: RavenEpoch[] = [];
 
-  for (let i = 0, l = serverEpochs.length; i < l; ++i) {
-    const serverEpoch: MpsServerEpoch = serverEpochs[i];
+  for (let i = 0, l = mpsServerEpochs.length; i < l; ++i) {
+    const serverEpoch: MpsServerEpoch = mpsServerEpochs[i];
 
-    epochs.push({
+    ravenEpochs.push({
       name: serverEpoch.name,
       value: serverEpoch.value,
     });
   }
 
-  return epochs;
+  return ravenEpochs;
 }
