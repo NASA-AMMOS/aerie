@@ -7,11 +7,26 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export interface RavenDefaultSettings {
-  activityLayout: number;
-  fillColor: string;
-  icon: string;
-  labelFont: string;
-  labelFontSize: number;
-  resourceColor: string;
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+} from '@angular/core';
+
+import {
+  RavenDefaultBandSettings,
+  RavenSettingsUpdate,
+} from '../../shared/models';
+
+@Component({
+  selector: 'raven-settings-global',
+  styleUrls: ['./raven-settings-global.component.css'],
+  templateUrl: './raven-settings-global.component.html',
+})
+export class RavenSettingsGlobalComponent {
+  @Input() defaultBandSettings: RavenDefaultBandSettings;
+
+  @Output() addDividerBand: EventEmitter<null> = new EventEmitter<null>();
+  @Output() updateDefaultBandSettings: EventEmitter<RavenSettingsUpdate> = new EventEmitter<RavenSettingsUpdate>();
 }

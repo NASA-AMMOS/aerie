@@ -32,10 +32,6 @@ import { environment } from './../environments/environment';
 import { FalconModule } from './shared/falcon';
 import { MaterialModule } from './shared/material';
 
-import { ColorPickerModule } from 'ngx-color-picker';
-
-import { WebsocketService } from './services';
-
 import {
   AppComponent,
   SourceExplorerComponent,
@@ -48,9 +44,9 @@ import {
   RavenConfirmDialogComponent,
   RavenEpochsComponent,
   RavenFileImportDialogComponent,
-  RavenGlobalSettingsComponent,
   RavenResourcePointComponent,
-  RavenSettingsComponent,
+  RavenSettingsBandsComponent,
+  RavenSettingsGlobalComponent,
   RavenStatePointComponent,
   RavenStateSaveDialogComponent,
   RavenTreeComponent,
@@ -86,9 +82,9 @@ export const DECLARATIONS = [
   RavenConfirmDialogComponent,
   RavenEpochsComponent,
   RavenFileImportDialogComponent,
-  RavenGlobalSettingsComponent,
   RavenResourcePointComponent,
-  RavenSettingsComponent,
+  RavenSettingsBandsComponent,
+  RavenSettingsGlobalComponent,
   RavenStatePointComponent,
   RavenStateSaveDialogComponent,
   RavenTreeComponent,
@@ -111,7 +107,6 @@ export const EFFECTS = [
 ];
 
 export const MODULES = [
-  ColorPickerModule,
   CommonModule,
   BrowserModule,
   BrowserAnimationsModule,
@@ -135,7 +130,6 @@ export const PROVIDERS = [
     useClass: CustomRouterStateSerializer,
   },
   TimelineGuard,
-  WebsocketService,
 ];
 
 export const SCHEMAS = [

@@ -66,7 +66,7 @@ import {
   MpsServerGraphData,
   MpsServerSource,
   RavenCompositeBand,
-  RavenDefaultSettings,
+  RavenDefaultBandSettings,
   RavenSource,
   RavenSubBand,
   RavenTimeRange,
@@ -93,9 +93,9 @@ export class SourceExplorerEffects {
       ]),
     ),
     map(([action, state, sources]) => ({ action, state, sources })),
-    concatMap(({ action, state: { bands, labelWidth, maxTimeRange, viewTimeRange }, sources }) =>
+    concatMap(({ action, state: { bands, maxTimeRange, viewTimeRange }, sources }) =>
       concat(
-        ...this.load(bands, labelWidth, maxTimeRange, viewTimeRange, sources),
+        ...this.load(bands, maxTimeRange, viewTimeRange, sources),
       ),
     ),
   );
@@ -206,7 +206,14 @@ export class SourceExplorerEffects {
     map(([action, state]) => ({ action, state })),
     concatMap(({ state, action }) =>
       concat(
-        this.open(state.sourceExplorer.treeBySourceId, action.sourceId, state.timeline.bands, state.timeline.selectedBandId, state.timeline.selectedSubBandId, state.timeline.defaultSettings),
+        this.open(
+          state.sourceExplorer.treeBySourceId,
+          action.sourceId,
+          state.timeline.bands,
+          state.timeline.selectedBandId,
+          state.timeline.selectedSubBandId,
+          state.config.defaultBandSettings,
+        ),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
       ).pipe(
         catchError((e: Error) => {
@@ -248,7 +255,6 @@ export class SourceExplorerEffects {
                 points: [],
               })),
             })),
-            labelWidth: state.timeline.labelWidth,
             maxTimeRange: state.timeline.maxTimeRange,
             pins: state.sourceExplorer.pins,
             viewTimeRange: state.timeline.viewTimeRange,
@@ -295,7 +301,6 @@ export class SourceExplorerEffects {
    */
   load(
     bands: RavenCompositeBand[],
-    labelWidth: number,
     maxTimeRange: RavenTimeRange,
     viewTimeRange: RavenTimeRange,
     initialSources: RavenSource[],
@@ -310,7 +315,6 @@ export class SourceExplorerEffects {
       of(new timelineActions.UpdateTimeline({
         ...fromTimeline.initialState,
         bands,
-        labelWidth,
         maxTimeRange,
         viewTimeRange,
       })),
@@ -331,7 +335,14 @@ export class SourceExplorerEffects {
           take(1),
           concatMap(state =>
             concat(
-              this.open(state.sourceExplorer.treeBySourceId, sourceId, bands, null, null, state.timeline.defaultSettings),
+              this.open(
+                state.sourceExplorer.treeBySourceId,
+                sourceId,
+                bands,
+                null,
+                null,
+                state.config.defaultBandSettings,
+              ),
               of(new sourceExplorerActions.UpdateTreeSource(sourceId, { opened: true })),
             ),
           ),
@@ -345,8 +356,14 @@ export class SourceExplorerEffects {
    * Helper. Returns a stream of actions that need to occur when opening a source explorer source.
    * The order of the cases in this function are very important. Do not change the order.
    */
-  open(treeBySourceId: StringTMap<RavenSource>, sourceId: string, currentBands: RavenCompositeBand[], bandId: string | null, subBandId: string | null, defaultSettings: RavenDefaultSettings) {
-    return this.fetchSubBands(treeBySourceId[sourceId].url, sourceId, defaultSettings).pipe(
+  open(
+    treeBySourceId: StringTMap<RavenSource>,
+    sourceId: string, currentBands: RavenCompositeBand[],
+    bandId: string | null,
+    subBandId: string | null,
+    defaultBandSettings: RavenDefaultBandSettings,
+  ) {
+    return this.fetchSubBands(treeBySourceId[sourceId].url, sourceId, defaultBandSettings).pipe(
       concatMap((newSubBands: RavenSubBand[]) => {
         const actions: Action[] = [];
 
@@ -390,9 +407,9 @@ export class SourceExplorerEffects {
   /**
    * Fetch helper. Fetches graph data from MPS Server and maps it to Raven sub-band data.
    */
-  fetchSubBands(sourceUrl: string, sourceId: string, defaultSettings: RavenDefaultSettings) {
+  fetchSubBands(sourceUrl: string, sourceId: string, defaultBandSettings: RavenDefaultBandSettings) {
     return this.http.get<MpsServerGraphData>(sourceUrl).pipe(
-      map((graphData: MpsServerGraphData) => toRavenBandData(sourceId, graphData, defaultSettings)),
+      map((graphData: MpsServerGraphData) => toRavenBandData(sourceId, graphData, defaultBandSettings)),
     );
   }
 

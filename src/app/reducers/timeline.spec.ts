@@ -161,129 +161,24 @@ describe('timeline reducer', () => {
     });
   });
 
-  it('handle updateTimeline currentTimeCursor', () => {
-    timelineState = reducer(timelineState, new UpdateTimeline({currentTimeCursor: true}));
-    expect(timelineState).toEqual({
-      ...initialState,
-      currentTimeCursor: true,
-    });
-  });
-
   it('handle UpdateTimeline dateFormat', () => {
-    timelineState = reducer(timelineState, new UpdateTimeline({dateFormat: 'Julian'}));
+    timelineState = reducer(timelineState, new UpdateTimeline({ dateFormat: 'Julian' }));
     expect(timelineState).toEqual({
       ...initialState,
       dateFormat: 'Julian',
     });
   });
 
-  it('handle UpdateDefaultSettings activityLayout', () => {
-    timelineState = reducer(timelineState, new UpdateDefaultSettings({activityLayout: 2}));
+  it('handle UpdateTimeline showTimeCursor', () => {
+    timelineState = reducer(timelineState, new UpdateTimeline({ showTimeCursor: true }));
     expect(timelineState).toEqual({
       ...initialState,
-      defaultSettings: {
-        activityLayout: 2,
-        fillColor: '#000000',
-        icon: 'circle',
-        labelFont: 'Georgia',
-        labelFontSize: 9,
-        resourceColor: '#000000',
-      },
+      showTimeCursor: true,
     });
   });
 
-  it('handle UpdateDefaultSettings activityLayout', () => {
-    timelineState = reducer(timelineState, new UpdateDefaultSettings({activityLayout: 2}));
-    expect(timelineState).toEqual({
-      ...initialState,
-      defaultSettings: {
-        activityLayout: 2,
-        fillColor: '#000000',
-        icon: 'circle',
-        labelFont: 'Georgia',
-        labelFontSize: 9,
-        resourceColor: '#000000',
-      },
-    });
-  });
-
-  it('handle UpdateDefaultSettings fillColor', () => {
-    timelineState = reducer(timelineState, new UpdateDefaultSettings({fillColor: '#ff0000'}));
-    expect(timelineState).toEqual({
-      ...initialState,
-      defaultSettings: {
-        activityLayout: 0,
-        fillColor: '#ff0000',
-        icon: 'circle',
-        labelFont: 'Georgia',
-        labelFontSize: 9,
-        resourceColor: '#000000',
-      },
-    });
-  });
-
-  it('handle UpdateDefaultSettings icon', () => {
-    timelineState = reducer(timelineState, new UpdateDefaultSettings({icon: 'triangle'}));
-    expect(timelineState).toEqual({
-      ...initialState,
-      defaultSettings: {
-        activityLayout: 0,
-        fillColor: '#000000',
-        icon: 'triangle',
-        labelFont: 'Georgia',
-        labelFontSize: 9,
-        resourceColor: '#000000',
-      },
-    });
-  });
-
-  it('handle UpdateDefaultSettings labelFont', () => {
-    timelineState = reducer(timelineState, new UpdateDefaultSettings({labelFont: 'Courier'}));
-    expect(timelineState).toEqual({
-      ...initialState,
-      defaultSettings: {
-        activityLayout: 0,
-        fillColor: '#000000',
-        icon: 'circle',
-        labelFont: 'Courier',
-        labelFontSize: 9,
-        resourceColor: '#000000',
-      },
-    });
-  });
-
-  it('handle UpdateDefaultSettings labelFontSize', () => {
-    timelineState = reducer(timelineState, new UpdateDefaultSettings({labelFontSize: 11}));
-    expect(timelineState).toEqual({
-      ...initialState,
-      defaultSettings: {
-        activityLayout: 0,
-        fillColor: '#000000',
-        icon: 'circle',
-        labelFont: 'Georgia',
-        labelFontSize: 11,
-        resourceColor: '#000000',
-      },
-    });
-  });
-
-  it('handle UpdateDefaultSettings resourceColor', () => {
-    timelineState = reducer(timelineState, new UpdateDefaultSettings({resourceColor: '#00ff00'}));
-    expect(timelineState).toEqual({
-      ...initialState,
-      defaultSettings: {
-        activityLayout: 0,
-        fillColor: '#000000',
-        icon: 'circle',
-        labelFont: 'Georgia',
-        labelFontSize: 9,
-        resourceColor: '#00ff00',
-      },
-    });
-  });
-
-  it('handle UpdateTimeline tooltip', () => {
-    timelineState = reducer(timelineState, new UpdateTimeline({showTooltip: true}));
+  it('handle UpdateTimeline showTooltip', () => {
+    timelineState = reducer(timelineState, new UpdateTimeline({ showTooltip: true }));
     expect(timelineState).toEqual({
       ...initialState,
       showTooltip: true,
@@ -520,12 +415,10 @@ describe('timeline reducer', () => {
 
   it('handle UpdateTimeline', () => {
     timelineState = reducer(timelineState, new UpdateTimeline({
-      labelWidth: 200,
       viewTimeRange: { end: 314, start: 272 },
     }));
     expect(timelineState).toEqual({
       ...initialState,
-      labelWidth: 200,
       viewTimeRange: { end: 314, start: 272 },
     });
   });

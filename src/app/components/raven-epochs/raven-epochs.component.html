@@ -1,11 +1,12 @@
-<div class="epochs mat-elevation-z8">
-  <!-- Filter. -->
-  <mat-form-field class="epoch-filter">
-    <input
-      matInput
-      (keyup)="applyFilter($event.target.value)"
-      placeholder="Epoch Filter">
-  </mat-form-field>
+<mat-card>
+  <!-- Import. -->
+  <div class="import">
+    <label>Import Epochs
+      <input
+        type="file"
+        (change)="readFile($event.target.files[0])">
+    </label>
+  </div>
 
   <!-- Day Code. -->
   <mat-form-field>
@@ -25,11 +26,18 @@
       placeholder="Earth Sec to Epoch Sec">
   </mat-form-field>
 
+  <!-- Filter. -->
+  <mat-form-field>
+    <input
+      matInput
+      (keyup)="applyFilter($event.target.value)"
+      placeholder="Filter...">
+  </mat-form-field>
+
   <!-- Table. -->
   <mat-table
-    #table
-    [dataSource]="sortedAndFilteredEpochs"
     matSort
+    [dataSource]="sortedAndFilteredEpochs"
     (matSortChange)="sortData($event)">
     <!-- Radio button Column. -->
     <ng-container matColumnDef="select">
@@ -37,7 +45,7 @@
       <mat-cell *matCellDef="let row">
         <mat-radio-button
           name="radioButton"
-          [checked]="inUseEpoch?row.name==inUseEpoch.name:false"
+          [checked]="inUseEpoch ? row.name === inUseEpoch.name:false"
           (change)="selectEpoch.emit(row)">
         </mat-radio-button>
       </mat-cell>
@@ -70,12 +78,4 @@
     <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
     <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
   </mat-table>
-</div>
-
-<div class="button-container">
-  <label>Import Epochs
-    <input
-      type="file"
-      (change)="readFile($event.target.files[0])">
-  </label>
-</div>
+</mat-card>

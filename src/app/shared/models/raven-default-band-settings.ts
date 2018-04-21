@@ -7,4 +7,15 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './websocket.service';
+export interface RavenDefaultBandSettings {
+  activityLayout: number;
+  dateFormat: string;
+  icon: string;
+  labelFont: string;
+  labelFontSize: number;
+  labelWidth: number;
+  resourceColor: string;
+  resourceFillColor: string;
+  showTimeCursor: boolean;
+  showTooltip: boolean;
+}

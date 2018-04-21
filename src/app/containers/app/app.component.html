@@ -13,19 +13,6 @@
 
   <span class="spacer"></span>
 
-  <button mat-icon-button
-    matTooltip="global settings"
-    (click)="drawer='globals'; globalSettingsDrawer.toggle()">
-    <mat-icon class="mat-24" aria-label="List">
-      settings
-    </mat-icon>
-  </button>
-  <button mat-icon-button matTooltip="manage epochs"
-    (click)="drawer='epochs'; globalSettingsDrawer.toggle()">
-      <mat-icon class="mat-24" aria-label="List">
-        query_builder
-      </mat-icon>
-    </button>
   <button
     [matMenuTriggerFor]="menu"
     mat-icon-button>
@@ -74,61 +61,12 @@
     </button>
   </mat-menu>
 </mat-toolbar>
+
 <div *ngIf="loading$ | async">
-  <mat-progress-bar
-    mode="query">
+  <mat-progress-bar mode="query">
   </mat-progress-bar>
 </div>
+
 <div class="outlet">
   <router-outlet></router-outlet>
 </div>
-<mat-sidenav-container class="global-settings-drawer-container">
-  <mat-sidenav position="end"
-    [fixedInViewport]="true"
-    [fixedTopGap]="40"
-    #globalSettingsDrawer
-    mode="over">
-    <div *ngIf="drawer=='globals'">
-    <raven-global-settings [currentTimeCursor]="currentTimeCursor"
-      [tooltip]="tooltip"
-      [labelWidth]="labelWidth"
-      [defaultActivityLayout]="defaultSettings.activityLayout"
-      [defaultFillColor]="defaultSettings.fillColor"
-      [defaultIcon]="defaultSettings.icon"
-      [defaultLabelFontSize]="defaultSettings.labelFontSize"
-      [defaultLabelFont]="defaultSettings.labelFont"
-      [defaultResourceColor]="defaultSettings.resourceColor"
-      [colorPalette]="colorPalette"
-      [dateFormat]="dateFormat"
-      (changeDefaultActivityLayout)="onChangeDefaultActivityLayout($event)"
-      (changeDefaultFillColor)="onChangeDefaultFillColor($event)"
-      (changeDefaultIcon)="onChangeDefaultIcon($event)"
-      (changeDefaultLabelFontSize)="onChangeDefaultLabelFontSize($event)"
-      (changeDefaultLabelFont)="onChangeDefaultLabelFont($event)"
-      (changeDefaultResourceColor)="onChangeDefaultResourceColor($event)"
-      (changeLabelWidth)="onChangeLabelWidth($event)"
-      (changeTooltip)="onChangeTooltip($event)"
-      (changeCurrentTimeCursor)="onChangeCurrentTimeCursor($event)"
-      (changeDateFormat)="onChangeDateFormat($event)">
-    </raven-global-settings>
-    </div>
-    <div *ngIf="drawer=='epochs'">
-      <raven-epochs
-      [epochs]="epochs"
-      [dayCode]="dayCode"
-      [earthSecToEpochSec]="earthSecToEpochSec"
-      [inUseEpoch]="inUseEpoch"
-      (changeDayCode)="onChangeDayCode($event)"
-      (changeEarthSecToEpochSec)="onChangeEarthSecToEpochSec($event)"
-      (selectEpoch)="onSelectEpoch($event)"
-      (importEpochs)="onImportEpochs($event)"></raven-epochs>
-    </div>
-    <div style="text-align:center;">
-      <button mat-raised-button class="done-button"
-        (click)="globalSettingsDrawer.toggle()">Done</button>
-    </div>
-  </mat-sidenav>
-  <mat-sidenav-content>
-    <span></span>
-  </mat-sidenav-content>
-</mat-sidenav-container>

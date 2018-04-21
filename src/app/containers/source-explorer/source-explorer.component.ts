@@ -22,7 +22,12 @@ import {
   Store,
 } from '@ngrx/store';
 
-import { takeUntil } from 'rxjs/operators';
+import {
+  switchMap,
+  takeUntil,
+} from 'rxjs/operators';
+
+import { WebSocketSubject } from 'rxjs/observable/dom/WebSocketSubject';
 import { Subject } from 'rxjs/Subject';
 
 import * as fromConfig from './../../reducers/config';
@@ -30,8 +35,6 @@ import * as fromSourceExplorer from './../../reducers/source-explorer';
 
 import * as epochsActions from './../../actions/epochs';
 import * as sourceExplorerActions from './../../actions/source-explorer';
-
-import { WebsocketService } from './../../services';
 
 import {
   RavenConfirmDialogComponent,
@@ -64,7 +67,6 @@ export class SourceExplorerComponent implements OnDestroy {
     private changeDetector: ChangeDetectorRef,
     private dialog: MatDialog,
     private store: Store<fromSourceExplorer.SourceExplorerState>,
-    private webSocketService: WebsocketService,
   ) {
     // Config state.
     this.store.select(fromConfig.getConfigState).pipe(
@@ -101,7 +103,12 @@ export class SourceExplorerComponent implements OnDestroy {
    * When a data sources changes we fetch new sources to update the source explorer.
    */
   connectToWebsocket() {
-    this.webSocketService.connection.subscribe((msg: any) => {
+    this.store.select(fromConfig.getConfigState).pipe(
+      switchMap(config =>
+        WebSocketSubject.create(`${config.baseUrl.replace('https', 'wss')}/${config.baseSocketUrl}`),
+      ),
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe((msg: any) => {
       const data = JSON.parse(msg.data);
       if (data.detail === 'data source changed') {
         const pattern = new RegExp('(.*/fs-mongodb)(/.*)/(.*)');

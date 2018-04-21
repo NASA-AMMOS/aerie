@@ -1,26 +1,13 @@
-.button-container {
-  padding-top: 40px;
-  padding-left: 10px;
-}
-
-.epoch-filter {
-  padding-top: 20px;
-  padding-left: 20px;
-}
-
-.import-epoch {
-  padding-left: 30px;
-}
-
-input[type='file'] {
-  color: transparent;
-}
-
-.mat-column-select {
-  overflow: visible;
+:host {
+  display: block;
 }
 
 mat-table {
+  max-height: 450px;
   overflow: auto;
-  max-height: 700px;
+}
+
+.import {
+  padding-bottom: 12px;
+  padding-top: 10px;
 }

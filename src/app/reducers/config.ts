@@ -7,16 +7,29 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { ConfigAction } from './../actions/config';
+import {
+  createFeatureSelector,
+  createSelector,
+} from '@ngrx/store';
+
+import {
+  ConfigAction,
+  ConfigActionTypes,
+  UpdateDefaultBandSettings,
+} from './../actions/config';
 
 import { environment } from './../../environments/environment';
+
+import {
+  RavenDefaultBandSettings,
+} from './../shared/models';
 
 // Config State Interface.
 export interface ConfigState {
   baseSocketUrl: string;
   baseSourcesUrl: string;
   baseUrl: string;
+  defaultBandSettings: RavenDefaultBandSettings;
   epochsUrl: string;
   itarMessage: string;
   production: boolean;
@@ -31,9 +44,24 @@ export const initialState: ConfigState = environment;
  */
 export function reducer(state: ConfigState = initialState, action: ConfigAction): ConfigState {
   switch (action.type) {
+    case ConfigActionTypes.UpdateDefaultBandSettings:
+      return updateDefaultBandSettings(state, action);
     default:
       return state;
   }
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'UpdateDefaultBandSettings' action.
+ */
+export function updateDefaultBandSettings(state: ConfigState, action: UpdateDefaultBandSettings): ConfigState {
+  return {
+    ...state,
+    defaultBandSettings: {
+      ...state.defaultBandSettings,
+      ...action.update,
+    },
+  };
 }
 
 /**
@@ -52,4 +80,5 @@ export const getConfigState = createFeatureSelector<ConfigState>('config');
  * only recompute when arguments change. The created selectors can also be composed
  * together to select different pieces of state.
  */
+export const getDefaultBandSettings = createSelector(getConfigState, (state: ConfigState) => state.defaultBandSettings);
 export const getItarMessage = createSelector(getConfigState, (state: ConfigState) => state.itarMessage);

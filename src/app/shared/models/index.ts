@@ -32,7 +32,7 @@ export * from './raven-activity-band';
 export * from './raven-activity-point';
 export * from './raven-band-left-click';
 export * from './raven-composite-band';
-export * from './raven-default-settings';
+export * from './raven-default-band-settings';
 export * from './raven-divider-band';
 export * from './raven-epoch';
 export * from './raven-file';

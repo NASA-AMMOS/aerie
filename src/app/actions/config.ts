@@ -9,11 +9,17 @@
 
 import { Action } from '@ngrx/store';
 
+import {
+  BaseType,
+  StringTMap,
+} from './../shared/models';
+
 // Action Types.
 export enum ConfigActionTypes {
-  ChangeBaseSourcesUrl = '[config] change_base_sources_url',
-  ChangeBaseUrl        = '[config] change_base_url',
-  ChangeItarMessage    = '[config] change_itar_message',
+  ChangeBaseSourcesUrl      = '[config] change_base_sources_url',
+  ChangeBaseUrl             = '[config] change_base_url',
+  ChangeItarMessage         = '[config] change_itar_message',
+  UpdateDefaultBandSettings = '[config] update_default_band_settings',
 }
 
 // Actions.
@@ -29,8 +35,15 @@ export class ChangeItarMessage implements Action {
   readonly type = ConfigActionTypes.ChangeItarMessage;
 }
 
+export class UpdateDefaultBandSettings implements Action {
+  readonly type = ConfigActionTypes.UpdateDefaultBandSettings;
+
+  constructor(public update: StringTMap<BaseType>) {}
+}
+
 // Union type of all actions.
 export type ConfigAction =
   ChangeBaseSourcesUrl |
   ChangeBaseUrl |
-  ChangeItarMessage;
+  ChangeItarMessage |
+  UpdateDefaultBandSettings;

@@ -40,7 +40,6 @@ import {
 
 import {
   RavenCompositeBand,
-  RavenDefaultSettings,
   RavenPoint,
   RavenSubBand,
   RavenTimeRange,
@@ -49,46 +48,20 @@ import {
 // Timeline State Interface.
 export interface TimelineState {
   bands: RavenCompositeBand[];
-  colorPalette: string[];
-  currentTimeCursor: boolean;
-  dateFormat: string;
-  defaultSettings: RavenDefaultSettings;
-  labelWidth: number;
   maxTimeRange: RavenTimeRange;
   selectedBandId: string;
   selectedPoint: RavenPoint | null;
   selectedSubBandId: string;
-  showTooltip: boolean;
   viewTimeRange: RavenTimeRange;
 }
 
 // Timeline Initial State.
 export const initialState: TimelineState = {
   bands: [],
-  colorPalette: [
-    '#000000', // black
-    '#ff0000', // red
-    '#00ff00', // green
-    '#0000ff', // blue
-    '#ffa500', // orange
-    '#ffff00', // yellow
-  ],
-  currentTimeCursor: false,
-  dateFormat: 'Day-Month-Year',
-  defaultSettings: {
-    activityLayout: 0,
-    fillColor: '#000000',
-    icon: 'circle',
-    labelFont: 'Georgia',
-    labelFontSize: 9,
-    resourceColor: '#000000',
-  },
-  labelWidth: 100,
   maxTimeRange: { end: 0, start: 0 },
   selectedBandId: '',
   selectedPoint: null,
   selectedSubBandId: '',
-  showTooltip: true,
   viewTimeRange: { end: 0, start: 0 },
 };
 
@@ -116,8 +89,6 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
       return sortBands(state, action);
     case TimelineActionTypes.UpdateBand:
       return updateBand(state, action);
-    case TimelineActionTypes.UpdateDefaultSettings:
-      return {...state, defaultSettings: { ... state.defaultSettings, ...action.update}};
     case TimelineActionTypes.UpdateSubBand:
       return updateSubBand(state, action);
     case TimelineActionTypes.UpdateTimeline:

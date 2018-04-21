@@ -24,11 +24,11 @@ import {
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  selector: 'raven-settings',
-  styleUrls: ['./raven-settings.component.css'],
-  templateUrl: './raven-settings.component.html',
+  selector: 'raven-settings-bands',
+  styleUrls: ['./raven-settings-bands.component.css'],
+  templateUrl: './raven-settings-bands.component.html',
 })
-export class RavenSettingsComponent {
+export class RavenSettingsBandsComponent {
   @Input() bandsById: StringTMap<RavenCompositeBand>;
   @Input() selectedBandId: string;
   @Input() selectedSubBandId: string;

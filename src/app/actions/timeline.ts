@@ -28,7 +28,6 @@ export enum TimelineActionTypes {
   SelectPoint                  = '[timeline] select_point',
   SortBands                    = '[timeline] sort_bands',
   UpdateBand                   = '[timeline] update_band',
-  UpdateDefaultSettings        = '[timeline] update_default_settings',
   UpdateSubBand                = '[timeline] update_sub_band',
   UpdateTimeline               = '[timeline] update_timeline',
 }
@@ -100,12 +99,6 @@ export class UpdateBand implements Action {
   constructor(public bandId: string, public update: StringTMap<BaseType>) {}
 }
 
-export class UpdateDefaultSettings implements Action {
-  readonly type = TimelineActionTypes.UpdateDefaultSettings;
-
-  constructor(public update: StringTMap<BaseType>) {}
-}
-
 export class UpdateSubBand implements Action {
   readonly type = TimelineActionTypes.UpdateSubBand;
 
@@ -129,6 +122,5 @@ export type TimelineAction =
   SelectPoint |
   SortBands |
   UpdateBand |
-  UpdateDefaultSettings |
   UpdateSubBand |
   UpdateTimeline;
