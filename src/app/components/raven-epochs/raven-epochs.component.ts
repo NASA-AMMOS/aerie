@@ -13,11 +13,9 @@ import {
   Input,
   OnInit,
   Output,
-  ViewChild,
 } from '@angular/core';
 
 import {
-  MatSort,
   Sort,
 } from '@angular/material';
 
@@ -42,8 +40,6 @@ export class RavenEpochsComponent implements OnInit {
 
   displayedColumns = ['select', 'name', 'value'];
   sortedAndFilteredEpochs: RavenEpoch[];
-
-  @ViewChild(MatSort) sort: MatSort;
 
   ngOnInit() {
     this.sortedAndFilteredEpochs = [...this.epochs];
