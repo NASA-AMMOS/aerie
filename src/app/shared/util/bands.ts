@@ -21,6 +21,7 @@ import {
   MpsServerStatePoint,
   RavenActivityBand,
   RavenCompositeBand,
+  RavenDefaultBandSettings,
   RavenDividerBand,
   RavenResourceBand,
   RavenStateBand,
@@ -43,22 +44,26 @@ import {
  * Note that we do not worry about how these bands are displayed here.
  * We are just generating the band types for use elsewhere.
  */
-export function toRavenBandData(sourceId: string, graphData: MpsServerGraphData): RavenSubBand[] {
+export function toRavenBandData(
+  sourceId: string,
+  graphData: MpsServerGraphData,
+  defaultBandSettings: RavenDefaultBandSettings,
+): RavenSubBand[] {
   const metadata = graphData['Timeline Metadata'];
   const timelineData = graphData['Timeline Data'];
 
   if (metadata.hasTimelineType === 'measurement' && (metadata as MpsServerStateMetadata).hasValueType === 'string_xdr' ||
       metadata.hasTimelineType === 'state') {
     // State.
-    const stateBand = toStateBand(sourceId, metadata as MpsServerStateMetadata, timelineData as MpsServerStatePoint[]);
+    const stateBand = toStateBand(sourceId, metadata as MpsServerStateMetadata, timelineData as MpsServerStatePoint[], defaultBandSettings);
     return [stateBand];
   } else if (metadata.hasTimelineType === 'measurement') {
     // Resource.
-    const resourceBand = toResourceBand(sourceId, metadata as MpsServerResourceMetadata, timelineData as MpsServerResourcePoint[]);
+    const resourceBand = toResourceBand(sourceId, metadata as MpsServerResourceMetadata, timelineData as MpsServerResourcePoint[], defaultBandSettings);
     return [resourceBand];
   } else if (metadata.hasTimelineType === 'activity') {
     // Activity.
-    const activityBands = toActivityBands(sourceId, timelineData as MpsServerActivityPoint[]);
+    const activityBands = toActivityBands(sourceId, timelineData as MpsServerActivityPoint[], defaultBandSettings);
     return activityBands;
   } else {
     console.error(`raven2 - bands.ts - toRavenBandData - parameter 'graphData' has a timeline type we do not recognize: ${metadata.hasTimelineType}`);
@@ -69,7 +74,11 @@ export function toRavenBandData(sourceId: string, graphData: MpsServerGraphData)
 /**
  * Returns a list of bands based on timelineData and point legends.
  */
-export function toActivityBands(sourceId: string, timelineData: MpsServerActivityPoint[]): RavenActivityBand[] {
+export function toActivityBands(
+  sourceId: string,
+  timelineData: MpsServerActivityPoint[],
+  defaultBandSettings: RavenDefaultBandSettings,
+): RavenActivityBand[] {
   const { legends, maxTimeRange } = getActivityPointsByLegend(sourceId, timelineData);
   const sourceType = getSourceType(sourceId);
   const bands: RavenActivityBand[] = [];
@@ -81,14 +90,18 @@ export function toActivityBands(sourceId: string, timelineData: MpsServerActivit
       activityStyle: 1,
       addTo: false,
       alignLabel: 3,
+      autoFit: defaultBandSettings.activityLayout === 0 ? 1 : null,
       baselineLabel: 3,
       borderWidth: 1,
       height: 50,
       heightPadding: 10,
+      icon: defaultBandSettings.icon,
       id: uniqueId(),
       label: `${legend}`,
       labelColor: [0, 0, 0],
-      layout: 1,
+      labelFont: defaultBandSettings.labelFont,
+      labelFontSize: defaultBandSettings.labelFontSize,
+      layout: defaultBandSettings.activityLayout,
       legend,
       maxTimeRange,
       minorLabels: [],
@@ -162,21 +175,29 @@ export function toDividerBand(): RavenDividerBand {
 /**
  * Returns a resource band given metadata and timelineData.
  */
-export function toResourceBand(sourceId: string, metadata: MpsServerResourceMetadata, timelineData: MpsServerResourcePoint[]): RavenResourceBand {
+export function toResourceBand(
+  sourceId: string,
+  metadata: MpsServerResourceMetadata,
+  timelineData: MpsServerResourcePoint[],
+  defaultBandSettings: RavenDefaultBandSettings,
+): RavenResourceBand {
   const { maxTimeRange, points } = getResourcePoints(sourceId, timelineData);
 
   const resourceBand: RavenResourceBand = {
     addTo: false,
     autoTickValues: true,
-    color: [0, 0, 0],
+    color: colorHexToRgbArray(defaultBandSettings.resourceColor),
     fill: false,
-    fillColor: [0, 0, 0],
+    fillColor: colorHexToRgbArray(defaultBandSettings.resourceFillColor),
     height: 100,
     heightPadding: 10,
+    icon: defaultBandSettings.icon,
     id: uniqueId(),
     interpolation: 'linear',
     label: metadata.hasObjectName,
     labelColor: [0, 0, 0],
+    labelFont: defaultBandSettings.labelFont,
+    labelFontSize: defaultBandSettings.labelFontSize,
     maxTimeRange,
     minorLabels: [],
     name: metadata.hasObjectName,
@@ -195,7 +216,12 @@ export function toResourceBand(sourceId: string, metadata: MpsServerResourceMeta
 /**
  * Returns a state band given metadata and timelineData.
  */
-export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, timelineData: MpsServerStatePoint[]): RavenStateBand {
+export function toStateBand(
+  sourceId: string,
+  metadata: MpsServerStateMetadata,
+  timelineData: MpsServerStatePoint[],
+  defaultBandSettings: RavenDefaultBandSettings,
+): RavenStateBand {
   const { maxTimeRange, points } = getStatePoints(sourceId, timelineData);
 
   const stateBand: RavenStateBand = {
@@ -208,6 +234,8 @@ export function toStateBand(sourceId: string, metadata: MpsServerStateMetadata, 
     id: uniqueId(),
     label: metadata.hasObjectName,
     labelColor: [0, 0, 0],
+    labelFont: defaultBandSettings.labelFont,
+    labelFontSize: defaultBandSettings.labelFontSize,
     maxTimeRange,
     minorLabels: [],
     name: metadata.hasObjectName,
@@ -328,7 +356,11 @@ export function updateTimeRanges(bands: RavenCompositeBand[], currentViewTimeRan
 /**
  * Helper. Updates the selectedBandId and selectedSubBandId based on the current band list.
  */
-export function updateSelectedBandIds(bands: RavenCompositeBand[], selectedBandId: string, selectedSubBandId: string) {
+export function updateSelectedBandIds(
+  bands: RavenCompositeBand[],
+  selectedBandId: string,
+  selectedSubBandId: string,
+) {
   const band = bandById(bands, selectedBandId);
   const subBand = subBandById(bands, selectedBandId, selectedSubBandId);
 
@@ -443,4 +475,37 @@ export function isOverlay(bands: RavenCompositeBand[], bandId: string): boolean 
   }
 
   return false;
+}
+
+/**
+ * Helper. Converts an rgb hex color string to a rgb color array.
+ */
+export function colorHexToRgbArray(hex: string): number[] {
+  const color = [0, 0, 0];
+  const pattern = new RegExp('#(.{2})(.{2})(.{2})');
+  const match = hex.match(pattern);
+
+  if (match) {
+    color[0] = parseInt(match[1], 16);
+    color[1] = parseInt(match[2], 16);
+    color[2] = parseInt(match[3], 16);
+  }
+
+  return color;
+}
+
+/**
+ * Helper. Converts an rgb color array to an rgb hex color string.
+ */
+export function colorRgbArrayToHex(rgb: number[]): string {
+  const [r = 0, g = 0, b = 0] = rgb;
+  return `#${colorRgbToHex(r)}${colorRgbToHex(g)}${colorRgbToHex(b)}`;
+}
+
+/**
+ * Helper. Converts a single rgb value [0, 255] to a hex value.
+ */
+export function colorRgbToHex(rgb: number): string {
+  const hex = rgb.toString(16).toUpperCase();
+  return hex.length === 1 ? '0' + hex : hex;
 }

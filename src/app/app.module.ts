@@ -42,14 +42,18 @@ import {
   RavenActivityPointComponent,
   RavenBandsComponent,
   RavenConfirmDialogComponent,
+  RavenEpochsComponent,
+  RavenFileImportDialogComponent,
   RavenResourcePointComponent,
-  RavenSettingsComponent,
+  RavenSettingsBandsComponent,
+  RavenSettingsGlobalComponent,
   RavenStatePointComponent,
   RavenStateSaveDialogComponent,
   RavenTreeComponent,
 } from './components';
 
 import {
+  EpochsEffects,
   LayoutEffects,
   RouterEffects,
   SourceExplorerEffects,
@@ -76,8 +80,11 @@ export const DECLARATIONS = [
   RavenActivityPointComponent,
   RavenBandsComponent,
   RavenConfirmDialogComponent,
+  RavenEpochsComponent,
+  RavenFileImportDialogComponent,
   RavenResourcePointComponent,
-  RavenSettingsComponent,
+  RavenSettingsBandsComponent,
+  RavenSettingsGlobalComponent,
   RavenStatePointComponent,
   RavenStateSaveDialogComponent,
   RavenTreeComponent,
@@ -87,10 +94,12 @@ export const DECLARATIONS = [
 
 export const ENTRY_COMPONENTS = [
   RavenConfirmDialogComponent,
+  RavenFileImportDialogComponent,
   RavenStateSaveDialogComponent,
 ];
 
 export const EFFECTS = [
+  EpochsEffects,
   LayoutEffects,
   RouterEffects,
   SourceExplorerEffects,

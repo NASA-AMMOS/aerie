@@ -1,0 +1,28 @@
+host {
+  display: block;
+}
+
+label {
+  font-family: Roboto,"Helvetica Neue",sans-serif;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.container > * {
+  width: 100%;
+}
+
+.file {
+  padding-top: 10px;
+}
+
+.mapping-file {
+  padding-top: 20px;
+}
+
+.import-to {
+  padding-bottom: 10px;
+}

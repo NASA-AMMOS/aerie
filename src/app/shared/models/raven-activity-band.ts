@@ -17,13 +17,17 @@ export interface RavenActivityBand {
   activityStyle: number;
   addTo: boolean;
   alignLabel: number;
+  autoFit: number | null;
   baselineLabel: number;
   borderWidth: number;
   height: number;
   heightPadding: number;
+  icon: string;
   id: string;
   label: string;
   labelColor: number[];
+  labelFontSize: number;
+  labelFont: string;
   layout: number;
   legend: string;
   maxTimeRange: RavenTimeRange;

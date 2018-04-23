@@ -390,12 +390,10 @@ describe('timeline reducer', () => {
 
   it('handle UpdateTimeline', () => {
     timelineState = reducer(timelineState, new UpdateTimeline({
-      labelWidth: 200,
       viewTimeRange: { end: 314, start: 272 },
     }));
     expect(timelineState).toEqual({
       ...initialState,
-      labelWidth: 200,
       viewTimeRange: { end: 314, start: 272 },
     });
   });

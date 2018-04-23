@@ -21,12 +21,15 @@ import {
   MatMenuModule,
   MatProgressBarModule,
   MatProgressSpinnerModule,
+  MatRadioModule,
   MatSelectModule,
   MatSidenavModule,
-  MatSliderModule,
   MatSlideToggleModule,
+  MatSortModule,
+  MatTableModule,
   MatTabsModule,
   MatToolbarModule,
+  MatTooltipModule,
 } from '@angular/material';
 
 export const MODULES = [
@@ -41,12 +44,15 @@ export const MODULES = [
   MatMenuModule,
   MatProgressBarModule,
   MatProgressSpinnerModule,
+  MatRadioModule,
   MatSelectModule,
   MatSidenavModule,
-  MatSliderModule,
   MatSlideToggleModule,
+  MatSortModule,
+  MatTableModule,
   MatTabsModule,
   MatToolbarModule,
+  MatTooltipModule,
 ];
 
 /**

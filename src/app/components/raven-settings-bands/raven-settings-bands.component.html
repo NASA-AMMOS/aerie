@@ -5,33 +5,6 @@
       fxLayout="row"
       fxLayoutAlign="start center"
       fxLayoutWrap>
-      <!-- Height. -->
-      <div class="field">
-        <mat-slider
-          id="raven-settings-height"
-          color="primary"
-          max="500"
-          min="2"
-          step="1"
-          thumb-label="true"
-          tick-interval="50"
-          [value]="bandsById[selectedBandId].height"
-          (change)="updateBand.emit({ bandId: selectedBandId, update: { height: $event.value } })">
-        </mat-slider>
-        <label>Height</label>
-      </div>
-
-      <!-- Overlay. -->
-      <div class="field">
-        <mat-slide-toggle
-          id="raven-settings-overlay"
-          color="primary"
-          [checked]="bandsById[selectedBandId].overlay"
-          (change)="updateBand.emit({ bandId: selectedBandId, update: { overlay: $event.checked } })">
-          Overlay
-        </mat-slide-toggle>
-      </div>
-
       <!-- Selected Sub Band. -->
       <div
         *ngIf="bandsById[selectedBandId].subBands.length > 1"
@@ -40,7 +13,7 @@
           <mat-select
             [value]="selectedSubBandId"
             (change)="updateTimeline.emit({ update: { selectedSubBandId: $event.value } })"
-            placeholder="Selected Band">
+            placeholder="Selected Sub-Band">
             <ng-container *ngFor="let subBand of bandsById[selectedBandId].subBands; trackBy: trackByFn">
               <mat-option [value]="subBand.id">{{subBand.label}}</mat-option>
             </ng-container>
@@ -60,6 +33,31 @@
                 [value]="subBand.label"
                 (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { label: $event.target.value } })">
             </mat-form-field>
+          </div>
+
+          <!-- Overlay (applies to all sub-bands). -->
+          <div class="field">
+            <mat-slide-toggle
+              id="raven-settings-overlay"
+              color="primary"
+              [checked]="bandsById[selectedBandId].overlay"
+              (change)="updateBand.emit({ bandId: selectedBandId, update: { overlay: $event.checked } })">
+              Overlay
+            </mat-slide-toggle>
+          </div>
+
+          <!-- Height (applies to all sub-bands). -->
+          <div class="field">
+            <label>Height</label>
+            <input
+              mat-input
+              [value]="bandsById[selectedBandId].height"
+              type="number"
+              name="height"
+              step="1"
+              min="5"
+              max="500"
+              (change)="updateBand.emit({ bandId: selectedBandId, update: { height: $event.target.valueAsNumber } })">
           </div>
 
           <!-- Activity Settings. -->
@@ -133,7 +131,14 @@
 
           <!-- Resource Settings. -->
           <ng-container *ngIf="subBand.type === 'resource'">
-            <!-- TODO: Color. -->
+            <!-- Color. -->
+            <div class="field">
+              <label>Color</label>
+              <input
+                type="color"
+                [value]="subBand.color"
+                (input)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { color: $event.target.value } })">
+            </div>
 
             <!-- Fill. -->
             <div class="field">
@@ -144,6 +149,15 @@
                 (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { fill: $event.checked } })">
                 Fill
               </mat-slide-toggle>
+            </div>
+
+            <!-- Fill Color. -->
+            <div class="field">
+              <label>Fill Color</label>
+              <input
+                type="color"
+                [value]="subBand.fillColor"
+                (input)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { fillColor: $event.target.value } })">
             </div>
 
             <!-- Interpolation. -->

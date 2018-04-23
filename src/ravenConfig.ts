@@ -7,20 +7,39 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import {
+  RavenDefaultBandSettings,
+} from './app/shared/models';
+
 /**
  * Type interface schema for Raven's configuration.
  * This object is loaded into the store's `config` reducer upon application load.
- *
- * @export
- * @interface RavenConfig
  */
+
 export interface RavenConfig {
+  baseSocketUrl: string;
   baseSourcesUrl: string;
+  defaultBandSettings: RavenDefaultBandSettings;
+  epochsUrl: string;
   itarMessage: string;
 }
 
 const ravenConfig: RavenConfig = {
+  baseSocketUrl: 'mpsserver/websocket/v1/topic/main',
   baseSourcesUrl: 'mpsserver/api/v2/fs',
+  defaultBandSettings: {
+    activityLayout: 0,
+    dateFormat: 'Day-Month-Year',
+    icon: 'circle',
+    labelFont: 'Georgia',
+    labelFontSize: 9,
+    labelWidth: 100,
+    resourceColor: '#000000',
+    resourceFillColor: '#000000',
+    showTimeCursor: false,
+    showTooltip: false,
+  },
+  epochsUrl: 'mpsserver/api/v2/fs-mongodb/leucadia/taifunTest/europaEpoch.csv',
   itarMessage: '',
 };
 

@@ -1,0 +1,13 @@
+:host {
+  display: block;
+}
+
+mat-table {
+  max-height: 450px;
+  overflow: auto;
+}
+
+.import {
+  padding-bottom: 12px;
+  padding-top: 10px;
+}

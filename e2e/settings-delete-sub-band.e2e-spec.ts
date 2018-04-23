@@ -30,7 +30,7 @@ describe('raven2 - settings - delete sub-band', () => {
     'raven-tree-Array-expand',
   ];
 
-  beforeAll(async () => {
+  beforeAll(async() => {
     page = new AppPage();
     page.navigateTo();
     clickByIds(ids);
@@ -39,7 +39,7 @@ describe('raven2 - settings - delete sub-band', () => {
     source2.open();
   });
 
-  it('should initially have 3 bands drawn with the correct sources opened', async () => {
+  it('should initially have 3 bands drawn with the correct sources opened', async() => {
     bands = await probe(page.bands, 'bands');
 
     expect(bands.length).toEqual(3);
@@ -48,7 +48,7 @@ describe('raven2 - settings - delete sub-band', () => {
     expect(source2.getProp('opened')).toBe(true);
   });
 
-  it('should properly delete the 3rd band and close the corresponding source', async () => {
+  it('should properly delete the 3rd band and close the corresponding source', async() => {
     page.band2.click();
     page.selectedBandTab.click();
     page.settingsDeleteBand.click();
@@ -61,7 +61,7 @@ describe('raven2 - settings - delete sub-band', () => {
     expect(source2.getProp('opened')).toBe(false);
   });
 
-  it('should properly delete an overlay band and close the corresponding source', async () => {
+  it('should properly delete an overlay band and close the corresponding source', async() => {
     page.band1.click();
     page.settingsOverlay.click();
     source2.open();

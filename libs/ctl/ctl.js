@@ -1901,6 +1901,7 @@ function Decorator(obj) {
   if(typeof obj === "undefined") { return; }
 
   this.font = ("font" in obj) ? obj.font : "normal 9px Verdana";
+  this.labelFont = ("labelFont" in obj) ?obj.labelFont : "Georgia";
   this.labelFontSize = ("labelFontSize" in obj) ?obj.labelFontSize : 10;
   this.guideColor = ("guideColor" in obj) ? obj.guideColor : [34,139,34];
   this.showIcon = ("showIcon" in obj) ? obj.showIcon : false;
@@ -2050,7 +2051,7 @@ Decorator.prototype.paintNow = function() {
 Decorator.prototype.paintLabel = function(yStart) {
   var ctx = this.band.canvas.getContext('2d');
   let originalFont = ctx.font;
-  ctx.font = this.labelFontSize+"px Georgia";
+  ctx.font = this.labelFontSize+"px "+this.labelFont;
   ctx.textAlign = "left";
   var labelWidth = this.band.viewTimeAxis.x1;
 

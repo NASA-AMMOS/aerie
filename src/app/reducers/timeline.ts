@@ -48,7 +48,6 @@ import {
 // Timeline State Interface.
 export interface TimelineState {
   bands: RavenCompositeBand[];
-  labelWidth: number;
   maxTimeRange: RavenTimeRange;
   selectedBandId: string;
   selectedPoint: RavenPoint | null;
@@ -59,7 +58,6 @@ export interface TimelineState {
 // Timeline Initial State.
 export const initialState: TimelineState = {
   bands: [],
-  labelWidth: 150,
   maxTimeRange: { end: 0, start: 0 },
   selectedBandId: '',
   selectedPoint: null,

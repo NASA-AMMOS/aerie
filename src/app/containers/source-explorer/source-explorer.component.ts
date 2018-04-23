@@ -14,19 +14,31 @@ import {
   OnDestroy,
 } from '@angular/core';
 
-import { MatDialog } from '@angular/material';
+import {
+  MatDialog,
+} from '@angular/material';
 
-import { Store } from '@ngrx/store';
+import {
+  Store,
+} from '@ngrx/store';
 
-import { takeUntil } from 'rxjs/operators';
+import {
+  switchMap,
+  takeUntil,
+} from 'rxjs/operators';
+
+import { WebSocketSubject } from 'rxjs/observable/dom/WebSocketSubject';
 import { Subject } from 'rxjs/Subject';
 
+import * as fromConfig from './../../reducers/config';
 import * as fromSourceExplorer from './../../reducers/source-explorer';
 
+import * as epochsActions from './../../actions/epochs';
 import * as sourceExplorerActions from './../../actions/source-explorer';
 
 import {
   RavenConfirmDialogComponent,
+  RavenFileImportDialogComponent,
   RavenStateSaveDialogComponent,
 } from './../../components';
 
@@ -43,6 +55,9 @@ import {
   templateUrl: './source-explorer.component.html',
 })
 export class SourceExplorerComponent implements OnDestroy {
+  // Config state
+  baseUrl: string;
+
   // Source Explorer state.
   tree: StringTMap<RavenSource>;
 
@@ -53,6 +68,14 @@ export class SourceExplorerComponent implements OnDestroy {
     private dialog: MatDialog,
     private store: Store<fromSourceExplorer.SourceExplorerState>,
   ) {
+    // Config state.
+    this.store.select(fromConfig.getConfigState).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(state => {
+      this.baseUrl = state.baseUrl;
+      this.changeDetector.markForCheck();
+    });
+
     // Source Explorer state.
     this.store.select(fromSourceExplorer.getTreeBySourceId).pipe(
       takeUntil(this.ngUnsubscribe),
@@ -65,11 +88,36 @@ export class SourceExplorerComponent implements OnDestroy {
         this.changeDetector.detectChanges(),
       );
     });
+
+    // Connect to web socket to update new sources when they change on the server.
+    this.connectToWebsocket();
   }
 
   ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
+  }
+
+  /**
+   * Helper that connects to the MPS Server websocket.
+   * When a data sources changes we fetch new sources to update the source explorer.
+   */
+  connectToWebsocket() {
+    this.store.select(fromConfig.getConfigState).pipe(
+      switchMap(config =>
+        WebSocketSubject.create(`${config.baseUrl.replace('https', 'wss')}/${config.baseSocketUrl}`),
+      ),
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe((msg: any) => {
+      const data = JSON.parse(msg.data);
+      if (data.detail === 'data source changed') {
+        const pattern = new RegExp('(.*/fs-mongodb)(/.*)/(.*)');
+        const match = data.subject.match(pattern);
+        const sourceId = `${match[2]}`;
+        const sourceUrl = `${match[1]}${match[2]}`;
+        this.store.dispatch(new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl));
+      }
+    });
   }
 
   /**
@@ -86,6 +134,10 @@ export class SourceExplorerComponent implements OnDestroy {
       this.openDeleteDialog(source);
     } else if (event === 'save') {
       this.openStateSaveDialog(source);
+    } else if (event === 'file-import') {
+      this.openFileImportDialog(source);
+    } else if (event === 'epoch-load') {
+      this.onLoadEpochs(source);
     }
   }
 
@@ -108,6 +160,13 @@ export class SourceExplorerComponent implements OnDestroy {
    */
   onExpand(source: RavenSource): void {
     this.store.dispatch(new sourceExplorerActions.ExpandEvent(source.id));
+  }
+
+  /**
+   * Event. Called when a `load-epoch` event is caught from the source action menu.
+   */
+  onLoadEpochs(source: RavenSource): void {
+    this.store.dispatch(new epochsActions.FetchEpochs(source.url));
   }
 
   /**
@@ -161,7 +220,7 @@ export class SourceExplorerComponent implements OnDestroy {
       data: {
         cancelText: 'No',
         confirmText: 'Yes',
-        message: 'Are you sure you want to delete this source?',
+        message: `Are you sure you want to delete ${source.name}?`,
       },
       width: '250px',
     });
@@ -171,6 +230,22 @@ export class SourceExplorerComponent implements OnDestroy {
     ).subscribe(result => {
       if (result.confirm) {
         this.store.dispatch(new sourceExplorerActions.RemoveSourceEvent(source));
+      }
+    });
+  }
+
+  /**
+   * Dialog trigger. Opens the file import dialog.
+   */
+  openFileImportDialog(source: RavenSource): void {
+    const fileImportDialog = this.dialog.open(RavenFileImportDialogComponent, {
+      data: { source },
+      width: '250px',
+    });
+
+    fileImportDialog.afterClosed().subscribe(result => {
+      if (result.import) {
+        this.store.dispatch(new sourceExplorerActions.ImportFile(source, result.file));
       }
     });
   }

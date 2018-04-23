@@ -11,6 +11,7 @@ import { Action } from '@ngrx/store';
 
 import {
   BaseType,
+  RavenFile,
   RavenSource,
   StringTMap,
 } from './../shared/models';
@@ -23,6 +24,10 @@ export enum SourceExplorerActionTypes {
   CollapseEvent        = '[sourceExplorer] collapse_event',
   ExpandEvent          = '[sourceExplorer] expand_event',
   FetchInitialSources  = '[sourceExplorer] fetch_initial_sources',
+  FetchNewSources      = '[sourceExplorer] fetch_new_sources',
+  ImportFile           = '[sourceExplorer] import_file',
+  ImportFileFailure    = '[sourceExplorer] import_file_failure',
+  ImportFileSuccess    = '[sourceExplorer] import_file_success',
   NewSources           = '[sourceExplorer] new_sources',
   OpenEvent            = '[sourceExplorer] open_event',
   RemoveSource         = '[sourceExplorer] remove_source',
@@ -68,6 +73,26 @@ export class ExpandEvent implements Action {
 
 export class FetchInitialSources implements Action {
   readonly type = SourceExplorerActionTypes.FetchInitialSources;
+}
+
+export class FetchNewSources implements Action {
+  readonly type = SourceExplorerActionTypes.FetchNewSources;
+
+  constructor(public sourceId: string, public sourceUrl: string) {}
+}
+
+export class ImportFile implements Action {
+  readonly type = SourceExplorerActionTypes.ImportFile;
+
+  constructor(public source: RavenSource, public file: RavenFile) {}
+}
+
+export class ImportFileFailure implements Action {
+  readonly type = SourceExplorerActionTypes.ImportFileFailure;
+}
+
+export class ImportFileSuccess implements Action {
+  readonly type = SourceExplorerActionTypes.ImportFileSuccess;
 }
 
 export class NewSources implements Action {
@@ -138,6 +163,10 @@ export type SourceExplorerAction =
   CollapseEvent |
   ExpandEvent |
   FetchInitialSources |
+  FetchNewSources |
+  ImportFile |
+  ImportFileFailure |
+  ImportFileSuccess |
   NewSources |
   OpenEvent |
   RemoveSource |

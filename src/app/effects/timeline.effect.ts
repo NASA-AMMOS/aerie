@@ -39,7 +39,7 @@ export class TimelineEffects {
 
       if (state.timeline.selectedPoint) {
         actions.push(new layoutActions.UpdateLayout({
-          rightDrawerSelectedTabIndex: 1,
+          rightDrawerSelectedTabIndex: 2,
         }));
 
         if (!state.layout.showRightDrawer) {

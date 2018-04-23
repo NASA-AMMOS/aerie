@@ -11,7 +11,6 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  HostListener,
   OnDestroy,
 } from '@angular/core';
 
@@ -23,9 +22,12 @@ import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs/Subject';
 
 import * as fromConfig from './../../reducers/config';
+import * as fromEpochs from './../../reducers/epochs';
 import * as fromLayout from './../../reducers/layout';
 import * as fromTimeline from './../../reducers/timeline';
 
+import * as configActions from './../../actions/config';
+import * as epochsActions from './../../actions/epochs';
 import * as layoutActions from './../../actions/layout';
 import * as sourceExplorerActions from './../../actions/source-explorer';
 import * as timelineActions from './../../actions/timeline';
@@ -33,11 +35,13 @@ import * as timelineActions from './../../actions/timeline';
 import {
   RavenBandLeftClick,
   RavenCompositeBand,
+  RavenDefaultBandSettings,
+  RavenEpoch,
   RavenPoint,
-  RavenSettingsUpdate,
   RavenSortMessage,
   RavenSubBand,
   RavenTimeRange,
+  RavenUpdate,
   StringTMap,
 } from './../../shared/models';
 
@@ -54,7 +58,14 @@ import {
 })
 export class TimelineComponent implements OnDestroy {
   // Config state.
+  defaultBandSettings: RavenDefaultBandSettings;
   itarMessage: string;
+
+  // Epoch state.
+  dayCode: string;
+  earthSecToEpochSec: number;
+  epochs: RavenEpoch[];
+  inUseEpoch: RavenEpoch | null;
 
   // Layout state.
   rightDrawerSelectedTabIndex: number | null;
@@ -68,7 +79,6 @@ export class TimelineComponent implements OnDestroy {
 
   // Timeline state.
   bands: RavenCompositeBand[];
-  labelWidth: number;
   maxTimeRange: RavenTimeRange;
   selectedBandId: string;
   selectedPoint: RavenPoint | null;
@@ -92,6 +102,28 @@ export class TimelineComponent implements OnDestroy {
       setTimeout(() =>
         this.changeDetector.detectChanges(),
       );
+    });
+
+    this.store.select(fromConfig.getDefaultBandSettings).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(defaultBandSettings => {
+      this.defaultBandSettings = defaultBandSettings;
+      // TODO. Find out how to remove this checking.
+      this.changeDetector.markForCheck();
+      setTimeout(() =>
+        this.changeDetector.detectChanges(),
+      );
+    });
+
+    // Epoch state.
+    this.store.select(fromEpochs.getEpochsState).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(state => {
+      this.dayCode = state.dayCode;
+      this.earthSecToEpochSec = state.earthSecToEpochSec;
+      this.epochs = state.epochs;
+      this.inUseEpoch = state.inUseEpoch;
+      this.changeDetector.markForCheck();
     });
 
     // Layout state.
@@ -120,7 +152,6 @@ export class TimelineComponent implements OnDestroy {
       takeUntil(this.ngUnsubscribe),
     ).subscribe(state => {
       this.bands = state.bands;
-      this.labelWidth = state.labelWidth;
       this.maxTimeRange = state.maxTimeRange;
       this.selectedBandId = state.selectedBandId;
       this.selectedPoint = state.selectedPoint;
@@ -167,6 +198,13 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
+   * Event. Called when a `import-epochs` event is fired from the raven-epochs component.
+   */
+  onImportEpochs(epochs: RavenEpoch[]) {
+    this.store.dispatch(new epochsActions.AddEpochs(epochs));
+  }
+
+  /**
    * Event. Called when a tab is changed.
    */
   onSelectedTabChange(e: MatTabChangeEvent) {
@@ -197,16 +235,30 @@ export class TimelineComponent implements OnDestroy {
   /**
    * Event. Called when an `update-band` event is fired from the raven-settings component.
    */
-  onUpdateBand(e: RavenSettingsUpdate): void {
+  onUpdateBand(e: RavenUpdate): void {
     if (e.bandId) {
       this.store.dispatch(new timelineActions.UpdateBand(e.bandId, e.update));
     }
   }
 
   /**
+   * Event. Called when an `update-default-band-settings` event is fired from the raven-settings-global component.
+   */
+  onUpdateDefaultBandSettings(e: RavenUpdate): void {
+    this.store.dispatch(new configActions.UpdateDefaultBandSettings(e.update));
+  }
+
+  /**
+   * Event. Called when an `update-epochs` event is fired from the raven-epochs component.
+   */
+  onUpdateEpochs(e: RavenUpdate): void {
+    this.store.dispatch(new epochsActions.UpdateEpochs(e.update));
+  }
+
+  /**
    * Event. Called when an `update-sub-band` event is fired from the raven-settings component.
    */
-  onUpdateSubBand(e: RavenSettingsUpdate): void {
+  onUpdateSubBand(e: RavenUpdate): void {
     if (e.bandId && e.subBandId) {
       this.store.dispatch(new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update));
     }
@@ -215,7 +267,7 @@ export class TimelineComponent implements OnDestroy {
   /**
    * Event. Called when an `update-timeline` event is fired from the raven-settings component.
    */
-  onUpdateTimeline(e: RavenSettingsUpdate): void {
+  onUpdateTimeline(e: RavenUpdate): void {
     this.store.dispatch(new timelineActions.UpdateTimeline(e.update));
   }
 
@@ -231,19 +283,5 @@ export class TimelineComponent implements OnDestroy {
    */
   onDragEnd(): void {
     dispatchEvent(new Event('resize'));
-  }
-
-  /**
-   * Event. Called when a keyboard key is pressed.
-   */
-  @HostListener('window:keyup', ['$event'])
-  keyEvent(event: KeyboardEvent) {
-    if (event.keyCode === 49) { // 1 key.
-      this.store.dispatch(new layoutActions.UpdateLayout({ rightDrawerSelectedTabIndex: 0 }));
-    }
-
-    if (event.keyCode === 50) { // 2 key.
-      this.store.dispatch(new layoutActions.UpdateLayout({ rightDrawerSelectedTabIndex: 1 }));
-    }
   }
 }

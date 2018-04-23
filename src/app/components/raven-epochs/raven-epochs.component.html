@@ -1,0 +1,81 @@
+<mat-card>
+  <!-- Import. -->
+  <div class="import">
+    <label>Import Epochs</label>
+    <input
+      type="file"
+      (change)="readFile($event.target.files[0])">
+  </div>
+
+  <!-- Day Code. -->
+  <mat-form-field>
+    <input
+      matInput
+      (keyup)="updateEpochs.emit({ update: { dayCode: $event.target.value } })"
+      [value]="dayCode"
+      placeholder="Day Code">
+  </mat-form-field>
+
+  <!-- Earth Sec to Epoch Sec. -->
+  <mat-form-field>
+    <input
+      matInput
+      type="number"
+      (keyup)="updateEpochs.emit({ update: { earthSecToEpochSec: $event.target.valueAsNumber } })"
+      [value]="earthSecToEpochSec"
+      placeholder="Earth Sec to Epoch Sec">
+  </mat-form-field>
+
+  <!-- Filter. -->
+  <mat-form-field>
+    <input
+      matInput
+      (keyup)="applyFilter($event.target.value)"
+      placeholder="Filter...">
+  </mat-form-field>
+
+  <!-- Table. -->
+  <mat-table
+    matSort
+    [dataSource]="sortedAndFilteredEpochs"
+    (matSortChange)="sortData($event)">
+    <!-- Radio button Column. -->
+    <ng-container matColumnDef="select">
+      <mat-header-cell *matHeaderCellDef>Select</mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <mat-radio-button
+          name="radioButton"
+          [checked]="inUseEpoch ? row.name === inUseEpoch.name:false"
+          (change)="updateEpochs.emit({ update: { inUseEpoch: row } })">
+        </mat-radio-button>
+      </mat-cell>
+    </ng-container>
+
+    <!-- Epoch name Column. -->
+    <ng-container matColumnDef="name">
+      <mat-header-cell
+        *matHeaderCellDef
+        mat-sort-header>
+        name
+      </mat-header-cell>
+      <mat-cell *matCellDef="let element">
+        {{element.name}}
+      </mat-cell>
+    </ng-container>
+
+    <!-- Epoch value Column. -->
+    <ng-container matColumnDef="value">
+      <mat-header-cell
+        *matHeaderCellDef
+        mat-sort-header>
+        value
+      </mat-header-cell>
+      <mat-cell *matCellDef="let element">
+        {{element.value}}
+      </mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+  </mat-table>
+</mat-card>
