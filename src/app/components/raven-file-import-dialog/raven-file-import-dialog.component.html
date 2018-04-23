@@ -1,6 +1,6 @@
 <div mat-dialog-content>
   <div class="import-to">
-    Import To: {{data.source.name}}
+    <label>Import To:</label> {{data.source.name}}
   </div>
 
   <div class="container">
@@ -23,23 +23,19 @@
     </mat-form-field>
 
     <div class="file">
-      <label>
-        File
-        <input
-          type="file"
-          (change)="readFile($event.target.files[0], false)">
-      </label>
+      <label>File</label>
+      <input
+        type="file"
+        (change)="readFile($event.target.files[0], false)">
     </div>
 
     <div
       *ngIf="file.type === 'generic'"
       class="mapping-file">
-      <label>
-        Mapping File
-        <input
-          type="file"
-          (change)="readFile($event.target.files[0], true)">
-      </label>
+      <label>Mapping File</label>
+      <input
+        type="file"
+        (change)="readFile($event.target.files[0], true)">
     </div>
   </div>
 </div>

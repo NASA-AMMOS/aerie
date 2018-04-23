@@ -62,7 +62,7 @@ export class RavenFileImportDialogComponent {
   readFile(file: File, mapping: boolean): void {
     const reader: FileReader = new FileReader();
 
-    reader.onloadend = (e) => {
+    reader.onloadend = () => {
       if (mapping) {
         this.file.mapping = reader.result;
       } else {
