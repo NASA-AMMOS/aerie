@@ -186,9 +186,9 @@ export function toResourceBand(
   const resourceBand: RavenResourceBand = {
     addTo: false,
     autoTickValues: true,
-    color: hexToColorArray(defaultBandSettings.resourceColor),
+    color: colorHexToRgbArray(defaultBandSettings.resourceColor),
     fill: false,
-    fillColor: hexToColorArray(defaultBandSettings.resourceFillColor),
+    fillColor: colorHexToRgbArray(defaultBandSettings.resourceFillColor),
     height: 100,
     heightPadding: 10,
     icon: defaultBandSettings.icon,
@@ -478,12 +478,12 @@ export function isOverlay(bands: RavenCompositeBand[], bandId: string): boolean 
 }
 
 /**
- * Helper. Converts an rgb hex color string to a color array.
+ * Helper. Converts an rgb hex color string to a rgb color array.
  */
-export function hexToColorArray(rgb: string): number[] {
+export function colorHexToRgbArray(hex: string): number[] {
   const color = [0, 0, 0];
   const pattern = new RegExp('#(.{2})(.{2})(.{2})');
-  const match = rgb.match(pattern);
+  const match = hex.match(pattern);
 
   if (match) {
     color[0] = parseInt(match[1], 16);
@@ -492,4 +492,20 @@ export function hexToColorArray(rgb: string): number[] {
   }
 
   return color;
+}
+
+/**
+ * Helper. Converts an rgb color array to an rgb hex color string.
+ */
+export function colorRgbArrayToHex(rgb: number[]): string {
+  const [r = 0, g = 0, b = 0] = rgb;
+  return `#${colorRgbToHex(r)}${colorRgbToHex(g)}${colorRgbToHex(b)}`;
+}
+
+/**
+ * Helper. Converts a single rgb value [0, 255] to a hex value.
+ */
+export function colorRgbToHex(rgb: number): string {
+  const hex = rgb.toString(16).toUpperCase();
+  return hex.length === 1 ? '0' + hex : hex;
 }

@@ -162,6 +162,9 @@ export class SourceExplorerComponent implements OnDestroy {
     this.store.dispatch(new sourceExplorerActions.ExpandEvent(source.id));
   }
 
+  /**
+   * Event. Called when a `load-epoch` event is caught from the source action menu.
+   */
   onLoadEpochs(source: RavenSource): void {
     this.store.dispatch(new epochsActions.FetchEpochs(source.url));
   }
