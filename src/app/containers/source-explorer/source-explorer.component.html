@@ -1,14 +1,45 @@
-<ng-container *ngFor="let childId of tree['/'].childIds">
-  <raven-tree
-    [class]="tree[childId].name"
-    [id]="childId"
-    [source]="tree[childId]"
-    [tree]="tree"
-    (action)="onAction($event)"
-    (close)="onClose($event)"
-    (collapse)="onCollapse($event)"
-    (expand)="onExpand($event)"
-    (open)="onOpen($event)"
-    (select)="onSelect($event)">
-  </raven-tree>
-</ng-container>
+<mat-tab-group #leftDrawerTabGroup>
+  <mat-tab label="Home">
+    <div
+      *ngIf="leftDrawerTabGroup.selectedIndex === 0"
+      class="tab">
+      <ng-container *ngFor="let childId of tree['/'].childIds">
+        <raven-tree
+          [class]="tree[childId].name"
+          [id]="childId"
+          [source]="tree[childId]"
+          [tree]="tree"
+          (action)="onAction($event)"
+          (close)="onClose($event)"
+          (collapse)="onCollapse($event)"
+          (expand)="onExpand($event)"
+          (open)="onOpen($event)"
+          (select)="onSelect($event)">
+        </raven-tree>
+      </ng-container>
+    </div>
+  </mat-tab>
+  <mat-tab *ngFor="let pin of pins" [label]="pin.name">
+    <div
+      *ngIf="leftDrawerTabGroup.selectedIndex === 1"
+      class="tab">
+      <mat-card *ngIf="!tree[pin.sourceId]">
+        The source for this pin is not loaded.
+      </mat-card>
+
+      <raven-tree
+        *ngIf="tree[pin.sourceId]"
+        [class]="tree[pin.sourceId].name"
+        [id]="pin.sourceId"
+        [source]="tree[pin.sourceId]"
+        [tree]="tree"
+        (action)="onAction($event)"
+        (close)="onClose($event)"
+        (collapse)="onCollapse($event)"
+        (expand)="onExpand($event)"
+        (open)="onOpen($event)"
+        (select)="onSelect($event)">
+      </raven-tree>
+    </div>
+  </mat-tab>
+</mat-tab-group>

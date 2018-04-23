@@ -335,4 +335,5 @@ export const getSourceExplorerState = createFeatureSelector<SourceExplorerState>
  */
 export const getInitialSourcesLoaded = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.initialSourcesLoaded);
 export const getPending = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.fetchPending);
+export const getPins = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.pins);
 export const getTreeBySourceId = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.treeBySourceId);

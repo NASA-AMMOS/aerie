@@ -1,6 +1,6 @@
 <split
   direction="horizontal"
-  (dragEnd)="onDragEnd()">
+  (dragEnd)="resize()">
   <split-area
     [visible]="showLeftDrawer"
     [order]="0"
@@ -13,7 +13,7 @@
     [size]="timelinePanelSize">
     <split
       direction="vertical"
-      (dragEnd)="onDragEnd()">
+      (dragEnd)="resize()">
       <split-area
         [order]="2"
         size="80">
@@ -110,7 +110,6 @@
     size="25">
     <mat-tab-group
       #rightDrawerTabGroup
-      [@.disabled]="true"
       [selectedIndex]="rightDrawerSelectedTabIndex"
       (selectedTabChange)="onSelectedTabChange($event)">
       <!-- Global Settings. -->

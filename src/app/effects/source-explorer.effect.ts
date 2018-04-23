@@ -45,6 +45,7 @@ import {
   SourceExplorerActionTypes,
 } from './../actions/source-explorer';
 
+import * as layoutActions from './../actions/layout';
 import * as sourceExplorerActions from './../actions/source-explorer';
 import * as timelineActions from './../actions/timeline';
 
@@ -60,6 +61,7 @@ import {
   toCompositeBand,
   toRavenBandData,
   toRavenSources,
+  updateSourceId,
 } from './../shared/util';
 
 import {
@@ -78,6 +80,29 @@ export class SourceExplorerEffects {
   @Effect()
   applyLayout$: Observable<Action> = this.actions$.pipe(
     ofType<ApplyLayout>(SourceExplorerActionTypes.ApplyLayout),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    concatMap(({ action, state }) =>
+      forkJoin([
+        of(action),
+        this.fetchSavedState(action.sourceUrl),
+        this.fetchNewSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`, '/', true),
+      ]),
+    ),
+    map(([action, state, initialSources]) => ({ action, state, initialSources })),
+    concatMap(({ action, state: { bands, labelWidth, maxTimeRange, viewTimeRange }, initialSources }) => {
+      const updatedBands = bands.map((band: RavenCompositeBand) => ({
+        ...band,
+        subBands: band.subBands.map((subBand: RavenSubBand) => ({
+          ...subBand,
+          sourceIds: subBand.sourceIds.map(sourceId => updateSourceId(sourceId, action.sourceId)),
+        })),
+      }));
+
+      return concat(
+        ...this.loadLayout(updatedBands, initialSources),
+      );
+    }),
   );
 
   @Effect()
@@ -92,10 +117,10 @@ export class SourceExplorerEffects {
         this.fetchNewSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`, '/', true),
       ]),
     ),
-    map(([action, state, sources]) => ({ action, state, sources })),
-    concatMap(({ action, state: { bands, maxTimeRange, viewTimeRange }, sources }) =>
+    map(([action, state, initialSources]) => ({ action, state, initialSources })),
+    concatMap(({ action, state: { bands, labelWidth, maxTimeRange, viewTimeRange }, initialSources }) =>
       concat(
-        ...this.load(bands, maxTimeRange, viewTimeRange, sources),
+        ...this.loadState(bands, initialSources, maxTimeRange, viewTimeRange),
       ),
     ),
   );
@@ -252,6 +277,7 @@ export class SourceExplorerEffects {
               ...band,
               subBands: band.subBands.map(subBand => ({
                 ...subBand,
+                maxTimeRange: { end: 0, start: 0 },
                 points: [],
               })),
             })),
@@ -297,16 +323,35 @@ export class SourceExplorerEffects {
   }
 
   /**
+   * Helper. Returns a stream of actions that need to occur when loading a layout.
+   */
+  loadLayout(
+    bands: RavenCompositeBand[],
+    initialSources: RavenSource[],
+  ) {
+    return [
+      of(new sourceExplorerActions.UpdateSourceExplorer({
+        ...fromSourceExplorer.initialState,
+        fetchPending: true,
+      })),
+      of(new timelineActions.UpdateTimeline({
+        ...fromTimeline.initialState,
+        bands,
+      })),
+      ...this.load(bands, initialSources),
+      of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+    ];
+  }
+
+  /**
    * Helper. Returns a stream of actions that need to occur when loading a state.
    */
-  load(
+  loadState(
     bands: RavenCompositeBand[],
+    initialSources: RavenSource[],
     maxTimeRange: RavenTimeRange,
     viewTimeRange: RavenTimeRange,
-    initialSources: RavenSource[],
   ): Observable<Action>[] {
-    const { parentSourceIds, sourceIds } = getSourceIds(bands);
-
     return [
       of(new sourceExplorerActions.UpdateSourceExplorer({
         ...fromSourceExplorer.initialState,
@@ -318,6 +363,22 @@ export class SourceExplorerEffects {
         maxTimeRange,
         viewTimeRange,
       })),
+      ...this.load(bands, initialSources),
+      of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+    ];
+  }
+
+  /**
+   * Helper. Returns a stream of actions that need to occur when loading a state or layout.
+   * This first expands all parent source ids in the source explorer. Then it opens the actual leaf sources for data.
+   */
+  load(
+    bands: RavenCompositeBand[],
+    initialSources: RavenSource[],
+  ): Observable<Action>[] {
+    const { parentSourceIds, sourceIds } = getSourceIds(bands);
+
+    return [
       of(new sourceExplorerActions.NewSources('/', initialSources)),
       ...parentSourceIds.map((sourceId: string) =>
         combineLatest(this.store$, state => state.sourceExplorer.treeBySourceId[sourceId]).pipe(
@@ -348,7 +409,7 @@ export class SourceExplorerEffects {
           ),
         ),
       ),
-      of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+      of(new layoutActions.Resize()),
     ];
   }
 

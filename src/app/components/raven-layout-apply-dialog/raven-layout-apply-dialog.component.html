@@ -1,0 +1,14 @@
+<h3 mat-dialog-title>Apply Layout</h3>
+
+<div mat-dialog-content>
+  <mat-form-field>
+    <mat-select placeholder="Sources" [formControl]="sources">
+      <mat-option *ngFor="let source of data.sources" [value]="source">{{source.name}}</mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>
+
+<div mat-dialog-actions>
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-button (click)="onApply()">Apply</button>
+</div>

@@ -12,6 +12,7 @@ export * from './raven-bands/raven-bands.component';
 export * from './raven-confirm-dialog/raven-confirm-dialog.component';
 export * from './raven-epochs/raven-epochs.component';
 export * from './raven-file-import-dialog/raven-file-import-dialog.component';
+export * from './raven-layout-apply-dialog/raven-layout-apply-dialog.component';
 export * from './raven-resource-point/raven-resource-point.component';
 export * from './raven-settings-bands/raven-settings-bands.component';
 export * from './raven-settings-global/raven-settings-global.component';
