@@ -16,34 +16,16 @@ import {
 
 // Action Types.
 export enum ConfigActionTypes {
-  UpdateBaseSourcesUrl      = '[config] update_base_sources_url',
-  UpdateBaseUrl             = '[config] update_base_url',
   UpdateDefaultBandSettings = '[config] update_default_band_settings',
-  UpdateItarMessage         = '[config] update_itar_message',
 }
 
 // Actions.
-export class UpdateBaseSourcesUrl implements Action {
-  readonly type = ConfigActionTypes.UpdateBaseSourcesUrl;
-}
-
-export class UpdateBaseUrl implements Action {
-  readonly type = ConfigActionTypes.UpdateBaseUrl;
-}
-
 export class UpdateDefaultBandSettings implements Action {
   readonly type = ConfigActionTypes.UpdateDefaultBandSettings;
 
   constructor(public update: StringTMap<BaseType>) {}
 }
 
-export class UpdateItarMessage implements Action {
-  readonly type = ConfigActionTypes.UpdateItarMessage;
-}
-
 // Union type of all actions.
 export type ConfigAction =
-  UpdateBaseSourcesUrl |
-  UpdateBaseUrl |
-  UpdateDefaultBandSettings |
-  UpdateItarMessage;
+  UpdateDefaultBandSettings;
