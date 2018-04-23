@@ -101,7 +101,7 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
       // Make sure we don't redraw or update times unless the times actually changed.
       if (previousMaxTimeRange.start !== currentMaxTimeRange.start ||
           previousMaxTimeRange.end !== currentMaxTimeRange.end) {
-        this.ctlViewTimeAxis.updateTimes(currentMaxTimeRange.start, currentMaxTimeRange.end);
+        this.ctlTimeAxis.updateTimes(currentMaxTimeRange.start, currentMaxTimeRange.end);
         shouldRedraw = true;
       }
     }
