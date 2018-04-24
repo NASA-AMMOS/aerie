@@ -101,7 +101,7 @@ export const stateBand: RavenStateBand = {
   labelColor: [0, 0, 0],
   labelFont: 'Georgia',
   labelFontSize: 9,
-  maxTimeRange: { end: 100, start: 0 },
+  maxTimeRange: { end: 100, start: 10 },
   minorLabels: [],
   name: 'test-state-band',
   parentUniqueId: null,

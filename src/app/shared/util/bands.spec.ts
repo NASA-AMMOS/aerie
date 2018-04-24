@@ -202,29 +202,29 @@ describe('bands.ts', () => {
 
     it(`should set the viewTimeRange to the maxTimeRange if an empty currentViewTimeRange is given`, () => {
       expect(updateTimeRanges(bands, { end: 0, start: 0 })).toEqual({
-        maxTimeRange: { end: 300, start: 0 },
-        viewTimeRange: { end: 300, start: 0 },
+        maxTimeRange: { end: 300, start: 10 },
+        viewTimeRange: { end: 300, start: 10 },
       });
     });
 
     it(`should clamp the viewTimeRange.start to the maxTimeRange.start`, () => {
       expect(updateTimeRanges(bands, { end: 100, start: -100 })).toEqual({
-        maxTimeRange: { end: 300, start: 0 },
-        viewTimeRange: { end: 100, start: 0 },
+        maxTimeRange: { end: 300, start: 10 },
+        viewTimeRange: { end: 100, start: 10 },
       });
     });
 
     it(`should clamp the viewTimeRange.end to the maxTimeRange.end`, () => {
       expect(updateTimeRanges(bands, { end: 600, start: 0 })).toEqual({
-        maxTimeRange: { end: 300, start: 0 },
-        viewTimeRange: { end: 300, start: 0 },
+        maxTimeRange: { end: 300, start: 10 },
+        viewTimeRange: { end: 300, start: 10 },
       });
     });
 
     it(`should clamp start and end of viewTimeRange to the start and end of maxTimeRange`, () => {
       expect(updateTimeRanges(bands, { end: 600, start: -100 })).toEqual({
-        maxTimeRange: { end: 300, start: 0 },
-        viewTimeRange: { end: 300, start: 0 },
+        maxTimeRange: { end: 300, start: 10 },
+        viewTimeRange: { end: 300, start: 10 },
       });
     });
   });

@@ -318,8 +318,7 @@ export function updateTimeRanges(bands: RavenCompositeBand[], currentViewTimeRan
         const subBand = band.subBands[j];
 
         // Since dividers don't really have a time range, make sure we do not re-calc time for them.
-        // Also note how we only count non-zero sub-band maxTimeRanges (start and end). This is so
-        // we don't ever render the timeline with zero values (e.g. for layout loading).
+        // Also make sure we dont account for 0's in maxTimeRange (e.g. when loading layouts).
         if (subBand.type !== 'divider') {
           if (subBand.maxTimeRange.start !== 0 && subBand.maxTimeRange.start < startTime) {
             startTime = subBand.maxTimeRange.start;
