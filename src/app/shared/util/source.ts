@@ -23,6 +23,9 @@ import {
  * Transform form an MPS Server source to a Raven source.
  */
 export function toSource(parentId: string, isServer: boolean, mSource: MpsServerSource): RavenSource {
+  // Replace any slashes in name with dashes since slashes delineate sources in the source-explorer.
+  const sourceName = mSource.name.replace('/', '-');
+
   const rSource: RavenSource = {
     actions: [],
     childIds: [],
@@ -32,7 +35,7 @@ export function toSource(parentId: string, isServer: boolean, mSource: MpsServer
     expandable: true,
     expanded: false,
     icon: '',
-    id: parentId === '/' ? `/${mSource.name}` : `${parentId}/${mSource.name}`,
+    id: parentId === '/' ? `/${sourceName}` : `${parentId}/${sourceName}`,
     isServer,
     kind: mSource.__kind,
     label: mSource.label,
