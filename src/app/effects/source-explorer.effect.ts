@@ -45,6 +45,7 @@ import {
   SourceExplorerActionTypes,
 } from './../actions/source-explorer';
 
+import * as configActions from './../actions/config';
 import * as layoutActions from './../actions/layout';
 import * as sourceExplorerActions from './../actions/source-explorer';
 import * as timelineActions from './../actions/timeline';
@@ -89,8 +90,8 @@ export class SourceExplorerEffects {
         this.fetchNewSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`, '/', true),
       ]),
     ),
-    map(([action, state, initialSources]) => ({ action, state, initialSources })),
-    concatMap(({ action, state: { bands, labelWidth, maxTimeRange, viewTimeRange }, initialSources }) => {
+    map(([action, savedState, initialSources]) => ({ action, savedState, initialSources })),
+    concatMap(({ action, savedState: { bands, defaultBandSettings }, initialSources }) => {
       const updatedBands = bands.map((band: RavenCompositeBand) => ({
         ...band,
         subBands: band.subBands.map((subBand: RavenSubBand) => ({
@@ -100,7 +101,7 @@ export class SourceExplorerEffects {
       }));
 
       return concat(
-        ...this.loadLayout(updatedBands, initialSources),
+        ...this.loadLayout(updatedBands, initialSources, defaultBandSettings),
       );
     }),
   );
@@ -117,10 +118,10 @@ export class SourceExplorerEffects {
         this.fetchNewSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`, '/', true),
       ]),
     ),
-    map(([action, state, initialSources]) => ({ action, state, initialSources })),
-    concatMap(({ action, state: { bands, labelWidth, maxTimeRange, viewTimeRange }, initialSources }) =>
+    map(([action, savedState, initialSources]) => ({ action, savedState, initialSources })),
+    concatMap(({ action, savedState: { bands, defaultBandSettings, maxTimeRange, viewTimeRange }, initialSources }) =>
       concat(
-        ...this.loadState(bands, initialSources, maxTimeRange, viewTimeRange),
+        ...this.loadState(bands, initialSources, defaultBandSettings, maxTimeRange, viewTimeRange),
       ),
     ),
   );
@@ -281,6 +282,7 @@ export class SourceExplorerEffects {
                 points: [],
               })),
             })),
+            defaultBandSettings: state.config.defaultBandSettings,
             maxTimeRange: state.timeline.maxTimeRange,
             pins: state.sourceExplorer.pins,
             viewTimeRange: state.timeline.viewTimeRange,
@@ -328,6 +330,7 @@ export class SourceExplorerEffects {
   loadLayout(
     bands: RavenCompositeBand[],
     initialSources: RavenSource[],
+    defaultBandSettings: RavenDefaultBandSettings,
   ) {
     return [
       of(new sourceExplorerActions.UpdateSourceExplorer({
@@ -337,6 +340,9 @@ export class SourceExplorerEffects {
       of(new timelineActions.UpdateTimeline({
         ...fromTimeline.initialState,
         bands,
+      })),
+      of(new configActions.UpdateDefaultBandSettings({
+        ...defaultBandSettings,
       })),
       ...this.load(bands, initialSources),
       of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
@@ -349,6 +355,7 @@ export class SourceExplorerEffects {
   loadState(
     bands: RavenCompositeBand[],
     initialSources: RavenSource[],
+    defaultBandSettings: RavenDefaultBandSettings,
     maxTimeRange: RavenTimeRange,
     viewTimeRange: RavenTimeRange,
   ): Observable<Action>[] {
@@ -362,6 +369,9 @@ export class SourceExplorerEffects {
         bands,
         maxTimeRange,
         viewTimeRange,
+      })),
+      of(new configActions.UpdateDefaultBandSettings({
+        ...defaultBandSettings,
       })),
       ...this.load(bands, initialSources),
       of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
