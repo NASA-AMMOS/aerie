@@ -12,7 +12,7 @@
           [value]="defaultBandSettings.labelWidth"
           type="number"
           name="labelWidth"
-          step="5"
+          step="1"
           min="5"
           max="300"
           (change)="updateDefaultBandSettings.emit({ update: { labelWidth: $event.target.valueAsNumber } })">
