@@ -321,13 +321,6 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
       if (subBand.id === subBandId) {
         subBand.setIntervals(intervals);
         subBand.intervalsById = intervalsById;
-
-        if (subBand.type === 'resource') {
-          // Note: setIntervals resets interpolation for resources in CTL,
-          // so we must re-set it on the next line.
-          subBand.setInterpolation(subBand.interpolation);
-        }
-
         this.redraw();
         return;
       }
