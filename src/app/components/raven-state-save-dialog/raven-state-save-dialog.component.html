@@ -1,18 +1,20 @@
-<div mat-dialog-content>
-  <div class="save-to">
-    Save To: {{data.source.name}}
+<form [formGroup]="saveStateForm">
+  <div mat-dialog-content>
+    <div class="save-to">
+      Save To: {{data.source.name}}
+    </div>
+
+    <mat-form-field>
+      <input
+        formControlName="name"
+        matInput
+        placeholder="Name"
+        required>
+    </mat-form-field>
   </div>
 
-  <mat-form-field>
-    <input
-      [(ngModel)]="name"
-      matInput
-      placeholder="Name"
-      required>
-  </mat-form-field>
-</div>
-
-<div mat-dialog-actions>
-  <button mat-button (click)="onCancel()">Cancel</button>
-  <button mat-button (click)="onSave()">Save</button>
-</div>
+  <div mat-dialog-actions>
+    <button mat-button (click)="onCancel()">Cancel</button>
+    <button mat-button (click)="onSave()" [disabled]="!saveStateForm.valid">Save</button>
+  </div>
+</form>
