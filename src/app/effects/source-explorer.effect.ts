@@ -25,6 +25,7 @@ import {
   catchError,
   concatMap,
   map,
+  switchMap,
   take,
   withLatestFrom,
 } from 'rxjs/operators';
@@ -129,7 +130,10 @@ export class SourceExplorerEffects {
   @Effect()
   closeEvent$: Observable<Action> = this.actions$.pipe(
     ofType<CloseEvent>(SourceExplorerActionTypes.CloseEvent),
-    map(action => new timelineActions.RemoveBandsOrPointsForSource(action.sourceId)),
+    switchMap(action => [
+      new timelineActions.RemoveBandsOrPointsForSource(action.sourceId),
+      new sourceExplorerActions.UpdateTreeSource(action.sourceId, { opened: false }),
+    ]),
   );
 
   @Effect()
@@ -137,10 +141,11 @@ export class SourceExplorerEffects {
     ofType<ExpandEvent>(SourceExplorerActionTypes.ExpandEvent),
     withLatestFrom(this.store$),
     map(([action, state]) => state.sourceExplorer.treeBySourceId[action.sourceId]),
-    concatMap(source =>
+    switchMap(source =>
       concat(
         ...this.expand(source),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+        of(new sourceExplorerActions.UpdateTreeSource(source.id, { expanded: true })),
       ).pipe(
         catchError((e: Error) => {
           console.error('SourceExplorerEffects - expandEvent$: ', e);
@@ -213,7 +218,6 @@ export class SourceExplorerEffects {
               map(() => new sourceExplorerActions.ImportFileSuccess()),
             );
           } else {
-            // No need to send mapping data.
             return of(new sourceExplorerActions.ImportFileSuccess());
           }
         }),
@@ -230,7 +234,7 @@ export class SourceExplorerEffects {
     ofType<OpenEvent>(SourceExplorerActionTypes.OpenEvent),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
-    concatMap(({ state, action }) =>
+    switchMap(({ state, action }) =>
       concat(
         this.open(
           state.sourceExplorer.treeBySourceId,
@@ -241,6 +245,7 @@ export class SourceExplorerEffects {
           state.config.defaultBandSettings,
         ),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+        of(new sourceExplorerActions.UpdateTreeSource(action.sourceId, { opened: true })),
       ).pipe(
         catchError((e: Error) => {
           console.error('SourceExplorerEffects - openEvent$: ', e);
