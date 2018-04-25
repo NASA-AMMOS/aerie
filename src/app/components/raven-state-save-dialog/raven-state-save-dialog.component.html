@@ -5,7 +5,7 @@
 
   <mat-form-field>
     <input
-      [(ngModel)]="name"
+      [formControl]="name"
       matInput
       placeholder="Name"
       required>
@@ -14,5 +14,5 @@
 
 <div mat-dialog-actions>
   <button mat-button (click)="onCancel()">Cancel</button>
-  <button mat-button (click)="onSave()">Save</button>
+  <button mat-button (click)="onSave()" [disabled]="!name.valid">Save</button>
 </div>

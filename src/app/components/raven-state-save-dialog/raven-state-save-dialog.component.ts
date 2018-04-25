@@ -17,24 +17,34 @@ import {
   MatDialogRef,
 } from '@angular/material';
 
+import {
+  FormControl,
+  Validators,
+} from '@angular/forms';
+
 @Component({
   selector: 'raven-state-save-dialog',
   styleUrls: ['./raven-state-save-dialog.component.css'],
   templateUrl: './raven-state-save-dialog.component.html',
 })
 export class RavenStateSaveDialogComponent {
-  name: string;
+  name: FormControl;
 
   constructor(
     public dialogRef: MatDialogRef<RavenStateSaveDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
-  ) {}
+  ) {
+    this.name = new FormControl('', [
+      Validators.required,
+      Validators.pattern('^([(a-zA-Z0-9\-\_\s)]*){1,30}$'),
+    ]);
+  }
 
   onCancel() {
     this.dialogRef.close({ save: false });
   }
 
   onSave() {
-    this.dialogRef.close({ name: this.name, save: true });
+    this.dialogRef.close({ name: this.name.value, save: true });
   }
 }
