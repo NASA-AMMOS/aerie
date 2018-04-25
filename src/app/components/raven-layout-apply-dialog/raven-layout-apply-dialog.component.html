@@ -2,7 +2,7 @@
 
 <div mat-dialog-content>
   <mat-form-field>
-    <mat-select placeholder="Sources" [formControl]="sources">
+    <mat-select placeholder="Sources" [formControl]="sources" required>
       <mat-option *ngFor="let source of data.sources" [value]="source">{{source.name}}</mat-option>
     </mat-select>
   </mat-form-field>
@@ -10,5 +10,5 @@
 
 <div mat-dialog-actions>
   <button mat-button (click)="onCancel()">Cancel</button>
-  <button mat-button (click)="onApply()">Apply</button>
+  <button mat-button (click)="onApply()" [disabled]="!sources.valid">Apply</button>
 </div>
