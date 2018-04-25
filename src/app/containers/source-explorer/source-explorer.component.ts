@@ -39,14 +39,20 @@ import * as sourceExplorerActions from './../../actions/source-explorer';
 import {
   RavenConfirmDialogComponent,
   RavenFileImportDialogComponent,
+  RavenLayoutApplyDialogComponent,
   RavenStateSaveDialogComponent,
 } from './../../components';
 
 import {
+  RavenPin,
   RavenSource,
   RavenSourceActionEvent,
   StringTMap,
 } from './../../shared/models';
+
+import {
+  getAllSourcesByKind,
+} from './../../shared/util';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -59,6 +65,7 @@ export class SourceExplorerComponent implements OnDestroy {
   baseUrl: string;
 
   // Source Explorer state.
+  pins: RavenPin[];
   tree: StringTMap<RavenSource>;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
@@ -77,16 +84,17 @@ export class SourceExplorerComponent implements OnDestroy {
     });
 
     // Source Explorer state.
+    this.store.select(fromSourceExplorer.getPins).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(pins => {
+      this.pins = pins;
+      this.markForCheck();
+    });
     this.store.select(fromSourceExplorer.getTreeBySourceId).pipe(
       takeUntil(this.ngUnsubscribe),
     ).subscribe(tree => {
       this.tree = tree;
-
-      // TODO. Find out how to remove this checking.
-      this.changeDetector.markForCheck();
-      setTimeout(() =>
-        this.changeDetector.detectChanges(),
-      );
+      this.markForCheck();
     });
 
     // Connect to web socket to update new sources when they change on the server.
@@ -118,6 +126,17 @@ export class SourceExplorerComponent implements OnDestroy {
         this.store.dispatch(new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl));
       }
     });
+  }
+
+  /**
+   * Helper. Marks this component for change detection check,
+   * and then detects changes on the next tick.
+   *
+   * TODO: Find out how we can remove this.
+   */
+  markForCheck() {
+    this.changeDetector.markForCheck();
+    setTimeout(() => this.changeDetector.detectChanges());
   }
 
   /**
@@ -187,7 +206,20 @@ export class SourceExplorerComponent implements OnDestroy {
    * Dialog trigger. Opens the apply layout dialog.
    */
   openApplyLayoutDialog(source: RavenSource) {
-    // TODO.
+    const applyLayoutDialog = this.dialog.open(RavenLayoutApplyDialogComponent, {
+      data: {
+        sources: getAllSourcesByKind(this.tree, '/', 'fs_file'),
+      },
+      width: '250px',
+    });
+
+    applyLayoutDialog.afterClosed().pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(result => {
+      if (result.apply) {
+        this.store.dispatch(new sourceExplorerActions.ApplyLayout(source.url, result.sourceId));
+      }
+    });
   }
 
   /**
@@ -254,12 +286,12 @@ export class SourceExplorerComponent implements OnDestroy {
    * Dialog trigger. Opens the save state dialog.
    */
   openStateSaveDialog(source: RavenSource): void {
-    const stateStateSaveDialog = this.dialog.open(RavenStateSaveDialogComponent, {
+    const stateSaveDialog = this.dialog.open(RavenStateSaveDialogComponent, {
       data: { source },
       width: '250px',
     });
 
-    stateStateSaveDialog.afterClosed().pipe(
+    stateSaveDialog.afterClosed().pipe(
       takeUntil(this.ngUnsubscribe),
     ).subscribe(result => {
       if (result.save) {

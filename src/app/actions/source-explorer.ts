@@ -44,7 +44,7 @@ export enum SourceExplorerActionTypes {
 export class ApplyLayout implements Action {
   readonly type = SourceExplorerActionTypes.ApplyLayout;
 
-  constructor(public sourceUrl: string) {}
+  constructor(public sourceUrl: string, public sourceId: string) {}
 }
 
 export class ApplyState implements Action {

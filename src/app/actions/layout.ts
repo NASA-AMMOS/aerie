@@ -16,6 +16,7 @@ import {
 
 // Action Types.
 export enum LayoutActionTypes {
+  Resize                  = '[layout] resize',
   SetMode                 = '[layout] set_mode',
   ToggleDetailsDrawer     = '[layout] toggle_details_drawer',
   ToggleLeftDrawer        = '[layout] toggle_left_drawer',
@@ -25,6 +26,10 @@ export enum LayoutActionTypes {
 }
 
 // Actions.
+export class Resize implements Action {
+  readonly type = LayoutActionTypes.Resize;
+}
+
 export class SetMode implements Action {
   readonly type = LayoutActionTypes.SetMode;
 
@@ -61,6 +66,7 @@ export class UpdateLayout implements Action {
 
 // Union type of all actions.
 export type LayoutAction =
+  Resize |
   SetMode |
   ToggleDetailsDrawer |
   ToggleLeftDrawer |

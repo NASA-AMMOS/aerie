@@ -16,6 +16,7 @@ import { Observable } from 'rxjs/Observable';
 
 import {
   map,
+  switchMap,
   withLatestFrom,
 } from 'rxjs/operators';
 
@@ -23,6 +24,7 @@ import { AppState } from './../../app/store';
 
 import {
   LayoutActionTypes,
+  Resize,
   ToggleRightDrawer,
 } from './../actions/layout';
 
@@ -41,6 +43,15 @@ export class LayoutEffects {
       } else {
         return new layoutActions.UpdateLayout({ timelinePanelSize: 75 });
       }
+    }),
+  );
+
+  @Effect({ dispatch: false })
+  resize$: Observable<Action> = this.actions$.pipe(
+    ofType<Resize>(LayoutActionTypes.Resize),
+    switchMap(() => {
+      setTimeout(() => dispatchEvent(new Event('resize')));
+      return [];
     }),
   );
 

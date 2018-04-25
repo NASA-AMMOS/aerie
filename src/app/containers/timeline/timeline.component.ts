@@ -96,23 +96,13 @@ export class TimelineComponent implements OnDestroy {
       takeUntil(this.ngUnsubscribe),
     ).subscribe(itarMessage => {
       this.itarMessage = itarMessage;
-
-      // TODO. Find out how to remove this checking.
-      this.changeDetector.markForCheck();
-      setTimeout(() =>
-        this.changeDetector.detectChanges(),
-      );
+      this.markForCheck();
     });
-
     this.store.select(fromConfig.getDefaultBandSettings).pipe(
       takeUntil(this.ngUnsubscribe),
     ).subscribe(defaultBandSettings => {
       this.defaultBandSettings = defaultBandSettings;
-      // TODO. Find out how to remove this checking.
-      this.changeDetector.markForCheck();
-      setTimeout(() =>
-        this.changeDetector.detectChanges(),
-      );
+      this.markForCheck();
     });
 
     // Epoch state.
@@ -123,7 +113,7 @@ export class TimelineComponent implements OnDestroy {
       this.earthSecToEpochSec = state.earthSecToEpochSec;
       this.epochs = state.epochs;
       this.inUseEpoch = state.inUseEpoch;
-      this.changeDetector.markForCheck();
+      this.markForCheck();
     });
 
     // Layout state.
@@ -138,13 +128,8 @@ export class TimelineComponent implements OnDestroy {
       this.showRightDrawer = state.showRightDrawer;
       this.showSouthBandsDrawer = state.showSouthBandsDrawer;
       this.timelinePanelSize = state.timelinePanelSize;
-
-      // TODO. Find out how to remove this checking.
-      this.changeDetector.markForCheck();
-      setTimeout(() => {
-        this.changeDetector.detectChanges();
-        dispatchEvent(new Event('resize')); // Trigger a window resize to make sure bands properly resize anytime our layout changes.
-      });
+      this.markForCheck();
+      this.resize();
     });
 
     // Timeline state.
@@ -157,18 +142,24 @@ export class TimelineComponent implements OnDestroy {
       this.selectedPoint = state.selectedPoint;
       this.selectedSubBandId = state.selectedSubBandId;
       this.viewTimeRange = state.viewTimeRange;
-
-      // TODO. Find out how to remove this checking.
-      this.changeDetector.markForCheck();
-      setTimeout(() =>
-        this.changeDetector.detectChanges(),
-      );
+      this.markForCheck();
     });
   }
 
   ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
+  }
+
+  /**
+   * Helper. Marks this component for change detection check,
+   * and then detects changes on the next tick.
+   *
+   * TODO: Find out how we can remove this.
+   */
+  markForCheck() {
+    this.changeDetector.markForCheck();
+    setTimeout(() => this.changeDetector.detectChanges());
   }
 
   /**
@@ -279,9 +270,9 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
-   * Event. After a split pane drag, trigger a window resize event so the bands are properly sized.
+   * Helper that dispatches a resize event.
    */
-  onDragEnd(): void {
-    dispatchEvent(new Event('resize'));
+  resize() {
+    this.store.dispatch(new layoutActions.Resize());
   }
 }

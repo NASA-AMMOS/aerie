@@ -136,8 +136,7 @@ export class FalconResourceBandComponent implements OnChanges, OnDestroy, OnInit
     // Create Intervals.
     const { intervals, intervalsById } = this.getIntervals();
 
-    ctlResourceBand.setIntervals(intervals); // This resets interpolation in CTL so we must re-set it on the next line.
-    ctlResourceBand.setInterpolation(this.interpolation);
+    ctlResourceBand.setIntervals(intervals);
     ctlResourceBand.intervalsById = intervalsById;
     ctlResourceBand.type = 'resource';
 

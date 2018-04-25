@@ -319,15 +319,8 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
       const subBand = this.ctlCompositeBand.bands[i];
 
       if (subBand.id === subBandId) {
-        subBand.setIntervals(intervals);
         subBand.intervalsById = intervalsById;
-
-        if (subBand.type === 'resource') {
-          // Note: setIntervals resets interpolation for resources in CTL,
-          // so we must re-set it on the next line.
-          subBand.setInterpolation(subBand.interpolation);
-        }
-
+        subBand.setIntervals(intervals);
         this.redraw();
         return;
       }
@@ -368,7 +361,7 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
         subBand.computeMinMaxPaintValues();
         subBand.tickValues = (window as any).Util.getLinearTickValues(subBand.minPaintValue, subBand.maxPaintValue, this.height);
       }
-     }
+    }
   }
 
   /**

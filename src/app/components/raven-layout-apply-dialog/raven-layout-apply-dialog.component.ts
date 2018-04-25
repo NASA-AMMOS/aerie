@@ -13,38 +13,35 @@ import {
 } from '@angular/core';
 
 import {
+  FormControl,
+} from '@angular/forms';
+
+import {
   MAT_DIALOG_DATA,
   MatDialogRef,
 } from '@angular/material';
 
-import {
-  FormControl,
-  Validators,
-} from '@angular/forms';
-
 @Component({
-  selector: 'raven-state-save-dialog',
-  styleUrls: ['./raven-state-save-dialog.component.css'],
-  templateUrl: './raven-state-save-dialog.component.html',
+  selector: 'raven-layout-apply-dialog',
+  styleUrls: ['./raven-layout-apply-dialog.component.css'],
+  templateUrl: './raven-layout-apply-dialog.component.html',
 })
-export class RavenStateSaveDialogComponent {
-  name: FormControl;
+export class RavenLayoutApplyDialogComponent {
+  sources = new FormControl();
 
   constructor(
-    public dialogRef: MatDialogRef<RavenStateSaveDialogComponent>,
+    public dialogRef: MatDialogRef<RavenLayoutApplyDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
-  ) {
-    this.name = new FormControl('', [
-      Validators.required,
-      Validators.pattern('^([(a-zA-Z0-9\-\_\s)]*){1,30}$'),
-    ]);
+  ) {}
+
+  onApply() {
+    this.dialogRef.close({
+      apply: true,
+      sourceId: this.sources.value.id,
+    });
   }
 
   onCancel() {
-    this.dialogRef.close({ save: false });
-  }
-
-  onSave() {
-    this.dialogRef.close({ name: this.name.value, save: true });
+    this.dialogRef.close({ apply: false });
   }
 }

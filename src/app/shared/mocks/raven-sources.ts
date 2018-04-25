@@ -70,23 +70,27 @@ export const treeBySourceId: StringTMap<RavenSource> = {
   '/': {
     ...rootSource,
     childIds: ['/child/0', '/child/1'],
+    kind: 'db',
   },
   '/child/0': {
     ...childSource,
     childIds: [],
     id: '/child/0',
+    kind: 'file',
     parentId: '/',
   },
   '/child/1': {
     ...childSource,
     childIds: ['/child/child/0'],
     id: '/child/1',
+    kind: 'file',
     parentId: '/',
   },
   '/child/child/0': {
     ...childSource,
     childIds: [],
     id: '/child/child/0',
+    kind: 'data',
     parentId: '/child/1',
   },
 };

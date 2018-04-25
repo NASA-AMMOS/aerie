@@ -1,4 +1,7 @@
 :host {
   display: block;
-  padding: 15px 0px 0px 10px;
+}
+
+.tab {
+  padding: 15px 10px;
 }

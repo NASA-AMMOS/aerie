@@ -15,7 +15,7 @@ import {
 export interface RavenSource {
   actions: RavenSourceAction[];
   childIds: string[];
-  content: MpsServerSourceGraphable[];
+  content: MpsServerSourceGraphable[] | null;
   dbType: string;
   draggable: boolean;
   expandable: boolean;

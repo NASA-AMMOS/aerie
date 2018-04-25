@@ -14,6 +14,7 @@ import {
 } from './layout';
 
 import {
+  Resize,
   SetMode,
   ToggleDetailsDrawer,
   ToggleLeftDrawer,
@@ -31,6 +32,13 @@ describe('layout reducer', () => {
 
   it('handle default', () => {
     expect(layoutState).toEqual(initialState);
+  });
+
+  it('handle Resize', () => {
+    layoutState = reducer(layoutState, new Resize());
+    expect(layoutState).toEqual({
+      ...initialState,
+    });
   });
 
   it('handle SetMode', () => {

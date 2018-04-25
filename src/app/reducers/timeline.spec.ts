@@ -73,8 +73,8 @@ describe('timeline reducer', () => {
           sourceIds: [source.id],
         }],
       }],
-      maxTimeRange: { end: 100, start: 0 },
-      viewTimeRange: { end: 100, start: 0 },
+      maxTimeRange: { end: 100, start: 10 },
+      viewTimeRange: { end: 100, start: 10 },
     });
   });
 
@@ -99,8 +99,8 @@ describe('timeline reducer', () => {
           sourceIds: [],
         }],
       }],
-      maxTimeRange: { end: 100, start: 0 },
-      viewTimeRange: { end: 100, start: 0 },
+      maxTimeRange: { end: 100, start: 10 },
+      viewTimeRange: { end: 100, start: 10 },
     });
   });
 
@@ -155,8 +155,8 @@ describe('timeline reducer', () => {
           },
         ],
       }],
-      maxTimeRange: { end: 200, start: 0 },
-      viewTimeRange: { end: 100, start: 0 },
+      maxTimeRange: { end: 200, start: 10 },
+      viewTimeRange: { end: 100, start: 10 },
     });
   });
 

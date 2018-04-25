@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
@@ -44,6 +44,7 @@ import {
   RavenConfirmDialogComponent,
   RavenEpochsComponent,
   RavenFileImportDialogComponent,
+  RavenLayoutApplyDialogComponent,
   RavenResourcePointComponent,
   RavenSettingsBandsComponent,
   RavenSettingsGlobalComponent,
@@ -82,6 +83,7 @@ export const DECLARATIONS = [
   RavenConfirmDialogComponent,
   RavenEpochsComponent,
   RavenFileImportDialogComponent,
+  RavenLayoutApplyDialogComponent,
   RavenResourcePointComponent,
   RavenSettingsBandsComponent,
   RavenSettingsGlobalComponent,
@@ -95,6 +97,7 @@ export const DECLARATIONS = [
 export const ENTRY_COMPONENTS = [
   RavenConfirmDialogComponent,
   RavenFileImportDialogComponent,
+  RavenLayoutApplyDialogComponent,
   RavenStateSaveDialogComponent,
 ];
 
@@ -111,6 +114,7 @@ export const MODULES = [
   BrowserModule,
   BrowserAnimationsModule,
   HttpClientModule,
+  ReactiveFormsModule,
   FormsModule,
   FalconModule,
   MaterialModule,

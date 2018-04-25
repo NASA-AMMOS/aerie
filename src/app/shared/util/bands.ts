@@ -317,11 +317,15 @@ export function updateTimeRanges(bands: RavenCompositeBand[], currentViewTimeRan
       for (let j = 0, ll = band.subBands.length; j < ll; ++j) {
         const subBand = band.subBands[j];
 
-        // Special case!
         // Since dividers don't really have a time range, make sure we do not re-calc time for them.
+        // Also make sure we dont account for 0's in maxTimeRange (e.g. when loading layouts).
         if (subBand.type !== 'divider') {
-          if (subBand.maxTimeRange.start < startTime) { startTime = subBand.maxTimeRange.start; }
-          if (subBand.maxTimeRange.end > endTime) { endTime = subBand.maxTimeRange.end; }
+          if (subBand.maxTimeRange.start !== 0 && subBand.maxTimeRange.start < startTime) {
+            startTime = subBand.maxTimeRange.start;
+          }
+          if (subBand.maxTimeRange.end !== 0 && subBand.maxTimeRange.end > endTime) {
+            endTime = subBand.maxTimeRange.end;
+          }
         }
       }
     }

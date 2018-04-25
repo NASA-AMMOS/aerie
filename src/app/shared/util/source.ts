@@ -23,16 +23,19 @@ import {
  * Transform form an MPS Server source to a Raven source.
  */
 export function toSource(parentId: string, isServer: boolean, mSource: MpsServerSource): RavenSource {
+  // Replace any slashes in name with dashes since slashes delineate sources in the source-explorer.
+  const sourceName = mSource.name.replace('/', '-');
+
   const rSource: RavenSource = {
     actions: [],
     childIds: [],
-    content: [],
+    content: null,
     dbType: '',
     draggable: false,
     expandable: true,
     expanded: false,
     icon: '',
-    id: parentId === '/' ? `/${mSource.name}` : `${parentId}/${mSource.name}`,
+    id: parentId === '/' ? `/${sourceName}` : `${parentId}/${sourceName}`,
     isServer,
     kind: mSource.__kind,
     label: mSource.label,
@@ -189,6 +192,25 @@ export function getAllChildIds(tree: StringTMap<RavenSource>, sourceId: string):
 }
 
 /**
+ * Helper that returns all sources by kind, starting at a given source id in the given tree.
+ */
+export function getAllSourcesByKind(tree: StringTMap<RavenSource>, sourceId: string, kind: string): RavenSource[] {
+  let sourceNames: RavenSource[] = [];
+
+  tree[sourceId].childIds.forEach((childId: string) => {
+    const childSource = tree[childId];
+
+    if (childSource.kind === kind) {
+      sourceNames.push(childSource);
+    }
+
+    sourceNames = sourceNames.concat(getAllSourcesByKind(tree, childSource.id, kind));
+  });
+
+  return sourceNames;
+}
+
+/**
  * Helper that returns all the individual parent source ids for a given source id.
  *
  * So if a source has id: '/hello/world/goodbye'.
@@ -245,4 +267,24 @@ export function getSourceType(sourceId: string): string {
     console.warn('source.ts - getSourceType: unknown source type: ', sourceId);
     return '';
   }
+}
+
+/**
+ * Helper that replaces part of a source id with a base id.
+ * Ex. If we have a source id: /a/b/c/d, and a base id: /x/y, then
+ *     this function should output /x/y/c/d.
+ */
+export function updateSourceId(sourceId: string, baseId: string): string {
+  const sourceIds = sourceId.split('/').filter(x => x !== '');
+  const baseIds = baseId.split('/').filter(x => x !== '');
+
+  for (let i = 0, l = sourceIds.length; i < l; ++i) {
+    if (baseIds[i] !== undefined) {
+      sourceIds.splice(i, 1, baseIds[i]);
+    }
+  }
+
+  sourceIds.unshift('');
+
+  return sourceIds.join('/');
 }
