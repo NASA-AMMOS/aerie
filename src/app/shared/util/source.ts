@@ -29,7 +29,7 @@ export function toSource(parentId: string, isServer: boolean, mSource: MpsServer
   const rSource: RavenSource = {
     actions: [],
     childIds: [],
-    content: [],
+    content: null,
     dbType: '',
     draggable: false,
     expandable: true,

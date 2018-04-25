@@ -63,7 +63,7 @@ export const initialState: SourceExplorerState = {
     '/': {
       actions: [],
       childIds: [],
-      content: [],
+      content: null,
       dbType: '',
       draggable: false,
       expandable: false,

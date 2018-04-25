@@ -310,19 +310,17 @@ export class SourceExplorerEffects {
   expand(source: RavenSource): Observable<Action>[] {
     const actions: Observable<Action>[] = [];
 
-    if (source) {
-      if (!source.childIds.length) {
-        if (source.content.length > 0) {
-          actions.push(
-            of(new sourceExplorerActions.NewSources(source.id, toRavenSources(source.id, false, source.content))),
-          );
-        } else {
-          actions.push(
-            this.fetchNewSources(source.url, source.id, false).pipe(
-              map((sources: RavenSource[]) => new sourceExplorerActions.NewSources(source.id, sources)),
-            ),
-          );
-        }
+    if (source && !source.childIds.length) {
+      if (source.content) {
+        actions.push(
+          of(new sourceExplorerActions.NewSources(source.id, toRavenSources(source.id, false, source.content))),
+        );
+      } else {
+        actions.push(
+          this.fetchNewSources(source.url, source.id, false).pipe(
+            map((sources: RavenSource[]) => new sourceExplorerActions.NewSources(source.id, sources)),
+          ),
+        );
       }
     }
 
