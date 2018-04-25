@@ -19,7 +19,6 @@ import {
 
 import {
   FormControl,
-  FormGroup,
   Validators,
 } from '@angular/forms';
 
@@ -29,18 +28,16 @@ import {
   templateUrl: './raven-state-save-dialog.component.html',
 })
 export class RavenStateSaveDialogComponent {
-  saveStateForm: FormGroup;
+  name: FormControl;
 
   constructor(
     public dialogRef: MatDialogRef<RavenStateSaveDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
   ) {
-    this.saveStateForm = new FormGroup({
-      name: new FormControl('', [
-        Validators.required,
-        Validators.pattern('^([(a-zA-Z0-9\-\_\s)]*){1,30}$'),
-      ]),
-    });
+    this.name = new FormControl('', [
+      Validators.required,
+      Validators.pattern('^([(a-zA-Z0-9\-\_\s)]*){1,30}$'),
+    ]);
   }
 
   onCancel() {
@@ -48,6 +45,6 @@ export class RavenStateSaveDialogComponent {
   }
 
   onSave() {
-    this.dialogRef.close({ name: this.saveStateForm.controls.name.value, save: true });
+    this.dialogRef.close({ name: this.name.value, save: true });
   }
 }
