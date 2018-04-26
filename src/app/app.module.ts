@@ -9,9 +9,8 @@
 
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
-import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
+import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
@@ -31,27 +30,13 @@ import { environment } from './../environments/environment';
 
 import { FalconModule } from './shared/falcon';
 import { MaterialModule } from './shared/material';
+import { RavenModule } from './shared/raven';
 
 import {
   AppComponent,
   SourceExplorerComponent,
   TimelineComponent,
 } from './containers';
-
-import {
-  RavenActivityPointComponent,
-  RavenBandsComponent,
-  RavenConfirmDialogComponent,
-  RavenEpochsComponent,
-  RavenFileImportDialogComponent,
-  RavenLayoutApplyDialogComponent,
-  RavenResourcePointComponent,
-  RavenSettingsBandsComponent,
-  RavenSettingsGlobalComponent,
-  RavenStatePointComponent,
-  RavenStateSaveDialogComponent,
-  RavenTreeComponent,
-} from './components';
 
 import {
   EpochsEffects,
@@ -65,40 +50,10 @@ import {
   TimelineGuard,
 } from './guards';
 
-import {
-  DhmsPipe,
-  HasKeysPipe,
-  KeyByPipe,
-  TimestampPipe,
-} from './pipes';
-
 export const DECLARATIONS = [
   AppComponent,
-  DhmsPipe,
-  HasKeysPipe,
-  KeyByPipe,
-  TimestampPipe,
-  RavenActivityPointComponent,
-  RavenBandsComponent,
-  RavenConfirmDialogComponent,
-  RavenEpochsComponent,
-  RavenFileImportDialogComponent,
-  RavenLayoutApplyDialogComponent,
-  RavenResourcePointComponent,
-  RavenSettingsBandsComponent,
-  RavenSettingsGlobalComponent,
-  RavenStatePointComponent,
-  RavenStateSaveDialogComponent,
-  RavenTreeComponent,
   SourceExplorerComponent,
   TimelineComponent,
-];
-
-export const ENTRY_COMPONENTS = [
-  RavenConfirmDialogComponent,
-  RavenFileImportDialogComponent,
-  RavenLayoutApplyDialogComponent,
-  RavenStateSaveDialogComponent,
 ];
 
 export const EFFECTS = [
@@ -111,12 +66,11 @@ export const EFFECTS = [
 
 export const MODULES = [
   CommonModule,
+  FalconModule,
   BrowserModule,
   BrowserAnimationsModule,
   HttpClientModule,
-  ReactiveFormsModule,
-  FormsModule,
-  FalconModule,
+  RavenModule,
   MaterialModule,
   AngularSplitModule,
   FlexLayoutModule,
@@ -136,19 +90,13 @@ export const PROVIDERS = [
   TimelineGuard,
 ];
 
-export const SCHEMAS = [
-  CUSTOM_ELEMENTS_SCHEMA,
-];
-
 @NgModule({
   bootstrap: [
     AppComponent,
   ],
   declarations: DECLARATIONS,
-  entryComponents: ENTRY_COMPONENTS,
   exports: DECLARATIONS,
   imports: MODULES,
   providers: PROVIDERS,
-  schemas: SCHEMAS,
 })
 export class AppModule {}

@@ -20,7 +20,7 @@ import {
   RavenSubBand,
   RavenUpdate,
   StringTMap,
-} from './../../shared/models';
+} from './../../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

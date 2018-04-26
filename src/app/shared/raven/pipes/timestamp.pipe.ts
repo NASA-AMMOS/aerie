@@ -12,13 +12,13 @@ import {
   PipeTransform,
 } from '@angular/core';
 
-import { dhms } from './../shared/util';
+import { timestamp } from './../../../shared/util';
 
 @Pipe({
-  name: 'dhms',
+  name: 'timestamp',
 })
-export class DhmsPipe implements PipeTransform {
+export class TimestampPipe implements PipeTransform {
   transform(value: number): string {
-    return dhms(value);
+    return timestamp(value);
   }
 }

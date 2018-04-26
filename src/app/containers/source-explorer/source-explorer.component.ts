@@ -41,7 +41,7 @@ import {
   RavenFileImportDialogComponent,
   RavenLayoutApplyDialogComponent,
   RavenStateSaveDialogComponent,
-} from './../../components';
+} from './../../shared/raven/components';
 
 import {
   RavenPin,
@@ -272,7 +272,7 @@ export class SourceExplorerComponent implements OnDestroy {
   openFileImportDialog(source: RavenSource): void {
     const fileImportDialog = this.dialog.open(RavenFileImportDialogComponent, {
       data: { source },
-      width: '250px',
+      width: '300px',
     });
 
     fileImportDialog.afterClosed().subscribe(result => {

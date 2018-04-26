@@ -9,24 +9,18 @@
 
 import {
   Component,
-  EventEmitter,
   Input,
-  Output,
 } from '@angular/core';
 
 import {
-  RavenDefaultBandSettings,
-  RavenUpdate,
-} from '../../shared/models';
+  RavenResourcePoint,
+} from './../../../../shared/models';
 
 @Component({
-  selector: 'raven-settings-global',
-  styleUrls: ['./raven-settings-global.component.css'],
-  templateUrl: './raven-settings-global.component.html',
+  selector: 'raven-resource-point',
+  styleUrls: ['./raven-resource-point.component.css'],
+  templateUrl: './raven-resource-point.component.html',
 })
-export class RavenSettingsGlobalComponent {
-  @Input() defaultBandSettings: RavenDefaultBandSettings;
-
-  @Output() addDividerBand: EventEmitter<null> = new EventEmitter<null>();
-  @Output() updateDefaultBandSettings: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
+export class RavenResourcePointComponent {
+  @Input() selectedPoint: RavenResourcePoint;
 }
