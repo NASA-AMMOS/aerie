@@ -16,26 +16,20 @@ import {
 } from '@angular/core';
 
 import {
-  RavenSource,
-  RavenSourceActionEvent,
-  StringTMap,
-} from './../../shared/models';
+  RavenActivityPoint,
+} from './../../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  selector: 'raven-tree',
-  styleUrls: ['./raven-tree.component.css'],
-  templateUrl: './raven-tree.component.html',
+  selector: 'raven-activity-point',
+  styleUrls: ['./raven-activity-point.component.css'],
+  templateUrl: './raven-activity-point.component.html',
 })
-export class RavenTreeComponent {
-  @Input() id: string;
-  @Input() source: RavenSource;
-  @Input() tree: StringTMap<RavenSource>;
+export class RavenActivityPointComponent {
+  @Input() selectedPoint: RavenActivityPoint;
+  @Input() showActivityPointMetadata: boolean;
+  @Input() showActivityPointParameters: boolean;
 
-  @Output() action: EventEmitter<RavenSourceActionEvent> = new EventEmitter<RavenSourceActionEvent>();
-  @Output() close: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
-  @Output() collapse: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
-  @Output() expand: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
-  @Output() open: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
-  @Output() select: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
+  @Output() toggleShowActivityPointMetadata: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() toggleShowActivityPointParameters: EventEmitter<boolean> = new EventEmitter<boolean>();
 }

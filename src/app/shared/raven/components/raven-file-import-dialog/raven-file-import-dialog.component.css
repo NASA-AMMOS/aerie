@@ -1,4 +1,4 @@
-host {
+:host {
   display: block;
 }
 
@@ -25,4 +25,8 @@ label {
 
 .import-to {
   padding-bottom: 10px;
+}
+
+.actions {
+  justify-content: center;
 }

@@ -8,19 +8,17 @@
  */
 
 import {
-  Component,
-  Input,
+  Pipe,
+  PipeTransform,
 } from '@angular/core';
 
-import {
-  RavenStatePoint,
-} from './../../shared/models';
+import { dhms } from './../../../shared/util';
 
-@Component({
-  selector: 'raven-state-point',
-  styleUrls: ['./raven-state-point.component.css'],
-  templateUrl: './raven-state-point.component.html',
+@Pipe({
+  name: 'dhms',
 })
-export class RavenStatePointComponent {
-  @Input() selectedPoint: RavenStatePoint;
+export class DhmsPipe implements PipeTransform {
+  transform(value: number): string {
+    return dhms(value);
+  }
 }

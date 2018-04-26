@@ -22,7 +22,7 @@ import {
 import {
   RavenEpoch,
   RavenUpdate,
-} from '../../shared/models';
+} from '../../../../shared/models';
 
 @Component({
   selector: 'raven-epochs',

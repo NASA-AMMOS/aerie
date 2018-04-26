@@ -19,7 +19,7 @@ import {
 
 import {
   RavenFile,
-} from './../../shared/models';
+} from './../../../../shared/models';
 
 @Component({
   selector: 'raven-file-import-dialog',
