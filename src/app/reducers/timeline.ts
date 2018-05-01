@@ -11,6 +11,7 @@ import { without } from 'lodash';
 
 import {
   createFeatureSelector,
+  createSelector,
 } from '@ngrx/store';
 
 import {
@@ -48,6 +49,7 @@ import {
 // Timeline State Interface.
 export interface TimelineState {
   bands: RavenCompositeBand[];
+  fetchPending: boolean;
   maxTimeRange: RavenTimeRange;
   selectedBandId: string;
   selectedPoint: RavenPoint | null;
@@ -58,6 +60,7 @@ export interface TimelineState {
 // Timeline Initial State.
 export const initialState: TimelineState = {
   bands: [],
+  fetchPending: false,
   maxTimeRange: { end: 0, start: 0 },
   selectedBandId: '',
   selectedPoint: null,
@@ -376,4 +379,4 @@ export const getTimelineState = createFeatureSelector<TimelineState>('timeline')
  * only recompute when arguments change. The created selectors can also be composed
  * together to select different pieces of state.
  */
-// TODO: Add more specific selectors if needed.
+export const getPending = createSelector(getTimelineState, (state: TimelineState) => state.fetchPending);

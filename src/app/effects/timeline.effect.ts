@@ -34,7 +34,6 @@ import {
   UpdateViewTimeRange,
 } from './../actions/timeline';
 
-import * as sourceExplorerActions from './../actions/source-explorer';
 import * as timelineActions from './../actions/timeline';
 
 import {
@@ -103,7 +102,7 @@ export class TimelineEffects {
           if (subBand.type === 'resource' && subBand.decimate) {
             subBand.sourceIds.forEach(sourceId => {
               actions.push(
-                of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: true })),
+                of(new timelineActions.UpdateTimeline({ fetchPending: true })),
                 this.fetchNewResourcePoints(sourceExplorer.treeBySourceId[sourceId], action.viewTimeRange).pipe(
                   switchMap(({ points }) => [
                     new timelineActions.UpdateSubBand(band.id, subBand.id, {
@@ -111,7 +110,7 @@ export class TimelineEffects {
                     }),
                   ]),
                 ),
-                of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+                of(new timelineActions.UpdateTimeline({ fetchPending: false })),
               );
             });
           }
