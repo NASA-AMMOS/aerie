@@ -16,6 +16,7 @@ export interface RavenResourceBand {
   addTo: boolean;
   autoTickValues: boolean;
   color: number[];
+  decimate: boolean;
   fill: boolean;
   fillColor: number[];
   height: number;

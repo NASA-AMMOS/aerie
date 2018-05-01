@@ -30,6 +30,7 @@ import {
   UpdateBand,
   UpdateSubBand,
   UpdateTimeline,
+  UpdateViewTimeRange,
 } from './../actions/timeline';
 
 import {
@@ -392,6 +393,14 @@ describe('timeline reducer', () => {
     timelineState = reducer(timelineState, new UpdateTimeline({
       viewTimeRange: { end: 314, start: 272 },
     }));
+    expect(timelineState).toEqual({
+      ...initialState,
+      viewTimeRange: { end: 314, start: 272 },
+    });
+  });
+
+  it('handle UpdateViewTimeRange', () => {
+    timelineState = reducer(timelineState, new UpdateViewTimeRange({ end: 314, start: 272 }));
     expect(timelineState).toEqual({
       ...initialState,
       viewTimeRange: { end: 314, start: 272 },

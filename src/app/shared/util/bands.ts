@@ -187,6 +187,7 @@ export function toResourceBand(
     addTo: false,
     autoTickValues: true,
     color: colorHexToRgbArray(defaultBandSettings.resourceColor),
+    decimate: metadata.decimatedData,
     fill: false,
     fillColor: colorHexToRgbArray(defaultBandSettings.resourceFillColor),
     height: 100,

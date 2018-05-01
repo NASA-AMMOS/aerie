@@ -21,6 +21,7 @@ import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs/Subject';
 
 import * as fromSourceExplorer from './../../reducers/source-explorer';
+import * as fromTimeline from './../../reducers/timeline';
 
 import * as layoutActions from './../../actions/layout';
 
@@ -41,7 +42,8 @@ export class AppComponent implements OnDestroy {
     // Combine all fetch pending observables for use in progress bar.
     this.loading$ = combineLatest(
       this.store.select(fromSourceExplorer.getPending),
-      sourceExplorerPending => sourceExplorerPending,
+      this.store.select(fromTimeline.getPending),
+      (sourceExplorerPending, timelinePending) => sourceExplorerPending || timelinePending,
     ).pipe(
       takeUntil(this.ngUnsubscribe),
     );

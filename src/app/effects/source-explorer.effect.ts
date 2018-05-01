@@ -14,7 +14,6 @@ import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 
 import { Observable } from 'rxjs/Observable';
-
 import { combineLatest } from 'rxjs/observable/combineLatest';
 import { concat } from 'rxjs/observable/concat';
 import { forkJoin } from 'rxjs/observable/forkJoin';
@@ -25,6 +24,7 @@ import {
   catchError,
   concatMap,
   map,
+  mergeMap,
   switchMap,
   take,
   withLatestFrom,
@@ -234,7 +234,7 @@ export class SourceExplorerEffects {
     ofType<OpenEvent>(SourceExplorerActionTypes.OpenEvent),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
-    switchMap(({ state, action }) =>
+    mergeMap(({ state, action }) =>
       concat(
         this.open(
           state.sourceExplorer.treeBySourceId,
@@ -299,8 +299,8 @@ export class SourceExplorerEffects {
   );
 
   constructor(
-    private http: HttpClient,
     private actions$: Actions,
+    private http: HttpClient,
     private store$: Store<AppState>,
   ) {}
 
@@ -537,7 +537,6 @@ export class SourceExplorerEffects {
   importMappingFile(sourceUrl: string, name: string, mapping: string) {
     // TODO: Make this better so we don't have to change the URL.
     const url = sourceUrl.replace('fs-mongodb', 'metadata-mongodb');
-
     return this.http.post(`${url}/${name}`, mapping, { responseType: 'text' });
   }
 }

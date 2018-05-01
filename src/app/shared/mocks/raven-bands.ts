@@ -66,6 +66,7 @@ export const resourceBand: RavenResourceBand = {
   addTo: false,
   autoTickValues: true,
   color: [0, 0, 0],
+  decimate: false,
   fill: false,
   fillColor: [0, 0, 0],
   height: 50,
