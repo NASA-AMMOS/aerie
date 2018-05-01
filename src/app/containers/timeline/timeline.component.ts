@@ -266,7 +266,7 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when catching an `update-view-time-range` event.
    */
   onUpdateViewTimeRange(viewTimeRange: RavenTimeRange): void {
-    this.store.dispatch(new timelineActions.UpdateTimeline({ viewTimeRange }));
+    this.store.dispatch(new timelineActions.UpdateViewTimeRange(viewTimeRange));
   }
 
   /**

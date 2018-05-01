@@ -93,6 +93,8 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
       return updateSubBand(state, action);
     case TimelineActionTypes.UpdateTimeline:
       return { ...state, ...action.update };
+    case TimelineActionTypes.UpdateViewTimeRange:
+      return { ...state, viewTimeRange: { ...action.viewTimeRange } };
     default:
       return state;
   }
