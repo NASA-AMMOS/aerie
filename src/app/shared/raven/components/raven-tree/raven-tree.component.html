@@ -49,8 +49,10 @@
       <ng-container *ngIf="a.name === 'Apply'">
         <button mat-menu-item [matMenuTriggerFor]="applyMenu">{{a.name}}</button>
       </ng-container>
-
-      <ng-container *ngIf="a.name !== 'Apply'">
+      <ng-container *ngIf="a.name === 'File metadata'">
+        <button mat-menu-item (click)="openMetadata.emit(tree[id])">File Metadata</button>
+      </ng-container>
+      <ng-container *ngIf="a.name !== 'Apply' && a.name !== 'File metadata'">
         <button mat-menu-item (click)="action.emit({ event: a.event, source: source })">{{a.name}}</button>
       </ng-container>
     </ng-container>
@@ -77,6 +79,7 @@
       (collapse)="collapse.emit($event)"
       (expand)="expand.emit($event)"
       (open)="open.emit($event)"
+      (openMetadata)="openMetadata.emit($event)"
       (select)="select.emit($event)">
     </raven-tree>
   </li>

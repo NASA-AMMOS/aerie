@@ -8,6 +8,6 @@
  */
 
 export * from './dhms.pipe';
-export * from './has-keys.pipe';
 export * from './key-by.pipe';
 export * from './timestamp.pipe';
+export * from './to-key-value-array.pipe';

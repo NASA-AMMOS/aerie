@@ -14,6 +14,7 @@ import {
   MpsServerSourceFile,
   MpsServerSourceGraphable,
   RavenCompositeBand,
+  RavenFileMetadata,
   RavenSource,
   RavenSubBand,
   StringTMap,
@@ -34,6 +35,14 @@ export function toSource(parentId: string, isServer: boolean, mSource: MpsServer
     draggable: false,
     expandable: true,
     expanded: false,
+    fileMetadata: {
+      createdBy: '',
+      createdOn: '',
+      customMetadata: null,
+      fileType: '',
+      lastModified: '',
+      permissions: '',
+    },
     icon: '',
     id: parentId === '/' ? `/${sourceName}` : `${parentId}/${sourceName}`,
     isServer,
@@ -44,7 +53,6 @@ export function toSource(parentId: string, isServer: boolean, mSource: MpsServer
     openable: false,
     opened: false,
     parentId,
-    permissions: '',
     pinnable: true,
     pinned: false,
     selectable: true,
@@ -97,21 +105,25 @@ export function fromDir(isServer: boolean, mSource: MpsServerSourceDir, rSource:
     ...rSource,
     actions: [
       {
-        event: 'save',
-        name: 'Save',
+        event: 'file-delete',
+        name: 'Delete',
+      },
+      {
+        event: 'file-metadata',
+        name: 'File metadata',
       },
       {
         event: 'file-import',
         name: 'Import',
       },
       {
-        event: 'file-delete',
-        name: 'Delete',
+        event: 'save',
+        name: 'Save',
       },
     ],
     dbType: mSource.__db_type,
+    fileMetadata: toRavenFileMetadata(mSource as MpsServerSourceFile),
     icon: isServer ? 'fa fa-database' : 'fa fa-folder',
-    permissions: mSource.permissions,
     url: mSource.contents_url,
   };
 }
@@ -128,30 +140,78 @@ export function fromFile(mSource: MpsServerSourceFile, rSource: RavenSource): Ra
         name: 'Delete',
       },
       {
+        event: 'file-metadata',
+        name: 'File metadata',
+      },
+      {
         event: 'epoch-load',
         name: 'Load Epoch',
       },
-    ] : [{
+    ] : [
+      {
       event: 'delete',
       name: 'Delete',
-    }],
+      },
+      {
+        event: 'file-metadata',
+        name: 'File metadata',
+      },
+    ],
     dbType: mSource.__db_type,
+    fileMetadata: toRavenFileMetadata(mSource),
     icon: 'fa fa-file',
-    permissions: mSource.permissions,
     url: mSource.contents_url,
   };
+}
+
+/**
+ * Transforms MPS Server file metadata to Raven file metadata.
+ */
+export function toRavenFileMetadata(mSource: MpsServerSourceFile): RavenFileMetadata {
+  const fileMetadata = {
+    createdBy: mSource.createdBy ? mSource.createdBy : '',
+    createdOn: mSource.created ? mSource.created : '',
+    customMetadata: mSource.customMeta && mSource.customMeta.length ? toRavenCustomMetadata(mSource.customMeta) : null,
+    fileType: mSource.__kind === 'fs_dir' ? 'folder' : (mSource.__kind_sub === 'file_maros' ? 'Generic CSV' : mSource.__kind_sub),
+    lastModified: mSource.modified ? mSource.modified : '',
+    permissions: mSource.permissions ? mSource.permissions.substring(0, mSource.permissions.indexOf(' ')) : '',
+  };
+
+  return fileMetadata;
+}
+
+/**
+ * Transforms MPS Server custom metadata to Raven customMetadata.
+ */
+export function toRavenCustomMetadata(metadata: any) {
+  const customMetadata = {};
+
+  for (let i = 0, l = metadata.length; i < l; ++i) {
+    const meta = metadata[i];
+    customMetadata[meta['Key']] = meta['Value'];
+  }
+
+  return customMetadata;
 }
 
 /**
  * Convert an MPS Server 'fs_graphable' source to a Raven source.
  */
 export function fromGraphable(mSource: MpsServerSourceGraphable, rSource: RavenSource): RavenSource {
+  const fileMetadata = toRavenFileMetadata(mSource as MpsServerSourceFile);
   return {
     ...rSource,
+    actions: fileMetadata.customMetadata ? [
+      {
+        event: 'file-metadata',
+        name: 'File metadata',
+      },
+    ] : [],
     expandable: false,
+    fileMetadata,
     icon: 'fa fa-area-chart',
     openable: true,
-    selectable: false,
+    selectable: fileMetadata.customMetadata ? true : false,
     url: mSource.data_url,
   };
 }

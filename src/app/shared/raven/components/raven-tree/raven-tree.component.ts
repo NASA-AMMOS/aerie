@@ -37,5 +37,6 @@ export class RavenTreeComponent {
   @Output() collapse: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
   @Output() expand: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
   @Output() open: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
+  @Output() openMetadata: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
   @Output() select: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
 }

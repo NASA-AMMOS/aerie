@@ -7,25 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  BaseType,
-  StringTMap,
- } from './index';
+import { BaseType } from '.';
+import { StringTMap } from './map';
 
-export interface MpsServerSourceGraphable {
-  __db_type: string;
-  __kind: string;
-  __kind_sub: string;
-  contents_url: string;
-  created: string;
+export interface RavenFileMetadata {
   createdBy: string;
-  customMeta: StringTMap<BaseType>[];
-  data_url: string;
-  file_data_url: string;
-  hasCollectionType: string;
-  importJobStatus: string;
-  label: string;
-  modified: string;
-  name: string;
+  createdOn: string;
+  customMetadata: StringTMap<BaseType> | null;
+  fileType: string;
+  lastModified: string;
   permissions: string;
 }

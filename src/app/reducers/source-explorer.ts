@@ -68,6 +68,14 @@ export const initialState: SourceExplorerState = {
       draggable: false,
       expandable: false,
       expanded: false,
+      fileMetadata: {
+        createdBy: '',
+        createdOn: '',
+        customMetadata: null,
+        fileType: '',
+        lastModified: '',
+        permissions: '',
+      },
       icon: '',
       id: '/',
       isServer: false,
@@ -78,7 +86,6 @@ export const initialState: SourceExplorerState = {
       openable: false,
       opened: false,
       parentId: '',
-      permissions: '',
       pinnable: false,
       pinned: false,
       selectable: false,
@@ -336,4 +343,5 @@ export const getSourceExplorerState = createFeatureSelector<SourceExplorerState>
 export const getInitialSourcesLoaded = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.initialSourcesLoaded);
 export const getPending = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.fetchPending);
 export const getPins = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.pins);
+export const getSelectedSourceId = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.selectedSourceId);
 export const getTreeBySourceId = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.treeBySourceId);

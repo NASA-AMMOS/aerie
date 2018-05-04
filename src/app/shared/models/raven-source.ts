@@ -9,6 +9,7 @@
 
 import {
   MpsServerSourceGraphable,
+  RavenFileMetadata,
   RavenSourceAction,
 } from './index';
 
@@ -20,6 +21,7 @@ export interface RavenSource {
   draggable: boolean;
   expandable: boolean;
   expanded: boolean;
+  fileMetadata: RavenFileMetadata;
   icon: string;
   id: string;
   isServer: boolean;
@@ -30,7 +32,6 @@ export interface RavenSource {
   openable: boolean;
   opened: boolean;
   parentId: string;
-  permissions: string;
   pinnable: boolean;
   pinned: boolean;
   selectable: boolean;

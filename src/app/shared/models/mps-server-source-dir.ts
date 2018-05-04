@@ -7,11 +7,18 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import {
+  BaseType,
+  StringTMap,
+ } from './index';
+
 export interface MpsServerSourceDir {
   __db_type: string;
   __kind: string;
   contents_url: string;
   created: string;
+  createdBy: string;
+  customMeta: StringTMap<BaseType>[];
   label: string;
   name: string;
   modified: string;

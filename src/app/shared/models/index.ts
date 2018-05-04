@@ -35,6 +35,7 @@ export * from './raven-default-band-settings';
 export * from './raven-divider-band';
 export * from './raven-epoch';
 export * from './raven-file';
+export * from './raven-file-metadata';
 export * from './raven-pin';
 export * from './raven-point';
 export * from './raven-resource-band';

@@ -66,6 +66,7 @@ export class SourceExplorerComponent implements OnDestroy {
 
   // Source Explorer state.
   pins: RavenPin[];
+  selectedSourceId: string;
   tree: StringTMap<RavenSource>;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
@@ -88,6 +89,12 @@ export class SourceExplorerComponent implements OnDestroy {
       takeUntil(this.ngUnsubscribe),
     ).subscribe(pins => {
       this.pins = pins;
+      this.markForCheck();
+    });
+    this.store.select(fromSourceExplorer.getSelectedSourceId).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(selectedSourceId => {
+      this.selectedSourceId = selectedSourceId;
       this.markForCheck();
     });
     this.store.select(fromSourceExplorer.getTreeBySourceId).pipe(

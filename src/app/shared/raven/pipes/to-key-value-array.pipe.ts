@@ -7,13 +7,22 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Pipe, PipeTransform } from '@angular/core';
+import {
+  Pipe,
+  PipeTransform,
+} from '@angular/core';
+
+import {
+  StringTMap,
+} from './../../models';
 
 @Pipe({
-  name: 'hasKeys',
+  name: 'toKeyValueArray',
 })
-export class HasKeysPipe implements PipeTransform {
-  transform(value: any, args?: any): boolean {
-    return Object.keys(value).length > 0;
+export class ToKeyValueArrayPipe implements PipeTransform {
+  transform(obj: StringTMap<any>, key?: string, value?: string): Array<StringTMap<any>> {
+    return Object.getOwnPropertyNames(obj).map(k =>
+      ({ [key ? key : 'key']: k, [value ? value : 'value']: obj[k] }),
+    );
   }
 }

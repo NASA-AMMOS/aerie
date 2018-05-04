@@ -1,4 +1,7 @@
 {
+  "extends": [
+    "tslint-eslint-rules"
+  ],
   "rulesDirectory": [
     "node_modules/codelyzer"
   ],
@@ -75,6 +78,10 @@
     "no-unused-expression": true,
     "no-use-before-declare": true,
     "no-var-keyword": true,
+    "object-curly-spacing": [
+      true,
+      "always"
+    ],
     "object-literal-sort-keys": true,
     "one-line": [
       true,
@@ -115,10 +122,13 @@
       true,
       "check-branch",
       "check-decl",
+      "check-module",
       "check-operator",
+      "check-preblock",
+      "check-rest-spread",
       "check-separator",
       "check-type",
-      "check-module"
+      "check-type-operator"
     ],
     "directive-selector": [
       true,

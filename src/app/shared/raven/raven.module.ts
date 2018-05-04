@@ -18,8 +18,10 @@ import {
   RavenActivityPointComponent,
   RavenBandsComponent,
   RavenConfirmDialogComponent,
+  RavenCustomMetadataComponent,
   RavenEpochsComponent,
   RavenFileImportDialogComponent,
+  RavenFileMetadataComponent,
   RavenLayoutApplyDialogComponent,
   RavenResourcePointComponent,
   RavenSettingsBandsComponent,
@@ -31,21 +33,23 @@ import {
 
 import {
   DhmsPipe,
-  HasKeysPipe,
   KeyByPipe,
   TimestampPipe,
+  ToKeyValueArrayPipe,
 } from './pipes';
 
 export const DECLARATIONS = [
   DhmsPipe,
-  HasKeysPipe,
   KeyByPipe,
   TimestampPipe,
+  ToKeyValueArrayPipe,
   RavenActivityPointComponent,
   RavenBandsComponent,
   RavenConfirmDialogComponent,
+  RavenCustomMetadataComponent,
   RavenEpochsComponent,
   RavenFileImportDialogComponent,
+  RavenFileMetadataComponent,
   RavenLayoutApplyDialogComponent,
   RavenResourcePointComponent,
   RavenSettingsBandsComponent,

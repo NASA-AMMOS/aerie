@@ -13,6 +13,8 @@ import {
   getParentSourceIds,
   getSourceIds,
   getSourceType,
+  toRavenCustomMetadata,
+  toRavenFileMetadata,
   updateSourceId,
 } from './source';
 
@@ -111,6 +113,102 @@ describe('source.ts', () => {
 
     it(`should return empty string for an unknown source type`, () => {
       expect(getSourceType('hello, world!')).toEqual('');
+    });
+  });
+
+  describe('toRavenCustomMetadata', () => {
+    it(`should convert to RavenCustomMetadata`, () => {
+      expect(toRavenCustomMetadata([
+        {
+          Key: 'release',
+          Value: 'A',
+        },
+        {
+          Key: 'version',
+          Value: 'seq 34.7',
+        },
+      ])).toEqual({
+        release: 'A',
+        version: 'seq 34.7',
+      });
+    });
+  });
+
+  describe('toRavenFileMetadata', () => {
+    it(`should convert to folder RavenFileMetadata`, () => {
+      expect(toRavenFileMetadata({
+        __db_type: '',
+        __kind: 'fs_dir',
+        __kind_sub: '',
+        contents_url: '',
+        created: '2017-10-05 15:26:58-0700',
+        createdBy: 'userA',
+        customMeta: [
+          {
+            Key: 'release',
+            Value: 'A',
+          },
+          {
+            Key: 'version',
+            Value: 'seq 34.7',
+          },
+        ],
+        file_data_url: '',
+        hasCollectionType: '',
+        importJobStatus: '',
+        label: '',
+        modified: '2017-10-05 15:26:58-0700',
+        name: '',
+        permissions: 'rw-rw-r-- all us',
+      })).toEqual({
+        createdBy: 'userA',
+        createdOn: '2017-10-05 15:26:58-0700',
+        customMetadata: {
+          release: 'A',
+          version: 'seq 34.7',
+        },
+        fileType: 'folder',
+        lastModified: '2017-10-05 15:26:58-0700',
+        permissions: 'rw-rw-r--',
+      });
+    });
+
+    it(`should convert to generic csv RavenFileMetadata`, () => {
+      expect(toRavenFileMetadata({
+        __db_type: '',
+        __kind: 'fs_file',
+        __kind_sub: 'file_maros',
+        contents_url: '',
+        created: '2017-10-05 15:26:58-0700',
+        createdBy: 'userB',
+        customMeta: [
+          {
+            Key: 'release',
+            Value: 'B',
+          },
+          {
+            Key: 'version',
+            Value: 'seq 34.8',
+          },
+        ],
+        file_data_url: '',
+        hasCollectionType: '',
+        importJobStatus: '',
+        label: '',
+        modified: '2017-10-05 15:26:58-0700',
+        name: '',
+        permissions: 'rw-rw-r-- all us',
+      })).toEqual({
+        createdBy: 'userB',
+        createdOn: '2017-10-05 15:26:58-0700',
+        customMetadata: {
+          release: 'B',
+          version: 'seq 34.8',
+        },
+        fileType: 'Generic CSV',
+        lastModified: '2017-10-05 15:26:58-0700',
+        permissions: 'rw-rw-r--',
+      });
     });
   });
 

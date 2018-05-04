@@ -7,21 +7,21 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { HasKeysPipe } from './has-keys.pipe';
+import {
+  Component,
+  Input,
+} from '@angular/core';
 
-describe('HasKeysPipe', () => {
-  it('create an instance', () => {
-    const pipe = new HasKeysPipe();
-    expect(pipe).toBeTruthy();
-  });
+import {
+  RavenFileMetadata,
+} from './../../../models';
 
-  it('should return true', () => {
-    const pipe = new HasKeysPipe();
-    expect(pipe.transform({ a: 1, b: 2 })).toEqual(true);
-  });
-
-  it('should return false', () => {
-    const pipe = new HasKeysPipe();
-    expect(pipe.transform({})).toEqual(false);
-  });
-});
+@Component({
+  selector: 'raven-file-metadata',
+  styleUrls: ['./raven-file-metadata.component.css'],
+  templateUrl: './raven-file-metadata.component.html',
+})
+export class RavenFileMetadataComponent {
+  @Input() fileMetadata: RavenFileMetadata;
+  @Input() name: string;
+}

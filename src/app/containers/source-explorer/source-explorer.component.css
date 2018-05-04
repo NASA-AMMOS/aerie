@@ -1,7 +1,17 @@
 :host {
   display: block;
+  height: 100%;
 }
 
 .tab {
   padding: 15px 10px;
+}
+
+mat-drawer-container {
+  background-color: transparent;
+  height: 100%;
+}
+
+raven-file-metadata {
+  padding: 0.5em;
 }
