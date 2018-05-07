@@ -1,5 +1,9 @@
 pipeline {
 
+	options {
+		disableConcurrentBuilds()
+	}
+
 	agent {
 		label 'coronado || Pismo || San-clemente || Sugarloaf'
 	}
@@ -31,7 +35,12 @@ pipeline {
 						# load nvm shell commands
 						[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 						# install/use proper node version
-						nvm install v8.9.4
+						nvm install v9.11.1
+						# update to npm 5.8.0 to take advantage of npm ci
+						npm_version=`npm -version`
+						if [[ $npm_version != '5.8.0' ]]; then
+							npm install -g npm@5.8.0
+						fi
 
 						echo -e "\ncurrent environment variables:\n"
 						env | sort
