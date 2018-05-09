@@ -30,11 +30,11 @@ import {
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  selector: 'falcon-composite-band',
-  styleUrls: ['./falcon-composite-band.component.css'],
-  templateUrl: './falcon-composite-band.component.html',
+  selector: 'raven-composite-band',
+  styleUrls: ['./raven-composite-band.component.css'],
+  templateUrl: './raven-composite-band.component.html',
 })
-export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, OnInit {
+export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, OnInit {
   @Input() height: number;
   @Input() heightPadding: number;
   @Input() id: string;
@@ -310,7 +310,7 @@ export class FalconCompositeBandComponent implements AfterViewInit, OnChanges, O
   }
 
   /**
-   * Event. Called when a (non-resource) sub-band emits intervals.
+   * Event. Called when a sub-band emits intervals.
    */
   onUpdateIntervals(update: any) {
     const { subBandId, intervals, intervalsById } = update;

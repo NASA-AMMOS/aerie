@@ -133,13 +133,13 @@
     "directive-selector": [
       true,
       "attribute",
-      ["app", "falcon", "raven"],
+      ["app", "raven"],
       "camelCase"
     ],
     "component-selector": [
       true,
       "element",
-      ["app", "falcon", "raven"],
+      ["app", "raven"],
       "kebab-case"
     ],
     "trailing-comma": [

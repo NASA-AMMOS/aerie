@@ -7,15 +7,16 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { keyBy } from 'lodash';
+import { RavenKeyByPipe } from './raven-key-by.pipe';
 
-import { Pipe, PipeTransform } from '@angular/core';
+describe('RavenKeyByPipe', () => {
+  it('create an instance', () => {
+    const pipe = new RavenKeyByPipe();
+    expect(pipe).toBeTruthy();
+  });
 
-@Pipe({
-  name: 'keyBy',
-})
-export class KeyByPipe implements PipeTransform {
-  transform(value: any, args?: any): any {
-    return keyBy(value, args);
-  }
-}
+  it('should properly return an object keyed by the arg', () => {
+    const pipe = new RavenKeyByPipe();
+    expect(pipe.transform([{ id: '0', val: 0 }, { id: '1', val: 1 }], 'id')).toEqual({ '0': { id: '0', val: 0 }, '1': { id: '1', val: 1 } });
+  });
+});

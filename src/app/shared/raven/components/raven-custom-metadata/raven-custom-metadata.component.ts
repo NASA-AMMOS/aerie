@@ -15,7 +15,7 @@ import {
 } from '@angular/core';
 
 import {
-  ToKeyValueArrayPipe,
+  RavenToKeyValueArrayPipe,
 } from './../../pipes';
 
 import {
@@ -33,7 +33,7 @@ export class RavenCustomMetadataComponent implements OnChanges {
   metadataObjects: any[];
   metadataValues: any[];
 
-  private toKeyValueArray = new ToKeyValueArrayPipe().transform;
+  private toKeyValueArray = new RavenToKeyValueArrayPipe().transform;
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.customMetadata) {

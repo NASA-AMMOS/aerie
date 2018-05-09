@@ -28,7 +28,6 @@ import { metaReducers, reducers } from './store';
 
 import { environment } from './../environments/environment';
 
-import { FalconModule } from './shared/falcon';
 import { MaterialModule } from './shared/material';
 import { RavenModule } from './shared/raven';
 
@@ -66,7 +65,6 @@ export const EFFECTS = [
 
 export const MODULES = [
   CommonModule,
-  FalconModule,
   BrowserModule,
   BrowserAnimationsModule,
   HttpClientModule,

@@ -7,10 +7,17 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './falcon-activity-band/falcon-activity-band.component';
-export * from './falcon-composite-band/falcon-composite-band.component';
-export * from './falcon-divider-band/falcon-divider-band.component';
-export * from './falcon-resource-band/falcon-resource-band.component';
-export * from './falcon-state-band/falcon-state-band.component';
-export * from './falcon-time-band/falcon-time-band.component';
-export * from './falcon-time-scroll-bar/falcon-time-scroll-bar.component';
+import { RavenDhmsPipe } from './raven-dhms.pipe';
+
+describe('RavenDhmsPipe', () => {
+  it('create an instance', () => {
+    const pipe = new RavenDhmsPipe();
+    expect(pipe).toBeTruthy();
+  });
+
+  it('should properly convert a duration to dhms format', () => {
+    const pipe = new RavenDhmsPipe();
+    expect(pipe.transform(216)).toBe('3m36s0ms');
+    expect(pipe.transform(528)).toBe('8m48s0ms');
+  });
+});

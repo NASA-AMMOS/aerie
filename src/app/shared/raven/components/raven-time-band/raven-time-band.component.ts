@@ -27,19 +27,21 @@ import {
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  selector: 'falcon-time-scroll-bar',
-  styleUrls: ['./falcon-time-scroll-bar.component.css'],
-  templateUrl: './falcon-time-scroll-bar.component.html',
+  selector: 'raven-time-band',
+  styleUrls: ['./raven-time-band.component.css'],
+  templateUrl: './raven-time-band.component.html',
 })
-export class FalconTimeScrollBarComponent implements AfterViewInit, OnChanges, OnInit {
+export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit {
   @Input() labelWidth: number;
   @Input() maxTimeRange: RavenTimeRange;
+  @Input() showTooltip: boolean;
   @Input() viewTimeRange: RavenTimeRange;
 
   @Output() updateViewTimeRange: EventEmitter<RavenTimeRange> = new EventEmitter<RavenTimeRange>();
 
   ctlTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
-  ctlTimeScrollBar: any;
+  ctlTimeBand: any;
+  ctlTooltip = new (window as any).Tooltip({});
   ctlViewTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
 
   constructor(public elementRef: ElementRef) {}
@@ -92,20 +94,24 @@ export class FalconTimeScrollBarComponent implements AfterViewInit, OnChanges, O
   }
 
   ngOnInit() {
-    this.ctlTimeScrollBar = new (window as any).TimeScrollBar({
+    this.ctlTimeBand = new (window as any).TimeBand({
       font: 'normal 9px Verdana',
-      height: 15,
-      label: '',
+      height: 37,
+      label: 'UTC',
+      minorLabels: [],
+      onHideTooltip: this.onHideTooltip.bind(this),
+      onShowTooltip: this.onShowTooltip.bind(this),
       onUpdateView: this.onUpdateView.bind(this),
+      scrollDelta: 21600,
       timeAxis: this.ctlTimeAxis,
-      updateOnDrag: false,
       viewTimeAxis: this.ctlViewTimeAxis,
+      zoomDelta: 21600,
     });
 
     this.ctlTimeAxis.updateTimes(this.maxTimeRange.start, this.maxTimeRange.end);
     this.ctlViewTimeAxis.updateTimes(this.viewTimeRange.start, this.viewTimeRange.end);
 
-    this.elementRef.nativeElement.appendChild(this.ctlTimeScrollBar.div);
+    this.elementRef.nativeElement.appendChild(this.ctlTimeBand.div);
   }
 
   /**
@@ -114,6 +120,22 @@ export class FalconTimeScrollBarComponent implements AfterViewInit, OnChanges, O
   @HostListener('window:resize', ['$event'])
   onResize(e: Event): void {
     this.resize();
+  }
+
+  /**
+   * CTL Event. Called when tooltip is hidden.
+   */
+  onHideTooltip() {
+    this.ctlTooltip.hide();
+  }
+
+  /**
+   * CTL Event. Called when tooltip is shown.
+   */
+  onShowTooltip(e: MouseEvent, text: string) {
+    if (this.showTooltip) {
+      this.ctlTooltip.show(text, e.clientX, e.clientY);
+    }
   }
 
   /**
@@ -141,15 +163,15 @@ export class FalconTimeScrollBarComponent implements AfterViewInit, OnChanges, O
   }
 
   /**
-   * Helper. Call when a time-scroll-bar should be redrawn.
+   * Helper. Call when a time-band should be redrawn.
    */
   redraw() {
-    this.ctlTimeScrollBar.revalidate();
-    this.ctlTimeScrollBar.repaint();
+    this.ctlTimeBand.revalidate();
+    this.ctlTimeBand.repaint();
   }
 
   /**
-   * Helper. Call when a time-scroll-bar should be resized.
+   * Helper. Call when a time-band should be resized.
    * Note that this triggers a redraw.
    */
   resize() {

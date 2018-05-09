@@ -20,53 +20,70 @@ import {
 } from '@angular/core';
 
 import {
-  RavenStatePoint,
+  RavenResourcePoint,
 } from './../../../models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  selector: 'falcon-state-band',
-  styleUrls: ['./falcon-state-band.component.css'],
-  templateUrl: './falcon-state-band.component.html',
+  selector: 'raven-resource-band',
+  styleUrls: ['./raven-resource-band.component.css'],
+  templateUrl: './raven-resource-band.component.html',
 })
-export class FalconStateBandComponent implements OnChanges, OnDestroy, OnInit {
-  @Input() alignLabel: number;
-  @Input() baselineLabel: number;
-  @Input() borderWidth: number;
+export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit {
+  @Input() autoTickValues: boolean;
   @Input() ctlTimeAxis: any;
   @Input() ctlViewTimeAxis: any;
+  @Input() color: number[];
+  @Input() fill: boolean;
+  @Input() fillColor: number[];
+  @Input() font: string;
+  @Input() icon: string;
+  @Input() labelFont: string;
+  @Input() labelFontSize: number;
   @Input() height: number;
   @Input() heightPadding: number;
   @Input() id: string;
+  @Input() interpolation: string;
   @Input() label: string;
-  @Input() labelColor: number[];
-  @Input() labelFont: string;
-  @Input() labelFontSize: number;
   @Input() minorLabels: string[];
   @Input() name: string;
-  @Input() points: RavenStatePoint[];
+  @Input() points: RavenResourcePoint[];
+  @Input() rescale: boolean;
+  @Input() showIcon: boolean;
   @Input() showTooltip: boolean;
   @Input() type: string;
 
   @Output() addSubBand: EventEmitter<any> = new EventEmitter<any>();
   @Output() removeSubBand: EventEmitter<string> = new EventEmitter<string>();
+  @Output() updateInterpolation: EventEmitter<any> = new EventEmitter<any>();
   @Output() updateIntervals: EventEmitter<any> = new EventEmitter<any>();
   @Output() updateSubBand: EventEmitter<any> = new EventEmitter<any>();
 
   ngOnChanges(changes: SimpleChanges) {
-    // Align Label.
-    if (changes.alignLabel && !changes.alignLabel.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'alignLabel', value: this.alignLabel });
+    // Auto Tick Values.
+    if (changes.autoTickValues && !changes.autoTickValues.firstChange) {
+      this.updateSubBand.emit({ subBandId: this.id, prop: 'autoTickValues', value: this.autoTickValues });
     }
 
-    // Baseline Label.
-    if (changes.baselineLabel && !changes.baselineLabel.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'baselineLabel', value: this.baselineLabel });
+    // Color.
+    // TODO.
+
+    // Fill.
+    if (changes.fill && !changes.fill.firstChange) {
+      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'fill', value: this.fill });
     }
 
-    // Border Width.
-    if (changes.borderWidth && !changes.borderWidth.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'borderWidth', value: this.borderWidth });
+    // Fill Color.
+    if (changes.fillColor && !changes.fillColor.firstChange) {
+      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'fillColor', value: this.fillColor });
+    }
+
+    // Font.
+    // TODO.
+
+    // Interpolation.
+    if (changes.interpolation && !changes.interpolation.firstChange) {
+      this.updateInterpolation.emit({ subBandId: this.id, interpolation: this.interpolation });
     }
 
     // Label.
@@ -74,34 +91,44 @@ export class FalconStateBandComponent implements OnChanges, OnDestroy, OnInit {
       this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.label });
     }
 
-    // Label Color.
-    if (changes.labelColor && !changes.labelColor.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'labelColor', value: this.labelColor });
-    }
-
     // Points.
     if (changes.points && !changes.points.firstChange) {
       this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals() });
     }
+
+    // Show Icon.
+    if (changes.showIcon && !changes.showIcon.firstChange) {
+      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'showIcon', value: this.showIcon });
+    }
   }
 
   ngOnInit() {
-    // Create State Band.
-    const ctlStateBand = new (window as any).StateBand({
-      alignLabel: this.alignLabel,
-      autoColor: true,
-      baselineLabel: this.baselineLabel,
-      borderWidth: this.borderWidth,
+    // Create Resource Band.
+    const ctlResourceBand = new (window as any).ResourceBand({
+      autoScale: (window as any).ResourceBand.VISIBLE_INTERVALS,
+      autoTickValues: this.autoTickValues,
       height: this.height,
       heightPadding: this.heightPadding,
+      hideTicks: false,
+      icon: this.icon,
       id: this.id,
+      interpolation: this.interpolation,
       intervals: [],
       label: this.label,
-      labelColor: this.labelColor,
+      labelColor: this.color,
       labelFont: this.labelFont,
       labelFontSize: this.labelFontSize,
       minorLabels: this.minorLabels,
       name: this.name,
+      painter: new (window as any).ResourcePainter({
+        color: this.color,
+        fill: this.fill,
+        fillColor: this.fillColor,
+        icon: this.icon,
+        showIcon: this.showIcon,
+      }),
+      rescale: this.rescale,
+      tickValues: [],
       timeAxis: this.ctlTimeAxis,
       viewTimeAxis: this.ctlViewTimeAxis,
     });
@@ -109,13 +136,13 @@ export class FalconStateBandComponent implements OnChanges, OnDestroy, OnInit {
     // Create Intervals.
     const { intervals, intervalsById } = this.getIntervals();
 
-    ctlStateBand.setIntervals(intervals); // This resets interpolation in CTL so we must re-set it on the next line.
-    ctlStateBand.intervalsById = intervalsById;
-    ctlStateBand.type = 'state';
+    ctlResourceBand.setIntervals(intervals);
+    ctlResourceBand.intervalsById = intervalsById;
+    ctlResourceBand.type = 'resource';
 
-    // Send the newly created state band to the parent composite band so it can be added.
+    // Send the newly created resource band to the parent composite band so it can be added.
     // All subsequent updates should be made to the parent composite sub-band via events.
-    this.addSubBand.emit(ctlStateBand);
+    this.addSubBand.emit(ctlResourceBand);
   }
 
   ngOnDestroy() {
@@ -123,7 +150,7 @@ export class FalconStateBandComponent implements OnChanges, OnDestroy, OnInit {
   }
 
   /**
-   * Helper. Creates CTL intervals for a state band.
+   * Helper. Creates CTL intervals for a resource band.
    */
   getIntervals() {
     const intervals = [];
@@ -133,11 +160,12 @@ export class FalconStateBandComponent implements OnChanges, OnDestroy, OnInit {
       const point = this.points[i];
 
       const interval = new (window as any).DrawableInterval({
-        end: point.end,
+        color: this.color,
+        end: point.start,
         endValue: point.value,
+        icon: this.icon,
         id: point.id,
-        label: point.value,
-        opacity: 0.5,
+        opacity: 0.9,
         properties: {
           Value: point.value,
         },

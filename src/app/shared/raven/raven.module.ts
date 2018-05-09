@@ -11,52 +11,68 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SortablejsModule } from 'angular-sortablejs';
-import { FalconModule } from './../falcon';
 import { MaterialModule } from './../material';
 
 import {
+  RavenActivityBandComponent,
   RavenActivityPointComponent,
   RavenBandsComponent,
+  RavenCompositeBandComponent,
   RavenConfirmDialogComponent,
   RavenCustomMetadataComponent,
+  RavenDividerBandComponent,
   RavenEpochsComponent,
   RavenFileImportDialogComponent,
   RavenFileMetadataComponent,
   RavenLayoutApplyDialogComponent,
+  RavenResourceBandComponent,
   RavenResourcePointComponent,
   RavenSettingsBandsComponent,
   RavenSettingsGlobalComponent,
+  RavenStateBandComponent,
   RavenStatePointComponent,
   RavenStateSaveDialogComponent,
+  RavenTimeBandComponent,
+  RavenTimeScrollBarComponent,
   RavenTreeComponent,
 } from './components';
 
 import {
-  DhmsPipe,
-  KeyByPipe,
-  TimestampPipe,
-  ToKeyValueArrayPipe,
+  RavenDhmsPipe,
+  RavenKeyByPipe,
+  RavenTimestampPipe,
+  RavenToKeyValueArrayPipe,
 } from './pipes';
 
 export const DECLARATIONS = [
-  DhmsPipe,
-  KeyByPipe,
-  TimestampPipe,
-  ToKeyValueArrayPipe,
+  // Components.
+  RavenActivityBandComponent,
   RavenActivityPointComponent,
   RavenBandsComponent,
+  RavenCompositeBandComponent,
   RavenConfirmDialogComponent,
   RavenCustomMetadataComponent,
+  RavenDividerBandComponent,
   RavenEpochsComponent,
   RavenFileImportDialogComponent,
   RavenFileMetadataComponent,
   RavenLayoutApplyDialogComponent,
+  RavenResourceBandComponent,
   RavenResourcePointComponent,
   RavenSettingsBandsComponent,
   RavenSettingsGlobalComponent,
+  RavenStateBandComponent,
   RavenStatePointComponent,
   RavenStateSaveDialogComponent,
+  RavenTimeBandComponent,
+  RavenTimeScrollBarComponent,
   RavenTreeComponent,
+
+  // Pipes.
+  RavenDhmsPipe,
+  RavenKeyByPipe,
+  RavenTimestampPipe,
+  RavenToKeyValueArrayPipe,
 ];
 
 export const ENTRY_COMPONENTS = [
@@ -68,7 +84,6 @@ export const ENTRY_COMPONENTS = [
 
 export const MODULES = [
   CommonModule,
-  FalconModule,
   FormsModule,
   MaterialModule,
   ReactiveFormsModule,

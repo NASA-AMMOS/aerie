@@ -21,11 +21,11 @@ import {
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  selector: 'falcon-divider-band',
-  styleUrls: ['./falcon-divider-band.component.css'],
-  templateUrl: './falcon-divider-band.component.html',
+  selector: 'raven-divider-band',
+  styleUrls: ['./raven-divider-band.component.css'],
+  templateUrl: './raven-divider-band.component.html',
 })
-export class FalconDividerBandComponent implements OnChanges, OnDestroy, OnInit {
+export class RavenDividerBandComponent implements OnChanges, OnDestroy, OnInit {
   @Input() borderWidth: number;
   @Input() color: number[];
   @Input() ctlTimeAxis: any;

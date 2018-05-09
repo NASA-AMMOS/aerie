@@ -8,40 +8,21 @@
  */
 
 import {
-  NgModule,
+  Pipe,
+  PipeTransform,
 } from '@angular/core';
 
 import {
-  CommonModule,
-} from '@angular/common';
+  StringTMap,
+} from './../../../models';
 
-import {
-  FalconActivityBandComponent,
-  FalconCompositeBandComponent,
-  FalconDividerBandComponent,
-  FalconResourceBandComponent,
-  FalconStateBandComponent,
-  FalconTimeBandComponent,
-  FalconTimeScrollBarComponent,
-} from './components';
-
-export const COMPONENTS = [
-  FalconActivityBandComponent,
-  FalconCompositeBandComponent,
-  FalconDividerBandComponent,
-  FalconResourceBandComponent,
-  FalconStateBandComponent,
-  FalconTimeBandComponent,
-  FalconTimeScrollBarComponent,
-];
-
-export const MODULES = [
-  CommonModule,
-];
-
-@NgModule({
-  declarations: COMPONENTS,
-  exports: COMPONENTS,
-  imports: MODULES,
+@Pipe({
+  name: 'toKeyValueArray',
 })
-export class FalconModule {}
+export class RavenToKeyValueArrayPipe implements PipeTransform {
+  transform(obj: StringTMap<any>, key?: string, value?: string): Array<StringTMap<any>> {
+    return Object.getOwnPropertyNames(obj).map(k =>
+      ({ [key ? key : 'key']: k, [value ? value : 'value']: obj[k] }),
+    );
+  }
+}

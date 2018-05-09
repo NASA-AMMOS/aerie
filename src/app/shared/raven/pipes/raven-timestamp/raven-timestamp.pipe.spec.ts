@@ -7,22 +7,17 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Pipe,
-  PipeTransform,
-} from '@angular/core';
+import { RavenTimestampPipe } from './raven-timestamp.pipe';
 
-import {
-  StringTMap,
-} from './../../models';
+describe('RavenTimestampPipe', () => {
+  it('create an instance', () => {
+    const pipe = new RavenTimestampPipe();
+    expect(pipe).toBeTruthy();
+  });
 
-@Pipe({
-  name: 'toKeyValueArray',
-})
-export class ToKeyValueArrayPipe implements PipeTransform {
-  transform(obj: StringTMap<any>, key?: string, value?: string): Array<StringTMap<any>> {
-    return Object.getOwnPropertyNames(obj).map(k =>
-      ({ [key ? key : 'key']: k, [value ? value : 'value']: obj[k] }),
-    );
-  }
-}
+  it('should return a correct timestamp for the given time', () => {
+    const pipe = new RavenTimestampPipe();
+    expect(pipe.transform(1667498617)).toBe('2022-307T18:03:37.000');
+    expect(pipe.transform(1678662802.685)).toBe('2023-071T23:13:22.685');
+  });
+});

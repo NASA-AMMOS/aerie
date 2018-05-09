@@ -20,18 +20,16 @@ import {
 } from '@angular/core';
 
 import {
-  RavenActivityPoint,
+  RavenStatePoint,
 } from './../../../models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  selector: 'falcon-activity-band',
-  styleUrls: ['./falcon-activity-band.component.css'],
-  templateUrl: './falcon-activity-band.component.html',
+  selector: 'raven-state-band',
+  styleUrls: ['./raven-state-band.component.css'],
+  templateUrl: './raven-state-band.component.html',
 })
-export class FalconActivityBandComponent implements OnChanges, OnDestroy, OnInit {
-  @Input() activityHeight: number;
-  @Input() activityStyle: number;
+export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
   @Input() alignLabel: number;
   @Input() baselineLabel: number;
   @Input() borderWidth: number;
@@ -39,17 +37,14 @@ export class FalconActivityBandComponent implements OnChanges, OnDestroy, OnInit
   @Input() ctlViewTimeAxis: any;
   @Input() height: number;
   @Input() heightPadding: number;
-  @Input() icon: string;
   @Input() id: string;
   @Input() label: string;
   @Input() labelColor: number[];
   @Input() labelFont: string;
   @Input() labelFontSize: number;
-  @Input() layout: number;
   @Input() minorLabels: string[];
   @Input() name: string;
-  @Input() points: RavenActivityPoint[];
-  @Input() showLabel: boolean;
+  @Input() points: RavenStatePoint[];
   @Input() showTooltip: boolean;
   @Input() type: string;
 
@@ -59,11 +54,6 @@ export class FalconActivityBandComponent implements OnChanges, OnDestroy, OnInit
   @Output() updateSubBand: EventEmitter<any> = new EventEmitter<any>();
 
   ngOnChanges(changes: SimpleChanges) {
-    // Activity Style.
-    if (changes.activityStyle && !changes.activityStyle.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'style', value: this.activityStyle });
-    }
-
     // Align Label.
     if (changes.alignLabel && !changes.alignLabel.firstChange) {
       this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'alignLabel', value: this.alignLabel });
@@ -84,11 +74,6 @@ export class FalconActivityBandComponent implements OnChanges, OnDestroy, OnInit
       this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.label });
     }
 
-    // Layout.
-    if (changes.layout && !changes.layout.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'layout', value: this.layout });
-    }
-
     // Label Color.
     if (changes.labelColor && !changes.labelColor.firstChange) {
       this.updateSubBand.emit({ subBandId: this.id, prop: 'labelColor', value: this.labelColor });
@@ -98,50 +83,39 @@ export class FalconActivityBandComponent implements OnChanges, OnDestroy, OnInit
     if (changes.points && !changes.points.firstChange) {
       this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals() });
     }
-
-    // Show Label.
-    if (changes.showLabel && !changes.showLabel.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'showLabel', value: this.showLabel });
-    }
   }
 
   ngOnInit() {
-    // Create Activity Band.
-    const ctlActivityBand = new (window as any).ActivityBand({
-      activityHeight: this.activityHeight,
+    // Create State Band.
+    const ctlStateBand = new (window as any).StateBand({
       alignLabel: this.alignLabel,
-      autoFit: this.layout === 0 ? 1 : null,
+      autoColor: true,
       baselineLabel: this.baselineLabel,
       borderWidth: this.borderWidth,
       height: this.height,
       heightPadding: this.heightPadding,
-      icon: this.icon,
       id: this.id,
       intervals: [],
       label: this.label,
       labelColor: this.labelColor,
       labelFont: this.labelFont,
       labelFontSize: this.labelFontSize,
-      layout: this.layout,
       minorLabels: this.minorLabels,
       name: this.name,
-      showLabel: this.showLabel,
-      style: this.activityStyle,
       timeAxis: this.ctlTimeAxis,
-      trimLabel: false,
       viewTimeAxis: this.ctlViewTimeAxis,
     });
 
     // Create Intervals.
     const { intervals, intervalsById } = this.getIntervals();
 
-    ctlActivityBand.setIntervals(intervals); // This resets interpolation in CTL so we must re-set it on the next line.
-    ctlActivityBand.intervalsById = intervalsById;
-    ctlActivityBand.type = 'activity';
+    ctlStateBand.setIntervals(intervals); // This resets interpolation in CTL so we must re-set it on the next line.
+    ctlStateBand.intervalsById = intervalsById;
+    ctlStateBand.type = 'state';
 
-    // Send the newly created activity band to the parent composite band so it can be added.
+    // Send the newly created state band to the parent composite band so it can be added.
     // All subsequent updates should be made to the parent composite sub-band via events.
-    this.addSubBand.emit(ctlActivityBand);
+    this.addSubBand.emit(ctlStateBand);
   }
 
   ngOnDestroy() {
@@ -149,7 +123,7 @@ export class FalconActivityBandComponent implements OnChanges, OnDestroy, OnInit
   }
 
   /**
-   * Helper. Creates CTL intervals for a activity band.
+   * Helper. Creates CTL intervals for a state band.
    */
   getIntervals() {
     const intervals = [];
@@ -159,14 +133,16 @@ export class FalconActivityBandComponent implements OnChanges, OnDestroy, OnInit
       const point = this.points[i];
 
       const interval = new (window as any).DrawableInterval({
-        color: point.color,
         end: point.end,
-        icon: this.icon,
+        endValue: point.value,
         id: point.id,
-        label: point.activityName,
+        label: point.value,
         opacity: 0.5,
-        properties: {},
+        properties: {
+          Value: point.value,
+        },
         start: point.start,
+        startValue: point.value,
       });
 
       // Set the sub-band ID and unique ID separately since they are not a DrawableInterval prop.

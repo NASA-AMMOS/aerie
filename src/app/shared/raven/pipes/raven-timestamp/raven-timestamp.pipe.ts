@@ -12,12 +12,12 @@ import {
   PipeTransform,
 } from '@angular/core';
 
-import { timestamp } from './../../../shared/util';
+import { timestamp } from './../../../../shared/util';
 
 @Pipe({
   name: 'timestamp',
 })
-export class TimestampPipe implements PipeTransform {
+export class RavenTimestampPipe implements PipeTransform {
   transform(value: number): string {
     return timestamp(value);
   }

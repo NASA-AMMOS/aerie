@@ -7,31 +7,31 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ToKeyValueArrayPipe } from './to-key-value-array.pipe';
+import { RavenToKeyValueArrayPipe } from './raven-to-key-value-array.pipe';
 
-describe('ToKeyValueArrayPipe', () => {
+describe('RavenToKeyValueArrayPipe', () => {
   it('create an instance', () => {
-    const pipe = new ToKeyValueArrayPipe();
+    const pipe = new RavenToKeyValueArrayPipe();
     expect(pipe).toBeTruthy();
   });
 
   it(`should return a 'key'/'value' array when passing no transform params`, () => {
-    const pipe = new ToKeyValueArrayPipe();
+    const pipe = new RavenToKeyValueArrayPipe();
     expect(pipe.transform({ a: 1 })).toEqual([{ key: 'a', value: 1 }]);
   });
 
   it(`should return a 'key'/'value' array when passing 'key' and 'y' as transform params`, () => {
-    const pipe = new ToKeyValueArrayPipe();
+    const pipe = new RavenToKeyValueArrayPipe();
     expect(pipe.transform({ a: 1 }, 'key', 'value')).toEqual([{ key: 'a', value: 1 }]);
   });
 
   it(`should return a 'x'/'y' array when passing 'x' and 'y' as transform params`, () => {
-    const pipe = new ToKeyValueArrayPipe();
+    const pipe = new RavenToKeyValueArrayPipe();
     expect(pipe.transform({ a: 1 }, 'x', 'y')).toEqual([{ x: 'a', y: 1 }]);
   });
 
   it(`should return 'key'/'value' array when passing an object with a nested object`, () => {
-    const pipe = new ToKeyValueArrayPipe();
+    const pipe = new RavenToKeyValueArrayPipe();
     const input = { mapping: { Events: { 'Tstart Assigned': 'Date', 'Tend Assigned': 'Date', 'Activity Name': 'event', 'Draw Type': 'triangle' } } };
 
     expect(pipe.transform(input)).toEqual([{

@@ -1,13 +1,13 @@
-<ng-container *ngFor="let subBand of subBands; index as j; trackBy: subBandsTrackByFn">
+<ng-container *ngFor="let subBand of subBands; index as i; trackBy: subBandsTrackByFn">
   <!-- Activity Band. -->
-  <falcon-activity-band
+  <raven-activity-band
     *ngIf="subBand.type === 'activity'"
     [activityHeight]="subBand.activityHeight"
     [activityStyle]="subBand.activityStyle"
     [alignLabel]="subBand.alignLabel"
     [baselineLabel]="subBand.baselineLabel"
     [borderWidth]="subBand.borderWidth"
-    [class]="'falcon-sub-band-' + i + '-' + j"
+    [class]="'raven-sub-band-' + i"
     [ctlTimeAxis]="ctlTimeAxis"
     [ctlViewTimeAxis]="ctlViewTimeAxis"
     [height]="subBand.height"
@@ -29,12 +29,12 @@
     (removeSubBand)="onRemoveSubBand($event)"
     (updateIntervals)="onUpdateIntervals($event)"
     (updateSubBand)="onUpdateSubBand($event)">
-  </falcon-activity-band>
+  </raven-activity-band>
 
   <!-- Divider Band. -->
-  <falcon-divider-band
+  <raven-divider-band
     *ngIf="subBand.type === 'divider'"
-    [class]="'falcon-sub-band-' + i + '-' + j"
+    [class]="'raven-sub-band-' + i"
     [color]="subBand.color"
     [ctlTimeAxis]="ctlTimeAxis"
     [ctlViewTimeAxis]="ctlViewTimeAxis"
@@ -48,13 +48,13 @@
     (addSubBand)="onAddSubBand($event)"
     (removeSubBand)="onRemoveSubBand($event)"
     (updateSubBand)="onUpdateSubBand($event)">
-  </falcon-divider-band>
+  </raven-divider-band>
 
   <!-- Resource Band. -->
-  <falcon-resource-band
+  <raven-resource-band
     *ngIf="subBand.type === 'resource'"
     [autoTickValues]="subBand.autoTickValues"
-    [class]="'falcon-sub-band-' + i + '-' + j"
+    [class]="'raven-sub-band-' + i"
     [color]="subBand.color"
     [ctlTimeAxis]="ctlTimeAxis"
     [ctlViewTimeAxis]="ctlViewTimeAxis"
@@ -81,15 +81,15 @@
     (updateInterpolation)="onUpdateInterpolation($event)"
     (updateIntervals)="onUpdateIntervals($event)"
     (updateSubBand)="onUpdateSubBand($event)">
-  </falcon-resource-band>
+  </raven-resource-band>
 
   <!-- State Band. -->
-  <falcon-state-band
+  <raven-state-band
     *ngIf="subBand.type === 'state'"
     [alignLabel]="subBand.alignLabel"
     [baselineLabel]="subBand.baselineLabel"
     [borderWidth]="subBand.borderWidth"
-    [class]="'falcon-sub-band-' + i + '-' + j"
+    [class]="'raven-sub-band-' + i"
     [ctlTimeAxis]="ctlTimeAxis"
     [ctlViewTimeAxis]="ctlViewTimeAxis"
     [height]="subBand.height"
@@ -108,5 +108,5 @@
     (removeSubBand)="onRemoveSubBand($event)"
     (updateIntervals)="onUpdateIntervals($event)"
     (updateSubBand)="onUpdateSubBand($event)">
-  </falcon-state-band>
+  </raven-state-band>
 </ng-container>

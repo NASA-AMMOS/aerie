@@ -7,17 +7,18 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { TimestampPipe } from './timestamp.pipe';
+import { keyBy } from 'lodash';
 
-describe('TimestampPipe', () => {
-  it('create an instance', () => {
-    const pipe = new TimestampPipe();
-    expect(pipe).toBeTruthy();
-  });
+import {
+  Pipe,
+  PipeTransform,
+} from '@angular/core';
 
-  it('should return a correct timestamp for the given time', () => {
-    const pipe = new TimestampPipe();
-    expect(pipe.transform(1667498617)).toBe('2022-307T18:03:37.000');
-    expect(pipe.transform(1678662802.685)).toBe('2023-071T23:13:22.685');
-  });
-});
+@Pipe({
+  name: 'keyBy',
+})
+export class RavenKeyByPipe implements PipeTransform {
+  transform(value: any, args?: any): any {
+    return keyBy(value, args);
+  }
+}
