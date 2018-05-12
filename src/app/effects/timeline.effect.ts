@@ -13,9 +13,11 @@ import { Injectable } from '@angular/core';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 
-import { Observable } from 'rxjs/Observable';
-import { concat } from 'rxjs/observable/concat';
-import { of } from 'rxjs/observable/of';
+import {
+  concat,
+  Observable,
+  of,
+} from 'rxjs';
 
 import {
   concatMap,

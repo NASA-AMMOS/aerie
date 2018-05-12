@@ -24,11 +24,11 @@ Run `npm run ng generate component component-name` to generate a new component. 
 
 ## Build
 
-Run `npm run build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `npm run build-prod` for a production build.
+Run `npm run build-prod` to build the project. The build artifacts will be stored in the `dist/` directory.
 
 ## Running unit tests
 
-Run `npm test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+Run `npm test` (or `npm t`) to execute the unit tests via [Karma](https://karma-runner.github.io).
 
 ## Running end-to-end tests
 

@@ -9,8 +9,3 @@ html {
   -ms-overflow-style: none;
   overflow: auto;
 }
-
-.mat-progress-spinner svg {
-  width: 30px !important;
-  height: 30px !important;
-}

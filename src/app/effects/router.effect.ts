@@ -14,7 +14,9 @@ import { Actions, Effect, ofType } from '@ngrx/effects';
 import { RouterNavigationAction } from '@ngrx/router-store';
 import { Action, Store } from '@ngrx/store';
 
-import { Observable } from 'rxjs/Observable';
+import {
+  Observable,
+} from 'rxjs';
 
 import {
   map,

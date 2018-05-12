@@ -9,16 +9,21 @@
 
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
-  OnDestroy,
 } from '@angular/core';
 
 import { Store } from '@ngrx/store';
 
-import { Observable } from 'rxjs/Observable';
-import { combineLatest } from 'rxjs/observable/combineLatest';
-import { takeUntil } from 'rxjs/operators';
-import { Subject } from 'rxjs/Subject';
+import {
+  combineLatest,
+  Observable,
+} from 'rxjs';
+
+import {
+  map,
+  tap,
+} from 'rxjs/operators';
 
 import * as fromSourceExplorer from './../../reducers/source-explorer';
 import * as fromTimeline from './../../reducers/timeline';
@@ -31,27 +36,32 @@ import * as layoutActions from './../../actions/layout';
   styleUrls: ['./app.component.css'],
   templateUrl: './app.component.html',
 })
-export class AppComponent implements OnDestroy {
+export class AppComponent {
   loading$: Observable<boolean>;
 
-  private ngUnsubscribe: Subject<{}> = new Subject();
-
   constructor(
+    private changeDetector: ChangeDetectorRef,
     private store: Store<fromSourceExplorer.SourceExplorerState>,
   ) {
     // Combine all fetch pending observables for use in progress bar.
     this.loading$ = combineLatest(
       this.store.select(fromSourceExplorer.getPending),
       this.store.select(fromTimeline.getPending),
-      (sourceExplorerPending, timelinePending) => sourceExplorerPending || timelinePending,
     ).pipe(
-      takeUntil(this.ngUnsubscribe),
+      map(loading => loading[0] || loading[1]),
+      tap(() => this.markForCheck()),
     );
   }
 
-  ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
+  /**
+   * Helper. Marks this component for change detection check,
+   * and then detects changes on the next tick.
+   *
+   * TODO: Find out how we can remove this.
+   */
+  markForCheck() {
+    this.changeDetector.markForCheck();
+    setTimeout(() => this.changeDetector.detectChanges());
   }
 
   toggleDetailsDrawer() {
