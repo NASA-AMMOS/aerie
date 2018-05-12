@@ -75,8 +75,8 @@
             "browserTarget": "raven2:build"
           },
           "configurations": {
-            "production": {
-              "browserTarget": "raven2:build:production"
+            "prod": {
+              "browserTarget": "raven2:build:prod"
             }
           }
         },
