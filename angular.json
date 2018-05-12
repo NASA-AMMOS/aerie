@@ -142,7 +142,7 @@
   "defaultProject": "raven2",
   "cli": {
     "warnings": {
-      "typescriptMismatch": false
+      "typescriptMismatch": true
     }
   }
 }
