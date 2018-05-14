@@ -27,8 +27,13 @@ import {
   takeUntil,
 } from 'rxjs/operators';
 
-import { WebSocketSubject } from 'rxjs/observable/dom/WebSocketSubject';
-import { Subject } from 'rxjs/Subject';
+import {
+  Subject,
+} from 'rxjs';
+
+import {
+  WebSocketSubject,
+} from 'rxjs/webSocket';
 
 import * as fromConfig from './../../reducers/config';
 import * as fromSourceExplorer from './../../reducers/source-explorer';

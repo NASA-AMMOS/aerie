@@ -13,12 +13,14 @@ import { Injectable } from '@angular/core';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 
-import { Observable } from 'rxjs/Observable';
-import { combineLatest } from 'rxjs/observable/combineLatest';
-import { concat } from 'rxjs/observable/concat';
-import { forkJoin } from 'rxjs/observable/forkJoin';
-import { merge } from 'rxjs/observable/merge';
-import { of } from 'rxjs/observable/of';
+import {
+  combineLatest,
+  concat,
+  forkJoin,
+  merge,
+  Observable,
+  of,
+} from 'rxjs';
 
 import {
   catchError,
@@ -394,8 +396,9 @@ export class SourceExplorerEffects {
     return [
       of(new sourceExplorerActions.NewSources('/', initialSources)),
       ...parentSourceIds.map((sourceId: string) =>
-        combineLatest(this.store$, state => state.sourceExplorer.treeBySourceId[sourceId]).pipe(
+        combineLatest(this.store$).pipe(
           take(1),
+          map((state: AppState[]) => state[0].sourceExplorer.treeBySourceId[sourceId]),
           concatMap(source =>
             concat(
               ...this.expand(source),
@@ -405,9 +408,10 @@ export class SourceExplorerEffects {
         ),
       ),
       ...sourceIds.map((sourceId: string) =>
-        combineLatest(this.store$, state => state).pipe(
+        combineLatest(this.store$).pipe(
           take(1),
-          concatMap(state =>
+          map((state: AppState[]) => state[0]),
+          concatMap((state: AppState) =>
             concat(
               this.open(
                 state.sourceExplorer.treeBySourceId,

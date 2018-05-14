@@ -9,9 +9,6 @@
 
 import { Injectable } from '@angular/core';
 
-import { takeUntil } from 'rxjs/operators';
-import { Subject } from 'rxjs/Subject';
-
 import {
   ActivatedRouteSnapshot,
   CanActivate,
@@ -20,14 +17,18 @@ import {
 
 import { select, Store } from '@ngrx/store';
 
-import { Observable } from 'rxjs/Observable';
-import { of } from 'rxjs/observable/of';
+import {
+  Observable,
+  of,
+  Subject,
+} from 'rxjs';
 
 import {
   catchError,
   filter,
   switchMap,
   take,
+  takeUntil,
   tap,
 } from 'rxjs/operators';
 

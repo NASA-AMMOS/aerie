@@ -18,8 +18,8 @@ import { MatTabChangeEvent } from '@angular/material';
 
 import { Store } from '@ngrx/store';
 
+import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { Subject } from 'rxjs/Subject';
 
 import * as fromConfig from './../../reducers/config';
 import * as fromEpochs from './../../reducers/epochs';
