@@ -33,7 +33,6 @@ testem.log
 
 # testing
 karma-test-results.xml
-/e2e/*.js
 /e2e/*.map
 /reports
 

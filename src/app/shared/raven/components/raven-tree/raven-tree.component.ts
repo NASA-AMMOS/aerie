@@ -16,6 +16,7 @@ import {
 } from '@angular/core';
 
 import {
+  RavenPin,
   RavenSource,
   RavenSourceActionEvent,
   StringTMap,
@@ -29,6 +30,7 @@ import {
 })
 export class RavenTreeComponent {
   @Input() id: string;
+  @Input() pins: RavenPin[];
   @Input() source: RavenSource;
   @Input() tree: StringTMap<RavenSource>;
 

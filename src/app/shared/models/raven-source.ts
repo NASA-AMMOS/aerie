@@ -37,5 +37,6 @@ export interface RavenSource {
   selectable: boolean;
   selected: boolean;
   subBandIds: string[];
+  subKind: string;
   url: string;
 }

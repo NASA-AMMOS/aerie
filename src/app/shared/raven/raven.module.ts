@@ -25,6 +25,7 @@ import {
   RavenFileImportDialogComponent,
   RavenFileMetadataComponent,
   RavenLayoutApplyDialogComponent,
+  RavenPinDialogComponent,
   RavenResourceBandComponent,
   RavenResourcePointComponent,
   RavenSettingsBandsComponent,
@@ -57,6 +58,7 @@ export const DECLARATIONS = [
   RavenFileImportDialogComponent,
   RavenFileMetadataComponent,
   RavenLayoutApplyDialogComponent,
+  RavenPinDialogComponent,
   RavenResourceBandComponent,
   RavenResourcePointComponent,
   RavenSettingsBandsComponent,
@@ -79,6 +81,7 @@ export const ENTRY_COMPONENTS = [
   RavenConfirmDialogComponent,
   RavenFileImportDialogComponent,
   RavenLayoutApplyDialogComponent,
+  RavenPinDialogComponent,
   RavenStateSaveDialogComponent,
 ];
 

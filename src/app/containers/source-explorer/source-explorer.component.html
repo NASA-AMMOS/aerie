@@ -20,9 +20,7 @@
   </mat-drawer>
   <mat-tab-group #leftDrawerTabGroup>
     <mat-tab label="Home">
-      <div
-        *ngIf="leftDrawerTabGroup.selectedIndex === 0"
-        class="tab">
+      <div class="tab">
         <ng-container *ngFor="let childId of tree['/'].childIds">
           <raven-tree
             [class]="tree[childId].name"
@@ -41,9 +39,7 @@
       </div>
     </mat-tab>
     <mat-tab *ngFor="let pin of pins" [label]="pin.name">
-      <div
-        *ngIf="leftDrawerTabGroup.selectedIndex === 1"
-        class="tab">
+      <div class="tab">
         <mat-card *ngIf="!tree[pin.sourceId]">
           The source for this pin is not loaded.
         </mat-card>

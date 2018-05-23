@@ -32,6 +32,10 @@ import * as layoutActions from './../actions/layout';
 import { TimelineActionTypes } from './../actions/timeline';
 
 import {
+  AddBand,
+  PinAdd,
+  PinRemove,
+  PinRename,
   SelectPoint,
   UpdateViewTimeRange,
 } from './../actions/timeline';
@@ -42,18 +46,33 @@ import {
   MpsServerGraphData,
   MpsServerResourcePoint,
   RavenCompositeBand,
+  RavenPin,
   RavenResourceBand,
   RavenSource,
   RavenTimeRange,
 } from './../shared/models';
 
 import {
+  getPinLabel,
   getResourcePoints,
   timestamp,
 } from './../shared/util';
 
 @Injectable()
 export class TimelineEffects {
+  @Effect()
+  updatePinLabels$: Observable<Action> = this.actions$.pipe(
+    ofType<AddBand | PinAdd | PinRemove | PinRename>(
+      TimelineActionTypes.AddBand,
+      TimelineActionTypes.PinAdd,
+      TimelineActionTypes.PinRemove,
+      TimelineActionTypes.PinRename,
+    ),
+    withLatestFrom(this.store$),
+    map(([action, state]) => state),
+    concatMap(({ timeline, sourceExplorer }) => this.updatePinLabels(timeline.bands, sourceExplorer.pins)),
+  );
+
   /**
    * Effect for SelectPoint.
    */
@@ -137,6 +156,27 @@ export class TimelineEffects {
       map((graphData: MpsServerGraphData) => graphData['Timeline Data']),
       map((timelineData: MpsServerResourcePoint[]) => getResourcePoints(source.id, timelineData)),
     );
+  }
+
+  /**
+   * Helper. Returns a list of actions that update the pin labels for all bands and their sub-bands.
+   */
+  updatePinLabels(bands: RavenCompositeBand[], pins: RavenPin[]): Action[] {
+    const actions: Action[] = [];
+
+    bands.forEach(band => {
+      band.subBands.forEach(subBand => {
+        actions.push(
+          new timelineActions.UpdateSubBand(
+            band.id,
+            subBand.id,
+            { labelPin: getPinLabel(subBand.sourceIds, pins) },
+          ),
+        );
+      });
+    });
+
+    return actions;
   }
 
   constructor(

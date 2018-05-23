@@ -14,6 +14,7 @@ import {
 } from './source-explorer';
 
 import {
+  RavenPin,
   RavenSource,
 } from './../shared/models';
 
@@ -25,6 +26,9 @@ import {
   FetchInitialSources,
   NewSources,
   OpenEvent,
+  PinAdd,
+  PinRemove,
+  PinRename,
   RemoveSource,
   RemoveSourceEvent,
   SaveState,
@@ -52,7 +56,7 @@ describe('source-explorer reducer', () => {
   });
 
   it('handle ApplyState', () => {
-    sourceExplorerState = reducer(sourceExplorerState, new ApplyState(rootSource.url));
+    sourceExplorerState = reducer(sourceExplorerState, new ApplyState(rootSource.url, rootSource.id));
     expect(sourceExplorerState).toEqual({
       ...initialState,
       fetchPending: true,
@@ -125,6 +129,100 @@ describe('source-explorer reducer', () => {
         [rootSource.id]: {
           ...initialState.treeBySourceId[rootSource.id],
           opened: true,
+        },
+      },
+    });
+  });
+
+  it('handle PinAdd', () => {
+    // Seed the root source with an `Add Pin` action.
+    sourceExplorerState.treeBySourceId['/'] = {
+      ...sourceExplorerState.treeBySourceId['/'],
+      actions: [
+        { event: 'pin-add', name: 'Add Pin' },
+      ],
+    };
+
+    const pin: RavenPin = { name: 'somePin', sourceId: '/' };
+    sourceExplorerState = reducer(sourceExplorerState, new PinAdd(pin));
+
+    expect(sourceExplorerState).toEqual({
+      ...initialState,
+      pins: [pin],
+      treeBySourceId: {
+        ...sourceExplorerState.treeBySourceId,
+        '/': {
+          ...sourceExplorerState.treeBySourceId['/'],
+          actions: [
+            { event: 'pin-remove', name: 'Remove Pin' },
+            { event: 'pin-rename', name: 'Rename Pin' },
+          ],
+        },
+      },
+    });
+  });
+
+  it('handle PinRemove', () => {
+    // Seed the root source with `Remove Pin` and `Rename Pin` actions.
+    sourceExplorerState.treeBySourceId['/'] = {
+      ...sourceExplorerState.treeBySourceId['/'],
+      actions: [
+        { event: 'pin-remove', name: 'Remove Pin' },
+        { event: 'pin-rename', name: 'Rename Pin' },
+      ],
+    };
+
+    // Add a pin that we can remove.
+    const pin: RavenPin = { name: 'somePin', sourceId: '/' };
+    sourceExplorerState = reducer(sourceExplorerState, new PinAdd(pin));
+
+    // Finally remove the pin.
+    sourceExplorerState = reducer(sourceExplorerState, new PinRemove('/'));
+    expect(sourceExplorerState).toEqual({
+      ...initialState,
+      pins: [],
+      treeBySourceId: {
+        ...sourceExplorerState.treeBySourceId,
+        '/': {
+          ...sourceExplorerState.treeBySourceId['/'],
+          actions: [
+            { event: 'pin-add', name: 'Add Pin' },
+          ],
+        },
+      },
+    });
+  });
+
+  it('handle PinRename', () => {
+    // Seed the root source with `Remove Pin` and `Rename Pin` actions.
+    sourceExplorerState.treeBySourceId['/'] = {
+      ...sourceExplorerState.treeBySourceId['/'],
+      actions: [
+        { event: 'pin-remove', name: 'Remove Pin' },
+        { event: 'pin-rename', name: 'Rename Pin' },
+      ],
+    };
+
+    // Add a pin that we can rename.
+    const pin: RavenPin = { name: 'somePin', sourceId: '/' };
+    sourceExplorerState = reducer(sourceExplorerState, new PinAdd(pin));
+
+    // Finally rename the pin.
+    sourceExplorerState = reducer(sourceExplorerState, new PinRename('/', 'someNewNamePin'));
+    expect(sourceExplorerState).toEqual({
+      ...initialState,
+      pins: [{
+        ...pin,
+        name: 'someNewNamePin',
+      }],
+      treeBySourceId: {
+        ...sourceExplorerState.treeBySourceId,
+        '/': {
+          ...sourceExplorerState.treeBySourceId['/'],
+          actions: [
+            { event: 'pin-remove', name: 'Remove Pin' },
+            { event: 'pin-rename', name: 'Rename Pin' },
+          ],
         },
       },
     });

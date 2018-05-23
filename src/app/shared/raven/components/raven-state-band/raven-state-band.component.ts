@@ -42,9 +42,11 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
   @Input() labelColor: number[];
   @Input() labelFont: string;
   @Input() labelFontSize: number;
+  @Input() labelPin: string;
   @Input() minorLabels: string[];
   @Input() name: string;
   @Input() points: RavenStatePoint[];
+  @Input() showLabelPin: boolean;
   @Input() showTooltip: boolean;
   @Input() type: string;
 
@@ -79,9 +81,24 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
       this.updateSubBand.emit({ subBandId: this.id, prop: 'labelColor', value: this.labelColor });
     }
 
+    // Label Pin.
+    if (changes.labelPin && !changes.labelPin.firstChange) {
+      this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.getLabel() });
+    }
+
+    // Minor Labels.
+    if (changes.minorLabels && !changes.minorLabels.firstChange) {
+      this.updateSubBand.emit({ subBandId: this.id, prop: 'minorLabels', value: this.minorLabels });
+    }
+
     // Points.
     if (changes.points && !changes.points.firstChange) {
       this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals() });
+    }
+
+    // Show Label Pin.
+    if (changes.showLabelPin && !changes.showLabelPin.firstChange) {
+      this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.getLabel() });
     }
   }
 
@@ -96,7 +113,7 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
       heightPadding: this.heightPadding,
       id: this.id,
       intervals: [],
-      label: this.label,
+      label: this.getLabel(),
       labelColor: this.labelColor,
       labelFont: this.labelFont,
       labelFontSize: this.labelFontSize,
@@ -159,5 +176,18 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
       intervals,
       intervalsById,
     };
+  }
+
+  /**
+   * Helper. Builds a label from the base label and pins.
+   */
+  getLabel() {
+    let labelPin = '';
+
+    if (this.showLabelPin && this.labelPin !== '') {
+      labelPin = ` (${this.labelPin})`;
+    }
+
+    return `${this.label}${labelPin}`;
   }
 }

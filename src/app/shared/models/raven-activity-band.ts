@@ -28,6 +28,7 @@ export interface RavenActivityBand {
   labelColor: number[];
   labelFontSize: number;
   labelFont: string;
+  labelPin: string;
   layout: number;
   legend: string;
   maxTimeRange: RavenTimeRange;
@@ -36,6 +37,7 @@ export interface RavenActivityBand {
   parentUniqueId: string | null;
   points: RavenActivityPoint[];
   showLabel: boolean;
+  showLabelPin: boolean;
   showTooltip: boolean;
   sourceIds: string[];
   sourceType: string;

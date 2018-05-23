@@ -31,25 +31,29 @@ import {
 })
 export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit {
   @Input() autoTickValues: boolean;
+  @Input() color: number[];
   @Input() ctlTimeAxis: any;
   @Input() ctlViewTimeAxis: any;
-  @Input() color: number[];
   @Input() fill: boolean;
   @Input() fillColor: number[];
   @Input() font: string;
-  @Input() icon: string;
-  @Input() labelFont: string;
-  @Input() labelFontSize: number;
   @Input() height: number;
   @Input() heightPadding: number;
+  @Input() icon: string;
   @Input() id: string;
   @Input() interpolation: string;
   @Input() label: string;
+  @Input() labelFont: string;
+  @Input() labelFontSize: number;
+  @Input() labelPin: string;
+  @Input() labelUnit: string;
   @Input() minorLabels: string[];
   @Input() name: string;
   @Input() points: RavenResourcePoint[];
   @Input() rescale: boolean;
   @Input() showIcon: boolean;
+  @Input() showLabelPin: boolean;
+  @Input() showLabelUnit: boolean;
   @Input() showTooltip: boolean;
   @Input() type: string;
 
@@ -88,7 +92,22 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
 
     // Label.
     if (changes.label && !changes.label.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.label });
+      this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.getLabel() });
+    }
+
+    // Label Pin.
+    if (changes.labelPin && !changes.labelPin.firstChange) {
+      this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.getLabel() });
+    }
+
+    // Label Unit.
+    if (changes.labelUnit && !changes.labelUnit.firstChange) {
+      this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.getLabel() });
+    }
+
+    // Minor Labels.
+    if (changes.minorLabels && !changes.minorLabels.firstChange) {
+      this.updateSubBand.emit({ subBandId: this.id, prop: 'minorLabels', value: this.minorLabels });
     }
 
     // Points.
@@ -99,6 +118,16 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
     // Show Icon.
     if (changes.showIcon && !changes.showIcon.firstChange) {
       this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'showIcon', value: this.showIcon });
+    }
+
+    // Show Label Pin.
+    if (changes.showLabelPin && !changes.showLabelPin.firstChange) {
+      this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.getLabel() });
+    }
+
+    // Show Label Unit.
+    if (changes.showLabelUnit && !changes.showLabelUnit.firstChange) {
+      this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.getLabel() });
     }
   }
 
@@ -114,7 +143,7 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
       id: this.id,
       interpolation: this.interpolation,
       intervals: [],
-      label: this.label,
+      label: this.getLabel(),
       labelColor: this.color,
       labelFont: this.labelFont,
       labelFontSize: this.labelFontSize,
@@ -187,5 +216,23 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
       intervals,
       intervalsById,
     };
+  }
+
+  /**
+   * Helper. Builds a label from the base label, pins, and units.
+   */
+  getLabel() {
+    let labelPin = '';
+    let labelUnit = '';
+
+    if (this.showLabelPin && this.labelPin !== '') {
+      labelPin = ` (${this.labelPin})`;
+    }
+
+    if (this.showLabelUnit && this.labelUnit !== '') {
+      labelUnit = ` (${this.labelUnit})`;
+    }
+
+    return `${this.label}${labelPin}${labelUnit}`;
   }
 }

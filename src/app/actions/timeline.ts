@@ -12,6 +12,7 @@ import { Action } from '@ngrx/store';
 import {
   BaseType,
   RavenCompositeBand,
+  RavenPin,
   RavenSortMessage,
   RavenSubBand,
   RavenTimeRange,
@@ -23,6 +24,9 @@ export enum TimelineActionTypes {
   AddBand                      = '[timeline] add_band',
   AddPointsToSubBand           = '[timeline] add_points_to_sub_band',
   AddSubBand                   = '[timeline] add_sub_band',
+  PinAdd                       = '[timeline] pin_add',
+  PinRemove                    = '[timeline] pin_remove',
+  PinRename                    = '[timeline] pin_rename',
   RemoveBandsOrPointsForSource = '[timeline] remove_bands_or_points_for_source',
   RemoveSubBand                = '[timeline] remove_sub_band',
   SelectBand                   = '[timeline] select_band',
@@ -63,6 +67,24 @@ export class AddSubBand implements Action {
     public bandId: string,
     public subBand: RavenSubBand,
   ) {}
+}
+
+export class PinAdd implements Action {
+  readonly type = TimelineActionTypes.PinAdd;
+
+  constructor(public pin: RavenPin) {}
+}
+
+export class PinRemove implements Action {
+  readonly type = TimelineActionTypes.PinRemove;
+
+  constructor(public sourceId: string) {}
+}
+
+export class PinRename implements Action {
+  readonly type = TimelineActionTypes.PinRename;
+
+  constructor(public sourceId: string, public newName: string) {}
 }
 
 export class RemoveBandsOrPointsForSource implements Action {
@@ -124,6 +146,9 @@ export type TimelineAction =
   AddBand |
   AddPointsToSubBand |
   AddSubBand |
+  PinAdd |
+  PinRemove |
+  PinRename |
   RemoveBandsOrPointsForSource |
   RemoveSubBand |
   SelectBand |

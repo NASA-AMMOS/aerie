@@ -74,8 +74,8 @@ import {
   RavenCompositeBand,
   RavenDefaultBandSettings,
   RavenSource,
+  RavenState,
   RavenSubBand,
-  RavenTimeRange,
   StringTMap,
 } from './../shared/models';
 
@@ -89,22 +89,26 @@ export class SourceExplorerEffects {
     concatMap(({ action, state }) =>
       forkJoin([
         of(action),
-        this.fetchSavedState(action.sourceUrl),
+        this.http.get(action.sourceUrl).pipe(map(res => res[0])),
         this.fetchNewSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`, '/', true),
       ]),
     ),
     map(([action, savedState, initialSources]) => ({ action, savedState, initialSources })),
-    concatMap(({ action, savedState: { bands, defaultBandSettings }, initialSources }) => {
-      const updatedBands = bands.map((band: RavenCompositeBand) => ({
+    concatMap(({ action, savedState, initialSources }) => {
+      const updatedBands = savedState.bands.map((band: RavenCompositeBand) => ({
         ...band,
         subBands: band.subBands.map((subBand: RavenSubBand) => ({
           ...subBand,
-          sourceIds: subBand.sourceIds.map(sourceId => updateSourceId(sourceId, action.sourceId)),
+          sourceIds: subBand.sourceIds.map(sourceId => updateSourceId(sourceId, action.targetSourceId)),
         })),
       }));
 
       return concat(
-        ...this.loadLayout(updatedBands, initialSources, defaultBandSettings),
+        ...this.loadLayout(
+          updatedBands,
+          initialSources,
+          savedState.defaultBandSettings,
+        ),
       );
     }),
   );
@@ -116,15 +120,14 @@ export class SourceExplorerEffects {
     map(([action, state]) => ({ action, state })),
     concatMap(({ action, state }) =>
       forkJoin([
-        of(action),
-        this.fetchSavedState(action.sourceUrl),
+        this.http.get(action.sourceUrl).pipe(map(res => res[0])),
         this.fetchNewSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`, '/', true),
       ]),
     ),
-    map(([action, savedState, initialSources]) => ({ action, savedState, initialSources })),
-    concatMap(({ action, savedState: { bands, defaultBandSettings, maxTimeRange, viewTimeRange }, initialSources }) =>
+    map(([savedState, initialSources]) => ({ savedState, initialSources })),
+    concatMap(({ savedState, initialSources }) =>
       concat(
-        ...this.loadState(bands, initialSources, defaultBandSettings, maxTimeRange, viewTimeRange),
+        ...this.loadState(initialSources, savedState),
       ),
     ),
   );
@@ -192,7 +195,9 @@ export class SourceExplorerEffects {
     concatMap(action =>
       concat(
         this.fetchNewSources(action.sourceUrl, action.sourceId, false).pipe(
-          map((sources: RavenSource[]) => new sourceExplorerActions.NewSources(action.sourceId, sources)),
+          concatMap((sources: RavenSource[]) => [
+            new sourceExplorerActions.NewSources(action.sourceId, sources),
+          ]),
         ),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
       ).pipe(
@@ -279,21 +284,18 @@ export class SourceExplorerEffects {
     concatMap(({ state, action }) =>
       concat(
         this.saveState(action.source.url, action.source.id, action.name, {
-          name: `raven2-state-${action.name}`,
-          state: {
-            bands: state.timeline.bands.map(band => ({
-              ...band,
-              subBands: band.subBands.map(subBand => ({
-                ...subBand,
-                maxTimeRange: { end: 0, start: 0 },
-                points: [],
-              })),
+          bands: state.timeline.bands.map(band => ({
+            ...band,
+            subBands: band.subBands.map(subBand => ({
+              ...subBand,
+              maxTimeRange: { end: 0, start: 0 },
+              points: [],
             })),
-            defaultBandSettings: state.config.defaultBandSettings,
-            maxTimeRange: state.timeline.maxTimeRange,
-            pins: state.sourceExplorer.pins,
-            viewTimeRange: state.timeline.viewTimeRange,
-          },
+          })),
+          defaultBandSettings: state.config.defaultBandSettings,
+          maxTimeRange: state.timeline.maxTimeRange,
+          pins: state.sourceExplorer.pins,
+          viewTimeRange: state.timeline.viewTimeRange,
         }),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
       ),
@@ -320,7 +322,9 @@ export class SourceExplorerEffects {
       } else {
         actions.push(
           this.fetchNewSources(source.url, source.id, false).pipe(
-            map((sources: RavenSource[]) => new sourceExplorerActions.NewSources(source.id, sources)),
+            concatMap((sources: RavenSource[]) => [
+              new sourceExplorerActions.NewSources(source.id, sources), // Add new sources to the source-explorer.
+            ]),
           ),
         );
       }
@@ -358,11 +362,8 @@ export class SourceExplorerEffects {
    * Helper. Returns a stream of actions that need to occur when loading a state.
    */
   loadState(
-    bands: RavenCompositeBand[],
     initialSources: RavenSource[],
-    defaultBandSettings: RavenDefaultBandSettings,
-    maxTimeRange: RavenTimeRange,
-    viewTimeRange: RavenTimeRange,
+    state: RavenState,
   ): Observable<Action>[] {
     return [
       of(new sourceExplorerActions.UpdateSourceExplorer({
@@ -371,14 +372,14 @@ export class SourceExplorerEffects {
       })),
       of(new timelineActions.UpdateTimeline({
         ...fromTimeline.initialState,
-        bands,
-        maxTimeRange,
-        viewTimeRange,
+        bands: state.bands,
+        maxTimeRange: state.maxTimeRange,
+        viewTimeRange: state.viewTimeRange,
       })),
       of(new configActions.UpdateDefaultBandSettings({
-        ...defaultBandSettings,
+        ...state.defaultBandSettings,
       })),
-      ...this.load(bands, initialSources),
+      ...this.load(state.bands, initialSources),
       of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
     ];
   }
@@ -501,21 +502,10 @@ export class SourceExplorerEffects {
   }
 
   /**
-   * Fetch helper. Fetches saved state from MPS Server.
-   */
-  fetchSavedState(url: string) {
-    return this.http.get(url).pipe(
-      map(res => res[0].state),
-    );
-  }
-
-  /**
    * Fetch helper. Deletes a source from MPS Server.
    */
   removeSource(sourceUrl: string, sourceId: string) {
-    // TODO: Make this better so we don't have to change the URL.
     const url = sourceUrl.replace(/list_(generic|.*custom.*)-mongodb/i, 'fs-mongodb');
-
     return this.http.delete(url, { responseType: 'text' }).pipe(
       map(() => new sourceExplorerActions.RemoveSource(sourceId)),
     );
@@ -524,14 +514,10 @@ export class SourceExplorerEffects {
   /**
    * Helper. Save state to an MPS Server source.
    * Fetches new sources and updates the source after the save.
-   *
-   * TODO: Replace 'any' with a concrete type.
    */
-  saveState(sourceUrl: string, sourceId: string, name: string, data: any) {
-    return this.http.put(`${sourceUrl}/${name}`, data).pipe(
-      concatMap(() =>
-        of(new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl)),
-      ),
+  saveState(sourceUrl: string, sourceId: string, name: string, state: RavenState) {
+    return this.http.put(`${sourceUrl}/${name}?timeline_type=state`, state).pipe(
+      map(() => new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl)),
     );
   }
 
@@ -539,7 +525,6 @@ export class SourceExplorerEffects {
    * Helper. Import mapping file into MPS Server for a given source URL.
    */
   importMappingFile(sourceUrl: string, name: string, mapping: string) {
-    // TODO: Make this better so we don't have to change the URL.
     const url = sourceUrl.replace('fs-mongodb', 'metadata-mongodb');
     return this.http.post(`${url}/${name}`, mapping, { responseType: 'text' });
   }

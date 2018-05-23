@@ -11,6 +11,8 @@ import {
   getAllChildIds,
   getAllSourcesByKind,
   getParentSourceIds,
+  getPin,
+  getPinLabel,
   getSourceIds,
   getSourceType,
   toRavenCustomMetadata,
@@ -77,6 +79,59 @@ describe('source.ts', () => {
         '/hello/world/goodbye/what/is',
         '/hello/world/goodbye/what/is/going',
       ]);
+    });
+  });
+
+  describe('getPin', () => {
+    const pins = [
+      { name: 'pin1', sourceId: '/a/b/c' },
+      { name: 'pin2', sourceId: '/e/f' },
+      { name: 'pin3', sourceId: '/a/b/c/d' },
+      { name: 'pin4', sourceId: '/a' },
+      { name: 'pin5', sourceId: '/a/b' },
+    ];
+
+    it(`should return a pin if a source id is in the pin set`, () => {
+      expect(getPin('/e/f/g/h/i', pins)).toEqual({ name: 'pin2', sourceId: '/e/f' });
+    });
+
+    it(`should return the pin who's sourceId is the longest sub-string of the given sourceId (i.e. the nearest parent)`, () => {
+      expect(getPin('/a/b/c/d/e', pins)).toEqual({ name: 'pin3', sourceId: '/a/b/c/d' });
+    });
+
+    it('should return null if the source id is not in the pin set', () => {
+      expect(getPin('/e/x', pins)).toEqual(null);
+    });
+  });
+
+  describe('getPinLabel', () => {
+    it(`should get a pin label for a given list of source ids and pins`, () => {
+      const sourceIds = ['/a/b/c', '/d/e/f'];
+      const pins = [
+        { name: 'pin1', sourceId: '/a/b/c' },
+      ];
+
+      expect(getPinLabel(sourceIds, pins)).toEqual('pin1');
+    });
+
+    it(`should return a comma-separated pin label given multiple pins`, () => {
+      const sourceIds = ['/a/b/c', '/d/e/f', '/g/h/i/j'];
+      const pins = [
+        { name: 'pin1', sourceId: '/a/b/c' },
+        { name: 'pin2', sourceId: '/x/y/z' },
+        { name: 'pin3', sourceId: '/g/h/i/j' },
+      ];
+
+      expect(getPinLabel(sourceIds, pins)).toEqual('pin1, pin3');
+    });
+
+    it(`should return no pin label if there are no pins for the given source ids`, () => {
+      const sourceIds = ['/a/b/c', '/d/e/f'];
+      const pins = [
+        { name: 'pin1', sourceId: '/x/y/z' },
+      ];
+
+      expect(getPinLabel(sourceIds, pins)).toEqual('');
     });
   });
 

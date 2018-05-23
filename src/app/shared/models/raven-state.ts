@@ -7,14 +7,17 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export interface MpsServerResourceMetadata {
-  decimatedData: boolean;
-  hasInterpolatorType: string;
-  hasObjectName: string;
-  hasObjectNamespace: string;
-  hasObjectType: string;
-  hasTimeSystem: string;
-  hasTimelineType: string;
-  hasUnits: string;
-  hasValueType: string;
+import {
+  RavenCompositeBand,
+  RavenDefaultBandSettings,
+  RavenPin,
+  RavenTimeRange,
+} from './index';
+
+export interface RavenState {
+  bands: RavenCompositeBand[];
+  defaultBandSettings: RavenDefaultBandSettings;
+  maxTimeRange: RavenTimeRange;
+  pins: RavenPin[];
+  viewTimeRange: RavenTimeRange;
 }

@@ -22,6 +22,8 @@ import {
   AddBand,
   AddPointsToSubBand,
   AddSubBand,
+  PinRemove,
+  PinRename,
   RemoveBandsOrPointsForSource,
   RemoveSubBand,
   SelectBand,
@@ -159,6 +161,16 @@ describe('timeline reducer', () => {
       maxTimeRange: { end: 200, start: 10 },
       viewTimeRange: { end: 100, start: 10 },
     });
+  });
+
+  it('handle PinRemove', () => {
+    timelineState = reducer(timelineState, new PinRemove('/'));
+    expect(timelineState).toEqual(initialState);
+  });
+
+  it('handle PinRename', () => {
+    timelineState = reducer(timelineState, new PinRename('/', 'hello'));
+    expect(timelineState).toEqual(initialState);
   });
 
   it('handle RemoveBandsOrPointsForSource', () => {

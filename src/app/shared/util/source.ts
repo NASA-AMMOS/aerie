@@ -15,6 +15,7 @@ import {
   MpsServerSourceGraphable,
   RavenCompositeBand,
   RavenFileMetadata,
+  RavenPin,
   RavenSource,
   RavenSubBand,
   StringTMap,
@@ -58,6 +59,7 @@ export function toSource(parentId: string, isServer: boolean, mSource: MpsServer
     selectable: true,
     selected: false,
     subBandIds: [], // List of band ids that this source contributes data to.
+    subKind: mSource.__kind_sub,
     url: '',
   };
 
@@ -66,14 +68,13 @@ export function toSource(parentId: string, isServer: boolean, mSource: MpsServer
   } else if (rSource.kind === 'fs_dir') {
     return fromDir(isServer, mSource as MpsServerSourceDir, rSource);
   } else if (rSource.kind === 'fs_file') {
-    return fromFile(mSource as MpsServerSourceFile, rSource);
-  } else if (rSource.kind === 'fs_graphable') {
-    if (rSource.name.includes('raven2-state')) {
-      // TODO: Replace 'any' with a concrete type.
+    if (rSource.subKind === 'file_state') {
       return fromState(mSource as any, rSource);
     } else {
-      return fromGraphable(mSource as MpsServerSourceGraphable, rSource);
+      return fromFile(mSource as MpsServerSourceFile, rSource);
     }
+  } else if (rSource.kind === 'fs_graphable') {
+    return fromGraphable(mSource as MpsServerSourceGraphable, rSource);
   } else {
     return rSource;
   }
@@ -117,6 +118,10 @@ export function fromDir(isServer: boolean, mSource: MpsServerSourceDir, rSource:
         name: 'Import',
       },
       {
+        event: 'pin-add',
+        name: 'Add Pin',
+      },
+      {
         event: 'save',
         name: 'Save',
       },
@@ -132,31 +137,32 @@ export function fromDir(isServer: boolean, mSource: MpsServerSourceDir, rSource:
  * Convert an MPS Server 'fs_file' source to a Raven source.
  */
 export function fromFile(mSource: MpsServerSourceFile, rSource: RavenSource): RavenSource {
-  return {
-    ...rSource,
-    actions: mSource.__kind_sub === 'file_epoch' ? [
-      {
-        event: 'delete',
-        name: 'Delete',
-      },
-      {
-        event: 'file-metadata',
-        name: 'File metadata',
-      },
-      {
-        event: 'epoch-load',
-        name: 'Load Epoch',
-      },
-    ] : [
-      {
+  const actions = [
+    {
       event: 'delete',
       name: 'Delete',
-      },
-      {
-        event: 'file-metadata',
-        name: 'File metadata',
-      },
-    ],
+    },
+    {
+      event: 'file-metadata',
+      name: 'File Metadata',
+    },
+  ];
+
+  if (mSource.__kind_sub === 'file_epoch') {
+    actions.push({
+      event: 'epoch-load',
+      name: 'Load Epoch',
+    });
+  } else {
+    actions.push({
+      event: 'pin-add',
+      name: 'Add Pin',
+    });
+  }
+
+  return {
+    ...rSource,
+    actions,
     dbType: mSource.__db_type,
     fileMetadata: toRavenFileMetadata(mSource),
     icon: 'fa fa-file',
@@ -227,12 +233,16 @@ export function fromState(mSource: any, rSource: RavenSource): RavenSource {
         event: 'apply',
         name: 'Apply',
       },
+      {
+        event: 'delete',
+        name: 'Delete',
+      },
     ],
     expandable: false,
     icon: 'fa fa-table',
     openable: false,
     selectable: true,
-    url: mSource.data_url,
+    url: mSource.contents_url,
   };
 }
 
@@ -289,6 +299,40 @@ export function getParentSourceIds(sourceId: string): string[] {
   parentSourceIds.reverse(); // Return the ids starting from the top.
 
   return parentSourceIds;
+}
+
+/**
+ * Helper that returns a pin if the given source is in the given pin array. Null otherwise.
+ * If a source's parent-parent or any ancestors have a pin then we only return the pin of the nearest parent.
+ */
+export function getPin(sourceId: string, pins: RavenPin[]): RavenPin | null {
+  const filteredPins = pins.filter(pin => sourceId.includes(pin.sourceId));
+
+  if (filteredPins.length) {
+    // The `filteredPins` list contains all pins that contain source id sub-strings of the given `sourceId`.
+    // We want to reduce those pins to a single pin such that the pins source id is the longest `sourceId` sub-string.
+    // Convince yourself that this is analogous to finding the closest parent pin for the given `sourceId`.
+    return filteredPins.reduce((aPin, bPin) => aPin.sourceId.length >= bPin.sourceId.length ? aPin : bPin);
+  }
+
+  return null;
+}
+
+/**
+ * Helper that gets a pin label from a list of pins and corresponding source ids.
+ * If there is more than one pin then it returns the pins as a comma-separated string.
+ */
+export function getPinLabel(sourceIds: string[], pins: RavenPin[]): string {
+  return sourceIds.reduce((pinNames: string[], sourceId: string) => {
+    const pin = getPin(sourceId, pins);
+
+    // If the current source id is referenced in a pin, then add that pin to the pin names.
+    if (pin) {
+      pinNames.push(pin.name);
+    }
+
+    return pinNames;
+  }, []).join(', ');
 }
 
 /**

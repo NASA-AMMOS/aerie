@@ -7,11 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import {
+  Action,
+} from '@ngrx/store';
 
 import {
   BaseType,
   RavenFile,
+  RavenPin,
   RavenSource,
   StringTMap,
 } from './../shared/models';
@@ -30,6 +33,9 @@ export enum SourceExplorerActionTypes {
   ImportFileSuccess    = '[sourceExplorer] import_file_success',
   NewSources           = '[sourceExplorer] new_sources',
   OpenEvent            = '[sourceExplorer] open_event',
+  PinAdd               = '[sourceExplorer] pin_add',
+  PinRemove            = '[sourceExplorer] pin_remove',
+  PinRename            = '[sourceExplorer] pin_rename',
   RemoveSource         = '[sourceExplorer] remove_source',
   RemoveSourceEvent    = '[sourceExplorer] remove_source_event',
   SaveState            = '[sourceExplorer] save_state',
@@ -44,13 +50,17 @@ export enum SourceExplorerActionTypes {
 export class ApplyLayout implements Action {
   readonly type = SourceExplorerActionTypes.ApplyLayout;
 
-  constructor(public sourceUrl: string, public sourceId: string) {}
+  constructor(
+    public sourceUrl: string,
+    public sourceId: string,
+    public targetSourceId: string,
+  ) {}
 }
 
 export class ApplyState implements Action {
   readonly type = SourceExplorerActionTypes.ApplyState;
 
-  constructor(public sourceUrl: string) {}
+  constructor(public sourceUrl: string, public sourceId: string) {}
 }
 
 export class CloseEvent implements Action {
@@ -105,6 +115,24 @@ export class OpenEvent implements Action {
   readonly type = SourceExplorerActionTypes.OpenEvent;
 
   constructor(public sourceId: string) {}
+}
+
+export class PinAdd implements Action {
+  readonly type = SourceExplorerActionTypes.PinAdd;
+
+  constructor(public pin: RavenPin) {}
+}
+
+export class PinRemove implements Action {
+  readonly type = SourceExplorerActionTypes.PinRemove;
+
+  constructor(public sourceId: string) {}
+}
+
+export class PinRename implements Action {
+  readonly type = SourceExplorerActionTypes.PinRename;
+
+  constructor(public sourceId: string, public newName: string) {}
 }
 
 export class RemoveSource implements Action {
@@ -169,6 +197,9 @@ export type SourceExplorerAction =
   ImportFileSuccess |
   NewSources |
   OpenEvent |
+  PinAdd |
+  PinRemove |
+  PinRename |
   RemoveSource |
   RemoveSourceEvent |
   SaveState |

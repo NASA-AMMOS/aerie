@@ -24,6 +24,9 @@ import {
   ExpandEvent,
   NewSources,
   OpenEvent,
+  PinAdd,
+  PinRemove,
+  PinRename,
   RemoveSource,
   SelectSource,
   SourceExplorerAction,
@@ -36,6 +39,7 @@ import {
   BaseType,
   RavenPin,
   RavenSource,
+  RavenSourceAction,
   StringTMap,
 } from './../shared/models';
 
@@ -91,6 +95,7 @@ export const initialState: SourceExplorerState = {
       selectable: false,
       selected: false,
       subBandIds: [],
+      subKind: '',
       url: '',
     },
   },
@@ -116,6 +121,12 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
       return newSources(state, action);
     case SourceExplorerActionTypes.OpenEvent:
       return openEvent(state, action);
+    case SourceExplorerActionTypes.PinAdd:
+      return pinAdd(state, action);
+    case SourceExplorerActionTypes.PinRemove:
+      return pinRemove(state, action);
+    case SourceExplorerActionTypes.PinRename:
+      return pinRename(state, action);
     case SourceExplorerActionTypes.RemoveSource:
       return removeSource(state, action);
     case SourceExplorerActionTypes.RemoveSourceEvent:
@@ -206,6 +217,70 @@ export function openEvent(state: SourceExplorerState, action: OpenEvent): Source
     fetchPending: true,
     ...updateTreeSource(state, action.sourceId, {
       opened: true,
+    }),
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'PinAdd' action.
+ */
+export function pinAdd(state: SourceExplorerState, action: PinAdd): SourceExplorerState {
+  return {
+    ...state,
+    pins: state.pins.concat(action.pin),
+    treeBySourceId: {
+      ...state.treeBySourceId,
+      [action.pin.sourceId]: {
+        ...state.treeBySourceId[action.pin.sourceId],
+        actions: state.treeBySourceId[action.pin.sourceId].actions.reduce((actions: RavenSourceAction[], currentAction: RavenSourceAction) => {
+          if (currentAction.event === 'pin-add') {
+            actions.push(
+              { event: 'pin-remove', name: 'Remove Pin' },
+              { event: 'pin-rename', name: 'Rename Pin' },
+            );
+          } else {
+            actions.push(currentAction);
+          }
+          return actions;
+        }, []),
+      },
+    },
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'PinRemove' action.
+ */
+export function pinRemove(state: SourceExplorerState, action: PinRemove): SourceExplorerState {
+  return {
+    ...state,
+    pins: state.pins.filter(pin => pin.sourceId !== action.sourceId),
+    treeBySourceId: {
+      ...state.treeBySourceId,
+      [action.sourceId]: {
+        ...state.treeBySourceId[action.sourceId],
+        actions: state.treeBySourceId[action.sourceId].actions
+          .filter(currentAction => currentAction.event !== 'pin-remove' && currentAction.event !== 'pin-rename')
+          .concat({ event: 'pin-add', name: 'Add Pin' }),
+      },
+    },
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'PinRename' action.
+ */
+export function pinRename(state: SourceExplorerState, action: PinRename): SourceExplorerState {
+  return {
+    ...state,
+    pins: state.pins.map(pin => {
+      if (pin.sourceId === action.sourceId) {
+        return {
+          ...pin,
+          name: action.newName,
+        };
+      }
+      return pin;
     }),
   };
 }

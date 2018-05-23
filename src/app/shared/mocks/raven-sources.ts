@@ -43,6 +43,7 @@ export const rootSource: RavenSource = {
   selectable: false,
   selected: false,
   subBandIds: [],
+  subKind: '',
   url: '',
 };
 
@@ -77,6 +78,7 @@ export const childSource: RavenSource = {
   selectable: true,
   selected: false,
   subBandIds: [],
+  subKind: '',
   url: '',
 };
 

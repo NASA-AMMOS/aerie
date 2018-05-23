@@ -28,6 +28,8 @@ export interface RavenResourceBand {
   labelColor: number[];
   labelFontSize: number;
   labelFont: string;
+  labelPin: string;
+  labelUnit: string;
   maxTimeRange: RavenTimeRange;
   minorLabels: string[];
   name: string;
@@ -35,6 +37,8 @@ export interface RavenResourceBand {
   points: RavenResourcePoint[];
   rescale: boolean;
   showIcon: boolean;
+  showLabelPin: boolean;
+  showLabelUnit: boolean;
   showTooltip: boolean;
   sourceIds: string[];
   type: string;

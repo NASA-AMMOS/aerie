@@ -4,7 +4,7 @@
 }
 
 .selected {
-  box-shadow: 0 0 5px rgba(81, 203, 238, 1);
+  background-color: rgba(240, 252, 253, 1);
 }
 
 .sortable-bands {

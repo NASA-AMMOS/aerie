@@ -35,6 +35,40 @@
             </mat-form-field>
           </div>
 
+          <!-- Resource Band Settings for Label Unit and Show Label Unit. -->
+          <ng-container *ngIf="subBand.type === 'resource'">
+            <!-- Label Unit. -->
+            <div class="field">
+              <mat-form-field class="full-width">
+                <input
+                  matInput
+                  placeholder="Unit Label"
+                  [value]="subBand.labelUnit"
+                  (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { labelUnit: $event.target.value } })">
+              </mat-form-field>
+            </div>
+
+            <!-- Show Label Unit. -->
+            <div class="field">
+              <mat-slide-toggle
+                color="primary"
+                [checked]="subBand.showLabelUnit"
+                (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { showLabelUnit: $event.checked } })">
+                Show Unit Label
+              </mat-slide-toggle>
+            </div>
+          </ng-container>
+
+          <!-- Show Label Pin. -->
+          <div class="field">
+            <mat-slide-toggle
+              color="primary"
+              [checked]="subBand.showLabelPin"
+              (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { showLabelPin: $event.checked } })">
+              Show Pin Label
+            </mat-slide-toggle>
+          </div>
+
           <!-- Overlay (applies to all sub-bands). -->
           <div class="field">
             <mat-slide-toggle

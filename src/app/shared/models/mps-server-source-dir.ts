@@ -15,6 +15,7 @@ import {
 export interface MpsServerSourceDir {
   __db_type: string;
   __kind: string;
+  __kind_sub: string;
   contents_url: string;
   created: string;
   createdBy: string;

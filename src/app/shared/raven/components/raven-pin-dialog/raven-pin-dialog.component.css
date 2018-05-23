@@ -1,0 +1,19 @@
+:host {
+  display: block;
+  font-family: Roboto,"Helvetica Neue",sans-serif;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.container > * {
+  width: 100%;
+}
+
+.pin-add,
+.pin-remove,
+.pin-rename {
+  padding-bottom: 15px;
+}

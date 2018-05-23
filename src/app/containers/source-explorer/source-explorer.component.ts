@@ -40,11 +40,13 @@ import * as fromSourceExplorer from './../../reducers/source-explorer';
 
 import * as epochsActions from './../../actions/epochs';
 import * as sourceExplorerActions from './../../actions/source-explorer';
+import * as timelineActions from './../../actions/timeline';
 
 import {
   RavenConfirmDialogComponent,
   RavenFileImportDialogComponent,
   RavenLayoutApplyDialogComponent,
+  RavenPinDialogComponent,
   RavenStateSaveDialogComponent,
 } from './../../shared/raven/components';
 
@@ -66,9 +68,6 @@ import {
   templateUrl: './source-explorer.component.html',
 })
 export class SourceExplorerComponent implements OnDestroy {
-  // Config state
-  baseUrl: string;
-
   // Source Explorer state.
   pins: RavenPin[];
   selectedSourceId: string;
@@ -81,14 +80,6 @@ export class SourceExplorerComponent implements OnDestroy {
     private dialog: MatDialog,
     private store: Store<fromSourceExplorer.SourceExplorerState>,
   ) {
-    // Config state.
-    this.store.select(fromConfig.getConfigState).pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(state => {
-      this.baseUrl = state.baseUrl;
-      this.changeDetector.markForCheck();
-    });
-
     // Source Explorer state.
     this.store.select(fromSourceExplorer.getPins).pipe(
       takeUntil(this.ngUnsubscribe),
@@ -128,8 +119,7 @@ export class SourceExplorerComponent implements OnDestroy {
         WebSocketSubject.create(`${config.baseUrl.replace('https', 'wss')}/${config.baseSocketUrl}`),
       ),
       takeUntil(this.ngUnsubscribe),
-    ).subscribe((msg: any) => {
-      const data = JSON.parse(msg.data);
+    ).subscribe((data: any) => {
       if (data.detail === 'data source changed') {
         const pattern = new RegExp('(.*/fs-mongodb)(/.*)/(.*)');
         const match = data.subject.match(pattern);
@@ -163,12 +153,18 @@ export class SourceExplorerComponent implements OnDestroy {
       this.openApplyStateDialog(source);
     } else if (event === 'delete') {
       this.openDeleteDialog(source);
-    } else if (event === 'save') {
-      this.openStateSaveDialog(source);
-    } else if (event === 'file-import') {
-      this.openFileImportDialog(source);
     } else if (event === 'epoch-load') {
       this.onLoadEpochs(source);
+    } else if (event === 'file-import') {
+      this.openFileImportDialog(source);
+    } else if (event === 'pin-add') {
+      this.openPinDialog('add', source);
+    } else if (event === 'pin-remove') {
+      this.openPinDialog('remove', source);
+    } else if (event === 'pin-rename') {
+      this.openPinDialog('rename', source);
+    } else if (event === 'save') {
+      this.openStateSaveDialog(source);
     }
   }
 
@@ -228,8 +224,8 @@ export class SourceExplorerComponent implements OnDestroy {
     applyLayoutDialog.afterClosed().pipe(
       takeUntil(this.ngUnsubscribe),
     ).subscribe(result => {
-      if (result.apply) {
-        this.store.dispatch(new sourceExplorerActions.ApplyLayout(source.url, result.sourceId));
+      if (result && result.apply) {
+        this.store.dispatch(new sourceExplorerActions.ApplyLayout(source.url, source.id, result.sourceId));
       }
     });
   }
@@ -250,8 +246,8 @@ export class SourceExplorerComponent implements OnDestroy {
     applyStateDialog.afterClosed().pipe(
       takeUntil(this.ngUnsubscribe),
     ).subscribe(result => {
-      if (result.confirm) {
-        this.store.dispatch(new sourceExplorerActions.ApplyState(source.url));
+      if (result && result.confirm) {
+        this.store.dispatch(new sourceExplorerActions.ApplyState(source.url, source.id));
       }
     });
   }
@@ -272,7 +268,7 @@ export class SourceExplorerComponent implements OnDestroy {
     stateDeleteDialog.afterClosed().pipe(
       takeUntil(this.ngUnsubscribe),
     ).subscribe(result => {
-      if (result.confirm) {
+      if (result && result.confirm) {
         this.store.dispatch(new sourceExplorerActions.RemoveSourceEvent(source));
       }
     });
@@ -288,8 +284,41 @@ export class SourceExplorerComponent implements OnDestroy {
     });
 
     fileImportDialog.afterClosed().subscribe(result => {
-      if (result.import) {
+      if (result && result.import) {
         this.store.dispatch(new sourceExplorerActions.ImportFile(source, result.file));
+      }
+    });
+  }
+
+  /**
+   * Dialog trigger. Opens the pin dialog.
+   * NOTE: In this function we have two separate `PinAdd`, `PinRemove`, and `PinRename` actions for the
+   *       timeline and source explorer reducers. This is to keep these reducers as decoupled as possible.
+   *       Because they are separate, make sure their call order is maintained (e.g. source-explorer PinAdd is first followed by timeline PinAdd).
+   *       This way the timeline effect has the new pins to work with when we get there.
+   */
+  openPinDialog(type: string, source: RavenSource): void {
+    const pinDialog = this.dialog.open(RavenPinDialogComponent, {
+      data: {
+        pin: this.pins.find(p => p.sourceId === source.id),
+        source,
+        type,
+      },
+      width: '250px',
+    });
+
+    pinDialog.afterClosed().pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(result => {
+      if (result && result.pinAdd) {
+        this.store.dispatch(new sourceExplorerActions.PinAdd(result.pin));
+        this.store.dispatch(new timelineActions.PinAdd(result.pin));
+      } else if (result && result.pinRemove) {
+        this.store.dispatch(new sourceExplorerActions.PinRemove(result.sourceId));
+        this.store.dispatch(new timelineActions.PinRemove(result.sourceId));
+      } else if (result && result.pinRename) {
+        this.store.dispatch(new sourceExplorerActions.PinRename(result.sourceId, result.newName));
+        this.store.dispatch(new timelineActions.PinRename(result.sourceId, result.newName));
       }
     });
   }
@@ -306,7 +335,7 @@ export class SourceExplorerComponent implements OnDestroy {
     stateSaveDialog.afterClosed().pipe(
       takeUntil(this.ngUnsubscribe),
     ).subscribe(result => {
-      if (result.save) {
+      if (result && result.save) {
         this.store.dispatch(new sourceExplorerActions.SaveState(source, result.name));
       }
     });

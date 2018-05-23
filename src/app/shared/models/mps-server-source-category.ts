@@ -11,6 +11,7 @@ import { MpsServerSourceGraphable } from './index';
 
 export interface MpsServerSourceCategory {
   __kind: string;
+  __kind_sub: string;
   contents: MpsServerSourceGraphable[];
   label: string;
   name: string;

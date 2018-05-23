@@ -24,11 +24,13 @@ export interface RavenStateBand {
   labelColor: number[];
   labelFontSize: number;
   labelFont: string;
+  labelPin: string;
   maxTimeRange: RavenTimeRange;
   minorLabels: string[];
   name: string;
   parentUniqueId: string | null;
   points: RavenStatePoint[];
+  showLabelPin: boolean;
   showTooltip: boolean;
   sourceIds: string[];
   type: string;
