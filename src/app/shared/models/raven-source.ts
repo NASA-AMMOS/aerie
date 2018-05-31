@@ -8,35 +8,20 @@
  */
 
 import {
-  MpsServerSourceGraphable,
-  RavenFileMetadata,
-  RavenSourceAction,
+  RavenCustomGraphableSource,
+  RavenExpandableSource,
+  RavenFileSource,
+  RavenFilterSource,
+  RavenFolderSource,
+  RavenGraphableFilterSource,
+  RavenGraphableSource,
 } from './index';
 
-export interface RavenSource {
-  actions: RavenSourceAction[];
-  childIds: string[];
-  content: MpsServerSourceGraphable[] | null;
-  dbType: string;
-  draggable: boolean;
-  expandable: boolean;
-  expanded: boolean;
-  fileMetadata: RavenFileMetadata;
-  icon: string;
-  id: string;
-  isServer: boolean;
-  kind: string;
-  label: string;
-  menu: boolean;
-  name: string;
-  openable: boolean;
-  opened: boolean;
-  parentId: string;
-  pinnable: boolean;
-  pinned: boolean;
-  selectable: boolean;
-  selected: boolean;
-  subBandIds: string[];
-  subKind: string;
-  url: string;
-}
+export type RavenSource =
+  RavenCustomGraphableSource |
+  RavenExpandableSource |
+  RavenFileSource |
+  RavenFilterSource |
+  RavenFolderSource |
+  RavenGraphableFilterSource |
+  RavenGraphableSource;

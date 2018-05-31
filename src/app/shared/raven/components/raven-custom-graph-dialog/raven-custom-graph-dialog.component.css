@@ -1,0 +1,21 @@
+:host {
+  display: block;
+  font-family: Roboto,"Helvetica Neue",sans-serif;
+}
+
+.actions {
+  justify-content: center;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.container > * {
+  width: 100%;
+}
+
+.graph {
+  padding-bottom: 15px;
+}

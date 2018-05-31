@@ -60,6 +60,9 @@ import {
 
 @Injectable()
 export class TimelineEffects {
+  /**
+   * Effect for AddBand | PinAdd | PinRemove | PinRename.
+   */
   @Effect()
   updatePinLabels$: Observable<Action> = this.actions$.pipe(
     ofType<AddBand | PinAdd | PinRemove | PinRename>(

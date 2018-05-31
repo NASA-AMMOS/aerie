@@ -18,10 +18,13 @@ import {
   AddBand,
   AddPointsToSubBand,
   AddSubBand,
+  RemoveAllPointsInSubBandWithParentSource,
   RemoveBandsOrPointsForSource,
+  RemoveSourceIdFromSubBands,
   RemoveSubBand,
   SelectBand,
   SelectPoint,
+  SetPointsForSubBand,
   SortBands,
   TimelineAction,
   TimelineActionTypes,
@@ -32,6 +35,7 @@ import {
 import {
   bandById,
   getMaxTimeRange,
+  getParentSourceIds,
   getPoint,
   updateSelectedBandIds,
   updateSelectedPoint,
@@ -80,14 +84,20 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
       return addPointsToSubBand(state, action);
     case TimelineActionTypes.AddSubBand:
       return addSubBand(state, action);
+    case TimelineActionTypes.RemoveAllPointsInSubBandWithParentSource:
+      return removeAllPointsInSubBandWithParentSource(state, action);
     case TimelineActionTypes.RemoveBandsOrPointsForSource:
       return removeBandsOrPointsForSource(state, action);
+    case TimelineActionTypes.RemoveSourceIdFromSubBands:
+      return removeSourceIdFromSubBands(state, action);
     case TimelineActionTypes.RemoveSubBand:
       return removeSubBand(state, action);
     case TimelineActionTypes.SelectBand:
       return selectBand(state, action);
     case TimelineActionTypes.SelectPoint:
       return selectPoint(state, action);
+    case TimelineActionTypes.SetPointsForSubBand:
+      return setPointsForSubBand(state, action);
     case TimelineActionTypes.SortBands:
       return sortBands(state, action);
     case TimelineActionTypes.UpdateBand:
@@ -113,11 +123,10 @@ export function addBand(state: TimelineState, action: AddBand): TimelineState {
     sortOrder: state.bands.filter(b => b.containerId === '0').length,
     subBands: action.band.subBands.map(subBand => {
       if (action.sourceId) {
-        const sourceIds = without(subBand.sourceIds, action.sourceId).concat(action.sourceId);
         return {
           ...subBand,
           parentUniqueId: action.band.id,
-          sourceIds,
+          sourceIds: without(subBand.sourceIds, action.sourceId).concat(action.sourceId),
         };
       } else {
         return {
@@ -200,6 +209,34 @@ export function addSubBand(state: TimelineState, action: AddSubBand): TimelineSt
 }
 
 /**
+ * Reduction Helper. Called when reducing the 'RemoveAllPointsInSubBandWithParentSource' action.
+ * Remove all points in the subBand whose parent source ids contain the action sourceId.
+ * All sourceIds for this band share a common parent. Therefore, we can use any sourceIds in the band, thus subBand.sourceIds[0].
+ */
+export function removeAllPointsInSubBandWithParentSource(state: TimelineState, action: RemoveAllPointsInSubBandWithParentSource): TimelineState {
+  const bands = state.bands.map(band => ({
+    ...band,
+    subBands: band.subBands.reduce((subBands: RavenSubBand[], subBand: RavenSubBand) => {
+      if (subBand.sourceIds.length > 0 && !getParentSourceIds(subBand.sourceIds[0]).includes(action.parentSourceId)) {
+        subBands.push(subBand);
+      } else {
+        subBands.push({
+          ...subBand,
+          points: [],
+        });
+      }
+
+      return subBands;
+    }, []),
+  }));
+
+  return {
+    ...state,
+    bands,
+  };
+}
+
+/**
  * Reduction Helper. Called when reducing the 'RemoveBandsOrPointsForSource' action.
  * Removes all bands or points that reference the given source.
  *
@@ -238,6 +275,27 @@ export function removeBandsOrPointsForSource(state: TimelineState, action: Remov
     ...updateSelectedBandIds(bands, state.selectedBandId, state.selectedSubBandId),
     ...updateSelectedPoint(state.selectedPoint, action.sourceId, null),
     ...updateTimeRanges(bands, state.viewTimeRange),
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'RemoveSourceIdFromSubBands' action.
+ */
+export function removeSourceIdFromSubBands(state: TimelineState, action: RemoveSourceIdFromSubBands): TimelineState {
+  const bands = state.bands.map(band => ({
+    ...band,
+    subBands: band.subBands.reduce((subBands: RavenSubBand[], subBand: RavenSubBand) => {
+      subBands.push({
+        ...subBand,
+        sourceIds: subBand.sourceIds.filter(sourceId => sourceId !== action.sourceId),
+      });
+      return subBands;
+    }, []),
+  }));
+
+  return {
+    ...state,
+    bands,
   };
 }
 
@@ -294,6 +352,39 @@ export function selectPoint(state: TimelineState, action: SelectPoint): Timeline
   return {
     ...state,
     selectedPoint: alreadySelected ? null : getPoint(state.bands, action.bandId, action.subBandId, action.pointId),
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'SetPointsForSubBand' action.
+ * Set points in a subBand with a specified band id and update time range.
+ */
+export function setPointsForSubBand(state: TimelineState, action: SetPointsForSubBand): TimelineState {
+  const bands = state.bands.map((band: RavenCompositeBand) => {
+    if (action.bandId === band.id) {
+      return {
+        ...band,
+        subBands: band.subBands.map(subBand => {
+          if (action.subBandId === subBand.id) {
+            const maxTimeRange = getMaxTimeRange(action.points);
+            return {
+              ...subBand,
+              maxTimeRange,
+              points: action.points,
+            };
+          }
+          return subBand;
+        }),
+      };
+    }
+
+    return band;
+  });
+
+  return {
+    ...state,
+    bands,
+    ...updateTimeRanges(bands, state.viewTimeRange),
   };
 }
 

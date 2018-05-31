@@ -1,0 +1,14 @@
+<div class="tree" [ngClass]="{
+  'highlight': source.subBandIds.length !== 0,
+  'no-highlight': source.subBandIds.length === 0
+}">
+  <mat-icon
+    *ngIf="source.type==='customGraphable'"
+    [id]="'raven-tree-'+source.name+'-customGraph'"
+    (click)="addCustomGraph.emit(source)">
+    subject
+  </mat-icon>
+  <span class="name">
+    <i [ngClass]="source.icon" aria-hidden="true"></i> {{source.name}}
+  </span>
+</div>

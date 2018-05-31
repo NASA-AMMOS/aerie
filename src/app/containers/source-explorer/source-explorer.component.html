@@ -28,11 +28,16 @@
             [source]="tree[childId]"
             [tree]="tree"
             (action)="onAction($event)"
+            (addCustomGraph)="onAddCustomGraph($event)"
+            (addFilter)="onAddFilter($event)"
+            (addGraphableFilter)="onAddGraphableFilter($event)"
             (close)="onClose($event)"
             (collapse)="onCollapse($event)"
             (expand)="onExpand($event)"
             (open)="onOpen($event)"
             (openMetadata)="fileMetadataDrawer.toggle()"
+            (removeFilter)="onRemoveFilter($event)"
+            (removeGraphableFilter)="onRemoveGraphableFilter($event)"
             (select)="onSelect($event)">
           </raven-tree>
         </ng-container>
@@ -51,11 +56,16 @@
           [source]="tree[pin.sourceId]"
           [tree]="tree"
           (action)="onAction($event)"
+          (addCustomGraph)="onAddCustomGraph($event)"
+          (addFilter)="onAddFilter($event)"
+          (addGraphableFilter)="onAddGraphableFilter($event)"
           (close)="onClose($event)"
           (collapse)="onCollapse($event)"
           (expand)="onExpand($event)"
           (open)="onOpen($event)"
           (openMetadata)="fileMetadataDrawer.toggle()"
+          (removeFilter)="onRemoveFilter($event)"
+          (removeGraphableFilter)="onRemoveGraphableFilter($event)"
           (select)="onSelect($event)">
         </raven-tree>
       </div>

@@ -23,6 +23,12 @@ import {
 } from './../models';
 
 import {
+  colorHexToRgbArray,
+  colorMap,
+  getRandomColor,
+} from './color';
+
+import {
   timestamp,
   utc,
 } from './time';
@@ -31,48 +37,41 @@ import {
  * Helper that gets a color from activity metadata.
  */
 export function getColorFromActivityMetadata(metadata: MpsServerActivityPointMetadata[]): number[] {
-  const colorMap: StringTMap<number[]> = {
-    'Aquamarine': [193, 226, 236],
-    'Cadet Blue': [92, 144, 198],
-    'Dodger Blue': [66, 130, 198],
-    'Hot Pink': [245, 105, 171],
-    'Khaki': [249, 217, 119],
-    'Lavender': [218, 154, 190],
-    'Orange': [249, 189, 133],
-    'Orange Red': [244, 145, 19],
-    'Pink': [245, 213, 228],
-    'Plum': [176, 150, 193],
-    'Purple': [144, 111, 169],
-    'Salmon': [255, 191, 193],
-    'Sky Blue': [166, 203, 240],
-    'Spring Green': [124, 191, 183],
-    'Violet Red': [183, 80, 163],
-    'Yellow': [245, 202, 46],
-    'color1': [0x5f, 0x99, 0x00],
-    'color2': [0x00, 0x93, 0xc3],
-    'color3': [0xee, 0x99, 0x33],
-    'color4': [0xcF, 0x30, 0x30],
-    'color5': [0x89, 750, 0xD9],
-    'color6': [0x3D, 0x3A, 0xAD],
-    'color7': [0xEC, 0x82, 0xB2],
-    'color8': [0x57, 0x57, 0x57],
-  };
-
-  let color = [0, 0, 0];
+  let color = null;
 
   for (let i = 0, l = metadata.length; i < l; ++i) {
     const data: MpsServerActivityPointMetadata = metadata[i];
 
     if (data.Name.toLowerCase() === 'color') {
-      const newColor = colorMap[data.Value];
-
-      if (newColor) {
-        color = newColor;
+      if (Array.isArray(data.Value)) {
+        return data.Value;
+      } else {
+        if (data.Value.startsWith('#')) {
+          return colorHexToRgbArray(data.Value);
+        } else {
+          color = colorMap[data.Value];
+        }
       }
     }
   }
 
-  return color;
+  return color ? color : getRandomColor().color;
+}
+
+/**
+ * Helper that gets the message in the activity metadata.
+ * For activities with 'message' metadata, the labels are hidden and the tooltips for activities should display the 'message' content instead of the activity name.
+ */
+export function getMessage(metadata: MpsServerActivityPointMetadata[] | null) {
+  if (metadata) {
+    for (let i = 0, l = metadata.length; i < l; ++i) {
+      const data = metadata[i];
+      if (data.Name === 'message') {
+        return data.Value;
+      }
+    }
+  }
+  return null;
 }
 
 /**
@@ -85,10 +84,12 @@ export function getActivityPoint(sourceId: string, data: MpsServerActivityPoint)
   const activityType = data['Activity Type'];
   const ancestors = data.ancestors;
   const childrenUrl = data.childrenUrl;
-  const color = getColorFromActivityMetadata(data.Metadata);
+  const color = data.Metadata ? getColorFromActivityMetadata(data.Metadata) : getRandomColor().color;
   const descendantsUrl = data.descendantsUrl;
   const endTimestamp = data['Tend Assigned'];
   const id = data.__document_id;
+  const keywordLine = data['Keyword Line'];
+  const message = getMessage(data.Metadata);
   const metadata = data.Metadata;
   const startTimestamp = data['Tstart Assigned'];
 
@@ -120,7 +121,9 @@ export function getActivityPoint(sourceId: string, data: MpsServerActivityPoint)
     end,
     endTimestamp,
     id,
+    keywordLine,
     legend,
+    message,
     metadata,
     sourceId,
     start,
@@ -137,7 +140,7 @@ export function getActivityPoint(sourceId: string, data: MpsServerActivityPoint)
  * Transforms MPS Server activity points of a given type to Raven activity points bucketed by legend. Also returns the max and min point times.
  * Note that for performance we are only looping through timelineData once.
  */
-export function getActivityPointsByLegend(sourceId: string, timelineData: MpsServerActivityPoint[]) {
+export function getActivityPointsByLegend(sourceId: string, sourceName: string, timelineData: MpsServerActivityPoint[]) {
   const legends: StringTMap<RavenActivityPoint[]> = {};
 
   let maxTime = Number.MIN_SAFE_INTEGER;
@@ -151,7 +154,13 @@ export function getActivityPointsByLegend(sourceId: string, timelineData: MpsSer
     if (point.end > maxTime) { maxTime = point.end; }
 
     // Group points by legend manually so we don't have to loop through timelineData twice.
-    if (legends[point.legend]) {
+    if (!point.legend) {
+      if (legends[sourceName]) {
+        legends[sourceName].push(point);
+      } else {
+        legends[sourceName] = [point];
+      }
+    } else if (legends[point.legend]) {
       legends[point.legend].push(point);
     } else {
       legends[point.legend] = [point];

@@ -44,6 +44,7 @@ import * as timelineActions from './../../actions/timeline';
 
 import {
   RavenConfirmDialogComponent,
+  RavenCustomGraphDialogComponent,
   RavenFileImportDialogComponent,
   RavenLayoutApplyDialogComponent,
   RavenPinDialogComponent,
@@ -51,6 +52,9 @@ import {
 } from './../../shared/raven/components';
 
 import {
+  RavenCustomGraphableSource,
+  RavenFilterSource,
+  RavenGraphableFilterSource,
   RavenPin,
   RavenSource,
   RavenSourceActionEvent,
@@ -169,6 +173,27 @@ export class SourceExplorerComponent implements OnDestroy {
   }
 
   /**
+   * Event. Called when a custom graphable source is clicked.
+   */
+  onAddCustomGraph(source: RavenCustomGraphableSource): void {
+    this.openCustomGraphDialog(source);
+  }
+
+  /**
+   * Event. Called when a filter is selected
+   */
+  onAddFilter(source: RavenFilterSource): void {
+    this.store.dispatch(new sourceExplorerActions.AddFilter(source));
+  }
+
+  /**
+   * Event. Called when a graphable filter is selected.
+   */
+  onAddGraphableFilter(source: RavenGraphableFilterSource): void {
+    this.store.dispatch(new sourceExplorerActions.AddGraphableFilter(source));
+  }
+
+  /**
    * Event. Called when a `close` event is fired from a raven-tree.
    */
   onClose(source: RavenSource): void {
@@ -201,6 +226,20 @@ export class SourceExplorerComponent implements OnDestroy {
    */
   onOpen(source: RavenSource): void {
     this.store.dispatch(new sourceExplorerActions.OpenEvent(source.id));
+  }
+
+  /**
+   * Event. Called when a filter is unselected
+   */
+  onRemoveFilter(source: RavenFilterSource): void {
+    this.store.dispatch(new sourceExplorerActions.RemoveFilter(source));
+  }
+
+  /**
+   * Event. Called when a graphable filter is unselected.
+   */
+  onRemoveGraphableFilter(source: RavenGraphableFilterSource): void {
+    this.store.dispatch(new sourceExplorerActions.RemoveGraphableFilter(source));
   }
 
   /**
@@ -248,6 +287,24 @@ export class SourceExplorerComponent implements OnDestroy {
     ).subscribe(result => {
       if (result && result.confirm) {
         this.store.dispatch(new sourceExplorerActions.ApplyState(source.url, source.id));
+      }
+    });
+  }
+
+  /**
+   * Dialog trigger. Opens the custom graph dialog.
+   */
+  openCustomGraphDialog(source: RavenCustomGraphableSource) {
+    const customGraphableDialog = this.dialog.open(RavenCustomGraphDialogComponent, {
+      data: { source },
+      width: '300px',
+    });
+
+    customGraphableDialog.afterClosed().pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(result => {
+      if (result && result.label) {
+        this.store.dispatch(new sourceExplorerActions.GraphCustomSource(source.id, result.label, result.filter));
       }
     });
   }

@@ -21,21 +21,24 @@ import {
 
 // Action Types.
 export enum TimelineActionTypes {
-  AddBand                      = '[timeline] add_band',
-  AddPointsToSubBand           = '[timeline] add_points_to_sub_band',
-  AddSubBand                   = '[timeline] add_sub_band',
-  PinAdd                       = '[timeline] pin_add',
-  PinRemove                    = '[timeline] pin_remove',
-  PinRename                    = '[timeline] pin_rename',
-  RemoveBandsOrPointsForSource = '[timeline] remove_bands_or_points_for_source',
-  RemoveSubBand                = '[timeline] remove_sub_band',
-  SelectBand                   = '[timeline] select_band',
-  SelectPoint                  = '[timeline] select_point',
-  SortBands                    = '[timeline] sort_bands',
-  UpdateBand                   = '[timeline] update_band',
-  UpdateSubBand                = '[timeline] update_sub_band',
-  UpdateTimeline               = '[timeline] update_timeline',
-  UpdateViewTimeRange          = '[timeline] update_view_time_range',
+  AddBand                                   = '[timeline] add_band',
+  AddPointsToSubBand                        = '[timeline] add_points_to_sub_band',
+  AddSubBand                                = '[timeline] add_sub_band',
+  PinAdd                                    = '[timeline] pin_add',
+  PinRemove                                 = '[timeline] pin_remove',
+  PinRename                                 = '[timeline] pin_rename',
+  RemoveAllPointsInSubBandWithParentSource  = '[timeline] remove_all_points_in_sub_band_with_parent_source',
+  RemoveBandsOrPointsForSource              = '[timeline] remove_bands_or_points_for_source',
+  RemoveSourceIdFromSubBands                = '[timeline] remove_source_from_sub_bands',
+  RemoveSubBand                             = '[timeline] remove_sub_band',
+  SelectBand                                = '[timeline] select_band',
+  SelectPoint                               = '[timeline] select_point',
+  SetPointsForSubBand                       = '[timeline] set_points_for_sub_band',
+  SortBands                                 = '[timeline] sort_bands',
+  UpdateBand                                = '[timeline] update_band',
+  UpdateSubBand                             = '[timeline] update_sub_band',
+  UpdateTimeline                            = '[timeline] update_timeline',
+  UpdateViewTimeRange                       = '[timeline] update_view_time_range',
 }
 
 // Actions.
@@ -87,8 +90,20 @@ export class PinRename implements Action {
   constructor(public sourceId: string, public newName: string) {}
 }
 
+export class RemoveAllPointsInSubBandWithParentSource implements Action {
+  readonly type = TimelineActionTypes.RemoveAllPointsInSubBandWithParentSource;
+
+  constructor(public parentSourceId: string) {}
+}
+
 export class RemoveBandsOrPointsForSource implements Action {
   readonly type = TimelineActionTypes.RemoveBandsOrPointsForSource;
+
+  constructor(public sourceId: string) {}
+}
+
+export class RemoveSourceIdFromSubBands implements Action {
+  readonly type = TimelineActionTypes.RemoveSourceIdFromSubBands;
 
   constructor(public sourceId: string) {}
 }
@@ -109,6 +124,16 @@ export class SelectPoint implements Action {
   readonly type = TimelineActionTypes.SelectPoint;
 
   constructor(public bandId: string, public subBandId: string, public pointId: string) {}
+}
+
+export class SetPointsForSubBand implements Action {
+  readonly type = TimelineActionTypes.SetPointsForSubBand;
+
+  constructor(
+    public bandId: string,
+    public subBandId: string,
+    public points: any[],
+  ) {}
 }
 
 export class SortBands implements Action {
@@ -149,10 +174,13 @@ export type TimelineAction =
   PinAdd |
   PinRemove |
   PinRename |
+  RemoveAllPointsInSubBandWithParentSource |
   RemoveBandsOrPointsForSource |
+  RemoveSourceIdFromSubBands |
   RemoveSubBand |
   SelectBand |
   SelectPoint |
+  SetPointsForSubBand |
   SortBands |
   UpdateBand |
   UpdateSubBand |

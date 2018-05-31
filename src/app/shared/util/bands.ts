@@ -13,6 +13,10 @@ import {
 } from 'lodash';
 
 import {
+  colorHexToRgbArray,
+} from './color';
+
+import {
   MpsServerActivityPoint,
   MpsServerGraphData,
   MpsServerResourceMetadata,
@@ -20,6 +24,7 @@ import {
   MpsServerStateMetadata,
   MpsServerStatePoint,
   RavenActivityBand,
+  RavenActivityPoint,
   RavenCompositeBand,
   RavenDefaultBandSettings,
   RavenDividerBand,
@@ -35,10 +40,6 @@ import {
   getStatePoints,
 } from './points';
 
-import {
-  getSourceType,
-} from './source';
-
 /**
  * Returns a data structure that transforms MpsServerGraphData to bands displayed in Raven.
  * Note that we do not worry about how these bands are displayed here.
@@ -46,6 +47,7 @@ import {
  */
 export function toRavenBandData(
   sourceId: string,
+  sourceName: string,
   graphData: MpsServerGraphData,
   defaultBandSettings: RavenDefaultBandSettings,
 ): RavenSubBand[] {
@@ -63,7 +65,7 @@ export function toRavenBandData(
     return [resourceBand];
   } else if (metadata.hasTimelineType === 'activity') {
     // Activity.
-    const activityBands = toActivityBands(sourceId, timelineData as MpsServerActivityPoint[], defaultBandSettings);
+    const activityBands = toActivityBands(sourceId, sourceName, timelineData as MpsServerActivityPoint[], defaultBandSettings);
     return activityBands;
   } else {
     console.error(`raven2 - bands.ts - toRavenBandData - parameter 'graphData' has a timeline type we do not recognize: ${metadata.hasTimelineType}`);
@@ -73,21 +75,27 @@ export function toRavenBandData(
 
 /**
  * Returns a list of bands based on timelineData and point legends.
+ *
+ * Note: For bands with activity points containing 'message' or 'keywordLine', labels should not be shown.
+ * Warnings, errors, and comments contain 'message'.
+ * DKF spec advisories contain 'keywordLine'.
+ * 'message' and 'keywordLine' are displayed in the tooltips for activities
+ * containing 'message' or 'keywordLine' instead of the 'Activity Name' in regular activities.
  */
 export function toActivityBands(
   sourceId: string,
+  sourceName: string,
   timelineData: MpsServerActivityPoint[],
   defaultBandSettings: RavenDefaultBandSettings,
 ): RavenActivityBand[] {
-  const { legends, maxTimeRange } = getActivityPointsByLegend(sourceId, timelineData);
-  const sourceType = getSourceType(sourceId);
+  const { legends, maxTimeRange } = getActivityPointsByLegend(sourceId, sourceName, timelineData);
   const bands: RavenActivityBand[] = [];
 
   // Map each legend to a band.
   Object.keys(legends).forEach(legend => {
     const activityBand: RavenActivityBand = {
-      activityHeight: 20,
-      activityStyle: 1,
+      activityHeight: isMessageTypeActivity(legends[legend][0]) ? 5 : 20,
+      activityStyle: isMessageTypeActivity(legends[legend][0]) ? 2 : 1,
       addTo: false,
       alignLabel: 3,
       autoFit: defaultBandSettings.activityLayout === 0 ? 1 : null,
@@ -95,7 +103,7 @@ export function toActivityBands(
       borderWidth: 1,
       height: 50,
       heightPadding: 10,
-      icon: defaultBandSettings.icon,
+      icon: defaultBandSettings.iconEnabled ? defaultBandSettings.icon : null,
       id: uniqueId(),
       label: `${legend}`,
       labelColor: [0, 0, 0],
@@ -109,11 +117,10 @@ export function toActivityBands(
       name: legend,
       parentUniqueId: null,
       points: legends[legend],
-      showLabel: true,
+      showLabel: !isMessageTypeActivity(legends[legend][0]), // Don't show labels for message type activities such as error, warning etc.
       showLabelPin: true,
       showTooltip: true,
       sourceIds: [sourceId],
-      sourceType,
       trimLabel: true,
       type: 'activity',
     };
@@ -391,19 +398,71 @@ export function updateSelectedBandIds(
 }
 
 /**
+ * Helper. Restore customFiltersBySourceId from args in band sourceIds. e.g ../command?label=ips&filter=.*IPS.*
+ */
+export function getCustomFiltersBySourceId(bands: RavenCompositeBand[]) {
+  const customFiltersBySourceId = {};
+
+  bands.forEach((band: RavenCompositeBand) => {
+    band.subBands.forEach((subBand: RavenSubBand) => {
+      subBand.sourceIds.forEach(sourceId => {
+        const pattern = new RegExp('(.*)\\?(.*)=(.*)&(.*)=(.*)');
+        const match = sourceId.match(pattern);
+
+        if (match) {
+          const customFilter = {
+            [match[2]]: match[3],
+            [match[4]]: match[5],
+          };
+          const id = match[1];
+          const customFilters = customFiltersBySourceId[id] || [];
+          customFiltersBySourceId[id] = customFilters.concat(customFilter);
+        }
+      });
+    });
+  });
+
+  return customFiltersBySourceId;
+}
+
+/**
+ * Helper. Restore filtersByParentId from arg in sourceIds. e.g ../DKF?events=BOT,EOT.
+ */
+export function getFiltersByParentId(bands: RavenCompositeBand[]) {
+  const filtersByParentId = {};
+
+  bands.forEach((band: RavenCompositeBand) => {
+    band.subBands.forEach((subBand: RavenSubBand) => {
+      subBand.sourceIds.forEach(sourceId => {
+        const pattern = new RegExp('(.*)\\?(.*)=(.*)');
+        const match = sourceId.match(pattern);
+
+        if (match) {
+          const parentId = match[1].replace(/\/([^\/]+)\/?$/, '');
+          filtersByParentId[parentId] = {
+            [match[2]]: match[3].split(','),
+          };
+        }
+      });
+    });
+  });
+
+  return filtersByParentId;
+}
+
+/**
  * Helper. Returns an activity-by-type band locator if a given band exists in the list of bands for a legend.
  * `null` otherwise.
  */
-export function hasActivityByTypeBand(bands: RavenCompositeBand[], band: RavenSubBand) {
-  if (band.type === 'activity' && (band as RavenActivityBand).sourceType === 'byType') {
+export function hasActivityBand(bands: RavenCompositeBand[], band: RavenSubBand) {
+  if (band.type === 'activity') {
     for (let i = 0, l = bands.length; i < l; ++i) {
       for (let j = 0, ll = bands[i].subBands.length; j < ll; ++j) {
         const subBand = bands[i].subBands[j] as RavenActivityBand;
 
         if (
           subBand.type === 'activity' &&
-          subBand.sourceType === 'byType' &&
-          subBand.legend === (band as RavenActivityBand).legend
+          subBand.label === (band as RavenActivityBand).legend
         ) {
           return {
             bandId: bands[i].id,
@@ -478,6 +537,13 @@ export function isAddTo(bands: RavenCompositeBand[], bandId: string, subBandId: 
 }
 
 /**
+ * Helper. Returns true if an activity is a `message` type. False otherwise.
+ */
+export function isMessageTypeActivity(activity: RavenActivityPoint): boolean {
+  return activity.message && !activity.keywordLine ? true : false;
+}
+
+/**
  * Helper. Returns true if the given band id in a list of bands is in overlay mode. False otherwise.
  */
 export function isOverlay(bands: RavenCompositeBand[], bandId: string): boolean {
@@ -488,37 +554,4 @@ export function isOverlay(bands: RavenCompositeBand[], bandId: string): boolean 
   }
 
   return false;
-}
-
-/**
- * Helper. Converts an rgb hex color string to a rgb color array.
- */
-export function colorHexToRgbArray(hex: string): number[] {
-  const color = [0, 0, 0];
-  const pattern = new RegExp('#(.{2})(.{2})(.{2})');
-  const match = hex.match(pattern);
-
-  if (match) {
-    color[0] = parseInt(match[1], 16);
-    color[1] = parseInt(match[2], 16);
-    color[2] = parseInt(match[3], 16);
-  }
-
-  return color;
-}
-
-/**
- * Helper. Converts an rgb color array to an rgb hex color string.
- */
-export function colorRgbArrayToHex(rgb: number[]): string {
-  const [r = 0, g = 0, b = 0] = rgb;
-  return `#${colorRgbToHex(r)}${colorRgbToHex(g)}${colorRgbToHex(b)}`;
-}
-
-/**
- * Helper. Converts a single rgb value [0, 255] to a hex value.
- */
-export function colorRgbToHex(rgb: number): string {
-  const hex = rgb.toString(16).toUpperCase();
-  return hex.length === 1 ? '0' + hex : hex;
 }

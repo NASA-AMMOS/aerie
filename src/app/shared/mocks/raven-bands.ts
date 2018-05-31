@@ -46,7 +46,6 @@ export const activityBand: RavenActivityBand = {
   showLabelPin: true,
   showTooltip: true,
   sourceIds: [],
-  sourceType: '',
   trimLabel: true,
   type: 'activity',
 };
@@ -134,11 +133,11 @@ export const bands: RavenCompositeBand[] = [
         ...activityBand,
         addTo: true,
         id: '0',
+        label: 'a',
         legend: 'a',
         name: 'test-activity-sub-band-0',
         parentUniqueId: '100',
         sourceIds: ['/a/b/c/d/e/w'],
-        sourceType: 'byType',
       },
     ],
   },
@@ -187,7 +186,6 @@ export const bands: RavenCompositeBand[] = [
         name: 'test-activity-sub-band-3',
         parentUniqueId: '103',
         sourceIds: ['/a/b/c/d/e/u'],
-        sourceType: 'byLegend',
       },
     ],
   },
@@ -211,7 +209,80 @@ export const bands: RavenCompositeBand[] = [
           uniqueId: '400',
         }],
         sourceIds: ['/a/b/c/d/e/v'],
-        sourceType: 'byType',
+      },
+    ],
+  },
+];
+
+export const bandsWithCustomFiltersInSourceId: RavenCompositeBand[] = [
+  {
+    ...compositeBand,
+    id: '100',
+    name: 'test-composite-band-0',
+    sortOrder: 0,
+    subBands: [
+      {
+        ...activityBand,
+        addTo: true,
+        id: '0',
+        label: 'ips',
+        legend: 'ips',
+        name: 'test-activity-sub-band-0',
+        parentUniqueId: '100',
+        sourceIds: ['/a/b/c?label=ips&filter=.*'],
+      },
+    ],
+  },
+  {
+    ...compositeBand,
+    id: '101',
+    name: 'test-composite-band-1',
+    overlay: false,
+    sortOrder: 1,
+    subBands: [
+      {
+        ...stateBand,
+        id: '1',
+        name: 'test-state-sub-band-0',
+        parentUniqueId: '101',
+        sourceIds: ['/a/b/c/d/e/x/y'],
+      },
+    ],
+  },
+];
+
+export const bandsWithFiltersInSourceId: RavenCompositeBand[] = [
+  {
+    ...compositeBand,
+    id: '100',
+    name: 'test-composite-band-0',
+    sortOrder: 0,
+    subBands: [
+      {
+        ...activityBand,
+        addTo: true,
+        id: '0',
+        label: 'DKF',
+        legend: 'DKF',
+        name: 'test-activity-sub-band-0',
+        parentUniqueId: '100',
+        sourceIds: ['/a/b/DKF/EOT?events=AOS,EOT'],
+      },
+    ],
+  },
+  {
+    ...compositeBand,
+    id: '101',
+    name: 'test-composite-band-1',
+    overlay: false,
+    sortOrder: 1,
+    subBands: [
+      {
+        ...stateBand,
+        id: '1',
+        name: 'test-state-sub-band-0',
+        parentUniqueId: '101',
+        sourceIds: ['/a/b/c/d/e/x/y'],
       },
     ],
   },

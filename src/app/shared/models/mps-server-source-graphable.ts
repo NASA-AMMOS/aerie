@@ -21,11 +21,14 @@ export interface MpsServerSourceGraphable {
   createdBy: string;
   customMeta: StringTMap<BaseType>[];
   data_url: string;
+  filterSetOf: string;
   file_data_url: string;
   hasCollectionType: string;
   importJobStatus: string;
   label: string;
   modified: string;
   name: string;
+  arg: string;
+  filter_key: string;
   permissions: string;
 }

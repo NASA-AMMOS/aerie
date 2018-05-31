@@ -182,7 +182,7 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
         id: point.id,
         label: point.activityName,
         opacity: 0.5,
-        properties: {},
+        properties: point.message ? { message: point.message } : {},
         start: point.start,
       });
 

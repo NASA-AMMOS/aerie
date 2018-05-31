@@ -8,6 +8,7 @@
  */
 
 import {
+  getColorFromActivityMetadata,
   getMaxTimeRange,
   getPoint,
   updateSelectedPoint,
@@ -71,6 +72,20 @@ describe('points.ts', () => {
       expect(getPoint(bands, '104', '4', '400')).toEqual({
         ...bands[4].subBands[0].points[0],
       });
+    });
+  });
+
+  describe('getColorFromActivityMetadata', () => {
+    it(`should return [66, 130, 198 ] for Dodger Blue`, () => {
+      expect(getColorFromActivityMetadata([{ Name: 'color', Value: 'Dodger Blue' }])).toEqual([66, 130, 198]);
+    });
+
+    it(`should return [255, 0, 0 ] for #ff0000`, () => {
+      expect(getColorFromActivityMetadata([{ Name: 'color', Value: '#ff0000' }])).toEqual([255, 0, 0]);
+    });
+
+    it(`should return [255, 255, 198 ] for [255, 255, 198]`, () => {
+      expect(getColorFromActivityMetadata([{ Name: 'color', Value: [255, 255, 198] }])).toEqual([255, 255, 198]);
     });
   });
 

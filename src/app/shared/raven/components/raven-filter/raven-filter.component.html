@@ -1,0 +1,20 @@
+<div class="tree" [ngClass]="{
+  'highlight': source.opened,
+  'no-highlight': !source.opened
+}">
+  <mat-icon
+    *ngIf="source.opened"
+    [id]="'raven-tree-'+source.name+'-unselectFilter'"
+    (click)="removeFilter.emit(source)">
+    star
+  </mat-icon>
+  <mat-icon
+    *ngIf="!source.opened"
+    [id]="'raven-tree-'+source.name+'-selectFilter'"
+    (click)="addFilter.emit(source)">
+    star
+  </mat-icon>
+  <span (click)="select.emit(source)" class="name">
+    {{source.name}}
+  </span>
+</div>

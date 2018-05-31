@@ -19,6 +19,8 @@ import {
 } from '@ngrx/store';
 
 import {
+  AddCustomFilter,
+  AddFilter,
   CloseEvent,
   CollapseEvent,
   ExpandEvent,
@@ -27,8 +29,10 @@ import {
   PinAdd,
   PinRemove,
   PinRename,
+  RemoveFilter,
   RemoveSource,
   SelectSource,
+  SetCustomFilterSubBandId,
   SourceExplorerAction,
   SourceExplorerActionTypes,
   SubBandIdAdd,
@@ -37,6 +41,7 @@ import {
 
 import {
   BaseType,
+  RavenCustomFilter,
   RavenPin,
   RavenSource,
   RavenSourceAction,
@@ -49,7 +54,9 @@ import {
 
 // Source Explorer State Interface.
 export interface SourceExplorerState {
+  customFiltersBySourceId: StringTMap<RavenCustomFilter[]>;
   fetchPending: boolean;
+  filtersByParentId: StringTMap<StringTMap<string[]>>;
   initialSourcesLoaded: boolean;
   pins: RavenPin[];
   selectedSourceId: string;
@@ -58,7 +65,9 @@ export interface SourceExplorerState {
 
 // Source Explorer Initial State.
 export const initialState: SourceExplorerState = {
+  customFiltersBySourceId: {},
   fetchPending: false,
+  filtersByParentId: {},
   initialSourcesLoaded: false,
   pins: [],
   selectedSourceId: '',
@@ -90,12 +99,14 @@ export const initialState: SourceExplorerState = {
       openable: false,
       opened: false,
       parentId: '',
+      permissions: '',
       pinnable: false,
       pinned: false,
       selectable: false,
       selected: false,
       subBandIds: [],
       subKind: '',
+      type: '',
       url: '',
     },
   },
@@ -107,6 +118,12 @@ export const initialState: SourceExplorerState = {
  */
 export function reducer(state: SourceExplorerState = initialState, action: SourceExplorerAction): SourceExplorerState {
   switch (action.type) {
+    case SourceExplorerActionTypes.AddCustomFilter:
+      return addCustomFilter(state, action);
+    case SourceExplorerActionTypes.AddFilter:
+      return addFilter(state, action);
+    case SourceExplorerActionTypes.AddGraphableFilter:
+      return { ...state, fetchPending: true };
     case SourceExplorerActionTypes.ApplyState:
       return { ...state, fetchPending: true };
     case SourceExplorerActionTypes.CloseEvent:
@@ -116,6 +133,7 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
     case SourceExplorerActionTypes.ExpandEvent:
       return expandEvent(state, action);
     case SourceExplorerActionTypes.FetchInitialSources:
+    case SourceExplorerActionTypes.GraphCustomSource:
       return { ...state, fetchPending: true };
     case SourceExplorerActionTypes.NewSources:
       return newSources(state, action);
@@ -127,6 +145,10 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
       return pinRemove(state, action);
     case SourceExplorerActionTypes.PinRename:
       return pinRename(state, action);
+    case SourceExplorerActionTypes.RemoveFilter:
+      return removeFilter(state, action);
+    case SourceExplorerActionTypes.RemoveGraphableFilter:
+      return { ...state, fetchPending: true };
     case SourceExplorerActionTypes.RemoveSource:
       return removeSource(state, action);
     case SourceExplorerActionTypes.RemoveSourceEvent:
@@ -134,6 +156,8 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
       return { ...state, fetchPending: true };
     case SourceExplorerActionTypes.SelectSource:
       return selectSource(state, action);
+    case SourceExplorerActionTypes.SetCustomFilterSubBandId:
+      return setCustomFilterSubBandId(state, action);
     case SourceExplorerActionTypes.SubBandIdAdd:
       return subBandIdAdd(state, action);
     case SourceExplorerActionTypes.SubBandIdRemove:
@@ -145,6 +169,44 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
     default:
       return state;
   }
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'AddCustomFilter' action.
+ */
+export function addCustomFilter(state: SourceExplorerState, action: AddCustomFilter): SourceExplorerState {
+  const customFilters = state.customFiltersBySourceId[action.sourceId] || [];
+
+  return {
+    ...state,
+    customFiltersBySourceId: {
+      ...state.customFiltersBySourceId,
+      [action.sourceId]: customFilters.concat({
+        filter: action.customFilter,
+        label: action.label,
+        subBandId: '',
+      }),
+    },
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'AddFilter' action.
+ */
+export function addFilter(state: SourceExplorerState, action: AddFilter): SourceExplorerState {
+  const parentFilters = state.filtersByParentId[action.source.parentId] || {};
+  const groupFilters = parentFilters[action.source.filterSetOf] || [];
+
+  return {
+    ...state,
+    filtersByParentId: {
+      ...state.filtersByParentId,
+      [action.source.parentId]: {
+        [action.source.filterSetOf]: without(groupFilters, action.source.name).concat(action.source.name),
+      },
+    },
+    ...updateTreeSource(state, action.source.id, { opened: true }),
+  };
 }
 
 /**
@@ -286,6 +348,26 @@ export function pinRename(state: SourceExplorerState, action: PinRename): Source
 }
 
 /**
+ * Reduction Helper. Called when reducing the 'RemoveFilter' action.
+ * Removes filter from filter array and unselects the source.
+ */
+export function removeFilter(state: SourceExplorerState, action: RemoveFilter): SourceExplorerState {
+  const parentFilters = state.filtersByParentId[action.source.parentId] || {};
+  const groupFilters = parentFilters[action.source.filterSetOf] || [];
+
+  return {
+    ...state,
+    filtersByParentId: {
+      ...state.filtersByParentId,
+      [action.source.parentId]: {
+        [action.source.filterSetOf]: without(groupFilters, action.source.name),
+      },
+    },
+    ...updateTreeSource(state, action.source.id, { opened: false }),
+  };
+}
+
+/**
  * Reduction Helper. Called when reducing the 'RemoveSource' action.
  * Removes a source and all it's children from the source tree.
  * Make sure we reset the selected source id if we remove the selected source.
@@ -343,6 +425,24 @@ export function selectSource(state: SourceExplorerState, action: SelectSource): 
 }
 
 /**
+ * Reduction Helper. Called when reducing the 'SetCustomFilterSubBandId' action.
+ */
+export function setCustomFilterSubBandId(state: SourceExplorerState, action: SetCustomFilterSubBandId): SourceExplorerState {
+  const customFilters = state.customFiltersBySourceId[action.sourceId] || [];
+
+  return {
+    ...state,
+    customFiltersBySourceId: {
+      ...state.customFiltersBySourceId,
+      [action.sourceId]: customFilters.map(customFilter => ({
+        ...customFilter,
+        subBandId: customFilter.label === action.customLabel ? action.subBandId : customFilter.subBandId,
+      })),
+    },
+  };
+}
+
+/**
  * Reduction Helper. Called when reducing the 'SubBandIdAdd' action.
  */
 export function subBandIdAdd(state: SourceExplorerState, action: SubBandIdAdd): SourceExplorerState {
@@ -364,8 +464,30 @@ export function subBandIdAdd(state: SourceExplorerState, action: SubBandIdAdd): 
  * Reduction Helper. Called when reducing the 'SubBandIdRemove' action.
  */
 export function subBandIdRemove(state: SourceExplorerState, action: SubBandIdRemove): SourceExplorerState {
+  const graphableFilterSourceId = action.sourceIds[0]; // Removing a `customGraphable` source sends the first source id in a list.
+
+  let newCustomFiltersBySourceId = {
+    ...state.customFiltersBySourceId,
+  };
+
+  // If the source is custom-graphable then make sure to update the custom filters for that source in `newCustomFiltersBySourceId`.
+  if (
+    state.treeBySourceId[graphableFilterSourceId] &&
+    state.treeBySourceId[graphableFilterSourceId].type === 'customGraphable'
+  ) {
+    const customFilters = state.customFiltersBySourceId[graphableFilterSourceId] || [];
+
+    newCustomFiltersBySourceId = {
+      ...state.customFiltersBySourceId,
+      [graphableFilterSourceId]: customFilters.filter(
+        customFilter => customFilter.subBandId !== action.subBandId,
+      ),
+    };
+  }
+
   return {
     ...state,
+    customFiltersBySourceId: newCustomFiltersBySourceId,
     treeBySourceId: {
       ...state.treeBySourceId,
       ...action.sourceIds.reduce((sourceIds, sourceId) => {

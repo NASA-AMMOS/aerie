@@ -12,9 +12,20 @@ import {
   MpsServerSourceCategory,
   MpsServerSourceDir,
   MpsServerSourceFile,
+  MpsServerSourceFileState,
   MpsServerSourceGraphable,
+  RavenBaseSource,
   RavenCompositeBand,
+  RavenCustomFilter,
+  RavenCustomFilterSource,
+  RavenCustomGraphableSource,
+  RavenExpandableSource,
   RavenFileMetadata,
+  RavenFileSource,
+  RavenFilterSource,
+  RavenFolderSource,
+  RavenGraphableFilterSource,
+  RavenGraphableSource,
   RavenPin,
   RavenSource,
   RavenSubBand,
@@ -25,10 +36,10 @@ import {
  * Transform form an MPS Server source to a Raven source.
  */
 export function toSource(parentId: string, isServer: boolean, mSource: MpsServerSource): RavenSource {
-  // Replace any slashes in name with dashes since slashes delineate sources in the source-explorer.
-  const sourceName = mSource.name.replace('/', '-');
+  // Replace any slashes or '.' in name with dashes since slashes delineate sources in the source-explorer and '.' cannot be be used in keys in mongodb.
+  const sourceName = mSource.name.replace(/\.|\//g, '-');
 
-  const rSource: RavenSource = {
+  const rSource: RavenBaseSource = {
     actions: [],
     childIds: [],
     content: null,
@@ -52,31 +63,39 @@ export function toSource(parentId: string, isServer: boolean, mSource: MpsServer
     menu: true,
     name: mSource.name,
     openable: false,
-    opened: false,
     parentId,
+    permissions: '',
     pinnable: true,
     pinned: false,
     selectable: true,
-    selected: false,
     subBandIds: [], // List of band ids that this source contributes data to.
     subKind: mSource.__kind_sub,
+    type: '',
     url: '',
   };
 
   if (rSource.kind === 'fs_category') {
     return fromCategory(mSource as MpsServerSourceCategory, rSource);
+  } else if (rSource.kind === 'fs_custom_filter') {
+    return fromCustomFilter(mSource as MpsServerSourceGraphable, rSource);
+  } else if (rSource.kind === 'fs_custom_graphable') {
+    return fromCustomGraphable(mSource as MpsServerSourceGraphable, rSource);
   } else if (rSource.kind === 'fs_dir') {
     return fromDir(isServer, mSource as MpsServerSourceDir, rSource);
   } else if (rSource.kind === 'fs_file') {
     if (rSource.subKind === 'file_state') {
-      return fromState(mSource as any, rSource);
+      return fromState(mSource as MpsServerSourceFileState, rSource);
     } else {
       return fromFile(mSource as MpsServerSourceFile, rSource);
     }
+  } else if (rSource.kind === 'fs_filter') {
+    return fromFilter(mSource as MpsServerSourceGraphable, rSource);
+  } else if (rSource.kind === 'fs_graphable_filter') {
+    return fromGraphableFilter(mSource as MpsServerSourceGraphable, rSource);
   } else if (rSource.kind === 'fs_graphable') {
     return fromGraphable(mSource as MpsServerSourceGraphable, rSource);
   } else {
-    return rSource;
+    return rSource as RavenSource;
   }
 }
 
@@ -90,18 +109,22 @@ export function toRavenSources(parentId: string, isServer: boolean, sources: Mps
 /**
  * Convert an MPS Server 'fs_category' source to a Raven source.
  */
-export function fromCategory(mSource: MpsServerSourceCategory, rSource: RavenSource): RavenSource {
+export function fromCategory(mSource: MpsServerSourceCategory, rSource: RavenBaseSource): RavenExpandableSource {
   return {
     ...rSource,
     content: mSource.contents,
+    expandable: true,
+    expanded: false,
     icon: 'fa fa-file-o',
+    selectable: false,
+    type: 'category',
   };
 }
 
 /**
  * Convert an MPS Server 'fs_dir' source to a Raven source.
  */
-export function fromDir(isServer: boolean, mSource: MpsServerSourceDir, rSource: RavenSource): RavenSource {
+export function fromDir(isServer: boolean, mSource: MpsServerSourceDir, rSource: RavenBaseSource): RavenFolderSource {
   return {
     ...rSource,
     actions: [
@@ -127,8 +150,14 @@ export function fromDir(isServer: boolean, mSource: MpsServerSourceDir, rSource:
       },
     ],
     dbType: mSource.__db_type,
+    expandable: true,
+    expanded: false,
     fileMetadata: toRavenFileMetadata(mSource as MpsServerSourceFile),
     icon: isServer ? 'fa fa-database' : 'fa fa-folder',
+    permissions: mSource.permissions,
+    selectable: true,
+    selected: false,
+    type: 'folder',
     url: mSource.contents_url,
   };
 }
@@ -164,46 +193,73 @@ export function fromFile(mSource: MpsServerSourceFile, rSource: RavenSource): Ra
     ...rSource,
     actions,
     dbType: mSource.__db_type,
+    expandable: true,
+    expanded: false,
     fileMetadata: toRavenFileMetadata(mSource),
     icon: 'fa fa-file',
+    permissions: mSource.permissions,
+    selectable: true,
+    selected: false,
+    type: 'file',
     url: mSource.contents_url,
   };
 }
 
 /**
- * Transforms MPS Server file metadata to Raven file metadata.
+ * Convert an MPS Server 'fs_custom_graphable' source to a Raven source.
  */
-export function toRavenFileMetadata(mSource: MpsServerSourceFile): RavenFileMetadata {
-  const fileMetadata = {
-    createdBy: mSource.createdBy ? mSource.createdBy : '',
-    createdOn: mSource.created ? mSource.created : '',
-    customMetadata: mSource.customMeta && mSource.customMeta.length ? toRavenCustomMetadata(mSource.customMeta) : null,
-    fileType: mSource.__kind === 'fs_dir' ? 'folder' : (mSource.__kind_sub === 'file_maros' ? 'Generic CSV' : mSource.__kind_sub),
-    lastModified: mSource.modified ? mSource.modified : '',
-    permissions: mSource.permissions ? mSource.permissions.substring(0, mSource.permissions.indexOf(' ')) : '',
+export function fromCustomGraphable(mSource: MpsServerSourceGraphable, rSource: RavenBaseSource): RavenCustomGraphableSource {
+  return {
+    ...rSource,
+    arg: mSource.arg,
+    expandable: false,
+    filterKey: mSource.filter_key,
+    icon: 'fa fa-area-chart',
+    openable: false,
+    selectable: false,
+    type: 'customGraphable',
+    url: mSource.data_url,
   };
-
-  return fileMetadata;
 }
 
 /**
- * Transforms MPS Server custom metadata to Raven customMetadata.
+ * Convert an MPS Server 'fs_filter' source to a Raven source.
  */
-export function toRavenCustomMetadata(metadata: any) {
-  const customMetadata = {};
+export function fromCustomFilter(mSource: MpsServerSourceGraphable, rSource: RavenBaseSource): RavenCustomFilterSource {
+  return {
+    ...rSource,
+    expandable: false,
+    filterSetOf: mSource.filterSetOf,
+    icon: 'fa fa-area-chart',
+    openable: false,
+    opened: false,
+    selectable: true,
+    type: 'customFilter',
+    url: mSource.data_url,
+  };
+}
 
-  for (let i = 0, l = metadata.length; i < l; ++i) {
-    const meta = metadata[i];
-    customMetadata[meta['Key']] = meta['Value'];
-  }
-
-  return customMetadata;
+/**
+ * Convert an MPS Server 'fs_filter' source to a Raven source.
+ */
+export function fromFilter(mSource: MpsServerSourceGraphable, rSource: RavenBaseSource): RavenFilterSource {
+  return {
+    ...rSource,
+    expandable: false,
+    filterSetOf: mSource.filterSetOf,
+    icon: 'fa fa-area-chart',
+    openable: false,
+    opened: false,
+    selectable: true,
+    type: 'filter',
+    url: mSource.data_url,
+  };
 }
 
 /**
  * Convert an MPS Server 'fs_graphable' source to a Raven source.
  */
-export function fromGraphable(mSource: MpsServerSourceGraphable, rSource: RavenSource): RavenSource {
+export function fromGraphable(mSource: MpsServerSourceGraphable, rSource: RavenBaseSource): RavenGraphableSource {
   const fileMetadata = toRavenFileMetadata(mSource as MpsServerSourceFile);
   return {
     ...rSource,
@@ -217,7 +273,27 @@ export function fromGraphable(mSource: MpsServerSourceGraphable, rSource: RavenS
     fileMetadata,
     icon: 'fa fa-area-chart',
     openable: true,
-    selectable: fileMetadata.customMetadata ? true : false,
+    opened: false,
+    selectable: mSource.customMeta ? true : false,
+    selected: false,
+    type: 'graphable',
+    url: mSource.data_url,
+  };
+}
+
+/**
+ * Convert an MPS Server 'fs_graphable' source to a Raven source.
+ */
+export function fromGraphableFilter(mSource: MpsServerSourceGraphable, rSource: RavenBaseSource): RavenGraphableFilterSource {
+  return {
+    ...rSource,
+    expandable: false,
+    filterSetOf: mSource.filterSetOf,
+    icon: 'fa fa-area-chart',
+    openable: false,
+    opened: false,
+    selectable: false,
+    type: 'graphableFilter',
     url: mSource.data_url,
   };
 }
@@ -225,7 +301,7 @@ export function fromGraphable(mSource: MpsServerSourceGraphable, rSource: RavenS
 /**
  * Convert an MPS Server 'fs_state' source to a Raven source.
  */
-export function fromState(mSource: any, rSource: RavenSource): RavenSource {
+export function fromState(mSource: MpsServerSourceFileState, rSource: RavenBaseSource): RavenFileSource {
   return {
     ...rSource,
     actions: [
@@ -239,11 +315,38 @@ export function fromState(mSource: any, rSource: RavenSource): RavenSource {
       },
     ],
     expandable: false,
+    expanded: false,
     icon: 'fa fa-table',
     openable: false,
     selectable: true,
-    url: mSource.contents_url,
+    selected: false,
+    type: 'file',
+    url: mSource.file_data_url,
   };
+}
+
+/**
+ * Helper for saving a state.
+ * Appends query strings to custom-graphable and graphable-filter types for a more compact state save.
+ */
+export function addQueryOptionsToSourceId(
+  source: RavenSource,
+  label: string,
+  customFilters: RavenCustomFilter[] | null = null,
+  filtersByParentId: StringTMap<StringTMap<string[]>>,
+): string {
+  // Custom Graphable.
+  if (source.type === 'customGraphable') {
+    const customFilter = getCustomFilterForLabel(label, customFilters);
+    return customFilter ? `${source.id}?label=${customFilter.label}&filter=${customFilter.filter}` : source.id;
+  }
+
+  // Graphable Filter.
+  if (source.type === 'graphableFilter' && filtersByParentId[source.parentId]) {
+    return getQueryOptionsForGraphableFilter(source.parentId, source.id, filtersByParentId[source.parentId]);
+  }
+
+  return source.id;
 }
 
 /**
@@ -278,6 +381,47 @@ export function getAllSourcesByKind(tree: StringTMap<RavenSource>, sourceId: str
   });
 
   return sourceNames;
+}
+
+/**
+ * Helper. Returns the filter for a label for a custom source instance. Labels for custom source are required to be unique with a given custom source.
+ */
+export function getCustomFilterForLabel(label: string, customFilters: RavenCustomFilter[] | null = null): RavenCustomFilter | null {
+  if (customFilters) {
+    for (let i = 0, l = customFilters.length; i < l; ++i) {
+      if (customFilters[i].label === label) {
+        return customFilters[i];
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Helper that returns a nicely formatted sourceUrl for custom-graphable and graphable-filter types.
+ * Just return the default sourceUrl if the type is not custom-graphable or graphable-filter.
+ */
+export function getFormattedSourceUrl(
+  source: RavenSource,
+  customFilter: RavenCustomFilter | null,
+  filtersByParentId: StringTMap<StringTMap<string[]>>,
+): string {
+  let sourceUrl = source.url;
+
+  // Custom Graphable.
+  if (source.type === 'customGraphable' && customFilter) {
+    const customGraphableSource = source as RavenCustomGraphableSource;
+    const param = customGraphableSource.arg === 'filter' ? `(${customGraphableSource.filterKey}=[${customFilter.filter}])` : customFilter.filter;
+    const queryOptions = `legend=${customFilter.label}&${customGraphableSource.arg}=${param}`;
+    sourceUrl = `${sourceUrl}&${queryOptions}`;
+  }
+
+  // Graphable Filter.
+  if (source.type === 'graphableFilter' && filtersByParentId[source.parentId]) {
+    sourceUrl = getQueryOptionsForGraphableFilter(source.parentId, source.url, filtersByParentId[source.parentId]);
+  }
+
+  return sourceUrl;
 }
 
 /**
@@ -336,6 +480,23 @@ export function getPinLabel(sourceIds: string[], pins: RavenPin[]): string {
 }
 
 /**
+ * Helper that returns query options attached to a graphable filter source id or url.
+ */
+export function getQueryOptionsForGraphableFilter(
+  parentId: string,
+  sourceIdOrUrl: string,
+  parentFilters: StringTMap<string[]>,
+) {
+  let queryOptions = '';
+
+  for (const group of Object.keys(parentFilters)) {
+    queryOptions += `${group}=${parentFilters[group].join(',')}&`;
+  }
+
+  return `${sourceIdOrUrl}?${queryOptions}`;
+}
+
+/**
  * Helper that returns a list of ALL source ids for a list of bands,
  * separated by parent ids and leaf source ids.
  * Using a hash here so we don't have to filter out repeats later.
@@ -348,7 +509,14 @@ export function getSourceIds(bands: RavenCompositeBand[]) {
     band.subBands.forEach((subBand: RavenSubBand) => {
       subBand.sourceIds.forEach(sourceId => {
         getParentSourceIds(sourceId).forEach(id => parentSourceIds[id] = id);
-        sourceIds[sourceId] = sourceId;
+        const pattern = new RegExp('([^\?]*)(.*)?');
+        const match = sourceId.match(pattern);
+        // remove args if exist
+        if (match) {
+          sourceIds[match[1]] = match[1];
+        } else {
+          sourceIds[sourceId] = sourceId;
+        }
       });
     });
   });
@@ -360,17 +528,33 @@ export function getSourceIds(bands: RavenCompositeBand[]) {
 }
 
 /**
- * Helper that returns a source type based on a given source id. Empty otherwise.
+ * Transforms MPS Server file metadata to Raven file metadata.
  */
-export function getSourceType(sourceId: string): string {
-  if (sourceId.includes('Activities by Legend')) {
-    return 'byLegend';
-  } else if (sourceId.includes('Activities by Type')) {
-    return 'byType';
-  } else {
-    console.warn('source.ts - getSourceType: unknown source type: ', sourceId);
-    return '';
+export function toRavenFileMetadata(mSource: MpsServerSourceFile): RavenFileMetadata {
+  const fileMetadata = {
+    createdBy: mSource.createdBy ? mSource.createdBy : '',
+    createdOn: mSource.created ? mSource.created : '',
+    customMetadata: mSource.customMeta && mSource.customMeta.length ? toRavenCustomMetadata(mSource.customMeta) : null,
+    fileType: mSource.__kind === 'fs_dir' ? 'folder' : (mSource.__kind_sub === 'file_maros' ? 'Generic CSV' : mSource.__kind_sub),
+    lastModified: mSource.modified ? mSource.modified : '',
+    permissions: mSource.permissions ? mSource.permissions.substring(0, mSource.permissions.indexOf(' ')) : '',
+  };
+
+  return fileMetadata;
+}
+
+/**
+ * Transforms MPS Server custom metadata to Raven customMetadata.
+ */
+export function toRavenCustomMetadata(metadata: any) {
+  const customMetadata = {};
+
+  for (let i = 0, l = metadata.length; i < l; ++i) {
+    const meta = metadata[i];
+    customMetadata[meta['Key']] = meta['Value'];
   }
+
+  return customMetadata;
 }
 
 /**

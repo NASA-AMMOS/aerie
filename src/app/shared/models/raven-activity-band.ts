@@ -22,7 +22,7 @@ export interface RavenActivityBand {
   borderWidth: number;
   height: number;
   heightPadding: number;
-  icon: string;
+  icon: string | null;
   id: string;
   label: string;
   labelColor: number[];
@@ -40,7 +40,6 @@ export interface RavenActivityBand {
   showLabelPin: boolean;
   showTooltip: boolean;
   sourceIds: string[];
-  sourceType: string;
   trimLabel: boolean;
   type: string;
 }

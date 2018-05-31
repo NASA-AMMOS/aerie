@@ -1,72 +1,74 @@
-<div class="tree" [ngClass]="{
-  'selected': source.selected,
-  'highlight': source.expanded || source.opened,
-  'no-highlight': !source.expanded && !source.opened
-}">
-  <mat-icon
-    *ngIf="source.expandable && source.expanded"
-    [id]="'raven-tree-'+source.name+'-collapse'"
-    (click)="collapse.emit(source)">
-    remove
-  </mat-icon>
-  <mat-icon
-    *ngIf="source.expandable && !source.expanded"
-    [id]="'raven-tree-'+source.name+'-expand'"
-    (click)="expand.emit(source)">
-    add
-  </mat-icon>
+<!-- Category. -->
+<raven-category
+  *ngIf="source.type === 'category'"
+  [id]="id"
+  [source]="source"
+  (collapse)="collapse.emit($event)"
+  (expand)="expand.emit($event)">
+</raven-category>
 
-  <mat-icon
-    *ngIf="source.openable && source.opened"
-    [id]="'raven-tree-'+source.name+'-close'"
-    (click)="close.emit(source)">
-    radio_button_checked
-  </mat-icon>
-  <mat-icon
-    *ngIf="source.openable && !source.opened"
-    [id]="'raven-tree-'+source.name+'-open'"
-    (click)="open.emit(source)">
-    radio_button_unchecked
-  </mat-icon>
+<!-- Custom Graphable. -->
+<raven-custom-graphable
+  *ngIf="source.type === 'customGraphable'"
+  [id]="id"
+  [source]="source"
+  (click)="addCustomGraph.emit(source)">
+</raven-custom-graphable>
 
-  <span (click)="select.emit(source)" class="name">
-    <i [ngClass]="source.icon" aria-hidden="true"></i> {{source.name}}
-  </span>
+<!-- File. -->
+<raven-file
+  *ngIf="source.type === 'file'"
+  [id]="id"
+  [source]="source"
+  (action)="action.emit($event)"
+  (collapse)="collapse.emit($event)"
+  (expand)="expand.emit($event)"
+  (openMetadata)="openMetadata.emit($event)"
+  (select)="select.emit($event)">
+</raven-file>
 
-  <button
-    *ngIf="source.selected"
-    class="menu-icon"
-    mat-icon-button
-    [matMenuTriggerFor]="actionsMenu">
-    <mat-icon>more_vert</mat-icon>
-  </button>
+<!-- Filter. -->
+<raven-filter
+  *ngIf="source.type === 'filter'"
+  [id]="id"
+  [source]="source"
+  (addFilter)="addFilter.emit($event)"
+  (removeFilter)="removeFilter.emit($event)">
+</raven-filter>
 
-  <mat-menu
-    #actionsMenu="matMenu"
-    [overlapTrigger]="false"
-    y-position="below">
-    <ng-container *ngFor="let a of source.actions">
-      <ng-container *ngIf="a.name === 'Apply'">
-        <button mat-menu-item [matMenuTriggerFor]="applyMenu">{{a.name}}</button>
-      </ng-container>
-      <ng-container *ngIf="a.name === 'File metadata'">
-        <button mat-menu-item (click)="openMetadata.emit(tree[id])">File Metadata</button>
-      </ng-container>
-      <ng-container *ngIf="a.name !== 'Apply' && a.name !== 'File metadata'">
-        <button mat-menu-item (click)="action.emit({ event: a.event, source: source })">{{a.name}}</button>
-      </ng-container>
-    </ng-container>
-  </mat-menu>
+<!-- Folder. -->
+<raven-folder
+  *ngIf="source.type === 'folder'"
+  [id]="id"
+  [source]="source"
+  (action)="action.emit($event)"
+  (collapse)="collapse.emit($event)"
+  (expand)="expand.emit($event)"
+  (openMetadata)="openMetadata.emit($event)"
+  (select)="select.emit($event)">
+</raven-folder>
 
-  <mat-menu
-    #applyMenu="matMenu"
-    [overlapTrigger]="false"
-    y-position="below">
-    <button mat-menu-item (click)="action.emit({ event: 'apply-layout', source: source })">Layout</button>
-    <button mat-menu-item (click)="action.emit({ event: 'apply-state', source: source })">State</button>
-  </mat-menu>
-</div>
+<!-- Graphable. -->
+<raven-graphable
+  *ngIf="source.type === 'graphable'"
+  [id]="id"
+  [source]="source"
+  (close)="close.emit($event)"
+  (open)="open.emit($event)"
+  (openMetadata)="openMetadata.emit($event)"
+  (select)="select.emit($event)">
+</raven-graphable>
 
+<!-- Graphable Filter. -->
+<raven-graphable-filter
+  *ngIf="source.type === 'graphableFilter'"
+  [id]="id"
+  [source]="source"
+  (addGraphableFilter)="addGraphableFilter.emit($event)"
+  (removeGraphableFilter)="removeGraphableFilter.emit($event)">
+</raven-graphable-filter>
+
+<!-- Children Nodes. -->
 <ul *ngIf="source.expanded">
   <li *ngFor="let childId of source.childIds; trackBy: trackByFn">
     <raven-tree
@@ -75,11 +77,16 @@
       [source]="tree[childId]"
       [tree]="tree"
       (action)="action.emit($event)"
+      (addCustomGraph)="addCustomGraph.emit($event)"
+      (addFilter)="addFilter.emit($event)"
+      (addGraphableFilter)="addGraphableFilter.emit($event)"
       (close)="close.emit($event)"
       (collapse)="collapse.emit($event)"
       (expand)="expand.emit($event)"
       (open)="open.emit($event)"
       (openMetadata)="openMetadata.emit($event)"
+      (removeFilter)="removeFilter.emit($event)"
+      (removeGraphableFilter)="removeGraphableFilter.emit($event)"
       (select)="select.emit($event)">
     </raven-tree>
   </li>

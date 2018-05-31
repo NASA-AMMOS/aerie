@@ -24,10 +24,13 @@ import {
   AddSubBand,
   PinRemove,
   PinRename,
+  RemoveAllPointsInSubBandWithParentSource,
   RemoveBandsOrPointsForSource,
+  RemoveSourceIdFromSubBands,
   RemoveSubBand,
   SelectBand,
   SelectPoint,
+  SetPointsForSubBand,
   SortBands,
   UpdateBand,
   UpdateSubBand,
@@ -39,6 +42,7 @@ import {
   activityBand,
   activityPoint,
   compositeBand,
+  grandChildSource,
   rootSource,
   stateBand,
 } from './../shared/mocks';
@@ -173,6 +177,37 @@ describe('timeline reducer', () => {
     expect(timelineState).toEqual(initialState);
   });
 
+  it('handle RemoveAllPointsInSubBandWithParentSource', () => {
+    const source: RavenSource = grandChildSource;
+
+    const band = {
+      ...compositeBand,
+      id: '0',
+      subBands: [{
+        ...activityBand,
+        id: '1',
+        parentUniqueId: '0',
+        points: [
+          {
+            ...activityPoint,
+            id: '100',
+            sourceId: '/child/grandChild',
+          },
+          {
+            ...activityPoint,
+            id: '101',
+            sourceId: '/child/gandChild',
+          },
+        ],
+        sourceIds: [],
+      }],
+    };
+
+    timelineState = reducer(timelineState, new AddBand(source.id, band));
+    timelineState = reducer(timelineState, new RemoveAllPointsInSubBandWithParentSource('/child'));
+    expect(timelineState.bands[0].subBands[0].points).toEqual([]);
+  });
+
   it('handle RemoveBandsOrPointsForSource', () => {
     const source: RavenSource = rootSource;
 
@@ -208,6 +243,37 @@ describe('timeline reducer', () => {
 
     timelineState = reducer(timelineState, new RemoveBandsOrPointsForSource('/child'));
     expect(timelineState.bands.length).toEqual(0);
+  });
+
+  it('handle RemoveSourceIdFromSubBands', () => {
+    const source: RavenSource = grandChildSource;
+    const band = {
+      ...compositeBand,
+      id: '0',
+      subBands: [{
+        ...activityBand,
+        id: '1',
+        parentUniqueId: '0',
+        points: [
+          {
+            ...activityPoint,
+            id: '100',
+            sourceId: '/',
+          },
+          {
+            ...activityPoint,
+            id: '101',
+            sourceId: '/child',
+          },
+        ],
+        sourceIds: ['/', '/child'],
+      }],
+    };
+
+    timelineState = reducer(timelineState, new AddBand(source.id, band));
+    expect(timelineState.bands[0].subBands[0].sourceIds).toEqual(['/', '/child', '/child/grandChild']);
+    timelineState = reducer(timelineState, new RemoveSourceIdFromSubBands('/child/grandChild'));
+    expect(timelineState.bands[0].subBands[0].sourceIds).toEqual(['/', '/child']);
   });
 
   it('handle RemoveSubBand', () => {
@@ -301,6 +367,37 @@ describe('timeline reducer', () => {
     timelineState = reducer(timelineState, new SelectPoint('0', '1', '400'));
 
     expect(timelineState.selectedPoint).toEqual(point);
+  });
+
+  it('handle SetPointsForSubBand', () => {
+    const source = grandChildSource;
+    const points = [activityPoint];
+    const band = {
+      ...compositeBand,
+      id: '0',
+      subBands: [{
+        ...activityBand,
+        id: '1',
+        parentUniqueId: '0',
+        points: [
+          {
+            ...activityPoint,
+            id: '100',
+            sourceId: '/',
+          },
+          {
+            ...activityPoint,
+            id: '101',
+            sourceId: '/child',
+          },
+        ],
+        sourceIds: ['/', '/child'],
+      }],
+    };
+
+    timelineState = reducer(timelineState, new AddBand(source.id, band));
+    timelineState = reducer(timelineState, new SetPointsForSubBand('0', '1', points));
+    expect(timelineState.bands[0].subBands[0].points).toEqual(points);
   });
 
   it('handle SortBands', () => {

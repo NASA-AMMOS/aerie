@@ -19,6 +19,8 @@ import {
 } from './../shared/models';
 
 import {
+  AddCustomFilter,
+  AddFilter,
   ApplyState,
   CloseEvent,
   CollapseEvent,
@@ -29,10 +31,12 @@ import {
   PinAdd,
   PinRemove,
   PinRename,
+  RemoveFilter,
   RemoveSource,
   RemoveSourceEvent,
   SaveState,
   SelectSource,
+  SetCustomFilterSubBandId,
   SubBandIdAdd,
   SubBandIdRemove,
   UpdateSourceExplorer,
@@ -40,7 +44,9 @@ import {
 } from './../actions/source-explorer';
 
 import {
+  categorySource,
   childSource,
+  filterSource,
   rootSource,
 } from './../shared/mocks';
 
@@ -53,6 +59,22 @@ describe('source-explorer reducer', () => {
 
   it('handle default', () => {
     expect(sourceExplorerState).toEqual(initialState);
+  });
+
+  it('handle AddCustomFilter', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new AddCustomFilter('/child', 'ips', '.*IPS.*'));
+    expect(sourceExplorerState).toEqual({
+      ...initialState,
+      customFiltersBySourceId: {
+        '/child' : [ { filter: '.*IPS.*', label: 'ips', subBandId: '' }]},
+    });
+  });
+
+  it('handle AddFilter', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new NewSources(rootSource.id, [categorySource]));
+    sourceExplorerState = reducer(sourceExplorerState, new NewSources(categorySource.id, [filterSource]));
+    sourceExplorerState = reducer(sourceExplorerState, new AddFilter(filterSource));
+    expect(sourceExplorerState.filtersByParentId).toEqual({ '/DKF' : { events: ['BOT'] } } );
   });
 
   it('handle ApplyState', () => {
@@ -228,6 +250,14 @@ describe('source-explorer reducer', () => {
     });
   });
 
+  it('handle RemoveFilter', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new NewSources(rootSource.id, [categorySource]));
+    sourceExplorerState = reducer(sourceExplorerState, new NewSources(categorySource.id, [filterSource]));
+    sourceExplorerState = reducer(sourceExplorerState, new AddFilter(filterSource));
+    sourceExplorerState = reducer(sourceExplorerState, new RemoveFilter(filterSource));
+    expect(sourceExplorerState.filtersByParentId).toEqual({ '/DKF' : { events: [] } });
+  });
+
   it('handle RemoveSource', () => {
     // First add a source we can remove.
     sourceExplorerState = reducer(sourceExplorerState, new NewSources(rootSource.id, [childSource]));
@@ -299,6 +329,16 @@ describe('source-explorer reducer', () => {
     });
   });
 
+  it('handle SetCustomFilterSubBandId', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new AddCustomFilter('/child', 'ips', '.*IPS.*'));
+    sourceExplorerState = reducer(sourceExplorerState, new SetCustomFilterSubBandId('/child', 'ips', '45'));
+    expect(sourceExplorerState).toEqual({
+      ...initialState,
+      customFiltersBySourceId: {
+        '/child' : [ { filter: '.*IPS.*', label: 'ips', subBandId: '45' }]},
+    });
+  });
+
   it('handle SubBandIdAdd', () => {
     sourceExplorerState = reducer(sourceExplorerState, new SubBandIdAdd(rootSource.id, '100'));
     expect(sourceExplorerState).toEqual({
@@ -319,6 +359,7 @@ describe('source-explorer reducer', () => {
     sourceExplorerState = reducer(sourceExplorerState, new SubBandIdRemove(['/'], '100'));
     expect(sourceExplorerState).toEqual({
       ...initialState,
+      customFiltersBySourceId: {},
       treeBySourceId: {
         ...initialState.treeBySourceId,
         '/': {

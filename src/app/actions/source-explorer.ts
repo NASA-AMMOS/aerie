@@ -14,6 +14,8 @@ import {
 import {
   BaseType,
   RavenFile,
+  RavenFilterSource,
+  RavenGraphableFilterSource,
   RavenPin,
   RavenSource,
   StringTMap,
@@ -21,32 +23,67 @@ import {
 
 // Action Types.
 export enum SourceExplorerActionTypes {
-  ApplyLayout          = '[sourceExplorer] apply-layout',
-  ApplyState           = '[sourceExplorer] apply-state',
-  CloseEvent           = '[sourceExplorer] close_event',
-  CollapseEvent        = '[sourceExplorer] collapse_event',
-  ExpandEvent          = '[sourceExplorer] expand_event',
-  FetchInitialSources  = '[sourceExplorer] fetch_initial_sources',
-  FetchNewSources      = '[sourceExplorer] fetch_new_sources',
-  ImportFile           = '[sourceExplorer] import_file',
-  ImportFileFailure    = '[sourceExplorer] import_file_failure',
-  ImportFileSuccess    = '[sourceExplorer] import_file_success',
-  NewSources           = '[sourceExplorer] new_sources',
-  OpenEvent            = '[sourceExplorer] open_event',
-  PinAdd               = '[sourceExplorer] pin_add',
-  PinRemove            = '[sourceExplorer] pin_remove',
-  PinRename            = '[sourceExplorer] pin_rename',
-  RemoveSource         = '[sourceExplorer] remove_source',
-  RemoveSourceEvent    = '[sourceExplorer] remove_source_event',
-  SaveState            = '[sourceExplorer] save_state',
-  SelectSource         = '[sourceExplorer] select_source',
-  SubBandIdAdd         = '[sourceExplorer] sub_band_id_add',
-  SubBandIdRemove      = '[sourceExplorer] sub_band_id_remove',
-  UpdateSourceExplorer = '[sourceExplorer] update_source_explorer',
-  UpdateTreeSource     = '[sourceExplorer] update_tree_source',
+  AddCustomFilter              = '[sourceExplorer] add_custom_filter',
+  AddCustomGraph               = '[sourceExplorer] add_custom_graph',
+  AddFilter                    = '[sourceExplorer] add_filter',
+  AddGraphableFilter           = '[sourceExplorer] add_graphable_filter',
+  ApplyLayout                  = '[sourceExplorer] apply-layout',
+  ApplyState                   = '[sourceExplorer] apply-state',
+  CloseEvent                   = '[sourceExplorer] close_event',
+  CollapseEvent                = '[sourceExplorer] collapse_event',
+  ExpandEvent                  = '[sourceExplorer] expand_event',
+  FetchInitialSources          = '[sourceExplorer] fetch_initial_sources',
+  FetchNewSources              = '[sourceExplorer] fetch_new_sources',
+  GraphCustomSource            = '[sourceExplorer] graph_custom_source',
+  ImportFile                   = '[sourceExplorer] import_file',
+  ImportFileFailure            = '[sourceExplorer] import_file_failure',
+  ImportFileSuccess            = '[sourceExplorer] import_file_success',
+  NewSources                   = '[sourceExplorer] new_sources',
+  OpenEvent                    = '[sourceExplorer] open_event',
+  PinAdd                       = '[sourceExplorer] pin_add',
+  PinRemove                    = '[sourceExplorer] pin_remove',
+  PinRename                    = '[sourceExplorer] pin_rename',
+  RemoveCustomFilter           = '[sourceExplorer] remove_custom_filter',
+  RemoveFilter                 = '[sourceExplorer] remove_filter',
+  RemoveGraphableFilter        = '[sourceExplorer] remove_graphable_filter',
+  RemoveSource                 = '[sourceExplorer] remove_source',
+  RemoveSourceEvent            = '[sourceExplorer] remove_source_event',
+  SaveState                    = '[sourceExplorer] save_state',
+  SelectSource                 = '[sourceExplorer] select_source',
+  SetCustomFilterSubBandId     = '[sourceExplorer] set_custom_filter_sub_band_id',
+  SubBandIdAdd                 = '[sourceExplorer] sub_band_id_add',
+  SubBandIdRemove              = '[sourceExplorer] sub_band_id_remove',
+  UpdateGraphAfterFilterAdd    = '[sourceExplorer] update_graph_after_filter_add',
+  UpdateGraphAfterFilterRemove = '[sourceExplorer] update_graph_after_filter_remove',
+  UpdateSourceExplorer         = '[sourceExplorer] update_source_explorer',
+  UpdateTreeSource             = '[sourceExplorer] update_tree_source',
 }
 
 // Actions.
+export class AddCustomFilter implements Action {
+  readonly type = SourceExplorerActionTypes.AddCustomFilter;
+
+  constructor(public sourceId: string, public label: string, public customFilter: string) {}
+}
+
+export class AddCustomGraph implements Action {
+  readonly type = SourceExplorerActionTypes.AddCustomGraph;
+
+  constructor(public sourceId: string, public label: string, public customFilter: string) {}
+}
+
+export class AddFilter implements Action {
+  readonly type = SourceExplorerActionTypes.AddFilter;
+
+  constructor(public source: RavenFilterSource) {}
+}
+
+export class AddGraphableFilter implements Action {
+  readonly type = SourceExplorerActionTypes.AddGraphableFilter;
+
+  constructor(public source: RavenGraphableFilterSource) {}
+}
+
 export class ApplyLayout implements Action {
   readonly type = SourceExplorerActionTypes.ApplyLayout;
 
@@ -89,6 +126,12 @@ export class FetchNewSources implements Action {
   readonly type = SourceExplorerActionTypes.FetchNewSources;
 
   constructor(public sourceId: string, public sourceUrl: string) {}
+}
+
+export class GraphCustomSource implements Action {
+  readonly type = SourceExplorerActionTypes.GraphCustomSource;
+
+  constructor(public sourceId: string, public label: string, public filter: string) {}
 }
 
 export class ImportFile implements Action {
@@ -135,6 +178,24 @@ export class PinRename implements Action {
   constructor(public sourceId: string, public newName: string) {}
 }
 
+export class RemoveCustomFilter implements Action {
+  readonly type = SourceExplorerActionTypes.RemoveCustomFilter;
+
+  constructor(public sourceId: string, public label: string) {}
+}
+
+export class RemoveFilter implements Action {
+  readonly type = SourceExplorerActionTypes.RemoveFilter;
+
+  constructor(public source: RavenFilterSource) {}
+}
+
+export class RemoveGraphableFilter implements Action {
+  readonly type = SourceExplorerActionTypes.RemoveGraphableFilter;
+
+  constructor(public source: RavenGraphableFilterSource) {}
+}
+
 export class RemoveSource implements Action {
   readonly type = SourceExplorerActionTypes.RemoveSource;
 
@@ -159,6 +220,12 @@ export class SelectSource implements Action {
   constructor(public source: RavenSource) {}
 }
 
+export class SetCustomFilterSubBandId implements Action {
+  readonly type = SourceExplorerActionTypes.SetCustomFilterSubBandId;
+
+  constructor(public sourceId: string, public customLabel: string, public subBandId: string) {}
+}
+
 export class SubBandIdAdd implements Action {
   readonly type = SourceExplorerActionTypes.SubBandIdAdd;
 
@@ -169,6 +236,18 @@ export class SubBandIdRemove implements Action {
   readonly type = SourceExplorerActionTypes.SubBandIdRemove;
 
   constructor(public sourceIds: string[], public subBandId: string) {}
+}
+
+export class UpdateGraphAfterFilterAdd implements Action {
+  readonly type = SourceExplorerActionTypes.UpdateGraphAfterFilterAdd;
+
+  constructor(public sourceId: string) {}
+}
+
+export class UpdateGraphAfterFilterRemove implements Action {
+  readonly type = SourceExplorerActionTypes.UpdateGraphAfterFilterRemove;
+
+  constructor(public sourceId: string) {}
 }
 
 export class UpdateSourceExplorer implements Action {
@@ -185,6 +264,10 @@ export class UpdateTreeSource implements Action {
 
 // Union type of all actions.
 export type SourceExplorerAction =
+  AddCustomFilter |
+  AddCustomGraph |
+  AddFilter |
+  AddGraphableFilter |
   ApplyLayout |
   ApplyState |
   CloseEvent |
@@ -192,6 +275,7 @@ export type SourceExplorerAction =
   ExpandEvent |
   FetchInitialSources |
   FetchNewSources |
+  GraphCustomSource |
   ImportFile |
   ImportFileFailure |
   ImportFileSuccess |
@@ -200,11 +284,17 @@ export type SourceExplorerAction =
   PinAdd |
   PinRemove |
   PinRename |
+  RemoveCustomFilter |
+  RemoveFilter |
+  RemoveGraphableFilter |
   RemoveSource |
   RemoveSourceEvent |
   SaveState |
   SelectSource |
+  SetCustomFilterSubBandId |
   SubBandIdAdd |
   SubBandIdRemove |
+  UpdateGraphAfterFilterAdd |
+  UpdateGraphAfterFilterRemove |
   UpdateSourceExplorer |
   UpdateTreeSource;

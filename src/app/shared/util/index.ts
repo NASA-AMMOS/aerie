@@ -8,6 +8,7 @@
  */
 
 export * from './bands';
+export * from './color';
 export * from './epochs';
 export * from './points';
 export * from './source';

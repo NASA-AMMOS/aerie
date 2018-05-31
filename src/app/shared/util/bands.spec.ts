@@ -9,12 +9,12 @@
 
 import {
   bandById,
-  colorHexToRgbArray,
-  colorRgbArrayToHex,
-  colorRgbToHex,
-  hasActivityByTypeBand,
+  getCustomFiltersBySourceId,
+  getFiltersByParentId,
+  hasActivityBand,
   hasSourceId,
   isAddTo,
+  isMessageTypeActivity,
   isOverlay,
   subBandById,
   updateSelectedBandIds,
@@ -23,7 +23,12 @@ import {
 } from './bands';
 
 import {
+  activityPoint,
   bands,
+  bandsWithCustomFiltersInSourceId,
+  bandsWithFiltersInSourceId,
+  keywordLineActivityPoint,
+  messageTypeActivityPoint,
 } from './../mocks';
 
 describe('bands.ts', () => {
@@ -39,55 +44,37 @@ describe('bands.ts', () => {
     });
   });
 
-  describe('colorHexToRgbArray', () => {
-    it(`should convert a non hex value to a black color array`, () => {
-      expect(colorHexToRgbArray('42')).toEqual([0, 0, 0]);
-    });
+  describe('getCustomFiltersBySourceId', () => {
 
-    it(`should properly convert a hex color to an array of colors`, () => {
-      expect(colorHexToRgbArray('#000000')).toEqual([0, 0, 0]);
-      expect(colorHexToRgbArray('#FF0000')).toEqual([255, 0, 0]);
-      expect(colorHexToRgbArray('#00FF00')).toEqual([0, 255, 0]);
-      expect(colorHexToRgbArray('#0000FF')).toEqual([0, 0, 255]);
-      expect(colorHexToRgbArray('#FFFFFF')).toEqual([255, 255, 255]);
+    it(`should return custom filters from sourceIds in bands`, () => {
+      expect(getCustomFiltersBySourceId(bandsWithCustomFiltersInSourceId)).toEqual({
+        '/a/b/c': [{
+          filter: '.*',
+          label: 'ips',
+        }],
+      });
     });
   });
 
-  describe('colorRgbArrayToHex', () => {
-    it(`should convert an empty color array to a black hex color value`, () => {
-      expect(colorRgbArrayToHex([])).toEqual('#000000');
-    });
-
-    it(`should properly convert an rgb color array to a hex color value`, () => {
-      expect(colorRgbArrayToHex([0, 0, 0])).toEqual('#000000');
-      expect(colorRgbArrayToHex([255, 0, 0])).toEqual('#FF0000');
-      expect(colorRgbArrayToHex([0, 255, 0])).toEqual('#00FF00');
-      expect(colorRgbArrayToHex([0, 0, 255])).toEqual('#0000FF');
-      expect(colorRgbArrayToHex([255, 255, 255])).toEqual('#FFFFFF');
+  describe('getFiltersByParentId', () => {
+    it(`should return filters for parentId from sourceIds in bands`, () => {
+      expect(getFiltersByParentId(bandsWithFiltersInSourceId)).toEqual({
+        '/a/b/DKF': {
+          events: ['AOS', 'EOT'],
+        },
+      });
     });
   });
 
-  describe('colorRgbToHex', () => {
-    it(`should convert a rgb number to a hex value`, () => {
-      expect(colorRgbToHex(0)).toEqual('00');
-      expect(colorRgbToHex(255)).toEqual('FF');
-    });
-  });
-
-  describe('hasActivityByTypeBand', () => {
+  describe('hasActivityBand', () => {
     it(`should return null if the given band is not an activity band`, () => {
       const stateBand = bands[1].subBands[0];
-      expect(hasActivityByTypeBand(bands, stateBand)).toBe(null);
-    });
-
-    it(`should return null if the given band is not a byType activity band`, () => {
-      const byLegendActivityBand = bands[3].subBands[0];
-      expect(hasActivityByTypeBand(bands, byLegendActivityBand)).toBe(null);
+      expect(hasActivityBand(bands, stateBand)).toBe(null);
     });
 
     it(`should return the first found sub-band if it is an activity by-type sub-band with the same legend as the given band`, () => {
       const byTypeActivityBand = bands[4].subBands[0];
-      expect(hasActivityByTypeBand(bands, byTypeActivityBand)).toEqual({
+      expect(hasActivityBand(bands, byTypeActivityBand)).toEqual({
         bandId: '100',
         subBandId: '0',
       });
@@ -126,6 +113,20 @@ describe('bands.ts', () => {
 
     it(`should return true if the ids and type are correct and the band is in addTo mode`, () => {
       expect(isAddTo(bands, '100', '0', 'activity')).toBe(true);
+    });
+  });
+
+  describe('isMessageTypeActivity', () => {
+    it(`should return true for activityPoint with message and no keywordLine`, () => {
+      expect(isMessageTypeActivity(messageTypeActivityPoint)).toBe(true);
+    });
+
+    it(`should return false for activityPoint with message and keywordLine`, () => {
+      expect(isMessageTypeActivity(keywordLineActivityPoint)).toBe(false);
+    });
+
+    it(`should return false for activityPoint with message and keywordLine`, () => {
+      expect(isMessageTypeActivity(activityPoint)).toBe(false);
     });
   });
 

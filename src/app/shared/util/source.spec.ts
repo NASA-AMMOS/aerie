@@ -8,13 +8,16 @@
  */
 
 import {
+  addQueryOptionsToSourceId,
   getAllChildIds,
   getAllSourcesByKind,
+  getCustomFilterForLabel,
+  getFormattedSourceUrl,
   getParentSourceIds,
   getPin,
   getPinLabel,
+  getQueryOptionsForGraphableFilter,
   getSourceIds,
-  getSourceType,
   toRavenCustomMetadata,
   toRavenFileMetadata,
   updateSourceId,
@@ -22,10 +25,40 @@ import {
 
 import {
   bands,
+  customGraphableSource,
+  graphableFilterSource,
   treeBySourceId,
 } from './../mocks/';
 
 describe('source.ts', () => {
+  describe('addQueryOptionsToSourceId', () => {
+    const customFilters = [
+      {
+        filter: 'AC.*',
+        label: 'ac',
+        subBandId: '',
+      },
+      {
+        filter: '.*IPS.*',
+        label: 'ips',
+        subBandId: '',
+      },
+    ];
+    const filtersByParentId = {
+      '/DKF': {
+        events: ['BOT', 'EOT'],
+      },
+    };
+
+    it(`should add custom filter to sourceId`, () => {
+      expect(addQueryOptionsToSourceId(customGraphableSource, 'ac', customFilters, filtersByParentId)).toEqual('/PEF/command?label=ac&filter=AC.*');
+    });
+
+    it(`should add filter to graphable sourceId`, () => {
+      expect(addQueryOptionsToSourceId(graphableFilterSource, '', customFilters, filtersByParentId)).toEqual('/DKF/BOT?events=BOT,EOT&');
+    });
+  });
+
   describe('getAllChildIds', () => {
     it(`should return a list of all child ids (recursively) for a given source id`, () => {
       expect(getAllChildIds(treeBySourceId, '/')).toEqual([
@@ -66,6 +99,55 @@ describe('source.ts', () => {
       expect(getAllSourcesByKind(treeBySourceId, '/child/1', 'data')).toEqual([
         treeBySourceId['/child/child/0'],
       ]);
+    });
+  });
+
+  describe('getCustomFilterForLabel', () => {
+    const label = 'ips';
+    const customFilters = [
+      {
+        filter: 'AC.*',
+        label: 'ac',
+        subBandId: '',
+      },
+      {
+        filter: '.*IPS.*',
+        label: 'ips',
+        subBandId: '',
+      },
+    ];
+
+    it(`should return the filter for a label for a custom source`, () => {
+      expect(getCustomFilterForLabel(label, customFilters)).toEqual({
+        filter: '.*IPS.*',
+        label: 'ips',
+        subBandId: '',
+      });
+    });
+
+    it(`should return null for a label with no filter`, () => {
+      expect(getCustomFilterForLabel('badLabel', customFilters)).toEqual(null);
+    });
+  });
+
+  describe('getFormattedSourceUrl', () => {
+    const customFilter = {
+      filter: '.*IPS.*',
+        label: 'ips',
+        subBandId: '',
+    };
+    const filtersByParentId = {
+      '/DKF': {
+        events: ['BOT', 'EOT'],
+      },
+    };
+
+    it(`should return sourceUrl with custom filter args`, () => {
+      expect(getFormattedSourceUrl(customGraphableSource, customFilter, filtersByParentId)).toEqual('https://a/b/c?format=TMS&legend=ips&filter=(command=[.*IPS.*])');
+    });
+
+    it(`should return sourceUrl with filter`, () => {
+      expect(getFormattedSourceUrl(graphableFilterSource, customFilter, filtersByParentId)).toEqual('https://a/b/c?events=BOT,EOT&');
     });
   });
 
@@ -135,6 +217,26 @@ describe('source.ts', () => {
     });
   });
 
+  describe('getQueryOptionsForGraphableFilter', () => {
+    const sourceIdOrUrl = 'leucadia/taifunTest/abc.pef/DKF';
+    const parentFilters = {
+      events: ['BOT', 'EOT'],
+    };
+    it('should include filters as query option in the sourceId or url', () => {
+      expect(getQueryOptionsForGraphableFilter('leucadia/taifunTest/abc.pef', sourceIdOrUrl, parentFilters)).toEqual('leucadia/taifunTest/abc.pef/DKF?events=BOT,EOT&');
+    });
+  });
+
+  describe('getQueryOptionsForGraphableFilter', () => {
+    const sourceIdOrUrl = 'leucadia/taifunTest/abc.pef/DKF';
+    const parentFilters = {
+      collection: [],
+    };
+    it(`should include filters as query option in the sourceId or url`, () => {
+      expect(getQueryOptionsForGraphableFilter('leucadia/taifunTest/abc.pef', sourceIdOrUrl, parentFilters)).toEqual('leucadia/taifunTest/abc.pef/DKF?collection=&');
+    });
+  });
+
   describe('getSourceIds', () => {
     it(`should split sources from a list of bands into parent source ids and leaf source ids`, () => {
       expect(getSourceIds(bands)).toEqual({
@@ -154,20 +256,6 @@ describe('source.ts', () => {
           '/a/b/c/d/e/v',
         ],
       });
-    });
-  });
-
-  describe('getSourceType', () => {
-    it(`should properly identify an 'Activities by Legend'`, () => {
-      expect(getSourceType('/hello/Activities by Legend/goodbye/')).toEqual('byLegend');
-    });
-
-    it(`should properly identify an 'Activities by Type'`, () => {
-      expect(getSourceType('/hello/Activities by Type/goodbye/')).toEqual('byType');
-    });
-
-    it(`should return empty string for an unknown source type`, () => {
-      expect(getSourceType('hello, world!')).toEqual('');
     });
   });
 

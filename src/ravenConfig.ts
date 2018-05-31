@@ -31,6 +31,7 @@ const ravenConfig: RavenConfig = {
     activityLayout: 0,
     dateFormat: 'Day-Month-Year',
     icon: 'circle',
+    iconEnabled: false,
     labelFont: 'Georgia',
     labelFontSize: 9,
     labelWidth: 100,

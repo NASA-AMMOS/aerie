@@ -9,5 +9,5 @@
 
 export interface MpsServerActivityPointMetadata {
   Name: string;
-  Value: string;
+  Value: any;
 }
