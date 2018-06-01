@@ -10,6 +10,7 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { AgGridModule } from 'ag-grid-angular';
 import { SortablejsModule } from 'angular-sortablejs';
 import { MaterialModule } from './../material';
 
@@ -41,6 +42,8 @@ import {
   RavenStateBandComponent,
   RavenStatePointComponent,
   RavenStateSaveDialogComponent,
+  RavenTableComponent,
+  RavenTableDetailComponent,
   RavenTimeBandComponent,
   RavenTimeScrollBarComponent,
   RavenTreeComponent,
@@ -82,6 +85,8 @@ export const DECLARATIONS = [
   RavenStateBandComponent,
   RavenStatePointComponent,
   RavenStateSaveDialogComponent,
+  RavenTableComponent,
+  RavenTableDetailComponent,
   RavenTimeBandComponent,
   RavenTimeScrollBarComponent,
   RavenTreeComponent,
@@ -108,6 +113,9 @@ export const MODULES = [
   MaterialModule,
   ReactiveFormsModule,
   SortablejsModule,
+  AgGridModule.withComponents([
+    RavenTableDetailComponent,
+  ]),
 ];
 
 @NgModule({

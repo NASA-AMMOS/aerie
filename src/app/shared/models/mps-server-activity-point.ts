@@ -16,6 +16,7 @@ export interface MpsServerActivityPoint {
   __document_id: string;
   __file_id: string;
   __kind: string;
+  Arguments: number;
   ancestors: string[];
   childrenUrl: string;
   descendantsUrl: string;

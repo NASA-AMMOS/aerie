@@ -34,6 +34,8 @@ export * from './raven-settings-global/raven-settings-global.component';
 export * from './raven-state-band/raven-state-band.component';
 export * from './raven-state-point/raven-state-point.component';
 export * from './raven-state-save-dialog/raven-state-save-dialog.component';
+export * from './raven-table/raven-table.component';
+export * from './raven-table-detail/raven-table-detail.component';
 export * from './raven-time-band/raven-time-band.component';
 export * from './raven-time-scroll-bar/raven-time-scroll-bar.component';
 export * from './raven-tree/raven-tree.component';

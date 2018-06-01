@@ -83,6 +83,7 @@ export function getActivityPoint(sourceId: string, data: MpsServerActivityPoint)
   const activityParameters = data['Activity Parameters'];
   const activityType = data['Activity Type'];
   const ancestors = data.ancestors;
+  const args = data.Arguments;
   const childrenUrl = data.childrenUrl;
   const color = data.Metadata ? getColorFromActivityMetadata(data.Metadata) : getRandomColor().color;
   const descendantsUrl = data.descendantsUrl;
@@ -114,6 +115,7 @@ export function getActivityPoint(sourceId: string, data: MpsServerActivityPoint)
     activityParameters,
     activityType,
     ancestors,
+    arguments: args,
     childrenUrl,
     color,
     descendantsUrl,
@@ -191,7 +193,12 @@ export function getResourcePoints(sourceId: string, timelineData: MpsServerResou
 
     const id = data.__document_id;
     const start = utc(data['Data Timestamp']);
-    const value = data['Data Value'];
+    let value = data['Data Value'];
+
+    // Make sure that empty string values are set to 0.
+    if (value === '') {
+      value = '000T00:00:00';
+    }
 
     if (start < minTime) { minTime = start; }
     if (start > maxTime) { maxTime = start; }

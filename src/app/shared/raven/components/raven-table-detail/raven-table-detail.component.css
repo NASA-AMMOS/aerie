@@ -1,0 +1,17 @@
+.full-width-panel {
+  background: #fafafa;
+  border-bottom: 2px solid lightgray;
+  border-left: 2px solid grey;
+  border-right: 2px solid lightgray;
+  box-sizing: border-box;
+  height: 100%;
+  position: relative;
+  width: 100%;
+}
+
+.full-width-grid {
+  box-sizing: border-box;
+  display: block;
+  height: 50%;
+  padding: 10px;
+}

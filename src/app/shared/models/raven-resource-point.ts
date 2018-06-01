@@ -15,5 +15,5 @@ export interface RavenResourcePoint {
   subBandId: string;
   type: string;
   uniqueId: string;
-  value: number;
+  value: string;
 }

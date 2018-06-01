@@ -36,7 +36,7 @@ export const initialState: LayoutState = {
   rightDrawerSelectedTabIndex: 0,
   showActivityPointMetadata: false,
   showActivityPointParameters: true,
-  showDetailsDrawer: false,
+  showDetailsDrawer: true,
   showLeftDrawer: true,
   showRightDrawer: true,
   showSouthBandsDrawer: true,

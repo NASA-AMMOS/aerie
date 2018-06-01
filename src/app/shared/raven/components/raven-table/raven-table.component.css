@@ -1,0 +1,22 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+ag-grid-angular {
+  height: 85%;
+  width: 100%;
+}
+
+mat-card {
+  padding: 10px;
+}
+
+.grid-container {
+  height: 100%;
+  overflow: hidden;
+}
+
+.reset-columns-button {
+  padding-bottom: 10px;
+}

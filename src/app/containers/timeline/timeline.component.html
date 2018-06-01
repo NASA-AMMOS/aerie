@@ -95,11 +95,12 @@
         [visible]="showDetailsDrawer"
         [order]="4"
         size="20">
-        <div class="details">
-          <mat-card>
-            Nothing here yet.
-          </mat-card>
-        </div>
+        <raven-table
+          class="raven-table"
+          [points]="selectedSubBandPoints"
+          [selectedBandId]="selectedBandId"
+          [selectedPoint]="selectedPoint">
+        </raven-table>
       </split-area>
     </split>
   </split-area>

@@ -19,6 +19,7 @@ export const activityPoint: RavenActivityPoint = {
   ],
   activityType: '',
   ancestors: [],
+  arguments: 0,
   childrenUrl: '',
   color: [
     0, 0, 0,
@@ -48,6 +49,7 @@ export const messageTypeActivityPoint: RavenActivityPoint = {
   ],
   activityType: '',
   ancestors: [],
+  arguments: 0,
   childrenUrl: '',
   color: [
     0, 0, 0,
@@ -77,6 +79,7 @@ export const keywordLineActivityPoint: RavenActivityPoint = {
   ],
   activityType: '',
   ancestors: [],
+  arguments: 0,
   childrenUrl: '',
   color: [
     0, 0, 0,

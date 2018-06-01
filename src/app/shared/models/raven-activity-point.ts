@@ -18,6 +18,7 @@ export interface RavenActivityPoint {
   activityParameters: MpsServerActivityPointParameter[];
   activityType: string;
   ancestors: string[];
+  arguments: number;
   childrenUrl: string;
   color: number[];
   descendantsUrl: string;

@@ -12,5 +12,5 @@ export interface MpsServerResourcePoint {
   __file_id: string;
   __kind: string;
   'Data Timestamp': string;
-  'Data Value': number;
+  'Data Value': string;
 }

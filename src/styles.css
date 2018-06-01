@@ -1,4 +1,6 @@
 @import "~@angular/material/prebuilt-themes/indigo-pink.css";
+@import "~ag-grid/dist/styles/ag-grid.css";
+@import "~ag-grid/dist/styles/ag-theme-fresh.css";
 
 * {
   box-sizing: border-box;
@@ -8,4 +10,8 @@ html {
   -webkit-font-smoothing: antialiased;
   -ms-overflow-style: none;
   overflow: auto;
+}
+
+.ag-theme-fresh .ag-row-selected {
+  background-color: #fffe0d;
 }
