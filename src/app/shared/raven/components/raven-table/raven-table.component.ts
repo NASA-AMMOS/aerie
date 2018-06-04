@@ -15,8 +15,10 @@ import {
 import {
   ChangeDetectionStrategy,
   Component,
+  EventEmitter,
   Input,
   OnChanges,
+  Output,
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
@@ -30,8 +32,8 @@ import {
 } from 'ag-grid-angular';
 
 import {
-  RavenActivityPoint,
   RavenPoint,
+  RavenSubBand,
 } from './../../../models';
 
 import {
@@ -53,24 +55,38 @@ export class RavenTableComponent implements OnChanges {
 
   @Input() points: RavenPoint[];
   @Input() selectedBandId: string;
+  @Input() selectedSubBand: RavenSubBand;
   @Input() selectedPoint: RavenPoint;
+
+  @Output() updateTableColumns: EventEmitter<any> = new EventEmitter<any>();
 
   columnDefs: any[] = [];
   rowData: any[] = [];
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.selectedPoint) {
+    // Points.
+    if (changes.points && this.points.length && this.selectedSubBand) {
+      if (this.selectedSubBand.tableColumns.length) {
+        // Load columns if they exist on the band.
+        this.columnDefs = this.selectedSubBand.tableColumns;
+      } else {
+        // Otherwise generate new columns dynamically.
+        this.columnDefs = this.createColumnDefs(this.points[0]);
+      }
+
+      this.setColumnHeader(); // Set the header since it may have changed if we are coming from saved columns.
+      this.rowData = this.createRowData(this.points);
       this.highlightRowForSelectedPoint();
     }
 
-    if (changes.points && this.points.length) {
-      this.columnDefs = this.createColumnDefs(this.points[0]);
+    // Selected Sub Band.
+    if (changes.selectedSubBand && this.selectedSubBand) {
+      this.setColumnHeader();
+    }
 
-      const { rowData, hideFirstColumn } = this.createRowData(this.points);
-      this.rowData = rowData;
-      this.columnDefs[0].hide = hideFirstColumn; // Hide first column if we don't need to see it (e.g. no activity params or metadata).
-
-      this.groupTimeColumns();
+    // Selected Point.
+    if (changes.selectedPoint) {
+      this.highlightRowForSelectedPoint();
     }
   }
 
@@ -87,18 +103,29 @@ export class RavenTableComponent implements OnChanges {
    */
   getRowHeight(params: any) {
     const rowIsDetailRow = params.node.level === 1;
-    return rowIsDetailRow ? 400 : 48;
+    return rowIsDetailRow ? 300 : 28;
   }
 
   /**
    * Ag Grid. Helper that gets child records from a row.
+   * Note the Ag Grid quirk of `children` being an array-of-arrays.
    */
   getNodeChildDetails(record: any) {
     if (record.activityParameters || record.metadata) {
+      const children = [];
+
+      // Add activity parameters table only if we have activity parameters.
+      if (record.activityParameters && record.activityParameters.length) {
+        children.push([{ type: 'Activity Parameters', rows: record.activityParameters }]);
+      }
+
+      // Add metadata table only if we have metadata.
+      if (record.metadata && record.metadata.length) {
+        children.push([{ type: 'Metadata', rows: record.metadata }]);
+      }
+
       return {
-        children: [
-          [record],
-        ],
+        children,
         group: true,
         key: record.id, // The key is used by the default group cellRenderer.
       };
@@ -117,36 +144,25 @@ export class RavenTableComponent implements OnChanges {
   /**
    * Calculates and returns `columnDefs` for use in the grid based on a point.
    */
-  createColumnDefs(point?: RavenPoint): any[] {
-    const columnDefs: any[] = [];
+  createColumnDefs(point: RavenPoint) {
+    const children: any[] = [];
 
     if (point) {
       // First push the sub-grid menu column for opening/closing the detail panel if it exists.
-      columnDefs.push({
+      children.push({
         cellRenderer: 'agGroupCellRenderer',
         cellRendererParams: {
           suppressCount: true,
           suppressDoubleClickExpand: true,
         },
-        colId: 'detail',
-        editable: false,
-        field: 'detail',
+        colId: 'index',
+        field: 'index',
         headerName: '',
         hide: false,
-        maxWidth: 25,
-        minWidth: 25,
-        showRowGroup: true,
-        suppressFilter: true,
-        suppressMenu: true,
-        suppressMovable: true,
-        suppressResize: true,
-        suppressSizeToFit: true,
-        suppressSorting: true,
-        suppressToolPanel: true,
-        width: 25,
+        width: 70,
       });
 
-      Object.keys(pickBy(point)).forEach(prop => { // `pickBy` removes undefined or null props.
+      Object.keys(pickBy(point)).forEach(prop => { // `pickBy` removes nulls or undefined props.
         // Exclude table columns we do not want to show.
         if (
           typeof point[prop] !== 'object' &&
@@ -171,7 +187,7 @@ export class RavenTableComponent implements OnChanges {
           prop !== 'type' &&
           prop !== 'uniqueId'
         ) {
-          columnDefs.push({
+          children.push({
             colId: prop,
             field: prop,
             headerName: prop.charAt(0).toUpperCase() + prop.slice(1), // Capitalize header.
@@ -181,53 +197,70 @@ export class RavenTableComponent implements OnChanges {
       });
     }
 
-    return columnDefs;
+    return [{
+      children: this.groupTimeColumns(children),
+      groupId: 'header',
+      headerName: this.selectedSubBand.label,
+    }];
   }
 
   /**
    * Returns `rowData` for use in the grid.
+   * Makes sure points have a properly formatted timestamp and an index.
    */
-  createRowData(points?: RavenPoint[]) {
-    const rowData: any[] = [];
+  createRowData(points: RavenPoint[] = []) {
+    return points.map((point, index) => ({
+      ...this.timestampPoint(pickBy(point)), // `pickBy` removes nulls or undefined props.
+      index,
+    }));
+  }
 
-    let hideFirstColumn = true;
+  /**
+   * Helper that emits an `updateTableColumns` event.
+   * Note the setTimeout. This is to ensure Ag Grid has the most recent columns before emitting them.
+   */
+  emitUpdateTableColumns(tableColumns?: any[]) {
+    setTimeout(() =>
+      this.updateTableColumns.emit({
+        bandId: this.selectedBandId,
+        subBandId: this.selectedSubBand.id,
+        update: {
+          tableColumns: tableColumns || this.getColumnState(),
+        },
+      }),
+    );
+  }
 
-    if (points) {
-      for (let i = 0, l = points.length; i < l; ++i) {
-        const point = this.timestampPoint(points[i]);
-
-        if (
-          (point as RavenActivityPoint).activityParameters && (point as RavenActivityPoint).activityParameters.length ||
-          (point as RavenActivityPoint).metadata && (point as RavenActivityPoint).metadata.length
-        ) {
-          hideFirstColumn = false;
-
-          rowData.push({
-            ...point,
-            detail: '', // Add a `detail` data point so the detail column shows an expand/collapse arrow if needed.
-          });
-        } else {
-          rowData.push(point);
-        }
-      }
+  /**
+   * Helper that returns column state based on the current column defs and api state.
+   * Ag Grid does not return the api state or sort with the column def so we have to do this manually :(.
+   */
+  getColumnState() {
+    if (this.agGrid) {
+      return [{
+        ...this.agGrid.columnApi.getColumnGroupState()[0],
+        children: this.agGrid.columnApi.getColumnState().map(column => ({
+          ...this.agGrid.columnApi.getColumn(column.colId).getColDef(),
+          ...this.agGrid.api.getSortModel().find(sort => sort.colId === column.colId),
+          ...column,
+        })),
+      }];
     }
-
-    return {
-      hideFirstColumn,
-      rowData,
-    };
+    return [];
   }
 
   /**
    * Helper that groups columns based on time (i.e. start, end, and duration).
    */
-  groupTimeColumns() {
-    if (this.columnDefs.length) {
+  groupTimeColumns(columns: any[]) {
+    const columnDefs = [...columns];
+
+    if (columnDefs.length) {
       let startIndex = -1;
       let endIndex = -1;
       let durationIndex = -1;
 
-      this.columnDefs.forEach((column, i) => {
+      columnDefs.forEach((column: any, i: number) => {
         if (column.field === 'start') {
           startIndex = i;
         } else if (column.field === 'end') {
@@ -240,27 +273,29 @@ export class RavenTableComponent implements OnChanges {
       // Rearrange start and end first and place them at the end of the columns.
       if (startIndex > -1 && endIndex > -1) {
         // Keep a reference to the start and end column.
-        const startColumn = this.columnDefs[startIndex];
-        const endColumn = this.columnDefs[endIndex];
+        const startColumn = columnDefs[startIndex];
+        const endColumn = columnDefs[endIndex];
 
         // Remove both columns.
         // This correctly accounts for the case if there is a column between end and start.
-        this.columnDefs.splice(startIndex, 1);
-        this.columnDefs.splice(endIndex, 1);
+        columnDefs.splice(startIndex, 1);
+        columnDefs.splice(endIndex, 1);
 
         // Add back start and end columns in the correct order.
-        this.columnDefs.push(startColumn);
-        this.columnDefs.push(endColumn);
+        columnDefs.push(startColumn);
+        columnDefs.push(endColumn);
       }
 
       // Next (only after start and end have been rearranged), move duration to the end column.
       // This gives the order: start | end | duration.
       if (durationIndex > -1) {
-        const durationColumn = this.columnDefs[durationIndex];
-        this.columnDefs.splice(durationIndex, 1);
-        this.columnDefs.push(durationColumn);
+        const durationColumn = columnDefs[durationIndex];
+        columnDefs.splice(durationIndex, 1);
+        columnDefs.push(durationColumn);
       }
     }
+
+    return columnDefs;
   }
 
   /**
@@ -287,7 +322,21 @@ export class RavenTableComponent implements OnChanges {
    * This resets the columns to their original state.
    */
   onResetColumns() {
-    this.agGrid.columnApi.resetColumnState();
+    this.columnDefs = this.createColumnDefs(this.points[0]);
+    this.emitUpdateTableColumns([]);
+  }
+
+  /**
+   * Helper that sets the current column header.
+   * Note the setTimeout. This is to ensure Ag Grid is finished rendering before setting the new header.
+   */
+  setColumnHeader() {
+    setTimeout(() => {
+      if (this.agGrid) {
+        this.agGrid.columnApi.getColumnGroup('header').getColGroupDef().headerName = this.selectedSubBand.label;
+        this.agGrid.api.refreshHeader();
+      }
+    });
   }
 
   /**

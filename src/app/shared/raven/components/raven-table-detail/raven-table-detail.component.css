@@ -12,6 +12,6 @@
 .full-width-grid {
   box-sizing: border-box;
   display: block;
-  height: 50%;
+  height: 100%;
   padding: 10px;
 }

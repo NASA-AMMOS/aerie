@@ -121,6 +121,7 @@ export function toActivityBands(
       showLabelPin: true,
       showTooltip: true,
       sourceIds: [sourceId],
+      tableColumns: [],
       trimLabel: true,
       type: 'activity',
     };
@@ -175,6 +176,7 @@ export function toDividerBand(): RavenDividerBand {
     points: [],
     showTooltip: true,
     sourceIds: [],
+    tableColumns: [],
     type: 'divider',
   };
 
@@ -221,6 +223,7 @@ export function toResourceBand(
     showLabelUnit: true,
     showTooltip: true,
     sourceIds: [sourceId],
+    tableColumns: [],
     type: 'resource',
   };
 
@@ -259,6 +262,7 @@ export function toStateBand(
     showLabelPin: true,
     showTooltip: true,
     sourceIds: [sourceId],
+    tableColumns: [],
     type: 'state',
   };
 

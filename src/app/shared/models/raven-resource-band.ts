@@ -41,5 +41,6 @@ export interface RavenResourceBand {
   showLabelUnit: boolean;
   showTooltip: boolean;
   sourceIds: string[];
+  tableColumns: any[]; // TODO: Remove `any`.
   type: string;
 }

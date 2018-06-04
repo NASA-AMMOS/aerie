@@ -46,6 +46,7 @@ export const activityBand: RavenActivityBand = {
   showLabelPin: true,
   showTooltip: true,
   sourceIds: [],
+  tableColumns: [],
   trimLabel: true,
   type: 'activity',
 };
@@ -92,6 +93,7 @@ export const resourceBand: RavenResourceBand = {
   showLabelUnit: true,
   showTooltip: true,
   sourceIds: [],
+  tableColumns: [],
   type: 'resource',
 };
 
@@ -116,6 +118,7 @@ export const stateBand: RavenStateBand = {
   showLabelPin: true,
   showTooltip: true,
   sourceIds: [],
+  tableColumns: [],
   type: 'state',
 };
 

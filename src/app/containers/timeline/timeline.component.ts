@@ -87,6 +87,7 @@ export class TimelineComponent implements OnDestroy {
   viewTimeRange: RavenTimeRange;
 
   // Other state.
+  selectedSubBand: RavenSubBand | null;
   selectedSubBandPoints: RavenPoint[];
 
   private ngUnsubscribe: Subject<{}> = new Subject();
@@ -146,7 +147,7 @@ export class TimelineComponent implements OnDestroy {
       this.selectedPoint = state.selectedPoint;
       this.selectedSubBandId = state.selectedSubBandId;
       this.viewTimeRange = state.viewTimeRange;
-      this.setSelectedSubBandPoints();
+      this.setSelectedSubBand();
       this.markForCheck();
     });
   }
@@ -282,13 +283,13 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
-   * Helper that sets the selected sub-band points array for the `raven-table`.
+   * Helper that sets the selected sub-band and it's points array for use in the `raven-table`.
    */
-  setSelectedSubBandPoints() {
-    const selectedSubBand = subBandById(this.bands, this.selectedBandId, this.selectedSubBandId);
+  setSelectedSubBand() {
+    this.selectedSubBand = subBandById(this.bands, this.selectedBandId, this.selectedSubBandId);
 
-    if (selectedSubBand) {
-      this.selectedSubBandPoints = selectedSubBand.points;
+    if (this.selectedSubBand) {
+      this.selectedSubBandPoints = this.selectedSubBand.points;
     } else {
       this.selectedSubBandPoints = [];
     }

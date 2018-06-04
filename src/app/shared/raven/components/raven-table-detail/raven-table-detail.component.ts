@@ -28,31 +28,22 @@ import {
   templateUrl: './raven-table-detail.component.html',
 })
 export class RavenTableDetailComponent implements AfterViewInit, ICellRendererAngularComp {
-  public gridOptionsActivityParameters: GridOptions;
-  public gridOptionsActivityMetadata: GridOptions;
+  public gridOptions: GridOptions;
   public parentRecord: any;
 
   constructor() {
-    this.gridOptionsActivityParameters = <GridOptions>{};
-    this.gridOptionsActivityParameters.columnDefs = this.createColumnDefs('Activity Parameters');
-
-    this.gridOptionsActivityMetadata = <GridOptions>{};
-    this.gridOptionsActivityMetadata.columnDefs = this.createColumnDefs('Metadata');
+    this.gridOptions = <GridOptions>{};
   }
 
   agInit(params: any): void {
-    this.parentRecord = params.node.parent.data;
+    this.parentRecord = params.data[0];
   }
 
   ngAfterViewInit() {
-    if (this.gridOptionsActivityParameters && this.gridOptionsActivityParameters.api) {
-      this.gridOptionsActivityParameters.api.setRowData(this.parentRecord.activityParameters);
-      this.gridOptionsActivityParameters.api.sizeColumnsToFit();
-    }
-
-    if (this.gridOptionsActivityMetadata && this.gridOptionsActivityMetadata.api) {
-      this.gridOptionsActivityMetadata.api.setRowData(this.parentRecord.metadata);
-      this.gridOptionsActivityMetadata.api.sizeColumnsToFit();
+    if (this.gridOptions && this.gridOptions.api && this.parentRecord) {
+      this.gridOptions.api.setColumnDefs(this.createColumnDefs(this.parentRecord.type));
+      this.gridOptions.api.setRowData(this.parentRecord.rows);
+      this.gridOptions.api.sizeColumnsToFit();
     }
   }
 

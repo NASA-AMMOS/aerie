@@ -40,6 +40,7 @@ export interface RavenActivityBand {
   showLabelPin: boolean;
   showTooltip: boolean;
   sourceIds: string[];
+  tableColumns: any[]; // TODO: Remove `any`.
   trimLabel: boolean;
   type: string;
 }

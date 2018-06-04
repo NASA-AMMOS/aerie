@@ -99,7 +99,9 @@
           class="raven-table"
           [points]="selectedSubBandPoints"
           [selectedBandId]="selectedBandId"
-          [selectedPoint]="selectedPoint">
+          [selectedSubBand]="selectedSubBand"
+          [selectedPoint]="selectedPoint"
+          (updateTableColumns)="onUpdateSubBand($event)">
         </raven-table>
       </split-area>
     </split>

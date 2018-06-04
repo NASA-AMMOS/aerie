@@ -33,5 +33,6 @@ export interface RavenStateBand {
   showLabelPin: boolean;
   showTooltip: boolean;
   sourceIds: string[];
+  tableColumns: any[]; // TODO: Remove `any`.
   type: string;
 }

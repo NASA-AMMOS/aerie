@@ -1,14 +1,10 @@
 <div class="full-width-panel">
   <ag-grid-angular
     class="full-width-grid"
-    [gridOptions]="gridOptionsActivityParameters"
-    [suppressHorizontalScroll]="true"
-    [suppressMovableColumns]="true">
-  </ag-grid-angular>
-
-  <ag-grid-angular
-    class="full-width-grid"
-    [gridOptions]="gridOptionsActivityMetadata"
+    [enableColResize]="true"
+    [enableSorting]="true"
+    [enableFilter]="true"
+    [gridOptions]="gridOptions"
     [suppressHorizontalScroll]="true"
     [suppressMovableColumns]="true">
   </ag-grid-angular>
