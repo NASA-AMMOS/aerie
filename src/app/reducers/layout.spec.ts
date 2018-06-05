@@ -16,10 +16,12 @@ import {
 import {
   Resize,
   SetMode,
-  ToggleDetailsDrawer,
-  ToggleLeftDrawer,
-  ToggleRightDrawer,
-  ToggleSouthBandsDrawer,
+  ToggleDetailsPanel,
+  ToggleEpochsDrawer,
+  ToggleGlobalSettingsDrawer,
+  ToggleLeftPanel,
+  ToggleRightPanel,
+  ToggleSouthBandsPanel,
   UpdateLayout,
 } from './../actions/layout';
 
@@ -46,31 +48,49 @@ describe('layout reducer', () => {
     expect(layoutState).toEqual({
       ...initialState,
       mode: 'custom',
-      showDetailsDrawer: false,
-      showLeftDrawer: false,
-      showRightDrawer: true,
-      showSouthBandsDrawer: false,
+      showDetailsPanel: false,
+      showLeftPanel: false,
+      showRightPanel: true,
+      showSouthBandsPanel: false,
     });
   });
 
-  it('handle ToggleDetailsDrawer', () => {
-    layoutState = reducer(layoutState, new ToggleDetailsDrawer());
-    expect(layoutState).toEqual({ ...initialState, showDetailsDrawer: !initialState.showDetailsDrawer });
+  it('handle ToggleDetailsPanel', () => {
+    layoutState = reducer(layoutState, new ToggleDetailsPanel());
+    expect(layoutState).toEqual({ ...initialState, showDetailsPanel: !initialState.showDetailsPanel });
   });
 
-  it('handle ToggleLeftDrawer', () => {
-    layoutState = reducer(layoutState, new ToggleLeftDrawer());
-    expect(layoutState).toEqual({ ...initialState, showLeftDrawer: !initialState.showLeftDrawer });
+  it('handle ToggleEpochsDrawer', () => {
+    layoutState = reducer(layoutState, new ToggleEpochsDrawer());
+    expect(layoutState).toEqual({
+      ...initialState,
+      showEpochsDrawer: true,
+      showGlobalSettingsDrawer: false,
+    });
   });
 
-  it('handle ToggleRightDrawer', () => {
-    layoutState = reducer(layoutState, new ToggleRightDrawer());
-    expect(layoutState).toEqual({ ...initialState, showRightDrawer: !initialState.showRightDrawer });
+  it('handle ToggleGlobalSettingsDrawer', () => {
+    layoutState = reducer(layoutState, new ToggleGlobalSettingsDrawer());
+    expect(layoutState).toEqual({
+      ...initialState,
+      showEpochsDrawer: false,
+      showGlobalSettingsDrawer: true,
+    });
   });
 
-  it('handle ToggleSouthBandsDrawer', () => {
-    layoutState = reducer(layoutState, new ToggleSouthBandsDrawer());
-    expect(layoutState).toEqual({ ...initialState, showSouthBandsDrawer: !initialState.showSouthBandsDrawer });
+  it('handle ToggleLeftPanel', () => {
+    layoutState = reducer(layoutState, new ToggleLeftPanel());
+    expect(layoutState).toEqual({ ...initialState, showLeftPanel: !initialState.showLeftPanel });
+  });
+
+  it('handle ToggleRightPanel', () => {
+    layoutState = reducer(layoutState, new ToggleRightPanel());
+    expect(layoutState).toEqual({ ...initialState, showRightPanel: !initialState.showRightPanel });
+  });
+
+  it('handle ToggleSouthBandsPanel', () => {
+    layoutState = reducer(layoutState, new ToggleSouthBandsPanel());
+    expect(layoutState).toEqual({ ...initialState, showSouthBandsPanel: !initialState.showSouthBandsPanel });
   });
 
   it('handle UpdateLayout', () => {

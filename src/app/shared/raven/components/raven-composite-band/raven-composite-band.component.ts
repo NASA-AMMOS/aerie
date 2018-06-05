@@ -269,6 +269,7 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
   onAddSubBand(subBand: any) {
     this.ctlCompositeBand.addBand(subBand);
     this.updateTickValues();
+    this.setIntervalColor();
 
     // Only redraw if we have more than one sub-band since the first
     // added sub-band will have already been drawn upon component creation.
@@ -345,6 +346,24 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
         }
         this.redraw();
         return;
+      }
+    }
+  }
+
+  /**
+   * Helper that sets an interval color if that interval is the selected point.
+   * This is useful for when a composite-band is re-initialized (e.g. when it's moved) and there is
+   * already a selectedPoint.
+   */
+  setIntervalColor() {
+    if (this.selectedPoint) {
+      for (let i = 0, l = this.ctlCompositeBand.bands.length; i < l; ++i) {
+        const interval = this.ctlCompositeBand.bands[i].intervalsById[this.selectedPoint.uniqueId];
+
+        if (interval) {
+          interval.originalColor = interval.color;
+          interval.color = this.selectedPointColor;
+        }
       }
     }
   }

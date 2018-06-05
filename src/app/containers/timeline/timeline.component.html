@@ -2,7 +2,7 @@
   direction="horizontal"
   (dragEnd)="resize()">
   <split-area
-    [visible]="showLeftDrawer"
+    [visible]="showLeftPanel"
     [order]="0"
     size="25">
     <app-source-explorer></app-source-explorer>
@@ -69,7 +69,7 @@
       </split-area>
 
       <split-area
-        [visible]="showSouthBandsDrawer"
+        [visible]="showSouthBandsPanel"
         [order]="3"
         size="20">
         <div class="timeline-1">
@@ -92,7 +92,7 @@
       </split-area>
 
       <split-area
-        [visible]="showDetailsDrawer"
+        [visible]="showDetailsPanel"
         [order]="4"
         size="20">
         <raven-table
@@ -108,32 +108,16 @@
   </split-area>
 
   <split-area
-    [visible]="showRightDrawer"
+    [visible]="showRightPanel"
     [order]="5"
     size="25">
+    <!-- Tabs. -->
     <mat-tab-group
-      #rightDrawerTabGroup
-      [selectedIndex]="rightDrawerSelectedTabIndex"
+      [selectedIndex]="rightPanelSelectedTabIndex"
       (selectedTabChange)="onSelectedTabChange($event)">
-      <!-- Global Settings. -->
-      <mat-tab label="Settings">
-        <div
-          *ngIf="rightDrawerTabGroup.selectedIndex === 0"
-          class="global-settings">
-          <raven-settings-global
-            [defaultBandSettings]="defaultBandSettings"
-            (addDividerBand)="onAddDividerBand()"
-            (updateDefaultBandSettings)="onUpdateDefaultBandSettings($event)"
-            (updateTimeline)="onUpdateTimeline($event)">
-          </raven-settings-global>
-        </div>
-      </mat-tab>
-
       <!-- Selected Band. -->
       <mat-tab label="Selected Band">
-        <div
-          *ngIf="rightDrawerTabGroup.selectedIndex === 1"
-          class="selected-band">
+        <div class="selected-band">
           <ng-container *ngIf="selectedBandId === ''">
             <mat-card>
               No band is currently selected.
@@ -156,9 +140,7 @@
 
       <!-- Selected Point. -->
       <mat-tab label="Selected Point">
-        <div
-          *ngIf="rightDrawerTabGroup.selectedIndex === 2"
-          class="selected-point">
+        <div class="selected-point">
           <ng-container *ngIf="!selectedPoint">
             <mat-card>
               No point is currently selected.
@@ -190,22 +172,67 @@
           </ng-container>
         </div>
       </mat-tab>
-
-      <!-- Epochs. -->
-      <mat-tab label="Epochs">
-        <div
-          *ngIf="rightDrawerTabGroup.selectedIndex === 3"
-          class="epochs">
-          <raven-epochs
-            [epochs]="epochs"
-            [dayCode]="dayCode"
-            [earthSecToEpochSec]="earthSecToEpochSec"
-            [inUseEpoch]="inUseEpoch"
-            (importEpochs)="onImportEpochs($event)"
-            (updateEpochs)="onUpdateEpochs($event)">
-          </raven-epochs>
-        </div>
-      </mat-tab>
     </mat-tab-group>
   </split-area>
 </split>
+
+<mat-sidenav-container>
+  <!-- Global Settings Drawer. -->
+  <mat-sidenav
+    *ngIf="showGlobalSettingsDrawer"
+    mode="over"
+    position="end"
+    [fixedInViewport]="true"
+    [fixedTopGap]="40"
+    [opened]="showGlobalSettingsDrawer"
+    (closedStart)="onToggleGlobalSettingsDrawer(false)">
+    <div class="sidenav-content">
+      <button
+        mat-icon-button
+        (click)="onToggleGlobalSettingsDrawer(false)">
+        <mat-icon
+          class="mat-24"
+          aria-label="Clear">
+          clear
+        </mat-icon>
+      </button>
+      <raven-settings-global
+        [defaultBandSettings]="defaultBandSettings"
+        (addDividerBand)="onAddDividerBand()"
+        (updateDefaultBandSettings)="onUpdateDefaultBandSettings($event)"
+        (updateTimeline)="onUpdateTimeline($event)">
+      </raven-settings-global>
+    </div>
+  </mat-sidenav>
+
+  <!-- Epochs Drawer. -->
+  <mat-sidenav
+    *ngIf="showEpochsDrawer"
+    class="epochs-drawer"
+    mode="over"
+    position="end"
+    [fixedInViewport]="true"
+    [fixedTopGap]="40"
+    [opened]="showEpochsDrawer"
+    (closedStart)="onToggleEpochsDrawer(false)">
+    <div class="sidenav-content">
+      <button
+        mat-icon-button
+        (click)="onToggleEpochsDrawer(false)">
+        <mat-icon
+          class="mat-24"
+          aria-label="Clear">
+          clear
+        </mat-icon>
+      </button>
+      <raven-epochs
+        [epochs]="epochs"
+        [dayCode]="dayCode"
+        [earthSecToEpochSec]="earthSecToEpochSec"
+        [inUseEpoch]="inUseEpoch"
+        (importEpochs)="onImportEpochs($event)"
+        (updateEpochs)="onUpdateEpochs($event)">
+      </raven-epochs>
+    </div>
+  </mat-sidenav>
+</mat-sidenav-container>

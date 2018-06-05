@@ -69,13 +69,15 @@ export class TimelineComponent implements OnDestroy {
   inUseEpoch: RavenEpoch | null;
 
   // Layout state.
-  rightDrawerSelectedTabIndex: number | null;
+  rightPanelSelectedTabIndex: number | null;
   showActivityPointMetadata: boolean;
   showActivityPointParameters: boolean;
-  showDetailsDrawer: boolean;
-  showLeftDrawer: boolean;
-  showRightDrawer: boolean;
-  showSouthBandsDrawer: boolean;
+  showDetailsPanel: boolean;
+  showEpochsDrawer: boolean;
+  showGlobalSettingsDrawer: boolean;
+  showLeftPanel: boolean;
+  showRightPanel: boolean;
+  showSouthBandsPanel: boolean;
   timelinePanelSize: number;
 
   // Timeline state.
@@ -125,13 +127,15 @@ export class TimelineComponent implements OnDestroy {
     this.store.select(fromLayout.getLayoutState).pipe(
       takeUntil(this.ngUnsubscribe),
     ).subscribe(state => {
-      this.rightDrawerSelectedTabIndex = state.rightDrawerSelectedTabIndex;
+      this.rightPanelSelectedTabIndex = state.rightPanelSelectedTabIndex;
       this.showActivityPointMetadata = state.showActivityPointMetadata;
       this.showActivityPointParameters = state.showActivityPointParameters;
-      this.showDetailsDrawer = state.showDetailsDrawer;
-      this.showLeftDrawer = state.showLeftDrawer;
-      this.showRightDrawer = state.showRightDrawer;
-      this.showSouthBandsDrawer = state.showSouthBandsDrawer;
+      this.showDetailsPanel = state.showDetailsPanel;
+      this.showEpochsDrawer = state.showEpochsDrawer;
+      this.showGlobalSettingsDrawer = state.showGlobalSettingsDrawer;
+      this.showLeftPanel = state.showLeftPanel;
+      this.showRightPanel = state.showRightPanel;
+      this.showSouthBandsPanel = state.showSouthBandsPanel;
       this.timelinePanelSize = state.timelinePanelSize;
       this.markForCheck();
       this.resize();
@@ -205,7 +209,7 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when a tab is changed.
    */
   onSelectedTabChange(e: MatTabChangeEvent) {
-    this.store.dispatch(new layoutActions.UpdateLayout({ rightDrawerSelectedTabIndex: e.index }));
+    this.store.dispatch(new layoutActions.UpdateLayout({ rightPanelSelectedTabIndex: e.index }));
   }
 
   /**
@@ -213,6 +217,20 @@ export class TimelineComponent implements OnDestroy {
    */
   onSort(sort: StringTMap<RavenSortMessage>): void {
     this.store.dispatch(new timelineActions.SortBands(sort));
+  }
+
+  /**
+   * Event. Called when a toggle event is fired from the epochs drawer.
+   */
+  onToggleEpochsDrawer(opened?: boolean) {
+    this.store.dispatch(new layoutActions.ToggleEpochsDrawer(opened));
+  }
+
+  /**
+   * Event. Called when a toggle event is fired from the global settings drawer.
+   */
+  onToggleGlobalSettingsDrawer(opened?: boolean) {
+    this.store.dispatch(new layoutActions.ToggleGlobalSettingsDrawer(opened));
   }
 
   /**

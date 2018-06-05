@@ -16,13 +16,15 @@ import {
 
 // Action Types.
 export enum LayoutActionTypes {
-  Resize                  = '[layout] resize',
-  SetMode                 = '[layout] set_mode',
-  ToggleDetailsDrawer     = '[layout] toggle_details_drawer',
-  ToggleLeftDrawer        = '[layout] toggle_left_drawer',
-  ToggleRightDrawer       = '[layout] toggle_right_drawer',
-  ToggleSouthBandsDrawer  = '[layout] toggle_south_bands_drawer',
-  UpdateLayout            = '[layout] update_layout',
+  Resize                     = '[layout] resize',
+  SetMode                    = '[layout] set_mode',
+  ToggleDetailsPanel         = '[layout] toggle_details_panel',
+  ToggleEpochsDrawer         = '[layout] toggle_epochs_drawer',
+  ToggleGlobalSettingsDrawer = '[layout] toggle_global_settings_drawer',
+  ToggleLeftPanel            = '[layout] toggle_left_panel',
+  ToggleRightPanel           = '[layout] toggle_right_panel',
+  ToggleSouthBandsPanel      = '[layout] toggle_south_bands_panel',
+  UpdateLayout               = '[layout] update_layout',
 }
 
 // Actions.
@@ -35,27 +37,39 @@ export class SetMode implements Action {
 
   constructor(
     public mode: string,
-    public showDetailsDrawer: boolean,
-    public showLeftDrawer: boolean,
-    public showRightDrawer: boolean,
-    public showSouthBandsDrawer: boolean,
+    public showDetailsPanel: boolean,
+    public showLeftPanel: boolean,
+    public showRightPanel: boolean,
+    public showSouthBandsPanel: boolean,
   ) {}
 }
 
-export class ToggleDetailsDrawer implements Action {
-  readonly type = LayoutActionTypes.ToggleDetailsDrawer;
+export class ToggleDetailsPanel implements Action {
+  readonly type = LayoutActionTypes.ToggleDetailsPanel;
 }
 
-export class ToggleLeftDrawer implements Action {
-  readonly type = LayoutActionTypes.ToggleLeftDrawer;
+export class ToggleEpochsDrawer implements Action {
+  readonly type = LayoutActionTypes.ToggleEpochsDrawer;
+
+  constructor(public opened?: boolean) {}
 }
 
-export class ToggleRightDrawer implements Action {
-  readonly type = LayoutActionTypes.ToggleRightDrawer;
+export class ToggleGlobalSettingsDrawer implements Action {
+  readonly type = LayoutActionTypes.ToggleGlobalSettingsDrawer;
+
+  constructor(public opened?: boolean) {}
 }
 
-export class ToggleSouthBandsDrawer implements Action {
-  readonly type = LayoutActionTypes.ToggleSouthBandsDrawer;
+export class ToggleLeftPanel implements Action {
+  readonly type = LayoutActionTypes.ToggleLeftPanel;
+}
+
+export class ToggleRightPanel implements Action {
+  readonly type = LayoutActionTypes.ToggleRightPanel;
+}
+
+export class ToggleSouthBandsPanel implements Action {
+  readonly type = LayoutActionTypes.ToggleSouthBandsPanel;
 }
 
 export class UpdateLayout implements Action {
@@ -68,8 +82,10 @@ export class UpdateLayout implements Action {
 export type LayoutAction =
   Resize |
   SetMode |
-  ToggleDetailsDrawer |
-  ToggleLeftDrawer |
-  ToggleRightDrawer |
-  ToggleSouthBandsDrawer |
+  ToggleDetailsPanel |
+  ToggleEpochsDrawer |
+  ToggleGlobalSettingsDrawer |
+  ToggleLeftPanel |
+  ToggleRightPanel |
+  ToggleSouthBandsPanel |
   UpdateLayout;

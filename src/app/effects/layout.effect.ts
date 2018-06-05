@@ -27,33 +27,39 @@ import { AppState } from './../../app/store';
 import {
   LayoutActionTypes,
   Resize,
-  ToggleRightDrawer,
+  ToggleRightPanel,
 } from './../actions/layout';
 
 import * as layoutActions from './../actions/layout';
 
 @Injectable()
 export class LayoutEffects {
-  @Effect()
-  toggleRightDrawer$: Observable<Action> = this.actions$.pipe(
-    ofType<ToggleRightDrawer>(LayoutActionTypes.ToggleRightDrawer),
-    withLatestFrom(this.store$),
-    map(([action, state]) => state.layout.showRightDrawer),
-    map((showRightDrawer: boolean) => {
-      if (showRightDrawer) {
-        return new layoutActions.UpdateLayout({ timelinePanelSize: 50 });
-      } else {
-        return new layoutActions.UpdateLayout({ timelinePanelSize: 75 });
-      }
-    }),
-  );
-
+  /**
+   * Effect for Resize.
+   */
   @Effect({ dispatch: false })
   resize$: Observable<Action> = this.actions$.pipe(
     ofType<Resize>(LayoutActionTypes.Resize),
     switchMap(() => {
       setTimeout(() => dispatchEvent(new Event('resize')));
       return [];
+    }),
+  );
+
+  /**
+   * Effect for ToggleRightPanel.
+   */
+  @Effect()
+  toggleRightPanel$: Observable<Action> = this.actions$.pipe(
+    ofType<ToggleRightPanel>(LayoutActionTypes.ToggleRightPanel),
+    withLatestFrom(this.store$),
+    map(([action, state]) => state.layout.showRightPanel),
+    map((showRightPanel: boolean) => {
+      if (showRightPanel) {
+        return new layoutActions.UpdateLayout({ timelinePanelSize: 50 });
+      } else {
+        return new layoutActions.UpdateLayout({ timelinePanelSize: 75 });
+      }
     }),
   );
 

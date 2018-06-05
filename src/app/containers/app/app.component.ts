@@ -64,19 +64,27 @@ export class AppComponent {
     setTimeout(() => this.changeDetector.detectChanges());
   }
 
-  toggleDetailsDrawer() {
-    this.store.dispatch(new layoutActions.ToggleDetailsDrawer());
+  toggleDetailsPanel() {
+    this.store.dispatch(new layoutActions.ToggleDetailsPanel());
   }
 
-  toggleLeftDrawer() {
-    this.store.dispatch(new layoutActions.ToggleLeftDrawer());
+  toggleEpochsDrawer() {
+    this.store.dispatch(new layoutActions.ToggleEpochsDrawer());
   }
 
-  toggleRightDrawer() {
-    this.store.dispatch(new layoutActions.ToggleRightDrawer());
+  toggleGlobalSettingsDrawer() {
+    this.store.dispatch(new layoutActions.ToggleGlobalSettingsDrawer());
   }
 
-  toggleSouthBandsDrawer() {
-    this.store.dispatch(new layoutActions.ToggleSouthBandsDrawer());
+  toggleLeftPanel() {
+    this.store.dispatch(new layoutActions.ToggleLeftPanel());
+  }
+
+  toggleRightPanel() {
+    this.store.dispatch(new layoutActions.ToggleRightPanel());
+  }
+
+  toggleSouthBandsPanel() {
+    this.store.dispatch(new layoutActions.ToggleSouthBandsPanel());
   }
 }

@@ -201,6 +201,7 @@ export class SourceExplorerEffects {
     switchMap(action => [
       new timelineActions.RemoveBandsOrPointsForSource(action.sourceId),
       new sourceExplorerActions.UpdateTreeSource(action.sourceId, { opened: false }),
+      new layoutActions.Resize(), // Resize bands when we `close` to make sure they are all resized properly.
     ]),
   );
 
@@ -715,6 +716,9 @@ export class SourceExplorerEffects {
             }
           }
         });
+
+        // Resize bands when we `open` to make sure they are all resized properly.
+        actions.push(new layoutActions.Resize());
 
         return actions;
       }),

@@ -47,10 +47,10 @@ export class RouterEffects {
         actions.push(
           new layoutActions.SetMode(
             'custom',
-            state.layout.showDetailsDrawer,
-            state.layout.showLeftDrawer,
-            state.layout.showRightDrawer,
-            state.layout.showSouthBandsDrawer,
+            state.layout.showDetailsPanel,
+            state.layout.showLeftPanel,
+            state.layout.showRightPanel,
+            state.layout.showSouthBandsPanel,
           ),
         );
       }

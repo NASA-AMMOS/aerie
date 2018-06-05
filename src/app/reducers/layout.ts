@@ -15,31 +15,37 @@ import {
   LayoutAction,
   LayoutActionTypes,
   SetMode,
+  ToggleEpochsDrawer,
+  ToggleGlobalSettingsDrawer,
 } from './../actions/layout';
 
 // Layout State Interface.
 export interface LayoutState {
   mode: string;
-  rightDrawerSelectedTabIndex: number | null;
+  rightPanelSelectedTabIndex: number | null;
   showActivityPointMetadata: boolean;
   showActivityPointParameters: boolean;
-  showDetailsDrawer: boolean;
-  showLeftDrawer: boolean;
-  showRightDrawer: boolean;
-  showSouthBandsDrawer: boolean;
+  showDetailsPanel: boolean;
+  showEpochsDrawer: boolean;
+  showGlobalSettingsDrawer: boolean;
+  showLeftPanel: boolean;
+  showRightPanel: boolean;
+  showSouthBandsPanel: boolean;
   timelinePanelSize: number;
 }
 
 // Layout State.
 export const initialState: LayoutState = {
   mode: 'default',
-  rightDrawerSelectedTabIndex: 0,
+  rightPanelSelectedTabIndex: 0,
   showActivityPointMetadata: false,
   showActivityPointParameters: true,
-  showDetailsDrawer: true,
-  showLeftDrawer: true,
-  showRightDrawer: true,
-  showSouthBandsDrawer: true,
+  showDetailsPanel: true,
+  showEpochsDrawer: false,
+  showGlobalSettingsDrawer: false,
+  showLeftPanel: true,
+  showRightPanel: true,
+  showSouthBandsPanel: true,
   timelinePanelSize: 50,
 };
 
@@ -51,14 +57,18 @@ export function reducer(state: LayoutState = initialState, action: LayoutAction)
   switch (action.type) {
     case LayoutActionTypes.SetMode:
       return setMode(state, action);
-    case LayoutActionTypes.ToggleDetailsDrawer:
-      return { ...state, showDetailsDrawer: !state.showDetailsDrawer };
-    case LayoutActionTypes.ToggleLeftDrawer:
-      return { ...state, showLeftDrawer: !state.showLeftDrawer };
-    case LayoutActionTypes.ToggleRightDrawer:
-      return { ...state, showRightDrawer: !state.showRightDrawer };
-    case LayoutActionTypes.ToggleSouthBandsDrawer:
-      return { ...state, showSouthBandsDrawer: !state.showSouthBandsDrawer };
+    case LayoutActionTypes.ToggleDetailsPanel:
+      return { ...state, showDetailsPanel: !state.showDetailsPanel };
+    case LayoutActionTypes.ToggleEpochsDrawer:
+      return toggleEpochsDrawer(state, action);
+    case LayoutActionTypes.ToggleGlobalSettingsDrawer:
+      return toggleGlobalSettingsDrawer(state, action);
+    case LayoutActionTypes.ToggleLeftPanel:
+      return { ...state, showLeftPanel: !state.showLeftPanel };
+    case LayoutActionTypes.ToggleRightPanel:
+      return { ...state, showRightPanel: !state.showRightPanel };
+    case LayoutActionTypes.ToggleSouthBandsPanel:
+      return { ...state, showSouthBandsPanel: !state.showSouthBandsPanel };
     case LayoutActionTypes.UpdateLayout:
       return { ...state, ...action.update };
     default:
@@ -73,10 +83,32 @@ export function setMode(state: LayoutState, action: SetMode): LayoutState {
   return {
     ...state,
     mode: action.mode,
-    showDetailsDrawer: action.showDetailsDrawer,
-    showLeftDrawer: action.showLeftDrawer,
-    showRightDrawer: action.showRightDrawer,
-    showSouthBandsDrawer: action.showSouthBandsDrawer,
+    showDetailsPanel: action.showDetailsPanel,
+    showLeftPanel: action.showLeftPanel,
+    showRightPanel: action.showRightPanel,
+    showSouthBandsPanel: action.showSouthBandsPanel,
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'ToggleEpochsDrawer' action.
+ */
+export function toggleEpochsDrawer(state: LayoutState, action: ToggleEpochsDrawer): LayoutState {
+  return {
+    ...state,
+    showEpochsDrawer: action.opened !== undefined ? action.opened : !state.showEpochsDrawer,
+    showGlobalSettingsDrawer: false,
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'ToggleGlobalSettingsDrawer' action.
+ */
+export function toggleGlobalSettingsDrawer(state: LayoutState, action: ToggleGlobalSettingsDrawer): LayoutState {
+  return {
+    ...state,
+    showEpochsDrawer: false,
+    showGlobalSettingsDrawer: action.opened !== undefined ? action.opened : !state.showGlobalSettingsDrawer,
   };
 }
 

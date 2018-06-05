@@ -8,16 +8,20 @@
  */
 
 import {
+  AfterViewInit,
   Component,
   EventEmitter,
+  HostListener,
   Input,
-  OnInit,
+  OnChanges,
   Output,
+  SimpleChanges,
+  ViewChild,
 } from '@angular/core';
 
 import {
-  Sort,
-} from '@angular/material';
+  AgGridNg2,
+} from 'ag-grid-angular';
 
 import {
   RavenEpoch,
@@ -29,7 +33,9 @@ import {
   styleUrls: ['./raven-epochs.component.css'],
   templateUrl: './raven-epochs.component.html',
 })
-export class RavenEpochsComponent implements OnInit {
+export class RavenEpochsComponent implements AfterViewInit, OnChanges {
+  @ViewChild('agGrid') agGrid: AgGridNg2;
+
   @Input() dayCode: string;
   @Input() earthSecToEpochSec: number;
   @Input() epochs: RavenEpoch[];
@@ -38,33 +44,81 @@ export class RavenEpochsComponent implements OnInit {
   @Output() importEpochs: EventEmitter<RavenEpoch[]> = new EventEmitter<RavenEpoch[]>();
   @Output() updateEpochs: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
 
-  displayedColumns = ['select', 'name', 'value'];
-  sortedAndFilteredEpochs: RavenEpoch[];
+  columnDefs: any[] = [];
+  rowData: any[] = [];
 
-  ngOnInit() {
-    this.sortedAndFilteredEpochs = [...this.epochs];
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes.epochs) {
+      this.columnDefs = this.createColumnDefs();
+      this.rowData = this.epochs;
+      this.highlightRowForInUseEpoch();
+    }
+
+    if (changes.inUseEpoch) {
+      this.highlightRowForInUseEpoch();
+    }
+  }
+
+  ngAfterViewInit() {
+    this.sizeColumnsToFit();
   }
 
   /**
-   * Filter the table of Epochs.
+   * Global Event. Called on window resize.
+   * Here we just always make sure the columns are the max size they can possibly be.
    */
-  applyFilter(filter: string) {
-    const filterValue = filter.trim();
-    const copy = [...this.epochs];
-
-    // Match either name or value.
-    this.sortedAndFilteredEpochs = copy.filter(epoch =>
-      (epoch.name.indexOf(filterValue) > -1) || (epoch.value.indexOf(filterValue) > -1),
-    );
+  @HostListener('window:resize', ['$event'])
+  onResize(e: Event): void {
+    this.sizeColumnsToFit();
   }
 
   /**
-   * Helper. Compare function for use in sorting epochs.
-   *
-   * TODO: Move this to a util lib eventually.
+   * Calculates and returns `columnDefs` for use in the grid based on a point.
    */
-  compare(a: string, b: string, isAsc: boolean) {
-    return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
+  createColumnDefs() {
+    const columnDefs: any[] = [
+      {
+        checkboxSelection: true,
+        colId: 'select',
+        field: 'select',
+        headerName: '',
+        hide: false,
+        width: 80,
+      },
+      {
+        colId: 'name',
+        field: 'name',
+        headerName: 'Name',
+        hide: false,
+      },
+      {
+        colId: 'value',
+        field: 'value',
+        headerName: 'Value',
+        hide: false,
+      },
+    ];
+
+    return columnDefs;
+  }
+
+  /**
+   * Helper that highlights the row in the grid for the currently in-use epoch.
+   * Note the setTimeout. This is to ensure Ag Grid is finished rendering before doing any selection.
+   */
+  highlightRowForInUseEpoch() {
+    setTimeout(() => {
+      if (this.agGrid && this.agGrid.api) {
+        this.agGrid.api.forEachNode(node => {
+          if (this.inUseEpoch && node.data.name === this.inUseEpoch.name) {
+            this.agGrid.api.ensureIndexVisible(node.rowIndex);
+            node.setSelected(true);
+          } else {
+            node.setSelected(false);
+          }
+        });
+      }
+    });
   }
 
   /**
@@ -82,27 +136,26 @@ export class RavenEpochsComponent implements OnInit {
   }
 
   /**
-   * Sort the table of epochs.
+   * Event. Called when the row selection changes.
    */
-  sortData(sort: Sort) {
-    const epochs = [...this.epochs];
+  onSelectionChanged() {
+    // Get the first row element since we can only select one row at a time.
+    const row = this.agGrid.api.getSelectedRows()[0];
 
-    if (!sort.active || sort.direction === '') {
-      this.sortedAndFilteredEpochs = epochs;
-      return;
+    if (row) {
+      this.updateEpochs.emit({ update: { inUseEpoch: row } });
+    } else {
+      this.updateEpochs.emit({ update: { inUseEpoch: null } });
     }
+  }
 
-    this.sortedAndFilteredEpochs = epochs.sort((a, b) => {
-      const isAsc = sort.direction === 'asc';
-
-      switch (sort.active) {
-        case 'name':
-          return this.compare(a.name, b.name, isAsc);
-        case 'value':
-          return this.compare(a.value, b.value, isAsc);
-        default:
-          return 0;
-      }
-    });
+  /**
+   * Ag Grid. Sizes all columns to fit the viewport.
+   * Note the setTimeout. We use this to make sure Ag Grid has the most recent data before sizing the columns.
+   */
+  sizeColumnsToFit() {
+    if (this.agGrid && this.agGrid.api) {
+      setTimeout(() => this.agGrid.api.sizeColumnsToFit());
+    }
   }
 }

@@ -1,10 +1,24 @@
 :host {
   display: block;
+  height: 100%;
 }
 
-mat-table {
-  max-height: 450px;
-  overflow: auto;
+ag-grid-angular {
+  height: 70%;
+}
+
+mat-card,
+mat-card-content {
+  height: 100%;
+}
+
+mat-card-title {
+  font-size: 18px;
+}
+
+mat-form-field {
+  padding-right: 15px;
+  padding-bottom: 15px;
 }
 
 .import {

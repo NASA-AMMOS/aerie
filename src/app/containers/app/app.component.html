@@ -1,7 +1,7 @@
 <mat-toolbar color="primary">
   <button
     mat-icon-button
-    (click)="toggleLeftDrawer()">
+    (click)="toggleLeftPanel()">
     <mat-icon
       class="mat-24"
       aria-label="Menu">
@@ -12,6 +12,28 @@
   <span class="app-title">Raven2</span>
 
   <span class="spacer"></span>
+
+  <button
+    mat-icon-button
+    matTooltip="Global Band Settings"
+    (click)="toggleGlobalSettingsDrawer()">
+    <mat-icon
+      class="mat-24"
+      aria-label="Settings">
+      settings
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Epochs"
+    (click)="toggleEpochsDrawer()">
+    <mat-icon
+      class="mat-24"
+      aria-label="Epochs">
+      access_time
+    </mat-icon>
+  </button>
 
   <button
     [matMenuTriggerFor]="menu"
@@ -29,7 +51,7 @@
     y-position="below">
     <button
       mat-menu-item
-      (click)="toggleSouthBandsDrawer()">
+      (click)="toggleSouthBandsPanel()">
       <mat-icon
         class="mat-24"
         aria-label="South Bands">
@@ -40,7 +62,7 @@
 
     <button
       mat-menu-item
-      (click)="toggleDetailsDrawer()">
+      (click)="toggleDetailsPanel()">
       <mat-icon
         class="mat-24"
         aria-label="Details">
@@ -51,13 +73,13 @@
 
     <button
       mat-menu-item
-      (click)="toggleRightDrawer()">
+      (click)="toggleRightPanel()">
       <mat-icon
         class="mat-24"
-        aria-label="Right Drawer">
+        aria-label="Right Panel">
         show_chart
       </mat-icon>
-      Toggle Right Drawer
+      Toggle Right Panel
     </button>
   </mat-menu>
 </mat-toolbar>

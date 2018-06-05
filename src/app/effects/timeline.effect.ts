@@ -89,11 +89,11 @@ export class TimelineEffects {
 
       if (state.timeline.selectedPoint) {
         actions.push(new layoutActions.UpdateLayout({
-          rightDrawerSelectedTabIndex: 2,
+          rightPanelSelectedTabIndex: 1,
         }));
 
-        if (!state.layout.showRightDrawer) {
-          actions.push(new layoutActions.ToggleRightDrawer());
+        if (!state.layout.showRightPanel) {
+          actions.push(new layoutActions.ToggleRightPanel());
         }
       }
 

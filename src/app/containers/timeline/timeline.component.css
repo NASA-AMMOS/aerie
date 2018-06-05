@@ -8,10 +8,16 @@ mat-card {
   padding: 10px;
 }
 
-.itar-message {
-  padding: 0.5em;
-  text-align: center;
-  font-size: x-small;
+::ng-deep mat-tab-header {
+  z-index: 1; /* Prevents CSS bleed of the tab header. */
+}
+
+mat-sidenav.epochs-drawer {
+  width: 600px;
+}
+
+mat-sidenav-container {
+  z-index: 5;
 }
 
 .get-started {
@@ -19,13 +25,22 @@ mat-card {
   text-align: center;
 }
 
+.itar-message {
+  padding: 0.5em;
+  text-align: center;
+  font-size: x-small;
+}
+
+.sidenav-content {
+  height: 100%;
+}
+
 .details,
-.epochs,
-.global-settings,
-.timeline-0,
-.timeline-1,
 .raven-table,
 .selected-band,
-.selected-point {
+.selected-point,
+.sidenav-content,
+.timeline-0,
+.timeline-1 {
   padding: 0.5em;
 }
