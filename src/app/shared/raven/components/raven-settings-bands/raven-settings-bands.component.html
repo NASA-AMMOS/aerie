@@ -117,7 +117,6 @@
                   [value]="subBand.alignLabel"
                   (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { alignLabel: $event.value } })">
                   <mat-option [value]="1">Left</mat-option>
-                  <mat-option [value]="2">Right</mat-option>
                   <mat-option [value]="3">Center</mat-option>
                 </mat-select>
               </mat-form-field>
@@ -243,7 +242,6 @@
                   [value]="subBand.alignLabel"
                   (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { alignLabel: $event.value } })">
                   <mat-option [value]="1">Left</mat-option>
-                  <mat-option [value]="2">Right</mat-option>
                   <mat-option [value]="3">Center</mat-option>
                 </mat-select>
               </mat-form-field>
