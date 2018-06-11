@@ -307,7 +307,7 @@ export class SourceExplorerEffects {
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     concatMap(({ state, action }) => {
-      const headers = new HttpHeaders().set('Content-Type', 'text/csv');
+      const headers = new HttpHeaders().set('Content-Type', `${action.file.type === 'pef' ? 'application/json' : 'text/csv'}`);
       const url = `${action.source.url}/${action.file.name}?timeline_type=${action.file.type}`;
 
       return this.http.put(url, action.file.data, { headers: headers, responseType: 'text' }).pipe(
