@@ -87,8 +87,15 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
     }
 
     // Layout.
+    // Note: layout === 0 is autoFit. We autoFit is set then we need to set the layout to compact by default.
     if (changes.layout && !changes.layout.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'layout', value: this.layout });
+      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'autoFit', value: this.layout === 0 ? true : null });
+      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'layout', value: this.layout === 0 ? 1 : this.layout });
+
+      // Need to reset activityHeight when going from Waterfall to other layouts.
+      if (changes.layout.previousValue === 2) {
+        this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'activityHeight', value: 20 });
+      }
     }
 
     // Label Color.
@@ -139,7 +146,7 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
       labelColor: this.labelColor,
       labelFont: this.labelFont,
       labelFontSize: this.labelFontSize,
-      layout: this.layout,
+      layout: this.layout === 0 ? 1 : this.layout,
       minorLabels: this.minorLabels,
       name: this.name,
       showLabel: this.showLabel,

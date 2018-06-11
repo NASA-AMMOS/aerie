@@ -23,7 +23,6 @@ export const activityBand: RavenActivityBand = {
   activityStyle: 1,
   addTo: false,
   alignLabel: 3,
-  autoFit: null,
   baselineLabel: 3,
   borderWidth: 1,
   height: 50,

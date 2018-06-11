@@ -98,7 +98,6 @@ export function toActivityBands(
       activityStyle: isMessageTypeActivity(legends[legend][0]) ? 2 : 1,
       addTo: false,
       alignLabel: 3,
-      autoFit: defaultBandSettings.activityLayout === 0 ? 1 : null,
       baselineLabel: 3,
       borderWidth: 1,
       height: 50,

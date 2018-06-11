@@ -144,7 +144,8 @@
                   placeholder="Layout"
                   [value]="subBand.layout"
                   (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { layout: $event.value } })">
-                  <mat-option [value]="1">Compact</mat-option>
+                  <mat-option [value]="0">Auto-fit</mat-option>
+                  <mat-option [value]="1">Packed</mat-option>
                   <mat-option [value]="2">Waterfall</mat-option>
                 </mat-select>
               </mat-form-field>
