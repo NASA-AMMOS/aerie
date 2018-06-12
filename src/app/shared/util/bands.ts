@@ -54,12 +54,11 @@ export function toRavenBandData(
   const metadata = graphData['Timeline Metadata'];
   const timelineData = graphData['Timeline Data'];
 
-  if (metadata.hasTimelineType === 'measurement' && (metadata as MpsServerStateMetadata).hasValueType === 'string_xdr' ||
-      metadata.hasTimelineType === 'state') {
+  if (metadata.hasTimelineType === 'measurement' && (metadata as MpsServerStateMetadata).hasValueType === 'string_xdr') {
     // State.
     const stateBand = toStateBand(sourceId, metadata as MpsServerStateMetadata, timelineData as MpsServerStatePoint[], defaultBandSettings);
     return [stateBand];
-  } else if (metadata.hasTimelineType === 'measurement') {
+  } else if (metadata.hasTimelineType === 'measurement' || metadata.hasTimelineType === 'state' ) {
     // Resource.
     const resourceBand = toResourceBand(sourceId, metadata as MpsServerResourceMetadata, timelineData as MpsServerResourcePoint[], defaultBandSettings);
     return [resourceBand];
