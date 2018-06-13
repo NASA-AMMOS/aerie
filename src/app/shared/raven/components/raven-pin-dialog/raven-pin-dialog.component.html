@@ -60,6 +60,6 @@
 
   <div mat-dialog-actions>
     <button mat-button (click)="onCancel()">Cancel</button>
-    <button mat-button (click)="onRename()">Rename</button>
+    <button mat-button (click)="onRename()" [disabled]="!name.valid">Rename</button>
   </div>
 </div>
