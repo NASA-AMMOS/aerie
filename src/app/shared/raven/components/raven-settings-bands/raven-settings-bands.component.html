@@ -12,7 +12,7 @@
         <mat-form-field class="full-width">
           <mat-select
             [value]="selectedSubBandId"
-            (change)="updateTimeline.emit({ update: { selectedSubBandId: $event.value } })"
+            (selectionChange)="updateTimeline.emit({ update: { selectedSubBandId: $event.value } })"
             placeholder="Selected Sub-Band">
             <ng-container *ngFor="let subBand of bandsById[selectedBandId].subBands; trackBy: trackByFn">
               <mat-option [value]="subBand.id">{{subBand.label}}</mat-option>
