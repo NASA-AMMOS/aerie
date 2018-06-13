@@ -21,6 +21,7 @@ export interface MpsServerSourceGraphable {
   createdBy: string;
   customMeta: StringTMap<BaseType>[];
   data_url: string;
+  filterTarget: string;
   filterSetOf: string;
   file_data_url: string;
   hasCollectionType: string;

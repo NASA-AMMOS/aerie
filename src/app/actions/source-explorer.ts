@@ -13,6 +13,7 @@ import {
 
 import {
   BaseType,
+  RavenCustomFilterSource,
   RavenFile,
   RavenFilterSource,
   RavenGraphableFilterSource,
@@ -50,6 +51,7 @@ export enum SourceExplorerActionTypes {
   RemoveSourceEvent            = '[sourceExplorer] remove_source_event',
   SaveState                    = '[sourceExplorer] save_state',
   SelectSource                 = '[sourceExplorer] select_source',
+  SetCustomFilter              = '[sourceExplorer] set_custom_filter',
   SetCustomFilterSubBandId     = '[sourceExplorer] set_custom_filter_sub_band_id',
   SubBandIdAdd                 = '[sourceExplorer] sub_band_id_add',
   SubBandIdRemove              = '[sourceExplorer] sub_band_id_remove',
@@ -220,6 +222,12 @@ export class SelectSource implements Action {
   constructor(public source: RavenSource) {}
 }
 
+export class SetCustomFilter implements Action {
+  readonly type = SourceExplorerActionTypes.SetCustomFilter;
+
+  constructor(public source: RavenCustomFilterSource, public filter: string) {}
+}
+
 export class SetCustomFilterSubBandId implements Action {
   readonly type = SourceExplorerActionTypes.SetCustomFilterSubBandId;
 
@@ -291,6 +299,7 @@ export type SourceExplorerAction =
   RemoveSourceEvent |
   SaveState |
   SelectSource |
+  SetCustomFilter |
   SetCustomFilterSubBandId |
   SubBandIdAdd |
   SubBandIdRemove |

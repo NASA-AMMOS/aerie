@@ -37,6 +37,7 @@ import {
 } from './../../../models';
 
 import {
+  dhms,
   timestamp,
 } from './../../../util';
 
@@ -64,7 +65,12 @@ export class RavenTableComponent implements OnChanges {
   rowData: any[] = [];
 
   ngOnChanges(changes: SimpleChanges): void {
-    // Points.
+    // Points (any length).
+    if (changes.points) {
+      this.rowData = this.createRowData(this.points);
+    }
+
+    // Points (length > 0).
     if (changes.points && this.points.length && this.selectedSubBand) {
       if (this.selectedSubBand.tableColumns.length) {
         // Load columns if they exist on the band.
@@ -75,7 +81,6 @@ export class RavenTableComponent implements OnChanges {
       }
 
       this.setColumnHeader(); // Set the header since it may have changed if we are coming from saved columns.
-      this.rowData = this.createRowData(this.points);
       this.highlightRowForSelectedPoint();
     }
 
@@ -354,6 +359,13 @@ export class RavenTableComponent implements OnChanges {
       point = {
         ...point,
         end: timestamp(point.end),
+      };
+    }
+
+    if (point.duration) {
+      point = {
+        ...point,
+        duration: dhms(point.duration),
       };
     }
 

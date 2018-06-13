@@ -13,5 +13,6 @@ import {
 
 export interface RavenGraphableFilterSource extends RavenBaseSource {
   opened: boolean;
+  filterTarget: string;
   filterSetOf: string;
 }

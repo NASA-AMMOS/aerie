@@ -7,11 +7,27 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import ravenConfig from './../ravenConfig';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+} from '@angular/core';
 
-export const environment = {
-  ...ravenConfig,
-  baseUrl: 'https://leucadia.jpl.nasa.gov:9443',
-  // baseUrl: 'https://localhost:8443',
-  production: false,
-};
+import {
+  RavenCustomFilterSource,
+} from './../../../../shared/models';
+
+@Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  selector: 'raven-custom-filter',
+  styleUrls: ['./raven-custom-filter.component.css'],
+  templateUrl: './raven-custom-filter.component.html',
+})
+export class RavenCustomFilterComponent {
+  @Input() id: string;
+  @Input() source: RavenCustomFilterSource;
+
+  @Output() selectCustomFilter: EventEmitter<RavenCustomFilterSource> = new EventEmitter<RavenCustomFilterSource>();
+}

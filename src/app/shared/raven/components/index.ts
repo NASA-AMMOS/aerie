@@ -13,6 +13,8 @@ export * from './raven-bands/raven-bands.component';
 export * from './raven-category/raven-category.component';
 export * from './raven-composite-band/raven-composite-band.component';
 export * from './raven-confirm-dialog/raven-confirm-dialog.component';
+export * from './raven-custom-filter/raven-custom-filter.component';
+export * from './raven-custom-filter-dialog/raven-custom-filter-dialog.component';
 export * from './raven-custom-graphable/raven-custom-graphable.component';
 export * from './raven-custom-graph-dialog/raven-custom-graph-dialog.component';
 export * from './raven-custom-metadata/raven-custom-metadata.component';

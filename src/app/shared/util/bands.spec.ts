@@ -10,7 +10,6 @@
 import {
   bandById,
   getCustomFiltersBySourceId,
-  getFiltersByParentId,
   hasActivityBand,
   hasSourceId,
   isAddTo,
@@ -26,9 +25,9 @@ import {
   activityPoint,
   bands,
   bandsWithCustomFiltersInSourceId,
-  bandsWithFiltersInSourceId,
   keywordLineActivityPoint,
   messageTypeActivityPoint,
+  treeBySourceId,
 } from './../mocks';
 
 describe('bands.ts', () => {
@@ -45,23 +44,12 @@ describe('bands.ts', () => {
   });
 
   describe('getCustomFiltersBySourceId', () => {
-
     it(`should return custom filters from sourceIds in bands`, () => {
-      expect(getCustomFiltersBySourceId(bandsWithCustomFiltersInSourceId)).toEqual({
-        '/a/b/c': [{
+      expect(getCustomFiltersBySourceId(bandsWithCustomFiltersInSourceId, treeBySourceId)).toEqual({
+        '/DKF/command': [{
           filter: '.*',
           label: 'ips',
         }],
-      });
-    });
-  });
-
-  describe('getFiltersByParentId', () => {
-    it(`should return filters for parentId from sourceIds in bands`, () => {
-      expect(getFiltersByParentId(bandsWithFiltersInSourceId)).toEqual({
-        '/a/b/DKF': {
-          events: ['AOS', 'EOT'],
-        },
       });
     });
   });

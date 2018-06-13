@@ -6,13 +6,13 @@
     *ngIf="source.opened"
     [id]="'raven-tree-'+source.name+'-unselectFilter'"
     (click)="removeFilter.emit(source)">
-    star
+    filter_list
   </mat-icon>
   <mat-icon
     *ngIf="!source.opened"
     [id]="'raven-tree-'+source.name+'-selectFilter'"
     (click)="addFilter.emit(source)">
-    star
+    filter_list
   </mat-icon>
   <span (click)="select.emit(source)" class="name">
     {{source.name}}

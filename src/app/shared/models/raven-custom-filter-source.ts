@@ -13,5 +13,7 @@
 
 export interface RavenCustomFilterSource extends RavenBaseSource {
   opened: boolean;
+  filter: string;
+  filterTarget: string;
   filterSetOf: string;
 }

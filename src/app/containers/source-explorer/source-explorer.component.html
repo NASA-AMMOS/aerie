@@ -38,7 +38,8 @@
             (openMetadata)="fileMetadataDrawer.toggle()"
             (removeFilter)="onRemoveFilter($event)"
             (removeGraphableFilter)="onRemoveGraphableFilter($event)"
-            (select)="onSelect($event)">
+            (select)="onSelect($event)"
+            (selectCustomFilter)="onSelectCustomFilter($event)">
           </raven-tree>
         </ng-container>
       </div>
@@ -66,7 +67,8 @@
           (openMetadata)="fileMetadataDrawer.toggle()"
           (removeFilter)="onRemoveFilter($event)"
           (removeGraphableFilter)="onRemoveGraphableFilter($event)"
-          (select)="onSelect($event)">
+          (select)="onSelect($event)"
+          (selectCustomFilter)="onSelectCustomFilter($event)">
         </raven-tree>
       </div>
     </mat-tab>

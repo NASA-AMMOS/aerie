@@ -231,7 +231,7 @@ export const bandsWithCustomFiltersInSourceId: RavenCompositeBand[] = [
         legend: 'ips',
         name: 'test-activity-sub-band-0',
         parentUniqueId: '100',
-        sourceIds: ['/a/b/c?label=ips&filter=.*'],
+        sourceIds: ['/DKF/command?label=ips&filter=.*'],
       },
     ],
   },

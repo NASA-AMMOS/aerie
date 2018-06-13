@@ -44,6 +44,7 @@ import * as timelineActions from './../../actions/timeline';
 
 import {
   RavenConfirmDialogComponent,
+  RavenCustomFilterDialogComponent,
   RavenCustomGraphDialogComponent,
   RavenFileImportDialogComponent,
   RavenLayoutApplyDialogComponent,
@@ -52,6 +53,7 @@ import {
 } from './../../shared/raven/components';
 
 import {
+  RavenCustomFilterSource,
   RavenCustomGraphableSource,
   RavenFilterSource,
   RavenGraphableFilterSource,
@@ -73,6 +75,7 @@ import {
 })
 export class SourceExplorerComponent implements OnDestroy {
   // Source Explorer state.
+  filtersByTarget: StringTMap<StringTMap<RavenSource[]>> | null;
   pins: RavenPin[];
   selectedSourceId: string;
   tree: StringTMap<RavenSource>;
@@ -85,6 +88,12 @@ export class SourceExplorerComponent implements OnDestroy {
     private store: Store<fromSourceExplorer.SourceExplorerState>,
   ) {
     // Source Explorer state.
+    this.store.select(fromSourceExplorer.getFiltersByTarget).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(filtersByTarget => {
+      this.filtersByTarget = filtersByTarget;
+      this.markForCheck();
+    });
     this.store.select(fromSourceExplorer.getPins).pipe(
       takeUntil(this.ngUnsubscribe),
     ).subscribe(pins => {
@@ -125,8 +134,7 @@ export class SourceExplorerComponent implements OnDestroy {
       takeUntil(this.ngUnsubscribe),
     ).subscribe((data: any) => {
       if (data.detail === 'data source changed') {
-        const pattern = new RegExp('(.*/fs-mongodb)(/.*)/(.*)');
-        const match = data.subject.match(pattern);
+        const match = data.subject.match(new RegExp('(.*/fs-mongodb)(/.*)/(.*)'));
         const sourceId = `${match[2]}`;
         const sourceUrl = `${match[1]}${match[2]}`;
         this.store.dispatch(new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl));
@@ -250,6 +258,13 @@ export class SourceExplorerComponent implements OnDestroy {
   }
 
   /**
+   * Event. Called when a custom filter source is clicked.
+   */
+  onSelectCustomFilter(source: RavenCustomFilterSource): void {
+    this.openCustomFilterDialog(source);
+  }
+
+  /**
    * Dialog trigger. Opens the apply layout dialog.
    */
   openApplyLayoutDialog(source: RavenSource) {
@@ -287,6 +302,27 @@ export class SourceExplorerComponent implements OnDestroy {
     ).subscribe(result => {
       if (result && result.confirm) {
         this.store.dispatch(new sourceExplorerActions.ApplyState(source.url, source.id));
+      }
+    });
+  }
+
+  /**
+   * Dialog trigger. Opens the custom filter dialog.
+   */
+  openCustomFilterDialog(source: RavenCustomFilterSource) {
+    const customFilterDialog = this.dialog.open(RavenCustomFilterDialogComponent, {
+      data: {
+        currentFilter: source.filter,
+        source,
+        width: '300px',
+      },
+    });
+
+    customFilterDialog.afterClosed().pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(result => {
+      if (result) {
+        this.store.dispatch(new sourceExplorerActions.SetCustomFilter(source, result.filter));
       }
     });
   }

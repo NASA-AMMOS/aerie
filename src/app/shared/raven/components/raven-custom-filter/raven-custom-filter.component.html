@@ -1,0 +1,13 @@
+<div class="tree" [ngClass]="{
+  'highlight': source.opened,
+  'no-highlight': !source.opened
+}">
+  <mat-icon
+    [id]="'raven-tree-'+source.name+'-customFilter'"
+    (click)="selectCustomFilter.emit(source)">
+    subject
+  </mat-icon>
+  <span class="name">
+    {{source.name}}
+  </span>
+</div>

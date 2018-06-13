@@ -29,9 +29,11 @@ import {
   RavenDefaultBandSettings,
   RavenDividerBand,
   RavenResourceBand,
+  RavenSource,
   RavenStateBand,
   RavenSubBand,
   RavenTimeRange,
+  StringTMap,
 } from './../models';
 
 import {
@@ -400,56 +402,45 @@ export function updateSelectedBandIds(
 }
 
 /**
- * Helper. Restore customFiltersBySourceId from args in band sourceIds. e.g ../command?label=ips&filter=.*IPS.*
+ * Helper. Get customFilters from sourceIds in bands. e.g ../command?label=ips&filter=.*IPS.*
  */
-export function getCustomFiltersBySourceId(bands: RavenCompositeBand[]) {
+export function getCustomFiltersBySourceId(
+  bands: RavenCompositeBand[],
+  treeBySourceId: StringTMap<RavenSource>,
+) {
   const customFiltersBySourceId = {};
 
   bands.forEach((band: RavenCompositeBand) => {
     band.subBands.forEach((subBand: RavenSubBand) => {
       subBand.sourceIds.forEach(sourceId => {
-        const pattern = new RegExp('(.*)\\?(.*)=(.*)&(.*)=(.*)');
-        const match = sourceId.match(pattern);
+        const hasQueryString = sourceId.match(new RegExp('(.*)\\?(.*)'));
 
-        if (match) {
-          const customFilter = {
-            [match[2]]: match[3],
-            [match[4]]: match[5],
-          };
-          const id = match[1];
-          const customFilters = customFiltersBySourceId[id] || [];
-          customFiltersBySourceId[id] = customFilters.concat(customFilter);
+        if (hasQueryString) {
+          const [, id, args] = hasQueryString;
+          const source = treeBySourceId[id];
+
+          if (source && source.type === 'customGraphable') {
+            const hasQueryStringArgs = args.match(new RegExp('(.*)=(.*)&(.*)=(.*)'));
+
+            if (hasQueryStringArgs) {
+              // Name/Value pairs here are parsed from the query string: ?name1=value1&name2=value2.
+              const [, name1, value1, name2, value2] = hasQueryStringArgs;
+
+              const customFilter = {
+                [name1]: value1,
+                [name2]: value2,
+              };
+
+              const customFilters = customFiltersBySourceId[id] || [];
+              customFiltersBySourceId[id] = customFilters.concat(customFilter);
+            }
+          }
         }
       });
     });
   });
 
   return customFiltersBySourceId;
-}
-
-/**
- * Helper. Restore filtersByParentId from arg in sourceIds. e.g ../DKF?events=BOT,EOT.
- */
-export function getFiltersByParentId(bands: RavenCompositeBand[]) {
-  const filtersByParentId = {};
-
-  bands.forEach((band: RavenCompositeBand) => {
-    band.subBands.forEach((subBand: RavenSubBand) => {
-      subBand.sourceIds.forEach(sourceId => {
-        const pattern = new RegExp('(.*)\\?(.*)=(.*)');
-        const match = sourceId.match(pattern);
-
-        if (match) {
-          const parentId = match[1].replace(/\/([^\/]+)\/?$/, '');
-          filtersByParentId[parentId] = {
-            [match[2]]: match[3].split(','),
-          };
-        }
-      });
-    });
-  });
-
-  return filtersByParentId;
 }
 
 /**

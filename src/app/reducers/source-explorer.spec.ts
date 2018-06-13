@@ -36,6 +36,7 @@ import {
   RemoveSourceEvent,
   SaveState,
   SelectSource,
+  SetCustomFilter,
   SetCustomFilterSubBandId,
   SubBandIdAdd,
   SubBandIdRemove,
@@ -46,7 +47,8 @@ import {
 import {
   categorySource,
   childSource,
-  filterSource,
+  customFilterSource,
+  filterSourceLocation,
   rootSource,
 } from './../shared/mocks';
 
@@ -66,15 +68,16 @@ describe('source-explorer reducer', () => {
     expect(sourceExplorerState).toEqual({
       ...initialState,
       customFiltersBySourceId: {
-        '/child' : [ { filter: '.*IPS.*', label: 'ips', subBandId: '' }]},
+        '/child': [{ filter: '.*IPS.*', label: 'ips', subBandId: '' }],
+      },
     });
   });
 
   it('handle AddFilter', () => {
     sourceExplorerState = reducer(sourceExplorerState, new NewSources(rootSource.id, [categorySource]));
-    sourceExplorerState = reducer(sourceExplorerState, new NewSources(categorySource.id, [filterSource]));
-    sourceExplorerState = reducer(sourceExplorerState, new AddFilter(filterSource));
-    expect(sourceExplorerState.filtersByParentId).toEqual({ '/DKF' : { events: ['BOT'] } } );
+    sourceExplorerState = reducer(sourceExplorerState, new NewSources(categorySource.id, [filterSourceLocation]));
+    sourceExplorerState = reducer(sourceExplorerState, new AddFilter(filterSourceLocation));
+    expect(sourceExplorerState.filtersByTarget).toEqual({ '/SequenceTracker': { meeting: [filterSourceLocation] } });
   });
 
   it('handle ApplyState', () => {
@@ -252,10 +255,10 @@ describe('source-explorer reducer', () => {
 
   it('handle RemoveFilter', () => {
     sourceExplorerState = reducer(sourceExplorerState, new NewSources(rootSource.id, [categorySource]));
-    sourceExplorerState = reducer(sourceExplorerState, new NewSources(categorySource.id, [filterSource]));
-    sourceExplorerState = reducer(sourceExplorerState, new AddFilter(filterSource));
-    sourceExplorerState = reducer(sourceExplorerState, new RemoveFilter(filterSource));
-    expect(sourceExplorerState.filtersByParentId).toEqual({ '/DKF' : { events: [] } });
+    sourceExplorerState = reducer(sourceExplorerState, new NewSources(categorySource.id, [filterSourceLocation]));
+    sourceExplorerState = reducer(sourceExplorerState, new AddFilter(filterSourceLocation));
+    sourceExplorerState = reducer(sourceExplorerState, new RemoveFilter(filterSourceLocation));
+    expect(sourceExplorerState.filtersByTarget).toEqual({ '/SequenceTracker': { meeting: [] } });
   });
 
   it('handle RemoveSource', () => {
@@ -329,13 +332,24 @@ describe('source-explorer reducer', () => {
     });
   });
 
+  it('handle SetCustomFilter', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new NewSources(rootSource.id, [categorySource]));
+    sourceExplorerState = reducer(sourceExplorerState, new NewSources(categorySource.id, [customFilterSource]));
+    sourceExplorerState = reducer(sourceExplorerState, new SetCustomFilter(customFilterSource, 'jm0132'));
+    expect(customFilterSource).toEqual({
+      ...customFilterSource,
+      filter: 'jm0132',
+    });
+  });
+
   it('handle SetCustomFilterSubBandId', () => {
     sourceExplorerState = reducer(sourceExplorerState, new AddCustomFilter('/child', 'ips', '.*IPS.*'));
     sourceExplorerState = reducer(sourceExplorerState, new SetCustomFilterSubBandId('/child', 'ips', '45'));
     expect(sourceExplorerState).toEqual({
       ...initialState,
       customFiltersBySourceId: {
-        '/child' : [ { filter: '.*IPS.*', label: 'ips', subBandId: '45' }]},
+        '/child': [{ filter: '.*IPS.*', label: 'ips', subBandId: '45' }],
+      },
     });
   });
 

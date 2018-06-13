@@ -173,7 +173,7 @@ export class TimelineEffects {
           new timelineActions.UpdateSubBand(
             band.id,
             subBand.id,
-            { labelPin: getPinLabel(subBand.sourceIds, pins) },
+            { labelPin: getPinLabel(subBand.sourceIds[0], pins) },
           ),
         );
       });

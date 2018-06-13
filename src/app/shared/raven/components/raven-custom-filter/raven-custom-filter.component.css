@@ -1,0 +1,22 @@
+.tree {
+  cursor: pointer;
+  min-height: 25px;
+  padding-left: 5px;
+  white-space: nowrap;
+}
+
+mat-icon {
+  font-size: 16px;
+}
+
+.name {
+  line-height: 25px;
+}
+
+.highlight {
+  color: #688ad8;
+}
+
+.no-highlight {
+  color: #000000;
+}

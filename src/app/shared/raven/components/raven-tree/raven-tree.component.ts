@@ -46,4 +46,5 @@ export class RavenTreeComponent {
   @Output() removeFilter: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
   @Output() removeGraphableFilter: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
   @Output() select: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
+  @Output() selectCustomFilter: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
 }

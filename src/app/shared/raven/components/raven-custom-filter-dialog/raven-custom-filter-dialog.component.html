@@ -1,0 +1,20 @@
+<div mat-dialog-content>
+  <div class="filter">
+    <label>{{data.source.name}} Filter</label>
+  </div>
+  <div class="container">
+    <mat-form-field>
+      <input
+        matInput
+        [(ngModel)]="filter"
+        placeholder={{data.source.arg}}>
+    </mat-form-field>
+  </div>
+</div>
+
+<div class="container">
+  <div class="actions" mat-dialog-actions>
+    <button mat-button (click)="onCancel()">Cancel</button>
+    <button mat-button (click)="onSetFilter()">Set Filter</button>
+  </div>
+</div>

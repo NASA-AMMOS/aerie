@@ -7,6 +7,14 @@
   (expand)="expand.emit($event)">
 </raven-category>
 
+<!-- Custom Filter. -->
+<raven-custom-filter
+  *ngIf="source.type === 'customFilter'"
+  [id]="id"
+  [source]="source"
+  (click)="selectCustomFilter.emit(source)">
+</raven-custom-filter>
+
 <!-- Custom Graphable. -->
 <raven-custom-graphable
   *ngIf="source.type === 'customGraphable'"
@@ -87,7 +95,8 @@
       (openMetadata)="openMetadata.emit($event)"
       (removeFilter)="removeFilter.emit($event)"
       (removeGraphableFilter)="removeGraphableFilter.emit($event)"
-      (select)="select.emit($event)">
+      (select)="select.emit($event)"
+      (selectCustomFilter)="selectCustomFilter.emit($event)">
     </raven-tree>
   </li>
 </ul>

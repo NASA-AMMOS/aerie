@@ -21,6 +21,8 @@ import {
   RavenCategoryComponent,
   RavenCompositeBandComponent,
   RavenConfirmDialogComponent,
+  RavenCustomFilterComponent,
+  RavenCustomFilterDialogComponent,
   RavenCustomGraphableComponent,
   RavenCustomGraphDialogComponent,
   RavenCustomMetadataComponent,
@@ -64,6 +66,8 @@ export const DECLARATIONS = [
   RavenCategoryComponent,
   RavenCompositeBandComponent,
   RavenConfirmDialogComponent,
+  RavenCustomFilterComponent,
+  RavenCustomFilterDialogComponent,
   RavenCustomGraphableComponent,
   RavenCustomGraphDialogComponent,
   RavenCustomMetadataComponent,
@@ -100,6 +104,7 @@ export const DECLARATIONS = [
 
 export const ENTRY_COMPONENTS = [
   RavenConfirmDialogComponent,
+  RavenCustomFilterDialogComponent,
   RavenCustomGraphDialogComponent,
   RavenFileImportDialogComponent,
   RavenLayoutApplyDialogComponent,
