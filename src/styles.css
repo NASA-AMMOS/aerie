@@ -15,3 +15,17 @@ html {
 .ag-theme-fresh .ag-row-selected {
   background-color: #fffe0d;
 }
+
+.alert {
+  border: 1px solid transparent;
+  border-radius: .25rem;
+  margin-bottom: 1rem;
+  padding: .75rem 1.25rem;
+  position: relative;
+}
+
+.alert-warning {
+  background-color: #fff3cd;
+  border-color: #ffeeba;
+  color: #856404;
+}

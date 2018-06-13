@@ -2,6 +2,19 @@
   display: block;
 }
 
+.actions {
+  justify-content: center;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.container > * {
+  width: 100%;
+}
+
 .save-to {
   padding-bottom: 20px;
 }

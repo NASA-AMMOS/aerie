@@ -10,7 +10,12 @@
 import {
   Component,
   Inject,
+  OnDestroy,
 } from '@angular/core';
+
+import {
+  HttpClient,
+} from '@angular/common/http';
 
 import {
   MAT_DIALOG_DATA,
@@ -22,22 +27,64 @@ import {
   Validators,
 } from '@angular/forms';
 
+import {
+  combineLatest,
+  Subject,
+} from 'rxjs';
+
+import {
+  map,
+  takeUntil,
+} from 'rxjs/operators';
+
+import {
+  MpsServerSource,
+} from './../../../models';
+
 @Component({
   selector: 'raven-state-save-dialog',
   styleUrls: ['./raven-state-save-dialog.component.css'],
   templateUrl: './raven-state-save-dialog.component.html',
 })
-export class RavenStateSaveDialogComponent {
+export class RavenStateSaveDialogComponent implements OnDestroy {
   name: FormControl;
+  overwriteWarning: boolean;
+
+  private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(
     public dialogRef: MatDialogRef<RavenStateSaveDialogComponent>,
+    public http: HttpClient,
     @Inject(MAT_DIALOG_DATA) public data: any,
   ) {
     this.name = new FormControl('', [
       Validators.required,
       Validators.pattern('^([(a-zA-Z0-9\-\_\s)]*){1,30}$'),
     ]);
+    this.overwriteWarning = false;
+
+    combineLatest(
+      this.name.valueChanges,
+      this.http.get(data.source.url),
+    ).pipe(
+      map(([value, sources]) => ({ value, sources })),
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(({ value, sources }) => {
+      const children = (sources as MpsServerSource[]).map(source => source.name);
+
+      // If the current source has a child with the name we are trying to save,
+      // then display a proper overwrite warning.
+      if (children.find(name => name === value)) {
+        this.overwriteWarning = true;
+      } else {
+        this.overwriteWarning = false;
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
   }
 
   onCancel() {

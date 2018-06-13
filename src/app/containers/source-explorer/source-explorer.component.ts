@@ -386,7 +386,7 @@ export class SourceExplorerComponent implements OnDestroy {
   openStateSaveDialog(source: RavenSource): void {
     const stateSaveDialog = this.dialog.open(RavenStateSaveDialogComponent, {
       data: { source },
-      width: '250px',
+      width: '300px',
     });
 
     stateSaveDialog.afterClosed().pipe(
