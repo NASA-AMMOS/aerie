@@ -7,4 +7,92 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-// TODO.
+import {
+  uniqueId,
+} from 'lodash';
+
+import {
+  RavenState,
+} from './../models';
+
+import {
+  toCompositeBand,
+} from './../util/bands';
+
+/**
+ * Takes a RavenState and does some transformations before saving it to the database:
+ * 1. Remove ids.
+ * 2. Flattens composite bands with one sub-band.
+ */
+export function exportState(state: RavenState): any {
+  return {
+    ...state,
+    bands: state.bands
+      // Remove all ids from bands and sub-bands.
+      .map(band => {
+        const { id: bandId, ...bandWithNoId } = band;
+
+        return {
+          ...bandWithNoId,
+          subBands: band.subBands.map(subBand => {
+            const { id: subBandId, parentUniqueId, ...subBandWithNoIds } = subBand;
+
+            return {
+              ...subBandWithNoIds,
+            };
+          }),
+        };
+      })
+      // Flatten composite bands with a single sub-band.
+      .reduce((bands: any[], band) => {
+        if (band.subBands.length === 1) {
+          bands.push({
+            ...band.subBands[0],
+            containerId: band.containerId,
+            sortOrder: band.sortOrder,
+          });
+        } else {
+          bands.push(band);
+        }
+
+        return bands;
+      }, []),
+  };
+}
+
+/**
+ * Takes a saved state and transforms it into a RavenState:
+ * 1. Creates composite bands from flattened sub-bands.
+ * 2. Adds ids.
+ */
+export function importState(state: any): RavenState {
+  return {
+    ...state,
+    bands: state.bands
+      // Create composite bands.
+      .reduce((bands: any[], band: any) => {
+        if (band.type !== 'composite') {
+          const { containerId, sortOrder, ...subBand } = band;
+          bands.push(toCompositeBand(subBand, containerId, sortOrder));
+        } else {
+          bands.push(band);
+        }
+
+        return bands;
+      }, [])
+      // Add ids.
+      .map((band: any) => {
+        const parentUniqueId = uniqueId();
+
+        return {
+          ...band,
+          id: parentUniqueId,
+          subBands: band.subBands.map((subBand: any) => ({
+            ...subBand,
+            id: uniqueId(),
+            parentUniqueId,
+          })),
+        };
+      }),
+  };
+}

@@ -62,6 +62,7 @@ import * as fromSourceExplorer from './../reducers/source-explorer';
 import * as fromTimeline from './../reducers/timeline';
 
 import {
+  exportState,
   getCustomFilterForLabel,
   getCustomFiltersBySourceId,
   getFormattedSourceUrl,
@@ -69,6 +70,7 @@ import {
   getSourceIdsForSubBand,
   hasActivityBand,
   hasSourceId,
+  importState,
   isAddTo,
   isOverlay,
   toCompositeBand,
@@ -147,7 +149,7 @@ export class SourceExplorerEffects {
     concatMap(({ action, state }) =>
       forkJoin([
         of(action),
-        this.http.get(action.sourceUrl).pipe(map(res => res[0])),
+        this.fetchState(action.sourceUrl),
         this.fetchNewSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`, '/', true),
       ]),
     ),
@@ -181,7 +183,7 @@ export class SourceExplorerEffects {
     map(([action, state]) => ({ action, state })),
     concatMap(({ action, state }) =>
       forkJoin([
-        this.http.get(action.sourceUrl).pipe(map(res => res[0])),
+        this.fetchState(action.sourceUrl),
         this.fetchNewSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`, '/', true),
       ]),
     ),
@@ -534,15 +536,6 @@ export class SourceExplorerEffects {
   }
 
   /**
-   * Fetch helper. Fetches saved state from MPS Server.
-   */
-  fetchSavedState(url: string) {
-    return this.http.get(url).pipe(
-      map(res => res[0].state),
-    );
-  }
-
-  /**
    * Helper. Returns a stream of actions that need to occur when loading a layout.
    */
   loadLayout(
@@ -830,11 +823,22 @@ export class SourceExplorerEffects {
   }
 
   /**
+   * Fetch helper. Fetches saved state from MPS Server.
+   * Imports state after fetching.
+   */
+  fetchState(url: string) {
+    return this.http.get(url).pipe(
+      map(res => importState(res[0])),
+    );
+  }
+
+  /**
    * Helper. Save state to an MPS Server source.
-   * Fetches new sources and updates the source after the save.
+   * Exports state before saving.
+   * Fetches new sources and updates the source state after the save.
    */
   saveState(sourceUrl: string, sourceId: string, name: string, state: RavenState) {
-    return this.http.put(`${sourceUrl}/${name}?timeline_type=state`, state).pipe(
+    return this.http.put(`${sourceUrl}/${name}?timeline_type=state`, exportState(state)).pipe(
       map(() => new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl)),
     );
   }

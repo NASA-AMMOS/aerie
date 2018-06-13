@@ -26,6 +26,7 @@ export interface RavenDividerBand {
   labelColor: number[];
   maxTimeRange: RavenTimeRange;
   name: string;
+  parentUniqueId: string | null;
   points: any[]; // A divider bands should never actually have points.
   showTooltip: boolean;
   sourceIds: string[];

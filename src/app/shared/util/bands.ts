@@ -134,18 +134,22 @@ export function toActivityBands(
 /**
  * Returns a list of new composite bands.
  */
-export function toCompositeBand(subBand: RavenSubBand): RavenCompositeBand {
+export function toCompositeBand(
+  subBand: RavenSubBand,
+  containerId?: string,
+  sortOrder?: number,
+): RavenCompositeBand {
   const compositeBandUniqueId = uniqueId();
 
   const compositeBand: RavenCompositeBand = {
-    containerId: '0',
+    containerId: containerId || '0',
     height: subBand.height,
     heightPadding: subBand.heightPadding,
     id: compositeBandUniqueId,
     name: subBand.name,
-    overlay: false,
+    overlay: false, // Composite bands with a single sub-band cannot be overlay by default.
     showTooltip: subBand.showTooltip,
-    sortOrder: 0,
+    sortOrder: sortOrder || 0,
     subBands: [{
       ...subBand,
     }],
@@ -171,6 +175,7 @@ export function toDividerBand(): RavenDividerBand {
     labelColor: [0, 0, 0],
     maxTimeRange: { start: 0, end: 0 },
     name: `Divider ${id}`,
+    parentUniqueId: null,
     points: [],
     showTooltip: true,
     sourceIds: [],

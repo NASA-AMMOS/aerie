@@ -12,4 +12,5 @@ export * from './color';
 export * from './epochs';
 export * from './points';
 export * from './source';
+export * from './state';
 export * from './time';

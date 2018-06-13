@@ -7,11 +7,122 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import {
+  RavenState,
+} from '../models';
+
+import {
+  exportState,
+  importState,
+} from './state';
+
+export const preExportBands = [
+  {
+    containerId: '0',
+    id: '100',
+    name: 'test-composite-band-0',
+    sortOrder: 0,
+    subBands: [
+      {
+        id: '0',
+        name: 'test-activity-sub-band-0',
+        parentUniqueId: '100',
+      },
+    ],
+  },
+  {
+    containerId: '0',
+    id: '101',
+    name: 'test-composite-band-1',
+    sortOrder: 1,
+    subBands: [
+      {
+        id: '0',
+        name: 'test-resource-sub-band-0',
+        parentUniqueId: '101',
+      },
+      {
+        id: '1',
+        name: 'test-resource-sub-band-1',
+        parentUniqueId: '101',
+      },
+    ],
+  },
+  {
+    containerId: '1',
+    id: '102',
+    name: 'test-composite-band-2',
+    sortOrder: 0,
+    subBands: [
+      {
+        id: '0',
+        name: 'test-divider-sub-band-0',
+        parentUniqueId: '102',
+      },
+    ],
+  },
+];
+
+export const postExportBands: any[] = [
+  {
+    containerId: '0',
+    name: 'test-activity-sub-band-0',
+    sortOrder: 0,
+  },
+  {
+    containerId: '0',
+    name: 'test-composite-band-1',
+    sortOrder: 1,
+    subBands: [
+      {
+        name: 'test-resource-sub-band-0',
+      },
+      {
+        name: 'test-resource-sub-band-1',
+      },
+    ],
+  },
+  {
+    containerId: '1',
+    name: 'test-divider-sub-band-0',
+    sortOrder: 0,
+  },
+];
+
 describe('state.ts', () => {
-  describe('', () => {
-    it(``, () => {
-      // TODO.
-      expect(true).toBe(true);
+  describe('exportState', () => {
+    it('should properly export a state', () => {
+      expect(exportState({ bands: preExportBands } as RavenState)).toEqual({ bands: postExportBands });
+    });
+  });
+
+  describe('importState', () => {
+    it('should properly import a state', () => {
+      const { bands } = importState({ bands: postExportBands });
+
+      // Make sure all bands are composite bands.
+      bands.forEach(band => {
+        expect(band.type).toEqual('composite');
+      });
+
+      // Make sure container id and sort order were properly restored.
+      bands.forEach((band, i) => {
+        expect(band.containerId).toBeDefined();
+        expect(band.sortOrder).toBeDefined();
+        expect(band.containerId).toEqual(preExportBands[i].containerId);
+        expect(band.sortOrder).toEqual(preExportBands[i].sortOrder);
+      });
+
+      // Check that ids are all accounted for.
+      bands.forEach(band => {
+        const parentUniqueId = band.id;
+        expect(parentUniqueId).toBeDefined();
+
+        band.subBands.forEach(subBand => {
+          expect(subBand.id).toBeDefined();
+          expect(subBand.parentUniqueId).toEqual(parentUniqueId);
+        });
+      });
     });
   });
 });
