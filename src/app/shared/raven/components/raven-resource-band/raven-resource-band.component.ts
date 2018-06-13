@@ -47,7 +47,6 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
   @Input() labelFontSize: number;
   @Input() labelPin: string;
   @Input() labelUnit: string;
-  @Input() minorLabels: string[];
   @Input() name: string;
   @Input() points: RavenResourcePoint[];
   @Input() rescale: boolean;
@@ -105,11 +104,6 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
       this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.getLabel() });
     }
 
-    // Minor Labels.
-    if (changes.minorLabels && !changes.minorLabels.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'minorLabels', value: this.minorLabels });
-    }
-
     // Points.
     if (changes.points && !changes.points.firstChange) {
       this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals() });
@@ -147,7 +141,6 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
       labelColor: this.color,
       labelFont: this.labelFont,
       labelFontSize: this.labelFontSize,
-      minorLabels: this.minorLabels,
       name: this.name,
       painter: new (window as any).ResourcePainter({
         color: this.color,

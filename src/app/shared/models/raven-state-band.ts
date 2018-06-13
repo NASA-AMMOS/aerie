@@ -26,7 +26,6 @@ export interface RavenStateBand {
   labelFont: string;
   labelPin: string;
   maxTimeRange: RavenTimeRange;
-  minorLabels: string[];
   name: string;
   parentUniqueId: string | null;
   points: RavenStatePoint[];

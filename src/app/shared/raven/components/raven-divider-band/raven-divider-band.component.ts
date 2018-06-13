@@ -34,7 +34,6 @@ export class RavenDividerBandComponent implements OnChanges, OnDestroy, OnInit {
   @Input() id: string;
   @Input() label: string;
   @Input() labelColor: number[];
-  @Input() minorLabels: string[];
   @Input() name: string;
   @Input() showTooltip: boolean;
 
@@ -74,7 +73,6 @@ export class RavenDividerBandComponent implements OnChanges, OnDestroy, OnInit {
       intervals: [],
       label: this.label,
       labelColor: this.labelColor,
-      minorLabels: this.minorLabels,
       name: this.name,
       timeAxis: this.ctlTimeAxis,
       viewTimeAxis: this.ctlViewTimeAxis,

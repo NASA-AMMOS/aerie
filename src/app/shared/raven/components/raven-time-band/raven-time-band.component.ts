@@ -98,7 +98,6 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
       font: 'normal 9px Verdana',
       height: 37,
       label: 'UTC',
-      minorLabels: [],
       onHideTooltip: this.onHideTooltip.bind(this),
       onShowTooltip: this.onShowTooltip.bind(this),
       onUpdateView: this.onUpdateView.bind(this),

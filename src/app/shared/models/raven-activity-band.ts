@@ -31,7 +31,6 @@ export interface RavenActivityBand {
   layout: number;
   legend: string;
   maxTimeRange: RavenTimeRange;
-  minorLabels: string[];
   name: string;
   parentUniqueId: string | null;
   points: RavenActivityPoint[];

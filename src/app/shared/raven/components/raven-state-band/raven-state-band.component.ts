@@ -43,7 +43,6 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
   @Input() labelFont: string;
   @Input() labelFontSize: number;
   @Input() labelPin: string;
-  @Input() minorLabels: string[];
   @Input() name: string;
   @Input() points: RavenStatePoint[];
   @Input() showLabelPin: boolean;
@@ -86,11 +85,6 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
       this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.getLabel() });
     }
 
-    // Minor Labels.
-    if (changes.minorLabels && !changes.minorLabels.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'minorLabels', value: this.minorLabels });
-    }
-
     // Points.
     if (changes.points && !changes.points.firstChange) {
       this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals() });
@@ -117,7 +111,6 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
       labelColor: this.labelColor,
       labelFont: this.labelFont,
       labelFontSize: this.labelFontSize,
-      minorLabels: this.minorLabels,
       name: this.name,
       timeAxis: this.ctlTimeAxis,
       viewTimeAxis: this.ctlViewTimeAxis,
