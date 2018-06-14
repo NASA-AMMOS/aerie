@@ -15,6 +15,61 @@
 
   <button
     mat-icon-button
+    matTooltip="Reset Time"
+    (click)="onReset()">
+    <mat-icon
+      class="mat-24"
+      aria-label="Reset Time">
+      restore
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Zoom In Time"
+    (click)="onZoomIn()">
+    <mat-icon
+      class="mat-24"
+      aria-label="Zoom In Time">
+      zoom_in
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Zoom Out Time"
+    (click)="onZoomOut()">
+    <mat-icon
+      class="mat-24"
+      aria-label="Zoom Out Time">
+      zoom_out
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Pan Left Time"
+    (click)="onPanLeft()">
+    <mat-icon
+      class="mat-24"
+      aria-label="Pan Left Time">
+      skip_previous
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Pan Right Time"
+    (click)="onPanRight()">
+    <mat-icon
+      class="mat-24"
+      aria-label="Pan Right Time">
+      skip_next
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
     matTooltip="Global Band Settings"
     (click)="toggleGlobalSettingsDrawer()">
     <mat-icon

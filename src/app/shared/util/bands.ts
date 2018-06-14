@@ -359,16 +359,6 @@ export function updateTimeRanges(bands: RavenCompositeBand[], currentViewTimeRan
     if (viewTimeRange.start === 0 && viewTimeRange.end === 0 ||
         viewTimeRange.start === Number.MAX_SAFE_INTEGER && viewTimeRange.end === Number.MIN_SAFE_INTEGER) {
       viewTimeRange = { ...maxTimeRange };
-    } else {
-      // Clamp new viewTimeRange start.
-      if (viewTimeRange.start < maxTimeRange.start) {
-        viewTimeRange.start = maxTimeRange.start;
-      }
-
-      // Clamp new viewTimeRange end.
-      if (viewTimeRange.end > maxTimeRange.end) {
-        viewTimeRange.end = maxTimeRange.end;
-      }
     }
   }
 
@@ -548,4 +538,21 @@ export function isOverlay(bands: RavenCompositeBand[], bandId: string): boolean 
   }
 
   return false;
+}
+
+/**
+ * Returns a new time range based on the view time range and some delta.
+ */
+export function changeZoom(
+  delta: number,
+  viewTimeRange: RavenTimeRange,
+): RavenTimeRange {
+  const { end, start } = viewTimeRange;
+  const range = end - start;
+  const zoomAmount = range / delta;
+
+  return {
+    end: end - zoomAmount,
+    start: start + zoomAmount,
+  };
 }

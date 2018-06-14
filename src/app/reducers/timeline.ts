@@ -34,6 +34,7 @@ import {
 
 import {
   bandById,
+  changeZoom,
   getMaxTimeRange,
   getParentSourceIds,
   getPoint,
@@ -55,10 +56,12 @@ export interface TimelineState {
   bands: RavenCompositeBand[];
   fetchPending: boolean;
   maxTimeRange: RavenTimeRange;
+  panDelta: number;
   selectedBandId: string;
   selectedPoint: RavenPoint | null;
   selectedSubBandId: string;
   viewTimeRange: RavenTimeRange;
+  zoomDelta: number;
 }
 
 // Timeline Initial State.
@@ -66,10 +69,12 @@ export const initialState: TimelineState = {
   bands: [],
   fetchPending: false,
   maxTimeRange: { end: 0, start: 0 },
+  panDelta: 10,
   selectedBandId: '',
   selectedPoint: null,
   selectedSubBandId: '',
   viewTimeRange: { end: 0, start: 0 },
+  zoomDelta: 10,
 };
 
 /**
@@ -84,6 +89,10 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
       return addPointsToSubBand(state, action);
     case TimelineActionTypes.AddSubBand:
       return addSubBand(state, action);
+    case TimelineActionTypes.PanLeftViewTimeRange:
+      return panLeftViewTimeRange(state);
+    case TimelineActionTypes.PanRightViewTimeRange:
+      return panRightViewTimeRange(state);
     case TimelineActionTypes.RemoveAllPointsInSubBandWithParentSource:
       return removeAllPointsInSubBandWithParentSource(state, action);
     case TimelineActionTypes.RemoveBandsOrPointsForSource:
@@ -92,6 +101,8 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
       return removeSourceIdFromSubBands(state, action);
     case TimelineActionTypes.RemoveSubBand:
       return removeSubBand(state, action);
+    case TimelineActionTypes.ResetViewTimeRange:
+      return { ...state, viewTimeRange: { ...state.maxTimeRange } };
     case TimelineActionTypes.SelectBand:
       return selectBand(state, action);
     case TimelineActionTypes.SelectPoint:
@@ -108,6 +119,10 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
       return { ...state, ...action.update };
     case TimelineActionTypes.UpdateViewTimeRange:
       return { ...state, viewTimeRange: { ...action.viewTimeRange } };
+    case TimelineActionTypes.ZoomInViewTimeRange:
+      return { ...state, viewTimeRange: changeZoom(state.zoomDelta, state.viewTimeRange) };
+    case TimelineActionTypes.ZoomOutViewTimeRange:
+      return { ...state, viewTimeRange: changeZoom(-state.zoomDelta, state.viewTimeRange) };
     default:
       return state;
   }
@@ -205,6 +220,40 @@ export function addSubBand(state: TimelineState, action: AddSubBand): TimelineSt
     ...state,
     bands,
     ...updateTimeRanges(bands, state.viewTimeRange),
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'PanLeftViewTimeRange' action.
+ */
+export function panLeftViewTimeRange(state: TimelineState): TimelineState {
+  const currentViewWindow = state.viewTimeRange.end - state.viewTimeRange.start;
+  const delta = currentViewWindow / state.panDelta;
+  const newStart = state.viewTimeRange.start + delta;
+
+  return {
+    ...state,
+    viewTimeRange: {
+      end: newStart,
+      start: newStart - currentViewWindow,
+    },
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'PanRightViewTimeRange' action.
+ */
+export function panRightViewTimeRange(state: TimelineState): TimelineState {
+  const currentViewWindow = state.viewTimeRange.end - state.viewTimeRange.start;
+  const delta = currentViewWindow / state.panDelta;
+  const newStart = state.viewTimeRange.end - delta;
+
+  return {
+    ...state,
+    viewTimeRange: {
+      end: newStart + currentViewWindow,
+      start: newStart,
+    },
   };
 }
 

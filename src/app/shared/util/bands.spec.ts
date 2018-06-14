@@ -9,6 +9,7 @@
 
 import {
   bandById,
+  changeZoom,
   getCustomFiltersBySourceId,
   hasActivityBand,
   hasSourceId,
@@ -40,6 +41,18 @@ describe('bands.ts', () => {
       expect(bandById(bands, '100')).toEqual({
         ...bands[0],
       });
+    });
+  });
+
+  describe('changeZoom', () => {
+    it('zooming out should work', () => {
+      const timeRange = { end: 1741564830, start: 1655143200 };
+      expect(changeZoom(-10, timeRange)).toEqual({ end: 1750206993, start: 1646501037 });
+    });
+
+    it('zooming in should work', () => {
+      const timeRange = { end: 1741564830, start: 1655143200 };
+      expect(changeZoom(10, timeRange)).toEqual({ end: 1732922667, start: 1663785363 });
     });
   });
 
@@ -196,24 +209,10 @@ describe('bands.ts', () => {
       });
     });
 
-    it(`should clamp the viewTimeRange.start to the maxTimeRange.start`, () => {
+    it(`should properly set the viewTimeRange`, () => {
       expect(updateTimeRanges(bands, { end: 100, start: -100 })).toEqual({
         maxTimeRange: { end: 300, start: 10 },
-        viewTimeRange: { end: 100, start: 10 },
-      });
-    });
-
-    it(`should clamp the viewTimeRange.end to the maxTimeRange.end`, () => {
-      expect(updateTimeRanges(bands, { end: 600, start: 0 })).toEqual({
-        maxTimeRange: { end: 300, start: 10 },
-        viewTimeRange: { end: 300, start: 10 },
-      });
-    });
-
-    it(`should clamp start and end of viewTimeRange to the start and end of maxTimeRange`, () => {
-      expect(updateTimeRanges(bands, { end: 600, start: -100 })).toEqual({
-        maxTimeRange: { end: 300, start: 10 },
-        viewTimeRange: { end: 300, start: 10 },
+        viewTimeRange: { end: 100, start: -100 },
       });
     });
   });

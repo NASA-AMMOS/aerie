@@ -22,12 +22,15 @@ import {
   AddBand,
   AddPointsToSubBand,
   AddSubBand,
+  PanLeftViewTimeRange,
+  PanRightViewTimeRange,
   PinRemove,
   PinRename,
   RemoveAllPointsInSubBandWithParentSource,
   RemoveBandsOrPointsForSource,
   RemoveSourceIdFromSubBands,
   RemoveSubBand,
+  ResetViewTimeRange,
   SelectBand,
   SelectPoint,
   SetPointsForSubBand,
@@ -36,6 +39,8 @@ import {
   UpdateSubBand,
   UpdateTimeline,
   UpdateViewTimeRange,
+  ZoomInViewTimeRange,
+  ZoomOutViewTimeRange,
 } from './../actions/timeline';
 
 import {
@@ -164,6 +169,34 @@ describe('timeline reducer', () => {
       }],
       maxTimeRange: { end: 200, start: 10 },
       viewTimeRange: { end: 100, start: 10 },
+    });
+  });
+
+  it('handle PanLeftViewTimeRange', () => {
+    // First set the timeline state to have realistic time ranges we can test.
+    timelineState = {
+      ...timelineState,
+      viewTimeRange: { end: 1741564830, start: 1655143200 },
+    };
+
+    timelineState = reducer(timelineState, new PanLeftViewTimeRange());
+    expect(timelineState).toEqual({
+      ...initialState,
+      viewTimeRange: { end: 1663785363, start: 1577363733 },
+    });
+  });
+
+  it('handle PanRightViewTimeRange', () => {
+    // First set the timeline state to have realistic time ranges we can test.
+    timelineState = {
+      ...timelineState,
+      viewTimeRange: { end: 1741564830, start: 1655143200 },
+    };
+
+    timelineState = reducer(timelineState, new PanRightViewTimeRange());
+    expect(timelineState).toEqual({
+      ...initialState,
+      viewTimeRange: { end: 1819344297, start: 1732922667 },
     });
   });
 
@@ -309,6 +342,22 @@ describe('timeline reducer', () => {
 
     timelineState = reducer(timelineState, new RemoveSubBand('2'));
     expect(timelineState.bands.length).toEqual(0);
+  });
+
+  it('handle ResetViewTimeRange', () => {
+    // First set the timeline state to have realistic time ranges we can test.
+    timelineState = {
+      ...timelineState,
+      maxTimeRange: { end: 1741564830, start: 1655143200 },
+      viewTimeRange: { end: 1000, start: 0 },
+    };
+
+    timelineState = reducer(timelineState, new ResetViewTimeRange());
+    expect(timelineState).toEqual({
+      ...initialState,
+      maxTimeRange: { end: 1741564830, start: 1655143200 },
+      viewTimeRange: { end: 1741564830, start: 1655143200 },
+    });
   });
 
   it('handle SelectBand', () => {
@@ -513,6 +562,38 @@ describe('timeline reducer', () => {
     expect(timelineState).toEqual({
       ...initialState,
       viewTimeRange: { end: 314, start: 272 },
+    });
+  });
+
+  it('handle ZoomInViewTimeRange', () => {
+    // First set the timeline state to have realistic time ranges we can test.
+    timelineState = {
+      ...timelineState,
+      maxTimeRange: { end: 1741564830, start: 1655143200 },
+      viewTimeRange: { end: 1741564830, start: 1655143200 },
+    };
+
+    timelineState = reducer(timelineState, new ZoomInViewTimeRange());
+    expect(timelineState).toEqual({
+      ...initialState,
+      maxTimeRange: { end: 1741564830, start: 1655143200 },
+      viewTimeRange: { end: 1732922667, start: 1663785363 },
+    });
+  });
+
+  it('handle ZoomOutViewTimeRange', () => {
+    // First set the timeline state to have realistic time ranges we can test.
+    timelineState = {
+      ...timelineState,
+      maxTimeRange: { end: 1741564830, start: 1655143200 },
+      viewTimeRange: { end: 1741564830, start: 1655143200 },
+    };
+
+    timelineState = reducer(timelineState, new ZoomOutViewTimeRange());
+    expect(timelineState).toEqual({
+      ...initialState,
+      maxTimeRange: { end: 1741564830, start: 1655143200 },
+      viewTimeRange: { end: 1750206993, start: 1646501037 },
     });
   });
 });

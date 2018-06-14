@@ -29,6 +29,7 @@ import * as fromSourceExplorer from './../../reducers/source-explorer';
 import * as fromTimeline from './../../reducers/timeline';
 
 import * as layoutActions from './../../actions/layout';
+import * as timelineActions from './../../actions/timeline';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -62,6 +63,26 @@ export class AppComponent {
   markForCheck() {
     this.changeDetector.markForCheck();
     setTimeout(() => this.changeDetector.detectChanges());
+  }
+
+  onPanLeft() {
+    this.store.dispatch(new timelineActions.PanLeftViewTimeRange());
+  }
+
+  onPanRight() {
+    this.store.dispatch(new timelineActions.PanRightViewTimeRange());
+  }
+
+  onReset() {
+    this.store.dispatch(new timelineActions.ResetViewTimeRange());
+  }
+
+  onZoomIn() {
+    this.store.dispatch(new timelineActions.ZoomInViewTimeRange());
+  }
+
+  onZoomOut() {
+    this.store.dispatch(new timelineActions.ZoomOutViewTimeRange());
   }
 
   toggleDetailsPanel() {

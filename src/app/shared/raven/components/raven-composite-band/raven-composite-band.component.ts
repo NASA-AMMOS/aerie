@@ -322,6 +322,7 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
       if (subBand.id === subBandId) {
         subBand.intervalsById = intervalsById;
         subBand.setIntervals(intervals);
+        this.updateTickValues();
         this.redraw();
         return;
       }
@@ -378,7 +379,13 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
 
       if (subBand.type === 'resource') {
         subBand.computeMinMaxPaintValues();
-        subBand.tickValues = (window as any).Util.getLinearTickValues(subBand.minPaintValue, subBand.maxPaintValue, this.height);
+
+        // For some data, `getLinearTickValues` may return a precision range error since it uses `toExponential` and `toFixed`.
+        // Wrap in a try-catch here to make sure the program does not crash when this happens.
+        // See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Precision_range
+        try {
+          subBand.tickValues = (window as any).Util.getLinearTickValues(subBand.minPaintValue, subBand.maxPaintValue, this.height);
+        } catch (e) {}
       }
     }
   }
