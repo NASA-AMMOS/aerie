@@ -31,6 +31,10 @@ import * as fromTimeline from './../../reducers/timeline';
 import * as layoutActions from './../../actions/layout';
 import * as timelineActions from './../../actions/timeline';
 
+import {
+  RavenTimeRange,
+} from './../../shared/models';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-root',
@@ -71,6 +75,10 @@ export class AppComponent {
 
   onPanRight() {
     this.store.dispatch(new timelineActions.PanRightViewTimeRange());
+  }
+
+  onPanTo(viewTimeRange: RavenTimeRange) {
+    this.store.dispatch(new timelineActions.UpdateViewTimeRange(viewTimeRange));
   }
 
   onReset() {
