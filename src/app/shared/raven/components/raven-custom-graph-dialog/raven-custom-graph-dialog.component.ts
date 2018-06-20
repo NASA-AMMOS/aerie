@@ -50,6 +50,7 @@ export class RavenCustomGraphDialogComponent {
     } else {
       this.filter = new FormControl('', [
         Validators.pattern('[a-zA-Z0-9\-\_\.\*\$]*'),
+        this.validateFilter,
       ]);
     }
     this.form = new FormGroup(
@@ -58,6 +59,20 @@ export class RavenCustomGraphDialogComponent {
         label: this.label,
       },
     );
+  }
+
+  /**
+   * Helper that tests if the filter value is a valid RegExp.
+   */
+  validateFilter(filter: FormControl) {
+    try {
+      RegExp(filter.value);
+      return null;
+    } catch (ex) {
+      return {
+        validateFilter: { valid: false },
+      };
+    }
   }
 
   /**
