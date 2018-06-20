@@ -11,7 +11,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   EventEmitter,
-  OnDestroy,
   Output,
 } from '@angular/core';
 
@@ -22,13 +21,11 @@ import {
 
 import {
   Observable,
-  Subject,
 } from 'rxjs';
 
 import {
   map,
   startWith,
-  takeUntil,
 } from 'rxjs/operators';
 
 import {
@@ -47,7 +44,7 @@ import {
   templateUrl: './raven-pan-to-duration.html',
 })
 
-export class RavenPanToDurationComponent implements OnDestroy {
+export class RavenPanToDurationComponent {
   @Output() panTo: EventEmitter<RavenTimeRange> = new EventEmitter<RavenTimeRange>();
 
   durations = [
@@ -69,19 +66,11 @@ export class RavenPanToDurationComponent implements OnDestroy {
     Validators.pattern(/^((\d+)[d,D])?((\d+)[h,H])?((\d+)[m,M])?((\d+)[s,S])?((\d+)ms)?$/),
   ]);
 
-  private ngUnsubscribe: Subject<{}> = new Subject();
-
   constructor() {
     this.filteredDurations = this.panDurationControl.valueChanges.pipe(
-      takeUntil(this.ngUnsubscribe),
       startWith(''),
       map(duration => duration ? this.filterDurations(duration) : [...this.durations]),
     );
-  }
-
-  ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
   }
 
   /**
