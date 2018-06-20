@@ -33,11 +33,16 @@ import { TimelineActionTypes } from './../actions/timeline';
 
 import {
   AddBand,
+  PanLeftViewTimeRange,
+  PanRightViewTimeRange,
   PinAdd,
   PinRemove,
   PinRename,
+  ResetViewTimeRange,
   SelectPoint,
   UpdateViewTimeRange,
+  ZoomInViewTimeRange,
+  ZoomOutViewTimeRange,
 } from './../actions/timeline';
 
 import * as timelineActions from './../actions/timeline';
@@ -114,11 +119,19 @@ export class TimelineEffects {
    */
   @Effect()
   updateViewTimeRange$: Observable<Action> = this.actions$.pipe(
-    ofType<UpdateViewTimeRange>(TimelineActionTypes.UpdateViewTimeRange),
+    ofType<ResetViewTimeRange | PanLeftViewTimeRange | PanRightViewTimeRange | UpdateViewTimeRange | ZoomInViewTimeRange | ZoomOutViewTimeRange>(
+      TimelineActionTypes.ResetViewTimeRange,
+      TimelineActionTypes.PanLeftViewTimeRange,
+      TimelineActionTypes.PanRightViewTimeRange,
+      TimelineActionTypes.UpdateViewTimeRange,
+      TimelineActionTypes.ZoomInViewTimeRange,
+      TimelineActionTypes.ZoomOutViewTimeRange,
+    ),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     switchMap(({ action, state: { sourceExplorer, timeline } }) => {
       const actions: Observable<Action>[] = [];
+      const viewTimeRange = (action as UpdateViewTimeRange).viewTimeRange || timeline.viewTimeRange;
 
       timeline.bands.forEach((band: RavenCompositeBand) => {
         band.subBands.forEach((subBand: RavenResourceBand) => {
@@ -127,7 +140,7 @@ export class TimelineEffects {
             subBand.sourceIds.forEach(sourceId => {
               actions.push(
                 of(new timelineActions.UpdateTimeline({ fetchPending: true })),
-                this.fetchNewResourcePoints(sourceExplorer.treeBySourceId[sourceId], action.viewTimeRange).pipe(
+                this.fetchNewResourcePoints(sourceExplorer.treeBySourceId[sourceId], viewTimeRange).pipe(
                   switchMap(({ points }) => [
                     new timelineActions.UpdateSubBand(band.id, subBand.id, {
                       points: subBand.points.filter(point => point.sourceId !== sourceId).concat(points),

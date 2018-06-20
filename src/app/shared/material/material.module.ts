@@ -10,6 +10,7 @@
 import { NgModule } from '@angular/core';
 
 import {
+  MatAutocompleteModule,
   MatButtonModule,
   MatCardModule,
   MatDialogModule,
@@ -33,6 +34,7 @@ import {
 } from '@angular/material';
 
 export const MODULES = [
+  MatAutocompleteModule,
   MatButtonModule,
   MatCardModule,
   MatDialogModule,

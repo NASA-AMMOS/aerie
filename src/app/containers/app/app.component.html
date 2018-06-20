@@ -13,6 +13,10 @@
 
   <span class="spacer"></span>
 
+  <raven-pan-to-duration
+    (panTo)="onPanTo($event)">
+  </raven-pan-to-duration>
+
   <button
     mat-icon-button
     matTooltip="Reset Time"
@@ -80,17 +84,6 @@
   </button>
 
   <button
-    mat-icon-button
-    matTooltip="Epochs"
-    (click)="toggleEpochsDrawer()">
-    <mat-icon
-      class="mat-24"
-      aria-label="Epochs">
-      access_time
-    </mat-icon>
-  </button>
-
-  <button
     [matMenuTriggerFor]="menu"
     mat-icon-button>
     <mat-icon
@@ -135,6 +128,17 @@
         show_chart
       </mat-icon>
       Toggle Right Panel
+    </button>
+
+    <button
+      mat-menu-item
+      (click)="toggleEpochsDrawer()">
+      <mat-icon
+        class="mat-24"
+        aria-label="Epochs Drawer">
+        access_time
+      </mat-icon>
+      Toggle Epochs Drawer
     </button>
   </mat-menu>
 </mat-toolbar>

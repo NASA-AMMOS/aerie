@@ -66,6 +66,46 @@ export function dhms(duration: number): string {
 }
 
 /**
+ * Takes a duration string (e.g. 20s) and returns a time.
+ */
+export function fromDHMString(duration: string): number {
+  if (!duration) {
+    return 0;
+  }
+
+  const re = /^((\d+)[d,D])?((\d+)[h,H])?((\d+)[m,M])?((\d+)[s,S])?((\d+)ms)?$/;
+  const results = duration.match(re);
+
+  if (!results) {
+    return 0;
+  }
+
+  let days = 0;
+  let hours = 0;
+  let mins = 0;
+  let secs = 0;
+  let msecs = 0;
+
+  if (results[2] !== undefined) {
+    days = parseInt(results[1], 10);
+  }
+  if (results[4] !== undefined) {
+    hours = parseInt(results[3], 10);
+  }
+  if (results[6] !== undefined) {
+    mins = parseInt(results[5], 10);
+  }
+  if (results[8] !== undefined) {
+    secs = parseInt(results[7], 10);
+  }
+  if (results[10] !== undefined) {
+    msecs = parseInt(results[9], 10);
+  }
+
+  return days * 24 * 3600 + hours * 3600 + mins * 60 + secs + msecs / 1000;
+}
+
+/**
  * Get day of year on a Date.
  * Taken from ctl.js to lessen dependency on the library.
  */
