@@ -7,9 +7,24 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './dialog.effect';
-export * from './epochs.effect';
-export * from './layout.effect';
-export * from './router.effect';
-export * from './source-explorer.effect';
-export * from './timeline.effect';
+import { Action } from '@ngrx/store';
+
+// Action Types.
+export enum DialogActionTypes {
+  ConfirmDialogOpen = '[dialog] confirm_dialog_open',
+}
+
+// Actions.
+export class ConfirmDialogOpen implements Action {
+  readonly type = DialogActionTypes.ConfirmDialogOpen;
+
+  constructor(
+    public cancelText: string,
+    public message: string,
+    public width: string,
+  ) {}
+}
+
+// Union type of all actions.
+export type DialogAction =
+  ConfirmDialogOpen;

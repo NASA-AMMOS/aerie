@@ -38,6 +38,7 @@ import {
 } from './containers';
 
 import {
+  DialogEffects,
   EpochsEffects,
   LayoutEffects,
   RouterEffects,
@@ -56,6 +57,7 @@ export const DECLARATIONS = [
 ];
 
 export const EFFECTS = [
+  DialogEffects,
   EpochsEffects,
   LayoutEffects,
   RouterEffects,

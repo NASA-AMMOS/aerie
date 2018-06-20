@@ -54,6 +54,7 @@ import {
 } from './../actions/source-explorer';
 
 import * as configActions from './../actions/config';
+import * as dialogActions from './../actions/dialog';
 import * as layoutActions from './../actions/layout';
 import * as sourceExplorerActions from './../actions/source-explorer';
 import * as timelineActions from './../actions/timeline';
@@ -678,46 +679,50 @@ export class SourceExplorerEffects {
           // Clear existing points regardless if fetch returns any data.
           actions.push(new timelineActions.RemoveAllPointsInSubBandWithParentSource(treeBySourceId[sourceId].parentId));
         }
+        if (newSubBands.length > 0) {
+          newSubBands.forEach((subBand: RavenSubBand) => {
+            const activityBand = hasActivityBand(currentBands, subBand);
+            const existingBand = treeBySourceId[sourceId].type === 'customGraphable' ? false : hasSourceId(currentBands, sourceId);
 
-        newSubBands.forEach((subBand: RavenSubBand) => {
-          const activityBand = hasActivityBand(currentBands, subBand);
-          const existingBand = treeBySourceId[sourceId].type === 'customGraphable' ? false : hasSourceId(currentBands, sourceId);
+            if (activityBand) {
+              actions.push(
+                new sourceExplorerActions.SubBandIdAdd(sourceId, activityBand.subBandId),
+                new timelineActions.AddPointsToSubBand(sourceId, activityBand.bandId, activityBand.subBandId, subBand.points),
+              );
+            } else if (existingBand) {
+              actions.push(
+                new sourceExplorerActions.SubBandIdAdd(sourceId, existingBand.subBandId),
+                new timelineActions.AddPointsToSubBand(sourceId, existingBand.bandId, existingBand.subBandId, subBand.points),
+              );
+            } else if (bandId && subBandId && isAddTo(currentBands, bandId, subBandId, subBand.type)) {
+              actions.push(
+                new sourceExplorerActions.SubBandIdAdd(sourceId, subBandId),
+                new timelineActions.AddPointsToSubBand(sourceId, bandId, subBandId, subBand.points),
+              );
+            } else if (bandId && isOverlay(currentBands, bandId)) {
+              actions.push(
+                new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id),
+                new timelineActions.AddSubBand(sourceId, bandId, subBand),
+              );
+            } else {
+              actions.push(
+                new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id),
+                new timelineActions.AddBand(sourceId, toCompositeBand(subBand)),
+              );
 
-          if (activityBand) {
-            actions.push(
-              new sourceExplorerActions.SubBandIdAdd(sourceId, activityBand.subBandId),
-              new timelineActions.AddPointsToSubBand(sourceId, activityBand.bandId, activityBand.subBandId, subBand.points),
-            );
-          } else if (existingBand) {
-            actions.push(
-              new sourceExplorerActions.SubBandIdAdd(sourceId, existingBand.subBandId),
-              new timelineActions.AddPointsToSubBand(sourceId, existingBand.bandId, existingBand.subBandId, subBand.points),
-            );
-          } else if (bandId && subBandId && isAddTo(currentBands, bandId, subBandId, subBand.type)) {
-            actions.push(
-              new sourceExplorerActions.SubBandIdAdd(sourceId, subBandId),
-              new timelineActions.AddPointsToSubBand(sourceId, bandId, subBandId, subBand.points),
-            );
-          } else if (bandId && isOverlay(currentBands, bandId)) {
-            actions.push(
-              new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id),
-              new timelineActions.AddSubBand(sourceId, bandId, subBand),
-            );
-          } else {
-            actions.push(
-              new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id),
-              new timelineActions.AddBand(sourceId, toCompositeBand(subBand)),
-            );
-
-            if (treeBySourceId[sourceId].type === 'customGraphable') {
-              // Set the band id in custom filter instance.
-              actions.push(new sourceExplorerActions.SetCustomFilterSubBandId(sourceId, customFilter ? customFilter.label : '', subBand.id));
+              if (treeBySourceId[sourceId].type === 'customGraphable') {
+                // Set the band id in custom filter instance.
+                actions.push(new sourceExplorerActions.SetCustomFilterSubBandId(sourceId, customFilter ? customFilter.label : '', subBand.id));
+              }
             }
-          }
-        });
+          });
 
-        // Resize bands when we `open` to make sure they are all resized properly.
-        actions.push(new layoutActions.Resize());
+          // Resize bands when we `open` to make sure they are all resized properly.
+          actions.push(new layoutActions.Resize());
+        } else {
+          // Notify user no bands will be drawn.
+          actions.push(new dialogActions.ConfirmDialogOpen('OK', 'Data set empty. Timeline will not de drawn.', '350px'));
+        }
 
         return actions;
       }),
