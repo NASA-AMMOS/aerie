@@ -21,7 +21,7 @@
   <mat-tab-group>
     <mat-tab label="Home">
       <div class="tab">
-        <ng-container *ngFor="let childId of tree['/'].childIds">
+        <ng-container *ngFor="let childId of sortedChildIds">
           <raven-tree
             [class]="tree[childId].name"
             [id]="childId"

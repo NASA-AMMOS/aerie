@@ -12,7 +12,9 @@ import {
   Component,
   EventEmitter,
   Input,
+  OnChanges,
   Output,
+  SimpleChanges,
 } from '@angular/core';
 
 import {
@@ -22,13 +24,17 @@ import {
   StringTMap,
 } from './../../../../shared/models';
 
+import {
+  getSortedChildIds,
+} from './../../../util/source';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'raven-tree',
   styleUrls: ['./raven-tree.component.css'],
   templateUrl: './raven-tree.component.html',
 })
-export class RavenTreeComponent {
+export class RavenTreeComponent implements OnChanges {
   @Input() id: string;
   @Input() pins: RavenPin[];
   @Input() source: RavenSource;
@@ -47,4 +53,12 @@ export class RavenTreeComponent {
   @Output() removeGraphableFilter: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
   @Output() select: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
   @Output() selectCustomFilter: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
+
+  sortedChildIds: string[];
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes.source) {
+      this.sortedChildIds = getSortedChildIds(this.tree, this.source.childIds);
+    }
+  }
 }

@@ -16,6 +16,7 @@ import {
   getPin,
   getPinLabel,
   getQueryOptionsForGraphableFilter,
+  getSortedChildIds,
   getSourceIds,
   getTargetFilters,
   toRavenCustomMetadata,
@@ -198,6 +199,12 @@ describe('source.ts', () => {
     };
     it(`should include filters as query option in the sourceId or url`, () => {
       expect(getQueryOptionsForGraphableFilter(sourceIdOrUrl, parentFilters)).toEqual('leucadia/taifunTest/abc.pef/DKF?collection=&');
+    });
+  });
+
+  describe('getSortedChildIds', () => {
+    it('should properly sort the child ids', () => {
+      expect(getSortedChildIds(treeBySourceId, ['/child/0', '/child/1', '/DKF/command'])).toEqual(['/DKF/command', '/child/0', '/child/1']);
     });
   });
 
