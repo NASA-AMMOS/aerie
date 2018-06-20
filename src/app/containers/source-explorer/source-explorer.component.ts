@@ -65,6 +65,7 @@ import {
 
 import {
   getAllSourcesByKind,
+  getSortedChildIds,
 } from './../../shared/util';
 
 @Component({
@@ -79,6 +80,9 @@ export class SourceExplorerComponent implements OnDestroy {
   pins: RavenPin[];
   selectedSourceId: string;
   tree: StringTMap<RavenSource>;
+
+  // Local state (derived on Source Explorer state).
+  sortedChildIds: string[];
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -110,6 +114,7 @@ export class SourceExplorerComponent implements OnDestroy {
       takeUntil(this.ngUnsubscribe),
     ).subscribe(tree => {
       this.tree = tree;
+      this.sortedChildIds = getSortedChildIds(this.tree, this.tree['/'].childIds);
       this.markForCheck();
     });
 

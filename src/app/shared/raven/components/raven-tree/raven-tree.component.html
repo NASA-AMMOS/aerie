@@ -78,7 +78,7 @@
 
 <!-- Children Nodes. -->
 <ul *ngIf="source.expanded">
-  <li *ngFor="let childId of source.childIds; trackBy: trackByFn">
+  <li *ngFor="let childId of sortedChildIds; trackBy: trackByFn">
     <raven-tree
       [class]="tree[childId].name"
       [id]="childId"

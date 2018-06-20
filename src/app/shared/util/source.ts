@@ -330,6 +330,35 @@ export function fromState(mSource: MpsServerSourceFileState, rSource: RavenBaseS
 }
 
 /**
+ * Get the sorted child ids:
+ * 1. Alphabetically (case-insensitive).
+ * 2. If we have a `customGraphable` or `graphable` source, then make sure they appear before other sources in the list.
+ */
+export function getSortedChildIds(tree: StringTMap<RavenSource>, childIds: string[]): string[] {
+  return [...childIds].sort((a, b) => {
+    // Make sure all `customGraphable` or `graphable` sources come before any other sources.
+    if (tree[a].type === 'customGraphable' && tree[b].type !== 'customGraphable' ||
+        tree[a].type === 'graphable' && tree[b].type !== 'graphable') {
+      return -1;
+    }
+    if (tree[a].type !== 'customGraphable' && tree[b].type === 'customGraphable' ||
+        tree[a].type !== 'graphable' && tree[b].type === 'graphable') {
+      return 1;
+    }
+
+    // Then just sort by name alphabetically (case-insensitive).
+    if (tree[a].name.toLowerCase() < tree[b].name.toLowerCase()) {
+      return -1;
+    }
+    if (tree[a].name.toLowerCase() > tree[b].name.toLowerCase()) {
+      return 1;
+    }
+
+    return 0;
+  });
+}
+
+/**
  * Helper for saving a state.
  * Returns list of sourceIds from subBand. sourceIds of related filters are added for graphableFilter and filters are
  * added as query options for customGraphable
