@@ -85,7 +85,7 @@ export class RavenPanToDurationComponent implements OnDestroy {
   }
 
   /**
-   * Called when the pan to search is clicked.
+   * Called when the pan search button is clicked.
    */
   onPan() {
     const start: number = utc(this.panToControl.value);
