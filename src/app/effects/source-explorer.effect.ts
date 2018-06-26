@@ -169,7 +169,7 @@ export class SourceExplorerEffects {
         ...this.loadLayout(
           updatedBands,
           initialSources,
-          savedState.defaultBandSettings,
+          savedState,
         ),
       );
     }),
@@ -571,12 +571,13 @@ export class SourceExplorerEffects {
   loadLayout(
     bands: RavenCompositeBand[],
     initialSources: RavenSource[],
-    defaultBandSettings: RavenDefaultBandSettings,
+    savedState: RavenState,
   ) {
     return [
       of(new sourceExplorerActions.UpdateSourceExplorer({
         ...fromSourceExplorer.initialState,
         fetchPending: true,
+        pins: savedState.pins, // TODO: Update layouts to apply pins correctly.
       })),
       of(new timelineActions.UpdateTimeline({
         ...fromTimeline.initialState,
@@ -589,7 +590,7 @@ export class SourceExplorerEffects {
         })),
       })),
       of(new configActions.UpdateDefaultBandSettings({
-        ...defaultBandSettings,
+        ...savedState.defaultBandSettings,
       })),
       ...this.load(bands, initialSources),
       of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
@@ -607,6 +608,7 @@ export class SourceExplorerEffects {
       of(new sourceExplorerActions.UpdateSourceExplorer({
         ...fromSourceExplorer.initialState,
         fetchPending: true,
+        pins: savedState.pins,
       })),
       of(new timelineActions.UpdateTimeline({
         ...fromTimeline.initialState,
