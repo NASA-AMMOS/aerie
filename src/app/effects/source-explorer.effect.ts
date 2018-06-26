@@ -577,7 +577,6 @@ export class SourceExplorerEffects {
       of(new sourceExplorerActions.UpdateSourceExplorer({
         ...fromSourceExplorer.initialState,
         fetchPending: true,
-        pins: savedState.pins, // TODO: Update layouts to apply pins correctly.
       })),
       of(new timelineActions.UpdateTimeline({
         ...fromTimeline.initialState,
@@ -593,6 +592,7 @@ export class SourceExplorerEffects {
         ...savedState.defaultBandSettings,
       })),
       ...this.load(bands, initialSources),
+      ...savedState.pins.map(pin => of(new sourceExplorerActions.PinAdd(pin))), // TODO: Update layouts to apply pins correctly.
       of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
     ];
   }
@@ -608,7 +608,6 @@ export class SourceExplorerEffects {
       of(new sourceExplorerActions.UpdateSourceExplorer({
         ...fromSourceExplorer.initialState,
         fetchPending: true,
-        pins: savedState.pins,
       })),
       of(new timelineActions.UpdateTimeline({
         ...fromTimeline.initialState,
@@ -626,6 +625,7 @@ export class SourceExplorerEffects {
         ...savedState.defaultBandSettings,
       })),
       ...this.load(savedState.bands, initialSources),
+      ...savedState.pins.map(pin => of(new sourceExplorerActions.PinAdd(pin))),
       of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
     ];
   }
