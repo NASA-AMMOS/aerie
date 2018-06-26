@@ -12,6 +12,7 @@ import {
   changeZoom,
   getCustomFiltersBySourceId,
   hasActivityBand,
+  hasActivityBandForFilterTarget,
   hasSourceId,
   isAddTo,
   isMessageTypeActivity,
@@ -26,6 +27,7 @@ import {
   activityPoint,
   bands,
   bandsWithCustomFiltersInSourceId,
+  bandsWithFilterTarget,
   keywordLineActivityPoint,
   messageTypeActivityPoint,
   treeBySourceId,
@@ -76,6 +78,19 @@ describe('bands.ts', () => {
     it(`should return the first found sub-band if it is an activity by-type sub-band with the same legend as the given band`, () => {
       const byTypeActivityBand = bands[4].subBands[0];
       expect(hasActivityBand(bands, byTypeActivityBand)).toEqual({
+        bandId: '100',
+        subBandId: '0',
+      });
+    });
+  });
+
+  describe('hasActivityBandForFilterTarget', () => {
+    it(`should return null if no band has the specified filterTarget`, () => {
+      expect(hasActivityBandForFilterTarget(bandsWithFilterTarget, 'ABC')).toBe(null);
+    });
+
+    it(`should return the band with the filterTarget`, () => {
+      expect(hasActivityBandForFilterTarget(bandsWithFilterTarget, 'DKF')).toEqual({
         bandId: '100',
         subBandId: '0',
       });

@@ -90,6 +90,34 @@ describe('timeline reducer', () => {
     });
   });
 
+  it('handle AddBand (with filterTarget)', () => {
+    const source: RavenSource = rootSource;
+    const newBand = {
+      ...compositeBand,
+      subBands: [{
+        ...activityBand,
+      }],
+    };
+    timelineState = reducer(timelineState, new AddBand(source.id, newBand, { filterTarget: 'DKF' }));
+
+    expect(timelineState).toEqual({
+      ...initialState,
+      bands: [{
+        ...compositeBand,
+        containerId: '0',
+        sortOrder: 0,
+        subBands: [{
+          ...activityBand,
+          filterTarget: 'DKF',
+          parentUniqueId: compositeBand.id,
+          sourceIds: [source.id],
+        }],
+      }],
+      maxTimeRange: { end: 200, start: 50 },
+      viewTimeRange: { end: 200, start: 50 },
+    });
+  });
+
   it('handle AddBand (no source)', () => {
     const newBand = {
       ...compositeBand,

@@ -25,6 +25,7 @@ export const activityBand: RavenActivityBand = {
   alignLabel: 3,
   baselineLabel: 3,
   borderWidth: 1,
+  filterTarget: null,
   height: 50,
   heightPadding: 10,
   icon: 'circle',
@@ -282,6 +283,36 @@ export const bandsWithFiltersInSourceId: RavenCompositeBand[] = [
         name: 'test-state-sub-band-0',
         parentUniqueId: '101',
         sourceIds: ['/a/b/c/d/e/x/y'],
+      },
+    ],
+  },
+];
+
+export const bandsWithFilterTarget: RavenCompositeBand[] = [
+  {
+    ...compositeBand,
+    id: '100',
+    name: 'test-composite-band-0',
+    sortOrder: 0,
+    subBands: [
+      {
+        ...activityBand,
+        filterTarget: 'DKF',
+        id: '0',
+      },
+    ],
+  },
+  {
+    ...compositeBand,
+    id: '101',
+    name: 'test-composite-band-1',
+    overlay: false,
+    sortOrder: 1,
+    subBands: [
+      {
+        ...activityBand,
+        filterTarget: 'Sequence Tracker',
+        id: '1',
       },
     ],
   },

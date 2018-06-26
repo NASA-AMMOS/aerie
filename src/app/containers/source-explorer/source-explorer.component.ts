@@ -76,7 +76,7 @@ import {
 })
 export class SourceExplorerComponent implements OnDestroy {
   // Source Explorer state.
-  filtersByTarget: StringTMap<StringTMap<RavenSource[]>> | null;
+  filtersByTarget: StringTMap<StringTMap<string[]>> | null;
   pins: RavenPin[];
   selectedSourceId: string;
   tree: StringTMap<RavenSource>;

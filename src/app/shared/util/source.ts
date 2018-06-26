@@ -368,7 +368,7 @@ export function getSourceIdsForSubBand(
   treeBySourceId: StringTMap<RavenSource>,
   label: string,
   customFiltersBySourceId: StringTMap<RavenCustomFilter[]> | null = null,
-  filtersByTarget: StringTMap<StringTMap<RavenSource[]>> | null = null,
+  filtersByTarget: StringTMap<StringTMap<string[]>> | null = null,
 ): string[] {
   let savedSourceIds: string[] = [];
 
@@ -380,7 +380,7 @@ export function getSourceIdsForSubBand(
       savedSourceIds.push(customFilter ? `${source.id}?label=${customFilter.label}&filter=${customFilter.filter}` : source.id);
     } else if (source.type === 'graphableFilter' && filtersByTarget) {
       // Graphable Filter.
-      savedSourceIds = getTargetFilterSourceIds(filtersByTarget, (source as RavenGraphableFilterSource).filterTarget);
+      savedSourceIds = getTargetFilterSourceIds(treeBySourceId, filtersByTarget, (source as RavenGraphableFilterSource).filterTarget);
     } else {
       savedSourceIds.push(sourceId);
     }
@@ -438,13 +438,21 @@ export function getCustomFilterForLabel(label: string, customFilters: RavenCusto
 }
 
 /**
+ * Helper. Return list of filters from list of filter/graphableFilter or customFilter sources.
+ */
+export function getFilters(treeBySourceId: StringTMap<RavenSource>, sourceIds: string[]) {
+  return sourceIds.map(sourceId => treeBySourceId[sourceId].type === 'customFilter' ? (treeBySourceId[sourceId] as RavenCustomFilterSource).filter : treeBySourceId[sourceId].name);
+}
+
+/**
  * Helper that returns a nicely formatted sourceUrl for custom-graphable and graphable-filter types.
  * Just return the default sourceUrl if the type is not custom-graphable or graphable-filter.
  */
 export function getFormattedSourceUrl(
+  treeBySourceId: StringTMap<RavenSource>,
   source: RavenSource,
   customFilter: RavenCustomFilter | null,
-  filtersByTarget: StringTMap<StringTMap<RavenSource[]>>,
+  filtersByTarget: StringTMap<StringTMap<string[]>>,
 ): string {
   let sourceUrl = source.url;
 
@@ -458,7 +466,7 @@ export function getFormattedSourceUrl(
 
   // Graphable Filter.
   if (source.type === 'graphableFilter') {
-    sourceUrl = getQueryOptionsForGraphableFilter(source.url, getTargetFilters(filtersByTarget, (source as RavenGraphableFilterSource).filterTarget));
+    sourceUrl = getQueryUrlForGraphableFilter(treeBySourceId, source.url, getTargetFilters(filtersByTarget, (source as RavenGraphableFilterSource).filterTarget));
   }
 
   return sourceUrl;
@@ -514,35 +522,28 @@ export function getPinLabel(sourceId: string, pins: RavenPin[]): string {
 /**
  * Helper that returns query options attached to a graphable filter source id or url.
  */
-export function getQueryOptionsForGraphableFilter(
+export function getQueryUrlForGraphableFilter(
+  treeBySourceId: StringTMap<RavenSource>,
   sourceIdOrUrl: string,
-  targetFilters: StringTMap<RavenSource[]>,
+  targetFilters: StringTMap<string[]>,
 ) {
   let queryOptions = '';
   for (const group of Object.keys(targetFilters)) {
-    queryOptions += `${group}=${getFilters(targetFilters[group]).join(',')}&`;
+    queryOptions += `${group}=${getFilters(treeBySourceId, targetFilters[group]).join(',')}&`;
   }
-
   return `${sourceIdOrUrl}?${queryOptions}`;
-}
-
-/**
- * Helper. Return list of filters from list of filter/graphableFilter or customFilter sources
- */
-export function getFilters(sources: RavenSource[]) {
-  return sources.map(source => source.type === 'customFilter' ? (source as RavenCustomFilterSource).filter : source.name);
 }
 
 /**
  * Helper. Returns filters in set for a graphable source
  */
-export function getTargetFilters(filtersByTarget: StringTMap<StringTMap<RavenSource[]>> | null, filterTarget: string) {
+export function getTargetFilters(filtersByTarget: StringTMap<StringTMap<string[]>> | null, filterTarget: string) {
   let targetFilters = {};
 
   if (filtersByTarget) {
-    Object.keys(filtersByTarget).forEach(id => {
-      if (id === filterTarget) {
-        targetFilters = Object.assign({}, targetFilters, filtersByTarget[id]);
+    Object.keys(filtersByTarget).forEach(target => {
+      if (target === filterTarget) {
+        targetFilters = Object.assign({}, targetFilters, filtersByTarget[target]);
       }
     });
   }
@@ -553,7 +554,7 @@ export function getTargetFilters(filtersByTarget: StringTMap<StringTMap<RavenSou
 /**
  * Helper. Returns sourceIds for filters in set for target
  */
-export function getTargetFilterSourceIds(filtersByTarget: StringTMap<StringTMap<RavenSource[]>> | null, filterTarget: string): string[] {
+export function getTargetFilterSourceIds(treeBySourceId: StringTMap<RavenSource>, filtersByTarget: StringTMap<StringTMap<string[]>> | null, filterTarget: string): string[] {
   const targetFilterSourceIds = {};
 
   if (filtersByTarget) {
@@ -561,13 +562,13 @@ export function getTargetFilterSourceIds(filtersByTarget: StringTMap<StringTMap<
 
     Object.keys(filterGroups).forEach(group => {
       const filterSources = filterGroups[group];
-      filterSources.forEach(source => {
-        if (source.type === 'customFilter') {
-          // add filter in sourceId for customFilter
-          const customSource = source as RavenCustomFilterSource;
+      filterSources.forEach(sourceId => {
+        if (treeBySourceId[sourceId].type === 'customFilter') {
+          // Add filter in sourceId for customFilter.
+          const customSource = treeBySourceId[sourceId] as RavenCustomFilterSource;
           targetFilterSourceIds[`${customSource.id}?${customSource.filterSetOf}=${customSource.filter}`] = `${customSource.id}?${customSource.filterSetOf}=${customSource.filter}`;
         } else {
-          targetFilterSourceIds[`${source.id}`] = `${source.id}`;
+          targetFilterSourceIds[`${sourceId}`] = `${sourceId}`;
         }
       });
     });

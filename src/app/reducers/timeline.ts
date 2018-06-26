@@ -26,6 +26,7 @@ import {
   SelectPoint,
   SetPointsForSubBand,
   SortBands,
+  SourceIdAdd,
   TimelineAction,
   TimelineActionTypes,
   UpdateBand,
@@ -111,6 +112,8 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
       return setPointsForSubBand(state, action);
     case TimelineActionTypes.SortBands:
       return sortBands(state, action);
+    case TimelineActionTypes.SourceIdAdd:
+      return sourceIdAdd(state, action);
     case TimelineActionTypes.UpdateBand:
       return updateBand(state, action);
     case TimelineActionTypes.UpdateSubBand:
@@ -142,11 +145,13 @@ export function addBand(state: TimelineState, action: AddBand): TimelineState {
           ...subBand,
           parentUniqueId: action.band.id,
           sourceIds: without(subBand.sourceIds, action.sourceId).concat(action.sourceId),
+          ...action.additionalSubBandProps,
         };
       } else {
         return {
           ...subBand,
           parentUniqueId: action.band.id,
+          ...action.additionalSubBandProps,
         };
       }
     }),
@@ -454,6 +459,26 @@ export function sortBands(state: TimelineState, action: SortBands): TimelineStat
 
       return band;
     }),
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'SourceIdAdd' action.
+ */
+export function sourceIdAdd(state: TimelineState, action: SourceIdAdd): TimelineState {
+  const bands = state.bands.map(band => ({
+    ...band,
+    subBands: band.subBands.reduce((subBands: RavenSubBand[], subBand: RavenSubBand) => {
+      subBands.push({
+        ...subBand,
+        sourceIds: subBand.id === action.subBandId ? without(subBand.sourceIds, action.sourceId).concat(action.sourceId) : subBand.sourceIds,
+      });
+      return subBands;
+    }, []),
+  }));
+  return {
+    ...state,
+    bands,
   };
 }
 

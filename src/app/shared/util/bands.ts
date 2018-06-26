@@ -60,7 +60,7 @@ export function toRavenBandData(
     // State.
     const stateBand = toStateBand(sourceId, metadata as MpsServerStateMetadata, timelineData as MpsServerStatePoint[], defaultBandSettings);
     return [stateBand];
-  } else if (metadata.hasTimelineType === 'measurement' || metadata.hasTimelineType === 'state' ) {
+  } else if (metadata.hasTimelineType === 'measurement' || metadata.hasTimelineType === 'state') {
     // Resource.
     const resourceBand = toResourceBand(sourceId, metadata as MpsServerResourceMetadata, timelineData as MpsServerResourcePoint[], defaultBandSettings);
     return [resourceBand];
@@ -101,6 +101,7 @@ export function toActivityBands(
       alignLabel: 3,
       baselineLabel: 3,
       borderWidth: 1,
+      filterTarget: null,
       height: 50,
       heightPadding: 10,
       icon: defaultBandSettings.iconEnabled ? defaultBandSettings.icon : null,
@@ -453,6 +454,28 @@ export function hasActivityBand(bands: RavenCompositeBand[], band: RavenSubBand)
             subBandId: subBand.id,
           };
         }
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Helper. Returns an activity band for a filterTarget.
+ * `null` otherwise.
+ */
+export function hasActivityBandForFilterTarget(bands: RavenCompositeBand[], filterTarget: string) {
+  for (let i = 0, l = bands.length; i < l; ++i) {
+    for (let j = 0, ll = bands[i].subBands.length; j < ll; ++j) {
+      const subBand = bands[i].subBands[j] as RavenActivityBand;
+      if (
+        subBand.type === 'activity' &&
+        subBand.filterTarget === filterTarget
+      ) {
+        return {
+          bandId: bands[i].id,
+          subBandId: subBand.id,
+        };
       }
     }
   }

@@ -259,7 +259,7 @@ export const filterSourceStatus: RavenFilterSource = {
   filterSetOf: 'collection',
   filterTarget: '/SequenceTracker',
   icon: '',
-  id: '/SequenceTracker/Location',
+  id: '/SequenceTracker/Status',
   isServer: false,
   kind: 'fs_filter',
   label: 'Status',
@@ -297,7 +297,7 @@ export const graphableFilterKickoff: RavenGraphableFilterSource = {
   filterSetOf: 'events',
   filterTarget: 'SequenceTracker',
   icon: '',
-  id: '/SequenceTracker/KickOff',
+  id: 'SequenceTracker/Kickoff',
   isServer: false,
   kind: 'fs_filter',
   label: 'Kickoff',
@@ -305,7 +305,7 @@ export const graphableFilterKickoff: RavenGraphableFilterSource = {
   name: 'Kickoff',
   openable: false,
   opened: false,
-  parentId: '/SequenceTracker',
+  parentId: 'SequenceTracker',
   permissions: '',
   pinnable: false,
   pinned: false,
@@ -382,5 +382,14 @@ export const treeBySourceId: StringTMap<RavenSource> = {
     id: '/child/child/0',
     kind: 'data',
     parentId: '/child/1',
+  },
+  'SequenceTracker/Kickoff': {
+    ...graphableFilterKickoff,
+  },
+  'SequenceTracker/Location': {
+    ...filterSourceLocation,
+  },
+  'SequenceTracker/Status': {
+    ...filterSourceStatus,
   },
 };

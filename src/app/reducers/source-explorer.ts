@@ -58,7 +58,7 @@ import {
 export interface SourceExplorerState {
   customFiltersBySourceId: StringTMap<RavenCustomFilter[]>;
   fetchPending: boolean;
-  filtersByTarget: StringTMap<StringTMap<RavenSource[]>>; // Target refers to an id that ties filters to a graphable source.
+  filtersByTarget: StringTMap<StringTMap<string[]>>; // Target refers to an id that ties filters to a graphable source.
   initialSourcesLoaded: boolean;
   pins: RavenPin[];
   selectedSourceId: string;
@@ -208,8 +208,8 @@ export function addFilter(state: SourceExplorerState, action: AddFilter): Source
       [action.source.filterTarget]: {
         ...targetFilters,
         [action.source.filterSetOf]: groupFilters
-          .filter(filter => filter.id !== action.source.id)
-          .concat(action.source),
+          .filter(filter => filter !== action.source.id)
+          .concat(action.source.id),
       },
     },
     ...updateTreeSource(state, action.source.id, { opened: true }),
@@ -368,7 +368,7 @@ export function removeFilter(state: SourceExplorerState, action: RemoveFilter): 
       ...state.filtersByTarget,
       [action.source.filterTarget]: {
         ...targetFilters,
-        [action.source.filterSetOf]: groupFilters.filter(filter => filter.id !== action.source.id),
+        [action.source.filterSetOf]: groupFilters.filter(filter => filter !== action.source.id),
       },
     },
     ...updateTreeSource(state, action.source.id, { opened: false }),
@@ -436,18 +436,13 @@ export function selectSource(state: SourceExplorerState, action: SelectSource): 
  * Reduction Helper. Called when reducing the 'SetCustomFilter' action.
  */
 export function setCustomFilter(state: SourceExplorerState, action: SetCustomFilter): SourceExplorerState {
-  const newCustomSource = {
-    ...state.treeBySourceId[action.source.id],
-    filter: action.filter,
-  };
-
   return {
     ...state,
     filtersByTarget: {
       ...state.filtersByTarget,
       [action.source.filterTarget]: {
         ...state.filtersByTarget[action.source.filterTarget],
-        [action.source.filterSetOf]: [newCustomSource],
+        [action.source.filterSetOf]: [action.source.id],
       },
     },
     ...updateTreeSource(state, action.source.id, { opened: action.filter ? true : false, filter: action.filter }),
@@ -466,7 +461,7 @@ export function setCustomFilterSubBandId(state: SourceExplorerState, action: Set
       ...state.customFiltersBySourceId,
       [action.sourceId]: customFilters.map(customFilter => ({
         ...customFilter,
-        subBandId: customFilter.label === action.customLabel ? action.subBandId : customFilter.subBandId,
+        subBandId: customFilter.label === action.label ? action.subBandId : customFilter.subBandId,
       })),
     },
   };
@@ -526,7 +521,7 @@ export function subBandIdRemove(state: SourceExplorerState, action: SubBandIdRem
         [filterTarget]: {
           ...filters,
           [graphableFilterSource.filterSetOf]: filters[graphableFilterSource.filterSetOf].filter(
-            filterSource => filterSource.name !== graphableFilterSource.name,
+            filterSourceId => filterSourceId !== graphableFilterSource.name,
           ),
         },
       };

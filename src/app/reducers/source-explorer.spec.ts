@@ -77,7 +77,7 @@ describe('source-explorer reducer', () => {
     sourceExplorerState = reducer(sourceExplorerState, new NewSources(rootSource.id, [categorySource]));
     sourceExplorerState = reducer(sourceExplorerState, new NewSources(categorySource.id, [filterSourceLocation]));
     sourceExplorerState = reducer(sourceExplorerState, new AddFilter(filterSourceLocation));
-    expect(sourceExplorerState.filtersByTarget).toEqual({ '/SequenceTracker': { meeting: [filterSourceLocation] } });
+    expect(sourceExplorerState.filtersByTarget).toEqual({ '/SequenceTracker': { meeting: [filterSourceLocation.id] } });
   });
 
   it('handle ApplyState', () => {

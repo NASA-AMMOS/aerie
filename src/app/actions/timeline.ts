@@ -38,6 +38,7 @@ export enum TimelineActionTypes {
   SelectPoint                               = '[timeline] select_point',
   SetPointsForSubBand                       = '[timeline] set_points_for_sub_band',
   SortBands                                 = '[timeline] sort_bands',
+  SourceIdAdd                               = '[timeline] source_id_add',
   UpdateBand                                = '[timeline] update_band',
   UpdateSubBand                             = '[timeline] update_sub_band',
   UpdateTimeline                            = '[timeline] update_timeline',
@@ -53,6 +54,7 @@ export class AddBand implements Action {
   constructor(
     public sourceId: string | null,
     public band: RavenCompositeBand,
+    public additionalSubBandProps?: StringTMap<BaseType>,
   ) {}
 }
 
@@ -153,6 +155,15 @@ export class SetPointsForSubBand implements Action {
   ) {}
 }
 
+export class SourceIdAdd implements Action {
+  readonly type = TimelineActionTypes.SourceIdAdd;
+
+  constructor(
+    public sourceId: string,
+    public subBandId: string,
+  ) {}
+}
+
 export class SortBands implements Action {
   readonly type = TimelineActionTypes.SortBands;
 
@@ -210,6 +221,7 @@ export type TimelineAction =
   SelectPoint |
   SetPointsForSubBand |
   SortBands |
+  SourceIdAdd |
   UpdateBand |
   UpdateSubBand |
   UpdateTimeline |

@@ -231,7 +231,7 @@ export class SetCustomFilter implements Action {
 export class SetCustomFilterSubBandId implements Action {
   readonly type = SourceExplorerActionTypes.SetCustomFilterSubBandId;
 
-  constructor(public sourceId: string, public customLabel: string, public subBandId: string) {}
+  constructor(public sourceId: string, public label: string, public subBandId: string) {}
 }
 
 export class SubBandIdAdd implements Action {

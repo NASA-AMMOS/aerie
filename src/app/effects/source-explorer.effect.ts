@@ -70,6 +70,7 @@ import {
   getSourceIds,
   getSourceIdsForSubBand,
   hasActivityBand,
+  hasActivityBandForFilterTarget,
   hasSourceId,
   importState,
   isAddTo,
@@ -241,7 +242,7 @@ export class SourceExplorerEffects {
   fetchInitialSources$: Observable<Action> = this.actions$.pipe(
     ofType<FetchInitialSources>(SourceExplorerActionTypes.FetchInitialSources),
     withLatestFrom(this.store$),
-    map(([action, state]) => state),
+    map(([, state]) => state),
     concatMap((state: AppState) =>
       concat(
         this.fetchNewSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`, '/', true).pipe(
@@ -292,9 +293,7 @@ export class SourceExplorerEffects {
   @Effect()
   graphCustomSource$: Observable<Action> = this.actions$.pipe(
     ofType<GraphCustomSource>(SourceExplorerActionTypes.GraphCustomSource),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(({ action, state }) =>
+    concatMap(action =>
       concat(
         of(new sourceExplorerActions.AddCustomFilter(action.sourceId, action.label, action.filter)),
         of(new sourceExplorerActions.AddCustomGraph(action.sourceId, action.label, action.filter)),
@@ -308,9 +307,7 @@ export class SourceExplorerEffects {
   @Effect()
   importFile$: Observable<Action> = this.actions$.pipe(
     ofType<ImportFile>(SourceExplorerActionTypes.ImportFile),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(({ state, action }) => {
+    concatMap(action => {
       const headers = new HttpHeaders().set('Content-Type', `${action.file.type === 'pef' ? 'application/json' : 'text/csv'}`);
       const url = `${action.source.url}/${action.file.name}?timeline_type=${action.file.type}`;
 
@@ -375,7 +372,6 @@ export class SourceExplorerEffects {
     concatMap(action =>
       concat(
         of(new sourceExplorerActions.RemoveFilter(action.source as RavenFilterSource)),
-        of(new timelineActions.RemoveSourceIdFromSubBands(action.source.id)),
         of(new sourceExplorerActions.SubBandIdRemove([action.source.id], action.source.subBandIds[0])),
         of(new sourceExplorerActions.UpdateGraphAfterFilterRemove(action.source.id)),
       ),
@@ -440,17 +436,33 @@ export class SourceExplorerEffects {
     ofType<UpdateGraphAfterFilterAdd>(SourceExplorerActionTypes.UpdateGraphAfterFilterAdd),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
-    concatMap(({ state, action }) =>
+    concatMap(({ state: { config, sourceExplorer, timeline: { bands } }, action }) =>
       concat(
-        this.open(
-          null,
-          state.sourceExplorer.filtersByTarget,
-          state.sourceExplorer.treeBySourceId,
-          action.sourceId,
-          state.timeline.bands,
-          state.timeline.selectedBandId,
-          state.timeline.selectedSubBandId,
-          state.config.defaultBandSettings,
+        this.fetchSubBands(sourceExplorer.treeBySourceId, action.sourceId, config.defaultBandSettings, null, sourceExplorer.filtersByTarget).pipe(
+          concatMap((newSubBands: RavenSubBand[]) => {
+            const actions: Action[] = [];
+            const filterTarget = (sourceExplorer.treeBySourceId[action.sourceId] as RavenFilterSource).filterTarget;
+
+            newSubBands.forEach((subBand: RavenSubBand) => {
+              const activityBand = hasActivityBandForFilterTarget(bands, filterTarget);
+
+              if (activityBand) {
+                actions.push(
+                  // Add filterSource id to existing band.
+                  new timelineActions.SourceIdAdd(action.sourceId, activityBand.subBandId),
+                  // Replace points in band.
+                  new timelineActions.SetPointsForSubBand(activityBand.bandId, activityBand.subBandId, subBand.points),
+                );
+              } else {
+                actions.push(
+                  new sourceExplorerActions.SubBandIdAdd(action.sourceId, subBand.id),
+                  new timelineActions.AddBand(action.sourceId, toCompositeBand(subBand), { filterTarget: (sourceExplorer.treeBySourceId[action.sourceId] as RavenFilterSource).filterTarget }),
+                );
+              }
+            });
+
+            return actions;
+          }),
         ),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
       ),
@@ -467,20 +479,36 @@ export class SourceExplorerEffects {
     map(([action, state]) => ({ action, state })),
     concatMap(({ state: { config, sourceExplorer, timeline: { bands } }, action }) =>
       concat(
-        // Clear existing points in band regardless if fetch returns any data.
-        of(new timelineActions.RemoveAllPointsInSubBandWithParentSource(sourceExplorer.treeBySourceId[action.sourceId].parentId)),
-        this.fetchSubBands(sourceExplorer.treeBySourceId[action.sourceId], action.sourceId, config.defaultBandSettings, null, sourceExplorer.filtersByTarget).pipe(
+        this.fetchSubBands(sourceExplorer.treeBySourceId, action.sourceId, config.defaultBandSettings, null, sourceExplorer.filtersByTarget).pipe(
           concatMap((newSubBands: RavenSubBand[]) => {
             const actions: Action[] = [];
+            const target = (sourceExplorer.treeBySourceId[action.sourceId] as RavenFilterSource).filterTarget;
 
-            newSubBands.forEach((subBand: RavenSubBand) => {
-              const activityBand = hasActivityBand(bands, subBand);
+            if (newSubBands.length) {
+              newSubBands.forEach((subBand: RavenSubBand) => {
+                const activityBand = hasActivityBandForFilterTarget(bands, target);
+
+                if (activityBand) {
+                  actions.push(
+                    // Remove sourceId from band.
+                    new timelineActions.RemoveSourceIdFromSubBands(action.sourceId),
+                    // Replace band points.
+                    new timelineActions.SetPointsForSubBand(activityBand.bandId, activityBand.subBandId, subBand.points),
+                  );
+                }
+              });
+            } else { // When the last graphable filter source is unselected.
+              const activityBand = hasActivityBandForFilterTarget(bands, target);
+
               if (activityBand) {
                 actions.push(
-                  new timelineActions.SetPointsForSubBand(activityBand.bandId, activityBand.subBandId, subBand.points),
+                  // Remove sourceId from band.
+                  new timelineActions.RemoveSourceIdFromSubBands(action.sourceId),
+                  // Set empty data points.
+                  new timelineActions.SetPointsForSubBand(activityBand.bandId, activityBand.subBandId, []),
                 );
               }
-            });
+            }
 
             return actions;
           }),
@@ -525,13 +553,14 @@ export class SourceExplorerEffects {
    * Fetch helper. Fetches graph data from MPS Server and maps it to Raven sub-band data.
    */
   fetchSubBands(
-    source: RavenSource,
+    treeBySourceId: StringTMap<RavenSource>,
     sourceId: string,
     defaultBandSettings: RavenDefaultBandSettings,
     customFilter: RavenCustomFilter | null,
-    filtersByTarget: StringTMap<StringTMap<RavenSource[]>>,
+    filtersByTarget: StringTMap<StringTMap<string[]>>,
   ) {
-    return this.http.get<MpsServerGraphData>(getFormattedSourceUrl(source, customFilter, filtersByTarget)).pipe(
+    const source = treeBySourceId[sourceId];
+    return this.http.get<MpsServerGraphData>(getFormattedSourceUrl(treeBySourceId, source, customFilter, filtersByTarget)).pipe(
       map((graphData: MpsServerGraphData) => toRavenBandData(sourceId, source.name, graphData, defaultBandSettings)),
     );
   }
@@ -663,7 +692,7 @@ export class SourceExplorerEffects {
    */
   open(
     customFilter: RavenCustomFilter | null,
-    filtersByTarget: StringTMap<StringTMap<RavenSource[]>>,
+    filtersByTarget: StringTMap<StringTMap<string[]>>,
     treeBySourceId: StringTMap<RavenSource>,
     sourceId: string,
     currentBands: RavenCompositeBand[],
@@ -671,7 +700,7 @@ export class SourceExplorerEffects {
     subBandId: string | null,
     defaultBandSettings: RavenDefaultBandSettings,
   ) {
-    return this.fetchSubBands(treeBySourceId[sourceId], sourceId, defaultBandSettings, customFilter, filtersByTarget).pipe(
+    return this.fetchSubBands(treeBySourceId, sourceId, defaultBandSettings, customFilter, filtersByTarget).pipe(
       concatMap((newSubBands: RavenSubBand[]) => {
         const actions: Action[] = [];
 
@@ -679,6 +708,7 @@ export class SourceExplorerEffects {
           // Clear existing points regardless if fetch returns any data.
           actions.push(new timelineActions.RemoveAllPointsInSubBandWithParentSource(treeBySourceId[sourceId].parentId));
         }
+
         if (newSubBands.length > 0) {
           newSubBands.forEach((subBand: RavenSubBand) => {
             const activityBand = hasActivityBand(currentBands, subBand);
@@ -709,11 +739,11 @@ export class SourceExplorerEffects {
                 new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id),
                 new timelineActions.AddBand(sourceId, toCompositeBand(subBand)),
               );
+            }
 
-              if (treeBySourceId[sourceId].type === 'customGraphable') {
-                // Set the band id in custom filter instance.
-                actions.push(new sourceExplorerActions.SetCustomFilterSubBandId(sourceId, customFilter ? customFilter.label : '', subBand.id));
-              }
+            // Make sure that if we are dealing with a custom graphable source that we update the custom filters with the new sub-band id.
+            if (treeBySourceId[sourceId].type === 'customGraphable') {
+              actions.push(new sourceExplorerActions.SetCustomFilterSubBandId(sourceId, customFilter ? customFilter.label : '', subBand.id));
             }
           });
 
@@ -734,7 +764,7 @@ export class SourceExplorerEffects {
    */
   openAllInstancesForSource(
     customFilters: RavenCustomFilter[] | null = null,
-    filtersByTarget: StringTMap<StringTMap<RavenSource[]>>,
+    filtersByTarget: StringTMap<StringTMap<string[]>>,
     treeBySourceId: StringTMap<RavenSource>,
     sourceId: string,
     currentBands: RavenCompositeBand[],
@@ -794,7 +824,7 @@ export class SourceExplorerEffects {
   }
 
   /**
-   * Helper. Returns a stream of Add/Set filter actions to restore filters and custom filters
+   * Helper. Returns a stream of Add/Set filter actions to restore filters and custom filters.
    */
   restoreFilters(bands: RavenCompositeBand[], treeBySourceId: StringTMap<RavenSource>) {
     const actions: Action[] = [];

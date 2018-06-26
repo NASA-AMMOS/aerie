@@ -15,7 +15,7 @@ import {
   getParentSourceIds,
   getPin,
   getPinLabel,
-  getQueryOptionsForGraphableFilter,
+  getQueryUrlForGraphableFilter,
   getSortedChildIds,
   getSourceIds,
   getTargetFilters,
@@ -113,12 +113,12 @@ describe('source.ts', () => {
     };
     const filtersByTarget = {
       '/SequenceTracker': {
-        events: [filterSourceLocation, filterSourceStatus],
+        events: [filterSourceLocation.id, filterSourceStatus.id],
       },
     };
 
     it(`should return sourceUrl with custom filter args`, () => {
-      expect(getFormattedSourceUrl(customGraphableSource, customFilter, filtersByTarget)).toEqual('https://a/b/c?format=TMS&legend=ips&filter=(command=[.*IPS.*])');
+      expect(getFormattedSourceUrl(treeBySourceId, customGraphableSource, customFilter, filtersByTarget)).toEqual('https://a/b/c?format=TMS&legend=ips&filter=(command=[.*IPS.*])');
     });
 
     it(`should return sourceUrl with filter`, () => {
@@ -182,23 +182,23 @@ describe('source.ts', () => {
     });
   });
 
-  describe('getQueryOptionsForGraphableFilter', () => {
-    const sourceIdOrUrl = 'leucadia/taifunTest/abc.pef/DKF';
+  describe('getQueryUrlForGraphableFilter', () => {
+    const sourceIdOrUrl = 'SequenceTracker/Kickoff';
     const groupFilters = {
-      events: [graphableFilterKickoff],
+      events: [graphableFilterKickoff.id],
     };
     it('should include filters as query option in the sourceId or url', () => {
-      expect(getQueryOptionsForGraphableFilter(sourceIdOrUrl, groupFilters)).toEqual('leucadia/taifunTest/abc.pef/DKF?events=Kickoff&');
+      expect(getQueryUrlForGraphableFilter(treeBySourceId, sourceIdOrUrl, groupFilters)).toEqual('SequenceTracker/Kickoff?events=Kickoff&');
     });
   });
 
-  describe('getQueryOptionsForGraphableFilter', () => {
+  describe('getQueryUrlForGraphableFilter', () => {
     const sourceIdOrUrl = 'leucadia/taifunTest/abc.pef/DKF';
     const parentFilters = {
       collection: [],
     };
     it(`should include filters as query option in the sourceId or url`, () => {
-      expect(getQueryOptionsForGraphableFilter(sourceIdOrUrl, parentFilters)).toEqual('leucadia/taifunTest/abc.pef/DKF?collection=&');
+      expect(getQueryUrlForGraphableFilter(treeBySourceId, sourceIdOrUrl, parentFilters)).toEqual('leucadia/taifunTest/abc.pef/DKF?collection=&');
     });
   });
 
@@ -239,13 +239,13 @@ describe('source.ts', () => {
   describe('getTargetFilters', () => {
     const filtersByTarget = {
       '/SequenceTracker': {
-        collection: [filterSourceStatus],
-        meeting: [filterSourceLocation],
+        collection: [filterSourceStatus.id],
+        meeting: [filterSourceLocation.id],
       },
     };
 
     it(`should return filter related to sourceId`, () => {
-      expect(getTargetFilters(filtersByTarget, '/SequenceTracker')).toEqual({ collection: [filterSourceStatus], meeting: [ filterSourceLocation] });
+      expect(getTargetFilters(filtersByTarget, '/SequenceTracker')).toEqual({ collection: [filterSourceStatus.id], meeting: [ filterSourceLocation.id] });
     });
   });
 
