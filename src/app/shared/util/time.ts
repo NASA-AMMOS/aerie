@@ -178,6 +178,48 @@ export function formatEpochTimeRange(
 }
 
 /**
+ * Formatter function used to format the Raven Time Band.
+ */
+export function formatTimeTickTFormat(
+  obj: any,
+  epoch: RavenEpoch |  null,
+  earthSecPerEpochSec: number,
+  dayCode: string,
+): any[] {
+  const time = obj.time;
+  const band = obj.timeBand;
+
+  const formattedTimes = [];
+  let formatDecrementer = 5;
+
+  formattedTimes.push({
+    formattedTime: timestamp(time, false),
+    y: band.height / 2,
+  });
+
+  if (epoch) {
+    const epochTime = toEpochTime(time, earthSecPerEpochSec, epoch);
+    const formattedEpoch = formatEpochTime(epochTime, dayCode);
+
+    formattedTimes.push({
+      formattedTime: formattedEpoch,
+      y: band.height - formatDecrementer,
+    });
+
+    formatDecrementer -= 5;
+  } else {
+    formattedTimes.push({
+      formattedTime: timestampYMD(time),
+      y: band.height - formatDecrementer,
+    });
+
+    formatDecrementer -= 5;
+  }
+
+  return formattedTimes;
+}
+
+/**
  * Get day of year on a Date.
  * Taken from ctl.js to lessen dependency on the library.
  */
@@ -187,10 +229,11 @@ export function getDOY(date: Date): number {
 }
 
 /**
- * Get a timestamp string from a time.
+ * Get a DOY timestamp (e.g. 2023-164T00:00:00.000) from a time.
+ * Includes milliseconds by default.
  * In Raven1 this was called `formatTimeTFormat`.
  */
-export function timestamp(time: number): string {
+export function timestamp(time: number, includeMsecs: boolean = true): string {
   const date = new Date(time * 1000);
   const year = date.getUTCFullYear();
   const doy = getDOY(date).toString();
@@ -204,8 +247,31 @@ export function timestamp(time: number): string {
   const secs = date.getUTCSeconds().toString();
   timeStr += `:${secs.padStart(2, '0')}`;
 
-  const msecs = date.getUTCMilliseconds().toString();
-  timeStr += `.${msecs.padStart(3, '0')}`;
+  if (includeMsecs) {
+    const msecs = date.getUTCMilliseconds().toString();
+    timeStr += `.${msecs.padStart(3, '0')}`;
+  }
+
+  return timeStr;
+}
+
+/**
+ * Returns a YMD timestamp (e.g. 2023-06-13 00:00:00) based on a time.
+ */
+export function timestampYMD(time: number) {
+  const date = new Date(time * 1000);
+  const year = date.getUTCFullYear();
+  const mon = date.getUTCMonth() + 1;
+  const day = date.getUTCDate();
+  const hour = date.getUTCHours();
+  const mins = date.getUTCMinutes();
+
+  let timeStr = '';
+  timeStr = year + '-' + mon.toString().padStart(2, '0') + '-' + day.toString().padStart(2, '0') + ' ';
+  timeStr += hour.toString().padStart(2, '0') + ':' + mins.toString().padStart(2, '0');
+
+  const secs = date.getUTCSeconds();
+  timeStr += ':' + secs.toString().padStart(2, '0');
 
   return timeStr;
 }

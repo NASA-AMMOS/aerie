@@ -22,8 +22,13 @@ import {
 } from '@angular/core';
 
 import {
+  RavenEpoch,
   RavenTimeRange,
 } from './../../../models';
+
+import {
+  formatTimeTickTFormat,
+} from './../../../util/time';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,6 +37,9 @@ import {
   templateUrl: './raven-time-band.component.html',
 })
 export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit {
+  @Input() dayCode: string;
+  @Input() earthSecToEpochSec: number;
+  @Input() epoch: RavenEpoch | null;
   @Input() labelWidth: number;
   @Input() maxTimeRange: RavenTimeRange;
   @Input() showTooltip: boolean;
@@ -97,7 +105,8 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
     this.ctlTimeBand = new (window as any).TimeBand({
       font: 'normal 9px Verdana',
       height: 37,
-      label: 'UTC',
+      label: 'SCET',
+      onFormatTimeTick: this.onFormatTimeTick.bind(this),
       onHideTooltip: this.onHideTooltip.bind(this),
       onShowTooltip: this.onShowTooltip.bind(this),
       onUpdateView: this.onUpdateView.bind(this),
@@ -128,6 +137,13 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
    */
   onHideTooltip() {
     this.ctlTooltip.hide();
+  }
+
+  /**
+   * CTL Event.
+   */
+  onFormatTimeTick(obj: any) {
+    return formatTimeTickTFormat(obj, this.epoch, this.earthSecToEpochSec, this.dayCode);
   }
 
   /**
