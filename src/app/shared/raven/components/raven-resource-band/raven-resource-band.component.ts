@@ -20,8 +20,14 @@ import {
 } from '@angular/core';
 
 import {
+  RavenEpoch,
   RavenResourcePoint,
 } from './../../../models';
+
+import {
+  getInterpolatedTooltipText,
+  getTooltipText,
+} from './../../../util/tooltip';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,6 +40,10 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
   @Input() color: number[];
   @Input() ctlTimeAxis: any;
   @Input() ctlViewTimeAxis: any;
+  @Input() dayCode: string;
+  @Input() earthSecToEpochSec: number;
+  @Input() epoch: RavenEpoch | null;
+  @Input() epochPrefix: string;
   @Input() fill: boolean;
   @Input() fillColor: number[];
   @Input() font: string;
@@ -53,7 +63,6 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
   @Input() showIcon: boolean;
   @Input() showLabelPin: boolean;
   @Input() showLabelUnit: boolean;
-  @Input() showTooltip: boolean;
   @Input() type: string;
 
   @Output() addSubBand: EventEmitter<any> = new EventEmitter<any>();
@@ -142,6 +151,7 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
       labelFont: this.labelFont,
       labelFontSize: this.labelFontSize,
       name: this.name,
+      onGetInterpolatedTooltipText: this.onGetInterpolatedTooltipText.bind(this),
       painter: new (window as any).ResourcePainter({
         color: this.color,
         fill: this.fill,
@@ -187,6 +197,7 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
         endValue: point.value,
         icon: this.icon,
         id: point.id,
+        onGetTooltipText: this.onGetTooltipText.bind(this),
         opacity: 0.9,
         properties: {
           Value: point.value,
@@ -227,5 +238,19 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
     }
 
     return `${this.label}${labelPin}${labelUnit}`;
+  }
+
+  /**
+   * CTL Event. Called when we want to get tooltip text for an interpolated interval.
+   */
+  onGetInterpolatedTooltipText(e: Event, obj: any) {
+    return getInterpolatedTooltipText(obj, this.earthSecToEpochSec, this.epoch, this.dayCode, this.epochPrefix);
+  }
+
+  /**
+   * CTL Event. Called when we want to get tooltip text.
+   */
+  onGetTooltipText(e: Event, obj: any) {
+    return getTooltipText(obj, this.earthSecToEpochSec, this.epoch, this.dayCode, this.epochPrefix);
   }
 }

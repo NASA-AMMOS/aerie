@@ -38,7 +38,7 @@ const ravenConfig: RavenConfig = {
     resourceColor: '#000000',
     resourceFillColor: '#000000',
     showTimeCursor: false,
-    showTooltip: false,
+    showTooltip: true,
   },
   epochsUrl: 'mpsserver/api/v2/fs-mongodb/leucadia/taifunTest/europaEpoch.csv',
   itarMessage: '',

@@ -107,6 +107,8 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
       zoomDelta: 21600,
     });
 
+    this.ctlTimeBand.div.appendChild(this.ctlTooltip.div);
+
     this.ctlTimeAxis.updateTimes(this.maxTimeRange.start, this.maxTimeRange.end);
     this.ctlViewTimeAxis.updateTimes(this.viewTimeRange.start, this.viewTimeRange.end);
 

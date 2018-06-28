@@ -25,6 +25,7 @@ import {
 import {
   RavenBandLeftClick,
   RavenCompositeBand,
+  RavenEpoch,
   RavenPoint,
   RavenSortMessage,
   RavenTimeRange,
@@ -40,10 +41,15 @@ import {
 export class RavenBandsComponent implements OnChanges, OnInit {
   @Input() bands: RavenCompositeBand[];
   @Input() containerId: string;
+  @Input() dayCode: string;
+  @Input() earthSecToEpochSec: number;
+  @Input() epoch: RavenEpoch | null;
+  @Input() epochPrefix: string;
   @Input() labelWidth: number;
   @Input() maxTimeRange: RavenTimeRange;
   @Input() selectedBandId: string;
   @Input() selectedPoint: RavenPoint;
+  @Input() showTooltip: boolean;
   @Input() viewTimeRange: RavenTimeRange;
 
   @Output() bandLeftClick: EventEmitter<RavenBandLeftClick> = new EventEmitter<RavenBandLeftClick>();
