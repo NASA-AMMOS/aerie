@@ -140,7 +140,7 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
   }
 
   /**
-   * CTL Event.
+   * CTL Event. Called to get custom time band ticks.
    */
   onFormatTimeTick(obj: any) {
     return formatTimeTickTFormat(obj, this.epoch, this.earthSecToEpochSec, this.dayCode);
