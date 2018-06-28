@@ -41,7 +41,6 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
   @Input() dayCode: string;
   @Input() earthSecToEpochSec: number;
   @Input() epoch: RavenEpoch | null;
-  @Input() epochPrefix: string;
   @Input() id: string;
   @Input() labelWidth: number;
   @Input() maxTimeRange: RavenTimeRange;

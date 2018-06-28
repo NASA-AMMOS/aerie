@@ -43,7 +43,6 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
   @Input() dayCode: string;
   @Input() earthSecToEpochSec: number;
   @Input() epoch: RavenEpoch | null;
-  @Input() epochPrefix: string;
   @Input() fill: boolean;
   @Input() fillColor: number[];
   @Input() font: string;
@@ -244,13 +243,13 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
    * CTL Event. Called when we want to get tooltip text for an interpolated interval.
    */
   onGetInterpolatedTooltipText(e: Event, obj: any) {
-    return getInterpolatedTooltipText(obj, this.earthSecToEpochSec, this.epoch, this.dayCode, this.epochPrefix);
+    return getInterpolatedTooltipText(obj, this.earthSecToEpochSec, this.epoch, this.dayCode);
   }
 
   /**
    * CTL Event. Called when we want to get tooltip text.
    */
   onGetTooltipText(e: Event, obj: any) {
-    return getTooltipText(obj, this.earthSecToEpochSec, this.epoch, this.dayCode, this.epochPrefix);
+    return getTooltipText(obj, this.earthSecToEpochSec, this.epoch, this.dayCode);
   }
 }

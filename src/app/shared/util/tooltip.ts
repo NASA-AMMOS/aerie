@@ -36,12 +36,11 @@ export function getInterpolatedTooltipText(
   earthSecPerEpochSec: number,
   epoch: RavenEpoch | null,
   dayCode: string,
-  epochPrefix: string,
 ) {
   const { band, interval, time } = obj;
 
   const timeInterval = formatTimeRangeTFormat(interval.start, interval.end);
-  const epochInterval = formatEpochTimeRange(interval.start, interval.end, null, earthSecPerEpochSec, dayCode, epochPrefix);
+  const epochInterval = formatEpochTimeRange(interval.start, interval.end, null, earthSecPerEpochSec, dayCode);
   let valueAtTime = interpolateY3(interval.start, interval.startValue, interval.end, interval.endValue, time);
   valueAtTime = band.onFormatTickValue ? band.onFormatTickValue(valueAtTime) : valueAtTime;
   const startValue = band.onFormatTickValue ? band.onFormatTickValue(interval.startValue) : interval.startValue;
@@ -110,12 +109,11 @@ export function getTooltipText(
   earthSecPerEpochSec: number,
   epoch: RavenEpoch | null,
   dayCode: string,
-  epochPrefix: string,
 ) {
   const { interval, band } = obj;
 
   const timeInterval = formatTimeRangeTFormat(interval.start, interval.end);
-  const epochInterval = formatEpochTimeRange(interval.start, interval.end, epoch, earthSecPerEpochSec, dayCode, epochPrefix);
+  const epochInterval = formatEpochTimeRange(interval.start, interval.end, epoch, earthSecPerEpochSec, dayCode);
   const value = band.onFormatTickValue ? band.onFormatTickValue(interval.properties.Value) : interval.properties.Value;
 
   return `

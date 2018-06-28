@@ -65,7 +65,6 @@ export class TimelineComponent implements OnDestroy {
   // Epoch state.
   dayCode: string;
   earthSecToEpochSec: number;
-  epochPrefix: string;
   epochs: RavenEpoch[];
   inUseEpoch: RavenEpoch | null;
 
@@ -119,7 +118,6 @@ export class TimelineComponent implements OnDestroy {
     ).subscribe(state => {
       this.dayCode = state.dayCode;
       this.earthSecToEpochSec = state.earthSecToEpochSec;
-      this.epochPrefix = state.epochPrefix;
       this.epochs = state.epochs;
       this.inUseEpoch = state.inUseEpoch;
       this.markForCheck();

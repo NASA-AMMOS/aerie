@@ -45,7 +45,6 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
   @Input() dayCode: string;
   @Input() earthSecToEpochSec: number;
   @Input() epoch: RavenEpoch | null;
-  @Input() epochPrefix: string;
   @Input() height: number;
   @Input() heightPadding: number;
   @Input() icon: string;
@@ -228,6 +227,6 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
    * CTL Event. Called when we want to get tooltip text.
    */
   onGetTooltipText(e: Event, obj: any) {
-    return getTooltipText(obj, this.earthSecToEpochSec, this.epoch, this.dayCode, this.epochPrefix);
+    return getTooltipText(obj, this.earthSecToEpochSec, this.epoch, this.dayCode);
   }
 }

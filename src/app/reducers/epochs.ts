@@ -22,7 +22,6 @@ import {
 export interface EpochsState {
   dayCode: string;
   earthSecToEpochSec: number;
-  epochPrefix: string;
   epochs: RavenEpoch[];
   inUseEpoch: RavenEpoch | null;
 }
@@ -31,7 +30,6 @@ export interface EpochsState {
 export const initialState: EpochsState = {
   dayCode: '',
   earthSecToEpochSec: 1,
-  epochPrefix: 'JOI',
   epochs: [],
   inUseEpoch: null,
 };
