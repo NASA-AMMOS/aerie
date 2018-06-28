@@ -219,6 +219,7 @@ export class TimelineComponent implements OnDestroy {
    */
   onSort(sort: StringTMap<RavenSortMessage>): void {
     this.store.dispatch(new timelineActions.SortBands(sort));
+    this.store.dispatch(new layoutActions.Resize());
   }
 
   /**

@@ -152,12 +152,7 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
    * Helper. Recalculates x-coordinates of the band based on the label width.
    */
   updateTimeAxisXCoordinates() {
-    const container = document.querySelector('.timeline-0');
-    let offsetWidth = 0;
-
-    if (container && container.parentElement) {
-      offsetWidth = container.parentElement.offsetWidth;
-    }
+    const offsetWidth = this.elementRef.nativeElement.offsetWidth;
 
     this.ctlTimeAxis.updateXCoordinates(this.labelWidth, offsetWidth);
     this.ctlViewTimeAxis.updateXCoordinates(this.labelWidth, offsetWidth);
