@@ -22,7 +22,6 @@ export interface RavenStateBand {
   id: string;
   label: string;
   labelColor: number[];
-  labelFontSize: number;
   labelFont: string;
   labelPin: string;
   maxTimeRange: RavenTimeRange;

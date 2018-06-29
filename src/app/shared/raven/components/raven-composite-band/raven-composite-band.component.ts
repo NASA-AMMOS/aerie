@@ -42,6 +42,7 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
   @Input() earthSecToEpochSec: number;
   @Input() epoch: RavenEpoch | null;
   @Input() id: string;
+  @Input() labelFontSize: number;
   @Input() labelWidth: number;
   @Input() maxTimeRange: RavenTimeRange;
   @Input() selectedPoint: RavenPoint;
@@ -96,6 +97,11 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
     // Label Width.
     if (changes.labelWidth && !changes.labelWidth.firstChange) {
       shouldResize = true;
+    }
+
+    // Label Font Size.
+    if (changes.labelFontSize && !changes.labelFontSize.firstChange) {
+      shouldRedraw = true;
     }
 
     // Max Time Range.

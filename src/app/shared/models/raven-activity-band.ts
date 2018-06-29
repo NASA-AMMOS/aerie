@@ -26,7 +26,6 @@ export interface RavenActivityBand {
   id: string;
   label: string;
   labelColor: number[];
-  labelFontSize: number;
   labelFont: string;
   labelPin: string;
   layout: number;

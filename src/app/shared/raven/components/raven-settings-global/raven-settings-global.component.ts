@@ -29,4 +29,13 @@ export class RavenSettingsGlobalComponent {
 
   @Output() addDividerBand: EventEmitter<null> = new EventEmitter<null>();
   @Output() updateDefaultBandSettings: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
+
+  /**
+   * Event. Change callback. Only allow label font size between the min/max font size ranges.
+   */
+  onLabelFontSizeChange(labelFontSize: number) {
+    if (labelFontSize > 5 && labelFontSize < 31) {
+      this.updateDefaultBandSettings.emit({ update: { labelFontSize } });
+    }
+  }
 }

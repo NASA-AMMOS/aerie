@@ -26,7 +26,6 @@ export interface RavenResourceBand {
   interpolation: string;
   label: string;
   labelColor: number[];
-  labelFontSize: number;
   labelFont: string;
   labelPin: string;
   labelUnit: string;
