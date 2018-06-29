@@ -34,6 +34,8 @@ export class RavenDividerBandComponent implements OnChanges, OnDestroy, OnInit {
   @Input() id: string;
   @Input() label: string;
   @Input() labelColor: number[];
+  @Input() labelFont: string;
+  @Input() labelFontSize: number;
   @Input() name: string;
 
   @Output() addSubBand: EventEmitter<any> = new EventEmitter<any>();
@@ -60,6 +62,11 @@ export class RavenDividerBandComponent implements OnChanges, OnDestroy, OnInit {
     if (changes.labelColor && !changes.labelColor.firstChange) {
       this.updateSubBand.emit({ subBandId: this.id, prop: 'labelColor', value: this.labelColor });
     }
+
+    // Label Font Size.
+    if (changes.labelFontSize && !changes.labelFontSize.firstChange) {
+      this.updateSubBand.emit({ subBandId: this.id, subObject: 'decorator', prop: 'labelFontSize', value: this.labelFontSize });
+    }
   }
 
   ngOnInit() {
@@ -72,6 +79,8 @@ export class RavenDividerBandComponent implements OnChanges, OnDestroy, OnInit {
       intervals: [],
       label: this.label,
       labelColor: this.labelColor,
+      labelFont: this.labelFont,
+      labelFontSize: this.labelFontSize,
       name: this.name,
       timeAxis: this.ctlTimeAxis,
       viewTimeAxis: this.ctlViewTimeAxis,

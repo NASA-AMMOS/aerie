@@ -44,6 +44,7 @@ export class RavenBandsComponent implements OnChanges, OnInit {
   @Input() dayCode: string;
   @Input() earthSecToEpochSec: number;
   @Input() epoch: RavenEpoch | null;
+  @Input() labelFontSize: number;
   @Input() labelWidth: number;
   @Input() maxTimeRange: RavenTimeRange;
   @Input() selectedBandId: string;

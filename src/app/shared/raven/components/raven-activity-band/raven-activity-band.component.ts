@@ -92,6 +92,11 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
       this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.label });
     }
 
+    // Label Font Size.
+    if (changes.labelFontSize && !changes.labelFontSize.firstChange) {
+      this.updateSubBand.emit({ subBandId: this.id, subObject: 'decorator', prop: 'labelFontSize', value: this.labelFontSize });
+    }
+
     // Layout.
     // Note: layout === 0 is autoFit. We autoFit is set then we need to set the layout to compact by default.
     if (changes.layout && !changes.layout.firstChange) {

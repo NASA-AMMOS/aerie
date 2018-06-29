@@ -95,18 +95,18 @@
         </mat-form-field>
       </div>
 
-      <!-- Default Label Font Size. -->
+      <!-- Label Font Size. -->
       <div class="field">
-        <label>Default Label Font Size</label>
+        <label>Label Font Size</label>
         <input
           mat-input
           [value]="defaultBandSettings.labelFontSize"
           type="number"
           name="labelFontSize"
           step="1"
-          min="5"
-          max="300"
-          (change)="updateDefaultBandSettings.emit({ update: { labelFontSize: $event.target.valueAsNumber } })">
+          min="6"
+          max="30"
+          (change)="onLabelFontSizeChange($event.target.valueAsNumber)">
       </div>
 
       <!-- Default Resource Color. -->

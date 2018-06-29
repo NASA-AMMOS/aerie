@@ -87,6 +87,11 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
       this.updateSubBand.emit({ subBandId: this.id, prop: 'labelColor', value: this.labelColor });
     }
 
+    // Label Font Size.
+    if (changes.labelFontSize && !changes.labelFontSize.firstChange) {
+      this.updateSubBand.emit({ subBandId: this.id, subObject: 'decorator', prop: 'labelFontSize', value: this.labelFontSize });
+    }
+
     // Label Pin.
     if (changes.labelPin && !changes.labelPin.firstChange) {
       this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.getLabel() });
