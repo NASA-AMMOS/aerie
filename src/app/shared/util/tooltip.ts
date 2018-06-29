@@ -112,6 +112,9 @@ export function getTooltipText(
 ) {
   const { interval, band } = obj;
 
+  console.log(band);
+  console.log(interval);
+
   const timeInterval = formatTimeRangeTFormat(interval.start, interval.end);
   const epochInterval = formatEpochTimeRange(interval.start, interval.end, epoch, earthSecPerEpochSec, dayCode);
   const value = band.onFormatTickValue ? band.onFormatTickValue(interval.properties.Value) : interval.properties.Value;
@@ -148,7 +151,7 @@ export function getTooltipText(
           <strong>Value:</strong>
         </td>
         <td>
-          ${value || interval.properties.text || interval.label}
+          ${value || interval.properties.text || interval.label || interval.properties.Value}
         </td>
       </tr>
     </table>
