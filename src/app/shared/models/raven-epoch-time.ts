@@ -7,11 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './bands';
-export * from './color';
-export * from './epochs';
-export * from './points';
-export * from './source';
-export * from './state';
-export * from './time';
-export * from './tooltip';
+export interface RavenEpochTime {
+  epoch: number;
+  hours: number;
+  milliseconds: number;
+  minutes: number;
+  seconds: number;
+  sign: string;
+}

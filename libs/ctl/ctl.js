@@ -1486,7 +1486,16 @@ Band.prototype._mousemove = function(e) {
 
   // check to see if we're over the label
   if(x >= 0 && x < this.viewTimeAxis.x1) {
-    if(this.label !== "") {
+    if(this.bands.length) {
+      let label = '';
+
+      // Build a pretty label for a tooltip based on all the bands.
+      this.bands.forEach(band => {
+        label += `<div>${band.label}<div>`;
+      });
+
+      this.onShowTooltip(e, label);
+    } else if (this.label !==  "") {
       this.onShowTooltip(e, this.label);
     }
     return true;
@@ -1515,21 +1524,25 @@ Band.prototype._mousemove = function(e) {
       bands.forEach((band) => {
           // check to see if we're over a interval
           var intervals = band.findIntervals(x, y);
+
           // callback to filter out intervals that match the x,y position
           if(band.onFilterTooltipIntervals !== null) {
             intervals = band.onFilterTooltipIntervals({band:band, intervals:intervals, time:mouseTime});
-            if (intervals.length !== 0) {
-              let interval = intervals[0];
-              if(first)
-                 first = false;
-              else {
-                  tooltipText += separator;
-              }
-              if (interval.properties && interval.properties.message)
-                  tooltipText = '<p>'+Util.toDOYDate(interval.start)+'</p>'+interval.properties.message;
-              else if(interval.onGetTooltipText !== null) {
-                  tooltipText += interval.onGetTooltipText(e, {band:band, interval:interval, time:mouseTime});
-              }
+          }
+
+          if (intervals.length !== 0) {
+            let interval = intervals[0];
+
+            if(first)
+              first = false;
+            else {
+              tooltipText += separator;
+            }
+
+            if (interval.properties && interval.properties.message)
+              tooltipText = '<p>'+Util.toDOYDate(interval.start)+'</p>'+interval.properties.message;
+            else if(interval.onGetTooltipText !== null) {
+              tooltipText += interval.onGetTooltipText(e, {band:band, interval:interval, time:mouseTime});
             }
           }
       });
@@ -1537,12 +1550,15 @@ Band.prototype._mousemove = function(e) {
   else {
       // check to see if we're over a interval
       var intervals = this.findIntervals(x, y);
+
       // callback to filter out intervals that match the x,y position
       if(this.onFilterTooltipIntervals !== null) {
         intervals = this.onFilterTooltipIntervals({band:this, intervals:intervals, time:mouseTime});
       }
+
       if (intervals.length !== 0) {
         var interval = intervals[0];
+
         if (interval.properties && interval.properties.message)
           tooltipText = '<p>'+Util.toDOYDate(interval.start)+'</p>'+interval.properties.message;
         else if(interval.onGetTooltipText !== null) {

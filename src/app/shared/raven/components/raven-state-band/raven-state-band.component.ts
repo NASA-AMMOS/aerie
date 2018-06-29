@@ -20,8 +20,13 @@ import {
 } from '@angular/core';
 
 import {
+  RavenEpoch,
   RavenStatePoint,
 } from './../../../models';
+
+import {
+  getTooltipText,
+} from './../../../util';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -35,6 +40,9 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
   @Input() borderWidth: number;
   @Input() ctlTimeAxis: any;
   @Input() ctlViewTimeAxis: any;
+  @Input() dayCode: string;
+  @Input() earthSecToEpochSec: number;
+  @Input() epoch: RavenEpoch | null;
   @Input() height: number;
   @Input() heightPadding: number;
   @Input() id: string;
@@ -46,7 +54,6 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
   @Input() name: string;
   @Input() points: RavenStatePoint[];
   @Input() showLabelPin: boolean;
-  @Input() showTooltip: boolean;
   @Input() type: string;
 
   @Output() addSubBand: EventEmitter<any> = new EventEmitter<any>();
@@ -147,6 +154,7 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
         endValue: point.value,
         id: point.id,
         label: point.value,
+        onGetTooltipText: this.onGetTooltipText.bind(this),
         opacity: 0.5,
         properties: {
           Value: point.value,
@@ -182,5 +190,12 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
     }
 
     return `${this.label}${labelPin}`;
+  }
+
+  /**
+   * CTL Event. Called when we want to get tooltip text.
+   */
+  onGetTooltipText(e: Event, obj: any) {
+    return getTooltipText(obj, this.earthSecToEpochSec, this.epoch, this.dayCode);
   }
 }

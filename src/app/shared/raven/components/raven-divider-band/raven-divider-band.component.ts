@@ -35,7 +35,6 @@ export class RavenDividerBandComponent implements OnChanges, OnDestroy, OnInit {
   @Input() label: string;
   @Input() labelColor: number[];
   @Input() name: string;
-  @Input() showTooltip: boolean;
 
   @Output() addSubBand: EventEmitter<any> = new EventEmitter<any>();
   @Output() removeSubBand: EventEmitter<string> = new EventEmitter<string>();

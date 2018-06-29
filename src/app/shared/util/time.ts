@@ -7,6 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { utc as momentUtc } from 'moment';
+
+import {
+  RavenEpoch,
+  RavenEpochTime,
+} from './../models';
+
 /**
  * Converts a duration to a DHMS (days, hours, minutes, seconds) string.
  */
@@ -66,6 +73,17 @@ export function dhms(duration: number): string {
 }
 
 /**
+ * Formats a start and end time into a time range string.
+ */
+export function formatTimeRangeTFormat(start: number, end: number): string {
+  const startStr = timestamp(start);
+  const endStr = timestamp(end);
+  const durStr = dhms(end - start);
+
+  return startStr + ' - ' + endStr + ' (' + durStr + ')';
+}
+
+/**
  * Takes a duration string (e.g. 20s) and returns a time.
  */
 export function fromDHMString(duration: string): number {
@@ -106,6 +124,60 @@ export function fromDHMString(duration: string): number {
 }
 
 /**
+ * Formats an epoch time to a duration string.
+ */
+export function formatEpochDuration(epochTime: RavenEpochTime, dayCode: string): string {
+  const epochStr = epochTime.epoch > 0 ? (epochTime.epoch + dayCode) : '';
+  const hourStr = epochTime.hours > 0 ? (epochTime.hours + 'h') : '';
+
+  return epochStr + hourStr + epochTime.minutes + 'm' + epochTime.seconds + 's' + epochTime.milliseconds + 'ms';
+}
+
+/**
+ * Formats an epoch time to a string.
+ */
+export function formatEpochTime(epochTime: RavenEpochTime, dayCode: string): string {
+  const hours = epochTime.hours.toString().padStart(2, '0');
+  const minutes = epochTime.minutes.toString().padStart(2, '0');
+  const seconds = epochTime.seconds.toString().padStart(2, '0');
+  const milliseconds = epochTime.milliseconds.toString().padStart(3, '0');
+
+  return epochTime.sign + Math.abs(epochTime.epoch) + dayCode + `${hours}:${minutes}:${seconds}.${milliseconds}`;
+}
+
+/**
+ * Formats a start and end time to an epoch time range string.
+ */
+export function formatEpochTimeRange(
+  start: number,
+  end: number,
+  epoch: RavenEpoch | null,
+  earthSecPerEpochSec: number,
+  dayCode: string,
+): string {
+  let landingSeconds = 0;
+
+  if (epoch !== null) {
+    landingSeconds = momentUtc(epoch.value).unix();
+  }
+
+  const startEpoch = toEpochTime(start, earthSecPerEpochSec, epoch);
+  const endEpoch = toEpochTime(end, earthSecPerEpochSec, epoch);
+  const difference = toEpochTime(end - start + landingSeconds, earthSecPerEpochSec, epoch);
+
+  const epochDuration: RavenEpochTime = {
+    epoch: difference.epoch,
+    hours: difference.hours,
+    milliseconds: difference.milliseconds,
+    minutes: difference.minutes,
+    seconds: difference.seconds,
+    sign: '',
+  };
+
+  return formatEpochTime(startEpoch, dayCode) + ' to ' + formatEpochTime(endEpoch, dayCode) + ' (' + formatEpochDuration(epochDuration, dayCode) + ')';
+}
+
+/**
  * Get day of year on a Date.
  * Taken from ctl.js to lessen dependency on the library.
  */
@@ -116,6 +188,7 @@ export function getDOY(date: Date): number {
 
 /**
  * Get a timestamp string from a time.
+ * In Raven1 this was called `formatTimeTFormat`.
  */
 export function timestamp(time: number): string {
   const date = new Date(time * 1000);
@@ -146,6 +219,30 @@ export function timestring(start: number, end: number): string {
   const durStr = dhms(end - start);
 
   return `${startStr} - ${endStr} (${durStr})`;
+}
+
+/**
+ * Converts SCET seconds to an EpochTime.
+ */
+export function toEpochTime(scetSeconds: number, earthSecPerEpochSec: number, epoch: RavenEpoch | null): RavenEpochTime {
+  let landingSeconds = 0;
+
+  if (epoch !== null) {
+    landingSeconds = momentUtc(epoch.value).unix();
+  }
+
+  const epochTime = (scetSeconds - landingSeconds) / (60 * 60 * 24 * earthSecPerEpochSec);
+  const remainder = Math.abs(epochTime) % 1;
+  const ms = remainder * 60 * 60 * 24 * 1000;
+
+  return {
+    epoch: epochTime < 0 ? Math.ceil (epochTime) : Math.floor(epochTime),
+    hours: momentUtc(ms).hour(),
+    milliseconds: momentUtc(ms).millisecond(),
+    minutes: momentUtc(ms).minute(),
+    seconds: momentUtc(ms).second(),
+    sign: epochTime < 0 ? '-' : '+',
+  };
 }
 
 /**

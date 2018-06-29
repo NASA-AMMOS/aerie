@@ -23,6 +23,7 @@ import {
 
 import {
   RavenBandLeftClick,
+  RavenEpoch,
   RavenPoint,
   RavenSubBand,
   RavenTimeRange,
@@ -37,6 +38,9 @@ import {
 export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, OnInit {
   @Input() height: number;
   @Input() heightPadding: number;
+  @Input() dayCode: string;
+  @Input() earthSecToEpochSec: number;
+  @Input() epoch: RavenEpoch | null;
   @Input() id: string;
   @Input() labelWidth: number;
   @Input() maxTimeRange: RavenTimeRange;
@@ -50,6 +54,7 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
 
   ctlCompositeBand: any;
   ctlTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
+  ctlTooltip = new (window as any).Tooltip({});
   ctlViewTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
   selectedPointColor = [255, 254, 13];
 
@@ -193,6 +198,8 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
       viewTimeAxis: this.ctlViewTimeAxis,
     });
 
+    this.ctlCompositeBand.div.appendChild(this.ctlTooltip.div);
+
     this.ctlTimeAxis.updateTimes(this.maxTimeRange.start, this.maxTimeRange.end);
     this.ctlViewTimeAxis.updateTimes(this.viewTimeRange.start, this.viewTimeRange.end);
 
@@ -225,7 +232,7 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
    * CTL Event. Called when a tooltip is hidden.
    */
   onHideTooltip() {
-    // TODO.
+    this.ctlTooltip.hide();
   }
 
   /**
@@ -250,7 +257,9 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
    * CTL Event. Called when tooltip is shown.
    */
   onShowTooltip(e: MouseEvent, text: string) {
-    // TODO.
+    if (this.showTooltip) {
+      this.ctlTooltip.show(text, e.clientX, e.clientY);
+    }
   }
 
   /**
@@ -359,11 +368,13 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
   setIntervalColor() {
     if (this.selectedPoint) {
       for (let i = 0, l = this.ctlCompositeBand.bands.length; i < l; ++i) {
-        const interval = this.ctlCompositeBand.bands[i].intervalsById[this.selectedPoint.uniqueId];
+        if (this.ctlCompositeBand.bands[i].intervalsById) {
+          const interval = this.ctlCompositeBand.bands[i].intervalsById[this.selectedPoint.uniqueId];
 
-        if (interval) {
-          interval.originalColor = interval.color;
-          interval.color = this.selectedPointColor;
+          if (interval) {
+            interval.originalColor = interval.color;
+            interval.color = this.selectedPointColor;
+          }
         }
       }
     }
