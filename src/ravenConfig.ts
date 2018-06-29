@@ -29,7 +29,6 @@ const ravenConfig: RavenConfig = {
   baseSourcesUrl: 'mpsserver/api/v2/fs',
   defaultBandSettings: {
     activityLayout: 0,
-    dateFormat: 'Day-Month-Year',
     icon: 'circle',
     iconEnabled: false,
     labelFont: 'Georgia',
