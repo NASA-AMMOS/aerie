@@ -302,7 +302,7 @@ export function toEpochTime(scetSeconds: number, earthSecPerEpochSec: number, ep
   const ms = remainder * 60 * 60 * 24 * 1000;
 
   return {
-    epoch: epochTime < 0 ? Math.ceil (epochTime) : Math.floor(epochTime),
+    epoch: epochTime < 0 ? Math.ceil(epochTime) : Math.floor(epochTime),
     hours: momentUtc(ms).hour(),
     milliseconds: momentUtc(ms).millisecond(),
     minutes: momentUtc(ms).minute(),
