@@ -62,6 +62,22 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
     let shouldRedraw = false;
     let shouldResize = false;
 
+    // Day Code.
+    if (changes.dayCode && !changes.dayCode.firstChange) {
+      shouldRedraw = true;
+    }
+
+    // Earth Sec To Epoch Sec.
+    if (changes.earthSecToEpochSec && !changes.earthSecToEpochSec.firstChange) {
+      shouldRedraw = true;
+    }
+
+    // Epoch.
+    if (changes.epoch && !changes.epoch.firstChange) {
+      this.ctlTimeBand.minorLabels = this.getEpochLabel(this.epoch);
+      shouldRedraw = true;
+    }
+
     // Label Width.
     if (changes.labelWidth && !changes.labelWidth.firstChange) {
       shouldResize = true;
@@ -106,6 +122,7 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
       font: 'normal 9px Verdana',
       height: 37,
       label: 'SCET',
+      minorLabels: this.getEpochLabel(this.epoch),
       onFormatTimeTick: this.onFormatTimeTick.bind(this),
       onHideTooltip: this.onHideTooltip.bind(this),
       onShowTooltip: this.onShowTooltip.bind(this),
@@ -189,5 +206,15 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
   resize() {
     this.updateTimeAxisXCoordinates();
     this.redraw();
+  }
+
+  /**
+   * Helper that returns an epoch label based on an epoch if it exists.
+   */
+  getEpochLabel(epoch: RavenEpoch | null): string[] {
+    if (epoch !== null) {
+      return [epoch.name];
+    }
+    return [];
   }
 }
