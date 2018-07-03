@@ -124,10 +124,18 @@ export function fromDHMString(duration: string): number {
 }
 
 /**
+ * Helper that returns a default day code if `dayCode` is the empty string.
+ */
+export function formatDayCode(dayCode: string): string {
+  return dayCode === '' ? ' days ' : dayCode;
+}
+
+/**
  * Formats an epoch time to a duration string.
  */
 export function formatEpochDuration(epochTime: RavenEpochTime, dayCode: string): string {
-  const epochStr = epochTime.epoch > 0 ? (epochTime.epoch + dayCode) : '';
+  const day = formatDayCode(dayCode);
+  const epochStr = epochTime.epoch > 0 ? (epochTime.epoch + day) : '';
   const hourStr = epochTime.hours > 0 ? (epochTime.hours + 'h') : '';
 
   return epochStr + hourStr + epochTime.minutes + 'm' + epochTime.seconds + 's' + epochTime.milliseconds + 'ms';
@@ -137,12 +145,13 @@ export function formatEpochDuration(epochTime: RavenEpochTime, dayCode: string):
  * Formats an epoch time to a string.
  */
 export function formatEpochTime(epochTime: RavenEpochTime, dayCode: string): string {
+  const day = formatDayCode(dayCode);
   const hours = epochTime.hours.toString().padStart(2, '0');
   const minutes = epochTime.minutes.toString().padStart(2, '0');
   const seconds = epochTime.seconds.toString().padStart(2, '0');
   const milliseconds = epochTime.milliseconds.toString().padStart(3, '0');
 
-  return epochTime.sign + Math.abs(epochTime.epoch) + dayCode + `${hours}:${minutes}:${seconds}.${milliseconds}`;
+  return epochTime.sign + Math.abs(epochTime.epoch) + day + `${hours}:${minutes}:${seconds}.${milliseconds}`;
 }
 
 /**
