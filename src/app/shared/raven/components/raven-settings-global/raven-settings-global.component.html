@@ -22,20 +22,6 @@
           (change)="updateDefaultBandSettings.emit({ update: { labelWidth: $event.target.valueAsNumber } })">
       </div>
 
-      <!-- Date Format. -->
-      <div class="field">
-        <mat-form-field>
-          <mat-select
-            placeholder="Date Format"
-            [value]="defaultBandSettings.dateFormat"
-            (selectionChange)="updateDefaultBandSettings.emit({ update: { dateFormat: $event.value } })">
-            <mat-option [value]="'Epoch Relative'">Epoch Relative</mat-option>
-            <mat-option [value]="'Julian'">Julian</mat-option>
-            <mat-option [value]="'Day-Month-Year'">Day-Month-Year</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-
       <!-- Add Divider Band. -->
       <div class="field">
         <button

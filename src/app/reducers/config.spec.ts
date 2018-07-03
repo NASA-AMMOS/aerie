@@ -39,17 +39,6 @@ describe('config reducer', () => {
     });
   });
 
-  it('handle UpdateDefaultBandSettings dateFormat', () => {
-    timelineState = reducer(timelineState, new UpdateDefaultBandSettings({ dateFormat: 'Julian' }));
-    expect(timelineState).toEqual({
-      ...initialState,
-      defaultBandSettings: {
-        ...initialState.defaultBandSettings,
-        dateFormat: 'Julian',
-      },
-    });
-  });
-
   it('handle UpdateDefaultBandSettings icon', () => {
     timelineState = reducer(timelineState, new UpdateDefaultBandSettings({ icon: 'triangle' }));
     expect(timelineState).toEqual({

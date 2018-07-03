@@ -22,8 +22,13 @@ import {
 } from '@angular/core';
 
 import {
+  RavenEpoch,
   RavenTimeRange,
 } from './../../../models';
+
+import {
+  formatTimeTickTFormat,
+} from './../../../util/time';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,6 +37,9 @@ import {
   templateUrl: './raven-time-band.component.html',
 })
 export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit {
+  @Input() dayCode: string;
+  @Input() earthSecToEpochSec: number;
+  @Input() epoch: RavenEpoch | null;
   @Input() labelWidth: number;
   @Input() maxTimeRange: RavenTimeRange;
   @Input() showTooltip: boolean;
@@ -53,6 +61,22 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
   ngOnChanges(changes: SimpleChanges) {
     let shouldRedraw = false;
     let shouldResize = false;
+
+    // Day Code.
+    if (changes.dayCode && !changes.dayCode.firstChange) {
+      shouldRedraw = true;
+    }
+
+    // Earth Sec To Epoch Sec.
+    if (changes.earthSecToEpochSec && !changes.earthSecToEpochSec.firstChange) {
+      shouldRedraw = true;
+    }
+
+    // Epoch.
+    if (changes.epoch && !changes.epoch.firstChange) {
+      this.ctlTimeBand.minorLabels = this.getEpochLabel(this.epoch);
+      shouldRedraw = true;
+    }
 
     // Label Width.
     if (changes.labelWidth && !changes.labelWidth.firstChange) {
@@ -96,8 +120,11 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
   ngOnInit() {
     this.ctlTimeBand = new (window as any).TimeBand({
       font: 'normal 9px Verdana',
+      formatNow: this.onFormatNow.bind(this),
       height: 37,
-      label: 'UTC',
+      label: 'SCET',
+      minorLabels: this.getEpochLabel(this.epoch),
+      onFormatTimeTick: this.onFormatTimeTick.bind(this),
       onHideTooltip: this.onHideTooltip.bind(this),
       onShowTooltip: this.onShowTooltip.bind(this),
       onUpdateView: this.onUpdateView.bind(this),
@@ -128,6 +155,23 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
    */
   onHideTooltip() {
     this.ctlTooltip.hide();
+  }
+
+  /**
+   * CTL Event. Called to get a CTL `formatNow` time tick (for use in the time cursor).
+   */
+  onFormatNow(obj: any) {
+    const formattedTimes = formatTimeTickTFormat(obj, this.epoch, this.earthSecToEpochSec, this.dayCode);
+    formattedTimes[0].y = 8;
+
+    return [formattedTimes[0]];
+  }
+
+  /**
+   * CTL Event. Called to get custom time band ticks.
+   */
+  onFormatTimeTick(obj: any) {
+    return formatTimeTickTFormat(obj, this.epoch, this.earthSecToEpochSec, this.dayCode);
   }
 
   /**
@@ -173,5 +217,15 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
   resize() {
     this.updateTimeAxisXCoordinates();
     this.redraw();
+  }
+
+  /**
+   * Helper that returns an epoch label based on an epoch if it exists.
+   */
+  getEpochLabel(epoch: RavenEpoch | null): string[] {
+    if (epoch !== null) {
+      return [epoch.name];
+    }
+    return [];
   }
 }

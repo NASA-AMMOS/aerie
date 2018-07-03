@@ -45,6 +45,9 @@
             </raven-time-scroll-bar>
 
             <raven-time-band
+              [dayCode]="dayCode"
+              [earthSecToEpochSec]="earthSecToEpochSec"
+              [epoch]="inUseEpoch"
               [labelWidth]="defaultBandSettings.labelWidth"
               [maxTimeRange]="maxTimeRange"
               [showTooltip]="defaultBandSettings.showTooltip"

@@ -9,7 +9,6 @@
 
 export interface RavenDefaultBandSettings {
   activityLayout: number;
-  dateFormat: string;
   icon: string;
   iconEnabled: boolean;
   labelFont: string;
