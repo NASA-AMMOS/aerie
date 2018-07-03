@@ -120,6 +120,7 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
   ngOnInit() {
     this.ctlTimeBand = new (window as any).TimeBand({
       font: 'normal 9px Verdana',
+      formatNow: this.onFormatNow.bind(this),
       height: 37,
       label: 'SCET',
       minorLabels: this.getEpochLabel(this.epoch),
@@ -154,6 +155,16 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
    */
   onHideTooltip() {
     this.ctlTooltip.hide();
+  }
+
+  /**
+   * CTL Event. Called to get a CTL `formatNow` time tick (for use in the time cursor).
+   */
+  onFormatNow(obj: any) {
+    const formattedTimes = formatTimeTickTFormat(obj, this.epoch, this.earthSecToEpochSec, this.dayCode);
+    formattedTimes[0].y = 8;
+
+    return [formattedTimes[0]];
   }
 
   /**
