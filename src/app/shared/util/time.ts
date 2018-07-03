@@ -198,12 +198,13 @@ export function formatTimeTickTFormat(
   const time = obj.time;
   const band = obj.timeBand;
 
+  const tickYPosition = band.height / 4;
   const formattedTimes = [];
-  let formatDecrementer = 5;
+  const formatDecrementer = 10;
 
   formattedTimes.push({
     formattedTime: timestamp(time, false),
-    y: band.height / 2,
+    y: tickYPosition,
   });
 
   if (epoch) {
@@ -212,17 +213,13 @@ export function formatTimeTickTFormat(
 
     formattedTimes.push({
       formattedTime: formattedEpoch,
-      y: band.height - formatDecrementer,
+      y: tickYPosition + formatDecrementer,
     });
-
-    formatDecrementer -= 5;
   } else {
     formattedTimes.push({
       formattedTime: timestampYMD(time),
-      y: band.height - formatDecrementer,
+      y: tickYPosition + formatDecrementer,
     });
-
-    formatDecrementer -= 5;
   }
 
   return formattedTimes;
