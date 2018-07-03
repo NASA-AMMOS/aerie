@@ -7,6 +7,9 @@
     [ngClass]="{ 'selected': band.id === selectedBandId }">
     <raven-composite-band
       [class]="'raven-band-' + i"
+      [cursorColor]="cursorColor"
+      [cursorTime]="cursorTime"
+      [cursorWidth]="cursorWidth"
       [dayCode]="dayCode"
       [earthSecToEpochSec]="earthSecToEpochSec"
       [epoch]="epoch"

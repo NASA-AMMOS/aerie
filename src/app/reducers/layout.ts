@@ -17,6 +17,7 @@ import {
   SetMode,
   ToggleEpochsDrawer,
   ToggleGlobalSettingsDrawer,
+  ToggleTimeCursorDrawer,
 } from './../actions/layout';
 
 // Layout State Interface.
@@ -31,6 +32,7 @@ export interface LayoutState {
   showLeftPanel: boolean;
   showRightPanel: boolean;
   showSouthBandsPanel: boolean;
+  showTimeCursorDrawer: boolean;
   timelinePanelSize: number;
 }
 
@@ -46,6 +48,7 @@ export const initialState: LayoutState = {
   showLeftPanel: true,
   showRightPanel: true,
   showSouthBandsPanel: true,
+  showTimeCursorDrawer: false,
   timelinePanelSize: 50,
 };
 
@@ -69,6 +72,8 @@ export function reducer(state: LayoutState = initialState, action: LayoutAction)
       return { ...state, showRightPanel: !state.showRightPanel };
     case LayoutActionTypes.ToggleSouthBandsPanel:
       return { ...state, showSouthBandsPanel: !state.showSouthBandsPanel };
+    case LayoutActionTypes.ToggleTimeCursorDrawer:
+      return toggleTimeCursorDrawer(state, action);
     case LayoutActionTypes.UpdateLayout:
       return { ...state, ...action.update };
     default:
@@ -98,6 +103,7 @@ export function toggleEpochsDrawer(state: LayoutState, action: ToggleEpochsDrawe
     ...state,
     showEpochsDrawer: action.opened !== undefined ? action.opened : !state.showEpochsDrawer,
     showGlobalSettingsDrawer: false,
+    showTimeCursorDrawer: false,
   };
 }
 
@@ -109,9 +115,21 @@ export function toggleGlobalSettingsDrawer(state: LayoutState, action: ToggleGlo
     ...state,
     showEpochsDrawer: false,
     showGlobalSettingsDrawer: action.opened !== undefined ? action.opened : !state.showGlobalSettingsDrawer,
+    showTimeCursorDrawer: false,
   };
 }
 
+/**
+ * Reduction Helper. Called when reducing the 'ToggleTimeCursorDrawer' action.
+ */
+export function toggleTimeCursorDrawer(state: LayoutState, action: ToggleTimeCursorDrawer): LayoutState {
+  return {
+    ...state,
+    showEpochsDrawer: false,
+    showGlobalSettingsDrawer: false,
+    showTimeCursorDrawer: action.opened !== undefined ? action.opened : !state.showTimeCursorDrawer,
+  };
+}
 /**
  * Layout state selector helper.
  */

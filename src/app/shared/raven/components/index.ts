@@ -40,5 +40,6 @@ export * from './raven-state-save-dialog/raven-state-save-dialog.component';
 export * from './raven-table/raven-table.component';
 export * from './raven-table-detail/raven-table-detail.component';
 export * from './raven-time-band/raven-time-band.component';
+export * from './raven-time-cursor/raven-time-cursor.component';
 export * from './raven-time-scroll-bar/raven-time-scroll-bar.component';
 export * from './raven-tree/raven-tree.component';

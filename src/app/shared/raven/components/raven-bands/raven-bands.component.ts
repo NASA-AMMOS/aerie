@@ -39,6 +39,9 @@ import {
   templateUrl: './raven-bands.component.html',
 })
 export class RavenBandsComponent implements OnChanges, OnInit {
+  @Input() cursorColor: string;
+  @Input() cursorTime: number | null;
+  @Input() cursorWidth: number;
   @Input() bands: RavenCompositeBand[];
   @Input() containerId: string;
   @Input() dayCode: string;

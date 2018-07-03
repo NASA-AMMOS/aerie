@@ -27,6 +27,10 @@ import {
 } from './../../../models';
 
 import {
+  colorHexToRgbArray,
+} from '../../../util/color';
+
+import {
   formatTimeTickTFormat,
 } from './../../../util/time';
 
@@ -37,6 +41,9 @@ import {
   templateUrl: './raven-time-band.component.html',
 })
 export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit {
+  @Input() cursorColor: string;
+  @Input() cursorTime: number | null;
+  @Input() cursorWidth: number;
   @Input() dayCode: string;
   @Input() earthSecToEpochSec: number;
   @Input() epoch: RavenEpoch | null;
@@ -96,6 +103,20 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
       }
     }
 
+    // Time Cursor.
+    if (changes.cursorColor && !changes.cursorColor.firstChange) {
+      this.ctlTimeBand.timeCursorColor = colorHexToRgbArray(this.cursorColor);
+      shouldRedraw = true;
+    }
+    if (changes.cursorWidth && !changes.cursorWidth.firstChange) {
+      this.ctlTimeBand.timeCursorWidth = this.cursorWidth;
+      shouldRedraw = true;
+    }
+    if (changes.cursorTime && !changes.cursorTime.firstChange) {
+      this.ctlViewTimeAxis.now = changes.cursorTime.currentValue;
+      shouldRedraw = true;
+    }
+
     // View Time Range.
     if (changes.viewTimeRange && !changes.viewTimeRange.firstChange) {
       const currentViewTimeRange = changes.viewTimeRange.currentValue;
@@ -120,10 +141,10 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
   ngOnInit() {
     this.ctlTimeBand = new (window as any).TimeBand({
       font: 'normal 9px Verdana',
-      formatNow: this.onFormatNow.bind(this),
       height: 37,
       label: 'SCET',
       minorLabels: this.getEpochLabel(this.epoch),
+      onFormatNow: this.onFormatNow.bind(this),
       onFormatTimeTick: this.onFormatTimeTick.bind(this),
       onHideTooltip: this.onHideTooltip.bind(this),
       onShowTooltip: this.onShowTooltip.bind(this),
@@ -133,6 +154,8 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
       viewTimeAxis: this.ctlViewTimeAxis,
       zoomDelta: 21600,
     });
+    this.ctlTimeBand.timeCursorWidth = this.cursorWidth;
+    this.ctlTimeBand.timeCursorColor = colorHexToRgbArray(this.cursorColor);
 
     this.ctlTimeBand.div.appendChild(this.ctlTooltip.div);
 
@@ -162,7 +185,7 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
    */
   onFormatNow(obj: any) {
     const formattedTimes = formatTimeTickTFormat(obj, this.epoch, this.earthSecToEpochSec, this.dayCode);
-    formattedTimes[0].y = 8;
+    formattedTimes[0].y = 30;
 
     return [formattedTimes[0]];
   }

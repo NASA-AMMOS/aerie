@@ -45,6 +45,9 @@
             </raven-time-scroll-bar>
 
             <raven-time-band
+              [cursorColor]="cursorColor"
+              [cursorTime]="cursorTime"
+              [cursorWidth]="cursorWidth"
               [dayCode]="dayCode"
               [earthSecToEpochSec]="earthSecToEpochSec"
               [epoch]="inUseEpoch"
@@ -57,6 +60,9 @@
 
             <raven-bands
               class="raven-bands-0"
+              [cursorColor]="cursorColor"
+              [cursorTime]="cursorTime"
+              [cursorWidth]="cursorWidth"
               [bands]="bands"
               [containerId]="'0'"
               [dayCode]="dayCode"
@@ -85,6 +91,9 @@
           <mat-card>
             <raven-bands
               class="raven-bands-1"
+              [cursorColor]="cursorColor"
+              [cursorTime]="cursorTime"
+              [cursorWidth]="cursorWidth"
               [bands]="bands"
               [containerId]="'1'"
               [dayCode]="dayCode"
@@ -247,6 +256,41 @@
         (importEpochs)="onImportEpochs($event)"
         (updateEpochs)="onUpdateEpochs($event)">
       </raven-epochs>
+    </div>
+  </mat-sidenav>
+
+  <!-- Time cursor Drawer. -->
+  <mat-sidenav
+    *ngIf="showTimeCursorDrawer"
+    class="time-cursor-drawer"
+    mode="over"
+    position="end"
+    [fixedInViewport]="true"
+    [fixedTopGap]="40"
+    [opened]="showTimeCursorDrawer"
+    (closedStart)="onToggleTimeCursorDrawer(false)">
+    <div class="sidenav-content">
+      <button
+        mat-icon-button
+        (click)="onToggleTimeCursorDrawer(false)">
+        <mat-icon
+          class="mat-24"
+          aria-label="Clear">
+          clear
+        </mat-icon>
+      </button>
+      <raven-time-cursor
+        [autoPage]="autoPage"
+        [clockRate]="clockRate"
+        [currentTimeDelta]="currentTimeDelta"
+        [cursorColor]="cursorColor"
+        [cursorTime]="cursorTime"
+        [cursorWidth]="cursorWidth"
+        [showTimeCursor]="showTimeCursor"
+        [setCursorTime]="setCursorTime"
+        (displayTimeCursor)="onDisplayTimeCursor($event)"
+        (updateTimeCursorSettings)="onUpdateTimeCursorSettings($event)">
+      </raven-time-cursor>
     </div>
   </mat-sidenav>
 </mat-sidenav-container>

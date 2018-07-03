@@ -24,6 +24,7 @@ export enum LayoutActionTypes {
   ToggleLeftPanel            = '[layout] toggle_left_panel',
   ToggleRightPanel           = '[layout] toggle_right_panel',
   ToggleSouthBandsPanel      = '[layout] toggle_south_bands_panel',
+  ToggleTimeCursorDrawer     = '[layout] toggle_time_cursor_drawer',
   UpdateLayout               = '[layout] update_layout',
 }
 
@@ -72,6 +73,12 @@ export class ToggleSouthBandsPanel implements Action {
   readonly type = LayoutActionTypes.ToggleSouthBandsPanel;
 }
 
+export class ToggleTimeCursorDrawer implements Action {
+  readonly type = LayoutActionTypes.ToggleTimeCursorDrawer;
+
+  constructor(public opened?: boolean) {}
+}
+
 export class UpdateLayout implements Action {
   readonly type = LayoutActionTypes.UpdateLayout;
 
@@ -88,4 +95,5 @@ export type LayoutAction =
   ToggleLeftPanel |
   ToggleRightPanel |
   ToggleSouthBandsPanel |
+  ToggleTimeCursorDrawer |
   UpdateLayout;

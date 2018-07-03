@@ -136,9 +136,20 @@
       <mat-icon
         class="mat-24"
         aria-label="Epochs Drawer">
-        access_time
+        timelapse
       </mat-icon>
       Manage Epochs
+    </button>
+
+    <button
+      mat-menu-item
+      (click)="toggleTimeCursorDrawer()">
+      <mat-icon
+        class="mat-24"
+        aria-label="Time Cursor Drawer">
+        access_time
+      </mat-icon>
+      Manage Time Cursor
     </button>
   </mat-menu>
 </mat-toolbar>

@@ -13,7 +13,7 @@ import {
 
 /**
  * Type interface schema for Raven's configuration.
- * This object is loaded into the store's `config` reducer upon application load.
+ * This object is loaded into the store (in various reducers) upon application load.
  */
 
 export interface RavenConfig {
@@ -22,6 +22,7 @@ export interface RavenConfig {
   defaultBandSettings: RavenDefaultBandSettings;
   epochsUrl: string;
   itarMessage: string;
+  showTimeCursor: boolean;
 }
 
 const ravenConfig: RavenConfig = {
@@ -41,6 +42,7 @@ const ravenConfig: RavenConfig = {
   },
   epochsUrl: 'mpsserver/api/v2/fs-mongodb/leucadia/taifunTest/europaEpoch.csv',
   itarMessage: '',
+  showTimeCursor: false,
 };
 
 export default ravenConfig;

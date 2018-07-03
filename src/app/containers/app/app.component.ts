@@ -116,4 +116,8 @@ export class AppComponent {
   toggleSouthBandsPanel() {
     this.store.dispatch(new layoutActions.ToggleSouthBandsPanel());
   }
+
+  toggleTimeCursorDrawer() {
+    this.store.dispatch(new layoutActions.ToggleTimeCursorDrawer());
+  }
 }

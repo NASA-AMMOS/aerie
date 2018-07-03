@@ -48,6 +48,7 @@ import {
   RavenTableComponent,
   RavenTableDetailComponent,
   RavenTimeBandComponent,
+  RavenTimeCursorComponent,
   RavenTimeScrollBarComponent,
   RavenTreeComponent,
 } from './components';
@@ -94,6 +95,7 @@ export const DECLARATIONS = [
   RavenTableComponent,
   RavenTableDetailComponent,
   RavenTimeBandComponent,
+  RavenTimeCursorComponent,
   RavenTimeScrollBarComponent,
   RavenTreeComponent,
 

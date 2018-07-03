@@ -36,6 +36,7 @@ import * as fromConfig from './reducers/config';
 import * as fromEpochs from './reducers/epochs';
 import * as fromLayout from './reducers/layout';
 import * as fromSourceExplorer from './reducers/source-explorer';
+import * as fromTimeCursor from './reducers/time-cursor';
 import * as fromTimeline from './reducers/timeline';
 
 /**
@@ -48,6 +49,7 @@ export interface AppState {
   layout: fromLayout.LayoutState;
   routerReducer: fromRouter.RouterReducerState<RouterStateUrl>;
   sourceExplorer: fromSourceExplorer.SourceExplorerState;
+  timeCursor: fromTimeCursor.TimeCursorState;
   timeline: fromTimeline.TimelineState;
 }
 
@@ -62,6 +64,7 @@ export const reducers: ActionReducerMap<AppState> = {
   layout: fromLayout.reducer,
   routerReducer: fromRouter.routerReducer,
   sourceExplorer: fromSourceExplorer.reducer,
+  timeCursor: fromTimeCursor.reducer,
   timeline: fromTimeline.reducer,
 };
 

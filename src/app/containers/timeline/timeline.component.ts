@@ -24,12 +24,14 @@ import { takeUntil } from 'rxjs/operators';
 import * as fromConfig from './../../reducers/config';
 import * as fromEpochs from './../../reducers/epochs';
 import * as fromLayout from './../../reducers/layout';
+import * as fromTimeCursor from './../../reducers/time-cursor';
 import * as fromTimeline from './../../reducers/timeline';
 
 import * as configActions from './../../actions/config';
 import * as epochsActions from './../../actions/epochs';
 import * as layoutActions from './../../actions/layout';
 import * as sourceExplorerActions from './../../actions/source-explorer';
+import * as timeCursorActions from './../../actions/time-cursor';
 import * as timelineActions from './../../actions/timeline';
 
 import {
@@ -78,7 +80,18 @@ export class TimelineComponent implements OnDestroy {
   showLeftPanel: boolean;
   showRightPanel: boolean;
   showSouthBandsPanel: boolean;
+  showTimeCursorDrawer: boolean;
   timelinePanelSize: number;
+
+  // Time cursor state.
+  autoPage: boolean;
+  clockRate: number;
+  cursorTime: number | null;
+  currentTimeDelta: number | null;
+  cursorColor: string;
+  cursorWidth: number;
+  showTimeCursor: boolean;
+  setCursorTime: number | null;
 
   // Timeline state.
   bands: RavenCompositeBand[];
@@ -96,7 +109,7 @@ export class TimelineComponent implements OnDestroy {
 
   constructor(
     private changeDetector: ChangeDetectorRef,
-    private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState>,
+    private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState | fromTimeCursor.TimeCursorState>,
   ) {
     // Config state.
     this.store.select(fromConfig.getItarMessage).pipe(
@@ -136,9 +149,25 @@ export class TimelineComponent implements OnDestroy {
       this.showLeftPanel = state.showLeftPanel;
       this.showRightPanel = state.showRightPanel;
       this.showSouthBandsPanel = state.showSouthBandsPanel;
+      this.showTimeCursorDrawer = state.showTimeCursorDrawer;
       this.timelinePanelSize = state.timelinePanelSize;
       this.markForCheck();
       this.resize();
+    });
+
+    // Time cursor state.
+    this.store.select(fromTimeCursor.getTimeCursorState).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(state => {
+      this.autoPage = state.autoPage;
+      this.clockRate = state.clockRate;
+      this.currentTimeDelta = state.currentTimeDelta;
+      this.cursorColor = state.cursorColor;
+      this.cursorTime = state.cursorTime;
+      this.cursorWidth = state.cursorWidth;
+      this.showTimeCursor = state.showTimeCursor;
+      this.setCursorTime = state.setCursorTime;
+      this.markForCheck();
     });
 
     // Timeline state.
@@ -199,6 +228,13 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
+   * Event. Called when a `change-time-cursor` event is fired from the raven-time-cursor component.
+   */
+  onDisplayTimeCursor(show: boolean): void {
+    show ? this.store.dispatch(new timeCursorActions.ShowTimeCursor()) : this.store.dispatch(new timeCursorActions.HideTimeCursor());
+  }
+
+  /**
    * Event. Called when a `import-epochs` event is fired from the raven-epochs component.
    */
   onImportEpochs(epochs: RavenEpoch[]) {
@@ -225,6 +261,13 @@ export class TimelineComponent implements OnDestroy {
    */
   onToggleEpochsDrawer(opened?: boolean) {
     this.store.dispatch(new layoutActions.ToggleEpochsDrawer(opened));
+  }
+
+  /**
+   * Event. Called when a toggle event is fired from the epochs drawer.
+   */
+  onToggleTimeCursorDrawer(opened?: boolean) {
+    this.store.dispatch(new layoutActions.ToggleTimeCursorDrawer(opened));
   }
 
   /**
@@ -278,6 +321,13 @@ export class TimelineComponent implements OnDestroy {
     if (e.bandId && e.subBandId) {
       this.store.dispatch(new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update));
     }
+  }
+
+  /**
+   * Event. Called when an `update-time-cursor-settings` event is fired from the raven-time-cursor component.
+   */
+  onUpdateTimeCursorSettings(e: RavenUpdate): void {
+    this.store.dispatch(new timeCursorActions.UpdateTimeCursorSettings(e.update));
   }
 
   /**

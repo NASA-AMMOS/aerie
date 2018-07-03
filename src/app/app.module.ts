@@ -43,6 +43,7 @@ import {
   LayoutEffects,
   RouterEffects,
   SourceExplorerEffects,
+  TimeCursorEffects,
   TimelineEffects,
 } from './effects';
 
@@ -62,6 +63,7 @@ export const EFFECTS = [
   LayoutEffects,
   RouterEffects,
   SourceExplorerEffects,
+  TimeCursorEffects,
   TimelineEffects,
 ];
 

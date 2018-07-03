@@ -31,16 +31,6 @@
         </button>
       </div>
 
-      <!-- Show Time Cursor. -->
-      <div class="field">
-        <mat-slide-toggle
-          color="primary"
-          [checked]="defaultBandSettings.showTimeCursor"
-          (change)="updateDefaultBandSettings.emit({ update: { showTimeCursor: $event.checked } })">
-          Show Time Cursor
-        </mat-slide-toggle>
-      </div>
-
       <!-- Show Tooltip. -->
       <div class="field">
         <mat-slide-toggle

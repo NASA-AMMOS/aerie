@@ -1,0 +1,11 @@
+:host {
+  display: block;
+}
+
+mat-card-title {
+  font-size: 18px;
+}
+
+.field {
+  padding: 10px;
+}

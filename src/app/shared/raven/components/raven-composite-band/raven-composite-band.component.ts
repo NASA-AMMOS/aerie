@@ -29,6 +29,10 @@ import {
   RavenTimeRange,
 } from './../../../models';
 
+import {
+  colorHexToRgbArray,
+} from '../../../util/color';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'raven-composite-band',
@@ -36,6 +40,9 @@ import {
   templateUrl: './raven-composite-band.component.html',
 })
 export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, OnInit {
+  @Input() cursorColor: string;
+  @Input() cursorTime: number | null;
+  @Input() cursorWidth: number;
   @Input() height: number;
   @Input() heightPadding: number;
   @Input() dayCode: string;
@@ -176,6 +183,20 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
       }
     }
 
+    // Time Cursor.
+    if (changes.cursorColor && !changes.cursorColor.firstChange) {
+      this.ctlCompositeBand.decorator.timeCursorColor = colorHexToRgbArray(this.cursorColor);
+      shouldRedraw = true;
+    }
+    if (changes.cursorWidth && !changes.cursorWidth.firstChange) {
+      this.ctlCompositeBand.decorator.timeCursorWidth = this.cursorWidth;
+      shouldRedraw = true;
+    }
+    if (changes.cursorTime && !changes.cursorTime.firstChange) {
+      this.ctlViewTimeAxis.now = changes.cursorTime.currentValue;
+      shouldRedraw = true;
+    }
+
     // Only update ticks for resource bands once to maintain performance.
     if (shouldUpdateTicks) {
       this.updateTickValues();
@@ -206,8 +227,12 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
 
     this.ctlCompositeBand.div.appendChild(this.ctlTooltip.div);
 
+    this.ctlCompositeBand.decorator.timeCursorWidth = this.cursorWidth;
+    this.ctlCompositeBand.decorator.timeCursorColor = colorHexToRgbArray(this.cursorColor);
+
     this.ctlTimeAxis.updateTimes(this.maxTimeRange.start, this.maxTimeRange.end);
     this.ctlViewTimeAxis.updateTimes(this.viewTimeRange.start, this.viewTimeRange.end);
+    this.ctlViewTimeAxis.now = this.cursorTime; // Set `now` for the time-cursor so it draws upon initialization.
 
     this.elementRef.nativeElement.appendChild(this.ctlCompositeBand.div);
   }
