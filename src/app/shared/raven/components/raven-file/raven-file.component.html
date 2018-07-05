@@ -39,10 +39,10 @@
       <ng-container *ngIf="a.name === 'Apply'">
         <button mat-menu-item [matMenuTriggerFor]="applyMenu">{{a.name}}</button>
       </ng-container>
-      <ng-container *ngIf="a.name === 'File metadata'">
+      <ng-container *ngIf="a.name === 'File Metadata'">
         <button mat-menu-item (click)="openMetadata.emit(source)">File Metadata</button>
       </ng-container>
-      <ng-container *ngIf="a.name !== 'Apply' && a.name !== 'File metadata'">
+      <ng-container *ngIf="a.name !== 'Apply' && a.name !== 'File Metadata'">
         <button mat-menu-item (click)="action.emit({ event: a.event, source: source })">{{a.name}}</button>
       </ng-container>
     </ng-container>

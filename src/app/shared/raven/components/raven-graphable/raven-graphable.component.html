@@ -30,10 +30,10 @@
     [overlapTrigger]="false"
     y-position="below">
     <ng-container *ngFor="let a of source.actions">
-      <ng-container *ngIf="a.name === 'File metadata'">
+      <ng-container *ngIf="a.name === 'File Metadata'">
         <button mat-menu-item (click)="openMetadata.emit(source)">File Metadata</button>
       </ng-container>
-      <ng-container *ngIf="a.name !== 'File metadata'">
+      <ng-container *ngIf="a.name !== 'File Metadata'">
         <button mat-menu-item (click)="action.emit({ event: a.event, source: source })">{{a.name}}</button>
       </ng-container>
     </ng-container>

@@ -134,7 +134,7 @@ export function fromDir(isServer: boolean, mSource: MpsServerSourceDir, rSource:
       },
       {
         event: 'file-metadata',
-        name: 'File metadata',
+        name: 'File Metadata',
       },
       {
         event: 'file-import',
@@ -269,7 +269,7 @@ export function fromGraphable(mSource: MpsServerSourceGraphable, rSource: RavenB
     actions: fileMetadata.customMetadata ? [
       {
         event: 'file-metadata',
-        name: 'File metadata',
+        name: 'File Metadata',
       },
     ] : [],
     expandable: false,
