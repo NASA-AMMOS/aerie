@@ -3,10 +3,10 @@
   [sortablejs]="sortedAndFilteredBands"
   [sortablejsOptions]="sortablejsOptions">
   <div
-    *ngFor="let band of sortedAndFilteredBands; index as i; trackBy: bandsTrackByFn"
+    *ngFor="let band of sortedAndFilteredBands; trackBy: bandsTrackByFn"
     [ngClass]="{ 'selected': band.id === selectedBandId }">
     <raven-composite-band
-      [class]="'raven-band-' + i"
+      [class]="'raven-band-' + band.name"
       [cursorColor]="cursorColor"
       [cursorTime]="cursorTime"
       [cursorWidth]="cursorWidth"
