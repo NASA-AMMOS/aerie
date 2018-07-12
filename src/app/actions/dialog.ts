@@ -11,7 +11,8 @@ import { Action } from '@ngrx/store';
 
 // Action Types.
 export enum DialogActionTypes {
-  ConfirmDialogOpen = '[dialog] confirm_dialog_open',
+  ConfirmDialogOpen       = '[dialog] confirm_dialog_open',
+  ShareableLinkDialogOpen = '[dialog] shareable_link_dialog_open',
 }
 
 // Actions.
@@ -25,6 +26,13 @@ export class ConfirmDialogOpen implements Action {
   ) {}
 }
 
+export class ShareableLinkDialogOpen implements Action {
+  readonly type = DialogActionTypes.ShareableLinkDialogOpen;
+
+  constructor(public width: string) {}
+}
+
 // Union type of all actions.
 export type DialogAction =
-  ConfirmDialogOpen;
+  ConfirmDialogOpen |
+  ShareableLinkDialogOpen;

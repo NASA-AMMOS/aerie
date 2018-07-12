@@ -63,12 +63,11 @@ import * as fromSourceExplorer from './../reducers/source-explorer';
 import * as fromTimeline from './../reducers/timeline';
 
 import {
-  exportState,
   getCustomFilterForLabel,
   getCustomFiltersBySourceId,
   getFormattedSourceUrl,
   getSourceIds,
-  getSourceIdsForSubBand,
+  getState,
   hasActivityBand,
   hasActivityBandForFilterTarget,
   hasSourceId,
@@ -400,29 +399,9 @@ export class SourceExplorerEffects {
     ofType<SaveState>(SourceExplorerActionTypes.SaveState),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
-    concatMap(({ state: { config, sourceExplorer, timeline }, action }) =>
+    concatMap(({ state, action }) =>
       concat(
-        this.saveState(action.source.url, action.source.id, action.name, {
-          bands: timeline.bands.map(band => ({
-            ...band,
-            subBands: band.subBands.map(subBand => ({
-              ...subBand,
-              maxTimeRange: { end: 0, start: 0 },
-              points: [],
-              sourceIds: getSourceIdsForSubBand(
-                subBand.sourceIds,
-                sourceExplorer.treeBySourceId,
-                subBand.label,
-                sourceExplorer.customFiltersBySourceId,
-                sourceExplorer.filtersByTarget,
-              ),
-            })),
-          })),
-          defaultBandSettings: config.defaultBandSettings,
-          maxTimeRange: timeline.maxTimeRange,
-          pins: sourceExplorer.pins,
-          viewTimeRange: timeline.viewTimeRange,
-        }),
+        this.saveState(action.source.url, action.source.id, action.name, state),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
       ),
     ),
@@ -874,8 +853,8 @@ export class SourceExplorerEffects {
    * Exports state before saving.
    * Fetches new sources and updates the source state after the save.
    */
-  saveState(sourceUrl: string, sourceId: string, name: string, state: RavenState) {
-    return this.http.put(`${sourceUrl}/${name}?timeline_type=state`, exportState(state)).pipe(
+  saveState(sourceUrl: string, sourceId: string, name: string, state: AppState) {
+    return this.http.put(`${sourceUrl}/${name}?timeline_type=state`, getState(state)).pipe(
       map(() => new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl)),
     );
   }

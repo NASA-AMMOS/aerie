@@ -33,6 +33,7 @@ export interface ConfigState {
   epochsUrl: string;
   itarMessage: string;
   production: boolean;
+  shareableLinkStatesUrl: string;
 }
 
 // Config State.

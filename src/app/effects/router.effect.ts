@@ -27,6 +27,7 @@ import {
 import { AppState } from './../store';
 
 import * as layoutActions from './../actions/layout';
+import * as sourceExplorerActions from './../actions/source-explorer';
 
 @Injectable()
 export class RouterEffects {
@@ -37,10 +38,11 @@ export class RouterEffects {
     map(([action, state]) => ({ action, state })),
     mergeMap(({ state, action }) => {
       const actions: Action[] = [];
-      const { layout } = action.payload.routerState.queryParams;
+      const layout = action.payload.routerState.queryParams.layout;
+      const statePath = action.payload.routerState.queryParams.state;
 
       if (layout === 'minimal') {
-        actions.push(new layoutActions.SetMode('minimal', false, false, false, true));
+        actions.push(new layoutActions.SetMode('minimal', true, false, false, true));
       } else if (layout === 'default') {
         actions.push(new layoutActions.SetMode('default', true, true, false, true));
       } else {
@@ -53,6 +55,11 @@ export class RouterEffects {
             state.layout.showSouthBandsPanel,
           ),
         );
+      }
+
+      // Load a state if a state path exists (note the state path is just a source id, we call it state in the URL since it's more clear to the user what it is).
+      if (statePath) {
+        actions.push(new sourceExplorerActions.ApplyState(`${state.config.baseUrl}/${state.config.baseSourcesUrl}${statePath}`, statePath));
       }
 
       return actions;

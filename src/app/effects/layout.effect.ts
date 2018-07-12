@@ -53,9 +53,9 @@ export class LayoutEffects {
   toggleRightPanel$: Observable<Action> = this.actions$.pipe(
     ofType<ToggleRightPanel>(LayoutActionTypes.ToggleRightPanel),
     withLatestFrom(this.store$),
-    map(([action, state]) => state.layout.showRightPanel),
-    map((showRightPanel: boolean) => {
-      if (showRightPanel) {
+    map(([, state]) => state),
+    map(state => {
+      if (state.layout.showRightPanel && state.layout.showLeftPanel) {
         return new layoutActions.UpdateLayout({ timelinePanelSize: 50 });
       } else {
         return new layoutActions.UpdateLayout({ timelinePanelSize: 75 });

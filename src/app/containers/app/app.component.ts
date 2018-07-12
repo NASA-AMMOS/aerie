@@ -11,6 +11,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  OnDestroy,
 } from '@angular/core';
 
 import { Store } from '@ngrx/store';
@@ -18,16 +19,20 @@ import { Store } from '@ngrx/store';
 import {
   combineLatest,
   Observable,
+  Subject,
 } from 'rxjs';
 
 import {
   map,
+  takeUntil,
   tap,
 } from 'rxjs/operators';
 
+import * as fromLayout from './../../reducers/layout';
 import * as fromSourceExplorer from './../../reducers/source-explorer';
 import * as fromTimeline from './../../reducers/timeline';
 
+import * as dialogActions from './../../actions/dialog';
 import * as layoutActions from './../../actions/layout';
 import * as timelineActions from './../../actions/timeline';
 
@@ -41,8 +46,11 @@ import {
   styleUrls: ['./app.component.css'],
   templateUrl: './app.component.html',
 })
-export class AppComponent {
+export class AppComponent implements OnDestroy {
   loading$: Observable<boolean>;
+  mode: string;
+
+  private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(
     private changeDetector: ChangeDetectorRef,
@@ -56,6 +64,19 @@ export class AppComponent {
       map(loading => loading[0] || loading[1]),
       tap(() => this.markForCheck()),
     );
+
+    // Layout mode.
+    this.store.select(fromLayout.getMode).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(mode => {
+      this.mode = mode;
+      this.markForCheck();
+    });
+  }
+
+  ngOnDestroy() {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
   }
 
   /**
@@ -111,6 +132,10 @@ export class AppComponent {
 
   toggleRightPanel() {
     this.store.dispatch(new layoutActions.ToggleRightPanel());
+  }
+
+  toggleShareableLinkDialog() {
+    this.store.dispatch(new dialogActions.ShareableLinkDialogOpen('600px'));
   }
 
   toggleSouthBandsPanel() {

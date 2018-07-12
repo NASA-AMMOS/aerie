@@ -24,6 +24,12 @@ html {
   position: relative;
 }
 
+.alert-danger {
+  background-color: #f2dede;
+  border-color: #ebcccc;
+  color: #a94442;
+}
+
 .alert-warning {
   background-color: #fff3cd;
   border-color: #ffeeba;

@@ -16,8 +16,43 @@ import {
 } from './../models';
 
 import {
+  AppState,
+} from './../../../app/store';
+
+import {
+  getSourceIdsForSubBand,
+} from './../util/source';
+
+import {
   toCompositeBand,
 } from './../util/bands';
+
+/**
+ * Returns a stripped down version of a state that we save and export it for saving.
+ */
+export function getState(state: AppState): any {
+  return exportState({
+    bands: state.timeline.bands.map(band => ({
+      ...band,
+      subBands: band.subBands.map(subBand => ({
+        ...subBand,
+        maxTimeRange: { end: 0, start: 0 },
+        points: [],
+        sourceIds: getSourceIdsForSubBand(
+          subBand.sourceIds,
+          state.sourceExplorer.treeBySourceId,
+          subBand.label,
+          state.sourceExplorer.customFiltersBySourceId,
+          state.sourceExplorer.filtersByTarget,
+        ),
+      })),
+    })),
+    defaultBandSettings: state.config.defaultBandSettings,
+    maxTimeRange: state.timeline.maxTimeRange,
+    pins: state.sourceExplorer.pins,
+    viewTimeRange: state.timeline.viewTimeRange,
+  });
+}
 
 /**
  * Takes a RavenState and does some transformations before saving it to the database:

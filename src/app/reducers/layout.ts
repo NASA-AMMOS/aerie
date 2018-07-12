@@ -9,6 +9,7 @@
 
 import {
   createFeatureSelector,
+  createSelector,
 } from '@ngrx/store';
 
 import {
@@ -146,4 +147,4 @@ export const getLayoutState = createFeatureSelector<LayoutState>('layout');
  * only recompute when arguments change. The created selectors can also be composed
  * together to select different pieces of state.
  */
-// TODO: Add more specific selectors if needed.
+export const getMode = createSelector(getLayoutState, (state: LayoutState) => state.mode);

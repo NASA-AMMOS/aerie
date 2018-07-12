@@ -34,6 +34,7 @@ export * from './raven-resource-band/raven-resource-band.component';
 export * from './raven-resource-point/raven-resource-point.component';
 export * from './raven-settings-bands/raven-settings-bands.component';
 export * from './raven-settings-global/raven-settings-global.component';
+export * from './raven-shareable-link-dialog/raven-shareable-link-dialog.component';
 export * from './raven-state-band/raven-state-band.component';
 export * from './raven-state-point/raven-state-point.component';
 export * from './raven-state-save-dialog/raven-state-save-dialog.component';

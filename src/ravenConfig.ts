@@ -22,6 +22,7 @@ export interface RavenConfig {
   defaultBandSettings: RavenDefaultBandSettings;
   epochsUrl: string;
   itarMessage: string;
+  shareableLinkStatesUrl: string;
   showTimeCursor: boolean;
 }
 
@@ -42,6 +43,7 @@ const ravenConfig: RavenConfig = {
   },
   epochsUrl: 'mpsserver/api/v2/fs-mongodb/leucadia/taifunTest/europaEpoch.csv',
   itarMessage: '',
+  shareableLinkStatesUrl: 'TEST_ATS/STATES',
   showTimeCursor: false,
 };
 

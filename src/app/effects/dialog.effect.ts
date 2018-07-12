@@ -10,25 +10,31 @@
 import { Injectable } from '@angular/core';
 
 import { Actions, Effect, ofType } from '@ngrx/effects';
-import { Action } from '@ngrx/store';
+import { Action, Store } from '@ngrx/store';
 
 import { MatDialog } from '@angular/material';
+
+import { AppState } from './../../app/store';
 
 import {
   Observable,
 } from 'rxjs';
 
 import {
+  map,
   switchMap,
+  withLatestFrom,
 } from 'rxjs/operators';
 
 import {
   RavenConfirmDialogComponent,
+  RavenShareableLinkDialogComponent,
 } from './../shared/raven/components';
 
 import {
   ConfirmDialogOpen,
   DialogActionTypes,
+  ShareableLinkDialogOpen,
 } from './../actions/dialog';
 
 @Injectable()
@@ -48,11 +54,31 @@ export class DialogEffects {
         width: action.width,
       });
       return [];
-    },
-  ));
+    }),
+  );
+
+  /**
+   * Effect for ShareableLinkDialogOpen.
+   */
+  @Effect({ dispatch: false })
+  shareableLinkDialogOpen$: Observable<Action> = this.actions$.pipe(
+    ofType<ShareableLinkDialogOpen>(DialogActionTypes.ShareableLinkDialogOpen),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    switchMap(({ action, state }) => {
+      this.dialog.open(RavenShareableLinkDialogComponent, {
+        data: {
+          state,
+        },
+        width: action.width,
+      });
+      return [];
+    }),
+  );
 
   constructor(
     private actions$: Actions,
     private dialog: MatDialog,
+    private store$: Store<AppState>,
   ) {}
 }

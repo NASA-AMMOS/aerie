@@ -1,5 +1,6 @@
 <mat-toolbar color="primary">
   <button
+    *ngIf="mode !== 'minimal'"
     mat-icon-button
     (click)="toggleLeftPanel()">
     <mat-icon
@@ -150,6 +151,17 @@
         access_time
       </mat-icon>
       Manage Time Cursor
+    </button>
+
+    <button
+      mat-menu-item
+      (click)="toggleShareableLinkDialog()">
+      <mat-icon
+        class="mat-24"
+        aria-label="Get Shareable Link">
+        link
+      </mat-icon>
+      Get Shareable Link
     </button>
   </mat-menu>
 </mat-toolbar>
