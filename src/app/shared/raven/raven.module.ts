@@ -57,6 +57,7 @@ import {
 import {
   RavenDhmsPipe,
   RavenKeyByPipe,
+  RavenResourcePointValuePipe,
   RavenTimestampPipe,
   RavenToKeyValueArrayPipe,
 } from './pipes';
@@ -104,6 +105,7 @@ export const DECLARATIONS = [
   // Pipes.
   RavenDhmsPipe,
   RavenKeyByPipe,
+  RavenResourcePointValuePipe,
   RavenTimestampPipe,
   RavenToKeyValueArrayPipe,
 ];

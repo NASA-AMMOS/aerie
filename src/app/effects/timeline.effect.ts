@@ -49,6 +49,7 @@ import * as timelineActions from './../actions/timeline';
 
 import {
   MpsServerGraphData,
+  MpsServerResourceMetadata,
   MpsServerResourcePoint,
   RavenCompositeBand,
   RavenPin,
@@ -169,8 +170,9 @@ export class TimelineEffects {
     const url = `${source.url}&start=${timestamp(start)}&end=${timestamp(end)}`;
 
     return this.http.get(url).pipe(
-      map((graphData: MpsServerGraphData) => graphData['Timeline Data']),
-      map((timelineData: MpsServerResourcePoint[]) => getResourcePoints(source.id, timelineData)),
+      map((graphData: MpsServerGraphData) =>
+        getResourcePoints(source.id, graphData['Timeline Metadata'] as MpsServerResourceMetadata, graphData['Timeline Data'] as MpsServerResourcePoint[]),
+      ),
     );
   }
 

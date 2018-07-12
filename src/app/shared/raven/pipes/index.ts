@@ -9,5 +9,6 @@
 
 export * from './raven-dhms/raven-dhms.pipe';
 export * from './raven-key-by/raven-key-by.pipe';
+export * from './raven-resource-point-value/raven-resource-point-value.pipe';
 export * from './raven-timestamp/raven-timestamp.pipe';
 export * from './raven-to-key-value/raven-to-key-value-array.pipe';

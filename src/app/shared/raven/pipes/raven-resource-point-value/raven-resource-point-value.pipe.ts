@@ -7,15 +7,31 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export interface RavenResourcePoint {
-  duration: number | null;
-  id: string;
-  isDuration: boolean; // Does the point belong to a `duration` resource band?
-  isTime: boolean; // Does the point belong to a `time` resource band?
-  sourceId: string;
-  start: number;
-  subBandId: string;
-  type: string;
-  uniqueId: string;
-  value: number;
+import {
+  Pipe,
+  PipeTransform,
+} from '@angular/core';
+
+import {
+  RavenResourcePoint,
+} from './../../../models';
+
+import {
+  dateToTimestring,
+  toDuration,
+} from './../../../util';
+
+@Pipe({
+  name: 'resourcePointValue',
+})
+export class RavenResourcePointValuePipe implements PipeTransform {
+  transform(point: RavenResourcePoint, args?: any): any {
+    if (point.isDuration) {
+      return toDuration(point.value, true);
+    } else if (point.isTime) {
+      return dateToTimestring(new Date(point.value * 1000), true);
+    }
+
+    return point.value;
+  }
 }

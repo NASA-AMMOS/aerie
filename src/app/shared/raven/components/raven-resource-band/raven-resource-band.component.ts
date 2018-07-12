@@ -29,6 +29,11 @@ import {
   getTooltipText,
 } from './../../../util/tooltip';
 
+import {
+  dateToTimestring,
+  toDuration,
+} from './../../../util/time';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'raven-resource-band',
@@ -51,6 +56,8 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
   @Input() icon: string;
   @Input() id: string;
   @Input() interpolation: string;
+  @Input() isDuration: boolean;
+  @Input() isTime: boolean;
   @Input() label: string;
   @Input() labelFont: string;
   @Input() labelFontSize: number;
@@ -155,6 +162,7 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
       labelFont: this.labelFont,
       labelFontSize: this.labelFontSize,
       name: this.name,
+      onFormatTickValue: this.onFormatTickValue.bind(this),
       onGetInterpolatedTooltipText: this.onGetInterpolatedTooltipText.bind(this),
       painter: new (window as any).ResourcePainter({
         color: this.color,
@@ -175,6 +183,8 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
     ctlResourceBand.setIntervals(intervals);
     ctlResourceBand.intervalsById = intervalsById;
     ctlResourceBand.type = 'resource';
+    ctlResourceBand.isDuration = this.isDuration;
+    ctlResourceBand.isTime = this.isTime;
 
     // Send the newly created resource band to the parent composite band so it can be added.
     // All subsequent updates should be made to the parent composite sub-band via events.
@@ -242,6 +252,21 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
     }
 
     return `${this.label}${labelPin}${labelUnit}`;
+  }
+
+  /**
+   * CTL Event. Called when we want to format a tick value.
+   */
+  onFormatTickValue(tick: any, showMilliseconds: boolean) {
+    if (this.isDuration) {
+      // Format duration resources ticks.
+      return toDuration(tick, false);
+    } else if (this.isTime) {
+      // Format time resources ticks.
+      return dateToTimestring(new Date(tick * 1000), showMilliseconds);
+    }
+
+    return tick;
   }
 
   /**

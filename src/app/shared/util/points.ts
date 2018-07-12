@@ -12,6 +12,7 @@ import { uniqueId } from 'lodash';
 import {
   MpsServerActivityPoint,
   MpsServerActivityPointMetadata,
+  MpsServerResourceMetadata,
   MpsServerResourcePoint,
   MpsServerStatePoint,
   RavenActivityPoint,
@@ -29,6 +30,7 @@ import {
 } from './color';
 
 import {
+  fromDuration,
   timestamp,
   utc,
 } from './time';
@@ -182,8 +184,14 @@ export function getActivityPointsByLegend(sourceId: string, sourceName: string, 
  * Transforms MPS Server resource points to Raven resource points. Also returns the max and min point times.
  * Note that for performance we are only looping through timelineData once.
  */
-export function getResourcePoints(sourceId: string, timelineData: MpsServerResourcePoint[]) {
+export function getResourcePoints(
+  sourceId: string,
+  metadata: MpsServerResourceMetadata,
+  timelineData: MpsServerResourcePoint[],
+) {
   const points: RavenResourcePoint[] = [];
+  const isDuration = metadata.hasValueType.toLowerCase() === 'duration';
+  const isTime = metadata.hasValueType.toLowerCase() === 'time';
 
   let maxTime = Number.MIN_SAFE_INTEGER;
   let minTime = Number.MAX_SAFE_INTEGER;
@@ -195,9 +203,10 @@ export function getResourcePoints(sourceId: string, timelineData: MpsServerResou
     const start = utc(data['Data Timestamp']);
     let value = data['Data Value'];
 
-    // Make sure that empty string values are set to 0.
-    if (value === '') {
-      value = '000T00:00:00';
+    if (isDuration) {
+      value = fromDuration(value as string);
+    } else if (isTime) {
+      value = utc(value as string);
     }
 
     if (start < minTime) { minTime = start; }
@@ -206,12 +215,14 @@ export function getResourcePoints(sourceId: string, timelineData: MpsServerResou
     points.push({
       duration: null,
       id,
+      isDuration,
+      isTime,
       sourceId,
       start,
       subBandId: '',
       type: 'resource',
       uniqueId: uniqueId(),
-      value,
+      value: value as number,
     });
   }
 

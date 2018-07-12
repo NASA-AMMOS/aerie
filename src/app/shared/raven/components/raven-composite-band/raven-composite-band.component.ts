@@ -31,7 +31,7 @@ import {
 
 import {
   colorHexToRgbArray,
-} from '../../../util/color';
+} from './../../../util/color';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -420,7 +420,7 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
       const subBand = this.ctlCompositeBand.bands[i];
 
       if (subBand.type === 'resource') {
-        subBand.computeMinMaxPaintValues();
+        subBand.computeMinMaxValues();
 
         // For some data, `getLinearTickValues` may return a precision range error since it uses `toExponential` and `toFixed`.
         // Wrap in a try-catch here to make sure the program does not crash when this happens.

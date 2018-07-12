@@ -15,6 +15,32 @@ import {
 } from './../models';
 
 /**
+ * Converts a JS Date object to a timestring.
+ * Called `toTimeString` in Raven1.
+ */
+export function dateToTimestring(date: Date, showMilliseconds: boolean): string {
+  if (date.getUTCFullYear() === 1970) {
+    return '0';
+  }
+
+  const year = date.getUTCFullYear().toString().padStart(4, '0');
+  const doy = getDOY(date).toString().padStart(3, '0');
+  const hour = date.getUTCHours().toString().padStart(2, '0');
+  const min = date.getUTCMinutes().toString().padStart(2, '0');
+  const sec = date.getUTCSeconds().toString().padStart(2, '0');
+
+  let timeString = '';
+
+  if (!showMilliseconds) {
+    timeString = year + '-' + doy + 'T' + hour + ':' + min + ':' + sec;
+  } else {
+    timeString = year + '-' + doy + 'T' + hour + ':' + min + ':' + sec + '.' + date.getUTCMilliseconds().toString().padStart(2, '0');
+  }
+
+  return timeString;
+}
+
+/**
  * Converts a duration to a DHMS (days, hours, minutes, seconds) string.
  */
 export function dhms(duration: number): string {
@@ -84,7 +110,7 @@ export function formatTimeRangeTFormat(start: number, end: number): string {
 }
 
 /**
- * Takes a duration string (e.g. 20s) and returns a time.
+ * Takes a duration string of the form `20s` and returns a time.
  */
 export function fromDHMString(duration: string): number {
   if (!duration) {
@@ -121,6 +147,39 @@ export function fromDHMString(duration: string): number {
   }
 
   return days * 24 * 3600 + hours * 3600 + mins * 60 + secs + msecs / 1000;
+}
+
+/**
+ * Takes a duration string of the form `12:00:00` and returns a corresponding time.
+ * Previously called `fromDurationString` in Raven1.
+ */
+export function fromDuration(duration: string): number {
+  const results = duration.match(new RegExp(/([+|-]?)(\d+T)?(\d{2}):(\d{2}):(\d{2})(\.\d{3})?/));
+
+  if (results) {
+    let day = 0;
+
+    if (results[2]) {
+      day = parseInt(results[2].replace('T', ''), 10) * 24 * 60 * 60;
+    }
+
+    const hour = parseInt(results[3], 10) * 60 * 60;
+    const min = parseInt(results[4], 10) * 60;
+    const sec = parseInt(results[5], 10);
+
+    let msec = 0;
+    if (results[6]) {
+      msec = parseInt(results[6].replace('.', ''), 10) / 1000;
+    }
+
+    if (results[1] && results[1] === '-') {
+      return -(day + hour + min + sec + msec);
+    } else {
+      return (day + hour + min + sec + msec);
+    }
+  }
+
+  return 0;
 }
 
 /**
@@ -294,6 +353,48 @@ export function timestring(start: number, end: number): string {
 }
 
 /**
+ * Converts a time to a duration string (e.g. 12:00:00).
+ * This is the inverse of `fromDuration`.
+ * Previously called `toDurationString` in Raven1.
+ */
+export function toDuration(msecs: number, showMilliseconds: boolean): string {
+  let negative = false;
+
+  if (msecs < 0) {
+    negative = true;
+    msecs = -msecs;
+  }
+
+  let seconds = msecs / 1000;
+
+  const doy = Math.floor(seconds / (60 * 60 * 24)).toString().padStart(3, '0');
+  seconds -= parseInt(doy, 10) * (60 * 60 * 24);
+
+  const hour = Math.floor(seconds / (60 * 60)).toString().padStart(2, '0');
+  seconds -= parseInt(hour, 10) * (60 * 60);
+
+  const min = Math.floor(seconds / 60).toString().padStart(2, '0');
+  seconds -= parseInt(min, 10) * 60;
+
+  const sec = Math.floor(seconds).toString().padStart(2, '0');
+
+  let timeString = '';
+
+  if (!showMilliseconds) {
+    timeString = doy + 'T' + hour + ':' + min + ':' + sec;
+  } else {
+    seconds -= parseInt(sec, 10);
+    timeString = doy + 'T' + hour + ':' + min + ':' + sec + '.' + Math.floor(seconds * 1000).toString().padStart(3, '0');
+  }
+
+  if (negative) {
+    timeString = `-${timeString}`;
+  }
+
+  return timeString;
+}
+
+/**
  * Converts SCET seconds to an EpochTime.
  */
 export function toEpochTime(scetSeconds: number, earthSecPerEpochSec: number, epoch: RavenEpoch | null): RavenEpochTime {
@@ -320,26 +421,29 @@ export function toEpochTime(scetSeconds: number, earthSecPerEpochSec: number, ep
 /**
  * Takes a ISO 8601 time string and returns an epoch number representation of that time.
  */
-export function utc(time: string): number {
-  const re = /(\d\d\d\d)-(\d\d\d)T(\d\d):(\d\d):(\d\d)\.?(\d\d\d)?/;
-  const results = time.match(re);
-  let withMilliseconds = true;
+export function utc(time: string | number): number {
+  if (typeof time === 'string') {
+    const re = /(\d\d\d\d)-(\d\d\d)T(\d\d):(\d\d):(\d\d)\.?(\d\d\d)?/;
+    const results = time.match(re);
+    let withMilliseconds = true;
 
-  if (!results) {
-    return 0;
+    if (!results) {
+      return 0;
+    }
+
+    if (!results[6]) {
+      withMilliseconds = false;
+    }
+
+    const year = parseInt(results[1], 10);
+    const doy = parseInt(results[2], 10);
+    const hour = parseInt(results[3], 10);
+    const min = parseInt(results[4], 10);
+    const sec = parseInt(results[5], 10);
+    const msec = withMilliseconds ? parseInt(results[6], 10) : 0;
+    const msecsUTC = Date.UTC(year, 0, doy, hour, min, sec, msec);
+
+    return msecsUTC / 1000;
   }
-
-  if (!results[6]) {
-    withMilliseconds = false;
-  }
-
-  const year = parseInt(results[1], 10);
-  const doy = parseInt(results[2], 10);
-  const hour = parseInt(results[3], 10);
-  const min = parseInt(results[4], 10);
-  const sec = parseInt(results[5], 10);
-  const msec = withMilliseconds ? parseInt(results[6], 10) : 0;
-  const msecsUTC = Date.UTC(year, 0, doy, hour, min, sec, msec);
-
-  return msecsUTC / 1000;
+  return 0;
 }

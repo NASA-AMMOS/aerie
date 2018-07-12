@@ -37,8 +37,10 @@ import {
 } from './../../../models';
 
 import {
+  dateToTimestring,
   dhms,
   timestamp,
+  toDuration,
 } from './../../../util';
 
 import {
@@ -167,7 +169,7 @@ export class RavenTableComponent implements OnChanges {
         width: 70,
       });
 
-      Object.keys(pickBy(point)).forEach(prop => { // `pickBy` removes nulls or undefined props.
+      Object.keys(pickBy(point, prop => prop !== null && prop !== undefined)).forEach(prop => { // `pickBy` removes nulls or undefined props.
         // Exclude table columns we do not want to show.
         if (
           typeof point[prop] !== 'object' &&
@@ -180,6 +182,8 @@ export class RavenTableComponent implements OnChanges {
           prop !== 'endTimestamp' &&
           prop !== 'id' &&
           prop !== 'interpolateEnding' &&
+          prop !== 'isDuration' &&
+          prop !== 'isTime' &&
           prop !== 'keywordLine' &&
           prop !== 'legend' &&
           prop !== 'plan' &&
@@ -215,7 +219,7 @@ export class RavenTableComponent implements OnChanges {
    */
   createRowData(points: RavenPoint[] = []) {
     return points.map((point, index) => ({
-      ...this.timestampPoint(pickBy(point)), // `pickBy` removes nulls or undefined props.
+      ...this.timestampPoint(point),
       index,
     }));
   }
@@ -366,6 +370,22 @@ export class RavenTableComponent implements OnChanges {
       point = {
         ...point,
         duration: dhms(point.duration),
+      };
+    }
+
+    if (point.value !== undefined && point.isDuration) {
+      // If we have a point form a duration resource band, we need to make sure to format the value accordingly.
+      point = {
+        ...point,
+        value: toDuration(point.value, true),
+      };
+    }
+
+    if (point.value !== undefined && point.isTime) {
+      // If we have a point form a time resource band, we need to make sure to format the value accordingly.
+      point = {
+        ...point,
+        value: dateToTimestring(new Date(point.value * 1000), true),
       };
     }
 

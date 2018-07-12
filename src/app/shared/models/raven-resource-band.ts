@@ -24,6 +24,8 @@ export interface RavenResourceBand {
   icon: string;
   id: string;
   interpolation: string;
+  isDuration: boolean;
+  isTime: boolean;
   label: string;
   labelColor: number[];
   labelFont: string;

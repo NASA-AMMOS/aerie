@@ -74,6 +74,8 @@ export const resourceBand: RavenResourceBand = {
   icon: 'circle',
   id: '101',
   interpolation: 'linear',
+  isDuration: false,
+  isTime: false,
   label: 'test-resource-band',
   labelColor: [0, 0, 0],
   labelFont: 'Georgia',

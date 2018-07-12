@@ -195,7 +195,7 @@ export function toResourceBand(
   timelineData: MpsServerResourcePoint[],
   defaultBandSettings: RavenDefaultBandSettings,
 ): RavenResourceBand {
-  const { maxTimeRange, points } = getResourcePoints(sourceId, timelineData);
+  const { maxTimeRange, points } = getResourcePoints(sourceId, metadata, timelineData);
 
   const resourceBand: RavenResourceBand = {
     addTo: false,
@@ -209,6 +209,8 @@ export function toResourceBand(
     icon: defaultBandSettings.icon,
     id: uniqueId(),
     interpolation: 'linear',
+    isDuration: metadata.hasValueType.toLowerCase() === 'duration',
+    isTime: metadata.hasValueType.toLowerCase() === 'time',
     label: metadata.hasObjectName,
     labelColor: [0, 0, 0],
     labelFont: defaultBandSettings.labelFont,
