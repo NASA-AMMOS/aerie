@@ -166,9 +166,12 @@ export class RavenShareableLinkDialogComponent implements AfterViewInit, OnDestr
    * Helper that returns the sharable link text.
    */
   getShareableLink(name: string): string {
-    const { config } = this.data.state;
-    const baseUrl = `${config.baseUrl}/#/timeline`;
-    return `${baseUrl}?state=/${config.shareableLinkStatesUrl}/${name}&&layout=minimal`;
+    const { baseRavenUrl, baseUrl, shareableLinkStatesUrl } = this.data.state.config;
+
+    const url = `${baseUrl}${baseRavenUrl ? '/' + baseRavenUrl : ''}/#/timeline`;
+    const query = `state=/${shareableLinkStatesUrl}/${name}&&layout=minimal`;
+
+    return `${url}?${query}`;
   }
 
   /**

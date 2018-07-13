@@ -26,6 +26,7 @@ import {
 
 // Config State Interface.
 export interface ConfigState {
+  baseRavenUrl: string;
   baseSocketUrl: string;
   baseSourcesUrl: string;
   baseUrl: string;

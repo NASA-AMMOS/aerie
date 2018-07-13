@@ -17,6 +17,7 @@ import {
  */
 
 export interface RavenConfig {
+  baseRavenUrl: string;
   baseSocketUrl: string;
   baseSourcesUrl: string;
   defaultBandSettings: RavenDefaultBandSettings;
@@ -27,6 +28,7 @@ export interface RavenConfig {
 }
 
 const ravenConfig: RavenConfig = {
+  baseRavenUrl: 'mpsserver/raven',
   baseSocketUrl: 'mpsserver/websocket/v1/topic/main',
   baseSourcesUrl: 'mpsserver/api/v2/fs',
   defaultBandSettings: {
