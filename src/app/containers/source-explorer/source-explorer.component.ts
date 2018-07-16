@@ -15,10 +15,6 @@ import {
 } from '@angular/core';
 
 import {
-  MatDialog,
-} from '@angular/material';
-
-import {
   Store,
 } from '@ngrx/store';
 
@@ -38,19 +34,9 @@ import {
 import * as fromConfig from './../../reducers/config';
 import * as fromSourceExplorer from './../../reducers/source-explorer';
 
+import * as dialogActions from './../../actions/dialog';
 import * as epochsActions from './../../actions/epochs';
 import * as sourceExplorerActions from './../../actions/source-explorer';
-import * as timelineActions from './../../actions/timeline';
-
-import {
-  RavenConfirmDialogComponent,
-  RavenCustomFilterDialogComponent,
-  RavenCustomGraphDialogComponent,
-  RavenFileImportDialogComponent,
-  RavenLayoutApplyDialogComponent,
-  RavenPinDialogComponent,
-  RavenStateSaveDialogComponent,
-} from './../../shared/raven/components';
 
 import {
   RavenCustomFilterSource,
@@ -64,7 +50,6 @@ import {
 } from './../../shared/models';
 
 import {
-  getAllSourcesByKind,
   getSortedChildIds,
 } from './../../shared/util';
 
@@ -88,7 +73,6 @@ export class SourceExplorerComponent implements OnDestroy {
 
   constructor(
     private changeDetector: ChangeDetectorRef,
-    private dialog: MatDialog,
     private store: Store<fromSourceExplorer.SourceExplorerState>,
   ) {
     // Source Explorer state.
@@ -165,23 +149,23 @@ export class SourceExplorerComponent implements OnDestroy {
     const { event, source } = action;
 
     if (event === 'apply-layout') {
-      this.openApplyLayoutDialog(source);
+      this.store.dispatch(new dialogActions.OpenLayoutApplyDialog(source, '250px'));
     } else if (event === 'apply-state') {
-      this.openApplyStateDialog(source);
+      this.store.dispatch(new dialogActions.OpenStateApplyDialog(source, '250px'));
     } else if (event === 'delete') {
-      this.openDeleteDialog(source);
+      this.store.dispatch(new dialogActions.OpenDeleteDialog(source, '250px'));
     } else if (event === 'epoch-load') {
       this.onLoadEpochs(source);
     } else if (event === 'file-import') {
-      this.openFileImportDialog(source);
+      this.store.dispatch(new dialogActions.OpenFileImportDialog(source, '300px'));
     } else if (event === 'pin-add') {
-      this.openPinDialog('add', source);
+      this.store.dispatch(new dialogActions.OpenPinDialog('add', source, '250px'));
     } else if (event === 'pin-remove') {
-      this.openPinDialog('remove', source);
+      this.store.dispatch(new dialogActions.OpenPinDialog('remove', source, '250px'));
     } else if (event === 'pin-rename') {
-      this.openPinDialog('rename', source);
+      this.store.dispatch(new dialogActions.OpenPinDialog('rename', source, '250px'));
     } else if (event === 'save') {
-      this.openStateSaveDialog(source);
+      this.store.dispatch(new dialogActions.OpenStateSaveDialog(source, '300px'));
     }
   }
 
@@ -189,7 +173,7 @@ export class SourceExplorerComponent implements OnDestroy {
    * Event. Called when a custom graphable source is clicked.
    */
   onAddCustomGraph(source: RavenCustomGraphableSource): void {
-    this.openCustomGraphDialog(source);
+    this.store.dispatch(new dialogActions.OpenCustomGraphDialog(source, '300px'));
   }
 
   /**
@@ -266,176 +250,6 @@ export class SourceExplorerComponent implements OnDestroy {
    * Event. Called when a custom filter source is clicked.
    */
   onSelectCustomFilter(source: RavenCustomFilterSource): void {
-    this.openCustomFilterDialog(source);
-  }
-
-  /**
-   * Dialog trigger. Opens the apply layout dialog.
-   */
-  openApplyLayoutDialog(source: RavenSource) {
-    const applyLayoutDialog = this.dialog.open(RavenLayoutApplyDialogComponent, {
-      data: {
-        sources: getAllSourcesByKind(this.tree, '/', 'fs_file'),
-      },
-      width: '250px',
-    });
-
-    applyLayoutDialog.afterClosed().pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(result => {
-      if (result && result.apply) {
-        this.store.dispatch(new sourceExplorerActions.ApplyLayout(source.url, source.id, result.sourceId));
-      }
-    });
-  }
-
-  /**
-   * Dialog trigger. Opens the apply state dialog.
-   */
-  openApplyStateDialog(source: RavenSource) {
-    const applyStateDialog = this.dialog.open(RavenConfirmDialogComponent, {
-      data: {
-        cancelText: 'No',
-        confirmText: 'Yes',
-        message: 'Applying this state will clear your current workspace. Are you sure you want to do this?',
-      },
-      width: '250px',
-    });
-
-    applyStateDialog.afterClosed().pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(result => {
-      if (result && result.confirm) {
-        this.store.dispatch(new sourceExplorerActions.ApplyState(source.url, source.id));
-      }
-    });
-  }
-
-  /**
-   * Dialog trigger. Opens the custom filter dialog.
-   */
-  openCustomFilterDialog(source: RavenCustomFilterSource) {
-    const customFilterDialog = this.dialog.open(RavenCustomFilterDialogComponent, {
-      data: {
-        currentFilter: source.filter,
-        source,
-        width: '300px',
-      },
-    });
-
-    customFilterDialog.afterClosed().pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(result => {
-      if (result) {
-        this.store.dispatch(new sourceExplorerActions.SetCustomFilter(source, result.filter));
-      }
-    });
-  }
-
-  /**
-   * Dialog trigger. Opens the custom graph dialog.
-   */
-  openCustomGraphDialog(source: RavenCustomGraphableSource) {
-    const customGraphableDialog = this.dialog.open(RavenCustomGraphDialogComponent, {
-      data: { source },
-      width: '300px',
-    });
-
-    customGraphableDialog.afterClosed().pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(result => {
-      if (result && result.label) {
-        this.store.dispatch(new sourceExplorerActions.GraphCustomSource(source.id, result.label, result.filter));
-      }
-    });
-  }
-
-  /**
-   * Dialog trigger. Opens the delete dialog.
-   */
-  openDeleteDialog(source: RavenSource) {
-    const stateDeleteDialog = this.dialog.open(RavenConfirmDialogComponent, {
-      data: {
-        cancelText: 'No',
-        confirmText: 'Yes',
-        message: `Are you sure you want to delete ${source.name}?`,
-      },
-      width: '250px',
-    });
-
-    stateDeleteDialog.afterClosed().pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(result => {
-      if (result && result.confirm) {
-        this.store.dispatch(new sourceExplorerActions.RemoveSourceEvent(source));
-      }
-    });
-  }
-
-  /**
-   * Dialog trigger. Opens the file import dialog.
-   */
-  openFileImportDialog(source: RavenSource): void {
-    const fileImportDialog = this.dialog.open(RavenFileImportDialogComponent, {
-      data: { source },
-      width: '300px',
-    });
-
-    fileImportDialog.afterClosed().subscribe(result => {
-      if (result && result.import) {
-        this.store.dispatch(new sourceExplorerActions.ImportFile(source, result.file));
-      }
-    });
-  }
-
-  /**
-   * Dialog trigger. Opens the pin dialog.
-   * NOTE: In this function we have two separate `PinAdd`, `PinRemove`, and `PinRename` actions for the
-   *       timeline and source explorer reducers. This is to keep these reducers as decoupled as possible.
-   *       Because they are separate, make sure their call order is maintained (e.g. source-explorer PinAdd is first followed by timeline PinAdd).
-   *       This way the timeline effect has the new pins to work with when we get there.
-   */
-  openPinDialog(type: string, source: RavenSource): void {
-    const pinDialog = this.dialog.open(RavenPinDialogComponent, {
-      data: {
-        pin: this.pins.find(p => p.sourceId === source.id),
-        source,
-        type,
-      },
-      width: '250px',
-    });
-
-    pinDialog.afterClosed().pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(result => {
-      if (result && result.pinAdd) {
-        this.store.dispatch(new sourceExplorerActions.PinAdd(result.pin));
-        this.store.dispatch(new timelineActions.PinAdd(result.pin));
-      } else if (result && result.pinRemove) {
-        this.store.dispatch(new sourceExplorerActions.PinRemove(result.sourceId));
-        this.store.dispatch(new timelineActions.PinRemove(result.sourceId));
-      } else if (result && result.pinRename) {
-        this.store.dispatch(new sourceExplorerActions.PinRename(result.sourceId, result.newName));
-        this.store.dispatch(new timelineActions.PinRename(result.sourceId, result.newName));
-      }
-    });
-  }
-
-  /**
-   * Dialog trigger. Opens the save state dialog.
-   */
-  openStateSaveDialog(source: RavenSource): void {
-    const stateSaveDialog = this.dialog.open(RavenStateSaveDialogComponent, {
-      data: { source },
-      width: '300px',
-    });
-
-    stateSaveDialog.afterClosed().pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(result => {
-      if (result && result.save) {
-        this.store.dispatch(new sourceExplorerActions.SaveState(source, result.name));
-      }
-    });
+    this.store.dispatch(new dialogActions.OpenCustomFilterDialog(source, '300px'));
   }
 }

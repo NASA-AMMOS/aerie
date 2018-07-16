@@ -38,11 +38,43 @@ describe('DialogEffects', () => {
     metadata = getEffectsMetadata(effects);
   });
 
-  it('should register confirmDialogOpen$ that does not dispatch an action', () => {
-    expect(metadata.confirmDialogOpen$).toEqual({ dispatch: false });
+  it('should register openConfirmDialog$ that does not dispatch an action', () => {
+    expect(metadata.openConfirmDialog$).toEqual({ dispatch: false });
   });
 
-  it('should register shareableLinkDialogOpen$ that does not dispatch an action', () => {
-    expect(metadata.shareableLinkDialogOpen$).toEqual({ dispatch: false });
+  it('should register openCustomFilterDialog$ that does dispatch an action', () => {
+    expect(metadata.openCustomFilterDialog$).toEqual({ dispatch: true });
+  });
+
+  it('should register openCustomGraphDialog$ that does dispatch an action', () => {
+    expect(metadata.openCustomGraphDialog$).toEqual({ dispatch: true });
+  });
+
+  it('should register openDeleteDialog$ that does dispatch an action', () => {
+    expect(metadata.openDeleteDialog$).toEqual({ dispatch: true });
+  });
+
+  it('should register openFileImportDialog$ that does dispatch an action', () => {
+    expect(metadata.openFileImportDialog$).toEqual({ dispatch: true });
+  });
+
+  it('should register openLayoutApplyDialog$ that does dispatch an action', () => {
+    expect(metadata.openLayoutApplyDialog$).toEqual({ dispatch: true });
+  });
+
+  it('should register openPinDialog$that does dispatch an action', () => {
+    expect(metadata.openPinDialog$).toEqual({ dispatch: true });
+  });
+
+  it('should register openShareableLinkDialog$ that does not dispatch an action', () => {
+    expect(metadata.openShareableLinkDialog$).toEqual({ dispatch: false });
+  });
+
+  it('should register openStateApplyDialog$ that does dispatch an action', () => {
+    expect(metadata.openStateApplyDialog$).toEqual({ dispatch: true });
+  });
+
+  it('should register openStateSaveDialog$ that does dispatch an action', () => {
+    expect(metadata.openStateSaveDialog$).toEqual({ dispatch: true });
   });
 });

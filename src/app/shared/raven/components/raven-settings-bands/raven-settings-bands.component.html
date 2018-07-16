@@ -91,7 +91,7 @@
               step="1"
               min="5"
               max="500"
-              (change)="updateBand.emit({ bandId: selectedBandId, update: { height: $event.target.valueAsNumber } })">
+              (change)="updateBandAndSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { height: $event.target.valueAsNumber } })">
           </div>
 
           <!-- Activity Settings. -->

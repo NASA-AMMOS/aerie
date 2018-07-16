@@ -732,7 +732,7 @@ export class SourceExplorerEffects {
           actions.push(new layoutActions.Resize());
         } else {
           // Notify user no bands will be drawn.
-          actions.push(new dialogActions.ConfirmDialogOpen('OK', 'Data set empty. Timeline will not de drawn.', '350px'));
+          actions.push(new dialogActions.OpenConfirmDialog('OK', 'Data set empty. Timeline will not de drawn.', '350px'));
         }
 
         return actions;

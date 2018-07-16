@@ -135,7 +135,7 @@ export class AppComponent implements OnDestroy {
   }
 
   toggleShareableLinkDialog() {
-    this.store.dispatch(new dialogActions.ShareableLinkDialogOpen('600px'));
+    this.store.dispatch(new dialogActions.OpenShareableLinkDialog('600px'));
   }
 
   toggleSouthBandsPanel() {

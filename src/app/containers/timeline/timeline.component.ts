@@ -301,6 +301,16 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
+   * Event. Called when an `update-band-and-sub-band` event is fired from the raven-settings component.
+   */
+  onUpdateBandAndSubBand(e: RavenUpdate): void {
+    if (e.bandId && e.subBandId) {
+      this.store.dispatch(new timelineActions.UpdateBand(e.bandId, e.update));
+      this.store.dispatch(new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update));
+    }
+  }
+
+  /**
    * Event. Called when an `update-default-band-settings` event is fired from the raven-settings-global component.
    */
   onUpdateDefaultBandSettings(e: RavenUpdate): void {

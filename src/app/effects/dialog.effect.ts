@@ -18,34 +18,57 @@ import { AppState } from './../../app/store';
 
 import {
   Observable,
+  of,
+  zip,
 } from 'rxjs';
 
 import {
+  exhaustMap,
   map,
-  switchMap,
   withLatestFrom,
 } from 'rxjs/operators';
 
 import {
   RavenConfirmDialogComponent,
+  RavenCustomFilterDialogComponent,
+  RavenCustomGraphDialogComponent,
+  RavenFileImportDialogComponent,
+  RavenLayoutApplyDialogComponent,
+  RavenPinDialogComponent,
   RavenShareableLinkDialogComponent,
+  RavenStateSaveDialogComponent,
 } from './../shared/raven/components';
 
 import {
-  ConfirmDialogOpen,
   DialogActionTypes,
-  ShareableLinkDialogOpen,
+  OpenConfirmDialog,
+  OpenCustomFilterDialog,
+  OpenCustomGraphDialog,
+  OpenDeleteDialog,
+  OpenFileImportDialog,
+  OpenLayoutApplyDialog,
+  OpenPinDialog,
+  OpenShareableLinkDialog,
+  OpenStateApplyDialog,
+  OpenStateSaveDialog,
 } from './../actions/dialog';
+
+import {
+  getAllSourcesByKind,
+} from './../shared/util';
+
+import * as sourceExplorerActions from './../actions/source-explorer';
+import * as timelineActions from './../actions/timeline';
 
 @Injectable()
 export class DialogEffects {
   /**
-   * Effect for ConfirmDialogOpen.
+   * Effect for OpenConfirmDialog.
    */
   @Effect({ dispatch: false })
-  confirmDialogOpen$: Observable<Action> = this.actions$.pipe(
-    ofType<ConfirmDialogOpen>(DialogActionTypes.ConfirmDialogOpen),
-    switchMap(action => {
+  openConfirmDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenConfirmDialog>(DialogActionTypes.OpenConfirmDialog),
+    exhaustMap(action => {
       this.dialog.open(RavenConfirmDialogComponent, {
         data: {
           cancelText: action.cancelText,
@@ -58,20 +81,272 @@ export class DialogEffects {
   );
 
   /**
-   * Effect for ShareableLinkDialogOpen.
+   * Effect for OpenCustomFilterDialog.
    */
-  @Effect({ dispatch: false })
-  shareableLinkDialogOpen$: Observable<Action> = this.actions$.pipe(
-    ofType<ShareableLinkDialogOpen>(DialogActionTypes.ShareableLinkDialogOpen),
+  @Effect()
+  openCustomFilterDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenCustomFilterDialog>(DialogActionTypes.OpenCustomFilterDialog),
+    exhaustMap(action => {
+      const customFilterDialog = this.dialog.open(RavenCustomFilterDialogComponent, {
+        data: {
+          currentFilter: action.source.filter,
+          source: action.source,
+          width: action.width,
+        },
+      });
+
+      return zip(
+        of(action),
+        customFilterDialog.afterClosed(),
+      );
+    }),
+    map(([action, result]) => ({ action, result })),
+    exhaustMap(({ action, result }) => {
+      if (result) {
+        return of(new sourceExplorerActions.SetCustomFilter(action.source, result.filter));
+      }
+      return [];
+    }),
+  );
+
+  /**
+   * Effect for OpenCustomGraphDialog.
+   */
+  @Effect()
+  openCustomGraphDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenCustomGraphDialog>(DialogActionTypes.OpenCustomGraphDialog),
+    exhaustMap(action => {
+      const customGraphableDialog = this.dialog.open(RavenCustomGraphDialogComponent, {
+        data: {
+          source: action.source,
+        },
+        width: '300px',
+      });
+
+      return zip(
+        of(action),
+        customGraphableDialog.afterClosed(),
+      );
+    }),
+    map(([action, result]) => ({ action, result })),
+    exhaustMap(({ action, result }) => {
+      if (result && result.label) {
+        return of(new sourceExplorerActions.GraphCustomSource(action.source.id, result.label, result.filter));
+      }
+      return [];
+    }),
+  );
+
+  /**
+   * Effect for OpenDeleteDialog.
+   */
+  @Effect()
+  openDeleteDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenDeleteDialog>(DialogActionTypes.OpenDeleteDialog),
+    exhaustMap(action => {
+      const deleteDialog = this.dialog.open(RavenConfirmDialogComponent, {
+        data: {
+          cancelText: 'No',
+          confirmText: 'Yes',
+          message: `Are you sure you want to delete ${action.source.name}?`,
+        },
+        width: action.width,
+      });
+
+      return zip(
+        of(action),
+        deleteDialog.afterClosed(),
+      );
+    }),
+    map(([action, result]) => ({ action, result })),
+    exhaustMap(({ action, result }) => {
+      if (result && result.confirm) {
+        return of(new sourceExplorerActions.RemoveSourceEvent(action.source));
+      }
+      return [];
+    }),
+  );
+
+  /**
+   * Effect for OpenFileImportDialog.
+   */
+  @Effect()
+  openFileImportDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenFileImportDialog>(DialogActionTypes.OpenFileImportDialog),
+    exhaustMap(action => {
+      const fileImportDialog = this.dialog.open(RavenFileImportDialogComponent, {
+        data: {
+          source: action.source,
+        },
+        width: action.width,
+      });
+
+      return zip(
+        of(action),
+        fileImportDialog.afterClosed(),
+      );
+    }),
+    map(([action, result]) => ({ action, result })),
+    exhaustMap(({ action, result }) => {
+      if (result && result.import) {
+        return of(new sourceExplorerActions.ImportFile(action.source, result.file));
+      }
+      return [];
+    }),
+  );
+
+  /**
+   * Effect for OpenLayoutApplyDialog.
+   */
+  @Effect()
+  openLayoutApplyDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenLayoutApplyDialog>(DialogActionTypes.OpenLayoutApplyDialog),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
-    switchMap(({ action, state }) => {
+    exhaustMap(({ action, state }) => {
+      const applyLayoutDialog = this.dialog.open(RavenLayoutApplyDialogComponent, {
+        data: {
+          sources: getAllSourcesByKind(state.sourceExplorer.treeBySourceId, '/', 'fs_file'),
+        },
+        width: action.width,
+      });
+
+      return zip(
+        of(action),
+        applyLayoutDialog.afterClosed(),
+      );
+    }),
+    map(([action, result]) => ({ action, result })),
+    exhaustMap(({ action, result }) => {
+      if (result && result.apply) {
+        return of(new sourceExplorerActions.ApplyLayout(action.source.url, action.source.id, result.sourceId));
+      }
+      return [];
+    }),
+  );
+
+  /**
+   * Effect for OpenPinDialog.
+   * NOTE: In this effect we have two separate `PinAdd`, `PinRemove`, and `PinRename` actions for the
+   *       timeline and source explorer reducers. This is to keep these reducers as decoupled as possible.
+   *       Because they are separate, make sure their call order is maintained (e.g. source-explorer PinAdd is first followed by timeline PinAdd).
+   *       This way the timeline effect has the new pins to work with when we get there.
+   */
+  @Effect()
+  openPinDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenPinDialog>(DialogActionTypes.OpenPinDialog),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    exhaustMap(({ action, state }) => {
+      const pinDialog = this.dialog.open(RavenPinDialogComponent, {
+        data: {
+          pin: state.sourceExplorer.pins.find(p => p.sourceId === action.source.id),
+          source: action.source,
+          type: action.pinAction,
+        },
+        width: action.width,
+      });
+
+      return pinDialog.afterClosed();
+    }),
+    exhaustMap((result: any) => {
+      if (result && result.pinAdd) {
+        return [
+          new sourceExplorerActions.PinAdd(result.pin) as Action,
+          new timelineActions.PinAdd(result.pin) as Action,
+        ];
+      } else if (result && result.pinRemove) {
+        return [
+          new sourceExplorerActions.PinRemove(result.sourceId) as Action,
+          new timelineActions.PinRemove(result.sourceId) as Action,
+        ];
+      } else if (result && result.pinRename) {
+        return [
+          new sourceExplorerActions.PinRename(result.sourceId, result.newName) as Action,
+          new timelineActions.PinRename(result.sourceId, result.newName) as Action,
+        ];
+      }
+      return [];
+    }),
+  );
+
+  /**
+   * Effect for OpenShareableLinkDialog.
+   */
+  @Effect({ dispatch: false })
+  openShareableLinkDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenShareableLinkDialog>(DialogActionTypes.OpenShareableLinkDialog),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    exhaustMap(({ action, state }) => {
       this.dialog.open(RavenShareableLinkDialogComponent, {
         data: {
           state,
         },
         width: action.width,
       });
+      return [];
+    }),
+  );
+
+  /**
+   * Effect for OpenStateApplyDialog.
+   */
+  @Effect()
+  openStateApplyDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenStateApplyDialog>(DialogActionTypes.OpenStateApplyDialog),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    exhaustMap(({ action, state }) => {
+      const applyStateDialog = this.dialog.open(RavenConfirmDialogComponent, {
+        data: {
+          cancelText: 'No',
+          confirmText: 'Yes',
+          message: 'Applying this state will clear your current workspace. Are you sure you want to do this?',
+        },
+        width: action.width,
+      });
+
+      return zip(
+        of(action),
+        applyStateDialog.afterClosed(),
+      );
+    }),
+    map(([action, result]) => ({ action, result })),
+    exhaustMap(({ action, result }) => {
+      if (result && result.confirm) {
+        return of(new sourceExplorerActions.ApplyState(action.source.url, action.source.id));
+      }
+      return [];
+    }),
+  );
+
+  /**
+   * Effect for OpenStateApplyDialog.
+   */
+  @Effect()
+  openStateSaveDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenStateSaveDialog>(DialogActionTypes.OpenStateSaveDialog),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    exhaustMap(({ action, state }) => {
+      const stateSaveDialog = this.dialog.open(RavenStateSaveDialogComponent, {
+        data: {
+          source: action.source,
+        },
+        width: action.width,
+      });
+
+      return zip(
+        of(action),
+        stateSaveDialog.afterClosed(),
+      );
+    }),
+    map(([action, result]) => ({ action, result })),
+    exhaustMap(({ action, result }) => {
+      if (result && result.save) {
+        return of(new sourceExplorerActions.SaveState(action.source, result.name));
+      }
       return [];
     }),
   );
