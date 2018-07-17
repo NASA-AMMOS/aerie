@@ -20,6 +20,12 @@ mat-sidenav-container {
   z-index: 5;
 }
 
+.time-bands-container {
+  background: white;
+  position: sticky;
+  top: 0px;
+}
+
 .get-started {
   padding: 0.5em;
   text-align: center;

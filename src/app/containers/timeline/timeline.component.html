@@ -37,26 +37,28 @@
           *ngIf="bands.length > 0"
           class="timeline-0">
           <mat-card>
-            <raven-time-scroll-bar
-              [labelWidth]="defaultBandSettings.labelWidth"
-              [maxTimeRange]="maxTimeRange"
-              [viewTimeRange]="viewTimeRange"
-              (updateViewTimeRange)="onUpdateViewTimeRange($event)">
-            </raven-time-scroll-bar>
+            <div class="time-bands-container">
+              <raven-time-scroll-bar
+                [labelWidth]="defaultBandSettings.labelWidth"
+                [maxTimeRange]="maxTimeRange"
+                [viewTimeRange]="viewTimeRange"
+                (updateViewTimeRange)="onUpdateViewTimeRange($event)">
+              </raven-time-scroll-bar>
 
-            <raven-time-band
-              [cursorColor]="cursorColor"
-              [cursorTime]="cursorTime"
-              [cursorWidth]="cursorWidth"
-              [dayCode]="dayCode"
-              [earthSecToEpochSec]="earthSecToEpochSec"
-              [epoch]="inUseEpoch"
-              [labelWidth]="defaultBandSettings.labelWidth"
-              [maxTimeRange]="maxTimeRange"
-              [showTooltip]="defaultBandSettings.showTooltip"
-              [viewTimeRange]="viewTimeRange"
-              (updateViewTimeRange)="onUpdateViewTimeRange($event)">
-            </raven-time-band>
+              <raven-time-band
+                [cursorColor]="cursorColor"
+                [cursorTime]="cursorTime"
+                [cursorWidth]="cursorWidth"
+                [dayCode]="dayCode"
+                [earthSecToEpochSec]="earthSecToEpochSec"
+                [epoch]="inUseEpoch"
+                [labelWidth]="defaultBandSettings.labelWidth"
+                [maxTimeRange]="maxTimeRange"
+                [showTooltip]="defaultBandSettings.showTooltip"
+                [viewTimeRange]="viewTimeRange"
+                (updateViewTimeRange)="onUpdateViewTimeRange($event)">
+              </raven-time-band>
+            </div>
 
             <raven-bands
               class="raven-bands-0"
