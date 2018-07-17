@@ -134,7 +134,7 @@ export function getActivityPoint(sourceId: string, data: MpsServerActivityPoint)
     startTimestamp,
     subBandId: '',
     type: 'activity',
-    uniqueId: uniqueId(),
+    uniqueId: activityId,
   };
 
   return point;
@@ -315,9 +315,9 @@ export function getMaxTimeRange(points: any[]) {
 /**
  * Get a raven point from a list of bands by bandId, subBandId, and pointId. Returns null if no point is found.
  */
-export function getPoint(bands: RavenCompositeBand[], bandId: string, subBandId: string, pointId: string): RavenPoint | null {
+export function getPoint(bands: RavenCompositeBand[], bandId: string | null, subBandId: string, pointId: string): RavenPoint | null {
   for (let i = 0, l = bands.length; i < l; ++i) {
-    if (bands[i].id === bandId) {
+    if (bandId === null || bands[i].id === bandId) { // Optional bandId.
       for (let j = 0, ll = bands[i].subBands.length; j < ll; ++j) {
         const subBand = bands[i].subBands[j];
         if (subBand.id === subBandId) {
@@ -340,17 +340,14 @@ export function getPoint(bands: RavenCompositeBand[], bandId: string, subBandId:
  * Helper that checks if we need to reset the selectedPoint.
  * If we don't need to reset just return the original selectedPoint.
  */
-export function updateSelectedPoint(selectedPoint: RavenPoint | null, sourceId: string | null, subBandId: string | null) {
-  const pointInSubBand = selectedPoint && selectedPoint.subBandId === subBandId;
-  const pointFromSourceId = selectedPoint && selectedPoint.sourceId === sourceId;
-
-  if (pointInSubBand || pointFromSourceId) {
+export function updateSelectedPoint(bands: RavenCompositeBand[], selectedPoint: RavenPoint | null) {
+  if (selectedPoint && getPoint(bands, null, selectedPoint.subBandId, selectedPoint.uniqueId)) {
     return {
-      selectedPoint: null,
+      selectedPoint,
     };
   } else {
     return {
-      selectedPoint,
+      selectedPoint: null,
     };
   }
 }

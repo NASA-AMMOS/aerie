@@ -32,6 +32,7 @@ import {
 } from 'ag-grid-angular';
 
 import {
+  RavenActivityPoint,
   RavenPoint,
   RavenSubBand,
 } from './../../../models';
@@ -216,12 +217,34 @@ export class RavenTableComponent implements OnChanges {
   /**
    * Returns `rowData` for use in the grid.
    * Makes sure points have a properly formatted timestamp and an index.
+   *
+   * `pointsByActivityId` keeps tracks of points with activity IDs we have already seen
+   * to make sure we don't ever keep two activities with the same IDs in a point array.
+   *
+   * Notice how we are looping through the points only once here for max performance.
    */
   createRowData(points: RavenPoint[] = []) {
-    return points.map((point, index) => ({
-      ...this.timestampPoint(point),
-      index,
-    }));
+    const newPoints = [];
+    const pointsByActivityId = {};
+    let index = 0;
+
+    for (let i = 0, l = points.length; i < l; ++i) {
+      const point = {
+        ...this.timestampPoint(points[i]),
+        index,
+      } as RavenActivityPoint; // This is so typings work out.
+
+      if (point.type !== 'activity') {
+        newPoints.push(point);
+        ++index;
+      } else if (point.type === 'activity' && !pointsByActivityId[point.activityId]) {
+        pointsByActivityId[point.activityId] = true; // Track that we have now seen this activity id so we don't add it again.
+        newPoints.push(point);
+        ++index;
+      }
+    }
+
+    return newPoints;
   }
 
   /**
