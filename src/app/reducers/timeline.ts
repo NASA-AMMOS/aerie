@@ -327,7 +327,7 @@ export function removeBandsOrPointsForSource(state: TimelineState, action: Remov
     ...state,
     bands,
     ...updateSelectedBandIds(bands, state.selectedBandId, state.selectedSubBandId),
-    ...updateSelectedPoint(state.selectedPoint, action.sourceId, null),
+    ...updateSelectedPoint(bands, state.selectedPoint),
     ...updateTimeRanges(bands, state.viewTimeRange),
   };
 }
@@ -372,7 +372,7 @@ export function removeSubBand(state: TimelineState, action: RemoveSubBand): Time
     ...state,
     bands,
     ...updateSelectedBandIds(bands, state.selectedBandId, state.selectedSubBandId),
-    ...updateSelectedPoint(state.selectedPoint, null, action.subBandId),
+    ...updateSelectedPoint(bands, state.selectedPoint),
     ...updateTimeRanges(bands, state.viewTimeRange),
   };
 }

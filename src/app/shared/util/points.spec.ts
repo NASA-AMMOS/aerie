@@ -90,21 +90,28 @@ describe('points.ts', () => {
   });
 
   describe('updateSelectedPoint', () => {
-    it(`should return null if the point has the source id`, () => {
-      expect(updateSelectedPoint(activityPoint, '/a/b/c/', '')).toEqual({
+    it(`should return null if no bands are given`, () => {
+      expect(updateSelectedPoint([], activityPoint)).toEqual({
         selectedPoint: null,
       });
     });
 
-    it(`should return null if the point has the sub-band id`, () => {
-      expect(updateSelectedPoint(activityPoint, '', '4')).toEqual({
+    it(`should return null if no selected point is given`, () => {
+      expect(updateSelectedPoint([], null)).toEqual({
         selectedPoint: null,
       });
     });
 
-    it(`should return the given point if the given source id or sub-band id are not associated with the point`, () => {
-      expect(updateSelectedPoint(activityPoint, '', '')).toEqual({
-        selectedPoint: activityPoint,
+    it(`should return the given point if the given selected point is in the given bands array`, () => {
+      const selectedPoint = {
+        ...activityPoint,
+        sourceId: '/a/b/c/d/e/v',
+        subBandId: '4',
+        uniqueId: '400',
+      };
+
+      expect(updateSelectedPoint(bands, selectedPoint)).toEqual({
+        selectedPoint,
       });
     });
   });

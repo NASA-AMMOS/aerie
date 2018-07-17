@@ -362,6 +362,7 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
       if (subBand.id === subBandId) {
         subBand.intervalsById = intervalsById;
         subBand.setIntervals(intervals);
+        this.setIntervalColor();
         this.updateTickValues();
         this.redraw();
         return;

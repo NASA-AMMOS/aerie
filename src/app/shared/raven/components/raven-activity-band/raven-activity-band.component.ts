@@ -179,6 +179,7 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
 
   /**
    * Helper. Creates CTL intervals for a activity band.
+   * Notice how we are looping through the points only once here for max performance.
    */
   getIntervals() {
     const intervals = [];
@@ -187,24 +188,27 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
     for (let i = 0, l = this.points.length; i < l; ++i) {
       const point = this.points[i];
 
-      const interval = new (window as any).DrawableInterval({
-        color: point.color,
-        end: point.end,
-        icon: this.icon,
-        id: point.id,
-        label: point.activityName,
-        onGetTooltipText: this.onGetTooltipText.bind(this),
-        opacity: 0.5,
-        properties: point.message ? { message: point.message } : {},
-        start: point.start,
-      });
+      // If we have not seen the activity id before then add it to be drawn.
+      if (!intervalsById[point.activityId]) {
+        const interval = new (window as any).DrawableInterval({
+          color: point.color,
+          end: point.end,
+          icon: this.icon,
+          id: point.id,
+          label: point.activityName,
+          onGetTooltipText: this.onGetTooltipText.bind(this),
+          opacity: 0.5,
+          properties: point.message ? { message: point.message } : {},
+          start: point.start,
+        });
 
-      // Set the sub-band ID and unique ID separately since they are not a DrawableInterval prop.
-      interval.subBandId = this.id;
-      interval.uniqueId = point.uniqueId;
+        // Set the sub-band ID and unique ID separately since they are not a DrawableInterval prop.
+        interval.subBandId = this.id;
+        interval.uniqueId = point.activityId;
 
-      intervals.push(interval);
-      intervalsById[interval.uniqueId] = interval;
+        intervals.push(interval);
+        intervalsById[interval.uniqueId] = interval;
+      }
     }
 
     intervals.sort((window as any).DrawableInterval.earlyStartEarlyEnd);
