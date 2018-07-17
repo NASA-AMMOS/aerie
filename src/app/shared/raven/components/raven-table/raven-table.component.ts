@@ -218,7 +218,7 @@ export class RavenTableComponent implements OnChanges {
    * Returns `rowData` for use in the grid.
    * Makes sure points have a properly formatted timestamp and an index.
    *
-   * `pointsByActivityId` keeps tracks of points with activity IDs we have already seen
+   * `pointsByActivityId` keeps tracks of points with unique activity IDs we have already seen
    * to make sure we don't ever keep two activities with the same IDs in a point array.
    *
    * Notice how we are looping through the points only once here for max performance.
@@ -237,8 +237,8 @@ export class RavenTableComponent implements OnChanges {
       if (point.type !== 'activity') {
         newPoints.push(point);
         ++index;
-      } else if (point.type === 'activity' && !pointsByActivityId[point.activityId]) {
-        pointsByActivityId[point.activityId] = true; // Track that we have now seen this activity id so we don't add it again.
+      } else if (point.type === 'activity' && !pointsByActivityId[point.uniqueId]) {
+        pointsByActivityId[point.uniqueId] = true; // Track that we have now seen this unique activity id so we don't add it again.
         newPoints.push(point);
         ++index;
       }

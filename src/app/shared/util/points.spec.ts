@@ -11,6 +11,7 @@ import {
   getColorFromActivityMetadata,
   getMaxTimeRange,
   getPoint,
+  getUniqueActivityId,
   updateSelectedPoint,
 } from './points';
 
@@ -86,6 +87,12 @@ describe('points.ts', () => {
 
     it(`should return [255, 255, 198 ] for [255, 255, 198]`, () => {
       expect(getColorFromActivityMetadata([{ Name: 'color', Value: [255, 255, 198] }])).toEqual([255, 255, 198]);
+    });
+  });
+
+  describe('getUniqueActivityId', () => {
+    it(`should return a correct unique activity id`, () => {
+      expect(getUniqueActivityId(activityPoint)).toEqual('test-activity-point-0-500');
     });
   });
 

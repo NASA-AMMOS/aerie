@@ -134,8 +134,12 @@ export function getActivityPoint(sourceId: string, data: MpsServerActivityPoint)
     startTimestamp,
     subBandId: '',
     type: 'activity',
-    uniqueId: activityId,
+    uniqueId: '',
   };
+
+  // Set the unique activity id with the newly created point object.
+  // See `getUniqueActivityId` for why `activityId` by itself does not suffice as a `uniqueId`.
+  point.uniqueId = getUniqueActivityId(point);
 
   return point;
 }
@@ -334,6 +338,15 @@ export function getPoint(bands: RavenCompositeBand[], bandId: string | null, sub
     }
   }
   return null;
+}
+
+/**
+ * Helper that returns a unique activity instance id which is composed of the activity id and the start/end times.
+ * In some rare cases (e.g. in a PEF) an activity id can be set to a non-unique string in the adaptation.
+ * This adds the start/end times to ensure uniqueness.
+ */
+export function getUniqueActivityId(point: RavenActivityPoint): string {
+  return `${point.activityId}-${point.start}-${point.end}`;
 }
 
 /**

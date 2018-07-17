@@ -12,7 +12,7 @@ import {
 } from './../models';
 
 export const activityPoint: RavenActivityPoint = {
-  activityId: '',
+  activityId: 'test-activity-point',
   activityName: 'test-activity-point',
   activityParameters: [
     { Name: '', Value: '' },

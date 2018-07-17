@@ -188,8 +188,8 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
     for (let i = 0, l = this.points.length; i < l; ++i) {
       const point = this.points[i];
 
-      // If we have not seen the activity id before then add it to be drawn.
-      if (!intervalsById[point.activityId]) {
+      // If we have not seen the unique activity id before then add it to be drawn.
+      if (!intervalsById[point.uniqueId]) {
         const interval = new (window as any).DrawableInterval({
           color: point.color,
           end: point.end,
@@ -204,7 +204,7 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
 
         // Set the sub-band ID and unique ID separately since they are not a DrawableInterval prop.
         interval.subBandId = this.id;
-        interval.uniqueId = point.activityId;
+        interval.uniqueId = point.uniqueId;
 
         intervals.push(interval);
         intervalsById[interval.uniqueId] = interval;
