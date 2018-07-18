@@ -581,7 +581,7 @@ export function getQueryUrlForGraphableFilter(
   for (const group of Object.keys(targetFilters)) {
     queryOptions += `${group}=${getFilters(treeBySourceId, targetFilters[group]).join(',')}&`;
   }
-  return `${sourceIdOrUrl}?${queryOptions}`;
+  return `${sourceIdOrUrl}${queryOptions}`;
 }
 
 /**
