@@ -13,10 +13,6 @@ import {
 } from 'lodash';
 
 import {
-  colorHexToRgbArray,
-} from './color';
-
-import {
   MpsServerActivityPoint,
   MpsServerGraphData,
   MpsServerResourceMetadata,
@@ -200,10 +196,10 @@ export function toResourceBand(
   const resourceBand: RavenResourceBand = {
     addTo: false,
     autoTickValues: true,
-    color: colorHexToRgbArray(defaultBandSettings.resourceColor),
+    color: defaultBandSettings.resourceColor,
     decimate: metadata.decimatedData,
     fill: false,
-    fillColor: colorHexToRgbArray(defaultBandSettings.resourceFillColor),
+    fillColor: defaultBandSettings.resourceFillColor,
     height: 100,
     heightPadding: 10,
     icon: defaultBandSettings.icon,
@@ -212,7 +208,7 @@ export function toResourceBand(
     isDuration: metadata.hasValueType.toLowerCase() === 'duration',
     isTime: metadata.hasValueType.toLowerCase() === 'time',
     label: metadata.hasObjectName,
-    labelColor: [0, 0, 0],
+    labelColor: '#000000',
     labelFont: defaultBandSettings.labelFont,
     labelPin: '',
     labelUnit: metadata.hasUnits || '',

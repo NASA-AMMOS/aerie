@@ -34,6 +34,10 @@ import {
   toDuration,
 } from './../../../util/time';
 
+import {
+  colorHexToRgbArray,
+} from './../../../util';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'raven-resource-band',
@@ -42,14 +46,14 @@ import {
 })
 export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit {
   @Input() autoTickValues: boolean;
-  @Input() color: number[];
+  @Input() color: string;
   @Input() ctlTimeAxis: any;
   @Input() ctlViewTimeAxis: any;
   @Input() dayCode: string;
   @Input() earthSecToEpochSec: number;
   @Input() epoch: RavenEpoch | null;
   @Input() fill: boolean;
-  @Input() fillColor: number[];
+  @Input() fillColor: string;
   @Input() font: string;
   @Input() height: number;
   @Input() heightPadding: number;
@@ -77,6 +81,8 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
   @Output() updateIntervals: EventEmitter<any> = new EventEmitter<any>();
   @Output() updateSubBand: EventEmitter<any> = new EventEmitter<any>();
 
+  ctlResourceBand: any;
+
   ngOnChanges(changes: SimpleChanges) {
     // Auto Tick Values.
     if (changes.autoTickValues && !changes.autoTickValues.firstChange) {
@@ -84,16 +90,24 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
     }
 
     // Color.
-    // TODO.
+    if (changes.color && !changes.color.firstChange && this.ctlResourceBand) {
+      this.color = changes.color.currentValue;
+      // update color of intervals
+      const { intervals } = this.getIntervals();
+      this.ctlResourceBand.setIntervals(intervals);
+      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'color', value: this.color });
+    }
 
     // Fill.
     if (changes.fill && !changes.fill.firstChange) {
+      this.fill = changes.fill.currentValue;
       this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'fill', value: this.fill });
     }
 
     // Fill Color.
     if (changes.fillColor && !changes.fillColor.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'fillColor', value: this.fillColor });
+      this.fillColor = changes.fillColor.currentValue;
+      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'fillColor', value: colorHexToRgbArray(this.fillColor) });
     }
 
     // Font.
@@ -147,7 +161,7 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
 
   ngOnInit() {
     // Create Resource Band.
-    const ctlResourceBand = new (window as any).ResourceBand({
+    this.ctlResourceBand = new (window as any).ResourceBand({
       autoScale: (window as any).ResourceBand.VISIBLE_INTERVALS,
       autoTickValues: this.autoTickValues,
       height: this.height,
@@ -158,16 +172,16 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
       interpolation: this.interpolation,
       intervals: [],
       label: this.getLabel(),
-      labelColor: this.color,
+      labelColor: colorHexToRgbArray(this.color),
       labelFont: this.labelFont,
       labelFontSize: this.labelFontSize,
       name: this.name,
       onFormatTickValue: this.onFormatTickValue.bind(this),
       onGetInterpolatedTooltipText: this.onGetInterpolatedTooltipText.bind(this),
       painter: new (window as any).ResourcePainter({
-        color: this.color,
+        color: colorHexToRgbArray(this.color),
         fill: this.fill,
-        fillColor: this.fillColor,
+        fillColor: colorHexToRgbArray(this.fillColor),
         icon: this.icon,
         showIcon: this.showIcon,
       }),
@@ -180,15 +194,15 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
     // Create Intervals.
     const { intervals, intervalsById } = this.getIntervals();
 
-    ctlResourceBand.setIntervals(intervals);
-    ctlResourceBand.intervalsById = intervalsById;
-    ctlResourceBand.type = 'resource';
-    ctlResourceBand.isDuration = this.isDuration;
-    ctlResourceBand.isTime = this.isTime;
+    this.ctlResourceBand.setIntervals(intervals);
+    this.ctlResourceBand.intervalsById = intervalsById;
+    this.ctlResourceBand.type = 'resource';
+    this.ctlResourceBand.isDuration = this.isDuration;
+    this.ctlResourceBand.isTime = this.isTime;
 
     // Send the newly created resource band to the parent composite band so it can be added.
     // All subsequent updates should be made to the parent composite sub-band via events.
-    this.addSubBand.emit(ctlResourceBand);
+    this.addSubBand.emit(this.ctlResourceBand);
   }
 
   ngOnDestroy() {
@@ -206,7 +220,7 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
       const point = this.points[i];
 
       const interval = new (window as any).DrawableInterval({
-        color: this.color,
+        color: colorHexToRgbArray(this.color),
         end: point.start,
         endValue: point.value,
         icon: this.icon,
