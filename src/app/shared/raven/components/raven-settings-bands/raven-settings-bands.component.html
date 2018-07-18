@@ -265,7 +265,7 @@
           </ng-container>
 
           <!-- Add To. -->
-          <div class="field">
+          <div class="field" *ngIf="subBand.type === 'activity'">
             <mat-slide-toggle
               id="raven-settings-add-to"
               color="primary"
