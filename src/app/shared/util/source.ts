@@ -32,6 +32,10 @@ import {
   StringTMap,
 } from './../models';
 
+import {
+  getBandLabel,
+} from './bands';
+
 /**
  * Transform form an MPS Server source to a Raven source.
  */
@@ -359,6 +363,31 @@ export function getSortedChildIds(tree: StringTMap<RavenSource>, childIds: strin
 }
 
 /**
+ * Helper. Get sourceIds in bands grouped by label.
+ */
+export function getSourceIdsByLabelInBands(
+  bands: RavenCompositeBand[],
+  customFiltersBySourceId: StringTMap<RavenCustomFilter[]>,
+  filtersByTarget: StringTMap<StringTMap<string[]>>,
+  treeBySourceId: StringTMap<RavenSource>,
+): StringTMap<string[]> {
+  return bands.reduce((sourceIdsByLabelInBands: StringTMap<string[]>, band) => {
+    band.subBands.forEach(subBand => {
+      sourceIdsByLabelInBands[getBandLabel(subBand)] = [];
+      const sourceIds = getSourceIdsForSubBand(
+        subBand.sourceIds,
+        treeBySourceId,
+        subBand.label,
+        customFiltersBySourceId,
+        filtersByTarget,
+      );
+      sourceIds.forEach(sourceId => sourceIdsByLabelInBands[getBandLabel(subBand)].push(sourceId ));
+    });
+    return sourceIdsByLabelInBands;
+  }, {});
+}
+
+/**
  * Helper for saving a state.
  * Returns list of sourceIds from subBand. sourceIds of related filters are added for graphableFilter and filters are
  * added as query options for customGraphable
@@ -366,7 +395,7 @@ export function getSortedChildIds(tree: StringTMap<RavenSource>, childIds: strin
 export function getSourceIdsForSubBand(
   sourceIds: string[],
   treeBySourceId: StringTMap<RavenSource>,
-  label: string,
+  bandLabel: string,
   customFiltersBySourceId: StringTMap<RavenCustomFilter[]> | null = null,
   filtersByTarget: StringTMap<StringTMap<string[]>> | null = null,
 ): string[] {
@@ -376,7 +405,7 @@ export function getSourceIdsForSubBand(
     const source = treeBySourceId[sourceId];
     // Custom Graphable.
     if (source.type === 'customGraphable' && customFiltersBySourceId) {
-      const customFilter = getCustomFilterForLabel(label, customFiltersBySourceId[sourceId]);
+      const customFilter = getCustomFilterForLabel(bandLabel, customFiltersBySourceId[sourceId]);
       savedSourceIds.push(customFilter ? `${source.id}?label=${customFilter.label}&filter=${customFilter.filter}` : source.id);
     } else if (source.type === 'graphableFilter' && filtersByTarget) {
       // Graphable Filter.
@@ -467,6 +496,27 @@ export function getFormattedSourceUrl(
   // Graphable Filter.
   if (source.type === 'graphableFilter') {
     sourceUrl = getQueryUrlForGraphableFilter(treeBySourceId, source.url, getTargetFilters(filtersByTarget, (source as RavenGraphableFilterSource).filterTarget));
+  }
+
+  return sourceUrl;
+}
+
+/**
+ * Helper that returns url to get the output data for source.
+ */
+export function getOutputDataUrl(
+  treeBySourceId: StringTMap<RavenSource>,
+  source: RavenSource,
+  customFilter: RavenCustomFilter | null,
+  filtersByTarget: StringTMap<StringTMap<string[]>>,
+  outputFormat: string,
+  decimate: boolean,
+): string {
+  let sourceUrl = getFormattedSourceUrl(treeBySourceId, source, customFilter, filtersByTarget);
+  sourceUrl = sourceUrl.replace('format=TMS', outputFormat === 'CSV' ? 'format=CSV' : 'format=JSON');
+
+  if (!decimate) {
+    sourceUrl = sourceUrl.replace('decimate=true', 'decimate=false');
   }
 
   return sourceUrl;

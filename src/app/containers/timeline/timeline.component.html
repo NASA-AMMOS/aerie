@@ -262,6 +262,39 @@
     </div>
   </mat-sidenav>
 
+  <!-- Output Drawer. -->
+  <mat-sidenav
+    *ngIf="showOutputDrawer"
+    class="output-drawer"
+    mode="over"
+    position="end"
+    [fixedInViewport]="true"
+    [fixedTopGap]="40"
+    [opened]="showOutputDrawer"
+    (closedStart)="onToggleOutputDrawer(false)">
+    <div class="sidenav-content">
+      <button
+        mat-icon-button
+        (click)="onToggleOutputDrawer(false)">
+        <mat-icon
+          class="mat-24"
+          aria-label="Clear">
+          clear
+        </mat-icon>
+      </button>
+      <raven-output
+        [allInOneFile]="allInOneFile"
+        [allInOneFilename]="allInOneFilename"
+        [decimateOutputData]="decimateOutputData"
+        [outputFormat]="outputFormat"
+        [outputSourceIdsByLabel]="outputSourceIdsByLabel"
+        [subBandSourceIdsByLabel]="subBandSourceIdsByLabel"
+        (createOutput)="onCreateOutput()"
+        (updateOutputSettings)="onUpdateOutputSettings($event)">
+      </raven-output>
+    </div>
+  </mat-sidenav>
+
   <!-- Time cursor Drawer. -->
   <mat-sidenav
     *ngIf="showTimeCursorDrawer"

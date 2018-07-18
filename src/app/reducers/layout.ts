@@ -18,6 +18,7 @@ import {
   SetMode,
   ToggleEpochsDrawer,
   ToggleGlobalSettingsDrawer,
+  ToggleOutputDrawer,
   ToggleTimeCursorDrawer,
 } from './../actions/layout';
 
@@ -31,6 +32,7 @@ export interface LayoutState {
   showEpochsDrawer: boolean;
   showGlobalSettingsDrawer: boolean;
   showLeftPanel: boolean;
+  showOutputDrawer: boolean;
   showRightPanel: boolean;
   showSouthBandsPanel: boolean;
   showTimeCursorDrawer: boolean;
@@ -47,6 +49,7 @@ export const initialState: LayoutState = {
   showEpochsDrawer: false,
   showGlobalSettingsDrawer: false,
   showLeftPanel: true,
+  showOutputDrawer: false,
   showRightPanel: true,
   showSouthBandsPanel: true,
   showTimeCursorDrawer: false,
@@ -69,6 +72,8 @@ export function reducer(state: LayoutState = initialState, action: LayoutAction)
       return toggleGlobalSettingsDrawer(state, action);
     case LayoutActionTypes.ToggleLeftPanel:
       return { ...state, showLeftPanel: !state.showLeftPanel };
+    case LayoutActionTypes.ToggleOutputDrawer:
+      return toggleOutputDrawer(state, action);
     case LayoutActionTypes.ToggleRightPanel:
       return { ...state, showRightPanel: !state.showRightPanel };
     case LayoutActionTypes.ToggleSouthBandsPanel:
@@ -104,6 +109,7 @@ export function toggleEpochsDrawer(state: LayoutState, action: ToggleEpochsDrawe
     ...state,
     showEpochsDrawer: action.opened !== undefined ? action.opened : !state.showEpochsDrawer,
     showGlobalSettingsDrawer: false,
+    showOutputDrawer: false,
     showTimeCursorDrawer: false,
   };
 }
@@ -116,6 +122,19 @@ export function toggleGlobalSettingsDrawer(state: LayoutState, action: ToggleGlo
     ...state,
     showEpochsDrawer: false,
     showGlobalSettingsDrawer: action.opened !== undefined ? action.opened : !state.showGlobalSettingsDrawer,
+    showOutputDrawer: false,
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'ToggleOutputDrawer' action.
+ */
+export function toggleOutputDrawer(state: LayoutState, action: ToggleOutputDrawer): LayoutState {
+  return {
+    ...state,
+    showEpochsDrawer: false,
+    showGlobalSettingsDrawer: false,
+    showOutputDrawer: action.opened !== undefined ? action.opened : !state.showOutputDrawer,
     showTimeCursorDrawer: false,
   };
 }

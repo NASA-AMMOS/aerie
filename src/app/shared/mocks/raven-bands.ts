@@ -250,6 +250,27 @@ export const bandsWithCustomFiltersInSourceId: RavenCompositeBand[] = [
   },
 ];
 
+export const bandsWithCustomGraphableSource: RavenCompositeBand[] = [
+  {
+    ...compositeBand,
+    id: '100',
+    name: 'test-composite-band-0',
+    sortOrder: 0,
+    subBands: [
+      {
+        ...activityBand,
+        addTo: true,
+        id: '0',
+        label: 'ips',
+        legend: 'ips',
+        name: 'test-activity-sub-band-0',
+        parentUniqueId: '100',
+        sourceIds: ['/DKF/command'],
+      },
+    ],
+  },
+];
+
 export const bandsWithFiltersInSourceId: RavenCompositeBand[] = [
   {
     ...compositeBand,

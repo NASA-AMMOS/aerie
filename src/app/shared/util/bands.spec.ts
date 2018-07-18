@@ -10,6 +10,7 @@
 import {
   bandById,
   changeZoom,
+  getBandLabel,
   getCustomFiltersBySourceId,
   hasActivityBand,
   hasActivityBandForFilterTarget,
@@ -30,6 +31,7 @@ import {
   bandsWithFilterTarget,
   keywordLineActivityPoint,
   messageTypeActivityPoint,
+  resourceBand,
   treeBySourceId,
 } from './../mocks';
 
@@ -66,6 +68,12 @@ describe('bands.ts', () => {
           label: 'ips',
         }],
       });
+    });
+  });
+
+  describe('getBandLabel', () => {
+    it(`should return label with empty pin and units`, () => {
+      expect(getBandLabel(resourceBand)).toEqual('test-resource-band (Degrees)');
     });
   });
 

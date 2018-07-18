@@ -144,6 +144,17 @@
 
     <button
       mat-menu-item
+      (click)="toggleOutputDrawer()">
+      <mat-icon
+        class="mat-24"
+        aria-label="Manage Output">
+        save_alt
+      </mat-icon>
+      Manage Output
+    </button>
+
+    <button
+      mat-menu-item
       (click)="toggleTimeCursorDrawer()">
       <mat-icon
         class="mat-24"

@@ -130,6 +130,10 @@ export class AppComponent implements OnDestroy {
     this.store.dispatch(new layoutActions.ToggleLeftPanel());
   }
 
+  toggleOutputDrawer() {
+    this.store.dispatch(new layoutActions.ToggleOutputDrawer());
+  }
+
   toggleRightPanel() {
     this.store.dispatch(new layoutActions.ToggleRightPanel());
   }

@@ -1,0 +1,77 @@
+<mat-card>
+  <mat-card-title>
+    Manage Output
+  </mat-card-title>
+
+  <mat-card-content>
+    <p>
+      Select which resources to output:
+    </p>
+
+    <!-- Table. -->
+    <ag-grid-angular
+      #agGrid
+      class="ag-theme-fresh"
+      [columnDefs]="columnDefs"
+      [enableColResize]="true"
+      [enableFilter]="true"
+      [enableSorting]="true"
+      [rowData]="rowData"
+      [rowSelection]="rowSelection"
+      [suppressRowClickSelection]="true"
+      (selectionChanged)="onSelectionChanged()">
+    </ag-grid-angular>
+
+    <!-- Output Format. -->
+    <mat-form-field>
+      <mat-select
+        placeholder="Output Format"
+        [(value)]="outputFormat"
+        (selectionChange)="updateOutputSettings.emit({ update: { outputFormat: $event.value, allInOneFile:  $event.value === 'JSON' ? false : allInOneFile } })">
+        <mat-option [value]="'CSV'">CSV</mat-option>
+        <mat-option [value]="'JSON'">JSON</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <div
+      class="inputs"
+      fxLayout="row"
+      fxLayoutAlign="space center"
+      fxLayoutWrap>
+      <!-- Decimate Output Data. -->
+      <mat-slide-toggle
+        color="primary"
+        [checked]="decimateOutputData"
+        (change)="updateOutputSettings.emit({ update: { decimateOutputData: $event.checked } })">
+        Decimate Output Data
+      </mat-slide-toggle>
+
+      <!-- All-in-one File Toggle. -->
+      <mat-slide-toggle
+        *ngIf="outputFormat==='CSV' && moreThanOneSelected()"
+        color="primary"
+        [checked]="allInOneFile"
+        (change)="updateOutputSettings.emit({ update: { allInOneFile: $event.checked } })">
+        All-in-one File
+      </mat-slide-toggle>
+
+      <!-- All-in-one File Name. -->
+      <mat-form-field *ngIf="outputFormat==='CSV' && allInOneFile">
+        <input
+          matInput
+          (keyup)="updateOutputSettings.emit({ update: { allInOneFilename: $event.target.value } })"
+          [value]="allInOneFilename"
+          placeholder="Output Filename">
+      </mat-form-field>
+    </div>
+
+    <!-- Output. -->
+    <button
+      mat-raised-button
+      color="primary"
+      [disabled]="!isValid()"
+      (click)="onCreateOutput()">
+      Create Output
+    </button>
+  </mat-card-content>
+</mat-card>

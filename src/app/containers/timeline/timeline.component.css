@@ -16,6 +16,10 @@ mat-sidenav.epochs-drawer {
   width: 600px;
 }
 
+mat-sidenav.output-drawer {
+  width: 900px;
+}
+
 mat-sidenav-container {
   z-index: 5;
 }

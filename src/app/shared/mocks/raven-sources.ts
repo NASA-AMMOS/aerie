@@ -13,6 +13,7 @@ import {
   RavenCustomGraphableSource,
   RavenFilterSource,
   RavenGraphableFilterSource,
+  RavenGraphableSource,
   RavenSource,
   StringTMap,
 } from './../models';
@@ -351,6 +352,43 @@ export const grandChildSource: RavenSource = {
   subKind: '',
   type: '',
   url: '',
+};
+
+export const graphableSource: RavenGraphableSource = {
+  actions: [],
+  childIds: [],
+  content: [],
+  dbType: '',
+  draggable: false,
+  expandable: true,
+  expanded: false,
+  fileMetadata: {
+    createdBy: '',
+    createdOn: '',
+    customMetadata: null,
+    fileType: '',
+    lastModified: '',
+    permissions: '',
+  },
+  icon: '',
+  id: '/child/grandChild',
+  isServer: false,
+  kind: 'db',
+  label: 'test-grand-child-source',
+  menu: true,
+  name: 'test-grand-child-source',
+  openable: false,
+  opened: false,
+  parentId: '/child',
+  permissions: '',
+  pinnable: true,
+  pinned: false,
+  selectable: true,
+  selected: false,
+  subBandIds: [],
+  subKind: '',
+  type: 'resource',
+  url: 'https://a/b/c?name=power&format=TMS&decimate=true',
 };
 
 export const treeBySourceId: StringTMap<RavenSource> = {

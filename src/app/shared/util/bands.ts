@@ -393,6 +393,27 @@ export function updateSelectedBandIds(
 }
 
 /**
+ * Helper returns band label with composed label and unit if they exist.
+ * Note the typing on `subBand` is cast to `RavenResourceBand` since the `RavenResourceBand` has the all the required properties.
+ * This should not be a problem since we are checking `subBand.(...)` before accessing any properties.
+ */
+export function getBandLabel(band: RavenSubBand): string {
+  const subBand = band as RavenResourceBand;
+  let labelPin = '';
+  let labelUnit = '';
+
+  if (subBand.showLabelPin && subBand.labelPin !== '') {
+    labelPin = ` (${subBand.labelPin})`;
+  }
+
+  if (subBand.showLabelUnit && subBand.labelUnit !== '') {
+    labelUnit = ` (${subBand.labelUnit})`;
+  }
+
+  return subBand.type === 'resource' ? `${subBand.label}${labelPin}${labelUnit}` : `${subBand.label}${labelPin}`;
+}
+
+/**
  * Helper. Get customFilters from sourceIds in bands. e.g ../command?label=ips&filter=.*IPS.*
  */
 export function getCustomFiltersBySourceId(

@@ -28,6 +28,7 @@ export * from './raven-file-metadata/raven-file-metadata.component';
 export * from './raven-graphable/raven-graphable.component';
 export * from './raven-graphable-filter/raven-graphable-filter.component';
 export * from './raven-layout-apply-dialog/raven-layout-apply-dialog.component';
+export * from './raven-output/raven-output.component';
 export * from './raven-pan-to-duration/raven-pan-to-duration';
 export * from './raven-pin-dialog/raven-pin-dialog.component';
 export * from './raven-resource-band/raven-resource-band.component';

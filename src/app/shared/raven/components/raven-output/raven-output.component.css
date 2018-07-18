@@ -1,0 +1,27 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+ag-grid-angular {
+  height: 40%;
+  padding-bottom: 15px;
+}
+
+mat-card,
+mat-card-content {
+  height: 100%;
+}
+
+mat-card-title {
+  font-size: 18px;
+}
+
+mat-form-field,
+mat-slide-toggle {
+  padding-right: 15px;
+}
+
+.inputs {
+  padding-bottom: 15px;
+}

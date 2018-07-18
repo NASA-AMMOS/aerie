@@ -22,6 +22,7 @@ export enum LayoutActionTypes {
   ToggleEpochsDrawer         = '[layout] toggle_epochs_drawer',
   ToggleGlobalSettingsDrawer = '[layout] toggle_global_settings_drawer',
   ToggleLeftPanel            = '[layout] toggle_left_panel',
+  ToggleOutputDrawer         = '[layout] toggle_output_drawer',
   ToggleRightPanel           = '[layout] toggle_right_panel',
   ToggleSouthBandsPanel      = '[layout] toggle_south_bands_panel',
   ToggleTimeCursorDrawer     = '[layout] toggle_time_cursor_drawer',
@@ -65,6 +66,12 @@ export class ToggleLeftPanel implements Action {
   readonly type = LayoutActionTypes.ToggleLeftPanel;
 }
 
+export class ToggleOutputDrawer implements Action {
+  readonly type = LayoutActionTypes.ToggleOutputDrawer;
+
+  constructor(public opened?: boolean) {}
+}
+
 export class ToggleRightPanel implements Action {
   readonly type = LayoutActionTypes.ToggleRightPanel;
 }
@@ -93,6 +100,7 @@ export type LayoutAction =
   ToggleEpochsDrawer |
   ToggleGlobalSettingsDrawer |
   ToggleLeftPanel |
+  ToggleOutputDrawer |
   ToggleRightPanel |
   ToggleSouthBandsPanel |
   ToggleTimeCursorDrawer |

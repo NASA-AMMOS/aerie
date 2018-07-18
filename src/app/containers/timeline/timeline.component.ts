@@ -24,12 +24,15 @@ import { takeUntil } from 'rxjs/operators';
 import * as fromConfig from './../../reducers/config';
 import * as fromEpochs from './../../reducers/epochs';
 import * as fromLayout from './../../reducers/layout';
+import * as fromOutput from './../../reducers/output';
+import * as fromSourceExplorer from './../../reducers/source-explorer';
 import * as fromTimeCursor from './../../reducers/time-cursor';
 import * as fromTimeline from './../../reducers/timeline';
 
 import * as configActions from './../../actions/config';
 import * as epochsActions from './../../actions/epochs';
 import * as layoutActions from './../../actions/layout';
+import * as outputActions from './../../actions/output';
 import * as sourceExplorerActions from './../../actions/source-explorer';
 import * as timeCursorActions from './../../actions/time-cursor';
 import * as timelineActions from './../../actions/timeline';
@@ -37,10 +40,12 @@ import * as timelineActions from './../../actions/timeline';
 import {
   RavenBandLeftClick,
   RavenCompositeBand,
+  RavenCustomFilter,
   RavenDefaultBandSettings,
   RavenEpoch,
   RavenPoint,
   RavenSortMessage,
+  RavenSource,
   RavenSubBand,
   RavenTimeRange,
   RavenUpdate,
@@ -48,6 +53,7 @@ import {
 } from './../../shared/models';
 
 import {
+  getSourceIdsByLabelInBands,
   subBandById,
   toCompositeBand,
   toDividerBand,
@@ -70,6 +76,13 @@ export class TimelineComponent implements OnDestroy {
   epochs: RavenEpoch[];
   inUseEpoch: RavenEpoch | null;
 
+  // Output state.
+  allInOneFile: boolean;
+  allInOneFilename: string;
+  decimateOutputData: boolean;
+  outputFormat: string;
+  outputSourceIdsByLabel: StringTMap<string[]>;
+
   // Layout state.
   rightPanelSelectedTabIndex: number | null;
   showActivityPointMetadata: boolean;
@@ -78,10 +91,16 @@ export class TimelineComponent implements OnDestroy {
   showEpochsDrawer: boolean;
   showGlobalSettingsDrawer: boolean;
   showLeftPanel: boolean;
+  showOutputDrawer: boolean;
   showRightPanel: boolean;
   showSouthBandsPanel: boolean;
   showTimeCursorDrawer: boolean;
   timelinePanelSize: number;
+
+  // Source Explorer state.
+  customFiltersBySourceId: StringTMap<RavenCustomFilter[]>;
+  filtersByTarget: StringTMap<StringTMap<string[]>>;
+  treeBySourceId: StringTMap<RavenSource>;
 
   // Time cursor state.
   autoPage: boolean;
@@ -101,9 +120,10 @@ export class TimelineComponent implements OnDestroy {
   selectedSubBandId: string;
   viewTimeRange: RavenTimeRange;
 
-  // Other state.
+  // Other state (derived from store state).
   selectedSubBand: RavenSubBand | null;
   selectedSubBandPoints: RavenPoint[];
+  subBandSourceIdsByLabel: StringTMap<string[]> = {};
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -147,12 +167,35 @@ export class TimelineComponent implements OnDestroy {
       this.showEpochsDrawer = state.showEpochsDrawer;
       this.showGlobalSettingsDrawer = state.showGlobalSettingsDrawer;
       this.showLeftPanel = state.showLeftPanel;
+      this.showOutputDrawer = state.showOutputDrawer;
       this.showRightPanel = state.showRightPanel;
       this.showSouthBandsPanel = state.showSouthBandsPanel;
       this.showTimeCursorDrawer = state.showTimeCursorDrawer;
       this.timelinePanelSize = state.timelinePanelSize;
       this.markForCheck();
       this.resize();
+    });
+
+    // Output state.
+    this.store.select(fromOutput.getOutputState).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(state => {
+      this.allInOneFile = state.allInOneFile;
+      this.allInOneFilename = state.allInOneFilename;
+      this.decimateOutputData = state.decimateOutputData;
+      this.outputFormat = state.outputFormat;
+      this.outputSourceIdsByLabel = state.outputSourceIdsByLabel;
+      this.markForCheck();
+    });
+
+    // Source Explorer state.
+    this.store.select(fromSourceExplorer.getSourceExplorerState).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(state => {
+      this.customFiltersBySourceId = state.customFiltersBySourceId;
+      this.filtersByTarget = state.filtersByTarget;
+      this.treeBySourceId = state.treeBySourceId;
+      this.markForCheck();
     });
 
     // Time cursor state.
@@ -181,6 +224,12 @@ export class TimelineComponent implements OnDestroy {
       this.selectedSubBandId = state.selectedSubBandId;
       this.viewTimeRange = state.viewTimeRange;
       this.setSelectedSubBand();
+      this.subBandSourceIdsByLabel = getSourceIdsByLabelInBands(
+        this.bands,
+        this.customFiltersBySourceId,
+        this.filtersByTarget,
+        this.treeBySourceId,
+      );
       this.markForCheck();
     });
   }
@@ -217,6 +266,13 @@ export class TimelineComponent implements OnDestroy {
     if (e.subBandId && e.pointId) {
       this.store.dispatch(new timelineActions.SelectPoint(e.bandId, e.subBandId, e.pointId));
     }
+  }
+
+  /**
+   * Event. Called when a `create-output` event is fired from the raven-output component.
+   */
+  onCreateOutput(): void {
+    this.store.dispatch(new outputActions.CreateOutput());
   }
 
   /**
@@ -278,6 +334,13 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
+   * Event. Called when a toggle event is fired from the output drawer.
+   */
+  onToggleOutputDrawer(opened?: boolean) {
+    this.store.dispatch(new layoutActions.ToggleOutputDrawer(opened));
+  }
+
+  /**
    * Event. Called when a `toggle-show-activity-point-metadata` event is fired from a raven-activity-point.
    */
   onToggleShowActivityPointMetadata(show: boolean) {
@@ -322,6 +385,13 @@ export class TimelineComponent implements OnDestroy {
    */
   onUpdateEpochs(e: RavenUpdate): void {
     this.store.dispatch(new epochsActions.UpdateEpochs(e.update));
+  }
+
+  /**
+   * Event. Called when an `update-output-settings` event is fired from the raven-output component.
+   */
+  onUpdateOutputSettings(e: RavenUpdate): void {
+    this.store.dispatch(new outputActions.UpdateOutputSettings(e.update));
   }
 
   /**

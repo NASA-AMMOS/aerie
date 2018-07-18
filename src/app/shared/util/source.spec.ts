@@ -12,12 +12,14 @@ import {
   getAllSourcesByKind,
   getCustomFilterForLabel,
   getFormattedSourceUrl,
+  getOutputDataUrl,
   getParentSourceIds,
   getPin,
   getPinLabel,
   getQueryUrlForGraphableFilter,
   getSortedChildIds,
   getSourceIds,
+  getSourceIdsByLabelInBands,
   getTargetFilters,
   toRavenCustomMetadata,
   toRavenFileMetadata,
@@ -26,10 +28,12 @@ import {
 
 import {
   bands,
+  bandsWithCustomGraphableSource,
   customGraphableSource,
   filterSourceLocation,
   filterSourceStatus,
   graphableFilterKickoff,
+  graphableSource,
   treeBySourceId,
 } from './../mocks/';
 
@@ -125,6 +129,36 @@ describe('source.ts', () => {
       // TODO.
       // expect(getFormattedSourceUrl(graphableFilterKickoff, customFilter, filtersByTarget)).toEqual('https://a/b/c?events=kickoff&');
     });
+  });
+
+  describe('getOutputDataUrl', () => {
+    const customFilter = {
+      filter: '.*IPS.*',
+        label: 'ips',
+        subBandId: '',
+    };
+    const filtersByTarget = {
+      '/SequenceTracker': {
+        events: [filterSourceLocation.id, filterSourceStatus.id],
+      },
+    };
+
+    it(`should return url with format=CSV`, () => {
+      expect(getOutputDataUrl(treeBySourceId, customGraphableSource, customFilter, filtersByTarget, 'CSV', false)).toEqual('https://a/b/c?format=CSV&legend=ips&filter=(command=[.*IPS.*])');
+    });
+
+    it(`should return url with format=JSON`, () => {
+      expect(getOutputDataUrl(treeBySourceId, customGraphableSource, customFilter, filtersByTarget, 'JSON', false)).toEqual('https://a/b/c?format=JSON&legend=ips&filter=(command=[.*IPS.*])');
+    });
+
+    it(`should return url with format=CSV, decimate=true`, () => {
+      expect(getOutputDataUrl(treeBySourceId, graphableSource, customFilter, filtersByTarget, 'CSV', true)).toEqual('https://a/b/c?name=power&format=CSV&decimate=true');
+    });
+
+    it(`should return url with format=CSV, decimate=false`, () => {
+      expect(getOutputDataUrl(treeBySourceId, graphableSource, customFilter, filtersByTarget, 'JSON', false)).toEqual('https://a/b/c?name=power&format=JSON&decimate=false');
+    });
+
   });
 
   describe('getParentSourceIds', () => {
@@ -234,6 +268,27 @@ describe('source.ts', () => {
     it(`should return all related filter sourceIds for subBand`, () => {
       // TODO
     });
+  });
+
+  describe('getSourceIdsByLabelInBands', () => {
+    const customFiltersBySourceId = {'/PEF/command': [
+      {
+        filter: '.*IPS.*',
+        label: 'ips',
+        subBandId: '',
+      },
+    ]};
+    const filtersByTarget = {
+      '/SequenceTracker': {
+        events: [filterSourceLocation.id, filterSourceStatus.id],
+      },
+    };
+    it(`should return all sourceIds in subBands grouped by label`, () => {
+      expect(getSourceIdsByLabelInBands(bandsWithCustomGraphableSource, customFiltersBySourceId, filtersByTarget, treeBySourceId)).toEqual (
+        {
+          ips: ['/DKF/command'],
+        });
+      });
   });
 
   describe('getTargetFilters', () => {
