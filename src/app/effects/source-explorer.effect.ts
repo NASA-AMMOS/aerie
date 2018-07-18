@@ -764,10 +764,14 @@ export class SourceExplorerEffects {
           defaultBandSettings,
         ),
       );
-    } if (treeBySourceId[sourceId].type === 'customFilter' || treeBySourceId[sourceId].type === 'filter') {
+    }
+
+    if (treeBySourceId[sourceId].type === 'customFilter' || treeBySourceId[sourceId].type === 'filter') {
       // No drawing for customFilters or filters. TODO: Why?
       return [];
-    } if (treeBySourceId[sourceId].type === 'graphableFilter') {
+    }
+
+    if (treeBySourceId[sourceId].type === 'graphableFilter') {
       return [of(new sourceExplorerActions.AddGraphableFilter(treeBySourceId[sourceId] as RavenGraphableFilterSource))];
     } else {
       return [
