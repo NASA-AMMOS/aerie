@@ -3,16 +3,6 @@
   height: 100%;
 }
 
-::ng-deep .mat-tooltip  {
-  white-space: pre-line;
-}
-
-.info-tooltip {
-  font-size: 14px;
-  height: 14px;
-  width: 14px;
-}
-
 .mat-toolbar {
   position: fixed;
   top: 0;

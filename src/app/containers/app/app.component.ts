@@ -106,11 +106,10 @@ export class AppComponent implements OnDestroy {
    */
   getInfo(ravenVersion: RavenVersion): string {
     return `
+      Raven ${ravenVersion.version} - ${ravenVersion.branch} - ${ravenVersion.commit}\n
       Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED.
       United States Government sponsorship acknowledged.
-      Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.
-
-      Raven ${ravenVersion.version} - ${ravenVersion.branch} - ${ravenVersion.commit}
+      Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.\n
     `;
   }
 
@@ -136,6 +135,10 @@ export class AppComponent implements OnDestroy {
 
   onZoomOut() {
     this.store.dispatch(new timelineActions.ZoomOutViewTimeRange());
+  }
+
+  toggleAboutDialog() {
+    this.store.dispatch(new dialogActions.OpenConfirmDialog('Close', this.info, '400px'));
   }
 
   toggleDetailsPanel() {
