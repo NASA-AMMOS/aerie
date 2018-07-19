@@ -30,6 +30,7 @@
 npm-debug.log
 testem.log
 /typings
+version.ts
 
 # testing
 karma-test-results.xml

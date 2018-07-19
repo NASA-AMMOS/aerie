@@ -63,3 +63,4 @@ export * from './raven-sub-band-point-data';
 export * from './raven-sub-band';
 export * from './raven-time-range';
 export * from './raven-update';
+export * from './raven-version';

@@ -1,16 +1,22 @@
 <mat-toolbar color="primary">
+  <mat-icon
+    class="info-tooltip"
+    matTooltip="{{info}}"
+    aria-label="Info">
+    info
+  </mat-icon>
+
   <button
     *ngIf="mode !== 'minimal'"
     mat-icon-button
     (click)="toggleLeftPanel()">
     <mat-icon
-      class="mat-24"
       aria-label="Menu">
       menu
     </mat-icon>
   </button>
 
-  <span class="app-title">Raven2</span>
+  <span class="app-title">Raven</span>
 
   <span class="spacer"></span>
 
@@ -23,7 +29,6 @@
     matTooltip="Reset Time"
     (click)="onReset()">
     <mat-icon
-      class="mat-24"
       aria-label="Reset Time">
       restore
     </mat-icon>
@@ -34,7 +39,6 @@
     matTooltip="Zoom In Time"
     (click)="onZoomIn()">
     <mat-icon
-      class="mat-24"
       aria-label="Zoom In Time">
       zoom_in
     </mat-icon>
@@ -45,7 +49,6 @@
     matTooltip="Zoom Out Time"
     (click)="onZoomOut()">
     <mat-icon
-      class="mat-24"
       aria-label="Zoom Out Time">
       zoom_out
     </mat-icon>
@@ -56,7 +59,6 @@
     matTooltip="Pan Left Time"
     (click)="onPanLeft()">
     <mat-icon
-      class="mat-24"
       aria-label="Pan Left Time">
       skip_previous
     </mat-icon>
@@ -67,7 +69,6 @@
     matTooltip="Pan Right Time"
     (click)="onPanRight()">
     <mat-icon
-      class="mat-24"
       aria-label="Pan Right Time">
       skip_next
     </mat-icon>
@@ -78,7 +79,6 @@
     matTooltip="Global Band Settings"
     (click)="toggleGlobalSettingsDrawer()">
     <mat-icon
-      class="mat-24"
       aria-label="Settings">
       settings
     </mat-icon>
@@ -88,7 +88,6 @@
     [matMenuTriggerFor]="menu"
     mat-icon-button>
     <mat-icon
-      class="mat-24"
       aria-label="List">
       list
     </mat-icon>
@@ -102,7 +101,6 @@
       mat-menu-item
       (click)="toggleSouthBandsPanel()">
       <mat-icon
-        class="mat-24"
         aria-label="South Bands">
         view_agenda
       </mat-icon>
@@ -113,7 +111,6 @@
       mat-menu-item
       (click)="toggleDetailsPanel()">
       <mat-icon
-        class="mat-24"
         aria-label="Details">
         assessment
       </mat-icon>
@@ -124,7 +121,6 @@
       mat-menu-item
       (click)="toggleRightPanel()">
       <mat-icon
-        class="mat-24"
         aria-label="Right Panel">
         show_chart
       </mat-icon>
@@ -135,7 +131,6 @@
       mat-menu-item
       (click)="toggleEpochsDrawer()">
       <mat-icon
-        class="mat-24"
         aria-label="Epochs Drawer">
         timelapse
       </mat-icon>
@@ -146,7 +141,6 @@
       mat-menu-item
       (click)="toggleOutputDrawer()">
       <mat-icon
-        class="mat-24"
         aria-label="Manage Output">
         save_alt
       </mat-icon>
@@ -157,7 +151,6 @@
       mat-menu-item
       (click)="toggleTimeCursorDrawer()">
       <mat-icon
-        class="mat-24"
         aria-label="Time Cursor Drawer">
         access_time
       </mat-icon>
@@ -168,7 +161,6 @@
       mat-menu-item
       (click)="toggleShareableLinkDialog()">
       <mat-icon
-        class="mat-24"
         aria-label="Get Shareable Link">
         link
       </mat-icon>
