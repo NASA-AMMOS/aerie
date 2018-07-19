@@ -15,10 +15,10 @@ import {
 export interface RavenResourceBand {
   addTo: boolean;
   autoTickValues: boolean;
-  color: number[];
+  color: string;
   decimate: boolean;
   fill: boolean;
-  fillColor: number[];
+  fillColor: string;
   height: number;
   heightPadding: number;
   icon: string;
@@ -27,7 +27,7 @@ export interface RavenResourceBand {
   isDuration: boolean;
   isTime: boolean;
   label: string;
-  labelColor: number[];
+  labelColor: string;
   labelFont: string;
   labelPin: string;
   labelUnit: string;

@@ -34,6 +34,10 @@ import {
   toDuration,
 } from './../../../util/time';
 
+import {
+  colorHexToRgbArray,
+} from './../../../util';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'raven-resource-band',
@@ -42,14 +46,14 @@ import {
 })
 export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit {
   @Input() autoTickValues: boolean;
-  @Input() color: number[];
+  @Input() color: string;
   @Input() ctlTimeAxis: any;
   @Input() ctlViewTimeAxis: any;
   @Input() dayCode: string;
   @Input() earthSecToEpochSec: number;
   @Input() epoch: RavenEpoch | null;
   @Input() fill: boolean;
-  @Input() fillColor: number[];
+  @Input() fillColor: string;
   @Input() font: string;
   @Input() height: number;
   @Input() heightPadding: number;
@@ -84,7 +88,10 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
     }
 
     // Color.
-    // TODO.
+    if (changes.color && !changes.color.firstChange) {
+      this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals(this.color) }); // All intervals need to be updated with the new color.
+      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'color', value: this.color });
+    }
 
     // Fill.
     if (changes.fill && !changes.fill.firstChange) {
@@ -93,7 +100,7 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
 
     // Fill Color.
     if (changes.fillColor && !changes.fillColor.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'fillColor', value: this.fillColor });
+      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'fillColor', value: colorHexToRgbArray(this.fillColor) });
     }
 
     // Font.
@@ -126,7 +133,7 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
 
     // Points.
     if (changes.points && !changes.points.firstChange) {
-      this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals() });
+      this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals(this.color) });
     }
 
     // Show Icon.
@@ -158,16 +165,16 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
       interpolation: this.interpolation,
       intervals: [],
       label: this.getLabel(),
-      labelColor: this.color,
+      labelColor: colorHexToRgbArray(this.color),
       labelFont: this.labelFont,
       labelFontSize: this.labelFontSize,
       name: this.name,
       onFormatTickValue: this.onFormatTickValue.bind(this),
       onGetInterpolatedTooltipText: this.onGetInterpolatedTooltipText.bind(this),
       painter: new (window as any).ResourcePainter({
-        color: this.color,
+        color: colorHexToRgbArray(this.color),
         fill: this.fill,
-        fillColor: this.fillColor,
+        fillColor: colorHexToRgbArray(this.fillColor),
         icon: this.icon,
         showIcon: this.showIcon,
       }),
@@ -178,7 +185,7 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
     });
 
     // Create Intervals.
-    const { intervals, intervalsById } = this.getIntervals();
+    const { intervals, intervalsById } = this.getIntervals(this.color);
 
     ctlResourceBand.setIntervals(intervals);
     ctlResourceBand.intervalsById = intervalsById;
@@ -198,7 +205,7 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
   /**
    * Helper. Creates CTL intervals for a resource band.
    */
-  getIntervals() {
+  getIntervals(color: string) {
     const intervals = [];
     const intervalsById = {};
 
@@ -206,7 +213,7 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
       const point = this.points[i];
 
       const interval = new (window as any).DrawableInterval({
-        color: this.color,
+        color: colorHexToRgbArray(color),
         end: point.start,
         endValue: point.value,
         icon: this.icon,

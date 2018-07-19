@@ -541,7 +541,7 @@ export class SourceExplorerEffects {
   ) {
     const source = treeBySourceId[sourceId];
     return this.http.get<MpsServerGraphData>(getFormattedSourceUrl(treeBySourceId, source, customFilter, filtersByTarget)).pipe(
-      map((graphData: MpsServerGraphData) => toRavenBandData(sourceId, source.name, graphData, defaultBandSettings)),
+      map((graphData: MpsServerGraphData) => toRavenBandData(sourceId, source.name, graphData, defaultBandSettings, customFilter, treeBySourceId)),
     );
   }
 
@@ -765,10 +765,14 @@ export class SourceExplorerEffects {
           defaultBandSettings,
         ),
       );
-    } if (treeBySourceId[sourceId].type === 'customFilter' || treeBySourceId[sourceId].type === 'filter') {
+    }
+
+    if (treeBySourceId[sourceId].type === 'customFilter' || treeBySourceId[sourceId].type === 'filter') {
       // No drawing for customFilters or filters. TODO: Why?
       return [];
-    } if (treeBySourceId[sourceId].type === 'graphableFilter') {
+    }
+
+    if (treeBySourceId[sourceId].type === 'graphableFilter') {
       return [of(new sourceExplorerActions.AddGraphableFilter(treeBySourceId[sourceId] as RavenGraphableFilterSource))];
     } else {
       return [

@@ -488,8 +488,8 @@ export function getFormattedSourceUrl(
   // Custom Graphable.
   if (source.type === 'customGraphable' && customFilter) {
     const customGraphableSource = source as RavenCustomGraphableSource;
-    const param = customGraphableSource.arg === 'filter' ? `(${customGraphableSource.filterKey}=[${customFilter.filter}])` : customFilter.filter;
-    const queryOptions = `legend=${customFilter.label}&${customGraphableSource.arg}=${param}`;
+    const filterArg = customGraphableSource.arg === 'filter' ? `(${customGraphableSource.filterKey}=[${customFilter.filter}])` : customFilter.filter;
+    const queryOptions = (customGraphableSource.arg !== 'filter' || customFilter.filter) ? `legend=${customFilter.label}&${customGraphableSource.arg}=${filterArg}&` : `legend=${customFilter.label}&`;
     sourceUrl = `${sourceUrl}&${queryOptions}`;
   }
 

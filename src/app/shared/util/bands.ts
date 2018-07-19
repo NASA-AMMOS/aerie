@@ -13,10 +13,6 @@ import {
 } from 'lodash';
 
 import {
-  colorHexToRgbArray,
-} from './color';
-
-import {
   MpsServerActivityPoint,
   MpsServerGraphData,
   MpsServerResourceMetadata,
@@ -26,6 +22,8 @@ import {
   RavenActivityBand,
   RavenActivityPoint,
   RavenCompositeBand,
+  RavenCustomFilter,
+  RavenCustomGraphableSource,
   RavenDefaultBandSettings,
   RavenDividerBand,
   RavenResourceBand,
@@ -52,6 +50,8 @@ export function toRavenBandData(
   sourceName: string,
   graphData: MpsServerGraphData,
   defaultBandSettings: RavenDefaultBandSettings,
+  customFilter: RavenCustomFilter | null,
+  treeBySourceId: StringTMap<RavenSource>,
 ): RavenSubBand[] {
   const metadata = graphData['Timeline Metadata'];
   const timelineData = graphData['Timeline Data'];
@@ -66,7 +66,7 @@ export function toRavenBandData(
     return [resourceBand];
   } else if (metadata.hasTimelineType === 'activity') {
     // Activity.
-    const activityBands = toActivityBands(sourceId, sourceName, timelineData as MpsServerActivityPoint[], defaultBandSettings);
+    const activityBands = toActivityBands(sourceId, sourceName, timelineData as MpsServerActivityPoint[], defaultBandSettings, customFilter, treeBySourceId);
     return activityBands;
   } else {
     console.error(`raven2 - bands.ts - toRavenBandData - parameter 'graphData' has a timeline type we do not recognize: ${metadata.hasTimelineType}`);
@@ -88,9 +88,12 @@ export function toActivityBands(
   sourceName: string,
   timelineData: MpsServerActivityPoint[],
   defaultBandSettings: RavenDefaultBandSettings,
+  customFilter: RavenCustomFilter | null,
+  treeBySourceId: StringTMap<RavenSource>,
 ): RavenActivityBand[] {
   const { legends, maxTimeRange } = getActivityPointsByLegend(sourceId, sourceName, timelineData);
   const bands: RavenActivityBand[] = [];
+  const customGraphableSource = treeBySourceId[sourceId] as RavenCustomGraphableSource;
 
   // Map each legend to a band.
   Object.keys(legends).forEach(legend => {
@@ -113,9 +116,11 @@ export function toActivityBands(
       layout: defaultBandSettings.activityLayout,
       legend,
       maxTimeRange,
+      minorLabels: customFilter &&  customFilter.filter ? [getFilterLabel(customGraphableSource, customFilter)] : [],
       name: legend,
       parentUniqueId: null,
       points: legends[legend],
+      showActivityTimes: false,
       showLabel: !isMessageTypeActivity(legends[legend][0]), // Don't show labels for message type activities such as error, warning etc.
       showLabelPin: true,
       showTooltip: true,
@@ -200,10 +205,10 @@ export function toResourceBand(
   const resourceBand: RavenResourceBand = {
     addTo: false,
     autoTickValues: true,
-    color: colorHexToRgbArray(defaultBandSettings.resourceColor),
+    color: defaultBandSettings.resourceColor,
     decimate: metadata.decimatedData,
     fill: false,
-    fillColor: colorHexToRgbArray(defaultBandSettings.resourceFillColor),
+    fillColor: defaultBandSettings.resourceFillColor,
     height: 100,
     heightPadding: 10,
     icon: defaultBandSettings.icon,
@@ -212,7 +217,7 @@ export function toResourceBand(
     isDuration: metadata.hasValueType.toLowerCase() === 'duration',
     isTime: metadata.hasValueType.toLowerCase() === 'time',
     label: metadata.hasObjectName,
-    labelColor: [0, 0, 0],
+    labelColor: '#000000',
     labelFont: defaultBandSettings.labelFont,
     labelPin: '',
     labelUnit: metadata.hasUnits || '',
@@ -453,6 +458,17 @@ export function getCustomFiltersBySourceId(
   });
 
   return customFiltersBySourceId;
+}
+
+/**
+ * Helper returns the filter for a customGraphableSource label.
+ */
+export function getFilterLabel(customGraphableSource: RavenCustomGraphableSource, customFilter: RavenCustomFilter) {
+  if (customGraphableSource.arg === 'filter') {
+    return `(${customGraphableSource.filterKey}=[${customFilter.filter}])`;
+  } else {
+    return `${customGraphableSource.arg}=${customFilter.filter}`;
+  }
 }
 
 /**

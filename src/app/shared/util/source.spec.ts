@@ -122,7 +122,7 @@ describe('source.ts', () => {
     };
 
     it(`should return sourceUrl with custom filter args`, () => {
-      expect(getFormattedSourceUrl(treeBySourceId, customGraphableSource, customFilter, filtersByTarget)).toEqual('https://a/b/c?format=TMS&legend=ips&filter=(command=[.*IPS.*])');
+      expect(getFormattedSourceUrl(treeBySourceId, customGraphableSource, customFilter, filtersByTarget)).toEqual('https://a/b/c?format=TMS&legend=ips&filter=(command=[.*IPS.*])&');
     });
 
     it(`should return sourceUrl with filter`, () => {
@@ -144,11 +144,11 @@ describe('source.ts', () => {
     };
 
     it(`should return url with format=CSV`, () => {
-      expect(getOutputDataUrl(treeBySourceId, customGraphableSource, customFilter, filtersByTarget, 'CSV', false)).toEqual('https://a/b/c?format=CSV&legend=ips&filter=(command=[.*IPS.*])');
+      expect(getOutputDataUrl(treeBySourceId, customGraphableSource, customFilter, filtersByTarget, 'CSV', false)).toEqual('https://a/b/c?format=CSV&legend=ips&filter=(command=[.*IPS.*])&');
     });
 
     it(`should return url with format=JSON`, () => {
-      expect(getOutputDataUrl(treeBySourceId, customGraphableSource, customFilter, filtersByTarget, 'JSON', false)).toEqual('https://a/b/c?format=JSON&legend=ips&filter=(command=[.*IPS.*])');
+      expect(getOutputDataUrl(treeBySourceId, customGraphableSource, customFilter, filtersByTarget, 'JSON', false)).toEqual('https://a/b/c?format=JSON&legend=ips&filter=(command=[.*IPS.*])&');
     });
 
     it(`should return url with format=CSV, decimate=true`, () => {
