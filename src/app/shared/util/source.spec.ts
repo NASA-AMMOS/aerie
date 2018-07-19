@@ -217,7 +217,7 @@ describe('source.ts', () => {
   });
 
   describe('getQueryUrlForGraphableFilter', () => {
-    const sourceIdOrUrl = 'SequenceTracker/Kickoff';
+    const sourceIdOrUrl = 'SequenceTracker/Kickoff?';
     const groupFilters = {
       events: [graphableFilterKickoff.id],
     };
@@ -227,7 +227,7 @@ describe('source.ts', () => {
   });
 
   describe('getQueryUrlForGraphableFilter', () => {
-    const sourceIdOrUrl = 'leucadia/taifunTest/abc.pef/DKF';
+    const sourceIdOrUrl = 'leucadia/taifunTest/abc.pef/DKF?';
     const parentFilters = {
       collection: [],
     };
