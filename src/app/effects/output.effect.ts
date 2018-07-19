@@ -204,6 +204,7 @@ export class OutputEffects {
     const data = keepHeader ? dataWithHeader : this.removeCsvHeader(dataWithHeader);
     return data.endsWith('\n') ? data : `${data}\n`;
   }
+
   /**
    * Helper. Save to file. Append file ext. if not already in filename.
    */
