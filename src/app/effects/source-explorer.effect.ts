@@ -418,13 +418,14 @@ export class SourceExplorerEffects {
     concatMap(({ state: { config, sourceExplorer, timeline: { bands } }, action }) =>
       concat(
         this.fetchSubBands(sourceExplorer.treeBySourceId, action.sourceId, config.defaultBandSettings, null, sourceExplorer.filtersByTarget).pipe(
-          concatMap((newSubBands: RavenSubBand[]) => {
+          withLatestFrom(this.store$),
+          map(([newSubBands, state]) => ({ newSubBands, state })),
+          concatMap(({ newSubBands, state: { timeline } }) => {
             const actions: Action[] = [];
             const filterTarget = (sourceExplorer.treeBySourceId[action.sourceId] as RavenFilterSource).filterTarget;
 
             newSubBands.forEach((subBand: RavenSubBand) => {
-              const activityBand = hasActivityBandForFilterTarget(bands, filterTarget);
-
+              const activityBand = hasActivityBandForFilterTarget(timeline.bands, filterTarget);
               if (activityBand) {
                 actions.push(
                   // Add filterSource id to existing band.
