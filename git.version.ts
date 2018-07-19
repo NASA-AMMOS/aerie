@@ -38,7 +38,7 @@ const commit$ = new Observable<string>(observer => {
 });
 
 /**
- * Subscribe to the branch$ and commit$ Observables and output a `versions` file we can use in the application.
+ * Subscribe to the branch$ and commit$ Observables and output a `version` file we can use in the application.
  */
 combineLatest(branch$, commit$).subscribe(([branch, commit]) => {
   console.log(`branch: '${branch}', commit: '${commit}', version: '${process.env.npm_package_version}'`);
