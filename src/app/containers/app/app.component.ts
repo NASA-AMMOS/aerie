@@ -69,7 +69,7 @@ export class AppComponent implements OnDestroy {
       tap(() => this.markForCheck()),
     );
 
-    // Config.
+    // Config version.
     this.store.select(fromConfig.getVersion).pipe(
       takeUntil(this.ngUnsubscribe),
     ).subscribe(version => {
