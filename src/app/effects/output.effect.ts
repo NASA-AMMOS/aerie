@@ -185,7 +185,7 @@ export class OutputEffects {
     const outputDataUrl = getOutputDataUrl(treeBySourceId, source, customFilter, filtersByTarget, output.outputFormat, output.decimateOutputData);
 
     return this.http.get(outputDataUrl, { responseType: 'text' }).pipe(
-      map(dataWithHeader => keepHeader ? dataWithHeader : this.removeCsvHeader(dataWithHeader)),
+      map(dataWithHeader => this.sanitizeData(dataWithHeader, keepHeader)),
       switchMap(data => of(new outputActions.AppendData(data))),
     );
   }
@@ -194,7 +194,15 @@ export class OutputEffects {
    * Helper. Remove the first line in the csv data. The first line in CSV data from MPSServer is the CSV header.
    */
   removeCsvHeader(data: string) {
-    return '\n' + data.substring(data.indexOf('\n') + 1);
+    return data.substring(data.indexOf('\n') + 1);
+  }
+
+  /**
+   * Helper. Removes header if !keepHeader and ensure data ends with '\n'.
+   */
+  sanitizeData(dataWithHeader: string, keepHeader: boolean) {
+    const data = keepHeader ? dataWithHeader : this.removeCsvHeader(dataWithHeader);
+    return data.endsWith('\n') ? data : `${data}\n`;
   }
 
   /**
