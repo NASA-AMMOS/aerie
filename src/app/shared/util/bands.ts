@@ -120,6 +120,7 @@ export function toActivityBands(
       name: legend,
       parentUniqueId: null,
       points: legends[legend],
+      showActivityTimes: false,
       showLabel: !isMessageTypeActivity(legends[legend][0]), // Don't show labels for message type activities such as error, warning etc.
       showLabelPin: true,
       showTooltip: true,

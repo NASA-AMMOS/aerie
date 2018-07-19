@@ -58,6 +58,7 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
   @Input() minorLabels: string[];
   @Input() name: string;
   @Input() points: RavenActivityPoint[];
+  @Input() showActivityTimes: boolean;
   @Input() showLabel: boolean;
   @Input() showLabelPin: boolean;
   @Input() type: string;
@@ -130,6 +131,12 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
       this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals() });
     }
 
+    // Show Activity times.
+    if (changes.showActivityTimes && !changes.showActivityTimes.firstChange) {
+      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'showActivityTimes', value: this.showActivityTimes });
+      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'rowPadding', value: this.showActivityTimes ? 15 : 2 });
+    }
+
     // Show Label.
     if (changes.showLabel && !changes.showLabel.firstChange) {
       this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'showLabel', value: this.showLabel });
@@ -161,6 +168,7 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
       layout: this.layout === 0 ? 1 : this.layout,
       minorLabels: this.minorLabels,
       name: this.name,
+      showActivityTimes: this.showActivityTimes,
       showLabel: this.showLabel,
       style: this.activityStyle,
       timeAxis: this.ctlTimeAxis,

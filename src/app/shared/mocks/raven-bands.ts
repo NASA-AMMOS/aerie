@@ -41,6 +41,7 @@ export const activityBand: RavenActivityBand = {
   name: 'test-activity-band',
   parentUniqueId: null,
   points: [],
+  showActivityTimes: false,
   showLabel: true,
   showLabelPin: true,
   showTooltip: true,
