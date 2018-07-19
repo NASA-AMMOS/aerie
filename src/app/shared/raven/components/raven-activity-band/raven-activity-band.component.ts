@@ -55,6 +55,7 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
   @Input() labelFontSize: number;
   @Input() labelPin: string;
   @Input() layout: number;
+  @Input() minorLabels: string[];
   @Input() name: string;
   @Input() points: RavenActivityPoint[];
   @Input() showLabel: boolean;
@@ -119,6 +120,11 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
       this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.getLabel() });
     }
 
+    // Minor labels.
+    if (changes.minorLabels && !changes.minorLabels.firstChange) {
+      this.updateSubBand.emit({ subBandId: this.id, prop: 'minorLabels', value: this.minorLabels });
+    }
+
     // Points.
     if (changes.points && !changes.points.firstChange) {
       this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals() });
@@ -153,6 +159,7 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
       labelFont: this.labelFont,
       labelFontSize: this.labelFontSize,
       layout: this.layout === 0 ? 1 : this.layout,
+      minorLabels: this.minorLabels,
       name: this.name,
       showLabel: this.showLabel,
       style: this.activityStyle,

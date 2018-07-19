@@ -37,6 +37,7 @@ export const activityBand: RavenActivityBand = {
   layout: 1,
   legend: '',
   maxTimeRange: { end: 200, start: 50 },
+  minorLabels: [],
   name: 'test-activity-band',
   parentUniqueId: null,
   points: [],

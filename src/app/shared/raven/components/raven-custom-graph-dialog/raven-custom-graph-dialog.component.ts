@@ -87,7 +87,7 @@ export class RavenCustomGraphDialogComponent {
    */
   onGraph() {
     this.dialogRef.close({
-      filter: this.filter.value ? this.filter.value : '.*',
+      filter: this.filter.value ? this.filter.value : '',
       label: this.label.value,
     });
   }

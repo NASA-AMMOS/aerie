@@ -22,6 +22,8 @@ import {
   RavenActivityBand,
   RavenActivityPoint,
   RavenCompositeBand,
+  RavenCustomFilter,
+  RavenCustomGraphableSource,
   RavenDefaultBandSettings,
   RavenDividerBand,
   RavenResourceBand,
@@ -48,6 +50,8 @@ export function toRavenBandData(
   sourceName: string,
   graphData: MpsServerGraphData,
   defaultBandSettings: RavenDefaultBandSettings,
+  customFilter: RavenCustomFilter | null,
+  treeBySourceId: StringTMap<RavenSource>,
 ): RavenSubBand[] {
   const metadata = graphData['Timeline Metadata'];
   const timelineData = graphData['Timeline Data'];
@@ -62,7 +66,7 @@ export function toRavenBandData(
     return [resourceBand];
   } else if (metadata.hasTimelineType === 'activity') {
     // Activity.
-    const activityBands = toActivityBands(sourceId, sourceName, timelineData as MpsServerActivityPoint[], defaultBandSettings);
+    const activityBands = toActivityBands(sourceId, sourceName, timelineData as MpsServerActivityPoint[], defaultBandSettings, customFilter, treeBySourceId);
     return activityBands;
   } else {
     console.error(`raven2 - bands.ts - toRavenBandData - parameter 'graphData' has a timeline type we do not recognize: ${metadata.hasTimelineType}`);
@@ -84,9 +88,12 @@ export function toActivityBands(
   sourceName: string,
   timelineData: MpsServerActivityPoint[],
   defaultBandSettings: RavenDefaultBandSettings,
+  customFilter: RavenCustomFilter | null,
+  treeBySourceId: StringTMap<RavenSource>,
 ): RavenActivityBand[] {
   const { legends, maxTimeRange } = getActivityPointsByLegend(sourceId, sourceName, timelineData);
   const bands: RavenActivityBand[] = [];
+  const customGraphableSource = treeBySourceId[sourceId] as RavenCustomGraphableSource;
 
   // Map each legend to a band.
   Object.keys(legends).forEach(legend => {
@@ -109,6 +116,7 @@ export function toActivityBands(
       layout: defaultBandSettings.activityLayout,
       legend,
       maxTimeRange,
+      minorLabels: customFilter &&  customFilter.filter ? [getFilterLabel(customGraphableSource, customFilter)] : [],
       name: legend,
       parentUniqueId: null,
       points: legends[legend],
@@ -449,6 +457,17 @@ export function getCustomFiltersBySourceId(
   });
 
   return customFiltersBySourceId;
+}
+
+/**
+ * Helper returns the filter for a customGraphableSource label.
+ */
+export function getFilterLabel(customGraphableSource: RavenCustomGraphableSource, customFilter: RavenCustomFilter) {
+  if (customGraphableSource.arg === 'filter') {
+    return `(${customGraphableSource.filterKey}=[${customFilter.filter}])`;
+  } else {
+    return `${customGraphableSource.arg}=${customFilter.filter}`;
+  }
 }
 
 /**

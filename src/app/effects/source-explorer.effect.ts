@@ -540,7 +540,7 @@ export class SourceExplorerEffects {
   ) {
     const source = treeBySourceId[sourceId];
     return this.http.get<MpsServerGraphData>(getFormattedSourceUrl(treeBySourceId, source, customFilter, filtersByTarget)).pipe(
-      map((graphData: MpsServerGraphData) => toRavenBandData(sourceId, source.name, graphData, defaultBandSettings)),
+      map((graphData: MpsServerGraphData) => toRavenBandData(sourceId, source.name, graphData, defaultBandSettings, customFilter, treeBySourceId)),
     );
   }
 
