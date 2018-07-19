@@ -143,6 +143,7 @@
 
   <mat-menu #subMenu="matMenu">
     <button
+      *ngIf="mode !== 'minimal'"
       mat-menu-item
       (click)="toggleLeftPanel()">
       <mat-icon

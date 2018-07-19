@@ -11,6 +11,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  HostListener,
   OnDestroy,
 } from '@angular/core';
 
@@ -88,6 +89,28 @@ export class AppComponent implements OnDestroy {
   ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
+  }
+
+  /**
+   * Global Event. Called on keydown event.
+   */
+  @HostListener('document:keydown', ['$event'])
+  onResize(e: KeyboardEvent): void {
+    if (e.keyCode === 49 && this.mode !== 'minimal') { // 1 key.
+      this.store.dispatch(new layoutActions.ToggleLeftPanel());
+    } else if (e.keyCode === 50) { // 2 key.
+      this.store.dispatch(new layoutActions.ToggleRightPanel());
+    } else if (e.keyCode === 51) { // 3 key.
+      this.store.dispatch(new layoutActions.ToggleSouthBandsPanel());
+    } else if (e.keyCode === 52) { // 4 key.
+      this.store.dispatch(new layoutActions.ToggleDetailsPanel());
+    } else if (e.keyCode === 53) { // 5 key.
+      this.store.dispatch(new layoutActions.ToggleGlobalSettingsDrawer());
+    } else if (e.keyCode === 61) { // + key.
+      this.store.dispatch(new timelineActions.ZoomInViewTimeRange());
+    } else if (e.keyCode === 173) { // - key.
+      this.store.dispatch(new timelineActions.ZoomOutViewTimeRange());
+    }
   }
 
   /**
