@@ -28,6 +28,7 @@ import {
   tap,
 } from 'rxjs/operators';
 
+import * as fromConfig from './../../reducers/config';
 import * as fromLayout from './../../reducers/layout';
 import * as fromSourceExplorer from './../../reducers/source-explorer';
 import * as fromTimeline from './../../reducers/timeline';
@@ -38,6 +39,7 @@ import * as timelineActions from './../../actions/timeline';
 
 import {
   RavenTimeRange,
+  RavenVersion,
 } from './../../shared/models';
 
 @Component({
@@ -48,6 +50,8 @@ import {
 })
 export class AppComponent implements OnDestroy {
   loading$: Observable<boolean>;
+
+  info: string;
   mode: string;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
@@ -64,6 +68,13 @@ export class AppComponent implements OnDestroy {
       map(loading => loading[0] || loading[1]),
       tap(() => this.markForCheck()),
     );
+
+    // Config version.
+    this.store.select(fromConfig.getVersion).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(version => {
+      this.info = this.getInfo(version);
+    });
 
     // Layout mode.
     this.store.select(fromLayout.getMode).pipe(
@@ -90,6 +101,18 @@ export class AppComponent implements OnDestroy {
     setTimeout(() => this.changeDetector.detectChanges());
   }
 
+  /**
+   * Get a string for the info tooltip.
+   */
+  getInfo(ravenVersion: RavenVersion): string {
+    return `
+      Raven ${ravenVersion.version} - ${ravenVersion.branch} - ${ravenVersion.commit}\n
+      Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED.
+      United States Government sponsorship acknowledged.
+      Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.\n
+    `;
+  }
+
   onPanLeft() {
     this.store.dispatch(new timelineActions.PanLeftViewTimeRange());
   }
@@ -112,6 +135,10 @@ export class AppComponent implements OnDestroy {
 
   onZoomOut() {
     this.store.dispatch(new timelineActions.ZoomOutViewTimeRange());
+  }
+
+  toggleAboutDialog() {
+    this.store.dispatch(new dialogActions.OpenConfirmDialog('Close', this.info, '400px'));
   }
 
   toggleDetailsPanel() {

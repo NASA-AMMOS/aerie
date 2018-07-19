@@ -1,6 +1,6 @@
 {
   "name": "raven2",
-  "version": "0.0.0",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "build-prod": "ng build --configuration=prod",
@@ -8,11 +8,15 @@
     "e2e": "ng e2e",
     "lint": "ng lint",
     "ng": "ng",
+    "prebuild-prod": "npm run version",
+    "prebuild-prod-mpsserver": "npm run version",
+    "prestart": "npm run version",
     "sonarqube": "sonar-scanner",
     "start": "ng serve",
     "test": "ng test",
     "test-coverage": "ng test --code-coverage",
-    "test-for-build": "ng test --watch=false --browsers FirefoxHeadless"
+    "test-for-build": "ng test --watch=false --browsers FirefoxHeadless",
+    "version": "ts-node git.version.ts"
   },
   "dependencies": {
     "@angular/animations": "^6.0.1",
@@ -76,7 +80,7 @@
     "protractor": "~5.3.2",
     "sonar-scanner": "^3.1.0",
     "sonarjs": "^1.0.0",
-    "ts-node": "~5.0.1",
+    "ts-node": "^5.0.1",
     "tslint": "~5.9.1",
     "tslint-eslint-rules": "^5.2.0",
     "typescript": "~2.7.2"

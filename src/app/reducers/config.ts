@@ -19,9 +19,11 @@ import {
 } from './../actions/config';
 
 import { environment } from './../../environments/environment';
+import { version } from './../../environments/version';
 
 import {
   RavenDefaultBandSettings,
+  RavenVersion,
 } from './../shared/models';
 
 // Config State Interface.
@@ -35,10 +37,15 @@ export interface ConfigState {
   itarMessage: string;
   production: boolean;
   shareableLinkStatesUrl: string;
+  showTimeCursor: boolean;
+  version: RavenVersion;
 }
 
 // Config State.
-export const initialState: ConfigState = environment;
+export const initialState: ConfigState = {
+  ...environment,
+  version,
+};
 
 /**
  * Reducer.
@@ -84,3 +91,4 @@ export const getConfigState = createFeatureSelector<ConfigState>('config');
  */
 export const getDefaultBandSettings = createSelector(getConfigState, (state: ConfigState) => state.defaultBandSettings);
 export const getItarMessage = createSelector(getConfigState, (state: ConfigState) => state.itarMessage);
+export const getVersion = createSelector(getConfigState, (state: ConfigState) => state.version);
