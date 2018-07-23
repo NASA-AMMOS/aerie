@@ -93,23 +93,29 @@ export class AppComponent implements OnDestroy {
 
   /**
    * Global Event. Called on keydown event.
+   * Since this is a global listener, do not `preventDefault` in here or it
+   * will nuke all other key presses.
    */
-  @HostListener('document:keydown', ['$event'])
+  @HostListener('window:keydown', ['$event'])
   onResize(e: KeyboardEvent): void {
-    if (e.keyCode === 49 && this.mode !== 'minimal') { // 1 key.
+    if (e.ctrlKey && e.shiftKey && e.code === 'Digit1' && this.mode !== 'minimal') { // Ctrl+Shift+1.
       this.store.dispatch(new layoutActions.ToggleLeftPanel());
-    } else if (e.keyCode === 50) { // 2 key.
+    } else if (e.ctrlKey && e.shiftKey && e.code === 'Digit2') { // Ctrl+Shift+2.
       this.store.dispatch(new layoutActions.ToggleRightPanel());
-    } else if (e.keyCode === 51) { // 3 key.
+    } else if (e.ctrlKey && e.shiftKey && e.code === 'Digit3') { // Ctrl+Shift+3.
       this.store.dispatch(new layoutActions.ToggleSouthBandsPanel());
-    } else if (e.keyCode === 52) { // 4 key.
+    } else if (e.ctrlKey && e.shiftKey && e.code === 'Digit4') { // Ctrl+Shift+4.
       this.store.dispatch(new layoutActions.ToggleDetailsPanel());
-    } else if (e.keyCode === 53) { // 5 key.
+    } else if (e.ctrlKey && e.shiftKey && e.code === 'Digit5') { // Ctrl+Shift+5.
       this.store.dispatch(new layoutActions.ToggleGlobalSettingsDrawer());
-    } else if (e.keyCode === 61) { // + key.
+    } else if (e.ctrlKey && e.shiftKey && e.code === 'Equal') { // Ctrl+Shift+Equal.
       this.store.dispatch(new timelineActions.ZoomInViewTimeRange());
-    } else if (e.keyCode === 173) { // - key.
+    } else if (e.ctrlKey && e.shiftKey && e.code === 'Minus') { // Ctrl+Shift+Minus.
       this.store.dispatch(new timelineActions.ZoomOutViewTimeRange());
+    } else if (e.ctrlKey && e.shiftKey && e.code === 'ArrowRight') { // Ctrl+Shift+ArrowRight.
+      this.store.dispatch(new timelineActions.PanRightViewTimeRange());
+    } else if (e.ctrlKey && e.shiftKey && e.code === 'ArrowLeft') { // Ctrl+Shift+ArrowLeft.
+      this.store.dispatch(new timelineActions.PanLeftViewTimeRange());
     }
   }
 

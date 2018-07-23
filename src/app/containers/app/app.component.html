@@ -1,72 +1,4 @@
 <mat-toolbar color="primary">
-  <span class="app-title">Raven</span>
-
-  <span class="spacer"></span>
-
-  <raven-pan-to-duration
-    (panTo)="onPanTo($event)">
-  </raven-pan-to-duration>
-
-  <button
-    mat-icon-button
-    matTooltip="Reset Time"
-    (click)="onReset()">
-    <mat-icon
-      aria-label="Reset Time">
-      restore
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Zoom In Time"
-    (click)="onZoomIn()">
-    <mat-icon
-      aria-label="Zoom In Time">
-      zoom_in
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Zoom Out Time"
-    (click)="onZoomOut()">
-    <mat-icon
-      aria-label="Zoom Out Time">
-      zoom_out
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Pan Left Time"
-    (click)="onPanLeft()">
-    <mat-icon
-      aria-label="Pan Left Time">
-      skip_previous
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Pan Right Time"
-    (click)="onPanRight()">
-    <mat-icon
-      aria-label="Pan Right Time">
-      skip_next
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Global Band Settings"
-    (click)="toggleGlobalSettingsDrawer()">
-    <mat-icon
-      aria-label="Settings">
-      settings
-    </mat-icon>
-  </button>
-
   <button
     [matMenuTriggerFor]="rootMenu"
     mat-icon-button>
@@ -183,6 +115,74 @@
       Toggle Details Panel
     </button>
   </mat-menu>
+
+  <span class="app-title">Raven</span>
+
+  <span class="spacer"></span>
+
+  <raven-pan-to-duration
+    (panTo)="onPanTo($event)">
+  </raven-pan-to-duration>
+
+  <button
+    mat-icon-button
+    matTooltip="Reset Time"
+    (click)="onReset()">
+    <mat-icon
+      aria-label="Reset Time">
+      restore
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Zoom In Time"
+    (click)="onZoomIn()">
+    <mat-icon
+      aria-label="Zoom In Time">
+      zoom_in
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Zoom Out Time"
+    (click)="onZoomOut()">
+    <mat-icon
+      aria-label="Zoom Out Time">
+      zoom_out
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Pan Left Time"
+    (click)="onPanLeft()">
+    <mat-icon
+      aria-label="Pan Left Time">
+      skip_previous
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Pan Right Time"
+    (click)="onPanRight()">
+    <mat-icon
+      aria-label="Pan Right Time">
+      skip_next
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Global Band Settings"
+    (click)="toggleGlobalSettingsDrawer()">
+    <mat-icon
+      aria-label="Settings">
+      settings
+    </mat-icon>
+  </button>
 </mat-toolbar>
 
 <div *ngIf="loading$ | async">
