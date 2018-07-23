@@ -266,6 +266,7 @@ export function toStateBand(
     parentUniqueId: null,
     points,
     showLabelPin: true,
+    showStateChangeTimes: false,
     showTooltip: true,
     sourceIds: [sourceId],
     tableColumns: [],

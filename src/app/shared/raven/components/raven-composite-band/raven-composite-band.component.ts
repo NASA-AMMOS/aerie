@@ -82,19 +82,7 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
       this.ctlCompositeBand.height = this.height;
 
       for (let i = 0, l = this.ctlCompositeBand.bands.length; i < l; ++i) {
-        this.ctlCompositeBand.bands[i].height = this.height;
-      }
-
-      shouldRedraw = true;
-      shouldUpdateTicks = true;
-    }
-
-    // Height Padding.
-    if (changes.heightPadding && !changes.heightPadding.firstChange) {
-      this.ctlCompositeBand.heightPadding = this.heightPadding;
-
-      for (let i = 0, l = this.ctlCompositeBand.bands.length; i < l; ++i) {
-        this.ctlCompositeBand.bands[i].heightPadding = this.heightPadding;
+        this.ctlCompositeBand.bands[i].height = this.ctlCompositeBand.bands[i].heightPadding ? this.height -  this.ctlCompositeBand.bands[i].heightPadding : this.height;
       }
 
       shouldRedraw = true;

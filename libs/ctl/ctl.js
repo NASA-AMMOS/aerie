@@ -4414,7 +4414,6 @@ StatePainter.prototype.paintUnit = function(unit, lastPaintedTimeX2, lastPainted
       }
   }
 
-
   return {coord: [unitX1, unitX2, 0, this.band.height + this.band.heightPadding], lastPaintedTimeX2, lastPaintedTime};
 };
 

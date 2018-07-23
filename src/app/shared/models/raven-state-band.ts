@@ -29,6 +29,7 @@ export interface RavenStateBand {
   parentUniqueId: string | null;
   points: RavenStatePoint[];
   showLabelPin: boolean;
+  showStateChangeTimes: boolean;
   showTooltip: boolean;
   sourceIds: string[];
   tableColumns: any[]; // TODO: Remove `any`.

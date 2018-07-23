@@ -284,6 +284,17 @@
                 </mat-select>
               </mat-form-field>
             </div>
+
+            <!-- Show State Change Times. -->
+            <div class="field">
+              <mat-slide-toggle
+                id="raven-settings-show-state-change-times"
+                color="primary"
+                [checked]="subBand.showStateChangeTimes"
+                (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { showStateChangeTimes: $event.checked } })">
+                Show State Change Times
+              </mat-slide-toggle>
+            </div>
           </ng-container>
 
           <!-- Delete Sub-Band. -->

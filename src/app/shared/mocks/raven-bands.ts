@@ -114,6 +114,7 @@ export const stateBand: RavenStateBand = {
   parentUniqueId: null,
   points: [],
   showLabelPin: true,
+  showStateChangeTimes: false,
   showTooltip: true,
   sourceIds: [],
   tableColumns: [],

@@ -186,6 +186,12 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
     // Send the newly created activity band to the parent composite band so it can be added.
     // All subsequent updates should be made to the parent composite sub-band via events.
     this.addSubBand.emit(ctlActivityBand);
+
+    // Show Activity times.
+    if (this.showActivityTimes) {
+      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'showActivityTimes', value: this.showActivityTimes });
+      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'rowPadding', value: this.showActivityTimes ? 15 : 2 });
+    }
   }
 
   ngOnDestroy() {

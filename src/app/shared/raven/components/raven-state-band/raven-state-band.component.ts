@@ -54,6 +54,7 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
   @Input() name: string;
   @Input() points: RavenStatePoint[];
   @Input() showLabelPin: boolean;
+  @Input() showStateChangeTimes: boolean;
   @Input() type: string;
 
   @Output() addSubBand: EventEmitter<any> = new EventEmitter<any>();
@@ -106,6 +107,13 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
     if (changes.showLabelPin && !changes.showLabelPin.firstChange) {
       this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.getLabel() });
     }
+
+    // Show State Change Times.
+    if (changes.showStateChangeTimes && !changes.showStateChangeTimes.firstChange) {
+      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'showStateChangeTimes', value: this.showStateChangeTimes });
+      this.updateSubBand.emit({ subBandId: this.id, prop: 'heightPadding', value: this.showStateChangeTimes ? 12 : 0 });
+      this.updateSubBand.emit({ subBandId: this.id, prop: 'height', value: this.showStateChangeTimes ? this.height - 12 : this.height });
+    }
   }
 
   ngOnInit() {
@@ -138,6 +146,12 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
     // Send the newly created state band to the parent composite band so it can be added.
     // All subsequent updates should be made to the parent composite sub-band via events.
     this.addSubBand.emit(ctlStateBand);
+
+    if (this.showStateChangeTimes) {
+      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'showStateChangeTimes', value: true });
+      this.updateSubBand.emit({ subBandId: this.id, prop: 'heightPadding', value: 12 });
+      this.updateSubBand.emit({ subBandId: this.id, prop: 'height', value: this.height - 12 });
+    }
   }
 
   ngOnDestroy() {
