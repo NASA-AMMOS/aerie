@@ -106,6 +106,11 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
     // Font.
     // TODO.
 
+    // Icon.
+    if (changes.icon && !changes.icon.firstChange) {
+      this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals(this.color) });
+    }
+
     // Interpolation.
     if (changes.interpolation && !changes.interpolation.firstChange) {
       this.updateInterpolation.emit({ subBandId: this.id, interpolation: this.interpolation });

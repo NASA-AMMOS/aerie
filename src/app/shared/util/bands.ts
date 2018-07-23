@@ -107,7 +107,7 @@ export function toActivityBands(
       filterTarget: null,
       height: 50,
       heightPadding: 10,
-      icon: defaultBandSettings.iconEnabled ? defaultBandSettings.icon : null,
+      icon: defaultBandSettings.icon,
       id: uniqueId(),
       label: `${legend}`,
       labelColor: [0, 0, 0],

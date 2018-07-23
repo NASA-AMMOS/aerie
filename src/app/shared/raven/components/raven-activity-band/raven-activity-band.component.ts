@@ -72,6 +72,13 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
     // Activity Style.
     if (changes.activityStyle && !changes.activityStyle.firstChange) {
       this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'style', value: this.activityStyle });
+      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'showIcon', value: this.activityStyle === 3 ? true : false });
+      this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals() });
+    }
+
+    // Icon.
+    if (changes.icon && !changes.icon.firstChange) {
+      this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals() });
     }
 
     // Align Label.
@@ -158,7 +165,6 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
       borderWidth: this.borderWidth,
       height: this.height,
       heightPadding: this.heightPadding,
-      icon: this.icon,
       id: this.id,
       intervals: [],
       label: this.getLabel(),
@@ -169,6 +175,7 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
       minorLabels: this.minorLabels,
       name: this.name,
       showActivityTimes: this.showActivityTimes,
+      showIcon: this.activityStyle === 3 ? true : false,
       showLabel: this.showLabel,
       style: this.activityStyle,
       timeAxis: this.ctlTimeAxis,
@@ -214,7 +221,7 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
         const interval = new (window as any).DrawableInterval({
           color: point.color,
           end: point.end,
-          icon: this.icon,
+          icon: this.activityStyle === 3 ? this.icon : null,
           id: point.id,
           label: point.activityName,
           onGetTooltipText: this.onGetTooltipText.bind(this),
