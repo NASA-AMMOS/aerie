@@ -859,7 +859,7 @@ export class SourceExplorerEffects {
    * Fetches new sources and updates the source state after the save.
    */
   saveState(sourceUrl: string, sourceId: string, name: string, state: AppState) {
-    return this.http.put(`${sourceUrl}/${name}?timeline_type=state`, getState(state)).pipe(
+    return this.http.put(`${sourceUrl}/${name}?timeline_type=state`, getState(name, state)).pipe(
       map(() => new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl)),
     );
   }

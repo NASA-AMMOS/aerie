@@ -126,11 +126,12 @@ export class RavenShareableLinkDialogComponent implements AfterViewInit, OnDestr
       this.shareableNameControl.valid &&
       this.shareableLinkInput.nativeElement === document.activeElement
     ) {
+      const shareableName = this.shareableNameControl.value;
       this.titleMessage = 'Link text copied!';
 
       this.http.put(
-        `${this.getStateUrl(this.shareableNameControl.value)}?timeline_type=state`,
-        getState(this.data.state),
+        `${this.getStateUrl(shareableName)}?timeline_type=state`,
+        getState(shareableName, this.data.state),
       ).pipe(
         takeUntil(this.ngUnsubscribe),
       ).subscribe(() =>
@@ -166,10 +167,10 @@ export class RavenShareableLinkDialogComponent implements AfterViewInit, OnDestr
    * Helper that returns the sharable link text.
    */
   getShareableLink(name: string): string {
-    const { baseRavenUrl, baseUrl, shareableLinkStatesUrl } = this.data.state.config;
+    const { baseRavenUrl, baseUrl } = this.data.state.config;
 
     const url = `${baseUrl}${baseRavenUrl ? '/' + baseRavenUrl : ''}/#/timeline`;
-    const query = `state=/${shareableLinkStatesUrl}/${name}&&layout=minimal`;
+    const query = `s=${name}`;
 
     return `${url}?${query}`;
   }

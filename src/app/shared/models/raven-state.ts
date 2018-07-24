@@ -18,6 +18,8 @@ export interface RavenState {
   bands: RavenCompositeBand[];
   defaultBandSettings: RavenDefaultBandSettings;
   maxTimeRange: RavenTimeRange;
+  name: string;
   pins: RavenPin[];
+  version: string;
   viewTimeRange: RavenTimeRange;
 }

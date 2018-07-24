@@ -30,7 +30,7 @@ import {
 /**
  * Returns a stripped down version of a state that we save and export it for saving.
  */
-export function getState(state: AppState): any {
+export function getState(name: string, state: AppState): any {
   return exportState({
     bands: state.timeline.bands.map(band => ({
       ...band,
@@ -49,7 +49,9 @@ export function getState(state: AppState): any {
     })),
     defaultBandSettings: state.config.defaultBandSettings,
     maxTimeRange: state.timeline.maxTimeRange,
+    name,
     pins: state.sourceExplorer.pins,
+    version: '1.0.0',
     viewTimeRange: state.timeline.viewTimeRange,
   });
 }
