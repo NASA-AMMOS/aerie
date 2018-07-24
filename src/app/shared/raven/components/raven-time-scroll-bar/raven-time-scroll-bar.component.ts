@@ -28,8 +28,12 @@ import {
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'raven-time-scroll-bar',
-  styleUrls: ['./raven-time-scroll-bar.component.css'],
-  templateUrl: './raven-time-scroll-bar.component.html',
+  styles: [`
+    :host {
+      display: block;
+    }
+  `],
+  template: ``,
 })
 export class RavenTimeScrollBarComponent implements AfterViewInit, OnChanges, OnInit {
   @Input() labelWidth: number;

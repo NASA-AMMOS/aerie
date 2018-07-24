@@ -31,8 +31,8 @@ import {
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'raven-activity-band',
-  styleUrls: ['./raven-activity-band.component.css'],
-  templateUrl: './raven-activity-band.component.html',
+  styles: [``],
+  template: ``,
 })
 export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit {
   @Input() activityHeight: number;
@@ -195,6 +195,9 @@ export class RavenActivityBandComponent implements OnChanges, OnDestroy, OnInit 
     this.addSubBand.emit(ctlActivityBand);
 
     // Show Activity times.
+    // Note: We need this update here after the band is created because CTL is quirky.
+    // Adding these properties in the `new ActivityBand` above does not properly initialize these properties for drawing.
+    // TODO: Look into how we can remove these emits.
     if (this.showActivityTimes) {
       this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'showActivityTimes', value: this.showActivityTimes });
       this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'rowPadding', value: this.showActivityTimes ? 15 : 2 });

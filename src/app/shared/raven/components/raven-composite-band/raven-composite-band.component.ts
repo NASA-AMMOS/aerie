@@ -36,7 +36,11 @@ import {
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'raven-composite-band',
-  styleUrls: ['./raven-composite-band.component.css'],
+  styles: [`
+    :host {
+      display: block;
+    }
+  `],
   templateUrl: './raven-composite-band.component.html',
 })
 export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, OnInit {
@@ -82,21 +86,27 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
       this.ctlCompositeBand.height = this.height;
 
       for (let i = 0, l = this.ctlCompositeBand.bands.length; i < l; ++i) {
-        this.ctlCompositeBand.bands[i].height = this.ctlCompositeBand.bands[i].heightPadding ? this.height -  this.ctlCompositeBand.bands[i].heightPadding : this.height;
+        const subBand = this.ctlCompositeBand.bands[i];
+
+        if (subBand.heightPadding && subBand.heightPadding > 0) {
+          subBand.height = this.height - subBand.heightPadding;
+        } else {
+          subBand.height = this.height;
+        }
       }
 
       shouldRedraw = true;
       shouldUpdateTicks = true;
     }
 
-    // Label Width.
-    if (changes.labelWidth && !changes.labelWidth.firstChange) {
-      shouldResize = true;
-    }
-
     // Label Font Size.
     if (changes.labelFontSize && !changes.labelFontSize.firstChange) {
       shouldRedraw = true;
+    }
+
+    // Label Width.
+    if (changes.labelWidth && !changes.labelWidth.firstChange) {
+      shouldResize = true;
     }
 
     // Max Time Range.
@@ -157,6 +167,24 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
       }
     }
 
+    // Time Cursor Color.
+    if (changes.cursorColor && !changes.cursorColor.firstChange) {
+      this.ctlCompositeBand.decorator.timeCursorColor = colorHexToRgbArray(this.cursorColor);
+      shouldRedraw = true;
+    }
+
+    // Time Cursor Time.
+    if (changes.cursorTime && !changes.cursorTime.firstChange) {
+      this.ctlViewTimeAxis.now = changes.cursorTime.currentValue;
+      shouldRedraw = true;
+    }
+
+    // Time Cursor Width.
+    if (changes.cursorWidth && !changes.cursorWidth.firstChange) {
+      this.ctlCompositeBand.decorator.timeCursorWidth = this.cursorWidth;
+      shouldRedraw = true;
+    }
+
     // View Time Range.
     if (changes.viewTimeRange && !changes.viewTimeRange.firstChange) {
       const currentViewTimeRange = changes.viewTimeRange.currentValue;
@@ -169,20 +197,6 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
         shouldRedraw = true;
         shouldUpdateTicks = true;
       }
-    }
-
-    // Time Cursor.
-    if (changes.cursorColor && !changes.cursorColor.firstChange) {
-      this.ctlCompositeBand.decorator.timeCursorColor = colorHexToRgbArray(this.cursorColor);
-      shouldRedraw = true;
-    }
-    if (changes.cursorWidth && !changes.cursorWidth.firstChange) {
-      this.ctlCompositeBand.decorator.timeCursorWidth = this.cursorWidth;
-      shouldRedraw = true;
-    }
-    if (changes.cursorTime && !changes.cursorTime.firstChange) {
-      this.ctlViewTimeAxis.now = changes.cursorTime.currentValue;
-      shouldRedraw = true;
     }
 
     // Only update ticks for resource bands once to maintain performance.

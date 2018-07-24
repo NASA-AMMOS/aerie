@@ -22,8 +22,8 @@ import {
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'raven-divider-band',
-  styleUrls: ['./raven-divider-band.component.css'],
-  templateUrl: './raven-divider-band.component.html',
+  styles: [``],
+  template: ``,
 })
 export class RavenDividerBandComponent implements OnChanges, OnDestroy, OnInit {
   @Input() borderWidth: number;

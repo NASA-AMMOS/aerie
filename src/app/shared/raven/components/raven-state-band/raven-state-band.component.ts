@@ -31,8 +31,8 @@ import {
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'raven-state-band',
-  styleUrls: ['./raven-state-band.component.css'],
-  templateUrl: './raven-state-band.component.html',
+  styles: [``],
+  template: ``,
 })
 export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
   @Input() alignLabel: number;
@@ -147,6 +147,10 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
     // All subsequent updates should be made to the parent composite sub-band via events.
     this.addSubBand.emit(ctlStateBand);
 
+    // Show State Change Times.
+    // Note: We need this update here after the band is created because CTL is quirky.
+    // Adding these properties in the `new StateBand` above does not properly initialize these properties for drawing.
+    // TODO: Look into how we can remove these emits.
     if (this.showStateChangeTimes) {
       this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'showStateChangeTimes', value: true });
       this.updateSubBand.emit({ subBandId: this.id, prop: 'heightPadding', value: 12 });

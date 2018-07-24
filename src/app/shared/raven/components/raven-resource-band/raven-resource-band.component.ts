@@ -41,8 +41,8 @@ import {
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'raven-resource-band',
-  styleUrls: ['./raven-resource-band.component.css'],
-  templateUrl: './raven-resource-band.component.html',
+  styles: [``],
+  template: ``,
 })
 export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit {
   @Input() autoTickValues: boolean;

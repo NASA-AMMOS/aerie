@@ -37,8 +37,12 @@ import {
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'raven-time-band',
-  styleUrls: ['./raven-time-band.component.css'],
-  templateUrl: './raven-time-band.component.html',
+  styles: [`
+    :host {
+      display: block;
+    }
+  `],
+  template: ``,
 })
 export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit {
   @Input() cursorColor: string;
@@ -103,17 +107,21 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
       }
     }
 
-    // Time Cursor.
+    // Time Cursor Color.
     if (changes.cursorColor && !changes.cursorColor.firstChange) {
       this.ctlTimeBand.timeCursorColor = colorHexToRgbArray(this.cursorColor);
       shouldRedraw = true;
     }
-    if (changes.cursorWidth && !changes.cursorWidth.firstChange) {
-      this.ctlTimeBand.timeCursorWidth = this.cursorWidth;
-      shouldRedraw = true;
-    }
+
+    // Time Cursor Time.
     if (changes.cursorTime && !changes.cursorTime.firstChange) {
       this.ctlViewTimeAxis.now = changes.cursorTime.currentValue;
+      shouldRedraw = true;
+    }
+
+    // Time Cursor Width.
+    if (changes.cursorWidth && !changes.cursorWidth.firstChange) {
+      this.ctlTimeBand.timeCursorWidth = this.cursorWidth;
       shouldRedraw = true;
     }
 

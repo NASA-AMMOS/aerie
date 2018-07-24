@@ -9,7 +9,7 @@
 
 import {
   RavenEpoch,
-} from '../models';
+} from './../models';
 
 import {
   formatEpochTimeRange,
