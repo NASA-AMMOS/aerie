@@ -147,6 +147,8 @@ export function toCompositeBand(
   const compositeBandUniqueId = uniqueId();
 
   const compositeBand: RavenCompositeBand = {
+    compositeAutoScale: true,
+    compositeYAxisLabel: false,
     containerId: containerId || '0',
     height: subBand.height,
     heightPadding: subBand.heightPadding,
@@ -204,7 +206,7 @@ export function toResourceBand(
 
   const resourceBand: RavenResourceBand = {
     addTo: false,
-    autoTickValues: true,
+    autoScale: true,
     color: defaultBandSettings.resourceColor,
     decimate: metadata.decimatedData,
     fill: false,
@@ -225,7 +227,6 @@ export function toResourceBand(
     name: metadata.hasObjectName,
     parentUniqueId: null,
     points,
-    rescale: true,
     showIcon: false,
     showLabelPin: true,
     showLabelUnit: true,

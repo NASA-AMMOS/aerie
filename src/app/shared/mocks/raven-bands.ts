@@ -52,6 +52,8 @@ export const activityBand: RavenActivityBand = {
 };
 
 export const compositeBand: RavenCompositeBand = {
+  compositeAutoScale: false,
+  compositeYAxisLabel: false,
   containerId: '0',
   height: 50,
   heightPadding: 0,
@@ -66,7 +68,7 @@ export const compositeBand: RavenCompositeBand = {
 
 export const resourceBand: RavenResourceBand = {
   addTo: false,
-  autoTickValues: true,
+  autoScale: true,
   color: '#000000',
   decimate: false,
   fill: false,
@@ -87,7 +89,6 @@ export const resourceBand: RavenResourceBand = {
   name: 'test-resource-band',
   parentUniqueId: null,
   points: [],
-  rescale: true,
   showIcon: false,
   showLabelPin: true,
   showLabelUnit: true,

@@ -40,6 +40,15 @@ export class RavenSettingsBandsComponent {
   @Output() updateTimeline: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
 
   /**
+   * Returns true if the selected band contains more than one resource sub-band. False otherwise.
+   */
+  containsMultipleResourceBands(): boolean {
+    const subBands = this.bandsById[this.selectedBandId].subBands;
+    const resourceCount = subBands.reduce((count, subBand) => subBand.type === 'resource' ? count + 1 : count, 0);
+    return resourceCount > 1;
+  }
+
+  /**
    * trackBy for subBands.
    */
   trackByFn(index: number, item: RavenSubBand) {

@@ -48,6 +48,18 @@
               </mat-form-field>
             </div>
 
+            <!-- Composite Y-axis. -->
+            <div
+              *ngIf="containsMultipleResourceBands()"
+              class="field">
+              <mat-slide-toggle
+                color="primary"
+                [checked]="bandsById[selectedBandId].compositeYAxisLabel"
+                (change)="updateBand.emit({ bandId: selectedBandId, update: { compositeYAxisLabel: $event.checked } })">
+                Composite Y-axis Label
+               </mat-slide-toggle>
+            </div>
+
             <!-- Show Label Unit. -->
             <div class="field">
               <mat-slide-toggle
@@ -188,9 +200,34 @@
 
           <!-- Resource Settings. -->
           <ng-container *ngIf="subBand.type === 'resource'">
-            <!-- Color. -->
+            <!-- Composite Y-axis Auto Scale. -->
+            <div
+              *ngIf="bandsById[selectedBandId].compositeYAxisLabel"
+              class="field">
+              <mat-slide-toggle
+                color="primary"
+                [checked]="bandsById[selectedBandId].compositeAutoScale"
+                (change)="updateBand.emit({ bandId: selectedBandId, update: { compositeAutoScale: $event.checked } })">
+                Composite Auto Scale
+               </mat-slide-toggle>
+            </div>
+
+            <!-- Auto Scale. -->
+            <div
+              *ngIf="!bandsById[selectedBandId].compositeYAxisLabel"
+              class="field">
+              <mat-slide-toggle
+                id="raven-settings-auto-scale"
+                color="primary"
+                [checked]="subBand.autoScale"
+                (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { autoScale: $event.checked } })">
+                Auto Scale
+              </mat-slide-toggle>
+            </div>
+
+            <!-- Line Color. -->
             <div class="field">
-              <label>Color</label>
+              <label>Line Color</label>
               <input
                 type="color"
                 [value]="subBand.color"
@@ -230,17 +267,6 @@
                   <mat-option value="none">None</mat-option>
                 </mat-select>
               </mat-form-field>
-            </div>
-
-            <!-- Rescale. -->
-            <div class="field">
-              <mat-slide-toggle
-                id="raven-settings-rescale"
-                color="primary"
-                [checked]="subBand.rescale"
-                (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { rescale: $event.checked } })">
-                Rescale Y-Axis Ticks
-              </mat-slide-toggle>
             </div>
 
             <!-- Show Icon. -->

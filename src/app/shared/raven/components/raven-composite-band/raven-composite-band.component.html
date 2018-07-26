@@ -58,7 +58,7 @@
   <!-- Resource Band. -->
   <raven-resource-band
     *ngIf="subBand.type === 'resource'"
-    [autoTickValues]="subBand.autoTickValues"
+    [autoScale]="subBand.autoScale"
     [class]="'raven-sub-band-' + i"
     [color]="subBand.color"
     [ctlTimeAxis]="ctlTimeAxis"
@@ -83,7 +83,6 @@
     [labelUnit]="subBand.labelUnit"
     [name]="subBand.name"
     [points]="subBand.points"
-    [rescale]="subBand.rescale"
     [showIcon]="subBand.showIcon"
     [showLabelPin]="subBand.showLabelPin"
     [showLabelUnit]="subBand.showLabelUnit"
@@ -92,7 +91,8 @@
     (removeSubBand)="onRemoveSubBand($event)"
     (updateInterpolation)="onUpdateInterpolation($event)"
     (updateIntervals)="onUpdateIntervals($event)"
-    (updateSubBand)="onUpdateSubBand($event)">
+    (updateSubBand)="onUpdateSubBand($event)"
+    (updateTickValues)="onUpdateTickValues($event)">
   </raven-resource-band>
 
   <!-- State Band. -->

@@ -12,6 +12,8 @@ import {
 } from './index';
 
 export interface RavenCompositeBand {
+  compositeAutoScale: boolean;
+  compositeYAxisLabel: boolean;
   containerId: string;
   height: number;
   heightPadding: number;

@@ -3278,6 +3278,16 @@ ResourceBand.prototype.repaint = function() {
   Band.prototype.repaint.call(this);
 };
 
+// Added by Chris Camargo (7/26/2018).
+ResourceBand.prototype.recomputeTickValues = function() {
+  // For some data, `getLinearTickValues` may return a precision range error since it uses `toExponential` and `toFixed`.
+  // Wrap in a try-catch here to make sure the program does not crash when this happens.
+  // See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Precision_range
+  try {
+    this.tickValues = Util.computeTickValues(this.minPaintValue, this.maxPaintValue, this.height, this.scientificNotation);
+  } catch (e) {}
+}
+
 ResourceDecorator.prototype = new Decorator();
 ResourceDecorator.prototype.constructor = ResourceDecorator;
 
@@ -6148,8 +6158,36 @@ var Util = {
     }
   },
 
-  // Calculate linear tick values.
-  getLinearTickValues: function(min, max, height) {
+  // Calculate tick values.
+  computeTickValuesLinear: function(min, max, height, scientificNotation) {
+    /* Adapted tick mark calculations from d3 https://d3js.org/
+     * Copyright (c) 2010-2016, Michael Bostock
+     * All rights reserved.
+     *
+     * Redistribution and use in source and binary forms, with or without
+     * modification, are permitted provided that the following conditions are met:
+     *
+     * * Redistributions of source code must retain the above copyright notice, this
+     * list of conditions and the following disclaimer.
+     *
+     * * Redistributions in binary form must reproduce the above copyright notice,
+     * this list of conditions and the following disclaimer in the documentation
+     * and/or other materials provided with the distribution.
+     *
+     * * The name Michael Bostock may not be used to endorse or promote products
+     * derived from this software without specific prior written permission.
+     *
+     * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS'
+     * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+     * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+     * DISCLAIMED. IN NO EVENT SHALL MICHAEL BOSTOCK BE LIABLE FOR ANY DIRECT,
+     * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+     * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+     * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+     * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+     * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+     * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+     */
     const start = min;
     const stop = max;
     const count = Math.floor(height / 20);
@@ -6159,7 +6197,7 @@ var Util = {
 
     const range = (start, stop, step) => {
       // Ticks as exponents if start and stop are extra small or extra large.
-      let asExponent = ((start || stop) < -largeNumber || (start || stop) > largeNumber || step < .00001) ? true : false;
+      let asExponent = scientificNotation === null ? (((start || stop) < -largeNumber || (start || stop) > largeNumber || step < .00001) ? true : false) : scientificNotation;
       start = Number(start);
       stop = Number(stop);
       start = +start, stop = +stop, step = (n = arguments.length) < 2 ? (stop = start, start = 0, 1) : n < 3 ? 1 : +Number(step);
@@ -6212,5 +6250,86 @@ var Util = {
     );
 
     return ticks;
-  }
+  },
+
+  /**
+    * Rounds a number to the next greatest power of 10.
+    *
+    * @static
+    * @param {number} x
+    * @return {number}
+    *
+    * @memberOf MPSViewerUtils
+    */
+  roundToNearestPowerOf10: function(x) {
+      // If x < 1, just clamp to 0.1.
+      if (x < 1) {
+        return 0.1;
+      }
+      // Else round to nearest power of 10.
+      // http://stackoverflow.com/questions/15906148/round-up-to-nearest
+      else {
+        x = Math.round(x);
+
+        let strLen = x.toString().length;
+        let y = x / Math.pow(10, strLen);
+        let rst = Math.pow(10, strLen - 1 + Math.round(y));
+
+        return rst < 10 ? 1 : rst;
+      }
+  },
+
+  /**
+    * Computes a list of log ticks given a min and max.
+    *
+    * @static
+    * @param {number} min
+    * @param {number} max
+    * @return {number[]}
+    *
+    * @memberOf MPSViewerUtils
+    */
+  computeTickValuesLog: function(min, max) {
+    let ticks = [];
+    let tick = MPSViewerUtils.roundToNearestPowerOf10(min);
+
+    ticks.push(tick);
+
+    // Compute log ticks. All ticks should be powers of 10.
+    while (tick < MPSViewerUtils.roundToNearestPowerOf10(max)) {
+      tick *= 10;
+      ticks.push(tick);
+    }
+
+    return ticks;
+  },
+
+
+
+  /**
+    * Computes tick values.
+    * Currently, the two possible tick values types are linear, and log.
+    *
+    * @static
+    * @param {number} min
+    * @param {number} max
+    * @param {number} height
+    * @param {boolean} logTicks
+    * @return {number[]}
+    *
+    * @memberOf MPSViewerUtils
+    */
+  computeTickValues: function(min, max, height, logTicks, scientificNotation) {
+    let ticks = [];
+
+    if (logTicks) {
+      ticks = this.computeTickValuesLog(min, max);
+    }
+    else {
+      ticks = this.computeTickValuesLinear(min, max, height, scientificNotation);
+    }
+
+    return ticks;
+  },
+
 };

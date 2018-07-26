@@ -45,7 +45,7 @@ import {
   template: ``,
 })
 export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit {
-  @Input() autoTickValues: boolean;
+  @Input() autoScale: boolean;
   @Input() color: string;
   @Input() ctlTimeAxis: any;
   @Input() ctlViewTimeAxis: any;
@@ -69,7 +69,6 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
   @Input() labelUnit: string;
   @Input() name: string;
   @Input() points: RavenResourcePoint[];
-  @Input() rescale: boolean;
   @Input() showIcon: boolean;
   @Input() showLabelPin: boolean;
   @Input() showLabelUnit: boolean;
@@ -80,17 +79,21 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
   @Output() updateInterpolation: EventEmitter<any> = new EventEmitter<any>();
   @Output() updateIntervals: EventEmitter<any> = new EventEmitter<any>();
   @Output() updateSubBand: EventEmitter<any> = new EventEmitter<any>();
+  @Output() updateTickValues: EventEmitter<any> = new EventEmitter<any>();
 
   ngOnChanges(changes: SimpleChanges) {
-    // Auto Tick Values.
-    if (changes.autoTickValues && !changes.autoTickValues.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'autoTickValues', value: this.autoTickValues });
+    // Auto Scale Tick Values.
+    if (changes.autoScale && !changes.autoScale.firstChange) {
+      const ctlResourceBand = (window as any).ResourceBand;
+      this.updateSubBand.emit({ subBandId: this.id, prop: 'autoScale', value: this.autoScale ? ctlResourceBand.VISIBLE_INTERVALS : ctlResourceBand.ALL_INTERVALS });
+      this.updateTickValues.emit();
     }
 
     // Color.
     if (changes.color && !changes.color.firstChange) {
       this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals(this.color) }); // All intervals need to be updated with the new color.
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'color', value: this.color });
+      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'color', value: colorHexToRgbArray(this.color) });
+      this.updateSubBand.emit({ subBandId: this.id, prop: 'labelColor', value: colorHexToRgbArray(this.color) });
     }
 
     // Fill.
@@ -161,7 +164,6 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
     // Create Resource Band.
     const ctlResourceBand = new (window as any).ResourceBand({
       autoScale: (window as any).ResourceBand.VISIBLE_INTERVALS,
-      autoTickValues: this.autoTickValues,
       height: this.height,
       heightPadding: this.heightPadding,
       hideTicks: false,
@@ -183,7 +185,6 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
         icon: this.icon,
         showIcon: this.showIcon,
       }),
-      rescale: this.rescale,
       tickValues: [],
       timeAxis: this.ctlTimeAxis,
       viewTimeAxis: this.ctlViewTimeAxis,

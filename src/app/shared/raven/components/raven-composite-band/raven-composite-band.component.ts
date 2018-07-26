@@ -25,6 +25,7 @@ import {
   RavenBandLeftClick,
   RavenEpoch,
   RavenPoint,
+  RavenResourceBand,
   RavenSubBand,
   RavenTimeRange,
 } from './../../../models';
@@ -44,14 +45,16 @@ import {
   templateUrl: './raven-composite-band.component.html',
 })
 export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, OnInit {
+  @Input() compositeAutoScale: boolean;
+  @Input() compositeYAxisLabel: boolean;
   @Input() cursorColor: string;
   @Input() cursorTime: number | null;
   @Input() cursorWidth: number;
-  @Input() height: number;
-  @Input() heightPadding: number;
   @Input() dayCode: string;
   @Input() earthSecToEpochSec: number;
   @Input() epoch: RavenEpoch | null;
+  @Input() height: number;
+  @Input() heightPadding: number;
   @Input() id: string;
   @Input() labelFontSize: number;
   @Input() labelWidth: number;
@@ -81,6 +84,28 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
     let shouldResize = false;
     let shouldUpdateTicks = false;
 
+    // Composite Auto Scale.
+    if (changes.compositeAutoScale && !changes.compositeAutoScale.firstChange) {
+      this.setAutoScaleInResourceSubBands();
+      shouldRedraw = true;
+      shouldUpdateTicks = true;
+    }
+
+    // Composite Y-Axis Label.
+    if (changes.compositeYAxisLabel && !changes.compositeYAxisLabel.firstChange) {
+      this.ctlCompositeBand.compositeLabel = this.compositeYAxisLabel;
+
+      if (this.compositeYAxisLabel) {
+        // CTL draws the axis label in black when compositeLabel is set.
+        this.setAutoScaleInResourceSubBands();
+        this.computeMinMaxTickValuesForCompositeScale();
+      } else {
+        this.resetMinMaxTickValuesForEachSubBands();
+      }
+
+      shouldRedraw = true;
+    }
+
     // Height.
     if (changes.height && !changes.height.firstChange) {
       this.ctlCompositeBand.height = this.height;
@@ -96,7 +121,6 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
       }
 
       shouldRedraw = true;
-      shouldUpdateTicks = true;
     }
 
     // Label Font Size.
@@ -119,6 +143,7 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
           previousMaxTimeRange.end !== currentMaxTimeRange.end) {
         this.ctlTimeAxis.updateTimes(currentMaxTimeRange.start, currentMaxTimeRange.end);
         shouldRedraw = true;
+        shouldUpdateTicks = true;
       }
     }
 
@@ -201,7 +226,7 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
 
     // Only update ticks for resource bands once to maintain performance.
     if (shouldUpdateTicks) {
-      this.updateTickValues();
+      this.onUpdateTickValues();
     }
 
     // Only resize OR redraw once to maintain performance.
@@ -214,6 +239,7 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
 
   ngOnInit() {
     this.ctlCompositeBand = new (window as any).CompositeBand({
+      compositeYAxisLabel: false,
       height: this.height,
       heightPadding: this.heightPadding,
       id: this.id,
@@ -237,6 +263,47 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
     this.ctlViewTimeAxis.now = this.cursorTime; // Set `now` for the time-cursor so it draws upon initialization.
 
     this.elementRef.nativeElement.appendChild(this.ctlCompositeBand.div);
+  }
+
+  /**
+   * Compute min, max and tick values from all resource band intervals.
+   * Set computed min, max for all resource bands.
+   * Only show ticks for one sub-band.
+   */
+  computeMinMaxTickValuesForCompositeScale() {
+    let resourceBandCounter = 0;
+    let min = null;
+    let max = null;
+
+    for (let i = 0, length = this.ctlCompositeBand.bands.length; i < length; ++i) {
+      const band = this.ctlCompositeBand.bands[i];
+
+      if (band.type === 'resource') {
+        band.computeMinMaxPaintValues();
+        min = min ? Math.min(min, band.minPaintValue) : band.minPaintValue;
+        max = max ? Math.max(max, band.maxPaintValue) : band.maxPaintValue;
+
+        if (resourceBandCounter > 0) {
+          // Keep only one axis for the resource bands.
+          band.hideTicks = true;
+        }
+
+        resourceBandCounter++;
+      }
+    }
+
+    // Set minLimit and maxLimit for all resource bands.
+    for (let i = 0, length = this.ctlCompositeBand.bands.length; i < length; ++i) {
+      const band = this.ctlCompositeBand.bands[i];
+
+      if (band.type === 'resource') {
+        band.minLimit = min;
+        band.maxLimit = max;
+        band.maxPaintValue = max;
+        band.minPaintValue = min;
+        band.recomputeTickValues();
+      }
+    }
   }
 
   /**
@@ -309,8 +376,9 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
    * Event. Called when a sub-band is added.
    */
   onAddSubBand(subBand: any) {
+    subBand.parent = this.ctlCompositeBand;
     this.ctlCompositeBand.addBand(subBand);
-    this.updateTickValues();
+    this.onUpdateTickValues();
     this.setIntervalColor();
 
     // Only redraw if we have more than one sub-band since the first
@@ -365,7 +433,7 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
         subBand.intervalsById = intervalsById;
         subBand.setIntervals(intervals);
         this.setIntervalColor();
-        this.updateTickValues();
+        this.onUpdateTickValues();
         this.redraw();
         return;
       }
@@ -388,10 +456,42 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
         } else {
           subBand[prop] = value;
         }
+
         this.redraw();
         return;
       }
     }
+  }
+
+  /**
+   * Event. Updates tick values for a resource band.
+   * This can be called as an event from the resource-band component or directly to update resource sub-band ticks.
+   * Make sure this is only called when needed for performance.
+   */
+  onUpdateTickValues() {
+    if (this.compositeYAxisLabel) {
+      this.computeMinMaxTickValuesForCompositeScale();
+    } else {
+      for (let i = 0, l = this.ctlCompositeBand.bands.length; i < l; ++i) {
+        const band = this.ctlCompositeBand.bands[i];
+
+        if (band.type === 'resource') {
+          band.computeMinMaxValues();
+          band.recomputeTickValues();
+          this.redraw();
+        }
+      }
+    }
+  }
+
+  /**
+   * Helper that returns an auto-scale option for a CTL resource band.
+   * VISIBLE_INTERVALS indicates auto-scale of the y-axis ticks.
+   * ALL_INTERVALS indicates no auto-scale of the y-axis ticks.
+   */
+  getResourceAutoScale(autoScale: boolean): number {
+    const ctlResourceBand = (window as any).ResourceBand;
+    return autoScale ? ctlResourceBand.VISIBLE_INTERVALS : ctlResourceBand.ALL_INTERVALS;
   }
 
   /**
@@ -410,27 +510,6 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
             interval.color = this.selectedPointColor;
           }
         }
-      }
-    }
-  }
-
-  /**
-   * Helper. Updates tick values for a resource band.
-   * Make sure this is only called when needed.
-   */
-  updateTickValues() {
-    for (let i = 0, l = this.ctlCompositeBand.bands.length; i < l; ++i) {
-      const subBand = this.ctlCompositeBand.bands[i];
-
-      if (subBand.type === 'resource') {
-        subBand.computeMinMaxValues();
-
-        // For some data, `getLinearTickValues` may return a precision range error since it uses `toExponential` and `toFixed`.
-        // Wrap in a try-catch here to make sure the program does not crash when this happens.
-        // See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Precision_range
-        try {
-          subBand.tickValues = (window as any).Util.getLinearTickValues(subBand.minPaintValue, subBand.maxPaintValue, this.height);
-        } catch (e) {}
       }
     }
   }
@@ -460,11 +539,51 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
   }
 
   /**
+   * Reset the computed min, max and tick values for each resource subBand based on subBand intervals.
+   */
+  resetMinMaxTickValuesForEachSubBands() {
+    for (let i = 0, length = this.ctlCompositeBand.bands.length; i < length; ++i) {
+      const subBand = this.ctlCompositeBand.bands[i];
+
+      if (subBand.type === 'resource') {
+        // Change autoScale back to the original resource subBand setting.
+        this.subBands.forEach(ravenSubBand => {
+          if (ravenSubBand.id === subBand.id) {
+            subBand.autoScale = this.getResourceAutoScale((ravenSubBand as RavenResourceBand).autoScale);
+          }
+        });
+
+        subBand.minLimit = null;
+        subBand.maxLimit = null;
+        subBand.computeMinMaxValues();
+        subBand.computeInterpolatedIntervals();
+        subBand.recomputeTickValues();
+        subBand.hideTicks = false;
+        subBand.labelColor = subBand.painter.color;
+      }
+    }
+  }
+
+  /**
    * Helper. Call when a composite-band should be resized.
    * Note that this triggers a redraw.
    */
   resize() {
     this.updateTimeAxisXCoordinates();
     this.redraw();
+  }
+
+  /**
+   * Helper. Set VISIBLE_INTERVALS (i.e. auto-scale) or ALL_INTERVALS (i.e. no auto-scale)
+   * in all ctl resource bands based on the composite auto scale flag.
+   */
+  setAutoScaleInResourceSubBands() {
+    for (let i = 0, length = this.ctlCompositeBand.bands.length; i < length; ++i) {
+      const subBand = this.ctlCompositeBand.bands[i];
+
+      if (subBand.type === 'resource') {
+        subBand.autoScale = this.getResourceAutoScale(this.compositeAutoScale);
+      }
+    }
   }
 }

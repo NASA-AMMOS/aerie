@@ -14,7 +14,7 @@ import {
 
 export interface RavenResourceBand {
   addTo: boolean;
-  autoTickValues: boolean;
+  autoScale: boolean;
   color: string;
   decimate: boolean;
   fill: boolean;
@@ -35,7 +35,6 @@ export interface RavenResourceBand {
   name: string;
   parentUniqueId: string | null;
   points: RavenResourcePoint[];
-  rescale: boolean;
   showIcon: boolean;
   showLabelPin: boolean;
   showLabelUnit: boolean;

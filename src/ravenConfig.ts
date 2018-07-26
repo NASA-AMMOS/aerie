@@ -37,7 +37,7 @@ const ravenConfig: RavenConfig = {
     iconEnabled: false,
     labelFont: 'Georgia',
     labelFontSize: 9,
-    labelWidth: 100,
+    labelWidth: 150,
     resourceColor: '#000000',
     resourceFillColor: '#000000',
     showTimeCursor: false,

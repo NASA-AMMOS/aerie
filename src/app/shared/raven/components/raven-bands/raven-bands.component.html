@@ -7,6 +7,8 @@
     [ngClass]="{ 'selected': band.id === selectedBandId }">
     <raven-composite-band
       [class]="'raven-band-' + band.name"
+      [compositeAutoScale]="band.compositeAutoScale"
+      [compositeYAxisLabel]="band.compositeYAxisLabel"
       [cursorColor]="cursorColor"
       [cursorTime]="cursorTime"
       [cursorWidth]="cursorWidth"
