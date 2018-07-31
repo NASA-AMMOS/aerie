@@ -4,6 +4,8 @@
 }">
   <mat-icon
     *ngIf="source.type==='customGraphable'"
+    matTooltip="Custom Filter Graph"
+    matTooltipShowDelay="500"
     [id]="'raven-tree-'+source.name+'-customGraph'"
     (click)="addCustomGraph.emit(source)">
     subject

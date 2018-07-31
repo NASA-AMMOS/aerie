@@ -3,6 +3,8 @@
   'no-highlight': !source.opened
 }">
   <mat-icon
+    matTooltip="Custom Filter"
+    matTooltipShowDelay="500"
     [id]="'raven-tree-'+source.name+'-customFilter'"
     (click)="selectCustomFilter.emit(source)">
     subject

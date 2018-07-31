@@ -4,12 +4,16 @@
 }">
   <mat-icon
     *ngIf="source.opened"
+    matTooltip="Filter For Parent Graph"
+    matTooltipShowDelay="500"
     [id]="'raven-tree-'+source.name+'-unselectGraphableFilter'"
     (click)="removeGraphableFilter.emit(source)">
     filter
   </mat-icon>
   <mat-icon
     *ngIf="!source.opened"
+    matTooltip="Filter For Parent Graph"
+    matTooltipShowDelay="500"
     [id]="'raven-tree-'+source.name+'-selectGraphableFilter'"
     (click)="addGraphableFilter.emit(source)">
     filter
