@@ -9,7 +9,7 @@
 
 import {
   getAllChildIds,
-  getAllSourcesByKind,
+  getAllSourcesByKinds,
   getCustomFilterForLabel,
   getFormattedSourceUrl,
   getOutputDataUrl,
@@ -56,26 +56,26 @@ describe('source.ts', () => {
     });
   });
 
-  describe('getAllSourcesByKind', () => {
+  describe('getAllSourcesByKinds', () => {
     it(`should return no sources for no kind`, () => {
-      expect(getAllSourcesByKind(treeBySourceId, '/', '42')).toEqual([]);
+      expect(getAllSourcesByKinds(treeBySourceId, '/', ['42'])).toEqual([]);
     });
 
     it(`should get all sources for an existing kind`, () => {
-      expect(getAllSourcesByKind(treeBySourceId, '/', 'file')).toEqual([
+      expect(getAllSourcesByKinds(treeBySourceId, '/', ['file'])).toEqual([
         treeBySourceId['/child/0'],
         treeBySourceId['/child/1'],
       ]);
     });
 
     it(`should get a single source for an existing kind`, () => {
-      expect(getAllSourcesByKind(treeBySourceId, '/', 'data')).toEqual([
+      expect(getAllSourcesByKinds(treeBySourceId, '/', ['data'])).toEqual([
         treeBySourceId['/child/child/0'],
       ]);
     });
 
     it(`should get a single source for an existing kind when we dont start at the root source`, () => {
-      expect(getAllSourcesByKind(treeBySourceId, '/child/1', 'data')).toEqual([
+      expect(getAllSourcesByKinds(treeBySourceId, '/child/1', ['data'])).toEqual([
         treeBySourceId['/child/child/0'],
       ]);
     });
@@ -408,34 +408,40 @@ describe('source.ts', () => {
   });
 
   describe('updateSourceId', () => {
-    it(`should update a simple source id with a simple base id`, () => {
-      expect(updateSourceId('/a/b/c/d', '/x/y')).toEqual('/x/y/c/d');
+    it(`should update a simple source id with a simple base id up to the given file`, () => {
+      expect(updateSourceId('/a/b/c/d', '/x/y', { 'b': 'file' }, 'file')).toEqual('/x/y/c/d');
     });
 
-    it(`should update an actual source id with an actual base id`, () => {
+    it(`should update an actual source id with an actual base id up to the given file`, () => {
       const sourceId = updateSourceId(
         '/leucadia/EuropaSimulations/15F10_Cruise_Simulation_CheckoutActivities/Resources/Array/ArrayTrackingMode',
         '/leucadia/EuropaSimulations/15F10_Tour_Simulation_2016_265T23_32_16',
+        { '15F10_Cruise_Simulation_CheckoutActivities': 'file' },
+        'file',
       );
       const expected = '/leucadia/EuropaSimulations/15F10_Tour_Simulation_2016_265T23_32_16/Resources/Array/ArrayTrackingMode';
       expect(sourceId).toEqual(expected);
     });
 
-    it(`if the base id is as long as the source id, then the entire source id should be replaced`, () => {
+    it(`the source id should be properly updated with the base id up to the given file`, () => {
       const sourceId = updateSourceId(
-        '/leucadia/EuropaSimulations/15F10_Cruise_Simulation_CheckoutActivities/Resources/Array/ArrayTrackingMode',
-        '/leucadia/EuropaSimulations/15F10_Tour_Simulation_2016_265T23_32_16/Resources/Array/SolarArrayFlopCount',
+        '/leucadia/EuropaSimulations/15F10_Cruise_Simulation_CheckoutActivities/more-stuff/Resources/Array/ArrayTrackingMode',
+        '/leucadia/EuropaSimulations/15F10_Tour_Simulation_2016_265T23_32_16',
+        { '15F10_Cruise_Simulation_CheckoutActivities': 'file' },
+        'file',
       );
-      const expected = '/leucadia/EuropaSimulations/15F10_Tour_Simulation_2016_265T23_32_16/Resources/Array/SolarArrayFlopCount';
+      const expected = '/leucadia/EuropaSimulations/15F10_Tour_Simulation_2016_265T23_32_16/more-stuff/Resources/Array/ArrayTrackingMode';
       expect(sourceId).toEqual(expected);
     });
 
-    it(`if the base id is longer than the source id, then source id should be replaced but not more than it's original length`, () => {
+    it(`the source id should be properly updated with the base id up to the given file`, () => {
       const sourceId = updateSourceId(
-        '/leucadia/EuropaSimulations/15F10_Cruise_Simulation_CheckoutActivities/Resources/Array/ArrayTrackingMode',
         '/leucadia/EuropaSimulations/15F10_Tour_Simulation_2016_265T23_32_16/Resources/Array/SolarArrayFlopCount/some/more/stuff',
+        '/leucadia/EuropaSimulations/15F10_Cruise_Simulation_CheckoutActivities',
+        { '15F10_Tour_Simulation_2016_265T23_32_16': 'file' },
+        'file',
       );
-      const expected = '/leucadia/EuropaSimulations/15F10_Tour_Simulation_2016_265T23_32_16/Resources/Array/SolarArrayFlopCount';
+      const expected = '/leucadia/EuropaSimulations/15F10_Cruise_Simulation_CheckoutActivities/Resources/Array/SolarArrayFlopCount/some/more/stuff';
       expect(sourceId).toEqual(expected);
     });
   });

@@ -20,6 +20,7 @@ import {
   AddSubBand,
   RemoveAllPointsInSubBandWithParentSource,
   RemoveBandsOrPointsForSource,
+  RemoveBandsWithNoPoints,
   RemoveSourceIdFromSubBands,
   RemoveSubBand,
   SelectBand,
@@ -98,6 +99,8 @@ export function reducer(state: TimelineState = initialState, action: TimelineAct
       return removeAllPointsInSubBandWithParentSource(state, action);
     case TimelineActionTypes.RemoveBandsOrPointsForSource:
       return removeBandsOrPointsForSource(state, action);
+    case TimelineActionTypes.RemoveBandsWithNoPoints:
+      return removeBandsWithNoPoints(state, action);
     case TimelineActionTypes.RemoveSourceIdFromSubBands:
       return removeSourceIdFromSubBands(state, action);
     case TimelineActionTypes.RemoveSubBand:
@@ -333,6 +336,27 @@ export function removeBandsOrPointsForSource(state: TimelineState, action: Remov
     ...updateSelectedBandIds(bands, state.selectedBandId, state.selectedSubBandId),
     ...updateSelectedPoint(bands, state.selectedPoint),
     ...updateTimeRanges(bands, state.viewTimeRange),
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'RemoveBandsWithNoPoints' action.
+ */
+export function removeBandsWithNoPoints(state: TimelineState, action: RemoveBandsWithNoPoints): TimelineState {
+  let bands = state.bands
+    // First remove subBands that have no points.
+    .map(band => ({
+      ...band,
+      subBands: band.subBands.filter(subBand => subBand.points.length),
+    }))
+    // Then remove bands if they have no subBands left (i.e. all subBands had no points).
+    .filter(band => band.subBands.length);
+
+  bands = updateSortOrder(bands);
+
+  return {
+    ...state,
+    bands,
   };
 }
 

@@ -1,0 +1,25 @@
+<mat-card>
+  <mat-card-title>
+    Apply Layout from State
+  </mat-card-title>
+
+  <mat-card-content>
+    <div class="field">
+      State: {{currentStateId}}
+    </div>
+
+    <div class="container field">
+      <mat-form-field>
+        <mat-select placeholder="Sources" [formControl]="sourcesFormControl" required multiple>
+          <mat-option *ngFor="let source of filteredSources" [value]="source">
+            {{source.id}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="container">
+      <button color="primary" mat-button (click)="onApply()" [disabled]="!sourcesFormControl.valid">Apply</button>
+    </div>
+  </mat-card-content>
+</mat-card>

@@ -21,7 +21,6 @@ export enum DialogActionTypes {
   OpenCustomGraphDialog   = '[dialog] open_custom_graph_dialog',
   OpenDeleteDialog        = '[dialog] open_delete_dialog',
   OpenFileImportDialog    = '[dialog] open_file_import_dialog',
-  OpenLayoutApplyDialog   = '[dialog] open_layout_apply_dialog',
   OpenPinDialog           = '[dialog] open_pin_dialog',
   OpenShareableLinkDialog = '[dialog] open_shareable_link_dialog',
   OpenStateApplyDialog    = '[dialog] open_state_apply_dialog',
@@ -63,12 +62,6 @@ export class OpenFileImportDialog implements Action {
   constructor(public source: RavenSource, public width: string) {}
 }
 
-export class OpenLayoutApplyDialog implements Action {
-  readonly type = DialogActionTypes.OpenLayoutApplyDialog;
-
-  constructor(public source: RavenSource, public width: string) {}
-}
-
 export class OpenPinDialog implements Action {
   readonly type = DialogActionTypes.OpenPinDialog;
 
@@ -104,7 +97,6 @@ export type DialogAction =
   OpenCustomGraphDialog |
   OpenDeleteDialog |
   OpenFileImportDialog |
-  OpenLayoutApplyDialog |
   OpenPinDialog |
   OpenShareableLinkDialog |
   OpenStateApplyDialog |

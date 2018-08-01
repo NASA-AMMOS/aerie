@@ -107,7 +107,12 @@ export function toSource(parentId: string, isServer: boolean, mSource: MpsServer
  * Transform an array of MPS Server sources to Raven sources.
  */
 export function toRavenSources(parentId: string, isServer: boolean, sources: MpsServerSource[]): RavenSource[] {
-  return sources.map((source: MpsServerSource) => toSource(parentId, isServer, source));
+  if (sources) {
+    return sources.map((source: MpsServerSource) => toSource(parentId, isServer, source));
+  } else {
+    console.warn('sources.ts - toRavenSources: no sources given: ', sources);
+    return [];
+  }
 }
 
 /**
@@ -307,7 +312,7 @@ export function fromGraphableFilter(mSource: MpsServerSourceGraphable, rSource: 
 }
 
 /**
- * Convert an MPS Server 'fs_state' source to a Raven source.
+ * Convert an MPS Server 'file_state' source to a Raven source.
  */
 export function fromState(mSource: MpsServerSourceFileState, rSource: RavenBaseSource): RavenFileSource {
   return {
@@ -436,17 +441,17 @@ export function getAllChildIds(tree: StringTMap<RavenSource>, sourceId: string):
 /**
  * Helper that returns all sources by kind, starting at a given source id in the given tree.
  */
-export function getAllSourcesByKind(tree: StringTMap<RavenSource>, sourceId: string, kind: string): RavenSource[] {
+export function getAllSourcesByKinds(tree: StringTMap<RavenSource>, sourceId: string, kinds: string[]): RavenSource[] {
   let sourceNames: RavenSource[] = [];
 
   tree[sourceId].childIds.forEach((childId: string) => {
     const childSource = tree[childId];
 
-    if (childSource.kind === kind) {
+    if (kinds.includes(childSource.kind)) {
       sourceNames.push(childSource);
     }
 
-    sourceNames = sourceNames.concat(getAllSourcesByKind(tree, childSource.id, kind));
+    sourceNames = sourceNames.concat(getAllSourcesByKinds(tree, childSource.id, kinds));
   });
 
   return sourceNames;
@@ -578,9 +583,11 @@ export function getQueryUrlForGraphableFilter(
   targetFilters: StringTMap<string[]>,
 ) {
   let queryOptions = '';
+
   for (const group of Object.keys(targetFilters)) {
     queryOptions += `${group}=${getFilters(treeBySourceId, targetFilters[group]).join(',')}&`;
   }
+
   return `${sourceIdOrUrl}${queryOptions}`;
 }
 
@@ -688,21 +695,28 @@ export function toRavenCustomMetadata(metadata: any) {
 }
 
 /**
- * Helper that replaces part of a source id with a base id.
- * Ex. If we have a source id: /a/b/c/d, and a base id: /x/y, then
- *     this function should output /x/y/c/d.
+ * Helper that replaces part of a source id with a base id, based on the index of a source file.
+ * Ex. If we have a source id: /a/b/c/d, and a base id: /x/y, with `c` being a source id with the given `type`, then
+ *     this function should output /x/y/d.
  */
-export function updateSourceId(sourceId: string, baseId: string): string {
-  const sourceIds = sourceId.split('/').filter(x => x !== '');
+export function updateSourceId(sourceId: string, baseId: string, sourceTypes: StringTMap<string>, type: string): string {
   const baseIds = baseId.split('/').filter(x => x !== '');
+  let sourceIds = sourceId.split('/').filter(x => x !== '');
 
-  for (let i = 0, l = sourceIds.length; i < l; ++i) {
-    if (baseIds[i] !== undefined) {
-      sourceIds.splice(i, 1, baseIds[i]);
-    }
-  }
+  // Assumes a source id of `type` is found in the `sourceIds`.
+  // Grab the last one we find since it's the closest node we use when applying a layout.
+  const sourceIdsType = sourceIds.filter(s => sourceTypes[s] === type).pop();
 
-  sourceIds.unshift('');
+  // If there is a sourceIdsType then use it's index for replacement.
+  // Otherwise just use the base ids entire length as a fallback.
+  const sourceIdsTypeIndex = sourceIdsType ? sourceIds.indexOf(sourceIdsType) : baseIds.length - 1;
+
+  // Remove all sources up to and before the sourceId file.
+  sourceIds = sourceIds.filter((_, index) => index > sourceIdsTypeIndex);
+
+  // Push to the front of the source ids array the base ids and an empty string.
+  // The empty string is so when we do a `join` we get a prefixed forward-slash `/`.
+  sourceIds.unshift(...['', ...baseIds]);
 
   return sourceIds.join('/');
 }

@@ -203,6 +203,33 @@
 </split>
 
 <mat-sidenav-container>
+  <!-- Apply Layout Drawer. -->
+  <mat-sidenav
+    *ngIf="showApplyLayoutDrawer"
+    class="apply-layout-drawer"
+    mode="over"
+    position="end"
+    [fixedInViewport]="true"
+    [fixedTopGap]="40"
+    [opened]="showApplyLayoutDrawer"
+    (closedStart)="onToggleApplyLayoutDrawer(false)">
+    <div class="sidenav-content">
+      <button
+        mat-icon-button
+        (click)="onToggleApplyLayoutDrawer(false)">
+        <mat-icon
+          aria-label="Clear">
+          clear
+        </mat-icon>
+      </button>
+      <raven-layout-apply
+        [currentStateId]="currentStateId"
+        [treeBySourceId]="treeBySourceId"
+        (applyLayout)="onApplyLayout($event)">
+      </raven-layout-apply>
+    </div>
+  </mat-sidenav>
+
   <!-- Global Settings Drawer. -->
   <mat-sidenav
     *ngIf="showGlobalSettingsDrawer"

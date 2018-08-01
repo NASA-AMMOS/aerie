@@ -1,0 +1,21 @@
+:host {
+  display: block;
+  font-family: Roboto,"Helvetica Neue",sans-serif;
+}
+
+::ng-deep .mat-option-text {
+  direction: rtl;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.container > * {
+  width: 100%;
+}
+
+.field {
+  padding-bottom: 20px;
+}

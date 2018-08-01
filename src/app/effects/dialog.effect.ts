@@ -33,7 +33,6 @@ import {
   RavenCustomFilterDialogComponent,
   RavenCustomGraphDialogComponent,
   RavenFileImportDialogComponent,
-  RavenLayoutApplyDialogComponent,
   RavenPinDialogComponent,
   RavenShareableLinkDialogComponent,
   RavenStateSaveDialogComponent,
@@ -46,16 +45,11 @@ import {
   OpenCustomGraphDialog,
   OpenDeleteDialog,
   OpenFileImportDialog,
-  OpenLayoutApplyDialog,
   OpenPinDialog,
   OpenShareableLinkDialog,
   OpenStateApplyDialog,
   OpenStateSaveDialog,
 } from './../actions/dialog';
-
-import {
-  getAllSourcesByKind,
-} from './../shared/util';
 
 import * as sourceExplorerActions from './../actions/source-explorer';
 import * as timelineActions from './../actions/timeline';
@@ -190,36 +184,6 @@ export class DialogEffects {
     exhaustMap(({ action, result }) => {
       if (result && result.import) {
         return of(new sourceExplorerActions.ImportFile(action.source, result.file));
-      }
-      return [];
-    }),
-  );
-
-  /**
-   * Effect for OpenLayoutApplyDialog.
-   */
-  @Effect()
-  openLayoutApplyDialog$: Observable<Action> = this.actions$.pipe(
-    ofType<OpenLayoutApplyDialog>(DialogActionTypes.OpenLayoutApplyDialog),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    exhaustMap(({ action, state }) => {
-      const applyLayoutDialog = this.dialog.open(RavenLayoutApplyDialogComponent, {
-        data: {
-          sources: getAllSourcesByKind(state.sourceExplorer.treeBySourceId, '/', 'fs_file'),
-        },
-        width: action.width,
-      });
-
-      return zip(
-        of(action),
-        applyLayoutDialog.afterClosed(),
-      );
-    }),
-    map(([action, result]) => ({ action, result })),
-    exhaustMap(({ action, result }) => {
-      if (result && result.apply) {
-        return of(new sourceExplorerActions.ApplyLayout(action.source.url, action.source.id, result.sourceId));
       }
       return [];
     }),

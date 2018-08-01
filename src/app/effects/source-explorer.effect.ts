@@ -13,6 +13,8 @@ import { Injectable } from '@angular/core';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 
+import { flatten, uniqueId } from 'lodash';
+
 import {
   combineLatest,
   concat,
@@ -29,6 +31,7 @@ import {
   mergeMap,
   switchMap,
   take,
+  timeout,
   withLatestFrom,
 } from 'rxjs/operators';
 
@@ -141,6 +144,7 @@ export class SourceExplorerEffects {
 
   /**
    * Effect for ApplyLayout.
+   * Note that right now we are only applying layouts to the `fs_file` type.
    */
   @Effect()
   applyLayout$: Observable<Action> = this.actions$.pipe(
@@ -150,22 +154,48 @@ export class SourceExplorerEffects {
     concatMap(({ action, state }) =>
       forkJoin([
         of(action),
-        this.fetchState(action.sourceUrl),
+        of(state),
+        this.fetchState(`${state.config.baseUrl}/${state.config.baseSourcesUrl}${state.sourceExplorer.currentStateId}`),
         this.fetchNewSources(`${state.config.baseUrl}/${state.config.baseSourcesUrl}`, '/', true),
       ]),
     ),
-    map(([action, savedState, initialSources]) => ({ action, savedState, initialSources })),
-    concatMap(({ action, savedState, initialSources }) => {
-      const updatedBands = savedState.bands.map((band: RavenCompositeBand) => ({
-        ...band,
-        subBands: band.subBands.map((subBand: RavenSubBand) => ({
-          ...subBand,
-          sourceIds: subBand.sourceIds.map(sourceId => updateSourceId(sourceId, action.targetSourceId)),
-        })),
-      }));
+    map(([action, state, savedState, initialSources]) => ({ action, state, savedState, initialSources })),
+    concatMap(({ action, state, savedState, initialSources }) =>
+      forkJoin([
+        of(action),
+        of(state),
+        of(savedState),
+        of(initialSources),
+        this.fetchSourcesByType(state, getSourceIds(savedState.bands).parentSourceIds),
+      ]),
+    ),
+    map(([action, state, savedState, initialSources, sourceTypes]) => ({ action, state, savedState, initialSources, sourceTypes })),
+    concatMap(({ action, state, savedState, initialSources, sourceTypes }) => {
+      const updatedBands: RavenCompositeBand[] = [];
+
+      action.targetSourceIds.forEach(targetSourceId => {
+        const bands = savedState.bands.map((band: RavenCompositeBand) => {
+          const parentId = uniqueId();
+          const targetSource = state.sourceExplorer.treeBySourceId[targetSourceId];
+
+          return {
+            ...band,
+            id: parentId,
+            subBands: band.subBands.map((subBand: RavenSubBand) => ({
+              ...subBand,
+              id: uniqueId(),
+              parentUniqueId: parentId,
+              sourceIds: subBand.sourceIds.map(sourceId => updateSourceId(sourceId, targetSourceId, sourceTypes, targetSource.type)),
+            })),
+          };
+        });
+
+        updatedBands.push(...bands);
+      });
 
       return concat(
         ...this.loadLayout(
+          state,
           updatedBands,
           initialSources,
           savedState,
@@ -502,7 +532,7 @@ export class SourceExplorerEffects {
     private actions$: Actions,
     private http: HttpClient,
     private store$: Store<AppState>,
-  ) { }
+  ) {}
 
   /**
    * Helper. Returns a stream of actions that need to occur when expanding a source explorer source.
@@ -510,20 +540,24 @@ export class SourceExplorerEffects {
   expand(source: RavenSource): Observable<Action>[] {
     const actions: Observable<Action>[] = [];
 
-    if (source && !source.childIds.length) {
-      if (source.content) {
-        actions.push(
-          of(new sourceExplorerActions.NewSources(source.id, toRavenSources(source.id, false, source.content))),
-        );
-      } else {
-        actions.push(
-          this.fetchNewSources(source.url, source.id, false).pipe(
-            concatMap((sources: RavenSource[]) => [
-              new sourceExplorerActions.NewSources(source.id, sources), // Add new sources to the source-explorer.
-            ]),
-          ),
-        );
+    if (source) {
+      if (!source.childIds.length) {
+        if (source.content) {
+          actions.push(
+            of(new sourceExplorerActions.NewSources(source.id, toRavenSources(source.id, false, source.content))),
+          );
+        } else {
+          actions.push(
+            this.fetchNewSources(source.url, source.id, false).pipe(
+              concatMap((sources: RavenSource[]) => [
+                new sourceExplorerActions.NewSources(source.id, sources), // Add new sources to the source-explorer.
+              ]),
+            ),
+          );
+        }
       }
+    } else {
+      console.warn('source-explorer.effect: expand: source is not defined: ', source);
     }
 
     return actions;
@@ -549,6 +583,7 @@ export class SourceExplorerEffects {
    * Helper. Returns a stream of actions that need to occur when loading a layout.
    */
   loadLayout(
+    state: AppState,
     bands: RavenCompositeBand[],
     initialSources: RavenSource[],
     savedState: RavenState,
@@ -556,6 +591,7 @@ export class SourceExplorerEffects {
     return [
       of(new sourceExplorerActions.UpdateSourceExplorer({
         ...fromSourceExplorer.initialState,
+        currentStateId: state.sourceExplorer.currentStateId,
         fetchPending: true,
       })),
       of(new timelineActions.UpdateTimeline({
@@ -572,6 +608,7 @@ export class SourceExplorerEffects {
         ...savedState.defaultBandSettings,
       })),
       ...this.load(bands, initialSources),
+      of(new timelineActions.RemoveBandsWithNoPoints()),
       ...savedState.pins.map(pin => of(new sourceExplorerActions.PinAdd(pin))), // TODO: Update layouts to apply pins correctly.
       of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
     ];
@@ -619,18 +656,25 @@ export class SourceExplorerEffects {
     initialSources: RavenSource[],
   ): Observable<Action>[] {
     const { parentSourceIds, sourceIds } = getSourceIds(bands);
+
     return [
       of(new sourceExplorerActions.NewSources('/', initialSources)),
       ...parentSourceIds.map((sourceId: string) =>
         combineLatest(this.store$).pipe(
           take(1),
           map((state: AppState[]) => state[0].sourceExplorer.treeBySourceId[sourceId]),
-          concatMap(source =>
-            concat(
-              ...this.expand(source),
-              of(new sourceExplorerActions.UpdateTreeSource(source.id, { expanded: true })),
-            ),
-          ),
+          concatMap(source => {
+            if (source) {
+              return concat(
+                ...this.expand(source),
+                of(new sourceExplorerActions.UpdateTreeSource(source.id, { expanded: true })),
+              );
+            } else {
+              console.warn('source-explorer.effect: load: source is not defined: ', source);
+              // TODO: Output warning?
+              return [];
+            }
+          }),
         ),
       ),
       combineLatest(this.store$).pipe(
@@ -733,7 +777,7 @@ export class SourceExplorerEffects {
           actions.push(new layoutActions.Resize());
         } else {
           // Notify user no bands will be drawn.
-          actions.push(new dialogActions.OpenConfirmDialog('OK', 'Data set empty. Timeline will not de drawn.', '350px'));
+          actions.push(new dialogActions.OpenConfirmDialog('OK', `Data set empty or does not exist. Timeline will not de drawn for ${sourceId}.`, '350px'));
         }
 
         return actions;
@@ -767,26 +811,32 @@ export class SourceExplorerEffects {
       );
     }
 
-    if (treeBySourceId[sourceId].type === 'customFilter' || treeBySourceId[sourceId].type === 'filter') {
-      // No drawing for customFilters or filters. TODO: Why?
-      return [];
-    }
+    if (treeBySourceId[sourceId]) {
+      if (treeBySourceId[sourceId].type === 'customFilter' || treeBySourceId[sourceId].type === 'filter') {
+        // No drawing for customFilters or filters. TODO: Why?
+        return [];
+      }
 
-    if (treeBySourceId[sourceId].type === 'graphableFilter') {
-      return [of(new sourceExplorerActions.AddGraphableFilter(treeBySourceId[sourceId] as RavenGraphableFilterSource))];
+      if (treeBySourceId[sourceId].type === 'graphableFilter') {
+        return [of(new sourceExplorerActions.AddGraphableFilter(treeBySourceId[sourceId] as RavenGraphableFilterSource))];
+      } else {
+        return [
+          this.open(
+            null,
+            filtersByTarget,
+            treeBySourceId,
+            sourceId,
+            currentBands,
+            null,
+            null,
+            defaultBandSettings,
+          ),
+        ];
+      }
     } else {
-      return [
-        this.open(
-          null,
-          filtersByTarget,
-          treeBySourceId,
-          sourceId,
-          currentBands,
-          null,
-          null,
-          defaultBandSettings,
-        ),
-      ];
+      // Error case. No sources to open.
+      // TODO: Catch and handle errors here.
+      return [];
     }
   }
 
@@ -796,6 +846,38 @@ export class SourceExplorerEffects {
   fetchNewSources(url: string, parentId: string, isServer: boolean) {
     return this.http.get<MpsServerSource[]>(url).pipe(
       map((mpsServerSources: MpsServerSource[]) => toRavenSources(parentId, isServer, mpsServerSources)),
+    );
+  }
+
+  /**
+   * Helper. Makes requests for a list of source ids and returns the type of each source id.
+   * This is used when we need to know the source type when we apply a layout.
+   */
+  fetchSourcesByType(state: AppState, parentSourceIds: string[]) {
+    // Collapse parentSourceIds into a map of sourceIds so we only fetch sources once.
+    const sourceIds = parentSourceIds.reduce((ids, id) => {
+      ids[id] = true;
+      return ids;
+    }, {});
+
+    return forkJoin(
+        Object.keys(sourceIds).map(sourceId =>
+          this.http.get(`${state.config.baseUrl}/${state.config.baseSourcesUrl}${sourceId}`).pipe(
+            timeout(3000), // Timeout long requests since MPS Server returns type information quickly, and long requests probably are not what we are looking for.
+            map((mpsServerSources: MpsServerSource[]) => toRavenSources('', false, mpsServerSources)),
+            map((sources:  RavenSource[]) => sources.map(source => ({ name: source.name, type: source.type }))),
+            catchError(() => of([])),
+          ),
+        ),
+    ).pipe(
+      map((res: any[][]) => flatten(res)), // forkJoin returns an array with each response in a sub-array. So flatten here to get a single array of sources.
+      map(sources =>
+        // Build and return a map of source names to their type.
+        sources.reduce((sourceTypes, source) => {
+          sourceTypes[source.name] = source.type;
+          return sourceTypes;
+        }, {}),
+      ),
     );
   }
 

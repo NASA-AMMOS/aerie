@@ -56,6 +56,7 @@ import {
 
 // Source Explorer State Interface.
 export interface SourceExplorerState {
+  currentStateId: string;
   customFiltersBySourceId: StringTMap<RavenCustomFilter[]>;
   fetchPending: boolean;
   filtersByTarget: StringTMap<StringTMap<string[]>>; // Target refers to an id that ties filters to a graphable source.
@@ -67,6 +68,7 @@ export interface SourceExplorerState {
 
 // Source Explorer Initial State.
 export const initialState: SourceExplorerState = {
+  currentStateId: '',
   customFiltersBySourceId: {},
   fetchPending: false,
   filtersByTarget: {},
@@ -125,7 +127,7 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
     case SourceExplorerActionTypes.AddFilter:
       return addFilter(state, action);
     case SourceExplorerActionTypes.AddGraphableFilter:
-      return { ...state, fetchPending: true };
+    case SourceExplorerActionTypes.ApplyLayout:
     case SourceExplorerActionTypes.ApplyState:
       return { ...state, fetchPending: true };
     case SourceExplorerActionTypes.CloseEvent:

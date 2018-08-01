@@ -12,6 +12,10 @@ mat-card {
   z-index: 1; /* Prevents CSS bleed of the tab header. */
 }
 
+mat-sidenav.apply-layout-drawer {
+  width: 700px;
+}
+
 mat-sidenav.epochs-drawer {
   width: 600px;
 }

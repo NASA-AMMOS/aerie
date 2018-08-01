@@ -58,11 +58,11 @@ export function toRavenBandData(
 
   if (metadata.hasTimelineType === 'measurement' && (metadata as MpsServerStateMetadata).hasValueType === 'string_xdr') {
     // State.
-    const stateBand = toStateBand(sourceId, metadata as MpsServerStateMetadata, timelineData as MpsServerStatePoint[], defaultBandSettings);
+    const stateBand = toStateBand(sourceId, metadata as MpsServerStateMetadata, timelineData as MpsServerStatePoint[], defaultBandSettings, treeBySourceId);
     return [stateBand];
   } else if (metadata.hasTimelineType === 'measurement' || metadata.hasTimelineType === 'state') {
     // Resource.
-    const resourceBand = toResourceBand(sourceId, metadata as MpsServerResourceMetadata, timelineData as MpsServerResourcePoint[], defaultBandSettings);
+    const resourceBand = toResourceBand(sourceId, metadata as MpsServerResourceMetadata, timelineData as MpsServerResourcePoint[], defaultBandSettings, treeBySourceId);
     return [resourceBand];
   } else if (metadata.hasTimelineType === 'activity') {
     // Activity.
@@ -203,6 +203,7 @@ export function toResourceBand(
   metadata: MpsServerResourceMetadata,
   timelineData: MpsServerResourcePoint[],
   defaultBandSettings: RavenDefaultBandSettings,
+  treeBySourceId: StringTMap<RavenSource>,
 ): RavenResourceBand {
   const { maxTimeRange, points } = getResourcePoints(sourceId, metadata, timelineData);
 
@@ -251,6 +252,7 @@ export function toStateBand(
   metadata: MpsServerStateMetadata,
   timelineData: MpsServerStatePoint[],
   defaultBandSettings: RavenDefaultBandSettings,
+  treeBySourceId: StringTMap<RavenSource>,
 ): RavenStateBand {
   const { maxTimeRange, points } = getStatePoints(sourceId, timelineData);
 

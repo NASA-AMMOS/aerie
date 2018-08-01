@@ -28,6 +28,7 @@ import {
   PinRename,
   RemoveAllPointsInSubBandWithParentSource,
   RemoveBandsOrPointsForSource,
+  RemoveBandsWithNoPoints,
   RemoveSourceIdFromSubBands,
   RemoveSubBand,
   ResetViewTimeRange,
@@ -304,6 +305,43 @@ describe('timeline reducer', () => {
 
     timelineState = reducer(timelineState, new RemoveBandsOrPointsForSource('/child'));
     expect(timelineState.bands.length).toEqual(0);
+  });
+
+  it('handle RemoveBandsWithNoPoints', () => {
+    const source: RavenSource = rootSource;
+
+    const band0 = {
+      ...compositeBand,
+      id: '0',
+      subBands: [{
+        ...activityBand,
+        id: '1',
+        parentUniqueId: '0',
+        points: [],
+        sourceIds: ['/', '/child'],
+      }],
+    };
+
+    const band1 = {
+      ...compositeBand,
+      id: '1',
+      subBands: [{
+        ...activityBand,
+        id: '2',
+        parentUniqueId: '1',
+        points: [{
+          ...activityPoint,
+          id: '100',
+          sourceId: '/',
+        }],
+        sourceIds: ['/', '/child'],
+      }],
+    };
+
+    timelineState = reducer(timelineState, new AddBand(source.id, band0));
+    timelineState = reducer(timelineState, new AddBand(source.id, band1));
+    timelineState = reducer(timelineState, new RemoveBandsWithNoPoints());
+    expect(timelineState.bands.length).toEqual(1);
   });
 
   it('handle RemoveSourceIdFromSubBands', () => {

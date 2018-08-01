@@ -87,6 +87,7 @@ export class TimelineComponent implements OnDestroy {
   rightPanelSelectedTabIndex: number | null;
   showActivityPointMetadata: boolean;
   showActivityPointParameters: boolean;
+  showApplyLayoutDrawer: boolean;
   showDetailsPanel: boolean;
   showEpochsDrawer: boolean;
   showGlobalSettingsDrawer: boolean;
@@ -98,6 +99,7 @@ export class TimelineComponent implements OnDestroy {
   timelinePanelSize: number;
 
   // Source Explorer state.
+  currentStateId: string;
   customFiltersBySourceId: StringTMap<RavenCustomFilter[]>;
   filtersByTarget: StringTMap<StringTMap<string[]>>;
   treeBySourceId: StringTMap<RavenSource>;
@@ -163,6 +165,7 @@ export class TimelineComponent implements OnDestroy {
       this.rightPanelSelectedTabIndex = state.rightPanelSelectedTabIndex;
       this.showActivityPointMetadata = state.showActivityPointMetadata;
       this.showActivityPointParameters = state.showActivityPointParameters;
+      this.showApplyLayoutDrawer = state.showApplyLayoutDrawer;
       this.showDetailsPanel = state.showDetailsPanel;
       this.showEpochsDrawer = state.showEpochsDrawer;
       this.showGlobalSettingsDrawer = state.showGlobalSettingsDrawer;
@@ -192,6 +195,7 @@ export class TimelineComponent implements OnDestroy {
     this.store.select(fromSourceExplorer.getSourceExplorerState).pipe(
       takeUntil(this.ngUnsubscribe),
     ).subscribe(state => {
+      this.currentStateId = state.currentStateId;
       this.customFiltersBySourceId = state.customFiltersBySourceId;
       this.filtersByTarget = state.filtersByTarget;
       this.treeBySourceId = state.treeBySourceId;
@@ -248,6 +252,13 @@ export class TimelineComponent implements OnDestroy {
   markForCheck() {
     this.changeDetector.markForCheck();
     setTimeout(() => this.changeDetector.detectChanges());
+  }
+
+  /**
+   * Event. Called when ``
+   */
+  onApplyLayout(targetSourceIds: string[]): void {
+    this.store.dispatch(new sourceExplorerActions.ApplyLayout(targetSourceIds));
   }
 
   /**
@@ -310,6 +321,13 @@ export class TimelineComponent implements OnDestroy {
   onSort(sort: StringTMap<RavenSortMessage>): void {
     this.store.dispatch(new timelineActions.SortBands(sort));
     this.store.dispatch(new layoutActions.Resize());
+  }
+
+  /**
+   * Event. Called when a toggle event is fired from the apply layout drawer.
+   */
+  onToggleApplyLayoutDrawer(opened?: boolean) {
+    this.store.dispatch(new layoutActions.ToggleApplyLayoutDrawer(opened));
   }
 
   /**

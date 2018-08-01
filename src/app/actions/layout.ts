@@ -18,6 +18,7 @@ import {
 export enum LayoutActionTypes {
   Resize                     = '[layout] resize',
   SetMode                    = '[layout] set_mode',
+  ToggleApplyLayoutDrawer    = '[layout] toggle_apply_layout_drawer',
   ToggleDetailsPanel         = '[layout] toggle_details_panel',
   ToggleEpochsDrawer         = '[layout] toggle_epochs_drawer',
   ToggleGlobalSettingsDrawer = '[layout] toggle_global_settings_drawer',
@@ -44,6 +45,12 @@ export class SetMode implements Action {
     public showRightPanel: boolean,
     public showSouthBandsPanel: boolean,
   ) {}
+}
+
+export class ToggleApplyLayoutDrawer implements Action {
+  readonly type = LayoutActionTypes.ToggleApplyLayoutDrawer;
+
+  constructor(public opened?: boolean) {}
 }
 
 export class ToggleDetailsPanel implements Action {
@@ -96,6 +103,7 @@ export class UpdateLayout implements Action {
 export type LayoutAction =
   Resize |
   SetMode |
+  ToggleApplyLayoutDrawer |
   ToggleDetailsPanel |
   ToggleEpochsDrawer |
   ToggleGlobalSettingsDrawer |

@@ -58,10 +58,6 @@ describe('DialogEffects', () => {
     expect(metadata.openFileImportDialog$).toEqual({ dispatch: true });
   });
 
-  it('should register openLayoutApplyDialog$ that does dispatch an action', () => {
-    expect(metadata.openLayoutApplyDialog$).toEqual({ dispatch: true });
-  });
-
   it('should register openPinDialog$that does dispatch an action', () => {
     expect(metadata.openPinDialog$).toEqual({ dispatch: true });
   });

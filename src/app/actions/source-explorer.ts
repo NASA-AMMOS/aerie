@@ -89,11 +89,7 @@ export class AddGraphableFilter implements Action {
 export class ApplyLayout implements Action {
   readonly type = SourceExplorerActionTypes.ApplyLayout;
 
-  constructor(
-    public sourceUrl: string,
-    public sourceId: string,
-    public targetSourceId: string,
-  ) {}
+  constructor(public targetSourceIds: string[]) {}
 }
 
 export class ApplyState implements Action {

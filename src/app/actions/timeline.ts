@@ -31,6 +31,7 @@ export enum TimelineActionTypes {
   PinRename                                 = '[timeline] pin_rename',
   RemoveAllPointsInSubBandWithParentSource  = '[timeline] remove_all_points_in_sub_band_with_parent_source',
   RemoveBandsOrPointsForSource              = '[timeline] remove_bands_or_points_for_source',
+  RemoveBandsWithNoPoints                   = '[timeline] remove_bands_with_no_points',
   RemoveSourceIdFromSubBands                = '[timeline] remove_source_from_sub_bands',
   RemoveSubBand                             = '[timeline] remove_sub_band',
   ResetViewTimeRange                        = '[timeline] reset_view_time_range',
@@ -115,6 +116,10 @@ export class RemoveBandsOrPointsForSource implements Action {
   readonly type = TimelineActionTypes.RemoveBandsOrPointsForSource;
 
   constructor(public sourceId: string) {}
+}
+
+export class RemoveBandsWithNoPoints implements Action {
+  readonly type = TimelineActionTypes.RemoveBandsWithNoPoints;
 }
 
 export class RemoveSourceIdFromSubBands implements Action {
@@ -214,6 +219,7 @@ export type TimelineAction =
   PinRename |
   RemoveAllPointsInSubBandWithParentSource |
   RemoveBandsOrPointsForSource |
+  RemoveBandsWithNoPoints |
   RemoveSourceIdFromSubBands |
   RemoveSubBand |
   ResetViewTimeRange |

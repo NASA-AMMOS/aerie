@@ -364,9 +364,13 @@ export class RavenTableComponent implements OnChanges {
    */
   setColumnHeader() {
     setTimeout(() => {
-      if (this.agGrid) {
-        this.agGrid.columnApi.getColumnGroup('header').getColGroupDef().headerName = this.selectedSubBand.label;
-        this.agGrid.api.refreshHeader();
+      if (this.agGrid && this.agGrid.columnApi) {
+        const header = this.agGrid.columnApi.getColumnGroup('header');
+
+        if (header) {
+          header.getColGroupDef().headerName = this.selectedSubBand.label;
+          this.agGrid.api.refreshHeader();
+        }
       }
     });
   }

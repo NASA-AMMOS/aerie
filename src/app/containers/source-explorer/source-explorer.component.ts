@@ -36,6 +36,7 @@ import * as fromSourceExplorer from './../../reducers/source-explorer';
 
 import * as dialogActions from './../../actions/dialog';
 import * as epochsActions from './../../actions/epochs';
+import * as layoutActions from './../../actions/layout';
 import * as sourceExplorerActions from './../../actions/source-explorer';
 
 import {
@@ -149,7 +150,8 @@ export class SourceExplorerComponent implements OnDestroy {
     const { event, source } = action;
 
     if (event === 'apply-layout') {
-      this.store.dispatch(new dialogActions.OpenLayoutApplyDialog(source, '250px'));
+      this.store.dispatch(new sourceExplorerActions.UpdateSourceExplorer({ currentStateId: source.id }));
+      this.store.dispatch(new layoutActions.ToggleApplyLayoutDrawer(true));
     } else if (event === 'apply-state') {
       this.store.dispatch(new dialogActions.OpenStateApplyDialog(source, '250px'));
     } else if (event === 'delete') {
