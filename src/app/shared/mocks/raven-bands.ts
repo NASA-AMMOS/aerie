@@ -53,6 +53,8 @@ export const activityBand: RavenActivityBand = {
 
 export const compositeBand: RavenCompositeBand = {
   compositeAutoScale: false,
+  compositeLogTicks: false,
+  compositeScientificNotation: false,
   compositeYAxisLabel: false,
   containerId: '0',
   height: 50,
@@ -85,10 +87,12 @@ export const resourceBand: RavenResourceBand = {
   labelFont: 'Georgia',
   labelPin: '',
   labelUnit: 'Degrees',
+  logTicks: false,
   maxTimeRange: { end: 300, start: 100 },
   name: 'test-resource-band',
   parentUniqueId: null,
   points: [],
+  scientificNotation: false,
   showIcon: false,
   showLabelPin: true,
   showLabelUnit: true,

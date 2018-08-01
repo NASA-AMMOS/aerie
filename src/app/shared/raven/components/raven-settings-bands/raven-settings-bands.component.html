@@ -269,6 +269,57 @@
               </mat-form-field>
             </div>
 
+            <!-- Composite Log Scale. -->
+            <div
+              *ngIf="bandsById[selectedBandId].compositeYAxisLabel"
+              class="field">
+              <mat-slide-toggle
+                id="raven-composite_log_ticks"
+                color="primary"
+                [checked]="bandsById[selectedBandId].compositeLogTicks"
+                (change)="updateBand.emit({ bandId: selectedBandId, update: { compositeLogTicks: $event.checked } })">
+                Composite Log Scale
+              </mat-slide-toggle>
+            </div>
+
+            <!-- Log Scale. -->
+            <div
+              *ngIf="!bandsById[selectedBandId].compositeYAxisLabel"
+              class="field">
+              <mat-slide-toggle
+                id="raven-log_ticks"
+                color="primary"
+                [checked]="subBand.logTicks"
+                (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { logTicks: $event.checked } })">
+                Log Scale
+              </mat-slide-toggle>
+            </div>
+
+            <!-- Composite Scientific Notation. -->
+            <div
+              *ngIf="bandsById[selectedBandId].compositeYAxisLabel && !subBand.logTicks"
+              class="field">
+              <mat-slide-toggle
+                color="primary"
+                [checked]="bandsById[selectedBandId].compositeScientificNotation"
+                (change)="updateBand.emit({ bandId: selectedBandId, update: { compositeScientificNotation: $event.checked } })">
+                Composite Scientific Notation
+              </mat-slide-toggle>
+            </div>
+
+            <!-- Scientific notation. -->
+            <div
+              *ngIf="!bandsById[selectedBandId].compositeYAxisLabel && !subBand.logTicks"
+              class="field">
+              <mat-slide-toggle
+                id="raven-scientific_notation"
+                color="primary"
+                [checked]="subBand.scientificNotation"
+                (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { scientificNotation: $event.checked } })">
+                Scientific Notation
+              </mat-slide-toggle>
+            </div>
+
             <!-- Show Icon. -->
             <div class="field">
               <mat-slide-toggle

@@ -2904,6 +2904,9 @@ function ResourceBand(obj) {
   // indicates if tick values should be hidden
   this.hideTicks = ("hideTicks" in obj) ? obj.hideTicks : false;
 
+  // RAVEN -- scientific notation
+  this.scientificNotation = ("scientificNotation" in obj) ? obj.scientificNotation : false; // If true, use Scientific notation. False otherwise.
+
   // RAVEN -- log ticks
   this.logTicks = ("logTicks" in obj) ? obj.logTicks : false; // If true, use Log ticks. False otherwise.
   this.logTickToCanvasHeight = {};                            // Maps log tick values to height drawn on Canvas.
@@ -3284,7 +3287,7 @@ ResourceBand.prototype.recomputeTickValues = function() {
   // Wrap in a try-catch here to make sure the program does not crash when this happens.
   // See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Precision_range
   try {
-    this.tickValues = Util.computeTickValues(this.minPaintValue, this.maxPaintValue, this.height, this.scientificNotation);
+    this.tickValues = Util.computeTickValues(this.minPaintValue, this.maxPaintValue, this.height, this.logTicks, this.scientificNotation);
   } catch (e) {}
 }
 
@@ -3347,10 +3350,6 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
     }
   }
 
-  if (this.band.hideTicks) {
-    return xStart;
-  }
-
   // if no tick values to render, return early and return the original
   // xStart location
   if(tickValues.length === 0) {
@@ -3380,13 +3379,18 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
       var renderedValue = this.band.onFormatTickValue !== null ? this.band.onFormatTickValue(value) : value;
 
       if (this.band.logTicks) {
-        ctx.fillText(renderedValue, axisLabelsXVal, this.band.height - yVal);
+
+        if (!this.band.hideTicks) {
+          ctx.fillText(renderedValue, axisLabelsXVal, this.band.height - yVal);
+        }
         this.band.logTickToCanvasHeight[value] = this.band.height - yVal; // Maps tick values to Canvas positions.
         yVal += step;
       }
       else {
         var yVal = this.band.getYFromValue(value);
-        ctx.fillText(renderedValue, axisLabelsXVal, yVal);
+        if (!this.band.hideTicks) {
+          ctx.fillText(renderedValue, axisLabelsXVal, yVal);
+        }
       }
 
       var valueWidth = ctx.measureText(renderedValue).width;
@@ -3410,6 +3414,10 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
     }
     ctx.stroke();
     ctx.closePath();
+  }
+
+  if (this.band.hideTicks) {
+    return xStart;
   }
 
   // Don't draw a vertical if on labelWidth - assuming one already exists
@@ -6291,12 +6299,12 @@ var Util = {
     */
   computeTickValuesLog: function(min, max) {
     let ticks = [];
-    let tick = MPSViewerUtils.roundToNearestPowerOf10(min);
+    let tick = Util.roundToNearestPowerOf10(min);
 
     ticks.push(tick);
 
     // Compute log ticks. All ticks should be powers of 10.
-    while (tick < MPSViewerUtils.roundToNearestPowerOf10(max)) {
+    while (tick < Util.roundToNearestPowerOf10(max)) {
       tick *= 10;
       ticks.push(tick);
     }
@@ -6323,10 +6331,10 @@ var Util = {
     let ticks = [];
 
     if (logTicks) {
-      ticks = this.computeTickValuesLog(min, max);
+      ticks = Util.computeTickValuesLog(min, max);
     }
     else {
-      ticks = this.computeTickValuesLinear(min, max, height, scientificNotation);
+      ticks = Util.computeTickValuesLinear(min, max, height, scientificNotation);
     }
 
     return ticks;

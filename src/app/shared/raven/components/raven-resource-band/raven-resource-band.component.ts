@@ -67,8 +67,10 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
   @Input() labelFontSize: number;
   @Input() labelPin: string;
   @Input() labelUnit: string;
+  @Input() logTicks: boolean;
   @Input() name: string;
   @Input() points: RavenResourcePoint[];
+  @Input() scientificNotation: boolean;
   @Input() showIcon: boolean;
   @Input() showLabelPin: boolean;
   @Input() showLabelUnit: boolean;
@@ -139,9 +141,21 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
       this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.getLabel() });
     }
 
+    // Log Ticks.
+    if (changes.logTicks && !changes.logTicks.firstChange) {
+      this.updateSubBand.emit({ subBandId: this.id, prop: 'logTicks', value: this.logTicks });
+      this.updateTickValues.emit();
+    }
+
     // Points.
     if (changes.points && !changes.points.firstChange) {
       this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals(this.color) });
+    }
+
+    // Scientific Notation.
+    if (changes.scientificNotation && !changes.scientificNotation.firstChange) {
+      this.updateSubBand.emit({ subBandId: this.id, prop: 'scientificNotation', value: this.scientificNotation });
+      this.updateTickValues.emit();
     }
 
     // Show Icon.
@@ -175,6 +189,7 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
       labelColor: colorHexToRgbArray(this.color),
       labelFont: this.labelFont,
       labelFontSize: this.labelFontSize,
+      logTicks: this.logTicks,
       name: this.name,
       onFormatTickValue: this.onFormatTickValue.bind(this),
       onGetInterpolatedTooltipText: this.onGetInterpolatedTooltipText.bind(this),
@@ -185,6 +200,7 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
         icon: this.icon,
         showIcon: this.showIcon,
       }),
+      scientificNotation: this.scientificNotation,
       tickValues: [],
       timeAxis: this.ctlTimeAxis,
       viewTimeAxis: this.ctlViewTimeAxis,

@@ -31,10 +31,12 @@ export interface RavenResourceBand {
   labelFont: string;
   labelPin: string;
   labelUnit: string;
+  logTicks: boolean;
   maxTimeRange: RavenTimeRange;
   name: string;
   parentUniqueId: string | null;
   points: RavenResourcePoint[];
+  scientificNotation: boolean;
   showIcon: boolean;
   showLabelPin: boolean;
   showLabelUnit: boolean;

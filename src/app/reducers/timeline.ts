@@ -319,7 +319,11 @@ export function removeBandsOrPointsForSource(state: TimelineState, action: Remov
     }))
     .filter(
       band => band.subBands.length !== 0,
-    );
+    )
+    .map(band => ({
+      ...band,
+      compositeYAxisLabel: band.subBands.length > 1,
+    }));
 
   bands = updateSortOrder(bands);
 
@@ -364,7 +368,11 @@ export function removeSubBand(state: TimelineState, action: RemoveSubBand): Time
     }))
     .filter(
       band => band.subBands.length !== 0,
-    );
+    )
+    .map(band => ({
+      ...band,
+      compositeYAxisLabel: band.subBands.length > 1,
+    }));
 
   bands = updateSortOrder(bands);
 
@@ -382,7 +390,7 @@ export function removeSubBand(state: TimelineState, action: RemoveSubBand): Time
  */
 export function selectBand(state: TimelineState, action: SelectBand): TimelineState {
   if (action.bandId !== state.selectedBandId) {
-    const band = bandById(state.bands, action.bandId);
+    const band = bandById(state.bands, action.bandId) as RavenCompositeBand;
 
     return {
       ...state,

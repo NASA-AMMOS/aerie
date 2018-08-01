@@ -13,6 +13,8 @@ import {
 
 export interface RavenCompositeBand {
   compositeAutoScale: boolean;
+  compositeLogTicks: boolean;
+  compositeScientificNotation: boolean;
   compositeYAxisLabel: boolean;
   containerId: string;
   height: number;

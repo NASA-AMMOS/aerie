@@ -148,6 +148,8 @@ export function toCompositeBand(
 
   const compositeBand: RavenCompositeBand = {
     compositeAutoScale: true,
+    compositeLogTicks: false,
+    compositeScientificNotation: false,
     compositeYAxisLabel: false,
     containerId: containerId || '0',
     height: subBand.height,
@@ -223,10 +225,12 @@ export function toResourceBand(
     labelFont: defaultBandSettings.labelFont,
     labelPin: '',
     labelUnit: metadata.hasUnits || '',
+    logTicks: false,
     maxTimeRange,
     name: metadata.hasObjectName,
     parentUniqueId: null,
     points,
+    scientificNotation: false,
     showIcon: false,
     showLabelPin: true,
     showLabelUnit: true,
@@ -383,7 +387,7 @@ export function updateSelectedBandIds(
   selectedBandId: string,
   selectedSubBandId: string,
 ) {
-  const band = bandById(bands, selectedBandId);
+  const band = bandById(bands, selectedBandId) as RavenCompositeBand;
   const subBand = subBandById(bands, selectedBandId, selectedSubBandId);
 
   if (!band) {
@@ -543,7 +547,7 @@ export function hasSourceId(bands: RavenCompositeBand[], sourceId: string) {
 /**
  * Helper. Returns a band from a list of bands with the given id. Null otherwise.
  */
-export function bandById(bands: RavenCompositeBand[], id: string): RavenCompositeBand | null {
+export function bandById(bands: RavenSubBand[] | RavenCompositeBand[], id: string): RavenSubBand | RavenCompositeBand | null {
   for (let i = 0, l = bands.length; i < l; ++i) {
     if (bands[i].id === id) {
       return bands[i];
@@ -592,7 +596,7 @@ export function isMessageTypeActivity(activity: RavenActivityPoint): boolean {
  * Helper. Returns true if the given band id in a list of bands is in overlay mode. False otherwise.
  */
 export function isOverlay(bands: RavenCompositeBand[], bandId: string): boolean {
-  const band = bandById(bands, bandId);
+  const band = bandById(bands, bandId) as RavenCompositeBand;
 
   if (band) {
     return band.overlay;
