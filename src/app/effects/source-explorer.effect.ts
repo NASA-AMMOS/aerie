@@ -609,6 +609,7 @@ export class SourceExplorerEffects {
       })),
       ...this.load(bands, initialSources),
       of(new timelineActions.RemoveBandsWithNoPoints()),
+      of(new timelineActions.ResetViewTimeRange()),
       ...savedState.pins.map(pin => of(new sourceExplorerActions.PinAdd(pin))), // TODO: Update layouts to apply pins correctly.
       of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
     ];
