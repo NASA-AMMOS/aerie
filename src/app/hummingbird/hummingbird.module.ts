@@ -10,48 +10,45 @@
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-
-import { SortablejsModule } from 'angular-sortablejs/dist';
 
 import { EffectsModule } from '@ngrx/effects';
-import { StoreRouterConnectingModule } from '@ngrx/router-store';
 import { StoreModule } from '@ngrx/store';
-import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
-import { AppRoutingModule } from './app-routing.module';
-import { metaReducers, reducers } from './app-store';
+import { reducers } from './hummingbird-store';
 
-import { environment } from '../environments/environment';
-
-import {
-  AppComponent,
-} from './app.component';
+import { MaterialModule } from './../shared/material';
+import { SharedModule } from './../shared/shared.module';
 
 import {
-  MaterialModule,
-} from './shared/material';
+  HummingbirdRoutingModule,
+} from './hummingbird-routing.module';
+
+import {
+  HummingbirdAppComponent,
+} from './containers';
+
+export const DECLARATIONS = [
+  HummingbirdAppComponent,
+];
+
+export const EFFECTS = [];
 
 export const MODULES = [
   CommonModule,
-  BrowserAnimationsModule,
   HttpClientModule,
-  AppRoutingModule,
   MaterialModule,
-  SortablejsModule.forRoot({}),
-  StoreModule.forRoot(reducers, { metaReducers }),
-  StoreRouterConnectingModule.forRoot({ stateKey: 'router' }),
-  StoreDevtoolsModule.instrument({ logOnly: environment.production, maxAge: 10 }),
-  EffectsModule.forRoot([]),
+  SharedModule,
+  HummingbirdRoutingModule,
+  StoreModule.forFeature('hummingbird', reducers),
+  EffectsModule.forFeature(EFFECTS),
 ];
 
+export const PROVIDERS = [];
+
 @NgModule({
-  bootstrap: [
-    AppComponent,
-  ],
-  declarations: [
-    AppComponent,
-  ],
+  declarations: DECLARATIONS,
+  exports: DECLARATIONS,
   imports: MODULES,
+  providers: PROVIDERS,
 })
-export class AppModule {}
+export class HummingbirdModule {}

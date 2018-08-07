@@ -16,8 +16,8 @@ import {
 } from './../models';
 
 import {
-  AppState,
-} from './../../../app/store';
+  RavenAppState,
+} from './../../raven/raven-store';
 
 import {
   getSourceIdsForSubBand,
@@ -30,9 +30,9 @@ import {
 /**
  * Returns a stripped down version of a state that we save and export it for saving.
  */
-export function getState(name: string, state: AppState): any {
+export function getState(name: string, state: RavenAppState): any {
   return exportState({
-    bands: state.timeline.bands.map(band => ({
+    bands: state.raven.timeline.bands.map(band => ({
       ...band,
       subBands: band.subBands.map(subBand => ({
         ...subBand,
@@ -40,19 +40,19 @@ export function getState(name: string, state: AppState): any {
         points: [],
         sourceIds: getSourceIdsForSubBand(
           subBand.sourceIds,
-          state.sourceExplorer.treeBySourceId,
+          state.raven.sourceExplorer.treeBySourceId,
           subBand.label,
-          state.sourceExplorer.customFiltersBySourceId,
-          state.sourceExplorer.filtersByTarget,
+          state.raven.sourceExplorer.customFiltersBySourceId,
+          state.raven.sourceExplorer.filtersByTarget,
         ),
       })),
     })),
-    defaultBandSettings: state.config.defaultBandSettings,
-    maxTimeRange: state.timeline.maxTimeRange,
+    defaultBandSettings: state.raven.config.defaultBandSettings,
+    maxTimeRange: state.raven.timeline.maxTimeRange,
     name,
-    pins: state.sourceExplorer.pins,
+    pins: state.raven.sourceExplorer.pins,
     version: '1.0.0',
-    viewTimeRange: state.timeline.viewTimeRange,
+    viewTimeRange: state.raven.timeline.viewTimeRange,
   });
 }
 
