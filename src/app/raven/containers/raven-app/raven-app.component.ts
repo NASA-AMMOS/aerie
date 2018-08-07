@@ -45,7 +45,7 @@ import {
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  selector: 'app-root',
+  selector: 'raven-app',
   styleUrls: ['./raven-app.component.css'],
   templateUrl: './raven-app.component.html',
 })
