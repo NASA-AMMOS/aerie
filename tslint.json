@@ -6,6 +6,13 @@
     "node_modules/codelyzer"
   ],
   "rules": {
+    "align": [
+      true,
+      "elements",
+      "members",
+      "parameters",
+      "statements"
+    ],
     "arrow-return-shorthand": true,
     "callable-types": true,
     "class-name": true,

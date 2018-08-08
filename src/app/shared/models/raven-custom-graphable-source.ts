@@ -7,9 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
- import {
-   RavenBaseSource,
- } from './index';
+import {
+  RavenBaseSource,
+} from './index';
 
 export interface RavenCustomGraphableSource extends RavenBaseSource {
   arg: string;

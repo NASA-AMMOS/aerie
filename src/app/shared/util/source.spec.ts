@@ -112,8 +112,8 @@ describe('source.ts', () => {
   describe('getFormattedSourceUrl', () => {
     const customFilter = {
       filter: '.*IPS.*',
-        label: 'ips',
-        subBandId: '',
+      label: 'ips',
+      subBandId: '',
     };
     const filtersByTarget = {
       '/SequenceTracker': {
@@ -134,8 +134,8 @@ describe('source.ts', () => {
   describe('getOutputDataUrl', () => {
     const customFilter = {
       filter: '.*IPS.*',
-        label: 'ips',
-        subBandId: '',
+      label: 'ips',
+      subBandId: '',
     };
     const filtersByTarget = {
       '/SequenceTracker': {
