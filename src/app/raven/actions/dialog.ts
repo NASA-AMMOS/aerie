@@ -12,6 +12,7 @@ import { Action } from '@ngrx/store';
 import {
   RavenCustomFilterSource,
   RavenSource,
+  RavenSubBand,
 } from './../../shared/models';
 
 // Action Types.
@@ -20,6 +21,7 @@ export enum DialogActionTypes {
   OpenCustomFilterDialog  = '[dialog] open_custom_filter_dialog',
   OpenCustomGraphDialog   = '[dialog] open_custom_graph_dialog',
   OpenDeleteDialog        = '[dialog] open_delete_dialog',
+  OpenDeleteSubBandDialog = '[dialog] open_delete_sub_band_dialog',
   OpenFileImportDialog    = '[dialog] open_file_import_dialog',
   OpenPinDialog           = '[dialog] open_pin_dialog',
   OpenShareableLinkDialog = '[dialog] open_shareable_link_dialog',
@@ -54,6 +56,12 @@ export class OpenDeleteDialog implements Action {
   readonly type = DialogActionTypes.OpenDeleteDialog;
 
   constructor(public source: RavenSource, public width: string) {}
+}
+
+export class OpenDeleteSubBandDialog implements Action {
+  readonly type = DialogActionTypes.OpenDeleteSubBandDialog;
+
+  constructor(public subBand: RavenSubBand, public width: string) {}
 }
 
 export class OpenFileImportDialog implements Action {

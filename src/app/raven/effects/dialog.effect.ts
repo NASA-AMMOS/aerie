@@ -44,6 +44,7 @@ import {
   OpenCustomFilterDialog,
   OpenCustomGraphDialog,
   OpenDeleteDialog,
+  OpenDeleteSubBandDialog,
   OpenFileImportDialog,
   OpenPinDialog,
   OpenShareableLinkDialog,
@@ -156,6 +157,39 @@ export class DialogEffects {
     exhaustMap(({ action, result }) => {
       if (result && result.confirm) {
         return of(new sourceExplorerActions.RemoveSourceEvent(action.source));
+      }
+      return [];
+    }),
+  );
+
+  /**
+   * Effect for OpenDeleteSubBandDialog.
+   */
+  @Effect()
+  openDeleteSubBandDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenDeleteSubBandDialog>(DialogActionTypes.OpenDeleteSubBandDialog),
+    exhaustMap(action => {
+      const deleteSubBandDialog = this.dialog.open(RavenConfirmDialogComponent, {
+        data: {
+          cancelText: 'No',
+          confirmText: 'Yes',
+          message: 'Are you sure you want to delete this band?',
+        },
+        width: action.width,
+      });
+
+      return zip(
+        of(action),
+        deleteSubBandDialog.afterClosed(),
+      );
+    }),
+    map(([action, result]) => ({ action, result })),
+    exhaustMap(({ action: { subBand }, result }) => {
+      if (result && result.confirm) {
+        return [
+          new timelineActions.RemoveSubBand(subBand.id),
+          new sourceExplorerActions.SubBandIdRemove(subBand.sourceIds, subBand.id),
+        ];
       }
       return [];
     }),

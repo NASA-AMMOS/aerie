@@ -30,6 +30,7 @@ import * as fromTimeCursor from './../../reducers/time-cursor';
 import * as fromTimeline from './../../reducers/timeline';
 
 import * as configActions from './../../actions/config';
+import * as dialogActions from './../../actions/dialog';
 import * as epochsActions from './../../actions/epochs';
 import * as layoutActions from './../../actions/layout';
 import * as outputActions from './../../actions/output';
@@ -290,15 +291,18 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when a `delete-sub-band` event is fired from the raven-settings component.
    */
   onDeleteSubBand(subBand: RavenSubBand): void {
-    this.store.dispatch(new timelineActions.RemoveSubBand(subBand.id));
-    this.store.dispatch(new sourceExplorerActions.SubBandIdRemove(subBand.sourceIds, subBand.id));
+    this.store.dispatch(new dialogActions.OpenDeleteSubBandDialog(subBand, '300px'));
   }
 
   /**
    * Event. Called when a `change-time-cursor` event is fired from the raven-time-cursor component.
    */
   onDisplayTimeCursor(show: boolean): void {
-    show ? this.store.dispatch(new timeCursorActions.ShowTimeCursor()) : this.store.dispatch(new timeCursorActions.HideTimeCursor());
+    if (show) {
+      this.store.dispatch(new timeCursorActions.ShowTimeCursor());
+    } else {
+      this.store.dispatch(new timeCursorActions.HideTimeCursor());
+    }
   }
 
   /**

@@ -54,6 +54,10 @@ describe('DialogEffects', () => {
     expect(metadata.openDeleteDialog$).toEqual({ dispatch: true });
   });
 
+  it('should register openDeleteSubBandDialog$ that does dispatch an action', () => {
+    expect(metadata.openDeleteSubBandDialog$).toEqual({ dispatch: true });
+  });
+
   it('should register openFileImportDialog$ that does dispatch an action', () => {
     expect(metadata.openFileImportDialog$).toEqual({ dispatch: true });
   });
