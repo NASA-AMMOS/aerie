@@ -483,16 +483,15 @@ export function getFilterLabel(customGraphableSource: RavenCustomGraphableSource
  * Helper. Returns an activity-by-type band locator if a given band exists in the list of bands for a legend.
  * `null` otherwise.
  */
-export function hasActivityBand(bands: RavenCompositeBand[], band: RavenSubBand) {
+export function hasActivityBand(bands: RavenCompositeBand[], band: RavenSubBand, pinLabel: string) {
   if (band.type === 'activity') {
     for (let i = 0, l = bands.length; i < l; ++i) {
       for (let j = 0, ll = bands[i].subBands.length; j < ll; ++j) {
         const subBand = bands[i].subBands[j] as RavenActivityBand;
-
         if (
           subBand.type === 'activity' &&
-          subBand.label === (band as RavenActivityBand).legend
-        ) {
+          subBand.label === (band as RavenActivityBand).legend &&
+          subBand.labelPin === pinLabel) {
           return {
             bandId: bands[i].id,
             subBandId: subBand.id,

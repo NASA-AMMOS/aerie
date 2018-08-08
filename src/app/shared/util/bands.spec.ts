@@ -80,12 +80,12 @@ describe('bands.ts', () => {
   describe('hasActivityBand', () => {
     it(`should return null if the given band is not an activity band`, () => {
       const stateBand = bands[1].subBands[0];
-      expect(hasActivityBand(bands, stateBand)).toBe(null);
+      expect(hasActivityBand(bands, stateBand, '')).toBe(null);
     });
 
     it(`should return the first found sub-band if it is an activity by-type sub-band with the same legend as the given band`, () => {
       const byTypeActivityBand = bands[4].subBands[0];
-      expect(hasActivityBand(bands, byTypeActivityBand)).toEqual({
+      expect(hasActivityBand(bands, byTypeActivityBand, '')).toEqual({
         bandId: '100',
         subBandId: '0',
       });

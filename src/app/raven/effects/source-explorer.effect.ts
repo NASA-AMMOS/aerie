@@ -69,6 +69,7 @@ import {
   getCustomFilterForLabel,
   getCustomFiltersBySourceId,
   getFormattedSourceUrl,
+  getPinLabel,
   getSourceIds,
   getState,
   hasActivityBand,
@@ -92,6 +93,7 @@ import {
   RavenDefaultBandSettings,
   RavenFilterSource,
   RavenGraphableFilterSource,
+  RavenPin,
   RavenSource,
   RavenState,
   RavenSubBand,
@@ -122,6 +124,7 @@ export class SourceExplorerEffects {
           timeline.selectedBandId,
           timeline.selectedSubBandId,
           config.defaultBandSettings,
+          sourceExplorer.pins,
         ),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
       ),
@@ -377,6 +380,7 @@ export class SourceExplorerEffects {
           raven.timeline.selectedBandId,
           raven.timeline.selectedSubBandId,
           raven.config.defaultBandSettings,
+          raven.sourceExplorer.pins,
         ),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
         of(new sourceExplorerActions.UpdateTreeSource(action.sourceId, { opened: true })),
@@ -703,6 +707,7 @@ export class SourceExplorerEffects {
                 sourceId,
                 bands,
                 state.raven.config.defaultBandSettings,
+                state.raven.sourceExplorer.pins,
               ),
               of(new sourceExplorerActions.UpdateTreeSource(sourceId, { opened: true })),
             ),
@@ -726,6 +731,7 @@ export class SourceExplorerEffects {
     bandId: string | null,
     subBandId: string | null,
     defaultBandSettings: RavenDefaultBandSettings,
+    pins: RavenPin[],
   ) {
     return this.fetchSubBands(treeBySourceId, sourceId, defaultBandSettings, customFilter, filtersByTarget).pipe(
       concatMap((newSubBands: RavenSubBand[]) => {
@@ -738,7 +744,7 @@ export class SourceExplorerEffects {
 
         if (newSubBands.length > 0) {
           newSubBands.forEach((subBand: RavenSubBand) => {
-            const activityBand = hasActivityBand(currentBands, subBand);
+            const activityBand = hasActivityBand(currentBands, subBand, getPinLabel(treeBySourceId[sourceId].id, pins));
             const existingBand = treeBySourceId[sourceId].type === 'customGraphable' ? false : hasSourceId(currentBands, sourceId);
 
             if (activityBand) {
@@ -796,6 +802,7 @@ export class SourceExplorerEffects {
     sourceId: string,
     currentBands: RavenCompositeBand[],
     defaultBandSettings: RavenDefaultBandSettings,
+    pins: RavenPin[],
   ): Observable<Action>[] {
     if (customFilters) {
       return customFilters.map(customFilter =>
@@ -808,6 +815,7 @@ export class SourceExplorerEffects {
           null,
           null,
           defaultBandSettings,
+          pins,
         ),
       );
     }
@@ -831,6 +839,7 @@ export class SourceExplorerEffects {
             null,
             null,
             defaultBandSettings,
+            pins,
           ),
         ];
       }
