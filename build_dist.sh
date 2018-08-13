@@ -13,6 +13,9 @@ rm -rf dist
 # install dependencies
 time npm ci
 
+# generate code coverage report
+time npm run test-coverage
+
 # build
 time npm run build-prod-mpsserver
 
