@@ -9,18 +9,13 @@ set -x
 # clean
 rm -rf node_modules
 rm -rf dist
+rm -rf coverage
 
 # install dependencies
 time npm ci
 
-# generate code coverage report
-time npm run test-coverage
-
 # build
 time npm run build-prod-mpsserver
-
-# static code analysis
-time npm run sonarqube
 
 # tar up dist
 cd dist
@@ -30,5 +25,7 @@ cd ..
 # run tests
 set +e
 time npm run test-for-build
+
 # another command after running tests is required so the script returns 0
 echo "build dist script finished"
+

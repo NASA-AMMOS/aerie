@@ -14,8 +14,7 @@
     "sonarqube": "sonar-scanner",
     "start": "ng serve",
     "test": "ng test",
-    "test-coverage": "ng test --code-coverage",
-    "test-for-build": "ng test --watch=false --browsers FirefoxHeadless",
+    "test-for-build": "ng test --code-coverage --watch=false --browsers FirefoxHeadless",
     "version": "ts-node git.version.ts"
   },
   "dependencies": {
