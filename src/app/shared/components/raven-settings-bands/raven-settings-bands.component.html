@@ -72,7 +72,9 @@
           </ng-container>
 
           <!-- Show Label Pin. -->
-          <div class="field">
+          <div
+            *ngIf="subBand.type !== 'divider'"
+            class="field">
             <mat-slide-toggle
               color="primary"
               [checked]="subBand.showLabelPin"
@@ -81,8 +83,10 @@
             </mat-slide-toggle>
           </div>
 
-          <!-- Overlay (applies to all sub-bands). -->
-          <div class="field">
+          <!-- Overlay (applies to all sub-bands except Divider band). -->
+          <div
+            *ngIf="subBand.type !== 'divider'"
+            class="field">
             <mat-slide-toggle
               id="raven-settings-overlay"
               color="primary"
@@ -376,7 +380,8 @@
           </ng-container>
 
           <!-- Icon. -->
-          <div *ngIf="subBand.type !== 'state'"
+          <div
+            *ngIf="subBand.type !== 'state' && subBand.type !== 'divider'"
             class="field">
             <mat-form-field>
               <mat-select
