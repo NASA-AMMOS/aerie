@@ -15,6 +15,7 @@ import { SortablejsModule } from 'angular-sortablejs';
 import { MaterialModule } from './material';
 
 import {
+  HBCodeMirrorModule,
   RavenActivityBandComponent,
   RavenActivityPointComponent,
   RavenBandsComponent,
@@ -122,9 +123,17 @@ export const ENTRY_COMPONENTS = [
   RavenStateSaveDialogComponent,
 ];
 
+export const EXPORTS = [
+  DECLARATIONS,
+
+  // Modules.
+  HBCodeMirrorModule,
+];
+
 export const MODULES = [
   CommonModule,
   FormsModule,
+  HBCodeMirrorModule,
   MaterialModule,
   ReactiveFormsModule,
   SortablejsModule,
@@ -136,7 +145,7 @@ export const MODULES = [
 @NgModule({
   declarations: DECLARATIONS,
   entryComponents: ENTRY_COMPONENTS,
-  exports: DECLARATIONS,
+  exports: EXPORTS,
   imports: MODULES,
 })
 export class SharedModule {}

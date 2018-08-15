@@ -7,6 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+// Components.
 export * from './raven-activity-band/raven-activity-band.component';
 export * from './raven-activity-point/raven-activity-point.component';
 export * from './raven-bands/raven-bands.component';
@@ -45,3 +46,6 @@ export * from './raven-time-band/raven-time-band.component';
 export * from './raven-time-cursor/raven-time-cursor.component';
 export * from './raven-time-scroll-bar/raven-time-scroll-bar.component';
 export * from './raven-tree/raven-tree.component';
+
+// Modules.
+export * from './hb-code-mirror/hb-code-mirror.module';

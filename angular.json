@@ -24,12 +24,14 @@
             "styles": [
               "src/styles.css",
               "libs/ctl/ctl.css",
+              "node_modules/codemirror/lib/codemirror.css",
               "node_modules/font-awesome/css/font-awesome.min.css",
               "node_modules/material-design-icons/iconfont/material-icons.css"
             ],
             "scripts": [
               "libs/ctl/ctl.libs.min.js",
-              "libs/ctl/ctl.js"
+              "libs/ctl/ctl.js",
+              "node_modules/codemirror/lib/codemirror.js"
             ]
           },
           "configurations": {
