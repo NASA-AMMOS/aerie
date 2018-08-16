@@ -19,7 +19,6 @@ import {
   combineLatest,
   concat,
   forkJoin,
-  merge,
   Observable,
   of,
 } from 'rxjs';
@@ -48,6 +47,7 @@ import {
   FetchNewSources,
   GraphCustomSource,
   ImportFile,
+  LoadErrorsDisplay,
   OpenEvent,
   RemoveSourceEvent,
   SaveState,
@@ -56,11 +56,12 @@ import {
   UpdateGraphAfterFilterRemove,
 } from '../actions/source-explorer';
 
-import * as configActions from '../actions/config';
-import * as dialogActions from '../actions/dialog';
-import * as layoutActions from '../actions/layout';
-import * as sourceExplorerActions from '../actions/source-explorer';
-import * as timelineActions from '../actions/timeline';
+import * as configActions from './../actions/config';
+import * as dialogActions from './../actions/dialog';
+import * as layoutActions from './../actions/layout';
+import * as sourceExplorerActions from './../actions/source-explorer';
+import * as timelineActions from './../actions/timeline';
+import * as toastActions from './../actions/toast';
 
 import * as fromSourceExplorer from '../reducers/source-explorer';
 import * as fromTimeline from '../reducers/timeline';
@@ -258,10 +259,11 @@ export class SourceExplorerEffects {
       ).pipe(
         catchError((e: Error) => {
           console.error('SourceExplorerEffects - expandEvent$: ', e);
-          return merge(
-            of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
-            of(new sourceExplorerActions.UpdateTreeSource(source.id, { expanded: false })),
-          );
+          return [
+            new toastActions.ShowToast('warning', `Failed To Expand Source "${source.name}"`, ''),
+            new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }),
+            new sourceExplorerActions.UpdateTreeSource(source.id, { expanded: false }),
+          ];
         }),
       ),
     ),
@@ -287,17 +289,17 @@ export class SourceExplorerEffects {
       ).pipe(
         catchError((e: Error) => {
           console.error('SourceExplorerEffects - fetchInitialSources$: ', e);
-          return of(new sourceExplorerActions.UpdateSourceExplorer({
-            fetchPending: false,
-            initialSourcesLoaded: false,
-          }));
+          return [
+            new toastActions.ShowToast('warning', 'Failed To Fetch Initial Sources', ''),
+            new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false, initialSourcesLoaded: false }),
+          ];
         }),
       ),
     ),
   );
 
   /**
-   * Effect for FetchInitialSources.
+   * Effect for FetchNewSources.
    */
   @Effect()
   fetchNewSources$: Observable<Action> = this.actions$.pipe(
@@ -313,7 +315,10 @@ export class SourceExplorerEffects {
       ).pipe(
         catchError((e: Error) => {
           console.error('SourceExplorerEffects - fetchNewSources$: ', e);
-          return of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }));
+          return [
+            new toastActions.ShowToast('warning', 'Failed To Fetch Sources', ''),
+            new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }),
+          ];
         }),
       ),
     ),
@@ -355,9 +360,33 @@ export class SourceExplorerEffects {
         }),
         catchError((e: Error) => {
           console.error('SourceExplorerEffects - importFile$: ', e);
-          return of(new sourceExplorerActions.ImportFileFailure());
+          return [
+            new toastActions.ShowToast('warning', 'Failed To Import File', ''),
+            new sourceExplorerActions.ImportFileFailure(),
+          ];
         }),
       );
+    }),
+  );
+
+  /**
+   * Effect for LoadErrorsDisplay.
+   */
+  @Effect()
+  loadErrorsDisplay$: Observable<Action> = this.actions$.pipe(
+    ofType<LoadErrorsDisplay>(SourceExplorerActionTypes.LoadErrorsDisplay),
+    withLatestFrom(this.store$),
+    map(([, state]) => state.raven.sourceExplorer.loadErrors),
+    switchMap(loadErrors => {
+      if (loadErrors.length) {
+        const errors = loadErrors.map(error => `${error}\n\n`);
+
+        return [
+          new dialogActions.OpenConfirmDialog('OK', `Data sets empty or do not exist.\nTimeline will not de drawn for:\n\n ${errors}`, '350px'),
+          new sourceExplorerActions.UpdateSourceExplorer({ loadErrors: [] }),
+        ];
+      }
+      return [];
     }),
   );
 
@@ -387,10 +416,11 @@ export class SourceExplorerEffects {
       ).pipe(
         catchError((e: Error) => {
           console.error('SourceExplorerEffects - openEvent$: ', e);
-          return merge(
-            of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
-            of(new sourceExplorerActions.UpdateTreeSource(action.sourceId, { opened: false })),
-          );
+          return [
+            new toastActions.ShowToast('warning', 'Failed To Open Source', ''),
+            new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }),
+            new sourceExplorerActions.UpdateTreeSource(action.sourceId, { opened: false }),
+          ];
         }),
       ),
     ),
@@ -675,9 +705,8 @@ export class SourceExplorerEffects {
                 of(new sourceExplorerActions.UpdateTreeSource(source.id, { expanded: true })),
               );
             } else {
-              console.warn('source-explorer.effect: load: source is not defined: ', source);
-              // TODO: Output warning?
-              return [];
+              console.log('source-explorer.effect: load: source does not exist: ', sourceId);
+              return of(new sourceExplorerActions.LoadErrorsAdd([sourceId]));
             }
           }),
         ),
@@ -715,6 +744,7 @@ export class SourceExplorerEffects {
         ),
       ),
       of(new layoutActions.Resize()),
+      of(new sourceExplorerActions.LoadErrorsDisplay()),
     ];
   }
 
@@ -784,7 +814,7 @@ export class SourceExplorerEffects {
           actions.push(new layoutActions.Resize());
         } else {
           // Notify user no bands will be drawn.
-          actions.push(new dialogActions.OpenConfirmDialog('OK', `Data set empty or does not exist. Timeline will not de drawn for ${sourceId}.`, '350px'));
+          actions.push(new sourceExplorerActions.LoadErrorsAdd([sourceId]));
         }
 
         return actions;
@@ -827,7 +857,9 @@ export class SourceExplorerEffects {
       }
 
       if (treeBySourceId[sourceId].type === 'graphableFilter') {
-        return [of(new sourceExplorerActions.AddGraphableFilter(treeBySourceId[sourceId] as RavenGraphableFilterSource))];
+        return [
+          of(new sourceExplorerActions.AddGraphableFilter(treeBySourceId[sourceId] as RavenGraphableFilterSource)),
+        ];
       } else {
         return [
           this.open(

@@ -65,6 +65,7 @@ export interface SourceExplorerState {
   fetchPending: boolean;
   filtersByTarget: StringTMap<StringTMap<string[]>>; // Target refers to an id that ties filters to a graphable source.
   initialSourcesLoaded: boolean;
+  loadErrors: string[];
   pins: RavenPin[];
   selectedSourceId: string;
   treeBySourceId: StringTMap<RavenSource>;
@@ -77,6 +78,7 @@ export const initialState: SourceExplorerState = {
   fetchPending: false,
   filtersByTarget: {},
   initialSourcesLoaded: false,
+  loadErrors: [], // List of sourceIds that give errors when trying to load. Cleared after displayed.
   pins: [],
   selectedSourceId: '',
   treeBySourceId: {
@@ -143,6 +145,8 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
     case SourceExplorerActionTypes.FetchInitialSources:
     case SourceExplorerActionTypes.GraphCustomSource:
       return { ...state, fetchPending: true };
+    case SourceExplorerActionTypes.LoadErrorsAdd:
+      return { ...state, loadErrors: state.loadErrors.concat(action.sourceIds) };
     case SourceExplorerActionTypes.NewSources:
       return newSources(state, action);
     case SourceExplorerActionTypes.OpenEvent:

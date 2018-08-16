@@ -21,11 +21,14 @@ import {
 import {
   AddCustomFilter,
   AddFilter,
+  AddGraphableFilter,
+  ApplyLayout,
   ApplyState,
   CloseEvent,
   CollapseEvent,
   ExpandEvent,
   FetchInitialSources,
+  LoadErrorsAdd,
   NewSources,
   OpenEvent,
   PinAdd,
@@ -80,12 +83,19 @@ describe('source-explorer reducer', () => {
     expect(sourceExplorerState.filtersByTarget).toEqual({ '/SequenceTracker': { meeting: [filterSourceLocation.id] } });
   });
 
+  it('handle AddGraphableFilter', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new AddGraphableFilter(customFilterSource));
+    expect(sourceExplorerState).toEqual({ ...initialState, fetchPending: true });
+  });
+
+  it('handle ApplyLayout', () => {
+    sourceExplorerState = reducer(sourceExplorerState, new ApplyLayout(['/source1']));
+    expect(sourceExplorerState).toEqual({ ...initialState, fetchPending: true });
+  });
+
   it('handle ApplyState', () => {
     sourceExplorerState = reducer(sourceExplorerState, new ApplyState(rootSource.url, rootSource.id));
-    expect(sourceExplorerState).toEqual({
-      ...initialState,
-      fetchPending: true,
-    });
+    expect(sourceExplorerState).toEqual({ ...initialState, fetchPending: true });
   });
 
   it('handle CloseEvent', () => {
@@ -123,6 +133,12 @@ describe('source-explorer reducer', () => {
       ...initialState,
       fetchPending: true,
     });
+  });
+
+  it('handle LoadErrorsAdd', () => {
+    const loadErrors = ['/id1', '/id2'];
+    sourceExplorerState = reducer(sourceExplorerState, new LoadErrorsAdd(loadErrors));
+    expect(sourceExplorerState.loadErrors).toEqual(loadErrors);
   });
 
   it('handle NewSources', () => {

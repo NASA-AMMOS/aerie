@@ -19,6 +19,8 @@ import { StoreRouterConnectingModule } from '@ngrx/router-store';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
+import { ToastrModule } from 'ngx-toastr';
+
 import { AppRoutingModule } from './app-routing.module';
 import { metaReducers, reducers } from './app-store';
 
@@ -43,6 +45,7 @@ export const MODULES = [
   StoreRouterConnectingModule.forRoot({ stateKey: 'router' }),
   StoreDevtoolsModule.instrument({ logOnly: environment.production, maxAge: 10 }),
   EffectsModule.forRoot([]),
+  ToastrModule.forRoot(),
 ];
 
 @NgModule({

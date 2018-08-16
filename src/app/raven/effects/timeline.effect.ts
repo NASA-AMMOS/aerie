@@ -78,7 +78,7 @@ export class TimelineEffects {
       TimelineActionTypes.PinRename,
     ),
     withLatestFrom(this.store$),
-    map(([action, state]) => state.raven),
+    map(([, state]) => state.raven),
     concatMap(({ timeline, sourceExplorer }) => this.updatePinLabels(timeline.bands, sourceExplorer.pins)),
   );
 
@@ -89,7 +89,7 @@ export class TimelineEffects {
   selectPoint$: Observable<Action> = this.actions$.pipe(
     ofType<SelectPoint>(TimelineActionTypes.SelectPoint),
     withLatestFrom(this.store$),
-    map(([action, state]) => state.raven),
+    map(([, state]) => state.raven),
     concatMap(raven => {
       const actions: Action[] = [];
 

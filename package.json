@@ -13,7 +13,7 @@
     "prestart": "npm run version",
     "sonarqube": "sonar-scanner",
     "start": "ng serve",
-    "test": "ng test",
+    "test": "ng test --code-coverage --source-map=false",
     "test-for-build": "ng test --code-coverage --watch=false --browsers FirefoxHeadless",
     "version": "ts-node git.version.ts"
   },
@@ -48,6 +48,7 @@
     "lodash": "^4.17.10",
     "material-design-icons": "^3.0.1",
     "moment": "^2.22.2",
+    "ngx-toastr": "^8.10.2",
     "rxjs": "^6.1.0",
     "rxjs-compat": "^6.1.0",
     "sortablejs": "^1.7.0",

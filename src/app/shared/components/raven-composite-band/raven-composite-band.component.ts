@@ -49,26 +49,26 @@ import {
   templateUrl: './raven-composite-band.component.html',
 })
 export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, OnInit {
-  @Input() compositeAutoScale: boolean;
-  @Input() compositeLogTicks: boolean;
-  @Input() compositeScientificNotation: boolean;
-  @Input() compositeYAxisLabel: boolean;
-  @Input() cursorColor: string;
-  @Input() cursorTime: number | null;
-  @Input() cursorWidth: number;
-  @Input() dayCode: string;
-  @Input() earthSecToEpochSec: number;
-  @Input() epoch: RavenEpoch | null;
-  @Input() height: number;
-  @Input() heightPadding: number;
-  @Input() id: string;
-  @Input() labelFontSize: number;
-  @Input() labelWidth: number;
-  @Input() maxTimeRange: RavenTimeRange;
-  @Input() selectedPoint: RavenPoint;
-  @Input() showTooltip: boolean;
-  @Input() subBands: RavenSubBand[];
-  @Input() viewTimeRange: RavenTimeRange;
+  @Input() compositeAutoScale = false;
+  @Input() compositeLogTicks = false;
+  @Input() compositeScientificNotation = false;
+  @Input() compositeYAxisLabel = false;
+  @Input() cursorColor = '#ff0000';
+  @Input() cursorTime: number | null = null;
+  @Input() cursorWidth = 1;
+  @Input() dayCode = '';
+  @Input() earthSecToEpochSec = 1;
+  @Input() epoch: RavenEpoch | null = null;
+  @Input() height = 100;
+  @Input() heightPadding = 0;
+  @Input() id = '';
+  @Input() labelFontSize = 9;
+  @Input() labelWidth = 150;
+  @Input() maxTimeRange: RavenTimeRange = { end: 0, start: 0 };
+  @Input() selectedPoint: RavenPoint | null = null;
+  @Input() showTooltip = true;
+  @Input() subBands: RavenSubBand[] = [];
+  @Input() viewTimeRange: RavenTimeRange = { end: 0, start: 0 };
 
   @Output() bandLeftClick: EventEmitter<RavenBandLeftClick> = new EventEmitter<RavenBandLeftClick>();
   @Output() updateViewTimeRange: EventEmitter<RavenTimeRange> = new EventEmitter<RavenTimeRange>();

@@ -38,6 +38,7 @@ import {
   SourceExplorerEffects,
   TimeCursorEffects,
   TimelineEffects,
+  ToastEffects,
 } from './effects';
 
 import {
@@ -63,6 +64,7 @@ export const EFFECTS = [
   SourceExplorerEffects,
   TimeCursorEffects,
   TimelineEffects,
+  ToastEffects,
 ];
 
 export const MODULES = [

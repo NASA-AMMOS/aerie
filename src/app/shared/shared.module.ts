@@ -15,19 +15,20 @@ import { SortablejsModule } from 'angular-sortablejs';
 import { MaterialModule } from './material';
 
 import {
+  // Modules + Components (TODO: Make all modules).
   HBCodeMirrorModule,
-  RavenActivityBandComponent,
+  RavenActivityBandModule,
   RavenActivityPointComponent,
   RavenBandsComponent,
   RavenCategoryComponent,
-  RavenCompositeBandComponent,
+  RavenCompositeBandModule,
   RavenConfirmDialogComponent,
   RavenCustomFilterComponent,
   RavenCustomFilterDialogComponent,
   RavenCustomGraphableComponent,
   RavenCustomGraphDialogComponent,
   RavenCustomMetadataComponent,
-  RavenDividerBandComponent,
+  RavenDividerBandModule,
   RavenEpochsComponent,
   RavenFileComponent,
   RavenFileImportDialogComponent,
@@ -40,12 +41,12 @@ import {
   RavenOutputComponent,
   RavenPanToDurationComponent,
   RavenPinDialogComponent,
-  RavenResourceBandComponent,
+  RavenResourceBandModule,
   RavenResourcePointComponent,
   RavenSettingsBandsComponent,
   RavenSettingsGlobalComponent,
   RavenShareableLinkDialogComponent,
-  RavenStateBandComponent,
+  RavenStateBandModule,
   RavenStatePointComponent,
   RavenStateSaveDialogComponent,
   RavenTableComponent,
@@ -64,20 +65,26 @@ import {
   RavenToKeyValueArrayPipe,
 } from './pipes';
 
+export const APP_MODULES = [
+  HBCodeMirrorModule,
+  RavenActivityBandModule,
+  RavenCompositeBandModule,
+  RavenDividerBandModule,
+  RavenResourceBandModule,
+  RavenStateBandModule,
+];
+
 export const DECLARATIONS = [
   // Components.
-  RavenActivityBandComponent,
   RavenActivityPointComponent,
   RavenBandsComponent,
   RavenCategoryComponent,
-  RavenCompositeBandComponent,
   RavenConfirmDialogComponent,
   RavenCustomFilterComponent,
   RavenCustomFilterDialogComponent,
   RavenCustomGraphableComponent,
   RavenCustomGraphDialogComponent,
   RavenCustomMetadataComponent,
-  RavenDividerBandComponent,
   RavenEpochsComponent,
   RavenFileComponent,
   RavenFileImportDialogComponent,
@@ -90,12 +97,10 @@ export const DECLARATIONS = [
   RavenOutputComponent,
   RavenPanToDurationComponent,
   RavenPinDialogComponent,
-  RavenResourceBandComponent,
   RavenResourcePointComponent,
   RavenSettingsBandsComponent,
   RavenSettingsGlobalComponent,
   RavenShareableLinkDialogComponent,
-  RavenStateBandComponent,
   RavenStatePointComponent,
   RavenStateSaveDialogComponent,
   RavenTableComponent,
@@ -124,22 +129,20 @@ export const ENTRY_COMPONENTS = [
 ];
 
 export const EXPORTS = [
-  DECLARATIONS,
-
-  // Modules.
-  HBCodeMirrorModule,
+  ...DECLARATIONS,
+  ...APP_MODULES,
 ];
 
 export const MODULES = [
   CommonModule,
   FormsModule,
-  HBCodeMirrorModule,
   MaterialModule,
   ReactiveFormsModule,
   SortablejsModule,
   AgGridModule.withComponents([
     RavenTableDetailComponent,
   ]),
+  ...APP_MODULES,
 ];
 
 @NgModule({

@@ -167,7 +167,7 @@ export function fromDir(isServer: boolean, mSource: MpsServerSourceDir, rSource:
     selectable: true,
     selected: false,
     type: 'folder',
-    url: mSource.contents_url,
+    url: mSource.contents_url || mSource.file_data_url || '',
   };
 }
 

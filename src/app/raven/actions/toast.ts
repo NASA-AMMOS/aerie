@@ -7,12 +7,25 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './dialog.effect';
-export * from './epochs.effect';
-export * from './layout.effect';
-export * from './output.effect';
-export * from './router.effect';
-export * from './source-explorer.effect';
-export * from './time-cursor.effect';
-export * from './timeline.effect';
-export * from './toast.effect';
+import { Action } from '@ngrx/store';
+
+// Action Types.
+export enum ToastActionTypes {
+  ShowToast = '[toast] show_toast',
+}
+
+// Actions.
+export class ShowToast implements Action {
+  readonly type = ToastActionTypes.ShowToast;
+
+  constructor(
+    public toastType: string,
+    public message: string,
+    public title: string,
+    public config?: any,
+  ) {}
+}
+
+// Union type of all actions.
+export type ToastrAction =
+  ShowToast;

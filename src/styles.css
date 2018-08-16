@@ -1,6 +1,7 @@
 @import "~@angular/material/prebuilt-themes/indigo-pink.css";
 @import "~ag-grid/dist/styles/ag-grid.css";
 @import "~ag-grid/dist/styles/ag-theme-fresh.css";
+@import '~ngx-toastr/toastr.css';
 
 * {
   box-sizing: border-box;
@@ -34,4 +35,8 @@ html {
   background-color: #fff3cd;
   border-color: #ffeeba;
   color: #856404;
+}
+
+.toast-container {
+  font-family: Roboto,"Helvetica Neue",sans-serif;
 }

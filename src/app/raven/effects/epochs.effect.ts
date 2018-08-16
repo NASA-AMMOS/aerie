@@ -22,7 +22,6 @@ import {
 
 import {
   Observable,
-  of,
 } from 'rxjs';
 
 import {
@@ -45,7 +44,8 @@ import {
   toRavenEpochs,
 } from './../../shared/util';
 
-import * as epochsActions from '../actions/epochs';
+import * as epochsActions from './../actions/epochs';
+import * as toastActions from './../actions/toast';
 
 @Injectable()
 export class EpochsEffects {
@@ -59,7 +59,10 @@ export class EpochsEffects {
     ),
     catchError((e: Error) => {
       console.error('EpochsEffects - fetchEpochs$: ', e);
-      return of(new epochsActions.AddEpochs([]));
+      return [
+        new toastActions.ShowToast('warning', 'Failed to fetch epochs', ''),
+        new epochsActions.AddEpochs([]),
+      ];
     }),
   );
 

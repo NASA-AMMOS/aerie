@@ -28,4 +28,3 @@ time npm run test-for-build
 
 # another command after running tests is required so the script returns 0
 echo "build dist script finished"
-

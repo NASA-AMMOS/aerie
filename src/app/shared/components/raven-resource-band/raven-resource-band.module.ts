@@ -7,12 +7,18 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './dialog.effect';
-export * from './epochs.effect';
-export * from './layout.effect';
-export * from './output.effect';
-export * from './router.effect';
-export * from './source-explorer.effect';
-export * from './time-cursor.effect';
-export * from './timeline.effect';
-export * from './toast.effect';
+import { NgModule } from '@angular/core';
+
+import {
+  RavenResourceBandComponent,
+} from './../raven-resource-band/raven-resource-band.component';
+
+@NgModule({
+  declarations: [
+    RavenResourceBandComponent,
+  ],
+  exports: [
+    RavenResourceBandComponent,
+  ],
+})
+export class RavenResourceBandModule {}

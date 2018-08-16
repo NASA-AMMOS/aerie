@@ -39,6 +39,8 @@ export enum SourceExplorerActionTypes {
   ImportFile                   = '[sourceExplorer] import_file',
   ImportFileFailure            = '[sourceExplorer] import_file_failure',
   ImportFileSuccess            = '[sourceExplorer] import_file_success',
+  LoadErrorsAdd                = '[sourceExplorer] load_errors_add',
+  LoadErrorsDisplay            = '[sourceExplorer] load_errors_display',
   NewSources                   = '[sourceExplorer] new_sources',
   OpenEvent                    = '[sourceExplorer] open_event',
   PinAdd                       = '[sourceExplorer] pin_add',
@@ -144,6 +146,16 @@ export class ImportFileFailure implements Action {
 
 export class ImportFileSuccess implements Action {
   readonly type = SourceExplorerActionTypes.ImportFileSuccess;
+}
+
+export class LoadErrorsAdd implements Action {
+  readonly type = SourceExplorerActionTypes.LoadErrorsAdd;
+
+  constructor(public sourceIds: string[]) {}
+}
+
+export class LoadErrorsDisplay implements Action {
+  readonly type = SourceExplorerActionTypes.LoadErrorsDisplay;
 }
 
 export class NewSources implements Action {
@@ -283,6 +295,8 @@ export type SourceExplorerAction =
   ImportFile |
   ImportFileFailure |
   ImportFileSuccess |
+  LoadErrorsAdd |
+  LoadErrorsDisplay |
   NewSources |
   OpenEvent |
   PinAdd |

@@ -20,6 +20,7 @@ export interface MpsServerSourceDir {
   created: string;
   createdBy: string;
   customMeta: StringTMap<BaseType>[];
+  file_data_url: string;
   label: string;
   name: string;
   modified: string;

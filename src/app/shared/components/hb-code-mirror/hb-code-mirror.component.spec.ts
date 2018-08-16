@@ -10,6 +10,7 @@
 import {
   SimpleChange,
 } from '@angular/core';
+
 import {
   async,
   ComponentFixture,
@@ -128,5 +129,4 @@ describe('HBCodeMirrorComponent', () => {
 
     expect(called).toBe(true);
   });
-
 });
