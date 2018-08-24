@@ -16,10 +16,10 @@ import {
 
 // Action Types.
 export enum OutputActionTypes {
-  AppendData           = '[output] append_data',
-  CreateOutput         = '[output] create_output',
+  AppendData = '[output] append_data',
+  CreateOutput = '[output] create_output',
   UpdateOutputSettings = '[output] update_output_settings',
-  WriteFile            = '[output] write_file',
+  WriteFile = '[output] write_file',
 }
 
 // Actions.

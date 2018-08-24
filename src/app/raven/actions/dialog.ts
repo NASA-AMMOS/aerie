@@ -17,16 +17,16 @@ import {
 
 // Action Types.
 export enum DialogActionTypes {
-  OpenConfirmDialog       = '[dialog] open_confirm_dialog',
-  OpenCustomFilterDialog  = '[dialog] open_custom_filter_dialog',
-  OpenCustomGraphDialog   = '[dialog] open_custom_graph_dialog',
-  OpenDeleteDialog        = '[dialog] open_delete_dialog',
+  OpenConfirmDialog = '[dialog] open_confirm_dialog',
+  OpenCustomFilterDialog = '[dialog] open_custom_filter_dialog',
+  OpenCustomGraphDialog = '[dialog] open_custom_graph_dialog',
+  OpenDeleteDialog = '[dialog] open_delete_dialog',
   OpenDeleteSubBandDialog = '[dialog] open_delete_sub_band_dialog',
-  OpenFileImportDialog    = '[dialog] open_file_import_dialog',
-  OpenPinDialog           = '[dialog] open_pin_dialog',
+  OpenFileImportDialog = '[dialog] open_file_import_dialog',
+  OpenPinDialog = '[dialog] open_pin_dialog',
   OpenShareableLinkDialog = '[dialog] open_shareable_link_dialog',
-  OpenStateApplyDialog    = '[dialog] open_state_apply_dialog',
-  OpenStateSaveDialog     = '[dialog] open_state_save_dialog',
+  OpenStateApplyDialog = '[dialog] open_state_apply_dialog',
+  OpenStateSaveDialog = '[dialog] open_state_save_dialog',
 }
 
 // Actions.

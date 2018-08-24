@@ -16,8 +16,8 @@ import {
 
 // Action Types.
 export enum TimeCursorActionTypes {
-  HideTimeCursor           = '[timeCursor] hide_time_cursor',
-  ShowTimeCursor           = '[timeCursor] show_time_cursor',
+  HideTimeCursor = '[timeCursor] hide_time_cursor',
+  ShowTimeCursor = '[timeCursor] show_time_cursor',
   UpdateTimeCursorSettings = '[timeCursor] update_time_cursor_settings',
 }
 

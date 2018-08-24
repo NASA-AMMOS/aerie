@@ -17,8 +17,8 @@ import {
 
 // Action Types.
 export enum EpochsActionTypes {
-  AddEpochs    = '[epochs] add_epochs',
-  FetchEpochs  = '[epochs] fetch_epochs',
+  AddEpochs = '[epochs] add_epochs',
+  FetchEpochs = '[epochs] fetch_epochs',
   UpdateEpochs = '[epochs] update_epochs',
 }
 

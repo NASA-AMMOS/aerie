@@ -62,7 +62,7 @@ pipeline {
 					}
 				}
 				echo "Analyzing JUnit tests..."
-				junit healthScaleFactor: 10.0, keepLongStdio: true, testResults: 'src/**/karma-test-results.xml'
+				junit healthScaleFactor: 10.0, keepLongStdio: true, testResults: 'karma-test-results.xml'
 			}
 		}
 
