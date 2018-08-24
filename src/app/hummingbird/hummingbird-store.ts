@@ -11,23 +11,22 @@ import {
   ActionReducerMap,
 } from '@ngrx/store';
 
+import * as fromRoot from './../app-store';
+
 /**
  * Every reducer module's default export is the reducer function itself. In
  * addition, each module should export a type or interface that describes
  * the state of the reducer plus any selector functions. The `* as`
  * notation packages up all of the exports into a single object.
  */
-
-// TODO: Import reducers here. Ex:
-// import * as fromConfig from './reducers/config';
+import * as fromCommandDictionary from './reducers/command-dictionary';
 
 /**
  * As mentioned, we treat each reducer like a table in a database. This means
  * our top level state interface is just a map of keys to inner state types.
  */
-// TODO: Remove this TSLINT disable when we add props to this interface.
-// tslint:disable-next-line
-export interface HummingbirdAppState {
+export interface State {
+  commandDictionary: fromCommandDictionary.CommandDictionaryState;
 }
 
 /**
@@ -35,5 +34,13 @@ export interface HummingbirdAppState {
  * These reducer functions are called with each dispatched action
  * and the current or initial state and return a new immutable state.
  */
-export const reducers: ActionReducerMap<HummingbirdAppState> = {
+export const reducers: ActionReducerMap<State> = {
+  commandDictionary: fromCommandDictionary.reducer,
 };
+
+/**
+ * Namespaced state for this feature reducer
+ */
+export interface HummingbirdAppState extends fromRoot.AppState {
+  hummingbird: State;
+}

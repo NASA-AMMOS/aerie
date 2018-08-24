@@ -17,6 +17,7 @@ import { MaterialModule } from './material';
 import {
   // Modules + Components (TODO: Make all modules).
   HBCodeMirrorModule,
+  HBCommandLoaderModule,
   RavenActivityBandModule,
   RavenActivityPointComponent,
   RavenBandsComponent,
@@ -67,6 +68,7 @@ import {
 
 export const APP_MODULES = [
   HBCodeMirrorModule,
+  HBCommandLoaderModule,
   RavenActivityBandModule,
   RavenCompositeBandModule,
   RavenDividerBandModule,

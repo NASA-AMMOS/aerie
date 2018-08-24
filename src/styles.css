@@ -1,7 +1,5 @@
-@import "~@angular/material/prebuilt-themes/indigo-pink.css";
-@import "~ag-grid/dist/styles/ag-grid.css";
-@import "~ag-grid/dist/styles/ag-theme-fresh.css";
-@import '~ngx-toastr/toastr.css';
+/* NOTE: external styles should be defined in angular.json and karma.js,
+   or you will get 404s on them in the tests. */
 
 * {
   box-sizing: border-box;

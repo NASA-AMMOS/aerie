@@ -1,0 +1,18 @@
+<mat-card>
+  <mat-card-title>
+    Command Dictionaries
+  </mat-card-title>
+
+  <mat-card-content>
+    <ag-grid-angular #agGrid
+      style="height: 300px; width: 100%;"
+      class="ag-theme-fresh"
+      [columnDefs]="columnDefs"
+      [enableColResize]="true"
+      [enableSorting]="true"
+      [enableFilter]="true"
+      [rowData]="rowData"
+      (selectionChanged)="onSelectionChanged()">
+    </ag-grid-angular>
+  </mat-card-content>
+</mat-card>

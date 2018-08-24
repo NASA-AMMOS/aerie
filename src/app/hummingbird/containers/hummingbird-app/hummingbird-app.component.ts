@@ -7,11 +7,72 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Component } from '@angular/core';
+import {
+  Component,
+  OnDestroy,
+} from '@angular/core';
+
+import {
+  Store,
+} from '@ngrx/store';
+
+import {
+  Subject,
+} from 'rxjs';
+
+import {
+  takeUntil,
+} from 'rxjs/operators';
+
+import {
+  HBCommandDictionary,
+} from '../../../shared/models/hb-command-dictionary';
+
+import {
+  HummingbirdAppState,
+} from '../../hummingbird-store';
+
+import {
+  FetchCommandDictionaryList,
+  SelectCommandDictionary,
+} from '../../actions/command-dictionary';
+
+import * as fromCommandDictionary from '../../reducers/command-dictionary';
 
 @Component({
   selector: 'hummingbird-app',
   styleUrls: ['./hummingbird-app.component.css'],
   templateUrl: './hummingbird-app.component.html',
 })
-export class HummingbirdAppComponent {}
+export class HummingbirdAppComponent implements OnDestroy {
+
+  /**
+   * List of all available dictionaries to select from
+   */
+  dictionaries: Array<HBCommandDictionary>;
+
+  private ngUnsubscribe: Subject<{}> = new Subject();
+
+  constructor(private store: Store<HummingbirdAppState>) {
+    this.store.select(fromCommandDictionary.getCommandDictionaryState).pipe(
+      takeUntil(this.ngUnsubscribe),
+    ).subscribe(state => {
+      this.dictionaries = state.list || [];
+    });
+
+    this.store.dispatch(new FetchCommandDictionaryList());
+  }
+
+  ngOnDestroy() {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
+  }
+
+  /**
+   * A dictionary from the list of dictionaries was selected
+   * @param dictionary The dictionary which was selected
+   */
+  onSelectedDictionary(dictionary: HBCommandDictionary ) {
+    this.store.dispatch(new SelectCommandDictionary(dictionary));
+  }
+}

@@ -8,6 +8,7 @@
  */
 
 // Components.
+export * from './raven-activity-band/raven-activity-band.component';
 export * from './raven-activity-point/raven-activity-point.component';
 export * from './raven-bands/raven-bands.component';
 export * from './raven-category/raven-category.component';
@@ -44,6 +45,7 @@ export * from './raven-tree/raven-tree.component';
 
 // Modules.
 export * from './hb-code-mirror/hb-code-mirror.module';
+export * from './hb-command-loader/hb-command-loader.module';
 export * from './raven-activity-band/raven-activity-band.module';
 export * from './raven-composite-band/raven-composite-band.module';
 export * from './raven-divider-band/raven-divider-band.module';

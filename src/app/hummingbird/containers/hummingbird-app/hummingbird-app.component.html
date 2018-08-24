@@ -1,8 +1,17 @@
-<mat-toolbar color="primary">
-  <span class="app-title">Hummingbird</span>
-</mat-toolbar>
-
-<div class="content">
+<header>
+  <mat-toolbar color="primary">
+    <span class="app-title">Hummingbird</span>
+  </mat-toolbar>
+</header>
+<main class="content">
   <hb-code-mirror></hb-code-mirror>
-</div>
-
+</main>
+<aside>
+  <hb-command-loader
+    [dictionaries]="dictionaries"
+    (selectedDictionaryChanged)="onSelectedDictionary($event)"
+    >
+  </hb-command-loader>
+</aside>
+<footer>
+</footer>

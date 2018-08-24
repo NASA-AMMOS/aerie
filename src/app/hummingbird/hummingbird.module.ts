@@ -27,11 +27,17 @@ import {
   HummingbirdAppComponent,
 } from './containers';
 
+import {
+  CommandDictionaryEffects,
+} from './effects/command-dictionary.effect';
+
 export const DECLARATIONS = [
   HummingbirdAppComponent,
 ];
 
-export const EFFECTS = [];
+export const EFFECTS = [
+  CommandDictionaryEffects,
+];
 
 export const MODULES = [
   CommonModule,
