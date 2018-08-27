@@ -1,0 +1,91 @@
+# Source Explorer
+
+<p align="center"><img src="./images/source_explorer.png" width="500" /></p>
+
+*<p align="center">Image 1: The Source Explorer Panel consists of two main things: a tree that represents the available sources and the pins added by the user. The Home tab is the original sources tree, when the user adds a new pin, it will represent a sub-tree out of the Home tab.</p>*
+
+The Left Panel of the application contains the Source Explorer. In the Source Explorer you can navigate between your sources and select the sources that you desire to visualize in the Bands Panels. In addition, the Source Explorer contains pins, that will be explained in detail in the next section.
+
+#### Iconography
+
+There are different icons that represent every node in the Source Explorer tree. Some of them can be expanded,collapsed and/or pinned. Others are graphable sources, which can result in a band that visualizes data.
+
+|                            Icon                             | Name                    | Description                                                  |
+| :---------------------------------------------------------: | ----------------------- | ------------------------------------------------------------ |
+|       <img src="./images/database.svg" width="18" />        | Alias                   | An alias is the name that is set in the configuration file to identify the collection in the data store. |
+|        <img src="./images/folder.svg" width="20" />         | Database                | <Add more info about >                                       |
+|         <img src="./images/file.svg" width="20" />          | Collection              | <Add more info about >                                       |
+|      <img src="./images/file-solid.svg" width="19" />       | Files                   | <Add more info about >                                       |
+|      <img src="./images/chart-area.svg" width="20" />       | Graphable Source        | This icon represents a source that can be rendered.          |
+| <img src="./images/baseline-subject-24px.svg" width="23" /> | Custom Graphable Source | This icon represents a graphable source in where the user can pass a filter when requesting for data. |
+|        <img src="./images/circle.svg" width="20" />         | Unselected Source       | When a graphable source contains this icon in the left side of its name, means that the source can be graphed. |
+|    <img src="./images/selected_source.svg" width="20" />    | Selected Source         | When a graphable source contains this icon in the left side of its name, means that the source can be removed from the source explorer. |
+
+### How To...
+
+#### Expand/Collapse Nodes
+
+<p align="center"><img src="./images/expand_source_explorer_node.png" width="400" /></p>
+
+*<p align="center">Image 2: **How to Expand sources in the Source Explorer**. Left side: Click the plus sign (`+` ) to see the children of the source of your preference. Right side: Once the source is expanded, all its children will be displayed.</p>*
+
+ ###### To expand a node:
+
+1. Look for a collapsed Alias, Database or Collection source in the Source Explorer.
+2. Click the plus sign (`+`) icon previous to the source's name. As a result the child sources of the selected one will be expanded. (*Image 2*)
+
+###### To collapse a node:
+
+1.  Look for a expanded Alias, Database or Collection icon in the Source Explorer.
+2. Click the minus sign (`-`) icon previous to the source's node. As a result the child sources will be collapsed.
+
+#### Select a source
+
+<p align="center"><img src="./images/add_band.png" /></p>
+
+*<p align="center">Image 3: **How to Select a Source in the Source Explorer and add a Band**. Left side: Navigate and click the Radio Button previous to on the graphable source of your interest. Right side: The Radio Button will change it's state to selected and a band will be added to the Main Bands Panel.</p>*
+
+To select a source in the Source Explorer 
+
+1. Look for a Graphable Source of your interest.
+2. Click the Radio Button (<img src="./images/circle.svg" width="20" />) to select the source.
+
+As shown on *Image 3* (right side), the result of your selection will be a band added to the Main Bands Panel and the Radio Button will change its state to selected (<img src="./images/selected_source.svg" width="20" />). 
+
+
+
+## Pins
+
+<p align="center"><img src="./images/add_pin.png" width="300"/></p>
+
+*<p align="center">Image 4: Pins.  The (1) `Home` tab contains the original sources tree. When the user adds a new pin, for example (2) `my-pin` , it will represent a sub-tree out of the Home tab. To navigate to the content of the pin, click its name in the Source Explorer's tab.</p>*
+
+A Pin is a subtree of the sources tree loaded in the Home Tab. It is used when a subtree is of special interest or requires quick and easy access. When a pin is created, a new tab will be added next to the Home tab in the Source Explorer, as shown on *Image 4*. If there are bands in the Bands Panels that are children of a pinned source, their labels will be attached with the pin name.
+
+### How to...
+
+#### Pin a Subtree:
+
+1. Select an Alias, Database or Collection.
+2. Click the snowman icon (<img src="./images/baseline-more_vert-24px.svg" width="20" />).
+3. In the dropdown, select: `Add Pin`.
+4. A dialog will appear, enter the name of the new pin.
+5. Click `Add`.
+
+#### Rename a pin:
+
+1. Select an Alias, Database or Collection that is pinned already. It can be selected from the Home Tab or the Pin's Tab.
+2. Click the snowman icon (<img src="./images/baseline-more_vert-24px.svg" width="20" />).
+3. In the dropdown, select: `Rename Pin`.
+4. A dialog will appear, enter the new name for the pin.
+5. Click `Rename`.
+
+#### To Rename a pin:
+
+1. Select an Alias, Database or Collection that is pinned already. It can be selected from the Home Tab or the Pin's Tab.
+2. Click the snowman icon (<img src="./images/baseline-more_vert-24px.svg" width="20" />).
+3. In the dropdown, select: `Remove Pin`.
+4. A dialog will appear, click `Remove`.
+
+<p align="right"><a href="./Raven_101_3_bands.md">Next: Bands</a></p>
+
