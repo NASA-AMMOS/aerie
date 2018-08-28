@@ -1,0 +1,1760 @@
+[{
+        "name": "PEF_COMBINED_STATE_MOST_COVERED",
+        "type": 0,
+        "sources": [
+            {
+                "hasGraph": false,
+                "name": "TEST_ATS",
+                "overrideName": null,
+                "tabName": null,
+                "suffix": null,
+                "props": {
+                    "isServer": true
+                },
+                "selected": true,
+                "isHidden": false,
+                "sources": [
+                    {
+                        "hasGraph": false,
+                        "name": "PEF_Combined_Test",
+                        "overrideName": null,
+                        "tabName": null,
+                        "suffix": null,
+                        "props": {
+                            "__kind": "fs_dir",
+                            "__db_type": "mongodb",
+                            "name": "PEF_Combined_Test",
+                            "label": "PEF_Combined_Test",
+                            "contents_url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/fs-mongodb/TEST_ATS/PEF_Combined_Test",
+                            "permissions": "rw-r--r-- null all.usjpl",
+                            "created": "2018-06-13 18:09:16-0400",
+                            "modified": "2018-06-13 18:09:16-0400"
+                        },
+                        "selected": true,
+                        "isHidden": false,
+                        "sources": [
+                            {
+                                "hasGraph": false,
+                                "name": "test_10000",
+                                "overrideName": null,
+                                "tabName": null,
+                                "suffix": null,
+                                "props": {
+                                    "__kind": "fs_file",
+                                    "__db_type": "mongodb",
+                                    "name": "test_10000",
+                                    "label": "test_10000",
+                                    "__kind_sub": "file_pef",
+                                    "contents_url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/list_pef-mongodb/TEST_ATS/PEF_Combined_Test/test_10000",
+                                    "file_data_url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/fs-mongodb/TEST_ATS/PEF_Combined_Test/test_10000",
+                                    "permissions": "rw-r--r-- null all.usjpl",
+                                    "created": "2018-06-13 18:09:16-0400",
+                                    "modified": "2018-06-13 18:09:16-0400"
+                                },
+                                "selected": true,
+                                "isHidden": false,
+                                "sources": [
+                                    {
+                                        "hasGraph": false,
+                                        "name": "command",
+                                        "overrideName": null,
+                                        "tabName": null,
+                                        "suffix": null,
+                                        "props": {
+                                            "__kind": "fs_custom_graphable",
+                                            "__kind_sub": "graphable_activity",
+                                            "name": "command",
+                                            "label": "command",
+                                            "data_url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_event_history-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?format=TMS&event=[CMD,CMDW]",
+                                            "arg": "filter",
+                                            "filter_key": "command",
+                                            "isData": true
+                                        },
+                                        "selected": true,
+                                        "isHidden": false,
+                                        "sources": [],
+                                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_event_history-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?format=TMS&event=[CMD,CMDW]",
+                                        "tabSelected": false,
+                                        "bandIds": [],
+                                        "graphSettings": null,
+                                        "id": "147"
+                                    },
+                                    {
+                                        "hasGraph": false,
+                                        "name": "Sequence_Execution_Tree",
+                                        "overrideName": null,
+                                        "tabName": null,
+                                        "suffix": null,
+                                        "props": {
+                                            "__kind": "fs_custom_graphable",
+                                            "__kind_sub": "graphable_activity",
+                                            "name": "Sequence_Execution_Tree",
+                                            "label": "Sequence_Execution_Tree",
+                                            "data_url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_all_sequence-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?group_by_engine=true&format=TMS",
+                                            "arg": "filter",
+                                            "isData": true
+                                        },
+                                        "selected": true,
+                                        "isHidden": false,
+                                        "sources": [],
+                                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_all_sequence-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?group_by_engine=true&format=TMS",
+                                        "tabSelected": false,
+                                        "bandIds": [
+                                            "band7588",
+                                            "band7589",
+                                            "band7590",
+                                            "band7591",
+                                            "band7592",
+                                            "band7593",
+                                            "band7594",
+                                            "band7595",
+                                            "band7596",
+                                            "band7597",
+                                            "band7598",
+                                            "band7599"
+                                        ],
+                                        "graphSettings": [
+                                            {
+                                                "label": "Sequence_Execution_Tree",
+                                                "labelOverride": false,
+                                                "iconEnabled": false,
+                                                "trimLabel": false,
+                                                "hideLabel": false,
+                                                "compositeYLabel": false,
+                                                "dynamicCompositeYLabel": false,
+                                                "labelColor": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "lineColor": "black",
+                                                "lineColorCustom": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "fillColor": "black",
+                                                "activityColorCustom": [
+                                                    249,
+                                                    189,
+                                                    133
+                                                ],
+                                                "fill": false,
+                                                "isInCompositeBand": false,
+                                                "height": null,
+                                                "heightPadding": 0,
+                                                "interpolation": "constant",
+                                                "scientificNotation": null,
+                                                "customMenuItems": [],
+                                                "overlayBand": "",
+                                                "logTicks": false,
+                                                "statePlotType": 0,
+                                                "currentTimeCursorEnabled": false,
+                                                "activityLayout": 1,
+                                                "style": "bar",
+                                                "showActivityTimes": false,
+                                                "labelFontSize": 10,
+                                                "rowHeight": 5,
+                                                "inSouth": null,
+                                                "showStateChangeTimes": false,
+                                                "activityHeight": 20
+                                            },
+                                            {
+                                                "label": "0",
+                                                "labelOverride": false,
+                                                "iconEnabled": false,
+                                                "trimLabel": false,
+                                                "hideLabel": false,
+                                                "compositeYLabel": false,
+                                                "dynamicCompositeYLabel": false,
+                                                "labelColor": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "lineColor": "black",
+                                                "lineColorCustom": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "fillColor": "black",
+                                                "activityColorCustom": [
+                                                    249,
+                                                    189,
+                                                    133
+                                                ],
+                                                "fill": false,
+                                                "isInCompositeBand": false,
+                                                "height": null,
+                                                "heightPadding": 0,
+                                                "interpolation": "constant",
+                                                "scientificNotation": null,
+                                                "customMenuItems": [],
+                                                "overlayBand": "",
+                                                "logTicks": false,
+                                                "statePlotType": 0,
+                                                "currentTimeCursorEnabled": false,
+                                                "activityLayout": 1,
+                                                "style": "bar",
+                                                "showActivityTimes": false,
+                                                "labelFontSize": 10,
+                                                "rowHeight": 5,
+                                                "inSouth": null,
+                                                "showStateChangeTimes": false,
+                                                "activityHeight": 20
+                                            },
+                                            {
+                                                "label": "1",
+                                                "labelOverride": false,
+                                                "iconEnabled": false,
+                                                "trimLabel": false,
+                                                "hideLabel": false,
+                                                "compositeYLabel": false,
+                                                "dynamicCompositeYLabel": false,
+                                                "labelColor": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "lineColor": "black",
+                                                "lineColorCustom": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "fillColor": "black",
+                                                "activityColorCustom": [
+                                                    249,
+                                                    189,
+                                                    133
+                                                ],
+                                                "fill": false,
+                                                "isInCompositeBand": false,
+                                                "height": null,
+                                                "heightPadding": 0,
+                                                "interpolation": "constant",
+                                                "scientificNotation": null,
+                                                "customMenuItems": [],
+                                                "overlayBand": "",
+                                                "logTicks": false,
+                                                "statePlotType": 0,
+                                                "currentTimeCursorEnabled": false,
+                                                "activityLayout": 1,
+                                                "style": "bar",
+                                                "showActivityTimes": false,
+                                                "labelFontSize": 10,
+                                                "rowHeight": 5,
+                                                "inSouth": null,
+                                                "showStateChangeTimes": false,
+                                                "activityHeight": 20
+                                            },
+                                            {
+                                                "label": "2",
+                                                "labelOverride": false,
+                                                "iconEnabled": false,
+                                                "trimLabel": false,
+                                                "hideLabel": false,
+                                                "compositeYLabel": false,
+                                                "dynamicCompositeYLabel": false,
+                                                "labelColor": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "lineColor": "black",
+                                                "lineColorCustom": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "fillColor": "black",
+                                                "activityColorCustom": [
+                                                    249,
+                                                    189,
+                                                    133
+                                                ],
+                                                "fill": false,
+                                                "isInCompositeBand": false,
+                                                "height": null,
+                                                "heightPadding": 0,
+                                                "interpolation": "constant",
+                                                "scientificNotation": null,
+                                                "customMenuItems": [],
+                                                "overlayBand": "",
+                                                "logTicks": false,
+                                                "statePlotType": 0,
+                                                "currentTimeCursorEnabled": false,
+                                                "activityLayout": 1,
+                                                "style": "bar",
+                                                "showActivityTimes": false,
+                                                "labelFontSize": 10,
+                                                "rowHeight": 5,
+                                                "inSouth": null,
+                                                "showStateChangeTimes": false,
+                                                "activityHeight": 20
+                                            },
+                                            {
+                                                "label": "3",
+                                                "labelOverride": false,
+                                                "iconEnabled": false,
+                                                "trimLabel": false,
+                                                "hideLabel": false,
+                                                "compositeYLabel": false,
+                                                "dynamicCompositeYLabel": false,
+                                                "labelColor": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "lineColor": "black",
+                                                "lineColorCustom": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "fillColor": "black",
+                                                "activityColorCustom": [
+                                                    249,
+                                                    189,
+                                                    133
+                                                ],
+                                                "fill": false,
+                                                "isInCompositeBand": false,
+                                                "height": null,
+                                                "heightPadding": 0,
+                                                "interpolation": "constant",
+                                                "scientificNotation": null,
+                                                "customMenuItems": [],
+                                                "overlayBand": "",
+                                                "logTicks": false,
+                                                "statePlotType": 0,
+                                                "currentTimeCursorEnabled": false,
+                                                "activityLayout": 1,
+                                                "style": "bar",
+                                                "showActivityTimes": false,
+                                                "labelFontSize": 10,
+                                                "rowHeight": 5,
+                                                "inSouth": null,
+                                                "showStateChangeTimes": false,
+                                                "activityHeight": 20
+                                            },
+                                            {
+                                                "label": "4",
+                                                "labelOverride": false,
+                                                "iconEnabled": false,
+                                                "trimLabel": false,
+                                                "hideLabel": false,
+                                                "compositeYLabel": false,
+                                                "dynamicCompositeYLabel": false,
+                                                "labelColor": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "lineColor": "black",
+                                                "lineColorCustom": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "fillColor": "black",
+                                                "activityColorCustom": [
+                                                    249,
+                                                    189,
+                                                    133
+                                                ],
+                                                "fill": false,
+                                                "isInCompositeBand": false,
+                                                "height": null,
+                                                "heightPadding": 0,
+                                                "interpolation": "constant",
+                                                "scientificNotation": null,
+                                                "customMenuItems": [],
+                                                "overlayBand": "",
+                                                "logTicks": false,
+                                                "statePlotType": 0,
+                                                "currentTimeCursorEnabled": false,
+                                                "activityLayout": 1,
+                                                "style": "bar",
+                                                "showActivityTimes": false,
+                                                "labelFontSize": 10,
+                                                "rowHeight": 5,
+                                                "inSouth": null,
+                                                "showStateChangeTimes": false,
+                                                "activityHeight": 20
+                                            },
+                                            {
+                                                "label": "5",
+                                                "labelOverride": false,
+                                                "iconEnabled": false,
+                                                "trimLabel": false,
+                                                "hideLabel": false,
+                                                "compositeYLabel": false,
+                                                "dynamicCompositeYLabel": false,
+                                                "labelColor": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "lineColor": "black",
+                                                "lineColorCustom": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "fillColor": "black",
+                                                "activityColorCustom": [
+                                                    249,
+                                                    189,
+                                                    133
+                                                ],
+                                                "fill": false,
+                                                "isInCompositeBand": false,
+                                                "height": null,
+                                                "heightPadding": 0,
+                                                "interpolation": "constant",
+                                                "scientificNotation": null,
+                                                "customMenuItems": [],
+                                                "overlayBand": "",
+                                                "logTicks": false,
+                                                "statePlotType": 0,
+                                                "currentTimeCursorEnabled": false,
+                                                "activityLayout": 1,
+                                                "style": "bar",
+                                                "showActivityTimes": false,
+                                                "labelFontSize": 10,
+                                                "rowHeight": 5,
+                                                "inSouth": null,
+                                                "showStateChangeTimes": false,
+                                                "activityHeight": 20
+                                            },
+                                            {
+                                                "label": "6",
+                                                "labelOverride": false,
+                                                "iconEnabled": false,
+                                                "trimLabel": false,
+                                                "hideLabel": false,
+                                                "compositeYLabel": false,
+                                                "dynamicCompositeYLabel": false,
+                                                "labelColor": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "lineColor": "black",
+                                                "lineColorCustom": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "fillColor": "black",
+                                                "activityColorCustom": [
+                                                    249,
+                                                    189,
+                                                    133
+                                                ],
+                                                "fill": false,
+                                                "isInCompositeBand": false,
+                                                "height": null,
+                                                "heightPadding": 0,
+                                                "interpolation": "constant",
+                                                "scientificNotation": null,
+                                                "customMenuItems": [],
+                                                "overlayBand": "",
+                                                "logTicks": false,
+                                                "statePlotType": 0,
+                                                "currentTimeCursorEnabled": false,
+                                                "activityLayout": 1,
+                                                "style": "bar",
+                                                "showActivityTimes": false,
+                                                "labelFontSize": 10,
+                                                "rowHeight": 5,
+                                                "inSouth": null,
+                                                "showStateChangeTimes": false,
+                                                "activityHeight": 20
+                                            },
+                                            {
+                                                "label": "7",
+                                                "labelOverride": false,
+                                                "iconEnabled": false,
+                                                "trimLabel": false,
+                                                "hideLabel": false,
+                                                "compositeYLabel": false,
+                                                "dynamicCompositeYLabel": false,
+                                                "labelColor": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "lineColor": "black",
+                                                "lineColorCustom": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "fillColor": "black",
+                                                "activityColorCustom": [
+                                                    249,
+                                                    189,
+                                                    133
+                                                ],
+                                                "fill": false,
+                                                "isInCompositeBand": false,
+                                                "height": null,
+                                                "heightPadding": 0,
+                                                "interpolation": "constant",
+                                                "scientificNotation": null,
+                                                "customMenuItems": [],
+                                                "overlayBand": "",
+                                                "logTicks": false,
+                                                "statePlotType": 0,
+                                                "currentTimeCursorEnabled": false,
+                                                "activityLayout": 1,
+                                                "style": "bar",
+                                                "showActivityTimes": false,
+                                                "labelFontSize": 10,
+                                                "rowHeight": 5,
+                                                "inSouth": null,
+                                                "showStateChangeTimes": false,
+                                                "activityHeight": 20
+                                            },
+                                            {
+                                                "label": "8",
+                                                "labelOverride": false,
+                                                "iconEnabled": false,
+                                                "trimLabel": false,
+                                                "hideLabel": false,
+                                                "compositeYLabel": false,
+                                                "dynamicCompositeYLabel": false,
+                                                "labelColor": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "lineColor": "black",
+                                                "lineColorCustom": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "fillColor": "black",
+                                                "activityColorCustom": [
+                                                    249,
+                                                    189,
+                                                    133
+                                                ],
+                                                "fill": false,
+                                                "isInCompositeBand": false,
+                                                "height": null,
+                                                "heightPadding": 0,
+                                                "interpolation": "constant",
+                                                "scientificNotation": null,
+                                                "customMenuItems": [],
+                                                "overlayBand": "",
+                                                "logTicks": false,
+                                                "statePlotType": 0,
+                                                "currentTimeCursorEnabled": false,
+                                                "activityLayout": 1,
+                                                "style": "bar",
+                                                "showActivityTimes": false,
+                                                "labelFontSize": 10,
+                                                "rowHeight": 5,
+                                                "inSouth": null,
+                                                "showStateChangeTimes": false,
+                                                "activityHeight": 20
+                                            },
+                                            {
+                                                "label": "9",
+                                                "labelOverride": false,
+                                                "iconEnabled": false,
+                                                "trimLabel": false,
+                                                "hideLabel": false,
+                                                "compositeYLabel": false,
+                                                "dynamicCompositeYLabel": false,
+                                                "labelColor": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "lineColor": "black",
+                                                "lineColorCustom": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "fillColor": "black",
+                                                "activityColorCustom": [
+                                                    249,
+                                                    189,
+                                                    133
+                                                ],
+                                                "fill": false,
+                                                "isInCompositeBand": false,
+                                                "height": null,
+                                                "heightPadding": 0,
+                                                "interpolation": "constant",
+                                                "scientificNotation": null,
+                                                "customMenuItems": [],
+                                                "overlayBand": "",
+                                                "logTicks": false,
+                                                "statePlotType": 0,
+                                                "currentTimeCursorEnabled": false,
+                                                "activityLayout": 1,
+                                                "style": "bar",
+                                                "showActivityTimes": false,
+                                                "labelFontSize": 10,
+                                                "rowHeight": 5,
+                                                "inSouth": null,
+                                                "showStateChangeTimes": false,
+                                                "activityHeight": 20
+                                            },
+                                            {
+                                                "label": "10",
+                                                "labelOverride": false,
+                                                "iconEnabled": false,
+                                                "trimLabel": false,
+                                                "hideLabel": false,
+                                                "compositeYLabel": false,
+                                                "dynamicCompositeYLabel": false,
+                                                "labelColor": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "lineColor": "black",
+                                                "lineColorCustom": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "fillColor": "black",
+                                                "activityColorCustom": [
+                                                    249,
+                                                    189,
+                                                    133
+                                                ],
+                                                "fill": false,
+                                                "isInCompositeBand": false,
+                                                "height": null,
+                                                "heightPadding": 0,
+                                                "interpolation": "constant",
+                                                "scientificNotation": null,
+                                                "customMenuItems": [],
+                                                "overlayBand": "",
+                                                "logTicks": false,
+                                                "statePlotType": 0,
+                                                "currentTimeCursorEnabled": false,
+                                                "activityLayout": 1,
+                                                "style": "bar",
+                                                "showActivityTimes": false,
+                                                "labelFontSize": 10,
+                                                "rowHeight": 5,
+                                                "inSouth": null,
+                                                "showStateChangeTimes": false,
+                                                "activityHeight": 20
+                                            },
+                                            {
+                                                "label": "11",
+                                                "labelOverride": false,
+                                                "iconEnabled": false,
+                                                "trimLabel": false,
+                                                "hideLabel": false,
+                                                "compositeYLabel": false,
+                                                "dynamicCompositeYLabel": false,
+                                                "labelColor": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "lineColor": "black",
+                                                "lineColorCustom": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "fillColor": "black",
+                                                "activityColorCustom": [
+                                                    249,
+                                                    189,
+                                                    133
+                                                ],
+                                                "fill": false,
+                                                "isInCompositeBand": false,
+                                                "height": null,
+                                                "heightPadding": 0,
+                                                "interpolation": "constant",
+                                                "scientificNotation": null,
+                                                "customMenuItems": [],
+                                                "overlayBand": "",
+                                                "logTicks": false,
+                                                "statePlotType": 0,
+                                                "currentTimeCursorEnabled": false,
+                                                "activityLayout": 1,
+                                                "style": "bar",
+                                                "showActivityTimes": false,
+                                                "labelFontSize": 10,
+                                                "rowHeight": 5,
+                                                "inSouth": null,
+                                                "showStateChangeTimes": false,
+                                                "activityHeight": 20
+                                            }
+                                        ],
+                                        "id": "158"
+                                    },
+                                    {
+                                        "hasGraph": false,
+                                        "name": "Activities",
+                                        "overrideName": null,
+                                        "tabName": null,
+                                        "suffix": null,
+                                        "props": {
+                                            "__kind": "fs_category",
+                                            "name": "Activities",
+                                            "label": "Activities"
+                                        },
+                                        "selected": true,
+                                        "isHidden": false,
+                                        "sources": [
+                                            {
+                                                "hasGraph": false,
+                                                "name": "ISSUE_CMDS",
+                                                "overrideName": null,
+                                                "tabName": null,
+                                                "suffix": null,
+                                                "props": {
+                                                    "__kind": "fs_graphable",
+                                                    "__kind_sub": "graphable_activity",
+                                                    "name": "ISSUE_CMDS",
+                                                    "label": "ISSUE_CMDS",
+                                                    "data_url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_all_activity-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?format=TMS&filter=(Name=ISSUE_CMDS)&legend=ISSUE_CMDS",
+                                                    "isData": true
+                                                },
+                                                "selected": true,
+                                                "isHidden": false,
+                                                "sources": [],
+                                                "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_all_activity-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?format=TMS&filter=(Name=ISSUE_CMDS)&legend=ISSUE_CMDS",
+                                                "tabSelected": false,
+                                                "bandIds": [
+                                                    "band8018"
+                                                ],
+                                                "graphSettings": [
+                                                    {
+                                                        "label": "ISSUE_CMDS",
+                                                        "labelOverride": false,
+                                                        "iconEnabled": false,
+                                                        "trimLabel": false,
+                                                        "hideLabel": false,
+                                                        "compositeYLabel": false,
+                                                        "dynamicCompositeYLabel": false,
+                                                        "labelColor": [
+                                                            0,
+                                                            0,
+                                                            0
+                                                        ],
+                                                        "lineColor": "black",
+                                                        "lineColorCustom": [
+                                                            0,
+                                                            0,
+                                                            0
+                                                        ],
+                                                        "fillColor": "black",
+                                                        "activityColorCustom": [
+                                                            249,
+                                                            189,
+                                                            133
+                                                        ],
+                                                        "fill": false,
+                                                        "isInCompositeBand": false,
+                                                        "height": null,
+                                                        "heightPadding": 0,
+                                                        "interpolation": "constant",
+                                                        "scientificNotation": null,
+                                                        "customMenuItems": [],
+                                                        "overlayBand": "",
+                                                        "logTicks": false,
+                                                        "statePlotType": 0,
+                                                        "currentTimeCursorEnabled": false,
+                                                        "activityLayout": 1,
+                                                        "style": "bar",
+                                                        "showActivityTimes": false,
+                                                        "labelFontSize": 10,
+                                                        "rowHeight": 5,
+                                                        "inSouth": null,
+                                                        "showStateChangeTimes": false,
+                                                        "activityHeight": 20
+                                                    }
+                                                ],
+                                                "id": "159"
+                                            }
+                                        ],
+                                        "url": "",
+                                        "tabSelected": false,
+                                        "bandIds": [],
+                                        "graphSettings": null,
+                                        "id": "160"
+                                    },
+                                    {
+                                        "hasGraph": false,
+                                        "name": "DKF",
+                                        "overrideName": null,
+                                        "tabName": null,
+                                        "suffix": null,
+                                        "props": {
+                                            "__kind": "fs_category",
+                                            "name": "DKF",
+                                            "label": "DKF"
+                                        },
+                                        "selected": true,
+                                        "isHidden": false,
+                                        "sources": [],
+                                        "url": "",
+                                        "tabSelected": false,
+                                        "bandIds": [],
+                                        "graphSettings": null,
+                                        "id": "195"
+                                    },
+                                    {
+                                        "hasGraph": false,
+                                        "name": "Resources",
+                                        "overrideName": null,
+                                        "tabName": null,
+                                        "suffix": null,
+                                        "props": {
+                                            "__kind": "fs_category",
+                                            "name": "Resources",
+                                            "label": "Resources"
+                                        },
+                                        "selected": true,
+                                        "isHidden": false,
+                                        "sources": [
+                                            {
+                                                "hasGraph": false,
+                                                "name": "BIN",
+                                                "overrideName": null,
+                                                "tabName": null,
+                                                "suffix": null,
+                                                "props": {
+                                                    "__kind": "fs_category",
+                                                    "name": "BIN",
+                                                    "label": "BIN"
+                                                },
+                                                "selected": true,
+                                                "isHidden": false,
+                                                "sources": [
+                                                    {
+                                                        "hasGraph": false,
+                                                        "name": "bin_attr",
+                                                        "overrideName": null,
+                                                        "tabName": null,
+                                                        "suffix": null,
+                                                        "props": {
+                                                            "__kind": "fs_graphable",
+                                                            "__kind_sub": "graphable_resource",
+                                                            "name": "bin_attr",
+                                                            "label": "BIN::bin_attr",
+                                                            "collection": "test_10000_5b21960c1014ac7e86ff8cdb",
+                                                            "data_url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_attribute_history-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?format=TMS&me=BIN&attr=bin_attr&decimate=true",
+                                                            "isData": true
+                                                        },
+                                                        "selected": true,
+                                                        "isHidden": false,
+                                                        "sources": [],
+                                                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_attribute_history-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?format=TMS&me=BIN&attr=bin_attr&decimate=true",
+                                                        "tabSelected": false,
+                                                        "bandIds": [
+                                                            "band8419"
+                                                        ],
+                                                        "graphSettings": [
+                                                            {
+                                                                "label": "bin_attr",
+                                                                "labelOverride": false,
+                                                                "iconEnabled": false,
+                                                                "trimLabel": false,
+                                                                "hideLabel": false,
+                                                                "compositeYLabel": false,
+                                                                "dynamicCompositeYLabel": false,
+                                                                "labelColor": [
+                                                                    0,
+                                                                    0,
+                                                                    0
+                                                                ],
+                                                                "lineColor": "black",
+                                                                "lineColorCustom": [
+                                                                    0,
+                                                                    0,
+                                                                    0
+                                                                ],
+                                                                "fillColor": "black",
+                                                                "activityColorCustom": [
+                                                                    249,
+                                                                    189,
+                                                                    133
+                                                                ],
+                                                                "fill": false,
+                                                                "isInCompositeBand": false,
+                                                                "height": null,
+                                                                "heightPadding": 0,
+                                                                "interpolation": "constant",
+                                                                "scientificNotation": null,
+                                                                "customMenuItems": [],
+                                                                "overlayBand": "",
+                                                                "logTicks": false,
+                                                                "statePlotType": 0,
+                                                                "currentTimeCursorEnabled": false,
+                                                                "activityLayout": 1,
+                                                                "style": "bar",
+                                                                "showActivityTimes": false,
+                                                                "labelFontSize": 10,
+                                                                "rowHeight": 5,
+                                                                "inSouth": null,
+                                                                "showStateChangeTimes": false,
+                                                                "activityHeight": 20
+                                                            }
+                                                        ],
+                                                        "id": "196"
+                                                    },
+                                                    {
+                                                        "hasGraph": false,
+                                                        "name": "bin_array_attr",
+                                                        "overrideName": null,
+                                                        "tabName": null,
+                                                        "suffix": null,
+                                                        "props": {
+                                                            "__kind": "fs_category",
+                                                            "name": "bin_array_attr",
+                                                            "label": "BIN::bin_array_attr"
+                                                        },
+                                                        "selected": true,
+                                                        "isHidden": false,
+                                                        "sources": [
+                                                            {
+                                                                "hasGraph": false,
+                                                                "name": "bin_array_attr[1]",
+                                                                "overrideName": null,
+                                                                "tabName": null,
+                                                                "suffix": null,
+                                                                "props": {
+                                                                    "__kind": "fs_graphable",
+                                                                    "__kind_sub": "graphable_resource",
+                                                                    "name": "bin_array_attr[1]",
+                                                                    "label": "BIN::bin_array_attr[1]",
+                                                                    "collection": "test_10000_5b21960c1014ac7e86ff8cdb",
+                                                                    "data_url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_attribute_history-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?format=TMS&me=BIN&attr=bin_array_attr&decimate=true&index=1",
+                                                                    "isData": true
+                                                                },
+                                                                "selected": true,
+                                                                "isHidden": false,
+                                                                "sources": [],
+                                                                "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_attribute_history-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?format=TMS&me=BIN&attr=bin_array_attr&decimate=true&index=1",
+                                                                "tabSelected": false,
+                                                                "bandIds": [
+                                                                    "band13909"
+                                                                ],
+                                                                "graphSettings": [
+                                                                    {
+                                                                        "label": "bin_array_attr[1]",
+                                                                        "labelOverride": false,
+                                                                        "iconEnabled": false,
+                                                                        "trimLabel": false,
+                                                                        "hideLabel": false,
+                                                                        "compositeYLabel": false,
+                                                                        "dynamicCompositeYLabel": false,
+                                                                        "labelColor": [
+                                                                            0,
+                                                                            0,
+                                                                            0
+                                                                        ],
+                                                                        "lineColor": "black",
+                                                                        "lineColorCustom": [
+                                                                            0,
+                                                                            0,
+                                                                            0
+                                                                        ],
+                                                                        "fillColor": "black",
+                                                                        "activityColorCustom": [
+                                                                            249,
+                                                                            189,
+                                                                            133
+                                                                        ],
+                                                                        "fill": false,
+                                                                        "isInCompositeBand": false,
+                                                                        "height": null,
+                                                                        "heightPadding": 0,
+                                                                        "interpolation": "constant",
+                                                                        "scientificNotation": null,
+                                                                        "customMenuItems": [],
+                                                                        "overlayBand": "",
+                                                                        "logTicks": false,
+                                                                        "statePlotType": 0,
+                                                                        "currentTimeCursorEnabled": false,
+                                                                        "activityLayout": 1,
+                                                                        "style": "bar",
+                                                                        "showActivityTimes": false,
+                                                                        "labelFontSize": 10,
+                                                                        "rowHeight": 5,
+                                                                        "inSouth": null,
+                                                                        "showStateChangeTimes": false,
+                                                                        "activityHeight": 20
+                                                                    }
+                                                                ],
+                                                                "id": "197"
+                                                            }
+                                                        ],
+                                                        "url": "",
+                                                        "tabSelected": false,
+                                                        "bandIds": [],
+                                                        "graphSettings": null,
+                                                        "id": "200"
+                                                    }
+                                                ],
+                                                "url": "",
+                                                "tabSelected": false,
+                                                "bandIds": [],
+                                                "graphSettings": null,
+                                                "id": "201"
+                                            }
+                                        ],
+                                        "url": "",
+                                        "tabSelected": false,
+                                        "bandIds": [],
+                                        "graphSettings": null,
+                                        "id": "308"
+                                    },
+                                    {
+                                        "hasGraph": false,
+                                        "name": "sequences",
+                                        "overrideName": null,
+                                        "tabName": null,
+                                        "suffix": null,
+                                        "props": {
+                                            "__kind": "fs_category",
+                                            "name": "sequences",
+                                            "label": "sequences"
+                                        },
+                                        "selected": true,
+                                        "isHidden": false,
+                                        "sources": [
+                                            {
+                                                "hasGraph": false,
+                                                "name": "ATR",
+                                                "overrideName": null,
+                                                "tabName": null,
+                                                "suffix": null,
+                                                "props": {
+                                                    "engine": "0",
+                                                    "ParentName": "",
+                                                    "ParentEngine": "-1",
+                                                    "ParentId": "",
+                                                    "InvocationType": "SASF",
+                                                    "State": "COMPLETED",
+                                                    "__kind": "fs_graphable",
+                                                    "__kind_sub": "graphable_activity",
+                                                    "Activity Name": "ATR",
+                                                    "Activity Type": "ATR",
+                                                    "name": "ATR",
+                                                    "label": "ATR",
+                                                    "Tstart Assigned": "1993-295T00:00:00.000",
+                                                    "Tend Assigned": "1993-295T02:53:50.000",
+                                                    "data_url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_commands_in_sequence-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?format=TMS&sequenceId=ATR",
+                                                    "isData": true
+                                                },
+                                                "selected": true,
+                                                "isHidden": false,
+                                                "sources": [],
+                                                "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_commands_in_sequence-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?format=TMS&sequenceId=ATR",
+                                                "tabSelected": false,
+                                                "bandIds": [
+                                                    "band19414"
+                                                ],
+                                                "graphSettings": [
+                                                    {
+                                                        "label": "ATR",
+                                                        "labelOverride": false,
+                                                        "iconEnabled": false,
+                                                        "trimLabel": false,
+                                                        "hideLabel": false,
+                                                        "compositeYLabel": false,
+                                                        "dynamicCompositeYLabel": false,
+                                                        "labelColor": [
+                                                            0,
+                                                            0,
+                                                            0
+                                                        ],
+                                                        "lineColor": "black",
+                                                        "lineColorCustom": [
+                                                            0,
+                                                            0,
+                                                            0
+                                                        ],
+                                                        "fillColor": "black",
+                                                        "activityColorCustom": [
+                                                            249,
+                                                            189,
+                                                            133
+                                                        ],
+                                                        "fill": false,
+                                                        "isInCompositeBand": false,
+                                                        "height": null,
+                                                        "heightPadding": 0,
+                                                        "interpolation": "constant",
+                                                        "scientificNotation": null,
+                                                        "customMenuItems": [],
+                                                        "overlayBand": "",
+                                                        "logTicks": false,
+                                                        "statePlotType": 0,
+                                                        "currentTimeCursorEnabled": false,
+                                                        "activityLayout": 1,
+                                                        "style": "bar",
+                                                        "showActivityTimes": false,
+                                                        "labelFontSize": 10,
+                                                        "rowHeight": 5,
+                                                        "inSouth": null,
+                                                        "showStateChangeTimes": false,
+                                                        "activityHeight": 20
+                                                    }
+                                                ],
+                                                "id": "161"
+                                            }
+                                        ],
+                                        "url": "",
+                                        "tabSelected": false,
+                                        "bandIds": [],
+                                        "graphSettings": null,
+                                        "id": "194"
+                                    },
+                                    {
+                                        "hasGraph": false,
+                                        "name": "label",
+                                        "overrideName": null,
+                                        "tabName": null,
+                                        "suffix": null,
+                                        "props": {
+                                            "ignoreCustomPefFlag": true,
+                                            "__kind": "fs_custom_graphable",
+                                            "__kind_sub": "graphable_activity",
+                                            "name": "command",
+                                            "label": "command",
+                                            "data_url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_event_history-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?format=TMS&event=[CMD,CMDW]",
+                                            "arg": "filter",
+                                            "filter_key": "command",
+                                            "isData": true,
+                                            "filter": "(command=[.*])"
+                                        },
+                                        "selected": true,
+                                        "isHidden": true,
+                                        "sources": [],
+                                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_event_history-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?format=TMS&event=[CMD,CMDW]&filter=(command%3D%5B.*%5D)&legend=label",
+                                        "tabSelected": false,
+                                        "bandIds": [
+                                            "band7458"
+                                        ],
+                                        "graphSettings": [
+                                            {
+                                                "label": "label",
+                                                "labelOverride": false,
+                                                "iconEnabled": false,
+                                                "trimLabel": false,
+                                                "hideLabel": false,
+                                                "compositeYLabel": false,
+                                                "dynamicCompositeYLabel": false,
+                                                "labelColor": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "lineColor": "black",
+                                                "lineColorCustom": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ],
+                                                "fillColor": "black",
+                                                "activityColorCustom": [
+                                                    249,
+                                                    189,
+                                                    133
+                                                ],
+                                                "fill": false,
+                                                "isInCompositeBand": false,
+                                                "height": null,
+                                                "heightPadding": 0,
+                                                "interpolation": "constant",
+                                                "scientificNotation": null,
+                                                "customMenuItems": [],
+                                                "overlayBand": "",
+                                                "logTicks": false,
+                                                "statePlotType": 0,
+                                                "currentTimeCursorEnabled": false,
+                                                "activityLayout": 1,
+                                                "style": "bar",
+                                                "showActivityTimes": false,
+                                                "labelFontSize": 10,
+                                                "rowHeight": 5,
+                                                "inSouth": null,
+                                                "showStateChangeTimes": false,
+                                                "activityHeight": 20
+                                            }
+                                        ],
+                                        "id": "333"
+                                    }
+                                ],
+                                "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/list_pef-mongodb/TEST_ATS/PEF_Combined_Test/test_10000",
+                                "tabSelected": false,
+                                "bandIds": [],
+                                "graphSettings": null,
+                                "id": "122"
+                            }
+                        ],
+                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/fs-mongodb/TEST_ATS/PEF_Combined_Test",
+                        "tabSelected": false,
+                        "bandIds": [],
+                        "graphSettings": null,
+                        "id": "84"
+                    }
+                ],
+                "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/fs-mongodb/TEST_ATS",
+                "tabSelected": false,
+                "bandIds": [],
+                "graphSettings": null,
+                "id": "6"
+            }
+        ],
+        "loaded": false,
+        "props": {},
+        "globalOptions": {
+            "startTicks": null,
+            "endTicks": null,
+            "graphStartTime": 0,
+            "panTo": null,
+            "panDuration": "1d",
+            "timeDelta": null,
+            "panScrobbleAmount": 600,
+            "zoomDelta": 10,
+            "overlayBandLabel": "ATR",
+            "tooltipEnabled": true
+        },
+        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/fs-mongodb/leucadia/states",
+        "viewTemplate": {
+            "viewStart": "1993-295T01:00:00.000",
+            "viewEnd": "1993-295T07:40:00.000",
+            "charts": {
+                "center": [
+                    {
+                        "id": "band7458",
+                        "label": "label",
+                        "originalName": "label",
+                        "suffix": null,
+                        "legend": "label",
+                        "graphSettings": {
+                            "labelFontSize": 10,
+                            "height": 35,
+                            "rowHeight": 0.005265289590927501,
+                            "rowPadding": 2,
+                            "activityHeight": 20,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "iconEnabled": false,
+                            "autoFit": 1,
+                            "activityLayout": 1,
+                            "filter": "(command=[.*])",
+                            "style": "bar",
+                            "showActivityTimes": false
+                        },
+                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_event_history-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?format=TMS&event=[CMD,CMDW]&filter=(command%3D%5B.*%5D)&legend=label",
+                        "properties": {
+                            "additionalSources": {},
+                            "timeRangeAnnotations": []
+                        }
+                    },
+                    {
+                        "id": "band7588",
+                        "label": "0",
+                        "originalName": "Sequence_Execution_Tree",
+                        "suffix": null,
+                        "legend": "0",
+                        "graphSettings": {
+                            "labelFontSize": 10,
+                            "height": 35,
+                            "rowHeight": 35,
+                            "rowPadding": 2,
+                            "activityHeight": 20,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "iconEnabled": false,
+                            "autoFit": 1,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false
+                        },
+                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_all_sequence-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?group_by_engine=true&format=TMS",
+                        "properties": {
+                            "additionalSources": {},
+                            "timeRangeAnnotations": []
+                        }
+                    },
+                    {
+                        "id": "band7589",
+                        "label": "1",
+                        "originalName": "Sequence_Execution_Tree",
+                        "suffix": null,
+                        "legend": "1",
+                        "graphSettings": {
+                            "labelFontSize": 10,
+                            "height": 35,
+                            "rowHeight": 35,
+                            "rowPadding": 2,
+                            "activityHeight": 20,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "iconEnabled": false,
+                            "autoFit": 1,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false
+                        },
+                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_all_sequence-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?group_by_engine=true&format=TMS",
+                        "properties": {
+                            "additionalSources": {},
+                            "timeRangeAnnotations": []
+                        }
+                    },
+                    {
+                        "id": "band7590",
+                        "label": "2",
+                        "originalName": "Sequence_Execution_Tree",
+                        "suffix": null,
+                        "legend": "2",
+                        "graphSettings": {
+                            "labelFontSize": 10,
+                            "height": 35,
+                            "rowHeight": 35,
+                            "rowPadding": 2,
+                            "activityHeight": 20,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "iconEnabled": false,
+                            "autoFit": 1,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false
+                        },
+                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_all_sequence-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?group_by_engine=true&format=TMS",
+                        "properties": {
+                            "additionalSources": {},
+                            "timeRangeAnnotations": []
+                        }
+                    },
+                    {
+                        "id": "band7591",
+                        "label": "3",
+                        "originalName": "Sequence_Execution_Tree",
+                        "suffix": null,
+                        "legend": "3",
+                        "graphSettings": {
+                            "labelFontSize": 10,
+                            "height": 35,
+                            "rowHeight": 3.25,
+                            "rowPadding": 2,
+                            "activityHeight": 20,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "iconEnabled": false,
+                            "autoFit": 1,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false
+                        },
+                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_all_sequence-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?group_by_engine=true&format=TMS",
+                        "properties": {
+                            "additionalSources": {},
+                            "timeRangeAnnotations": []
+                        }
+                    },
+                    {
+                        "id": "band7592",
+                        "label": "4",
+                        "originalName": "Sequence_Execution_Tree",
+                        "suffix": null,
+                        "legend": "4",
+                        "graphSettings": {
+                            "labelFontSize": 10,
+                            "height": 35,
+                            "rowHeight": 35,
+                            "rowPadding": 2,
+                            "activityHeight": 20,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "iconEnabled": false,
+                            "autoFit": 1,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false
+                        },
+                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_all_sequence-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?group_by_engine=true&format=TMS",
+                        "properties": {
+                            "additionalSources": {},
+                            "timeRangeAnnotations": []
+                        }
+                    },
+                    {
+                        "id": "band7593",
+                        "label": "5",
+                        "originalName": "Sequence_Execution_Tree",
+                        "suffix": null,
+                        "legend": "5",
+                        "graphSettings": {
+                            "labelFontSize": 10,
+                            "height": 35,
+                            "rowHeight": 35,
+                            "rowPadding": 2,
+                            "activityHeight": 20,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "iconEnabled": false,
+                            "autoFit": 1,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false
+                        },
+                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_all_sequence-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?group_by_engine=true&format=TMS",
+                        "properties": {
+                            "additionalSources": {},
+                            "timeRangeAnnotations": []
+                        }
+                    },
+                    {
+                        "id": "band7594",
+                        "label": "6",
+                        "originalName": "Sequence_Execution_Tree",
+                        "suffix": null,
+                        "legend": "6",
+                        "graphSettings": {
+                            "labelFontSize": 10,
+                            "height": 35,
+                            "rowHeight": 35,
+                            "rowPadding": 2,
+                            "activityHeight": 20,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "iconEnabled": false,
+                            "autoFit": 1,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false
+                        },
+                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_all_sequence-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?group_by_engine=true&format=TMS",
+                        "properties": {
+                            "additionalSources": {},
+                            "timeRangeAnnotations": []
+                        }
+                    },
+                    {
+                        "id": "band7595",
+                        "label": "7",
+                        "originalName": "Sequence_Execution_Tree",
+                        "suffix": null,
+                        "legend": "7",
+                        "graphSettings": {
+                            "labelFontSize": 10,
+                            "height": 35,
+                            "rowHeight": 35,
+                            "rowPadding": 2,
+                            "activityHeight": 20,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "iconEnabled": false,
+                            "autoFit": 1,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false
+                        },
+                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_all_sequence-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?group_by_engine=true&format=TMS",
+                        "properties": {
+                            "additionalSources": {},
+                            "timeRangeAnnotations": []
+                        }
+                    },
+                    {
+                        "id": "band7596",
+                        "label": "8",
+                        "originalName": "Sequence_Execution_Tree",
+                        "suffix": null,
+                        "legend": "8",
+                        "graphSettings": {
+                            "labelFontSize": 10,
+                            "height": 35,
+                            "rowHeight": 35,
+                            "rowPadding": 2,
+                            "activityHeight": 20,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "iconEnabled": false,
+                            "autoFit": 1,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false
+                        },
+                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_all_sequence-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?group_by_engine=true&format=TMS",
+                        "properties": {
+                            "additionalSources": {},
+                            "timeRangeAnnotations": []
+                        }
+                    },
+                    {
+                        "id": "band7597",
+                        "label": "9",
+                        "originalName": "Sequence_Execution_Tree",
+                        "suffix": null,
+                        "legend": "9",
+                        "graphSettings": {
+                            "labelFontSize": 10,
+                            "height": 35,
+                            "rowHeight": 35,
+                            "rowPadding": 2,
+                            "activityHeight": 20,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "iconEnabled": false,
+                            "autoFit": 1,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false
+                        },
+                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_all_sequence-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?group_by_engine=true&format=TMS",
+                        "properties": {
+                            "additionalSources": {},
+                            "timeRangeAnnotations": []
+                        }
+                    },
+                    {
+                        "id": "band7598",
+                        "label": "10",
+                        "originalName": "Sequence_Execution_Tree",
+                        "suffix": null,
+                        "legend": "10",
+                        "graphSettings": {
+                            "labelFontSize": 10,
+                            "height": 35,
+                            "rowHeight": 35,
+                            "rowPadding": 2,
+                            "activityHeight": 20,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "iconEnabled": false,
+                            "autoFit": 1,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false
+                        },
+                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_all_sequence-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?group_by_engine=true&format=TMS",
+                        "properties": {
+                            "additionalSources": {},
+                            "timeRangeAnnotations": []
+                        }
+                    },
+                    {
+                        "id": "band7599",
+                        "label": "11",
+                        "originalName": "Sequence_Execution_Tree",
+                        "suffix": null,
+                        "legend": "11",
+                        "graphSettings": {
+                            "labelFontSize": 10,
+                            "height": 35,
+                            "rowHeight": 35,
+                            "rowPadding": 2,
+                            "activityHeight": 20,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "iconEnabled": false,
+                            "autoFit": 1,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false
+                        },
+                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_all_sequence-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?group_by_engine=true&format=TMS",
+                        "properties": {
+                            "additionalSources": {},
+                            "timeRangeAnnotations": []
+                        }
+                    },
+                    {
+                        "id": "band8018",
+                        "label": "ISSUE_CMDS",
+                        "originalName": "ISSUE_CMDS",
+                        "suffix": null,
+                        "legend": "ISSUE_CMDS",
+                        "graphSettings": {
+                            "labelFontSize": 10,
+                            "height": 35,
+                            "rowHeight": 13,
+                            "rowPadding": 2,
+                            "activityHeight": 20,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "iconEnabled": false,
+                            "autoFit": 1,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false
+                        },
+                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_all_activity-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?format=TMS&filter=(Name=ISSUE_CMDS)&legend=ISSUE_CMDS",
+                        "properties": {
+                            "additionalSources": {},
+                            "timeRangeAnnotations": []
+                        }
+                    },
+                    {
+                        "id": "band8419",
+                        "label": "bin_attr",
+                        "originalName": "bin_attr",
+                        "suffix": null,
+                        "graphSettings": {
+                            "labelFontSize": 10,
+                            "height": 100,
+                            "lineColorCustom": [
+                                0,
+                                0,
+                                0
+                            ],
+                            "labelColor": [
+                                0,
+                                0,
+                                0
+                            ],
+                            "fillColorCustom": [
+                                0,
+                                0,
+                                0
+                            ],
+                            "interpolation": "constant",
+                            "scientificNotation": null,
+                            "iconEnabled": false,
+                            "fill": false,
+                            "logTicks": false,
+                            "heightPadding": 12
+                        },
+                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_attribute_history-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?format=TMS&me=BIN&attr=bin_attr&decimate=true"
+                    },
+                    {
+                        "id": "band13909",
+                        "label": "bin_array_attr[1]",
+                        "originalName": "bin_array_attr[1]",
+                        "suffix": null,
+                        "graphSettings": {
+                            "labelFontSize": 10,
+                            "height": 100,
+                            "lineColorCustom": [
+                                0,
+                                0,
+                                0
+                            ],
+                            "labelColor": [
+                                0,
+                                0,
+                                0
+                            ],
+                            "fillColorCustom": [
+                                0,
+                                0,
+                                0
+                            ],
+                            "interpolation": "constant",
+                            "scientificNotation": null,
+                            "iconEnabled": false,
+                            "fill": false,
+                            "logTicks": false,
+                            "heightPadding": 12
+                        },
+                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_attribute_history-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?format=TMS&me=BIN&attr=bin_array_attr&decimate=true&index=1"
+                    },
+                    {
+                        "id": "band19414",
+                        "label": "ATR",
+                        "originalName": "ATR",
+                        "suffix": null,
+                        "legend": "ATR",
+                        "graphSettings": {
+                            "labelFontSize": 10,
+                            "height": 35,
+                            "rowHeight": 35,
+                            "rowPadding": 2,
+                            "activityHeight": 20,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "iconEnabled": false,
+                            "autoFit": 1,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false
+                        },
+                        "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/pef_commands_in_sequence-mongodb/TEST_ATS/PEF_Combined_Test/test_10000?format=TMS&sequenceId=ATR",
+                        "properties": {
+                            "additionalSources": {},
+                            "timeRangeAnnotations": []
+                        }
+                    }
+                ],
+                "south": []
+            },
+            "guides": [],
+            "bandLabelWidth": 100,
+            "globalLabelFontSize": 10,
+            "tooltipEnabled": true
+        },
+        "customFilters": {
+            "sequenceId": "",
+            "meeting": [],
+            "collection": [],
+            "events": [],
+            "sequenceType": []
+        },
+        "wasImported": false,
+        "colors": {
+            "black": [
+                0,
+                0,
+                0
+            ],
+            "red": [
+                255,
+                0,
+                0
+            ],
+            "green": [
+                0,
+                255,
+                0
+            ],
+            "blue": [
+                0,
+                0,
+                255
+            ],
+            "orange": [
+                255,
+                165,
+                0
+            ],
+            "yellow": [
+                255,
+                255,
+                0
+            ]
+        },
+        "pins": [],
+        "tabSources": [
+            {
+                "home": true,
+                "name": "Home",
+                "tabSelected": true,
+                "filtered": [],
+                "filterTerms": null
+            }
+        ],
+        "__file_id": "/leucadia/states/PEF_COMBINED_STATE_MOST_COVERED",
+        "__document_id": "5b85a0131af4cd1276af5d04",
+        "__kind": "fs_record",
+        "__db_type": "mongodb"
+    }]

@@ -1,0 +1,19 @@
+{ "sequencer_tests" : 
+   {"user1": "mpsa_testuser1", "password1": "mXD7SVH5!hv2IZB",
+    "user2": "mpsa_testuser2", "password2": "cUCg$8MaFVHzmbo",
+    "user3": "mpsa_testuser3", "password3": "im4lg!QvafLY6q4"
+   },
+  "maros_testing":
+   {"user1": "mpsa_testuser1", "password1": "mXD7SVH5!hv2IZB",
+    "user2": "mpsa_testuser2", "password2": "cUCg$8MaFVHzmbo",
+    "user3": "mpsa_testuser3", "password3": "im4lg!QvafLY6q4"
+   },
+  "old_accounts":
+   {"user1": "mpsa-testuser1", "password1": "S0q1nHJf44j=.",
+    "user2": "mpsa-testuser2", "password2": "hwc7B$<+Py2)SRcc",
+    "user3": "mpsa-testuser3", "password3": "bQNy=GbJ6qy61bS"
+   },
+   "asttro_tests":
+   {"user1": "asttro-test", "password1": "X94doTOGKK.YqeC"}
+   
+}
