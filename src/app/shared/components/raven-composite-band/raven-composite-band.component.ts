@@ -93,6 +93,7 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
     // Composite Auto Scale.
     if (changes.compositeAutoScale && !changes.compositeAutoScale.firstChange) {
       shouldUpdateTicks = true;
+      shouldRedraw = true;
     }
 
     // Composite Log Ticks.
