@@ -8,25 +8,12 @@
  */
 
 import { Injectable } from '@angular/core';
-
+import { MatDialog } from '@angular/material';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
-
-import { MatDialog } from '@angular/material';
-
-import { RavenAppState } from './../raven-store';
-
-import {
-  Observable,
-  of,
-  zip,
-} from 'rxjs';
-
-import {
-  exhaustMap,
-  map,
-  withLatestFrom,
-} from 'rxjs/operators';
+import { Observable, of, zip } from 'rxjs';
+import { exhaustMap, map, withLatestFrom } from 'rxjs/operators';
+import { RavenAppState } from '../raven-store';
 
 import {
   RavenConfirmDialogComponent,
@@ -36,7 +23,7 @@ import {
   RavenPinDialogComponent,
   RavenShareableLinkDialogComponent,
   RavenStateSaveDialogComponent,
-} from './../../shared/components';
+} from '../../shared/components/components';
 
 import {
   DialogActionTypes,

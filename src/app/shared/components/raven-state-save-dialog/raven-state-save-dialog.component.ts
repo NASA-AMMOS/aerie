@@ -7,39 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Component,
-  Inject,
-  OnDestroy,
-} from '@angular/core';
-
-import {
-  HttpClient,
-} from '@angular/common/http';
-
-import {
-  MAT_DIALOG_DATA,
-  MatDialogRef,
-} from '@angular/material';
-
-import {
-  FormControl,
-  Validators,
-} from '@angular/forms';
-
-import {
-  combineLatest,
-  Subject,
-} from 'rxjs';
-
-import {
-  map,
-  takeUntil,
-} from 'rxjs/operators';
-
-import {
-  MpsServerSource,
-} from './../../models';
+import { HttpClient } from '@angular/common/http';
+import { Component, Inject, OnDestroy } from '@angular/core';
+import { FormControl, Validators } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
+import { combineLatest, Subject } from 'rxjs';
+import { map, takeUntil } from 'rxjs/operators';
+import { MpsServerSource } from '../../models';
 
 @Component({
   selector: 'raven-state-save-dialog',

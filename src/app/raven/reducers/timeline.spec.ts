@@ -7,16 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  initialState,
-  reducer,
-  TimelineState,
-} from './timeline';
-
-import {
-  RavenActivityPoint,
-  RavenSource,
-} from './../../shared/models';
+import { RavenActivityPoint, RavenSource } from '../../shared/models';
+import { initialState, reducer, TimelineState } from './timeline';
 
 import {
   AddBand,
@@ -51,7 +43,7 @@ import {
   grandChildSource,
   rootSource,
   stateBand,
-} from './../../shared/mocks';
+} from '../../shared/mocks';
 
 describe('timeline reducer', () => {
   let timelineState: TimelineState;

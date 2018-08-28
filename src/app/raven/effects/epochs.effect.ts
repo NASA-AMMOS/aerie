@@ -9,43 +9,16 @@
 
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { Actions, Effect, ofType } from '@ngrx/effects';
+import { Action } from '@ngrx/store';
+import { Observable } from 'rxjs';
+import { catchError, concatMap, map } from 'rxjs/operators';
+import { MpsServerEpoch, RavenEpoch } from '../../shared/models';
+import { toRavenEpochs } from '../../shared/util';
+import { EpochsActionTypes, FetchEpochs } from '../actions/epochs';
 
-import {
-  Actions,
-  Effect,
-  ofType,
-} from '@ngrx/effects';
-
-import {
-  Action,
-} from '@ngrx/store';
-
-import {
-  Observable,
-} from 'rxjs';
-
-import {
-  catchError,
-  concatMap,
-  map,
-} from 'rxjs/operators';
-
-import {
-  EpochsActionTypes,
-  FetchEpochs,
-} from '../actions/epochs';
-
-import {
-  MpsServerEpoch,
-  RavenEpoch,
-} from './../../shared/models';
-
-import {
-  toRavenEpochs,
-} from './../../shared/util';
-
-import * as epochsActions from './../actions/epochs';
-import * as toastActions from './../actions/toast';
+import * as epochsActions from '../actions/epochs';
+import * as toastActions from '../actions/toast';
 
 @Injectable()
 export class EpochsEffects {

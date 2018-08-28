@@ -13,7 +13,7 @@ import {
   RavenCustomFilterSource,
   RavenSource,
   RavenSubBand,
-} from './../../shared/models';
+} from '../../shared/models';
 
 // Action Types.
 export enum DialogActionTypes {

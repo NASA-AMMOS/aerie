@@ -7,9 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Action,
-} from '@ngrx/store';
+import { Action } from '@ngrx/store';
 
 import {
   BaseType,
@@ -20,7 +18,7 @@ import {
   RavenPin,
   RavenSource,
   StringTMap,
-} from './../../shared/models';
+} from '../../shared/models';
 
 // Action Types.
 export enum SourceExplorerActionTypes {

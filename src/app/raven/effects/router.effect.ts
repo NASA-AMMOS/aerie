@@ -9,23 +9,12 @@
 
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot } from '@angular/router';
-
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { RouterNavigationAction } from '@ngrx/router-store';
 import { Action, Store } from '@ngrx/store';
-
-import {
-  Observable,
-} from 'rxjs';
-
-import {
-  map,
-  mergeMap,
-  withLatestFrom,
-} from 'rxjs/operators';
-
-import { RavenAppState } from './../raven-store';
-
+import { Observable } from 'rxjs';
+import { map, mergeMap, withLatestFrom } from 'rxjs/operators';
+import { RavenAppState } from '../raven-store';
 import { ConfigState } from '../reducers/config';
 import { LayoutState } from '../reducers/layout';
 

@@ -7,19 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  CommandDictionaryState,
-  initialState,
-  reducer,
-} from './command-dictionary';
-
-import {
-  FetchCommandDictionaryListSuccess,
-} from './../actions/command-dictionary';
-
-import {
-  mpsServerCommandDictionaryList,
-} from './../../shared/mocks/mps-server-command-dictionary-list';
+import { mpsServerCommandDictionaryList } from '../../shared/mocks/mps-server-command-dictionary-list';
+import { FetchCommandDictionaryListSuccess } from '../actions/command-dictionary';
+import { CommandDictionaryState, initialState, reducer } from './command-dictionary';
 
 describe('Command Dictionary reducer', () => {
 
@@ -37,5 +27,4 @@ describe('Command Dictionary reducer', () => {
       selected: null,
     });
   });
-
 });

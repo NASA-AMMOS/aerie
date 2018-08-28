@@ -7,22 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Injectable,
-} from '@angular/core';
-
-import {
-  Observable,
-  Observer,
-} from 'rxjs';
-
-import {
-  HBCommandDictionary,
-} from '../models/hb-command-dictionary';
-
-import {
-  mpsServerCommandDictionaryList,
-} from '../mocks/mps-server-command-dictionary-list';
+import { Injectable } from '@angular/core';
+import { Observable, Observer } from 'rxjs';
+import { mpsServerCommandDictionaryList } from '../mocks/mps-server-command-dictionary-list';
+import { HBCommandDictionary } from '../models/hb-command-dictionary';
 
 @Injectable({
   providedIn: 'root',

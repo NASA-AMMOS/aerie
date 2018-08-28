@@ -8,11 +8,7 @@
  */
 
 import { Action } from '@ngrx/store';
-
-import {
-  BaseType,
-  StringTMap,
-} from './../../shared/models';
+import { BaseType, StringTMap } from '../../shared/models';
 
 // Action Types.
 export enum LayoutActionTypes {

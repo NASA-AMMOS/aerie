@@ -7,44 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  TestBed,
-} from '@angular/core/testing';
-
-import {
-  EffectsMetadata,
-  getEffectsMetadata,
-} from '@ngrx/effects';
-
-import {
-  provideMockActions,
-} from '@ngrx/effects/testing';
-
-import {
-  StoreModule,
-} from '@ngrx/store';
-
-import {
-  cold,
-  hot,
-} from 'jasmine-marbles';
-
-import {
-  Observable,
-  of,
-} from 'rxjs';
-
-import {
-  MaterialModule,
-} from './../../shared/material';
-
-import {
-  CommandDictionaryEffects,
-} from './command-dictionary.effect';
-
-import {
-  MpsServerService,
-} from '../../shared/services/mps-server.service';
+import { TestBed } from '@angular/core/testing';
+import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
+import { provideMockActions } from '@ngrx/effects/testing';
+import { StoreModule } from '@ngrx/store';
+import { cold, hot } from 'jasmine-marbles';
+import { Observable, of } from 'rxjs';
+import { MpsServerService } from '../../shared/services/mps-server.service';
+import { CommandDictionaryEffects } from './command-dictionary.effect';
 
 import {
   FetchCommandDictionaryList,
@@ -69,7 +39,6 @@ describe('CommandDictionaryEffects', () => {
 
     TestBed.configureTestingModule({
       imports: [
-        MaterialModule,
         StoreModule.forRoot({}),
       ],
       providers: [

@@ -8,10 +8,7 @@
  */
 
 import { NgModule } from '@angular/core';
-
-import {
-  RavenActivityBandComponent,
-} from './../raven-activity-band/raven-activity-band.component';
+import { RavenActivityBandComponent } from '../raven-activity-band/raven-activity-band.component';
 
 @NgModule({
   declarations: [

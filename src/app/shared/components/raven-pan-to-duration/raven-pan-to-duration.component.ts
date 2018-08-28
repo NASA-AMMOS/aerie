@@ -14,34 +14,17 @@ import {
   Output,
 } from '@angular/core';
 
-import {
-  FormControl,
-  Validators,
-} from '@angular/forms';
-
-import {
-  Observable,
-} from 'rxjs';
-
-import {
-  map,
-  startWith,
-} from 'rxjs/operators';
-
-import {
-  RavenTimeRange,
-} from './../../models';
-
-import {
-  fromDHMString,
-  utc,
-} from './../../util/time';
+import { FormControl, Validators } from '@angular/forms';
+import { Observable } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
+import { RavenTimeRange } from '../../models';
+import { fromDHMString, utc } from '../../util/time';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'raven-pan-to-duration',
-  styleUrls: ['./raven-pan-to-duration.css'],
-  templateUrl: './raven-pan-to-duration.html',
+  styleUrls: ['./raven-pan-to-duration.component.css'],
+  templateUrl: './raven-pan-to-duration.component.html',
 })
 
 export class RavenPanToDurationComponent {

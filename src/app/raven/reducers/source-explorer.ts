@@ -7,20 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  keyBy,
-  omit,
-  without,
-} from 'lodash';
-
-import {
-  createFeatureSelector,
-  createSelector,
-} from '@ngrx/store';
-
-import {
-  State,
-} from './../raven-store';
+import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { keyBy, omit, without } from 'lodash';
+import { getAllChildIds } from '../../shared/util';
+import { State } from '../raven-store';
 
 import {
   AddCustomFilter,
@@ -52,11 +42,7 @@ import {
   RavenSource,
   RavenSourceAction,
   StringTMap,
-} from './../../shared/models';
-
-import {
-  getAllChildIds,
-} from './../../shared/util';
+} from '../../shared/models';
 
 // Source Explorer State Interface.
 export interface SourceExplorerState {

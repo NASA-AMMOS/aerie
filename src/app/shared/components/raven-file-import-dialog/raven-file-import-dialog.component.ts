@@ -7,19 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Component,
-  Inject,
-} from '@angular/core';
-
-import {
-  MAT_DIALOG_DATA,
-  MatDialogRef,
-} from '@angular/material';
-
-import {
-  RavenFile,
-} from './../../../shared/models';
+import { Component, Inject } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
+import { RavenFile } from '../../../shared/models';
 
 @Component({
   selector: 'raven-file-import-dialog',

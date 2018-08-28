@@ -7,9 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  StringTMap,
-} from './../models';
+import { StringTMap } from '../models';
 
 export const colorMap: StringTMap<number[]> = {
   'Aquamarine': [193, 226, 236],

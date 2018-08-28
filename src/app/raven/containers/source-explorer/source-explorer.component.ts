@@ -14,30 +14,11 @@ import {
   OnDestroy,
 } from '@angular/core';
 
-import {
-  Store,
-} from '@ngrx/store';
-
-import {
-  switchMap,
-  takeUntil,
-} from 'rxjs/operators';
-
-import {
-  Subject,
-} from 'rxjs';
-
-import {
-  WebSocketSubject,
-} from 'rxjs/webSocket';
-
-import * as fromConfig from './../../reducers/config';
-import * as fromSourceExplorer from './../../reducers/source-explorer';
-
-import * as dialogActions from './../../actions/dialog';
-import * as epochsActions from './../../actions/epochs';
-import * as layoutActions from './../../actions/layout';
-import * as sourceExplorerActions from './../../actions/source-explorer';
+import { Store } from '@ngrx/store';
+import { Subject } from 'rxjs';
+import { switchMap, takeUntil } from 'rxjs/operators';
+import { WebSocketSubject } from 'rxjs/webSocket';
+import { getSortedChildIds } from '../../../shared/util';
 
 import {
   RavenCustomFilterSource,
@@ -48,11 +29,15 @@ import {
   RavenSource,
   RavenSourceActionEvent,
   StringTMap,
-} from './../../../shared/models';
+} from '../../../shared/models';
 
-import {
-  getSortedChildIds,
-} from './../../../shared/util';
+import * as fromConfig from '../../reducers/config';
+import * as fromSourceExplorer from '../../reducers/source-explorer';
+
+import * as dialogActions from '../../actions/dialog';
+import * as epochsActions from '../../actions/epochs';
+import * as layoutActions from '../../actions/layout';
+import * as sourceExplorerActions from '../../actions/source-explorer';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

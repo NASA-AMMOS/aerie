@@ -8,11 +8,7 @@
  */
 
 import { utc as momentUtc } from 'moment';
-
-import {
-  RavenEpoch,
-  RavenEpochTime,
-} from './../models';
+import { RavenEpoch, RavenEpochTime } from '../models';
 
 /**
  * Converts a JS Date object to a timestring.

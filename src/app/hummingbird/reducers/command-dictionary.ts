@@ -7,23 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  createFeatureSelector,
-  createSelector,
-} from '@ngrx/store';
-
-import {
-  State,
-} from '../hummingbird-store';
-
-import {
-  HBCommandDictionary,
-} from '../../shared/models/hb-command-dictionary';
-
-import {
-  CommandDictionaryAction,
-  CommandDictionaryActionTypes,
-} from '../actions/command-dictionary';
+import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { HBCommandDictionary } from '../../shared/models/hb-command-dictionary';
+import { CommandDictionaryAction, CommandDictionaryActionTypes } from '../actions/command-dictionary';
+import { State } from '../hummingbird-store';
 
 /**
  * Schema for the command dictionary state

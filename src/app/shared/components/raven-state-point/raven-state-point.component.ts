@@ -7,14 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Component,
-  Input,
-} from '@angular/core';
-
-import {
-  RavenStatePoint,
-} from './../../../shared/models';
+import { Component, Input } from '@angular/core';
+import { RavenStatePoint } from '../../../shared/models';
 
 @Component({
   selector: 'raven-state-point',

@@ -8,10 +8,7 @@
  */
 
 import { NgModule } from '@angular/core';
-
-import {
-  RavenStateBandComponent,
-} from './../raven-state-band/raven-state-band.component';
+import { RavenStateBandComponent } from '../raven-state-band/raven-state-band.component';
 
 @NgModule({
   declarations: [

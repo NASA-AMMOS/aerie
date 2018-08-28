@@ -18,7 +18,7 @@ import {
 import {
   activityPoint,
   bands,
-} from './../mocks';
+} from '../mocks';
 
 describe('points.ts', () => {
   describe('getMaxTimeRange', () => {

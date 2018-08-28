@@ -7,16 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { StoreModule } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
-
 import { OutputEffects } from './output.effect';
-
-import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { MaterialModule } from './../../shared/material';
 
 describe('OutputEffects', () => {
   let effects: OutputEffects;
@@ -27,7 +24,6 @@ describe('OutputEffects', () => {
     TestBed.configureTestingModule({
       imports: [
         HttpClientModule,
-        MaterialModule,
         StoreModule.forRoot({}),
       ],
       providers: [

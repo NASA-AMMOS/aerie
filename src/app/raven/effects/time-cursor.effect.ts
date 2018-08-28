@@ -8,16 +8,12 @@
  */
 
 import { Injectable } from '@angular/core';
-
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
-
+import { Observable, of } from 'rxjs';
 import { interval } from 'rxjs/observable/interval';
-
-import {
-  Observable,
-  of,
-} from 'rxjs';
+import { RavenTimeRange } from '../../shared/models';
+import { RavenAppState } from '../raven-store';
 
 import {
   concatMap,
@@ -27,17 +23,11 @@ import {
   withLatestFrom,
 } from 'rxjs/operators';
 
-import { RavenAppState } from '../raven-store';
-
 import {
   HideTimeCursor,
   ShowTimeCursor,
   TimeCursorActionTypes,
 } from '../actions/time-cursor';
-
-import {
-  RavenTimeRange,
-} from './../../shared/models';
 
 import * as timeCursorActions from '../actions/time-cursor';
 import * as timelineActions from '../actions/timeline';

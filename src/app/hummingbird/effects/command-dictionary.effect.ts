@@ -7,30 +7,12 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Injectable,
-} from '@angular/core';
-
-import {
-  Actions,
-  Effect,
-  ofType,
-} from '@ngrx/effects';
-
-import {
-  Action,
-} from '@ngrx/store';
-
-import {
-  Observable,
-  of,
-} from 'rxjs';
-
-import {
-  catchError,
-  concatMap,
-  map,
-} from 'rxjs/operators';
+import { Injectable } from '@angular/core';
+import { Actions, Effect, ofType } from '@ngrx/effects';
+import { Action } from '@ngrx/store';
+import { Observable, of } from 'rxjs';
+import { catchError, concatMap, map } from 'rxjs/operators';
+import { MpsServerService } from '../../shared/services/mps-server.service';
 
 import {
   CommandDictionaryActionTypes,
@@ -38,10 +20,6 @@ import {
   FetchCommandDictionaryListFailure,
   FetchCommandDictionaryListSuccess,
 } from '../actions/command-dictionary';
-
-import {
-  MpsServerService,
-} from '../../shared/services/mps-server.service';
 
 @Injectable()
 export class CommandDictionaryEffects {

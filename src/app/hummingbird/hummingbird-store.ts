@@ -7,11 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  ActionReducerMap,
-} from '@ngrx/store';
+import { ActionReducerMap } from '@ngrx/store';
 
-import * as fromRoot from './../app-store';
+import * as fromRoot from '../app-store';
 
 /**
  * Every reducer module's default export is the reducer function itself. In

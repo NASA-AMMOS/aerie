@@ -15,9 +15,7 @@ import {
   Output,
 } from '@angular/core';
 
-import {
-  RavenActivityPoint,
-} from './../../../shared/models';
+import { RavenActivityPoint } from '../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

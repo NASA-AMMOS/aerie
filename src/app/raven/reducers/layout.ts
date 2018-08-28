@@ -7,14 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  createFeatureSelector,
-  createSelector,
-} from '@ngrx/store';
-
-import {
-  State,
-} from './../raven-store';
+import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { State } from '../raven-store';
 
 import {
   LayoutAction,
@@ -25,7 +19,7 @@ import {
   ToggleGlobalSettingsDrawer,
   ToggleOutputDrawer,
   ToggleTimeCursorDrawer,
-} from './../actions/layout';
+} from '../actions/layout';
 
 // Layout State Interface.
 export interface LayoutState {

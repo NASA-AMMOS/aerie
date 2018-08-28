@@ -7,25 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  uniqueId,
-} from 'lodash';
-
-import {
-  RavenState,
-} from './../models';
-
-import {
-  RavenAppState,
-} from './../../raven/raven-store';
-
-import {
-  getSourceIdsForSubBand,
-} from './../util/source';
-
-import {
-  toCompositeBand,
-} from './../util/bands';
+import { uniqueId } from 'lodash';
+import { RavenAppState } from '../../raven/raven-store';
+import { RavenState } from '../models';
+import { toCompositeBand } from '../util/bands';
+import { getSourceIdsForSubBand } from '../util/source';
 
 /**
  * Returns a stripped down version of a state that we save and export it for saving.

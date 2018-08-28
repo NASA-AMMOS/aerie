@@ -16,11 +16,11 @@ import {
 
 import {
   RavenToKeyValueArrayPipe,
-} from './../../pipes';
+} from '../../pipes/raven-to-key-value-array/raven-to-key-value-array.pipe';
 
 import {
   StringTMap,
-} from './../../models';
+} from '../../models';
 
 @Component({
   selector: 'raven-custom-metadata',

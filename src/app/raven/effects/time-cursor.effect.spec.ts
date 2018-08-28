@@ -12,10 +12,9 @@ import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { StoreModule } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
-
 import { TimeCursorEffects } from './time-cursor.effect';
 
-import * as timeCursorReducer from './../reducers/time-cursor';
+import * as timeCursorReducer from '../reducers/time-cursor';
 
 describe('TimeCursorEffects', () => {
   let effects: TimeCursorEffects;

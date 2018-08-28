@@ -7,15 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { OverlayModule } from '@angular/cdk/overlay';
 import { TestBed } from '@angular/core/testing';
+import { MatDialogModule } from '@angular/material';
 import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { StoreModule } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
-
 import { DialogEffects } from './dialog.effect';
-
-import { MaterialModule } from './../../shared/material';
 
 describe('DialogEffects', () => {
   let effects: DialogEffects;
@@ -25,7 +24,8 @@ describe('DialogEffects', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [
-        MaterialModule,
+        MatDialogModule,
+        OverlayModule,
         StoreModule.forRoot({}),
       ],
       providers: [

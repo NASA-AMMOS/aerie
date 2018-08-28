@@ -7,23 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  createFeatureSelector,
-  createSelector,
-} from '@ngrx/store';
-
-import {
-  State,
-} from '../raven-store';
-
-import {
-  EpochsAction,
-  EpochsActionTypes,
-} from '../actions/epochs';
-
-import {
-  RavenEpoch,
-} from './../../shared/models/raven-epoch';
+import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { RavenEpoch } from '../../shared/models/raven-epoch';
+import { EpochsAction, EpochsActionTypes } from '../actions/epochs';
+import { State } from '../raven-store';
 
 // Epoch State Interface.
 export interface EpochsState {

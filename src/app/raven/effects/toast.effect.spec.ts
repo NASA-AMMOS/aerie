@@ -11,12 +11,9 @@ import { TestBed } from '@angular/core/testing';
 import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { StoreModule } from '@ngrx/store';
-import { Observable, of } from 'rxjs';
-
 import { ToastrModule, ToastrService } from 'ngx-toastr';
+import { Observable, of } from 'rxjs';
 import { ToastEffects } from './toast.effect';
-
-import { MaterialModule } from './../../shared/material';
 
 describe('ToastEffects', () => {
   let effects: ToastEffects;
@@ -26,7 +23,6 @@ describe('ToastEffects', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [
-        MaterialModule,
         StoreModule.forRoot({}),
         ToastrModule.forRoot(),
       ],

@@ -7,15 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  ConfigState,
-  initialState,
-  reducer,
-} from './config';
-
-import {
-  UpdateDefaultBandSettings,
-} from './../actions/config';
+import { UpdateDefaultBandSettings } from '../actions/config';
+import { ConfigState, initialState, reducer } from './config';
 
 describe('config reducer', () => {
   let timelineState: ConfigState;

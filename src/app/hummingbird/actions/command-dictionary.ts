@@ -7,13 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Action,
-} from '@ngrx/store';
-
-import {
-  HBCommandDictionary,
-} from '../../shared/models/hb-command-dictionary';
+import { Action } from '@ngrx/store';
+import { HBCommandDictionary } from '../../shared/models/hb-command-dictionary';
 
 export enum CommandDictionaryActionTypes {
   FetchCommandDictionary = '[command_dictionary] fetch_command_dictionary',

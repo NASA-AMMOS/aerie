@@ -19,14 +19,8 @@ import {
   ViewChild,
 } from '@angular/core';
 
-import {
-  AgGridNg2,
-} from 'ag-grid-angular';
-
-import {
-  RavenUpdate,
-  StringTMap,
-} from '../../../shared/models';
+import { AgGridNg2 } from 'ag-grid-angular';
+import { RavenUpdate, StringTMap } from '../../../shared/models';
 
 @Component({
   selector: 'raven-output',

@@ -21,18 +21,9 @@ import {
   SimpleChanges,
 } from '@angular/core';
 
-import {
-  RavenEpoch,
-  RavenTimeRange,
-} from './../../models';
-
-import {
-  colorHexToRgbArray,
-} from '../../util/color';
-
-import {
-  formatTimeTickTFormat,
-} from './../../util/time';
+import { RavenEpoch, RavenTimeRange } from '../../models';
+import { colorHexToRgbArray } from '../../util/color';
+import { formatTimeTickTFormat } from '../../util/time';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

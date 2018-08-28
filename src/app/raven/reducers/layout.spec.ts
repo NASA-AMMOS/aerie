@@ -23,7 +23,7 @@ import {
   ToggleRightPanel,
   ToggleSouthBandsPanel,
   UpdateLayout,
-} from './../actions/layout';
+} from '../actions/layout';
 
 describe('layout reducer', () => {
   let layoutState: LayoutState;

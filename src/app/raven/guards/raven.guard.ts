@@ -8,14 +8,14 @@
  */
 
 import { Injectable } from '@angular/core';
+import { select, Store } from '@ngrx/store';
+import { RavenAppState } from '../raven-store';
 
 import {
   ActivatedRouteSnapshot,
   CanActivate,
   RouterStateSnapshot,
 } from '@angular/router';
-
-import { select, Store } from '@ngrx/store';
 
 import {
   Observable,
@@ -31,8 +31,6 @@ import {
   takeUntil,
   tap,
 } from 'rxjs/operators';
-
-import { RavenAppState } from './../raven-store';
 
 import * as epochsActions from '../actions/epochs';
 import * as sourceExplorerActions from '../actions/source-explorer';

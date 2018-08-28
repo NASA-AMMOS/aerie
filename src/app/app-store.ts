@@ -7,13 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  ActionReducer,
-  ActionReducerMap,
-  MetaReducer,
-} from '@ngrx/store';
-
-import { environment } from './../environments/environment';
+import { ActionReducer, ActionReducerMap, MetaReducer } from '@ngrx/store';
+import { environment } from '../environments/environment';
 
 import * as fromRouter from '@ngrx/router-store';
 

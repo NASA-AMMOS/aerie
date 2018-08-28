@@ -33,7 +33,7 @@ import {
   messageTypeActivityPoint,
   resourceBand,
   treeBySourceId,
-} from './../mocks';
+} from '../mocks';
 
 describe('bands.ts', () => {
   describe('bandById', () => {

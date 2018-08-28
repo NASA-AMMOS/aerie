@@ -7,14 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Component,
-  Input,
-} from '@angular/core';
-
-import {
-  RavenFileMetadata,
-} from './../../models';
+import { Component, Input } from '@angular/core';
+import { RavenFileMetadata } from '../../models';
 
 @Component({
   selector: 'raven-file-metadata',

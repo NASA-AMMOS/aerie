@@ -16,7 +16,7 @@ import {
   RavenGraphableSource,
   RavenSource,
   StringTMap,
-} from './../models';
+} from '../models';
 
 export const rootSource: RavenSource = {
   actions: [],

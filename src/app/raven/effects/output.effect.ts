@@ -8,17 +8,14 @@
  */
 
 import { HttpClient } from '@angular/common/http';
-
 import { Injectable } from '@angular/core';
-
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
-
-import {
-  concat,
-  Observable,
-  of,
-} from 'rxjs';
+import { saveAs } from 'file-saver';
+import { concat, Observable, of } from 'rxjs';
+import { getCustomFilterForLabel, getOutputDataUrl } from '../../shared/util';
+import { OutputActionTypes } from '../actions/output';
+import { RavenAppState } from '../raven-store';
 
 import {
   concatMap,
@@ -28,28 +25,14 @@ import {
   withLatestFrom,
 } from 'rxjs/operators';
 
-import { RavenAppState } from '../raven-store';
-
-import { saveAs } from 'file-saver';
-
-import {
-  OutputActionTypes,
-} from '../actions/output';
-
-import * as outputActions from '../actions/output';
-
-import * as fromOutput from '../reducers/output';
-
 import {
   RavenCustomFilter,
   RavenSource,
   StringTMap,
-} from './../../shared/models';
+} from '../../shared/models';
 
-import {
-  getCustomFilterForLabel,
-  getOutputDataUrl,
-} from './../../shared/util';
+import * as outputActions from '../actions/output';
+import * as fromOutput from '../reducers/output';
 
 @Injectable()
 export class OutputEffects {

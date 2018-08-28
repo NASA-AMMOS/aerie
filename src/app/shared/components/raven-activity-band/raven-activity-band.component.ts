@@ -19,14 +19,8 @@ import {
   SimpleChanges,
 } from '@angular/core';
 
-import {
-  RavenActivityPoint,
-  RavenEpoch,
-} from './../../models';
-
-import {
-  getTooltipText,
-} from './../../util';
+import { RavenActivityPoint, RavenEpoch } from '../../models';
+import { getTooltipText } from '../../util';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

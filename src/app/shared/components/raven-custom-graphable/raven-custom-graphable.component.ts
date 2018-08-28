@@ -17,7 +17,7 @@ import {
 
 import {
   RavenCustomGraphableSource,
-} from './../../../shared/models';
+} from '../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

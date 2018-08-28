@@ -7,10 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  sortBy,
-  uniqueId,
-} from 'lodash';
+import { sortBy, uniqueId } from 'lodash';
 
 import {
   MpsServerActivityPoint,
@@ -32,7 +29,7 @@ import {
   RavenSubBand,
   RavenTimeRange,
   StringTMap,
-} from './../models';
+} from '../models';
 
 import {
   getActivityPointsByLegend,

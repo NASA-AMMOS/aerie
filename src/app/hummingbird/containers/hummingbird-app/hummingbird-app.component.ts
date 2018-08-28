@@ -7,35 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Component,
-  OnDestroy,
-} from '@angular/core';
-
-import {
-  Store,
-} from '@ngrx/store';
-
-import {
-  Subject,
-} from 'rxjs';
-
-import {
-  takeUntil,
-} from 'rxjs/operators';
-
-import {
-  HBCommandDictionary,
-} from '../../../shared/models/hb-command-dictionary';
-
-import {
-  HummingbirdAppState,
-} from '../../hummingbird-store';
-
-import {
-  FetchCommandDictionaryList,
-  SelectCommandDictionary,
-} from '../../actions/command-dictionary';
+import { Component, OnDestroy } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { HBCommandDictionary } from '../../../shared/models/hb-command-dictionary';
+import { FetchCommandDictionaryList, SelectCommandDictionary } from '../../actions/command-dictionary';
+import { HummingbirdAppState } from '../../hummingbird-store';
 
 import * as fromCommandDictionary from '../../reducers/command-dictionary';
 

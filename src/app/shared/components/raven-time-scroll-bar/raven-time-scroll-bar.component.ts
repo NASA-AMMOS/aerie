@@ -23,7 +23,7 @@ import {
 
 import {
   RavenTimeRange,
-} from './../../models';
+} from '../../models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

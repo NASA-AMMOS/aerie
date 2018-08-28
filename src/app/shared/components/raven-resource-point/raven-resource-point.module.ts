@@ -7,4 +7,22 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './material.module';
+import { NgModule } from '@angular/core';
+import { MatCardModule } from '@angular/material';
+import { RavenResourcePointValuePipeModule, RavenTimestampPipeModule } from '../../pipes';
+import { RavenResourcePointComponent } from './raven-resource-point.component';
+
+@NgModule({
+  declarations: [
+    RavenResourcePointComponent,
+  ],
+  exports: [
+    RavenResourcePointComponent,
+  ],
+  imports: [
+    MatCardModule,
+    RavenResourcePointValuePipeModule,
+    RavenTimestampPipeModule,
+  ],
+})
+export class RavenResourcePointModule {}

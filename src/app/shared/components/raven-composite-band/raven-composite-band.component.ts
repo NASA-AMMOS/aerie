@@ -28,15 +28,10 @@ import {
   RavenResourceBand,
   RavenSubBand,
   RavenTimeRange,
-} from './../../models';
+} from '../../models';
 
-import {
-  colorHexToRgbArray,
-} from './../../util/color';
-
-import {
-  bandById,
-} from '../../util/bands';
+import { bandById } from '../../util/bands';
+import { colorHexToRgbArray } from '../../util/color';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

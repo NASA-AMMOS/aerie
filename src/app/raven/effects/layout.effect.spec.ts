@@ -12,10 +12,7 @@ import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { StoreModule } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
-
 import { LayoutEffects } from './layout.effect';
-
-import { MaterialModule } from './../../shared/material';
 
 describe('LayoutEffects', () => {
   let effects: LayoutEffects;
@@ -25,7 +22,6 @@ describe('LayoutEffects', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [
-        MaterialModule,
         StoreModule.forRoot({}),
       ],
       providers: [

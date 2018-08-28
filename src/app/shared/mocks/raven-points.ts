@@ -7,9 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  RavenActivityPoint,
-} from './../models';
+import { RavenActivityPoint } from '../models';
 
 export const activityPoint: RavenActivityPoint = {
   activityId: 'test-activity-point',

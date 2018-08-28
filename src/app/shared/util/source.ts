@@ -30,7 +30,7 @@ import {
   RavenSource,
   RavenSubBand,
   StringTMap,
-} from './../models';
+} from '../models';
 
 import {
   getBandLabel,

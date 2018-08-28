@@ -7,16 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  initialState,
-  reducer,
-  SourceExplorerState,
-} from './source-explorer';
-
-import {
-  RavenPin,
-  RavenSource,
-} from './../../shared/models';
+import { RavenPin, RavenSource } from '../../shared/models';
+import { initialState, reducer, SourceExplorerState } from './source-explorer';
 
 import {
   AddCustomFilter,
@@ -45,7 +37,7 @@ import {
   SubBandIdRemove,
   UpdateSourceExplorer,
   UpdateTreeSource,
-} from './../actions/source-explorer';
+} from '../actions/source-explorer';
 
 import {
   categorySource,
@@ -53,7 +45,7 @@ import {
   customFilterSource,
   filterSourceLocation,
   rootSource,
-} from './../../shared/mocks';
+} from '../../shared/mocks';
 
 describe('source-explorer reducer', () => {
   let sourceExplorerState: SourceExplorerState;

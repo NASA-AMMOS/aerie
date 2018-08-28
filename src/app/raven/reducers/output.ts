@@ -7,23 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  createFeatureSelector,
-  createSelector,
-} from '@ngrx/store';
-
-import {
-  State,
-} from '../raven-store';
-
-import {
-  OutputAction,
-  OutputActionTypes,
-} from '../actions/output';
-
-import {
-  StringTMap,
-} from './../../shared/models';
+import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { StringTMap } from '../../shared/models';
+import { OutputAction, OutputActionTypes } from '../actions/output';
+import { State } from '../raven-store';
 
 // Output State Interface.
 export interface OutputState {

@@ -8,27 +8,12 @@
  */
 
 import { Injectable } from '@angular/core';
-
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
-
-import {
-  Observable,
-} from 'rxjs';
-
-import {
-  map,
-  switchMap,
-  withLatestFrom,
-} from 'rxjs/operators';
-
-import { RavenAppState } from './../raven-store';
-
-import {
-  LayoutActionTypes,
-  Resize,
-  ToggleRightPanel,
-} from '../actions/layout';
+import { Observable } from 'rxjs';
+import { map, switchMap, withLatestFrom } from 'rxjs/operators';
+import { LayoutActionTypes, Resize, ToggleRightPanel } from '../actions/layout';
+import { RavenAppState } from '../raven-store';
 
 import * as layoutActions from '../actions/layout';
 

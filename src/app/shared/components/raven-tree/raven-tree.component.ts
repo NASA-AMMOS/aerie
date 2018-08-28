@@ -22,11 +22,11 @@ import {
   RavenSource,
   RavenSourceActionEvent,
   StringTMap,
-} from './../../../shared/models';
+} from '../../../shared/models';
 
 import {
   getSortedChildIds,
-} from './../../util/source';
+} from '../../util/source';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

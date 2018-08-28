@@ -12,7 +12,7 @@ import {
   RavenCompositeBand,
   RavenResourceBand,
   RavenStateBand,
-} from './../models';
+} from '../models';
 
 import {
   activityPoint,

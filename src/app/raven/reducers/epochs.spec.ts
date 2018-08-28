@@ -16,7 +16,7 @@ import {
 import {
   AddEpochs,
   UpdateEpochs,
-} from './../actions/epochs';
+} from '../actions/epochs';
 
 describe('epochs reducer', () => {
   let epochsState: EpochsState;

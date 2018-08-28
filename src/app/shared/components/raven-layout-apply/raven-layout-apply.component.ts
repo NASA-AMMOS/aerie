@@ -16,18 +16,9 @@ import {
   SimpleChanges,
 } from '@angular/core';
 
-import {
-  FormControl,
-} from '@angular/forms';
-
-import {
-  RavenSource,
-  StringTMap,
-} from './../../models';
-
-import {
-  getAllSourcesByKinds,
-} from './../../util/source';
+import { FormControl } from '@angular/forms';
+import { RavenSource, StringTMap } from '../../models';
+import { getAllSourcesByKinds } from '../../util/source';
 
 @Component({
   selector: 'raven-layout-apply',

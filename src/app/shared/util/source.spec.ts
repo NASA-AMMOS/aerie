@@ -35,7 +35,7 @@ import {
   graphableFilterKickoff,
   graphableSource,
   treeBySourceId,
-} from './../mocks/';
+} from '../mocks/';
 
 describe('source.ts', () => {
   describe('getAllChildIds', () => {

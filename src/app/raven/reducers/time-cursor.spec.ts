@@ -17,7 +17,7 @@ import {
   HideTimeCursor,
   ShowTimeCursor,
   UpdateTimeCursorSettings,
-} from './../actions/time-cursor';
+} from '../actions/time-cursor';
 
 describe('time-cursor reducer', () => {
   let timeCursorState: TimeCursorState;

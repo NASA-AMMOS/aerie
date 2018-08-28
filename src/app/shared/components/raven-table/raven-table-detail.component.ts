@@ -7,19 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  AfterViewInit,
-  ChangeDetectionStrategy,
-  Component,
-} from '@angular/core';
-
-import {
-  GridOptions,
-} from 'ag-grid';
-
-import {
-  ICellRendererAngularComp,
-} from 'ag-grid-angular';
+import { AfterViewInit, ChangeDetectionStrategy, Component } from '@angular/core';
+import { GridOptions } from 'ag-grid';
+import { ICellRendererAngularComp } from 'ag-grid-angular';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

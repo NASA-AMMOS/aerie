@@ -7,16 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { without } from 'lodash';
-
-import {
-  createFeatureSelector,
-  createSelector,
-} from '@ngrx/store';
-
-import {
-  State,
-} from '../raven-store';
+import { State } from '../raven-store';
 
 import {
   AddBand,
@@ -48,14 +41,14 @@ import {
   updateSelectedPoint,
   updateSortOrder,
   updateTimeRanges,
-} from './../../shared/util';
+} from '../../shared/util';
 
 import {
   RavenCompositeBand,
   RavenPoint,
   RavenSubBand,
   RavenTimeRange,
-} from './../../shared/models';
+} from '../../shared/models';
 
 // Timeline State Interface.
 export interface TimelineState {

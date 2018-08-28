@@ -16,32 +16,18 @@ import {
 } from '@angular/core';
 
 import { Store } from '@ngrx/store';
+import { combineLatest, Observable, Subject } from 'rxjs';
+import { map, takeUntil, tap } from 'rxjs/operators';
+import { RavenTimeRange, RavenVersion } from '../../../shared/models';
 
-import {
-  combineLatest,
-  Observable,
-  Subject,
-} from 'rxjs';
+import * as fromConfig from '../../reducers/config';
+import * as fromLayout from '../../reducers/layout';
+import * as fromSourceExplorer from '../../reducers/source-explorer';
+import * as fromTimeline from '../../reducers/timeline';
 
-import {
-  map,
-  takeUntil,
-  tap,
-} from 'rxjs/operators';
-
-import * as fromConfig from './../../reducers/config';
-import * as fromLayout from './../../reducers/layout';
-import * as fromSourceExplorer from './../../reducers/source-explorer';
-import * as fromTimeline from './../../reducers/timeline';
-
-import * as dialogActions from './../../actions/dialog';
-import * as layoutActions from './../../actions/layout';
-import * as timelineActions from './../../actions/timeline';
-
-import {
-  RavenTimeRange,
-  RavenVersion,
-} from './../../../shared/models';
+import * as dialogActions from '../../actions/dialog';
+import * as layoutActions from '../../actions/layout';
+import * as timelineActions from '../../actions/timeline';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

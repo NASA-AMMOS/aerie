@@ -7,8 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { v4 as uuidv4 } from 'uuid';
-
 import {
   AfterViewInit,
   Component,
@@ -20,41 +18,15 @@ import {
   ViewChild,
 } from '@angular/core';
 
-import {
-  HttpClient,
-} from '@angular/common/http';
-
-import {
-  FormControl,
-  Validators,
-} from '@angular/forms';
-
-import {
-  MAT_DIALOG_DATA,
-  MatDialogRef,
-} from '@angular/material';
-
-import {
-  combineLatest,
-  Subject,
-} from 'rxjs';
-
-import {
-  map,
-  takeUntil,
-} from 'rxjs/operators';
-
-import {
-  RavenAppState,
-} from './../../../raven/raven-store';
-
-import {
-  MpsServerSource,
-} from './../../models';
-
-import {
-  getState,
-} from './../../util/state';
+import { HttpClient } from '@angular/common/http';
+import { FormControl, Validators } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
+import { combineLatest, Subject } from 'rxjs';
+import { map, takeUntil } from 'rxjs/operators';
+import { v4 as uuidv4 } from 'uuid';
+import { RavenAppState } from '../../../raven/raven-store';
+import { MpsServerSource } from '../../models';
+import { getState } from '../../util/state';
 
 @Component({
   selector: 'raven-shareable-link-dialog',

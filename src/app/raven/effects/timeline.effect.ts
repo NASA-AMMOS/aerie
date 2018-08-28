@@ -9,9 +9,10 @@
 
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
+import { TimelineActionTypes } from '../actions/timeline';
+import { RavenAppState } from '../raven-store';
 
 import {
   concat,
@@ -25,11 +26,6 @@ import {
   switchMap,
   withLatestFrom,
 } from 'rxjs/operators';
-
-import { RavenAppState } from '../raven-store';
-
-import * as layoutActions from '../actions/layout';
-import { TimelineActionTypes } from '../actions/timeline';
 
 import {
   AddBand,
@@ -45,8 +41,6 @@ import {
   ZoomOutViewTimeRange,
 } from '../actions/timeline';
 
-import * as timelineActions from '../actions/timeline';
-
 import {
   MpsServerGraphData,
   MpsServerResourceMetadata,
@@ -56,13 +50,16 @@ import {
   RavenResourceBand,
   RavenSource,
   RavenTimeRange,
-} from './../../shared/models';
+} from '../../shared/models';
 
 import {
   getPinLabel,
   getResourcePoints,
   timestamp,
-} from './../../shared/util';
+} from '../../shared/util';
+
+import * as layoutActions from '../actions/layout';
+import * as timelineActions from '../actions/timeline';
 
 @Injectable()
 export class TimelineEffects {

@@ -7,36 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Injectable,
-} from '@angular/core';
-
-import {
-  Actions,
-  Effect,
-  ofType,
-} from '@ngrx/effects';
-
-import {
-  Action,
-} from '@ngrx/store';
-
-import {
-  Observable,
-} from 'rxjs';
-
-import {
-  mergeMap,
-} from 'rxjs/operators';
-
-import {
-  ShowToast,
-  ToastActionTypes,
-} from '../actions/toast';
-
-import {
-  ToastrService,
-} from 'ngx-toastr';
+import { Injectable } from '@angular/core';
+import { Actions, Effect, ofType } from '@ngrx/effects';
+import { Action } from '@ngrx/store';
+import { ToastrService } from 'ngx-toastr';
+import { Observable } from 'rxjs';
+import { mergeMap } from 'rxjs/operators';
+import { ShowToast, ToastActionTypes } from '../actions/toast';
 
 @Injectable()
 export class ToastEffects {

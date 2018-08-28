@@ -17,7 +17,7 @@ import {
 
 import {
   RavenExpandableSource,
-} from './../../../shared/models';
+} from '../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

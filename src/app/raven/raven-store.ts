@@ -11,7 +11,7 @@ import {
   ActionReducerMap,
 } from '@ngrx/store';
 
-import * as fromRoot from './../app-store';
+import * as fromRoot from '../app-store';
 
 /**
  * Every reducer module's default export is the reducer function itself. In

@@ -7,28 +7,17 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  createFeatureSelector,
-  createSelector,
-} from '@ngrx/store';
-
-import {
-  State,
-} from '../raven-store';
+import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { environment } from '../../../environments/environment';
+import { version } from '../../../environments/version';
+import { RavenDefaultBandSettings, RavenVersion } from '../../shared/models';
+import { State } from '../raven-store';
 
 import {
   ConfigAction,
   ConfigActionTypes,
   UpdateDefaultBandSettings,
 } from '../actions/config';
-
-import { environment } from '../../../environments/environment';
-import { version } from '../../../environments/version';
-
-import {
-  RavenDefaultBandSettings,
-  RavenVersion,
-} from './../../shared/models';
 
 // Config State Interface.
 export interface ConfigState {

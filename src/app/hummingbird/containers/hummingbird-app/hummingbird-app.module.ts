@@ -7,22 +7,22 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Pipe,
-  PipeTransform,
-} from '@angular/core';
+import { NgModule } from '@angular/core';
+import { MatToolbarModule } from '@angular/material';
+import { HBCodeMirrorModule, HBCommandLoaderModule } from '../../../shared/components/modules';
+import { HummingbirdAppComponent } from './hummingbird-app.component';
 
-import {
-  StringTMap,
-} from './../../models';
-
-@Pipe({
-  name: 'toKeyValueArray',
+@NgModule({
+  declarations: [
+    HummingbirdAppComponent,
+  ],
+  exports: [
+    HummingbirdAppComponent,
+  ],
+  imports: [
+    HBCodeMirrorModule,
+    HBCommandLoaderModule,
+    MatToolbarModule,
+  ],
 })
-export class RavenToKeyValueArrayPipe implements PipeTransform {
-  transform(obj: StringTMap<any>, key?: string, value?: string): Array<StringTMap<any>> {
-    return Object.getOwnPropertyNames(obj).map(k =>
-      ({ [key ? key : 'key']: k, [value ? value : 'value']: obj[k] }),
-    );
-  }
-}
+export class HummingbirdAppModule {}

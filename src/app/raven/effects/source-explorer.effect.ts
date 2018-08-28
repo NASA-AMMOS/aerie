@@ -9,11 +9,10 @@
 
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
-
 import { flatten, uniqueId } from 'lodash';
+import { RavenAppState } from '../raven-store';
 
 import {
   combineLatest,
@@ -33,8 +32,6 @@ import {
   timeout,
   withLatestFrom,
 } from 'rxjs/operators';
-
-import { RavenAppState } from './../raven-store';
 
 import {
   AddCustomGraph,
@@ -56,16 +53,6 @@ import {
   UpdateGraphAfterFilterRemove,
 } from '../actions/source-explorer';
 
-import * as configActions from './../actions/config';
-import * as dialogActions from './../actions/dialog';
-import * as layoutActions from './../actions/layout';
-import * as sourceExplorerActions from './../actions/source-explorer';
-import * as timelineActions from './../actions/timeline';
-import * as toastActions from './../actions/toast';
-
-import * as fromSourceExplorer from '../reducers/source-explorer';
-import * as fromTimeline from '../reducers/timeline';
-
 import {
   getCustomFilterForLabel,
   getCustomFiltersBySourceId,
@@ -83,7 +70,7 @@ import {
   toRavenBandData,
   toRavenSources,
   updateSourceId,
-} from './../../shared/util';
+} from '../../shared/util';
 
 import {
   MpsServerGraphData,
@@ -99,7 +86,17 @@ import {
   RavenState,
   RavenSubBand,
   StringTMap,
-} from './../../shared/models';
+} from '../../shared/models';
+
+import * as configActions from '../actions/config';
+import * as dialogActions from '../actions/dialog';
+import * as layoutActions from '../actions/layout';
+import * as sourceExplorerActions from '../actions/source-explorer';
+import * as timelineActions from '../actions/timeline';
+import * as toastActions from '../actions/toast';
+
+import * as fromSourceExplorer from '../reducers/source-explorer';
+import * as fromTimeline from '../reducers/timeline';
 
 @Injectable()
 export class SourceExplorerEffects {

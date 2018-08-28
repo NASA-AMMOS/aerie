@@ -13,7 +13,7 @@ import {
   BaseType,
   RavenEpoch,
   StringTMap,
-} from './../../shared/models';
+} from '../../shared/models';
 
 // Action Types.
 export enum EpochsActionTypes {

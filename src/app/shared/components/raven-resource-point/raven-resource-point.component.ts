@@ -7,14 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Component,
-  Input,
-} from '@angular/core';
-
-import {
-  RavenResourcePoint,
-} from './../../../shared/models';
+import { Component, Input } from '@angular/core';
+import { RavenResourcePoint } from '../../../shared/models';
 
 @Component({
   selector: 'raven-resource-point',

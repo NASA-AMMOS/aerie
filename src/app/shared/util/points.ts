@@ -21,7 +21,7 @@ import {
   RavenResourcePoint,
   RavenStatePoint,
   StringTMap,
-} from './../models';
+} from '../models';
 
 import {
   colorHexToRgbArray,

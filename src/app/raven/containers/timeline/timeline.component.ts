@@ -15,28 +15,9 @@ import {
 } from '@angular/core';
 
 import { MatTabChangeEvent } from '@angular/material';
-
 import { Store } from '@ngrx/store';
-
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-
-import * as fromConfig from './../../reducers/config';
-import * as fromEpochs from './../../reducers/epochs';
-import * as fromLayout from './../../reducers/layout';
-import * as fromOutput from './../../reducers/output';
-import * as fromSourceExplorer from './../../reducers/source-explorer';
-import * as fromTimeCursor from './../../reducers/time-cursor';
-import * as fromTimeline from './../../reducers/timeline';
-
-import * as configActions from './../../actions/config';
-import * as dialogActions from './../../actions/dialog';
-import * as epochsActions from './../../actions/epochs';
-import * as layoutActions from './../../actions/layout';
-import * as outputActions from './../../actions/output';
-import * as sourceExplorerActions from './../../actions/source-explorer';
-import * as timeCursorActions from './../../actions/time-cursor';
-import * as timelineActions from './../../actions/timeline';
 
 import {
   RavenBandLeftClick,
@@ -51,14 +32,31 @@ import {
   RavenTimeRange,
   RavenUpdate,
   StringTMap,
-} from './../../../shared/models';
+} from '../../../shared/models';
 
 import {
   getSourceIdsByLabelInBands,
   subBandById,
   toCompositeBand,
   toDividerBand,
-} from './../../../shared/util';
+} from '../../../shared/util';
+
+import * as fromConfig from '../../reducers/config';
+import * as fromEpochs from '../../reducers/epochs';
+import * as fromLayout from '../../reducers/layout';
+import * as fromOutput from '../../reducers/output';
+import * as fromSourceExplorer from '../../reducers/source-explorer';
+import * as fromTimeCursor from '../../reducers/time-cursor';
+import * as fromTimeline from '../../reducers/timeline';
+
+import * as configActions from '../../actions/config';
+import * as dialogActions from '../../actions/dialog';
+import * as epochsActions from '../../actions/epochs';
+import * as layoutActions from '../../actions/layout';
+import * as outputActions from '../../actions/output';
+import * as sourceExplorerActions from '../../actions/source-explorer';
+import * as timeCursorActions from '../../actions/time-cursor';
+import * as timelineActions from '../../actions/timeline';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

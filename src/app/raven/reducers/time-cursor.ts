@@ -7,19 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  createFeatureSelector,
-  createSelector,
-} from '@ngrx/store';
-
-import {
-  State,
-} from './../raven-store';
-
-import {
-  TimeCursorAction,
-  TimeCursorActionTypes,
-} from './../actions/time-cursor';
+import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { TimeCursorAction, TimeCursorActionTypes } from '../actions/time-cursor';
+import { State } from '../raven-store';
 
 export interface TimeCursorState {
   autoPage: boolean;

@@ -17,7 +17,7 @@ import {
   RavenSubBand,
   RavenTimeRange,
   StringTMap,
-} from './../../shared/models';
+} from '../../shared/models';
 
 // Action Types.
 export enum TimelineActionTypes {
