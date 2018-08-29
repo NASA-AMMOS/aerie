@@ -322,7 +322,7 @@ export function removeBandsOrPointsForSource(state: TimelineState, action: Remov
     )
     .map(band => ({
       ...band,
-      compositeYAxisLabel: band.subBands.length > 1,
+      compositeYAxisLabel: band.compositeYAxisLabel ? band.subBands.length > 1 : false,
     }));
 
   bands = updateSortOrder(bands);
@@ -392,7 +392,7 @@ export function removeSubBand(state: TimelineState, action: RemoveSubBand): Time
     )
     .map(band => ({
       ...band,
-      compositeYAxisLabel: band.subBands.length > 1,
+      compositeYAxisLabel: band.compositeYAxisLabel ? band.subBands.length > 1 : false,
     }));
 
   bands = updateSortOrder(bands);

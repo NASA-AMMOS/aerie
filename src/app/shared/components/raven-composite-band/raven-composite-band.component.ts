@@ -114,6 +114,7 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
         this.resetMinMaxTickValuesForEachSubBands();
       }
 
+      shouldUpdateTicks = true;
       shouldRedraw = true;
     }
 
@@ -411,6 +412,7 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
    */
   onRemoveSubBand(subBandId: string) {
     this.ctlCompositeBand.removeBand(subBandId);
+    this.onUpdateTickValues();
 
     // Only redraw if there are any sub-bands left.
     // The band should be destroyed when all sub-bands are removed.
@@ -567,7 +569,7 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
     for (let i = 0, length = this.ctlCompositeBand.bands.length; i < length; ++i) {
       const ctlBand = this.ctlCompositeBand.bands[i];
       if (ctlBand.type === 'resource') {
-        const ravenSubBand = bandById([this.ctlCompositeBand], ctlBand.id) as RavenResourceBand;
+        const ravenSubBand = bandById(this.subBands, ctlBand.id) as RavenResourceBand;
         if (ravenSubBand) {
           ctlBand.autoScale = this.getResourceAutoScale(ravenSubBand.autoScale);
           ctlBand.logTicks = ravenSubBand.logTicks;
