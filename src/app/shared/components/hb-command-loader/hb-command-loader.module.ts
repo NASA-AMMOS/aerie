@@ -9,21 +9,17 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
-import { AgGridModule } from 'ag-grid-angular';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { HBCommandLoaderComponent } from './hb-command-loader.component';
 
 @NgModule({
-  declarations: [
-    HBCommandLoaderComponent,
-  ],
-  exports: [
-    HBCommandLoaderComponent,
-  ],
+  declarations: [HBCommandLoaderComponent],
+  exports: [HBCommandLoaderComponent],
   imports: [
-    AgGridModule.withComponents([]),
     CommonModule,
-    MatCardModule,
+    MatSelectModule,
+    MatFormFieldModule,
   ],
 })
 export class HBCommandLoaderModule {}

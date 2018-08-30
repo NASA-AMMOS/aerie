@@ -8,7 +8,6 @@
  */
 
 import { Action } from '@ngrx/store';
-import { HBCommandDictionary } from '../../shared/models/hb-command-dictionary';
 
 export enum CommandDictionaryActionTypes {
   FetchCommandDictionary = '[command_dictionary] fetch_command_dictionary',
@@ -22,6 +21,8 @@ export enum CommandDictionaryActionTypes {
 
 export class FetchCommandDictionary implements Action {
   readonly type = CommandDictionaryActionTypes.FetchCommandDictionary;
+
+  constructor(public name: string) {}
 }
 
 export class FetchCommandDictionaryFailure implements Action {
@@ -55,7 +56,7 @@ export class FetchCommandDictionaryListSuccess implements Action {
 export class SelectCommandDictionary implements Action {
   readonly type = CommandDictionaryActionTypes.SelectCommandDictionary;
 
-  constructor(public dictionary: HBCommandDictionary) {}
+  constructor(public selectedId: string) {}
 }
 
 export type CommandDictionaryAction =

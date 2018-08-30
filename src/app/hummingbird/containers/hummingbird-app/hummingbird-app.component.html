@@ -8,10 +8,14 @@
 </main>
 <aside>
   <hb-command-loader
+    [selectedId]="selectedDictionaryId"
     [dictionaries]="dictionaries"
-    (selectedDictionaryChanged)="onSelectedDictionary($event)"
-    >
+    (selectedDictionaryChanged)="onSelectedDictionary($event)">
   </hb-command-loader>
+  <hb-command-list
+    [commands]="commands"
+    (selectedCommandChanged)="onSelectedCommand($event)">
+  </hb-command-list>
 </aside>
 <footer>
 </footer>

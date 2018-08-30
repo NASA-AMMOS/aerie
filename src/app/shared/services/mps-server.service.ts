@@ -9,7 +9,8 @@
 
 import { Injectable } from '@angular/core';
 import { Observable, Observer } from 'rxjs';
-import { mpsServerCommandDictionaryList } from '../mocks/mps-server-command-dictionary-list';
+import * as mpsServerMocks from '../mocks/mps-server';
+import { HBCommand } from '../models/hb-command';
 import { HBCommandDictionary } from '../models/hb-command-dictionary';
 
 @Injectable({
@@ -18,8 +19,8 @@ import { HBCommandDictionary } from '../models/hb-command-dictionary';
 export class MpsServerService {
 
   /**
-   * Populate an Observable with mock/static data until MPS Server has
-   * an endpoint for this.
+   * Get a list of available command dictionaries and populate an Observable
+   * with mock/static data until MPS Server has an endpoint for this.
    *
    * @todo When MPS Server gets an endpoint for listing command dictionaries
    * get this list with an http.get request
@@ -36,7 +37,33 @@ export class MpsServerService {
    */
   getCommandDictionaryList(): Observable<HBCommandDictionary[]> {
     return Observable.create((o: Observer<HBCommandDictionary[]>) => {
-      o.next(mpsServerCommandDictionaryList);
+      o.next(mpsServerMocks.commandDictionaryList);
+      o.complete();
+    });
+  }
+
+  /**
+   * Retrieve a command dictionary by name and populate an Observable with
+   * mock/static data until MPS has an endpoint for this.
+   *
+   * @todo When MPS Server gets an endpoint for fetching command dictionaries
+   * get this list with an http.get request
+   *
+   * @todo Once the Raven config reducer has been moved to the app level, this
+   * should be replaced with something like the following:
+   * return this.store.select(fromConfig.getUrls).pipe(
+   *  switchMap(config =>
+   *    http.get(`${config.baseUrl}/${name}`) // ...
+   *  )
+   * )
+   * @todo Update spec with HTTP tests once this has been updated
+   * https://angular.io/guide/testing#testing-http-services
+   *
+   * @param name The name of a command dictionary to retrieve
+   */
+  getCommandDictionary(name: string): Observable<HBCommand[]> {
+    return Observable.create((o: Observer<HBCommand[]>) => {
+      o.next(mpsServerMocks.getCommandList(1, name));
       o.complete();
     });
   }

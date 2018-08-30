@@ -42,3 +42,9 @@ footer {
   top: 0;
   z-index: 9;
 }
+
+hb-command-loader,
+hb-command-list {
+  display: block;
+  margin-bottom: 1.5rem;
+}

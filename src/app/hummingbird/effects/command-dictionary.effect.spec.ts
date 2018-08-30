@@ -17,14 +17,15 @@ import { MpsServerService } from '../../shared/services/mps-server.service';
 import { CommandDictionaryEffects } from './command-dictionary.effect';
 
 import {
+  FetchCommandDictionary,
+  FetchCommandDictionaryFailure,
   FetchCommandDictionaryList,
   FetchCommandDictionaryListFailure,
   FetchCommandDictionaryListSuccess,
+  FetchCommandDictionarySuccess,
 } from '../actions/command-dictionary';
 
-import {
-  mpsServerCommandDictionaryList,
-} from '../../shared/mocks/mps-server-command-dictionary-list';
+import * as mpsServerMocks from '../../shared/mocks/mps-server';
 
 describe('CommandDictionaryEffects', () => {
   let effects: CommandDictionaryEffects;
@@ -35,6 +36,7 @@ describe('CommandDictionaryEffects', () => {
   beforeEach(() => {
     mpsServerService = jasmine.createSpyObj('MpsServerService', [
       'getCommandDictionaryList',
+      'getCommandDictionary',
     ]);
 
     TestBed.configureTestingModule({
@@ -55,25 +57,25 @@ describe('CommandDictionaryEffects', () => {
     metadata = getEffectsMetadata(effects);
   });
 
-  describe('fetchList$', () => {
-    it('should register fetchList$ that does dispatch an action', () => {
-      expect(metadata.fetchList$).toEqual({ dispatch: true });
+  describe('fetchCommandDictionaryList$', () => {
+    it('should register fetchCommandDictionaryList$ that dispatches an action', () => {
+      expect(metadata.fetchCommandDictionaryList$).toEqual({ dispatch: true });
     });
 
     it('should return a FetchCommandDictionaryListSuccess with data on success', () => {
       const action = new FetchCommandDictionaryList();
       const success = new FetchCommandDictionaryListSuccess(
-        mpsServerCommandDictionaryList,
+        mpsServerMocks.commandDictionaryList,
       );
 
       mpsServerService.getCommandDictionaryList.and.returnValue(
-        of(mpsServerCommandDictionaryList),
+        of(mpsServerMocks.commandDictionaryList),
       );
 
       actions = hot('--a-', { a: action });
       const expected = cold('--b', { b: success });
 
-      expect(effects.fetchList$).toBeObservable(expected);
+      expect(effects.fetchCommandDictionaryList$).toBeObservable(expected);
     });
 
     it('should return a FetchCommandDictionaryListFailure with error on failure', () => {
@@ -92,9 +94,51 @@ describe('CommandDictionaryEffects', () => {
       // service to fail with the spy
       const expected = cold('---b', { b: failure });
 
-      expect(effects.fetchList$).toBeObservable(expected);
+      expect(effects.fetchCommandDictionaryList$).toBeObservable(expected);
 
     });
   });
 
+  describe('fetchCommandDictionary$', () => {
+    it('should register fetchCommandDictionary$ that dispatches an action', () => {
+      expect(metadata.fetchCommandDictionary$).toEqual({ dispatch: true });
+    });
+
+    it('should return a FetchCommandDictionarySuccess with data on success', () => {
+      const name = mpsServerMocks.commandDictionaryList[0].id;
+      const action = new FetchCommandDictionary(name);
+      const success = new FetchCommandDictionarySuccess(
+        mpsServerMocks.getCommandList(),
+      );
+
+      mpsServerService.getCommandDictionary.and.returnValue(
+        of(mpsServerMocks.getCommandList()),
+      );
+
+      actions = hot('--a-', { a: action });
+      const expected = cold('--b', { b: success });
+
+      expect(effects.fetchCommandDictionary$).toBeObservable(expected);
+    });
+
+    it('should return a FetchCommandDictionaryFailure with error on failure', () => {
+      const action = new FetchCommandDictionary(mpsServerMocks.commandDictionaryList[0].id);
+      const error = new Error('MOCK_FAILURE');
+      const failure = new FetchCommandDictionaryFailure(error);
+
+      // Make the service return a fake error observable
+      mpsServerService.getCommandDictionary.and.returnValue(
+        cold('--#|', {}, error),
+      );
+
+      actions = hot('-a--', { a: action });
+
+      // We expect the service to return the failure because we have forced the
+      // service to fail with the spy
+      const expected = cold('---b', { b: failure });
+
+      expect(effects.fetchCommandDictionary$).toBeObservable(expected);
+
+    });
+  });
 });

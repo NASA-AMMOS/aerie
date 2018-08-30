@@ -16,24 +16,50 @@ import { MpsServerService } from '../../shared/services/mps-server.service';
 
 import {
   CommandDictionaryActionTypes,
+  FetchCommandDictionary,
+  FetchCommandDictionaryFailure,
   FetchCommandDictionaryList,
   FetchCommandDictionaryListFailure,
   FetchCommandDictionaryListSuccess,
+  FetchCommandDictionarySuccess,
+  SelectCommandDictionary,
 } from '../actions/command-dictionary';
 
 @Injectable()
 export class CommandDictionaryEffects {
   @Effect()
-  fetchList$: Observable<Action> = this.actions$.pipe(
+  fetchCommandDictionaryList$: Observable<Action> = this.actions$.pipe(
     ofType<FetchCommandDictionaryList>(CommandDictionaryActionTypes.FetchCommandDictionaryList),
     concatMap(action =>
       this.mpsServerService.getCommandDictionaryList().pipe(
         map(data => new FetchCommandDictionaryListSuccess(data)),
         catchError((e: Error) => {
-          console.error('CommandDictionaryEffect - fetchList$: ', e);
+          console.error('CommandDictionaryEffect - fetchCommandDictionaryList$: ', e);
           return of(new FetchCommandDictionaryListFailure(e));
         }),
     )),
+  );
+
+  @Effect()
+  fetchCommandDictionary$: Observable<Action> = this.actions$.pipe(
+    ofType<FetchCommandDictionary>(CommandDictionaryActionTypes.FetchCommandDictionary),
+    concatMap(action =>
+      this.mpsServerService.getCommandDictionary(action.name).pipe(
+        map(data => new FetchCommandDictionarySuccess(data)),
+        catchError((e: Error) => {
+          console.error('CommandDictionaryEffect - fetchCommandDictionary$: ', e);
+          return of(new FetchCommandDictionaryFailure(e));
+        }),
+    )),
+  );
+
+  /**
+   * Dispatch the FetchCommandAction whenever a new selection has been made
+   */
+  @Effect()
+  selectCommandDictionary$: Observable<Action> = this.actions$.pipe(
+    ofType<SelectCommandDictionary>(CommandDictionaryActionTypes.SelectCommandDictionary),
+    map(action => new FetchCommandDictionary(action.selectedId)),
   );
 
   constructor(

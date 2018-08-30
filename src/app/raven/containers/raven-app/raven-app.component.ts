@@ -109,7 +109,7 @@ export class RavenAppComponent implements OnDestroy {
    * Helper. Marks this component for change detection check,
    * and then detects changes on the next tick.
    *
-   * TODO: Find out how we can remove this.
+   * @todo Find out how we can remove this.
    */
   markForCheck() {
     this.changeDetector.markForCheck();

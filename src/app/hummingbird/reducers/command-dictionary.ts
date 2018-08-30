@@ -8,6 +8,7 @@
  */
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { HBCommand } from '../../shared/models/hb-command';
 import { HBCommandDictionary } from '../../shared/models/hb-command-dictionary';
 import { CommandDictionaryAction, CommandDictionaryActionTypes } from '../actions/command-dictionary';
 import { State } from '../hummingbird-store';
@@ -17,18 +18,23 @@ import { State } from '../hummingbird-store';
  */
 export interface CommandDictionaryState {
   /**
+   * A list of commands for the selected dictionary
+   */
+  commands: HBCommand[] | null;
+  /**
    * List of available command dictionaries
    */
-  list: HBCommandDictionary[];
+  dictionaries: HBCommandDictionary[];
   /**
    * The currently selected command dictionary
    */
-  selected: HBCommandDictionary | null;
+  selectedDictionaryId: string | null;
 }
 
 export const initialState: CommandDictionaryState = {
-  list: [],
-  selected: null,
+  commands: null,
+  dictionaries: [],
+  selectedDictionaryId: null,
 };
 
 /**
@@ -41,10 +47,12 @@ export function reducer(
 ): CommandDictionaryState {
 
   switch (action.type) {
+    case CommandDictionaryActionTypes.FetchCommandDictionarySuccess:
+      return { ...state, commands: action.data };
     case CommandDictionaryActionTypes.FetchCommandDictionaryListSuccess:
-      return { ...state, list: action.data };
+      return { ...state, dictionaries: action.data };
     case CommandDictionaryActionTypes.SelectCommandDictionary:
-      return { ...state, selected: { ...action.dictionary } };
+      return { ...state, selectedDictionaryId: action.selectedId };
     default:
       return state;
   }
@@ -58,4 +66,19 @@ const featureSelector = createFeatureSelector<State>('hummingbird');
 export const getCommandDictionaryState = createSelector(
   featureSelector,
   (state: State): CommandDictionaryState => state.commandDictionary,
+);
+
+export const getCommands = createSelector(
+  getCommandDictionaryState,
+  (state: CommandDictionaryState) => state.commands,
+);
+
+export const getDictionaries = createSelector(
+  getCommandDictionaryState,
+  (state: CommandDictionaryState) => state.dictionaries,
+);
+
+export const getSelected = createSelector(
+  getCommandDictionaryState,
+  (state: CommandDictionaryState) => state.selectedDictionaryId,
 );

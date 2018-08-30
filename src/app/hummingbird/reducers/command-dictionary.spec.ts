@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { mpsServerCommandDictionaryList } from '../../shared/mocks/mps-server-command-dictionary-list';
+import * as mpsServerMocks from '../../shared/mocks/mps-server';
 import { FetchCommandDictionaryListSuccess } from '../actions/command-dictionary';
 import { CommandDictionaryState, initialState, reducer } from './command-dictionary';
 
@@ -20,11 +20,12 @@ describe('Command Dictionary reducer', () => {
   it('should handle FetchCommandDictionaryListSuccess', () => {
     const result: CommandDictionaryState = reducer(
       initialState,
-      new FetchCommandDictionaryListSuccess(mpsServerCommandDictionaryList),
+      new FetchCommandDictionaryListSuccess(mpsServerMocks.commandDictionaryList),
     );
     expect(result).toEqual({
-      list: [...mpsServerCommandDictionaryList],
-      selected: null,
+      commands: null,
+      dictionaries: [...mpsServerMocks.commandDictionaryList],
+      selectedDictionaryId: null,
     });
   });
 });

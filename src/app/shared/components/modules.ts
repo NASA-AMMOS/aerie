@@ -8,6 +8,7 @@
  */
 
 export * from './hb-code-mirror/hb-code-mirror.module';
+export * from './hb-command-list/hb-command-list.module';
 export * from './hb-command-loader/hb-command-loader.module';
 export * from './raven-activity-band/raven-activity-band.module';
 export * from './raven-activity-point/raven-activity-point.module';
