@@ -88,7 +88,7 @@ import {
   StringTMap,
 } from '../../shared/models';
 
-import * as configActions from '../actions/config';
+import * as configActions from '../../shared/actions/config';
 import * as dialogActions from '../actions/dialog';
 import * as layoutActions from '../actions/layout';
 import * as sourceExplorerActions from '../actions/source-explorer';
@@ -108,7 +108,7 @@ export class SourceExplorerEffects {
     ofType<AddCustomGraph>(SourceExplorerActionTypes.AddCustomGraph),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
-    concatMap(({ state: { raven: { config, sourceExplorer, timeline } }, action: { label, sourceId } }) =>
+    concatMap(({ state: { config, raven: { sourceExplorer, timeline } }, action: { label, sourceId } }) =>
       concat(
         this.open(
           getCustomFilterForLabel(
@@ -121,7 +121,7 @@ export class SourceExplorerEffects {
           timeline.bands,
           timeline.selectedBandId,
           timeline.selectedSubBandId,
-          config.defaultBandSettings,
+          config.raven.defaultBandSettings,
           sourceExplorer.pins,
         ),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
@@ -156,8 +156,8 @@ export class SourceExplorerEffects {
       forkJoin([
         of(action),
         of(state),
-        this.fetchState(`${state.raven.config.baseUrl}/${state.raven.config.baseSourcesUrl}${state.raven.sourceExplorer.currentStateId}`),
-        this.fetchNewSources(`${state.raven.config.baseUrl}/${state.raven.config.baseSourcesUrl}`, '/', true),
+        this.fetchState(`${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${state.raven.sourceExplorer.currentStateId}`),
+        this.fetchNewSources(`${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`, '/', true),
       ]),
     ),
     map(([action, state, savedState, initialSources]) => ({ action, state, savedState, initialSources })),
@@ -213,10 +213,10 @@ export class SourceExplorerEffects {
     ofType<ApplyState>(SourceExplorerActionTypes.ApplyState),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
-    concatMap(({ action, state: { raven } }) =>
+    concatMap(({ action, state: { config, raven } }) =>
       forkJoin([
         this.fetchState(action.sourceUrl),
-        this.fetchNewSources(`${raven.config.baseUrl}/${raven.config.baseSourcesUrl}`, '/', true),
+        this.fetchNewSources(`${config.app.baseUrl}/${config.mpsServer.apiUrl}`, '/', true),
       ]),
     ),
     map(([savedState, initialSources]) => ({ savedState, initialSources })),
@@ -276,7 +276,7 @@ export class SourceExplorerEffects {
     map(([, state]) => state),
     concatMap((state: RavenAppState) =>
       concat(
-        this.fetchNewSources(`${state.raven.config.baseUrl}/${state.raven.config.baseSourcesUrl}`, '/', true).pipe(
+        this.fetchNewSources(`${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`, '/', true).pipe(
           map((sources: RavenSource[]) => new sourceExplorerActions.NewSources('/', sources) as Action),
         ),
         of(new sourceExplorerActions.UpdateSourceExplorer({
@@ -395,7 +395,7 @@ export class SourceExplorerEffects {
     ofType<OpenEvent>(SourceExplorerActionTypes.OpenEvent),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
-    mergeMap(({ state: { raven }, action }) =>
+    mergeMap(({ state: { config, raven }, action }) =>
       concat(
         this.open(
           null,
@@ -405,7 +405,7 @@ export class SourceExplorerEffects {
           raven.timeline.bands,
           raven.timeline.selectedBandId,
           raven.timeline.selectedSubBandId,
-          raven.config.defaultBandSettings,
+          config.raven.defaultBandSettings,
           raven.sourceExplorer.pins,
         ),
         of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
@@ -476,9 +476,9 @@ export class SourceExplorerEffects {
     ofType<UpdateGraphAfterFilterAdd>(SourceExplorerActionTypes.UpdateGraphAfterFilterAdd),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
-    concatMap(({ state: { raven: { config, sourceExplorer } }, action }) =>
+    concatMap(({ state: { config, raven: { sourceExplorer } }, action }) =>
       concat(
-        this.fetchSubBands(sourceExplorer.treeBySourceId, action.sourceId, config.defaultBandSettings, null, sourceExplorer.filtersByTarget).pipe(
+        this.fetchSubBands(sourceExplorer.treeBySourceId, action.sourceId, config.raven.defaultBandSettings, null, sourceExplorer.filtersByTarget).pipe(
           withLatestFrom(this.store$),
           map(([newSubBands, state]) => ({ newSubBands, state })),
           concatMap(({ newSubBands, state: { raven: { timeline } } }) => {
@@ -518,9 +518,9 @@ export class SourceExplorerEffects {
     ofType<UpdateGraphAfterFilterRemove>(SourceExplorerActionTypes.UpdateGraphAfterFilterRemove),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
-    concatMap(({ state: { raven: { config, sourceExplorer, timeline: { bands } } }, action }) =>
+    concatMap(({ state: { config, raven: { sourceExplorer, timeline: { bands } } }, action }) =>
       concat(
-        this.fetchSubBands(sourceExplorer.treeBySourceId, action.sourceId, config.defaultBandSettings, null, sourceExplorer.filtersByTarget).pipe(
+        this.fetchSubBands(sourceExplorer.treeBySourceId, action.sourceId, config.raven.defaultBandSettings, null, sourceExplorer.filtersByTarget).pipe(
           concatMap((newSubBands: RavenSubBand[]) => {
             const actions: Action[] = [];
             const target = (sourceExplorer.treeBySourceId[action.sourceId] as RavenFilterSource).filterTarget;
@@ -732,7 +732,7 @@ export class SourceExplorerEffects {
                 state.raven.sourceExplorer.treeBySourceId,
                 sourceId,
                 bands,
-                state.raven.config.defaultBandSettings,
+                state.config.raven.defaultBandSettings,
                 state.raven.sourceExplorer.pins,
               ),
               of(new sourceExplorerActions.UpdateTreeSource(sourceId, { opened: true })),
@@ -901,7 +901,7 @@ export class SourceExplorerEffects {
 
     return forkJoin(
         Object.keys(sourceIds).map(sourceId =>
-          this.http.get(`${state.raven.config.baseUrl}/${state.raven.config.baseSourcesUrl}${sourceId}`).pipe(
+          this.http.get(`${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${sourceId}`).pipe(
             timeout(3000), // Timeout long requests since MPS Server returns type information quickly, and long requests probably are not what we are looking for.
             map((mpsServerSources: MpsServerSource[]) => toRavenSources('', false, mpsServerSources)),
             map((sources:  RavenSource[]) => sources.map(source => ({ name: source.name, type: source.type }))),

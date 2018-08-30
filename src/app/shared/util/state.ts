@@ -33,7 +33,7 @@ export function getState(name: string, state: RavenAppState): any {
         ),
       })),
     })),
-    defaultBandSettings: state.raven.config.defaultBandSettings,
+    defaultBandSettings: state.config.raven.defaultBandSettings,
     maxTimeRange: state.raven.timeline.maxTimeRange,
     name,
     pins: state.raven.sourceExplorer.pins,

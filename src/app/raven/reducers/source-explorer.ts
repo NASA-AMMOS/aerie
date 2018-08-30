@@ -564,8 +564,9 @@ export function updateTreeSource(state: SourceExplorerState, sourceId: string, u
 /**
  * Source Explorer state selector helper.
  */
+const featureSelector = createFeatureSelector<State>('raven');
 export const getSourceExplorerState = createSelector(
-  createFeatureSelector<State>('raven'),
+  featureSelector,
   (state: State): SourceExplorerState => state.sourceExplorer,
 );
 

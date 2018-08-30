@@ -7,10 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  ActionReducerMap,
-} from '@ngrx/store';
-
+import { ActionReducerMap } from '@ngrx/store';
 import * as fromRoot from '../app-store';
 
 /**
@@ -20,7 +17,6 @@ import * as fromRoot from '../app-store';
  * notation packages up all of the exports into a single object.
  */
 
-import * as fromConfig from './reducers/config';
 import * as fromEpochs from './reducers/epochs';
 import * as fromLayout from './reducers/layout';
 import * as fromOutput from './reducers/output';
@@ -33,7 +29,6 @@ import * as fromTimeline from './reducers/timeline';
  * our top level state interface is just a map of keys to inner state types.
  */
 export interface State {
-  config: fromConfig.ConfigState;
   epochs: fromEpochs.EpochsState;
   layout: fromLayout.LayoutState;
   output: fromOutput.OutputState;
@@ -48,7 +43,6 @@ export interface State {
  * and the current or initial state and return a new immutable state.
  */
 export const reducers: ActionReducerMap<State> = {
-  config: fromConfig.reducer,
   epochs: fromEpochs.reducer,
   layout: fromLayout.reducer,
   output: fromOutput.reducer,

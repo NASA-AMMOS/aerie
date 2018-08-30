@@ -175,8 +175,9 @@ export function toggleTimeCursorDrawer(state: LayoutState, action: ToggleTimeCur
 /**
  * Layout state selector helper.
  */
+const featureSelector = createFeatureSelector<State>('raven');
 export const getLayoutState = createSelector(
-  createFeatureSelector<State>('raven'),
+  featureSelector,
   (state: State): LayoutState => state.layout,
 );
 

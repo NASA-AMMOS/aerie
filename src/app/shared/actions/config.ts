@@ -7,8 +7,21 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export interface RavenVersion {
-  branch: string;
-  commit: string;
-  version: string;
+import { Action } from '@ngrx/store';
+import { BaseType, StringTMap } from '../models';
+
+// Action Types.
+export enum ConfigActionTypes {
+  UpdateDefaultBandSettings = '[config] update_default_band_settings',
 }
+
+// Actions.
+export class UpdateDefaultBandSettings implements Action {
+  readonly type = ConfigActionTypes.UpdateDefaultBandSettings;
+
+  constructor(public update: StringTMap<BaseType>) {}
+}
+
+// Union type of all actions.
+export type ConfigAction =
+  UpdateDefaultBandSettings;

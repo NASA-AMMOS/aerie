@@ -560,8 +560,9 @@ export function updateSubBand(state: TimelineState, action: UpdateSubBand): Time
 /**
  * Timeline state selector helper.
  */
+const featureSelector = createFeatureSelector<State>('raven');
 export const getTimelineState = createSelector(
-  createFeatureSelector<State>('raven'),
+  featureSelector,
   (state: State): TimelineState => state.timeline,
 );
 

@@ -18,9 +18,9 @@ import {
 import { Store } from '@ngrx/store';
 import { combineLatest, Observable, Subject } from 'rxjs';
 import { map, takeUntil, tap } from 'rxjs/operators';
-import { RavenTimeRange, RavenVersion } from '../../../shared/models';
+import { RavenTimeRange } from '../../../shared/models';
 
-import * as fromConfig from '../../reducers/config';
+import * as fromConfig from '../../../shared/reducers/config';
 import * as fromLayout from '../../reducers/layout';
 import * as fromSourceExplorer from '../../reducers/source-explorer';
 import * as fromTimeline from '../../reducers/timeline';
@@ -59,8 +59,8 @@ export class RavenAppComponent implements OnDestroy {
     // Config version.
     this.store.select(fromConfig.getVersion).pipe(
       takeUntil(this.ngUnsubscribe),
-    ).subscribe(version => {
-      this.info = this.getInfo(version);
+    ).subscribe(v => {
+      this.info = this.getInfo(v.version, v.branch, v.commit);
     });
 
     // Layout mode.
@@ -113,15 +113,19 @@ export class RavenAppComponent implements OnDestroy {
    */
   markForCheck() {
     this.changeDetector.markForCheck();
-    setTimeout(() => this.changeDetector.detectChanges());
+    setTimeout(() => {
+      if (!this.changeDetector['destroyed']) {
+        this.changeDetector.detectChanges();
+      }
+    });
   }
 
   /**
    * Get a string for the info tooltip.
    */
-  getInfo(ravenVersion: RavenVersion): string {
+  getInfo(version: string, branch: string, commit: string): string {
     return `
-      Raven ${ravenVersion.version} - ${ravenVersion.branch} - ${ravenVersion.commit}\n
+      Raven ${version} - ${branch} - ${commit}\n
       Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED.
       United States Government sponsorship acknowledged.
       Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.\n

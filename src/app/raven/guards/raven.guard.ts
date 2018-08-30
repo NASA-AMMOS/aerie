@@ -32,9 +32,9 @@ import {
   tap,
 } from 'rxjs/operators';
 
+import * as fromConfig from '../../shared/reducers/config';
 import * as epochsActions from '../actions/epochs';
 import * as sourceExplorerActions from '../actions/source-explorer';
-import * as fromConfig from '../reducers/config';
 import * as fromSourceExplorer from '../reducers/source-explorer';
 
 @Injectable()

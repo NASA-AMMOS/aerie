@@ -18,6 +18,7 @@ import { MatTabChangeEvent } from '@angular/material';
 import { Store } from '@ngrx/store';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { ConfigState } from '../../../../config';
 
 import {
   RavenBandLeftClick,
@@ -41,7 +42,7 @@ import {
   toDividerBand,
 } from '../../../shared/util';
 
-import * as fromConfig from '../../reducers/config';
+import * as fromConfig from '../../../shared/reducers/config';
 import * as fromEpochs from '../../reducers/epochs';
 import * as fromLayout from '../../reducers/layout';
 import * as fromOutput from '../../reducers/output';
@@ -49,7 +50,7 @@ import * as fromSourceExplorer from '../../reducers/source-explorer';
 import * as fromTimeCursor from '../../reducers/time-cursor';
 import * as fromTimeline from '../../reducers/timeline';
 
-import * as configActions from '../../actions/config';
+import * as configActions from '../../../shared/actions/config';
 import * as dialogActions from '../../actions/dialog';
 import * as epochsActions from '../../actions/epochs';
 import * as layoutActions from '../../actions/layout';
@@ -130,7 +131,7 @@ export class TimelineComponent implements OnDestroy {
 
   constructor(
     private changeDetector: ChangeDetectorRef,
-    private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState | fromTimeCursor.TimeCursorState>,
+    private store: Store<fromTimeline.TimelineState | ConfigState | fromTimeCursor.TimeCursorState>,
   ) {
     // Config state.
     this.store.select(fromConfig.getItarMessage).pipe(
@@ -250,7 +251,11 @@ export class TimelineComponent implements OnDestroy {
    */
   markForCheck() {
     this.changeDetector.markForCheck();
-    setTimeout(() => this.changeDetector.detectChanges());
+    setTimeout(() => {
+      if (!this.changeDetector['destroyed']) {
+        this.changeDetector.detectChanges();
+      }
+    });
   }
 
   /**

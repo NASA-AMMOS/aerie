@@ -52,9 +52,10 @@ export function reducer(
 }
 
 /**
- * State selector helper
+ * State selector helper.
  */
+const featureSelector = createFeatureSelector<State>('hummingbird');
 export const getCommandDictionaryState = createSelector(
-  createFeatureSelector<State>('hummingbird'),
+  featureSelector,
   (state: State): CommandDictionaryState => state.commandDictionary,
 );

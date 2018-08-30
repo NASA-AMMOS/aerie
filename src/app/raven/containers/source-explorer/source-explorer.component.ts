@@ -31,7 +31,7 @@ import {
   StringTMap,
 } from '../../../shared/models';
 
-import * as fromConfig from '../../reducers/config';
+import * as fromConfig from '../../../shared/reducers/config';
 import * as fromSourceExplorer from '../../reducers/source-explorer';
 
 import * as dialogActions from '../../actions/dialog';
@@ -102,9 +102,9 @@ export class SourceExplorerComponent implements OnDestroy {
    * When a data sources changes we fetch new sources to update the source explorer.
    */
   connectToWebsocket() {
-    this.store.select(fromConfig.getConfigState).pipe(
+    this.store.select(fromConfig.getUrls).pipe(
       switchMap(config =>
-        WebSocketSubject.create(`${config.baseUrl.replace('https', 'wss')}/${config.baseSocketUrl}`),
+        WebSocketSubject.create(`${config.baseUrl.replace('https', 'wss')}/${config.socketUrl}`),
       ),
       takeUntil(this.ngUnsubscribe),
     ).subscribe((data: any) => {
@@ -125,7 +125,11 @@ export class SourceExplorerComponent implements OnDestroy {
    */
   markForCheck() {
     this.changeDetector.markForCheck();
-    setTimeout(() => this.changeDetector.detectChanges());
+    setTimeout(() => {
+      if (!this.changeDetector['destroyed']) {
+        this.changeDetector.detectChanges();
+      }
+    });
   }
 
   /**

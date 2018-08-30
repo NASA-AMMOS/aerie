@@ -139,9 +139,11 @@ export class RavenShareableLinkDialogComponent implements AfterViewInit, OnDestr
    * Helper that returns the sharable link text.
    */
   getShareableLink(name: string): string {
-    const { baseRavenUrl, baseUrl } = this.data.state.raven.config;
+    const { config } = this.data.state;
+    const { baseUrl } = config.app;
+    const { ravenUrl } = config.mpsServer;
 
-    const url = `${baseUrl}${baseRavenUrl ? '/' + baseRavenUrl : ''}/#/raven`;
+    const url = `${baseUrl}${ravenUrl ? '/' + ravenUrl : ''}/#/raven`;
     const query = `s=${name}`;
 
     return `${url}?${query}`;
@@ -152,8 +154,12 @@ export class RavenShareableLinkDialogComponent implements AfterViewInit, OnDestr
    * Note this is different from the actual sharable link as the state url points to the actual state in the database.
    */
   getStateUrl(sharableName?: string) {
-    const { baseSourcesUrl, baseUrl, shareableLinkStatesUrl } = this.data.state.raven.config;
-    return `${baseUrl}/${baseSourcesUrl}/${shareableLinkStatesUrl}${sharableName ? '/' + sharableName : ''}`.replace(/fs/, 'fs-mongodb');
+    const { config } = this.data.state;
+    const { baseUrl } = config.app;
+    const { apiUrl } = config.mpsServer;
+    const { shareableLinkStatesUrl } = config.raven;
+
+    return `${baseUrl}/${apiUrl}/${shareableLinkStatesUrl}${sharableName ? '/' + sharableName : ''}`.replace(/fs/, 'fs-mongodb');
   }
 
   /**

@@ -14,8 +14,8 @@ import { RouterNavigationAction } from '@ngrx/router-store';
 import { Action, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { map, mergeMap, withLatestFrom } from 'rxjs/operators';
+import { ConfigState } from '../../../config';
 import { RavenAppState } from '../raven-store';
-import { ConfigState } from '../reducers/config';
 import { LayoutState } from '../reducers/layout';
 
 import * as layoutActions from '../actions/layout';
@@ -38,13 +38,13 @@ export class RouterEffects {
       if (shareableName) {
         // If there is an `s` query parameter then use it to load a shareable link.
         return [
-          ...this.loadShareableLink(state.raven.config, state.raven.layout, shareableName),
+          ...this.loadShareableLink(state.config, state.raven.layout, shareableName),
         ];
       } else {
         // Otherwise use other query parameters to load an app layout and/or state.
         return [
           ...this.loadLayout(state.raven.layout, layout),
-          ...this.loadState(state.raven.config, statePath),
+          ...this.loadState(state.config, statePath),
         ];
       }
     }),
@@ -87,7 +87,7 @@ export class RouterEffects {
    * the user given `shareableName`.
    */
   loadShareableLink(configState: ConfigState, layoutState: LayoutState, shareableName: string): Action[] {
-    const statePath = `/${configState.shareableLinkStatesUrl}/${shareableName}`;
+    const statePath = `/${configState.raven.shareableLinkStatesUrl}/${shareableName}`;
 
     return [
       ...this.loadLayout(layoutState, 'minimal'),
@@ -102,7 +102,7 @@ export class RouterEffects {
   loadState(configState: ConfigState, statePath: string): Action[] {
     if (statePath) {
       return [
-        new sourceExplorerActions.ApplyState(`${configState.baseUrl}/${configState.baseSourcesUrl}${statePath}`, statePath),
+        new sourceExplorerActions.ApplyState(`${configState.app.baseUrl}/${configState.mpsServer.apiUrl}${statePath}`, statePath),
       ];
     }
     return [];

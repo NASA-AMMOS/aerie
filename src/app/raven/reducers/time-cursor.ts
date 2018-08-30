@@ -67,7 +67,8 @@ export function showTimeCursor(state: TimeCursorState): TimeCursorState {
 /**
  * Config state selector helper.
  */
+const featureSelector = createFeatureSelector<State>('raven');
 export const getTimeCursorState = createSelector(
-  createFeatureSelector<State>('raven'),
+  featureSelector,
   (state: State): TimeCursorState => state.timeCursor,
 );

@@ -46,7 +46,8 @@ export function reducer(state: EpochsState = initialState, action: EpochsAction)
 /**
  * Epoch state selector helper.
  */
+const featureSelector = createFeatureSelector<State>('raven');
 export const getEpochsState = createSelector(
-  createFeatureSelector<State>('raven'),
+  featureSelector,
   (state: State): EpochsState => state.epochs,
 );

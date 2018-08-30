@@ -13,6 +13,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { RavenLayoutApplyComponent } from './raven-layout-apply.component';
 
 import {
+  MatButtonModule,
   MatCardModule,
   MatFormFieldModule,
   MatSelectModule,
@@ -27,6 +28,7 @@ import {
   ],
   imports: [
     CommonModule,
+    MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
     MatSelectModule,
