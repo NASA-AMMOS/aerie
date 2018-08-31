@@ -12,20 +12,13 @@ import { NgModule } from '@angular/core';
 import { MatButtonModule, MatCardModule } from '@angular/material';
 import { AgGridModule } from 'ag-grid-angular';
 import { RavenTableDetailComponent } from './raven-table-detail.component';
-import {  RavenTableComponent } from './raven-table.component';
+import { RavenTableComponent } from './raven-table.component';
 
 @NgModule({
-  declarations: [
-    RavenTableComponent,
-    RavenTableDetailComponent,
-  ],
-  exports: [
-    RavenTableComponent,
-  ],
+  declarations: [RavenTableComponent, RavenTableDetailComponent],
+  exports: [RavenTableComponent],
   imports: [
-    AgGridModule.withComponents([
-      RavenTableDetailComponent,
-    ]),
+    AgGridModule.withComponents([RavenTableDetailComponent]),
     CommonModule,
     MatCardModule,
     MatButtonModule,

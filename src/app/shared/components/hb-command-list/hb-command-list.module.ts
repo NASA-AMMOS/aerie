@@ -18,12 +18,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { HBCommandListComponent } from './hb-command-list.component';
 
 @NgModule({
-  declarations: [
-    HBCommandListComponent,
-  ],
-  exports: [
-    HBCommandListComponent,
-  ],
+  declarations: [HBCommandListComponent],
+  exports: [HBCommandListComponent],
   imports: [
     CommonModule,
     MatButtonModule,

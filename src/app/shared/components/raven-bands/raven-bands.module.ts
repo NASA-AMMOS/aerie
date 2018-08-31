@@ -14,16 +14,8 @@ import { RavenCompositeBandModule } from '../raven-composite-band/raven-composit
 import { RavenBandsComponent } from './raven-bands.component';
 
 @NgModule({
-  declarations: [
-    RavenBandsComponent,
-  ],
-  exports: [
-    RavenBandsComponent,
-  ],
-  imports: [
-    CommonModule,
-    RavenCompositeBandModule,
-    SortablejsModule,
-  ],
+  declarations: [RavenBandsComponent],
+  exports: [RavenBandsComponent],
+  imports: [CommonModule, RavenCompositeBandModule, SortablejsModule],
 })
 export class RavenBandsModule {}

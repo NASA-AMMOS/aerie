@@ -32,7 +32,10 @@ export const initialState: EpochsState = {
  * Reducer.
  * If a case takes more than one line then it should be in it's own helper function.
  */
-export function reducer(state: EpochsState = initialState, action: EpochsAction): EpochsState {
+export function reducer(
+  state: EpochsState = initialState,
+  action: EpochsAction
+): EpochsState {
   switch (action.type) {
     case EpochsActionTypes.AddEpochs:
       return { ...state, epochs: state.epochs.concat(action.epochs) };
@@ -49,5 +52,5 @@ export function reducer(state: EpochsState = initialState, action: EpochsAction)
 const featureSelector = createFeatureSelector<State>('raven');
 export const getEpochsState = createSelector(
   featureSelector,
-  (state: State): EpochsState => state.epochs,
+  (state: State): EpochsState => state.epochs
 );

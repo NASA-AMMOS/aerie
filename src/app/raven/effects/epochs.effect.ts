@@ -27,8 +27,14 @@ export class EpochsEffects {
     ofType<FetchEpochs>(EpochsActionTypes.FetchEpochs),
     concatMap(action =>
       this.http.get(action.url).pipe(
-        map((mpsServerEpochs: MpsServerEpoch[]) => toRavenEpochs(mpsServerEpochs)),
-        map((ravenEpochs: RavenEpoch[]) => new epochsActions.AddEpochs(ravenEpochs))),
+        map((mpsServerEpochs: MpsServerEpoch[]) =>
+          toRavenEpochs(mpsServerEpochs)
+        ),
+        map(
+          (ravenEpochs: RavenEpoch[]) =>
+            new epochsActions.AddEpochs(ravenEpochs)
+        )
+      )
     ),
     catchError((e: Error) => {
       console.error('EpochsEffects - fetchEpochs$: ', e);
@@ -36,11 +42,8 @@ export class EpochsEffects {
         new toastActions.ShowToast('warning', 'Failed to fetch epochs', ''),
         new epochsActions.AddEpochs([]),
       ];
-    }),
+    })
   );
 
-  constructor(
-    private http: HttpClient,
-    private actions$: Actions,
-  ) {}
+  constructor(private http: HttpClient, private actions$: Actions) {}
 }

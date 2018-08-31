@@ -11,11 +11,7 @@ import { NgModule } from '@angular/core';
 import { RavenResourceBandComponent } from '../raven-resource-band/raven-resource-band.component';
 
 @NgModule({
-  declarations: [
-    RavenResourceBandComponent,
-  ],
-  exports: [
-    RavenResourceBandComponent,
-  ],
+  declarations: [RavenResourceBandComponent],
+  exports: [RavenResourceBandComponent],
 })
 export class RavenResourceBandModule {}

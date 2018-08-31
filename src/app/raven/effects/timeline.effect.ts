@@ -14,18 +14,9 @@ import { Action, Store } from '@ngrx/store';
 import { TimelineActionTypes } from '../actions/timeline';
 import { RavenAppState } from '../raven-store';
 
-import {
-  concat,
-  Observable,
-  of,
-} from 'rxjs';
+import { concat, Observable, of } from 'rxjs';
 
-import {
-  concatMap,
-  map,
-  switchMap,
-  withLatestFrom,
-} from 'rxjs/operators';
+import { concatMap, map, switchMap, withLatestFrom } from 'rxjs/operators';
 
 import {
   AddBand,
@@ -52,11 +43,7 @@ import {
   RavenTimeRange,
 } from '../../shared/models';
 
-import {
-  getPinLabel,
-  getResourcePoints,
-  timestamp,
-} from '../../shared/util';
+import { getPinLabel, getResourcePoints, timestamp } from '../../shared/util';
 
 import * as layoutActions from '../actions/layout';
 import * as timelineActions from '../actions/timeline';
@@ -72,11 +59,13 @@ export class TimelineEffects {
       TimelineActionTypes.AddBand,
       TimelineActionTypes.PinAdd,
       TimelineActionTypes.PinRemove,
-      TimelineActionTypes.PinRename,
+      TimelineActionTypes.PinRename
     ),
     withLatestFrom(this.store$),
     map(([, state]) => state.raven),
-    concatMap(({ timeline, sourceExplorer }) => this.updatePinLabels(timeline.bands, sourceExplorer.pins)),
+    concatMap(({ timeline, sourceExplorer }) =>
+      this.updatePinLabels(timeline.bands, sourceExplorer.pins)
+    )
   );
 
   /**
@@ -91,9 +80,11 @@ export class TimelineEffects {
       const actions: Action[] = [];
 
       if (raven.timeline.selectedPoint) {
-        actions.push(new layoutActions.UpdateLayout({
-          rightPanelSelectedTabIndex: 1,
-        }));
+        actions.push(
+          new layoutActions.UpdateLayout({
+            rightPanelSelectedTabIndex: 1,
+          })
+        );
 
         if (!raven.layout.showRightPanel) {
           actions.push(new layoutActions.ToggleRightPanel());
@@ -101,7 +92,7 @@ export class TimelineEffects {
       }
 
       return actions;
-    }),
+    })
   );
 
   /**
@@ -117,19 +108,27 @@ export class TimelineEffects {
    */
   @Effect()
   updateViewTimeRange$: Observable<Action> = this.actions$.pipe(
-    ofType<ResetViewTimeRange | PanLeftViewTimeRange | PanRightViewTimeRange | UpdateViewTimeRange | ZoomInViewTimeRange | ZoomOutViewTimeRange>(
+    ofType<
+      | ResetViewTimeRange
+      | PanLeftViewTimeRange
+      | PanRightViewTimeRange
+      | UpdateViewTimeRange
+      | ZoomInViewTimeRange
+      | ZoomOutViewTimeRange
+    >(
       TimelineActionTypes.ResetViewTimeRange,
       TimelineActionTypes.PanLeftViewTimeRange,
       TimelineActionTypes.PanRightViewTimeRange,
       TimelineActionTypes.UpdateViewTimeRange,
       TimelineActionTypes.ZoomInViewTimeRange,
-      TimelineActionTypes.ZoomOutViewTimeRange,
+      TimelineActionTypes.ZoomOutViewTimeRange
     ),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     switchMap(({ action, state: { raven: { sourceExplorer, timeline } } }) => {
       const actions: Observable<Action>[] = [];
-      const viewTimeRange = (action as UpdateViewTimeRange).viewTimeRange || timeline.viewTimeRange;
+      const viewTimeRange =
+        (action as UpdateViewTimeRange).viewTimeRange || timeline.viewTimeRange;
 
       timeline.bands.forEach((band: RavenCompositeBand) => {
         band.subBands.forEach((subBand: RavenResourceBand) => {
@@ -138,24 +137,27 @@ export class TimelineEffects {
             subBand.sourceIds.forEach(sourceId => {
               actions.push(
                 of(new timelineActions.UpdateTimeline({ fetchPending: true })),
-                this.fetchNewResourcePoints(sourceExplorer.treeBySourceId[sourceId], viewTimeRange).pipe(
+                this.fetchNewResourcePoints(
+                  sourceExplorer.treeBySourceId[sourceId],
+                  viewTimeRange
+                ).pipe(
                   switchMap(({ points }) => [
                     new timelineActions.UpdateSubBand(band.id, subBand.id, {
-                      points: subBand.points.filter(point => point.sourceId !== sourceId).concat(points),
+                      points: subBand.points
+                        .filter(point => point.sourceId !== sourceId)
+                        .concat(points),
                     }),
-                  ]),
+                  ])
                 ),
-                of(new timelineActions.UpdateTimeline({ fetchPending: false })),
+                of(new timelineActions.UpdateTimeline({ fetchPending: false }))
               );
             });
           }
         });
       });
 
-      return concat(
-        ...actions,
-      );
-    }),
+      return concat(...actions);
+    })
   );
 
   /**
@@ -166,11 +168,17 @@ export class TimelineEffects {
     const { end, start } = viewTimeRange;
     const url = `${source.url}&start=${timestamp(start)}&end=${timestamp(end)}`;
 
-    return this.http.get(url).pipe(
-      map((graphData: MpsServerGraphData) =>
-        getResourcePoints(source.id, graphData['Timeline Metadata'] as MpsServerResourceMetadata, graphData['Timeline Data'] as MpsServerResourcePoint[]),
-      ),
-    );
+    return this.http
+      .get(url)
+      .pipe(
+        map((graphData: MpsServerGraphData) =>
+          getResourcePoints(
+            source.id,
+            graphData['Timeline Metadata'] as MpsServerResourceMetadata,
+            graphData['Timeline Data'] as MpsServerResourcePoint[]
+          )
+        )
+      );
   }
 
   /**
@@ -182,11 +190,9 @@ export class TimelineEffects {
     bands.forEach(band => {
       band.subBands.forEach(subBand => {
         actions.push(
-          new timelineActions.UpdateSubBand(
-            band.id,
-            subBand.id,
-            { labelPin: getPinLabel(subBand.sourceIds[0], pins) },
-          ),
+          new timelineActions.UpdateSubBand(band.id, subBand.id, {
+            labelPin: getPinLabel(subBand.sourceIds[0], pins),
+          })
         );
       });
     });
@@ -197,6 +203,6 @@ export class TimelineEffects {
   constructor(
     private actions$: Actions,
     private http: HttpClient,
-    private store$: Store<RavenAppState>,
+    private store$: Store<RavenAppState>
   ) {}
 }

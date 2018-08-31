@@ -23,15 +23,8 @@ describe('DialogEffects', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [
-        MatDialogModule,
-        OverlayModule,
-        StoreModule.forRoot({}),
-      ],
-      providers: [
-        DialogEffects,
-        provideMockActions(() => actions),
-      ],
+      imports: [MatDialogModule, OverlayModule, StoreModule.forRoot({})],
+      providers: [DialogEffects, provideMockActions(() => actions)],
     });
 
     effects = TestBed.get(DialogEffects);

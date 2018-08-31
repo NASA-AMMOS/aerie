@@ -18,17 +18,8 @@ import {
 } from '@angular/material';
 
 @NgModule({
-  declarations: [
-    RavenGraphableComponent,
-  ],
-  exports: [
-    RavenGraphableComponent,
-  ],
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule,
-  ],
+  declarations: [RavenGraphableComponent],
+  exports: [RavenGraphableComponent],
+  imports: [CommonModule, MatButtonModule, MatIconModule, MatMenuModule],
 })
 export class RavenGraphableModule {}

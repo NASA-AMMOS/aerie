@@ -11,11 +11,7 @@ import { NgModule } from '@angular/core';
 import { RavenTimeBandComponent } from './raven-time-band.component';
 
 @NgModule({
-  declarations: [
-    RavenTimeBandComponent,
-  ],
-  exports: [
-    RavenTimeBandComponent,
-  ],
+  declarations: [RavenTimeBandComponent],
+  exports: [RavenTimeBandComponent],
 })
 export class RavenTimeBandModule {}

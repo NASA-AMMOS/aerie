@@ -9,16 +9,10 @@
 
 import { NgModule } from '@angular/core';
 
-import {
-  RavenToKeyValueArrayPipe,
-} from './raven-to-key-value-array.pipe';
+import { RavenToKeyValueArrayPipe } from './raven-to-key-value-array.pipe';
 
 @NgModule({
-  declarations: [
-    RavenToKeyValueArrayPipe,
-  ],
-  exports: [
-    RavenToKeyValueArrayPipe,
-  ],
+  declarations: [RavenToKeyValueArrayPipe],
+  exports: [RavenToKeyValueArrayPipe],
 })
 export class RavenToKeyValueArrayPipeModule {}

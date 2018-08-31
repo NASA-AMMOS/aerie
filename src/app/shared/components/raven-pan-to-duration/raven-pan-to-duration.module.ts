@@ -19,12 +19,8 @@ import {
 } from '@angular/material';
 
 @NgModule({
-  declarations: [
-    RavenPanToDurationComponent,
-  ],
-  exports: [
-    RavenPanToDurationComponent,
-  ],
+  declarations: [RavenPanToDurationComponent],
+  exports: [RavenPanToDurationComponent],
   imports: [
     CommonModule,
     MatAutocompleteModule,

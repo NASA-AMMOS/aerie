@@ -23,13 +23,8 @@ describe('TimeCursorEffects', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [
-        StoreModule.forRoot(timeCursorReducer.reducer),
-      ],
-      providers: [
-        TimeCursorEffects,
-        provideMockActions(() => actions),
-      ],
+      imports: [StoreModule.forRoot(timeCursorReducer.reducer)],
+      providers: [TimeCursorEffects, provideMockActions(() => actions)],
     });
 
     effects = TestBed.get(TimeCursorEffects);

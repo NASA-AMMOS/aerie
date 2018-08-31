@@ -12,14 +12,8 @@ import { NgModule } from '@angular/core';
 import { HBCodeMirrorComponent } from './hb-code-mirror.component';
 
 @NgModule({
-  declarations: [
-    HBCodeMirrorComponent,
-  ],
-  exports: [
-    HBCodeMirrorComponent,
-  ],
-  imports: [
-    CommonModule,
-  ],
+  declarations: [HBCodeMirrorComponent],
+  exports: [HBCodeMirrorComponent],
+  imports: [CommonModule],
 })
 export class HBCodeMirrorModule {}

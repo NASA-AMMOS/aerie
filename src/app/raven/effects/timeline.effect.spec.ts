@@ -22,10 +22,7 @@ describe('TimelineEffects', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [
-        HttpClientModule,
-        StoreModule.forRoot({}),
-      ],
+      imports: [HttpClientModule, StoreModule.forRoot({})],
       providers: [
         HttpClient,
         TimelineEffects,

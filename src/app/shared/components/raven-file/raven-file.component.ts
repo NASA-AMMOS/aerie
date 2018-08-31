@@ -26,14 +26,29 @@ import {
   styleUrls: ['./raven-file.component.css'],
   templateUrl: './raven-file.component.html',
 })
-
 export class RavenFileComponent {
-  @Input() id: string;
-  @Input() source: RavenFileSource;
+  @Input()
+  id: string;
 
-  @Output() action: EventEmitter<RavenSourceActionEvent> = new EventEmitter<RavenSourceActionEvent>();
-  @Output() collapse: EventEmitter<RavenFileSource> = new EventEmitter<RavenFileSource>();
-  @Output() expand: EventEmitter<RavenFileSource> = new EventEmitter<RavenFileSource>();
-  @Output() openMetadata: EventEmitter<RavenFileSource> = new EventEmitter<RavenFileSource>();
-  @Output() select: EventEmitter<RavenFileSource> = new EventEmitter<RavenFileSource>();
+  @Input()
+  source: RavenFileSource;
+
+  @Output()
+  action: EventEmitter<RavenSourceActionEvent> = new EventEmitter<
+    RavenSourceActionEvent
+  >();
+
+  @Output()
+  collapse: EventEmitter<RavenFileSource> = new EventEmitter<RavenFileSource>();
+
+  @Output()
+  expand: EventEmitter<RavenFileSource> = new EventEmitter<RavenFileSource>();
+
+  @Output()
+  openMetadata: EventEmitter<RavenFileSource> = new EventEmitter<
+    RavenFileSource
+  >();
+
+  @Output()
+  select: EventEmitter<RavenFileSource> = new EventEmitter<RavenFileSource>();
 }

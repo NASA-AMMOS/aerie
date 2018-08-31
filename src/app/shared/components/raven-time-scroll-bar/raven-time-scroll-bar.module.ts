@@ -11,11 +11,7 @@ import { NgModule } from '@angular/core';
 import { RavenTimeScrollBarComponent } from './raven-time-scroll-bar.component';
 
 @NgModule({
-  declarations: [
-    RavenTimeScrollBarComponent,
-  ],
-  exports: [
-    RavenTimeScrollBarComponent,
-  ],
+  declarations: [RavenTimeScrollBarComponent],
+  exports: [RavenTimeScrollBarComponent],
 })
 export class RavenTimeScrollBarModule {}

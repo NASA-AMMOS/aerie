@@ -20,12 +20,8 @@ import { RavenGraphableModule } from '../raven-graphable/raven-graphable.module'
 import { RavenTreeComponent } from './raven-tree.component';
 
 @NgModule({
-  declarations: [
-    RavenTreeComponent,
-  ],
-  exports: [
-    RavenTreeComponent,
-  ],
+  declarations: [RavenTreeComponent],
+  exports: [RavenTreeComponent],
   imports: [
     CommonModule,
     RavenCategoryModule,

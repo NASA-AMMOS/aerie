@@ -38,7 +38,11 @@ export class RouterEffects {
       if (shareableName) {
         // If there is an `s` query parameter then use it to load a shareable link.
         return [
-          ...this.loadShareableLink(state.config, state.raven.layout, shareableName),
+          ...this.loadShareableLink(
+            state.config,
+            state.raven.layout,
+            shareableName
+          ),
         ];
       } else {
         // Otherwise use other query parameters to load an app layout and/or state.
@@ -47,12 +51,12 @@ export class RouterEffects {
           ...this.loadState(state.config, statePath),
         ];
       }
-    }),
+    })
   );
 
   constructor(
     private actions$: Actions,
-    private store$: Store<RavenAppState>,
+    private store$: Store<RavenAppState>
   ) {}
 
   /**
@@ -62,9 +66,13 @@ export class RouterEffects {
     const actions: Action[] = [];
 
     if (layout === 'minimal') {
-      actions.push(new layoutActions.SetMode('minimal', true, false, false, true));
+      actions.push(
+        new layoutActions.SetMode('minimal', true, false, false, true)
+      );
     } else if (layout === 'default') {
-      actions.push(new layoutActions.SetMode('default', true, true, false, true));
+      actions.push(
+        new layoutActions.SetMode('default', true, true, false, true)
+      );
     } else {
       actions.push(
         new layoutActions.SetMode(
@@ -72,8 +80,8 @@ export class RouterEffects {
           layoutState.showDetailsPanel,
           layoutState.showLeftPanel,
           layoutState.showRightPanel,
-          layoutState.showSouthBandsPanel,
-        ),
+          layoutState.showSouthBandsPanel
+        )
       );
     }
 
@@ -86,8 +94,14 @@ export class RouterEffects {
    * and apply the state using the `statePath`, which is composed of the `shareableLinkStatesUrl` from ravenConfig and
    * the user given `shareableName`.
    */
-  loadShareableLink(configState: ConfigState, layoutState: LayoutState, shareableName: string): Action[] {
-    const statePath = `/${configState.raven.shareableLinkStatesUrl}/${shareableName}`;
+  loadShareableLink(
+    configState: ConfigState,
+    layoutState: LayoutState,
+    shareableName: string
+  ): Action[] {
+    const statePath = `/${
+      configState.raven.shareableLinkStatesUrl
+    }/${shareableName}`;
 
     return [
       ...this.loadLayout(layoutState, 'minimal'),
@@ -102,7 +116,12 @@ export class RouterEffects {
   loadState(configState: ConfigState, statePath: string): Action[] {
     if (statePath) {
       return [
-        new sourceExplorerActions.ApplyState(`${configState.app.baseUrl}/${configState.mpsServer.apiUrl}${statePath}`, statePath),
+        new sourceExplorerActions.ApplyState(
+          `${configState.app.baseUrl}/${
+            configState.mpsServer.apiUrl
+          }${statePath}`,
+          statePath
+        ),
       ];
     }
     return [];

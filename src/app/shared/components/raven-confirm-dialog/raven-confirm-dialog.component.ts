@@ -7,15 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Component,
-  Inject,
-} from '@angular/core';
+import { Component, Inject } from '@angular/core';
 
-import {
-  MAT_DIALOG_DATA,
-  MatDialogRef,
-} from '@angular/material';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
 @Component({
   selector: 'raven-confirm-dialog',
@@ -25,7 +19,7 @@ import {
 export class RavenConfirmDialogComponent {
   constructor(
     public dialogRef: MatDialogRef<RavenConfirmDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    @Inject(MAT_DIALOG_DATA) public data: any
   ) {}
 
   onCancel() {

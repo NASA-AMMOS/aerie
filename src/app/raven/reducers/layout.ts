@@ -61,7 +61,10 @@ export const initialState: LayoutState = {
  * Reducer.
  * If a case takes more than one line then it should be in it's own helper function.
  */
-export function reducer(state: LayoutState = initialState, action: LayoutAction): LayoutState {
+export function reducer(
+  state: LayoutState = initialState,
+  action: LayoutAction
+): LayoutState {
   switch (action.type) {
     case LayoutActionTypes.SetMode:
       return setMode(state, action);
@@ -107,10 +110,16 @@ export function setMode(state: LayoutState, action: SetMode): LayoutState {
 /**
  * Reduction Helper. Called when reducing the 'ToggleApplyLayoutDrawer' action.
  */
-export function toggleApplyLayoutDrawer(state: LayoutState, action: ToggleApplyLayoutDrawer): LayoutState {
+export function toggleApplyLayoutDrawer(
+  state: LayoutState,
+  action: ToggleApplyLayoutDrawer
+): LayoutState {
   return {
     ...state,
-    showApplyLayoutDrawer: action.opened !== undefined ? action.opened : !state.showApplyLayoutDrawer,
+    showApplyLayoutDrawer:
+      action.opened !== undefined
+        ? action.opened
+        : !state.showApplyLayoutDrawer,
     showEpochsDrawer: false,
     showGlobalSettingsDrawer: false,
     showOutputDrawer: false,
@@ -121,11 +130,15 @@ export function toggleApplyLayoutDrawer(state: LayoutState, action: ToggleApplyL
 /**
  * Reduction Helper. Called when reducing the 'ToggleEpochsDrawer' action.
  */
-export function toggleEpochsDrawer(state: LayoutState, action: ToggleEpochsDrawer): LayoutState {
+export function toggleEpochsDrawer(
+  state: LayoutState,
+  action: ToggleEpochsDrawer
+): LayoutState {
   return {
     ...state,
     showApplyLayoutDrawer: false,
-    showEpochsDrawer: action.opened !== undefined ? action.opened : !state.showEpochsDrawer,
+    showEpochsDrawer:
+      action.opened !== undefined ? action.opened : !state.showEpochsDrawer,
     showGlobalSettingsDrawer: false,
     showOutputDrawer: false,
     showTimeCursorDrawer: false,
@@ -135,12 +148,18 @@ export function toggleEpochsDrawer(state: LayoutState, action: ToggleEpochsDrawe
 /**
  * Reduction Helper. Called when reducing the 'ToggleGlobalSettingsDrawer' action.
  */
-export function toggleGlobalSettingsDrawer(state: LayoutState, action: ToggleGlobalSettingsDrawer): LayoutState {
+export function toggleGlobalSettingsDrawer(
+  state: LayoutState,
+  action: ToggleGlobalSettingsDrawer
+): LayoutState {
   return {
     ...state,
     showApplyLayoutDrawer: false,
     showEpochsDrawer: false,
-    showGlobalSettingsDrawer: action.opened !== undefined ? action.opened : !state.showGlobalSettingsDrawer,
+    showGlobalSettingsDrawer:
+      action.opened !== undefined
+        ? action.opened
+        : !state.showGlobalSettingsDrawer,
     showOutputDrawer: false,
   };
 }
@@ -148,13 +167,17 @@ export function toggleGlobalSettingsDrawer(state: LayoutState, action: ToggleGlo
 /**
  * Reduction Helper. Called when reducing the 'ToggleOutputDrawer' action.
  */
-export function toggleOutputDrawer(state: LayoutState, action: ToggleOutputDrawer): LayoutState {
+export function toggleOutputDrawer(
+  state: LayoutState,
+  action: ToggleOutputDrawer
+): LayoutState {
   return {
     ...state,
     showApplyLayoutDrawer: false,
     showEpochsDrawer: false,
     showGlobalSettingsDrawer: false,
-    showOutputDrawer: action.opened !== undefined ? action.opened : !state.showOutputDrawer,
+    showOutputDrawer:
+      action.opened !== undefined ? action.opened : !state.showOutputDrawer,
     showTimeCursorDrawer: false,
   };
 }
@@ -162,13 +185,17 @@ export function toggleOutputDrawer(state: LayoutState, action: ToggleOutputDrawe
 /**
  * Reduction Helper. Called when reducing the 'ToggleTimeCursorDrawer' action.
  */
-export function toggleTimeCursorDrawer(state: LayoutState, action: ToggleTimeCursorDrawer): LayoutState {
+export function toggleTimeCursorDrawer(
+  state: LayoutState,
+  action: ToggleTimeCursorDrawer
+): LayoutState {
   return {
     ...state,
     showApplyLayoutDrawer: false,
     showEpochsDrawer: false,
     showGlobalSettingsDrawer: false,
-    showTimeCursorDrawer: action.opened !== undefined ? action.opened : !state.showTimeCursorDrawer,
+    showTimeCursorDrawer:
+      action.opened !== undefined ? action.opened : !state.showTimeCursorDrawer,
   };
 }
 
@@ -178,7 +205,7 @@ export function toggleTimeCursorDrawer(state: LayoutState, action: ToggleTimeCur
 const featureSelector = createFeatureSelector<State>('raven');
 export const getLayoutState = createSelector(
   featureSelector,
-  (state: State): LayoutState => state.layout,
+  (state: State): LayoutState => state.layout
 );
 
 /**
@@ -192,4 +219,7 @@ export const getLayoutState = createSelector(
  * only recompute when arguments change. The created selectors can also be composed
  * together to select different pieces of state.
  */
-export const getMode = createSelector(getLayoutState, (state: LayoutState) => state.mode);
+export const getMode = createSelector(
+  getLayoutState,
+  (state: LayoutState) => state.mode
+);

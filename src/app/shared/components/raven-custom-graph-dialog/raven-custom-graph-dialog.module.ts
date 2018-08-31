@@ -18,12 +18,8 @@ import {
 } from '@angular/material';
 
 @NgModule({
-  declarations: [
-    RavenCustomGraphDialogComponent,
-  ],
-  exports: [
-    RavenCustomGraphDialogComponent,
-  ],
+  declarations: [RavenCustomGraphDialogComponent],
+  exports: [RavenCustomGraphDialogComponent],
   imports: [
     MatDialogModule,
     MatFormFieldModule,

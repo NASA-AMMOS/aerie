@@ -28,7 +28,7 @@ export class LayoutEffects {
     switchMap(() => {
       setTimeout(() => dispatchEvent(new Event('resize')));
       return [];
-    }),
+    })
   );
 
   /**
@@ -45,11 +45,11 @@ export class LayoutEffects {
       } else {
         return new layoutActions.UpdateLayout({ timelinePanelSize: 75 });
       }
-    }),
+    })
   );
 
   constructor(
     private actions$: Actions,
-    private store$: Store<RavenAppState>,
+    private store$: Store<RavenAppState>
   ) {}
 }

@@ -1,9 +1,9 @@
 :host {
   display: grid;
   grid-template-areas:
-    "header header"
-    "aside main"
-    "footer footer";
+    'header header'
+    'aside main'
+    'footer footer';
   grid-gap: 1rem;
   grid-template-columns: 300px 1fr;
   grid-template-rows: 50px 1fr 50px;

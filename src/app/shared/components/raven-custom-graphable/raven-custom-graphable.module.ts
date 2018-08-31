@@ -13,16 +13,8 @@ import { MatButtonModule, MatIconModule } from '@angular/material';
 import { RavenCustomGraphableComponent } from './raven-custom-graphable.component';
 
 @NgModule({
-  declarations: [
-    RavenCustomGraphableComponent,
-  ],
-  exports: [
-    RavenCustomGraphableComponent,
-  ],
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatIconModule,
-  ],
+  declarations: [RavenCustomGraphableComponent],
+  exports: [RavenCustomGraphableComponent],
+  imports: [CommonModule, MatButtonModule, MatIconModule],
 })
 export class RavenCustomGraphableModule {}

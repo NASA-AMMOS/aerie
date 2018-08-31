@@ -55,7 +55,7 @@ export class AddBand implements Action {
   constructor(
     public sourceId: string | null,
     public band: RavenCompositeBand,
-    public additionalSubBandProps?: StringTMap<BaseType>,
+    public additionalSubBandProps?: StringTMap<BaseType>
   ) {}
 }
 
@@ -66,7 +66,7 @@ export class AddPointsToSubBand implements Action {
     public sourceId: string,
     public bandId: string,
     public subBandId: string,
-    public points: any[],
+    public points: any[]
   ) {}
 }
 
@@ -76,7 +76,7 @@ export class AddSubBand implements Action {
   constructor(
     public sourceId: string,
     public bandId: string,
-    public subBand: RavenSubBand,
+    public subBand: RavenSubBand
   ) {}
 }
 
@@ -147,7 +147,11 @@ export class SelectBand implements Action {
 export class SelectPoint implements Action {
   readonly type = TimelineActionTypes.SelectPoint;
 
-  constructor(public bandId: string, public subBandId: string, public pointId: string) {}
+  constructor(
+    public bandId: string,
+    public subBandId: string,
+    public pointId: string
+  ) {}
 }
 
 export class SetPointsForSubBand implements Action {
@@ -156,17 +160,14 @@ export class SetPointsForSubBand implements Action {
   constructor(
     public bandId: string,
     public subBandId: string,
-    public points: any[],
+    public points: any[]
   ) {}
 }
 
 export class SourceIdAdd implements Action {
   readonly type = TimelineActionTypes.SourceIdAdd;
 
-  constructor(
-    public sourceId: string,
-    public subBandId: string,
-  ) {}
+  constructor(public sourceId: string, public subBandId: string) {}
 }
 
 export class SortBands implements Action {
@@ -184,7 +185,11 @@ export class UpdateBand implements Action {
 export class UpdateSubBand implements Action {
   readonly type = TimelineActionTypes.UpdateSubBand;
 
-  constructor(public bandId: string, public subBandId: string, public update: StringTMap<BaseType>) {}
+  constructor(
+    public bandId: string,
+    public subBandId: string,
+    public update: StringTMap<BaseType>
+  ) {}
 }
 
 export class UpdateTimeline implements Action {
@@ -209,28 +214,28 @@ export class ZoomOutViewTimeRange implements Action {
 
 // Union type of all actions.
 export type TimelineAction =
-  AddBand |
-  AddPointsToSubBand |
-  AddSubBand |
-  PanLeftViewTimeRange |
-  PanRightViewTimeRange |
-  PinAdd |
-  PinRemove |
-  PinRename |
-  RemoveAllPointsInSubBandWithParentSource |
-  RemoveBandsOrPointsForSource |
-  RemoveBandsWithNoPoints |
-  RemoveSourceIdFromSubBands |
-  RemoveSubBand |
-  ResetViewTimeRange |
-  SelectBand |
-  SelectPoint |
-  SetPointsForSubBand |
-  SortBands |
-  SourceIdAdd |
-  UpdateBand |
-  UpdateSubBand |
-  UpdateTimeline |
-  UpdateViewTimeRange |
-  ZoomInViewTimeRange |
-  ZoomOutViewTimeRange;
+  | AddBand
+  | AddPointsToSubBand
+  | AddSubBand
+  | PanLeftViewTimeRange
+  | PanRightViewTimeRange
+  | PinAdd
+  | PinRemove
+  | PinRename
+  | RemoveAllPointsInSubBandWithParentSource
+  | RemoveBandsOrPointsForSource
+  | RemoveBandsWithNoPoints
+  | RemoveSourceIdFromSubBands
+  | RemoveSubBand
+  | ResetViewTimeRange
+  | SelectBand
+  | SelectPoint
+  | SetPointsForSubBand
+  | SortBands
+  | SourceIdAdd
+  | UpdateBand
+  | UpdateSubBand
+  | UpdateTimeline
+  | UpdateViewTimeRange
+  | ZoomInViewTimeRange
+  | ZoomOutViewTimeRange;

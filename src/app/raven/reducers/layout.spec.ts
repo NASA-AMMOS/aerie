@@ -7,11 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  initialState,
-  LayoutState,
-  reducer,
-} from './layout';
+import { initialState, LayoutState, reducer } from './layout';
 
 import {
   Resize,
@@ -44,7 +40,10 @@ describe('layout reducer', () => {
   });
 
   it('handle SetMode', () => {
-    layoutState = reducer(layoutState, new SetMode('custom', false, false, true, false));
+    layoutState = reducer(
+      layoutState,
+      new SetMode('custom', false, false, true, false)
+    );
     expect(layoutState).toEqual({
       ...initialState,
       mode: 'custom',
@@ -57,7 +56,10 @@ describe('layout reducer', () => {
 
   it('handle ToggleDetailsPanel', () => {
     layoutState = reducer(layoutState, new ToggleDetailsPanel());
-    expect(layoutState).toEqual({ ...initialState, showDetailsPanel: !initialState.showDetailsPanel });
+    expect(layoutState).toEqual({
+      ...initialState,
+      showDetailsPanel: !initialState.showDetailsPanel,
+    });
   });
 
   it('handle ToggleEpochsDrawer', () => {
@@ -80,21 +82,33 @@ describe('layout reducer', () => {
 
   it('handle ToggleLeftPanel', () => {
     layoutState = reducer(layoutState, new ToggleLeftPanel());
-    expect(layoutState).toEqual({ ...initialState, showLeftPanel: !initialState.showLeftPanel });
+    expect(layoutState).toEqual({
+      ...initialState,
+      showLeftPanel: !initialState.showLeftPanel,
+    });
   });
 
   it('handle ToggleRightPanel', () => {
     layoutState = reducer(layoutState, new ToggleRightPanel());
-    expect(layoutState).toEqual({ ...initialState, showRightPanel: !initialState.showRightPanel });
+    expect(layoutState).toEqual({
+      ...initialState,
+      showRightPanel: !initialState.showRightPanel,
+    });
   });
 
   it('handle ToggleSouthBandsPanel', () => {
     layoutState = reducer(layoutState, new ToggleSouthBandsPanel());
-    expect(layoutState).toEqual({ ...initialState, showSouthBandsPanel: !initialState.showSouthBandsPanel });
+    expect(layoutState).toEqual({
+      ...initialState,
+      showSouthBandsPanel: !initialState.showSouthBandsPanel,
+    });
   });
 
   it('handle UpdateLayout', () => {
-    layoutState = reducer(layoutState, new UpdateLayout({ timelinePanelSize: 50 }));
+    layoutState = reducer(
+      layoutState,
+      new UpdateLayout({ timelinePanelSize: 50 })
+    );
     expect(layoutState).toEqual({ ...initialState, timelinePanelSize: 50 });
   });
 });

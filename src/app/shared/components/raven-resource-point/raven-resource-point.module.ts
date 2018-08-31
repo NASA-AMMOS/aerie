@@ -9,16 +9,15 @@
 
 import { NgModule } from '@angular/core';
 import { MatCardModule } from '@angular/material';
-import { RavenResourcePointValuePipeModule, RavenTimestampPipeModule } from '../../pipes';
+import {
+  RavenResourcePointValuePipeModule,
+  RavenTimestampPipeModule,
+} from '../../pipes';
 import { RavenResourcePointComponent } from './raven-resource-point.component';
 
 @NgModule({
-  declarations: [
-    RavenResourcePointComponent,
-  ],
-  exports: [
-    RavenResourcePointComponent,
-  ],
+  declarations: [RavenResourcePointComponent],
+  exports: [RavenResourcePointComponent],
   imports: [
     MatCardModule,
     RavenResourcePointValuePipeModule,

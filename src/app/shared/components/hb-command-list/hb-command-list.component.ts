@@ -24,12 +24,11 @@ import { HBCommand } from '../../models/hb-command';
   templateUrl: './hb-command-list.component.html',
 })
 export class HBCommandListComponent {
+  @Input()
+  commands: HBCommand[] | null;
 
-  @Input() commands: HBCommand[] | null;
-
-  @Output() selectedCommandChanged: EventEmitter<string> = new EventEmitter<
-    string
-  >();
+  @Output()
+  selectedCommandChanged: EventEmitter<string> = new EventEmitter<string>();
 
   /**
    * Event. Called when a command is selected.
@@ -38,5 +37,4 @@ export class HBCommandListComponent {
     console.log('HBCommandListComponent::onSelection', command);
     this.selectedCommandChanged.emit(command.name);
   }
-
 }

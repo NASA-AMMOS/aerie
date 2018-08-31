@@ -20,12 +20,8 @@ import {
 } from '@angular/material';
 
 @NgModule({
-  declarations: [
-    RavenLayoutApplyComponent,
-  ],
-  exports: [
-    RavenLayoutApplyComponent,
-  ],
+  declarations: [RavenLayoutApplyComponent],
+  exports: [RavenLayoutApplyComponent],
   imports: [
     CommonModule,
     MatButtonModule,

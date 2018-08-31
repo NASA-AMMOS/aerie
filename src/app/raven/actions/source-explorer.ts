@@ -65,13 +65,21 @@ export enum SourceExplorerActionTypes {
 export class AddCustomFilter implements Action {
   readonly type = SourceExplorerActionTypes.AddCustomFilter;
 
-  constructor(public sourceId: string, public label: string, public customFilter: string) {}
+  constructor(
+    public sourceId: string,
+    public label: string,
+    public customFilter: string
+  ) {}
 }
 
 export class AddCustomGraph implements Action {
   readonly type = SourceExplorerActionTypes.AddCustomGraph;
 
-  constructor(public sourceId: string, public label: string, public customFilter: string) {}
+  constructor(
+    public sourceId: string,
+    public label: string,
+    public customFilter: string
+  ) {}
 }
 
 export class AddFilter implements Action {
@@ -129,7 +137,11 @@ export class FetchNewSources implements Action {
 export class GraphCustomSource implements Action {
   readonly type = SourceExplorerActionTypes.GraphCustomSource;
 
-  constructor(public sourceId: string, public label: string, public filter: string) {}
+  constructor(
+    public sourceId: string,
+    public label: string,
+    public filter: string
+  ) {}
 }
 
 export class ImportFile implements Action {
@@ -237,7 +249,11 @@ export class SetCustomFilter implements Action {
 export class SetCustomFilterSubBandId implements Action {
   readonly type = SourceExplorerActionTypes.SetCustomFilterSubBandId;
 
-  constructor(public sourceId: string, public label: string, public subBandId: string) {}
+  constructor(
+    public sourceId: string,
+    public label: string,
+    public subBandId: string
+  ) {}
 }
 
 export class SubBandIdAdd implements Action {
@@ -278,40 +294,40 @@ export class UpdateTreeSource implements Action {
 
 // Union type of all actions.
 export type SourceExplorerAction =
-  AddCustomFilter |
-  AddCustomGraph |
-  AddFilter |
-  AddGraphableFilter |
-  ApplyLayout |
-  ApplyState |
-  CloseEvent |
-  CollapseEvent |
-  ExpandEvent |
-  FetchInitialSources |
-  FetchNewSources |
-  GraphCustomSource |
-  ImportFile |
-  ImportFileFailure |
-  ImportFileSuccess |
-  LoadErrorsAdd |
-  LoadErrorsDisplay |
-  NewSources |
-  OpenEvent |
-  PinAdd |
-  PinRemove |
-  PinRename |
-  RemoveCustomFilter |
-  RemoveFilter |
-  RemoveGraphableFilter |
-  RemoveSource |
-  RemoveSourceEvent |
-  SaveState |
-  SelectSource |
-  SetCustomFilter |
-  SetCustomFilterSubBandId |
-  SubBandIdAdd |
-  SubBandIdRemove |
-  UpdateGraphAfterFilterAdd |
-  UpdateGraphAfterFilterRemove |
-  UpdateSourceExplorer |
-  UpdateTreeSource;
+  | AddCustomFilter
+  | AddCustomGraph
+  | AddFilter
+  | AddGraphableFilter
+  | ApplyLayout
+  | ApplyState
+  | CloseEvent
+  | CollapseEvent
+  | ExpandEvent
+  | FetchInitialSources
+  | FetchNewSources
+  | GraphCustomSource
+  | ImportFile
+  | ImportFileFailure
+  | ImportFileSuccess
+  | LoadErrorsAdd
+  | LoadErrorsDisplay
+  | NewSources
+  | OpenEvent
+  | PinAdd
+  | PinRemove
+  | PinRename
+  | RemoveCustomFilter
+  | RemoveFilter
+  | RemoveGraphableFilter
+  | RemoveSource
+  | RemoveSourceEvent
+  | SaveState
+  | SelectSource
+  | SetCustomFilter
+  | SetCustomFilterSubBandId
+  | SubBandIdAdd
+  | SubBandIdRemove
+  | UpdateGraphAfterFilterAdd
+  | UpdateGraphAfterFilterRemove
+  | UpdateSourceExplorer
+  | UpdateTreeSource;

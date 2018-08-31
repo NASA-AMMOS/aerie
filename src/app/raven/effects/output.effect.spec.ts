@@ -22,15 +22,8 @@ describe('OutputEffects', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [
-        HttpClientModule,
-        StoreModule.forRoot({}),
-      ],
-      providers: [
-        HttpClient,
-        OutputEffects,
-        provideMockActions(() => actions),
-      ],
+      imports: [HttpClientModule, StoreModule.forRoot({})],
+      providers: [HttpClient, OutputEffects, provideMockActions(() => actions)],
     });
 
     effects = TestBed.get(OutputEffects);

@@ -22,19 +22,18 @@ import { metaReducers, reducers } from './app-store';
 import { AppComponent } from './app.component';
 
 @NgModule({
-  bootstrap: [
-    AppComponent,
-  ],
-  declarations: [
-    AppComponent,
-  ],
+  bootstrap: [AppComponent],
+  declarations: [AppComponent],
   imports: [
     BrowserAnimationsModule,
     AppRoutingModule,
     EffectsModule.forRoot([]),
     OverlayModule,
     SortablejsModule.forRoot({}),
-    StoreDevtoolsModule.instrument({ logOnly: environment.production, maxAge: 10 }),
+    StoreDevtoolsModule.instrument({
+      logOnly: environment.production,
+      maxAge: 10,
+    }),
     StoreModule.forRoot(reducers, { metaReducers }),
     StoreRouterConnectingModule.forRoot({ stateKey: 'router' }),
     ToastrModule.forRoot(),

@@ -21,13 +21,14 @@ export class ToastEffects {
   showToast$: Observable<Action> = this.actions$.pipe(
     ofType<ShowToast>(ToastActionTypes.ShowToast),
     mergeMap(action => {
-      this.toastr[action.toastType](action.message, action.title, action.config);
+      this.toastr[action.toastType](
+        action.message,
+        action.title,
+        action.config
+      );
       return [];
-    }),
+    })
   );
 
-  constructor(
-    private actions$: Actions,
-    private toastr: ToastrService,
-  ) {}
+  constructor(private actions$: Actions, private toastr: ToastrService) {}
 }

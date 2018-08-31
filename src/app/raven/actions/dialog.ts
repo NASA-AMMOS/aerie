@@ -36,7 +36,7 @@ export class OpenConfirmDialog implements Action {
   constructor(
     public cancelText: string,
     public message: string,
-    public width: string,
+    public width: string
   ) {}
 }
 
@@ -76,7 +76,7 @@ export class OpenPinDialog implements Action {
   constructor(
     public pinAction: string,
     public source: RavenSource,
-    public width: string,
+    public width: string
   ) {}
 }
 
@@ -100,12 +100,12 @@ export class OpenStateSaveDialog implements Action {
 
 // Union type of all actions.
 export type DialogAction =
-  OpenConfirmDialog |
-  OpenCustomFilterDialog |
-  OpenCustomGraphDialog |
-  OpenDeleteDialog |
-  OpenFileImportDialog |
-  OpenPinDialog |
-  OpenShareableLinkDialog |
-  OpenStateApplyDialog |
-  OpenStateSaveDialog;
+  | OpenConfirmDialog
+  | OpenCustomFilterDialog
+  | OpenCustomGraphDialog
+  | OpenDeleteDialog
+  | OpenFileImportDialog
+  | OpenPinDialog
+  | OpenShareableLinkDialog
+  | OpenStateApplyDialog
+  | OpenStateSaveDialog;

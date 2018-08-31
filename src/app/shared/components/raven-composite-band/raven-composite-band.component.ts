@@ -36,37 +36,86 @@ import { colorHexToRgbArray } from '../../util/color';
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'raven-composite-band',
-  styles: [`
-    :host {
-      display: block;
-    }
-  `],
+  styles: [
+    `
+      :host {
+        display: block;
+      }
+    `,
+  ],
   templateUrl: './raven-composite-band.component.html',
 })
-export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, OnInit {
-  @Input() compositeAutoScale = false;
-  @Input() compositeLogTicks = false;
-  @Input() compositeScientificNotation = false;
-  @Input() compositeYAxisLabel = false;
-  @Input() cursorColor = '#ff0000';
-  @Input() cursorTime: number | null = null;
-  @Input() cursorWidth = 1;
-  @Input() dayCode = '';
-  @Input() earthSecToEpochSec = 1;
-  @Input() epoch: RavenEpoch | null = null;
-  @Input() height = 100;
-  @Input() heightPadding = 0;
-  @Input() id = '';
-  @Input() labelFontSize = 9;
-  @Input() labelWidth = 150;
-  @Input() maxTimeRange: RavenTimeRange = { end: 0, start: 0 };
-  @Input() selectedPoint: RavenPoint | null = null;
-  @Input() showTooltip = true;
-  @Input() subBands: RavenSubBand[] = [];
-  @Input() viewTimeRange: RavenTimeRange = { end: 0, start: 0 };
+export class RavenCompositeBandComponent
+  implements AfterViewInit, OnChanges, OnInit {
+  @Input()
+  compositeAutoScale = false;
 
-  @Output() bandLeftClick: EventEmitter<RavenBandLeftClick> = new EventEmitter<RavenBandLeftClick>();
-  @Output() updateViewTimeRange: EventEmitter<RavenTimeRange> = new EventEmitter<RavenTimeRange>();
+  @Input()
+  compositeLogTicks = false;
+
+  @Input()
+  compositeScientificNotation = false;
+
+  @Input()
+  compositeYAxisLabel = false;
+
+  @Input()
+  cursorColor = '#ff0000';
+
+  @Input()
+  cursorTime: number | null = null;
+
+  @Input()
+  cursorWidth = 1;
+
+  @Input()
+  dayCode = '';
+
+  @Input()
+  earthSecToEpochSec = 1;
+
+  @Input()
+  epoch: RavenEpoch | null = null;
+
+  @Input()
+  height = 100;
+
+  @Input()
+  heightPadding = 0;
+
+  @Input()
+  id = '';
+
+  @Input()
+  labelFontSize = 9;
+
+  @Input()
+  labelWidth = 150;
+
+  @Input()
+  maxTimeRange: RavenTimeRange = { end: 0, start: 0 };
+
+  @Input()
+  selectedPoint: RavenPoint | null = null;
+
+  @Input()
+  showTooltip = true;
+
+  @Input()
+  subBands: RavenSubBand[] = [];
+
+  @Input()
+  viewTimeRange: RavenTimeRange = { end: 0, start: 0 };
+
+  @Output()
+  bandLeftClick: EventEmitter<RavenBandLeftClick> = new EventEmitter<
+    RavenBandLeftClick
+  >();
+
+  @Output()
+  updateViewTimeRange: EventEmitter<RavenTimeRange> = new EventEmitter<
+    RavenTimeRange
+  >();
 
   ctlCompositeBand: any;
   ctlTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
@@ -98,13 +147,19 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
     }
 
     // Composite Scientific Notation.
-    if (changes.compositeScientificNotation && !changes.compositeScientificNotation.firstChange) {
+    if (
+      changes.compositeScientificNotation &&
+      !changes.compositeScientificNotation.firstChange
+    ) {
       shouldUpdateTicks = true;
       shouldRedraw = true;
     }
 
     // Composite Y-Axis Label.
-    if (changes.compositeYAxisLabel && !changes.compositeYAxisLabel.firstChange) {
+    if (
+      changes.compositeYAxisLabel &&
+      !changes.compositeYAxisLabel.firstChange
+    ) {
       this.ctlCompositeBand.compositeLabel = this.compositeYAxisLabel;
 
       if (this.compositeYAxisLabel) {
@@ -151,9 +206,14 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
       const previousMaxTimeRange = changes.maxTimeRange.previousValue;
 
       // Make sure we don't redraw or update times unless the times actually changed.
-      if (previousMaxTimeRange.start !== currentMaxTimeRange.start ||
-          previousMaxTimeRange.end !== currentMaxTimeRange.end) {
-        this.ctlTimeAxis.updateTimes(currentMaxTimeRange.start, currentMaxTimeRange.end);
+      if (
+        previousMaxTimeRange.start !== currentMaxTimeRange.start ||
+        previousMaxTimeRange.end !== currentMaxTimeRange.end
+      ) {
+        this.ctlTimeAxis.updateTimes(
+          currentMaxTimeRange.start,
+          currentMaxTimeRange.end
+        );
         shouldRedraw = true;
         shouldUpdateTicks = true;
       }
@@ -183,7 +243,11 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
             oldInterval.color = oldInterval.originalColor;
             shouldRedraw = true;
           }
-        } else if (!newSelectedPoint && oldSelectedPoint && subBand.intervalsById) {
+        } else if (
+          !newSelectedPoint &&
+          oldSelectedPoint &&
+          subBand.intervalsById
+        ) {
           const interval = subBand.intervalsById[oldSelectedPoint.uniqueId];
 
           if (interval) {
@@ -191,7 +255,11 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
             interval.color = interval.originalColor;
             shouldRedraw = true;
           }
-        } else if (newSelectedPoint && !oldSelectedPoint && subBand.intervalsById) {
+        } else if (
+          newSelectedPoint &&
+          !oldSelectedPoint &&
+          subBand.intervalsById
+        ) {
           const interval = subBand.intervalsById[newSelectedPoint.uniqueId];
 
           if (interval) {
@@ -206,7 +274,9 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
 
     // Time Cursor Color.
     if (changes.cursorColor && !changes.cursorColor.firstChange) {
-      this.ctlCompositeBand.decorator.timeCursorColor = colorHexToRgbArray(this.cursorColor);
+      this.ctlCompositeBand.decorator.timeCursorColor = colorHexToRgbArray(
+        this.cursorColor
+      );
       shouldRedraw = true;
     }
 
@@ -228,9 +298,14 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
       const previousViewTimeRange = changes.viewTimeRange.previousValue;
 
       // Make sure we don't redraw or update times unless the times actually changed.
-      if (previousViewTimeRange.start !== currentViewTimeRange.start ||
-          previousViewTimeRange.end !== currentViewTimeRange.end) {
-        this.ctlViewTimeAxis.updateTimes(currentViewTimeRange.start, currentViewTimeRange.end);
+      if (
+        previousViewTimeRange.start !== currentViewTimeRange.start ||
+        previousViewTimeRange.end !== currentViewTimeRange.end
+      ) {
+        this.ctlViewTimeAxis.updateTimes(
+          currentViewTimeRange.start,
+          currentViewTimeRange.end
+        );
         shouldRedraw = true;
         shouldUpdateTicks = true;
       }
@@ -269,10 +344,18 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
     this.ctlCompositeBand.div.appendChild(this.ctlTooltip.div);
 
     this.ctlCompositeBand.decorator.timeCursorWidth = this.cursorWidth;
-    this.ctlCompositeBand.decorator.timeCursorColor = colorHexToRgbArray(this.cursorColor);
+    this.ctlCompositeBand.decorator.timeCursorColor = colorHexToRgbArray(
+      this.cursorColor
+    );
 
-    this.ctlTimeAxis.updateTimes(this.maxTimeRange.start, this.maxTimeRange.end);
-    this.ctlViewTimeAxis.updateTimes(this.viewTimeRange.start, this.viewTimeRange.end);
+    this.ctlTimeAxis.updateTimes(
+      this.maxTimeRange.start,
+      this.maxTimeRange.end
+    );
+    this.ctlViewTimeAxis.updateTimes(
+      this.viewTimeRange.start,
+      this.viewTimeRange.end
+    );
     this.ctlViewTimeAxis.now = this.cursorTime; // Set `now` for the time-cursor so it draws upon initialization.
 
     this.elementRef.nativeElement.appendChild(this.ctlCompositeBand.div);
@@ -288,7 +371,11 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
     let min = null;
     let max = null;
 
-    for (let i = 0, length = this.ctlCompositeBand.bands.length; i < length; ++i) {
+    for (
+      let i = 0, length = this.ctlCompositeBand.bands.length;
+      i < length;
+      ++i
+    ) {
       const band = this.ctlCompositeBand.bands[i];
 
       if (band.type === 'resource') {
@@ -310,7 +397,11 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
     }
 
     // Set minLimit and maxLimit for all resource bands.
-    for (let i = 0, length = this.ctlCompositeBand.bands.length; i < length; ++i) {
+    for (
+      let i = 0, length = this.ctlCompositeBand.bands.length;
+      i < length;
+      ++i
+    ) {
       const band = this.ctlCompositeBand.bands[i];
 
       if (band.type === 'resource') {
@@ -359,9 +450,17 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
    */
   onLeftClick(e: MouseEvent, ctlData: any) {
     if (ctlData.interval) {
-      this.bandLeftClick.emit({ bandId: ctlData.band.id, subBandId: ctlData.interval.subBandId, pointId: ctlData.interval.uniqueId });
+      this.bandLeftClick.emit({
+        bandId: ctlData.band.id,
+        pointId: ctlData.interval.uniqueId,
+        subBandId: ctlData.interval.subBandId,
+      });
     } else {
-      this.bandLeftClick.emit({ bandId: ctlData.band.id, subBandId: null, pointId: null });
+      this.bandLeftClick.emit({
+        bandId: ctlData.band.id,
+        pointId: null,
+        subBandId: null,
+      });
     }
   }
 
@@ -385,8 +484,13 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
    * CTL Event. Called when the view is updated.
    */
   onUpdateView(start: number, end: number) {
-    if (this.viewTimeRange.end !== end || this.viewTimeRange.start !== start &&
-        start !== 0 && end !== 0 && start < end) {
+    if (
+      this.viewTimeRange.end !== end ||
+      (this.viewTimeRange.start !== start &&
+        start !== 0 &&
+        end !== 0 &&
+        start < end)
+    ) {
       this.updateViewTimeRange.emit({ end, start });
     }
   }
@@ -514,7 +618,9 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
    */
   getResourceAutoScale(autoScale: boolean): number {
     const ctlResourceBand = (window as any).ResourceBand;
-    return autoScale ? ctlResourceBand.VISIBLE_INTERVALS : ctlResourceBand.ALL_INTERVALS;
+    return autoScale
+      ? ctlResourceBand.VISIBLE_INTERVALS
+      : ctlResourceBand.ALL_INTERVALS;
   }
 
   /**
@@ -526,7 +632,9 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
     if (this.selectedPoint) {
       for (let i = 0, l = this.ctlCompositeBand.bands.length; i < l; ++i) {
         if (this.ctlCompositeBand.bands[i].intervalsById) {
-          const interval = this.ctlCompositeBand.bands[i].intervalsById[this.selectedPoint.uniqueId];
+          const interval = this.ctlCompositeBand.bands[i].intervalsById[
+            this.selectedPoint.uniqueId
+          ];
 
           if (interval) {
             interval.originalColor = interval.color;
@@ -566,10 +674,17 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
    * Change autoScale back to the original subBand setting.
    */
   resetMinMaxTickValuesForEachSubBands() {
-    for (let i = 0, length = this.ctlCompositeBand.bands.length; i < length; ++i) {
+    for (
+      let i = 0, length = this.ctlCompositeBand.bands.length;
+      i < length;
+      ++i
+    ) {
       const ctlBand = this.ctlCompositeBand.bands[i];
       if (ctlBand.type === 'resource') {
-        const ravenSubBand = bandById(this.subBands, ctlBand.id) as RavenResourceBand;
+        const ravenSubBand = bandById(
+          this.subBands,
+          ctlBand.id
+        ) as RavenResourceBand;
         if (ravenSubBand) {
           ctlBand.autoScale = this.getResourceAutoScale(ravenSubBand.autoScale);
           ctlBand.logTicks = ravenSubBand.logTicks;
@@ -602,7 +717,11 @@ export class RavenCompositeBandComponent implements AfterViewInit, OnChanges, On
    * in all ctl resource bands based on the composite auto scale flag.
    */
   setAutoScaleInResourceSubBands() {
-    for (let i = 0, length = this.ctlCompositeBand.bands.length; i < length; ++i) {
+    for (
+      let i = 0, length = this.ctlCompositeBand.bands.length;
+      i < length;
+      ++i
+    ) {
       const subBand = this.ctlCompositeBand.bands[i];
 
       if (subBand.type === 'resource') {

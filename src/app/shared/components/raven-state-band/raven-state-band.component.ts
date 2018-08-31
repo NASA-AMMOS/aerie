@@ -29,67 +29,147 @@ import { getTooltipText } from '../../util';
   template: ``,
 })
 export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
-  @Input() alignLabel: number;
-  @Input() baselineLabel: number;
-  @Input() borderWidth: number;
-  @Input() ctlTimeAxis: any;
-  @Input() ctlViewTimeAxis: any;
-  @Input() dayCode: string;
-  @Input() earthSecToEpochSec: number;
-  @Input() epoch: RavenEpoch | null;
-  @Input() height: number;
-  @Input() heightPadding: number;
-  @Input() id: string;
-  @Input() label: string;
-  @Input() labelColor: number[];
-  @Input() labelFont: string;
-  @Input() labelFontSize: number;
-  @Input() labelPin: string;
-  @Input() name: string;
-  @Input() points: RavenStatePoint[];
-  @Input() showLabelPin: boolean;
-  @Input() showStateChangeTimes: boolean;
-  @Input() type: string;
+  @Input()
+  alignLabel: number;
 
-  @Output() addSubBand: EventEmitter<any> = new EventEmitter<any>();
-  @Output() removeSubBand: EventEmitter<string> = new EventEmitter<string>();
-  @Output() updateIntervals: EventEmitter<any> = new EventEmitter<any>();
-  @Output() updateSubBand: EventEmitter<any> = new EventEmitter<any>();
+  @Input()
+  baselineLabel: number;
+
+  @Input()
+  borderWidth: number;
+
+  @Input()
+  ctlTimeAxis: any;
+
+  @Input()
+  ctlViewTimeAxis: any;
+
+  @Input()
+  dayCode: string;
+
+  @Input()
+  earthSecToEpochSec: number;
+
+  @Input()
+  epoch: RavenEpoch | null;
+
+  @Input()
+  height: number;
+
+  @Input()
+  heightPadding: number;
+
+  @Input()
+  id: string;
+
+  @Input()
+  label: string;
+
+  @Input()
+  labelColor: number[];
+
+  @Input()
+  labelFont: string;
+
+  @Input()
+  labelFontSize: number;
+
+  @Input()
+  labelPin: string;
+
+  @Input()
+  name: string;
+
+  @Input()
+  points: RavenStatePoint[];
+
+  @Input()
+  showLabelPin: boolean;
+
+  @Input()
+  showStateChangeTimes: boolean;
+
+  @Input()
+  type: string;
+
+  @Output()
+  addSubBand: EventEmitter<any> = new EventEmitter<any>();
+
+  @Output()
+  removeSubBand: EventEmitter<string> = new EventEmitter<string>();
+
+  @Output()
+  updateIntervals: EventEmitter<any> = new EventEmitter<any>();
+
+  @Output()
+  updateSubBand: EventEmitter<any> = new EventEmitter<any>();
 
   ngOnChanges(changes: SimpleChanges) {
     // Align Label.
     if (changes.alignLabel && !changes.alignLabel.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'alignLabel', value: this.alignLabel });
+      this.updateSubBand.emit({
+        prop: 'alignLabel',
+        subBandId: this.id,
+        subObject: 'painter',
+        value: this.alignLabel,
+      });
     }
 
     // Baseline Label.
     if (changes.baselineLabel && !changes.baselineLabel.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'baselineLabel', value: this.baselineLabel });
+      this.updateSubBand.emit({
+        prop: 'baselineLabel',
+        subBandId: this.id,
+        subObject: 'painter',
+        value: this.baselineLabel,
+      });
     }
 
     // Border Width.
     if (changes.borderWidth && !changes.borderWidth.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'borderWidth', value: this.borderWidth });
+      this.updateSubBand.emit({
+        prop: 'borderWidth',
+        subBandId: this.id,
+        subObject: 'painter',
+        value: this.borderWidth,
+      });
     }
 
     // Label.
     if (changes.label && !changes.label.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.label });
+      this.updateSubBand.emit({
+        prop: 'label',
+        subBandId: this.id,
+        value: this.label,
+      });
     }
 
     // Label Color.
     if (changes.labelColor && !changes.labelColor.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'labelColor', value: this.labelColor });
+      this.updateSubBand.emit({
+        prop: 'labelColor',
+        subBandId: this.id,
+        value: this.labelColor,
+      });
     }
 
     // Label Font Size.
     if (changes.labelFontSize && !changes.labelFontSize.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'decorator', prop: 'labelFontSize', value: this.labelFontSize });
+      this.updateSubBand.emit({
+        prop: 'labelFontSize',
+        subBandId: this.id,
+        subObject: 'decorator',
+        value: this.labelFontSize,
+      });
     }
 
     // Label Pin.
     if (changes.labelPin && !changes.labelPin.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.getLabel() });
+      this.updateSubBand.emit({
+        prop: 'label',
+        subBandId: this.id,
+        value: this.getLabel(),
+      });
     }
 
     // Points.
@@ -99,14 +179,34 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
 
     // Show Label Pin.
     if (changes.showLabelPin && !changes.showLabelPin.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.getLabel() });
+      this.updateSubBand.emit({
+        prop: 'label',
+        subBandId: this.id,
+        value: this.getLabel(),
+      });
     }
 
     // Show State Change Times.
-    if (changes.showStateChangeTimes && !changes.showStateChangeTimes.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'showStateChangeTimes', value: this.showStateChangeTimes });
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'heightPadding', value: this.showStateChangeTimes ? 12 : 0 });
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'height', value: this.showStateChangeTimes ? this.height - 12 : this.height });
+    if (
+      changes.showStateChangeTimes &&
+      !changes.showStateChangeTimes.firstChange
+    ) {
+      this.updateSubBand.emit({
+        prop: 'showStateChangeTimes',
+        subBandId: this.id,
+        subObject: 'painter',
+        value: this.showStateChangeTimes,
+      });
+      this.updateSubBand.emit({
+        prop: 'heightPadding',
+        subBandId: this.id,
+        value: this.showStateChangeTimes ? 12 : 0,
+      });
+      this.updateSubBand.emit({
+        prop: 'height',
+        subBandId: this.id,
+        value: this.showStateChangeTimes ? this.height - 12 : this.height,
+      });
     }
   }
 
@@ -146,9 +246,22 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
     // Adding these properties in the `new StateBand` above does not properly initialize these properties for drawing.
     // TODO: Look into how we can remove these emits.
     if (this.showStateChangeTimes) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'showStateChangeTimes', value: true });
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'heightPadding', value: 12 });
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'height', value: this.height - 12 });
+      this.updateSubBand.emit({
+        prop: 'showStateChangeTimes',
+        subBandId: this.id,
+        subObject: 'painter',
+        value: true,
+      });
+      this.updateSubBand.emit({
+        prop: 'heightPadding',
+        subBandId: this.id,
+        value: 12,
+      });
+      this.updateSubBand.emit({
+        prop: 'height',
+        subBandId: this.id,
+        value: this.height - 12,
+      });
     }
   }
 
@@ -213,6 +326,11 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
    * CTL Event. Called when we want to get tooltip text.
    */
   onGetTooltipText(e: Event, obj: any) {
-    return getTooltipText(obj, this.earthSecToEpochSec, this.epoch, this.dayCode);
+    return getTooltipText(
+      obj,
+      this.earthSecToEpochSec,
+      this.epoch,
+      this.dayCode
+    );
   }
 }

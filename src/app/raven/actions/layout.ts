@@ -39,7 +39,7 @@ export class SetMode implements Action {
     public showDetailsPanel: boolean,
     public showLeftPanel: boolean,
     public showRightPanel: boolean,
-    public showSouthBandsPanel: boolean,
+    public showSouthBandsPanel: boolean
   ) {}
 }
 
@@ -97,15 +97,15 @@ export class UpdateLayout implements Action {
 
 // Union type of all actions.
 export type LayoutAction =
-  Resize |
-  SetMode |
-  ToggleApplyLayoutDrawer |
-  ToggleDetailsPanel |
-  ToggleEpochsDrawer |
-  ToggleGlobalSettingsDrawer |
-  ToggleLeftPanel |
-  ToggleOutputDrawer |
-  ToggleRightPanel |
-  ToggleSouthBandsPanel |
-  ToggleTimeCursorDrawer |
-  UpdateLayout;
+  | Resize
+  | SetMode
+  | ToggleApplyLayoutDrawer
+  | ToggleDetailsPanel
+  | ToggleEpochsDrawer
+  | ToggleGlobalSettingsDrawer
+  | ToggleLeftPanel
+  | ToggleOutputDrawer
+  | ToggleRightPanel
+  | ToggleSouthBandsPanel
+  | ToggleTimeCursorDrawer
+  | UpdateLayout;

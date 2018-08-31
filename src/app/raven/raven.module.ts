@@ -82,8 +82,6 @@ import {
     RavenShareableLinkDialogModule,
     RavenStateSaveDialogModule,
   ],
-  providers: [
-    RavenGuard,
-  ],
+  providers: [RavenGuard],
 })
 export class RavenModule {}

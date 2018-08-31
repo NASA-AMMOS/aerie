@@ -7,28 +7,17 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Component,
-  Inject,
-} from '@angular/core';
+import { Component, Inject } from '@angular/core';
 
-import {
-  MAT_DIALOG_DATA,
-  MatDialogRef,
-} from '@angular/material';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
-import {
-  FormControl,
-  FormGroup,
-  Validators,
-} from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'raven-custom-graph-dialog',
   styleUrls: ['./raven-custom-graph-dialog.component.css'],
   templateUrl: './raven-custom-graph-dialog.component.html',
 })
-
 export class RavenCustomGraphDialogComponent {
   filter: FormControl;
   form: FormGroup;
@@ -36,11 +25,11 @@ export class RavenCustomGraphDialogComponent {
 
   constructor(
     public dialogRef: MatDialogRef<RavenCustomGraphDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     this.label = new FormControl('', [
       Validators.required,
-      Validators.pattern('([(a-zA-Z0-9\-\_\.)]*)'),
+      Validators.pattern('([(a-zA-Z0-9-_.)]*)'),
     ]);
     if (data.source.arg === 'engine') {
       this.filter = new FormControl('', [
@@ -49,16 +38,14 @@ export class RavenCustomGraphDialogComponent {
       ]);
     } else {
       this.filter = new FormControl('', [
-        Validators.pattern('[a-zA-Z0-9\-\_\.\*\$]*'),
+        Validators.pattern('[a-zA-Z0-9-_.*$]*'),
         this.validateFilter,
       ]);
     }
-    this.form = new FormGroup(
-      {
-        filter: this.filter,
-        label: this.label,
-      },
-    );
+    this.form = new FormGroup({
+      filter: this.filter,
+      label: this.label,
+    });
   }
 
   /**

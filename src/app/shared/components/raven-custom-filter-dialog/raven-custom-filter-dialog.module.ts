@@ -18,17 +18,8 @@ import {
 } from '@angular/material';
 
 @NgModule({
-  declarations: [
-    RavenCustomFilterDialogComponent,
-  ],
-  exports: [
-    RavenCustomFilterDialogComponent,
-  ],
-  imports: [
-    FormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-  ],
+  declarations: [RavenCustomFilterDialogComponent],
+  exports: [RavenCustomFilterDialogComponent],
+  imports: [FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule],
 })
 export class RavenCustomFilterDialogModule {}

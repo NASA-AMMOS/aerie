@@ -7,7 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { AfterViewInit, ChangeDetectionStrategy, Component } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+} from '@angular/core';
 import { GridOptions } from 'ag-grid';
 import { ICellRendererAngularComp } from 'ag-grid-angular';
 
@@ -17,7 +21,8 @@ import { ICellRendererAngularComp } from 'ag-grid-angular';
   styleUrls: ['./raven-table-detail.component.css'],
   templateUrl: './raven-table-detail.component.html',
 })
-export class RavenTableDetailComponent implements AfterViewInit, ICellRendererAngularComp {
+export class RavenTableDetailComponent
+  implements AfterViewInit, ICellRendererAngularComp {
   public gridOptions: GridOptions;
   public parentRecord: any;
 
@@ -31,7 +36,9 @@ export class RavenTableDetailComponent implements AfterViewInit, ICellRendererAn
 
   ngAfterViewInit() {
     if (this.gridOptions && this.gridOptions.api && this.parentRecord) {
-      this.gridOptions.api.setColumnDefs(this.createColumnDefs(this.parentRecord.type));
+      this.gridOptions.api.setColumnDefs(
+        this.createColumnDefs(this.parentRecord.type)
+      );
       this.gridOptions.api.setRowData(this.parentRecord.rows);
       this.gridOptions.api.sizeColumnsToFit();
     }

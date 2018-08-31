@@ -15,20 +15,14 @@ import { RavenGuard } from './guards';
 
 export const routes: Routes = [
   {
-    canActivate: [
-      RavenGuard,
-    ],
+    canActivate: [RavenGuard],
     component: RavenAppComponent,
     path: '',
   },
 ];
 
 @NgModule({
-  exports: [
-    RouterModule,
-  ],
-  imports: [
-    RouterModule.forChild(routes),
-  ],
+  exports: [RouterModule],
+  imports: [RouterModule.forChild(routes)],
 })
 export class RavenRoutingModule {}

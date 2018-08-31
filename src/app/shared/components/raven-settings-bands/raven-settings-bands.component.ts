@@ -29,22 +29,41 @@ import {
   templateUrl: './raven-settings-bands.component.html',
 })
 export class RavenSettingsBandsComponent {
-  @Input() bandsById: StringTMap<RavenCompositeBand>;
-  @Input() selectedBandId: string;
-  @Input() selectedSubBandId: string;
+  @Input()
+  bandsById: StringTMap<RavenCompositeBand>;
 
-  @Output() deleteSubBand: EventEmitter<RavenSubBand> = new EventEmitter<RavenSubBand>();
-  @Output() updateBand: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
-  @Output() updateBandAndSubBand: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
-  @Output() updateSubBand: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
-  @Output() updateTimeline: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
+  @Input()
+  selectedBandId: string;
+
+  @Input()
+  selectedSubBandId: string;
+
+  @Output()
+  deleteSubBand: EventEmitter<RavenSubBand> = new EventEmitter<RavenSubBand>();
+
+  @Output()
+  updateBand: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
+
+  @Output()
+  updateBandAndSubBand: EventEmitter<RavenUpdate> = new EventEmitter<
+    RavenUpdate
+  >();
+
+  @Output()
+  updateSubBand: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
+
+  @Output()
+  updateTimeline: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
 
   /**
    * Returns true if the selected band contains more than one resource sub-band. False otherwise.
    */
   containsMultipleResourceBands(): boolean {
     const subBands = this.bandsById[this.selectedBandId].subBands;
-    const resourceCount = subBands.reduce((count, subBand) => subBand.type === 'resource' ? count + 1 : count, 0);
+    const resourceCount = subBands.reduce(
+      (count, subBand) => (subBand.type === 'resource' ? count + 1 : count),
+      0
+    );
     return resourceCount > 1;
   }
 

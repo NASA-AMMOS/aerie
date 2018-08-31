@@ -27,7 +27,6 @@ import { HBCommandDictionary } from '../../models/hb-command-dictionary';
   templateUrl: './hb-command-loader.component.html',
 })
 export class HBCommandLoaderComponent {
-
   @Input()
   dictionaries: HBCommandDictionary[] = [];
 

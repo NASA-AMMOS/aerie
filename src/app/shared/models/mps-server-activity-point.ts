@@ -25,7 +25,7 @@ export interface MpsServerActivityPoint {
   'Activity Parameters': MpsServerActivityPointParameter[];
   'Activity Type': string;
   'Keyword Line': string;
-  'Metadata': MpsServerActivityPointMetadata[];
+  Metadata: MpsServerActivityPointMetadata[];
   'Tend Assigned': string;
   'Tstart Assigned': string;
 }

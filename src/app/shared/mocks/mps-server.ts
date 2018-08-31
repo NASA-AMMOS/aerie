@@ -28,7 +28,10 @@ export const commandDictionaryList: HBCommandDictionary[] = [
   },
 ];
 
-export function getCommandList(seed: number = 1, prefix: string = 'TEST'): HBCommand[] {
+export function getCommandList(
+  seed: number = 1,
+  prefix: string = 'TEST'
+): HBCommand[] {
   const list = [];
 
   // MSL has a list of almost 4000 commands.
@@ -58,10 +61,7 @@ export function getCommandList(seed: number = 1, prefix: string = 'TEST'): HBCom
         },
       ],
       processorString: null,
-      restrictedPhases: [
-        'PRE-LAUNCH',
-        'LAUNCH',
-      ],
+      restrictedPhases: ['PRE-LAUNCH', 'LAUNCH'],
     });
   }
   return list;

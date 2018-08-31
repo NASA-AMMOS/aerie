@@ -21,13 +21,8 @@ describe('RouterEffects', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [
-        StoreModule.forRoot({}),
-      ],
-      providers: [
-        RouterEffects,
-        provideMockActions(() => actions),
-      ],
+      imports: [StoreModule.forRoot({})],
+      providers: [RouterEffects, provideMockActions(() => actions)],
     });
 
     effects = TestBed.get(RouterEffects);

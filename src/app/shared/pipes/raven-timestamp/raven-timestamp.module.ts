@@ -9,16 +9,10 @@
 
 import { NgModule } from '@angular/core';
 
-import {
-  RavenTimestampPipe,
-} from './raven-timestamp.pipe';
+import { RavenTimestampPipe } from './raven-timestamp.pipe';
 
 @NgModule({
-  declarations: [
-    RavenTimestampPipe,
-  ],
-  exports: [
-    RavenTimestampPipe,
-  ],
+  declarations: [RavenTimestampPipe],
+  exports: [RavenTimestampPipe],
 })
 export class RavenTimestampPipeModule {}

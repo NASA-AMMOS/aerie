@@ -18,17 +18,8 @@ import {
 } from '@angular/material';
 
 @NgModule({
-  declarations: [
-    RavenFolderComponent,
-  ],
-  exports: [
-    RavenFolderComponent,
-  ],
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule,
-  ],
+  declarations: [RavenFolderComponent],
+  exports: [RavenFolderComponent],
+  imports: [CommonModule, MatButtonModule, MatIconModule, MatMenuModule],
 })
 export class RavenFolderModule {}

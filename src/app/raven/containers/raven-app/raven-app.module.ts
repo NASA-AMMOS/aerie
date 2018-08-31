@@ -22,12 +22,8 @@ import {
 } from '@angular/material';
 
 @NgModule({
-  declarations: [
-    RavenAppComponent,
-  ],
-  exports: [
-    RavenAppComponent,
-  ],
+  declarations: [RavenAppComponent],
+  exports: [RavenAppComponent],
   imports: [
     CommonModule,
     MatButtonModule,

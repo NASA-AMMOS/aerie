@@ -46,11 +46,21 @@ export class OutputEffects {
     map(([, state]) => state.raven),
     exhaustMap(({ output, sourceExplorer }) =>
       concat(
-        ...output.allInOneFile ?
-          this.generateOutputFile(output, sourceExplorer.treeBySourceId, sourceExplorer.customFiltersBySourceId, sourceExplorer.filtersByTarget) :
-          this.generateOutputFiles(output, sourceExplorer.treeBySourceId, sourceExplorer.customFiltersBySourceId, sourceExplorer.filtersByTarget),
-      ),
-    ),
+        ...(output.allInOneFile
+          ? this.generateOutputFile(
+              output,
+              sourceExplorer.treeBySourceId,
+              sourceExplorer.customFiltersBySourceId,
+              sourceExplorer.filtersByTarget
+            )
+          : this.generateOutputFiles(
+              output,
+              sourceExplorer.treeBySourceId,
+              sourceExplorer.customFiltersBySourceId,
+              sourceExplorer.filtersByTarget
+            ))
+      )
+    )
   );
 
   /**
@@ -62,15 +72,19 @@ export class OutputEffects {
     withLatestFrom(this.store$),
     map(([, state]) => state.raven),
     concatMap(({ output }) => {
-      this.writeToFile(output.outputData, output.allInOneFilename, output.outputFormat.toLowerCase());
+      this.writeToFile(
+        output.outputData,
+        output.allInOneFilename,
+        output.outputFormat.toLowerCase()
+      );
       return [];
-    }),
+    })
   );
 
   constructor(
     private actions$: Actions,
     private http: HttpClient,
-    private store$: Store<RavenAppState>,
+    private store$: Store<RavenAppState>
   ) {}
 
   /**
@@ -82,16 +96,23 @@ export class OutputEffects {
     customFilter: RavenCustomFilter | null,
     filtersByTarget: StringTMap<StringTMap<string[]>>,
     source: RavenSource,
-    label: string,
+    label: string
   ) {
-    const outputDataUrl = getOutputDataUrl(treeBySourceId, source, customFilter, filtersByTarget, output.outputFormat, output.decimateOutputData);
+    const outputDataUrl = getOutputDataUrl(
+      treeBySourceId,
+      source,
+      customFilter,
+      filtersByTarget,
+      output.outputFormat,
+      output.decimateOutputData
+    );
 
     if (output.outputFormat === 'CSV') {
       return this.http.get(outputDataUrl, { responseType: 'text' }).pipe(
         switchMap(data => {
           this.writeToFile(data, label, 'csv');
           return [];
-        }),
+        })
       );
     } else {
       return this.http.get(outputDataUrl).pipe(
@@ -99,7 +120,7 @@ export class OutputEffects {
         switchMap(jsonData => {
           this.writeToFile(jsonData, label, 'json');
           return [];
-        }),
+        })
       );
     }
   }
@@ -111,18 +132,29 @@ export class OutputEffects {
     output: fromOutput.OutputState,
     treeBySourceId: StringTMap<RavenSource>,
     customFiltersBySourceId: StringTMap<RavenCustomFilter[]>,
-    filtersByTarget: StringTMap<StringTMap<string[]>>,
+    filtersByTarget: StringTMap<StringTMap<string[]>>
   ) {
     const actions: Observable<Action>[] = [];
     let keepHeader = true;
 
-    actions.push(of(new outputActions.UpdateOutputSettings({ outputData: '' })));
+    actions.push(
+      of(new outputActions.UpdateOutputSettings({ outputData: '' }))
+    );
 
     Object.keys(output.outputSourceIdsByLabel).forEach(label => {
       const sourceIds = output.outputSourceIdsByLabel[label];
       sourceIds.forEach(sourceId => {
         const source = treeBySourceId[sourceId];
-        actions.push(this.getCsvDataForSource(output, treeBySourceId, getCustomFilterForLabel(label, customFiltersBySourceId[sourceId]), filtersByTarget, source, keepHeader));
+        actions.push(
+          this.getCsvDataForSource(
+            output,
+            treeBySourceId,
+            getCustomFilterForLabel(label, customFiltersBySourceId[sourceId]),
+            filtersByTarget,
+            source,
+            keepHeader
+          )
+        );
         keepHeader = false;
       });
     });
@@ -139,7 +171,7 @@ export class OutputEffects {
     output: fromOutput.OutputState,
     treeBySourceId: StringTMap<RavenSource>,
     customFiltersBySourceId: StringTMap<RavenCustomFilter[]>,
-    filtersByTarget: StringTMap<StringTMap<string[]>>,
+    filtersByTarget: StringTMap<StringTMap<string[]>>
   ) {
     const actions: Observable<Action>[] = [];
 
@@ -147,7 +179,16 @@ export class OutputEffects {
       const sourceIds = output.outputSourceIdsByLabel[label];
       sourceIds.forEach(sourceId => {
         const source = treeBySourceId[sourceId];
-        actions.push(this.createFileForSource(output, treeBySourceId, getCustomFilterForLabel(label, customFiltersBySourceId[sourceId]), filtersByTarget, source, label));
+        actions.push(
+          this.createFileForSource(
+            output,
+            treeBySourceId,
+            getCustomFilterForLabel(label, customFiltersBySourceId[sourceId]),
+            filtersByTarget,
+            source,
+            label
+          )
+        );
       });
     });
 
@@ -163,13 +204,20 @@ export class OutputEffects {
     customFilter: RavenCustomFilter | null,
     filtersByTarget: StringTMap<StringTMap<string[]>>,
     source: RavenSource,
-    keepHeader: boolean,
+    keepHeader: boolean
   ) {
-    const outputDataUrl = getOutputDataUrl(treeBySourceId, source, customFilter, filtersByTarget, output.outputFormat, output.decimateOutputData);
+    const outputDataUrl = getOutputDataUrl(
+      treeBySourceId,
+      source,
+      customFilter,
+      filtersByTarget,
+      output.outputFormat,
+      output.decimateOutputData
+    );
 
     return this.http.get(outputDataUrl, { responseType: 'text' }).pipe(
       map(dataWithHeader => this.sanitizeData(dataWithHeader, keepHeader)),
-      switchMap(data => of(new outputActions.AppendData(data))),
+      switchMap(data => of(new outputActions.AppendData(data)))
     );
   }
 
@@ -184,7 +232,9 @@ export class OutputEffects {
    * Helper. Removes header if !keepHeader and ensure data ends with '\n'.
    */
   sanitizeData(dataWithHeader: string, keepHeader: boolean) {
-    const data = keepHeader ? dataWithHeader : this.removeCsvHeader(dataWithHeader);
+    const data = keepHeader
+      ? dataWithHeader
+      : this.removeCsvHeader(dataWithHeader);
     return data.endsWith('\n') ? data : `${data}\n`;
   }
 

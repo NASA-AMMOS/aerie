@@ -17,7 +17,10 @@ describe('MpsServerService', () => {
     });
   });
 
-  it('should be created', inject([MpsServerService], (service: MpsServerService) => {
-    expect(service).toBeTruthy();
-  }));
+  it('should be created', inject(
+    [MpsServerService],
+    (service: MpsServerService) => {
+      expect(service).toBeTruthy();
+    }
+  ));
 });

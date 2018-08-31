@@ -10,8 +10,7 @@ describe('HBCommandListComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       imports: [HBCommandListModule],
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

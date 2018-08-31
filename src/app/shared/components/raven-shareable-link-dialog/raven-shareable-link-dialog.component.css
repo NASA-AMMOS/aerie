@@ -1,6 +1,6 @@
 :host {
   display: block;
-  font-family: Roboto,"Helvetica Neue",sans-serif;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
 }
 
 input {
@@ -16,7 +16,7 @@ label {
 }
 
 .mat-dialog-title {
-  font: 100 20px/20px Roboto,"Helvetica Neue",sans-serif;
+  font: 100 20px/20px Roboto, 'Helvetica Neue', sans-serif;
 }
 
 .actions {

@@ -17,7 +17,6 @@ import { HBCommandDictionary } from '../models/hb-command-dictionary';
   providedIn: 'root',
 })
 export class MpsServerService {
-
   /**
    * Get a list of available command dictionaries and populate an Observable
    * with mock/static data until MPS Server has an endpoint for this.

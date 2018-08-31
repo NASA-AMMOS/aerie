@@ -21,13 +21,8 @@ describe('LayoutEffects', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [
-        StoreModule.forRoot({}),
-      ],
-      providers: [
-        LayoutEffects,
-        provideMockActions(() => actions),
-      ],
+      imports: [StoreModule.forRoot({})],
+      providers: [LayoutEffects, provideMockActions(() => actions)],
     });
 
     effects = TestBed.get(LayoutEffects);

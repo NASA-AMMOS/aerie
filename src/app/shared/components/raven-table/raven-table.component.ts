@@ -23,18 +23,9 @@ import { AgGridNg2 } from 'ag-grid-angular';
 import { pickBy, startsWith } from 'lodash';
 import { RavenTableDetailComponent } from './raven-table-detail.component';
 
-import {
-  RavenActivityPoint,
-  RavenPoint,
-  RavenSubBand,
-} from '../../models';
+import { RavenActivityPoint, RavenPoint, RavenSubBand } from '../../models';
 
-import {
-  dateToTimestring,
-  dhms,
-  timestamp,
-  toDuration,
-} from '../../util';
+import { dateToTimestring, dhms, timestamp, toDuration } from '../../util';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,14 +34,23 @@ import {
   templateUrl: './raven-table.component.html',
 })
 export class RavenTableComponent implements OnChanges {
-  @ViewChild('agGrid') agGrid: AgGridNg2;
+  @ViewChild('agGrid')
+  agGrid: AgGridNg2;
 
-  @Input() points: RavenPoint[];
-  @Input() selectedBandId: string;
-  @Input() selectedSubBand: RavenSubBand;
-  @Input() selectedPoint: RavenPoint;
+  @Input()
+  points: RavenPoint[];
 
-  @Output() updateTableColumns: EventEmitter<any> = new EventEmitter<any>();
+  @Input()
+  selectedBandId: string;
+
+  @Input()
+  selectedSubBand: RavenSubBand;
+
+  @Input()
+  selectedPoint: RavenPoint;
+
+  @Output()
+  updateTableColumns: EventEmitter<any> = new EventEmitter<any>();
 
   columnDefs: any[] = [];
   rowData: any[] = [];
@@ -112,7 +112,9 @@ export class RavenTableComponent implements OnChanges {
 
       // Add activity parameters table only if we have activity parameters.
       if (record.activityParameters && record.activityParameters.length) {
-        children.push([{ type: 'Activity Parameters', rows: record.activityParameters }]);
+        children.push([
+          { type: 'Activity Parameters', rows: record.activityParameters },
+        ]);
       }
 
       // Add metadata table only if we have metadata.
@@ -158,7 +160,10 @@ export class RavenTableComponent implements OnChanges {
         width: 70,
       });
 
-      Object.keys(pickBy(point, prop => prop !== null && prop !== undefined)).forEach(prop => { // `pickBy` removes nulls or undefined props.
+      Object.keys(
+        pickBy(point, prop => prop !== null && prop !== undefined)
+      ).forEach(prop => {
+        // `pickBy` removes nulls or undefined props.
         // Exclude table columns we do not want to show.
         if (
           typeof point[prop] !== 'object' &&
@@ -195,11 +200,13 @@ export class RavenTableComponent implements OnChanges {
       });
     }
 
-    return [{
-      children: this.groupTimeColumns(children),
-      groupId: 'header',
-      headerName: this.selectedSubBand.label,
-    }];
+    return [
+      {
+        children: this.groupTimeColumns(children),
+        groupId: 'header',
+        headerName: this.selectedSubBand.label,
+      },
+    ];
   }
 
   /**
@@ -225,7 +232,10 @@ export class RavenTableComponent implements OnChanges {
       if (point.type !== 'activity') {
         newPoints.push(point);
         ++index;
-      } else if (point.type === 'activity' && !pointsByActivityId[point.uniqueId]) {
+      } else if (
+        point.type === 'activity' &&
+        !pointsByActivityId[point.uniqueId]
+      ) {
         pointsByActivityId[point.uniqueId] = true; // Track that we have now seen this unique activity id so we don't add it again.
         newPoints.push(point);
         ++index;
@@ -247,7 +257,7 @@ export class RavenTableComponent implements OnChanges {
         update: {
           tableColumns: tableColumns || this.getColumnState(),
         },
-      }),
+      })
     );
   }
 
@@ -257,14 +267,18 @@ export class RavenTableComponent implements OnChanges {
    */
   getColumnState() {
     if (this.agGrid) {
-      return [{
-        ...this.agGrid.columnApi.getColumnGroupState()[0],
-        children: this.agGrid.columnApi.getColumnState().map(column => ({
-          ...this.agGrid.columnApi.getColumn(column.colId).getColDef(),
-          ...this.agGrid.api.getSortModel().find(sort => sort.colId === column.colId),
-          ...column,
-        })),
-      }];
+      return [
+        {
+          ...this.agGrid.columnApi.getColumnGroupState()[0],
+          children: this.agGrid.columnApi.getColumnState().map(column => ({
+            ...this.agGrid.columnApi.getColumn(column.colId).getColDef(),
+            ...this.agGrid.api
+              .getSortModel()
+              .find(sort => sort.colId === column.colId),
+            ...column,
+          })),
+        },
+      ];
     }
     return [];
   }
@@ -326,7 +340,10 @@ export class RavenTableComponent implements OnChanges {
     setTimeout(() => {
       if (this.agGrid && this.agGrid.api) {
         this.agGrid.api.forEachNode(node => {
-          if (this.selectedPoint && node.data.uniqueId === this.selectedPoint.uniqueId) {
+          if (
+            this.selectedPoint &&
+            node.data.uniqueId === this.selectedPoint.uniqueId
+          ) {
             this.agGrid.api.ensureIndexVisible(node.rowIndex);
             node.setSelected(true);
           } else {

@@ -29,7 +29,7 @@ export function getState(name: string, state: RavenAppState): any {
           state.raven.sourceExplorer.treeBySourceId,
           subBand.label,
           state.raven.sourceExplorer.customFiltersBySourceId,
-          state.raven.sourceExplorer.filtersByTarget,
+          state.raven.sourceExplorer.filtersByTarget
         ),
       })),
     })),
@@ -58,7 +58,11 @@ export function exportState(state: RavenState): any {
         return {
           ...bandWithNoId,
           subBands: band.subBands.map(subBand => {
-            const { id: subBandId, parentUniqueId, ...subBandWithNoIds } = subBand;
+            const {
+              id: subBandId,
+              parentUniqueId,
+              ...subBandWithNoIds
+            } = subBand;
 
             return {
               ...subBandWithNoIds,

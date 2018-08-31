@@ -7,10 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  RavenActivityPoint,
-  RavenTimeRange,
-} from './index';
+import { RavenActivityPoint, RavenTimeRange } from './index';
 
 export interface RavenActivityBand {
   activityHeight: number;

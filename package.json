@@ -6,6 +6,8 @@
     "build-prod": "ng build --configuration=prod",
     "build-prod-mpsserver": "ng build --configuration=prod-mpsserver --base-href /mpsserver/raven/ --deploy-url /mpsserver/raven/",
     "e2e": "ng e2e",
+    "format:check": "prettier --config ./.prettierrc.json --list-different \"src/{app,environments,assets}/**/*{.ts,.js,.json,.css,.scss}\"",
+    "format:write": "prettier --config ./.prettierrc.json --write \"src/{app,environments,assets}/**/*{.ts,.js,.json,.css,.scss}\"",
     "lint": "ng lint",
     "ng": "ng",
     "prebuild-prod": "npm run version",
@@ -80,11 +82,13 @@
     "karma-jasmine-html-reporter": "^0.2.2",
     "karma-junit-reporter": "^1.2.0",
     "ngrx-store-freeze": "^0.2.3",
+    "prettier": "1.14.2",
     "protractor": "~5.3.2",
     "sonar-scanner": "^3.1.0",
     "sonarjs": "^1.0.0",
     "ts-node": "^5.0.1",
     "tslint": "~5.9.1",
+    "tslint-config-prettier": "^1.15.0",
     "tslint-eslint-rules": "^5.2.0",
     "typescript": "~2.7.2"
   }

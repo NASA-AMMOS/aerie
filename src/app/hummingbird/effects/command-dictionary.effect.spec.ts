@@ -40,9 +40,7 @@ describe('CommandDictionaryEffects', () => {
     ]);
 
     TestBed.configureTestingModule({
-      imports: [
-        StoreModule.forRoot({}),
-      ],
+      imports: [StoreModule.forRoot({})],
       providers: [
         CommandDictionaryEffects,
         provideMockActions(() => actions),
@@ -65,11 +63,11 @@ describe('CommandDictionaryEffects', () => {
     it('should return a FetchCommandDictionaryListSuccess with data on success', () => {
       const action = new FetchCommandDictionaryList();
       const success = new FetchCommandDictionaryListSuccess(
-        mpsServerMocks.commandDictionaryList,
+        mpsServerMocks.commandDictionaryList
       );
 
       mpsServerService.getCommandDictionaryList.and.returnValue(
-        of(mpsServerMocks.commandDictionaryList),
+        of(mpsServerMocks.commandDictionaryList)
       );
 
       actions = hot('--a-', { a: action });
@@ -85,7 +83,7 @@ describe('CommandDictionaryEffects', () => {
 
       // Make the service return a fake error observable
       mpsServerService.getCommandDictionaryList.and.returnValue(
-        cold('--#|', {}, error),
+        cold('--#|', {}, error)
       );
 
       actions = hot('-a--', { a: action });
@@ -95,7 +93,6 @@ describe('CommandDictionaryEffects', () => {
       const expected = cold('---b', { b: failure });
 
       expect(effects.fetchCommandDictionaryList$).toBeObservable(expected);
-
     });
   });
 
@@ -108,11 +105,11 @@ describe('CommandDictionaryEffects', () => {
       const name = mpsServerMocks.commandDictionaryList[0].id;
       const action = new FetchCommandDictionary(name);
       const success = new FetchCommandDictionarySuccess(
-        mpsServerMocks.getCommandList(),
+        mpsServerMocks.getCommandList()
       );
 
       mpsServerService.getCommandDictionary.and.returnValue(
-        of(mpsServerMocks.getCommandList()),
+        of(mpsServerMocks.getCommandList())
       );
 
       actions = hot('--a-', { a: action });
@@ -122,13 +119,15 @@ describe('CommandDictionaryEffects', () => {
     });
 
     it('should return a FetchCommandDictionaryFailure with error on failure', () => {
-      const action = new FetchCommandDictionary(mpsServerMocks.commandDictionaryList[0].id);
+      const action = new FetchCommandDictionary(
+        mpsServerMocks.commandDictionaryList[0].id
+      );
       const error = new Error('MOCK_FAILURE');
       const failure = new FetchCommandDictionaryFailure(error);
 
       // Make the service return a fake error observable
       mpsServerService.getCommandDictionary.and.returnValue(
-        cold('--#|', {}, error),
+        cold('--#|', {}, error)
       );
 
       actions = hot('-a--', { a: action });
@@ -138,7 +137,6 @@ describe('CommandDictionaryEffects', () => {
       const expected = cold('---b', { b: failure });
 
       expect(effects.fetchCommandDictionary$).toBeObservable(expected);
-
     });
   });
 });

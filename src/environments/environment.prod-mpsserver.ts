@@ -8,6 +8,11 @@
  */
 
 export const environment = {
-  baseUrl: window.location.protocol + '//' + window.location.hostname + ':' + window.location.port,
+  baseUrl:
+    window.location.protocol +
+    '//' +
+    window.location.hostname +
+    ':' +
+    window.location.port,
   production: true,
 };

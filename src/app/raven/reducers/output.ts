@@ -36,7 +36,10 @@ export const initialState: OutputState = {
  * Reducer.
  * If a case takes more than one line then it should be in it's own helper function.
  */
-export function reducer(state: OutputState = initialState, action: OutputAction): OutputState {
+export function reducer(
+  state: OutputState = initialState,
+  action: OutputAction
+): OutputState {
   switch (action.type) {
     case OutputActionTypes.UpdateOutputSettings:
       return { ...state, ...action.update };
@@ -53,5 +56,5 @@ export function reducer(state: OutputState = initialState, action: OutputAction)
 const featureSelector = createFeatureSelector<State>('raven');
 export const getOutputState = createSelector(
   featureSelector,
-  (state: State): OutputState => state.output,
+  (state: State): OutputState => state.output
 );

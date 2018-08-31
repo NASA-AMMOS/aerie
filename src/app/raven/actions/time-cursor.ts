@@ -34,6 +34,6 @@ export class UpdateTimeCursorSettings implements Action {
 
 // Union type of all actions.
 export type TimeCursorAction =
-  HideTimeCursor |
-  ShowTimeCursor |
-  UpdateTimeCursorSettings;
+  | HideTimeCursor
+  | ShowTimeCursor
+  | UpdateTimeCursorSettings;

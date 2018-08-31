@@ -9,16 +9,10 @@
 
 import { NgModule } from '@angular/core';
 
-import {
-  RavenResourcePointValuePipe,
-} from './raven-resource-point-value.pipe';
+import { RavenResourcePointValuePipe } from './raven-resource-point-value.pipe';
 
 @NgModule({
-  declarations: [
-    RavenResourcePointValuePipe,
-  ],
-  exports: [
-    RavenResourcePointValuePipe,
-  ],
+  declarations: [RavenResourcePointValuePipe],
+  exports: [RavenResourcePointValuePipe],
 })
 export class RavenResourcePointValuePipeModule {}

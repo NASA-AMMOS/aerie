@@ -22,10 +22,7 @@ describe('ToastEffects', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [
-        StoreModule.forRoot({}),
-        ToastrModule.forRoot(),
-      ],
+      imports: [StoreModule.forRoot({}), ToastrModule.forRoot()],
       providers: [
         ToastEffects,
         ToastrService,

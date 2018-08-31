@@ -10,7 +10,10 @@
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { HBCommand } from '../../shared/models/hb-command';
 import { HBCommandDictionary } from '../../shared/models/hb-command-dictionary';
-import { CommandDictionaryAction, CommandDictionaryActionTypes } from '../actions/command-dictionary';
+import {
+  CommandDictionaryAction,
+  CommandDictionaryActionTypes,
+} from '../actions/command-dictionary';
 import { State } from '../hummingbird-store';
 
 /**
@@ -43,9 +46,8 @@ export const initialState: CommandDictionaryState = {
  */
 export function reducer(
   state: CommandDictionaryState = initialState,
-  action: CommandDictionaryAction,
+  action: CommandDictionaryAction
 ): CommandDictionaryState {
-
   switch (action.type) {
     case CommandDictionaryActionTypes.FetchCommandDictionarySuccess:
       return { ...state, commands: action.data };
@@ -56,7 +58,6 @@ export function reducer(
     default:
       return state;
   }
-
 }
 
 /**
@@ -65,20 +66,20 @@ export function reducer(
 const featureSelector = createFeatureSelector<State>('hummingbird');
 export const getCommandDictionaryState = createSelector(
   featureSelector,
-  (state: State): CommandDictionaryState => state.commandDictionary,
+  (state: State): CommandDictionaryState => state.commandDictionary
 );
 
 export const getCommands = createSelector(
   getCommandDictionaryState,
-  (state: CommandDictionaryState) => state.commands,
+  (state: CommandDictionaryState) => state.commands
 );
 
 export const getDictionaries = createSelector(
   getCommandDictionaryState,
-  (state: CommandDictionaryState) => state.dictionaries,
+  (state: CommandDictionaryState) => state.dictionaries
 );
 
 export const getSelected = createSelector(
   getCommandDictionaryState,
-  (state: CommandDictionaryState) => state.selectedDictionaryId,
+  (state: CommandDictionaryState) => state.selectedDictionaryId
 );

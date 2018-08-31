@@ -8,7 +8,10 @@
  */
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { TimeCursorAction, TimeCursorActionTypes } from '../actions/time-cursor';
+import {
+  TimeCursorAction,
+  TimeCursorActionTypes,
+} from '../actions/time-cursor';
 import { State } from '../raven-store';
 
 export interface TimeCursorState {
@@ -40,7 +43,10 @@ export const initialState: TimeCursorState = {
  * Reducer.
  * If a case takes more than one line then it should be in it's own helper function.
  */
-export function reducer(state: TimeCursorState = initialState, action: TimeCursorAction): TimeCursorState {
+export function reducer(
+  state: TimeCursorState = initialState,
+  action: TimeCursorAction
+): TimeCursorState {
   switch (action.type) {
     case TimeCursorActionTypes.HideTimeCursor:
       return { ...state, cursorTime: null, showTimeCursor: false };
@@ -59,7 +65,9 @@ export function reducer(state: TimeCursorState = initialState, action: TimeCurso
 export function showTimeCursor(state: TimeCursorState): TimeCursorState {
   return {
     ...state,
-    cursorTime:  state.setCursorTime ? state.setCursorTime : Date.now() / 1000 + state.currentTimeDelta,
+    cursorTime: state.setCursorTime
+      ? state.setCursorTime
+      : Date.now() / 1000 + state.currentTimeDelta,
     showTimeCursor: true,
   };
 }
@@ -70,5 +78,5 @@ export function showTimeCursor(state: TimeCursorState): TimeCursorState {
 const featureSelector = createFeatureSelector<State>('raven');
 export const getTimeCursorState = createSelector(
   featureSelector,
-  (state: State): TimeCursorState => state.timeCursor,
+  (state: State): TimeCursorState => state.timeCursor
 );

@@ -9,11 +9,7 @@
 
 import { Action } from '@ngrx/store';
 
-import {
-  BaseType,
-  RavenEpoch,
-  StringTMap,
-} from '../../shared/models';
+import { BaseType, RavenEpoch, StringTMap } from '../../shared/models';
 
 // Action Types.
 export enum EpochsActionTypes {
@@ -42,7 +38,4 @@ export class UpdateEpochs implements Action {
 }
 
 // Union type of all actions.
-export type EpochsAction =
-  AddEpochs |
-  FetchEpochs |
-  UpdateEpochs;
+export type EpochsAction = AddEpochs | FetchEpochs | UpdateEpochs;

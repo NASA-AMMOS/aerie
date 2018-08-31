@@ -13,16 +13,8 @@ import { MatButtonModule, MatDialogModule } from '@angular/material';
 import { RavenConfirmDialogComponent } from './raven-confirm-dialog.component';
 
 @NgModule({
-  declarations: [
-    RavenConfirmDialogComponent,
-  ],
-  exports: [
-    RavenConfirmDialogComponent,
-  ],
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatDialogModule,
-  ],
+  declarations: [RavenConfirmDialogComponent],
+  exports: [RavenConfirmDialogComponent],
+  imports: [CommonModule, MatButtonModule, MatDialogModule],
 })
 export class RavenConfirmDialogModule {}

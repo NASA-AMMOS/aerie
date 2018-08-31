@@ -23,22 +23,16 @@ import {
   StringTMap,
 } from '../models';
 
-import {
-  colorHexToRgbArray,
-  colorMap,
-  getRandomColor,
-} from './color';
+import { colorHexToRgbArray, colorMap, getRandomColor } from './color';
 
-import {
-  fromDuration,
-  timestamp,
-  utc,
-} from './time';
+import { fromDuration, timestamp, utc } from './time';
 
 /**
  * Helper that gets a color from activity metadata.
  */
-export function getColorFromActivityMetadata(metadata: MpsServerActivityPointMetadata[]): number[] {
+export function getColorFromActivityMetadata(
+  metadata: MpsServerActivityPointMetadata[]
+): number[] {
   let color = null;
 
   for (let i = 0, l = metadata.length; i < l; ++i) {
@@ -79,7 +73,10 @@ export function getMessage(metadata: MpsServerActivityPointMetadata[] | null) {
 /**
  * Transforms an MpsServerActivityPoint to a RavenActivityPoint.
  */
-export function getActivityPoint(sourceId: string, data: MpsServerActivityPoint): RavenActivityPoint {
+export function getActivityPoint(
+  sourceId: string,
+  data: MpsServerActivityPoint
+): RavenActivityPoint {
   const activityId = data['Activity ID'];
   const activityName = data['Activity Name'];
   const activityParameters = data['Activity Parameters'];
@@ -87,7 +84,9 @@ export function getActivityPoint(sourceId: string, data: MpsServerActivityPoint)
   const ancestors = data.ancestors;
   const args = data.Arguments;
   const childrenUrl = data.childrenUrl;
-  const color = data.Metadata ? getColorFromActivityMetadata(data.Metadata) : getRandomColor().color;
+  const color = data.Metadata
+    ? getColorFromActivityMetadata(data.Metadata)
+    : getRandomColor().color;
   const descendantsUrl = data.descendantsUrl;
   const endTimestamp = data['Tend Assigned'];
   const id = data.__document_id;
@@ -148,7 +147,11 @@ export function getActivityPoint(sourceId: string, data: MpsServerActivityPoint)
  * Transforms MPS Server activity points of a given type to Raven activity points bucketed by legend. Also returns the max and min point times.
  * Note that for performance we are only looping through timelineData once.
  */
-export function getActivityPointsByLegend(sourceId: string, sourceName: string, timelineData: MpsServerActivityPoint[]) {
+export function getActivityPointsByLegend(
+  sourceId: string,
+  sourceName: string,
+  timelineData: MpsServerActivityPoint[]
+) {
   const legends: StringTMap<RavenActivityPoint[]> = {};
 
   let maxTime = Number.MIN_SAFE_INTEGER;
@@ -158,8 +161,12 @@ export function getActivityPointsByLegend(sourceId: string, sourceName: string, 
     const data: MpsServerActivityPoint = timelineData[i];
     const point: RavenActivityPoint = getActivityPoint(sourceId, data);
 
-    if (point.start < minTime) { minTime = point.start; }
-    if (point.end > maxTime) { maxTime = point.end; }
+    if (point.start < minTime) {
+      minTime = point.start;
+    }
+    if (point.end > maxTime) {
+      maxTime = point.end;
+    }
 
     // Group points by legend manually so we don't have to loop through timelineData twice.
     if (!point.legend) {
@@ -191,7 +198,7 @@ export function getActivityPointsByLegend(sourceId: string, sourceName: string, 
 export function getResourcePoints(
   sourceId: string,
   metadata: MpsServerResourceMetadata,
-  timelineData: MpsServerResourcePoint[],
+  timelineData: MpsServerResourcePoint[]
 ) {
   const points: RavenResourcePoint[] = [];
   const isDuration = metadata.hasValueType.toLowerCase() === 'duration';
@@ -213,8 +220,12 @@ export function getResourcePoints(
       value = utc(value as string);
     }
 
-    if (start < minTime) { minTime = start; }
-    if (start > maxTime) { maxTime = start; }
+    if (start < minTime) {
+      minTime = start;
+    }
+    if (start > maxTime) {
+      maxTime = start;
+    }
 
     points.push({
       duration: null,
@@ -243,7 +254,10 @@ export function getResourcePoints(
  * Transforms MPS Server state points to Raven state points. Also returns the max and min point times.
  * Note that for performance we are only looping through timelineData once.
  */
-export function getStatePoints(sourceId: string, timelineData: MpsServerStatePoint[]) {
+export function getStatePoints(
+  sourceId: string,
+  timelineData: MpsServerStatePoint[]
+) {
   const points: RavenStatePoint[] = [];
 
   let maxTime = Number.MIN_SAFE_INTEGER;
@@ -260,12 +274,19 @@ export function getStatePoints(sourceId: string, timelineData: MpsServerStatePoi
     // This may or may not be correct. We're making an assumption that if there's no end,
     // we're going to draw to the end of the day.
     const startTimePlusDelta = utc(startTimestamp) + 30;
-    const endTimestamp = timelineData[i + 1] !== undefined ? timelineData[i + 1]['Data Timestamp'] : timestamp(startTimePlusDelta);
+    const endTimestamp =
+      timelineData[i + 1] !== undefined
+        ? timelineData[i + 1]['Data Timestamp']
+        : timestamp(startTimePlusDelta);
     const duration = utc(endTimestamp) - utc(startTimestamp);
     const end = start + duration;
 
-    if (start < minTime) { minTime = start; }
-    if (end > maxTime) { maxTime = end; }
+    if (start < minTime) {
+      minTime = start;
+    }
+    if (end > maxTime) {
+      maxTime = end;
+    }
 
     points.push({
       duration,
@@ -304,10 +325,16 @@ export function getMaxTimeRange(points: any[]) {
     const start = point.start;
     let end = point.end;
 
-    if (!point.duration) { end = start; }
+    if (!point.duration) {
+      end = start;
+    }
 
-    if (start < minTime) { minTime = start; }
-    if (end > maxTime) { maxTime = end; }
+    if (start < minTime) {
+      minTime = start;
+    }
+    if (end > maxTime) {
+      maxTime = end;
+    }
   }
 
   return {
@@ -319,9 +346,15 @@ export function getMaxTimeRange(points: any[]) {
 /**
  * Get a raven point from a list of bands by bandId, subBandId, and pointId. Returns null if no point is found.
  */
-export function getPoint(bands: RavenCompositeBand[], bandId: string | null, subBandId: string, pointId: string): RavenPoint | null {
+export function getPoint(
+  bands: RavenCompositeBand[],
+  bandId: string | null,
+  subBandId: string,
+  pointId: string
+): RavenPoint | null {
   for (let i = 0, l = bands.length; i < l; ++i) {
-    if (bandId === null || bands[i].id === bandId) { // Optional bandId.
+    if (bandId === null || bands[i].id === bandId) {
+      // Optional bandId.
       for (let j = 0, ll = bands[i].subBands.length; j < ll; ++j) {
         const subBand = bands[i].subBands[j];
         if (subBand.id === subBandId) {
@@ -353,8 +386,14 @@ export function getUniqueActivityId(point: RavenActivityPoint): string {
  * Helper that checks if we need to reset the selectedPoint.
  * If we don't need to reset just return the original selectedPoint.
  */
-export function updateSelectedPoint(bands: RavenCompositeBand[], selectedPoint: RavenPoint | null) {
-  if (selectedPoint && getPoint(bands, null, selectedPoint.subBandId, selectedPoint.uniqueId)) {
+export function updateSelectedPoint(
+  bands: RavenCompositeBand[],
+  selectedPoint: RavenPoint | null
+) {
+  if (
+    selectedPoint &&
+    getPoint(bands, null, selectedPoint.subBandId, selectedPoint.uniqueId)
+  ) {
     return {
       selectedPoint,
     };

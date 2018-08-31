@@ -21,9 +21,7 @@ import { reducers } from './hummingbird-store';
     HttpClientModule,
     HummingbirdRoutingModule,
     StoreModule.forFeature('hummingbird', reducers),
-    EffectsModule.forFeature([
-      CommandDictionaryEffects,
-    ]),
+    EffectsModule.forFeature([CommandDictionaryEffects]),
     HummingbirdAppModule,
   ],
 })

@@ -15,9 +15,7 @@ import {
   Output,
 } from '@angular/core';
 
-import {
-  RavenCustomGraphableSource,
-} from '../../../shared/models';
+import { RavenCustomGraphableSource } from '../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,8 +24,14 @@ import {
   templateUrl: './raven-custom-graphable.component.html',
 })
 export class RavenCustomGraphableComponent {
-  @Input() id: string;
-  @Input() source: RavenCustomGraphableSource;
+  @Input()
+  id: string;
 
-  @Output() addCustomGraph: EventEmitter<RavenCustomGraphableSource> = new EventEmitter<RavenCustomGraphableSource>();
+  @Input()
+  source: RavenCustomGraphableSource;
+
+  @Output()
+  addCustomGraph: EventEmitter<RavenCustomGraphableSource> = new EventEmitter<
+    RavenCustomGraphableSource
+  >();
 }

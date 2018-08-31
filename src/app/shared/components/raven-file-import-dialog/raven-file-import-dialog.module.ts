@@ -21,12 +21,8 @@ import {
 } from '@angular/material';
 
 @NgModule({
-  declarations: [
-    RavenFileImportDialogComponent,
-  ],
-  exports: [
-    RavenFileImportDialogComponent,
-  ],
+  declarations: [RavenFileImportDialogComponent],
+  exports: [RavenFileImportDialogComponent],
   imports: [
     CommonModule,
     FormsModule,

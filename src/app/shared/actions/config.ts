@@ -23,5 +23,4 @@ export class UpdateDefaultBandSettings implements Action {
 }
 
 // Union type of all actions.
-export type ConfigAction =
-  UpdateDefaultBandSettings;
+export type ConfigAction = UpdateDefaultBandSettings;

@@ -28,17 +28,34 @@ import { RavenUpdate, StringTMap } from '../../../shared/models';
   templateUrl: './raven-output.component.html',
 })
 export class RavenOutputComponent implements AfterViewInit, OnChanges {
-  @ViewChild('agGrid') agGrid: AgGridNg2;
+  @ViewChild('agGrid')
+  agGrid: AgGridNg2;
 
-  @Input() allInOneFile: boolean;
-  @Input() allInOneFilename: string;
-  @Input() decimateOutputData: boolean;
-  @Input() outputFormat: string;
-  @Input() outputSourceIdsByLabel: StringTMap<string[]>;
-  @Input() subBandSourceIdsByLabel: StringTMap<string[]>;
+  @Input()
+  allInOneFile: boolean;
 
-  @Output() createOutput: EventEmitter<any> = new EventEmitter<any>();
-  @Output() updateOutputSettings: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
+  @Input()
+  allInOneFilename: string;
+
+  @Input()
+  decimateOutputData: boolean;
+
+  @Input()
+  outputFormat: string;
+
+  @Input()
+  outputSourceIdsByLabel: StringTMap<string[]>;
+
+  @Input()
+  subBandSourceIdsByLabel: StringTMap<string[]>;
+
+  @Output()
+  createOutput: EventEmitter<any> = new EventEmitter<any>();
+
+  @Output()
+  updateOutputSettings: EventEmitter<RavenUpdate> = new EventEmitter<
+    RavenUpdate
+  >();
 
   columnDefs: any[] = [];
   rowData: any[] = [];
@@ -55,7 +72,8 @@ export class RavenOutputComponent implements AfterViewInit, OnChanges {
     }
 
     if (changes.subBandSourceIdsByLabel) {
-      this.subBandSourceIdsByLabel = changes.subBandSourceIdsByLabel.currentValue;
+      this.subBandSourceIdsByLabel =
+        changes.subBandSourceIdsByLabel.currentValue;
       this.rowData = this.createRowData(this.subBandSourceIdsByLabel);
       this.columnDefs = this.createColumnDefs();
       this.rowSelection = 'multiple';
@@ -80,7 +98,9 @@ export class RavenOutputComponent implements AfterViewInit, OnChanges {
     setTimeout(() => {
       if (this.agGrid && this.agGrid.api) {
         this.agGrid.api.forEachNode(node => {
-          if (Object.keys(this.outputSourceIdsByLabel).includes(node.data.label)) {
+          if (
+            Object.keys(this.outputSourceIdsByLabel).includes(node.data.label)
+          ) {
             this.agGrid.api.ensureIndexVisible(node.rowIndex);
             node.setSelected(true);
           } else {
@@ -146,14 +166,18 @@ export class RavenOutputComponent implements AfterViewInit, OnChanges {
     Object.keys(subBandSourceIdsByLabel).forEach(label => {
       const sourceIds = subBandSourceIdsByLabel[label];
       sourceIds.forEach(sourceId => {
-        const pathNameArgs = sourceId.match(new RegExp('(.*)/([^\\?]*)(\\?.*)?'));
+        const pathNameArgs = sourceId.match(
+          new RegExp('(.*)/([^\\?]*)(\\?.*)?')
+        );
 
         if (pathNameArgs) {
           const [, path, name, args] = pathNameArgs;
           let filter = '';
 
           if (args) {
-            const labelFilter = args.match(new RegExp('\\?label=(.*)&filter=(.*)'));
+            const labelFilter = args.match(
+              new RegExp('\\?label=(.*)&filter=(.*)')
+            );
 
             if (labelFilter) {
               label = labelFilter[1];
@@ -180,7 +204,9 @@ export class RavenOutputComponent implements AfterViewInit, OnChanges {
    * is not reflected in the form validator.
    */
   isValid() {
-    return this.allInOneFile && this.allInOneFilename.length === 0 ? false : true;
+    return this.allInOneFile && this.allInOneFilename.length === 0
+      ? false
+      : true;
   }
 
   /**
@@ -209,7 +235,9 @@ export class RavenOutputComponent implements AfterViewInit, OnChanges {
     this.updateOutputSettings.emit({
       update: {
         outputSourceIdsByLabel: rows.reduce((obj, row) => {
-          obj[row.label] ? obj[row.label].push (row.id) : obj[row.label] = [row.id];
+          obj[row.label]
+            ? obj[row.label].push(row.id)
+            : (obj[row.label] = [row.id]);
           return obj;
         }, {}),
       },

@@ -51,29 +51,44 @@ describe('bands.ts', () => {
   describe('changeZoom', () => {
     it('zooming out should work', () => {
       const timeRange = { end: 1741564830, start: 1655143200 };
-      expect(changeZoom(-10, timeRange)).toEqual({ end: 1750206993, start: 1646501037 });
+      expect(changeZoom(-10, timeRange)).toEqual({
+        end: 1750206993,
+        start: 1646501037,
+      });
     });
 
     it('zooming in should work', () => {
       const timeRange = { end: 1741564830, start: 1655143200 };
-      expect(changeZoom(10, timeRange)).toEqual({ end: 1732922667, start: 1663785363 });
+      expect(changeZoom(10, timeRange)).toEqual({
+        end: 1732922667,
+        start: 1663785363,
+      });
     });
   });
 
   describe('getCustomFiltersBySourceId', () => {
     it(`should return custom filters from sourceIds in bands`, () => {
-      expect(getCustomFiltersBySourceId(bandsWithCustomFiltersInSourceId, treeBySourceId)).toEqual({
-        '/DKF/command': [{
-          filter: '.*',
-          label: 'ips',
-        }],
+      expect(
+        getCustomFiltersBySourceId(
+          bandsWithCustomFiltersInSourceId,
+          treeBySourceId
+        )
+      ).toEqual({
+        '/DKF/command': [
+          {
+            filter: '.*',
+            label: 'ips',
+          },
+        ],
       });
     });
   });
 
   describe('getBandLabel', () => {
     it(`should return label with empty pin and units`, () => {
-      expect(getBandLabel(resourceBand)).toEqual('test-resource-band (Degrees)');
+      expect(getBandLabel(resourceBand)).toEqual(
+        'test-resource-band (Degrees)'
+      );
     });
   });
 
@@ -94,11 +109,15 @@ describe('bands.ts', () => {
 
   describe('hasActivityBandForFilterTarget', () => {
     it(`should return null if no band has the specified filterTarget`, () => {
-      expect(hasActivityBandForFilterTarget(bandsWithFilterTarget, 'ABC')).toBe(null);
+      expect(hasActivityBandForFilterTarget(bandsWithFilterTarget, 'ABC')).toBe(
+        null
+      );
     });
 
     it(`should return the band with the filterTarget`, () => {
-      expect(hasActivityBandForFilterTarget(bandsWithFilterTarget, 'DKF')).toEqual({
+      expect(
+        hasActivityBandForFilterTarget(bandsWithFilterTarget, 'DKF')
+      ).toEqual({
         bandId: '100',
         subBandId: '0',
       });

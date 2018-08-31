@@ -112,7 +112,10 @@ export const initialState: SourceExplorerState = {
  * Reducer.
  * If a case takes more than one line then it should be in it's own helper function.
  */
-export function reducer(state: SourceExplorerState = initialState, action: SourceExplorerAction): SourceExplorerState {
+export function reducer(
+  state: SourceExplorerState = initialState,
+  action: SourceExplorerAction
+): SourceExplorerState {
   switch (action.type) {
     case SourceExplorerActionTypes.AddCustomFilter:
       return addCustomFilter(state, action);
@@ -132,7 +135,10 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
     case SourceExplorerActionTypes.GraphCustomSource:
       return { ...state, fetchPending: true };
     case SourceExplorerActionTypes.LoadErrorsAdd:
-      return { ...state, loadErrors: state.loadErrors.concat(action.sourceIds) };
+      return {
+        ...state,
+        loadErrors: state.loadErrors.concat(action.sourceIds),
+      };
     case SourceExplorerActionTypes.NewSources:
       return newSources(state, action);
     case SourceExplorerActionTypes.OpenEvent:
@@ -165,7 +171,10 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
     case SourceExplorerActionTypes.UpdateSourceExplorer:
       return { ...state, ...action.update };
     case SourceExplorerActionTypes.UpdateTreeSource:
-      return { ...state, ...updateTreeSource(state, action.sourceId, action.update) };
+      return {
+        ...state,
+        ...updateTreeSource(state, action.sourceId, action.update),
+      };
     default:
       return state;
   }
@@ -174,7 +183,10 @@ export function reducer(state: SourceExplorerState = initialState, action: Sourc
 /**
  * Reduction Helper. Called when reducing the 'AddCustomFilter' action.
  */
-export function addCustomFilter(state: SourceExplorerState, action: AddCustomFilter): SourceExplorerState {
+export function addCustomFilter(
+  state: SourceExplorerState,
+  action: AddCustomFilter
+): SourceExplorerState {
   const customFilters = state.customFiltersBySourceId[action.sourceId] || [];
 
   return {
@@ -193,7 +205,10 @@ export function addCustomFilter(state: SourceExplorerState, action: AddCustomFil
 /**
  * Reduction Helper. Called when reducing the 'AddFilter' action.
  */
-export function addFilter(state: SourceExplorerState, action: AddFilter): SourceExplorerState {
+export function addFilter(
+  state: SourceExplorerState,
+  action: AddFilter
+): SourceExplorerState {
   const targetFilters = state.filtersByTarget[action.source.filterTarget] || {};
   const groupFilters = targetFilters[action.source.filterSetOf] || [];
 
@@ -215,7 +230,10 @@ export function addFilter(state: SourceExplorerState, action: AddFilter): Source
 /**
  * Reduction Helper. Called when reducing the 'CloseEvent' action.
  */
-export function closeEvent(state: SourceExplorerState, action: CloseEvent): SourceExplorerState {
+export function closeEvent(
+  state: SourceExplorerState,
+  action: CloseEvent
+): SourceExplorerState {
   return {
     ...state,
     ...updateTreeSource(state, action.sourceId, {
@@ -228,7 +246,10 @@ export function closeEvent(state: SourceExplorerState, action: CloseEvent): Sour
 /**
  * Reduction Helper. Called when reducing the 'CollapseEvent' action.
  */
-export function collapseEvent(state: SourceExplorerState, action: CollapseEvent): SourceExplorerState {
+export function collapseEvent(
+  state: SourceExplorerState,
+  action: CollapseEvent
+): SourceExplorerState {
   return {
     ...state,
     ...updateTreeSource(state, action.sourceId, {
@@ -240,7 +261,10 @@ export function collapseEvent(state: SourceExplorerState, action: CollapseEvent)
 /**
  * Reduction Helper. Called when reducing the 'ExpandEvent' action.
  */
-export function expandEvent(state: SourceExplorerState, action: ExpandEvent): SourceExplorerState {
+export function expandEvent(
+  state: SourceExplorerState,
+  action: ExpandEvent
+): SourceExplorerState {
   return {
     ...state,
     fetchPending: true,
@@ -256,9 +280,14 @@ export function expandEvent(state: SourceExplorerState, action: ExpandEvent): So
  * Generates a new treeBySourceId data structure with updated childIds for the action.sourceId,
  * and the new child sources keyed off of their id.
  */
-export function newSources(state: SourceExplorerState, action: NewSources): SourceExplorerState {
+export function newSources(
+  state: SourceExplorerState,
+  action: NewSources
+): SourceExplorerState {
   const parentSource = state.treeBySourceId[action.sourceId];
-  const sources = action.sources.filter(source => !state.treeBySourceId[source.id]); // Exclude sources that already exist.
+  const sources = action.sources.filter(
+    source => !state.treeBySourceId[source.id]
+  ); // Exclude sources that already exist.
 
   return {
     ...state,
@@ -267,7 +296,9 @@ export function newSources(state: SourceExplorerState, action: NewSources): Sour
       ...keyBy(sources, 'id'),
       [action.sourceId]: {
         ...parentSource,
-        childIds: parentSource.childIds.concat(sources.map(source => source.id)),
+        childIds: parentSource.childIds.concat(
+          sources.map(source => source.id)
+        ),
       },
     },
   };
@@ -276,7 +307,10 @@ export function newSources(state: SourceExplorerState, action: NewSources): Sour
 /**
  * Reduction Helper. Called when reducing the 'OpenEvent' action.
  */
-export function openEvent(state: SourceExplorerState, action: OpenEvent): SourceExplorerState {
+export function openEvent(
+  state: SourceExplorerState,
+  action: OpenEvent
+): SourceExplorerState {
   return {
     ...state,
     fetchPending: true,
@@ -289,7 +323,10 @@ export function openEvent(state: SourceExplorerState, action: OpenEvent): Source
 /**
  * Reduction Helper. Called when reducing the 'PinAdd' action.
  */
-export function pinAdd(state: SourceExplorerState, action: PinAdd): SourceExplorerState {
+export function pinAdd(
+  state: SourceExplorerState,
+  action: PinAdd
+): SourceExplorerState {
   return {
     ...state,
     pins: state.pins.concat(action.pin),
@@ -297,17 +334,20 @@ export function pinAdd(state: SourceExplorerState, action: PinAdd): SourceExplor
       ...state.treeBySourceId,
       [action.pin.sourceId]: {
         ...state.treeBySourceId[action.pin.sourceId],
-        actions: state.treeBySourceId[action.pin.sourceId].actions.reduce((actions: RavenSourceAction[], currentAction: RavenSourceAction) => {
-          if (currentAction.event === 'pin-add') {
-            actions.push(
-              { event: 'pin-remove', name: 'Remove Pin' },
-              { event: 'pin-rename', name: 'Rename Pin' },
-            );
-          } else {
-            actions.push(currentAction);
-          }
-          return actions;
-        }, []),
+        actions: state.treeBySourceId[action.pin.sourceId].actions.reduce(
+          (actions: RavenSourceAction[], currentAction: RavenSourceAction) => {
+            if (currentAction.event === 'pin-add') {
+              actions.push(
+                { event: 'pin-remove', name: 'Remove Pin' },
+                { event: 'pin-rename', name: 'Rename Pin' }
+              );
+            } else {
+              actions.push(currentAction);
+            }
+            return actions;
+          },
+          []
+        ),
       },
     },
   };
@@ -316,7 +356,10 @@ export function pinAdd(state: SourceExplorerState, action: PinAdd): SourceExplor
 /**
  * Reduction Helper. Called when reducing the 'PinRemove' action.
  */
-export function pinRemove(state: SourceExplorerState, action: PinRemove): SourceExplorerState {
+export function pinRemove(
+  state: SourceExplorerState,
+  action: PinRemove
+): SourceExplorerState {
   return {
     ...state,
     pins: state.pins.filter(pin => pin.sourceId !== action.sourceId),
@@ -325,7 +368,11 @@ export function pinRemove(state: SourceExplorerState, action: PinRemove): Source
       [action.sourceId]: {
         ...state.treeBySourceId[action.sourceId],
         actions: state.treeBySourceId[action.sourceId].actions
-          .filter(currentAction => currentAction.event !== 'pin-remove' && currentAction.event !== 'pin-rename')
+          .filter(
+            currentAction =>
+              currentAction.event !== 'pin-remove' &&
+              currentAction.event !== 'pin-rename'
+          )
           .concat({ event: 'pin-add', name: 'Add Pin' }),
       },
     },
@@ -335,7 +382,10 @@ export function pinRemove(state: SourceExplorerState, action: PinRemove): Source
 /**
  * Reduction Helper. Called when reducing the 'PinRename' action.
  */
-export function pinRename(state: SourceExplorerState, action: PinRename): SourceExplorerState {
+export function pinRename(
+  state: SourceExplorerState,
+  action: PinRename
+): SourceExplorerState {
   return {
     ...state,
     pins: state.pins.map(pin => {
@@ -354,7 +404,10 @@ export function pinRename(state: SourceExplorerState, action: PinRename): Source
  * Reduction Helper. Called when reducing the 'RemoveFilter' action.
  * Removes filter from filter array and unselects the source.
  */
-export function removeFilter(state: SourceExplorerState, action: RemoveFilter): SourceExplorerState {
+export function removeFilter(
+  state: SourceExplorerState,
+  action: RemoveFilter
+): SourceExplorerState {
   const targetFilters = state.filtersByTarget[action.source.filterTarget] || {};
   const groupFilters = targetFilters[action.source.filterSetOf] || [];
 
@@ -364,7 +417,9 @@ export function removeFilter(state: SourceExplorerState, action: RemoveFilter): 
       ...state.filtersByTarget,
       [action.source.filterTarget]: {
         ...targetFilters,
-        [action.source.filterSetOf]: groupFilters.filter(filter => filter !== action.source.id),
+        [action.source.filterSetOf]: groupFilters.filter(
+          filter => filter !== action.source.id
+        ),
       },
     },
     ...updateTreeSource(state, action.source.id, { opened: false }),
@@ -376,7 +431,10 @@ export function removeFilter(state: SourceExplorerState, action: RemoveFilter): 
  * Removes a source and all it's children from the source tree.
  * Make sure we reset the selected source id if we remove the selected source.
  */
-export function removeSource(state: SourceExplorerState, action: RemoveSource): SourceExplorerState {
+export function removeSource(
+  state: SourceExplorerState,
+  action: RemoveSource
+): SourceExplorerState {
   const source = state.treeBySourceId[action.sourceId];
   const parentSource = state.treeBySourceId[source.parentId];
   const allChildIds = getAllChildIds(state.treeBySourceId, source.id);
@@ -384,17 +442,25 @@ export function removeSource(state: SourceExplorerState, action: RemoveSource): 
   if (parentSource) {
     return {
       ...state,
-      selectedSourceId: action.sourceId === state.selectedSourceId ? '' : state.selectedSourceId,
+      selectedSourceId:
+        action.sourceId === state.selectedSourceId
+          ? ''
+          : state.selectedSourceId,
       treeBySourceId: {
         ...omit(state.treeBySourceId, action.sourceId, allChildIds),
         [parentSource.id]: {
           ...parentSource,
-          childIds: parentSource.childIds.filter(childId => childId !== action.sourceId),
+          childIds: parentSource.childIds.filter(
+            childId => childId !== action.sourceId
+          ),
         },
       },
     };
   } else {
-    console.error('source-explorer.ts - removeSource: you cannot remove a source without a parent: ', action.sourceId);
+    console.error(
+      'source-explorer.ts - removeSource: you cannot remove a source without a parent: ',
+      action.sourceId
+    );
 
     return {
       ...state,
@@ -406,22 +472,29 @@ export function removeSource(state: SourceExplorerState, action: RemoveSource): 
  * Reduction Helper. Called when reducing the 'SelectSource' action.
  * Note that in some cases state.selectedSourceId === '' so we just omit '' keys from treeBySourceId.
  */
-export function selectSource(state: SourceExplorerState, action: SelectSource): SourceExplorerState {
+export function selectSource(
+  state: SourceExplorerState,
+  action: SelectSource
+): SourceExplorerState {
   if (state.treeBySourceId[action.source.id].selectable) {
     return {
       ...state,
-      selectedSourceId: action.source.id === state.selectedSourceId ? '' : action.source.id,
-      treeBySourceId: omit({
-        ...state.treeBySourceId,
-        [action.source.id]: {
-          ...state.treeBySourceId[action.source.id],
-          selected: true,
+      selectedSourceId:
+        action.source.id === state.selectedSourceId ? '' : action.source.id,
+      treeBySourceId: omit(
+        {
+          ...state.treeBySourceId,
+          [action.source.id]: {
+            ...state.treeBySourceId[action.source.id],
+            selected: true,
+          },
+          [state.selectedSourceId]: {
+            ...state.treeBySourceId[state.selectedSourceId],
+            selected: false,
+          },
         },
-        [state.selectedSourceId]: {
-          ...state.treeBySourceId[state.selectedSourceId],
-          selected: false,
-        },
-      }, ''),
+        ''
+      ),
     };
   }
 
@@ -431,7 +504,10 @@ export function selectSource(state: SourceExplorerState, action: SelectSource): 
 /**
  * Reduction Helper. Called when reducing the 'SetCustomFilter' action.
  */
-export function setCustomFilter(state: SourceExplorerState, action: SetCustomFilter): SourceExplorerState {
+export function setCustomFilter(
+  state: SourceExplorerState,
+  action: SetCustomFilter
+): SourceExplorerState {
   return {
     ...state,
     filtersByTarget: {
@@ -441,14 +517,20 @@ export function setCustomFilter(state: SourceExplorerState, action: SetCustomFil
         [action.source.filterSetOf]: [action.source.id],
       },
     },
-    ...updateTreeSource(state, action.source.id, { opened: action.filter ? true : false, filter: action.filter }),
+    ...updateTreeSource(state, action.source.id, {
+      filter: action.filter,
+      opened: action.filter ? true : false,
+    }),
   };
 }
 
 /**
  * Reduction Helper. Called when reducing the 'SetCustomFilterSubBandId' action.
  */
-export function setCustomFilterSubBandId(state: SourceExplorerState, action: SetCustomFilterSubBandId): SourceExplorerState {
+export function setCustomFilterSubBandId(
+  state: SourceExplorerState,
+  action: SetCustomFilterSubBandId
+): SourceExplorerState {
   const customFilters = state.customFiltersBySourceId[action.sourceId] || [];
 
   return {
@@ -457,7 +539,10 @@ export function setCustomFilterSubBandId(state: SourceExplorerState, action: Set
       ...state.customFiltersBySourceId,
       [action.sourceId]: customFilters.map(customFilter => ({
         ...customFilter,
-        subBandId: customFilter.label === action.label ? action.subBandId : customFilter.subBandId,
+        subBandId:
+          customFilter.label === action.label
+            ? action.subBandId
+            : customFilter.subBandId,
       })),
     },
   };
@@ -466,8 +551,14 @@ export function setCustomFilterSubBandId(state: SourceExplorerState, action: Set
 /**
  * Reduction Helper. Called when reducing the 'SubBandIdAdd' action.
  */
-export function subBandIdAdd(state: SourceExplorerState, action: SubBandIdAdd): SourceExplorerState {
-  const subBandIds = without(state.treeBySourceId[action.sourceId].subBandIds, action.subBandId).concat(action.subBandId);
+export function subBandIdAdd(
+  state: SourceExplorerState,
+  action: SubBandIdAdd
+): SourceExplorerState {
+  const subBandIds = without(
+    state.treeBySourceId[action.sourceId].subBandIds,
+    action.subBandId
+  ).concat(action.subBandId);
 
   return {
     ...state,
@@ -484,7 +575,10 @@ export function subBandIdAdd(state: SourceExplorerState, action: SubBandIdAdd): 
 /**
  * Reduction Helper. Called when reducing the 'SubBandIdRemove' action.
  */
-export function subBandIdRemove(state: SourceExplorerState, action: SubBandIdRemove): SourceExplorerState {
+export function subBandIdRemove(
+  state: SourceExplorerState,
+  action: SubBandIdRemove
+): SourceExplorerState {
   let newCustomFiltersBySourceId = {
     ...state.customFiltersBySourceId,
   };
@@ -503,7 +597,7 @@ export function subBandIdRemove(state: SourceExplorerState, action: SubBandIdRem
       newCustomFiltersBySourceId = {
         ...state.customFiltersBySourceId,
         [sourceId]: customFilters.filter(
-          customFilter => customFilter.subBandId !== action.subBandId,
+          customFilter => customFilter.subBandId !== action.subBandId
         ),
       };
     } else if (source && source.type === 'graphableFilter') {
@@ -516,8 +610,10 @@ export function subBandIdRemove(state: SourceExplorerState, action: SubBandIdRem
         ...newFiltersByTarget,
         [filterTarget]: {
           ...filters,
-          [graphableFilterSource.filterSetOf]: filters[graphableFilterSource.filterSetOf].filter(
-            filterSourceId => filterSourceId !== graphableFilterSource.name,
+          [graphableFilterSource.filterSetOf]: filters[
+            graphableFilterSource.filterSetOf
+          ].filter(
+            filterSourceId => filterSourceId !== graphableFilterSource.name
           ),
         },
       };
@@ -531,7 +627,9 @@ export function subBandIdRemove(state: SourceExplorerState, action: SubBandIdRem
     treeBySourceId: {
       ...state.treeBySourceId,
       ...action.sourceIds.reduce((sourceIds, sourceId) => {
-        const subBandIds = state.treeBySourceId[sourceId].subBandIds.filter(subBandId => subBandId !== action.subBandId);
+        const subBandIds = state.treeBySourceId[sourceId].subBandIds.filter(
+          subBandId => subBandId !== action.subBandId
+        );
         const opened = subBandIds.length > 0 ? true : false;
 
         sourceIds[sourceId] = {
@@ -549,7 +647,11 @@ export function subBandIdRemove(state: SourceExplorerState, action: SubBandIdRem
 /**
  * Helper. Return an updated tree source object. Can be used to spread over the state to update it.
  */
-export function updateTreeSource(state: SourceExplorerState, sourceId: string, update: StringTMap<BaseType>) {
+export function updateTreeSource(
+  state: SourceExplorerState,
+  sourceId: string,
+  update: StringTMap<BaseType>
+) {
   return {
     treeBySourceId: {
       ...state.treeBySourceId,
@@ -567,7 +669,7 @@ export function updateTreeSource(state: SourceExplorerState, sourceId: string, u
 const featureSelector = createFeatureSelector<State>('raven');
 export const getSourceExplorerState = createSelector(
   featureSelector,
-  (state: State): SourceExplorerState => state.sourceExplorer,
+  (state: State): SourceExplorerState => state.sourceExplorer
 );
 
 /**
@@ -581,9 +683,27 @@ export const getSourceExplorerState = createSelector(
  * only recompute when arguments change. The created selectors can also be composed
  * together to select different pieces of state.
  */
-export const getFiltersByTarget = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.filtersByTarget);
-export const getInitialSourcesLoaded = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.initialSourcesLoaded);
-export const getPending = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.fetchPending);
-export const getPins = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.pins);
-export const getSelectedSourceId = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.selectedSourceId);
-export const getTreeBySourceId = createSelector(getSourceExplorerState, (state: SourceExplorerState) => state.treeBySourceId);
+export const getFiltersByTarget = createSelector(
+  getSourceExplorerState,
+  (state: SourceExplorerState) => state.filtersByTarget
+);
+export const getInitialSourcesLoaded = createSelector(
+  getSourceExplorerState,
+  (state: SourceExplorerState) => state.initialSourcesLoaded
+);
+export const getPending = createSelector(
+  getSourceExplorerState,
+  (state: SourceExplorerState) => state.fetchPending
+);
+export const getPins = createSelector(
+  getSourceExplorerState,
+  (state: SourceExplorerState) => state.pins
+);
+export const getSelectedSourceId = createSelector(
+  getSourceExplorerState,
+  (state: SourceExplorerState) => state.selectedSourceId
+);
+export const getTreeBySourceId = createSelector(
+  getSourceExplorerState,
+  (state: SourceExplorerState) => state.treeBySourceId
+);

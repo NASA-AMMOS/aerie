@@ -18,12 +18,8 @@ import {
 } from '@angular/material';
 
 @NgModule({
-  declarations: [
-    RavenEpochsComponent,
-  ],
-  exports: [
-    RavenEpochsComponent,
-  ],
+  declarations: [RavenEpochsComponent],
+  exports: [RavenEpochsComponent],
   imports: [
     AgGridModule.withComponents([]),
     MatCardModule,

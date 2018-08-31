@@ -21,26 +21,35 @@ import {
   SimpleChanges,
 } from '@angular/core';
 
-import {
-  RavenTimeRange,
-} from '../../models';
+import { RavenTimeRange } from '../../models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'raven-time-scroll-bar',
-  styles: [`
-    :host {
-      display: block;
-    }
-  `],
+  styles: [
+    `
+      :host {
+        display: block;
+      }
+    `,
+  ],
   template: ``,
 })
-export class RavenTimeScrollBarComponent implements AfterViewInit, OnChanges, OnInit {
-  @Input() labelWidth: number;
-  @Input() maxTimeRange: RavenTimeRange;
-  @Input() viewTimeRange: RavenTimeRange;
+export class RavenTimeScrollBarComponent
+  implements AfterViewInit, OnChanges, OnInit {
+  @Input()
+  labelWidth: number;
 
-  @Output() updateViewTimeRange: EventEmitter<RavenTimeRange> = new EventEmitter<RavenTimeRange>();
+  @Input()
+  maxTimeRange: RavenTimeRange;
+
+  @Input()
+  viewTimeRange: RavenTimeRange;
+
+  @Output()
+  updateViewTimeRange: EventEmitter<RavenTimeRange> = new EventEmitter<
+    RavenTimeRange
+  >();
 
   ctlTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
   ctlTimeScrollBar: any;
@@ -67,9 +76,14 @@ export class RavenTimeScrollBarComponent implements AfterViewInit, OnChanges, On
       const previousMaxTimeRange = changes.maxTimeRange.previousValue;
 
       // Make sure we don't redraw or update times unless the times actually changed.
-      if (previousMaxTimeRange.start !== currentMaxTimeRange.start ||
-          previousMaxTimeRange.end !== currentMaxTimeRange.end) {
-        this.ctlTimeAxis.updateTimes(currentMaxTimeRange.start, currentMaxTimeRange.end);
+      if (
+        previousMaxTimeRange.start !== currentMaxTimeRange.start ||
+        previousMaxTimeRange.end !== currentMaxTimeRange.end
+      ) {
+        this.ctlTimeAxis.updateTimes(
+          currentMaxTimeRange.start,
+          currentMaxTimeRange.end
+        );
         shouldRedraw = true;
       }
     }
@@ -80,9 +94,14 @@ export class RavenTimeScrollBarComponent implements AfterViewInit, OnChanges, On
       const previousViewTimeRange = changes.viewTimeRange.previousValue;
 
       // Make sure we don't redraw or update times unless the times actually changed.
-      if (previousViewTimeRange.start !== currentViewTimeRange.start ||
-          previousViewTimeRange.end !== currentViewTimeRange.end) {
-        this.ctlViewTimeAxis.updateTimes(currentViewTimeRange.start, currentViewTimeRange.end);
+      if (
+        previousViewTimeRange.start !== currentViewTimeRange.start ||
+        previousViewTimeRange.end !== currentViewTimeRange.end
+      ) {
+        this.ctlViewTimeAxis.updateTimes(
+          currentViewTimeRange.start,
+          currentViewTimeRange.end
+        );
         shouldRedraw = true;
       }
     }
@@ -106,8 +125,14 @@ export class RavenTimeScrollBarComponent implements AfterViewInit, OnChanges, On
       viewTimeAxis: this.ctlViewTimeAxis,
     });
 
-    this.ctlTimeAxis.updateTimes(this.maxTimeRange.start, this.maxTimeRange.end);
-    this.ctlViewTimeAxis.updateTimes(this.viewTimeRange.start, this.viewTimeRange.end);
+    this.ctlTimeAxis.updateTimes(
+      this.maxTimeRange.start,
+      this.maxTimeRange.end
+    );
+    this.ctlViewTimeAxis.updateTimes(
+      this.viewTimeRange.start,
+      this.viewTimeRange.end
+    );
 
     this.elementRef.nativeElement.appendChild(this.ctlTimeScrollBar.div);
   }

@@ -9,16 +9,10 @@
 
 import { NgModule } from '@angular/core';
 
-import {
-  RavenKeyByPipe,
-} from './raven-key-by.pipe';
+import { RavenKeyByPipe } from './raven-key-by.pipe';
 
 @NgModule({
-  declarations: [
-    RavenKeyByPipe,
-  ],
-  exports: [
-    RavenKeyByPipe,
-  ],
+  declarations: [RavenKeyByPipe],
+  exports: [RavenKeyByPipe],
 })
 export class RavenKeyByPipeModule {}

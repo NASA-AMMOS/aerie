@@ -9,16 +9,16 @@
 
 import { NgModule } from '@angular/core';
 import { MatToolbarModule } from '@angular/material';
-import { HBCodeMirrorModule, HBCommandListModule, HBCommandLoaderModule } from '../../../shared/components/modules';
+import {
+  HBCodeMirrorModule,
+  HBCommandListModule,
+  HBCommandLoaderModule,
+} from '../../../shared/components/modules';
 import { HummingbirdAppComponent } from './hummingbird-app.component';
 
 @NgModule({
-  declarations: [
-    HummingbirdAppComponent,
-  ],
-  exports: [
-    HummingbirdAppComponent,
-  ],
+  declarations: [HummingbirdAppComponent],
+  exports: [HummingbirdAppComponent],
   imports: [
     HBCodeMirrorModule,
     HBCommandListModule,

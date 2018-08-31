@@ -7,13 +7,21 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+} from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { HBCommand } from '../../../shared/models/hb-command';
 import { HBCommandDictionary } from '../../../shared/models/hb-command-dictionary';
-import { FetchCommandDictionaryList, SelectCommandDictionary } from '../../actions/command-dictionary';
+import {
+  FetchCommandDictionaryList,
+  SelectCommandDictionary,
+} from '../../actions/command-dictionary';
 import { HummingbirdAppState } from '../../hummingbird-store';
 
 import * as fromCommandDictionary from '../../reducers/command-dictionary';
@@ -25,7 +33,6 @@ import * as fromCommandDictionary from '../../reducers/command-dictionary';
   templateUrl: './hummingbird-app.component.html',
 })
 export class HummingbirdAppComponent implements OnDestroy {
-
   /**
    * List of all available dictionaries to select from
    */
@@ -47,26 +54,29 @@ export class HummingbirdAppComponent implements OnDestroy {
     private changeDetector: ChangeDetectorRef,
     private store: Store<HummingbirdAppState>
   ) {
-    this.store.select(fromCommandDictionary.getDictionaries).pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(dictionaries => {
-      this.dictionaries = dictionaries;
-      this.markForCheck();
-    });
+    this.store
+      .select(fromCommandDictionary.getDictionaries)
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(dictionaries => {
+        this.dictionaries = dictionaries;
+        this.markForCheck();
+      });
 
-    this.store.select(fromCommandDictionary.getCommands).pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(commands => {
-      this.commands = commands;
-      this.markForCheck();
-    });
+    this.store
+      .select(fromCommandDictionary.getCommands)
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(commands => {
+        this.commands = commands;
+        this.markForCheck();
+      });
 
-    this.store.select(fromCommandDictionary.getSelected).pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(selected => {
-      this.selectedDictionaryId =  selected || null;
-      this.markForCheck();
-    });
+    this.store
+      .select(fromCommandDictionary.getSelected)
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(selected => {
+        this.selectedDictionaryId = selected || null;
+        this.markForCheck();
+      });
 
     this.store.dispatch(new FetchCommandDictionaryList());
   }
@@ -95,7 +105,7 @@ export class HummingbirdAppComponent implements OnDestroy {
    * A dictionary from the list of dictionaries was selected
    * @param dictionary The dictionary which was selected
    */
-  onSelectedDictionary(selectedId: string ) {
+  onSelectedDictionary(selectedId: string) {
     this.store.dispatch(new SelectCommandDictionary(selectedId));
   }
 

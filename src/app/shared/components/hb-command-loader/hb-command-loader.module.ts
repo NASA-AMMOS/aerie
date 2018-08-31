@@ -16,10 +16,6 @@ import { HBCommandLoaderComponent } from './hb-command-loader.component';
 @NgModule({
   declarations: [HBCommandLoaderComponent],
   exports: [HBCommandLoaderComponent],
-  imports: [
-    CommonModule,
-    MatSelectModule,
-    MatFormFieldModule,
-  ],
+  imports: [CommonModule, MatSelectModule, MatFormFieldModule],
 })
 export class HBCommandLoaderModule {}

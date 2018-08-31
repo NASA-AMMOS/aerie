@@ -13,16 +13,8 @@ import { MatButtonModule, MatIconModule } from '@angular/material';
 import { RavenFilterComponent } from './raven-filter.component';
 
 @NgModule({
-  declarations: [
-    RavenFilterComponent,
-  ],
-  exports: [
-    RavenFilterComponent,
-  ],
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatIconModule,
-  ],
+  declarations: [RavenFilterComponent],
+  exports: [RavenFilterComponent],
+  imports: [CommonModule, MatButtonModule, MatIconModule],
 })
 export class RavenFilterModule {}

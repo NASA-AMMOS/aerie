@@ -17,11 +17,7 @@ import {
   RouterStateSnapshot,
 } from '@angular/router';
 
-import {
-  Observable,
-  of,
-  Subject,
-} from 'rxjs';
+import { Observable, of, Subject } from 'rxjs';
 
 import {
   catchError,
@@ -47,12 +43,13 @@ export class RavenGuard implements CanActivate {
 
   constructor(private store$: Store<RavenAppState>) {
     // Config state.
-    this.store$.select(fromConfig.getUrls).pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(({ baseUrl, epochsUrl }) => {
-      this.epochsUrl = epochsUrl;
-      this.baseUrl = baseUrl;
-    });
+    this.store$
+      .select(fromConfig.getUrls)
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(({ baseUrl, epochsUrl }) => {
+        this.epochsUrl = epochsUrl;
+        this.baseUrl = baseUrl;
+      });
   }
 
   /**
@@ -60,10 +57,11 @@ export class RavenGuard implements CanActivate {
    */
   canActivate(
     next: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot): Observable<boolean> | Promise<boolean> | boolean {
+    state: RouterStateSnapshot
+  ): Observable<boolean> | Promise<boolean> | boolean {
     return this.initialSourcesLoaded().pipe(
       switchMap(() => of(true)),
-      catchError(() => of(false)),
+      catchError(() => of(false))
     );
   }
 
@@ -78,11 +76,13 @@ export class RavenGuard implements CanActivate {
       tap((initialSourcesLoaded: boolean) => {
         if (!initialSourcesLoaded) {
           this.store$.dispatch(new sourceExplorerActions.FetchInitialSources());
-          this.store$.dispatch(new epochsActions.FetchEpochs(`${this.baseUrl}/${this.epochsUrl}`));
+          this.store$.dispatch(
+            new epochsActions.FetchEpochs(`${this.baseUrl}/${this.epochsUrl}`)
+          );
         }
       }),
       filter((initialSourcesLoaded: boolean) => initialSourcesLoaded),
-      take(1),
+      take(1)
     );
   }
 }

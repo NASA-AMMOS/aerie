@@ -27,31 +27,49 @@ import * as CodeMirror from 'codemirror';
   selector: 'hb-code-mirror',
   template: `<div #codeMirror></div>`,
 })
-
 export class HBCodeMirrorComponent implements AfterViewInit, OnChanges {
-  @ViewChild('codeMirror') codeMirror: ElementRef;
+  @ViewChild('codeMirror')
+  codeMirror: ElementRef;
 
-  @Input() lineNumbers: boolean | undefined = true;
-  @Input() mode = '';
-  @Input() value = '';
+  @Input()
+  lineNumbers: boolean | undefined = true;
 
-  @Output() beforeChange: EventEmitter<null> = new EventEmitter<null>();
-  @Output() change: EventEmitter<CodeMirror.Editor> = new EventEmitter<CodeMirror.Editor>();
-  @Output() changes: EventEmitter<CodeMirror.Editor> = new EventEmitter<CodeMirror.Editor>();
+  @Input()
+  mode = '';
+
+  @Input()
+  value = '';
+
+  @Output()
+  beforeChange: EventEmitter<null> = new EventEmitter<null>();
+
+  @Output()
+  change: EventEmitter<CodeMirror.Editor> = new EventEmitter<
+    CodeMirror.Editor
+  >();
+
+  @Output()
+  changes: EventEmitter<CodeMirror.Editor> = new EventEmitter<
+    CodeMirror.Editor
+  >();
 
   codeMirrorInstance: CodeMirror.Editor;
 
   ngAfterViewInit() {
     this.codeMirrorInstance = CodeMirror(this.codeMirror.nativeElement, {
       lineNumbers: this.lineNumbers,
-      mode:  this.mode,
+      mode: this.mode,
       value: this.value,
     });
 
     // Events.
     this.codeMirrorInstance.on('beforeChange', () => this.beforeChange.emit());
-    this.codeMirrorInstance.on('change', (event: CodeMirror.Editor) => this.change.emit(event));
-    this.codeMirrorInstance.on('changes', (event: CodeMirror.Editor) => this.changes.emit(event));
+    this.codeMirrorInstance.on('change', (event: CodeMirror.Editor) =>
+      this.change.emit(event)
+    );
+    this.codeMirrorInstance.on('changes', (event: CodeMirror.Editor) =>
+      this.changes.emit(event)
+    );
   }
 
   ngOnChanges(changes: SimpleChanges) {

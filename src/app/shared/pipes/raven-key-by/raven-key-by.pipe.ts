@@ -9,10 +9,7 @@
 
 import { keyBy } from 'lodash';
 
-import {
-  Pipe,
-  PipeTransform,
-} from '@angular/core';
+import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
   name: 'keyBy',

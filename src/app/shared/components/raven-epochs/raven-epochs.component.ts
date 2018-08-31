@@ -19,14 +19,9 @@ import {
   ViewChild,
 } from '@angular/core';
 
-import {
-  AgGridNg2,
-} from 'ag-grid-angular';
+import { AgGridNg2 } from 'ag-grid-angular';
 
-import {
-  RavenEpoch,
-  RavenUpdate,
-} from '../../../shared/models';
+import { RavenEpoch, RavenUpdate } from '../../../shared/models';
 
 @Component({
   selector: 'raven-epochs',
@@ -34,15 +29,26 @@ import {
   templateUrl: './raven-epochs.component.html',
 })
 export class RavenEpochsComponent implements AfterViewInit, OnChanges {
-  @ViewChild('agGrid') agGrid: AgGridNg2;
+  @ViewChild('agGrid')
+  agGrid: AgGridNg2;
 
-  @Input() dayCode: string;
-  @Input() earthSecToEpochSec: number;
-  @Input() epochs: RavenEpoch[];
-  @Input() inUseEpoch: RavenEpoch | null;
+  @Input()
+  dayCode: string;
 
-  @Output() importEpochs: EventEmitter<RavenEpoch[]> = new EventEmitter<RavenEpoch[]>();
-  @Output() updateEpochs: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
+  @Input()
+  earthSecToEpochSec: number;
+
+  @Input()
+  epochs: RavenEpoch[];
+
+  @Input()
+  inUseEpoch: RavenEpoch | null;
+
+  @Output()
+  importEpochs: EventEmitter<RavenEpoch[]> = new EventEmitter<RavenEpoch[]>();
+
+  @Output()
+  updateEpochs: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
 
   columnDefs: any[] = [];
   rowData: any[] = [];
@@ -127,7 +133,7 @@ export class RavenEpochsComponent implements AfterViewInit, OnChanges {
   readFile(file: File): void {
     const reader: FileReader = new FileReader();
 
-    reader.onloadend = (e) => {
+    reader.onloadend = e => {
       const newEpochs: RavenEpoch[] = JSON.parse(reader.result);
       this.importEpochs.emit(newEpochs);
     };

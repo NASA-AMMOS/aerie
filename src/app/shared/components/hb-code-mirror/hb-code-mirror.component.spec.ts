@@ -7,30 +7,20 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  SimpleChange,
-} from '@angular/core';
+import { SimpleChange } from '@angular/core';
 
-import {
-  async,
-  ComponentFixture,
-  TestBed,
-} from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import {
-  HBCodeMirrorComponent,
-} from './hb-code-mirror.component';
+import { HBCodeMirrorComponent } from './hb-code-mirror.component';
 
 describe('HBCodeMirrorComponent', () => {
   let component: HBCodeMirrorComponent;
   let fixture: ComponentFixture<HBCodeMirrorComponent>;
 
   beforeEach(async(() => {
-    TestBed
-      .configureTestingModule({
-        declarations: [ HBCodeMirrorComponent ],
-      })
-      .compileComponents();
+    TestBed.configureTestingModule({
+      declarations: [HBCodeMirrorComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -100,13 +90,15 @@ describe('HBCodeMirrorComponent', () => {
     });
 
     fixture.detectChanges();
-    expect(component.codeMirrorInstance.getOption('lineNumbers')).toBe(lineNumbers);
+    expect(component.codeMirrorInstance.getOption('lineNumbers')).toBe(
+      lineNumbers
+    );
   });
 
   it('should emit when beforeChange event', () => {
     let called = false;
 
-    component.beforeChange.subscribe(() => called = true);
+    component.beforeChange.subscribe(() => (called = true));
     component.codeMirrorInstance.setValue('change value');
 
     expect(called).toBe(true);
@@ -115,7 +107,7 @@ describe('HBCodeMirrorComponent', () => {
   it('should emit when change event', () => {
     let called = false;
 
-    component.change.subscribe(() => called = true);
+    component.change.subscribe(() => (called = true));
     component.codeMirrorInstance.setValue('change value');
 
     expect(called).toBe(true);
@@ -124,7 +116,7 @@ describe('HBCodeMirrorComponent', () => {
   it('should emit when changes event', () => {
     let called = false;
 
-    component.changes.subscribe(() => called = true);
+    component.changes.subscribe(() => (called = true));
     component.codeMirrorInstance.setValue('change value');
 
     expect(called).toBe(true);

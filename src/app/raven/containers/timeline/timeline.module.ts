@@ -39,12 +39,8 @@ import {
 } from '../../../shared/components/modules';
 
 @NgModule({
-  declarations: [
-    TimelineComponent,
-  ],
-  exports: [
-    TimelineComponent,
-  ],
+  declarations: [TimelineComponent],
+  exports: [TimelineComponent],
   imports: [
     AngularSplitModule,
     CommonModule,

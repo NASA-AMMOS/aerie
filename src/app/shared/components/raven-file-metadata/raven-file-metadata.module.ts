@@ -14,16 +14,8 @@ import { RavenCustomMetadataModule } from '../raven-custom-metadata/raven-custom
 import { RavenFileMetadataComponent } from './raven-file-metadata.component';
 
 @NgModule({
-  declarations: [
-    RavenFileMetadataComponent,
-  ],
-  exports: [
-    RavenFileMetadataComponent,
-  ],
-  imports: [
-    CommonModule,
-    MatCardModule,
-    RavenCustomMetadataModule,
-  ],
+  declarations: [RavenFileMetadataComponent],
+  exports: [RavenFileMetadataComponent],
+  imports: [CommonModule, MatCardModule, RavenCustomMetadataModule],
 })
 export class RavenFileMetadataModule {}

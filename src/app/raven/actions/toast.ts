@@ -22,10 +22,9 @@ export class ShowToast implements Action {
     public toastType: string,
     public message: string,
     public title: string,
-    public config?: any,
+    public config?: any
   ) {}
 }
 
 // Union type of all actions.
-export type ToastrAction =
-  ShowToast;
+export type ToastrAction = ShowToast;

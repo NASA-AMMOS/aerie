@@ -16,5 +16,6 @@ import { RavenStatePoint } from '../../../shared/models';
   templateUrl: './raven-state-point.component.html',
 })
 export class RavenStatePointComponent {
-  @Input() selectedPoint: RavenStatePoint;
+  @Input()
+  selectedPoint: RavenStatePoint;
 }

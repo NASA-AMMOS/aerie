@@ -16,5 +16,6 @@ import { RavenResourcePoint } from '../../../shared/models';
   templateUrl: './raven-resource-point.component.html',
 })
 export class RavenResourcePointComponent {
-  @Input() selectedPoint: RavenResourcePoint;
+  @Input()
+  selectedPoint: RavenResourcePoint;
 }

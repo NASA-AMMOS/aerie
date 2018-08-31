@@ -7,14 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  RavenState,
-} from '../models';
+import { RavenState } from '../models';
 
-import {
-  exportState,
-  importState,
-} from './state';
+import { exportState, importState } from './state';
 
 export const preExportBands = [
   {
@@ -92,7 +87,9 @@ export const postExportBands: any[] = [
 describe('state.ts', () => {
   describe('exportState', () => {
     it('should properly export a state', () => {
-      expect(exportState({ bands: preExportBands } as RavenState)).toEqual({ bands: postExportBands });
+      expect(exportState({ bands: preExportBands } as RavenState)).toEqual({
+        bands: postExportBands,
+      });
     });
   });
 

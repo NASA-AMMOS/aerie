@@ -22,15 +22,8 @@ describe('EpochsEffects', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [
-        HttpClientModule,
-        StoreModule.forRoot({}),
-      ],
-      providers: [
-        HttpClient,
-        EpochsEffects,
-        provideMockActions(() => actions),
-      ],
+      imports: [HttpClientModule, StoreModule.forRoot({})],
+      providers: [HttpClient, EpochsEffects, provideMockActions(() => actions)],
     });
 
     effects = TestBed.get(EpochsEffects);

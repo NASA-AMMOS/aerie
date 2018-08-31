@@ -12,14 +12,8 @@ import { NgModule } from '@angular/core';
 import { RavenCustomMetadataComponent } from './raven-custom-metadata.component';
 
 @NgModule({
-  declarations: [
-    RavenCustomMetadataComponent,
-  ],
-  exports: [
-    RavenCustomMetadataComponent,
-  ],
-  imports: [
-    CommonModule,
-  ],
+  declarations: [RavenCustomMetadataComponent],
+  exports: [RavenCustomMetadataComponent],
+  imports: [CommonModule],
 })
 export class RavenCustomMetadataModule {}

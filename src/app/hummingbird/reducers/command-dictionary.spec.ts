@@ -9,10 +9,13 @@
 
 import * as mpsServerMocks from '../../shared/mocks/mps-server';
 import { FetchCommandDictionaryListSuccess } from '../actions/command-dictionary';
-import { CommandDictionaryState, initialState, reducer } from './command-dictionary';
+import {
+  CommandDictionaryState,
+  initialState,
+  reducer,
+} from './command-dictionary';
 
 describe('Command Dictionary reducer', () => {
-
   it('handle default', () => {
     expect(initialState).toEqual(initialState);
   });
@@ -20,7 +23,9 @@ describe('Command Dictionary reducer', () => {
   it('should handle FetchCommandDictionaryListSuccess', () => {
     const result: CommandDictionaryState = reducer(
       initialState,
-      new FetchCommandDictionaryListSuccess(mpsServerMocks.commandDictionaryList),
+      new FetchCommandDictionaryListSuccess(
+        mpsServerMocks.commandDictionaryList
+      )
     );
     expect(result).toEqual({
       commands: null,

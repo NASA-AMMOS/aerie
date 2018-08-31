@@ -19,12 +19,8 @@ import {
 } from '@angular/material';
 
 @NgModule({
-  declarations: [
-    RavenCustomFilterComponent,
-  ],
-  exports: [
-    RavenCustomFilterComponent,
-  ],
+  declarations: [RavenCustomFilterComponent],
+  exports: [RavenCustomFilterComponent],
   imports: [
     CommonModule,
     MatButtonModule,

@@ -42,13 +42,15 @@ export class FetchCommandDictionaryList implements Action {
 }
 
 export class FetchCommandDictionaryListFailure implements Action {
-  readonly type = CommandDictionaryActionTypes.FetchCommandDictionaryListFailure;
+  readonly type =
+    CommandDictionaryActionTypes.FetchCommandDictionaryListFailure;
 
   constructor(public error: Error) {}
 }
 
 export class FetchCommandDictionaryListSuccess implements Action {
-  readonly type = CommandDictionaryActionTypes.FetchCommandDictionaryListSuccess;
+  readonly type =
+    CommandDictionaryActionTypes.FetchCommandDictionaryListSuccess;
 
   constructor(public data: any) {}
 }
@@ -60,10 +62,10 @@ export class SelectCommandDictionary implements Action {
 }
 
 export type CommandDictionaryAction =
-  FetchCommandDictionary |
-  FetchCommandDictionaryFailure |
-  FetchCommandDictionarySuccess |
-  FetchCommandDictionaryList |
-  FetchCommandDictionaryListFailure |
-  FetchCommandDictionaryListSuccess |
-  SelectCommandDictionary;
+  | FetchCommandDictionary
+  | FetchCommandDictionaryFailure
+  | FetchCommandDictionarySuccess
+  | FetchCommandDictionaryList
+  | FetchCommandDictionaryListFailure
+  | FetchCommandDictionaryListSuccess
+  | SelectCommandDictionary;

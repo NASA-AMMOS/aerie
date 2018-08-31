@@ -20,12 +20,8 @@ import {
 } from '@angular/material';
 
 @NgModule({
-  declarations: [
-    RavenTimeCursorComponent,
-  ],
-  exports: [
-    RavenTimeCursorComponent,
-  ],
+  declarations: [RavenTimeCursorComponent],
+  exports: [RavenTimeCursorComponent],
   imports: [
     MatCardModule,
     MatFormFieldModule,

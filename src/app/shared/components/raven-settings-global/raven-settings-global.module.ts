@@ -21,12 +21,8 @@ import {
 } from '@angular/material';
 
 @NgModule({
-  declarations: [
-    RavenSettingsGlobalComponent,
-  ],
-  exports: [
-    RavenSettingsGlobalComponent,
-  ],
+  declarations: [RavenSettingsGlobalComponent],
+  exports: [RavenSettingsGlobalComponent],
   imports: [
     CommonModule,
     MatButtonModule,

@@ -41,7 +41,7 @@ export class WriteFile implements Action {
 
 // Union type of all actions.
 export type OutputAction =
-  AppendData |
-  CreateOutput |
-  UpdateOutputSettings |
-  WriteFile;
+  | AppendData
+  | CreateOutput
+  | UpdateOutputSettings
+  | WriteFile;

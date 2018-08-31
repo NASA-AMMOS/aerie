@@ -7,11 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  initialState,
-  reducer,
-  TimeCursorState,
-} from './time-cursor';
+import { initialState, reducer, TimeCursorState } from './time-cursor';
 
 import {
   HideTimeCursor,
@@ -49,11 +45,14 @@ describe('time-cursor reducer', () => {
   });
 
   it('handle UpdateTimeCursorSettings', () => {
-    timeCursorState = reducer(timeCursorState, new UpdateTimeCursorSettings({
-      autoPage: true,
-      clockRate: 42,
-      clockUpdateIntervalInSecs: 1,
-    }));
+    timeCursorState = reducer(
+      timeCursorState,
+      new UpdateTimeCursorSettings({
+        autoPage: true,
+        clockRate: 42,
+        clockUpdateIntervalInSecs: 1,
+      })
+    );
 
     expect(timeCursorState).toEqual({
       ...initialState,

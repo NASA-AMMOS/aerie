@@ -45,31 +45,33 @@ export class RavenAppComponent implements OnDestroy {
 
   constructor(
     private changeDetector: ChangeDetectorRef,
-    private store: Store<fromSourceExplorer.SourceExplorerState>,
+    private store: Store<fromSourceExplorer.SourceExplorerState>
   ) {
     // Combine all fetch pending observables for use in progress bar.
     this.loading$ = combineLatest(
       this.store.select(fromSourceExplorer.getPending),
-      this.store.select(fromTimeline.getPending),
+      this.store.select(fromTimeline.getPending)
     ).pipe(
       map(loading => loading[0] || loading[1]),
-      tap(() => this.markForCheck()),
+      tap(() => this.markForCheck())
     );
 
     // Config version.
-    this.store.select(fromConfig.getVersion).pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(v => {
-      this.info = this.getInfo(v.version, v.branch, v.commit);
-    });
+    this.store
+      .select(fromConfig.getVersion)
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(v => {
+        this.info = this.getInfo(v.version, v.branch, v.commit);
+      });
 
     // Layout mode.
-    this.store.select(fromLayout.getMode).pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(mode => {
-      this.mode = mode;
-      this.markForCheck();
-    });
+    this.store
+      .select(fromLayout.getMode)
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(mode => {
+        this.mode = mode;
+        this.markForCheck();
+      });
   }
 
   ngOnDestroy() {
@@ -84,23 +86,37 @@ export class RavenAppComponent implements OnDestroy {
    */
   @HostListener('window:keydown', ['$event'])
   onResize(e: KeyboardEvent): void {
-    if (e.ctrlKey && e.shiftKey && e.code === 'Digit1' && this.mode !== 'minimal') { // Ctrl+Shift+1.
+    if (
+      e.ctrlKey &&
+      e.shiftKey &&
+      e.code === 'Digit1' &&
+      this.mode !== 'minimal'
+    ) {
+      // Ctrl+Shift+1.
       this.store.dispatch(new layoutActions.ToggleLeftPanel());
-    } else if (e.ctrlKey && e.shiftKey && e.code === 'Digit2') { // Ctrl+Shift+2.
+    } else if (e.ctrlKey && e.shiftKey && e.code === 'Digit2') {
+      // Ctrl+Shift+2.
       this.store.dispatch(new layoutActions.ToggleRightPanel());
-    } else if (e.ctrlKey && e.shiftKey && e.code === 'Digit3') { // Ctrl+Shift+3.
+    } else if (e.ctrlKey && e.shiftKey && e.code === 'Digit3') {
+      // Ctrl+Shift+3.
       this.store.dispatch(new layoutActions.ToggleSouthBandsPanel());
-    } else if (e.ctrlKey && e.shiftKey && e.code === 'Digit4') { // Ctrl+Shift+4.
+    } else if (e.ctrlKey && e.shiftKey && e.code === 'Digit4') {
+      // Ctrl+Shift+4.
       this.store.dispatch(new layoutActions.ToggleDetailsPanel());
-    } else if (e.ctrlKey && e.shiftKey && e.code === 'Digit5') { // Ctrl+Shift+5.
+    } else if (e.ctrlKey && e.shiftKey && e.code === 'Digit5') {
+      // Ctrl+Shift+5.
       this.store.dispatch(new layoutActions.ToggleGlobalSettingsDrawer());
-    } else if (e.ctrlKey && e.shiftKey && e.code === 'Equal') { // Ctrl+Shift+Equal.
+    } else if (e.ctrlKey && e.shiftKey && e.code === 'Equal') {
+      // Ctrl+Shift+Equal.
       this.store.dispatch(new timelineActions.ZoomInViewTimeRange());
-    } else if (e.ctrlKey && e.shiftKey && e.code === 'Minus') { // Ctrl+Shift+Minus.
+    } else if (e.ctrlKey && e.shiftKey && e.code === 'Minus') {
+      // Ctrl+Shift+Minus.
       this.store.dispatch(new timelineActions.ZoomOutViewTimeRange());
-    } else if (e.ctrlKey && e.shiftKey && e.code === 'ArrowRight') { // Ctrl+Shift+ArrowRight.
+    } else if (e.ctrlKey && e.shiftKey && e.code === 'ArrowRight') {
+      // Ctrl+Shift+ArrowRight.
       this.store.dispatch(new timelineActions.PanRightViewTimeRange());
-    } else if (e.ctrlKey && e.shiftKey && e.code === 'ArrowLeft') { // Ctrl+Shift+ArrowLeft.
+    } else if (e.ctrlKey && e.shiftKey && e.code === 'ArrowLeft') {
+      // Ctrl+Shift+ArrowLeft.
       this.store.dispatch(new timelineActions.PanLeftViewTimeRange());
     }
   }
@@ -157,7 +173,9 @@ export class RavenAppComponent implements OnDestroy {
   }
 
   toggleAboutDialog() {
-    this.store.dispatch(new dialogActions.OpenConfirmDialog('Close', this.info, '400px'));
+    this.store.dispatch(
+      new dialogActions.OpenConfirmDialog('Close', this.info, '400px')
+    );
   }
 
   toggleDetailsPanel() {

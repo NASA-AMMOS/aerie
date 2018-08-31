@@ -42,7 +42,7 @@ export class TimeCursorEffects {
   @Effect({ dispatch: false })
   hideTimeCursor$: Observable<Action> = this.actions$.pipe(
     ofType<HideTimeCursor>(TimeCursorActionTypes.HideTimeCursor),
-    concatMap(() => of({} as Action)),
+    concatMap(() => of({} as Action))
   );
 
   /**
@@ -54,13 +54,13 @@ export class TimeCursorEffects {
     withLatestFrom(this.store$),
     map(([, state]) => state.raven),
     concatMap(({ timeCursor: { clockUpdateIntervalInSecs } }) =>
-      this.cursorInterval$(clockUpdateIntervalInSecs),
-    ),
+      this.cursorInterval$(clockUpdateIntervalInSecs)
+    )
   );
 
   constructor(
     private actions$: Actions,
-    private store$: Store<RavenAppState>,
+    private store$: Store<RavenAppState>
   ) {}
 
   /**
@@ -77,10 +77,10 @@ export class TimeCursorEffects {
           raven.timeCursor.clockRate,
           raven.timeCursor.clockUpdateIntervalInSecs,
           raven.timeCursor.autoPage,
-          raven.timeline.viewTimeRange,
-        ),
+          raven.timeline.viewTimeRange
+        )
       ),
-      takeUntil(this.hideTimeCursor$),
+      takeUntil(this.hideTimeCursor$)
     );
   }
 
@@ -93,20 +93,28 @@ export class TimeCursorEffects {
     clockRate: number,
     clockUpdateIntervalInSecs: number,
     autoPage: boolean,
-    viewTimeRange: RavenTimeRange,
+    viewTimeRange: RavenTimeRange
   ) {
     const actions = [];
 
-    const newCursorTime = cursorTime ? cursorTime + (clockRate * clockUpdateIntervalInSecs) : null;
-    actions.push((new timeCursorActions.UpdateTimeCursorSettings({ cursorTime: newCursorTime })));
+    const newCursorTime = cursorTime
+      ? cursorTime + clockRate * clockUpdateIntervalInSecs
+      : null;
+    actions.push(
+      new timeCursorActions.UpdateTimeCursorSettings({
+        cursorTime: newCursorTime,
+      })
+    );
 
     // If we are auto-paging and our time cursor goes outside the view window, then pan the view window right.
-    if (autoPage &&
-        cursorTime &&
-        cursorTime > viewTimeRange.start &&
-        cursorTime < viewTimeRange.end &&
-        newCursorTime &&
-        newCursorTime > viewTimeRange.end) {
+    if (
+      autoPage &&
+      cursorTime &&
+      cursorTime > viewTimeRange.start &&
+      cursorTime < viewTimeRange.end &&
+      newCursorTime &&
+      newCursorTime > viewTimeRange.end
+    ) {
       actions.push(new timelineActions.PanRightViewTimeRange());
     }
 

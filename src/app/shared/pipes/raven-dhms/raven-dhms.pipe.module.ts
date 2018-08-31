@@ -9,16 +9,10 @@
 
 import { NgModule } from '@angular/core';
 
-import {
-  RavenDhmsPipe,
-} from './raven-dhms.pipe';
+import { RavenDhmsPipe } from './raven-dhms.pipe';
 
 @NgModule({
-  declarations: [
-    RavenDhmsPipe,
-  ],
-  exports: [
-    RavenDhmsPipe,
-  ],
+  declarations: [RavenDhmsPipe],
+  exports: [RavenDhmsPipe],
 })
 export class RavenDhmsPipeModule {}

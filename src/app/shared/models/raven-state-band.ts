@@ -7,10 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  RavenStatePoint,
-  RavenTimeRange,
-} from './index';
+import { RavenStatePoint, RavenTimeRange } from './index';
 
 export interface RavenStateBand {
   alignLabel: number;

@@ -22,12 +22,8 @@ import {
 } from '@angular/material';
 
 @NgModule({
-  declarations: [
-    RavenSettingsBandsComponent,
-  ],
-  exports: [
-    RavenSettingsBandsComponent,
-  ],
+  declarations: [RavenSettingsBandsComponent],
+  exports: [RavenSettingsBandsComponent],
   imports: [
     CommonModule,
     MatButtonModule,

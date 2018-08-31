@@ -9,7 +9,11 @@
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { config, ConfigState } from '../../../config';
-import { ConfigAction, ConfigActionTypes, UpdateDefaultBandSettings } from '../actions/config';
+import {
+  ConfigAction,
+  ConfigActionTypes,
+  UpdateDefaultBandSettings,
+} from '../actions/config';
 
 // Config State Interface.
 // Defined in the top-level `config.ts` file.
@@ -21,7 +25,10 @@ export const initialState: ConfigState = config;
  * Reducer.
  * If a case takes more than one line then it should be in it's own helper function.
  */
-export function reducer(state: ConfigState = initialState, action: ConfigAction): ConfigState {
+export function reducer(
+  state: ConfigState = initialState,
+  action: ConfigAction
+): ConfigState {
   switch (action.type) {
     case ConfigActionTypes.UpdateDefaultBandSettings:
       return updateDefaultBandSettings(state, action);
@@ -33,7 +40,10 @@ export function reducer(state: ConfigState = initialState, action: ConfigAction)
 /**
  * Reduction Helper. Called when reducing the 'UpdateDefaultBandSettings' action.
  */
-export function updateDefaultBandSettings(state: ConfigState, action: UpdateDefaultBandSettings): ConfigState {
+export function updateDefaultBandSettings(
+  state: ConfigState,
+  action: UpdateDefaultBandSettings
+): ConfigState {
   return {
     ...state,
     raven: {
@@ -56,11 +66,11 @@ export const getConfigState = createFeatureSelector('config');
  */
 export const getDefaultBandSettings = createSelector(
   getConfigState,
-  (state: ConfigState) => state.raven.defaultBandSettings,
+  (state: ConfigState) => state.raven.defaultBandSettings
 );
 export const getItarMessage = createSelector(
   getConfigState,
-  (state: ConfigState) => state.raven.itarMessage,
+  (state: ConfigState) => state.raven.itarMessage
 );
 export const getVersion = createSelector(
   getConfigState,
@@ -68,15 +78,12 @@ export const getVersion = createSelector(
     branch: state.app.branch,
     commit: state.app.commit,
     version: state.app.version,
-  }),
+  })
 );
-export const getUrls = createSelector(
-  getConfigState,
-  (state: ConfigState) => ({
-    apiUrl: state.mpsServer.apiUrl,
-    baseUrl: state.app.baseUrl,
-    epochsUrl: state.mpsServer.epochsUrl,
-    ravenUrl: state.mpsServer.ravenUrl,
-    socketUrl: state.mpsServer.socketUrl,
-  }),
-);
+export const getUrls = createSelector(getConfigState, (state: ConfigState) => ({
+  apiUrl: state.mpsServer.apiUrl,
+  baseUrl: state.app.baseUrl,
+  epochsUrl: state.mpsServer.epochsUrl,
+  ravenUrl: state.mpsServer.ravenUrl,
+  socketUrl: state.mpsServer.socketUrl,
+}));
