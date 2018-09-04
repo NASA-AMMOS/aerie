@@ -175,17 +175,21 @@ export class RavenCompositeBandComponent
 
     // Height.
     if (changes.height && !changes.height.firstChange) {
-      this.ctlCompositeBand.height = this.height;
+      this.ctlCompositeBand.height = this.height + this.heightPadding;
 
       for (let i = 0, l = this.ctlCompositeBand.bands.length; i < l; ++i) {
         const subBand = this.ctlCompositeBand.bands[i];
-
-        if (subBand.heightPadding && subBand.heightPadding > 0) {
-          subBand.height = this.height - subBand.heightPadding;
-        } else {
-          subBand.height = this.height;
-        }
+        // CtlBand height for state band needs to exclude heightPadding.
+        subBand.height = (subBand.type === 'state' && !subBand.isNumeric && subBand.showStateChangeTimes) ? this.height - subBand.heightPadding : this.height;
       }
+
+      shouldRedraw = true;
+    }
+
+    // Height Padding.
+    if (changes.heightPadding && !changes.heightPadding.firstChange) {
+      this.ctlCompositeBand.heightPading = this.heightPadding;
+      this.ctlCompositeBand.height = this.height + this.heightPadding;
 
       shouldRedraw = true;
     }
@@ -503,12 +507,7 @@ export class RavenCompositeBandComponent
     this.ctlCompositeBand.addBand(subBand);
     this.onUpdateTickValues();
     this.setIntervalColor();
-
-    // Only redraw if we have more than one sub-band since the first
-    // added sub-band will have already been drawn upon component creation.
-    if (this.ctlCompositeBand.bands.length > 1) {
-      this.redraw();
-    }
+    this.redraw();
   }
 
   /**

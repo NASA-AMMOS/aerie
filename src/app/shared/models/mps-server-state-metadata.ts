@@ -13,6 +13,7 @@ export interface MpsServerStateMetadata {
   hasObjectName: string;
   hasObjectNamespace: string;
   hasObjectType: string;
+  hasPossibleStates: string[] | null;
   hasTimeSystem: string;
   hasTimelineType: string;
   hasValueType: string;

@@ -229,35 +229,6 @@
               </mat-slide-toggle>
             </div>
 
-            <!-- Line Color. -->
-            <div class="field">
-              <label>Line Color</label>
-              <input
-                type="color"
-                [value]="subBand.color"
-                (input)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { color: $event.target.value } })">
-            </div>
-
-            <!-- Fill. -->
-            <div class="field">
-              <mat-slide-toggle
-                id="raven-settings-fill"
-                color="primary"
-                [checked]="subBand.fill"
-                (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { fill: $event.checked } })">
-                Fill
-              </mat-slide-toggle>
-            </div>
-
-            <!-- Fill Color. -->
-            <div class="field">
-              <label>Fill Color</label>
-              <input
-                type="color"
-                [value]="subBand.fillColor"
-                (input)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { fillColor: $event.target.value } })">
-            </div>
-
             <!-- Interpolation. -->
             <div class="field">
               <mat-form-field>
@@ -323,21 +294,10 @@
                 Scientific Notation
               </mat-slide-toggle>
             </div>
-
-            <!-- Show Icon. -->
-            <div class="field">
-              <mat-slide-toggle
-                id="raven-settings-show-icon"
-                color="primary"
-                [checked]="subBand.showIcon"
-                (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { showIcon: $event.checked } })">
-                Show Icon
-              </mat-slide-toggle>
-            </div>
           </ng-container>
 
-          <!-- State Settings. -->
-          <ng-container *ngIf="subBand.type === 'state'">
+          <!-- State Settings (non-numeric). -->
+          <ng-container *ngIf="subBand.type === 'state' && !subBand.isNumeric">
             <!-- Align Label. -->
             <div class="field">
               <mat-form-field>
@@ -373,19 +333,32 @@
                 id="raven-settings-show-state-change-times"
                 color="primary"
                 [checked]="subBand.showStateChangeTimes"
-                (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { showStateChangeTimes: $event.checked } })">
+                (change)="onChangeShowStateChangeTimes(subBand, $event.checked)">
                 Show State Change Times
               </mat-slide-toggle>
             </div>
           </ng-container>
 
-          <!-- Icon. -->
-          <div
-            *ngIf="subBand.type !== 'state' && subBand.type !== 'divider'"
+          <!-- Plot Type. -->
+          <div *ngIf="subBand.possibleStates && subBand.possibleStates.length > 0"
             class="field">
             <mat-form-field>
               <mat-select
-                placeholder="Default Icon"
+                placeholder="Plot Type"
+                [value]="subBand.isNumeric"
+                (selectionChange)="onChangePlotType(subBand, $event.value)">
+                <mat-option [value]="false">Bar</mat-option>
+                <mat-option [value]="true">Line</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <!-- Icon. -->
+          <div *ngIf="subBand.type === 'resource' || (subBand.type === 'activity' && subBand.activityStyle === 3) || subBand.isNumeric"
+            class="field">
+            <mat-form-field>
+              <mat-select
+                placeholder="Icon"
                 [value]="subBand.icon"
                 (selectionChange)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { icon: $event.value } })">
                 <mat-option [value]="''">None</mat-option>
@@ -398,6 +371,49 @@
               </mat-select>
             </mat-form-field>
           </div>
+
+          <!-- Resource or Numeric. -->
+          <ng-container *ngIf="subBand.type === 'resource' || subBand.isNumeric">
+            <!-- Show Icon. -->
+            <div class="field">
+              <mat-slide-toggle
+                id="raven-settings-show-icon"
+                color="primary"
+                [checked]="subBand.showIcon"
+                (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { showIcon: $event.checked } })">
+                Show Icon
+              </mat-slide-toggle>
+            </div>
+
+            <!-- Line Color. -->
+            <div class="field">
+              <label>Line Color</label>
+              <input
+                type="color"
+                [value]="subBand.color"
+                (input)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { color: $event.target.value } })">
+            </div>
+
+            <!-- Fill. -->
+            <div class="field">
+              <mat-slide-toggle
+                id="raven-settings-fill"
+                color="primary"
+                [checked]="subBand.fill"
+                (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { fill: $event.checked } })">
+                Fill
+              </mat-slide-toggle>
+            </div>
+
+            <!-- Fill Color. -->
+            <div class="field">
+              <label>Fill Color</label>
+              <input
+                type="color"
+                [value]="subBand.fillColor"
+                (input)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { fillColor: $event.target.value } })">
+            </div>
+          </ng-container>
 
           <!-- Delete Sub-Band. -->
           <div class="field">

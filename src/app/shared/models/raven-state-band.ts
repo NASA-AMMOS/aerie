@@ -14,9 +14,20 @@ export interface RavenStateBand {
   addTo: boolean;
   baselineLabel: number;
   borderWidth: number;
+
+  // Use in line plot only.
+  color: string;
+  fill: boolean;
+  fillColor: string;
+
   height: number;
   heightPadding: number;
+
+  // Use in line plot only.
+  icon: string;
+
   id: string;
+  isNumeric: boolean;
   label: string;
   labelColor: number[];
   labelFont: string;
@@ -25,6 +36,11 @@ export interface RavenStateBand {
   name: string;
   parentUniqueId: string | null;
   points: RavenStatePoint[];
+  possibleStates: string[];
+
+  // Use in line plot only.
+  showIcon: boolean;
+
   showLabelPin: boolean;
   showStateChangeTimes: boolean;
   showTooltip: boolean;
