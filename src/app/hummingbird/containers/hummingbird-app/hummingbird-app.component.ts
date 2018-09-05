@@ -21,10 +21,10 @@ import { HBCommandDictionary } from '../../../shared/models/hb-command-dictionar
 import {
   FetchCommandDictionaryList,
   SelectCommandDictionary,
-} from '../../actions/command-dictionary';
+} from '../../actions/command-dictionary.actions';
 import { HummingbirdAppState } from '../../hummingbird-store';
 
-import * as fromCommandDictionary from '../../reducers/command-dictionary';
+import * as fromCommandDictionary from '../../reducers/command-dictionary.reducer';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

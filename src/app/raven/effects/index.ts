@@ -7,12 +7,12 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './dialog.effect';
-export * from './epochs.effect';
-export * from './layout.effect';
-export * from './output.effect';
-export * from './router.effect';
-export * from './source-explorer.effect';
-export * from './time-cursor.effect';
-export * from './timeline.effect';
-export * from './toast.effect';
+export * from './dialog.effects';
+export * from './epochs.effects';
+export * from './layout.effects';
+export * from './output.effects';
+export * from './router.effects';
+export * from './source-explorer.effects';
+export * from './time-cursor.effects';
+export * from './timeline.effects';
+export * from './toast.effects';

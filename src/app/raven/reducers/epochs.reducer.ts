@@ -8,28 +8,24 @@
  */
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { StringTMap } from '../../shared/models';
-import { OutputAction, OutputActionTypes } from '../actions/output';
+import { RavenEpoch } from '../../shared/models/raven-epoch';
+import { EpochsAction, EpochsActionTypes } from '../actions/epochs.actions';
 import { State } from '../raven-store';
 
-// Output State Interface.
-export interface OutputState {
-  allInOneFile: boolean;
-  allInOneFilename: string;
-  decimateOutputData: boolean;
-  outputData: string;
-  outputFormat: string;
-  outputSourceIdsByLabel: StringTMap<string[]>;
+// Epoch State Interface.
+export interface EpochsState {
+  dayCode: string;
+  earthSecToEpochSec: number;
+  epochs: RavenEpoch[];
+  inUseEpoch: RavenEpoch | null;
 }
 
-// Output Initial State.
-export const initialState: OutputState = {
-  allInOneFile: false,
-  allInOneFilename: '',
-  decimateOutputData: true,
-  outputData: '',
-  outputFormat: 'CSV',
-  outputSourceIdsByLabel: {},
+// Epoch Initial State.
+export const initialState: EpochsState = {
+  dayCode: '',
+  earthSecToEpochSec: 1,
+  epochs: [],
+  inUseEpoch: null,
 };
 
 /**
@@ -37,24 +33,24 @@ export const initialState: OutputState = {
  * If a case takes more than one line then it should be in it's own helper function.
  */
 export function reducer(
-  state: OutputState = initialState,
-  action: OutputAction
-): OutputState {
+  state: EpochsState = initialState,
+  action: EpochsAction
+): EpochsState {
   switch (action.type) {
-    case OutputActionTypes.UpdateOutputSettings:
+    case EpochsActionTypes.AddEpochs:
+      return { ...state, epochs: state.epochs.concat(action.epochs) };
+    case EpochsActionTypes.UpdateEpochs:
       return { ...state, ...action.update };
-    case OutputActionTypes.AppendData:
-      return { ...state, outputData: state.outputData.concat(action.data) };
     default:
       return state;
   }
 }
 
 /**
- * Output state selector helper.
+ * Epoch state selector helper.
  */
 const featureSelector = createFeatureSelector<State>('raven');
-export const getOutputState = createSelector(
+export const getEpochsState = createSelector(
   featureSelector,
-  (state: State): OutputState => state.output
+  (state: State): EpochsState => state.epochs
 );

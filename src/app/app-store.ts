@@ -12,7 +12,7 @@ import { ConfigState } from '../config';
 import { environment } from '../environments/environment';
 
 import * as fromRouter from '@ngrx/router-store';
-import * as fromConfig from './shared/reducers/config';
+import * as fromConfig from './shared/reducers/config.reducer';
 
 /**
  * storeFreeze prevents state from being mutated. When mutation occurs, an

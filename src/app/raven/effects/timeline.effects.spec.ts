@@ -13,7 +13,7 @@ import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { StoreModule } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
-import { TimelineEffects } from './timeline.effect';
+import { TimelineEffects } from './timeline.effects';
 
 describe('TimelineEffects', () => {
   let effects: TimelineEffects;

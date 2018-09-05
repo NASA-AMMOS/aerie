@@ -23,7 +23,7 @@ import {
   FetchCommandDictionaryListSuccess,
   FetchCommandDictionarySuccess,
   SelectCommandDictionary,
-} from '../actions/command-dictionary';
+} from '../actions/command-dictionary.actions';
 
 @Injectable()
 export class CommandDictionaryEffects {

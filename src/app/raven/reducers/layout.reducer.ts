@@ -19,7 +19,7 @@ import {
   ToggleGlobalSettingsDrawer,
   ToggleOutputDrawer,
   ToggleTimeCursorDrawer,
-} from '../actions/layout';
+} from '../actions/layout.actions';
 
 // Layout State Interface.
 export interface LayoutState {

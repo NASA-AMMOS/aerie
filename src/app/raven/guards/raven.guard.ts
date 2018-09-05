@@ -28,10 +28,10 @@ import {
   tap,
 } from 'rxjs/operators';
 
-import * as fromConfig from '../../shared/reducers/config';
-import * as epochsActions from '../actions/epochs';
-import * as sourceExplorerActions from '../actions/source-explorer';
-import * as fromSourceExplorer from '../reducers/source-explorer';
+import * as fromConfig from '../../shared/reducers/config.reducer';
+import * as epochsActions from '../actions/epochs.actions';
+import * as sourceExplorerActions from '../actions/source-explorer.actions';
+import * as fromSourceExplorer from '../reducers/source-explorer.reducer';
 
 @Injectable()
 export class RavenGuard implements CanActivate {

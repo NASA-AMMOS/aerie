@@ -7,34 +7,30 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { StoreModule } from '@ngrx/store';
-import { ToastrModule, ToastrService } from 'ngx-toastr';
 import { Observable, of } from 'rxjs';
-import { ToastEffects } from './toast.effect';
+import { EpochsEffects } from './epochs.effects';
 
-describe('ToastEffects', () => {
-  let effects: ToastEffects;
-  let metadata: EffectsMetadata<ToastEffects>;
+describe('EpochsEffects', () => {
+  let effects: EpochsEffects;
+  let metadata: EffectsMetadata<EpochsEffects>;
   const actions: Observable<any> = of();
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [StoreModule.forRoot({}), ToastrModule.forRoot()],
-      providers: [
-        ToastEffects,
-        ToastrService,
-        provideMockActions(() => actions),
-      ],
+      imports: [HttpClientModule, StoreModule.forRoot({})],
+      providers: [HttpClient, EpochsEffects, provideMockActions(() => actions)],
     });
 
-    effects = TestBed.get(ToastEffects);
+    effects = TestBed.get(EpochsEffects);
     metadata = getEffectsMetadata(effects);
   });
 
-  it('should register showToast$ that does not dispatch an action', () => {
-    expect(metadata.showToast$).toEqual({ dispatch: false });
+  it('should register fetchEpochs$ that does dispatch an action', () => {
+    expect(metadata.fetchEpochs$).toEqual({ dispatch: true });
   });
 });

@@ -29,7 +29,7 @@ import {
   TimelineActionTypes,
   UpdateBand,
   UpdateSubBand,
-} from '../actions/timeline';
+} from '../actions/timeline.actions';
 
 import {
   bandById,

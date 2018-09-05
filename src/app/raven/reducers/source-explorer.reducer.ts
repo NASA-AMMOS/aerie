@@ -32,7 +32,7 @@ import {
   SourceExplorerActionTypes,
   SubBandIdAdd,
   SubBandIdRemove,
-} from '../actions/source-explorer';
+} from '../actions/source-explorer.actions';
 
 import {
   BaseType,

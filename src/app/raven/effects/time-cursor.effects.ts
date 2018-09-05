@@ -27,10 +27,10 @@ import {
   HideTimeCursor,
   ShowTimeCursor,
   TimeCursorActionTypes,
-} from '../actions/time-cursor';
+} from '../actions/time-cursor.actions';
 
-import * as timeCursorActions from '../actions/time-cursor';
-import * as timelineActions from '../actions/timeline';
+import * as timeCursorActions from '../actions/time-cursor.actions';
+import * as timelineActions from '../actions/timeline.actions';
 
 @Injectable()
 export class TimeCursorEffects {

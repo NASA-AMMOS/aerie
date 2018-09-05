@@ -12,38 +12,28 @@ import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { StoreModule } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
-import { TimeCursorEffects } from './time-cursor.effect';
+import { LayoutEffects } from './layout.effects';
 
-import * as timeCursorReducer from '../reducers/time-cursor';
-
-describe('TimeCursorEffects', () => {
-  let effects: TimeCursorEffects;
-  let metadata: EffectsMetadata<TimeCursorEffects>;
+describe('LayoutEffects', () => {
+  let effects: LayoutEffects;
+  let metadata: EffectsMetadata<LayoutEffects>;
   const actions: Observable<any> = of();
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [StoreModule.forRoot(timeCursorReducer.reducer)],
-      providers: [TimeCursorEffects, provideMockActions(() => actions)],
+      imports: [StoreModule.forRoot({})],
+      providers: [LayoutEffects, provideMockActions(() => actions)],
     });
 
-    effects = TestBed.get(TimeCursorEffects);
+    effects = TestBed.get(LayoutEffects);
     metadata = getEffectsMetadata(effects);
   });
 
-  it('should register hideTimeCursor$ that does not dispatch an action', () => {
-    expect(metadata.hideTimeCursor$).toEqual({ dispatch: false });
+  it('should register resize$ that does not dispatch an action', () => {
+    expect(metadata.resize$).toEqual({ dispatch: false });
   });
 
-  it('should register showTimeCursor$ that dispatches an action', () => {
-    expect(metadata.showTimeCursor$).toEqual({ dispatch: true });
-  });
-
-  it('should not register cursorInterval$', () => {
-    expect(metadata.cursorInterval$).toBeUndefined();
-  });
-
-  it('should not register updateCursor', () => {
-    expect(metadata.updateCursor).toBeUndefined();
+  it('should register toggleRightPanel$ that does dispatch an action', () => {
+    expect(metadata.toggleRightPanel$).toEqual({ dispatch: true });
   });
 });

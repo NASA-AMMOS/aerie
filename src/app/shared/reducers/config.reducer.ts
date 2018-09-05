@@ -13,7 +13,7 @@ import {
   ConfigAction,
   ConfigActionTypes,
   UpdateDefaultBandSettings,
-} from '../actions/config';
+} from '../actions/config.actions';
 
 // Config State Interface.
 // Defined in the top-level `config.ts` file.

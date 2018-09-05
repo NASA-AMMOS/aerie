@@ -8,8 +8,8 @@
  */
 
 import { ConfigState } from '../../../config';
-import { UpdateDefaultBandSettings } from '../actions/config';
-import { initialState, reducer } from './config';
+import { UpdateDefaultBandSettings } from '../actions/config.actions';
+import { initialState, reducer } from './config.reducer';
 
 describe('config reducer', () => {
   let configState: ConfigState;

@@ -11,7 +11,7 @@ import { createFeatureSelector, createSelector } from '@ngrx/store';
 import {
   TimeCursorAction,
   TimeCursorActionTypes,
-} from '../actions/time-cursor';
+} from '../actions/time-cursor.actions';
 import { State } from '../raven-store';
 
 export interface TimeCursorState {

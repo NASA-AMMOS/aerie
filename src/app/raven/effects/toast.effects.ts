@@ -13,7 +13,7 @@ import { Action } from '@ngrx/store';
 import { ToastrService } from 'ngx-toastr';
 import { Observable } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
-import { ShowToast, ToastActionTypes } from '../actions/toast';
+import { ShowToast, ToastActionTypes } from '../actions/toast.actions';
 
 @Injectable()
 export class ToastEffects {

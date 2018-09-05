@@ -8,12 +8,12 @@
  */
 
 import * as mpsServerMocks from '../../shared/mocks/mps-server';
-import { FetchCommandDictionaryListSuccess } from '../actions/command-dictionary';
+import { FetchCommandDictionaryListSuccess } from '../actions/command-dictionary.actions';
 import {
   CommandDictionaryState,
   initialState,
   reducer,
-} from './command-dictionary';
+} from './command-dictionary.reducer';
 
 describe('Command Dictionary reducer', () => {
   it('handle default', () => {

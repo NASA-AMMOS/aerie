@@ -12,36 +12,38 @@ import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { StoreModule } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
-import { RouterEffects } from './router.effect';
+import { TimeCursorEffects } from './time-cursor.effects';
 
-describe('RouterEffects', () => {
-  let effects: RouterEffects;
-  let metadata: EffectsMetadata<RouterEffects>;
+import * as timeCursorReducer from '../reducers/time-cursor.reducer';
+
+describe('TimeCursorEffects', () => {
+  let effects: TimeCursorEffects;
+  let metadata: EffectsMetadata<TimeCursorEffects>;
   const actions: Observable<any> = of();
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [StoreModule.forRoot({})],
-      providers: [RouterEffects, provideMockActions(() => actions)],
+      imports: [StoreModule.forRoot(timeCursorReducer.reducer)],
+      providers: [TimeCursorEffects, provideMockActions(() => actions)],
     });
 
-    effects = TestBed.get(RouterEffects);
+    effects = TestBed.get(TimeCursorEffects);
     metadata = getEffectsMetadata(effects);
   });
 
-  it('should register routerNavigation$ that does dispatch an action', () => {
-    expect(metadata.routerNavigation$).toEqual({ dispatch: true });
+  it('should register hideTimeCursor$ that does not dispatch an action', () => {
+    expect(metadata.hideTimeCursor$).toEqual({ dispatch: false });
   });
 
-  it('should not register loadLayout', () => {
-    expect(metadata.loadLayout).toBeUndefined();
+  it('should register showTimeCursor$ that dispatches an action', () => {
+    expect(metadata.showTimeCursor$).toEqual({ dispatch: true });
   });
 
-  it('should not register loadShareableLink', () => {
-    expect(metadata.loadShareableLink).toBeUndefined();
+  it('should not register cursorInterval$', () => {
+    expect(metadata.cursorInterval$).toBeUndefined();
   });
 
-  it('should not register loadState', () => {
-    expect(metadata.loadState).toBeUndefined();
+  it('should not register updateCursor', () => {
+    expect(metadata.updateCursor).toBeUndefined();
   });
 });

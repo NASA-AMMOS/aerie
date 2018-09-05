@@ -17,12 +17,12 @@ import * as fromRoot from '../app-store';
  * notation packages up all of the exports into a single object.
  */
 
-import * as fromEpochs from './reducers/epochs';
-import * as fromLayout from './reducers/layout';
-import * as fromOutput from './reducers/output';
-import * as fromSourceExplorer from './reducers/source-explorer';
-import * as fromTimeCursor from './reducers/time-cursor';
-import * as fromTimeline from './reducers/timeline';
+import * as fromEpochs from './reducers/epochs.reducer';
+import * as fromLayout from './reducers/layout.reducer';
+import * as fromOutput from './reducers/output.reducer';
+import * as fromSourceExplorer from './reducers/source-explorer.reducer';
+import * as fromTimeCursor from './reducers/time-cursor.reducer';
+import * as fromTimeline from './reducers/timeline.reducer';
 
 /**
  * As mentioned, we treat each reducer like a table in a database. This means

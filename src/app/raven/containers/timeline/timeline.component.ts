@@ -42,22 +42,22 @@ import {
   toDividerBand,
 } from '../../../shared/util';
 
-import * as fromConfig from '../../../shared/reducers/config';
-import * as fromEpochs from '../../reducers/epochs';
-import * as fromLayout from '../../reducers/layout';
-import * as fromOutput from '../../reducers/output';
-import * as fromSourceExplorer from '../../reducers/source-explorer';
-import * as fromTimeCursor from '../../reducers/time-cursor';
-import * as fromTimeline from '../../reducers/timeline';
+import * as fromConfig from '../../../shared/reducers/config.reducer';
+import * as fromEpochs from '../../reducers/epochs.reducer';
+import * as fromLayout from '../../reducers/layout.reducer';
+import * as fromOutput from '../../reducers/output.reducer';
+import * as fromSourceExplorer from '../../reducers/source-explorer.reducer';
+import * as fromTimeCursor from '../../reducers/time-cursor.reducer';
+import * as fromTimeline from '../../reducers/timeline.reducer';
 
-import * as configActions from '../../../shared/actions/config';
-import * as dialogActions from '../../actions/dialog';
-import * as epochsActions from '../../actions/epochs';
-import * as layoutActions from '../../actions/layout';
-import * as outputActions from '../../actions/output';
-import * as sourceExplorerActions from '../../actions/source-explorer';
-import * as timeCursorActions from '../../actions/time-cursor';
-import * as timelineActions from '../../actions/timeline';
+import * as configActions from '../../../shared/actions/config.actions';
+import * as dialogActions from '../../actions/dialog.actions';
+import * as epochsActions from '../../actions/epochs.actions';
+import * as layoutActions from '../../actions/layout.actions';
+import * as outputActions from '../../actions/output.actions';
+import * as sourceExplorerActions from '../../actions/source-explorer.actions';
+import * as timeCursorActions from '../../actions/time-cursor.actions';
+import * as timelineActions from '../../actions/timeline.actions';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

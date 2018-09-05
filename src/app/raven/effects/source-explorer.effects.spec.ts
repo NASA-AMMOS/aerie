@@ -13,7 +13,7 @@ import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { StoreModule } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
-import { SourceExplorerEffects } from './source-explorer.effect';
+import { SourceExplorerEffects } from './source-explorer.effects';
 
 describe('SourceExplorerEffects', () => {
   let effects: SourceExplorerEffects;

@@ -37,10 +37,10 @@ import {
   OpenShareableLinkDialog,
   OpenStateApplyDialog,
   OpenStateSaveDialog,
-} from '../actions/dialog';
+} from '../actions/dialog.actions';
 
-import * as sourceExplorerActions from '../actions/source-explorer';
-import * as timelineActions from '../actions/timeline';
+import * as sourceExplorerActions from '../actions/source-explorer.actions';
+import * as timelineActions from '../actions/timeline.actions';
 
 @Injectable()
 export class DialogEffects {

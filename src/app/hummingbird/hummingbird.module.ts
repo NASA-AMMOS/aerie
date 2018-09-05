@@ -12,7 +12,7 @@ import { NgModule } from '@angular/core';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { HummingbirdAppModule } from './containers/hummingbird-app/hummingbird-app.module';
-import { CommandDictionaryEffects } from './effects/command-dictionary.effect';
+import { CommandDictionaryEffects } from './effects/command-dictionary.effects';
 import { HummingbirdRoutingModule } from './hummingbird-routing.module';
 import { reducers } from './hummingbird-store';
 

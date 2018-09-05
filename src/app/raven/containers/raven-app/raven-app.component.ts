@@ -20,14 +20,14 @@ import { combineLatest, Observable, Subject } from 'rxjs';
 import { map, takeUntil, tap } from 'rxjs/operators';
 import { RavenTimeRange } from '../../../shared/models';
 
-import * as fromConfig from '../../../shared/reducers/config';
-import * as fromLayout from '../../reducers/layout';
-import * as fromSourceExplorer from '../../reducers/source-explorer';
-import * as fromTimeline from '../../reducers/timeline';
+import * as fromConfig from '../../../shared/reducers/config.reducer';
+import * as fromLayout from '../../reducers/layout.reducer';
+import * as fromSourceExplorer from '../../reducers/source-explorer.reducer';
+import * as fromTimeline from '../../reducers/timeline.reducer';
 
-import * as dialogActions from '../../actions/dialog';
-import * as layoutActions from '../../actions/layout';
-import * as timelineActions from '../../actions/timeline';
+import * as dialogActions from '../../actions/dialog.actions';
+import * as layoutActions from '../../actions/layout.actions';
+import * as timelineActions from '../../actions/timeline.actions';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

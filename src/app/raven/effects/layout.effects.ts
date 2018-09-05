@@ -12,10 +12,10 @@ import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { map, switchMap, withLatestFrom } from 'rxjs/operators';
-import { LayoutActionTypes, Resize, ToggleRightPanel } from '../actions/layout';
+import { LayoutActionTypes, Resize, ToggleRightPanel } from '../actions/layout.actions';
 import { RavenAppState } from '../raven-store';
 
-import * as layoutActions from '../actions/layout';
+import * as layoutActions from '../actions/layout.actions';
 
 @Injectable()
 export class LayoutEffects {

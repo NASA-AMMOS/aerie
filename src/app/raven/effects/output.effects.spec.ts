@@ -13,7 +13,7 @@ import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { StoreModule } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
-import { OutputEffects } from './output.effect';
+import { OutputEffects } from './output.effects';
 
 describe('OutputEffects', () => {
   let effects: OutputEffects;

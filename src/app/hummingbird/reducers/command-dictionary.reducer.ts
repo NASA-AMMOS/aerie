@@ -13,7 +13,7 @@ import { HBCommandDictionary } from '../../shared/models/hb-command-dictionary';
 import {
   CommandDictionaryAction,
   CommandDictionaryActionTypes,
-} from '../actions/command-dictionary';
+} from '../actions/command-dictionary.actions';
 import { State } from '../hummingbird-store';
 
 /**

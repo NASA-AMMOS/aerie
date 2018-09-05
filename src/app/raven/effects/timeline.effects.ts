@@ -11,7 +11,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
-import { TimelineActionTypes } from '../actions/timeline';
+import { TimelineActionTypes } from '../actions/timeline.actions';
 import { RavenAppState } from '../raven-store';
 
 import { concat, Observable, of } from 'rxjs';
@@ -30,7 +30,7 @@ import {
   UpdateViewTimeRange,
   ZoomInViewTimeRange,
   ZoomOutViewTimeRange,
-} from '../actions/timeline';
+} from '../actions/timeline.actions';
 
 import {
   MpsServerGraphData,
@@ -45,8 +45,8 @@ import {
 
 import { getPinLabel, getResourcePoints, timestamp } from '../../shared/util';
 
-import * as layoutActions from '../actions/layout';
-import * as timelineActions from '../actions/timeline';
+import * as layoutActions from '../actions/layout.actions';
+import * as timelineActions from '../actions/timeline.actions';
 
 @Injectable()
 export class TimelineEffects {

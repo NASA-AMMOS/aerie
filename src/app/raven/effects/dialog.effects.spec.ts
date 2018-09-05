@@ -14,7 +14,7 @@ import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { StoreModule } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
-import { DialogEffects } from './dialog.effect';
+import { DialogEffects } from './dialog.effects';
 
 describe('DialogEffects', () => {
   let effects: DialogEffects;

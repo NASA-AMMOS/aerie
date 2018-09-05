@@ -31,13 +31,13 @@ import {
   StringTMap,
 } from '../../../shared/models';
 
-import * as fromConfig from '../../../shared/reducers/config';
-import * as fromSourceExplorer from '../../reducers/source-explorer';
+import * as fromConfig from '../../../shared/reducers/config.reducer';
+import * as fromSourceExplorer from '../../reducers/source-explorer.reducer';
 
-import * as dialogActions from '../../actions/dialog';
-import * as epochsActions from '../../actions/epochs';
-import * as layoutActions from '../../actions/layout';
-import * as sourceExplorerActions from '../../actions/source-explorer';
+import * as dialogActions from '../../actions/dialog.actions';
+import * as epochsActions from '../../actions/epochs.actions';
+import * as layoutActions from '../../actions/layout.actions';
+import * as sourceExplorerActions from '../../actions/source-explorer.actions';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
