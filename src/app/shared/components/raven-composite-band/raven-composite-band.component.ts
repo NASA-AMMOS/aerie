@@ -180,7 +180,12 @@ export class RavenCompositeBandComponent
       for (let i = 0, l = this.ctlCompositeBand.bands.length; i < l; ++i) {
         const subBand = this.ctlCompositeBand.bands[i];
         // CtlBand height for state band needs to exclude heightPadding.
-        subBand.height = (subBand.type === 'state' && !subBand.isNumeric && subBand.showStateChangeTimes) ? this.height - subBand.heightPadding : this.height;
+        subBand.height =
+          subBand.type === 'state' &&
+          !subBand.isNumeric &&
+          subBand.showStateChangeTimes
+            ? this.height - subBand.heightPadding
+            : this.height;
       }
 
       shouldRedraw = true;

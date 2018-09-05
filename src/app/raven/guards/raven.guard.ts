@@ -9,6 +9,7 @@
 
 import { Injectable } from '@angular/core';
 import { select, Store } from '@ngrx/store';
+import { Observable, of, Subject } from 'rxjs';
 import { RavenAppState } from '../raven-store';
 
 import {
@@ -16,8 +17,6 @@ import {
   CanActivate,
   RouterStateSnapshot,
 } from '@angular/router';
-
-import { Observable, of, Subject } from 'rxjs';
 
 import {
   catchError,
@@ -44,8 +43,10 @@ export class RavenGuard implements CanActivate {
   constructor(private store$: Store<RavenAppState>) {
     // Config state.
     this.store$
-      .select(fromConfig.getUrls)
-      .pipe(takeUntil(this.ngUnsubscribe))
+      .pipe(
+        select(fromConfig.getUrls),
+        takeUntil(this.ngUnsubscribe)
+      )
       .subscribe(({ baseUrl, epochsUrl }) => {
         this.epochsUrl = epochsUrl;
         this.baseUrl = baseUrl;

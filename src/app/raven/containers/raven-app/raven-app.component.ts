@@ -15,9 +15,9 @@ import {
   OnDestroy,
 } from '@angular/core';
 
-import { Store } from '@ngrx/store';
-import { combineLatest, Observable, Subject } from 'rxjs';
-import { map, takeUntil, tap } from 'rxjs/operators';
+import { select, Store } from '@ngrx/store';
+import { combineLatest, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { RavenTimeRange } from '../../../shared/models';
 
 import * as fromConfig from '../../../shared/reducers/config.reducer';
@@ -36,9 +36,8 @@ import * as timelineActions from '../../actions/timeline.actions';
   templateUrl: './raven-app.component.html',
 })
 export class RavenAppComponent implements OnDestroy {
-  loading$: Observable<boolean>;
-
   info: string;
+  loading: boolean;
   mode: string;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
@@ -47,27 +46,33 @@ export class RavenAppComponent implements OnDestroy {
     private changeDetector: ChangeDetectorRef,
     private store: Store<fromSourceExplorer.SourceExplorerState>
   ) {
-    // Combine all fetch pending observables for use in progress bar.
-    this.loading$ = combineLatest(
-      this.store.select(fromSourceExplorer.getPending),
-      this.store.select(fromTimeline.getPending)
-    ).pipe(
-      map(loading => loading[0] || loading[1]),
-      tap(() => this.markForCheck())
-    );
+    // Combine all fetch pending observable for progress bar.
+    combineLatest(
+      this.store.pipe(select(fromSourceExplorer.getPending)),
+      this.store.pipe(select(fromTimeline.getPending))
+    )
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(loading => {
+        this.loading = loading[0] || loading[1];
+        this.markForCheck();
+      });
 
     // Config version.
     this.store
-      .select(fromConfig.getVersion)
-      .pipe(takeUntil(this.ngUnsubscribe))
+      .pipe(
+        select(fromConfig.getVersion),
+        takeUntil(this.ngUnsubscribe)
+      )
       .subscribe(v => {
         this.info = this.getInfo(v.version, v.branch, v.commit);
       });
 
     // Layout mode.
     this.store
-      .select(fromLayout.getMode)
-      .pipe(takeUntil(this.ngUnsubscribe))
+      .pipe(
+        select(fromLayout.getMode),
+        takeUntil(this.ngUnsubscribe)
+      )
       .subscribe(mode => {
         this.mode = mode;
         this.markForCheck();

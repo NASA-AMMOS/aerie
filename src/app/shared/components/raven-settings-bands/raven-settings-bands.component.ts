@@ -72,13 +72,23 @@ export class RavenSettingsBandsComponent {
    * Change plot type changes the height and heightPadding. Height of CompositeBand needs to include heightPadding for top and bottom tick labels to show in a line plot.
    */
   onChangePlotType(subBand: RavenSubBand, isNumeric: boolean) {
-    this.updateBand.emit({ bandId: this.selectedBandId, subBandId: subBand.id, update: { heightPadding: isNumeric ? 20 : 0, height: isNumeric ? 100 : 50 } });
+    this.updateBand.emit({
+      bandId: this.selectedBandId,
+      subBandId: subBand.id,
+      update: {
+        height: isNumeric ? 100 : 50,
+        heightPadding: isNumeric ? 20 : 0,
+      },
+    });
     this.updateSubBand.emit({
       bandId: this.selectedBandId,
       subBandId: subBand.id,
       update: {
         height: isNumeric ? 100 : 50,
-        heightPadding: isNumeric || (subBand as RavenStateBand).showStateChangeTimes ? 10 : 0,
+        heightPadding:
+          isNumeric || (subBand as RavenStateBand).showStateChangeTimes
+            ? 10
+            : 0,
         isNumeric,
       },
     });
@@ -87,7 +97,10 @@ export class RavenSettingsBandsComponent {
   /**
    * Change showStateChangeTimes requires change in heightPadding for the times to be shown.
    */
-  onChangeShowStateChangeTimes(subBand: RavenSubBand, showStateChangeTimes: boolean) {
+  onChangeShowStateChangeTimes(
+    subBand: RavenSubBand,
+    showStateChangeTimes: boolean
+  ) {
     this.updateSubBand.emit({
       bandId: this.selectedBandId,
       subBandId: subBand.id,

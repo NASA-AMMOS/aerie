@@ -14,7 +14,7 @@ import {
   OnDestroy,
 } from '@angular/core';
 
-import { Store } from '@ngrx/store';
+import { select, Store } from '@ngrx/store';
 import { Subject } from 'rxjs';
 import { switchMap, takeUntil } from 'rxjs/operators';
 import { WebSocketSubject } from 'rxjs/webSocket';
@@ -63,29 +63,40 @@ export class SourceExplorerComponent implements OnDestroy {
   ) {
     // Source Explorer state.
     this.store
-      .select(fromSourceExplorer.getFiltersByTarget)
-      .pipe(takeUntil(this.ngUnsubscribe))
+      .pipe(
+        select(fromSourceExplorer.getFiltersByTarget),
+        takeUntil(this.ngUnsubscribe)
+      )
       .subscribe(filtersByTarget => {
         this.filtersByTarget = filtersByTarget;
         this.markForCheck();
       });
+
     this.store
-      .select(fromSourceExplorer.getPins)
-      .pipe(takeUntil(this.ngUnsubscribe))
+      .pipe(
+        select(fromSourceExplorer.getPins),
+        takeUntil(this.ngUnsubscribe)
+      )
       .subscribe(pins => {
         this.pins = pins;
         this.markForCheck();
       });
+
     this.store
-      .select(fromSourceExplorer.getSelectedSourceId)
-      .pipe(takeUntil(this.ngUnsubscribe))
+      .pipe(
+        select(fromSourceExplorer.getSelectedSourceId),
+        takeUntil(this.ngUnsubscribe)
+      )
       .subscribe(selectedSourceId => {
         this.selectedSourceId = selectedSourceId;
         this.markForCheck();
       });
+
     this.store
-      .select(fromSourceExplorer.getTreeBySourceId)
-      .pipe(takeUntil(this.ngUnsubscribe))
+      .pipe(
+        select(fromSourceExplorer.getTreeBySourceId),
+        takeUntil(this.ngUnsubscribe)
+      )
       .subscribe(tree => {
         this.tree = tree;
         this.sortedChildIds = getSortedChildIds(
@@ -110,8 +121,8 @@ export class SourceExplorerComponent implements OnDestroy {
    */
   connectToWebsocket() {
     this.store
-      .select(fromConfig.getUrls)
       .pipe(
+        select(fromConfig.getUrls),
         switchMap(config =>
           WebSocketSubject.create(
             `${config.baseUrl.replace('https', 'wss')}/${config.socketUrl}`

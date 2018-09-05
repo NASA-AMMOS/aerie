@@ -318,7 +318,9 @@ export function toStateBand(
     name: metadata.hasObjectName,
     parentUniqueId: null,
     points,
-    possibleStates: metadata.hasPossibleStates ? metadata.hasPossibleStates : [],
+    possibleStates: metadata.hasPossibleStates
+      ? metadata.hasPossibleStates
+      : [],
     showIcon: false,
     showLabelPin: true,
     showStateChangeTimes: false,

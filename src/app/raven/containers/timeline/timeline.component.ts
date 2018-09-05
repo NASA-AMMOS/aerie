@@ -15,7 +15,7 @@ import {
 } from '@angular/core';
 
 import { MatTabChangeEvent } from '@angular/material';
-import { Store } from '@ngrx/store';
+import { select, Store } from '@ngrx/store';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ConfigState } from '../../../../config';
@@ -137,15 +137,20 @@ export class TimelineComponent implements OnDestroy {
   ) {
     // Config state.
     this.store
-      .select(fromConfig.getItarMessage)
-      .pipe(takeUntil(this.ngUnsubscribe))
+      .pipe(
+        select(fromConfig.getItarMessage),
+        takeUntil(this.ngUnsubscribe)
+      )
       .subscribe(itarMessage => {
         this.itarMessage = itarMessage;
         this.markForCheck();
       });
+
     this.store
-      .select(fromConfig.getDefaultBandSettings)
-      .pipe(takeUntil(this.ngUnsubscribe))
+      .pipe(
+        select(fromConfig.getDefaultBandSettings),
+        takeUntil(this.ngUnsubscribe)
+      )
       .subscribe(defaultBandSettings => {
         this.defaultBandSettings = defaultBandSettings;
         this.markForCheck();
@@ -153,8 +158,10 @@ export class TimelineComponent implements OnDestroy {
 
     // Epoch state.
     this.store
-      .select(fromEpochs.getEpochsState)
-      .pipe(takeUntil(this.ngUnsubscribe))
+      .pipe(
+        select(fromEpochs.getEpochsState),
+        takeUntil(this.ngUnsubscribe)
+      )
       .subscribe(state => {
         this.dayCode = state.dayCode;
         this.earthSecToEpochSec = state.earthSecToEpochSec;
@@ -165,8 +172,10 @@ export class TimelineComponent implements OnDestroy {
 
     // Layout state.
     this.store
-      .select(fromLayout.getLayoutState)
-      .pipe(takeUntil(this.ngUnsubscribe))
+      .pipe(
+        select(fromLayout.getLayoutState),
+        takeUntil(this.ngUnsubscribe)
+      )
       .subscribe(state => {
         this.rightPanelSelectedTabIndex = state.rightPanelSelectedTabIndex;
         this.showActivityPointMetadata = state.showActivityPointMetadata;
@@ -187,8 +196,10 @@ export class TimelineComponent implements OnDestroy {
 
     // Output state.
     this.store
-      .select(fromOutput.getOutputState)
-      .pipe(takeUntil(this.ngUnsubscribe))
+      .pipe(
+        select(fromOutput.getOutputState),
+        takeUntil(this.ngUnsubscribe)
+      )
       .subscribe(state => {
         this.allInOneFile = state.allInOneFile;
         this.allInOneFilename = state.allInOneFilename;
@@ -200,8 +211,10 @@ export class TimelineComponent implements OnDestroy {
 
     // Source Explorer state.
     this.store
-      .select(fromSourceExplorer.getSourceExplorerState)
-      .pipe(takeUntil(this.ngUnsubscribe))
+      .pipe(
+        select(fromSourceExplorer.getSourceExplorerState),
+        takeUntil(this.ngUnsubscribe)
+      )
       .subscribe(state => {
         this.currentStateId = state.currentStateId;
         this.customFiltersBySourceId = state.customFiltersBySourceId;
@@ -212,8 +225,10 @@ export class TimelineComponent implements OnDestroy {
 
     // Time cursor state.
     this.store
-      .select(fromTimeCursor.getTimeCursorState)
-      .pipe(takeUntil(this.ngUnsubscribe))
+      .pipe(
+        select(fromTimeCursor.getTimeCursorState),
+        takeUntil(this.ngUnsubscribe)
+      )
       .subscribe(state => {
         this.autoPage = state.autoPage;
         this.clockRate = state.clockRate;
@@ -228,8 +243,10 @@ export class TimelineComponent implements OnDestroy {
 
     // Timeline state.
     this.store
-      .select(fromTimeline.getTimelineState)
-      .pipe(takeUntil(this.ngUnsubscribe))
+      .pipe(
+        select(fromTimeline.getTimelineState),
+        takeUntil(this.ngUnsubscribe)
+      )
       .subscribe(state => {
         this.bands = state.bands;
         this.maxTimeRange = state.maxTimeRange;

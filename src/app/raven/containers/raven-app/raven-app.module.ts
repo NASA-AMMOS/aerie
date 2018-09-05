@@ -19,6 +19,7 @@ import {
   MatMenuModule,
   MatProgressBarModule,
   MatToolbarModule,
+  MatTooltipModule,
 } from '@angular/material';
 
 @NgModule({
@@ -31,6 +32,7 @@ import {
     MatMenuModule,
     MatProgressBarModule,
     MatToolbarModule,
+    MatTooltipModule,
     RavenPanToDurationModule,
     TimelineModule,
   ],

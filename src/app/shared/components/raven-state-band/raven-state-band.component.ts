@@ -99,7 +99,7 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
   type: string;
 
   // These Inputs are used when isNumeric is true.
-  @Input() 
+  @Input()
   color: string;
 
   @Input()
@@ -159,24 +159,49 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
 
     // Color.
     if (changes.color && !changes.color.firstChange) {
-      this.updateIntervals.emit({ subBandId: this.id, ...this.getLineIntervals(this.color) }); // All intervals need to be updated with the new color.
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'color', value: colorHexToRgbArray(this.color) });
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'labelColor', value: colorHexToRgbArray(this.color) });
+      this.updateIntervals.emit({
+        subBandId: this.id,
+        ...this.getLineIntervals(this.color),
+      }); // All intervals need to be updated with the new color.
+      this.updateSubBand.emit({
+        prop: 'color',
+        subBandId: this.id,
+        subObject: 'painter',
+        value: colorHexToRgbArray(this.color),
+      });
+      this.updateSubBand.emit({
+        prop: 'labelColor',
+        subBandId: this.id,
+        value: colorHexToRgbArray(this.color),
+      });
     }
 
     // Fill.
     if (changes.fill && !changes.fill.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'fill', value: this.fill });
+      this.updateSubBand.emit({
+        prop: 'fill',
+        subBandId: this.id,
+        subObject: 'painter',
+        value: this.fill,
+      });
     }
 
     // Fill Color.
     if (changes.fillColor && !changes.fillColor.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'fillColor', value: colorHexToRgbArray(this.fillColor) });
+      this.updateSubBand.emit({
+        prop: 'fillColor',
+        subBandId: this.id,
+        subObject: 'painter',
+        value: colorHexToRgbArray(this.fillColor),
+      });
     }
 
     // Icon.
     if (changes.icon && !changes.icon.firstChange) {
-      this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals(this.color) });
+      this.updateIntervals.emit({
+        subBandId: this.id,
+        ...this.getIntervals(this.color),
+      });
     }
 
     // IsNumeric. It is important to check isNumeric prior to height and heightPadding since isNumeric creates a new ctlBand.
@@ -187,19 +212,32 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
       this.addSubBand.emit(this.createCtlBand());
 
       if (!this.isNumeric && this.showStateChangeTimes) {
-        this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'showStateChangeTimes', value: this.showStateChangeTimes });
+        this.updateSubBand.emit({
+          prop: 'showStateChangeTimes',
+          subBandId: this.id,
+          subObject: 'painter',
+          value: this.showStateChangeTimes,
+        });
       }
     }
 
     // Height.
     if (changes.height && !changes.height.firstChange) {
       // Height of state bar drawn needs to exclude heightPadding.
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'height', value: this.isNumeric ? this.height : this.height - this.heightPadding });
+      this.updateSubBand.emit({
+        prop: 'height',
+        subBandId: this.id,
+        value: this.isNumeric ? this.height : this.height - this.heightPadding,
+      });
     }
 
     // Height Padding.
     if (changes.heightPadding && !changes.heightPadding.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'heightPadding', value: this.heightPadding });
+      this.updateSubBand.emit({
+        prop: 'heightPadding',
+        subBandId: this.id,
+        value: this.heightPadding,
+      });
     }
 
     // Label.
@@ -241,12 +279,20 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
 
     // Points.
     if (changes.points && !changes.points.firstChange) {
-      this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals(this.color) });
+      this.updateIntervals.emit({
+        subBandId: this.id,
+        ...this.getIntervals(this.color),
+      });
     }
 
     // Show Icon.
     if (changes.showIcon && !changes.showIcon.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'showIcon', value: this.showIcon });
+      this.updateSubBand.emit({
+        prop: 'showIcon',
+        subBandId: this.id,
+        subObject: 'painter',
+        value: this.showIcon,
+      });
     }
 
     // Show Label Pin.
@@ -337,7 +383,7 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
       // Create Resource Band.
       const ctlResourceBand = new (window as any).ResourceBand({
         autoScale: (window as any).ResourceBand.VISIBLE_INTERVALS,
-        height:  this.height,
+        height: this.height,
         heightPadding: 10,
         hideTicks: false,
         icon: this.icon,
@@ -380,7 +426,9 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
    * Helper. Returns state or line intervals.
    */
   getIntervals(color: string) {
-    return !this.isNumeric ? this.getStateIntervals() : this.getLineIntervals (color);
+    return !this.isNumeric
+      ? this.getStateIntervals()
+      : this.getLineIntervals(color);
   }
 
   /**

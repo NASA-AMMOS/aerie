@@ -8,7 +8,12 @@
  */
 
 import { RavenPin, RavenSource } from '../../shared/models';
-import { initialState, reducer, SourceExplorerState } from './source-explorer.reducer';
+
+import {
+  initialState,
+  reducer,
+  SourceExplorerState,
+} from './source-explorer.reducer';
 
 import {
   AddCustomFilter,
