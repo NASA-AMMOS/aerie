@@ -24,6 +24,10 @@ mat-sidenav.output-drawer {
   width: 900px;
 }
 
+mat-sidenav.situational-awareness-drawer {
+  width: 900px;
+}
+
 mat-sidenav-container {
   z-index: 5;
 }

@@ -17,6 +17,7 @@ import {
   getPin,
   getPinLabel,
   getQueryUrlForGraphableFilter,
+  getSituAwareUrl,
   getSortedChildIds,
   getSourceIds,
   getSourceIdsByLabelInBands,
@@ -128,6 +129,9 @@ describe('source.ts', () => {
           customGraphableSource,
           customFilter,
           filtersByTarget,
+          false,
+          '',
+          '',
         ),
       ).toEqual(
         'https://a/b/c?format=TMS&legend=ips&filter=(command=[.*IPS.*])&',
@@ -297,6 +301,20 @@ describe('source.ts', () => {
           parentFilters,
         ),
       ).toEqual('leucadia/taifunTest/abc.pef/DKF?collection=&');
+    });
+  });
+
+  describe('getSituAwareUrl', () => {
+    it(`should return sourceUrl with situAware args`, () => {
+      expect(
+        getSituAwareUrl(
+          'https://a/b/c?format=TMS',
+          '2018-245T12:00:00',
+          '002T00:00:00',
+        ),
+      ).toEqual(
+        'https://a/b/c?format=TMS&situAware=true&start=2018-245T12:00:00&pageDuration=002T00:00:00',
+      );
     });
   });
 

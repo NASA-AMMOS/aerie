@@ -60,7 +60,9 @@ import {
   importState,
   isAddTo,
   isOverlay,
+  timestamp,
   toCompositeBand,
+  toDuration,
   toRavenBandData,
   toRavenSources,
   updateSourceId,
@@ -89,6 +91,7 @@ import * as sourceExplorerActions from '../actions/source-explorer.actions';
 import * as timelineActions from '../actions/timeline.actions';
 import * as toastActions from '../actions/toast.actions';
 
+import * as fromSituationalAwareness from '../reducers/situational-awareness.reducer';
 import * as fromSourceExplorer from '../reducers/source-explorer.reducer';
 import * as fromTimeline from '../reducers/timeline.reducer';
 
@@ -106,7 +109,7 @@ export class SourceExplorerEffects {
       ({
         state: {
           config,
-          raven: { sourceExplorer, timeline },
+          raven: { sourceExplorer, timeline, situationalAwareness },
         },
         action: { label, sourceId },
       }) =>
@@ -124,6 +127,9 @@ export class SourceExplorerEffects {
             timeline.selectedSubBandId,
             config.raven.defaultBandSettings,
             sourceExplorer.pins,
+            situationalAwareness.situationalAware,
+            this.getSituationalAwarenessStartTime(situationalAwareness),
+            this.getSituationalAwarenessPageDuration(situationalAwareness),
           ),
           of(new sourceExplorerActions.LoadErrorsDisplay()),
           of(
@@ -518,6 +524,9 @@ export class SourceExplorerEffects {
           raven.timeline.selectedSubBandId,
           config.raven.defaultBandSettings,
           raven.sourceExplorer.pins,
+          raven.situationalAwareness.situationalAware,
+          this.getSituationalAwarenessStartTime(raven.situationalAwareness),
+          this.getSituationalAwarenessPageDuration(raven.situationalAwareness),
         ),
         of(
           new sourceExplorerActions.UpdateSourceExplorer({
@@ -624,70 +633,80 @@ export class SourceExplorerEffects {
     ),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
-    concatMap(({ state: { config, raven: { sourceExplorer } }, action }) =>
-      concat(
-        this.fetchSubBands(
-          sourceExplorer.treeBySourceId,
-          action.sourceId,
-          config.raven.defaultBandSettings,
-          null,
-          sourceExplorer.filtersByTarget,
-        ).pipe(
-          withLatestFrom(this.store$),
-          map(([newSubBands, state]) => ({ newSubBands, state })),
-          concatMap(({ newSubBands, state: { raven: { timeline } } }) => {
-            const actions: Action[] = [];
-            const filterTarget = (sourceExplorer.treeBySourceId[
-              action.sourceId
-            ] as RavenFilterSource).filterTarget;
+    concatMap(
+      ({
+        state: {
+          config,
+          raven: { sourceExplorer, situationalAwareness },
+        },
+        action,
+      }) =>
+        concat(
+          this.fetchSubBands(
+            sourceExplorer.treeBySourceId,
+            action.sourceId,
+            config.raven.defaultBandSettings,
+            null,
+            sourceExplorer.filtersByTarget,
+            situationalAwareness.situationalAware,
+            this.getSituationalAwarenessStartTime(situationalAwareness),
+            this.getSituationalAwarenessPageDuration(situationalAwareness),
+          ).pipe(
+            withLatestFrom(this.store$),
+            map(([newSubBands, state]) => ({ newSubBands, state })),
+            concatMap(({ newSubBands, state: { raven: { timeline } } }) => {
+              const actions: Action[] = [];
+              const filterTarget = (sourceExplorer.treeBySourceId[
+                action.sourceId
+              ] as RavenFilterSource).filterTarget;
 
-            newSubBands.forEach((subBand: RavenSubBand) => {
-              const activityBand = hasActivityBandForFilterTarget(
-                timeline.bands,
-                filterTarget,
-              );
-              if (activityBand) {
-                actions.push(
-                  // Add filterSource id to existing band.
-                  new timelineActions.SourceIdAdd(
-                    action.sourceId,
-                    activityBand.subBandId,
-                  ),
-                  // Replace points in band.
-                  new timelineActions.SetPointsForSubBand(
-                    activityBand.bandId,
-                    activityBand.subBandId,
-                    subBand.points,
-                  ),
+              newSubBands.forEach((subBand: RavenSubBand) => {
+                const activityBand = hasActivityBandForFilterTarget(
+                  timeline.bands,
+                  filterTarget,
                 );
-              } else {
-                actions.push(
-                  new sourceExplorerActions.SubBandIdAdd(
-                    action.sourceId,
-                    subBand.id,
-                  ),
-                  new timelineActions.AddBand(
-                    action.sourceId,
-                    toCompositeBand(subBand),
-                    {
-                      filterTarget: (sourceExplorer.treeBySourceId[
-                        action.sourceId
-                      ] as RavenFilterSource).filterTarget,
-                    },
-                  ),
-                );
-              }
-            });
+                if (activityBand) {
+                  actions.push(
+                    // Add filterSource id to existing band.
+                    new timelineActions.SourceIdAdd(
+                      action.sourceId,
+                      activityBand.subBandId,
+                    ),
+                    // Replace points in band.
+                    new timelineActions.SetPointsForSubBand(
+                      activityBand.bandId,
+                      activityBand.subBandId,
+                      subBand.points,
+                    ),
+                  );
+                } else {
+                  actions.push(
+                    new sourceExplorerActions.SubBandIdAdd(
+                      action.sourceId,
+                      subBand.id,
+                    ),
+                    new timelineActions.AddBand(
+                      action.sourceId,
+                      toCompositeBand(subBand),
+                      {
+                        filterTarget: (sourceExplorer.treeBySourceId[
+                          action.sourceId
+                        ] as RavenFilterSource).filterTarget,
+                      },
+                    ),
+                  );
+                }
+              });
 
-            return actions;
-          }),
+              return actions;
+            }),
+          ),
+          of(
+            new sourceExplorerActions.UpdateSourceExplorer({
+              fetchPending: false,
+            }),
+          ),
         ),
-        of(
-          new sourceExplorerActions.UpdateSourceExplorer({
-            fetchPending: false,
-          }),
-        ),
-      ),
     ),
   );
 
@@ -708,6 +727,7 @@ export class SourceExplorerEffects {
           raven: {
             sourceExplorer,
             timeline: { bands },
+            situationalAwareness,
           },
         },
         action,
@@ -719,6 +739,9 @@ export class SourceExplorerEffects {
             config.raven.defaultBandSettings,
             null,
             sourceExplorer.filtersByTarget,
+            situationalAwareness.situationalAware,
+            this.getSituationalAwarenessStartTime(situationalAwareness),
+            this.getSituationalAwarenessPageDuration(situationalAwareness),
           ).pipe(
             concatMap((newSubBands: RavenSubBand[]) => {
               const actions: Action[] = [];
@@ -835,6 +858,9 @@ export class SourceExplorerEffects {
     defaultBandSettings: RavenDefaultBandSettings,
     customFilter: RavenCustomFilter | null,
     filtersByTarget: StringTMap<StringTMap<string[]>>,
+    situAware: boolean,
+    startTime: string,
+    pageDuration: string,
   ) {
     const source = treeBySourceId[sourceId];
     return this.http
@@ -844,6 +870,9 @@ export class SourceExplorerEffects {
           source,
           customFilter,
           filtersByTarget,
+          situAware,
+          startTime,
+          pageDuration,
         ),
       )
       .pipe(
@@ -858,6 +887,46 @@ export class SourceExplorerEffects {
           ),
         ),
       );
+  }
+
+  /**
+   * Helper. Return situationalAwareness startTime. If 'now' is used, startTime is now - nowMinus.
+   */
+  getSituationalAwarenessStartTime(
+    situationalAwareness: fromSituationalAwareness.SituationalAwarenessState,
+  ): string {
+    if (situationalAwareness.useNow) {
+      const start = situationalAwareness.nowMinus
+        ? new Date().getTime() / 1000 - situationalAwareness.nowMinus
+        : new Date().getTime() / 1000;
+      return timestamp(start);
+    } else {
+      return situationalAwareness.startTime
+        ? timestamp(situationalAwareness.startTime)
+        : timestamp(new Date().getTime() / 1000);
+    }
+  }
+
+  /**
+   * Helper. Return situationAwareness pageDuration.
+   */
+  getSituationalAwarenessPageDuration(
+    situationalAwareness: fromSituationalAwareness.SituationalAwarenessState,
+  ): string {
+    if (situationalAwareness.useNow) {
+      return situationalAwareness.nowMinus && situationalAwareness.nowPlus
+        ? toDuration(
+            (situationalAwareness.nowMinus + situationalAwareness.nowPlus) *
+              1000,
+            false,
+          )
+        : '001T00:00:00';
+    } else {
+      return situationalAwareness.pageDuration &&
+        situationalAwareness.pageDuration !== 0
+        ? toDuration(situationalAwareness.pageDuration * 1000, false)
+        : '001T00:00:00';
+    }
   }
 
   /**
@@ -1019,6 +1088,13 @@ export class SourceExplorerEffects {
                 bands,
                 state.config.raven.defaultBandSettings,
                 state.raven.sourceExplorer.pins,
+                state.raven.situationalAwareness.situationalAware,
+                this.getSituationalAwarenessStartTime(
+                  state.raven.situationalAwareness,
+                ),
+                this.getSituationalAwarenessPageDuration(
+                  state.raven.situationalAwareness,
+                ),
               ),
               of(
                 new sourceExplorerActions.UpdateTreeSource(sourceId, {
@@ -1048,6 +1124,9 @@ export class SourceExplorerEffects {
     subBandId: string | null,
     defaultBandSettings: RavenDefaultBandSettings,
     pins: RavenPin[],
+    situAware: boolean,
+    startTime: string,
+    pageDuration: string,
   ) {
     return this.fetchSubBands(
       treeBySourceId,
@@ -1055,6 +1134,9 @@ export class SourceExplorerEffects {
       defaultBandSettings,
       customFilter,
       filtersByTarget,
+      situAware,
+      startTime,
+      pageDuration,
     ).pipe(
       concatMap((newSubBands: RavenSubBand[]) => {
         const actions: Action[] = [];
@@ -1167,6 +1249,9 @@ export class SourceExplorerEffects {
     currentBands: RavenCompositeBand[],
     defaultBandSettings: RavenDefaultBandSettings,
     pins: RavenPin[],
+    situAware: boolean,
+    startTime: string,
+    pageDuration: string,
   ): Observable<Action>[] {
     if (customFilters) {
       return customFilters.map(customFilter =>
@@ -1180,6 +1265,9 @@ export class SourceExplorerEffects {
           null,
           defaultBandSettings,
           pins,
+          situAware,
+          startTime,
+          pageDuration,
         ),
       );
     }
@@ -1213,6 +1301,9 @@ export class SourceExplorerEffects {
             null,
             defaultBandSettings,
             pins,
+            situAware,
+            startTime,
+            pageDuration,
           ),
         ];
       }

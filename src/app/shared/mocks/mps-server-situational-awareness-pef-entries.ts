@@ -7,12 +7,23 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './bands';
-export * from './color';
-export * from './epochs';
-export * from './points';
-export * from './situational-awareness';
-export * from './source';
-export * from './state';
-export * from './time';
-export * from './tooltip';
+export const mpsServerSituationalAwarenessPefEntries = [
+  {
+    pefCollection: 'taifun_Juno/jm0042a.00.pef',
+    pefEndTime: '2017-085T08:37:20.000',
+    pefStartTime: '2017-068T00:00:00.000',
+    sequenceId: 'jm0042a.00',
+  },
+  {
+    pefCollection: 'taifun_Juno/jm0051a.00.pef',
+    pefEndTime: '2017-117T00:37:36.000',
+    pefStartTime: '2017-085T08:00:00.000',
+    sequenceId: 'jm0051a.00',
+  },
+  {
+    pefCollection: 'taifun_Juno/jm0052a.00.pef',
+    pefEndTime: '2017-138T06:38:56.000',
+    pefStartTime: '2017-117T00:00:00.000',
+    sequenceId: 'jm0052a.00',
+  },
+];

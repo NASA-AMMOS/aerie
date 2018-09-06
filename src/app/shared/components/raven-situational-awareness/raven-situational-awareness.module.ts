@@ -7,26 +7,38 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { ReactiveFormsModule } from '@angular/forms';
-import { RavenCustomGraphDialogComponent } from './raven-custom-graph-dialog.component';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { AgGridModule } from 'ag-grid-angular';
+import { RavenDurationPipeModule, RavenTimestampPipeModule } from '../../pipes';
+import { RavenSituationalAwarenessComponent } from './raven-situational-awareness.component';
 
 import {
-  MatButtonModule,
-  MatDialogModule,
+  MatCardModule,
   MatFormFieldModule,
   MatInputModule,
+  MatOptionModule,
+  MatSelectModule,
+  MatSlideToggleModule,
 } from '@angular/material';
 
 @NgModule({
-  declarations: [RavenCustomGraphDialogComponent],
-  exports: [RavenCustomGraphDialogComponent],
+  declarations: [RavenSituationalAwarenessComponent],
+  exports: [RavenSituationalAwarenessComponent],
   imports: [
-    MatButtonModule,
-    MatDialogModule,
+    CommonModule,
+    FormsModule,
+    MatCardModule,
     MatFormFieldModule,
     MatInputModule,
+    MatOptionModule,
+    MatSelectModule,
+    MatSlideToggleModule,
+    AgGridModule.withComponents([]),
+    RavenDurationPipeModule,
+    RavenTimestampPipeModule,
     ReactiveFormsModule,
   ],
 })
-export class RavenCustomGraphDialogModule {}
+export class RavenSituationalAwarenessModule {}

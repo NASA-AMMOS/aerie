@@ -14,7 +14,7 @@ import { timestamp } from '../../../shared/util';
   name: 'timestamp',
 })
 export class RavenTimestampPipe implements PipeTransform {
-  transform(value: number): string {
-    return timestamp(value);
+  transform(value: number | null): string {
+    return value !== null ? timestamp(value) : '';
   }
 }

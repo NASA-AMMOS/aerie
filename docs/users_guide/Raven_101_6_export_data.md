@@ -3,7 +3,7 @@
 ### How to: Export your data
 
 1. Make sure that the data sets you want to download are selected in the Source Explorer.
-2. In the Top Bar, open the Main Menu (<img src="./images/baseline-menu-24px.svg" width="18" />),
+2. In the Top Bar, open the Main Menu (<img src="./images/baseline-menu-24px.svg" width="18" />).
 3. In the Dropdown select 'Manage Output'.
 4. A drawer will open showing a list of the sources available to download.
 

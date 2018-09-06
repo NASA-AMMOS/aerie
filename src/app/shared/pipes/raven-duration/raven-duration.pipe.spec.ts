@@ -7,12 +7,16 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './bands';
-export * from './color';
-export * from './epochs';
-export * from './points';
-export * from './situational-awareness';
-export * from './source';
-export * from './state';
-export * from './time';
-export * from './tooltip';
+import { RavenDurationPipe } from './raven-duration.pipe';
+
+describe('RavenDurationPipe', () => {
+  it('create an instance', () => {
+    const pipe = new RavenDurationPipe();
+    expect(pipe).toBeTruthy();
+  });
+
+  it('should properly return a correct T format duration for the given duration', () => {
+    const pipe = new RavenDurationPipe();
+    expect(pipe.transform(86400)).toBe('001T00:00:00');
+  });
+});

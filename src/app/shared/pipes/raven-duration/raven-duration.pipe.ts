@@ -7,12 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './bands';
-export * from './color';
-export * from './epochs';
-export * from './points';
-export * from './situational-awareness';
-export * from './source';
-export * from './state';
-export * from './time';
-export * from './tooltip';
+import { Pipe, PipeTransform } from '@angular/core';
+import { toDuration } from '../../../shared/util';
+
+@Pipe({
+  name: 'duration',
+})
+export class RavenDurationPipe implements PipeTransform {
+  transform(value: number): string {
+    return toDuration(value * 1000, false);
+  }
+}

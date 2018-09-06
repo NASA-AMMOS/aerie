@@ -7,12 +7,19 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './bands';
-export * from './color';
-export * from './epochs';
-export * from './points';
-export * from './situational-awareness';
-export * from './source';
-export * from './state';
-export * from './time';
-export * from './tooltip';
+import { toRavenPefEntries } from './situational-awareness';
+
+import {
+  mpsServerSituationalAwarenessPefEntries,
+  ravenPefEntries,
+} from '../mocks';
+
+describe('situational-awareness.ts', () => {
+  describe('toRavenPefEntries', () => {
+    it(`convert mpsserver situationalAwareness pef entries to raven Pef entries`, () => {
+      expect(
+        toRavenPefEntries(mpsServerSituationalAwarenessPefEntries),
+      ).toEqual(ravenPefEntries);
+    });
+  });
+});

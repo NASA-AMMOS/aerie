@@ -18,6 +18,7 @@ import {
   ToggleEpochsDrawer,
   ToggleGlobalSettingsDrawer,
   ToggleOutputDrawer,
+  ToggleSituationalAwarenessDrawer,
   ToggleTimeCursorDrawer,
 } from '../actions/layout.actions';
 
@@ -34,6 +35,7 @@ export interface LayoutState {
   showLeftPanel: boolean;
   showOutputDrawer: boolean;
   showRightPanel: boolean;
+  showSituationalAwarenessDrawer: boolean;
   showSouthBandsPanel: boolean;
   showTimeCursorDrawer: boolean;
   timelinePanelSize: number;
@@ -52,6 +54,7 @@ export const initialState: LayoutState = {
   showLeftPanel: true,
   showOutputDrawer: false,
   showRightPanel: true,
+  showSituationalAwarenessDrawer: false,
   showSouthBandsPanel: true,
   showTimeCursorDrawer: false,
   timelinePanelSize: 50,
@@ -82,6 +85,8 @@ export function reducer(
       return toggleOutputDrawer(state, action);
     case LayoutActionTypes.ToggleRightPanel:
       return { ...state, showRightPanel: !state.showRightPanel };
+    case LayoutActionTypes.ToggleSituationalAwarenessDrawer:
+      return toggleSituationalAwarenessDrawer(state, action);
     case LayoutActionTypes.ToggleSouthBandsPanel:
       return { ...state, showSouthBandsPanel: !state.showSouthBandsPanel };
     case LayoutActionTypes.ToggleTimeCursorDrawer:
@@ -123,6 +128,7 @@ export function toggleApplyLayoutDrawer(
     showEpochsDrawer: false,
     showGlobalSettingsDrawer: false,
     showOutputDrawer: false,
+    showSituationalAwarenessDrawer: false,
     showTimeCursorDrawer: false,
   };
 }
@@ -141,6 +147,7 @@ export function toggleEpochsDrawer(
       action.opened !== undefined ? action.opened : !state.showEpochsDrawer,
     showGlobalSettingsDrawer: false,
     showOutputDrawer: false,
+    showSituationalAwarenessDrawer: false,
     showTimeCursorDrawer: false,
   };
 }
@@ -161,6 +168,8 @@ export function toggleGlobalSettingsDrawer(
         ? action.opened
         : !state.showGlobalSettingsDrawer,
     showOutputDrawer: false,
+    showSituationalAwarenessDrawer: false,
+    showTimeCursorDrawer: false,
   };
 }
 
@@ -178,6 +187,28 @@ export function toggleOutputDrawer(
     showGlobalSettingsDrawer: false,
     showOutputDrawer:
       action.opened !== undefined ? action.opened : !state.showOutputDrawer,
+    showSituationalAwarenessDrawer: false,
+    showTimeCursorDrawer: false,
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'ToggleSituationalAwarenessDrawer' action.
+ */
+export function toggleSituationalAwarenessDrawer(
+  state: LayoutState,
+  action: ToggleSituationalAwarenessDrawer,
+): LayoutState {
+  return {
+    ...state,
+    showApplyLayoutDrawer: false,
+    showEpochsDrawer: false,
+    showGlobalSettingsDrawer: false,
+    showOutputDrawer: false,
+    showSituationalAwarenessDrawer:
+      action.opened !== undefined
+        ? action.opened
+        : !state.showSituationalAwarenessDrawer,
     showTimeCursorDrawer: false,
   };
 }
@@ -194,6 +225,8 @@ export function toggleTimeCursorDrawer(
     showApplyLayoutDrawer: false,
     showEpochsDrawer: false,
     showGlobalSettingsDrawer: false,
+    showOutputDrawer: false,
+    showSituationalAwarenessDrawer: false,
     showTimeCursorDrawer:
       action.opened !== undefined ? action.opened : !state.showTimeCursorDrawer,
   };

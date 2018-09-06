@@ -8,6 +8,7 @@
  */
 
 export * from './raven-dhms/raven-dhms.pipe.module';
+export * from './raven-duration/raven-duration.module';
 export * from './raven-key-by/raven-key-by.module';
 export * from './raven-resource-point-value/raven-resource-point-value.module';
 export * from './raven-timestamp/raven-timestamp.module';

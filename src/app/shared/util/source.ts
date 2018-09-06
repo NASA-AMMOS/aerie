@@ -457,28 +457,30 @@ export function getSourceIdsForSubBand(
 
   sourceIds.forEach(sourceId => {
     const source = treeBySourceId[sourceId];
-    // Custom Graphable.
-    if (source.type === 'customGraphable' && customFiltersBySourceId) {
-      const customFilter = getCustomFilterForLabel(
-        bandLabel,
-        customFiltersBySourceId[sourceId],
-      );
-      savedSourceIds.push(
-        customFilter
-          ? `${source.id}?label=${customFilter.label}&filter=${
-              customFilter.filter
-            }`
-          : source.id,
-      );
-    } else if (source.type === 'graphableFilter' && filtersByTarget) {
-      // Graphable Filter.
-      savedSourceIds = getTargetFilterSourceIds(
-        treeBySourceId,
-        filtersByTarget,
-        (source as RavenGraphableFilterSource).filterTarget,
-      );
-    } else {
-      savedSourceIds.push(sourceId);
+    if (source) {
+      // Custom Graphable.
+      if (source.type === 'customGraphable' && customFiltersBySourceId) {
+        const customFilter = getCustomFilterForLabel(
+          bandLabel,
+          customFiltersBySourceId[sourceId],
+        );
+        savedSourceIds.push(
+          customFilter
+            ? `${source.id}?label=${customFilter.label}&filter=${
+                customFilter.filter
+              }`
+            : source.id,
+        );
+      } else if (source.type === 'graphableFilter' && filtersByTarget) {
+        // Graphable Filter.
+        savedSourceIds = getTargetFilterSourceIds(
+          treeBySourceId,
+          filtersByTarget,
+          (source as RavenGraphableFilterSource).filterTarget,
+        );
+      } else {
+        savedSourceIds.push(sourceId);
+      }
     }
   });
 
@@ -569,6 +571,9 @@ export function getFormattedSourceUrl(
   source: RavenSource,
   customFilter: RavenCustomFilter | null,
   filtersByTarget: StringTMap<StringTMap<string[]>>,
+  situAware: boolean,
+  startTime: string,
+  pageDuration: string,
 ): string {
   let sourceUrl = source.url;
 
@@ -600,7 +605,23 @@ export function getFormattedSourceUrl(
     );
   }
 
+  // If situAware, add query options.
+  if (situAware) {
+    sourceUrl = getSituAwareUrl(sourceUrl, startTime, pageDuration);
+  }
+
   return sourceUrl;
+}
+
+/**
+ * Helper. Returns situationalAware url.
+ */
+export function getSituAwareUrl(
+  sourceUrl: string,
+  startTime: string,
+  pageDuration: string,
+) {
+  return `${sourceUrl}&situAware=true&start=${startTime}&pageDuration=${pageDuration}`;
 }
 
 /**
@@ -619,6 +640,9 @@ export function getOutputDataUrl(
     source,
     customFilter,
     filtersByTarget,
+    false,
+    '',
+    '',
   );
   sourceUrl = sourceUrl.replace(
     'format=TMS',

@@ -10,17 +10,19 @@
 import { Injectable } from '@angular/core';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
-import { map, switchMap, withLatestFrom } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { concatMap, map, switchMap, withLatestFrom } from 'rxjs/operators';
 import { RavenAppState } from '../raven-store';
 
 import {
   LayoutActionTypes,
   Resize,
   ToggleRightPanel,
+  ToggleSituationalAwarenessDrawer,
 } from '../actions/layout.actions';
 
 import * as layoutActions from '../actions/layout.actions';
+import * as situationalAwarenessActions from '../actions/situational-awareness.actions';
 
 @Injectable()
 export class LayoutEffects {
@@ -49,6 +51,31 @@ export class LayoutEffects {
         return new layoutActions.UpdateLayout({ timelinePanelSize: 50 });
       } else {
         return new layoutActions.UpdateLayout({ timelinePanelSize: 75 });
+      }
+    }),
+  );
+
+  /**
+   * Effect for ToggleSituationalAwarenessDrawer.
+   */
+  @Effect()
+  toggleSituationalAwarenessDrawer$: Observable<Action> = this.actions$.pipe(
+    ofType<ToggleSituationalAwarenessDrawer>(
+      LayoutActionTypes.ToggleSituationalAwarenessDrawer,
+    ),
+    withLatestFrom(this.store$),
+    map(([, state]) => state),
+    concatMap(state => {
+      if (state.raven.layout.showSituationalAwarenessDrawer) {
+        return of(
+          new situationalAwarenessActions.FetchPefEntries(
+            `${
+              state.config.app.baseUrl
+            }/mpsserver/api/v2/situational_awareness?`,
+          ),
+        );
+      } else {
+        return [];
       }
     }),
   );

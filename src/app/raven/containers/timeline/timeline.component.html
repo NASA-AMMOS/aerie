@@ -319,6 +319,40 @@
     </div>
   </mat-sidenav>
 
+  <!-- Situational Awareness Drawer. -->
+  <mat-sidenav
+    *ngIf="showSituationalAwarenessDrawer"
+    class="situational-awareness-drawer"
+    mode="over"
+    position="end"
+    [fixedInViewport]="true"
+    [fixedTopGap]="40"
+    [opened]="showSituationalAwarenessDrawer"
+    (closedStart)="onToggleSituationalAwarenessDrawer(false)">
+    <div class="sidenav-content">
+      <button
+        mat-icon-button
+        (click)="onToggleSituationalAwarenessDrawer(false)">
+        <mat-icon
+          class="mat-24"
+          aria-label="Clear">
+          clear
+        </mat-icon>
+      </button>
+      <raven-situational-awareness
+        [nowMinus]="nowMinus"
+        [nowPlus]="nowPlus"
+        [pageDuration]="pageDuration"
+        [pefEntries]="pefEntries"
+        [situationalAware]="situationalAware"
+        [startTime]="startTime"
+        [useNow]="useNow"
+        (changeSituationalAwareness)="onChangeSituationalAwareness($event)"
+        (updateSituationalAwarenessSettings)="onUpdateSituationalAwarenessSettings($event)">
+      </raven-situational-awareness>
+    </div>
+  </mat-sidenav>
+
   <!-- Time cursor Drawer. -->
   <mat-sidenav
     *ngIf="showTimeCursorDrawer"

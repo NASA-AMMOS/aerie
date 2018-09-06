@@ -27,6 +27,7 @@ import {
   RavenDefaultBandSettings,
   RavenEpoch,
   RavenPoint,
+  RavenSituationalAwarenessPefEntry,
   RavenSortMessage,
   RavenSource,
   RavenSubBand,
@@ -46,6 +47,7 @@ import * as fromConfig from '../../../shared/reducers/config.reducer';
 import * as fromEpochs from '../../reducers/epochs.reducer';
 import * as fromLayout from '../../reducers/layout.reducer';
 import * as fromOutput from '../../reducers/output.reducer';
+import * as fromSituationalAwareness from '../../reducers/situational-awareness.reducer';
 import * as fromSourceExplorer from '../../reducers/source-explorer.reducer';
 import * as fromTimeCursor from '../../reducers/time-cursor.reducer';
 import * as fromTimeline from '../../reducers/timeline.reducer';
@@ -55,6 +57,7 @@ import * as dialogActions from '../../actions/dialog.actions';
 import * as epochsActions from '../../actions/epochs.actions';
 import * as layoutActions from '../../actions/layout.actions';
 import * as outputActions from '../../actions/output.actions';
+import * as situationalAwarenessActions from '../../actions/situational-awareness.actions';
 import * as sourceExplorerActions from '../../actions/source-explorer.actions';
 import * as timeCursorActions from '../../actions/time-cursor.actions';
 import * as timelineActions from '../../actions/timeline.actions';
@@ -67,6 +70,7 @@ import * as timelineActions from '../../actions/timeline.actions';
 })
 export class TimelineComponent implements OnDestroy {
   // Config state.
+  baseUrl: string;
   defaultBandSettings: RavenDefaultBandSettings;
   itarMessage: string;
 
@@ -94,6 +98,7 @@ export class TimelineComponent implements OnDestroy {
   showLeftPanel: boolean;
   showOutputDrawer: boolean;
   showRightPanel: boolean;
+  showSituationalAwarenessDrawer: boolean;
   showSouthBandsPanel: boolean;
   showTimeCursorDrawer: boolean;
   timelinePanelSize: number;
@@ -103,6 +108,15 @@ export class TimelineComponent implements OnDestroy {
   customFiltersBySourceId: StringTMap<RavenCustomFilter[]>;
   filtersByTarget: StringTMap<StringTMap<string[]>>;
   treeBySourceId: StringTMap<RavenSource>;
+
+  // SituationalAwareness state.
+  nowMinus: number | null;
+  nowPlus: number | null;
+  pageDuration: number | null;
+  pefEntries: RavenSituationalAwarenessPefEntry[] | null;
+  situationalAware: boolean;
+  startTime: number | null;
+  useNow: boolean;
 
   // Time cursor state.
   autoPage: boolean;
@@ -156,6 +170,15 @@ export class TimelineComponent implements OnDestroy {
         this.markForCheck();
       });
 
+    this.store
+      .pipe(
+        select(fromConfig.getUrls),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(({ baseUrl }) => {
+        this.baseUrl = baseUrl;
+      });
+
     // Epoch state.
     this.store
       .pipe(
@@ -187,6 +210,8 @@ export class TimelineComponent implements OnDestroy {
         this.showLeftPanel = state.showLeftPanel;
         this.showOutputDrawer = state.showOutputDrawer;
         this.showRightPanel = state.showRightPanel;
+        this.showSituationalAwarenessDrawer =
+          state.showSituationalAwarenessDrawer;
         this.showSouthBandsPanel = state.showSouthBandsPanel;
         this.showTimeCursorDrawer = state.showTimeCursorDrawer;
         this.timelinePanelSize = state.timelinePanelSize;
@@ -220,6 +245,23 @@ export class TimelineComponent implements OnDestroy {
         this.customFiltersBySourceId = state.customFiltersBySourceId;
         this.filtersByTarget = state.filtersByTarget;
         this.treeBySourceId = state.treeBySourceId;
+        this.markForCheck();
+      });
+
+    // Situational awareness state.
+    this.store
+      .pipe(
+        select(fromSituationalAwareness.getSituationalAwarenessState),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(state => {
+        this.nowMinus = state.nowMinus;
+        this.nowPlus = state.nowPlus;
+        this.pageDuration = state.pageDuration;
+        this.pefEntries = state.pefEntries;
+        this.situationalAware = state.situationalAware;
+        this.startTime = state.startTime;
+        this.useNow = state.useNow;
         this.markForCheck();
       });
 
@@ -312,6 +354,19 @@ export class TimelineComponent implements OnDestroy {
         new timelineActions.SelectPoint(e.bandId, e.subBandId, e.pointId),
       );
     }
+  }
+
+  /**
+   * Event. Called when an `change-situational-awareness` event is fired
+   * from the raven-situational-awareness component.
+   */
+  onChangeSituationalAwareness(situAware: boolean): void {
+    this.store.dispatch(
+      new situationalAwarenessActions.ChangeSituationalAwareness(
+        `${this.baseUrl}/mpsserver/api/v2/situational_awareness?`,
+        situAware,
+      ),
+    );
   }
 
   /**
@@ -419,6 +474,15 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
+   * Event. Called when a toggle event is fired from the situational awareness drawer.
+   */
+  onToggleSituationalAwarenessDrawer(opened?: boolean) {
+    this.store.dispatch(
+      new layoutActions.ToggleSituationalAwarenessDrawer(opened),
+    );
+  }
+
+  /**
    * Event. Called when an `update-band` event is fired from the raven-settings component.
    */
   onUpdateBand(e: RavenUpdate): void {
@@ -458,6 +522,17 @@ export class TimelineComponent implements OnDestroy {
    */
   onUpdateOutputSettings(e: RavenUpdate): void {
     this.store.dispatch(new outputActions.UpdateOutputSettings(e.update));
+  }
+
+  /**
+   * Event. Called when an `update-situational-awareness-settings` event is fired from the raven-situational-awareness component.
+   */
+  onUpdateSituationalAwarenessSettings(e: RavenUpdate): void {
+    this.store.dispatch(
+      new situationalAwarenessActions.UpdateSituationalAwarenessSettings(
+        e.update,
+      ),
+    );
   }
 
   /**

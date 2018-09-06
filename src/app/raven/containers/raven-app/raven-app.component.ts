@@ -22,6 +22,7 @@ import { RavenTimeRange } from '../../../shared/models';
 
 import * as fromConfig from '../../../shared/reducers/config.reducer';
 import * as fromLayout from '../../reducers/layout.reducer';
+import * as fromSituationalAwareness from '../../reducers/situational-awareness.reducer';
 import * as fromSourceExplorer from '../../reducers/source-explorer.reducer';
 import * as fromTimeline from '../../reducers/timeline.reducer';
 
@@ -48,12 +49,13 @@ export class RavenAppComponent implements OnDestroy {
   ) {
     // Combine all fetch pending observable for progress bar.
     combineLatest(
+      this.store.pipe(select(fromSituationalAwareness.getPending)),
       this.store.pipe(select(fromSourceExplorer.getPending)),
       this.store.pipe(select(fromTimeline.getPending)),
     )
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(loading => {
-        this.loading = loading[0] || loading[1];
+        this.loading = loading[0] || loading[1] || loading[3];
         this.markForCheck();
       });
 
@@ -209,6 +211,10 @@ export class RavenAppComponent implements OnDestroy {
 
   toggleShareableLinkDialog() {
     this.store.dispatch(new dialogActions.OpenShareableLinkDialog('600px'));
+  }
+
+  toggleSituationalAwarenessDrawer() {
+    this.store.dispatch(new layoutActions.ToggleSituationalAwarenessDrawer());
   }
 
   toggleSouthBandsPanel() {

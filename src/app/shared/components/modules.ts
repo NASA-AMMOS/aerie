@@ -39,6 +39,7 @@ export * from './raven-resource-point/raven-resource-point.module';
 export * from './raven-settings-bands/raven-settings-bands.module';
 export * from './raven-settings-global/raven-settings-global.module';
 export * from './raven-shareable-link-dialog/raven-shareable-link-dialog.module';
+export * from './raven-situational-awareness/raven-situational-awareness.module';
 export * from './raven-state-band/raven-state-band.module';
 export * from './raven-state-point/raven-state-point.module';
 export * from './raven-state-save-dialog/raven-state-save-dialog.module';

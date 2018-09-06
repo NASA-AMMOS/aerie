@@ -587,38 +587,50 @@ export function subBandIdRemove(
     ...state.filtersByTarget,
   };
 
+  let sourceNotFound = false;
+
   action.sourceIds.forEach(sourceId => {
     const source = state.treeBySourceId[sourceId];
 
-    if (source && source.type === 'customGraphable') {
-      // Custom Graphable.
-      const customFilters = state.customFiltersBySourceId[sourceId] || [];
+    if (source) {
+      if (source && source.type === 'customGraphable') {
+        // Custom Graphable.
+        const customFilters = state.customFiltersBySourceId[sourceId] || [];
 
-      newCustomFiltersBySourceId = {
-        ...state.customFiltersBySourceId,
-        [sourceId]: customFilters.filter(
-          customFilter => customFilter.subBandId !== action.subBandId,
-        ),
-      };
-    } else if (source && source.type === 'graphableFilter') {
-      // Graphable Filter.
-      const graphableFilterSource = source as RavenGraphableFilterSource;
-      const filterTarget = graphableFilterSource.filterTarget;
-      const filters = newFiltersByTarget[filterTarget] || [];
-
-      newFiltersByTarget = {
-        ...newFiltersByTarget,
-        [filterTarget]: {
-          ...filters,
-          [graphableFilterSource.filterSetOf]: filters[
-            graphableFilterSource.filterSetOf
-          ].filter(
-            filterSourceId => filterSourceId !== graphableFilterSource.name,
+        newCustomFiltersBySourceId = {
+          ...state.customFiltersBySourceId,
+          [sourceId]: customFilters.filter(
+            customFilter => customFilter.subBandId !== action.subBandId,
           ),
-        },
-      };
+        };
+      } else if (source && source.type === 'graphableFilter') {
+        // Graphable Filter.
+        const graphableFilterSource = source as RavenGraphableFilterSource;
+        const filterTarget = graphableFilterSource.filterTarget;
+        const filters = newFiltersByTarget[filterTarget] || [];
+
+        newFiltersByTarget = {
+          ...newFiltersByTarget,
+          [filterTarget]: {
+            ...filters,
+            [graphableFilterSource.filterSetOf]: filters[
+              graphableFilterSource.filterSetOf
+            ].filter(
+              filterSourceId => filterSourceId !== graphableFilterSource.name,
+            ),
+          },
+        };
+      }
+    } else {
+      sourceNotFound = true;
     }
   });
+
+  if (sourceNotFound) {
+    return {
+      ...state,
+    };
+  }
 
   return {
     ...state,

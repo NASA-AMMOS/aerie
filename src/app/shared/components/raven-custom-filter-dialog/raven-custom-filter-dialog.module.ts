@@ -12,6 +12,7 @@ import { FormsModule } from '@angular/forms';
 import { RavenCustomFilterDialogComponent } from './raven-custom-filter-dialog.component';
 
 import {
+  MatButtonModule,
   MatDialogModule,
   MatFormFieldModule,
   MatInputModule,
@@ -20,6 +21,12 @@ import {
 @NgModule({
   declarations: [RavenCustomFilterDialogComponent],
   exports: [RavenCustomFilterDialogComponent],
-  imports: [FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule],
+  imports: [
+    FormsModule,
+    MatButtonModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+  ],
 })
 export class RavenCustomFilterDialogModule {}

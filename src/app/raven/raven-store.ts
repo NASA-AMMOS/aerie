@@ -20,6 +20,7 @@ import * as fromRoot from '../app-store';
 import * as fromEpochs from './reducers/epochs.reducer';
 import * as fromLayout from './reducers/layout.reducer';
 import * as fromOutput from './reducers/output.reducer';
+import * as fromSituationalAwareness from './reducers/situational-awareness.reducer';
 import * as fromSourceExplorer from './reducers/source-explorer.reducer';
 import * as fromTimeCursor from './reducers/time-cursor.reducer';
 import * as fromTimeline from './reducers/timeline.reducer';
@@ -32,6 +33,7 @@ export interface State {
   epochs: fromEpochs.EpochsState;
   layout: fromLayout.LayoutState;
   output: fromOutput.OutputState;
+  situationalAwareness: fromSituationalAwareness.SituationalAwarenessState;
   sourceExplorer: fromSourceExplorer.SourceExplorerState;
   timeCursor: fromTimeCursor.TimeCursorState;
   timeline: fromTimeline.TimelineState;
@@ -46,6 +48,7 @@ export const reducers: ActionReducerMap<State> = {
   epochs: fromEpochs.reducer,
   layout: fromLayout.reducer,
   output: fromOutput.reducer,
+  situationalAwareness: fromSituationalAwareness.reducer,
   sourceExplorer: fromSourceExplorer.reducer,
   timeCursor: fromTimeCursor.reducer,
   timeline: fromTimeline.reducer,

@@ -12,6 +12,7 @@ export * from './epochs.effects';
 export * from './layout.effects';
 export * from './output.effects';
 export * from './router.effects';
+export * from './situational-awareness.effects';
 export * from './source-explorer.effects';
 export * from './time-cursor.effects';
 export * from './timeline.effects';
