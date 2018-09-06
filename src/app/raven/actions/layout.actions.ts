@@ -39,7 +39,7 @@ export class SetMode implements Action {
     public showDetailsPanel: boolean,
     public showLeftPanel: boolean,
     public showRightPanel: boolean,
-    public showSouthBandsPanel: boolean
+    public showSouthBandsPanel: boolean,
   ) {}
 }
 

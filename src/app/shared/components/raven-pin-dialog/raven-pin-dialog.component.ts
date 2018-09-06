@@ -22,7 +22,7 @@ export class RavenPinDialogComponent {
 
   constructor(
     public dialogRef: MatDialogRef<RavenPinDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+    @Inject(MAT_DIALOG_DATA) public data: any,
   ) {
     let currentName = '';
 

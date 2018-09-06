@@ -80,7 +80,7 @@ export class RavenPanToDurationComponent {
   panDurationControl: FormControl = new FormControl('', [
     Validators.required,
     Validators.pattern(
-      /^((\d+)[d,D])?((\d+)[h,H])?((\d+)[m,M])?((\d+)[s,S])?((\d+)ms)?$/
+      /^((\d+)[d,D])?((\d+)[h,H])?((\d+)[m,M])?((\d+)[s,S])?((\d+)ms)?$/,
     ),
   ]);
 
@@ -89,8 +89,8 @@ export class RavenPanToDurationComponent {
       startWith(''),
       map(
         duration =>
-          duration ? this.filterDurations(duration) : [...this.durations]
-      )
+          duration ? this.filterDurations(duration) : [...this.durations],
+      ),
     );
   }
 
@@ -108,7 +108,7 @@ export class RavenPanToDurationComponent {
    */
   filterDurations(duration: string) {
     return this.durations.filter(
-      d => d.toLowerCase().indexOf(duration.toLowerCase()) === 0
+      d => d.toLowerCase().indexOf(duration.toLowerCase()) === 0,
     );
   }
 }

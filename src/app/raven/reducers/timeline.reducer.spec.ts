@@ -101,7 +101,7 @@ describe('timeline reducer', () => {
     };
     timelineState = reducer(
       timelineState,
-      new AddBand(source.id, newBand, { filterTarget: 'DKF' })
+      new AddBand(source.id, newBand, { filterTarget: 'DKF' }),
     );
 
     expect(timelineState).toEqual({
@@ -177,7 +177,7 @@ describe('timeline reducer', () => {
       timelineState,
       new AddPointsToSubBand(source.id, newBand.id, activityBand.id, [
         activityPoint,
-      ])
+      ]),
     );
     expect(timelineState.bands[0].subBands[0].points).toEqual([activityPoint]);
   });
@@ -199,7 +199,7 @@ describe('timeline reducer', () => {
     expect(timelineState.bands[0].subBands.length).toEqual(1);
     timelineState = reducer(
       timelineState,
-      new AddSubBand(source.id, newBand.id, activityBand)
+      new AddSubBand(source.id, newBand.id, activityBand),
     );
     expect(timelineState.bands[0].subBands.length).toEqual(2);
     expect(timelineState).toEqual({
@@ -297,7 +297,7 @@ describe('timeline reducer', () => {
     timelineState = reducer(timelineState, new AddBand(source.id, band));
     timelineState = reducer(
       timelineState,
-      new RemoveAllPointsInSubBandWithParentSource('/child')
+      new RemoveAllPointsInSubBandWithParentSource('/child'),
     );
     expect(timelineState.bands[0].subBands[0].points).toEqual([]);
   });
@@ -335,14 +335,14 @@ describe('timeline reducer', () => {
 
     timelineState = reducer(
       timelineState,
-      new RemoveBandsOrPointsForSource('/')
+      new RemoveBandsOrPointsForSource('/'),
     );
     expect(timelineState.bands[0].subBands[0].points[0].id).toEqual('101');
     expect(timelineState.bands[0].subBands[0].points.length).toEqual(1);
 
     timelineState = reducer(
       timelineState,
-      new RemoveBandsOrPointsForSource('/child')
+      new RemoveBandsOrPointsForSource('/child'),
     );
     expect(timelineState.bands.length).toEqual(0);
   });
@@ -425,7 +425,7 @@ describe('timeline reducer', () => {
     ]);
     timelineState = reducer(
       timelineState,
-      new RemoveSourceIdFromSubBands('/child/grandChild')
+      new RemoveSourceIdFromSubBands('/child/grandChild'),
     );
     expect(timelineState.bands[0].subBands[0].sourceIds).toEqual([
       '/',
@@ -579,7 +579,7 @@ describe('timeline reducer', () => {
     timelineState = reducer(timelineState, new AddBand(source.id, band));
     timelineState = reducer(
       timelineState,
-      new SetPointsForSubBand('0', '1', points)
+      new SetPointsForSubBand('0', '1', points),
     );
     expect(timelineState.bands[0].subBands[0].points).toEqual(points);
   });
@@ -663,7 +663,7 @@ describe('timeline reducer', () => {
 
     timelineState = reducer(
       timelineState,
-      new UpdateBand(band.id, { height: 42 })
+      new UpdateBand(band.id, { height: 42 }),
     );
     expect(timelineState.bands[0].height).toEqual(42);
   });
@@ -691,7 +691,7 @@ describe('timeline reducer', () => {
 
     timelineState = reducer(
       timelineState,
-      new UpdateSubBand(band.id, '1', { height: 42 })
+      new UpdateSubBand(band.id, '1', { height: 42 }),
     );
     expect(timelineState.bands[0].subBands[0].height).toEqual(42);
   });
@@ -701,7 +701,7 @@ describe('timeline reducer', () => {
       timelineState,
       new UpdateTimeline({
         viewTimeRange: { end: 314, start: 272 },
-      })
+      }),
     );
     expect(timelineState).toEqual({
       ...initialState,
@@ -712,7 +712,7 @@ describe('timeline reducer', () => {
   it('handle UpdateViewTimeRange', () => {
     timelineState = reducer(
       timelineState,
-      new UpdateViewTimeRange({ end: 314, start: 272 })
+      new UpdateViewTimeRange({ end: 314, start: 272 }),
     );
     expect(timelineState).toEqual({
       ...initialState,

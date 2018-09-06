@@ -23,7 +23,7 @@ export class RavenCustomGraphDialogComponent {
 
   constructor(
     public dialogRef: MatDialogRef<RavenCustomGraphDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+    @Inject(MAT_DIALOG_DATA) public data: any,
   ) {
     this.label = new FormControl('', [
       Validators.required,

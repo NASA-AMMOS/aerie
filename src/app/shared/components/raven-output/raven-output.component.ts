@@ -167,7 +167,7 @@ export class RavenOutputComponent implements AfterViewInit, OnChanges {
       const sourceIds = subBandSourceIdsByLabel[label];
       sourceIds.forEach(sourceId => {
         const pathNameArgs = sourceId.match(
-          new RegExp('(.*)/([^\\?]*)(\\?.*)?')
+          new RegExp('(.*)/([^\\?]*)(\\?.*)?'),
         );
 
         if (pathNameArgs) {
@@ -176,7 +176,7 @@ export class RavenOutputComponent implements AfterViewInit, OnChanges {
 
           if (args) {
             const labelFilter = args.match(
-              new RegExp('\\?label=(.*)&filter=(.*)')
+              new RegExp('\\?label=(.*)&filter=(.*)'),
             );
 
             if (labelFilter) {

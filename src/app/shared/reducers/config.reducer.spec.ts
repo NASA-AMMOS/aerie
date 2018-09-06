@@ -25,7 +25,7 @@ describe('config reducer', () => {
   it('handle UpdateDefaultBandSettings activityLayout', () => {
     configState = reducer(
       configState,
-      new UpdateDefaultBandSettings({ activityLayout: 2 })
+      new UpdateDefaultBandSettings({ activityLayout: 2 }),
     );
     expect(configState).toEqual({
       ...initialState,
@@ -42,7 +42,7 @@ describe('config reducer', () => {
   it('handle UpdateDefaultBandSettings icon', () => {
     configState = reducer(
       configState,
-      new UpdateDefaultBandSettings({ icon: 'triangle' })
+      new UpdateDefaultBandSettings({ icon: 'triangle' }),
     );
     expect(configState).toEqual({
       ...initialState,
@@ -59,7 +59,7 @@ describe('config reducer', () => {
   it('handle UpdateDefaultBandSettings labelFont', () => {
     configState = reducer(
       configState,
-      new UpdateDefaultBandSettings({ labelFont: 'Courier' })
+      new UpdateDefaultBandSettings({ labelFont: 'Courier' }),
     );
     expect(configState).toEqual({
       ...initialState,
@@ -76,7 +76,7 @@ describe('config reducer', () => {
   it('handle UpdateDefaultBandSettings labelFontSize', () => {
     configState = reducer(
       configState,
-      new UpdateDefaultBandSettings({ labelFontSize: 11 })
+      new UpdateDefaultBandSettings({ labelFontSize: 11 }),
     );
     expect(configState).toEqual({
       ...initialState,
@@ -93,7 +93,7 @@ describe('config reducer', () => {
   it('handle UpdateDefaultBandSettings labelWidth', () => {
     configState = reducer(
       configState,
-      new UpdateDefaultBandSettings({ labelWidth: 50 })
+      new UpdateDefaultBandSettings({ labelWidth: 50 }),
     );
     expect(configState).toEqual({
       ...initialState,
@@ -110,7 +110,7 @@ describe('config reducer', () => {
   it('handle UpdateDefaultBandSettings resourceColor', () => {
     configState = reducer(
       configState,
-      new UpdateDefaultBandSettings({ resourceColor: '#00ff00' })
+      new UpdateDefaultBandSettings({ resourceColor: '#00ff00' }),
     );
     expect(configState).toEqual({
       ...initialState,
@@ -127,7 +127,7 @@ describe('config reducer', () => {
   it('handle UpdateDefaultBandSettings resourceFillColor', () => {
     configState = reducer(
       configState,
-      new UpdateDefaultBandSettings({ resourceFillColor: '#ff0000' })
+      new UpdateDefaultBandSettings({ resourceFillColor: '#ff0000' }),
     );
     expect(configState).toEqual({
       ...initialState,
@@ -144,7 +144,7 @@ describe('config reducer', () => {
   it('handle UpdateDefaultBandSettings showTimeCursor', () => {
     configState = reducer(
       configState,
-      new UpdateDefaultBandSettings({ showTimeCursor: true })
+      new UpdateDefaultBandSettings({ showTimeCursor: true }),
     );
     expect(configState).toEqual({
       ...initialState,
@@ -161,7 +161,7 @@ describe('config reducer', () => {
   it('handle UpdateDefaultBandSettings showTooltip', () => {
     configState = reducer(
       configState,
-      new UpdateDefaultBandSettings({ showTooltip: true })
+      new UpdateDefaultBandSettings({ showTooltip: true }),
     );
     expect(configState).toEqual({
       ...initialState,

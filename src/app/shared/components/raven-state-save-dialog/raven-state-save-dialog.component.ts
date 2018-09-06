@@ -29,7 +29,7 @@ export class RavenStateSaveDialogComponent implements OnDestroy {
   constructor(
     public dialogRef: MatDialogRef<RavenStateSaveDialogComponent>,
     public http: HttpClient,
-    @Inject(MAT_DIALOG_DATA) public data: any
+    @Inject(MAT_DIALOG_DATA) public data: any,
   ) {
     this.name = new FormControl('', [
       Validators.required,
@@ -40,11 +40,11 @@ export class RavenStateSaveDialogComponent implements OnDestroy {
     combineLatest(this.name.valueChanges, this.http.get(data.source.url))
       .pipe(
         map(([value, sources]) => ({ value, sources })),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe(({ value, sources }) => {
         const children = (sources as MpsServerSource[]).map(
-          source => source.name
+          source => source.name,
         );
 
         // If the current source has a child with the name we are trying to save,

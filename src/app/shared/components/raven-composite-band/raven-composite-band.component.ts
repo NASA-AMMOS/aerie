@@ -221,7 +221,7 @@ export class RavenCompositeBandComponent
       ) {
         this.ctlTimeAxis.updateTimes(
           currentMaxTimeRange.start,
-          currentMaxTimeRange.end
+          currentMaxTimeRange.end,
         );
         shouldRedraw = true;
         shouldUpdateTicks = true;
@@ -284,7 +284,7 @@ export class RavenCompositeBandComponent
     // Time Cursor Color.
     if (changes.cursorColor && !changes.cursorColor.firstChange) {
       this.ctlCompositeBand.decorator.timeCursorColor = colorHexToRgbArray(
-        this.cursorColor
+        this.cursorColor,
       );
       shouldRedraw = true;
     }
@@ -313,7 +313,7 @@ export class RavenCompositeBandComponent
       ) {
         this.ctlViewTimeAxis.updateTimes(
           currentViewTimeRange.start,
-          currentViewTimeRange.end
+          currentViewTimeRange.end,
         );
         shouldRedraw = true;
         shouldUpdateTicks = true;
@@ -354,16 +354,16 @@ export class RavenCompositeBandComponent
 
     this.ctlCompositeBand.decorator.timeCursorWidth = this.cursorWidth;
     this.ctlCompositeBand.decorator.timeCursorColor = colorHexToRgbArray(
-      this.cursorColor
+      this.cursorColor,
     );
 
     this.ctlTimeAxis.updateTimes(
       this.maxTimeRange.start,
-      this.maxTimeRange.end
+      this.maxTimeRange.end,
     );
     this.ctlViewTimeAxis.updateTimes(
       this.viewTimeRange.start,
-      this.viewTimeRange.end
+      this.viewTimeRange.end,
     );
     this.ctlViewTimeAxis.now = this.cursorTime; // Set `now` for the time-cursor so it draws upon initialization.
 
@@ -687,7 +687,7 @@ export class RavenCompositeBandComponent
       if (ctlBand.type === 'resource') {
         const ravenSubBand = bandById(
           this.subBands,
-          ctlBand.id
+          ctlBand.id,
         ) as RavenResourceBand;
         if (ravenSubBand) {
           ctlBand.autoScale = this.getResourceAutoScale(ravenSubBand.autoScale);

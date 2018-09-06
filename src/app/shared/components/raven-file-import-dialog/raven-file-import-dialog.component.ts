@@ -26,7 +26,7 @@ export class RavenFileImportDialogComponent {
 
   constructor(
     public dialogRef: MatDialogRef<RavenFileImportDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+    @Inject(MAT_DIALOG_DATA) public data: any,
   ) {}
 
   /**

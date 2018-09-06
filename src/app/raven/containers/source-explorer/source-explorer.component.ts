@@ -59,13 +59,13 @@ export class SourceExplorerComponent implements OnDestroy {
 
   constructor(
     private changeDetector: ChangeDetectorRef,
-    private store: Store<fromSourceExplorer.SourceExplorerState>
+    private store: Store<fromSourceExplorer.SourceExplorerState>,
   ) {
     // Source Explorer state.
     this.store
       .pipe(
         select(fromSourceExplorer.getFiltersByTarget),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe(filtersByTarget => {
         this.filtersByTarget = filtersByTarget;
@@ -75,7 +75,7 @@ export class SourceExplorerComponent implements OnDestroy {
     this.store
       .pipe(
         select(fromSourceExplorer.getPins),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe(pins => {
         this.pins = pins;
@@ -85,7 +85,7 @@ export class SourceExplorerComponent implements OnDestroy {
     this.store
       .pipe(
         select(fromSourceExplorer.getSelectedSourceId),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe(selectedSourceId => {
         this.selectedSourceId = selectedSourceId;
@@ -95,13 +95,13 @@ export class SourceExplorerComponent implements OnDestroy {
     this.store
       .pipe(
         select(fromSourceExplorer.getTreeBySourceId),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe(tree => {
         this.tree = tree;
         this.sortedChildIds = getSortedChildIds(
           this.tree,
-          this.tree['/'].childIds
+          this.tree['/'].childIds,
         );
         this.markForCheck();
       });
@@ -125,20 +125,20 @@ export class SourceExplorerComponent implements OnDestroy {
         select(fromConfig.getUrls),
         switchMap(config =>
           WebSocketSubject.create(
-            `${config.baseUrl.replace('https', 'wss')}/${config.socketUrl}`
-          )
+            `${config.baseUrl.replace('https', 'wss')}/${config.socketUrl}`,
+          ),
         ),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe((data: any) => {
         if (data.detail === 'data source changed') {
           const match = data.subject.match(
-            new RegExp('(.*/fs-mongodb)(/.*)/(.*)')
+            new RegExp('(.*/fs-mongodb)(/.*)/(.*)'),
           );
           const sourceId = `${match[2]}`;
           const sourceUrl = `${match[1]}${match[2]}`;
           this.store.dispatch(
-            new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl)
+            new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl),
           );
         }
       });
@@ -169,12 +169,12 @@ export class SourceExplorerComponent implements OnDestroy {
       this.store.dispatch(
         new sourceExplorerActions.UpdateSourceExplorer({
           currentStateId: source.id,
-        })
+        }),
       );
       this.store.dispatch(new layoutActions.ToggleApplyLayoutDrawer(true));
     } else if (event === 'apply-state') {
       this.store.dispatch(
-        new dialogActions.OpenStateApplyDialog(source, '250px')
+        new dialogActions.OpenStateApplyDialog(source, '250px'),
       );
     } else if (event === 'delete') {
       this.store.dispatch(new dialogActions.OpenDeleteDialog(source, '250px'));
@@ -182,23 +182,23 @@ export class SourceExplorerComponent implements OnDestroy {
       this.onLoadEpochs(source);
     } else if (event === 'file-import') {
       this.store.dispatch(
-        new dialogActions.OpenFileImportDialog(source, '300px')
+        new dialogActions.OpenFileImportDialog(source, '300px'),
       );
     } else if (event === 'pin-add') {
       this.store.dispatch(
-        new dialogActions.OpenPinDialog('add', source, '250px')
+        new dialogActions.OpenPinDialog('add', source, '250px'),
       );
     } else if (event === 'pin-remove') {
       this.store.dispatch(
-        new dialogActions.OpenPinDialog('remove', source, '250px')
+        new dialogActions.OpenPinDialog('remove', source, '250px'),
       );
     } else if (event === 'pin-rename') {
       this.store.dispatch(
-        new dialogActions.OpenPinDialog('rename', source, '250px')
+        new dialogActions.OpenPinDialog('rename', source, '250px'),
       );
     } else if (event === 'save') {
       this.store.dispatch(
-        new dialogActions.OpenStateSaveDialog(source, '300px')
+        new dialogActions.OpenStateSaveDialog(source, '300px'),
       );
     }
   }
@@ -208,7 +208,7 @@ export class SourceExplorerComponent implements OnDestroy {
    */
   onAddCustomGraph(source: RavenCustomGraphableSource): void {
     this.store.dispatch(
-      new dialogActions.OpenCustomGraphDialog(source, '300px')
+      new dialogActions.OpenCustomGraphDialog(source, '300px'),
     );
   }
 
@@ -273,7 +273,7 @@ export class SourceExplorerComponent implements OnDestroy {
    */
   onRemoveGraphableFilter(source: RavenGraphableFilterSource): void {
     this.store.dispatch(
-      new sourceExplorerActions.RemoveGraphableFilter(source)
+      new sourceExplorerActions.RemoveGraphableFilter(source),
     );
   }
 
@@ -289,7 +289,7 @@ export class SourceExplorerComponent implements OnDestroy {
    */
   onSelectCustomFilter(source: RavenCustomFilterSource): void {
     this.store.dispatch(
-      new dialogActions.OpenCustomFilterDialog(source, '300px')
+      new dialogActions.OpenCustomFilterDialog(source, '300px'),
     );
   }
 }

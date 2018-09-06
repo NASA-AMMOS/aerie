@@ -21,6 +21,6 @@ describe('MpsServerService', () => {
     [MpsServerService],
     (service: MpsServerService) => {
       expect(service).toBeTruthy();
-    }
+    },
   ));
 });

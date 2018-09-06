@@ -29,7 +29,7 @@ export function getState(name: string, state: RavenAppState): any {
           state.raven.sourceExplorer.treeBySourceId,
           subBand.label,
           state.raven.sourceExplorer.customFiltersBySourceId,
-          state.raven.sourceExplorer.filtersByTarget
+          state.raven.sourceExplorer.filtersByTarget,
         ),
       })),
     })),

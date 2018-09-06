@@ -82,7 +82,7 @@ export class RavenTimeScrollBarComponent
       ) {
         this.ctlTimeAxis.updateTimes(
           currentMaxTimeRange.start,
-          currentMaxTimeRange.end
+          currentMaxTimeRange.end,
         );
         shouldRedraw = true;
       }
@@ -100,7 +100,7 @@ export class RavenTimeScrollBarComponent
       ) {
         this.ctlViewTimeAxis.updateTimes(
           currentViewTimeRange.start,
-          currentViewTimeRange.end
+          currentViewTimeRange.end,
         );
         shouldRedraw = true;
       }
@@ -127,11 +127,11 @@ export class RavenTimeScrollBarComponent
 
     this.ctlTimeAxis.updateTimes(
       this.maxTimeRange.start,
-      this.maxTimeRange.end
+      this.maxTimeRange.end,
     );
     this.ctlViewTimeAxis.updateTimes(
       this.viewTimeRange.start,
-      this.viewTimeRange.end
+      this.viewTimeRange.end,
     );
 
     this.elementRef.nativeElement.appendChild(this.ctlTimeScrollBar.div);

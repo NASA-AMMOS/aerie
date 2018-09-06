@@ -161,7 +161,7 @@ export class RavenTableComponent implements OnChanges {
       });
 
       Object.keys(
-        pickBy(point, prop => prop !== null && prop !== undefined)
+        pickBy(point, prop => prop !== null && prop !== undefined),
       ).forEach(prop => {
         // `pickBy` removes nulls or undefined props.
         // Exclude table columns we do not want to show.
@@ -257,7 +257,7 @@ export class RavenTableComponent implements OnChanges {
         update: {
           tableColumns: tableColumns || this.getColumnState(),
         },
-      })
+      }),
     );
   }
 

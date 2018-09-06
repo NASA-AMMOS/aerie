@@ -68,7 +68,7 @@ export class AddCustomFilter implements Action {
   constructor(
     public sourceId: string,
     public label: string,
-    public customFilter: string
+    public customFilter: string,
   ) {}
 }
 
@@ -78,7 +78,7 @@ export class AddCustomGraph implements Action {
   constructor(
     public sourceId: string,
     public label: string,
-    public customFilter: string
+    public customFilter: string,
   ) {}
 }
 
@@ -140,7 +140,7 @@ export class GraphCustomSource implements Action {
   constructor(
     public sourceId: string,
     public label: string,
-    public filter: string
+    public filter: string,
   ) {}
 }
 
@@ -252,7 +252,7 @@ export class SetCustomFilterSubBandId implements Action {
   constructor(
     public sourceId: string,
     public label: string,
-    public subBandId: string
+    public subBandId: string,
   ) {}
 }
 

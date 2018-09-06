@@ -39,7 +39,7 @@ class HBCommandLoaderTestComponent {
   component: HBCommandLoaderComponent;
 
   selectedDictionaryChanged = jasmine.createSpy(
-    'HBCommandLoaderTestComponent::selectedDictionaryChanged'
+    'HBCommandLoaderTestComponent::selectedDictionaryChanged',
   );
 }
 
@@ -76,7 +76,7 @@ describe('HBCommandLoaderComponent', () => {
     const id = 'TEST_2';
     updateInput('selectedId', id);
     const select: HTMLSelectElement | null = element.querySelector(
-      'mat-select'
+      'mat-select',
     );
     const value: string | null = select
       ? select.getAttribute('ng-reflect-value')

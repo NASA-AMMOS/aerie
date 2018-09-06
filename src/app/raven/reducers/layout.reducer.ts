@@ -63,7 +63,7 @@ export const initialState: LayoutState = {
  */
 export function reducer(
   state: LayoutState = initialState,
-  action: LayoutAction
+  action: LayoutAction,
 ): LayoutState {
   switch (action.type) {
     case LayoutActionTypes.SetMode:
@@ -112,7 +112,7 @@ export function setMode(state: LayoutState, action: SetMode): LayoutState {
  */
 export function toggleApplyLayoutDrawer(
   state: LayoutState,
-  action: ToggleApplyLayoutDrawer
+  action: ToggleApplyLayoutDrawer,
 ): LayoutState {
   return {
     ...state,
@@ -132,7 +132,7 @@ export function toggleApplyLayoutDrawer(
  */
 export function toggleEpochsDrawer(
   state: LayoutState,
-  action: ToggleEpochsDrawer
+  action: ToggleEpochsDrawer,
 ): LayoutState {
   return {
     ...state,
@@ -150,7 +150,7 @@ export function toggleEpochsDrawer(
  */
 export function toggleGlobalSettingsDrawer(
   state: LayoutState,
-  action: ToggleGlobalSettingsDrawer
+  action: ToggleGlobalSettingsDrawer,
 ): LayoutState {
   return {
     ...state,
@@ -169,7 +169,7 @@ export function toggleGlobalSettingsDrawer(
  */
 export function toggleOutputDrawer(
   state: LayoutState,
-  action: ToggleOutputDrawer
+  action: ToggleOutputDrawer,
 ): LayoutState {
   return {
     ...state,
@@ -187,7 +187,7 @@ export function toggleOutputDrawer(
  */
 export function toggleTimeCursorDrawer(
   state: LayoutState,
-  action: ToggleTimeCursorDrawer
+  action: ToggleTimeCursorDrawer,
 ): LayoutState {
   return {
     ...state,
@@ -205,7 +205,7 @@ export function toggleTimeCursorDrawer(
 const featureSelector = createFeatureSelector<State>('raven');
 export const getLayoutState = createSelector(
   featureSelector,
-  (state: State): LayoutState => state.layout
+  (state: State): LayoutState => state.layout,
 );
 
 /**
@@ -221,5 +221,5 @@ export const getLayoutState = createSelector(
  */
 export const getMode = createSelector(
   getLayoutState,
-  (state: LayoutState) => state.mode
+  (state: LayoutState) => state.mode,
 );

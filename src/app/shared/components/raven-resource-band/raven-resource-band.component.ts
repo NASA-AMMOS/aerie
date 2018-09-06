@@ -325,7 +325,7 @@ export class RavenResourceBandComponent
       name: this.name,
       onFormatTickValue: this.onFormatTickValue.bind(this),
       onGetInterpolatedTooltipText: this.onGetInterpolatedTooltipText.bind(
-        this
+        this,
       ),
       painter: new (window as any).ResourcePainter({
         color: colorHexToRgbArray(this.color),
@@ -440,7 +440,7 @@ export class RavenResourceBandComponent
       obj,
       this.earthSecToEpochSec,
       this.epoch,
-      this.dayCode
+      this.dayCode,
     );
   }
 
@@ -452,7 +452,7 @@ export class RavenResourceBandComponent
       obj,
       this.earthSecToEpochSec,
       this.epoch,
-      this.dayCode
+      this.dayCode,
     );
   }
 }

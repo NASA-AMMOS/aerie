@@ -18,7 +18,7 @@ describe('RavenKeyByPipe', () => {
   it('should properly return an object keyed by the arg', () => {
     const pipe = new RavenKeyByPipe();
     expect(
-      pipe.transform([{ id: '0', val: 0 }, { id: '1', val: 1 }], 'id')
+      pipe.transform([{ id: '0', val: 0 }, { id: '1', val: 1 }], 'id'),
     ).toEqual({ '0': { id: '0', val: 0 }, '1': { id: '1', val: 1 } });
   });
 });

@@ -38,7 +38,7 @@ export const initialState: OutputState = {
  */
 export function reducer(
   state: OutputState = initialState,
-  action: OutputAction
+  action: OutputAction,
 ): OutputState {
   switch (action.type) {
     case OutputActionTypes.UpdateOutputSettings:
@@ -56,5 +56,5 @@ export function reducer(
 const featureSelector = createFeatureSelector<State>('raven');
 export const getOutputState = createSelector(
   featureSelector,
-  (state: State): OutputState => state.output
+  (state: State): OutputState => state.output,
 );

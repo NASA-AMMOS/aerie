@@ -60,8 +60,8 @@ export class RavenLayoutApplyComponent implements OnChanges {
             tree[source.id].childIds.reduce(
               (include, childId) =>
                 include || tree[childId].kind === 'fs_graphable',
-              false
-            ))
+              false,
+            )),
       );
     }
   }
@@ -71,7 +71,7 @@ export class RavenLayoutApplyComponent implements OnChanges {
    */
   onApply() {
     this.applyLayout.emit(
-      this.sourcesFormControl.value.map((value: RavenSource) => value.id)
+      this.sourcesFormControl.value.map((value: RavenSource) => value.id),
     );
     this.sourcesFormControl.setErrors({ valid: false });
   }

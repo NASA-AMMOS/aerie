@@ -114,7 +114,7 @@ export const initialState: SourceExplorerState = {
  */
 export function reducer(
   state: SourceExplorerState = initialState,
-  action: SourceExplorerAction
+  action: SourceExplorerAction,
 ): SourceExplorerState {
   switch (action.type) {
     case SourceExplorerActionTypes.AddCustomFilter:
@@ -185,7 +185,7 @@ export function reducer(
  */
 export function addCustomFilter(
   state: SourceExplorerState,
-  action: AddCustomFilter
+  action: AddCustomFilter,
 ): SourceExplorerState {
   const customFilters = state.customFiltersBySourceId[action.sourceId] || [];
 
@@ -207,7 +207,7 @@ export function addCustomFilter(
  */
 export function addFilter(
   state: SourceExplorerState,
-  action: AddFilter
+  action: AddFilter,
 ): SourceExplorerState {
   const targetFilters = state.filtersByTarget[action.source.filterTarget] || {};
   const groupFilters = targetFilters[action.source.filterSetOf] || [];
@@ -232,7 +232,7 @@ export function addFilter(
  */
 export function closeEvent(
   state: SourceExplorerState,
-  action: CloseEvent
+  action: CloseEvent,
 ): SourceExplorerState {
   return {
     ...state,
@@ -248,7 +248,7 @@ export function closeEvent(
  */
 export function collapseEvent(
   state: SourceExplorerState,
-  action: CollapseEvent
+  action: CollapseEvent,
 ): SourceExplorerState {
   return {
     ...state,
@@ -263,7 +263,7 @@ export function collapseEvent(
  */
 export function expandEvent(
   state: SourceExplorerState,
-  action: ExpandEvent
+  action: ExpandEvent,
 ): SourceExplorerState {
   return {
     ...state,
@@ -282,11 +282,11 @@ export function expandEvent(
  */
 export function newSources(
   state: SourceExplorerState,
-  action: NewSources
+  action: NewSources,
 ): SourceExplorerState {
   const parentSource = state.treeBySourceId[action.sourceId];
   const sources = action.sources.filter(
-    source => !state.treeBySourceId[source.id]
+    source => !state.treeBySourceId[source.id],
   ); // Exclude sources that already exist.
 
   return {
@@ -297,7 +297,7 @@ export function newSources(
       [action.sourceId]: {
         ...parentSource,
         childIds: parentSource.childIds.concat(
-          sources.map(source => source.id)
+          sources.map(source => source.id),
         ),
       },
     },
@@ -309,7 +309,7 @@ export function newSources(
  */
 export function openEvent(
   state: SourceExplorerState,
-  action: OpenEvent
+  action: OpenEvent,
 ): SourceExplorerState {
   return {
     ...state,
@@ -325,7 +325,7 @@ export function openEvent(
  */
 export function pinAdd(
   state: SourceExplorerState,
-  action: PinAdd
+  action: PinAdd,
 ): SourceExplorerState {
   return {
     ...state,
@@ -339,14 +339,14 @@ export function pinAdd(
             if (currentAction.event === 'pin-add') {
               actions.push(
                 { event: 'pin-remove', name: 'Remove Pin' },
-                { event: 'pin-rename', name: 'Rename Pin' }
+                { event: 'pin-rename', name: 'Rename Pin' },
               );
             } else {
               actions.push(currentAction);
             }
             return actions;
           },
-          []
+          [],
         ),
       },
     },
@@ -358,7 +358,7 @@ export function pinAdd(
  */
 export function pinRemove(
   state: SourceExplorerState,
-  action: PinRemove
+  action: PinRemove,
 ): SourceExplorerState {
   return {
     ...state,
@@ -371,7 +371,7 @@ export function pinRemove(
           .filter(
             currentAction =>
               currentAction.event !== 'pin-remove' &&
-              currentAction.event !== 'pin-rename'
+              currentAction.event !== 'pin-rename',
           )
           .concat({ event: 'pin-add', name: 'Add Pin' }),
       },
@@ -384,7 +384,7 @@ export function pinRemove(
  */
 export function pinRename(
   state: SourceExplorerState,
-  action: PinRename
+  action: PinRename,
 ): SourceExplorerState {
   return {
     ...state,
@@ -406,7 +406,7 @@ export function pinRename(
  */
 export function removeFilter(
   state: SourceExplorerState,
-  action: RemoveFilter
+  action: RemoveFilter,
 ): SourceExplorerState {
   const targetFilters = state.filtersByTarget[action.source.filterTarget] || {};
   const groupFilters = targetFilters[action.source.filterSetOf] || [];
@@ -418,7 +418,7 @@ export function removeFilter(
       [action.source.filterTarget]: {
         ...targetFilters,
         [action.source.filterSetOf]: groupFilters.filter(
-          filter => filter !== action.source.id
+          filter => filter !== action.source.id,
         ),
       },
     },
@@ -433,7 +433,7 @@ export function removeFilter(
  */
 export function removeSource(
   state: SourceExplorerState,
-  action: RemoveSource
+  action: RemoveSource,
 ): SourceExplorerState {
   const source = state.treeBySourceId[action.sourceId];
   const parentSource = state.treeBySourceId[source.parentId];
@@ -451,7 +451,7 @@ export function removeSource(
         [parentSource.id]: {
           ...parentSource,
           childIds: parentSource.childIds.filter(
-            childId => childId !== action.sourceId
+            childId => childId !== action.sourceId,
           ),
         },
       },
@@ -459,7 +459,7 @@ export function removeSource(
   } else {
     console.error(
       'source-explorer.ts - removeSource: you cannot remove a source without a parent: ',
-      action.sourceId
+      action.sourceId,
     );
 
     return {
@@ -474,7 +474,7 @@ export function removeSource(
  */
 export function selectSource(
   state: SourceExplorerState,
-  action: SelectSource
+  action: SelectSource,
 ): SourceExplorerState {
   if (state.treeBySourceId[action.source.id].selectable) {
     return {
@@ -493,7 +493,7 @@ export function selectSource(
             selected: false,
           },
         },
-        ''
+        '',
       ),
     };
   }
@@ -506,7 +506,7 @@ export function selectSource(
  */
 export function setCustomFilter(
   state: SourceExplorerState,
-  action: SetCustomFilter
+  action: SetCustomFilter,
 ): SourceExplorerState {
   return {
     ...state,
@@ -529,7 +529,7 @@ export function setCustomFilter(
  */
 export function setCustomFilterSubBandId(
   state: SourceExplorerState,
-  action: SetCustomFilterSubBandId
+  action: SetCustomFilterSubBandId,
 ): SourceExplorerState {
   const customFilters = state.customFiltersBySourceId[action.sourceId] || [];
 
@@ -553,11 +553,11 @@ export function setCustomFilterSubBandId(
  */
 export function subBandIdAdd(
   state: SourceExplorerState,
-  action: SubBandIdAdd
+  action: SubBandIdAdd,
 ): SourceExplorerState {
   const subBandIds = without(
     state.treeBySourceId[action.sourceId].subBandIds,
-    action.subBandId
+    action.subBandId,
   ).concat(action.subBandId);
 
   return {
@@ -577,7 +577,7 @@ export function subBandIdAdd(
  */
 export function subBandIdRemove(
   state: SourceExplorerState,
-  action: SubBandIdRemove
+  action: SubBandIdRemove,
 ): SourceExplorerState {
   let newCustomFiltersBySourceId = {
     ...state.customFiltersBySourceId,
@@ -597,7 +597,7 @@ export function subBandIdRemove(
       newCustomFiltersBySourceId = {
         ...state.customFiltersBySourceId,
         [sourceId]: customFilters.filter(
-          customFilter => customFilter.subBandId !== action.subBandId
+          customFilter => customFilter.subBandId !== action.subBandId,
         ),
       };
     } else if (source && source.type === 'graphableFilter') {
@@ -613,7 +613,7 @@ export function subBandIdRemove(
           [graphableFilterSource.filterSetOf]: filters[
             graphableFilterSource.filterSetOf
           ].filter(
-            filterSourceId => filterSourceId !== graphableFilterSource.name
+            filterSourceId => filterSourceId !== graphableFilterSource.name,
           ),
         },
       };
@@ -628,7 +628,7 @@ export function subBandIdRemove(
       ...state.treeBySourceId,
       ...action.sourceIds.reduce((sourceIds, sourceId) => {
         const subBandIds = state.treeBySourceId[sourceId].subBandIds.filter(
-          subBandId => subBandId !== action.subBandId
+          subBandId => subBandId !== action.subBandId,
         );
         const opened = subBandIds.length > 0 ? true : false;
 
@@ -650,7 +650,7 @@ export function subBandIdRemove(
 export function updateTreeSource(
   state: SourceExplorerState,
   sourceId: string,
-  update: StringTMap<BaseType>
+  update: StringTMap<BaseType>,
 ) {
   return {
     treeBySourceId: {
@@ -669,7 +669,7 @@ export function updateTreeSource(
 const featureSelector = createFeatureSelector<State>('raven');
 export const getSourceExplorerState = createSelector(
   featureSelector,
-  (state: State): SourceExplorerState => state.sourceExplorer
+  (state: State): SourceExplorerState => state.sourceExplorer,
 );
 
 /**
@@ -685,25 +685,25 @@ export const getSourceExplorerState = createSelector(
  */
 export const getFiltersByTarget = createSelector(
   getSourceExplorerState,
-  (state: SourceExplorerState) => state.filtersByTarget
+  (state: SourceExplorerState) => state.filtersByTarget,
 );
 export const getInitialSourcesLoaded = createSelector(
   getSourceExplorerState,
-  (state: SourceExplorerState) => state.initialSourcesLoaded
+  (state: SourceExplorerState) => state.initialSourcesLoaded,
 );
 export const getPending = createSelector(
   getSourceExplorerState,
-  (state: SourceExplorerState) => state.fetchPending
+  (state: SourceExplorerState) => state.fetchPending,
 );
 export const getPins = createSelector(
   getSourceExplorerState,
-  (state: SourceExplorerState) => state.pins
+  (state: SourceExplorerState) => state.pins,
 );
 export const getSelectedSourceId = createSelector(
   getSourceExplorerState,
-  (state: SourceExplorerState) => state.selectedSourceId
+  (state: SourceExplorerState) => state.selectedSourceId,
 );
 export const getTreeBySourceId = createSelector(
   getSourceExplorerState,
-  (state: SourceExplorerState) => state.treeBySourceId
+  (state: SourceExplorerState) => state.treeBySourceId,
 );

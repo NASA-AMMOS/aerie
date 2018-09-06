@@ -59,7 +59,7 @@ export class DialogEffects {
         width: action.width,
       });
       return [];
-    })
+    }),
   );
 
   /**
@@ -77,7 +77,7 @@ export class DialogEffects {
             source: action.source,
             width: action.width,
           },
-        }
+        },
       );
 
       return zip(of(action), customFilterDialog.afterClosed());
@@ -88,12 +88,12 @@ export class DialogEffects {
         return of(
           new sourceExplorerActions.SetCustomFilter(
             action.source,
-            result.filter
-          )
+            result.filter,
+          ),
         );
       }
       return [];
-    })
+    }),
   );
 
   /**
@@ -110,7 +110,7 @@ export class DialogEffects {
             source: action.source,
           },
           width: '300px',
-        }
+        },
       );
 
       return zip(of(action), customGraphableDialog.afterClosed());
@@ -122,12 +122,12 @@ export class DialogEffects {
           new sourceExplorerActions.GraphCustomSource(
             action.source.id,
             result.label,
-            result.filter
-          )
+            result.filter,
+          ),
         );
       }
       return [];
-    })
+    }),
   );
 
   /**
@@ -154,7 +154,7 @@ export class DialogEffects {
         return of(new sourceExplorerActions.RemoveSourceEvent(action.source));
       }
       return [];
-    })
+    }),
   );
 
   /**
@@ -173,7 +173,7 @@ export class DialogEffects {
             message: 'Are you sure you want to delete this band?',
           },
           width: action.width,
-        }
+        },
       );
 
       return zip(of(action), deleteSubBandDialog.afterClosed());
@@ -185,12 +185,12 @@ export class DialogEffects {
           new timelineActions.RemoveSubBand(subBand.id),
           new sourceExplorerActions.SubBandIdRemove(
             subBand.sourceIds,
-            subBand.id
+            subBand.id,
           ),
         ];
       }
       return [];
-    })
+    }),
   );
 
   /**
@@ -207,7 +207,7 @@ export class DialogEffects {
             source: action.source,
           },
           width: action.width,
-        }
+        },
       );
 
       return zip(of(action), fileImportDialog.afterClosed());
@@ -216,11 +216,11 @@ export class DialogEffects {
     exhaustMap(({ action, result }) => {
       if (result && result.import) {
         return of(
-          new sourceExplorerActions.ImportFile(action.source, result.file)
+          new sourceExplorerActions.ImportFile(action.source, result.file),
         );
       }
       return [];
-    })
+    }),
   );
 
   /**
@@ -239,7 +239,7 @@ export class DialogEffects {
       const pinDialog = this.dialog.open(RavenPinDialogComponent, {
         data: {
           pin: raven.sourceExplorer.pins.find(
-            p => p.sourceId === action.source.id
+            p => p.sourceId === action.source.id,
           ),
           source: action.source,
           type: action.pinAction,
@@ -264,16 +264,16 @@ export class DialogEffects {
         return [
           new sourceExplorerActions.PinRename(
             result.sourceId,
-            result.newName
+            result.newName,
           ) as Action,
           new timelineActions.PinRename(
             result.sourceId,
-            result.newName
+            result.newName,
           ) as Action,
         ];
       }
       return [];
-    })
+    }),
   );
 
   /**
@@ -292,7 +292,7 @@ export class DialogEffects {
         width: action.width,
       });
       return [];
-    })
+    }),
   );
 
   /**
@@ -322,12 +322,12 @@ export class DialogEffects {
         return of(
           new sourceExplorerActions.ApplyState(
             action.source.url,
-            action.source.id
-          )
+            action.source.id,
+          ),
         );
       }
       return [];
-    })
+    }),
   );
 
   /**
@@ -352,16 +352,16 @@ export class DialogEffects {
     exhaustMap(({ action, result }) => {
       if (result && result.save) {
         return of(
-          new sourceExplorerActions.SaveState(action.source, result.name)
+          new sourceExplorerActions.SaveState(action.source, result.name),
         );
       }
       return [];
-    })
+    }),
   );
 
   constructor(
     private actions$: Actions,
     private dialog: MatDialog,
-    private store$: Store<RavenAppState>
+    private store$: Store<RavenAppState>,
   ) {}
 }

@@ -59,13 +59,13 @@ export class TimelineEffects {
       TimelineActionTypes.AddBand,
       TimelineActionTypes.PinAdd,
       TimelineActionTypes.PinRemove,
-      TimelineActionTypes.PinRename
+      TimelineActionTypes.PinRename,
     ),
     withLatestFrom(this.store$),
     map(([, state]) => state.raven),
     concatMap(({ timeline, sourceExplorer }) =>
-      this.updatePinLabels(timeline.bands, sourceExplorer.pins)
-    )
+      this.updatePinLabels(timeline.bands, sourceExplorer.pins),
+    ),
   );
 
   /**
@@ -83,7 +83,7 @@ export class TimelineEffects {
         actions.push(
           new layoutActions.UpdateLayout({
             rightPanelSelectedTabIndex: 1,
-          })
+          }),
         );
 
         if (!raven.layout.showRightPanel) {
@@ -92,7 +92,7 @@ export class TimelineEffects {
       }
 
       return actions;
-    })
+    }),
   );
 
   /**
@@ -121,7 +121,7 @@ export class TimelineEffects {
       TimelineActionTypes.PanRightViewTimeRange,
       TimelineActionTypes.UpdateViewTimeRange,
       TimelineActionTypes.ZoomInViewTimeRange,
-      TimelineActionTypes.ZoomOutViewTimeRange
+      TimelineActionTypes.ZoomOutViewTimeRange,
     ),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
@@ -139,7 +139,7 @@ export class TimelineEffects {
                 of(new timelineActions.UpdateTimeline({ fetchPending: true })),
                 this.fetchNewResourcePoints(
                   sourceExplorer.treeBySourceId[sourceId],
-                  viewTimeRange
+                  viewTimeRange,
                 ).pipe(
                   switchMap(({ points }) => [
                     new timelineActions.UpdateSubBand(band.id, subBand.id, {
@@ -147,9 +147,9 @@ export class TimelineEffects {
                         .filter(point => point.sourceId !== sourceId)
                         .concat(points),
                     }),
-                  ])
+                  ]),
                 ),
-                of(new timelineActions.UpdateTimeline({ fetchPending: false }))
+                of(new timelineActions.UpdateTimeline({ fetchPending: false })),
               );
             });
           }
@@ -157,7 +157,7 @@ export class TimelineEffects {
       });
 
       return concat(...actions);
-    })
+    }),
   );
 
   /**
@@ -175,9 +175,9 @@ export class TimelineEffects {
           getResourcePoints(
             source.id,
             graphData['Timeline Metadata'] as MpsServerResourceMetadata,
-            graphData['Timeline Data'] as MpsServerResourcePoint[]
-          )
-        )
+            graphData['Timeline Data'] as MpsServerResourcePoint[],
+          ),
+        ),
       );
   }
 
@@ -192,7 +192,7 @@ export class TimelineEffects {
         actions.push(
           new timelineActions.UpdateSubBand(band.id, subBand.id, {
             labelPin: getPinLabel(subBand.sourceIds[0], pins),
-          })
+          }),
         );
       });
     });
@@ -203,6 +203,6 @@ export class TimelineEffects {
   constructor(
     private actions$: Actions,
     private http: HttpClient,
-    private store$: Store<RavenAppState>
+    private store$: Store<RavenAppState>,
   ) {}
 }

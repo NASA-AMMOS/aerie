@@ -63,7 +63,7 @@ export class RavenSettingsBandsComponent {
     const subBands = this.bandsById[this.selectedBandId].subBands;
     const resourceCount = subBands.reduce(
       (count, subBand) => (subBand.type === 'resource' ? count + 1 : count),
-      0
+      0,
     );
     return resourceCount > 1;
   }
@@ -99,7 +99,7 @@ export class RavenSettingsBandsComponent {
    */
   onChangeShowStateChangeTimes(
     subBand: RavenSubBand,
-    showStateChangeTimes: boolean
+    showStateChangeTimes: boolean,
   ) {
     this.updateSubBand.emit({
       bandId: this.selectedBandId,

@@ -71,8 +71,8 @@ describe('bands.ts', () => {
       expect(
         getCustomFiltersBySourceId(
           bandsWithCustomFiltersInSourceId,
-          treeBySourceId
-        )
+          treeBySourceId,
+        ),
       ).toEqual({
         '/DKF/command': [
           {
@@ -87,7 +87,7 @@ describe('bands.ts', () => {
   describe('getBandLabel', () => {
     it(`should return label with empty pin and units`, () => {
       expect(getBandLabel(resourceBand)).toEqual(
-        'test-resource-band (Degrees)'
+        'test-resource-band (Degrees)',
       );
     });
   });
@@ -110,13 +110,13 @@ describe('bands.ts', () => {
   describe('hasActivityBandForFilterTarget', () => {
     it(`should return null if no band has the specified filterTarget`, () => {
       expect(hasActivityBandForFilterTarget(bandsWithFilterTarget, 'ABC')).toBe(
-        null
+        null,
       );
     });
 
     it(`should return the band with the filterTarget`, () => {
       expect(
-        hasActivityBandForFilterTarget(bandsWithFilterTarget, 'DKF')
+        hasActivityBandForFilterTarget(bandsWithFilterTarget, 'DKF'),
       ).toEqual({
         bandId: '100',
         subBandId: '0',

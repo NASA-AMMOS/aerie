@@ -38,10 +38,10 @@ describe('RavenSettingsBandsComponent', () => {
     let bandUpdate: any;
     let subBandUpdate: any;
     component.updateBand.subscribe(
-      (emit: RavenUpdate) => (bandUpdate = emit.update)
+      (emit: RavenUpdate) => (bandUpdate = emit.update),
     );
     component.updateSubBand.subscribe(
-      (emit: RavenUpdate) => (subBandUpdate = emit)
+      (emit: RavenUpdate) => (subBandUpdate = emit),
     );
     component.onChangePlotType(bands[0].subBands[0], true);
     expect(bandUpdate.height).toEqual(100);
@@ -57,10 +57,10 @@ describe('RavenSettingsBandsComponent', () => {
     let bandUpdate: any;
     let subBandUpdate: any;
     component.updateBand.subscribe(
-      (emit: RavenUpdate) => (bandUpdate = emit.update)
+      (emit: RavenUpdate) => (bandUpdate = emit.update),
     );
     component.updateSubBand.subscribe(
-      (emit: RavenUpdate) => (subBandUpdate = emit.update)
+      (emit: RavenUpdate) => (subBandUpdate = emit.update),
     );
     component.onChangePlotType(bands[0].subBands[0], false);
     expect(bandUpdate.height).toEqual(50);
@@ -74,10 +74,10 @@ describe('RavenSettingsBandsComponent', () => {
     let bandUpdate: any;
     let subBandUpdate: any;
     component.updateBand.subscribe(
-      (emit: RavenUpdate) => (bandUpdate = emit.update)
+      (emit: RavenUpdate) => (bandUpdate = emit.update),
     );
     component.updateSubBand.subscribe(
-      (emit: RavenUpdate) => (subBandUpdate = emit.update)
+      (emit: RavenUpdate) => (subBandUpdate = emit.update),
     );
     (bands[1].subBands[0] as RavenStateBand).showStateChangeTimes = true;
     component.onChangePlotType(bands[1].subBands[0], false);
@@ -91,7 +91,7 @@ describe('RavenSettingsBandsComponent', () => {
   it('should update subBand heightPadding to 12 when showStateChangeTimes is true', () => {
     let subBandUpdate: any;
     component.updateSubBand.subscribe(
-      (emit: RavenUpdate) => (subBandUpdate = emit.update)
+      (emit: RavenUpdate) => (subBandUpdate = emit.update),
     );
     component.onChangeShowStateChangeTimes(bands[0].subBands[0], true);
     expect(subBandUpdate.heightPadding).toEqual(12);
@@ -101,7 +101,7 @@ describe('RavenSettingsBandsComponent', () => {
   it('should update subBand heightPadding to 0 when showStateChangeTimes is false', () => {
     let subBandUpdate: any;
     component.updateSubBand.subscribe(
-      (emit: RavenUpdate) => (subBandUpdate = emit.update)
+      (emit: RavenUpdate) => (subBandUpdate = emit.update),
     );
     component.onChangeShowStateChangeTimes(bands[0].subBands[0], false);
     expect(subBandUpdate.heightPadding).toEqual(0);

@@ -54,21 +54,21 @@ export class RavenShareableLinkDialogComponent
   constructor(
     public dialogRef: MatDialogRef<RavenShareableLinkDialogComponent>,
     public http: HttpClient,
-    @Inject(MAT_DIALOG_DATA) public data: { state: RavenAppState }
+    @Inject(MAT_DIALOG_DATA) public data: { state: RavenAppState },
   ) {
     combineLatest(
       this.shareableNameControl.valueChanges,
-      this.http.get(this.getStateUrl())
+      this.http.get(this.getStateUrl()),
     )
       .pipe(
         map(([value, sources]) => ({ value, sources })),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe(({ value, sources }) => {
         this.shareableLinkControl.setValue(this.getShareableLink(value));
 
         const children = (sources as MpsServerSource[]).map(
-          source => source.name
+          source => source.name,
         );
 
         // If the current source has a child with the name we are trying to save,
@@ -111,7 +111,7 @@ export class RavenShareableLinkDialogComponent
       this.http
         .put(
           `${this.getStateUrl(shareableName)}?timeline_type=state`,
-          getState(shareableName, this.data.state)
+          getState(shareableName, this.data.state),
         )
         .pipe(takeUntil(this.ngUnsubscribe))
         .subscribe(() => this.dialogRef.close());
@@ -131,7 +131,7 @@ export class RavenShareableLinkDialogComponent
   ngOnInit() {
     const initialShareableName = uuidv4();
     this.shareableLinkControl.setValue(
-      this.getShareableLink(initialShareableName)
+      this.getShareableLink(initialShareableName),
     );
     this.shareableNameControl.setValue(initialShareableName);
   }

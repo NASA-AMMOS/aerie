@@ -55,7 +55,7 @@ export class AddBand implements Action {
   constructor(
     public sourceId: string | null,
     public band: RavenCompositeBand,
-    public additionalSubBandProps?: StringTMap<BaseType>
+    public additionalSubBandProps?: StringTMap<BaseType>,
   ) {}
 }
 
@@ -66,7 +66,7 @@ export class AddPointsToSubBand implements Action {
     public sourceId: string,
     public bandId: string,
     public subBandId: string,
-    public points: any[]
+    public points: any[],
   ) {}
 }
 
@@ -76,7 +76,7 @@ export class AddSubBand implements Action {
   constructor(
     public sourceId: string,
     public bandId: string,
-    public subBand: RavenSubBand
+    public subBand: RavenSubBand,
   ) {}
 }
 
@@ -150,7 +150,7 @@ export class SelectPoint implements Action {
   constructor(
     public bandId: string,
     public subBandId: string,
-    public pointId: string
+    public pointId: string,
   ) {}
 }
 
@@ -160,7 +160,7 @@ export class SetPointsForSubBand implements Action {
   constructor(
     public bandId: string,
     public subBandId: string,
-    public points: any[]
+    public points: any[],
   ) {}
 }
 
@@ -188,7 +188,7 @@ export class UpdateSubBand implements Action {
   constructor(
     public bandId: string,
     public subBandId: string,
-    public update: StringTMap<BaseType>
+    public update: StringTMap<BaseType>,
   ) {}
 }
 

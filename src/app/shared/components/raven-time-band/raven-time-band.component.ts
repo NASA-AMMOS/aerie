@@ -122,7 +122,7 @@ export class RavenTimeBandComponent
       ) {
         this.ctlTimeAxis.updateTimes(
           currentMaxTimeRange.start,
-          currentMaxTimeRange.end
+          currentMaxTimeRange.end,
         );
         shouldRedraw = true;
       }
@@ -158,7 +158,7 @@ export class RavenTimeBandComponent
       ) {
         this.ctlViewTimeAxis.updateTimes(
           currentViewTimeRange.start,
-          currentViewTimeRange.end
+          currentViewTimeRange.end,
         );
         shouldRedraw = true;
       }
@@ -195,11 +195,11 @@ export class RavenTimeBandComponent
 
     this.ctlTimeAxis.updateTimes(
       this.maxTimeRange.start,
-      this.maxTimeRange.end
+      this.maxTimeRange.end,
     );
     this.ctlViewTimeAxis.updateTimes(
       this.viewTimeRange.start,
-      this.viewTimeRange.end
+      this.viewTimeRange.end,
     );
 
     this.elementRef.nativeElement.appendChild(this.ctlTimeBand.div);
@@ -228,7 +228,7 @@ export class RavenTimeBandComponent
       obj,
       this.epoch,
       this.earthSecToEpochSec,
-      this.dayCode
+      this.dayCode,
     );
     formattedTimes[0].y = 30;
 
@@ -243,7 +243,7 @@ export class RavenTimeBandComponent
       obj,
       this.epoch,
       this.earthSecToEpochSec,
-      this.dayCode
+      this.dayCode,
     );
   }
 

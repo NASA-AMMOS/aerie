@@ -54,12 +54,12 @@ export class HummingbirdAppComponent implements OnDestroy {
 
   constructor(
     private changeDetector: ChangeDetectorRef,
-    private store: Store<HummingbirdAppState>
+    private store: Store<HummingbirdAppState>,
   ) {
     this.store
       .pipe(
         select(fromCommandDictionary.getDictionaries),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe(dictionaries => {
         this.dictionaries = dictionaries;
@@ -69,7 +69,7 @@ export class HummingbirdAppComponent implements OnDestroy {
     this.store
       .pipe(
         select(fromCommandDictionary.getCommands),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe(commands => {
         this.commands = commands;
@@ -79,7 +79,7 @@ export class HummingbirdAppComponent implements OnDestroy {
     this.store
       .pipe(
         select(fromCommandDictionary.getSelected),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe(selected => {
         this.selectedDictionaryId = selected || null;

@@ -24,8 +24,8 @@ describe('Command Dictionary reducer', () => {
     const result: CommandDictionaryState = reducer(
       initialState,
       new FetchCommandDictionaryListSuccess(
-        mpsServerMocks.commandDictionaryList
-      )
+        mpsServerMocks.commandDictionaryList,
+      ),
     );
     expect(result).toEqual({
       commands: null,

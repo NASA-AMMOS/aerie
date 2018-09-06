@@ -76,7 +76,7 @@ describe('source.ts', () => {
 
     it(`should get a single source for an existing kind when we dont start at the root source`, () => {
       expect(
-        getAllSourcesByKinds(treeBySourceId, '/child/1', ['data'])
+        getAllSourcesByKinds(treeBySourceId, '/child/1', ['data']),
       ).toEqual([treeBySourceId['/child/child/0']]);
     });
   });
@@ -127,10 +127,10 @@ describe('source.ts', () => {
           treeBySourceId,
           customGraphableSource,
           customFilter,
-          filtersByTarget
-        )
+          filtersByTarget,
+        ),
       ).toEqual(
-        'https://a/b/c?format=TMS&legend=ips&filter=(command=[.*IPS.*])&'
+        'https://a/b/c?format=TMS&legend=ips&filter=(command=[.*IPS.*])&',
       );
     });
 
@@ -160,10 +160,10 @@ describe('source.ts', () => {
           customFilter,
           filtersByTarget,
           'CSV',
-          false
-        )
+          false,
+        ),
       ).toEqual(
-        'https://a/b/c?format=CSV&legend=ips&filter=(command=[.*IPS.*])&'
+        'https://a/b/c?format=CSV&legend=ips&filter=(command=[.*IPS.*])&',
       );
     });
 
@@ -175,10 +175,10 @@ describe('source.ts', () => {
           customFilter,
           filtersByTarget,
           'JSON',
-          false
-        )
+          false,
+        ),
       ).toEqual(
-        'https://a/b/c?format=JSON&legend=ips&filter=(command=[.*IPS.*])&'
+        'https://a/b/c?format=JSON&legend=ips&filter=(command=[.*IPS.*])&',
       );
     });
 
@@ -190,8 +190,8 @@ describe('source.ts', () => {
           customFilter,
           filtersByTarget,
           'CSV',
-          true
-        )
+          true,
+        ),
       ).toEqual('https://a/b/c?name=power&format=CSV&decimate=true');
     });
 
@@ -203,8 +203,8 @@ describe('source.ts', () => {
           customFilter,
           filtersByTarget,
           'JSON',
-          false
-        )
+          false,
+        ),
       ).toEqual('https://a/b/c?name=power&format=JSON&decimate=false');
     });
   });
@@ -212,7 +212,7 @@ describe('source.ts', () => {
   describe('getParentSourceIds', () => {
     it(`should split a source correctly into it's parent source ids, in the correct order`, () => {
       expect(
-        getParentSourceIds('/hello/world/goodbye/what/is/going/on')
+        getParentSourceIds('/hello/world/goodbye/what/is/going/on'),
       ).toEqual([
         '/hello',
         '/hello/world',
@@ -278,8 +278,8 @@ describe('source.ts', () => {
         getQueryUrlForGraphableFilter(
           treeBySourceId,
           sourceIdOrUrl,
-          groupFilters
-        )
+          groupFilters,
+        ),
       ).toEqual('SequenceTracker/Kickoff?events=Kickoff&');
     });
   });
@@ -294,8 +294,8 @@ describe('source.ts', () => {
         getQueryUrlForGraphableFilter(
           treeBySourceId,
           sourceIdOrUrl,
-          parentFilters
-        )
+          parentFilters,
+        ),
       ).toEqual('leucadia/taifunTest/abc.pef/DKF?collection=&');
     });
   });
@@ -307,7 +307,7 @@ describe('source.ts', () => {
           '/child/0',
           '/child/1',
           '/DKF/command',
-        ])
+        ]),
       ).toEqual(['/DKF/command', '/child/0', '/child/1']);
     });
   });
@@ -361,8 +361,8 @@ describe('source.ts', () => {
           bandsWithCustomGraphableSource,
           customFiltersBySourceId,
           filtersByTarget,
-          treeBySourceId
-        )
+          treeBySourceId,
+        ),
       ).toEqual({
         ips: ['/DKF/command'],
       });
@@ -403,7 +403,7 @@ describe('source.ts', () => {
             Key: 'version',
             Value: 'seq 34.7',
           },
-        ])
+        ]),
       ).toEqual({
         release: 'A',
         version: 'seq 34.7',
@@ -438,7 +438,7 @@ describe('source.ts', () => {
           modified: '2017-10-05 15:26:58-0700',
           name: '',
           permissions: 'rw-rw-r-- all us',
-        })
+        }),
       ).toEqual({
         createdBy: 'userA',
         createdOn: '2017-10-05 15:26:58-0700',
@@ -478,7 +478,7 @@ describe('source.ts', () => {
           modified: '2017-10-05 15:26:58-0700',
           name: '',
           permissions: 'rw-rw-r-- all us',
-        })
+        }),
       ).toEqual({
         createdBy: 'userB',
         createdOn: '2017-10-05 15:26:58-0700',
@@ -496,7 +496,7 @@ describe('source.ts', () => {
   describe('updateSourceId', () => {
     it(`should update a simple source id with a simple base id up to the given file`, () => {
       expect(updateSourceId('/a/b/c/d', '/x/y', { b: 'file' }, 'file')).toEqual(
-        '/x/y/c/d'
+        '/x/y/c/d',
       );
     });
 
@@ -505,7 +505,7 @@ describe('source.ts', () => {
         '/leucadia/EuropaSimulations/15F10_Cruise_Simulation_CheckoutActivities/Resources/Array/ArrayTrackingMode',
         '/leucadia/EuropaSimulations/15F10_Tour_Simulation_2016_265T23_32_16',
         { '15F10_Cruise_Simulation_CheckoutActivities': 'file' },
-        'file'
+        'file',
       );
       const expected =
         '/leucadia/EuropaSimulations/15F10_Tour_Simulation_2016_265T23_32_16/Resources/Array/ArrayTrackingMode';
@@ -517,7 +517,7 @@ describe('source.ts', () => {
         '/leucadia/EuropaSimulations/15F10_Cruise_Simulation_CheckoutActivities/more-stuff/Resources/Array/ArrayTrackingMode',
         '/leucadia/EuropaSimulations/15F10_Tour_Simulation_2016_265T23_32_16',
         { '15F10_Cruise_Simulation_CheckoutActivities': 'file' },
-        'file'
+        'file',
       );
       const expected =
         '/leucadia/EuropaSimulations/15F10_Tour_Simulation_2016_265T23_32_16/more-stuff/Resources/Array/ArrayTrackingMode';
@@ -529,7 +529,7 @@ describe('source.ts', () => {
         '/leucadia/EuropaSimulations/15F10_Tour_Simulation_2016_265T23_32_16/Resources/Array/SolarArrayFlopCount/some/more/stuff',
         '/leucadia/EuropaSimulations/15F10_Cruise_Simulation_CheckoutActivities',
         { '15F10_Tour_Simulation_2016_265T23_32_16': 'file' },
-        'file'
+        'file',
       );
       const expected =
         '/leucadia/EuropaSimulations/15F10_Cruise_Simulation_CheckoutActivities/Resources/Array/SolarArrayFlopCount/some/more/stuff';

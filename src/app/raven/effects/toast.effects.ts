@@ -24,10 +24,10 @@ export class ToastEffects {
       this.toastr[action.toastType](
         action.message,
         action.title,
-        action.config
+        action.config,
       );
       return [];
-    })
+    }),
   );
 
   constructor(private actions$: Actions, private toastr: ToastrService) {}

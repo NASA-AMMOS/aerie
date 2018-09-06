@@ -41,7 +41,7 @@ export class RouterEffects {
           ...this.loadShareableLink(
             state.config,
             state.raven.layout,
-            shareableName
+            shareableName,
           ),
         ];
       } else {
@@ -51,12 +51,12 @@ export class RouterEffects {
           ...this.loadState(state.config, statePath),
         ];
       }
-    })
+    }),
   );
 
   constructor(
     private actions$: Actions,
-    private store$: Store<RavenAppState>
+    private store$: Store<RavenAppState>,
   ) {}
 
   /**
@@ -67,11 +67,11 @@ export class RouterEffects {
 
     if (layout === 'minimal') {
       actions.push(
-        new layoutActions.SetMode('minimal', true, false, false, true)
+        new layoutActions.SetMode('minimal', true, false, false, true),
       );
     } else if (layout === 'default') {
       actions.push(
-        new layoutActions.SetMode('default', true, true, false, true)
+        new layoutActions.SetMode('default', true, true, false, true),
       );
     } else {
       actions.push(
@@ -80,8 +80,8 @@ export class RouterEffects {
           layoutState.showDetailsPanel,
           layoutState.showLeftPanel,
           layoutState.showRightPanel,
-          layoutState.showSouthBandsPanel
-        )
+          layoutState.showSouthBandsPanel,
+        ),
       );
     }
 
@@ -97,7 +97,7 @@ export class RouterEffects {
   loadShareableLink(
     configState: ConfigState,
     layoutState: LayoutState,
-    shareableName: string
+    shareableName: string,
   ): Action[] {
     const statePath = `/${
       configState.raven.shareableLinkStatesUrl
@@ -120,7 +120,7 @@ export class RouterEffects {
           `${configState.app.baseUrl}/${
             configState.mpsServer.apiUrl
           }${statePath}`,
-          statePath
+          statePath,
         ),
       ];
     }

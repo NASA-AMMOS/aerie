@@ -42,7 +42,7 @@ describe('layout reducer', () => {
   it('handle SetMode', () => {
     layoutState = reducer(
       layoutState,
-      new SetMode('custom', false, false, true, false)
+      new SetMode('custom', false, false, true, false),
     );
     expect(layoutState).toEqual({
       ...initialState,
@@ -107,7 +107,7 @@ describe('layout reducer', () => {
   it('handle UpdateLayout', () => {
     layoutState = reducer(
       layoutState,
-      new UpdateLayout({ timelinePanelSize: 50 })
+      new UpdateLayout({ timelinePanelSize: 50 }),
     );
     expect(layoutState).toEqual({ ...initialState, timelinePanelSize: 50 });
   });

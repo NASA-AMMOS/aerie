@@ -46,7 +46,7 @@ export const initialState: CommandDictionaryState = {
  */
 export function reducer(
   state: CommandDictionaryState = initialState,
-  action: CommandDictionaryAction
+  action: CommandDictionaryAction,
 ): CommandDictionaryState {
   switch (action.type) {
     case CommandDictionaryActionTypes.FetchCommandDictionarySuccess:
@@ -66,20 +66,20 @@ export function reducer(
 const featureSelector = createFeatureSelector<State>('hummingbird');
 export const getCommandDictionaryState = createSelector(
   featureSelector,
-  (state: State): CommandDictionaryState => state.commandDictionary
+  (state: State): CommandDictionaryState => state.commandDictionary,
 );
 
 export const getCommands = createSelector(
   getCommandDictionaryState,
-  (state: CommandDictionaryState) => state.commands
+  (state: CommandDictionaryState) => state.commands,
 );
 
 export const getDictionaries = createSelector(
   getCommandDictionaryState,
-  (state: CommandDictionaryState) => state.dictionaries
+  (state: CommandDictionaryState) => state.dictionaries,
 );
 
 export const getSelected = createSelector(
   getCommandDictionaryState,
-  (state: CommandDictionaryState) => state.selectedDictionaryId
+  (state: CommandDictionaryState) => state.selectedDictionaryId,
 );

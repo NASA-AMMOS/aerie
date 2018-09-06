@@ -44,12 +44,12 @@ export class RavenAppComponent implements OnDestroy {
 
   constructor(
     private changeDetector: ChangeDetectorRef,
-    private store: Store<fromSourceExplorer.SourceExplorerState>
+    private store: Store<fromSourceExplorer.SourceExplorerState>,
   ) {
     // Combine all fetch pending observable for progress bar.
     combineLatest(
       this.store.pipe(select(fromSourceExplorer.getPending)),
-      this.store.pipe(select(fromTimeline.getPending))
+      this.store.pipe(select(fromTimeline.getPending)),
     )
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(loading => {
@@ -61,7 +61,7 @@ export class RavenAppComponent implements OnDestroy {
     this.store
       .pipe(
         select(fromConfig.getVersion),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe(v => {
         this.info = this.getInfo(v.version, v.branch, v.commit);
@@ -71,7 +71,7 @@ export class RavenAppComponent implements OnDestroy {
     this.store
       .pipe(
         select(fromLayout.getMode),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe(mode => {
         this.mode = mode;
@@ -179,7 +179,7 @@ export class RavenAppComponent implements OnDestroy {
 
   toggleAboutDialog() {
     this.store.dispatch(
-      new dialogActions.OpenConfirmDialog('Close', this.info, '400px')
+      new dialogActions.OpenConfirmDialog('Close', this.info, '400px'),
     );
   }
 

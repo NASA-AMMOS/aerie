@@ -36,7 +36,7 @@ export class OpenConfirmDialog implements Action {
   constructor(
     public cancelText: string,
     public message: string,
-    public width: string
+    public width: string,
   ) {}
 }
 
@@ -76,7 +76,7 @@ export class OpenPinDialog implements Action {
   constructor(
     public pinAction: string,
     public source: RavenSource,
-    public width: string
+    public width: string,
   ) {}
 }
 

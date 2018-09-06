@@ -40,7 +40,7 @@ import { getBandLabel } from './bands';
 export function toSource(
   parentId: string,
   isServer: boolean,
-  mSource: MpsServerSource
+  mSource: MpsServerSource,
 ): RavenSource {
   // Replace any slashes or '.' in name with dashes since slashes delineate sources in the source-explorer and '.' cannot be be used in keys in mongodb.
   const sourceName = mSource.name.replace(/\.|\//g, '-');
@@ -111,11 +111,11 @@ export function toSource(
 export function toRavenSources(
   parentId: string,
   isServer: boolean,
-  sources: MpsServerSource[]
+  sources: MpsServerSource[],
 ): RavenSource[] {
   if (sources) {
     return sources.map((source: MpsServerSource) =>
-      toSource(parentId, isServer, source)
+      toSource(parentId, isServer, source),
     );
   } else {
     console.warn('sources.ts - toRavenSources: no sources given: ', sources);
@@ -128,7 +128,7 @@ export function toRavenSources(
  */
 export function fromCategory(
   mSource: MpsServerSourceCategory,
-  rSource: RavenBaseSource
+  rSource: RavenBaseSource,
 ): RavenExpandableSource {
   return {
     ...rSource,
@@ -147,7 +147,7 @@ export function fromCategory(
 export function fromDir(
   isServer: boolean,
   mSource: MpsServerSourceDir,
-  rSource: RavenBaseSource
+  rSource: RavenBaseSource,
 ): RavenFolderSource {
   return {
     ...rSource,
@@ -191,7 +191,7 @@ export function fromDir(
  */
 export function fromFile(
   mSource: MpsServerSourceFile,
-  rSource: RavenSource
+  rSource: RavenSource,
 ): RavenSource {
   const actions = [
     {
@@ -237,7 +237,7 @@ export function fromFile(
  */
 export function fromCustomGraphable(
   mSource: MpsServerSourceGraphable,
-  rSource: RavenBaseSource
+  rSource: RavenBaseSource,
 ): RavenCustomGraphableSource {
   return {
     ...rSource,
@@ -257,7 +257,7 @@ export function fromCustomGraphable(
  */
 export function fromCustomFilter(
   mSource: MpsServerSourceGraphable,
-  rSource: RavenBaseSource
+  rSource: RavenBaseSource,
 ): RavenCustomFilterSource {
   return {
     ...rSource,
@@ -279,7 +279,7 @@ export function fromCustomFilter(
  */
 export function fromFilter(
   mSource: MpsServerSourceGraphable,
-  rSource: RavenBaseSource
+  rSource: RavenBaseSource,
 ): RavenFilterSource {
   return {
     ...rSource,
@@ -300,7 +300,7 @@ export function fromFilter(
  */
 export function fromGraphable(
   mSource: MpsServerSourceGraphable,
-  rSource: RavenBaseSource
+  rSource: RavenBaseSource,
 ): RavenGraphableSource {
   const fileMetadata = toRavenFileMetadata(mSource as MpsServerSourceFile);
   return {
@@ -330,7 +330,7 @@ export function fromGraphable(
  */
 export function fromGraphableFilter(
   mSource: MpsServerSourceGraphable,
-  rSource: RavenBaseSource
+  rSource: RavenBaseSource,
 ): RavenGraphableFilterSource {
   return {
     ...rSource,
@@ -351,7 +351,7 @@ export function fromGraphableFilter(
  */
 export function fromState(
   mSource: MpsServerSourceFileState,
-  rSource: RavenBaseSource
+  rSource: RavenBaseSource,
 ): RavenFileSource {
   return {
     ...rSource,
@@ -383,7 +383,7 @@ export function fromState(
  */
 export function getSortedChildIds(
   tree: StringTMap<RavenSource>,
-  childIds: string[]
+  childIds: string[],
 ): string[] {
   return [...childIds].sort((a, b) => {
     // Make sure all `customGraphable` or `graphable` sources come before any other sources.
@@ -421,7 +421,7 @@ export function getSourceIdsByLabelInBands(
   bands: RavenCompositeBand[],
   customFiltersBySourceId: StringTMap<RavenCustomFilter[]>,
   filtersByTarget: StringTMap<StringTMap<string[]>>,
-  treeBySourceId: StringTMap<RavenSource>
+  treeBySourceId: StringTMap<RavenSource>,
 ): StringTMap<string[]> {
   return bands.reduce((sourceIdsByLabelInBands: StringTMap<string[]>, band) => {
     band.subBands.forEach(subBand => {
@@ -431,10 +431,10 @@ export function getSourceIdsByLabelInBands(
         treeBySourceId,
         subBand.label,
         customFiltersBySourceId,
-        filtersByTarget
+        filtersByTarget,
       );
       sourceIds.forEach(sourceId =>
-        sourceIdsByLabelInBands[getBandLabel(subBand)].push(sourceId)
+        sourceIdsByLabelInBands[getBandLabel(subBand)].push(sourceId),
       );
     });
     return sourceIdsByLabelInBands;
@@ -451,7 +451,7 @@ export function getSourceIdsForSubBand(
   treeBySourceId: StringTMap<RavenSource>,
   bandLabel: string,
   customFiltersBySourceId: StringTMap<RavenCustomFilter[]> | null = null,
-  filtersByTarget: StringTMap<StringTMap<string[]>> | null = null
+  filtersByTarget: StringTMap<StringTMap<string[]>> | null = null,
 ): string[] {
   let savedSourceIds: string[] = [];
 
@@ -461,21 +461,21 @@ export function getSourceIdsForSubBand(
     if (source.type === 'customGraphable' && customFiltersBySourceId) {
       const customFilter = getCustomFilterForLabel(
         bandLabel,
-        customFiltersBySourceId[sourceId]
+        customFiltersBySourceId[sourceId],
       );
       savedSourceIds.push(
         customFilter
           ? `${source.id}?label=${customFilter.label}&filter=${
               customFilter.filter
             }`
-          : source.id
+          : source.id,
       );
     } else if (source.type === 'graphableFilter' && filtersByTarget) {
       // Graphable Filter.
       savedSourceIds = getTargetFilterSourceIds(
         treeBySourceId,
         filtersByTarget,
-        (source as RavenGraphableFilterSource).filterTarget
+        (source as RavenGraphableFilterSource).filterTarget,
       );
     } else {
       savedSourceIds.push(sourceId);
@@ -490,7 +490,7 @@ export function getSourceIdsForSubBand(
  */
 export function getAllChildIds(
   tree: StringTMap<RavenSource>,
-  sourceId: string
+  sourceId: string,
 ): string[] {
   const source = tree[sourceId];
   let childIds: string[] = (source && source.childIds) || [];
@@ -509,7 +509,7 @@ export function getAllChildIds(
 export function getAllSourcesByKinds(
   tree: StringTMap<RavenSource>,
   sourceId: string,
-  kinds: string[]
+  kinds: string[],
 ): RavenSource[] {
   let sourceNames: RavenSource[] = [];
 
@@ -521,7 +521,7 @@ export function getAllSourcesByKinds(
     }
 
     sourceNames = sourceNames.concat(
-      getAllSourcesByKinds(tree, childSource.id, kinds)
+      getAllSourcesByKinds(tree, childSource.id, kinds),
     );
   });
 
@@ -533,7 +533,7 @@ export function getAllSourcesByKinds(
  */
 export function getCustomFilterForLabel(
   label: string,
-  customFilters: RavenCustomFilter[] | null = null
+  customFilters: RavenCustomFilter[] | null = null,
 ): RavenCustomFilter | null {
   if (customFilters) {
     for (let i = 0, l = customFilters.length; i < l; ++i) {
@@ -550,13 +550,13 @@ export function getCustomFilterForLabel(
  */
 export function getFilters(
   treeBySourceId: StringTMap<RavenSource>,
-  sourceIds: string[]
+  sourceIds: string[],
 ) {
   return sourceIds.map(
     sourceId =>
       treeBySourceId[sourceId].type === 'customFilter'
         ? (treeBySourceId[sourceId] as RavenCustomFilterSource).filter
-        : treeBySourceId[sourceId].name
+        : treeBySourceId[sourceId].name,
   );
 }
 
@@ -568,7 +568,7 @@ export function getFormattedSourceUrl(
   treeBySourceId: StringTMap<RavenSource>,
   source: RavenSource,
   customFilter: RavenCustomFilter | null,
-  filtersByTarget: StringTMap<StringTMap<string[]>>
+  filtersByTarget: StringTMap<StringTMap<string[]>>,
 ): string {
   let sourceUrl = source.url;
 
@@ -595,8 +595,8 @@ export function getFormattedSourceUrl(
       source.url,
       getTargetFilters(
         filtersByTarget,
-        (source as RavenGraphableFilterSource).filterTarget
-      )
+        (source as RavenGraphableFilterSource).filterTarget,
+      ),
     );
   }
 
@@ -612,17 +612,17 @@ export function getOutputDataUrl(
   customFilter: RavenCustomFilter | null,
   filtersByTarget: StringTMap<StringTMap<string[]>>,
   outputFormat: string,
-  decimate: boolean
+  decimate: boolean,
 ): string {
   let sourceUrl = getFormattedSourceUrl(
     treeBySourceId,
     source,
     customFilter,
-    filtersByTarget
+    filtersByTarget,
   );
   sourceUrl = sourceUrl.replace(
     'format=TMS',
-    outputFormat === 'CSV' ? 'format=CSV' : 'format=JSON'
+    outputFormat === 'CSV' ? 'format=CSV' : 'format=JSON',
   );
 
   if (!decimate) {
@@ -666,7 +666,7 @@ export function getPin(sourceId: string, pins: RavenPin[]): RavenPin | null {
     // Convince yourself that this is analogous to finding the closest parent pin for the given `sourceId`.
     return filteredPins.reduce(
       (aPin, bPin) =>
-        aPin.sourceId.length >= bPin.sourceId.length ? aPin : bPin
+        aPin.sourceId.length >= bPin.sourceId.length ? aPin : bPin,
     );
   }
 
@@ -688,14 +688,14 @@ export function getPinLabel(sourceId: string, pins: RavenPin[]): string {
 export function getQueryUrlForGraphableFilter(
   treeBySourceId: StringTMap<RavenSource>,
   sourceIdOrUrl: string,
-  targetFilters: StringTMap<string[]>
+  targetFilters: StringTMap<string[]>,
 ) {
   let queryOptions = '';
 
   for (const group of Object.keys(targetFilters)) {
     queryOptions += `${group}=${getFilters(
       treeBySourceId,
-      targetFilters[group]
+      targetFilters[group],
     ).join(',')}&`;
   }
 
@@ -707,7 +707,7 @@ export function getQueryUrlForGraphableFilter(
  */
 export function getTargetFilters(
   filtersByTarget: StringTMap<StringTMap<string[]>> | null,
-  filterTarget: string
+  filterTarget: string,
 ) {
   let targetFilters = {};
 
@@ -717,7 +717,7 @@ export function getTargetFilters(
         targetFilters = Object.assign(
           {},
           targetFilters,
-          filtersByTarget[target]
+          filtersByTarget[target],
         );
       }
     });
@@ -732,7 +732,7 @@ export function getTargetFilters(
 export function getTargetFilterSourceIds(
   treeBySourceId: StringTMap<RavenSource>,
   filtersByTarget: StringTMap<StringTMap<string[]>> | null,
-  filterTarget: string
+  filterTarget: string,
 ): string[] {
   const targetFilterSourceIds = {};
 
@@ -798,7 +798,7 @@ export function getSourceIds(bands: RavenCompositeBand[]) {
  * Transforms MPS Server file metadata to Raven file metadata.
  */
 export function toRavenFileMetadata(
-  mSource: MpsServerSourceFile
+  mSource: MpsServerSourceFile,
 ): RavenFileMetadata {
   const fileMetadata = {
     createdBy: mSource.createdBy ? mSource.createdBy : '',
@@ -845,7 +845,7 @@ export function updateSourceId(
   sourceId: string,
   baseId: string,
   sourceTypes: StringTMap<string>,
-  type: string
+  type: string,
 ): string {
   const baseIds = baseId.split('/').filter(x => x !== '');
   let sourceIds = sourceId.split('/').filter(x => x !== '');

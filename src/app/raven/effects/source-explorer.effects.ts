@@ -114,7 +114,7 @@ export class SourceExplorerEffects {
           this.open(
             getCustomFilterForLabel(
               label,
-              sourceExplorer.customFiltersBySourceId[sourceId]
+              sourceExplorer.customFiltersBySourceId[sourceId],
             ),
             sourceExplorer.filtersByTarget,
             sourceExplorer.treeBySourceId,
@@ -123,16 +123,16 @@ export class SourceExplorerEffects {
             timeline.selectedBandId,
             timeline.selectedSubBandId,
             config.raven.defaultBandSettings,
-            sourceExplorer.pins
+            sourceExplorer.pins,
           ),
           of(new sourceExplorerActions.LoadErrorsDisplay()),
           of(
             new sourceExplorerActions.UpdateSourceExplorer({
               fetchPending: false,
-            })
-          )
-        )
-    )
+            }),
+          ),
+        ),
+    ),
   );
 
   /**
@@ -145,10 +145,10 @@ export class SourceExplorerEffects {
       concat(
         of(new sourceExplorerActions.AddFilter(action.source)),
         of(
-          new sourceExplorerActions.UpdateGraphAfterFilterAdd(action.source.id)
-        )
-      )
-    )
+          new sourceExplorerActions.UpdateGraphAfterFilterAdd(action.source.id),
+        ),
+      ),
+    ),
   );
 
   /**
@@ -167,14 +167,14 @@ export class SourceExplorerEffects {
         this.fetchState(
           `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${
             state.raven.sourceExplorer.currentStateId
-          }`
+          }`,
         ),
         this.fetchNewSources(
           `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
           '/',
-          true
+          true,
         ),
-      ])
+      ]),
     ),
     map(([action, state, savedState, initialSources]) => ({
       action,
@@ -190,9 +190,9 @@ export class SourceExplorerEffects {
         of(initialSources),
         this.fetchSourcesByType(
           state,
-          getSourceIds(savedState.bands).parentSourceIds
+          getSourceIds(savedState.bands).parentSourceIds,
         ),
-      ])
+      ]),
     ),
     map(([action, state, savedState, initialSources, sourceTypes]) => ({
       action,
@@ -222,8 +222,8 @@ export class SourceExplorerEffects {
                   sourceId,
                   targetSourceId,
                   sourceTypes,
-                  targetSource.type
-                )
+                  targetSource.type,
+                ),
               ),
             })),
           };
@@ -233,9 +233,9 @@ export class SourceExplorerEffects {
       });
 
       return concat(
-        ...this.loadLayout(state, updatedBands, initialSources, savedState)
+        ...this.loadLayout(state, updatedBands, initialSources, savedState),
       );
-    })
+    }),
   );
 
   /**
@@ -252,14 +252,14 @@ export class SourceExplorerEffects {
         this.fetchNewSources(
           `${config.app.baseUrl}/${config.mpsServer.apiUrl}`,
           '/',
-          true
+          true,
         ),
-      ])
+      ]),
     ),
     map(([savedState, initialSources]) => ({ savedState, initialSources })),
     concatMap(({ savedState, initialSources }) =>
-      concat(...this.loadState(initialSources, savedState))
-    )
+      concat(...this.loadState(initialSources, savedState)),
+    ),
   );
 
   /**
@@ -274,7 +274,7 @@ export class SourceExplorerEffects {
         opened: false,
       }),
       new layoutActions.Resize(), // Resize bands when we `close` to make sure they are all resized properly.
-    ])
+    ]),
   );
 
   /**
@@ -286,7 +286,7 @@ export class SourceExplorerEffects {
     withLatestFrom(this.store$),
     map(
       ([action, state]) =>
-        state.raven.sourceExplorer.treeBySourceId[action.sourceId]
+        state.raven.sourceExplorer.treeBySourceId[action.sourceId],
     ),
     switchMap(source =>
       concat(
@@ -294,13 +294,13 @@ export class SourceExplorerEffects {
         of(
           new sourceExplorerActions.UpdateSourceExplorer({
             fetchPending: false,
-          })
+          }),
         ),
         of(
           new sourceExplorerActions.UpdateTreeSource(source.id, {
             expanded: true,
-          })
-        )
+          }),
+        ),
       ).pipe(
         catchError((e: Error) => {
           console.error('SourceExplorerEffects - expandEvent$: ', e);
@@ -308,7 +308,7 @@ export class SourceExplorerEffects {
             new toastActions.ShowToast(
               'warning',
               `Failed To Expand Source "${source.name}"`,
-              ''
+              '',
             ),
             new sourceExplorerActions.UpdateSourceExplorer({
               fetchPending: false,
@@ -317,9 +317,9 @@ export class SourceExplorerEffects {
               expanded: false,
             }),
           ];
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
 
   /**
@@ -335,19 +335,19 @@ export class SourceExplorerEffects {
         this.fetchNewSources(
           `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
           '/',
-          true
+          true,
         ).pipe(
           map(
             (sources: RavenSource[]) =>
-              new sourceExplorerActions.NewSources('/', sources) as Action
-          )
+              new sourceExplorerActions.NewSources('/', sources) as Action,
+          ),
         ),
         of(
           new sourceExplorerActions.UpdateSourceExplorer({
             fetchPending: false,
             initialSourcesLoaded: true,
-          })
-        )
+          }),
+        ),
       ).pipe(
         catchError((e: Error) => {
           console.error('SourceExplorerEffects - fetchInitialSources$: ', e);
@@ -355,16 +355,16 @@ export class SourceExplorerEffects {
             new toastActions.ShowToast(
               'warning',
               'Failed To Fetch Initial Sources',
-              ''
+              '',
             ),
             new sourceExplorerActions.UpdateSourceExplorer({
               fetchPending: false,
               initialSourcesLoaded: false,
             }),
           ];
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
 
   /**
@@ -378,13 +378,13 @@ export class SourceExplorerEffects {
         this.fetchNewSources(action.sourceUrl, action.sourceId, false).pipe(
           concatMap((sources: RavenSource[]) => [
             new sourceExplorerActions.NewSources(action.sourceId, sources),
-          ])
+          ]),
         ),
         of(
           new sourceExplorerActions.UpdateSourceExplorer({
             fetchPending: false,
-          })
-        )
+          }),
+        ),
       ).pipe(
         catchError((e: Error) => {
           console.error('SourceExplorerEffects - fetchNewSources$: ', e);
@@ -392,15 +392,15 @@ export class SourceExplorerEffects {
             new toastActions.ShowToast(
               'warning',
               'Failed To Fetch Sources',
-              ''
+              '',
             ),
             new sourceExplorerActions.UpdateSourceExplorer({
               fetchPending: false,
             }),
           ];
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
 
   /**
@@ -415,18 +415,18 @@ export class SourceExplorerEffects {
           new sourceExplorerActions.AddCustomFilter(
             action.sourceId,
             action.label,
-            action.filter
-          )
+            action.filter,
+          ),
         ),
         of(
           new sourceExplorerActions.AddCustomGraph(
             action.sourceId,
             action.label,
-            action.filter
-          )
-        )
-      )
-    )
+            action.filter,
+          ),
+        ),
+      ),
+    ),
   );
 
   /**
@@ -438,7 +438,7 @@ export class SourceExplorerEffects {
     concatMap(action => {
       const headers = new HttpHeaders().set(
         'Content-Type',
-        `${action.file.type === 'pef' ? 'application/json' : 'text/csv'}`
+        `${action.file.type === 'pef' ? 'application/json' : 'text/csv'}`,
       );
       const url = `${action.source.url}/${action.file.name}?timeline_type=${
         action.file.type
@@ -452,7 +452,7 @@ export class SourceExplorerEffects {
               return this.importMappingFile(
                 action.source.url,
                 action.file.name,
-                action.file.mapping
+                action.file.mapping,
               ).pipe(map(() => new sourceExplorerActions.ImportFileSuccess()));
             } else {
               return of(new sourceExplorerActions.ImportFileSuccess());
@@ -464,13 +464,13 @@ export class SourceExplorerEffects {
               new toastActions.ShowToast(
                 'warning',
                 'Failed To Import File',
-                ''
+                '',
               ),
               new sourceExplorerActions.ImportFileFailure(),
             ];
-          })
+          }),
         );
-    })
+    }),
   );
 
   /**
@@ -489,13 +489,13 @@ export class SourceExplorerEffects {
           new dialogActions.OpenConfirmDialog(
             'OK',
             `Data sets empty or do not exist.\nTimeline will not de drawn for:\n\n ${errors}`,
-            '350px'
+            '350px',
           ),
           new sourceExplorerActions.UpdateSourceExplorer({ loadErrors: [] }),
         ];
       }
       return [];
-    })
+    }),
   );
 
   /**
@@ -517,18 +517,18 @@ export class SourceExplorerEffects {
           raven.timeline.selectedBandId,
           raven.timeline.selectedSubBandId,
           config.raven.defaultBandSettings,
-          raven.sourceExplorer.pins
+          raven.sourceExplorer.pins,
         ),
         of(
           new sourceExplorerActions.UpdateSourceExplorer({
             fetchPending: false,
-          })
+          }),
         ),
         of(
           new sourceExplorerActions.UpdateTreeSource(action.sourceId, {
             opened: true,
-          })
-        )
+          }),
+        ),
       ).pipe(
         catchError((e: Error) => {
           console.error('SourceExplorerEffects - openEvent$: ', e);
@@ -541,9 +541,9 @@ export class SourceExplorerEffects {
               opened: false,
             }),
           ];
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
 
   /**
@@ -552,28 +552,28 @@ export class SourceExplorerEffects {
   @Effect()
   removeGraphableFilter$: Observable<Action> = this.actions$.pipe(
     ofType<sourceExplorerActions.RemoveGraphableFilter>(
-      SourceExplorerActionTypes.RemoveGraphableFilter
+      SourceExplorerActionTypes.RemoveGraphableFilter,
     ),
     concatMap(action =>
       concat(
         of(
           new sourceExplorerActions.RemoveFilter(
-            action.source as RavenFilterSource
-          )
+            action.source as RavenFilterSource,
+          ),
         ),
         of(
           new sourceExplorerActions.SubBandIdRemove(
             [action.source.id],
-            action.source.subBandIds[0]
-          )
+            action.source.subBandIds[0],
+          ),
         ),
         of(
           new sourceExplorerActions.UpdateGraphAfterFilterRemove(
-            action.source.id
-          )
-        )
-      )
-    )
+            action.source.id,
+          ),
+        ),
+      ),
+    ),
   );
 
   /**
@@ -588,10 +588,10 @@ export class SourceExplorerEffects {
         of(
           new sourceExplorerActions.UpdateSourceExplorer({
             fetchPending: false,
-          })
-        )
-      )
-    )
+          }),
+        ),
+      ),
+    ),
   );
 
   /**
@@ -608,10 +608,10 @@ export class SourceExplorerEffects {
         of(
           new sourceExplorerActions.UpdateSourceExplorer({
             fetchPending: false,
-          })
-        )
-      )
-    )
+          }),
+        ),
+      ),
+    ),
   );
 
   /**
@@ -620,7 +620,7 @@ export class SourceExplorerEffects {
   @Effect()
   updateGraphAfterFilterAdd$: Observable<Action> = this.actions$.pipe(
     ofType<UpdateGraphAfterFilterAdd>(
-      SourceExplorerActionTypes.UpdateGraphAfterFilterAdd
+      SourceExplorerActionTypes.UpdateGraphAfterFilterAdd,
     ),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
@@ -631,7 +631,7 @@ export class SourceExplorerEffects {
           action.sourceId,
           config.raven.defaultBandSettings,
           null,
-          sourceExplorer.filtersByTarget
+          sourceExplorer.filtersByTarget,
         ).pipe(
           withLatestFrom(this.store$),
           map(([newSubBands, state]) => ({ newSubBands, state })),
@@ -644,27 +644,27 @@ export class SourceExplorerEffects {
             newSubBands.forEach((subBand: RavenSubBand) => {
               const activityBand = hasActivityBandForFilterTarget(
                 timeline.bands,
-                filterTarget
+                filterTarget,
               );
               if (activityBand) {
                 actions.push(
                   // Add filterSource id to existing band.
                   new timelineActions.SourceIdAdd(
                     action.sourceId,
-                    activityBand.subBandId
+                    activityBand.subBandId,
                   ),
                   // Replace points in band.
                   new timelineActions.SetPointsForSubBand(
                     activityBand.bandId,
                     activityBand.subBandId,
-                    subBand.points
-                  )
+                    subBand.points,
+                  ),
                 );
               } else {
                 actions.push(
                   new sourceExplorerActions.SubBandIdAdd(
                     action.sourceId,
-                    subBand.id
+                    subBand.id,
                   ),
                   new timelineActions.AddBand(
                     action.sourceId,
@@ -673,22 +673,22 @@ export class SourceExplorerEffects {
                       filterTarget: (sourceExplorer.treeBySourceId[
                         action.sourceId
                       ] as RavenFilterSource).filterTarget,
-                    }
-                  )
+                    },
+                  ),
                 );
               }
             });
 
             return actions;
-          })
+          }),
         ),
         of(
           new sourceExplorerActions.UpdateSourceExplorer({
             fetchPending: false,
-          })
-        )
-      )
-    )
+          }),
+        ),
+      ),
+    ),
   );
 
   /**
@@ -697,7 +697,7 @@ export class SourceExplorerEffects {
   @Effect()
   updateGraphAfterFilterRemove$: Observable<Action> = this.actions$.pipe(
     ofType<UpdateGraphAfterFilterRemove>(
-      SourceExplorerActionTypes.UpdateGraphAfterFilterRemove
+      SourceExplorerActionTypes.UpdateGraphAfterFilterRemove,
     ),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
@@ -718,7 +718,7 @@ export class SourceExplorerEffects {
             action.sourceId,
             config.raven.defaultBandSettings,
             null,
-            sourceExplorer.filtersByTarget
+            sourceExplorer.filtersByTarget,
           ).pipe(
             concatMap((newSubBands: RavenSubBand[]) => {
               const actions: Action[] = [];
@@ -730,21 +730,21 @@ export class SourceExplorerEffects {
                 newSubBands.forEach((subBand: RavenSubBand) => {
                   const activityBand = hasActivityBandForFilterTarget(
                     bands,
-                    target
+                    target,
                   );
 
                   if (activityBand) {
                     actions.push(
                       // Remove sourceId from band.
                       new timelineActions.RemoveSourceIdFromSubBands(
-                        action.sourceId
+                        action.sourceId,
                       ),
                       // Replace band points.
                       new timelineActions.SetPointsForSubBand(
                         activityBand.bandId,
                         activityBand.subBandId,
-                        subBand.points
-                      )
+                        subBand.points,
+                      ),
                     );
                   }
                 });
@@ -752,41 +752,41 @@ export class SourceExplorerEffects {
                 // When the last graphable filter source is unselected.
                 const activityBand = hasActivityBandForFilterTarget(
                   bands,
-                  target
+                  target,
                 );
 
                 if (activityBand) {
                   actions.push(
                     // Remove sourceId from band.
                     new timelineActions.RemoveSourceIdFromSubBands(
-                      action.sourceId
+                      action.sourceId,
                     ),
                     // Set empty data points.
                     new timelineActions.SetPointsForSubBand(
                       activityBand.bandId,
                       activityBand.subBandId,
-                      []
-                    )
+                      [],
+                    ),
                   );
                 }
               }
 
               return actions;
-            })
+            }),
           ),
           of(
             new sourceExplorerActions.UpdateSourceExplorer({
               fetchPending: false,
-            })
-          )
-        )
-    )
+            }),
+          ),
+        ),
+    ),
   );
 
   constructor(
     private actions$: Actions,
     private http: HttpClient,
-    private store$: Store<RavenAppState>
+    private store$: Store<RavenAppState>,
   ) {}
 
   /**
@@ -802,24 +802,24 @@ export class SourceExplorerEffects {
             of(
               new sourceExplorerActions.NewSources(
                 source.id,
-                toRavenSources(source.id, false, source.content)
-              )
-            )
+                toRavenSources(source.id, false, source.content),
+              ),
+            ),
           );
         } else {
           actions.push(
             this.fetchNewSources(source.url, source.id, false).pipe(
               concatMap((sources: RavenSource[]) => [
                 new sourceExplorerActions.NewSources(source.id, sources), // Add new sources to the source-explorer.
-              ])
-            )
+              ]),
+            ),
           );
         }
       }
     } else {
       console.warn(
         'source-explorer.effect: expand: source is not defined: ',
-        source
+        source,
       );
     }
 
@@ -834,7 +834,7 @@ export class SourceExplorerEffects {
     sourceId: string,
     defaultBandSettings: RavenDefaultBandSettings,
     customFilter: RavenCustomFilter | null,
-    filtersByTarget: StringTMap<StringTMap<string[]>>
+    filtersByTarget: StringTMap<StringTMap<string[]>>,
   ) {
     const source = treeBySourceId[sourceId];
     return this.http
@@ -843,8 +843,8 @@ export class SourceExplorerEffects {
           treeBySourceId,
           source,
           customFilter,
-          filtersByTarget
-        )
+          filtersByTarget,
+        ),
       )
       .pipe(
         map((graphData: MpsServerGraphData) =>
@@ -854,9 +854,9 @@ export class SourceExplorerEffects {
             graphData,
             defaultBandSettings,
             customFilter,
-            treeBySourceId
-          )
-        )
+            treeBySourceId,
+          ),
+        ),
       );
   }
 
@@ -867,7 +867,7 @@ export class SourceExplorerEffects {
     state: RavenAppState,
     bands: RavenCompositeBand[],
     initialSources: RavenSource[],
-    savedState: RavenState
+    savedState: RavenState,
   ) {
     return [
       of(
@@ -875,7 +875,7 @@ export class SourceExplorerEffects {
           ...fromSourceExplorer.initialState,
           currentStateId: state.raven.sourceExplorer.currentStateId,
           fetchPending: true,
-        })
+        }),
       ),
       of(
         new timelineActions.UpdateTimeline({
@@ -887,19 +887,19 @@ export class SourceExplorerEffects {
               sourceIds: [],
             })),
           })),
-        })
+        }),
       ),
       of(
         new configActions.UpdateDefaultBandSettings({
           ...savedState.defaultBandSettings,
-        })
+        }),
       ),
       ...this.load(bands, initialSources),
       of(new timelineActions.RemoveBandsWithNoPoints()),
       of(new timelineActions.ResetViewTimeRange()),
       ...savedState.pins.map(pin => of(new sourceExplorerActions.PinAdd(pin))), // TODO: Update layouts to apply pins correctly.
       of(
-        new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })
+        new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }),
       ),
     ];
   }
@@ -909,14 +909,14 @@ export class SourceExplorerEffects {
    */
   loadState(
     initialSources: RavenSource[],
-    savedState: RavenState
+    savedState: RavenState,
   ): Observable<Action>[] {
     return [
       of(
         new sourceExplorerActions.UpdateSourceExplorer({
           ...fromSourceExplorer.initialState,
           fetchPending: true,
-        })
+        }),
       ),
       of(
         new timelineActions.UpdateTimeline({
@@ -930,17 +930,17 @@ export class SourceExplorerEffects {
           })),
           maxTimeRange: savedState.maxTimeRange,
           viewTimeRange: savedState.viewTimeRange,
-        })
+        }),
       ),
       of(
         new configActions.UpdateDefaultBandSettings({
           ...savedState.defaultBandSettings,
-        })
+        }),
       ),
       ...this.load(savedState.bands, initialSources),
       ...savedState.pins.map(pin => of(new sourceExplorerActions.PinAdd(pin))),
       of(
-        new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })
+        new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }),
       ),
     ];
   }
@@ -951,7 +951,7 @@ export class SourceExplorerEffects {
    */
   load(
     bands: RavenCompositeBand[],
-    initialSources: RavenSource[]
+    initialSources: RavenSource[],
   ): Observable<Action>[] {
     const { parentSourceIds, sourceIds } = getSourceIds(bands);
 
@@ -962,7 +962,7 @@ export class SourceExplorerEffects {
           take(1),
           map(
             (state: RavenAppState[]) =>
-              state[0].raven.sourceExplorer.treeBySourceId[sourceId]
+              state[0].raven.sourceExplorer.treeBySourceId[sourceId],
           ),
           concatMap(source => {
             if (source) {
@@ -971,18 +971,18 @@ export class SourceExplorerEffects {
                 of(
                   new sourceExplorerActions.UpdateTreeSource(source.id, {
                     expanded: true,
-                  })
-                )
+                  }),
+                ),
               );
             } else {
               console.log(
                 'source-explorer.effect: load: source does not exist: ',
-                sourceId
+                sourceId,
               );
               return of(new sourceExplorerActions.LoadErrorsAdd([sourceId]));
             }
-          })
-        )
+          }),
+        ),
       ),
       combineLatest(this.store$).pipe(
         take(1),
@@ -994,16 +994,16 @@ export class SourceExplorerEffects {
               new sourceExplorerActions.UpdateSourceExplorer({
                 customFiltersBySourceId: getCustomFiltersBySourceId(
                   bands,
-                  state.raven.sourceExplorer.treeBySourceId
+                  state.raven.sourceExplorer.treeBySourceId,
                 ),
-              })
+              }),
             ),
             this.restoreFilters(
               bands,
-              state.raven.sourceExplorer.treeBySourceId
-            )
-          )
-        )
+              state.raven.sourceExplorer.treeBySourceId,
+            ),
+          ),
+        ),
       ),
       ...sourceIds.map((sourceId: string) =>
         combineLatest(this.store$).pipe(
@@ -1018,16 +1018,16 @@ export class SourceExplorerEffects {
                 sourceId,
                 bands,
                 state.config.raven.defaultBandSettings,
-                state.raven.sourceExplorer.pins
+                state.raven.sourceExplorer.pins,
               ),
               of(
                 new sourceExplorerActions.UpdateTreeSource(sourceId, {
                   opened: true,
-                })
-              )
-            )
-          )
-        )
+                }),
+              ),
+            ),
+          ),
+        ),
       ),
       of(new layoutActions.Resize()),
       of(new sourceExplorerActions.LoadErrorsDisplay()),
@@ -1047,14 +1047,14 @@ export class SourceExplorerEffects {
     bandId: string | null,
     subBandId: string | null,
     defaultBandSettings: RavenDefaultBandSettings,
-    pins: RavenPin[]
+    pins: RavenPin[],
   ) {
     return this.fetchSubBands(
       treeBySourceId,
       sourceId,
       defaultBandSettings,
       customFilter,
-      filtersByTarget
+      filtersByTarget,
     ).pipe(
       concatMap((newSubBands: RavenSubBand[]) => {
         const actions: Action[] = [];
@@ -1063,8 +1063,8 @@ export class SourceExplorerEffects {
           // Clear existing points regardless if fetch returns any data.
           actions.push(
             new timelineActions.RemoveAllPointsInSubBandWithParentSource(
-              treeBySourceId[sourceId].parentId
-            )
+              treeBySourceId[sourceId].parentId,
+            ),
           );
         }
 
@@ -1073,7 +1073,7 @@ export class SourceExplorerEffects {
             const activityBand = hasActivityBand(
               currentBands,
               subBand,
-              getPinLabel(treeBySourceId[sourceId].id, pins)
+              getPinLabel(treeBySourceId[sourceId].id, pins),
             );
             const existingBand =
               treeBySourceId[sourceId].type === 'customGraphable'
@@ -1084,27 +1084,27 @@ export class SourceExplorerEffects {
               actions.push(
                 new sourceExplorerActions.SubBandIdAdd(
                   sourceId,
-                  activityBand.subBandId
+                  activityBand.subBandId,
                 ),
                 new timelineActions.AddPointsToSubBand(
                   sourceId,
                   activityBand.bandId,
                   activityBand.subBandId,
-                  subBand.points
-                )
+                  subBand.points,
+                ),
               );
             } else if (existingBand) {
               actions.push(
                 new sourceExplorerActions.SubBandIdAdd(
                   sourceId,
-                  existingBand.subBandId
+                  existingBand.subBandId,
                 ),
                 new timelineActions.AddPointsToSubBand(
                   sourceId,
                   existingBand.bandId,
                   existingBand.subBandId,
-                  subBand.points
-                )
+                  subBand.points,
+                ),
               );
             } else if (
               bandId &&
@@ -1117,18 +1117,18 @@ export class SourceExplorerEffects {
                   sourceId,
                   bandId,
                   subBandId,
-                  subBand.points
-                )
+                  subBand.points,
+                ),
               );
             } else if (bandId && isOverlay(currentBands, bandId)) {
               actions.push(
                 new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id),
-                new timelineActions.AddSubBand(sourceId, bandId, subBand)
+                new timelineActions.AddSubBand(sourceId, bandId, subBand),
               );
             } else {
               actions.push(
                 new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id),
-                new timelineActions.AddBand(sourceId, toCompositeBand(subBand))
+                new timelineActions.AddBand(sourceId, toCompositeBand(subBand)),
               );
             }
 
@@ -1138,8 +1138,8 @@ export class SourceExplorerEffects {
                 new sourceExplorerActions.SetCustomFilterSubBandId(
                   sourceId,
                   customFilter ? customFilter.label : '',
-                  subBand.id
-                )
+                  subBand.id,
+                ),
               );
             }
           });
@@ -1152,7 +1152,7 @@ export class SourceExplorerEffects {
         }
 
         return actions;
-      })
+      }),
     );
   }
 
@@ -1166,7 +1166,7 @@ export class SourceExplorerEffects {
     sourceId: string,
     currentBands: RavenCompositeBand[],
     defaultBandSettings: RavenDefaultBandSettings,
-    pins: RavenPin[]
+    pins: RavenPin[],
   ): Observable<Action>[] {
     if (customFilters) {
       return customFilters.map(customFilter =>
@@ -1179,8 +1179,8 @@ export class SourceExplorerEffects {
           null,
           null,
           defaultBandSettings,
-          pins
-        )
+          pins,
+        ),
       );
     }
 
@@ -1198,7 +1198,7 @@ export class SourceExplorerEffects {
           of(
             new sourceExplorerActions.AddGraphableFilter(treeBySourceId[
               sourceId
-            ] as RavenGraphableFilterSource)
+            ] as RavenGraphableFilterSource),
           ),
         ];
       } else {
@@ -1212,7 +1212,7 @@ export class SourceExplorerEffects {
             null,
             null,
             defaultBandSettings,
-            pins
+            pins,
           ),
         ];
       }
@@ -1231,8 +1231,8 @@ export class SourceExplorerEffects {
       .get<MpsServerSource[]>(url)
       .pipe(
         map((mpsServerSources: MpsServerSource[]) =>
-          toRavenSources(parentId, isServer, mpsServerSources)
-        )
+          toRavenSources(parentId, isServer, mpsServerSources),
+        ),
       );
   }
 
@@ -1253,19 +1253,19 @@ export class SourceExplorerEffects {
           .get(
             `${state.config.app.baseUrl}/${
               state.config.mpsServer.apiUrl
-            }${sourceId}`
+            }${sourceId}`,
           )
           .pipe(
             timeout(3000), // Timeout long requests since MPS Server returns type information quickly, and long requests probably are not what we are looking for.
             map((mpsServerSources: MpsServerSource[]) =>
-              toRavenSources('', false, mpsServerSources)
+              toRavenSources('', false, mpsServerSources),
             ),
             map((sources: RavenSource[]) =>
-              sources.map(source => ({ name: source.name, type: source.type }))
+              sources.map(source => ({ name: source.name, type: source.type })),
             ),
-            catchError(() => of([]))
-          )
-      )
+            catchError(() => of([])),
+          ),
+      ),
     ).pipe(
       map((res: any[][]) => flatten(res)), // forkJoin returns an array with each response in a sub-array. So flatten here to get a single array of sources.
       map(sources =>
@@ -1273,8 +1273,8 @@ export class SourceExplorerEffects {
         sources.reduce((sourceTypes, source) => {
           sourceTypes[source.name] = source.type;
           return sourceTypes;
-        }, {})
-      )
+        }, {}),
+      ),
     );
   }
 
@@ -1284,7 +1284,7 @@ export class SourceExplorerEffects {
   removeSource(sourceUrl: string, sourceId: string) {
     const url = sourceUrl.replace(
       /list_(generic|.*custom.*)-mongodb/i,
-      'fs-mongodb'
+      'fs-mongodb',
     );
     return this.http
       .delete(url, { responseType: 'text' })
@@ -1296,7 +1296,7 @@ export class SourceExplorerEffects {
    */
   restoreFilters(
     bands: RavenCompositeBand[],
-    treeBySourceId: StringTMap<RavenSource>
+    treeBySourceId: StringTMap<RavenSource>,
   ) {
     const actions: Action[] = [];
 
@@ -1310,7 +1310,7 @@ export class SourceExplorerEffects {
             actions.push(
               new sourceExplorerActions.AddFilter(treeBySourceId[
                 sourceId
-              ] as RavenFilterSource)
+              ] as RavenFilterSource),
             );
           } else {
             const hasQueryString = sourceId.match(new RegExp('(.*)\\?(.*)'));
@@ -1326,8 +1326,8 @@ export class SourceExplorerEffects {
                   actions.push(
                     new sourceExplorerActions.SetCustomFilter(
                       source,
-                      hasQueryStringArgs[2]
-                    )
+                      hasQueryStringArgs[2],
+                    ),
                   );
                 }
               }
@@ -1357,14 +1357,14 @@ export class SourceExplorerEffects {
     sourceUrl: string,
     sourceId: string,
     name: string,
-    state: RavenAppState
+    state: RavenAppState,
   ) {
     return this.http
       .put(`${sourceUrl}/${name}?timeline_type=state`, getState(name, state))
       .pipe(
         map(
-          () => new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl)
-        )
+          () => new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl),
+        ),
       );
   }
 

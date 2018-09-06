@@ -30,7 +30,7 @@ export class CommandDictionaryEffects {
   @Effect()
   fetchCommandDictionaryList$: Observable<Action> = this.actions$.pipe(
     ofType<FetchCommandDictionaryList>(
-      CommandDictionaryActionTypes.FetchCommandDictionaryList
+      CommandDictionaryActionTypes.FetchCommandDictionaryList,
     ),
     concatMap(action =>
       this.mpsServerService.getCommandDictionaryList().pipe(
@@ -38,18 +38,18 @@ export class CommandDictionaryEffects {
         catchError((e: Error) => {
           console.error(
             'CommandDictionaryEffect - fetchCommandDictionaryList$: ',
-            e
+            e,
           );
           return of(new FetchCommandDictionaryListFailure(e));
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
 
   @Effect()
   fetchCommandDictionary$: Observable<Action> = this.actions$.pipe(
     ofType<FetchCommandDictionary>(
-      CommandDictionaryActionTypes.FetchCommandDictionary
+      CommandDictionaryActionTypes.FetchCommandDictionary,
     ),
     concatMap(action =>
       this.mpsServerService.getCommandDictionary(action.name).pipe(
@@ -57,12 +57,12 @@ export class CommandDictionaryEffects {
         catchError((e: Error) => {
           console.error(
             'CommandDictionaryEffect - fetchCommandDictionary$: ',
-            e
+            e,
           );
           return of(new FetchCommandDictionaryFailure(e));
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
 
   /**
@@ -71,13 +71,13 @@ export class CommandDictionaryEffects {
   @Effect()
   selectCommandDictionary$: Observable<Action> = this.actions$.pipe(
     ofType<SelectCommandDictionary>(
-      CommandDictionaryActionTypes.SelectCommandDictionary
+      CommandDictionaryActionTypes.SelectCommandDictionary,
     ),
-    map(action => new FetchCommandDictionary(action.selectedId))
+    map(action => new FetchCommandDictionary(action.selectedId)),
   );
 
   constructor(
     private actions$: Actions,
-    private mpsServerService: MpsServerService
+    private mpsServerService: MpsServerService,
   ) {}
 }

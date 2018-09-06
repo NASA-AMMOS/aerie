@@ -51,7 +51,7 @@ describe('time-cursor reducer', () => {
         autoPage: true,
         clockRate: 42,
         clockUpdateIntervalInSecs: 1,
-      })
+      }),
     );
 
     expect(timeCursorState).toEqual({

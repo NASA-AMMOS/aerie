@@ -34,7 +34,7 @@ export const initialState: EpochsState = {
  */
 export function reducer(
   state: EpochsState = initialState,
-  action: EpochsAction
+  action: EpochsAction,
 ): EpochsState {
   switch (action.type) {
     case EpochsActionTypes.AddEpochs:
@@ -52,5 +52,5 @@ export function reducer(
 const featureSelector = createFeatureSelector<State>('raven');
 export const getEpochsState = createSelector(
   featureSelector,
-  (state: State): EpochsState => state.epochs
+  (state: State): EpochsState => state.epochs,
 );

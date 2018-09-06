@@ -133,13 +133,13 @@ export class TimelineComponent implements OnDestroy {
     private changeDetector: ChangeDetectorRef,
     private store: Store<
       fromTimeline.TimelineState | ConfigState | fromTimeCursor.TimeCursorState
-    >
+    >,
   ) {
     // Config state.
     this.store
       .pipe(
         select(fromConfig.getItarMessage),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe(itarMessage => {
         this.itarMessage = itarMessage;
@@ -149,7 +149,7 @@ export class TimelineComponent implements OnDestroy {
     this.store
       .pipe(
         select(fromConfig.getDefaultBandSettings),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe(defaultBandSettings => {
         this.defaultBandSettings = defaultBandSettings;
@@ -160,7 +160,7 @@ export class TimelineComponent implements OnDestroy {
     this.store
       .pipe(
         select(fromEpochs.getEpochsState),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe(state => {
         this.dayCode = state.dayCode;
@@ -174,7 +174,7 @@ export class TimelineComponent implements OnDestroy {
     this.store
       .pipe(
         select(fromLayout.getLayoutState),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe(state => {
         this.rightPanelSelectedTabIndex = state.rightPanelSelectedTabIndex;
@@ -198,7 +198,7 @@ export class TimelineComponent implements OnDestroy {
     this.store
       .pipe(
         select(fromOutput.getOutputState),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe(state => {
         this.allInOneFile = state.allInOneFile;
@@ -213,7 +213,7 @@ export class TimelineComponent implements OnDestroy {
     this.store
       .pipe(
         select(fromSourceExplorer.getSourceExplorerState),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe(state => {
         this.currentStateId = state.currentStateId;
@@ -227,7 +227,7 @@ export class TimelineComponent implements OnDestroy {
     this.store
       .pipe(
         select(fromTimeCursor.getTimeCursorState),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe(state => {
         this.autoPage = state.autoPage;
@@ -245,7 +245,7 @@ export class TimelineComponent implements OnDestroy {
     this.store
       .pipe(
         select(fromTimeline.getTimelineState),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe(state => {
         this.bands = state.bands;
@@ -259,7 +259,7 @@ export class TimelineComponent implements OnDestroy {
           this.bands,
           this.customFiltersBySourceId,
           this.filtersByTarget,
-          this.treeBySourceId
+          this.treeBySourceId,
         );
         this.markForCheck();
       });
@@ -297,7 +297,7 @@ export class TimelineComponent implements OnDestroy {
    */
   onAddDividerBand(): void {
     this.store.dispatch(
-      new timelineActions.AddBand(null, toCompositeBand(toDividerBand()))
+      new timelineActions.AddBand(null, toCompositeBand(toDividerBand())),
     );
   }
 
@@ -309,7 +309,7 @@ export class TimelineComponent implements OnDestroy {
 
     if (e.subBandId && e.pointId) {
       this.store.dispatch(
-        new timelineActions.SelectPoint(e.bandId, e.subBandId, e.pointId)
+        new timelineActions.SelectPoint(e.bandId, e.subBandId, e.pointId),
       );
     }
   }
@@ -326,7 +326,7 @@ export class TimelineComponent implements OnDestroy {
    */
   onDeleteSubBand(subBand: RavenSubBand): void {
     this.store.dispatch(
-      new dialogActions.OpenDeleteSubBandDialog(subBand, '300px')
+      new dialogActions.OpenDeleteSubBandDialog(subBand, '300px'),
     );
   }
 
@@ -353,7 +353,7 @@ export class TimelineComponent implements OnDestroy {
    */
   onSelectedTabChange(e: MatTabChangeEvent) {
     this.store.dispatch(
-      new layoutActions.UpdateLayout({ rightPanelSelectedTabIndex: e.index })
+      new layoutActions.UpdateLayout({ rightPanelSelectedTabIndex: e.index }),
     );
   }
 
@@ -405,7 +405,7 @@ export class TimelineComponent implements OnDestroy {
    */
   onToggleShowActivityPointMetadata(show: boolean) {
     this.store.dispatch(
-      new layoutActions.UpdateLayout({ showActivityPointMetadata: show })
+      new layoutActions.UpdateLayout({ showActivityPointMetadata: show }),
     );
   }
 
@@ -414,7 +414,7 @@ export class TimelineComponent implements OnDestroy {
    */
   onToggleShowActivityPointParameters(show: boolean) {
     this.store.dispatch(
-      new layoutActions.UpdateLayout({ showActivityPointParameters: show })
+      new layoutActions.UpdateLayout({ showActivityPointParameters: show }),
     );
   }
 
@@ -434,7 +434,7 @@ export class TimelineComponent implements OnDestroy {
     if (e.bandId && e.subBandId) {
       this.store.dispatch(new timelineActions.UpdateBand(e.bandId, e.update));
       this.store.dispatch(
-        new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update)
+        new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update),
       );
     }
   }
@@ -466,7 +466,7 @@ export class TimelineComponent implements OnDestroy {
   onUpdateSubBand(e: RavenUpdate): void {
     if (e.bandId && e.subBandId) {
       this.store.dispatch(
-        new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update)
+        new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update),
       );
     }
   }
@@ -476,7 +476,7 @@ export class TimelineComponent implements OnDestroy {
    */
   onUpdateTimeCursorSettings(e: RavenUpdate): void {
     this.store.dispatch(
-      new timeCursorActions.UpdateTimeCursorSettings(e.update)
+      new timeCursorActions.UpdateTimeCursorSettings(e.update),
     );
   }
 
@@ -508,7 +508,7 @@ export class TimelineComponent implements OnDestroy {
     this.selectedSubBand = subBandById(
       this.bands,
       this.selectedBandId,
-      this.selectedSubBandId
+      this.selectedSubBandId,
     );
 
     if (this.selectedSubBand) {

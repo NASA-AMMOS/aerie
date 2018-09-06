@@ -416,7 +416,7 @@ export class RavenActivityBandComponent
       obj,
       this.earthSecToEpochSec,
       this.epoch,
-      this.dayCode
+      this.dayCode,
     );
   }
 }

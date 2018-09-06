@@ -91,7 +91,7 @@ describe('HBCodeMirrorComponent', () => {
 
     fixture.detectChanges();
     expect(component.codeMirrorInstance.getOption('lineNumbers')).toBe(
-      lineNumbers
+      lineNumbers,
     );
   });
 

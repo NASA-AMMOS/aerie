@@ -28,7 +28,7 @@ describe('epochs reducer', () => {
       new AddEpochs([
         { name: 'Day1', value: '2018-134T12:00:00.000' },
         { name: 'Day2', value: '2018-156T23:00:00.000' },
-      ])
+      ]),
     );
     expect(epochsState).toEqual({
       ...initialState,
@@ -50,7 +50,7 @@ describe('epochs reducer', () => {
   it('handle UpdateEpochs earthSecToEpochSec', () => {
     epochsState = reducer(
       epochsState,
-      new UpdateEpochs({ earthSecToEpochSec: 1.16 })
+      new UpdateEpochs({ earthSecToEpochSec: 1.16 }),
     );
     expect(epochsState).toEqual({
       ...initialState,
@@ -64,13 +64,13 @@ describe('epochs reducer', () => {
       new AddEpochs([
         { name: 'Day1', value: '2018-134T12:00:00.000' },
         { name: 'Day2', value: '2018-156T23:00:00.000' },
-      ])
+      ]),
     );
     epochsState = reducer(
       epochsState,
       new UpdateEpochs({
         inUseEpoch: { name: 'Day2', value: '2018-156T23:00:00.000' },
-      })
+      }),
     );
     expect(epochsState).toEqual({
       ...initialState,

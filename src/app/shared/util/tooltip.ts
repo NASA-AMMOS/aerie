@@ -20,7 +20,7 @@ export function interpolateY3(
   y1: number,
   x2: number,
   y2: number,
-  x3: number
+  x3: number,
 ): number {
   if (x1 === x2) {
     return y1;
@@ -36,7 +36,7 @@ export function getInterpolatedTooltipText(
   obj: any,
   earthSecPerEpochSec: number,
   epoch: RavenEpoch | null,
-  dayCode: string
+  dayCode: string,
 ) {
   const { band, interval, time } = obj;
 
@@ -46,14 +46,14 @@ export function getInterpolatedTooltipText(
     interval.end,
     null,
     earthSecPerEpochSec,
-    dayCode
+    dayCode,
   );
   let valueAtTime = interpolateY3(
     interval.start,
     interval.startValue,
     interval.end,
     interval.endValue,
-    time
+    time,
   );
   valueAtTime = band.onFormatTickValue
     ? band.onFormatTickValue(valueAtTime)
@@ -131,7 +131,7 @@ export function getTooltipText(
   obj: any,
   earthSecPerEpochSec: number,
   epoch: RavenEpoch | null,
-  dayCode: string
+  dayCode: string,
 ) {
   const { interval, band } = obj;
 
@@ -141,7 +141,7 @@ export function getTooltipText(
     interval.end,
     epoch,
     earthSecPerEpochSec,
-    dayCode
+    dayCode,
   );
   const value = band.onFormatTickValue
     ? band.onFormatTickValue(interval.properties.Value)

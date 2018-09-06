@@ -82,7 +82,7 @@ export const initialState: TimelineState = {
  */
 export function reducer(
   state: TimelineState = initialState,
-  action: TimelineAction
+  action: TimelineAction,
 ): TimelineState {
   switch (action.type) {
     case TimelineActionTypes.AddBand:
@@ -154,7 +154,7 @@ export function addBand(state: TimelineState, action: AddBand): TimelineState {
           ...subBand,
           parentUniqueId: action.band.id,
           sourceIds: without(subBand.sourceIds, action.sourceId).concat(
-            action.sourceId
+            action.sourceId,
           ),
           ...action.additionalSubBandProps,
         };
@@ -182,7 +182,7 @@ export function addBand(state: TimelineState, action: AddBand): TimelineState {
  */
 export function addPointsToSubBand(
   state: TimelineState,
-  action: AddPointsToSubBand
+  action: AddPointsToSubBand,
 ): TimelineState {
   const bands = state.bands.map((band: RavenCompositeBand) => {
     if (action.bandId === band.id) {
@@ -194,7 +194,7 @@ export function addPointsToSubBand(
             const maxTimeRange = getMaxTimeRange(points);
             const sourceIds = without(
               subBand.sourceIds,
-              action.sourceId
+              action.sourceId,
             ).concat(action.sourceId);
 
             return {
@@ -225,7 +225,7 @@ export function addPointsToSubBand(
  */
 export function addSubBand(
   state: TimelineState,
-  action: AddSubBand
+  action: AddSubBand,
 ): TimelineState {
   const bands = state.bands.map((band: RavenCompositeBand) => {
     if (action.bandId === band.id) {
@@ -289,7 +289,7 @@ export function panRightViewTimeRange(state: TimelineState): TimelineState {
  */
 export function removeAllPointsInSubBandWithParentSource(
   state: TimelineState,
-  action: RemoveAllPointsInSubBandWithParentSource
+  action: RemoveAllPointsInSubBandWithParentSource,
 ): TimelineState {
   const bands = state.bands.map(band => ({
     ...band,
@@ -298,7 +298,7 @@ export function removeAllPointsInSubBandWithParentSource(
         if (
           subBand.sourceIds.length > 0 &&
           !getParentSourceIds(subBand.sourceIds[0]).includes(
-            action.parentSourceId
+            action.parentSourceId,
           )
         ) {
           subBands.push(subBand);
@@ -311,7 +311,7 @@ export function removeAllPointsInSubBandWithParentSource(
 
         return subBands;
       },
-      []
+      [],
     ),
   }));
 
@@ -329,7 +329,7 @@ export function removeAllPointsInSubBandWithParentSource(
  */
 export function removeBandsOrPointsForSource(
   state: TimelineState,
-  action: RemoveBandsOrPointsForSource
+  action: RemoveBandsOrPointsForSource,
 ): TimelineState {
   let bands = state.bands
     .map(band => ({
@@ -345,17 +345,17 @@ export function removeBandsOrPointsForSource(
             subBands.push({
               ...subBand,
               points: (subBand as any).points.filter(
-                (point: any) => point.sourceId !== action.sourceId
+                (point: any) => point.sourceId !== action.sourceId,
               ),
               sourceIds: subBand.sourceIds.filter(
-                sourceId => sourceId !== action.sourceId
+                sourceId => sourceId !== action.sourceId,
               ),
             });
           }
 
           return subBands;
         },
-        []
+        [],
       ),
     }))
     .filter(band => band.subBands.length !== 0)
@@ -374,7 +374,7 @@ export function removeBandsOrPointsForSource(
     ...updateSelectedBandIds(
       bands,
       state.selectedBandId,
-      state.selectedSubBandId
+      state.selectedSubBandId,
     ),
     ...updateSelectedPoint(bands, state.selectedPoint),
     ...updateTimeRanges(bands, state.viewTimeRange),
@@ -386,7 +386,7 @@ export function removeBandsOrPointsForSource(
  */
 export function removeBandsWithNoPoints(
   state: TimelineState,
-  action: RemoveBandsWithNoPoints
+  action: RemoveBandsWithNoPoints,
 ): TimelineState {
   let bands = state.bands
     // First remove subBands that have no points.
@@ -410,7 +410,7 @@ export function removeBandsWithNoPoints(
  */
 export function removeSourceIdFromSubBands(
   state: TimelineState,
-  action: RemoveSourceIdFromSubBands
+  action: RemoveSourceIdFromSubBands,
 ): TimelineState {
   const bands = state.bands.map(band => ({
     ...band,
@@ -419,12 +419,12 @@ export function removeSourceIdFromSubBands(
         subBands.push({
           ...subBand,
           sourceIds: subBand.sourceIds.filter(
-            sourceId => sourceId !== action.sourceId
+            sourceId => sourceId !== action.sourceId,
           ),
         });
         return subBands;
       },
-      []
+      [],
     ),
   }));
 
@@ -439,13 +439,13 @@ export function removeSourceIdFromSubBands(
  */
 export function removeSubBand(
   state: TimelineState,
-  action: RemoveSubBand
+  action: RemoveSubBand,
 ): TimelineState {
   let bands = state.bands
     .map(band => ({
       ...band,
       subBands: band.subBands.filter(
-        subBand => subBand.id !== action.subBandId
+        subBand => subBand.id !== action.subBandId,
       ),
     }))
     .filter(band => band.subBands.length !== 0)
@@ -464,7 +464,7 @@ export function removeSubBand(
     ...updateSelectedBandIds(
       bands,
       state.selectedBandId,
-      state.selectedSubBandId
+      state.selectedSubBandId,
     ),
     ...updateSelectedPoint(bands, state.selectedPoint),
     ...updateTimeRanges(bands, state.viewTimeRange),
@@ -476,7 +476,7 @@ export function removeSubBand(
  */
 export function selectBand(
   state: TimelineState,
-  action: SelectBand
+  action: SelectBand,
 ): TimelineState {
   if (action.bandId !== state.selectedBandId) {
     const band = bandById(state.bands, action.bandId) as RavenCompositeBand;
@@ -502,7 +502,7 @@ export function selectBand(
  */
 export function selectPoint(
   state: TimelineState,
-  action: SelectPoint
+  action: SelectPoint,
 ): TimelineState {
   const alreadySelected =
     state.selectedPoint && state.selectedPoint.uniqueId === action.pointId;
@@ -521,7 +521,7 @@ export function selectPoint(
  */
 export function setPointsForSubBand(
   state: TimelineState,
-  action: SetPointsForSubBand
+  action: SetPointsForSubBand,
 ): TimelineState {
   const bands = state.bands.map((band: RavenCompositeBand) => {
     if (action.bandId === band.id) {
@@ -556,7 +556,7 @@ export function setPointsForSubBand(
  */
 export function sortBands(
   state: TimelineState,
-  action: SortBands
+  action: SortBands,
 ): TimelineState {
   return {
     ...state,
@@ -579,7 +579,7 @@ export function sortBands(
  */
 export function sourceIdAdd(
   state: TimelineState,
-  action: SourceIdAdd
+  action: SourceIdAdd,
 ): TimelineState {
   const bands = state.bands.map(band => ({
     ...band,
@@ -590,13 +590,13 @@ export function sourceIdAdd(
           sourceIds:
             subBand.id === action.subBandId
               ? without(subBand.sourceIds, action.sourceId).concat(
-                  action.sourceId
+                  action.sourceId,
                 )
               : subBand.sourceIds,
         });
         return subBands;
       },
-      []
+      [],
     ),
   }));
   return {
@@ -610,7 +610,7 @@ export function sourceIdAdd(
  */
 export function updateBand(
   state: TimelineState,
-  action: UpdateBand
+  action: UpdateBand,
 ): TimelineState {
   return {
     ...state,
@@ -632,7 +632,7 @@ export function updateBand(
  */
 export function updateSubBand(
   state: TimelineState,
-  action: UpdateSubBand
+  action: UpdateSubBand,
 ): TimelineState {
   return {
     ...state,
@@ -663,7 +663,7 @@ export function updateSubBand(
 const featureSelector = createFeatureSelector<State>('raven');
 export const getTimelineState = createSelector(
   featureSelector,
-  (state: State): TimelineState => state.timeline
+  (state: State): TimelineState => state.timeline,
 );
 
 /**
@@ -679,5 +679,5 @@ export const getTimelineState = createSelector(
  */
 export const getPending = createSelector(
   getTimelineState,
-  (state: TimelineState) => state.fetchPending
+  (state: TimelineState) => state.fetchPending,
 );

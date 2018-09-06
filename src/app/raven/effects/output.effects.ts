@@ -51,16 +51,16 @@ export class OutputEffects {
               output,
               sourceExplorer.treeBySourceId,
               sourceExplorer.customFiltersBySourceId,
-              sourceExplorer.filtersByTarget
+              sourceExplorer.filtersByTarget,
             )
           : this.generateOutputFiles(
               output,
               sourceExplorer.treeBySourceId,
               sourceExplorer.customFiltersBySourceId,
-              sourceExplorer.filtersByTarget
-            ))
-      )
-    )
+              sourceExplorer.filtersByTarget,
+            )),
+      ),
+    ),
   );
 
   /**
@@ -75,16 +75,16 @@ export class OutputEffects {
       this.writeToFile(
         output.outputData,
         output.allInOneFilename,
-        output.outputFormat.toLowerCase()
+        output.outputFormat.toLowerCase(),
       );
       return [];
-    })
+    }),
   );
 
   constructor(
     private actions$: Actions,
     private http: HttpClient,
-    private store$: Store<RavenAppState>
+    private store$: Store<RavenAppState>,
   ) {}
 
   /**
@@ -96,7 +96,7 @@ export class OutputEffects {
     customFilter: RavenCustomFilter | null,
     filtersByTarget: StringTMap<StringTMap<string[]>>,
     source: RavenSource,
-    label: string
+    label: string,
   ) {
     const outputDataUrl = getOutputDataUrl(
       treeBySourceId,
@@ -104,7 +104,7 @@ export class OutputEffects {
       customFilter,
       filtersByTarget,
       output.outputFormat,
-      output.decimateOutputData
+      output.decimateOutputData,
     );
 
     if (output.outputFormat === 'CSV') {
@@ -112,7 +112,7 @@ export class OutputEffects {
         switchMap(data => {
           this.writeToFile(data, label, 'csv');
           return [];
-        })
+        }),
       );
     } else {
       return this.http.get(outputDataUrl).pipe(
@@ -120,7 +120,7 @@ export class OutputEffects {
         switchMap(jsonData => {
           this.writeToFile(jsonData, label, 'json');
           return [];
-        })
+        }),
       );
     }
   }
@@ -132,13 +132,13 @@ export class OutputEffects {
     output: fromOutput.OutputState,
     treeBySourceId: StringTMap<RavenSource>,
     customFiltersBySourceId: StringTMap<RavenCustomFilter[]>,
-    filtersByTarget: StringTMap<StringTMap<string[]>>
+    filtersByTarget: StringTMap<StringTMap<string[]>>,
   ) {
     const actions: Observable<Action>[] = [];
     let keepHeader = true;
 
     actions.push(
-      of(new outputActions.UpdateOutputSettings({ outputData: '' }))
+      of(new outputActions.UpdateOutputSettings({ outputData: '' })),
     );
 
     Object.keys(output.outputSourceIdsByLabel).forEach(label => {
@@ -152,8 +152,8 @@ export class OutputEffects {
             getCustomFilterForLabel(label, customFiltersBySourceId[sourceId]),
             filtersByTarget,
             source,
-            keepHeader
-          )
+            keepHeader,
+          ),
         );
         keepHeader = false;
       });
@@ -171,7 +171,7 @@ export class OutputEffects {
     output: fromOutput.OutputState,
     treeBySourceId: StringTMap<RavenSource>,
     customFiltersBySourceId: StringTMap<RavenCustomFilter[]>,
-    filtersByTarget: StringTMap<StringTMap<string[]>>
+    filtersByTarget: StringTMap<StringTMap<string[]>>,
   ) {
     const actions: Observable<Action>[] = [];
 
@@ -186,8 +186,8 @@ export class OutputEffects {
             getCustomFilterForLabel(label, customFiltersBySourceId[sourceId]),
             filtersByTarget,
             source,
-            label
-          )
+            label,
+          ),
         );
       });
     });
@@ -204,7 +204,7 @@ export class OutputEffects {
     customFilter: RavenCustomFilter | null,
     filtersByTarget: StringTMap<StringTMap<string[]>>,
     source: RavenSource,
-    keepHeader: boolean
+    keepHeader: boolean,
   ) {
     const outputDataUrl = getOutputDataUrl(
       treeBySourceId,
@@ -212,12 +212,12 @@ export class OutputEffects {
       customFilter,
       filtersByTarget,
       output.outputFormat,
-      output.decimateOutputData
+      output.decimateOutputData,
     );
 
     return this.http.get(outputDataUrl, { responseType: 'text' }).pipe(
       map(dataWithHeader => this.sanitizeData(dataWithHeader, keepHeader)),
-      switchMap(data => of(new outputActions.AppendData(data)))
+      switchMap(data => of(new outputActions.AppendData(data))),
     );
   }
 

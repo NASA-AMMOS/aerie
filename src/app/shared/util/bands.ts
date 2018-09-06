@@ -48,7 +48,7 @@ export function toRavenBandData(
   graphData: MpsServerGraphData,
   defaultBandSettings: RavenDefaultBandSettings,
   customFilter: RavenCustomFilter | null,
-  treeBySourceId: StringTMap<RavenSource>
+  treeBySourceId: StringTMap<RavenSource>,
 ): RavenSubBand[] {
   const metadata = graphData['Timeline Metadata'];
   const timelineData = graphData['Timeline Data'];
@@ -63,7 +63,7 @@ export function toRavenBandData(
       metadata as MpsServerStateMetadata,
       timelineData as MpsServerStatePoint[],
       defaultBandSettings,
-      treeBySourceId
+      treeBySourceId,
     );
     return [stateBand];
   } else if (
@@ -76,7 +76,7 @@ export function toRavenBandData(
       metadata as MpsServerResourceMetadata,
       timelineData as MpsServerResourcePoint[],
       defaultBandSettings,
-      treeBySourceId
+      treeBySourceId,
     );
     return [resourceBand];
   } else if (metadata.hasTimelineType === 'activity') {
@@ -87,14 +87,14 @@ export function toRavenBandData(
       timelineData as MpsServerActivityPoint[],
       defaultBandSettings,
       customFilter,
-      treeBySourceId
+      treeBySourceId,
     );
     return activityBands;
   } else {
     console.error(
       `raven2 - bands.ts - toRavenBandData - parameter 'graphData' has a timeline type we do not recognize: ${
         metadata.hasTimelineType
-      }`
+      }`,
     );
     return [];
   }
@@ -115,12 +115,12 @@ export function toActivityBands(
   timelineData: MpsServerActivityPoint[],
   defaultBandSettings: RavenDefaultBandSettings,
   customFilter: RavenCustomFilter | null,
-  treeBySourceId: StringTMap<RavenSource>
+  treeBySourceId: StringTMap<RavenSource>,
 ): RavenActivityBand[] {
   const { legends, maxTimeRange } = getActivityPointsByLegend(
     sourceId,
     sourceName,
-    timelineData
+    timelineData,
   );
   const bands: RavenActivityBand[] = [];
   const customGraphableSource = treeBySourceId[
@@ -177,7 +177,7 @@ export function toActivityBands(
 export function toCompositeBand(
   subBand: RavenSubBand,
   containerId?: string,
-  sortOrder?: number
+  sortOrder?: number,
 ): RavenCompositeBand {
   const compositeBandUniqueId = uniqueId();
 
@@ -240,12 +240,12 @@ export function toResourceBand(
   metadata: MpsServerResourceMetadata,
   timelineData: MpsServerResourcePoint[],
   defaultBandSettings: RavenDefaultBandSettings,
-  treeBySourceId: StringTMap<RavenSource>
+  treeBySourceId: StringTMap<RavenSource>,
 ): RavenResourceBand {
   const { maxTimeRange, points } = getResourcePoints(
     sourceId,
     metadata,
-    timelineData
+    timelineData,
   );
 
   const resourceBand: RavenResourceBand = {
@@ -293,7 +293,7 @@ export function toStateBand(
   metadata: MpsServerStateMetadata,
   timelineData: MpsServerStatePoint[],
   defaultBandSettings: RavenDefaultBandSettings,
-  treeBySourceId: StringTMap<RavenSource>
+  treeBySourceId: StringTMap<RavenSource>,
 ): RavenStateBand {
   const { maxTimeRange, points } = getStatePoints(sourceId, timelineData);
 
@@ -366,7 +366,7 @@ export function toStateBand(
  * ];
  */
 export function updateSortOrder(
-  bands: RavenCompositeBand[]
+  bands: RavenCompositeBand[],
 ): RavenCompositeBand[] {
   const sortByBands = sortBy(bands, 'containerId', 'sortOrder');
   const index = {}; // Hash of containerIds to a given index (indices start at 0).
@@ -390,7 +390,7 @@ export function updateSortOrder(
  */
 export function updateTimeRanges(
   bands: RavenCompositeBand[],
-  currentViewTimeRange: RavenTimeRange
+  currentViewTimeRange: RavenTimeRange,
 ) {
   let maxTimeRange: RavenTimeRange = { end: 0, start: 0 };
   let viewTimeRange: RavenTimeRange = { end: 0, start: 0 };
@@ -451,7 +451,7 @@ export function updateTimeRanges(
 export function updateSelectedBandIds(
   bands: RavenCompositeBand[],
   selectedBandId: string,
-  selectedSubBandId: string
+  selectedSubBandId: string,
 ) {
   const band = bandById(bands, selectedBandId) as RavenCompositeBand;
   const subBand = subBandById(bands, selectedBandId, selectedSubBandId);
@@ -497,7 +497,7 @@ export function getBandLabel(band: RavenSubBand): string {
  */
 export function getCustomFiltersBySourceId(
   bands: RavenCompositeBand[],
-  treeBySourceId: StringTMap<RavenSource>
+  treeBySourceId: StringTMap<RavenSource>,
 ) {
   const customFiltersBySourceId = {};
 
@@ -512,7 +512,7 @@ export function getCustomFiltersBySourceId(
 
           if (source && source.type === 'customGraphable') {
             const hasQueryStringArgs = args.match(
-              new RegExp('(.*)=(.*)&(.*)=(.*)')
+              new RegExp('(.*)=(.*)&(.*)=(.*)'),
             );
 
             if (hasQueryStringArgs) {
@@ -541,7 +541,7 @@ export function getCustomFiltersBySourceId(
  */
 export function getFilterLabel(
   customGraphableSource: RavenCustomGraphableSource,
-  customFilter: RavenCustomFilter
+  customFilter: RavenCustomFilter,
 ) {
   if (customGraphableSource.arg === 'filter') {
     return `(${customGraphableSource.filterKey}=[${customFilter.filter}])`;
@@ -557,7 +557,7 @@ export function getFilterLabel(
 export function hasActivityBand(
   bands: RavenCompositeBand[],
   band: RavenSubBand,
-  pinLabel: string
+  pinLabel: string,
 ) {
   if (band.type === 'activity') {
     for (let i = 0, l = bands.length; i < l; ++i) {
@@ -585,7 +585,7 @@ export function hasActivityBand(
  */
 export function hasActivityBandForFilterTarget(
   bands: RavenCompositeBand[],
-  filterTarget: string
+  filterTarget: string,
 ) {
   for (let i = 0, l = bands.length; i < l; ++i) {
     for (let j = 0, ll = bands[i].subBands.length; j < ll; ++j) {
@@ -629,7 +629,7 @@ export function hasSourceId(bands: RavenCompositeBand[], sourceId: string) {
  */
 export function bandById(
   bands: RavenSubBand[] | RavenCompositeBand[],
-  id: string
+  id: string,
 ): RavenSubBand | RavenCompositeBand | null {
   for (let i = 0, l = bands.length; i < l; ++i) {
     if (bands[i].id === id) {
@@ -645,7 +645,7 @@ export function bandById(
 export function subBandById(
   bands: RavenCompositeBand[],
   bandId: string,
-  subBandId: string
+  subBandId: string,
 ): RavenSubBand | null {
   for (let i = 0, l = bands.length; i < l; ++i) {
     if (bands[i].id === bandId) {
@@ -666,7 +666,7 @@ export function isAddTo(
   bands: RavenCompositeBand[],
   bandId: string,
   subBandId: string,
-  type: string
+  type: string,
 ): boolean {
   const subBand = subBandById(bands, bandId, subBandId);
 
@@ -689,7 +689,7 @@ export function isMessageTypeActivity(activity: RavenActivityPoint): boolean {
  */
 export function isOverlay(
   bands: RavenCompositeBand[],
-  bandId: string
+  bandId: string,
 ): boolean {
   const band = bandById(bands, bandId) as RavenCompositeBand;
 
@@ -705,7 +705,7 @@ export function isOverlay(
  */
 export function changeZoom(
   delta: number,
-  viewTimeRange: RavenTimeRange
+  viewTimeRange: RavenTimeRange,
 ): RavenTimeRange {
   const { end, start } = viewTimeRange;
   const range = end - start;

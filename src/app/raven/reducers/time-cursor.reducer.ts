@@ -45,7 +45,7 @@ export const initialState: TimeCursorState = {
  */
 export function reducer(
   state: TimeCursorState = initialState,
-  action: TimeCursorAction
+  action: TimeCursorAction,
 ): TimeCursorState {
   switch (action.type) {
     case TimeCursorActionTypes.HideTimeCursor:
@@ -78,5 +78,5 @@ export function showTimeCursor(state: TimeCursorState): TimeCursorState {
 const featureSelector = createFeatureSelector<State>('raven');
 export const getTimeCursorState = createSelector(
   featureSelector,
-  (state: State): TimeCursorState => state.timeCursor
+  (state: State): TimeCursorState => state.timeCursor,
 );

@@ -27,7 +27,7 @@ export const initialState: ConfigState = config;
  */
 export function reducer(
   state: ConfigState = initialState,
-  action: ConfigAction
+  action: ConfigAction,
 ): ConfigState {
   switch (action.type) {
     case ConfigActionTypes.UpdateDefaultBandSettings:
@@ -42,7 +42,7 @@ export function reducer(
  */
 export function updateDefaultBandSettings(
   state: ConfigState,
-  action: UpdateDefaultBandSettings
+  action: UpdateDefaultBandSettings,
 ): ConfigState {
   return {
     ...state,
@@ -66,11 +66,11 @@ export const getConfigState = createFeatureSelector('config');
  */
 export const getDefaultBandSettings = createSelector(
   getConfigState,
-  (state: ConfigState) => state.raven.defaultBandSettings
+  (state: ConfigState) => state.raven.defaultBandSettings,
 );
 export const getItarMessage = createSelector(
   getConfigState,
-  (state: ConfigState) => state.raven.itarMessage
+  (state: ConfigState) => state.raven.itarMessage,
 );
 export const getVersion = createSelector(
   getConfigState,
@@ -78,7 +78,7 @@ export const getVersion = createSelector(
     branch: state.app.branch,
     commit: state.app.commit,
     version: state.app.version,
-  })
+  }),
 );
 export const getUrls = createSelector(getConfigState, (state: ConfigState) => ({
   apiUrl: state.mpsServer.apiUrl,

@@ -37,7 +37,7 @@ export class RavenTableDetailComponent
   ngAfterViewInit() {
     if (this.gridOptions && this.gridOptions.api && this.parentRecord) {
       this.gridOptions.api.setColumnDefs(
-        this.createColumnDefs(this.parentRecord.type)
+        this.createColumnDefs(this.parentRecord.type),
       );
       this.gridOptions.api.setRowData(this.parentRecord.rows);
       this.gridOptions.api.sizeColumnsToFit();

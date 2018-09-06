@@ -76,13 +76,13 @@ describe('points.ts', () => {
   describe('getColorFromActivityMetadata', () => {
     it(`should return [66, 130, 198 ] for Dodger Blue`, () => {
       expect(
-        getColorFromActivityMetadata([{ Name: 'color', Value: 'Dodger Blue' }])
+        getColorFromActivityMetadata([{ Name: 'color', Value: 'Dodger Blue' }]),
       ).toEqual([66, 130, 198]);
     });
 
     it(`should return [255, 0, 0 ] for #ff0000`, () => {
       expect(
-        getColorFromActivityMetadata([{ Name: 'color', Value: '#ff0000' }])
+        getColorFromActivityMetadata([{ Name: 'color', Value: '#ff0000' }]),
       ).toEqual([255, 0, 0]);
     });
 
@@ -90,7 +90,7 @@ describe('points.ts', () => {
       expect(
         getColorFromActivityMetadata([
           { Name: 'color', Value: [255, 255, 198] },
-        ])
+        ]),
       ).toEqual([255, 255, 198]);
     });
   });
@@ -98,7 +98,7 @@ describe('points.ts', () => {
   describe('getUniqueActivityId', () => {
     it(`should return a correct unique activity id`, () => {
       expect(getUniqueActivityId(activityPoint)).toEqual(
-        'test-activity-point-0-500'
+        'test-activity-point-0-500',
       );
     });
   });

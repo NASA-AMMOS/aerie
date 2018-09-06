@@ -21,7 +21,7 @@ export class RavenCustomFilterDialogComponent {
 
   constructor(
     public dialogRef: MatDialogRef<RavenCustomFilterDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+    @Inject(MAT_DIALOG_DATA) public data: any,
   ) {
     this.filter = data.currentFilter;
   }

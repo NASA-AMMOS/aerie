@@ -559,7 +559,7 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
       obj,
       this.earthSecToEpochSec,
       this.epoch,
-      this.dayCode
+      this.dayCode,
     );
   }
 }

@@ -31,7 +31,7 @@ import { fromDuration, timestamp, utc } from './time';
  * Helper that gets a color from activity metadata.
  */
 export function getColorFromActivityMetadata(
-  metadata: MpsServerActivityPointMetadata[]
+  metadata: MpsServerActivityPointMetadata[],
 ): number[] {
   let color = null;
 
@@ -75,7 +75,7 @@ export function getMessage(metadata: MpsServerActivityPointMetadata[] | null) {
  */
 export function getActivityPoint(
   sourceId: string,
-  data: MpsServerActivityPoint
+  data: MpsServerActivityPoint,
 ): RavenActivityPoint {
   const activityId = data['Activity ID'];
   const activityName = data['Activity Name'];
@@ -150,7 +150,7 @@ export function getActivityPoint(
 export function getActivityPointsByLegend(
   sourceId: string,
   sourceName: string,
-  timelineData: MpsServerActivityPoint[]
+  timelineData: MpsServerActivityPoint[],
 ) {
   const legends: StringTMap<RavenActivityPoint[]> = {};
 
@@ -198,7 +198,7 @@ export function getActivityPointsByLegend(
 export function getResourcePoints(
   sourceId: string,
   metadata: MpsServerResourceMetadata,
-  timelineData: MpsServerResourcePoint[]
+  timelineData: MpsServerResourcePoint[],
 ) {
   const points: RavenResourcePoint[] = [];
   const isDuration = metadata.hasValueType.toLowerCase() === 'duration';
@@ -256,7 +256,7 @@ export function getResourcePoints(
  */
 export function getStatePoints(
   sourceId: string,
-  timelineData: MpsServerStatePoint[]
+  timelineData: MpsServerStatePoint[],
 ) {
   const points: RavenStatePoint[] = [];
 
@@ -350,7 +350,7 @@ export function getPoint(
   bands: RavenCompositeBand[],
   bandId: string | null,
   subBandId: string,
-  pointId: string
+  pointId: string,
 ): RavenPoint | null {
   for (let i = 0, l = bands.length; i < l; ++i) {
     if (bandId === null || bands[i].id === bandId) {
@@ -388,7 +388,7 @@ export function getUniqueActivityId(point: RavenActivityPoint): string {
  */
 export function updateSelectedPoint(
   bands: RavenCompositeBand[],
-  selectedPoint: RavenPoint | null
+  selectedPoint: RavenPoint | null,
 ) {
   if (
     selectedPoint &&

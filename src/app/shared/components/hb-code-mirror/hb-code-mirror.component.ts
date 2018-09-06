@@ -65,10 +65,10 @@ export class HBCodeMirrorComponent implements AfterViewInit, OnChanges {
     // Events.
     this.codeMirrorInstance.on('beforeChange', () => this.beforeChange.emit());
     this.codeMirrorInstance.on('change', (event: CodeMirror.Editor) =>
-      this.change.emit(event)
+      this.change.emit(event),
     );
     this.codeMirrorInstance.on('changes', (event: CodeMirror.Editor) =>
-      this.changes.emit(event)
+      this.changes.emit(event),
     );
   }
 

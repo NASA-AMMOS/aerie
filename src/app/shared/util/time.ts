@@ -16,7 +16,7 @@ import { RavenEpoch, RavenEpochTime } from '../models';
  */
 export function dateToTimestring(
   date: Date,
-  showMilliseconds: boolean
+  showMilliseconds: boolean,
 ): string {
   if (date.getUTCFullYear() === 1970) {
     return '0';
@@ -182,7 +182,7 @@ export function fromDHMString(duration: string): number {
  */
 export function fromDuration(duration: string): number {
   const results = duration.match(
-    new RegExp(/([+|-]?)(\d+T)?(\d{2}):(\d{2}):(\d{2})(\.\d{3})?/)
+    new RegExp(/([+|-]?)(\d+T)?(\d{2}):(\d{2}):(\d{2})(\.\d{3})?/),
   );
 
   if (results) {
@@ -223,7 +223,7 @@ export function formatDayCode(dayCode: string): string {
  */
 export function formatEpochDuration(
   epochTime: RavenEpochTime,
-  dayCode: string
+  dayCode: string,
 ): string {
   const day = formatDayCode(dayCode);
   const epochStr = epochTime.epoch > 0 ? epochTime.epoch + day : '';
@@ -246,7 +246,7 @@ export function formatEpochDuration(
  */
 export function formatEpochTime(
   epochTime: RavenEpochTime,
-  dayCode: string
+  dayCode: string,
 ): string {
   const day = formatDayCode(dayCode);
   const hours = epochTime.hours.toString().padStart(2, '0');
@@ -270,7 +270,7 @@ export function formatEpochTimeRange(
   end: number,
   epoch: RavenEpoch | null,
   earthSecPerEpochSec: number,
-  dayCode: string
+  dayCode: string,
 ): string {
   let landingSeconds = 0;
 
@@ -283,7 +283,7 @@ export function formatEpochTimeRange(
   const difference = toEpochTime(
     end - start + landingSeconds,
     earthSecPerEpochSec,
-    epoch
+    epoch,
   );
 
   const epochDuration: RavenEpochTime = {
@@ -312,7 +312,7 @@ export function formatTimeTickTFormat(
   obj: any,
   epoch: RavenEpoch | null,
   earthSecPerEpochSec: number,
-  dayCode: string
+  dayCode: string,
 ): any[] {
   const time = obj.time;
   const band = obj.timeBand;
@@ -486,7 +486,7 @@ export function toDuration(msecs: number, showMilliseconds: boolean): string {
 export function toEpochTime(
   scetSeconds: number,
   earthSecPerEpochSec: number,
-  epoch: RavenEpoch | null
+  epoch: RavenEpoch | null,
 ): RavenEpochTime {
   let landingSeconds = 0;
 

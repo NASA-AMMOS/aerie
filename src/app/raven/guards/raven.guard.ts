@@ -45,7 +45,7 @@ export class RavenGuard implements CanActivate {
     this.store$
       .pipe(
         select(fromConfig.getUrls),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe(({ baseUrl, epochsUrl }) => {
         this.epochsUrl = epochsUrl;
@@ -58,11 +58,11 @@ export class RavenGuard implements CanActivate {
    */
   canActivate(
     next: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot
+    state: RouterStateSnapshot,
   ): Observable<boolean> | Promise<boolean> | boolean {
     return this.initialSourcesLoaded().pipe(
       switchMap(() => of(true)),
-      catchError(() => of(false))
+      catchError(() => of(false)),
     );
   }
 
@@ -78,12 +78,12 @@ export class RavenGuard implements CanActivate {
         if (!initialSourcesLoaded) {
           this.store$.dispatch(new sourceExplorerActions.FetchInitialSources());
           this.store$.dispatch(
-            new epochsActions.FetchEpochs(`${this.baseUrl}/${this.epochsUrl}`)
+            new epochsActions.FetchEpochs(`${this.baseUrl}/${this.epochsUrl}`),
           );
         }
       }),
       filter((initialSourcesLoaded: boolean) => initialSourcesLoaded),
-      take(1)
+      take(1),
     );
   }
 }

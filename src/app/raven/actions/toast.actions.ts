@@ -22,7 +22,7 @@ export class ShowToast implements Action {
     public toastType: string,
     public message: string,
     public title: string,
-    public config?: any
+    public config?: any,
   ) {}
 }
 

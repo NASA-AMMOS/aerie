@@ -44,7 +44,7 @@ export const reducers: ActionReducerMap<AppState> = {
  * console.log all actions for debugging purposes.
  */
 export function logger(
-  reducer: ActionReducer<AppState>
+  reducer: ActionReducer<AppState>,
 ): ActionReducer<AppState> {
   return function(state: AppState, action: any): AppState {
     console.log('state before update', state);

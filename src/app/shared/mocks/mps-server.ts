@@ -30,7 +30,7 @@ export const commandDictionaryList: HBCommandDictionary[] = [
 
 export function getCommandList(
   seed: number = 1,
-  prefix: string = 'TEST'
+  prefix: string = 'TEST',
 ): HBCommand[] {
   const list = [];
 
