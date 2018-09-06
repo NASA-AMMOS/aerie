@@ -17,4 +17,6 @@
 .center {
   justify-content: center;
   text-align: center;
+  word-break: break-all;
+  word-wrap: break-word;
 }

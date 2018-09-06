@@ -8,10 +8,8 @@
  */
 
 import { Component, Inject } from '@angular/core';
-
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
-
 import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
 @Component({
   selector: 'raven-custom-graph-dialog',
@@ -31,6 +29,7 @@ export class RavenCustomGraphDialogComponent {
       Validators.required,
       Validators.pattern('([(a-zA-Z0-9-_.)]*)'),
     ]);
+
     if (data.source.arg === 'engine') {
       this.filter = new FormControl('', [
         Validators.required,
@@ -42,6 +41,7 @@ export class RavenCustomGraphDialogComponent {
         this.validateFilter,
       ]);
     }
+
     this.form = new FormGroup({
       filter: this.filter,
       label: this.label,

@@ -125,6 +125,7 @@ export class SourceExplorerEffects {
             config.raven.defaultBandSettings,
             sourceExplorer.pins
           ),
+          of(new sourceExplorerActions.LoadErrorsDisplay()),
           of(
             new sourceExplorerActions.UpdateSourceExplorer({
               fetchPending: false,
