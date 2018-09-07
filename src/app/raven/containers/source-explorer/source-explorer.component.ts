@@ -123,10 +123,11 @@ export class SourceExplorerComponent implements OnDestroy {
     this.store
       .pipe(
         select(fromConfig.getUrls),
-        switchMap(config =>
-          WebSocketSubject.create(
-            `${config.baseUrl.replace('https', 'wss')}/${config.socketUrl}`,
-          ),
+        switchMap(
+          config =>
+            new WebSocketSubject(
+              `${config.baseUrl.replace('https', 'wss')}/${config.socketUrl}`,
+            ),
         ),
         takeUntil(this.ngUnsubscribe),
       )
