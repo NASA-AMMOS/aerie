@@ -4,7 +4,9 @@
 
 *<p align="center">**Image 24. Situational Awareness Drawer.** Situational awareness will read the available sequences and show them to the user. </p>*
 
-<What is situational awareness.question mark. Taifun to fill this paragraph.>
+Situtation Awareness is a mode in RAVEN which allows the timelines to be displayed based on current time or an user specified time. If the current time is selected, the user can specify the plus and minus deltas to provide the page duration. The default minus delta is 7 days and plus delta is 60 days. Hence, the default page duration is 67 days.
+
+In situational awareness mode, RAVEN will only query data for the current time period resulting in an improved performance for timelines spanning a long period. In addition, PEF data can be setup on the server side to be 'stitched' from multiple sequences. Querying PEF data in situational awareness mode will result in portions of timeline data from multiple PEFs stitched together as one continuous timeline rendered in RAVEN.
 
 #### How To: Enable situational awareness
 
