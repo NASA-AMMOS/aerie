@@ -612,12 +612,12 @@ export class SourceExplorerEffects {
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     concatMap(({ state, action }) =>
-      concat(
-        this.saveState(action.source.url, action.source.id, action.name, state),
-        of(
-          new sourceExplorerActions.UpdateSourceExplorer({
-            fetchPending: false,
-          }),
+      this.saveState(action.source.url, action.name, state).pipe(
+        map(
+          () =>
+            new sourceExplorerActions.UpdateSourceExplorer({
+              fetchPending: false,
+            }),
         ),
       ),
     ),
@@ -1442,21 +1442,12 @@ export class SourceExplorerEffects {
   /**
    * Helper. Save state to an MPS Server source.
    * Exports state before saving.
-   * Fetches new sources and updates the source state after the save.
    */
-  saveState(
-    sourceUrl: string,
-    sourceId: string,
-    name: string,
-    state: RavenAppState,
-  ) {
-    return this.http
-      .put(`${sourceUrl}/${name}?timeline_type=state`, getState(name, state))
-      .pipe(
-        map(
-          () => new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl),
-        ),
-      );
+  saveState(sourceUrl: string, name: string, state: RavenAppState) {
+    return this.http.put(
+      `${sourceUrl}/${name}?timeline_type=state`,
+      getState(name, state),
+    );
   }
 
   /**

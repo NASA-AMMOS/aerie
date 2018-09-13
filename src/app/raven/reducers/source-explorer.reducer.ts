@@ -278,27 +278,25 @@ export function expandEvent(
  * Reduction Helper. Called when reducing the 'NewSources' action.
  *
  * Generates a new treeBySourceId data structure with updated childIds for the action.sourceId,
- * and the new child sources keyed off of their id.
+ * and the new child sources keyed off of their id. All child sources need to be updated since the importJobStatus of child
+ * source could have been updated.
  */
 export function newSources(
   state: SourceExplorerState,
   action: NewSources,
 ): SourceExplorerState {
   const parentSource = state.treeBySourceId[action.sourceId];
-  const sources = action.sources.filter(
-    source => !state.treeBySourceId[source.id],
-  ); // Exclude sources that already exist.
+  const sources = action.sources;
+  const allChildIds = getAllChildIds(state.treeBySourceId, action.sourceId);
 
   return {
     ...state,
     treeBySourceId: {
-      ...state.treeBySourceId,
+      ...omit(state.treeBySourceId, [action.sourceId, ...allChildIds]),
       ...keyBy(sources, 'id'),
       [action.sourceId]: {
         ...parentSource,
-        childIds: parentSource.childIds.concat(
-          sources.map(source => source.id),
-        ),
+        childIds: sources.map(source => source.id),
       },
     },
   };
