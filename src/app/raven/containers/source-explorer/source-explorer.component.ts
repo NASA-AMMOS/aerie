@@ -142,13 +142,14 @@ export class SourceExplorerComponent implements OnDestroy {
             new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl),
           );
         } else if (data.aspect === 'importJobStatus') {
-          const match = data.subject.match(
-            new RegExp('(.*)/(.*)'),
-          );
+          const match = data.subject.match(new RegExp('(.*)/(.*)'));
           const parentId = `${match[1]}`;
           if (this.tree[parentId]) {
             this.store.dispatch(
-             new sourceExplorerActions.FetchNewSources(parentId, this.tree[parentId].url),
+              new sourceExplorerActions.FetchNewSources(
+                parentId,
+                this.tree[parentId].url,
+              ),
             );
           }
         }

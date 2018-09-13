@@ -224,7 +224,9 @@ export function fromFile(
     expanded: false,
     fileMetadata: toRavenFileMetadata(mSource),
     icon: 'fa fa-file',
-    importJobStatus: mSource.importJobStatus ? mSource.importJobStatus : 'FINISHED',
+    importJobStatus: mSource.importJobStatus
+      ? mSource.importJobStatus
+      : 'FINISHED',
     permissions: mSource.permissions,
     selectable: true,
     selected: false,

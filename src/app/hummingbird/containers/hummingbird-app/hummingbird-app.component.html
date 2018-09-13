@@ -4,7 +4,9 @@
   </mat-toolbar>
 </header>
 <main class="content">
-  <hb-code-mirror></hb-code-mirror>
+  <hb-command-editor
+    [commands]="commands"
+  ></hb-command-editor>
 </main>
 <aside>
   <hb-command-loader

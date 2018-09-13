@@ -7,25 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { MatToolbarModule } from '@angular/material';
-import {
-  HbCommandEditorModule,
-  HBCommandListModule,
-  HBCommandLoaderModule,
-  HbMonacoModule,
-} from '../../../shared/components/modules';
-import { HummingbirdAppComponent } from './hummingbird-app.component';
+import { HbMonacoModule } from '../hb-monaco/hb-monaco.module';
+import { HbCommandEditorComponent } from './hb-command-editor.component';
 
 @NgModule({
-  declarations: [HummingbirdAppComponent],
-  exports: [HummingbirdAppComponent],
-  imports: [
-    HbCommandEditorModule,
-    HbMonacoModule,
-    HBCommandListModule,
-    HBCommandLoaderModule,
-    MatToolbarModule,
-  ],
+  declarations: [HbCommandEditorComponent],
+  exports: [HbCommandEditorComponent],
+  imports: [CommonModule, HbMonacoModule],
 })
-export class HummingbirdAppModule {}
+export class HbCommandEditorModule {}

@@ -9,11 +9,11 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { HBCodeMirrorComponent } from './hb-code-mirror.component';
+import { HbMonacoComponent } from './hb-monaco.component';
 
 @NgModule({
-  declarations: [HBCodeMirrorComponent],
-  exports: [HBCodeMirrorComponent],
+  declarations: [HbMonacoComponent],
+  exports: [HbMonacoComponent],
   imports: [CommonModule],
 })
-export class HBCodeMirrorModule {}
+export class HbMonacoModule {}
