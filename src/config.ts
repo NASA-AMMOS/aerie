@@ -24,6 +24,7 @@ export interface ConfigState {
   };
   mpsServer: {
     apiUrl: string;
+    ravenConfigUrl: string;
     epochsUrl: string;
     ravenUrl: string;
     socketUrl: string;
@@ -32,7 +33,6 @@ export interface ConfigState {
     defaultBandSettings: RavenDefaultBandSettings;
     itarMessage: string;
     shareableLinkStatesUrl: string;
-    showTimeCursor: boolean;
   };
 }
 
@@ -48,6 +48,7 @@ export const config: ConfigState = {
   mpsServer: {
     apiUrl: 'mpsserver/api/v2/fs',
     epochsUrl: 'mpsserver/api/v2/fs-mongodb/leucadia/taifunTest/europaEpoch.csv',
+    ravenConfigUrl: 'mpsserver/api/v2/raven_config_file',
     ravenUrl: 'mpsserver/raven',
     socketUrl: 'mpsserver/websocket/v1/topic/main',
   },
@@ -61,11 +62,9 @@ export const config: ConfigState = {
       labelWidth: 150,
       resourceColor: '#000000',
       resourceFillColor: '#000000',
-      showTimeCursor: false,
       showTooltip: true,
     },
     itarMessage: '',
     shareableLinkStatesUrl: 'TEST_ATS/STATES',
-    showTimeCursor: false,
   },
 };

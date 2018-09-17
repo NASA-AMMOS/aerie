@@ -8,8 +8,9 @@
  */
 
 import { Injectable } from '@angular/core';
-import { select, Store } from '@ngrx/store';
-import { Observable, of, Subject } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { Observable, of } from 'rxjs';
+import { map, withLatestFrom } from 'rxjs/operators';
 import { RavenAppState } from '../raven-store';
 
 import {
@@ -23,35 +24,16 @@ import {
   filter,
   switchMap,
   take,
-  takeUntil,
   tap,
 } from 'rxjs/operators';
 
-import * as fromConfig from '../../shared/reducers/config.reducer';
+import * as configActions from '../../shared/actions/config.actions';
 import * as epochsActions from '../actions/epochs.actions';
 import * as sourceExplorerActions from '../actions/source-explorer.actions';
-import * as fromSourceExplorer from '../reducers/source-explorer.reducer';
 
 @Injectable()
 export class RavenGuard implements CanActivate {
-  // Config state.
-  baseUrl: string;
-  epochsUrl: string;
-
-  private ngUnsubscribe: Subject<{}> = new Subject();
-
-  constructor(private store$: Store<RavenAppState>) {
-    // Config state.
-    this.store$
-      .pipe(
-        select(fromConfig.getUrls),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(({ baseUrl, epochsUrl }) => {
-        this.epochsUrl = epochsUrl;
-        this.baseUrl = baseUrl;
-      });
-  }
+  constructor(private store$: Store<RavenAppState>) {}
 
   /**
    * Returns a true boolean Observable if we can activate the route.
@@ -73,12 +55,22 @@ export class RavenGuard implements CanActivate {
    */
   initialSourcesLoaded(): Observable<boolean> {
     return this.store$.pipe(
-      select(fromSourceExplorer.getInitialSourcesLoaded),
-      tap((initialSourcesLoaded: boolean) => {
-        if (!initialSourcesLoaded) {
+      withLatestFrom(this.store$),
+      map(([, state]) => state),
+      tap(state => {
+        if (!state.raven.sourceExplorer.initialSourcesLoaded) {
+          this.store$.dispatch(
+            new configActions.FetchProjectConfig(
+              `${state.config.app.baseUrl}/${
+                state.config.mpsServer.ravenConfigUrl
+              }`,
+            ),
+          );
           this.store$.dispatch(new sourceExplorerActions.FetchInitialSources());
           this.store$.dispatch(
-            new epochsActions.FetchEpochs(`${this.baseUrl}/${this.epochsUrl}`),
+            new epochsActions.FetchEpochs(
+              `${state.config.app.baseUrl}/${state.config.mpsServer.epochsUrl}`,
+            ),
           );
         }
       }),

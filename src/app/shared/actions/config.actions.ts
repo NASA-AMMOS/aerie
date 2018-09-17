@@ -12,15 +12,32 @@ import { BaseType, StringTMap } from '../models';
 
 // Action Types.
 export enum ConfigActionTypes {
+  FetchProjectConfig = '[config] fetch_project_config',
   UpdateDefaultBandSettings = '[config] update_default_band_settings',
+  UpdateRavenSettings = '[config] update_raven_settings',
 }
 
 // Actions.
+export class FetchProjectConfig implements Action {
+  readonly type = ConfigActionTypes.FetchProjectConfig;
+
+  constructor(public url: string) {}
+}
+
 export class UpdateDefaultBandSettings implements Action {
   readonly type = ConfigActionTypes.UpdateDefaultBandSettings;
 
   constructor(public update: StringTMap<BaseType>) {}
 }
 
+export class UpdateRavenSettings implements Action {
+  readonly type = ConfigActionTypes.UpdateRavenSettings;
+
+  constructor(public update: StringTMap<BaseType>) {}
+}
+
 // Union type of all actions.
-export type ConfigAction = UpdateDefaultBandSettings;
+export type ConfigAction =
+  | FetchProjectConfig
+  | UpdateDefaultBandSettings
+  | UpdateRavenSettings;

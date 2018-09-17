@@ -49,6 +49,8 @@ import {
   RavenStateSaveDialogComponent,
 } from '../shared/components/components';
 
+import { ConfigEffects } from '../shared/effects/config.effect';
+
 @NgModule({
   entryComponents: [
     RavenConfirmDialogComponent,
@@ -64,6 +66,7 @@ import {
     RavenRoutingModule,
     StoreModule.forFeature('raven', reducers),
     EffectsModule.forFeature([
+      ConfigEffects,
       DialogEffects,
       EpochsEffects,
       LayoutEffects,

@@ -8,7 +8,7 @@
  */
 
 import { ConfigState } from '../../../config';
-import { UpdateDefaultBandSettings } from '../actions/config.actions';
+import { UpdateDefaultBandSettings, UpdateRavenSettings } from '../actions/config.actions';
 import { initialState, reducer } from './config.reducer';
 
 describe('config reducer', () => {
@@ -141,23 +141,6 @@ describe('config reducer', () => {
     });
   });
 
-  it('handle UpdateDefaultBandSettings showTimeCursor', () => {
-    configState = reducer(
-      configState,
-      new UpdateDefaultBandSettings({ showTimeCursor: true }),
-    );
-    expect(configState).toEqual({
-      ...initialState,
-      raven: {
-        ...initialState.raven,
-        defaultBandSettings: {
-          ...initialState.raven.defaultBandSettings,
-          showTimeCursor: true,
-        },
-      },
-    });
-  });
-
   it('handle UpdateDefaultBandSettings showTooltip', () => {
     configState = reducer(
       configState,
@@ -171,6 +154,20 @@ describe('config reducer', () => {
           ...initialState.raven.defaultBandSettings,
           showTooltip: true,
         },
+      },
+    });
+  });
+
+  it('handle UpdateRavenSettings itarMessage', () => {
+    configState = reducer(
+      configState,
+      new UpdateRavenSettings({ itarMessage: 'test itar message' }),
+    );
+    expect(configState).toEqual({
+      ...initialState,
+      raven: {
+        ...initialState.raven,
+        itarMessage: 'test itar message',
       },
     });
   });

@@ -13,6 +13,7 @@ import {
   ConfigAction,
   ConfigActionTypes,
   UpdateDefaultBandSettings,
+  UpdateRavenSettings,
 } from '../actions/config.actions';
 
 // Config State Interface.
@@ -32,6 +33,8 @@ export function reducer(
   switch (action.type) {
     case ConfigActionTypes.UpdateDefaultBandSettings:
       return updateDefaultBandSettings(state, action);
+    case ConfigActionTypes.UpdateRavenSettings:
+      return updateRavenSettings(state, action);
     default:
       return state;
   }
@@ -52,6 +55,22 @@ export function updateDefaultBandSettings(
         ...state.raven.defaultBandSettings,
         ...action.update,
       },
+    },
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'UpdateRavenSettings' action.
+ */
+export function updateRavenSettings(
+  state: ConfigState,
+  action: UpdateRavenSettings
+): ConfigState {
+  return {
+    ...state,
+    raven: {
+      ...state.raven,
+      ...action.update,
     },
   };
 }
@@ -84,6 +103,7 @@ export const getUrls = createSelector(getConfigState, (state: ConfigState) => ({
   apiUrl: state.mpsServer.apiUrl,
   baseUrl: state.app.baseUrl,
   epochsUrl: state.mpsServer.epochsUrl,
+  ravenConfigUrl: state.mpsServer.ravenConfigUrl,
   ravenUrl: state.mpsServer.ravenUrl,
   socketUrl: state.mpsServer.socketUrl,
 }));
