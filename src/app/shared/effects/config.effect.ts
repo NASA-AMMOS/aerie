@@ -12,14 +12,12 @@ import { Injectable } from '@angular/core';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { catchError, concatMap, map } from 'rxjs/operators';
+import { concatMap, map } from 'rxjs/operators';
 import * as stripJsonComments from 'strip-json-comments';
 
 import { ConfigActionTypes, FetchProjectConfig } from '../actions/config.actions';
 
 import * as configActions from '../actions/config.actions';
-
-import * as toastActions from '../../raven/actions/toast.actions';
 
 import * as timeCursorActions from '../../raven/actions/time-cursor.actions';
 
@@ -48,13 +46,7 @@ export class ConfigEffects {
           }
         )
       )
-    ),
-    catchError((e: Error) => {
-      console.error('ConfigEffects - fetchConfig$: ', e);
-      return [
-        new toastActions.ShowToast('warning', 'Failed to fetch project config', ''),
-      ];
-    })
+    )
   );
 
   constructor(private http: HttpClient, private actions$: Actions) {}
