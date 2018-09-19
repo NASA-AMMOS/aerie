@@ -17,6 +17,7 @@ import { RavenAppState } from '../raven-store';
 
 import {
   concatMap,
+  exhaustMap,
   map,
   switchMap,
   takeUntil,
@@ -58,7 +59,7 @@ export class TimeCursorEffects {
     ofType<ShowTimeCursor>(TimeCursorActionTypes.ShowTimeCursor),
     withLatestFrom(this.store$),
     map(([, state]) => state.raven),
-    concatMap(({ timeCursor: { clockUpdateIntervalInSecs } }) =>
+    exhaustMap(({ timeCursor: { clockUpdateIntervalInSecs } }) =>
       this.cursorInterval$(clockUpdateIntervalInSecs),
     ),
   );
