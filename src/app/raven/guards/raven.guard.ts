@@ -19,13 +19,7 @@ import {
   RouterStateSnapshot,
 } from '@angular/router';
 
-import {
-  catchError,
-  filter,
-  switchMap,
-  take,
-  tap,
-} from 'rxjs/operators';
+import { catchError, filter, switchMap, take, tap } from 'rxjs/operators';
 
 import * as configActions from '../../shared/actions/config.actions';
 import * as epochsActions from '../actions/epochs.actions';

@@ -60,6 +60,9 @@ export class RavenCompositeBandComponent
   compositeYAxisLabel = false;
 
   @Input()
+  containerId = '0';
+
+  @Input()
   cursorColor = '#ff0000';
 
   @Input()

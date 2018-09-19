@@ -31,6 +31,7 @@ export * from './mps-server-state-metadata';
 export * from './mps-server-state-point';
 export * from './raven-activity-band';
 export * from './raven-activity-point';
+export * from './raven-apply-layout-update';
 export * from './raven-band-left-click';
 export * from './raven-base-source';
 export * from './raven-composite-band';

@@ -7,25 +7,35 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
 import { concatMap, map, switchMap, withLatestFrom } from 'rxjs/operators';
+import { importState } from '../../shared/util';
 import { RavenAppState } from '../raven-store';
 
 import {
   LayoutActionTypes,
   Resize,
+  ToggleApplyLayoutDrawerEvent,
   ToggleRightPanel,
   ToggleSituationalAwarenessDrawer,
 } from '../actions/layout.actions';
 
 import * as layoutActions from '../actions/layout.actions';
 import * as situationalAwarenessActions from '../actions/situational-awareness.actions';
+import * as sourceExplorerActions from '../actions/source-explorer.actions';
 
 @Injectable()
 export class LayoutEffects {
+  constructor(
+    private actions$: Actions,
+    private http: HttpClient,
+    private store$: Store<RavenAppState>,
+  ) {}
+
   /**
    * Effect for Resize.
    */
@@ -35,6 +45,48 @@ export class LayoutEffects {
     switchMap(() => {
       setTimeout(() => dispatchEvent(new Event('resize')));
       return [];
+    }),
+  );
+
+  /**
+   * Effect for ToggleApplyLayoutDrawerEvent.
+   * Fetches the state associated with the current state id so it's available in the
+   * apply layout drawer when it opens.
+   * If there is no current state id it should set the current state to null.
+   */
+  @Effect()
+  toggleApplyLayoutDrawerEvent$: Observable<Action> = this.actions$.pipe(
+    ofType<ToggleApplyLayoutDrawerEvent>(
+      LayoutActionTypes.ToggleApplyLayoutDrawerEvent,
+    ),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    switchMap(({ action, state }) => {
+      if (action.opened && state.raven.sourceExplorer.currentStateId !== '') {
+        return this.http
+          .get(
+            `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${
+              state.raven.sourceExplorer.currentStateId
+            }`,
+          )
+          .pipe(
+            map(res => importState(res[0])),
+            switchMap(currentState => [
+              new sourceExplorerActions.UpdateSourceExplorer({
+                currentState,
+              }),
+              new layoutActions.ToggleApplyLayoutDrawer(action.opened),
+              new layoutActions.UpdateLayout({ fetchPending: false }),
+            ]),
+          );
+      }
+
+      return [
+        new sourceExplorerActions.UpdateSourceExplorer({
+          currentState: null,
+          fetchPending: false,
+        }),
+      ];
     }),
   );
 
@@ -79,9 +131,4 @@ export class LayoutEffects {
       }
     }),
   );
-
-  constructor(
-    private actions$: Actions,
-    private store$: Store<RavenAppState>,
-  ) {}
 }

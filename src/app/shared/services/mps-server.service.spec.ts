@@ -7,13 +7,15 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { inject, TestBed } from '@angular/core/testing';
 import { MpsServerService } from './mps-server.service';
 
 describe('MpsServerService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [MpsServerService],
+      imports: [HttpClientModule],
+      providers: [HttpClient, MpsServerService],
     });
   });
 

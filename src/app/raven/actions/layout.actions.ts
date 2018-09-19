@@ -15,6 +15,7 @@ export enum LayoutActionTypes {
   Resize = '[layout] resize',
   SetMode = '[layout] set_mode',
   ToggleApplyLayoutDrawer = '[layout] toggle_apply_layout_drawer',
+  ToggleApplyLayoutDrawerEvent = '[layout] toggle_apply_layout_drawer_event',
   ToggleDetailsPanel = '[layout] toggle_details_panel',
   ToggleEpochsDrawer = '[layout] toggle_epochs_drawer',
   ToggleGlobalSettingsDrawer = '[layout] toggle_global_settings_drawer',
@@ -46,6 +47,12 @@ export class SetMode implements Action {
 
 export class ToggleApplyLayoutDrawer implements Action {
   readonly type = LayoutActionTypes.ToggleApplyLayoutDrawer;
+
+  constructor(public opened?: boolean) {}
+}
+
+export class ToggleApplyLayoutDrawerEvent implements Action {
+  readonly type = LayoutActionTypes.ToggleApplyLayoutDrawerEvent;
 
   constructor(public opened?: boolean) {}
 }
@@ -107,6 +114,7 @@ export type LayoutAction =
   | Resize
   | SetMode
   | ToggleApplyLayoutDrawer
+  | ToggleApplyLayoutDrawerEvent
   | ToggleDetailsPanel
   | ToggleEpochsDrawer
   | ToggleGlobalSettingsDrawer

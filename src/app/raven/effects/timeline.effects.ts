@@ -50,6 +50,12 @@ import * as timelineActions from '../actions/timeline.actions';
 
 @Injectable()
 export class TimelineEffects {
+  constructor(
+    private actions$: Actions,
+    private http: HttpClient,
+    private store$: Store<RavenAppState>,
+  ) {}
+
   /**
    * Effect for AddBand | PinAdd | PinRemove | PinRename.
    */
@@ -199,10 +205,4 @@ export class TimelineEffects {
 
     return actions;
   }
-
-  constructor(
-    private actions$: Actions,
-    private http: HttpClient,
-    private store$: Store<RavenAppState>,
-  ) {}
 }

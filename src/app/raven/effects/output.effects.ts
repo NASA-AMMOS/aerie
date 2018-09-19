@@ -36,6 +36,12 @@ import * as fromOutput from '../reducers/output.reducer';
 
 @Injectable()
 export class OutputEffects {
+  constructor(
+    private actions$: Actions,
+    private http: HttpClient,
+    private store$: Store<RavenAppState>,
+  ) {}
+
   /**
    * Effect for CreateOutput.
    */
@@ -80,12 +86,6 @@ export class OutputEffects {
       return [];
     }),
   );
-
-  constructor(
-    private actions$: Actions,
-    private http: HttpClient,
-    private store$: Store<RavenAppState>,
-  ) {}
 
   /**
    * Helper. Get data for source and write to file.

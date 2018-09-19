@@ -44,6 +44,12 @@ import * as timelineActions from '../actions/timeline.actions';
 
 @Injectable()
 export class DialogEffects {
+  constructor(
+    private actions$: Actions,
+    private dialog: MatDialog,
+    private store$: Store<RavenAppState>,
+  ) {}
+
   /**
    * Effect for OpenConfirmDialog.
    */
@@ -358,10 +364,4 @@ export class DialogEffects {
       return [];
     }),
   );
-
-  constructor(
-    private actions$: Actions,
-    private dialog: MatDialog,
-    private store$: Store<RavenAppState>,
-  ) {}
 }

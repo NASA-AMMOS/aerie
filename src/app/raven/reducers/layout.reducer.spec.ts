@@ -12,6 +12,8 @@ import { initialState, LayoutState, reducer } from './layout.reducer';
 import {
   Resize,
   SetMode,
+  ToggleApplyLayoutDrawer,
+  ToggleApplyLayoutDrawerEvent,
   ToggleDetailsPanel,
   ToggleEpochsDrawer,
   ToggleGlobalSettingsDrawer,
@@ -44,6 +46,7 @@ describe('layout reducer', () => {
       layoutState,
       new SetMode('custom', false, false, true, false),
     );
+
     expect(layoutState).toEqual({
       ...initialState,
       mode: 'custom',
@@ -59,6 +62,23 @@ describe('layout reducer', () => {
     expect(layoutState).toEqual({
       ...initialState,
       showDetailsPanel: !initialState.showDetailsPanel,
+    });
+  });
+
+  it('handle ToggleApplyLayoutDrawer', () => {
+    layoutState = reducer(layoutState, new ToggleApplyLayoutDrawer());
+    expect(layoutState).toEqual({
+      ...initialState,
+      showApplyLayoutDrawer: true,
+      showGlobalSettingsDrawer: false,
+    });
+  });
+
+  it('handle ToggleApplyLayoutDrawerEvent', () => {
+    layoutState = reducer(layoutState, new ToggleApplyLayoutDrawerEvent());
+    expect(layoutState).toEqual({
+      ...initialState,
+      fetchPending: true,
     });
   });
 

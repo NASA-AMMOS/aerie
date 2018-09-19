@@ -8,7 +8,6 @@
  */
 
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-
 import { RavenDefaultBandSettings, RavenUpdate } from '../../../shared/models';
 
 @Component({

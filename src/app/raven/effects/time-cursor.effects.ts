@@ -34,6 +34,11 @@ import * as timelineActions from '../actions/timeline.actions';
 
 @Injectable()
 export class TimeCursorEffects {
+  constructor(
+    private actions$: Actions,
+    private store$: Store<RavenAppState>,
+  ) {}
+
   /**
    * Effect for HideTimeCursor.
    * Note how we return an empty action here {}. This is so `cursorInterval$` `takeUntil` fires.
@@ -57,11 +62,6 @@ export class TimeCursorEffects {
       this.cursorInterval$(clockUpdateIntervalInSecs),
     ),
   );
-
-  constructor(
-    private actions$: Actions,
-    private store$: Store<RavenAppState>,
-  ) {}
 
   /**
    * Helper. Returns a cursor time interval Observable that fires every `clockUpdateIntervalInSecs` seconds.

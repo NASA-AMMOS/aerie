@@ -41,6 +41,10 @@ mat-sidenav-container {
   z-index: 5;
 }
 
+.scroll {
+  overflow-y: scroll !important; /* Always show scrollbar track so bands always align. */
+}
+
 .time-bands-container {
   background: white;
   position: sticky;

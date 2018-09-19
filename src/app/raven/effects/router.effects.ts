@@ -23,6 +23,11 @@ import * as sourceExplorerActions from '../actions/source-explorer.actions';
 
 @Injectable()
 export class RouterEffects {
+  constructor(
+    private actions$: Actions,
+    private store$: Store<RavenAppState>,
+  ) {}
+
   @Effect()
   routerNavigation$: Observable<Action> = this.actions$.pipe(
     ofType<RouterNavigationAction<ActivatedRouteSnapshot>>('ROUTER_NAVIGATION'),
@@ -53,11 +58,6 @@ export class RouterEffects {
       }
     }),
   );
-
-  constructor(
-    private actions$: Actions,
-    private store$: Store<RavenAppState>,
-  ) {}
 
   /**
    * Load an app layout mode which shows/hides panels in the main Raven2 UI.

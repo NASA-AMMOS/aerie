@@ -49,13 +49,14 @@ export class RavenAppComponent implements OnDestroy {
   ) {
     // Combine all fetch pending observable for progress bar.
     combineLatest(
+      this.store.pipe(select(fromLayout.getPending)),
       this.store.pipe(select(fromSituationalAwareness.getPending)),
       this.store.pipe(select(fromSourceExplorer.getPending)),
       this.store.pipe(select(fromTimeline.getPending)),
     )
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(loading => {
-        this.loading = loading[0] || loading[1] || loading[3];
+        this.loading = loading[0] || loading[1] || loading[2] || loading[3];
         this.markForCheck();
       });
 

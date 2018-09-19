@@ -9,13 +9,14 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RavenLayoutApplyComponent } from './raven-layout-apply.component';
 
 import {
   MatButtonModule,
   MatCardModule,
   MatFormFieldModule,
+  MatRadioModule,
   MatSelectModule,
 } from '@angular/material';
 
@@ -24,9 +25,11 @@ import {
   exports: [RavenLayoutApplyComponent],
   imports: [
     CommonModule,
+    FormsModule,
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
+    MatRadioModule,
     MatSelectModule,
     ReactiveFormsModule,
   ],

@@ -183,7 +183,7 @@ export class SourceExplorerComponent implements OnDestroy {
           currentStateId: source.id,
         }),
       );
-      this.store.dispatch(new layoutActions.ToggleApplyLayoutDrawer(true));
+      this.store.dispatch(new layoutActions.ToggleApplyLayoutDrawerEvent(true));
     } else if (event === 'apply-state') {
       this.store.dispatch(
         new dialogActions.OpenStateApplyDialog(source, '250px'),

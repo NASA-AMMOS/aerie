@@ -16,6 +16,20 @@
   direction: rtl;
 }
 
+mat-card-subtitle {
+  padding-bottom: 10px;
+}
+
+mat-radio-button,
+.radio-label {
+  padding-right: 10px;
+}
+
+table,
+.field {
+  padding-bottom: 20px;
+}
+
 .container {
   display: flex;
   flex-direction: column;
@@ -25,6 +39,6 @@
   width: 100%;
 }
 
-.field {
-  padding-bottom: 20px;
+.full-width {
+  width: 100%;
 }

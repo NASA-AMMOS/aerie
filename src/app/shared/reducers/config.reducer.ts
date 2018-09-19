@@ -64,7 +64,7 @@ export function updateDefaultBandSettings(
  */
 export function updateRavenSettings(
   state: ConfigState,
-  action: UpdateRavenSettings
+  action: UpdateRavenSettings,
 ): ConfigState {
   return {
     ...state,

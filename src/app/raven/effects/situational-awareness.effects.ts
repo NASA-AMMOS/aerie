@@ -28,6 +28,7 @@ import {
 } from '../actions/situational-awareness.actions';
 
 import {
+  getInitialPageStartEndTime,
   toCompositeBand,
   toRavenBandData,
   toRavenPefEntries,
@@ -41,10 +42,15 @@ import {
 
 import * as situationalAwarenessActions from '../actions/situational-awareness.actions';
 import * as timelineActions from '../actions/timeline.actions';
-import * as fromSituationalAwareness from '../reducers/situational-awareness.reducer';
 
 @Injectable()
 export class SituationalAwarenessEffects {
+  constructor(
+    private http: HttpClient,
+    private actions$: Actions,
+    private store$: Store<RavenAppState>,
+  ) {}
+
   @Effect()
   changeSituationalAwareness$: Observable<Action> = this.actions$.pipe(
     ofType<situationalAwarenessActions.ChangeSituationalAwareness>(
@@ -59,7 +65,9 @@ export class SituationalAwarenessEffects {
               action.url,
               state.config.raven.defaultBandSettings,
             )
-          : this.removePefEntriesBand(),
+          : of(
+              new timelineActions.RemoveBandsOrPointsForSource('situAwarePef'),
+            ),
         of(
           new situationalAwarenessActions.UpdateSituationalAwarenessSettings({
             situationalAware: action.situAware,
@@ -68,9 +76,7 @@ export class SituationalAwarenessEffects {
         action.situAware
           ? of(
               new timelineActions.UpdateViewTimeRange(
-                this.getInitialPageStartEndTime(
-                  state.raven.situationalAwareness,
-                ),
+                getInitialPageStartEndTime(state.raven.situationalAwareness),
               ),
             )
           : [],
@@ -146,52 +152,4 @@ export class SituationalAwarenessEffects {
       ),
     );
   }
-
-  /**
-   * Helper. Returns start and end time range for the initial page.
-   * pageDuration is defaulted to 1 day.
-   */
-  getInitialPageStartEndTime(
-    situationalAwareness: fromSituationalAwareness.SituationalAwarenessState,
-  ) {
-    let start = 0;
-    let pageDuration = 24 * 60 * 60;
-    if (situationalAwareness.useNow) {
-      start = situationalAwareness.nowMinus
-        ? new Date().getTime() / 1000 - situationalAwareness.nowMinus
-        : new Date().getTime() / 1000;
-      if (
-        situationalAwareness.nowMinus &&
-        situationalAwareness.nowPlus &&
-        situationalAwareness.nowMinus + situationalAwareness.nowPlus !== 0
-      ) {
-        pageDuration =
-          situationalAwareness.nowMinus + situationalAwareness.nowPlus;
-      }
-    } else {
-      start = situationalAwareness.startTime
-        ? situationalAwareness.startTime
-        : new Date().getTime() / 1000;
-      if (
-        situationalAwareness.pageDuration &&
-        situationalAwareness.pageDuration !== 0
-      ) {
-        pageDuration = situationalAwareness.pageDuration;
-      }
-    }
-    return { start, end: start + pageDuration };
-  }
-
-  /**
-   * Helper. Returns action to remove situAwarePef band.
-   */
-  removePefEntriesBand() {
-    return of(new timelineActions.RemoveBandsOrPointsForSource('situAwarePef'));
-  }
-
-  constructor(
-    private http: HttpClient,
-    private actions$: Actions,
-    private store$: Store<RavenAppState>,
-  ) {}
 }

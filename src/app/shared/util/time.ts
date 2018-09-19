@@ -8,6 +8,7 @@
  */
 
 import { utc as momentUtc } from 'moment';
+import { SituationalAwarenessState } from '../../raven/reducers/situational-awareness.reducer';
 import { RavenEpoch, RavenEpochTime } from '../models';
 
 /**
@@ -351,6 +352,80 @@ export function formatTimeTickTFormat(
 export function getDOY(date: Date): number {
   const d = Date.UTC(date.getUTCFullYear(), 0, 0);
   return Math.floor((date.getTime() - d) / 8.64e7);
+}
+
+/**
+ * Returns start and end time range for the initial page.
+ * `pageDuration` is defaulted to 1 day.
+ */
+export function getInitialPageStartEndTime(
+  situationalAwareness: SituationalAwarenessState,
+) {
+  let start = 0;
+  let pageDuration = 24 * 60 * 60;
+  if (situationalAwareness.useNow) {
+    start = situationalAwareness.nowMinus
+      ? new Date().getTime() / 1000 - situationalAwareness.nowMinus
+      : new Date().getTime() / 1000;
+    if (
+      situationalAwareness.nowMinus &&
+      situationalAwareness.nowPlus &&
+      situationalAwareness.nowMinus + situationalAwareness.nowPlus !== 0
+    ) {
+      pageDuration =
+        situationalAwareness.nowMinus + situationalAwareness.nowPlus;
+    }
+  } else {
+    start = situationalAwareness.startTime
+      ? situationalAwareness.startTime
+      : new Date().getTime() / 1000;
+    if (
+      situationalAwareness.pageDuration &&
+      situationalAwareness.pageDuration !== 0
+    ) {
+      pageDuration = situationalAwareness.pageDuration;
+    }
+  }
+  return { start, end: start + pageDuration };
+}
+
+/**
+ * Helper. Return situationalAwareness startTime. If 'now' is used, startTime is now - nowMinus.
+ */
+export function getSituationalAwarenessStartTime(
+  situationalAwareness: SituationalAwarenessState,
+): string {
+  if (situationalAwareness.useNow) {
+    const start = situationalAwareness.nowMinus
+      ? new Date().getTime() / 1000 - situationalAwareness.nowMinus
+      : new Date().getTime() / 1000;
+    return timestamp(start);
+  } else {
+    return situationalAwareness.startTime
+      ? timestamp(situationalAwareness.startTime)
+      : timestamp(new Date().getTime() / 1000);
+  }
+}
+
+/**
+ * Helper. Return situationAwareness pageDuration.
+ */
+export function getSituationalAwarenessPageDuration(
+  situationalAwareness: SituationalAwarenessState,
+): string {
+  if (situationalAwareness.useNow) {
+    return situationalAwareness.nowMinus && situationalAwareness.nowPlus
+      ? toDuration(
+          (situationalAwareness.nowMinus + situationalAwareness.nowPlus) * 1000,
+          false,
+        )
+      : '001T00:00:00';
+  } else {
+    return situationalAwareness.pageDuration &&
+      situationalAwareness.pageDuration !== 0
+      ? toDuration(situationalAwareness.pageDuration * 1000, false)
+      : '001T00:00:00';
+  }
 }
 
 /**

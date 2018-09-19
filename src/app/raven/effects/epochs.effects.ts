@@ -22,6 +22,8 @@ import * as toastActions from '../actions/toast.actions';
 
 @Injectable()
 export class EpochsEffects {
+  constructor(private http: HttpClient, private actions$: Actions) {}
+
   @Effect()
   fetchEpochs$: Observable<Action> = this.actions$.pipe(
     ofType<FetchEpochs>(EpochsActionTypes.FetchEpochs),
@@ -44,6 +46,4 @@ export class EpochsEffects {
       ];
     }),
   );
-
-  constructor(private http: HttpClient, private actions$: Actions) {}
 }

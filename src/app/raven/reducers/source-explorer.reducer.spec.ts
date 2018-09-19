@@ -108,7 +108,7 @@ describe('source-explorer reducer', () => {
   it('handle ApplyLayout', () => {
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new ApplyLayout(['/source1']),
+      new ApplyLayout({ pins: {}, targetSourceIds: ['/source1'] }),
     );
     expect(sourceExplorerState).toEqual({
       ...initialState,

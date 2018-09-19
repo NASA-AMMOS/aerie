@@ -12,6 +12,7 @@ import { Injectable } from '@angular/core';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 import { flatten, uniqueId } from 'lodash';
+import { MpsServerService } from '../../shared/services/mps-server.service';
 import { RavenAppState } from '../raven-store';
 
 import { combineLatest, concat, forkJoin, Observable, of } from 'rxjs';
@@ -31,6 +32,7 @@ import {
   AddCustomGraph,
   AddGraphableFilter,
   ApplyLayout,
+  ApplyLayoutWithPins,
   ApplyState,
   CloseEvent,
   ExpandEvent,
@@ -52,17 +54,15 @@ import {
   getCustomFiltersBySourceId,
   getFormattedSourceUrl,
   getPinLabel,
+  getSituationalAwarenessPageDuration,
+  getSituationalAwarenessStartTime,
   getSourceIds,
-  getState,
   hasActivityBand,
   hasActivityBandForFilterTarget,
   hasSourceId,
-  importState,
   isAddTo,
   isOverlay,
-  timestamp,
   toCompositeBand,
-  toDuration,
   toRavenBandData,
   toRavenSources,
   updateSourceId,
@@ -91,12 +91,18 @@ import * as sourceExplorerActions from '../actions/source-explorer.actions';
 import * as timelineActions from '../actions/timeline.actions';
 import * as toastActions from '../actions/toast.actions';
 
-import * as fromSituationalAwareness from '../reducers/situational-awareness.reducer';
 import * as fromSourceExplorer from '../reducers/source-explorer.reducer';
 import * as fromTimeline from '../reducers/timeline.reducer';
 
 @Injectable()
 export class SourceExplorerEffects {
+  constructor(
+    private actions$: Actions,
+    private http: HttpClient,
+    private mpsServerService: MpsServerService,
+    private store$: Store<RavenAppState>,
+  ) {}
+
   /**
    * Effect for AddCustomGraph.
    */
@@ -128,8 +134,8 @@ export class SourceExplorerEffects {
             config.raven.defaultBandSettings,
             sourceExplorer.pins,
             situationalAwareness.situationalAware,
-            this.getSituationalAwarenessStartTime(situationalAwareness),
-            this.getSituationalAwarenessPageDuration(situationalAwareness),
+            getSituationalAwarenessStartTime(situationalAwareness),
+            getSituationalAwarenessPageDuration(situationalAwareness),
           ),
           of(new sourceExplorerActions.LoadErrorsDisplay()),
           of(
@@ -164,53 +170,11 @@ export class SourceExplorerEffects {
   @Effect()
   applyLayout$: Observable<Action> = this.actions$.pipe(
     ofType<ApplyLayout>(SourceExplorerActionTypes.ApplyLayout),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(({ action, state }) =>
-      forkJoin([
-        of(action),
-        of(state),
-        this.fetchState(
-          `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${
-            state.raven.sourceExplorer.currentStateId
-          }`,
-        ),
-        this.fetchNewSources(
-          `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
-          '/',
-          true,
-        ),
-      ]),
-    ),
-    map(([action, state, savedState, initialSources]) => ({
-      action,
-      initialSources,
-      savedState,
-      state,
-    })),
-    concatMap(({ action, state, savedState, initialSources }) =>
-      forkJoin([
-        of(action),
-        of(state),
-        of(savedState),
-        of(initialSources),
-        this.fetchSourcesByType(
-          state,
-          getSourceIds(savedState.bands).parentSourceIds,
-        ),
-      ]),
-    ),
-    map(([action, state, savedState, initialSources, sourceTypes]) => ({
-      action,
-      initialSources,
-      savedState,
-      sourceTypes,
-      state,
-    })),
+    ...this.preApplyLayout(),
     concatMap(({ action, state, savedState, initialSources, sourceTypes }) => {
       const updatedBands: RavenCompositeBand[] = [];
 
-      action.targetSourceIds.forEach(targetSourceId => {
+      action.update.targetSourceIds.forEach((targetSourceId: string) => {
         const bands = savedState.bands.map((band: RavenCompositeBand) => {
           const parentId = uniqueId();
           const targetSource =
@@ -239,7 +203,62 @@ export class SourceExplorerEffects {
       });
 
       return concat(
-        ...this.loadLayout(state, updatedBands, initialSources, savedState),
+        ...this.loadLayout(
+          state,
+          updatedBands,
+          initialSources,
+          savedState,
+          Object.values(action.update.pins),
+        ),
+      );
+    }),
+  );
+
+  /**
+   * Effect for ApplyLayoutWithPins.
+   */
+  @Effect()
+  applyLayoutWithPins$: Observable<Action> = this.actions$.pipe(
+    ofType<ApplyLayoutWithPins>(SourceExplorerActionTypes.ApplyLayoutWithPins),
+    ...this.preApplyLayout(),
+    concatMap(({ action, state, savedState, initialSources, sourceTypes }) => {
+      const bands = savedState.bands.map((band: RavenCompositeBand) => {
+        const parentId = uniqueId();
+
+        return {
+          ...band,
+          id: parentId,
+          subBands: band.subBands.map((subBand: RavenSubBand) => {
+            const labelPin = subBand.labelPin;
+            const pin = action.update.pins[labelPin];
+            const targetSource =
+              state.raven.sourceExplorer.treeBySourceId[pin.sourceId];
+
+            return {
+              ...subBand,
+              id: uniqueId(),
+              parentUniqueId: parentId,
+              sourceIds: subBand.sourceIds.map(sourceId =>
+                updateSourceId(
+                  sourceId,
+                  targetSource.id,
+                  sourceTypes,
+                  targetSource.type,
+                ),
+              ),
+            };
+          }),
+        };
+      });
+
+      return concat(
+        ...this.loadLayout(
+          state,
+          bands,
+          initialSources,
+          savedState,
+          Object.values(action.update.pins),
+        ),
       );
     }),
   );
@@ -252,19 +271,24 @@ export class SourceExplorerEffects {
     ofType<ApplyState>(SourceExplorerActionTypes.ApplyState),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
-    concatMap(({ action, state: { config, raven } }) =>
+    concatMap(({ action, state }) =>
       forkJoin([
-        this.fetchState(action.sourceUrl),
-        this.fetchNewSources(
-          `${config.app.baseUrl}/${config.mpsServer.apiUrl}`,
+        of(state),
+        this.mpsServerService.fetchState(action.sourceUrl),
+        this.mpsServerService.fetchNewSources(
+          `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
           '/',
           true,
         ),
       ]),
     ),
-    map(([savedState, initialSources]) => ({ savedState, initialSources })),
-    concatMap(({ savedState, initialSources }) =>
-      concat(...this.loadState(initialSources, savedState)),
+    map(([state, savedState, initialSources]) => ({
+      initialSources,
+      savedState,
+      state,
+    })),
+    concatMap(({ initialSources, savedState, state }) =>
+      concat(...this.loadState(state, initialSources, savedState)),
     ),
   );
 
@@ -338,16 +362,18 @@ export class SourceExplorerEffects {
     map(([, state]) => state),
     concatMap((state: RavenAppState) =>
       concat(
-        this.fetchNewSources(
-          `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
-          '/',
-          true,
-        ).pipe(
-          map(
-            (sources: RavenSource[]) =>
-              new sourceExplorerActions.NewSources('/', sources) as Action,
+        this.mpsServerService
+          .fetchNewSources(
+            `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
+            '/',
+            true,
+          )
+          .pipe(
+            map(
+              (sources: RavenSource[]) =>
+                new sourceExplorerActions.NewSources('/', sources) as Action,
+            ),
           ),
-        ),
         of(
           new sourceExplorerActions.UpdateSourceExplorer({
             fetchPending: false,
@@ -381,11 +407,13 @@ export class SourceExplorerEffects {
     ofType<FetchNewSources>(SourceExplorerActionTypes.FetchNewSources),
     concatMap(action =>
       concat(
-        this.fetchNewSources(action.sourceUrl, action.sourceId, false).pipe(
-          concatMap((sources: RavenSource[]) => [
-            new sourceExplorerActions.NewSources(action.sourceId, sources),
-          ]),
-        ),
+        this.mpsServerService
+          .fetchNewSources(action.sourceUrl, action.sourceId, false)
+          .pipe(
+            concatMap((sources: RavenSource[]) => [
+              new sourceExplorerActions.NewSources(action.sourceId, sources),
+            ]),
+          ),
         of(
           new sourceExplorerActions.UpdateSourceExplorer({
             fetchPending: false,
@@ -455,11 +483,13 @@ export class SourceExplorerEffects {
         .pipe(
           concatMap(() => {
             if (action.file.mapping) {
-              return this.importMappingFile(
-                action.source.url,
-                action.file.name,
-                action.file.mapping,
-              ).pipe(map(() => new sourceExplorerActions.ImportFileSuccess()));
+              return this.mpsServerService
+                .importMappingFile(
+                  action.source.url,
+                  action.file.name,
+                  action.file.mapping,
+                )
+                .pipe(map(() => new sourceExplorerActions.ImportFileSuccess()));
             } else {
               return of(new sourceExplorerActions.ImportFileSuccess());
             }
@@ -525,8 +555,8 @@ export class SourceExplorerEffects {
           config.raven.defaultBandSettings,
           raven.sourceExplorer.pins,
           raven.situationalAwareness.situationalAware,
-          this.getSituationalAwarenessStartTime(raven.situationalAwareness),
-          this.getSituationalAwarenessPageDuration(raven.situationalAwareness),
+          getSituationalAwarenessStartTime(raven.situationalAwareness),
+          getSituationalAwarenessPageDuration(raven.situationalAwareness),
         ),
         of(
           new sourceExplorerActions.UpdateSourceExplorer({
@@ -593,7 +623,11 @@ export class SourceExplorerEffects {
     ofType<RemoveSourceEvent>(SourceExplorerActionTypes.RemoveSourceEvent),
     concatMap(action =>
       concat(
-        this.removeSource(action.source.url, action.source.id),
+        this.mpsServerService
+          .removeSource(action.source.url, action.source.id)
+          .pipe(
+            map(() => new sourceExplorerActions.RemoveSource(action.source.id)),
+          ),
         of(
           new sourceExplorerActions.UpdateSourceExplorer({
             fetchPending: false,
@@ -612,14 +646,16 @@ export class SourceExplorerEffects {
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     concatMap(({ state, action }) =>
-      this.saveState(action.source.url, action.name, state).pipe(
-        map(
-          () =>
-            new sourceExplorerActions.UpdateSourceExplorer({
-              fetchPending: false,
-            }),
+      this.mpsServerService
+        .saveState(action.source.url, action.name, state)
+        .pipe(
+          map(
+            () =>
+              new sourceExplorerActions.UpdateSourceExplorer({
+                fetchPending: false,
+              }),
+          ),
         ),
-      ),
     ),
   );
 
@@ -649,8 +685,8 @@ export class SourceExplorerEffects {
             null,
             sourceExplorer.filtersByTarget,
             situationalAwareness.situationalAware,
-            this.getSituationalAwarenessStartTime(situationalAwareness),
-            this.getSituationalAwarenessPageDuration(situationalAwareness),
+            getSituationalAwarenessStartTime(situationalAwareness),
+            getSituationalAwarenessPageDuration(situationalAwareness),
           ).pipe(
             withLatestFrom(this.store$),
             map(([newSubBands, state]) => ({ newSubBands, state })),
@@ -740,8 +776,8 @@ export class SourceExplorerEffects {
             null,
             sourceExplorer.filtersByTarget,
             situationalAwareness.situationalAware,
-            this.getSituationalAwarenessStartTime(situationalAwareness),
-            this.getSituationalAwarenessPageDuration(situationalAwareness),
+            getSituationalAwarenessStartTime(situationalAwareness),
+            getSituationalAwarenessPageDuration(situationalAwareness),
           ).pipe(
             concatMap((newSubBands: RavenSubBand[]) => {
               const actions: Action[] = [];
@@ -806,12 +842,6 @@ export class SourceExplorerEffects {
     ),
   );
 
-  constructor(
-    private actions$: Actions,
-    private http: HttpClient,
-    private store$: Store<RavenAppState>,
-  ) {}
-
   /**
    * Helper. Returns a stream of actions that need to occur when expanding a source explorer source.
    */
@@ -831,11 +861,13 @@ export class SourceExplorerEffects {
           );
         } else {
           actions.push(
-            this.fetchNewSources(source.url, source.id, false).pipe(
-              concatMap((sources: RavenSource[]) => [
-                new sourceExplorerActions.NewSources(source.id, sources), // Add new sources to the source-explorer.
-              ]),
-            ),
+            this.mpsServerService
+              .fetchNewSources(source.url, source.id, false)
+              .pipe(
+                concatMap((sources: RavenSource[]) => [
+                  new sourceExplorerActions.NewSources(source.id, sources), // Add new sources to the source-explorer.
+                ]),
+              ),
           );
         }
       }
@@ -890,46 +922,6 @@ export class SourceExplorerEffects {
   }
 
   /**
-   * Helper. Return situationalAwareness startTime. If 'now' is used, startTime is now - nowMinus.
-   */
-  getSituationalAwarenessStartTime(
-    situationalAwareness: fromSituationalAwareness.SituationalAwarenessState,
-  ): string {
-    if (situationalAwareness.useNow) {
-      const start = situationalAwareness.nowMinus
-        ? new Date().getTime() / 1000 - situationalAwareness.nowMinus
-        : new Date().getTime() / 1000;
-      return timestamp(start);
-    } else {
-      return situationalAwareness.startTime
-        ? timestamp(situationalAwareness.startTime)
-        : timestamp(new Date().getTime() / 1000);
-    }
-  }
-
-  /**
-   * Helper. Return situationAwareness pageDuration.
-   */
-  getSituationalAwarenessPageDuration(
-    situationalAwareness: fromSituationalAwareness.SituationalAwarenessState,
-  ): string {
-    if (situationalAwareness.useNow) {
-      return situationalAwareness.nowMinus && situationalAwareness.nowPlus
-        ? toDuration(
-            (situationalAwareness.nowMinus + situationalAwareness.nowPlus) *
-              1000,
-            false,
-          )
-        : '001T00:00:00';
-    } else {
-      return situationalAwareness.pageDuration &&
-        situationalAwareness.pageDuration !== 0
-        ? toDuration(situationalAwareness.pageDuration * 1000, false)
-        : '001T00:00:00';
-    }
-  }
-
-  /**
    * Helper. Returns a stream of actions that need to occur when loading a layout.
    */
   loadLayout(
@@ -937,11 +929,13 @@ export class SourceExplorerEffects {
     bands: RavenCompositeBand[],
     initialSources: RavenSource[],
     savedState: RavenState,
+    pins: RavenPin[],
   ) {
     return [
       of(
         new sourceExplorerActions.UpdateSourceExplorer({
           ...fromSourceExplorer.initialState,
+          currentState: state.raven.sourceExplorer.currentState,
           currentStateId: state.raven.sourceExplorer.currentStateId,
           fetchPending: true,
         }),
@@ -963,10 +957,11 @@ export class SourceExplorerEffects {
           ...savedState.defaultBandSettings,
         }),
       ),
-      ...this.load(bands, initialSources),
+      ...this.load(bands, initialSources, pins),
       of(new timelineActions.RemoveBandsWithNoPoints()),
+      ...pins.map(pin => of(new sourceExplorerActions.PinAdd(pin))),
+      ...pins.map(pin => of(new timelineActions.PinAdd(pin))),
       of(new timelineActions.ResetViewTimeRange()),
-      ...savedState.pins.map(pin => of(new sourceExplorerActions.PinAdd(pin))), // TODO: Update layouts to apply pins correctly.
       of(
         new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }),
       ),
@@ -977,6 +972,7 @@ export class SourceExplorerEffects {
    * Helper. Returns a stream of actions that need to occur when loading a state.
    */
   loadState(
+    state: RavenAppState,
     initialSources: RavenSource[],
     savedState: RavenState,
   ): Observable<Action>[] {
@@ -984,6 +980,8 @@ export class SourceExplorerEffects {
       of(
         new sourceExplorerActions.UpdateSourceExplorer({
           ...fromSourceExplorer.initialState,
+          currentState: state.raven.sourceExplorer.currentState,
+          currentStateId: state.raven.sourceExplorer.currentStateId,
           fetchPending: true,
         }),
       ),
@@ -1006,8 +1004,9 @@ export class SourceExplorerEffects {
           ...savedState.defaultBandSettings,
         }),
       ),
-      ...this.load(savedState.bands, initialSources),
+      ...this.load(savedState.bands, initialSources, savedState.pins),
       ...savedState.pins.map(pin => of(new sourceExplorerActions.PinAdd(pin))),
+      ...savedState.pins.map(pin => of(new timelineActions.PinAdd(pin))),
       of(
         new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }),
       ),
@@ -1021,6 +1020,7 @@ export class SourceExplorerEffects {
   load(
     bands: RavenCompositeBand[],
     initialSources: RavenSource[],
+    pins: RavenPin[],
   ): Observable<Action>[] {
     const { parentSourceIds, sourceIds } = getSourceIds(bands);
 
@@ -1087,12 +1087,12 @@ export class SourceExplorerEffects {
                 sourceId,
                 bands,
                 state.config.raven.defaultBandSettings,
-                state.raven.sourceExplorer.pins,
+                pins,
                 state.raven.situationalAwareness.situationalAware,
-                this.getSituationalAwarenessStartTime(
+                getSituationalAwarenessStartTime(
                   state.raven.situationalAwareness,
                 ),
-                this.getSituationalAwarenessPageDuration(
+                getSituationalAwarenessPageDuration(
                   state.raven.situationalAwareness,
                 ),
               ),
@@ -1157,6 +1157,7 @@ export class SourceExplorerEffects {
               subBand,
               getPinLabel(treeBySourceId[sourceId].id, pins),
             );
+
             const existingBand =
               treeBySourceId[sourceId].type === 'customGraphable'
                 ? false
@@ -1315,16 +1316,51 @@ export class SourceExplorerEffects {
   }
 
   /**
-   * Fetch helper. Fetches sources from MPS Server and maps them to Raven sources.
+   * A set of operations we need to do before we apply a layout.
    */
-  fetchNewSources(url: string, parentId: string, isServer: boolean) {
-    return this.http
-      .get<MpsServerSource[]>(url)
-      .pipe(
-        map((mpsServerSources: MpsServerSource[]) =>
-          toRavenSources(parentId, isServer, mpsServerSources),
-        ),
-      );
+  preApplyLayout() {
+    return [
+      withLatestFrom(this.store$),
+      map(([action, state]) => ({ action, state })),
+      concatMap(({ action, state }) =>
+        forkJoin([
+          of(action),
+          of(state),
+          this.mpsServerService.fetchNewSources(
+            `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
+            '/',
+            true,
+          ),
+        ]),
+      ),
+      map(([action, state, initialSources]) => ({
+        action,
+        initialSources,
+        state,
+      })),
+      concatMap(({ action, state, initialSources }) => {
+        const savedState = state.raven.sourceExplorer
+          .currentState as RavenState;
+
+        return forkJoin([
+          of(action),
+          of(state),
+          of(savedState),
+          of(initialSources),
+          this.fetchSourcesByType(
+            state,
+            getSourceIds(savedState.bands).parentSourceIds,
+          ),
+        ]);
+      }),
+      map(([action, state, savedState, initialSources, sourceTypes]) => ({
+        action,
+        initialSources,
+        savedState,
+        sourceTypes,
+        state,
+      })),
+    ];
   }
 
   /**
@@ -1367,19 +1403,6 @@ export class SourceExplorerEffects {
         }, {}),
       ),
     );
-  }
-
-  /**
-   * Fetch helper. Deletes a source from MPS Server.
-   */
-  removeSource(sourceUrl: string, sourceId: string) {
-    const url = sourceUrl.replace(
-      /list_(generic|.*custom.*)-mongodb/i,
-      'fs-mongodb',
-    );
-    return this.http
-      .delete(url, { responseType: 'text' })
-      .pipe(map(() => new sourceExplorerActions.RemoveSource(sourceId)));
   }
 
   /**
@@ -1429,32 +1452,5 @@ export class SourceExplorerEffects {
     });
 
     return actions;
-  }
-
-  /**
-   * Fetch helper. Fetches saved state from MPS Server.
-   * Imports state after fetching.
-   */
-  fetchState(url: string) {
-    return this.http.get(url).pipe(map(res => importState(res[0])));
-  }
-
-  /**
-   * Helper. Save state to an MPS Server source.
-   * Exports state before saving.
-   */
-  saveState(sourceUrl: string, name: string, state: RavenAppState) {
-    return this.http.put(
-      `${sourceUrl}/${name}?timeline_type=state`,
-      getState(name, state),
-    );
-  }
-
-  /**
-   * Helper. Import mapping file into MPS Server for a given source URL.
-   */
-  importMappingFile(sourceUrl: string, name: string, mapping: string) {
-    const url = sourceUrl.replace('fs-mongodb', 'metadata-mongodb');
-    return this.http.post(`${url}/${name}`, mapping, { responseType: 'text' });
   }
 }

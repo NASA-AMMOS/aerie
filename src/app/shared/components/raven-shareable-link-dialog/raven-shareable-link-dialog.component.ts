@@ -37,6 +37,7 @@ export class RavenShareableLinkDialogComponent
   implements AfterViewInit, OnDestroy, OnInit {
   @ViewChild('shareableLinkInput')
   shareableLinkInput: ElementRef;
+
   @ViewChild('shareableNameInput')
   shareableNameInput: ElementRef;
 

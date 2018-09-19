@@ -7,16 +7,44 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, Observer } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { RavenAppState } from '../../raven/raven-store';
 import * as mpsServerMocks from '../mocks/mps-server';
+import { MpsServerSource } from '../models';
 import { HBCommand } from '../models/hb-command';
 import { HBCommandDictionary } from '../models/hb-command-dictionary';
+import { getState, importState, toRavenSources } from '../util';
 
 @Injectable({
   providedIn: 'root',
 })
 export class MpsServerService {
+  constructor(private http: HttpClient) {}
+
+  /**
+   * etches sources from MPS Server and maps them to Raven sources.
+   */
+  fetchNewSources(url: string, parentId: string, isServer: boolean) {
+    return this.http
+      .get<MpsServerSource[]>(url)
+      .pipe(
+        map((mpsServerSources: MpsServerSource[]) =>
+          toRavenSources(parentId, isServer, mpsServerSources),
+        ),
+      );
+  }
+
+  /**
+   * Fetches saved state from MPS Server.
+   * Imports state after fetching.
+   */
+  fetchState(url: string) {
+    return this.http.get(url).pipe(map(res => importState(res[0])));
+  }
+
   /**
    * Get a list of available command dictionaries and populate an Observable
    * with mock/static data until MPS Server has an endpoint for this.
@@ -65,5 +93,35 @@ export class MpsServerService {
       o.next(mpsServerMocks.getCommandList(1, name));
       o.complete();
     });
+  }
+
+  /**
+   * Import mapping file into MPS Server for a given source URL.
+   */
+  importMappingFile(sourceUrl: string, name: string, mapping: string) {
+    const url = sourceUrl.replace('fs-mongodb', 'metadata-mongodb');
+    return this.http.post(`${url}/${name}`, mapping, { responseType: 'text' });
+  }
+
+  /**
+   * Deletes a source from MPS Server.
+   */
+  removeSource(sourceUrl: string, sourceId: string) {
+    const url = sourceUrl.replace(
+      /list_(generic|.*custom.*)-mongodb/i,
+      'fs-mongodb',
+    );
+    return this.http.delete(url, { responseType: 'text' });
+  }
+
+  /**
+   * Save state to an MPS Server source.
+   * Exports state before saving.
+   */
+  saveState(sourceUrl: string, name: string, state: RavenAppState) {
+    return this.http.put(
+      `${sourceUrl}/${name}?timeline_type=state`,
+      getState(name, state),
+    );
   }
 }

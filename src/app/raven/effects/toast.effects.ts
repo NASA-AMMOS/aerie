@@ -17,6 +17,8 @@ import { ShowToast, ToastActionTypes } from '../actions/toast.actions';
 
 @Injectable()
 export class ToastEffects {
+  constructor(private actions$: Actions, private toastr: ToastrService) {}
+
   @Effect({ dispatch: false })
   showToast$: Observable<Action> = this.actions$.pipe(
     ofType<ShowToast>(ToastActionTypes.ShowToast),
@@ -29,6 +31,4 @@ export class ToastEffects {
       return [];
     }),
   );
-
-  constructor(private actions$: Actions, private toastr: ToastrService) {}
 }

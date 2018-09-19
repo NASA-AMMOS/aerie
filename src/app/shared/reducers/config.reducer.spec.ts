@@ -8,7 +8,10 @@
  */
 
 import { ConfigState } from '../../../config';
-import { UpdateDefaultBandSettings, UpdateRavenSettings } from '../actions/config.actions';
+import {
+  UpdateDefaultBandSettings,
+  UpdateRavenSettings,
+} from '../actions/config.actions';
 import { initialState, reducer } from './config.reducer';
 
 describe('config reducer', () => {

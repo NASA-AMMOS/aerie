@@ -7,6 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
@@ -21,8 +22,8 @@ describe('LayoutEffects', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [StoreModule.forRoot({})],
-      providers: [LayoutEffects, provideMockActions(() => actions)],
+      imports: [HttpClientModule, StoreModule.forRoot({})],
+      providers: [HttpClient, LayoutEffects, provideMockActions(() => actions)],
     });
 
     effects = TestBed.get(LayoutEffects);
@@ -31,6 +32,10 @@ describe('LayoutEffects', () => {
 
   it('should register resize$ that does not dispatch an action', () => {
     expect(metadata.resize$).toEqual({ dispatch: false });
+  });
+
+  it('should register toggleApplyLayoutDrawerEvent$ that does dispatch an action', () => {
+    expect(metadata.toggleApplyLayoutDrawerEvent$).toEqual({ dispatch: true });
   });
 
   it('should register toggleRightPanel$ that does dispatch an action', () => {

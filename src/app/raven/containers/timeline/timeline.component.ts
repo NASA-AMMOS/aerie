@@ -21,6 +21,7 @@ import { takeUntil } from 'rxjs/operators';
 import { ConfigState } from '../../../../config';
 
 import {
+  RavenApplyLayoutUpdate,
   RavenBandLeftClick,
   RavenCompositeBand,
   RavenCustomFilter,
@@ -30,6 +31,7 @@ import {
   RavenSituationalAwarenessPefEntry,
   RavenSortMessage,
   RavenSource,
+  RavenState,
   RavenSubBand,
   RavenTimeRange,
   RavenUpdate,
@@ -104,6 +106,7 @@ export class TimelineComponent implements OnDestroy {
   timelinePanelSize: number;
 
   // Source Explorer state.
+  currentState: RavenState | null;
   currentStateId: string;
   customFiltersBySourceId: StringTMap<RavenCustomFilter[]>;
   filtersByTarget: StringTMap<StringTMap<string[]>>;
@@ -241,9 +244,10 @@ export class TimelineComponent implements OnDestroy {
         takeUntil(this.ngUnsubscribe),
       )
       .subscribe(state => {
-        this.currentStateId = state.currentStateId;
         this.customFiltersBySourceId = state.customFiltersBySourceId;
         this.filtersByTarget = state.filtersByTarget;
+        this.currentState = state.currentState;
+        this.currentStateId = state.currentStateId;
         this.treeBySourceId = state.treeBySourceId;
         this.markForCheck();
       });
@@ -328,18 +332,34 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
-   * Event. Called when ``
-   */
-  onApplyLayout(targetSourceIds: string[]): void {
-    this.store.dispatch(new sourceExplorerActions.ApplyLayout(targetSourceIds));
-  }
-
-  /**
    * Event. Called when a `add-divider-band` event is fired from the raven-settings component.
    */
   onAddDividerBand(): void {
     this.store.dispatch(
       new timelineActions.AddBand(null, toCompositeBand(toDividerBand())),
+    );
+  }
+
+  /**
+   * Event. Called when an `apply-layout` event is fired from the raven-layout-apply component.
+   */
+  onApplyLayout(update: RavenApplyLayoutUpdate): void {
+    this.store.dispatch(new sourceExplorerActions.ApplyLayout(update));
+  }
+
+  /**
+   * Event. Called when an `apply-layout-with-pins` event is fired from the raven-layout-apply component.
+   */
+  onApplyLayoutWithPins(update: RavenApplyLayoutUpdate): void {
+    this.store.dispatch(new sourceExplorerActions.ApplyLayoutWithPins(update));
+  }
+
+  /**
+   * Event. Called when an `apply-state` event is fired from the raven-layout-apply component.
+   */
+  onApplyState(source: RavenSource): void {
+    this.store.dispatch(
+      new sourceExplorerActions.ApplyState(source.url, source.id),
     );
   }
 

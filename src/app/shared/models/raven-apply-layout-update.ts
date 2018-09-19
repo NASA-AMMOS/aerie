@@ -7,23 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-:host {
-  display: block;
-  font-family: Roboto, 'Helvetica Neue', sans-serif;
-  font-weight: 300;
-}
+import { StringTMap } from './map';
+import { RavenPin } from './raven-pin';
 
-.container {
-  display: flex;
-  flex-direction: column;
-  white-space: pre-line;
-}
-
-.container > * {
-  width: 100%;
-}
-
-.center {
-  justify-content: center;
-  text-align: center;
+export interface RavenApplyLayoutUpdate {
+  pins: StringTMap<RavenPin>;
+  targetSourceIds: string[];
 }

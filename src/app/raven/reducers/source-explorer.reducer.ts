@@ -18,6 +18,7 @@ import {
   CloseEvent,
   CollapseEvent,
   ExpandEvent,
+  LoadErrorsAdd,
   NewSources,
   OpenEvent,
   PinAdd,
@@ -41,11 +42,13 @@ import {
   RavenPin,
   RavenSource,
   RavenSourceAction,
+  RavenState,
   StringTMap,
 } from '../../shared/models';
 
 // Source Explorer State Interface.
 export interface SourceExplorerState {
+  currentState: RavenState | null;
   currentStateId: string;
   customFiltersBySourceId: StringTMap<RavenCustomFilter[]>;
   fetchPending: boolean;
@@ -59,6 +62,7 @@ export interface SourceExplorerState {
 
 // Source Explorer Initial State.
 export const initialState: SourceExplorerState = {
+  currentState: null,
   currentStateId: '',
   customFiltersBySourceId: {},
   fetchPending: false,
@@ -123,6 +127,7 @@ export function reducer(
       return addFilter(state, action);
     case SourceExplorerActionTypes.AddGraphableFilter:
     case SourceExplorerActionTypes.ApplyLayout:
+    case SourceExplorerActionTypes.ApplyLayoutWithPins:
     case SourceExplorerActionTypes.ApplyState:
       return { ...state, fetchPending: true };
     case SourceExplorerActionTypes.CloseEvent:
@@ -135,10 +140,7 @@ export function reducer(
     case SourceExplorerActionTypes.GraphCustomSource:
       return { ...state, fetchPending: true };
     case SourceExplorerActionTypes.LoadErrorsAdd:
-      return {
-        ...state,
-        loadErrors: state.loadErrors.concat(action.sourceIds),
-      };
+      return loadErrorsAdd(state, action);
     case SourceExplorerActionTypes.NewSources:
       return newSources(state, action);
     case SourceExplorerActionTypes.OpenEvent:
@@ -275,6 +277,19 @@ export function expandEvent(
 }
 
 /**
+ * Reduction Helper. Called when reducing the 'LoadErrorsAdd' action.
+ */
+export function loadErrorsAdd(
+  state: SourceExplorerState,
+  action: LoadErrorsAdd,
+): SourceExplorerState {
+  return {
+    ...state,
+    loadErrors: state.loadErrors.concat(action.sourceIds),
+  };
+}
+
+/**
  * Reduction Helper. Called when reducing the 'NewSources' action.
  *
  * Generates a new treeBySourceId data structure with updated childIds for the action.sourceId,
@@ -325,29 +340,38 @@ export function pinAdd(
   state: SourceExplorerState,
   action: PinAdd,
 ): SourceExplorerState {
+  if (state.treeBySourceId[action.pin.sourceId]) {
+    return {
+      ...state,
+      pins: state.pins.concat(action.pin),
+      treeBySourceId: {
+        ...state.treeBySourceId,
+        [action.pin.sourceId]: {
+          ...state.treeBySourceId[action.pin.sourceId],
+          actions: state.treeBySourceId[action.pin.sourceId].actions.reduce(
+            (
+              actions: RavenSourceAction[],
+              currentAction: RavenSourceAction,
+            ) => {
+              if (currentAction.event === 'pin-add') {
+                actions.push(
+                  { event: 'pin-remove', name: 'Remove Pin' },
+                  { event: 'pin-rename', name: 'Rename Pin' },
+                );
+              } else {
+                actions.push(currentAction);
+              }
+              return actions;
+            },
+            [],
+          ),
+        },
+      },
+    };
+  }
+
   return {
     ...state,
-    pins: state.pins.concat(action.pin),
-    treeBySourceId: {
-      ...state.treeBySourceId,
-      [action.pin.sourceId]: {
-        ...state.treeBySourceId[action.pin.sourceId],
-        actions: state.treeBySourceId[action.pin.sourceId].actions.reduce(
-          (actions: RavenSourceAction[], currentAction: RavenSourceAction) => {
-            if (currentAction.event === 'pin-add') {
-              actions.push(
-                { event: 'pin-remove', name: 'Remove Pin' },
-                { event: 'pin-rename', name: 'Rename Pin' },
-              );
-            } else {
-              actions.push(currentAction);
-            }
-            return actions;
-          },
-          [],
-        ),
-      },
-    },
   };
 }
 

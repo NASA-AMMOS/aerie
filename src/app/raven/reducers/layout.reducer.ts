@@ -24,6 +24,7 @@ import {
 
 // Layout State Interface.
 export interface LayoutState {
+  fetchPending: boolean;
   mode: string;
   rightPanelSelectedTabIndex: number | null;
   showActivityPointMetadata: boolean;
@@ -43,6 +44,7 @@ export interface LayoutState {
 
 // Layout State.
 export const initialState: LayoutState = {
+  fetchPending: false,
   mode: 'default',
   rightPanelSelectedTabIndex: 0,
   showActivityPointMetadata: false,
@@ -73,6 +75,8 @@ export function reducer(
       return setMode(state, action);
     case LayoutActionTypes.ToggleApplyLayoutDrawer:
       return toggleApplyLayoutDrawer(state, action);
+    case LayoutActionTypes.ToggleApplyLayoutDrawerEvent:
+      return { ...state, fetchPending: true };
     case LayoutActionTypes.ToggleDetailsPanel:
       return { ...state, showDetailsPanel: !state.showDetailsPanel };
     case LayoutActionTypes.ToggleEpochsDrawer:
@@ -255,4 +259,8 @@ export const getLayoutState = createSelector(
 export const getMode = createSelector(
   getLayoutState,
   (state: LayoutState) => state.mode,
+);
+export const getPending = createSelector(
+  getLayoutState,
+  (state: LayoutState) => state.fetchPending,
 );

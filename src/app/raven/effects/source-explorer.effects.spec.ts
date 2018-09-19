@@ -13,19 +13,29 @@ import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { StoreModule } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
+import { MpsServerService } from '../../shared/services/mps-server.service';
 import { SourceExplorerEffects } from './source-explorer.effects';
 
 describe('SourceExplorerEffects', () => {
   let effects: SourceExplorerEffects;
   let metadata: EffectsMetadata<SourceExplorerEffects>;
+  let mpsServerService: any;
   const actions: Observable<any> = of();
 
   beforeEach(() => {
+    mpsServerService = jasmine.createSpyObj('MpsServerService', [
+      'fetchNewSources',
+    ]);
+
     TestBed.configureTestingModule({
       imports: [HttpClientModule, StoreModule.forRoot({})],
       providers: [
         HttpClient,
         SourceExplorerEffects,
+        {
+          provide: MpsServerService,
+          useValue: mpsServerService,
+        },
         provideMockActions(() => actions),
       ],
     });

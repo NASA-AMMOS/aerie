@@ -219,6 +219,7 @@ export function toDividerBand(): RavenDividerBand {
     id,
     label: `Divider ${id}`,
     labelColor: [0, 0, 0],
+    labelPin: '',
     maxTimeRange: { start: 0, end: 0 },
     name: `Divider ${id}`,
     parentUniqueId: null,

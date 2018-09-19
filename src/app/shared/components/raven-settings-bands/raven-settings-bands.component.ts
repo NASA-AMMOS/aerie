@@ -80,6 +80,7 @@ export class RavenSettingsBandsComponent {
         heightPadding: isNumeric ? 20 : 0,
       },
     });
+
     this.updateSubBand.emit({
       bandId: this.selectedBandId,
       subBandId: subBand.id,

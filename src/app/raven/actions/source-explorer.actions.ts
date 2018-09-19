@@ -11,6 +11,7 @@ import { Action } from '@ngrx/store';
 
 import {
   BaseType,
+  RavenApplyLayoutUpdate,
   RavenCustomFilterSource,
   RavenFile,
   RavenFilterSource,
@@ -27,6 +28,7 @@ export enum SourceExplorerActionTypes {
   AddFilter = '[sourceExplorer] add_filter',
   AddGraphableFilter = '[sourceExplorer] add_graphable_filter',
   ApplyLayout = '[sourceExplorer] apply-layout',
+  ApplyLayoutWithPins = '[sourceExplorer] apply-layout-with-pins',
   ApplyState = '[sourceExplorer] apply-state',
   CloseEvent = '[sourceExplorer] close_event',
   CollapseEvent = '[sourceExplorer] collapse_event',
@@ -97,7 +99,13 @@ export class AddGraphableFilter implements Action {
 export class ApplyLayout implements Action {
   readonly type = SourceExplorerActionTypes.ApplyLayout;
 
-  constructor(public targetSourceIds: string[]) {}
+  constructor(public update: RavenApplyLayoutUpdate) {}
+}
+
+export class ApplyLayoutWithPins implements Action {
+  readonly type = SourceExplorerActionTypes.ApplyLayoutWithPins;
+
+  constructor(public update: RavenApplyLayoutUpdate) {}
 }
 
 export class ApplyState implements Action {
@@ -299,6 +307,7 @@ export type SourceExplorerAction =
   | AddFilter
   | AddGraphableFilter
   | ApplyLayout
+  | ApplyLayoutWithPins
   | ApplyState
   | CloseEvent
   | CollapseEvent

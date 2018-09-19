@@ -129,6 +129,7 @@ export class RavenTimeScrollBarComponent
       this.maxTimeRange.start,
       this.maxTimeRange.end,
     );
+
     this.ctlViewTimeAxis.updateTimes(
       this.viewTimeRange.start,
       this.viewTimeRange.end,
