@@ -11,9 +11,10 @@ import { NgModule } from '@angular/core';
 import { MatToolbarModule } from '@angular/material';
 import {
   HbCommandEditorModule,
-  HBCommandListModule,
-  HBCommandLoaderModule,
+  HbCommandListModule,
+  HbCommandLoaderModule,
   HbMonacoModule,
+  RavenActivityTypeListModule,
 } from '../../../shared/components/modules';
 import { HummingbirdAppComponent } from './hummingbird-app.component';
 
@@ -21,10 +22,11 @@ import { HummingbirdAppComponent } from './hummingbird-app.component';
   declarations: [HummingbirdAppComponent],
   exports: [HummingbirdAppComponent],
   imports: [
+    RavenActivityTypeListModule,
     HbCommandEditorModule,
+    HbCommandListModule,
+    HbCommandLoaderModule,
     HbMonacoModule,
-    HBCommandListModule,
-    HBCommandLoaderModule,
     MatToolbarModule,
   ],
 })

@@ -15,7 +15,7 @@ import {
   Output,
 } from '@angular/core';
 
-import { HBCommandDictionary } from '../../models/hb-command-dictionary';
+import { HbCommandDictionary } from '../../models/hb-command-dictionary';
 
 /**
  * Display a list of commands that can be loaded into the system
@@ -26,9 +26,9 @@ import { HBCommandDictionary } from '../../models/hb-command-dictionary';
   styleUrls: ['./hb-command-loader.component.css'],
   templateUrl: './hb-command-loader.component.html',
 })
-export class HBCommandLoaderComponent {
+export class HbCommandLoaderComponent {
   @Input()
-  dictionaries: HBCommandDictionary[] = [];
+  dictionaries: HbCommandDictionary[] = [];
 
   @Input()
   selectedId: string | null = null;

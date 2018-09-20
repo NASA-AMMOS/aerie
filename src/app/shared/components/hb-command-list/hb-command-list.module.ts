@@ -15,11 +15,11 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { HBCommandListComponent } from './hb-command-list.component';
+import { HbCommandListComponent } from './hb-command-list.component';
 
 @NgModule({
-  declarations: [HBCommandListComponent],
-  exports: [HBCommandListComponent],
+  declarations: [HbCommandListComponent],
+  exports: [HbCommandListComponent],
   imports: [
     CommonModule,
     MatButtonModule,
@@ -30,4 +30,4 @@ import { HBCommandListComponent } from './hb-command-list.component';
     ScrollingModule,
   ],
 })
-export class HBCommandListModule {}
+export class HbCommandListModule {}

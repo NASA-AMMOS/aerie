@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export interface HBCommandType {
+export interface HbCommandType {
   simple: {
     baseType: string | null;
     arraySize: number | null;

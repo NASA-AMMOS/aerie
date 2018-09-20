@@ -1,0 +1,31 @@
+<mat-list>
+  <h2 mat-subheader>Activity Types</h2>
+  <mat-divider></mat-divider>
+  <mat-list-item class="button-item">
+    <button mat-button color="primary" (click)="onClickCreate()">
+      <mat-icon>add</mat-icon> Activity Type
+    </button>
+  </mat-list-item>
+  <mat-divider></mat-divider>
+  <cdk-virtual-scroll-viewport class="viewport" autosize>
+    <mat-list-item class="activity-type-item" *cdkVirtualFor="let activityType of activityTypes">
+      <span matLine>{{ activityType.name }}</span>
+      <button mat-icon-button color="primary">
+        <mat-icon aria-label="Edit activity type" (click)="onClickUpdate(activityType)">
+          edit
+        </mat-icon>
+      </button>
+      <button mat-icon-button color="primary">
+        <mat-icon aria-label="Delete activity type" (click)="onClickDelete(activityType)">
+          clear
+        </mat-icon>
+      </button>
+      <button mat-icon-button color="primary">
+        <mat-icon aria-label="Select activity type" (click)="onClickSelect(activityType)">
+          chevron_right
+        </mat-icon>
+      </button>
+      <mat-divider></mat-divider>
+    </mat-list-item>
+  </cdk-virtual-scroll-viewport>
+</mat-list>

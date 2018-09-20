@@ -15,7 +15,7 @@ import {
   Output,
 } from '@angular/core';
 
-import { HBCommand } from '../../models/hb-command';
+import { HbCommand } from '../../models/hb-command';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -23,9 +23,9 @@ import { HBCommand } from '../../models/hb-command';
   styleUrls: ['./hb-command-list.component.css'],
   templateUrl: './hb-command-list.component.html',
 })
-export class HBCommandListComponent {
+export class HbCommandListComponent {
   @Input()
-  commands: HBCommand[] | null;
+  commands: HbCommand[] | null;
 
   @Output()
   selectedCommandChanged: EventEmitter<string> = new EventEmitter<string>();
@@ -33,8 +33,7 @@ export class HBCommandListComponent {
   /**
    * Event. Called when a command is selected.
    */
-  onSelection(command: HBCommand) {
-    console.log('HBCommandListComponent::onSelection', command);
+  onSelection(command: HbCommand) {
     this.selectedCommandChanged.emit(command.name);
   }
 }

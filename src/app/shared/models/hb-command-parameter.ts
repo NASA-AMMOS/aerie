@@ -7,14 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { HBCommandType } from './hb-command-type';
+import { HbCommandType } from './hb-command-type';
 
-export interface HBCommandParameter {
+export interface HbCommandParameter {
   default_: string;
   description: string;
   mode: string | null;
   name: string;
   range: string;
-  type: HBCommandType;
+  type: HbCommandType;
   units: string | null;
 }

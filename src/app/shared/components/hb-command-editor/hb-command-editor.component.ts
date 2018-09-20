@@ -17,7 +17,7 @@ import {
 } from '@angular/core';
 
 import * as monaco from 'monaco-editor';
-import { HBCommand } from '../../models/hb-command';
+import { HbCommand } from '../../models/hb-command';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,7 +26,7 @@ import { HBCommand } from '../../models/hb-command';
 })
 export class HbCommandEditorComponent implements OnInit, OnChanges {
   @Input()
-  commands: HBCommand[];
+  commands: HbCommand[];
 
   @Input()
   completionItems: monaco.languages.CompletionItem[];

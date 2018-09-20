@@ -7,16 +7,16 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { HBCommandParameter } from './hb-command-parameter';
+import { HbCommandParameter } from './hb-command-parameter';
 
-export interface HBCommand {
+export interface HbCommand {
   definitionMaturity: string;
   description: string;
   implementationMaturity: string;
   name: string;
   opcode: string;
   operationalCategory: string;
-  parameterDefs: HBCommandParameter[];
+  parameterDefs: HbCommandParameter[];
   processorString: string | null;
   restrictedPhases: string[];
 }

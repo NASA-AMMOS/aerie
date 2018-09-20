@@ -14,8 +14,8 @@ import { map } from 'rxjs/operators';
 import { RavenAppState } from '../../raven/raven-store';
 import * as mpsServerMocks from '../mocks/mps-server';
 import { MpsServerSource } from '../models';
-import { HBCommand } from '../models/hb-command';
-import { HBCommandDictionary } from '../models/hb-command-dictionary';
+import { HbCommand } from '../models/hb-command';
+import { HbCommandDictionary } from '../models/hb-command-dictionary';
 import { getState, importState, toRavenSources } from '../util';
 
 @Injectable({
@@ -62,8 +62,8 @@ export class MpsServerService {
    * @todo Update spec with HTTP tests once this has been updated
    * https://angular.io/guide/testing#testing-http-services
    */
-  getCommandDictionaryList(): Observable<HBCommandDictionary[]> {
-    return Observable.create((o: Observer<HBCommandDictionary[]>) => {
+  getCommandDictionaryList(): Observable<HbCommandDictionary[]> {
+    return Observable.create((o: Observer<HbCommandDictionary[]>) => {
       o.next(mpsServerMocks.commandDictionaryList);
       o.complete();
     });
@@ -88,8 +88,8 @@ export class MpsServerService {
    *
    * @param name The name of a command dictionary to retrieve
    */
-  getCommandDictionary(name: string): Observable<HBCommand[]> {
-    return Observable.create((o: Observer<HBCommand[]>) => {
+  getCommandDictionary(name: string): Observable<HbCommand[]> {
+    return Observable.create((o: Observer<HbCommand[]>) => {
       o.next(mpsServerMocks.getCommandList(1, name));
       o.complete();
     });

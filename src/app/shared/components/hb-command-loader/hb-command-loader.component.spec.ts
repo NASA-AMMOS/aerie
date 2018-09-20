@@ -16,8 +16,8 @@ import {
 } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
-import { HBCommandLoaderComponent } from './hb-command-loader.component';
-import { HBCommandLoaderModule } from './hb-command-loader.module';
+import { HbCommandLoaderComponent } from './hb-command-loader.component';
+import { HbCommandLoaderModule } from './hb-command-loader.module';
 
 import * as mpsServerMocks from '../../mocks/mps-server';
 
@@ -31,21 +31,21 @@ import * as mpsServerMocks from '../../mocks/mps-server';
     </hb-command-loader>
   `,
 })
-class HBCommandLoaderTestComponent {
+class HbCommandLoaderTestComponent {
   dictionaries: any[] = mpsServerMocks.commandDictionaryList;
   selectedId: string | null = null;
 
-  @ViewChild(HBCommandLoaderComponent)
-  component: HBCommandLoaderComponent;
+  @ViewChild(HbCommandLoaderComponent)
+  component: HbCommandLoaderComponent;
 
   selectedDictionaryChanged = jasmine.createSpy(
-    'HBCommandLoaderTestComponent::selectedDictionaryChanged',
+    'HbCommandLoaderTestComponent::selectedDictionaryChanged',
   );
 }
 
-describe('HBCommandLoaderComponent', () => {
-  let component: HBCommandLoaderTestComponent;
-  let fixture: ComponentFixture<HBCommandLoaderTestComponent>;
+describe('HbCommandLoaderComponent', () => {
+  let component: HbCommandLoaderTestComponent;
+  let fixture: ComponentFixture<HbCommandLoaderTestComponent>;
   let element: HTMLElement;
 
   /**
@@ -60,13 +60,13 @@ describe('HBCommandLoaderComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [HBCommandLoaderTestComponent],
-      imports: [HBCommandLoaderModule, NoopAnimationsModule],
+      declarations: [HbCommandLoaderTestComponent],
+      imports: [HbCommandLoaderModule, NoopAnimationsModule],
     }).compileComponents();
   }));
 
   beforeEach(fakeAsync(() => {
-    fixture = TestBed.createComponent(HBCommandLoaderTestComponent);
+    fixture = TestBed.createComponent(HbCommandLoaderTestComponent);
     element = fixture.nativeElement;
     component = fixture.componentInstance;
     fixture.detectChanges();

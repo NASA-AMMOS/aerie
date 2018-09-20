@@ -9,21 +9,21 @@
 
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { HBCommandListComponent } from './hb-command-list.component';
-import { HBCommandListModule } from './hb-command-list.module';
+import { HbCommandListComponent } from './hb-command-list.component';
+import { HbCommandListModule } from './hb-command-list.module';
 
-describe('HBCommandListComponent', () => {
-  let component: HBCommandListComponent;
-  let fixture: ComponentFixture<HBCommandListComponent>;
+describe('HbCommandListComponent', () => {
+  let component: HbCommandListComponent;
+  let fixture: ComponentFixture<HbCommandListComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      imports: [HBCommandListModule],
+      imports: [HbCommandListModule],
     }).compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(HBCommandListComponent);
+    fixture = TestBed.createComponent(HbCommandListComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

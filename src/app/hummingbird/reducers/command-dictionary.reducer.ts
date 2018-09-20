@@ -8,8 +8,8 @@
  */
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { HBCommand } from '../../shared/models/hb-command';
-import { HBCommandDictionary } from '../../shared/models/hb-command-dictionary';
+import { HbCommand } from '../../shared/models/hb-command';
+import { HbCommandDictionary } from '../../shared/models/hb-command-dictionary';
 import {
   CommandDictionaryAction,
   CommandDictionaryActionTypes,
@@ -23,11 +23,11 @@ export interface CommandDictionaryState {
   /**
    * A list of commands for the selected dictionary
    */
-  commands: HBCommand[] | null;
+  commands: HbCommand[] | null;
   /**
    * List of available command dictionaries
    */
-  dictionaries: HBCommandDictionary[];
+  dictionaries: HbCommandDictionary[];
   /**
    * The currently selected command dictionary
    */

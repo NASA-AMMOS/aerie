@@ -17,14 +17,13 @@ import {
 import { select, Store } from '@ngrx/store';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { HBCommand } from '../../../shared/models/hb-command';
-import { HBCommandDictionary } from '../../../shared/models/hb-command-dictionary';
-import { HummingbirdAppState } from '../../hummingbird-store';
-
+import { HbCommand } from '../../../shared/models/hb-command';
+import { HbCommandDictionary } from '../../../shared/models/hb-command-dictionary';
 import {
   FetchCommandDictionaryList,
   SelectCommandDictionary,
 } from '../../actions/command-dictionary.actions';
+import { HummingbirdAppState } from '../../hummingbird-store';
 
 import * as fromCommandDictionary from '../../reducers/command-dictionary.reducer';
 
@@ -38,12 +37,12 @@ export class HummingbirdAppComponent implements OnDestroy {
   /**
    * List of all available dictionaries to select from
    */
-  dictionaries: HBCommandDictionary[];
+  dictionaries: HbCommandDictionary[];
 
   /**
    * List of all commands from the selected dictionary
    */
-  commands: HBCommand[] | null = [];
+  commands: HbCommand[] | null = [];
 
   /**
    * Currently active dictionary

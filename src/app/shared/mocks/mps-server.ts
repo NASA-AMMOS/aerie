@@ -7,13 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { HBCommand } from '../models/hb-command';
-import { HBCommandDictionary } from '../models/hb-command-dictionary';
+import { HbCommand } from '../models/hb-command';
+import { HbCommandDictionary } from '../models/hb-command-dictionary';
 
 /**
  * Mock data for command dictionary list testing
  */
-export const commandDictionaryList: HBCommandDictionary[] = [
+export const commandDictionaryList: HbCommandDictionary[] = [
   {
     id: 'TEST_1',
     name: 'Test 1',
@@ -31,7 +31,7 @@ export const commandDictionaryList: HBCommandDictionary[] = [
 export function getCommandList(
   seed: number = 1,
   prefix: string = 'TEST',
-): HBCommand[] {
+): HbCommand[] {
   const list = [];
 
   // MSL has a list of almost 4000 commands.

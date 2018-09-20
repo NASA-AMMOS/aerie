@@ -11,6 +11,8 @@ export * from './hb-command-editor/hb-command-editor.module';
 export * from './hb-command-list/hb-command-list.module';
 export * from './hb-command-loader/hb-command-loader.module';
 export * from './hb-monaco/hb-monaco.module';
+export * from './raven-activity-type-form-dialog/raven-activity-type-form-dialog.module';
+export * from './raven-activity-type-list/raven-activity-type-list.module';
 export * from './raven-activity-band/raven-activity-band.module';
 export * from './raven-activity-point/raven-activity-point.module';
 export * from './raven-bands/raven-bands.module';

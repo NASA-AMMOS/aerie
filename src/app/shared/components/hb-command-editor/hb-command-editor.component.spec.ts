@@ -10,7 +10,7 @@
 import { SimpleChange } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import * as monaco from 'monaco-editor';
-import { HBCommand } from '../../models/hb-command';
+import { HbCommand } from '../../models/hb-command';
 import { HbCommandEditorComponent } from './hb-command-editor.component';
 import { HbCommandEditorModule } from './hb-command-editor.module';
 
@@ -51,7 +51,7 @@ describe('HbCommandEditorComponent', () => {
   });
 
   it('should convert commands to completion items', () => {
-    const commands: HBCommand[] = [
+    const commands: HbCommand[] = [
       {
         definitionMaturity: 'UNLOCKED',
         description: 'A test command',
