@@ -134,8 +134,10 @@ export class RavenEpochsComponent implements AfterViewInit, OnChanges {
     const reader: FileReader = new FileReader();
 
     reader.onloadend = e => {
-      const newEpochs: RavenEpoch[] = JSON.parse(reader.result);
-      this.importEpochs.emit(newEpochs);
+      if (typeof reader.result === 'string') {
+        const newEpochs: RavenEpoch[] = JSON.parse(reader.result);
+        this.importEpochs.emit(newEpochs);
+      }
     };
 
     reader.readAsText(file);

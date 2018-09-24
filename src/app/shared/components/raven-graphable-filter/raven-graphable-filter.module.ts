@@ -11,11 +11,15 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { RavenGraphableFilterComponent } from './raven-graphable-filter.component';
 
-import { MatButtonModule, MatIconModule } from '@angular/material';
+import {
+  MatButtonModule,
+  MatIconModule,
+  MatTooltipModule,
+} from '@angular/material';
 
 @NgModule({
   declarations: [RavenGraphableFilterComponent],
   exports: [RavenGraphableFilterComponent],
-  imports: [CommonModule, MatButtonModule, MatIconModule],
+  imports: [CommonModule, MatButtonModule, MatIconModule, MatTooltipModule],
 })
 export class RavenGraphableFilterModule {}

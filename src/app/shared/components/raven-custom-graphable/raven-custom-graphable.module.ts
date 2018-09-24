@@ -9,12 +9,16 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { MatButtonModule, MatIconModule } from '@angular/material';
+import {
+  MatButtonModule,
+  MatIconModule,
+  MatTooltipModule,
+} from '@angular/material';
 import { RavenCustomGraphableComponent } from './raven-custom-graphable.component';
 
 @NgModule({
   declarations: [RavenCustomGraphableComponent],
   exports: [RavenCustomGraphableComponent],
-  imports: [CommonModule, MatButtonModule, MatIconModule],
+  imports: [CommonModule, MatButtonModule, MatIconModule, MatTooltipModule],
 })
 export class RavenCustomGraphableModule {}
