@@ -31,6 +31,7 @@ The global settings will apply to all the bands once the options are changed.
 | Label Width                 | Defines the width of the label area for each band.           |
 | Add Divider Band            | On Click, a new divider band will be added.                  |
 | Show Tooltip                | If On, the tooltip will be displayed. The tooltip appears in three areas: the band's label area, timeline band and for each the data point when hovering the band. |
+| Show Last Click | If On, when the user clicks any band at any point in the timeline, it will add a light blue 'ghost' line marking the selected time. |
 | Default Activity Layout     | Sets the default value for the activity layout when activities are added in the future. |
 | Default Label Font          | Defines the font of the label for each band.                 |
 | Default Resource Color      | Sets the default value for the line color when resources are added in the future. |
@@ -180,5 +181,5 @@ To select a Data Point, click on the data point of your preference. When a data 
 
 *<p align="center">**Image 15: Select a Data Point.** Left side: On a band of your preference, click any data point. Right Side: Once a data point is selected, the details panel will scroll and highlight the selected data point. Also within the 'Selected Point' Tab in the Right Panel, the data point's metadata will be displayed.</p>*
 
-<p align="right"><a href="./Raven_101_4_time_cursor.md">Next: Time Cursor</a></p>
+<p align="right"><a href="./Raven_101_3.1_guides.md">Next: Guides</a></p>
 
