@@ -22,15 +22,6 @@
           (change)="updateDefaultBandSettings.emit({ update: { labelWidth: $event.target.valueAsNumber } })">
       </div>
 
-      <!-- Add Divider Band. -->
-      <div class="field">
-        <button
-          mat-raised-button
-          (click)="addDividerBand.emit(null)">
-          Add Divider Band
-        </button>
-      </div>
-
       <!-- Show Last Click. -->
       <div class="field">
         <mat-slide-toggle

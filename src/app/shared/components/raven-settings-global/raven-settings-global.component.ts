@@ -20,9 +20,6 @@ export class RavenSettingsGlobalComponent {
   defaultBandSettings: RavenDefaultBandSettings;
 
   @Output()
-  addDividerBand: EventEmitter<null> = new EventEmitter<null>();
-
-  @Output()
   updateDefaultBandSettings: EventEmitter<RavenUpdate> = new EventEmitter<
     RavenUpdate
   >();

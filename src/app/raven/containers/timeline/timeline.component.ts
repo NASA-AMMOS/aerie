@@ -340,7 +340,9 @@ export class TimelineComponent implements OnDestroy {
    */
   onAddDividerBand(): void {
     this.store.dispatch(
-      new timelineActions.AddBand(null, toCompositeBand(toDividerBand())),
+      new timelineActions.AddBand(null, toCompositeBand(toDividerBand()), {
+        afterBandId: this.selectedBandId,
+      }),
     );
   }
 

@@ -104,7 +104,9 @@ describe('timeline reducer', () => {
     };
     timelineState = reducer(
       timelineState,
-      new AddBand(source.id, newBand, { filterTarget: 'DKF' }),
+      new AddBand(source.id, newBand, {
+        additionalSubBandProps: { filterTarget: 'DKF' },
+      }),
     );
 
     expect(timelineState).toEqual({
@@ -170,6 +172,25 @@ describe('timeline reducer', () => {
       guides: [1665067939],
       lastClickTime: 1665067939,
     });
+  });
+
+  it('handle AddBand (insert after named band)', () => {
+    const actions = [
+      new AddBand(null, { ...compositeBand, id: '0' }),
+      new AddBand(null, { ...compositeBand, id: '1' }),
+      new AddBand(null, { ...compositeBand, id: '42' }, { afterBandId: '0' }),
+    ];
+
+    timelineState = actions.reduce(
+      (state, action) => reducer(state, action),
+      timelineState,
+    );
+
+    const sortedBands = [...timelineState.bands].sort(
+      (a, b) => a.sortOrder - b.sortOrder,
+    );
+
+    expect(sortedBands.map(b => b.id)).toEqual(['0', '42', '1']);
   });
 
   it('handle AddPointsToSubBand', () => {

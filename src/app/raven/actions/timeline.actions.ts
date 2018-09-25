@@ -10,6 +10,7 @@
 import { Action } from '@ngrx/store';
 
 import {
+  AddBandModifiers,
   BaseType,
   RavenCompositeBand,
   RavenPin,
@@ -59,7 +60,7 @@ export class AddBand implements Action {
   constructor(
     public sourceId: string | null,
     public band: RavenCompositeBand,
-    public additionalSubBandProps?: StringTMap<BaseType>,
+    public modifiers: AddBandModifiers = {},
   ) {}
 }
 

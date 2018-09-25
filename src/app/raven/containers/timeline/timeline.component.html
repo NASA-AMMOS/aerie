@@ -159,6 +159,7 @@
               [selectedBandId]="selectedBandId"
               [selectedSubBandId]="selectedSubBandId"
               (deleteSubBand)="onDeleteSubBand($event)"
+              (addDividerBand)="onAddDividerBand()"
               (updateBand)="onUpdateBand($event)"
               (updateBandAndSubBand)="onUpdateBandAndSubBand($event)"
               (updateSubBand)="onUpdateSubBand($event)"
@@ -257,7 +258,6 @@
       </button>
       <raven-settings-global
         [defaultBandSettings]="defaultBandSettings"
-        (addDividerBand)="onAddDividerBand()"
         (updateDefaultBandSettings)="onUpdateDefaultBandSettings($event)"
         (updateTimeline)="onUpdateTimeline($event)">
       </raven-settings-global>

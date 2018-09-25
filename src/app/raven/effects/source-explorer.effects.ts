@@ -725,9 +725,11 @@ export class SourceExplorerEffects {
                       action.sourceId,
                       toCompositeBand(subBand),
                       {
-                        filterTarget: (sourceExplorer.treeBySourceId[
-                          action.sourceId
-                        ] as RavenFilterSource).filterTarget,
+                        additionalSubBandProps: {
+                          filterTarget: (sourceExplorer.treeBySourceId[
+                            action.sourceId
+                          ] as RavenFilterSource).filterTarget,
+                        },
                       },
                     ),
                   );

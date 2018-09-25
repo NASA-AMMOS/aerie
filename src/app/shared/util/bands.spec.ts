@@ -18,6 +18,7 @@ import {
   isAddTo,
   isMessageTypeActivity,
   isOverlay,
+  sortOrderForBand,
   subBandById,
   updateSelectedBandIds,
   updateSortOrder,
@@ -233,6 +234,14 @@ describe('bands.ts', () => {
   describe('updateSortOrder', () => {
     it(`should maintain the correct sort order of the given bands`, () => {
       expect(updateSortOrder(bands)).toEqual(bands);
+    });
+  });
+
+  describe('sortOrderForBand', () => {
+    it(`should return the sortOrder for the band with the given id`, () => {
+      expect(sortOrderForBand(bands, '102')).toEqual(2);
+      expect(sortOrderForBand(bands, '')).toEqual(bands.length - 1);
+      expect(sortOrderForBand(bands, 'abc')).toEqual(bands.length - 1);
     });
   });
 

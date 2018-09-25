@@ -387,6 +387,24 @@ export function updateSortOrder(
 }
 
 /**
+ * Helper that finds the sortOrder of a band by its id.
+ */
+export function sortOrderForBand(
+  bands: RavenCompositeBand[],
+  bandId: string,
+): number {
+  const bandIndex = bands
+    .filter(b => b.containerId === '0')
+    .findIndex(b => b.id === bandId);
+
+  if (bandIndex !== -1) {
+    return bands[bandIndex].sortOrder;
+  } else {
+    return bands.filter(b => b.containerId === '0').length - 1;
+  }
+}
+
+/**
  * Helper that gets new time ranges based on the current view time range and the list of given bands.
  */
 export function updateTimeRanges(

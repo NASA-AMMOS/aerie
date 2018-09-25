@@ -7,6 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+export * from './add-band-modifiers';
 export * from './base-type';
 export * from './map';
 export * from './mps-server-activity-metadata';

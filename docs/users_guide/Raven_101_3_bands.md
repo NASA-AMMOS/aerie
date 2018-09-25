@@ -29,7 +29,6 @@ The global settings will apply to all the bands once the options are changed.
 | Option                      | Description                                                  |
 | --------------------------- | ------------------------------------------------------------ |
 | Label Width                 | Defines the width of the label area for each band.           |
-| Add Divider Band            | On Click, a new divider band will be added.                  |
 | Show Tooltip                | If On, the tooltip will be displayed. The tooltip appears in three areas: the band's label area, timeline band and for each the data point when hovering the band. |
 | Show Last Click | If On, when the user clicks any band at any point in the timeline, it will add a light blue 'ghost' line marking the selected time. |
 | Default Activity Layout     | Sets the default value for the activity layout when activities are added in the future. |
@@ -50,13 +49,14 @@ The global settings will apply to all the bands once the options are changed.
 
 These are the configuration options shared among all the band types.
 
-| Option         | Description                                                  |
-| -------------- | ------------------------------------------------------------ |
-| Label          | Defines the label displayed in the Band                      |
-| Height         | Defines the height of the band.                              |
-| Delete Band    | On Click, the user will have the option to remove a band from the Bands Panels. |
-| Overlay        | If this option is Turned On, future selected sources will be displayed on top of the band. Please refer to [Overlay Bands Section](#overlay-bands) for more details. |
-| Show Pin Label | If this option is Turned On and the selected source is the child of a pin, it will append the pin name to the band's label. |
+| Option           | Description                                                  |
+| ---------------- | ------------------------------------------------------------ |
+| Label            | Defines the label displayed in the Band                      |
+| Height           | Defines the height of the band.                              |
+| Delete Band      | On Click, the user will have the option to remove a band from the Bands Panels. |
+| Overlay          | If this option is Turned On, future selected sources will be displayed on top of the band. Please refer to [Overlay Bands Section](#overlay-bands) for more details. |
+| Show Pin Label   | If this option is Turned On and the selected source is the child of a pin, it will append the pin name to the band's label. |
+| Add Divider Band | On Click, a new divider band will be added below the selected band. |
 
 #### Resource Band Options
 
@@ -182,4 +182,3 @@ To select a Data Point, click on the data point of your preference. When a data 
 *<p align="center">**Image 15: Select a Data Point.** Left side: On a band of your preference, click any data point. Right Side: Once a data point is selected, the details panel will scroll and highlight the selected data point. Also within the 'Selected Point' Tab in the Right Panel, the data point's metadata will be displayed.</p>*
 
 <p align="right"><a href="./Raven_101_3.1_guides.md">Next: Guides</a></p>
-

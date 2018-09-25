@@ -39,6 +39,7 @@ import {
   getMaxTimeRange,
   getParentSourceIds,
   getPoint,
+  sortOrderForBand,
   updateSelectedBandIds,
   updateSelectedPoint,
   updateSortOrder,
@@ -158,29 +159,46 @@ export function reducer(
  * Reduction Helper. Called when reducing the 'AddBand' action.
  */
 export function addBand(state: TimelineState, action: AddBand): TimelineState {
-  const bands = state.bands.concat({
-    ...action.band,
-    containerId: '0',
-    sortOrder: state.bands.filter(b => b.containerId === '0').length,
-    subBands: action.band.subBands.map(subBand => {
-      if (action.sourceId) {
-        return {
-          ...subBand,
-          parentUniqueId: action.band.id,
-          sourceIds: without(subBand.sourceIds, action.sourceId).concat(
-            action.sourceId,
-          ),
-          ...action.additionalSubBandProps,
-        };
-      } else {
-        return {
-          ...subBand,
-          parentUniqueId: action.band.id,
-          ...action.additionalSubBandProps,
-        };
+  const prevSort = sortOrderForBand(
+    state.bands,
+    action.modifiers.afterBandId || '',
+  );
+
+  const bands = state.bands
+    .map(band => {
+      if (band.containerId !== '0') {
+        return band;
       }
-    }),
-  });
+
+      if (band.sortOrder > prevSort) {
+        return { ...band, sortOrder: band.sortOrder + 1 };
+      } else {
+        return band;
+      }
+    })
+    .concat({
+      ...action.band,
+      containerId: '0',
+      sortOrder: prevSort + 1,
+      subBands: action.band.subBands.map(subBand => {
+        if (action.sourceId) {
+          return {
+            ...subBand,
+            parentUniqueId: action.band.id,
+            sourceIds: without(subBand.sourceIds, action.sourceId).concat(
+              action.sourceId,
+            ),
+            ...action.modifiers.additionalSubBandProps,
+          };
+        } else {
+          return {
+            ...subBand,
+            parentUniqueId: action.band.id,
+            ...action.modifiers.additionalSubBandProps,
+          };
+        }
+      }),
+    });
 
   return {
     ...state,
