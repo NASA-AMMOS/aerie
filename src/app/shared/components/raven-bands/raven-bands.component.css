@@ -13,7 +13,7 @@
 }
 
 .selected {
-  background-color: rgba(240, 252, 253, 1);
+  background-color: rgba(240, 252, 253, 0.3);
 }
 
 .sortable-bands {

@@ -12,6 +12,7 @@ import { initialState, reducer, TimelineState } from './timeline.reducer';
 
 import {
   AddBand,
+  AddGuide,
   AddPointsToSubBand,
   AddSubBand,
   PanLeftViewTimeRange,
@@ -21,6 +22,7 @@ import {
   RemoveAllPointsInSubBandWithParentSource,
   RemoveBandsOrPointsForSource,
   RemoveBandsWithNoPoints,
+  RemoveGuide,
   RemoveSourceIdFromSubBands,
   RemoveSubBand,
   ResetViewTimeRange,
@@ -29,6 +31,7 @@ import {
   SetPointsForSubBand,
   SortBands,
   UpdateBand,
+  UpdateLastClickTime,
   UpdateSubBand,
   UpdateTimeline,
   UpdateViewTimeRange,
@@ -155,6 +158,17 @@ describe('timeline reducer', () => {
       ],
       maxTimeRange: { end: 100, start: 10 },
       viewTimeRange: { end: 100, start: 10 },
+    });
+  });
+
+  it('handle AddGuide', () => {
+    timelineState = reducer(timelineState, new UpdateLastClickTime(1665067939));
+    timelineState = reducer(timelineState, new AddGuide());
+
+    expect(timelineState).toEqual({
+      ...initialState,
+      guides: [1665067939],
+      lastClickTime: 1665067939,
     });
   });
 
@@ -388,6 +402,18 @@ describe('timeline reducer', () => {
     timelineState = reducer(timelineState, new AddBand(source.id, band1));
     timelineState = reducer(timelineState, new RemoveBandsWithNoPoints());
     expect(timelineState.bands.length).toEqual(1);
+  });
+
+  it('handle RemoveGuide', () => {
+    timelineState = reducer(timelineState, new UpdateLastClickTime(1665067939));
+    timelineState = reducer(timelineState, new AddGuide());
+    timelineState = reducer(timelineState, new RemoveGuide());
+
+    expect(timelineState).toEqual({
+      ...initialState,
+      guides: [],
+      lastClickTime: 1665067939,
+    });
   });
 
   it('handle RemoveSourceIdFromSubBands', () => {
@@ -666,6 +692,15 @@ describe('timeline reducer', () => {
       new UpdateBand(band.id, { height: 42 }),
     );
     expect(timelineState.bands[0].height).toEqual(42);
+  });
+
+  it('handle UpdateLastClickTime', () => {
+    timelineState = reducer(timelineState, new UpdateLastClickTime(1665067123));
+
+    expect(timelineState).toEqual({
+      ...initialState,
+      lastClickTime: 1665067123,
+    });
   });
 
   it('handle UpdateSubBand', () => {

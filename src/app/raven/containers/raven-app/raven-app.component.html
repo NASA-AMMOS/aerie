@@ -186,6 +186,36 @@
 
   <button
     mat-icon-button
+    matTooltip="Create Guide"
+    (click)="onAddGuide()">
+    <mat-icon
+      aria-label="Create Guide">
+      create
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Delete Guide"
+    (click)="onRemoveGuide()">
+    <mat-icon
+      aria-label="Delete Guide">
+      remove_circle_outline
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Remove All Guides"
+    (click)="onRemoveAllGuides()">
+    <mat-icon
+      aria-label="Remove All Guides">
+      remove_circle
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
     matTooltip="Global Band Settings"
     (click)="toggleGlobalSettingsDrawer()">
     <mat-icon

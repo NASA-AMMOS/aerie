@@ -214,7 +214,7 @@ export function getResourcePoints(
     const start = utc(data['Data Timestamp']);
     let value = data['Data Value'];
 
-    if (isDuration) {
+    if (isDuration && typeof value === 'string') {
       value = fromDuration(value as string);
     } else if (isTime) {
       value = utc(value as string);

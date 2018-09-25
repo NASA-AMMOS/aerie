@@ -16,5 +16,6 @@ export interface RavenDefaultBandSettings {
   labelWidth: number;
   resourceColor: string;
   resourceFillColor: string;
+  showLastClick: boolean;
   showTooltip: boolean;
 }

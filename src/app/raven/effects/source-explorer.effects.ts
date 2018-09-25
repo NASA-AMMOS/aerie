@@ -995,6 +995,7 @@ export class SourceExplorerEffects {
               sourceIds: [],
             })),
           })),
+          guides: savedState.guides ? savedState.guides : [],
           maxTimeRange: savedState.maxTimeRange,
           viewTimeRange: savedState.viewTimeRange,
         }),

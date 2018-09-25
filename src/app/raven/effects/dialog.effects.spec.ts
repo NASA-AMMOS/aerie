@@ -59,6 +59,10 @@ describe('DialogEffects', () => {
     expect(metadata.openPinDialog$).toEqual({ dispatch: true });
   });
 
+  it('should register openRemoveAllGuidesDialog$ that does dispatch an action', () => {
+    expect(metadata.openRemoveAllGuidesDialog$).toEqual({ dispatch: true });
+  });
+
   it('should register openShareableLinkDialog$ that does not dispatch an action', () => {
     expect(metadata.openShareableLinkDialog$).toEqual({ dispatch: false });
   });

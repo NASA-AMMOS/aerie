@@ -156,6 +156,18 @@ export class RavenAppComponent implements OnDestroy {
     `;
   }
 
+  onAddGuide() {
+    this.store.dispatch(new timelineActions.AddGuide());
+  }
+
+  onRemoveGuide() {
+    this.store.dispatch(new timelineActions.RemoveGuide());
+  }
+
+  onRemoveAllGuides() {
+    this.store.dispatch(new dialogActions.OpenRemoveAllGuidesDialog('400px'));
+  }
+
   onPanLeft() {
     this.store.dispatch(new timelineActions.PanLeftViewTimeRange());
   }

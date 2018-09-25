@@ -34,6 +34,7 @@ import {
   OpenDeleteSubBandDialog,
   OpenFileImportDialog,
   OpenPinDialog,
+  OpenRemoveAllGuidesDialog,
   OpenShareableLinkDialog,
   OpenStateApplyDialog,
   OpenStateSaveDialog,
@@ -277,6 +278,38 @@ export class DialogEffects {
             result.newName,
           ) as Action,
         ];
+      }
+      return [];
+    }),
+  );
+
+  /**
+   * Effect for OpenRemoveAllGuidesDialog.
+   */
+  @Effect()
+  openRemoveAllGuidesDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenRemoveAllGuidesDialog>(
+      DialogActionTypes.OpenRemoveAllGuidesDialog,
+    ),
+    exhaustMap(action => {
+      const removeAllGuidesDialog = this.dialog.open(
+        RavenConfirmDialogComponent,
+        {
+          data: {
+            cancelText: 'No',
+            confirmText: 'Yes',
+            message: 'Are you sure you want to remove all guides?',
+          },
+          width: action.width,
+        },
+      );
+
+      return zip(of(action), removeAllGuidesDialog.afterClosed());
+    }),
+    map(([action, result]) => ({ action, result })),
+    exhaustMap(({ result }) => {
+      if (result && result.confirm) {
+        return [new timelineActions.RemoveAllGuides()];
       }
       return [];
     }),

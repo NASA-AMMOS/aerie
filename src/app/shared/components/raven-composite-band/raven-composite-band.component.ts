@@ -81,6 +81,9 @@ export class RavenCompositeBandComponent
   epoch: RavenEpoch | null = null;
 
   @Input()
+  guides: number[];
+
+  @Input()
   height = 100;
 
   @Input()
@@ -96,10 +99,16 @@ export class RavenCompositeBandComponent
   labelWidth = 150;
 
   @Input()
+  lastClickTime: number | null;
+
+  @Input()
   maxTimeRange: RavenTimeRange = { end: 0, start: 0 };
 
   @Input()
   selectedPoint: RavenPoint | null = null;
+
+  @Input()
+  showLastClick = true;
 
   @Input()
   showTooltip = true;
@@ -176,6 +185,12 @@ export class RavenCompositeBandComponent
       shouldRedraw = true;
     }
 
+    // Guides.
+    if (changes.guides && !changes.guides.firstChange) {
+      this.ctlTimeAxis.guideTimes = this.guides;
+      shouldRedraw = true;
+    }
+
     // Height.
     if (changes.height && !changes.height.firstChange) {
       this.ctlCompositeBand.height = this.height + this.heightPadding;
@@ -210,6 +225,14 @@ export class RavenCompositeBandComponent
     // Label Width.
     if (changes.labelWidth && !changes.labelWidth.firstChange) {
       shouldResize = true;
+    }
+
+    // Last click time.
+    if (changes.lastClickTime && !changes.lastClickTime.firstChange) {
+      this.ctlTimeAxis.lastClickTime = this.showLastClick
+        ? this.lastClickTime
+        : null;
+      shouldRedraw = true;
     }
 
     // Max Time Range.
@@ -282,6 +305,14 @@ export class RavenCompositeBandComponent
           }
         }
       }
+    }
+
+    // Show Last click.
+    if (changes.showLastClick && !changes.showLastClick.firstChange) {
+      this.ctlTimeAxis.lastClickTime = this.showLastClick
+        ? this.lastClickTime
+        : null;
+      shouldRedraw = true;
     }
 
     // Time Cursor Color.
@@ -368,6 +399,10 @@ export class RavenCompositeBandComponent
       this.viewTimeRange.start,
       this.viewTimeRange.end,
     );
+    this.ctlTimeAxis.guideTimes = this.guides;
+    this.ctlTimeAxis.lastClickTime = this.showLastClick
+      ? this.lastClickTime
+      : null;
     this.ctlViewTimeAxis.now = this.cursorTime; // Set `now` for the time-cursor so it draws upon initialization.
 
     this.elementRef.nativeElement.appendChild(this.ctlCompositeBand.div);
@@ -466,12 +501,14 @@ export class RavenCompositeBandComponent
         bandId: ctlData.band.id,
         pointId: ctlData.interval.uniqueId,
         subBandId: ctlData.interval.subBandId,
+        time: ctlData.time,
       });
     } else {
       this.bandLeftClick.emit({
         bandId: ctlData.band.id,
         pointId: null,
         subBandId: null,
+        time: ctlData.time,
       });
     }
   }

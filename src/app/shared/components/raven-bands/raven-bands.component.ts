@@ -62,10 +62,16 @@ export class RavenBandsComponent implements OnChanges, OnInit {
   epoch: RavenEpoch | null;
 
   @Input()
+  guides: number[];
+
+  @Input()
   labelFontSize: number;
 
   @Input()
   labelWidth: number;
+
+  @Input()
+  lastClickTime: number | null;
 
   @Input()
   maxTimeRange: RavenTimeRange;
@@ -75,6 +81,9 @@ export class RavenBandsComponent implements OnChanges, OnInit {
 
   @Input()
   selectedPoint: RavenPoint;
+
+  @Input()
+  showLastClick: boolean;
 
   @Input()
   showTooltip: boolean;

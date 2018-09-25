@@ -133,6 +133,8 @@ export class TimelineComponent implements OnDestroy {
 
   // Timeline state.
   bands: RavenCompositeBand[];
+  guides: number[];
+  lastClickTime: number | null;
   maxTimeRange: RavenTimeRange;
   selectedBandId: string;
   selectedPoint: RavenPoint | null;
@@ -295,7 +297,9 @@ export class TimelineComponent implements OnDestroy {
       )
       .subscribe(state => {
         this.bands = state.bands;
+        this.guides = state.guides;
         this.maxTimeRange = state.maxTimeRange;
+        this.lastClickTime = state.lastClickTime;
         this.selectedBandId = state.selectedBandId;
         this.selectedPoint = state.selectedPoint;
         this.selectedSubBandId = state.selectedSubBandId;
@@ -368,6 +372,7 @@ export class TimelineComponent implements OnDestroy {
    */
   onBandLeftClick(e: RavenBandLeftClick): void {
     this.store.dispatch(new timelineActions.SelectBand(e.bandId));
+    this.store.dispatch(new timelineActions.UpdateLastClickTime(e.time));
 
     if (e.subBandId && e.pointId) {
       this.store.dispatch(

@@ -13,11 +13,13 @@ import { State } from '../raven-store';
 
 import {
   AddBand,
+  AddGuide,
   AddPointsToSubBand,
   AddSubBand,
   RemoveAllPointsInSubBandWithParentSource,
   RemoveBandsOrPointsForSource,
   RemoveBandsWithNoPoints,
+  RemoveGuide,
   RemoveSourceIdFromSubBands,
   RemoveSubBand,
   SelectBand,
@@ -54,6 +56,8 @@ import {
 export interface TimelineState {
   bands: RavenCompositeBand[];
   fetchPending: boolean;
+  guides: number[]; // in secs
+  lastClickTime: number | null;
   maxTimeRange: RavenTimeRange;
   panDelta: number;
   selectedBandId: string;
@@ -67,6 +71,8 @@ export interface TimelineState {
 export const initialState: TimelineState = {
   bands: [],
   fetchPending: false,
+  guides: [],
+  lastClickTime: null,
   maxTimeRange: { end: 0, start: 0 },
   panDelta: 10,
   selectedBandId: '',
@@ -87,6 +93,8 @@ export function reducer(
   switch (action.type) {
     case TimelineActionTypes.AddBand:
       return addBand(state, action);
+    case TimelineActionTypes.AddGuide:
+      return addGuide(state, action);
     case TimelineActionTypes.AddPointsToSubBand:
       return addPointsToSubBand(state, action);
     case TimelineActionTypes.AddSubBand:
@@ -95,12 +103,16 @@ export function reducer(
       return panLeftViewTimeRange(state);
     case TimelineActionTypes.PanRightViewTimeRange:
       return panRightViewTimeRange(state);
+    case TimelineActionTypes.RemoveAllGuides:
+      return { ...state, guides: [] };
     case TimelineActionTypes.RemoveAllPointsInSubBandWithParentSource:
       return removeAllPointsInSubBandWithParentSource(state, action);
     case TimelineActionTypes.RemoveBandsOrPointsForSource:
       return removeBandsOrPointsForSource(state, action);
     case TimelineActionTypes.RemoveBandsWithNoPoints:
       return removeBandsWithNoPoints(state, action);
+    case TimelineActionTypes.RemoveGuide:
+      return removeGuide(state, action);
     case TimelineActionTypes.RemoveSourceIdFromSubBands:
       return removeSourceIdFromSubBands(state, action);
     case TimelineActionTypes.RemoveSubBand:
@@ -119,6 +131,8 @@ export function reducer(
       return sourceIdAdd(state, action);
     case TimelineActionTypes.UpdateBand:
       return updateBand(state, action);
+    case TimelineActionTypes.UpdateLastClickTime:
+      return { ...state, lastClickTime: action.time };
     case TimelineActionTypes.UpdateSubBand:
       return updateSubBand(state, action);
     case TimelineActionTypes.UpdateTimeline:
@@ -172,6 +186,18 @@ export function addBand(state: TimelineState, action: AddBand): TimelineState {
     ...state,
     bands,
     ...updateTimeRanges(bands, state.viewTimeRange),
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'AddGuide' action.
+ */
+export function addGuide(state: TimelineState, action: AddGuide) {
+  return {
+    ...state,
+    guides: state.lastClickTime
+      ? state.guides.concat(state.lastClickTime)
+      : state.guides,
   };
 }
 
@@ -402,6 +428,23 @@ export function removeBandsWithNoPoints(
   return {
     ...state,
     bands,
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'RemoveGuide' action.
+ */
+export function removeGuide(state: TimelineState, action: RemoveGuide) {
+  return {
+    ...state,
+    guides: state.guides.filter(time => {
+      if (state.lastClickTime) {
+        // remove guides within 10 sec threshold
+        const min = state.lastClickTime - 10;
+        const max = state.lastClickTime + 10;
+        return time >= max || time <= min;
+      } else return true;
+    }),
   };
 }
 

@@ -62,6 +62,7 @@ export const config: ConfigState = {
       labelWidth: 150,
       resourceColor: '#000000',
       resourceFillColor: '#000000',
+      showLastClick: true,
       showTooltip: true,
     },
     itarMessage: '',

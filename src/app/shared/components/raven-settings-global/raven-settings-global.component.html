@@ -31,6 +31,16 @@
         </button>
       </div>
 
+      <!-- Show Last Click. -->
+      <div class="field">
+        <mat-slide-toggle
+          color="primary"
+          [checked]="defaultBandSettings.showLastClick"
+          (change)="updateDefaultBandSettings.emit({ update: { showLastClick: $event.checked } })">
+          Show Last Click
+        </mat-slide-toggle>
+      </div>
+
       <!-- Show Tooltip. -->
       <div class="field">
         <mat-slide-toggle

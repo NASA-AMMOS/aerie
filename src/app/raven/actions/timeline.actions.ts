@@ -22,6 +22,7 @@ import {
 // Action Types.
 export enum TimelineActionTypes {
   AddBand = '[timeline] add_band',
+  AddGuide = '[timeline] add_guide',
   AddPointsToSubBand = '[timeline] add_points_to_sub_band',
   AddSubBand = '[timeline] add_sub_band',
   PanLeftViewTimeRange = '[timeline] pan_left_view_time_range',
@@ -29,9 +30,11 @@ export enum TimelineActionTypes {
   PinAdd = '[timeline] pin_add',
   PinRemove = '[timeline] pin_remove',
   PinRename = '[timeline] pin_rename',
+  RemoveAllGuides = '[timeline] remove_all_guides',
   RemoveAllPointsInSubBandWithParentSource = '[timeline] remove_all_points_in_sub_band_with_parent_source',
   RemoveBandsOrPointsForSource = '[timeline] remove_bands_or_points_for_source',
   RemoveBandsWithNoPoints = '[timeline] remove_bands_with_no_points',
+  RemoveGuide = '[timeline] remove_guide',
   RemoveSourceIdFromSubBands = '[timeline] remove_source_from_sub_bands',
   RemoveSubBand = '[timeline] remove_sub_band',
   ResetViewTimeRange = '[timeline] reset_view_time_range',
@@ -41,6 +44,7 @@ export enum TimelineActionTypes {
   SortBands = '[timeline] sort_bands',
   SourceIdAdd = '[timeline] source_id_add',
   UpdateBand = '[timeline] update_band',
+  UpdateLastClickTime = '[timeline] last_click_time',
   UpdateSubBand = '[timeline] update_sub_band',
   UpdateTimeline = '[timeline] update_timeline',
   UpdateViewTimeRange = '[timeline] update_view_time_range',
@@ -57,6 +61,10 @@ export class AddBand implements Action {
     public band: RavenCompositeBand,
     public additionalSubBandProps?: StringTMap<BaseType>,
   ) {}
+}
+
+export class AddGuide implements Action {
+  readonly type = TimelineActionTypes.AddGuide;
 }
 
 export class AddPointsToSubBand implements Action {
@@ -106,6 +114,10 @@ export class PinRename implements Action {
   constructor(public sourceId: string, public newName: string) {}
 }
 
+export class RemoveAllGuides implements Action {
+  readonly type = TimelineActionTypes.RemoveAllGuides;
+}
+
 export class RemoveAllPointsInSubBandWithParentSource implements Action {
   readonly type = TimelineActionTypes.RemoveAllPointsInSubBandWithParentSource;
 
@@ -120,6 +132,10 @@ export class RemoveBandsOrPointsForSource implements Action {
 
 export class RemoveBandsWithNoPoints implements Action {
   readonly type = TimelineActionTypes.RemoveBandsWithNoPoints;
+}
+
+export class RemoveGuide implements Action {
+  readonly type = TimelineActionTypes.RemoveGuide;
 }
 
 export class RemoveSourceIdFromSubBands implements Action {
@@ -182,6 +198,12 @@ export class UpdateBand implements Action {
   constructor(public bandId: string, public update: StringTMap<BaseType>) {}
 }
 
+export class UpdateLastClickTime implements Action {
+  readonly type = TimelineActionTypes.UpdateLastClickTime;
+
+  constructor(public time: number) {}
+}
+
 export class UpdateSubBand implements Action {
   readonly type = TimelineActionTypes.UpdateSubBand;
 
@@ -215,6 +237,7 @@ export class ZoomOutViewTimeRange implements Action {
 // Union type of all actions.
 export type TimelineAction =
   | AddBand
+  | AddGuide
   | AddPointsToSubBand
   | AddSubBand
   | PanLeftViewTimeRange
@@ -222,9 +245,11 @@ export type TimelineAction =
   | PinAdd
   | PinRemove
   | PinRename
+  | RemoveAllGuides
   | RemoveAllPointsInSubBandWithParentSource
   | RemoveBandsOrPointsForSource
   | RemoveBandsWithNoPoints
+  | RemoveGuide
   | RemoveSourceIdFromSubBands
   | RemoveSubBand
   | ResetViewTimeRange
@@ -234,6 +259,7 @@ export type TimelineAction =
   | SortBands
   | SourceIdAdd
   | UpdateBand
+  | UpdateLastClickTime
   | UpdateSubBand
   | UpdateTimeline
   | UpdateViewTimeRange
