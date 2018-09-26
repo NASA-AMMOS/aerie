@@ -37,6 +37,8 @@ export * from './raven-layout-apply/raven-layout-apply.module';
 export * from './raven-output/raven-output.module';
 export * from './raven-pan-to-duration/raven-pan-to-duration.module';
 export * from './raven-pin-dialog/raven-pin-dialog.module';
+export * from './raven-plan-form-dialog/raven-plan-form-dialog.module';
+export * from './raven-plan-list/raven-plan-list.module';
 export * from './raven-resource-band/raven-resource-band.module';
 export * from './raven-resource-point/raven-resource-point.module';
 export * from './raven-settings-bands/raven-settings-bands.module';

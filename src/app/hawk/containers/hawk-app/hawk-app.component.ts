@@ -19,14 +19,25 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { RavenActivityType } from '../../../shared/models/raven-activity-type';
+import { RavenPlan } from '../../../shared/models/raven-plan';
+
 import {
   FetchActivityTypeList,
   OpenActivityTypeFormDialog,
   RemoveActivityType,
 } from '../../actions/activity-type.actions';
+
+import {
+  FetchPlanList,
+  OpenPlanFormDialog,
+  RemovePlan,
+  SelectPlan,
+} from '../../actions/plan.actions';
+
 import { HawkAppState } from '../../hawk-store';
 
 import * as fromActivityType from '../../reducers/activity-type.reducer';
+import * as fromPlan from '../../reducers/plan.reducer';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,6 +50,21 @@ export class HawkAppComponent implements OnDestroy {
    * List of activity types to display
    */
   activityTypes: RavenActivityType[] = [];
+
+  /**
+   * List of plans to display
+   */
+  plans: RavenPlan[] = [];
+
+  /**
+   * Selected plan
+   */
+  selectedPlan: RavenPlan | null = null;
+
+  /**
+   * Track whether the plan list is expanded
+   */
+  planListExpanded = true;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -56,7 +82,28 @@ export class HawkAppComponent implements OnDestroy {
         this.markForCheck();
       });
 
+    this.store
+      .pipe(
+        select(fromPlan.getPlans),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(plans => {
+        this.plans = plans;
+        this.markForCheck();
+      });
+
+    this.store
+      .pipe(
+        select(fromPlan.getSelectedPlan),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(plan => {
+        this.selectedPlan = plan || null;
+        this.markForCheck();
+      });
+
     // TODO: Move to a route guard
+    this.store.dispatch(new FetchPlanList());
     this.store.dispatch(new FetchActivityTypeList());
   }
 
@@ -99,5 +146,41 @@ export class HawkAppComponent implements OnDestroy {
    */
   deleteActivityType(id: string) {
     this.store.dispatch(new RemoveActivityType(id));
+  }
+
+  /**
+   * Event. Dispatch an action to display the Plan Form Dialog
+   */
+  showCreatePlanForm() {
+    this.store.dispatch(new OpenPlanFormDialog(null));
+  }
+
+  /**
+   * Event. Dispatch an action to display the Plan Form Dialog
+   */
+  showUpdatePlanForm(id: string) {
+    this.store.dispatch(new OpenPlanFormDialog(id));
+  }
+
+  /**
+   * Event. Dispatch an action to delete a Plan
+   */
+  deletePlan(id: string) {
+    this.store.dispatch(new RemovePlan(id));
+  }
+
+  /**
+   * Event. Dispatch an action to select a Plan
+   */
+  selectPlan(id: string) {
+    this.store.dispatch(new SelectPlan(id));
+  }
+
+  /**
+   * Event. Track the expanded state of the plan list component
+   * @param isExpanded boolean
+   */
+  setPlanListExpanded(isExpanded: boolean) {
+    this.planListExpanded = isExpanded;
   }
 }

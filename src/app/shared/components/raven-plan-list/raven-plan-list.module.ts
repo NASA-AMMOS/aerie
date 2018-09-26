@@ -15,12 +15,11 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { RavenActivityTypeListComponent } from './raven-activity-type-list.component';
+import { RavenPlanListComponent } from './raven-plan-list.component';
 
 @NgModule({
-  declarations: [RavenActivityTypeListComponent],
-  exports: [RavenActivityTypeListComponent],
+  declarations: [RavenPlanListComponent],
+  exports: [RavenPlanListComponent],
   imports: [
     CommonModule,
     MatButtonModule,
@@ -28,8 +27,7 @@ import { RavenActivityTypeListComponent } from './raven-activity-type-list.compo
     MatExpansionModule,
     MatIconModule,
     MatListModule,
-    MatTooltipModule,
     ScrollingModule,
   ],
 })
-export class RavenActivityTypeListModule {}
+export class RavenPlanListModule {}

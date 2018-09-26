@@ -7,31 +7,42 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { CommonModule } from '@angular/common';
-import { NgModule } from '@angular/core';
-import {
-  MatDialogModule,
-  MatExpansionModule,
-  MatToolbarModule,
-} from '@angular/material';
+/**
+ * A rudimentary interface for activity types
+ */
+export interface RavenPlan {
+  /**
+   * Id of the plan
+   */
+  id: string;
 
-import {
-  RavenActivityTypeListModule,
-  RavenPlanListModule,
-} from '../../../shared/components/modules';
+  /**
+   * Name of plan
+   */
+  name: string;
 
-import { HawkAppComponent } from './hawk-app.component';
+  /**
+   * When the plan should start
+   */
+  start: string;
 
-@NgModule({
-  declarations: [HawkAppComponent],
-  exports: [HawkAppComponent],
-  imports: [
-    CommonModule,
-    MatDialogModule,
-    MatExpansionModule,
-    MatToolbarModule,
-    RavenActivityTypeListModule,
-    RavenPlanListModule,
-  ],
-})
-export class HawkAppModule {}
+  /**
+   * When the plan should end
+   */
+  end: string;
+
+  /**
+   * Minimum state of charge
+   */
+  msoc: number;
+
+  /**
+   * Handover state of charge
+   */
+  hsoc: number;
+
+  /**
+   * Max power load
+   */
+  mpow: number;
+}

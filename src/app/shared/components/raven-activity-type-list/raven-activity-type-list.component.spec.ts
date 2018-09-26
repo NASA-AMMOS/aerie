@@ -9,6 +9,7 @@
 
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { RavenActivityType } from '../../models/raven-activity-type';
 import { ActivityTypeMockService } from '../../services/activity-type-mock.service';
@@ -47,7 +48,7 @@ describe('RavenActivityTypeListComponent', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
       declarations: [RavenActivityTypeListTestComponent],
-      imports: [RavenActivityTypeListModule],
+      imports: [RavenActivityTypeListModule, NoopAnimationsModule],
     });
 
     await TestBed.compileComponents();
@@ -71,13 +72,13 @@ describe('RavenActivityTypeListComponent', () => {
 
   it('should emit the deleteActivityTypeClicked event', () => {
     spyOn(component, 'remove').and.callThrough();
-    component.component.onClickDelete('test0');
+    component.component.onClickDelete(new Event('click'), 'test0');
     expect(component.remove).toHaveBeenCalledWith('test0');
   });
 
   it('should emit the updateActivityTypeClicked event', () => {
     spyOn(component, 'update').and.callThrough();
-    component.component.onClickUpdate('test0');
+    component.component.onClickUpdate(new Event('click'), 'test0');
     expect(component.update).toHaveBeenCalledWith('test0');
   });
 

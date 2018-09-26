@@ -57,3 +57,9 @@ hb-command-list {
   display: block;
   margin-bottom: 1.5rem;
 }
+
+.empty {
+  background: rgba(0, 0, 0, 0.04);
+  margin-top: 16px;
+  padding: 24px;
+}

@@ -11,9 +11,13 @@ import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
-import { RavenActivityTypeFormDialogModule } from '../shared/components/modules';
+import {
+  RavenActivityTypeFormDialogModule,
+  RavenPlanFormDialogModule,
+} from '../shared/components/modules';
 import { HawkAppModule } from './containers/hawk-app/hawk-app.module';
 import { ActivityTypeEffects } from './effects/activity-type.effects';
+import { PlanEffects } from './effects/plan.effects';
 import { HawkRoutingModule } from './hawk-routing.module';
 import { reducers } from './hawk-store';
 
@@ -22,9 +26,10 @@ import { reducers } from './hawk-store';
     HttpClientModule,
     HawkRoutingModule,
     StoreModule.forFeature('hawk', reducers),
-    EffectsModule.forFeature([ActivityTypeEffects]),
+    EffectsModule.forFeature([ActivityTypeEffects, PlanEffects]),
     HawkAppModule,
     RavenActivityTypeFormDialogModule,
+    RavenPlanFormDialogModule,
   ],
 })
 export class HawkModule {}

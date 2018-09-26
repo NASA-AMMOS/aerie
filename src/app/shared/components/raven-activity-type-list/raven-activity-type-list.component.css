@@ -7,11 +7,12 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-::ng-deep .button-item .mat-list-item-content {
-  padding: 0 !important;
+.button-row {
+  padding: 16px 8px;
+  justify-content: flex-start;
 }
 
-::ng-deep .button-item .mat-list-item-content .mat-button {
+.button-row .mat-button {
   border-radius: 2rem;
   width: 100%;
   text-align: left;

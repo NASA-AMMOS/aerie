@@ -7,38 +7,61 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { RavenActivityType } from '../../models/raven-activity-type';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  ViewChild,
+} from '@angular/core';
+import { MatExpansionPanel } from '@angular/material';
+
+import { RavenPlan } from '../../models/raven-plan';
 
 @Component({
-  selector: 'raven-activity-type-list',
-  styleUrls: ['./raven-activity-type-list.component.css'],
-  templateUrl: './raven-activity-type-list.component.html',
+  selector: 'raven-plan-list',
+  styleUrls: ['./raven-plan-list.component.css'],
+  templateUrl: './raven-plan-list.component.html',
 })
-export class RavenActivityTypeListComponent {
+export class RavenPlanListComponent {
   @Input()
-  activityTypes: RavenActivityType[];
+  plans: RavenPlan[];
 
   @Input()
   expanded = true;
 
-  @Output()
-  createActivityTypeClicked = new EventEmitter();
+  @Input()
+  title = 'Plans';
+
+  @Input()
+  selectedPlan: RavenPlan;
 
   @Output()
-  deleteActivityTypeClicked = new EventEmitter<string>();
+  createPlanClicked = new EventEmitter();
 
   @Output()
-  updateActivityTypeClicked = new EventEmitter<string>();
+  deletePlanClicked = new EventEmitter<string>();
 
   @Output()
-  selectActivityTypeClicked = new EventEmitter<string>();
+  updatePlanClicked = new EventEmitter<string>();
+
+  @Output()
+  selectPlanClicked = new EventEmitter<string>();
+
+  @Output()
+  closed = new EventEmitter<void>();
+
+  @Output()
+  opened = new EventEmitter<void>();
+
+  @ViewChild('panel')
+  panel: MatExpansionPanel;
 
   /**
    * Event. Called when the create button is clicked
    */
   onClickCreate() {
-    this.createActivityTypeClicked.emit();
+    this.createPlanClicked.emit();
   }
 
   /**
@@ -47,7 +70,7 @@ export class RavenActivityTypeListComponent {
    */
   onClickDelete(e: Event, id: string) {
     e.stopPropagation();
-    this.deleteActivityTypeClicked.emit(id);
+    this.deletePlanClicked.emit(id);
   }
 
   /**
@@ -56,7 +79,7 @@ export class RavenActivityTypeListComponent {
    */
   onClickUpdate(e: Event, id: string) {
     e.stopPropagation();
-    this.updateActivityTypeClicked.emit(id);
+    this.updatePlanClicked.emit(id);
   }
 
   /**
@@ -64,6 +87,7 @@ export class RavenActivityTypeListComponent {
    * @param id id of the record to select
    */
   onClickSelect(id: string) {
-    this.selectActivityTypeClicked.emit(id);
+    this.panel.close();
+    this.selectPlanClicked.emit(id);
   }
 }

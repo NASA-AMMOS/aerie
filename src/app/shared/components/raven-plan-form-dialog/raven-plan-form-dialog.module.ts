@@ -7,29 +7,28 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ScrollingModule } from '@angular/cdk-experimental/scrolling';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { RavenActivityTypeListComponent } from './raven-activity-type-list.component';
+import { ReactiveFormsModule } from '@angular/forms';
+import {
+  MatButtonModule,
+  MatDialogModule,
+  MatFormFieldModule,
+  MatInputModule,
+} from '@angular/material';
+import { RavenPlanFormDialogComponent } from './raven-plan-form-dialog.component';
 
 @NgModule({
-  declarations: [RavenActivityTypeListComponent],
-  exports: [RavenActivityTypeListComponent],
+  declarations: [RavenPlanFormDialogComponent],
+  entryComponents: [RavenPlanFormDialogComponent],
+  exports: [RavenPlanFormDialogComponent],
   imports: [
     CommonModule,
     MatButtonModule,
-    MatDividerModule,
-    MatExpansionModule,
-    MatIconModule,
-    MatListModule,
-    MatTooltipModule,
-    ScrollingModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    ReactiveFormsModule,
   ],
 })
-export class RavenActivityTypeListModule {}
+export class RavenPlanFormDialogModule {}

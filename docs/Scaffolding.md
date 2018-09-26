@@ -5,43 +5,48 @@ Most of the files that are required for a feature can be generated with the
 that are required to generate all files for a new feature. Run the following
 commands from the `src/app/hummingbird` directory.
 
-1. Generate actions, effects, and reducers. Do not prefix.
+1. Change into the module directory that you are working on
+   (hawk, hummingbird, raven)
+2. Change the reducer and feature schmematic in angular.json (project root)
+   to point to the store in your current directory.
+3. Generate actions, effects, and reducers. *Do not prefix*.
 ```bash
 ng generate feature ActivityType
 ```
-2. Generate the component. Prefix with either Raven or Hb. State 
+4. Generate the component. *Prefix with Raven*. 
 ```bash
-ng generate component HbActivityTypeList
+ng generate component RavenActivityTypeList
 ```
-3. Move the component into `shared/components`
+5. Move the component into `shared/components`
 ```bash
-mv hb-activity-type-list ../shared/components/
+mv raven-activity-type-list ../shared/components/
 ```
-4. Create a component module in the component folder
+6. Create a component module in the component folder
 ```bash
-touch ../shared/components/hb-activity-type-list/hb-activity-type-list.module.ts
+touch ../shared/components/raven-activity-type-list/raven-activity-type-list.module.ts
 ```
-5. Add the module definition
+7. Add the module definition
 ```ts
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { HbActivityTypeListComponent } from './hb-activity-type-list.component';
+import { RavenActivityTypeListComponent } from './raven-activity-type-list.component';
 
 @NgModule({
-  declarations: [HbActivityTypeListComponent],
-  exports: [HbActivityTypeListComponent],
+  declarations: [RavenActivityTypeListComponent],
+  exports: [RavenActivityTypeListComponent],
   imports: [ CommonModule],
 })
-export class HbActivityTypeListModule {}
+export class RavenActivityTypeListModule {}
 ```
-6. Add the module to `../shared/components/modules.ts`
+8. Add the module to `../shared/components/modules.ts`
 ```diff
-+ export * from './hb-activity-type-list/hb-activity-type-list.module';
++ export * from './raven-activity-type-list/raven-activity-type-list.module';
 ```
-7. Remove the component from `hummingbird.module.ts`
+9. Remove the component from `hummingbird.module.ts` or the module that
+   corresponds to whatever directory you are in.
 ```diff
-- import { HbActivityTypeListComponent } from './hb-activity-type-list/hb-activity-type-list.component';
-- declarations: [HbActivitityTypeListComponent],
+- import { RavenActivityTypeListComponent } from './raven-activity-type-list/raven-activity-type-list.component';
+- declarations: [RavenActivitityTypeListComponent],
 ```
 
 [scaffold]: https://github.com/ngrx/platform/blob/master/docs/schematics/README.md

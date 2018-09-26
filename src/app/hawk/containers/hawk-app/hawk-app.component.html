@@ -6,12 +6,32 @@
 <main class="content">
 </main>
 <aside>
-  <raven-activity-type-list
-    [activityTypes]="activityTypes"
-    (deleteActivityTypeClicked)="deleteActivityType($event.id)"
-    (createActivityTypeClicked)="showCreateActivityTypeForm()"
-    (updateActivityTypeClicked)="showUpdateActivityTypeForm($event.id)">
-  </raven-activity-type-list>
+  <mat-accordion>
+    <raven-plan-list
+      (closed)="setPlanListExpanded(false)"
+      (createPlanClicked)="showCreatePlanForm()"
+      (opened)="setPlanListExpanded(true)"
+      (selectPlanClicked)="selectPlan($event.id)"
+      (updatePlanClicked)="showUpdatePlanForm($event.id)"
+      [expanded]="selectedPlan == null"
+      [plans]="plans"
+      [selectedPlan]="selectedPlan" (deletePlanClicked)="deletePlan($event.id)"
+      [title]="selectedPlan?.name">
+    </raven-plan-list>
+
+    <raven-activity-type-list
+      (createActivityTypeClicked)="showCreateActivityTypeForm()"
+      (deleteActivityTypeClicked)="deleteActivityType($event.id)"
+      (updateActivityTypeClicked)="showUpdateActivityTypeForm($event.id)"
+      *ngIf="selectedPlan != null"
+      [activityTypes]="activityTypes"
+      [expanded]="!planListExpanded">
+    </raven-activity-type-list>
+  </mat-accordion>
+
+  <div class="empty" *ngIf="selectedPlan == null">
+    Select a plan to view activity types.
+  </div>
 </aside>
 <footer>
 </footer>

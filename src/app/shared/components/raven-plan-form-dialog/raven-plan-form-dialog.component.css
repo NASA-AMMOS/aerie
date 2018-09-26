@@ -7,31 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { CommonModule } from '@angular/common';
-import { NgModule } from '@angular/core';
-import {
-  MatDialogModule,
-  MatExpansionModule,
-  MatToolbarModule,
-} from '@angular/material';
+mat-form-field {
+  display: block;
+}
 
-import {
-  RavenActivityTypeListModule,
-  RavenPlanListModule,
-} from '../../../shared/components/modules';
-
-import { HawkAppComponent } from './hawk-app.component';
-
-@NgModule({
-  declarations: [HawkAppComponent],
-  exports: [HawkAppComponent],
-  imports: [
-    CommonModule,
-    MatDialogModule,
-    MatExpansionModule,
-    MatToolbarModule,
-    RavenActivityTypeListModule,
-    RavenPlanListModule,
-  ],
-})
-export class HawkAppModule {}
+button {
+  text-transform: uppercase;
+}

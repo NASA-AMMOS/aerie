@@ -18,6 +18,7 @@ import * as fromRoot from '../app-store';
  * notation packages up all of the exports into a single object.
  */
 import * as fromActivityType from './reducers/activity-type.reducer';
+import * as fromPlan from './reducers/plan.reducer';
 
 /**
  * As mentioned, we treat each reducer like a table in a database. This means
@@ -25,6 +26,7 @@ import * as fromActivityType from './reducers/activity-type.reducer';
  */
 export interface State {
   activityType: fromActivityType.ActivityTypeState;
+  plan: fromPlan.PlanState;
 }
 
 /**
@@ -34,6 +36,7 @@ export interface State {
  */
 export const reducers: ActionReducerMap<State> = {
   activityType: fromActivityType.reducer,
+  plan: fromPlan.reducer,
 };
 
 /**

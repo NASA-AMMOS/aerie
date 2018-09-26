@@ -7,31 +7,26 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { CommonModule } from '@angular/common';
-import { NgModule } from '@angular/core';
-import {
-  MatDialogModule,
-  MatExpansionModule,
-  MatToolbarModule,
-} from '@angular/material';
+.button-row {
+  padding: 16px 8px;
+  justify-content: flex-start;
+}
 
-import {
-  RavenActivityTypeListModule,
-  RavenPlanListModule,
-} from '../../../shared/components/modules';
+.button-row .mat-button {
+  border-radius: 2rem;
+  width: 100%;
+  text-align: left;
+  margin: 0;
+}
 
-import { HawkAppComponent } from './hawk-app.component';
+.plan-item button {
+  display: none;
+}
 
-@NgModule({
-  declarations: [HawkAppComponent],
-  exports: [HawkAppComponent],
-  imports: [
-    CommonModule,
-    MatDialogModule,
-    MatExpansionModule,
-    MatToolbarModule,
-    RavenActivityTypeListModule,
-    RavenPlanListModule,
-  ],
-})
-export class HawkAppModule {}
+.plan-item:hover button {
+  display: initial;
+}
+
+.viewport {
+  height: 250px;
+}

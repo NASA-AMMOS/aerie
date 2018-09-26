@@ -20,12 +20,12 @@
         "@ngrx/schematics:reducer": {
           "group": true,
           "spec": true,
-          "reducers": "./hummingbird-store.ts"
+          "reducers": "./hawk-store.ts"
         },
         "@ngrx/schematics:feature": {
           "group": true,
           "spec": true,
-          "reducers": "./hummingbird-store.ts"
+          "reducers": "./hawk-store.ts"
         }
       },
       "architect": {

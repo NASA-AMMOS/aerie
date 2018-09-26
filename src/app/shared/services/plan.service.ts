@@ -7,31 +7,12 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { CommonModule } from '@angular/common';
-import { NgModule } from '@angular/core';
-import {
-  MatDialogModule,
-  MatExpansionModule,
-  MatToolbarModule,
-} from '@angular/material';
+import { Observable } from 'rxjs';
+import { RavenPlan } from '../models/raven-plan';
 
-import {
-  RavenActivityTypeListModule,
-  RavenPlanListModule,
-} from '../../../shared/components/modules';
-
-import { HawkAppComponent } from './hawk-app.component';
-
-@NgModule({
-  declarations: [HawkAppComponent],
-  exports: [HawkAppComponent],
-  imports: [
-    CommonModule,
-    MatDialogModule,
-    MatExpansionModule,
-    MatToolbarModule,
-    RavenActivityTypeListModule,
-    RavenPlanListModule,
-  ],
-})
-export class HawkAppModule {}
+/**
+ * @todo Convert into a real service once one exists to get data from
+ */
+export interface PlanService {
+  getPlans(): Observable<RavenPlan[]>;
+}
