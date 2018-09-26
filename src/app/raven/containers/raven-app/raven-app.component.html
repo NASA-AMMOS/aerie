@@ -186,6 +186,16 @@
 
   <button
     mat-icon-button
+    matTooltip="Remove All Bands"
+    (click)="onRemoveAllBands()">
+    <mat-icon
+      aria-label="Remove All Bands">
+      clear
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
     matTooltip="Create Guide"
     (click)="onAddGuide()">
     <mat-icon

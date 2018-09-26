@@ -25,6 +25,7 @@ import {
   PinAdd,
   PinRemove,
   PinRename,
+  RemoveAllBands,
   ResetViewTimeRange,
   SelectPoint,
   UpdateViewTimeRange,
@@ -46,6 +47,7 @@ import {
 import { getPinLabel, getResourcePoints, timestamp } from '../../shared/util';
 
 import * as layoutActions from '../actions/layout.actions';
+import * as sourceExplorerActions from '../actions/source-explorer.actions';
 import * as timelineActions from '../actions/timeline.actions';
 
 @Injectable()
@@ -55,6 +57,17 @@ export class TimelineEffects {
     private http: HttpClient,
     private store$: Store<RavenAppState>,
   ) {}
+
+  /**
+   * Effect for RemoveAllBands.
+   */
+  @Effect()
+  removeAllBands$: Observable<Action> = this.actions$.pipe(
+    ofType<RemoveAllBands>(TimelineActionTypes.RemoveAllBands),
+    withLatestFrom(this.store$),
+    map(([, state]) => state.raven.timeline),
+    concatMap(timeline => this.removeAllBands(timeline.bands)),
+  );
 
   /**
    * Effect for AddBand | PinAdd | PinRemove | PinRename.
@@ -185,6 +198,30 @@ export class TimelineEffects {
           ),
         ),
       );
+  }
+
+  /**
+   *
+   * Helper. Returns a list of action to remove bands from timeline and update source explorer.
+   */
+  removeAllBands(bands: RavenCompositeBand[]) {
+    const actions: Action[] = [];
+
+    bands.forEach((band: RavenCompositeBand) => {
+      band.subBands.forEach((subBand: RavenResourceBand) => {
+        subBand.sourceIds.forEach(sourceId => {
+          actions.push(
+            new timelineActions.RemoveBandsOrPointsForSource(sourceId),
+          );
+          actions.push(
+            new sourceExplorerActions.UpdateTreeSource(sourceId, {
+              opened: false,
+            }),
+          );
+        });
+      });
+    });
+    return actions;
   }
 
   /**

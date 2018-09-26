@@ -160,6 +160,10 @@ export class RavenAppComponent implements OnDestroy {
     this.store.dispatch(new timelineActions.AddGuide());
   }
 
+  onRemoveAllBands() {
+    this.store.dispatch(new dialogActions.OpenRemoveAllBandsDialog('400px'));
+  }
+
   onRemoveGuide() {
     this.store.dispatch(new timelineActions.RemoveGuide());
   }

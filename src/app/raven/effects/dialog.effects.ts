@@ -34,6 +34,7 @@ import {
   OpenDeleteSubBandDialog,
   OpenFileImportDialog,
   OpenPinDialog,
+  OpenRemoveAllBandsDialog,
   OpenRemoveAllGuidesDialog,
   OpenShareableLinkDialog,
   OpenStateApplyDialog,
@@ -50,6 +51,38 @@ export class DialogEffects {
     private dialog: MatDialog,
     private store$: Store<RavenAppState>,
   ) {}
+
+  /**
+   * Effect for OpenRemoveAllBandsDialog.
+   */
+  @Effect()
+  openRemoveAllBandsDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenRemoveAllBandsDialog>(
+      DialogActionTypes.OpenRemoveAllBandsDialog,
+    ),
+    exhaustMap(action => {
+      const removeAllBandsDialog = this.dialog.open(
+        RavenConfirmDialogComponent,
+        {
+          data: {
+            cancelText: 'No',
+            confirmText: 'Yes',
+            message: `Are you sure you want to remove all bands?`,
+          },
+          width: action.width,
+        },
+      );
+
+      return zip(of(action), removeAllBandsDialog.afterClosed());
+    }),
+    map(([action, result]) => ({ action, result })),
+    exhaustMap(({ action, result }) => {
+      if (result && result.confirm) {
+        return of(new timelineActions.RemoveAllBands());
+      }
+      return [];
+    }),
+  );
 
   /**
    * Effect for OpenConfirmDialog.

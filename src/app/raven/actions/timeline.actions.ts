@@ -31,6 +31,7 @@ export enum TimelineActionTypes {
   PinAdd = '[timeline] pin_add',
   PinRemove = '[timeline] pin_remove',
   PinRename = '[timeline] pin_rename',
+  RemoveAllBands = '[timeline] remove_all_bands',
   RemoveAllGuides = '[timeline] remove_all_guides',
   RemoveAllPointsInSubBandWithParentSource = '[timeline] remove_all_points_in_sub_band_with_parent_source',
   RemoveBandsOrPointsForSource = '[timeline] remove_bands_or_points_for_source',
@@ -113,6 +114,10 @@ export class PinRename implements Action {
   readonly type = TimelineActionTypes.PinRename;
 
   constructor(public sourceId: string, public newName: string) {}
+}
+
+export class RemoveAllBands implements Action {
+  readonly type = TimelineActionTypes.RemoveAllBands;
 }
 
 export class RemoveAllGuides implements Action {
@@ -246,6 +251,7 @@ export type TimelineAction =
   | PinAdd
   | PinRemove
   | PinRename
+  | RemoveAllBands
   | RemoveAllGuides
   | RemoveAllPointsInSubBandWithParentSource
   | RemoveBandsOrPointsForSource

@@ -24,6 +24,7 @@ export enum DialogActionTypes {
   OpenDeleteSubBandDialog = '[dialog] open_delete_sub_band_dialog',
   OpenFileImportDialog = '[dialog] open_file_import_dialog',
   OpenPinDialog = '[dialog] open_pin_dialog',
+  OpenRemoveAllBandsDialog = '[dialog] remove_all_bands_dialog',
   OpenRemoveAllGuidesDialog = '[dialog] remove_all_guides_dialog',
   OpenShareableLinkDialog = '[dialog] open_shareable_link_dialog',
   OpenStateApplyDialog = '[dialog] open_state_apply_dialog',
@@ -81,6 +82,12 @@ export class OpenPinDialog implements Action {
   ) {}
 }
 
+export class OpenRemoveAllBandsDialog implements Action {
+  readonly type = DialogActionTypes.OpenRemoveAllBandsDialog;
+
+  constructor(public width: string) {}
+}
+
 export class OpenRemoveAllGuidesDialog implements Action {
   readonly type = DialogActionTypes.OpenRemoveAllGuidesDialog;
 
@@ -113,6 +120,7 @@ export type DialogAction =
   | OpenDeleteDialog
   | OpenFileImportDialog
   | OpenPinDialog
+  | OpenRemoveAllBandsDialog
   | OpenRemoveAllGuidesDialog
   | OpenShareableLinkDialog
   | OpenStateApplyDialog
