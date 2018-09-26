@@ -20,7 +20,17 @@ The Purpose of this document is to provide a system administrator a quick refere
 
 ### 1.2             Terminology and Notation
 
-Define terminology and notation.
+| Term  | Meaning                                    |
+| ----- | ------------------------------------------ |
+| RAVEN | Resource and Activity Visualization Engine |
+| MGSS  | Multi-mission Ground Systems and Services  |
+| AMMOS | Advanced Multi-mission Operations System   |
+| NPM   | Node Package Manager                       |
+| HTML  | Hyper-text Markup Language                 |
+| CAM   | Common Access Management                   |
+| MPS   | Mission Planning Systems                   |
+
+
 
 ### 1.3             References
 
@@ -148,7 +158,7 @@ raven: {
 
  
 
-The following diagram illustrates how the communication within RAVEN context happens. The client, via a browser, loads RAVEN. Then, RAVEN loads its configuration from a configuration file that permates to the components loaded. The communication to the backend happens through a middleware layer that packages requests and handles responses. All of this communication happens through http/https. 
+The following diagram illustrates how the communication within RAVEN context happens. The client, via a browser, loads RAVEN. Then, RAVEN loads its configuration from a configuration file that permeates to the components loaded. The communication to the backend happens through a middleware layer that packages requests and handles responses. All of this communication happens through http/https. 
 
 
 
