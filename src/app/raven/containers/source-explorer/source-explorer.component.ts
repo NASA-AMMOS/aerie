@@ -14,7 +14,7 @@ import {
   OnDestroy,
 } from '@angular/core';
 
-import { Store } from '@ngrx/store';
+import { select, Store } from '@ngrx/store';
 import { Subject } from 'rxjs';
 import { switchMap, takeUntil } from 'rxjs/operators';
 import { WebSocketSubject } from 'rxjs/webSocket';
@@ -31,13 +31,13 @@ import {
   StringTMap,
 } from '../../../shared/models';
 
-import * as fromConfig from '../../reducers/config';
-import * as fromSourceExplorer from '../../reducers/source-explorer';
+import * as fromConfig from '../../../shared/reducers/config.reducer';
+import * as fromSourceExplorer from '../../reducers/source-explorer.reducer';
 
-import * as dialogActions from '../../actions/dialog';
-import * as epochsActions from '../../actions/epochs';
-import * as layoutActions from '../../actions/layout';
-import * as sourceExplorerActions from '../../actions/source-explorer';
+import * as dialogActions from '../../actions/dialog.actions';
+import * as epochsActions from '../../actions/epochs.actions';
+import * as layoutActions from '../../actions/layout.actions';
+import * as sourceExplorerActions from '../../actions/source-explorer.actions';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -62,31 +62,49 @@ export class SourceExplorerComponent implements OnDestroy {
     private store: Store<fromSourceExplorer.SourceExplorerState>,
   ) {
     // Source Explorer state.
-    this.store.select(fromSourceExplorer.getFiltersByTarget).pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(filtersByTarget => {
-      this.filtersByTarget = filtersByTarget;
-      this.markForCheck();
-    });
-    this.store.select(fromSourceExplorer.getPins).pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(pins => {
-      this.pins = pins;
-      this.markForCheck();
-    });
-    this.store.select(fromSourceExplorer.getSelectedSourceId).pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(selectedSourceId => {
-      this.selectedSourceId = selectedSourceId;
-      this.markForCheck();
-    });
-    this.store.select(fromSourceExplorer.getTreeBySourceId).pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(tree => {
-      this.tree = tree;
-      this.sortedChildIds = getSortedChildIds(this.tree, this.tree['/'].childIds);
-      this.markForCheck();
-    });
+    this.store
+      .pipe(
+        select(fromSourceExplorer.getFiltersByTarget),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(filtersByTarget => {
+        this.filtersByTarget = filtersByTarget;
+        this.markForCheck();
+      });
+
+    this.store
+      .pipe(
+        select(fromSourceExplorer.getPins),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(pins => {
+        this.pins = pins;
+        this.markForCheck();
+      });
+
+    this.store
+      .pipe(
+        select(fromSourceExplorer.getSelectedSourceId),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(selectedSourceId => {
+        this.selectedSourceId = selectedSourceId;
+        this.markForCheck();
+      });
+
+    this.store
+      .pipe(
+        select(fromSourceExplorer.getTreeBySourceId),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(tree => {
+        this.tree = tree;
+        this.sortedChildIds = getSortedChildIds(
+          this.tree,
+          this.tree['/'].childIds,
+        );
+        this.markForCheck();
+      });
 
     // Connect to web socket to update new sources when they change on the server.
     this.connectToWebsocket();
@@ -102,19 +120,40 @@ export class SourceExplorerComponent implements OnDestroy {
    * When a data sources changes we fetch new sources to update the source explorer.
    */
   connectToWebsocket() {
-    this.store.select(fromConfig.getConfigState).pipe(
-      switchMap(config =>
-        WebSocketSubject.create(`${config.baseUrl.replace('https', 'wss')}/${config.baseSocketUrl}`),
-      ),
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe((data: any) => {
-      if (data.detail === 'data source changed') {
-        const match = data.subject.match(new RegExp('(.*/fs-mongodb)(/.*)/(.*)'));
-        const sourceId = `${match[2]}`;
-        const sourceUrl = `${match[1]}${match[2]}`;
-        this.store.dispatch(new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl));
-      }
-    });
+    this.store
+      .pipe(
+        select(fromConfig.getUrls),
+        switchMap(
+          config =>
+            new WebSocketSubject(
+              `${config.baseUrl.replace('https', 'wss')}/${config.socketUrl}`,
+            ),
+        ),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe((data: any) => {
+        if (data.detail === 'data source changed') {
+          const match = data.subject.match(
+            new RegExp('(.*/fs-mongodb)(/.*)/(.*)'),
+          );
+          const sourceId = `${match[2]}`;
+          const sourceUrl = `${match[1]}${match[2]}`;
+          this.store.dispatch(
+            new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl),
+          );
+        } else if (data.aspect === 'importJobStatus') {
+          const match = data.subject.match(new RegExp('(.*)/(.*)'));
+          const parentId = `${match[1]}`;
+          if (this.tree[parentId]) {
+            this.store.dispatch(
+              new sourceExplorerActions.FetchNewSources(
+                parentId,
+                this.tree[parentId].url,
+              ),
+            );
+          }
+        }
+      });
   }
 
   /**
@@ -125,7 +164,11 @@ export class SourceExplorerComponent implements OnDestroy {
    */
   markForCheck() {
     this.changeDetector.markForCheck();
-    setTimeout(() => this.changeDetector.detectChanges());
+    setTimeout(() => {
+      if (!this.changeDetector['destroyed']) {
+        this.changeDetector.detectChanges();
+      }
+    });
   }
 
   /**
@@ -135,24 +178,40 @@ export class SourceExplorerComponent implements OnDestroy {
     const { event, source } = action;
 
     if (event === 'apply-layout') {
-      this.store.dispatch(new sourceExplorerActions.UpdateSourceExplorer({ currentStateId: source.id }));
-      this.store.dispatch(new layoutActions.ToggleApplyLayoutDrawer(true));
+      this.store.dispatch(
+        new sourceExplorerActions.UpdateSourceExplorer({
+          currentStateId: source.id,
+        }),
+      );
+      this.store.dispatch(new layoutActions.ToggleApplyLayoutDrawerEvent(true));
     } else if (event === 'apply-state') {
-      this.store.dispatch(new dialogActions.OpenStateApplyDialog(source, '250px'));
+      this.store.dispatch(
+        new dialogActions.OpenStateApplyDialog(source, '250px'),
+      );
     } else if (event === 'delete') {
       this.store.dispatch(new dialogActions.OpenDeleteDialog(source, '250px'));
     } else if (event === 'epoch-load') {
       this.onLoadEpochs(source);
     } else if (event === 'file-import') {
-      this.store.dispatch(new dialogActions.OpenFileImportDialog(source, '300px'));
+      this.store.dispatch(
+        new dialogActions.OpenFileImportDialog(source, '300px'),
+      );
     } else if (event === 'pin-add') {
-      this.store.dispatch(new dialogActions.OpenPinDialog('add', source, '250px'));
+      this.store.dispatch(
+        new dialogActions.OpenPinDialog('add', source, '250px'),
+      );
     } else if (event === 'pin-remove') {
-      this.store.dispatch(new dialogActions.OpenPinDialog('remove', source, '250px'));
+      this.store.dispatch(
+        new dialogActions.OpenPinDialog('remove', source, '250px'),
+      );
     } else if (event === 'pin-rename') {
-      this.store.dispatch(new dialogActions.OpenPinDialog('rename', source, '250px'));
+      this.store.dispatch(
+        new dialogActions.OpenPinDialog('rename', source, '250px'),
+      );
     } else if (event === 'save') {
-      this.store.dispatch(new dialogActions.OpenStateSaveDialog(source, '300px'));
+      this.store.dispatch(
+        new dialogActions.OpenStateSaveDialog(source, '300px'),
+      );
     }
   }
 
@@ -160,7 +219,9 @@ export class SourceExplorerComponent implements OnDestroy {
    * Event. Called when a custom graphable source is clicked.
    */
   onAddCustomGraph(source: RavenCustomGraphableSource): void {
-    this.store.dispatch(new dialogActions.OpenCustomGraphDialog(source, '300px'));
+    this.store.dispatch(
+      new dialogActions.OpenCustomGraphDialog(source, '300px'),
+    );
   }
 
   /**
@@ -223,7 +284,9 @@ export class SourceExplorerComponent implements OnDestroy {
    * Event. Called when a graphable filter is unselected.
    */
   onRemoveGraphableFilter(source: RavenGraphableFilterSource): void {
-    this.store.dispatch(new sourceExplorerActions.RemoveGraphableFilter(source));
+    this.store.dispatch(
+      new sourceExplorerActions.RemoveGraphableFilter(source),
+    );
   }
 
   /**
@@ -237,6 +300,8 @@ export class SourceExplorerComponent implements OnDestroy {
    * Event. Called when a custom filter source is clicked.
    */
   onSelectCustomFilter(source: RavenCustomFilterSource): void {
-    this.store.dispatch(new dialogActions.OpenCustomFilterDialog(source, '300px'));
+    this.store.dispatch(
+      new dialogActions.OpenCustomFilterDialog(source, '300px'),
+    );
   }
 }

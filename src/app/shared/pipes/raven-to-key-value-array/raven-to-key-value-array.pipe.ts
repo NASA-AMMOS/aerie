@@ -14,9 +14,14 @@ import { StringTMap } from '../../models';
   name: 'toKeyValueArray',
 })
 export class RavenToKeyValueArrayPipe implements PipeTransform {
-  transform(obj: StringTMap<any>, key?: string, value?: string): Array<StringTMap<any>> {
-    return Object.getOwnPropertyNames(obj).map(k =>
-      ({ [key ? key : 'key']: k, [value ? value : 'value']: obj[k] }),
-    );
+  transform(
+    obj: StringTMap<any>,
+    key?: string,
+    value?: string,
+  ): Array<StringTMap<any>> {
+    return Object.getOwnPropertyNames(obj).map(k => ({
+      [key ? key : 'key']: k,
+      [value ? value : 'value']: obj[k],
+    }));
   }
 }

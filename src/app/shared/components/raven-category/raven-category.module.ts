@@ -13,16 +13,8 @@ import { MatButtonModule, MatIconModule } from '@angular/material';
 import { RavenCategoryComponent } from './raven-category.component';
 
 @NgModule({
-  declarations: [
-    RavenCategoryComponent,
-  ],
-  exports: [
-    RavenCategoryComponent,
-  ],
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatIconModule,
-  ],
+  declarations: [RavenCategoryComponent],
+  exports: [RavenCategoryComponent],
+  imports: [CommonModule, MatButtonModule, MatIconModule],
 })
 export class RavenCategoryModule {}

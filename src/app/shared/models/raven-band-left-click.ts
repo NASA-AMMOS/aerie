@@ -11,4 +11,5 @@ export interface RavenBandLeftClick {
   bandId: string;
   subBandId: string | null;
   pointId: string | null;
+  time: number;
 }

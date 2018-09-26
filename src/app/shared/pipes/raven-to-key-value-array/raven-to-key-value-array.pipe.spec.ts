@@ -22,7 +22,9 @@ describe('RavenToKeyValueArrayPipe', () => {
 
   it(`should return a 'key'/'value' array when passing 'key' and 'y' as transform params`, () => {
     const pipe = new RavenToKeyValueArrayPipe();
-    expect(pipe.transform({ a: 1 }, 'key', 'value')).toEqual([{ key: 'a', value: 1 }]);
+    expect(pipe.transform({ a: 1 }, 'key', 'value')).toEqual([
+      { key: 'a', value: 1 },
+    ]);
   });
 
   it(`should return a 'x'/'y' array when passing 'x' and 'y' as transform params`, () => {
@@ -32,11 +34,29 @@ describe('RavenToKeyValueArrayPipe', () => {
 
   it(`should return 'key'/'value' array when passing an object with a nested object`, () => {
     const pipe = new RavenToKeyValueArrayPipe();
-    const input = { mapping: { Events: { 'Tstart Assigned': 'Date', 'Tend Assigned': 'Date', 'Activity Name': 'event', 'Draw Type': 'triangle' } } };
+    const input = {
+      mapping: {
+        Events: {
+          'Activity Name': 'event',
+          'Draw Type': 'triangle',
+          'Tend Assigned': 'Date',
+          'Tstart Assigned': 'Date',
+        },
+      },
+    };
 
-    expect(pipe.transform(input)).toEqual([{
-      key: 'mapping',
-      value: { Events: { 'Tstart Assigned': 'Date', 'Tend Assigned': 'Date', 'Activity Name': 'event', 'Draw Type': 'triangle' } },
-    }]);
+    expect(pipe.transform(input)).toEqual([
+      {
+        key: 'mapping',
+        value: {
+          Events: {
+            'Activity Name': 'event',
+            'Draw Type': 'triangle',
+            'Tend Assigned': 'Date',
+            'Tstart Assigned': 'Date',
+          },
+        },
+      },
+    ]);
   });
 });

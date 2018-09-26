@@ -29,6 +29,12 @@ html {
   color: #a94442;
 }
 
+.alert-info {
+  background-color: #d1ecf1;
+  border-color: #bee5eb;
+  color: #0c5460;
+}
+
 .alert-warning {
   background-color: #fff3cd;
   border-color: #ffeeba;

@@ -1,0 +1,22 @@
+<h2 class="mat-subheading-1">Commands</h2>
+<mat-list dense *ngIf="commands?.length">
+  <cdk-virtual-scroll-viewport class="viewport" autosize>
+    <mat-list-item *cdkVirtualFor="let command of commands">
+      <span mat-line
+        matTooltip="{{ command.description }}"
+        matTooltipPosition="above">
+        {{ command.name }}
+      </span>
+      <button mat-icon-button>
+        <mat-icon aria-label="Select command"
+          (click)="onSelection(command)">
+          chevron_right
+        </mat-icon>
+      </button>
+    </mat-list-item>
+  </cdk-virtual-scroll-viewport>
+</mat-list>
+
+<p *ngIf="!commands?.length">
+  Select a command dictionary to view&nbsp;commands.
+</p>

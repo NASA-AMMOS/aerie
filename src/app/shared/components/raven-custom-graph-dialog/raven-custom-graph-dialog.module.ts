@@ -12,19 +12,17 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { RavenCustomGraphDialogComponent } from './raven-custom-graph-dialog.component';
 
 import {
+  MatButtonModule,
   MatDialogModule,
   MatFormFieldModule,
   MatInputModule,
 } from '@angular/material';
 
 @NgModule({
-  declarations: [
-    RavenCustomGraphDialogComponent,
-  ],
-  exports: [
-    RavenCustomGraphDialogComponent,
-  ],
+  declarations: [RavenCustomGraphDialogComponent],
+  exports: [RavenCustomGraphDialogComponent],
   imports: [
+    MatButtonModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,

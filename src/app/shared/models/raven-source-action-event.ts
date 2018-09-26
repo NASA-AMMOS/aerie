@@ -7,9 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  RavenSource,
-} from './index';
+import { RavenSource } from './index';
 
 export interface RavenSourceActionEvent {
   event: string;

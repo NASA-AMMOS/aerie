@@ -14,12 +14,8 @@ import { MatButtonModule, MatDialogModule } from '@angular/material';
 import { RavenShareableLinkDialogComponent } from './raven-shareable-link-dialog.component';
 
 @NgModule({
-  declarations: [
-    RavenShareableLinkDialogComponent,
-  ],
-  exports: [
-    RavenShareableLinkDialogComponent,
-  ],
+  declarations: [RavenShareableLinkDialogComponent],
+  exports: [RavenShareableLinkDialogComponent],
   imports: [
     CommonModule,
     MatButtonModule,

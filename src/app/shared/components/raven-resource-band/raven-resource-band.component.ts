@@ -30,68 +30,167 @@ import { getInterpolatedTooltipText, getTooltipText } from '../../util/tooltip';
   styles: [``],
   template: ``,
 })
-export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit {
-  @Input() autoScale: boolean;
-  @Input() color: string;
-  @Input() ctlTimeAxis: any;
-  @Input() ctlViewTimeAxis: any;
-  @Input() dayCode: string;
-  @Input() earthSecToEpochSec: number;
-  @Input() epoch: RavenEpoch | null;
-  @Input() fill: boolean;
-  @Input() fillColor: string;
-  @Input() font: string;
-  @Input() height: number;
-  @Input() heightPadding: number;
-  @Input() icon: string;
-  @Input() id: string;
-  @Input() interpolation: string;
-  @Input() isDuration: boolean;
-  @Input() isTime: boolean;
-  @Input() label: string;
-  @Input() labelFont: string;
-  @Input() labelFontSize: number;
-  @Input() labelPin: string;
-  @Input() labelUnit: string;
-  @Input() logTicks: boolean;
-  @Input() name: string;
-  @Input() points: RavenResourcePoint[];
-  @Input() scientificNotation: boolean;
-  @Input() showIcon: boolean;
-  @Input() showLabelPin: boolean;
-  @Input() showLabelUnit: boolean;
-  @Input() type: string;
+export class RavenResourceBandComponent
+  implements OnChanges, OnDestroy, OnInit {
+  @Input()
+  autoScale: boolean;
 
-  @Output() addSubBand: EventEmitter<any> = new EventEmitter<any>();
-  @Output() removeSubBand: EventEmitter<string> = new EventEmitter<string>();
-  @Output() updateInterpolation: EventEmitter<any> = new EventEmitter<any>();
-  @Output() updateIntervals: EventEmitter<any> = new EventEmitter<any>();
-  @Output() updateSubBand: EventEmitter<any> = new EventEmitter<any>();
-  @Output() updateTickValues: EventEmitter<any> = new EventEmitter<any>();
+  @Input()
+  color: string;
+
+  @Input()
+  ctlTimeAxis: any;
+
+  @Input()
+  ctlViewTimeAxis: any;
+
+  @Input()
+  dayCode: string;
+
+  @Input()
+  earthSecToEpochSec: number;
+
+  @Input()
+  epoch: RavenEpoch | null;
+
+  @Input()
+  fill: boolean;
+
+  @Input()
+  fillColor: string;
+
+  @Input()
+  font: string;
+
+  @Input()
+  height: number;
+
+  @Input()
+  heightPadding: number;
+
+  @Input()
+  icon: string;
+
+  @Input()
+  id: string;
+
+  @Input()
+  interpolation: string;
+
+  @Input()
+  isDuration: boolean;
+
+  @Input()
+  isTime: boolean;
+
+  @Input()
+  label: string;
+
+  @Input()
+  labelFont: string;
+
+  @Input()
+  labelFontSize: number;
+
+  @Input()
+  labelPin: string;
+
+  @Input()
+  labelUnit: string;
+
+  @Input()
+  logTicks: boolean;
+
+  @Input()
+  name: string;
+
+  @Input()
+  points: RavenResourcePoint[];
+
+  @Input()
+  scientificNotation: boolean;
+
+  @Input()
+  showIcon: boolean;
+
+  @Input()
+  showLabelPin: boolean;
+
+  @Input()
+  showLabelUnit: boolean;
+
+  @Input()
+  type: string;
+
+  @Output()
+  addSubBand: EventEmitter<any> = new EventEmitter<any>();
+
+  @Output()
+  removeSubBand: EventEmitter<string> = new EventEmitter<string>();
+
+  @Output()
+  updateInterpolation: EventEmitter<any> = new EventEmitter<any>();
+
+  @Output()
+  updateIntervals: EventEmitter<any> = new EventEmitter<any>();
+
+  @Output()
+  updateSubBand: EventEmitter<any> = new EventEmitter<any>();
+
+  @Output()
+  updateTickValues: EventEmitter<any> = new EventEmitter<any>();
 
   ngOnChanges(changes: SimpleChanges) {
     // Auto Scale Tick Values.
     if (changes.autoScale && !changes.autoScale.firstChange) {
       const ctlResourceBand = (window as any).ResourceBand;
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'autoScale', value: this.autoScale ? ctlResourceBand.VISIBLE_INTERVALS : ctlResourceBand.ALL_INTERVALS });
+      this.updateSubBand.emit({
+        prop: 'autoScale',
+        subBandId: this.id,
+        value: this.autoScale
+          ? ctlResourceBand.VISIBLE_INTERVALS
+          : ctlResourceBand.ALL_INTERVALS,
+      });
       this.updateTickValues.emit();
     }
 
     // Color.
     if (changes.color && !changes.color.firstChange) {
-      this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals(this.color) }); // All intervals need to be updated with the new color.
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'color', value: colorHexToRgbArray(this.color) });
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'labelColor', value: colorHexToRgbArray(this.color) });
+      this.updateIntervals.emit({
+        subBandId: this.id,
+        ...this.getIntervals(this.color),
+      }); // All intervals need to be updated with the new color.
+      this.updateSubBand.emit({
+        prop: 'color',
+        subBandId: this.id,
+        subObject: 'painter',
+        value: colorHexToRgbArray(this.color),
+      });
+      this.updateSubBand.emit({
+        prop: 'labelColor',
+        subBandId: this.id,
+        value: colorHexToRgbArray(this.color),
+      });
     }
 
     // Fill.
     if (changes.fill && !changes.fill.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'fill', value: this.fill });
+      this.updateSubBand.emit({
+        prop: 'fill',
+        subBandId: this.id,
+        subObject: 'painter',
+        value: this.fill,
+      });
     }
 
     // Fill Color.
     if (changes.fillColor && !changes.fillColor.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'fillColor', value: colorHexToRgbArray(this.fillColor) });
+      this.updateSubBand.emit({
+        prop: 'fillColor',
+        subBandId: this.id,
+        subObject: 'painter',
+        value: colorHexToRgbArray(this.fillColor),
+      });
     }
 
     // Font.
@@ -99,64 +198,111 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
 
     // Icon.
     if (changes.icon && !changes.icon.firstChange) {
-      this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals(this.color) });
+      this.updateIntervals.emit({
+        subBandId: this.id,
+        ...this.getIntervals(this.color),
+      });
     }
 
     // Interpolation.
     if (changes.interpolation && !changes.interpolation.firstChange) {
-      this.updateInterpolation.emit({ subBandId: this.id, interpolation: this.interpolation });
+      this.updateInterpolation.emit({
+        interpolation: this.interpolation,
+        subBandId: this.id,
+      });
     }
 
     // Label.
     if (changes.label && !changes.label.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.getLabel() });
+      this.updateSubBand.emit({
+        prop: 'label',
+        subBandId: this.id,
+        value: this.getLabel(),
+      });
     }
 
     // Label Font Size.
     if (changes.labelFontSize && !changes.labelFontSize.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'decorator', prop: 'labelFontSize', value: this.labelFontSize });
+      this.updateSubBand.emit({
+        prop: 'labelFontSize',
+        subBandId: this.id,
+        subObject: 'decorator',
+        value: this.labelFontSize,
+      });
     }
 
     // Label Pin.
     if (changes.labelPin && !changes.labelPin.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.getLabel() });
+      this.updateSubBand.emit({
+        prop: 'label',
+        subBandId: this.id,
+        value: this.getLabel(),
+      });
     }
 
     // Label Unit.
     if (changes.labelUnit && !changes.labelUnit.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.getLabel() });
+      this.updateSubBand.emit({
+        prop: 'label',
+        subBandId: this.id,
+        value: this.getLabel(),
+      });
     }
 
     // Log Ticks.
     if (changes.logTicks && !changes.logTicks.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'logTicks', value: this.logTicks });
+      this.updateSubBand.emit({
+        prop: 'logTicks',
+        subBandId: this.id,
+        value: this.logTicks,
+      });
       this.updateTickValues.emit();
     }
 
     // Points.
     if (changes.points && !changes.points.firstChange) {
-      this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals(this.color) });
+      this.updateIntervals.emit({
+        subBandId: this.id,
+        ...this.getIntervals(this.color),
+      });
     }
 
     // Scientific Notation.
     if (changes.scientificNotation && !changes.scientificNotation.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'scientificNotation', value: this.scientificNotation });
+      this.updateSubBand.emit({
+        prop: 'scientificNotation',
+        subBandId: this.id,
+        value: this.scientificNotation,
+      });
       this.updateTickValues.emit();
     }
 
     // Show Icon.
     if (changes.showIcon && !changes.showIcon.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'showIcon', value: this.showIcon });
+      this.updateSubBand.emit({
+        prop: 'showIcon',
+        subBandId: this.id,
+        subObject: 'painter',
+        value: this.showIcon,
+      });
     }
 
     // Show Label Pin.
     if (changes.showLabelPin && !changes.showLabelPin.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.getLabel() });
+      this.updateSubBand.emit({
+        prop: 'label',
+        subBandId: this.id,
+        value: this.getLabel(),
+      });
     }
 
     // Show Label Unit.
     if (changes.showLabelUnit && !changes.showLabelUnit.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.getLabel() });
+      this.updateSubBand.emit({
+        prop: 'label',
+        subBandId: this.id,
+        value: this.getLabel(),
+      });
     }
   }
 
@@ -178,7 +324,9 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
       logTicks: this.logTicks,
       name: this.name,
       onFormatTickValue: this.onFormatTickValue.bind(this),
-      onGetInterpolatedTooltipText: this.onGetInterpolatedTooltipText.bind(this),
+      onGetInterpolatedTooltipText: this.onGetInterpolatedTooltipText.bind(
+        this,
+      ),
       painter: new (window as any).ResourcePainter({
         color: colorHexToRgbArray(this.color),
         fill: this.fill,
@@ -288,13 +436,23 @@ export class RavenResourceBandComponent implements OnChanges, OnDestroy, OnInit 
    * CTL Event. Called when we want to get tooltip text for an interpolated interval.
    */
   onGetInterpolatedTooltipText(e: Event, obj: any) {
-    return getInterpolatedTooltipText(obj, this.earthSecToEpochSec, this.epoch, this.dayCode);
+    return getInterpolatedTooltipText(
+      obj,
+      this.earthSecToEpochSec,
+      this.epoch,
+      this.dayCode,
+    );
   }
 
   /**
    * CTL Event. Called when we want to get tooltip text.
    */
   onGetTooltipText(e: Event, obj: any) {
-    return getTooltipText(obj, this.earthSecToEpochSec, this.epoch, this.dayCode);
+    return getTooltipText(
+      obj,
+      this.earthSecToEpochSec,
+      this.epoch,
+      this.dayCode,
+    );
   }
 }

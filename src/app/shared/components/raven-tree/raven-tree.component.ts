@@ -24,9 +24,7 @@ import {
   StringTMap,
 } from '../../../shared/models';
 
-import {
-  getSortedChildIds,
-} from '../../util/source';
+import { getSortedChildIds } from '../../util/source';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -35,24 +33,64 @@ import {
   templateUrl: './raven-tree.component.html',
 })
 export class RavenTreeComponent implements OnChanges {
-  @Input() id: string;
-  @Input() pins: RavenPin[];
-  @Input() source: RavenSource;
-  @Input() tree: StringTMap<RavenSource>;
+  @Input()
+  id: string;
 
-  @Output() action: EventEmitter<RavenSourceActionEvent> = new EventEmitter<RavenSourceActionEvent>();
-  @Output() addCustomGraph: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
-  @Output() addFilter: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
-  @Output() addGraphableFilter: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
-  @Output() close: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
-  @Output() collapse: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
-  @Output() expand: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
-  @Output() open: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
-  @Output() openMetadata: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
-  @Output() removeFilter: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
-  @Output() removeGraphableFilter: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
-  @Output() select: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
-  @Output() selectCustomFilter: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
+  @Input()
+  pins: RavenPin[];
+
+  @Input()
+  source: RavenSource;
+
+  @Input()
+  tree: StringTMap<RavenSource>;
+
+  @Output()
+  action: EventEmitter<RavenSourceActionEvent> = new EventEmitter<
+    RavenSourceActionEvent
+  >();
+
+  @Output()
+  addCustomGraph: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
+
+  @Output()
+  addFilter: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
+
+  @Output()
+  addGraphableFilter: EventEmitter<RavenSource> = new EventEmitter<
+    RavenSource
+  >();
+
+  @Output()
+  close: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
+
+  @Output()
+  collapse: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
+
+  @Output()
+  expand: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
+
+  @Output()
+  open: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
+
+  @Output()
+  openMetadata: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
+
+  @Output()
+  removeFilter: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
+
+  @Output()
+  removeGraphableFilter: EventEmitter<RavenSource> = new EventEmitter<
+    RavenSource
+  >();
+
+  @Output()
+  select: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
+
+  @Output()
+  selectCustomFilter: EventEmitter<RavenSource> = new EventEmitter<
+    RavenSource
+  >();
 
   sortedChildIds: string[];
 

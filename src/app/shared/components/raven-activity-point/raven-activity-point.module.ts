@@ -14,12 +14,8 @@ import { RavenDhmsPipeModule } from '../../pipes';
 import { RavenActivityPointComponent } from './raven-activity-point.component';
 
 @NgModule({
-  declarations: [
-    RavenActivityPointComponent,
-  ],
-  exports: [
-    RavenActivityPointComponent,
-  ],
+  declarations: [RavenActivityPointComponent],
+  exports: [RavenActivityPointComponent],
   imports: [
     CommonModule,
     MatCardModule,

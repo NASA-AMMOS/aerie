@@ -13,15 +13,8 @@ import { RavenTimestampPipeModule } from '../../pipes';
 import { RavenStatePointComponent } from './raven-state-point.component';
 
 @NgModule({
-  declarations: [
-    RavenStatePointComponent,
-  ],
-  exports: [
-    RavenStatePointComponent,
-  ],
-  imports: [
-    MatCardModule,
-    RavenTimestampPipeModule,
-  ],
+  declarations: [RavenStatePointComponent],
+  exports: [RavenStatePointComponent],
+  imports: [MatCardModule, RavenTimestampPipeModule],
 })
 export class RavenStatePointModule {}

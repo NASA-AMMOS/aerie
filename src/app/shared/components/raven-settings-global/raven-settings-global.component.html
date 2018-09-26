@@ -22,13 +22,14 @@
           (change)="updateDefaultBandSettings.emit({ update: { labelWidth: $event.target.valueAsNumber } })">
       </div>
 
-      <!-- Add Divider Band. -->
+      <!-- Show Last Click. -->
       <div class="field">
-        <button
-          mat-raised-button
-          (click)="addDividerBand.emit(null)">
-          Add Divider Band
-        </button>
+        <mat-slide-toggle
+          color="primary"
+          [checked]="defaultBandSettings.showLastClick"
+          (change)="updateDefaultBandSettings.emit({ update: { showLastClick: $event.checked } })">
+          Show Last Click
+        </mat-slide-toggle>
       </div>
 
       <!-- Show Tooltip. -->

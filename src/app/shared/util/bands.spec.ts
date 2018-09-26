@@ -18,6 +18,7 @@ import {
   isAddTo,
   isMessageTypeActivity,
   isOverlay,
+  sortOrderForBand,
   subBandById,
   updateSelectedBandIds,
   updateSortOrder,
@@ -51,29 +52,44 @@ describe('bands.ts', () => {
   describe('changeZoom', () => {
     it('zooming out should work', () => {
       const timeRange = { end: 1741564830, start: 1655143200 };
-      expect(changeZoom(-10, timeRange)).toEqual({ end: 1750206993, start: 1646501037 });
+      expect(changeZoom(-10, timeRange)).toEqual({
+        end: 1750206993,
+        start: 1646501037,
+      });
     });
 
     it('zooming in should work', () => {
       const timeRange = { end: 1741564830, start: 1655143200 };
-      expect(changeZoom(10, timeRange)).toEqual({ end: 1732922667, start: 1663785363 });
+      expect(changeZoom(10, timeRange)).toEqual({
+        end: 1732922667,
+        start: 1663785363,
+      });
     });
   });
 
   describe('getCustomFiltersBySourceId', () => {
     it(`should return custom filters from sourceIds in bands`, () => {
-      expect(getCustomFiltersBySourceId(bandsWithCustomFiltersInSourceId, treeBySourceId)).toEqual({
-        '/DKF/command': [{
-          filter: '.*',
-          label: 'ips',
-        }],
+      expect(
+        getCustomFiltersBySourceId(
+          bandsWithCustomFiltersInSourceId,
+          treeBySourceId,
+        ),
+      ).toEqual({
+        '/DKF/command': [
+          {
+            filter: '.*',
+            label: 'ips',
+          },
+        ],
       });
     });
   });
 
   describe('getBandLabel', () => {
     it(`should return label with empty pin and units`, () => {
-      expect(getBandLabel(resourceBand)).toEqual('test-resource-band (Degrees)');
+      expect(getBandLabel(resourceBand)).toEqual(
+        'test-resource-band (Degrees)',
+      );
     });
   });
 
@@ -94,11 +110,15 @@ describe('bands.ts', () => {
 
   describe('hasActivityBandForFilterTarget', () => {
     it(`should return null if no band has the specified filterTarget`, () => {
-      expect(hasActivityBandForFilterTarget(bandsWithFilterTarget, 'ABC')).toBe(null);
+      expect(hasActivityBandForFilterTarget(bandsWithFilterTarget, 'ABC')).toBe(
+        null,
+      );
     });
 
     it(`should return the band with the filterTarget`, () => {
-      expect(hasActivityBandForFilterTarget(bandsWithFilterTarget, 'DKF')).toEqual({
+      expect(
+        hasActivityBandForFilterTarget(bandsWithFilterTarget, 'DKF'),
+      ).toEqual({
         bandId: '100',
         subBandId: '0',
       });
@@ -214,6 +234,14 @@ describe('bands.ts', () => {
   describe('updateSortOrder', () => {
     it(`should maintain the correct sort order of the given bands`, () => {
       expect(updateSortOrder(bands)).toEqual(bands);
+    });
+  });
+
+  describe('sortOrderForBand', () => {
+    it(`should return the sortOrder for the band with the given id`, () => {
+      expect(sortOrderForBand(bands, '102')).toEqual(2);
+      expect(sortOrderForBand(bands, '')).toEqual(bands.length - 1);
+      expect(sortOrderForBand(bands, 'abc')).toEqual(bands.length - 1);
     });
   });
 

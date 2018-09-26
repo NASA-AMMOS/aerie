@@ -20,12 +20,8 @@ import {
 } from '@angular/material';
 
 @NgModule({
-  declarations: [
-    RavenStateSaveDialogComponent,
-  ],
-  exports: [
-    RavenStateSaveDialogComponent,
-  ],
+  declarations: [RavenStateSaveDialogComponent],
+  exports: [RavenStateSaveDialogComponent],
   imports: [
     CommonModule,
     MatButtonModule,

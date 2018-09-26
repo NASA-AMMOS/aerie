@@ -7,17 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Component,
-  EventEmitter,
-  Input,
-  Output,
-} from '@angular/core';
-
-import {
-  RavenDefaultBandSettings,
-  RavenUpdate,
-} from '../../../shared/models';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { RavenDefaultBandSettings, RavenUpdate } from '../../../shared/models';
 
 @Component({
   selector: 'raven-settings-global',
@@ -25,10 +16,13 @@ import {
   templateUrl: './raven-settings-global.component.html',
 })
 export class RavenSettingsGlobalComponent {
-  @Input() defaultBandSettings: RavenDefaultBandSettings;
+  @Input()
+  defaultBandSettings: RavenDefaultBandSettings;
 
-  @Output() addDividerBand: EventEmitter<null> = new EventEmitter<null>();
-  @Output() updateDefaultBandSettings: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
+  @Output()
+  updateDefaultBandSettings: EventEmitter<RavenUpdate> = new EventEmitter<
+    RavenUpdate
+  >();
 
   /**
    * Event. Change callback. Only allow label font size between the min/max font size ranges.

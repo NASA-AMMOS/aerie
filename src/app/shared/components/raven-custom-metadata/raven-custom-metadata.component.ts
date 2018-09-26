@@ -7,20 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Component,
-  Input,
-  OnChanges,
-  SimpleChanges,
-} from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 
-import {
-  RavenToKeyValueArrayPipe,
-} from '../../pipes/raven-to-key-value-array/raven-to-key-value-array.pipe';
+import { RavenToKeyValueArrayPipe } from '../../pipes/raven-to-key-value-array/raven-to-key-value-array.pipe';
 
-import {
-  StringTMap,
-} from '../../models';
+import { StringTMap } from '../../models';
 
 @Component({
   selector: 'raven-custom-metadata',
@@ -28,7 +19,8 @@ import {
   templateUrl: './raven-custom-metadata.component.html',
 })
 export class RavenCustomMetadataComponent implements OnChanges {
-  @Input() customMetadata: StringTMap<any>;
+  @Input()
+  customMetadata: StringTMap<any>;
 
   metadataObjects: any[];
   metadataValues: any[];

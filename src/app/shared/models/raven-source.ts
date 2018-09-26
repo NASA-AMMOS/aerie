@@ -18,10 +18,10 @@ import {
 } from './index';
 
 export type RavenSource =
-  RavenCustomGraphableSource |
-  RavenExpandableSource |
-  RavenFileSource |
-  RavenFilterSource |
-  RavenFolderSource |
-  RavenGraphableFilterSource |
-  RavenGraphableSource;
+  | RavenCustomGraphableSource
+  | RavenExpandableSource
+  | RavenFileSource
+  | RavenFilterSource
+  | RavenFolderSource
+  | RavenGraphableFilterSource
+  | RavenGraphableSource;

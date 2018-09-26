@@ -39,3 +39,35 @@ Any other inline comments should use `//`. These comments should start with a ca
 ```ts
 // This is a nice comment.
 ```
+
+## Formatting
+
+Previously, we had to painstakingly format every file with no assistance from
+our toolchain. Now, it can be completely automated so that you never have to
+format a file again _and_ the entire codebase will use the exact same style.
+
+We use [Prettier][prettier] for formatting. There is a lot of documentation
+there, but here is the summary of what Prettier is:
+
+* An opinionated code formatter. It doesn't lint. It just reformats your code into a standard style.
+* Supports many languages - JS, TS, CSS, Markdown, YAML, JSX, etc. with tons more in progress.
+* Integrates with most editors. VS Code, VIM, Emacs, Atom, Sublime, etc.
+* Has few options. It is mostly config free except for the few things that cause holy wars among devs
+
+**Formatting as you go**
+
+In VS Code, install the Prettier extension. Once it is installed you type
+`CMD + Shift + P` -> Format Document (also works with a selection) or configure
+it to format on save in the per language settings.
+
+[prettier]: https://prettier.io/
+
+**Regarding decorator formatting**
+
+`@Decorators()` are always on their own line. Angular prefers inline decorators
+for member variables but Prettier doesn't make that distinction. So that is a
+compromise we have to make. Make sure to include a new line between decorated
+items because Prettier won't add them for you. Here is an issue which discusses
+inline Decorators in Angular: https://github.com/prettier/prettier/issues/4924
+and here is the Prettier issue where the decision was made: 
+https://github.com/prettier/prettier/issues/2613.

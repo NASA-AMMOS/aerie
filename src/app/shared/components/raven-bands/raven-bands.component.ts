@@ -18,9 +18,7 @@ import {
   SimpleChanges,
 } from '@angular/core';
 
-import {
-  SortablejsOptions,
-} from 'angular-sortablejs';
+import { SortablejsOptions } from 'angular-sortablejs';
 
 import {
   RavenBandLeftClick,
@@ -39,25 +37,74 @@ import {
   templateUrl: './raven-bands.component.html',
 })
 export class RavenBandsComponent implements OnChanges, OnInit {
-  @Input() cursorColor: string;
-  @Input() cursorTime: number | null;
-  @Input() cursorWidth: number;
-  @Input() bands: RavenCompositeBand[];
-  @Input() containerId: string;
-  @Input() dayCode: string;
-  @Input() earthSecToEpochSec: number;
-  @Input() epoch: RavenEpoch | null;
-  @Input() labelFontSize: number;
-  @Input() labelWidth: number;
-  @Input() maxTimeRange: RavenTimeRange;
-  @Input() selectedBandId: string;
-  @Input() selectedPoint: RavenPoint;
-  @Input() showTooltip: boolean;
-  @Input() viewTimeRange: RavenTimeRange;
+  @Input()
+  cursorColor: string;
 
-  @Output() bandLeftClick: EventEmitter<RavenBandLeftClick> = new EventEmitter<RavenBandLeftClick>();
-  @Output() newSort: EventEmitter<StringTMap<RavenSortMessage>> = new EventEmitter<StringTMap<RavenSortMessage>>();
-  @Output() updateViewTimeRange: EventEmitter<RavenTimeRange> = new EventEmitter<RavenTimeRange>();
+  @Input()
+  cursorTime: number | null;
+
+  @Input()
+  cursorWidth: number;
+
+  @Input()
+  bands: RavenCompositeBand[];
+
+  @Input()
+  containerId: string;
+
+  @Input()
+  dayCode: string;
+
+  @Input()
+  earthSecToEpochSec: number;
+
+  @Input()
+  epoch: RavenEpoch | null;
+
+  @Input()
+  guides: number[];
+
+  @Input()
+  labelFontSize: number;
+
+  @Input()
+  labelWidth: number;
+
+  @Input()
+  lastClickTime: number | null;
+
+  @Input()
+  maxTimeRange: RavenTimeRange;
+
+  @Input()
+  selectedBandId: string;
+
+  @Input()
+  selectedPoint: RavenPoint;
+
+  @Input()
+  showLastClick: boolean;
+
+  @Input()
+  showTooltip: boolean;
+
+  @Input()
+  viewTimeRange: RavenTimeRange;
+
+  @Output()
+  bandLeftClick: EventEmitter<RavenBandLeftClick> = new EventEmitter<
+    RavenBandLeftClick
+  >();
+
+  @Output()
+  newSort: EventEmitter<StringTMap<RavenSortMessage>> = new EventEmitter<
+    StringTMap<RavenSortMessage>
+  >();
+
+  @Output()
+  updateViewTimeRange: EventEmitter<RavenTimeRange> = new EventEmitter<
+    RavenTimeRange
+  >();
 
   sortablejsOptions: SortablejsOptions;
   sortedAndFilteredBands: RavenCompositeBand[];
@@ -80,10 +127,9 @@ export class RavenBandsComponent implements OnChanges, OnInit {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.bands) {
-      this.sortedAndFilteredBands =
-        [...this.bands]
-          .filter(band => band.containerId === this.containerId)
-          .sort((a, b) => a.sortOrder - b.sortOrder);
+      this.sortedAndFilteredBands = [...this.bands]
+        .filter(band => band.containerId === this.containerId)
+        .sort((a, b) => a.sortOrder - b.sortOrder);
     }
   }
 

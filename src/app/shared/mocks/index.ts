@@ -8,7 +8,9 @@
  */
 
 export * from './mps-server-epochs';
+export * from './mps-server-situational-awareness-pef-entries';
 export * from './raven-bands';
 export * from './raven-epochs';
+export * from './raven-pef-entries';
 export * from './raven-points';
 export * from './raven-sources';

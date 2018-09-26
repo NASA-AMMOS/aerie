@@ -19,15 +19,12 @@ import {
   MatMenuModule,
   MatProgressBarModule,
   MatToolbarModule,
+  MatTooltipModule,
 } from '@angular/material';
 
 @NgModule({
-  declarations: [
-    RavenAppComponent,
-  ],
-  exports: [
-    RavenAppComponent,
-  ],
+  declarations: [RavenAppComponent],
+  exports: [RavenAppComponent],
   imports: [
     CommonModule,
     MatButtonModule,
@@ -35,6 +32,7 @@ import {
     MatMenuModule,
     MatProgressBarModule,
     MatToolbarModule,
+    MatTooltipModule,
     RavenPanToDurationModule,
     TimelineModule,
   ],

@@ -7,10 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  RavenResourcePoint,
-  RavenTimeRange,
-} from './index';
+import { RavenResourcePoint, RavenTimeRange } from './index';
 
 export interface RavenResourceBand {
   addTo: boolean;

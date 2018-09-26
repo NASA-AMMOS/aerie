@@ -33,7 +33,8 @@ export function getState(name: string, state: RavenAppState): any {
         ),
       })),
     })),
-    defaultBandSettings: state.raven.config.defaultBandSettings,
+    defaultBandSettings: state.config.raven.defaultBandSettings,
+    guides: state.raven.timeline.guides,
     maxTimeRange: state.raven.timeline.maxTimeRange,
     name,
     pins: state.raven.sourceExplorer.pins,
@@ -58,7 +59,11 @@ export function exportState(state: RavenState): any {
         return {
           ...bandWithNoId,
           subBands: band.subBands.map(subBand => {
-            const { id: subBandId, parentUniqueId, ...subBandWithNoIds } = subBand;
+            const {
+              id: subBandId,
+              parentUniqueId,
+              ...subBandWithNoIds
+            } = subBand;
 
             return {
               ...subBandWithNoIds,

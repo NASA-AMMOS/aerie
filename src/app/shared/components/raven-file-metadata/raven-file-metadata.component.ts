@@ -16,6 +16,9 @@ import { RavenFileMetadata } from '../../models';
   templateUrl: './raven-file-metadata.component.html',
 })
 export class RavenFileMetadataComponent {
-  @Input() fileMetadata: RavenFileMetadata;
-  @Input() name: string;
+  @Input()
+  fileMetadata: RavenFileMetadata;
+
+  @Input()
+  name: string;
 }

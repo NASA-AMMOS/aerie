@@ -1,0 +1,17 @@
+<header>
+  <mat-toolbar color="primary">
+    <span class="app-title">Planning</span>
+  </mat-toolbar>
+</header>
+<main class="content">
+</main>
+<aside>
+  <raven-activity-type-list
+    [activityTypes]="activityTypes"
+    (deleteActivityTypeClicked)="deleteActivityType($event.id)"
+    (createActivityTypeClicked)="showCreateActivityTypeForm()"
+    (updateActivityTypeClicked)="showUpdateActivityTypeForm($event.id)">
+  </raven-activity-type-list>
+</aside>
+<footer>
+</footer>

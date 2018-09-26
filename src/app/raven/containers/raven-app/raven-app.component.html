@@ -54,6 +54,16 @@
 
     <button
       mat-menu-item
+      (click)="toggleSituationalAwarenessDrawer()">
+      <mat-icon
+        aria-label="Situational Awareness Drawer">
+        timeline
+      </mat-icon>
+      Situational Awareness
+    </button>
+
+    <button
+      mat-menu-item
       (click)="toggleShareableLinkDialog()">
       <mat-icon
         aria-label="Get Shareable Link">
@@ -176,6 +186,46 @@
 
   <button
     mat-icon-button
+    matTooltip="Remove All Bands"
+    (click)="onRemoveAllBands()">
+    <mat-icon
+      aria-label="Remove All Bands">
+      clear
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Create Guide"
+    (click)="onAddGuide()">
+    <mat-icon
+      aria-label="Create Guide">
+      create
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Delete Guide"
+    (click)="onRemoveGuide()">
+    <mat-icon
+      aria-label="Delete Guide">
+      remove_circle_outline
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Remove All Guides"
+    (click)="onRemoveAllGuides()">
+    <mat-icon
+      aria-label="Remove All Guides">
+      remove_circle
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
     matTooltip="Global Band Settings"
     (click)="toggleGlobalSettingsDrawer()">
     <mat-icon
@@ -185,8 +235,8 @@
   </button>
 </mat-toolbar>
 
-<div *ngIf="loading$ | async">
-  <mat-progress-bar mode="query">
+<div *ngIf="loading">
+  <mat-progress-bar mode="indeterminate">
   </mat-progress-bar>
 </div>
 

@@ -8,6 +8,7 @@
  */
 
 import { OverlayModule } from '@angular/cdk/overlay';
+import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { EffectsModule } from '@ngrx/effects';
@@ -22,19 +23,19 @@ import { metaReducers, reducers } from './app-store';
 import { AppComponent } from './app.component';
 
 @NgModule({
-  bootstrap: [
-    AppComponent,
-  ],
-  declarations: [
-    AppComponent,
-  ],
+  bootstrap: [AppComponent],
+  declarations: [AppComponent],
   imports: [
     BrowserAnimationsModule,
+    HttpClientModule,
     AppRoutingModule,
     EffectsModule.forRoot([]),
     OverlayModule,
     SortablejsModule.forRoot({}),
-    StoreDevtoolsModule.instrument({ logOnly: environment.production, maxAge: 10 }),
+    StoreDevtoolsModule.instrument({
+      logOnly: environment.production,
+      maxAge: 10,
+    }),
     StoreModule.forRoot(reducers, { metaReducers }),
     StoreRouterConnectingModule.forRoot({ stateKey: 'router' }),
     ToastrModule.forRoot(),

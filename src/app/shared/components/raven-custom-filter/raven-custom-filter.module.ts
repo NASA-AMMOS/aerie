@@ -16,21 +16,19 @@ import {
   MatFormFieldModule,
   MatIconModule,
   MatInputModule,
+  MatTooltipModule,
 } from '@angular/material';
 
 @NgModule({
-  declarations: [
-    RavenCustomFilterComponent,
-  ],
-  exports: [
-    RavenCustomFilterComponent,
-  ],
+  declarations: [RavenCustomFilterComponent],
+  exports: [RavenCustomFilterComponent],
   imports: [
     CommonModule,
     MatButtonModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
+    MatTooltipModule,
   ],
 })
 export class RavenCustomFilterModule {}

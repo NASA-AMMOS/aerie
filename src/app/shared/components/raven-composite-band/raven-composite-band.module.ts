@@ -16,12 +16,8 @@ import { RavenStateBandModule } from '../raven-state-band/raven-state-band.modul
 import { RavenCompositeBandComponent } from './raven-composite-band.component';
 
 @NgModule({
-  declarations: [
-    RavenCompositeBandComponent,
-  ],
-  exports: [
-    RavenCompositeBandComponent,
-  ],
+  declarations: [RavenCompositeBandComponent],
+  exports: [RavenCompositeBandComponent],
   imports: [
     CommonModule,
     RavenActivityBandModule,

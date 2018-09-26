@@ -26,15 +26,48 @@ import { fromDHMString, utc } from '../../util/time';
   styleUrls: ['./raven-pan-to-duration.component.css'],
   templateUrl: './raven-pan-to-duration.component.html',
 })
-
 export class RavenPanToDurationComponent {
-  @Output() panTo: EventEmitter<RavenTimeRange> = new EventEmitter<RavenTimeRange>();
+  @Output()
+  panTo: EventEmitter<RavenTimeRange> = new EventEmitter<RavenTimeRange>();
 
   durations = [
-    '10s', '20s', '30s', '40s', '50s', '60s',
-    '1m', '10m', '20m', '30m', '40m', '50m', '60m',
-    '1h', '2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h',
-    '1d', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d',
+    '10s',
+    '20s',
+    '30s',
+    '40s',
+    '50s',
+    '60s',
+    '1m',
+    '10m',
+    '20m',
+    '30m',
+    '40m',
+    '50m',
+    '60m',
+    '1h',
+    '2h',
+    '3h',
+    '4h',
+    '5h',
+    '6h',
+    '7h',
+    '8h',
+    '9h',
+    '10h',
+    '11h',
+    '12h',
+    '1d',
+    '2d',
+    '3d',
+    '4d',
+    '5d',
+    '6d',
+    '7d',
+    '8d',
+    '9d',
+    '10d',
+    '11d',
+    '12d',
   ];
 
   filteredDurations: Observable<string[]>;
@@ -46,13 +79,18 @@ export class RavenPanToDurationComponent {
 
   panDurationControl: FormControl = new FormControl('', [
     Validators.required,
-    Validators.pattern(/^((\d+)[d,D])?((\d+)[h,H])?((\d+)[m,M])?((\d+)[s,S])?((\d+)ms)?$/),
+    Validators.pattern(
+      /^((\d+)[d,D])?((\d+)[h,H])?((\d+)[m,M])?((\d+)[s,S])?((\d+)ms)?$/,
+    ),
   ]);
 
   constructor() {
     this.filteredDurations = this.panDurationControl.valueChanges.pipe(
       startWith(''),
-      map(duration => duration ? this.filterDurations(duration) : [...this.durations]),
+      map(
+        duration =>
+          duration ? this.filterDurations(duration) : [...this.durations],
+      ),
     );
   }
 
@@ -69,6 +107,8 @@ export class RavenPanToDurationComponent {
    * Helper that filters the durations array based on a duration.
    */
   filterDurations(duration: string) {
-    return this.durations.filter(d => d.toLowerCase().indexOf(duration.toLowerCase()) === 0);
+    return this.durations.filter(
+      d => d.toLowerCase().indexOf(duration.toLowerCase()) === 0,
+    );
   }
 }

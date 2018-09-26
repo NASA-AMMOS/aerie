@@ -20,12 +20,8 @@ import {
 } from '@angular/material';
 
 @NgModule({
-  declarations: [
-    RavenPinDialogComponent,
-  ],
-  exports: [
-    RavenPinDialogComponent,
-  ],
+  declarations: [RavenPinDialogComponent],
+  exports: [RavenPinDialogComponent],
   imports: [
     CommonModule,
     MatButtonModule,

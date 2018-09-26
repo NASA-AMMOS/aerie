@@ -7,9 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  RavenTimeRange,
-} from './index';
+import { RavenTimeRange } from './index';
 
 /**
  * Note: Divider bands don't use all of these properties.
@@ -24,6 +22,7 @@ export interface RavenDividerBand {
   id: string;
   label: string;
   labelColor: number[];
+  labelPin: string;
   maxTimeRange: RavenTimeRange;
   name: string;
   parentUniqueId: string | null;

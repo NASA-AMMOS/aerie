@@ -32,7 +32,7 @@ export class RavenPinDialogComponent {
 
     this.name = new FormControl(currentName, [
       Validators.required,
-      Validators.pattern('^([(a-zA-Z0-9\-\_\s)]*){1,30}$'),
+      Validators.pattern('^([(a-zA-Z0-9-_s)]*){1,30}$'),
     ]);
   }
 

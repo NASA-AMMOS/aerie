@@ -7,10 +7,12 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import ravenConfig from '../ravenConfig';
-
 export const environment = {
-  ...ravenConfig,
-  baseUrl: window.location.protocol + '//' + window.location.hostname + ':' + window.location.port,
+  baseUrl:
+    window.location.protocol +
+    '//' +
+    window.location.hostname +
+    ':' +
+    window.location.port,
   production: true,
 };

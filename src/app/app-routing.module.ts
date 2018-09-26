@@ -17,6 +17,10 @@ export const routes: Routes = [
     redirectTo: 'raven',
   },
   {
+    loadChildren: './hawk/hawk.module#HawkModule',
+    path: 'hawk',
+  },
+  {
     loadChildren: './hummingbird/hummingbird.module#HummingbirdModule',
     path: 'hummingbird',
   },
@@ -31,11 +35,7 @@ export const routes: Routes = [
 ];
 
 @NgModule({
-  exports: [
-    RouterModule,
-  ],
-  imports: [
-    RouterModule.forRoot(routes, { useHash: true }),
-  ],
+  exports: [RouterModule],
+  imports: [RouterModule.forRoot(routes, { useHash: true })],
 })
 export class AppRoutingModule {}

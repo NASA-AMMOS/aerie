@@ -23,12 +23,8 @@ import {
 } from '@angular/material';
 
 @NgModule({
-  declarations: [
-    RavenOutputComponent,
-  ],
-  exports: [
-    RavenOutputComponent,
-  ],
+  declarations: [RavenOutputComponent],
+  exports: [RavenOutputComponent],
   imports: [
     AgGridModule.withComponents([]),
     CommonModule,

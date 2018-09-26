@@ -17,6 +17,7 @@ import {
 export interface RavenState {
   bands: RavenCompositeBand[];
   defaultBandSettings: RavenDefaultBandSettings;
+  guides: number[];
   maxTimeRange: RavenTimeRange;
   name: string;
   pins: RavenPin[];

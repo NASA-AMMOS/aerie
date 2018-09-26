@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export interface HBCommandDictionary {
+export interface HbCommandDictionary {
   /**
    * Unique identifier of the command dictionary
    */

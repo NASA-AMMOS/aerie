@@ -15,7 +15,7 @@ import {
 } from './index';
 
 export type MpsServerSource =
-  MpsServerSourceCategory |
-  MpsServerSourceDir |
-  MpsServerSourceFile |
-  MpsServerSourceGraphable;
+  | MpsServerSourceCategory
+  | MpsServerSourceDir
+  | MpsServerSourceFile
+  | MpsServerSourceGraphable;

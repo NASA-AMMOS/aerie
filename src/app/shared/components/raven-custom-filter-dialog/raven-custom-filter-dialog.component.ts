@@ -7,22 +7,15 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Component,
-  Inject,
-} from '@angular/core';
+import { Component, Inject } from '@angular/core';
 
-import {
-  MAT_DIALOG_DATA,
-  MatDialogRef,
-} from '@angular/material';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
 @Component({
   selector: 'raven-custom-filter-dialog',
   styleUrls: ['./raven-custom-filter-dialog.component.css'],
   templateUrl: './raven-custom-filter-dialog.component.html',
 })
-
 export class RavenCustomFilterDialogComponent {
   filter: string;
 

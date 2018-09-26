@@ -115,7 +115,7 @@ pipeline {
 							"files": [
 								{
 									"pattern": "dist/*.tar.gz",
-									"target": "general-develop/gov/nasa/jpl/mgss/mpsa/seq/",
+									"target": "general-develop/gov/nasa/jpl/ammos/mpsa/raven/",
 									"recursive":false
 								}
 							]

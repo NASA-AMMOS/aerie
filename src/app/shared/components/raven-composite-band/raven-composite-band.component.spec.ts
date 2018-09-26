@@ -17,11 +17,8 @@ describe('RavenCompositeBandComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      imports: [
-        RavenCompositeBandModule,
-      ],
-    })
-    .compileComponents();
+      imports: [RavenCompositeBandModule],
+    }).compileComponents();
   }));
 
   beforeEach(() => {

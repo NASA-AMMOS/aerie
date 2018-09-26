@@ -14,19 +14,12 @@ import { RavenGraphableFilterComponent } from './raven-graphable-filter.componen
 import {
   MatButtonModule,
   MatIconModule,
+  MatTooltipModule,
 } from '@angular/material';
 
 @NgModule({
-  declarations: [
-    RavenGraphableFilterComponent,
-  ],
-  exports: [
-    RavenGraphableFilterComponent,
-  ],
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatIconModule,
-  ],
+  declarations: [RavenGraphableFilterComponent],
+  exports: [RavenGraphableFilterComponent],
+  imports: [CommonModule, MatButtonModule, MatIconModule, MatTooltipModule],
 })
 export class RavenGraphableFilterModule {}

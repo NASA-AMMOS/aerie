@@ -17,6 +17,7 @@ import {
 
 import {
   RavenCompositeBand,
+  RavenStateBand,
   RavenSubBand,
   RavenUpdate,
   StringTMap,
@@ -29,23 +30,89 @@ import {
   templateUrl: './raven-settings-bands.component.html',
 })
 export class RavenSettingsBandsComponent {
-  @Input() bandsById: StringTMap<RavenCompositeBand>;
-  @Input() selectedBandId: string;
-  @Input() selectedSubBandId: string;
+  @Output()
+  addDividerBand: EventEmitter<void> = new EventEmitter<void>();
 
-  @Output() deleteSubBand: EventEmitter<RavenSubBand> = new EventEmitter<RavenSubBand>();
-  @Output() updateBand: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
-  @Output() updateBandAndSubBand: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
-  @Output() updateSubBand: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
-  @Output() updateTimeline: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
+  @Input()
+  bandsById: StringTMap<RavenCompositeBand>;
+
+  @Input()
+  selectedBandId: string;
+
+  @Input()
+  selectedSubBandId: string;
+
+  @Output()
+  deleteSubBand: EventEmitter<RavenSubBand> = new EventEmitter<RavenSubBand>();
+
+  @Output()
+  updateBand: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
+
+  @Output()
+  updateBandAndSubBand: EventEmitter<RavenUpdate> = new EventEmitter<
+    RavenUpdate
+  >();
+
+  @Output()
+  updateSubBand: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
+
+  @Output()
+  updateTimeline: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
 
   /**
    * Returns true if the selected band contains more than one resource sub-band. False otherwise.
    */
   containsMultipleResourceBands(): boolean {
     const subBands = this.bandsById[this.selectedBandId].subBands;
-    const resourceCount = subBands.reduce((count, subBand) => subBand.type === 'resource' ? count + 1 : count, 0);
+    const resourceCount = subBands.reduce(
+      (count, subBand) => (subBand.type === 'resource' ? count + 1 : count),
+      0,
+    );
     return resourceCount > 1;
+  }
+
+  /**
+   * Change plot type changes the height and heightPadding. Height of CompositeBand needs to include heightPadding for top and bottom tick labels to show in a line plot.
+   */
+  onChangePlotType(subBand: RavenSubBand, isNumeric: boolean) {
+    this.updateBand.emit({
+      bandId: this.selectedBandId,
+      subBandId: subBand.id,
+      update: {
+        height: isNumeric ? 100 : 50,
+        heightPadding: isNumeric ? 20 : 0,
+      },
+    });
+
+    this.updateSubBand.emit({
+      bandId: this.selectedBandId,
+      subBandId: subBand.id,
+      update: {
+        height: isNumeric ? 100 : 50,
+        heightPadding:
+          isNumeric || (subBand as RavenStateBand).showStateChangeTimes
+            ? 10
+            : 0,
+        isNumeric,
+      },
+    });
+  }
+
+  /**
+   * Change showStateChangeTimes requires change in heightPadding for the times to be shown.
+   */
+  onChangeShowStateChangeTimes(
+    subBand: RavenSubBand,
+    showStateChangeTimes: boolean,
+  ) {
+    this.updateSubBand.emit({
+      bandId: this.selectedBandId,
+      subBandId: subBand.id,
+      update: {
+        heightPadding: showStateChangeTimes ? 12 : 0,
+        showStateChangeTimes,
+      },
+    });
   }
 
   /**

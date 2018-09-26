@@ -14,6 +14,6 @@ import {
 } from './index';
 
 export type MpsServerMetadata =
-  MpsServerActivityMetadata |
-  MpsServerResourceMetadata |
-  MpsServerStateMetadata;
+  | MpsServerActivityMetadata
+  | MpsServerResourceMetadata
+  | MpsServerStateMetadata;

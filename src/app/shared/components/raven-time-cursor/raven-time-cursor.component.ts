@@ -26,17 +26,37 @@ import { timestamp, utc } from '../../../shared/util/time';
   templateUrl: './raven-time-cursor.component.html',
 })
 export class RavenTimeCursorComponent implements OnChanges {
-  @Input() autoPage: boolean;
-  @Input() clockRate: number;
-  @Input() currentTimeDelta: number;
-  @Input() cursorColor: string;
-  @Input() cursorTime: number | null;
-  @Input() cursorWidth: number;
-  @Input() showTimeCursor: boolean;
-  @Input() setCursorTime: number | null;
+  @Input()
+  autoPage: boolean;
 
-  @Output() displayTimeCursor: EventEmitter<boolean> = new EventEmitter<boolean>();
-  @Output() updateTimeCursorSettings: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
+  @Input()
+  clockRate: number;
+
+  @Input()
+  currentTimeDelta: number;
+
+  @Input()
+  cursorColor: string;
+
+  @Input()
+  cursorTime: number | null;
+
+  @Input()
+  cursorWidth: number;
+
+  @Input()
+  showTimeCursor: boolean;
+
+  @Input()
+  setCursorTime: number | null;
+
+  @Output()
+  displayTimeCursor: EventEmitter<boolean> = new EventEmitter<boolean>();
+
+  @Output()
+  updateTimeCursorSettings: EventEmitter<RavenUpdate> = new EventEmitter<
+    RavenUpdate
+  >();
 
   cursorWidthControl: FormControl = new FormControl('', [
     Validators.min(1),

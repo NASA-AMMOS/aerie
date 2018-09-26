@@ -14,9 +14,7 @@ import {
   RavenStateBand,
 } from '../models';
 
-import {
-  activityPoint,
-} from './raven-points';
+import { activityPoint } from './raven-points';
 
 export const activityBand: RavenActivityBand = {
   activityHeight: 20,
@@ -107,9 +105,14 @@ export const stateBand: RavenStateBand = {
   alignLabel: 3,
   baselineLabel: 3,
   borderWidth: 1,
+  color: '#000000',
+  fill: false,
+  fillColor: '#000000',
   height: 50,
   heightPadding: 0,
+  icon: 'circle',
   id: '102',
+  isNumeric: false,
   label: 'test-state-band',
   labelColor: [0, 0, 0],
   labelFont: 'Georgia',
@@ -118,6 +121,8 @@ export const stateBand: RavenStateBand = {
   name: 'test-state-band',
   parentUniqueId: null,
   points: [],
+  possibleStates: [],
+  showIcon: false,
   showLabelPin: true,
   showStateChangeTimes: false,
   showTooltip: true,
@@ -209,12 +214,14 @@ export const bands: RavenCompositeBand[] = [
         legend: 'a',
         name: 'test-activity-sub-band-4',
         parentUniqueId: '104',
-        points: [{
-          ...activityPoint,
-          sourceId: '/a/b/c/d/e/v',
-          subBandId: '4',
-          uniqueId: '400',
-        }],
+        points: [
+          {
+            ...activityPoint,
+            sourceId: '/a/b/c/d/e/v',
+            subBandId: '4',
+            uniqueId: '400',
+          },
+        ],
         sourceIds: ['/a/b/c/d/e/v'],
       },
     ],

@@ -1470,6 +1470,7 @@ Band.prototype.repaint = function() {
   if(this.decorator !== null) {
     this.decorator.paintForegroundIntervals();
     this.decorator.paintGuideTimes();
+    this.decorator.paintLastClickTime();
     this.decorator.paintNow();
   }
 };
@@ -1909,6 +1910,7 @@ CompositeBand.prototype.repaint = function() {
   if(this.decorator !== null) {
     this.decorator.paintForegroundIntervals();
     this.decorator.paintGuideTimes();
+    this.decorator.paintLastClickTime();
     this.decorator.paintNow();
   }
 };
@@ -1984,7 +1986,7 @@ Decorator.prototype.paintForegroundIntervals = function() {
 
 Decorator.prototype.paintGuideTimes = function() {
   var guideTimes = this.band.timeAxis.guideTimes;
-  if(guideTimes.length === 0) { return; }
+  if(!guideTimes || guideTimes.length === 0) { return; }
 
   var viewTimeAxis = this.band.viewTimeAxis;
   var viewStart = viewTimeAxis.start;
@@ -2006,6 +2008,29 @@ Decorator.prototype.paintGuideTimes = function() {
   }
   ctx.stroke();
   ctx.closePath();
+};
+
+Decorator.prototype.paintLastClickTime = function() {
+  var lastClickTime = this.band.timeAxis.lastClickTime;
+  if(!lastClickTime) { return; }
+
+  var viewTimeAxis = this.band.viewTimeAxis;
+  var viewStart = viewTimeAxis.start;
+  var viewEnd = viewTimeAxis.end;
+
+  if(lastClickTime >= viewStart && lastClickTime <= viewEnd) {
+    var bandHeight = this.band.height + this.band.heightPadding;
+    var ctx = this.band.canvas.getContext('2d');
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = Util.rgbaToString([39, 143, 229], 0.2);
+
+    ctx.beginPath();
+    var lineX = viewTimeAxis.getXFromTime(lastClickTime);
+    ctx.moveTo(lineX, 0);
+    ctx.lineTo(lineX, bandHeight);
+    ctx.stroke();
+    ctx.closePath();
+  }
 };
 
 Decorator.prototype.paintTimeTicks = function() {

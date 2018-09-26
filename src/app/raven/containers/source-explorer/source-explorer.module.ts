@@ -25,12 +25,8 @@ import {
 } from '../../../shared/components/modules';
 
 @NgModule({
-  declarations: [
-    SourceExplorerComponent,
-  ],
-  exports: [
-    SourceExplorerComponent,
-  ],
+  declarations: [SourceExplorerComponent],
+  exports: [SourceExplorerComponent],
   imports: [
     CommonModule,
     MatButtonModule,

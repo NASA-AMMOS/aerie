@@ -7,8 +7,12 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './hb-code-mirror/hb-code-mirror.module';
+export * from './hb-command-editor/hb-command-editor.module';
+export * from './hb-command-list/hb-command-list.module';
 export * from './hb-command-loader/hb-command-loader.module';
+export * from './hb-monaco/hb-monaco.module';
+export * from './raven-activity-type-form-dialog/raven-activity-type-form-dialog.module';
+export * from './raven-activity-type-list/raven-activity-type-list.module';
 export * from './raven-activity-band/raven-activity-band.module';
 export * from './raven-activity-point/raven-activity-point.module';
 export * from './raven-bands/raven-bands.module';
@@ -38,6 +42,7 @@ export * from './raven-resource-point/raven-resource-point.module';
 export * from './raven-settings-bands/raven-settings-bands.module';
 export * from './raven-settings-global/raven-settings-global.module';
 export * from './raven-shareable-link-dialog/raven-shareable-link-dialog.module';
+export * from './raven-situational-awareness/raven-situational-awareness.module';
 export * from './raven-state-band/raven-state-band.module';
 export * from './raven-state-point/raven-state-point.module';
 export * from './raven-state-save-dialog/raven-state-save-dialog.module';

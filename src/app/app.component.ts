@@ -12,12 +12,14 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-root',
-  styles: [`
-    :host {
-      display: block;
-      height: 100%;
-    }
-  `],
+  styles: [
+    `
+      :host {
+        display: block;
+        height: 100%;
+      }
+    `,
+  ],
   template: `
     <router-outlet></router-outlet>
   `,
