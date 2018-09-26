@@ -181,4 +181,12 @@ To select a Data Point, click on the data point of your preference. When a data 
 
 *<p align="center">**Image 15: Select a Data Point.** Left side: On a band of your preference, click any data point. Right Side: Once a data point is selected, the details panel will scroll and highlight the selected data point. Also within the 'Selected Point' Tab in the Right Panel, the data point's metadata will be displayed.</p>*
 
+#### How to: Remove all Bands
+
+To remove all the drawn bands:
+
+1. In the Top Bar, click the Remove All Bands Icon (<img src="./images/baseline-clear-24px.svg" width="20" />).
+2. A confirmation dialog will appear. 
+3. Click `Yes`. All bands should be removed.
+
 <p align="right"><a href="./Raven_101_3.1_guides.md">Next: Guides</a></p>
