@@ -168,27 +168,29 @@
               </mat-form-field>
             </div>
 
-            <!-- Show Activity Times. -->
-            <div class="field">
-              <mat-slide-toggle
-                id="raven-settings-show-activity-times"
-                color="primary"
-                [checked]="subBand.showActivityTimes"
-                (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { showActivityTimes: $event.checked } })">
-                Show Activity Times
-              </mat-slide-toggle>
-            </div>
+            <ng-container *ngIf="subBand.layout !== 2">
+              <!-- Show Activity Times. -->
+              <div class="field">
+                <mat-slide-toggle
+                  id="raven-settings-show-activity-times"
+                  color="primary"
+                  [checked]="subBand.showActivityTimes"
+                  (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { showActivityTimes: $event.checked } })">
+                  Show Activity Times
+                </mat-slide-toggle>
+              </div>
 
-            <!-- Show Label. -->
-            <div class="field">
-              <mat-slide-toggle
-                id="raven-settings-show-label"
-                color="primary"
-                [checked]="subBand.showLabel"
-                (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { showLabel: $event.checked } })">
-                Show Labels
-              </mat-slide-toggle>
-            </div>
+              <!-- Show Label. -->
+              <div class="field">
+                <mat-slide-toggle
+                  id="raven-settings-show-label"
+                  color="primary"
+                  [checked]="subBand.showLabel"
+                  (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { showLabel: $event.checked } })">
+                  Show Labels
+                </mat-slide-toggle>
+              </div>
+            </ng-container>
 
             <!-- Add To. -->
             <div class="field">
