@@ -654,6 +654,46 @@ ActivityPainter.prototype.getColor = function(act) {
   }
 };
 
+ActivityPainter.prototype.paintLabelAndTimes = function (act, actX1, actX2, actY1, actY2, previousAct, previousActX1, previousActX2 , lastPaintedTimeX2, lastPaintedTime) {
+  if (this.showLabel) {
+      // autofit already includes space for label
+      if (this.autoFit) {
+          if (act.label !== null) {
+              this.paintLabel({interval:act,
+                     ll:{x:actX1, y:actY2},
+                     ul:{x:actX1, y:actY1},
+                     ur:{x:actX2, y:actY1},
+                     lr:{x:actX2, y:actY2}});
+          }
+      }
+      // paint the label of the previous act in the row
+      else if (previousAct && previousAct.label !== null) {
+          // paint previous activity label if there is room
+          this.paintLabel({interval:previousAct,
+                     ll:{x:previousActX1, y:actY2},
+                     ul:{x:previousActX1, y:actY1},
+                     ur:{x:previousActX2, y:actY1},
+                     lr:{x:previousActX2, y:actY2},
+                     maxr: {x:actX1, y:actY2}});
+      }
+  }
+
+  // paint start and end times of activity
+  if (this.showActivityTimes && this.rowPadding > 12) {
+      paintedTimeX2 = this.paintActivityTimes({interval:act,
+                     ll:{x:actX1, y:actY2},
+                     ul:{x:actX1, y:actY1},
+                     ur:{x:actX2, y:actY1},
+                      lr:{x:actX2, y:actY2},
+                     lastPaintedTimeX2: lastPaintedTimeX2,
+                     lastPaintedTime: lastPaintedTime});
+      if (paintedTimeX2 !== lastPaintedTimeX2) {
+        lastPaintedTimeX2 = paintedTimeX2;
+        lastPaintedTime = act.start;
+      }
+  }
+}
+
 ActivityPainter.prototype.paintActivityAsBar = function(rowY, act, previousAct, previousActX1, previousActX2, lastPaintedTimeX2, lastPaintedTime) {
   var ctx = this.band.canvas.getContext('2d');
   rowY = rowY - this.rowPadding;
@@ -721,43 +761,7 @@ ActivityPainter.prototype.paintActivityAsBar = function(rowY, act, previousAct, 
                        lr:{x:actX2, y:actY2}});
   }
 
-  if (this.showLabel) {
-      // autofit already includes space for label
-      if (this.autoFit) {
-          if (act.label !== null) {
-              this.paintLabel({interval:act,
-                     ll:{x:actX1, y:actY2},
-                     ul:{x:actX1, y:actY1},
-                     ur:{x:actX2, y:actY1},
-                     lr:{x:actX2, y:actY2}});
-          }
-      }
-      // paint the label of the previous act in the row
-      else if (previousAct && previousAct.label !== null) {
-          // paint previous activity label if there is room
-          this.paintLabel({interval:previousAct,
-                     ll:{x:previousActX1, y:actY2},
-                     ul:{x:previousActX1, y:actY1},
-                     ur:{x:previousActX2, y:actY1},
-                     lr:{x:previousActX2, y:actY2},
-                     maxr: {x:actX1, y:actY2}});
-      }
-  }
-
-  // paint start and end times of activity
-  if (this.showActivityTimes && this.rowPadding > 12) {
-      paintedTimeX2 = this.paintActivityTimes({interval:act,
-                     ll:{x:actX1, y:actY2},
-                     ul:{x:actX1, y:actY1},
-                     ur:{x:actX2, y:actY1},
-                      lr:{x:actX2, y:actY2},
-                     lastPaintedTimeX2: lastPaintedTimeX2,
-                     lastPaintedTime: lastPaintedTime});
-      if (paintedTimeX2 !== lastPaintedTimeX2) {
-        lastPaintedTimeX2 = paintedTimeX2;
-        lastPaintedTime = act.start;
-      }
-  }
+  this.paintLabelAndTimes (act, actX1, actX2, actY1, actY2, previousAct, previousActX1, previousActX2, lastPaintedTimeX2, lastPaintedTime);
 
   // check to see if it was selected
   if(this.band.onIsSelectedActivity && this.band.onIsSelectedActivity(act)) {
@@ -790,7 +794,7 @@ ActivityPainter.prototype.paintActivityAsBar = function(rowY, act, previousAct, 
   return {actCoord:actCoord, drawCoord:drawCoord, lastPaintedTimeX2: lastPaintedTimeX2, lastPaintedTime: lastPaintedTime};
 };
 
-ActivityPainter.prototype.paintActivityAsLine = function(rowY, act) {
+ActivityPainter.prototype.paintActivityAsLine = function(rowY, act, previousAct, previousActX1, previousActX2, lastPaintedTimeX2, lastPaintedTime) {
   // rowY is the bottom left corner
   var ctx = this.band.canvas.getContext('2d');
   rowY = rowY - this.rowPadding;
@@ -857,14 +861,7 @@ ActivityPainter.prototype.paintActivityAsLine = function(rowY, act) {
                        lr:{x:actX2, y:hashY2}});
   }
 
-  // paint the label
-  if(this.showLabel && act.label !== null) {
-    this.paintLabel({interval:act,
-                     ll:{x:actX1, y:actY},
-                     ul:{x:actX1, y:actY},
-                     ur:{x:actX2, y:actY},
-                     lr:{x:actX2, y:actY}});
-  }
+  this.paintLabelAndTimes (act, actX1, actX2, hashY1, hashY2, previousAct, previousActX1, previousActX2, lastPaintedTimeX2, lastPaintedTime);
 
   var actCoord = [actX1, actX2, hashY1, hashY2];
   var drawCoord = [actX1, actX2, hashY1, hashY2];
