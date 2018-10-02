@@ -123,7 +123,7 @@ ActivityBand.prototype.computeNumRowsCompactLayout = function() {
         if(interval.end <= start || interval.start >= end) {
           continue;
         }
-        if(prevDrawEnd !== null && prevDrawEnd > interval.start) {
+        if(prevDrawEnd !== null && prevDrawEnd >= interval.start) {
           newOpenIntervals.push(interval);
         }
         else {

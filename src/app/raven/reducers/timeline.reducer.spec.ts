@@ -87,8 +87,8 @@ describe('timeline reducer', () => {
           ],
         },
       ],
-      maxTimeRange: { end: 100, start: 10 },
-      viewTimeRange: { end: 100, start: 10 },
+      maxTimeRange: { end: 110, start: 10 },
+      viewTimeRange: { end: 110, start: 10 },
     });
   });
 
@@ -126,8 +126,8 @@ describe('timeline reducer', () => {
           ],
         },
       ],
-      maxTimeRange: { end: 200, start: 50 },
-      viewTimeRange: { end: 200, start: 50 },
+      maxTimeRange: { end: 210, start: 50 },
+      viewTimeRange: { end: 210, start: 50 },
     });
   });
 
@@ -158,8 +158,8 @@ describe('timeline reducer', () => {
           ],
         },
       ],
-      maxTimeRange: { end: 100, start: 10 },
-      viewTimeRange: { end: 100, start: 10 },
+      maxTimeRange: { end: 110, start: 10 },
+      viewTimeRange: { end: 110, start: 10 },
     });
   });
 
@@ -258,8 +258,8 @@ describe('timeline reducer', () => {
           ],
         },
       ],
-      maxTimeRange: { end: 200, start: 10 },
-      viewTimeRange: { end: 100, start: 10 },
+      maxTimeRange: { end: 210, start: 10 },
+      viewTimeRange: { end: 110, start: 10 },
     });
   });
 

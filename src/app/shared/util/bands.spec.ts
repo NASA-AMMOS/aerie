@@ -255,14 +255,14 @@ describe('bands.ts', () => {
 
     it(`should set the viewTimeRange to the maxTimeRange if an empty currentViewTimeRange is given`, () => {
       expect(updateTimeRanges(bands, { end: 0, start: 0 })).toEqual({
-        maxTimeRange: { end: 300, start: 10 },
-        viewTimeRange: { end: 300, start: 10 },
+        maxTimeRange: { end: 310, start: 10 },
+        viewTimeRange: { end: 310, start: 10 },
       });
     });
 
     it(`should properly set the viewTimeRange`, () => {
       expect(updateTimeRanges(bands, { end: 100, start: -100 })).toEqual({
-        maxTimeRange: { end: 300, start: 10 },
+        maxTimeRange: { end: 310, start: 10 },
         viewTimeRange: { end: 100, start: -100 },
       });
     });

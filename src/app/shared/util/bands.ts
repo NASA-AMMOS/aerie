@@ -406,11 +406,13 @@ export function sortOrderForBand(
 
 /**
  * Helper that gets new time ranges based on the current view time range and the list of given bands.
+ * Need to pad end time in order to view the last point or when there is only one instantaneous point.
  */
 export function updateTimeRanges(
   bands: RavenCompositeBand[],
   currentViewTimeRange: RavenTimeRange,
 ) {
+  const padTime = 10; // 10 secs
   let maxTimeRange: RavenTimeRange = { end: 0, start: 0 };
   let viewTimeRange: RavenTimeRange = { end: 0, start: 0 };
 
@@ -443,6 +445,8 @@ export function updateTimeRanges(
         }
       }
     }
+
+    endTime += padTime;
 
     maxTimeRange = { end: endTime, start: startTime };
     viewTimeRange = { ...currentViewTimeRange };
