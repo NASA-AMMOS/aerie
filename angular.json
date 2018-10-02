@@ -46,8 +46,8 @@
               "node_modules/font-awesome/css/font-awesome.min.css",
               "node_modules/monaco-editor/dev/vs/editor/editor.main.css",
               "node_modules/roboto-fontface/css/roboto/roboto-fontface.css",
-              "node_modules/ag-grid/dist/styles/ag-grid.css",
-              "node_modules/ag-grid/dist/styles/ag-theme-fresh.css",
+              "node_modules/ag-grid-community/dist/styles/ag-grid.css",
+              "node_modules/ag-grid-community/dist/styles/ag-theme-fresh.css",
               "node_modules/ngx-toastr/toastr.css",
               "src/styles.css",
               "libs/ctl/ctl.css"
@@ -73,7 +73,7 @@
               "aot": true,
               "extractLicenses": true,
               "vendorChunk": false,
-              "buildOptimizer": false
+              "buildOptimizer": true
             },
             "prod-mpsserver": {
               "fileReplacements": [
@@ -90,7 +90,7 @@
               "aot": true,
               "extractLicenses": true,
               "vendorChunk": false,
-              "buildOptimizer": false
+              "buildOptimizer": true
             }
           }
         },

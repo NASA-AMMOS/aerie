@@ -20,6 +20,6 @@ describe('raven2 App', () => {
 
   it('the app title should be correct', () => {
     page.navigateTo();
-    expect(page.appTile.getText()).toEqual('Raven2');
+    expect(page.appTile.getText()).toEqual('Raven');
   });
 });

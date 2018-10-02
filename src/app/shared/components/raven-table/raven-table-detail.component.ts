@@ -12,8 +12,8 @@ import {
   ChangeDetectionStrategy,
   Component,
 } from '@angular/core';
-import { GridOptions } from 'ag-grid';
 import { ICellRendererAngularComp } from 'ag-grid-angular';
+import { GridOptions } from 'ag-grid-community';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -18,8 +18,8 @@ import {
   ViewChild,
 } from '@angular/core';
 
-import { RowNode } from 'ag-grid';
 import { AgGridNg2 } from 'ag-grid-angular';
+import { RowNode } from 'ag-grid-community';
 import { pickBy, startsWith } from 'lodash';
 import { RavenTableDetailComponent } from './raven-table-detail.component';
 
