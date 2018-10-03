@@ -7,19 +7,12 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  AppPage,
-} from './utils';
+import { browser, by, element, promise } from 'protractor';
 
-describe('raven2 App', () => {
-  let page: AppPage;
+export class AppPage {
+  appTile = element(by.css('.app-title'));
 
-  beforeEach(() => {
-    page = new AppPage();
-  });
-
-  it('the app title should be correct', () => {
-    page.navigateTo();
-    expect(page.appTile.getText()).toEqual('Raven');
-  });
-});
+  navigateTo(): promise.Promise<any> {
+    return browser.get('/');
+  }
+}

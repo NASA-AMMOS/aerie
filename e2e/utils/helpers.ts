@@ -7,12 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  browser,
-  by,
-  element,
-  ElementFinder,
-} from 'protractor';
+import { browser, by, element, ElementFinder } from 'protractor';
 
 /**
  * Click via css class.
@@ -44,7 +39,11 @@ export function clickByIds(ids: string[]): void {
  * of a known "max callback stack size exceeded" error when sending big objects between selenium and the browser.
  */
 export function probe(elem: ElementFinder, prop: string): any {
-  return browser.executeScript('return ng.probe(arguments[0]).componentInstance[arguments[1]]', elem, prop);
+  return browser.executeScript(
+    'return ng.probe(arguments[0]).componentInstance[arguments[1]]',
+    elem,
+    prop,
+  );
 }
 
 /**

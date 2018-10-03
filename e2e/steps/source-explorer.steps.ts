@@ -7,6 +7,26 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './app.po';
-export * from './helpers';
-export * from './raven-tree.po';
+import { expect } from 'chai';
+import { defineSupportCode } from 'cucumber';
+import { AppPage } from './../utils';
+
+defineSupportCode(({ Given, When, Then, Before }) => {
+  let app: AppPage;
+
+  Before(() => {
+    app = new AppPage();
+  });
+
+  Given('I am on the RAVEN page', () => app.navigateTo());
+
+  When(
+    'I click on a + for a parent node in the Source Explorer',
+    () => 'pending',
+  );
+
+  Then(
+    'I should see the children nodes loaded and displayed under the parent',
+    () => expect(true).to.equal(true),
+  );
+});
