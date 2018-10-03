@@ -1,0 +1,431 @@
+[
+    {
+        "bands": [
+            {
+                "compositeAutoScale": true,
+                "compositeLogTicks": false,
+                "compositeScientificNotation": false,
+                "compositeYAxisLabel": false,
+                "containerId": "0",
+                "height": 50,
+                "heightPadding": 10,
+                "name": "ACT0_1000",
+                "overlay": false,
+                "showTooltip": true,
+                "sortOrder": 0,
+                "subBands": [
+                    {
+                        "activityHeight": 20,
+                        "activityStyle": 1,
+                        "addTo": false,
+                        "alignLabel": 3,
+                        "baselineLabel": 3,
+                        "borderWidth": 1,
+                        "filterTarget": null,
+                        "height": 50,
+                        "heightPadding": 10,
+                        "icon": "circle",
+                        "label": "ACT0_1000",
+                        "labelColor": [
+                            0,
+                            0,
+                            0
+                        ],
+                        "labelFont": "Georgia",
+                        "labelPin": "Pin_Pin",
+                        "layout": 0,
+                        "legend": "ACT0_1000",
+                        "maxTimeRange": {
+                            "end": 0,
+                            "start": 0
+                        },
+                        "minorLabels": [],
+                        "name": "ACT0_1000",
+                        "points": [],
+                        "showActivityTimes": false,
+                        "showLabel": true,
+                        "showLabelPin": true,
+                        "showTooltip": true,
+                        "sourceIds": [
+                            "/TEST_ATS/Combo_Test/activity_1000/Activities by Legend/ACT0_1000"
+                        ],
+                        "tableColumns": [],
+                        "trimLabel": true,
+                        "type": "activity"
+                    },
+                    {
+                        "activityHeight": 20,
+                        "activityStyle": 1,
+                        "addTo": false,
+                        "alignLabel": 3,
+                        "baselineLabel": 3,
+                        "borderWidth": 1,
+                        "filterTarget": null,
+                        "height": 50,
+                        "heightPadding": 10,
+                        "icon": "circle",
+                        "label": "ACT1+ACT2_1000",
+                        "labelColor": [
+                            0,
+                            0,
+                            0
+                        ],
+                        "labelFont": "Georgia",
+                        "labelPin": "Pin_Pin",
+                        "layout": 0,
+                        "legend": "ACT1+ACT2_1000",
+                        "maxTimeRange": {
+                            "end": 0,
+                            "start": 0
+                        },
+                        "minorLabels": [],
+                        "name": "ACT1+ACT2_1000",
+                        "points": [],
+                        "showActivityTimes": false,
+                        "showLabel": true,
+                        "showLabelPin": true,
+                        "showTooltip": true,
+                        "sourceIds": [
+                            "/TEST_ATS/Combo_Test/activity_1000/Activities by Legend/ACT1+ACT2_1000"
+                        ],
+                        "tableColumns": [],
+                        "trimLabel": true,
+                        "type": "activity"
+                    },
+                    {
+                        "activityHeight": 20,
+                        "activityStyle": 1,
+                        "addTo": false,
+                        "alignLabel": 3,
+                        "baselineLabel": 3,
+                        "borderWidth": 1,
+                        "filterTarget": null,
+                        "height": 50,
+                        "heightPadding": 10,
+                        "icon": "circle",
+                        "label": "ACT3+ACT4_1000",
+                        "labelColor": [
+                            0,
+                            0,
+                            0
+                        ],
+                        "labelFont": "Georgia",
+                        "labelPin": "Pin_Pin",
+                        "layout": 0,
+                        "legend": "ACT3+ACT4_1000",
+                        "maxTimeRange": {
+                            "end": 0,
+                            "start": 0
+                        },
+                        "minorLabels": [],
+                        "name": "ACT3+ACT4_1000",
+                        "points": [],
+                        "showActivityTimes": false,
+                        "showLabel": true,
+                        "showLabelPin": true,
+                        "showTooltip": true,
+                        "sourceIds": [
+                            "/TEST_ATS/Combo_Test/activity_1000/Activities by Legend/ACT3+ACT4_1000"
+                        ],
+                        "tableColumns": [],
+                        "trimLabel": true,
+                        "type": "activity"
+                    }
+                ],
+                "type": "composite"
+            },
+            {
+                "addTo": false,
+                "autoScale": true,
+                "color": "#000000",
+                "decimate": false,
+                "fill": false,
+                "fillColor": "#000000",
+                "height": 100,
+                "heightPadding": 10,
+                "icon": "circle",
+                "interpolation": "linear",
+                "isDuration": false,
+                "isTime": false,
+                "label": "DataRate_1000[ONE]",
+                "labelColor": "#000000",
+                "labelFont": "Georgia",
+                "labelPin": "flt_res_square_tol_10000",
+                "labelUnit": "Mbits/hour",
+                "logTicks": false,
+                "maxTimeRange": {
+                    "end": 0,
+                    "start": 0
+                },
+                "name": "DataRate_1000[ONE]",
+                "points": [],
+                "scientificNotation": false,
+                "showIcon": false,
+                "showLabelPin": true,
+                "showLabelUnit": true,
+                "showTooltip": true,
+                "sourceIds": [
+                    "/TEST_ATS/Combo_Test/flt_array_res_square_tol_1000/Resources/ArrayData/DataRate_1000/DataRate_1000[ONE]"
+                ],
+                "tableColumns": [],
+                "type": "resource",
+                "containerId": "0",
+                "sortOrder": 1
+            },
+            {
+                "compositeAutoScale": true,
+                "compositeLogTicks": false,
+                "compositeScientificNotation": false,
+                "compositeYAxisLabel": false,
+                "containerId": "0",
+                "height": 100,
+                "heightPadding": 10,
+                "name": "DataRate_1000[TWO]",
+                "overlay": false,
+                "showTooltip": true,
+                "sortOrder": 2,
+                "subBands": [
+                    {
+                        "addTo": false,
+                        "autoScale": true,
+                        "color": "#000000",
+                        "decimate": false,
+                        "fill": false,
+                        "fillColor": "#000000",
+                        "height": 100,
+                        "heightPadding": 10,
+                        "icon": "circle",
+                        "interpolation": "linear",
+                        "isDuration": false,
+                        "isTime": false,
+                        "label": "DataRate_1000[TWO]",
+                        "labelColor": "#000000",
+                        "labelFont": "Georgia",
+                        "labelPin": "flt_res_square_tol_10000",
+                        "labelUnit": "Mbits/hour",
+                        "logTicks": false,
+                        "maxTimeRange": {
+                            "end": 0,
+                            "start": 0
+                        },
+                        "name": "DataRate_1000[TWO]",
+                        "points": [],
+                        "scientificNotation": false,
+                        "showIcon": false,
+                        "showLabelPin": true,
+                        "showLabelUnit": true,
+                        "showTooltip": true,
+                        "sourceIds": [
+                            "/TEST_ATS/Combo_Test/flt_array_res_square_tol_1000/Resources/ArrayData/DataRate_1000/DataRate_1000[TWO]"
+                        ],
+                        "tableColumns": [],
+                        "type": "resource"
+                    },
+                    {
+                        "addTo": false,
+                        "autoScale": true,
+                        "color": "#000000",
+                        "decimate": false,
+                        "fill": false,
+                        "fillColor": "#000000",
+                        "height": 100,
+                        "heightPadding": 10,
+                        "icon": "circle",
+                        "interpolation": "linear",
+                        "isDuration": false,
+                        "isTime": false,
+                        "label": "DataRate_1000[THREE,ONE]",
+                        "labelColor": "#000000",
+                        "labelFont": "Georgia",
+                        "labelPin": "flt_res_square_tol_10000",
+                        "labelUnit": "Mbits/hour",
+                        "logTicks": false,
+                        "maxTimeRange": {
+                            "end": 0,
+                            "start": 0
+                        },
+                        "name": "DataRate_1000[THREE,ONE]",
+                        "points": [],
+                        "scientificNotation": false,
+                        "showIcon": false,
+                        "showLabelPin": true,
+                        "showLabelUnit": true,
+                        "showTooltip": true,
+                        "sourceIds": [
+                            "/TEST_ATS/Combo_Test/flt_array_res_square_tol_1000/Resources/ArrayData/DataRate_1000/THREE/DataRate_1000[THREE,ONE]"
+                        ],
+                        "tableColumns": [],
+                        "type": "resource"
+                    },
+                    {
+                        "addTo": false,
+                        "autoScale": true,
+                        "color": "#000000",
+                        "decimate": false,
+                        "fill": false,
+                        "fillColor": "#000000",
+                        "height": 100,
+                        "heightPadding": 10,
+                        "icon": "circle",
+                        "interpolation": "linear",
+                        "isDuration": false,
+                        "isTime": false,
+                        "label": "DataRate_1000[THREE,THREE]",
+                        "labelColor": "#000000",
+                        "labelFont": "Georgia",
+                        "labelPin": "flt_res_square_tol_10000",
+                        "labelUnit": "Mbits/hour",
+                        "logTicks": false,
+                        "maxTimeRange": {
+                            "end": 0,
+                            "start": 0
+                        },
+                        "name": "DataRate_1000[THREE,THREE]",
+                        "points": [],
+                        "scientificNotation": false,
+                        "showIcon": false,
+                        "showLabelPin": true,
+                        "showLabelUnit": true,
+                        "showTooltip": true,
+                        "sourceIds": [
+                            "/TEST_ATS/Combo_Test/flt_array_res_square_tol_1000/Resources/ArrayData/DataRate_1000/THREE/DataRate_1000[THREE,THREE]"
+                        ],
+                        "tableColumns": [],
+                        "type": "resource"
+                    }
+                ],
+                "type": "composite"
+            },
+            {
+                "compositeAutoScale": true,
+                "compositeLogTicks": false,
+                "compositeScientificNotation": false,
+                "compositeYAxisLabel": false,
+                "containerId": "0",
+                "height": 100,
+                "heightPadding": 10,
+                "name": "DataVolume_bits_10000",
+                "overlay": true,
+                "showTooltip": true,
+                "sortOrder": 3,
+                "subBands": [
+                    {
+                        "addTo": false,
+                        "autoScale": true,
+                        "color": "#000000",
+                        "decimate": false,
+                        "fill": false,
+                        "fillColor": "#000000",
+                        "height": 100,
+                        "heightPadding": 10,
+                        "icon": "circle",
+                        "interpolation": "linear",
+                        "isDuration": false,
+                        "isTime": false,
+                        "label": "DataVolume_bits_10000",
+                        "labelColor": "#000000",
+                        "labelFont": "Georgia",
+                        "labelPin": "Pin_Pin",
+                        "labelUnit": "bits",
+                        "logTicks": false,
+                        "maxTimeRange": {
+                            "end": 0,
+                            "start": 0
+                        },
+                        "name": "DataVolume_bits_10000",
+                        "points": [],
+                        "scientificNotation": false,
+                        "showIcon": false,
+                        "showLabelPin": true,
+                        "showLabelUnit": true,
+                        "showTooltip": true,
+                        "sourceIds": [
+                            "/TEST_ATS/Combo_Test/int_res_square_tol_10000/Resources/Data/DataVolume_bits_10000"
+                        ],
+                        "tableColumns": [],
+                        "type": "resource"
+                    },
+                    {
+                        "addTo": false,
+                        "alignLabel": 3,
+                        "baselineLabel": 3,
+                        "borderWidth": 1,
+                        "color": "#000000",
+                        "fill": false,
+                        "fillColor": "#000000",
+                        "height": 50,
+                        "heightPadding": 0,
+                        "icon": "circle",
+                        "isNumeric": false,
+                        "label": "State_1000",
+                        "labelColor": [
+                            0,
+                            0,
+                            0
+                        ],
+                        "labelFont": "Georgia",
+                        "labelPin": "",
+                        "maxTimeRange": {
+                            "end": 0,
+                            "start": 0
+                        },
+                        "name": "State_1000",
+                        "points": [],
+                        "possibleStates": [
+                            "LOW",
+                            "MED",
+                            "HIGH"
+                        ],
+                        "showIcon": false,
+                        "showLabelPin": true,
+                        "showStateChangeTimes": false,
+                        "showTooltip": true,
+                        "sourceIds": [
+                            "/TEST_ATS/Combo_Test/state_res_tol_1000/Resources/State_1000"
+                        ],
+                        "tableColumns": [],
+                        "type": "state"
+                    }
+                ],
+                "type": "composite"
+            }
+        ],
+        "defaultBandSettings": {
+            "activityLayout": 0,
+            "icon": "circle",
+            "iconEnabled": false,
+            "labelFont": "Georgia",
+            "labelFontSize": 9,
+            "labelWidth": 150,
+            "resourceColor": "#000000",
+            "resourceFillColor": "#000000",
+            "showLastClick": true,
+            "showTooltip": true
+        },
+        "guides": [],
+        "maxTimeRange": {
+            "end": 1262904000.555,
+            "start": 1262304000
+        },
+        "name": "RAVEN_2_Mult_Over_Pins",
+        "pins": [
+            {
+                "name": "Pin_Pin",
+                "sourceId": "/TEST_ATS/Combo_Test"
+            },
+            {
+                "name": "flt_res_square_tol_10000",
+                "sourceId": "/TEST_ATS/Combo_Test/flt_array_res_square_tol_1000"
+            }
+        ],
+        "version": "1.0.0",
+        "viewTimeRange": {
+            "end": 1262363950,
+            "start": 1262304000
+        },
+        "__file_id": "/TEST_ATS/STATES/RAVEN_2_Mult_Over_Pins",
+        "__document_id": "5baad0df5eb7ba1198ff8b89",
+        "__kind": "fs_record",
+        "__db_type": "mongodb"
+    }
+]
