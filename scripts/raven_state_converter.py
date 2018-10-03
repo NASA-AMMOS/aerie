@@ -36,27 +36,56 @@ def main():
     
     raven_two_state = {}
     raven_two_state["bands"] = []
+    raven_two_state["unoverlaid_bands"] = []
+    raven_two_state["pins"] = []
+    raven_two_state["guides"] = []
     set_global_settings(raven_one_state[0]["viewTemplate"], raven_two_state)
+    raven_two_state["pins"] = get_pins(raven_one_state)
+    raven_two_state["guides"] = get_guides(raven_one_state)
     raven_two_state = map_fields_to_new_state_field(raven_one_state, raven_two_state, band_list)
+    raven_two_state = add_overlays_to_state(raven_two_state, band_list)
     
+
+    del raven_two_state["unoverlaid_bands"]
+
     print json.dumps (raven_two_state)
     
 def get_raven_state(data):
     sources = data[0]["viewTemplate"]
     return sources
 
-def find_tree_leaf(data, i, original_name, label_name):
-    i = i +1
-    print i
+def get_pins(data):
+    pins = []
+    for tab_source in data[0]["tabSources"]:
+        if "home" not in tab_source:
+            pin = {}
+            print tab_source["tabName"]
+            pin["name"] = tab_source["tabName"]
+            if "fs" in str(tab_source["url"]): 
+                pin["sourceId"] = tab_source["url"].split("fs")[1].split("/",1)[1]
+            elif "list" in str(tab_source["url"]):
+                pin["sourceId"] = tab_source["url"].split("list")[1].split("/",1)[1]
+            pins.append(pin)
+    return pins
+
+def get_guides(data):
+    guides = []
+    if "guides" in data[0]["viewTemplate"]:
+        for guide in data[0]["viewTemplate"]["guides"]:
+            guides.append(t_time_to_epoch(guide))
+            print guides
+    return guides    
+
+def find_tree_leaf(data, original_name, label_name):
  
     for source in data["sources"]:
         if source["name"] == original_name:
             if source["graphSettings"][0]["label"] == label_name:
                 print original_name
                 return original_name
-        path = find_tree_leaf(source, i, original_name, label_name)
+        path = find_tree_leaf(source, original_name, label_name)
         if path:
-            # print source["name"]
+            print source["name"]
             return source["name"] + '/' + path    
 
 def get_data_from_leaf(data, original_name, label_name, key):
@@ -76,37 +105,40 @@ def create_list_of_overlay_labels(raven_one_state):
                 unique_overlay_bands.append(source["overlayBand"])
     return unique_overlay_bands            
 
-def map_fields_to_new_state_field(raven_one_state, raven_two_state, unique_list):
-# Figure out what type of source and sourceID from original url  
-    for source in raven_one_state[0]["viewTemplate"]["charts"]["center"]:
+def map_fields_to_new_state_field(raven_one_state, raven_two_state, overlay_band_names):
 
+# Figure out what type of source and sourceID from original url  
+
+    for source in raven_one_state[0]["viewTemplate"]["charts"]["center"]:
+        
         by_type = False
-        type_of_source = source["url"].split("v2")[1].split("-mongodb")[0].split("/")[1].split("_")[1]
+        if "url" not in source:
+            type_of_source = "divider"
+        else:
+            type_of_source = source["url"].split("v2")[1].split("-")[0].split("/")[1].split("_")[1]
 
         if "legend" in source:
             type_of_source = "activities"
             by_type = True
 
-        # determine source type
-        if type_of_source not in ["activities", "resources"]:
-            if "pef" in source["url"].split("v2")[1].split("-mongodb")[0].split("/")[1]:
+        #  determine source type
+        if type_of_source not in ["activities", "resources", "divider"]:
+            if "pef" in source["url"].split("v2")[1].split("-")[0].split("/")[1]:
                 type_of_source = "pef"
-            elif "generic" in source["url"].split("v2")[1].split("-mongodb")[0].split("/")[1]:
+            elif "generic" in source["url"].split("v2")[1].split("-")[0].split("/")[1]:
                 type_of_source = "generic"
-
-        source_id = source["url"].split("mongodb")[1].split("?")[0]
-        
         
         band = {}
-        band["source_id"] = []
-        band["type"] = type_of_source.lower()
+        band["sourceIds"] = []
+        if type_of_source:
+            band["type"] = type_of_source.lower()
         # Account for TOL activities by type and PEF Sequence Execution Tree
-        if not by_type:
-            band["source_id"].append(find_tree_leaf(raven_one_state[0], 0, source["originalName"], source["label"]))
+        if not by_type and type_of_source != "divider":
+            band["sourceIds"].append(find_tree_leaf(raven_one_state[0], source["originalName"], source["label"]))
+        elif type_of_source == "divider":
+            band["sourceIds"] = []
         else:
-            band["source_id"].append(find_tree_leaf(raven_one_state[0], 0, source["originalName"], source["originalName"]))    
-        print band["source_id"]
-        print band["type"]
+            band["sourceIds"].append(find_tree_leaf(raven_one_state[0], source["originalName"], source["originalName"]))    
 
         if band["type"] == "resource":
             band["interpolation"] = source["graphSettings"]["interpolation"]
@@ -141,46 +173,46 @@ def map_fields_to_new_state_field(raven_one_state, raven_two_state, unique_list)
             else:
                 band["activityStyle"] = "3"    
         
-        if source["label"] not in unique_list and "overlayBand" not in source:
+        if "suffix" in source:
+            band["labelPin"] = source["suffix"]
+            band["showLabelPin"] = True 
+
+        if source["label"] not in overlay_band_names and "overlayBand" not in source and type_of_source != "divider":
             band["name"] = source["originalName"]
             raven_two_state["bands"].append(band)
-            print "single"
     
-        elif source["label"] in unique_list and "overlayBand" not in source:
+        elif source["label"] in overlay_band_names and "overlayBand" not in source and type_of_source != "divider":
             wrapper_band = {}
-                # "compositeAutoScale": true,
-                # "compositeLogTicks": false,
-                # "compositeScientificNotation": false,
-                # "compositeYAxisLabel": false,
-                # "containerId": "0",
-                # "height": 100,
-                # "heightPadding": 10}
+            wrapper_band["compositeAutoScale"] = True
+            wrapper_band["compositeLogTicks"] = False
+            wrapper_band["compositeScientificNotation"] = False
+            wrapper_band["compositeYAxisLabel"] = False
+            wrapper_band["containerId"] = "0"
+            wrapper_band["height"] = 100
+            wrapper_band["heightPadding"] = 10
             wrapper_band["name"] = source["originalName"]
-            
+            wrapper_band["type"]= "composite"
             subBands = []
             subBands.append(band)
             wrapper_band["subBands"] = subBands
-            print "unique"
             raven_two_state["bands"].append(wrapper_band)
         
-        elif "overlayBand" in source:
-            print "overlaid band"
-            for element in raven_two_state["bands"]:
-                if band["labelUnit"] != "": 
-                    constructed_label = band["label"] + " (" + band["labelUnit"] + ")"
-                    print constructed_label + "compares to " + source["overlayBand"]
-                else:
-                    constructed_label = band["label"]
-                if constructed_label == source["overlayBand"]:
-                    element["subBands"].append(band)
-                    
-            # for band in raven_two_state["bands"]:
-                
-                
-            #     if source["label"] == band[]
-            
-        
-        
+        elif "overlayBand" in source and type_of_source != "divider":
+            # print "lBEL"  + label_no_units(source) 
+            band["overlayBand"] = overlay_no_units(source)
+            raven_two_state["unoverlaid_bands"].append(band)    
+        else:
+            raven_two_state["bands"].append(band)
+
+    return raven_two_state
+
+def add_overlays_to_state(raven_two_state, overlay_band_names):
+    for unoverlaid_band in raven_two_state["unoverlaid_bands"]:
+        for band in raven_two_state["bands"]:
+            if unoverlaid_band["overlayBand"] == band["name"]:
+                # print json.dumps(unoverlaid_band)
+                band["subBands"].append(unoverlaid_band)
+
     return raven_two_state
 
 def set_global_settings(raven_one_state, raven_two_state):
@@ -200,18 +232,28 @@ def create_wrapper_band():
 def extract_units(source):
     label_string = source["label"]
     if label_string.endswith(')'):
-        units = source["label"][:source["label"].rfind(")")].split("(")[1]
+        units = source["label"][:source["label"].rfind(")")].rsplit("(",1)[1]
+
     else:
         units = ""
     return units   
 
-def label_no_units(source):
+def label_no_units(source): 
     label_string = source["label"]
     if label_string.endswith(')'):
         label = source["label"][:source["label"].rfind(")")].split("(")[0]
         label = label[:label.rfind(" ")]
     else:
         label = source["label"]
+    return label
+
+def overlay_no_units(source):
+    label_string = source["overlayBand"]
+    if label_string.endswith(')') and source["suffix"] != "null":
+        label = source["overlayBand"][:source["overlayBand"].rfind(")")].split("(")[0]
+        label = label[:label.rfind(" ")]
+    else:
+        label = source["overlayBand"]
     return label
 
 def t_time_to_epoch(t_time):
@@ -239,18 +281,18 @@ if __name__ == '__main__':
     main()
 
 
-    # 
+# wrapper_band[
 
 
 
 
-    # Create list of bands
-    # Look for unique values of overlayband
-    # For n number of unique values
-        # Create a container band 
-        # Find all bands associated with the unique value and add to container band
-        # pull them out of list of existing bands and into the container band
+# wrapper_band[Create list of bands
+# wrapper_band[Look for unique values of overlayband
+# wrapper_band[For n number of unique values
+#     wrapper_band[Create a container band 
+#     wrapper_band[Find all bands associated with the unique value and add to container band
+#     wrapper_band[pull them out of list of existing bands and into the container band
 
-        # Case 1: I am a parent Band:  Create a Container band and put information in subband
-        # Case 2: I am an overlaid band:  Put the band into the container that has the the overlayBand name
-        # Case 3: I am a standard non-overlaid band
+#     wrapper_band[Case 1: I am a parent Band:  Create a Container band and put information in subband
+#     wrapper_band[Case 2: I am an overlaid band:  Put the band into the container that has the the overlayBand name
+#     wrapper_band[Case 3: I am a standard non-overlaid band
