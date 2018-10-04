@@ -3,9 +3,9 @@
   [sortablejs]="sortedAndFilteredBands"
   [sortablejsOptions]="sortablejsOptions">
   <div
-    *ngFor="let band of sortedAndFilteredBands; trackBy: bandsTrackByFn"
-    [ngClass]="{ 'selected': band.id === selectedBandId }">
+    *ngFor="let band of sortedAndFilteredBands; trackBy: bandsTrackByFn">
     <raven-composite-band
+      [backgroundColor]="band.backgroundColor"
       [class]="'raven-band-' + band.name"
       [compositeAutoScale]="band.compositeAutoScale"
       [compositeLogTicks]="band.compositeLogTicks"
@@ -22,6 +22,7 @@
       [height]="band.height"
       [heightPadding]="band.heightPadding"
       [id]="band.id"
+      [isSelected]="band.id === selectedBandId"
       [labelFontSize]="labelFontSize"
       [labelWidth]="labelWidth"
       [lastClickTime]="lastClickTime"

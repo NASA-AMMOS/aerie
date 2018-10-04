@@ -35,6 +35,18 @@
             </mat-form-field>
           </div>
 
+          <!-- Divider Band Settings -->
+          <ng-container *ngIf="subBand.type === 'divider'">
+            <!-- Background Color. -->
+            <div class="field">
+              <label>Background Color</label>
+              <input
+                type="color"
+                [value]="bandsById[selectedBandId].backgroundColor"
+                (input)="updateBand.emit({ bandId: selectedBandId, update: { backgroundColor: $event.target.value } })">
+            </div>
+          </ng-container>
+
           <!-- Resource Band Settings for Label Unit and Show Label Unit. -->
           <ng-container *ngIf="subBand.type === 'resource'">
             <!-- Label Unit. -->

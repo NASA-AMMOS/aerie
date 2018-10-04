@@ -178,10 +178,12 @@ export function toCompositeBand(
   subBand: RavenSubBand,
   containerId?: string,
   sortOrder?: number,
+  backgroundColor?: string,
 ): RavenCompositeBand {
   const compositeBandUniqueId = uniqueId();
 
   const compositeBand: RavenCompositeBand = {
+    backgroundColor: backgroundColor || '#FFFFFF',
     compositeAutoScale: true,
     compositeLogTicks: false,
     compositeScientificNotation: false,

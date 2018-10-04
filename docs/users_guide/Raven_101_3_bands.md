@@ -95,6 +95,12 @@ These are the configuration options shared among all the band types.
 | Default Icon          | If Activity Style is set to Icon, the selected Icon will be the one displayed for each data point. Options: None, Plus, Cross, Circle, Triangle, Square and Diamond. |
 | Show Labels           | If On, labels will be shown for each data points.            |
 
+#### Divider Band Options
+
+| Option            | Description                                |
+| ----------------- | ------------------------------------------ |
+| Background Color  | Sets the background color of the divider.  |
+
 
 
 #### How to: Overlay Bands

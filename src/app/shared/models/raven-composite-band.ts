@@ -10,6 +10,7 @@
 import { RavenSubBand } from './index';
 
 export interface RavenCompositeBand {
+  backgroundColor: string;
   compositeAutoScale: boolean;
   compositeLogTicks: boolean;
   compositeScientificNotation: boolean;

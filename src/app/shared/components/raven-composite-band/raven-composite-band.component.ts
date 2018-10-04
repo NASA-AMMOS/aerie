@@ -19,6 +19,7 @@ import {
   OnInit,
   Output,
   SimpleChanges,
+  ViewChild,
 } from '@angular/core';
 
 import {
@@ -36,17 +37,14 @@ import { colorHexToRgbArray } from '../../util/color';
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'raven-composite-band',
-  styles: [
-    `
-      :host {
-        display: block;
-      }
-    `,
-  ],
+  styleUrls: ['./raven-composite-band.component.css'],
   templateUrl: './raven-composite-band.component.html',
 })
 export class RavenCompositeBandComponent
   implements AfterViewInit, OnChanges, OnInit {
+  @Input()
+  backgroundColor = '#FFFFFF';
+
   @Input()
   compositeAutoScale = false;
 
@@ -93,6 +91,9 @@ export class RavenCompositeBandComponent
   id = '';
 
   @Input()
+  isSelected = false;
+
+  @Input()
   labelFontSize = 9;
 
   @Input()
@@ -128,6 +129,9 @@ export class RavenCompositeBandComponent
   updateViewTimeRange: EventEmitter<RavenTimeRange> = new EventEmitter<
     RavenTimeRange
   >();
+
+  @ViewChild('ctlMount')
+  ctlMountElementRef: ElementRef;
 
   ctlCompositeBand: any;
   ctlTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
@@ -384,7 +388,6 @@ export class RavenCompositeBandComponent
     });
 
     this.ctlCompositeBand.compositeLabel = this.compositeYAxisLabel;
-    this.ctlCompositeBand.div.appendChild(this.ctlTooltip.div);
 
     this.ctlCompositeBand.decorator.timeCursorWidth = this.cursorWidth;
     this.ctlCompositeBand.decorator.timeCursorColor = colorHexToRgbArray(
@@ -405,7 +408,10 @@ export class RavenCompositeBandComponent
       : null;
     this.ctlViewTimeAxis.now = this.cursorTime; // Set `now` for the time-cursor so it draws upon initialization.
 
-    this.elementRef.nativeElement.appendChild(this.ctlCompositeBand.div);
+    this.ctlMountElementRef.nativeElement.appendChild(
+      this.ctlCompositeBand.div,
+    );
+    this.elementRef.nativeElement.appendChild(this.ctlTooltip.div);
   }
 
   /**

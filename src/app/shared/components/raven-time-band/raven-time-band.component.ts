@@ -191,8 +191,6 @@ export class RavenTimeBandComponent
     this.ctlTimeBand.timeCursorWidth = this.cursorWidth;
     this.ctlTimeBand.timeCursorColor = colorHexToRgbArray(this.cursorColor);
 
-    this.ctlTimeBand.div.appendChild(this.ctlTooltip.div);
-
     this.ctlTimeAxis.updateTimes(
       this.maxTimeRange.start,
       this.maxTimeRange.end,
@@ -203,6 +201,7 @@ export class RavenTimeBandComponent
     );
 
     this.elementRef.nativeElement.appendChild(this.ctlTimeBand.div);
+    this.elementRef.nativeElement.appendChild(this.ctlTooltip.div);
   }
 
   /**

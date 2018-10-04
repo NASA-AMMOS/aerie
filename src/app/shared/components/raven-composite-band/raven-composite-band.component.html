@@ -135,3 +135,11 @@
     (updateSubBand)="onUpdateSubBand($event)">
   </raven-state-band>
 </ng-container>
+
+<div [ngClass]="{ 'raven-band': true, 'raven-band--selected': isSelected }">
+  <div
+    #ctlMount
+    class="raven-band__ctl"
+    [ngStyle]="{ 'background-color': backgroundColor }">
+  </div>
+</div>

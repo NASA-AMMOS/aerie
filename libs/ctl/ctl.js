@@ -2093,7 +2093,7 @@ Decorator.prototype.paintLabel = function(yStart) {
   ctx.textAlign = "left";
   var labelWidth = this.band.viewTimeAxis.x1;
 
-  var x = 2;
+  var x = 3;
   var y = this.labelFontSize + yStart;
   var yDelta = this.labelFontSize;
   ctx.fillStyle = Util.rgbaToString(this.band.labelColor, 1);

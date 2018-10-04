@@ -76,6 +76,7 @@ export function exportState(state: RavenState): any {
         if (band.subBands.length === 1) {
           bands.push({
             ...band.subBands[0],
+            backgroundColor: band.backgroundColor,
             containerId: band.containerId,
             sortOrder: band.sortOrder,
           });
@@ -100,8 +101,10 @@ export function importState(state: any): RavenState {
       // Create composite bands.
       .reduce((bands: any[], band: any) => {
         if (band.type !== 'composite') {
-          const { containerId, sortOrder, ...subBand } = band;
-          bands.push(toCompositeBand(subBand, containerId, sortOrder));
+          const { backgroundColor, containerId, sortOrder, ...subBand } = band;
+          bands.push(
+            toCompositeBand(subBand, containerId, sortOrder, backgroundColor),
+          );
         } else {
           bands.push(band);
         }

@@ -9,13 +9,19 @@
 
 :host {
   display: block;
-  padding-bottom: 10px;
 }
 
-.sortable-bands {
-  padding-bottom: 20px;
+.raven-band {
+  isolation: isolate;
 }
-
-.sortable-placeholder {
-  background-color: rgb(230, 230, 250);
+.raven-band--selected {
+  background-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 1) 0px,
+    rgba(0, 0, 0, 1) 2px,
+    rgba(0, 0, 0, 0) 2px
+  );
+}
+.raven-band__ctl {
+  mix-blend-mode: multiply;
 }

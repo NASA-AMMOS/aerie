@@ -50,6 +50,7 @@ export const activityBand: RavenActivityBand = {
 };
 
 export const compositeBand: RavenCompositeBand = {
+  backgroundColor: '#FFFFFF',
   compositeAutoScale: false,
   compositeLogTicks: false,
   compositeScientificNotation: false,
