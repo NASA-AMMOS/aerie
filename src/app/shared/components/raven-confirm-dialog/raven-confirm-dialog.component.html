@@ -10,7 +10,7 @@
 
 <div class="container">
   <div class="center" mat-dialog-actions>
-    <button mat-button (click)="onCancel()" cdkFocusInitial>{{data.cancelText}}</button>
-    <button *ngIf="data.confirmText" mat-button (click)="onConfirm()">{{data.confirmText}}</button>
+    <button *ngIf="data.confirmText" mat-button (click)="onConfirm()" cdkFocusInitial>{{data.confirmText}}</button>
+    <button mat-button (click)="onCancel()">{{data.cancelText}}</button>
   </div>
 </div>
