@@ -22,6 +22,7 @@ import {
 
 @NgModule({
   declarations: [RavenFileImportDialogComponent],
+  entryComponents: [RavenFileImportDialogComponent],
   exports: [RavenFileImportDialogComponent],
   imports: [
     CommonModule,

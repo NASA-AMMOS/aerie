@@ -20,6 +20,7 @@ import {
 
 @NgModule({
   declarations: [RavenCustomGraphDialogComponent],
+  entryComponents: [RavenCustomGraphDialogComponent],
   exports: [RavenCustomGraphDialogComponent],
   imports: [
     MatButtonModule,

@@ -15,6 +15,7 @@ import { RavenShareableLinkDialogComponent } from './raven-shareable-link-dialog
 
 @NgModule({
   declarations: [RavenShareableLinkDialogComponent],
+  entryComponents: [RavenShareableLinkDialogComponent],
   exports: [RavenShareableLinkDialogComponent],
   imports: [
     CommonModule,

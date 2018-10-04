@@ -14,6 +14,7 @@ import { RavenConfirmDialogComponent } from './raven-confirm-dialog.component';
 
 @NgModule({
   declarations: [RavenConfirmDialogComponent],
+  entryComponents: [RavenConfirmDialogComponent],
   exports: [RavenConfirmDialogComponent],
   imports: [CommonModule, MatButtonModule, MatDialogModule],
 })

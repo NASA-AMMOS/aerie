@@ -20,6 +20,7 @@ import {
 
 @NgModule({
   declarations: [RavenCustomFilterDialogComponent],
+  entryComponents: [RavenCustomFilterDialogComponent],
   exports: [RavenCustomFilterDialogComponent],
   imports: [
     FormsModule,

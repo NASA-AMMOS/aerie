@@ -21,6 +21,7 @@ import {
 
 @NgModule({
   declarations: [RavenPinDialogComponent],
+  entryComponents: [RavenPinDialogComponent],
   exports: [RavenPinDialogComponent],
   imports: [
     CommonModule,

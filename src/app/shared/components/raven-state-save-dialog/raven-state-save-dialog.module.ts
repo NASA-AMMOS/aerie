@@ -21,6 +21,7 @@ import {
 
 @NgModule({
   declarations: [RavenStateSaveDialogComponent],
+  entryComponents: [RavenStateSaveDialogComponent],
   exports: [RavenStateSaveDialogComponent],
   imports: [
     CommonModule,

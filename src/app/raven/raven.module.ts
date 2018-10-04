@@ -39,28 +39,9 @@ import {
   RavenStateSaveDialogModule,
 } from '../shared/components/modules';
 
-import {
-  RavenConfirmDialogComponent,
-  RavenCustomFilterDialogComponent,
-  RavenCustomGraphDialogComponent,
-  RavenFileImportDialogComponent,
-  RavenPinDialogComponent,
-  RavenShareableLinkDialogComponent,
-  RavenStateSaveDialogComponent,
-} from '../shared/components/components';
-
 import { ConfigEffects } from '../shared/effects/config.effect';
 
 @NgModule({
-  entryComponents: [
-    RavenConfirmDialogComponent,
-    RavenCustomFilterDialogComponent,
-    RavenCustomGraphDialogComponent,
-    RavenFileImportDialogComponent,
-    RavenPinDialogComponent,
-    RavenShareableLinkDialogComponent,
-    RavenStateSaveDialogComponent,
-  ],
   imports: [
     HttpClientModule,
     RavenRoutingModule,
