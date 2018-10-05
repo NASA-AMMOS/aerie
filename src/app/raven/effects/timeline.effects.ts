@@ -41,6 +41,7 @@ import {
   RavenPin,
   RavenResourceBand,
   RavenSource,
+  RavenSubBand,
   RavenTimeRange,
 } from '../../shared/models';
 
@@ -208,17 +209,16 @@ export class TimelineEffects {
     const actions: Action[] = [];
 
     bands.forEach((band: RavenCompositeBand) => {
-      band.subBands.forEach((subBand: RavenResourceBand) => {
-        subBand.sourceIds.forEach(sourceId => {
+      band.subBands.forEach((subBand: RavenSubBand) => {
           actions.push(
-            new timelineActions.RemoveBandsOrPointsForSource(sourceId),
+            new timelineActions.RemoveSubBand(subBand.id),
           );
           actions.push(
-            new sourceExplorerActions.UpdateTreeSource(sourceId, {
-              opened: false,
-            }),
+            new sourceExplorerActions.SubBandIdRemove(
+              subBand.sourceIds,
+              subBand.id,
+            ),
           );
-        });
       });
     });
     return actions;
