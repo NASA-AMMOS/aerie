@@ -92,10 +92,16 @@ def find_tree_leaf(data, original_name, label_name):
     for prefix, _source in traverse_source_tree(data, pred):
         return prefix + original_name
 
-def get_data_from_leaf(data, original_name, label_name, key):
+def get_leaf(data, original_name, label_name):
     pred = source_by_name(original_name=original_name, label_name=label_name)
     for _prefix, source in traverse_source_tree(data, pred):
+        return source
+
+def get_data_from_leaf(data, original_name, label_name, key):
+    source = get_leaf(data, original_name, label_name)
+    if source:
         return source["graphSettings"][0][key]
+
 
 
 def create_list_of_overlay_labels(raven_one_state):
@@ -122,21 +128,21 @@ def map_fields_to_new_state_field(raven_one_state, raven_two_state, overlay_band
         for source in raven_one_state[0]["viewTemplate"]["charts"][panelId]:
             type_of_source, by_type = determine_type_of_source(source)
 
-            band = {
-                "containerId": containerId,
-                "sourceIds": [],
-                "type": type_of_source.lower() if type_of_source else None,
-            }
-
             # Account for TOL activities by type and PEF Sequence Execution Tree
             if type_of_source == "divider":
-                band["sourceIds"] = []
+                source_ids = []
             elif not by_type:
-                band["sourceIds"] = [find_tree_leaf(raven_one_state[0], source["originalName"], source["label"])]
+                source_ids = [find_tree_leaf(raven_one_state[0], source["originalName"], source["label"])]
             elif type_of_source == "Sequence-Tracker":
-                band["sourceIds"] = [find_tree_leaf(raven_one_state[0], "Sequence-Tracker", source["name"])]
+                source_ids = [find_tree_leaf(raven_one_state[0], "Sequence-Tracker", source["name"])]
             else:
-                band["sourceIds"] = [find_tree_leaf(raven_one_state[0], source["originalName"], source["originalName"])]
+                source_ids = [find_tree_leaf(raven_one_state[0], source["originalName"], source["originalName"])]
+
+            band = {
+                "containerId": containerId,
+                "sourceIds": source_ids,
+                "type": type_of_source.lower() if type_of_source else None,
+            }
 
             # Primary data handling
             map_elements_of_state(band, source, raven_one_state[0])
@@ -224,20 +230,24 @@ def determine_type_of_source(source):
 
     # determine source type
     if "legend" in source and not type_of_source:
-        return "activities", True
+        return "activity", True
     elif type_of_source in ["activities", "resources", "divider"]:
+        type_of_source = {
+            "activities": "activity",
+            "resources": "resource",
+        }.get(type_of_source, type_of_source)
         return type_of_source, False
     elif "pef" in source_info["file_type"]:
-        return "pef", False
+        return "activity", False
     elif "generic" in source_info["file_type"]:
         return "generic", False
     else:
         return type_of_source, False
 
 def map_elements_of_state(band, source, raven_one_state):
-    if band["type"] == "resource":
-        default_band_settings = get_default_band_settings(raven_one_state)
+    default_band_settings = get_default_band_settings(raven_one_state)
 
+    if band["type"] == "resource":
         url = urlparse.urlparse(source["url"])
         url_qs = urlparse.parse_qs(url.query)
 
@@ -284,31 +294,57 @@ def map_elements_of_state(band, source, raven_one_state):
             "sortOrder": 0,
             "tableColumns": [],
         })
-    else:
-        band["label"] = label_no_units(source)
-        band["height"] = source["graphSettings"].get("height", 100)
-        band["showIcon"] = source["graphSettings"]["iconEnabled"]
-
-    if band["type"] == "activities":
+    elif band["type"] == "activity":
         # print("[DEBUG] " + "activity")
-        band["activityStyle"] = source["graphSettings"]["activityLayout"]
-        band["activityHeight"] = source["graphSettings"]["activityHeight"]
-        band["activityStyle"] = source["graphSettings"]["style"]
-        band["showActivityTimes"] = source["graphSettings"]["showActivityTimes"]
-        band["trimLabel"] = source["graphSettings"]["trimLabel"]
-        band["labelColor"] = get_data_from_leaf(raven_one_state, source["originalName"], source["label"], "labelColor")
-        band["layout"] = source["graphSettings"]["activityLayout"]
+        ACTIVITY_STYLES = {
+            "bar":  "1",
+            "icon": "2",
+        }
+        DEFAULT_ACTIVITY_STYLE = "0"
 
-        if source["graphSettings"]["activityLayout"] == "bar":
-            band["activityStyle"] = "1"
-        elif source["graphSettings"]["activityLayout"] == "icon":
-            band["activityStyle"] = "2"
-        else:
-            band["activityStyle"] = "3"
+        leaf = get_leaf(raven_one_state, source["originalName"], source["label"])
 
-    if "suffix" in source:
-        band["labelPin"] = source.get("suffix") or ""
-        band["showLabelPin"] = bool(source.get("suffix") or "")
+        # print(json.dumps(source, indent=4, sort_keys=True), flush=True)
+        band.update({
+            "activityHeight": leaf["graphSettings"][0]["activityHeight"],
+            "activityStyle": leaf["graphSettings"][0]["activityLayout"],
+            "addTo": False,
+            "alignLabel": 3,
+            "baselineLabel": 3,
+            "borderWidth": 1,
+            "filterTarget": None,
+            "height": source["graphSettings"].get("height", 50),
+            "heightPadding": 10,
+            "icon": default_band_settings["icon"],
+            "label": label_no_units(source),
+            "labelColor": leaf["graphSettings"][0].get("labelColor", [0, 0, 0]),
+            "labelFont": default_band_settings["labelFont"],
+            "labelPin": source.get("suffix") or "",
+            "layout": int(ACTIVITY_STYLES.get(leaf["graphSettings"][0]["style"], DEFAULT_ACTIVITY_STYLE)),
+            "legend": source.get("legend", ""),
+            "maxTimeRange": {
+                "start": 0,
+                "end": 0,
+            },
+            "minorLabels": [source["graphSettings"].get("filter")] if source["graphSettings"].get("filter") else [],
+            "name": source.get("legend", ""),
+            "points": [],
+            "showActivityTimes": leaf["graphSettings"][0].get("showActivityTimes", False),
+            "showLabel": True,  # !isMessageTypeActivity(legends[legend][0]),  # Don't show labels for message type activities such as error, warning etc.
+            "showLabelPin": bool(source.get("suffix") or ""),
+            "showTooltip": True,
+            "sortOrder": 0,
+            "tableColumns": [],
+            "trimLabel": leaf["graphSettings"][0].get("trimLabel", True),
+        })
+    else:
+        band.update({
+            "label": label_no_units(source),
+            "labelPin": source.get("suffix") or "",
+            "height": source["graphSettings"].get("height", 100),
+            "showLabelPin": bool(source.get("suffix") or ""),
+            "showIcon": source["graphSettings"]["iconEnabled"],
+        })
 
 def create_wrapper_band(source, band, sortOrder=0):
     return {
