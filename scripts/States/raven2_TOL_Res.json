@@ -61,9 +61,5 @@
     "viewTimeRange": {
         "end": 1262364000.555,
         "start": 1262304000.555
-    },
-    "__file_id": "/TEST_ATS/STATES/A_2State_Single_TOL_Res",
-    "__document_id": "5b639c20d196ef1194a8a634",
-    "__kind": "fs_record",
-    "__db_type": "mongodb"
+    }
 }

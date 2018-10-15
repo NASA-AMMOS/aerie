@@ -1,4 +1,4 @@
-#!/usr/bin/env python -tt
+#!/usr/bin/env python3 -tt
 """
 The purpose of this script is given a state that was saved in raven pre-34.8.0
 and convert that state to a state that is compatible with Raven2 or 34.8.0 and
@@ -10,7 +10,7 @@ import sys
 import os
 import json
 import time
-import urlparse
+import urllib.parse as urlparse
 import re
 from datetime import datetime
 import calendar
@@ -27,7 +27,7 @@ def main():
 
     if not args:
         print('usage: [--flags options] [inputs] ')
-        sys.exit(1)
+        return 1
 
 # Read in old state
     with open(sys.argv[1]) as f:
@@ -47,71 +47,69 @@ def main():
     raven_two_state["version"] = "1.0.0"
     del raven_two_state["unoverlaid_bands"]
 
-    print json.dumps(raven_two_state, indent=4, sort_keys=True)
+    print(json.dumps(raven_two_state, indent=4, sort_keys=True))
 
+
+def tab_source_to_pin(tab_source):
+    # print("[DEBUG] " + tab_source["tabName"])
+    if "fs" in str(tab_source["url"]):
+        source_id = tab_source["url"].split("fs")[1].split("/",1)[1]
+    elif "list" in str(tab_source["url"]):
+        source_id = tab_source["url"].split("list")[1].split("/",1)[1]
+
+    return {
+        "name": tab_source["tabName"],
+        "sourceId": source_id,
+    }
 
 def get_pins(data):
-    pins = []
-    for tab_source in data[0]["tabSources"]:
-        if "home" not in tab_source:
-            pin = {}
-            # print "[DEBUG] " + tab_source["tabName"]
-            pin["name"] = tab_source["tabName"]
-            if "fs" in str(tab_source["url"]):
-                pin["sourceId"] = tab_source["url"].split("fs")[1].split("/",1)[1]
-            elif "list" in str(tab_source["url"]):
-                pin["sourceId"] = tab_source["url"].split("list")[1].split("/",1)[1]
-            pins.append(pin)
-    return pins
+    return [
+        tab_source_to_pin(tab_source)
+        for tab_source in data[0]["tabSources"]
+        if "home" not in tab_source
+    ]
 
 def get_guides(data):
-    guides = []
-    if "guides" in data[0]["viewTemplate"]:
-        for guide in data[0]["viewTemplate"]["guides"]:
-            guides.append(t_time_to_epoch(guide))
-            # print "[DEBUG] " + guides
-    return guides
+    return [
+        t_time_to_epoch(guide)
+        for guide in data[0]["viewTemplate"].get("guides", [])
+    ]
+
+def traverse_source_tree(data, predicate, prefix="/"):
+    for source in data["sources"]:
+        if predicate(source):
+            yield prefix, source
+        yield from traverse_source_tree(source, predicate, prefix + source["name"] + "/")
+
+
+def source_by_name(*, original_name, label_name):
+    def predicate(source):
+        return source["name"] == original_name and source["graphSettings"][0]["label"] == label_name
+    return predicate
 
 def find_tree_leaf(data, original_name, label_name):
-
-    for source in data["sources"]:
-        if source["name"] == original_name:
-            if source["graphSettings"][0]["label"] == label_name:
-                # print "[DEBUG] " + original_name
-                return "/" + original_name
-        path = find_tree_leaf(source, original_name, label_name)
-        if path:
-            # print "[DEBUG] " + source["name"]
-            return "/" + source["name"] + path
-
-def find_tree_leaf_seq_tracker(data, original_name, label_name):
-
-    for source in data["sources"]:
-        if source["name"] == original_name:
-            if source["graphSettings"][0]["label"] == label_name:
-                # print "[DEBUG] " + original_name
-                return "/" + original_name
-        path = find_tree_leaf_seq_tracker(source, original_name, label_name)
-        if path:
-            # print "[DEBUG] " + source["name"]
-            return "/" + source["name"] + path
+    pred = source_by_name(original_name=original_name, label_name=label_name)
+    for prefix, _source in traverse_source_tree(data, pred):
+        return prefix + original_name
 
 def get_data_from_leaf(data, original_name, label_name, key):
-    for source in data["sources"]:
-        if source["name"] == original_name:
-            if source["graphSettings"][0]["label"] == label_name:
-                return source["graphSettings"][0][key]
-        value = get_data_from_leaf(source, original_name, label_name, key)
-        if value:
-            return value
+    pred = source_by_name(original_name=original_name, label_name=label_name)
+    for _prefix, source in traverse_source_tree(data, pred):
+        return source["graphSettings"][0][key]
+
 
 def create_list_of_overlay_labels(raven_one_state):
-    unique_overlay_bands = []
-    for source in raven_one_state[0]["viewTemplate"]["charts"]["center"]:
-        if "overlayBand" in source:
-            if source["overlayBand"] not in unique_overlay_bands:
-                unique_overlay_bands.append(source["overlayBand"])
-    return unique_overlay_bands
+    charts = raven_one_state[0]["viewTemplate"]["charts"]
+    sources = charts["center"] + charts["south"]
+
+    overlay_band_names = [
+        source["overlayBand"]
+        for source in sources
+        if "overlayBand" in source
+    ]
+
+    # Remove duplicates by round-tripping through a set
+    return list(set(overlay_band_names))
 
 def map_fields_to_new_state_field(raven_one_state, raven_two_state, overlay_band_names):
 # Figure out what type of source and sourceID from original url
@@ -136,7 +134,7 @@ def map_fields_to_new_state_field(raven_one_state, raven_two_state, overlay_band
             elif not by_type:
                 band["sourceIds"] = [find_tree_leaf(raven_one_state[0], source["originalName"], source["label"])]
             elif type_of_source == "Sequence-Tracker":
-                band["sourceIds"] = [find_tree_leaf_seq_tracker(raven_one_state[0], "Sequence-Tracker", source["name"])]
+                band["sourceIds"] = [find_tree_leaf(raven_one_state[0], "Sequence-Tracker", source["name"])]
             else:
                 band["sourceIds"] = [find_tree_leaf(raven_one_state[0], source["originalName"], source["originalName"])]
 
@@ -167,7 +165,7 @@ def add_overlays_to_state(raven_two_state, overlay_band_names):
     for unoverlaid_band in raven_two_state["unoverlaid_bands"]:
         for band in raven_two_state["bands"]:
             if unoverlaid_band["overlayBand"] == band["name"]:
-                # print "[DEBUG] " + json.dumps(unoverlaid_band)
+                # print("[DEBUG] " + json.dumps(unoverlaid_band))
                 del unoverlaid_band["containerId"]
                 del unoverlaid_band["sortOrder"]
                 del unoverlaid_band["overlayBand"]
@@ -201,29 +199,37 @@ def set_global_settings(raven_one_state, raven_two_state):
         "defaultBandSettings": get_default_band_settings(raven_one_state),
     })
 
+def parse_data_source_url(url):
+    BAND_TYPE_REGEX = r"/api/v2/(?P<file_type>[^_]+)_(?P<band_type>[^-]+)-(?P<db>[^/]+)/"
+
+    url_path = urlparse.urlparse(url).path
+    match = re.search(BAND_TYPE_REGEX, url_path)
+
+    return {
+        "file_type": match.group("file_type"),
+        "band_type": match.group("band_type"),
+        "source_name": match.group("db")
+    }
+
 def determine_type_of_source(source):
     if "url" not in source:
         return "divider", False
 
-    BAND_TYPE_REGEX = r"/api/v2/(?P<file_type>[^_]+)_(?P<band_type>[^-]+)-(?P<db>[^/]+)/"
-    url_path = urlparse.urlparse(source["url"]).path
-    match = re.search(BAND_TYPE_REGEX, url_path)
-    file_type = match.group("file_type")
-    band_type = match.group("band_type")
+    source_info = parse_data_source_url(source["url"])
 
     if source["label"] == "Sequence-Tracker":
         type_of_source = "Sequence-Tracker"
     else:
-        type_of_source = band_type
+        type_of_source = source_info["band_type"]
 
     # determine source type
     if "legend" in source and not type_of_source:
         return "activities", True
     elif type_of_source in ["activities", "resources", "divider"]:
         return type_of_source, False
-    elif "pef" in file_type:
+    elif "pef" in source_info["file_type"]:
         return "pef", False
-    elif "generic" in file_type:
+    elif "generic" in source_info["file_type"]:
         return "generic", False
     else:
         return type_of_source, False
@@ -284,7 +290,7 @@ def map_elements_of_state(band, source, raven_one_state):
         band["showIcon"] = source["graphSettings"]["iconEnabled"]
 
     if band["type"] == "activities":
-        # print "[DEBUG] " + "activity"
+        # print("[DEBUG] " + "activity")
         band["activityStyle"] = source["graphSettings"]["activityLayout"]
         band["activityHeight"] = source["graphSettings"]["activityHeight"]
         band["activityStyle"] = source["graphSettings"]["style"]
@@ -348,7 +354,6 @@ def overlay_no_units(source):
     return label
 
 def t_time_to_epoch(t_time):
-
     year = t_time.split("-")[0]
     doy = t_time.split("-")[1].split("T")[0]
     hour = int(t_time.split("T")[1].split(":")[0])
@@ -369,4 +374,4 @@ def convert_color(rgb_color):
 
 # Main body
 if __name__ == '__main__':
-    main()
+    exit(main() or 0)
