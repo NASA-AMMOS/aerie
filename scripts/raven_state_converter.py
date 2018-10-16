@@ -15,12 +15,6 @@ import re
 from datetime import datetime
 import calendar
 
-# Global variables
-
-SOURCES_LIST = []
-Source_String = ''
-
-# Function declarations
 
 def main():
     args = sys.argv[1:]
@@ -29,26 +23,49 @@ def main():
         print('usage: [--flags options] [inputs] ')
         return 1
 
-# Read in old state
+    # Read in old state
     with open(sys.argv[1]) as f:
         raven_one_state = json.load(f)
 
-    band_list = create_list_of_overlay_labels(raven_one_state)
-
-    raven_two_state = {}
-    raven_two_state["bands"] = []
-    raven_two_state["unoverlaid_bands"] = []
-    set_global_settings(raven_one_state[0]["viewTemplate"], raven_two_state)
-    raven_two_state["pins"] = get_pins(raven_one_state)
-    # raven_two_state["guides"] = get_guides(raven_one_state)
-    map_fields_to_new_state_field(raven_one_state, raven_two_state, band_list)
-    raven_two_state = add_overlays_to_state(raven_two_state, band_list)
-    raven_two_state["name"] = raven_one_state[0]["name"]
-    raven_two_state["version"] = "1.0.0"
-    del raven_two_state["unoverlaid_bands"]
+    raven_two_state = {
+        "bands": convert_raven_bands(raven_one_state[0]),
+        "defaultBandSettings": get_default_band_settings(raven_one_state[0]["viewTemplate"]),
+        # "guides": get_guides(raven_one_state),
+        "maxTimeRange": convert_time_range(raven_one_state[0]["viewTemplate"]),
+        "name": raven_one_state[0]["name"],
+        "pins": get_pins(raven_one_state),
+        "version": "1.0.0",
+        "viewTimeRange": convert_time_range(raven_one_state[0]["viewTemplate"]),
+    }
 
     print(json.dumps(raven_two_state, indent=4, sort_keys=True))
 
+def convert_raven_bands(raven_one_state):
+    band_list = create_list_of_overlay_labels(raven_one_state["viewTemplate"]["charts"])
+    new_state = map_fields_to_new_state_field(raven_one_state, band_list)
+    add_overlays_to_state(new_state["bands"], new_state["unoverlaid_bands"])
+
+    return flatten_singular_bands(new_state["bands"])
+
+def flatten_singular_bands(bands):
+    def flatten_band(band):
+        if len(band["subBands"]) != 1:
+            return band
+        else:
+            flattened_band = dict(band["subBands"][0])
+            flattened_band.update({
+                "containerId": band["containerId"],
+                "sortOrder": band["sortOrder"],
+            })
+            return flattened_band
+
+    return [flatten_band(band) for band in bands]
+
+def convert_time_range(viewTemplate):
+    return {
+        "start": float(t_time_to_epoch(viewTemplate["viewStart"])),
+        "end": float(t_time_to_epoch(viewTemplate["viewEnd"])),
+    }
 
 def tab_source_to_pin(tab_source):
     # print("[DEBUG] " + tab_source["tabName"])
@@ -104,8 +121,7 @@ def get_data_from_leaf(data, original_name, label_name, key):
 
 
 
-def create_list_of_overlay_labels(raven_one_state):
-    charts = raven_one_state[0]["viewTemplate"]["charts"]
+def create_list_of_overlay_labels(charts):
     sources = charts["center"] + charts["south"]
 
     overlay_band_names = [
@@ -117,67 +133,61 @@ def create_list_of_overlay_labels(raven_one_state):
     # Remove duplicates by round-tripping through a set
     return list(set(overlay_band_names))
 
-def map_fields_to_new_state_field(raven_one_state, raven_two_state, overlay_band_names):
+def map_fields_to_new_state_field(raven_one_state, overlay_band_names):
 # Figure out what type of source and sourceID from original url
     CHARTS = [
         ("0", "center"),  # Main Panel
         ("1", "south"),   # South Panel
     ]
 
+    new_state = {
+        "bands": [],
+        "unoverlaid_bands": [],
+    }
+
     for (containerId, panelId) in CHARTS:
-        for source in raven_one_state[0]["viewTemplate"]["charts"][panelId]:
+        for source in raven_one_state["viewTemplate"]["charts"][panelId]:
             type_of_source, by_type = determine_type_of_source(source)
 
             # Account for TOL activities by type and PEF Sequence Execution Tree
             if type_of_source == "divider":
                 source_ids = []
-            elif not by_type:
-                source_ids = [find_tree_leaf(raven_one_state[0], source["originalName"], source["label"])]
+            elif by_type:
+                source_ids = [find_tree_leaf(raven_one_state, source["originalName"], source["originalName"])]
             elif type_of_source == "Sequence-Tracker":
-                source_ids = [find_tree_leaf(raven_one_state[0], "Sequence-Tracker", source["name"])]
+                source_ids = [find_tree_leaf(raven_one_state, "Sequence-Tracker", source["name"])]
             else:
-                source_ids = [find_tree_leaf(raven_one_state[0], source["originalName"], source["originalName"])]
+                source_ids = [find_tree_leaf(raven_one_state, source["originalName"], source["label"])]
 
             band = {
-                "containerId": containerId,
                 "sourceIds": source_ids,
                 "type": type_of_source.lower() if type_of_source else None,
             }
 
             # Primary data handling
-            map_elements_of_state(band, source, raven_one_state[0])
+            map_elements_of_state(band, source, raven_one_state)
 
-            if type_of_source == "divider":
-                # Divider Band
-                raven_two_state["bands"].append(band)
-            elif "overlayBand" in source:
-                # Overlay Band Child
-                band["overlayBand"] = overlay_no_units(source)
-                band["name"] = source["originalName"]
-                raven_two_state["unoverlaid_bands"].append(band)
-            elif source["label"] in overlay_band_names:
-                # Overlaid Band Parent
-                wrapper_band = create_wrapper_band(source, band)
-                del band["containerId"]
-                del band["sortOrder"]
-                band["name"] = source["originalName"]
-                raven_two_state["bands"].append(wrapper_band)
+            if "overlayBand" not in source:
+                # Top-level band
+                new_state["bands"].append(create_wrapper_band(band, containerId=containerId))
             else:
-                # Non-Overlaid Band
-                band["name"] = source["originalName"]
-                raven_two_state["bands"].append(band)
+                # Overlay band
+                band["overlayBand"] = overlay_no_units(source)
+                new_state["unoverlaid_bands"].append(band)
 
-def add_overlays_to_state(raven_two_state, overlay_band_names):
-    for unoverlaid_band in raven_two_state["unoverlaid_bands"]:
-        for band in raven_two_state["bands"]:
-            if unoverlaid_band["overlayBand"] == band["name"]:
+    return new_state
+
+def add_overlays_to_state(bands, unoverlaid_bands):
+    # Add each unoverlaid band to its associated parent
+    for unoverlaid_band in unoverlaid_bands:
+        overlayBandName = unoverlaid_band["overlayBand"]
+        del unoverlaid_band["overlayBand"]
+
+        for band in bands:
+            if band["name"] == overlayBandName:
+                # This band is the unoverlaid band's parent
                 # print("[DEBUG] " + json.dumps(unoverlaid_band))
-                del unoverlaid_band["containerId"]
-                del unoverlaid_band["sortOrder"]
-                del unoverlaid_band["overlayBand"]
                 band["subBands"].append(unoverlaid_band)
-
-    return raven_two_state
 
 def get_default_band_settings(raven_one_state):
     return {
@@ -193,28 +203,21 @@ def get_default_band_settings(raven_one_state):
         "showTooltip": raven_one_state.get("tooltipEnabled", True),
     }
 
-def set_global_settings(raven_one_state, raven_two_state):
-    maxTimeRange = {
-        "start": float(t_time_to_epoch(raven_one_state["viewStart"])),
-        "end": float(t_time_to_epoch(raven_one_state["viewEnd"])),
-    }
+def parse_data_source_url(url_str):
+    BAND_TYPE_REGEX = r"/api/v2/(?P<file_type>[^_]+)_(?P<band_type>[^-]+)-(?P<db>[^/]+)/(?P<path>.+)"
 
-    raven_two_state.update({
-        "viewTimeRange": dict(maxTimeRange),
-        "maxTimeRange": dict(maxTimeRange),  # clone the dict
-        "defaultBandSettings": get_default_band_settings(raven_one_state),
-    })
+    url = urlparse.urlparse(url_str)
+    url_path = url.path
+    url_qs = urlparse.parse_qs(url.query)
 
-def parse_data_source_url(url):
-    BAND_TYPE_REGEX = r"/api/v2/(?P<file_type>[^_]+)_(?P<band_type>[^-]+)-(?P<db>[^/]+)/"
-
-    url_path = urlparse.urlparse(url).path
     match = re.search(BAND_TYPE_REGEX, url_path)
 
     return {
         "file_type": match.group("file_type"),
         "band_type": match.group("band_type"),
-        "source_name": match.group("db")
+        "source_name": match.group("db"),
+        "path": "/" + match.group("path"),
+        "parameters": url_qs,
     }
 
 def determine_type_of_source(source):
@@ -223,33 +226,27 @@ def determine_type_of_source(source):
 
     source_info = parse_data_source_url(source["url"])
 
-    if source["label"] == "Sequence-Tracker":
-        type_of_source = "Sequence-Tracker"
-    else:
-        type_of_source = source_info["band_type"]
-
     # determine source type
-    if "legend" in source and not type_of_source:
+    if source["label"] == "Sequence-Tracker":
+        return "Sequence-Tracker", False
+    elif source_info["band_type"] in ["activities_by_legend"]:
+        return "activity", False
+    elif source_info["band_type"] in ["resource"]:
+        return "resource", False
+    elif "legend" in source:
         return "activity", True
-    elif type_of_source in ["activities", "resources", "divider"]:
-        type_of_source = {
-            "activities": "activity",
-            "resources": "resource",
-        }.get(type_of_source, type_of_source)
-        return type_of_source, False
     elif "pef" in source_info["file_type"]:
         return "activity", False
     elif "generic" in source_info["file_type"]:
         return "generic", False
     else:
-        return type_of_source, False
+        return "activity", False
 
 def map_elements_of_state(band, source, raven_one_state):
     default_band_settings = get_default_band_settings(raven_one_state)
 
     if band["type"] == "resource":
-        url = urlparse.urlparse(source["url"])
-        url_qs = urlparse.parse_qs(url.query)
+        source_info = parse_data_source_url(source["url"])
 
         if "lineColorCustom" in source["graphSettings"]:
             color = convert_color(source["graphSettings"]["lineColorCustom"])
@@ -265,14 +262,13 @@ def map_elements_of_state(band, source, raven_one_state):
             "addTo": False,
             "autoScale": True,
             "color": color,
-            "decimate": (url_qs.get("decimate", ["false"])[0] == "true"),
-            "interpolation": source["graphSettings"]["interpolation"],
+            "decimate": (source_info["parameters"].get("decimate", ["false"])[0] == "true"),
             "fill": source["graphSettings"].get("fill") or False,  # for states
             "fillColor": fillColor,
             "height": source["graphSettings"].get("height", 100),
             "heightPadding": source["graphSettings"].get("heightPadding", 10),
             "icon": default_band_settings["icon"],
-            "interpolation": "linear",
+            "interpolation": source["graphSettings"].get("interpolation", "linear"),
             "isDuration": False,  # TODO: (metadata.hasValueType.toLowerCase() === 'duration')
             "isTime": False,      # TODO: (metadata.hasValueType.toLowerCase() === 'time')
             "label": label_no_units(source),
@@ -285,13 +281,13 @@ def map_elements_of_state(band, source, raven_one_state):
                 "start": 0,
                 "end": 0,
             },
+            "name": source["originalName"],
             "points": [],
             "scientificNotation": source["graphSettings"].get("scientificNotation") or False,
             "showIcon": source["graphSettings"].get("iconEnabled") or False,
             "showLabelPin": bool(source.get("suffix") or ""),
             "showLabelUnit": True,
             "showTooltip": True,
-            "sortOrder": 0,
             "tableColumns": [],
         })
     elif band["type"] == "activity":
@@ -304,7 +300,6 @@ def map_elements_of_state(band, source, raven_one_state):
 
         leaf = get_leaf(raven_one_state, source["originalName"], source["label"])
 
-        # print(json.dumps(source, indent=4, sort_keys=True), flush=True)
         band.update({
             "activityHeight": leaf["graphSettings"][0]["activityHeight"],
             "activityStyle": leaf["graphSettings"][0]["activityLayout"],
@@ -333,32 +328,43 @@ def map_elements_of_state(band, source, raven_one_state):
             "showLabel": True,  # !isMessageTypeActivity(legends[legend][0]),  # Don't show labels for message type activities such as error, warning etc.
             "showLabelPin": bool(source.get("suffix") or ""),
             "showTooltip": True,
-            "sortOrder": 0,
             "tableColumns": [],
             "trimLabel": leaf["graphSettings"][0].get("trimLabel", True),
         })
-    else:
+    elif band["type"] == "divider":
         band.update({
+            "height": source["graphSettings"].get("height", 100),
             "label": label_no_units(source),
             "labelPin": source.get("suffix") or "",
-            "height": source["graphSettings"].get("height", 100),
+            "name": source["originalName"],
             "showLabelPin": bool(source.get("suffix") or ""),
             "showIcon": source["graphSettings"]["iconEnabled"],
         })
+    elif band["type"] == "state":
+        band.update({
+            "height": source["graphSettings"].get("height", 100),
+            "label": label_no_units(source),
+            "labelPin": source.get("suffix") or "",
+            "name": source["originalName"],
+            "showLabelPin": bool(source.get("suffix") or ""),
+            "showIcon": source["graphSettings"]["iconEnabled"],
+        })
+    else:
+        raise Exception("Unknown band type \""+band["type"]+"\"")
 
-def create_wrapper_band(source, band, sortOrder=0):
+def create_wrapper_band(band, containerId="0"):
     return {
         "compositeAutoScale": True,
         "compositeLogTicks": False,
         "compositeScientificNotation": False,
         "compositeYAxisLabel": False,
-        "containerId": "0",
-        "height": 100,  # TODO: band["height"]
-        "heightPadding": 10,  # TODO: band["heightPadding"]
-        "name": source["originalName"],  # TODO: band["name"]
+        "containerId": containerId,
+        "height": band["height"],
+        "heightPadding": band["heightPadding"],
+        "name": band["name"],
         "overlay": False,
-        "showTooltip": False,  # TODO: band["showTooltip"]
-        "sortOrder": sortOrder,
+        "showTooltip": band["showTooltip"],
+        "sortOrder": 0,
         "subBands": [band],
         "type": "composite",
     }
