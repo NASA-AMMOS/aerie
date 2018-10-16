@@ -9,18 +9,17 @@
 
 :host {
   display: grid;
+  grid-gap: 12px;
   grid-template-areas:
     'header header'
-    'aside main'
-    'footer footer';
-  grid-gap: 1rem;
+    'aside main';
   grid-template-columns: 300px 1fr;
-  grid-template-rows: 50px 1fr 50px;
-  margin: 0 1.5rem;
-  min-height: 100vh;
+  grid-template-rows: 40px 1fr;
+  margin: 0;
+  height: 100%;
 }
 
-header {
+raven-app-header {
   grid-area: header;
 }
 
@@ -30,26 +29,7 @@ main {
 
 aside {
   grid-area: aside;
-}
-
-footer {
-  grid-area: footer;
-}
-
-.content {
-  height: 100%;
-  width: 100%;
-}
-
-.mat-toolbar {
-  background-color: #039be5;
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.24);
-  height: 40px;
-  left: 0;
-  position: fixed;
-  right: 0;
-  top: 0;
-  z-index: 9;
+  margin-left: 12px;
 }
 
 hb-command-loader,

@@ -7,39 +7,44 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-:host {
-  display: grid;
-  grid-gap: 12px;
-  grid-template-areas:
-    'header header'
-    'aside main';
-  grid-template-columns: 300px 1fr;
-  grid-template-rows: 40px 1fr;
-  margin: 0;
-  height: 100%;
+.top-bar {
+  background-color: #039be5;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.24);
+  height: 40px;
+  padding: 0 12px;
+  position: relative;
+  z-index: 10;
 }
 
-raven-app-header {
-  grid-area: header;
+.top-bar-nav-icon {
+  height: 48px;
+  width: 48px;
 }
 
-main {
-  grid-area: main;
+.top-bar-title {
+  margin-left: 20px;
 }
 
-aside {
-  grid-area: aside;
-  margin-left: 12px;
+.top-bar-row {
+  box-sizing: border-box;
+  display: flex;
+  position: relative;
+  width: 100%;
 }
 
-hb-command-loader,
-hb-command-list {
-  display: block;
-  margin-bottom: 1.5rem;
+.top-bar-row-left,
+.top-bar-row-right {
+  align-items: center;
+  display: inline-flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  z-index: 1;
 }
 
-.empty {
-  background: rgba(0, 0, 0, 0.04);
-  margin-top: 16px;
-  padding: 24px;
+.top-bar-row-left {
+  justify-content: flex-start;
+}
+
+.top-bar-row-right {
+  justify-content: flex-end;
 }

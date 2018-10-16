@@ -21,6 +21,7 @@ import { takeUntil } from 'rxjs/operators';
 import { RavenActivityType } from '../../../shared/models/raven-activity-type';
 import { RavenPlan } from '../../../shared/models/raven-plan';
 
+import * as configActions from '../../../shared/actions/config.actions';
 import {
   FetchActivityTypeList,
   OpenActivityTypeFormDialog,
@@ -36,6 +37,7 @@ import {
 
 import { HawkAppState } from '../../hawk-store';
 
+import * as fromConfig from '../../../shared/reducers/config.reducer';
 import * as fromActivityType from '../../reducers/activity-type.reducer';
 import * as fromPlan from '../../reducers/plan.reducer';
 
@@ -65,6 +67,11 @@ export class HawkAppComponent implements OnDestroy {
    * Track whether the plan list is expanded
    */
   planListExpanded = true;
+
+  /**
+   * Current state of the navigation drawer
+   */
+  navigationDrawerState: configActions.NavigationDrawerStates;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -99,6 +106,17 @@ export class HawkAppComponent implements OnDestroy {
       )
       .subscribe(plan => {
         this.selectedPlan = plan || null;
+        this.markForCheck();
+      });
+
+    // Navigation drawer state
+    this.store
+      .pipe(
+        select(fromConfig.getNavigationDrawerState),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(state => {
+        this.navigationDrawerState = state;
         this.markForCheck();
       });
 
@@ -182,5 +200,12 @@ export class HawkAppComponent implements OnDestroy {
    */
   setPlanListExpanded(isExpanded: boolean) {
     this.planListExpanded = isExpanded;
+  }
+
+  /**
+   * The hamburger menu was clicked
+   */
+  onMenuClicked() {
+    this.store.dispatch(new configActions.ToggleNavigationDrawer());
   }
 }

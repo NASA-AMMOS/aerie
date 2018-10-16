@@ -12,6 +12,7 @@ import { config, ConfigState } from '../../../config';
 import {
   ConfigAction,
   ConfigActionTypes,
+  NavigationDrawerStates,
   UpdateDefaultBandSettings,
   UpdateRavenSettings,
 } from '../actions/config.actions';
@@ -35,6 +36,8 @@ export function reducer(
       return updateDefaultBandSettings(state, action);
     case ConfigActionTypes.UpdateRavenSettings:
       return updateRavenSettings(state, action);
+    case ConfigActionTypes.ToggleNavigationDrawer:
+      return { ...state, navigationDrawerState: toggleDrawer(state) };
     default:
       return state;
   }
@@ -76,6 +79,22 @@ export function updateRavenSettings(
 }
 
 /**
+ * The drawer can be toggled three ways: open, closed, or collapsed.
+ * At the moment, however, the design decision was to avoid closed.
+ */
+export function toggleDrawer(state: ConfigState) {
+  switch (state.navigationDrawerState) {
+    case NavigationDrawerStates.Closed:
+      return NavigationDrawerStates.Opened;
+    case NavigationDrawerStates.Collapsed:
+      return NavigationDrawerStates.Opened;
+    case NavigationDrawerStates.Opened:
+    default:
+      return NavigationDrawerStates.Collapsed;
+  }
+}
+
+/**
  * Feature selectors.
  */
 export const getConfigState = createFeatureSelector('config');
@@ -107,3 +126,13 @@ export const getUrls = createSelector(getConfigState, (state: ConfigState) => ({
   ravenUrl: state.mpsServer.ravenUrl,
   socketUrl: state.mpsServer.socketUrl,
 }));
+
+export const getAppModules = createSelector(
+  getConfigState,
+  (state: ConfigState) => state.appModules,
+);
+
+export const getNavigationDrawerState = createSelector(
+  getConfigState,
+  (state: ConfigState) => state.navigationDrawerState,
+);

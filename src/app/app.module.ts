@@ -22,6 +22,14 @@ import { AppRoutingModule } from './app-routing.module';
 import { metaReducers, reducers } from './app-store';
 import { AppComponent } from './app.component';
 
+/**
+ * Dependencies for the shell UI
+ */
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { RavenAppNavModule } from './shared/components/raven-app-nav/raven-app-nav.module';
+
 @NgModule({
   bootstrap: [AppComponent],
   declarations: [AppComponent],
@@ -39,6 +47,10 @@ import { AppComponent } from './app.component';
     StoreModule.forRoot(reducers, { metaReducers }),
     StoreRouterConnectingModule.forRoot({ stateKey: 'router' }),
     ToastrModule.forRoot(),
+    MatButtonModule,
+    MatIconModule,
+    MatSidenavModule,
+    RavenAppNavModule,
   ],
 })
 export class AppModule {}

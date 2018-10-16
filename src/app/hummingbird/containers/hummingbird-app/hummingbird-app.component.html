@@ -1,9 +1,7 @@
-<header>
-  <mat-toolbar color="primary">
-    <span class="app-title">Hummingbird</span>
-  </mat-toolbar>
-</header>
-<main class="content">
+<raven-app-header title="Sequencing" (menuClicked)="onMenuClicked()">
+</raven-app-header>
+
+<main>
   <hb-command-editor
     [commands]="commands"
   ></hb-command-editor>
@@ -19,5 +17,3 @@
     (selectedCommandChanged)="onSelectedCommand($event)">
   </hb-command-list>
 </aside>
-<footer>
-</footer>

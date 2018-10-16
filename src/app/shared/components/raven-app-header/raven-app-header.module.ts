@@ -10,36 +10,15 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 
-import {
-  RavenAppHeaderModule,
-  RavenPanToDurationModule,
-} from '../../../shared/components/modules';
-import { TimelineModule } from '../timeline/timeline.module';
-import { RavenAppComponent } from './raven-app.component';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatToolbarModule } from '@angular/material/toolbar';
 
-import {
-  MatButtonModule,
-  MatIconModule,
-  MatMenuModule,
-  MatProgressBarModule,
-  MatToolbarModule,
-  MatTooltipModule,
-} from '@angular/material';
+import { RavenAppHeaderComponent } from './raven-app-header.component';
 
 @NgModule({
-  declarations: [RavenAppComponent],
-  exports: [RavenAppComponent],
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule,
-    MatProgressBarModule,
-    MatToolbarModule,
-    MatTooltipModule,
-    RavenPanToDurationModule,
-    TimelineModule,
-    RavenAppHeaderModule,
-  ],
+  declarations: [RavenAppHeaderComponent],
+  exports: [RavenAppHeaderComponent],
+  imports: [CommonModule, MatButtonModule, MatIconModule, MatToolbarModule],
 })
-export class RavenAppModule {}
+export class RavenAppHeaderModule {}

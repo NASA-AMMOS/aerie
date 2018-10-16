@@ -7,39 +7,32 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { ScrollingModule } from '@angular/cdk-experimental/scrolling';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatIconModule } from '@angular/material/icon';
+import { MatListModule } from '@angular/material/list';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { RouterModule } from '@angular/router';
 
-import {
-  RavenAppHeaderModule,
-  RavenPanToDurationModule,
-} from '../../../shared/components/modules';
-import { TimelineModule } from '../timeline/timeline.module';
-import { RavenAppComponent } from './raven-app.component';
-
-import {
-  MatButtonModule,
-  MatIconModule,
-  MatMenuModule,
-  MatProgressBarModule,
-  MatToolbarModule,
-  MatTooltipModule,
-} from '@angular/material';
+import { RavenAppNavComponent } from './raven-app-nav.component';
 
 @NgModule({
-  declarations: [RavenAppComponent],
-  exports: [RavenAppComponent],
+  declarations: [RavenAppNavComponent],
+  exports: [RavenAppNavComponent],
   imports: [
     CommonModule,
+    RouterModule,
     MatButtonModule,
+    MatDividerModule,
+    MatExpansionModule,
     MatIconModule,
-    MatMenuModule,
-    MatProgressBarModule,
-    MatToolbarModule,
+    MatListModule,
     MatTooltipModule,
-    RavenPanToDurationModule,
-    TimelineModule,
-    RavenAppHeaderModule,
+    ScrollingModule,
   ],
 })
-export class RavenAppModule {}
+export class RavenAppNavModule {}

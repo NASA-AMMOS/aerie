@@ -8,11 +8,15 @@
  */
 
 import { ConfigState } from '../../../config';
+
 import {
+  NavigationDrawerStates,
+  ToggleNavigationDrawer,
   UpdateDefaultBandSettings,
   UpdateRavenSettings,
 } from '../actions/config.actions';
-import { initialState, reducer } from './config.reducer';
+
+import { initialState, reducer, toggleDrawer } from './config.reducer';
 
 describe('config reducer', () => {
   let configState: ConfigState;
@@ -173,5 +177,41 @@ describe('config reducer', () => {
         itarMessage: 'test itar message',
       },
     });
+  });
+
+  it('should toggle the state of the navigation drawer', () => {
+    expect(configState.navigationDrawerState).toBe(
+      NavigationDrawerStates.Collapsed,
+    );
+
+    configState = reducer(configState, new ToggleNavigationDrawer());
+
+    expect(configState.navigationDrawerState).toBe(
+      NavigationDrawerStates.Opened,
+    );
+
+    configState = reducer(configState, new ToggleNavigationDrawer());
+
+    expect(configState.navigationDrawerState).toBe(
+      NavigationDrawerStates.Collapsed,
+    );
+  });
+
+  it('should open a collapsed drawer', () => {
+    configState.navigationDrawerState = NavigationDrawerStates.Collapsed;
+    const drawer = toggleDrawer(configState);
+    expect(drawer).toBe(NavigationDrawerStates.Opened);
+  });
+
+  it('should collapse an opened drawer', () => {
+    configState.navigationDrawerState = NavigationDrawerStates.Opened;
+    const drawer = toggleDrawer(configState);
+    expect(drawer).toBe(NavigationDrawerStates.Collapsed);
+  });
+
+  it('should open a closed drawer', () => {
+    configState.navigationDrawerState = NavigationDrawerStates.Closed;
+    const drawer = toggleDrawer(configState);
+    expect(drawer).toBe(NavigationDrawerStates.Opened);
   });
 });

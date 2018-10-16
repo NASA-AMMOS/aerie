@@ -210,15 +210,13 @@ export class TimelineEffects {
 
     bands.forEach((band: RavenCompositeBand) => {
       band.subBands.forEach((subBand: RavenSubBand) => {
-          actions.push(
-            new timelineActions.RemoveSubBand(subBand.id),
-          );
-          actions.push(
-            new sourceExplorerActions.SubBandIdRemove(
-              subBand.sourceIds,
-              subBand.id,
-            ),
-          );
+        actions.push(new timelineActions.RemoveSubBand(subBand.id));
+        actions.push(
+          new sourceExplorerActions.SubBandIdRemove(
+            subBand.sourceIds,
+            subBand.id,
+          ),
+        );
       });
     });
     return actions;

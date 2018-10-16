@@ -19,12 +19,16 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { HbCommand } from '../../../shared/models/hb-command';
 import { HbCommandDictionary } from '../../../shared/models/hb-command-dictionary';
+
+import * as configActions from '../../../shared/actions/config.actions';
 import {
   FetchCommandDictionaryList,
   SelectCommandDictionary,
 } from '../../actions/command-dictionary.actions';
+
 import { HummingbirdAppState } from '../../hummingbird-store';
 
+import * as fromConfig from '../../../shared/reducers/config.reducer';
 import * as fromCommandDictionary from '../../reducers/command-dictionary.reducer';
 
 @Component({
@@ -48,6 +52,11 @@ export class HummingbirdAppComponent implements OnDestroy {
    * Currently active dictionary
    */
   selectedDictionaryId: string | null;
+
+  /**
+   * Current state of the navigation drawer
+   */
+  navigationDrawerState: configActions.NavigationDrawerStates;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -82,6 +91,17 @@ export class HummingbirdAppComponent implements OnDestroy {
       )
       .subscribe(selected => {
         this.selectedDictionaryId = selected || null;
+        this.markForCheck();
+      });
+
+    // Navigation drawer state
+    this.store
+      .pipe(
+        select(fromConfig.getNavigationDrawerState),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(state => {
+        this.navigationDrawerState = state;
         this.markForCheck();
       });
 
@@ -123,5 +143,12 @@ export class HummingbirdAppComponent implements OnDestroy {
    */
   onSelectedCommand(name: string) {
     // STUB
+  }
+
+  /**
+   * The hamburger menu was clicked
+   */
+  onMenuClicked() {
+    this.store.dispatch(new configActions.ToggleNavigationDrawer());
   }
 }

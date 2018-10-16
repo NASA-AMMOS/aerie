@@ -10,9 +10,16 @@
 import { Action } from '@ngrx/store';
 import { BaseType, StringTMap } from '../models';
 
+export enum NavigationDrawerStates {
+  Opened = 'opened',
+  Closed = 'closed',
+  Collapsed = 'collapsed',
+}
+
 // Action Types.
 export enum ConfigActionTypes {
   FetchProjectConfig = '[config] fetch_project_config',
+  ToggleNavigationDrawer = '[config] toggle_menu',
   UpdateDefaultBandSettings = '[config] update_default_band_settings',
   UpdateRavenSettings = '[config] update_raven_settings',
 }
@@ -22,6 +29,10 @@ export class FetchProjectConfig implements Action {
   readonly type = ConfigActionTypes.FetchProjectConfig;
 
   constructor(public url: string) {}
+}
+
+export class ToggleNavigationDrawer implements Action {
+  readonly type = ConfigActionTypes.ToggleNavigationDrawer;
 }
 
 export class UpdateDefaultBandSettings implements Action {
@@ -39,5 +50,6 @@ export class UpdateRavenSettings implements Action {
 // Union type of all actions.
 export type ConfigAction =
   | FetchProjectConfig
+  | ToggleNavigationDrawer
   | UpdateDefaultBandSettings
   | UpdateRavenSettings;

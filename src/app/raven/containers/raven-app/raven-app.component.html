@@ -1,10 +1,116 @@
-<mat-toolbar color="primary">
+<raven-app-header title="Visualization" (menuClicked)="onMenuClicked()">
+  <span class="spacer"></span>
+
+  <raven-pan-to-duration
+    (panTo)="onPanTo($event)">
+  </raven-pan-to-duration>
+
+  <button
+    mat-icon-button
+    matTooltip="Reset Time"
+    (click)="onReset()">
+    <mat-icon
+      aria-label="Reset Time">
+      restore
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Zoom In Time"
+    (click)="onZoomIn()">
+    <mat-icon
+      aria-label="Zoom In Time">
+      zoom_in
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Zoom Out Time"
+    (click)="onZoomOut()">
+    <mat-icon
+      aria-label="Zoom Out Time">
+      zoom_out
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Pan Left Time"
+    (click)="onPanLeft()">
+    <mat-icon
+      aria-label="Pan Left Time">
+      skip_previous
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Pan Right Time"
+    (click)="onPanRight()">
+    <mat-icon
+      aria-label="Pan Right Time">
+      skip_next
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Remove All Bands"
+    (click)="onRemoveAllBands()">
+    <mat-icon
+      aria-label="Remove All Bands">
+      clear
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Create Guide"
+    (click)="onAddGuide()">
+    <mat-icon
+      aria-label="Create Guide">
+      create
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Delete Guide"
+    (click)="onRemoveGuide()">
+    <mat-icon
+      aria-label="Delete Guide">
+      remove_circle_outline
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Remove All Guides"
+    (click)="onRemoveAllGuides()">
+    <mat-icon
+      aria-label="Remove All Guides">
+      remove_circle
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Global Band Settings"
+    (click)="toggleGlobalSettingsDrawer()">
+    <mat-icon
+      aria-label="Settings">
+      settings
+    </mat-icon>
+  </button>
+
   <button
     [matMenuTriggerFor]="rootMenu"
     mat-icon-button>
     <mat-icon
       aria-label="Menu">
-      menu
+      more_vert
     </mat-icon>
   </button>
 
@@ -125,121 +231,15 @@
       Toggle Details Panel
     </button>
   </mat-menu>
+</raven-app-header>
 
-  <span class="app-title">Raven</span>
-
-  <span class="spacer"></span>
-
-  <raven-pan-to-duration
-    (panTo)="onPanTo($event)">
-  </raven-pan-to-duration>
-
-  <button
-    mat-icon-button
-    matTooltip="Reset Time"
-    (click)="onReset()">
-    <mat-icon
-      aria-label="Reset Time">
-      restore
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Zoom In Time"
-    (click)="onZoomIn()">
-    <mat-icon
-      aria-label="Zoom In Time">
-      zoom_in
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Zoom Out Time"
-    (click)="onZoomOut()">
-    <mat-icon
-      aria-label="Zoom Out Time">
-      zoom_out
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Pan Left Time"
-    (click)="onPanLeft()">
-    <mat-icon
-      aria-label="Pan Left Time">
-      skip_previous
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Pan Right Time"
-    (click)="onPanRight()">
-    <mat-icon
-      aria-label="Pan Right Time">
-      skip_next
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Remove All Bands"
-    (click)="onRemoveAllBands()">
-    <mat-icon
-      aria-label="Remove All Bands">
-      clear
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Create Guide"
-    (click)="onAddGuide()">
-    <mat-icon
-      aria-label="Create Guide">
-      create
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Delete Guide"
-    (click)="onRemoveGuide()">
-    <mat-icon
-      aria-label="Delete Guide">
-      remove_circle_outline
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Remove All Guides"
-    (click)="onRemoveAllGuides()">
-    <mat-icon
-      aria-label="Remove All Guides">
-      remove_circle
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Global Band Settings"
-    (click)="toggleGlobalSettingsDrawer()">
-    <mat-icon
-      aria-label="Settings">
-      settings
-    </mat-icon>
-  </button>
-</mat-toolbar>
-
-<div *ngIf="loading">
-  <mat-progress-bar mode="indeterminate">
+<div class="progress-container">
+  <mat-progress-bar mode="indeterminate" *ngIf="loading">
   </mat-progress-bar>
 </div>
 
-<div class="timeline">
-  <app-timeline></app-timeline>
+<div class="timeline-container">
+  <div class="timeline">
+    <app-timeline></app-timeline>
+  </div>
 </div>

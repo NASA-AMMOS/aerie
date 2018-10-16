@@ -7,7 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { RavenDefaultBandSettings } from './app/shared/models';
+import { NavigationDrawerStates } from './app/shared/actions/config.actions';
+import { NestModule, RavenDefaultBandSettings } from './app/shared/models';
 import { environment } from './environments/environment';
 import { version } from './environments/version';
 
@@ -19,6 +20,7 @@ export interface ConfigState {
     production: boolean;
     version: string;
   };
+  appModules: NestModule[];
   hummingbird: {
     // TODO. Add hummingbird specific config here.
   };
@@ -29,6 +31,7 @@ export interface ConfigState {
     ravenUrl: string;
     socketUrl: string;
   };
+  navigationDrawerState: NavigationDrawerStates;
   raven: {
     defaultBandSettings: RavenDefaultBandSettings;
     itarMessage: string;
@@ -44,14 +47,33 @@ export const config: ConfigState = {
     production: environment.production,
     version: version.version,
   },
+  appModules: [
+    {
+      icon: 'event',
+      path: 'hawk',
+      title: 'Planning',
+    },
+    {
+      icon: 'dns',
+      path: 'hummingbird',
+      title: 'Sequencing',
+    },
+    {
+      icon: 'poll',
+      path: 'raven',
+      title: 'Visualization',
+    },
+  ],
   hummingbird: {},
   mpsServer: {
     apiUrl: 'mpsserver/api/v2/fs',
-    epochsUrl: 'mpsserver/api/v2/fs-mongodb/leucadia/taifunTest/europaEpoch.csv',
+    epochsUrl:
+      'mpsserver/api/v2/fs-mongodb/leucadia/taifunTest/europaEpoch.csv',
     ravenConfigUrl: 'mpsserver/api/v2/raven_config_file',
     ravenUrl: 'mpsserver/raven',
     socketUrl: 'mpsserver/websocket/v1/topic/main',
   },
+  navigationDrawerState: NavigationDrawerStates.Collapsed,
   raven: {
     defaultBandSettings: {
       activityLayout: 0,

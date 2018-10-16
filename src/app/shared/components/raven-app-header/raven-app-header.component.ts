@@ -7,39 +7,17 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-:host {
-  display: grid;
-  grid-gap: 12px;
-  grid-template-areas:
-    'header header'
-    'aside main';
-  grid-template-columns: 300px 1fr;
-  grid-template-rows: 40px 1fr;
-  margin: 0;
-  height: 100%;
-}
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 
-raven-app-header {
-  grid-area: header;
-}
+@Component({
+  selector: 'raven-app-header',
+  styleUrls: ['./raven-app-header.component.css'],
+  templateUrl: './raven-app-header.component.html',
+})
+export class RavenAppHeaderComponent {
+  @Input()
+  title = '';
 
-main {
-  grid-area: main;
-}
-
-aside {
-  grid-area: aside;
-  margin-left: 12px;
-}
-
-hb-command-loader,
-hb-command-list {
-  display: block;
-  margin-bottom: 1.5rem;
-}
-
-.empty {
-  background: rgba(0, 0, 0, 0.04);
-  margin-top: 16px;
-  padding: 24px;
+  @Output()
+  menuClicked: EventEmitter<never> = new EventEmitter();
 }

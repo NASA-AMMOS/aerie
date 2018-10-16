@@ -8,34 +8,40 @@
  */
 
 :host {
-  display: block;
+  align-content: center;
+  align-items: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
   height: 100%;
-}
-
-.mat-progress-bar {
-  height: 3px;
-  position: absolute;
-  top: 40px;
-  z-index: 10;
-}
-
-.mat-toolbar {
-  background-color: #039be5;
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.24);
-  height: 40px;
-  left: 0;
-  position: fixed;
-  right: 0;
-  top: 0;
-  z-index: 9;
+  overflow: hidden;
+  width: 100%;
 }
 
 .spacer {
   flex: 1 1 auto;
 }
 
+.timeline-container {
+  flex: 1 0 auto;
+  position: relative;
+}
+
 .timeline {
-  height: 100%;
-  padding-top: 42px;
-  width: 100%;
+  bottom: 0px;
+  left: 0px;
+  position: absolute;
+  right: 0px;
+  top: 0px;
+}
+
+.progress-container {
+  display: block;
+  flex: 0 0 3px;
+  margin-top: -3px;
+}
+
+mat-progress-bar {
+  height: 3px;
+  z-index: 10;
 }

@@ -18,6 +18,7 @@ import {
 import { select, Store } from '@ngrx/store';
 import { combineLatest, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+
 import { RavenTimeRange } from '../../../shared/models';
 
 import * as fromConfig from '../../../shared/reducers/config.reducer';
@@ -26,6 +27,7 @@ import * as fromSituationalAwareness from '../../reducers/situational-awareness.
 import * as fromSourceExplorer from '../../reducers/source-explorer.reducer';
 import * as fromTimeline from '../../reducers/timeline.reducer';
 
+import * as configActions from '../../../shared/actions/config.actions';
 import * as dialogActions from '../../actions/dialog.actions';
 import * as layoutActions from '../../actions/layout.actions';
 import * as timelineActions from '../../actions/timeline.actions';
@@ -40,6 +42,11 @@ export class RavenAppComponent implements OnDestroy {
   info: string;
   loading: boolean;
   mode: string;
+
+  /**
+   * Current state of the navigation drawer
+   */
+  navigationDrawerState: configActions.NavigationDrawerStates;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -78,6 +85,17 @@ export class RavenAppComponent implements OnDestroy {
       )
       .subscribe(mode => {
         this.mode = mode;
+        this.markForCheck();
+      });
+
+    // Navigation drawer state
+    this.store
+      .pipe(
+        select(fromConfig.getNavigationDrawerState),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(state => {
+        this.navigationDrawerState = state;
         this.markForCheck();
       });
   }
@@ -158,6 +176,13 @@ export class RavenAppComponent implements OnDestroy {
 
   onAddGuide() {
     this.store.dispatch(new timelineActions.AddGuide());
+  }
+
+  /**
+   * The hamburger menu was clicked
+   */
+  onMenuClicked() {
+    this.store.dispatch(new configActions.ToggleNavigationDrawer());
   }
 
   onRemoveAllBands() {

@@ -15,6 +15,7 @@ import {
   HbCommandLoaderModule,
   HbMonacoModule,
   RavenActivityTypeListModule,
+  RavenAppHeaderModule,
 } from '../../../shared/components/modules';
 import { HummingbirdAppComponent } from './hummingbird-app.component';
 
@@ -28,6 +29,7 @@ import { HummingbirdAppComponent } from './hummingbird-app.component';
     HbCommandLoaderModule,
     HbMonacoModule,
     MatToolbarModule,
+    RavenAppHeaderModule,
   ],
 })
 export class HummingbirdAppModule {}

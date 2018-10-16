@@ -1,4 +1,7 @@
 /**
+ * Defines basic information about a top-level module (e.g. Raven, Hawk)
+ *
+ * @license
  * Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
  * Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.
  * This software may be subject to U.S. export control laws and regulations.
@@ -7,39 +10,17 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-:host {
-  display: grid;
-  grid-gap: 12px;
-  grid-template-areas:
-    'header header'
-    'aside main';
-  grid-template-columns: 300px 1fr;
-  grid-template-rows: 40px 1fr;
-  margin: 0;
-  height: 100%;
-}
-
-raven-app-header {
-  grid-area: header;
-}
-
-main {
-  grid-area: main;
-}
-
-aside {
-  grid-area: aside;
-  margin-left: 12px;
-}
-
-hb-command-loader,
-hb-command-list {
-  display: block;
-  margin-bottom: 1.5rem;
-}
-
-.empty {
-  background: rgba(0, 0, 0, 0.04);
-  margin-top: 16px;
-  padding: 24px;
+export interface NestModule {
+  /**
+   * Material icon name, see https://material.io/tools/icons/?style=baseline
+   */
+  icon: string;
+  /**
+   * Default path to this module
+   */
+  path: string;
+  /**
+   * Title of this module for display purposes
+   */
+  title: string;
 }

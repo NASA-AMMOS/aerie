@@ -17,6 +17,7 @@ import {
 
 import {
   RavenActivityTypeListModule,
+  RavenAppHeaderModule,
   RavenPlanListModule,
 } from '../../../shared/components/modules';
 
@@ -32,6 +33,7 @@ import { HawkAppComponent } from './hawk-app.component';
     MatToolbarModule,
     RavenActivityTypeListModule,
     RavenPlanListModule,
+    RavenAppHeaderModule,
   ],
 })
 export class HawkAppModule {}
