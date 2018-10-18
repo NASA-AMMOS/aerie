@@ -41,8 +41,6 @@ import {
 import {
   getSourceIdsByLabelInBands,
   subBandById,
-  toCompositeBand,
-  toDividerBand,
 } from '../../../shared/util';
 
 import * as fromConfig from '../../../shared/reducers/config.reducer';
