@@ -30,8 +30,6 @@ import {
   templateUrl: './raven-settings-bands.component.html',
 })
 export class RavenSettingsBandsComponent {
-  @Output()
-  addDividerBand: EventEmitter<void> = new EventEmitter<void>();
 
   @Input()
   bandsById: StringTMap<RavenCompositeBand>;

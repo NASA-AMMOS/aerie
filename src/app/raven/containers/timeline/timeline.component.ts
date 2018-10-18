@@ -336,17 +336,6 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
-   * Event. Called when a `add-divider-band` event is fired from the raven-settings component.
-   */
-  onAddDividerBand(): void {
-    this.store.dispatch(
-      new timelineActions.AddBand(null, toCompositeBand(toDividerBand()), {
-        afterBandId: this.selectedBandId,
-      }),
-    );
-  }
-
-  /**
    * Event. Called when an `apply-layout` event is fired from the raven-layout-apply component.
    */
   onApplyLayout(update: RavenApplyLayoutUpdate): void {
