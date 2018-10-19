@@ -140,27 +140,28 @@ def create_resource_band(raven_one_band, sources, default_band_settings):
 
 def create_activity_band(raven_one_band, sources, default_band_settings):
     ACTIVITY_STYLES = {
-        "bar":  "1",
-        "icon": "2",
+        "bar":  1,
+        "line": 2,
+        "icon": 3,
     }
-    DEFAULT_ACTIVITY_STYLE = "0"
+    DEFAULT_ACTIVITY_STYLE = 0
 
     return {
         "activityHeight": sources[0]["graphSettings"][0]["activityHeight"],
-        "activityStyle": sources[0]["graphSettings"][0]["activityLayout"],
+        "activityStyle": ACTIVITY_STYLES.get(sources[0]["graphSettings"][0]["style"], DEFAULT_ACTIVITY_STYLE),
         "addTo": False,
         "alignLabel": 3,
         "baselineLabel": 3,
         "borderWidth": 1,
         "filterTarget": None,
         "height": raven_one_band["graphSettings"].get("height", 50),
-        "heightPadding": 10,
+        "heightPadding": raven_one_band["graphSettings"].get("heightPadding", 10),
         "icon": default_band_settings["icon"],
         "label": strip_units(raven_one_band["label"]),
         "labelColor": sources[0]["graphSettings"][0].get("labelColor", [0, 0, 0]),
         "labelFont": default_band_settings["labelFont"],
         "labelPin": raven_one_band.get("suffix") or "",
-        "layout": int(ACTIVITY_STYLES.get(sources[0]["graphSettings"][0]["style"], DEFAULT_ACTIVITY_STYLE)),
+        "layout": sources[0]["graphSettings"][0]["activityLayout"],
         "legend": raven_one_band.get("legend", ""),
         "maxTimeRange": {
             "start": 0,
