@@ -306,18 +306,6 @@ def convert_raven_one_bands(raven_one_state):
     return bands
 
 
-def create_list_of_overlay_labels(charts):
-    sources = charts["center"] + charts["south"]
-
-    overlay_band_names = [
-        source["overlayBand"]
-        for source in sources
-        if "overlayBand" in source
-    ]
-
-    # Remove duplicates by round-tripping through a set
-    return list(set(overlay_band_names))
-
 def flatten_band(band):
     if len(band["subBands"]) != 1:
         # Can't flatten overlaid bands
@@ -332,7 +320,6 @@ def flatten_band(band):
         return flattened_band
 
 def convert_raven_bands(raven_one_state):
-    # band_list = create_list_of_overlay_labels(raven_one_state["viewTemplate"]["charts"])
     return [
         flatten_band(band)
         for band in convert_raven_one_bands(raven_one_state)
