@@ -182,24 +182,47 @@ def create_activity_band(raven_one_band, sources, default_band_settings):
 
 def create_state_band(raven_one_band, sources, default_band_settings):
     return {
-        "height": raven_one_band["graphSettings"].get("height", 100),
-        "label": strip_units(raven_one_band["label"]),
+        "addTo": False,
+        "alignLabel": 3,
+        "baselineLabel": 3,
+        "borderWidth": 1,
+        "height": raven_one_band["graphSettings"].get("height") or 50,
+        "heightPadding": 0,
+        "label": strip_units(raven_one_band["label"]),  # TODO:  metadata.hasObjectName
+        "labelColor": raven_one_band["graphSettings"].get("labelColor") or [0, 0, 0],
+        "labelFont": default_band_settings["labelFont"],
         "labelPin": raven_one_band.get("suffix") or "",
+        "maxTimeRange": {
+            "start": 0,
+            "end": 0,
+        },
         "name": raven_one_band["originalName"],
+        "points": [],
         "showLabelPin": bool(raven_one_band.get("suffix") or ""),
-        "showIcon": raven_one_band["graphSettings"]["iconEnabled"],
+        "showStateChangeTimes": False,
+        "showTooltip": True,
         "sourceIds": [sources[0]["path"] for source in sources],
+        "tableColumns": [],
         "type": "state",
     }
 
 def create_divider_band(raven_one_band, sources, default_band_settings):
     return {
-        "height": raven_one_band["graphSettings"].get("height", 100),
+        "addTo": False,
+        "color": [255, 255, 255],
+        "height": raven_one_band["graphSettings"].get("height", 7),
+        "heightPadding": 10,
         "label": strip_units(raven_one_band["label"]),
-        "labelPin": raven_one_band.get("suffix") or "",
+        "labelColor": [0, 0, 0],
+        "maxTimeRange": {
+            "start": 0,
+            "end": 0,
+        },
         "name": raven_one_band["originalName"],
-        "showLabelPin": bool(raven_one_band.get("suffix") or ""),
-        "showIcon": raven_one_band["graphSettings"]["iconEnabled"],
+        "points": [],
+        "showTooltip": True,
+        "sourceIds": [sources[0]["path"] for source in sources],
+        "tableColumns": [],
         "type": "divider",
     }
 
