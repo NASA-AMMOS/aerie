@@ -7,24 +7,25 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  RavenEpoch,
-} from './../models';
+import { RavenEpoch } from '../models';
 
-import {
-  formatEpochTimeRange,
-  formatTimeRangeTFormat,
-} from './time';
+import { formatEpochTimeRange, formatTimeRangeTFormat } from './time';
 
 /**
  * Linearly interpolate x3 between two points (x1, y1) and (x2, y2).
  * Taken from ctl.js to lessen dependency on the library.
  */
-export function interpolateY3(x1: number, y1: number, x2: number, y2: number, x3: number): number {
+export function interpolateY3(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  x3: number,
+): number {
   if (x1 === x2) {
     return y1;
   } else {
-    return y2 - ((x2 - x3) * ((y2 - y1) / (x2 - x1)));
+    return y2 - (x2 - x3) * ((y2 - y1) / (x2 - x1));
   }
 }
 
@@ -40,11 +41,29 @@ export function getInterpolatedTooltipText(
   const { band, interval, time } = obj;
 
   const timeInterval = formatTimeRangeTFormat(interval.start, interval.end);
-  const epochInterval = formatEpochTimeRange(interval.start, interval.end, null, earthSecPerEpochSec, dayCode);
-  let valueAtTime = interpolateY3(interval.start, interval.startValue, interval.end, interval.endValue, time);
-  valueAtTime = band.onFormatTickValue ? band.onFormatTickValue(valueAtTime) : valueAtTime;
-  const startValue = band.onFormatTickValue ? band.onFormatTickValue(interval.startValue) : interval.startValue;
-  const endValue = band.onFormatTickValue ? band.onFormatTickValue(interval.endValue) : interval.endValue;
+  const epochInterval = formatEpochTimeRange(
+    interval.start,
+    interval.end,
+    null,
+    earthSecPerEpochSec,
+    dayCode,
+  );
+  let valueAtTime = interpolateY3(
+    interval.start,
+    interval.startValue,
+    interval.end,
+    interval.endValue,
+    time,
+  );
+  valueAtTime = band.onFormatTickValue
+    ? band.onFormatTickValue(valueAtTime)
+    : valueAtTime;
+  const startValue = band.onFormatTickValue
+    ? band.onFormatTickValue(interval.startValue)
+    : interval.startValue;
+  const endValue = band.onFormatTickValue
+    ? band.onFormatTickValue(interval.endValue)
+    : interval.endValue;
 
   return `
     <table>
@@ -64,7 +83,9 @@ export function getInterpolatedTooltipText(
           ${timeInterval}
         </td>
       </tr>
-      ${epoch ? `
+      ${
+        epoch
+          ? `
       <tr>
         <td>
           <strong>Epoch Relative:</strong>
@@ -72,7 +93,9 @@ export function getInterpolatedTooltipText(
         <td>
           ${epochInterval}
         </td>
-      </tr>` : ''}
+      </tr>`
+          : ''
+      }
       <tr>
         <td>
           <strong>Start Value:</strong>
@@ -113,8 +136,16 @@ export function getTooltipText(
   const { interval, band } = obj;
 
   const timeInterval = formatTimeRangeTFormat(interval.start, interval.end);
-  const epochInterval = formatEpochTimeRange(interval.start, interval.end, epoch, earthSecPerEpochSec, dayCode);
-  const value = band.onFormatTickValue ? band.onFormatTickValue(interval.properties.Value) : interval.properties.Value;
+  const epochInterval = formatEpochTimeRange(
+    interval.start,
+    interval.end,
+    epoch,
+    earthSecPerEpochSec,
+    dayCode,
+  );
+  const value = band.onFormatTickValue
+    ? band.onFormatTickValue(interval.properties.Value)
+    : interval.properties.Value;
 
   return `
     <table>
@@ -134,7 +165,9 @@ export function getTooltipText(
           ${timeInterval}
         </td>
       </tr>
-      ${epoch !== null ? `
+      ${
+        epoch !== null
+          ? `
       <tr>
         <td>
           <strong>Epoch Relative:</strong>
@@ -142,13 +175,18 @@ export function getTooltipText(
         <td>
           ${epochInterval}
         </td>
-      </tr>` : ''}
+      </tr>`
+          : ''
+      }
       <tr>
         <td>
           <strong>Value:</strong>
         </td>
         <td>
-          ${value || interval.properties.text || interval.label || interval.properties.Value}
+          ${value ||
+            interval.properties.text ||
+            interval.label ||
+            interval.properties.Value}
         </td>
       </tr>
     </table>

@@ -7,10 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import ravenConfig from './../ravenConfig';
-
 export const environment = {
-  ...ravenConfig,
   baseUrl: 'https://leucadia.jpl.nasa.gov:9443',
   // baseUrl: 'https://localhost:8443',
   production: false,

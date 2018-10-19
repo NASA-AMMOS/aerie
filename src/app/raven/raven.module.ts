@@ -7,27 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
-import { FlexLayoutModule } from '@angular/flex-layout';
-
-import { SortablejsModule } from 'angular-sortablejs';
-import { AngularSplitModule } from 'angular-split';
-
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
-
+import { RavenAppModule } from './containers/raven-app/raven-app.module';
+import { RavenGuard } from './guards';
+import { RavenRoutingModule } from './raven-routing.module';
 import { reducers } from './raven-store';
-
-import { MaterialModule } from './../shared/material';
-import { SharedModule } from './../shared/shared.module';
-
-import {
-  RavenAppComponent,
-  SourceExplorerComponent,
-  TimelineComponent,
-} from './containers';
 
 import {
   DialogEffects,
@@ -35,6 +22,7 @@ import {
   LayoutEffects,
   OutputEffects,
   RouterEffects,
+  SituationalAwarenessEffects,
   SourceExplorerEffects,
   TimeCursorEffects,
   TimelineEffects,
@@ -42,52 +30,44 @@ import {
 } from './effects';
 
 import {
-  RavenGuard,
-} from './guards';
+  RavenConfirmDialogModule,
+  RavenCustomFilterDialogModule,
+  RavenCustomGraphDialogModule,
+  RavenFileImportDialogModule,
+  RavenPinDialogModule,
+  RavenShareableLinkDialogModule,
+  RavenStateSaveDialogModule,
+} from '../shared/components/modules';
 
-import {
-  RavenRoutingModule,
-} from './raven-routing.module';
-
-export const DECLARATIONS = [
-  RavenAppComponent,
-  SourceExplorerComponent,
-  TimelineComponent,
-];
-
-export const EFFECTS = [
-  DialogEffects,
-  EpochsEffects,
-  LayoutEffects,
-  OutputEffects,
-  RouterEffects,
-  SourceExplorerEffects,
-  TimeCursorEffects,
-  TimelineEffects,
-  ToastEffects,
-];
-
-export const MODULES = [
-  CommonModule,
-  HttpClientModule,
-  AngularSplitModule,
-  FlexLayoutModule,
-  SortablejsModule,
-  RavenRoutingModule,
-  MaterialModule,
-  SharedModule,
-  StoreModule.forFeature('raven', reducers),
-  EffectsModule.forFeature(EFFECTS),
-];
-
-export const PROVIDERS = [
-  RavenGuard,
-];
+import { ConfigEffects } from '../shared/effects/config.effect';
 
 @NgModule({
-  declarations: DECLARATIONS,
-  exports: DECLARATIONS,
-  imports: MODULES,
-  providers: PROVIDERS,
+  imports: [
+    HttpClientModule,
+    RavenRoutingModule,
+    StoreModule.forFeature('raven', reducers),
+    EffectsModule.forFeature([
+      ConfigEffects,
+      DialogEffects,
+      EpochsEffects,
+      LayoutEffects,
+      OutputEffects,
+      RouterEffects,
+      SituationalAwarenessEffects,
+      SourceExplorerEffects,
+      TimeCursorEffects,
+      TimelineEffects,
+      ToastEffects,
+    ]),
+    RavenAppModule,
+    RavenConfirmDialogModule,
+    RavenCustomFilterDialogModule,
+    RavenCustomGraphDialogModule,
+    RavenFileImportDialogModule,
+    RavenPinDialogModule,
+    RavenShareableLinkDialogModule,
+    RavenStateSaveDialogModule,
+  ],
+  providers: [RavenGuard],
 })
 export class RavenModule {}

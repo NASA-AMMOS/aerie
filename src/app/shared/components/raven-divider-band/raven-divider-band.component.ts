@@ -26,26 +26,57 @@ import {
   template: ``,
 })
 export class RavenDividerBandComponent implements OnChanges, OnDestroy, OnInit {
-  @Input() borderWidth: number;
-  @Input() color: number[];
-  @Input() ctlTimeAxis: any;
-  @Input() ctlViewTimeAxis: any;
-  @Input() height: number;
-  @Input() id: string;
-  @Input() label: string;
-  @Input() labelColor: number[];
-  @Input() labelFont: string;
-  @Input() labelFontSize: number;
-  @Input() name: string;
+  @Input()
+  borderWidth: number;
 
-  @Output() addSubBand: EventEmitter<any> = new EventEmitter<any>();
-  @Output() removeSubBand: EventEmitter<string> = new EventEmitter<string>();
-  @Output() updateSubBand: EventEmitter<any> = new EventEmitter<any>();
+  @Input()
+  color: number[];
+
+  @Input()
+  ctlTimeAxis: any;
+
+  @Input()
+  ctlViewTimeAxis: any;
+
+  @Input()
+  height: number;
+
+  @Input()
+  id: string;
+
+  @Input()
+  label: string;
+
+  @Input()
+  labelColor: number[];
+
+  @Input()
+  labelFont: string;
+
+  @Input()
+  labelFontSize: number;
+
+  @Input()
+  name: string;
+
+  @Output()
+  addSubBand: EventEmitter<any> = new EventEmitter<any>();
+
+  @Output()
+  removeSubBand: EventEmitter<string> = new EventEmitter<string>();
+
+  @Output()
+  updateSubBand: EventEmitter<any> = new EventEmitter<any>();
 
   ngOnChanges(changes: SimpleChanges) {
     // Border Width.
     if (changes.borderWidth && !changes.borderWidth.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'painter', prop: 'borderWidth', value: this.borderWidth });
+      this.updateSubBand.emit({
+        prop: 'borderWidth',
+        subBandId: this.id,
+        subObject: 'painter',
+        value: this.borderWidth,
+      });
     }
 
     // Color.
@@ -55,17 +86,30 @@ export class RavenDividerBandComponent implements OnChanges, OnDestroy, OnInit {
 
     // Label.
     if (changes.label && !changes.label.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'label', value: this.label });
+      this.updateSubBand.emit({
+        prop: 'label',
+        subBandId: this.id,
+        value: this.label,
+      });
     }
 
     // Label Color.
     if (changes.labelColor && !changes.labelColor.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, prop: 'labelColor', value: this.labelColor });
+      this.updateSubBand.emit({
+        prop: 'labelColor',
+        subBandId: this.id,
+        value: this.labelColor,
+      });
     }
 
     // Label Font Size.
     if (changes.labelFontSize && !changes.labelFontSize.firstChange) {
-      this.updateSubBand.emit({ subBandId: this.id, subObject: 'decorator', prop: 'labelFontSize', value: this.labelFontSize });
+      this.updateSubBand.emit({
+        prop: 'labelFontSize',
+        subBandId: this.id,
+        subObject: 'decorator',
+        value: this.labelFontSize,
+      });
     }
   }
 

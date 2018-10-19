@@ -7,5 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export interface StringTMap<T> { [key: string]: T; }
-export interface NumberTMap<T> { [key: number]: T; }
+export interface StringTMap<T> {
+  [key: string]: T;
+}
+export interface NumberTMap<T> {
+  [key: number]: T;
+}

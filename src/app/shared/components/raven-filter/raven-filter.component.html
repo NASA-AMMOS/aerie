@@ -4,12 +4,16 @@
 }">
   <mat-icon
     *ngIf="source.opened"
+    matTooltip="Filter"
+    matTooltipShowDelay="500"
     [id]="'raven-tree-'+source.name+'-unselectFilter'"
     (click)="removeFilter.emit(source)">
     filter_list
   </mat-icon>
   <mat-icon
     *ngIf="!source.opened"
+    matTooltip="Filter"
+    matTooltipShowDelay="500"
     [id]="'raven-tree-'+source.name+'-selectFilter'"
     (click)="addFilter.emit(source)">
     filter_list

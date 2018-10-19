@@ -7,25 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  uniqueId,
-} from 'lodash';
-
-import {
-  RavenState,
-} from './../models';
-
-import {
-  RavenAppState,
-} from './../../raven/raven-store';
-
-import {
-  getSourceIdsForSubBand,
-} from './../util/source';
-
-import {
-  toCompositeBand,
-} from './../util/bands';
+import { uniqueId } from 'lodash';
+import { RavenAppState } from '../../raven/raven-store';
+import { RavenState } from '../models';
+import { toCompositeBand } from '../util/bands';
+import { getSourceIdsForSubBand } from '../util/source';
 
 /**
  * Returns a stripped down version of a state that we save and export it for saving.
@@ -47,7 +33,8 @@ export function getState(name: string, state: RavenAppState): any {
         ),
       })),
     })),
-    defaultBandSettings: state.raven.config.defaultBandSettings,
+    defaultBandSettings: state.config.raven.defaultBandSettings,
+    guides: state.raven.timeline.guides,
     maxTimeRange: state.raven.timeline.maxTimeRange,
     name,
     pins: state.raven.sourceExplorer.pins,
@@ -72,7 +59,11 @@ export function exportState(state: RavenState): any {
         return {
           ...bandWithNoId,
           subBands: band.subBands.map(subBand => {
-            const { id: subBandId, parentUniqueId, ...subBandWithNoIds } = subBand;
+            const {
+              id: subBandId,
+              parentUniqueId,
+              ...subBandWithNoIds
+            } = subBand;
 
             return {
               ...subBandWithNoIds,
@@ -85,6 +76,7 @@ export function exportState(state: RavenState): any {
         if (band.subBands.length === 1) {
           bands.push({
             ...band.subBands[0],
+            backgroundColor: band.backgroundColor,
             containerId: band.containerId,
             sortOrder: band.sortOrder,
           });
@@ -109,8 +101,10 @@ export function importState(state: any): RavenState {
       // Create composite bands.
       .reduce((bands: any[], band: any) => {
         if (band.type !== 'composite') {
-          const { containerId, sortOrder, ...subBand } = band;
-          bands.push(toCompositeBand(subBand, containerId, sortOrder));
+          const { backgroundColor, containerId, sortOrder, ...subBand } = band;
+          bands.push(
+            toCompositeBand(subBand, containerId, sortOrder, backgroundColor),
+          );
         } else {
           bands.push(band);
         }

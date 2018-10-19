@@ -21,42 +21,58 @@ import {
   SimpleChanges,
 } from '@angular/core';
 
-import {
-  RavenEpoch,
-  RavenTimeRange,
-} from './../../models';
-
-import {
-  colorHexToRgbArray,
-} from '../../util/color';
-
-import {
-  formatTimeTickTFormat,
-} from './../../util/time';
+import { RavenEpoch, RavenTimeRange } from '../../models';
+import { colorHexToRgbArray } from '../../util/color';
+import { formatTimeTickTFormat } from '../../util/time';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'raven-time-band',
-  styles: [`
-    :host {
-      display: block;
-    }
-  `],
+  styles: [
+    `
+      :host {
+        display: block;
+      }
+    `,
+  ],
   template: ``,
 })
-export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit {
-  @Input() cursorColor: string;
-  @Input() cursorTime: number | null;
-  @Input() cursorWidth: number;
-  @Input() dayCode: string;
-  @Input() earthSecToEpochSec: number;
-  @Input() epoch: RavenEpoch | null;
-  @Input() labelWidth: number;
-  @Input() maxTimeRange: RavenTimeRange;
-  @Input() showTooltip: boolean;
-  @Input() viewTimeRange: RavenTimeRange;
+export class RavenTimeBandComponent
+  implements AfterViewInit, OnChanges, OnInit {
+  @Input()
+  cursorColor: string;
 
-  @Output() updateViewTimeRange: EventEmitter<RavenTimeRange> = new EventEmitter<RavenTimeRange>();
+  @Input()
+  cursorTime: number | null;
+
+  @Input()
+  cursorWidth: number;
+
+  @Input()
+  dayCode: string;
+
+  @Input()
+  earthSecToEpochSec: number;
+
+  @Input()
+  epoch: RavenEpoch | null;
+
+  @Input()
+  labelWidth: number;
+
+  @Input()
+  maxTimeRange: RavenTimeRange;
+
+  @Input()
+  showTooltip: boolean;
+
+  @Input()
+  viewTimeRange: RavenTimeRange;
+
+  @Output()
+  updateViewTimeRange: EventEmitter<RavenTimeRange> = new EventEmitter<
+    RavenTimeRange
+  >();
 
   ctlTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
   ctlTimeBand: any;
@@ -100,9 +116,14 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
       const previousMaxTimeRange = changes.maxTimeRange.previousValue;
 
       // Make sure we don't redraw or update times unless the times actually changed.
-      if (previousMaxTimeRange.start !== currentMaxTimeRange.start ||
-          previousMaxTimeRange.end !== currentMaxTimeRange.end) {
-        this.ctlTimeAxis.updateTimes(currentMaxTimeRange.start, currentMaxTimeRange.end);
+      if (
+        previousMaxTimeRange.start !== currentMaxTimeRange.start ||
+        previousMaxTimeRange.end !== currentMaxTimeRange.end
+      ) {
+        this.ctlTimeAxis.updateTimes(
+          currentMaxTimeRange.start,
+          currentMaxTimeRange.end,
+        );
         shouldRedraw = true;
       }
     }
@@ -131,9 +152,14 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
       const previousViewTimeRange = changes.viewTimeRange.previousValue;
 
       // Make sure we don't redraw or update times unless the times actually changed.
-      if (previousViewTimeRange.start !== currentViewTimeRange.start ||
-          previousViewTimeRange.end !== currentViewTimeRange.end) {
-        this.ctlViewTimeAxis.updateTimes(currentViewTimeRange.start, currentViewTimeRange.end);
+      if (
+        previousViewTimeRange.start !== currentViewTimeRange.start ||
+        previousViewTimeRange.end !== currentViewTimeRange.end
+      ) {
+        this.ctlViewTimeAxis.updateTimes(
+          currentViewTimeRange.start,
+          currentViewTimeRange.end,
+        );
         shouldRedraw = true;
       }
     }
@@ -165,12 +191,17 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
     this.ctlTimeBand.timeCursorWidth = this.cursorWidth;
     this.ctlTimeBand.timeCursorColor = colorHexToRgbArray(this.cursorColor);
 
-    this.ctlTimeBand.div.appendChild(this.ctlTooltip.div);
-
-    this.ctlTimeAxis.updateTimes(this.maxTimeRange.start, this.maxTimeRange.end);
-    this.ctlViewTimeAxis.updateTimes(this.viewTimeRange.start, this.viewTimeRange.end);
+    this.ctlTimeAxis.updateTimes(
+      this.maxTimeRange.start,
+      this.maxTimeRange.end,
+    );
+    this.ctlViewTimeAxis.updateTimes(
+      this.viewTimeRange.start,
+      this.viewTimeRange.end,
+    );
 
     this.elementRef.nativeElement.appendChild(this.ctlTimeBand.div);
+    this.elementRef.nativeElement.appendChild(this.ctlTooltip.div);
   }
 
   /**
@@ -192,7 +223,12 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
    * CTL Event. Called to get a CTL `formatNow` time tick (for use in the time cursor).
    */
   onFormatNow(obj: any) {
-    const formattedTimes = formatTimeTickTFormat(obj, this.epoch, this.earthSecToEpochSec, this.dayCode);
+    const formattedTimes = formatTimeTickTFormat(
+      obj,
+      this.epoch,
+      this.earthSecToEpochSec,
+      this.dayCode,
+    );
     formattedTimes[0].y = 30;
 
     return [formattedTimes[0]];
@@ -202,7 +238,12 @@ export class RavenTimeBandComponent implements AfterViewInit, OnChanges, OnInit 
    * CTL Event. Called to get custom time band ticks.
    */
   onFormatTimeTick(obj: any) {
-    return formatTimeTickTFormat(obj, this.epoch, this.earthSecToEpochSec, this.dayCode);
+    return formatTimeTickTFormat(
+      obj,
+      this.epoch,
+      this.earthSecToEpochSec,
+      this.dayCode,
+    );
   }
 
   /**

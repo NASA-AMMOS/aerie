@@ -11,9 +11,9 @@ module.exports = function (config) {
       '../node_modules/@angular/material/prebuilt-themes/indigo-pink.css',
       '../node_modules/material-design-icons/iconfont/material-icons.css',
       '../node_modules/font-awesome/css/font-awesome.min.css',
-      '../node_modules/codemirror/lib/codemirror.css',
-      '../node_modules/ag-grid/dist/styles/ag-grid.css',
-      '../node_modules/ag-grid/dist/styles/ag-theme-fresh.css',
+      '../node_modules/monaco-editor/dev/vs/editor/editor.main.css',
+      '../node_modules/ag-grid-community/dist/styles/ag-grid.css',
+      '../node_modules/ag-grid-community/dist/styles/ag-theme-fresh.css',
       '../node_modules/ngx-toastr/toastr.css',
       './styles.css',
       '../libs/ctl/ctl.css'

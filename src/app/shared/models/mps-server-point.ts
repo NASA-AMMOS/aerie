@@ -14,6 +14,6 @@ import {
 } from './index';
 
 export type MpsServerPoint =
-  MpsServerActivityPoint |
-  MpsServerResourcePoint |
-  MpsServerStatePoint;
+  | MpsServerActivityPoint
+  | MpsServerResourcePoint
+  | MpsServerStatePoint;

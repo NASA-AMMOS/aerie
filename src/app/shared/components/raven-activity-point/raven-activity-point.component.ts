@@ -15,9 +15,7 @@ import {
   Output,
 } from '@angular/core';
 
-import {
-  RavenActivityPoint,
-} from './../../../shared/models';
+import { RavenActivityPoint } from '../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,10 +24,22 @@ import {
   templateUrl: './raven-activity-point.component.html',
 })
 export class RavenActivityPointComponent {
-  @Input() selectedPoint: RavenActivityPoint;
-  @Input() showActivityPointMetadata: boolean;
-  @Input() showActivityPointParameters: boolean;
+  @Input()
+  selectedPoint: RavenActivityPoint;
 
-  @Output() toggleShowActivityPointMetadata: EventEmitter<boolean> = new EventEmitter<boolean>();
-  @Output() toggleShowActivityPointParameters: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Input()
+  showActivityPointMetadata: boolean;
+
+  @Input()
+  showActivityPointParameters: boolean;
+
+  @Output()
+  toggleShowActivityPointMetadata: EventEmitter<boolean> = new EventEmitter<
+    boolean
+  >();
+
+  @Output()
+  toggleShowActivityPointParameters: EventEmitter<boolean> = new EventEmitter<
+    boolean
+  >();
 }

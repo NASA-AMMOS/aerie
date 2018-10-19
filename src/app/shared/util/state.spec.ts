@@ -7,17 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  RavenState,
-} from '../models';
+import { RavenState } from '../models';
 
-import {
-  exportState,
-  importState,
-} from './state';
+import { exportState, importState } from './state';
 
-export const preExportBands = [
+export const preExportBands: any[] = [
   {
+    backgroundColor: '#FFFFFF',
     containerId: '0',
     id: '100',
     name: 'test-composite-band-0',
@@ -31,6 +27,7 @@ export const preExportBands = [
     ],
   },
   {
+    backgroundColor: '#DDDDDD',
     containerId: '0',
     id: '101',
     name: 'test-composite-band-1',
@@ -49,6 +46,7 @@ export const preExportBands = [
     ],
   },
   {
+    backgroundColor: '#222222',
     containerId: '1',
     id: '102',
     name: 'test-composite-band-2',
@@ -65,11 +63,13 @@ export const preExportBands = [
 
 export const postExportBands: any[] = [
   {
+    backgroundColor: '#FFFFFF',
     containerId: '0',
     name: 'test-activity-sub-band-0',
     sortOrder: 0,
   },
   {
+    backgroundColor: '#DDDDDD',
     containerId: '0',
     name: 'test-composite-band-1',
     sortOrder: 1,
@@ -83,6 +83,7 @@ export const postExportBands: any[] = [
     ],
   },
   {
+    backgroundColor: '#222222',
     containerId: '1',
     name: 'test-divider-sub-band-0',
     sortOrder: 0,
@@ -92,7 +93,9 @@ export const postExportBands: any[] = [
 describe('state.ts', () => {
   describe('exportState', () => {
     it('should properly export a state', () => {
-      expect(exportState({ bands: preExportBands } as RavenState)).toEqual({ bands: postExportBands });
+      expect(exportState({ bands: preExportBands } as RavenState)).toEqual({
+        bands: postExportBands,
+      });
     });
   });
 

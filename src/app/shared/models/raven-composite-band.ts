@@ -7,11 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  RavenSubBand,
-} from './index';
+import { RavenSubBand } from './index';
 
 export interface RavenCompositeBand {
+  backgroundColor: string;
   compositeAutoScale: boolean;
   compositeLogTicks: boolean;
   compositeScientificNotation: boolean;

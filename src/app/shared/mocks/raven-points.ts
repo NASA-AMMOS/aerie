@@ -7,23 +7,17 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  RavenActivityPoint,
-} from './../models';
+import { RavenActivityPoint } from '../models';
 
 export const activityPoint: RavenActivityPoint = {
   activityId: 'test-activity-point',
   activityName: 'test-activity-point',
-  activityParameters: [
-    { Name: '', Value: '' },
-  ],
+  activityParameters: [{ Name: '', Value: '' }],
   activityType: '',
   ancestors: [],
   arguments: 0,
   childrenUrl: '',
-  color: [
-    0, 0, 0,
-  ],
+  color: [0, 0, 0],
   descendantsUrl: '',
   duration: 10,
   end: 500,
@@ -44,16 +38,12 @@ export const activityPoint: RavenActivityPoint = {
 export const messageTypeActivityPoint: RavenActivityPoint = {
   activityId: '',
   activityName: 'test-activity-point',
-  activityParameters: [
-    { Name: '', Value: '' },
-  ],
+  activityParameters: [{ Name: '', Value: '' }],
   activityType: '',
   ancestors: [],
   arguments: 0,
   childrenUrl: '',
-  color: [
-    0, 0, 0,
-  ],
+  color: [0, 0, 0],
   descendantsUrl: '',
   duration: 10,
   end: 500,
@@ -74,16 +64,12 @@ export const messageTypeActivityPoint: RavenActivityPoint = {
 export const keywordLineActivityPoint: RavenActivityPoint = {
   activityId: '',
   activityName: 'test-activity-point',
-  activityParameters: [
-    { Name: '', Value: '' },
-  ],
+  activityParameters: [{ Name: '', Value: '' }],
   activityType: '',
   ancestors: [],
   arguments: 0,
   childrenUrl: '',
-  color: [
-    0, 0, 0,
-  ],
+  color: [0, 0, 0],
   descendantsUrl: '',
   duration: 10,
   end: 500,

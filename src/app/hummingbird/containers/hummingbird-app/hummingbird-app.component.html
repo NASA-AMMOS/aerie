@@ -1,17 +1,19 @@
-<header>
-  <mat-toolbar color="primary">
-    <span class="app-title">Hummingbird</span>
-  </mat-toolbar>
-</header>
-<main class="content">
-  <hb-code-mirror></hb-code-mirror>
+<raven-app-header title="Sequencing" (menuClicked)="onMenuClicked()">
+</raven-app-header>
+
+<main>
+  <hb-command-editor
+    [commands]="commands"
+  ></hb-command-editor>
 </main>
 <aside>
   <hb-command-loader
+    [selectedId]="selectedDictionaryId"
     [dictionaries]="dictionaries"
-    (selectedDictionaryChanged)="onSelectedDictionary($event)"
-    >
+    (selectedDictionaryChanged)="onSelectedDictionary($event)">
   </hb-command-loader>
+  <hb-command-list
+    [commands]="commands"
+    (selectedCommandChanged)="onSelectedCommand($event)">
+  </hb-command-list>
 </aside>
-<footer>
-</footer>

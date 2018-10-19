@@ -7,14 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Component,
-  Input,
-} from '@angular/core';
-
-import {
-  RavenFileMetadata,
-} from './../../models';
+import { Component, Input } from '@angular/core';
+import { RavenFileMetadata } from '../../models';
 
 @Component({
   selector: 'raven-file-metadata',
@@ -22,6 +16,9 @@ import {
   templateUrl: './raven-file-metadata.component.html',
 })
 export class RavenFileMetadataComponent {
-  @Input() fileMetadata: RavenFileMetadata;
-  @Input() name: string;
+  @Input()
+  fileMetadata: RavenFileMetadata;
+
+  @Input()
+  name: string;
 }

@@ -9,20 +9,15 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-
-import { RavenActivityBandModule } from './../raven-activity-band/raven-activity-band.module';
-import { RavenDividerBandModule } from './../raven-divider-band/raven-divider-band.module';
-import { RavenResourceBandModule } from './../raven-resource-band/raven-resource-band.module';
-import { RavenStateBandModule } from './../raven-state-band/raven-state-band.module';
+import { RavenActivityBandModule } from '../raven-activity-band/raven-activity-band.module';
+import { RavenDividerBandModule } from '../raven-divider-band/raven-divider-band.module';
+import { RavenResourceBandModule } from '../raven-resource-band/raven-resource-band.module';
+import { RavenStateBandModule } from '../raven-state-band/raven-state-band.module';
 import { RavenCompositeBandComponent } from './raven-composite-band.component';
 
 @NgModule({
-  declarations: [
-    RavenCompositeBandComponent,
-  ],
-  exports: [
-    RavenCompositeBandComponent,
-  ],
+  declarations: [RavenCompositeBandComponent],
+  exports: [RavenCompositeBandComponent],
   imports: [
     CommonModule,
     RavenActivityBandModule,

@@ -1,0 +1,44 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit(form.value)">
+  <h2 mat-dialog-title>{{ modeText }} Plan</h2>
+  <mat-dialog-content>
+    <mat-form-field appearance="fill">
+      <mat-label>ID</mat-label>
+      <input matInput placeholder="id1" type="text" [formControl]="form.controls['id']"
+        required />
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>Name</mat-label>
+      <input matInput placeholder="Plan Name" type="text"
+        [formControl]="form.controls['name']" required />
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>Start</mat-label>
+      <input matInput placeholder="Start time" type="datetime-local" [formControl]="form.controls['start']"
+        required />
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>End</mat-label>
+      <input matInput placeholder="End time" type="datetime-local" [formControl]="form.controls['end']"
+        required />
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label><abbr title="Minimum State of Charge">MSOC</abbr></mat-label>
+      <input matInput placeholder="" type="number" [formControl]="form.controls['msoc']"
+        required />
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label><abbr title="Max Power Loader">MPOW</abbr></mat-label>
+      <input matInput placeholder="" type="number" [formControl]="form.controls['mpow']"
+        required />
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label><abbr title="Handover State of Charge">HSOC</abbr></mat-label>
+      <input matInput placeholder="" type="number" [formControl]="form.controls['hsoc']"
+        required />
+    </mat-form-field>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button matDialogClose color="primary">Cancel</button>
+    <button mat-button color="primary">Save</button>
+  </mat-dialog-actions>
+</form>

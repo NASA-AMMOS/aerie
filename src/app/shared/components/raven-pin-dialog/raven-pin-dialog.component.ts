@@ -7,24 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Component,
-  Inject,
-} from '@angular/core';
-
-import {
-  MAT_DIALOG_DATA,
-  MatDialogRef,
-} from '@angular/material';
-
-import {
-  FormControl,
-  Validators,
-} from '@angular/forms';
-
-import {
-  RavenPin,
-} from '../../models';
+import { Component, Inject } from '@angular/core';
+import { FormControl, Validators } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
+import { RavenPin } from '../../models';
 
 @Component({
   selector: 'raven-pin-dialog',
@@ -46,7 +32,7 @@ export class RavenPinDialogComponent {
 
     this.name = new FormControl(currentName, [
       Validators.required,
-      Validators.pattern('^([(a-zA-Z0-9\-\_\s)]*){1,30}$'),
+      Validators.pattern('^([(a-zA-Z0-9-_s)]*){1,30}$'),
     ]);
   }
 

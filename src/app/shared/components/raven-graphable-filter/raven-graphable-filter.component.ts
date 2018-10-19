@@ -15,9 +15,7 @@ import {
   Output,
 } from '@angular/core';
 
-import {
-  RavenGraphableFilterSource,
-} from './../../../shared/models';
+import { RavenGraphableFilterSource } from '../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,11 +23,20 @@ import {
   styleUrls: ['./raven-graphable-filter.component.css'],
   templateUrl: './raven-graphable-filter.component.html',
 })
-
 export class RavenGraphableFilterComponent {
-  @Input() id: string;
-  @Input() source: RavenGraphableFilterSource;
+  @Input()
+  id: string;
 
-  @Output() addGraphableFilter: EventEmitter<RavenGraphableFilterSource> = new EventEmitter<RavenGraphableFilterSource>();
-  @Output() removeGraphableFilter: EventEmitter<RavenGraphableFilterSource> = new EventEmitter<RavenGraphableFilterSource>();
+  @Input()
+  source: RavenGraphableFilterSource;
+
+  @Output()
+  addGraphableFilter: EventEmitter<
+    RavenGraphableFilterSource
+  > = new EventEmitter<RavenGraphableFilterSource>();
+
+  @Output()
+  removeGraphableFilter: EventEmitter<
+    RavenGraphableFilterSource
+  > = new EventEmitter<RavenGraphableFilterSource>();
 }

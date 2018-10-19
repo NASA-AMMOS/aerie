@@ -15,6 +15,7 @@
       direction="vertical"
       (dragEnd)="resize()">
       <split-area
+        class="scroll"
         [order]="2"
         size="80">
         <div
@@ -36,83 +37,86 @@
         <div
           *ngIf="bands.length > 0"
           class="timeline-0">
-          <mat-card>
-            <div class="time-bands-container">
-              <raven-time-scroll-bar
-                [labelWidth]="defaultBandSettings.labelWidth"
-                [maxTimeRange]="maxTimeRange"
-                [viewTimeRange]="viewTimeRange"
-                (updateViewTimeRange)="onUpdateViewTimeRange($event)">
-              </raven-time-scroll-bar>
+          <div class="time-bands-container">
+            <raven-time-scroll-bar
+              [labelWidth]="defaultBandSettings.labelWidth"
+              [maxTimeRange]="maxTimeRange"
+              [viewTimeRange]="viewTimeRange"
+              (updateViewTimeRange)="onUpdateViewTimeRange($event)">
+            </raven-time-scroll-bar>
 
-              <raven-time-band
-                [cursorColor]="cursorColor"
-                [cursorTime]="cursorTime"
-                [cursorWidth]="cursorWidth"
-                [dayCode]="dayCode"
-                [earthSecToEpochSec]="earthSecToEpochSec"
-                [epoch]="inUseEpoch"
-                [labelWidth]="defaultBandSettings.labelWidth"
-                [maxTimeRange]="maxTimeRange"
-                [showTooltip]="defaultBandSettings.showTooltip"
-                [viewTimeRange]="viewTimeRange"
-                (updateViewTimeRange)="onUpdateViewTimeRange($event)">
-              </raven-time-band>
-            </div>
-
-            <raven-bands
-              class="raven-bands-0"
+            <raven-time-band
               [cursorColor]="cursorColor"
               [cursorTime]="cursorTime"
               [cursorWidth]="cursorWidth"
-              [bands]="bands"
-              [containerId]="'0'"
               [dayCode]="dayCode"
               [earthSecToEpochSec]="earthSecToEpochSec"
               [epoch]="inUseEpoch"
-              [labelFontSize]="defaultBandSettings.labelFontSize"
               [labelWidth]="defaultBandSettings.labelWidth"
               [maxTimeRange]="maxTimeRange"
-              [selectedBandId]="selectedBandId"
-              [selectedPoint]="selectedPoint"
               [showTooltip]="defaultBandSettings.showTooltip"
               [viewTimeRange]="viewTimeRange"
-              (bandLeftClick)="onBandLeftClick($event)"
-              (newSort)="onSort($event)"
               (updateViewTimeRange)="onUpdateViewTimeRange($event)">
-            </raven-bands>
-          </mat-card>
+            </raven-time-band>
+          </div>
+
+          <raven-bands
+            class="raven-bands-0"
+            [cursorColor]="cursorColor"
+            [cursorTime]="cursorTime"
+            [cursorWidth]="cursorWidth"
+            [bands]="bands"
+            [containerId]="'0'"
+            [dayCode]="dayCode"
+            [earthSecToEpochSec]="earthSecToEpochSec"
+            [epoch]="inUseEpoch"
+            [guides]="guides"
+            [labelFontSize]="defaultBandSettings.labelFontSize"
+            [labelWidth]="defaultBandSettings.labelWidth"
+            [lastClickTime]="lastClickTime"
+            [maxTimeRange]="maxTimeRange"
+            [selectedBandId]="selectedBandId"
+            [selectedPoint]="selectedPoint"
+            [showLastClick]="defaultBandSettings.showLastClick"
+            [showTooltip]="defaultBandSettings.showTooltip"
+            [viewTimeRange]="viewTimeRange"
+            (bandLeftClick)="onBandLeftClick($event)"
+            (newSort)="onSort($event)"
+            (updateViewTimeRange)="onUpdateViewTimeRange($event)">
+          </raven-bands>
         </div>
       </split-area>
 
       <split-area
+        class="scroll"
         [visible]="showSouthBandsPanel"
         [order]="3"
         size="20">
         <div class="timeline-1">
-          <mat-card>
-            <raven-bands
-              class="raven-bands-1"
-              [cursorColor]="cursorColor"
-              [cursorTime]="cursorTime"
-              [cursorWidth]="cursorWidth"
-              [bands]="bands"
-              [containerId]="'1'"
-              [dayCode]="dayCode"
-              [earthSecToEpochSec]="earthSecToEpochSec"
-              [epoch]="inUseEpoch"
-              [labelFontSize]="defaultBandSettings.labelFontSize"
-              [labelWidth]="defaultBandSettings.labelWidth"
-              [maxTimeRange]="maxTimeRange"
-              [selectedBandId]="selectedBandId"
-              [selectedPoint]="selectedPoint"
-              [showTooltip]="defaultBandSettings.showTooltip"
-              [viewTimeRange]="viewTimeRange"
-              (bandLeftClick)="onBandLeftClick($event)"
-              (newSort)="onSort($event)"
-              (updateViewTimeRange)="onUpdateViewTimeRange($event)">
-            </raven-bands>
-          </mat-card>
+          <raven-bands
+            class="raven-bands-1"
+            [cursorColor]="cursorColor"
+            [cursorTime]="cursorTime"
+            [cursorWidth]="cursorWidth"
+            [bands]="bands"
+            [containerId]="'1'"
+            [dayCode]="dayCode"
+            [earthSecToEpochSec]="earthSecToEpochSec"
+            [epoch]="inUseEpoch"
+            [guides]="guides"
+            [labelFontSize]="defaultBandSettings.labelFontSize"
+            [labelWidth]="defaultBandSettings.labelWidth"
+            [lastClickTime]="lastClickTime"
+            [maxTimeRange]="maxTimeRange"
+            [selectedBandId]="selectedBandId"
+            [selectedPoint]="selectedPoint"
+            [showLastClick]="defaultBandSettings.showLastClick"
+            [showTooltip]="defaultBandSettings.showTooltip"
+            [viewTimeRange]="viewTimeRange"
+            (bandLeftClick)="onBandLeftClick($event)"
+            (newSort)="onSort($event)"
+            (updateViewTimeRange)="onUpdateViewTimeRange($event)">
+          </raven-bands>
         </div>
       </split-area>
 
@@ -155,6 +159,7 @@
               [selectedBandId]="selectedBandId"
               [selectedSubBandId]="selectedSubBandId"
               (deleteSubBand)="onDeleteSubBand($event)"
+              (addDividerBand)="onAddDividerBand()"
               (updateBand)="onUpdateBand($event)"
               (updateBandAndSubBand)="onUpdateBandAndSubBand($event)"
               (updateSubBand)="onUpdateSubBand($event)"
@@ -223,9 +228,12 @@
         </mat-icon>
       </button>
       <raven-layout-apply
+        [currentState]="currentState"
         [currentStateId]="currentStateId"
         [treeBySourceId]="treeBySourceId"
-        (applyLayout)="onApplyLayout($event)">
+        (applyLayout)="onApplyLayout($event)"
+        (applyLayoutWithPins)="onApplyLayoutWithPins($event)"
+        (applyState)="onApplyState($event)">
       </raven-layout-apply>
     </div>
   </mat-sidenav>
@@ -250,7 +258,6 @@
       </button>
       <raven-settings-global
         [defaultBandSettings]="defaultBandSettings"
-        (addDividerBand)="onAddDividerBand()"
         (updateDefaultBandSettings)="onUpdateDefaultBandSettings($event)"
         (updateTimeline)="onUpdateTimeline($event)">
       </raven-settings-global>
@@ -316,6 +323,40 @@
         (createOutput)="onCreateOutput()"
         (updateOutputSettings)="onUpdateOutputSettings($event)">
       </raven-output>
+    </div>
+  </mat-sidenav>
+
+  <!-- Situational Awareness Drawer. -->
+  <mat-sidenav
+    *ngIf="showSituationalAwarenessDrawer"
+    class="situational-awareness-drawer"
+    mode="over"
+    position="end"
+    [fixedInViewport]="true"
+    [fixedTopGap]="40"
+    [opened]="showSituationalAwarenessDrawer"
+    (closedStart)="onToggleSituationalAwarenessDrawer(false)">
+    <div class="sidenav-content">
+      <button
+        mat-icon-button
+        (click)="onToggleSituationalAwarenessDrawer(false)">
+        <mat-icon
+          class="mat-24"
+          aria-label="Clear">
+          clear
+        </mat-icon>
+      </button>
+      <raven-situational-awareness
+        [nowMinus]="nowMinus"
+        [nowPlus]="nowPlus"
+        [pageDuration]="pageDuration"
+        [pefEntries]="pefEntries"
+        [situationalAware]="situationalAware"
+        [startTime]="startTime"
+        [useNow]="useNow"
+        (changeSituationalAwareness)="onChangeSituationalAwareness($event)"
+        (updateSituationalAwarenessSettings)="onUpdateSituationalAwarenessSettings($event)">
+      </raven-situational-awareness>
     </div>
   </mat-sidenav>
 

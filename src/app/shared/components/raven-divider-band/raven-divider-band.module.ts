@@ -8,17 +8,10 @@
  */
 
 import { NgModule } from '@angular/core';
-
-import {
-  RavenDividerBandComponent,
-} from './../raven-divider-band/raven-divider-band.component';
+import { RavenDividerBandComponent } from '../raven-divider-band/raven-divider-band.component';
 
 @NgModule({
-  declarations: [
-    RavenDividerBandComponent,
-  ],
-  exports: [
-    RavenDividerBandComponent,
-  ],
+  declarations: [RavenDividerBandComponent],
+  exports: [RavenDividerBandComponent],
 })
 export class RavenDividerBandModule {}

@@ -7,11 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  ActionReducerMap,
-} from '@ngrx/store';
+import { ActionReducerMap } from '@ngrx/store';
 
-import * as fromRoot from './../app-store';
+import * as fromRoot from '../app-store';
 
 /**
  * Every reducer module's default export is the reducer function itself. In
@@ -19,7 +17,7 @@ import * as fromRoot from './../app-store';
  * the state of the reducer plus any selector functions. The `* as`
  * notation packages up all of the exports into a single object.
  */
-import * as fromCommandDictionary from './reducers/command-dictionary';
+import * as fromCommandDictionary from './reducers/command-dictionary.reducer';
 
 /**
  * As mentioned, we treat each reducer like a table in a database. This means

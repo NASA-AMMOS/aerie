@@ -18,7 +18,7 @@ import {
 import {
   RavenGraphableSource,
   RavenSourceActionEvent,
-} from './../../../shared/models';
+} from '../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,14 +26,35 @@ import {
   styleUrls: ['./raven-graphable.component.css'],
   templateUrl: './raven-graphable.component.html',
 })
-
 export class RavenGraphableComponent {
-  @Input() id: string;
-  @Input() source: RavenGraphableSource;
+  @Input()
+  id: string;
 
-  @Output() action: EventEmitter<RavenSourceActionEvent> = new EventEmitter<RavenSourceActionEvent>();
-  @Output() close: EventEmitter<RavenGraphableSource> = new EventEmitter<RavenGraphableSource>();
-  @Output() open: EventEmitter<RavenGraphableSource> = new EventEmitter<RavenGraphableSource>();
-  @Output() openMetadata: EventEmitter<RavenGraphableSource> = new EventEmitter<RavenGraphableSource>();
-  @Output() select: EventEmitter<RavenGraphableSource> = new EventEmitter<RavenGraphableSource>();
+  @Input()
+  source: RavenGraphableSource;
+
+  @Output()
+  action: EventEmitter<RavenSourceActionEvent> = new EventEmitter<
+    RavenSourceActionEvent
+  >();
+
+  @Output()
+  close: EventEmitter<RavenGraphableSource> = new EventEmitter<
+    RavenGraphableSource
+  >();
+
+  @Output()
+  open: EventEmitter<RavenGraphableSource> = new EventEmitter<
+    RavenGraphableSource
+  >();
+
+  @Output()
+  openMetadata: EventEmitter<RavenGraphableSource> = new EventEmitter<
+    RavenGraphableSource
+  >();
+
+  @Output()
+  select: EventEmitter<RavenGraphableSource> = new EventEmitter<
+    RavenGraphableSource
+  >();
 }

@@ -7,11 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  ActionReducerMap,
-} from '@ngrx/store';
-
-import * as fromRoot from './../app-store';
+import { ActionReducerMap } from '@ngrx/store';
+import * as fromRoot from '../app-store';
 
 /**
  * Every reducer module's default export is the reducer function itself. In
@@ -20,23 +17,23 @@ import * as fromRoot from './../app-store';
  * notation packages up all of the exports into a single object.
  */
 
-import * as fromConfig from './reducers/config';
-import * as fromEpochs from './reducers/epochs';
-import * as fromLayout from './reducers/layout';
-import * as fromOutput from './reducers/output';
-import * as fromSourceExplorer from './reducers/source-explorer';
-import * as fromTimeCursor from './reducers/time-cursor';
-import * as fromTimeline from './reducers/timeline';
+import * as fromEpochs from './reducers/epochs.reducer';
+import * as fromLayout from './reducers/layout.reducer';
+import * as fromOutput from './reducers/output.reducer';
+import * as fromSituationalAwareness from './reducers/situational-awareness.reducer';
+import * as fromSourceExplorer from './reducers/source-explorer.reducer';
+import * as fromTimeCursor from './reducers/time-cursor.reducer';
+import * as fromTimeline from './reducers/timeline.reducer';
 
 /**
  * As mentioned, we treat each reducer like a table in a database. This means
  * our top level state interface is just a map of keys to inner state types.
  */
 export interface State {
-  config: fromConfig.ConfigState;
   epochs: fromEpochs.EpochsState;
   layout: fromLayout.LayoutState;
   output: fromOutput.OutputState;
+  situationalAwareness: fromSituationalAwareness.SituationalAwarenessState;
   sourceExplorer: fromSourceExplorer.SourceExplorerState;
   timeCursor: fromTimeCursor.TimeCursorState;
   timeline: fromTimeline.TimelineState;
@@ -48,10 +45,10 @@ export interface State {
  * and the current or initial state and return a new immutable state.
  */
 export const reducers: ActionReducerMap<State> = {
-  config: fromConfig.reducer,
   epochs: fromEpochs.reducer,
   layout: fromLayout.reducer,
   output: fromOutput.reducer,
+  situationalAwareness: fromSituationalAwareness.reducer,
   sourceExplorer: fromSourceExplorer.reducer,
   timeCursor: fromTimeCursor.reducer,
   timeline: fromTimeline.reducer,

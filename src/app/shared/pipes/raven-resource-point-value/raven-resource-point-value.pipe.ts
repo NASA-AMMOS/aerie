@@ -7,19 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Pipe,
-  PipeTransform,
-} from '@angular/core';
-
-import {
-  RavenResourcePoint,
-} from './../../models';
-
-import {
-  dateToTimestring,
-  toDuration,
-} from './../../util';
+import { Pipe, PipeTransform } from '@angular/core';
+import { RavenResourcePoint } from '../../models';
+import { dateToTimestring, toDuration } from '../../util';
 
 @Pipe({
   name: 'resourcePointValue',

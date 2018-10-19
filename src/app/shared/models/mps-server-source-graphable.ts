@@ -7,10 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  BaseType,
-  StringTMap,
- } from './index';
+import { BaseType, StringTMap } from './index';
 
 export interface MpsServerSourceGraphable {
   __db_type: string;

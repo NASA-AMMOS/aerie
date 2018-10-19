@@ -8,7 +8,26 @@
       "sourceRoot": "src",
       "projectType": "application",
       "prefix": "app",
-      "schematics": {},
+      "schematics": {
+        "@ngrx/schematics:action": {
+          "group": true,
+          "spec": false
+        },
+        "@ngrx/schematics:effect": {
+          "group": true,
+          "spec": true
+        },
+        "@ngrx/schematics:reducer": {
+          "group": true,
+          "spec": true,
+          "reducers": "./hawk-store.ts"
+        },
+        "@ngrx/schematics:feature": {
+          "group": true,
+          "spec": true,
+          "reducers": "./hawk-store.ts"
+        }
+      },
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
@@ -25,17 +44,17 @@
               "node_modules/@angular/material/prebuilt-themes/indigo-pink.css",
               "node_modules/material-design-icons/iconfont/material-icons.css",
               "node_modules/font-awesome/css/font-awesome.min.css",
-              "node_modules/codemirror/lib/codemirror.css",
-              "node_modules/ag-grid/dist/styles/ag-grid.css",
-              "node_modules/ag-grid/dist/styles/ag-theme-fresh.css",
+              "node_modules/monaco-editor/dev/vs/editor/editor.main.css",
+              "node_modules/roboto-fontface/css/roboto/roboto-fontface.css",
+              "node_modules/ag-grid-community/dist/styles/ag-grid.css",
+              "node_modules/ag-grid-community/dist/styles/ag-theme-fresh.css",
               "node_modules/ngx-toastr/toastr.css",
               "src/styles.css",
               "libs/ctl/ctl.css"
             ],
             "scripts": [
               "libs/ctl/ctl.libs.min.js",
-              "libs/ctl/ctl.js",
-              "node_modules/codemirror/lib/codemirror.js"
+              "libs/ctl/ctl.js"
             ]
           },
           "configurations": {
@@ -54,7 +73,7 @@
               "aot": true,
               "extractLicenses": true,
               "vendorChunk": false,
-              "buildOptimizer": false
+              "buildOptimizer": true
             },
             "prod-mpsserver": {
               "fileReplacements": [
@@ -71,7 +90,7 @@
               "aot": true,
               "extractLicenses": true,
               "vendorChunk": false,
-              "buildOptimizer": false
+              "buildOptimizer": true
             }
           }
         },
@@ -149,6 +168,7 @@
   "cli": {
     "warnings": {
       "typescriptMismatch": true
-    }
+    },
+    "defaultCollection": "@ngrx/schematics"
   }
 }

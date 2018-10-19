@@ -7,8 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { v4 as uuidv4 } from 'uuid';
-
 import {
   AfterViewInit,
   Component,
@@ -20,57 +18,35 @@ import {
   ViewChild,
 } from '@angular/core';
 
-import {
-  HttpClient,
-} from '@angular/common/http';
-
-import {
-  FormControl,
-  Validators,
-} from '@angular/forms';
-
-import {
-  MAT_DIALOG_DATA,
-  MatDialogRef,
-} from '@angular/material';
-
-import {
-  combineLatest,
-  Subject,
-} from 'rxjs';
-
-import {
-  map,
-  takeUntil,
-} from 'rxjs/operators';
-
-import {
-  RavenAppState,
-} from './../../../raven/raven-store';
-
-import {
-  MpsServerSource,
-} from './../../models';
-
-import {
-  getState,
-} from './../../util/state';
+import { HttpClient } from '@angular/common/http';
+import { FormControl, Validators } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
+import { combineLatest, Subject } from 'rxjs';
+import { map, takeUntil } from 'rxjs/operators';
+import { v4 as uuidv4 } from 'uuid';
+import { RavenAppState } from '../../../raven/raven-store';
+import { MpsServerSource } from '../../models';
+import { getState } from '../../util/state';
 
 @Component({
   selector: 'raven-shareable-link-dialog',
   styleUrls: ['./raven-shareable-link-dialog.component.css'],
   templateUrl: './raven-shareable-link-dialog.component.html',
 })
-export class RavenShareableLinkDialogComponent implements AfterViewInit, OnDestroy, OnInit {
-  @ViewChild('shareableLinkInput') shareableLinkInput: ElementRef;
-  @ViewChild('shareableNameInput') shareableNameInput: ElementRef;
+export class RavenShareableLinkDialogComponent
+  implements AfterViewInit, OnDestroy, OnInit {
+  @ViewChild('shareableLinkInput')
+  shareableLinkInput: ElementRef;
+
+  @ViewChild('shareableNameInput')
+  shareableNameInput: ElementRef;
 
   invalidShareableName = false;
   overwriteWarning = false;
   shareableLinkControl: FormControl = new FormControl('', []);
   shareableNameControl: FormControl = new FormControl('', [
     Validators.required,
-    Validators.pattern('^([(a-zA-Z0-9\-\_\s)]*){1,30}$'),
+    Validators.pattern('^([(a-zA-Z0-9-_s)]*){1,30}$'),
   ]);
   titleMessage = 'Copy Shareable Link';
 
@@ -84,35 +60,39 @@ export class RavenShareableLinkDialogComponent implements AfterViewInit, OnDestr
     combineLatest(
       this.shareableNameControl.valueChanges,
       this.http.get(this.getStateUrl()),
-    ).pipe(
-      map(([value, sources]) => ({ value, sources })),
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(({ value, sources }) => {
-      this.shareableLinkControl.setValue(this.getShareableLink(value));
+    )
+      .pipe(
+        map(([value, sources]) => ({ value, sources })),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(({ value, sources }) => {
+        this.shareableLinkControl.setValue(this.getShareableLink(value));
 
-      const children = (sources as MpsServerSource[]).map(source => source.name);
+        const children = (sources as MpsServerSource[]).map(
+          source => source.name,
+        );
 
-      // If the current source has a child with the name we are trying to save,
-      // then display a proper overwrite warning.
-      if (children.find(name => name === value)) {
-        this.overwriteWarning = true;
-      } else {
-        this.overwriteWarning = false;
-      }
+        // If the current source has a child with the name we are trying to save,
+        // then display a proper overwrite warning.
+        if (children.find(name => name === value)) {
+          this.overwriteWarning = true;
+        } else {
+          this.overwriteWarning = false;
+        }
 
-      // This is to make sure the input field turns red if the user deletes the text.
-      // If we dont blur and focus we don't see the input turn red right away.
-      if (value === '') {
-        this.shareableNameInput.nativeElement.blur();
-        this.shareableNameInput.nativeElement.focus();
-      }
+        // This is to make sure the input field turns red if the user deletes the text.
+        // If we dont blur and focus we don't see the input turn red right away.
+        if (value === '') {
+          this.shareableNameInput.nativeElement.blur();
+          this.shareableNameInput.nativeElement.focus();
+        }
 
-      if (this.shareableNameControl.valid) {
-        this.invalidShareableName = false;
-      } else {
-        this.invalidShareableName = true;
-      }
-    });
+        if (this.shareableNameControl.valid) {
+          this.invalidShareableName = false;
+        } else {
+          this.invalidShareableName = true;
+        }
+      });
   }
 
   /**
@@ -129,14 +109,13 @@ export class RavenShareableLinkDialogComponent implements AfterViewInit, OnDestr
       const shareableName = this.shareableNameControl.value;
       this.titleMessage = 'Link text copied!';
 
-      this.http.put(
-        `${this.getStateUrl(shareableName)}?timeline_type=state`,
-        getState(shareableName, this.data.state),
-      ).pipe(
-        takeUntil(this.ngUnsubscribe),
-      ).subscribe(() =>
-        this.dialogRef.close(),
-      );
+      this.http
+        .put(
+          `${this.getStateUrl(shareableName)}?timeline_type=state`,
+          getState(shareableName, this.data.state),
+        )
+        .pipe(takeUntil(this.ngUnsubscribe))
+        .subscribe(() => this.dialogRef.close());
     }
   }
 
@@ -152,7 +131,9 @@ export class RavenShareableLinkDialogComponent implements AfterViewInit, OnDestr
 
   ngOnInit() {
     const initialShareableName = uuidv4();
-    this.shareableLinkControl.setValue(this.getShareableLink(initialShareableName));
+    this.shareableLinkControl.setValue(
+      this.getShareableLink(initialShareableName),
+    );
     this.shareableNameControl.setValue(initialShareableName);
   }
 
@@ -167,9 +148,11 @@ export class RavenShareableLinkDialogComponent implements AfterViewInit, OnDestr
    * Helper that returns the sharable link text.
    */
   getShareableLink(name: string): string {
-    const { baseRavenUrl, baseUrl } = this.data.state.raven.config;
+    const { config } = this.data.state;
+    const { baseUrl } = config.app;
+    const { ravenUrl } = config.mpsServer;
 
-    const url = `${baseUrl}${baseRavenUrl ? '/' + baseRavenUrl : ''}/#/raven`;
+    const url = `${baseUrl}${ravenUrl ? '/' + ravenUrl : ''}/#/raven`;
     const query = `s=${name}`;
 
     return `${url}?${query}`;
@@ -180,8 +163,14 @@ export class RavenShareableLinkDialogComponent implements AfterViewInit, OnDestr
    * Note this is different from the actual sharable link as the state url points to the actual state in the database.
    */
   getStateUrl(sharableName?: string) {
-    const { baseSourcesUrl, baseUrl, shareableLinkStatesUrl } = this.data.state.raven.config;
-    return `${baseUrl}/${baseSourcesUrl}/${shareableLinkStatesUrl}${sharableName ? '/' + sharableName : ''}`.replace(/fs/, 'fs-mongodb');
+    const { config } = this.data.state;
+    const { baseUrl } = config.app;
+    const { apiUrl } = config.mpsServer;
+    const { shareableLinkStatesUrl } = config.raven;
+
+    return `${baseUrl}/${apiUrl}/${shareableLinkStatesUrl}${
+      sharableName ? '/' + sharableName : ''
+    }`.replace(/fs/, 'fs-mongodb');
   }
 
   /**

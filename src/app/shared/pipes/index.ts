@@ -7,8 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './raven-dhms/raven-dhms.pipe';
-export * from './raven-key-by/raven-key-by.pipe';
-export * from './raven-resource-point-value/raven-resource-point-value.pipe';
-export * from './raven-timestamp/raven-timestamp.pipe';
-export * from './raven-to-key-value/raven-to-key-value-array.pipe';
+export * from './raven-dhms/raven-dhms.pipe.module';
+export * from './raven-duration/raven-duration.module';
+export * from './raven-key-by/raven-key-by.module';
+export * from './raven-resource-point-value/raven-resource-point-value.module';
+export * from './raven-timestamp/raven-timestamp.module';
+export * from './raven-to-key-value-array/raven-to-key-value-array.module';

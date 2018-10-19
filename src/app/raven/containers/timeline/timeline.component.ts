@@ -15,50 +15,54 @@ import {
 } from '@angular/core';
 
 import { MatTabChangeEvent } from '@angular/material';
-
-import { Store } from '@ngrx/store';
-
+import { select, Store } from '@ngrx/store';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-
-import * as fromConfig from './../../reducers/config';
-import * as fromEpochs from './../../reducers/epochs';
-import * as fromLayout from './../../reducers/layout';
-import * as fromOutput from './../../reducers/output';
-import * as fromSourceExplorer from './../../reducers/source-explorer';
-import * as fromTimeCursor from './../../reducers/time-cursor';
-import * as fromTimeline from './../../reducers/timeline';
-
-import * as configActions from './../../actions/config';
-import * as dialogActions from './../../actions/dialog';
-import * as epochsActions from './../../actions/epochs';
-import * as layoutActions from './../../actions/layout';
-import * as outputActions from './../../actions/output';
-import * as sourceExplorerActions from './../../actions/source-explorer';
-import * as timeCursorActions from './../../actions/time-cursor';
-import * as timelineActions from './../../actions/timeline';
+import { ConfigState } from '../../../../config';
 
 import {
+  RavenApplyLayoutUpdate,
   RavenBandLeftClick,
   RavenCompositeBand,
   RavenCustomFilter,
   RavenDefaultBandSettings,
   RavenEpoch,
   RavenPoint,
+  RavenSituationalAwarenessPefEntry,
   RavenSortMessage,
   RavenSource,
+  RavenState,
   RavenSubBand,
   RavenTimeRange,
   RavenUpdate,
   StringTMap,
-} from './../../../shared/models';
+} from '../../../shared/models';
 
 import {
   getSourceIdsByLabelInBands,
   subBandById,
   toCompositeBand,
   toDividerBand,
-} from './../../../shared/util';
+} from '../../../shared/util';
+
+import * as fromConfig from '../../../shared/reducers/config.reducer';
+import * as fromEpochs from '../../reducers/epochs.reducer';
+import * as fromLayout from '../../reducers/layout.reducer';
+import * as fromOutput from '../../reducers/output.reducer';
+import * as fromSituationalAwareness from '../../reducers/situational-awareness.reducer';
+import * as fromSourceExplorer from '../../reducers/source-explorer.reducer';
+import * as fromTimeCursor from '../../reducers/time-cursor.reducer';
+import * as fromTimeline from '../../reducers/timeline.reducer';
+
+import * as configActions from '../../../shared/actions/config.actions';
+import * as dialogActions from '../../actions/dialog.actions';
+import * as epochsActions from '../../actions/epochs.actions';
+import * as layoutActions from '../../actions/layout.actions';
+import * as outputActions from '../../actions/output.actions';
+import * as situationalAwarenessActions from '../../actions/situational-awareness.actions';
+import * as sourceExplorerActions from '../../actions/source-explorer.actions';
+import * as timeCursorActions from '../../actions/time-cursor.actions';
+import * as timelineActions from '../../actions/timeline.actions';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -68,6 +72,7 @@ import {
 })
 export class TimelineComponent implements OnDestroy {
   // Config state.
+  baseUrl: string;
   defaultBandSettings: RavenDefaultBandSettings;
   itarMessage: string;
 
@@ -95,15 +100,26 @@ export class TimelineComponent implements OnDestroy {
   showLeftPanel: boolean;
   showOutputDrawer: boolean;
   showRightPanel: boolean;
+  showSituationalAwarenessDrawer: boolean;
   showSouthBandsPanel: boolean;
   showTimeCursorDrawer: boolean;
   timelinePanelSize: number;
 
   // Source Explorer state.
+  currentState: RavenState | null;
   currentStateId: string;
   customFiltersBySourceId: StringTMap<RavenCustomFilter[]>;
   filtersByTarget: StringTMap<StringTMap<string[]>>;
   treeBySourceId: StringTMap<RavenSource>;
+
+  // SituationalAwareness state.
+  nowMinus: number | null;
+  nowPlus: number | null;
+  pageDuration: number | null;
+  pefEntries: RavenSituationalAwarenessPefEntry[] | null;
+  situationalAware: boolean;
+  startTime: number | null;
+  useNow: boolean;
 
   // Time cursor state.
   autoPage: boolean;
@@ -117,6 +133,8 @@ export class TimelineComponent implements OnDestroy {
 
   // Timeline state.
   bands: RavenCompositeBand[];
+  guides: number[];
+  lastClickTime: number | null;
   maxTimeRange: RavenTimeRange;
   selectedBandId: string;
   selectedPoint: RavenPoint | null;
@@ -132,111 +150,169 @@ export class TimelineComponent implements OnDestroy {
 
   constructor(
     private changeDetector: ChangeDetectorRef,
-    private store: Store<fromTimeline.TimelineState | fromConfig.ConfigState | fromTimeCursor.TimeCursorState>,
+    private store: Store<
+      fromTimeline.TimelineState | ConfigState | fromTimeCursor.TimeCursorState
+    >,
   ) {
     // Config state.
-    this.store.select(fromConfig.getItarMessage).pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(itarMessage => {
-      this.itarMessage = itarMessage;
-      this.markForCheck();
-    });
-    this.store.select(fromConfig.getDefaultBandSettings).pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(defaultBandSettings => {
-      this.defaultBandSettings = defaultBandSettings;
-      this.markForCheck();
-    });
+    this.store
+      .pipe(
+        select(fromConfig.getItarMessage),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(itarMessage => {
+        this.itarMessage = itarMessage;
+        this.markForCheck();
+      });
+
+    this.store
+      .pipe(
+        select(fromConfig.getDefaultBandSettings),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(defaultBandSettings => {
+        this.defaultBandSettings = defaultBandSettings;
+        this.markForCheck();
+      });
+
+    this.store
+      .pipe(
+        select(fromConfig.getUrls),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(({ baseUrl }) => {
+        this.baseUrl = baseUrl;
+      });
 
     // Epoch state.
-    this.store.select(fromEpochs.getEpochsState).pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(state => {
-      this.dayCode = state.dayCode;
-      this.earthSecToEpochSec = state.earthSecToEpochSec;
-      this.epochs = state.epochs;
-      this.inUseEpoch = state.inUseEpoch;
-      this.markForCheck();
-    });
+    this.store
+      .pipe(
+        select(fromEpochs.getEpochsState),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(state => {
+        this.dayCode = state.dayCode;
+        this.earthSecToEpochSec = state.earthSecToEpochSec;
+        this.epochs = state.epochs;
+        this.inUseEpoch = state.inUseEpoch;
+        this.markForCheck();
+      });
 
     // Layout state.
-    this.store.select(fromLayout.getLayoutState).pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(state => {
-      this.rightPanelSelectedTabIndex = state.rightPanelSelectedTabIndex;
-      this.showActivityPointMetadata = state.showActivityPointMetadata;
-      this.showActivityPointParameters = state.showActivityPointParameters;
-      this.showApplyLayoutDrawer = state.showApplyLayoutDrawer;
-      this.showDetailsPanel = state.showDetailsPanel;
-      this.showEpochsDrawer = state.showEpochsDrawer;
-      this.showGlobalSettingsDrawer = state.showGlobalSettingsDrawer;
-      this.showLeftPanel = state.showLeftPanel;
-      this.showOutputDrawer = state.showOutputDrawer;
-      this.showRightPanel = state.showRightPanel;
-      this.showSouthBandsPanel = state.showSouthBandsPanel;
-      this.showTimeCursorDrawer = state.showTimeCursorDrawer;
-      this.timelinePanelSize = state.timelinePanelSize;
-      this.markForCheck();
-      this.resize();
-    });
+    this.store
+      .pipe(
+        select(fromLayout.getLayoutState),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(state => {
+        this.rightPanelSelectedTabIndex = state.rightPanelSelectedTabIndex;
+        this.showActivityPointMetadata = state.showActivityPointMetadata;
+        this.showActivityPointParameters = state.showActivityPointParameters;
+        this.showApplyLayoutDrawer = state.showApplyLayoutDrawer;
+        this.showDetailsPanel = state.showDetailsPanel;
+        this.showEpochsDrawer = state.showEpochsDrawer;
+        this.showGlobalSettingsDrawer = state.showGlobalSettingsDrawer;
+        this.showLeftPanel = state.showLeftPanel;
+        this.showOutputDrawer = state.showOutputDrawer;
+        this.showRightPanel = state.showRightPanel;
+        this.showSituationalAwarenessDrawer =
+          state.showSituationalAwarenessDrawer;
+        this.showSouthBandsPanel = state.showSouthBandsPanel;
+        this.showTimeCursorDrawer = state.showTimeCursorDrawer;
+        this.timelinePanelSize = state.timelinePanelSize;
+        this.markForCheck();
+        this.resize();
+      });
 
     // Output state.
-    this.store.select(fromOutput.getOutputState).pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(state => {
-      this.allInOneFile = state.allInOneFile;
-      this.allInOneFilename = state.allInOneFilename;
-      this.decimateOutputData = state.decimateOutputData;
-      this.outputFormat = state.outputFormat;
-      this.outputSourceIdsByLabel = state.outputSourceIdsByLabel;
-      this.markForCheck();
-    });
+    this.store
+      .pipe(
+        select(fromOutput.getOutputState),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(state => {
+        this.allInOneFile = state.allInOneFile;
+        this.allInOneFilename = state.allInOneFilename;
+        this.decimateOutputData = state.decimateOutputData;
+        this.outputFormat = state.outputFormat;
+        this.outputSourceIdsByLabel = state.outputSourceIdsByLabel;
+        this.markForCheck();
+      });
 
     // Source Explorer state.
-    this.store.select(fromSourceExplorer.getSourceExplorerState).pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(state => {
-      this.currentStateId = state.currentStateId;
-      this.customFiltersBySourceId = state.customFiltersBySourceId;
-      this.filtersByTarget = state.filtersByTarget;
-      this.treeBySourceId = state.treeBySourceId;
-      this.markForCheck();
-    });
+    this.store
+      .pipe(
+        select(fromSourceExplorer.getSourceExplorerState),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(state => {
+        this.customFiltersBySourceId = state.customFiltersBySourceId;
+        this.filtersByTarget = state.filtersByTarget;
+        this.currentState = state.currentState;
+        this.currentStateId = state.currentStateId;
+        this.treeBySourceId = state.treeBySourceId;
+        this.markForCheck();
+      });
+
+    // Situational awareness state.
+    this.store
+      .pipe(
+        select(fromSituationalAwareness.getSituationalAwarenessState),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(state => {
+        this.nowMinus = state.nowMinus;
+        this.nowPlus = state.nowPlus;
+        this.pageDuration = state.pageDuration;
+        this.pefEntries = state.pefEntries;
+        this.situationalAware = state.situationalAware;
+        this.startTime = state.startTime;
+        this.useNow = state.useNow;
+        this.markForCheck();
+      });
 
     // Time cursor state.
-    this.store.select(fromTimeCursor.getTimeCursorState).pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(state => {
-      this.autoPage = state.autoPage;
-      this.clockRate = state.clockRate;
-      this.currentTimeDelta = state.currentTimeDelta;
-      this.cursorColor = state.cursorColor;
-      this.cursorTime = state.cursorTime;
-      this.cursorWidth = state.cursorWidth;
-      this.showTimeCursor = state.showTimeCursor;
-      this.setCursorTime = state.setCursorTime;
-      this.markForCheck();
-    });
+    this.store
+      .pipe(
+        select(fromTimeCursor.getTimeCursorState),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(state => {
+        this.autoPage = state.autoPage;
+        this.clockRate = state.clockRate;
+        this.currentTimeDelta = state.currentTimeDelta;
+        this.cursorColor = state.cursorColor;
+        this.cursorTime = state.cursorTime;
+        this.cursorWidth = state.cursorWidth;
+        this.showTimeCursor = state.showTimeCursor;
+        this.setCursorTime = state.setCursorTime;
+        this.markForCheck();
+      });
 
     // Timeline state.
-    this.store.select(fromTimeline.getTimelineState).pipe(
-      takeUntil(this.ngUnsubscribe),
-    ).subscribe(state => {
-      this.bands = state.bands;
-      this.maxTimeRange = state.maxTimeRange;
-      this.selectedBandId = state.selectedBandId;
-      this.selectedPoint = state.selectedPoint;
-      this.selectedSubBandId = state.selectedSubBandId;
-      this.viewTimeRange = state.viewTimeRange;
-      this.setSelectedSubBand();
-      this.subBandSourceIdsByLabel = getSourceIdsByLabelInBands(
-        this.bands,
-        this.customFiltersBySourceId,
-        this.filtersByTarget,
-        this.treeBySourceId,
-      );
-      this.markForCheck();
-    });
+    this.store
+      .pipe(
+        select(fromTimeline.getTimelineState),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(state => {
+        this.bands = state.bands;
+        this.guides = state.guides;
+        this.maxTimeRange = state.maxTimeRange;
+        this.lastClickTime = state.lastClickTime;
+        this.selectedBandId = state.selectedBandId;
+        this.selectedPoint = state.selectedPoint;
+        this.selectedSubBandId = state.selectedSubBandId;
+        this.viewTimeRange = state.viewTimeRange;
+        this.setSelectedSubBand();
+        this.subBandSourceIdsByLabel = getSourceIdsByLabelInBands(
+          this.bands,
+          this.customFiltersBySourceId,
+          this.filtersByTarget,
+          this.treeBySourceId,
+        );
+        this.markForCheck();
+      });
   }
 
   ngOnDestroy() {
@@ -252,21 +328,45 @@ export class TimelineComponent implements OnDestroy {
    */
   markForCheck() {
     this.changeDetector.markForCheck();
-    setTimeout(() => this.changeDetector.detectChanges());
-  }
-
-  /**
-   * Event. Called when ``
-   */
-  onApplyLayout(targetSourceIds: string[]): void {
-    this.store.dispatch(new sourceExplorerActions.ApplyLayout(targetSourceIds));
+    setTimeout(() => {
+      if (!this.changeDetector['destroyed']) {
+        this.changeDetector.detectChanges();
+      }
+    });
   }
 
   /**
    * Event. Called when a `add-divider-band` event is fired from the raven-settings component.
    */
   onAddDividerBand(): void {
-    this.store.dispatch(new timelineActions.AddBand(null, toCompositeBand(toDividerBand())));
+    this.store.dispatch(
+      new timelineActions.AddBand(null, toCompositeBand(toDividerBand()), {
+        afterBandId: this.selectedBandId,
+      }),
+    );
+  }
+
+  /**
+   * Event. Called when an `apply-layout` event is fired from the raven-layout-apply component.
+   */
+  onApplyLayout(update: RavenApplyLayoutUpdate): void {
+    this.store.dispatch(new sourceExplorerActions.ApplyLayout(update));
+  }
+
+  /**
+   * Event. Called when an `apply-layout-with-pins` event is fired from the raven-layout-apply component.
+   */
+  onApplyLayoutWithPins(update: RavenApplyLayoutUpdate): void {
+    this.store.dispatch(new sourceExplorerActions.ApplyLayoutWithPins(update));
+  }
+
+  /**
+   * Event. Called when an `apply-state` event is fired from the raven-layout-apply component.
+   */
+  onApplyState(source: RavenSource): void {
+    this.store.dispatch(
+      new sourceExplorerActions.ApplyState(source.url, source.id),
+    );
   }
 
   /**
@@ -274,10 +374,26 @@ export class TimelineComponent implements OnDestroy {
    */
   onBandLeftClick(e: RavenBandLeftClick): void {
     this.store.dispatch(new timelineActions.SelectBand(e.bandId));
+    this.store.dispatch(new timelineActions.UpdateLastClickTime(e.time));
 
     if (e.subBandId && e.pointId) {
-      this.store.dispatch(new timelineActions.SelectPoint(e.bandId, e.subBandId, e.pointId));
+      this.store.dispatch(
+        new timelineActions.SelectPoint(e.bandId, e.subBandId, e.pointId),
+      );
     }
+  }
+
+  /**
+   * Event. Called when an `change-situational-awareness` event is fired
+   * from the raven-situational-awareness component.
+   */
+  onChangeSituationalAwareness(situAware: boolean): void {
+    this.store.dispatch(
+      new situationalAwarenessActions.ChangeSituationalAwareness(
+        `${this.baseUrl}/mpsserver/api/v2/situational_awareness?`,
+        situAware,
+      ),
+    );
   }
 
   /**
@@ -291,7 +407,9 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when a `delete-sub-band` event is fired from the raven-settings component.
    */
   onDeleteSubBand(subBand: RavenSubBand): void {
-    this.store.dispatch(new dialogActions.OpenDeleteSubBandDialog(subBand, '300px'));
+    this.store.dispatch(
+      new dialogActions.OpenDeleteSubBandDialog(subBand, '300px'),
+    );
   }
 
   /**
@@ -316,7 +434,9 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when a tab is changed.
    */
   onSelectedTabChange(e: MatTabChangeEvent) {
-    this.store.dispatch(new layoutActions.UpdateLayout({ rightPanelSelectedTabIndex: e.index }));
+    this.store.dispatch(
+      new layoutActions.UpdateLayout({ rightPanelSelectedTabIndex: e.index }),
+    );
   }
 
   /**
@@ -366,14 +486,27 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when a `toggle-show-activity-point-metadata` event is fired from a raven-activity-point.
    */
   onToggleShowActivityPointMetadata(show: boolean) {
-    this.store.dispatch(new layoutActions.UpdateLayout({ showActivityPointMetadata: show }));
+    this.store.dispatch(
+      new layoutActions.UpdateLayout({ showActivityPointMetadata: show }),
+    );
   }
 
   /**
    * Event. Called when a `toggle-show-activity-point-parameters` event is fired from a raven-activity-point.
    */
   onToggleShowActivityPointParameters(show: boolean) {
-    this.store.dispatch(new layoutActions.UpdateLayout({ showActivityPointParameters: show }));
+    this.store.dispatch(
+      new layoutActions.UpdateLayout({ showActivityPointParameters: show }),
+    );
+  }
+
+  /**
+   * Event. Called when a toggle event is fired from the situational awareness drawer.
+   */
+  onToggleSituationalAwarenessDrawer(opened?: boolean) {
+    this.store.dispatch(
+      new layoutActions.ToggleSituationalAwarenessDrawer(opened),
+    );
   }
 
   /**
@@ -391,7 +524,9 @@ export class TimelineComponent implements OnDestroy {
   onUpdateBandAndSubBand(e: RavenUpdate): void {
     if (e.bandId && e.subBandId) {
       this.store.dispatch(new timelineActions.UpdateBand(e.bandId, e.update));
-      this.store.dispatch(new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update));
+      this.store.dispatch(
+        new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update),
+      );
     }
   }
 
@@ -417,11 +552,24 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
+   * Event. Called when an `update-situational-awareness-settings` event is fired from the raven-situational-awareness component.
+   */
+  onUpdateSituationalAwarenessSettings(e: RavenUpdate): void {
+    this.store.dispatch(
+      new situationalAwarenessActions.UpdateSituationalAwarenessSettings(
+        e.update,
+      ),
+    );
+  }
+
+  /**
    * Event. Called when an `update-sub-band` event is fired from the raven-settings component.
    */
   onUpdateSubBand(e: RavenUpdate): void {
     if (e.bandId && e.subBandId) {
-      this.store.dispatch(new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update));
+      this.store.dispatch(
+        new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update),
+      );
     }
   }
 
@@ -429,7 +577,9 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when an `update-time-cursor-settings` event is fired from the raven-time-cursor component.
    */
   onUpdateTimeCursorSettings(e: RavenUpdate): void {
-    this.store.dispatch(new timeCursorActions.UpdateTimeCursorSettings(e.update));
+    this.store.dispatch(
+      new timeCursorActions.UpdateTimeCursorSettings(e.update),
+    );
   }
 
   /**
@@ -457,7 +607,11 @@ export class TimelineComponent implements OnDestroy {
    * Helper that sets the selected sub-band and it's points array for use in the `raven-table`.
    */
   setSelectedSubBand() {
-    this.selectedSubBand = subBandById(this.bands, this.selectedBandId, this.selectedSubBandId);
+    this.selectedSubBand = subBandById(
+      this.bands,
+      this.selectedBandId,
+      this.selectedSubBandId,
+    );
 
     if (this.selectedSubBand) {
       this.selectedSubBandPoints = this.selectedSubBand.points;

@@ -16,19 +16,9 @@ import {
   SimpleChanges,
 } from '@angular/core';
 
-import {
-  FormControl,
-  Validators,
-} from '@angular/forms';
-
-import {
-  RavenUpdate,
-} from '../../../shared/models';
-
-import {
-  timestamp,
-  utc,
-} from './../../../shared/util/time';
+import { FormControl, Validators } from '@angular/forms';
+import { RavenUpdate } from '../../../shared/models';
+import { timestamp, utc } from '../../../shared/util/time';
 
 @Component({
   selector: 'raven-time-cursor',
@@ -36,17 +26,37 @@ import {
   templateUrl: './raven-time-cursor.component.html',
 })
 export class RavenTimeCursorComponent implements OnChanges {
-  @Input() autoPage: boolean;
-  @Input() clockRate: number;
-  @Input() currentTimeDelta: number;
-  @Input() cursorColor: string;
-  @Input() cursorTime: number | null;
-  @Input() cursorWidth: number;
-  @Input() showTimeCursor: boolean;
-  @Input() setCursorTime: number | null;
+  @Input()
+  autoPage: boolean;
 
-  @Output() displayTimeCursor: EventEmitter<boolean> = new EventEmitter<boolean>();
-  @Output() updateTimeCursorSettings: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
+  @Input()
+  clockRate: number;
+
+  @Input()
+  currentTimeDelta: number;
+
+  @Input()
+  cursorColor: string;
+
+  @Input()
+  cursorTime: number | null;
+
+  @Input()
+  cursorWidth: number;
+
+  @Input()
+  showTimeCursor: boolean;
+
+  @Input()
+  setCursorTime: number | null;
+
+  @Output()
+  displayTimeCursor: EventEmitter<boolean> = new EventEmitter<boolean>();
+
+  @Output()
+  updateTimeCursorSettings: EventEmitter<RavenUpdate> = new EventEmitter<
+    RavenUpdate
+  >();
 
   cursorWidthControl: FormControl = new FormControl('', [
     Validators.min(1),

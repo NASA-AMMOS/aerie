@@ -8,33 +8,61 @@
  */
 
 import { utc as momentUtc } from 'moment';
-
-import {
-  RavenEpoch,
-  RavenEpochTime,
-} from './../models';
+import { SituationalAwarenessState } from '../../raven/reducers/situational-awareness.reducer';
+import { RavenEpoch, RavenEpochTime } from '../models';
 
 /**
  * Converts a JS Date object to a timestring.
  * Called `toTimeString` in Raven1.
  */
-export function dateToTimestring(date: Date, showMilliseconds: boolean): string {
+export function dateToTimestring(
+  date: Date,
+  showMilliseconds: boolean,
+): string {
   if (date.getUTCFullYear() === 1970) {
     return '0';
   }
 
-  const year = date.getUTCFullYear().toString().padStart(4, '0');
-  const doy = getDOY(date).toString().padStart(3, '0');
-  const hour = date.getUTCHours().toString().padStart(2, '0');
-  const min = date.getUTCMinutes().toString().padStart(2, '0');
-  const sec = date.getUTCSeconds().toString().padStart(2, '0');
+  const year = date
+    .getUTCFullYear()
+    .toString()
+    .padStart(4, '0');
+  const doy = getDOY(date)
+    .toString()
+    .padStart(3, '0');
+  const hour = date
+    .getUTCHours()
+    .toString()
+    .padStart(2, '0');
+  const min = date
+    .getUTCMinutes()
+    .toString()
+    .padStart(2, '0');
+  const sec = date
+    .getUTCSeconds()
+    .toString()
+    .padStart(2, '0');
 
   let timeString = '';
 
   if (!showMilliseconds) {
     timeString = year + '-' + doy + 'T' + hour + ':' + min + ':' + sec;
   } else {
-    timeString = year + '-' + doy + 'T' + hour + ':' + min + ':' + sec + '.' + date.getUTCMilliseconds().toString().padStart(2, '0');
+    timeString =
+      year +
+      '-' +
+      doy +
+      'T' +
+      hour +
+      ':' +
+      min +
+      ':' +
+      sec +
+      '.' +
+      date
+        .getUTCMilliseconds()
+        .toString()
+        .padStart(2, '0');
   }
 
   return timeString;
@@ -63,11 +91,11 @@ export function dhms(duration: number): string {
 
   if (remainder !== 0) {
     days = Math.floor(remainder / (24 * 60 * 60));
-    remainder %= (24 * 60 * 60);
+    remainder %= 24 * 60 * 60;
   }
   if (remainder !== 0) {
     hrs = Math.floor(remainder / (60 * 60));
-    remainder %= (60 * 60);
+    remainder %= 60 * 60;
   }
   if (remainder !== 0) {
     mins = Math.floor(remainder / 60);
@@ -154,7 +182,9 @@ export function fromDHMString(duration: string): number {
  * Previously called `fromDurationString` in Raven1.
  */
 export function fromDuration(duration: string): number {
-  const results = duration.match(new RegExp(/([+|-]?)(\d+T)?(\d{2}):(\d{2}):(\d{2})(\.\d{3})?/));
+  const results = duration.match(
+    new RegExp(/([+|-]?)(\d+T)?(\d{2}):(\d{2}):(\d{2})(\.\d{3})?/),
+  );
 
   if (results) {
     let day = 0;
@@ -175,7 +205,7 @@ export function fromDuration(duration: string): number {
     if (results[1] && results[1] === '-') {
       return -(day + hour + min + sec + msec);
     } else {
-      return (day + hour + min + sec + msec);
+      return day + hour + min + sec + msec;
     }
   }
 
@@ -192,25 +222,45 @@ export function formatDayCode(dayCode: string): string {
 /**
  * Formats an epoch time to a duration string.
  */
-export function formatEpochDuration(epochTime: RavenEpochTime, dayCode: string): string {
+export function formatEpochDuration(
+  epochTime: RavenEpochTime,
+  dayCode: string,
+): string {
   const day = formatDayCode(dayCode);
-  const epochStr = epochTime.epoch > 0 ? (epochTime.epoch + day) : '';
-  const hourStr = epochTime.hours > 0 ? (epochTime.hours + 'h') : '';
+  const epochStr = epochTime.epoch > 0 ? epochTime.epoch + day : '';
+  const hourStr = epochTime.hours > 0 ? epochTime.hours + 'h' : '';
 
-  return epochStr + hourStr + epochTime.minutes + 'm' + epochTime.seconds + 's' + epochTime.milliseconds + 'ms';
+  return (
+    epochStr +
+    hourStr +
+    epochTime.minutes +
+    'm' +
+    epochTime.seconds +
+    's' +
+    epochTime.milliseconds +
+    'ms'
+  );
 }
 
 /**
  * Formats an epoch time to a string.
  */
-export function formatEpochTime(epochTime: RavenEpochTime, dayCode: string): string {
+export function formatEpochTime(
+  epochTime: RavenEpochTime,
+  dayCode: string,
+): string {
   const day = formatDayCode(dayCode);
   const hours = epochTime.hours.toString().padStart(2, '0');
   const minutes = epochTime.minutes.toString().padStart(2, '0');
   const seconds = epochTime.seconds.toString().padStart(2, '0');
   const milliseconds = epochTime.milliseconds.toString().padStart(3, '0');
 
-  return epochTime.sign + Math.abs(epochTime.epoch) + day + `${hours}:${minutes}:${seconds}.${milliseconds}`;
+  return (
+    epochTime.sign +
+    Math.abs(epochTime.epoch) +
+    day +
+    `${hours}:${minutes}:${seconds}.${milliseconds}`
+  );
 }
 
 /**
@@ -231,7 +281,11 @@ export function formatEpochTimeRange(
 
   const startEpoch = toEpochTime(start, earthSecPerEpochSec, epoch);
   const endEpoch = toEpochTime(end, earthSecPerEpochSec, epoch);
-  const difference = toEpochTime(end - start + landingSeconds, earthSecPerEpochSec, epoch);
+  const difference = toEpochTime(
+    end - start + landingSeconds,
+    earthSecPerEpochSec,
+    epoch,
+  );
 
   const epochDuration: RavenEpochTime = {
     epoch: difference.epoch,
@@ -242,7 +296,14 @@ export function formatEpochTimeRange(
     sign: '',
   };
 
-  return formatEpochTime(startEpoch, dayCode) + ' to ' + formatEpochTime(endEpoch, dayCode) + ' (' + formatEpochDuration(epochDuration, dayCode) + ')';
+  return (
+    formatEpochTime(startEpoch, dayCode) +
+    ' to ' +
+    formatEpochTime(endEpoch, dayCode) +
+    ' (' +
+    formatEpochDuration(epochDuration, dayCode) +
+    ')'
+  );
 }
 
 /**
@@ -250,7 +311,7 @@ export function formatEpochTimeRange(
  */
 export function formatTimeTickTFormat(
   obj: any,
-  epoch: RavenEpoch |  null,
+  epoch: RavenEpoch | null,
   earthSecPerEpochSec: number,
   dayCode: string,
 ): any[] {
@@ -290,7 +351,81 @@ export function formatTimeTickTFormat(
  */
 export function getDOY(date: Date): number {
   const d = Date.UTC(date.getUTCFullYear(), 0, 0);
-  return Math.floor((date.getTime() - d) / 8.64e+7);
+  return Math.floor((date.getTime() - d) / 8.64e7);
+}
+
+/**
+ * Returns start and end time range for the initial page.
+ * `pageDuration` is defaulted to 1 day.
+ */
+export function getInitialPageStartEndTime(
+  situationalAwareness: SituationalAwarenessState,
+) {
+  let start = 0;
+  let pageDuration = 24 * 60 * 60;
+  if (situationalAwareness.useNow) {
+    start = situationalAwareness.nowMinus
+      ? new Date().getTime() / 1000 - situationalAwareness.nowMinus
+      : new Date().getTime() / 1000;
+    if (
+      situationalAwareness.nowMinus &&
+      situationalAwareness.nowPlus &&
+      situationalAwareness.nowMinus + situationalAwareness.nowPlus !== 0
+    ) {
+      pageDuration =
+        situationalAwareness.nowMinus + situationalAwareness.nowPlus;
+    }
+  } else {
+    start = situationalAwareness.startTime
+      ? situationalAwareness.startTime
+      : new Date().getTime() / 1000;
+    if (
+      situationalAwareness.pageDuration &&
+      situationalAwareness.pageDuration !== 0
+    ) {
+      pageDuration = situationalAwareness.pageDuration;
+    }
+  }
+  return { start, end: start + pageDuration };
+}
+
+/**
+ * Helper. Return situationalAwareness startTime. If 'now' is used, startTime is now - nowMinus.
+ */
+export function getSituationalAwarenessStartTime(
+  situationalAwareness: SituationalAwarenessState,
+): string {
+  if (situationalAwareness.useNow) {
+    const start = situationalAwareness.nowMinus
+      ? new Date().getTime() / 1000 - situationalAwareness.nowMinus
+      : new Date().getTime() / 1000;
+    return timestamp(start);
+  } else {
+    return situationalAwareness.startTime
+      ? timestamp(situationalAwareness.startTime)
+      : timestamp(new Date().getTime() / 1000);
+  }
+}
+
+/**
+ * Helper. Return situationAwareness pageDuration.
+ */
+export function getSituationalAwarenessPageDuration(
+  situationalAwareness: SituationalAwarenessState,
+): string {
+  if (situationalAwareness.useNow) {
+    return situationalAwareness.nowMinus && situationalAwareness.nowPlus
+      ? toDuration(
+          (situationalAwareness.nowMinus + situationalAwareness.nowPlus) * 1000,
+          false,
+        )
+      : '001T00:00:00';
+  } else {
+    return situationalAwareness.pageDuration &&
+      situationalAwareness.pageDuration !== 0
+      ? toDuration(situationalAwareness.pageDuration * 1000, false)
+      : '001T00:00:00';
+  }
 }
 
 /**
@@ -332,8 +467,15 @@ export function timestampYMD(time: number) {
   const mins = date.getUTCMinutes();
 
   let timeStr = '';
-  timeStr = year + '-' + mon.toString().padStart(2, '0') + '-' + day.toString().padStart(2, '0') + ' ';
-  timeStr += hour.toString().padStart(2, '0') + ':' + mins.toString().padStart(2, '0');
+  timeStr =
+    year +
+    '-' +
+    mon.toString().padStart(2, '0') +
+    '-' +
+    day.toString().padStart(2, '0') +
+    ' ';
+  timeStr +=
+    hour.toString().padStart(2, '0') + ':' + mins.toString().padStart(2, '0');
 
   const secs = date.getUTCSeconds();
   timeStr += ':' + secs.toString().padStart(2, '0');
@@ -367,16 +509,24 @@ export function toDuration(msecs: number, showMilliseconds: boolean): string {
 
   let seconds = msecs / 1000;
 
-  const doy = Math.floor(seconds / (60 * 60 * 24)).toString().padStart(3, '0');
+  const doy = Math.floor(seconds / (60 * 60 * 24))
+    .toString()
+    .padStart(3, '0');
   seconds -= parseInt(doy, 10) * (60 * 60 * 24);
 
-  const hour = Math.floor(seconds / (60 * 60)).toString().padStart(2, '0');
+  const hour = Math.floor(seconds / (60 * 60))
+    .toString()
+    .padStart(2, '0');
   seconds -= parseInt(hour, 10) * (60 * 60);
 
-  const min = Math.floor(seconds / 60).toString().padStart(2, '0');
+  const min = Math.floor(seconds / 60)
+    .toString()
+    .padStart(2, '0');
   seconds -= parseInt(min, 10) * 60;
 
-  const sec = Math.floor(seconds).toString().padStart(2, '0');
+  const sec = Math.floor(seconds)
+    .toString()
+    .padStart(2, '0');
 
   let timeString = '';
 
@@ -384,7 +534,18 @@ export function toDuration(msecs: number, showMilliseconds: boolean): string {
     timeString = doy + 'T' + hour + ':' + min + ':' + sec;
   } else {
     seconds -= parseInt(sec, 10);
-    timeString = doy + 'T' + hour + ':' + min + ':' + sec + '.' + Math.floor(seconds * 1000).toString().padStart(3, '0');
+    timeString =
+      doy +
+      'T' +
+      hour +
+      ':' +
+      min +
+      ':' +
+      sec +
+      '.' +
+      Math.floor(seconds * 1000)
+        .toString()
+        .padStart(3, '0');
   }
 
   if (negative) {
@@ -397,14 +558,19 @@ export function toDuration(msecs: number, showMilliseconds: boolean): string {
 /**
  * Converts SCET seconds to an EpochTime.
  */
-export function toEpochTime(scetSeconds: number, earthSecPerEpochSec: number, epoch: RavenEpoch | null): RavenEpochTime {
+export function toEpochTime(
+  scetSeconds: number,
+  earthSecPerEpochSec: number,
+  epoch: RavenEpoch | null,
+): RavenEpochTime {
   let landingSeconds = 0;
 
   if (epoch !== null) {
     landingSeconds = momentUtc(epoch.value).unix();
   }
 
-  const epochTime = (scetSeconds - landingSeconds) / (60 * 60 * 24 * earthSecPerEpochSec);
+  const epochTime =
+    (scetSeconds - landingSeconds) / (60 * 60 * 24 * earthSecPerEpochSec);
   const remainder = Math.abs(epochTime) % 1;
   const ms = remainder * 60 * 60 * 24 * 1000;
 

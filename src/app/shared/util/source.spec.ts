@@ -17,6 +17,7 @@ import {
   getPin,
   getPinLabel,
   getQueryUrlForGraphableFilter,
+  getSituAwareUrl,
   getSortedChildIds,
   getSourceIds,
   getSourceIdsByLabelInBands,
@@ -35,7 +36,7 @@ import {
   graphableFilterKickoff,
   graphableSource,
   treeBySourceId,
-} from './../mocks/';
+} from '../mocks/';
 
 describe('source.ts', () => {
   describe('getAllChildIds', () => {
@@ -75,9 +76,9 @@ describe('source.ts', () => {
     });
 
     it(`should get a single source for an existing kind when we dont start at the root source`, () => {
-      expect(getAllSourcesByKinds(treeBySourceId, '/child/1', ['data'])).toEqual([
-        treeBySourceId['/child/child/0'],
-      ]);
+      expect(
+        getAllSourcesByKinds(treeBySourceId, '/child/1', ['data']),
+      ).toEqual([treeBySourceId['/child/child/0']]);
     });
   });
 
@@ -122,7 +123,19 @@ describe('source.ts', () => {
     };
 
     it(`should return sourceUrl with custom filter args`, () => {
-      expect(getFormattedSourceUrl(treeBySourceId, customGraphableSource, customFilter, filtersByTarget)).toEqual('https://a/b/c?format=TMS&legend=ips&filter=(command=[.*IPS.*])&');
+      expect(
+        getFormattedSourceUrl(
+          treeBySourceId,
+          customGraphableSource,
+          customFilter,
+          filtersByTarget,
+          false,
+          '',
+          '',
+        ),
+      ).toEqual(
+        'https://a/b/c?format=TMS&legend=ips&filter=(command=[.*IPS.*])&',
+      );
     });
 
     it(`should return sourceUrl with filter`, () => {
@@ -144,26 +157,67 @@ describe('source.ts', () => {
     };
 
     it(`should return url with format=CSV`, () => {
-      expect(getOutputDataUrl(treeBySourceId, customGraphableSource, customFilter, filtersByTarget, 'CSV', false)).toEqual('https://a/b/c?format=CSV&legend=ips&filter=(command=[.*IPS.*])&');
+      expect(
+        getOutputDataUrl(
+          treeBySourceId,
+          customGraphableSource,
+          customFilter,
+          filtersByTarget,
+          'CSV',
+          false,
+        ),
+      ).toEqual(
+        'https://a/b/c?format=CSV&legend=ips&filter=(command=[.*IPS.*])&',
+      );
     });
 
     it(`should return url with format=JSON`, () => {
-      expect(getOutputDataUrl(treeBySourceId, customGraphableSource, customFilter, filtersByTarget, 'JSON', false)).toEqual('https://a/b/c?format=JSON&legend=ips&filter=(command=[.*IPS.*])&');
+      expect(
+        getOutputDataUrl(
+          treeBySourceId,
+          customGraphableSource,
+          customFilter,
+          filtersByTarget,
+          'JSON',
+          false,
+        ),
+      ).toEqual(
+        'https://a/b/c?format=JSON&legend=ips&filter=(command=[.*IPS.*])&',
+      );
     });
 
     it(`should return url with format=CSV, decimate=true`, () => {
-      expect(getOutputDataUrl(treeBySourceId, graphableSource, customFilter, filtersByTarget, 'CSV', true)).toEqual('https://a/b/c?name=power&format=CSV&decimate=true');
+      expect(
+        getOutputDataUrl(
+          treeBySourceId,
+          graphableSource,
+          customFilter,
+          filtersByTarget,
+          'CSV',
+          true,
+        ),
+      ).toEqual('https://a/b/c?name=power&format=CSV&decimate=true');
     });
 
     it(`should return url with format=CSV, decimate=false`, () => {
-      expect(getOutputDataUrl(treeBySourceId, graphableSource, customFilter, filtersByTarget, 'JSON', false)).toEqual('https://a/b/c?name=power&format=JSON&decimate=false');
+      expect(
+        getOutputDataUrl(
+          treeBySourceId,
+          graphableSource,
+          customFilter,
+          filtersByTarget,
+          'JSON',
+          false,
+        ),
+      ).toEqual('https://a/b/c?name=power&format=JSON&decimate=false');
     });
-
   });
 
   describe('getParentSourceIds', () => {
     it(`should split a source correctly into it's parent source ids, in the correct order`, () => {
-      expect(getParentSourceIds('/hello/world/goodbye/what/is/going/on')).toEqual([
+      expect(
+        getParentSourceIds('/hello/world/goodbye/what/is/going/on'),
+      ).toEqual([
         '/hello',
         '/hello/world',
         '/hello/world/goodbye',
@@ -184,11 +238,17 @@ describe('source.ts', () => {
     ];
 
     it(`should return a pin if a source id is in the pin set`, () => {
-      expect(getPin('/e/f/g/h/i', pins)).toEqual({ name: 'pin2', sourceId: '/e/f' });
+      expect(getPin('/e/f/g/h/i', pins)).toEqual({
+        name: 'pin2',
+        sourceId: '/e/f',
+      });
     });
 
     it(`should return the pin who's sourceId is the longest sub-string of the given sourceId (i.e. the nearest parent)`, () => {
-      expect(getPin('/a/b/c/d/e', pins)).toEqual({ name: 'pin3', sourceId: '/a/b/c/d' });
+      expect(getPin('/a/b/c/d/e', pins)).toEqual({
+        name: 'pin3',
+        sourceId: '/a/b/c/d',
+      });
     });
 
     it('should return null if the source id is not in the pin set', () => {
@@ -199,18 +259,14 @@ describe('source.ts', () => {
   describe('getPinLabel', () => {
     it(`should get a pin label for a given list of source ids and pins`, () => {
       const sourceIds = ['/a/b/c', '/d/e/f'];
-      const pins = [
-        { name: 'pin1', sourceId: '/a/b/c' },
-      ];
+      const pins = [{ name: 'pin1', sourceId: '/a/b/c' }];
 
       expect(getPinLabel(sourceIds[0], pins)).toEqual('pin1');
     });
 
     it(`should return no pin label if there are no pins for the given source ids`, () => {
       const sourceIds = ['/a/b/c', '/d/e/f'];
-      const pins = [
-        { name: 'pin1', sourceId: '/x/y/z' },
-      ];
+      const pins = [{ name: 'pin1', sourceId: '/x/y/z' }];
 
       expect(getPinLabel(sourceIds[0], pins)).toEqual('');
     });
@@ -222,7 +278,13 @@ describe('source.ts', () => {
       events: [graphableFilterKickoff.id],
     };
     it('should include filters as query option in the sourceId or url', () => {
-      expect(getQueryUrlForGraphableFilter(treeBySourceId, sourceIdOrUrl, groupFilters)).toEqual('SequenceTracker/Kickoff?events=Kickoff&');
+      expect(
+        getQueryUrlForGraphableFilter(
+          treeBySourceId,
+          sourceIdOrUrl,
+          groupFilters,
+        ),
+      ).toEqual('SequenceTracker/Kickoff?events=Kickoff&');
     });
   });
 
@@ -232,13 +294,39 @@ describe('source.ts', () => {
       collection: [],
     };
     it(`should include filters as query option in the sourceId or url`, () => {
-      expect(getQueryUrlForGraphableFilter(treeBySourceId, sourceIdOrUrl, parentFilters)).toEqual('leucadia/taifunTest/abc.pef/DKF?collection=&');
+      expect(
+        getQueryUrlForGraphableFilter(
+          treeBySourceId,
+          sourceIdOrUrl,
+          parentFilters,
+        ),
+      ).toEqual('leucadia/taifunTest/abc.pef/DKF?collection=&');
+    });
+  });
+
+  describe('getSituAwareUrl', () => {
+    it(`should return sourceUrl with situAware args`, () => {
+      expect(
+        getSituAwareUrl(
+          'https://a/b/c?format=TMS',
+          '2018-245T12:00:00',
+          '002T00:00:00',
+        ),
+      ).toEqual(
+        'https://a/b/c?format=TMS&situAware=true&start=2018-245T12:00:00&pageDuration=002T00:00:00',
+      );
     });
   });
 
   describe('getSortedChildIds', () => {
     it('should properly sort the child ids', () => {
-      expect(getSortedChildIds(treeBySourceId, ['/child/0', '/child/1', '/DKF/command'])).toEqual(['/DKF/command', '/child/0', '/child/1']);
+      expect(
+        getSortedChildIds(treeBySourceId, [
+          '/child/0',
+          '/child/1',
+          '/DKF/command',
+        ]),
+      ).toEqual(['/DKF/command', '/child/0', '/child/1']);
     });
   });
 
@@ -271,24 +359,32 @@ describe('source.ts', () => {
   });
 
   describe('getSourceIdsByLabelInBands', () => {
-    const customFiltersBySourceId = {'/PEF/command': [
-      {
-        filter: '.*IPS.*',
-        label: 'ips',
-        subBandId: '',
-      },
-    ]};
+    const customFiltersBySourceId = {
+      '/PEF/command': [
+        {
+          filter: '.*IPS.*',
+          label: 'ips',
+          subBandId: '',
+        },
+      ],
+    };
     const filtersByTarget = {
       '/SequenceTracker': {
         events: [filterSourceLocation.id, filterSourceStatus.id],
       },
     };
     it(`should return all sourceIds in subBands grouped by label`, () => {
-      expect(getSourceIdsByLabelInBands(bandsWithCustomGraphableSource, customFiltersBySourceId, filtersByTarget, treeBySourceId)).toEqual (
-        {
-          ips: ['/DKF/command'],
-        });
+      expect(
+        getSourceIdsByLabelInBands(
+          bandsWithCustomGraphableSource,
+          customFiltersBySourceId,
+          filtersByTarget,
+          treeBySourceId,
+        ),
+      ).toEqual({
+        ips: ['/DKF/command'],
       });
+    });
   });
 
   describe('getTargetFilters', () => {
@@ -300,12 +396,14 @@ describe('source.ts', () => {
     };
 
     it(`should return filter related to sourceId`, () => {
-      expect(getTargetFilters(filtersByTarget, '/SequenceTracker')).toEqual({ collection: [filterSourceStatus.id], meeting: [ filterSourceLocation.id] });
+      expect(getTargetFilters(filtersByTarget, '/SequenceTracker')).toEqual({
+        collection: [filterSourceStatus.id],
+        meeting: [filterSourceLocation.id],
+      });
     });
   });
 
   describe('getTargetFilterSourceIds', () => {
-
     it(`should return target filter source ids`, () => {
       // TODO
     });
@@ -313,32 +411,8 @@ describe('source.ts', () => {
 
   describe('toRavenCustomMetadata', () => {
     it(`should convert to RavenCustomMetadata`, () => {
-      expect(toRavenCustomMetadata([
-        {
-          Key: 'release',
-          Value: 'A',
-        },
-        {
-          Key: 'version',
-          Value: 'seq 34.7',
-        },
-      ])).toEqual({
-        release: 'A',
-        version: 'seq 34.7',
-      });
-    });
-  });
-
-  describe('toRavenFileMetadata', () => {
-    it(`should convert to folder RavenFileMetadata`, () => {
-      expect(toRavenFileMetadata({
-        __db_type: '',
-        __kind: 'fs_dir',
-        __kind_sub: '',
-        contents_url: '',
-        created: '2017-10-05 15:26:58-0700',
-        createdBy: 'userA',
-        customMeta: [
+      expect(
+        toRavenCustomMetadata([
           {
             Key: 'release',
             Value: 'A',
@@ -347,15 +421,43 @@ describe('source.ts', () => {
             Key: 'version',
             Value: 'seq 34.7',
           },
-        ],
-        file_data_url: '',
-        hasCollectionType: '',
-        importJobStatus: '',
-        label: '',
-        modified: '2017-10-05 15:26:58-0700',
-        name: '',
-        permissions: 'rw-rw-r-- all us',
-      })).toEqual({
+        ]),
+      ).toEqual({
+        release: 'A',
+        version: 'seq 34.7',
+      });
+    });
+  });
+
+  describe('toRavenFileMetadata', () => {
+    it(`should convert to folder RavenFileMetadata`, () => {
+      expect(
+        toRavenFileMetadata({
+          __db_type: '',
+          __kind: 'fs_dir',
+          __kind_sub: '',
+          contents_url: '',
+          created: '2017-10-05 15:26:58-0700',
+          createdBy: 'userA',
+          customMeta: [
+            {
+              Key: 'release',
+              Value: 'A',
+            },
+            {
+              Key: 'version',
+              Value: 'seq 34.7',
+            },
+          ],
+          file_data_url: '',
+          hasCollectionType: '',
+          importJobStatus: '',
+          label: '',
+          modified: '2017-10-05 15:26:58-0700',
+          name: '',
+          permissions: 'rw-rw-r-- all us',
+        }),
+      ).toEqual({
         createdBy: 'userA',
         createdOn: '2017-10-05 15:26:58-0700',
         customMetadata: {
@@ -369,31 +471,33 @@ describe('source.ts', () => {
     });
 
     it(`should convert to generic csv RavenFileMetadata`, () => {
-      expect(toRavenFileMetadata({
-        __db_type: '',
-        __kind: 'fs_file',
-        __kind_sub: 'file_maros',
-        contents_url: '',
-        created: '2017-10-05 15:26:58-0700',
-        createdBy: 'userB',
-        customMeta: [
-          {
-            Key: 'release',
-            Value: 'B',
-          },
-          {
-            Key: 'version',
-            Value: 'seq 34.8',
-          },
-        ],
-        file_data_url: '',
-        hasCollectionType: '',
-        importJobStatus: '',
-        label: '',
-        modified: '2017-10-05 15:26:58-0700',
-        name: '',
-        permissions: 'rw-rw-r-- all us',
-      })).toEqual({
+      expect(
+        toRavenFileMetadata({
+          __db_type: '',
+          __kind: 'fs_file',
+          __kind_sub: 'file_maros',
+          contents_url: '',
+          created: '2017-10-05 15:26:58-0700',
+          createdBy: 'userB',
+          customMeta: [
+            {
+              Key: 'release',
+              Value: 'B',
+            },
+            {
+              Key: 'version',
+              Value: 'seq 34.8',
+            },
+          ],
+          file_data_url: '',
+          hasCollectionType: '',
+          importJobStatus: '',
+          label: '',
+          modified: '2017-10-05 15:26:58-0700',
+          name: '',
+          permissions: 'rw-rw-r-- all us',
+        }),
+      ).toEqual({
         createdBy: 'userB',
         createdOn: '2017-10-05 15:26:58-0700',
         customMetadata: {
@@ -409,7 +513,9 @@ describe('source.ts', () => {
 
   describe('updateSourceId', () => {
     it(`should update a simple source id with a simple base id up to the given file`, () => {
-      expect(updateSourceId('/a/b/c/d', '/x/y', { 'b': 'file' }, 'file')).toEqual('/x/y/c/d');
+      expect(updateSourceId('/a/b/c/d', '/x/y', { b: 'file' }, 'file')).toEqual(
+        '/x/y/c/d',
+      );
     });
 
     it(`should update an actual source id with an actual base id up to the given file`, () => {
@@ -419,7 +525,8 @@ describe('source.ts', () => {
         { '15F10_Cruise_Simulation_CheckoutActivities': 'file' },
         'file',
       );
-      const expected = '/leucadia/EuropaSimulations/15F10_Tour_Simulation_2016_265T23_32_16/Resources/Array/ArrayTrackingMode';
+      const expected =
+        '/leucadia/EuropaSimulations/15F10_Tour_Simulation_2016_265T23_32_16/Resources/Array/ArrayTrackingMode';
       expect(sourceId).toEqual(expected);
     });
 
@@ -430,7 +537,8 @@ describe('source.ts', () => {
         { '15F10_Cruise_Simulation_CheckoutActivities': 'file' },
         'file',
       );
-      const expected = '/leucadia/EuropaSimulations/15F10_Tour_Simulation_2016_265T23_32_16/more-stuff/Resources/Array/ArrayTrackingMode';
+      const expected =
+        '/leucadia/EuropaSimulations/15F10_Tour_Simulation_2016_265T23_32_16/more-stuff/Resources/Array/ArrayTrackingMode';
       expect(sourceId).toEqual(expected);
     });
 
@@ -441,7 +549,8 @@ describe('source.ts', () => {
         { '15F10_Tour_Simulation_2016_265T23_32_16': 'file' },
         'file',
       );
-      const expected = '/leucadia/EuropaSimulations/15F10_Cruise_Simulation_CheckoutActivities/Resources/Array/SolarArrayFlopCount/some/more/stuff';
+      const expected =
+        '/leucadia/EuropaSimulations/15F10_Cruise_Simulation_CheckoutActivities/Resources/Array/SolarArrayFlopCount/some/more/stuff';
       expect(sourceId).toEqual(expected);
     });
   });

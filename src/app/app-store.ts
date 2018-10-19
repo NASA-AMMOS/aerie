@@ -7,15 +7,12 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  ActionReducer,
-  ActionReducerMap,
-  MetaReducer,
-} from '@ngrx/store';
-
-import { environment } from './../environments/environment';
+import { ActionReducer, ActionReducerMap, MetaReducer } from '@ngrx/store';
+import { ConfigState } from '../config';
+import { environment } from '../environments/environment';
 
 import * as fromRouter from '@ngrx/router-store';
+import * as fromConfig from './shared/reducers/config.reducer';
 
 /**
  * storeFreeze prevents state from being mutated. When mutation occurs, an
@@ -29,6 +26,7 @@ import { storeFreeze } from 'ngrx-store-freeze';
  * our top level state interface is just a map of keys to inner state types.
  */
 export interface AppState {
+  config: ConfigState;
   router: fromRouter.RouterReducerState;
 }
 
@@ -38,13 +36,16 @@ export interface AppState {
  * and the current or initial state and return a new immutable state.
  */
 export const reducers: ActionReducerMap<AppState> = {
+  config: fromConfig.reducer,
   router: fromRouter.routerReducer,
 };
 
 /**
  * console.log all actions for debugging purposes.
  */
-export function logger(reducer: ActionReducer<AppState>): ActionReducer<AppState> {
+export function logger(
+  reducer: ActionReducer<AppState>,
+): ActionReducer<AppState> {
   return function(state: AppState, action: any): AppState {
     console.log('state before update', state);
     console.log('action', action);

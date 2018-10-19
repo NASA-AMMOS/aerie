@@ -1,18 +1,10 @@
-<mat-card>
-  <mat-card-title>
-    Command Dictionaries
-  </mat-card-title>
-
-  <mat-card-content>
-    <ag-grid-angular #agGrid
-      style="height: 300px; width: 100%;"
-      class="ag-theme-fresh"
-      [columnDefs]="columnDefs"
-      [enableColResize]="true"
-      [enableSorting]="true"
-      [enableFilter]="true"
-      [rowData]="rowData"
-      (selectionChanged)="onSelectionChanged()">
-    </ag-grid-angular>
-  </mat-card-content>
-</mat-card>
+<mat-form-field>
+  <mat-select
+    placeholder="Command dictionary"
+    [value]="selectedId"
+    (selectionChange)="onSelectionChanged($event.value)">
+    <mat-option *ngFor="let command of dictionaries" [value]="command.id">
+      {{command.name}}
+    </mat-option>
+  </mat-select>
+</mat-form-field>

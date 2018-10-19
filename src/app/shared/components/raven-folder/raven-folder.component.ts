@@ -18,7 +18,7 @@ import {
 import {
   RavenFolderSource,
   RavenSourceActionEvent,
-} from './../../../shared/models';
+} from '../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,14 +26,35 @@ import {
   styleUrls: ['./raven-folder.component.css'],
   templateUrl: './raven-folder.component.html',
 })
-
 export class RavenFolderComponent {
-  @Input() id: string;
-  @Input() source: RavenFolderSource;
+  @Input()
+  id: string;
 
-  @Output() action: EventEmitter<RavenSourceActionEvent> = new EventEmitter<RavenSourceActionEvent>();
-  @Output() collapse: EventEmitter<RavenFolderSource> = new EventEmitter<RavenFolderSource>();
-  @Output() expand: EventEmitter<RavenFolderSource> = new EventEmitter<RavenFolderSource>();
-  @Output() openMetadata: EventEmitter<RavenFolderSource> = new EventEmitter<RavenFolderSource>();
-  @Output() select: EventEmitter<RavenFolderSource> = new EventEmitter<RavenFolderSource>();
+  @Input()
+  source: RavenFolderSource;
+
+  @Output()
+  action: EventEmitter<RavenSourceActionEvent> = new EventEmitter<
+    RavenSourceActionEvent
+  >();
+
+  @Output()
+  collapse: EventEmitter<RavenFolderSource> = new EventEmitter<
+    RavenFolderSource
+  >();
+
+  @Output()
+  expand: EventEmitter<RavenFolderSource> = new EventEmitter<
+    RavenFolderSource
+  >();
+
+  @Output()
+  openMetadata: EventEmitter<RavenFolderSource> = new EventEmitter<
+    RavenFolderSource
+  >();
+
+  @Output()
+  select: EventEmitter<RavenFolderSource> = new EventEmitter<
+    RavenFolderSource
+  >();
 }

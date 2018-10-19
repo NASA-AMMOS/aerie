@@ -7,18 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Pipe,
-  PipeTransform,
-} from '@angular/core';
-
-import { timestamp } from './../../../shared/util';
+import { Pipe, PipeTransform } from '@angular/core';
+import { timestamp } from '../../../shared/util';
 
 @Pipe({
   name: 'timestamp',
 })
 export class RavenTimestampPipe implements PipeTransform {
-  transform(value: number): string {
-    return timestamp(value);
+  transform(value: number | null): string {
+    return value !== null ? timestamp(value) : '';
   }
 }

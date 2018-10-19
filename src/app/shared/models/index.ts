@@ -7,6 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+export * from './add-band-modifiers';
 export * from './base-type';
 export * from './map';
 export * from './mps-server-activity-metadata';
@@ -20,6 +21,7 @@ export * from './mps-server-metadata';
 export * from './mps-server-point';
 export * from './mps-server-resource-metadata';
 export * from './mps-server-resource-point';
+export * from './mps-server-situational-awareness-pef-entry';
 export * from './mps-server-source-category';
 export * from './mps-server-source-dir';
 export * from './mps-server-source-file-state';
@@ -28,8 +30,10 @@ export * from './mps-server-source-graphable';
 export * from './mps-server-source';
 export * from './mps-server-state-metadata';
 export * from './mps-server-state-point';
+export * from './nest-module';
 export * from './raven-activity-band';
 export * from './raven-activity-point';
+export * from './raven-apply-layout-update';
 export * from './raven-band-left-click';
 export * from './raven-base-source';
 export * from './raven-composite-band';
@@ -53,6 +57,7 @@ export * from './raven-point';
 export * from './raven-resource-band';
 export * from './raven-resource-point';
 export * from './raven-sort-message';
+export * from './raven-situational-awareness-pef-entry';
 export * from './raven-source-action-event';
 export * from './raven-source-action';
 export * from './raven-source';
@@ -63,4 +68,3 @@ export * from './raven-sub-band-point-data';
 export * from './raven-sub-band';
 export * from './raven-time-range';
 export * from './raven-update';
-export * from './raven-version';

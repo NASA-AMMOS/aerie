@@ -11,6 +11,8 @@ Raven2 is a web-based platform included in the SEQ subsystem of the Advanced Mul
 
 ## Develop
 
+This project uses the [Angular CLI](https://cli.angular.io/). All dependencies should be kept in line with the latest version.
+
 ```
 npm i
 npm start

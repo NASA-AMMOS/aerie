@@ -7,10 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  RavenExpandableSource,
-} from './index';
+import { RavenExpandableSource } from './index';
 
 export interface RavenFileSource extends RavenExpandableSource {
+  importJobStatus: string;
   selected: boolean;
 }

@@ -104,14 +104,19 @@
     [baselineLabel]="subBand.baselineLabel"
     [borderWidth]="subBand.borderWidth"
     [class]="'raven-sub-band-' + i"
+    [color]="subBand.color"
     [ctlTimeAxis]="ctlTimeAxis"
     [ctlViewTimeAxis]="ctlViewTimeAxis"
     [dayCode]="dayCode"
     [earthSecToEpochSec]="earthSecToEpochSec"
     [epoch]="epoch"
+    [fill]="subBand.fill"
+    [fillColor]="subBand.fillColor"
     [height]="subBand.height"
     [heightPadding]="subBand.heightPadding"
+    [icon]="subBand.icon"
     [id]="subBand.id"
+    [isNumeric]="subBand.isNumeric"
     [label]="subBand.label"
     [labelColor]="subBand.labelColor"
     [labelFont]="subBand.labelFont"
@@ -119,6 +124,8 @@
     [labelPin]="subBand.labelPin"
     [name]="subBand.name"
     [points]="subBand.points"
+    [possibleStates]="subBand.possibleStates"
+    [showIcon]="subBand.showIcon"
     [showLabelPin]="subBand.showLabelPin"
     [showStateChangeTimes]="subBand.showStateChangeTimes"
     [type]="subBand.type"
@@ -128,3 +135,11 @@
     (updateSubBand)="onUpdateSubBand($event)">
   </raven-state-band>
 </ng-container>
+
+<div [ngClass]="{ 'raven-band': true, 'raven-band--selected': isSelected }">
+  <div
+    #ctlMount
+    class="raven-band__ctl"
+    [ngStyle]="{ 'background-color': backgroundColor }">
+  </div>
+</div>

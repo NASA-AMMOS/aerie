@@ -7,11 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  colorHexToRgbArray,
-  colorRgbArrayToHex,
-  colorRgbToHex,
-} from './color';
+import { colorHexToRgbArray, colorRgbArrayToHex, colorRgbToHex } from './color';
 
 describe('colorHexToRgbArray', () => {
   it(`should convert a non hex value to a black color array`, () => {

@@ -4,7 +4,7 @@
   'no-highlight': !source.expanded
 }">
   <mat-icon
-    *ngIf="source.subKind === 'file_state'"
+    *ngIf="source.subKind === 'file_state' || source.importJobStatus !== 'FINISHED'"
     class="transparent">
     check_box_outline_blank
   </mat-icon>
@@ -15,12 +15,16 @@
     remove
   </mat-icon>
   <mat-icon
-    *ngIf="source.subKind !== 'file_state' && !source.expanded"
+    *ngIf="source.subKind !== 'file_state' && !source.expanded && source.importJobStatus === 'FINISHED'"
     [id]="'raven-tree-'+source.name+'-expand'"
     (click)="expand.emit(source)">
     add
   </mat-icon>
-  <span (click)="select.emit(source)" class="name">
+  <span (click)="select.emit(source)" class="name"
+    [ngClass]="{
+      'running': source.importJobStatus === 'RUNNING'||source.importJobStatus === 'QUEUED',
+      'error': source.importJobStatus === 'ERROR'
+    }">
     <i [ngClass]="source.icon" aria-hidden="true"></i> {{source.name}}
   </span>
   <button

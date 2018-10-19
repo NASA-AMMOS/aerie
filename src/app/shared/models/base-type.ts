@@ -7,16 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  StringTMap,
-} from './index';
+import { StringTMap } from './index';
 
 export type BaseType =
-  boolean |
-  number |
-  string |
-  boolean[] |
-  number[] |
-  string[] |
-  StringTMap<any> |
-  null;
+  | boolean
+  | number
+  | string
+  | boolean[]
+  | number[]
+  | string[]
+  | StringTMap<any>
+  | null;

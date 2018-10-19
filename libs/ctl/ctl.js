@@ -123,7 +123,7 @@ ActivityBand.prototype.computeNumRowsCompactLayout = function() {
         if(interval.end <= start || interval.start >= end) {
           continue;
         }
-        if(prevDrawEnd !== null && prevDrawEnd > interval.start) {
+        if(prevDrawEnd !== null && prevDrawEnd >= interval.start) {
           newOpenIntervals.push(interval);
         }
         else {
@@ -654,6 +654,46 @@ ActivityPainter.prototype.getColor = function(act) {
   }
 };
 
+ActivityPainter.prototype.paintLabelAndTimes = function (act, actX1, actX2, actY1, actY2, previousAct, previousActX1, previousActX2 , lastPaintedTimeX2, lastPaintedTime) {
+  if (this.showLabel) {
+      // autofit already includes space for label
+      if (this.autoFit) {
+          if (act.label !== null) {
+              this.paintLabel({interval:act,
+                     ll:{x:actX1, y:actY2},
+                     ul:{x:actX1, y:actY1},
+                     ur:{x:actX2, y:actY1},
+                     lr:{x:actX2, y:actY2}});
+          }
+      }
+      // paint the label of the previous act in the row
+      else if (previousAct && previousAct.label !== null) {
+          // paint previous activity label if there is room
+          this.paintLabel({interval:previousAct,
+                     ll:{x:previousActX1, y:actY2},
+                     ul:{x:previousActX1, y:actY1},
+                     ur:{x:previousActX2, y:actY1},
+                     lr:{x:previousActX2, y:actY2},
+                     maxr: {x:actX1, y:actY2}});
+      }
+  }
+
+  // paint start and end times of activity
+  if (this.showActivityTimes && this.rowPadding > 12) {
+      paintedTimeX2 = this.paintActivityTimes({interval:act,
+                     ll:{x:actX1, y:actY2},
+                     ul:{x:actX1, y:actY1},
+                     ur:{x:actX2, y:actY1},
+                      lr:{x:actX2, y:actY2},
+                     lastPaintedTimeX2: lastPaintedTimeX2,
+                     lastPaintedTime: lastPaintedTime});
+      if (paintedTimeX2 !== lastPaintedTimeX2) {
+        lastPaintedTimeX2 = paintedTimeX2;
+        lastPaintedTime = act.start;
+      }
+  }
+}
+
 ActivityPainter.prototype.paintActivityAsBar = function(rowY, act, previousAct, previousActX1, previousActX2, lastPaintedTimeX2, lastPaintedTime) {
   var ctx = this.band.canvas.getContext('2d');
   rowY = rowY - this.rowPadding;
@@ -721,43 +761,7 @@ ActivityPainter.prototype.paintActivityAsBar = function(rowY, act, previousAct, 
                        lr:{x:actX2, y:actY2}});
   }
 
-  if (this.showLabel) {
-      // autofit already includes space for label
-      if (this.autoFit) {
-          if (act.label !== null) {
-              this.paintLabel({interval:act,
-                     ll:{x:actX1, y:actY2},
-                     ul:{x:actX1, y:actY1},
-                     ur:{x:actX2, y:actY1},
-                     lr:{x:actX2, y:actY2}});
-          }
-      }
-      // paint the label of the previous act in the row
-      else if (previousAct && previousAct.label !== null) {
-          // paint previous activity label if there is room
-          this.paintLabel({interval:previousAct,
-                     ll:{x:previousActX1, y:actY2},
-                     ul:{x:previousActX1, y:actY1},
-                     ur:{x:previousActX2, y:actY1},
-                     lr:{x:previousActX2, y:actY2},
-                     maxr: {x:actX1, y:actY2}});
-      }
-  }
-
-  // paint start and end times of activity
-  if (this.showActivityTimes && this.rowPadding > 12) {
-      paintedTimeX2 = this.paintActivityTimes({interval:act,
-                     ll:{x:actX1, y:actY2},
-                     ul:{x:actX1, y:actY1},
-                     ur:{x:actX2, y:actY1},
-                      lr:{x:actX2, y:actY2},
-                     lastPaintedTimeX2: lastPaintedTimeX2,
-                     lastPaintedTime: lastPaintedTime});
-      if (paintedTimeX2 !== lastPaintedTimeX2) {
-        lastPaintedTimeX2 = paintedTimeX2;
-        lastPaintedTime = act.start;
-      }
-  }
+  this.paintLabelAndTimes (act, actX1, actX2, actY1, actY2, previousAct, previousActX1, previousActX2, lastPaintedTimeX2, lastPaintedTime);
 
   // check to see if it was selected
   if(this.band.onIsSelectedActivity && this.band.onIsSelectedActivity(act)) {
@@ -790,7 +794,7 @@ ActivityPainter.prototype.paintActivityAsBar = function(rowY, act, previousAct, 
   return {actCoord:actCoord, drawCoord:drawCoord, lastPaintedTimeX2: lastPaintedTimeX2, lastPaintedTime: lastPaintedTime};
 };
 
-ActivityPainter.prototype.paintActivityAsLine = function(rowY, act) {
+ActivityPainter.prototype.paintActivityAsLine = function(rowY, act, previousAct, previousActX1, previousActX2, lastPaintedTimeX2, lastPaintedTime) {
   // rowY is the bottom left corner
   var ctx = this.band.canvas.getContext('2d');
   rowY = rowY - this.rowPadding;
@@ -857,14 +861,7 @@ ActivityPainter.prototype.paintActivityAsLine = function(rowY, act) {
                        lr:{x:actX2, y:hashY2}});
   }
 
-  // paint the label
-  if(this.showLabel && act.label !== null) {
-    this.paintLabel({interval:act,
-                     ll:{x:actX1, y:actY},
-                     ul:{x:actX1, y:actY},
-                     ur:{x:actX2, y:actY},
-                     lr:{x:actX2, y:actY}});
-  }
+  this.paintLabelAndTimes (act, actX1, actX2, hashY1, hashY2, previousAct, previousActX1, previousActX2, lastPaintedTimeX2, lastPaintedTime);
 
   var actCoord = [actX1, actX2, hashY1, hashY2];
   var drawCoord = [actX1, actX2, hashY1, hashY2];
@@ -1470,6 +1467,7 @@ Band.prototype.repaint = function() {
   if(this.decorator !== null) {
     this.decorator.paintForegroundIntervals();
     this.decorator.paintGuideTimes();
+    this.decorator.paintLastClickTime();
     this.decorator.paintNow();
   }
 };
@@ -1909,6 +1907,7 @@ CompositeBand.prototype.repaint = function() {
   if(this.decorator !== null) {
     this.decorator.paintForegroundIntervals();
     this.decorator.paintGuideTimes();
+    this.decorator.paintLastClickTime();
     this.decorator.paintNow();
   }
 };
@@ -1984,7 +1983,7 @@ Decorator.prototype.paintForegroundIntervals = function() {
 
 Decorator.prototype.paintGuideTimes = function() {
   var guideTimes = this.band.timeAxis.guideTimes;
-  if(guideTimes.length === 0) { return; }
+  if(!guideTimes || guideTimes.length === 0) { return; }
 
   var viewTimeAxis = this.band.viewTimeAxis;
   var viewStart = viewTimeAxis.start;
@@ -2006,6 +2005,29 @@ Decorator.prototype.paintGuideTimes = function() {
   }
   ctx.stroke();
   ctx.closePath();
+};
+
+Decorator.prototype.paintLastClickTime = function() {
+  var lastClickTime = this.band.timeAxis.lastClickTime;
+  if(!lastClickTime) { return; }
+
+  var viewTimeAxis = this.band.viewTimeAxis;
+  var viewStart = viewTimeAxis.start;
+  var viewEnd = viewTimeAxis.end;
+
+  if(lastClickTime >= viewStart && lastClickTime <= viewEnd) {
+    var bandHeight = this.band.height + this.band.heightPadding;
+    var ctx = this.band.canvas.getContext('2d');
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = Util.rgbaToString([39, 143, 229], 0.2);
+
+    ctx.beginPath();
+    var lineX = viewTimeAxis.getXFromTime(lastClickTime);
+    ctx.moveTo(lineX, 0);
+    ctx.lineTo(lineX, bandHeight);
+    ctx.stroke();
+    ctx.closePath();
+  }
 };
 
 Decorator.prototype.paintTimeTicks = function() {
@@ -2071,7 +2093,7 @@ Decorator.prototype.paintLabel = function(yStart) {
   ctx.textAlign = "left";
   var labelWidth = this.band.viewTimeAxis.x1;
 
-  var x = 2;
+  var x = 3;
   var y = this.labelFontSize + yStart;
   var yDelta = this.labelFontSize;
   ctx.fillStyle = Util.rgbaToString(this.band.labelColor, 1);

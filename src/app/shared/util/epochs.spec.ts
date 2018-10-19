@@ -7,14 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  toRavenEpochs,
-} from './epochs';
-
-import {
-  mpsServerEpochs,
-  ravenEpochs,
-} from './../mocks';
+import { mpsServerEpochs, ravenEpochs } from '../mocks';
+import { toRavenEpochs } from './epochs';
 
 describe('epochs.ts', () => {
   describe('toRavenEpochs', () => {

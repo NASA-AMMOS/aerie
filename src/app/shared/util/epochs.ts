@@ -7,10 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  MpsServerEpoch,
-  RavenEpoch,
-} from './../models';
+import { MpsServerEpoch, RavenEpoch } from '../models';
 
 /**
  * Transform an array of MPS Server epochs to Raven epochs.

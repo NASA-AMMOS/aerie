@@ -14,6 +14,6 @@ import {
 } from './index';
 
 export type RavenPoint =
-  RavenActivityPoint |
-  RavenResourcePoint |
-  RavenStatePoint;
+  | RavenActivityPoint
+  | RavenResourcePoint
+  | RavenStatePoint;
