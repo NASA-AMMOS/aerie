@@ -75,21 +75,6 @@ def find_tree_sources(data, band):
     return sources
 
 
-def get_default_band_settings(raven_one_state):
-    return {
-        "activityLayout": 0,
-        "icon": "circle",
-        "iconEnabled": False,
-        "labelFont": "Georgia",
-        "labelFontSize": raven_one_state.get("globalLabelFontSize", 9),
-        "labelWidth": raven_one_state.get("bandLabelWidth", 150),
-        "resourceColor": "#000000",
-        "resourceFillColor": "#000000",
-        "showTimeCursor": False,
-        "showTooltip": raven_one_state.get("tooltipEnabled", True),
-    }
-
-
 def create_resource_band(raven_one_band, sources, default_band_settings):
     source_info = parse_data_source_url(raven_one_band["url"])
 
@@ -171,7 +156,7 @@ def create_activity_band(raven_one_band, sources, default_band_settings):
         "name": raven_one_band.get("legend") or "",
         "points": [],
         "showActivityTimes": sources[0]["graphSettings"][0].get("showActivityTimes", False),
-        "showLabel": True,  # !isMessageTypeActivity(legends[legend][0]),  # Don't show labels for message type activities such as error, warning etc.
+        "showLabel": True,  # TODO: default !isMessageTypeActivity(legends[legend][0])
         "showLabelPin": bool(raven_one_band.get("suffix") or ""),
         "showTooltip": True,
         "sourceIds": [sources[0]["path"] for source in sources],
@@ -268,7 +253,7 @@ def determine_type_of_source(source):
         # By process of elimination...
         return "state"
 
-def convert_raven_one_band(raven_one_band, sources, default_band_settings):
+def convert_raven_one_band(raven_one_state, raven_one_band, default_band_settings):
     BAND_BUILDERS = {
         "resource": create_resource_band,
         "activity": create_activity_band,
@@ -281,60 +266,67 @@ def convert_raven_one_band(raven_one_band, sources, default_band_settings):
     if not builder:
         raise Exception("Unknown band type \""+band_type+"\"")
 
+    # Identify the sources for this band
+    sources = [
+        source
+        for source in find_tree_sources(raven_one_state, raven_one_band)
+        if source is not None
+    ]
+
     return builder(raven_one_band, sources, default_band_settings)
 
-def convert_raven_one_bands(raven_one_state):
+def convert_raven_one_bands(raven_one_state, default_band_settings):
     CHARTS = [
         ("0", "center"),  # Main Panel
         ("1", "south"),   # South Panel
     ]
 
-    default_band_settings = get_default_band_settings(raven_one_state)
-
-    # Convert all of the bands, but defer overlaying
+    # First, handle all of the top-level bands
     bands = []
-    unoverlaid_bands = []
     for (containerId, panelId) in CHARTS:
         sort_order = 0
         for raven_one_band in raven_one_state["viewTemplate"]["charts"][panelId]:
-            # Identify the sources for this band
-            sources = [
-                source
-                for source in find_tree_sources(raven_one_state, raven_one_band)
-                if source is not None
-            ]
+            if "overlayBand" not in raven_one_band:
+                # Convert the Raven 1 band into a Raven 2 band
+                raven_two_band = convert_raven_one_band(raven_one_state, raven_one_band, default_band_settings)
 
-            # Convert the Raven 1 band into a Raven 2 band
-            band = convert_raven_one_band(raven_one_band, sources, default_band_settings)
-
-            # If this band is overlaid on another, save it separately so we can
-            # attach it to its parent once all of the bands have been converted.
-            if "overlayBand" in raven_one_band:
-                if raven_one_band.get("suffix") is not None:
-                    overlay_band_name = strip_units(raven_one_band["overlayBand"])
-                else:
-                    overlay_band_name = raven_one_band["overlayBand"]
-
-                unoverlaid_bands.append({
-                    "overlayBand": overlay_band_name,
-                    "subBand": band,
-                })
-            else:
-                top_level_band = create_wrapper_band(band,
+                # Wrap it in a composite band
+                top_level_band = create_wrapper_band(raven_two_band,
                     container_id=containerId,
                     sort_order=sort_order)
                 sort_order += 1
 
                 bands.append(top_level_band)
 
-    # Add each unoverlaid band to its associated parent
-    for unoverlaid_band in unoverlaid_bands:
-        for band in bands:
-            if band["name"] == unoverlaid_band["overlayBand"]:
-                # This band is the unoverlaid band's parent
-                band["subBands"].append(unoverlaid_band["subBand"])
+    # Next, add all of the overlay bands to their parents
+    for (containerId, panelId) in CHARTS:
+        for raven_one_band in raven_one_state["viewTemplate"]["charts"][panelId]:
+            if "overlayBand" in raven_one_band:
+                # Convert the Raven 1 band into a Raven 2 band
+                raven_two_band = convert_raven_one_band(raven_one_state, raven_one_band, default_band_settings)
+
+                # Add this band as a subband of its parent
+                if raven_one_band.get("suffix") is not None:
+                    overlay_band_name = strip_units(raven_one_band["overlayBand"])
+                else:
+                    overlay_band_name = raven_one_band["overlayBand"]
+
+                for band in bands:
+                    if band["name"] == overlay_band_name:
+                        # This band is the unoverlaid band's parent
+                        band["subBands"].append(raven_two_band)
+                        break
 
     return bands
+
+
+def tab_source_to_pin(tab_source):
+    source_info = parse_data_source_url(tab_source["url"])
+
+    return {
+        "name": tab_source["tabName"],
+        "sourceId": source_info["path"],
+    }
 
 
 def flatten_band(band):
@@ -350,21 +342,32 @@ def flatten_band(band):
         })
         return flattened_band
 
-def convert_raven_bands(raven_one_state):
+
+def get_bands(raven_one_state, default_band_settings):
     return [
         flatten_band(band)
-        for band in convert_raven_one_bands(raven_one_state)
+        for band in convert_raven_one_bands(raven_one_state, default_band_settings)
     ]
 
-
-def tab_source_to_pin(tab_source):
-    source_info = parse_data_source_url(tab_source["url"])
-
+def get_default_band_settings(raven_one_state):
     return {
-        "name": tab_source["tabName"],
-        "sourceId": source_info["path"],
+        "activityLayout": 0,
+        "icon": "circle",
+        "iconEnabled": False,
+        "labelFont": "Georgia",
+        "labelFontSize": raven_one_state.get("globalLabelFontSize", 9),
+        "labelWidth": raven_one_state.get("bandLabelWidth", 150),
+        "resourceColor": "#000000",
+        "resourceFillColor": "#000000",
+        "showTimeCursor": False,
+        "showTooltip": raven_one_state.get("tooltipEnabled", True),
     }
 
+def get_guides(guides):
+    return [
+        t_time_to_epoch(guide)
+        for guide in guides
+    ]
 
 def get_pins(tab_sources):
     return [
@@ -373,28 +376,25 @@ def get_pins(tab_sources):
         if "home" not in tab_source
     ]
 
-def get_guides(guides):
-    return [
-        t_time_to_epoch(guide)
-        for guide in guides
-    ]
-
-def convert_time_range(viewTemplate):
+def get_time_range(viewTemplate):
     return {
         "start": t_time_to_epoch(viewTemplate["viewStart"]),
-        "end":   t_time_to_epoch(viewTemplate["viewEnd"]),
+        "end": t_time_to_epoch(viewTemplate["viewEnd"]),
     }
 
 def convert_raven1_state_to_raven2(raven_one_state):
+    default_band_settings = get_default_band_settings(raven_one_state["viewTemplate"])
+    time_range = get_time_range(raven_one_state["viewTemplate"])
+
     return {
         "bands":
-            convert_raven_bands(raven_one_state),
+            get_bands(raven_one_state, default_band_settings),
         "defaultBandSettings":
-            get_default_band_settings(raven_one_state["viewTemplate"]),
+            default_band_settings,
         "guides":
             get_guides(raven_one_state["viewTemplate"]["guides"]),
         "maxTimeRange":
-            convert_time_range(raven_one_state["viewTemplate"]),
+            time_range,
         "name":
             raven_one_state["name"],
         "pins":
@@ -402,7 +402,7 @@ def convert_raven1_state_to_raven2(raven_one_state):
         "version":
             "1.0.0",
         "viewTimeRange":
-            convert_time_range(raven_one_state["viewTemplate"]),
+            time_range,
     }
 
 
