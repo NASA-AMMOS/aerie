@@ -114,9 +114,9 @@ def create_resource_band(raven_one_band, sources, default_band_settings):
         "heightPadding": raven_one_band["graphSettings"].get("heightPadding", 10),
         "icon": default_band_settings["icon"],
         "interpolation": raven_one_band["graphSettings"].get("interpolation", "linear"),
-        "isDuration": False,  # TODO: (metadata.hasValueType.toLowerCase() === 'duration')
-        "isTime": False,      # TODO: (metadata.hasValueType.toLowerCase() === 'time')
-        "label": strip_units(raven_one_band["label"]),
+        "isDuration": False,  # TODO: default (metadata.hasValueType.toLowerCase() === 'duration')
+        "isTime": False,      # TODO: default (metadata.hasValueType.toLowerCase() === 'time')
+        "label": strip_units(raven_one_band["label"]),  # TODO: default metadata.hasObjectName
         "labelColor": "#000000",
         "labelFont": default_band_settings["labelFont"],
         "labelPin": raven_one_band.get("suffix") or "",
@@ -126,7 +126,7 @@ def create_resource_band(raven_one_band, sources, default_band_settings):
             "start": 0,
             "end": 0,
         },
-        "name": raven_one_band["originalName"],
+        "name": raven_one_band["originalName"],  # TODO: default metadata.hasObjectName
         "points": [],
         "scientificNotation": raven_one_band["graphSettings"].get("scientificNotation") or False,
         "showIcon": raven_one_band["graphSettings"].get("iconEnabled") or False,
@@ -167,8 +167,8 @@ def create_activity_band(raven_one_band, sources, default_band_settings):
             "start": 0,
             "end": 0,
         },
-        "minorLabels": [raven_one_band["graphSettings"].get("filter")] if raven_one_band["graphSettings"].get("filter") else [],
-        "name": raven_one_band.get("legend", ""),
+        "minorLabels": list(filter(None, [raven_one_band["graphSettings"].get("filter")])),
+        "name": raven_one_band.get("legend") or "",
         "points": [],
         "showActivityTimes": sources[0]["graphSettings"][0].get("showActivityTimes", False),
         "showLabel": True,  # !isMessageTypeActivity(legends[legend][0]),  # Don't show labels for message type activities such as error, warning etc.
@@ -186,9 +186,14 @@ def create_state_band(raven_one_band, sources, default_band_settings):
         "alignLabel": 3,
         "baselineLabel": 3,
         "borderWidth": 1,
+        "color": default_band_settings["resourceColor"],
+        "fill": False,
+        "fillColor": default_band_settings["resourceFillColor"],
         "height": raven_one_band["graphSettings"].get("height") or 50,
         "heightPadding": 0,
-        "label": strip_units(raven_one_band["label"]),  # TODO:  metadata.hasObjectName
+        "icon": default_band_settings["icon"],
+        "isNumeric": False,
+        "label": strip_units(raven_one_band["label"]),  # TODO: default metadata.hasObjectName
         "labelColor": raven_one_band["graphSettings"].get("labelColor") or [0, 0, 0],
         "labelFont": default_band_settings["labelFont"],
         "labelPin": raven_one_band.get("suffix") or "",
@@ -196,8 +201,10 @@ def create_state_band(raven_one_band, sources, default_band_settings):
             "start": 0,
             "end": 0,
         },
-        "name": raven_one_band["originalName"],
+        "name": raven_one_band["originalName"],  # TODO: default metadata.hasObjectName
+        "possibleStates": [],  # TODO: metadata.hasPossibleStates
         "points": [],
+        "showIcon": False,
         "showLabelPin": bool(raven_one_band.get("suffix") or ""),
         "showStateChangeTimes": False,
         "showTooltip": True,
