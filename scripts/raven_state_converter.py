@@ -18,7 +18,7 @@ def t_time_to_epoch(t_time):
     return datetime.strptime(t_time, "%Y-%jT%H:%M:%S.%f").timestamp()
 
 def convert_color(rgb_color):
-    return '#%02x%02x%02x' % tuple(rgb_color)
+    return '#%02x%02x%02x' % tuple(map(int, rgb_color))
 
 def extract_units(label_string):
     if label_string.endswith(')'):
@@ -210,7 +210,7 @@ def create_divider_band(raven_one_band, sources, default_band_settings):
             "start": 0,
             "end": 0,
         },
-        "name": raven_one_band["originalName"],
+        "name": raven_one_band["label"],
         "points": [],
         "showTooltip": True,
         "sourceIds": [sources[0]["path"] for source in sources],
@@ -398,7 +398,7 @@ def convert_raven1_state_to_raven2(raven_one_state):
         "name":
             raven_one_state["name"],
         "pins":
-            get_pins(raven_one_state["tabSources"]),
+            get_pins(raven_one_state.get("tabSources", [])),
         "version":
             "1.0.0",
         "viewTimeRange":
