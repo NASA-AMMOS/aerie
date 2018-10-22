@@ -54,9 +54,9 @@ export class RavenFileImportDialogComponent {
 
     reader.onloadend = () => {
       if (mapping) {
-        this.file.mapping = reader.result;
+        this.file.mapping = reader.result as string;
       } else {
-        this.file.data = reader.result;
+        this.file.data = reader.result as string;
       }
     };
 

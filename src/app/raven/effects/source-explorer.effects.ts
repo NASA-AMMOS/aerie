@@ -170,7 +170,45 @@ export class SourceExplorerEffects {
   @Effect()
   applyLayout$: Observable<Action> = this.actions$.pipe(
     ofType<ApplyLayout>(SourceExplorerActionTypes.ApplyLayout),
-    ...this.preApplyLayout(),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    concatMap(({ action, state }) =>
+      forkJoin([
+        of(action),
+        of(state),
+        this.mpsServerService.fetchNewSources(
+          `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
+          '/',
+          true,
+        ),
+      ]),
+    ),
+    map(([action, state, initialSources]) => ({
+      action,
+      initialSources,
+      state,
+    })),
+    concatMap(({ action, state, initialSources }) => {
+      const savedState = state.raven.sourceExplorer.currentState as RavenState;
+
+      return forkJoin([
+        of(action),
+        of(state),
+        of(savedState),
+        of(initialSources),
+        this.fetchSourcesByType(
+          state,
+          getSourceIds(savedState.bands).parentSourceIds,
+        ),
+      ]);
+    }),
+    map(([action, state, savedState, initialSources, sourceTypes]) => ({
+      action,
+      initialSources,
+      savedState,
+      sourceTypes,
+      state,
+    })),
     concatMap(({ action, state, savedState, initialSources, sourceTypes }) => {
       const updatedBands: RavenCompositeBand[] = [];
 
@@ -220,7 +258,45 @@ export class SourceExplorerEffects {
   @Effect()
   applyLayoutWithPins$: Observable<Action> = this.actions$.pipe(
     ofType<ApplyLayoutWithPins>(SourceExplorerActionTypes.ApplyLayoutWithPins),
-    ...this.preApplyLayout(),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    concatMap(({ action, state }) =>
+      forkJoin([
+        of(action),
+        of(state),
+        this.mpsServerService.fetchNewSources(
+          `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
+          '/',
+          true,
+        ),
+      ]),
+    ),
+    map(([action, state, initialSources]) => ({
+      action,
+      initialSources,
+      state,
+    })),
+    concatMap(({ action, state, initialSources }) => {
+      const savedState = state.raven.sourceExplorer.currentState as RavenState;
+
+      return forkJoin([
+        of(action),
+        of(state),
+        of(savedState),
+        of(initialSources),
+        this.fetchSourcesByType(
+          state,
+          getSourceIds(savedState.bands).parentSourceIds,
+        ),
+      ]);
+    }),
+    map(([action, state, savedState, initialSources, sourceTypes]) => ({
+      action,
+      initialSources,
+      savedState,
+      sourceTypes,
+      state,
+    })),
     concatMap(({ action, state, savedState, initialSources, sourceTypes }) => {
       const bands = savedState.bands.map((band: RavenCompositeBand) => {
         const parentId = uniqueId();
@@ -1316,54 +1392,6 @@ export class SourceExplorerEffects {
       // TODO: Catch and handle errors here.
       return [];
     }
-  }
-
-  /**
-   * A set of operations we need to do before we apply a layout.
-   */
-  preApplyLayout() {
-    return [
-      withLatestFrom(this.store$),
-      map(([action, state]) => ({ action, state })),
-      concatMap(({ action, state }) =>
-        forkJoin([
-          of(action),
-          of(state),
-          this.mpsServerService.fetchNewSources(
-            `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
-            '/',
-            true,
-          ),
-        ]),
-      ),
-      map(([action, state, initialSources]) => ({
-        action,
-        initialSources,
-        state,
-      })),
-      concatMap(({ action, state, initialSources }) => {
-        const savedState = state.raven.sourceExplorer
-          .currentState as RavenState;
-
-        return forkJoin([
-          of(action),
-          of(state),
-          of(savedState),
-          of(initialSources),
-          this.fetchSourcesByType(
-            state,
-            getSourceIds(savedState.bands).parentSourceIds,
-          ),
-        ]);
-      }),
-      map(([action, state, savedState, initialSources, sourceTypes]) => ({
-        action,
-        initialSources,
-        savedState,
-        sourceTypes,
-        state,
-      })),
-    ];
   }
 
   /**
