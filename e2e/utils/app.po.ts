@@ -7,12 +7,20 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { browser, by, element, promise } from 'protractor';
+import { browser, by, element, promise, until } from 'protractor';
 
 export class AppPage {
-  appTile = element(by.css('.app-title'));
+  aboutButton = element(by.css('.raven-app-nav-about-button'));
 
   navigateTo(): promise.Promise<any> {
     return browser.get('/');
+  }
+
+  openNestAboutDialog(): promise.Promise<any> {
+    this.aboutButton.click();
+    return browser.wait(
+      until.elementsLocated(by.css('.nest-about-dialog-version')), // Implies dialog is opened.
+      10000,
+    );
   }
 }
