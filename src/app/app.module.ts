@@ -28,7 +28,9 @@ import { AppComponent } from './app.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
+import { NestAboutDialogModule } from './shared/components/nest-about-dialog/nest-about-dialog.module';
 import { RavenAppNavModule } from './shared/components/raven-app-nav/raven-app-nav.module';
+import { ConfigEffects, DialogEffects } from './shared/effects';
 
 @NgModule({
   bootstrap: [AppComponent],
@@ -37,7 +39,7 @@ import { RavenAppNavModule } from './shared/components/raven-app-nav/raven-app-n
     BrowserAnimationsModule,
     HttpClientModule,
     AppRoutingModule,
-    EffectsModule.forRoot([]),
+    EffectsModule.forRoot([ConfigEffects, DialogEffects]),
     OverlayModule,
     SortablejsModule.forRoot({}),
     StoreDevtoolsModule.instrument({
@@ -50,6 +52,7 @@ import { RavenAppNavModule } from './shared/components/raven-app-nav/raven-app-n
     MatButtonModule,
     MatIconModule,
     MatSidenavModule,
+    NestAboutDialogModule,
     RavenAppNavModule,
   ],
 })

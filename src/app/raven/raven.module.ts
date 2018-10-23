@@ -39,15 +39,12 @@ import {
   RavenStateSaveDialogModule,
 } from '../shared/components/modules';
 
-import { ConfigEffects } from '../shared/effects/config.effect';
-
 @NgModule({
   imports: [
     HttpClientModule,
     RavenRoutingModule,
     StoreModule.forFeature('raven', reducers),
     EffectsModule.forFeature([
-      ConfigEffects,
       DialogEffects,
       EpochsEffects,
       LayoutEffects,

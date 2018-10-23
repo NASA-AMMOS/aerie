@@ -1,7 +1,4 @@
 /**
- * Defines basic information about a top-level module (e.g. Raven, Hawk)
- *
- * @license
  * Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
  * Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.
  * This software may be subject to U.S. export control laws and regulations.
@@ -10,21 +7,19 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export interface NestModule {
-  /**
-   * Material icon name, see https://material.io/tools/icons/?style=baseline
-   */
-  icon: string;
-  /**
-   * Default path to this module
-   */
-  path: string;
-  /**
-   * Title of this module for display purposes
-   */
-  title: string;
-  /**
-   * Version of this module in semantic versioning format
-   */
-  version: string;
+import { Component, Inject } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
+import { NestModule } from '../../models';
+
+@Component({
+  selector: 'nest-about-dialog',
+  styleUrls: ['./nest-about-dialog.component.css'],
+  templateUrl: './nest-about-dialog.component.html',
+})
+export class NestAboutDialogComponent {
+  constructor(
+    public dialogRef: MatDialogRef<NestAboutDialogComponent>,
+    @Inject(MAT_DIALOG_DATA)
+    public data: { modules: NestModule[]; version: string },
+  ) {}
 }

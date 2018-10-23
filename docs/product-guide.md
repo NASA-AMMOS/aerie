@@ -55,7 +55,7 @@ Table 2: Applicable MGSS documents
 
 ## 2 Minimum System Requirements
 
-RAVEN is a browser based application, developed using Angular 6 as the framework, HTML and TypeScript. In order for the application to build, the minimum requirements are:
+RAVEN is a browser based application, developed using Angular 7 as the framework, HTML and TypeScript. In order for the application to build, the minimum requirements are:
 
 - NodeJS >= 8.9.3
 - NPM >= 5.6.0
@@ -71,19 +71,18 @@ The dependencies are:
 
 ```json
 "dependencies": {
-  "@angular/animations": "^6.1.9",
-  "@angular/cdk": "^6.4.7",
-  "@angular/cdk-experimental": "^6.4.7",
-  "@angular/common": "^6.1.9",
-  "@angular/compiler": "^6.1.9",
-  "@angular/core": "^6.1.9",
-  "@angular/flex-layout": "6.0.0-beta.18",
-  "@angular/forms": "^6.1.9",
-  "@angular/http": "^6.1.9",
-  "@angular/material": "^6.4.7",
-  "@angular/platform-browser": "^6.1.9",
-  "@angular/platform-browser-dynamic": "^6.1.9",
-  "@angular/router": "^6.1.9",
+  "@angular/animations": "~7.0.0",
+  "@angular/cdk": "~7.0.0",
+  "@angular/common": "~7.0.0",
+  "@angular/compiler": "~7.0.0",
+  "@angular/core": "~7.0.0",
+  "@angular/flex-layout": "7.0.0-beta.19",
+  "@angular/forms": "~7.0.0",
+  "@angular/http": "~7.0.0",
+  "@angular/material": "~7.0.0",
+  "@angular/platform-browser": "~7.0.0",
+  "@angular/platform-browser-dynamic": "~7.0.0",
+  "@angular/router": "~7.0.0",
   "@ngrx/effects": "^6.1.0",
   "@ngrx/router-store": "^6.1.0",
   "@ngrx/store": "^6.1.0",
@@ -101,10 +100,10 @@ The dependencies are:
   "material-design-icons": "^3.0.1",
   "moment": "^2.22.2",
   "monaco-editor": "^0.14.3",
-  "ngx-toastr": "^9.1.0",
+  "ngx-toastr": "^9.1.1",
   "roboto-fontface": "^0.10.0",
-  "rxjs": "~6.2.0",
-  "rxjs-compat": "^6.3.3",
+  "rxjs": "~6.3.3",
+  "rxjs-compat": "~6.3.3",
   "sortablejs": "^1.7.0",
   "strip-json-comments": "^2.0.1",
   "uuid": "^3.3.2",

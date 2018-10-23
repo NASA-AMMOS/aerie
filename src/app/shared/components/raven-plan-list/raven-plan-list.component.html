@@ -8,7 +8,7 @@
   </mat-panel-description>
 
   <mat-nav-list>
-    <cdk-virtual-scroll-viewport class="viewport" autosize>
+    <cdk-virtual-scroll-viewport class="viewport" itemSize="50">
       <mat-list-item
         (click)="onClickSelect(plan)"
         *cdkVirtualFor="let plan of plans"

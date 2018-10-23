@@ -4,7 +4,7 @@
   </mat-expansion-panel-header>
 
   <mat-nav-list>
-    <cdk-virtual-scroll-viewport class="viewport" autosize>
+    <cdk-virtual-scroll-viewport class="viewport" itemSize="50">
       <mat-list-item class="activity-type-item" *cdkVirtualFor="let activityType of activityTypes"
         (click)="onClickSelect(activityType)">
         <span matLine>{{ activityType.name }}</span>

@@ -7,26 +7,15 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ScrollingModule } from '@angular/cdk/scrolling';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { HbCommandListComponent } from './hb-command-list.component';
+import { MatButtonModule, MatDialogModule } from '@angular/material';
+import { NestAboutDialogComponent } from './nest-about-dialog.component';
+
 @NgModule({
-  declarations: [HbCommandListComponent],
-  exports: [HbCommandListComponent],
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatCardModule,
-    MatIconModule,
-    MatListModule,
-    MatTooltipModule,
-    ScrollingModule,
-  ],
+  declarations: [NestAboutDialogComponent],
+  entryComponents: [NestAboutDialogComponent],
+  exports: [NestAboutDialogComponent],
+  imports: [CommonModule, MatButtonModule, MatDialogModule],
 })
-export class HbCommandListModule {}
+export class NestAboutDialogModule {}

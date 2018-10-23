@@ -71,6 +71,7 @@ describe('RavenAppNavComponent', () => {
       icon: 'face',
       path: 'frankenstein',
       title: 'flim-flam',
+      version: '0.4.2',
     };
 
     component.childComponent.modules = [module];
@@ -100,5 +101,16 @@ describe('RavenAppNavComponent', () => {
     fixture.detectChanges();
 
     expect(navList.clientWidth).toBe(COLLAPSED_WIDTH as number);
+  });
+
+  it('should emit an aboutClicked event when the About mat-list-item is clicked', () => {
+    const aboutNavListItem: HTMLElement =
+      element.querySelector('.raven-app-nav-about-button') || new HTMLElement();
+
+    component.childComponent.aboutClicked.subscribe((event: MouseEvent) =>
+      expect(event.type).toEqual('click'),
+    );
+
+    aboutNavListItem.click();
   });
 });
