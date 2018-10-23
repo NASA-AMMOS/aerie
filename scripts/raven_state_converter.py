@@ -66,9 +66,13 @@ def parse_data_source_url(url_str):
 
 def traverse_source_tree(data, predicate, prefix="/"):
     for source in data["sources"]:
+        # Determine the path to this node
+        path = prefix + source["name"]
+
         if predicate(source):
-            yield prefix, source
-        yield from traverse_source_tree(source, predicate, prefix + source["name"] + "/")
+            yield path, source
+
+        yield from traverse_source_tree(source, predicate, path + "/")
 
 
 def source_by(*, band_id):
@@ -78,13 +82,8 @@ def source_by(*, band_id):
 
 def find_tree_sources(data, band):
     sources = []
-    for prefix, source in traverse_source_tree(data, source_by(band_id=band["id"])):
-        result = dict(source)  # Clone
-        result.update({
-            # The "path" to the band is its location in the source tree.
-            "path": prefix + band["originalName"],
-        })
-        sources.append(result)
+    for path, _source in traverse_source_tree(data, source_by(band_id=band["id"])):
+        sources.append(path)
     return sources
 
 def create_resource_band(raven_one_band, sources, default_band_settings):
@@ -103,6 +102,7 @@ def create_resource_band(raven_one_band, sources, default_band_settings):
     return {
         "addTo": False,
         "autoScale": True,
+        "backgroundColor": "#FFFFFF",
         "color": color,
         "decimate": (source_info["parameters"].get("decimate", ["false"])[0] == "true"),
         "fill": raven_one_band["graphSettings"].get("fill") or False,  # for states
@@ -130,7 +130,7 @@ def create_resource_band(raven_one_band, sources, default_band_settings):
         "showLabelPin": bool(raven_one_band.get("suffix") or ""),
         "showLabelUnit": True,
         "showTooltip": True,
-        "sourceIds": [source["path"] for source in sources],
+        "sourceIds": sources,
         "tableColumns": [],
         "type": "resource",
     }
@@ -144,10 +144,11 @@ def create_activity_band(raven_one_band, sources, default_band_settings):
     DEFAULT_ACTIVITY_STYLE = 0
 
     return {
-        "activityHeight": sources[0]["graphSettings"][0]["activityHeight"],
-        "activityStyle": ACTIVITY_STYLES.get(sources[0]["graphSettings"][0]["style"], DEFAULT_ACTIVITY_STYLE),
+        "activityHeight": raven_one_band["graphSettings"]["activityHeight"],
+        "activityStyle": ACTIVITY_STYLES.get(raven_one_band["graphSettings"]["style"], DEFAULT_ACTIVITY_STYLE),
         "addTo": False,
         "alignLabel": 3,
+        "backgroundColor": "#FFFFFF",
         "baselineLabel": 3,
         "borderWidth": 1,
         "filterTarget": None,
@@ -155,10 +156,10 @@ def create_activity_band(raven_one_band, sources, default_band_settings):
         "heightPadding": raven_one_band["graphSettings"].get("heightPadding", 10),
         "icon": default_band_settings["icon"],
         "label": strip_units(raven_one_band["label"]),
-        "labelColor": sources[0]["graphSettings"][0].get("labelColor", [0, 0, 0]),
+        "labelColor": [0, 0, 0],
         "labelFont": default_band_settings["labelFont"],
         "labelPin": raven_one_band.get("suffix") or "",
-        "layout": sources[0]["graphSettings"][0]["activityLayout"],
+        "layout": raven_one_band["graphSettings"]["activityLayout"],
         "legend": raven_one_band.get("legend", ""),
         "maxTimeRange": {
             "start": 0,
@@ -167,13 +168,13 @@ def create_activity_band(raven_one_band, sources, default_band_settings):
         "minorLabels": list(filter(None, [raven_one_band["graphSettings"].get("filter")])),
         "name": raven_one_band.get("legend") or "",
         "points": [],
-        "showActivityTimes": sources[0]["graphSettings"][0].get("showActivityTimes", False),
+        "showActivityTimes": raven_one_band["graphSettings"].get("showActivityTimes", False),
         "showLabel": True,  # TODO: default !isMessageTypeActivity(legends[legend][0])
         "showLabelPin": bool(raven_one_band.get("suffix") or ""),
         "showTooltip": True,
-        "sourceIds": [source["path"] for source in sources],
+        "sourceIds": sources,
         "tableColumns": [],
-        "trimLabel": sources[0]["graphSettings"][0].get("trimLabel", True),
+        "trimLabel": raven_one_band["graphSettings"].get("trimLabel", True),
         "type": "activity",
     }
 
@@ -181,6 +182,7 @@ def create_state_band(raven_one_band, sources, default_band_settings):
     return {
         "addTo": False,
         "alignLabel": 3,
+        "backgroundColor": "#FFFFFF",
         "baselineLabel": 3,
         "borderWidth": 1,
         "color": default_band_settings["resourceColor"],
@@ -205,7 +207,7 @@ def create_state_band(raven_one_band, sources, default_band_settings):
         "showLabelPin": bool(raven_one_band.get("suffix") or ""),
         "showStateChangeTimes": False,
         "showTooltip": True,
-        "sourceIds": [source["path"] for source in sources],
+        "sourceIds": sources,
         "tableColumns": [],
         "type": "state",
     }
@@ -213,6 +215,7 @@ def create_state_band(raven_one_band, sources, default_band_settings):
 def create_divider_band(raven_one_band, sources, default_band_settings):
     return {
         "addTo": False,
+        "backgroundColor": "#FFFFFF",
         "color": [255, 255, 255],
         "height": raven_one_band["graphSettings"].get("height", 7),
         "heightPadding": 10,
@@ -225,7 +228,7 @@ def create_divider_band(raven_one_band, sources, default_band_settings):
         "name": raven_one_band["label"],
         "points": [],
         "showTooltip": True,
-        "sourceIds": [source["path"] for source in sources],
+        "sourceIds": sources,
         "tableColumns": [],
         "type": "divider",
     }
@@ -279,11 +282,7 @@ def convert_raven_one_band(raven_one_state, raven_one_band, default_band_setting
         raise Exception("Unknown band type \""+band_type+"\"")
 
     # Identify the sources for this band
-    sources = [
-        source
-        for source in find_tree_sources(raven_one_state, raven_one_band)
-        if source is not None
-    ]
+    sources = find_tree_sources(raven_one_state, raven_one_band)
 
     return builder(raven_one_band, sources, default_band_settings)
 
@@ -371,7 +370,7 @@ def get_default_band_settings(raven_one_state):
         "labelWidth": raven_one_state.get("bandLabelWidth", 150),
         "resourceColor": "#000000",
         "resourceFillColor": "#000000",
-        "showTimeCursor": False,
+        "showLastClick": False,
         "showTooltip": raven_one_state.get("tooltipEnabled", True),
     }
 
