@@ -20,6 +20,18 @@ def t_time_to_epoch(t_time):
 def convert_color(rgb_color):
     return '#%02x%02x%02x' % tuple(map(int, rgb_color))
 
+def split_units(label_string):
+    """Currently UNUSED, but planned to replace `extract_units` and `strip_units`."""
+    # The label extends to the first left-parenthesis.
+    # The units are between the final pair of parentheses.
+    UNITS_REX = r"^(?P<label>[^(]*)(?:\(.+?)?\((?P<units>[^(]*)\)[^)]*$$"
+
+    match = re.search(UNITS_REX, label_string)
+    if not match:
+        return {"label": label_string.strip(), "units": ""}
+    else:
+        return {"label": match.group(1).strip(), "units": match.group(2).strip()}
+
 def extract_units(label_string):
     if label_string.endswith(')'):
         return label_string[:label_string.rfind(")")].rsplit("(", 1)[1]
@@ -69,11 +81,11 @@ def find_tree_sources(data, band):
     for prefix, source in traverse_source_tree(data, source_by(band_id=band["id"])):
         result = dict(source)  # Clone
         result.update({
+            # The "path" to the band is its location in the source tree.
             "path": prefix + band["originalName"],
         })
         sources.append(result)
     return sources
-
 
 def create_resource_band(raven_one_band, sources, default_band_settings):
     source_info = parse_data_source_url(raven_one_band["url"])
@@ -118,7 +130,7 @@ def create_resource_band(raven_one_band, sources, default_band_settings):
         "showLabelPin": bool(raven_one_band.get("suffix") or ""),
         "showLabelUnit": True,
         "showTooltip": True,
-        "sourceIds": [sources[0]["path"] for source in sources],
+        "sourceIds": [source["path"] for source in sources],
         "tableColumns": [],
         "type": "resource",
     }
@@ -159,7 +171,7 @@ def create_activity_band(raven_one_band, sources, default_band_settings):
         "showLabel": True,  # TODO: default !isMessageTypeActivity(legends[legend][0])
         "showLabelPin": bool(raven_one_band.get("suffix") or ""),
         "showTooltip": True,
-        "sourceIds": [sources[0]["path"] for source in sources],
+        "sourceIds": [source["path"] for source in sources],
         "tableColumns": [],
         "trimLabel": sources[0]["graphSettings"][0].get("trimLabel", True),
         "type": "activity",
@@ -193,7 +205,7 @@ def create_state_band(raven_one_band, sources, default_band_settings):
         "showLabelPin": bool(raven_one_band.get("suffix") or ""),
         "showStateChangeTimes": False,
         "showTooltip": True,
-        "sourceIds": [sources[0]["path"] for source in sources],
+        "sourceIds": [source["path"] for source in sources],
         "tableColumns": [],
         "type": "state",
     }
@@ -213,7 +225,7 @@ def create_divider_band(raven_one_band, sources, default_band_settings):
         "name": raven_one_band["label"],
         "points": [],
         "showTooltip": True,
-        "sourceIds": [sources[0]["path"] for source in sources],
+        "sourceIds": [source["path"] for source in sources],
         "tableColumns": [],
         "type": "divider",
     }
