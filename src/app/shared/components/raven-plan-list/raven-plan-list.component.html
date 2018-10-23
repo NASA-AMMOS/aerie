@@ -15,12 +15,12 @@
         [class.mat-list-item-focus]="plan.id === selectedPlan?.id"
         class="plan-item">
         <span matLine>{{ plan.name }}</span>
-        <button type="button" mat-icon-button color="primary" (click)="onClickUpdate($event, plan)">
+        <button type="button" mat-icon-button color="accent" (click)="onClickUpdate($event, plan)">
           <mat-icon aria-label="Edit plan">
             edit
           </mat-icon>
         </button>
-        <button type="button" mat-icon-button color="primary" (click)="onClickDelete($event, plan)">
+        <button type="button" mat-icon-button color="accent" (click)="onClickDelete($event, plan)">
           <mat-icon aria-label="Delete plan">
             clear
           </mat-icon>
@@ -31,7 +31,7 @@
   </mat-nav-list>
 
   <mat-action-row class="button-row">
-    <button mat-button color="primary" (click)="onClickCreate()">
+    <button mat-button color="accent" (click)="onClickCreate()">
       <mat-icon>add</mat-icon> Create Plan
     </button>
   </mat-action-row>

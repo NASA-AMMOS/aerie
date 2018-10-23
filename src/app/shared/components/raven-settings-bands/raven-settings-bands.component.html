@@ -65,7 +65,7 @@
               *ngIf="containsMultipleResourceBands()"
               class="field">
               <mat-slide-toggle
-                color="primary"
+                color="accent"
                 [checked]="bandsById[selectedBandId].compositeYAxisLabel"
                 (change)="updateBand.emit({ bandId: selectedBandId, update: { compositeYAxisLabel: $event.checked } })">
                 Composite Y-axis Label
@@ -75,7 +75,7 @@
             <!-- Show Label Unit. -->
             <div class="field">
               <mat-slide-toggle
-                color="primary"
+                color="accent"
                 [checked]="subBand.showLabelUnit"
                 (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { showLabelUnit: $event.checked } })">
                 Show Unit Label
@@ -88,7 +88,7 @@
             *ngIf="subBand.type !== 'divider'"
             class="field">
             <mat-slide-toggle
-              color="primary"
+              color="accent"
               [checked]="subBand.showLabelPin"
               (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { showLabelPin: $event.checked } })">
               Show Pin Label
@@ -101,7 +101,7 @@
             class="field">
             <mat-slide-toggle
               id="raven-settings-overlay"
-              color="primary"
+              color="accent"
               [checked]="bandsById[selectedBandId].overlay"
               (change)="updateBand.emit({ bandId: selectedBandId, update: { overlay: $event.checked } })">
               Overlay
@@ -185,7 +185,7 @@
               <div class="field">
                 <mat-slide-toggle
                   id="raven-settings-show-activity-times"
-                  color="primary"
+                  color="accent"
                   [checked]="subBand.showActivityTimes"
                   (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { showActivityTimes: $event.checked } })">
                   Show Activity Times
@@ -196,7 +196,7 @@
               <div class="field">
                 <mat-slide-toggle
                   id="raven-settings-show-label"
-                  color="primary"
+                  color="accent"
                   [checked]="subBand.showLabel"
                   (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { showLabel: $event.checked } })">
                   Show Labels
@@ -208,7 +208,7 @@
             <div class="field">
               <mat-slide-toggle
                 id="raven-settings-add-to"
-                color="primary"
+                color="accent"
                 [checked]="subBand.addTo"
                 (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { addTo: $event.checked } })">
                 Add To
@@ -223,7 +223,7 @@
               *ngIf="bandsById[selectedBandId].compositeYAxisLabel"
               class="field">
               <mat-slide-toggle
-                color="primary"
+                color="accent"
                 [checked]="bandsById[selectedBandId].compositeAutoScale"
                 (change)="updateBand.emit({ bandId: selectedBandId, update: { compositeAutoScale: $event.checked } })">
                 Composite Auto Scale
@@ -236,7 +236,7 @@
               class="field">
               <mat-slide-toggle
                 id="raven-settings-auto-scale"
-                color="primary"
+                color="accent"
                 [checked]="subBand.autoScale"
                 (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { autoScale: $event.checked } })">
                 Auto Scale
@@ -264,7 +264,7 @@
               class="field">
               <mat-slide-toggle
                 id="raven-composite_log_ticks"
-                color="primary"
+                color="accent"
                 [checked]="bandsById[selectedBandId].compositeLogTicks"
                 (change)="updateBand.emit({ bandId: selectedBandId, update: { compositeLogTicks: $event.checked } })">
                 Composite Log Scale
@@ -277,7 +277,7 @@
               class="field">
               <mat-slide-toggle
                 id="raven-log_ticks"
-                color="primary"
+                color="accent"
                 [checked]="subBand.logTicks"
                 (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { logTicks: $event.checked } })">
                 Log Scale
@@ -289,7 +289,7 @@
               *ngIf="bandsById[selectedBandId].compositeYAxisLabel && !subBand.logTicks"
               class="field">
               <mat-slide-toggle
-                color="primary"
+                color="accent"
                 [checked]="bandsById[selectedBandId].compositeScientificNotation"
                 (change)="updateBand.emit({ bandId: selectedBandId, update: { compositeScientificNotation: $event.checked } })">
                 Composite Scientific Notation
@@ -302,7 +302,7 @@
               class="field">
               <mat-slide-toggle
                 id="raven-scientific_notation"
-                color="primary"
+                color="accent"
                 [checked]="subBand.scientificNotation"
                 (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { scientificNotation: $event.checked } })">
                 Scientific Notation
@@ -345,7 +345,7 @@
             <div class="field">
               <mat-slide-toggle
                 id="raven-settings-show-state-change-times"
-                color="primary"
+                color="accent"
                 [checked]="subBand.showStateChangeTimes"
                 (change)="onChangeShowStateChangeTimes(subBand, $event.checked)">
                 Show State Change Times
@@ -392,7 +392,7 @@
             <div class="field">
               <mat-slide-toggle
                 id="raven-settings-show-icon"
-                color="primary"
+                color="accent"
                 [checked]="subBand.showIcon"
                 (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { showIcon: $event.checked } })">
                 Show Icon
@@ -412,7 +412,7 @@
             <div class="field">
               <mat-slide-toggle
                 id="raven-settings-fill"
-                color="primary"
+                color="accent"
                 [checked]="subBand.fill"
                 (change)="updateSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { fill: $event.checked } })">
                 Fill
