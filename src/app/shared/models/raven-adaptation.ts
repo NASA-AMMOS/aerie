@@ -8,31 +8,21 @@
  */
 
 /**
- * A rudimentary interface for activity types
+ * A rudimentary interface for adaptations
  */
-export interface RavenPlan {
+export interface RavenAdaptation {
   /**
-   * Id of the plan
+   * Id of the adaptation
    */
   id: string;
 
   /**
-   * Name of plan
+   * Name of adaptation
    */
   name: string;
 
   /**
-   * When the plan should start
+   * Adaptation version
    */
-  start: string;
-
-  /**
-   * When the plan should end
-   */
-  end: string;
-
-  /**
-   * ID of the adaptation
-   */
-  adaptationId: string;
+  version: string;
 }

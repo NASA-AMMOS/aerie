@@ -7,27 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ScrollingModule } from '@angular/cdk/scrolling';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
-import { RavenPlanListComponent } from './raven-plan-list.component';
+import { MatSelectModule } from '@angular/material/select';
+import { RavenPlanSelectorComponent } from './raven-plan-selector.component';
 
 @NgModule({
-  declarations: [RavenPlanListComponent],
-  exports: [RavenPlanListComponent],
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatDividerModule,
-    MatExpansionModule,
-    MatIconModule,
-    MatListModule,
-    ScrollingModule,
-  ],
+  declarations: [RavenPlanSelectorComponent],
+  exports: [RavenPlanSelectorComponent],
+  imports: [CommonModule, MatSelectModule],
 })
-export class RavenPlanListModule {}
+export class RavenPlanSelectorModule {}

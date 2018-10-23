@@ -10,15 +10,18 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import {
+  MatButtonModule,
   MatDialogModule,
   MatExpansionModule,
+  MatIconModule,
+  MatSidenavModule,
   MatToolbarModule,
 } from '@angular/material';
 
 import {
   RavenActivityTypeListModule,
   RavenAppHeaderModule,
-  RavenPlanListModule,
+  RavenPlanSelectorModule,
 } from '../../../shared/components/modules';
 
 import { HawkAppComponent } from './hawk-app.component';
@@ -28,11 +31,14 @@ import { HawkAppComponent } from './hawk-app.component';
   exports: [HawkAppComponent],
   imports: [
     CommonModule,
+    MatButtonModule,
     MatDialogModule,
     MatExpansionModule,
+    MatIconModule,
+    MatSidenavModule,
     MatToolbarModule,
     RavenActivityTypeListModule,
-    RavenPlanListModule,
+    RavenPlanSelectorModule,
     RavenAppHeaderModule,
   ],
 })

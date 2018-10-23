@@ -11,6 +11,7 @@ import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
+import { cloneDeep } from 'lodash';
 import { Observable, of, zip } from 'rxjs';
 import {
   catchError,
@@ -21,6 +22,7 @@ import {
 } from 'rxjs/operators';
 
 import { RavenPlanFormDialogComponent } from '../../shared/components/components';
+import { RavenPlanFormDialogData } from '../../shared/models/raven-plan-form-dialog-data';
 
 import {
   FetchPlanList,
@@ -33,7 +35,6 @@ import {
   SavePlanSuccess,
 } from '../actions/plan.actions';
 
-import { RavenPlan } from '../../shared/models/raven-plan';
 // TODO: Replace with a real service once an external service for plans becomes available
 import { PlanMockService } from '../../shared/services/plan-mock.service';
 import { HawkAppState } from '../hawk-store';
@@ -77,11 +78,15 @@ export class PlanEffects {
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     exhaustMap(({ action, state }) => {
-      const data: RavenPlan | null =
-        state.hawk.plan.plans.find(a => a.id === action.id) || null;
+      const data: RavenPlanFormDialogData = {
+        adaptations: cloneDeep(state.hawk.adaptation.adaptations),
+        selectedPlan:
+          state.hawk.plan.plans.find(a => a.id === action.id) || null,
+      };
 
       const componentDialog = this.dialog.open(RavenPlanFormDialogComponent, {
         data: data || {},
+        width: '500px',
       });
 
       return zip(of(action), componentDialog.afterClosed());

@@ -7,32 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-/**
- * A rudimentary interface for activity types
- */
-export interface RavenPlan {
-  /**
-   * Id of the plan
-   */
-  id: string;
+import { RavenAdaptation } from './raven-adaptation';
+import { RavenPlan } from './raven-plan';
 
-  /**
-   * Name of plan
-   */
-  name: string;
-
-  /**
-   * When the plan should start
-   */
-  start: string;
-
-  /**
-   * When the plan should end
-   */
-  end: string;
-
-  /**
-   * ID of the adaptation
-   */
-  adaptationId: string;
+export interface RavenPlanFormDialogData {
+  adaptations: RavenAdaptation[];
+  selectedPlan: RavenPlan | null;
 }

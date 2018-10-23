@@ -7,32 +7,15 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-/**
- * A rudimentary interface for activity types
- */
-export interface RavenPlan {
-  /**
-   * Id of the plan
-   */
-  id: string;
+import { TestBed } from '@angular/core/testing';
 
-  /**
-   * Name of plan
-   */
-  name: string;
+import { AdaptationMockService } from './adaptation-mock.service';
 
-  /**
-   * When the plan should start
-   */
-  start: string;
+describe('AdaptationService', () => {
+  beforeEach(() => TestBed.configureTestingModule({}));
 
-  /**
-   * When the plan should end
-   */
-  end: string;
-
-  /**
-   * ID of the adaptation
-   */
-  adaptationId: string;
-}
+  it('should be created', () => {
+    const service: AdaptationMockService = TestBed.get(AdaptationMockService);
+    expect(service).toBeTruthy();
+  });
+});

@@ -35,6 +35,30 @@ export class RavenActivityTypeListComponent {
   selectActivityTypeClicked = new EventEmitter<string>();
 
   /**
+   * Getter for creating new activity types.
+   * @todo Integrate permissions
+   */
+  get canCreate() {
+    return false;
+  }
+
+  /**
+   * Getter for editing activity types
+   * @todo Integrate permissions
+   */
+  get canEdit() {
+    return false;
+  }
+
+  /**
+   * Getter for deleting activity types
+   * @todo Integrate permissions
+   */
+  get canDelete() {
+    return false;
+  }
+
+  /**
    * Event. Called when the create button is clicked
    */
   onClickCreate() {

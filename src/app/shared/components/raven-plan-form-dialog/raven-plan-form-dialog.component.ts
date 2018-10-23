@@ -16,6 +16,10 @@ import {
 } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
+import { RavenAdaptation } from '../../models/raven-adaptation';
+import { RavenPlan } from '../../models/raven-plan';
+import { RavenPlanFormDialogData } from '../../models/raven-plan-form-dialog-data';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'raven-plan-form-dialog',
@@ -23,32 +27,55 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
   templateUrl: './raven-plan-form-dialog.component.html',
 })
 export class RavenPlanFormDialogComponent {
-  modeText = 'Create';
+  /**
+   * The text to display as the modal title
+   */
+  modeText = 'Create New';
+
+  /**
+   * Whether this is a new or existing plan
+   */
   isNew = false;
 
+  /**
+   * Adaptations
+   */
+  adaptations: RavenAdaptation[] = [];
+
+  /**
+   * The main form
+   */
   form: FormGroup;
 
   constructor(
     fb: FormBuilder,
     public dialogRef: MatDialogRef<RavenPlanFormDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    @Inject(MAT_DIALOG_DATA) public data: RavenPlanFormDialogData,
   ) {
-    if (data.id) {
-      this.isNew = true;
-      this.modeText = 'Edit';
+    this.adaptations = data.adaptations;
+
+    const plan: RavenPlan = data.selectedPlan || {
+      adaptationId: '',
+      end: '',
+      id: '',
+      name: '',
+      start: '',
+    };
+
+    if (data.selectedPlan) {
+      this.isNew = false;
+      this.modeText = 'Edit Existing';
     }
 
     this.form = fb.group({
-      end: new FormControl(data.end, [Validators.required]),
-      hsoc: new FormControl(data.hsoc, [Validators.required]),
-      id: new FormControl({ value: data.id, disabled: !!data.id }, [
+      adaptationId: new FormControl(plan.adaptationId, [Validators.required]),
+      end: new FormControl(plan.end, [Validators.required]),
+      id: new FormControl({ value: plan.id, disabled: !!plan.id }, [
         Validators.required,
         Validators.pattern('^([(a-zA-Z0-9-_)]*){1,30}$'),
       ]),
-      mpow: new FormControl(data.mpow, [Validators.required]),
-      msoc: new FormControl(data.msoc, [Validators.required]),
-      name: new FormControl(data.name, [Validators.required]),
-      start: new FormControl(data.start, [Validators.required]),
+      name: new FormControl(plan.name, [Validators.required]),
+      start: new FormControl(plan.start, [Validators.required]),
     });
   }
 

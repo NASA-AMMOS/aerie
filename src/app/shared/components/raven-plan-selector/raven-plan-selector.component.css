@@ -6,33 +6,3 @@
  * User has the responsibility to obtain export licenses, or other export authority as may be required
  * before exporting such information to foreign countries or providing access to foreign persons
  */
-
-/**
- * A rudimentary interface for activity types
- */
-export interface RavenPlan {
-  /**
-   * Id of the plan
-   */
-  id: string;
-
-  /**
-   * Name of plan
-   */
-  name: string;
-
-  /**
-   * When the plan should start
-   */
-  start: string;
-
-  /**
-   * When the plan should end
-   */
-  end: string;
-
-  /**
-   * ID of the adaptation
-   */
-  adaptationId: string;
-}

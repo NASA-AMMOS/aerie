@@ -17,19 +17,26 @@ import {
 } from '../shared/components/modules';
 import { HawkAppModule } from './containers/hawk-app/hawk-app.module';
 import { ActivityTypeEffects } from './effects/activity-type.effects';
+import { AdaptationEffects } from './effects/adaptation.effects';
 import { PlanEffects } from './effects/plan.effects';
 import { HawkRoutingModule } from './hawk-routing.module';
 import { reducers } from './hawk-store';
+import * as fromAdaptation from './reducers/adaptation.reducer';
 
 @NgModule({
   imports: [
     HttpClientModule,
     HawkRoutingModule,
     StoreModule.forFeature('hawk', reducers),
-    EffectsModule.forFeature([ActivityTypeEffects, PlanEffects]),
+    EffectsModule.forFeature([
+      ActivityTypeEffects,
+      AdaptationEffects,
+      PlanEffects,
+    ]),
     HawkAppModule,
     RavenActivityTypeFormDialogModule,
     RavenPlanFormDialogModule,
+    StoreModule.forFeature('adaptation', fromAdaptation.reducer),
   ],
 })
 export class HawkModule {}

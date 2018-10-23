@@ -19,6 +19,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { RavenActivityType } from '../../../shared/models/raven-activity-type';
+import { RavenAdaptation } from '../../../shared/models/raven-adaptation';
 import { RavenPlan } from '../../../shared/models/raven-plan';
 
 import * as configActions from '../../../shared/actions/config.actions';
@@ -27,6 +28,8 @@ import {
   OpenActivityTypeFormDialog,
   RemoveActivityType,
 } from '../../actions/activity-type.actions';
+
+import { FetchAdaptationList } from '../../actions/adaptation.actions';
 
 import {
   FetchPlanList,
@@ -39,6 +42,7 @@ import { HawkAppState } from '../../hawk-store';
 
 import * as fromConfig from '../../../shared/reducers/config.reducer';
 import * as fromActivityType from '../../reducers/activity-type.reducer';
+import * as fromAdaptation from '../../reducers/adaptation.reducer';
 import * as fromPlan from '../../reducers/plan.reducer';
 
 @Component({
@@ -54,6 +58,16 @@ export class HawkAppComponent implements OnDestroy {
   activityTypes: RavenActivityType[] = [];
 
   /**
+   * List of adaptations to display
+   */
+  adaptations: RavenAdaptation[] = [];
+
+  /**
+   * The selected adaptation
+   */
+  selectedAdaptation: RavenAdaptation | null = null;
+
+  /**
    * List of plans to display
    */
   plans: RavenPlan[] = [];
@@ -62,11 +76,6 @@ export class HawkAppComponent implements OnDestroy {
    * Selected plan
    */
   selectedPlan: RavenPlan | null = null;
-
-  /**
-   * Track whether the plan list is expanded
-   */
-  planListExpanded = true;
 
   /**
    * Current state of the navigation drawer
@@ -86,6 +95,16 @@ export class HawkAppComponent implements OnDestroy {
       )
       .subscribe(activityTypes => {
         this.activityTypes = activityTypes;
+        this.markForCheck();
+      });
+
+    this.store
+      .pipe(
+        select(fromAdaptation.getAdaptations),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(adaptations => {
+        this.adaptations = adaptations;
         this.markForCheck();
       });
 
@@ -121,6 +140,7 @@ export class HawkAppComponent implements OnDestroy {
       });
 
     // TODO: Move to a route guard
+    this.store.dispatch(new FetchAdaptationList());
     this.store.dispatch(new FetchPlanList());
     this.store.dispatch(new FetchActivityTypeList());
   }
@@ -192,14 +212,6 @@ export class HawkAppComponent implements OnDestroy {
    */
   selectPlan(id: string) {
     this.store.dispatch(new SelectPlan(id));
-  }
-
-  /**
-   * Event. Track the expanded state of the plan list component
-   * @param isExpanded boolean
-   */
-  setPlanListExpanded(isExpanded: boolean) {
-    this.planListExpanded = isExpanded;
   }
 
   /**
