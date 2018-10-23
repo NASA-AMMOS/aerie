@@ -600,7 +600,7 @@ export class SourceExplorerEffects {
         return [
           new dialogActions.OpenConfirmDialog(
             'OK',
-            `Data sets empty or do not exist.\nTimeline will not de drawn for:\n\n ${errors}`,
+            `Data sets empty or do not exist.\nTimeline will not be drawn for:\n\n ${errors}`,
             '350px',
           ),
           new sourceExplorerActions.UpdateSourceExplorer({ loadErrors: [] }),
