@@ -65,6 +65,12 @@ def parse_data_source_url(url_str):
 
 
 def traverse_source_tree(data, predicate, prefix="/"):
+    """
+    Traverses a Raven 1 source tree, generating a list of sources that match the
+    specified predicate.
+
+    Example: sources = traverse_source_tree(tree, source_by(band_id="band123"))
+    """
     for source in data["sources"]:
         # Determine the path to this node
         path = prefix + source["name"]
@@ -76,11 +82,21 @@ def traverse_source_tree(data, predicate, prefix="/"):
 
 
 def source_by(*, band_id):
+    """
+    Constructs a predicate on Raven 1 sources that matches a source if its `bandIds`
+    array contains the given `band_id` parameter.
+    """
     def predicate(source):
         return (band_id in source["bandIds"])
+
+    # Remember that `predicate` is not called here; the function itself is returned.
+    # Usage: if predicate(source): print("This matched!")
     return predicate
 
 def find_tree_sources(data, band):
+    """
+    Gets a list of source IDs for the given band.
+    """
     sources = []
     for path, _source in traverse_source_tree(data, source_by(band_id=band["id"])):
         sources.append(path)
@@ -251,18 +267,18 @@ def create_wrapper_band(band, *, container_id, sort_order):
     }
 
 
-def determine_type_of_source(source):
+def determine_type_of_band(raven_one_band):
     # This is just a set of heuristics which we've observed to be correct so far.
     # The "right" way to determine the band type is to ask MPS Server directly
     # and mimic the logic in Raven 2.
-    if "url" not in source:
+    if "url" not in raven_one_band:
         # Dividers don't have any data sources.
         return "divider"
-    elif "activityLayout" in source["graphSettings"]:
+    elif "activityLayout" in raven_one_band["graphSettings"]:
         # If it has an activity layout, it's probably really an activity.
         return "activity"
-    elif "fill" in source["graphSettings"]:
-        # Observationally, only resourecs have "fill", but this is tenuous.
+    elif "fill" in raven_one_band["graphSettings"]:
+        # Observationally, only resources have "fill", but this is tenuous.
         return "resource"
     else:
         # By process of elimination...
@@ -276,7 +292,7 @@ def convert_raven_one_band(raven_one_state, raven_one_band, default_band_setting
         "state": create_state_band,
     }
 
-    band_type = determine_type_of_source(raven_one_band)
+    band_type = determine_type_of_band(raven_one_band)
     builder = BAND_BUILDERS.get(band_type)
     if not builder:
         raise Exception("Unknown band type \""+band_type+"\"")
