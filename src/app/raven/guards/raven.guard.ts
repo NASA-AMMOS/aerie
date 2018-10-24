@@ -68,7 +68,7 @@ export class RavenGuard implements CanActivate {
           );
         }
       }),
-      filter((initialSourcesLoaded: boolean) => initialSourcesLoaded),
+      filter((initialSourcesLoaded: any) => initialSourcesLoaded), // TODO: Strongly type?
       take(1),
     );
   }

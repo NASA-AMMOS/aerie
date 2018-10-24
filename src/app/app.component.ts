@@ -24,6 +24,8 @@ import { NestModule } from './shared/models';
 import { NavigationDrawerStates } from './shared/actions/config.actions';
 import * as fromConfig from './shared/reducers/config.reducer';
 
+import * as dialogActions from './shared/actions/dialog.actions';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-root',
@@ -43,7 +45,8 @@ import * as fromConfig from './shared/reducers/config.reducer';
         <mat-sidenav #sidenav mode="side" opened>
           <raven-app-nav
             [modules]="appModules"
-            [iconsOnly]="navigationDrawerState === 'collapsed'">
+            [iconsOnly]="navigationDrawerState === 'collapsed'"
+            (aboutClicked)="onAboutClicked()">
           </raven-app-nav>
         </mat-sidenav>
         <mat-sidenav-content #sidenavContent class="app-sidenav-content">
@@ -64,6 +67,7 @@ export class AppComponent implements OnDestroy {
     private changeDetector: ChangeDetectorRef,
     private store: Store<AppState>,
   ) {
+    // App modules state
     this.store
       .pipe(
         select(fromConfig.getAppModules),
@@ -104,5 +108,12 @@ export class AppComponent implements OnDestroy {
         this.changeDetector.detectChanges();
       }
     });
+  }
+
+  /**
+   * Callback event. Called when the About button is clicked inside the `raven-app-nav` component.
+   */
+  onAboutClicked() {
+    this.store.dispatch(new dialogActions.OpenAboutDialog('400px'));
   }
 }

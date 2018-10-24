@@ -24,11 +24,9 @@ export class PlanMockService implements PlanService {
     const plans: RavenPlan[] = [];
     for (let i = 0, len = 50; i < len; ++i) {
       plans.push({
-        end: '1995-12-17T03:28:00',
-        hsoc: 30,
+        adaptationId: 'ops',
+        end: '1995-12-18T03:28:00',
         id: `plan${i}`,
-        mpow: 24,
-        msoc: 10,
         name: `Plan ${i}`,
         start: '1995-12-17T03:24:00',
       });

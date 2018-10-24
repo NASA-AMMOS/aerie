@@ -12,11 +12,14 @@ exports.config = {
   framework: 'custom',
   frameworkPath: require.resolve('protractor-cucumber-framework'),
   cucumberOpts: {
-    require: ['./steps/**/*.ts'],
-    tags: [],
-    strict: true,
-    dryRun: false,
     compiler: [],
+    dryRun: false,
+    format: [
+      'node_modules/cucumber-pretty'
+    ],
+    require: ['./steps/**/*.ts'],
+    strict: true,
+    tags: [],
   },
   onPrepare() {
     require('ts-node').register({

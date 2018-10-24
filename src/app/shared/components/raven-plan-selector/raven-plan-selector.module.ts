@@ -7,26 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { expect } from 'chai';
-import { defineSupportCode } from 'cucumber';
-import { AppPage } from './../utils';
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { MatSelectModule } from '@angular/material/select';
+import { RavenPlanSelectorComponent } from './raven-plan-selector.component';
 
-defineSupportCode(({ Given, When, Then, Before }) => {
-  let app: AppPage;
-
-  Before(() => {
-    app = new AppPage();
-  });
-
-  Given('I am on the RAVEN page', () => app.navigateTo());
-
-  When(
-    'I click on a + for a parent node in the Source Explorer',
-    () => 'pending',
-  );
-
-  Then(
-    'I should see the children nodes loaded and displayed under the parent',
-    () => expect(true).to.equal(true),
-  );
-});
+@NgModule({
+  declarations: [RavenPlanSelectorComponent],
+  exports: [RavenPlanSelectorComponent],
+  imports: [CommonModule, MatSelectModule],
+})
+export class RavenPlanSelectorModule {}

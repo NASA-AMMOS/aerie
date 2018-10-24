@@ -25,20 +25,16 @@ describe('Plan Reducer', () => {
 
   beforeEach(() => {
     plan = {
+      adaptationId: 'ops',
       end: '1995-12-17T03:28:00',
-      hsoc: 30,
       id: 'foo',
-      mpow: 24,
-      msoc: 10,
       name: 'Foo',
       start: '1995-12-17T03:24:00',
     };
     updated = {
+      adaptationId: 'ops',
       end: '1995-12-17T03:28:00',
-      hsoc: 30,
       id: 'foo',
-      mpow: 24,
-      msoc: 10,
       name: 'FooBar',
       start: '1995-12-17T03:24:00',
     };

@@ -23,4 +23,8 @@ export interface NestModule {
    * Title of this module for display purposes
    */
   title: string;
+  /**
+   * Version of this module in semantic versioning format
+   */
+  version: string;
 }

@@ -1,31 +1,28 @@
-<mat-expansion-panel #panel displayMode="flat" [expanded]="expanded">
-  <mat-expansion-panel-header>
-    Activity Types
-  </mat-expansion-panel-header>
+<mat-nav-list>
+  <h3 mat-subheader>Activity Types</h3>
+  <cdk-virtual-scroll-viewport class="viewport" itemSize="50">
+    <mat-list-item class="activity-type-item" *cdkVirtualFor="let activityType of activityTypes"
+      (click)="onClickSelect(activityType)">
+      <span matLine>{{ activityType.name }}</span>
+      <button mat-icon-button color="primary" (click)="onClickUpdate($event, activityType)"
+        *ngIf="canEdit">
+        <mat-icon aria-label="Edit activity type">
+          edit
+        </mat-icon>
+      </button>
+      <button mat-icon-button color="primary" (click)="onClickDelete($event, activityType)"
+        *ngIf="canDelete">
+        <mat-icon aria-label="Delete activity type">
+          clear
+        </mat-icon>
+      </button>
+      <mat-divider></mat-divider>
+    </mat-list-item>
+  </cdk-virtual-scroll-viewport>
+</mat-nav-list>
 
-  <mat-nav-list>
-    <cdk-virtual-scroll-viewport class="viewport" autosize>
-      <mat-list-item class="activity-type-item" *cdkVirtualFor="let activityType of activityTypes"
-        (click)="onClickSelect(activityType)">
-        <span matLine>{{ activityType.name }}</span>
-        <button mat-icon-button color="primary" (click)="onClickUpdate($event, activityType)">
-          <mat-icon aria-label="Edit activity type">
-            edit
-          </mat-icon>
-        </button>
-        <button mat-icon-button color="primary" (click)="onClickDelete($event, activityType)">
-          <mat-icon aria-label="Delete activity type">
-            clear
-          </mat-icon>
-        </button>
-        <mat-divider></mat-divider>
-      </mat-list-item>
-    </cdk-virtual-scroll-viewport>
-  </mat-nav-list>
-
-  <mat-action-row class="button-row">
-    <button mat-button color="primary" (click)="onClickCreate()">
-      <mat-icon>add</mat-icon> Create Activity Type
-    </button>
-  </mat-action-row>
-</mat-expansion-panel>
+<mat-action-row class="button-row" *ngIf="canCreate">
+  <button mat-button color="accent" (click)="onClickCreate()">
+    <mat-icon>add</mat-icon> Create Activity Type
+  </button>
+</mat-action-row>

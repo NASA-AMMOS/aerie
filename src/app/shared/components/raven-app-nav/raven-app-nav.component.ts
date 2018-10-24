@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 import { NestModule } from '../../models/nest-module';
 
@@ -46,4 +46,7 @@ export class RavenAppNavComponent {
 
   @Input()
   iconsOnly = false;
+
+  @Output()
+  aboutClicked: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
 }
