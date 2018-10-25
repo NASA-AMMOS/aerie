@@ -436,7 +436,7 @@ def convert_raven1_state_to_raven2(raven_one_state):
 
 def option_parser():
   parser = argparse.ArgumentParser(description="""
-    Convert a Raven <34.8.0 state to a Raven2 or >=34.8.0 state.
+    Convert a saved state from Raven version <34.8.0 to version >=34.8.0.
   """)
 
   parser.add_argument("state_json",
