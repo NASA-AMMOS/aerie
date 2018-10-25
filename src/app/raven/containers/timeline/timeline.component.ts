@@ -21,6 +21,7 @@ import { takeUntil } from 'rxjs/operators';
 import { ConfigState } from '../../../../config';
 
 import {
+  RavenActivityPointExpansion,
   RavenApplyLayoutUpdate,
   RavenBandLeftClick,
   RavenCompositeBand,
@@ -379,6 +380,29 @@ export class TimelineComponent implements OnDestroy {
     if (e.subBandId && e.pointId) {
       this.store.dispatch(
         new timelineActions.SelectPoint(e.bandId, e.subBandId, e.pointId),
+      );
+    }
+  }
+
+  /**
+   * Event. Called when an activity expansion selecttion is made.
+   */
+  onChangeActivityExpansion(e: RavenActivityPointExpansion) {
+    this.store.dispatch(
+      new timelineActions.RemoveChildrenOrDescendants(
+        this.selectedBandId,
+        this.selectedSubBandId,
+        e.activityPoint,
+      ),
+    );
+    if (e.expansion !== 'noExpansion') {
+      this.store.dispatch(
+        new timelineActions.FetchChildrenOrDescendants(
+          this.selectedBandId,
+          this.selectedSubBandId,
+          e.activityPoint,
+          e.expansion,
+        ),
       );
     }
   }

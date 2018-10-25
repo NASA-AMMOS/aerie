@@ -12,6 +12,7 @@ import { Action } from '@ngrx/store';
 import {
   AddBandModifiers,
   BaseType,
+  RavenActivityPoint,
   RavenCompositeBand,
   RavenPin,
   RavenSortMessage,
@@ -26,6 +27,8 @@ export enum TimelineActionTypes {
   AddGuide = '[timeline] add_guide',
   AddPointsToSubBand = '[timeline] add_points_to_sub_band',
   AddSubBand = '[timeline] add_sub_band',
+  ExpandChildrenOrDescendants = '[timeline] expand_children_or_descendants',
+  FetchChildrenOrDescendants = '[timeline] fetch_children_or_descendants',
   PanLeftViewTimeRange = '[timeline] pan_left_view_time_range',
   PanRightViewTimeRange = '[timeline] pan_right_view_time_range',
   PinAdd = '[timeline] pin_add',
@@ -36,6 +39,7 @@ export enum TimelineActionTypes {
   RemoveAllPointsInSubBandWithParentSource = '[timeline] remove_all_points_in_sub_band_with_parent_source',
   RemoveBandsOrPointsForSource = '[timeline] remove_bands_or_points_for_source',
   RemoveBandsWithNoPoints = '[timeline] remove_bands_with_no_points',
+  RemoveChildrenOrDescendants = '[timeline] remove_children_or_descendants',
   RemoveGuide = '[timeline] remove_guide',
   RemoveSourceIdFromSubBands = '[timeline] remove_source_from_sub_bands',
   RemoveSubBand = '[timeline] remove_sub_band',
@@ -90,6 +94,28 @@ export class AddSubBand implements Action {
   ) {}
 }
 
+export class ExpandChildrenOrDescendants implements Action {
+  readonly type = TimelineActionTypes.ExpandChildrenOrDescendants;
+
+  constructor(
+    public bandId: string,
+    public subBandId: string,
+    public activityPoint: RavenActivityPoint,
+    public expandType: string,
+  ) {}
+}
+
+export class FetchChildrenOrDescendants implements Action {
+  readonly type = TimelineActionTypes.FetchChildrenOrDescendants;
+
+  constructor(
+    public bandId: string,
+    public subBandId: string,
+    public activityPoint: RavenActivityPoint,
+    public expandType: string,
+  ) {}
+}
+
 export class PanLeftViewTimeRange implements Action {
   readonly type = TimelineActionTypes.PanLeftViewTimeRange;
 }
@@ -138,6 +164,16 @@ export class RemoveBandsOrPointsForSource implements Action {
 
 export class RemoveBandsWithNoPoints implements Action {
   readonly type = TimelineActionTypes.RemoveBandsWithNoPoints;
+}
+
+export class RemoveChildrenOrDescendants implements Action {
+  readonly type = TimelineActionTypes.RemoveChildrenOrDescendants;
+
+  constructor(
+    public bandId: string,
+    public subBandId: string,
+    public activityPoint: RavenActivityPoint,
+  ) {}
 }
 
 export class RemoveGuide implements Action {
@@ -246,6 +282,8 @@ export type TimelineAction =
   | AddGuide
   | AddPointsToSubBand
   | AddSubBand
+  | ExpandChildrenOrDescendants
+  | FetchChildrenOrDescendants
   | PanLeftViewTimeRange
   | PanRightViewTimeRange
   | PinAdd
@@ -256,6 +294,7 @@ export type TimelineAction =
   | RemoveAllPointsInSubBandWithParentSource
   | RemoveBandsOrPointsForSource
   | RemoveBandsWithNoPoints
+  | RemoveChildrenOrDescendants
   | RemoveGuide
   | RemoveSourceIdFromSubBands
   | RemoveSubBand
