@@ -15,6 +15,7 @@ import {
   MatDialogModule,
   MatFormFieldModule,
   MatInputModule,
+  MatSelectModule,
 } from '@angular/material';
 import { RavenPlanFormDialogComponent } from './raven-plan-form-dialog.component';
 
@@ -28,6 +29,7 @@ import { RavenPlanFormDialogComponent } from './raven-plan-form-dialog.component
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     ReactiveFormsModule,
   ],
 })

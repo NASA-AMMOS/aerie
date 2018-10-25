@@ -40,7 +40,7 @@
       fxLayoutWrap>
       <!-- Decimate Output Data. -->
       <mat-slide-toggle
-        color="primary"
+        color="accent"
         [checked]="decimateOutputData"
         (change)="updateOutputSettings.emit({ update: { decimateOutputData: $event.checked } })">
         Decimate Output Data
@@ -49,7 +49,7 @@
       <!-- All-in-one File Toggle. -->
       <mat-slide-toggle
         *ngIf="outputFormat==='CSV' && moreThanOneSelected()"
-        color="primary"
+        color="accent"
         [checked]="allInOneFile"
         (change)="updateOutputSettings.emit({ update: { allInOneFile: $event.checked } })">
         All-in-one File
@@ -68,7 +68,7 @@
     <!-- Output. -->
     <button
       mat-raised-button
-      color="primary"
+      color="accent"
       [disabled]="!isValid()"
       (click)="onCreateOutput()">
       Create Output

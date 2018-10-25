@@ -7,26 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-.button-row {
-  padding: 16px 8px;
-  justify-content: flex-start;
-}
+import { Observable } from 'rxjs';
 
-.button-row .mat-button {
-  border-radius: 2rem;
-  width: 100%;
-  text-align: left;
-  margin: 0;
-}
+import { RavenAdaptation } from '../models/raven-adaptation';
 
-.plan-item button {
-  display: none;
-}
-
-.plan-item:hover button {
-  display: initial;
-}
-
-.viewport {
-  height: 250px;
+/**
+ * @todo Convert into a real service once one exists to get data from
+ */
+export interface AdaptationService {
+  getAdaptations(): Observable<RavenAdaptation[]>;
 }

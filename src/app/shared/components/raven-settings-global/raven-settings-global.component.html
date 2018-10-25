@@ -25,7 +25,7 @@
       <!-- Show Last Click. -->
       <div class="field">
         <mat-slide-toggle
-          color="primary"
+          color="accent"
           [checked]="defaultBandSettings.showLastClick"
           (change)="updateDefaultBandSettings.emit({ update: { showLastClick: $event.checked } })">
           Show Last Click
@@ -35,7 +35,7 @@
       <!-- Show Tooltip. -->
       <div class="field">
         <mat-slide-toggle
-          color="primary"
+          color="accent"
           [checked]="defaultBandSettings.showTooltip"
           (change)="updateDefaultBandSettings.emit({ update: { showTooltip: $event.checked } })">
           Show Tooltip

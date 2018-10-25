@@ -1,33 +1,33 @@
-<raven-app-header title="Planning" (menuClicked)="onMenuClicked()">
-</raven-app-header>
+<raven-app-header title="Planning" (menuClicked)="onMenuClicked()"></raven-app-header>
 
 <main class="content">
+  <mat-sidenav-container hasBackdrop="false">
+    <mat-sidenav-content>
+      <div class="page-header">
+        <h1 class="mat-display-1">Planning Cycle:</h1>
+        <raven-plan-selector [plans]="plans"
+          [selectedPlan]="selectedPlan"
+          (selectPlanClicked)="selectPlan($event)">
+        </raven-plan-selector>
+        <button mat-raised-button color="accent" (click)="showCreatePlanForm()">
+          <mat-icon>add</mat-icon> Create New Plan
+        </button>
+      </div>
+    </mat-sidenav-content>
+    <mat-sidenav mode="over" position="end" opened="true">
+      <aside>
+        <mat-accordion>
+          <raven-activity-type-list (createActivityTypeClicked)="showCreateActivityTypeForm()"
+            (deleteActivityTypeClicked)="deleteActivityType($event.id)"
+            (updateActivityTypeClicked)="showUpdateActivityTypeForm($event.id)"
+            *ngIf="selectedPlan != null" [activityTypes]="activityTypes">
+          </raven-activity-type-list>
+        </mat-accordion>
+
+        <div class="empty" *ngIf="selectedPlan == null">
+          Select a plan to view activity types.
+        </div>
+      </aside>
+    </mat-sidenav>
+  </mat-sidenav-container>
 </main>
-<aside>
-  <mat-accordion>
-    <raven-plan-list
-      (closed)="setPlanListExpanded(false)"
-      (createPlanClicked)="showCreatePlanForm()"
-      (opened)="setPlanListExpanded(true)"
-      (selectPlanClicked)="selectPlan($event.id)"
-      (updatePlanClicked)="showUpdatePlanForm($event.id)"
-      [expanded]="selectedPlan == null"
-      [plans]="plans"
-      [selectedPlan]="selectedPlan" (deletePlanClicked)="deletePlan($event.id)"
-      [title]="selectedPlan?.name">
-    </raven-plan-list>
-
-    <raven-activity-type-list
-      (createActivityTypeClicked)="showCreateActivityTypeForm()"
-      (deleteActivityTypeClicked)="deleteActivityType($event.id)"
-      (updateActivityTypeClicked)="showUpdateActivityTypeForm($event.id)"
-      *ngIf="selectedPlan != null"
-      [activityTypes]="activityTypes"
-      [expanded]="!planListExpanded">
-    </raven-activity-type-list>
-  </mat-accordion>
-
-  <div class="empty" *ngIf="selectedPlan == null">
-    Select a plan to view activity types.
-  </div>
-</aside>

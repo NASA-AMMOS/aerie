@@ -9,10 +9,10 @@
 
 :host {
   display: grid;
-  grid-gap: 12px;
+  grid-gap: 0px;
   grid-template-areas:
     'header header'
-    'aside main';
+    'main main';
   grid-template-columns: 300px 1fr;
   grid-template-rows: 40px 1fr;
   margin: 0;
@@ -27,19 +27,35 @@ main {
   grid-area: main;
 }
 
-aside {
-  grid-area: aside;
-  margin-left: 12px;
+mat-sidenav-container {
+  height: 100%;
 }
 
-hb-command-loader,
-hb-command-list {
-  display: block;
-  margin-bottom: 1.5rem;
+mat-sidenav-content {
+  margin-right: 300px;
+  padding: 3rem 2rem 1rem;
+}
+
+mat-sidenav {
+  width: 300px;
+  padding: 12px;
 }
 
 .empty {
   background: rgba(0, 0, 0, 0.04);
   margin-top: 16px;
   padding: 24px;
+}
+
+.page-header {
+  align-items: center;
+  display: grid;
+  grid-gap: 12px;
+  grid-template-columns: auto 1fr auto;
+}
+
+.mat-display-1 {
+  margin-bottom: 0;
+  /* Add the same amount of padding as the select so they will line up */
+  padding-bottom: 1.34375rem;
 }

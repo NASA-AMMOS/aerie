@@ -29,6 +29,7 @@ import {
 } from '../actions/plan.actions';
 
 import { RavenPlan } from '../../shared/models/raven-plan';
+import { RavenPlanFormDialogData } from '../../shared/models/raven-plan-form-dialog-data';
 import { PlanMockService } from '../../shared/services/plan-mock.service';
 
 import { reducers } from '../hawk-store';
@@ -116,11 +117,9 @@ describe('PlanEffects', () => {
   describe('openUpdatePlanFormDialog$', () => {
     it('should return a SavePlanSuccess with the new plan and creation flag on save', () => {
       const result: RavenPlan = {
+        adaptationId: 'ops',
         end: '1995-12-17T03:28:00',
-        hsoc: 30,
         id: 'make_sandwich',
-        mpow: 24,
-        msoc: 10,
         name: 'Make me a sandwich',
         start: '1995-12-17T03:24:00',
       };
@@ -147,11 +146,9 @@ describe('PlanEffects', () => {
      */
     it('should return a SavePlanSuccess with the updated plan and creation flag on save', () => {
       const initial: RavenPlan = {
+        adaptationId: 'ops',
         end: '1995-12-17T03:28:00',
-        hsoc: 30,
         id: 'make_sandwich',
-        mpow: 24,
-        msoc: 10,
         name: 'Make me a sandwich',
         start: '1995-12-17T03:24:00',
       };
@@ -161,10 +158,15 @@ describe('PlanEffects', () => {
 
       // Overwrite the dialog.open method so that we can pass `data`
       // back to `afterClosed` and verify that the whole process worked.
-      dialog.open = function(component: any, data: any) {
+      dialog.open = function(
+        component: any,
+        // This is Typescript's weird way of typing destructured object params,
+        // see https://blog.mariusschulz.com/2015/11/13/typing-destructured-object-parameters-in-typescript
+        { data }: { data: RavenPlanFormDialogData },
+      ) {
         return {
           afterClosed() {
-            return of(data.data);
+            return of(data.selectedPlan);
           },
         };
       };

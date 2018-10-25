@@ -7,43 +7,15 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-.top-bar {
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.24);
-  height: 40px;
-  padding: 0 12px;
-  position: relative;
-  z-index: 10;
-}
+import { TestBed } from '@angular/core/testing';
 
-.top-bar-nav-icon {
-  height: 48px;
-  width: 48px;
-}
+import { AdaptationMockService } from './adaptation-mock.service';
 
-.top-bar-title {
-  margin-left: 20px;
-}
+describe('AdaptationService', () => {
+  beforeEach(() => TestBed.configureTestingModule({}));
 
-.top-bar-row {
-  box-sizing: border-box;
-  display: flex;
-  position: relative;
-  width: 100%;
-}
-
-.top-bar-row-left,
-.top-bar-row-right {
-  align-items: center;
-  display: inline-flex;
-  flex: 1 1 auto;
-  min-width: 0;
-  z-index: 1;
-}
-
-.top-bar-row-left {
-  justify-content: flex-start;
-}
-
-.top-bar-row-right {
-  justify-content: flex-end;
-}
+  it('should be created', () => {
+    const service: AdaptationMockService = TestBed.get(AdaptationMockService);
+    expect(service).toBeTruthy();
+  });
+});

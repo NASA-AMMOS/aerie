@@ -11,7 +11,7 @@
       <!-- Show Time Cursor. -->
       <div class="field">
         <mat-slide-toggle
-          color="primary"
+          color="accent"
           [checked]="showTimeCursor"
           (change)="displayTimeCursor.emit($event.checked)">
           Show Time Cursor
@@ -45,7 +45,7 @@
       <!-- AutoPage. -->
       <div class="field">
         <mat-slide-toggle
-          color="primary"
+          color="accent"
           [checked]="autoPage"
           (change)="updateTimeCursorSettings.emit({ update: { autoPage: $event.checked } })">
           Auto-page

@@ -14,3 +14,9 @@ mat-form-field {
 button {
   text-transform: uppercase;
 }
+
+.plan-dates {
+  display: grid;
+  grid-gap: 12px;
+  grid-template-columns: auto auto;
+}

@@ -14,6 +14,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { RavenPlan } from '../../models/raven-plan';
+import { RavenPlanFormDialogData } from '../../models/raven-plan-form-dialog-data';
 import { RavenPlanFormDialogComponent } from './raven-plan-form-dialog.component';
 import { RavenPlanFormDialogModule } from './raven-plan-form-dialog.module';
 
@@ -35,21 +36,25 @@ describe('RavenPlanFormDialogComponent', () => {
   let component: RavenPlanFormDialogTestComponent;
   let fixture: ComponentFixture<RavenPlanFormDialogTestComponent>;
   let element: HTMLElement;
-  let data: any;
+  let data: RavenPlanFormDialogData;
+  let selectedPlan: RavenPlan;
 
   const mockDialogRef = {
     close: jasmine.createSpy('close'),
   };
 
   beforeEach(async () => {
-    data = {
+    selectedPlan = {
+      adaptationId: 'ops',
       end: '1995-12-17T03:28:00',
-      hsoc: 30,
       id: `test0`,
-      mpow: 24,
-      msoc: 10,
       name: `Test 0`,
       start: '1995-12-17T03:24:00',
+    };
+
+    data = {
+      adaptations: [],
+      selectedPlan,
     };
 
     TestBed.configureTestingModule({
@@ -89,11 +94,11 @@ describe('RavenPlanFormDialogComponent', () => {
       buttons[1].click();
     }
 
-    const expected = { ...data };
+    const expected = { ...selectedPlan };
     delete expected['id'];
 
     expect(component.component.onSubmit).toHaveBeenCalledWith(expected);
-    expect(mockDialogRef.close).toHaveBeenCalledWith(data);
+    expect(mockDialogRef.close).toHaveBeenCalledWith(selectedPlan);
   });
 
   it('should fail validation', () => {

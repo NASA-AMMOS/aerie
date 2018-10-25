@@ -32,17 +32,7 @@ export interface RavenPlan {
   end: string;
 
   /**
-   * Minimum state of charge
+   * ID of the adaptation
    */
-  msoc: number;
-
-  /**
-   * Handover state of charge
-   */
-  hsoc: number;
-
-  /**
-   * Max power load
-   */
-  mpow: number;
+  adaptationId: string;
 }
