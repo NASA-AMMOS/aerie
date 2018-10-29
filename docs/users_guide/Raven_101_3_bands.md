@@ -187,6 +187,19 @@ To select a Data Point, click on the data point of your preference. When a data 
 
 *<p align="center">**Image 15: Select a Data Point.** Left side: On a band of your preference, click any data point. Right Side: Once a data point is selected, the details panel will scroll and highlight the selected data point. Also within the 'Selected Point' Tab in the Right Panel, the data point's metadata will be displayed.</p>*
 
+##### How to: Expand Activity Data Points
+| Option            | Description                                |
+| ----------------- | ------------------------------------------ |
+| No Expansion | Displays only the parent activity.|
+| Children Expansion | Displays the immediate children of the selected activity. | 
+| Descendants Expansion  | Displays all the descendants of the selected activity (Children of Children). |
+
+1. Make sure that you have an activity band in the bands panels.
+2. Select an activity data point in the band.
+3. Make sure that you have the `Selected Point` tab in the right panel open.
+4. Look for the Activity Selection Dropdown, and here you will have three options: No Expansion, Children Expansion and Descendants Expansion.
+5. Select the desired expansion.
+
 #### How to: Remove all Bands
 
 To remove all the drawn bands:
