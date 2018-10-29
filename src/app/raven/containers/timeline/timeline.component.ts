@@ -42,8 +42,6 @@ import {
 import {
   getSourceIdsByLabelInBands,
   subBandById,
-  toCompositeBand,
-  toDividerBand,
 } from '../../../shared/util';
 
 import * as fromConfig from '../../../shared/reducers/config.reducer';
@@ -334,17 +332,6 @@ export class TimelineComponent implements OnDestroy {
         this.changeDetector.detectChanges();
       }
     });
-  }
-
-  /**
-   * Event. Called when a `add-divider-band` event is fired from the raven-settings component.
-   */
-  onAddDividerBand(): void {
-    this.store.dispatch(
-      new timelineActions.AddBand(null, toCompositeBand(toDividerBand()), {
-        afterBandId: this.selectedBandId,
-      }),
-    );
   }
 
   /**

@@ -19,6 +19,11 @@ import { select, Store } from '@ngrx/store';
 import { combineLatest, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
+import {
+  toCompositeBand,
+  toDividerBand,
+} from '../../../shared/util';
+
 import { RavenTimeRange } from '../../../shared/models';
 
 import * as fromConfig from '../../../shared/reducers/config.reducer';
@@ -42,6 +47,7 @@ export class RavenAppComponent implements OnDestroy {
   info: string;
   loading: boolean;
   mode: string;
+  selectedBandId: string;
 
   /**
    * Current state of the navigation drawer
@@ -96,6 +102,17 @@ export class RavenAppComponent implements OnDestroy {
       )
       .subscribe(state => {
         this.navigationDrawerState = state;
+        this.markForCheck();
+      });
+
+    // Timeline state.
+    this.store
+      .pipe(
+        select(fromTimeline.getTimelineState),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(state => {
+        this.selectedBandId = state.selectedBandId;
         this.markForCheck();
       });
   }
@@ -172,6 +189,17 @@ export class RavenAppComponent implements OnDestroy {
       United States Government sponsorship acknowledged.
       Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.\n
     `;
+  }
+
+  /**
+   * Event. Called when a `add-divider-band` event is fired.
+   */
+  onAddDividerBand(): void {
+    this.store.dispatch(
+      new timelineActions.AddBand(null, toCompositeBand(toDividerBand()), {
+        afterBandId: this.selectedBandId,
+      }),
+    );
   }
 
   onAddGuide() {
