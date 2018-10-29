@@ -56,7 +56,6 @@ These are the configuration options shared among all the band types.
 | Delete Band      | On Click, the user will have the option to remove a band from the Bands Panels. |
 | Overlay          | If this option is Turned On, future selected sources will be displayed on top of the band. Please refer to [Overlay Bands Section](#overlay-bands) for more details. |
 | Show Pin Label   | If this option is Turned On and the selected source is the child of a pin, it will append the pin name to the band's label. |
-| Add Divider Band | On Click, a new divider band will be added below the selected band. |
 
 #### Resource Band Options
 
@@ -121,7 +120,7 @@ Overlaying bands allows for multiple data sources of any type to be overlaid wit
 
 
 
-#### 'Add To' Activity Bands
+#### How to: 'Add To' Activity Bands
 
 'Add To' is similar to overlaying bands, however is specific for Activity Bands. The activities will be added in line with different activity sources within the same band.  The activities will not overlap eachother and be arranged as if the activities were drawn from a single data source.  
 
@@ -130,7 +129,12 @@ Overlaying bands allows for multiple data sources of any type to be overlaid wit
 3. In the Selected Band Tab in the Right Panel, set true the 'Add To' option.
 4. Select another source of your preference. The data points of this last selected source will be added in the same band from step one.
 
+#### How to: Add Divider Band
 
+Divider bands are use as separators of different band groupings. If the user wants to add a band in a specific location, a band can be selected and when the user adds a band it will be added after the selected band. 
+
+1. In the top bar look for the divider icon (<img src="./images/baseline-view_day-24px.svg" width="20" />) and click it.
+2. A divider band will be added in the bands panel.
 
 #### How to: Manipulate Time Range
 
