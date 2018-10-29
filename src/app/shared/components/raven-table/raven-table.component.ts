@@ -174,6 +174,8 @@ export class RavenTableComponent implements OnChanges {
           prop !== 'childrenUrl' &&
           prop !== 'descendantsUrl' &&
           prop !== 'endTimestamp' &&
+          prop !== 'expandedFromPointId' &&
+          prop !== 'expansion' &&
           prop !== 'id' &&
           prop !== 'interpolateEnding' &&
           prop !== 'isDuration' &&

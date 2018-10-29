@@ -183,6 +183,7 @@
                 [selectedPoint]="selectedPoint"
                 [showActivityPointMetadata]="showActivityPointMetadata"
                 [showActivityPointParameters]="showActivityPointParameters"
+                (changeActivityExpansion)="onChangeActivityExpansion($event)"
                 (toggleShowActivityPointMetadata)="onToggleShowActivityPointMetadata($event)"
                 (toggleShowActivityPointParameters)="onToggleShowActivityPointParameters($event)">
               </raven-activity-point>

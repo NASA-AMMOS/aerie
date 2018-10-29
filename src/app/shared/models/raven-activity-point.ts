@@ -25,6 +25,8 @@ export interface RavenActivityPoint {
   duration: number;
   end: number;
   endTimestamp: string;
+  expandedFromPointId: string | null;
+  expansion: string;
   id: string;
   keywordLine: string;
   legend: string;

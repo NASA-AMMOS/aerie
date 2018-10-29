@@ -105,12 +105,25 @@ export class RavenLayoutApplyComponent implements OnChanges {
    * Event. Called when the `apply` button is clicked.
    */
   onApply(): void {
-    if (this.canApplyLayout()) {
+    const targetSourceIds = this.sourcesFormControl.value
+      ? this.sourcesFormControl.value.map((value: RavenSource) => value.id)
+      : [];
+
+    if (this.currentState && !this.currentState.pins.length) {
+      // No pins case.
+      const update: RavenApplyLayoutUpdate = {
+        pins: {},
+        targetSourceIds,
+      };
+
+      // Apply layout with generic target ids.
+      this.applyLayout.emit(update);
+      this.sourcesFormControl = new FormControl(); // Reset the form.
+    } else if (this.canApplyLayout()) {
+      // Pins case.
       const update: RavenApplyLayoutUpdate = {
         pins: this.applyPinsByName,
-        targetSourceIds: this.sourcesFormControl.value
-          ? this.sourcesFormControl.value.map((value: RavenSource) => value.id)
-          : [],
+        targetSourceIds,
       };
 
       if (this.applyPins === '0') {

@@ -76,6 +76,7 @@ export function getMessage(metadata: MpsServerActivityPointMetadata[] | null) {
 export function getActivityPoint(
   sourceId: string,
   data: MpsServerActivityPoint,
+  expandedFromPointId: string | null,
 ): RavenActivityPoint {
   const activityId = data['Activity ID'];
   const activityName = data['Activity Name'];
@@ -123,6 +124,8 @@ export function getActivityPoint(
     duration,
     end,
     endTimestamp,
+    expandedFromPointId,
+    expansion: 'noExpansion',
     id,
     keywordLine,
     legend,
@@ -150,6 +153,7 @@ export function getActivityPoint(
 export function getActivityPointsByLegend(
   sourceId: string,
   sourceName: string,
+  expandedFromPointId: string | null,
   timelineData: MpsServerActivityPoint[],
 ) {
   const legends: StringTMap<RavenActivityPoint[]> = {};
@@ -159,7 +163,11 @@ export function getActivityPointsByLegend(
 
   for (let i = 0, l = timelineData.length; i < l; ++i) {
     const data: MpsServerActivityPoint = timelineData[i];
-    const point: RavenActivityPoint = getActivityPoint(sourceId, data);
+    const point: RavenActivityPoint = getActivityPoint(
+      sourceId,
+      data,
+      expandedFromPointId,
+    );
 
     if (point.start < minTime) {
       minTime = point.start;

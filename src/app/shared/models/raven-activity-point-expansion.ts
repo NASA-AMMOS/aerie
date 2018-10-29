@@ -7,26 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  MpsServerActivityPointMetadata,
-  MpsServerActivityPointParameter,
-} from './index';
+import { RavenActivityPoint } from './raven-activity-point';
 
-export interface MpsServerActivityPoint {
-  __document_id: string;
-  __file_id: string;
-  __kind: string;
-  Arguments: number;
-  ancestors: string[];
-  children: MpsServerActivityPoint[];
-  childrenUrl: string;
-  descendantsUrl: string;
-  'Activity ID': string;
-  'Activity Name': string;
-  'Activity Parameters': MpsServerActivityPointParameter[];
-  'Activity Type': string;
-  'Keyword Line': string;
-  Metadata: MpsServerActivityPointMetadata[];
-  'Tend Assigned': string;
-  'Tstart Assigned': string;
+export interface RavenActivityPointExpansion {
+  expansion: string;
+  activityPoint: RavenActivityPoint;
 }

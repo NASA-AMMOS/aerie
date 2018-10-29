@@ -15,6 +15,7 @@ import {
   AddGuide,
   AddPointsToSubBand,
   AddSubBand,
+  ExpandChildrenOrDescendants,
   PanLeftViewTimeRange,
   PanRightViewTimeRange,
   PinRemove,
@@ -22,6 +23,7 @@ import {
   RemoveAllPointsInSubBandWithParentSource,
   RemoveBandsOrPointsForSource,
   RemoveBandsWithNoPoints,
+  RemoveChildrenOrDescendants,
   RemoveGuide,
   RemoveSourceIdFromSubBands,
   RemoveSubBand,
@@ -263,6 +265,72 @@ describe('timeline reducer', () => {
     });
   });
 
+  it('handle expandPoint ExpandChildrenOrDescendants children', () => {
+    const source: RavenSource = rootSource;
+    const newBand = {
+      ...compositeBand,
+      subBands: [
+        {
+          ...activityBand,
+        },
+      ],
+    };
+
+    // First add band to state so we have something to add points to.
+    timelineState = reducer(timelineState, new AddBand(source.id, newBand));
+    timelineState = reducer(
+      timelineState,
+      new AddPointsToSubBand(source.id, newBand.id, activityBand.id, [
+        activityPoint,
+      ]),
+    );
+    timelineState = reducer(
+      timelineState,
+      new ExpandChildrenOrDescendants(
+        newBand.id,
+        activityBand.id,
+        activityPoint,
+        'expandChildren',
+      ),
+    );
+    expect(timelineState.bands[0].subBands[0].points).toEqual([
+      { ...activityPoint, expansion: 'expandChildren' },
+    ]);
+  });
+
+  it('handle expandPoint ExpandChildrenOrDescendants descendants', () => {
+    const source: RavenSource = rootSource;
+    const newBand = {
+      ...compositeBand,
+      subBands: [
+        {
+          ...activityBand,
+        },
+      ],
+    };
+
+    // First add band to state so we have something to add points to.
+    timelineState = reducer(timelineState, new AddBand(source.id, newBand));
+    timelineState = reducer(
+      timelineState,
+      new AddPointsToSubBand(source.id, newBand.id, activityBand.id, [
+        activityPoint,
+      ]),
+    );
+    timelineState = reducer(
+      timelineState,
+      new ExpandChildrenOrDescendants(
+        newBand.id,
+        activityBand.id,
+        activityPoint,
+        'expandDescendants',
+      ),
+    );
+    expect(timelineState.bands[0].subBands[0].points).toEqual([
+      { ...activityPoint, expansion: 'expandDescendants' },
+    ]);
+  });
+
   it('handle PanLeftViewTimeRange', () => {
     // First set the timeline state to have realistic time ranges we can test.
     timelineState = {
@@ -423,6 +491,48 @@ describe('timeline reducer', () => {
     timelineState = reducer(timelineState, new AddBand(source.id, band1));
     timelineState = reducer(timelineState, new RemoveBandsWithNoPoints());
     expect(timelineState.bands.length).toEqual(1);
+  });
+
+  it('handle removeDescendants', () => {
+    const source: RavenSource = rootSource;
+    const newBand = {
+      ...compositeBand,
+      subBands: [
+        {
+          ...activityBand,
+        },
+      ],
+    };
+
+    // First add band to state so we have something to add points to.
+    timelineState = reducer(timelineState, new AddBand(source.id, newBand));
+    timelineState = reducer(
+      timelineState,
+      new AddPointsToSubBand(source.id, newBand.id, activityBand.id, [
+        activityPoint,
+      ]),
+    );
+    timelineState = reducer(
+      timelineState,
+      new ExpandChildrenOrDescendants(
+        newBand.id,
+        activityBand.id,
+        activityPoint,
+        'expandChildren',
+      ),
+    );
+    expect(timelineState.bands[0].subBands[0].points).toEqual([
+      { ...activityPoint, expansion: 'expandChildren' },
+    ]);
+    timelineState = reducer(
+      timelineState,
+      new RemoveChildrenOrDescendants(
+        newBand.id,
+        activityBand.id,
+        activityPoint,
+      ),
+    );
+    expect(timelineState.bands[0].subBands[0].points).toEqual([activityPoint]);
   });
 
   it('handle RemoveGuide', () => {

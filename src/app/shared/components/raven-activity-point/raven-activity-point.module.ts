@@ -9,7 +9,11 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { MatCardModule, MatExpansionModule } from '@angular/material';
+import {
+  MatCardModule,
+  MatExpansionModule,
+  MatSelectModule,
+} from '@angular/material';
 import { RavenDhmsPipeModule } from '../../pipes';
 import { RavenActivityPointComponent } from './raven-activity-point.component';
 
@@ -20,6 +24,7 @@ import { RavenActivityPointComponent } from './raven-activity-point.component';
     CommonModule,
     MatCardModule,
     MatExpansionModule,
+    MatSelectModule,
     RavenDhmsPipeModule,
   ],
 })

@@ -15,7 +15,10 @@ import {
   Output,
 } from '@angular/core';
 
-import { RavenActivityPoint } from '../../../shared/models';
+import {
+  RavenActivityPoint,
+  RavenActivityPointExpansion,
+} from '../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,6 +35,11 @@ export class RavenActivityPointComponent {
 
   @Input()
   showActivityPointParameters: boolean;
+
+  @Output()
+  changeActivityExpansion: EventEmitter<
+    RavenActivityPointExpansion
+  > = new EventEmitter<RavenActivityPointExpansion>();
 
   @Output()
   toggleShowActivityPointMetadata: EventEmitter<boolean> = new EventEmitter<
