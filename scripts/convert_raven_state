@@ -20,6 +20,18 @@ def t_time_to_epoch(t_time):
 def convert_color(rgb_color):
     return '#%02x%02x%02x' % tuple(map(int, rgb_color))
 
+def deduplicated(xs):
+    """
+    Takes an iterable and yields each unique element exactly once.
+    Example: list(deduplicated([1, 1, 2, 1, 3])) == [1, 2, 3]
+    """
+    seen = set()
+    for x in xs:
+        if x not in seen:
+            seen.add(x)
+            yield x
+
+
 def split_units(label_string):
     """Currently UNUSED, but planned to replace `extract_units` and `strip_units`."""
     # The label extends to the first left-parenthesis.
@@ -64,21 +76,21 @@ def parse_data_source_url(url_str):
     }
 
 
-def traverse_source_tree(data, predicate, prefix="/"):
+def traverse_source_tree(tree, predicate, prefix="/"):
     """
     Traverses a Raven 1 source tree, generating a list of sources that match the
     specified predicate.
 
     Example: sources = traverse_source_tree(tree, source_by(band_id="band123"))
     """
-    for source in data["sources"]:
+    for node in tree:
         # Determine the path to this node
-        path = prefix + source["name"]
+        path = prefix + node["name"]
 
-        if predicate(source):
-            yield path, source
+        if predicate(node):
+            yield path, node
 
-        yield from traverse_source_tree(source, predicate, path + "/")
+        yield from traverse_source_tree(node["sources"], predicate, path + "/")
 
 
 def source_by(*, band_id):
@@ -93,14 +105,23 @@ def source_by(*, band_id):
     # Usage: if predicate(source): print("This matched!")
     return predicate
 
-def find_tree_sources(data, band):
+def find_tree_sources(raven_one_state, band):
     """
     Gets a list of source IDs for the given band.
     """
-    sources = []
-    for path, _source in traverse_source_tree(data, source_by(band_id=band["id"])):
-        sources.append(path)
-    return sources
+    # We need to traverse the main source tree _and_ any tabbed source trees.
+    tree = []
+    tree.extend(raven_one_state["sources"])
+    for tab in raven_one_state["tabSources"]:
+        # At the moment, it looks like the Home tab uses the `filtered` key, whereas
+        # other tabs use the `sources` key.
+        tree.extend(tab.get("filtered") or tab["sources"])
+
+    # Traverse each source tree and collect any paths we find.
+    return list(deduplicated(
+        path
+        for path, _source in traverse_source_tree(tree, source_by(band_id=band["id"]))
+    ))
 
 def create_resource_band(raven_one_band, sources, default_band_settings):
     source_info = parse_data_source_url(raven_one_band["url"])
@@ -231,7 +252,7 @@ def create_state_band(raven_one_band, sources, default_band_settings):
 def create_divider_band(raven_one_band, sources, default_band_settings):
     return {
         "addTo": False,
-        "backgroundColor": "#FFFFFF",
+        "backgroundColor": convert_color(raven_one_band["graphSettings"].get("lineColorCustom", [255, 255, 255])),
         "color": [255, 255, 255],
         "height": raven_one_band["graphSettings"].get("height", 7),
         "heightPadding": 10,
