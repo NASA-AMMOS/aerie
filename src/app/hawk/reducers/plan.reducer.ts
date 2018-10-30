@@ -41,38 +41,19 @@ export function reducer(
   action: PlanActions,
 ): PlanState {
   switch (action.type) {
+    case PlanActionTypes.FetchPlanDetail:
+      return { ...state, selectedPlanId: action.id };
     case PlanActionTypes.FetchPlanListSuccess:
       return { ...state, plans: action.data };
     case PlanActionTypes.SavePlanSuccess:
       return action.isNew ? insert(state, action) : update(state, action);
     case PlanActionTypes.RemovePlan:
       return remove(state, action);
-    case PlanActionTypes.SelectPlan:
-      return { ...state, selectedPlanId: action.id };
 
     default:
       return state;
   }
 }
-
-/**
- * State selector helper.
- */
-const featureSelector = createFeatureSelector<State>('hawk');
-export const getPlanState = createSelector(
-  featureSelector,
-  (state: State): PlanState => state.plan,
-);
-
-export const getPlans = createSelector(
-  getPlanState,
-  (state: PlanState) => state.plans,
-);
-
-export const getSelectedPlan = createSelector(
-  getPlanState,
-  (state: PlanState) => state.plans.find(p => p.id === state.selectedPlanId),
-);
 
 /**
  * Remove an plan from the plans list
@@ -105,3 +86,22 @@ function insert(state: PlanState, action: SavePlanSuccess): PlanState {
     plans: [...state.plans, action.data],
   };
 }
+
+/**
+ * State selector helper.
+ */
+const featureSelector = createFeatureSelector<State>('hawk');
+export const getPlanState = createSelector(
+  featureSelector,
+  (state: State): PlanState => state.plan,
+);
+
+export const getPlans = createSelector(
+  getPlanState,
+  (state: PlanState) => state.plans,
+);
+
+export const getSelectedPlan = createSelector(
+  getPlanState,
+  (state: PlanState) => state.plans.find(p => p.id === state.selectedPlanId),
+);

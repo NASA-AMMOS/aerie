@@ -16,7 +16,6 @@ import {
   RavenPlanFormDialogModule,
 } from '../shared/components/modules';
 import { HawkAppModule } from './containers/hawk-app/hawk-app.module';
-import { ActivityTypeEffects } from './effects/activity-type.effects';
 import { AdaptationEffects } from './effects/adaptation.effects';
 import { PlanEffects } from './effects/plan.effects';
 import { HawkRoutingModule } from './hawk-routing.module';
@@ -28,11 +27,7 @@ import * as fromAdaptation from './reducers/adaptation.reducer';
     HttpClientModule,
     HawkRoutingModule,
     StoreModule.forFeature('hawk', reducers),
-    EffectsModule.forFeature([
-      ActivityTypeEffects,
-      AdaptationEffects,
-      PlanEffects,
-    ]),
+    EffectsModule.forFeature([AdaptationEffects, PlanEffects]),
     HawkAppModule,
     RavenActivityTypeFormDialogModule,
     RavenPlanFormDialogModule,

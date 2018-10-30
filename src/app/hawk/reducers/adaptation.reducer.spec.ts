@@ -7,9 +7,17 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { RavenActivityType } from '../../shared/models/raven-activity-type';
 import { RavenAdaptation } from '../../shared/models/raven-adaptation';
+import { RavenAdaptationDetail } from '../../shared/models/raven-adaptation-detail';
 import { AdaptationMockService } from '../../shared/services/adaptation-mock.service';
-import { FetchAdaptationListSuccess } from '../actions/adaptation.actions';
+
+import {
+  FetchAdaptationListSuccess,
+  RemoveActivityType,
+  SaveActivityTypeSuccess,
+} from '../actions/adaptation.actions';
+
 import { AdaptationState, initialState, reducer } from './adaptation.reducer';
 
 describe('Adaptation Reducer', () => {
@@ -23,7 +31,115 @@ describe('Adaptation Reducer', () => {
 
       expect(result).toEqual({
         adaptations,
-        selectedAdaptationId: null,
+        selectedAdaptation: null,
+      });
+    });
+  });
+
+  describe('activityTypes', () => {
+    let activity: RavenActivityType;
+    let updated: RavenActivityType;
+    let selectedState: AdaptationState;
+    let selectedAdaptation: RavenAdaptationDetail;
+
+    beforeEach(() => {
+      selectedState = {
+        adaptations: AdaptationMockService.getMockData(),
+        selectedAdaptation: {
+          activityTypes: {},
+          id: 'ops',
+          name: 'Ops',
+          version: '1.0.0',
+        },
+      };
+
+      selectedAdaptation = selectedState.selectedAdaptation as RavenAdaptationDetail;
+
+      activity = {
+        id: 'foo',
+        name: 'Foo',
+        start: '',
+      };
+
+      updated = {
+        id: 'foo',
+        name: 'FooBar',
+        start: '',
+      };
+    });
+
+    describe('SaveActivityTypeSuccess', () => {
+      it('should append an activity type when a new activity type is passed', () => {
+        const result: AdaptationState = reducer(
+          selectedState,
+          new SaveActivityTypeSuccess(activity, true),
+        );
+
+        const expected: AdaptationState = {
+          ...selectedState,
+          selectedAdaptation: {
+            ...selectedAdaptation,
+            activityTypes: {
+              [activity.id]: { ...activity },
+            },
+          },
+        };
+
+        expect(result).toEqual(expected);
+      });
+
+      it('should update an activity type when an existing activity type is passed', () => {
+        const result: AdaptationState = reducer(
+          {
+            ...selectedState,
+            selectedAdaptation: {
+              ...selectedAdaptation,
+              activityTypes: {
+                [activity.id]: { ...activity },
+              },
+            },
+          },
+          new SaveActivityTypeSuccess(updated, false),
+        );
+
+        const expected: AdaptationState = {
+          ...selectedState,
+          selectedAdaptation: {
+            ...selectedAdaptation,
+            activityTypes: {
+              [updated.id]: { ...updated },
+            },
+          },
+        };
+
+        expect(result).toEqual(expected);
+      });
+    });
+
+    describe('RemoveActivityType', () => {
+      it('should remove an activity with the provided ID', () => {
+        const result: AdaptationState = reducer(
+          {
+            ...selectedState,
+            selectedAdaptation: {
+              ...selectedAdaptation,
+              activityTypes: {
+                [activity.id]: { ...activity },
+              },
+            },
+          },
+          new RemoveActivityType(activity.id),
+        );
+
+        const expected: AdaptationState = {
+          ...selectedState,
+          selectedAdaptation: {
+            ...selectedAdaptation,
+            activityTypes: {},
+          },
+        };
+
+        expect(result).toEqual(expected);
       });
     });
   });

@@ -279,7 +279,10 @@ export class TimelineEffects {
               );
             } else {
               actions.push(
-                new timelineActions.AddBand('__childrenOrDescendants', toCompositeBand(subBand)),
+                new timelineActions.AddBand(
+                  '__childrenOrDescendants',
+                  toCompositeBand(subBand),
+                ),
               );
             }
           });

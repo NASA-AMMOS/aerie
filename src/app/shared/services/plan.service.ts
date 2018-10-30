@@ -14,5 +14,6 @@ import { RavenPlan } from '../models/raven-plan';
  * @todo Convert into a real service once one exists to get data from
  */
 export interface PlanService {
+  getPlan(id: string): Observable<RavenPlan>;
   getPlans(): Observable<RavenPlan[]>;
 }

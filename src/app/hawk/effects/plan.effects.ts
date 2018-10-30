@@ -12,12 +12,13 @@ import { MatDialog } from '@angular/material';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 import { cloneDeep } from 'lodash';
-import { Observable, of, zip } from 'rxjs';
+import { merge, Observable, of, zip } from 'rxjs';
 import {
   catchError,
   concatMap,
   exhaustMap,
   map,
+  switchMap,
   withLatestFrom,
 } from 'rxjs/operators';
 
@@ -25,6 +26,9 @@ import { RavenPlanFormDialogComponent } from '../../shared/components/components
 import { RavenPlanFormDialogData } from '../../shared/models/raven-plan-form-dialog-data';
 
 import {
+  FetchPlanDetail,
+  FetchPlanDetailFailure,
+  FetchPlanDetailSuccess,
   FetchPlanList,
   FetchPlanListFailure,
   FetchPlanListSuccess,
@@ -35,7 +39,13 @@ import {
   SavePlanSuccess,
 } from '../actions/plan.actions';
 
+import {
+  FetchAdaptationFailure,
+  FetchAdaptationSuccess,
+} from '../actions/adaptation.actions';
+
 // TODO: Replace with a real service once an external service for plans becomes available
+import { AdaptationMockService } from '../../shared/services/adaptation-mock.service';
 import { PlanMockService } from '../../shared/services/plan-mock.service';
 import { HawkAppState } from '../hawk-store';
 
@@ -45,6 +55,7 @@ export class PlanEffects {
     private actions$: Actions,
     private store$: Store<HawkAppState>,
     private planService: PlanMockService,
+    private adaptationService: AdaptationMockService,
     private dialog: MatDialog,
   ) {}
 
@@ -58,6 +69,34 @@ export class PlanEffects {
           console.error('PlanEffects - fetchPlanList$: ', e);
           return of(new FetchPlanListFailure(e));
         }),
+      );
+    }),
+  );
+
+  /**
+   * Any time a new plan is requested, fetch the plan _and_ the adaptation.
+   */
+  @Effect()
+  fetchPlan$: Observable<Action> = this.actions$.pipe(
+    ofType<FetchPlanDetail>(PlanActionTypes.FetchPlanDetail),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    switchMap(({ action, state }) => {
+      const plan = state.hawk.plan.plans.find(p => p.id === action.id);
+      if (!plan) {
+        const err = new Error('UndefinedPlan');
+        return of(new FetchPlanDetailFailure(err));
+      }
+
+      return merge(
+        this.planService.getPlan(action.id).pipe(
+          map(data => new FetchPlanDetailSuccess(data)),
+          catchError((err: Error) => of(new FetchPlanDetailFailure(err))),
+        ),
+        this.adaptationService.getAdaptation(plan.adaptationId).pipe(
+          map(data => new FetchAdaptationSuccess(data)),
+          catchError((err: Error) => of(new FetchAdaptationFailure(err))),
+        ),
       );
     }),
   );

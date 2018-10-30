@@ -17,7 +17,6 @@ import * as fromRoot from '../app-store';
  * the state of the reducer plus any selector functions. The `* as`
  * notation packages up all of the exports into a single object.
  */
-import * as fromActivityType from './reducers/activity-type.reducer';
 import * as fromAdaptation from './reducers/adaptation.reducer';
 import * as fromPlan from './reducers/plan.reducer';
 
@@ -26,7 +25,6 @@ import * as fromPlan from './reducers/plan.reducer';
  * our top level state interface is just a map of keys to inner state types.
  */
 export interface State {
-  activityType: fromActivityType.ActivityTypeState;
   adaptation: fromAdaptation.AdaptationState;
   plan: fromPlan.PlanState;
 }
@@ -37,7 +35,6 @@ export interface State {
  * and the current or initial state and return a new immutable state.
  */
 export const reducers: ActionReducerMap<State> = {
-  activityType: fromActivityType.reducer,
   adaptation: fromAdaptation.reducer,
   plan: fromPlan.reducer,
 };

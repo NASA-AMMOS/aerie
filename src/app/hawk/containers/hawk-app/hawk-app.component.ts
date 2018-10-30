@@ -23,27 +23,25 @@ import { RavenAdaptation } from '../../../shared/models/raven-adaptation';
 import { RavenPlan } from '../../../shared/models/raven-plan';
 
 import * as configActions from '../../../shared/actions/config.actions';
+
 import {
-  FetchActivityTypeList,
+  FetchAdaptationList,
   OpenActivityTypeFormDialog,
   RemoveActivityType,
-} from '../../actions/activity-type.actions';
-
-import { FetchAdaptationList } from '../../actions/adaptation.actions';
+} from '../../actions/adaptation.actions';
 
 import {
+  FetchPlanDetail,
   FetchPlanList,
   OpenPlanFormDialog,
   RemovePlan,
-  SelectPlan,
 } from '../../actions/plan.actions';
 
-import { HawkAppState } from '../../hawk-store';
-
 import * as fromConfig from '../../../shared/reducers/config.reducer';
-import * as fromActivityType from '../../reducers/activity-type.reducer';
 import * as fromAdaptation from '../../reducers/adaptation.reducer';
 import * as fromPlan from '../../reducers/plan.reducer';
+
+import { HawkAppState } from '../../hawk-store';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -90,21 +88,24 @@ export class HawkAppComponent implements OnDestroy {
   ) {
     this.store
       .pipe(
-        select(fromActivityType.getActivityTypes),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(activityTypes => {
-        this.activityTypes = activityTypes;
-        this.markForCheck();
-      });
-
-    this.store
-      .pipe(
         select(fromAdaptation.getAdaptations),
         takeUntil(this.ngUnsubscribe),
       )
       .subscribe(adaptations => {
         this.adaptations = adaptations;
+        this.markForCheck();
+      });
+
+    this.store
+      .pipe(
+        select(fromAdaptation.getSelectedAdaptation),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(selectedAdaptation => {
+        this.selectedAdaptation = selectedAdaptation;
+        if (selectedAdaptation) {
+          this.activityTypes = Object.values(selectedAdaptation.activityTypes);
+        }
         this.markForCheck();
       });
 
@@ -142,7 +143,6 @@ export class HawkAppComponent implements OnDestroy {
     // TODO: Move to a route guard
     this.store.dispatch(new FetchAdaptationList());
     this.store.dispatch(new FetchPlanList());
-    this.store.dispatch(new FetchActivityTypeList());
   }
 
   ngOnDestroy() {
@@ -211,7 +211,7 @@ export class HawkAppComponent implements OnDestroy {
    * Event. Dispatch an action to select a Plan
    */
   selectPlan(id: string) {
-    this.store.dispatch(new SelectPlan(id));
+    this.store.dispatch(new FetchPlanDetail(id));
   }
 
   /**

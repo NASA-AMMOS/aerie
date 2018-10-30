@@ -11,6 +11,9 @@ import { Action } from '@ngrx/store';
 import { RavenPlan } from '../../shared/models/raven-plan';
 
 export enum PlanActionTypes {
+  FetchPlanDetail = '[plan] fetch_plan_detail',
+  FetchPlanDetailSuccess = '[plan] fetch_plan_detail_success',
+  FetchPlanDetailFailure = '[plan] fetch_plan_detail_failure',
   FetchPlanList = '[plan] fetch_plan_list',
   FetchPlanListFailure = '[plan] fetch_plan_list_failure',
   FetchPlanListSuccess = '[plan] fetch_plan_list_success',
@@ -21,7 +24,24 @@ export enum PlanActionTypes {
   SavePlan = '[plan] save_plan',
   SavePlanFailure = '[plan] save_plan_failure',
   SavePlanSuccess = '[plan] save_plan_success',
-  SelectPlan = '[plan] select_plan',
+}
+
+export class FetchPlanDetail implements Action {
+  readonly type = PlanActionTypes.FetchPlanDetail;
+
+  constructor(public id: string) {}
+}
+
+export class FetchPlanDetailFailure implements Action {
+  readonly type = PlanActionTypes.FetchPlanDetailFailure;
+
+  constructor(public error: Error) {}
+}
+
+export class FetchPlanDetailSuccess implements Action {
+  readonly type = PlanActionTypes.FetchPlanDetailSuccess;
+
+  constructor(public data: RavenPlan) {}
 }
 
 export class FetchPlanList implements Action {
@@ -80,13 +100,10 @@ export class SavePlanSuccess implements Action {
   constructor(public data: RavenPlan, public isNew: boolean = false) {}
 }
 
-export class SelectPlan implements Action {
-  readonly type = PlanActionTypes.SelectPlan;
-
-  constructor(public id: string) {}
-}
-
 export type PlanActions =
+  | FetchPlanDetail
+  | FetchPlanDetailFailure
+  | FetchPlanDetailSuccess
   | FetchPlanList
   | FetchPlanListFailure
   | FetchPlanListSuccess
@@ -96,5 +113,4 @@ export type PlanActions =
   | RemovePlanSuccess
   | SavePlan
   | SavePlanFailure
-  | SavePlanSuccess
-  | SelectPlan;
+  | SavePlanSuccess;
