@@ -11,8 +11,9 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
+import { StringTMap } from '../../models/map';
 import { RavenActivityType } from '../../models/raven-activity-type';
-import { ActivityTypeMockService } from '../../services/activity-type-mock.service';
+import { AdaptationMockService } from '../../services/adaptation-mock.service';
 import { RavenActivityTypeListComponent } from './raven-activity-type-list.component';
 import { RavenActivityTypeListModule } from './raven-activity-type-list.module';
 
@@ -30,7 +31,9 @@ import { RavenActivityTypeListModule } from './raven-activity-type-list.module';
   `,
 })
 class RavenActivityTypeListTestComponent {
-  activityTypes: RavenActivityType[] = ActivityTypeMockService.getMockData();
+  activityTypes: StringTMap<
+    RavenActivityType
+  > = AdaptationMockService.getMockActivityTypes('Test 0');
 
   @ViewChild(RavenActivityTypeListComponent)
   component: RavenActivityTypeListComponent;

@@ -20,11 +20,11 @@
           <raven-activity-type-list (createActivityTypeClicked)="showCreateActivityTypeForm()"
             (deleteActivityTypeClicked)="deleteActivityType($event.id)"
             (updateActivityTypeClicked)="showUpdateActivityTypeForm($event.id)"
-            *ngIf="selectedPlan != null" [activityTypes]="activityTypes">
+            *ngIf="activityTypes.length" [activityTypes]="activityTypes">
           </raven-activity-type-list>
         </mat-accordion>
 
-        <div class="empty" *ngIf="selectedPlan == null">
+        <div class="empty" *ngIf="!activityTypes.length">
           Select a plan to view activity types.
         </div>
       </aside>
