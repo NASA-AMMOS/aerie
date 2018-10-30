@@ -9,6 +9,17 @@
   <div class="value">{{selectedPoint.endTimestamp}}</div>
   <div class="label pad-top">Duration</div>
   <div class="value">{{selectedPoint.duration | dhms}}</div>
+  <div class="label pad-top">Activity Expansion</div>
+
+  <mat-select
+    class="value"
+    [value]="selectedPoint.expansion"
+    (selectionChange)="changeActivityExpansion.emit({activityPoint: selectedPoint, expansion: $event.value})">
+    <mat-option [value]="'noExpansion'">No Expansion</mat-option>
+    <mat-option [value]="'expandChildren'">Show Children</mat-option>
+    <mat-option [value]="'expandDescendants'">Show Descendants</mat-option>
+  </mat-select>
+
 </mat-card>
 
 <div class="parameters">

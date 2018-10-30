@@ -97,7 +97,7 @@ export class RavenLayoutApplyComponent implements OnChanges {
     }
 
     return (
-      (this.sourcesFormControl.valid && pinsValid) || this.applyPins === '0'
+      this.sourcesFormControl.valid && (pinsValid || this.applyPins === '0')
     );
   }
 

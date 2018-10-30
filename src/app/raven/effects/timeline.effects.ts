@@ -20,6 +20,7 @@ import { concatMap, map, switchMap, withLatestFrom } from 'rxjs/operators';
 
 import {
   AddBand,
+  FetchChildrenOrDescendants,
   PanLeftViewTimeRange,
   PanRightViewTimeRange,
   PinAdd,
@@ -38,14 +39,24 @@ import {
   MpsServerResourceMetadata,
   MpsServerResourcePoint,
   RavenCompositeBand,
+  RavenDefaultBandSettings,
   RavenPin,
   RavenResourceBand,
   RavenSource,
   RavenSubBand,
   RavenTimeRange,
+  StringTMap,
 } from '../../shared/models';
 
-import { getPinLabel, getResourcePoints, timestamp } from '../../shared/util';
+import {
+  getPinLabel,
+  getResourcePoints,
+  hasActivityBand,
+  subBandById,
+  timestamp,
+  toCompositeBand,
+  toRavenDescendantsData,
+} from '../../shared/util';
 
 import * as layoutActions from '../actions/layout.actions';
 import * as sourceExplorerActions from '../actions/source-explorer.actions';
@@ -58,6 +69,45 @@ export class TimelineEffects {
     private http: HttpClient,
     private store$: Store<RavenAppState>,
   ) {}
+
+  @Effect()
+  fetchChildrenOrDescendants$: Observable<Action> = this.actions$.pipe(
+    ofType<FetchChildrenOrDescendants>(
+      TimelineActionTypes.FetchChildrenOrDescendants,
+    ),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    concatMap(({ action, state }) =>
+      concat(
+        of(new timelineActions.UpdateTimeline({ fetchPending: true })),
+        this.fetchChildrenOrDescendants(
+          state.raven.timeline.bands
+            ? subBandById(
+                state.raven.timeline.bands,
+                action.bandId,
+                action.subBandId,
+              )
+            : null,
+          action.activityPoint.uniqueId,
+          action.expandType === 'expandChildren'
+            ? action.activityPoint.childrenUrl
+            : action.activityPoint.descendantsUrl,
+          state.config.raven.defaultBandSettings,
+          state.raven.sourceExplorer.treeBySourceId,
+          state.raven.timeline.bands,
+        ),
+        of(
+          new timelineActions.ExpandChildrenOrDescendants(
+            action.bandId,
+            action.subBandId,
+            action.activityPoint,
+            action.expandType,
+          ),
+        ),
+        of(new timelineActions.UpdateTimeline({ fetchPending: false })),
+      ),
+    ),
+  );
 
   /**
    * Effect for RemoveAllBands.
@@ -181,6 +231,65 @@ export class TimelineEffects {
   );
 
   /**
+   * Helper. Fetches children or descendants of an activity point
+   */
+  fetchChildrenOrDescendants(
+    parentSubBand: RavenSubBand | null,
+    activityPointId: string,
+    url: string,
+    defaultBandSettings: RavenDefaultBandSettings,
+    treeBySourceId: StringTMap<RavenSource>,
+    currentBands: RavenCompositeBand[],
+  ) {
+    let sourceId = '';
+    let pinLabel = '';
+    if (parentSubBand) {
+      sourceId = parentSubBand.sourceIds[0];
+      pinLabel = parentSubBand.labelPin;
+    }
+    return this.http.get(url).pipe(
+      map((graphData: MpsServerGraphData) =>
+        toRavenDescendantsData(
+          '__childrenOrDescendants',
+          activityPointId,
+          graphData,
+          defaultBandSettings,
+          null,
+          treeBySourceId,
+        ),
+      ),
+      concatMap((newSubBands: RavenSubBand[]) => {
+        const actions: Action[] = [];
+
+        if (newSubBands.length > 0) {
+          newSubBands.forEach((subBand: RavenSubBand) => {
+            const activityBand = hasActivityBand(
+              currentBands,
+              subBand,
+              pinLabel,
+            );
+            if (activityBand) {
+              actions.push(
+                new timelineActions.AddPointsToSubBand(
+                  sourceId,
+                  activityBand.bandId,
+                  activityBand.subBandId,
+                  subBand.points,
+                ),
+              );
+            } else {
+              actions.push(
+                new timelineActions.AddBand('__childrenOrDescendants', toCompositeBand(subBand)),
+              );
+            }
+          });
+        }
+        return actions;
+      }),
+    );
+  }
+
+  /**
    * Helper. Fetches new resource points for a given time range.
    * Good for use on decimated data.
    */
@@ -210,15 +319,19 @@ export class TimelineEffects {
 
     bands.forEach((band: RavenCompositeBand) => {
       band.subBands.forEach((subBand: RavenSubBand) => {
-        actions.push(new timelineActions.RemoveSubBand(subBand.id));
-        actions.push(
-          new sourceExplorerActions.SubBandIdRemove(
-            subBand.sourceIds,
-            subBand.id,
-          ),
-        );
+        subBand.sourceIds.forEach(sourceId => {
+          actions.push(
+            new timelineActions.RemoveBandsOrPointsForSource(sourceId),
+          );
+          actions.push(
+            new sourceExplorerActions.UpdateTreeSource(sourceId, {
+              opened: false,
+            }),
+          );
+        });
       });
     });
+
     return actions;
   }
 

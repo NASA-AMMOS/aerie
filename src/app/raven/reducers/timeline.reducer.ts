@@ -16,9 +16,11 @@ import {
   AddGuide,
   AddPointsToSubBand,
   AddSubBand,
+  ExpandChildrenOrDescendants,
   RemoveAllPointsInSubBandWithParentSource,
   RemoveBandsOrPointsForSource,
   RemoveBandsWithNoPoints,
+  RemoveChildrenOrDescendants,
   RemoveGuide,
   RemoveSourceIdFromSubBands,
   RemoveSubBand,
@@ -47,6 +49,7 @@ import {
 } from '../../shared/util';
 
 import {
+  RavenActivityPoint,
   RavenCompositeBand,
   RavenPoint,
   RavenSubBand,
@@ -100,6 +103,8 @@ export function reducer(
       return addPointsToSubBand(state, action);
     case TimelineActionTypes.AddSubBand:
       return addSubBand(state, action);
+    case TimelineActionTypes.ExpandChildrenOrDescendants:
+      return expandChildrenOrDescendants(state, action);
     case TimelineActionTypes.PanLeftViewTimeRange:
       return panLeftViewTimeRange(state);
     case TimelineActionTypes.PanRightViewTimeRange:
@@ -114,6 +119,8 @@ export function reducer(
       return removeBandsWithNoPoints(state, action);
     case TimelineActionTypes.RemoveGuide:
       return removeGuide(state, action);
+    case TimelineActionTypes.RemoveChildrenOrDescendants:
+      return removeChildrenOrDescendants(state, action);
     case TimelineActionTypes.RemoveSourceIdFromSubBands:
       return removeSourceIdFromSubBands(state, action);
     case TimelineActionTypes.RemoveSubBand:
@@ -293,6 +300,51 @@ export function addSubBand(
 }
 
 /**
+ * Reduction Helper. Called when reducing 'ExpandChildrenOrDescendants' actions.
+ */
+export function expandChildrenOrDescendants(
+  state: TimelineState,
+  action: ExpandChildrenOrDescendants,
+): TimelineState {
+  const activityPoint = action.activityPoint
+    ? {
+        ...action.activityPoint,
+        expansion: action.expandType,
+      }
+    : null;
+  const bands = state.bands.map((band: RavenCompositeBand) => {
+    if (action.bandId === band.id) {
+      return {
+        ...band,
+        subBands: band.subBands.map(subBand => {
+          if (action.subBandId === subBand.id) {
+            return {
+              ...subBand,
+              points: (subBand as any).points.map(
+                (point: RavenActivityPoint) => {
+                  if (point.uniqueId === action.activityPoint.uniqueId) {
+                    return { ...activityPoint };
+                  }
+                  return point;
+                },
+              ),
+            };
+          }
+          return subBand;
+        }),
+      };
+    }
+
+    return band;
+  });
+  return {
+    ...state,
+    bands,
+    selectedPoint: activityPoint,
+  };
+}
+
+/**
  * Reduction Helper. Called when reducing the 'PanLeftViewTimeRange' action.
  */
 export function panLeftViewTimeRange(state: TimelineState): TimelineState {
@@ -378,18 +430,18 @@ export function removeBandsOrPointsForSource(
   let bands = state.bands
     .map(band => ({
       ...band,
-      subBands: band.subBands.reduce(
-        (subBands: RavenSubBand[], subBand: RavenSubBand) => {
+      subBands: band.subBands
+        .reduce((subBands: RavenSubBand[], subBand: RavenSubBand) => {
           const subBandHasSource = subBand.sourceIds.includes(action.sourceId);
-          const sourceIdsCount = subBand.sourceIds.length;
-
           if (!subBandHasSource) {
             subBands.push(subBand);
-          } else if (subBandHasSource && sourceIdsCount > 1) {
+          } else {
             subBands.push({
               ...subBand,
               points: (subBand as any).points.filter(
-                (point: any) => point.sourceId !== action.sourceId,
+                (point: any) =>
+                  point.sourceId !== action.sourceId ||
+                  point.expandedFromPointId,
               ),
               sourceIds: subBand.sourceIds.filter(
                 sourceId => sourceId !== action.sourceId,
@@ -398,9 +450,8 @@ export function removeBandsOrPointsForSource(
           }
 
           return subBands;
-        },
-        [],
-      ),
+        }, [])
+        .filter(subBand => subBand.points.length !== 0),
     }))
     .filter(band => band.subBands.length !== 0)
     .map(band => ({
@@ -442,6 +493,46 @@ export function removeBandsWithNoPoints(
     .filter(band => band.subBands.length);
 
   bands = updateSortOrder(bands);
+
+  return {
+    ...state,
+    bands,
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'RemoveChildrenOrDescendants' action.
+ */
+export function removeChildrenOrDescendants(
+  state: TimelineState,
+  action: RemoveChildrenOrDescendants,
+): TimelineState {
+  const bands = state.bands
+    .map(band => ({
+      ...band,
+      subBands: band.subBands
+        .reduce((subBands: RavenSubBand[], subBand: RavenSubBand) => {
+          subBands.push({
+            ...subBand,
+            points: (subBand as any).points
+              .filter((point: RavenActivityPoint) => {
+                return (
+                  point.expandedFromPointId !== action.activityPoint.uniqueId
+                );
+              })
+              .map(
+                (point: RavenActivityPoint) =>
+                  point.uniqueId === action.activityPoint.uniqueId
+                    ? { ...point, expansion: 'noExpansion' }
+                    : point,
+              ),
+          });
+
+          return subBands;
+        }, [])
+        .filter(subBand => subBand.points.length !== 0),
+    }))
+    .filter(band => band.subBands.length !== 0);
 
   return {
     ...state,

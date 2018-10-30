@@ -84,6 +84,7 @@ export function toRavenBandData(
     const activityBands = toActivityBands(
       sourceId,
       sourceName,
+      null,
       timelineData as MpsServerActivityPoint[],
       defaultBandSettings,
       customFilter,
@@ -93,6 +94,58 @@ export function toRavenBandData(
   } else {
     console.error(
       `raven2 - bands.ts - toRavenBandData - parameter 'graphData' has a timeline type we do not recognize: ${
+        metadata.hasTimelineType
+      }`,
+    );
+    return [];
+  }
+}
+
+/**
+ * Returns a list of activity points from children and recursively getting nested children.
+ */
+export function getChildren(children: MpsServerActivityPoint[]) {
+  return children.reduce(function(acts: MpsServerActivityPoint[], child) {
+    acts.push(child);
+    if (child.children) {
+      acts = acts.concat(getChildren(child.children));
+      child.children = [];
+    }
+    return acts;
+  }, []);
+}
+
+/**
+ * Returns a data structure that transforms MpsServerGraphData containing children to bands displayed in Raven.
+ * Note that we do not worry about how these bands are displayed here.
+ * We are just generating the band types for use elsewhere.
+ */
+export function toRavenDescendantsData(
+  parentSubBandId: string,
+  expandedFromPointId: string,
+  graphData: MpsServerGraphData,
+  defaultBandSettings: RavenDefaultBandSettings,
+  customFilter: RavenCustomFilter | null,
+  treeBySourceId: StringTMap<RavenSource>,
+): RavenSubBand[] {
+  const metadata = graphData['Timeline Metadata'];
+
+  if (metadata.hasTimelineType === 'activity') {
+    const children = (graphData['Timeline Data'][0] as MpsServerActivityPoint)
+      .children;
+    const activityBands = toActivityBands(
+      parentSubBandId,
+      parentSubBandId,
+      expandedFromPointId,
+      getChildren(children),
+      defaultBandSettings,
+      customFilter,
+      treeBySourceId,
+    );
+    return activityBands;
+  } else {
+    console.error(
+      `raven2 - bands.ts - toRavenDescendantData - parameter 'graphData' has a timeline type not valid for descendants: ${
         metadata.hasTimelineType
       }`,
     );
@@ -112,6 +165,7 @@ export function toRavenBandData(
 export function toActivityBands(
   sourceId: string,
   sourceName: string,
+  expandedFromPointId: string | null,
   timelineData: MpsServerActivityPoint[],
   defaultBandSettings: RavenDefaultBandSettings,
   customFilter: RavenCustomFilter | null,
@@ -120,12 +174,13 @@ export function toActivityBands(
   const { legends, maxTimeRange } = getActivityPointsByLegend(
     sourceId,
     sourceName,
+    expandedFromPointId,
     timelineData,
   );
   const bands: RavenActivityBand[] = [];
-  const customGraphableSource = treeBySourceId[
-    sourceId
-  ] as RavenCustomGraphableSource;
+  const customGraphableSource = treeBySourceId[sourceId]
+    ? (treeBySourceId[sourceId] as RavenCustomGraphableSource)
+    : null;
 
   // Map each legend to a band.
   Object.keys(legends).forEach(legend => {
@@ -149,7 +204,7 @@ export function toActivityBands(
       legend,
       maxTimeRange,
       minorLabels:
-        customFilter && customFilter.filter
+        customFilter && customFilter.filter && customGraphableSource
           ? [getFilterLabel(customGraphableSource, customFilter)]
           : [],
       name: legend,

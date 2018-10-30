@@ -56,7 +56,6 @@ These are the configuration options shared among all the band types.
 | Delete Band      | On Click, the user will have the option to remove a band from the Bands Panels. |
 | Overlay          | If this option is Turned On, future selected sources will be displayed on top of the band. Please refer to [Overlay Bands Section](#overlay-bands) for more details. |
 | Show Pin Label   | If this option is Turned On and the selected source is the child of a pin, it will append the pin name to the band's label. |
-| Add Divider Band | On Click, a new divider band will be added below the selected band. |
 
 #### Resource Band Options
 
@@ -121,7 +120,7 @@ Overlaying bands allows for multiple data sources of any type to be overlaid wit
 
 
 
-#### 'Add To' Activity Bands
+#### How to: 'Add To' Activity Bands
 
 'Add To' is similar to overlaying bands, however is specific for Activity Bands. The activities will be added in line with different activity sources within the same band.  The activities will not overlap eachother and be arranged as if the activities were drawn from a single data source.  
 
@@ -130,7 +129,12 @@ Overlaying bands allows for multiple data sources of any type to be overlaid wit
 3. In the Selected Band Tab in the Right Panel, set true the 'Add To' option.
 4. Select another source of your preference. The data points of this last selected source will be added in the same band from step one.
 
+#### How to: Add Divider Band
 
+Divider bands are use as separators of different band groupings. If the user wants to add a band in a specific location, a band can be selected and when the user adds a band it will be added after the selected band. 
+
+1. In the top bar look for the divider icon (<img src="./images/baseline-view_day-24px.svg" width="20" />) and click it.
+2. A divider band will be added in the bands panel.
 
 #### How to: Manipulate Time Range
 
@@ -186,6 +190,19 @@ To select a Data Point, click on the data point of your preference. When a data 
 <p align="center"><img src="./images/select_data_point.png" /></p>
 
 *<p align="center">**Image 15: Select a Data Point.** Left side: On a band of your preference, click any data point. Right Side: Once a data point is selected, the details panel will scroll and highlight the selected data point. Also within the 'Selected Point' Tab in the Right Panel, the data point's metadata will be displayed.</p>*
+
+##### How to: Expand Activity Data Points
+| Option            | Description                                |
+| ----------------- | ------------------------------------------ |
+| No Expansion | Displays only the parent activity.|
+| Children Expansion | Displays the immediate children of the selected activity. | 
+| Descendants Expansion  | Displays all the descendants of the selected activity (Children of Children). |
+
+1. Make sure that you have an activity band in the bands panels.
+2. Select an activity data point in the band.
+3. Make sure that you have the `Selected Point` tab in the right panel open.
+4. Look for the Activity Selection Dropdown, and here you will have three options: No Expansion, Children Expansion and Descendants Expansion.
+5. Select the desired expansion.
 
 #### How to: Remove all Bands
 
