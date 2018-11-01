@@ -115,7 +115,7 @@ def find_tree_sources(raven_one_state, band):
     for tab in raven_one_state["tabSources"]:
         # At the moment, it looks like the Home tab uses the `filtered` key, whereas
         # other tabs use the `sources` key.
-        tree.extend(tab.get("filtered") or tab["sources"])
+        tree.extend(tab.get("filtered", tab.get("sources")))
 
     # Traverse each source tree and collect any paths we find.
     return list(deduplicated(
