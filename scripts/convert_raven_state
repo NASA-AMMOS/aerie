@@ -275,8 +275,8 @@ def create_wrapper_band(raven_one_band, sub_band, *, container_id, sort_order):
     return {
         "backgroundColor": backgroundColor,
         "compositeAutoScale": True,
-        "compositeLogTicks": False,
-        "compositeScientificNotation": False,
+        "compositeLogTicks": raven_one_band["graphSettings"].get("logTicks", False),
+        "compositeScientificNotation": raven_one_band["graphSettings"].get("scientificNotation") or False,
         "compositeYAxisLabel": raven_one_band["graphSettings"].get("compositeYLabel", False),
         "containerId": container_id,
         "height": sub_band["height"],
