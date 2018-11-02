@@ -2,6 +2,36 @@
     "bands": [
         {
             "addTo": false,
+            "color": [
+                255,
+                255,
+                255
+            ],
+            "height": 16,
+            "heightPadding": 10,
+            "label": "Divider A",
+            "labelColor": [
+                0,
+                0,
+                0
+            ],
+            "labelPin": "",
+            "maxTimeRange": {
+                "end": 0,
+                "start": 0
+            },
+            "name": "Divider 3014",
+            "points": [],
+            "showTooltip": true,
+            "sourceIds": [],
+            "tableColumns": [],
+            "type": "divider",
+            "backgroundColor": "#ffff00",
+            "containerId": "0",
+            "sortOrder": 0
+        },
+        {
+            "addTo": false,
             "autoScale": true,
             "color": "#000000",
             "decimate": false,
@@ -40,85 +70,13 @@
             "sortOrder": 1
         },
         {
-            "activityHeight": 20,
-            "activityStyle": 1,
-            "addTo": false,
-            "alignLabel": 3,
-            "baselineLabel": 3,
-            "borderWidth": 1,
-            "filterTarget": null,
-            "height": 50,
-            "heightPadding": 10,
-            "icon": "circle",
-            "label": "ACT0_10000",
-            "labelColor": [
-                0,
-                0,
-                0
-            ],
-            "labelFont": "Georgia",
-            "labelPin": "",
-            "layout": 0,
-            "legend": "ACT0_10000",
-            "maxTimeRange": {
-                "end": 0,
-                "start": 0
-            },
-            "minorLabels": [],
-            "name": "ACT0_10000",
-            "points": [],
-            "showActivityTimes": false,
-            "showLabel": true,
-            "showLabelPin": true,
-            "showTooltip": true,
-            "sourceIds": [
-                "/TEST_ATS/Activity_by_Legend_Test/activity_10000/Activities by Legend/ACT0_10000"
-            ],
-            "tableColumns": [],
-            "trimLabel": true,
-            "type": "activity",
-            "backgroundColor": "#FFFFFF",
-            "containerId": "0",
-            "sortOrder": 3
-        },
-        {
             "addTo": false,
             "color": [
                 255,
                 255,
                 255
             ],
-            "height": 7,
-            "heightPadding": 10,
-            "label": "Divider A",
-            "labelColor": [
-                0,
-                0,
-                0
-            ],
-            "labelPin": "",
-            "maxTimeRange": {
-                "end": 0,
-                "start": 0
-            },
-            "name": "Divider 3014",
-            "points": [],
-            "showTooltip": true,
-            "sourceIds": [],
-            "tableColumns": [],
-            "type": "divider",
-            "backgroundColor": "#ffff00",
-            "containerId": "0",
-            "sortOrder": 0
-        },
-        {
-            "addTo": false,
-            "color": [
-                255,
-                255,
-                255
-            ],
-            "height": 7,
+            "height": 16,
             "heightPadding": 10,
             "label": "Divider B",
             "labelColor": [
@@ -142,13 +100,55 @@
             "sortOrder": 2
         },
         {
+            "activityHeight": 20,
+            "activityStyle": 1,
+            "addTo": false,
+            "alignLabel": 3,
+            "baselineLabel": 3,
+            "borderWidth": 1,
+            "filterTarget": null,
+            "height": 35,
+            "heightPadding": 10,
+            "icon": "circle",
+            "label": "ACT0_10000",
+            "labelColor": [
+                0,
+                0,
+                0
+            ],
+            "labelFont": "Georgia",
+            "labelPin": "",
+            "layout": 0,
+            "legend": "ACT0_10000",
+            "maxTimeRange": {
+                "end": 0,
+                "start": 0
+            },
+            "minorLabels": [],
+            "name": "ACT0_10000",
+            "points": [],
+            "showActivityTimes": false,
+            "showLabel": true,
+            "showLabelPin": false,
+            "showTooltip": true,
+            "sourceIds": [
+                "/TEST_ATS/Activity_by_Legend_Test/activity_10000/Activities by Legend/ACT0_10000"
+            ],
+            "tableColumns": [],
+            "trimLabel": true,
+            "type": "activity",
+            "backgroundColor": "#FFFFFF",
+            "containerId": "0",
+            "sortOrder": 3
+        },
+        {
             "addTo": false,
             "color": [
                 255,
                 255,
                 255
             ],
-            "height": 7,
+            "height": 16,
             "heightPadding": 10,
             "label": "Divider C",
             "labelColor": [
@@ -177,11 +177,11 @@
         "icon": "circle",
         "iconEnabled": false,
         "labelFont": "Georgia",
-        "labelFontSize": 9,
-        "labelWidth": 150,
+        "labelFontSize": 10,
+        "labelWidth": 100,
         "resourceColor": "#000000",
         "resourceFillColor": "#000000",
-        "showLastClick": true,
+        "showLastClick": false,
         "showTooltip": true
     },
     "guides": [],
@@ -194,7 +194,7 @@
     "pins": [],
     "version": "1.0.0",
     "viewTimeRange": {
-        "end": 1262359200,
-        "start": 1262304000
+        "end": 1262364020.111,
+        "start": 1262304010.111
     }
 }
