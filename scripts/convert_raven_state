@@ -179,6 +179,12 @@ def create_activity_band(raven_one_band, sources, default_band_settings):
     }
     DEFAULT_ACTIVITY_STYLE = 0
 
+    LAYOUTS = [
+        1,  # PACKED    -- raven 1: 0; raven 2: 1
+        0,  # AUTO-FIT  -- raven 1: 1; raven 2: 0
+        2,  # WATERFALL -- raven 1: 2; raven 2: 2
+    ]
+
     return {
         "activityHeight": raven_one_band["graphSettings"]["activityHeight"],
         "activityStyle": ACTIVITY_STYLES.get(raven_one_band["graphSettings"]["style"], DEFAULT_ACTIVITY_STYLE),
@@ -194,7 +200,7 @@ def create_activity_band(raven_one_band, sources, default_band_settings):
         "labelColor": [0, 0, 0],
         "labelFont": default_band_settings["labelFont"],
         "labelPin": raven_one_band.get("suffix") or "",
-        "layout": raven_one_band["graphSettings"]["activityLayout"],
+        "layout": LAYOUTS[raven_one_band["graphSettings"]["activityLayout"]],
         "legend": raven_one_band.get("legend", ""),
         "maxTimeRange": {
             "start": 0,
@@ -441,7 +447,6 @@ def get_time_range(viewTemplate):
 
 def convert_raven1_state_to_raven2(raven_one_state):
     default_band_settings = get_default_band_settings(raven_one_state["viewTemplate"])
-    time_range = get_time_range(raven_one_state["viewTemplate"])
 
     return {
         "bands":
@@ -451,7 +456,7 @@ def convert_raven1_state_to_raven2(raven_one_state):
         "guides":
             get_guides(raven_one_state["viewTemplate"]["guides"]),
         "maxTimeRange":
-            time_range,
+            {"begin": 0, "end": 0},
         "name":
             raven_one_state["name"],
         "pins":
@@ -459,7 +464,7 @@ def convert_raven1_state_to_raven2(raven_one_state):
         "version":
             "1.0.0",
         "viewTimeRange":
-            time_range,
+            get_time_range(raven_one_state["viewTemplate"]),
     }
 
 
