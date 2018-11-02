@@ -139,7 +139,6 @@ def create_resource_band(raven_one_band, sources, default_band_settings):
     return {
         "addTo": False,
         "autoScale": True,
-        "backgroundColor": "#FFFFFF",
         "color": color,
         "decimate": (source_info["parameters"].get("decimate", ["false"])[0] == "true"),
         "fill": raven_one_band["graphSettings"].get("fill") or False,  # for states
@@ -185,7 +184,6 @@ def create_activity_band(raven_one_band, sources, default_band_settings):
         "activityStyle": ACTIVITY_STYLES.get(raven_one_band["graphSettings"]["style"], DEFAULT_ACTIVITY_STYLE),
         "addTo": False,
         "alignLabel": 3,
-        "backgroundColor": "#FFFFFF",
         "baselineLabel": 3,
         "borderWidth": 1,
         "filterTarget": None,
@@ -219,7 +217,6 @@ def create_state_band(raven_one_band, sources, default_band_settings):
     return {
         "addTo": False,
         "alignLabel": 3,
-        "backgroundColor": "#FFFFFF",
         "baselineLabel": 3,
         "borderWidth": 1,
         "color": default_band_settings["resourceColor"],
@@ -252,7 +249,6 @@ def create_state_band(raven_one_band, sources, default_band_settings):
 def create_divider_band(raven_one_band, sources, default_band_settings):
     return {
         "addTo": False,
-        "backgroundColor": convert_color(raven_one_band["graphSettings"].get("lineColorCustom", [255, 255, 255])),
         "color": [255, 255, 255],
         "height": raven_one_band["graphSettings"].get("height", 7),
         "heightPadding": 10,
@@ -270,20 +266,26 @@ def create_divider_band(raven_one_band, sources, default_band_settings):
         "type": "divider",
     }
 
-def create_wrapper_band(band, *, container_id, sort_order):
+def create_wrapper_band(raven_one_band, sub_band, *, container_id, sort_order):
+    if sub_band["type"] == "divider":
+        backgroundColor = convert_color(raven_one_band["graphSettings"].get("lineColorCustom", [255, 255, 255]))
+    else:
+        backgroundColor = "#FFFFFF"
+
     return {
+        "backgroundColor": backgroundColor,
         "compositeAutoScale": True,
         "compositeLogTicks": False,
         "compositeScientificNotation": False,
-        "compositeYAxisLabel": False,
+        "compositeYAxisLabel": raven_one_band["graphSettings"].get("compositeYLabel", False),
         "containerId": container_id,
-        "height": band["height"],
-        "heightPadding": band["heightPadding"],
-        "name": band["name"],
+        "height": sub_band["height"],
+        "heightPadding": sub_band["heightPadding"],
+        "name": sub_band["name"],
         "overlay": False,
-        "showTooltip": band["showTooltip"],
+        "showTooltip": sub_band["showTooltip"],
         "sortOrder": sort_order,
-        "subBands": [band],
+        "subBands": [sub_band],
         "type": "composite",
     }
 
@@ -331,39 +333,45 @@ def convert_raven_one_bands(raven_one_state, default_band_settings):
 
     # First, handle all of the top-level bands
     bands = []
+    bands_by_label = {}
     for (containerId, panelId) in CHARTS:
         sort_order = 0
         for raven_one_band in raven_one_state["viewTemplate"]["charts"][panelId]:
             if "overlayBand" not in raven_one_band:
                 # Convert the Raven 1 band into a Raven 2 band
-                raven_two_band = convert_raven_one_band(raven_one_state, raven_one_band, default_band_settings)
+                raven_two_band = convert_raven_one_band(
+                    raven_one_state,
+                    raven_one_band,
+                    default_band_settings)
 
                 # Wrap it in a composite band
-                top_level_band = create_wrapper_band(raven_two_band,
+                top_level_band = create_wrapper_band(
+                    raven_one_band,
+                    raven_two_band,
                     container_id=containerId,
                     sort_order=sort_order)
                 sort_order += 1
 
                 bands.append(top_level_band)
+                bands_by_label[raven_one_band["label"]] = top_level_band
 
     # Next, add all of the overlay bands to their parents
     for (containerId, panelId) in CHARTS:
         for raven_one_band in raven_one_state["viewTemplate"]["charts"][panelId]:
             if "overlayBand" in raven_one_band:
                 # Convert the Raven 1 band into a Raven 2 band
-                raven_two_band = convert_raven_one_band(raven_one_state, raven_one_band, default_band_settings)
+                raven_two_band = convert_raven_one_band(
+                    raven_one_state,
+                    raven_one_band,
+                    default_band_settings)
 
                 # Add this band as a subband of its parent
-                if raven_one_band.get("suffix") is not None:
-                    overlay_band_name = strip_units(raven_one_band["overlayBand"])
-                else:
-                    overlay_band_name = raven_one_band["overlayBand"]
-
-                for band in bands:
-                    if band["name"] == overlay_band_name:
-                        # This band is the unoverlaid band's parent
-                        band["subBands"].append(raven_two_band)
-                        break
+                #
+                # The `overlayBand` field is set to its parent's label in Raven 1.
+                # Of course, if multiple bands have the same label, this might
+                # not work properly... but then, Raven 1 would have the same
+                # issue when loading a state back in.
+                bands_by_label[raven_one_band["overlayBand"]]["subBands"].append(raven_two_band)
 
     return bands
 
@@ -385,6 +393,7 @@ def flatten_band(band):
         # Copy the first subband and add the container's id and order to it.
         flattened_band = dict(band["subBands"][0])
         flattened_band.update({
+            "backgroundColor": band["backgroundColor"],
             "containerId": band["containerId"],
             "sortOrder": band["sortOrder"],
         })
