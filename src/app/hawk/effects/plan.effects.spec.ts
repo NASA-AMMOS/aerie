@@ -148,7 +148,9 @@ describe('PlanEffects', () => {
       spyOn(planService, 'getPlan').and.returnValue(cold('-#|', null, error));
 
       const adaptationService = TestBed.get(AdaptationMockService);
-      spyOn(adaptationService, 'getAdaptation').and.returnValue(cold('-#|', null, error));
+      spyOn(adaptationService, 'getAdaptation').and.returnValue(
+        cold('-#|', null, error),
+      );
 
       actions$ = hot('-a', { a: action });
       const expected = cold('--(bc)', { b: planFailure, c: adaptationFailure });

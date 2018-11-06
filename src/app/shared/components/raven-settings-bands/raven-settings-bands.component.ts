@@ -30,7 +30,6 @@ import {
   templateUrl: './raven-settings-bands.component.html',
 })
 export class RavenSettingsBandsComponent {
-
   @Input()
   bandsById: StringTMap<RavenCompositeBand>;
 

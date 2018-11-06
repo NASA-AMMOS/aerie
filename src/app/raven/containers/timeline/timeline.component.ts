@@ -39,10 +39,7 @@ import {
   StringTMap,
 } from '../../../shared/models';
 
-import {
-  getSourceIdsByLabelInBands,
-  subBandById,
-} from '../../../shared/util';
+import { getSourceIdsByLabelInBands, subBandById } from '../../../shared/util';
 
 import * as fromConfig from '../../../shared/reducers/config.reducer';
 import * as fromEpochs from '../../reducers/epochs.reducer';

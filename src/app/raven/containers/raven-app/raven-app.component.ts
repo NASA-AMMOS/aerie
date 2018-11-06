@@ -19,10 +19,7 @@ import { select, Store } from '@ngrx/store';
 import { combineLatest, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
-import {
-  toCompositeBand,
-  toDividerBand,
-} from '../../../shared/util';
+import { toCompositeBand, toDividerBand } from '../../../shared/util';
 
 import { RavenTimeRange } from '../../../shared/models';
 
