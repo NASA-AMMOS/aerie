@@ -1,5 +1,11 @@
 package gov.nasa.jpl.adaptation;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import gov.nasa.jpl.adaptation.activities.ActivityType;
+import gov.nasa.jpl.adaptation.activities.ActivityTypeSerializer;
+import gov.nasa.jpl.engine.Setup;
+import gov.nasa.jpl.input.ReflectionUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -9,7 +15,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Optional;
+import java.lang.reflect.Parameter;
+import java.lang.reflect.Type;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/adaptation")
@@ -120,6 +130,43 @@ public class AdaptationController {
     }
 
     /**
+     * Get the Activity Types in the Adaptation
+     *
+     * @return Array of Activity Type objects
+     */
+    @GetMapping("/{id}/activities")
+    public ResponseEntity<Object> getActivityTypesForAdaptation(@PathVariable("id") Integer id) {
+
+        Optional<Adaptation> optAdapt = repository.findById(id);
+        HashMap<String, ActivityType> activityTypeList = null;
+        if (optAdapt.isPresent()) {
+            Adaptation adaptation = optAdapt.get();
+
+            try {
+                URL adaptationURL = new URL("file://" + adaptation.getLocation());
+                Setup.initializeEngine(adaptationURL);
+
+                activityTypeList = getActivityTypeList();
+
+            }
+            catch (MalformedURLException e) {
+                e.printStackTrace();
+                return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            GsonBuilder gsonMapBuilder = new GsonBuilder();
+            gsonMapBuilder.registerTypeAdapter(ActivityType.class, new ActivityTypeSerializer());
+            Gson gsonObject = gsonMapBuilder.create();
+            String JSONObject = gsonObject.toJson(activityTypeList);
+
+            return ResponseEntity.ok(JSONObject);
+        }
+        else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
      * @param location Path to the directory for the file to be placed
      * @param basename Basename for the file
      * @return String path followed by _X where X is the smallest positive integer that makes the filename unique (unless basename is already unique)
@@ -133,5 +180,58 @@ public class AdaptationController {
             i += 1;
         }
         return filename;
+    }
+
+
+    private HashMap<String, ActivityType> getActivityTypeList() {
+        HashMap<String, ActivityType> activityTypesToReturn = new HashMap<>();
+        String activitySuperClassLocationInPackage = "gov.nasa.jpl.activity.Activity";
+
+        List<Class> allCustomClasses = ReflectionUtilities.getListOfAllCustomClasses();
+        for (Class loadedClass : allCustomClasses) {
+            try {
+                if (Class.forName(activitySuperClassLocationInPackage).isAssignableFrom(loadedClass) && !Class.forName(activitySuperClassLocationInPackage).equals(loadedClass)) {
+                    // we grab and get names for all parameters for this activity type
+                    Parameter[] constructorParameters = loadedClass.getConstructors()[0].getParameters();
+                    Type[] constructorParameterTypes = loadedClass.getConstructors()[0].getGenericParameterTypes();
+                    List<Map<String, String>> parameters = new ArrayList<>();
+                    for (int i = 1; i < constructorParameters.length; i++) {
+                        // we assign to i-1 here because the first parameter is always the time, which doesn't 'count'
+                        Map<String, String> paramMap = new HashMap<>();
+                        paramMap.put("name", constructorParameters[i].getName());
+                        Type type = constructorParameterTypes[i];
+                        String typeName = type.getTypeName();
+                        if (type == Double.TYPE) {
+                            typeName = "java.lang.Double";
+                        }
+                        else if (type == Float.TYPE) {
+                            typeName = "java.lang.Float";
+                        }
+                        else if (type == Integer.TYPE) {
+                            typeName = "java.lang.Integer";
+                        }
+                        else if (type == Long.TYPE) {
+                            typeName = "java.lang.Long";
+                        }
+                        else if (type == Byte.TYPE) {
+                            typeName = "java.lang.Byte";
+                        }
+                        else if (type == Boolean.TYPE) {
+                            typeName = "java.lang.Boolean";
+                        }
+
+                        paramMap.put("type", typeName);
+                        parameters.add(paramMap);
+                    }
+                    ActivityType newType = new ActivityType(ReflectionUtilities.getClassNameWithoutPackage(loadedClass.getName()), loadedClass, parameters);
+                    activityTypesToReturn.put(ReflectionUtilities.getClassNameWithoutPackage(loadedClass.getName()), newType);
+                }
+            }
+            catch (ClassNotFoundException e) {
+                // if we can't load the class, we'll just move on to the next one
+            }
+        }
+
+        return activityTypesToReturn;
     }
 }
