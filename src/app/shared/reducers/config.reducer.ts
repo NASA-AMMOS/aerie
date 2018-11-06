@@ -14,6 +14,7 @@ import {
   ConfigActionTypes,
   NavigationDrawerStates,
   UpdateDefaultBandSettings,
+  UpdateMpsServerSettings,
   UpdateRavenSettings,
 } from '../actions/config.actions';
 
@@ -34,6 +35,8 @@ export function reducer(
   switch (action.type) {
     case ConfigActionTypes.UpdateDefaultBandSettings:
       return updateDefaultBandSettings(state, action);
+    case ConfigActionTypes.UpdateMpsServerSettings:
+      return updateMpsServerSettings(state, action);
     case ConfigActionTypes.UpdateRavenSettings:
       return updateRavenSettings(state, action);
     case ConfigActionTypes.ToggleNavigationDrawer:
@@ -58,6 +61,22 @@ export function updateDefaultBandSettings(
         ...state.raven.defaultBandSettings,
         ...action.update,
       },
+    },
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'UpdateMpsServerSettings' action.
+ */
+export function updateMpsServerSettings(
+  state: ConfigState,
+  action: UpdateMpsServerSettings,
+): ConfigState {
+  return {
+    ...state,
+    mpsServer: {
+      ...state.mpsServer,
+      ...action.update,
     },
   };
 }

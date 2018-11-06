@@ -19,8 +19,10 @@ export enum NavigationDrawerStates {
 // Action Types.
 export enum ConfigActionTypes {
   FetchProjectConfig = '[config] fetch_project_config',
+  FetchProjectConfigSuccess = '[config] fetch_project_config_success',
   ToggleNavigationDrawer = '[config] toggle_menu',
   UpdateDefaultBandSettings = '[config] update_default_band_settings',
+  UpdateMpsServerSettings = '[config] update_mpsserver_settings',
   UpdateRavenSettings = '[config] update_raven_settings',
 }
 
@@ -31,12 +33,22 @@ export class FetchProjectConfig implements Action {
   constructor(public url: string) {}
 }
 
+export class FetchProjectConfigSuccess implements Action {
+  readonly type = ConfigActionTypes.FetchProjectConfigSuccess;
+}
+
 export class ToggleNavigationDrawer implements Action {
   readonly type = ConfigActionTypes.ToggleNavigationDrawer;
 }
 
 export class UpdateDefaultBandSettings implements Action {
   readonly type = ConfigActionTypes.UpdateDefaultBandSettings;
+
+  constructor(public update: StringTMap<BaseType>) {}
+}
+
+export class UpdateMpsServerSettings implements Action {
+  readonly type = ConfigActionTypes.UpdateMpsServerSettings;
 
   constructor(public update: StringTMap<BaseType>) {}
 }
@@ -50,6 +62,8 @@ export class UpdateRavenSettings implements Action {
 // Union type of all actions.
 export type ConfigAction =
   | FetchProjectConfig
+  | FetchProjectConfigSuccess
   | ToggleNavigationDrawer
   | UpdateDefaultBandSettings
+  | UpdateMpsServerSettings
   | UpdateRavenSettings;

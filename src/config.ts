@@ -34,6 +34,7 @@ export interface ConfigState {
   navigationDrawerState: NavigationDrawerStates;
   raven: {
     defaultBandSettings: RavenDefaultBandSettings;
+    ignoreShareableLinkTimes: boolean,
     itarMessage: string;
     shareableLinkStatesUrl: string;
   };
@@ -70,8 +71,7 @@ export const config: ConfigState = {
   hummingbird: {},
   mpsServer: {
     apiUrl: 'mpsserver/api/v2/fs',
-    epochsUrl:
-      'mpsserver/api/v2/fs-mongodb/leucadia/taifunTest/europaEpoch.csv',
+    epochsUrl: '',
     ravenConfigUrl: 'mpsserver/api/v2/raven_config_file',
     ravenUrl: 'mpsserver/raven',
     socketUrl: 'mpsserver/websocket/v1/topic/main',
@@ -90,6 +90,7 @@ export const config: ConfigState = {
       showLastClick: true,
       showTooltip: true,
     },
+    ignoreShareableLinkTimes: false,
     itarMessage: '',
     shareableLinkStatesUrl: 'TEST_ATS/STATES',
   },

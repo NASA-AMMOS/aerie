@@ -14,11 +14,9 @@ import { RouterNavigationAction } from '@ngrx/router-store';
 import { Action, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { map, mergeMap, withLatestFrom } from 'rxjs/operators';
-import { ConfigState } from '../../../config';
 import { RavenAppState } from '../raven-store';
-import { LayoutState } from '../reducers/layout.reducer';
 
-import * as layoutActions from '../actions/layout.actions';
+import * as configActions from '../../shared/actions/config.actions';
 import * as sourceExplorerActions from '../actions/source-explorer.actions';
 
 @Injectable()
@@ -40,90 +38,30 @@ export class RouterEffects {
       const shareableName = queryParams.s;
       const statePath = queryParams.state;
 
+      const actions: Action[] = [];
+      // Get project config.
+      actions.push(
+        new configActions.FetchProjectConfig(
+          `${state.config.app.baseUrl}/${
+            state.config.mpsServer.ravenConfigUrl
+          }`,
+        ),
+      );
       if (shareableName) {
         // If there is an `s` query parameter then use it to load a shareable link.
-        return [
-          ...this.loadShareableLink(
-            state.config,
-            state.raven.layout,
-            shareableName,
-          ),
-        ];
+        actions.push(
+          new sourceExplorerActions.UpdateSourceExplorer({ shareableName }),
+        );
       } else {
         // Otherwise use other query parameters to load an app layout and/or state.
-        return [
-          ...this.loadLayout(state.raven.layout, layout),
-          ...this.loadState(state.config, statePath),
-        ];
+        actions.push(
+          new sourceExplorerActions.UpdateSourceExplorer({ layout }),
+        );
+        actions.push(
+          new sourceExplorerActions.UpdateSourceExplorer({ statePath }),
+        );
       }
+      return actions;
     }),
   );
-
-  /**
-   * Load an app layout mode which shows/hides panels in the main Raven2 UI.
-   */
-  loadLayout(layoutState: LayoutState, layout: string): Action[] {
-    const actions: Action[] = [];
-
-    if (layout === 'minimal') {
-      actions.push(
-        new layoutActions.SetMode('minimal', true, false, false, true),
-      );
-    } else if (layout === 'default') {
-      actions.push(
-        new layoutActions.SetMode('default', true, true, false, true),
-      );
-    } else {
-      actions.push(
-        new layoutActions.SetMode(
-          'custom',
-          layoutState.showDetailsPanel,
-          layoutState.showLeftPanel,
-          layoutState.showRightPanel,
-          layoutState.showSouthBandsPanel,
-        ),
-      );
-    }
-
-    return actions;
-  }
-
-  /**
-   * Returns a stream of actions that loads a sharable link.
-   * To load a shareable link we set the layout to `minimal` mode (i.e. no source-explorer),
-   * and apply the state using the `statePath`, which is composed of the `shareableLinkStatesUrl` from ravenConfig and
-   * the user given `shareableName`.
-   */
-  loadShareableLink(
-    configState: ConfigState,
-    layoutState: LayoutState,
-    shareableName: string,
-  ): Action[] {
-    const statePath = `/${
-      configState.raven.shareableLinkStatesUrl
-    }/${shareableName}`;
-
-    return [
-      ...this.loadLayout(layoutState, 'minimal'),
-      ...this.loadState(configState, statePath),
-    ];
-  }
-
-  /**
-   * Load a state (via ApplyState) if a state path exists.
-   * Note the state path is just a source id, we call it state in the URL since it's more clear to the user what it is.
-   */
-  loadState(configState: ConfigState, statePath: string): Action[] {
-    if (statePath) {
-      return [
-        new sourceExplorerActions.ApplyState(
-          `${configState.app.baseUrl}/${
-            configState.mpsServer.apiUrl
-          }${statePath}`,
-          statePath,
-        ),
-      ];
-    }
-    return [];
-  }
 }
