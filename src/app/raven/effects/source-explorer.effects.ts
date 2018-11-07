@@ -80,7 +80,6 @@ import {
   RavenPin,
   RavenSource,
   RavenState,
-  RavenStateBand,
   RavenSubBand,
   StringTMap,
 } from '../../shared/models';
