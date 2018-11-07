@@ -200,7 +200,7 @@ def create_activity_band(raven_one_band, sources, default_band_settings):
         "labelColor": [0, 0, 0],
         "labelFont": default_band_settings["labelFont"],
         "labelPin": raven_one_band.get("suffix") or "",
-        "layout": LAYOUTS[raven_one_band["graphSettings"]["activityLayout"]],
+        "layout": LAYOUTS[int(raven_one_band["graphSettings"]["activityLayout"])],
         "legend": raven_one_band.get("legend", ""),
         "maxTimeRange": {
             "start": 0,
