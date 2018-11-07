@@ -62,6 +62,9 @@ export class RavenBandsComponent implements OnChanges, OnInit {
   epoch: RavenEpoch | null;
 
   @Input()
+  excludeActivityTypes: string[];
+
+  @Input()
   guides: number[];
 
   @Input()

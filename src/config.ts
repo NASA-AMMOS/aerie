@@ -34,6 +34,7 @@ export interface ConfigState {
   navigationDrawerState: NavigationDrawerStates;
   raven: {
     defaultBandSettings: RavenDefaultBandSettings;
+    excludeActivityTypes: string[];
     ignoreShareableLinkTimes: boolean,
     itarMessage: string;
     shareableLinkStatesUrl: string;
@@ -90,6 +91,7 @@ export const config: ConfigState = {
       showLastClick: true,
       showTooltip: true,
     },
+    excludeActivityTypes: [],
     ignoreShareableLinkTimes: false,
     itarMessage: '',
     shareableLinkStatesUrl: 'TEST_ATS/STATES',
