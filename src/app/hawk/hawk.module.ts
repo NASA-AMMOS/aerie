@@ -15,12 +15,13 @@ import {
   RavenActivityTypeFormDialogModule,
   RavenPlanFormDialogModule,
 } from '../shared/components/modules';
+import { ActivitiesModule } from './containers/activities/activities.module';
 import { HawkAppModule } from './containers/hawk-app/hawk-app.module';
-import { AdaptationEffects } from './effects/adaptation.effects';
-import { PlanEffects } from './effects/plan.effects';
+import { AdaptationEffects, PlanEffects } from './effects';
 import { HawkRoutingModule } from './hawk-routing.module';
 import { reducers } from './hawk-store';
 import * as fromAdaptation from './reducers/adaptation.reducer';
+import { ActivityResolver } from './resolvers';
 
 @NgModule({
   imports: [
@@ -30,8 +31,10 @@ import * as fromAdaptation from './reducers/adaptation.reducer';
     EffectsModule.forFeature([AdaptationEffects, PlanEffects]),
     HawkAppModule,
     RavenActivityTypeFormDialogModule,
+    ActivitiesModule,
     RavenPlanFormDialogModule,
     StoreModule.forFeature('adaptation', fromAdaptation.reducer),
   ],
+  providers: [ActivityResolver],
 })
 export class HawkModule {}

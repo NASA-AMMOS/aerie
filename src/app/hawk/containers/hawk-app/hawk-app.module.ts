@@ -9,13 +9,21 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+
 import {
   MatButtonModule,
   MatDialogModule,
   MatExpansionModule,
+  MatFormFieldModule,
   MatIconModule,
+  MatInputModule,
+  MatSelectModule,
   MatSidenavModule,
+  MatTableModule,
   MatToolbarModule,
+  MatTooltipModule,
 } from '@angular/material';
 
 import {
@@ -31,12 +39,20 @@ import { HawkAppComponent } from './hawk-app.component';
   exports: [HawkAppComponent],
   imports: [
     CommonModule,
+    RouterModule,
+    ReactiveFormsModule,
+    FormsModule,
     MatButtonModule,
     MatDialogModule,
     MatExpansionModule,
+    MatFormFieldModule,
     MatIconModule,
+    MatInputModule,
+    MatSelectModule,
     MatSidenavModule,
+    MatTableModule,
     MatToolbarModule,
+    MatTooltipModule,
     RavenActivityTypeListModule,
     RavenPlanSelectorModule,
     RavenAppHeaderModule,

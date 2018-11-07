@@ -7,16 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  OnDestroy,
-} from '@angular/core';
-
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { select, Store } from '@ngrx/store';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import { HbCommand } from '../../../shared/models/hb-command';
 import { HbCommandDictionary } from '../../../shared/models/hb-command-dictionary';
 
@@ -27,9 +20,7 @@ import {
 } from '../../actions/command-dictionary.actions';
 
 import { HummingbirdAppState } from '../../hummingbird-store';
-
-import * as fromConfig from '../../../shared/reducers/config.reducer';
-import * as fromCommandDictionary from '../../reducers/command-dictionary.reducer';
+import { getCommands, getDictionaries, getSelected } from '../../selectors';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,95 +28,28 @@ import * as fromCommandDictionary from '../../reducers/command-dictionary.reduce
   styleUrls: ['./hummingbird-app.component.css'],
   templateUrl: './hummingbird-app.component.html',
 })
-export class HummingbirdAppComponent implements OnDestroy {
+export class HummingbirdAppComponent {
   /**
    * List of all available dictionaries to select from
    */
-  dictionaries: HbCommandDictionary[];
+  dictionaries$: Observable<HbCommandDictionary[]>;
 
   /**
    * List of all commands from the selected dictionary
    */
-  commands: HbCommand[] | null = [];
+  commands$: Observable<HbCommand[] | null>;
 
   /**
    * Currently active dictionary
    */
-  selectedDictionaryId: string | null;
+  selectedDictionaryId$: Observable<string | null>;
 
-  /**
-   * Current state of the navigation drawer
-   */
-  navigationDrawerState: configActions.NavigationDrawerStates;
-
-  private ngUnsubscribe: Subject<{}> = new Subject();
-
-  constructor(
-    private changeDetector: ChangeDetectorRef,
-    private store: Store<HummingbirdAppState>,
-  ) {
-    this.store
-      .pipe(
-        select(fromCommandDictionary.getDictionaries),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(dictionaries => {
-        this.dictionaries = dictionaries;
-        this.markForCheck();
-      });
-
-    this.store
-      .pipe(
-        select(fromCommandDictionary.getCommands),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(commands => {
-        this.commands = commands;
-        this.markForCheck();
-      });
-
-    this.store
-      .pipe(
-        select(fromCommandDictionary.getSelected),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(selected => {
-        this.selectedDictionaryId = selected || null;
-        this.markForCheck();
-      });
-
-    // Navigation drawer state
-    this.store
-      .pipe(
-        select(fromConfig.getNavigationDrawerState),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(state => {
-        this.navigationDrawerState = state;
-        this.markForCheck();
-      });
+  constructor(private store: Store<HummingbirdAppState>) {
+    this.commands$ = this.store.pipe(select(getCommands));
+    this.dictionaries$ = this.store.pipe(select(getDictionaries));
+    this.selectedDictionaryId$ = this.store.pipe(select(getSelected));
 
     this.store.dispatch(new FetchCommandDictionaryList());
-  }
-
-  ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
-  }
-
-  /**
-   * Helper. Marks this component for change detection check,
-   * and then detects changes on the next tick.
-   *
-   * @todo Find out how we can remove this.
-   */
-  markForCheck() {
-    this.changeDetector.markForCheck();
-    setTimeout(() => {
-      if (!this.changeDetector['destroyed']) {
-        this.changeDetector.detectChanges();
-      }
-    });
   }
 
   /**

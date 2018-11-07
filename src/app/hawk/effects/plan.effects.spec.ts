@@ -10,6 +10,7 @@
 import { OverlayModule } from '@angular/cdk/overlay';
 import { TestBed } from '@angular/core/testing';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { Actions, EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { Store, StoreModule } from '@ngrx/store';
@@ -34,6 +35,12 @@ import {
   OpenPlanFormDialog,
   RemovePlan,
   RemovePlanSuccess,
+  SaveActivity,
+  SaveActivityDetail,
+  SaveActivityDetailFailure,
+  SaveActivityDetailSuccess,
+  SaveActivityFailure,
+  SaveActivitySuccess,
   SavePlanSuccess,
 } from '../actions/plan.actions';
 
@@ -51,8 +58,11 @@ describe('PlanEffects', () => {
   let metadata: EffectsMetadata<PlanEffects>;
   let dialog: any;
   let store: any;
+  let mockRouter: any;
 
   beforeEach(() => {
+    mockRouter = jasmine.createSpyObj('Router', ['navigate']);
+
     TestBed.configureTestingModule({
       imports: [
         MatDialogModule,
@@ -65,6 +75,10 @@ describe('PlanEffects', () => {
         provideMockActions(() => actions$),
         PlanMockService,
         Store,
+        {
+          provide: Router,
+          useValue: mockRouter,
+        },
       ],
     });
 
@@ -74,111 +88,6 @@ describe('PlanEffects', () => {
     store = TestBed.get(Store);
   });
 
-  describe('fetchPlan$', () => {
-    it('should return a FetchPlanDetailFailure if the plan is undefined', () => {
-      const action = new FetchPlanDetail('spider_cat');
-      const planFailure = new FetchPlanDetailFailure(
-        new Error('UndefinedPlan'),
-      );
-
-      actions$ = hot('--a', { a: action });
-      const expected = cold('--b', { b: planFailure });
-
-      expect(effects.fetchPlan$).toBeObservable(expected);
-    });
-
-    it('should return a FetchPlanDetailFailure and FetchAdaptationSuccess', () => {
-      const plans = [PlanMockService.getMockPlan('spider_cat')];
-      const adaptations = AdaptationMockService.getMockData();
-      const adaptation = AdaptationMockService.getMockAdaptation(
-        'ops',
-      ) as RavenAdaptationDetail;
-
-      store.dispatch(new FetchPlanListSuccess(plans));
-      store.dispatch(new FetchAdaptationListSuccess(adaptations));
-
-      const error = new Error('MOCK_FAILURE');
-      const action = new FetchPlanDetail('spider_cat');
-      const planFailure = new FetchPlanDetailFailure(error);
-      const adaptationSuccess = new FetchAdaptationSuccess(adaptation);
-
-      const service = TestBed.get(PlanMockService);
-      spyOn(service, 'getPlan').and.returnValue(cold('-#|', null, error));
-
-      actions$ = hot('--a', { a: action });
-      const expected = cold('--cb', { b: planFailure, c: adaptationSuccess });
-
-      expect(effects.fetchPlan$).toBeObservable(expected);
-    });
-
-    it('should return a FetchPlanDetailSuccess and FetchAdaptationFailure', () => {
-      const plans = [PlanMockService.getMockPlan('spider_cat')];
-      const adaptations = AdaptationMockService.getMockData();
-
-      store.dispatch(new FetchPlanListSuccess(plans));
-      store.dispatch(new FetchAdaptationListSuccess(adaptations));
-
-      const error = new Error('MOCK_FAILURE');
-      const action = new FetchPlanDetail('spider_cat');
-      const planSuccess = new FetchPlanDetailSuccess(plans[0]);
-      const adaptationFailure = new FetchAdaptationFailure(error);
-
-      const service = TestBed.get(AdaptationMockService);
-      spyOn(service, 'getAdaptation').and.returnValue(cold('-#|', null, error));
-
-      actions$ = hot('--a', { a: action });
-      const expected = cold('--bc', { b: planSuccess, c: adaptationFailure });
-
-      expect(effects.fetchPlan$).toBeObservable(expected);
-    });
-
-    it('should return a FetchPlanDetailFailure and FetchAdaptationFailure', () => {
-      const plans = [PlanMockService.getMockPlan('spider_cat')];
-      const adaptations = AdaptationMockService.getMockData();
-
-      store.dispatch(new FetchPlanListSuccess(plans));
-      store.dispatch(new FetchAdaptationListSuccess(adaptations));
-
-      const error = new Error('MOCK_FAILURE');
-      const action = new FetchPlanDetail('spider_cat');
-      const planFailure = new FetchPlanDetailFailure(error);
-      const adaptationFailure = new FetchAdaptationFailure(error);
-
-      const planService = TestBed.get(PlanMockService);
-      spyOn(planService, 'getPlan').and.returnValue(cold('-#|', null, error));
-
-      const adaptationService = TestBed.get(AdaptationMockService);
-      spyOn(adaptationService, 'getAdaptation').and.returnValue(
-        cold('-#|', null, error),
-      );
-
-      actions$ = hot('-a', { a: action });
-      const expected = cold('--(bc)', { b: planFailure, c: adaptationFailure });
-
-      expect(effects.fetchPlan$).toBeObservable(expected);
-    });
-
-    it('should return a FetchPlanDetailSuccess and FetchAdaptationSuccess', () => {
-      const plans = [PlanMockService.getMockPlan('spider_cat')];
-      const adaptations = AdaptationMockService.getMockData();
-      const adaptation = AdaptationMockService.getMockAdaptation(
-        'ops',
-      ) as RavenAdaptationDetail;
-
-      store.dispatch(new FetchPlanListSuccess(plans));
-      store.dispatch(new FetchAdaptationListSuccess(adaptations));
-
-      const action = new FetchPlanDetail('spider_cat');
-      const planSuccess = new FetchPlanDetailSuccess(plans[0]);
-      const adaptationSuccess = new FetchAdaptationSuccess(adaptation);
-
-      actions$ = hot('--a', { a: action });
-      const expected = cold('--(bc)', { b: planSuccess, c: adaptationSuccess });
-
-      expect(effects.fetchPlan$).toBeObservable(expected);
-    });
-  });
-
   describe('fetchPlanList$', () => {
     it('should register fetchPlanList$ that dispatches an action', () => {
       expect(metadata.fetchPlanList$).toEqual({ dispatch: true });
@@ -186,7 +95,7 @@ describe('PlanEffects', () => {
 
     it('should return a FetchPlanDetailSuccess action with data on success', () => {
       const action = new FetchPlanList();
-      const success = new FetchPlanListSuccess(PlanMockService.getMockData());
+      const success = new FetchPlanListSuccess(PlanMockService.getMockPlans());
 
       actions$ = hot('--a-', { a: action });
       const expected = cold('--b', { b: success });
@@ -206,6 +115,126 @@ describe('PlanEffects', () => {
       const expected = cold('----b', { b: failure });
 
       expect(effects.fetchPlanList$).toBeObservable(expected);
+    });
+  });
+
+  describe('fetchPlanDetail$', () => {
+    it('should return a FetchPlanDetailFailure if the plan is undefined', () => {
+      const action = new FetchPlanDetail('spider_cat');
+      const planFailure = new FetchPlanDetailFailure(
+        new Error('UndefinedPlan'),
+      );
+
+      actions$ = hot('--a', { a: action });
+      const expected = cold('--b', { b: planFailure });
+
+      expect(effects.fetchPlanDetail$).toBeObservable(expected);
+    });
+
+    it('should return a FetchPlanDetailFailure and FetchAdaptationSuccess', () => {
+      const adaptationId = 'ops';
+      const plans = [PlanMockService.getMockPlan(adaptationId, 'spider_cat')];
+      const adaptations = AdaptationMockService.getMockData();
+      const adaptation = AdaptationMockService.getMockAdaptation(
+        adaptationId,
+      ) as RavenAdaptationDetail;
+
+      store.dispatch(new FetchPlanListSuccess(plans));
+      store.dispatch(new FetchAdaptationListSuccess(adaptations));
+
+      const error = new Error('MOCK_FAILURE');
+      const action = new FetchPlanDetail('spider_cat');
+      const planFailure = new FetchPlanDetailFailure(error);
+      const adaptationSuccess = new FetchAdaptationSuccess(adaptation);
+
+      const service = TestBed.get(PlanMockService);
+      spyOn(service, 'getPlanDetail').and.returnValue(cold('-#|', null, error));
+
+      actions$ = hot('--a', { a: action });
+      const expected = cold('--cb', { b: planFailure, c: adaptationSuccess });
+
+      expect(effects.fetchPlanDetail$).toBeObservable(expected);
+    });
+
+    it('should return a FetchPlanDetailSuccess and FetchAdaptationFailure', () => {
+      const adaptationId = 'test';
+      const plan = PlanMockService.getMockPlan(adaptationId, 'spider_cat');
+      const plans = [plan];
+      const planDetail = {
+        ...plan,
+        activities: PlanMockService.getMockActivities(),
+      };
+      const adaptations = AdaptationMockService.getMockData();
+
+      store.dispatch(new FetchPlanListSuccess(plans));
+      store.dispatch(new FetchAdaptationListSuccess(adaptations));
+
+      const error = new Error('MOCK_FAILURE');
+      const action = new FetchPlanDetail('spider_cat');
+      const planSuccess = new FetchPlanDetailSuccess(planDetail);
+      const adaptationFailure = new FetchAdaptationFailure(error);
+
+      const service = TestBed.get(AdaptationMockService);
+      spyOn(service, 'getAdaptation').and.returnValue(cold('-#|', null, error));
+
+      actions$ = hot('--a', { a: action });
+      const expected = cold('--bc', { b: planSuccess, c: adaptationFailure });
+
+      expect(effects.fetchPlanDetail$).toBeObservable(expected);
+    });
+
+    it('should return a FetchPlanDetailFailure and FetchAdaptationFailure', () => {
+      const plans = [PlanMockService.getMockPlan('test', 'spider_cat')];
+      const adaptations = AdaptationMockService.getMockData();
+
+      store.dispatch(new FetchPlanListSuccess(plans));
+      store.dispatch(new FetchAdaptationListSuccess(adaptations));
+
+      const error = new Error('MOCK_FAILURE');
+      const action = new FetchPlanDetail('spider_cat');
+      const planFailure = new FetchPlanDetailFailure(error);
+      const adaptationFailure = new FetchAdaptationFailure(error);
+
+      const planService = TestBed.get(PlanMockService);
+      spyOn(planService, 'getPlanDetail').and.returnValue(
+        cold('-#|', null, error),
+      );
+
+      const adaptationService = TestBed.get(AdaptationMockService);
+      spyOn(adaptationService, 'getAdaptation').and.returnValue(
+        cold('-#|', null, error),
+      );
+
+      actions$ = hot('-a', { a: action });
+      const expected = cold('--(bc)', { b: planFailure, c: adaptationFailure });
+
+      expect(effects.fetchPlanDetail$).toBeObservable(expected);
+    });
+
+    it('should return a FetchPlanDetailSuccess and FetchAdaptationSuccess', () => {
+      const adaptationId = 'ops';
+      const plan = PlanMockService.getMockPlan(adaptationId, 'spider_cat');
+      const plans = [plan];
+      const planDetail = {
+        ...plan,
+        activities: PlanMockService.getMockActivities(),
+      };
+      const adaptations = AdaptationMockService.getMockData();
+      const adaptation = AdaptationMockService.getMockAdaptation(
+        adaptationId,
+      ) as RavenAdaptationDetail;
+
+      store.dispatch(new FetchPlanListSuccess(plans));
+      store.dispatch(new FetchAdaptationListSuccess(adaptations));
+
+      const action = new FetchPlanDetail('spider_cat');
+      const planSuccess = new FetchPlanDetailSuccess(planDetail);
+      const adaptationSuccess = new FetchAdaptationSuccess(adaptation);
+
+      actions$ = hot('--a', { a: action });
+      const expected = cold('--(bc)', { b: planSuccess, c: adaptationSuccess });
+
+      expect(effects.fetchPlanDetail$).toBeObservable(expected);
     });
   });
 
@@ -247,7 +276,7 @@ describe('PlanEffects', () => {
       });
 
       const a = new OpenPlanFormDialog(null);
-      const b = new SavePlanSuccess(result, true);
+      const b = new SavePlanSuccess(result);
 
       actions$ = hot('-a', { a });
       const expected = cold('-b', { b });
@@ -293,7 +322,7 @@ describe('PlanEffects', () => {
       // Verify that the same object we passed in comes back without any
       // modification (since no dialog/form was displayed and no use
       // input was accepted the result should be the same as the input).
-      const b = new SavePlanSuccess(initial, false);
+      const b = new SavePlanSuccess(initial);
 
       actions$ = hot('-a', { a });
 
@@ -305,10 +334,88 @@ describe('PlanEffects', () => {
         new PlanMockService(),
         new AdaptationMockService(),
         dialog,
+        mockRouter,
       );
 
       const expected = cold('-b', { b });
       expect(effects.openUpdatePlanFormDialog$).toBeObservable(expected);
+    });
+  });
+
+  describe('saveActivity$', () => {
+    it('should register saveActivity$ that dispatches an action', () => {
+      expect(metadata.saveActivity$).toEqual({ dispatch: true });
+    });
+
+    it('should return a SaveActivitySuccess action with data on success', () => {
+      const activity = PlanMockService.getMockActivities().inst1actXYZ;
+      const action = new SaveActivity(activity);
+      const success = new SaveActivitySuccess(
+        PlanMockService.getMockActivityDetail(activity.id),
+      );
+
+      actions$ = hot('--a-', { a: action });
+      const expected = cold('--b', { b: success });
+
+      expect(effects.saveActivity$).toBeObservable(expected);
+    });
+
+    it('should return a SaveActivityFailure action with an error on failure', () => {
+      const activity = PlanMockService.getMockActivities().inst1actXYZ;
+      const action = new SaveActivity(activity);
+      const error = new Error('MOCK_FAILURE');
+      const failure = new SaveActivityFailure(error);
+
+      const service = TestBed.get(PlanMockService);
+      spyOn(service, 'saveActivity').and.returnValue(cold('--#|', null, error));
+
+      actions$ = hot('--a-', { a: action });
+      const expected = cold('----b', { b: failure });
+
+      expect(effects.saveActivity$).toBeObservable(expected);
+    });
+  });
+
+  describe('saveActivityDetail$', () => {
+    it('should register saveActivityDetail$ that dispatches an action', () => {
+      expect(metadata.saveActivityDetail$).toEqual({ dispatch: true });
+    });
+
+    it('should return a SaveActivityDetailSuccess action with data on success and properly route', () => {
+      const id = 'inst1actXYZ';
+      const activityDetail = PlanMockService.getMockActivityDetail(id);
+      const action = new SaveActivityDetail(activityDetail);
+      const success = new SaveActivityDetailSuccess(activityDetail);
+
+      actions$ = hot('--a-', { a: action });
+      const expected = cold('--b', { b: success });
+
+      expect(effects.saveActivityDetail$).toBeObservable(expected);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/hawk'], {
+        queryParams: { activityId: id },
+      });
+    });
+
+    it('should return a SaveActivityDetailFailure action with an error on failure and properly route', () => {
+      const id = 'inst1actXYZ';
+      const activityDetail = PlanMockService.getMockActivityDetail(id);
+      const action = new SaveActivityDetail(activityDetail);
+      const error = new Error('MOCK_FAILURE');
+      const failure = new SaveActivityDetailFailure(error);
+
+      const service = TestBed.get(PlanMockService);
+      spyOn(service, 'saveActivity').and.returnValue(cold('--#|', null, error));
+
+      actions$ = hot('--a-', { a: action });
+      const expected = cold('----b', { b: failure });
+
+      expect(effects.saveActivityDetail$).toBeObservable(expected);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/hawk'], {
+        queryParams: {
+          activityId: id,
+          err: 'ActivityDetailSaveError',
+        },
+      });
     });
   });
 });

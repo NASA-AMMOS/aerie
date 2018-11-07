@@ -136,6 +136,7 @@ describe('AdaptationEffects', () => {
 
       it('should return a SaveActivityTypeSuccess with the new activity type and creation flag on save', () => {
         const result: RavenActivityType = {
+          description: 'SAMMICH TIME',
           id: 'make_sandwich',
           name: 'Make me a sandwich',
           start: 'now',
@@ -177,6 +178,7 @@ describe('AdaptationEffects', () => {
         const initial: RavenAdaptationDetail = {
           activityTypes: {
             make_sandwich: {
+              description: 'SAMMICH TIME',
               id: 'make_sandwich',
               name: 'Make me a sandwich',
               start: 'now',

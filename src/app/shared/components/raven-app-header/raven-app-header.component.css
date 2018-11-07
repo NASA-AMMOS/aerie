@@ -47,3 +47,7 @@
 .top-bar-row-right {
   justify-content: flex-end;
 }
+
+.top-bar.mat-primary {
+  background: #525e66;
+}

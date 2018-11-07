@@ -8,12 +8,16 @@
  */
 
 import { Observable } from 'rxjs';
-import { RavenPlan } from '../models/raven-plan';
+import { RavenActivityDetail, RavenPlan, RavenPlanDetail } from '../models';
 
 /**
  * @todo Convert into a real service once one exists to get data from
  */
 export interface PlanService {
-  getPlan(id: string): Observable<RavenPlan>;
+  getActivityDetail(id: string): Observable<RavenActivityDetail>;
+  // TODO: Remove adaptation id here eventually.
+  getPlanDetail(adaptationId: string, id: string): Observable<RavenPlanDetail>;
   getPlans(): Observable<RavenPlan[]>;
+  removePlan(id: string): Observable<boolean>;
+  saveActivity(data: RavenActivityDetail): Observable<RavenActivityDetail>;
 }
