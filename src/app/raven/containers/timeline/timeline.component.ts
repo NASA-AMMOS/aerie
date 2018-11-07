@@ -21,6 +21,7 @@ import { takeUntil } from 'rxjs/operators';
 import { ConfigState } from '../../../../config';
 
 import {
+  RavenActivityPoint,
   RavenActivityPointExpansion,
   RavenApplyLayoutUpdate,
   RavenBandLeftClick,
@@ -70,6 +71,7 @@ export class TimelineComponent implements OnDestroy {
   // Config state.
   baseUrl: string;
   defaultBandSettings: RavenDefaultBandSettings;
+  excludeActivityTypes: string[];
   itarMessage: string;
 
   // Epoch state.
@@ -151,6 +153,16 @@ export class TimelineComponent implements OnDestroy {
     >,
   ) {
     // Config state.
+    this.store
+      .pipe(
+        select(fromConfig.getExcludeActivityTypes),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(excludeActivityTypes => {
+        this.excludeActivityTypes = excludeActivityTypes;
+        this.markForCheck();
+      });
+
     this.store
       .pipe(
         select(fromConfig.getItarMessage),
@@ -623,6 +635,15 @@ export class TimelineComponent implements OnDestroy {
 
     if (this.selectedSubBand) {
       this.selectedSubBandPoints = this.selectedSubBand.points;
+      // filter points in excludeActivityTypes
+      if (this.selectedSubBand.type === 'activity') {
+        this.selectedSubBandPoints = this.selectedSubBandPoints.filter(
+          point =>
+            !this.excludeActivityTypes.includes(
+              (point as RavenActivityPoint).activityType,
+            ),
+        );
+      }
     } else {
       this.selectedSubBandPoints = [];
     }

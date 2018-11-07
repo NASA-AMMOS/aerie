@@ -64,8 +64,9 @@ export class ConfigEffects {
                 }),
               );
             } else if (
-              key === 'itarMessage' ||
+              key === 'excludeActivityTypes' ||
               key === 'ignoreShareableLinkTimes' ||
+              key === 'itarMessage' ||
               key === 'shareableLinkStatesUrl'
             ) {
               actions.push(

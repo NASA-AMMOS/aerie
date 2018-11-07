@@ -125,6 +125,10 @@ export const getDefaultBandSettings = createSelector(
   getConfigState,
   (state: ConfigState) => state.raven.defaultBandSettings,
 );
+export const getExcludeActivityTypes = createSelector(
+  getConfigState,
+  (state: ConfigState) => state.raven.excludeActivityTypes,
+);
 export const getItarMessage = createSelector(
   getConfigState,
   (state: ConfigState) => state.raven.itarMessage,
