@@ -1210,7 +1210,6 @@ export class SourceExplorerEffects {
     startTime: string,
     pageDuration: string,
   ) {
-    console.log('in open');
     return this.fetchSubBands(
       treeBySourceId,
       sourceId,
