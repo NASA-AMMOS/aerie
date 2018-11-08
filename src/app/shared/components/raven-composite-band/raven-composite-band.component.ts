@@ -198,16 +198,13 @@ export class RavenCompositeBandComponent
       shouldRedraw = true;
     }
 
-    // Height.
+    // Height. This is the total visible height of the Band.
     if (changes.height && !changes.height.firstChange) {
       this.ctlCompositeBand.height = this.height;
       for (let i = 0, l = this.ctlCompositeBand.bands.length; i < l; ++i) {
         const ctlSubBand = this.ctlCompositeBand.bands[i];
-        // CtlBand height for state band needs to exclude heightPadding.
-        ctlSubBand.height =
-          ctlSubBand.type === 'resource' ||
-          (ctlSubBand.type === 'state' &&
-            (ctlSubBand.isNumeric || ctlSubBand.showStateChangeTimes))
+        // CtlSubBand height needs to exclude heightPadding.
+        ctlSubBand.height = ctlSubBand.heightPadding
             ? this.height - ctlSubBand.heightPadding
             : this.height;
       }
