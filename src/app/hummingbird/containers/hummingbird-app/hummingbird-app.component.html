@@ -3,17 +3,17 @@
 
 <main>
   <hb-command-editor
-    [commands]="commands"
+    [commands]="commands$ | async"
   ></hb-command-editor>
 </main>
 <aside>
   <hb-command-loader
-    [selectedId]="selectedDictionaryId"
-    [dictionaries]="dictionaries"
+    [selectedId]="selectedDictionaryId$ | async"
+    [dictionaries]="dictionaries$ | async"
     (selectedDictionaryChanged)="onSelectedDictionary($event)">
   </hb-command-loader>
   <hb-command-list
-    [commands]="commands"
+    [commands]="commands$ | async"
     (selectedCommandChanged)="onSelectedCommand($event)">
   </hb-command-list>
 </aside>
