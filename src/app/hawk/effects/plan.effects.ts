@@ -9,6 +9,7 @@
 
 import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material';
+import { Router } from '@angular/router';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 import { cloneDeep } from 'lodash';
@@ -36,6 +37,12 @@ import {
   PlanActionTypes,
   RemovePlan,
   RemovePlanSuccess,
+  SaveActivity,
+  SaveActivityDetail,
+  SaveActivityDetailFailure,
+  SaveActivityDetailSuccess,
+  SaveActivityFailure,
+  SaveActivitySuccess,
   SavePlanSuccess,
 } from '../actions/plan.actions';
 
@@ -57,12 +64,13 @@ export class PlanEffects {
     private planService: PlanMockService,
     private adaptationService: AdaptationMockService,
     private dialog: MatDialog,
+    private router: Router,
   ) {}
 
   @Effect()
   fetchPlanList$: Observable<Action> = this.actions$.pipe(
     ofType<FetchPlanList>(PlanActionTypes.FetchPlanList),
-    concatMap(action => {
+    concatMap(_ => {
       return this.planService.getPlans().pipe(
         map(data => new FetchPlanListSuccess(data)),
         catchError((e: Error) => {
@@ -77,19 +85,20 @@ export class PlanEffects {
    * Any time a new plan is requested, fetch the plan _and_ the adaptation.
    */
   @Effect()
-  fetchPlan$: Observable<Action> = this.actions$.pipe(
+  fetchPlanDetail$: Observable<Action> = this.actions$.pipe(
     ofType<FetchPlanDetail>(PlanActionTypes.FetchPlanDetail),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     switchMap(({ action, state }) => {
-      const plan = state.hawk.plan.plans.find(p => p.id === action.id);
+      const plan = state.hawk.plan.plans[action.id];
+
       if (!plan) {
         const err = new Error('UndefinedPlan');
         return of(new FetchPlanDetailFailure(err));
       }
 
       return merge(
-        this.planService.getPlan(action.id).pipe(
+        this.planService.getPlanDetail(plan.adaptationId, action.id).pipe(
           map(data => new FetchPlanDetailSuccess(data)),
           catchError((err: Error) => of(new FetchPlanDetailFailure(err))),
         ),
@@ -107,7 +116,7 @@ export class PlanEffects {
     concatMap(action =>
       this.planService
         .removePlan(action.id)
-        .pipe(map(data => new RemovePlanSuccess(action.id))),
+        .pipe(map(_ => new RemovePlanSuccess(action.id))),
     ),
   );
 
@@ -119,8 +128,7 @@ export class PlanEffects {
     exhaustMap(({ action, state }) => {
       const data: RavenPlanFormDialogData = {
         adaptations: cloneDeep(state.hawk.adaptation.adaptations),
-        selectedPlan:
-          state.hawk.plan.plans.find(a => a.id === action.id) || null,
+        selectedPlan: state.hawk.plan.plans[action.id as string] || null,
       };
 
       const componentDialog = this.dialog.open(RavenPlanFormDialogComponent, {
@@ -135,10 +143,52 @@ export class PlanEffects {
       if (result) {
         return of(
           // TODO: Dispatch SavePlan once we have a backend for it
-          new SavePlanSuccess(result, !action.id),
+          new SavePlanSuccess(result),
         );
       }
       return [];
+    }),
+  );
+
+  @Effect()
+  saveActivity$: Observable<Action> = this.actions$.pipe(
+    ofType<SaveActivity>(PlanActionTypes.SaveActivity),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    switchMap(({ action }) =>
+      this.planService.saveActivity(action.data).pipe(
+        map(data => new SaveActivitySuccess(data)),
+        catchError((e: Error) => of(new SaveActivityFailure(e))),
+      ),
+    ),
+  );
+
+  @Effect()
+  saveActivityDetail$: Observable<Action> = this.actions$.pipe(
+    ofType<SaveActivityDetail>(PlanActionTypes.SaveActivityDetail),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    switchMap(({ action }) => {
+      return this.planService.saveActivity(action.data).pipe(
+        map(data => {
+          this.router.navigate(['/hawk'], {
+            queryParams: {
+              activityId: action.data.id,
+            },
+          });
+          return new SaveActivityDetailSuccess(data);
+        }),
+        catchError((e: Error) => {
+          console.error('PlanEffects - saveActivityDetail$: ', e);
+          this.router.navigate(['/hawk'], {
+            queryParams: {
+              activityId: action.data.id,
+              err: 'ActivityDetailSaveError',
+            },
+          });
+          return of(new SaveActivityDetailFailure(e));
+        }),
+      );
     }),
   );
 }

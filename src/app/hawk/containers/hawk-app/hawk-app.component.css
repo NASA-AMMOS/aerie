@@ -10,13 +10,10 @@
 :host {
   display: grid;
   grid-gap: 0px;
-  grid-template-areas:
-    'header header'
-    'main main';
-  grid-template-columns: 300px 1fr;
+  grid-template-areas: 'header' 'main';
   grid-template-rows: 40px 1fr;
-  margin: 0;
   height: 100%;
+  margin: 0;
 }
 
 raven-app-header {
@@ -32,13 +29,45 @@ mat-sidenav-container {
 }
 
 mat-sidenav-content {
-  margin-right: 300px;
   padding: 3rem 2rem 1rem;
 }
 
 mat-sidenav {
-  width: 300px;
-  padding: 12px;
+  width: 350px;
+  padding: 20px 16px;
+  overflow: hidden;
+}
+
+mat-form-field {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.form-controls {
+  display: grid;
+  justify-content: end;
+  grid-template-columns: min-content min-content;
+  grid-gap: 12px;
+}
+
+raven-activity-type-list {
+  overflow-y: scroll;
+}
+
+.side-nav-container {
+  height: 100%;
+  position: relative;
+}
+
+.side-nav-wrapper:not([hidden]) {
+  display: grid;
+  grid-template-rows: 3rem 1fr;
+  height: 100%;
+}
+
+.side-nav-header {
+  display: grid;
+  grid-template-columns: 1fr min-content;
 }
 
 .empty {
@@ -58,4 +87,16 @@ mat-sidenav {
   margin-bottom: 0;
   /* Add the same amount of padding as the select so they will line up */
   padding-bottom: 1.34375rem;
+}
+
+#newActivity {
+  margin-bottom: 1.34735rem;
+}
+
+table {
+  width: 100%;
+}
+
+tr:not(.mat-header-row):hover {
+  background: #f5f5f5;
 }

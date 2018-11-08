@@ -26,7 +26,7 @@ import { RavenPlanSelectorModule } from './raven-plan-selector.module';
   `,
 })
 class RavenPlanSelectorTestComponent {
-  plans = PlanMockService.getMockData();
+  plans = PlanMockService.getMockPlans();
 
   @ViewChild(RavenPlanSelectorComponent)
   childComponent: RavenPlanSelectorComponent;

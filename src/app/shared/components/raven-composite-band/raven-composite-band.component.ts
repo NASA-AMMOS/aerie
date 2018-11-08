@@ -79,6 +79,9 @@ export class RavenCompositeBandComponent
   epoch: RavenEpoch | null = null;
 
   @Input()
+  excludeActivityTypes: string[];
+
+  @Input()
   guides: number[];
 
   @Input()

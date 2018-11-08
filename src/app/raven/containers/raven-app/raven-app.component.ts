@@ -19,14 +19,10 @@ import { select, Store } from '@ngrx/store';
 import { combineLatest, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
-import {
-  toCompositeBand,
-  toDividerBand,
-} from '../../../shared/util';
+import { toCompositeBand, toDividerBand } from '../../../shared/util';
 
 import { RavenTimeRange } from '../../../shared/models';
 
-import * as fromConfig from '../../../shared/reducers/config.reducer';
 import * as fromLayout from '../../reducers/layout.reducer';
 import * as fromSituationalAwareness from '../../reducers/situational-awareness.reducer';
 import * as fromSourceExplorer from '../../reducers/source-explorer.reducer';
@@ -36,6 +32,11 @@ import * as configActions from '../../../shared/actions/config.actions';
 import * as dialogActions from '../../actions/dialog.actions';
 import * as layoutActions from '../../actions/layout.actions';
 import * as timelineActions from '../../actions/timeline.actions';
+
+import {
+  getNavigationDrawerState,
+  getVersion,
+} from '../../../shared/selectors';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -76,7 +77,7 @@ export class RavenAppComponent implements OnDestroy {
     // Config version.
     this.store
       .pipe(
-        select(fromConfig.getVersion),
+        select(getVersion),
         takeUntil(this.ngUnsubscribe),
       )
       .subscribe(v => {
@@ -97,7 +98,7 @@ export class RavenAppComponent implements OnDestroy {
     // Navigation drawer state
     this.store
       .pipe(
-        select(fromConfig.getNavigationDrawerState),
+        select(getNavigationDrawerState),
         takeUntil(this.ngUnsubscribe),
       )
       .subscribe(state => {

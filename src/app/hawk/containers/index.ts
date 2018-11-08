@@ -7,4 +7,5 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+export * from './activities/activities.component';
 export * from './hawk-app/hawk-app.component';

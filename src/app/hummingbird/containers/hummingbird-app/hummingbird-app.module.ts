@@ -7,6 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { MatToolbarModule } from '@angular/material';
 import {
@@ -23,6 +24,7 @@ import { HummingbirdAppComponent } from './hummingbird-app.component';
   declarations: [HummingbirdAppComponent],
   exports: [HummingbirdAppComponent],
   imports: [
+    CommonModule,
     RavenActivityTypeListModule,
     HbCommandEditorModule,
     HbCommandListModule,

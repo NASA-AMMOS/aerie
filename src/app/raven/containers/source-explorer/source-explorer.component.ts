@@ -31,13 +31,14 @@ import {
   StringTMap,
 } from '../../../shared/models';
 
-import * as fromConfig from '../../../shared/reducers/config.reducer';
 import * as fromSourceExplorer from '../../reducers/source-explorer.reducer';
 
 import * as dialogActions from '../../actions/dialog.actions';
 import * as epochsActions from '../../actions/epochs.actions';
 import * as layoutActions from '../../actions/layout.actions';
 import * as sourceExplorerActions from '../../actions/source-explorer.actions';
+
+import { getUrls } from '../../../shared/selectors';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -122,7 +123,7 @@ export class SourceExplorerComponent implements OnDestroy {
   connectToWebsocket() {
     this.store
       .pipe(
-        select(fromConfig.getUrls),
+        select(getUrls),
         switchMap(
           config =>
             new WebSocketSubject(

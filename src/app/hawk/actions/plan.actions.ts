@@ -8,7 +8,12 @@
  */
 
 import { Action } from '@ngrx/store';
-import { RavenPlan } from '../../shared/models/raven-plan';
+import {
+  RavenActivity,
+  RavenActivityDetail,
+  RavenPlan,
+  RavenPlanDetail,
+} from '../../shared/models';
 
 export enum PlanActionTypes {
   FetchPlanDetail = '[plan] fetch_plan_detail',
@@ -21,6 +26,12 @@ export enum PlanActionTypes {
   RemovePlan = '[plan] remove_plan',
   RemovePlanFailure = '[plan] remove_plan_failure',
   RemovePlanSuccess = '[plan] remove_plan_success',
+  SaveActivity = '[plan] save_activity',
+  SaveActivityFailure = '[plan] save_activity_failure',
+  SaveActivitySuccess = '[plan] save_activity_success',
+  SaveActivityDetail = '[plan] save_activity_detail',
+  SaveActivityDetailFailure = '[plan] save_activity_detail_failure',
+  SaveActivityDetailSuccess = '[plan] save_activity_detail_success',
   SavePlan = '[plan] save_plan',
   SavePlanFailure = '[plan] save_plan_failure',
   SavePlanSuccess = '[plan] save_plan_success',
@@ -41,7 +52,7 @@ export class FetchPlanDetailFailure implements Action {
 export class FetchPlanDetailSuccess implements Action {
   readonly type = PlanActionTypes.FetchPlanDetailSuccess;
 
-  constructor(public data: RavenPlan) {}
+  constructor(public data: RavenPlanDetail) {}
 }
 
 export class FetchPlanList implements Action {
@@ -84,6 +95,42 @@ export class RemovePlanSuccess implements Action {
   constructor(public id: string) {}
 }
 
+export class SaveActivity implements Action {
+  readonly type = PlanActionTypes.SaveActivity;
+
+  constructor(public data: RavenActivity) {}
+}
+
+export class SaveActivityFailure implements Action {
+  readonly type = PlanActionTypes.SaveActivityFailure;
+
+  constructor(public error: Error) {}
+}
+
+export class SaveActivitySuccess implements Action {
+  readonly type = PlanActionTypes.SaveActivitySuccess;
+
+  constructor(public data: RavenActivityDetail) {}
+}
+
+export class SaveActivityDetail implements Action {
+  readonly type = PlanActionTypes.SaveActivityDetail;
+
+  constructor(public data: RavenActivityDetail) {}
+}
+
+export class SaveActivityDetailFailure implements Action {
+  readonly type = PlanActionTypes.SaveActivityDetailFailure;
+
+  constructor(public error: Error) {}
+}
+
+export class SaveActivityDetailSuccess implements Action {
+  readonly type = PlanActionTypes.SaveActivityDetailSuccess;
+
+  constructor(public data: RavenActivityDetail) {}
+}
+
 export class SavePlan implements Action {
   readonly type = PlanActionTypes.SavePlan;
 }
@@ -97,7 +144,7 @@ export class SavePlanFailure implements Action {
 export class SavePlanSuccess implements Action {
   readonly type = PlanActionTypes.SavePlanSuccess;
 
-  constructor(public data: RavenPlan, public isNew: boolean = false) {}
+  constructor(public data: RavenPlan) {}
 }
 
 export type PlanActions =
@@ -111,6 +158,12 @@ export type PlanActions =
   | RemovePlan
   | RemovePlanFailure
   | RemovePlanSuccess
+  | SaveActivity
+  | SaveActivityFailure
+  | SaveActivitySuccess
+  | SaveActivityDetail
+  | SaveActivityDetailFailure
+  | SaveActivityDetailSuccess
   | SavePlan
   | SavePlanFailure
   | SavePlanSuccess;

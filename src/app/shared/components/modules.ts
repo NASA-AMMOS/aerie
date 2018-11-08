@@ -50,6 +50,7 @@ export * from './raven-situational-awareness/raven-situational-awareness.module'
 export * from './raven-state-band/raven-state-band.module';
 export * from './raven-state-point/raven-state-point.module';
 export * from './raven-state-save-dialog/raven-state-save-dialog.module';
+export * from './raven-sub-activity-tree/raven-sub-activity-tree.module';
 export * from './raven-table/raven-table.module';
 export * from './raven-time-band/raven-time-band.module';
 export * from './raven-time-cursor/raven-time-cursor.module';

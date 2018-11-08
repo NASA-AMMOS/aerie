@@ -1075,7 +1075,9 @@ export class SourceExplorerEffects {
           })),
           guides: savedState.guides ? savedState.guides : [],
           maxTimeRange: savedState.maxTimeRange,
-          viewTimeRange: savedState.viewTimeRange,
+          viewTimeRange: savedState.ignoreShareableLinkTimes
+            ? { end: 0, start: 0 }
+            : savedState.viewTimeRange,
         }),
       ),
       of(

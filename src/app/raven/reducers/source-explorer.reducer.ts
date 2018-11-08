@@ -54,9 +54,12 @@ export interface SourceExplorerState {
   fetchPending: boolean;
   filtersByTarget: StringTMap<StringTMap<string[]>>; // Target refers to an id that ties filters to a graphable source.
   initialSourcesLoaded: boolean;
+  layout: string;
   loadErrors: string[];
   pins: RavenPin[];
   selectedSourceId: string;
+  shareableName: string;
+  statePath: string;
   treeBySourceId: StringTMap<RavenSource>;
 }
 
@@ -68,9 +71,12 @@ export const initialState: SourceExplorerState = {
   fetchPending: false,
   filtersByTarget: {},
   initialSourcesLoaded: false,
+  layout: '',
   loadErrors: [], // List of sourceIds that give errors when trying to load. Cleared after displayed.
   pins: [],
   selectedSourceId: '',
+  shareableName: '',
+  statePath: '',
   treeBySourceId: {
     // Note: The root source in the source explorer tree is never displayed.
     '/': {

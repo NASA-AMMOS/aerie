@@ -13,6 +13,7 @@ import {
   NavigationDrawerStates,
   ToggleNavigationDrawer,
   UpdateDefaultBandSettings,
+  UpdateMpsServerSettings,
   UpdateRavenSettings,
 } from '../actions/config.actions';
 
@@ -161,6 +162,22 @@ describe('config reducer', () => {
           ...initialState.raven.defaultBandSettings,
           showTooltip: true,
         },
+      },
+    });
+  });
+
+  it('handle UpdateMpsServerSettings epochsUrl', () => {
+    configState = reducer(
+      configState,
+      new UpdateMpsServerSettings({
+        epochsUrl: 'mpsserver/api/v2/fs-mongodb/leucadia/someEpoch.csv',
+      }),
+    );
+    expect(configState).toEqual({
+      ...initialState,
+      mpsServer: {
+        ...initialState.mpsServer,
+        epochsUrl: 'mpsserver/api/v2/fs-mongodb/leucadia/someEpoch.csv',
       },
     });
   });

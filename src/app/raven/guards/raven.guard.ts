@@ -20,9 +20,6 @@ import {
 } from '@angular/router';
 
 import { catchError, filter, switchMap, take, tap } from 'rxjs/operators';
-
-import * as configActions from '../../shared/actions/config.actions';
-import * as epochsActions from '../actions/epochs.actions';
 import * as sourceExplorerActions from '../actions/source-explorer.actions';
 
 @Injectable()
@@ -53,19 +50,7 @@ export class RavenGuard implements CanActivate {
       map(([, state]) => state),
       tap(state => {
         if (!state.raven.sourceExplorer.initialSourcesLoaded) {
-          this.store$.dispatch(
-            new configActions.FetchProjectConfig(
-              `${state.config.app.baseUrl}/${
-                state.config.mpsServer.ravenConfigUrl
-              }`,
-            ),
-          );
           this.store$.dispatch(new sourceExplorerActions.FetchInitialSources());
-          this.store$.dispatch(
-            new epochsActions.FetchEpochs(
-              `${state.config.app.baseUrl}/${state.config.mpsServer.epochsUrl}`,
-            ),
-          );
         }
       }),
       filter((initialSourcesLoaded: any) => initialSourcesLoaded), // TODO: Strongly type?

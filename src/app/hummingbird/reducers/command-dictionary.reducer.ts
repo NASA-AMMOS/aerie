@@ -7,14 +7,12 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { HbCommand } from '../../shared/models/hb-command';
 import { HbCommandDictionary } from '../../shared/models/hb-command-dictionary';
 import {
   CommandDictionaryAction,
   CommandDictionaryActionTypes,
 } from '../actions/command-dictionary.actions';
-import { State } from '../hummingbird-store';
 
 /**
  * Schema for the command dictionary state
@@ -59,27 +57,3 @@ export function reducer(
       return state;
   }
 }
-
-/**
- * State selector helper.
- */
-const featureSelector = createFeatureSelector<State>('hummingbird');
-export const getCommandDictionaryState = createSelector(
-  featureSelector,
-  (state: State): CommandDictionaryState => state.commandDictionary,
-);
-
-export const getCommands = createSelector(
-  getCommandDictionaryState,
-  (state: CommandDictionaryState) => state.commands,
-);
-
-export const getDictionaries = createSelector(
-  getCommandDictionaryState,
-  (state: CommandDictionaryState) => state.dictionaries,
-);
-
-export const getSelected = createSelector(
-  getCommandDictionaryState,
-  (state: CommandDictionaryState) => state.selectedDictionaryId,
-);

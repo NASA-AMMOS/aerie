@@ -15,9 +15,25 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
   templateUrl: './raven-app-header.component.html',
 })
 export class RavenAppHeaderComponent {
+  /**
+   * Whether to display the contextual top bar which is typically a different
+   * color than the primary, and usually has a back or X icon instead of the
+   * standard hamburger icon.
+   */
+  @Input()
+  contextual = false;
+
   @Input()
   title = '';
 
   @Output()
   menuClicked: EventEmitter<never> = new EventEmitter();
+
+  get color() {
+    return this.contextual ? 'accent' : 'primary';
+  }
+
+  get icon() {
+    return this.contextual ? 'arrow_back' : 'menu';
+  }
 }

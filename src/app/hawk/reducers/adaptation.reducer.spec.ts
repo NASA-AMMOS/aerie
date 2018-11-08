@@ -14,6 +14,7 @@ import { AdaptationMockService } from '../../shared/services/adaptation-mock.ser
 
 import {
   FetchAdaptationListSuccess,
+  FetchAdaptationSuccess,
   RemoveActivityType,
   SaveActivityTypeSuccess,
 } from '../actions/adaptation.actions';
@@ -21,6 +22,23 @@ import {
 import { AdaptationState, initialState, reducer } from './adaptation.reducer';
 
 describe('Adaptation Reducer', () => {
+  describe('FetchAdaptationSuccess', () => {
+    it('should properly set the selected adaptation', () => {
+      const adaptationDetail: RavenAdaptationDetail = AdaptationMockService.getMockAdaptation(
+        'test1',
+      ) as RavenAdaptationDetail;
+      const result: AdaptationState = reducer(
+        { ...initialState },
+        new FetchAdaptationSuccess(adaptationDetail),
+      );
+
+      expect(result).toEqual({
+        ...initialState,
+        selectedAdaptation: adaptationDetail,
+      });
+    });
+  });
+
   describe('FetchAdaptationListSuccess', () => {
     it('should return a list of activity types', () => {
       const adaptations: RavenAdaptation[] = AdaptationMockService.getMockData();
@@ -56,12 +74,14 @@ describe('Adaptation Reducer', () => {
       selectedAdaptation = selectedState.selectedAdaptation as RavenAdaptationDetail;
 
       activity = {
+        description: '*le foo',
         id: 'foo',
         name: 'Foo',
         start: '',
       };
 
       updated = {
+        description: '*le foo',
         id: 'foo',
         name: 'FooBar',
         start: '',

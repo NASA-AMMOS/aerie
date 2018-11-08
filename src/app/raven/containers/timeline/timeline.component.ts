@@ -21,6 +21,7 @@ import { takeUntil } from 'rxjs/operators';
 import { ConfigState } from '../../../../config';
 
 import {
+  RavenActivityPoint,
   RavenActivityPointExpansion,
   RavenApplyLayoutUpdate,
   RavenBandLeftClick,
@@ -39,12 +40,8 @@ import {
   StringTMap,
 } from '../../../shared/models';
 
-import {
-  getSourceIdsByLabelInBands,
-  subBandById,
-} from '../../../shared/util';
+import { getSourceIdsByLabelInBands, subBandById } from '../../../shared/util';
 
-import * as fromConfig from '../../../shared/reducers/config.reducer';
 import * as fromEpochs from '../../reducers/epochs.reducer';
 import * as fromLayout from '../../reducers/layout.reducer';
 import * as fromOutput from '../../reducers/output.reducer';
@@ -63,6 +60,13 @@ import * as sourceExplorerActions from '../../actions/source-explorer.actions';
 import * as timeCursorActions from '../../actions/time-cursor.actions';
 import * as timelineActions from '../../actions/timeline.actions';
 
+import {
+  getDefaultBandSettings,
+  getExcludeActivityTypes,
+  getItarMessage,
+  getUrls,
+} from '../../../shared/selectors';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-timeline',
@@ -73,6 +77,7 @@ export class TimelineComponent implements OnDestroy {
   // Config state.
   baseUrl: string;
   defaultBandSettings: RavenDefaultBandSettings;
+  excludeActivityTypes: string[];
   itarMessage: string;
 
   // Epoch state.
@@ -156,7 +161,17 @@ export class TimelineComponent implements OnDestroy {
     // Config state.
     this.store
       .pipe(
-        select(fromConfig.getItarMessage),
+        select(getExcludeActivityTypes),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(excludeActivityTypes => {
+        this.excludeActivityTypes = excludeActivityTypes;
+        this.markForCheck();
+      });
+
+    this.store
+      .pipe(
+        select(getItarMessage),
         takeUntil(this.ngUnsubscribe),
       )
       .subscribe(itarMessage => {
@@ -166,7 +181,7 @@ export class TimelineComponent implements OnDestroy {
 
     this.store
       .pipe(
-        select(fromConfig.getDefaultBandSettings),
+        select(getDefaultBandSettings),
         takeUntil(this.ngUnsubscribe),
       )
       .subscribe(defaultBandSettings => {
@@ -176,7 +191,7 @@ export class TimelineComponent implements OnDestroy {
 
     this.store
       .pipe(
-        select(fromConfig.getUrls),
+        select(getUrls),
         takeUntil(this.ngUnsubscribe),
       )
       .subscribe(({ baseUrl }) => {
@@ -626,6 +641,15 @@ export class TimelineComponent implements OnDestroy {
 
     if (this.selectedSubBand) {
       this.selectedSubBandPoints = this.selectedSubBand.points;
+      // filter points in excludeActivityTypes
+      if (this.selectedSubBand.type === 'activity') {
+        this.selectedSubBandPoints = this.selectedSubBandPoints.filter(
+          point =>
+            !this.excludeActivityTypes.includes(
+              (point as RavenActivityPoint).activityType,
+            ),
+        );
+      }
     } else {
       this.selectedSubBandPoints = [];
     }
