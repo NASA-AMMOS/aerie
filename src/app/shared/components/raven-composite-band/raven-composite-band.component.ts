@@ -200,16 +200,15 @@ export class RavenCompositeBandComponent
 
     // Height.
     if (changes.height && !changes.height.firstChange) {
-      this.ctlCompositeBand.height = this.height + this.heightPadding;
-
+      this.ctlCompositeBand.height = this.height;
       for (let i = 0, l = this.ctlCompositeBand.bands.length; i < l; ++i) {
-        const subBand = this.ctlCompositeBand.bands[i];
+        const ctlSubBand = this.ctlCompositeBand.bands[i];
         // CtlBand height for state band needs to exclude heightPadding.
-        subBand.height =
-          subBand.type === 'state' &&
-          !subBand.isNumeric &&
-          subBand.showStateChangeTimes
-            ? this.height - subBand.heightPadding
+        ctlSubBand.height =
+          ctlSubBand.type === 'resource' ||
+          (ctlSubBand.type === 'state' &&
+            (ctlSubBand.isNumeric || ctlSubBand.showStateChangeTimes))
+            ? this.height - ctlSubBand.heightPadding
             : this.height;
       }
 
@@ -218,9 +217,6 @@ export class RavenCompositeBandComponent
 
     // Height Padding.
     if (changes.heightPadding && !changes.heightPadding.firstChange) {
-      this.ctlCompositeBand.heightPading = this.heightPadding;
-      this.ctlCompositeBand.height = this.height + this.heightPadding;
-
       shouldRedraw = true;
     }
 
@@ -378,7 +374,7 @@ export class RavenCompositeBandComponent
     this.ctlCompositeBand = new (window as any).CompositeBand({
       compositeYAxisLabel: false,
       height: this.height,
-      heightPadding: this.heightPadding,
+      heightPadding: 0,
       id: this.id,
       onDblLeftClick: this.onDblLeftClick.bind(this),
       onHideTooltip: this.onHideTooltip.bind(this),
