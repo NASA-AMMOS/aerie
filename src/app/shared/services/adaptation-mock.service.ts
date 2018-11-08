@@ -45,6 +45,7 @@ export class AdaptationMockService implements AdaptationService {
   static getMockActivityType(name: string, i: number): RavenActivityType {
     const id = name.toLowerCase().replace(/[^\w]/gi, '');
     return {
+      description: '',
       id: `${id}${i}`,
       name: `${name} Activity Type ${i}`,
       start: '',

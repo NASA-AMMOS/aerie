@@ -42,7 +42,6 @@ import {
 
 import { getSourceIdsByLabelInBands, subBandById } from '../../../shared/util';
 
-import * as fromConfig from '../../../shared/reducers/config.reducer';
 import * as fromEpochs from '../../reducers/epochs.reducer';
 import * as fromLayout from '../../reducers/layout.reducer';
 import * as fromOutput from '../../reducers/output.reducer';
@@ -60,6 +59,13 @@ import * as situationalAwarenessActions from '../../actions/situational-awarenes
 import * as sourceExplorerActions from '../../actions/source-explorer.actions';
 import * as timeCursorActions from '../../actions/time-cursor.actions';
 import * as timelineActions from '../../actions/timeline.actions';
+
+import {
+  getDefaultBandSettings,
+  getExcludeActivityTypes,
+  getItarMessage,
+  getUrls,
+} from '../../../shared/selectors';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -155,7 +161,7 @@ export class TimelineComponent implements OnDestroy {
     // Config state.
     this.store
       .pipe(
-        select(fromConfig.getExcludeActivityTypes),
+        select(getExcludeActivityTypes),
         takeUntil(this.ngUnsubscribe),
       )
       .subscribe(excludeActivityTypes => {
@@ -165,7 +171,7 @@ export class TimelineComponent implements OnDestroy {
 
     this.store
       .pipe(
-        select(fromConfig.getItarMessage),
+        select(getItarMessage),
         takeUntil(this.ngUnsubscribe),
       )
       .subscribe(itarMessage => {
@@ -175,7 +181,7 @@ export class TimelineComponent implements OnDestroy {
 
     this.store
       .pipe(
-        select(fromConfig.getDefaultBandSettings),
+        select(getDefaultBandSettings),
         takeUntil(this.ngUnsubscribe),
       )
       .subscribe(defaultBandSettings => {
@@ -185,7 +191,7 @@ export class TimelineComponent implements OnDestroy {
 
     this.store
       .pipe(
-        select(fromConfig.getUrls),
+        select(getUrls),
         takeUntil(this.ngUnsubscribe),
       )
       .subscribe(({ baseUrl }) => {

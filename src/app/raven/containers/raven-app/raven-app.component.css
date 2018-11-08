@@ -45,3 +45,7 @@ mat-progress-bar {
   height: 3px;
   z-index: 10;
 }
+
+.collapsed {
+  position: static !important;
+}

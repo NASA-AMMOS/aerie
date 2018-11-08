@@ -7,29 +7,30 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { RavenPlan } from '../../shared/models/raven-plan';
+import { keyBy, omit } from 'lodash';
 
 import {
   PlanActions,
   PlanActionTypes,
   RemovePlan,
+  SaveActivityDetailSuccess,
+  SaveActivitySuccess,
   SavePlanSuccess,
 } from '../actions/plan.actions';
 
-import { State } from '../hawk-store';
+import { RavenPlan, RavenPlanDetail, StringTMap } from '../../shared/models';
 
 /**
  * Schema for PlanState
  */
 export interface PlanState {
-  plans: RavenPlan[];
-  selectedPlanId: string | null;
+  plans: StringTMap<RavenPlan>;
+  selectedPlan: RavenPlanDetail | null;
 }
 
 export const initialState: PlanState = {
-  plans: [],
-  selectedPlanId: null,
+  plans: {},
+  selectedPlan: null,
 };
 
 /**
@@ -41,67 +42,126 @@ export function reducer(
   action: PlanActions,
 ): PlanState {
   switch (action.type) {
-    case PlanActionTypes.FetchPlanDetail:
-      return { ...state, selectedPlanId: action.id };
+    case PlanActionTypes.FetchPlanDetailSuccess:
+      return { ...state, selectedPlan: action.data };
     case PlanActionTypes.FetchPlanListSuccess:
-      return { ...state, plans: action.data };
+      return { ...state, plans: keyBy(action.data, 'id') };
     case PlanActionTypes.SavePlanSuccess:
-      return action.isNew ? insert(state, action) : update(state, action);
+      return planExists(state, action)
+        ? insertPlan(state, action)
+        : updatePlan(state, action);
     case PlanActionTypes.RemovePlan:
-      return remove(state, action);
-
+      return removePlan(state, action);
+    case PlanActionTypes.SaveActivitySuccess:
+    case PlanActionTypes.SaveActivityDetailSuccess:
+      return activityExists(state, action)
+        ? insertActivity(state, action)
+        : updateActivity(state, action);
     default:
       return state;
   }
 }
 
 /**
- * Remove an plan from the plans list
+ * Determine if an activity exists
  */
-function remove(state: PlanState, action: RemovePlan): PlanState {
+function activityExists(
+  state: PlanState,
+  action: SaveActivitySuccess | SaveActivityDetailSuccess,
+): boolean {
+  if (!state.selectedPlan) throw new Error('NoPlanSelected');
+  return state.selectedPlan.activities.hasOwnProperty(action.data.id);
+}
+
+/**
+ * Insert an activity into the selected plan. If there is no selected plan,
+ * throw an error.
+ */
+function insertActivity(
+  state: PlanState,
+  action: SaveActivitySuccess | SaveActivityDetailSuccess,
+): PlanState {
+  if (!state.selectedPlan) throw new Error('NoPlanSelected');
   return {
     ...state,
-    plans: state.plans.filter((a: RavenPlan) => a.id !== action.id),
+    selectedPlan: {
+      ...state.selectedPlan,
+      activities: {
+        ...state.selectedPlan.activities,
+        [action.data.id]: { ...action.data },
+      },
+    },
+  };
+}
+
+/**
+ * Update an activity in the selected plan. If there is no selected plan,
+ * throw an error.
+ */
+function updateActivity(
+  state: PlanState,
+  action: SaveActivitySuccess | SaveActivityDetailSuccess,
+): PlanState {
+  if (!state.selectedPlan) throw new Error('NoPlanSelected');
+  return {
+    ...state,
+    selectedPlan: {
+      ...state.selectedPlan,
+      activities: {
+        ...state.selectedPlan.activities,
+        [action.data.id]: {
+          ...state.selectedPlan.activities[action.data.id],
+          ...action.data,
+        },
+      },
+    },
+  };
+}
+
+/**
+ * Determine if a plan exists
+ */
+function planExists(state: PlanState, action: SavePlanSuccess): boolean {
+  return state.plans.hasOwnProperty(action.data.id);
+}
+
+/**
+ * Remove an plan from the plans list
+ */
+function removePlan(state: PlanState, action: RemovePlan): PlanState {
+  return {
+    ...state,
+    plans: omit(state.plans, action.id),
   };
 }
 
 /**
  * Update an plan in the plans list
  */
-function update(state: PlanState, action: SavePlanSuccess): PlanState {
+function updatePlan(state: PlanState, action: SavePlanSuccess): PlanState {
   return {
     ...state,
-    plans: state.plans.map((a: RavenPlan) => {
-      return a.id === action.data.id ? action.data : a;
-    }),
+    plans: {
+      ...state.plans,
+      [action.data.id]: {
+        ...state.plans[action.data.id],
+        ...action.data,
+      },
+    },
   };
 }
 
 /**
  * Insert an plan into the plans list
  */
-function insert(state: PlanState, action: SavePlanSuccess): PlanState {
+function insertPlan(state: PlanState, action: SavePlanSuccess): PlanState {
   return {
     ...state,
-    plans: [...state.plans, action.data],
+    plans: {
+      ...state.plans,
+      [action.data.id]: {
+        ...action.data,
+      },
+    },
   };
 }
-
-/**
- * State selector helper.
- */
-const featureSelector = createFeatureSelector<State>('hawk');
-export const getPlanState = createSelector(
-  featureSelector,
-  (state: State): PlanState => state.plan,
-);
-
-export const getPlans = createSelector(
-  getPlanState,
-  (state: PlanState) => state.plans,
-);
-
-export const getSelectedPlan = createSelector(
-  getPlanState,
-  (state: PlanState) => state.plans.find(p => p.id === state.selectedPlanId),
-);

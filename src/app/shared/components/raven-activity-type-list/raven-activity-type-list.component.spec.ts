@@ -21,7 +21,7 @@ import { RavenActivityTypeListModule } from './raven-activity-type-list.module';
   selector: 'raven-activity-type-list-test',
   template: `
     <raven-activity-type-list
-      [activityTypes]="activityTypes"
+      [activityTypes]="activityTypesList"
       (createActivityTypeClicked)="create()"
       (deleteActivityTypeClicked)="remove($event)"
       (updateActivityTypeClicked)="update($event)"
@@ -34,6 +34,7 @@ class RavenActivityTypeListTestComponent {
   activityTypes: StringTMap<
     RavenActivityType
   > = AdaptationMockService.getMockActivityTypes('Test 0');
+  activityTypesList: RavenActivityType[] = Object.values(this.activityTypes);
 
   @ViewChild(RavenActivityTypeListComponent)
   component: RavenActivityTypeListComponent;

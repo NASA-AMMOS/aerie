@@ -7,7 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { config, ConfigState } from '../../../config';
 import {
   ConfigAction,
@@ -112,50 +111,3 @@ export function toggleDrawer(state: ConfigState) {
       return NavigationDrawerStates.Collapsed;
   }
 }
-
-/**
- * Feature selectors.
- */
-export const getConfigState = createFeatureSelector('config');
-
-/**
- * Selection Helpers.
- */
-export const getDefaultBandSettings = createSelector(
-  getConfigState,
-  (state: ConfigState) => state.raven.defaultBandSettings,
-);
-export const getExcludeActivityTypes = createSelector(
-  getConfigState,
-  (state: ConfigState) => state.raven.excludeActivityTypes,
-);
-export const getItarMessage = createSelector(
-  getConfigState,
-  (state: ConfigState) => state.raven.itarMessage,
-);
-export const getVersion = createSelector(
-  getConfigState,
-  (state: ConfigState) => ({
-    branch: state.app.branch,
-    commit: state.app.commit,
-    version: state.app.version,
-  }),
-);
-export const getUrls = createSelector(getConfigState, (state: ConfigState) => ({
-  apiUrl: state.mpsServer.apiUrl,
-  baseUrl: state.app.baseUrl,
-  epochsUrl: state.mpsServer.epochsUrl,
-  ravenConfigUrl: state.mpsServer.ravenConfigUrl,
-  ravenUrl: state.mpsServer.ravenUrl,
-  socketUrl: state.mpsServer.socketUrl,
-}));
-
-export const getAppModules = createSelector(
-  getConfigState,
-  (state: ConfigState) => state.appModules,
-);
-
-export const getNavigationDrawerState = createSelector(
-  getConfigState,
-  (state: ConfigState) => state.navigationDrawerState,
-);

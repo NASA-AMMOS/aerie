@@ -368,7 +368,10 @@ export class RavenActivityBandComponent
       const point = this.points[i];
 
       // If we have not seen the unique activity id before and not in excludeActivityTypes, then add it to be drawn.
-      if (!intervalsById[point.uniqueId] && !this.excludeActivityTypes.includes(point.activityType)) {
+      if (
+        !intervalsById[point.uniqueId] &&
+        !this.excludeActivityTypes.includes(point.activityType)
+      ) {
         const interval = new (window as any).DrawableInterval({
           color: point.color,
           end: point.end,

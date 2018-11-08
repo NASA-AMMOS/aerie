@@ -12,6 +12,11 @@
  */
 export interface RavenActivityType {
   /**
+   * Description of the activity type
+   */
+  description: string;
+
+  /**
    * Id of the activity type
    */
   id: string;

@@ -7,22 +7,27 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { ChangeDetectionStrategy, Component, ViewChild } from '@angular/core';
+
 import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  OnDestroy,
-} from '@angular/core';
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
+
+import { MatSidenav } from '@angular/material';
 
 import { select, Store } from '@ngrx/store';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
-import { RavenActivityType } from '../../../shared/models/raven-activity-type';
-import { RavenAdaptation } from '../../../shared/models/raven-adaptation';
-import { RavenPlan } from '../../../shared/models/raven-plan';
-
-import * as configActions from '../../../shared/actions/config.actions';
+import {
+  RavenActivity,
+  RavenActivityType,
+  RavenAdaptation,
+  RavenPlan,
+  RavenPlanDetail,
+} from '../../../shared/models';
 
 import {
   FetchAdaptationList,
@@ -35,13 +40,20 @@ import {
   FetchPlanList,
   OpenPlanFormDialog,
   RemovePlan,
+  SaveActivity,
 } from '../../actions/plan.actions';
 
-import * as fromConfig from '../../../shared/reducers/config.reducer';
-import * as fromAdaptation from '../../reducers/adaptation.reducer';
-import * as fromPlan from '../../reducers/plan.reducer';
+import {
+  getActivities,
+  getActivityTypes,
+  getPlans,
+  getSelectedAdaptation,
+  getSelectedPlan,
+} from '../../selectors';
 
 import { HawkAppState } from '../../hawk-store';
+
+import { ToggleNavigationDrawer } from '../../../shared/actions/config.actions';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -49,120 +61,88 @@ import { HawkAppState } from '../../hawk-store';
   styleUrls: ['./hawk-app.component.css'],
   templateUrl: './hawk-app.component.html',
 })
-export class HawkAppComponent implements OnDestroy {
+export class HawkAppComponent {
+  @ViewChild('sideNav')
+  sideNav: MatSidenav;
+
+  /**
+   * Activity *instances*
+   */
+  activities$: Observable<RavenActivity[] | null>;
+
   /**
    * List of activity types to display
    */
-  activityTypes: RavenActivityType[] = [];
+  activityTypes$: Observable<RavenActivityType[] | null>;
 
   /**
-   * List of adaptations to display
+   * Columns to display in the table
    */
-  adaptations: RavenAdaptation[] = [];
+  displayedColumns: string[] = ['name', 'start', 'duration', 'sequenceId'];
+
+  /**
+   * Activity form
+   */
+  form: FormGroup;
 
   /**
    * The selected adaptation
    */
-  selectedAdaptation: RavenAdaptation | null = null;
+  selectedAdaptation$: Observable<RavenAdaptation | null>;
 
   /**
    * List of plans to display
    */
-  plans: RavenPlan[] = [];
+  plans$: Observable<RavenPlan[]>;
 
   /**
    * Selected plan
    */
-  selectedPlan: RavenPlan | null = null;
+  selectedPlan$: Observable<RavenPlanDetail | null>;
 
   /**
-   * Current state of the navigation drawer
+   * Activity that is currently selected in the plan
    */
-  navigationDrawerState: configActions.NavigationDrawerStates;
+  selectedActivity: RavenActivity | null;
 
-  private ngUnsubscribe: Subject<{}> = new Subject();
+  constructor(private store: Store<HawkAppState>, fb: FormBuilder) {
+    this.activities$ = this.store.pipe(select(getActivities));
+    this.activityTypes$ = this.store.pipe(select(getActivityTypes));
+    this.plans$ = this.store.pipe(select(getPlans));
+    this.selectedAdaptation$ = this.store.pipe(select(getSelectedAdaptation));
+    this.selectedPlan$ = this.store.pipe(select(getSelectedPlan));
 
-  constructor(
-    private changeDetector: ChangeDetectorRef,
-    private store: Store<HawkAppState>,
-  ) {
-    this.store
-      .pipe(
-        select(fromAdaptation.getAdaptations),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(adaptations => {
-        this.adaptations = adaptations;
-        this.markForCheck();
-      });
+    let data: RavenActivity = {
+      activityTypeId: '',
+      duration: '',
+      id: '',
+      intent: '',
+      name: '',
+      sequenceId: '',
+      start: '',
+    };
 
-    this.store
-      .pipe(
-        select(fromAdaptation.getSelectedAdaptation),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(selectedAdaptation => {
-        this.selectedAdaptation = selectedAdaptation;
-        if (selectedAdaptation) {
-          this.activityTypes = Object.values(selectedAdaptation.activityTypes);
-        }
-        this.markForCheck();
-      });
+    if (this.selectedActivity) {
+      data = this.selectedActivity;
+    }
 
-    this.store
-      .pipe(
-        select(fromPlan.getPlans),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(plans => {
-        this.plans = plans;
-        this.markForCheck();
-      });
+    this.form = fb.group({
+      activityTypeId: new FormControl({
+        readonly: true,
+        value: data.activityTypeId,
+      }),
+      duration: new FormControl(data.duration, [
+        Validators.required,
+        Validators.pattern('^dd:dd$'),
+      ]),
+      intent: new FormControl(data.intent),
+      name: new FormControl(data.name, [Validators.required]),
+      sequenceId: new FormControl(data.sequenceId),
+      start: new FormControl(data.start, [Validators.required]),
+    });
 
-    this.store
-      .pipe(
-        select(fromPlan.getSelectedPlan),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(plan => {
-        this.selectedPlan = plan || null;
-        this.markForCheck();
-      });
-
-    // Navigation drawer state
-    this.store
-      .pipe(
-        select(fromConfig.getNavigationDrawerState),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(state => {
-        this.navigationDrawerState = state;
-        this.markForCheck();
-      });
-
-    // TODO: Move to a route guard
     this.store.dispatch(new FetchAdaptationList());
     this.store.dispatch(new FetchPlanList());
-  }
-
-  ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
-  }
-
-  /**
-   * Helper. Marks this component for change detection check,
-   * and then detects changes on the next tick.
-   *
-   * @todo Find out how we can remove this.
-   */
-  markForCheck() {
-    this.changeDetector.markForCheck();
-    setTimeout(() => {
-      if (!this.changeDetector['destroyed']) {
-        this.changeDetector.detectChanges();
-      }
-    });
   }
 
   /**
@@ -215,9 +195,64 @@ export class HawkAppComponent implements OnDestroy {
   }
 
   /**
-   * The hamburger menu was clicked
+   * Event. Set the selected activity and update the form's values
+   */
+  showActivityForm(activity: RavenActivity) {
+    this.selectedActivity = activity;
+    this.form.patchValue(this.selectedActivity);
+    this.sideNav.open();
+  }
+
+  /**
+   * Event. Show the activity types list. The selectedActivity is set to null
+   * because you can click the icon to show the activity types list while the
+   * activity form is open.
+   */
+  showActivityTypesList() {
+    this.selectedActivity = null;
+    this.sideNav.open();
+  }
+
+  /**
+   * Event. Handle form submission
+   */
+  onSubmit(value: any) {
+    if (!this.selectedActivity) {
+      throw new Error('NoSelectedActivity');
+    }
+
+    if (this.form.valid) {
+      this.store.dispatch(
+        new SaveActivity({
+          ...value,
+          id: this.selectedActivity.id,
+        }),
+      );
+    }
+  }
+
+  /**
+   * Event. The hamburger menu was clicked
    */
   onMenuClicked() {
-    this.store.dispatch(new configActions.ToggleNavigationDrawer());
+    this.store.dispatch(new ToggleNavigationDrawer());
+  }
+
+  /**
+   * Event. Set the selected activity to null and close the side nav
+   */
+  onCloseSideNav() {
+    this.selectedActivity = null;
+    this.sideNav.close();
+  }
+
+  /**
+   * Determine which select item to select
+   * @see https://angular.io/api/forms/SelectControlValueAccessor#caveat-option-selection
+   * @param a An object with an id property
+   * @param b An object with an id property
+   */
+  compareSelectValues(a: any, b: any) {
+    return a.id === b.id;
   }
 }

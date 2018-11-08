@@ -7,9 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { omit } from 'lodash';
-
 import { RavenAdaptation } from '../../shared/models/raven-adaptation';
 import { RavenAdaptationDetail } from '../../shared/models/raven-adaptation-detail';
 
@@ -21,8 +19,6 @@ import {
 } from '../actions/adaptation.actions';
 
 import { AdaptationState } from './adaptation.reducer';
-
-import { State } from '../hawk-store';
 
 /**
  * Schema for Adaptation state
@@ -129,32 +125,3 @@ function insert(
 
   return { ...state };
 }
-
-/**
- * State selector helpers
- */
-const featureSelector = createFeatureSelector<State>('hawk');
-export const getAdaptationState = createSelector(
-  featureSelector,
-  (state: State): AdaptationState => state.adaptation,
-);
-
-export const getAdaptations = createSelector(
-  getAdaptationState,
-  (state: AdaptationState) => state.adaptations,
-);
-
-export const getSelectedAdaptation = createSelector(
-  getAdaptationState,
-  (state: AdaptationState) => state.selectedAdaptation,
-);
-
-export const getSelectedActivityTypeState = createSelector(
-  getAdaptationState,
-  (state: AdaptationState) => {
-    if (state.selectedAdaptation) {
-      return state.selectedAdaptation.activityTypes;
-    }
-    return null;
-  },
-);

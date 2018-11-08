@@ -7,24 +7,18 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  OnDestroy,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 import { select, Store } from '@ngrx/store';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
 import { AppState } from './app-store';
 import { NestModule } from './shared/models';
 
 import { NavigationDrawerStates } from './shared/actions/config.actions';
-import * as fromConfig from './shared/reducers/config.reducer';
 
 import * as dialogActions from './shared/actions/dialog.actions';
+import { getAppModules, getNavigationDrawerState } from './shared/selectors';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,8 +38,8 @@ import * as dialogActions from './shared/actions/dialog.actions';
       <mat-sidenav-container autosize>
         <mat-sidenav #sidenav mode="side" opened>
           <raven-app-nav
-            [modules]="appModules"
-            [iconsOnly]="navigationDrawerState === 'collapsed'"
+            [modules]="appModules | async"
+            [iconsOnly]="(navigationDrawerState | async) === 'collapsed'"
             (aboutClicked)="onAboutClicked()">
           </raven-app-nav>
         </mat-sidenav>
@@ -56,58 +50,15 @@ import * as dialogActions from './shared/actions/dialog.actions';
     </div>
   `,
 })
-export class AppComponent implements OnDestroy {
-  appModules: NestModule[] = [];
-  navigationDrawerState: NavigationDrawerStates =
-    NavigationDrawerStates.Collapsed;
+export class AppComponent {
+  appModules: Observable<NestModule[]>;
+  navigationDrawerState: Observable<NavigationDrawerStates>;
 
-  private ngUnsubscribe: Subject<{}> = new Subject();
-
-  constructor(
-    private changeDetector: ChangeDetectorRef,
-    private store: Store<AppState>,
-  ) {
-    // App modules state
-    this.store
-      .pipe(
-        select(fromConfig.getAppModules),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe((appModules: NestModule[]) => {
-        this.appModules = appModules;
-        this.markForCheck();
-      });
-
-    // Navigation drawer state
-    this.store
-      .pipe(
-        select(fromConfig.getNavigationDrawerState),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(state => {
-        this.navigationDrawerState = state;
-        this.markForCheck();
-      });
-  }
-
-  ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
-  }
-
-  /**
-   * Helper. Marks this component for change detection check,
-   * and then detects changes on the next tick.
-   *
-   * @todo Find out how we can remove this.
-   */
-  markForCheck() {
-    this.changeDetector.markForCheck();
-    setTimeout(() => {
-      if (!this.changeDetector['destroyed']) {
-        this.changeDetector.detectChanges();
-      }
-    });
+  constructor(private store: Store<AppState>) {
+    this.appModules = this.store.pipe(select(getAppModules));
+    this.navigationDrawerState = this.store.pipe(
+      select(getNavigationDrawerState),
+    );
   }
 
   /**
