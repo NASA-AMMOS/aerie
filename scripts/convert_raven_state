@@ -307,7 +307,7 @@ def determine_type_of_band(raven_one_band):
         # If it has an activity layout, it's probably really an activity.
         return "activity"
     elif "scientificNotation" in raven_one_band["graphSettings"]:
-        # Observationally, only resources have "fill", but this is tenuous.
+        # Only Resources have scientificNotation.
         return "resource"
     else:
         # By process of elimination...
