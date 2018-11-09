@@ -7,12 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { createFeatureSelector, createSelector } from '@ngrx/store';
 import {
   TimeCursorAction,
   TimeCursorActionTypes,
 } from '../actions/time-cursor.actions';
-import { State } from '../raven-store';
 
 export interface TimeCursorState {
   autoPage: boolean;
@@ -26,7 +24,6 @@ export interface TimeCursorState {
   showTimeCursor: boolean;
 }
 
-// Time cursor State.
 export const initialState: TimeCursorState = {
   autoPage: false,
   clockRate: 1,
@@ -71,12 +68,3 @@ export function showTimeCursor(state: TimeCursorState): TimeCursorState {
     showTimeCursor: true,
   };
 }
-
-/**
- * Config state selector helper.
- */
-const featureSelector = createFeatureSelector<State>('raven');
-export const getTimeCursorState = createSelector(
-  featureSelector,
-  (state: State): TimeCursorState => state.timeCursor,
-);

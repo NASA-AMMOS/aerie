@@ -7,18 +7,15 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  OnDestroy,
-} from '@angular/core';
-
+import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
 import { MatTabChangeEvent } from '@angular/material';
 import { select, Store } from '@ngrx/store';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ConfigState } from '../../../../config';
+import { getSourceIdsByLabelInBands, subBandById } from '../../../shared/util';
+import { TimeCursorState } from '../../reducers/time-cursor.reducer';
+import { TimelineState } from '../../reducers/timeline.reducer';
 
 import {
   RavenActivityPoint,
@@ -40,15 +37,22 @@ import {
   StringTMap,
 } from '../../../shared/models';
 
-import { getSourceIdsByLabelInBands, subBandById } from '../../../shared/util';
+import {
+  getDefaultBandSettings,
+  getExcludeActivityTypes,
+  getItarMessage,
+  getUrls,
+} from '../../../shared/selectors';
 
-import * as fromEpochs from '../../reducers/epochs.reducer';
-import * as fromLayout from '../../reducers/layout.reducer';
-import * as fromOutput from '../../reducers/output.reducer';
-import * as fromSituationalAwareness from '../../reducers/situational-awareness.reducer';
-import * as fromSourceExplorer from '../../reducers/source-explorer.reducer';
-import * as fromTimeCursor from '../../reducers/time-cursor.reducer';
-import * as fromTimeline from '../../reducers/timeline.reducer';
+import {
+  getEpochsState,
+  getLayoutState,
+  getOutputState,
+  getSituationalAwarenessState,
+  getSourceExplorerState,
+  getTimeCursorState,
+  getTimelineState,
+} from '../../selectors';
 
 import * as configActions from '../../../shared/actions/config.actions';
 import * as dialogActions from '../../actions/dialog.actions';
@@ -59,13 +63,6 @@ import * as situationalAwarenessActions from '../../actions/situational-awarenes
 import * as sourceExplorerActions from '../../actions/source-explorer.actions';
 import * as timeCursorActions from '../../actions/time-cursor.actions';
 import * as timelineActions from '../../actions/timeline.actions';
-
-import {
-  getDefaultBandSettings,
-  getExcludeActivityTypes,
-  getItarMessage,
-  getUrls,
-} from '../../../shared/selectors';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -153,10 +150,7 @@ export class TimelineComponent implements OnDestroy {
   private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(
-    private changeDetector: ChangeDetectorRef,
-    private store: Store<
-      fromTimeline.TimelineState | ConfigState | fromTimeCursor.TimeCursorState
-    >,
+    private store: Store<TimelineState | ConfigState | TimeCursorState>,
   ) {
     // Config state.
     this.store
@@ -166,7 +160,6 @@ export class TimelineComponent implements OnDestroy {
       )
       .subscribe(excludeActivityTypes => {
         this.excludeActivityTypes = excludeActivityTypes;
-        this.markForCheck();
       });
 
     this.store
@@ -176,7 +169,6 @@ export class TimelineComponent implements OnDestroy {
       )
       .subscribe(itarMessage => {
         this.itarMessage = itarMessage;
-        this.markForCheck();
       });
 
     this.store
@@ -186,7 +178,6 @@ export class TimelineComponent implements OnDestroy {
       )
       .subscribe(defaultBandSettings => {
         this.defaultBandSettings = defaultBandSettings;
-        this.markForCheck();
       });
 
     this.store
@@ -201,7 +192,7 @@ export class TimelineComponent implements OnDestroy {
     // Epoch state.
     this.store
       .pipe(
-        select(fromEpochs.getEpochsState),
+        select(getEpochsState),
         takeUntil(this.ngUnsubscribe),
       )
       .subscribe(state => {
@@ -209,13 +200,12 @@ export class TimelineComponent implements OnDestroy {
         this.earthSecToEpochSec = state.earthSecToEpochSec;
         this.epochs = state.epochs;
         this.inUseEpoch = state.inUseEpoch;
-        this.markForCheck();
       });
 
     // Layout state.
     this.store
       .pipe(
-        select(fromLayout.getLayoutState),
+        select(getLayoutState),
         takeUntil(this.ngUnsubscribe),
       )
       .subscribe(state => {
@@ -234,14 +224,13 @@ export class TimelineComponent implements OnDestroy {
         this.showSouthBandsPanel = state.showSouthBandsPanel;
         this.showTimeCursorDrawer = state.showTimeCursorDrawer;
         this.timelinePanelSize = state.timelinePanelSize;
-        this.markForCheck();
         this.resize();
       });
 
     // Output state.
     this.store
       .pipe(
-        select(fromOutput.getOutputState),
+        select(getOutputState),
         takeUntil(this.ngUnsubscribe),
       )
       .subscribe(state => {
@@ -250,13 +239,12 @@ export class TimelineComponent implements OnDestroy {
         this.decimateOutputData = state.decimateOutputData;
         this.outputFormat = state.outputFormat;
         this.outputSourceIdsByLabel = state.outputSourceIdsByLabel;
-        this.markForCheck();
       });
 
     // Source Explorer state.
     this.store
       .pipe(
-        select(fromSourceExplorer.getSourceExplorerState),
+        select(getSourceExplorerState),
         takeUntil(this.ngUnsubscribe),
       )
       .subscribe(state => {
@@ -265,13 +253,12 @@ export class TimelineComponent implements OnDestroy {
         this.currentState = state.currentState;
         this.currentStateId = state.currentStateId;
         this.treeBySourceId = state.treeBySourceId;
-        this.markForCheck();
       });
 
     // Situational awareness state.
     this.store
       .pipe(
-        select(fromSituationalAwareness.getSituationalAwarenessState),
+        select(getSituationalAwarenessState),
         takeUntil(this.ngUnsubscribe),
       )
       .subscribe(state => {
@@ -282,13 +269,12 @@ export class TimelineComponent implements OnDestroy {
         this.situationalAware = state.situationalAware;
         this.startTime = state.startTime;
         this.useNow = state.useNow;
-        this.markForCheck();
       });
 
     // Time cursor state.
     this.store
       .pipe(
-        select(fromTimeCursor.getTimeCursorState),
+        select(getTimeCursorState),
         takeUntil(this.ngUnsubscribe),
       )
       .subscribe(state => {
@@ -300,13 +286,12 @@ export class TimelineComponent implements OnDestroy {
         this.cursorWidth = state.cursorWidth;
         this.showTimeCursor = state.showTimeCursor;
         this.setCursorTime = state.setCursorTime;
-        this.markForCheck();
       });
 
     // Timeline state.
     this.store
       .pipe(
-        select(fromTimeline.getTimelineState),
+        select(getTimelineState),
         takeUntil(this.ngUnsubscribe),
       )
       .subscribe(state => {
@@ -325,28 +310,12 @@ export class TimelineComponent implements OnDestroy {
           this.filtersByTarget,
           this.treeBySourceId,
         );
-        this.markForCheck();
       });
   }
 
   ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
-  }
-
-  /**
-   * Helper. Marks this component for change detection check,
-   * and then detects changes on the next tick.
-   *
-   * TODO: Find out how we can remove this.
-   */
-  markForCheck() {
-    this.changeDetector.markForCheck();
-    setTimeout(() => {
-      if (!this.changeDetector['destroyed']) {
-        this.changeDetector.detectChanges();
-      }
-    });
   }
 
   /**
@@ -387,7 +356,7 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
-   * Event. Called when an activity expansion selecttion is made.
+   * Event. Called when an activity expansion selection is made.
    */
   onChangeActivityExpansion(e: RavenActivityPointExpansion) {
     this.store.dispatch(
@@ -641,7 +610,7 @@ export class TimelineComponent implements OnDestroy {
 
     if (this.selectedSubBand) {
       this.selectedSubBandPoints = this.selectedSubBand.points;
-      // filter points in excludeActivityTypes
+      // Filter points in excludeActivityTypes.
       if (this.selectedSubBand.type === 'activity') {
         this.selectedSubBandPoints = this.selectedSubBandPoints.filter(
           point =>

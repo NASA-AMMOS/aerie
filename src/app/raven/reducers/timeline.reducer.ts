@@ -7,9 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { without } from 'lodash';
-import { State } from '../raven-store';
 
 import {
   AddBand,
@@ -56,7 +54,6 @@ import {
   RavenTimeRange,
 } from '../../shared/models';
 
-// Timeline State Interface.
 export interface TimelineState {
   bands: RavenCompositeBand[];
   fetchPending: boolean;
@@ -71,7 +68,6 @@ export interface TimelineState {
   zoomDelta: number;
 }
 
-// Timeline Initial State.
 export const initialState: TimelineState = {
   bands: [],
   fetchPending: false,
@@ -808,28 +804,3 @@ export function updateSubBand(
     }),
   };
 }
-
-/**
- * Timeline state selector helper.
- */
-const featureSelector = createFeatureSelector<State>('raven');
-export const getTimelineState = createSelector(
-  featureSelector,
-  (state: State): TimelineState => state.timeline,
-);
-
-/**
- * Create selector helper for selecting state slice.
- *
- * Every reducer module exports selector functions, however child reducers
- * have no knowledge of the overall state tree. To make them usable, we
- * need to make new selectors that wrap them.
- *
- * The createSelector function creates very efficient selectors that are memoized and
- * only recompute when arguments change. The created selectors can also be composed
- * together to select different pieces of state.
- */
-export const getPending = createSelector(
-  getTimelineState,
-  (state: TimelineState) => state.fetchPending,
-);
