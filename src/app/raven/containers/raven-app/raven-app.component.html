@@ -244,7 +244,7 @@
 </raven-app-header>
 
 <div class="progress-container">
-  <mat-progress-bar mode="indeterminate" *ngIf="loading" color="accent">
+  <mat-progress-bar mode="indeterminate" *ngIf="showProgressBar$ | async" color="accent">
   </mat-progress-bar>
 </div>
 

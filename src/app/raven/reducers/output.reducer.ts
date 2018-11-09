@@ -7,12 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { StringTMap } from '../../shared/models';
 import { OutputAction, OutputActionTypes } from '../actions/output.actions';
-import { State } from '../raven-store';
 
-// Output State Interface.
 export interface OutputState {
   allInOneFile: boolean;
   allInOneFilename: string;
@@ -22,7 +19,6 @@ export interface OutputState {
   outputSourceIdsByLabel: StringTMap<string[]>;
 }
 
-// Output Initial State.
 export const initialState: OutputState = {
   allInOneFile: false,
   allInOneFilename: '',
@@ -49,12 +45,3 @@ export function reducer(
       return state;
   }
 }
-
-/**
- * Output state selector helper.
- */
-const featureSelector = createFeatureSelector<State>('raven');
-export const getOutputState = createSelector(
-  featureSelector,
-  (state: State): OutputState => state.output,
-);

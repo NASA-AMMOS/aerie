@@ -9,34 +9,32 @@
 
 import {
   ChangeDetectionStrategy,
-  ChangeDetectorRef,
   Component,
   HostListener,
   OnDestroy,
 } from '@angular/core';
 
 import { select, Store } from '@ngrx/store';
-import { combineLatest, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-
-import { toCompositeBand, toDividerBand } from '../../../shared/util';
-
+import { combineLatest, Observable, Subject } from 'rxjs';
+import { map, takeUntil } from 'rxjs/operators';
 import { RavenTimeRange } from '../../../shared/models';
+import { getVersion } from '../../../shared/selectors';
+import { toCompositeBand, toDividerBand } from '../../../shared/util';
+import { SourceExplorerState } from '../../reducers/source-explorer.reducer';
 
-import * as fromLayout from '../../reducers/layout.reducer';
-import * as fromSituationalAwareness from '../../reducers/situational-awareness.reducer';
-import * as fromSourceExplorer from '../../reducers/source-explorer.reducer';
-import * as fromTimeline from '../../reducers/timeline.reducer';
+import {
+  getLayoutPending,
+  getMode,
+  getSelectedBandId,
+  getSituationalAwarenessPending,
+  getSourceExplorerPending,
+  getTimelinePending,
+} from '../../selectors';
 
 import * as configActions from '../../../shared/actions/config.actions';
 import * as dialogActions from '../../actions/dialog.actions';
 import * as layoutActions from '../../actions/layout.actions';
 import * as timelineActions from '../../actions/timeline.actions';
-
-import {
-  getNavigationDrawerState,
-  getVersion,
-} from '../../../shared/selectors';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,77 +43,34 @@ import {
   templateUrl: './raven-app.component.html',
 })
 export class RavenAppComponent implements OnDestroy {
-  info: string;
-  loading: boolean;
+  about$: Observable<string>;
+  showProgressBar$: Observable<boolean>;
+  mode$: Observable<string>;
+  selectedBandId$: Observable<string>;
+
+  about: string;
   mode: string;
   selectedBandId: string;
 
-  /**
-   * Current state of the navigation drawer
-   */
-  navigationDrawerState: configActions.NavigationDrawerStates;
-
   private ngUnsubscribe: Subject<{}> = new Subject();
 
-  constructor(
-    private changeDetector: ChangeDetectorRef,
-    private store: Store<fromSourceExplorer.SourceExplorerState>,
-  ) {
-    // Combine all fetch pending observable for progress bar.
-    combineLatest(
-      this.store.pipe(select(fromLayout.getPending)),
-      this.store.pipe(select(fromSituationalAwareness.getPending)),
-      this.store.pipe(select(fromSourceExplorer.getPending)),
-      this.store.pipe(select(fromTimeline.getPending)),
-    )
+  constructor(private store: Store<SourceExplorerState>) {
+    this.about$ = this.getAbout();
+    this.mode$ = this.store.pipe(select(getMode));
+    this.showProgressBar$ = this.getShowProgressBar();
+    this.selectedBandId$ = this.store.pipe(select(getSelectedBandId));
+
+    this.about$
       .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(loading => {
-        this.loading = loading[0] || loading[1] || loading[2] || loading[3];
-        this.markForCheck();
-      });
+      .subscribe(about => (this.about = about));
 
-    // Config version.
-    this.store
-      .pipe(
-        select(getVersion),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(v => {
-        this.info = this.getInfo(v.version, v.branch, v.commit);
-      });
+    this.mode$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(mode => (this.mode = mode));
 
-    // Layout mode.
-    this.store
-      .pipe(
-        select(fromLayout.getMode),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(mode => {
-        this.mode = mode;
-        this.markForCheck();
-      });
-
-    // Navigation drawer state
-    this.store
-      .pipe(
-        select(getNavigationDrawerState),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(state => {
-        this.navigationDrawerState = state;
-        this.markForCheck();
-      });
-
-    // Timeline state.
-    this.store
-      .pipe(
-        select(fromTimeline.getTimelineState),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(state => {
-        this.selectedBandId = state.selectedBandId;
-        this.markForCheck();
-      });
+    this.selectedBandId$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(selectedBandId => (this.selectedBandId = selectedBandId));
   }
 
   ngOnDestroy() {
@@ -166,30 +121,33 @@ export class RavenAppComponent implements OnDestroy {
   }
 
   /**
-   * Helper. Marks this component for change detection check,
-   * and then detects changes on the next tick.
-   *
-   * @todo Find out how we can remove this.
+   * Returns an Observable that we use to show a progress bar.
    */
-  markForCheck() {
-    this.changeDetector.markForCheck();
-    setTimeout(() => {
-      if (!this.changeDetector['destroyed']) {
-        this.changeDetector.detectChanges();
-      }
-    });
+  getShowProgressBar(): Observable<boolean> {
+    return combineLatest(
+      this.store.pipe(select(getLayoutPending)),
+      this.store.pipe(select(getSituationalAwarenessPending)),
+      this.store.pipe(select(getSourceExplorerPending)),
+      this.store.pipe(select(getTimelinePending)),
+    ).pipe(
+      map(pending => pending[0] || pending[1] || pending[2] || pending[3]),
+    );
   }
 
   /**
-   * Get a string for the info tooltip.
+   * Get a string for the about dialog.
    */
-  getInfo(version: string, branch: string, commit: string): string {
-    return `
-      Raven ${version} - ${branch} - ${commit}\n
-      Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED.
-      United States Government sponsorship acknowledged.
-      Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.\n
-    `;
+  getAbout(): Observable<string> {
+    return this.store.pipe(select(getVersion)).pipe(
+      map(
+        v => `
+        Raven ${v.version} - ${v.branch} - ${v.commit}\n
+        Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED.
+        United States Government sponsorship acknowledged.
+        Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.\n
+      `,
+      ),
+    );
   }
 
   /**
@@ -252,7 +210,7 @@ export class RavenAppComponent implements OnDestroy {
 
   toggleAboutDialog() {
     this.store.dispatch(
-      new dialogActions.OpenConfirmDialog('Close', this.info, '400px'),
+      new dialogActions.OpenConfirmDialog('Close', this.about, '400px'),
     );
   }
 
