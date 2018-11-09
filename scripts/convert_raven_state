@@ -231,7 +231,7 @@ def create_state_band(raven_one_band, sources, default_band_settings):
         "height": raven_one_band["graphSettings"].get("height") or 50,
         "heightPadding": 0,
         "icon": default_band_settings["icon"],
-        "isNumeric": False,
+        "isNumeric": raven_one_band["graphSettings"].get("statePlotType") in ["line"],
         "label": strip_units(raven_one_band["label"]),  # TODO: default metadata.hasObjectName
         "labelColor": raven_one_band["graphSettings"].get("labelColor") or [0, 0, 0],
         "labelFont": default_band_settings["labelFont"],
@@ -306,7 +306,7 @@ def determine_type_of_band(raven_one_band):
     elif "activityLayout" in raven_one_band["graphSettings"]:
         # If it has an activity layout, it's probably really an activity.
         return "activity"
-    elif "fill" in raven_one_band["graphSettings"]:
+    elif "scientificNotation" in raven_one_band["graphSettings"]:
         # Observationally, only resources have "fill", but this is tenuous.
         return "resource"
     else:
