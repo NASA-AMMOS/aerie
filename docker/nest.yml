@@ -1,0 +1,6 @@
+version: '3.3'
+services:
+  nest:
+    build: ../nest/
+    ports:
+      - "8080:80"
