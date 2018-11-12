@@ -7,10 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { keyBy, omit, without } from 'lodash';
 import { getAllChildIds } from '../../shared/util';
-import { State } from '../raven-store';
 
 import {
   AddCustomFilter,
@@ -46,7 +44,6 @@ import {
   StringTMap,
 } from '../../shared/models';
 
-// Source Explorer State Interface.
 export interface SourceExplorerState {
   currentState: RavenState | null;
   currentStateId: string;
@@ -63,7 +60,6 @@ export interface SourceExplorerState {
   treeBySourceId: StringTMap<RavenSource>;
 }
 
-// Source Explorer Initial State.
 export const initialState: SourceExplorerState = {
   currentState: null,
   currentStateId: '',
@@ -702,48 +698,3 @@ export function updateTreeSource(
     },
   };
 }
-
-/**
- * Source Explorer state selector helper.
- */
-const featureSelector = createFeatureSelector<State>('raven');
-export const getSourceExplorerState = createSelector(
-  featureSelector,
-  (state: State): SourceExplorerState => state.sourceExplorer,
-);
-
-/**
- * Create selector helper for selecting state slice.
- *
- * Every reducer module exports selector functions, however child reducers
- * have no knowledge of the overall state tree. To make them usable, we
- * need to make new selectors that wrap them.
- *
- * The createSelector function creates very efficient selectors that are memoized and
- * only recompute when arguments change. The created selectors can also be composed
- * together to select different pieces of state.
- */
-export const getFiltersByTarget = createSelector(
-  getSourceExplorerState,
-  (state: SourceExplorerState) => state.filtersByTarget,
-);
-export const getInitialSourcesLoaded = createSelector(
-  getSourceExplorerState,
-  (state: SourceExplorerState) => state.initialSourcesLoaded,
-);
-export const getPending = createSelector(
-  getSourceExplorerState,
-  (state: SourceExplorerState) => state.fetchPending,
-);
-export const getPins = createSelector(
-  getSourceExplorerState,
-  (state: SourceExplorerState) => state.pins,
-);
-export const getSelectedSourceId = createSelector(
-  getSourceExplorerState,
-  (state: SourceExplorerState) => state.selectedSourceId,
-);
-export const getTreeBySourceId = createSelector(
-  getSourceExplorerState,
-  (state: SourceExplorerState) => state.treeBySourceId,
-);

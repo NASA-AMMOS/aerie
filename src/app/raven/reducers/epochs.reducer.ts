@@ -7,12 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { RavenEpoch } from '../../shared/models/raven-epoch';
 import { EpochsAction, EpochsActionTypes } from '../actions/epochs.actions';
-import { State } from '../raven-store';
 
-// Epoch State Interface.
 export interface EpochsState {
   dayCode: string;
   earthSecToEpochSec: number;
@@ -20,7 +17,6 @@ export interface EpochsState {
   inUseEpoch: RavenEpoch | null;
 }
 
-// Epoch Initial State.
 export const initialState: EpochsState = {
   dayCode: '',
   earthSecToEpochSec: 1,
@@ -45,12 +41,3 @@ export function reducer(
       return state;
   }
 }
-
-/**
- * Epoch state selector helper.
- */
-const featureSelector = createFeatureSelector<State>('raven');
-export const getEpochsState = createSelector(
-  featureSelector,
-  (state: State): EpochsState => state.epochs,
-);

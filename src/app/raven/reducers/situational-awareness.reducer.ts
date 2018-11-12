@@ -7,9 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { RavenSituationalAwarenessPefEntry } from '../../shared/models';
-import { State } from '../raven-store';
 
 import {
   SituationalAwarenessAction,
@@ -27,7 +25,6 @@ export interface SituationalAwarenessState {
   useNow: boolean;
 }
 
-// Situational Awareness State.
 export const initialState: SituationalAwarenessState = {
   fetchPending: false,
   nowMinus: 604800, // 7 days.
@@ -56,27 +53,3 @@ export function reducer(
       return state;
   }
 }
-
-/**
- * SituationalAwareness state selector helper.
- */
-export const getSituationalAwarenessState = createSelector(
-  createFeatureSelector<State>('raven'),
-  (state: State): SituationalAwarenessState => state.situationalAwareness,
-);
-
-/**
- * Create selector helper for selecting state slice.
- *
- * Every reducer module exports selector functions, however child reducers
- * have no knowledge of the overall state tree. To make them usable, we
- * need to make new selectors that wrap them.
- *
- * The createSelector function creates very efficient selectors that are memoized and
- * only recompute when arguments change. The created selectors can also be composed
- * together to select different pieces of state.
- */
-export const getPending = createSelector(
-  getSituationalAwarenessState,
-  (state: SituationalAwarenessState) => state.fetchPending,
-);
