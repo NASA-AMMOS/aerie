@@ -11,16 +11,18 @@
         clear
       </mat-icon>
     </button>
-    <raven-file-metadata
-      *ngIf="selectedSourceId !== ''"
-      [fileMetadata]="tree[selectedSourceId].fileMetadata"
-      [name]="tree[selectedSourceId].name">
-    </raven-file-metadata>
+    <ng-container *ngIf="selectedSourceId$ | async as selectedSourceId">
+      <raven-file-metadata
+        *ngIf="selectedSourceId !== ''"
+        [fileMetadata]="tree[selectedSourceId].fileMetadata"
+        [name]="tree[selectedSourceId].name">
+      </raven-file-metadata>
+    </ng-container>
   </mat-drawer>
   <mat-tab-group>
     <mat-tab label="Home">
       <div class="tab">
-        <ng-container *ngFor="let childId of sortedChildIds">
+        <ng-container *ngFor="let childId of sortedChildIds$ | async">
           <raven-tree
             [class]="tree[childId].name"
             [id]="childId"
@@ -43,7 +45,7 @@
         </ng-container>
       </div>
     </mat-tab>
-    <mat-tab *ngFor="let pin of pins" [label]="pin.name">
+    <mat-tab *ngFor="let pin of pins$ | async" [label]="pin.name">
       <div class="tab">
         <mat-card *ngIf="!tree[pin.sourceId]">
           The source for this pin is not loaded.
