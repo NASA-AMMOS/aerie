@@ -13,6 +13,6 @@ public class AdaptationApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(AdaptationApplication.class, args);
-        logger.info("Adapttion Service started");
+        logger.info("Adaptation Service started");
     }
 }

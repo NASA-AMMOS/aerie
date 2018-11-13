@@ -1,6 +1,7 @@
 package gov.nasa.jpl.adaptation;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -55,6 +56,7 @@ public class AdaptationControllerTest {
         mockAdaptations.add(a3);
     }
 
+    @Ignore
     @Test
     public void retrieveAdaptations() throws Exception {
 
