@@ -480,7 +480,7 @@ export function removeBandsWithNoPoints(
   action: RemoveBandsWithNoPoints,
 ): TimelineState {
   let bands = state.bands
-    // First remove subBands that have no points.
+    // First remove subBands that have no points and keep the subBands that are dividers.
     .map(band => ({
       ...band,
       subBands: band.subBands.filter(subBand => subBand.type === 'divider' || subBand.points.length),
