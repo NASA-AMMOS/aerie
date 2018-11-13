@@ -7,18 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  OnDestroy,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
 
 import { select, Store } from '@ngrx/store';
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { switchMap, takeUntil } from 'rxjs/operators';
 import { WebSocketSubject } from 'rxjs/webSocket';
-import { getSortedChildIds } from '../../../shared/util';
+import { SourceExplorerState } from '../../reducers/source-explorer.reducer';
 
 import {
   RavenCustomFilterSource,
@@ -31,14 +26,20 @@ import {
   StringTMap,
 } from '../../../shared/models';
 
-import * as fromSourceExplorer from '../../reducers/source-explorer.reducer';
+import { getUrls } from '../../../shared/selectors';
+
+import {
+  getFiltersByTarget,
+  getPins,
+  getSelectedSourceId,
+  getTreeBySourceId,
+  treeSortedChildIds,
+} from '../../selectors';
 
 import * as dialogActions from '../../actions/dialog.actions';
 import * as epochsActions from '../../actions/epochs.actions';
 import * as layoutActions from '../../actions/layout.actions';
 import * as sourceExplorerActions from '../../actions/source-explorer.actions';
-
-import { getUrls } from '../../../shared/selectors';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -47,67 +48,27 @@ import { getUrls } from '../../../shared/selectors';
   templateUrl: './source-explorer.component.html',
 })
 export class SourceExplorerComponent implements OnDestroy {
-  // Source Explorer state.
-  filtersByTarget: StringTMap<StringTMap<string[]>> | null;
-  pins: RavenPin[];
-  selectedSourceId: string;
-  tree: StringTMap<RavenSource>;
+  filtersByTarget$: Observable<StringTMap<StringTMap<string[]>> | null>;
+  pins$: Observable<RavenPin[]>;
+  selectedSourceId$: Observable<string>;
+  sortedChildIds$: Observable<string[]>;
+  tree$: Observable<StringTMap<RavenSource>>;
 
-  // Local state (derived on Source Explorer state).
-  sortedChildIds: string[];
+  tree: StringTMap<RavenSource>;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
-  constructor(
-    private changeDetector: ChangeDetectorRef,
-    private store: Store<fromSourceExplorer.SourceExplorerState>,
-  ) {
-    // Source Explorer state.
-    this.store
-      .pipe(
-        select(fromSourceExplorer.getFiltersByTarget),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(filtersByTarget => {
-        this.filtersByTarget = filtersByTarget;
-        this.markForCheck();
-      });
+  constructor(private store: Store<SourceExplorerState>) {
+    this.filtersByTarget$ = this.store.pipe(select(getFiltersByTarget));
+    this.pins$ = this.store.pipe(select(getPins));
+    this.selectedSourceId$ = this.store.pipe(select(getSelectedSourceId));
+    this.sortedChildIds$ = this.store.pipe(select(treeSortedChildIds));
+    this.tree$ = this.store.pipe(select(getTreeBySourceId));
 
-    this.store
-      .pipe(
-        select(fromSourceExplorer.getPins),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(pins => {
-        this.pins = pins;
-        this.markForCheck();
-      });
+    this.tree$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(tree => (this.tree = tree));
 
-    this.store
-      .pipe(
-        select(fromSourceExplorer.getSelectedSourceId),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(selectedSourceId => {
-        this.selectedSourceId = selectedSourceId;
-        this.markForCheck();
-      });
-
-    this.store
-      .pipe(
-        select(fromSourceExplorer.getTreeBySourceId),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(tree => {
-        this.tree = tree;
-        this.sortedChildIds = getSortedChildIds(
-          this.tree,
-          this.tree['/'].childIds,
-        );
-        this.markForCheck();
-      });
-
-    // Connect to web socket to update new sources when they change on the server.
     this.connectToWebsocket();
   }
 
@@ -155,21 +116,6 @@ export class SourceExplorerComponent implements OnDestroy {
           }
         }
       });
-  }
-
-  /**
-   * Helper. Marks this component for change detection check,
-   * and then detects changes on the next tick.
-   *
-   * TODO: Find out how we can remove this.
-   */
-  markForCheck() {
-    this.changeDetector.markForCheck();
-    setTimeout(() => {
-      if (!this.changeDetector['destroyed']) {
-        this.changeDetector.detectChanges();
-      }
-    });
   }
 
   /**

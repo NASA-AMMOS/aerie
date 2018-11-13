@@ -12,6 +12,11 @@ import { ConfigState } from '../../../config';
 
 export const getConfigState = createFeatureSelector('config');
 
+export const getBaseUrl = createSelector(
+  getConfigState,
+  (state: ConfigState) => state.app.baseUrl,
+);
+
 export const getDefaultBandSettings = createSelector(
   getConfigState,
   (state: ConfigState) => state.raven.defaultBandSettings,

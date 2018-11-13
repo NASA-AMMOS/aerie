@@ -7,9 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { State } from '../raven-store';
-
 import {
   LayoutAction,
   LayoutActionTypes,
@@ -22,7 +19,6 @@ import {
   ToggleTimeCursorDrawer,
 } from '../actions/layout.actions';
 
-// Layout State Interface.
 export interface LayoutState {
   fetchPending: boolean;
   mode: string;
@@ -42,7 +38,6 @@ export interface LayoutState {
   timelinePanelSize: number;
 }
 
-// Layout State.
 export const initialState: LayoutState = {
   fetchPending: false,
   mode: 'default',
@@ -235,32 +230,3 @@ export function toggleTimeCursorDrawer(
       action.opened !== undefined ? action.opened : !state.showTimeCursorDrawer,
   };
 }
-
-/**
- * Layout state selector helper.
- */
-const featureSelector = createFeatureSelector<State>('raven');
-export const getLayoutState = createSelector(
-  featureSelector,
-  (state: State): LayoutState => state.layout,
-);
-
-/**
- * Create selector helper for selecting state slice.
- *
- * Every reducer module exports selector functions, however child reducers
- * have no knowledge of the overall state tree. To make them usable, we
- * need to make new selectors that wrap them.
- *
- * The createSelector function creates very efficient selectors that are memoized and
- * only recompute when arguments change. The created selectors can also be composed
- * together to select different pieces of state.
- */
-export const getMode = createSelector(
-  getLayoutState,
-  (state: LayoutState) => state.mode,
-);
-export const getPending = createSelector(
-  getLayoutState,
-  (state: LayoutState) => state.fetchPending,
-);
