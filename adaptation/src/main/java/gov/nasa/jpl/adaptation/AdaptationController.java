@@ -6,6 +6,8 @@ import gov.nasa.jpl.adaptation.activities.ActivityType;
 import gov.nasa.jpl.adaptation.activities.ActivityTypeSerializer;
 import gov.nasa.jpl.engine.Setup;
 import gov.nasa.jpl.input.ReflectionUtilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -28,6 +30,8 @@ public class AdaptationController {
     @Autowired
     private AdaptationRepository repository;
 
+    private static final Logger logger = LoggerFactory.getLogger(AdaptationController.class);
+
     private final String ADAPTATION_FILE_PATH = new File("").getAbsolutePath() + "/adaptation_files/";
 
     /**
@@ -36,8 +40,10 @@ public class AdaptationController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<Object> getAdaptation(@PathVariable("id") Integer id) {
+        logger.debug("GET adaptation/" + id + " requested");
         Optional<Adaptation> optAdapt = repository.findById(id);
         if (optAdapt.isPresent()) {
+            logger.debug("returning " + optAdapt.get());
             return ResponseEntity.ok(optAdapt.get());
         }
         return ResponseEntity.notFound().build();
@@ -49,6 +55,9 @@ public class AdaptationController {
      */
     @GetMapping("")
     public ResponseEntity<Object> getAvailableAdaptations() {
+        logger.debug("GET adaptation/");
+        logger.debug("returning " + repository.findAll());
+
         return ResponseEntity.ok(repository.findAll());
     }
 
@@ -69,6 +78,8 @@ public class AdaptationController {
                                                 @RequestParam("version") String version,
                                                 @RequestParam("mission") String mission) {
 
+        logger.debug("POST adaptation/ to create a new adaptation");
+
         String location = ADAPTATION_FILE_PATH + mission + "/";
         File path = new File(location);
         // Ensure the path exists by making any missing directories in location
@@ -78,27 +89,31 @@ public class AdaptationController {
         String filePath = getUniqueFilePath(location, multipartFile.getOriginalFilename());
         File file = new File(filePath);
 
+        logger.debug("creating a file in path: " + filePath);
         // Transfer the contents of the uploaded file to the created file
         try {
+            logger.debug("starting file transfer");
             file.createNewFile();
             multipartFile.transferTo(file);
         }
         catch (IOException e) {
             e.printStackTrace();
+            logger.error("Exception uploading file for adaptation: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
         Adaptation adaptation = new Adaptation(name, version, owner, mission, filePath);
-
+        logger.debug("Now creating adaptation: " + name + " version: " + version + " by " + owner + "for mission: " + mission + " in path: " + filePath);
         // Check if this adaptation already exists
         for (Adaptation adapt : repository.findAll()) {
             if (adaptation.equals(adapt)) {
+                logger.error("adaptation conflict");
                 return ResponseEntity.status(HttpStatus.CONFLICT).build();
             }
         }
 
         repository.save(adaptation);
-
+        logger.debug("saving adapatation");
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -109,6 +124,7 @@ public class AdaptationController {
      */
     @DeleteMapping("/{name}")
     public ResponseEntity<Object> deleteAdaptation(@PathVariable("id") Integer id) {
+        logger.debug("DELETE adaptation/" + id);
 
         Optional<Adaptation> optAdapt = repository.findById(id);
         if (!optAdapt.isPresent()) {
@@ -118,13 +134,16 @@ public class AdaptationController {
             String location = adaptation.getLocation();
             File file = new File(location);
             if (file.exists() && !file.delete()) {
+                logger.error("Adaptation " + id + " error trying to delete file");
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             }
 
             repository.delete(adaptation);
+            logger.debug("DELETED adaptation" + id);
             return ResponseEntity.ok().build();
         }
         else {
+            logger.error("Adaptation " + id + " not found");
             return ResponseEntity.notFound().build();
         }
     }
@@ -136,6 +155,8 @@ public class AdaptationController {
      */
     @GetMapping("/{id}/activities")
     public ResponseEntity<Object> getActivityTypesForAdaptation(@PathVariable("id") Integer id) {
+
+        logger.debug("GET adaptation/" + id + " /activities");
 
         Optional<Adaptation> optAdapt = repository.findById(id);
         HashMap<String, ActivityType> activityTypeList = null;
@@ -150,6 +171,7 @@ public class AdaptationController {
 
             }
             catch (MalformedURLException e) {
+                logger.error("Exception when trying to get activities from adaptation: " + e.getStackTrace());
                 e.printStackTrace();
                 return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
             }
@@ -162,6 +184,7 @@ public class AdaptationController {
             return ResponseEntity.ok(JSONObject);
         }
         else {
+            logger.error("Getting activities for adaptation " + id + " NOT FOUND");
             return ResponseEntity.notFound().build();
         }
     }
