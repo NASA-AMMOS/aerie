@@ -16,3 +16,43 @@ export const getTimeCursorState = createSelector(
   featureSelector,
   (state: State): TimeCursorState => state.timeCursor,
 );
+
+export const getAutoPage = createSelector(
+  getTimeCursorState,
+  (state: TimeCursorState) => state.autoPage,
+);
+
+export const getClockRate = createSelector(
+  getTimeCursorState,
+  (state: TimeCursorState) => state.clockRate,
+);
+
+export const getCurrentTimeDelta = createSelector(
+  getTimeCursorState,
+  (state: TimeCursorState) => state.currentTimeDelta,
+);
+
+export const getCursorColor = createSelector(
+  getTimeCursorState,
+  (state: TimeCursorState) => state.cursorColor,
+);
+
+export const getCursorTime = createSelector(
+  getTimeCursorState,
+  (state: TimeCursorState) => state.cursorTime,
+);
+
+export const getCursorWidth = createSelector(
+  getTimeCursorState,
+  (state: TimeCursorState) => state.cursorWidth,
+);
+
+export const getShowTimeCursor = createSelector(
+  getTimeCursorState,
+  (state: TimeCursorState) => state.showTimeCursor,
+);
+
+export const getSetCursorTime = createSelector(
+  getTimeCursorState,
+  (state: TimeCursorState) => state.setCursorTime,
+);

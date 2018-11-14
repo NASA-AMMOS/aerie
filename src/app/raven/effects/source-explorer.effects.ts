@@ -545,44 +545,13 @@ export class SourceExplorerEffects {
   @Effect()
   importFile$: Observable<Action> = this.actions$.pipe(
     ofType<ImportFile>(SourceExplorerActionTypes.ImportFile),
-    concatMap(action => {
-      const headers = new HttpHeaders().set(
-        'Content-Type',
-        `${action.file.type === 'pef' ? 'application/json' : 'text/csv'}`,
-      );
-      const url = `${action.source.url}/${action.file.name}?timeline_type=${
-        action.file.type
-      }`;
-
-      return this.http
-        .put(url, action.file.data, { headers: headers, responseType: 'text' })
-        .pipe(
-          concatMap(() => {
-            if (action.file.mapping) {
-              return this.mpsServerService
-                .importMappingFile(
-                  action.source.url,
-                  action.file.name,
-                  action.file.mapping,
-                )
-                .pipe(map(() => new sourceExplorerActions.ImportFileSuccess()));
-            } else {
-              return of(new sourceExplorerActions.ImportFileSuccess());
-            }
-          }),
-          catchError((e: Error) => {
-            console.error('SourceExplorerEffects - importFile$: ', e);
-            return [
-              new toastActions.ShowToast(
-                'warning',
-                'Failed To Import File',
-                '',
-              ),
-              new sourceExplorerActions.ImportFileFailure(),
-            ];
-          }),
-        );
-    }),
+    concatMap(action =>
+      concat(
+        of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: true })),
+        this.importFile(action),
+        of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+      ),
+    ),
   );
 
   /**
@@ -996,6 +965,44 @@ export class SourceExplorerEffects {
             treeBySourceId,
           ),
         ),
+      );
+  }
+
+  /**
+   * Helper. Returns a stream of actions that need to occur when importing a file.
+   */
+  importFile(action: sourceExplorerActions.ImportFile) {
+    const headers = new HttpHeaders().set(
+      'Content-Type',
+      `${action.file.type === 'pef' ? 'application/json' : 'text/csv'}`,
+    );
+    const url = `${action.source.url}/${action.file.name}?timeline_type=${
+      action.file.type
+    }`;
+
+    return this.http
+      .put(url, action.file.data, { headers: headers, responseType: 'text' })
+      .pipe(
+        concatMap(() => {
+          if (action.file.mapping) {
+            return this.mpsServerService
+              .importMappingFile(
+                action.source.url,
+                action.file.name,
+                action.file.mapping,
+              )
+              .pipe(map(() => new sourceExplorerActions.ImportFileSuccess()));
+          } else {
+            return of(new sourceExplorerActions.ImportFileSuccess());
+          }
+        }),
+        catchError((e: Error) => {
+          console.error('SourceExplorerEffects - importFile$: ', e);
+          return [
+            new toastActions.ShowToast('warning', 'Failed To Import File', ''),
+            new sourceExplorerActions.ImportFileFailure(),
+          ];
+        }),
       );
   }
 

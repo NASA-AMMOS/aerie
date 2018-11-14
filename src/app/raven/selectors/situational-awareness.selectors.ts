@@ -16,6 +16,41 @@ export const getSituationalAwarenessState = createSelector(
   (state: State): SituationalAwarenessState => state.situationalAwareness,
 );
 
+export const getNowMinus = createSelector(
+  getSituationalAwarenessState,
+  (state: SituationalAwarenessState) => state.nowMinus,
+);
+
+export const getNowPlus = createSelector(
+  getSituationalAwarenessState,
+  (state: SituationalAwarenessState) => state.nowPlus,
+);
+
+export const getPageDuration = createSelector(
+  getSituationalAwarenessState,
+  (state: SituationalAwarenessState) => state.pageDuration,
+);
+
+export const getPefEntries = createSelector(
+  getSituationalAwarenessState,
+  (state: SituationalAwarenessState) => state.pefEntries,
+);
+
+export const getSituationalAware = createSelector(
+  getSituationalAwarenessState,
+  (state: SituationalAwarenessState) => state.situationalAware,
+);
+
+export const getStartTime = createSelector(
+  getSituationalAwarenessState,
+  (state: SituationalAwarenessState) => state.startTime,
+);
+
+export const getUseNow = createSelector(
+  getSituationalAwarenessState,
+  (state: SituationalAwarenessState) => state.useNow,
+);
+
 export const getSituationalAwarenessPending = createSelector(
   getSituationalAwarenessState,
   (state: SituationalAwarenessState) => state.fetchPending,
