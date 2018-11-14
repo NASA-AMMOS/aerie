@@ -645,7 +645,7 @@ export function hasActivityBand(
         const subBand = bands[i].subBands[j] as RavenActivityBand;
         if (
           subBand.type === 'activity' &&
-          subBand.label === (band as RavenActivityBand).legend &&
+          subBand.legend === (band as RavenActivityBand).legend &&
           subBand.labelPin === pinLabel
         ) {
           return {

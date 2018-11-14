@@ -8,8 +8,15 @@
  */
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { RavenSubBand } from '../../shared/models';
+import { subBandById } from '../../shared/util';
 import { State } from '../raven-store';
 import { TimelineState } from '../reducers/timeline.reducer';
+
+const bandsState = (state: TimelineState) => state.bands;
+const selectedBandIdState = (state: TimelineState) => state.selectedBandId;
+const selectedSubBandIdState = (state: TimelineState) =>
+  state.selectedSubBandId;
 
 const featureSelector = createFeatureSelector<State>('raven');
 export const getTimelineState = createSelector(
@@ -17,12 +24,57 @@ export const getTimelineState = createSelector(
   (state: State): TimelineState => state.timeline,
 );
 
+export const getBands = createSelector(getTimelineState, bandsState);
+
+export const getGuides = createSelector(
+  getTimelineState,
+  (state: TimelineState) => state.guides,
+);
+
+export const getLastClickTime = createSelector(
+  getTimelineState,
+  (state: TimelineState) => state.lastClickTime,
+);
+
+export const getMaxTimeRange = createSelector(
+  getTimelineState,
+  (state: TimelineState) => state.maxTimeRange,
+);
+
 export const getSelectedBandId = createSelector(
   getTimelineState,
-  (state: TimelineState) => state.selectedBandId,
+  selectedBandIdState,
+);
+
+export const getSelectedPoint = createSelector(
+  getTimelineState,
+  (state: TimelineState) => state.selectedPoint,
+);
+
+export const getSelectedSubBandId = createSelector(
+  getTimelineState,
+  selectedSubBandIdState,
+);
+
+export const getSelectedSubBand = createSelector(
+  getBands,
+  getSelectedBandId,
+  getSelectedSubBandId,
+  (bands = [], selectedBandId, selectedSubBandId) =>
+    subBandById(bands, selectedBandId, selectedSubBandId),
+);
+
+export const getSelectedSubBandPoints = createSelector(
+  getSelectedSubBand,
+  (subBand: RavenSubBand | null) => (subBand ? subBand.points : []),
 );
 
 export const getTimelinePending = createSelector(
   getTimelineState,
   (state: TimelineState) => state.fetchPending,
+);
+
+export const getViewTimeRange = createSelector(
+  getTimelineState,
+  (state: TimelineState) => state.viewTimeRange,
 );

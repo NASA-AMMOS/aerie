@@ -2,6 +2,7 @@
 /dist
 /tmp
 /out-tsc
+__pycache__/
 
 # dependencies
 /node_modules

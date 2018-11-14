@@ -21,7 +21,6 @@ pipeline {
 						# setup env
 						export PATH=/usr/local/bin:/usr/bin
 						export LD_LIBRARY_PATH=/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib
-						export FIREFOX_BIN=/home/seqbamboo/build_dependencies/firefox-58.0.2/firefox
 						export REPO_REV_SHORT=`git rev-parse --short HEAD`
 						# replace forward slashes in branch name to prevent problems
 						export SEQBASETAG="${BRANCH_NAME//\\//_}-B$BUILD_NUMBER-R$REPO_REV_SHORT"
@@ -35,12 +34,7 @@ pipeline {
 						# load nvm shell commands
 						[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 						# install/use proper node version
-						nvm install v9.11.1
-						# update to npm 5.8.0 to take advantage of npm ci
-						npm_version=`npm -version`
-						if [[ $npm_version != '5.8.0' ]]; then
-							npm install -g npm@5.8.0
-						fi
+						nvm install v10.13.0
 
 						echo -e "\ncurrent environment variables:\n"
 						env | sort
@@ -86,7 +80,7 @@ pipeline {
 						# load nvm shell commands
 						[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 						# install/use proper node version
-						nvm install v8.9.4
+						nvm install v10.13.0
 
 						# run sonarqube analysis
 						npm run sonarqube
