@@ -20,6 +20,7 @@ import {
   LayoutActionTypes,
   Resize,
   ToggleApplyLayoutDrawerEvent,
+  ToggleLeftPanel,
   ToggleRightPanel,
   ToggleSituationalAwarenessDrawer,
 } from '../actions/layout.actions';
@@ -35,6 +36,18 @@ export class LayoutEffects {
     private http: HttpClient,
     private store$: Store<RavenAppState>,
   ) {}
+
+  /**
+   * Effect for triggering a band resize after any panels are resized.
+   */
+  @Effect()
+  panelsResized$: Observable<Action> = this.actions$.pipe(
+    ofType<ToggleLeftPanel | ToggleRightPanel>(
+      LayoutActionTypes.ToggleLeftPanel,
+      LayoutActionTypes.ToggleRightPanel,
+    ),
+    map(() => new Resize()),
+  );
 
   /**
    * Effect for Resize.

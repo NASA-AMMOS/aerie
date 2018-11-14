@@ -10,10 +10,10 @@
 import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
 import { MatTabChangeEvent } from '@angular/material';
 import { select, Store } from '@ngrx/store';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { combineLatest, Observable, Subject } from 'rxjs';
+import { map, takeUntil } from 'rxjs/operators';
 import { ConfigState } from '../../../../config';
-import { getSourceIdsByLabelInBands, subBandById } from '../../../shared/util';
+import { getSourceIdsByLabelInBands } from '../../../shared/util';
 import { TimeCursorState } from '../../reducers/time-cursor.reducer';
 import { TimelineState } from '../../reducers/timeline.reducer';
 
@@ -37,22 +37,14 @@ import {
   StringTMap,
 } from '../../../shared/models';
 
-import {
-  getDefaultBandSettings,
-  getExcludeActivityTypes,
-  getItarMessage,
-  getUrls,
-} from '../../../shared/selectors';
-
-import {
-  getEpochsState,
-  getLayoutState,
-  getOutputState,
-  getSituationalAwarenessState,
-  getSourceExplorerState,
-  getTimeCursorState,
-  getTimelineState,
-} from '../../selectors';
+import * as configSelectors from '../../../shared/selectors/config.selectors';
+import * as epochsSelectors from '../../selectors/epochs.selectors';
+import * as layoutSelectors from '../../selectors/layout.selectors';
+import * as outputSelectors from '../../selectors/output.selectors';
+import * as situAwareSelectors from '../../selectors/situational-awareness.selectors';
+import * as sourceExplorerSelectors from '../../selectors/source-explorer.selectors';
+import * as timeCursorSelectors from '../../selectors/time-cursor.selectors';
+import * as timelineSelectors from '../../selectors/timeline.selectors';
 
 import * as configActions from '../../../shared/actions/config.actions';
 import * as dialogActions from '../../actions/dialog.actions';
@@ -72,80 +64,84 @@ import * as timelineActions from '../../actions/timeline.actions';
 })
 export class TimelineComponent implements OnDestroy {
   // Config state.
-  baseUrl: string;
-  defaultBandSettings: RavenDefaultBandSettings;
-  excludeActivityTypes: string[];
-  itarMessage: string;
+  baseUrl$: Observable<string>;
+  defaultBandSettings$: Observable<RavenDefaultBandSettings>;
+  excludeActivityTypes$: Observable<string[]>;
+  itarMessage$: Observable<string>;
 
   // Epoch state.
-  dayCode: string;
-  earthSecToEpochSec: number;
-  epochs: RavenEpoch[];
-  inUseEpoch: RavenEpoch | null;
-
-  // Output state.
-  allInOneFile: boolean;
-  allInOneFilename: string;
-  decimateOutputData: boolean;
-  outputFormat: string;
-  outputSourceIdsByLabel: StringTMap<string[]>;
+  dayCode$: Observable<string>;
+  earthSecToEpochSec$: Observable<number>;
+  epochs$: Observable<RavenEpoch[]>;
+  inUseEpoch$: Observable<RavenEpoch | null>;
 
   // Layout state.
-  rightPanelSelectedTabIndex: number | null;
-  showActivityPointMetadata: boolean;
-  showActivityPointParameters: boolean;
-  showApplyLayoutDrawer: boolean;
-  showDetailsPanel: boolean;
-  showEpochsDrawer: boolean;
-  showGlobalSettingsDrawer: boolean;
-  showLeftPanel: boolean;
-  showOutputDrawer: boolean;
-  showRightPanel: boolean;
-  showSituationalAwarenessDrawer: boolean;
-  showSouthBandsPanel: boolean;
-  showTimeCursorDrawer: boolean;
-  timelinePanelSize: number;
+  rightPanelSelectedTabIndex$: Observable<number | null>;
+  showActivityPointMetadata$: Observable<boolean>;
+  showActivityPointParameters$: Observable<boolean>;
+  showApplyLayoutDrawer$: Observable<boolean>;
+  showDetailsPanel$: Observable<boolean>;
+  showEpochsDrawer$: Observable<boolean>;
+  showGlobalSettingsDrawer$: Observable<boolean>;
+  showLeftPanel$: Observable<boolean>;
+  showOutputDrawer$: Observable<boolean>;
+  showRightPanel$: Observable<boolean>;
+  showSituationalAwarenessDrawer$: Observable<boolean>;
+  showSouthBandsPanel$: Observable<boolean>;
+  showTimeCursorDrawer$: Observable<boolean>;
+  timelinePanelSize$: Observable<number>;
+
+  // Output state.
+  allInOneFile$: Observable<boolean>;
+  allInOneFilename$: Observable<string>;
+  decimateOutputData$: Observable<boolean>;
+  outputFormat$: Observable<string>;
+  outputSourceIdsByLabel$: Observable<StringTMap<string[]>>;
 
   // Source Explorer state.
-  currentState: RavenState | null;
-  currentStateId: string;
-  customFiltersBySourceId: StringTMap<RavenCustomFilter[]>;
-  filtersByTarget: StringTMap<StringTMap<string[]>>;
-  treeBySourceId: StringTMap<RavenSource>;
+  currentState$: Observable<RavenState | null>;
+  currentStateId$: Observable<string>;
+  customFiltersBySourceId$: Observable<StringTMap<RavenCustomFilter[]>>;
+  filtersByTarget$: Observable<StringTMap<StringTMap<string[]>>>;
+  treeBySourceId$: Observable<StringTMap<RavenSource>>;
 
   // SituationalAwareness state.
-  nowMinus: number | null;
-  nowPlus: number | null;
-  pageDuration: number | null;
-  pefEntries: RavenSituationalAwarenessPefEntry[] | null;
-  situationalAware: boolean;
-  startTime: number | null;
-  useNow: boolean;
+  nowMinus$: Observable<number | null>;
+  nowPlus$: Observable<number | null>;
+  pageDuration$: Observable<number | null>;
+  pefEntries$: Observable<RavenSituationalAwarenessPefEntry[] | null>;
+  situationalAware$: Observable<boolean>;
+  startTime$: Observable<number | null>;
+  useNow$: Observable<boolean>;
 
   // Time cursor state.
-  autoPage: boolean;
-  clockRate: number;
-  cursorTime: number | null;
-  currentTimeDelta: number | null;
-  cursorColor: string;
-  cursorWidth: number;
-  showTimeCursor: boolean;
-  setCursorTime: number | null;
+  autoPage$: Observable<boolean>;
+  clockRate$: Observable<number>;
+  cursorTime$: Observable<number | null>;
+  currentTimeDelta$: Observable<number | null>;
+  cursorColor$: Observable<string>;
+  cursorWidth$: Observable<number>;
+  showTimeCursor$: Observable<boolean>;
+  setCursorTime$: Observable<number | null>;
 
   // Timeline state.
-  bands: RavenCompositeBand[];
-  guides: number[];
-  lastClickTime: number | null;
-  maxTimeRange: RavenTimeRange;
-  selectedBandId: string;
-  selectedPoint: RavenPoint | null;
-  selectedSubBandId: string;
-  viewTimeRange: RavenTimeRange;
+  bands$: Observable<RavenCompositeBand[]>;
+  guides$: Observable<number[]>;
+  lastClickTime$: Observable<number | null>;
+  maxTimeRange$: Observable<RavenTimeRange>;
+  selectedBandId$: Observable<string>;
+  selectedPoint$: Observable<RavenPoint | null>;
+  selectedSubBand$: Observable<RavenSubBand | null>;
+  selectedSubBandId$: Observable<string>;
+  selectedSubBandPoints$: Observable<RavenPoint[]>;
+  subBandSourceIdsByLabel$: Observable<StringTMap<string[]>>;
+  viewTimeRange$: Observable<RavenTimeRange>;
 
-  // Other state (derived from store state).
-  selectedSubBand: RavenSubBand | null;
-  selectedSubBandPoints: RavenPoint[];
-  subBandSourceIdsByLabel: StringTMap<string[]> = {};
+  // Local (non-Observable) state. Derived from store state.
+  bands: RavenCompositeBand[];
+  baseUrl: string;
+  selectedBandId: string;
+  selectedSubBandId: string;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -153,164 +149,212 @@ export class TimelineComponent implements OnDestroy {
     private store: Store<TimelineState | ConfigState | TimeCursorState>,
   ) {
     // Config state.
-    this.store
-      .pipe(
-        select(getExcludeActivityTypes),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(excludeActivityTypes => {
-        this.excludeActivityTypes = excludeActivityTypes;
-      });
-
-    this.store
-      .pipe(
-        select(getItarMessage),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(itarMessage => {
-        this.itarMessage = itarMessage;
-      });
-
-    this.store
-      .pipe(
-        select(getDefaultBandSettings),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(defaultBandSettings => {
-        this.defaultBandSettings = defaultBandSettings;
-      });
-
-    this.store
-      .pipe(
-        select(getUrls),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(({ baseUrl }) => {
-        this.baseUrl = baseUrl;
-      });
+    this.baseUrl$ = this.store.pipe(select(configSelectors.getBaseUrl));
+    this.excludeActivityTypes$ = this.store.pipe(
+      select(configSelectors.getExcludeActivityTypes),
+    );
+    this.itarMessage$ = this.store.pipe(select(configSelectors.getItarMessage));
+    this.defaultBandSettings$ = this.store.pipe(
+      select(configSelectors.getDefaultBandSettings),
+    );
 
     // Epoch state.
-    this.store
-      .pipe(
-        select(getEpochsState),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(state => {
-        this.dayCode = state.dayCode;
-        this.earthSecToEpochSec = state.earthSecToEpochSec;
-        this.epochs = state.epochs;
-        this.inUseEpoch = state.inUseEpoch;
-      });
+    this.dayCode$ = this.store.pipe(select(epochsSelectors.getDayCode));
+    this.earthSecToEpochSec$ = this.store.pipe(
+      select(epochsSelectors.getEarthSecToEpochSec),
+    );
+    this.epochs$ = this.store.pipe(select(epochsSelectors.getEpochs));
+    this.inUseEpoch$ = this.store.pipe(select(epochsSelectors.getInUseEpochs));
 
     // Layout state.
-    this.store
-      .pipe(
-        select(getLayoutState),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(state => {
-        this.rightPanelSelectedTabIndex = state.rightPanelSelectedTabIndex;
-        this.showActivityPointMetadata = state.showActivityPointMetadata;
-        this.showActivityPointParameters = state.showActivityPointParameters;
-        this.showApplyLayoutDrawer = state.showApplyLayoutDrawer;
-        this.showDetailsPanel = state.showDetailsPanel;
-        this.showEpochsDrawer = state.showEpochsDrawer;
-        this.showGlobalSettingsDrawer = state.showGlobalSettingsDrawer;
-        this.showLeftPanel = state.showLeftPanel;
-        this.showOutputDrawer = state.showOutputDrawer;
-        this.showRightPanel = state.showRightPanel;
-        this.showSituationalAwarenessDrawer =
-          state.showSituationalAwarenessDrawer;
-        this.showSouthBandsPanel = state.showSouthBandsPanel;
-        this.showTimeCursorDrawer = state.showTimeCursorDrawer;
-        this.timelinePanelSize = state.timelinePanelSize;
-        this.resize();
-      });
+    this.rightPanelSelectedTabIndex$ = this.store.pipe(
+      select(layoutSelectors.getRightPanelSelectedTabIndex),
+    );
+    this.showActivityPointMetadata$ = this.store.pipe(
+      select(layoutSelectors.getShowActivityPointMetadata),
+    );
+    this.showActivityPointParameters$ = this.store.pipe(
+      select(layoutSelectors.getShowActivityPointParameters),
+    );
+    this.showApplyLayoutDrawer$ = this.store.pipe(
+      select(layoutSelectors.getShowApplyLayoutDrawer),
+    );
+    this.showDetailsPanel$ = this.store.pipe(
+      select(layoutSelectors.getShowDetailsPanel),
+    );
+    this.showEpochsDrawer$ = this.store.pipe(
+      select(layoutSelectors.getShowEpochsDrawer),
+    );
+    this.showGlobalSettingsDrawer$ = this.store.pipe(
+      select(layoutSelectors.getShowGlobalSettingsDrawer),
+    );
+    this.showLeftPanel$ = this.store.pipe(
+      select(layoutSelectors.getShowLeftPanel),
+    );
+    this.showOutputDrawer$ = this.store.pipe(
+      select(layoutSelectors.getShowOutputDrawer),
+    );
+    this.showRightPanel$ = this.store.pipe(
+      select(layoutSelectors.getShowRightPanel),
+    );
+    this.showSituationalAwarenessDrawer$ = this.store.pipe(
+      select(layoutSelectors.getShowSituationalAwarenessDrawer),
+    );
+    this.showSouthBandsPanel$ = this.store.pipe(
+      select(layoutSelectors.getShowSouthBandsPanel),
+    );
+    this.showTimeCursorDrawer$ = this.store.pipe(
+      select(layoutSelectors.getShowTimeCursorDrawer),
+    );
+    this.timelinePanelSize$ = this.store.pipe(
+      select(layoutSelectors.getTimelinePanelSize),
+    );
 
     // Output state.
-    this.store
-      .pipe(
-        select(getOutputState),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(state => {
-        this.allInOneFile = state.allInOneFile;
-        this.allInOneFilename = state.allInOneFilename;
-        this.decimateOutputData = state.decimateOutputData;
-        this.outputFormat = state.outputFormat;
-        this.outputSourceIdsByLabel = state.outputSourceIdsByLabel;
-      });
-
-    // Source Explorer state.
-    this.store
-      .pipe(
-        select(getSourceExplorerState),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(state => {
-        this.customFiltersBySourceId = state.customFiltersBySourceId;
-        this.filtersByTarget = state.filtersByTarget;
-        this.currentState = state.currentState;
-        this.currentStateId = state.currentStateId;
-        this.treeBySourceId = state.treeBySourceId;
-      });
+    this.allInOneFile$ = this.store.pipe(
+      select(outputSelectors.getAllInOneFile),
+    );
+    this.allInOneFilename$ = this.store.pipe(
+      select(outputSelectors.getAllInOneFilename),
+    );
+    this.decimateOutputData$ = this.store.pipe(
+      select(outputSelectors.getDecimateOutputData),
+    );
+    this.outputFormat$ = this.store.pipe(
+      select(outputSelectors.getOutputFormat),
+    );
+    this.outputSourceIdsByLabel$ = this.store.pipe(
+      select(outputSelectors.getOutputSourceIdsByLabel),
+    );
 
     // Situational awareness state.
-    this.store
-      .pipe(
-        select(getSituationalAwarenessState),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(state => {
-        this.nowMinus = state.nowMinus;
-        this.nowPlus = state.nowPlus;
-        this.pageDuration = state.pageDuration;
-        this.pefEntries = state.pefEntries;
-        this.situationalAware = state.situationalAware;
-        this.startTime = state.startTime;
-        this.useNow = state.useNow;
-      });
+    this.nowMinus$ = this.store.pipe(select(situAwareSelectors.getNowMinus));
+    this.nowPlus$ = this.store.pipe(select(situAwareSelectors.getNowPlus));
+    this.pageDuration$ = this.store.pipe(
+      select(situAwareSelectors.getPageDuration),
+    );
+    this.pefEntries$ = this.store.pipe(
+      select(situAwareSelectors.getPefEntries),
+    );
+    this.situationalAware$ = this.store.pipe(
+      select(situAwareSelectors.getSituationalAware),
+    );
+    this.startTime$ = this.store.pipe(select(situAwareSelectors.getStartTime));
+    this.useNow$ = this.store.pipe(select(situAwareSelectors.getUseNow));
+
+    // Source Explorer state.
+    this.currentState$ = this.store.pipe(
+      select(sourceExplorerSelectors.getCurrentState),
+    );
+    this.currentStateId$ = this.store.pipe(
+      select(sourceExplorerSelectors.getCurrentStateId),
+    );
+    this.customFiltersBySourceId$ = this.store.pipe(
+      select(sourceExplorerSelectors.getCustomFiltersBySourceId),
+    );
+    this.filtersByTarget$ = this.store.pipe(
+      select(sourceExplorerSelectors.getFiltersByTarget),
+    );
+    this.treeBySourceId$ = this.store.pipe(
+      select(sourceExplorerSelectors.getTreeBySourceId),
+    );
 
     // Time cursor state.
-    this.store
-      .pipe(
-        select(getTimeCursorState),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(state => {
-        this.autoPage = state.autoPage;
-        this.clockRate = state.clockRate;
-        this.currentTimeDelta = state.currentTimeDelta;
-        this.cursorColor = state.cursorColor;
-        this.cursorTime = state.cursorTime;
-        this.cursorWidth = state.cursorWidth;
-        this.showTimeCursor = state.showTimeCursor;
-        this.setCursorTime = state.setCursorTime;
-      });
+    this.autoPage$ = this.store.pipe(select(timeCursorSelectors.getAutoPage));
+    this.clockRate$ = this.store.pipe(select(timeCursorSelectors.getClockRate));
+    this.currentTimeDelta$ = this.store.pipe(
+      select(timeCursorSelectors.getCurrentTimeDelta),
+    );
+    this.cursorColor$ = this.store.pipe(
+      select(timeCursorSelectors.getCursorColor),
+    );
+    this.cursorTime$ = this.store.pipe(
+      select(timeCursorSelectors.getCursorTime),
+    );
+    this.cursorWidth$ = this.store.pipe(
+      select(timeCursorSelectors.getCursorWidth),
+    );
+    this.showTimeCursor$ = this.store.pipe(
+      select(timeCursorSelectors.getShowTimeCursor),
+    );
+    this.setCursorTime$ = this.store.pipe(
+      select(timeCursorSelectors.getSetCursorTime),
+    );
 
     // Timeline state.
-    this.store
-      .pipe(
-        select(getTimelineState),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(state => {
-        this.bands = state.bands;
-        this.guides = state.guides;
-        this.maxTimeRange = state.maxTimeRange;
-        this.lastClickTime = state.lastClickTime;
-        this.selectedBandId = state.selectedBandId;
-        this.selectedPoint = state.selectedPoint;
-        this.selectedSubBandId = state.selectedSubBandId;
-        this.viewTimeRange = state.viewTimeRange;
-        this.setSelectedSubBand();
-        this.subBandSourceIdsByLabel = getSourceIdsByLabelInBands(
-          this.bands,
-          this.customFiltersBySourceId,
-          this.filtersByTarget,
-          this.treeBySourceId,
-        );
-      });
+    this.bands$ = this.store.pipe(select(timelineSelectors.getBands));
+    this.guides$ = this.store.pipe(select(timelineSelectors.getGuides));
+    this.lastClickTime$ = this.store.pipe(
+      select(timelineSelectors.getLastClickTime),
+    );
+    this.maxTimeRange$ = this.store.pipe(
+      select(timelineSelectors.getMaxTimeRange),
+    );
+    this.selectedBandId$ = this.store.pipe(
+      select(timelineSelectors.getSelectedBandId),
+    );
+    this.selectedPoint$ = this.store.pipe(
+      select(timelineSelectors.getSelectedPoint),
+    );
+    this.selectedSubBand$ = this.store.pipe(
+      select(timelineSelectors.getSelectedSubBand),
+    );
+    this.selectedSubBandId$ = this.store.pipe(
+      select(timelineSelectors.getSelectedSubBandId),
+    );
+    this.selectedSubBandPoints$ = combineLatest(
+      this.selectedSubBand$,
+      this.excludeActivityTypes$,
+    ).pipe(
+      map(([selectedSubBand, excludeActivityTypes]) => {
+        if (selectedSubBand) {
+          // Filter points in excludeActivityTypes.
+          if (selectedSubBand.type === 'activity') {
+            const points = selectedSubBand.points as RavenActivityPoint[];
+            return points.filter(
+              (point: RavenActivityPoint) =>
+                !excludeActivityTypes.includes(point.activityType),
+            );
+          }
+          return selectedSubBand.points;
+        }
+        return [];
+      }),
+    );
+    this.subBandSourceIdsByLabel$ = combineLatest(
+      this.bands$,
+      this.customFiltersBySourceId$,
+      this.filtersByTarget$,
+      this.treeBySourceId$,
+    ).pipe(
+      map(([bands, customFiltersBySourceId, filtersByTarget, treeBySourceId]) =>
+        getSourceIdsByLabelInBands(
+          bands,
+          customFiltersBySourceId,
+          filtersByTarget,
+          treeBySourceId,
+        ),
+      ),
+    );
+    this.viewTimeRange$ = this.store.pipe(
+      select(timelineSelectors.getViewTimeRange),
+    );
+
+    // Subscribed state. For local use here in the component.
+    this.bands$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(bands => (this.bands = bands));
+    this.baseUrl$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(baseUrl => (this.baseUrl = baseUrl));
+    this.selectedBandId$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(selectedBandId => (this.selectedBandId = selectedBandId));
+    this.selectedSubBandId$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(
+        selectedSubBandId => (this.selectedSubBandId = selectedSubBandId),
+      );
   }
 
   ngOnDestroy() {
@@ -357,6 +401,10 @@ export class TimelineComponent implements OnDestroy {
 
   /**
    * Event. Called when an activity expansion selection is made.
+   *
+   * TODO: RemoveChildrenOrDescendants and FetchChildrenOrDescendants
+   * should not need selectedBandId and selectedSubBandId here as they can get
+   * that from the Effect or Reducer.
    */
   onChangeActivityExpansion(e: RavenActivityPointExpansion) {
     this.store.dispatch(
@@ -596,31 +644,5 @@ export class TimelineComponent implements OnDestroy {
    */
   resize() {
     this.store.dispatch(new layoutActions.Resize());
-  }
-
-  /**
-   * Helper that sets the selected sub-band and it's points array for use in the `raven-table`.
-   */
-  setSelectedSubBand() {
-    this.selectedSubBand = subBandById(
-      this.bands,
-      this.selectedBandId,
-      this.selectedSubBandId,
-    );
-
-    if (this.selectedSubBand) {
-      this.selectedSubBandPoints = this.selectedSubBand.points;
-      // Filter points in excludeActivityTypes.
-      if (this.selectedSubBand.type === 'activity') {
-        this.selectedSubBandPoints = this.selectedSubBandPoints.filter(
-          point =>
-            !this.excludeActivityTypes.includes(
-              (point as RavenActivityPoint).activityType,
-            ),
-        );
-      }
-    } else {
-      this.selectedSubBandPoints = [];
-    }
   }
 }
