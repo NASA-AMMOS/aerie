@@ -57,6 +57,7 @@ import {
   getSituationalAwarenessPageDuration,
   getSituationalAwarenessStartTime,
   getSourceIds,
+  getTargetFilters,
   hasActivityBand,
   hasActivityBandForFilterTarget,
   hasSourceId,
@@ -547,9 +548,17 @@ export class SourceExplorerEffects {
     ofType<ImportFile>(SourceExplorerActionTypes.ImportFile),
     concatMap(action =>
       concat(
-        of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: true })),
+        of(
+          new sourceExplorerActions.UpdateSourceExplorer({
+            fetchPending: true,
+          }),
+        ),
         this.importFile(action),
-        of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+        of(
+          new sourceExplorerActions.UpdateSourceExplorer({
+            fetchPending: false,
+          }),
+        ),
       ),
     ),
   );
@@ -723,7 +732,7 @@ export class SourceExplorerEffects {
         action,
       }) =>
         concat(
-          this.fetchSubBands(
+          this.fetchGraphableFilters(
             sourceExplorer.treeBySourceId,
             action.sourceId,
             config.raven.defaultBandSettings,
@@ -816,7 +825,7 @@ export class SourceExplorerEffects {
         action,
       }) =>
         concat(
-          this.fetchSubBands(
+          this.fetchGraphableFilters(
             sourceExplorer.treeBySourceId,
             action.sourceId,
             config.raven.defaultBandSettings,
@@ -929,6 +938,51 @@ export class SourceExplorerEffects {
   }
 
   /**
+   * Fetch helper. Fetches graphable filter data from MPS Server and maps it to Raven sub-band data.
+   */
+  fetchGraphableFilters(
+    treeBySourceId: StringTMap<RavenSource>,
+    sourceId: string,
+    defaultBandSettings: RavenDefaultBandSettings,
+    customFilter: RavenCustomFilter | null,
+    filtersByTarget: StringTMap<StringTMap<string[]>>,
+    situAware: boolean,
+    startTime: string,
+    pageDuration: string,
+  ) {
+    const source = treeBySourceId[sourceId];
+    return this.http
+      .post<MpsServerGraphData>(
+        getFormattedSourceUrl(
+          treeBySourceId,
+          source,
+          customFilter,
+          situAware,
+          startTime,
+          pageDuration,
+        ),
+        getTargetFilters(
+          treeBySourceId,
+          filtersByTarget,
+          (source as RavenGraphableFilterSource).filterTarget,
+        ),
+        { responseType: 'json' },
+      )
+      .pipe(
+        map((graphData: MpsServerGraphData) =>
+          toRavenBandData(
+            sourceId,
+            source.name,
+            graphData,
+            defaultBandSettings,
+            customFilter,
+            treeBySourceId,
+          ),
+        ),
+      );
+  }
+
+  /**
    * Fetch helper. Fetches graph data from MPS Server and maps it to Raven sub-band data.
    */
   fetchSubBands(
@@ -948,7 +1002,6 @@ export class SourceExplorerEffects {
           treeBySourceId,
           source,
           customFilter,
-          filtersByTarget,
           situAware,
           startTime,
           pageDuration,

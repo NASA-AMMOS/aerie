@@ -579,7 +579,6 @@ export function getFormattedSourceUrl(
   treeBySourceId: StringTMap<RavenSource>,
   source: RavenSource,
   customFilter: RavenCustomFilter | null,
-  filtersByTarget: StringTMap<StringTMap<string[]>>,
   situAware: boolean,
   startTime: string,
   pageDuration: string,
@@ -602,23 +601,10 @@ export function getFormattedSourceUrl(
     sourceUrl = `${sourceUrl}&${queryOptions}`;
   }
 
-  // Graphable Filter.
-  if (source.type === 'graphableFilter') {
-    sourceUrl = getQueryUrlForGraphableFilter(
-      treeBySourceId,
-      source.url,
-      getTargetFilters(
-        filtersByTarget,
-        (source as RavenGraphableFilterSource).filterTarget,
-      ),
-    );
-  }
-
   // If situAware, add query options.
   if (situAware) {
     sourceUrl = getSituAwareUrl(sourceUrl, startTime, pageDuration);
   }
-
   return sourceUrl;
 }
 
@@ -648,7 +634,6 @@ export function getOutputDataUrl(
     treeBySourceId,
     source,
     customFilter,
-    filtersByTarget,
     false,
     '',
     '',
@@ -716,46 +701,19 @@ export function getPinLabel(sourceId: string, pins: RavenPin[]): string {
 }
 
 /**
- * Helper that returns query options attached to a graphable filter source id or url.
- */
-export function getQueryUrlForGraphableFilter(
-  treeBySourceId: StringTMap<RavenSource>,
-  sourceIdOrUrl: string,
-  targetFilters: StringTMap<string[]>,
-) {
-  let queryOptions = '';
-
-  for (const group of Object.keys(targetFilters)) {
-    queryOptions += `${group}=${getFilters(
-      treeBySourceId,
-      targetFilters[group],
-    ).join(',')}&`;
-  }
-
-  return `${sourceIdOrUrl}${queryOptions}`;
-}
-
-/**
  * Helper. Returns filters in set for a graphable source
  */
 export function getTargetFilters(
+  treeBySourceId: StringTMap<RavenSource>,
   filtersByTarget: StringTMap<StringTMap<string[]>> | null,
   filterTarget: string,
 ) {
-  let targetFilters = {};
-
+  const targetFilters = {};
   if (filtersByTarget) {
-    Object.keys(filtersByTarget).forEach(target => {
-      if (target === filterTarget) {
-        targetFilters = Object.assign(
-          {},
-          targetFilters,
-          filtersByTarget[target],
-        );
-      }
-    });
+    for (const [group, sourceIds] of Object.entries(filtersByTarget[filterTarget])) {
+      targetFilters[group] = getFilters(treeBySourceId, sourceIds);
+    }
   }
-
   return targetFilters;
 }
 
