@@ -710,7 +710,9 @@ export function getTargetFilters(
 ) {
   const targetFilters = {};
   if (filtersByTarget) {
-    for (const [group, sourceIds] of Object.entries(filtersByTarget[filterTarget])) {
+    for (const [group, sourceIds] of Object.entries(
+      filtersByTarget[filterTarget],
+    )) {
       targetFilters[group] = getFilters(treeBySourceId, sourceIds);
     }
   }
