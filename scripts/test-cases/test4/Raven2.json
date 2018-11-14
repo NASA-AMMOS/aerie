@@ -1,0 +1,210 @@
+{
+    "bands": [
+        {
+            "backgroundColor": "#FFFFFF",
+            "compositeAutoScale": true,
+            "compositeLogTicks": false,
+            "compositeScientificNotation": false,
+            "compositeYAxisLabel": false,
+            "containerId": "0",
+            "height": 100,
+            "heightPadding": 10,
+            "name": "DataVolume_fltbits_1000",
+            "overlay": false,
+            "showTooltip": true,
+            "sortOrder": 0,
+            "subBands": [
+                {
+                    "addTo": false,
+                    "autoScale": true,
+                    "color": "#000000",
+                    "decimate": false,
+                    "fill": false,
+                    "fillColor": "#000000",
+                    "height": 100,
+                    "heightPadding": 10,
+                    "icon": "circle",
+                    "interpolation": "linear",
+                    "isDuration": false,
+                    "isTime": false,
+                    "label": "DataVolume_fltbits_1000",
+                    "labelColor": "#000000",
+                    "labelFont": "Georgia",
+                    "labelPin": "",
+                    "labelUnit": "megabits",
+                    "logTicks": false,
+                    "maxTimeRange": {
+                        "end": 0,
+                        "start": 0
+                    },
+                    "name": "DataVolume_fltbits_1000",
+                    "points": [],
+                    "scientificNotation": false,
+                    "showIcon": false,
+                    "showLabelPin": false,
+                    "showLabelUnit": true,
+                    "showTooltip": true,
+                    "sourceIds": [
+                        "/TEST_ATS/Overlay_Test/apgen-res-flt-tol_1000/Resources/Data/DataVolume_fltbits_1000"
+                    ],
+                    "tableColumns": [],
+                    "type": "resource"
+                },
+                {
+                    "addTo": false,
+                    "autoScale": true,
+                    "color": "#000000",
+                    "decimate": false,
+                    "fill": false,
+                    "fillColor": "#000000",
+                    "height": 100,
+                    "heightPadding": 10,
+                    "icon": "circle",
+                    "interpolation": "linear",
+                    "isDuration": false,
+                    "isTime": false,
+                    "label": "DataVolume_megabits_1000",
+                    "labelColor": "#000000",
+                    "labelFont": "Georgia",
+                    "labelPin": "",
+                    "labelUnit": "megabits",
+                    "logTicks": false,
+                    "maxTimeRange": {
+                        "end": 0,
+                        "start": 0
+                    },
+                    "name": "DataVolume_megabits_1000",
+                    "points": [],
+                    "scientificNotation": false,
+                    "showIcon": false,
+                    "showLabelPin": false,
+                    "showLabelUnit": true,
+                    "showTooltip": true,
+                    "sourceIds": [
+                        "/TEST_ATS/Overlay_Test/apgen-res-flt-tol_1000/Resources/Data/DataVolume_megabits_1000"
+                    ],
+                    "tableColumns": [],
+                    "type": "resource"
+                }
+            ],
+            "type": "composite"
+        },
+        {
+            "backgroundColor": "#FFFFFF",
+            "compositeAutoScale": true,
+            "compositeLogTicks": false,
+            "compositeScientificNotation": false,
+            "compositeYAxisLabel": true,
+            "containerId": "0",
+            "height": 100,
+            "heightPadding": 10,
+            "name": "DataVolume_0-5_bits_1000",
+            "overlay": false,
+            "showTooltip": true,
+            "sortOrder": 1,
+            "subBands": [
+                {
+                    "addTo": false,
+                    "autoScale": true,
+                    "color": "#000000",
+                    "decimate": false,
+                    "fill": false,
+                    "fillColor": "#000000",
+                    "height": 100,
+                    "heightPadding": 10,
+                    "icon": "circle",
+                    "interpolation": "constant",
+                    "isDuration": false,
+                    "isTime": false,
+                    "label": "DataVolume_0-5_bits_1000",
+                    "labelColor": "#000000",
+                    "labelFont": "Georgia",
+                    "labelPin": "",
+                    "labelUnit": "bits",
+                    "logTicks": false,
+                    "maxTimeRange": {
+                        "end": 0,
+                        "start": 0
+                    },
+                    "name": "DataVolume_0-5_bits_1000",
+                    "points": [],
+                    "scientificNotation": false,
+                    "showIcon": false,
+                    "showLabelPin": false,
+                    "showLabelUnit": true,
+                    "showTooltip": true,
+                    "sourceIds": [
+                        "/TEST_ATS/Overlay_Test/apgen-res-int-tol_1000/Resources/Data/DataVolume_0-5_bits_1000"
+                    ],
+                    "tableColumns": [],
+                    "type": "resource"
+                },
+                {
+                    "addTo": false,
+                    "autoScale": true,
+                    "color": "#000000",
+                    "decimate": false,
+                    "fill": false,
+                    "fillColor": "#000000",
+                    "height": 100,
+                    "heightPadding": 10,
+                    "icon": "circle",
+                    "interpolation": "constant",
+                    "isDuration": false,
+                    "isTime": false,
+                    "label": "DataVolume_5-10_bits_1000",
+                    "labelColor": "#000000",
+                    "labelFont": "Georgia",
+                    "labelPin": "",
+                    "labelUnit": "bits",
+                    "logTicks": false,
+                    "maxTimeRange": {
+                        "end": 0,
+                        "start": 0
+                    },
+                    "name": "DataVolume_5-10_bits_1000",
+                    "points": [],
+                    "scientificNotation": false,
+                    "showIcon": false,
+                    "showLabelPin": false,
+                    "showLabelUnit": true,
+                    "showTooltip": true,
+                    "sourceIds": [
+                        "/TEST_ATS/Overlay_Test/apgen-res-int-tol_1000/Resources/Data/DataVolume_5-10_bits_1000"
+                    ],
+                    "tableColumns": [],
+                    "type": "resource"
+                }
+            ],
+            "type": "composite"
+        }
+    ],
+    "defaultBandSettings": {
+        "activityLayout": 0,
+        "icon": "circle",
+        "iconEnabled": false,
+        "labelFont": "Georgia",
+        "labelFontSize": 10,
+        "labelWidth": 100,
+        "resourceColor": "#000000",
+        "resourceFillColor": "#000000",
+        "showLastClick": false,
+        "showTooltip": true
+    },
+    "guides": [
+        1262317231,
+        1262339984
+    ],
+    "ignoreShareableLinkTimes": true,
+    "maxTimeRange": {
+        "end": 1262364010,
+        "start": 1262304000
+    },
+    "name": "Conversion_Test4_Raven2",
+    "pins": [],
+    "version": "1.0.0",
+    "viewTimeRange": {
+        "end": 1262364010,
+        "start": 1262304000
+    }
+}

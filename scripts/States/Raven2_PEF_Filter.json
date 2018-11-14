@@ -1,0 +1,77 @@
+[
+    {
+        "bands": [
+            {
+                "activityHeight": 20,
+                "activityStyle": 1,
+                "addTo": false,
+                "alignLabel": 3,
+                "baselineLabel": 3,
+                "borderWidth": 1,
+                "filterTarget": null,
+                "height": 50,
+                "heightPadding": 10,
+                "icon": "circle",
+                "label": "command",
+                "labelColor": [
+                    0,
+                    0,
+                    0
+                ],
+                "labelFont": "Georgia",
+                "labelPin": "",
+                "layout": 0,
+                "legend": "command",
+                "maxTimeRange": {
+                    "end": 0,
+                    "start": 0
+                },
+                "minorLabels": [
+                    "engine=1"
+                ],
+                "name": "command",
+                "points": [],
+                "showActivityTimes": false,
+                "showLabel": true,
+                "showLabelPin": true,
+                "showTooltip": true,
+                "sourceIds": [
+                    "/TEST_ATS/PEF_Combined_Test/test_10000/command_by_engine?label=command&filter=1"
+                ],
+                "tableColumns": [],
+                "trimLabel": true,
+                "type": "activity",
+                "containerId": "0",
+                "sortOrder": 0
+            }
+        ],
+        "defaultBandSettings": {
+            "activityLayout": 0,
+            "icon": "circle",
+            "iconEnabled": false,
+            "labelFont": "Georgia",
+            "labelFontSize": 9,
+            "labelWidth": 150,
+            "resourceColor": "#000000",
+            "resourceFillColor": "#000000",
+            "showLastClick": true,
+            "showTooltip": true
+        },
+        "guides": [],
+        "maxTimeRange": {
+            "end": 751272600,
+            "start": 751251600
+        },
+        "name": "PEF_Filter",
+        "pins": [],
+        "version": "1.0.0",
+        "viewTimeRange": {
+            "end": 751272600,
+            "start": 751251600
+        },
+        "__file_id": "/TEST_ATS/STATES/PEF_Filter",
+        "__document_id": "5babecaa988765118edcce13",
+        "__kind": "fs_record",
+        "__db_type": "mongodb"
+    }
+]

@@ -1,0 +1,1108 @@
+[
+  {
+    "name": "Conversion_Test3_Raven1",
+    "type": 0,
+    "sources": [
+      {
+        "hasGraph": false,
+        "name": "TEST_ATS",
+        "overrideName": null,
+        "tabName": null,
+        "suffix": null,
+        "props": {
+          "isServer": true
+        },
+        "selected": true,
+        "isHidden": false,
+        "sources": [
+          {
+            "hasGraph": false,
+            "name": "Overlay_Test",
+            "overrideName": null,
+            "tabName": null,
+            "suffix": null,
+            "props": {
+              "__kind": "fs_dir",
+              "__db_type": "mongodb",
+              "name": "Overlay_Test",
+              "label": "Overlay_Test",
+              "contents_url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/fs-mongodb/TEST_ATS/Overlay_Test",
+              "permissions": "rw-r--r-- null all.usjpl",
+              "created": "2018-06-11 14:03:05-0700",
+              "modified": "2018-06-11 14:03:05-0700"
+            },
+            "selected": true,
+            "isHidden": false,
+            "sources": [
+              {
+                "hasGraph": false,
+                "name": "apgen-activity-tol_1000",
+                "overrideName": null,
+                "tabName": null,
+                "suffix": null,
+                "props": {
+                  "__kind": "fs_file",
+                  "__db_type": "mongodb",
+                  "name": "apgen-activity-tol_1000",
+                  "label": "apgen-activity-tol_1000",
+                  "__kind_sub": "file_tol",
+                  "contents_url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/list_tol-mongodb/TEST_ATS/Overlay_Test/apgen-activity-tol_1000",
+                  "file_data_url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/fs-mongodb/TEST_ATS/Overlay_Test/apgen-activity-tol_1000",
+                  "permissions": "rw-r--r-- null all.usjpl",
+                  "created": "2018-06-11 14:03:05-0700",
+                  "modified": "2018-06-11 14:03:05-0700",
+                  "importJobStatus": "FINISHED"
+                },
+                "selected": true,
+                "isHidden": false,
+                "sources": [
+                  {
+                    "hasGraph": false,
+                    "name": "Activities by Legend",
+                    "overrideName": null,
+                    "tabName": null,
+                    "suffix": null,
+                    "props": {
+                      "__kind": "fs_category",
+                      "name": "Activities by Legend",
+                      "label": "Activities by Legend"
+                    },
+                    "selected": true,
+                    "isHidden": false,
+                    "sources": [
+                      {
+                        "hasGraph": false,
+                        "name": "ACT0_1000",
+                        "overrideName": null,
+                        "tabName": null,
+                        "suffix": null,
+                        "props": {
+                          "__kind": "fs_graphable",
+                          "__kind_sub": "graphable_activity",
+                          "name": "ACT0_1000",
+                          "label": "ACT0_1000",
+                          "data_url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/tol_activities_by_legend-mongodb/TEST_ATS/Overlay_Test/apgen-activity-tol_1000?name=ACT0_1000&format=TMS",
+                          "isData": true
+                        },
+                        "selected": true,
+                        "isHidden": false,
+                        "sources": [],
+                        "url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/tol_activities_by_legend-mongodb/TEST_ATS/Overlay_Test/apgen-activity-tol_1000?name=ACT0_1000&format=TMS",
+                        "tabSelected": false,
+                        "bandIds": [
+                          "band1430"
+                        ],
+                        "graphSettings": [
+                          {
+                            "label": "ACT0_1000",
+                            "labelOverride": false,
+                            "iconEnabled": false,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "compositeYLabel": false,
+                            "dynamicCompositeYLabel": false,
+                            "labelColor": [
+                              0,
+                              0,
+                              0
+                            ],
+                            "lineColor": "black",
+                            "lineColorCustom": [
+                              0,
+                              0,
+                              0
+                            ],
+                            "fillColor": "black",
+                            "activityColorCustom": [
+                              249,
+                              189,
+                              133
+                            ],
+                            "fill": false,
+                            "isInCompositeBand": false,
+                            "height": null,
+                            "heightPadding": 0,
+                            "interpolation": "constant",
+                            "scientificNotation": null,
+                            "customMenuItems": [],
+                            "overlayBand": "",
+                            "logTicks": false,
+                            "statePlotType": 0,
+                            "currentTimeCursorEnabled": false,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false,
+                            "labelFontSize": 10,
+                            "rowHeight": 5,
+                            "inSouth": null,
+                            "showStateChangeTimes": false,
+                            "activityHeight": 20
+                          }
+                        ],
+                        "id": "257"
+                      }
+                    ],
+                    "url": "",
+                    "tabSelected": false,
+                    "bandIds": [],
+                    "graphSettings": null,
+                    "id": "263"
+                  },
+                  {
+                    "hasGraph": false,
+                    "name": "Activities by Type",
+                    "overrideName": null,
+                    "tabName": null,
+                    "suffix": null,
+                    "props": {
+                      "__kind": "fs_category",
+                      "name": "Activities by Type",
+                      "label": "Activities by Type"
+                    },
+                    "selected": true,
+                    "isHidden": false,
+                    "sources": [
+                      {
+                        "hasGraph": false,
+                        "name": "Root Activities",
+                        "overrideName": null,
+                        "tabName": null,
+                        "suffix": null,
+                        "props": {
+                          "__kind": "fs_graphable",
+                          "__kind_sub": "graphable_activity",
+                          "name": "Root Activities",
+                          "label": "Root Activities",
+                          "data_url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/tol_activities-mongodb/TEST_ATS/Overlay_Test/apgen-activity-tol_1000?root=true&format=TMS",
+                          "isData": true
+                        },
+                        "selected": true,
+                        "isHidden": false,
+                        "sources": [],
+                        "url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/tol_activities-mongodb/TEST_ATS/Overlay_Test/apgen-activity-tol_1000?root=true&format=TMS",
+                        "tabSelected": false,
+                        "bandIds": [
+                          "band1430",
+                          "band7749",
+                          "band7750",
+                          "band7751",
+                          "band7752",
+                          "band7753"
+                        ],
+                        "graphSettings": [
+                          {
+                            "label": "Root Activities",
+                            "labelOverride": false,
+                            "iconEnabled": false,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "compositeYLabel": false,
+                            "dynamicCompositeYLabel": false,
+                            "labelColor": [
+                              0,
+                              0,
+                              0
+                            ],
+                            "lineColor": "black",
+                            "lineColorCustom": [
+                              0,
+                              0,
+                              0
+                            ],
+                            "fillColor": "black",
+                            "activityColorCustom": [
+                              249,
+                              189,
+                              133
+                            ],
+                            "fill": false,
+                            "isInCompositeBand": false,
+                            "height": null,
+                            "heightPadding": 0,
+                            "interpolation": "constant",
+                            "scientificNotation": null,
+                            "customMenuItems": [],
+                            "overlayBand": "",
+                            "logTicks": false,
+                            "statePlotType": 0,
+                            "currentTimeCursorEnabled": false,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false,
+                            "labelFontSize": 10,
+                            "rowHeight": 5,
+                            "inSouth": null,
+                            "showStateChangeTimes": false,
+                            "activityHeight": 20
+                          },
+                          {
+                            "label": "ACT0_1000",
+                            "labelOverride": false,
+                            "iconEnabled": false,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "compositeYLabel": false,
+                            "dynamicCompositeYLabel": false,
+                            "labelColor": [
+                              0,
+                              0,
+                              0
+                            ],
+                            "lineColor": "black",
+                            "lineColorCustom": [
+                              0,
+                              0,
+                              0
+                            ],
+                            "fillColor": "black",
+                            "activityColorCustom": [
+                              249,
+                              189,
+                              133
+                            ],
+                            "fill": false,
+                            "isInCompositeBand": false,
+                            "height": null,
+                            "heightPadding": 0,
+                            "interpolation": "constant",
+                            "scientificNotation": null,
+                            "customMenuItems": [],
+                            "overlayBand": "",
+                            "logTicks": false,
+                            "statePlotType": 0,
+                            "currentTimeCursorEnabled": false,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false,
+                            "labelFontSize": 10,
+                            "rowHeight": 5,
+                            "inSouth": null,
+                            "showStateChangeTimes": false,
+                            "activityHeight": 20
+                          },
+                          {
+                            "label": "ACT1_1000",
+                            "labelOverride": false,
+                            "iconEnabled": false,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "compositeYLabel": false,
+                            "dynamicCompositeYLabel": false,
+                            "labelColor": [
+                              0,
+                              0,
+                              0
+                            ],
+                            "lineColor": "black",
+                            "lineColorCustom": [
+                              0,
+                              0,
+                              0
+                            ],
+                            "fillColor": "black",
+                            "activityColorCustom": [
+                              249,
+                              189,
+                              133
+                            ],
+                            "fill": false,
+                            "isInCompositeBand": false,
+                            "height": null,
+                            "heightPadding": 0,
+                            "interpolation": "constant",
+                            "scientificNotation": null,
+                            "customMenuItems": [],
+                            "overlayBand": "",
+                            "logTicks": false,
+                            "statePlotType": 0,
+                            "currentTimeCursorEnabled": false,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false,
+                            "labelFontSize": 10,
+                            "rowHeight": 5,
+                            "inSouth": null,
+                            "showStateChangeTimes": false,
+                            "activityHeight": 20
+                          },
+                          {
+                            "label": "ACT2_1000",
+                            "labelOverride": false,
+                            "iconEnabled": false,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "compositeYLabel": false,
+                            "dynamicCompositeYLabel": false,
+                            "labelColor": [
+                              0,
+                              0,
+                              0
+                            ],
+                            "lineColor": "black",
+                            "lineColorCustom": [
+                              0,
+                              0,
+                              0
+                            ],
+                            "fillColor": "black",
+                            "activityColorCustom": [
+                              249,
+                              189,
+                              133
+                            ],
+                            "fill": false,
+                            "isInCompositeBand": false,
+                            "height": null,
+                            "heightPadding": 0,
+                            "interpolation": "constant",
+                            "scientificNotation": null,
+                            "customMenuItems": [],
+                            "overlayBand": "",
+                            "logTicks": false,
+                            "statePlotType": 0,
+                            "currentTimeCursorEnabled": false,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false,
+                            "labelFontSize": 10,
+                            "rowHeight": 5,
+                            "inSouth": null,
+                            "showStateChangeTimes": false,
+                            "activityHeight": 20
+                          },
+                          {
+                            "label": "ACT3_1000",
+                            "labelOverride": false,
+                            "iconEnabled": false,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "compositeYLabel": false,
+                            "dynamicCompositeYLabel": false,
+                            "labelColor": [
+                              0,
+                              0,
+                              0
+                            ],
+                            "lineColor": "black",
+                            "lineColorCustom": [
+                              0,
+                              0,
+                              0
+                            ],
+                            "fillColor": "black",
+                            "activityColorCustom": [
+                              249,
+                              189,
+                              133
+                            ],
+                            "fill": false,
+                            "isInCompositeBand": false,
+                            "height": null,
+                            "heightPadding": 0,
+                            "interpolation": "constant",
+                            "scientificNotation": null,
+                            "customMenuItems": [],
+                            "overlayBand": "",
+                            "logTicks": false,
+                            "statePlotType": 0,
+                            "currentTimeCursorEnabled": false,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false,
+                            "labelFontSize": 10,
+                            "rowHeight": 5,
+                            "inSouth": null,
+                            "showStateChangeTimes": false,
+                            "activityHeight": 20
+                          },
+                          {
+                            "label": "ACT4_1000",
+                            "labelOverride": false,
+                            "iconEnabled": false,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "compositeYLabel": false,
+                            "dynamicCompositeYLabel": false,
+                            "labelColor": [
+                              0,
+                              0,
+                              0
+                            ],
+                            "lineColor": "black",
+                            "lineColorCustom": [
+                              0,
+                              0,
+                              0
+                            ],
+                            "fillColor": "black",
+                            "activityColorCustom": [
+                              249,
+                              189,
+                              133
+                            ],
+                            "fill": false,
+                            "isInCompositeBand": false,
+                            "height": null,
+                            "heightPadding": 0,
+                            "interpolation": "constant",
+                            "scientificNotation": null,
+                            "customMenuItems": [],
+                            "overlayBand": "",
+                            "logTicks": false,
+                            "statePlotType": 0,
+                            "currentTimeCursorEnabled": false,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false,
+                            "labelFontSize": 10,
+                            "rowHeight": 5,
+                            "inSouth": null,
+                            "showStateChangeTimes": false,
+                            "activityHeight": 20
+                          },
+                          {
+                            "label": "ACT5_1000",
+                            "labelOverride": false,
+                            "iconEnabled": false,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "compositeYLabel": false,
+                            "dynamicCompositeYLabel": false,
+                            "labelColor": [
+                              0,
+                              0,
+                              0
+                            ],
+                            "lineColor": "black",
+                            "lineColorCustom": [
+                              0,
+                              0,
+                              0
+                            ],
+                            "fillColor": "black",
+                            "activityColorCustom": [
+                              249,
+                              189,
+                              133
+                            ],
+                            "fill": false,
+                            "isInCompositeBand": false,
+                            "height": null,
+                            "heightPadding": 0,
+                            "interpolation": "constant",
+                            "scientificNotation": null,
+                            "customMenuItems": [],
+                            "overlayBand": "",
+                            "logTicks": false,
+                            "statePlotType": 0,
+                            "currentTimeCursorEnabled": false,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false,
+                            "labelFontSize": 10,
+                            "rowHeight": 5,
+                            "inSouth": null,
+                            "showStateChangeTimes": false,
+                            "activityHeight": 20
+                          }
+                        ],
+                        "id": "248"
+                      }
+                    ],
+                    "url": "",
+                    "tabSelected": false,
+                    "bandIds": [],
+                    "graphSettings": null,
+                    "id": "256"
+                  }
+                ],
+                "url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/list_tol-mongodb/TEST_ATS/Overlay_Test/apgen-activity-tol_1000",
+                "tabSelected": false,
+                "bandIds": [],
+                "graphSettings": null,
+                "id": "198"
+              },
+              {
+                "hasGraph": false,
+                "name": "apgen-res-flt-tol_1000",
+                "overrideName": null,
+                "tabName": null,
+                "suffix": null,
+                "props": {
+                  "__kind": "fs_file",
+                  "__db_type": "mongodb",
+                  "name": "apgen-res-flt-tol_1000",
+                  "label": "apgen-res-flt-tol_1000",
+                  "__kind_sub": "file_tol",
+                  "contents_url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/list_tol-mongodb/TEST_ATS/Overlay_Test/apgen-res-flt-tol_1000",
+                  "file_data_url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/fs-mongodb/TEST_ATS/Overlay_Test/apgen-res-flt-tol_1000",
+                  "permissions": "rw-r--r-- null all.usjpl",
+                  "created": "2018-06-11 14:03:08-0700",
+                  "modified": "2018-06-11 14:03:08-0700",
+                  "importJobStatus": "FINISHED"
+                },
+                "selected": true,
+                "isHidden": false,
+                "sources": [
+                  {
+                    "hasGraph": false,
+                    "name": "Resources",
+                    "overrideName": null,
+                    "tabName": null,
+                    "suffix": null,
+                    "props": {
+                      "__kind": "fs_category",
+                      "name": "Resources",
+                      "label": "Resources"
+                    },
+                    "selected": true,
+                    "isHidden": false,
+                    "sources": [
+                      {
+                        "hasGraph": false,
+                        "name": "Data",
+                        "overrideName": null,
+                        "tabName": null,
+                        "suffix": null,
+                        "props": {
+                          "__kind": "fs_category",
+                          "name": "Data",
+                          "label": "Data"
+                        },
+                        "selected": true,
+                        "isHidden": false,
+                        "sources": [
+                          {
+                            "hasGraph": false,
+                            "name": "DataVolume_fltbits_1000",
+                            "overrideName": null,
+                            "tabName": null,
+                            "suffix": null,
+                            "props": {
+                              "__kind": "fs_graphable",
+                              "__kind_sub": "graphable_resource",
+                              "name": "DataVolume_fltbits_1000",
+                              "label": "DataVolume_fltbits_1000",
+                              "data_url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/tol_resource-mongodb/TEST_ATS/Overlay_Test/apgen-res-flt-tol_1000?name=DataVolume_fltbits_1000&format=TMS&decimate=true",
+                              "isData": true
+                            },
+                            "selected": true,
+                            "isHidden": false,
+                            "sources": [],
+                            "url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/tol_resource-mongodb/TEST_ATS/Overlay_Test/apgen-res-flt-tol_1000?name=DataVolume_fltbits_1000&format=TMS&decimate=true",
+                            "tabSelected": false,
+                            "bandIds": [
+                              "band9670"
+                            ],
+                            "graphSettings": [
+                              {
+                                "label": "DataVolume_fltbits_1000 (megabits)",
+                                "labelOverride": false,
+                                "iconEnabled": false,
+                                "trimLabel": false,
+                                "hideLabel": false,
+                                "compositeYLabel": false,
+                                "dynamicCompositeYLabel": false,
+                                "labelColor": [
+                                  0,
+                                  0,
+                                  0
+                                ],
+                                "lineColor": "black",
+                                "lineColorCustom": [
+                                  0,
+                                  0,
+                                  0
+                                ],
+                                "fillColor": "black",
+                                "activityColorCustom": [
+                                  249,
+                                  189,
+                                  133
+                                ],
+                                "fill": false,
+                                "isInCompositeBand": false,
+                                "height": null,
+                                "heightPadding": 0,
+                                "interpolation": "linear",
+                                "scientificNotation": null,
+                                "customMenuItems": [],
+                                "overlayBand": "",
+                                "logTicks": false,
+                                "statePlotType": 0,
+                                "currentTimeCursorEnabled": false,
+                                "activityLayout": 1,
+                                "style": "bar",
+                                "showActivityTimes": false,
+                                "labelFontSize": 10,
+                                "rowHeight": 5,
+                                "inSouth": null,
+                                "showStateChangeTimes": false,
+                                "activityHeight": 20
+                              }
+                            ],
+                            "id": "9463"
+                          }
+                        ],
+                        "url": "",
+                        "tabSelected": false,
+                        "bandIds": [],
+                        "graphSettings": null,
+                        "id": "9465"
+                      }
+                    ],
+                    "url": "",
+                    "tabSelected": false,
+                    "bandIds": [],
+                    "graphSettings": null,
+                    "id": "9466"
+                  }
+                ],
+                "url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/list_tol-mongodb/TEST_ATS/Overlay_Test/apgen-res-flt-tol_1000",
+                "tabSelected": false,
+                "bandIds": [],
+                "graphSettings": null,
+                "id": "199"
+              },
+              {
+                "hasGraph": false,
+                "name": "apgen_state-tol_1000",
+                "overrideName": null,
+                "tabName": null,
+                "suffix": null,
+                "props": {
+                  "__kind": "fs_file",
+                  "__db_type": "mongodb",
+                  "name": "apgen_state-tol_1000",
+                  "label": "apgen_state-tol_1000",
+                  "__kind_sub": "file_tol",
+                  "contents_url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/list_tol-mongodb/TEST_ATS/Overlay_Test/apgen_state-tol_1000",
+                  "file_data_url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/fs-mongodb/TEST_ATS/Overlay_Test/apgen_state-tol_1000",
+                  "permissions": "rw-r--r-- null all.usjpl",
+                  "created": "2018-06-11 14:03:12-0700",
+                  "modified": "2018-06-11 14:03:12-0700",
+                  "importJobStatus": "FINISHED"
+                },
+                "selected": true,
+                "isHidden": false,
+                "sources": [
+                  {
+                    "hasGraph": false,
+                    "name": "Resources",
+                    "overrideName": null,
+                    "tabName": null,
+                    "suffix": null,
+                    "props": {
+                      "__kind": "fs_category",
+                      "name": "Resources",
+                      "label": "Resources"
+                    },
+                    "selected": true,
+                    "isHidden": false,
+                    "sources": [
+                      {
+                        "hasGraph": false,
+                        "name": "State_1000",
+                        "overrideName": null,
+                        "tabName": null,
+                        "suffix": null,
+                        "props": {
+                          "__kind": "fs_graphable",
+                          "__kind_sub": "graphable_resource",
+                          "name": "State_1000",
+                          "label": "State_1000",
+                          "data_url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/tol_resource-mongodb/TEST_ATS/Overlay_Test/apgen_state-tol_1000?name=State_1000&format=TMS&decimate=true",
+                          "isData": true
+                        },
+                        "selected": true,
+                        "isHidden": false,
+                        "sources": [],
+                        "url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/tol_resource-mongodb/TEST_ATS/Overlay_Test/apgen_state-tol_1000?name=State_1000&format=TMS&decimate=true",
+                        "tabSelected": false,
+                        "bandIds": [
+                          "band12382"
+                        ],
+                        "graphSettings": [
+                          {
+                            "label": "State_1000",
+                            "labelOverride": false,
+                            "iconEnabled": false,
+                            "trimLabel": false,
+                            "hideLabel": false,
+                            "compositeYLabel": false,
+                            "dynamicCompositeYLabel": false,
+                            "labelColor": [
+                              0,
+                              0,
+                              0
+                            ],
+                            "lineColor": "black",
+                            "lineColorCustom": [
+                              0,
+                              0,
+                              0
+                            ],
+                            "fillColor": "black",
+                            "activityColorCustom": [
+                              249,
+                              189,
+                              133
+                            ],
+                            "fill": false,
+                            "isInCompositeBand": false,
+                            "height": null,
+                            "heightPadding": 0,
+                            "interpolation": "constant",
+                            "scientificNotation": null,
+                            "customMenuItems": [],
+                            "overlayBand": "",
+                            "logTicks": false,
+                            "statePlotType": 0,
+                            "currentTimeCursorEnabled": false,
+                            "activityLayout": 1,
+                            "style": "bar",
+                            "showActivityTimes": false,
+                            "labelFontSize": 10,
+                            "rowHeight": 5,
+                            "inSouth": null,
+                            "showStateChangeTimes": false,
+                            "activityHeight": 20
+                          }
+                        ],
+                        "id": "12230"
+                      }
+                    ],
+                    "url": "",
+                    "tabSelected": false,
+                    "bandIds": [],
+                    "graphSettings": null,
+                    "id": "12231"
+                  }
+                ],
+                "url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/list_tol-mongodb/TEST_ATS/Overlay_Test/apgen_state-tol_1000",
+                "tabSelected": false,
+                "bandIds": [],
+                "graphSettings": null,
+                "id": "201"
+              }
+            ],
+            "url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/fs-mongodb/TEST_ATS/Overlay_Test",
+            "tabSelected": false,
+            "bandIds": [],
+            "graphSettings": null,
+            "id": "136"
+          }
+        ],
+        "url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/fs-mongodb/TEST_ATS",
+        "tabSelected": false,
+        "bandIds": [],
+        "graphSettings": null,
+        "id": "6"
+      }
+    ],
+    "loaded": false,
+    "props": {},
+    "globalOptions": {
+      "startTicks": null,
+      "endTicks": null,
+      "graphStartTime": 0,
+      "panTo": "2010-001T04:00:00",
+      "panDuration": "1d",
+      "timeDelta": null,
+      "panScrobbleAmount": 600,
+      "zoomDelta": 10,
+      "overlayBandLabel": "State_1000",
+      "tooltipEnabled": true
+    },
+    "url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/fs-mongodb/leucadia/states",
+    "viewTemplate": {
+      "viewStart": "2010-001T04:00:00.000",
+      "viewEnd": "2010-001T04:30:00.000",
+      "charts": {
+        "center": [
+          {
+            "id": "band1430",
+            "label": "ACT0_1000",
+            "originalName": "ACT0_1000",
+            "suffix": null,
+            "legend": "ACT0_1000",
+            "graphSettings": {
+              "labelFontSize": 10,
+              "height": 35,
+              "rowHeight": 13,
+              "rowPadding": 2,
+              "activityHeight": 20,
+              "trimLabel": false,
+              "hideLabel": false,
+              "iconEnabled": false,
+              "autoFit": 1,
+              "activityLayout": 1,
+              "style": "bar",
+              "showActivityTimes": false
+            },
+            "url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/tol_activities_by_legend-mongodb/TEST_ATS/Overlay_Test/apgen-activity-tol_1000?name=ACT0_1000&format=TMS",
+            "properties": {
+              "additionalSources": {
+                "Root Activities": {
+                  "url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/tol_activities-mongodb/TEST_ATS/Overlay_Test/apgen-activity-tol_1000?root=true&format=TMS",
+                  "addedTo": null
+                },
+                "ACT0": {
+                  "url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/tol_activities-mongodb/TEST_ATS/Overlay_Test/apgen-activity-tol_1000?subsystem=test&type=ACT0&format=TMS",
+                  "addedTo": null
+                }
+              },
+              "timeRangeAnnotations": []
+            }
+          },
+          {
+            "id": "band7749",
+            "label": "ACT1_1000",
+            "originalName": "Root Activities",
+            "suffix": null,
+            "legend": "ACT1_1000",
+            "graphSettings": {
+              "labelFontSize": 10,
+              "height": 35,
+              "rowHeight": 13,
+              "rowPadding": 2,
+              "activityHeight": 20,
+              "trimLabel": false,
+              "hideLabel": false,
+              "iconEnabled": false,
+              "autoFit": 1,
+              "activityLayout": 1,
+              "style": "bar",
+              "showActivityTimes": false
+            },
+            "url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/tol_activities-mongodb/TEST_ATS/Overlay_Test/apgen-activity-tol_1000?root=true&format=TMS",
+            "properties": {
+              "additionalSources": {},
+              "timeRangeAnnotations": []
+            }
+          },
+          {
+            "id": "band7750",
+            "label": "ACT2_1000",
+            "originalName": "Root Activities",
+            "suffix": null,
+            "legend": "ACT2_1000",
+            "graphSettings": {
+              "labelFontSize": 10,
+              "height": 35,
+              "rowHeight": 13,
+              "rowPadding": 2,
+              "activityHeight": 20,
+              "trimLabel": false,
+              "hideLabel": false,
+              "iconEnabled": false,
+              "autoFit": 1,
+              "activityLayout": 1,
+              "style": "bar",
+              "showActivityTimes": false
+            },
+            "url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/tol_activities-mongodb/TEST_ATS/Overlay_Test/apgen-activity-tol_1000?root=true&format=TMS",
+            "properties": {
+              "additionalSources": {},
+              "timeRangeAnnotations": []
+            }
+          },
+          {
+            "id": "band7751",
+            "label": "ACT3_1000",
+            "originalName": "Root Activities",
+            "suffix": null,
+            "legend": "ACT3_1000",
+            "graphSettings": {
+              "labelFontSize": 10,
+              "height": 35,
+              "rowHeight": 13,
+              "rowPadding": 2,
+              "activityHeight": 20,
+              "trimLabel": false,
+              "hideLabel": false,
+              "iconEnabled": false,
+              "autoFit": 1,
+              "activityLayout": 1,
+              "style": "bar",
+              "showActivityTimes": false
+            },
+            "url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/tol_activities-mongodb/TEST_ATS/Overlay_Test/apgen-activity-tol_1000?root=true&format=TMS",
+            "properties": {
+              "additionalSources": {},
+              "timeRangeAnnotations": []
+            }
+          },
+          {
+            "id": "band7752",
+            "label": "ACT4_1000",
+            "originalName": "Root Activities",
+            "suffix": null,
+            "legend": "ACT4_1000",
+            "graphSettings": {
+              "labelFontSize": 10,
+              "height": 35,
+              "rowHeight": 3.25,
+              "rowPadding": 2,
+              "activityHeight": 20,
+              "trimLabel": false,
+              "hideLabel": false,
+              "iconEnabled": false,
+              "autoFit": 1,
+              "activityLayout": 1,
+              "style": "bar",
+              "showActivityTimes": false
+            },
+            "url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/tol_activities-mongodb/TEST_ATS/Overlay_Test/apgen-activity-tol_1000?root=true&format=TMS",
+            "properties": {
+              "additionalSources": {},
+              "timeRangeAnnotations": []
+            }
+          },
+          {
+            "id": "band7753",
+            "label": "ACT5_1000",
+            "originalName": "Root Activities",
+            "suffix": null,
+            "legend": "ACT5_1000",
+            "graphSettings": {
+              "labelFontSize": 10,
+              "height": 35,
+              "rowHeight": 13,
+              "rowPadding": 2,
+              "activityHeight": 20,
+              "trimLabel": false,
+              "hideLabel": false,
+              "iconEnabled": false,
+              "autoFit": 1,
+              "activityLayout": 1,
+              "style": "bar",
+              "showActivityTimes": false
+            },
+            "url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/tol_activities-mongodb/TEST_ATS/Overlay_Test/apgen-activity-tol_1000?root=true&format=TMS",
+            "properties": {
+              "additionalSources": {},
+              "timeRangeAnnotations": []
+            }
+          }
+        ],
+        "south": [
+          {
+            "id": "band9670",
+            "label": "DataVolume_fltbits_1000 (megabits)",
+            "originalName": "DataVolume_fltbits_1000",
+            "suffix": null,
+            "graphSettings": {
+              "labelFontSize": 10,
+              "height": 100,
+              "lineColorCustom": [
+                0,
+                0,
+                0
+              ],
+              "labelColor": [
+                0,
+                0,
+                0
+              ],
+              "fillColorCustom": [
+                0,
+                0,
+                0
+              ],
+              "interpolation": "linear",
+              "scientificNotation": null,
+              "iconEnabled": false,
+              "fill": false,
+              "logTicks": false,
+              "heightPadding": 12
+            },
+            "url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/tol_resource-mongodb/TEST_ATS/Overlay_Test/apgen-res-flt-tol_1000?name=DataVolume_fltbits_1000&format=TMS&decimate=true"
+          },
+          {
+            "id": "band12382",
+            "label": "State_1000",
+            "originalName": "State_1000",
+            "suffix": null,
+            "graphSettings": {
+              "labelFontSize": 10,
+              "height": 30,
+              "lineColorCustom": [
+                0,
+                0,
+                0
+              ],
+              "labelColor": [
+                0,
+                0,
+                0
+              ],
+              "interpolation": "constant",
+              "iconEnabled": false,
+              "heightPadding": 0
+            },
+            "url": "https://leucadia.jpl.nasa.gov:8443/mpsserver/api/v2/tol_resource-mongodb/TEST_ATS/Overlay_Test/apgen_state-tol_1000?name=State_1000&format=TMS&decimate=true"
+          }
+        ]
+      },
+      "guides": [],
+      "bandLabelWidth": 100,
+      "globalLabelFontSize": 10,
+      "tooltipEnabled": true
+    },
+    "customFilters": {
+      "sequenceId": "",
+      "meeting": [],
+      "collection": [],
+      "events": [],
+      "sequenceType": []
+    },
+    "wasImported": false,
+    "colors": {
+      "black": [
+        0,
+        0,
+        0
+      ],
+      "red": [
+        255,
+        0,
+        0
+      ],
+      "green": [
+        0,
+        255,
+        0
+      ],
+      "blue": [
+        0,
+        0,
+        255
+      ],
+      "orange": [
+        255,
+        165,
+        0
+      ],
+      "yellow": [
+        255,
+        255,
+        0
+      ]
+    },
+    "pins": [],
+    "tabSources": [
+      {
+        "home": true,
+        "name": "Home",
+        "tabSelected": true,
+        "filtered": [],
+        "filterTerms": null
+      }
+    ],
+    "__file_id": "/leucadia/states/Conversion_Test3_Raven1",
+    "__document_id": "5bdb4f7da0355a5abb8ef3ec",
+    "__kind": "fs_record",
+    "__db_type": "mongodb"
+  }
+]
