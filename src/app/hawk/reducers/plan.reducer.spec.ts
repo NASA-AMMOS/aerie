@@ -51,6 +51,7 @@ describe('Plan Reducer', () => {
 
     activityDetail = {
       activityTypeId: '001',
+      constraints: [],
       duration: '00:19',
       id: '2',
       intent: 'Some science intent for this activity...',
@@ -58,6 +59,7 @@ describe('Plan Reducer', () => {
       parameters: [],
       sequenceId: 'inst00036.0000ba',
       start: '2023-11-28T15:54:10',
+      subActivityIds: [],
     };
 
     plan = {
@@ -201,8 +203,10 @@ describe('Plan Reducer', () => {
 
       const detail: RavenActivityDetail = {
         ...activities['1'],
+        constraints: [],
         name: 'i like turtles',
         parameters: [],
+        subActivityIds: [],
       };
 
       const result: PlanState = reducer(

@@ -7,12 +7,12 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { RavenActivity } from './raven-activity';
-import { RavenActivityConstraint } from './raven-activity-constraint';
-import { RavenActivityParameter } from './raven-activity-parameter';
-
-export interface RavenActivityDetail extends RavenActivity {
-  constraints: RavenActivityConstraint[];
-  parameters: RavenActivityParameter[];
-  subActivityIds: string[];
+// TODO: Strongly type when we have a better definition of a constraint.
+export interface RavenActivityConstraint {
+  default: any;
+  locked: boolean;
+  name: string;
+  type: string;
+  value: any;
+  values: any[];
 }
