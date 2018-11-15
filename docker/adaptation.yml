@@ -1,0 +1,9 @@
+version: '3.3'
+services:
+  adaptation:
+    build: ../adaptation/
+    volumes:
+      - adaptation_logs:/var/log/adaptation
+    ports:
+      - "9000:8080"
+
