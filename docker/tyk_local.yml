@@ -6,6 +6,7 @@ services:
   tyk_gateway:
     volumes:
     - ../tyk_gateway/tyk_gateway.conf:/opt/tyk-gateway/tyk.conf
+    - ../tyk_gateway/apps:/opt/tyk-gateway/apps
   tyk_pump:
     volumes:
     - ../tyk_pump/tyk_pump.conf:/opt/tyk-pump/pump.conf
