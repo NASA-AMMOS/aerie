@@ -28,7 +28,54 @@ export class PlanMockService implements PlanService {
 
     return {
       ...activities[id],
-      parameters: [],
+      constraints: [
+        {
+          default: 'At Start',
+          locked: false,
+          name: 'Time',
+          type: 'list',
+          value: 'During',
+          values: ['At Start', 'During', 'At End'],
+        },
+        {
+          default: 'Some Event',
+          locked: false,
+          name: 'Earliest Start',
+          type: 'list',
+          value: 'Local Noon',
+          values: ['Local Noon', 'Half Past noon', 'Some Future Time'],
+        },
+        {
+          default: 'Some Event',
+          locked: false,
+          name: 'Latest Start',
+          type: 'list',
+          value: 'Local Noon',
+          values: ['Local Noon', 'Half Past noon', 'Some Future Time'],
+        },
+        {
+          default: 'State Constraint',
+          locked: true,
+          name: 'Some Enum State',
+          type: 'enum',
+          value: 'SOME_ENUM_VAL',
+          values: [],
+        },
+        {
+          default: 'MOON',
+          locked: true,
+          name: 'Geometric Constraint',
+          type: 'enum',
+          value: 'NADIR_SUN',
+          values: [],
+        },
+      ],
+      parameters: [
+        {
+          name: 'Image Resolution',
+        },
+      ],
+      subActivityIds: [],
     };
   }
 

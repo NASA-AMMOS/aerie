@@ -15,10 +15,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Store, StoreModule } from '@ngrx/store';
 import { of } from 'rxjs';
 
+import { RavenActivityDetail } from '../../../shared/models';
+import { AdaptationMockService } from '../../../shared/services/adaptation-mock.service';
 import { ActivitiesComponent } from './activities.component';
 import { ActivitiesModule } from './activities.module';
-
-import { AdaptationMockService } from '../../../shared/services/adaptation-mock.service';
 
 describe('ActivitiesComponent', () => {
   let component: ActivitiesComponent;
@@ -70,16 +70,20 @@ describe('ActivitiesComponent', () => {
   });
 
   it('should save a new activity', () => {
-    component.form.patchValue({
+    component.activityForm.patchValue({
       activityTypeId: 'test1',
+      constraints: [],
       duration: '11:11',
+      id: '001',
       intent: 'Genenetically modify a donkey to have wings',
       name: 'Hawkey',
+      parameters: [],
       sequenceId: 'r578x',
       start: '2017-02-01T15:23:11',
-    });
+      subActivityIds: [],
+    } as RavenActivityDetail);
 
-    spyOn(component, 'onSubmit').and.callThrough();
+    spyOn(component, 'onSubmitActivityForm').and.callThrough();
 
     const form: DebugElement = fixture.debugElement.query(
       By.css('#activity-form'),
@@ -87,7 +91,7 @@ describe('ActivitiesComponent', () => {
     form.triggerEventHandler('submit', null);
     fixture.detectChanges();
 
-    expect(component.onSubmit).toHaveBeenCalled();
+    expect(component.onSubmitActivityForm).toHaveBeenCalled();
   });
 
   xit('should update an existing activity', () => {
@@ -112,7 +116,7 @@ describe('ActivitiesComponent', () => {
       },
     };
 
-    spyOn(component, 'onSubmit').and.callThrough();
+    spyOn(component, 'onSubmitActivityForm').and.callThrough();
 
     const form: DebugElement = fixture.debugElement.query(
       By.css('#activity-form'),
@@ -120,7 +124,7 @@ describe('ActivitiesComponent', () => {
     form.triggerEventHandler('submit', null);
     fixture.detectChanges();
 
-    expect(component.onSubmit).toHaveBeenCalledWith({
+    expect(component.onSubmitActivityForm).toHaveBeenCalledWith({
       ...activityDetail,
     });
   });

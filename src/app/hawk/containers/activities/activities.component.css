@@ -51,7 +51,7 @@ mat-form-field {
   grid-gap: 12px;
 }
 
-.sub-activities {
+.panels {
   display: grid;
   grid-gap: 15px;
   grid-template-columns: 50% 50%;
