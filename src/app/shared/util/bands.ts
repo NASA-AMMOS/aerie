@@ -244,8 +244,8 @@ export function toCompositeBand(
     compositeScientificNotation: false,
     compositeYAxisLabel: false,
     containerId: containerId || '0',
-    height: subBand.height,
-    heightPadding: subBand.heightPadding,
+    height: subBand.height + subBand.heightPadding,
+    heightPadding: 0,
     id: compositeBandUniqueId,
     name: subBand.name,
     overlay: false, // Composite bands with a single sub-band cannot be overlay by default.
@@ -271,8 +271,8 @@ export function toDividerBand(): RavenDividerBand {
   const dividerBand: RavenDividerBand = {
     addTo: false,
     color: [255, 255, 255],
-    height: 7,
-    heightPadding: 10,
+    height: 10,
+    heightPadding: 0,
     id,
     label: `Divider ${id}`,
     labelColor: [0, 0, 0],

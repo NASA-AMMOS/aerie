@@ -8,6 +8,12 @@
  */
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { select, Store } from '@ngrx/store';
+import { Observable } from 'rxjs';
+import { SaveActivityDetail } from '../../actions/plan.actions';
+import { HawkAppState } from '../../hawk-store';
+import { getActivityTypes } from '../../selectors/adaptation.selector';
 
 import {
   FormBuilder,
@@ -16,16 +22,12 @@ import {
   Validators,
 } from '@angular/forms';
 
-import { ActivatedRoute, Router } from '@angular/router';
-import { select, Store } from '@ngrx/store';
-
-import { RavenActivityDetail, RavenActivityType } from '../../../shared/models';
-
-import * as fromStore from '../../hawk-store';
-
-import { Observable } from 'rxjs';
-import { SaveActivityDetail } from '../../actions/plan.actions';
-import { getActivityTypes } from '../../selectors/adaptation.selector';
+import {
+  RavenActivityConstraint,
+  RavenActivityDetail,
+  RavenActivityParameter,
+  RavenActivityType,
+} from '../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -35,30 +37,16 @@ import { getActivityTypes } from '../../selectors/adaptation.selector';
 })
 export class ActivitiesComponent {
   activityTypes: Observable<RavenActivityType[] | null>;
-
   activityTypeId: string;
-
-  /**
-   * Duration in the format `hh:mm`
-   */
-  duration: string;
-
-  /**
-   * ID of the activity instance. Empty if this is new.
-   */
-  id: string | null;
-
-  /**
-   * Intent of the activity instance
-   */
-  intent: string;
-
+  constraints: RavenActivityConstraint[] = [];
+  duration: string; // Duration in the format `hh:mm`
+  id: string | null; // ID of the activity instance. Empty if this is new.
+  intent: string; // Intent of the activity instance
   name: string;
-  parameters: any;
+  parameters: RavenActivityParameter[] = [];
   sequenceId: string;
   start: string;
-
-  form: FormGroup;
+  activityForm: FormGroup;
 
   /**
    * Whether this activity type is new or pre-existing
@@ -68,16 +56,19 @@ export class ActivitiesComponent {
   }
 
   constructor(
-    private store: Store<fromStore.HawkAppState>,
+    private store: Store<HawkAppState>,
     private router: Router,
     private route: ActivatedRoute,
     fb: FormBuilder,
   ) {
+    this.activityTypes = this.store.pipe(select(getActivityTypes));
+
     const activityDetail: RavenActivityDetail | null =
       this.route.snapshot.data.activityDetail || null;
 
     if (activityDetail) {
       this.activityTypeId = activityDetail.activityTypeId;
+      this.constraints = activityDetail.constraints;
       this.duration = activityDetail.duration;
       this.id = activityDetail.id;
       this.intent = activityDetail.intent;
@@ -87,17 +78,24 @@ export class ActivitiesComponent {
       this.start = activityDetail.start;
     }
 
-    this.activityTypes = this.store.pipe(select(getActivityTypes));
-
-    this.form = fb.group({
+    this.activityForm = fb.group({
       activityTypeId: new FormControl({
         readonly: !this.isNew,
         value: this.activityTypeId,
       }),
-      duration: new FormControl(this.duration, [
-        Validators.required,
-        Validators.pattern('^dd:dd$'),
-      ]),
+      constraints: fb.array(
+        this.constraints.map(constraint =>
+          fb.group({
+            default: new FormControl(constraint.default),
+            locked: new FormControl(constraint.locked),
+            name: new FormControl(constraint.name),
+            type: new FormControl(constraint.type),
+            value: new FormControl(constraint.value),
+            values: new FormControl(constraint.values),
+          }),
+        ),
+      ),
+      duration: new FormControl(this.duration, [Validators.required]),
       intent: new FormControl(this.intent),
       name: new FormControl(this.name, [Validators.required]),
       sequenceId: new FormControl(this.sequenceId),
@@ -113,12 +111,12 @@ export class ActivitiesComponent {
     this.router.navigate(['/hawk']);
   }
 
-  onSubmit(value: any) {
-    if (this.form.valid) {
+  onSubmitActivityForm(value: RavenActivityDetail) {
+    if (this.activityForm.valid) {
       this.store.dispatch(
         new SaveActivityDetail({
           ...value,
-          id: this.id,
+          id: this.id as string,
         }),
       );
     }
