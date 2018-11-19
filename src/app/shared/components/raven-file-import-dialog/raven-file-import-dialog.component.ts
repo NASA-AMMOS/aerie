@@ -21,6 +21,7 @@ export class RavenFileImportDialogComponent {
     data: '',
     mapping: '',
     name: '',
+    timeFormat: 'doy',
     type: 'epoch', // Initialize to epoch.
   };
 
