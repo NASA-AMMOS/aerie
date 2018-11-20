@@ -1031,7 +1031,7 @@ export class SourceExplorerEffects {
     );
     const url = `${action.source.url}/${action.file.name}?timeline_type=${
       action.file.type
-    }`;
+    }&time_format=${action.file.timeFormat}`;
 
     return this.http
       .put(url, action.file.data, { headers: headers, responseType: 'text' })

@@ -37,6 +37,17 @@
         type="file"
         (change)="readFile($event.target.files[0], true)">
     </div>
+
+    <mat-form-field
+      *ngIf="file.type === 'generic'">
+      <mat-select
+        placeholder="Time Format"
+        [(value)]="file.timeFormat">
+        <mat-option [value]="'doy'">DOY (YYYY-DDDTHH:MM:SS.sss)</mat-option>
+        <mat-option [value]="'dom'">DOM (YYYY-MM-DDTHH:MM:SS.sss)</mat-option>
+        <mat-option [value]="'julian'">Julian</mat-option>
+      </mat-select>
+    </mat-form-field>
   </div>
 </div>
 
