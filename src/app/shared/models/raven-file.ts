@@ -11,5 +11,6 @@ export interface RavenFile {
   data: string;
   mapping: string;
   name: string;
+  timeFormat: string;
   type: string;
 }

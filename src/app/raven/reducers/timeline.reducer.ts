@@ -483,7 +483,9 @@ export function removeBandsWithNoPoints(
     // First remove subBands that have no points and keep the subBands that are dividers.
     .map(band => ({
       ...band,
-      subBands: band.subBands.filter(subBand => subBand.type === 'divider' || subBand.points.length),
+      subBands: band.subBands.filter(
+        subBand => subBand.type === 'divider' || subBand.points.length,
+      ),
     }))
     // Then remove bands if they have no subBands left (i.e. all subBands had no points).
     .filter(band => band.subBands.length);

@@ -547,9 +547,17 @@ export class SourceExplorerEffects {
     ofType<ImportFile>(SourceExplorerActionTypes.ImportFile),
     concatMap(action =>
       concat(
-        of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: true })),
+        of(
+          new sourceExplorerActions.UpdateSourceExplorer({
+            fetchPending: true,
+          }),
+        ),
         this.importFile(action),
-        of(new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false })),
+        of(
+          new sourceExplorerActions.UpdateSourceExplorer({
+            fetchPending: false,
+          }),
+        ),
       ),
     ),
   );
@@ -978,7 +986,7 @@ export class SourceExplorerEffects {
     );
     const url = `${action.source.url}/${action.file.name}?timeline_type=${
       action.file.type
-    }`;
+    }&time_format=${action.file.timeFormat}`;
 
     return this.http
       .put(url, action.file.data, { headers: headers, responseType: 'text' })
