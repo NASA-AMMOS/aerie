@@ -66,6 +66,7 @@ import {
   toRavenBandData,
   toRavenSources,
   updateSourceId,
+  utc,
 } from '../../shared/util';
 
 import {
@@ -1092,7 +1093,10 @@ export class SourceExplorerEffects {
           maxTimeRange: savedState.maxTimeRange,
           viewTimeRange: savedState.ignoreShareableLinkTimes
             ? { end: 0, start: 0 }
-            : savedState.viewTimeRange,
+            : {
+                end: utc(savedState.viewTimeRange.end),
+                start: utc(savedState.viewTimeRange.start),
+              },
         }),
       ),
       of(

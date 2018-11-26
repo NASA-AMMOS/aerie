@@ -76,4 +76,5 @@ export * from './raven-state';
 export * from './raven-sub-band-point-data';
 export * from './raven-sub-band';
 export * from './raven-time-range';
+export * from './raven-time-range-doy';
 export * from './raven-update';
