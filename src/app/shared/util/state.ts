@@ -12,6 +12,7 @@ import { RavenAppState } from '../../raven/raven-store';
 import { RavenState } from '../models';
 import { toCompositeBand } from '../util/bands';
 import { getSourceIdsForSubBand } from '../util/source';
+import { timestamp } from '../util/time';
 
 /**
  * Returns a stripped down version of a state that we save and export it for saving.
@@ -40,7 +41,10 @@ export function getState(name: string, state: RavenAppState): any {
     name,
     pins: state.raven.sourceExplorer.pins,
     version: '1.0.0',
-    viewTimeRange: state.raven.timeline.viewTimeRange,
+    viewTimeRange: {
+      end: timestamp(state.raven.timeline.viewTimeRange.end, true),
+      start: timestamp(state.raven.timeline.viewTimeRange.start, true),
+    },
   });
 }
 
