@@ -3329,8 +3329,6 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
   ctx.font = this.font;
   ctx.textAlign = "right";
   ctx.textBaseline = "bottom";
-  ctx.fillStyle = Util.rgbaToString(this.band.labelColor, 1);
-  ctx.strokeStyle = Util.rgbaToString(this.band.labelColor, 0.5);
 
   var labelWidth = this.band.viewTimeAxis.x1;
   //??var bandWidth = this.band.div.offsetWidth;
@@ -3351,6 +3349,12 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
           this.band.minPaintValue = Number(tickValue);
       }
       tickValues.push(tickValue);
+    }
+    if(this.band.maxPaintValue !== this.band.maxLimit) {
+      tickValues.push(this.band.maxLimit);
+    }
+    if(this.band.minPaintValue !== this.band.minLimit) {
+      tickValues.push(this.band.minLimit);
     }
   }
   else if(this.band.autoTickValues) {
@@ -3392,6 +3396,14 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
   for(var j=0, jlength=tickValues.length; j<jlength; ++j) {
     var value = tickValues[j];
 
+    if (value === this.band.maxLimit || value === this.band.minLimit) {
+      ctx.fillStyle = Util.rgbaToString([255,0,0], 1);
+      ctx.strokeStyle = Util.rgbaToString([255,0,0], 0.5);
+    }
+    else {
+      ctx.fillStyle = Util.rgbaToString(this.band.labelColor, 1);
+      ctx.strokeStyle = Util.rgbaToString(this.band.labelColor, 0.5);
+    }
     // skip if previously evaluated
     if(value in seen) { continue; }
     seen[value] = 1;
