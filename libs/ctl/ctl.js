@@ -3331,7 +3331,6 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
   ctx.textBaseline = "bottom";
 
   var labelWidth = this.band.viewTimeAxis.x1;
-  //??var bandWidth = this.band.div.offsetWidth;
   var bandWidth = this.band.canvas.width;
 
   var autoPadding = 2;
