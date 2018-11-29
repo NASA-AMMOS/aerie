@@ -3395,7 +3395,7 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
   for(var j=0, jlength=tickValues.length; j<jlength; ++j) {
     var value = tickValues[j];
 
-    if (value === this.band.maxLimit || value === this.band.minLimit) {
+    if ((this.band.maxLimit && value === this.band.maxLimit) || (this.band.minLimit && value === this.band.minLimit)) {
       ctx.fillStyle = Util.rgbaToString([255,0,0], 1);
       ctx.strokeStyle = Util.rgbaToString([255,0,0], 0.5);
     }
