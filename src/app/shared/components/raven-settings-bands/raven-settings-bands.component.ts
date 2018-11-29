@@ -22,6 +22,7 @@ import {
   RavenUpdate,
   StringTMap,
 } from '../../../shared/models';
+import { getBandLabel } from '../../util';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -113,9 +114,17 @@ export class RavenSettingsBandsComponent {
   }
 
   /**
+   * Get subBand label including pin and units.
+   */
+  getSubBandLabel(subBand: RavenSubBand) {
+    return getBandLabel(subBand);
+  }
+
+  /**
    * trackBy for subBands.
    */
   trackByFn(index: number, item: RavenSubBand) {
     return item.id;
   }
+
 }
