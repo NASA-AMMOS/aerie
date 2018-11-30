@@ -20,6 +20,7 @@ import { concatMap, map, switchMap, withLatestFrom } from 'rxjs/operators';
 
 import {
   AddBand,
+  AddSubBand,
   FetchChildrenOrDescendants,
   PanLeftViewTimeRange,
   PanRightViewTimeRange,
@@ -125,8 +126,9 @@ export class TimelineEffects {
    */
   @Effect()
   updatePinLabels$: Observable<Action> = this.actions$.pipe(
-    ofType<AddBand | PinAdd | PinRemove | PinRename>(
+    ofType<AddBand | AddSubBand | PinAdd | PinRemove | PinRename>(
       TimelineActionTypes.AddBand,
+      TimelineActionTypes.AddSubBand,
       TimelineActionTypes.PinAdd,
       TimelineActionTypes.PinRemove,
       TimelineActionTypes.PinRename,
