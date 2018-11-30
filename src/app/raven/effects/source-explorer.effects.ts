@@ -67,6 +67,7 @@ import {
   toRavenBandData,
   toRavenSources,
   updateSourceId,
+  utc,
 } from '../../shared/util';
 
 import {
@@ -1137,7 +1138,10 @@ export class SourceExplorerEffects {
           maxTimeRange: savedState.maxTimeRange,
           viewTimeRange: savedState.ignoreShareableLinkTimes
             ? { end: 0, start: 0 }
-            : savedState.viewTimeRange,
+            : {
+                end: utc(savedState.viewTimeRange.end),
+                start: utc(savedState.viewTimeRange.start),
+              },
         }),
       ),
       of(
@@ -1318,18 +1322,35 @@ export class SourceExplorerEffects {
                 ),
               );
             } else if (existingBand) {
-              actions.push(
-                new sourceExplorerActions.SubBandIdAdd(
-                  sourceId,
-                  existingBand.subBandId,
-                ),
-                new timelineActions.AddPointsToSubBand(
-                  sourceId,
-                  existingBand.bandId,
-                  existingBand.subBandId,
-                  subBand.points,
-                ),
-              );
+              if (subBand.type === 'state') {
+                // Use the newly create state band with possibly updated possibleStates.
+                actions.push(
+                  new sourceExplorerActions.SubBandIdAdd(
+                    sourceId,
+                    subBand.id,
+                  ),
+                  new timelineActions.AddSubBand(
+                    sourceId,
+                    existingBand.bandId,
+                    subBand,
+                  ),
+                  // Romove the old state band.
+                  new timelineActions.RemoveSubBand(existingBand.subBandId),
+                );
+              } else {
+                actions.push(
+                  new sourceExplorerActions.SubBandIdAdd(
+                    sourceId,
+                    existingBand.subBandId,
+                  ),
+                  new timelineActions.AddPointsToSubBand(
+                    sourceId,
+                    existingBand.bandId,
+                    existingBand.subBandId,
+                    subBand.points,
+                  ),
+                );
+              }
             } else if (
               bandId &&
               subBandId &&

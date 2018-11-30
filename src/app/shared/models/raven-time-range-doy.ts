@@ -7,22 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  RavenCompositeBand,
-  RavenDefaultBandSettings,
-  RavenPin,
-  RavenTimeRange,
-  RavenTimeRangeDoy,
-} from './index';
-
-export interface RavenState {
-  bands: RavenCompositeBand[];
-  defaultBandSettings: RavenDefaultBandSettings;
-  ignoreShareableLinkTimes: boolean;
-  guides: number[];
-  maxTimeRange: RavenTimeRange;
-  name: string;
-  pins: RavenPin[];
-  version: string;
-  viewTimeRange: RavenTimeRangeDoy;
+export interface RavenTimeRangeDoy {
+  end: string;
+  start: string;
 }
