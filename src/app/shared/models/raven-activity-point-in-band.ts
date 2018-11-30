@@ -7,24 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  RavenCompositeBand,
-  RavenDefaultBandSettings,
-  RavenPin,
-  RavenTimeRange,
-  StringTMap,
-  RavenTimeRangeDoy,
-} from './index';
+import { RavenActivityPoint } from './raven-activity-point';
 
-export interface RavenState {
-  bands: RavenCompositeBand[];
-  expansionByActivityId: StringTMap<string>;
-  defaultBandSettings: RavenDefaultBandSettings;
-  ignoreShareableLinkTimes: boolean;
-  guides: number[];
-  maxTimeRange: RavenTimeRange;
-  name: string;
-  pins: RavenPin[];
-  version: string;
-  viewTimeRange: RavenTimeRangeDoy;
+export interface RavenActivityPointInBand {
+  activityPoint: RavenActivityPoint;
+  bandId: string;
+  subBandId: string;
 }

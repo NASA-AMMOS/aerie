@@ -52,10 +52,12 @@ import {
   RavenPoint,
   RavenSubBand,
   RavenTimeRange,
+  StringTMap,
 } from '../../shared/models';
 
 export interface TimelineState {
   bands: RavenCompositeBand[];
+  expansionByActivityId: StringTMap<string>;
   fetchPending: boolean;
   guides: number[]; // in secs
   lastClickTime: number | null;
@@ -70,6 +72,7 @@ export interface TimelineState {
 
 export const initialState: TimelineState = {
   bands: [],
+  expansionByActivityId: {},
   fetchPending: false,
   guides: [],
   lastClickTime: null,
@@ -336,6 +339,10 @@ export function expandChildrenOrDescendants(
   return {
     ...state,
     bands,
+    expansionByActivityId: {
+      ...state.expansionByActivityId,
+      [action.activityPoint.activityId]: action.expandType,
+    },
     selectedPoint: activityPoint,
   };
 }

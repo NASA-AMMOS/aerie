@@ -16,6 +16,7 @@ import {
   MpsServerResourcePoint,
   MpsServerStatePoint,
   RavenActivityPoint,
+  RavenActivityPointInBand,
   RavenCompositeBand,
   RavenPoint,
   RavenResourcePoint,
@@ -374,6 +375,30 @@ export function getPoint(
               };
             }
           }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Helper that returns an activityPoint for a given activityId in bands.
+ */
+export function getActivityPointInBand(
+  bands: RavenCompositeBand[],
+  activityId: string,
+): RavenActivityPointInBand | null {
+  for (let i = 0, l = bands.length; i < l; ++i) {
+    for (let j = 0, ll = bands[i].subBands.length; j < ll; ++j) {
+      const subBand = bands[i].subBands[j];
+      for (let k = 0, lll = subBand.points.length; k < lll; ++k) {
+        if (subBand.points[k].activityId === activityId) {
+          return {
+            bandId: bands[i].id,
+            subBandId: subBand.id,
+            activityPoint: subBand.points[k],
+          };
         }
       }
     }
