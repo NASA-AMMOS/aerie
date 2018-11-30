@@ -29,7 +29,7 @@ export const activityPoint: RavenActivityPoint = {
   legend: '',
   message: null,
   metadata: [],
-  sourceId: '/a/b/c/',
+  sourceId: '/a/b/c/d/e/v',
   start: 0,
   startTimestamp: '',
   subBandId: '4',

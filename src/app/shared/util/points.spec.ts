@@ -8,6 +8,7 @@
  */
 
 import {
+  getActivityPointInBand,
   getColorFromActivityMetadata,
   getMaxTimeRange,
   getPoint,
@@ -18,6 +19,15 @@ import {
 import { activityPoint, bands } from '../mocks';
 
 describe('points.ts', () => {
+  describe('getActivityPointInBand', () => {
+    it(`should return a correct an activity point with a given activityId`, () => {
+      expect(getActivityPointInBand(bands, 'test-activity-point')).toEqual({
+        activityPoint,
+        bandId: '104',
+        subBandId: '4',
+      });
+    });
+  });
   describe('getMaxTimeRange', () => {
     it(`should properly calculate the max time range for a list of points`, () => {
       const points = [

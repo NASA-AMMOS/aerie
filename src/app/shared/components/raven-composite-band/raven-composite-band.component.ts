@@ -205,8 +205,8 @@ export class RavenCompositeBandComponent
         const ctlSubBand = this.ctlCompositeBand.bands[i];
         // CtlSubBand height needs to exclude heightPadding.
         ctlSubBand.height = ctlSubBand.heightPadding
-            ? this.height - ctlSubBand.heightPadding
-            : this.height;
+          ? this.height - ctlSubBand.heightPadding
+          : this.height;
       }
 
       shouldRedraw = true;

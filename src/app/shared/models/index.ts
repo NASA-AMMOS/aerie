@@ -37,6 +37,7 @@ export * from './raven-activity-detail';
 export * from './raven-activity-parameter';
 export * from './raven-activity-point-expansion';
 export * from './raven-activity-point';
+export * from './raven-activity-point-in-band';
 export * from './raven-activity-type';
 export * from './raven-activity';
 export * from './raven-adaptation';
