@@ -105,7 +105,7 @@ export function toggleDrawer(state: ConfigState) {
     case NavigationDrawerStates.Closed:
       return NavigationDrawerStates.Opened;
     case NavigationDrawerStates.Collapsed:
-      return NavigationDrawerStates.Opened;
+      return NavigationDrawerStates.Closed;
     case NavigationDrawerStates.Opened:
     default:
       return NavigationDrawerStates.Collapsed;
