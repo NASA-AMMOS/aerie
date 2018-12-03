@@ -36,7 +36,7 @@ import { getAppModules, getNavigationDrawerState } from './shared/selectors';
   template: `
     <div class="container">
       <mat-sidenav-container autosize>
-        <mat-sidenav #sidenav mode="side" opened>
+        <mat-sidenav #sidenav mode="side" [opened]="(navigationDrawerState | async) !== 'closed'">
           <raven-app-nav
             [modules]="appModules | async"
             [iconsOnly]="(navigationDrawerState | async) === 'collapsed'"
