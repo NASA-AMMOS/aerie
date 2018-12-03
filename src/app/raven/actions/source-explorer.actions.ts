@@ -30,6 +30,7 @@ export enum SourceExplorerActionTypes {
   ApplyLayout = '[sourceExplorer] apply-layout',
   ApplyLayoutWithPins = '[sourceExplorer] apply-layout-with-pins',
   ApplyState = '[sourceExplorer] apply-state',
+  ApplyStateOrLayoutSuccess = '[sourceExplorer] apply-state-or-layout-success',
   CloseEvent = '[sourceExplorer] close_event',
   CollapseEvent = '[sourceExplorer] collapse_event',
   ExpandEvent = '[sourceExplorer] expand_event',
@@ -112,6 +113,10 @@ export class ApplyState implements Action {
   readonly type = SourceExplorerActionTypes.ApplyState;
 
   constructor(public sourceUrl: string, public sourceId: string) {}
+}
+
+export class ApplyStateOrLayoutSuccess implements Action {
+  readonly type = SourceExplorerActionTypes.ApplyStateOrLayoutSuccess;
 }
 
 export class CloseEvent implements Action {
@@ -309,6 +314,7 @@ export type SourceExplorerAction =
   | ApplyLayout
   | ApplyLayoutWithPins
   | ApplyState
+  | ApplyStateOrLayoutSuccess
   | CloseEvent
   | CollapseEvent
   | ExpandEvent

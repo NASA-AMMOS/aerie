@@ -35,6 +35,7 @@ export function getState(name: string, state: RavenAppState): any {
       })),
     })),
     defaultBandSettings: state.config.raven.defaultBandSettings,
+    expansionByActivityId: state.raven.timeline.expansionByActivityId,
     guides: state.raven.timeline.guides,
     ignoreShareableLinkTimes: state.config.raven.ignoreShareableLinkTimes,
     maxTimeRange: state.raven.timeline.maxTimeRange,

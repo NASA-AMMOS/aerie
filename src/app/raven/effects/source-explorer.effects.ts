@@ -34,6 +34,7 @@ import {
   ApplyLayout,
   ApplyLayoutWithPins,
   ApplyState,
+  ApplyStateOrLayoutSuccess,
   CloseEvent,
   ExpandEvent,
   FetchInitialSources,
@@ -50,6 +51,7 @@ import {
 } from '../actions/source-explorer.actions';
 
 import {
+  getActivityPointInBand,
   getCustomFilterForLabel,
   getCustomFiltersBySourceId,
   getFormattedSourceUrl,
@@ -367,6 +369,26 @@ export class SourceExplorerEffects {
     })),
     concatMap(({ initialSources, savedState, state }) =>
       concat(...this.loadState(state, initialSources, savedState)),
+    ),
+  );
+
+  /**
+   * Effect for ApplyStateOrLayoutSuccess.
+   */
+  @Effect()
+  applyStateOrLayoutSuccess$: Observable<Action> = this.actions$.pipe(
+    ofType<ApplyStateOrLayoutSuccess>(
+      SourceExplorerActionTypes.ApplyStateOrLayoutSuccess,
+    ),
+    withLatestFrom(this.store$),
+    map(([, state]) => state),
+    concatMap(state =>
+      concat(
+        this.restoreExpansion(
+          state.raven.timeline.bands,
+          state.raven.timeline.expansionByActivityId,
+        ),
+      ),
     ),
   );
 
@@ -1089,6 +1111,7 @@ export class SourceExplorerEffects {
               sourceIds: [],
             })),
           })),
+          expansionByActivityId: savedState.expansionByActivityId,
         }),
       ),
       of(
@@ -1101,6 +1124,7 @@ export class SourceExplorerEffects {
       ...pins.map(pin => of(new sourceExplorerActions.PinAdd(pin))),
       ...pins.map(pin => of(new timelineActions.PinAdd(pin))),
       of(new timelineActions.ResetViewTimeRange()),
+      of(new sourceExplorerActions.ApplyStateOrLayoutSuccess()),
       of(
         new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }),
       ),
@@ -1134,6 +1158,7 @@ export class SourceExplorerEffects {
               sourceIds: [],
             })),
           })),
+          expansionByActivityId: savedState.expansionByActivityId,
           guides: savedState.guides ? savedState.guides : [],
           maxTimeRange: savedState.maxTimeRange,
           viewTimeRange: savedState.ignoreShareableLinkTimes
@@ -1152,6 +1177,7 @@ export class SourceExplorerEffects {
       ...this.load(savedState.bands, initialSources, savedState.pins),
       ...savedState.pins.map(pin => of(new sourceExplorerActions.PinAdd(pin))),
       ...savedState.pins.map(pin => of(new timelineActions.PinAdd(pin))),
+      of(new sourceExplorerActions.ApplyStateOrLayoutSuccess()),
       of(
         new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }),
       ),
@@ -1517,6 +1543,30 @@ export class SourceExplorerEffects {
         }, {}),
       ),
     );
+  }
+
+  /**
+   * Helper. Returns a stream of fetch children or descendants actions to restore expansion.
+   */
+  restoreExpansion(
+    bands: RavenCompositeBand[],
+    expansionByActivityId: StringTMap<string>,
+  ) {
+    const actions: Action[] = [];
+    Object.keys(expansionByActivityId).forEach(activityId => {
+      const activityPointInBand = getActivityPointInBand(bands, activityId);
+      if (activityPointInBand) {
+        actions.push(
+          new timelineActions.FetchChildrenOrDescendants(
+            activityPointInBand.bandId,
+            activityPointInBand.subBandId,
+            activityPointInBand.activityPoint,
+            expansionByActivityId[activityId],
+          ),
+        );
+      }
+    });
+    return actions;
   }
 
   /**
