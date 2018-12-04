@@ -16,7 +16,6 @@ import {
   getParentSourceIds,
   getPin,
   getPinLabel,
-  getQueryUrlForGraphableFilter,
   getSituAwareUrl,
   getSortedChildIds,
   getSourceIds,
@@ -33,7 +32,6 @@ import {
   customGraphableSource,
   filterSourceLocation,
   filterSourceStatus,
-  graphableFilterKickoff,
   graphableSource,
   treeBySourceId,
 } from '../mocks/';
@@ -116,11 +114,6 @@ describe('source.ts', () => {
       label: 'ips',
       subBandId: '',
     };
-    const filtersByTarget = {
-      '/SequenceTracker': {
-        events: [filterSourceLocation.id, filterSourceStatus.id],
-      },
-    };
 
     it(`should return sourceUrl with custom filter args`, () => {
       expect(
@@ -128,7 +121,6 @@ describe('source.ts', () => {
           treeBySourceId,
           customGraphableSource,
           customFilter,
-          filtersByTarget,
           false,
           '',
           '',
@@ -272,38 +264,6 @@ describe('source.ts', () => {
     });
   });
 
-  describe('getQueryUrlForGraphableFilter', () => {
-    const sourceIdOrUrl = 'SequenceTracker/Kickoff?';
-    const groupFilters = {
-      events: [graphableFilterKickoff.id],
-    };
-    it('should include filters as query option in the sourceId or url', () => {
-      expect(
-        getQueryUrlForGraphableFilter(
-          treeBySourceId,
-          sourceIdOrUrl,
-          groupFilters,
-        ),
-      ).toEqual('SequenceTracker/Kickoff?events=Kickoff&');
-    });
-  });
-
-  describe('getQueryUrlForGraphableFilter', () => {
-    const sourceIdOrUrl = 'leucadia/taifunTest/abc.pef/DKF?';
-    const parentFilters = {
-      collection: [],
-    };
-    it(`should include filters as query option in the sourceId or url`, () => {
-      expect(
-        getQueryUrlForGraphableFilter(
-          treeBySourceId,
-          sourceIdOrUrl,
-          parentFilters,
-        ),
-      ).toEqual('leucadia/taifunTest/abc.pef/DKF?collection=&');
-    });
-  });
-
   describe('getSituAwareUrl', () => {
     it(`should return sourceUrl with situAware args`, () => {
       expect(
@@ -396,9 +356,11 @@ describe('source.ts', () => {
     };
 
     it(`should return filter related to sourceId`, () => {
-      expect(getTargetFilters(filtersByTarget, '/SequenceTracker')).toEqual({
-        collection: [filterSourceStatus.id],
-        meeting: [filterSourceLocation.id],
+      expect(
+        getTargetFilters(treeBySourceId, filtersByTarget, '/SequenceTracker'),
+      ).toEqual({
+        collection: ['Status'],
+        meeting: ['Location'],
       });
     });
   });

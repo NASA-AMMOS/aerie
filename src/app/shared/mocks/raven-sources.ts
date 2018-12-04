@@ -400,6 +400,12 @@ export const treeBySourceId: StringTMap<RavenSource> = {
   '/DKF/command': {
     ...customGraphableSource,
   },
+  '/SequenceTracker/Location': {
+    ...filterSourceLocation,
+  },
+  '/SequenceTracker/Status': {
+    ...filterSourceStatus,
+  },
   '/child/0': {
     ...childSource,
     childIds: [],
