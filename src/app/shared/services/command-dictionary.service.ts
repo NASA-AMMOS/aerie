@@ -7,13 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './bands';
-export * from './color';
-export * from './command-lint';
-export * from './epochs';
-export * from './points';
-export * from './situational-awareness';
-export * from './source';
-export * from './state';
-export * from './time';
-export * from './tooltip';
+import { Observable } from 'rxjs';
+import { HbCommand, HbCommandDictionary } from '../models';
+
+/**
+ * @todo Convert into a real service once one exists to get data from
+ */
+export interface CommandDictionaryService {
+  getCommandDictionaryList(): Observable<HbCommandDictionary[]>;
+  getCommandDictionary(id: string): Observable<HbCommand[]>;
+}

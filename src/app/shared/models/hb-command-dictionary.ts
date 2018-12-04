@@ -17,11 +17,11 @@ export interface HbCommandDictionary {
    */
   name: string;
   /**
-   * Optional version of the command dictionary
-   */
-  version: string | null;
-  /**
    * Whether the command dictionary is selected
    */
   selected: boolean;
+  /**
+   * Optional version of the command dictionary
+   */
+  version: string | null;
 }

@@ -7,13 +7,21 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './bands';
-export * from './color';
-export * from './command-lint';
-export * from './epochs';
-export * from './points';
-export * from './situational-awareness';
-export * from './source';
-export * from './state';
-export * from './time';
-export * from './tooltip';
+import { Action } from '@ngrx/store';
+
+export enum EditorActionTypes {
+  SetLine = '[editor] set_line',
+  SetText = '[editor] set_text',
+}
+
+export class SetLine implements Action {
+  readonly type = EditorActionTypes.SetLine;
+  constructor(public line: number) {}
+}
+
+export class SetText implements Action {
+  readonly type = EditorActionTypes.SetText;
+  constructor(public text: string) {}
+}
+
+export type EditorAction = SetLine | SetText;

@@ -7,33 +7,28 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { HbCommand } from '../../shared/models/hb-command';
-import { HbCommandDictionary } from '../../shared/models/hb-command-dictionary';
+import {
+  HbCommand,
+  HbCommandDictionary,
+  StringTMap,
+} from '../../shared/models';
+
 import {
   CommandDictionaryAction,
   CommandDictionaryActionTypes,
+  FetchCommandDictionarySuccess,
 } from '../actions/command-dictionary.actions';
 
-/**
- * Schema for the command dictionary state
- */
+import { keyCommandsByName } from '../../shared/util';
+
 export interface CommandDictionaryState {
-  /**
-   * A list of commands for the selected dictionary
-   */
-  commands: HbCommand[] | null;
-  /**
-   * List of available command dictionaries
-   */
+  commandsByName: StringTMap<HbCommand> | null;
   dictionaries: HbCommandDictionary[];
-  /**
-   * The currently selected command dictionary
-   */
   selectedDictionaryId: string | null;
 }
 
 export const initialState: CommandDictionaryState = {
-  commands: null,
+  commandsByName: null,
   dictionaries: [],
   selectedDictionaryId: null,
 };
@@ -48,7 +43,7 @@ export function reducer(
 ): CommandDictionaryState {
   switch (action.type) {
     case CommandDictionaryActionTypes.FetchCommandDictionarySuccess:
-      return { ...state, commands: action.data };
+      return fetchCommandDictionarySuccess(state, action);
     case CommandDictionaryActionTypes.FetchCommandDictionaryListSuccess:
       return { ...state, dictionaries: action.data };
     case CommandDictionaryActionTypes.SelectCommandDictionary:
@@ -56,4 +51,17 @@ export function reducer(
     default:
       return state;
   }
+}
+
+/**
+ * Reduction helper. Called when reducing the `FetchCommandDictionarySuccess` action.
+ */
+function fetchCommandDictionarySuccess(
+  state: CommandDictionaryState,
+  action: FetchCommandDictionarySuccess,
+) {
+  return {
+    ...state,
+    commandsByName: keyCommandsByName(action.data),
+  };
 }
