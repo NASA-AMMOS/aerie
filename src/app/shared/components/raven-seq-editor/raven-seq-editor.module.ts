@@ -7,10 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export interface HbCommandType {
-  simple: {
-    baseType: string | null;
-    arraySize: number | null;
-  };
-  varArray: string | null;
-}
+import { NgModule } from '@angular/core';
+import { RavenSeqEditorComponent } from './raven-seq-editor.component';
+
+@NgModule({
+  declarations: [RavenSeqEditorComponent],
+  exports: [RavenSeqEditorComponent],
+})
+export class RavenSeqEditorModule {}

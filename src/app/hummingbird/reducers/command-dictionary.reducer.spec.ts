@@ -7,8 +7,16 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import * as mpsServerMocks from '../../shared/mocks/mps-server';
-import { FetchCommandDictionaryListSuccess } from '../actions/command-dictionary.actions';
+import { commands } from '../../shared/mocks/commands';
+import { mockCommandDictionaryList } from '../../shared/services/command-dictionary-mock.service';
+import { keyCommandsByName } from '../../shared/util';
+
+import {
+  FetchCommandDictionaryListSuccess,
+  FetchCommandDictionarySuccess,
+  SelectCommandDictionary,
+} from '../actions/command-dictionary.actions';
+
 import {
   CommandDictionaryState,
   initialState,
@@ -20,17 +28,38 @@ describe('Command Dictionary reducer', () => {
     expect(initialState).toEqual(initialState);
   });
 
+  it('should handle FetchCommandDictionarySuccess', () => {
+    const result: CommandDictionaryState = reducer(
+      initialState,
+      new FetchCommandDictionarySuccess(commands),
+    );
+
+    expect(result).toEqual({
+      ...initialState,
+      commandsByName: keyCommandsByName(commands),
+    });
+  });
+
   it('should handle FetchCommandDictionaryListSuccess', () => {
     const result: CommandDictionaryState = reducer(
       initialState,
-      new FetchCommandDictionaryListSuccess(
-        mpsServerMocks.commandDictionaryList,
-      ),
+      new FetchCommandDictionaryListSuccess(mockCommandDictionaryList),
+    );
+
+    expect(result).toEqual({
+      ...initialState,
+      dictionaries: [...mockCommandDictionaryList],
+    });
+  });
+
+  it('should handle SelectCommandDictionary', () => {
+    const result: CommandDictionaryState = reducer(
+      initialState,
+      new SelectCommandDictionary('42'),
     );
     expect(result).toEqual({
-      commands: null,
-      dictionaries: [...mpsServerMocks.commandDictionaryList],
-      selectedDictionaryId: null,
+      ...initialState,
+      selectedDictionaryId: '42',
     });
   });
 });

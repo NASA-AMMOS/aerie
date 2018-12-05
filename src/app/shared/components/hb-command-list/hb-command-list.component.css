@@ -7,6 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+.command-list-item button {
+  display: none;
+}
+
+.command-list-item:hover button {
+  display: initial;
+}
+
 .viewport {
-  height: 300px;
+  height: 600px;
 }

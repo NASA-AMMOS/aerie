@@ -25,15 +25,19 @@ raven-app-header {
 
 main {
   grid-area: main;
+  height: 100%;
+  position: relative;
+}
+
+raven-seq-editor {
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 
 aside {
   grid-area: aside;
   margin-left: 12px;
-}
-
-hb-command-loader,
-hb-command-list {
-  display: block;
-  margin-bottom: 1.5rem;
 }

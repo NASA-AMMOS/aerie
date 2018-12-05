@@ -44,3 +44,10 @@ html {
 .toast-container {
   font-family: Roboto,"Helvetica Neue",sans-serif;
 }
+
+/* Override default CodeMirror class so we can have auto resizing. */
+/* https://codemirror.net/demo/resize.html */
+.CodeMirror {
+  border: 1px solid #eee;
+  height: 100%;
+}

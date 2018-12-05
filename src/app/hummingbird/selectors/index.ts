@@ -8,3 +8,4 @@
  */
 
 export * from './command-dictionary.selectors';
+export * from './editor.selectors';

@@ -19,7 +19,13 @@ export const getCommandDictionaryState = createSelector(
 
 export const getCommands = createSelector(
   getCommandDictionaryState,
-  (state: CommandDictionaryState) => state.commands,
+  (state: CommandDictionaryState) =>
+    state.commandsByName ? Object.values(state.commandsByName) : null,
+);
+
+export const getCommandsByName = createSelector(
+  getCommandDictionaryState,
+  (state: CommandDictionaryState) => state.commandsByName,
 );
 
 export const getDictionaries = createSelector(

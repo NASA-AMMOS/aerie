@@ -2,9 +2,13 @@
 </raven-app-header>
 
 <main>
-  <hb-command-editor
+  <raven-seq-editor
     [commands]="commands$ | async"
-  ></hb-command-editor>
+    [commandsByName]="commandsByName$ | async"
+    [value]="text$ | async"
+    (cursorLineChanged)="onCursorLineChanged($event)"
+    (valueChanged)="onValueChanged($event)"
+  ></raven-seq-editor>
 </main>
 <aside>
   <hb-command-loader

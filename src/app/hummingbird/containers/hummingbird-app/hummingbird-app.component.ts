@@ -10,17 +10,29 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { HbCommand } from '../../../shared/models/hb-command';
-import { HbCommandDictionary } from '../../../shared/models/hb-command-dictionary';
+import { ToggleNavigationDrawer } from '../../../shared/actions/config.actions';
+import { SetLine, SetText } from '../../actions/editor.actions';
+import { HummingbirdAppState } from '../../hummingbird-store';
 
-import * as configActions from '../../../shared/actions/config.actions';
 import {
   FetchCommandDictionaryList,
+  SelectCommand,
   SelectCommandDictionary,
 } from '../../actions/command-dictionary.actions';
 
-import { HummingbirdAppState } from '../../hummingbird-store';
-import { getCommands, getDictionaries, getSelected } from '../../selectors';
+import {
+  getCommands,
+  getCommandsByName,
+  getDictionaries,
+  getSelected,
+  getText,
+} from '../../selectors';
+
+import {
+  HbCommand,
+  HbCommandDictionary,
+  StringTMap,
+} from '../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,50 +41,55 @@ import { getCommands, getDictionaries, getSelected } from '../../selectors';
   templateUrl: './hummingbird-app.component.html',
 })
 export class HummingbirdAppComponent {
-  /**
-   * List of all available dictionaries to select from
-   */
-  dictionaries$: Observable<HbCommandDictionary[]>;
-
-  /**
-   * List of all commands from the selected dictionary
-   */
   commands$: Observable<HbCommand[] | null>;
-
-  /**
-   * Currently active dictionary
-   */
+  commandsByName$: Observable<StringTMap<HbCommand> | null>;
+  dictionaries$: Observable<HbCommandDictionary[]>;
   selectedDictionaryId$: Observable<string | null>;
+  text$: Observable<string>;
 
   constructor(private store: Store<HummingbirdAppState>) {
     this.commands$ = this.store.pipe(select(getCommands));
+    this.commandsByName$ = this.store.pipe(select(getCommandsByName));
     this.dictionaries$ = this.store.pipe(select(getDictionaries));
     this.selectedDictionaryId$ = this.store.pipe(select(getSelected));
+    this.text$ = this.store.pipe(select(getText));
 
     this.store.dispatch(new FetchCommandDictionaryList());
+  }
+
+  /**
+   * Called when the raven-seq-editor cursor value changes
+   */
+  onCursorLineChanged(line: number): void {
+    this.store.dispatch(new SetLine(line));
+  }
+
+  /**
+   * The hamburger menu was clicked
+   */
+  onMenuClicked(): void {
+    this.store.dispatch(new ToggleNavigationDrawer());
+  }
+
+  /**
+   * A Command from the list of commands was selected.
+   */
+  onSelectedCommand(command: string): void {
+    this.store.dispatch(new SelectCommand(command));
   }
 
   /**
    * A dictionary from the list of dictionaries was selected
    * @param dictionary The dictionary which was selected
    */
-  onSelectedDictionary(selectedId: string) {
+  onSelectedDictionary(selectedId: string): void {
     this.store.dispatch(new SelectCommandDictionary(selectedId));
   }
 
   /**
-   * A Command from the list of commands was selected
-   * @todo Implement once we know what we want a command selection to do
-   * @param command The command which was selected
+   * Called with the raven-seq-editor value changes.
    */
-  onSelectedCommand(name: string) {
-    // STUB
-  }
-
-  /**
-   * The hamburger menu was clicked
-   */
-  onMenuClicked() {
-    this.store.dispatch(new configActions.ToggleNavigationDrawer());
+  onValueChanged(value: string): void {
+    this.store.dispatch(new SetText(value));
   }
 }
