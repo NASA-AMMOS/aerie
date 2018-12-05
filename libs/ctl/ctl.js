@@ -3337,6 +3337,11 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
   var axisLabelsXVal = xStart - autoPadding;
 
   var tickValues = [];
+  var tickValuesObj = {};
+  var maxLimit = this.band.maxLimit;
+  var minLimit = this.band.minLimit;
+
+  // band.tickValues are strings
   if(this.band.tickValues.length !== 0) {
     // handle custom tick values
     for(var i=0, ilength=this.band.tickValues.length; i<ilength; ++i) {
@@ -3347,33 +3352,46 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
       else if (Number(tickValue) < this.band.minPaintValue) {
           this.band.minPaintValue = Number(tickValue);
       }
-      tickValues.push(tickValue);
+      tickValuesObj[tickValue] = tickValue;;
     }
-    if(this.band.maxPaintValue !== this.band.maxLimit) {
-      tickValues.push(this.band.maxLimit);
+    if(this.band.maxLimit && this.band.maxPaintValue !== this.band.maxLimit) {
+      if (this.band.logTicks) {
+          maxLimit = Math.round(Math.log10(maxLimit));
+      }
+      tickValuesObj[maxLimit] = maxLimit.toString();
     }
-    if(this.band.minPaintValue !== this.band.minLimit) {
-      tickValues.push(this.band.minLimit);
+    if(this.band.minLimit && this.band.minPaintValue !== this.band.minLimit) {
+      if (this.band.logTicks) {
+          minLimit = Math.round(Math.log10(minLimit));
+      }
+      tickValuesObj[minLimit] = minLimit.toString();
     }
   }
   else if(this.band.autoTickValues) {
     // generate auto tick values
     if(this.band.maxPaintValue !== this.band.maxLimit) {
-      tickValues.push(this.band.maxLimit);
+      tickValuesObj[this.band.maxLimit] = this.band.maxLimit;
     }
     if(this.band.minPaintValue !== this.band.minLimit) {
-      tickValues.push(this.band.minLimit);
+      tickValuesObj[this.band.minLimit]=this.band.minLimit;
     }
     if(this.band.maxPaintValue > 0 && this.band.minPaintValue < 0) {
       // only render the tick if we're not already close to 0
-      tickValues.push(0);
+      tickValuesObj[0] = 0;
     }
     // include paint the min/max ticks if there is height padding
     if(this.band.heightPadding > 0) {
-      tickValues.push(this.band.maxPaintValue);
-      tickValues.push(this.band.minPaintValue);
+      tickValuesObj[this.band.maxPaintValue]=this.band.maxPaintValue;
+      tickValuesObj[this.band.minPaintValue]=this.band.minPaintValue;
     }
   }
+
+  // temporary convert tickValues to number for muneric sorting
+  Object.keys(tickValuesObj).forEach(key=> {
+      tickValues.push (Number(tickValuesObj[key]));
+  });
+  tickValues = tickValues.sort((a,b) => a - b);
+  tickValues = tickValues.map(tick=>tick.toString());
 
   // if no tick values to render, return early and return the original
   // xStart location
@@ -3392,10 +3410,11 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
   var yVal = 0;
   var yValue = 0;
   var step = this.band.height / tickValues.length;
+  this.band.logTickToCanvasHeight = {};
   for(var j=0, jlength=tickValues.length; j<jlength; ++j) {
     var value = tickValues[j];
 
-    if ((this.band.maxLimit && value === this.band.maxLimit) || (this.band.minLimit && value === this.band.minLimit)) {
+    if ((this.band.maxLimit && Number(value) === maxLimit) || (this.band.minLimit && Number(value) === minLimit)) {
       ctx.fillStyle = Util.rgbaToString([255,0,0], 1);
       ctx.strokeStyle = Util.rgbaToString([255,0,0], 0.5);
     }
@@ -6334,12 +6353,12 @@ var Util = {
     let ticks = [];
     let tick = Util.roundToNearestPowerOf10(min);
 
-    ticks.push(tick);
+    ticks.push(tick.toString());
 
     // Compute log ticks. All ticks should be powers of 10.
     while (tick < Util.roundToNearestPowerOf10(max)) {
       tick *= 10;
-      ticks.push(tick);
+      ticks.push(tick.toString());
     }
 
     return ticks;
