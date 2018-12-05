@@ -8,6 +8,7 @@
  */
 
 import { Action } from '@ngrx/store';
+import { HbCommand, HbCommandDictionary } from '../../shared/models';
 
 export enum CommandDictionaryActionTypes {
   FetchCommandDictionary = '[command_dictionary] fetch_command_dictionary',
@@ -16,25 +17,23 @@ export enum CommandDictionaryActionTypes {
   FetchCommandDictionaryList = '[command_dictionary] fetch_command_list',
   FetchCommandDictionaryListFailure = '[command_dictionary] fetch_command_list_failure',
   FetchCommandDictionaryListSuccess = '[command_dictionary] fetch_command_list_success',
+  SelectCommand = '[command_dictionary] select_command',
   SelectCommandDictionary = '[command_dictionary] select_command_dictionary',
 }
 
 export class FetchCommandDictionary implements Action {
   readonly type = CommandDictionaryActionTypes.FetchCommandDictionary;
-
   constructor(public name: string) {}
 }
 
 export class FetchCommandDictionaryFailure implements Action {
   readonly type = CommandDictionaryActionTypes.FetchCommandDictionaryFailure;
-
   constructor(public error: Error) {}
 }
 
 export class FetchCommandDictionarySuccess implements Action {
   readonly type = CommandDictionaryActionTypes.FetchCommandDictionarySuccess;
-
-  constructor(public data: any) {}
+  constructor(public data: HbCommand[]) {}
 }
 
 export class FetchCommandDictionaryList implements Action {
@@ -44,20 +43,22 @@ export class FetchCommandDictionaryList implements Action {
 export class FetchCommandDictionaryListFailure implements Action {
   readonly type =
     CommandDictionaryActionTypes.FetchCommandDictionaryListFailure;
-
   constructor(public error: Error) {}
 }
 
 export class FetchCommandDictionaryListSuccess implements Action {
   readonly type =
     CommandDictionaryActionTypes.FetchCommandDictionaryListSuccess;
+  constructor(public data: HbCommandDictionary[]) {}
+}
 
-  constructor(public data: any) {}
+export class SelectCommand implements Action {
+  readonly type = CommandDictionaryActionTypes.SelectCommand;
+  constructor(public command: string) {}
 }
 
 export class SelectCommandDictionary implements Action {
   readonly type = CommandDictionaryActionTypes.SelectCommandDictionary;
-
   constructor(public selectedId: string) {}
 }
 
@@ -68,4 +69,5 @@ export type CommandDictionaryAction =
   | FetchCommandDictionaryList
   | FetchCommandDictionaryListFailure
   | FetchCommandDictionaryListSuccess
+  | SelectCommand
   | SelectCommandDictionary;

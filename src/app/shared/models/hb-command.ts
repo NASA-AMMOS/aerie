@@ -10,13 +10,7 @@
 import { HbCommandParameter } from './hb-command-parameter';
 
 export interface HbCommand {
-  definitionMaturity: string;
-  description: string;
-  implementationMaturity: string;
   name: string;
-  opcode: string;
-  operationalCategory: string;
-  parameterDefs: HbCommandParameter[];
-  processorString: string | null;
-  restrictedPhases: string[];
+  parameters: HbCommandParameter[];
+  template?: string;
 }

@@ -7,14 +7,35 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { CommonModule } from '@angular/common';
-import { NgModule } from '@angular/core';
-import { HbMonacoModule } from '../hb-monaco/hb-monaco.module';
-import { HbCommandEditorComponent } from './hb-command-editor.component';
+import {
+  EditorAction,
+  EditorActionTypes,
+} from '../actions/editor.actions';
 
-@NgModule({
-  declarations: [HbCommandEditorComponent],
-  exports: [HbCommandEditorComponent],
-  imports: [CommonModule, HbMonacoModule],
-})
-export class HbCommandEditorModule {}
+export interface EditorState {
+  line: number;
+  text: string;
+}
+
+export const initialState: EditorState = {
+  line: 0,
+  text: '',
+};
+
+/**
+ * Reducer.
+ * If a case takes more than one line then it should be in it's own helper function.
+ */
+export function reducer(
+  state: EditorState = initialState,
+  action: EditorAction,
+): EditorState {
+  switch (action.type) {
+    case EditorActionTypes.SetLine:
+      return { ...state, line: action.line };
+    case EditorActionTypes.SetText:
+      return { ...state, text: action.text };
+    default:
+      return state;
+  }
+}

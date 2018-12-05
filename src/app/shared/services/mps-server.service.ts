@@ -9,13 +9,9 @@
 
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, Observer } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { RavenAppState } from '../../raven/raven-store';
-import * as mpsServerMocks from '../mocks/mps-server';
 import { MpsServerSource } from '../models';
-import { HbCommand } from '../models/hb-command';
-import { HbCommandDictionary } from '../models/hb-command-dictionary';
 import { getState, importState, toRavenSources } from '../util';
 
 @Injectable({
@@ -43,56 +39,6 @@ export class MpsServerService {
    */
   fetchState(url: string) {
     return this.http.get(url).pipe(map(res => importState(res[0])));
-  }
-
-  /**
-   * Get a list of available command dictionaries and populate an Observable
-   * with mock/static data until MPS Server has an endpoint for this.
-   *
-   * @todo When MPS Server gets an endpoint for listing command dictionaries
-   * get this list with an http.get request
-   *
-   * @todo Once the Raven config reducer has been moved to the app level, this
-   * should be replaced with something like the following:
-   * return this.store.select(fromConfig.getUrls).pipe(
-   *  switchMap(config =>
-   *    http.get(config.baseUrl) // ...
-   *  )
-   * )
-   * @todo Update spec with HTTP tests once this has been updated
-   * https://angular.io/guide/testing#testing-http-services
-   */
-  getCommandDictionaryList(): Observable<HbCommandDictionary[]> {
-    return Observable.create((o: Observer<HbCommandDictionary[]>) => {
-      o.next(mpsServerMocks.commandDictionaryList);
-      o.complete();
-    });
-  }
-
-  /**
-   * Retrieve a command dictionary by name and populate an Observable with
-   * mock/static data until MPS has an endpoint for this.
-   *
-   * @todo When MPS Server gets an endpoint for fetching command dictionaries
-   * get this list with an http.get request
-   *
-   * @todo Once the Raven config reducer has been moved to the app level, this
-   * should be replaced with something like the following:
-   * return this.store.select(fromConfig.getUrls).pipe(
-   *  switchMap(config =>
-   *    http.get(`${config.baseUrl}/${name}`) // ...
-   *  )
-   * )
-   * @todo Update spec with HTTP tests once this has been updated
-   * https://angular.io/guide/testing#testing-http-services
-   *
-   * @param name The name of a command dictionary to retrieve
-   */
-  getCommandDictionary(name: string): Observable<HbCommand[]> {
-    return Observable.create((o: Observer<HbCommand[]>) => {
-      o.next(mpsServerMocks.getCommandList(1, name));
-      o.complete();
-    });
   }
 
   /**

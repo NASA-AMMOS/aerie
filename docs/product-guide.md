@@ -99,7 +99,6 @@ The dependencies are:
   "lodash": "^4.17.11",
   "material-design-icons": "^3.0.1",
   "moment": "^2.22.2",
-  "monaco-editor": "^0.14.3",
   "ngx-toastr": "^9.1.1",
   "roboto-fontface": "^0.10.0",
   "rxjs": "~6.3.3",

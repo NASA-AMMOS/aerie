@@ -7,13 +7,17 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { CommonModule } from '@angular/common';
-import { NgModule } from '@angular/core';
-import { HbMonacoComponent } from './hb-monaco.component';
+import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { State } from '../hummingbird-store';
+import { EditorState } from '../reducers/editor.reducer';
 
-@NgModule({
-  declarations: [HbMonacoComponent],
-  exports: [HbMonacoComponent],
-  imports: [CommonModule],
-})
-export class HbMonacoModule {}
+const featureSelector = createFeatureSelector<State>('hummingbird');
+export const getEditorState = createSelector(
+  featureSelector,
+  (state: State): EditorState => state.editor,
+);
+
+export const getText = createSelector(
+  getEditorState,
+  (state: EditorState) => state.text,
+);

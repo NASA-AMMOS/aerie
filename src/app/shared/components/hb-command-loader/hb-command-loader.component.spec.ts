@@ -8,18 +8,17 @@
  */
 
 import { Component, ViewChild } from '@angular/core';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { mockCommandDictionaryList } from '../../services/command-dictionary-mock.service';
+import { HbCommandLoaderComponent } from './hb-command-loader.component';
+import { HbCommandLoaderModule } from './hb-command-loader.module';
+
 import {
   async,
   ComponentFixture,
   fakeAsync,
   TestBed,
 } from '@angular/core/testing';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-
-import { HbCommandLoaderComponent } from './hb-command-loader.component';
-import { HbCommandLoaderModule } from './hb-command-loader.module';
-
-import * as mpsServerMocks from '../../mocks/mps-server';
 
 @Component({
   selector: 'command-loader-test',
@@ -32,7 +31,7 @@ import * as mpsServerMocks from '../../mocks/mps-server';
   `,
 })
 class HbCommandLoaderTestComponent {
-  dictionaries: any[] = mpsServerMocks.commandDictionaryList;
+  dictionaries: any[] = mockCommandDictionaryList;
   selectedId: string | null = null;
 
   @ViewChild(HbCommandLoaderComponent)
