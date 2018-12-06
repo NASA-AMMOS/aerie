@@ -61,6 +61,7 @@
   *ngIf="source.type === 'graphable'"
   [id]="id"
   [source]="source"
+  (action)="action.emit($event)"
   (close)="close.emit($event)"
   (open)="open.emit($event)"
   (openMetadata)="openMetadata.emit($event)"

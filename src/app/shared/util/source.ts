@@ -314,14 +314,23 @@ export function fromGraphable(
             event: 'file-metadata',
             name: 'File Metadata',
           },
+          {
+            event: 'graph-again',
+            name: 'Graph Again',
+          },
         ]
-      : [],
+      : [
+          {
+            event: 'graph-again',
+            name: 'Graph Again',
+          },
+        ],
     expandable: false,
     fileMetadata,
     icon: 'fa fa-area-chart',
     openable: true,
     opened: false,
-    selectable: mSource.customMeta ? true : false,
+    selectable: true,
     selected: false,
     type: 'graphable',
     url: mSource.data_url,
