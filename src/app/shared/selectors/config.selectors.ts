@@ -35,8 +35,7 @@ export const getItarMessage = createSelector(
 export const getVersion = createSelector(
   getConfigState,
   (state: ConfigState) => ({
-    branch: state.app.branch,
-    commit: state.app.commit,
+    packageJsonVersion: state.app.packageJsonVersion,
     version: state.app.version,
   }),
 );
