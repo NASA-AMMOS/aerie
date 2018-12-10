@@ -3354,18 +3354,6 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
       }
       tickValuesObj[tickValue] = tickValue;;
     }
-    if(this.band.maxLimit && this.band.maxPaintValue !== this.band.maxLimit) {
-      if (this.band.logTicks) {
-          maxLimit = Math.round(Math.log10(maxLimit));
-      }
-      tickValuesObj[maxLimit] = maxLimit.toString();
-    }
-    if(this.band.minLimit && this.band.minPaintValue !== this.band.minLimit) {
-      if (this.band.logTicks) {
-          minLimit = Math.round(Math.log10(minLimit));
-      }
-      tickValuesObj[minLimit] = minLimit.toString();
-    }
   }
   else if(this.band.autoTickValues) {
     // generate auto tick values
@@ -3467,6 +3455,31 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
     ctx.stroke();
     ctx.closePath();
   }
+
+
+  // now draw min/max limits
+  var limits = []
+  if(this.band.maxLimit && this.band.maxPaintValue !== this.band.maxLimit && !tickValues.includes(this.band.maxLimit.toString())) {
+     limits.push (this.band.maxLimit);
+  }
+  if(this.band.minLimit && this.band.minPaintValue !== this.band.minLimit && !tickValues.includes(this.band.minLimit.toString())) {
+     limits.push (this.band.minLimit);
+  }
+     
+  limits.forEach(value => {
+      ctx.fillStyle = Util.rgbaToString([255,0,0], 1);
+      ctx.strokeStyle = Util.rgbaToString([255,0,0], 0.5);
+      var yVal = this.band.logTicks ? this.band.getYFromValueLog(value) : this.band.getYFromValue(value);
+      ctx.fillText(value, axisLabelsXVal, yVal);
+      ctx.beginPath();
+      var delta = 4;
+      for(var x=labelWidth; x<=labelWidth+bandWidth; x+=delta*2) {
+        ctx.moveTo(x,      yVal);
+        ctx.lineTo(x+delta, yVal);
+      }
+      ctx.stroke();
+      ctx.closePath();
+  });
 
   if (this.band.hideTicks) {
     return xStart;
