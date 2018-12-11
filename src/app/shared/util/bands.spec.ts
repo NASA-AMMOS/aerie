@@ -8,13 +8,13 @@
  */
 
 import {
+  activityBandsWithLegend,
   bandById,
   changeZoom,
   getBandLabel,
+  getBandsWithSourceId,
   getCustomFiltersBySourceId,
-  hasActivityBand,
   hasActivityBandForFilterTarget,
-  hasSourceId,
   isAddTo,
   isMessageTypeActivity,
   isOverlay,
@@ -93,18 +93,24 @@ describe('bands.ts', () => {
     });
   });
 
-  describe('hasActivityBand', () => {
+  describe('activityBandsWithLegend', () => {
     it(`should return null if the given band is not an activity band`, () => {
       const stateBand = bands[1].subBands[0];
-      expect(hasActivityBand(bands, stateBand, '')).toBe(null);
+      expect(activityBandsWithLegend(bands, stateBand, '')).toEqual([]);
     });
 
-    it(`should return the first found sub-band if it is an activity by-type sub-band with the same legend as the given band`, () => {
+    it(`should return all sub-bands if it is an activity by-type sub-band with the same legend as the given band`, () => {
       const byTypeActivityBand = bands[4].subBands[0];
-      expect(hasActivityBand(bands, byTypeActivityBand, '')).toEqual({
-        bandId: '100',
-        subBandId: '0',
-      });
+      expect(activityBandsWithLegend(bands, byTypeActivityBand, '')).toEqual([
+        {
+          bandId: '100',
+          subBandId: '0',
+        },
+        {
+          bandId: '104',
+          subBandId: '4',
+        },
+      ]);
     });
   });
 
@@ -125,16 +131,18 @@ describe('bands.ts', () => {
     });
   });
 
-  describe('hasSourceId', () => {
-    it(`should return null if a given source id does not exist`, () => {
-      expect(hasSourceId(bands, '/wtf')).toBe(null);
+  describe('getBandsWithSourceId', () => {
+    it(`should return [] if a given source id does not exist`, () => {
+      expect(getBandsWithSourceId(bands, '/wtf')).toEqual([]);
     });
 
     it(`should return a sub-band locator for the first sub-band that has the given source id`, () => {
-      expect(hasSourceId(bands, '/a/b/c/d/e/w')).toEqual({
-        bandId: '100',
-        subBandId: '0',
-      });
+      expect(getBandsWithSourceId(bands, '/a/b/c/d/e/w')).toEqual([
+        {
+          bandId: '100',
+          subBandId: '0',
+        },
+      ]);
     });
   });
 

@@ -636,11 +636,12 @@ export function getFilterLabel(
  * Helper. Returns an activity-by-type band locator if a given band exists in the list of bands for a legend.
  * `null` otherwise.
  */
-export function hasActivityBand(
+export function activityBandsWithLegend(
   bands: RavenCompositeBand[],
   band: RavenSubBand,
   pinLabel: string,
 ) {
+  const bandsWithLegend = [];
   if (band.type === 'activity') {
     for (let i = 0, l = bands.length; i < l; ++i) {
       for (let j = 0, ll = bands[i].subBands.length; j < ll; ++j) {
@@ -650,15 +651,15 @@ export function hasActivityBand(
           subBand.legend === (band as RavenActivityBand).legend &&
           subBand.labelPin === pinLabel
         ) {
-          return {
+          bandsWithLegend.push({
             bandId: bands[i].id,
             subBandId: subBand.id,
-          };
+          });
         }
       }
     }
   }
-  return null;
+  return bandsWithLegend;
 }
 
 /**
@@ -687,23 +688,26 @@ export function hasActivityBandForFilterTarget(
 }
 
 /**
- * Helper. Returns a sub-band locator if a given band has a source id.
- * `null` otherwise.
+ * Helper. Returns all sub-bands that has source id.
  */
-export function hasSourceId(bands: RavenCompositeBand[], sourceId: string) {
+export function getBandsWithSourceId(
+  bands: RavenCompositeBand[],
+  sourceId: string,
+) {
+  const bandsWithSourceId = [];
   for (let i = 0, l = bands.length; i < l; ++i) {
     for (let j = 0, ll = bands[i].subBands.length; j < ll; ++j) {
       const subBand = bands[i].subBands[j];
 
       if (subBand.sourceIds.includes(sourceId)) {
-        return {
+        bandsWithSourceId.push({
           bandId: bands[i].id,
           subBandId: subBand.id,
-        };
+        });
       }
     }
   }
-  return null;
+  return bandsWithSourceId;
 }
 
 /**

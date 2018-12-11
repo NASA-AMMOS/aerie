@@ -21,9 +21,11 @@ pipeline {
 						# setup env
 						export PATH=/usr/local/bin:/usr/bin
 						export LD_LIBRARY_PATH=/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib
+						export BUILD_DATE=`date +%Y%m%d`
 						export REPO_REV_SHORT=`git rev-parse --short HEAD`
-						# replace forward slashes in branch name to prevent problems
-						export SEQBASETAG="${BRANCH_NAME//\\//_}-B$BUILD_NUMBER-R$REPO_REV_SHORT"
+						# remove forward slash and release from branch name
+						export BRANCH_VERSION=`echo ${BRANCH_NAME} | sed -e 's/\\//_/g' -e 's/^release_//g'`
+						export SEQBASETAG="${BRANCH_VERSION}+b${BUILD_NUMBER}.r${REPO_REV_SHORT}.${BUILD_DATE}"
 
 						# setup nvm/node
 						export NVM_DIR="$HOME/.nvm"
@@ -42,10 +44,10 @@ pipeline {
 						if [[ $BRANCH_NAME == release* ]]; then
 							echo "Release branch detected. Analyzing and archiving source for CM purposes..."
 							# tar up source
-							tar -czf raven2-src-$SEQBASETAG.tar.gz --exclude='.git' `ls -A`
+							tar -czf raven-src-$SEQBASETAG.tar.gz --exclude='.git' `ls -A`
 							# record lines of code
 							npm install cloc
-							./node_modules/cloc/lib/cloc --exclude-dir=bower_components src --report-file=raven2-cloc-$SEQBASETAG.txt
+							./node_modules/cloc/lib/cloc --exclude-dir=bower_components src --report-file=raven-cloc-$SEQBASETAG.txt
 						fi
 
 						# build and test
@@ -107,6 +109,11 @@ pipeline {
 						def uploadSpec =
 						'''{
 							"files": [
+								{
+									"pattern": "*-src-*.tar.gz",
+									"target": "general-develop/gov/nasa/jpl/ammos/mpsa/raven/",
+									"recursive":false
+								},
 								{
 									"pattern": "dist/*.tar.gz",
 									"target": "general-develop/gov/nasa/jpl/ammos/mpsa/raven/",

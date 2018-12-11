@@ -1,4 +1,5 @@
 <div class="tree" [ngClass]="{
+  'selected': source.selected,
   'highlight': source.opened,
   'no-highlight': !source.opened
 }">
@@ -18,7 +19,7 @@
     <i [ngClass]="source.icon" aria-hidden="true"></i> {{source.name}}
   </span>
   <button
-    *ngIf="source.selected"
+    *ngIf="source.selected && source.opened"
     class="menu-icon"
     mat-icon-button
     [matMenuTriggerFor]="actionsMenu">

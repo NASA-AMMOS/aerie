@@ -36,6 +36,7 @@ export enum SourceExplorerActionTypes {
   ExpandEvent = '[sourceExplorer] expand_event',
   FetchInitialSources = '[sourceExplorer] fetch_initial_sources',
   FetchNewSources = '[sourceExplorer] fetch_new_sources',
+  GraphAgainEvent = '[sourceExplorer] graph-again-event',
   GraphCustomSource = '[sourceExplorer] graph_custom_source',
   ImportFile = '[sourceExplorer] import_file',
   ImportFileFailure = '[sourceExplorer] import_file_failure',
@@ -145,6 +146,12 @@ export class FetchNewSources implements Action {
   readonly type = SourceExplorerActionTypes.FetchNewSources;
 
   constructor(public sourceId: string, public sourceUrl: string) {}
+}
+
+export class GraphAgainEvent implements Action {
+  readonly type = SourceExplorerActionTypes.GraphAgainEvent;
+
+  constructor(public sourceId: string) {}
 }
 
 export class GraphCustomSource implements Action {
@@ -320,6 +327,7 @@ export type SourceExplorerAction =
   | ExpandEvent
   | FetchInitialSources
   | FetchNewSources
+  | GraphAgainEvent
   | GraphCustomSource
   | ImportFile
   | ImportFileFailure

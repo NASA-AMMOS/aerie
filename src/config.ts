@@ -15,8 +15,7 @@ import { version } from './environments/version';
 export interface ConfigState {
   app: {
     baseUrl: string;
-    branch: string;
-    commit: string;
+    packageJsonVersion: string;
     production: boolean;
     version: string;
   };
@@ -44,8 +43,7 @@ export interface ConfigState {
 export const config: ConfigState = {
   app: {
     baseUrl: environment.baseUrl,
-    branch: version.branch,
-    commit: version.commit,
+    packageJsonVersion: version.packageJsonVersion,
     production: environment.production,
     version: version.version,
   },
@@ -67,7 +65,7 @@ export const config: ConfigState = {
       icon: 'poll',
       path: 'raven',
       title: 'Raven',
-      version: '2.0.0',
+      version: version.packageJsonVersion,
     },
   ],
   hummingbird: {},
