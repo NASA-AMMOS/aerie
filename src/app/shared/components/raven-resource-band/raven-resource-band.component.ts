@@ -336,6 +336,8 @@ export class RavenResourceBandComponent
         this,
       ),
       painter: new (window as any).ResourcePainter({
+        // no border within paint units
+        borderWidth: 0,
         color: colorHexToRgbArray(this.color),
         fill: this.fill,
         fillColor: colorHexToRgbArray(this.fillColor),
