@@ -39,6 +39,7 @@ import {
   ExpandEvent,
   FetchInitialSources,
   FetchNewSources,
+  GraphAgainEvent,
   GraphCustomSource,
   ImportFile,
   LoadErrorsDisplay,
@@ -51,6 +52,8 @@ import {
 } from '../actions/source-explorer.actions';
 
 import {
+  activityBandsWithLegend,
+  getBandsWithSourceId,
   getActivityPointInBand,
   getCustomFilterForLabel,
   getCustomFiltersBySourceId,
@@ -60,9 +63,7 @@ import {
   getSituationalAwarenessStartTime,
   getSourceIds,
   getTargetFilters,
-  hasActivityBand,
   hasActivityBandForFilterTarget,
-  hasSourceId,
   isAddTo,
   isOverlay,
   toCompositeBand,
@@ -140,6 +141,7 @@ export class SourceExplorerEffects {
             situationalAwareness.situationalAware,
             getSituationalAwarenessStartTime(situationalAwareness),
             getSituationalAwarenessPageDuration(situationalAwareness),
+            false,
           ),
           of(new sourceExplorerActions.LoadErrorsDisplay()),
           of(
@@ -563,6 +565,56 @@ export class SourceExplorerEffects {
     ),
   );
 
+  @Effect()
+  graphAgainEvent$: Observable<Action> = this.actions$.pipe(
+    ofType<GraphAgainEvent>(SourceExplorerActionTypes.GraphAgainEvent),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    mergeMap(({ state: { config, raven }, action }) =>
+      concat(
+        of(
+          new sourceExplorerActions.UpdateSourceExplorer({
+            fetchPending: true,
+          }),
+        ),
+        this.open(
+          null,
+          raven.sourceExplorer.filtersByTarget,
+          raven.sourceExplorer.treeBySourceId,
+          action.sourceId,
+          raven.timeline.bands,
+          raven.timeline.selectedBandId,
+          raven.timeline.selectedSubBandId,
+          config.raven.defaultBandSettings,
+          raven.sourceExplorer.pins,
+          raven.situationalAwareness.situationalAware,
+          getSituationalAwarenessStartTime(raven.situationalAwareness),
+          getSituationalAwarenessPageDuration(raven.situationalAwareness),
+          true,
+        ),
+        of(
+          new sourceExplorerActions.UpdateSourceExplorer({
+            fetchPending: false,
+          }),
+        ),
+      ).pipe(
+        catchError((e: Error) => {
+          console.error('SourceExplorerEffects - graphAgainEvent$: ', e);
+          return [
+            new toastActions.ShowToast(
+              'warning',
+              'Failed To Graph Again Source',
+              '',
+            ),
+            new sourceExplorerActions.UpdateSourceExplorer({
+              fetchPending: false,
+            }),
+          ];
+        }),
+      ),
+    ),
+  );
+
   /**
    * Effect for ImportFile.
    */
@@ -634,6 +686,7 @@ export class SourceExplorerEffects {
           raven.situationalAwareness.situationalAware,
           getSituationalAwarenessStartTime(raven.situationalAwareness),
           getSituationalAwarenessPageDuration(raven.situationalAwareness),
+          false,
         ),
         of(
           new sourceExplorerActions.UpdateSourceExplorer({
@@ -1298,6 +1351,7 @@ export class SourceExplorerEffects {
     situAware: boolean,
     startTime: string,
     pageDuration: string,
+    graphAgain: boolean,
   ) {
     return this.fetchSubBands(
       treeBySourceId,
@@ -1323,60 +1377,67 @@ export class SourceExplorerEffects {
 
         if (newSubBands.length > 0) {
           newSubBands.forEach((subBand: RavenSubBand) => {
-            const activityBand = hasActivityBand(
-              currentBands,
-              subBand,
-              getPinLabel(treeBySourceId[sourceId].id, pins),
-            );
-
-            const existingBand =
+            const activityBands =
               treeBySourceId[sourceId].type === 'customGraphable'
-                ? false
-                : hasSourceId(currentBands, sourceId);
-
-            if (activityBand) {
-              actions.push(
-                new sourceExplorerActions.SubBandIdAdd(
-                  sourceId,
-                  activityBand.subBandId,
-                ),
-                new timelineActions.AddPointsToSubBand(
-                  sourceId,
-                  activityBand.bandId,
-                  activityBand.subBandId,
-                  subBand.points,
-                ),
-              );
-            } else if (existingBand) {
-              if (subBand.type === 'state') {
-                // Use the newly create state band with possibly updated possibleStates.
-                actions.push(
-                  new sourceExplorerActions.SubBandIdAdd(
-                    sourceId,
-                    subBand.id,
-                  ),
-                  new timelineActions.AddSubBand(
-                    sourceId,
-                    existingBand.bandId,
+                ? []
+                : activityBandsWithLegend(
+                    currentBands,
                     subBand,
-                  ),
-                  // Romove the old state band.
-                  new timelineActions.RemoveSubBand(existingBand.subBandId),
-                );
-              } else {
+                    getPinLabel(treeBySourceId[sourceId].id, pins),
+                  );
+
+            const existingBands =
+              treeBySourceId[sourceId].type === 'customGraphable' || graphAgain
+                ? []
+                : getBandsWithSourceId(currentBands, sourceId);
+
+            if (!graphAgain && activityBands.length > 0) {
+              activityBands.forEach(activityBand =>
                 actions.push(
                   new sourceExplorerActions.SubBandIdAdd(
                     sourceId,
-                    existingBand.subBandId,
+                    activityBand.subBandId,
                   ),
                   new timelineActions.AddPointsToSubBand(
                     sourceId,
-                    existingBand.bandId,
-                    existingBand.subBandId,
+                    activityBand.bandId,
+                    activityBand.subBandId,
                     subBand.points,
                   ),
-                );
-              }
+                ),
+              );
+            } else if (existingBands.length > 0) {
+              existingBands.forEach(existingBand => {
+                if (subBand.type === 'state') {
+                  // Use the newly create state band with possibly updated possibleStates.
+                  actions.push(
+                    new sourceExplorerActions.SubBandIdAdd(
+                      sourceId,
+                      subBand.id,
+                    ),
+                    new timelineActions.AddSubBand(
+                      sourceId,
+                      existingBand.bandId,
+                      subBand,
+                    ),
+                    // Romove the old state band.
+                    new timelineActions.RemoveSubBand(existingBand.subBandId),
+                  );
+                } else {
+                  actions.push(
+                    new sourceExplorerActions.SubBandIdAdd(
+                      sourceId,
+                      existingBand.subBandId,
+                    ),
+                    new timelineActions.AddPointsToSubBand(
+                      sourceId,
+                      existingBand.bandId,
+                      existingBand.subBandId,
+                      subBand.points,
+                    ),
+                  );
+                }
+              });
             } else if (
               bandId &&
               subBandId &&
@@ -1457,6 +1518,7 @@ export class SourceExplorerEffects {
           situAware,
           startTime,
           pageDuration,
+          false,
         ),
       );
     }
@@ -1493,6 +1555,7 @@ export class SourceExplorerEffects {
             situAware,
             startTime,
             pageDuration,
+            false,
           ),
         ];
       }

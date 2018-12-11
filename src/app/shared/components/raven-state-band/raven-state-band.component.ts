@@ -245,7 +245,7 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
       this.updateSubBand.emit({
         prop: 'label',
         subBandId: this.id,
-        value: this.label,
+        value: this.getLabel(),
       });
     }
 

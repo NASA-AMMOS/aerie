@@ -123,7 +123,6 @@ export class SourceExplorerComponent implements OnDestroy {
    */
   onAction(action: RavenSourceActionEvent): void {
     const { event, source } = action;
-
     if (event === 'apply-layout') {
       this.store.dispatch(
         new sourceExplorerActions.UpdateSourceExplorer({
@@ -143,6 +142,8 @@ export class SourceExplorerComponent implements OnDestroy {
       this.store.dispatch(
         new dialogActions.OpenFileImportDialog(source, '300px'),
       );
+    } else if (event === 'graph-again') {
+      this.store.dispatch(new sourceExplorerActions.GraphAgainEvent(source.id));
     } else if (event === 'pin-add') {
       this.store.dispatch(
         new dialogActions.OpenPinDialog('add', source, '250px'),
