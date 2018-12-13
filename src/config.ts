@@ -48,23 +48,22 @@ export const config: ConfigState = {
     version: version.version,
   },
   appModules: [
-    // TODO: Re-enable after release
-    // {
-    //   icon: 'event',
-    //   path: 'hawk',
-    //   title: 'Planning',
-    //   version: '0.0.1',
-    // },
-    // {
-    //   icon: 'dns',
-    //   path: 'hummingbird',
-    //   title: 'Sequencing',
-    //   version: '0.0.1',
-    // },
+    {
+      icon: 'event',
+      path: 'hawk',
+      title: 'Planning',
+      version: '0.0.1',
+    },
+    {
+      icon: 'dns',
+      path: 'hummingbird',
+      title: 'Sequencing',
+      version: '0.0.1',
+    },
     {
       icon: 'poll',
       path: 'raven',
-      title: 'Raven',
+      title: 'Visualization',
       version: version.packageJsonVersion,
     },
   ],
