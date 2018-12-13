@@ -1,4 +1,4 @@
-package gov.nasa.jpl.mpsa.activities;
+package gov.nasa.jpl.mpsa.old;
 
 
 import gov.nasa.jpl.mpsa.time.Time;
@@ -7,14 +7,14 @@ import java.util.*;
 import java.util.AbstractMap.SimpleImmutableEntry;
 
 public class ActivityInstanceList {
-    private List<Activity> allActivities;
+    private List<ActivityType> allActivities;
 
     // we keep a main activity instance list with all activities in it in this class
     // however we do make other instances of this class for filtering activities for writing outfiles
     private static ActivityInstanceList instance = null;
 
     public ActivityInstanceList() {
-        allActivities = new ArrayList<Activity>();
+        allActivities = new ArrayList<ActivityType>();
     }
 
     public static ActivityInstanceList getActivityList() {
@@ -26,7 +26,7 @@ public class ActivityInstanceList {
 
     public void prepareActivitiesForModeling() {
         Collections.sort(allActivities);
-        for (Activity act : allActivities) {
+        for (ActivityType act : allActivities) {
             // we want each condition to evaluate by default to its profile
             act.setInitialCondition();
         }
@@ -40,12 +40,12 @@ public class ActivityInstanceList {
     }
 
     public void stopAllSchedulers() {
-        for (Activity act : allActivities) {
+        for (ActivityType act : allActivities) {
             act.stopScheduling();
         }
     }
 
-    public void add(Activity act) {
+    public void add(ActivityType act) {
         allActivities.add(act);
     }
 
@@ -54,7 +54,7 @@ public class ActivityInstanceList {
      *
      * @param act
      */
-    public void remove(Activity act) {
+    public void remove(ActivityType act) {
         allActivities.remove(act);
     }
 
@@ -83,7 +83,7 @@ public class ActivityInstanceList {
         allActivities = new ArrayList<>();
     }
 
-    public Activity get(int i) {
+    public ActivityType get(int i) {
         return allActivities.get(i);
     }
 
@@ -93,7 +93,7 @@ public class ActivityInstanceList {
      * @param activityID
      * @return
      */
-    public Activity findActivityByID(UUID activityID) {
+    public ActivityType findActivityByID(UUID activityID) {
         for (int i = 0; i < allActivities.size(); i++) {
             // if the input id matches the id of the activity then return the activity
             if (allActivities.get(i).getIDString().equals(activityID.toString())) {
@@ -145,12 +145,12 @@ public class ActivityInstanceList {
      * is true if the activity is a start and false if it is an end, and the activity
      * is the one that either starts or ends at that time
      */
-    public List<Map.Entry<Time, Map.Entry<Boolean, Activity>>> createListOfActivityBeginAndEndTimes() {
-        ArrayList<Map.Entry<Time, Map.Entry<Boolean, Activity>>> listOfAllBeginAndEndTimes = new ArrayList();
+    public List<Map.Entry<Time, Map.Entry<Boolean, ActivityType>>> createListOfActivityBeginAndEndTimes() {
+        ArrayList<Map.Entry<Time, Map.Entry<Boolean, ActivityType>>> listOfAllBeginAndEndTimes = new ArrayList();
         for (int i = 0; i < allActivities.size(); i++) {
-            Activity ofInterest = allActivities.get(i);
-            listOfAllBeginAndEndTimes.add(new SimpleImmutableEntry<Time, Map.Entry<Boolean, Activity>>(ofInterest.getStart(), new SimpleImmutableEntry<Boolean, Activity>(true, ofInterest)));
-            listOfAllBeginAndEndTimes.add(new SimpleImmutableEntry<Time, Map.Entry<Boolean, Activity>>(ofInterest.getEnd(), new SimpleImmutableEntry<Boolean, Activity>(false, ofInterest)));
+            ActivityType ofInterest = allActivities.get(i);
+            listOfAllBeginAndEndTimes.add(new SimpleImmutableEntry<Time, Map.Entry<Boolean, ActivityType>>(ofInterest.getStart(), new SimpleImmutableEntry<Boolean, ActivityType>(true, ofInterest)));
+            listOfAllBeginAndEndTimes.add(new SimpleImmutableEntry<Time, Map.Entry<Boolean, ActivityType>>(ofInterest.getEnd(), new SimpleImmutableEntry<Boolean, ActivityType>(false, ofInterest)));
         }
         // now we have to sort this list since we have no idea when end times are
         Collections.sort(listOfAllBeginAndEndTimes, Map.Entry.comparingByKey());

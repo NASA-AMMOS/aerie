@@ -1,4 +1,4 @@
-package gov.nasa.jpl.mpsa.activities;
+package gov.nasa.jpl.mpsa.old;
 
 import gov.nasa.jpl.mpsa.conditions.Condition;
 
@@ -15,7 +15,7 @@ public interface ActivityDefinition {
         System.err.println("Nothing to decompose");
     }
 
-    default void model() throws InterruptedException {
+    default void effects() throws InterruptedException {
         System.err.println("No model defined");
     }
 

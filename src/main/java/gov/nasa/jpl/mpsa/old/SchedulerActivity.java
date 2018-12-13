@@ -1,4 +1,4 @@
-package gov.nasa.jpl.mpsa.activities;
+package gov.nasa.jpl.mpsa.old;
 
 import gov.nasa.jpl.mpsa.conditions.Condition;
 
