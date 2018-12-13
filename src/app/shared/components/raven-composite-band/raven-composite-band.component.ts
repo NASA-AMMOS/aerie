@@ -454,8 +454,6 @@ export class RavenCompositeBandComponent
       const band = this.ctlCompositeBand.bands[i];
 
       if (band.type === 'resource') {
-        band.minLimit = min;
-        band.maxLimit = max;
         band.maxPaintValue = max;
         band.minPaintValue = min;
         band.logTicks = this.compositeLogTicks;
@@ -735,8 +733,6 @@ export class RavenCompositeBandComponent
           ctlBand.autoScale = this.getResourceAutoScale(ravenSubBand.autoScale);
           ctlBand.logTicks = ravenSubBand.logTicks;
           ctlBand.scientificNotation = ravenSubBand.scientificNotation;
-          ctlBand.minLimit = null;
-          ctlBand.maxLimit = null;
           // Clear tickValues here to make sure computeMinMaxValues works properly for logTicks.
           ctlBand.tickValues = [];
           ctlBand.computeMinMaxValues();
