@@ -1,6 +1,6 @@
 package gov.nasa.jpl.mpsa.time;
 
-import gov.nasa.jpl.input.ConvertableFromString;
+import gov.nasa.jpl.mpsa.utilities.ConvertableFromString;
 import spice.basic.CSPICE;
 import spice.basic.SpiceErrorException;
 
