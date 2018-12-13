@@ -102,6 +102,12 @@ export class RavenResourceBandComponent
   logTicks: boolean;
 
   @Input()
+  maxLimit: number;
+
+  @Input()
+  minLimit: number;
+
+  @Input()
   name: string;
 
   @Input()
@@ -322,12 +328,16 @@ export class RavenResourceBandComponent
       labelFont: this.labelFont,
       labelFontSize: this.labelFontSize,
       logTicks: this.logTicks,
+      maxLimit: this.maxLimit,
+      minLimit: this.minLimit,
       name: this.name,
       onFormatTickValue: this.onFormatTickValue.bind(this),
       onGetInterpolatedTooltipText: this.onGetInterpolatedTooltipText.bind(
         this,
       ),
       painter: new (window as any).ResourcePainter({
+        // no border within paint units
+        borderWidth: 0,
         color: colorHexToRgbArray(this.color),
         fill: this.fill,
         fillColor: colorHexToRgbArray(this.fillColor),

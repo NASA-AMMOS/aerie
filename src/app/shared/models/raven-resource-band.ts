@@ -29,7 +29,9 @@ export interface RavenResourceBand {
   labelPin: string;
   labelUnit: string;
   logTicks: boolean;
+  maxLimit: number | null;
   maxTimeRange: RavenTimeRange;
+  minLimit: number | null;
   name: string;
   parentUniqueId: string | null;
   points: RavenResourcePoint[];
