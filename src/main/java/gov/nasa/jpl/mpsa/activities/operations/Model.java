@@ -6,4 +6,6 @@ public class Model implements Operation {
     public void doOperation(){
         // TODO:
     }
+
+
 }
