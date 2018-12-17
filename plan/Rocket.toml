@@ -1,0 +1,2 @@
+[global.databases]
+plan_service  = { url = "mongodb://localhost:27017" }
