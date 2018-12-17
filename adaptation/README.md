@@ -18,7 +18,7 @@ The services are written in Java 1.8 using the following technologies:
 
 
 
-The quickest way to build and run the services is using Maven to compile the applciation, run the tests and generate the .jar that will be executed:
+The quickest way to build and run the services is using Maven to compile the applciation, run the tests and generate the .jar that will be executed. In order to resolve some dependencies you will need to copy the settings.xml file into your `~/.m2/` directory (you can create it if it doesn't already exist). Then run the following commands:
 
 ```shell
 # Go to the location of the adaptation microservice
