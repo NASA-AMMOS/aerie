@@ -53,8 +53,8 @@ import {
 
 import {
   activityBandsWithLegend,
-  getBandsWithSourceId,
   getActivityPointInBand,
+  getBandsWithSourceId,
   getCustomFilterForLabel,
   getCustomFiltersBySourceId,
   getFormattedSourceUrl,
@@ -141,7 +141,7 @@ export class SourceExplorerEffects {
             situationalAwareness.situationalAware,
             getSituationalAwarenessStartTime(situationalAwareness),
             getSituationalAwarenessPageDuration(situationalAwareness),
-            false,
+            true,
           ),
           of(new sourceExplorerActions.LoadErrorsDisplay()),
           of(
@@ -1309,7 +1309,19 @@ export class SourceExplorerEffects {
                 state.raven.sourceExplorer.filtersByTarget,
                 state.raven.sourceExplorer.treeBySourceId,
                 sourceId,
-                bands,
+                bands.map(band => ({
+                  ...band,
+                  subBands: band.subBands.map((subBand: RavenSubBand) => ({
+                    ...subBand,
+                    // cleanup source id by removing args
+                    sourceIds: subBand.sourceIds.map(
+                      srcId =>
+                        srcId.indexOf('?') > -1
+                          ? srcId.substring(0, srcId.indexOf('?'))
+                          : srcId,
+                    ),
+                  })),
+                })),
                 state.config.raven.defaultBandSettings,
                 pins,
                 state.raven.situationalAwareness.situationalAware,
@@ -1385,12 +1397,9 @@ export class SourceExplorerEffects {
                     subBand,
                     getPinLabel(treeBySourceId[sourceId].id, pins),
                   );
-
-            const existingBands =
-              treeBySourceId[sourceId].type === 'customGraphable' || graphAgain
-                ? []
-                : getBandsWithSourceId(currentBands, sourceId);
-
+            const existingBands = graphAgain
+              ? []
+              : getBandsWithSourceId(currentBands, sourceId);
             if (!graphAgain && activityBands.length > 0) {
               activityBands.forEach(activityBand =>
                 actions.push(
