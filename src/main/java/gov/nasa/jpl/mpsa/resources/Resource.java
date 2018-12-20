@@ -200,7 +200,7 @@ public class Resource<V extends Comparable> {
         }
 
         // now check if when assigning a value it is an allowed one
-        if(this.allowedValues.contains(value)) {
+        if(this.allowedValues != null && this.allowedValues.contains(value)) {
             throw new RuntimeException("Value not allowed");
         }
 

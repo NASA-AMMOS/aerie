@@ -1,6 +1,6 @@
 package gov.nasa.jpl.mpsa.activities;
 
-import gov.nasa.jpl.mpsa.activities.operations.Operation;
+import gov.nasa.jpl.mpsa.activities.operations.AdaptationModel;
 import gov.nasa.jpl.mpsa.time.Time;
 
 import java.util.ArrayList;
@@ -13,7 +13,8 @@ public class ActivityType {
     private List<Parameter> parameters= new ArrayList<Parameter>();
     private String name;
     private List<ActivityType> relationsips = new ArrayList<ActivityType>();
-    private Operation operation;
+
+    private AdaptationModel model;
 
     public ActivityType() {}
     // Should we add a start time by default?
@@ -26,9 +27,13 @@ public class ActivityType {
         this.addParameter(start);
     }
 
-    // This us used to do modeling, decomposition, expansion, etc...
-    public void executeOperation(Operation operation){
-        operation.doOperation();
+    public void setModel(AdaptationModel model){
+        this.model = model;
+    }
+
+    public void executeModel() {
+        this.model.setup();
+        this.model.execute();
     }
 
     public void addParameter(Parameter parameter) {
