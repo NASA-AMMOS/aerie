@@ -186,6 +186,7 @@ export function toActivityBands(
   Object.keys(legends).forEach(legend => {
     const activityBand: RavenActivityBand = {
       activityHeight: isMessageTypeActivity(legends[legend][0]) ? 5 : 20,
+      activityLabelFontSize: 9,
       activityStyle: isMessageTypeActivity(legends[legend][0]) ? 2 : 1,
       addTo: false,
       alignLabel: 3,
@@ -386,6 +387,7 @@ export function toStateBand(
     showStateChangeTimes: false,
     showTooltip: true,
     sourceIds: [sourceId],
+    stateLabelFontSize: 9,
     tableColumns: [],
     type: 'state',
   };
