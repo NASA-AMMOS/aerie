@@ -141,7 +141,7 @@ export class RavenAppComponent implements OnDestroy {
     return this.store.pipe(select(getVersion)).pipe(
       map(
         v => `
-        Raven ${v.version} - ${v.branch} - ${v.commit}\n
+        Raven ${v.version}\n
         Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED.
         United States Government sponsorship acknowledged.
         Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.\n

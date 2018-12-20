@@ -34,12 +34,12 @@ export class DialogEffects {
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     exhaustMap(({ action, state }) => {
-      const { branch, commit, version } = state.config.app;
+      const { version } = state.config.app;
 
       this.dialog.open(NestAboutDialogComponent, {
         data: {
           modules: state.config.appModules,
-          version: `Nest ${version} - ${branch} - ${commit}`,
+          version: `Nest ${version}`,
         },
         width: action.width,
       });

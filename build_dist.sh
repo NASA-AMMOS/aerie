@@ -19,7 +19,7 @@ time npm run build-prod-mpsserver
 
 # tar up dist
 cd dist
-tar -czf raven2-$SEQBASETAG.tar.gz `ls -A`
+tar -czf raven-$SEQBASETAG.tar.gz `ls -A`
 cd ..
 
 # run tests

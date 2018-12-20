@@ -15,8 +15,7 @@ import { version } from './environments/version';
 export interface ConfigState {
   app: {
     baseUrl: string;
-    branch: string;
-    commit: string;
+    packageJsonVersion: string;
     production: boolean;
     version: string;
   };
@@ -44,30 +43,28 @@ export interface ConfigState {
 export const config: ConfigState = {
   app: {
     baseUrl: environment.baseUrl,
-    branch: version.branch,
-    commit: version.commit,
+    packageJsonVersion: version.packageJsonVersion,
     production: environment.production,
     version: version.version,
   },
   appModules: [
-    // TODO: Re-enable after release
-    // {
-    //   icon: 'event',
-    //   path: 'hawk',
-    //   title: 'Planning',
-    //   version: '0.0.1',
-    // },
-    // {
-    //   icon: 'dns',
-    //   path: 'hummingbird',
-    //   title: 'Sequencing',
-    //   version: '0.0.1',
-    // },
+    {
+      icon: 'event',
+      path: 'hawk',
+      title: 'Planning',
+      version: '0.0.1',
+    },
+    {
+      icon: 'dns',
+      path: 'hummingbird',
+      title: 'Sequencing',
+      version: '0.0.1',
+    },
     {
       icon: 'poll',
       path: 'raven',
-      title: 'Raven',
-      version: '2.0.0',
+      title: 'Visualization',
+      version: version.packageJsonVersion,
     },
   ],
   hummingbird: {},
