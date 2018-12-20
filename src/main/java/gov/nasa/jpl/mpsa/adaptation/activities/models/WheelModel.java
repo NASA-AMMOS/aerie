@@ -27,7 +27,7 @@ public class WheelModel implements AdaptationModel {
         for(int i= 0; i<90; i++) {
             try {
                 Thread.sleep(1000);
-                w1.setValue(i);
+                w1.setValue(x + i);
                 System.out.println("moved by 1 deg to " + i);
             } catch (InterruptedException e) {
                 e.printStackTrace();
