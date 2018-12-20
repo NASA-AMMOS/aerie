@@ -395,9 +395,9 @@ export function getActivityPointInBand(
       for (let k = 0, lll = subBand.points.length; k < lll; ++k) {
         if (subBand.points[k].activityId === activityId) {
           return {
+            activityPoint: subBand.points[k],
             bandId: bands[i].id,
             subBandId: subBand.id,
-            activityPoint: subBand.points[k],
           };
         }
       }
@@ -412,7 +412,9 @@ export function getActivityPointInBand(
  * This adds the start/end times to ensure uniqueness.
  */
 export function getUniqueActivityId(point: RavenActivityPoint): string {
-  return `${point.activityId}-${point.start}-${point.end}`;
+  return point.activityId
+    ? `${point.activityId}-${point.start}-${point.end}`
+    : uniqueId();
 }
 
 /**
