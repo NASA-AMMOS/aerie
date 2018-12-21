@@ -1,7 +1,7 @@
-package gov.nasa.jpl.mpsa.adaptation.activities;
+package gov.nasa.jpl.mpsa.examples.adaptationExample.activities;
 
-import gov.nasa.jpl.mpsa.adaptation.activities.models.ExampleModel;
-import gov.nasa.jpl.mpsa.adaptation.activities.models.WheelModel;
+import gov.nasa.jpl.mpsa.examples.adaptationExample.activities.models.ExampleModel;
+import gov.nasa.jpl.mpsa.examples.adaptationExample.activities.models.WheelModel;
 import gov.nasa.jpl.mpsa.resources.Resource;
 import gov.nasa.jpl.mpsa.resources.ResourcesContainer;
 

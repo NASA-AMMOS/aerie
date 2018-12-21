@@ -1,4 +1,4 @@
-package gov.nasa.jpl.mpsa.adaptation.activities.models;
+package gov.nasa.jpl.mpsa.examples.adaptationExample.activities.models;
 
 import gov.nasa.jpl.mpsa.activities.operations.AdaptationModel;
 import gov.nasa.jpl.mpsa.resources.Resource;

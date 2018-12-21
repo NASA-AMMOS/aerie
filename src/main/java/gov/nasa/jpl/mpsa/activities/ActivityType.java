@@ -1,6 +1,7 @@
 package gov.nasa.jpl.mpsa.activities;
 
 import gov.nasa.jpl.mpsa.activities.operations.AdaptationModel;
+import gov.nasa.jpl.mpsa.resources.ResourcesContainer;
 import gov.nasa.jpl.mpsa.time.Time;
 
 import java.util.ArrayList;
@@ -34,6 +35,9 @@ public class ActivityType {
     public void executeModel() {
         this.model.setup();
         this.model.execute();
+        // dispatch an event|message with the serialized resource container state:
+        // sendMessge(ResourcesContainer.getInstance().serialize());
+
     }
 
     public void addParameter(Parameter parameter) {

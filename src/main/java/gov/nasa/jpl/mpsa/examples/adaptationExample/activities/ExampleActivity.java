@@ -1,10 +1,9 @@
-package gov.nasa.jpl.mpsa.adaptation.activities;
+package gov.nasa.jpl.mpsa.examples.adaptationExample.activities;
 
 import gov.nasa.jpl.mpsa.activities.ActivityType;
 import gov.nasa.jpl.mpsa.activities.Parameter;
 import gov.nasa.jpl.mpsa.activities.operations.AdaptationModel;
-import gov.nasa.jpl.mpsa.adaptation.activities.models.ExampleModel;
-import gov.nasa.jpl.mpsa.time.Time;
+import gov.nasa.jpl.mpsa.examples.adaptationExample.activities.models.ExampleModel;
 
 public class ExampleActivity extends ActivityType {
 

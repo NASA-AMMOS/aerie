@@ -194,6 +194,11 @@ public class Resource<V extends Comparable> {
     public void clearHistory() { resourceHistory = new TreeMap<Time, V>(); }
 
     public void setValue(V value) {
+
+        // TODO: We want to implement a "dirty" flag that tells us if the value has changed.
+        // This way, when we have to serialize this object to send it through the wire in a message, we minimize the
+        // amount of data generated
+
         // if an activity tries to set a frozen resource, we don't know what to do right now, so just die
         if (this.frozen) {
             throw new RuntimeException("Tried to set frozen resource");
