@@ -10,9 +10,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map } from 'rxjs/operators';
-import { RavenAppState } from '../../raven/raven-store';
-import { MpsServerSource } from '../models';
-import { getState, importState, toRavenSources } from '../util';
+import { MpsServerSource, RavenState } from '../models';
+import { importState, toRavenSources } from '../util';
 
 @Injectable({
   providedIn: 'root',
@@ -64,10 +63,17 @@ export class MpsServerService {
    * Save state to an MPS Server source.
    * Exports state before saving.
    */
-  saveState(sourceUrl: string, name: string, state: RavenAppState) {
+  saveState(sourceUrl: string, name: string, state: RavenState) {
     return this.http.put(
       `${sourceUrl}/${name}?timeline_type=state`,
-      getState(name, state),
+      state,
+    );
+  }
+
+  updateState(stateUrl: string, state: RavenState) {
+    return this.http.put(
+      `${stateUrl}?timeline_type=state`,
+      state,
     );
   }
 }

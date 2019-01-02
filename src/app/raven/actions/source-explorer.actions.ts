@@ -62,6 +62,7 @@ export enum SourceExplorerActionTypes {
   UpdateGraphAfterFilterAdd = '[sourceExplorer] update_graph_after_filter_add',
   UpdateGraphAfterFilterRemove = '[sourceExplorer] update_graph_after_filter_remove',
   UpdateSourceExplorer = '[sourceExplorer] update_source_explorer',
+  UpdateState = '[sourceExplorer] update_state',
   UpdateTreeSource = '[sourceExplorer] update_tree_source',
 }
 
@@ -306,6 +307,10 @@ export class UpdateSourceExplorer implements Action {
   constructor(public update: StringTMap<BaseType>) {}
 }
 
+export class UpdateState implements Action {
+  readonly type = SourceExplorerActionTypes.UpdateState;
+}
+
 export class UpdateTreeSource implements Action {
   readonly type = SourceExplorerActionTypes.UpdateTreeSource;
 
@@ -353,4 +358,5 @@ export type SourceExplorerAction =
   | UpdateGraphAfterFilterAdd
   | UpdateGraphAfterFilterRemove
   | UpdateSourceExplorer
+  | UpdateState
   | UpdateTreeSource;

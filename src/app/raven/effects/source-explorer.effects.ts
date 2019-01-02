@@ -49,6 +49,7 @@ import {
   SourceExplorerActionTypes,
   UpdateGraphAfterFilterAdd,
   UpdateGraphAfterFilterRemove,
+  UpdateState,
 } from '../actions/source-explorer.actions';
 
 import {
@@ -62,6 +63,8 @@ import {
   getSituationalAwarenessPageDuration,
   getSituationalAwarenessStartTime,
   getSourceIds,
+  getSourceNameFromId,
+  getState,
   getTargetFilters,
   hasActivityBandForFilterTarget,
   isAddTo,
@@ -252,6 +255,7 @@ export class SourceExplorerEffects {
           updatedBands,
           initialSources,
           savedState,
+          state.raven.sourceExplorer.currentStateId,
           Object.values(action.update.pins),
         ),
       );
@@ -339,6 +343,7 @@ export class SourceExplorerEffects {
           bands,
           initialSources,
           savedState,
+          state.raven.sourceExplorer.currentStateId,
           Object.values(action.update.pins),
         ),
       );
@@ -355,6 +360,7 @@ export class SourceExplorerEffects {
     map(([action, state]) => ({ action, state })),
     concatMap(({ action, state }) =>
       forkJoin([
+        of(action),
         of(state),
         this.mpsServerService.fetchState(action.sourceUrl),
         this.mpsServerService.fetchNewSources(
@@ -364,13 +370,16 @@ export class SourceExplorerEffects {
         ),
       ]),
     ),
-    map(([state, savedState, initialSources]) => ({
+    map(([action, state, savedState, initialSources]) => ({
+      action,
       initialSources,
       savedState,
       state,
     })),
-    concatMap(({ initialSources, savedState, state }) =>
-      concat(...this.loadState(state, initialSources, savedState)),
+    concatMap(({ action, initialSources, savedState, state }) =>
+      concat(
+        ...this.loadState(state, initialSources, savedState, action.sourceId),
+      ),
     ),
   );
 
@@ -777,13 +786,17 @@ export class SourceExplorerEffects {
     map(([action, state]) => ({ action, state })),
     concatMap(({ state, action }) =>
       this.mpsServerService
-        .saveState(action.source.url, action.name, state)
+        .saveState(action.source.url, action.name, getState(action.name, state))
         .pipe(
           map(
             () =>
               new sourceExplorerActions.UpdateSourceExplorer({
-                fetchPending: false,
+                currentState: getState(action.name, state),
+                currentStateId: `${action.source.id}/${action.name}`,
               }),
+            new sourceExplorerActions.UpdateSourceExplorer({
+              fetchPending: false,
+            }),
           ),
         ),
     ),
@@ -974,6 +987,38 @@ export class SourceExplorerEffects {
     ),
   );
 
+  @Effect()
+  updateState$: Observable<Action> = this.actions$.pipe(
+    ofType<UpdateState>(SourceExplorerActionTypes.UpdateState),
+    withLatestFrom(this.store$),
+    map(([, state]) => ({ state })),
+    concatMap(({ state }) =>
+      this.mpsServerService
+        .updateState(
+          `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${state.raven.sourceExplorer.currentStateId}`,
+          // action.stateUrl,
+          getState(
+            getSourceNameFromId(state.raven.sourceExplorer.currentStateId),
+            state,
+          ),
+        )
+        .pipe(
+          map(
+            () =>
+              new sourceExplorerActions.UpdateSourceExplorer({
+                currentState: getState(
+                  getSourceNameFromId(state.raven.sourceExplorer.currentStateId),
+                  state,
+                ),
+              }),
+            new sourceExplorerActions.UpdateSourceExplorer({
+              fetchPending: false,
+            }),
+          ),
+        ),
+    ),
+  );
+
   /**
    * Helper. Returns a stream of actions that need to occur when expanding a source explorer source.
    */
@@ -1143,14 +1188,15 @@ export class SourceExplorerEffects {
     bands: RavenCompositeBand[],
     initialSources: RavenSource[],
     savedState: RavenState,
+    sourceId: string,
     pins: RavenPin[],
   ) {
     return [
       of(
         new sourceExplorerActions.UpdateSourceExplorer({
           ...fromSourceExplorer.initialState,
-          currentState: state.raven.sourceExplorer.currentState,
-          currentStateId: state.raven.sourceExplorer.currentStateId,
+          currentState: savedState,
+          currentStateId: sourceId,
           fetchPending: true,
         }),
       ),
@@ -1191,13 +1237,14 @@ export class SourceExplorerEffects {
     state: RavenAppState,
     initialSources: RavenSource[],
     savedState: RavenState,
+    sourceId: string,
   ): Observable<Action>[] {
     return [
       of(
         new sourceExplorerActions.UpdateSourceExplorer({
           ...fromSourceExplorer.initialState,
-          currentState: state.raven.sourceExplorer.currentState,
-          currentStateId: state.raven.sourceExplorer.currentStateId,
+          currentState: savedState,
+          currentStateId: sourceId,
           fetchPending: true,
         }),
       ),

@@ -113,6 +113,8 @@ export class ConfigEffects {
       const layout = state.raven.sourceExplorer.layout;
       const shareableName = state.raven.sourceExplorer.shareableName;
       const statePath = state.raven.sourceExplorer.statePath;
+      const layoutPath = state.raven.sourceExplorer.layoutPath;
+      const sourcePath = state.raven.sourceExplorer.sourcePath;
       if (shareableName) {
         return [
           ...this.loadShareableLink(
@@ -122,10 +124,11 @@ export class ConfigEffects {
           ),
         ];
       } else {
+        console.log('loadLayout & laodState');
         // Otherwise use other query parameters to load an app layout and/or state.
         return [
           ...this.loadLayout(state.raven.layout, layout),
-          ...this.loadState(state.config, statePath),
+          ...this.loadState(state.config, statePath, layoutPath, sourcePath),
         ];
       }
     }),
@@ -177,7 +180,7 @@ export class ConfigEffects {
 
     return [
       ...this.loadLayout(layoutState, 'minimal'),
-      ...this.loadState(configState, statePath),
+      ...this.loadState(configState, statePath, '', ''),
     ];
   }
 
@@ -185,7 +188,12 @@ export class ConfigEffects {
    * Load a state (via ApplyState) if a state path exists.
    * Note the state path is just a source id, we call it state in the URL since it's more clear to the user what it is.
    */
-  loadState(configState: ConfigState, statePath: string): Action[] {
+  loadState(
+    configState: ConfigState,
+    statePath: string,
+    layoutPath: string,
+    sourcePath: string,
+  ): Action[] {
     if (statePath) {
       return [
         new sourceExplorerActions.ApplyState(
@@ -194,6 +202,14 @@ export class ConfigEffects {
           }${statePath}`,
           statePath,
         ),
+      ];
+    } else if (layoutPath && sourcePath) {
+      // apply layout to sourcePath
+    } else if (layoutPath) {
+      return [
+        new sourceExplorerActions.UpdateSourceExplorer({
+          currentStateId: layoutPath,
+        }),
       ];
     }
     return [];

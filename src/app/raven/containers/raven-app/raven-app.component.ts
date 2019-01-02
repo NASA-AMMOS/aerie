@@ -17,12 +17,14 @@ import {
 import { select, Store } from '@ngrx/store';
 import { combineLatest, Observable, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
-import { RavenTimeRange } from '../../../shared/models';
-import { getVersion } from '../../../shared/selectors';
+import { RavenState, RavenTimeRange, StringTMap } from '../../../shared/models';
+import { getBaseUrl, getUrls, getVersion } from '../../../shared/selectors';
 import { toCompositeBand, toDividerBand } from '../../../shared/util';
 import { SourceExplorerState } from '../../reducers/source-explorer.reducer';
 
 import {
+  getCurrentState,
+  getCurrentStateId,
   getLayoutPending,
   getMode,
   getSelectedBandId,
@@ -34,6 +36,7 @@ import {
 import * as configActions from '../../../shared/actions/config.actions';
 import * as dialogActions from '../../actions/dialog.actions';
 import * as layoutActions from '../../actions/layout.actions';
+import * as sourceExplorerActions from '../../actions/source-explorer.actions';
 import * as timelineActions from '../../actions/timeline.actions';
 
 @Component({
@@ -44,11 +47,19 @@ import * as timelineActions from '../../actions/timeline.actions';
 })
 export class RavenAppComponent implements OnDestroy {
   about$: Observable<string>;
+  urls$: Observable<StringTMap<string>>;
+  baseUrl$: Observable<string>;
+  currentState$: Observable<RavenState | null>;
+  currentStateId$: Observable<string>;
   showProgressBar$: Observable<boolean>;
   mode$: Observable<string>;
   selectedBandId$: Observable<string>;
 
   about: string;
+  apiUrl: string;
+  baseUrl: string;
+  currentState: RavenState | null;
+  currentStateId: string;
   mode: string;
   selectedBandId: string;
 
@@ -56,6 +67,10 @@ export class RavenAppComponent implements OnDestroy {
 
   constructor(private store: Store<SourceExplorerState>) {
     this.about$ = this.getAbout();
+    this.urls$ = this.store.pipe(select(getUrls));
+    this.baseUrl$ = this.store.pipe(select(getBaseUrl));
+    this.currentState$ = this.store.pipe(select(getCurrentState));
+    this.currentStateId$ = this.store.pipe(select(getCurrentStateId));
     this.mode$ = this.store.pipe(select(getMode));
     this.showProgressBar$ = this.getShowProgressBar();
     this.selectedBandId$ = this.store.pipe(select(getSelectedBandId));
@@ -63,6 +78,22 @@ export class RavenAppComponent implements OnDestroy {
     this.about$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(about => (this.about = about));
+
+    this.baseUrl$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(baseUrl => (this.baseUrl = baseUrl));
+
+    this.urls$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(urls => (this.apiUrl = urls.apiUrl));
+
+    this.currentState$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(currentState => (this.currentState = currentState));
+
+    this.currentStateId$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(currentStateId => (this.currentStateId = currentStateId));
 
     this.mode$
       .pipe(takeUntil(this.ngUnsubscribe))
@@ -198,6 +229,23 @@ export class RavenAppComponent implements OnDestroy {
 
   onReset() {
     this.store.dispatch(new timelineActions.ResetViewTimeRange());
+  }
+
+  onApplyLayout() {
+    this.store.dispatch(new layoutActions.ToggleApplyLayoutDrawerEvent(true));
+  }
+
+  onApplyState() {
+    this.store.dispatch(
+      new sourceExplorerActions.ApplyState(
+        `${this.baseUrl}/${this.apiUrl}${this.currentStateId}`,
+        this.currentStateId,
+      ),
+    );
+  }
+
+  onUpdateState() {
+    this.store.dispatch(new sourceExplorerActions.UpdateState());
   }
 
   onZoomIn() {

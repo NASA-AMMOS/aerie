@@ -20,6 +20,7 @@ import {
   getSortedChildIds,
   getSourceIds,
   getSourceIdsByLabelInBands,
+  getSourceNameFromId,
   getTargetFilters,
   toRavenCustomMetadata,
   toRavenFileMetadata,
@@ -344,6 +345,22 @@ describe('source.ts', () => {
       ).toEqual({
         ips: ['/DKF/command'],
       });
+    });
+  });
+
+  describe('getSourceNameFromId', () => {
+    it(`should return the name of the source for a given source id`, () => {
+      expect(getSourceNameFromId('/a/b/c')).toEqual(
+        'c',
+      );
+
+      expect(getAllChildIds(treeBySourceId, '/child/1')).toEqual([
+        '/child/child/0',
+      ]);
+    });
+
+    it(`should return an empty list for a source id that does not exist in the tree`, () => {
+      expect(getAllChildIds(treeBySourceId, 'nonExistentId')).toEqual([]);
     });
   });
 

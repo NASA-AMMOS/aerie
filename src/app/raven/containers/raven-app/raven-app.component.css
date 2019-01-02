@@ -41,6 +41,11 @@
   margin-top: -3px;
 }
 
+.name {
+  font-size: 9px;
+  padding-right: 10px;
+}
+
 mat-progress-bar {
   height: 3px;
   z-index: 10;

@@ -34,9 +34,10 @@ export class RouterEffects {
     mergeMap(({ state, action }) => {
       const { queryParams } = action.payload.routerState.root;
 
-      const layout = queryParams.layout;
+      const layoutPath = queryParams.layout;
       const shareableName = queryParams.s;
       const statePath = queryParams.state;
+      const sourcePath = queryParams.source;
 
       const actions: Action[] = [];
       // Get project config.
@@ -55,7 +56,10 @@ export class RouterEffects {
       } else {
         // Otherwise use other query parameters to load an app layout and/or state.
         actions.push(
-          new sourceExplorerActions.UpdateSourceExplorer({ layout }),
+          new sourceExplorerActions.UpdateSourceExplorer({ layoutPath }),
+        );
+        actions.push(
+          new sourceExplorerActions.UpdateSourceExplorer({ sourcePath }),
         );
         actions.push(
           new sourceExplorerActions.UpdateSourceExplorer({ statePath }),

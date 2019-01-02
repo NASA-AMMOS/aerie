@@ -1,6 +1,40 @@
 <raven-app-header title="Visualization" (menuClicked)="onMenuClicked()">
   <span class="spacer"></span>
 
+  <button
+    *ngIf="currentStateId !== ''"
+    mat-icon-button
+    matTooltip="Apply State"
+    (click)="onApplyState()">
+    <mat-icon
+      aria-label="Apply State">
+      photo
+    </mat-icon>
+  </button>
+
+  <button
+    *ngIf="currentStateId !== ''"
+    mat-icon-button
+    matTooltip="Apply Layout"
+    (click)="onApplyLayout()">
+    <mat-icon
+      aria-label="Apply Layout">
+      playlist_play
+    </mat-icon>
+  </button>
+
+  <button
+    *ngIf="currentStateId !== ''"
+    mat-icon-button
+    matTooltip="Update State"
+    (click)="onUpdateState()">
+    <mat-icon
+      aria-label="Update State">
+      photo_library
+    </mat-icon>
+  </button>
+
+  <span class="name" *ngIf="currentStateId !== ''">State: {{currentStateId}}</span>
   <raven-pan-to-duration
     (panTo)="onPanTo($event)">
   </raven-pan-to-duration>
