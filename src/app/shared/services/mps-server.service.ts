@@ -53,7 +53,7 @@ export class MpsServerService {
    */
   removeSource(sourceUrl: string, sourceId: string) {
     const url = sourceUrl.replace(
-      /list_(generic|.*custom.*)-mongodb/i,
+      /list_.*-mongodb/i,
       'fs-mongodb',
     );
     return this.http.delete(url, { responseType: 'text' });
