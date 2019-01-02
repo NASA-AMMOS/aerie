@@ -35,8 +35,6 @@ public class SpacecraftModel {
         // now, I should be able to see it in the list of resources for the representation of the spacecraft
         System.out.println("Battery: " + myResources.getResourceByName("primaryBattery"));
 
-
-
         // This is mocking the invokation from the simulation service
         // Now run the simulation of the ExampleActivity
         ExampleActivity exampleActivity = new ExampleActivity();
