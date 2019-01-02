@@ -47,8 +47,6 @@ import * as timelineActions from '../../actions/timeline.actions';
 })
 export class RavenAppComponent implements OnDestroy {
   about$: Observable<string>;
-  urls$: Observable<StringTMap<string>>;
-  baseUrl$: Observable<string>;
   currentState$: Observable<RavenState | null>;
   currentStateId$: Observable<string>;
   showProgressBar$: Observable<boolean>;
@@ -56,8 +54,6 @@ export class RavenAppComponent implements OnDestroy {
   selectedBandId$: Observable<string>;
 
   about: string;
-  apiUrl: string;
-  baseUrl: string;
   currentState: RavenState | null;
   currentStateId: string;
   mode: string;
@@ -67,8 +63,6 @@ export class RavenAppComponent implements OnDestroy {
 
   constructor(private store: Store<SourceExplorerState>) {
     this.about$ = this.getAbout();
-    this.urls$ = this.store.pipe(select(getUrls));
-    this.baseUrl$ = this.store.pipe(select(getBaseUrl));
     this.currentState$ = this.store.pipe(select(getCurrentState));
     this.currentStateId$ = this.store.pipe(select(getCurrentStateId));
     this.mode$ = this.store.pipe(select(getMode));
@@ -78,14 +72,6 @@ export class RavenAppComponent implements OnDestroy {
     this.about$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(about => (this.about = about));
-
-    this.baseUrl$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(baseUrl => (this.baseUrl = baseUrl));
-
-    this.urls$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(urls => (this.apiUrl = urls.apiUrl));
 
     this.currentState$
       .pipe(takeUntil(this.ngUnsubscribe))
@@ -235,13 +221,8 @@ export class RavenAppComponent implements OnDestroy {
     this.store.dispatch(new layoutActions.ToggleApplyLayoutDrawerEvent(true));
   }
 
-  onApplyState() {
-    this.store.dispatch(
-      new sourceExplorerActions.ApplyState(
-        `${this.baseUrl}/${this.apiUrl}${this.currentStateId}`,
-        this.currentStateId,
-      ),
-    );
+  onApplyLastState() {
+    this.store.dispatch(new sourceExplorerActions.ApplyLastState());
   }
 
   onUpdateState() {

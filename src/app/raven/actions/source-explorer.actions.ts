@@ -27,6 +27,7 @@ export enum SourceExplorerActionTypes {
   AddCustomGraph = '[sourceExplorer] add_custom_graph',
   AddFilter = '[sourceExplorer] add_filter',
   AddGraphableFilter = '[sourceExplorer] add_graphable_filter',
+  ApplyLastState = '[sourceExplorer] apply-last-state',
   ApplyLayout = '[sourceExplorer] apply-layout',
   ApplyLayoutWithPins = '[sourceExplorer] apply-layout-with-pins',
   ApplyState = '[sourceExplorer] apply-state',
@@ -97,6 +98,10 @@ export class AddGraphableFilter implements Action {
   readonly type = SourceExplorerActionTypes.AddGraphableFilter;
 
   constructor(public source: RavenGraphableFilterSource) {}
+}
+
+export class ApplyLastState implements Action {
+  readonly type = SourceExplorerActionTypes.ApplyLastState;
 }
 
 export class ApplyLayout implements Action {
@@ -323,6 +328,7 @@ export type SourceExplorerAction =
   | AddCustomGraph
   | AddFilter
   | AddGraphableFilter
+  | ApplyLastState
   | ApplyLayout
   | ApplyLayoutWithPins
   | ApplyState

@@ -31,6 +31,7 @@ import {
 import {
   AddCustomGraph,
   AddGraphableFilter,
+  ApplyLastState,
   ApplyLayout,
   ApplyLayoutWithPins,
   ApplyState,
@@ -167,6 +168,40 @@ export class SourceExplorerEffects {
         of(new sourceExplorerActions.AddFilter(action.source)),
         of(
           new sourceExplorerActions.UpdateGraphAfterFilterAdd(action.source.id),
+        ),
+      ),
+    ),
+  );
+
+  /**
+   * Effect for ApplyState.
+   */
+  @Effect()
+  applyLastState$: Observable<Action> = this.actions$.pipe(
+    ofType<ApplyLastState>(SourceExplorerActionTypes.ApplyLastState),
+    withLatestFrom(this.store$),
+    map(([, state]) => ({ state })),
+    concatMap(({ state }) =>
+      forkJoin([
+        of(state),
+        this.mpsServerService.fetchNewSources(
+          `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
+          '/',
+          true,
+        ),
+      ]),
+    ),
+    map(([state, initialSources]) => ({
+      initialSources,
+      state,
+    })),
+    concatMap(({ state, initialSources }) =>
+      concat(
+        ...this.loadState(
+          state,
+          initialSources,
+          state.raven.sourceExplorer.currentState,
+          state.raven.sourceExplorer.currentStateId,
         ),
       ),
     ),
@@ -995,7 +1030,9 @@ export class SourceExplorerEffects {
     concatMap(({ state }) =>
       this.mpsServerService
         .updateState(
-          `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${state.raven.sourceExplorer.currentStateId}`,
+          `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${
+            state.raven.sourceExplorer.currentStateId
+          }`,
           // action.stateUrl,
           getState(
             getSourceNameFromId(state.raven.sourceExplorer.currentStateId),
@@ -1007,7 +1044,9 @@ export class SourceExplorerEffects {
             () =>
               new sourceExplorerActions.UpdateSourceExplorer({
                 currentState: getState(
-                  getSourceNameFromId(state.raven.sourceExplorer.currentStateId),
+                  getSourceNameFromId(
+                    state.raven.sourceExplorer.currentStateId,
+                  ),
                   state,
                 ),
               }),
@@ -1236,52 +1275,60 @@ export class SourceExplorerEffects {
   loadState(
     state: RavenAppState,
     initialSources: RavenSource[],
-    savedState: RavenState,
+    savedState: RavenState | null,
     sourceId: string,
   ): Observable<Action>[] {
-    return [
-      of(
-        new sourceExplorerActions.UpdateSourceExplorer({
-          ...fromSourceExplorer.initialState,
-          currentState: savedState,
-          currentStateId: sourceId,
-          fetchPending: true,
-        }),
-      ),
-      of(
-        new timelineActions.UpdateTimeline({
-          ...fromTimeline.initialState,
-          bands: savedState.bands.map(band => ({
-            ...band,
-            subBands: band.subBands.map((subBand: RavenSubBand) => ({
-              ...subBand,
-              sourceIds: [],
+    if (savedState) {
+      return [
+        of(
+          new sourceExplorerActions.UpdateSourceExplorer({
+            ...fromSourceExplorer.initialState,
+            currentState: savedState,
+            currentStateId: sourceId,
+            fetchPending: true,
+          }),
+        ),
+        of(
+          new timelineActions.UpdateTimeline({
+            ...fromTimeline.initialState,
+            bands: savedState.bands.map(band => ({
+              ...band,
+              subBands: band.subBands.map((subBand: RavenSubBand) => ({
+                ...subBand,
+                sourceIds: [],
+              })),
             })),
-          })),
-          expansionByActivityId: savedState.expansionByActivityId,
-          guides: savedState.guides ? savedState.guides : [],
-          maxTimeRange: savedState.maxTimeRange,
-          viewTimeRange: savedState.ignoreShareableLinkTimes
-            ? { end: 0, start: 0 }
-            : {
-                end: utc(savedState.viewTimeRange.end),
-                start: utc(savedState.viewTimeRange.start),
-              },
-        }),
-      ),
-      of(
-        new configActions.UpdateDefaultBandSettings({
-          ...savedState.defaultBandSettings,
-        }),
-      ),
-      ...this.load(savedState.bands, initialSources, savedState.pins),
-      ...savedState.pins.map(pin => of(new sourceExplorerActions.PinAdd(pin))),
-      ...savedState.pins.map(pin => of(new timelineActions.PinAdd(pin))),
-      of(new sourceExplorerActions.ApplyStateOrLayoutSuccess()),
-      of(
-        new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }),
-      ),
-    ];
+            expansionByActivityId: savedState.expansionByActivityId,
+            guides: savedState.guides ? savedState.guides : [],
+            maxTimeRange: savedState.maxTimeRange,
+            viewTimeRange: savedState.ignoreShareableLinkTimes
+              ? { end: 0, start: 0 }
+              : {
+                  end: utc(savedState.viewTimeRange.end),
+                  start: utc(savedState.viewTimeRange.start),
+                },
+          }),
+        ),
+        of(
+          new configActions.UpdateDefaultBandSettings({
+            ...savedState.defaultBandSettings,
+          }),
+        ),
+        ...this.load(savedState.bands, initialSources, savedState.pins),
+        ...savedState.pins.map(pin =>
+          of(new sourceExplorerActions.PinAdd(pin)),
+        ),
+        ...savedState.pins.map(pin => of(new timelineActions.PinAdd(pin))),
+        of(new sourceExplorerActions.ApplyStateOrLayoutSuccess()),
+        of(
+          new sourceExplorerActions.UpdateSourceExplorer({
+            fetchPending: false,
+          }),
+        ),
+      ];
+    } else {
+      return [];
+    }
   }
 
   /**
