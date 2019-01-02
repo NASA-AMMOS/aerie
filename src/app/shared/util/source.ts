@@ -153,7 +153,7 @@ export function fromDir(
     ...rSource,
     actions: [
       {
-        event: 'file-delete',
+        event: 'delete',
         name: 'Delete',
       },
       {
