@@ -11,7 +11,7 @@ public class Body {
     private String name;
     private int NAIFID;
     private String NAIFBodyFrame;
-    private double[] radii; // in km, should have length 3: larger equitorial radius, smaller equitorial radius, then polar radius
+    private double[] radii; // in km, should have length 3: larger equatorial radius, smaller equatorial radius, then polar radius
     private Double albeido;
     private Double mu;
 

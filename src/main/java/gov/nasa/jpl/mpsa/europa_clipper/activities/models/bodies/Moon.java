@@ -5,14 +5,14 @@ import gov.nasa.jpl.mpsa.activities.Parameter;
 import gov.nasa.jpl.mpsa.activities.operations.AdaptationModel;
 import gov.nasa.jpl.mpsa.time.Time;
 
-public class Earth extends ActivityType {
+public class Moon extends ActivityType {
 
     AdaptationModel EarthModel = new BodyModel();
 
     public void setParameters() {
 
         Parameter body = new Parameter.Builder("body")
-                .withValue("Earth")
+                .withValue("Moon")
                 .ofType(String.class)
                 .build();
         Parameter start = new Parameter.Builder("StartTime")
