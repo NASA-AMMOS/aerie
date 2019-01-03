@@ -72,6 +72,17 @@ export class RavenLayoutApplyComponent implements OnChanges {
     if (changes.treeBySourceId) {
       this.filteredSources = this.filterSources(this.treeBySourceId);
     }
+
+    // auto select the already opened files
+    this.sourcesFormControl.setValue(this.filteredSources.reduce(
+      (srcs: RavenSource[], filterSource) => {
+        if (filterSource.expanded) {
+          srcs.push(filterSource);
+        }
+        return srcs;
+      },
+      [],
+    ));
   }
 
   /**
