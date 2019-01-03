@@ -17,8 +17,8 @@ import {
 import { select, Store } from '@ngrx/store';
 import { combineLatest, Observable, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
-import { RavenState, RavenTimeRange, StringTMap } from '../../../shared/models';
-import { getBaseUrl, getUrls, getVersion } from '../../../shared/selectors';
+import { RavenState, RavenTimeRange} from '../../../shared/models';
+import { getVersion } from '../../../shared/selectors';
 import { toCompositeBand, toDividerBand } from '../../../shared/util';
 import { SourceExplorerState } from '../../reducers/source-explorer.reducer';
 
