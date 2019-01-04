@@ -445,7 +445,7 @@ export class RavenCompositeBandComponent
       }
     }
 
-    // Set minLimit and maxLimit for all resource bands.
+    // Set minPaintValue and maxPaintValue for all resource bands.
     for (
       let i = 0, length = this.ctlCompositeBand.bands.length;
       i < length;

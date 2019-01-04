@@ -17,6 +17,6 @@ export interface MpsServerResourceMetadata {
   hasTimelineType: string;
   hasUnits: string;
   hasValueType: string;
-  maxLimit: number | null;
-  minLimit: number | null;
+  maxLimit?: number;
+  minLimit?: number;
 }

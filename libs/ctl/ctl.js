@@ -3402,7 +3402,7 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
   for(var j=0, jlength=tickValues.length; j<jlength; ++j) {
     var value = tickValues[j];
 
-    if ((this.band.maxLimit && Number(value) === maxLimit) || (this.band.minLimit && Number(value) === minLimit)) {
+    if ((this.band.maxLimit !== undefined && Number(value) === maxLimit) || (this.band.minLimit !== undefined && Number(value) === minLimit)) {
       ctx.fillStyle = Util.rgbaToString([255,0,0], 1);
       ctx.strokeStyle = Util.rgbaToString([255,0,0], 0.5);
     }
@@ -3465,7 +3465,7 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
   if(this.band.minLimit && this.band.minPaintValue !== this.band.minLimit && !tickValues.includes(this.band.minLimit.toString())) {
      limits.push (this.band.minLimit);
   }
-     
+
   limits.forEach(value => {
       ctx.fillStyle = Util.rgbaToString([255,0,0], 1);
       ctx.strokeStyle = Util.rgbaToString([255,0,0], 0.5);
