@@ -15,6 +15,7 @@ public class Resource<V extends Comparable> {
     private String units;
     private String interpolation;
     private Set allowedValues;
+    private List<String> indices;
     private V minimum;
     private V maximum;
     // other resources or conditions might want to listen to when we change, so we will keep a collection of listeners
@@ -164,6 +165,7 @@ public class Resource<V extends Comparable> {
         this.name = builder.name;
         this.subsystem = builder.subsystem;
         this.units = builder.units;
+        this.indices = builder.indices;
         this.interpolation = builder.interpolation;
         this.allowedValues = builder.allowedValues;
         this.minimum = (V) builder.minimum;
@@ -185,6 +187,18 @@ public class Resource<V extends Comparable> {
         for (PropertyChangeListener name : listeners) {
             name.propertyChange(new PropertyChangeEvent(this, "ResourceValue", oldValue, newValue));
         }
+    }
+
+    public void setName(String str) {
+        name = str;
+    }
+
+    public List<String> getIndices() {
+        return indices;
+    }
+
+    public void setIndices(List<String> index) {
+        indices = index;
     }
 
     public boolean resourceHistoryHasElements() {
