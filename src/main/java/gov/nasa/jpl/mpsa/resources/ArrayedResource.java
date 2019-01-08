@@ -76,7 +76,6 @@ public class ArrayedResource<V extends Comparable> {
 
         public Builder(String name) {
             this.name = name;
-            this.entries = new String[]{"0"};
         }
 
         public Builder withEntries(String[] entries) {
@@ -120,6 +119,9 @@ public class ArrayedResource<V extends Comparable> {
         }
 
         public ArrayedResource build(){
+            if (this.entries == null) {
+                this.entries = new String[]{"0"};
+            }
             return new ArrayedResource(this);
         }
 
