@@ -95,8 +95,7 @@ public class AdaptationController {
             logger.debug("starting file transfer");
             file.createNewFile();
             multipartFile.transferTo(file);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
             logger.error("Exception uploading file for adaptation: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -129,7 +128,7 @@ public class AdaptationController {
         Optional<Adaptation> optAdapt = repository.findById(id);
         if (!optAdapt.isPresent()) {
             Adaptation adaptation = optAdapt.get();
-            
+
             // Ensure the file is deleted before removing the adaptation
             String location = adaptation.getLocation();
             File file = new File(location);
@@ -141,8 +140,7 @@ public class AdaptationController {
             repository.delete(adaptation);
             logger.debug("DELETED adaptation" + id);
             return ResponseEntity.ok().build();
-        }
-        else {
+        } else {
             logger.error("Adaptation " + id + " not found");
             return ResponseEntity.notFound().build();
         }
@@ -164,13 +162,12 @@ public class AdaptationController {
             Adaptation adaptation = optAdapt.get();
 
             try {
-                URL adaptationURL = new URL("file://" + adaptation.getLocation());
+                URL adaptationURL = new File(adaptation.getLocation()).toURI().toURL();
                 Setup.initializeEngine(adaptationURL);
 
                 activityTypeList = getActivityTypeList();
 
-            }
-            catch (MalformedURLException e) {
+            } catch (MalformedURLException e) {
                 logger.error("Exception when trying to get activities from adaptation: " + e.getStackTrace());
                 e.printStackTrace();
                 return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -182,8 +179,7 @@ public class AdaptationController {
             String JSONObject = gsonObject.toJson(activityTypeList);
 
             return ResponseEntity.ok(JSONObject);
-        }
-        else {
+        } else {
             logger.error("Getting activities for adaptation " + id + " NOT FOUND");
             return ResponseEntity.notFound().build();
         }
@@ -226,20 +222,15 @@ public class AdaptationController {
                         String typeName = type.getTypeName();
                         if (type == Double.TYPE) {
                             typeName = "java.lang.Double";
-                        }
-                        else if (type == Float.TYPE) {
+                        } else if (type == Float.TYPE) {
                             typeName = "java.lang.Float";
-                        }
-                        else if (type == Integer.TYPE) {
+                        } else if (type == Integer.TYPE) {
                             typeName = "java.lang.Integer";
-                        }
-                        else if (type == Long.TYPE) {
+                        } else if (type == Long.TYPE) {
                             typeName = "java.lang.Long";
-                        }
-                        else if (type == Byte.TYPE) {
+                        } else if (type == Byte.TYPE) {
                             typeName = "java.lang.Byte";
-                        }
-                        else if (type == Boolean.TYPE) {
+                        } else if (type == Boolean.TYPE) {
                             typeName = "java.lang.Boolean";
                         }
 
@@ -249,8 +240,7 @@ public class AdaptationController {
                     ActivityType newType = new ActivityType(ReflectionUtilities.getClassNameWithoutPackage(loadedClass.getName()), loadedClass, parameters);
                     activityTypesToReturn.put(ReflectionUtilities.getClassNameWithoutPackage(loadedClass.getName()), newType);
                 }
-            }
-            catch (ClassNotFoundException e) {
+            } catch (ClassNotFoundException e) {
                 // if we can't load the class, we'll just move on to the next one
             }
         }
