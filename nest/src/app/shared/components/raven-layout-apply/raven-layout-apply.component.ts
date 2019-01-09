@@ -74,15 +74,9 @@ export class RavenLayoutApplyComponent implements OnChanges {
     }
 
     // auto select the already opened files
-    this.sourcesFormControl.setValue(this.filteredSources.reduce(
-      (srcs: RavenSource[], filterSource) => {
-        if (filterSource.expanded) {
-          srcs.push(filterSource);
-        }
-        return srcs;
-      },
-      [],
-    ));
+    this.sourcesFormControl.setValue(
+      this.filteredSources.filter(filterSource => filterSource.expanded),
+    );
   }
 
   /**
