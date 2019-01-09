@@ -28,7 +28,7 @@ public class ActivityType {
         this.addParameter(start);
     }
 
-    public void setModel(AdaptationModel model){
+    public void setModel(AdaptationModel model) {
         this.model = model;
     }
 
