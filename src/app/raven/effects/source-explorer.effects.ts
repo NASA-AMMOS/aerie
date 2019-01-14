@@ -1034,7 +1034,6 @@ export class SourceExplorerEffects {
           `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${
             state.raven.sourceExplorer.currentStateId
           }`,
-          // action.stateUrl,
           getState(
             getSourceNameFromId(state.raven.sourceExplorer.currentStateId),
             state,

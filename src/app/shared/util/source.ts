@@ -709,6 +709,9 @@ export function getPinLabel(sourceId: string, pins: RavenPin[]): string {
   return pin ? pin.name : '';
 }
 
+/**
+ * Helper. Returns source name from source id.
+ */
 export function getSourceNameFromId(sourceId: string) {
   const hasName = sourceId.match(new RegExp('.*/([^/]*)'));
   if (hasName) {

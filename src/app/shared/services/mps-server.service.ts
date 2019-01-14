@@ -58,13 +58,17 @@ export class MpsServerService {
 
   /**
    * Save state to an MPS Server source.
-   * Exports state before saving.
+   * state is in exported form.
    */
-  saveState(sourceUrl: string, name: string, state: RavenState) {
+  saveState(sourceUrl: string, name: string, state: any) {
     return this.http.put(`${sourceUrl}/${name}?timeline_type=state`, state);
   }
 
-  updateState(stateUrl: string, state: RavenState) {
+  /**
+   * Update state to an MPS Server source.
+   * state is in exported form.
+   */
+  updateState(stateUrl: string, state: any) {
     return this.http.put(`${stateUrl}?timeline_type=state`, state);
   }
 }
