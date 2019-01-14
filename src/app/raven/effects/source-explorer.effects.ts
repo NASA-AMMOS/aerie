@@ -1024,8 +1024,8 @@ export class SourceExplorerEffects {
   );
 
   @Effect()
-  updateState$: Observable<Action> = this.actions$.pipe(
-    ofType<UpdateState>(SourceExplorerActionTypes.UpdateState),
+  updateCurrentState$: Observable<Action> = this.actions$.pipe(
+    ofType<UpdateState>(SourceExplorerActionTypes.UpdateCurrentState),
     withLatestFrom(this.store$),
     map(([, state]) => ({ state })),
     concatMap(({ state }) =>

@@ -63,7 +63,7 @@ export class DialogEffects {
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     exhaustMap(action => {
-      const updateStateDialog = this.dialog.open(RavenConfirmDialogComponent, {
+      const updateCurrentStateDialog = this.dialog.open(RavenConfirmDialogComponent, {
         data: {
           cancelText: 'No',
           confirmText: 'Yes',
@@ -72,7 +72,7 @@ export class DialogEffects {
         width: '400px',
       });
 
-      return zip(of(action), updateStateDialog.afterClosed());
+      return zip(of(action), updateCurrentStateDialog.afterClosed());
     }),
     map(([, result]) => ({ result })),
     exhaustMap(({ result }) => {
@@ -473,7 +473,7 @@ export class DialogEffects {
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     exhaustMap(action => {
-      const updateStateDialog = this.dialog.open(RavenConfirmDialogComponent, {
+      const updateCurrentStateDialog = this.dialog.open(RavenConfirmDialogComponent, {
         data: {
           cancelText: 'No',
           confirmText: 'Yes',
@@ -482,13 +482,13 @@ export class DialogEffects {
         width: '400px',
       });
 
-      return zip(of(action), updateStateDialog.afterClosed());
+      return zip(of(action), updateCurrentStateDialog.afterClosed());
     }),
     map(([, result]) => ({ result })),
     exhaustMap(({ result }) => {
       if (result && result.confirm) {
         return of(
-          new sourceExplorerActions.UpdateState(),
+          new sourceExplorerActions.UpdateCurrentState(),
         );
       }
       return [];

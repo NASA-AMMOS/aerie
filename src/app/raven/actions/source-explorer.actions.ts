@@ -60,10 +60,10 @@ export enum SourceExplorerActionTypes {
   SetCustomFilterSubBandId = '[sourceExplorer] set_custom_filter_sub_band_id',
   SubBandIdAdd = '[sourceExplorer] sub_band_id_add',
   SubBandIdRemove = '[sourceExplorer] sub_band_id_remove',
+  UpdateCurrentState = '[sourceExplorer] update_current_state',
   UpdateGraphAfterFilterAdd = '[sourceExplorer] update_graph_after_filter_add',
   UpdateGraphAfterFilterRemove = '[sourceExplorer] update_graph_after_filter_remove',
   UpdateSourceExplorer = '[sourceExplorer] update_source_explorer',
-  UpdateState = '[sourceExplorer] update_state',
   UpdateTreeSource = '[sourceExplorer] update_tree_source',
 }
 
@@ -294,6 +294,10 @@ export class SubBandIdRemove implements Action {
   constructor(public sourceIds: string[], public subBandId: string) {}
 }
 
+export class UpdateCurrentState implements Action {
+  readonly type = SourceExplorerActionTypes.UpdateCurrentState;
+}
+
 export class UpdateGraphAfterFilterAdd implements Action {
   readonly type = SourceExplorerActionTypes.UpdateGraphAfterFilterAdd;
 
@@ -310,10 +314,6 @@ export class UpdateSourceExplorer implements Action {
   readonly type = SourceExplorerActionTypes.UpdateSourceExplorer;
 
   constructor(public update: StringTMap<BaseType>) {}
-}
-
-export class UpdateState implements Action {
-  readonly type = SourceExplorerActionTypes.UpdateState;
 }
 
 export class UpdateTreeSource implements Action {
@@ -361,8 +361,8 @@ export type SourceExplorerAction =
   | SetCustomFilterSubBandId
   | SubBandIdAdd
   | SubBandIdRemove
+  | UpdateCurrentState
   | UpdateGraphAfterFilterAdd
   | UpdateGraphAfterFilterRemove
   | UpdateSourceExplorer
-  | UpdateState
   | UpdateTreeSource;

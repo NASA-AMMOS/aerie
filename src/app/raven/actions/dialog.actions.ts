@@ -17,7 +17,7 @@ import {
 
 // Action Types.
 export enum DialogActionTypes {
-  OpenApplyCurrentStateDialog = '[dialog] open_apply_current_saved_state_dialog',
+  OpenApplyCurrentStateDialog = '[dialog] open_apply_current_state_dialog',
   OpenConfirmDialog = '[dialog] open_confirm_dialog',
   OpenCustomFilterDialog = '[dialog] open_custom_filter_dialog',
   OpenCustomGraphDialog = '[dialog] open_custom_graph_dialog',
