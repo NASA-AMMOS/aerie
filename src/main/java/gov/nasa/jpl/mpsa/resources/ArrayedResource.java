@@ -30,6 +30,7 @@ public class ArrayedResource<V extends Comparable> {
                     .withMax((V) builder.maximum)
                     .withAllowedValues(builder.allowedValues)
                     .isFrozen(builder.frozen)
+                    .withInitialValue(builder.initialValue)
                     .build();
 
             individualResources.put(this.entries[i], resourceInstance);
@@ -73,9 +74,15 @@ public class ArrayedResource<V extends Comparable> {
         private V maximum;
         private String[] entries;
         private boolean frozen;
+        private V initialValue;
 
         public Builder(String name) {
             this.name = name;
+        }
+
+        public Builder withInitialValue(V value) {
+            this.initialValue = value;
+            return this;
         }
 
         public Builder withEntries(String[] entries) {
@@ -120,7 +127,7 @@ public class ArrayedResource<V extends Comparable> {
 
         public ArrayedResource build(){
             if (this.entries == null) {
-                this.entries = new String[]{"0"};
+                this.entries = new String[]{""};
             }
             return new ArrayedResource(this);
         }
