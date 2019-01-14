@@ -40,7 +40,7 @@ import {
   OpenShareableLinkDialog,
   OpenStateApplyDialog,
   OpenStateSaveDialog,
-  OpenUpdateStateDialog,
+  OpenUpdateCurrentStateDialog,
 } from '../actions/dialog.actions';
 
 import * as sourceExplorerActions from '../actions/source-explorer.actions';
@@ -465,11 +465,11 @@ export class DialogEffects {
   );
 
   /**
-   * Effect for OpenUpdateStateDialog.
+   * Effect for OpenUpdateCurrentStateDialog.
    */
   @Effect()
-  openUpdateStateDialog$: Observable<Action> = this.actions$.pipe(
-    ofType<OpenUpdateStateDialog>(DialogActionTypes.OpenUpdateStateDialog),
+  openUpdateCurrentStateDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenUpdateCurrentStateDialog>(DialogActionTypes.OpenUpdateCurrentStateDialog),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     exhaustMap(action => {

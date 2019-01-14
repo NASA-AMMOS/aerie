@@ -30,7 +30,7 @@ export enum DialogActionTypes {
   OpenShareableLinkDialog = '[dialog] open_shareable_link_dialog',
   OpenStateApplyDialog = '[dialog] open_state_apply_dialog',
   OpenStateSaveDialog = '[dialog] open_state_save_dialog',
-  OpenUpdateStateDialog = '[dialog open_update_state_dialog',
+  OpenUpdateCurrentStateDialog = '[dialog open_update_current_state_dialog',
 }
 
 // Actions.
@@ -118,8 +118,8 @@ export class OpenStateSaveDialog implements Action {
   constructor(public source: RavenSource, public width: string) {}
 }
 
-export class OpenUpdateStateDialog implements Action {
-  readonly type = DialogActionTypes.OpenUpdateStateDialog;
+export class OpenUpdateCurrentStateDialog implements Action {
+  readonly type = DialogActionTypes.OpenUpdateCurrentStateDialog;
 }
 
 // Union type of all actions.
@@ -136,4 +136,4 @@ export type DialogAction =
   | OpenShareableLinkDialog
   | OpenStateApplyDialog
   | OpenStateSaveDialog
-  | OpenUpdateStateDialog;
+  | OpenUpdateCurrentStateDialog;

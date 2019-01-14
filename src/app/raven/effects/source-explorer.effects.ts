@@ -48,9 +48,9 @@ import {
   RemoveSourceEvent,
   SaveState,
   SourceExplorerActionTypes,
+  UpdateCurrentState,
   UpdateGraphAfterFilterAdd,
   UpdateGraphAfterFilterRemove,
-  UpdateState,
 } from '../actions/source-explorer.actions';
 
 import {
@@ -1025,7 +1025,7 @@ export class SourceExplorerEffects {
 
   @Effect()
   updateCurrentState$: Observable<Action> = this.actions$.pipe(
-    ofType<UpdateState>(SourceExplorerActionTypes.UpdateCurrentState),
+    ofType<UpdateCurrentState>(SourceExplorerActionTypes.UpdateCurrentState),
     withLatestFrom(this.store$),
     map(([, state]) => ({ state })),
     concatMap(({ state }) =>

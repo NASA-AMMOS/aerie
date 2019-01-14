@@ -216,8 +216,8 @@ export class RavenAppComponent implements OnDestroy {
     this.store.dispatch(new dialogActions.OpenApplyCurrentStateDialog());
   }
 
-  onUpdateState() {
-    this.store.dispatch(new dialogActions.OpenUpdateStateDialog());
+  onUpdateCurrentState() {
+    this.store.dispatch(new dialogActions.OpenUpdateCurrentStateDialog());
   }
 
   onZoomIn() {
