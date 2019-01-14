@@ -17,13 +17,12 @@ import {
 import { select, Store } from '@ngrx/store';
 import { combineLatest, Observable, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
-import { RavenState, RavenTimeRange } from '../../../shared/models';
+import { RavenTimeRange } from '../../../shared/models';
 import { getVersion } from '../../../shared/selectors';
 import { toCompositeBand, toDividerBand } from '../../../shared/util';
 import { SourceExplorerState } from '../../reducers/source-explorer.reducer';
 
 import {
-  getCurrentState,
   getCurrentStateId,
   getLayoutPending,
   getMode,
@@ -36,7 +35,6 @@ import {
 import * as configActions from '../../../shared/actions/config.actions';
 import * as dialogActions from '../../actions/dialog.actions';
 import * as layoutActions from '../../actions/layout.actions';
-import * as sourceExplorerActions from '../../actions/source-explorer.actions';
 import * as timelineActions from '../../actions/timeline.actions';
 
 @Component({
@@ -47,14 +45,12 @@ import * as timelineActions from '../../actions/timeline.actions';
 })
 export class RavenAppComponent implements OnDestroy {
   about$: Observable<string>;
-  currentState$: Observable<RavenState | null>;
   currentStateId$: Observable<string>;
   showProgressBar$: Observable<boolean>;
   mode$: Observable<string>;
   selectedBandId$: Observable<string>;
 
   about: string;
-  currentState: RavenState | null;
   currentStateId: string;
   mode: string;
   selectedBandId: string;
@@ -63,7 +59,6 @@ export class RavenAppComponent implements OnDestroy {
 
   constructor(private store: Store<SourceExplorerState>) {
     this.about$ = this.getAbout();
-    this.currentState$ = this.store.pipe(select(getCurrentState));
     this.currentStateId$ = this.store.pipe(select(getCurrentStateId));
     this.mode$ = this.store.pipe(select(getMode));
     this.showProgressBar$ = this.getShowProgressBar();
@@ -72,10 +67,6 @@ export class RavenAppComponent implements OnDestroy {
     this.about$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(about => (this.about = about));
-
-    this.currentState$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(currentState => (this.currentState = currentState));
 
     this.currentStateId$
       .pipe(takeUntil(this.ngUnsubscribe))
@@ -221,12 +212,12 @@ export class RavenAppComponent implements OnDestroy {
     this.store.dispatch(new layoutActions.ToggleApplyLayoutDrawerEvent(true));
   }
 
-  onApplyLastState() {
-    this.store.dispatch(new sourceExplorerActions.ApplyLastState());
+  onApplyCurrentState() {
+    this.store.dispatch(new dialogActions.OpenApplyCurrentStateDialog());
   }
 
   onUpdateState() {
-    this.store.dispatch(new sourceExplorerActions.UpdateState());
+    this.store.dispatch(new dialogActions.OpenUpdateStateDialog());
   }
 
   onZoomIn() {

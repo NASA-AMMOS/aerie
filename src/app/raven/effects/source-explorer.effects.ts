@@ -31,7 +31,7 @@ import {
 import {
   AddCustomGraph,
   AddGraphableFilter,
-  ApplyLastState,
+  ApplyCurrentState,
   ApplyLayout,
   ApplyLayoutWithPins,
   ApplyState,
@@ -68,6 +68,7 @@ import {
   getState,
   getTargetFilters,
   hasActivityBandForFilterTarget,
+  importState,
   isAddTo,
   isOverlay,
   toCompositeBand,
@@ -177,8 +178,8 @@ export class SourceExplorerEffects {
    * Effect for ApplyState.
    */
   @Effect()
-  applyLastState$: Observable<Action> = this.actions$.pipe(
-    ofType<ApplyLastState>(SourceExplorerActionTypes.ApplyLastState),
+  applyCurrentState$: Observable<Action> = this.actions$.pipe(
+    ofType<ApplyCurrentState>(SourceExplorerActionTypes.ApplyCurrentState),
     withLatestFrom(this.store$),
     map(([, state]) => ({ state })),
     concatMap(({ state }) =>
@@ -826,7 +827,7 @@ export class SourceExplorerEffects {
           map(
             () =>
               new sourceExplorerActions.UpdateSourceExplorer({
-                currentState: getState(action.name, state),
+                currentState: importState(getState(action.name, state)),
                 currentStateId: `${action.source.id}/${action.name}`,
               }),
             new sourceExplorerActions.UpdateSourceExplorer({
@@ -1043,12 +1044,12 @@ export class SourceExplorerEffects {
           map(
             () =>
               new sourceExplorerActions.UpdateSourceExplorer({
-                currentState: getState(
+                currentState: importState(getState(
                   getSourceNameFromId(
                     state.raven.sourceExplorer.currentStateId,
                   ),
                   state,
-                ),
+                )),
               }),
             new sourceExplorerActions.UpdateSourceExplorer({
               fetchPending: false,
