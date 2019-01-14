@@ -232,16 +232,6 @@ public class Resource<V extends Comparable> {
         but makes it inflexible.
         */
 
-        /*
-        TODO: New question -
-        what are we going to do about seeing resource history?? It is currently a problem
-        That I can't get previous elements of a resource, especially if I am intent on moving forward while
-        being able to do things like generate mission geometry before the rest of the sim.
-        The way I currently plan to get around the time issue is for a mission to create a geometry-defined
-        hashmap-like-function capable of interpolation of time and integer, where some returned integer would allow for
-        a call at a reasonable time to other functions.
-        */
-
         resourceHistory.add(value);
 
     }
