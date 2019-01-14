@@ -33,7 +33,7 @@ public class ActivityType {
     }
 
     public void executeModel() {
-        this.model.setup();
+        this.model.setup(parameters);
         this.model.execute();
         // dispatch an event|message with the serialized resource container state:
         // sendMessge(ResourcesContainer.getInstance().serialize());
@@ -44,7 +44,7 @@ public class ActivityType {
         this.parameters.add(parameter);
     }
 
-    public List<Parameter> showParameters() {
+    public List<Parameter> getParameters() {
         return this.parameters;
     }
 

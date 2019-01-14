@@ -1,8 +1,11 @@
 package gov.nasa.jpl.mpsa.examples.adaptationExample.activities.models;
 
+import gov.nasa.jpl.mpsa.activities.Parameter;
 import gov.nasa.jpl.mpsa.activities.operations.AdaptationModel;
 import gov.nasa.jpl.mpsa.resources.Resource;
 import gov.nasa.jpl.mpsa.resources.ResourcesContainer;
+
+import java.util.List;
 
 // A different wheel1 model which suggests that
 // wheel1 is an x-fixed reaction wheel. Because it is calculated ev
@@ -11,7 +14,7 @@ public class WheelModelX implements AdaptationModel {
     private double step = 2.0;
 
     @Override
-    public void setup() {
+    public void setup(List<Parameter> parameters) {
         // Check the x-direction angular velocity of the reaction wheel
         ResourcesContainer myResources = ResourcesContainer.getInstance();
         Resource w1x_velocity = myResources.getResourceByName("RWA_angular_momentum_x");
