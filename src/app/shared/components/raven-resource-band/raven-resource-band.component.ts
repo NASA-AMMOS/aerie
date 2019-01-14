@@ -328,8 +328,6 @@ export class RavenResourceBandComponent
       labelFont: this.labelFont,
       labelFontSize: this.labelFontSize,
       logTicks: this.logTicks,
-      maxLimit: this.maxLimit,
-      minLimit: this.minLimit,
       name: this.name,
       onFormatTickValue: this.onFormatTickValue.bind(this),
       onGetInterpolatedTooltipText: this.onGetInterpolatedTooltipText.bind(
@@ -358,6 +356,13 @@ export class RavenResourceBandComponent
     ctlResourceBand.type = 'resource';
     ctlResourceBand.isDuration = this.isDuration;
     ctlResourceBand.isTime = this.isTime;
+
+    if (this.maxLimit !== undefined){
+      ctlResourceBand.maxLimit = this.maxLimit;
+    }
+    if (this.minLimit !== undefined){
+      ctlResourceBand.minLimit = this.minLimit;
+    }
 
     // Send the newly created resource band to the parent composite band so it can be added.
     // All subsequent updates should be made to the parent composite sub-band via events.

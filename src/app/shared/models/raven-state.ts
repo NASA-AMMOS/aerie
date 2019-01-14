@@ -12,8 +12,8 @@ import {
   RavenDefaultBandSettings,
   RavenPin,
   RavenTimeRange,
-  StringTMap,
   RavenTimeRangeDoy,
+  StringTMap,
 } from './index';
 
 export interface RavenState {
