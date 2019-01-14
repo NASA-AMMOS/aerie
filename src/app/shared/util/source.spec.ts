@@ -350,9 +350,7 @@ describe('source.ts', () => {
 
   describe('getSourceNameFromId', () => {
     it(`should return the name of the source for a given source id`, () => {
-      expect(getSourceNameFromId('/a/b/c')).toEqual(
-        'c',
-      );
+      expect(getSourceNameFromId('/a/b/c')).toEqual('c');
 
       expect(getAllChildIds(treeBySourceId, '/child/1')).toEqual([
         '/child/child/0',

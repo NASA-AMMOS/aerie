@@ -52,10 +52,7 @@ export class MpsServerService {
    * Deletes a source from MPS Server.
    */
   removeSource(sourceUrl: string, sourceId: string) {
-    const url = sourceUrl.replace(
-      /list_.*-mongodb/i,
-      'fs-mongodb',
-    );
+    const url = sourceUrl.replace(/list_.*-mongodb/i, 'fs-mongodb');
     return this.http.delete(url, { responseType: 'text' });
   }
 
@@ -64,16 +61,10 @@ export class MpsServerService {
    * Exports state before saving.
    */
   saveState(sourceUrl: string, name: string, state: RavenState) {
-    return this.http.put(
-      `${sourceUrl}/${name}?timeline_type=state`,
-      state,
-    );
+    return this.http.put(`${sourceUrl}/${name}?timeline_type=state`, state);
   }
 
   updateState(stateUrl: string, state: RavenState) {
-    return this.http.put(
-      `${stateUrl}?timeline_type=state`,
-      state,
-    );
+    return this.http.put(`${stateUrl}?timeline_type=state`, state);
   }
 }

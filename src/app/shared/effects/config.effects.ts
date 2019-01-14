@@ -124,7 +124,6 @@ export class ConfigEffects {
           ),
         ];
       } else {
-        console.log('loadLayout & laodState');
         // Otherwise use other query parameters to load an app layout and/or state.
         return [
           ...this.loadLayout(state.raven.layout, layout),
