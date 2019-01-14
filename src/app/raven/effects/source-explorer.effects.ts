@@ -1043,12 +1043,14 @@ export class SourceExplorerEffects {
           map(
             () =>
               new sourceExplorerActions.UpdateSourceExplorer({
-                currentState: importState(getState(
-                  getSourceNameFromId(
-                    state.raven.sourceExplorer.currentStateId,
+                currentState: importState(
+                  getState(
+                    getSourceNameFromId(
+                      state.raven.sourceExplorer.currentStateId,
+                    ),
+                    state,
                   ),
-                  state,
-                )),
+                ),
               }),
             new sourceExplorerActions.UpdateSourceExplorer({
               fetchPending: false,

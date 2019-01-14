@@ -59,25 +59,28 @@ export class DialogEffects {
    */
   @Effect()
   openApplyCurrentStateDialog$: Observable<Action> = this.actions$.pipe(
-    ofType<OpenApplyCurrentStateDialog>(DialogActionTypes.OpenApplyCurrentStateDialog),
+    ofType<OpenApplyCurrentStateDialog>(
+      DialogActionTypes.OpenApplyCurrentStateDialog,
+    ),
     exhaustMap(action => {
-      const updateCurrentStateDialog = this.dialog.open(RavenConfirmDialogComponent, {
-        data: {
-          cancelText: 'No',
-          confirmText: 'Yes',
-          message: 'Are you sure you want to apply current state?',
+      const updateCurrentStateDialog = this.dialog.open(
+        RavenConfirmDialogComponent,
+        {
+          data: {
+            cancelText: 'No',
+            confirmText: 'Yes',
+            message: 'Are you sure you want to apply current state?',
+          },
+          width: '400px',
         },
-        width: '400px',
-      });
+      );
 
       return zip(of(action), updateCurrentStateDialog.afterClosed());
     }),
     map(([, result]) => ({ result })),
     exhaustMap(({ result }) => {
       if (result && result.confirm) {
-        return of(
-          new sourceExplorerActions.ApplyCurrentState(),
-        );
+        return of(new sourceExplorerActions.ApplyCurrentState());
       }
       return [];
     }),
@@ -467,25 +470,28 @@ export class DialogEffects {
    */
   @Effect()
   openUpdateCurrentStateDialog$: Observable<Action> = this.actions$.pipe(
-    ofType<OpenUpdateCurrentStateDialog>(DialogActionTypes.OpenUpdateCurrentStateDialog),
+    ofType<OpenUpdateCurrentStateDialog>(
+      DialogActionTypes.OpenUpdateCurrentStateDialog,
+    ),
     exhaustMap(action => {
-      const updateCurrentStateDialog = this.dialog.open(RavenConfirmDialogComponent, {
-        data: {
-          cancelText: 'No',
-          confirmText: 'Yes',
-          message: 'Are you sure you want to update current state?',
+      const updateCurrentStateDialog = this.dialog.open(
+        RavenConfirmDialogComponent,
+        {
+          data: {
+            cancelText: 'No',
+            confirmText: 'Yes',
+            message: 'Are you sure you want to update current state?',
+          },
+          width: '400px',
         },
-        width: '400px',
-      });
+      );
 
       return zip(of(action), updateCurrentStateDialog.afterClosed());
     }),
     map(([, result]) => ({ result })),
     exhaustMap(({ result }) => {
       if (result && result.confirm) {
-        return of(
-          new sourceExplorerActions.UpdateCurrentState(),
-        );
+        return of(new sourceExplorerActions.UpdateCurrentState());
       }
       return [];
     }),
