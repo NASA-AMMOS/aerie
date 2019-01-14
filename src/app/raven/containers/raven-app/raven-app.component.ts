@@ -208,12 +208,12 @@ export class RavenAppComponent implements OnDestroy {
     this.store.dispatch(new timelineActions.ResetViewTimeRange());
   }
 
-  onApplyLayout() {
-    this.store.dispatch(new layoutActions.ToggleApplyLayoutDrawerEvent(true));
-  }
-
   onApplyCurrentState() {
     this.store.dispatch(new dialogActions.OpenApplyCurrentStateDialog());
+  }
+
+  onApplyLayout() {
+    this.store.dispatch(new layoutActions.ToggleApplyLayoutDrawerEvent(true));
   }
 
   onUpdateCurrentState() {

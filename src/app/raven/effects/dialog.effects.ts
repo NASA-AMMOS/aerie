@@ -60,8 +60,6 @@ export class DialogEffects {
   @Effect()
   openApplyCurrentStateDialog$: Observable<Action> = this.actions$.pipe(
     ofType<OpenApplyCurrentStateDialog>(DialogActionTypes.OpenApplyCurrentStateDialog),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
     exhaustMap(action => {
       const updateCurrentStateDialog = this.dialog.open(RavenConfirmDialogComponent, {
         data: {
@@ -470,8 +468,6 @@ export class DialogEffects {
   @Effect()
   openUpdateCurrentStateDialog$: Observable<Action> = this.actions$.pipe(
     ofType<OpenUpdateCurrentStateDialog>(DialogActionTypes.OpenUpdateCurrentStateDialog),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
     exhaustMap(action => {
       const updateCurrentStateDialog = this.dialog.open(RavenConfirmDialogComponent, {
         data: {
