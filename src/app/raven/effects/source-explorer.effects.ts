@@ -61,6 +61,7 @@ import {
   getCustomFiltersBySourceId,
   getFormattedSourceUrl,
   getPinLabel,
+  getRavenState,
   getSituationalAwarenessPageDuration,
   getSituationalAwarenessStartTime,
   getSourceIds,
@@ -68,7 +69,6 @@ import {
   getState,
   getTargetFilters,
   hasActivityBandForFilterTarget,
-  importState,
   isAddTo,
   isOverlay,
   toCompositeBand,
@@ -827,7 +827,7 @@ export class SourceExplorerEffects {
           map(
             () =>
               new sourceExplorerActions.UpdateSourceExplorer({
-                currentState: importState(getState(action.name, state)),
+                currentState: getRavenState(action.name, state),
                 currentStateId: `${action.source.id}/${action.name}`,
               }),
             new sourceExplorerActions.UpdateSourceExplorer({
@@ -1043,13 +1043,11 @@ export class SourceExplorerEffects {
           map(
             () =>
               new sourceExplorerActions.UpdateSourceExplorer({
-                currentState: importState(
-                  getState(
-                    getSourceNameFromId(
-                      state.raven.sourceExplorer.currentStateId,
-                    ),
-                    state,
+                currentState: getRavenState(
+                  getSourceNameFromId(
+                    state.raven.sourceExplorer.currentStateId,
                   ),
+                  state,
                 ),
               }),
             new sourceExplorerActions.UpdateSourceExplorer({

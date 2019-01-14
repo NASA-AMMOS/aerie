@@ -63,7 +63,7 @@ export class DialogEffects {
       DialogActionTypes.OpenApplyCurrentStateDialog,
     ),
     exhaustMap(action => {
-      const updateCurrentStateDialog = this.dialog.open(
+      const applyCurrentStateDialog = this.dialog.open(
         RavenConfirmDialogComponent,
         {
           data: {
@@ -75,7 +75,7 @@ export class DialogEffects {
         },
       );
 
-      return zip(of(action), updateCurrentStateDialog.afterClosed());
+      return zip(of(action), applyCurrentStateDialog.afterClosed());
     }),
     map(([, result]) => ({ result })),
     exhaustMap(({ result }) => {

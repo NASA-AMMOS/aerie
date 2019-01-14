@@ -15,10 +15,17 @@ import { getSourceIdsForSubBand } from '../util/source';
 import { timestamp } from '../util/time';
 
 /**
- * Returns a stripped down version of a state that we save and export it for saving.
+ * Returns an exported state of the stripped down state for saving.
  */
 export function getState(name: string, state: RavenAppState): any {
-  return exportState({
+  return exportState(getRavenState(name, state));
+}
+
+/**
+ * Returns a stripped down version of a state that we save.
+ */
+export function getRavenState(name: string, state: RavenAppState): RavenState {
+  return {
     bands: state.raven.timeline.bands.map(band => ({
       ...band,
       subBands: band.subBands.map(subBand => ({
@@ -46,7 +53,7 @@ export function getState(name: string, state: RavenAppState): any {
       end: timestamp(state.raven.timeline.viewTimeRange.end, true),
       start: timestamp(state.raven.timeline.viewTimeRange.start, true),
     },
-  });
+  };
 }
 
 /**
