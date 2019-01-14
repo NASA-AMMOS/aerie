@@ -247,7 +247,10 @@ public class Resource<V extends Comparable> {
     }
 
     public V getCurrentValue() {
-        return resourceHistory.get(resourceHistory.size()-1);
+        if (resourceHistory.size()-1 < 0) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        else return resourceHistory.get(resourceHistory.size() - 1);
     }
 
     public List<V> getResourceHistory() {
