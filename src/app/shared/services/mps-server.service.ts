@@ -10,7 +10,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map } from 'rxjs/operators';
-import { MpsServerSource, RavenState } from '../models';
+import { MpsServerSource } from '../models';
 import { importState, toRavenSources } from '../util';
 
 @Injectable({
