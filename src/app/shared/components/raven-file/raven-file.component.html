@@ -9,13 +9,13 @@
     check_box_outline_blank
   </mat-icon>
   <mat-icon
-    *ngIf="source.subKind !== 'file_state' && source.expanded"
+    *ngIf="source.subKind !== 'file_state' && source.subKind !== 'file_epoch' && source.expanded"
     [id]="'raven-tree-'+source.name+'-collapse'"
     (click)="collapse.emit(source)">
     remove
   </mat-icon>
   <mat-icon
-    *ngIf="source.subKind !== 'file_state' && !source.expanded && source.importJobStatus === 'FINISHED'"
+    *ngIf="source.subKind !== 'file_state' && source.subKind !== 'file_epoch' && !source.expanded && source.importJobStatus === 'FINISHED'"
     [id]="'raven-tree-'+source.name+'-expand'"
     (click)="expand.emit(source)">
     add

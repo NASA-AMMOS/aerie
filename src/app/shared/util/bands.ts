@@ -327,9 +327,7 @@ export function toResourceBand(
     labelPin: '',
     labelUnit: metadata.hasUnits || '',
     logTicks: false,
-    maxLimit: metadata.maxLimit || null,
     maxTimeRange,
-    minLimit: metadata.minLimit || null,
     name: metadata.hasObjectName,
     parentUniqueId: null,
     points,
@@ -342,6 +340,12 @@ export function toResourceBand(
     tableColumns: [],
     type: 'resource',
   };
+  if (metadata.maxLimit !== undefined) {
+    resourceBand.maxLimit = metadata.maxLimit;
+  }
+  if (metadata.minLimit !== undefined) {
+    resourceBand.minLimit = metadata.minLimit;
+  }
 
   return resourceBand;
 }
