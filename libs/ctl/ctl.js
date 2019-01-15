@@ -3379,7 +3379,7 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
       tickValues.push (Number(tickValuesObj[key]));
   });
   tickValues = tickValues.sort((a,b) => a - b);
-  tickValues = tickValues.map(tick=>tick.toString());
+  tickValues = tickValues.map(tick=>this.band.scientificNotation ? tick.toExponential() : tick.toString());
 
   // if no tick values to render, return early and return the original
   // xStart location
