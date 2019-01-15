@@ -128,22 +128,6 @@ export class RavenEpochsComponent implements AfterViewInit, OnChanges {
   }
 
   /**
-   * Read an input Epoch file. Emit new epochs if read is successful.
-   */
-  readFile(file: File): void {
-    const reader: FileReader = new FileReader();
-
-    reader.onloadend = e => {
-      if (typeof reader.result === 'string') {
-        const newEpochs: RavenEpoch[] = JSON.parse(reader.result);
-        this.importEpochs.emit(newEpochs);
-      }
-    };
-
-    reader.readAsText(file);
-  }
-
-  /**
    * Event. Called when the row selection changes.
    */
   onSelectionChanged() {
