@@ -4,7 +4,7 @@ The time cursor marks the time passing amongst all the bands in the timeline. It
 
 <p align="center"><img src="./images/time_cursor.png" width="400" /></p>
 
-*<p align="center">**Image 16.** Time cursor displayed among all the bands in the main and south Bands panels.</p>*
+*<p align="center">**Figure 18.** Time cursor displayed among all the bands in the main and south Bands panels.</p>*
 
 #### How to: Add a Time Cursor
 
@@ -16,7 +16,7 @@ The time cursor marks the time passing amongst all the bands in the timeline. It
 
 <p align="center"><img src="./images/open_time_cursor.png" width="400" /></p>
 
-*<p align="center">**Image 17.** Where to select the 'Manage Time Cursor' menu option.</p>*
+*<p align="center">**Figure 19.** Where to select the 'Manage Time Cursor' menu option.</p>*
 
 4. A new drawer is displayed with the Time Cursor options.
 
@@ -24,7 +24,7 @@ The time cursor marks the time passing amongst all the bands in the timeline. It
 
 <p align="center"><img src="./images/time_cursor_in_action.png" width="400" /></p>
 
-*<p align="center">**Image 18: Time cursor added in the application.** Note that in the left side of the application a drawer to Manage Time Cursor is opened. 'Other Options Section' will provide details.</p>*
+*<p align="center">**Figure 19: Time cursor added in the application.** Note that in the left side of the application a drawer to Manage Time Cursor is opened. 'Other Options Section' will provide details.</p>*
 
 ### Other options
 

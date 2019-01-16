@@ -1,14 +1,14 @@
-# Bands
+#  Bands
 
 <p align="center"><img src="./images/bands_container.png" width="500"/></p>
 
-*<p align="center">**Image 8.** Bands represent the selected sources in the Source Explorer, displaying one or more data sources per band. There are two panels: (1) the Main Bands Panel and the (2) the South Bands Panel. The user can move the bands between both panels and arrange their order if desired.</p>*
+*<p align="center">**Figure 8.** Bands represent the selected sources in the Source Explorer, displaying one or more data sources per band. There are two panels: (1) the Main Bands Panel and the (2) the South Bands Panel. The user can move the bands between both panels and arrange their order if desired.</p>*
 
-A band is how timeline data is presented within RAVEN. When a data source is selected a band is added to the Main Bands Panel and its data is displayed. There are three different band types that the user can add: Activity, Resource and State Bands. 
+A band is how the timeline data is presented within RAVEN. When a data source is selected a band is added to the *Main Bands Panel* and its data is displayed. There are three different band types that the user can add: Activity, Resource and State Bands. 
 
 <p align="center"><img src="./images/bands_types.png" width="600"/></p>
 
-*<p align="center">**Image 9: Band Types.** When a band is added for the first time, the (1) Timeline Band is also added to the Main Panel. This Band displays the "view time range" among all the bands. You can hover over this band to see the timestamp or brush on it to change the viewing range. There are 3 different kinds of bands to display data: (2) Resource Band, (3) State Band and (4) Activity Band.</p>*
+*<p align="center">**Figure 9: Band Types.** When a band is added for the first time, the (1) Timeline Band is also added to the Main Panel. This Band displays the view time range among all the bands. You can hover over this band to see the timestamp or brush on it to change the viewing range. There are 3 different kinds of bands to display data: (2) Resource Band, (3) State Band and (4) Activity Band.</p>*
 
 Each band type has its own settings that can be modified. In order to perform this action, you need to select a band and the right panel will show the available configuration options.
 
@@ -16,11 +16,9 @@ Each band type has its own settings that can be modified. In order to perform th
 
 <p align="center"><img src="./images/select_band_b.png"/></p>
 
-*<p align="center">**Image 10: How to select a band.** Left side: Click on the band's label area. Right side: As a result of the selection, the band will be highlighted, the details panel will display the bands data points in a table and the Selected Band Tab in the right panel will be populated with the configuration options for the selected band.</p>*
+*<p align="center">**Figure 10: How to select a band.** Left side: Click on the band's label area. Right side: As a result of the selection, the band will be highlighted, the details panel will display the bands data points in a table and the Selected Band Tab in the right panel will be populated with the configuration options for the selected band.</p>*
 
 Given a band exists in the Bands Panel, click the band in the label area.  Selecting a band will trigger the following actions:  the band's background will be highlighted with a light blue; The Details panel will populate a table with the source's data points; and The Right Panel will display the Band's configuration options in the Selected Band Tab. 
-
-
 
 ## Global Settings
 
@@ -43,7 +41,7 @@ The global settings will apply to all the bands once the options are changed.
 
 <p align="center"><img src="./images/selected_bands_options_by_type.png" width="600"/></p>
 
-*<p align="center">**Image 11.** Selected Band Configuration Options by Band Type for (1) the Resource Bands, (2) the States Bands and (3) the Activities Bands.</p>*
+*<p align="center">**Figure 11.** Selected Band Configuration Options by Band Type for (1) the Resource Bands, (2) the States Bands and (3) the Activities Bands.</p>*
 
 #### Common Options 
 
@@ -71,7 +69,7 @@ These are the configuration options shared among all the band types.
 | Log Scale              | If this option is Turned On, it will calculate the log for all the data points and graph them. |
 | Scientific Notation    | If this option is Turned On, the yAxis ticks will be represented with scientific notation. |
 | Show Icon              | If this option is Turned On, icons will be show for each data point. |
-| Default Icon           | If Show Icon is On, the selected Icon will be the one displayed for each data point. Options: None, Plus, Cross, Circle, Triangle, Square and Diamond. |
+| Icon                   | If Show Icon is On, the selected Icon will be the one displayed for each data point. Options: None, Plus, Cross, Circle, Triangle, Square and Diamond. |
 | Composite Y-Axis Label | If this option is Turned On and if there are two or more resource band types overlaid, then the Y-axis will works as a one. In addition, options like `Scientific Notation`, `Log Scale` and `Auto Scale` will be applied to the composite y-axis. |
 
 #### State Options
@@ -80,16 +78,18 @@ These are the configuration options shared among all the band types.
 | ------------------------ | ------------------------------------------------------------ |
 | Horizontally Align Label | Will align the label of each data point horizontally. Options are: Left and Center. |
 | Vertically Align Label   | Will align the label of each data point vertically. Options are: Top, Bottom and Center. |
+| Show State Change Times  | If this option is Turned On, it will apend the state times at the bottom of each state. |
+| Plot Type                | Defined how the states are represented in the band. Options: Bar and Line. |
 
 #### Activity Band Options 
 
 | Option                | Description                                                  |
 | --------------------- | ------------------------------------------------------------ |
-| Layout                | Defines how the activities are displayed in the Band. Options are (1) Autofit (2) Waterfall and (3) Packed. <p align="center"><img src="./images/activities_layout.png" width="600"/></p> |
-| Activity Style        | Defines how the data points will be displayed. Options are (1) Bar, (2) Icon and (3) Line. <p align="center"><img src="./images/activities_style.png" width="600"/></p> |
+| Layout                | Defines how the activities are displayed in the Band. Options are (1) Autofit (2) Waterfall and (3) Packed. <p align="center"><img src="./images/activities_layout.png" width="400"/></p> |
+| Activity Style        | Defines how the data points will be displayed. Options are (1) Bar, (2) Icon and (3) Line. <p align="center"><img src="./images/activities_style.png" width="400"/></p> |
 | Horizontally Align    | Will align the label of each data point horizontally. Options are: Left and Center. |
 | Vertically Align      | Will align the label of each data point vertically. Options are: Top, Bottom and Center. |
-| Show Activities Times | If On, it will show at what time an activity starts and ends in the bottom of the activities.<p align="center"><img src="./images/activities_show_times.png" width="400"/></p> |
+| Show Activities Times | If On, it will show at what time an activity starts and ends in the bottom of the activities.<p align="center"><img src="./images/activities_show_times.png" width="300"/></p> |
 | Add To                | If On, future selected sources will add the data points to the same band. |
 | Default Icon          | If Activity Style is set to Icon, the selected Icon will be the one displayed for each data point. Options: None, Plus, Cross, Circle, Triangle, Square and Diamond. |
 | Show Labels           | If On, labels will be shown for each data points.            |
@@ -99,8 +99,6 @@ These are the configuration options shared among all the band types.
 | Option            | Description                                |
 | ----------------- | ------------------------------------------ |
 | Background Color  | Sets the background color of the divider.  |
-
-
 
 #### How to: Overlay Bands
 
@@ -116,9 +114,7 @@ Overlaying bands allows for multiple data sources of any type to be overlaid wit
 
 <p align="center"><img src="./images/overlaid_options.png" width="400"/></p>
 
-*<p align="center">**Image 12.** When a band is overlaid, the Selected Band Panel will add a Selected Sub-Band option. This will allow the user to change the properties of both overlaid sources. In the case that the user uses 'Add To' instead of 'Overlay' this option will not be provided, since the data points for both sources will exist in the same band.</p>*
-
-
+*<p align="center">**Figure 12.** When a band is overlaid, the Selected Band Panel will add a Selected Sub-Band option. This will allow the user to change the properties of both overlaid sources. In the case that the user uses 'Add To' instead of 'Overlay' this option will not be provided, since the data points for both sources will exist in the same band.</p>*
 
 #### How to: 'Add To' Activity Bands
 
@@ -128,6 +124,14 @@ Overlaying bands allows for multiple data sources of any type to be overlaid wit
 2. Select the band by clicking the label.
 3. In the Selected Band Tab in the Right Panel, set true the 'Add To' option.
 4. Select another source of your preference. The data points of this last selected source will be added in the same band from step one.
+
+#### How to: 'Graph Again' a source
+
+'Graph Again' allows users to add the same source as much times as desired to the Bands Panel.  This can be useful, for example, when an user wants to add the same source to different overlaid bands. To do so, a band should be already added. The source explorer will identified the added source with a blue color.
+
+1. Select the source in the Source Explorer.  The source will be highlighted and a snowman icon  (<img src="./images/baseline-more_vert-24px.svg" width="20" />) will appear.
+2. Click the snowman icon (<img src="./images/baseline-more_vert-24px.svg" width="20" />).
+3. In the dropdown, select: Graph Again.
 
 #### How to: Add Divider Band
 
@@ -142,7 +146,7 @@ There are different ways to change the view range for your bands. From the Top B
 
 <p align="center"><img src="./images/time_management_top_bar.png" width="400"/></p>
 
-*<p align="center">**Image 13.** The Top Bar contains options to update the view range such as:  (1) 'Pan To' Options, (2) Reset Time, (3) Zoom In/Out, and (4) Pan Left/Right Options.</p>*
+*<p align="center">**Figure 13.** The Top Bar contains options to update the view range such as:  (1) 'Pan To' Options, (2) Reset Time, (3) Zoom In/Out, and (4) Pan Left/Right Options.</p>*
 
 ###### Pan To
 
@@ -179,7 +183,7 @@ To zoom your view range from the timeline bar,
 
 <p align="center"><img src="./images/brush.png" width="400"/></p>
 
-*<p align="center">**Image 14. How to: Execute Brush in the Timeline.** Top side: Click and hold at any place where you want to start or end your view range. Middle Side: Move your cursor left or right and release the cursor once the desired duration is selected. Bottom side: All the bands in the Bands Panels will update their view based on the user's selection.</p>*
+*<p align="center">**Figure 14. How to: Execute Brush in the Timeline.** Top side: Click and hold at any place where you want to start or end your view range. Middle Side: Move your cursor left or right and release the cursor once the desired duration is selected. Bottom side: All the bands in the Bands Panels will update their view based on the user's selection.</p>*
 
 
 
@@ -189,13 +193,13 @@ To select a Data Point, click on the data point of your preference. When a data 
 
 <p align="center"><img src="./images/select_data_point.png" /></p>
 
-*<p align="center">**Image 15: Select a Data Point.** Left side: On a band of your preference, click any data point. Right Side: Once a data point is selected, the details panel will scroll and highlight the selected data point. Also within the 'Selected Point' Tab in the Right Panel, the data point's metadata will be displayed.</p>*
+*<p align="center">**Figure 15: Select a Data Point.** Left side: On a band of your preference, click any data point. Right Side: Once a data point is selected, the details panel will scroll and highlight the selected data point. Also within the 'Selected Point' Tab in the Right Panel, the data point's metadata will be displayed.</p>*
 
 ##### How to: Expand Activity Data Points
 | Option            | Description                                |
 | ----------------- | ------------------------------------------ |
 | No Expansion | Displays only the parent activity.|
-| Children Expansion | Displays the immediate children of the selected activity. | 
+| Children Expansion | Displays the immediate children of the selected activity. |
 | Descendants Expansion  | Displays all the descendants of the selected activity (Children of Children). |
 
 1. Make sure that you have an activity band in the bands panels.
