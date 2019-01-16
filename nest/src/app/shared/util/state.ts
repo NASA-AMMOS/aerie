@@ -48,6 +48,10 @@ export function getRavenState(name: string, state: RavenAppState): RavenState {
     maxTimeRange: state.raven.timeline.maxTimeRange,
     name,
     pins: state.raven.sourceExplorer.pins,
+    showDetailsPanel: state.raven.layout.showDetailsPanel,
+    showLeftPanel: state.raven.layout.showLeftPanel,
+    showRightPanel: state.raven.layout.showRightPanel,
+    showSouthBandsPanel: state.raven.layout.showSouthBandsPanel,
     version: '1.0.0',
     viewTimeRange: {
       end: timestamp(state.raven.timeline.viewTimeRange.end, true),
@@ -138,5 +142,9 @@ export function importState(state: any): RavenState {
           })),
         };
       }),
+      showDetailsPanel: state.showDetailsPanel === undefined ? true : state.showDetailsPanel,
+      showLeftPanel: state.showLeftPanel === undefined ? true : state.showLeftPanel,
+      showRightPanel: state.showRightPanel === undefined ? true : state.showRightPanel,
+      showSouthBandsPanel: state.showSouthBandsPanel === undefined ? true : state.showSouthBandsPanel,
   };
 }
