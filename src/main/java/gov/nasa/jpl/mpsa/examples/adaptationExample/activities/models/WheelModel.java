@@ -1,15 +1,18 @@
 package gov.nasa.jpl.mpsa.examples.adaptationExample.activities.models;
 
+import gov.nasa.jpl.mpsa.activities.Parameter;
 import gov.nasa.jpl.mpsa.activities.operations.AdaptationModel;
 import gov.nasa.jpl.mpsa.resources.Resource;
 import gov.nasa.jpl.mpsa.resources.ResourcesContainer;
+
+import java.util.List;
 
 public class WheelModel implements AdaptationModel {
 
     private int x = 0;
 
     @Override
-    public void setup() {
+    public void setup(List<Parameter> parameters) {
         // DO SOME PREPARATION
         System.out.println("calculates a formula needed for something");
         this.x = 10;
@@ -36,6 +39,3 @@ public class WheelModel implements AdaptationModel {
     }
 
 }
-
-
-
