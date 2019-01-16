@@ -181,7 +181,9 @@ public class Resource<V extends Comparable> {
         this.minimum = (V) builder.minimum;
         this.maximum = (V) builder.maximum;
         this.frozen = builder.frozen;
-        this.setValue( (V) builder.initialValue);
+        if (builder.initialValue != null) {
+            this.setValue((V) builder.initialValue);
+        }
     }
 
 
