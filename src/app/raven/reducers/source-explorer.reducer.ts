@@ -22,6 +22,7 @@ import {
   PinAdd,
   PinRemove,
   PinRename,
+  RemoveCustomFilter,
   RemoveFilter,
   RemoveSource,
   SelectSource,
@@ -153,6 +154,8 @@ export function reducer(
       return pinRemove(state, action);
     case SourceExplorerActionTypes.PinRename:
       return pinRename(state, action);
+    case SourceExplorerActionTypes.RemoveCustomFilter:
+      return removeCustomFilter(state, action);
     case SourceExplorerActionTypes.RemoveFilter:
       return removeFilter(state, action);
     case SourceExplorerActionTypes.RemoveGraphableFilter:
@@ -421,6 +424,24 @@ export function pinRename(
       }
       return pin;
     }),
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'RemoveCustomFilter' action.
+ */
+export function removeCustomFilter(
+  state: SourceExplorerState,
+  action: RemoveCustomFilter,
+): SourceExplorerState {
+  const customFilters = state.customFiltersBySourceId[action.sourceId] || [];
+
+  return {
+    ...state,
+    customFiltersBySourceId: {
+      ...state.customFiltersBySourceId,
+      [action.sourceId]: customFilters.filter(customFilter =>customFilter.label !== action.label),
+    },
   };
 }
 
