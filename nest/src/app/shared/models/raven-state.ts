@@ -25,6 +25,10 @@ export interface RavenState {
   maxTimeRange: RavenTimeRange;
   name: string;
   pins: RavenPin[];
+  showDetailsPanel: boolean;
+  showLeftPanel: boolean;
+  showRightPanel: boolean;
+  showSouthBandsPanel: boolean;
   version: string;
   viewTimeRange: RavenTimeRangeDoy;
 }

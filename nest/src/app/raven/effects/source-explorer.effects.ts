@@ -107,6 +107,7 @@ import * as layoutActions from '../actions/layout.actions';
 import * as sourceExplorerActions from '../actions/source-explorer.actions';
 import * as timelineActions from '../actions/timeline.actions';
 
+import * as fromLayout from '../reducers/layout.reducer';
 import * as fromSourceExplorer from '../reducers/source-explorer.reducer';
 import * as fromTimeline from '../reducers/timeline.reducer';
 import { withLoadingBar } from './utils';
@@ -1386,6 +1387,7 @@ export class SourceExplorerEffects {
             fetchPending: true,
           }),
         ),
+        ...this.updatePanels(savedState),
         of(
           new timelineActions.UpdateTimeline({
             ...fromTimeline.initialState,
@@ -1901,6 +1903,26 @@ export class SourceExplorerEffects {
       });
     });
 
+    return actions;
+  }
+
+  /**
+   * Helper. Returns a stream of actions that need to occur when restoring the layout of the panels.
+   */
+  updatePanels(savedState: RavenState): Observable<Action>[]{
+    const actions: Observable<Action>[] = [];
+    if (!savedState.showDetailsPanel) {
+      actions.push(of(new layoutActions.ToggleDetailsPanel()));
+    }
+    if (!savedState.showRightPanel) {
+      actions.push(of(new layoutActions.ToggleRightPanel()));
+    }
+    if (!savedState.showLeftPanel) {
+      actions.push(of(new layoutActions.ToggleLeftPanel()));
+    }
+    if (!savedState.showSouthBandsPanel) {
+      actions.push(of(new layoutActions.ToggleSouthBandsPanel()));
+    }
     return actions;
   }
 }
