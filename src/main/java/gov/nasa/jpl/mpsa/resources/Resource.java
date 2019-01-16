@@ -1,3 +1,4 @@
+
 package gov.nasa.jpl.mpsa.resources;
 
 import gov.nasa.jpl.mpsa.time.Time;
@@ -15,16 +16,21 @@ public class Resource<V extends Comparable> {
     private String units;
     private String interpolation;
     private Set allowedValues;
-    private List<String> indices;
     private V minimum;
     private V maximum;
+
     // other resources or conditions might want to listen to when we change, so we will keep a collection of listeners
-    // we want a Set instead of a List because we never ever want to notify the same thing that we've changed twice - that could trigger duplicate events
+
+    // we want a Set instead of a List because we never ever want to notify the same thing that we've changed twice -
+    // that could trigger duplicate events
     private Set<PropertyChangeListener> listeners;
+
     // if resource has been read in and we don't want to modify it, set frozen boolean
     private boolean frozen = false;
+
     // setting up main data structure that holds value history
-    private TreeMap<Time, V> resourceHistory = new TreeMap<Time, V>();
+    private List<V> resourceHistory = new ArrayList<V>();
+
 
     public UUID getId() {
         return id;
@@ -110,12 +116,17 @@ public class Resource<V extends Comparable> {
         private Set allowedValues;
         private V minimum;
         private V maximum;
-        private List<String> indices;
         private boolean frozen;
+        private V initialValue;
 
         public Builder(String name) {
             this.id = UUID.randomUUID();
             this.name = name;
+        }
+
+        public Builder withInitialValue(V value) {
+            this.initialValue = value;
+            return this;
         }
 
         public Builder forSubsystem(String subsystem) {
@@ -165,12 +176,12 @@ public class Resource<V extends Comparable> {
         this.name = builder.name;
         this.subsystem = builder.subsystem;
         this.units = builder.units;
-        this.indices = builder.indices;
         this.interpolation = builder.interpolation;
         this.allowedValues = builder.allowedValues;
         this.minimum = (V) builder.minimum;
         this.maximum = (V) builder.maximum;
         this.frozen = builder.frozen;
+        this.setValue( (V) builder.initialValue);
     }
 
 
@@ -193,19 +204,11 @@ public class Resource<V extends Comparable> {
         name = str;
     }
 
-    public List<String> getIndices() {
-        return indices;
-    }
-
-    public void setIndices(List<String> index) {
-        indices = index;
-    }
-
     public boolean resourceHistoryHasElements() {
         return !resourceHistory.isEmpty();
     }
 
-    public void clearHistory() { resourceHistory = new TreeMap<Time, V>(); }
+    public void clearHistory() { resourceHistory = new ArrayList<V>(); }
 
     public void setValue(V value) {
 
@@ -223,27 +226,25 @@ public class Resource<V extends Comparable> {
             throw new RuntimeException("Value not allowed");
         }
 
-        // TODO: Discuss why we must rely on time. What if I just want a list of stuff ordered by "insertion" time.
-        // I get that when doing simulation it is easy to just pull from a table using the hash key (time)
-        // but makes it inflexible.
-//        Time currentTime = ModelingEngine.getEngine().getCurrentTime();
-//        Time lastTime = lastTimeSet();
-//        V lastValue = lastValue();
-//        // we want to notify listeners that our value is changing
-//        synchronized (resourceHistory) {
-//            resourceHistory.put(currentTime, inVal);
-//        }
-//
-//        // if we're not reading a file and are getting these values from activity modeling sections, we need to tell our listeners
-//        if (!ModelingEngine.getEngine().isCurrentlyReadingInFile()) {
-//            // we notify after we update in order to not get into an infinite loop with schedulers who want to update the resource that notifies them
-//            notifyListeners(new AbstractMap.SimpleImmutableEntry(lastTime, lastValue), new AbstractMap.SimpleImmutableEntry(currentTime, inVal));
-//        }
+        /*
+        TODO: Discuss why we must rely on time. What if I just want a list of stuff ordered by "insertion" time.
+        I get that when doing simulation it is easy to just pull from a table using the hash key (time)
+        but makes it inflexible.
+        */
+
+        resourceHistory.add(value);
+
     }
 
     public V getCurrentValue() {
-        // TODO: to be implemented after answer in previous question is provided.
-        return (V)"Something";
+        if (resourceHistory.size()-1 < 0) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        else return resourceHistory.get(resourceHistory.size() - 1);
+    }
+
+    public List<V> getResourceHistory() {
+        return resourceHistory;
     }
 
     @Override
