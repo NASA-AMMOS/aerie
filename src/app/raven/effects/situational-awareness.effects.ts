@@ -60,6 +60,11 @@ export class SituationalAwarenessEffects {
     map(([action, state]) => ({ action, state })),
     concatMap(({ state, action }) =>
       concat(
+        of(
+          new situationalAwarenessActions.UpdateSituationalAwarenessSettings({
+            situationalAware: action.situAware,
+          }),
+        ),
         action.situAware
           ? this.getPefEntriesAsState(
               action.url,
@@ -68,11 +73,6 @@ export class SituationalAwarenessEffects {
           : of(
               new timelineActions.RemoveBandsOrPointsForSource('situAwarePef'),
             ),
-        of(
-          new situationalAwarenessActions.UpdateSituationalAwarenessSettings({
-            situationalAware: action.situAware,
-          }),
-        ),
         action.situAware
           ? of(
               new timelineActions.UpdateViewTimeRange(
@@ -87,6 +87,14 @@ export class SituationalAwarenessEffects {
         ),
       ),
     ),
+    catchError((e: Error) => {
+      return of(
+        new situationalAwarenessActions.UpdateSituationalAwarenessSettings({
+          fetchPending: false,
+          pefEntries: [],
+        }),
+      );
+    }),
   );
 
   @Effect()
