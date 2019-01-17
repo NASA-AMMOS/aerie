@@ -2,7 +2,7 @@
 
 ### About
 
-RAVEN is a web-based application included in the SEQ subsystem of the Advanced Multimission Operations System (AMMOS) and managed by the Multimission Ground System and Services (MGSS). It allows users to view science planning, spacecraft activities, resource usage and predicted data, and/or any time-based data. The visualization happens in the context of a timeline via a web browser. Moreover, this information can be viewed simultaneously by different users/teams distributed in different geographial location with the purpose of collaboration when visualizing activity plans and command sequences. 
+RAVEN is a component of the web-based platform NEST. NEST is the Mission Planning, Sequencing and Analysis (MPSA) Team's platform to provide a cohesive user experience to multi-mission users that require activity planning, sequencing, validation and analysis capabilities.  RAVEN's role within this platform is to allow users to view science planning, spacecraft activities, resource usage and predicted data, and/or any time-based data. The visualization happens in the context of a timeline via a web browser. Moreover, this information can be viewed simultaneously by different users/teams distributed in different geographial location with the purpose of collaboration when visualizing activity plans and command sequences. 
 
 ### Getting Stated
 
