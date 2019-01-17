@@ -1,5 +1,6 @@
 package gov.nasa.jpl.schedule;
 
+import gov.nasa.jpl.schedule.models.Schedule;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,13 +25,15 @@ public class ScheduleController {
         ScheduleContext context;
         switch(algorithm.toLowerCase()) {
             case "greedy forward dispatch":
-                context = new ScheduleContext(new GreedyForwardDispatch(planId));
+                context = new ScheduleContext(new GreedyForwardDispatch(), planId);
                 break; // break is optional
 
             default:
-                context = new ScheduleContext(new GreedyForwardDispatch(planId));
+                context = new ScheduleContext(new GreedyForwardDispatch(), planId);
                 break;
         }
+
+        Schedule schedule = context.execute();
 
         return ResponseEntity.ok().build();
     }
