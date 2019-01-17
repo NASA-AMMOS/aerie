@@ -131,10 +131,7 @@ export class HawkAppComponent {
         readonly: true,
         value: data.activityTypeId,
       }),
-      duration: new FormControl(data.duration, [
-        Validators.required,
-        Validators.pattern('^dd:dd$'),
-      ]),
+      duration: new FormControl(data.duration, [Validators.required]),
       intent: new FormControl(data.intent),
       name: new FormControl(data.name, [Validators.required]),
       sequenceId: new FormControl(data.sequenceId),
