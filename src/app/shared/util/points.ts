@@ -8,6 +8,8 @@
  */
 
 import { uniqueId } from 'lodash';
+import { colorHexToRgbArray, colorMap, getRandomColor } from './color';
+import { fromDuration, timestamp, utc } from './time';
 
 import {
   MpsServerActivityPoint,
@@ -23,10 +25,6 @@ import {
   RavenStatePoint,
   StringTMap,
 } from '../models';
-
-import { colorHexToRgbArray, colorMap, getRandomColor } from './color';
-
-import { fromDuration, timestamp, utc } from './time';
 
 /**
  * Helper that gets a color from activity metadata.

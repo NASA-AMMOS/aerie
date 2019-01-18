@@ -8,11 +8,14 @@
  */
 
 import { Action } from '@ngrx/store';
+
 import {
   RavenActivity,
   RavenActivityDetail,
+  RavenActivityUpdate,
   RavenPlan,
   RavenPlanDetail,
+  RavenTimeRange,
 } from '../../shared/models';
 
 export enum PlanActionTypes {
@@ -35,6 +38,9 @@ export enum PlanActionTypes {
   SavePlan = '[plan] save_plan',
   SavePlanFailure = '[plan] save_plan_failure',
   SavePlanSuccess = '[plan] save_plan_success',
+  SelectActivity = '[plan] select_activity',
+  UpdateSelectedActivity = '[plan] update_selected_activity',
+  UpdateViewTimeRange = '[plan] update_view_time_range',
 }
 
 export class FetchPlanDetail implements Action {
@@ -147,6 +153,24 @@ export class SavePlanSuccess implements Action {
   constructor(public data: RavenPlan) {}
 }
 
+export class SelectActivity implements Action {
+  readonly type = PlanActionTypes.SelectActivity;
+
+  constructor(public id: string | null) {}
+}
+
+export class UpdateSelectedActivity implements Action {
+  readonly type = PlanActionTypes.UpdateSelectedActivity;
+
+  constructor(public update: RavenActivityUpdate) {}
+}
+
+export class UpdateViewTimeRange implements Action {
+  readonly type = PlanActionTypes.UpdateViewTimeRange;
+
+  constructor(public viewTimeRange: RavenTimeRange) {}
+}
+
 export type PlanActions =
   | FetchPlanDetail
   | FetchPlanDetailFailure
@@ -166,4 +190,7 @@ export type PlanActions =
   | SaveActivityDetailSuccess
   | SavePlan
   | SavePlanFailure
-  | SavePlanSuccess;
+  | SavePlanSuccess
+  | SelectActivity
+  | UpdateSelectedActivity
+  | UpdateViewTimeRange;

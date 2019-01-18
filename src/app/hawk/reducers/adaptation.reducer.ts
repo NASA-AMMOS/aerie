@@ -10,6 +10,7 @@
 import { omit } from 'lodash';
 import { RavenAdaptation } from '../../shared/models/raven-adaptation';
 import { RavenAdaptationDetail } from '../../shared/models/raven-adaptation-detail';
+import { AdaptationState } from './adaptation.reducer';
 
 import {
   AdaptationActions,
@@ -17,8 +18,6 @@ import {
   RemoveActivityType,
   SaveActivityTypeSuccess,
 } from '../actions/adaptation.actions';
-
-import { AdaptationState } from './adaptation.reducer';
 
 /**
  * Schema for Adaptation state

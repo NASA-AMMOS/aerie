@@ -29,37 +29,73 @@
         </button>
       </div>
 
-      <table mat-table [dataSource]="activities$ | async" *ngIf="selectedPlan$ | async">
-        <!--- Note that these columns can be defined in any order.
-                The actual rendered columns are set as a property on the row definition" -->
+      <div
+        *ngIf="selectedPlan$ | async"
+        class="plan-container">
+        <div
+          class="plan-timeline">
+          <nest-time-band
+            [maxTimeRange]="maxTimeRange$ | async"
+            [viewTimeRange]="viewTimeRange$ | async"
+            (updateViewTimeRange)="onUpdateViewTimeRange($event)"
+          ></nest-time-band>
 
-        <!-- Position Column -->
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef> Activity </th>
-          <td mat-cell *matCellDef="let element"> {{element.name}} </td>
-        </ng-container>
+          <nest-activity-band
+            [maxTimeRange]="maxTimeRange$ | async"
+            [points]="activities$ | async"
+            [selectedActivity]="selectedActivity$ | async"
+            [viewTimeRange]="viewTimeRange$ | async"
+            (selectActivity)="onSelectActivity($event)"
+            (updateSelectedActivity)="onUpdateSelectedActivity($event)"
+          ></nest-activity-band>
+        </div>
 
-        <!-- Name Column -->
-        <ng-container matColumnDef="start">
-          <th mat-header-cell *matHeaderCellDef> Start Date and Time </th>
-          <td mat-cell *matCellDef="let element"> {{element.start}} </td>
-        </ng-container>
+        <div
+          class="plan-table">
+          <table mat-table [dataSource]="activities$ | async">
+            <!--
+              Note that these columns can be defined in any order.
+              The actual rendered columns are set as a property on the row definition.
+            -->
 
-        <!-- Weight Column -->
-        <ng-container matColumnDef="duration">
-          <th mat-header-cell *matHeaderCellDef> Duration </th>
-          <td mat-cell *matCellDef="let element"> {{element.duration}} </td>
-        </ng-container>
+            <ng-container matColumnDef="id">
+              <th mat-header-cell *matHeaderCellDef> Activity ID </th>
+              <td mat-cell *matCellDef="let element"> {{element.id}} </td>
+            </ng-container>
 
-        <!-- Symbol Column -->
-        <ng-container matColumnDef="sequenceId">
-          <th mat-header-cell *matHeaderCellDef> Sequence ID </th>
-          <td mat-cell *matCellDef="let element"> {{element.sequenceId}} </td>
-        </ng-container>
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef> Activity Name </th>
+              <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+            </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="showActivityForm(row)"></tr>
-      </table>
+            <ng-container matColumnDef="start">
+              <th mat-header-cell *matHeaderCellDef> Start Date and Time </th>
+              <td mat-cell *matCellDef="let element"> {{element.startTimestamp}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="end">
+              <th mat-header-cell *matHeaderCellDef> End Date and Time </th>
+              <td mat-cell *matCellDef="let element"> {{element.endTimestamp}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="duration">
+              <th mat-header-cell *matHeaderCellDef> Duration </th>
+              <td mat-cell *matCellDef="let element"> {{element.duration}} </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr
+              mat-row
+              *matRowDef="let row; columns: displayedColumns; let activity"
+              (click)="showActivityForm(row)"
+              class="plan-table-row"
+              [ngClass]="{
+                'highlight': selectedActivity && selectedActivity.id === activity.id
+              }">
+            </tr>
+          </table>
+        </div>
+      </div>
     </mat-sidenav-content>
 
     <mat-sidenav #sideNav mode="side" position="end" opened="false">
@@ -107,7 +143,7 @@
               <mat-label>Activity Type</mat-label>
               <mat-select
                 placeholder="Select Activity Type"
-                [formControl]="form.controls['activityTypeId']"
+                [formControl]="form.controls['id']"
                 required
                 [compareWith]="compareSelectValues"
                 readonly>
@@ -134,8 +170,8 @@
               <input
                 matInput
                 placeholder="Start time"
-                type="datetime-local"
-                [formControl]="form.controls['start']"
+                type="text"
+                [formControl]="form.controls['startTimestamp']"
                 required />
               <mat-hint align="start">UTC within plan bounds</mat-hint>
               <mat-icon matSuffix>event</mat-icon>
@@ -146,10 +182,10 @@
               <input
                 matInput
                 placeholder="Duration"
-                type="text"
+                type="number"
                 [formControl]="form.controls['duration']"
                 required />
-              <mat-hint align="start">hh:mm</mat-hint>
+              <mat-hint align="start">000</mat-hint>
               <mat-icon matSuffix>hourglass_empty</mat-icon>
             </mat-form-field>
 
@@ -167,7 +203,7 @@
               <mat-label>Sequence ID</mat-label>
               <input
                 matInput
-                placeholder="Duration"
+                placeholder="Sequence ID"
                 type="text"
                 [formControl]="form.controls['sequenceId']"
                 required />

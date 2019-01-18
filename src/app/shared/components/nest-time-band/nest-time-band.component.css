@@ -7,20 +7,19 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-/**
- * A rudimentary interface for activity instances
- */
-export interface RavenActivity {
-  activityTypeId: string;
-  color: string;
-  duration: number;
-  end: number;
-  endTimestamp: string;
-  id: string;
-  intent: string;
-  name: string;
-  sequenceId: string;
-  start: number;
-  startTimestamp: string;
-  y: number | null;
+:host {
+  border: 1px solid lightgrey;
+  display: block;
+  height: var(--time-band-height);
+  position: relative;
+  width: 100%;
+}
+
+::ng-deep .nest-time-band-axis--x .domain {
+  stroke: #fff;
+}
+
+.nest-time-band-svg {
+  height: inherit;
+  width: inherit;
 }
