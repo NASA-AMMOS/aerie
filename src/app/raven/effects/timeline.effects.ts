@@ -39,6 +39,8 @@ import {
   MpsServerGraphData,
   MpsServerResourceMetadata,
   MpsServerResourcePoint,
+  RavenActivityBand,
+  RavenActivityPoint,
   RavenCompositeBand,
   RavenDefaultBandSettings,
   RavenPin,
@@ -96,6 +98,7 @@ export class TimelineEffects {
           state.config.raven.defaultBandSettings,
           state.raven.sourceExplorer.treeBySourceId,
           state.raven.timeline.bands,
+          state.raven.timeline.expansionByActivityId,
         ),
         of(
           new timelineActions.ExpandChildrenOrDescendants(
@@ -242,6 +245,7 @@ export class TimelineEffects {
     defaultBandSettings: RavenDefaultBandSettings,
     treeBySourceId: StringTMap<RavenSource>,
     currentBands: RavenCompositeBand[],
+    expansionByActivityId: StringTMap<string>,
   ) {
     let sourceId = '';
     let pinLabel = '';
@@ -271,7 +275,7 @@ export class TimelineEffects {
               pinLabel,
             );
             if (activityBands.length > 0) {
-              activityBands.forEach(activityBand =>
+              activityBands.forEach(activityBand => {
                 actions.push(
                   new timelineActions.AddPointsToSubBand(
                     sourceId,
@@ -279,13 +283,30 @@ export class TimelineEffects {
                     activityBand.subBandId,
                     subBand.points,
                   ),
-                ),
-              );
+                );
+                actions.push(
+                  ...this.getChildrenOfExpandedPoints(
+                    activityBand.bandId,
+                    activityBand.subBandId,
+                    subBand as RavenActivityBand,
+                    expansionByActivityId,
+                  ),
+                );
+              });
             } else {
+              const ravenCompositeBand = toCompositeBand(subBand);
               actions.push(
                 new timelineActions.AddBand(
                   '__childrenOrDescendants',
-                  toCompositeBand(subBand),
+                  ravenCompositeBand,
+                ),
+              );
+              actions.push(
+                ...this.getChildrenOfExpandedPoints(
+                  ravenCompositeBand.id,
+                  subBand.id,
+                  subBand as RavenActivityBand,
+                  expansionByActivityId,
                 ),
               );
             }
@@ -315,6 +336,31 @@ export class TimelineEffects {
           ),
         ),
       );
+  }
+
+  /**
+   * Helper. Returns list of Actions to fetch children of expanded activity points.
+   */
+  getChildrenOfExpandedPoints(
+    bandId: string,
+    subBandId: string,
+    subBand: RavenActivityBand,
+    expansionByActivityId: StringTMap<string>,
+  ) {
+    const actions: Action[] = [];
+    subBand.points.forEach(point => {
+      if (expansionByActivityId[point.activityId]) {
+        actions.push(
+          new timelineActions.FetchChildrenOrDescendants(
+            bandId,
+            subBandId,
+            point as RavenActivityPoint,
+            expansionByActivityId[(point as RavenActivityPoint).activityId],
+          ),
+        );
+      }
+    });
+    return actions;
   }
 
   /**
