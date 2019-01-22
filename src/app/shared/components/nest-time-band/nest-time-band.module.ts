@@ -7,20 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-/**
- * A rudimentary interface for activity instances
- */
-export interface RavenActivity {
-  activityTypeId: string;
-  color: string;
-  duration: number;
-  end: number;
-  endTimestamp: string;
-  id: string;
-  intent: string;
-  name: string;
-  sequenceId: string;
-  start: number;
-  startTimestamp: string;
-  y: number | null;
-}
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { NestTimeBandComponent } from './nest-time-band.component';
+
+@NgModule({
+  declarations: [NestTimeBandComponent],
+  exports: [NestTimeBandComponent],
+  imports: [CommonModule],
+})
+export class NestTimeBandModule {}

@@ -39,13 +39,16 @@ export class ActivitiesComponent {
   activityTypes: Observable<RavenActivityType[] | null>;
   activityTypeId: string;
   constraints: RavenActivityConstraint[] = [];
-  duration: string; // Duration in the format `hh:mm`
+  duration: number; // Duration in seconds
+  end: number;
+  endTimestamp: string;
   id: string | null; // ID of the activity instance. Empty if this is new.
   intent: string; // Intent of the activity instance
   name: string;
   parameters: RavenActivityParameter[] = [];
   sequenceId: string;
-  start: string;
+  start: number;
+  startTimestamp: string;
   activityForm: FormGroup;
 
   /**
@@ -70,12 +73,15 @@ export class ActivitiesComponent {
       this.activityTypeId = activityDetail.activityTypeId;
       this.constraints = activityDetail.constraints;
       this.duration = activityDetail.duration;
+      this.end = activityDetail.end;
+      this.endTimestamp = activityDetail.endTimestamp;
       this.id = activityDetail.id;
       this.intent = activityDetail.intent;
       this.name = activityDetail.name;
       this.parameters = activityDetail.parameters;
       this.sequenceId = activityDetail.sequenceId;
       this.start = activityDetail.start;
+      this.startTimestamp = activityDetail.startTimestamp;
     }
 
     this.activityForm = fb.group({

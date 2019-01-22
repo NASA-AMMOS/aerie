@@ -7,10 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  EditorAction,
-  EditorActionTypes,
-} from '../actions/editor.actions';
+import { EditorAction, EditorActionTypes } from '../actions/editor.actions';
 
 export interface EditorState {
   line: number;

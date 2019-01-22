@@ -7,20 +7,19 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-/**
- * A rudimentary interface for activity instances
- */
-export interface RavenActivity {
-  activityTypeId: string;
-  color: string;
-  duration: number;
-  end: number;
-  endTimestamp: string;
-  id: string;
-  intent: string;
-  name: string;
-  sequenceId: string;
-  start: number;
-  startTimestamp: string;
-  y: number | null;
+import { RavenActivity } from './raven-activity';
+
+export interface RavenActivitySvg extends RavenActivity {
+  fill: string;
+  height: number;
+  labelFill: string;
+  labelFontFamily: string;
+  labelFontSize: number;
+  labelX: number;
+  labelY: number;
+  showLabel: boolean;
+  stroke: string;
+  width: number;
+  x: number;
+  y: number;
 }

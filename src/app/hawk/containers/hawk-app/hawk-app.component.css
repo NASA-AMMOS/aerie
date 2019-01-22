@@ -43,11 +43,24 @@ mat-form-field {
   margin-bottom: 1rem;
 }
 
+.plan-container {
+  display: grid;
+  grid-gap: 10px;
+}
+
+.plan-table-row {
+  cursor: pointer;
+}
+
 .form-controls {
   display: grid;
   justify-content: end;
   grid-template-columns: min-content min-content;
   grid-gap: 12px;
+}
+
+.highlight {
+  background-color: #fafafa;
 }
 
 raven-activity-type-list {

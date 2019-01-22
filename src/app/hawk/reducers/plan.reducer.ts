@@ -8,29 +8,44 @@
  */
 
 import { keyBy, omit } from 'lodash';
+import { getMaxTimeRange, timestamp } from '../../shared/util';
 
 import {
+  RavenActivity,
+  RavenPlan,
+  RavenPlanDetail,
+  RavenTimeRange,
+  StringTMap,
+} from '../../shared/models';
+
+import {
+  FetchPlanDetailSuccess,
+  FetchPlanListSuccess,
   PlanActions,
   PlanActionTypes,
   RemovePlan,
   SaveActivityDetailSuccess,
   SaveActivitySuccess,
   SavePlanSuccess,
+  SelectActivity,
+  UpdateSelectedActivity,
+  UpdateViewTimeRange,
 } from '../actions/plan.actions';
 
-import { RavenPlan, RavenPlanDetail, StringTMap } from '../../shared/models';
-
-/**
- * Schema for PlanState
- */
 export interface PlanState {
+  maxTimeRange: RavenTimeRange;
   plans: StringTMap<RavenPlan>;
+  selectedActivity: RavenActivity | null;
   selectedPlan: RavenPlanDetail | null;
+  viewTimeRange: RavenTimeRange;
 }
 
 export const initialState: PlanState = {
+  maxTimeRange: { end: 0, start: 0 },
   plans: {},
+  selectedActivity: null,
   selectedPlan: null,
+  viewTimeRange: { end: 0, start: 0 },
 };
 
 /**
@@ -43,9 +58,9 @@ export function reducer(
 ): PlanState {
   switch (action.type) {
     case PlanActionTypes.FetchPlanDetailSuccess:
-      return { ...state, selectedPlan: action.data };
+      return fetchPlanDetailSuccess(state, action);
     case PlanActionTypes.FetchPlanListSuccess:
-      return { ...state, plans: keyBy(action.data, 'id') };
+      return fetchPlanListSuccess(state, action);
     case PlanActionTypes.SavePlanSuccess:
       return planExists(state, action)
         ? insertPlan(state, action)
@@ -57,9 +72,115 @@ export function reducer(
       return activityExists(state, action)
         ? insertActivity(state, action)
         : updateActivity(state, action);
+    case PlanActionTypes.SelectActivity:
+      return selectActivity(state, action);
+    case PlanActionTypes.UpdateSelectedActivity:
+      return updateSelectedActivity(state, action);
+    case PlanActionTypes.UpdateViewTimeRange:
+      return updateViewTimeRange(state, action);
     default:
       return state;
   }
+}
+
+/**
+ * Reduction helper. Called when a 'FetchPlanDetailSuccess' action occurs.
+ */
+function fetchPlanDetailSuccess(
+  state: PlanState,
+  action: FetchPlanDetailSuccess,
+): PlanState {
+  const selectedPlan = action.data;
+  const activities = Object.values(selectedPlan.activities);
+  const maxTimeRange = getMaxTimeRange(activities);
+  const viewTimeRange = { ...maxTimeRange };
+
+  return {
+    ...state,
+    maxTimeRange,
+    selectedPlan,
+    viewTimeRange,
+  };
+}
+
+/**
+ * Reduction helper. Called when a 'FetchPlanListSuccess' action occurs.
+ */
+function fetchPlanListSuccess(
+  state: PlanState,
+  action: FetchPlanListSuccess,
+): PlanState {
+  return {
+    ...state,
+    plans: keyBy(action.data, 'id'),
+  };
+}
+
+/**
+ * Reduction helper. Called when a 'SelectActivity' action occurs.
+ */
+function selectActivity(state: PlanState, action: SelectActivity): PlanState {
+  if (state.selectedPlan) {
+    const activities = state.selectedPlan.activities;
+
+    if (action.id !== null && activities[action.id]) {
+      return {
+        ...state,
+        selectedActivity: activities[action.id],
+      };
+    }
+  }
+
+  return {
+    ...state,
+  };
+}
+
+/**
+ * Reduction helper. Called when a 'UpdateSelectedActivity' action occurs.
+ */
+function updateSelectedActivity(
+  state: PlanState,
+  action: UpdateSelectedActivity,
+): PlanState {
+  if (state.selectedPlan) {
+    const { activityId, end, start, y } = action.update;
+
+    return {
+      ...state,
+      selectedPlan: {
+        ...state.selectedPlan,
+        activities: {
+          ...state.selectedPlan.activities,
+          [activityId]: {
+            ...state.selectedPlan.activities[activityId],
+            end,
+            endTimestamp: timestamp(end),
+            start,
+            startTimestamp: timestamp(start),
+            y,
+          },
+        },
+      },
+    };
+  }
+
+  return {
+    ...state,
+  };
+}
+
+/**
+ * Reduction helper. Called when a 'UpdateViewTimeRange' action occurs.
+ */
+function updateViewTimeRange(
+  state: PlanState,
+  action: UpdateViewTimeRange,
+): PlanState {
+  return {
+    ...state,
+    viewTimeRange: { ...action.viewTimeRange },
+  };
 }
 
 /**

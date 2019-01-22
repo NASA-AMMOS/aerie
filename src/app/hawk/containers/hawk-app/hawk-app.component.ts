@@ -7,7 +7,19 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ChangeDetectionStrategy, Component, ViewChild } from '@angular/core';
+import { MatSidenav } from '@angular/material';
+import { select, Store } from '@ngrx/store';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { ToggleNavigationDrawer } from '../../../shared/actions/config.actions';
+import { HawkAppState } from '../../hawk-store';
+
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  ViewChild,
+} from '@angular/core';
 
 import {
   FormBuilder,
@@ -16,17 +28,14 @@ import {
   Validators,
 } from '@angular/forms';
 
-import { MatSidenav } from '@angular/material';
-
-import { select, Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
-
 import {
   RavenActivity,
   RavenActivityType,
+  RavenActivityUpdate,
   RavenAdaptation,
   RavenPlan,
   RavenPlanDetail,
+  RavenTimeRange,
 } from '../../../shared/models';
 
 import {
@@ -41,19 +50,21 @@ import {
   OpenPlanFormDialog,
   RemovePlan,
   SaveActivity,
+  SelectActivity,
+  UpdateSelectedActivity,
+  UpdateViewTimeRange,
 } from '../../actions/plan.actions';
 
 import {
   getActivities,
   getActivityTypes,
+  getMaxTimeRange,
   getPlans,
+  getSelectedActivity,
   getSelectedAdaptation,
   getSelectedPlan,
+  getViewTimeRange,
 } from '../../selectors';
-
-import { HawkAppState } from '../../hawk-store';
-
-import { ToggleNavigationDrawer } from '../../../shared/actions/config.actions';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -61,85 +72,61 @@ import { ToggleNavigationDrawer } from '../../../shared/actions/config.actions';
   styleUrls: ['./hawk-app.component.css'],
   templateUrl: './hawk-app.component.html',
 })
-export class HawkAppComponent {
+export class HawkAppComponent implements OnDestroy {
   @ViewChild('sideNav')
   sideNav: MatSidenav;
 
-  /**
-   * Activity *instances*
-   */
-  activities$: Observable<RavenActivity[] | null>;
-
-  /**
-   * List of activity types to display
-   */
+  activities$: Observable<RavenActivity[] | null>; // Instances.
   activityTypes$: Observable<RavenActivityType[] | null>;
-
-  /**
-   * Columns to display in the table
-   */
-  displayedColumns: string[] = ['name', 'start', 'duration', 'sequenceId'];
-
-  /**
-   * Activity form
-   */
+  displayedColumns: string[] = ['id', 'name', 'start', 'end', 'duration'];
   form: FormGroup;
-
-  /**
-   * The selected adaptation
-   */
-  selectedAdaptation$: Observable<RavenAdaptation | null>;
-
-  /**
-   * List of plans to display
-   */
+  maxTimeRange$: Observable<RavenTimeRange>;
   plans$: Observable<RavenPlan[]>;
-
-  /**
-   * Selected plan
-   */
+  selectedActivity$: Observable<RavenActivity | null>;
+  selectedAdaptation$: Observable<RavenAdaptation | null>;
   selectedPlan$: Observable<RavenPlanDetail | null>;
+  viewTimeRange$: Observable<RavenTimeRange>;
 
-  /**
-   * Activity that is currently selected in the plan
-   */
-  selectedActivity: RavenActivity | null;
+  selectedActivity: RavenActivity | null = null;
+
+  private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(private store: Store<HawkAppState>, fb: FormBuilder) {
     this.activities$ = this.store.pipe(select(getActivities));
     this.activityTypes$ = this.store.pipe(select(getActivityTypes));
+    this.maxTimeRange$ = this.store.pipe(select(getMaxTimeRange));
     this.plans$ = this.store.pipe(select(getPlans));
+    this.selectedActivity$ = this.store.pipe(select(getSelectedActivity));
     this.selectedAdaptation$ = this.store.pipe(select(getSelectedAdaptation));
     this.selectedPlan$ = this.store.pipe(select(getSelectedPlan));
-
-    let data: RavenActivity = {
-      activityTypeId: '',
-      duration: '',
-      id: '',
-      intent: '',
-      name: '',
-      sequenceId: '',
-      start: '',
-    };
-
-    if (this.selectedActivity) {
-      data = this.selectedActivity;
-    }
+    this.viewTimeRange$ = this.store.pipe(select(getViewTimeRange));
 
     this.form = fb.group({
-      activityTypeId: new FormControl({
+      duration: new FormControl(0, [Validators.required]),
+      id: new FormControl({
         readonly: true,
-        value: data.activityTypeId,
+        value: '',
       }),
-      duration: new FormControl(data.duration, [Validators.required]),
-      intent: new FormControl(data.intent),
-      name: new FormControl(data.name, [Validators.required]),
-      sequenceId: new FormControl(data.sequenceId),
-      start: new FormControl(data.start, [Validators.required]),
+      intent: new FormControl(''),
+      name: new FormControl('', [Validators.required]),
+      sequenceId: new FormControl(''),
+      startTimestamp: new FormControl(0, [Validators.required]),
     });
+
+    this.selectedActivity$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe((selectedActivity: RavenActivity | null) => {
+        this.selectedActivity = selectedActivity;
+        this.patchActivityForm();
+      });
 
     this.store.dispatch(new FetchAdaptationList());
     this.store.dispatch(new FetchPlanList());
+  }
+
+  ngOnDestroy(): void {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
   }
 
   /**
@@ -192,39 +179,47 @@ export class HawkAppComponent {
   }
 
   /**
+   * Patch activity form with the selected activity.
+   */
+  patchActivityForm() {
+    if (this.selectedActivity) {
+      this.form.patchValue(this.selectedActivity);
+    }
+  }
+
+  /**
    * Event. Set the selected activity and update the form's values
+   *
+   * TODO (!): Move side nav management to a reducer.
+   * This will enable us to control the UI from actions (e.g. OpenSelectedActivityDrawer and Resize).
    */
   showActivityForm(activity: RavenActivity) {
-    this.selectedActivity = activity;
-    this.form.patchValue(this.selectedActivity);
+    this.store.dispatch(new SelectActivity(activity.id));
     this.sideNav.open();
+    setTimeout(() => dispatchEvent(new Event('resize')), 500);
   }
 
   /**
    * Event. Show the activity types list. The selectedActivity is set to null
    * because you can click the icon to show the activity types list while the
    * activity form is open.
+   *
+   * TODO (!): Move side nav management to a reducer.
+   * This will enable us to control the UI from actions (e.g. OpenSelectedActivityDrawer and Resize).
+   *
    */
   showActivityTypesList() {
-    this.selectedActivity = null;
+    this.store.dispatch(new SelectActivity(null));
     this.sideNav.open();
+    setTimeout(() => dispatchEvent(new Event('resize')), 500);
   }
 
   /**
    * Event. Handle form submission
    */
   onSubmit(value: any) {
-    if (!this.selectedActivity) {
-      throw new Error('NoSelectedActivity');
-    }
-
     if (this.form.valid) {
-      this.store.dispatch(
-        new SaveActivity({
-          ...value,
-          id: this.selectedActivity.id,
-        }),
-      );
+      this.store.dispatch(new SaveActivity(value));
     }
   }
 
@@ -237,10 +232,35 @@ export class HawkAppComponent {
 
   /**
    * Event. Set the selected activity to null and close the side nav
+   *
+   * TODO (!): Move side nav management to a reducer.
+   * This will enable us to control the UI from actions (e.g. OpenSelectedActivityDrawer and Resize).
    */
   onCloseSideNav() {
-    this.selectedActivity = null;
+    this.store.dispatch(new SelectActivity(null));
     this.sideNav.close();
+    setTimeout(() => dispatchEvent(new Event('resize')), 500);
+  }
+
+  /**
+   * Event. Dispatch to set the selected activity.
+   */
+  onSelectActivity(id: string): void {
+    this.store.dispatch(new SelectActivity(id));
+  }
+
+  /**
+   * Event. Called when we need to update the selected activity (e.g. after a drag).
+   */
+  onUpdateSelectedActivity(update: RavenActivityUpdate): void {
+    this.store.dispatch(new UpdateSelectedActivity(update));
+  }
+
+  /**
+   * Event. Called when we need to update our view time range for a selected plan.
+   */
+  onUpdateViewTimeRange(viewTimeRange: RavenTimeRange): void {
+    this.store.dispatch(new UpdateViewTimeRange(viewTimeRange));
   }
 
   /**
