@@ -1465,6 +1465,7 @@ export class SourceExplorerEffects {
               actions.push(
                 new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id),
                 new timelineActions.AddSubBand(sourceId, bandId, subBand),
+                new timelineActions.SetCompositeYLabelDefault(bandId),
               );
             } else {
               actions.push(

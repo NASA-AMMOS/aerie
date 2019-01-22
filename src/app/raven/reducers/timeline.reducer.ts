@@ -24,6 +24,7 @@ import {
   RemoveSubBand,
   SelectBand,
   SelectPoint,
+  SetCompositeYLabelDefault,
   SetPointsForSubBand,
   SortBands,
   SourceIdAdd,
@@ -39,6 +40,7 @@ import {
   getMaxTimeRange,
   getParentSourceIds,
   getPoint,
+  hasTwoResourceBands,
   sortOrderForBand,
   updateSelectedBandIds,
   updateSelectedPoint,
@@ -130,6 +132,8 @@ export function reducer(
       return selectBand(state, action);
     case TimelineActionTypes.SelectPoint:
       return selectPoint(state, action);
+    case TimelineActionTypes.SetCompositeYLabelDefault:
+      return setCompositeYLabelDefault(state, action);
     case TimelineActionTypes.SetPointsForSubBand:
       return setPointsForSubBand(state, action);
     case TimelineActionTypes.SortBands:
@@ -675,6 +679,26 @@ export function selectPoint(
       ? null
       : getPoint(state.bands, action.bandId, action.subBandId, action.pointId),
   };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'SetCompositeYLabelDefault' action.
+ */
+export function setCompositeYLabelDefault(
+  state: TimelineState,
+  action: SetCompositeYLabelDefault,
+): TimelineState {
+    return {
+      ...state,
+      bands: state.bands.map(band => {
+        if (band.id === action.bandId && hasTwoResourceBands (band)) {
+          return { ...band, compositeYAxisLabel: true };
+        }
+        else {
+          return band;
+        }
+      }),
+    };
 }
 
 /**
