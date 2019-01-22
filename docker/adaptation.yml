@@ -5,5 +5,5 @@ services:
     volumes:
       - adaptation_logs:/var/log/adaptation
     ports:
-      - "9000:8081"
+      - "27182:8081"
 

@@ -1,0 +1,24 @@
+version: '3.3'
+services:
+  plan:
+    build: ../plan/
+    command: java -jar -Dspring.profiles.active=production plan.jar
+    volumes:
+      - plan_logs:/var/log/plan
+    ports:
+      - "27183:27183"
+    depends_on:
+      - plan_mongo
+    restart: always
+
+  plan_mongo:
+    image: mongo:3.2
+    command: ["mongod", "--smallfiles"]
+    ports:
+    - "27017:27017"
+    volumes:
+    - plan_mongo_data:/data/db
+
+volumes:
+  plan_mongo_data:
+
