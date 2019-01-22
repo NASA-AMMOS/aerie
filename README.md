@@ -14,12 +14,15 @@ AMPSA is comprised of the following Primary and Support services.
 ### Primary services
 
 Primary services are developed in-house and should be focused on the core
-offering of AMPSA.
+offering of AMPSA. Primary services, with the exception of the `nest` service
+should use the next available port, beginning with `27182`, which is a
+truncated version of the mathematical constant E, to make it easy to remember.
 
-| Service       | Port  |
-| ---           | ---   |
-| adaptation    | 9000  |
-| nest          | 8080  |
+| Service       | Port   |
+| ---           | ---    |
+| adaptation    | 27182  |
+| plan          | 27183  |
+| nest          | 8080   |
 
 ### Support services
 

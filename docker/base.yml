@@ -2,3 +2,4 @@ version: '3.3'
 
 volumes:
   adaptation_logs:
+  plan_logs:
