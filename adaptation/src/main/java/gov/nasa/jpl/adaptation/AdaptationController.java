@@ -24,7 +24,7 @@ import java.net.URL;
 import java.util.*;
 
 @RestController
-@RequestMapping("/adaptation")
+@RequestMapping("/adaptations")
 public class AdaptationController {
 
     @Autowired

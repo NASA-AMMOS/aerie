@@ -23,7 +23,7 @@ public class PlansController {
     @Autowired
     private PlansRepository repository;
 
-    @RequestMapping(value = "/", method = RequestMethod.GET)
+    @RequestMapping(value = "", method = RequestMethod.GET)
     public ResponseEntity<Object> getPlans() {
         return ResponseEntity.ok(repository.findAll());
     }
@@ -53,7 +53,7 @@ public class PlansController {
         }
     }
 
-    @RequestMapping(value = "/", method = RequestMethod.POST)
+    @RequestMapping(value = "", method = RequestMethod.POST)
     public ResponseEntity<Object> createPlan(@Valid @RequestBody Plan plan) {
         plan.set_id(ObjectId.get());
         repository.save(plan);

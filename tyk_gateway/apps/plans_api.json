@@ -1,8 +1,8 @@
 {
-    "id": "5c47b464d3468100011dab0e",
-    "name": "adaptations",
-    "slug": "adaptations",
-    "api_id": "3c44b74e1aa44286532474d853e15010",
+    "id": "5c48baef41fe320001b2cf0b",
+    "name": "plans",
+    "slug": "plans",
+    "api_id": "b6ba648c49834451573179079d3dbf71",
     "org_id": "5c47b435d3468100011dab0a",
     "use_keyless": true,
     "use_oauth2": false,
@@ -73,7 +73,7 @@
                 "extended_paths": {
                     "white_list": [
                         {
-                            "path": "^/adaptations/[0-9A-Za-z]+$",
+                            "path": "^/plans/[0-9A-Za-z]+$",
                             "method_actions": {
                                 "GET": {
                                     "action": "no_action",
@@ -84,7 +84,7 @@
                             }
                         },
                         {
-                            "path": "^/adaptations/$",
+                            "path": "^/plans/$",
                             "method_actions": {
                                 "GET": {
                                     "action": "no_action",
@@ -124,8 +124,8 @@
     },
     "proxy": {
         "preserve_host_header": false,
-        "listen_path": "/adaptations/",
-        "target_url": "http://adaptation:27182/api/adaptations",
+        "listen_path": "/plans/",
+        "target_url": "http://plan:27183/api/plans",
         "strip_listen_path": true,
         "enable_load_balancing": false,
         "target_list": [],
