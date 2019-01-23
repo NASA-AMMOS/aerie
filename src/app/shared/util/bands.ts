@@ -694,15 +694,15 @@ export function hasActivityBandForFilterTarget(
 /**
  * Helper. Returns true if band contains two resource bands.
  */
-export function hasTwoResourceBands(
-  band: RavenCompositeBand,
-) {
-  return band.subBands.reduce((count, subBand) => {
-    if (subBand.type === 'resource') {
-      count++;
-    }
-    return count;
-  }, 0) === 2;
+export function hasTwoResourceBands(band: RavenCompositeBand) {
+  return (
+    band.subBands.reduce((count, subBand) => {
+      if (subBand.type === 'resource') {
+        count++;
+      }
+      return count;
+    }, 0) === 2
+  );
 }
 
 /**

@@ -440,7 +440,9 @@ export function removeCustomFilter(
     ...state,
     customFiltersBySourceId: {
       ...state.customFiltersBySourceId,
-      [action.sourceId]: customFilters.filter(customFilter =>customFilter.label !== action.label),
+      [action.sourceId]: customFilters.filter(
+        customFilter => customFilter.label !== action.label,
+      ),
     },
   };
 }

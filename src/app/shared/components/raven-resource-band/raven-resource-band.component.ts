@@ -357,10 +357,10 @@ export class RavenResourceBandComponent
     ctlResourceBand.isDuration = this.isDuration;
     ctlResourceBand.isTime = this.isTime;
 
-    if (this.maxLimit !== undefined){
+    if (this.maxLimit !== undefined) {
       ctlResourceBand.maxLimit = this.maxLimit;
     }
-    if (this.minLimit !== undefined){
+    if (this.minLimit !== undefined) {
       ctlResourceBand.minLimit = this.minLimit;
     }
 

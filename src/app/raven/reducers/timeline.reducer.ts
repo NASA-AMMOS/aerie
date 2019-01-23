@@ -214,10 +214,10 @@ export function addBand(state: TimelineState, action: AddBand): TimelineState {
     ...state,
     bands,
     selectedBandId: action.band.id,
-      selectedSubBandId:
-        action.band && action.band.subBands.length && action.band.id !== ''
-          ? action.band.subBands[0].id
-          : '',
+    selectedSubBandId:
+      action.band && action.band.subBands.length && action.band.id !== ''
+        ? action.band.subBands[0].id
+        : '',
     ...updateTimeRanges(bands, state.viewTimeRange),
   };
 }
@@ -688,17 +688,16 @@ export function setCompositeYLabelDefault(
   state: TimelineState,
   action: SetCompositeYLabelDefault,
 ): TimelineState {
-    return {
-      ...state,
-      bands: state.bands.map(band => {
-        if (band.id === action.bandId && hasTwoResourceBands (band)) {
-          return { ...band, compositeYAxisLabel: true };
-        }
-        else {
-          return band;
-        }
-      }),
-    };
+  return {
+    ...state,
+    bands: state.bands.map(band => {
+      if (band.id === action.bandId && hasTwoResourceBands(band)) {
+        return { ...band, compositeYAxisLabel: true };
+      } else {
+        return band;
+      }
+    }),
+  };
 }
 
 /**

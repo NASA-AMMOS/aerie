@@ -53,10 +53,7 @@ export class MpsServerService {
    * Deletes a source from MPS Server.
    */
   removeSource(sourceUrl: string, sourceId: string) {
-    const url = sourceUrl.replace(
-      /list_.*-mongodb/i,
-      'fs-mongodb',
-    );
+    const url = sourceUrl.replace(/list_.*-mongodb/i, 'fs-mongodb');
     return this.http.delete(url, { responseType: 'text' });
   }
 
