@@ -13,12 +13,11 @@ services:
 
   plan_mongo:
     image: mongo:3.2
-    command: ["mongod", "--smallfiles"]
+    command: ["mongod", "--port", "27018", "--smallfiles"]
     ports:
-    - "27017:27017"
+    - "27018:27018"
     volumes:
     - plan_mongo_data:/data/db
 
 volumes:
   plan_mongo_data:
-

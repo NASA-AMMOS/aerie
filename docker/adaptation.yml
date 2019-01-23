@@ -2,8 +2,8 @@ version: '3.3'
 services:
   adaptation:
     build: ../adaptation/
+    command: java -jar -Dspring.profiles.active=production adaptation.jar
     volumes:
       - adaptation_logs:/var/log/adaptation
     ports:
-      - "27182:8081"
-
+      - "27182:27182"

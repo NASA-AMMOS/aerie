@@ -1,6 +1,9 @@
 /target/
 !.mvn/wrapper/maven-wrapper.jar
 
+## Extensions
+*.jar
+
 ### STS ###
 .apt_generated
 .classpath

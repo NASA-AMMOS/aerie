@@ -15,5 +15,5 @@
 FROM openjdk:8-alpine
 WORKDIR /usr/src/adaptation
 COPY ./target/adaptation*.jar /usr/src/adaptation/adaptation.jar
-EXPOSE 8081
-CMD java -jar adaptation.jar --trace
+EXPOSE 27182
+CMD ["java", "-jar", "-Dspring.profiles.active=default", "adaptation.jar"]

@@ -31,7 +31,7 @@ mvn install
 # Maven will generate the artifacts in the target folder 
 cd {location_of_the_project}/adaptation/target
 
-# Run the generated artifact, by default, the service will be exposed through port 8081
+# Run the generated artifact, by default, the service will be exposed through port 27182
 java -jar adaptation-0.0.1-SNAPSHOT.jar  
 ```
 
@@ -40,20 +40,11 @@ java -jar adaptation-0.0.1-SNAPSHOT.jar
 > Note: To change the default port number, update the application.properties file: 
 
 ```properties
-server.port=8081
+server.port=27182
 
 # Enabling H2 Console
 spring.h2.console.enabled=true
-
-#port used to expose actuator
-management.port=8082
-
-#Whether security should be enabled or disabled altogether
-management.security.enabled=false
-management.endpoints.web.exposure.include=*
 ```
-
-
 
 ## What is an Adaptation?
 
