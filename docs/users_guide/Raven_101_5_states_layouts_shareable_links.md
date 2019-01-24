@@ -80,7 +80,7 @@ both `Collection-a` and `Collection-b` contain sources with the same names. Assu
 
 <p align="center"><img src="./images/layout_drawer.png" width="400" /></p>
 
-*<p align="center">**Image 19. Apply as a layout drawer.** When the user desires to apply a state as a layout, the drawer showed in the right side of the application will appear. In the Sources dropdown, the user will be able to select all the sources to which the layout is desired to be applied. </p>*
+*<p align="center">**Figure 21. Apply as a layout drawer.** When the user desires to apply a state as a layout, the drawer showed in the right side of the application will appear. In the Sources dropdown, the user will be able to select all the sources to which the layout is desired to be applied. </p>*
 
 
 
@@ -93,7 +93,7 @@ Shareable links helps with the creation of states and their access. When the use
 1. In the Top Bar, open the Main Menu by clicking on the "hamburger icon" (<img src="./images/baseline-menu-24px.svg" width="18" />).
 2. In the Dropdown, select `Get Shareable Link`.
 3. A dialog to copy the Shareable Link will appear. 
-4. By default, RAVEN will create a random id to generate the Shareable Link. The user also has the option to rename the shareable link. (***Image 20***)
+4. By default, RAVEN will create a random id to generate the Shareable Link. The user also has the option to rename the shareable link. (**Figure 22**)
 5. Once the shareable link is defined, copy the generated link. When it is in the clipboard, dialog will close automatically.
 6. Now, you can open your link in your browser's tab or share it with a college.
 
@@ -101,7 +101,7 @@ Shareable links helps with the creation of states and their access. When the use
 
 <p align="center"><img src="./images/shareable_link_dialog.png" width="500" /></p>
 
-*<p align="center">**Image 20. Shareable link dialog.**  A Shareable Link with a generated unique identifier. (left) A Shareable Link with custom name entered by the user. (right)</p>*
+*<p align="center">**Figure 22. Shareable link dialog.**  A Shareable Link with a generated unique identifier. (left) A Shareable Link with custom name entered by the user. (right)</p>*
 
 A host folder for the shareble link is defined on RAVEN's settings section. Since a shareable link is a state, the user can access it in the future to load it, update it, and/or delete it.
 

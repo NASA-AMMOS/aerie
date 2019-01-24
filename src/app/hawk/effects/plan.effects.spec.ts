@@ -348,7 +348,8 @@ describe('PlanEffects', () => {
     });
 
     it('should return a SaveActivitySuccess action with data on success', () => {
-      const activity = PlanMockService.getMockActivities().inst1actXYZ;
+      const activity = PlanMockService.getMockActivities()
+        .SetArrayTrackingMode_25788;
       const action = new SaveActivity(activity);
       const success = new SaveActivitySuccess(
         PlanMockService.getMockActivityDetail(activity.id),
@@ -361,7 +362,8 @@ describe('PlanEffects', () => {
     });
 
     it('should return a SaveActivityFailure action with an error on failure', () => {
-      const activity = PlanMockService.getMockActivities().inst1actXYZ;
+      const activity = PlanMockService.getMockActivities()
+        .SetArrayTrackingMode_25788;
       const action = new SaveActivity(activity);
       const error = new Error('MOCK_FAILURE');
       const failure = new SaveActivityFailure(error);
@@ -382,7 +384,7 @@ describe('PlanEffects', () => {
     });
 
     it('should return a SaveActivityDetailSuccess action with data on success and properly route', () => {
-      const id = 'inst1actXYZ';
+      const id = 'SetArrayTrackingMode_25788';
       const activityDetail = PlanMockService.getMockActivityDetail(id);
       const action = new SaveActivityDetail(activityDetail);
       const success = new SaveActivityDetailSuccess(activityDetail);
@@ -397,7 +399,7 @@ describe('PlanEffects', () => {
     });
 
     it('should return a SaveActivityDetailFailure action with an error on failure and properly route', () => {
-      const id = 'inst1actXYZ';
+      const id = 'SetArrayTrackingMode_25788';
       const activityDetail = PlanMockService.getMockActivityDetail(id);
       const action = new SaveActivityDetail(activityDetail);
       const error = new Error('MOCK_FAILURE');

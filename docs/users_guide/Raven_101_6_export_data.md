@@ -9,7 +9,7 @@
 
 <p align="center"><img src="./images/manage_output_drawer.png" width="400" /></p>
 
-*<p align="center">**Image 21**. Manage Output Drawer. In order to download the data of a selected source, select the it in the table, pick a format and generate the output. </p>*
+*<p align="center">**Figure 23**. Manage Output Drawer. In order to download the data of a selected source, select the it in the table, pick a format and generate the output. </p>*
 
 4. A table will be displayed with all the selected sources in the application, check the ones to export.
 5. Select the format of the file and whether you want the data to be decimated or not.
@@ -19,7 +19,7 @@
 
 <p align="center"><img src="./images/manage_output_all_in_one.png" width="400" /></p>
 
-*<p align="center">**Image 22.** Manage Output Drawer. When the user selects more than one source, the `All-in-one File` option will be available. </p>*
+*<p align="center">**Figure 24.** Manage Output Drawer. When the user selects more than one source, the `All-in-one File` option will be available. </p>*
 
 
 1. Make sure there are two or more data sets selected in the Source Explorer.
@@ -33,6 +33,6 @@
 
 <p align="center"><img src="./images/manage_output_all_in_one_filename.png" width="400" /></p>
 
-*<p align="center">**Image 23.** When the `All-in-one File` option is set to true, the user needs to enter a name for the file. Once entered `Create Output` will be enabled. </p>*
+*<p align="center">**Figure 25.** When the `All-in-one File` option is set to true, the user needs to enter a name for the file. Once entered `Create Output` will be enabled. </p>*
 
 <p align="right"><a href="./Raven_101_7_situational_awareness.md">Next: Situation Awareness</a></p>

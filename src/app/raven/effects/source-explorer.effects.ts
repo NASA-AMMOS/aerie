@@ -1490,6 +1490,11 @@ export class SourceExplorerEffects {
         } else {
           // Notify user no bands will be drawn.
           actions.push(new sourceExplorerActions.LoadErrorsAdd([sourceId]));
+
+          // Remove custom filter if custom source
+          if (treeBySourceId[sourceId].type === 'customGraphable' && customFilter) {
+            actions.push(new sourceExplorerActions.RemoveCustomFilter(sourceId, customFilter.label));
+          }
         }
 
         return actions;

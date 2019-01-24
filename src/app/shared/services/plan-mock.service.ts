@@ -81,23 +81,33 @@ export class PlanMockService implements PlanService {
 
   static getMockActivities(): StringTMap<RavenActivity> {
     return {
-      inst1actXYZ: {
-        activityTypeId: 'test1',
-        duration: '00:20',
-        id: 'inst1actXYZ',
-        intent: 'What is the sound of one hand clapping?',
-        name: 'Instrument 1, Activity ABC',
+      SetArrayTrackingMode_25788: {
+        activityTypeId: 'SetArrayTrackingMode',
+        color: '#ffffff',
+        duration: 580,
+        end: 1656459714.184,
+        endTimestamp: '2022-179T23:41:54.184',
+        id: 'SetArrayTrackingMode_25788',
+        intent: '...',
+        name: 'SetArrayTrackingMode_FIXED',
         sequenceId: 'inst00035.0000.a',
-        start: '2022-10-29T14:55:00',
+        start: 1656459134.184,
+        startTimestamp: '2022-179T23:32:14.184',
+        y: null,
       },
-      inst2actXYZ: {
-        activityTypeId: 'test2',
-        duration: '00:02',
-        id: 'inst2actXYZ',
-        intent: 'Science intent for this activity is blah blah',
-        name: 'Instrument 2, Activity XYZ',
+      SetArrayTrackingMode_25920: {
+        activityTypeId: 'SetArrayTrackingMode',
+        color: '#ffffff',
+        duration: 580,
+        end: 1656462679.447,
+        endTimestamp: '2022-180T00:31:19.447',
+        id: 'SetArrayTrackingMode_25920',
+        intent: '...',
+        name: 'SetArrayTrackingMode_FIXED',
         sequenceId: 'inst00036.0000.b',
-        start: '2022-10-29T15:15:00',
+        start: 1656462099.447,
+        startTimestamp: '2022-180T00:21:39.447',
+        y: null,
       },
     };
   }

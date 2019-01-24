@@ -1,4 +1,4 @@
-<raven-app-header title="Activity Type" contextual="true" (menuClicked)="onMenuClicked()">
+<raven-app-header title="Activity Instance" contextual="true" (menuClicked)="onMenuClicked()">
 </raven-app-header>
 
 <main class="content">
@@ -38,7 +38,7 @@
           <mat-label>Duration</mat-label>
           <input matInput placeholder="Duration" type="text" [formControl]="activityForm.controls['duration']"
             required />
-          <mat-hint align="start">hh:mm</mat-hint>
+          <mat-hint align="start">000</mat-hint>
           <mat-icon matSuffix>hourglass_empty</mat-icon>
         </mat-form-field>
 
@@ -61,7 +61,7 @@
         <div class="form-section">
           <mat-tab-group color="accent">
             <!-- Parameters. -->
-            <mat-tab label="Parameters">TODO</mat-tab>
+            <mat-tab label="Parameters"></mat-tab>
 
             <!-- Constraints. -->
             <mat-tab label="Constraints">
@@ -111,7 +111,7 @@
               <div class="panels">
                 <raven-sub-activity-tree></raven-sub-activity-tree>
                 <div>
-                  Placeholder for Details of selected sub-activity TDB.
+                  <!-- Placeholder for Details of selected sub-activity TDB. -->
                 </div>
               </div>
             </mat-tab>
