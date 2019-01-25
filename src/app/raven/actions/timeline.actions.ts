@@ -29,6 +29,7 @@ export enum TimelineActionTypes {
   AddSubBand = '[timeline] add_sub_band',
   ExpandChildrenOrDescendants = '[timeline] expand_children_or_descendants',
   FetchChildrenOrDescendants = '[timeline] fetch_children_or_descendants',
+  FetchChildrenOrDescendantsSuccess = '[timeline] fetch_children_or_descendants_success',
   PanLeftViewTimeRange = '[timeline] pan_left_view_time_range',
   PanRightViewTimeRange = '[timeline] pan_right_view_time_range',
   PinAdd = '[timeline] pin_add',
@@ -114,6 +115,10 @@ export class FetchChildrenOrDescendants implements Action {
     public activityPoint: RavenActivityPoint,
     public expandType: string,
   ) {}
+}
+
+export class FetchChildrenOrDescendantsSuccess implements Action {
+  readonly type = TimelineActionTypes.FetchChildrenOrDescendantsSuccess;
 }
 
 export class PanLeftViewTimeRange implements Action {

@@ -22,6 +22,7 @@ import {
   AddBand,
   AddSubBand,
   FetchChildrenOrDescendants,
+  FetchChildrenOrDescendantsSuccess,
   PanLeftViewTimeRange,
   PanRightViewTimeRange,
   PinAdd,
@@ -39,7 +40,6 @@ import {
   MpsServerGraphData,
   MpsServerResourceMetadata,
   MpsServerResourcePoint,
-  RavenActivityBand,
   RavenActivityPoint,
   RavenCompositeBand,
   RavenDefaultBandSettings,
@@ -100,15 +100,24 @@ export class TimelineEffects {
           state.raven.timeline.bands,
           state.raven.timeline.expansionByActivityId,
         ),
-        of(
-          new timelineActions.ExpandChildrenOrDescendants(
-            action.bandId,
-            action.subBandId,
-            action.activityPoint,
-            action.expandType,
-          ),
-        ),
         of(new timelineActions.UpdateTimeline({ fetchPending: false })),
+      ),
+    ),
+  );
+
+  @Effect()
+  fetchChildrenOrDescendantsSuccess$: Observable<Action> = this.actions$.pipe(
+    ofType<FetchChildrenOrDescendantsSuccess>(
+      TimelineActionTypes.FetchChildrenOrDescendantsSuccess,
+    ),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state})),
+    concatMap(({ action, state: {raven: {timeline, sourceExplorer} }}) =>
+      concat(
+      this.getChildrenOfExpandedPoints(
+        timeline.bands,
+        timeline.expansionByActivityId,
+      ),
       ),
     ),
   );
@@ -284,14 +293,6 @@ export class TimelineEffects {
                     subBand.points,
                   ),
                 );
-                actions.push(
-                  ...this.getChildrenOfExpandedPoints(
-                    activityBand.bandId,
-                    activityBand.subBandId,
-                    subBand as RavenActivityBand,
-                    expansionByActivityId,
-                  ),
-                );
               });
             } else {
               const ravenCompositeBand = toCompositeBand(subBand);
@@ -301,16 +302,11 @@ export class TimelineEffects {
                   ravenCompositeBand,
                 ),
               );
-              actions.push(
-                ...this.getChildrenOfExpandedPoints(
-                  ravenCompositeBand.id,
-                  subBand.id,
-                  subBand as RavenActivityBand,
-                  expansionByActivityId,
-                ),
-              );
             }
           });
+          actions.push(
+            new timelineActions.FetchChildrenOrDescendantsSuccess(),
+          );
         }
         return actions;
       }),
@@ -342,24 +338,40 @@ export class TimelineEffects {
    * Helper. Returns list of Actions to fetch children of expanded activity points.
    */
   getChildrenOfExpandedPoints(
-    bandId: string,
-    subBandId: string,
-    subBand: RavenActivityBand,
+    // bandId: string,
+    // subBandId: string,
+    // subBand: RavenActivityBand,
+    allCompositeBands: RavenCompositeBand[],
     expansionByActivityId: StringTMap<string>,
   ) {
     const actions: Action[] = [];
-    subBand.points.forEach(point => {
-      if (expansionByActivityId[point.activityId]) {
-        actions.push(
-          new timelineActions.FetchChildrenOrDescendants(
-            bandId,
-            subBandId,
-            point as RavenActivityPoint,
-            expansionByActivityId[(point as RavenActivityPoint).activityId],
-          ),
-        );
+    for (let i = 0, l = allCompositeBands.length; i < l;  i++) {
+      for (let j = 0, ll = allCompositeBands[i].subBands.length; j < ll; j++) {
+        const subBand = allCompositeBands[i].subBands[j];
+        for (let k = 0, lll = subBand.points.length; k < lll; k++) {
+          const point = subBand.points[k];
+          if ((point as RavenActivityPoint).expansion === 'noExpansion' && expansionByActivityId[point.activityId]) {
+            actions.push(
+              new timelineActions.ExpandChildrenOrDescendants(
+                allCompositeBands[i].id,
+                subBand.id,
+                point,
+                expansionByActivityId[(point as RavenActivityPoint).activityId],
+              ),
+            ),
+            actions.push(
+              new timelineActions.FetchChildrenOrDescendants(
+                allCompositeBands[i].id,
+                subBand.id,
+                point as RavenActivityPoint,
+                expansionByActivityId[(point as RavenActivityPoint).activityId],
+              ),
+            );
+            return actions;
+          }
+        };
       }
-    });
+    }
     return actions;
   }
 
