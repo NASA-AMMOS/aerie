@@ -53,9 +53,7 @@ import {
   stateBand,
 } from '../../shared/mocks';
 
-import {
-  hasTwoResourceBands,
-} from '../../shared/util';
+import { hasTwoResourceBands } from '../../shared/util';
 
 describe('timeline reducer', () => {
   let timelineState: TimelineState;
@@ -348,7 +346,10 @@ describe('timeline reducer', () => {
 
   it('handle hasTwoResourceBands', () => {
     const source: RavenSource = rootSource;
-    timelineState = reducer(timelineState, new AddBand(source.id, overlayResourceBands));
+    timelineState = reducer(
+      timelineState,
+      new AddBand(source.id, overlayResourceBands),
+    );
     expect(hasTwoResourceBands(timelineState.bands[0])).toBe(true);
   });
 
@@ -741,9 +742,15 @@ describe('timeline reducer', () => {
 
   it('handle SetCompositeYLabelDefault', () => {
     const source: RavenSource = rootSource;
-    timelineState = reducer(timelineState, new AddBand(source.id, overlayResourceBands));
+    timelineState = reducer(
+      timelineState,
+      new AddBand(source.id, overlayResourceBands),
+    );
     expect(timelineState.bands[0].compositeYAxisLabel).toBe(false);
-    timelineState = reducer(timelineState, new SetCompositeYLabelDefault(overlayResourceBands.id));
+    timelineState = reducer(
+      timelineState,
+      new SetCompositeYLabelDefault(overlayResourceBands.id),
+    );
     expect(timelineState.bands[0].compositeYAxisLabel).toBe(true);
   });
 
@@ -757,7 +764,10 @@ describe('timeline reducer', () => {
       ],
     };
     timelineState = reducer(timelineState, new AddBand(newBand.id, newBand));
-    timelineState = reducer(timelineState, new SetCompositeYLabelDefault(newBand.id));
+    timelineState = reducer(
+      timelineState,
+      new SetCompositeYLabelDefault(newBand.id),
+    );
     expect(timelineState.bands[0].compositeYAxisLabel).toBe(false);
   });
 
