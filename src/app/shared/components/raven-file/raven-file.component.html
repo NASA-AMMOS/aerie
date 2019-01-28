@@ -20,13 +20,11 @@
     (click)="expand.emit(source)">
     add
   </mat-icon>
-  <span (click)="select.emit(source)" class="name"
-    [ngClass]="{
-      'running': source.importJobStatus === 'RUNNING'||source.importJobStatus === 'QUEUED',
-      'error': source.importJobStatus === 'ERROR'
-    }">
-    <i [ngClass]="source.icon" aria-hidden="true"></i> {{source.name}}
+
+  <span (click)="select.emit(source)" class="name" [ngClass]="textClass">
+    <i [ngClass]="iconClass" aria-hidden="true"></i> {{source.name}}
   </span>
+
   <button
     *ngIf="source.selected"
     class="menu-icon"
@@ -39,16 +37,10 @@
     #actionsMenu="matMenu"
     [overlapTrigger]="false"
     y-position="below">
-    <ng-container *ngFor="let a of source.actions">
-      <ng-container *ngIf="a.name === 'Apply'">
-        <button mat-menu-item [matMenuTriggerFor]="applyMenu">{{a.name}}</button>
-      </ng-container>
-      <ng-container *ngIf="a.name === 'File Metadata'">
-        <button mat-menu-item (click)="openMetadata.emit(source)">File Metadata</button>
-      </ng-container>
-      <ng-container *ngIf="a.name !== 'Apply' && a.name !== 'File Metadata'">
-        <button mat-menu-item (click)="action.emit({ event: a.event, source: source })">{{a.name}}</button>
-      </ng-container>
+    <ng-container *ngFor="let a of source.actions" [ngSwitch]="a.name">
+      <button *ngSwitchCase="'Apply'" mat-menu-item [matMenuTriggerFor]="applyMenu">{{a.name}}</button>
+      <button *ngSwitchCase="'File Metadata'" mat-menu-item (click)="openMetadata.emit(source)">{{a.name}}</button>
+      <button *ngSwitchDefault mat-menu-item (click)="action.emit({ event: a.event, source: source })">{{a.name}}</button>
     </ng-container>
   </mat-menu>
 
