@@ -111,8 +111,8 @@ export class TimelineEffects {
       TimelineActionTypes.FetchChildrenOrDescendantsSuccess,
     ),
     withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state})),
-    concatMap(({ action, state: {raven: {timeline, sourceExplorer} }}) =>
+    map(([, state]) => state.raven.timeline),
+    concatMap(timeline =>
       concat(
       this.getChildrenOfExpandedPoints(
         timeline.bands,
@@ -338,9 +338,6 @@ export class TimelineEffects {
    * Helper. Returns list of Actions to fetch children of expanded activity points.
    */
   getChildrenOfExpandedPoints(
-    // bandId: string,
-    // subBandId: string,
-    // subBand: RavenActivityBand,
     allCompositeBands: RavenCompositeBand[],
     expansionByActivityId: StringTMap<string>,
   ) {
