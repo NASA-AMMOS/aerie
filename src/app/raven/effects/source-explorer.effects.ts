@@ -1492,8 +1492,16 @@ export class SourceExplorerEffects {
           actions.push(new sourceExplorerActions.LoadErrorsAdd([sourceId]));
 
           // Remove custom filter if custom source
-          if (treeBySourceId[sourceId].type === 'customGraphable' && customFilter) {
-            actions.push(new sourceExplorerActions.RemoveCustomFilter(sourceId, customFilter.label));
+          if (
+            treeBySourceId[sourceId].type === 'customGraphable' &&
+            customFilter
+          ) {
+            actions.push(
+              new sourceExplorerActions.RemoveCustomFilter(
+                sourceId,
+                customFilter.label,
+              ),
+            );
           }
         }
 

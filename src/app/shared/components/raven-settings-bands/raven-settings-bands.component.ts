@@ -74,7 +74,11 @@ export class RavenSettingsBandsComponent {
    */
   onActivityLabelFontSizeChange(labelFontSize: number) {
     if (labelFontSize > 5 && labelFontSize < 31) {
-      this.updateSubBand.emit({bandId: this.selectedBandId, subBandId: this.selectedSubBandId, update: { activityLabelFontSize:  labelFontSize} })
+      this.updateSubBand.emit({
+        bandId: this.selectedBandId,
+        subBandId: this.selectedSubBandId,
+        update: { activityLabelFontSize: labelFontSize },
+      });
     }
   }
 
@@ -127,7 +131,11 @@ export class RavenSettingsBandsComponent {
    */
   onStateLabelFontSizeChange(labelFontSize: number) {
     if (labelFontSize > 5 && labelFontSize < 31) {
-      this.updateSubBand.emit({bandId: this.selectedBandId, subBandId: this.selectedSubBandId, update: { stateLabelFontSize:  labelFontSize} })
+      this.updateSubBand.emit({
+        bandId: this.selectedBandId,
+        subBandId: this.selectedSubBandId,
+        update: { stateLabelFontSize: labelFontSize },
+      });
     }
   }
 
