@@ -110,9 +110,6 @@ export class TimeCursorEffects {
     // If we are auto-paging and our time cursor goes outside the view window, then pan the view window right.
     if (
       autoPage &&
-      cursorTime &&
-      cursorTime > viewTimeRange.start &&
-      cursorTime < viewTimeRange.end &&
       newCursorTime &&
       newCursorTime > viewTimeRange.end
     ) {
