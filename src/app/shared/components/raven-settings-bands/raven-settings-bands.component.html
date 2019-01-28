@@ -135,7 +135,7 @@
                   step="1"
                   min="6"
                   max="30"
-                  (change)="updateSubBand.emit({bandId: selectedBandId, subBandId: subBand.id, update: { activityLabelFontSize:  $event.target.valueAsNumber} })">
+                  (change)="onActivityLabelFontSizeChange($event.target.valueAsNumber)">
               </div>
 
               <!-- Activity Style. -->
@@ -377,7 +377,7 @@
                     step="1"
                     min="6"
                     max="30"
-                    (change)="updateSubBand.emit({bandId: selectedBandId, subBandId: subBand.id, update: { stateLabelFontSize:  $event.target.valueAsNumber} })">
+                    (change)="onStateLabelFontSizeChange($event.target.valueAsNumber)">
                 </div>
             </ng-container>
 
