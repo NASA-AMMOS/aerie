@@ -33,6 +33,7 @@ export * from './raven-file/raven-file.module';
 export * from './raven-file-import-dialog/raven-file-import-dialog.module';
 export * from './raven-filter/raven-filter.module';
 export * from './raven-folder/raven-folder.module';
+export * from './raven-folder-dialog/raven-folder-dialog.module';
 export * from './raven-graphable-filter/raven-graphable-filter.module';
 export * from './raven-graphable/raven-graphable.module';
 export * from './raven-layout-apply/raven-layout-apply.module';
