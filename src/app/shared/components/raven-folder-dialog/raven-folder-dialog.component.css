@@ -7,48 +7,20 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-.tree {
-  cursor: pointer;
-  min-height: 25px;
-  padding-left: 5px;
-  white-space: nowrap;
+:host {
+  display: block;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
 }
 
-mat-icon {
-  font-size: 16px;
+.container {
+  display: flex;
+  flex-direction: column;
 }
 
-.error {
-  color: #ff0000;
+.container > * {
+  width: 100%;
 }
 
-.menu-icon {
-  color: #000000;
-  height: 21px;
-  line-height: 0;
-  width: 21px;
-}
-
-.name {
-  line-height: 25px;
-}
-
-.highlight {
-  color: #688ad8;
-}
-
-.no-highlight {
-  color: #000000;
-}
-
-.running {
-  color: #b4b4b4;
-}
-
-.selected {
-  background-color: rgba(200, 200, 200, 0.5);
-}
-
-.transparent {
-  color: transparent;
+.folder-add {
+  padding-bottom: 15px;
 }

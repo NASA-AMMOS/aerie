@@ -76,6 +76,10 @@ describe('SourceExplorerEffects', () => {
     expect(metadata.fetchNewSources$).toEqual({ dispatch: true });
   });
 
+  it('should register folderAdd$ that does dispatch an action', () => {
+    expect(metadata.createFolder$).toEqual({ dispatch: true });
+  });
+
   it('should register graphCustomSource$ that does dispatch an action', () => {
     expect(metadata.graphCustomSource$).toEqual({ dispatch: true });
   });

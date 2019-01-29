@@ -23,6 +23,7 @@ export enum DialogActionTypes {
   OpenDeleteDialog = '[dialog] open_delete_dialog',
   OpenDeleteSubBandDialog = '[dialog] open_delete_sub_band_dialog',
   OpenFileImportDialog = '[dialog] open_file_import_dialog',
+  OpenFolderDialog = '[dialog] open_folder_dialog',
   OpenPinDialog = '[dialog] open_pin_dialog',
   OpenRemoveAllBandsDialog = '[dialog] remove_all_bands_dialog',
   OpenRemoveAllGuidesDialog = '[dialog] remove_all_guides_dialog',
@@ -72,6 +73,16 @@ export class OpenFileImportDialog implements Action {
   constructor(public source: RavenSource, public width: string) {}
 }
 
+export class OpenFolderDialog implements Action {
+  readonly type = DialogActionTypes.OpenFolderDialog;
+
+  constructor(
+    public folderAction: string,
+    public source: RavenSource,
+    public width: string,
+  ) {}
+}
+
 export class OpenPinDialog implements Action {
   readonly type = DialogActionTypes.OpenPinDialog;
 
@@ -119,6 +130,7 @@ export type DialogAction =
   | OpenCustomGraphDialog
   | OpenDeleteDialog
   | OpenFileImportDialog
+  | OpenFolderDialog
   | OpenPinDialog
   | OpenRemoveAllBandsDialog
   | OpenRemoveAllGuidesDialog

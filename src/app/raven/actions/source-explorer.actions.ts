@@ -15,6 +15,7 @@ import {
   RavenCustomFilterSource,
   RavenFile,
   RavenFilterSource,
+  RavenFolderSource,
   RavenGraphableFilterSource,
   RavenPin,
   RavenSource,
@@ -36,6 +37,9 @@ export enum SourceExplorerActionTypes {
   ExpandEvent = '[sourceExplorer] expand_event',
   FetchInitialSources = '[sourceExplorer] fetch_initial_sources',
   FetchNewSources = '[sourceExplorer] fetch_new_sources',
+  FolderAdd = '[sourceExplorer] folder_add',
+  FolderAddFailure = '[sourceExplorer] folder_add_failure',
+  FolderAddSuccess = '[sourceExplorer] folder_add_success',
   GraphAgainEvent = '[sourceExplorer] graph-again-event',
   GraphCustomSource = '[sourceExplorer] graph_custom_source',
   ImportFile = '[sourceExplorer] import_file',
@@ -146,6 +150,19 @@ export class FetchNewSources implements Action {
   readonly type = SourceExplorerActionTypes.FetchNewSources;
 
   constructor(public sourceId: string, public sourceUrl: string) {}
+}
+export class FolderAdd implements Action {
+  readonly type = SourceExplorerActionTypes.FolderAdd;
+
+  constructor(public folder: RavenFolderSource) {}
+}
+
+export class FolderAddFailure implements Action {
+  readonly type = SourceExplorerActionTypes.FolderAddFailure;
+}
+
+export class FolderAddSuccess implements Action {
+  readonly type = SourceExplorerActionTypes.FolderAddSuccess;
 }
 
 export class GraphAgainEvent implements Action {
@@ -327,6 +344,9 @@ export type SourceExplorerAction =
   | ExpandEvent
   | FetchInitialSources
   | FetchNewSources
+  | FolderAdd
+  | FolderAddFailure
+  | FolderAddSuccess
   | GraphAgainEvent
   | GraphCustomSource
   | ImportFile
