@@ -74,6 +74,24 @@ To start the Adaptation service you will use the `adaptation` file:
 
     docker-compose -f base.yml -f adaptation.yml up
 
+### Analytics configuration
+
+Rename the `analytics.env-example` file to `analytics.env`. This will
+eventually enable the ability to create a custom database settings. For
+now, however, leave the settings as is.
+
+To start the analytics service (Matomo), use the `analytics` file:
+
+    docker-compose -f base.yml -f analytics.yml up
+
+Once the service has been started, you will need to run the setup script in the
+analytics directory.
+
+    cd analytics
+    ./setup.sh
+
+This will initialize the database that will be used by Matomo.
+
 ### Logging configuration
 
 To start the log stack with Elasticsearch, Kibana, and Filebeat, you will use
@@ -131,6 +149,7 @@ This is a long, but very composable command:
       -f base.yml \
       -f nest.yml \
       -f adaptation.yml \
+      -f analytics.yml \
       -f elastic.yml \
       -f tyk.yml \
       -f tyk_local.yml \
