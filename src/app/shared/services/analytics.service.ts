@@ -7,6 +7,22 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './config.effects';
-export * from './dialog.effects';
-export * from './nav.effects';
+import { Injectable } from '@angular/core';
+
+export enum EventType {
+  NavigationEvent = 'NavigationEvent',
+  ClickEvent = 'ClickEvent',
+}
+
+@Injectable({
+  providedIn: 'root',
+})
+export class AnalyticsService {
+  trackEvent(evt: EventType, val: String): void {
+    // @ts-ignore
+    if (window._paq) {
+      // @ts-ignore
+      window._paq.push(['trackEvent', 'NEST', evt, val]);
+    }
+  }
+}

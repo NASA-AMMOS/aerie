@@ -126,5 +126,4 @@ export class RavenSettingsBandsComponent {
   trackByFn(index: number, item: RavenSubBand) {
     return item.id;
   }
-
 }

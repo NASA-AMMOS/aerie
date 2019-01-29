@@ -108,11 +108,7 @@ export class TimeCursorEffects {
     );
 
     // If we are auto-paging and our time cursor goes outside the view window, then pan the view window right.
-    if (
-      autoPage &&
-      newCursorTime &&
-      newCursorTime > viewTimeRange.end
-    ) {
+    if (autoPage && newCursorTime && newCursorTime > viewTimeRange.end) {
       actions.push(new timelineActions.PanRightViewTimeRange());
     }
 

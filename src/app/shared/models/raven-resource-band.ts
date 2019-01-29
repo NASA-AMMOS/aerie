@@ -29,7 +29,7 @@ export interface RavenResourceBand {
   labelPin: string;
   labelUnit: string;
   logTicks: boolean;
-  maxLimit?: number ;
+  maxLimit?: number;
   maxTimeRange: RavenTimeRange;
   minLimit?: number;
   name: string;
