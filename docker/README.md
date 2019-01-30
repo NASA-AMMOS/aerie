@@ -131,6 +131,7 @@ This is a long, but very composable command:
       -f base.yml \
       -f nest.yml \
       -f adaptation.yml \
+      -f plan.yml \
       -f elastic.yml \
       -f tyk.yml \
       -f tyk_local.yml \
