@@ -264,7 +264,7 @@ export class DialogEffects {
       return [];
     }),
   );
-  
+
   /**
    * Effect for OpenFolderDialog.
    */

@@ -96,7 +96,6 @@ ActivityBand.prototype.computeNumRowsWaterfallLayout = function() {
 ActivityBand.prototype.computeNumRowsCompactLayout = function() {
   var ctx = this.canvas.getContext('2d');
   ctx.font = this.painter.font;
-  var painter = this.painter;
   var start = this.timeAxis.start;
   var end = this.timeAxis.end;
   var viewTimeAxis = this.viewTimeAxis;
