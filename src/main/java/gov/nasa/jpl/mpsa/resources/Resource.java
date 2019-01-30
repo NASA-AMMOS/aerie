@@ -5,10 +5,11 @@ import gov.nasa.jpl.mpsa.time.Time;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.util.*;
 
 
-public class Resource<V extends Comparable> {
+public class Resource<V extends Comparable> implements PropertyChangeListener{
 
     private UUID id;
     private String name;
@@ -18,6 +19,8 @@ public class Resource<V extends Comparable> {
     private Set allowedValues;
     private V minimum;
     private V maximum;
+    private V dummy;
+
 
     // other resources or conditions might want to listen to when we change, so we will keep a collection of listeners
 
@@ -105,6 +108,11 @@ public class Resource<V extends Comparable> {
         this.frozen = frozen;
     }
 
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+
+    }
+
 
     public static class Builder<V extends Comparable> {
 
@@ -184,12 +192,16 @@ public class Resource<V extends Comparable> {
         if (builder.initialValue != null) {
             this.setValue((V) builder.initialValue);
         }
+
+        this.listeners = new HashSet<>();
+        addChangeListener(this);
     }
 
 
     public void addChangeListener(PropertyChangeListener newListener) {
         listeners.add(newListener);
     }
+
 
     // needed to not schedule schedulers every time a remodel is run
     public void removeChangeListener(PropertyChangeListener toBeRemoved) {
@@ -233,6 +245,10 @@ public class Resource<V extends Comparable> {
         I get that when doing simulation it is easy to just pull from a table using the hash key (time)
         but makes it inflexible.
         */
+
+        this.dummy = value;
+        notifyListeners(new AbstractMap.SimpleImmutableEntry(0, 0), new AbstractMap.SimpleImmutableEntry(0, value));
+
 
         resourceHistory.add(value);
 

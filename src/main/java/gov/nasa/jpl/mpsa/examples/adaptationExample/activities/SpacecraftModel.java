@@ -1,5 +1,6 @@
 package gov.nasa.jpl.mpsa.examples.adaptationExample.activities;
 
+import gov.nasa.jpl.mpsa.constraints.conditional.ConditionalConstraint;
 import gov.nasa.jpl.mpsa.examples.adaptationExample.activities.models.ExampleModel;
 import gov.nasa.jpl.mpsa.examples.adaptationExample.activities.models.WheelModel;
 import gov.nasa.jpl.mpsa.examples.adaptationExample.activities.models.WheelModelX;
@@ -29,7 +30,30 @@ public class SpacecraftModel {
                 .withMax(359)
                 .build();
 
+        Resource primaryBattery = new Resource.Builder("primaryBattery")
+                .forSubsystem("GNC")
+                .withUnits("degrees")
+                .withMin(0)
+                .withMax(359)
+                .build();
+
+        wheel1.setValue(0.0);
+        primaryBattery.setValue(0.0);
+
+        ConditionalConstraint leaf_one = new ConditionalConstraint("Leaf 1").postfixXpr(wheel1, 10.0, "<");
+        ConditionalConstraint leaf_two = new ConditionalConstraint("Leaf 2").postfixXpr(wheel1, 18.0, ">");
+        ConditionalConstraint parent_of_one_two = new ConditionalConstraint("Parent (1,2)").postfixXpr(leaf_one, leaf_two, "||");
+        ConditionalConstraint leaf_three = new ConditionalConstraint("Leaf 3").postfixXpr(primaryBattery, 50.0, ">");
+        ConditionalConstraint root = new ConditionalConstraint("Root").postfixXpr(parent_of_one_two, leaf_three, "&&");
+
+        System.out.println("\n\nSet wheel 1 to 30");
+        wheel1.setValue(30.0);
+
+        System.out.println("\n\nSet wheel 1 to 0 and battery to 100");
         wheel1.setValue(0);
+        primaryBattery.setValue(100);
+
+
 
         ArrayedResource wheel_velocity = new ArrayedResource.Builder("RWA_angular_momentum")
                 .forSubsystem("GNC")
