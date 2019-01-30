@@ -70,6 +70,19 @@ export class RavenSettingsBandsComponent {
   }
 
   /**
+   * Event. Change callback. Only allow activity label font size between the min/max font size ranges.
+   */
+  onActivityLabelFontSizeChange(labelFontSize: number) {
+    if (labelFontSize > 5 && labelFontSize < 31) {
+      this.updateSubBand.emit({
+        bandId: this.selectedBandId,
+        subBandId: this.selectedSubBandId,
+        update: { activityLabelFontSize: labelFontSize },
+      });
+    }
+  }
+
+  /**
    * Change plot type changes the height and heightPadding. Height of CompositeBand needs to include heightPadding for top and bottom tick labels to show in a line plot.
    */
   onChangePlotType(subBand: RavenSubBand, isNumeric: boolean) {
@@ -111,6 +124,19 @@ export class RavenSettingsBandsComponent {
         showStateChangeTimes,
       },
     });
+  }
+
+  /**
+   * Event. Change callback. Only allow state label font size between the min/max font size ranges.
+   */
+  onStateLabelFontSizeChange(labelFontSize: number) {
+    if (labelFontSize > 5 && labelFontSize < 31) {
+      this.updateSubBand.emit({
+        bandId: this.selectedBandId,
+        subBandId: this.selectedSubBandId,
+        update: { stateLabelFontSize: labelFontSize },
+      });
+    }
   }
 
   /**

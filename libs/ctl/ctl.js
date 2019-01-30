@@ -95,7 +95,7 @@ ActivityBand.prototype.computeNumRowsWaterfallLayout = function() {
 
 ActivityBand.prototype.computeNumRowsCompactLayout = function() {
   var ctx = this.canvas.getContext('2d');
-  var painter = this.painter;
+  ctx.font = this.painter.font;
   var start = this.timeAxis.start;
   var end = this.timeAxis.end;
   var viewTimeAxis = this.viewTimeAxis;
@@ -131,9 +131,9 @@ ActivityBand.prototype.computeNumRowsCompactLayout = function() {
           if(this.painter.autoFit && !this.painter.trimLabel && interval.label !== null) {
             // since we using the viewtime axis, tracks may be computed off the canvas so
             // we need to use the no clamping function to compute the x value
-            var labelX1 = viewTimeAxis.getXFromTimeNoClamping(interval.start) + painter.labelPadding;
+            var labelX1 = viewTimeAxis.getXFromTimeNoClamping(interval.start) + this.painter.labelPadding;
             var labelWidth = ctx.measureText(interval.label).width;
-            prevDrawEnd = Math.max(prevDrawEnd, viewTimeAxis.getTimeFromX(labelX1+labelWidth));
+            prevDrawEnd = Math.max(prevDrawEnd, viewTimeAxis.getTimeFromX(labelX1+labelWidth+this.painter.labelPadding));
           }
         }
       }

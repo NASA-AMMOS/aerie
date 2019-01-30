@@ -124,6 +124,20 @@
 
             <!-- Activity Settings. -->
             <ng-container *ngIf="subBand.type === 'activity'">
+              <!-- Activity Label Font Size. -->
+              <div class="field">
+                <label>Activity Label Font Size</label>
+                <input
+                 mat-input
+                  [value]="subBand.activityLabelFontSize"
+                  type="number"
+                  name="activityLabelFontSize"
+                  step="1"
+                  min="6"
+                  max="30"
+                  (change)="onActivityLabelFontSizeChange($event.target.valueAsNumber)">
+              </div>
+
               <!-- Activity Style. -->
               <div class="field">
                 <mat-form-field>
@@ -351,6 +365,20 @@
                   Show State Change Times
                 </mat-slide-toggle>
               </div>
+
+              <!-- State Label Font Size. -->
+              <div class="field">
+                  <label>State Label Font Size</label>
+                  <input
+                   mat-input
+                    [value]="subBand.stateLabelFontSize"
+                    type="number"
+                    name="stateLabelFontSize"
+                    step="1"
+                    min="6"
+                    max="30"
+                    (change)="onStateLabelFontSizeChange($event.target.valueAsNumber)">
+                </div>
             </ng-container>
 
             <!-- Plot Type. -->

@@ -96,6 +96,9 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
   showStateChangeTimes: boolean;
 
   @Input()
+  stateLabelFontSize: number;
+
+  @Input()
   type: string;
 
   // These Inputs are used when isNumeric is true.
@@ -326,6 +329,16 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
         value: this.showStateChangeTimes ? this.height - 12 : this.height,
       });
     }
+
+    // State Label Font Size.
+    if (changes.stateLabelFontSize && !changes.stateLabelFontSize.firstChange) {
+      this.updateSubBand.emit({
+        prop: 'font',
+        subBandId: this.id,
+        subObject: 'painter',
+        value: `normal ${this.stateLabelFontSize}px Verdana`,
+      });
+    }
   }
 
   ngOnInit() {
@@ -352,6 +365,7 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
         autoColor: true,
         baselineLabel: this.baselineLabel,
         borderWidth: this.borderWidth,
+        font: `normal ${this.stateLabelFontSize}px Verdana`,
         height: this.height - this.heightPadding,
         heightPadding: this.heightPadding,
         id: this.id,

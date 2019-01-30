@@ -34,6 +34,9 @@ export class RavenActivityBandComponent
   activityHeight: number;
 
   @Input()
+  activityLabelFontSize: number;
+
+  @Input()
   activityStyle: number;
 
   @Input()
@@ -127,6 +130,19 @@ export class RavenActivityBandComponent
   updateSubBand: EventEmitter<any> = new EventEmitter<any>();
 
   ngOnChanges(changes: SimpleChanges) {
+    // Activity Label Font Size.
+    if (
+      changes.activityLabelFontSize &&
+      !changes.activityLabelFontSize.firstChange
+    ) {
+      this.updateSubBand.emit({
+        prop: 'font',
+        subBandId: this.id,
+        subObject: 'painter',
+        value: `normal ${this.activityLabelFontSize}px Verdana`,
+      });
+    }
+
     // Activity Style.
     if (changes.activityStyle && !changes.activityStyle.firstChange) {
       this.updateSubBand.emit({
@@ -301,6 +317,7 @@ export class RavenActivityBandComponent
       autoFit: this.layout === 0 ? 1 : null,
       baselineLabel: this.baselineLabel,
       borderWidth: this.borderWidth,
+      font: `normal ${this.activityLabelFontSize}px Verdana`,
       height: this.height,
       heightPadding: this.heightPadding,
       id: this.id,
