@@ -110,16 +110,19 @@
 
             <!-- Height (applies to all sub-bands). -->
             <div class="field">
-              <label>Height</label>
-              <input
-                mat-input
-                [value]="bandsById[selectedBandId].height"
-                type="number"
-                name="height"
-                step="1"
-                min="5"
-                max="500"
-                (change)="updateBandAndSubBand.emit({ bandId: selectedBandId, subBandId: subBand.id, update: { height: $event.target.valueAsNumber } })">
+              <mat-form-field>
+                <input
+                  matInput
+                  [formControl]="heightControl"
+                  [value]="bandsById[selectedBandId].height"
+                  type="number"
+                  placeholder="Height"
+                  name="height"
+                  step="1"
+                  min="5"
+                  max="500"
+                  (change)="conditionalUpdateBandAndSubBand(!heightControl.invalid, { bandId: selectedBandId, subBandId: subBand.id, update: { height: $event.target.valueAsNumber } })">
+              </mat-form-field>
             </div>
 
             <!-- Activity Settings. -->

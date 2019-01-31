@@ -14,7 +14,7 @@ import {
   Input,
   Output,
 } from '@angular/core';
-
+import { FormControl, Validators } from '@angular/forms';
 import {
   RavenCompositeBand,
   RavenStateBand,
@@ -56,6 +56,12 @@ export class RavenSettingsBandsComponent {
 
   @Output()
   updateTimeline: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
+
+  heightControl: FormControl = new FormControl('', [
+    Validators.required,
+    Validators.min(5),
+    Validators.max(500),
+  ]);
 
   /**
    * Returns true if the selected band contains more than one resource sub-band. False otherwise.
@@ -151,5 +157,11 @@ export class RavenSettingsBandsComponent {
    */
   trackByFn(index: number, item: RavenSubBand) {
     return item.id;
+  }
+
+  conditionalUpdateBandAndSubBand(condition: boolean, updateDict: RavenUpdate) {
+    if (condition) {
+      this.updateBandAndSubBand.emit(updateDict);
+    }
   }
 }
