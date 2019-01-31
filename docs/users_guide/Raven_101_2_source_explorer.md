@@ -52,7 +52,23 @@ To select a source in the Source Explorer:
 
 As a result of your selection; a band is added to the *Main Bands Panel* and the Radio Button will change its state to selected (<img src="./images/selected_source.svg" width="20" />). 
 
+#### How To: Add/Delete Folders
+A user can add or remove folders from the Source Explorer. These actions need to be performed from the Source Explorer itself or using our server API. To do so,
 
+1. Select a Database or Folder or File. The source will be highlighted and a snowman icon  (<img src="./images/baseline-more_vert-24px.svg" width="20" />) will appear.
+2. Click the snowman icon (<img src="./images/baseline-more_vert-24px.svg" width="20" />).
+
+##### To add a folder:
+
+3. In the dropdown, select: Add Folder.
+4. A dialog will appear, enter the name of the new folder. Please note that
+5. Click Add.
+
+##### To delete a folder:
+
+3. In the dropdown, select: Delete.
+4. A dialog will appear, confirming the desired action.
+5. Click Yes.
 
 ## Pins
 

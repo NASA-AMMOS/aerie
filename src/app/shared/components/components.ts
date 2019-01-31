@@ -15,6 +15,7 @@ export * from './raven-confirm-dialog/raven-confirm-dialog.component';
 export * from './raven-custom-filter-dialog/raven-custom-filter-dialog.component';
 export * from './raven-custom-graph-dialog/raven-custom-graph-dialog.component';
 export * from './raven-file-import-dialog/raven-file-import-dialog.component';
+export * from './raven-folder-dialog/raven-folder-dialog.component';
 export * from './raven-pin-dialog/raven-pin-dialog.component';
 export * from './raven-plan-form-dialog/raven-plan-form-dialog.component';
 export * from './raven-shareable-link-dialog/raven-shareable-link-dialog.component';

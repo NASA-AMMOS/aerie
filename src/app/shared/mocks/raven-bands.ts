@@ -18,6 +18,7 @@ import { activityPoint } from './raven-points';
 
 export const activityBand: RavenActivityBand = {
   activityHeight: 20,
+  activityLabelFontSize: 9,
   activityStyle: 1,
   addTo: false,
   alignLabel: 3,
@@ -128,6 +129,7 @@ export const stateBand: RavenStateBand = {
   showStateChangeTimes: false,
   showTooltip: true,
   sourceIds: [],
+  stateLabelFontSize: 9,
   tableColumns: [],
   type: 'state',
 };

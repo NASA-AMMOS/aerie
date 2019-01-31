@@ -7,6 +7,28 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './config.effects';
-export * from './dialog.effects';
-export * from './nav.effects';
+import { Injectable } from '@angular/core';
+import { Actions, Effect, ofType } from '@ngrx/effects';
+import { tap, switchMap } from 'rxjs/operators';
+
+import { AnalyticsService, EventType } from '../services/analytics.service';
+
+@Injectable()
+export class NavEffects {
+  constructor(
+    private update$: Actions,
+    private analyticsService: AnalyticsService,
+  ) {}
+
+  @Effect()
+  navigate$ = this.update$.pipe(
+    ofType('ROUTER_NAVIGATION'),
+    tap(({ payload }: any) => {
+      this.analyticsService.trackEvent(
+        EventType.NavigationEvent,
+        payload.event.url,
+      );
+    }),
+    switchMap(() => []),
+  );
+}
