@@ -29,16 +29,18 @@ truncated version of the mathematical constant E, to make it easy to remember.
 Support services are ancillary to the operation of the Primary services. In
 other words, the Primary services can function completely without them.
 
-| Service       | Port  |
-| ---           | ---   |
-| elasticsearch | 9200  |
-| elasticsearch | 9300  |
-| kibana        | 5601  |
-| tyk_dashboard | 3000  |
-| tyk_dashboard | 5000  |
-| tyk_gateway   | 8081  |
-| tyk_mongo     | 27017 |
-| tyk_redis     | 6379  | 
+| Service         | Port  |
+| ---             | ---   |
+| elasticsearch   | 9200  |
+| elasticsearch   | 9300  |
+| kibana          | 5601  |
+| matomo          | 31423 |
+| matomo_database | 3306  |
+| tyk_dashboard   | 3000  |
+| tyk_dashboard   | 5000  |
+| tyk_gateway     | 8081  |
+| tyk_mongo       | 27017 |
+| tyk_redis       | 6379  | 
 
 ## Getting Started
 
@@ -58,6 +60,7 @@ The basic steps are:
 2. Build the adaptation service according to its [README][adaptation]
 3. Fetch and build the NEST service according to its [README][nest]
 4. Start the stack according to the Docker [README][docker_readme]
+5. Run the setup.sh files for each service that you started
 
 For now primary services are pre-built, but in the future they should be built
 with multi-stage Docker builds.

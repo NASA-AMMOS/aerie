@@ -4,6 +4,10 @@ services:
     build: ../adaptation/
     command: java -jar -Dspring.profiles.active=production adaptation.jar
     volumes:
+      - adaptation_files:/usr/src/adaptation/adaptation_files
       - adaptation_logs:/var/log/adaptation
     ports:
       - "27182:27182"
+
+volumes:
+  adaptation_files:

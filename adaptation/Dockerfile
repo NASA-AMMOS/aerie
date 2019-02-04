@@ -15,5 +15,9 @@
 FROM openjdk:8-alpine
 WORKDIR /usr/src/adaptation
 COPY ./target/adaptation*.jar /usr/src/adaptation/adaptation.jar
+COPY ./lib /usr/src/adaptation/lib
+RUN chmod 755 /usr/src/adaptation/lib/*
+RUN mkdir /usr/src/adaptation/adaptation_files 
+VOLUME [ "/usr/src/adaptation/adaptation_files" ]
 EXPOSE 27182
 CMD ["java", "-jar", "-Dspring.profiles.active=default", "adaptation.jar"]
