@@ -210,10 +210,10 @@ export function addBand(state: TimelineState, action: AddBand): TimelineState {
     ...state,
     bands,
     selectedBandId: action.band.id,
-      selectedSubBandId:
-        action.band && action.band.subBands.length && action.band.id !== ''
-          ? action.band.subBands[0].id
-          : '',
+    selectedSubBandId:
+      action.band && action.band.subBands.length && action.band.id !== ''
+        ? action.band.subBands[0].id
+        : '',
     ...updateTimeRanges(bands, state.viewTimeRange),
   };
 }

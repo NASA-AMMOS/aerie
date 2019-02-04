@@ -7,6 +7,20 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './config.effects';
-export * from './dialog.effects';
-export * from './nav.effects';
+:host {
+  display: block;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.container > * {
+  width: 100%;
+}
+
+.folder-add {
+  padding-bottom: 15px;
+}

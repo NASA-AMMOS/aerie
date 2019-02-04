@@ -142,6 +142,10 @@ export class SourceExplorerComponent implements OnDestroy {
       this.store.dispatch(
         new dialogActions.OpenFileImportDialog(source, '300px'),
       );
+    } else if (event === 'folder-add') {
+      this.store.dispatch(
+        new dialogActions.OpenFolderDialog('add', source, '250px'),
+      );
     } else if (event === 'graph-again') {
       this.store.dispatch(new sourceExplorerActions.GraphAgainEvent(source.id));
     } else if (event === 'pin-add') {

@@ -11,6 +11,7 @@ import { RavenActivityPoint, RavenTimeRange } from './index';
 
 export interface RavenActivityBand {
   activityHeight: number;
+  activityLabelFontSize: number;
   activityStyle: number;
   addTo: boolean;
   alignLabel: number;

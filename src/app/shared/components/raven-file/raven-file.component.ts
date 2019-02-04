@@ -51,4 +51,30 @@ export class RavenFileComponent {
 
   @Output()
   select: EventEmitter<RavenFileSource> = new EventEmitter<RavenFileSource>();
+
+  get iconClass(): string {
+    switch (this.source.importJobStatus) {
+      case 'RUNNING':
+      case 'QUEUED':
+        return 'fa fa-hourglass';
+      case 'FINISHED':
+        return this.source.icon;
+      case 'ERROR':
+      default:
+        return 'fa fa-exclamation-triangle';
+    }
+  }
+
+  get textClass(): string {
+    switch (this.source.importJobStatus) {
+      case 'RUNNING':
+      case 'QUEUED':
+        return 'running';
+      case 'FINISHED':
+        return '';
+      case 'ERROR':
+      default:
+        return 'error';
+    }
+  }
 }
