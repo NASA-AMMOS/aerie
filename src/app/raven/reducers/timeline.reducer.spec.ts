@@ -30,6 +30,7 @@ import {
   ResetViewTimeRange,
   SelectBand,
   SelectPoint,
+  SetCompositeYLabelDefault,
   SetPointsForSubBand,
   SortBands,
   UpdateBand,
@@ -46,9 +47,13 @@ import {
   activityPoint,
   compositeBand,
   grandChildSource,
+  overlayResourceBands,
+  resourceBand,
   rootSource,
   stateBand,
 } from '../../shared/mocks';
+
+import { hasTwoResourceBands } from '../../shared/util';
 
 describe('timeline reducer', () => {
   let timelineState: TimelineState;
@@ -337,6 +342,28 @@ describe('timeline reducer', () => {
     expect(timelineState.bands[0].subBands[0].points).toEqual([
       { ...activityPoint, expansion: 'expandDescendants' },
     ]);
+  });
+
+  it('handle hasTwoResourceBands', () => {
+    const source: RavenSource = rootSource;
+    timelineState = reducer(
+      timelineState,
+      new AddBand(source.id, overlayResourceBands),
+    );
+    expect(hasTwoResourceBands(timelineState.bands[0])).toBe(true);
+  });
+
+  it('handle hasTwoResourceBands', () => {
+    const newBand = {
+      ...compositeBand,
+      subBands: [
+        {
+          ...resourceBand,
+        },
+      ],
+    };
+    timelineState = reducer(timelineState, new AddBand(newBand.id, newBand));
+    expect(hasTwoResourceBands(timelineState.bands[0])).toBe(false);
   });
 
   it('handle PanLeftViewTimeRange', () => {
@@ -711,6 +738,37 @@ describe('timeline reducer', () => {
     timelineState = reducer(timelineState, new SelectPoint('0', '1', '400'));
 
     expect(timelineState.selectedPoint).toEqual(point);
+  });
+
+  it('handle SetCompositeYLabelDefault', () => {
+    const source: RavenSource = rootSource;
+    timelineState = reducer(
+      timelineState,
+      new AddBand(source.id, overlayResourceBands),
+    );
+    expect(timelineState.bands[0].compositeYAxisLabel).toBe(false);
+    timelineState = reducer(
+      timelineState,
+      new SetCompositeYLabelDefault(overlayResourceBands.id),
+    );
+    expect(timelineState.bands[0].compositeYAxisLabel).toBe(true);
+  });
+
+  it('handle SetCompositeYLabelDefault', () => {
+    const newBand = {
+      ...compositeBand,
+      subBands: [
+        {
+          ...resourceBand,
+        },
+      ],
+    };
+    timelineState = reducer(timelineState, new AddBand(newBand.id, newBand));
+    timelineState = reducer(
+      timelineState,
+      new SetCompositeYLabelDefault(newBand.id),
+    );
+    expect(timelineState.bands[0].compositeYAxisLabel).toBe(false);
   });
 
   it('handle SetPointsForSubBand', () => {
