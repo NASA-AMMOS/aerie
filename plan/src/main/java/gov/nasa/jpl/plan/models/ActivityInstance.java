@@ -22,14 +22,14 @@ public class ActivityInstance {
 
     public ActivityInstance(
         String activityId,
-        String activityType, 
+        String activityType,
         String color,
         ArrayList<Constraint> constraints,
         Number duration,
         Number end,
         String endTimestamp,
         String intent,
-        ArrayList<String> listeners, 
+        ArrayList<String> listeners,
         String name,
         ArrayList<Parameter> parameters,
         Number start,
@@ -52,8 +52,8 @@ public class ActivityInstance {
         this.y = y;
     }
 
-    public String toString() { 
-        return 
+    public String toString() {
+        return
             "activityId: " + this.activityId + "\n" +
             "activityType: " + this.activityType + "\n" +
             "color: " + this.color + "\n" +
@@ -68,7 +68,7 @@ public class ActivityInstance {
             "start: " + this.start.toString() + "\n" +
             "startTimestamp: " + this.startTimestamp + "\n" +
             "y: " + this.y + "\n";
-    } 
+    }
 
     public String getActivityId() {
         return activityId;

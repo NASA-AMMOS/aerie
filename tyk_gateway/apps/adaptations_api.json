@@ -1,8 +1,8 @@
 {
-    "id": "5c47b464d3468100011dab0e",
+    "id": "5c48c32e047580000160a981",
     "name": "adaptations",
     "slug": "adaptations",
-    "api_id": "3c44b74e1aa44286532474d853e15010",
+    "api_id": "612b9e2e858e4090422648b3011f3791",
     "org_id": "5c47b435d3468100011dab0a",
     "use_keyless": true,
     "use_oauth2": false,
@@ -73,18 +73,7 @@
                 "extended_paths": {
                     "white_list": [
                         {
-                            "path": "^/adaptations/[0-9A-Za-z]+$",
-                            "method_actions": {
-                                "GET": {
-                                    "action": "no_action",
-                                    "code": 200,
-                                    "data": "",
-                                    "headers": {}
-                                }
-                            }
-                        },
-                        {
-                            "path": "^/adaptations/$",
+                            "path": "^\\/adaptations(\\/[0-9A-Za-z_-]+)*\\/?$",
                             "method_actions": {
                                 "GET": {
                                     "action": "no_action",
@@ -200,12 +189,19 @@
     "expire_analytics_after": 0,
     "response_processors": [],
     "CORS": {
-        "enable": false,
+        "enable": true,
         "allowed_origins": [],
-        "allowed_methods": [],
+        "allowed_methods": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "OPTIONS"
+        ],
         "allowed_headers": [],
         "exposed_headers": [],
-        "allow_credentials": false,
+        "allow_credentials": true,
         "max_age": 24,
         "options_passthrough": false,
         "debug": false

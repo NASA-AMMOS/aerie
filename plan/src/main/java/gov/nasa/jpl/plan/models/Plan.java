@@ -20,7 +20,7 @@ public class Plan {
         ObjectId _id,
         String adaptationId,
         String endTimestamp,
-        String name, 
+        String name,
         String startTimestamp
     ) {
         this.set_id(_id);

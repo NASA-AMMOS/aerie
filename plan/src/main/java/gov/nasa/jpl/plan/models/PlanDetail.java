@@ -5,11 +5,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.data.mongodb.core.mapping.Document;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.UUID;
+
+import java.util.*;
 
 @Document("plans")
 public class PlanDetail extends Plan {
@@ -22,6 +19,44 @@ public class PlanDetail extends Plan {
             ArrayList<ActivityInstance> activityInstances) {
         super(_id, adaptationId, endTimestamp, name, startTimestamp);
         this.setActivityInstances(activityInstances);
+    }
+
+    /**
+     * This takes two Objects and merges them into the target Object while ignoring null property
+     * values.
+     * <p>
+     * TODO: Move this to a util package.
+     *
+     * @see https://bit.ly/2Wujn6G
+     */
+    public static void mergeObjects(Object source, Object target) {
+        String[] ignoreProperties = getNullPropertyNames(source);
+        BeanUtils.copyProperties(source, target, ignoreProperties);
+    }
+
+    /**
+     * This returns a list of non-null properties in a Java Object. This exists because we need a list
+     * of proerties to ignore when using the BeanUtils `copyProperties` for merging two Objects.
+     * <p>
+     * TODO: Move this to a util package.
+     *
+     * @see https://stackoverflow.com/a/19739041
+     */
+    public static String[] getNullPropertyNames(Object source) {
+        final BeanWrapper src = new BeanWrapperImpl(source);
+        java.beans.PropertyDescriptor[] pds = src.getPropertyDescriptors();
+
+        Set<String> emptyNames = new HashSet<>();
+        for (java.beans.PropertyDescriptor pd : pds) {
+            Object srcValue = src.getPropertyValue(pd.getName());
+            if (srcValue == null) {
+                emptyNames.add(pd.getName());
+            }
+        }
+
+        String[] result = new String[emptyNames.size()];
+
+        return emptyNames.toArray(result);
     }
 
     public ArrayList<ActivityInstance> getActivityInstances() {
@@ -77,47 +112,5 @@ public class PlanDetail extends Plan {
             i++;
         }
         return -1;
-    }
-
-    /**
-     * This takes two Objects and merges them into the target Object while ignoring
-     * null property values.
-     * 
-     * TODO: Move this to a util package.
-     * 
-     * @see https://bit.ly/2Wujn6G
-     * @param source
-     * @param target
-     */
-    public static void mergeObjects(Object source, Object target) {
-        String[] ignoreProperties = getNullPropertyNames(source);
-        BeanUtils.copyProperties(source, target, ignoreProperties);
-    }
-
-    /**
-     * This returns a list of non-null properties in a Java Object.
-     * This exists because we need a list of proerties to ignore when using
-     * the BeanUtils `copyProperties` for merging two Objects.
-     * 
-     * TODO: Move this to a util package.
-     * 
-     * @see https://stackoverflow.com/a/19739041
-     * @param source
-     * @return
-     */
-    public static String[] getNullPropertyNames(Object source) {
-        final BeanWrapper src = new BeanWrapperImpl(source);
-        java.beans.PropertyDescriptor[] pds = src.getPropertyDescriptors();
-
-        Set<String> emptyNames = new HashSet<>();
-        for (java.beans.PropertyDescriptor pd : pds) {
-            Object srcValue = src.getPropertyValue(pd.getName());
-            if (srcValue == null)
-                emptyNames.add(pd.getName());
-        }
-
-        String[] result = new String[emptyNames.size()];
-
-        return emptyNames.toArray(result);
     }
 }
