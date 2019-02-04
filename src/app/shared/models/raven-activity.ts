@@ -11,38 +11,16 @@
  * A rudimentary interface for activity instances
  */
 export interface RavenActivity {
-  /**
-   * ID of the parent activity type
-   */
   activityTypeId: string;
-
-  /**
-   * Duration of activity
-   */
-  duration: string;
-
-  /**
-   * Id of the activity
-   */
+  color: string;
+  duration: number;
+  end: number;
+  endTimestamp: string;
   id: string;
-
-  /**
-   * Description of the activity
-   */
   intent: string;
-
-  /**
-   * Name of activity
-   */
   name: string;
-
-  /**
-   * ID of the associated sequence for this activity
-   */
   sequenceId: string;
-
-  /**
-   * Start time of activity
-   */
-  start: string;
+  start: number;
+  startTimestamp: string;
+  y: number | null;
 }

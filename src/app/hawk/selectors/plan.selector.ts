@@ -20,14 +20,29 @@ export const getPlanState = createSelector(
 export const getActivities = createSelector(
   getPlanState,
   (state: PlanState) =>
-    state.selectedPlan ? Object.values(state.selectedPlan.activities) : null,
+    state.selectedPlan ? Object.values(state.selectedPlan.activities) : [],
+);
+
+export const getMaxTimeRange = createSelector(
+  getPlanState,
+  (state: PlanState) => state.maxTimeRange,
 );
 
 export const getPlans = createSelector(getPlanState, (state: PlanState) =>
   Object.values(state.plans),
 );
 
+export const getSelectedActivity = createSelector(
+  getPlanState,
+  (state: PlanState) => state.selectedActivity,
+);
+
 export const getSelectedPlan = createSelector(
   getPlanState,
   (state: PlanState) => state.selectedPlan,
+);
+
+export const getViewTimeRange = createSelector(
+  getPlanState,
+  (state: PlanState) => state.viewTimeRange,
 );

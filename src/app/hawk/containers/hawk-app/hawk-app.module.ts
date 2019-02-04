@@ -27,6 +27,8 @@ import {
 } from '@angular/material';
 
 import {
+  NestActivityBandModule,
+  NestTimeBandModule,
   RavenActivityTypeListModule,
   RavenAppHeaderModule,
   RavenPlanSelectorModule,
@@ -53,6 +55,8 @@ import { HawkAppComponent } from './hawk-app.component';
     MatTableModule,
     MatToolbarModule,
     MatTooltipModule,
+    NestActivityBandModule,
+    NestTimeBandModule,
     RavenActivityTypeListModule,
     RavenPlanSelectorModule,
     RavenAppHeaderModule,

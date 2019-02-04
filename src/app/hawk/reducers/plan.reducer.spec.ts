@@ -23,6 +23,8 @@ import {
   RemovePlan,
   SaveActivitySuccess,
   SavePlanSuccess,
+  SelectActivity,
+  UpdateViewTimeRange,
 } from '../actions/plan.actions';
 
 function getInitialState() {
@@ -40,26 +42,36 @@ describe('Plan Reducer', () => {
     activities = {
       '1': {
         activityTypeId: '000',
-        duration: '00:10',
+        color: '#7cbfb7',
+        duration: 0,
+        end: 0,
+        endTimestamp: '',
         id: '1',
         intent: 'Some science intent for this activity...',
         name: 'Instrument 1, Activity ABC',
         sequenceId: 'inst00035.0000.a',
-        start: '2022-10-29T14:55:00',
+        start: 0,
+        startTimestamp: '2022-10-29T14:55:00',
+        y: null,
       },
     };
 
     activityDetail = {
       activityTypeId: '001',
+      color: '#7cbfb7',
       constraints: [],
-      duration: '00:19',
+      duration: 0,
+      end: 0,
+      endTimestamp: '',
       id: '2',
       intent: 'Some science intent for this activity...',
       name: 'Instrument 2, Activity ABC',
       parameters: [],
       sequenceId: 'inst00036.0000ba',
-      start: '2023-11-28T15:54:10',
+      start: 0,
+      startTimestamp: '2023-11-28T15:54:10',
       subActivityIds: [],
+      y: null,
     };
 
     plan = {
@@ -225,6 +237,40 @@ describe('Plan Reducer', () => {
           },
         },
       } as PlanState);
+    });
+  });
+
+  describe('SelectActivity', () => {
+    it('should properly select an activity', () => {
+      // Set up some initial state with a selected plan.
+      const newInitialState: PlanState = reducer(
+        getInitialState(),
+        new FetchPlanDetailSuccess(planDetail),
+      );
+
+      const result: PlanState = reducer(
+        newInitialState,
+        new SelectActivity('1'),
+      );
+
+      expect(result).toEqual({
+        ...newInitialState,
+        selectedActivity: activities['1'],
+      });
+    });
+  });
+
+  describe('UpdateViewTimeRange', () => {
+    it('handle UpdateViewTimeRange', () => {
+      const result = reducer(
+        getInitialState(),
+        new UpdateViewTimeRange({ end: 314, start: 272 }),
+      );
+
+      expect(result).toEqual({
+        ...initialState,
+        viewTimeRange: { end: 314, start: 272 },
+      });
     });
   });
 });

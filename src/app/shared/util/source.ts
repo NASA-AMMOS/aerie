@@ -165,6 +165,10 @@ export function fromDir(
         name: 'Import',
       },
       {
+        event: 'folder-add',
+        name: 'Add Folder',
+      },
+      {
         event: 'pin-add',
         name: 'Add Pin',
       },

@@ -72,15 +72,20 @@ describe('ActivitiesComponent', () => {
   it('should save a new activity', () => {
     component.activityForm.patchValue({
       activityTypeId: 'test1',
+      color: '#7cbfb7',
       constraints: [],
-      duration: '11:11',
+      duration: 10,
+      end: 10,
+      endTimestamp: '',
       id: '001',
       intent: 'Genenetically modify a donkey to have wings',
       name: 'Hawkey',
       parameters: [],
       sequenceId: 'r578x',
-      start: '2017-02-01T15:23:11',
+      start: 0,
+      startTimestamp: '2017-02-01T15:23:11',
       subActivityIds: [],
+      y: null,
     } as RavenActivityDetail);
 
     spyOn(component, 'onSubmitActivityForm').and.callThrough();
@@ -98,12 +103,17 @@ describe('ActivitiesComponent', () => {
     const activityDetail = {
       activityDetail: {
         activityTypeId: 'test1',
-        duration: '11:11',
+        color: '#7cbfb7',
+        duration: 10,
+        end: 10,
+        endTimestamp: '',
         id: 'testy',
         intent: 'Genenetically modify a donkey to have wings',
         name: 'Hawkey',
         sequenceId: 'r578x',
-        start: '2017-02-01T15:23:11',
+        start: 0,
+        startTimestamp: '2017-02-01T15:23:11',
+        y: null,
       },
     };
 

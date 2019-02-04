@@ -3,6 +3,7 @@
   <raven-activity-band
     *ngIf="subBand.type === 'activity'"
     [activityHeight]="subBand.activityHeight"
+    [activityLabelFontSize]="subBand.activityLabelFontSize"
     [activityStyle]="subBand.activityStyle"
     [alignLabel]="subBand.alignLabel"
     [baselineLabel]="subBand.baselineLabel"
@@ -131,6 +132,7 @@
     [showIcon]="subBand.showIcon"
     [showLabelPin]="subBand.showLabelPin"
     [showStateChangeTimes]="subBand.showStateChangeTimes"
+    [stateLabelFontSize]="subBand.stateLabelFontSize"
     [type]="subBand.type"
     (addSubBand)="onAddSubBand($event)"
     (removeSubBand)="onRemoveSubBand($event)"

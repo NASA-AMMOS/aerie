@@ -9,6 +9,8 @@
 
 export * from './hb-command-list/hb-command-list.module';
 export * from './hb-command-loader/hb-command-loader.module';
+export * from './nest-activity-band/nest-activity-band.module';
+export * from './nest-time-band/nest-time-band.module';
 export * from './raven-app-header/raven-app-header.module';
 export * from './raven-app-nav/raven-app-nav.module';
 export * from './raven-activity-type-form-dialog/raven-activity-type-form-dialog.module';
@@ -31,6 +33,7 @@ export * from './raven-file/raven-file.module';
 export * from './raven-file-import-dialog/raven-file-import-dialog.module';
 export * from './raven-filter/raven-filter.module';
 export * from './raven-folder/raven-folder.module';
+export * from './raven-folder-dialog/raven-folder-dialog.module';
 export * from './raven-graphable-filter/raven-graphable-filter.module';
 export * from './raven-graphable/raven-graphable.module';
 export * from './raven-layout-apply/raven-layout-apply.module';

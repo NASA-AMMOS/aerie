@@ -20,6 +20,7 @@ import {
   RavenCustomFilterDialogComponent,
   RavenCustomGraphDialogComponent,
   RavenFileImportDialogComponent,
+  RavenFolderDialogComponent,
   RavenPinDialogComponent,
   RavenShareableLinkDialogComponent,
   RavenStateSaveDialogComponent,
@@ -34,6 +35,7 @@ import {
   OpenDeleteDialog,
   OpenDeleteSubBandDialog,
   OpenFileImportDialog,
+  OpenFolderDialog,
   OpenPinDialog,
   OpenRemoveAllBandsDialog,
   OpenRemoveAllGuidesDialog,
@@ -292,6 +294,30 @@ export class DialogEffects {
         return of(
           new sourceExplorerActions.ImportFile(action.source, result.file),
         );
+      }
+      return [];
+    }),
+  );
+
+  /**
+   * Effect for OpenFolderDialog.
+   */
+  @Effect()
+  openFolderDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenFolderDialog>(DialogActionTypes.OpenFolderDialog),
+    exhaustMap(action => {
+      const folderDialog = this.dialog.open(RavenFolderDialogComponent, {
+        data: {
+          source: action.source,
+          type: action.folderAction,
+        },
+        width: action.width,
+      });
+      return folderDialog.afterClosed();
+    }),
+    exhaustMap((result: any) => {
+      if (result && result.folderAdd) {
+        return [new sourceExplorerActions.FolderAdd(result.folder) as Action];
       }
       return [];
     }),

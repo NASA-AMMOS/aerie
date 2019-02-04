@@ -90,6 +90,8 @@ describe('timeline reducer', () => {
         },
       ],
       maxTimeRange: { end: 110, start: 10 },
+      selectedBandId: '200',
+      selectedSubBandId: '102',
       viewTimeRange: { end: 110, start: 10 },
     });
   });
@@ -129,6 +131,8 @@ describe('timeline reducer', () => {
         },
       ],
       maxTimeRange: { end: 210, start: 50 },
+      selectedBandId: '200',
+      selectedSubBandId: '100',
       viewTimeRange: { end: 210, start: 50 },
     });
   });
@@ -161,6 +165,8 @@ describe('timeline reducer', () => {
         },
       ],
       maxTimeRange: { end: 110, start: 10 },
+      selectedBandId: '200',
+      selectedSubBandId: '102',
       viewTimeRange: { end: 110, start: 10 },
     });
   });
@@ -261,6 +267,8 @@ describe('timeline reducer', () => {
         },
       ],
       maxTimeRange: { end: 210, start: 10 },
+      selectedBandId: '200',
+      selectedSubBandId: '102',
       viewTimeRange: { end: 110, start: 10 },
     });
   });

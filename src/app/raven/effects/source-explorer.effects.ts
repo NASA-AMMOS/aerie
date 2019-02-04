@@ -40,6 +40,7 @@ import {
   ExpandEvent,
   FetchInitialSources,
   FetchNewSources,
+  FolderAdd,
   GraphAgainEvent,
   GraphCustomSource,
   ImportFile,
@@ -454,6 +455,19 @@ export class SourceExplorerEffects {
     ]),
   );
 
+  @Effect()
+  createFolder$: Observable<Action> = this.actions$.pipe(
+    ofType<FolderAdd>(SourceExplorerActionTypes.FolderAdd),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    concatMap(({ action, state }) =>
+      concat(
+        this.withLoadingBar(this.createFolder(action, state)),
+        of(new sourceExplorerActions.ExpandEvent(action.folder.url)),
+      ),
+    ),
+  );
+
   /**
    * Effect for ExpandEvent.
    */
@@ -616,12 +630,7 @@ export class SourceExplorerEffects {
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     mergeMap(({ state: { config, raven }, action }) =>
-      concat(
-        of(
-          new sourceExplorerActions.UpdateSourceExplorer({
-            fetchPending: true,
-          }),
-        ),
+      this.withLoadingBar(
         this.open(
           null,
           raven.sourceExplorer.filtersByTarget,
@@ -636,11 +645,6 @@ export class SourceExplorerEffects {
           getSituationalAwarenessStartTime(raven.situationalAwareness),
           getSituationalAwarenessPageDuration(raven.situationalAwareness),
           true,
-        ),
-        of(
-          new sourceExplorerActions.UpdateSourceExplorer({
-            fetchPending: false,
-          }),
         ),
       ).pipe(
         catchError((e: Error) => {
@@ -666,21 +670,7 @@ export class SourceExplorerEffects {
   @Effect()
   importFile$: Observable<Action> = this.actions$.pipe(
     ofType<ImportFile>(SourceExplorerActionTypes.ImportFile),
-    concatMap(action =>
-      concat(
-        of(
-          new sourceExplorerActions.UpdateSourceExplorer({
-            fetchPending: true,
-          }),
-        ),
-        this.importFile(action),
-        of(
-          new sourceExplorerActions.UpdateSourceExplorer({
-            fetchPending: false,
-          }),
-        ),
-      ),
-    ),
+    concatMap(action => this.withLoadingBar(this.importFile(action))),
   );
 
   /**
@@ -1057,6 +1047,30 @@ export class SourceExplorerEffects {
         ),
     ),
   );
+
+  /**
+   * Helper. api call to mps server to create the folder
+   */
+  createFolder(action: sourceExplorerActions.FolderAdd, state: RavenAppState) {
+    const headers = new HttpHeaders().set('Content-Type', `application/json`);
+    const responseType = 'text';
+    const url = `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${
+      action.folder.url
+    }/${action.folder.name}`;
+
+    return this.http.put(url, '', { headers, responseType }).pipe(
+      concatMap(() => {
+        return of(new sourceExplorerActions.FolderAddSuccess());
+      }),
+      catchError((e: Error) => {
+        console.error('SourceExplorerEffects - createFolder$: ', e);
+        return [
+          new toastActions.ShowToast('warning', 'Failed To Create Folder', ''),
+          new sourceExplorerActions.FolderAddFailure(),
+        ];
+      }),
+    );
+  }
 
   /**
    * Helper. Returns a stream of actions that need to occur when expanding a source explorer source.
@@ -1584,6 +1598,19 @@ export class SourceExplorerEffects {
         } else {
           // Notify user no bands will be drawn.
           actions.push(new sourceExplorerActions.LoadErrorsAdd([sourceId]));
+
+          // Remove custom filter if custom source
+          if (
+            treeBySourceId[sourceId].type === 'customGraphable' &&
+            customFilter
+          ) {
+            actions.push(
+              new sourceExplorerActions.RemoveCustomFilter(
+                sourceId,
+                customFilter.label,
+              ),
+            );
+          }
         }
 
         return actions;
@@ -1782,5 +1809,24 @@ export class SourceExplorerEffects {
     });
 
     return actions;
+  }
+
+  /**
+   * Helper. wrap action with loadingBar fetchPending
+   */
+  withLoadingBar(actions$: Observable<Action>): Observable<Action> {
+    return concat(
+      of(
+        new sourceExplorerActions.UpdateSourceExplorer({
+          fetchPending: true,
+        }),
+      ),
+      actions$,
+      of(
+        new sourceExplorerActions.UpdateSourceExplorer({
+          fetchPending: false,
+        }),
+      ),
+    );
   }
 }

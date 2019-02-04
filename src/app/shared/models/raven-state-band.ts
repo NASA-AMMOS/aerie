@@ -45,6 +45,7 @@ export interface RavenStateBand {
   showStateChangeTimes: boolean;
   showTooltip: boolean;
   sourceIds: string[];
+  stateLabelFontSize: number;
   tableColumns: any[]; // TODO: Remove `any`.
   type: string;
 }
