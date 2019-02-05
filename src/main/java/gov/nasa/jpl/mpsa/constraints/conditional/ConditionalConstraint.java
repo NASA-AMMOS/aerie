@@ -27,7 +27,6 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
     }
 
     public void notifyTreeNodeListeners(boolean oldValue, boolean newValue){
-        System.out.println("GOT HERE!!! In " + name);
         for (PropertyChangeListener name : treeNodeListeners){
             name.propertyChange(new PropertyChangeEvent(this, "ConditionalXpr", oldValue, newValue));
         }
@@ -50,6 +49,10 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
 
     public String getName(){
         return this.name;
+    }
+
+    public boolean isLeaf(){
+        return ((leftLeaf != null) && (rightLeaf != null));
     }
 
 
@@ -187,32 +190,39 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
 
-
+        if (leftLeaf != null){
+            if (evt.getOldValue().equals(evt.getNewValue())){
+                System.out.println("No property change, change propagation stopped in " + name);
+                return;
+            }
+        }
 
         boolean oldvalue = value;
 
-        System.out.println("name is " + name);
-
-        System.out.println("value is " + this.leftLeaf.getCurrentValue());
-
-        System.out.println("IN PROPERTY CHANGE!");
         evaluateLeafNodes();
         evaluateConstraintNodes();
         if (left != null) {
             updateConstraintNodeExpr();
-            //System.out.println("Conditional value is " + this.value);
             System.out.println(expr);
         }
 
         if (leftLeaf != null){
             updateLeafExpr();
-            //System.out.println("Resource expression is " + this.value + " resource expression is " + this.leftLeaf.getCurrentValue() + this.operation + this.rightLeaf);
             System.out.println(expr);
         }
 
-        if (oldvalue != value){
-            System.out.println("notifying listeners...");
-            notifyTreeNodeListeners(oldvalue,value);
+        if (oldvalue != value) {
+            if (treeNodeListeners.size() > 0) {
+                System.out.println(name + " used to be " + oldvalue + " and is notifying listeners it is now " + value + "...");
+                notifyTreeNodeListeners(oldvalue, value);
+            } else {
+                System.out.println("no listeners, change propagation stopped. ");
+            }
+        }
+
+
+        else {
+            System.out.println("No property change, change propagation stopped in " + name);
         }
     }
 }

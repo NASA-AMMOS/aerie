@@ -194,7 +194,7 @@ public class Resource<V extends Comparable> implements PropertyChangeListener{
         }
 
         this.listeners = new HashSet<>();
-        addChangeListener(this);
+        //addChangeListener(this);
     }
 
 

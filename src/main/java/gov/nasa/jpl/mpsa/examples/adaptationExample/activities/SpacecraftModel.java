@@ -43,13 +43,29 @@ public class SpacecraftModel {
         primaryBattery.setValue(0.0);
 
         ConditionalConstraint leaf_one = new ConditionalConstraint("Leaf 1").logicXpr(wheel1, 10.0, "<");
-      //  ConditionalConstraint leaf_two = new ConditionalConstraint("Leaf 2").logicXpr(wheel1, 18.0, ">");
+
+        //We expect to see an updated evaluation
+        System.out.println("This is what happens if we change a resource that is being listened to by a disconnected leaf");
+        wheel1.setValue(6.0);
+
+        //This is what happens when we do change the value
+        System.out.println("\n\nThis is what happens if we change a resource that is being listened to by a disconnected leaf");
+        wheel1.setValue(12.0);
 
 
+        ConditionalConstraint leaf_two = new ConditionalConstraint("Leaf 2").logicXpr(wheel1, 18.0, ">");
+        ConditionalConstraint parent_of_one_two = new ConditionalConstraint("Parent (1,2)").logicXpr(leaf_one, leaf_two, "||");
 
+        //This is what happens when create a tree structure
+        //Currently, Parent(1,2) is false
+        //this is what happens if we change a resource value to make both conditions true
+        System.out.println("\n\nWe've created a parent of two leaf nodes whose value is currently false, let's change it to true");
+        wheel1.setValue(33.3);
 
-        //ConditionalConstraint parent_of_one_two = new ConditionalConstraint("Parent (1,2)").logicXpr(leaf_one, leaf_two, "||");
-        ConditionalConstraint leaf_three = new ConditionalConstraint("Leaf 3").logicXpr(primaryBattery, 50.0, ">");
+        System.out.println("\n\nNow let's change a resource value that does not result in a change in the parent");
+        wheel1.setValue(50.5);
+
+        /*ConditionalConstraint leaf_three = new ConditionalConstraint("Leaf 3").logicXpr(primaryBattery, 50.0, ">");
         //ConditionalConstraint root = new ConditionalConstraint("Root").logicXpr(parent_of_one_two, leaf_three, "&&");
 
         leaf_one.addTreeNodeChangeListener(leaf_three);
@@ -62,24 +78,24 @@ public class SpacecraftModel {
         System.out.println("\n\nSet wheel 1 to 30, statement 2");
         wheel1.setValue(30.0);
 
-        Scanner in = new Scanner(System.in);
+         in = new Scanner(System.in);
         in.hasNext();
 
-        System.out.println("\n\nSet wheel 1 to 30, statement 2");
+        System.out.println("\n\nSet wheel 1 to 30, statement 3");
         wheel1.setValue(30.0);
 
        // System.out.println("Leaf one leftnode val is " + leaf_one.leftLeaf.getCurrentValue());
        // System.out.println("Wheel 1 current value is " + wheel1.getCurrentValue());
 
 
-        System.out.println("\n\nEnter a value, statement 3");
+        System.out.println("\n\nEnter a value, statement 4");
         in = new Scanner(System.in);
         in.hasNext();
 
         System.out.println("\n\nSet wheel 1 to 0 and battery to 100");
         wheel1.setValue(0);
         primaryBattery.setValue(100);
-
+*/
 /*
 
         ArrayedResource wheel_velocity = new ArrayedResource.Builder("RWA_angular_momentum")
