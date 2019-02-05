@@ -1,6 +1,8 @@
 package gov.nasa.jpl.mpsa.constraints.conditional;
 import gov.nasa.jpl.mpsa.constraints.Constraint;
 import gov.nasa.jpl.mpsa.resources.Resource;
+import jdk.nashorn.internal.runtime.regexp.joni.exception.ValueException;
+
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.HashSet;
@@ -8,8 +10,8 @@ import java.util.Set;
 
 public class ConditionalConstraint<V extends Comparable> extends Constraint {
 
-    private ConditionalConstraint left;
-    private ConditionalConstraint right;
+    private ConditionalConstraint left = null;
+    private ConditionalConstraint right = null;
     private String operation;
     private Boolean value;
     public Resource leftLeaf = null;
@@ -32,10 +34,6 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
         }
     }
 
-    public ConditionalConstraint(String name){
-        this.name = name;
-    }
-
     public void updateLeafExpr(){
         this.expr = this.name + ": " + this.leftLeaf.getName() + " (value " + this.leftLeaf.getCurrentValue() + ") " + operation + " "
                 + this.rightLeaf
@@ -55,20 +53,55 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
         return ((leftLeaf != null) && (rightLeaf != null));
     }
 
+    public ConditionalConstraint withLeftLeaf(Resource leftLeaf){
+        this.leftLeaf = leftLeaf;
+        return this;
+    }
+
+    public ConditionalConstraint withRightLeaf(V rightLeaf){
+        this.rightLeaf = rightLeaf;
+        return this;
+    }
+
+    public ConditionalConstraint withLeftLeaf(ConditionalConstraint left){
+        this.left = left;
+        return this;
+    }
+
+    public ConditionalConstraint withRightLeaf(ConditionalConstraint right){
+        this.right = right;
+        return this;
+    }
+
+    public ConditionalConstraint withOperand(String operation){
+        this.operation = operation;
+        return logicXpr(leftLeaf, rightLeaf, operation);
+    }
+
+    public ConditionalConstraint build(){
+        addListenersToChildren(this);
+        this.treeNodeListeners = new HashSet<>();
+        evaluateNode();
+        return this;
+    }
+
+    public ConditionalConstraint(String name){
+        this.name = name;
+    }
+
+    public ConditionalConstraint logicXpr(ConditionalConstraint left, ConditionalConstraint right, String operation){
+        this.left = left;
+        this.right = right;
+        this.operation = operation;
+        build();
+        return this;
+    }
 
     public ConditionalConstraint logicXpr(Resource leftLeaf, V rightLeaf, String operation) {
         this.operation = operation;
         this.leftLeaf = leftLeaf;
         this.rightLeaf = rightLeaf;
-        //this.leftLeaf.addChangeListener(this);
-        addListenersToChildren(this);
-        this.left = null;
-        this.right = null;
-        this.treeNodeListeners = new HashSet<>();
-
-        evaluateLeafNodes();
-        //updateLeafExpr();
-
+        build();
         return this;
     }
 
@@ -86,102 +119,66 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
         }
     }
 
-    /*old
-    public void addListenersByTreeTraversal(ConditionalConstraint condition){
-        if (condition.left != null){
-            addListenersByTreeTraversal(condition.left);
+    //after evaluation, property change listeners will notify parents if value changes
+    public void evaluateConstraintNodes(){
+
+        assert(!isLeaf());
+        assert(left!=null && right!=null);
+
+        if (operation.equals("||")){
+            this.value = (left.value || right.value);
         }
 
-        if (condition.right != null){
-            addListenersByTreeTraversal(condition.right);
+        else if (operation.equals("&&")){
+            this.value = (left.value && right.value);
         }
 
         else {
-            condition.leftLeaf.addChangeListener(this);
-            return;
-        }
-    }
- */
-
-    public ConditionalConstraint logicXpr(ConditionalConstraint left, ConditionalConstraint right, String operation){
-        this.left = left;
-        this.right = right;
-        this.operation = operation;
-
-        addListenersToChildren(this);
-        evaluateConstraintNodes();
-
-        this.treeNodeListeners = new HashSet<>();
-        //updateConstraintNodeExpr();
-        return this;
-    }
-
-    public void setConstraintValue(){
-        boolean val = this.value;
-        evaluateConstraintNodes();
-        notifyTreeNodeListeners(val, this.value);
-    }
-
-    public void evaluateConstraintNodes(){
-
-        if ((left != null) && (right != null)){
-            if (operation.equals("||")){
-                if (left.value || right.value){
-                    this.value = true;
-                }
-                else {
-                    this.value = false;
-                }
-            }
-
-            if (operation.equals("&&")){
-                if (left.value==true && right.value==true){
-                    this.value = true;
-                }
-                else {
-                    this.value = false;
-                }
-            }
+            throw new IllegalArgumentException("Operation not recognized");
         }
     }
 
-
-    public void greaterThan(Double leftVal, Double rightLeaf){
-        this.value = (leftVal > rightLeaf);
+    public void evaluateNode() {
+        if (isLeaf()) {
+            evaluateLeafNodes();
+        } else {
+            evaluateConstraintNodes();
+        }
     }
 
     public void evaluateLeafNodes(){
 
-        //if leaf nodes
-        if ((leftLeaf != null) && (rightLeaf != null)){
-            V leftVal = (V)leftLeaf.getCurrentValue();
-            switch (operation)
-            {
-                case ">":
-                    if ((Double) leftVal > (Double) rightLeaf){ this.value = true;}
-                    else {this.value = false;}
-                    break;
-                case ">=":
-                    if ((Double) leftVal >= (Double) rightLeaf){ this.value = true;}
-                    else {this.value = false;}
-                    break;
-                case "==":
-                    if ((Double) leftVal == (Double) rightLeaf){ this.value = true;}
-                    else {this.value = false;}
-                    break;
-                case "<=":
-                    if ((Double) leftVal <= (Double) rightLeaf){ this.value = true;}
-                    else {this.value = false;}
-                    break;
-                case "<":
-                    if ((Double) leftVal < (Double) rightLeaf){ this.value = true;}
-                    else {this.value = false;}
-                    break;
-                case "!=":
-                    if ((Double) leftVal != (Double) rightLeaf){ this.value = true;}
-                    else {this.value = false;}
-                    break;
-            }
+        assert(isLeaf());
+        V leftVal = (V)leftLeaf.getCurrentValue();
+        switch (operation)
+        {
+            case ">":
+                if ((Double) leftVal > (Double) rightLeaf){ this.value = true;}
+                else {this.value = false;}
+                break;
+            case ">=":
+                if ((Double) leftVal >= (Double) rightLeaf){ this.value = true;}
+                else {this.value = false;}
+                break;
+            case "==":
+                if ((Double) leftVal == (Double) rightLeaf){ this.value = true;}
+                else {this.value = false;}
+                break;
+            case "<=":
+                if ((Double) leftVal <= (Double) rightLeaf){ this.value = true;}
+                else {this.value = false;}
+                break;
+            case "<":
+                if ((Double) leftVal < (Double) rightLeaf){ this.value = true;}
+                else {this.value = false;}
+                break;
+            case "!=":
+                if ((Double) leftVal != (Double) rightLeaf){ this.value = true;}
+                else {this.value = false;}
+                break;
+            default:
+                throw new IllegalArgumentException("Operation not recognized");
+
         }
         return;
     }
@@ -190,7 +187,7 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
 
-        if (leftLeaf != null){
+        if (isLeaf()){
             if (evt.getOldValue().equals(evt.getNewValue())){
                 System.out.println("No property change, change propagation stopped in " + name);
                 return;
@@ -198,18 +195,19 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
         }
 
         boolean oldvalue = value;
+        evaluateNode();
 
-        evaluateLeafNodes();
-        evaluateConstraintNodes();
-        if (left != null) {
+        //---delete later, for demo purposes--
+        if (!isLeaf()) {
             updateConstraintNodeExpr();
             System.out.println(expr);
         }
 
-        if (leftLeaf != null){
+        if (isLeaf()){
             updateLeafExpr();
             System.out.println(expr);
         }
+        //---delete above--
 
         if (oldvalue != value) {
             if (treeNodeListeners.size() > 0) {
@@ -219,7 +217,6 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
                 System.out.println("no listeners, change propagation stopped. ");
             }
         }
-
 
         else {
             System.out.println("No property change, change propagation stopped in " + name);
