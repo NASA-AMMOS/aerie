@@ -1,10 +1,10 @@
 package gov.nasa.jpl.mpsa.constraints.conditional;
-
 import gov.nasa.jpl.mpsa.constraints.Constraint;
-import gov.nasa.jpl.mpsa.resources.ArrayedResource;
 import gov.nasa.jpl.mpsa.resources.Resource;
-
 import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ConditionalConstraint<V extends Comparable> extends Constraint {
 
@@ -12,12 +12,26 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
     private ConditionalConstraint right;
     private String operation;
     private Boolean value;
-    private Resource leftLeaf = null;
+    public Resource leftLeaf = null;
     private V rightLeaf = null;
     private String name = null;
     private String expr = null;
 
-    public ConditionalConstraint(){};
+    //keep a collection of listeners
+    //this will be other nodes on the tree that are listening to us
+    private Set<PropertyChangeListener> treeNodeListeners;
+
+    //how we will add other listeners to our listener set
+    public void addTreeNodeChangeListener(PropertyChangeListener newListener){
+        treeNodeListeners.add(newListener);
+    }
+
+    public void notifyTreeNodeListeners(boolean oldValue, boolean newValue){
+        System.out.println("GOT HERE!!! In " + name);
+        for (PropertyChangeListener name : treeNodeListeners){
+            name.propertyChange(new PropertyChangeEvent(this, "ConditionalXpr", oldValue, newValue));
+        }
+    }
 
     public ConditionalConstraint(String name){
         this.name = name;
@@ -25,11 +39,8 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
 
     public void updateLeafExpr(){
         this.expr = this.name + ": " + this.leftLeaf.getName() + " (value " + this.leftLeaf.getCurrentValue() + ") " + operation + " "
-                + this.rightLeaf + " evaluates to " + this.value;
-    }
-
-    public String getName(){
-        return this.name;
+                + this.rightLeaf
+                + " evaluates to " + this.value;
     }
 
     public void updateConstraintNodeExpr(){
@@ -37,20 +48,42 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
                 + this.right.getName() + " evaluates to " + this.value;
     }
 
-    public ConditionalConstraint postfixXpr(Resource leftLeaf, V rightLeaf, String operation) {
+    public String getName(){
+        return this.name;
+    }
+
+
+    public ConditionalConstraint logicXpr(Resource leftLeaf, V rightLeaf, String operation) {
         this.operation = operation;
         this.leftLeaf = leftLeaf;
         this.rightLeaf = rightLeaf;
-        this.leftLeaf.addChangeListener(this);
+        //this.leftLeaf.addChangeListener(this);
+        addListenersToChildren(this);
         this.left = null;
         this.right = null;
+        this.treeNodeListeners = new HashSet<>();
 
         evaluateLeafNodes();
-        //    updateLeafExpr();
+        //updateLeafExpr();
 
         return this;
     }
 
+    public void addListenersToChildren(ConditionalConstraint condition){
+        if (condition.left != null){
+            condition.right.addTreeNodeChangeListener(this);
+        }
+
+        if (condition.right != null){
+            condition.right.addTreeNodeChangeListener(this);
+        }
+
+        if (condition.left == null && condition.right == null){
+            condition.leftLeaf.addChangeListener(this);
+        }
+    }
+
+    /*old
     public void addListenersByTreeTraversal(ConditionalConstraint condition){
         if (condition.left != null){
             addListenersByTreeTraversal(condition.left);
@@ -65,19 +98,25 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
             return;
         }
     }
+ */
 
-
-    public ConditionalConstraint postfixXpr(ConditionalConstraint left, ConditionalConstraint right, String operation){
+    public ConditionalConstraint logicXpr(ConditionalConstraint left, ConditionalConstraint right, String operation){
         this.left = left;
         this.right = right;
         this.operation = operation;
 
-        addListenersByTreeTraversal(this);
-
+        addListenersToChildren(this);
         evaluateConstraintNodes();
-        //   updateConstraintNodeExpr();
 
+        this.treeNodeListeners = new HashSet<>();
+        //updateConstraintNodeExpr();
         return this;
+    }
+
+    public void setConstraintValue(){
+        boolean val = this.value;
+        evaluateConstraintNodes();
+        notifyTreeNodeListeners(val, this.value);
     }
 
     public void evaluateConstraintNodes(){
@@ -93,11 +132,6 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
             }
 
             if (operation.equals("&&")){
-      /*          System.out.println("in here!");
-                System.out.println(left.name);
-                System.out.println(left.value);
-                System.out.println(right.name);
-                System.out.println(right.value);*/
                 if (left.value==true && right.value==true){
                     this.value = true;
                 }
@@ -110,8 +144,7 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
 
 
     public void greaterThan(Double leftVal, Double rightLeaf){
-        if (leftVal > rightLeaf){ this.value = true;}
-        else {this.value = false;}
+        this.value = (leftVal > rightLeaf);
     }
 
     public void evaluateLeafNodes(){
@@ -153,6 +186,16 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
+
+
+
+        boolean oldvalue = value;
+
+        System.out.println("name is " + name);
+
+        System.out.println("value is " + this.leftLeaf.getCurrentValue());
+
+        System.out.println("IN PROPERTY CHANGE!");
         evaluateLeafNodes();
         evaluateConstraintNodes();
         if (left != null) {
@@ -165,6 +208,11 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
             updateLeafExpr();
             //System.out.println("Resource expression is " + this.value + " resource expression is " + this.leftLeaf.getCurrentValue() + this.operation + this.rightLeaf);
             System.out.println(expr);
+        }
+
+        if (oldvalue != value){
+            System.out.println("notifying listeners...");
+            notifyTreeNodeListeners(oldvalue,value);
         }
     }
 }

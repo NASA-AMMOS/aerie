@@ -8,6 +8,8 @@ import gov.nasa.jpl.mpsa.resources.ArrayedResource;
 import gov.nasa.jpl.mpsa.resources.Resource;
 import gov.nasa.jpl.mpsa.resources.ResourcesContainer;
 
+import java.util.Scanner;
+
 public class SpacecraftModel {
 
     static ResourcesContainer myResources = ResourcesContainer.getInstance();
@@ -40,20 +42,45 @@ public class SpacecraftModel {
         wheel1.setValue(0.0);
         primaryBattery.setValue(0.0);
 
-        ConditionalConstraint leaf_one = new ConditionalConstraint("Leaf 1").postfixXpr(wheel1, 10.0, "<");
-        ConditionalConstraint leaf_two = new ConditionalConstraint("Leaf 2").postfixXpr(wheel1, 18.0, ">");
-        ConditionalConstraint parent_of_one_two = new ConditionalConstraint("Parent (1,2)").postfixXpr(leaf_one, leaf_two, "||");
-        ConditionalConstraint leaf_three = new ConditionalConstraint("Leaf 3").postfixXpr(primaryBattery, 50.0, ">");
-        ConditionalConstraint root = new ConditionalConstraint("Root").postfixXpr(parent_of_one_two, leaf_three, "&&");
+        ConditionalConstraint leaf_one = new ConditionalConstraint("Leaf 1").logicXpr(wheel1, 10.0, "<");
+      //  ConditionalConstraint leaf_two = new ConditionalConstraint("Leaf 2").logicXpr(wheel1, 18.0, ">");
 
-        System.out.println("\n\nSet wheel 1 to 30");
+
+
+
+        //ConditionalConstraint parent_of_one_two = new ConditionalConstraint("Parent (1,2)").logicXpr(leaf_one, leaf_two, "||");
+        ConditionalConstraint leaf_three = new ConditionalConstraint("Leaf 3").logicXpr(primaryBattery, 50.0, ">");
+        //ConditionalConstraint root = new ConditionalConstraint("Root").logicXpr(parent_of_one_two, leaf_three, "&&");
+
+        leaf_one.addTreeNodeChangeListener(leaf_three);
+
+        System.out.println("Enter a value, statement 1");
+        Scanner in = new Scanner(System.in);
+        in.hasNext();
+
+
+        System.out.println("\n\nSet wheel 1 to 30, statement 2");
         wheel1.setValue(30.0);
+
+        Scanner in = new Scanner(System.in);
+        in.hasNext();
+
+        System.out.println("\n\nSet wheel 1 to 30, statement 2");
+        wheel1.setValue(30.0);
+
+       // System.out.println("Leaf one leftnode val is " + leaf_one.leftLeaf.getCurrentValue());
+       // System.out.println("Wheel 1 current value is " + wheel1.getCurrentValue());
+
+
+        System.out.println("\n\nEnter a value, statement 3");
+        in = new Scanner(System.in);
+        in.hasNext();
 
         System.out.println("\n\nSet wheel 1 to 0 and battery to 100");
         wheel1.setValue(0);
         primaryBattery.setValue(100);
 
-
+/*
 
         ArrayedResource wheel_velocity = new ArrayedResource.Builder("RWA_angular_momentum")
                 .forSubsystem("GNC")
@@ -86,9 +113,11 @@ public class SpacecraftModel {
         MoveWheel1Activity move90Seconds = new MoveWheel1Activity();
         move90Seconds.setModel(new WheelModelX());
 
-        exampleActivity.executeModel();
+        */
+
+    //    exampleActivity.executeModel();
 //        move90Deg.executeModel();
-        move90Seconds.executeModel();
+   //     move90Seconds.executeModel();
     }
 
 }

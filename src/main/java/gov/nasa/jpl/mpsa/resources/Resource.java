@@ -19,7 +19,7 @@ public class Resource<V extends Comparable> implements PropertyChangeListener{
     private Set allowedValues;
     private V minimum;
     private V maximum;
-    private V dummy;
+    private V value;
 
 
     // other resources or conditions might want to listen to when we change, so we will keep a collection of listeners
@@ -214,6 +214,12 @@ public class Resource<V extends Comparable> implements PropertyChangeListener{
         }
     }
 
+    private void notifyListeners(V oldValue, V newValue) {
+        for (PropertyChangeListener name : listeners) {
+            name.propertyChange(new PropertyChangeEvent(this, "ResourceValue", oldValue, newValue));
+        }
+    }
+
     public void setName(String str) {
         name = str;
     }
@@ -224,7 +230,7 @@ public class Resource<V extends Comparable> implements PropertyChangeListener{
 
     public void clearHistory() { resourceHistory = new ArrayList<V>(); }
 
-    public void setValue(V value) {
+    public void setValue(V newValue) {
 
         // TODO: We want to implement a "dirty" flag that tells us if the value has changed.
         // This way, when we have to serialize this object to send it through the wire in a message, we minimize the
@@ -246,19 +252,22 @@ public class Resource<V extends Comparable> implements PropertyChangeListener{
         but makes it inflexible.
         */
 
-        this.dummy = value;
-        notifyListeners(new AbstractMap.SimpleImmutableEntry(0, 0), new AbstractMap.SimpleImmutableEntry(0, value));
-
+        V oldValue = this.value;
+        this.value = newValue;
+      //  System.out.println("value is " + value);
+    //    notifyListeners(new AbstractMap.SimpleImmutableEntry(0, 0), new AbstractMap.SimpleImmutableEntry(0, value));
+        notifyListeners(oldValue, newValue);
 
         resourceHistory.add(value);
 
     }
 
     public V getCurrentValue() {
-        if (resourceHistory.size()-1 < 0) {
+       /* if (resourceHistory.size()-1 < 0) {
             throw new ArrayIndexOutOfBoundsException();
         }
-        else return resourceHistory.get(resourceHistory.size() - 1);
+        else return resourceHistory.get(resourceHistory.size() - 1);*/
+       return value;
     }
 
     public List<V> getResourceHistory() {
