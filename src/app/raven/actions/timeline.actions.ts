@@ -47,6 +47,7 @@ export enum TimelineActionTypes {
   ResetViewTimeRange = '[timeline] reset_view_time_range',
   SelectBand = '[timeline] select_band',
   SelectPoint = '[timeline] select_point',
+  SetCompositeYLabelDefault = '[timeline] set_composite_y_label_default',
   SetPointsForSubBand = '[timeline] set_points_for_sub_band',
   SortBands = '[timeline] sort_bands',
   SourceIdAdd = '[timeline] source_id_add',
@@ -217,6 +218,12 @@ export class SelectPoint implements Action {
   ) {}
 }
 
+export class SetCompositeYLabelDefault implements Action {
+  readonly type = TimelineActionTypes.SetCompositeYLabelDefault;
+
+  constructor(public bandId: string) {}
+}
+
 export class SetPointsForSubBand implements Action {
   readonly type = TimelineActionTypes.SetPointsForSubBand;
 
@@ -306,6 +313,7 @@ export type TimelineAction =
   | ResetViewTimeRange
   | SelectBand
   | SelectPoint
+  | SetCompositeYLabelDefault
   | SetPointsForSubBand
   | SortBands
   | SourceIdAdd

@@ -355,3 +355,30 @@ export const bandsWithFilterTarget: RavenCompositeBand[] = [
     ],
   },
 ];
+
+/**
+ * This is a compositeBand containing overlay resource bands for use in unit tests.
+ */
+export const overlayResourceBands: RavenCompositeBand = {
+  ...compositeBand,
+  id: '102',
+  name: 'test-composite-band-2',
+  overlay: true,
+  sortOrder: 2,
+  subBands: [
+    {
+      ...resourceBand,
+      id: '2',
+      name: 'test-resource-sub-band-0',
+      parentUniqueId: '102',
+      sourceIds: ['/a/b/c/d/e/x/y'],
+    },
+    {
+      ...resourceBand,
+      id: '3',
+      name: 'test-resource-sub-band-1',
+      parentUniqueId: '102',
+      sourceIds: ['/a/b/c/d/e/x/z'],
+    },
+  ],
+};
