@@ -5,10 +5,11 @@ import gov.nasa.jpl.mpsa.time.Time;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.util.*;
 
 
-public class Resource<V extends Comparable> {
+public class Resource<V extends Comparable> implements PropertyChangeListener{
 
     private UUID id;
     private String name;
@@ -18,6 +19,8 @@ public class Resource<V extends Comparable> {
     private Set allowedValues;
     private V minimum;
     private V maximum;
+    private V value;
+
 
     // other resources or conditions might want to listen to when we change, so we will keep a collection of listeners
 
@@ -105,6 +108,11 @@ public class Resource<V extends Comparable> {
         this.frozen = frozen;
     }
 
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+
+    }
+
 
     public static class Builder<V extends Comparable> {
 
@@ -184,6 +192,9 @@ public class Resource<V extends Comparable> {
         if (builder.initialValue != null) {
             this.setValue((V) builder.initialValue);
         }
+
+        this.listeners = new HashSet<>();
+        //addChangeListener(this);
     }
 
 
@@ -191,12 +202,19 @@ public class Resource<V extends Comparable> {
         listeners.add(newListener);
     }
 
+
     // needed to not schedule schedulers every time a remodel is run
     public void removeChangeListener(PropertyChangeListener toBeRemoved) {
         listeners.remove(toBeRemoved);
     }
 
     private void notifyListeners(Map.Entry<Time, V> oldValue, Map.Entry<Time, V> newValue) {
+        for (PropertyChangeListener name : listeners) {
+            name.propertyChange(new PropertyChangeEvent(this, "ResourceValue", oldValue, newValue));
+        }
+    }
+
+    private void notifyListeners(V oldValue, V newValue) {
         for (PropertyChangeListener name : listeners) {
             name.propertyChange(new PropertyChangeEvent(this, "ResourceValue", oldValue, newValue));
         }
@@ -212,7 +230,7 @@ public class Resource<V extends Comparable> {
 
     public void clearHistory() { resourceHistory = new ArrayList<V>(); }
 
-    public void setValue(V value) {
+    public void setValue(V newValue) {
 
         // TODO: We want to implement a "dirty" flag that tells us if the value has changed.
         // This way, when we have to serialize this object to send it through the wire in a message, we minimize the
@@ -234,15 +252,22 @@ public class Resource<V extends Comparable> {
         but makes it inflexible.
         */
 
+        V oldValue = this.value;
+        this.value = newValue;
+      //  System.out.println("value is " + value);
+    //    notifyListeners(new AbstractMap.SimpleImmutableEntry(0, 0), new AbstractMap.SimpleImmutableEntry(0, value));
+        notifyListeners(oldValue, newValue);
+
         resourceHistory.add(value);
 
     }
 
     public V getCurrentValue() {
-        if (resourceHistory.size()-1 < 0) {
+       /* if (resourceHistory.size()-1 < 0) {
             throw new ArrayIndexOutOfBoundsException();
         }
-        else return resourceHistory.get(resourceHistory.size() - 1);
+        else return resourceHistory.get(resourceHistory.size() - 1);*/
+       return value;
     }
 
     public List<V> getResourceHistory() {
