@@ -44,13 +44,18 @@ public class SpacecraftModel {
 
         ConditionalConstraint leaf_one = new ConditionalConstraint("Leaf 1").withLeftLeaf(wheel1).withRightLeaf(10.0).withOperand("<");
 
+        Scanner scanner = new Scanner(System.in);
         //We expect to see an updated evaluation
         System.out.println("This is what happens if we change a resource that is being listened to by a disconnected leaf");
+        String readString = scanner.nextLine();
         wheel1.setValue(6.0);
+
 
         //This is what happens when we do change the value
         System.out.println("\n\nThis is what happens if we change a resource that is being listened to by a disconnected leaf");
+        readString = scanner.nextLine();
         wheel1.setValue(12.0);
+        readString = scanner.nextLine();
 
 
         ConditionalConstraint leaf_two = new ConditionalConstraint("Leaf 2").withLeftLeaf(wheel1).withRightLeaf(18.0).withOperand(">");
@@ -60,9 +65,12 @@ public class SpacecraftModel {
         //Currently, Parent(1,2) is false
         //this is what happens if we change a resource value to make both conditions true
         System.out.println("\n\nWe've created a parent of two leaf nodes whose value is currently false, let's change it to true");
+        readString = scanner.nextLine();
         wheel1.setValue(33.3);
 
+        readString = scanner.nextLine();
         System.out.println("\n\nNow let's change a resource value that does not result in a change in the parent");
+        readString = scanner.nextLine();
         wheel1.setValue(50.5);
 
         ConditionalConstraint leaf_three = new ConditionalConstraint("Leaf 3").withLeftLeaf(primaryBattery).withRightLeaf(50.0).withOperand(">");
@@ -71,10 +79,13 @@ public class SpacecraftModel {
         //Create another node and parent
         //This is currently false
         //Let's see what happens when we set primary battery to 12.6 (should still be false)
+        readString = scanner.nextLine();
         System.out.println("\n\nNow we've added two more nodes, a root and a battery node.  Currently root is false, let's update resource to keep it false");
+        readString = scanner.nextLine();
         primaryBattery.setValue(12.6);
 
         //Let's check for race conditions
+        readString = scanner.nextLine();
         System.out.println("\n\nHow does change propagation look with multiple changes in a short time span?");
         wheel1.setValue(12.3);
         primaryBattery.setValue(100.0);
