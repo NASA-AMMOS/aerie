@@ -29,8 +29,8 @@ public class PlansController {
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
-    public ResponseEntity<Object> getPlan(@PathVariable("id") ObjectId id) {
-        return ResponseEntity.ok(repository.findBy_id(id));
+    public ResponseEntity<Object> getPlanDetail(@PathVariable("id") ObjectId id) {
+        return ResponseEntity.ok(repository.findPlanDetailBy_id(id));
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
@@ -62,7 +62,7 @@ public class PlansController {
 
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public ResponseEntity<Object> deletePlan(@PathVariable ObjectId id) {
-        repository.delete(repository.findBy_id(id));
+        repository.delete(repository.findPlanBy_id(id));
         return ResponseEntity.noContent().build();
     }
 
@@ -113,12 +113,12 @@ public class PlansController {
         }
 
         UUID uuid = UUID.randomUUID();
-        activityInstance.setId(uuid.toString());
+        activityInstance.setActivityId(uuid.toString());
 
-        Plan plan = repository.findBy_id(planId);
-        plan.addActivityInstance(activityInstance);
-        plan.updateActivityInstance(uuid, requestBodyActivityInstance);
-        repository.save(plan);
+        PlanDetail planDetail = repository.findPlanDetailBy_id(planId);
+        planDetail.addActivityInstance(activityInstance);
+        planDetail.updateActivityInstance(uuid, requestBodyActivityInstance);
+        repository.save(planDetail);
 
         return ResponseEntity.ok(activityInstance);
     }
@@ -126,9 +126,9 @@ public class PlansController {
     @RequestMapping(value = "/{planId}/activity_instances", method =
             RequestMethod.GET)
     public ResponseEntity<Object> getActivityInstances(@PathVariable("planId") ObjectId planId) {
-        Plan plan = repository.findBy_id(planId);
-        if (plan != null) {
-            return ResponseEntity.ok(plan.getActivityInstances());
+        PlanDetail planDetail = repository.findPlanDetailBy_id(planId);
+        if (planDetail != null) {
+            return ResponseEntity.ok(planDetail.getActivityInstances());
         } else {
             return ResponseEntity.ok(new ArrayList<ActivityInstance>());
         }
@@ -138,10 +138,10 @@ public class PlansController {
             RequestMethod.GET)
     public ResponseEntity<Object> getActivityInstance(@PathVariable("planId") ObjectId planId,
             @PathVariable("id") UUID id) {
-        Plan plan = repository.findBy_id(planId);
-        if (plan != null) {
-            for (ActivityInstance ai : plan.getActivityInstances()) {
-                if (ai.getId().equals(id.toString())) {
+        PlanDetail planDetail = repository.findPlanDetailBy_id(planId);
+        if (planDetail != null) {
+            for (ActivityInstance ai : planDetail.getActivityInstances()) {
+                if (ai.getActivityId().equals(id.toString())) {
                     return ResponseEntity.ok(ai);
                 }
             }
@@ -167,12 +167,12 @@ public class PlansController {
             @PathVariable("id") UUID id,
             @Valid @RequestBody ActivityInstance requestBodyActivityInstance) {
 
-        Plan plan = repository.findBy_id(planId);
-        if (plan != null) {
-            ActivityInstance activityInstance = plan.getActivityInstance(id);
+        PlanDetail planDetail = repository.findPlanDetailBy_id(planId);
+        if (planDetail != null) {
+            ActivityInstance activityInstance = planDetail.getActivityInstance(id);
             if (activityInstance != null) {
-                plan.updateActivityInstance(id, requestBodyActivityInstance);
-                repository.save(plan);
+                planDetail.updateActivityInstance(id, requestBodyActivityInstance);
+                repository.save(planDetail);
                 return ResponseEntity.noContent().build();
             }
 
@@ -187,11 +187,11 @@ public class PlansController {
             "planId") ObjectId planId,
             @PathVariable("id") UUID id) {
 
-        Plan plan = repository.findBy_id(planId);
-        if (plan != null) {
+        PlanDetail planDetail = repository.findPlanDetailBy_id(planId);
+        if (planDetail != null) {
             try {
-                plan.removeActivityInstance(id);
-                repository.save(plan);
+                planDetail.removeActivityInstance(id);
+                repository.save(planDetail);
                 return ResponseEntity.noContent().build();
             } catch (NoSuchElementException e) {
                 return ResponseEntity.notFound().build();

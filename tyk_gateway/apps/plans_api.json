@@ -1,8 +1,8 @@
 {
-    "id": "5c48baef41fe320001b2cf0b",
+    "id": "5c48c33f047580000160a982",
     "name": "plans",
     "slug": "plans",
-    "api_id": "b6ba648c49834451573179079d3dbf71",
+    "api_id": "1d4f7d2df40a4d3945b26a5ad770ca46",
     "org_id": "5c47b435d3468100011dab0a",
     "use_keyless": true,
     "use_oauth2": false,
@@ -73,20 +73,27 @@
                 "extended_paths": {
                     "white_list": [
                         {
-                            "path": "^/plans/[0-9A-Za-z]+$",
+                            "path": "^\\/plans(\\/[0-9A-Za-z_-]+)*\\/?$",
                             "method_actions": {
                                 "GET": {
                                     "action": "no_action",
                                     "code": 200,
                                     "data": "",
                                     "headers": {}
-                                }
-                            }
-                        },
-                        {
-                            "path": "^/plans/$",
-                            "method_actions": {
-                                "GET": {
+                                },
+                                "OPTIONS": {
+                                    "action": "no_action",
+                                    "code": 200,
+                                    "data": "",
+                                    "headers": {}
+                                },
+                                "PATCH": {
+                                    "action": "no_action",
+                                    "code": 200,
+                                    "data": "",
+                                    "headers": {}
+                                },
+                                "POST": {
                                     "action": "no_action",
                                     "code": 200,
                                     "data": "",
@@ -200,12 +207,19 @@
     "expire_analytics_after": 0,
     "response_processors": [],
     "CORS": {
-        "enable": false,
+        "enable": true,
         "allowed_origins": [],
-        "allowed_methods": [],
+        "allowed_methods": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "OPTIONS"
+        ],
         "allowed_headers": [],
         "exposed_headers": [],
-        "allow_credentials": false,
+        "allow_credentials": true,
         "max_age": 24,
         "options_passthrough": false,
         "debug": false

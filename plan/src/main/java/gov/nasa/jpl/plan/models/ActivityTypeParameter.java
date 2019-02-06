@@ -4,9 +4,7 @@ public class ActivityTypeParameter {
     private String type;
     private String name;
 
-    public ActivityTypeParameter() {
-
-    }
+    public ActivityTypeParameter() {}
 
     public ActivityTypeParameter(String type, String name) {
         this.type = type;

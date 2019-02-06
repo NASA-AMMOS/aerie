@@ -1,6 +1,5 @@
 package gov.nasa.jpl.plan.models;
 
-
 import java.util.ArrayList;
 
 /*
@@ -21,14 +20,11 @@ Sample ActivityType from adaptation
 
 // Models an ActivityType which was fetched from the Adaptation Service
 public class ActivityType {
-
     private String activityClass;
     private ArrayList<String> listeners;
     private ArrayList<ActivityTypeParameter> parameters;
 
-    public ActivityType() {
-
-    }
+    public ActivityType() {}
 
     public ActivityType(String activityClass, ArrayList<String> listeners, ArrayList<ActivityTypeParameter> parameters) {
         this.setActivityClass(activityClass);

@@ -149,6 +149,7 @@ This is a long, but very composable command:
       -f base.yml \
       -f nest.yml \
       -f adaptation.yml \
+      -f plan.yml \
       -f analytics.yml \
       -f elastic.yml \
       -f tyk.yml \
