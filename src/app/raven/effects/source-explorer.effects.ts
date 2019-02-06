@@ -1657,13 +1657,21 @@ export class SourceExplorerEffects {
       const activityPointInBand = getActivityPointInBand(bands, activityId);
       if (activityPointInBand) {
         actions.push(
-          new timelineActions.FetchChildrenOrDescendants(
+          new timelineActions.ExpandChildrenOrDescendants(
             activityPointInBand.bandId,
             activityPointInBand.subBandId,
             activityPointInBand.activityPoint,
             expansionByActivityId[activityId],
           ),
-        );
+        ),
+          actions.push(
+            new timelineActions.FetchChildrenOrDescendants(
+              activityPointInBand.bandId,
+              activityPointInBand.subBandId,
+              activityPointInBand.activityPoint,
+              expansionByActivityId[activityId],
+            ),
+          );
       }
     });
     return actions;

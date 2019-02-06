@@ -22,6 +22,7 @@ import {
   AddBand,
   AddSubBand,
   FetchChildrenOrDescendants,
+  FetchChildrenOrDescendantsSuccess,
   PanLeftViewTimeRange,
   PanRightViewTimeRange,
   PinAdd,
@@ -39,6 +40,7 @@ import {
   MpsServerGraphData,
   MpsServerResourceMetadata,
   MpsServerResourcePoint,
+  RavenActivityPoint,
   RavenCompositeBand,
   RavenDefaultBandSettings,
   RavenPin,
@@ -96,16 +98,26 @@ export class TimelineEffects {
           state.config.raven.defaultBandSettings,
           state.raven.sourceExplorer.treeBySourceId,
           state.raven.timeline.bands,
-        ),
-        of(
-          new timelineActions.ExpandChildrenOrDescendants(
-            action.bandId,
-            action.subBandId,
-            action.activityPoint,
-            action.expandType,
-          ),
+          state.raven.timeline.expansionByActivityId,
         ),
         of(new timelineActions.UpdateTimeline({ fetchPending: false })),
+      ),
+    ),
+  );
+
+  @Effect()
+  fetchChildrenOrDescendantsSuccess$: Observable<Action> = this.actions$.pipe(
+    ofType<FetchChildrenOrDescendantsSuccess>(
+      TimelineActionTypes.FetchChildrenOrDescendantsSuccess,
+    ),
+    withLatestFrom(this.store$),
+    map(([, state]) => state.raven.timeline),
+    concatMap(timeline =>
+      concat(
+        this.getChildrenOfExpandedPoints(
+          timeline.bands,
+          timeline.expansionByActivityId,
+        ),
       ),
     ),
   );
@@ -242,6 +254,7 @@ export class TimelineEffects {
     defaultBandSettings: RavenDefaultBandSettings,
     treeBySourceId: StringTMap<RavenSource>,
     currentBands: RavenCompositeBand[],
+    expansionByActivityId: StringTMap<string>,
   ) {
     let sourceId = '';
     let pinLabel = '';
@@ -271,7 +284,7 @@ export class TimelineEffects {
               pinLabel,
             );
             if (activityBands.length > 0) {
-              activityBands.forEach(activityBand =>
+              activityBands.forEach(activityBand => {
                 actions.push(
                   new timelineActions.AddPointsToSubBand(
                     sourceId,
@@ -279,17 +292,19 @@ export class TimelineEffects {
                     activityBand.subBandId,
                     subBand.points,
                   ),
-                ),
-              );
+                );
+              });
             } else {
+              const ravenCompositeBand = toCompositeBand(subBand);
               actions.push(
                 new timelineActions.AddBand(
                   '__childrenOrDescendants',
-                  toCompositeBand(subBand),
+                  ravenCompositeBand,
                 ),
               );
             }
           });
+          actions.push(new timelineActions.FetchChildrenOrDescendantsSuccess());
         }
         return actions;
       }),
@@ -315,6 +330,49 @@ export class TimelineEffects {
           ),
         ),
       );
+  }
+
+  /**
+   * Helper. Returns list of Actions to fetch children of expanded activity points.
+   */
+  getChildrenOfExpandedPoints(
+    allCompositeBands: RavenCompositeBand[],
+    expansionByActivityId: StringTMap<string>,
+  ) {
+    const actions: Action[] = [];
+    for (let i = 0, l = allCompositeBands.length; i < l; i++) {
+      for (let j = 0, ll = allCompositeBands[i].subBands.length; j < ll; j++) {
+        const subBand = allCompositeBands[i].subBands[j];
+        for (let k = 0, lll = subBand.points.length; k < lll; k++) {
+          const point = subBand.points[k];
+          if (
+            (point as RavenActivityPoint).expansion === 'noExpansion' &&
+            expansionByActivityId[point.activityId]
+          ) {
+            actions.push(
+              new timelineActions.ExpandChildrenOrDescendants(
+                allCompositeBands[i].id,
+                subBand.id,
+                point,
+                expansionByActivityId[(point as RavenActivityPoint).activityId],
+              ),
+            ),
+              actions.push(
+                new timelineActions.FetchChildrenOrDescendants(
+                  allCompositeBands[i].id,
+                  subBand.id,
+                  point as RavenActivityPoint,
+                  expansionByActivityId[
+                    (point as RavenActivityPoint).activityId
+                  ],
+                ),
+              );
+            return actions;
+          }
+        }
+      }
+    }
+    return actions;
   }
 
   /**
