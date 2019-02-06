@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { without } from 'lodash';
+import { omit, without } from 'lodash';
 
 import {
   AddBand,
@@ -551,6 +551,10 @@ export function removeChildrenOrDescendants(
   return {
     ...state,
     bands,
+    expansionByActivityId: omit(
+      state.expansionByActivityId,
+      action.activityPoint.activityId,
+    ),
   };
 }
 
