@@ -9,9 +9,13 @@
 
 import { Injectable } from '@angular/core';
 import { Actions, Effect, ofType } from '@ngrx/effects';
-import { tap, switchMap } from 'rxjs/operators';
-
+import { tap } from 'rxjs/operators';
 import { AnalyticsService, EventType } from '../services/analytics.service';
+
+import {
+  RouterNavigationAction,
+  SerializedRouterStateSnapshot,
+} from '@ngrx/router-store';
 
 @Injectable()
 export class NavEffects {
@@ -20,15 +24,14 @@ export class NavEffects {
     private analyticsService: AnalyticsService,
   ) {}
 
-  @Effect()
+  @Effect({ dispatch: false })
   navigate$ = this.update$.pipe(
-    ofType('ROUTER_NAVIGATION'),
-    tap(({ payload }: any) => {
+    ofType('@ngrx/router-store/navigation'),
+    tap((action: RouterNavigationAction<SerializedRouterStateSnapshot>) => {
       this.analyticsService.trackEvent(
         EventType.NavigationEvent,
-        payload.event.url,
+        action.payload.event.url,
       );
     }),
-    switchMap(() => []),
   );
 }

@@ -13,7 +13,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { StringTMap } from '../../models/map';
 import { RavenActivityType } from '../../models/raven-activity-type';
-import { AdaptationMockService } from '../../services/adaptation-mock.service';
+import { getMockActivityTypes } from '../../services/adaptation-mock.service';
 import { RavenActivityTypeListComponent } from './raven-activity-type-list.component';
 import { RavenActivityTypeListModule } from './raven-activity-type-list.module';
 
@@ -31,9 +31,7 @@ import { RavenActivityTypeListModule } from './raven-activity-type-list.module';
   `,
 })
 class RavenActivityTypeListTestComponent {
-  activityTypes: StringTMap<
-    RavenActivityType
-  > = AdaptationMockService.getMockActivityTypes('Test 0');
+  activityTypes: StringTMap<RavenActivityType> = getMockActivityTypes();
   activityTypesList: RavenActivityType[] = Object.values(this.activityTypes);
 
   @ViewChild(RavenActivityTypeListComponent)

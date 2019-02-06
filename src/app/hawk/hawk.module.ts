@@ -11,17 +11,19 @@ import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
-import {
-  RavenActivityTypeFormDialogModule,
-  RavenPlanFormDialogModule,
-} from '../shared/components/modules';
+import { RavenPlanFormDialogModule } from '../shared/components/modules';
 import { ActivitiesModule } from './containers/activities/activities.module';
 import { HawkAppModule } from './containers/hawk-app/hawk-app.module';
 import { AdaptationEffects, PlanEffects } from './effects';
 import { HawkRoutingModule } from './hawk-routing.module';
 import { reducers } from './hawk-store';
-import * as fromAdaptation from './reducers/adaptation.reducer';
-import { ActivityResolver } from './resolvers';
+
+import {
+  ActivityResolver,
+  AdaptationListResolver,
+  PlanListResolver,
+  PlanResolver,
+} from './resolvers';
 
 @NgModule({
   imports: [
@@ -30,11 +32,14 @@ import { ActivityResolver } from './resolvers';
     StoreModule.forFeature('hawk', reducers),
     EffectsModule.forFeature([AdaptationEffects, PlanEffects]),
     HawkAppModule,
-    RavenActivityTypeFormDialogModule,
     ActivitiesModule,
     RavenPlanFormDialogModule,
-    StoreModule.forFeature('adaptation', fromAdaptation.reducer),
   ],
-  providers: [ActivityResolver],
+  providers: [
+    ActivityResolver,
+    AdaptationListResolver,
+    PlanListResolver,
+    PlanResolver,
+  ],
 })
 export class HawkModule {}

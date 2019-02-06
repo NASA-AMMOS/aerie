@@ -8,17 +8,17 @@
  */
 
 import { ChangeDetectionStrategy, Component, Inject } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
+import { RavenAdaptation } from '../../models/raven-adaptation';
+import { RavenPlan } from '../../models/raven-plan';
+import { RavenPlanFormDialogData } from '../../models/raven-plan-form-dialog-data';
+
 import {
   FormBuilder,
   FormControl,
   FormGroup,
   Validators,
 } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
-
-import { RavenAdaptation } from '../../models/raven-adaptation';
-import { RavenPlan } from '../../models/raven-plan';
-import { RavenPlanFormDialogData } from '../../models/raven-plan-form-dialog-data';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,25 +27,10 @@ import { RavenPlanFormDialogData } from '../../models/raven-plan-form-dialog-dat
   templateUrl: './raven-plan-form-dialog.component.html',
 })
 export class RavenPlanFormDialogComponent {
-  /**
-   * The text to display as the modal title
-   */
-  modeText = 'Create New';
-
-  /**
-   * Whether this is a new or existing plan
-   */
-  isNew = false;
-
-  /**
-   * Adaptations
-   */
   adaptations: RavenAdaptation[] = [];
-
-  /**
-   * The main form
-   */
   form: FormGroup;
+  isNew = false;
+  modeText = 'Create New';
 
   constructor(
     fb: FormBuilder,
@@ -54,34 +39,27 @@ export class RavenPlanFormDialogComponent {
   ) {
     this.adaptations = data.adaptations;
 
-    const plan: RavenPlan = data.selectedPlan || {
+    const plan: RavenPlan = {
       adaptationId: '',
-      end: '',
+      endTimestamp: '',
       id: '',
       name: '',
-      start: '',
+      startTimestamp: '',
     };
-
-    if (data.selectedPlan) {
-      this.isNew = false;
-      this.modeText = 'Edit Existing';
-    }
 
     this.form = fb.group({
       adaptationId: new FormControl(plan.adaptationId, [Validators.required]),
-      end: new FormControl(plan.end, [Validators.required]),
-      id: new FormControl({ value: plan.id, disabled: !!plan.id }, [
-        Validators.required,
-        Validators.pattern('^([(a-zA-Z0-9-_)]*){1,30}$'),
-      ]),
+      endTimestamp: new FormControl(plan.endTimestamp, [Validators.required]),
       name: new FormControl(plan.name, [Validators.required]),
-      start: new FormControl(plan.start, [Validators.required]),
+      startTimestamp: new FormControl(plan.startTimestamp, [
+        Validators.required,
+      ]),
     });
   }
 
   onSubmit(value: any) {
     if (this.form.valid) {
-      this.dialogRef.close({ ...value, id: this.form.controls['id'].value });
+      this.dialogRef.close({ ...value });
     }
   }
 }

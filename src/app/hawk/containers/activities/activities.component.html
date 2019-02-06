@@ -1,19 +1,23 @@
-<raven-app-header title="Activity Instance" contextual="true" (menuClicked)="onMenuClicked()">
+<raven-app-header title="Activity Instance" contextual="true" (menuClicked)="onNavBack()">
 </raven-app-header>
 
 <main class="content">
-  <form id="activity-form" [formGroup]="activityForm" (ngSubmit)="onSubmitActivityForm(activityForm.value)">
+  <form
+    id="activity-form"
+    [formGroup]="activityForm"
+    (ngSubmit)="onSubmitActivityForm(activityForm.value)">
     <mat-sidenav-container hasBackdrop="false">
       <mat-sidenav mode="side" position="start" opened="true">
         <mat-form-field appearance="fill" floatLabel="always">
           <mat-label>Activity Type</mat-label>
           <mat-select
             placeholder="Select Activity Type"
-            [formControl]="activityForm.controls['activityTypeId']"
-            [compareWith]="compareSelectValues"
-            required>
-            <mat-option *ngFor="let activityType of activityTypes | async" [value]="activityType.id">
-              {{ activityType.name }}
+            [formControl]="activityForm.controls['activityType']"
+            [compareWith]="compareSelectValues">
+            <mat-option
+              *ngFor="let activityType of activityTypes$ | async"
+              [value]="activityType.activityClass">
+              {{ activityType.activityClass }}
             </mat-option>
           </mat-select>
           <mat-icon matSuffix>lock</mat-icon>
@@ -21,22 +25,34 @@
 
         <mat-form-field appearance="fill">
           <mat-label>Activity Name</mat-label>
-          <input matInput placeholder="Activity Name" type="text" [formControl]="activityForm.controls['name']"
+          <input
+            matInput
+            placeholder="Activity Name"
+            type="text"
+            [formControl]="activityForm.controls['name']"
             required />
           <mat-icon matSuffix>mode_edit</mat-icon>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Start</mat-label>
-          <input matInput placeholder="Start time" type="datetime-local"
-            [formControl]="activityForm.controls['start']" required />
+          <input
+            matInput
+            placeholder="Start time"
+            type="number"
+            [formControl]="activityForm.controls['start']"
+            required />
           <mat-hint align="start">UTC within plan bounds</mat-hint>
           <mat-icon matSuffix>event</mat-icon>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Duration</mat-label>
-          <input matInput placeholder="Duration" type="text" [formControl]="activityForm.controls['duration']"
+          <input
+            matInput
+            placeholder="Duration"
+            type="number"
+            [formControl]="activityForm.controls['duration']"
             required />
           <mat-hint align="start">000</mat-hint>
           <mat-icon matSuffix>hourglass_empty</mat-icon>
@@ -44,18 +60,13 @@
 
         <mat-form-field appearance="fill">
           <mat-label>Intent</mat-label>
-          <textarea matInput placeholder="Add intent" [formControl]="activityForm.controls['intent']"></textarea>
+          <textarea
+            matInput
+            placeholder="Add intent"
+            [formControl]="activityForm.controls['intent']">
+          </textarea>
           <mat-hint align="start">Optional</mat-hint>
         </mat-form-field>
-
-        <mat-form-field appearance="fill">
-          <mat-label>Sequence ID</mat-label>
-          <input matInput placeholder="Duration" type="text" [formControl]="activityForm.controls['sequenceId']"
-            required />
-          <mat-hint align="start">Optional</mat-hint>
-          <mat-icon matSuffix>mode_edit</mat-icon>
-        </mat-form-field>
-
       </mat-sidenav>
       <mat-sidenav-content>
         <div class="form-section">
@@ -121,7 +132,7 @@
       <mat-sidenav mode="side" position="end" opened="true">
         <aside>
           <div class="form-controls">
-            <button id="cancel-button" mat-stroked-button color="primary" (click)="onClickCancel()">Cancel</button>
+            <button id="cancel-button" mat-stroked-button color="primary" (click)="onNavBack()">Cancel</button>
             <button id="save-button" mat-raised-button color="accent" *ngIf="isNew">Save</button>
             <button id="update-button" mat-raised-button color="accent" *ngIf="!isNew">Update</button>
           </div>

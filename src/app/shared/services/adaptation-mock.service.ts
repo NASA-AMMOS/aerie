@@ -9,86 +9,79 @@
 
 import { Injectable } from '@angular/core';
 import { Observable, Observer } from 'rxjs';
-
 import { StringTMap } from '../models/map';
 import { RavenActivityType } from '../models/raven-activity-type';
 import { RavenAdaptation } from '../models/raven-adaptation';
-import { RavenAdaptationDetail } from '../models/raven-adaptation-detail';
-import { AdaptationService } from './adaptation.service';
+import { AdaptationServiceInterface } from './adaptation-service-interface';
+
+export function getMockAdaptations(): RavenAdaptation[] {
+  const adaptations: RavenAdaptation[] = [
+    {
+      id: 'ops',
+      location: '',
+      mission: '',
+      name: 'Ops',
+      owner: '',
+      version: '1.0.0',
+    },
+    {
+      id: 'dev',
+      location: '',
+      mission: '',
+      name: 'Dev',
+      owner: '',
+      version: '1.0.0',
+    },
+    {
+      id: 'test1',
+      location: '',
+      mission: '',
+      name: 'Test 1',
+      owner: '',
+      version: '1.2.3',
+    },
+    {
+      id: 'test2',
+      location: '',
+      mission: '',
+      name: 'Test 2',
+      owner: '',
+      version: '2.3.4',
+    },
+  ];
+  return adaptations;
+}
+
+export function getMockActivityTypes(): StringTMap<RavenActivityType> {
+  const activityTypes: StringTMap<RavenActivityType> = {};
+
+  for (let i = 0, len = 10; i < len; ++i) {
+    const activityClass = `some.adaptation.DoSomething.${i}`;
+    activityTypes[activityClass] = {
+      activityClass,
+    };
+  }
+
+  return activityTypes;
+}
 
 @Injectable({
   providedIn: 'root',
 })
-export class AdaptationMockService implements AdaptationService {
-  static getMockData(): RavenAdaptation[] {
-    const adaptations: RavenAdaptation[] = [
-      { id: 'ops', name: 'Ops', version: '1.0.0' },
-      { id: 'dev', name: 'Dev', version: '1.0.0' },
-      { id: 'test1', name: 'Test 1', version: '1.2.3' },
-      { id: 'test2', name: 'Test 2', version: '2.3.4' },
-    ];
-    return adaptations;
-  }
-
-  static getMockActivityTypes(name: string): StringTMap<RavenActivityType> {
-    const activityTypes: StringTMap<RavenActivityType> = {};
-    const id = name.toLowerCase().replace(/[^\w]/gi, '');
-    for (let i = 0, len = 50; i < len; ++i) {
-      activityTypes[`${id}${i}`] = AdaptationMockService.getMockActivityType(
-        name,
-        i,
-      );
-    }
-    return activityTypes;
-  }
-
-  static getMockActivityType(name: string, i: number): RavenActivityType {
-    const id = name.toLowerCase().replace(/[^\w]/gi, '');
-    return {
-      description: '',
-      id: `${id}${i}`,
-      name: `${name} Activity Type ${i}`,
-      start: '',
-    };
-  }
-
-  static getMockAdaptation(id: string): RavenAdaptationDetail | null {
-    const adaptation: RavenAdaptation | null =
-      AdaptationMockService.getMockData().find(a => a.id === id) || null;
-
-    if (adaptation) {
-      return {
-        ...adaptation,
-        activityTypes: AdaptationMockService.getMockActivityTypes(
-          adaptation.name,
-        ),
-      };
-    }
-
-    return null;
-  }
-
-  getAdaptation(id: string): Observable<RavenAdaptationDetail> {
-    return Observable.create((o: Observer<RavenAdaptationDetail>) => {
-      const a = AdaptationMockService.getMockAdaptation(id);
-
-      if (!a) return o.error(new Error('UndefinedAdaptationId'));
-
-      o.next(a);
+export class AdaptationMockService implements AdaptationServiceInterface {
+  getActivityTypes(
+    apiBaseUrl: string,
+    id: string,
+  ): Observable<StringTMap<RavenActivityType>> {
+    return Observable.create((o: Observer<StringTMap<RavenActivityType>>) => {
+      o.next(getMockActivityTypes());
       o.complete();
     });
   }
 
-  getAdaptations(): Observable<RavenAdaptation[]> {
+  getAdaptations(apiBaseUrl: string = ''): Observable<RavenAdaptation[]> {
     return Observable.create((o: Observer<RavenAdaptation[]>) => {
-      o.next(AdaptationMockService.getMockData());
-      o.complete();
-    });
-  }
-
-  removeActivityType(id: string): Observable<boolean> {
-    return Observable.create((o: Observer<boolean>) => {
-      o.next(true);
+      o.next(getMockAdaptations());
       o.complete();
     });
   }

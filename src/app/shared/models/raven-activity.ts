@@ -7,20 +7,22 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-/**
- * A rudimentary interface for activity instances
- */
+import { RavenActivityConstraint } from './raven-activity-constraint';
+import { RavenActivityParameter } from './raven-activity-parameter';
+
 export interface RavenActivity {
-  activityTypeId: string;
+  activityId: string;
+  activityType: string;
   color: string;
+  constraints: RavenActivityConstraint[];
   duration: number;
   end: number;
   endTimestamp: string;
-  id: string;
   intent: string;
   name: string;
-  sequenceId: string;
+  parameters: RavenActivityParameter[];
   start: number;
   startTimestamp: string;
+  subActivityIds: string[];
   y: number | null;
 }

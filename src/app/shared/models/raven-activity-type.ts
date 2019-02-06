@@ -7,27 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-/**
- * A rudimentary interface for activity types
- */
 export interface RavenActivityType {
-  /**
-   * Description of the activity type
-   */
-  description: string;
-
-  /**
-   * Id of the activity type
-   */
-  id: string;
-
-  /**
-   * Name of activity type
-   */
-  name: string;
-
-  /**
-   * When the activity should start
-   */
-  start: string;
+  activityClass: string;
 }

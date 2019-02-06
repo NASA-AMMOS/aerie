@@ -32,16 +32,4 @@ describe('RouterEffects', () => {
   it('should register routerNavigation$ that does dispatch an action', () => {
     expect(metadata.routerNavigation$).toEqual({ dispatch: true });
   });
-
-  it('should not register loadLayout', () => {
-    expect(metadata.loadLayout).toBeUndefined();
-  });
-
-  it('should not register loadShareableLink', () => {
-    expect(metadata.loadShareableLink).toBeUndefined();
-  });
-
-  it('should not register loadState', () => {
-    expect(metadata.loadState).toBeUndefined();
-  });
 });

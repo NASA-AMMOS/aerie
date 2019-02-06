@@ -18,7 +18,7 @@ export const routes: Routes = [
   },
   {
     loadChildren: './hawk/hawk.module#HawkModule',
-    path: 'hawk',
+    path: 'plans',
   },
   {
     loadChildren: './hummingbird/hummingbird.module#HummingbirdModule',

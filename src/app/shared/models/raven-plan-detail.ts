@@ -12,5 +12,5 @@ import { RavenActivity } from './raven-activity';
 import { RavenPlan } from './raven-plan';
 
 export interface RavenPlanDetail extends RavenPlan {
-  activities: StringTMap<RavenActivity>;
+  activityInstances: StringTMap<RavenActivity>;
 }

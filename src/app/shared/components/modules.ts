@@ -13,7 +13,6 @@ export * from './nest-activity-band/nest-activity-band.module';
 export * from './nest-time-band/nest-time-band.module';
 export * from './raven-app-header/raven-app-header.module';
 export * from './raven-app-nav/raven-app-nav.module';
-export * from './raven-activity-type-form-dialog/raven-activity-type-form-dialog.module';
 export * from './raven-activity-type-list/raven-activity-type-list.module';
 export * from './raven-activity-band/raven-activity-band.module';
 export * from './raven-activity-point/raven-activity-point.module';

@@ -10,7 +10,6 @@
 /**
  * These are entry components we are exporting for easier import convenience.
  */
-export * from './raven-activity-type-form-dialog/raven-activity-type-form-dialog.component';
 export * from './raven-confirm-dialog/raven-confirm-dialog.component';
 export * from './raven-custom-filter-dialog/raven-custom-filter-dialog.component';
 export * from './raven-custom-graph-dialog/raven-custom-graph-dialog.component';

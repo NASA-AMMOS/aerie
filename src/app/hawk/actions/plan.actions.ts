@@ -11,53 +11,110 @@ import { Action } from '@ngrx/store';
 
 import {
   RavenActivity,
-  RavenActivityDetail,
-  RavenActivityUpdate,
   RavenPlan,
   RavenPlanDetail,
   RavenTimeRange,
+  StringTMap,
 } from '../../shared/models';
 
 export enum PlanActionTypes {
-  FetchPlanDetail = '[plan] fetch_plan_detail',
-  FetchPlanDetailSuccess = '[plan] fetch_plan_detail_success',
-  FetchPlanDetailFailure = '[plan] fetch_plan_detail_failure',
+  ClearSelectedActivity = '[plan] clear_selected_activity',
+  ClearSelectedPlan = '[plan] clear_selected_plan',
+  CreateActivity = '[plan] create_activity',
+  CreateActivityFailure = '[plan] create_activity_failure',
+  CreateActivitySuccess = '[plan] create_activity_success',
+  CreatePlan = '[plan] create_plan',
+  CreatePlanFailure = '[plan] create_plan_failure',
+  CreatePlanSuccess = '[plan] create_plan_success',
+  DeleteActivity = '[plan] delete_activity',
+  DeleteActivityFailure = '[plan] delete_activity_failure',
+  DeleteActivitySuccess = '[plan] delete_activity_success',
+  DeletePlan = '[plan] delete_plan',
+  DeletePlanFailure = '[plan] delete_plan_failure',
+  DeletePlanSuccess = '[plan] delete_plan_success',
   FetchPlanList = '[plan] fetch_plan_list',
   FetchPlanListFailure = '[plan] fetch_plan_list_failure',
   FetchPlanListSuccess = '[plan] fetch_plan_list_success',
+  FetchPlanDetailSuccess = '[plan] fetch_plan_detail_success',
   OpenPlanFormDialog = '[plan] open_plan_form_dialog',
-  RemovePlan = '[plan] remove_plan',
-  RemovePlanFailure = '[plan] remove_plan_failure',
-  RemovePlanSuccess = '[plan] remove_plan_success',
-  SaveActivity = '[plan] save_activity',
-  SaveActivityFailure = '[plan] save_activity_failure',
-  SaveActivitySuccess = '[plan] save_activity_success',
-  SaveActivityDetail = '[plan] save_activity_detail',
-  SaveActivityDetailFailure = '[plan] save_activity_detail_failure',
-  SaveActivityDetailSuccess = '[plan] save_activity_detail_success',
-  SavePlan = '[plan] save_plan',
-  SavePlanFailure = '[plan] save_plan_failure',
-  SavePlanSuccess = '[plan] save_plan_success',
   SelectActivity = '[plan] select_activity',
-  UpdateSelectedActivity = '[plan] update_selected_activity',
+  UpdateActivity = '[plan] update_activity',
+  UpdateActivityFailure = '[plan] update_activity_failure',
+  UpdateActivitySuccess = '[plan] update_activity_success',
+  UpdatePlan = '[plan] update_plan',
+  UpdatePlanFailure = '[plan] update_plan_failure',
+  UpdatePlanSuccess = '[plan] update_plan_success',
   UpdateViewTimeRange = '[plan] update_view_time_range',
 }
 
-export class FetchPlanDetail implements Action {
-  readonly type = PlanActionTypes.FetchPlanDetail;
-
-  constructor(public id: string) {}
+export class ClearSelectedActivity implements Action {
+  readonly type = PlanActionTypes.ClearSelectedActivity;
 }
 
-export class FetchPlanDetailFailure implements Action {
-  readonly type = PlanActionTypes.FetchPlanDetailFailure;
+export class ClearSelectedPlan implements Action {
+  readonly type = PlanActionTypes.ClearSelectedPlan;
+}
 
+export class CreateActivity implements Action {
+  readonly type = PlanActionTypes.CreateActivity;
+  constructor(public planId: string, public data: RavenActivity) {}
+}
+
+export class CreateActivityFailure implements Action {
+  readonly type = PlanActionTypes.CreateActivityFailure;
   constructor(public error: Error) {}
+}
+
+export class CreateActivitySuccess implements Action {
+  readonly type = PlanActionTypes.CreateActivitySuccess;
+  constructor(public planId: string) {}
+}
+
+export class CreatePlan implements Action {
+  readonly type = PlanActionTypes.CreatePlan;
+  constructor(public plan: RavenPlan) {}
+}
+
+export class CreatePlanFailure implements Action {
+  readonly type = PlanActionTypes.CreatePlanFailure;
+  constructor(public error: Error) {}
+}
+
+export class CreatePlanSuccess implements Action {
+  readonly type = PlanActionTypes.CreatePlanSuccess;
+  constructor(public plan: RavenPlan) {}
+}
+
+export class DeleteActivity implements Action {
+  readonly type = PlanActionTypes.DeleteActivity;
+  constructor(public planId: string, public activityId: string) {}
+}
+
+export class DeleteActivityFailure implements Action {
+  readonly type = PlanActionTypes.DeleteActivityFailure;
+  constructor(public error: Error) {}
+}
+
+export class DeleteActivitySuccess implements Action {
+  readonly type = PlanActionTypes.DeleteActivitySuccess;
+}
+
+export class DeletePlan implements Action {
+  readonly type = PlanActionTypes.DeletePlan;
+  constructor(public planId: string) {}
+}
+
+export class DeletePlanFailure implements Action {
+  readonly type = PlanActionTypes.DeletePlanFailure;
+  constructor(public error: Error) {}
+}
+
+export class DeletePlanSuccess implements Action {
+  readonly type = PlanActionTypes.DeletePlanSuccess;
 }
 
 export class FetchPlanDetailSuccess implements Action {
   readonly type = PlanActionTypes.FetchPlanDetailSuccess;
-
   constructor(public data: RavenPlanDetail) {}
 }
 
@@ -67,130 +124,83 @@ export class FetchPlanList implements Action {
 
 export class FetchPlanListFailure implements Action {
   readonly type = PlanActionTypes.FetchPlanListFailure;
-
   constructor(public error: Error) {}
 }
 
 export class FetchPlanListSuccess implements Action {
   readonly type = PlanActionTypes.FetchPlanListSuccess;
-
   constructor(public data: RavenPlan[]) {}
 }
 
 export class OpenPlanFormDialog implements Action {
   readonly type = PlanActionTypes.OpenPlanFormDialog;
-
   constructor(public id: string | null) {}
-}
-
-export class RemovePlan implements Action {
-  readonly type = PlanActionTypes.RemovePlan;
-
-  constructor(public id: string) {}
-}
-
-export class RemovePlanFailure implements Action {
-  readonly type = PlanActionTypes.RemovePlanFailure;
-
-  constructor(public id: string, public error: Error) {}
-}
-
-export class RemovePlanSuccess implements Action {
-  readonly type = PlanActionTypes.RemovePlanSuccess;
-
-  constructor(public id: string) {}
-}
-
-export class SaveActivity implements Action {
-  readonly type = PlanActionTypes.SaveActivity;
-
-  constructor(public data: RavenActivity) {}
-}
-
-export class SaveActivityFailure implements Action {
-  readonly type = PlanActionTypes.SaveActivityFailure;
-
-  constructor(public error: Error) {}
-}
-
-export class SaveActivitySuccess implements Action {
-  readonly type = PlanActionTypes.SaveActivitySuccess;
-
-  constructor(public data: RavenActivityDetail) {}
-}
-
-export class SaveActivityDetail implements Action {
-  readonly type = PlanActionTypes.SaveActivityDetail;
-
-  constructor(public data: RavenActivityDetail) {}
-}
-
-export class SaveActivityDetailFailure implements Action {
-  readonly type = PlanActionTypes.SaveActivityDetailFailure;
-
-  constructor(public error: Error) {}
-}
-
-export class SaveActivityDetailSuccess implements Action {
-  readonly type = PlanActionTypes.SaveActivityDetailSuccess;
-
-  constructor(public data: RavenActivityDetail) {}
-}
-
-export class SavePlan implements Action {
-  readonly type = PlanActionTypes.SavePlan;
-}
-
-export class SavePlanFailure implements Action {
-  readonly type = PlanActionTypes.SavePlanFailure;
-
-  constructor(public error: Error) {}
-}
-
-export class SavePlanSuccess implements Action {
-  readonly type = PlanActionTypes.SavePlanSuccess;
-
-  constructor(public data: RavenPlan) {}
 }
 
 export class SelectActivity implements Action {
   readonly type = PlanActionTypes.SelectActivity;
-
   constructor(public id: string | null) {}
 }
 
-export class UpdateSelectedActivity implements Action {
-  readonly type = PlanActionTypes.UpdateSelectedActivity;
+export class UpdateActivity implements Action {
+  readonly type = PlanActionTypes.UpdateActivity;
+  constructor(public activityId: string, public update: StringTMap<any>) {}
+}
 
-  constructor(public update: RavenActivityUpdate) {}
+export class UpdateActivityFailure implements Action {
+  readonly type = PlanActionTypes.UpdateActivityFailure;
+  constructor(public error: Error) {}
+}
+
+export class UpdateActivitySuccess implements Action {
+  readonly type = PlanActionTypes.UpdateActivitySuccess;
+  constructor(public activityId: string, public update: StringTMap<any>) {}
+}
+
+export class UpdatePlan implements Action {
+  readonly type = PlanActionTypes.UpdatePlan;
+  constructor(public planId: string, public update: StringTMap<any>) {}
+}
+
+export class UpdatePlanFailure implements Action {
+  readonly type = PlanActionTypes.UpdatePlanFailure;
+  constructor(public error: Error) {}
+}
+
+export class UpdatePlanSuccess implements Action {
+  readonly type = PlanActionTypes.UpdatePlanSuccess;
 }
 
 export class UpdateViewTimeRange implements Action {
   readonly type = PlanActionTypes.UpdateViewTimeRange;
-
   constructor(public viewTimeRange: RavenTimeRange) {}
 }
 
 export type PlanActions =
-  | FetchPlanDetail
-  | FetchPlanDetailFailure
+  | ClearSelectedActivity
+  | ClearSelectedPlan
+  | CreatePlan
+  | CreatePlanFailure
+  | CreatePlanSuccess
+  | DeleteActivity
+  | DeleteActivityFailure
+  | DeleteActivitySuccess
+  | DeletePlan
+  | DeletePlanFailure
+  | DeletePlanSuccess
   | FetchPlanDetailSuccess
   | FetchPlanList
   | FetchPlanListFailure
   | FetchPlanListSuccess
   | OpenPlanFormDialog
-  | RemovePlan
-  | RemovePlanFailure
-  | RemovePlanSuccess
-  | SaveActivity
-  | SaveActivityFailure
-  | SaveActivitySuccess
-  | SaveActivityDetail
-  | SaveActivityDetailFailure
-  | SaveActivityDetailSuccess
-  | SavePlan
-  | SavePlanFailure
-  | SavePlanSuccess
+  | CreateActivity
+  | CreateActivityFailure
+  | CreateActivitySuccess
   | SelectActivity
-  | UpdateSelectedActivity
+  | UpdateActivity
+  | UpdateActivityFailure
+  | UpdateActivitySuccess
+  | UpdatePlan
+  | UpdatePlanFailure
+  | UpdatePlanSuccess
   | UpdateViewTimeRange;

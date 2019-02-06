@@ -7,263 +7,195 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { initialState, PlanState, reducer } from './plan.reducer';
+import { initialState, reducer } from './plan.reducer';
 
 import {
   RavenActivity,
-  RavenActivityDetail,
   RavenPlan,
   RavenPlanDetail,
   StringTMap,
 } from '../../shared/models';
 
 import {
+  ClearSelectedActivity,
+  ClearSelectedPlan,
   FetchPlanDetailSuccess,
   FetchPlanListSuccess,
-  RemovePlan,
-  SaveActivitySuccess,
-  SavePlanSuccess,
   SelectActivity,
+  UpdateActivitySuccess,
   UpdateViewTimeRange,
 } from '../actions/plan.actions';
 
-function getInitialState() {
-  return { ...initialState };
-}
-
 describe('Plan Reducer', () => {
-  let activities: StringTMap<RavenActivity>;
-  let activityDetail: RavenActivityDetail;
+  let activityInstances: StringTMap<RavenActivity>;
   let plan: StringTMap<RavenPlan>;
   let planDetail: RavenPlanDetail;
-  let updated: StringTMap<RavenPlan>;
 
   beforeEach(() => {
-    activities = {
+    activityInstances = {
       '1': {
-        activityTypeId: '000',
+        activityId: '1',
+        activityType: '000',
         color: '#7cbfb7',
+        constraints: [],
         duration: 0,
         end: 0,
         endTimestamp: '',
-        id: '1',
         intent: 'Some science intent for this activity...',
         name: 'Instrument 1, Activity ABC',
-        sequenceId: 'inst00035.0000.a',
+        parameters: [],
         start: 0,
         startTimestamp: '2022-10-29T14:55:00',
+        subActivityIds: [],
         y: null,
       },
-    };
-
-    activityDetail = {
-      activityTypeId: '001',
-      color: '#7cbfb7',
-      constraints: [],
-      duration: 0,
-      end: 0,
-      endTimestamp: '',
-      id: '2',
-      intent: 'Some science intent for this activity...',
-      name: 'Instrument 2, Activity ABC',
-      parameters: [],
-      sequenceId: 'inst00036.0000ba',
-      start: 0,
-      startTimestamp: '2023-11-28T15:54:10',
-      subActivityIds: [],
-      y: null,
+      '2': {
+        activityId: '2',
+        activityType: '001',
+        color: '#7cbfb7',
+        constraints: [],
+        duration: 0,
+        end: 0,
+        endTimestamp: '',
+        intent: 'Some science intent for this activity...',
+        name: 'Instrument 2, Activity ABC',
+        parameters: [],
+        start: 0,
+        startTimestamp: '2023-11-28T15:54:10',
+        subActivityIds: [],
+        y: null,
+      },
     };
 
     plan = {
       foo: {
         adaptationId: 'ops',
-        end: '1995-12-17T03:28:00',
+        endTimestamp: '1995-12-17T03:28:00',
         id: 'foo',
         name: 'Foo',
-        start: '1995-12-17T03:24:00',
+        startTimestamp: '1995-12-17T03:24:00',
       },
     } as StringTMap<RavenPlan>;
 
     planDetail = {
       ...plan,
-      activities,
+      activityInstances,
     } as RavenPlanDetail;
+  });
 
-    updated = {
-      foo: {
-        adaptationId: 'ops',
-        end: '1995-12-17T03:28:00',
-        id: 'foo',
-        name: 'FooBar',
-        start: '1995-12-17T03:24:00',
-      },
-    } as StringTMap<RavenPlan>;
+  describe('ClearSelectedActivity', () => {
+    it('should clear the selected activity', () => {
+      const newInitialState = {
+        ...initialState,
+        selectedActivity: activityInstances['1'],
+      };
+
+      const result = reducer(newInitialState, new ClearSelectedActivity());
+
+      expect(result).toEqual({
+        ...newInitialState,
+        selectedActivity: null,
+      });
+    });
+  });
+
+  describe('ClearSelectedPlan', () => {
+    it('should clear the selected plan', () => {
+      const newInitialState = {
+        ...initialState,
+        selectedPlan: planDetail,
+      };
+
+      const result = reducer(newInitialState, new ClearSelectedPlan());
+
+      expect(result).toEqual({
+        ...newInitialState,
+        selectedPlan: null,
+      });
+    });
   });
 
   describe('FetchPlanDetailSuccess', () => {
-    it('should properly select a plan detail', () => {
-      const initial = getInitialState();
-
-      const result: PlanState = reducer(
-        getInitialState(),
+    it('should set a selectedPlan upon fetch plan detail success', () => {
+      const result = reducer(
+        initialState,
         new FetchPlanDetailSuccess(planDetail),
       );
 
       expect(result).toEqual({
-        ...initial,
+        ...initialState,
         selectedPlan: planDetail,
-      } as PlanState);
+      });
     });
   });
 
   describe('FetchPlanListSuccess', () => {
-    it('should return a list of plan types', () => {
-      const initial = getInitialState();
-
-      const result: PlanState = reducer(
-        getInitialState(),
+    it('should set the list of plans upon fetch plan list success', () => {
+      const result = reducer(
+        initialState,
         new FetchPlanListSuccess([plan['foo']]),
       );
 
       expect(result).toEqual({
-        ...initial,
-        plans: plan,
-      } as PlanState);
-    });
-  });
-
-  describe('SavePlanSuccess', () => {
-    it('should append an plan type when a new plan type is passed', () => {
-      const initial = getInitialState();
-      const result: PlanState = reducer(
-        getInitialState(),
-        // TODO: Verify that this works without the "new" flag
-        new SavePlanSuccess(plan['foo']),
-      );
-
-      expect(result).toEqual({
-        ...initial,
-        plans: plan,
-      } as PlanState);
-    });
-
-    it('should update an plan type when an existing plan type is passed', () => {
-      const result: PlanState = reducer(
-        {
-          ...initialState,
-          plans: plan,
-        },
-        // TODO: Verify that this works without the "new" flag
-        new SavePlanSuccess(updated['foo']),
-      );
-
-      expect(result).toEqual({
         ...initialState,
-        plans: updated,
+        plans: plan,
       });
-    });
-  });
-
-  describe('RemovePlan', () => {
-    it('should remove an plan with the provided ID', () => {
-      const result: PlanState = reducer(
-        {
-          ...initialState,
-          plans: plan,
-        },
-        new RemovePlan(plan['foo'].id),
-      );
-
-      expect(result).toEqual({
-        ...initialState,
-      });
-    });
-  });
-
-  describe('SaveActivitySuccess | SaveActivityDetailSuccess', () => {
-    it('should append an activity when a new activity is passed', () => {
-      // Set up initial condition so we have a selected plan.
-      const initial: PlanState = reducer(
-        getInitialState(),
-        new FetchPlanDetailSuccess(planDetail),
-      );
-
-      const result: PlanState = reducer(
-        initial,
-        new SaveActivitySuccess(activityDetail),
-      );
-
-      expect(result.selectedPlan).toBeDefined();
-      expect(result).toEqual({
-        ...initial,
-        selectedPlan: {
-          ...initial.selectedPlan,
-          activities: {
-            ...(initial.selectedPlan as RavenPlanDetail).activities,
-            [activityDetail.id]: activityDetail,
-          },
-        },
-      } as PlanState);
-    });
-
-    it('should update an activity when an existing activity is passed', () => {
-      // Set up initial condition so we have a selected plan.
-      const initial: PlanState = reducer(
-        getInitialState(),
-        new FetchPlanDetailSuccess(planDetail),
-      );
-
-      const detail: RavenActivityDetail = {
-        ...activities['1'],
-        constraints: [],
-        name: 'i like turtles',
-        parameters: [],
-        subActivityIds: [],
-      };
-
-      const result: PlanState = reducer(
-        initial,
-        new SaveActivitySuccess(detail),
-      );
-
-      expect(result.selectedPlan).toBeDefined();
-      expect(result).toEqual({
-        ...initial,
-        selectedPlan: {
-          ...initial.selectedPlan,
-          activities: {
-            ...(initial.selectedPlan as RavenPlanDetail).activities,
-            [detail.id]: detail,
-          },
-        },
-      } as PlanState);
     });
   });
 
   describe('SelectActivity', () => {
-    it('should properly select an activity', () => {
-      // Set up some initial state with a selected plan.
-      const newInitialState: PlanState = reducer(
-        getInitialState(),
+    it('should set the selectedActivity', () => {
+      const newInitialState = reducer(
+        initialState,
         new FetchPlanDetailSuccess(planDetail),
       );
 
-      const result: PlanState = reducer(
-        newInitialState,
-        new SelectActivity('1'),
-      );
+      const result = reducer(newInitialState, new SelectActivity('1'));
 
       expect(result).toEqual({
         ...newInitialState,
-        selectedActivity: activities['1'],
+        selectedActivity: activityInstances['1'],
+      });
+    });
+  });
+
+  describe('UpdateActivitySuccess', () => {
+    it('update an activity instance by id with the given update object', () => {
+      const newInitialState = reducer(
+        initialState,
+        new FetchPlanDetailSuccess(planDetail),
+      );
+
+      const activityId = '1';
+      const update = { color: '#000000' };
+      const result = reducer(
+        newInitialState,
+        new UpdateActivitySuccess(activityId, update),
+      );
+
+      const selectedPlan = newInitialState.selectedPlan as RavenPlanDetail;
+      const instance = selectedPlan.activityInstances[activityId];
+
+      expect(result).toEqual({
+        ...newInitialState,
+        selectedPlan: {
+          ...selectedPlan,
+          activityInstances: {
+            ...selectedPlan.activityInstances,
+            [activityId]: {
+              ...instance,
+              ...update,
+            },
+          },
+        },
       });
     });
   });
 
   describe('UpdateViewTimeRange', () => {
-    it('handle UpdateViewTimeRange', () => {
+    it('should update the viewTimeRange', () => {
       const result = reducer(
-        getInitialState(),
+        initialState,
         new UpdateViewTimeRange({ end: 314, start: 272 }),
       );
 

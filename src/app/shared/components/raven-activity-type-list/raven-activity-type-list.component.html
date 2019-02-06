@@ -1,8 +1,10 @@
 <mat-nav-list>
   <div class="viewport">
-    <mat-list-item class="activity-type-item" *ngFor="let activityType of activityTypes"
+    <mat-list-item
+      class="activity-type-item"
+      *ngFor="let activityType of activityTypes"
       (click)="onClickSelect(activityType)">
-      <span matLine>{{ activityType.name }}</span>
+      <span matLine>{{ activityType.activityClass }}</span>
       <button mat-icon-button color="primary" (click)="onClickUpdate($event, activityType)"
         *ngIf="canEdit">
         <mat-icon aria-label="Edit activity type">

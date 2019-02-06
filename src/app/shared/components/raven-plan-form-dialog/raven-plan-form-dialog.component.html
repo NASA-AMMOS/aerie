@@ -6,27 +6,31 @@
       <input matInput placeholder="Plan Name" type="text"
         [formControl]="form.controls['name']" required />
     </mat-form-field>
-    <mat-form-field appearance="fill">
-      <mat-label>Plan ID</mat-label>
-      <input matInput placeholder="id1" type="text" [formControl]="form.controls['id']"
-        required />
-    </mat-form-field>
 
     <div class="plan-dates">
       <mat-form-field appearance="fill">
         <mat-label>Plan Start</mat-label>
-        <input matInput placeholder="Start time" type="datetime-local" [formControl]="form.controls['start']"
+        <input
+          matInput
+          placeholder="Start time"
+          [formControl]="form.controls['startTimestamp']"
           required />
       </mat-form-field>
       <mat-form-field appearance="fill">
         <mat-label>Plan End</mat-label>
-        <input matInput placeholder="End time" type="datetime-local" [formControl]="form.controls['end']"
+        <input
+          matInput
+          placeholder="End time"
+          [formControl]="form.controls['endTimestamp']"
           required />
       </mat-form-field>
     </div>
+
     <mat-form-field appearance="fill" floatLabel="always">
       <mat-label>Adaptation</mat-label>
-      <mat-select placeholder="Select an Adaptation" [formControl]="form.controls['adaptationId']">
+      <mat-select
+        placeholder="Select an Adaptation"
+        [formControl]="form.controls['adaptationId']">
         <mat-option
           *ngFor="let adaptation of adaptations"
           [value]="adaptation.id">
@@ -34,8 +38,8 @@
         </mat-option>
       </mat-select>
     </mat-form-field>
-
   </mat-dialog-content>
+
   <mat-dialog-actions align="end">
     <button mat-button matDialogClose color="accent">Cancel</button>
     <button mat-button color="accent">Save</button>

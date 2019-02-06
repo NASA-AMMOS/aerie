@@ -7,13 +7,28 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { RavenActivityType, RavenAdaptation, StringTMap } from '../models';
+import { AdaptationServiceInterface } from './adaptation-service-interface';
 
-import { RavenAdaptation } from '../models/raven-adaptation';
+@Injectable({
+  providedIn: 'root',
+})
+export class AdaptationService implements AdaptationServiceInterface {
+  constructor(private http: HttpClient) {}
 
-/**
- * @todo Convert into a real service once one exists to get data from
- */
-export interface AdaptationService {
-  getAdaptations(): Observable<RavenAdaptation[]>;
+  getActivityTypes(
+    apiBaseUrl: string,
+    id: string,
+  ): Observable<StringTMap<RavenActivityType>> {
+    return this.http.get<StringTMap<RavenActivityType>>(
+      `${apiBaseUrl}/adaptations/${id}/activities/`,
+    );
+  }
+
+  getAdaptations(apiBaseUrl: string): Observable<RavenAdaptation[]> {
+    return this.http.get<RavenAdaptation[]>(`${apiBaseUrl}/adaptations/`);
+  }
 }

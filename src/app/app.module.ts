@@ -47,7 +47,9 @@ import { ConfigEffects, DialogEffects, NavEffects } from './shared/effects';
       maxAge: 10,
     }),
     StoreModule.forRoot(reducers, { metaReducers }),
-    StoreRouterConnectingModule.forRoot({ stateKey: 'router' }),
+    StoreRouterConnectingModule.forRoot({
+      stateKey: 'router',
+    }),
     ToastrModule.forRoot(),
     MatButtonModule,
     MatIconModule,

@@ -8,6 +8,7 @@
  */
 
 export const environment = {
+  apiBaseUrl: 'http://localhost:8081',
   baseUrl:
     window.location.protocol +
     '//' +

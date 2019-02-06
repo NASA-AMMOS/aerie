@@ -7,15 +7,19 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-
-import { AdaptationMockService } from './adaptation-mock.service';
+import { AdaptationService } from './adaptation.service';
 
 describe('AdaptationService', () => {
-  beforeEach(() => TestBed.configureTestingModule({}));
+  beforeEach(() =>
+    TestBed.configureTestingModule({
+      imports: [HttpClientModule],
+      providers: [HttpClient],
+    }));
 
   it('should be created', () => {
-    const service: AdaptationMockService = TestBed.get(AdaptationMockService);
+    const service: AdaptationService = TestBed.get(AdaptationService);
     expect(service).toBeTruthy();
   });
 });

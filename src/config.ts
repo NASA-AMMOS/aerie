@@ -14,6 +14,7 @@ import { version } from './environments/version';
 
 export interface ConfigState {
   app: {
+    apiBaseUrl: string;
     baseUrl: string;
     packageJsonVersion: string;
     production: boolean;
@@ -34,7 +35,7 @@ export interface ConfigState {
   raven: {
     defaultBandSettings: RavenDefaultBandSettings;
     excludeActivityTypes: string[];
-    ignoreShareableLinkTimes: boolean,
+    ignoreShareableLinkTimes: boolean;
     itarMessage: string;
     shareableLinkStatesUrl: string;
   };
@@ -42,6 +43,7 @@ export interface ConfigState {
 
 export const config: ConfigState = {
   app: {
+    apiBaseUrl: environment.apiBaseUrl,
     baseUrl: environment.baseUrl,
     packageJsonVersion: version.packageJsonVersion,
     production: environment.production,
@@ -50,7 +52,7 @@ export const config: ConfigState = {
   appModules: [
     {
       icon: 'event',
-      path: 'hawk',
+      path: 'plans',
       title: 'Planning',
       version: '0.0.1',
     },

@@ -19,28 +19,10 @@ export const getAdaptationState = createSelector(
 
 export const getActivityTypes = createSelector(
   getAdaptationState,
-  (state: AdaptationState) =>
-    state.selectedAdaptation
-      ? Object.values(state.selectedAdaptation.activityTypes)
-      : null,
+  (state: AdaptationState) => Object.values(state.activityTypes),
 );
 
 export const getAdaptations = createSelector(
   getAdaptationState,
   (state: AdaptationState) => state.adaptations,
-);
-
-export const getSelectedAdaptation = createSelector(
-  getAdaptationState,
-  (state: AdaptationState) => state.selectedAdaptation,
-);
-
-export const getSelectedActivityTypeState = createSelector(
-  getAdaptationState,
-  (state: AdaptationState) => {
-    if (state.selectedAdaptation) {
-      return state.selectedAdaptation.activityTypes;
-    }
-    return null;
-  },
 );

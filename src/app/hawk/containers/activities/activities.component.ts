@@ -7,13 +7,23 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
+import { ActivatedRoute, Data, NavigationEnd, Router } from '@angular/router';
 import { select, Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
-import { SaveActivityDetail } from '../../actions/plan.actions';
+import { Observable, Subject } from 'rxjs';
+import { filter, takeUntil } from 'rxjs/operators';
 import { HawkAppState } from '../../hawk-store';
+import { getSelectedPlan } from '../../selectors';
 import { getActivityTypes } from '../../selectors/adaptation.selector';
+
+import {
+  ClearSelectedPlan,
+  CreateActivity,
+  FetchPlanDetailSuccess,
+  FetchPlanListFailure,
+  FetchPlanListSuccess,
+  UpdateActivity,
+} from '../../actions/plan.actions';
 
 import {
   FormBuilder,
@@ -23,11 +33,16 @@ import {
 } from '@angular/forms';
 
 import {
-  RavenActivityConstraint,
-  RavenActivityDetail,
-  RavenActivityParameter,
+  RavenActivity,
   RavenActivityType,
+  RavenPlan,
 } from '../../../shared/models';
+
+import {
+  FetchActivityTypes,
+  FetchAdaptationListFailure,
+  FetchAdaptationListSuccess,
+} from '../../actions/adaptation.actions';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -35,96 +50,159 @@ import {
   styleUrls: ['./activities.component.css'],
   templateUrl: './activities.component.html',
 })
-export class ActivitiesComponent {
-  activityTypes: Observable<RavenActivityType[] | null>;
-  activityTypeId: string;
-  constraints: RavenActivityConstraint[] = [];
-  duration: number; // Duration in seconds
-  end: number;
-  endTimestamp: string;
-  id: string | null; // ID of the activity instance. Empty if this is new.
-  intent: string; // Intent of the activity instance
-  name: string;
-  parameters: RavenActivityParameter[] = [];
-  sequenceId: string;
-  start: number;
-  startTimestamp: string;
+export class ActivitiesComponent implements OnDestroy {
+  activityTypes$: Observable<RavenActivityType[] | null>;
+  selectedPlan$: Observable<RavenPlan | null>;
+
   activityForm: FormGroup;
+  selectedActivity: RavenActivity;
+  selectedPlan: RavenPlan | null;
+
+  private ngUnsubscribe: Subject<{}> = new Subject();
 
   /**
-   * Whether this activity type is new or pre-existing
+   * Return true if the selected activity is new or existing.
+   * We determine this by looking at the activityId.
+   * If the activityId is empty then we assume the selected activity is new.
    */
   get isNew() {
-    return !this.id;
+    return this.selectedActivity && this.selectedActivity.activityId === '';
+  }
+
+  /**
+   * Helper that just returns a new empty activity.
+   */
+  get emptyActivity(): RavenActivity {
+    return {
+      activityId: '',
+      activityType: '',
+      color: '',
+      constraints: [],
+      duration: 0,
+      end: 0,
+      endTimestamp: '',
+      intent: '',
+      name: '',
+      parameters: [],
+      start: 0,
+      startTimestamp: '',
+      subActivityIds: [],
+      y: null,
+    };
   }
 
   constructor(
+    public fb: FormBuilder,
     private store: Store<HawkAppState>,
     private router: Router,
     private route: ActivatedRoute,
-    fb: FormBuilder,
   ) {
-    this.activityTypes = this.store.pipe(select(getActivityTypes));
+    this.router.events
+      .pipe(
+        filter(event => event instanceof NavigationEnd),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(() => {
+        this.resolveActions(this.route.snapshot.data);
 
-    const activityDetail: RavenActivityDetail | null =
-      this.route.snapshot.data.activityDetail || null;
+        this.activityForm = fb.group({
+          activityType: new FormControl(''),
+          constraints: fb.array(
+            this.selectedActivity.constraints.map(constraint =>
+              fb.group({
+                default: new FormControl(constraint.default),
+                locked: new FormControl(constraint.locked),
+                name: new FormControl(constraint.name),
+                type: new FormControl(constraint.type),
+                value: new FormControl(constraint.value),
+                values: new FormControl(constraint.values),
+              }),
+            ),
+          ),
+          duration: new FormControl(this.selectedActivity.duration, [
+            Validators.required,
+          ]),
+          intent: new FormControl(this.selectedActivity.intent),
+          name: new FormControl(this.selectedActivity.name, [
+            Validators.required,
+          ]),
+          start: new FormControl(this.selectedActivity.start, [
+            Validators.required,
+          ]),
+        });
+      });
 
-    if (activityDetail) {
-      this.activityTypeId = activityDetail.activityTypeId;
-      this.constraints = activityDetail.constraints;
-      this.duration = activityDetail.duration;
-      this.end = activityDetail.end;
-      this.endTimestamp = activityDetail.endTimestamp;
-      this.id = activityDetail.id;
-      this.intent = activityDetail.intent;
-      this.name = activityDetail.name;
-      this.parameters = activityDetail.parameters;
-      this.sequenceId = activityDetail.sequenceId;
-      this.start = activityDetail.start;
-      this.startTimestamp = activityDetail.startTimestamp;
+    this.activityTypes$ = this.store.pipe(select(getActivityTypes));
+    this.selectedPlan$ = this.store.pipe(select(getSelectedPlan));
+
+    this.selectedPlan$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe((selPlan: RavenPlan | null) => {
+        this.selectedPlan = selPlan;
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
+  }
+
+  /**
+   * Emit actions based on router snapshot data from a resolver.
+   * This is so we can easily sync URL state,
+   * HTTP responses (i.e. data) from a resolver, and the store.
+   */
+  resolveActions(data: Data): void {
+    const { adaptations, plans, selectedActivity, selectedPlan } = data;
+
+    // Note that selectedActivity is transient state (i.e. it's not kept in the store for this page).
+    if (selectedActivity) {
+      this.selectedActivity = selectedActivity;
+    } else {
+      this.selectedActivity = this.emptyActivity;
     }
 
-    this.activityForm = fb.group({
-      activityTypeId: new FormControl({
-        readonly: !this.isNew,
-        value: this.activityTypeId,
-      }),
-      constraints: fb.array(
-        this.constraints.map(constraint =>
-          fb.group({
-            default: new FormControl(constraint.default),
-            locked: new FormControl(constraint.locked),
-            name: new FormControl(constraint.name),
-            type: new FormControl(constraint.type),
-            value: new FormControl(constraint.value),
-            values: new FormControl(constraint.values),
-          }),
-        ),
-      ),
-      duration: new FormControl(this.duration, [Validators.required]),
-      intent: new FormControl(this.intent),
-      name: new FormControl(this.name, [Validators.required]),
-      sequenceId: new FormControl(this.sequenceId),
-      start: new FormControl(this.start, [Validators.required]),
-    });
-  }
-
-  onClickCancel() {
-    this.router.navigate(['/hawk']);
-  }
-
-  onMenuClicked() {
-    this.router.navigate(['/hawk']);
-  }
-
-  onSubmitActivityForm(value: RavenActivityDetail) {
-    if (this.activityForm.valid) {
+    if (adaptations) {
+      this.store.dispatch(new FetchAdaptationListSuccess(adaptations));
+    } else {
       this.store.dispatch(
-        new SaveActivityDetail({
-          ...value,
-          id: this.id as string,
-        }),
+        new FetchAdaptationListFailure(
+          new Error('Failed to fetch adaptations list.'),
+        ),
       );
+    }
+
+    if (plans) {
+      this.store.dispatch(new FetchPlanListSuccess(plans));
+    } else {
+      this.store.dispatch(
+        new FetchPlanListFailure(new Error('Failed to fetch plan list.')),
+      );
+    }
+
+    if (selectedPlan) {
+      this.store.dispatch(new FetchPlanDetailSuccess(selectedPlan));
+      this.store.dispatch(new FetchActivityTypes(selectedPlan.adaptationId));
+    } else {
+      this.store.dispatch(new ClearSelectedPlan());
+    }
+  }
+
+  onNavBack() {
+    if (this.selectedPlan) {
+      this.router.navigate([`/plans/${this.selectedPlan.id}`]);
+    }
+  }
+
+  onSubmitActivityForm(value: RavenActivity) {
+    if (this.activityForm.valid && this.selectedPlan) {
+      if (!this.isNew) {
+        this.store.dispatch(
+          new UpdateActivity(this.selectedActivity.activityId, value),
+        );
+      } else {
+        this.store.dispatch(new CreateActivity(this.selectedPlan.id, value));
+      }
     }
   }
 
