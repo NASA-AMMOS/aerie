@@ -2,7 +2,7 @@
   <span class="spacer"></span>
 
   <button
-    *ngIf="currentStateId !== ''"
+    *ngIf="currentStateId !== '' && mode !== 'minimal'"
     mat-icon-button
     matTooltip="Apply State"
     (click)="onApplyCurrentState()">
@@ -13,7 +13,7 @@
   </button>
 
   <button
-    *ngIf="currentStateId !== ''"
+    *ngIf="currentStateId !== '' && mode !== 'minimal'"
     mat-icon-button
     matTooltip="Apply Layout"
     (click)="onApplyLayout()">
@@ -24,7 +24,7 @@
   </button>
 
   <button
-    *ngIf="currentStateId !== ''"
+    *ngIf="currentStateId !== '' && mode !== 'minimal'"
     mat-icon-button
     matTooltip="Update State"
     (click)="onUpdateCurrentState()">
@@ -34,7 +34,7 @@
     </mat-icon>
   </button>
 
-  <span class="name" *ngIf="currentStateId !== ''">State: {{currentStateId}}</span>
+  <span class="name" *ngIf="currentStateId !== '' && mode !== 'minimal'">State: {{currentStateId}}</span>
   <raven-pan-to-duration
     (panTo)="onPanTo($event)">
   </raven-pan-to-duration>
