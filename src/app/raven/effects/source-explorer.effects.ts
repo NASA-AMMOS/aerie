@@ -1664,14 +1664,14 @@ export class SourceExplorerEffects {
             expansionByActivityId[activityId],
           ),
         ),
-        actions.push(
-          new timelineActions.FetchChildrenOrDescendants(
-            activityPointInBand.bandId,
-            activityPointInBand.subBandId,
-            activityPointInBand.activityPoint,
-            expansionByActivityId[activityId],
-          ),
-        );
+          actions.push(
+            new timelineActions.FetchChildrenOrDescendants(
+              activityPointInBand.bandId,
+              activityPointInBand.subBandId,
+              activityPointInBand.activityPoint,
+              expansionByActivityId[activityId],
+            ),
+          );
       }
     });
     return actions;

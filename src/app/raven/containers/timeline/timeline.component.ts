@@ -423,14 +423,14 @@ export class TimelineComponent implements OnDestroy {
           e.expansion,
         ),
       ),
-      this.store.dispatch(
-        new timelineActions.FetchChildrenOrDescendants(
-          this.selectedBandId,
-          this.selectedSubBandId,
-          e.activityPoint,
-          e.expansion,
-        ),
-      );
+        this.store.dispatch(
+          new timelineActions.FetchChildrenOrDescendants(
+            this.selectedBandId,
+            this.selectedSubBandId,
+            e.activityPoint,
+            e.expansion,
+          ),
+        );
     }
   }
 

@@ -551,7 +551,10 @@ export function removeChildrenOrDescendants(
   return {
     ...state,
     bands,
-    expansionByActivityId: omit(state.expansionByActivityId, action.activityPoint.activityId),
+    expansionByActivityId: omit(
+      state.expansionByActivityId,
+      action.activityPoint.activityId,
+    ),
   };
 }
 
