@@ -92,6 +92,12 @@
                                     "code": 200,
                                     "data": "",
                                     "headers": {}
+                                },
+                                "POST": {
+                                    "action": "no_action",
+                                    "code": 200,
+                                    "data": "",
+                                    "headers": {}
                                 }
                             }
                         }

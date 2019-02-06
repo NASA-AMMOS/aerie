@@ -16,7 +16,7 @@ public class ActivityInstance {
     public ArrayList<Parameter> parameters;
     public Number start;
     public String startTimestamp;
-    public String y;
+    public Number y;
 
     public ActivityInstance() {}
 
@@ -34,7 +34,7 @@ public class ActivityInstance {
         ArrayList<Parameter> parameters,
         Number start,
         String startTimestamp,
-        String y
+        Number y
     ) {
         this.activityId = activityId;
         this.activityType = activityType;
@@ -174,11 +174,11 @@ public class ActivityInstance {
         this.startTimestamp = startTimestamp;
     }
 
-    public String getY() {
+    public Number getY() {
         return y;
     }
 
-    public void setY(String y) {
+    public void setY(Number y) {
         this.y = y;
     }
 }
