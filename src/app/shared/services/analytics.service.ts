@@ -18,7 +18,7 @@ export enum EventType {
   providedIn: 'root',
 })
 export class AnalyticsService {
-  trackEvent(evt: EventType, val: String): void {
+  trackEvent(evt: EventType, val: string): void {
     // @ts-ignore
     if (window._paq) {
       // @ts-ignore
