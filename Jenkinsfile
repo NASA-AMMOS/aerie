@@ -44,10 +44,10 @@ pipeline {
 						if [[ $BRANCH_NAME == release* ]]; then
 							echo "Release branch detected. Analyzing and archiving source for CM purposes..."
 							# tar up source
-							tar -czf raven-src-$SEQBASETAG.tar.gz --exclude='.git' `ls -A`
+							tar -czf nest-src-$SEQBASETAG.tar.gz --exclude='.git' `ls -A`
 							# record lines of code
 							npm install cloc
-							./node_modules/cloc/lib/cloc --exclude-dir=bower_components src --report-file=raven-cloc-$SEQBASETAG.txt
+							./node_modules/cloc/lib/cloc --exclude-dir=bower_components src --report-file=nest-cloc-$SEQBASETAG.txt
 						fi
 
 						# build and test
@@ -111,12 +111,12 @@ pipeline {
 							"files": [
 								{
 									"pattern": "*-src-*.tar.gz",
-									"target": "general-develop/gov/nasa/jpl/ammos/mpsa/raven/",
+									"target": "general-develop/gov/nasa/jpl/ammos/mpsa/nest/",
 									"recursive":false
 								},
 								{
 									"pattern": "dist/*.tar.gz",
-									"target": "general-develop/gov/nasa/jpl/ammos/mpsa/raven/",
+									"target": "general-develop/gov/nasa/jpl/ammos/mpsa/nest/",
 									"recursive":false
 								}
 							]

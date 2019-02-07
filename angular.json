@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "raven2": {
+    "nest": {
       "root": "",
       "sourceRoot": "src",
       "projectType": "application",
@@ -95,18 +95,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "raven2:build"
+            "browserTarget": "nest:build"
           },
           "configurations": {
             "prod": {
-              "browserTarget": "raven2:build:prod"
+              "browserTarget": "nest:build:prod"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "raven2:build"
+            "browserTarget": "nest:build"
           }
         },
         "test": {
@@ -130,7 +130,7 @@
         }
       }
     },
-    "raven2-e2e": {
+    "nest-e2e": {
       "root": "e2e/",
       "projectType": "application",
       "architect": {
@@ -138,7 +138,7 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "e2e/protractor.conf.js",
-            "devServerTarget": "raven2:serve"
+            "devServerTarget": "nest:serve"
           }
         },
         "lint": {
@@ -151,7 +151,7 @@
       }
     }
   },
-  "defaultProject": "raven2",
+  "defaultProject": "nest",
   "cli": {
     "warnings": {
       "typescriptMismatch": true
