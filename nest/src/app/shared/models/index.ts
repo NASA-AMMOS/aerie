@@ -9,6 +9,7 @@
 
 export * from './add-band-modifiers';
 export * from './base-type';
+export * from './filter-state';
 export * from './map';
 export * from './mps-server-activity-metadata';
 export * from './mps-server-activity-point-metadata';
