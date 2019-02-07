@@ -7,14 +7,21 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './bands';
-export * from './color';
-export * from './epochs';
-export * from './ng-template-utils';
-export * from './mps';
-export * from './points';
-export * from './situational-awareness';
-export * from './source';
-export * from './state';
-export * from './time';
-export * from './tooltip';
+import { MpsServerSource } from '../models';
+import { sanitizeSourceName } from './source';
+
+export function getMpsPathForSource(source: MpsServerSource): string {
+  const PATH_REGEX = /\/mpsserver\/api\/v2\/fs-[^\/]*(\/.+)$/;
+
+  // Use the file_data_url if it exists; otherwise use the contents_url.
+  // MPS Server provides one or both depending on what kind of source this is,
+  // and in almost all cases we prefer `file_data_url` for deriving a path.
+  const url = source['file_data_url'] || source['contents_url'];
+
+  const path = url.match(PATH_REGEX)[1];
+
+  return path
+    .split('/')
+    .map(sanitizeSourceName)
+    .join('/');
+}

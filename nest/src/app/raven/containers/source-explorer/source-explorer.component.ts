@@ -94,6 +94,10 @@ export class SourceExplorerComponent implements OnDestroy {
     this.connectToWebsocket();
   }
 
+  onFilterSources(filter: SourceFilter) {
+    this.store.dispatch(new sourceExplorerActions.UpdateSourceFilter(filter));
+  }
+
   ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();

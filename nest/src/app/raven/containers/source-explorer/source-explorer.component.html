@@ -22,7 +22,8 @@
 
   <raven-quick-filter-panel
     [filter]="sourceFilter$ | async"
-    [isActive]="filterIsActive$ | async">
+    [isActive]="filterIsActive$ | async"
+    (applyFilter)="onFilterSources($event)">
   </raven-quick-filter-panel>
 
   <mat-tab-group>
