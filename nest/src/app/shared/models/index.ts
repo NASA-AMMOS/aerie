@@ -72,3 +72,4 @@ export * from './raven-sub-band';
 export * from './raven-time-range';
 export * from './raven-time-range-doy';
 export * from './raven-update';
+export * from './source-filter';
