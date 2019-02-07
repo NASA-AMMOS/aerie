@@ -14,6 +14,7 @@ import {
   Input,
   Output,
 } from '@angular/core';
+
 import { RavenPlan } from '../../models/raven-plan';
 
 @Component({
@@ -34,10 +35,11 @@ export class RavenPlanSelectorComponent {
 
   /**
    * Formatted start date
+   * Assumes startTimestamp of format YYY-MM-DDTMM:SS:mm
    */
   get startDate(): string {
     if (this.selectedPlan) {
-      const d = new Date(this.selectedPlan.start);
+      const d = new Date(this.selectedPlan.startTimestamp);
       return `${d.getMonth() + 1}.${d.getDate()}.${d.getFullYear()}`;
     }
     return 'from';
@@ -45,10 +47,11 @@ export class RavenPlanSelectorComponent {
 
   /**
    * Formatted end date
+   * Assumes endTimestamp of format YYY-MM-DDTMM:SS:mm
    */
   get endDate(): string {
     if (this.selectedPlan) {
-      const d = new Date(this.selectedPlan.end);
+      const d = new Date(this.selectedPlan.endTimestamp);
       return `${d.getMonth() + 1}.${d.getDate()}.${d.getFullYear()}`;
     }
     return 'to';

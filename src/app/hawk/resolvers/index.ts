@@ -8,3 +8,6 @@
  */
 
 export * from './activity.resolver';
+export * from './adaptation-list.resolver';
+export * from './plan-list.resolver';
+export * from './plan.resolver';

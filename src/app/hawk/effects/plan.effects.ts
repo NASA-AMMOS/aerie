@@ -12,8 +12,15 @@ import { MatDialog } from '@angular/material';
 import { Router } from '@angular/router';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
-import { cloneDeep } from 'lodash';
-import { merge, Observable, of, zip } from 'rxjs';
+import { cloneDeep, omitBy } from 'lodash';
+import { Observable, of, zip } from 'rxjs';
+import { RavenPlanFormDialogComponent } from '../../shared/components/components';
+import { RavenActivity } from '../../shared/models';
+import { RavenPlanFormDialogData } from '../../shared/models/raven-plan-form-dialog-data';
+import { PlanService } from '../../shared/services/plan.service';
+import { timestamp } from '../../shared/util';
+import { HawkAppState } from '../hawk-store';
+
 import {
   catchError,
   concatMap,
@@ -23,100 +30,149 @@ import {
   withLatestFrom,
 } from 'rxjs/operators';
 
-import { RavenPlanFormDialogComponent } from '../../shared/components/components';
-import { RavenPlanFormDialogData } from '../../shared/models/raven-plan-form-dialog-data';
-
 import {
-  FetchPlanDetail,
-  FetchPlanDetailFailure,
-  FetchPlanDetailSuccess,
+  ClearSelectedActivity,
+  CreateActivity,
+  CreateActivityFailure,
+  CreateActivitySuccess,
+  CreatePlan,
+  CreatePlanFailure,
+  CreatePlanSuccess,
+  DeleteActivity,
+  DeleteActivityFailure,
+  DeleteActivitySuccess,
+  DeletePlan,
+  DeletePlanFailure,
+  DeletePlanSuccess,
   FetchPlanList,
   FetchPlanListFailure,
   FetchPlanListSuccess,
   OpenPlanFormDialog,
   PlanActionTypes,
-  RemovePlan,
-  RemovePlanSuccess,
-  SaveActivity,
-  SaveActivityDetail,
-  SaveActivityDetailFailure,
-  SaveActivityDetailSuccess,
-  SaveActivityFailure,
-  SaveActivitySuccess,
-  SavePlanSuccess,
+  UpdateActivity,
+  UpdateActivityFailure,
+  UpdateActivitySuccess,
 } from '../actions/plan.actions';
-
-import {
-  FetchAdaptationFailure,
-  FetchAdaptationSuccess,
-} from '../actions/adaptation.actions';
-
-// TODO: Replace with a real service once an external service for plans becomes available
-import { AdaptationMockService } from '../../shared/services/adaptation-mock.service';
-import { PlanMockService } from '../../shared/services/plan-mock.service';
-import { HawkAppState } from '../hawk-store';
 
 @Injectable()
 export class PlanEffects {
   constructor(
     private actions$: Actions,
     private store$: Store<HawkAppState>,
-    private planService: PlanMockService,
-    private adaptationService: AdaptationMockService,
+    private planService: PlanService,
     private dialog: MatDialog,
     private router: Router,
   ) {}
 
   @Effect()
-  fetchPlanList$: Observable<Action> = this.actions$.pipe(
-    ofType<FetchPlanList>(PlanActionTypes.FetchPlanList),
-    concatMap(_ => {
-      return this.planService.getPlans().pipe(
-        map(data => new FetchPlanListSuccess(data)),
-        catchError((e: Error) => {
-          console.error('PlanEffects - fetchPlanList$: ', e);
-          return of(new FetchPlanListFailure(e));
-        }),
-      );
-    }),
-  );
-
-  /**
-   * Any time a new plan is requested, fetch the plan _and_ the adaptation.
-   */
-  @Effect()
-  fetchPlanDetail$: Observable<Action> = this.actions$.pipe(
-    ofType<FetchPlanDetail>(PlanActionTypes.FetchPlanDetail),
+  createActivity$: Observable<Action> = this.actions$.pipe(
+    ofType<CreateActivity>(PlanActionTypes.CreateActivity),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
-    switchMap(({ action, state }) => {
-      const plan = state.hawk.plan.plans[action.id];
+    concatMap(({ action, state }) => {
+      // TODO: Should we let the service handle the filling in of blank values here?
 
-      if (!plan) {
-        const err = new Error('UndefinedPlan');
-        return of(new FetchPlanDetailFailure(err));
-      }
+      const end = action.data.start + action.data.duration;
 
-      return merge(
-        this.planService.getPlanDetail(plan.adaptationId, action.id).pipe(
-          map(data => new FetchPlanDetailSuccess(data)),
-          catchError((err: Error) => of(new FetchPlanDetailFailure(err))),
-        ),
-        this.adaptationService.getAdaptation(plan.adaptationId).pipe(
-          map(data => new FetchAdaptationSuccess(data)),
-          catchError((err: Error) => of(new FetchAdaptationFailure(err))),
-        ),
-      );
+      return this.planService
+        .createActivity(state.config.app.apiBaseUrl, action.planId, {
+          ...action.data,
+          color: '#ffffff',
+          constraints: [],
+          end,
+          endTimestamp: timestamp(end),
+          parameters: [],
+          startTimestamp: timestamp(action.data.start),
+          y: null,
+        })
+        .pipe(
+          map(() => new CreateActivitySuccess(action.planId)),
+          catchError((e: Error) => of(new CreateActivityFailure(e))),
+        );
+    }),
+  );
+
+  @Effect({ dispatch: false })
+  createActivitySuccess$: Observable<Action> = this.actions$.pipe(
+    ofType<CreateActivitySuccess>(PlanActionTypes.CreateActivitySuccess),
+    switchMap(action => {
+      this.router.navigate([`/plans/${action.planId}`]);
+      return [];
     }),
   );
 
   @Effect()
-  removePlan$: Observable<Action> = this.actions$.pipe(
-    ofType<RemovePlan>(PlanActionTypes.RemovePlan),
-    concatMap(action =>
+  createPlan$: Observable<Action> = this.actions$.pipe(
+    ofType<CreatePlan>(PlanActionTypes.CreatePlan),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    concatMap(({ action, state }) =>
       this.planService
-        .removePlan(action.id)
-        .pipe(map(_ => new RemovePlanSuccess(action.id))),
+        .createPlan(state.config.app.apiBaseUrl, action.plan)
+        .pipe(
+          // TODO: Strongly type. Back end should pass back id instead of _id.
+          map(
+            (plan: any) =>
+              new CreatePlanSuccess({ ...plan, id: plan._id || plan.id }),
+          ),
+          catchError((e: Error) => of(new CreatePlanFailure(e))),
+        ),
+    ),
+  );
+
+  @Effect({ dispatch: false })
+  createPlanSuccess$: Observable<Action> = this.actions$.pipe(
+    ofType<CreatePlanSuccess>(PlanActionTypes.CreatePlanSuccess),
+    switchMap(action => {
+      this.router.navigate([`/plans/${action.plan.id}`]);
+      return of(new ClearSelectedActivity());
+    }),
+  );
+
+  @Effect()
+  deleteActivity$: Observable<Action> = this.actions$.pipe(
+    ofType<DeleteActivity>(PlanActionTypes.DeleteActivity),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    concatMap(({ action, state }) =>
+      this.planService
+        .deleteActivity(
+          state.config.app.apiBaseUrl,
+          action.planId,
+          action.activityId,
+        )
+        .pipe(
+          map(() => new DeleteActivitySuccess()),
+          catchError((e: Error) => of(new DeleteActivityFailure(e))),
+        ),
+    ),
+  );
+
+  @Effect()
+  deletePlan$: Observable<Action> = this.actions$.pipe(
+    ofType<DeletePlan>(PlanActionTypes.DeletePlan),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    concatMap(({ action, state }) =>
+      this.planService
+        .deletePlan(state.config.app.apiBaseUrl, action.planId)
+        .pipe(
+          map(() => new DeletePlanSuccess()),
+          catchError((e: Error) => of(new DeletePlanFailure(e))),
+        ),
+    ),
+  );
+
+  @Effect()
+  fetchPlanList$: Observable<Action> = this.actions$.pipe(
+    ofType<FetchPlanList>(PlanActionTypes.FetchPlanList),
+    withLatestFrom(this.store$),
+    map(([_, state]) => state),
+    concatMap(state =>
+      this.planService.getPlans(state.config.app.apiBaseUrl).pipe(
+        map(data => new FetchPlanListSuccess(data)),
+        catchError((e: Error) => of(new FetchPlanListFailure(e))),
+      ),
     ),
   );
 
@@ -138,57 +194,79 @@ export class PlanEffects {
 
       return zip(of(action), componentDialog.afterClosed());
     }),
-    map(([action, result]) => ({ action, result })),
-    exhaustMap(({ action, result }) => {
+    map(([_, result]) => result),
+    exhaustMap(result => {
       if (result) {
-        return of(
-          // TODO: Dispatch SavePlan once we have a backend for it
-          new SavePlanSuccess(result),
-        );
+        return of(new CreatePlan(result));
       }
       return [];
     }),
   );
 
   @Effect()
-  saveActivity$: Observable<Action> = this.actions$.pipe(
-    ofType<SaveActivity>(PlanActionTypes.SaveActivity),
+  updateActivity$: Observable<Action> = this.actions$.pipe(
+    ofType<UpdateActivity>(PlanActionTypes.UpdateActivity),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
-    switchMap(({ action }) =>
-      this.planService.saveActivity(action.data).pipe(
-        map(data => new SaveActivitySuccess(data)),
-        catchError((e: Error) => of(new SaveActivityFailure(e))),
-      ),
-    ),
+    switchMap(({ state, action }) => {
+      const { selectedPlan } = state.hawk.plan;
+      const { apiBaseUrl } = state.config.app;
+
+      if (!selectedPlan) {
+        return of(
+          new UpdateActivityFailure(
+            new Error('UpdateActivity: UpdateActivityFailure: NoSelectedPlan'),
+          ),
+        );
+      }
+
+      const activityInstance =
+        selectedPlan.activityInstances[action.activityId];
+
+      if (!activityInstance) {
+        return of(
+          new UpdateActivityFailure(
+            new Error(
+              'UpdateActivity: UpdateActivityFailure: NoActivityInstanceFound',
+            ),
+          ),
+        );
+      }
+
+      // Since we are sending a PATCH, make sure that we are only
+      // sending value that changed.
+      const changes = omitBy(
+        action.update,
+        (v, k) => activityInstance[k] === v,
+      );
+
+      return this.planService
+        .updateActivityInstance(
+          apiBaseUrl,
+          selectedPlan.id,
+          action.activityId,
+          changes as RavenActivity,
+        )
+        .pipe(
+          map(_ => new UpdateActivitySuccess(action.activityId, changes)),
+          catchError((e: Error) => of(new UpdateActivityFailure(e))),
+        );
+    }),
   );
 
-  @Effect()
-  saveActivityDetail$: Observable<Action> = this.actions$.pipe(
-    ofType<SaveActivityDetail>(PlanActionTypes.SaveActivityDetail),
+  @Effect({ dispatch: false })
+  updateActivitySuccess$: Observable<Action> = this.actions$.pipe(
+    ofType<UpdateActivitySuccess>(PlanActionTypes.UpdateActivitySuccess),
     withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    switchMap(({ action }) => {
-      return this.planService.saveActivity(action.data).pipe(
-        map(data => {
-          this.router.navigate(['/hawk'], {
-            queryParams: {
-              activityId: action.data.id,
-            },
-          });
-          return new SaveActivityDetailSuccess(data);
-        }),
-        catchError((e: Error) => {
-          console.error('PlanEffects - saveActivityDetail$: ', e);
-          this.router.navigate(['/hawk'], {
-            queryParams: {
-              activityId: action.data.id,
-              err: 'ActivityDetailSaveError',
-            },
-          });
-          return of(new SaveActivityDetailFailure(e));
-        }),
-      );
+    map(([_, state]) => state),
+    switchMap(state => {
+      const { selectedPlan } = state.hawk.plan;
+
+      if (selectedPlan) {
+        this.router.navigate([`/plans/${selectedPlan.id}`]);
+      }
+
+      return [];
     }),
   );
 }

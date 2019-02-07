@@ -11,7 +11,7 @@ import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
 import { switchMap, take } from 'rxjs/operators';
-import { RavenActivity } from '../../shared/models';
+import { RavenPlan } from '../../shared/models';
 import { PlanService } from '../../shared/services/plan.service';
 import { HawkAppState } from '../hawk-store';
 
@@ -22,7 +22,7 @@ import {
 } from '@angular/router';
 
 @Injectable()
-export class ActivityResolver implements Resolve<RavenActivity> {
+export class PlanResolver implements Resolve<RavenPlan> {
   constructor(
     private planService: PlanService,
     private store: Store<HawkAppState>,
@@ -31,14 +31,13 @@ export class ActivityResolver implements Resolve<RavenActivity> {
   resolve(
     route: ActivatedRouteSnapshot,
     _: RouterStateSnapshot,
-  ): Observable<RavenActivity> {
+  ): Observable<RavenPlan> {
     return this.store.pipe(
       take(1),
       switchMap(state =>
-        this.planService.getActivityInstance(
+        this.planService.getPlanDetail(
           state.config.app.apiBaseUrl,
           route.params['planId'],
-          route.params['activityId'],
         ),
       ),
     );

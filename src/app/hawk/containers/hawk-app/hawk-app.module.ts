@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { HawkAppComponent } from './hawk-app.component';
 
 import {
   MatButtonModule,
@@ -33,8 +34,6 @@ import {
   RavenAppHeaderModule,
   RavenPlanSelectorModule,
 } from '../../../shared/components/modules';
-
-import { HawkAppComponent } from './hawk-app.component';
 
 @NgModule({
   declarations: [HawkAppComponent],

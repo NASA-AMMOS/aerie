@@ -17,10 +17,12 @@ export const getPlanState = createSelector(
   (state: State): PlanState => state.plan,
 );
 
-export const getActivities = createSelector(
+export const getActivityInstances = createSelector(
   getPlanState,
   (state: PlanState) =>
-    state.selectedPlan ? Object.values(state.selectedPlan.activities) : [],
+    state.selectedPlan
+      ? Object.values(state.selectedPlan.activityInstances)
+      : [],
 );
 
 export const getMaxTimeRange = createSelector(

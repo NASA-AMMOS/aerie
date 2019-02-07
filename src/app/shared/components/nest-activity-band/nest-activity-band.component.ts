@@ -169,7 +169,7 @@ export class NestActivityBandComponent
    * trackBy for bands list.
    */
   pointsTrackByFn(_: number, item: RavenActivitySvg): string {
-    return item.id;
+    return item.activityId;
   }
 
   /**
@@ -264,7 +264,7 @@ export class NestActivityBandComponent
       };
 
       this.svgPoints.push(svgPoint);
-      this.svgPointsMap[point.id] = svgPoint;
+      this.svgPointsMap[point.activityId] = svgPoint;
 
       if (rowY + rowHeight + activityHeight <= this.drawHeight) {
         rowY += rowHeight;
@@ -409,9 +409,9 @@ export class NestActivityBandComponent
         this.dragSubscription.unsubscribe();
       }
 
-      const id = this.selectedActivity.id;
-      const gTarget = this.el.querySelector(`g#${id}`) as SVGGElement;
-      const rectTarget = this.el.querySelector(`rect#${id}`) as SVGRectElement;
+      const id = this.selectedActivity.activityId;
+      const gTarget = this.el.querySelector(`#g-${id}`) as SVGGElement;
+      const rectTarget = this.el.querySelector(`#rect-${id}`) as SVGRectElement;
 
       const rectTargetHeight = parseFloat(rectTarget.getAttribute(
         'height',
@@ -480,19 +480,19 @@ export class NestActivityBandComponent
             point.labelFontSize,
           );
 
-          d3.select(`rect#${id}`)
+          d3.select(`#rect-${id}`)
             .attr('x', x)
             .attr('y', y);
 
-          d3.select(`text#${id}`)
+          d3.select(`#text-${id}`)
             .attr('x', labelX)
             .attr('y', labelY);
 
-          d3.select(`circle#drag-handle-left-${id}`)
+          d3.select(`#circle-drag-handle-left-${id}`)
             .attr('cx', x)
             .attr('cy', this.getYDragHandle(y, point.height));
 
-          d3.select(`circle#drag-handle-right-${id}`)
+          d3.select(`#circle-drag-handle-right-${id}`)
             .attr('cx', this.getXDragHandleRight(x, point.width))
             .attr('cy', this.getYDragHandle(y, point.height));
         });

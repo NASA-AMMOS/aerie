@@ -8,13 +8,16 @@
  */
 
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot } from '@angular/router';
 import { Actions, Effect, ofType } from '@ngrx/effects';
-import { RouterNavigationAction } from '@ngrx/router-store';
 import { Action, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { map, mergeMap, withLatestFrom } from 'rxjs/operators';
 import { RavenAppState } from '../raven-store';
+
+import {
+  RouterNavigationAction,
+  SerializedRouterStateSnapshot,
+} from '@ngrx/router-store';
 
 import * as configActions from '../../shared/actions/config.actions';
 import * as sourceExplorerActions from '../actions/source-explorer.actions';
@@ -28,7 +31,9 @@ export class RouterEffects {
 
   @Effect()
   routerNavigation$: Observable<Action> = this.actions$.pipe(
-    ofType<RouterNavigationAction<ActivatedRouteSnapshot>>('ROUTER_NAVIGATION'),
+    ofType<RouterNavigationAction<SerializedRouterStateSnapshot>>(
+      '@ngrx/router-store/navigation',
+    ),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     mergeMap(({ state, action }) => {

@@ -10,24 +10,53 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { ActivitiesComponent, HawkAppComponent } from './containers';
-import { PlanGuard } from './guards';
-import { ActivityResolver } from './resolvers';
+
+import {
+  ActivityResolver,
+  AdaptationListResolver,
+  PlanListResolver,
+  PlanResolver,
+} from './resolvers';
 
 export const routes: Routes = [
   {
-    canActivate: [PlanGuard],
     component: ActivitiesComponent,
-    path: 'activities',
+    path: ':planId/activities',
     pathMatch: 'full',
+    resolve: {
+      adaptations: AdaptationListResolver,
+      plans: PlanListResolver,
+      selectedPlan: PlanResolver,
+    },
   },
   {
-    canActivate: [PlanGuard],
     component: ActivitiesComponent,
-    path: 'activities/:id',
+    path: ':planId/activities/:activityId',
     pathMatch: 'full',
-    resolve: { activityDetail: ActivityResolver },
+    resolve: {
+      adaptations: AdaptationListResolver,
+      plans: PlanListResolver,
+      selectedActivity: ActivityResolver,
+      selectedPlan: PlanResolver,
+    },
   },
-  { component: HawkAppComponent, path: '' },
+  {
+    component: HawkAppComponent,
+    path: ':planId',
+    resolve: {
+      adaptations: AdaptationListResolver,
+      plans: PlanListResolver,
+      selectedPlan: PlanResolver,
+    },
+  },
+  {
+    component: HawkAppComponent,
+    path: '',
+    resolve: {
+      adaptations: AdaptationListResolver,
+      plans: PlanListResolver,
+    },
+  },
 ];
 
 @NgModule({

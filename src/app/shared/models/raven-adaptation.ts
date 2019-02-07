@@ -7,22 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-/**
- * A rudimentary interface for adaptations
- */
 export interface RavenAdaptation {
-  /**
-   * Id of the adaptation
-   */
   id: string;
-
-  /**
-   * Name of adaptation
-   */
+  location: string;
+  mission: string;
   name: string;
-
-  /**
-   * Adaptation version
-   */
+  owner: string;
   version: string;
 }

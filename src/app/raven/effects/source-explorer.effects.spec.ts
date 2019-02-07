@@ -144,31 +144,11 @@ describe('SourceExplorerEffects', () => {
     expect(metadata.openAllInstancesForSource).toBeUndefined();
   });
 
-  it('should not register fetchNewSources', () => {
-    expect(metadata.fetchNewSources).toBeUndefined();
-  });
-
   it('should not register fetchSourcesByType', () => {
     expect(metadata.fetchSourcesByType).toBeUndefined();
   });
 
-  it('should not register removeSource', () => {
-    expect(metadata.removeSource).toBeUndefined();
-  });
-
   it('should not register restoreFilters', () => {
     expect(metadata.restoreFilters).toBeUndefined();
-  });
-
-  it('should not register fetchState', () => {
-    expect(metadata.fetchState).toBeUndefined();
-  });
-
-  it('should not register saveState', () => {
-    expect(metadata.saveState).toBeUndefined();
-  });
-
-  it('should not register importMappingFile', () => {
-    expect(metadata.importMappingFile).toBeUndefined();
   });
 });

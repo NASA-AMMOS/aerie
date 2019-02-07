@@ -7,16 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { StringTMap } from './map';
-import { RavenActivityType } from './raven-activity-type';
-import { RavenAdaptation } from './raven-adaptation';
+import { Observable } from 'rxjs';
+import { RavenActivityType, RavenAdaptation, StringTMap } from '../models';
 
-/**
- * A rudimentary interface for adaptations
- */
-export interface RavenAdaptationDetail extends RavenAdaptation {
-  /**
-   * Activity types
-   */
-  activityTypes: StringTMap<RavenActivityType>;
+export interface AdaptationServiceInterface {
+  getActivityTypes(
+    apiBaseUrl: string,
+    id: string,
+  ): Observable<StringTMap<RavenActivityType>>;
+  getAdaptations(apiBaseUrl: string): Observable<RavenAdaptation[]>;
 }

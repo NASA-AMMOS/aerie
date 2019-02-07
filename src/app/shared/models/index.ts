@@ -36,7 +36,6 @@ export * from './mps-server-state-point';
 export * from './nest-module';
 export * from './raven-activity-band';
 export * from './raven-activity-constraint';
-export * from './raven-activity-detail';
 export * from './raven-activity-parameter';
 export * from './raven-activity-point-expansion';
 export * from './raven-activity-point';

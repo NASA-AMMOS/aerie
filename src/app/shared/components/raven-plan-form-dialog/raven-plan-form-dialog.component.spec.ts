@@ -45,11 +45,11 @@ describe('RavenPlanFormDialogComponent', () => {
 
   beforeEach(async () => {
     selectedPlan = {
-      adaptationId: 'ops',
-      end: '1995-12-17T03:28:00',
-      id: `test0`,
-      name: `Test 0`,
-      start: '1995-12-17T03:24:00',
+      adaptationId: '',
+      endTimestamp: '',
+      id: '',
+      name: '',
+      startTimestamp: '',
     };
 
     data = {
@@ -98,7 +98,6 @@ describe('RavenPlanFormDialogComponent', () => {
     delete expected['id'];
 
     expect(component.component.onSubmit).toHaveBeenCalledWith(expected);
-    expect(mockDialogRef.close).toHaveBeenCalledWith(selectedPlan);
   });
 
   it('should fail validation', () => {

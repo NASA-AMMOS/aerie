@@ -8,10 +8,12 @@
  */
 
 import { MatSidenav } from '@angular/material';
+import { ActivatedRoute, Data, NavigationEnd, Router } from '@angular/router';
 import { select, Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { filter, takeUntil } from 'rxjs/operators';
 import { ToggleNavigationDrawer } from '../../../shared/actions/config.actions';
+import { timestamp } from '../../../shared/util';
 import { HawkAppState } from '../../hawk-store';
 
 import {
@@ -32,36 +34,35 @@ import {
   RavenActivity,
   RavenActivityType,
   RavenActivityUpdate,
-  RavenAdaptation,
   RavenPlan,
   RavenPlanDetail,
   RavenTimeRange,
 } from '../../../shared/models';
 
 import {
-  FetchAdaptationList,
-  OpenActivityTypeFormDialog,
-  RemoveActivityType,
+  FetchActivityTypes,
+  FetchAdaptationListFailure,
+  FetchAdaptationListSuccess,
 } from '../../actions/adaptation.actions';
 
 import {
-  FetchPlanDetail,
-  FetchPlanList,
+  ClearSelectedActivity,
+  ClearSelectedPlan,
+  FetchPlanDetailSuccess,
+  FetchPlanListFailure,
+  FetchPlanListSuccess,
   OpenPlanFormDialog,
-  RemovePlan,
-  SaveActivity,
   SelectActivity,
-  UpdateSelectedActivity,
+  UpdateActivity,
   UpdateViewTimeRange,
 } from '../../actions/plan.actions';
 
 import {
-  getActivities,
+  getActivityInstances,
   getActivityTypes,
   getMaxTimeRange,
   getPlans,
   getSelectedActivity,
-  getSelectedAdaptation,
   getSelectedPlan,
   getViewTimeRange,
 } from '../../selectors';
@@ -76,42 +77,58 @@ export class HawkAppComponent implements OnDestroy {
   @ViewChild('sideNav')
   sideNav: MatSidenav;
 
-  activities$: Observable<RavenActivity[] | null>; // Instances.
-  activityTypes$: Observable<RavenActivityType[] | null>;
-  displayedColumns: string[] = ['id', 'name', 'start', 'end', 'duration'];
-  form: FormGroup;
+  activityInstances$: Observable<RavenActivity[] | null>;
+  activityTypes$: Observable<RavenActivityType[]>;
   maxTimeRange$: Observable<RavenTimeRange>;
   plans$: Observable<RavenPlan[]>;
   selectedActivity$: Observable<RavenActivity | null>;
-  selectedAdaptation$: Observable<RavenAdaptation | null>;
   selectedPlan$: Observable<RavenPlanDetail | null>;
   viewTimeRange$: Observable<RavenTimeRange>;
 
+  activityInstances: RavenActivity[] | null;
+  displayedColumns: string[] = ['name', 'start', 'end', 'duration'];
+  form: FormGroup;
   selectedActivity: RavenActivity | null = null;
+  selectedPlan: RavenPlan | null = null;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
-  constructor(private store: Store<HawkAppState>, fb: FormBuilder) {
-    this.activities$ = this.store.pipe(select(getActivities));
+  constructor(
+    public fb: FormBuilder,
+    private store: Store<HawkAppState>,
+    private router: Router,
+    private route: ActivatedRoute,
+  ) {
+    this.router.events
+      .pipe(
+        filter(event => event instanceof NavigationEnd),
+        takeUntil(this.ngUnsubscribe),
+      )
+      .subscribe(() => {
+        this.resolveActions(this.route.snapshot.data);
+      });
+
+    this.activityInstances$ = this.store.pipe(select(getActivityInstances));
     this.activityTypes$ = this.store.pipe(select(getActivityTypes));
     this.maxTimeRange$ = this.store.pipe(select(getMaxTimeRange));
     this.plans$ = this.store.pipe(select(getPlans));
     this.selectedActivity$ = this.store.pipe(select(getSelectedActivity));
-    this.selectedAdaptation$ = this.store.pipe(select(getSelectedAdaptation));
     this.selectedPlan$ = this.store.pipe(select(getSelectedPlan));
     this.viewTimeRange$ = this.store.pipe(select(getViewTimeRange));
 
     this.form = fb.group({
+      activityType: new FormControl(''),
       duration: new FormControl(0, [Validators.required]),
-      id: new FormControl({
-        readonly: true,
-        value: '',
-      }),
       intent: new FormControl(''),
       name: new FormControl('', [Validators.required]),
-      sequenceId: new FormControl(''),
-      startTimestamp: new FormControl(0, [Validators.required]),
+      start: new FormControl(0, [Validators.required]),
     });
+
+    this.activityInstances$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe((instances: RavenActivity[] | null) => {
+        this.activityInstances = instances;
+      });
 
     this.selectedActivity$
       .pipe(takeUntil(this.ngUnsubscribe))
@@ -120,8 +137,11 @@ export class HawkAppComponent implements OnDestroy {
         this.patchActivityForm();
       });
 
-    this.store.dispatch(new FetchAdaptationList());
-    this.store.dispatch(new FetchPlanList());
+    this.selectedPlan$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe((selPlan: RavenPlan | null) => {
+        this.selectedPlan = selPlan;
+      });
   }
 
   ngOnDestroy(): void {
@@ -130,24 +150,41 @@ export class HawkAppComponent implements OnDestroy {
   }
 
   /**
-   * Event. Dispatch an action to display the Activity Type Form Dialog
+   * Emit actions based on router snapshot data from a resolver.
+   * This is so we can easily sync URL state,
+   * HTTP responses (i.e. data) from a resolver, and the store.
    */
-  showCreateActivityTypeForm() {
-    this.store.dispatch(new OpenActivityTypeFormDialog(null));
-  }
+  resolveActions(data: Data): void {
+    const { adaptations, plans, selectedActivity, selectedPlan } = data;
 
-  /**
-   * Event. Dispatch an action to display the Activity Type Form Dialog
-   */
-  showUpdateActivityTypeForm(id: string) {
-    this.store.dispatch(new OpenActivityTypeFormDialog(id));
-  }
+    if (adaptations) {
+      this.store.dispatch(new FetchAdaptationListSuccess(adaptations));
+    } else {
+      this.store.dispatch(
+        new FetchAdaptationListFailure(
+          new Error('Failed to fetch adaptations list.'),
+        ),
+      );
+    }
 
-  /**
-   * Event. Dispatch an action to delete an Activity Type
-   */
-  deleteActivityType(id: string) {
-    this.store.dispatch(new RemoveActivityType(id));
+    if (plans) {
+      this.store.dispatch(new FetchPlanListSuccess(plans));
+    } else {
+      this.store.dispatch(
+        new FetchPlanListFailure(new Error('Failed to fetch plan list.')),
+      );
+    }
+
+    if (selectedPlan) {
+      this.store.dispatch(new FetchPlanDetailSuccess(selectedPlan));
+      this.store.dispatch(new FetchActivityTypes(selectedPlan.adaptationId));
+    } else {
+      this.store.dispatch(new ClearSelectedPlan());
+    }
+
+    if (selectedActivity) {
+      this.store.dispatch(new SelectActivity(selectedActivity.id));
+    }
   }
 
   /**
@@ -165,17 +202,11 @@ export class HawkAppComponent implements OnDestroy {
   }
 
   /**
-   * Event. Dispatch an action to delete a Plan
-   */
-  deletePlan(id: string) {
-    this.store.dispatch(new RemovePlan(id));
-  }
-
-  /**
    * Event. Dispatch an action to select a Plan
    */
-  selectPlan(id: string) {
-    this.store.dispatch(new FetchPlanDetail(id));
+  selectPlan(planId: string) {
+    this.store.dispatch(new ClearSelectedActivity());
+    this.router.navigateByUrl(`/plans/${planId}`);
   }
 
   /**
@@ -194,9 +225,30 @@ export class HawkAppComponent implements OnDestroy {
    * This will enable us to control the UI from actions (e.g. OpenSelectedActivityDrawer and Resize).
    */
   showActivityForm(activity: RavenActivity) {
-    this.store.dispatch(new SelectActivity(activity.id));
+    this.store.dispatch(new SelectActivity(activity.activityId));
     this.sideNav.open();
     setTimeout(() => dispatchEvent(new Event('resize')), 500);
+  }
+
+  /**
+   * Called when the user clicks the `+ Activity` button to show the activity instance page.
+   */
+  onClickNewActivity() {
+    if (this.selectedPlan) {
+      const planId = this.selectedPlan.id;
+      this.router.navigateByUrl(`/plans/${planId}/activities`);
+    }
+  }
+
+  /**
+   * Called when the user clicks the `Advanced` button to show the activity instance page.
+   */
+  onShowActivityInstancePage() {
+    if (this.selectedPlan && this.selectedActivity) {
+      const planId = this.selectedPlan.id;
+      const activityId = this.selectedActivity.activityId;
+      this.router.navigateByUrl(`/plans/${planId}/activities/${activityId}`);
+    }
   }
 
   /**
@@ -218,8 +270,10 @@ export class HawkAppComponent implements OnDestroy {
    * Event. Handle form submission
    */
   onSubmit(value: any) {
-    if (this.form.valid) {
-      this.store.dispatch(new SaveActivity(value));
+    if (this.form.valid && this.selectedActivity) {
+      this.store.dispatch(
+        new UpdateActivity(this.selectedActivity.activityId, { ...value }),
+      );
     }
   }
 
@@ -250,10 +304,20 @@ export class HawkAppComponent implements OnDestroy {
   }
 
   /**
-   * Event. Called when we need to update the selected activity (e.g. after a drag).
+   * Event. Called when we need to update the selected activity.
    */
   onUpdateSelectedActivity(update: RavenActivityUpdate): void {
-    this.store.dispatch(new UpdateSelectedActivity(update));
+    if (this.selectedActivity) {
+      this.store.dispatch(
+        new UpdateActivity(this.selectedActivity.activityId, {
+          end: update.end,
+          endTimestamp: timestamp(update.end),
+          start: update.start,
+          startTimestamp: timestamp(update.start),
+          y: update.y,
+        }),
+      );
+    }
   }
 
   /**

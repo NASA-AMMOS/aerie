@@ -1,23 +1,15 @@
-[![Build Status](https://cae-jenkins2.jpl.nasa.gov/buildStatus/icon?job=MPSA/SEQ/raven2/raven2%20build/master)](https://cae-jenkins2.jpl.nasa.gov/job/MPSA/job/SEQ/job/raven2/job/raven2%20build/job/master/) 
-[![Quality Gate](https://seq-sca-mgss.jpl.nasa.gov/api/badges/measure?key=mgss.seq%3Araven2&metric=ncloc)](https://seq-sca-mgss.jpl.nasa.gov/dashboard/index/com.qualinsight.plugins.sonarqube:qualinsight-plugins-sonarqube-badges)
-[![Quality Gate](https://seq-sca-mgss.jpl.nasa.gov/api/badges/measure?key=mgss.seq%3Araven2&metric=bugs)](https://seq-sca-mgss.jpl.nasa.gov/dashboard/index/com.qualinsight.plugins.sonarqube:qualinsight-plugins-sonarqube-badges)
-[![Quality Gate](https://seq-sca-mgss.jpl.nasa.gov/api/badges/measure?key=mgss.seq%3Araven2&metric=critical_violations)](https://seq-sca-mgss.jpl.nasa.gov/dashboard/index/com.qualinsight.plugins.sonarqube:qualinsight-plugins-sonarqube-badges)
+[![Build Status](https://cae-jenkins2.jpl.nasa.gov/buildStatus/icon?job=MPSA/SEQ/nest/nest%20build/master)](https://cae-jenkins2.jpl.nasa.gov/job/MPSA/job/SEQ/job/nest/job/nest%20build/job/master/)
+[![Quality Gate](https://seq-sca-mgss.jpl.nasa.gov/api/badges/measure?key=mgss.seq%3Anest&metric=ncloc)](https://seq-sca-mgss.jpl.nasa.gov/dashboard/index/com.qualinsight.plugins.sonarqube:qualinsight-plugins-sonarqube-badges)
+[![Quality Gate](https://seq-sca-mgss.jpl.nasa.gov/api/badges/measure?key=mgss.seq%3Anest&metric=bugs)](https://seq-sca-mgss.jpl.nasa.gov/dashboard/index/com.qualinsight.plugins.sonarqube:qualinsight-plugins-sonarqube-badges)
+[![Quality Gate](https://seq-sca-mgss.jpl.nasa.gov/api/badges/measure?key=mgss.seq%3Anest&metric=critical_violations)](https://seq-sca-mgss.jpl.nasa.gov/dashboard/index/com.qualinsight.plugins.sonarqube:qualinsight-plugins-sonarqube-badges)
 
 # NEST
 
 > NEST is the Mission Planning, Sequencing and Analysis (MPSA) Team's platform to provide a cohesive user experience to multi-mission users that require activity planning, sequencing, validation and analysis capabilities. The system's architecture is component-based and can be seized for different needs at different phases of a mission. 
 
-
-
 ## What's inside NEST? 
 
 NEST hosts components that provide functionalities to work with adaptations of a mission's model, create sequences that command spacecrafts and visualizes points of interest to a mission, among many other things. The power of NEST is in its flexibility.  Every single component in the application is a subject-matter expert in one, and only one, thing. 
-
-
-
-![](/Users/hacosta/IdeaProjects/raven2/docs/images/NESThome.png)
-
-
 
 ## Product Requirements
 
@@ -40,11 +32,9 @@ NEST hosts components that provide functionalities to work with adaptations of a
 | CPU                 | 2 gigahertz (GHz) frequency or above   |
 | RAM                 | 4 GB at minimum                        |
 | Display Resolution  | 2560-by-1600, recommended              |
-| Internet Conenction | High-speed connection, at least 10Mbps |
+| Internet Connection | High-speed connection, at least 10Mbps |
 
-*In order to provide meaningful data, the team recommends consuming it via MPSServer. This approach will evoolve as services are made available, though. 
-
-
+*In order to provide meaningful data, the team recommends consuming it via MPSServer. This approach will evolve as services are made available, though. 
 
 ## Usage
 
@@ -56,8 +46,6 @@ npm start
 ```
 
 Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
-
-
 
 ## Configuration
 
@@ -77,8 +65,6 @@ export const environment = {
   production: false,
 };
 ```
-
-
 
 **Basic Configuration Settings**
 
@@ -108,17 +94,11 @@ appModules: [
   },
 ```
 
-
-
-The configuration file contains other properties that can be modified. It is recommended to not change them. As the project evolves, new capabilities to change them via a remote configuration setting or a runtime configuration will be provided. 
-
-
+The configuration file contains other properties that can be modified. It is recommended to not change them. As the project evolves, new capabilities to change them via a remote configuration setting or a runtime configuration will be provided.
 
 ## Protocols
 
 All of the communication that happens inside the application is through HTTP/HTTPS. The client modules talk to a backend service via HTTP. 
-
-
 
 ## Development
 
@@ -126,19 +106,13 @@ All of the communication that happens inside the application is through HTTP/HTT
 
 Run `npm run ng generate component component-name` to generate a new component. You can also use `npm run ng generate directive|pipe|service|class|guard|interface|enum|module`.
 
-
-
 ### Running unit tests
 
 Run `npm test` (or `npm t`) to execute the unit tests via [Karma](https://karma-runner.github.io/).
 
-
-
 ### Running end-to-end tests
 
 Run `npm run e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-
-
 
 ## Deployment
 
@@ -152,17 +126,15 @@ Please follow the instructions in: https://github.jpl.nasa.gov/MPS/docker-raven
 
 Please follow the instructions in: https://github.jpl.nasa.gov/MPS/mps_server 
 
-
-
 ## Support
 
 ### Defect Reporting Procedure
 
-To report a defect in RAVEN, please create an ISA ticket and assign it to the SEQ Support Team. If you are unsure of the process, please send an email to [SEQ.support@jpl.nasa.gov](mailto:SEQ.support@jpl.nasa.gov). Within this message the following should be included:
+To report a defect in Nest, please create an ISA ticket and assign it to the SEQ Support Team. If you are unsure of the process, please send an email to [SEQ.support@jpl.nasa.gov](mailto:SEQ.support@jpl.nasa.gov). Within this message the following should be included:
 
 - Title
 - Brief Description of the defect and steps to reproduce
-- RAVEN Version
+- Nest Version
 - Criticality of the defect
 
 ### Points of Contact
@@ -171,13 +143,10 @@ To report a defect in RAVEN, please create an ISA ticket and assign it to the SE
 | ------------------- | ------------------------------------------------------------ |
 | Administration      | Hector Acosta [hector.r.acosta@jpl.nasa.gov](mailto:hector.r.acosta@jpl.nasa.gov) |
 | General Help        | Hector Acosta [hector.r.acosta@jpl.nasa.gov](mailto:hector.r.acosta@jpl.nasa.gov) |
-| Techincal Questions | Chris Camargo [Christopher.A.Camargo@jpl.nasa.gov](mailto:Christopher.A.Camargo@jpl.nasa.gov) |
+| Technical Questions | Chris Camargo [Christopher.A.Camargo@jpl.nasa.gov](mailto:Christopher.A.Camargo@jpl.nasa.gov) |
 |                     | Taifun O'Reilly [Taifun.L.OReilly@jpl.nasa.gov](mailto:Taifun.L.OReilly@jpl.nasa.gov) |
 |                     | Dustin Boston [dustin.m.boston@jpl.nasa.gov](mailto:dustin.m.boston@jpl.nasa.gov) |
 
 ## Change Log
 
 See [CHANGELOG](./CHANGELOG.md)
-
-
-
