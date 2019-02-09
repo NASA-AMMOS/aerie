@@ -73,7 +73,6 @@ export function toSource(
     permissions: '',
     pinnable: true,
     pinned: false,
-    selectable: true,
     subBandIds: [], // List of band ids that this source contributes data to.
     subKind: mSource.__kind_sub,
     type: '',
@@ -150,7 +149,6 @@ export function fromCategory(
     expandable: true,
     expanded: false,
     icon: 'fa fa-file-o',
-    selectable: false,
     type: 'category',
   };
 }
@@ -197,8 +195,6 @@ export function fromDir(
     fileMetadata: toRavenFileMetadata(mSource as MpsServerSourceFile),
     icon: isServer ? 'fa fa-database' : 'fa fa-folder',
     permissions: mSource.permissions,
-    selectable: true,
-    selected: false,
     type: 'folder',
     url: mSource.contents_url || mSource.file_data_url || '',
   };
@@ -246,8 +242,6 @@ export function fromFile(
       ? mSource.importJobStatus
       : 'FINISHED',
     permissions: mSource.permissions,
-    selectable: true,
-    selected: false,
     type: 'file',
     url: mSource.contents_url,
   };
@@ -267,7 +261,6 @@ export function fromCustomGraphable(
     filterKey: mSource.filter_key,
     icon: 'fa fa-area-chart',
     openable: false,
-    selectable: false,
     type: 'customGraphable',
     url: mSource.data_url,
   };
@@ -289,7 +282,6 @@ export function fromCustomFilter(
     icon: 'fa fa-area-chart',
     openable: false,
     opened: false,
-    selectable: true,
     type: 'customFilter',
     url: mSource.data_url,
   };
@@ -310,7 +302,6 @@ export function fromFilter(
     icon: 'fa fa-area-chart',
     openable: false,
     opened: false,
-    selectable: true,
     type: 'filter',
     url: mSource.data_url,
   };
@@ -348,8 +339,6 @@ export function fromGraphable(
     icon: 'fa fa-area-chart',
     openable: true,
     opened: false,
-    selectable: true,
-    selected: false,
     type: 'graphable',
     url: mSource.data_url,
   };
@@ -370,7 +359,6 @@ export function fromGraphableFilter(
     icon: 'fa fa-area-chart',
     openable: false,
     opened: false,
-    selectable: false,
     type: 'graphableFilter',
     url: mSource.data_url,
   };
@@ -405,8 +393,6 @@ export function fromState(
     icon: 'fa fa-table',
     importJobStatus: 'FINISHED',
     openable: false,
-    selectable: true,
-    selected: false,
     type: 'file',
     url: mSource.file_data_url,
   };

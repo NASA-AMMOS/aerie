@@ -11,5 +11,4 @@ import { RavenBaseSource } from './index';
 
 export interface RavenGraphableSource extends RavenBaseSource {
   opened: boolean;
-  selected: boolean;
 }

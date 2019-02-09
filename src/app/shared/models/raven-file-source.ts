@@ -11,5 +11,4 @@ import { RavenExpandableSource } from './index';
 
 export interface RavenFileSource extends RavenExpandableSource {
   importJobStatus: string;
-  selected: boolean;
 }

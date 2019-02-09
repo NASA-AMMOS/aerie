@@ -10,5 +10,4 @@
 import { RavenExpandableSource } from './index';
 
 export interface RavenFolderSource extends RavenExpandableSource {
-  selected: boolean;
 }
