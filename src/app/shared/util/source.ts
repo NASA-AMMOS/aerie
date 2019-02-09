@@ -23,7 +23,6 @@ import {
   RavenFileMetadata,
   RavenFileSource,
   RavenFilterSource,
-  RavenFolderSource,
   RavenGraphableFilterSource,
   RavenGraphableSource,
   RavenPin,
@@ -160,7 +159,7 @@ export function fromDir(
   isServer: boolean,
   mSource: MpsServerSourceDir,
   rSource: RavenBaseSource,
-): RavenFolderSource {
+): RavenExpandableSource {
   return {
     ...rSource,
     actions: [

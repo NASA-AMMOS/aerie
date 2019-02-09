@@ -14,7 +14,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 import { combineLatest, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { MpsServerSource } from '../../models';
-import { RavenFolderSource } from '../../models';
+import { RavenExpandableSource } from '../../models';
 
 @Component({
   selector: 'raven-folder-dialog',
@@ -68,7 +68,7 @@ export class RavenFolderDialogComponent implements OnDestroy {
       folder: {
         name: this.name.value,
         url: this.data.source.id,
-      } as RavenFolderSource,
+      } as RavenExpandableSource,
       folderAdd: true,
     });
   }

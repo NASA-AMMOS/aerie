@@ -13,9 +13,9 @@ import {
   BaseType,
   RavenApplyLayoutUpdate,
   RavenCustomFilterSource,
+  RavenExpandableSource,
   RavenFile,
   RavenFilterSource,
-  RavenFolderSource,
   RavenGraphableFilterSource,
   RavenPin,
   RavenSource,
@@ -164,7 +164,7 @@ export class FetchNewSources implements Action {
 export class FolderAdd implements Action {
   readonly type = SourceExplorerActionTypes.FolderAdd;
 
-  constructor(public folder: RavenFolderSource) {}
+  constructor(public folder: RavenExpandableSource) {}
 }
 
 export class FolderAddFailure implements Action {
