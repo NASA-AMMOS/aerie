@@ -7,7 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export interface RavenSourceAction {
-  event: string | RavenSourceAction[];
-  name: string;
-}
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { MatMenuModule } from '@angular/material';
+import { HierarchicalMenuComponent } from './hierarchical-menu.component';
+
+@NgModule({
+  declarations: [HierarchicalMenuComponent],
+  exports: [HierarchicalMenuComponent],
+  imports: [CommonModule, MatMenuModule],
+})
+export class HierarchicalMenuModule {}
