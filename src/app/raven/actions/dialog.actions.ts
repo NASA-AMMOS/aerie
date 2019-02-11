@@ -17,6 +17,7 @@ import {
 
 // Action Types.
 export enum DialogActionTypes {
+  OpenApplyCurrentStateDialog = '[dialog] open_apply_current_state_dialog',
   OpenConfirmDialog = '[dialog] open_confirm_dialog',
   OpenCustomFilterDialog = '[dialog] open_custom_filter_dialog',
   OpenCustomGraphDialog = '[dialog] open_custom_graph_dialog',
@@ -30,9 +31,14 @@ export enum DialogActionTypes {
   OpenShareableLinkDialog = '[dialog] open_shareable_link_dialog',
   OpenStateApplyDialog = '[dialog] open_state_apply_dialog',
   OpenStateSaveDialog = '[dialog] open_state_save_dialog',
+  OpenUpdateCurrentStateDialog = '[dialog open_update_current_state_dialog',
 }
 
 // Actions.
+export class OpenApplyCurrentStateDialog implements Action {
+  readonly type = DialogActionTypes.OpenApplyCurrentStateDialog;
+}
+
 export class OpenConfirmDialog implements Action {
   readonly type = DialogActionTypes.OpenConfirmDialog;
 
@@ -123,8 +129,13 @@ export class OpenStateSaveDialog implements Action {
   constructor(public source: RavenSource, public width: string) {}
 }
 
+export class OpenUpdateCurrentStateDialog implements Action {
+  readonly type = DialogActionTypes.OpenUpdateCurrentStateDialog;
+}
+
 // Union type of all actions.
 export type DialogAction =
+  | OpenApplyCurrentStateDialog
   | OpenConfirmDialog
   | OpenCustomFilterDialog
   | OpenCustomGraphDialog
@@ -136,4 +147,5 @@ export type DialogAction =
   | OpenRemoveAllGuidesDialog
   | OpenShareableLinkDialog
   | OpenStateApplyDialog
-  | OpenStateSaveDialog;
+  | OpenStateSaveDialog
+  | OpenUpdateCurrentStateDialog;

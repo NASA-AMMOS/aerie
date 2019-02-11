@@ -714,6 +714,17 @@ export function getPinLabel(sourceId: string, pins: RavenPin[]): string {
 }
 
 /**
+ * Helper. Returns source name from source id.
+ */
+export function getSourceNameFromId(sourceId: string) {
+  const hasName = sourceId.match(new RegExp('.*/([^/]*)'));
+  if (hasName) {
+    return hasName[1];
+  } else {
+    return sourceId;
+  }
+}
+/**
  * Helper. Returns filters in set for a graphable source
  */
 export function getTargetFilters(

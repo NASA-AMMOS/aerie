@@ -28,6 +28,7 @@ import {
 
 import {
   DialogActionTypes,
+  OpenApplyCurrentStateDialog,
   OpenConfirmDialog,
   OpenCustomFilterDialog,
   OpenCustomGraphDialog,
@@ -41,6 +42,7 @@ import {
   OpenShareableLinkDialog,
   OpenStateApplyDialog,
   OpenStateSaveDialog,
+  OpenUpdateCurrentStateDialog,
 } from '../actions/dialog.actions';
 
 import * as sourceExplorerActions from '../actions/source-explorer.actions';
@@ -53,6 +55,38 @@ export class DialogEffects {
     private dialog: MatDialog,
     private store$: Store<RavenAppState>,
   ) {}
+
+  /**
+   * Effect for OpenApplyCurrentStateDialog.
+   */
+  @Effect()
+  openApplyCurrentStateDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenApplyCurrentStateDialog>(
+      DialogActionTypes.OpenApplyCurrentStateDialog,
+    ),
+    exhaustMap(action => {
+      const applyCurrentStateDialog = this.dialog.open(
+        RavenConfirmDialogComponent,
+        {
+          data: {
+            cancelText: 'No',
+            confirmText: 'Yes',
+            message: 'Are you sure you want to apply current state?',
+          },
+          width: '400px',
+        },
+      );
+
+      return zip(of(action), applyCurrentStateDialog.afterClosed());
+    }),
+    map(([, result]) => ({ result })),
+    exhaustMap(({ result }) => {
+      if (result && result.confirm) {
+        return of(new sourceExplorerActions.ApplyCurrentState());
+      }
+      return [];
+    }),
+  );
 
   /**
    * Effect for OpenRemoveAllBandsDialog.
@@ -429,7 +463,7 @@ export class DialogEffects {
   );
 
   /**
-   * Effect for OpenStateApplyDialog.
+   * Effect for OpenStateSaveDialog.
    */
   @Effect()
   openStateSaveDialog$: Observable<Action> = this.actions$.pipe(
@@ -452,6 +486,38 @@ export class DialogEffects {
         return of(
           new sourceExplorerActions.SaveState(action.source, result.name),
         );
+      }
+      return [];
+    }),
+  );
+
+  /**
+   * Effect for OpenUpdateCurrentStateDialog.
+   */
+  @Effect()
+  openUpdateCurrentStateDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenUpdateCurrentStateDialog>(
+      DialogActionTypes.OpenUpdateCurrentStateDialog,
+    ),
+    exhaustMap(action => {
+      const updateCurrentStateDialog = this.dialog.open(
+        RavenConfirmDialogComponent,
+        {
+          data: {
+            cancelText: 'No',
+            confirmText: 'Yes',
+            message: 'Are you sure you want to update current state?',
+          },
+          width: '400px',
+        },
+      );
+
+      return zip(of(action), updateCurrentStateDialog.afterClosed());
+    }),
+    map(([, result]) => ({ result })),
+    exhaustMap(({ result }) => {
+      if (result && result.confirm) {
+        return of(new sourceExplorerActions.UpdateCurrentState());
       }
       return [];
     }),

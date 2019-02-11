@@ -28,6 +28,7 @@ export enum SourceExplorerActionTypes {
   AddCustomGraph = '[sourceExplorer] add_custom_graph',
   AddFilter = '[sourceExplorer] add_filter',
   AddGraphableFilter = '[sourceExplorer] add_graphable_filter',
+  ApplyCurrentState = '[sourceExplorer] apply-current-state',
   ApplyLayout = '[sourceExplorer] apply-layout',
   ApplyLayoutWithPins = '[sourceExplorer] apply-layout-with-pins',
   ApplyState = '[sourceExplorer] apply-state',
@@ -63,6 +64,7 @@ export enum SourceExplorerActionTypes {
   SetCustomFilterSubBandId = '[sourceExplorer] set_custom_filter_sub_band_id',
   SubBandIdAdd = '[sourceExplorer] sub_band_id_add',
   SubBandIdRemove = '[sourceExplorer] sub_band_id_remove',
+  UpdateCurrentState = '[sourceExplorer] update_current_state',
   UpdateGraphAfterFilterAdd = '[sourceExplorer] update_graph_after_filter_add',
   UpdateGraphAfterFilterRemove = '[sourceExplorer] update_graph_after_filter_remove',
   UpdateSourceExplorer = '[sourceExplorer] update_source_explorer',
@@ -100,6 +102,10 @@ export class AddGraphableFilter implements Action {
   readonly type = SourceExplorerActionTypes.AddGraphableFilter;
 
   constructor(public source: RavenGraphableFilterSource) {}
+}
+
+export class ApplyCurrentState implements Action {
+  readonly type = SourceExplorerActionTypes.ApplyCurrentState;
 }
 
 export class ApplyLayout implements Action {
@@ -305,6 +311,10 @@ export class SubBandIdRemove implements Action {
   constructor(public sourceIds: string[], public subBandId: string) {}
 }
 
+export class UpdateCurrentState implements Action {
+  readonly type = SourceExplorerActionTypes.UpdateCurrentState;
+}
+
 export class UpdateGraphAfterFilterAdd implements Action {
   readonly type = SourceExplorerActionTypes.UpdateGraphAfterFilterAdd;
 
@@ -335,6 +345,7 @@ export type SourceExplorerAction =
   | AddCustomGraph
   | AddFilter
   | AddGraphableFilter
+  | ApplyCurrentState
   | ApplyLayout
   | ApplyLayoutWithPins
   | ApplyState
@@ -370,6 +381,7 @@ export type SourceExplorerAction =
   | SetCustomFilterSubBandId
   | SubBandIdAdd
   | SubBandIdRemove
+  | UpdateCurrentState
   | UpdateGraphAfterFilterAdd
   | UpdateGraphAfterFilterRemove
   | UpdateSourceExplorer

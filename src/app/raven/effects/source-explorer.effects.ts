@@ -31,6 +31,7 @@ import {
 import {
   AddCustomGraph,
   AddGraphableFilter,
+  ApplyCurrentState,
   ApplyLayout,
   ApplyLayoutWithPins,
   ApplyState,
@@ -48,6 +49,7 @@ import {
   RemoveSourceEvent,
   SaveState,
   SourceExplorerActionTypes,
+  UpdateCurrentState,
   UpdateGraphAfterFilterAdd,
   UpdateGraphAfterFilterRemove,
 } from '../actions/source-explorer.actions';
@@ -60,9 +62,12 @@ import {
   getCustomFiltersBySourceId,
   getFormattedSourceUrl,
   getPinLabel,
+  getRavenState,
   getSituationalAwarenessPageDuration,
   getSituationalAwarenessStartTime,
   getSourceIds,
+  getSourceNameFromId,
+  getState,
   getTargetFilters,
   hasActivityBandForFilterTarget,
   isAddTo,
@@ -171,6 +176,40 @@ export class SourceExplorerEffects {
   );
 
   /**
+   * Effect for ApplyState.
+   */
+  @Effect()
+  applyCurrentState$: Observable<Action> = this.actions$.pipe(
+    ofType<ApplyCurrentState>(SourceExplorerActionTypes.ApplyCurrentState),
+    withLatestFrom(this.store$),
+    map(([, state]) => ({ state })),
+    concatMap(({ state }) =>
+      forkJoin([
+        of(state),
+        this.mpsServerService.fetchNewSources(
+          `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
+          '/',
+          true,
+        ),
+      ]),
+    ),
+    map(([state, initialSources]) => ({
+      initialSources,
+      state,
+    })),
+    concatMap(({ state, initialSources }) =>
+      concat(
+        ...this.loadState(
+          state,
+          initialSources,
+          state.raven.sourceExplorer.currentState,
+          state.raven.sourceExplorer.currentStateId,
+        ),
+      ),
+    ),
+  );
+
+  /**
    * Effect for ApplyLayout.
    * Note that right now we are only applying layouts to the `fs_file` type.
    */
@@ -253,6 +292,7 @@ export class SourceExplorerEffects {
           updatedBands,
           initialSources,
           savedState,
+          state.raven.sourceExplorer.currentStateId,
           Object.values(action.update.pins),
         ),
       );
@@ -340,6 +380,7 @@ export class SourceExplorerEffects {
           bands,
           initialSources,
           savedState,
+          state.raven.sourceExplorer.currentStateId,
           Object.values(action.update.pins),
         ),
       );
@@ -356,6 +397,7 @@ export class SourceExplorerEffects {
     map(([action, state]) => ({ action, state })),
     concatMap(({ action, state }) =>
       forkJoin([
+        of(action),
         of(state),
         this.mpsServerService.fetchState(action.sourceUrl),
         this.mpsServerService.fetchNewSources(
@@ -365,13 +407,16 @@ export class SourceExplorerEffects {
         ),
       ]),
     ),
-    map(([state, savedState, initialSources]) => ({
+    map(([action, state, savedState, initialSources]) => ({
+      action,
       initialSources,
       savedState,
       state,
     })),
-    concatMap(({ initialSources, savedState, state }) =>
-      concat(...this.loadState(state, initialSources, savedState)),
+    concatMap(({ action, initialSources, savedState, state }) =>
+      concat(
+        ...this.loadState(state, initialSources, savedState, action.sourceId),
+      ),
     ),
   );
 
@@ -767,13 +812,17 @@ export class SourceExplorerEffects {
     map(([action, state]) => ({ action, state })),
     concatMap(({ state, action }) =>
       this.mpsServerService
-        .saveState(action.source.url, action.name, state)
+        .saveState(action.source.url, action.name, getState(action.name, state))
         .pipe(
           map(
             () =>
               new sourceExplorerActions.UpdateSourceExplorer({
-                fetchPending: false,
+                currentState: getRavenState(action.name, state),
+                currentStateId: `${action.source.id}/${action.name}`,
               }),
+            new sourceExplorerActions.UpdateSourceExplorer({
+              fetchPending: false,
+            }),
           ),
         ),
     ),
@@ -956,6 +1005,41 @@ export class SourceExplorerEffects {
             }),
           ),
           of(
+            new sourceExplorerActions.UpdateSourceExplorer({
+              fetchPending: false,
+            }),
+          ),
+        ),
+    ),
+  );
+
+  @Effect()
+  updateCurrentState$: Observable<Action> = this.actions$.pipe(
+    ofType<UpdateCurrentState>(SourceExplorerActionTypes.UpdateCurrentState),
+    withLatestFrom(this.store$),
+    map(([, state]) => ({ state })),
+    concatMap(({ state }) =>
+      this.mpsServerService
+        .updateState(
+          `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${
+            state.raven.sourceExplorer.currentStateId
+          }`,
+          getState(
+            getSourceNameFromId(state.raven.sourceExplorer.currentStateId),
+            state,
+          ),
+        )
+        .pipe(
+          map(
+            () =>
+              new sourceExplorerActions.UpdateSourceExplorer({
+                currentState: getRavenState(
+                  getSourceNameFromId(
+                    state.raven.sourceExplorer.currentStateId,
+                  ),
+                  state,
+                ),
+              }),
             new sourceExplorerActions.UpdateSourceExplorer({
               fetchPending: false,
             }),
@@ -1157,14 +1241,15 @@ export class SourceExplorerEffects {
     bands: RavenCompositeBand[],
     initialSources: RavenSource[],
     savedState: RavenState,
+    sourceId: string,
     pins: RavenPin[],
   ) {
     return [
       of(
         new sourceExplorerActions.UpdateSourceExplorer({
           ...fromSourceExplorer.initialState,
-          currentState: state.raven.sourceExplorer.currentState,
-          currentStateId: state.raven.sourceExplorer.currentStateId,
+          currentState: savedState,
+          currentStateId: sourceId,
           fetchPending: true,
         }),
       ),
@@ -1204,51 +1289,60 @@ export class SourceExplorerEffects {
   loadState(
     state: RavenAppState,
     initialSources: RavenSource[],
-    savedState: RavenState,
+    savedState: RavenState | null,
+    sourceId: string,
   ): Observable<Action>[] {
-    return [
-      of(
-        new sourceExplorerActions.UpdateSourceExplorer({
-          ...fromSourceExplorer.initialState,
-          currentState: state.raven.sourceExplorer.currentState,
-          currentStateId: state.raven.sourceExplorer.currentStateId,
-          fetchPending: true,
-        }),
-      ),
-      of(
-        new timelineActions.UpdateTimeline({
-          ...fromTimeline.initialState,
-          bands: savedState.bands.map(band => ({
-            ...band,
-            subBands: band.subBands.map((subBand: RavenSubBand) => ({
-              ...subBand,
-              sourceIds: [],
+    if (savedState) {
+      return [
+        of(
+          new sourceExplorerActions.UpdateSourceExplorer({
+            ...fromSourceExplorer.initialState,
+            currentState: savedState,
+            currentStateId: sourceId,
+            fetchPending: true,
+          }),
+        ),
+        of(
+          new timelineActions.UpdateTimeline({
+            ...fromTimeline.initialState,
+            bands: savedState.bands.map(band => ({
+              ...band,
+              subBands: band.subBands.map((subBand: RavenSubBand) => ({
+                ...subBand,
+                sourceIds: [],
+              })),
             })),
-          })),
-          expansionByActivityId: savedState.expansionByActivityId,
-          guides: savedState.guides ? savedState.guides : [],
-          maxTimeRange: savedState.maxTimeRange,
-          viewTimeRange: savedState.ignoreShareableLinkTimes
-            ? { end: 0, start: 0 }
-            : {
-                end: utc(savedState.viewTimeRange.end),
-                start: utc(savedState.viewTimeRange.start),
-              },
-        }),
-      ),
-      of(
-        new configActions.UpdateDefaultBandSettings({
-          ...savedState.defaultBandSettings,
-        }),
-      ),
-      ...this.load(savedState.bands, initialSources, savedState.pins),
-      ...savedState.pins.map(pin => of(new sourceExplorerActions.PinAdd(pin))),
-      ...savedState.pins.map(pin => of(new timelineActions.PinAdd(pin))),
-      of(new sourceExplorerActions.ApplyStateOrLayoutSuccess()),
-      of(
-        new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }),
-      ),
-    ];
+            expansionByActivityId: savedState.expansionByActivityId,
+            guides: savedState.guides ? savedState.guides : [],
+            maxTimeRange: savedState.maxTimeRange,
+            viewTimeRange: savedState.ignoreShareableLinkTimes
+              ? { end: 0, start: 0 }
+              : {
+                  end: utc(savedState.viewTimeRange.end),
+                  start: utc(savedState.viewTimeRange.start),
+                },
+          }),
+        ),
+        of(
+          new configActions.UpdateDefaultBandSettings({
+            ...savedState.defaultBandSettings,
+          }),
+        ),
+        ...this.load(savedState.bands, initialSources, savedState.pins),
+        ...savedState.pins.map(pin =>
+          of(new sourceExplorerActions.PinAdd(pin)),
+        ),
+        ...savedState.pins.map(pin => of(new timelineActions.PinAdd(pin))),
+        of(new sourceExplorerActions.ApplyStateOrLayoutSuccess()),
+        of(
+          new sourceExplorerActions.UpdateSourceExplorer({
+            fetchPending: false,
+          }),
+        ),
+      ];
+    } else {
+      return [];
+    }
   }
 
   /**

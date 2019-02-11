@@ -23,6 +23,7 @@ import { toCompositeBand, toDividerBand } from '../../../shared/util';
 import { SourceExplorerState } from '../../reducers/source-explorer.reducer';
 
 import {
+  getCurrentStateId,
   getLayoutPending,
   getMode,
   getSelectedBandId,
@@ -44,11 +45,13 @@ import * as timelineActions from '../../actions/timeline.actions';
 })
 export class RavenAppComponent implements OnDestroy {
   about$: Observable<string>;
+  currentStateId$: Observable<string>;
   showProgressBar$: Observable<boolean>;
   mode$: Observable<string>;
   selectedBandId$: Observable<string>;
 
   about: string;
+  currentStateId: string;
   mode: string;
   selectedBandId: string;
 
@@ -56,6 +59,7 @@ export class RavenAppComponent implements OnDestroy {
 
   constructor(private store: Store<SourceExplorerState>) {
     this.about$ = this.getAbout();
+    this.currentStateId$ = this.store.pipe(select(getCurrentStateId));
     this.mode$ = this.store.pipe(select(getMode));
     this.showProgressBar$ = this.getShowProgressBar();
     this.selectedBandId$ = this.store.pipe(select(getSelectedBandId));
@@ -63,6 +67,10 @@ export class RavenAppComponent implements OnDestroy {
     this.about$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(about => (this.about = about));
+
+    this.currentStateId$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(currentStateId => (this.currentStateId = currentStateId));
 
     this.mode$
       .pipe(takeUntil(this.ngUnsubscribe))
@@ -198,6 +206,18 @@ export class RavenAppComponent implements OnDestroy {
 
   onReset() {
     this.store.dispatch(new timelineActions.ResetViewTimeRange());
+  }
+
+  onApplyCurrentState() {
+    this.store.dispatch(new dialogActions.OpenApplyCurrentStateDialog());
+  }
+
+  onApplyLayout() {
+    this.store.dispatch(new layoutActions.ToggleApplyLayoutDrawerEvent(true));
+  }
+
+  onUpdateCurrentState() {
+    this.store.dispatch(new dialogActions.OpenUpdateCurrentStateDialog());
   }
 
   onZoomIn() {
