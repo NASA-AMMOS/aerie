@@ -76,6 +76,7 @@ These are the configuration options shared among all the band types.
 
 | Option                   | Description                                                  |
 | ------------------------ | ------------------------------------------------------------ |
+| State Label Font Size    | Defines the font size of the individual state labels |
 | Horizontally Align Label | Will align the label of each data point horizontally. Options are: Left and Center. |
 | Vertically Align Label   | Will align the label of each data point vertically. Options are: Top, Bottom and Center. |
 | Show State Change Times  | If this option is Turned On, it will apend the state times at the bottom of each state. |
@@ -83,16 +84,17 @@ These are the configuration options shared among all the band types.
 
 #### Activity Band Options 
 
-| Option                | Description                                                  |
-| --------------------- | ------------------------------------------------------------ |
-| Layout                | Defines how the activities are displayed in the Band. Options are (1) Autofit (2) Waterfall and (3) Packed. <p align="center"><img src="./images/activities_layout.png" width="400"/></p> |
-| Activity Style        | Defines how the data points will be displayed. Options are (1) Bar, (2) Icon and (3) Line. <p align="center"><img src="./images/activities_style.png" width="400"/></p> |
-| Horizontally Align    | Will align the label of each data point horizontally. Options are: Left and Center. |
-| Vertically Align      | Will align the label of each data point vertically. Options are: Top, Bottom and Center. |
-| Show Activities Times | If On, it will show at what time an activity starts and ends in the bottom of the activities.<p align="center"><img src="./images/activities_show_times.png" width="300"/></p> |
-| Add To                | If On, future selected sources will add the data points to the same band. |
-| Default Icon          | If Activity Style is set to Icon, the selected Icon will be the one displayed for each data point. Options: None, Plus, Cross, Circle, Triangle, Square and Diamond. |
-| Show Labels           | If On, labels will be shown for each data points.            |
+| Option                   | Description                                                  |
+| ------------------------ | ------------------------------------------------------------ |
+| Activity Label Font Size | Defines the font size of the individual activity labels |
+| Layout                   | Defines how the activities are displayed in the Band. Options are (1) Autofit (2) Waterfall and (3) Packed. <p align="center"><img src="./images/activities_layout.png" width="400"/></p> |
+| Activity Style           | Defines how the data points will be displayed. Options are (1) Bar, (2) Icon and (3) Line. <p align="center"><img src="./images/activities_style.png" width="400"/></p> |
+| Horizontally Align       | Will align the label of each data point horizontally. Options are: Left and Center. |
+| Vertically Align         | Will align the label of each data point vertically. Options are: Top, Bottom and Center. |
+| Show Activities Times    | If On, it will show at what time an activity starts and ends in the bottom of the activities.<p align="center"><img src="./images/activities_show_times.png" width="300"/></p> |
+| Add To                   | If On, future selected sources will add the data points to the same band. |
+| Default Icon             | If Activity Style is set to Icon, the selected Icon will be the one displayed for each data point. Options: None, Plus, Cross, Circle, Triangle, Square and Diamond. |
+| Show Labels              | If On, labels will be shown for each data points.            |
 
 #### Divider Band Options
 
