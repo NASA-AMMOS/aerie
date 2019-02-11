@@ -6,6 +6,16 @@ When the user desires to save and recover their data display in a future; States
 
 A state saves all the bands, bands options, view range and all the items that the user added and customized at the moment a state was saved. A user can save their state anywhere in the source tree where allowed to do so.
 
+When the user access or saves a state, a group of State Management Buttons appear in the Top Bar. The following table, summarizes their functionality:
+
+| Icon                                                         | Name         | Description                                                  |
+| ------------------------------------------------------------ | ------------ | ------------------------------------------------------------ |
+| <img src="./images/baseline-image-24px.svg" width="25" />    | Apply State  | When the user applies a state, it loads the original selected sources. If the user changes this state (i.e. adds/deletes a band, changes the name of a band, etc...) and wants to recover the original one, the user can click the 'Apply State' Button to do so. |
+| <img src="./images/baseline-playlist_play-24px.svg" width="25" /> | Apply Layout | When the user clicks the 'Apply Layout' button, it will open the 'Apply Layout from State' drawer defaulting the current state as the one that you will apply. Please take a look at the Layout Section to learn more details about this functionality. |
+| <img src="./images/baseline-photo_library-24px.svg" width="25" /> | Update State | When a state is saved or loaded, and the user changes its configuration (i.e. adds/deletes a band, changes the name of a band, etc...) and wants to update the original state to include the new changes, the user can click the 'Update State' button to do so. |
+| State:                                                       | State Path   | Shows the path fo the current state and its name.            |
+
+
 #### How to: Save a State
 
 1. Select a Database. 
