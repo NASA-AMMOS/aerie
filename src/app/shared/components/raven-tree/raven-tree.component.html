@@ -1,8 +1,8 @@
 <!-- Category. -->
 <raven-category
   *ngIf="source.type === 'category'"
-  [id]="id"
   [source]="source"
+  (action)="action.emit($event)"
   (collapse)="collapse.emit($event)"
   (expand)="expand.emit($event)">
 </raven-category>
@@ -10,35 +10,31 @@
 <!-- Custom Filter. -->
 <raven-custom-filter
   *ngIf="source.type === 'customFilter'"
-  [id]="id"
   [source]="source"
-  (click)="selectCustomFilter.emit(source)">
+  (action)="action.emit($event)"
+  (selectCustomFilter)="selectCustomFilter.emit($event)">
 </raven-custom-filter>
 
 <!-- Custom Graphable. -->
 <raven-custom-graphable
   *ngIf="source.type === 'customGraphable'"
-  [id]="id"
   [source]="source"
-  (click)="addCustomGraph.emit(source)">
+  (action)="action.emit($event)"
+  (addCustomGraph)="addCustomGraph.emit($event)">
 </raven-custom-graphable>
 
 <!-- File. -->
 <raven-file
   *ngIf="source.type === 'file'"
-  [id]="id"
   [source]="source"
   (action)="action.emit($event)"
   (collapse)="collapse.emit($event)"
-  (expand)="expand.emit($event)"
-  (openMetadata)="openMetadata.emit($event)"
-  (select)="select.emit($event)">
+  (expand)="expand.emit($event)">
 </raven-file>
 
 <!-- Filter. -->
 <raven-filter
   *ngIf="source.type === 'filter'"
-  [id]="id"
   [source]="source"
   (addFilter)="addFilter.emit($event)"
   (removeFilter)="removeFilter.emit($event)">
@@ -47,32 +43,26 @@
 <!-- Folder. -->
 <raven-folder
   *ngIf="source.type === 'folder'"
-  [id]="id"
   [source]="source"
   (action)="action.emit($event)"
   (collapse)="collapse.emit($event)"
-  (expand)="expand.emit($event)"
-  (openMetadata)="openMetadata.emit($event)"
-  (select)="select.emit($event)">
+  (expand)="expand.emit($event)">
 </raven-folder>
 
 <!-- Graphable. -->
 <raven-graphable
   *ngIf="source.type === 'graphable'"
-  [id]="id"
   [source]="source"
   (action)="action.emit($event)"
   (close)="close.emit($event)"
-  (open)="open.emit($event)"
-  (openMetadata)="openMetadata.emit($event)"
-  (select)="select.emit($event)">
+  (open)="open.emit($event)">
 </raven-graphable>
 
 <!-- Graphable Filter. -->
 <raven-graphable-filter
   *ngIf="source.type === 'graphableFilter'"
-  [id]="id"
   [source]="source"
+  (action)="action.emit($event)"
   (addGraphableFilter)="addGraphableFilter.emit($event)"
   (removeGraphableFilter)="removeGraphableFilter.emit($event)">
 </raven-graphable-filter>

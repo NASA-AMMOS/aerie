@@ -15,7 +15,10 @@ import {
   Output,
 } from '@angular/core';
 
-import { RavenCustomFilterSource } from '../../../shared/models';
+import {
+  RavenCustomFilterSource,
+  RavenSourceActionEvent,
+} from '../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,10 +28,12 @@ import { RavenCustomFilterSource } from '../../../shared/models';
 })
 export class RavenCustomFilterComponent {
   @Input()
-  id: string;
-
-  @Input()
   source: RavenCustomFilterSource;
+
+  @Output()
+  action: EventEmitter<RavenSourceActionEvent> = new EventEmitter<
+    RavenSourceActionEvent
+  >();
 
   @Output()
   selectCustomFilter: EventEmitter<RavenCustomFilterSource> = new EventEmitter<

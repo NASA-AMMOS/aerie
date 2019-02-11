@@ -284,7 +284,7 @@ export class SaveState implements Action {
 export class SelectSource implements Action {
   readonly type = SourceExplorerActionTypes.SelectSource;
 
-  constructor(public source: RavenSource) {}
+  constructor(public sourceId: string) {}
 }
 
 export class SetCustomFilter implements Action {

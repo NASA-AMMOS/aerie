@@ -9,17 +9,12 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import { RavenTreeNodeModule } from '../raven-tree-node/raven-tree-node.module';
 import { RavenFolderComponent } from './raven-folder.component';
-
-import {
-  MatButtonModule,
-  MatIconModule,
-  MatMenuModule,
-} from '@angular/material';
 
 @NgModule({
   declarations: [RavenFolderComponent],
   exports: [RavenFolderComponent],
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatMenuModule],
+  imports: [CommonModule, RavenTreeNodeModule],
 })
 export class RavenFolderModule {}

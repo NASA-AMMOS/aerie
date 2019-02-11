@@ -7,7 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  ViewChild,
+} from '@angular/core';
+import { MatDrawer } from '@angular/material';
 
 import { select, Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
@@ -48,6 +54,9 @@ import * as sourceExplorerActions from '../../actions/source-explorer.actions';
   templateUrl: './source-explorer.component.html',
 })
 export class SourceExplorerComponent implements OnDestroy {
+  @ViewChild(MatDrawer)
+  fileMetadataDrawer: MatDrawer;
+
   filtersByTarget$: Observable<StringTMap<StringTMap<string[]>> | null>;
   pins$: Observable<RavenPin[]>;
   selectedSourceId$: Observable<string>;
@@ -142,6 +151,9 @@ export class SourceExplorerComponent implements OnDestroy {
       this.store.dispatch(
         new dialogActions.OpenFileImportDialog(source, '300px'),
       );
+    } else if (event === 'file-metadata') {
+      this.store.dispatch(new sourceExplorerActions.SelectSource(source.id));
+      this.fileMetadataDrawer.open();
     } else if (event === 'folder-add') {
       this.store.dispatch(
         new dialogActions.OpenFolderDialog('add', source, '250px'),
@@ -239,13 +251,6 @@ export class SourceExplorerComponent implements OnDestroy {
     this.store.dispatch(
       new sourceExplorerActions.RemoveGraphableFilter(source),
     );
-  }
-
-  /**
-   * Event. Called when a `select` event is fired from a raven-tree.
-   */
-  onSelect(source: RavenSource): void {
-    this.store.dispatch(new sourceExplorerActions.SelectSource(source));
   }
 
   /**

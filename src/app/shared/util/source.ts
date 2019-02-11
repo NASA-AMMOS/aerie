@@ -322,17 +322,8 @@ export function fromGraphable(
             event: 'file-metadata',
             name: 'File Metadata',
           },
-          {
-            event: 'graph-again',
-            name: 'Graph Again',
-          },
         ]
-      : [
-          {
-            event: 'graph-again',
-            name: 'Graph Again',
-          },
-        ],
+      : [],
     expandable: false,
     fileMetadata,
     icon: 'fa fa-area-chart',
@@ -374,7 +365,16 @@ export function fromState(
     ...rSource,
     actions: [
       {
-        event: 'apply',
+        event: [
+          {
+            event: 'apply-layout',
+            name: 'Layout',
+          },
+          {
+            event: 'apply-state',
+            name: 'State',
+          },
+        ],
         name: 'Apply',
       },
       {

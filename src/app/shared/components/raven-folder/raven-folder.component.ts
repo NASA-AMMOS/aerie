@@ -28,9 +28,6 @@ import {
 })
 export class RavenFolderComponent {
   @Input()
-  id: string;
-
-  @Input()
   source: RavenExpandableSource;
 
   @Output()
@@ -45,16 +42,6 @@ export class RavenFolderComponent {
 
   @Output()
   expand: EventEmitter<RavenExpandableSource> = new EventEmitter<
-    RavenExpandableSource
-  >();
-
-  @Output()
-  openMetadata: EventEmitter<RavenExpandableSource> = new EventEmitter<
-    RavenExpandableSource
-  >();
-
-  @Output()
-  select: EventEmitter<RavenExpandableSource> = new EventEmitter<
     RavenExpandableSource
   >();
 }

@@ -1,16 +1,13 @@
-<div class="tree" [ngClass]="{
-  'highlight': source.subBandIds.length !== 0,
-  'no-highlight': source.subBandIds.length === 0
-}">
-  <mat-icon
-    *ngIf="source.type==='customGraphable'"
-    matTooltip="Custom Filter Graph"
-    matTooltipShowDelay="500"
-    [id]="'raven-tree-'+source.name+'-customGraph'"
-    (click)="addCustomGraph.emit(source)">
-    subject
-  </mat-icon>
-  <span class="name">
-    <i [ngClass]="source.icon" aria-hidden="true"></i> {{source.name}}
-  </span>
-</div>
+<raven-tree-node
+  [attr.data-source-id]="source.id"
+  [activated]="source.subBandIds.length !== 0"
+  [icon]="source.icon"
+  [label]="source.name"
+  markerActivatedIcon="subject"
+  markerDeactivatedIcon="subject"
+  markerTooltip="Custom Filter Graph"
+  [menu]="source.actions"
+  [multiselectable]="true"
+  (action)="action.emit({ event: $event, source: source })"
+  (activate)="addCustomGraph.emit(source)">
+</raven-tree-node>

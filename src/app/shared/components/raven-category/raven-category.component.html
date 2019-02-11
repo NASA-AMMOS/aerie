@@ -1,20 +1,12 @@
-<div class="tree" [ngClass]="{
-  'highlight': source.expanded,
-  'no-highlight': !source.expanded
-}">
-  <mat-icon
-    *ngIf="source.expanded"
-    [id]="'raven-tree-'+source.name+'-collapse'"
-    (click)="collapse.emit(source)">
-    remove
-  </mat-icon>
-  <mat-icon
-    *ngIf="!source.expanded"
-    [id]="'raven-tree-'+source.name+'-expand'"
-    (click)="expand.emit(source)">
-    add
-  </mat-icon>
-  <span class="name">
-    <i [ngClass]="source.icon" aria-hidden="true"></i> {{source.name}}
-  </span>
-</div>
+<raven-tree-node
+  [attr.data-source-id]="source.id"
+  [activated]="source.expanded"
+  [icon]="source.icon"
+  [label]="source.name"
+  markerActivatedIcon="expand_more"
+  markerDeactivatedIcon="keyboard_arrow_right"
+  [menu]="source.actions"
+  (action)="action.emit({ event: $event, source: source })"
+  (activate)="expand.emit(source)"
+  (deactivate)="collapse.emit(source)">
+</raven-tree-node>

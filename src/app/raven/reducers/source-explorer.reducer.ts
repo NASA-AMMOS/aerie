@@ -546,11 +546,9 @@ export function selectSource(
 ): SourceExplorerState {
   return {
     ...state,
-    selectedSourceId:
-      action.source.id === state.selectedSourceId ? '' : action.source.id,
+    selectedSourceId: action.sourceId,
   };
 }
-
 
 /**
  * Reduction Helper. Called when reducing the 'SetCustomFilter' action.

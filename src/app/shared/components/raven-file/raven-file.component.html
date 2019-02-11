@@ -1,54 +1,13 @@
-<div class="tree" [ngClass]="{
-  'selected': source.selected,
-  'highlight': source.expanded,
-  'no-highlight': !source.expanded
-}">
-  <mat-icon
-    *ngIf="source.subKind === 'file_state' || source.importJobStatus !== 'FINISHED'"
-    class="transparent">
-    check_box_outline_blank
-  </mat-icon>
-  <mat-icon
-    *ngIf="source.subKind !== 'file_state' && source.subKind !== 'file_epoch' && source.expanded"
-    [id]="'raven-tree-'+source.name+'-collapse'"
-    (click)="collapse.emit(source)">
-    remove
-  </mat-icon>
-  <mat-icon
-    *ngIf="source.subKind !== 'file_state' && source.subKind !== 'file_epoch' && !source.expanded && source.importJobStatus === 'FINISHED'"
-    [id]="'raven-tree-'+source.name+'-expand'"
-    (click)="expand.emit(source)">
-    add
-  </mat-icon>
-
-  <span (click)="select.emit(source)" class="name" [ngClass]="textClass">
-    <i [ngClass]="iconClass" aria-hidden="true"></i> {{source.name}}
-  </span>
-
-  <button
-    *ngIf="source.selected"
-    class="menu-icon"
-    mat-icon-button
-    [matMenuTriggerFor]="actionsMenu">
-    <mat-icon>more_vert</mat-icon>
-  </button>
-
-  <mat-menu
-    #actionsMenu="matMenu"
-    [overlapTrigger]="false"
-    y-position="below">
-    <ng-container *ngFor="let a of source.actions" [ngSwitch]="a.name">
-      <button *ngSwitchCase="'Apply'" mat-menu-item [matMenuTriggerFor]="applyMenu">{{a.name}}</button>
-      <button *ngSwitchCase="'File Metadata'" mat-menu-item (click)="openMetadata.emit(source)">{{a.name}}</button>
-      <button *ngSwitchDefault mat-menu-item (click)="action.emit({ event: a.event, source: source })">{{a.name}}</button>
-    </ng-container>
-  </mat-menu>
-
-  <mat-menu
-    #applyMenu="matMenu"
-    [overlapTrigger]="false"
-    y-position="below">
-    <button mat-menu-item (click)="action.emit({ event: 'apply-layout', source: source })">Layout</button>
-    <button mat-menu-item (click)="action.emit({ event: 'apply-state', source: source })">State</button>
-  </mat-menu>
-</div>
+<raven-tree-node
+  [attr.data-source-id]="source.id"
+  [activated]="source.expanded"
+  [icon]="source.icon"
+  [label]="source.name"
+  [markerActivatedIcon]="(selectable) ? 'expand_more' : ' '"
+  [markerDeactivatedIcon]="(selectable) ? 'keyboard_arrow_right' : ' '"
+  [menu]="source.actions"
+  [status]="status"
+  (action)="action.emit({ event: $event, source: source })"
+  (activate)="onActivate()"
+  (deactivate)="onDeactivate()">
+</raven-tree-node>

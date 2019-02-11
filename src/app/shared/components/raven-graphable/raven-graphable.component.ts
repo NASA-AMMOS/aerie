@@ -12,7 +12,9 @@ import {
   Component,
   EventEmitter,
   Input,
+  OnChanges,
   Output,
+  SimpleChanges,
 } from '@angular/core';
 
 import {
@@ -26,10 +28,7 @@ import {
   styleUrls: ['./raven-graphable.component.css'],
   templateUrl: './raven-graphable.component.html',
 })
-export class RavenGraphableComponent {
-  @Input()
-  id: string;
-
+export class RavenGraphableComponent implements OnChanges {
   @Input()
   source: RavenGraphableSource;
 
@@ -48,13 +47,21 @@ export class RavenGraphableComponent {
     RavenGraphableSource
   >();
 
-  @Output()
-  openMetadata: EventEmitter<RavenGraphableSource> = new EventEmitter<
-    RavenGraphableSource
-  >();
+  menu: any;
 
-  @Output()
-  select: EventEmitter<RavenGraphableSource> = new EventEmitter<
-    RavenGraphableSource
-  >();
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes.source) {
+      if (this.source.opened) {
+        this.menu = [
+          ...this.source.actions,
+          {
+            event: 'graph-again',
+            name: 'Graph Again',
+          },
+        ];
+      } else {
+        this.menu = this.source.actions;
+      }
+    }
+  }
 }

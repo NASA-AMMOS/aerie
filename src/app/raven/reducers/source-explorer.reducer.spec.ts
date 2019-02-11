@@ -384,7 +384,7 @@ describe('source-explorer reducer', () => {
     const initState: SourceExplorerState = sourceExplorerState;
 
     // Select node.
-    sourceExplorerState = reducer(initState, new SelectSource(source));
+    sourceExplorerState = reducer(initState, new SelectSource(source.id));
 
     expect(sourceExplorerState).toEqual({
       ...initState,
@@ -392,10 +392,7 @@ describe('source-explorer reducer', () => {
     });
 
     // Deselect node.
-    sourceExplorerState = reducer(
-      sourceExplorerState,
-      new SelectSource(source),
-    );
+    sourceExplorerState = reducer(sourceExplorerState, new SelectSource(''));
 
     expect(sourceExplorerState).toEqual({
       ...initState,

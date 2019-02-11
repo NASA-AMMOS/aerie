@@ -9,17 +9,12 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import { RavenTreeNodeModule } from '../raven-tree-node/raven-tree-node.module';
 import { RavenGraphableFilterComponent } from './raven-graphable-filter.component';
-
-import {
-  MatButtonModule,
-  MatIconModule,
-  MatTooltipModule,
-} from '@angular/material';
 
 @NgModule({
   declarations: [RavenGraphableFilterComponent],
   exports: [RavenGraphableFilterComponent],
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatTooltipModule],
+  imports: [CommonModule, RavenTreeNodeModule],
 })
 export class RavenGraphableFilterModule {}
