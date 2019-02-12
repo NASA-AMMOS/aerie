@@ -263,11 +263,10 @@ public class Resource<V extends Comparable> implements PropertyChangeListener{
     }
 
     public V getCurrentValue() {
-       /* if (resourceHistory.size()-1 < 0) {
+        if (resourceHistory.size()-1 < 0) {
             throw new ArrayIndexOutOfBoundsException();
         }
-        else return resourceHistory.get(resourceHistory.size() - 1);*/
-       return value;
+        else return resourceHistory.get(resourceHistory.size() - 1);
     }
 
     public List<V> getResourceHistory() {

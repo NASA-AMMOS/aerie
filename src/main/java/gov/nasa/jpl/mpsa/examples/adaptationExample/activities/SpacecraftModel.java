@@ -8,6 +8,7 @@ import gov.nasa.jpl.mpsa.resources.ArrayedResource;
 import gov.nasa.jpl.mpsa.resources.Resource;
 import gov.nasa.jpl.mpsa.resources.ResourcesContainer;
 
+import java.util.List;
 import java.util.Scanner;
 
 public class SpacecraftModel {
@@ -72,6 +73,11 @@ public class SpacecraftModel {
         System.out.println("\n\nNow let's change a resource value that does not result in a change in the parent");
         readString = scanner.nextLine();
         wheel1.setValue(50.5);
+
+        List<Double> valueList = wheel1.getResourceHistory();
+        for (Double x : valueList){
+            System.out.println("Resource was " + x);
+        }
 
         ConditionalConstraint leaf_three = new ConditionalConstraint("Leaf 3").withLeftLeaf(primaryBattery).withRightLeaf(50.0).withOperand(">");
         ConditionalConstraint root = new ConditionalConstraint("Root").withLeftLeaf(parent_of_one_two).withRightLeaf(leaf_three).withOperand("&&");

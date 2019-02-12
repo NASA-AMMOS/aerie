@@ -1,5 +1,7 @@
 package gov.nasa.jpl.mpsa.constraints.conditional;
 import gov.nasa.jpl.mpsa.constraints.Constraint;
+import gov.nasa.jpl.mpsa.engine.ConstraintEvaluationEngine;
+import gov.nasa.jpl.mpsa.engine.Engine;
 import gov.nasa.jpl.mpsa.resources.Resource;
 import jdk.nashorn.internal.runtime.regexp.joni.exception.ValueException;
 
@@ -14,10 +16,34 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
     private ConditionalConstraint right = null;
     private String operation;
     private Boolean value;
-    public Resource leftLeaf = null;
+    private Resource leftLeaf = null;
     private V rightLeaf = null;
     private String name = null;
     private String expr = null;
+
+    public Resource getLeftLeaf(){
+        return this.leftLeaf;
+    }
+
+    public V getRightLeaf(){
+        return this.rightLeaf;
+    }
+
+    public String getOperation(){
+        return this.operation;
+    }
+
+    public ConditionalConstraint getLeft(){
+        return this.left;
+    }
+
+    public ConditionalConstraint getRight(){
+        return this.right;
+    }
+
+    public Boolean getValue(){
+        return this.value;
+    }
 
     //keep a collection of listeners
     //this will be other nodes on the tree that are listening to us
@@ -81,7 +107,12 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
     public ConditionalConstraint build(){
         addListenersToChildren(this);
         this.treeNodeListeners = new HashSet<>();
-        evaluateNode();
+        Engine conditionEvaluator = new ConstraintEvaluationEngine<>(this);
+       // evaluateNode();
+        ((ConstraintEvaluationEngine) conditionEvaluator).evaluateNode();
+
+        this.value = ((ConstraintEvaluationEngine) conditionEvaluator).getResult();
+
         return this;
     }
 
@@ -118,7 +149,7 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
             condition.leftLeaf.addChangeListener(this);
         }
     }
-
+/*
     //after evaluation, property change listeners will notify parents if value changes
     public void evaluateConstraintNodes(){
 
@@ -136,16 +167,16 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
         else {
             throw new IllegalArgumentException("Operation not recognized");
         }
-    }
-
+    }*/
+/*
     public void evaluateNode() {
         if (isLeaf()) {
             evaluateLeafNodes();
         } else {
             evaluateConstraintNodes();
         }
-    }
-
+    } */
+/*
     public void evaluateLeafNodes(){
 
         assert(isLeaf());
@@ -181,7 +212,7 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
 
         }
         return;
-    }
+    }*/
 
 
     @Override
@@ -195,8 +226,10 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
         }
 
         boolean oldvalue = value;
-        evaluateNode();
-
+        //evaluateNode();
+        Engine conditionEvaluator = new ConstraintEvaluationEngine<>(this);
+        ((ConstraintEvaluationEngine) conditionEvaluator).evaluateNode();
+        this.value = ((ConstraintEvaluationEngine) conditionEvaluator).getResult();
         //---delete later, for demo purposes--
         if (!isLeaf()) {
             updateConstraintNodeExpr();
