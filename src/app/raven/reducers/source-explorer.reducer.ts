@@ -638,8 +638,6 @@ export function subBandIdRemove(
     ...state.filtersByTarget,
   };
 
-  let sourceNotFound = false;
-
   action.sourceIds.forEach(sourceId => {
     const source = state.treeBySourceId[sourceId];
 
@@ -672,16 +670,8 @@ export function subBandIdRemove(
           },
         };
       }
-    } else {
-      sourceNotFound = true;
     }
   });
-
-  if (sourceNotFound) {
-    return {
-      ...state,
-    };
-  }
 
   return {
     ...state,
@@ -690,16 +680,17 @@ export function subBandIdRemove(
     treeBySourceId: {
       ...state.treeBySourceId,
       ...action.sourceIds.reduce((sourceIds, sourceId) => {
-        const subBandIds = state.treeBySourceId[sourceId].subBandIds.filter(
-          subBandId => subBandId !== action.subBandId,
-        );
-        const opened = subBandIds.length > 0 ? true : false;
-
-        sourceIds[sourceId] = {
-          ...state.treeBySourceId[sourceId],
-          opened,
-          subBandIds,
-        };
+        if (state.treeBySourceId[sourceId]) {
+          const subBandIds = state.treeBySourceId[sourceId].subBandIds.filter(
+            subBandId => subBandId !== action.subBandId,
+          );
+          const opened = (subBandIds.length > 0);
+          sourceIds[sourceId] = {
+            ...state.treeBySourceId[sourceId],
+            opened,
+            subBandIds,
+          };
+        }
 
         return sourceIds;
       }, {}),

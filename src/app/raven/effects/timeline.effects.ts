@@ -129,8 +129,13 @@ export class TimelineEffects {
   removeAllBands$: Observable<Action> = this.actions$.pipe(
     ofType<RemoveAllBands>(TimelineActionTypes.RemoveAllBands),
     withLatestFrom(this.store$),
-    map(([, state]) => state.raven.timeline),
-    concatMap(timeline => this.removeAllBands(timeline.bands)),
+    map(([, state]) => state.raven),
+    concatMap(raven =>
+      this.removeAllBands(
+        raven.timeline.bands,
+        raven.sourceExplorer.treeBySourceId,
+      ),
+    ),
   );
 
   /**
@@ -379,21 +384,21 @@ export class TimelineEffects {
    *
    * Helper. Returns a list of action to remove bands from timeline and update source explorer.
    */
-  removeAllBands(bands: RavenCompositeBand[]) {
+  removeAllBands(
+    bands: RavenCompositeBand[],
+    treeBySourceId: StringTMap<RavenSource>,
+  ) {
     const actions: Action[] = [];
 
     bands.forEach((band: RavenCompositeBand) => {
       band.subBands.forEach((subBand: RavenSubBand) => {
-        subBand.sourceIds.forEach(sourceId => {
+        actions.push(new timelineActions.RemoveSubBand(subBand.id)),
           actions.push(
-            new timelineActions.RemoveBandsOrPointsForSource(sourceId),
+            new sourceExplorerActions.SubBandIdRemove(
+              subBand.sourceIds,
+              subBand.id,
+            ),
           );
-          actions.push(
-            new sourceExplorerActions.UpdateTreeSource(sourceId, {
-              opened: false,
-            }),
-          );
-        });
       });
     });
 
