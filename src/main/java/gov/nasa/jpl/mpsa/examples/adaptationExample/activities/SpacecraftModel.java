@@ -1,12 +1,13 @@
 package gov.nasa.jpl.mpsa.examples.adaptationExample.activities;
 
 import gov.nasa.jpl.mpsa.constraints.conditional.ConditionalConstraint;
-import gov.nasa.jpl.mpsa.examples.adaptationExample.activities.models.ExampleModel;
-import gov.nasa.jpl.mpsa.examples.adaptationExample.activities.models.WheelModel;
-import gov.nasa.jpl.mpsa.examples.adaptationExample.activities.models.WheelModelX;
-import gov.nasa.jpl.mpsa.resources.ArrayedResource;
+
 import gov.nasa.jpl.mpsa.resources.Resource;
 import gov.nasa.jpl.mpsa.resources.ResourcesContainer;
+
+import org.codehaus.janino.ExpressionEvaluator;
+import com.fathzer.soft.javaluator.DoubleEvaluator;
+
 
 import java.util.List;
 import java.util.Scanner;
@@ -16,6 +17,12 @@ public class SpacecraftModel {
     static ResourcesContainer myResources = ResourcesContainer.getInstance();
 
     public static void main(String args[]){
+
+
+        DoubleEvaluator evaluator = new DoubleEvaluator();
+        String expression = "(2^3-1)*sin(pi/4)/ln(pi^2)";
+        Double result = evaluator.evaluate(expression);
+        System.out.println(expression + " = " + result);
 
 
         // Create an instance of my battery
