@@ -8,7 +8,9 @@ import gov.nasa.jpl.mpsa.resources.ResourcesContainer;
 import org.codehaus.janino.ExpressionEvaluator;
 import com.fathzer.soft.javaluator.DoubleEvaluator;
 
-
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -22,8 +24,14 @@ public class SpacecraftModel {
         DoubleEvaluator evaluator = new DoubleEvaluator();
         String expression = "(2^3-1)*sin(pi/4)/ln(pi^2)";
         Double result = evaluator.evaluate(expression);
-        System.out.println(expression + " = " + result);
 
+        ScriptEngineManager mgr = new ScriptEngineManager();
+        ScriptEngine engine = mgr.getEngineByName("JavaScript");
+        try {
+            System.out.println(engine.eval("40==2"));
+        } catch (ScriptException e) {
+            e.printStackTrace();
+        }
 
         // Create an instance of my battery
         Resource battery = new Resource.Builder("primaryBattery")

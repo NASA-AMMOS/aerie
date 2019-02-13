@@ -12,6 +12,8 @@ public abstract class Constraint implements Serializable, PropertyChangeListener
     private String message;
 
 
+
+
     public UUID getId() {
         return id;
     }

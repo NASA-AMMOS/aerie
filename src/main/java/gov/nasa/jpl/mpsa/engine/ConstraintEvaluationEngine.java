@@ -1,16 +1,25 @@
 package gov.nasa.jpl.mpsa.engine;
 
+import com.fathzer.soft.javaluator.DoubleEvaluator;
 import gov.nasa.jpl.mpsa.constraints.conditional.ConditionalConstraint;
 import gov.nasa.jpl.mpsa.resources.Resource;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 public class ConstraintEvaluationEngine<V, T extends Comparable> extends Engine{
 
     private ConditionalConstraint expression;
     private Boolean result;
+    private ScriptEngineManager mgr;
+    private ScriptEngine engine;
 
 
     public ConstraintEvaluationEngine(ConditionalConstraint expression){
         this.expression = expression;
+        this.mgr = new ScriptEngineManager();
+        this.engine = mgr.getEngineByName("JavaScript");
     }
 
 
@@ -51,8 +60,20 @@ public class ConstraintEvaluationEngine<V, T extends Comparable> extends Engine{
         }
     }
 
-
     public void evaluateLeafNodes(){
+        String leftVal = expression.getLeftLeaf().getCurrentValue().toString();
+        String rightLeaf = expression.getRightLeaf().toString();
+        String operation = expression.getOperation();
+        String equation = leftVal + operation + rightLeaf;
+        try {
+            this.result = (Boolean) engine.eval(equation);
+        } catch (ScriptException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void evaluateLeafNodesold(){
 
         assert(isLeaf());
         T leftVal = (T)expression.getLeftLeaf().getCurrentValue();
