@@ -10,7 +10,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map } from 'rxjs/operators';
-import { MpsServerSource } from '../models';
+import { MpsServerSource, RavenSource, StringTMap } from '../models';
 import { importState, toRavenSources } from '../util';
 
 @Injectable({
@@ -22,12 +22,17 @@ export class MpsServerService {
   /**
    * etches sources from MPS Server and maps them to Raven sources.
    */
-  fetchNewSources(url: string, parentId: string, isServer: boolean) {
+  fetchNewSources(
+    url: string,
+    parentId: string,
+    isServer: boolean,
+    tree: StringTMap<RavenSource> | null,
+  ) {
     return this.http
       .get<MpsServerSource[]>(url)
       .pipe(
         map((mpsServerSources: MpsServerSource[]) =>
-          toRavenSources(parentId, isServer, mpsServerSources),
+          toRavenSources(parentId, isServer, mpsServerSources, tree),
         ),
       );
   }

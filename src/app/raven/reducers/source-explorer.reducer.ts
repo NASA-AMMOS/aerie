@@ -311,12 +311,32 @@ export function newSources(
 ): SourceExplorerState {
   const parentSource = state.treeBySourceId[action.sourceId];
   const sources = action.sources;
-  const allChildIds = getAllChildIds(state.treeBySourceId, action.sourceId);
+  const newChildIds = sources.map(source => source.id);
+  const originalChildIds = parentSource.childIds;
 
+  const deletedSourceIds: string[] = [];
+  originalChildIds.forEach(originalChildId => {
+    if (!newChildIds.includes(originalChildId)) {
+      // Source has been deleted, remove source and its descendants.
+      deletedSourceIds.push(
+        originalChildId,
+        ...getAllChildIds(state.treeBySourceId, originalChildId),
+      );
+    } else if (
+      state.treeBySourceId[originalChildId].fileMetadata.createdOn !==
+      sources.filter(source => source.id === originalChildId)[0].fileMetadata
+        .createdOn
+    ) {
+      // Source has been updated, remove its descedants.
+      deletedSourceIds.push(
+        ...getAllChildIds(state.treeBySourceId, originalChildId),
+      );
+    }
+  });
   return {
     ...state,
     treeBySourceId: {
-      ...omit(state.treeBySourceId, [action.sourceId, ...allChildIds]),
+      ...omit(state.treeBySourceId, deletedSourceIds),
       ...keyBy(sources, 'id'),
       [action.sourceId]: {
         ...parentSource,

@@ -112,11 +112,25 @@ export function toRavenSources(
   parentId: string,
   isServer: boolean,
   sources: MpsServerSource[],
+  tree: StringTMap<RavenSource> | null,
 ): RavenSource[] {
   if (sources) {
-    return sources.map((source: MpsServerSource) =>
-      toSource(parentId, isServer, source),
-    );
+    return sources.map((source: MpsServerSource) => {
+      const ravenSource = toSource(parentId, isServer, source);
+
+      if (tree) {
+        const currentSource = tree[ravenSource.id];
+        // Use current source if source is the same.
+        if (
+          currentSource &&
+          (source as MpsServerSourceFile).created ===
+            currentSource.fileMetadata.createdOn
+        ) {
+          return { ...currentSource };
+        }
+      }
+      return ravenSource;
+    });
   } else {
     console.warn('sources.ts - toRavenSources: no sources given: ', sources);
     return [];

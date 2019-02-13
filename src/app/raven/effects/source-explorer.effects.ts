@@ -190,6 +190,7 @@ export class SourceExplorerEffects {
           `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
           '/',
           true,
+          null,
         ),
       ]),
     ),
@@ -226,6 +227,7 @@ export class SourceExplorerEffects {
           `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
           '/',
           true,
+          null,
         ),
       ]),
     ),
@@ -315,6 +317,7 @@ export class SourceExplorerEffects {
           `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
           '/',
           true,
+          null,
         ),
       ]),
     ),
@@ -404,6 +407,7 @@ export class SourceExplorerEffects {
           `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
           '/',
           true,
+          null,
         ),
       ]),
     ),
@@ -528,6 +532,7 @@ export class SourceExplorerEffects {
             `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
             '/',
             true,
+            null,
           )
           .pipe(
             map(
@@ -566,10 +571,17 @@ export class SourceExplorerEffects {
   @Effect()
   fetchNewSources$: Observable<Action> = this.actions$.pipe(
     ofType<FetchNewSources>(SourceExplorerActionTypes.FetchNewSources),
-    concatMap(action =>
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    concatMap(({ action, state }) =>
       concat(
         this.mpsServerService
-          .fetchNewSources(action.sourceUrl, action.sourceId, false)
+          .fetchNewSources(
+            action.sourceUrl,
+            action.sourceId,
+            false,
+            state.raven.sourceExplorer.treeBySourceId,
+          )
           .pipe(
             concatMap((sources: RavenSource[]) => [
               new sourceExplorerActions.NewSources(action.sourceId, sources),
@@ -1085,14 +1097,14 @@ export class SourceExplorerEffects {
             of(
               new sourceExplorerActions.NewSources(
                 source.id,
-                toRavenSources(source.id, false, source.content),
+                toRavenSources(source.id, false, source.content, null),
               ),
             ),
           );
         } else {
           actions.push(
             this.mpsServerService
-              .fetchNewSources(source.url, source.id, false)
+              .fetchNewSources(source.url, source.id, false, null)
               .pipe(
                 concatMap((sources: RavenSource[]) => [
                   new sourceExplorerActions.NewSources(source.id, sources), // Add new sources to the source-explorer.
@@ -1719,7 +1731,7 @@ export class SourceExplorerEffects {
           .pipe(
             timeout(3000), // Timeout long requests since MPS Server returns type information quickly, and long requests probably are not what we are looking for.
             map((mpsServerSources: MpsServerSource[]) =>
-              toRavenSources('', false, mpsServerSources),
+              toRavenSources('', false, mpsServerSources, null),
             ),
             map((sources: RavenSource[]) =>
               sources.map(source => ({ name: source.name, type: source.type })),
