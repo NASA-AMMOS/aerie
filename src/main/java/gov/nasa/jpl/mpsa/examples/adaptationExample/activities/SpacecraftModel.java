@@ -1,5 +1,6 @@
 package gov.nasa.jpl.mpsa.examples.adaptationExample.activities;
 
+import gov.nasa.jpl.mpsa.constraints.Constraint;
 import gov.nasa.jpl.mpsa.constraints.conditional.ConditionalConstraint;
 
 import gov.nasa.jpl.mpsa.resources.Resource;
@@ -11,6 +12,7 @@ import com.fathzer.soft.javaluator.DoubleEvaluator;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
@@ -60,7 +62,9 @@ public class SpacecraftModel {
         wheel1.setValue(0.0);
         primaryBattery.setValue(0.0);
 
-        ConditionalConstraint leaf_one = new ConditionalConstraint("Leaf 1").withLeftLeaf(wheel1).withRightLeaf(10.0).withOperand("<");
+        System.out.println("wheel1 value" + wheel1.getCurrentValue());
+
+        Constraint leaf_one = new ConditionalConstraint("Leaf 1").withLeftLeaf(wheel1).withRightLeaf(10.0).withOperand("<").build();
 
         Scanner scanner = new Scanner(System.in);
         //We expect to see an updated evaluation
@@ -77,7 +81,7 @@ public class SpacecraftModel {
 
 
         ConditionalConstraint leaf_two = new ConditionalConstraint("Leaf 2").withLeftLeaf(wheel1).withRightLeaf(18.0).withOperand(">");
-        ConditionalConstraint parent_of_one_two = new ConditionalConstraint("Parent (1,2)").withLeftLeaf(leaf_one).withRightLeaf(leaf_two).withOperand("||");
+        ConditionalConstraint parent_of_one_two = new ConditionalConstraint("Parent (1,2)").withLeftLeaf((ConditionalConstraint) leaf_one).withRightLeaf(leaf_two).withOperand("||");
 
         //This is what happens when create a tree structure
         //Currently, Parent(1,2) is false
@@ -91,10 +95,8 @@ public class SpacecraftModel {
         readString = scanner.nextLine();
         wheel1.setValue(50.5);
 
-        List<Double> valueList = wheel1.getResourceHistory();
-        for (Double x : valueList){
-            System.out.println("Resource was " + x);
-        }
+
+        System.out.println(Arrays.asList(wheel1.getResourceHistory()));
 
         ConditionalConstraint leaf_three = new ConditionalConstraint("Leaf 3").withLeftLeaf(primaryBattery).withRightLeaf(50.0).withOperand(">");
         ConditionalConstraint root = new ConditionalConstraint("Root").withLeftLeaf(parent_of_one_two).withRightLeaf(leaf_three).withOperand("&&");
