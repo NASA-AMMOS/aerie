@@ -35,22 +35,18 @@ public class PlansController {
 
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
     public ResponseEntity<Object> replacePlan(@PathVariable("id") ObjectId id,
-            @Valid @RequestBody Plan plan) {
-        plan.set_id(id);
-        repository.save(plan);
+            @Valid @RequestBody PlanDetail planDetail) {
+        planDetail.set_id(id);
+        repository.save(planDetail);
         return ResponseEntity.noContent().build();
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.PATCH)
     public ResponseEntity<Object> updatePlan(@PathVariable("id") ObjectId id,
-            @Valid @RequestBody Plan plan) {
-        if (id.toHexString().equals(plan.get_id())) {
-            repository.save(plan);
-            return ResponseEntity.noContent().build();
-        } else {
-            // The id in the URL is different than the one in the plan
-            return ResponseEntity.badRequest().build();
-        }
+            @Valid @RequestBody PlanDetail planDetail) {
+        repository.save(planDetail);
+        return ResponseEntity.noContent().build();
+
     }
 
     @RequestMapping(value = "", method = RequestMethod.POST)
