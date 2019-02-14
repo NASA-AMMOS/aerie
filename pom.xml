@@ -155,7 +155,7 @@
             <version>23.6-jre</version>
         </dependency>
         <dependency>
-            <groupId>org.objenesis</groupId>
+            <groupId>orgzxjenesis</groupId>
             <artifactId>objenesis</artifactId>
             <version>2.6</version>
         </dependency>

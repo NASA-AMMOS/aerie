@@ -23,10 +23,18 @@ public class ConstraintEvaluationEngine<V, T extends Comparable> extends Engine{
         return this.result;
     }
 
+    @Override
+    public void evaluateNode() {
+        if (isLeaf()) {
+            evaluateLeafNodes();
+        } else {
+            evaluateConstraintNodes();
+        }
+    }
+
     public boolean isLeaf(){
         return ((expression.getLeftLeaf() != null) && (expression.getRightLeaf() != null));
     }
-
 
     public void evaluateEngine(String equation){
         try {
@@ -35,7 +43,6 @@ public class ConstraintEvaluationEngine<V, T extends Comparable> extends Engine{
             e.printStackTrace();
         }
     }
-
 
     //after evaluation, property change listeners will notify parents if value changes
     public void evaluateConstraintNodes(){
@@ -46,14 +53,6 @@ public class ConstraintEvaluationEngine<V, T extends Comparable> extends Engine{
         evaluateEngine(equation);
     }
 
-    @Override
-    public void evaluateNode() {
-        if (isLeaf()) {
-            evaluateLeafNodes();
-        } else {
-            evaluateConstraintNodes();
-        }
-    }
 
     public void evaluateLeafNodes(){
         String equation = expression.getLeftLeaf().getCurrentValue().toString() + expression.getOperation() +
