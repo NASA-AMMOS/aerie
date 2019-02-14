@@ -7,6 +7,10 @@ public abstract class Engine {
 
     public Engine() {}
 
+    protected ConditionalConstraint expression;
+    protected Boolean result;
 
-    public boolean evaluateConstraint(ConditionalConstraint expression){return false;}
+
+    public abstract void evaluateNode();
+    public abstract Boolean getResult();
 }

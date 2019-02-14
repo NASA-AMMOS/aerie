@@ -27,8 +27,10 @@ public class SpacecraftModel {
 
         ScriptEngineManager mgr = new ScriptEngineManager();
         ScriptEngine engine = mgr.getEngineByName("JavaScript");
+        Boolean a = false;
+        Boolean b = true;
         try {
-            System.out.println(engine.eval("40==2"));
+            System.out.println(engine.eval(a.toString() +  "||"  + b.toString()));
         } catch (ScriptException e) {
             e.printStackTrace();
         }
