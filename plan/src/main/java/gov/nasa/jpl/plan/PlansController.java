@@ -44,13 +44,9 @@ public class PlansController {
     @RequestMapping(value = "/{id}", method = RequestMethod.PATCH)
     public ResponseEntity<Object> updatePlan(@PathVariable("id") ObjectId id,
             @Valid @RequestBody PlanDetail planDetail) {
-        //if (id.toHexString().equals(planDetail.get_id())) {
-            repository.save(planDetail);
-            return ResponseEntity.noContent().build();
-        //} else {
-            // The id in the URL is different than the one in the plan
-            //return ResponseEntity.badRequest().build();
-        //}
+        repository.save(planDetail);
+        return ResponseEntity.noContent().build();
+
     }
 
     @RequestMapping(value = "", method = RequestMethod.POST)
