@@ -52,11 +52,6 @@ export class RavenLayoutApplyComponent implements OnChanges {
   >();
 
   @Output()
-  applyLayoutWithPins: EventEmitter<RavenApplyLayoutUpdate> = new EventEmitter<
-    RavenApplyLayoutUpdate
-  >();
-
-  @Output()
   applyState: EventEmitter<RavenSource> = new EventEmitter<RavenSource>();
 
   applyPins = '0';
@@ -129,9 +124,6 @@ export class RavenLayoutApplyComponent implements OnChanges {
       if (this.applyPins === '0') {
         // Apply saved state pins.
         this.applyState.emit(this.treeBySourceId[this.currentStateId]);
-      } else if (this.applyPins === '1') {
-        // Use custom sources for pins.
-        this.applyLayoutWithPins.emit(update);
       } else {
         // Apply layout with generic target ids.
         this.applyLayout.emit(update);

@@ -370,13 +370,6 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
-   * Event. Called when an `apply-layout-with-pins` event is fired from the raven-layout-apply component.
-   */
-  onApplyLayoutWithPins(update: RavenApplyLayoutUpdate): void {
-    this.store.dispatch(new sourceExplorerActions.ApplyLayoutWithPins(update));
-  }
-
-  /**
    * Event. Called when an `apply-state` event is fired from the raven-layout-apply component.
    */
   onApplyState(source: RavenSource): void {

@@ -134,7 +134,6 @@ export function reducer(
       return addFilter(state, action);
     case SourceExplorerActionTypes.AddGraphableFilter:
     case SourceExplorerActionTypes.ApplyLayout:
-    case SourceExplorerActionTypes.ApplyLayoutWithPins:
     case SourceExplorerActionTypes.ApplyState:
       return { ...state, fetchPending: true };
     case SourceExplorerActionTypes.CloseEvent:
@@ -704,7 +703,7 @@ export function subBandIdRemove(
           const subBandIds = state.treeBySourceId[sourceId].subBandIds.filter(
             subBandId => subBandId !== action.subBandId,
           );
-          const opened = (subBandIds.length > 0);
+          const opened = subBandIds.length > 0;
           sourceIds[sourceId] = {
             ...state.treeBySourceId[sourceId],
             opened,

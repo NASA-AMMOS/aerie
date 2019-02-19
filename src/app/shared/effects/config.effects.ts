@@ -204,6 +204,21 @@ export class ConfigEffects {
       ];
     } else if (layoutPath && sourcePath) {
       // apply layout to sourcePath
+      return [
+        new sourceExplorerActions.UpdateSourceExplorer({
+          currentStateId: layoutPath,
+        }),
+        new sourceExplorerActions.UpdateSourceExplorer({
+          fetchPending: true,
+        }),
+        new sourceExplorerActions.ApplyLayoutToSources(
+          `${configState.app.baseUrl}/${
+            configState.mpsServer.apiUrl
+          }${layoutPath}`,
+          layoutPath,
+          sourcePath.split(','),
+        ),
+      ];
     } else if (layoutPath) {
       return [
         new sourceExplorerActions.UpdateSourceExplorer({

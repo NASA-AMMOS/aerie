@@ -92,7 +92,24 @@ both `Collection-a` and `Collection-b` contain sources with the same names. Assu
 
 *<p align="center">**Figure 21. Apply as a layout drawer.** When the user desires to apply a state as a layout, the drawer showed in the right side of the application will appear. In the Sources dropdown, the user will be able to select all the sources to which the layout is desired to be applied. </p>*
 
+#### How to: Apply a state as a layout using URL
+In order to apply a state as a layout using URL, the user needs:
+1. Path of the state. (`<STATE_PATH>`)
+2. Path of the sources that the user wants to apply layout to. (`<SOURCE_A>,<SOURCE_B>,...,<SOURCE_N>`)
 
+The URL will look as follows:
+
+```
+<LINK_TO_RAVEN>?layout=<STATE_PATH>&source=<SOURCE_A>,<SOURCE_B>,...,<SOURCE_N>
+```
+
+Example:
+
+```
+https://raven.jpl.nasa.gov/mpsserver/raven/#/raven?layout=/TEST_ATS/STATES/My_State&source=/TEST_ATS/PEF_Combined_Test/test_10000,TEST_ATS/PEF_Sequence_Test/test
+```
+
+**Important Note:** Pins are not supported by applying a state as a layout via URL. 
 
 ## Shareable Links
 

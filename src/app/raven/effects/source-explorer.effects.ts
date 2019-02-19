@@ -33,7 +33,7 @@ import {
   AddGraphableFilter,
   ApplyCurrentState,
   ApplyLayout,
-  ApplyLayoutWithPins,
+  ApplyLayoutToSources,
   ApplyState,
   ApplyStateOrLayoutSuccess,
   CloseEvent,
@@ -61,6 +61,7 @@ import {
   getCustomFilterForLabel,
   getCustomFiltersBySourceId,
   getFormattedSourceUrl,
+  getParentSourceIds,
   getPinLabel,
   getRavenState,
   getSituationalAwarenessPageDuration,
@@ -258,36 +259,67 @@ export class SourceExplorerEffects {
       state,
     })),
     concatMap(({ action, state, savedState, initialSources, sourceTypes }) => {
-      const updatedBands: RavenCompositeBand[] = [];
-
-      action.update.targetSourceIds.forEach((targetSourceId: string) => {
-        const bands = savedState.bands.map((band: RavenCompositeBand) => {
+      let updatedBands: RavenCompositeBand[] = [];
+      if (Object.keys(action.update.pins).length > 0) {
+        // Apply layout with pins.
+        updatedBands = savedState.bands.map((band: RavenCompositeBand) => {
           const parentId = uniqueId();
-          const targetSource =
-            state.raven.sourceExplorer.treeBySourceId[targetSourceId];
 
           return {
             ...band,
             id: parentId,
-            subBands: band.subBands.map((subBand: RavenSubBand) => ({
-              ...subBand,
-              id: uniqueId(),
-              parentUniqueId: parentId,
-              sourceIds: subBand.sourceIds.map(sourceId =>
-                updateSourceId(
-                  sourceId,
-                  targetSourceId,
-                  sourceTypes,
-                  targetSource.type,
+            subBands: band.subBands.map((subBand: RavenSubBand) => {
+              const labelPin = subBand.labelPin;
+              const pin = action.update.pins[labelPin];
+              const targetSource =
+                state.raven.sourceExplorer.treeBySourceId[pin.sourceId];
+
+              return {
+                ...subBand,
+                id: uniqueId(),
+                parentUniqueId: parentId,
+                sourceIds: subBand.sourceIds.map(sourceId =>
+                  updateSourceId(
+                    sourceId,
+                    targetSource.id,
+                    sourceTypes,
+                    targetSource.type,
+                  ),
                 ),
-              ),
-            })),
+              };
+            }),
           };
         });
+      } else {
+        action.update.targetSourceIds.forEach((targetSourceId: string) => {
+          targetSourceId = targetSourceId.trim();
+          const bands = savedState.bands.map((band: RavenCompositeBand) => {
+            const parentId = uniqueId();
+            const targetSource =
+              state.raven.sourceExplorer.treeBySourceId[targetSourceId];
 
-        updatedBands.push(...bands);
-      });
+            return {
+              ...band,
+              id: parentId,
+              subBands: band.subBands.map((subBand: RavenSubBand) => ({
+                ...subBand,
+                id: uniqueId(),
+                parentUniqueId: parentId,
+                sourceIds: subBand.sourceIds.map(sourceId =>
+                  updateSourceId(
+                    sourceId,
+                    targetSourceId,
+                    sourceTypes,
+                    targetSource.type,
+                  ),
+                ),
+              })),
+            };
+          });
 
+          updatedBands.push(...bands);
+        });
+      }
       return concat(
         ...this.loadLayout(
           state,
@@ -302,17 +334,19 @@ export class SourceExplorerEffects {
   );
 
   /**
-   * Effect for ApplyLayoutWithPins.
+   * Effect for ApplyLayoutToSources.
    */
   @Effect()
-  applyLayoutWithPins$: Observable<Action> = this.actions$.pipe(
-    ofType<ApplyLayoutWithPins>(SourceExplorerActionTypes.ApplyLayoutWithPins),
+  applyLayoutToSources$: Observable<Action> = this.actions$.pipe(
+    ofType<ApplyLayoutToSources>(
+      SourceExplorerActionTypes.ApplyLayoutToSources,
+    ),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     concatMap(({ action, state }) =>
       forkJoin([
         of(action),
-        of(state),
+        this.mpsServerService.fetchState(action.layoutSourceUrl),
         this.mpsServerService.fetchNewSources(
           `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
           '/',
@@ -321,73 +355,31 @@ export class SourceExplorerEffects {
         ),
       ]),
     ),
-    map(([action, state, initialSources]) => ({
-      action,
-      initialSources,
-      state,
-    })),
-    concatMap(({ action, state, initialSources }) => {
-      const savedState = state.raven.sourceExplorer.currentState as RavenState;
-
-      return forkJoin([
-        of(action),
-        of(state),
-        of(savedState),
-        of(initialSources),
-        this.fetchSourcesByType(
-          state,
-          getSourceIds(savedState.bands).parentSourceIds,
-        ),
-      ]);
-    }),
-    map(([action, state, savedState, initialSources, sourceTypes]) => ({
+    map(([action, savedState, initialSources]) => ({
       action,
       initialSources,
       savedState,
-      sourceTypes,
-      state,
     })),
-    concatMap(({ action, state, savedState, initialSources, sourceTypes }) => {
-      const bands = savedState.bands.map((band: RavenCompositeBand) => {
-        const parentId = uniqueId();
-
-        return {
-          ...band,
-          id: parentId,
-          subBands: band.subBands.map((subBand: RavenSubBand) => {
-            const labelPin = subBand.labelPin;
-            const pin = action.update.pins[labelPin];
-            const targetSource =
-              state.raven.sourceExplorer.treeBySourceId[pin.sourceId];
-
-            return {
-              ...subBand,
-              id: uniqueId(),
-              parentUniqueId: parentId,
-              sourceIds: subBand.sourceIds.map(sourceId =>
-                updateSourceId(
-                  sourceId,
-                  targetSource.id,
-                  sourceTypes,
-                  targetSource.type,
-                ),
-              ),
-            };
+    concatMap(({ action, initialSources, savedState }) =>
+      concat(
+        of(new sourceExplorerActions.NewSources('/', initialSources)),
+        of(
+          new sourceExplorerActions.UpdateSourceExplorer({
+            currentState: savedState,
           }),
-        };
-      });
-
-      return concat(
-        ...this.loadLayout(
-          state,
-          bands,
-          initialSources,
-          savedState,
-          state.raven.sourceExplorer.currentStateId,
-          Object.values(action.update.pins),
         ),
-      );
-    }),
+        ...this.expandSourcePaths(action.sourcePaths),
+        of(
+          new sourceExplorerActions.ApplyLayout({
+            pins: savedState.pins.reduce((allPins, pin) => {
+              allPins[pin.name] = pin.sourceId;
+              return allPins;
+            }, {}),
+            targetSourceIds: action.sourcePaths,
+          }),
+        ),
+      ),
+    ),
   );
 
   /**
@@ -1121,6 +1113,41 @@ export class SourceExplorerEffects {
     }
 
     return actions;
+  }
+
+  expandSourcePaths(sourcePaths: string[]): Observable<Action>[] {
+    return sourcePaths.reduce((actions: Observable<Action>[], sourcePath) => {
+      actions.push(
+        ...getParentSourceIds(sourcePath).map((sourceId: string) =>
+          combineLatest(this.store$).pipe(
+            take(1),
+            map(
+              (state: RavenAppState[]) =>
+                state[0].raven.sourceExplorer.treeBySourceId[sourceId],
+            ),
+            concatMap(source => {
+              if (source) {
+                return concat(
+                  ...this.expand(source),
+                  of(
+                    new sourceExplorerActions.UpdateTreeSource(source.id, {
+                      expanded: true,
+                    }),
+                  ),
+                );
+              } else {
+                console.log(
+                  'source-explorer.effect: load: source does not exist: ',
+                  sourceId,
+                );
+                return of(new sourceExplorerActions.LoadErrorsAdd([sourceId]));
+              }
+            }),
+          ),
+        ),
+      );
+      return actions;
+    }, []);
   }
 
   /**

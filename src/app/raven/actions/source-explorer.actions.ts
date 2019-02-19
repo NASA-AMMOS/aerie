@@ -30,7 +30,7 @@ export enum SourceExplorerActionTypes {
   AddGraphableFilter = '[sourceExplorer] add_graphable_filter',
   ApplyCurrentState = '[sourceExplorer] apply-current-state',
   ApplyLayout = '[sourceExplorer] apply-layout',
-  ApplyLayoutWithPins = '[sourceExplorer] apply-layout-with-pins',
+  ApplyLayoutToSources = '[sourceExplorer] apply-layout-to-sources',
   ApplyState = '[sourceExplorer] apply-state',
   ApplyStateOrLayoutSuccess = '[sourceExplorer] apply-state-or-layout-success',
   CloseEvent = '[sourceExplorer] close_event',
@@ -114,10 +114,14 @@ export class ApplyLayout implements Action {
   constructor(public update: RavenApplyLayoutUpdate) {}
 }
 
-export class ApplyLayoutWithPins implements Action {
-  readonly type = SourceExplorerActionTypes.ApplyLayoutWithPins;
+export class ApplyLayoutToSources implements Action {
+  readonly type = SourceExplorerActionTypes.ApplyLayoutToSources;
 
-  constructor(public update: RavenApplyLayoutUpdate) {}
+  constructor(
+    public layoutSourceUrl: string,
+    public layoutSourceId: string,
+    public sourcePaths: string[],
+  ) {}
 }
 
 export class ApplyState implements Action {
@@ -347,7 +351,7 @@ export type SourceExplorerAction =
   | AddGraphableFilter
   | ApplyCurrentState
   | ApplyLayout
-  | ApplyLayoutWithPins
+  | ApplyLayoutToSources
   | ApplyState
   | ApplyStateOrLayoutSuccess
   | CloseEvent
