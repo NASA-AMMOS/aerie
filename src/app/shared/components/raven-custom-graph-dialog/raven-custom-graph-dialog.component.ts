@@ -27,7 +27,7 @@ export class RavenCustomGraphDialogComponent {
   ) {
     this.label = new FormControl('', [
       Validators.required,
-      Validators.pattern('([(a-zA-Z0-9-_.)]*)'),
+      Validators.pattern('([(a-zA-Z0-9-_. )]*)'),
     ]);
 
     if (data.source.arg === 'engine') {
@@ -37,7 +37,7 @@ export class RavenCustomGraphDialogComponent {
       ]);
     } else {
       this.filter = new FormControl('', [
-        Validators.pattern('[a-zA-Z0-9-_.*$]*'),
+        Validators.pattern('[a-zA-Z0-9-_.*$;]*'),
         this.validateFilter,
       ]);
     }
