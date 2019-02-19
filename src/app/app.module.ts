@@ -42,10 +42,6 @@ import { ConfigEffects, DialogEffects, NavEffects } from './shared/effects';
     EffectsModule.forRoot([ConfigEffects, DialogEffects, NavEffects]),
     OverlayModule,
     SortablejsModule.forRoot({}),
-    StoreDevtoolsModule.instrument({
-      logOnly: environment.production,
-      maxAge: 10,
-    }),
     StoreModule.forRoot(reducers, { metaReducers }),
     StoreRouterConnectingModule.forRoot({
       stateKey: 'router',
@@ -56,6 +52,14 @@ import { ConfigEffects, DialogEffects, NavEffects } from './shared/effects';
     MatSidenavModule,
     NestAboutDialogModule,
     RavenAppNavModule,
+
+    // StoreDevtoolsModule must come AFTER StoreModule.
+    // To avoid interrupting alphabetical order (and since it's meant for dev only),
+    // we'll put it in its own section of the imports list.
+    StoreDevtoolsModule.instrument({
+      logOnly: environment.production,
+      maxAge: 10,
+    }),
   ],
 })
 export class AppModule {}
