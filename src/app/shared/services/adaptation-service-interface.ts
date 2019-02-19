@@ -8,12 +8,13 @@
  */
 
 import { Observable } from 'rxjs';
-import { RavenActivityType, RavenAdaptation, StringTMap } from '../models';
+import { ActivityType, Adaptation } from '../../../../libs/schemas/types/ts';
+import { StringTMap } from '../models';
 
 export interface AdaptationServiceInterface {
   getActivityTypes(
     apiBaseUrl: string,
     id: string,
-  ): Observable<StringTMap<RavenActivityType>>;
-  getAdaptations(apiBaseUrl: string): Observable<RavenAdaptation[]>;
+  ): Observable<StringTMap<ActivityType>>;
+  getAdaptations(apiBaseUrl: string): Observable<Adaptation[]>;
 }

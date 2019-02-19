@@ -16,8 +16,7 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-
-import { RavenActivityType } from '../../models';
+import { ActivityType } from '../../../../../libs/schemas/types/ts';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -67,7 +66,7 @@ export class RavenSubActivityTreeComponent implements OnChanges {
   activityClicked: EventEmitter<string> = new EventEmitter<string>();
 
   indentPadding = 15;
-  sortedActivityTypes: RavenActivityType[];
+  sortedActivityTypes: ActivityType[];
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.activityTypes) {

@@ -12,10 +12,9 @@ import { Injectable } from '@angular/core';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 import { flatten, uniqueId } from 'lodash';
+import { combineLatest, concat, forkJoin, Observable, of } from 'rxjs';
 import { MpsServerService } from '../../shared/services/mps-server.service';
 import { RavenAppState } from '../raven-store';
-
-import { combineLatest, concat, forkJoin, Observable, of } from 'rxjs';
 
 import {
   catchError,
@@ -97,14 +96,15 @@ import {
 } from '../../shared/models';
 
 import * as configActions from '../../shared/actions/config.actions';
+import * as toastActions from '../../shared/actions/toast.actions';
 import * as dialogActions from '../actions/dialog.actions';
 import * as layoutActions from '../actions/layout.actions';
 import * as sourceExplorerActions from '../actions/source-explorer.actions';
 import * as timelineActions from '../actions/timeline.actions';
-import * as toastActions from '../actions/toast.actions';
 
 import * as fromSourceExplorer from '../reducers/source-explorer.reducer';
 import * as fromTimeline from '../reducers/timeline.reducer';
+import { withLoadingBar } from './utils';
 
 @Injectable()
 export class SourceExplorerEffects {
@@ -458,7 +458,7 @@ export class SourceExplorerEffects {
     map(([action, state]) => ({ action, state })),
     concatMap(({ action, state }) =>
       concat(
-        this.withLoadingBar(this.createFolder(action, state)),
+        withLoadingBar([this.createFolder(action, state)]),
         of(new sourceExplorerActions.ExpandEvent(action.folder.url)),
       ),
     ),
@@ -634,7 +634,7 @@ export class SourceExplorerEffects {
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     mergeMap(({ state: { config, raven }, action }) =>
-      this.withLoadingBar(
+      withLoadingBar([
         this.open(
           null,
           raven.sourceExplorer.filtersByTarget,
@@ -650,7 +650,7 @@ export class SourceExplorerEffects {
           getSituationalAwarenessPageDuration(raven.situationalAwareness),
           true,
         ),
-      ).pipe(
+      ]).pipe(
         catchError((e: Error) => {
           console.error('SourceExplorerEffects - graphAgainEvent$: ', e);
           return [
@@ -674,7 +674,7 @@ export class SourceExplorerEffects {
   @Effect()
   importFile$: Observable<Action> = this.actions$.pipe(
     ofType<ImportFile>(SourceExplorerActionTypes.ImportFile),
-    concatMap(action => this.withLoadingBar(this.importFile(action))),
+    concatMap(action => withLoadingBar([this.importFile(action)])),
   );
 
   /**
@@ -1857,24 +1857,5 @@ export class SourceExplorerEffects {
     });
 
     return actions;
-  }
-
-  /**
-   * Helper. wrap action with loadingBar fetchPending
-   */
-  withLoadingBar(actions$: Observable<Action>): Observable<Action> {
-    return concat(
-      of(
-        new sourceExplorerActions.UpdateSourceExplorer({
-          fetchPending: true,
-        }),
-      ),
-      actions$,
-      of(
-        new sourceExplorerActions.UpdateSourceExplorer({
-          fetchPending: false,
-        }),
-      ),
-    );
   }
 }

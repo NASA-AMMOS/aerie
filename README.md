@@ -76,7 +76,7 @@ As previously noted, a mission may want to provide all or some of the applicatio
 appModules: [
   {
     icon: 'event',
-    path: 'hawk',
+    path: 'plans',
     title: 'Planning',
     version: '0.0.1',
   },

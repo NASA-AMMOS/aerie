@@ -9,45 +9,27 @@
 
 import { Injectable } from '@angular/core';
 import { Observable, Observer } from 'rxjs';
+import { Activity, Plan } from '../../../../libs/schemas/types/ts';
 import { PlanServiceInterface } from './plan-service-interface';
 
-import {
-  RavenActivity,
-  RavenPlan,
-  RavenPlanDetail,
-  StringTMap,
-} from '../models';
-
-export function getMockActivityInstances(): StringTMap<RavenActivity> {
-  return {
-    SetArrayTrackingMode_25788: {
+export function getMockActivities(): Activity[] {
+  return [
+    {
       activityId: 'SetArrayTrackingMode_25788',
       activityType: 'SetArrayTrackingMode',
       color: '#ffffff',
       constraints: [
         {
-          default: 'Some Event',
-          locked: false,
           name: 'Latest Start',
           type: 'list',
-          value: 'Local Noon',
-          values: ['Local Noon', 'Half Past noon', 'Some Future Time'],
         },
         {
-          default: 'State Constraint',
-          locked: true,
           name: 'Some Enum State',
           type: 'enum',
-          value: 'SOME_ENUM_VAL',
-          values: [],
         },
         {
-          default: 'MOON',
-          locked: true,
           name: 'Geometric Constraint',
           type: 'enum',
-          value: 'NADIR_SUN',
-          values: [],
         },
       ],
       duration: 580,
@@ -58,33 +40,25 @@ export function getMockActivityInstances(): StringTMap<RavenActivity> {
       parameters: [
         {
           name: 'Image Resolution',
+          type: '',
         },
       ],
       start: 1656459134.184,
       startTimestamp: '2022-179T23:32:14.184',
-      subActivityIds: [],
       y: null,
     },
-    SetArrayTrackingMode_25920: {
+    {
       activityId: 'SetArrayTrackingMode_25920',
       activityType: 'SetArrayTrackingMode',
       color: '#ffffff',
       constraints: [
         {
-          default: 'At Start',
-          locked: false,
           name: 'Time',
           type: 'list',
-          value: 'During',
-          values: ['At Start', 'During', 'At End'],
         },
         {
-          default: 'Some Event',
-          locked: false,
           name: 'Earliest Start',
           type: 'list',
-          value: 'Local Noon',
-          values: ['Local Noon', 'Half Past noon', 'Some Future Time'],
         },
       ],
       duration: 580,
@@ -95,17 +69,17 @@ export function getMockActivityInstances(): StringTMap<RavenActivity> {
       parameters: [
         {
           name: 'Image Resolution',
+          type: '',
         },
       ],
       start: 1656462099.447,
       startTimestamp: '2022-180T00:21:39.447',
-      subActivityIds: [],
       y: null,
     },
-  };
+  ];
 }
 
-export function getMockPlan(planId: string): RavenPlan {
+export function getMockPlan(planId: string): Plan {
   return {
     adaptationId: 'ops',
     endTimestamp: '1995-12-18T03:28:00',
@@ -115,19 +89,12 @@ export function getMockPlan(planId: string): RavenPlan {
   };
 }
 
-export function getMockPlans(): RavenPlan[] {
-  const plans: RavenPlan[] = [];
+export function getMockPlans(): Plan[] {
+  const plans: Plan[] = [];
   for (let i = 0, len = 10; i < len; ++i) {
     plans.push(getMockPlan(`${i}`));
   }
   return plans;
-}
-
-export function getMockPlanDetail(planId: string): RavenPlanDetail {
-  return {
-    ...getMockPlan(planId),
-    activityInstances: getMockActivityInstances(),
-  };
 }
 
 @Injectable({
@@ -137,18 +104,18 @@ export class PlanMockService implements PlanServiceInterface {
   createActivity(
     apiBaseUrl: string = '',
     planId: string,
-    data: RavenActivity,
-  ): Observable<RavenActivity> {
-    return Observable.create((o: Observer<RavenActivity>) => {
-      const instances = getMockActivityInstances();
+    data: Activity,
+  ): Observable<Activity> {
+    return Observable.create((o: Observer<Activity>) => {
+      const activities = getMockActivities();
       const activityId = data.activityId || Date.now().toString();
-      const mockDetail = instances[activityId];
+      const mockDetail = activities[activityId];
       o.next({ ...mockDetail, ...data, activityId });
     });
   }
 
-  createPlan(apiBaseUrl: string, plan: RavenPlan): Observable<RavenPlan> {
-    return Observable.create((o: Observer<RavenPlan>) => {
+  createPlan(apiBaseUrl: string, plan: Plan): Observable<Plan> {
+    return Observable.create((o: Observer<Plan>) => {
       o.next(plan);
       o.complete();
     });
@@ -172,40 +139,28 @@ export class PlanMockService implements PlanServiceInterface {
     });
   }
 
-  getActivityInstance(
-    apiBaseUrl: string = '',
-    planId: string = '',
-    activityId: string = '',
-  ): Observable<RavenActivity> {
-    const instances = getMockActivityInstances();
-    return Observable.create((o: Observer<RavenActivity>) => {
-      o.next(instances[activityId]);
-      o.complete();
-    });
-  }
-
-  getPlanDetail(
+  getActivities(
     apiBaseUrl: string = '',
     planId: string,
-  ): Observable<RavenPlanDetail> {
-    return Observable.create((o: Observer<RavenPlanDetail>) => {
-      o.next(getMockPlanDetail(planId));
+  ): Observable<Activity[]> {
+    return Observable.create((o: Observer<Activity[]>) => {
+      o.next(getMockActivities());
       o.complete();
     });
   }
 
-  getPlans(apiBaseUrl: string = ''): Observable<RavenPlan[]> {
-    return Observable.create((o: Observer<RavenPlan[]>) => {
+  getPlans(apiBaseUrl: string = ''): Observable<Plan[]> {
+    return Observable.create((o: Observer<Plan[]>) => {
       o.next(getMockPlans());
       o.complete();
     });
   }
 
-  updateActivityInstance(
+  updateActivity(
     apiBaseUrl: string = '',
     planId: string = '',
     activityId: string = '',
-    activityInstance: RavenActivity,
+    activityInstance: Activity,
   ): Observable<null> {
     return Observable.create((o: Observer<null>) => {
       o.next(null);

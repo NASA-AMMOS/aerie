@@ -8,35 +8,27 @@
  */
 
 import { Observable } from 'rxjs';
-import { RavenActivity, RavenPlan, RavenPlanDetail } from '../models';
+import { Activity, Plan } from '../../../../libs/schemas/types/ts';
 
 export interface PlanServiceInterface {
   createActivity(
     apiBaseUrl: string,
     planId: string,
-    data: RavenActivity,
-  ): Observable<RavenActivity>;
-  createPlan(apiBaseUrl: string, plan: RavenPlan): Observable<RavenPlan>;
+    data: Activity,
+  ): Observable<Activity>;
+  createPlan(apiBaseUrl: string, plan: Plan): Observable<Plan>;
   deleteActivity(
     apiBaseUrl: string,
     planId: string,
     activityId: string,
   ): Observable<{}>;
   deletePlan(apiBaseUrl: string, planId: string): Observable<{}>;
-  getActivityInstance(
+  getActivities(apiBaseUrl: string, planId: string): Observable<Activity[]>;
+  getPlans(apiBaseUrl: string): Observable<Plan[]>;
+  updateActivity(
     apiBaseUrl: string,
     planId: string,
     activityId: string,
-  ): Observable<RavenActivity>;
-  getPlanDetail(
-    apiBaseUrl: string,
-    planId: string,
-  ): Observable<RavenPlanDetail>;
-  getPlans(apiBaseUrl: string): Observable<RavenPlan[]>;
-  updateActivityInstance(
-    apiBaseUrl: string,
-    planId: string,
-    activityId: string,
-    activityInstance: RavenActivity,
+    activityInstance: Activity,
   ): Observable<null>;
 }

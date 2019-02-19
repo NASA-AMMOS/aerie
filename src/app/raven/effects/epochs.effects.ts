@@ -13,12 +13,11 @@ import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { catchError, concatMap, map } from 'rxjs/operators';
+import * as toastActions from '../../shared/actions/toast.actions';
 import { MpsServerEpoch, RavenEpoch } from '../../shared/models';
 import { toRavenEpochs } from '../../shared/util';
 import { EpochsActionTypes, FetchEpochs } from '../actions/epochs.actions';
-
 import * as epochsActions from '../actions/epochs.actions';
-import * as toastActions from '../actions/toast.actions';
 
 @Injectable()
 export class EpochsEffects {

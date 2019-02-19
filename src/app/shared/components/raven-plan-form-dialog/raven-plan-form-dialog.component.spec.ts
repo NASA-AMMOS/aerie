@@ -12,8 +12,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AbstractControl } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-
-import { RavenPlan } from '../../models/raven-plan';
+import { Plan } from '../../../../../libs/schemas/types/ts';
 import { RavenPlanFormDialogData } from '../../models/raven-plan-form-dialog-data';
 import { RavenPlanFormDialogComponent } from './raven-plan-form-dialog.component';
 import { RavenPlanFormDialogModule } from './raven-plan-form-dialog.module';
@@ -26,7 +25,7 @@ import { RavenPlanFormDialogModule } from './raven-plan-form-dialog.module';
   `,
 })
 class RavenPlanFormDialogTestComponent {
-  data: RavenPlan | null;
+  data: Plan | null;
 
   @ViewChild(RavenPlanFormDialogComponent)
   component: RavenPlanFormDialogComponent;
@@ -37,7 +36,7 @@ describe('RavenPlanFormDialogComponent', () => {
   let fixture: ComponentFixture<RavenPlanFormDialogTestComponent>;
   let element: HTMLElement;
   let data: RavenPlanFormDialogData;
-  let selectedPlan: RavenPlan;
+  let selectedPlan: Plan;
 
   const mockDialogRef = {
     close: jasmine.createSpy('close'),

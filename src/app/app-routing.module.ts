@@ -17,7 +17,7 @@ export const routes: Routes = [
     redirectTo: 'raven',
   },
   {
-    loadChildren: './hawk/hawk.module#HawkModule',
+    loadChildren: './planning/planning.module#PlanningModule',
     path: 'plans',
   },
   {

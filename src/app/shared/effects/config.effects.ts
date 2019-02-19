@@ -27,12 +27,11 @@ import * as sourceExplorerActions from '../../raven/actions/source-explorer.acti
 import * as timeCursorActions from '../../raven/actions/time-cursor.actions';
 import { RavenAppState } from '../../raven/raven-store';
 import { LayoutState } from '../../raven/reducers/layout.reducer';
-import * as configActions from '../actions/config.actions';
-
 import {
   ConfigActionTypes,
   FetchProjectConfig,
 } from '../actions/config.actions';
+import * as configActions from '../actions/config.actions';
 
 @Injectable()
 export class ConfigEffects {

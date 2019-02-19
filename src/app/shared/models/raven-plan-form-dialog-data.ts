@@ -7,10 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { RavenAdaptation } from './raven-adaptation';
-import { RavenPlan } from './raven-plan';
+import { Adaptation, Plan } from '../../../../libs/schemas/types/ts';
 
 export interface RavenPlanFormDialogData {
-  adaptations: RavenAdaptation[];
-  selectedPlan: RavenPlan | null;
+  adaptations: Adaptation[];
+  selectedPlan: Plan | null;
 }

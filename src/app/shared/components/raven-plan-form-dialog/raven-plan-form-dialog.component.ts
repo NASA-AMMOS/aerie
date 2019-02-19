@@ -8,17 +8,15 @@
  */
 
 import { ChangeDetectionStrategy, Component, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
-import { RavenAdaptation } from '../../models/raven-adaptation';
-import { RavenPlan } from '../../models/raven-plan';
-import { RavenPlanFormDialogData } from '../../models/raven-plan-form-dialog-data';
-
 import {
   FormBuilder,
   FormControl,
   FormGroup,
   Validators,
 } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
+import { Adaptation, Plan } from '../../../../../libs/schemas/types/ts';
+import { RavenPlanFormDialogData } from '../../models/raven-plan-form-dialog-data';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,7 +25,7 @@ import {
   templateUrl: './raven-plan-form-dialog.component.html',
 })
 export class RavenPlanFormDialogComponent {
-  adaptations: RavenAdaptation[] = [];
+  adaptations: Adaptation[] = [];
   form: FormGroup;
   isNew = false;
   modeText = 'Create New';
@@ -39,7 +37,7 @@ export class RavenPlanFormDialogComponent {
   ) {
     this.adaptations = data.adaptations;
 
-    const plan: RavenPlan = {
+    const plan: Plan = {
       adaptationId: '',
       endTimestamp: '',
       id: '',

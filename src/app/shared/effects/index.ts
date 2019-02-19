@@ -10,3 +10,4 @@
 export * from './config.effects';
 export * from './dialog.effects';
 export * from './nav.effects';
+export * from './toast.effects';

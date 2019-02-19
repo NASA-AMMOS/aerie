@@ -7,9 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { RavenActivity } from './raven-activity';
+import { Activity } from '../../../../libs/schemas/types/ts';
 
-export interface RavenActivitySvg extends RavenActivity {
+export interface RavenActivitySvg extends Activity {
   fill: string;
   height: number;
   labelFill: string;

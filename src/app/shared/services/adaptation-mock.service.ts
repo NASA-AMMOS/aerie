@@ -9,13 +9,12 @@
 
 import { Injectable } from '@angular/core';
 import { Observable, Observer } from 'rxjs';
+import { ActivityType, Adaptation } from '../../../../libs/schemas/types/ts';
 import { StringTMap } from '../models/map';
-import { RavenActivityType } from '../models/raven-activity-type';
-import { RavenAdaptation } from '../models/raven-adaptation';
 import { AdaptationServiceInterface } from './adaptation-service-interface';
 
-export function getMockAdaptations(): RavenAdaptation[] {
-  const adaptations: RavenAdaptation[] = [
+export function getMockAdaptations(): Adaptation[] {
+  const adaptations: Adaptation[] = [
     {
       id: 'ops',
       location: '',
@@ -52,13 +51,16 @@ export function getMockAdaptations(): RavenAdaptation[] {
   return adaptations;
 }
 
-export function getMockActivityTypes(): StringTMap<RavenActivityType> {
-  const activityTypes: StringTMap<RavenActivityType> = {};
+export function getMockActivityTypes(): StringTMap<ActivityType> {
+  const activityTypes: StringTMap<ActivityType> = {};
 
   for (let i = 0, len = 10; i < len; ++i) {
     const activityClass = `some.adaptation.DoSomething.${i}`;
     activityTypes[activityClass] = {
       activityClass,
+      listeners: [],
+      parameters: [],
+      typeName: '',
     };
   }
 
@@ -72,15 +74,15 @@ export class AdaptationMockService implements AdaptationServiceInterface {
   getActivityTypes(
     apiBaseUrl: string,
     id: string,
-  ): Observable<StringTMap<RavenActivityType>> {
-    return Observable.create((o: Observer<StringTMap<RavenActivityType>>) => {
+  ): Observable<StringTMap<ActivityType>> {
+    return Observable.create((o: Observer<StringTMap<ActivityType>>) => {
       o.next(getMockActivityTypes());
       o.complete();
     });
   }
 
-  getAdaptations(apiBaseUrl: string = ''): Observable<RavenAdaptation[]> {
-    return Observable.create((o: Observer<RavenAdaptation[]>) => {
+  getAdaptations(apiBaseUrl: string = ''): Observable<Adaptation[]> {
+    return Observable.create((o: Observer<Adaptation[]>) => {
       o.next(getMockAdaptations());
       o.complete();
     });

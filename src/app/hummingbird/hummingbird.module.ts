@@ -7,7 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
@@ -18,7 +17,6 @@ import { reducers } from './hummingbird-store';
 
 @NgModule({
   imports: [
-    HttpClientModule,
     HummingbirdRoutingModule,
     StoreModule.forFeature('hummingbird', reducers),
     EffectsModule.forFeature([CommandDictionaryEffects]),

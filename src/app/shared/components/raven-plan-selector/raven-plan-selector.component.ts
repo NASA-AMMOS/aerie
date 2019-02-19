@@ -14,8 +14,7 @@ import {
   Input,
   Output,
 } from '@angular/core';
-
-import { RavenPlan } from '../../models/raven-plan';
+import { Plan } from '../../../../../libs/schemas/types/ts';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,10 +24,10 @@ import { RavenPlan } from '../../models/raven-plan';
 })
 export class RavenPlanSelectorComponent {
   @Input()
-  plans: RavenPlan[];
+  plans: Plan[];
 
   @Input()
-  selectedPlan: RavenPlan;
+  selectedPlan: Plan;
 
   @Output()
   selectPlanClicked = new EventEmitter<string>();

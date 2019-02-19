@@ -10,6 +10,11 @@
 import { OverlayModule } from '@angular/cdk/overlay';
 import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
+import {
+  MatButtonModule,
+  MatIconModule,
+  MatSidenavModule,
+} from '@angular/material';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreRouterConnectingModule } from '@ngrx/router-store';
@@ -17,20 +22,15 @@ import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { SortablejsModule } from 'angular-sortablejs/dist';
 import { ToastrModule } from 'ngx-toastr';
+import { RouterEffects } from '../../libs/ngrx-router';
 import { environment } from '../environments/environment';
 import { AppRoutingModule } from './app-routing.module';
 import { metaReducers, reducers } from './app-store';
 import { AppComponent } from './app.component';
-
-/**
- * Dependencies for the shell UI
- */
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSidenavModule } from '@angular/material/sidenav';
 import { NestAboutDialogModule } from './shared/components/nest-about-dialog/nest-about-dialog.module';
 import { RavenAppNavModule } from './shared/components/raven-app-nav/raven-app-nav.module';
 import { ConfigEffects, DialogEffects, NavEffects } from './shared/effects';
+import { ToastEffects } from './shared/effects/toast.effects';
 
 @NgModule({
   bootstrap: [AppComponent],
@@ -39,7 +39,13 @@ import { ConfigEffects, DialogEffects, NavEffects } from './shared/effects';
     BrowserAnimationsModule,
     HttpClientModule,
     AppRoutingModule,
-    EffectsModule.forRoot([ConfigEffects, DialogEffects, NavEffects]),
+    EffectsModule.forRoot([
+      ConfigEffects,
+      DialogEffects,
+      NavEffects,
+      RouterEffects,
+      ToastEffects,
+    ]),
     OverlayModule,
     SortablejsModule.forRoot({}),
     StoreModule.forRoot(reducers, { metaReducers }),

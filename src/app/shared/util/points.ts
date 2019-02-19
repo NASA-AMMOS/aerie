@@ -405,7 +405,7 @@ export function getActivityPointInBand(
 }
 
 /**
- * Helper that returns a unique activity instance id which is composed of the activity id and the start/end times.
+ * Helper that returns a unique activity id which is composed of the activity id and the start/end times.
  * In some rare cases (e.g. in a PEF) an activity id can be set to a non-unique string in the adaptation.
  * This adds the start/end times to ensure uniqueness.
  */

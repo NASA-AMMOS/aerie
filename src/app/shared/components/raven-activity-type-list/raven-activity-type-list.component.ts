@@ -8,7 +8,7 @@
  */
 
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { RavenActivityType } from '../../models/raven-activity-type';
+import { ActivityType } from '../../../../../libs/schemas/types/ts';
 
 @Component({
   selector: 'raven-activity-type-list',
@@ -17,7 +17,7 @@ import { RavenActivityType } from '../../models/raven-activity-type';
 })
 export class RavenActivityTypeListComponent {
   @Input()
-  activityTypes: RavenActivityType[];
+  activityTypes: ActivityType[];
 
   @Input()
   expanded = true;

@@ -11,7 +11,7 @@ This script converts a Raven 1 State downloaded in JSON format to a equivelant R
 
 The process for converting a Raven 1 Layout to a Raven 2 State is as follows (**Skip to step 5 if you have a Raven 1 State**):
 
-1.  Expand the Source Explorer to the right of the screen in Raven 1 to a data source that is applicable to the Raven Layout you wish to convert, Expanding to the top level of the file that you wish to apply the layout to.  (i.e. This would be the name of the TOL file one level above the Activites By Legend, Activities By Type and Resources level)
+1.  Expand the Source Explorer to the right of the screen in Raven 1 to a data source that is applicable to the Raven Layout you wish to convert, Expanding to the top level of the file that you wish to apply the layout to.  (i.e. This would be the name of the TOL file one level above the Activities By Legend, Activities By Type and Resources level)
 2.  Click on the down arrow at the top of the Source Explorer in the purple bar to the right of the word RAVEN, and select Manage Data Sources from the dropdown menu.
 3.  Select the Layouts Tab at the top of the menu that appears.  Find the Layout in this list and click the green checkbox to the right of this Layout.  Say Yes to any additional dialogs.  Wait for the Layout to be fully applied to Raven.  For larger Layouts this can take some time (~5min).
 4.  Once again, Open the Manage Data Sources menu as done prior.  Click the States tab, and enter a `<NAME>` for this state.   

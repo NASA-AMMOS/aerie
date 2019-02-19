@@ -22,18 +22,16 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-
+import * as d3 from 'd3';
+import { fromEvent, Subject, Subscription } from 'rxjs';
+import { filter, map, mergeMap, takeUntil, tap } from 'rxjs/operators';
+import { Activity } from '../../../../../libs/schemas/types/ts';
 import {
-  RavenActivity,
   RavenActivitySvg,
   RavenActivityUpdate,
   RavenTimeRange,
   StringTMap,
 } from '../../models';
-
-import * as d3 from 'd3';
-import { fromEvent, Subject, Subscription } from 'rxjs';
-import { filter, map, mergeMap, takeUntil, tap } from 'rxjs/operators';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -71,10 +69,10 @@ export class NestActivityBandComponent
   maxTimeRange: RavenTimeRange = { end: 0, start: 0 };
 
   @Input()
-  points: RavenActivity[] = [];
+  points: Activity[] = [];
 
   @Input()
-  selectedActivity: RavenActivity | null;
+  selectedActivity: Activity | null;
 
   @Input()
   selectedActivityColor = '#fafafa';
@@ -230,7 +228,7 @@ export class NestActivityBandComponent
       const height = activityHeight;
       const stroke = 'black';
       const width = Math.max(1.0, range);
-      const y = point.y !== null ? point.y : rowY;
+      const y = (point.y !== null ? point.y : rowY) as number;
 
       const labelFill = 'black';
       const labelFontFamily = 'Verdana';

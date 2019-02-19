@@ -20,12 +20,12 @@
         "@ngrx/schematics:reducer": {
           "group": true,
           "spec": true,
-          "reducers": "./hawk-store.ts"
+          "reducers": "./planning-store.ts"
         },
         "@ngrx/schematics:feature": {
           "group": true,
           "spec": true,
-          "reducers": "./hawk-store.ts"
+          "reducers": "./planning-store.ts"
         }
       },
       "architect": {

@@ -9,10 +9,9 @@
 
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { keyBy } from 'lodash';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { RavenActivity, RavenPlan, RavenPlanDetail } from '../models';
+import { Activity, Plan } from '../../../../libs/schemas/types/ts';
 import { PlanServiceInterface } from './plan-service-interface';
 
 @Injectable({
@@ -24,16 +23,16 @@ export class PlanService implements PlanServiceInterface {
   createActivity(
     apiBaseUrl: string,
     planId: string,
-    data: RavenActivity,
-  ): Observable<RavenActivity> {
-    return this.http.post<RavenActivity>(
+    data: Activity,
+  ): Observable<Activity> {
+    return this.http.post<Activity>(
       `${apiBaseUrl}/plans/${planId}/activity_instances/`,
       data,
     );
   }
 
-  createPlan(apiBaseUrl: string, plan: RavenPlan): Observable<RavenPlan> {
-    return this.http.post<RavenPlan>(`${apiBaseUrl}/plans/`, plan);
+  createPlan(apiBaseUrl: string, plan: Plan): Observable<Plan> {
+    return this.http.post<Plan>(`${apiBaseUrl}/plans/`, plan);
   }
 
   deleteActivity(
@@ -50,33 +49,13 @@ export class PlanService implements PlanServiceInterface {
     return this.http.delete(`${apiBaseUrl}/plans/${planId}/`);
   }
 
-  getActivityInstance(
-    apiBaseUrl: string,
-    planId: string,
-    activityId: string,
-  ): Observable<RavenActivity> {
-    return this.http.get<any>(
-      `${apiBaseUrl}/plans/${planId}/activity_instances/${activityId}/`,
+  getActivities(apiBaseUrl: string, planId: string): Observable<Activity[]> {
+    return this.http.get<Activity[]>(
+      `${apiBaseUrl}/plans/${planId}/activity_instances/`,
     );
   }
 
-  getPlanDetail(
-    apiBaseUrl: string,
-    planId: string,
-  ): Observable<RavenPlanDetail> {
-    return this.http.get<any>(`${apiBaseUrl}/plans/${planId}/`).pipe(
-      // Map _id to id.
-      // Map activity instances to a map keyed by activity id.
-      // TODO: Do this on the server.
-      map(planDetail => ({
-        ...planDetail,
-        activityInstances: keyBy(planDetail.activityInstances, 'activityId'),
-        id: planDetail._id,
-      })),
-    );
-  }
-
-  getPlans(apiBaseUrl: string): Observable<RavenPlan[]> {
+  getPlans(apiBaseUrl: string): Observable<Plan[]> {
     return this.http.get<any[]>(`${apiBaseUrl}/plans/`).pipe(
       map(plans =>
         // Map _id to id.
@@ -89,11 +68,11 @@ export class PlanService implements PlanServiceInterface {
     );
   }
 
-  updateActivityInstance(
+  updateActivity(
     apiBaseUrl: string,
     planId: string,
     activityId: string,
-    activityInstance: RavenActivity,
+    activityInstance: Activity,
   ): Observable<null> {
     return this.http.patch<null>(
       `${apiBaseUrl}/plans/${planId}/activity_instances/${activityId}/`,

@@ -7,7 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
@@ -26,7 +25,6 @@ import {
   SourceExplorerEffects,
   TimeCursorEffects,
   TimelineEffects,
-  ToastEffects,
 } from './effects';
 
 import {
@@ -42,7 +40,6 @@ import {
 
 @NgModule({
   imports: [
-    HttpClientModule,
     RavenRoutingModule,
     StoreModule.forFeature('raven', reducers),
     EffectsModule.forFeature([
@@ -55,7 +52,6 @@ import {
       SourceExplorerEffects,
       TimeCursorEffects,
       TimelineEffects,
-      ToastEffects,
     ]),
     RavenAppModule,
     RavenConfirmDialogModule,

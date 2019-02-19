@@ -1,5 +1,5 @@
 /**
- * Defines basic information about a top-level module (e.g. Raven, Hawk)
+ * Defines basic information about a top-level module (e.g. Raven, Planning)
  *
  * @license
  * Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.

@@ -10,7 +10,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { RavenActivityType, RavenAdaptation, StringTMap } from '../models';
+import { ActivityType, Adaptation } from '../../../../libs/schemas/types/ts';
+import { StringTMap } from '../models';
 import { AdaptationServiceInterface } from './adaptation-service-interface';
 
 @Injectable({
@@ -22,13 +23,13 @@ export class AdaptationService implements AdaptationServiceInterface {
   getActivityTypes(
     apiBaseUrl: string,
     id: string,
-  ): Observable<StringTMap<RavenActivityType>> {
-    return this.http.get<StringTMap<RavenActivityType>>(
+  ): Observable<StringTMap<ActivityType>> {
+    return this.http.get<StringTMap<ActivityType>>(
       `${apiBaseUrl}/adaptations/${id}/activities/`,
     );
   }
 
-  getAdaptations(apiBaseUrl: string): Observable<RavenAdaptation[]> {
-    return this.http.get<RavenAdaptation[]>(`${apiBaseUrl}/adaptations/`);
+  getAdaptations(apiBaseUrl: string): Observable<Adaptation[]> {
+    return this.http.get<Adaptation[]>(`${apiBaseUrl}/adaptations/`);
   }
 }
