@@ -147,6 +147,27 @@ export function getTooltipText(
     ? band.onFormatTickValue(interval.properties.Value)
     : interval.properties.Value;
 
+  let parameterString = '';
+  if (interval.parameters && interval.parameters.length > 0) {
+    parameterString = '<p><h3>Parameters:</h3><table>';
+    for (let i = 0, l = interval.parameters.length; i < l; ++i) {
+      const param = interval.parameters[i];
+      parameterString =
+        parameterString +
+        `
+        <tr>
+         <td>
+          <strong>${param.Name}</strong>
+          </td>
+          <td>
+            ${param.Value}
+          </td>
+        </tr>
+      `;
+    }
+    parameterString = parameterString + '</table></p>';
+  }
+
   return `
     <table>
       <tr>
@@ -190,5 +211,5 @@ export function getTooltipText(
         </td>
       </tr>
     </table>
-  `;
+  ${parameterString}`;
 }

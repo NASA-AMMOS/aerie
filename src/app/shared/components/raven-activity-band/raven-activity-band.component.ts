@@ -404,6 +404,7 @@ export class RavenActivityBandComponent
         // Set the sub-band ID and unique ID separately since they are not a DrawableInterval prop.
         interval.subBandId = this.id;
         interval.uniqueId = point.uniqueId;
+        interval.parameters = point.activityParameters;
 
         intervals.push(interval);
         intervalsById[interval.uniqueId] = interval;
