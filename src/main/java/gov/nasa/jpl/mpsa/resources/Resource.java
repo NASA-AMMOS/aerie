@@ -2,10 +2,14 @@
 package gov.nasa.jpl.mpsa.resources;
 
 import gov.nasa.jpl.mpsa.time.Time;
+import jdk.nashorn.internal.runtime.regexp.joni.exception.ValueException;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 
 
@@ -32,7 +36,8 @@ public class Resource<V extends Comparable> implements PropertyChangeListener{
     private boolean frozen = false;
 
     // setting up main data structure that holds value history
-    private List<V> resourceHistory = new ArrayList<V>();
+    private Map<Instant, V> resourceHistory = new LinkedHashMap<>();
+
 
 
     public UUID getId() {
@@ -228,7 +233,7 @@ public class Resource<V extends Comparable> implements PropertyChangeListener{
         return !resourceHistory.isEmpty();
     }
 
-    public void clearHistory() { resourceHistory = new ArrayList<V>(); }
+    public void clearHistory() { resourceHistory = new HashMap<>(); }
 
     public void setValue(V newValue) {
 
@@ -257,20 +262,15 @@ public class Resource<V extends Comparable> implements PropertyChangeListener{
       //  System.out.println("value is " + value);
     //    notifyListeners(new AbstractMap.SimpleImmutableEntry(0, 0), new AbstractMap.SimpleImmutableEntry(0, value));
         notifyListeners(oldValue, newValue);
-
-        resourceHistory.add(value);
+        resourceHistory.put(Instant.now(),value);
 
     }
 
     public V getCurrentValue() {
-       /* if (resourceHistory.size()-1 < 0) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
-        else return resourceHistory.get(resourceHistory.size() - 1);*/
-       return value;
+        return value;
     }
 
-    public List<V> getResourceHistory() {
+    public Map<Instant, V> getResourceHistory() {
         return resourceHistory;
     }
 

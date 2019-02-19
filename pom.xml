@@ -145,14 +145,24 @@
             <version>3.6.1</version>
         </dependency>
         <dependency>
+            <groupId>janino</groupId>
+            <artifactId>janino</artifactId>
+            <version>2.5.10</version>
+        </dependency>
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>23.6-jre</version>
         </dependency>
         <dependency>
-            <groupId>org.objenesis</groupId>
+            <groupId>orgzxjenesis</groupId>
             <artifactId>objenesis</artifactId>
             <version>2.6</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fathzer</groupId>
+            <artifactId>javaluator</artifactId>
+            <version>3.0.2</version>
         </dependency>
         <dependency>
             <groupId>gov.nasa.jpl.mgss.mpsa.seq</groupId>
