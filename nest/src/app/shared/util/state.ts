@@ -142,9 +142,15 @@ export function importState(state: any): RavenState {
           })),
         };
       }),
-      showDetailsPanel: state.showDetailsPanel === undefined ? true : state.showDetailsPanel,
-      showLeftPanel: state.showLeftPanel === undefined ? true : state.showLeftPanel,
-      showRightPanel: state.showRightPanel === undefined ? true : state.showRightPanel,
-      showSouthBandsPanel: state.showSouthBandsPanel === undefined ? true : state.showSouthBandsPanel,
+    showDetailsPanel:
+      state.showDetailsPanel === undefined ? true : state.showDetailsPanel,
+    showLeftPanel:
+      state.showLeftPanel === undefined ? true : state.showLeftPanel,
+    showRightPanel:
+      state.showRightPanel === undefined ? true : state.showRightPanel,
+    showSouthBandsPanel:
+      state.showSouthBandsPanel === undefined
+        ? true
+        : state.showSouthBandsPanel,
   };
 }
