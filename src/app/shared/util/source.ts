@@ -206,6 +206,8 @@ export function fromFile(
   mSource: MpsServerSourceFile,
   rSource: RavenSource,
 ): RavenSource {
+  const isEpoch = mSource.__kind_sub === 'file_epoch';
+
   const actions = [
     {
       event: 'delete',
@@ -217,7 +219,7 @@ export function fromFile(
     },
   ];
 
-  if (mSource.__kind_sub === 'file_epoch') {
+  if (isEpoch) {
     actions.push({
       event: 'epoch-load',
       name: 'Load Epoch',
@@ -233,7 +235,7 @@ export function fromFile(
     ...rSource,
     actions,
     dbType: mSource.__db_type,
-    expandable: true,
+    expandable: !isEpoch,
     expanded: false,
     fileMetadata: toRavenFileMetadata(mSource),
     icon: 'fa fa-file',
@@ -278,7 +280,6 @@ export function fromCustomFilter(
     filter: '',
     filterSetOf: mSource.filterSetOf,
     filterTarget: mSource.filterTarget,
-    icon: 'fa fa-area-chart',
     openable: false,
     opened: false,
     type: 'customFilter',
@@ -298,7 +299,6 @@ export function fromFilter(
     expandable: false,
     filterSetOf: mSource.filterSetOf,
     filterTarget: mSource.filterTarget,
-    icon: 'fa fa-area-chart',
     openable: false,
     opened: false,
     type: 'filter',
