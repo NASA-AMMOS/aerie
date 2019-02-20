@@ -1909,7 +1909,7 @@ export class SourceExplorerEffects {
   /**
    * Helper. Returns a stream of actions that need to occur when restoring the layout of the panels.
    */
-  updatePanels(savedState: RavenState): Observable<Action>[]{
+  updatePanels(savedState: RavenState): Observable<Action>[] {
     const actions: Observable<Action>[] = [];
     if (!savedState.showDetailsPanel) {
       actions.push(of(new layoutActions.ToggleDetailsPanel()));
