@@ -9,11 +9,11 @@
 
 import { browser, by, element, promise, until } from 'protractor';
 
-export class AppPage {
+export class NestAppPage {
   aboutButton = element(by.css('.raven-app-nav-about-button'));
 
   navigateTo(): promise.Promise<any> {
-    return browser.get('/');
+    return browser.get('/#/plans');
   }
 
   openNestAboutDialog(): promise.Promise<any> {

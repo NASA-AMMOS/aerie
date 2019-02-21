@@ -3,7 +3,7 @@
 
 exports.config = {
   allScriptsTimeout: 11000,
-  specs: ['./features/*.feature'],
+  specs: ['./**/features/*.feature'],
   capabilities: {
     browserName: 'chrome',
   },
@@ -17,7 +17,7 @@ exports.config = {
     format: [
       'node_modules/cucumber-pretty'
     ],
-    require: ['./steps/**/*.ts'],
+    require: ['./**/steps/*.steps.ts'],
     strict: true,
     tags: [],
   },

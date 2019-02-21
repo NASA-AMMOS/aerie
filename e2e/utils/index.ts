@@ -7,5 +7,5 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './app.po';
+export * from './nest-app.po';
 export * from './helpers';

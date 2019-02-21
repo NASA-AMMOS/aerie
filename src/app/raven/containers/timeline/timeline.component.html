@@ -1,20 +1,20 @@
-<split
+<as-split
   direction="horizontal"
   (dragEnd)="resize()">
-  <split-area
+  <as-split-area
     [visible]="showLeftPanel$ | async"
     [order]="0"
     size="25">
     <app-source-explorer></app-source-explorer>
-  </split-area>
+  </as-split-area>
 
-  <split-area
+  <as-split-area
     [order]="1"
     [size]="timelinePanelSize$ | async">
-    <split
+    <as-split
       direction="vertical"
       (dragEnd)="resize()">
-      <split-area
+      <as-split-area
         class="scroll"
         [order]="2"
         size="80">
@@ -88,9 +88,9 @@
             (updateViewTimeRange)="onUpdateViewTimeRange($event)">
           </raven-bands>
         </div>
-      </split-area>
+      </as-split-area>
 
-      <split-area
+      <as-split-area
         class="scroll"
         [visible]="showSouthBandsPanel$ | async"
         [order]="3"
@@ -122,9 +122,9 @@
             (updateViewTimeRange)="onUpdateViewTimeRange($event)">
           </raven-bands>
         </div>
-      </split-area>
+      </as-split-area>
 
-      <split-area
+      <as-split-area
         [visible]="showDetailsPanel$ | async"
         [order]="4"
         size="20">
@@ -136,11 +136,11 @@
           [selectedPoint]="selectedPoint$ | async"
           (updateTableColumns)="onUpdateSubBand($event)">
         </raven-table>
-      </split-area>
-    </split>
-  </split-area>
+      </as-split-area>
+    </as-split>
+  </as-split-area>
 
-  <split-area
+  <as-split-area
     [visible]="showRightPanel$ | async"
     [order]="5"
     size="25">
@@ -208,8 +208,8 @@
         </div>
       </mat-tab>
     </mat-tab-group>
-  </split-area>
-</split>
+  </as-split-area>
+</as-split>
 
 <mat-sidenav-container>
   <!-- Apply Layout Drawer. -->

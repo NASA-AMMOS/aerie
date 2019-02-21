@@ -10,14 +10,14 @@
 import { expect } from 'chai';
 import { Before, Given, Then, When } from 'cucumber';
 import { $ } from 'protractor';
-import { config } from '../../src/config';
-import { AppPage } from './../utils';
+import { config } from '../../../src/config';
+import { NestAppPage } from '../../utils';
 
-let app: AppPage;
+let app: NestAppPage;
 
 // An About dialog is displayed
 Before(() => {
-  app = new AppPage();
+  app = new NestAppPage();
 });
 Given('A button called About in the Nest sidenav exists', () =>
   app.navigateTo(),
@@ -43,11 +43,9 @@ Then('The version of each module should be displayed', async () => {
 
 // Module versions are displayed using semver
 Before(() => {
-  app = new AppPage();
+  app = new NestAppPage();
 });
-Given('The About dialog is visible', () => {
-  app.navigateTo();
-});
+Given('The About dialog is visible', () => app.navigateTo());
 When('The versions are displayed', () => app.openNestAboutDialog());
 Then('They should be in the form MAJOR.MINOR.PATCH', async () => {
   for (let i = 0, l = config.appModules.length; i < l; ++i) {

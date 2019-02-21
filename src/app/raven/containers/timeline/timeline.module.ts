@@ -43,7 +43,7 @@ import {
   declarations: [TimelineComponent],
   exports: [TimelineComponent],
   imports: [
-    AngularSplitModule,
+    AngularSplitModule.forChild(),
     CommonModule,
     MatButtonModule,
     MatCardModule,
