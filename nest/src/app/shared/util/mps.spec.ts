@@ -31,6 +31,21 @@ const fileEntries: MpsServerSource[] = [
     customMeta: [],
     __kind: 'fs_file',
     __db_type: 'mongodb',
+    name: 'test.json',
+    label: 'test.json',
+    __kind_sub: 'file_pef',
+    contents_url:
+      'http://localhost:8080/mpsserver/api/v2/list_pef-mongodb/TEST_ATS/Big_Combo_Test/pef/prelim/test.json',
+    file_data_url:
+      'http://localhost:8080/mpsserver/api/v2/fs-mongodb/TEST_ATS/Big_Combo_Test/pef/prelim/test.json',
+    permissions: 'rw-r--r-- null all.usjpl',
+    created: '2019-01-08 10:49:46-0800',
+    modified: '2019-01-08 10:49:46-0800',
+  } as unknown) as MpsServerSource,
+  ({
+    customMeta: [],
+    __kind: 'fs_file',
+    __db_type: 'mongodb',
     name: 'states_layouts_and_links_layout',
     label: 'states_layouts_and_links_layout',
     __kind_sub: 'file_generic',
@@ -69,6 +84,7 @@ describe('util.ts', () => {
 
     it('should get the path for files', () => {
       expect(fileEntries.map(getMpsPathForSource)).toEqual([
+        '/TEST_ATS/Big_Combo_Test/pef/prelim/test-json',
         '/TEST_ATS/LAYOUTS/states_layouts_and_links_layout',
         '/TEST_ATS/STATES/states_layouts_and_links_state',
       ]);
