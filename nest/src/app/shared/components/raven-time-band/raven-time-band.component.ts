@@ -23,7 +23,7 @@ import {
 
 import { RavenEpoch, RavenTimeRange } from '../../models';
 import { colorHexToRgbArray } from '../../util/color';
-import { formatTimeTickTFormat } from '../../util/time';
+import { formatTimeTickTFormat, getLocalTimezoneName } from '../../util/time';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -177,7 +177,7 @@ export class RavenTimeBandComponent
       font: 'normal 9px Verdana',
       height: 37,
       label: 'SCET',
-      minorLabels: this.getEpochLabel(this.epoch),
+      minorLabels: this.getEpochLabel(this.epoch).length > 0 ? this.getEpochLabel(this.epoch) : [getLocalTimezoneName()],
       onFormatNow: this.onFormatNow.bind(this),
       onFormatTimeTick: this.onFormatTimeTick.bind(this),
       onHideTooltip: this.onHideTooltip.bind(this),
