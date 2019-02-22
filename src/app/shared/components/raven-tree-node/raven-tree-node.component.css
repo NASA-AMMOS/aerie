@@ -7,8 +7,50 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { RavenExpandableSource } from './index';
+.node {
+  cursor: pointer;
+  min-height: 25px;
+  padding-left: 5px;
+  white-space: nowrap;
 
-export interface RavenFolderSource extends RavenExpandableSource {
-  selected: boolean;
+  color: #000000;
+}
+.node--activated {
+  color: #688ad8;
+}
+.node--pending {
+  color: #b4b4b4;
+}
+.node--failure {
+  color: #ff0000;
+}
+.node--highlighted {
+  background-color: rgba(200, 200, 200, 0.5);
+}
+
+.node-icon {
+  font-size: 16px;
+  height: auto;
+  padding-right: 8px;
+  vertical-align: sub;
+}
+
+.menu-icon {
+  color: #000000;
+  line-height: 0;
+  height: 21px;
+  width: 21px;
+}
+.menu-icon mat-icon {
+  font-size: 16px;
+}
+
+.name {
+  line-height: 25px;
+}
+.name--error {
+  color: #ff0000;
+}
+.name--running {
+  color: #b4b4b4;
 }

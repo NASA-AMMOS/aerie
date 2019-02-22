@@ -1,25 +1,13 @@
-<div class="tree" [ngClass]="{
-  'highlight': source.opened,
-  'no-highlight': !source.opened
-}">
-  <mat-icon
-    *ngIf="source.opened"
-    matTooltip="Filter For Parent Graph"
-    matTooltipShowDelay="500"
-    [id]="'raven-tree-'+source.name+'-unselectGraphableFilter'"
-    (click)="removeGraphableFilter.emit(source)">
-    filter
-  </mat-icon>
-  <mat-icon
-    *ngIf="!source.opened"
-    matTooltip="Filter For Parent Graph"
-    matTooltipShowDelay="500"
-    [id]="'raven-tree-'+source.name+'-selectGraphableFilter'"
-    (click)="addGraphableFilter.emit(source)">
-    filter
-  </mat-icon>
-
-  <span class="name">
-    <i [ngClass]="source.icon" aria-hidden="true"></i> {{source.name}}
-  </span>
-</div>
+<raven-tree-node
+  [attr.data-source-id]="source.id"
+  [activated]="source.opened"
+  [icon]="source.icon"
+  [label]="source.name"
+  markerActivatedIcon="filter"
+  markerDeactivatedIcon="filter"
+  markerTooltip="Filter For Parent Graph"
+  [menu]="source.actions"
+  (action)="action.emit({ event: $event, source: source })"
+  (activate)="addGraphableFilter.emit(source)"
+  (deactivate)="removeGraphableFilter.emit(source)">
+</raven-tree-node>

@@ -12,7 +12,6 @@ import {
   RavenExpandableSource,
   RavenFileSource,
   RavenFilterSource,
-  RavenFolderSource,
   RavenGraphableFilterSource,
   RavenGraphableSource,
 } from './index';
@@ -22,6 +21,5 @@ export type RavenSource =
   | RavenExpandableSource
   | RavenFileSource
   | RavenFilterSource
-  | RavenFolderSource
   | RavenGraphableFilterSource
   | RavenGraphableSource;

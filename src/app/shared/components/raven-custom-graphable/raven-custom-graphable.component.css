@@ -6,26 +6,3 @@
  * User has the responsibility to obtain export licenses, or other export authority as may be required
  * before exporting such information to foreign countries or providing access to foreign persons
  */
-
-.tree {
-  cursor: pointer;
-  min-height: 25px;
-  padding-left: 5px;
-  white-space: nowrap;
-}
-
-mat-icon {
-  font-size: 16px;
-}
-
-.name {
-  line-height: 25px;
-}
-
-.highlight {
-  color: #688ad8;
-}
-
-.no-highlight {
-  color: #000000;
-}

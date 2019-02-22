@@ -28,9 +28,6 @@ import {
 })
 export class RavenFileComponent {
   @Input()
-  id: string;
-
-  @Input()
   source: RavenFileSource;
 
   @Output()
@@ -44,37 +41,33 @@ export class RavenFileComponent {
   @Output()
   expand: EventEmitter<RavenFileSource> = new EventEmitter<RavenFileSource>();
 
-  @Output()
-  openMetadata: EventEmitter<RavenFileSource> = new EventEmitter<
-    RavenFileSource
-  >();
+  get selectable(): boolean {
+    return (
+      !['file_state', 'file_epoch'].includes(this.source.subKind) &&
+      this.source.importJobStatus === 'FINISHED' &&
+      this.source.expandable
+    );
+  }
 
-  @Output()
-  select: EventEmitter<RavenFileSource> = new EventEmitter<RavenFileSource>();
-
-  get iconClass(): string {
-    switch (this.source.importJobStatus) {
-      case 'RUNNING':
-      case 'QUEUED':
-        return 'fa fa-hourglass';
-      case 'FINISHED':
-        return this.source.icon;
-      case 'ERROR':
-      default:
-        return 'fa fa-exclamation-triangle';
+  get status(): 'normal' | 'pending' | 'failure' {
+    if (['RUNNING', 'QUEUED'].includes(this.source.importJobStatus)) {
+      return 'pending';
+    } else if (['FINISHED'].includes(this.source.importJobStatus)) {
+      return 'normal';
+    } else {
+      return 'failure';
     }
   }
 
-  get textClass(): string {
-    switch (this.source.importJobStatus) {
-      case 'RUNNING':
-      case 'QUEUED':
-        return 'running';
-      case 'FINISHED':
-        return '';
-      case 'ERROR':
-      default:
-        return 'error';
+  onActivate() {
+    if (this.selectable) {
+      this.expand.emit(this.source);
+    }
+  }
+
+  onDeactivate() {
+    if (this.selectable) {
+      this.collapse.emit(this.source);
     }
   }
 }

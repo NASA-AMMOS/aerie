@@ -15,7 +15,10 @@ import {
   Output,
 } from '@angular/core';
 
-import { RavenExpandableSource } from '../../../shared/models';
+import {
+  RavenExpandableSource,
+  RavenSourceActionEvent,
+} from '../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,10 +28,12 @@ import { RavenExpandableSource } from '../../../shared/models';
 })
 export class RavenCategoryComponent {
   @Input()
-  id: string;
-
-  @Input()
   source: RavenExpandableSource;
+
+  @Output()
+  action: EventEmitter<RavenSourceActionEvent> = new EventEmitter<
+    RavenSourceActionEvent
+  >();
 
   @Output()
   collapse: EventEmitter<RavenExpandableSource> = new EventEmitter<

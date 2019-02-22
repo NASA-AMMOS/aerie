@@ -5,7 +5,7 @@
     position="end">
     <button
       mat-icon-button
-      (click)="fileMetadataDrawer.toggle()">
+      (click)="fileMetadataDrawer.close()">
       <mat-icon
         aria-label="Clear">
         clear
@@ -25,7 +25,6 @@
         <ng-container *ngFor="let childId of sortedChildIds$ | async">
           <raven-tree
             [class]="tree[childId].name"
-            [id]="childId"
             [source]="tree[childId]"
             [tree]="tree"
             (action)="onAction($event)"
@@ -36,10 +35,8 @@
             (collapse)="onCollapse($event)"
             (expand)="onExpand($event)"
             (open)="onOpen($event)"
-            (openMetadata)="fileMetadataDrawer.toggle()"
             (removeFilter)="onRemoveFilter($event)"
             (removeGraphableFilter)="onRemoveGraphableFilter($event)"
-            (select)="onSelect($event)"
             (selectCustomFilter)="onSelectCustomFilter($event)">
           </raven-tree>
         </ng-container>
@@ -54,7 +51,6 @@
         <raven-tree
           *ngIf="tree[pin.sourceId]"
           [class]="tree[pin.sourceId].name"
-          [id]="pin.sourceId"
           [source]="tree[pin.sourceId]"
           [tree]="tree"
           (action)="onAction($event)"
@@ -65,10 +61,8 @@
           (collapse)="onCollapse($event)"
           (expand)="onExpand($event)"
           (open)="onOpen($event)"
-          (openMetadata)="fileMetadataDrawer.toggle()"
           (removeFilter)="onRemoveFilter($event)"
           (removeGraphableFilter)="onRemoveGraphableFilter($event)"
-          (select)="onSelect($event)"
           (selectCustomFilter)="onSelectCustomFilter($event)">
         </raven-tree>
       </div>

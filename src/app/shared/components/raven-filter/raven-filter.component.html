@@ -1,24 +1,13 @@
-<div class="tree" [ngClass]="{
-  'highlight': source.opened,
-  'no-highlight': !source.opened
-}">
-  <mat-icon
-    *ngIf="source.opened"
-    matTooltip="Filter"
-    matTooltipShowDelay="500"
-    [id]="'raven-tree-'+source.name+'-unselectFilter'"
-    (click)="removeFilter.emit(source)">
-    filter_list
-  </mat-icon>
-  <mat-icon
-    *ngIf="!source.opened"
-    matTooltip="Filter"
-    matTooltipShowDelay="500"
-    [id]="'raven-tree-'+source.name+'-selectFilter'"
-    (click)="addFilter.emit(source)">
-    filter_list
-  </mat-icon>
-  <span (click)="select.emit(source)" class="name">
-    {{source.name}}
-  </span>
-</div>
+<raven-tree-node
+  [attr.data-source-id]="source.id"
+  [activated]="source.opened"
+  [icon]="source.icon"
+  [label]="source.name"
+  markerActivatedIcon="filter_list"
+  markerDeactivatedIcon="filter_list"
+  markerTooltip="Filter"
+  [menu]="source.actions"
+  (action)="action.emit({ event: $event, source: source })"
+  (activate)="addFilter.emit(source)"
+  (deactivate)="removeFilter.emit(source)">
+</raven-tree-node>

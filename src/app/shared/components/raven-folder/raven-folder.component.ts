@@ -16,7 +16,7 @@ import {
 } from '@angular/core';
 
 import {
-  RavenFolderSource,
+  RavenExpandableSource,
   RavenSourceActionEvent,
 } from '../../../shared/models';
 
@@ -28,10 +28,7 @@ import {
 })
 export class RavenFolderComponent {
   @Input()
-  id: string;
-
-  @Input()
-  source: RavenFolderSource;
+  source: RavenExpandableSource;
 
   @Output()
   action: EventEmitter<RavenSourceActionEvent> = new EventEmitter<
@@ -39,22 +36,12 @@ export class RavenFolderComponent {
   >();
 
   @Output()
-  collapse: EventEmitter<RavenFolderSource> = new EventEmitter<
-    RavenFolderSource
+  collapse: EventEmitter<RavenExpandableSource> = new EventEmitter<
+    RavenExpandableSource
   >();
 
   @Output()
-  expand: EventEmitter<RavenFolderSource> = new EventEmitter<
-    RavenFolderSource
-  >();
-
-  @Output()
-  openMetadata: EventEmitter<RavenFolderSource> = new EventEmitter<
-    RavenFolderSource
-  >();
-
-  @Output()
-  select: EventEmitter<RavenFolderSource> = new EventEmitter<
-    RavenFolderSource
+  expand: EventEmitter<RavenExpandableSource> = new EventEmitter<
+    RavenExpandableSource
   >();
 }

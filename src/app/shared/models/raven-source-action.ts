@@ -8,6 +8,6 @@
  */
 
 export interface RavenSourceAction {
-  event: string;
+  event: string | RavenSourceAction[];
   name: string;
 }

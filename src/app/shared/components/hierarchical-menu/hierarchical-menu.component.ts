@@ -10,38 +10,36 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   EventEmitter,
   Input,
   Output,
+  ViewChild,
 } from '@angular/core';
 
-import {
-  RavenFilterSource,
-  RavenSourceActionEvent,
-} from '../../../shared/models';
+import { RavenSourceAction } from '../../models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  selector: 'raven-filter',
-  styleUrls: ['./raven-filter.component.css'],
-  templateUrl: './raven-filter.component.html',
+  selector: 'hierarchical-menu',
+  styleUrls: ['./hierarchical-menu.component.css'],
+  templateUrl: './hierarchical-menu.component.html',
 })
-export class RavenFilterComponent {
+export class HierarchicalMenuComponent {
   @Input()
-  source: RavenFilterSource;
+  options: RavenSourceAction[];
 
   @Output()
-  action: EventEmitter<RavenSourceActionEvent> = new EventEmitter<
-    RavenSourceActionEvent
-  >();
+  action: EventEmitter<string> = new EventEmitter<string>();
 
-  @Output()
-  addFilter: EventEmitter<RavenFilterSource> = new EventEmitter<
-    RavenFilterSource
-  >();
+  @ViewChild('menuRef')
+  public menuRef: ElementRef;
 
-  @Output()
-  removeFilter: EventEmitter<RavenFilterSource> = new EventEmitter<
-    RavenFilterSource
-  >();
+  isExpandOption(option: RavenSourceAction): boolean {
+    return Array.isArray(option.event);
+  }
+
+  isEmitOption(option: RavenSourceAction): boolean {
+    return !this.isExpandOption(option);
+  }
 }

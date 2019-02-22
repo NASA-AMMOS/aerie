@@ -34,9 +34,6 @@ import { getSortedChildIds } from '../../util/source';
 })
 export class RavenTreeComponent implements OnChanges {
   @Input()
-  id: string;
-
-  @Input()
   pins: RavenPin[];
 
   @Input()

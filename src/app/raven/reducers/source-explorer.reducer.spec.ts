@@ -381,50 +381,22 @@ describe('source-explorer reducer', () => {
 
   it('handle SelectSource', () => {
     const source: RavenSource = rootSource;
-
-    // Make the rootSource node selectable in the initial state.
-    const initState = {
-      ...sourceExplorerState,
-      treeBySourceId: {
-        ...sourceExplorerState.treeBySourceId,
-        [source.id]: {
-          ...sourceExplorerState.treeBySourceId[source.id],
-          selectable: true,
-        },
-      },
-    };
+    const initState: SourceExplorerState = sourceExplorerState;
 
     // Select node.
-    sourceExplorerState = reducer(initState, new SelectSource(source));
+    sourceExplorerState = reducer(initState, new SelectSource(source.id));
 
     expect(sourceExplorerState).toEqual({
       ...initState,
       selectedSourceId: source.id,
-      treeBySourceId: {
-        ...initState.treeBySourceId,
-        [source.id]: {
-          ...initState.treeBySourceId[source.id],
-          selected: true,
-        },
-      },
     });
 
     // Deselect node.
-    sourceExplorerState = reducer(
-      sourceExplorerState,
-      new SelectSource(source),
-    );
+    sourceExplorerState = reducer(sourceExplorerState, new SelectSource(''));
 
     expect(sourceExplorerState).toEqual({
       ...initState,
       selectedSourceId: '',
-      treeBySourceId: {
-        ...initState.treeBySourceId,
-        [source.id]: {
-          ...initState.treeBySourceId[source.id],
-          selected: false,
-        },
-      },
     });
   });
 

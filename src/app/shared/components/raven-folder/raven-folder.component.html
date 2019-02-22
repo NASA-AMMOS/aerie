@@ -1,53 +1,12 @@
-<div class="tree" [ngClass]="{
-  'selected': source.selected,
-  'highlight': source.expanded,
-  'no-highlight': !source.expanded
-}">
-  <mat-icon
-    *ngIf="source.expanded"
-    [id]="'raven-tree-'+source.name+'-collapse'"
-    (click)="collapse.emit(source)">
-    remove
-  </mat-icon>
-  <mat-icon
-    *ngIf="!source.expanded"
-    [id]="'raven-tree-'+source.name+'-expand'"
-    (click)="expand.emit(source)">
-    add
-  </mat-icon>
-  <span (click)="select.emit(source)" class="name">
-    <i [ngClass]="source.icon" aria-hidden="true"></i> {{source.name}}
-  </span>
-  <button
-    *ngIf="source.selected"
-    class="menu-icon"
-    mat-icon-button
-    [matMenuTriggerFor]="actionsMenu">
-    <mat-icon>more_vert</mat-icon>
-  </button>
-
-  <mat-menu
-    #actionsMenu="matMenu"
-    [overlapTrigger]="false"
-    y-position="below">
-    <ng-container *ngFor="let a of source.actions">
-      <ng-container *ngIf="a.name === 'Apply'">
-        <button mat-menu-item [matMenuTriggerFor]="applyMenu">{{a.name}}</button>
-      </ng-container>
-      <ng-container *ngIf="a.name === 'File Metadata'">
-        <button mat-menu-item (click)="openMetadata.emit(source)">File Metadata</button>
-      </ng-container>
-      <ng-container *ngIf="a.name !== 'Apply' && a.name !== 'File Metadata'">
-        <button mat-menu-item (click)="action.emit({ event: a.event, source: source })">{{a.name}}</button>
-      </ng-container>
-    </ng-container>
-  </mat-menu>
-
-  <mat-menu
-    #applyMenu="matMenu"
-    [overlapTrigger]="false"
-    y-position="below">
-    <button mat-menu-item (click)="action.emit({ event: 'apply-layout', source: source })">Layout</button>
-    <button mat-menu-item (click)="action.emit({ event: 'apply-state', source: source })">State</button>
-  </mat-menu>
-</div>
+<raven-tree-node
+  [attr.data-source-id]="source.id"
+  [activated]="source.expanded"
+  [icon]="source.icon"
+  [label]="source.name"
+  markerActivatedIcon="expand_more"
+  markerDeactivatedIcon="keyboard_arrow_right"
+  [menu]="source.actions"
+  (action)="action.emit({ event: $event, source: source })"
+  (activate)="expand.emit(source)"
+  (deactivate)="collapse.emit(source)">
+</raven-tree-node>

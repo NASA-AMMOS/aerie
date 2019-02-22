@@ -1,50 +1,12 @@
-<div class="tree" [ngClass]="{
-  'selected': source.selected,
-  'highlight': source.opened,
-  'no-highlight': !source.opened
-}">
-  <mat-icon
-    *ngIf="source.opened"
-    [id]="'raven-tree-'+source.name+'-close'"
-    (click)="close.emit(source)">
-    radio_button_checked
-  </mat-icon>
-  <mat-icon
-    *ngIf="!source.opened"
-    [id]="'raven-tree-'+source.name+'-open'"
-    (click)="open.emit(source)">
-    radio_button_unchecked
-  </mat-icon>
-  <span (click)="select.emit(source)" class="name">
-    <i [ngClass]="source.icon" aria-hidden="true"></i> {{source.name}}
-  </span>
-  <button
-    *ngIf="source.selected && source.opened"
-    class="menu-icon"
-    mat-icon-button
-    [matMenuTriggerFor]="actionsMenu">
-    <mat-icon>more_vert</mat-icon>
-  </button>
-
-  <mat-menu
-    #actionsMenu="matMenu"
-    [overlapTrigger]="false"
-    y-position="below">
-    <ng-container *ngFor="let a of source.actions">
-      <ng-container *ngIf="a.name === 'File Metadata'">
-        <button mat-menu-item (click)="openMetadata.emit(source)">File Metadata</button>
-      </ng-container>
-      <ng-container *ngIf="a.name !== 'File Metadata'">
-        <button mat-menu-item (click)="action.emit({ event: a.event, source: source })">{{a.name}}</button>
-      </ng-container>
-    </ng-container>
-  </mat-menu>
-
-  <mat-menu
-    #applyMenu="matMenu"
-    [overlapTrigger]="false"
-    y-position="below">
-    <button mat-menu-item (click)="action.emit({ event: 'apply-layout', source: source })">Layout</button>
-    <button mat-menu-item (click)="action.emit({ event: 'apply-state', source: source })">State</button>
-  </mat-menu>
-</div>
+<raven-tree-node
+  [attr.data-source-id]="source.id"
+  [activated]="source.opened"
+  [icon]="source.icon"
+  [label]="source.name"
+  markerActivatedIcon="check_box"
+  markerDeactivatedIcon="check_box_outline_blank"
+  [menu]="menu"
+  (action)="action.emit({ event: $event, source: source })"
+  (activate)="open.emit(source)"
+  (deactivate)="close.emit(source)">
+</raven-tree-node>

@@ -109,8 +109,6 @@ export const initialState: SourceExplorerState = {
       permissions: '',
       pinnable: false,
       pinned: false,
-      selectable: false,
-      selected: false,
       subBandIds: [],
       subKind: '',
       type: '',
@@ -546,29 +544,10 @@ export function selectSource(
   state: SourceExplorerState,
   action: SelectSource,
 ): SourceExplorerState {
-  if (state.treeBySourceId[action.source.id].selectable) {
-    return {
-      ...state,
-      selectedSourceId:
-        action.source.id === state.selectedSourceId ? '' : action.source.id,
-      treeBySourceId: omit(
-        {
-          ...state.treeBySourceId,
-          [action.source.id]: {
-            ...state.treeBySourceId[action.source.id],
-            selected: true,
-          },
-          [state.selectedSourceId]: {
-            ...state.treeBySourceId[state.selectedSourceId],
-            selected: false,
-          },
-        },
-        '',
-      ),
-    };
-  }
-
-  return state;
+  return {
+    ...state,
+    selectedSourceId: action.sourceId,
+  };
 }
 
 /**

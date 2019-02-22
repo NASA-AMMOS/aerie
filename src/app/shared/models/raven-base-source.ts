@@ -34,7 +34,6 @@ export interface RavenBaseSource {
   permissions: string;
   pinnable: boolean;
   pinned: boolean;
-  selectable: boolean;
   subBandIds: string[];
   subKind: string;
   type: string;
