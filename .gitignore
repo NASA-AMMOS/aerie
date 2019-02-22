@@ -41,3 +41,6 @@ karma-test-results.xml
 # System Files
 .DS_Store
 Thumbs.db
+
+# Tools
+.scannerwork

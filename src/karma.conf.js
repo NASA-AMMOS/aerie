@@ -42,12 +42,21 @@ module.exports = function(config) {
       // Put the junit results in the top-level directory so it's not watched by Karma.
       outputFile: '../../karma-test-results.xml',
     },
+    customLaunchers: {
+      ChromeHeadlessNoSandbox: {
+        base: 'ChromeHeadless',
+        flags: ['--no-sandbox']
+      }
+    },
     reporters: ['progress', 'kjhtml', 'junit'],
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
     autoWatch: true,
-    browsers: ['Chrome'],
+    // If developers want to see the window, this can be changed back to Chrome
+    // and the --browsers ChromeHeadlessNoSandbox value can be added to the
+    // npm test command
+    browsers: ['ChromeHeadlessNoSandbox'],
     singleRun: false,
   });
 };

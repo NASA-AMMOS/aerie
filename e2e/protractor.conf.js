@@ -6,6 +6,9 @@ exports.config = {
   specs: ['./**/features/*.feature'],
   capabilities: {
     browserName: 'chrome',
+    chromeOptions: {
+      args: ["--headless", "--disable-gpu", "--no-sandbox"]
+    }
   },
   directConnect: true,
   baseUrl: 'http://localhost:4200/',
