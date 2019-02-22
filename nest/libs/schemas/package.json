@@ -1,0 +1,16 @@
+{
+  "name": "schemas",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npm run clean && npm run mkdir && npm run buildjava && npm run buildts",
+    "buildjava": "jsonschema2pojo -a NONE --source ./json --target types/java",
+    "buildts": "quicktype -s schema -l ts --just-types --alphabetize-properties -o types/ts/index.d.ts ./json/*.json",
+    "clean": "rimraf types",
+    "mkdir": "mkdir types && mkdir types/ts && mkdir types/java"
+  },
+  "dependencies": {
+    "quicktype": "^15.0.174",
+    "rimraf": "^2.6.3"
+  }
+}

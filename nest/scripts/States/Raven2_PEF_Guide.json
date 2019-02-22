@@ -1,0 +1,182 @@
+{
+    "bands": [
+        {
+            "activityHeight": 20,
+            "activityStyle": 1,
+            "addTo": false,
+            "alignLabel": 3,
+            "baselineLabel": 3,
+            "borderWidth": 1,
+            "filterTarget": null,
+            "height": 50,
+            "heightPadding": 10,
+            "icon": "circle",
+            "label": "command_label",
+            "labelColor": [
+                0,
+                0,
+                0
+            ],
+            "labelFont": "Georgia",
+            "labelPin": "",
+            "layout": 0,
+            "legend": "command_label",
+            "maxTimeRange": {
+                "end": 0,
+                "start": 0
+            },
+            "minorLabels": [
+                "engine=1"
+            ],
+            "name": "command_label",
+            "points": [],
+            "showActivityTimes": false,
+            "showLabel": true,
+            "showLabelPin": true,
+            "showTooltip": true,
+            "sourceIds": [
+                "/TEST_ATS/PEF_Combined_Test/test_10000/command_by_engine?label=command_label&filter=1"
+            ],
+            "tableColumns": [],
+            "trimLabel": true,
+            "type": "activity",
+            "containerId": "0",
+            "sortOrder": 0
+        },
+        {
+            "addTo": false,
+            "color": [
+                255,
+                255,
+                255
+            ],
+            "height": 7,
+            "heightPadding": 10,
+            "label": "Divider 3",
+            "labelColor": [
+                0,
+                0,
+                0
+            ],
+            "labelPin": "",
+            "maxTimeRange": {
+                "end": 0,
+                "start": 0
+            },
+            "name": "Divider 3",
+            "points": [],
+            "showTooltip": true,
+            "sourceIds": [],
+            "tableColumns": [],
+            "type": "divider",
+            "containerId": "0",
+            "sortOrder": 1
+        },
+        {
+            "addTo": false,
+            "autoScale": true,
+            "color": "#000000",
+            "decimate": false,
+            "fill": false,
+            "fillColor": "#000000",
+            "height": 100,
+            "heightPadding": 10,
+            "icon": "circle",
+            "interpolation": "linear",
+            "isDuration": false,
+            "isTime": false,
+            "label": "bin_attr",
+            "labelColor": "#000000",
+            "labelFont": "Georgia",
+            "labelPin": "",
+            "labelUnit": "",
+            "logTicks": false,
+            "maxTimeRange": {
+                "end": 0,
+                "start": 0
+            },
+            "name": "bin_attr",
+            "points": [],
+            "scientificNotation": false,
+            "showIcon": false,
+            "showLabelPin": true,
+            "showLabelUnit": true,
+            "showTooltip": true,
+            "sourceIds": [
+                "/TEST_ATS/PEF_Combined_Test/test_10000/Resources/BIN/bin_attr"
+            ],
+            "tableColumns": [],
+            "type": "resource",
+            "containerId": "0",
+            "sortOrder": 2
+        },
+        {
+            "activityHeight": 20,
+            "activityStyle": 1,
+            "addTo": false,
+            "alignLabel": 3,
+            "baselineLabel": 3,
+            "borderWidth": 1,
+            "filterTarget": null,
+            "height": 50,
+            "heightPadding": 10,
+            "icon": "circle",
+            "label": "Seq1$4CMD_1Master_15Spawn_Chain",
+            "labelColor": [
+                0,
+                0,
+                0
+            ],
+            "labelFont": "Georgia",
+            "labelPin": "",
+            "layout": 0,
+            "legend": "Seq1$4CMD_1Master_15Spawn_Chain",
+            "maxTimeRange": {
+                "end": 0,
+                "start": 0
+            },
+            "minorLabels": [],
+            "name": "Seq1$4CMD_1Master_15Spawn_Chain",
+            "points": [],
+            "showActivityTimes": false,
+            "showLabel": true,
+            "showLabelPin": true,
+            "showTooltip": true,
+            "sourceIds": [
+                "/TEST_ATS/PEF_Combined_Test/test_10000/sequences/Seq1$4CMD_1Master_15Spawn_Chain"
+            ],
+            "tableColumns": [],
+            "trimLabel": true,
+            "type": "activity",
+            "containerId": "0",
+            "sortOrder": 3
+        }
+    ],
+    "defaultBandSettings": {
+        "activityLayout": 0,
+        "icon": "circle",
+        "iconEnabled": false,
+        "labelFont": "Georgia",
+        "labelFontSize": 9,
+        "labelWidth": 150,
+        "resourceColor": "#000000",
+        "resourceFillColor": "#000000",
+        "showLastClick": true,
+        "showTooltip": true
+    },
+    "guides": [
+        751248357,
+        751263570
+    ],
+    "maxTimeRange": {
+        "end": 761616000,
+        "start": 751248000
+    },
+    "name": "PEF_Guide",
+    "pins": [],
+    "version": "1.0.0",
+    "viewTimeRange": {
+        "end": 751272600,
+        "start": 751251600
+    }
+}

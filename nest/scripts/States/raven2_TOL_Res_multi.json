@@ -1,0 +1,147 @@
+[
+    {
+        "bands": [
+            {
+                "addTo": false,
+                "autoScale": true,
+                "color": "#000000",
+                "decimate": false,
+                "fill": false,
+                "fillColor": "#000000",
+                "height": 100,
+                "heightPadding": 10,
+                "icon": "circle",
+                "interpolation": "linear",
+                "isDuration": false,
+                "isTime": false,
+                "label": "DataRate_1000[ONE]",
+                "labelColor": "#000000",
+                "labelFont": "Georgia",
+                "labelPin": "",
+                "labelUnit": "Mbits/hour",
+                "logTicks": false,
+                "maxTimeRange": {
+                    "end": 0,
+                    "start": 0
+                },
+                "name": "DataRate_1000[ONE]",
+                "points": [],
+                "scientificNotation": false,
+                "showIcon": false,
+                "showLabelPin": true,
+                "showLabelUnit": true,
+                "showTooltip": true,
+                "sourceIds": [
+                    "/TEST_ATS/Resource_Test/flt_array_res_square_tol_1000/Resources/ArrayData/DataRate_1000/DataRate_1000[ONE]"
+                ],
+                "tableColumns": [],
+                "type": "resource",
+                "containerId": "0",
+                "sortOrder": 0
+            },
+            {
+                "addTo": false,
+                "autoScale": true,
+                "color": "#000000",
+                "decimate": false,
+                "fill": false,
+                "fillColor": "#000000",
+                "height": 100,
+                "heightPadding": 10,
+                "icon": "circle",
+                "interpolation": "linear",
+                "isDuration": false,
+                "isTime": false,
+                "label": "DataRate_1000[TWO]",
+                "labelColor": "#000000",
+                "labelFont": "Georgia",
+                "labelPin": "",
+                "labelUnit": "Mbits/hour",
+                "logTicks": false,
+                "maxTimeRange": {
+                    "end": 0,
+                    "start": 0
+                },
+                "name": "DataRate_1000[TWO]",
+                "points": [],
+                "scientificNotation": false,
+                "showIcon": false,
+                "showLabelPin": true,
+                "showLabelUnit": true,
+                "showTooltip": true,
+                "sourceIds": [
+                    "/TEST_ATS/Resource_Test/flt_array_res_square_tol_1000/Resources/ArrayData/DataRate_1000/DataRate_1000[TWO]"
+                ],
+                "tableColumns": [],
+                "type": "resource",
+                "containerId": "0",
+                "sortOrder": 1
+            },
+            {
+                "addTo": false,
+                "autoScale": true,
+                "color": "#000000",
+                "decimate": true,
+                "fill": false,
+                "fillColor": "#000000",
+                "height": 100,
+                "heightPadding": 10,
+                "icon": "circle",
+                "interpolation": "linear",
+                "isDuration": false,
+                "isTime": false,
+                "label": "DataVolume_megabits_100000",
+                "labelColor": "#000000",
+                "labelFont": "Georgia",
+                "labelPin": "",
+                "labelUnit": "megabits",
+                "logTicks": false,
+                "maxTimeRange": {
+                    "end": 0,
+                    "start": 0
+                },
+                "name": "DataVolume_megabits_100000",
+                "points": [],
+                "scientificNotation": false,
+                "showIcon": false,
+                "showLabelPin": true,
+                "showLabelUnit": true,
+                "showTooltip": true,
+                "sourceIds": [
+                    "/TEST_ATS/Resource_Test/sine/Resources/Data/DataVolume_megabits_100000"
+                ],
+                "tableColumns": [],
+                "type": "resource",
+                "containerId": "0",
+                "sortOrder": 2
+            }
+        ],
+        "defaultBandSettings": {
+            "activityLayout": 0,
+            "icon": "circle",
+            "iconEnabled": false,
+            "labelFont": "Georgia",
+            "labelFontSize": 9,
+            "labelWidth": 150,
+            "resourceColor": "#000000",
+            "resourceFillColor": "#000000",
+            "showTimeCursor": false,
+            "showTooltip": true
+        },
+        "maxTimeRange": {
+            "end": 1262723880.555,
+            "start": 1262304000.555
+        },
+        "name": "A_2State_Multi_TOL_Res",
+        "pins": [],
+        "version": "1.0.0",
+        "viewTimeRange": {
+            "end": 1262364010.111,
+            "start": 1262304010.111
+        },
+        "__file_id": "/TEST_ATS/STATES/A_2State_Multi_TOL_Res",
+        "__document_id": "5b69c189c786531198dbe19c",
+        "__kind": "fs_record",
+        "__db_type": "mongodb"
+    }
+]

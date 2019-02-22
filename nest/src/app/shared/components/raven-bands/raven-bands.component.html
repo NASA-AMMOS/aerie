@@ -1,0 +1,40 @@
+<div
+  class="sortable-bands"
+  [sortablejs]="sortedAndFilteredBands"
+  [sortablejsOptions]="sortablejsOptions">
+  <div
+    *ngFor="let band of sortedAndFilteredBands; trackBy: bandsTrackByFn">
+    <raven-composite-band
+      [backgroundColor]="band.backgroundColor"
+      [class]="'raven-band-' + band.name"
+      [compositeAutoScale]="band.compositeAutoScale"
+      [compositeLogTicks]="band.compositeLogTicks"
+      [compositeScientificNotation]="band.compositeScientificNotation"
+      [compositeYAxisLabel]="band.compositeYAxisLabel"
+      [containerId]="band.containerId"
+      [cursorColor]="cursorColor"
+      [cursorTime]="cursorTime"
+      [cursorWidth]="cursorWidth"
+      [dayCode]="dayCode"
+      [earthSecToEpochSec]="earthSecToEpochSec"
+      [epoch]="epoch"
+      [excludeActivityTypes]="excludeActivityTypes"
+      [guides]="guides"
+      [height]="band.height"
+      [heightPadding]="band.heightPadding"
+      [id]="band.id"
+      [isSelected]="band.id === selectedBandId"
+      [labelFontSize]="labelFontSize"
+      [labelWidth]="labelWidth"
+      [lastClickTime]="lastClickTime"
+      [maxTimeRange]="maxTimeRange"
+      [selectedPoint]="selectedPoint"
+      [showLastClick]="showLastClick"
+      [showTooltip]="showTooltip"
+      [subBands]="band.subBands"
+      [viewTimeRange]="viewTimeRange"
+      (bandLeftClick)="bandLeftClick.emit($event)"
+      (updateViewTimeRange)="updateViewTimeRange.emit($event)">
+    </raven-composite-band>
+  </div>
+</div>

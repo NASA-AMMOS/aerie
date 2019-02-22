@@ -1,0 +1,89 @@
+<mat-card>
+  <mat-card-title>
+    Apply Layout from State
+  </mat-card-title>
+
+  <mat-card-subtitle>
+    State: {{currentStateId}}
+  </mat-card-subtitle>
+
+  <mat-card-content>
+    <!-- Select Sources. -->
+    <div
+      *ngIf="!currentState?.pins.length"
+      class="container field">
+      <mat-form-field>
+        <mat-select placeholder="Sources" [formControl]="sourcesFormControl" required multiple>
+          <mat-option *ngFor="let source of filteredSources" [value]="source">
+            {{source.id}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <!-- Pins. -->
+    <div
+      *ngIf="currentState?.pins.length"
+      class="field">
+      <mat-card-title>
+        Pins
+      </mat-card-title>
+
+      <table>
+        <tr>
+          <th>
+            Pin Name
+          </th>
+          <th>
+            Source Id
+          </th>
+        </tr>
+
+        <tr *ngFor="let pin of currentState?.pins">
+          <td>
+            {{pin.name}}
+          </td>
+          <td
+            *ngIf="applyPins === '0'"
+            class="full-width">
+            {{pin.sourceId}}
+          </td>
+          <td
+            *ngIf="applyPins === '1'"
+            class="full-width">
+            <mat-form-field class="full-width">
+              <mat-select
+                placeholder="Sources"
+                required
+                [value]="applyPinsByName[pin.name]?.sourceId"
+                (selectionChange)="onSelectionChange($event, pin)">
+                <mat-option
+                  *ngFor="let source of filteredSources"
+                  [value]="source.id">
+                  {{source.id}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </td>
+        </tr>
+      </table>
+
+      <mat-radio-group [(ngModel)]="applyPins">
+        <span class="radio-label">Apply Pins To:</span>
+        <mat-radio-button value="0">Original Sources</mat-radio-button>
+        <mat-radio-button value="1">New Sources</mat-radio-button>
+      </mat-radio-group>
+    </div>
+
+    <!-- Apply Button. -->
+    <div class="container">
+      <button
+        color="accent"
+        mat-button
+        (click)="onApply()"
+        [disabled]="!canApplyLayout()">
+        Apply
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>

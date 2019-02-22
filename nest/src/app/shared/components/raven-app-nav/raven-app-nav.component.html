@@ -1,0 +1,16 @@
+<mat-nav-list [class.iconsOnly]="iconsOnly">
+  <a mat-list-item
+    class="nav-item"
+    *ngFor="let module of modules"
+    routerLinkActive="nav-item-active"
+    routerLink="{{ module.path }}">
+    <mat-icon mat-list-icon>{{ module.icon }}</mat-icon>
+    <span matLine>{{ module.title }}</span>
+  </a>
+  <a mat-list-item
+    class="nav-item raven-app-nav-about-button"
+    (click)="aboutClicked.emit($event)">
+    <mat-icon mat-list-icon>info</mat-icon>
+    <span matLine>About</span>
+  </a>
+</mat-nav-list>

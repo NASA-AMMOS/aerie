@@ -1,0 +1,13 @@
+<raven-tree-node
+  [attr.data-source-id]="source.id"
+  [activated]="source.subBandIds.length !== 0"
+  [icon]="source.icon"
+  [label]="source.name"
+  markerActivatedIcon="subject"
+  markerDeactivatedIcon="subject"
+  markerTooltip="Custom Filter Graph"
+  [menu]="source.actions"
+  [multiselectable]="true"
+  (action)="action.emit({ event: $event, source: source })"
+  (activate)="addCustomGraph.emit(source)">
+</raven-tree-node>

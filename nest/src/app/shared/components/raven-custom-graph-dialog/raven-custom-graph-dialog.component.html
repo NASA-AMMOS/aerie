@@ -1,0 +1,28 @@
+<div mat-dialog-content>
+  <div class="graph">
+    <label>Graph</label> {{data.source.name}}
+  </div>
+
+  <div class="container" [formGroup]="form">
+    <mat-form-field>
+      <input
+        [formControl]="label"
+        matInput
+        placeholder="Label">
+    </mat-form-field>
+
+    <mat-form-field>
+      <input
+      [formControl]="filter"
+      matInput
+      placeholder={{data.source.arg}}>
+    </mat-form-field>
+  </div>
+</div>
+
+<div class="container">
+  <div class="actions" mat-dialog-actions>
+    <button mat-button (click)="onCancel()">Cancel</button>
+    <button mat-button (click)="onGraph()" [disabled]="!form.valid">Graph</button>
+  </div>
+</div>

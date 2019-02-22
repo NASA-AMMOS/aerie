@@ -1,0 +1,23 @@
+<h1 mat-dialog-title>About</h1>
+
+<div mat-dialog-content>
+  <div class="container">
+    <div class="center">
+      <p class="nest-about-dialog-version">
+        {{data.version}}
+      </p>
+      <p>
+        <ng-container *ngFor="let module of data.modules">
+          <span [ngClass]="'title-' + module.title">{{module.title}}</span> -
+          <span [ngClass]="'path-' + module.title">/{{module.path}}</span> -
+          <span [ngClass]="'version-' + module.title">{{module.version}}</span>
+          <br>
+        </ng-container>
+      </p>
+    </div>
+  </div>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button color="accent" matDialogClose>Close</button>
+</div>

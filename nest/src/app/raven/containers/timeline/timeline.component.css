@@ -1,0 +1,78 @@
+/**
+ * Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+ * Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.
+ * This software may be subject to U.S. export control laws and regulations.
+ * By accepting this document, the user agrees to comply with all applicable U.S. export laws and regulations.
+ * User has the responsibility to obtain export licenses, or other export authority as may be required
+ * before exporting such information to foreign countries or providing access to foreign persons
+ */
+
+:host {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+mat-card {
+  padding: 10px;
+}
+
+::ng-deep mat-tab-header {
+  z-index: 1; /* Prevents CSS bleed of the tab header. */
+}
+
+mat-sidenav.apply-layout-drawer {
+  width: 700px;
+}
+
+mat-sidenav.epochs-drawer {
+  width: 600px;
+}
+
+mat-sidenav.output-drawer {
+  width: 900px;
+}
+
+mat-sidenav.situational-awareness-drawer {
+  width: 900px;
+}
+
+mat-sidenav-container {
+  z-index: 5;
+}
+
+.scroll {
+  overflow-y: scroll !important; /* Always show scrollbar track so bands always align. */
+}
+
+.time-bands-container {
+  background: white;
+  position: sticky;
+  top: 0px;
+  z-index: 1;
+}
+
+.get-started {
+  padding: 0.5em;
+  text-align: center;
+}
+
+.itar-message {
+  padding: 0.5em;
+  text-align: center;
+  font-size: x-small;
+}
+
+.sidenav-content {
+  height: 100%;
+}
+
+.details,
+.raven-table,
+.selected-band,
+.selected-point,
+.sidenav-content,
+.timeline-0,
+.timeline-1 {
+  padding: 0.5em;
+}

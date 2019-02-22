@@ -1,0 +1,47 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit(form.value)">
+  <h2 mat-dialog-title>{{ modeText }} Plan</h2>
+  <mat-dialog-content>
+    <mat-form-field appearance="fill">
+      <mat-label>Name</mat-label>
+      <input matInput placeholder="Plan Name" type="text"
+        [formControl]="form.controls['name']" required />
+    </mat-form-field>
+
+    <div class="plan-dates">
+      <mat-form-field appearance="fill">
+        <mat-label>Plan Start</mat-label>
+        <input
+          matInput
+          placeholder="Start time"
+          [formControl]="form.controls['startTimestamp']"
+          required />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Plan End</mat-label>
+        <input
+          matInput
+          placeholder="End time"
+          [formControl]="form.controls['endTimestamp']"
+          required />
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="fill" floatLabel="always">
+      <mat-label>Adaptation</mat-label>
+      <mat-select
+        placeholder="Select an Adaptation"
+        [formControl]="form.controls['adaptationId']">
+        <mat-option
+          *ngFor="let adaptation of adaptations"
+          [value]="adaptation.id">
+          {{ adaptation.name }} {{ adaptation.version }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button matDialogClose color="accent">Cancel</button>
+    <button mat-button color="accent">Save</button>
+  </mat-dialog-actions>
+</form>

@@ -1,0 +1,33 @@
+<mat-card *ngIf="!selectedSubBand">
+  Please select a band to see its details.
+</mat-card>
+
+<mat-card
+  *ngIf="selectedSubBand"
+  class="grid-container">
+  <div class="reset-columns-button">
+    <button
+      mat-raised-button
+      (click)="onResetColumns()">
+      Reset Columns
+    </button>
+  </div>
+
+  <ag-grid-angular
+    #agGrid
+    class="ag-theme-fresh"
+    [columnDefs]="columnDefs"
+    [enableColResize]="true"
+    [enableSorting]="true"
+    [enableFilter]="true"
+    [fullWidthCellRendererFramework]="getFullWidthCellRenderer()"
+    [getNodeChildDetails]="getNodeChildDetails"
+    [getRowHeight]="getRowHeight"
+    [isFullWidthCell]="isFullWidthCell"
+    [rowData]="rowData"
+    (columnVisible)="emitUpdateTableColumns()"
+    (columnMoved)="emitUpdateTableColumns()"
+    (columnResized)="emitUpdateTableColumns()"
+    (sortChanged)="emitUpdateTableColumns()">
+  </ag-grid-angular>
+</mat-card>

@@ -1,0 +1,19 @@
+<!-- Values (non-recursive). -->
+<ng-container *ngIf="metadataValues.length">
+  <table>
+    <tr *ngFor="let meta of metadataValues">
+      <td>{{meta.key}}</td>
+      <td>{{meta.value}}</td>
+    </tr>
+  </table>
+</ng-container>
+
+<!-- Objects (recursive). -->
+<ng-container *ngIf="metadataObjects.length">
+  <ng-container *ngFor="let meta of metadataObjects">
+    <label>{{meta.key}}</label>
+    <raven-custom-metadata
+      [customMetadata]="meta.value">
+    </raven-custom-metadata>
+  </ng-container>
+</ng-container>

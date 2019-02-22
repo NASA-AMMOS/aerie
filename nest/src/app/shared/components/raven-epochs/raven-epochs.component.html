@@ -1,0 +1,38 @@
+<mat-card>
+  <mat-card-title>
+    Epochs
+  </mat-card-title>
+
+  <mat-card-content>
+    <!-- Day Code. -->
+    <mat-form-field>
+      <input
+        matInput
+        (keyup)="updateEpochs.emit({ update: { dayCode: $event.target.value } })"
+        [value]="dayCode"
+        placeholder="Day Code">
+    </mat-form-field>
+
+    <!-- Earth Sec to Epoch Sec. -->
+    <mat-form-field>
+      <input
+        matInput
+        type="number"
+        (keyup)="updateEpochs.emit({ update: { earthSecToEpochSec: $event.target.valueAsNumber } })"
+        [value]="earthSecToEpochSec"
+        placeholder="Earth Sec to Epoch Sec">
+    </mat-form-field>
+
+    <!-- Table. -->
+    <ag-grid-angular
+      #agGrid
+      class="ag-theme-fresh"
+      [columnDefs]="columnDefs"
+      [enableColResize]="true"
+      [enableSorting]="true"
+      [enableFilter]="true"
+      [rowData]="rowData"
+      (selectionChanged)="onSelectionChanged()">
+    </ag-grid-angular>
+  </mat-card-content>
+</mat-card>

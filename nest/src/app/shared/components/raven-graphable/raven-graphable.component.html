@@ -1,0 +1,12 @@
+<raven-tree-node
+  [attr.data-source-id]="source.id"
+  [activated]="source.opened"
+  [icon]="source.icon"
+  [label]="source.name"
+  markerActivatedIcon="check_box"
+  markerDeactivatedIcon="check_box_outline_blank"
+  [menu]="menu"
+  (action)="action.emit({ event: $event, source: source })"
+  (activate)="open.emit(source)"
+  (deactivate)="close.emit(source)">
+</raven-tree-node>
