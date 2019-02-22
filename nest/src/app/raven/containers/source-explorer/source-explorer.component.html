@@ -1,11 +1,12 @@
 <mat-drawer-container>
   <mat-drawer
-    #fileMetadataDrawer
+    [opened]="metadataDrawerVisible$ | async"
+    (openedChange)="setShowFileMetadataDrawer($event)"
     mode="over"
     position="end">
     <button
       mat-icon-button
-      (click)="fileMetadataDrawer.close()">
+      (click)="setShowFileMetadataDrawer(false)">
       <mat-icon
         aria-label="Clear">
         clear
