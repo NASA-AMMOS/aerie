@@ -55,9 +55,6 @@ public class AdaptationController {
      */
     @GetMapping("")
     public ResponseEntity<Object> getAvailableAdaptations() {
-        logger.debug("GET adaptation/");
-        logger.debug("returning " + repository.findAll());
-
         return ResponseEntity.ok(repository.findAll());
     }
 

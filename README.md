@@ -5,7 +5,7 @@
 ## Usage
 
 ```bash
-cd docker && docker-compose up 
+docker-compose up 
 ```
 ## Services
 
@@ -23,6 +23,7 @@ truncated version of the mathematical constant E, to make it easy to remember.
 | adaptation    | 27182  |
 | plan          | 27183  |
 | nest          | 8080   |
+| tyk_gateway   | 8081   |
 
 ### Support services
 
@@ -38,36 +39,9 @@ other words, the Primary services can function completely without them.
 | matomo_database | 3306  |
 | tyk_dashboard   | 3000  |
 | tyk_dashboard   | 5000  |
-| tyk_gateway     | 8081  |
 | tyk_mongo       | 27017 |
 | tyk_redis       | 6379  | 
 
-## Getting Started
+## Installation
 
-These instructions will get a copy of the project up and running on your local
-machine for development and testing purposes.
-
-### Prerequisites
-
-To start the services **locally** using Docker Compose you must have Git,
-[Docker][docker], and [Docker Compose][compose] installed.
-
-### Installation
-
-The basic steps are:
-
-1. Clone the repository
-2. Build the adaptation service according to its [README][adaptation]
-3. Fetch and build the NEST service according to its [README][nest]
-4. Start the stack according to the Docker [README][docker_readme]
-5. Run the setup.sh files for each service that you started
-
-For now primary services are pre-built, but in the future they should be built
-with multi-stage Docker builds.
-
-
-[adaptation]: ./adaptation/README.md
-[compose]: https://docs.docker.com/compose/
-[docker]: https://www.docker.com/get-docker
-[docker_readme]: ./docker/README.md
-[nest]: ./nest/README.md
+To get Aerie running see [Installation](./docs/installation.md).
