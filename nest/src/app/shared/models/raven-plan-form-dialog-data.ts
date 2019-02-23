@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Adaptation, Plan } from '../../../../libs/schemas/types/ts';
+import { Adaptation, Plan } from '../../../../../schemas/types/ts';
 
 export interface RavenPlanFormDialogData {
   adaptations: Adaptation[];

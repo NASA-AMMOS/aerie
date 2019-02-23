@@ -8,7 +8,7 @@
  */
 
 import { Observable } from 'rxjs';
-import { Activity, Plan } from '../../../../libs/schemas/types/ts';
+import { Activity, Plan } from '../../../../../schemas/types/ts';
 
 export interface PlanServiceInterface {
   createActivity(

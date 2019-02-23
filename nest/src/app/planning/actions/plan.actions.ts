@@ -8,7 +8,7 @@
  */
 
 import { Action } from '@ngrx/store';
-import { Activity, Plan } from '../../../../libs/schemas/types/ts';
+import { Activity, Plan } from '../../../../../schemas/types/ts';
 import { RavenTimeRange, StringTMap } from '../../shared/models';
 
 export enum PlanActionTypes {

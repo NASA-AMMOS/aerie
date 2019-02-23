@@ -18,7 +18,7 @@ import { Store, StoreModule } from '@ngrx/store';
 import { cold, hot } from 'jasmine-marbles';
 import { keyBy } from 'lodash';
 import { Observable, of } from 'rxjs';
-import { Activity, Adaptation, Plan } from '../../../../libs/schemas/types/ts';
+import { Activity, Adaptation, Plan } from '../../../../../schemas/types/ts';
 import { reducers as rootReducers } from '../../app-store';
 import { ShowToast } from '../../shared/actions/toast.actions';
 import { StringTMap } from '../../shared/models';

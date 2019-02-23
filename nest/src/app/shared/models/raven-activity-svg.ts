@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Activity } from '../../../../libs/schemas/types/ts';
+import { Activity } from '../../../../../schemas/types/ts';
 
 export interface RavenActivitySvg extends Activity {
   fill: string;
