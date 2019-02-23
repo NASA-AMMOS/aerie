@@ -2,7 +2,10 @@
 
 This folder contains [JSON Schema](https://json-schema.org/) `.json` files for all the types in the Aerie project.
 
-**In the future this will be moved to the Aerie project to host all of our schemas.**
+| Conversion | Library |
+| ---------- | ------- |
+| JSON Schema -> [Java](https://www.oracle.com/java/) | [jsonschema2pojo](http://www.jsonschema2pojo.org/) |
+| JSON Schema -> [TypeScript](https://www.typescriptlang.org/) | [quicktype](https://quicktype.io/) |
 
 # Setup
 

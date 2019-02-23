@@ -22,7 +22,7 @@ import {
   Activity,
   ActivityType,
   Plan,
-} from '../../../../../libs/schemas/types/ts';
+} from '../../../../../../schemas/types/ts';
 import { ToggleNavigationDrawer } from '../../../shared/actions/config.actions';
 import { RavenActivityUpdate, RavenTimeRange } from '../../../shared/models';
 import { NgTemplateUtils, timestamp } from '../../../shared/util';

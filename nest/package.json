@@ -16,7 +16,8 @@
     "protractor": "protractor ./e2e/protractor.conf.js",
     "start": "ng serve",
     "test": "ng test --code-coverage --source-map=false",
-    "test-for-build": "ng test --code-coverage --watch=false --browsers FirefoxHeadless"
+    "test-for-build": "ng test --code-coverage --watch=false --browsers FirefoxHeadless",
+    "version": "ts-node git.version.ts"
   },
   "dependencies": {
     "@angular/animations": "~7.2.0",

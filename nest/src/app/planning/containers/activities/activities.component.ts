@@ -22,7 +22,7 @@ import {
   Activity,
   ActivityType,
   Plan,
-} from '../../../../../libs/schemas/types/ts';
+} from '../../../../../../schemas/types/ts';
 import { NgTemplateUtils } from '../../../shared/util';
 import { CreateActivity, UpdateActivity } from '../../actions/plan.actions';
 import { PlanningAppState } from '../../planning-store';

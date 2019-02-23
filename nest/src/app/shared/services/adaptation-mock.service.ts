@@ -9,7 +9,7 @@
 
 import { Injectable } from '@angular/core';
 import { Observable, Observer } from 'rxjs';
-import { ActivityType, Adaptation } from '../../../../libs/schemas/types/ts';
+import { ActivityType, Adaptation } from '../../../../../schemas/types/ts';
 import { StringTMap } from '../models/map';
 import { AdaptationServiceInterface } from './adaptation-service-interface';
 
