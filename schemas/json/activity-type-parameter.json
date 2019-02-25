@@ -1,0 +1,17 @@
+{
+  "$id": "#/ActivityTypeParameter",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "javaType": "ActivityTypeParameter",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    }
+  },
+  "required": ["name", "type"],
+  "title": "ActivityTypeParameter",
+  "type": "object"
+}

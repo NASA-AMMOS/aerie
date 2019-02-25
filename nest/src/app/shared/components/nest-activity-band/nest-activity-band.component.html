@@ -1,0 +1,83 @@
+<!-- Canvas. -->
+<div
+  class="canvas-container"
+  [ngStyle]="{
+    'height': drawHeight + 'px',
+    'transform': 'translate(' + marginLeft + 'px ,' + marginTop + 'px)',
+    'width': drawWidth + 'px'
+  }">
+  <canvas
+    class="canvas"
+    [attr.height]="drawHeight"
+    [attr.width]="drawWidth">
+  </canvas>
+</div>
+
+<!-- SVG. -->
+<svg class="svg-container">
+  <g
+    class="svg"
+    [attr.transform]="'translate(' + marginLeft + ',' + marginTop + ')'">
+    <ng-container *ngFor="let point of svgPoints; trackBy: pointsTrackByFn">
+      <g
+        [id]="'g-' + point.activityId"
+        [ngClass]="{
+          'cursor-move': selectedActivity && selectedActivity.activityId === point.activityId
+        }"
+        (click)="onActivitySelected(point.activityId)">
+        <rect
+          [attr.fill]="selectedActivity && selectedActivity.activityId === point.activityId ? selectedActivityColor : point.fill"
+          [attr.height]="point.height"
+          [attr.stroke]="point.stroke"
+          [attr.width]="point.width"
+          [attr.x]="point.x"
+          [attr.y]="point.y"
+          [id]="'rect-' + point.activityId">
+        </rect>
+        <text
+          *ngIf="point.showLabel"
+          [attr.x]="point.labelX"
+          [attr.y]="point.labelY"
+          [attr.font-size]="point.labelFontSize"
+          [attr.font-family]="point.labelFontFamily"
+          [attr.fill]="point.labelFill"
+          [id]="'text-' + point.activityId">
+          {{point.name}}
+        </text>
+        <g *ngIf="selectedActivity && selectedActivity.activityId === point.activityId">
+          <circle
+            class="drag-handle-left"
+            [attr.cx]="point.x"
+            [attr.cy]="getYDragHandle(point.y, point.height)"
+            [attr.r]="3.5"
+            [id]="'circle-drag-handle-left-' + point.activityId">
+          </circle>
+          <circle
+            class="drag-handle-right"
+            [attr.cx]="getXDragHandleRight(point.x, point.width)"
+            [attr.cy]="getYDragHandle(point.y, point.height)"
+            [attr.r]="3.5"
+            [id]="'circle-drag-handle-right-' + point.activityId">
+          </circle>
+        </g>
+      </g>
+    </ng-container>
+  </g>
+</svg>
+
+<!-- Axis. -->
+<svg class="axis-container">
+  <g
+    #axisContainerGroup
+    [attr.transform]="'translate(' + marginLeft + ',' + marginTop + ')'">
+    <g
+      #axisX
+      class="nest-activity-band-axis--x"
+      [attr.transform]="'translate(0,' + drawHeight + ')'">
+    </g>
+    <g
+      #axisY
+      class="nest-activity-band-axis--y">
+    </g>
+  </g>
+</svg>

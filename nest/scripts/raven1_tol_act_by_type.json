@@ -1,0 +1,711 @@
+{
+    "name": "ACT_BY_TYPE",
+    "type": 0,
+    "sources": [
+        {
+            "hasGraph": false,
+            "name": "TEST_ATS",
+            "overrideName": null,
+            "tabName": null,
+            "suffix": null,
+            "props": {
+                "isServer": true
+            },
+            "selected": true,
+            "isHidden": false,
+            "sources": [
+                {
+                    "hasGraph": false,
+                    "name": "Activity_by_Type_Test",
+                    "overrideName": null,
+                    "tabName": null,
+                    "suffix": null,
+                    "props": {
+                        "__kind": "fs_dir",
+                        "__db_type": "mongodb",
+                        "name": "Activity_by_Type_Test",
+                        "label": "Activity_by_Type_Test",
+                        "contents_url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/fs-mongodb/TEST_ATS/Activity_by_Type_Test",
+                        "permissions": "rw-r--r-- null all.usjpl",
+                        "created": "2018-06-11 14:26:38-0400",
+                        "modified": "2018-06-11 14:26:38-0400"
+                    },
+                    "selected": true,
+                    "isHidden": false,
+                    "sources": [
+                        {
+                            "hasGraph": false,
+                            "name": "activity_10000",
+                            "overrideName": null,
+                            "tabName": null,
+                            "suffix": null,
+                            "props": {
+                                "__kind": "fs_file",
+                                "__db_type": "mongodb",
+                                "name": "activity_10000",
+                                "label": "activity_10000",
+                                "__kind_sub": "file_tol",
+                                "contents_url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/list_tol-mongodb/TEST_ATS/Activity_by_Type_Test/activity_10000",
+                                "file_data_url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/fs-mongodb/TEST_ATS/Activity_by_Type_Test/activity_10000",
+                                "permissions": "rw-r--r-- null all.usjpl",
+                                "created": "2018-06-11 14:26:38-0400",
+                                "modified": "2018-06-11 14:26:38-0400",
+                                "importJobStatus": "FINISHED"
+                            },
+                            "selected": true,
+                            "isHidden": false,
+                            "sources": [
+                                {
+                                    "hasGraph": false,
+                                    "name": "Activities by Type",
+                                    "overrideName": null,
+                                    "tabName": null,
+                                    "suffix": null,
+                                    "props": {
+                                        "__kind": "fs_category",
+                                        "name": "Activities by Type",
+                                        "label": "Activities by Type"
+                                    },
+                                    "selected": true,
+                                    "isHidden": false,
+                                    "sources": [
+                                        {
+                                            "hasGraph": false,
+                                            "name": "Root Activities",
+                                            "overrideName": null,
+                                            "tabName": null,
+                                            "suffix": null,
+                                            "props": {
+                                                "__kind": "fs_graphable",
+                                                "__kind_sub": "graphable_activity",
+                                                "name": "Root Activities",
+                                                "label": "Root Activities",
+                                                "data_url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/tol_activities-mongodb/TEST_ATS/Activity_by_Type_Test/activity_10000?root=true&format=TMS",
+                                                "isData": true
+                                            },
+                                            "selected": true,
+                                            "isHidden": false,
+                                            "sources": [],
+                                            "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/tol_activities-mongodb/TEST_ATS/Activity_by_Type_Test/activity_10000?root=true&format=TMS",
+                                            "tabSelected": false,
+                                            "bandIds": [
+                                                "band71830",
+                                                "band71831",
+                                                "band71832",
+                                                "band71833"
+                                            ],
+                                            "graphSettings": [
+                                                {
+                                                    "label": "Root Activities",
+                                                    "labelOverride": false,
+                                                    "iconEnabled": false,
+                                                    "trimLabel": false,
+                                                    "hideLabel": false,
+                                                    "compositeYLabel": false,
+                                                    "dynamicCompositeYLabel": false,
+                                                    "labelColor": [
+                                                        0,
+                                                        0,
+                                                        0
+                                                    ],
+                                                    "lineColor": "black",
+                                                    "lineColorCustom": [
+                                                        0,
+                                                        0,
+                                                        0
+                                                    ],
+                                                    "fillColor": "black",
+                                                    "activityColorCustom": [
+                                                        249,
+                                                        189,
+                                                        133
+                                                    ],
+                                                    "fill": false,
+                                                    "isInCompositeBand": false,
+                                                    "height": null,
+                                                    "heightPadding": 0,
+                                                    "interpolation": "constant",
+                                                    "scientificNotation": null,
+                                                    "customMenuItems": [],
+                                                    "overlayBand": "",
+                                                    "logTicks": false,
+                                                    "statePlotType": 0,
+                                                    "currentTimeCursorEnabled": false,
+                                                    "activityLayout": 1,
+                                                    "style": "bar",
+                                                    "showActivityTimes": false,
+                                                    "labelFontSize": 10,
+                                                    "rowHeight": 5,
+                                                    "inSouth": null,
+                                                    "showStateChangeTimes": false,
+                                                    "activityHeight": 20
+                                                },
+                                                {
+                                                    "label": "ACT0_10000",
+                                                    "labelOverride": false,
+                                                    "iconEnabled": false,
+                                                    "trimLabel": false,
+                                                    "hideLabel": false,
+                                                    "compositeYLabel": false,
+                                                    "dynamicCompositeYLabel": false,
+                                                    "labelColor": [
+                                                        0,
+                                                        0,
+                                                        0
+                                                    ],
+                                                    "lineColor": "black",
+                                                    "lineColorCustom": [
+                                                        0,
+                                                        0,
+                                                        0
+                                                    ],
+                                                    "fillColor": "black",
+                                                    "activityColorCustom": [
+                                                        249,
+                                                        189,
+                                                        133
+                                                    ],
+                                                    "fill": false,
+                                                    "isInCompositeBand": false,
+                                                    "height": null,
+                                                    "heightPadding": 0,
+                                                    "interpolation": "constant",
+                                                    "scientificNotation": null,
+                                                    "customMenuItems": [],
+                                                    "overlayBand": "",
+                                                    "logTicks": false,
+                                                    "statePlotType": 0,
+                                                    "currentTimeCursorEnabled": false,
+                                                    "activityLayout": 1,
+                                                    "style": "bar",
+                                                    "showActivityTimes": false,
+                                                    "labelFontSize": 10,
+                                                    "rowHeight": 5,
+                                                    "inSouth": null,
+                                                    "showStateChangeTimes": false,
+                                                    "activityHeight": 20
+                                                },
+                                                {
+                                                    "label": "ACT1+ACT2_10000",
+                                                    "labelOverride": false,
+                                                    "iconEnabled": false,
+                                                    "trimLabel": false,
+                                                    "hideLabel": false,
+                                                    "compositeYLabel": false,
+                                                    "dynamicCompositeYLabel": false,
+                                                    "labelColor": [
+                                                        0,
+                                                        0,
+                                                        0
+                                                    ],
+                                                    "lineColor": "black",
+                                                    "lineColorCustom": [
+                                                        0,
+                                                        0,
+                                                        0
+                                                    ],
+                                                    "fillColor": "black",
+                                                    "activityColorCustom": [
+                                                        249,
+                                                        189,
+                                                        133
+                                                    ],
+                                                    "fill": false,
+                                                    "isInCompositeBand": false,
+                                                    "height": null,
+                                                    "heightPadding": 0,
+                                                    "interpolation": "constant",
+                                                    "scientificNotation": null,
+                                                    "customMenuItems": [],
+                                                    "overlayBand": "",
+                                                    "logTicks": false,
+                                                    "statePlotType": 0,
+                                                    "currentTimeCursorEnabled": false,
+                                                    "activityLayout": 1,
+                                                    "style": "bar",
+                                                    "showActivityTimes": false,
+                                                    "labelFontSize": 10,
+                                                    "rowHeight": 5,
+                                                    "inSouth": null,
+                                                    "showStateChangeTimes": false,
+                                                    "activityHeight": 20
+                                                },
+                                                {
+                                                    "label": "ACT3&ACT4_10000",
+                                                    "labelOverride": false,
+                                                    "iconEnabled": false,
+                                                    "trimLabel": false,
+                                                    "hideLabel": false,
+                                                    "compositeYLabel": false,
+                                                    "dynamicCompositeYLabel": false,
+                                                    "labelColor": [
+                                                        0,
+                                                        0,
+                                                        0
+                                                    ],
+                                                    "lineColor": "black",
+                                                    "lineColorCustom": [
+                                                        0,
+                                                        0,
+                                                        0
+                                                    ],
+                                                    "fillColor": "black",
+                                                    "activityColorCustom": [
+                                                        249,
+                                                        189,
+                                                        133
+                                                    ],
+                                                    "fill": false,
+                                                    "isInCompositeBand": false,
+                                                    "height": null,
+                                                    "heightPadding": 0,
+                                                    "interpolation": "constant",
+                                                    "scientificNotation": null,
+                                                    "customMenuItems": [],
+                                                    "overlayBand": "",
+                                                    "logTicks": false,
+                                                    "statePlotType": 0,
+                                                    "currentTimeCursorEnabled": false,
+                                                    "activityLayout": 1,
+                                                    "style": "bar",
+                                                    "showActivityTimes": false,
+                                                    "labelFontSize": 10,
+                                                    "rowHeight": 5,
+                                                    "inSouth": null,
+                                                    "showStateChangeTimes": false,
+                                                    "activityHeight": 20
+                                                },
+                                                {
+                                                    "label": "ACT5_10000",
+                                                    "labelOverride": false,
+                                                    "iconEnabled": false,
+                                                    "trimLabel": false,
+                                                    "hideLabel": false,
+                                                    "compositeYLabel": false,
+                                                    "dynamicCompositeYLabel": false,
+                                                    "labelColor": [
+                                                        0,
+                                                        0,
+                                                        0
+                                                    ],
+                                                    "lineColor": "black",
+                                                    "lineColorCustom": [
+                                                        0,
+                                                        0,
+                                                        0
+                                                    ],
+                                                    "fillColor": "black",
+                                                    "activityColorCustom": [
+                                                        249,
+                                                        189,
+                                                        133
+                                                    ],
+                                                    "fill": false,
+                                                    "isInCompositeBand": false,
+                                                    "height": null,
+                                                    "heightPadding": 0,
+                                                    "interpolation": "constant",
+                                                    "scientificNotation": null,
+                                                    "customMenuItems": [],
+                                                    "overlayBand": "",
+                                                    "logTicks": false,
+                                                    "statePlotType": 0,
+                                                    "currentTimeCursorEnabled": false,
+                                                    "activityLayout": 1,
+                                                    "style": "bar",
+                                                    "showActivityTimes": false,
+                                                    "labelFontSize": 10,
+                                                    "rowHeight": 5,
+                                                    "inSouth": null,
+                                                    "showStateChangeTimes": false,
+                                                    "activityHeight": 20
+                                                }
+                                            ],
+                                            "id": "182"
+                                        },
+                                        {
+                                            "hasGraph": false,
+                                            "name": "test",
+                                            "overrideName": null,
+                                            "tabName": null,
+                                            "suffix": null,
+                                            "props": {
+                                                "__kind": "fs_category",
+                                                "name": "test",
+                                                "label": "test"
+                                            },
+                                            "selected": true,
+                                            "isHidden": false,
+                                            "sources": [],
+                                            "url": "",
+                                            "tabSelected": false,
+                                            "bandIds": [],
+                                            "graphSettings": null,
+                                            "id": "190"
+                                        }
+                                    ],
+                                    "url": "",
+                                    "tabSelected": false,
+                                    "bandIds": [],
+                                    "graphSettings": null,
+                                    "id": "191"
+                                }
+                            ],
+                            "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/list_tol-mongodb/TEST_ATS/Activity_by_Type_Test/activity_10000",
+                            "tabSelected": false,
+                            "bandIds": [],
+                            "graphSettings": null,
+                            "id": "155"
+                        },
+                        {
+                            "hasGraph": false,
+                            "name": "apgen-tol",
+                            "overrideName": null,
+                            "tabName": null,
+                            "suffix": null,
+                            "props": {
+                                "__kind": "fs_file",
+                                "__db_type": "mongodb",
+                                "name": "apgen-tol",
+                                "label": "apgen-tol",
+                                "__kind_sub": "file_tol",
+                                "contents_url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/list_tol-mongodb/TEST_ATS/Activity_by_Type_Test/apgen-tol",
+                                "file_data_url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/fs-mongodb/TEST_ATS/Activity_by_Type_Test/apgen-tol",
+                                "permissions": "rw-r--r-- null all.usjpl",
+                                "created": "2018-06-11 14:26:55-0400",
+                                "modified": "2018-06-11 14:26:55-0400",
+                                "importJobStatus": "FINISHED"
+                            },
+                            "selected": true,
+                            "isHidden": false,
+                            "sources": [
+                                {
+                                    "hasGraph": false,
+                                    "name": "Activities by Type",
+                                    "overrideName": null,
+                                    "tabName": null,
+                                    "suffix": null,
+                                    "props": {
+                                        "__kind": "fs_category",
+                                        "name": "Activities by Type",
+                                        "label": "Activities by Type"
+                                    },
+                                    "selected": true,
+                                    "isHidden": false,
+                                    "sources": [
+                                        {
+                                            "hasGraph": false,
+                                            "name": "__no_subsystem",
+                                            "overrideName": null,
+                                            "tabName": null,
+                                            "suffix": null,
+                                            "props": {
+                                                "__kind": "fs_category",
+                                                "name": "__no_subsystem",
+                                                "label": "__no_subsystem"
+                                            },
+                                            "selected": true,
+                                            "isHidden": false,
+                                            "sources": [],
+                                            "url": "",
+                                            "tabSelected": false,
+                                            "bandIds": [],
+                                            "graphSettings": null,
+                                            "id": "352"
+                                        },
+                                        {
+                                            "hasGraph": false,
+                                            "name": "Sub 1",
+                                            "overrideName": null,
+                                            "tabName": null,
+                                            "suffix": null,
+                                            "props": {
+                                                "__kind": "fs_category",
+                                                "name": "Sub 1",
+                                                "label": "Sub 1"
+                                            },
+                                            "selected": true,
+                                            "isHidden": false,
+                                            "sources": [],
+                                            "url": "",
+                                            "tabSelected": false,
+                                            "bandIds": [],
+                                            "graphSettings": null,
+                                            "id": "357"
+                                        },
+                                        {
+                                            "hasGraph": false,
+                                            "name": "Sub 2",
+                                            "overrideName": null,
+                                            "tabName": null,
+                                            "suffix": null,
+                                            "props": {
+                                                "__kind": "fs_category",
+                                                "name": "Sub 2",
+                                                "label": "Sub 2"
+                                            },
+                                            "selected": true,
+                                            "isHidden": false,
+                                            "sources": [],
+                                            "url": "",
+                                            "tabSelected": false,
+                                            "bandIds": [],
+                                            "graphSettings": null,
+                                            "id": "361"
+                                        },
+                                        {
+                                            "hasGraph": false,
+                                            "name": "Sub 3",
+                                            "overrideName": null,
+                                            "tabName": null,
+                                            "suffix": null,
+                                            "props": {
+                                                "__kind": "fs_category",
+                                                "name": "Sub 3",
+                                                "label": "Sub 3"
+                                            },
+                                            "selected": true,
+                                            "isHidden": false,
+                                            "sources": [],
+                                            "url": "",
+                                            "tabSelected": false,
+                                            "bandIds": [],
+                                            "graphSettings": null,
+                                            "id": "365"
+                                        },
+                                        {
+                                            "hasGraph": false,
+                                            "name": "Sub 4",
+                                            "overrideName": null,
+                                            "tabName": null,
+                                            "suffix": null,
+                                            "props": {
+                                                "__kind": "fs_category",
+                                                "name": "Sub 4",
+                                                "label": "Sub 4"
+                                            },
+                                            "selected": true,
+                                            "isHidden": false,
+                                            "sources": [],
+                                            "url": "",
+                                            "tabSelected": false,
+                                            "bandIds": [],
+                                            "graphSettings": null,
+                                            "id": "369"
+                                        }
+                                    ],
+                                    "url": "",
+                                    "tabSelected": false,
+                                    "bandIds": [],
+                                    "graphSettings": null,
+                                    "id": "370"
+                                }
+                            ],
+                            "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/list_tol-mongodb/TEST_ATS/Activity_by_Type_Test/apgen-tol",
+                            "tabSelected": false,
+                            "bandIds": [],
+                            "graphSettings": null,
+                            "id": "156"
+                        }
+                    ],
+                    "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/fs-mongodb/TEST_ATS/Activity_by_Type_Test",
+                    "tabSelected": false,
+                    "bandIds": [],
+                    "graphSettings": null,
+                    "id": "68"
+                }
+            ],
+            "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/fs-mongodb/TEST_ATS",
+            "tabSelected": false,
+            "bandIds": [],
+            "graphSettings": null,
+            "id": "6"
+        }
+    ],
+    "loaded": false,
+    "props": {},
+    "globalOptions": {
+        "startTicks": null,
+        "endTicks": null,
+        "graphStartTime": 0,
+        "panTo": null,
+        "panDuration": "1d",
+        "timeDelta": null,
+        "panScrobbleAmount": 600,
+        "zoomDelta": 10,
+        "overlayBandLabel": "ACT0_10000",
+        "tooltipEnabled": true
+    },
+    "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/fs-mongodb/leucadia/states",
+    "viewTemplate": {
+        "viewStart": "2010-001T00:00:00.000",
+        "viewEnd": "2010-007T22:44:40.000",
+        "charts": {
+            "center": [
+                {
+                    "id": "band71830",
+                    "label": "ACT0_10000",
+                    "originalName": "Root Activities",
+                    "suffix": null,
+                    "legend": "ACT0_10000",
+                    "graphSettings": {
+                        "labelFontSize": 10,
+                        "height": 35,
+                        "rowHeight": 0.029411764705882353,
+                        "rowPadding": 2,
+                        "activityHeight": 20,
+                        "trimLabel": false,
+                        "hideLabel": false,
+                        "iconEnabled": false,
+                        "autoFit": 1,
+                        "activityLayout": 1,
+                        "style": "bar",
+                        "showActivityTimes": false
+                    },
+                    "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/tol_activities-mongodb/TEST_ATS/Activity_by_Type_Test/activity_10000?root=true&format=TMS",
+                    "properties": {
+                        "additionalSources": {},
+                        "timeRangeAnnotations": []
+                    }
+                },
+                {
+                    "id": "band71831",
+                    "label": "ACT1+ACT2_10000",
+                    "originalName": "Root Activities",
+                    "suffix": null,
+                    "legend": "ACT1+ACT2_10000",
+                    "graphSettings": {
+                        "labelFontSize": 10,
+                        "height": 35,
+                        "rowHeight": 0.014689265536723164,
+                        "rowPadding": 2,
+                        "activityHeight": 20,
+                        "trimLabel": false,
+                        "hideLabel": false,
+                        "iconEnabled": false,
+                        "autoFit": 1,
+                        "activityLayout": 1,
+                        "style": "bar",
+                        "showActivityTimes": false
+                    },
+                    "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/tol_activities-mongodb/TEST_ATS/Activity_by_Type_Test/activity_10000?root=true&format=TMS",
+                    "properties": {
+                        "additionalSources": {},
+                        "timeRangeAnnotations": []
+                    }
+                },
+                {
+                    "id": "band71832",
+                    "label": "ACT3&ACT4_10000",
+                    "originalName": "Root Activities",
+                    "suffix": null,
+                    "legend": "ACT3&ACT4_10000",
+                    "graphSettings": {
+                        "labelFontSize": 10,
+                        "height": 35,
+                        "rowHeight": 0.014689265536723164,
+                        "rowPadding": 2,
+                        "activityHeight": 20,
+                        "trimLabel": false,
+                        "hideLabel": false,
+                        "iconEnabled": false,
+                        "autoFit": 1,
+                        "activityLayout": 1,
+                        "style": "bar",
+                        "showActivityTimes": false
+                    },
+                    "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/tol_activities-mongodb/TEST_ATS/Activity_by_Type_Test/activity_10000?root=true&format=TMS",
+                    "properties": {
+                        "additionalSources": {},
+                        "timeRangeAnnotations": []
+                    }
+                },
+                {
+                    "id": "band71833",
+                    "label": "ACT5_10000",
+                    "originalName": "Root Activities",
+                    "suffix": null,
+                    "legend": "ACT5_10000",
+                    "graphSettings": {
+                        "labelFontSize": 10,
+                        "height": 35,
+                        "rowHeight": 0.014689265536723164,
+                        "rowPadding": 2,
+                        "activityHeight": 20,
+                        "trimLabel": false,
+                        "hideLabel": false,
+                        "iconEnabled": false,
+                        "autoFit": 1,
+                        "activityLayout": 1,
+                        "style": "bar",
+                        "showActivityTimes": false
+                    },
+                    "url": "https://mpsserver.jpl.nasa.gov:9002/mpsserver/api/v2/tol_activities-mongodb/TEST_ATS/Activity_by_Type_Test/activity_10000?root=true&format=TMS",
+                    "properties": {
+                        "additionalSources": {},
+                        "timeRangeAnnotations": []
+                    }
+                }
+            ],
+            "south": []
+        },
+        "guides": [],
+        "bandLabelWidth": 100,
+        "globalLabelFontSize": 10,
+        "tooltipEnabled": true
+    },
+    "customFilters": {
+        "sequenceId": "",
+        "meeting": [],
+        "collection": [],
+        "events": [],
+        "sequenceType": []
+    },
+    "wasImported": false,
+    "colors": {
+        "black": [
+            0,
+            0,
+            0
+        ],
+        "red": [
+            255,
+            0,
+            0
+        ],
+        "green": [
+            0,
+            255,
+            0
+        ],
+        "blue": [
+            0,
+            0,
+            255
+        ],
+        "orange": [
+            255,
+            165,
+            0
+        ],
+        "yellow": [
+            255,
+            255,
+            0
+        ]
+    },
+    "pins": [],
+    "tabSources": [
+        {
+            "home": true,
+            "name": "Home",
+            "tabSelected": true,
+            "filtered": [],
+            "filterTerms": null
+        }
+    ],
+    "__file_id": "/leucadia/states/ACT_BY_TYPE",
+    "__document_id": "5b85c43a1af4cd1276af5d05",
+    "__kind": "fs_record",
+    "__db_type": "mongodb"
+}

@@ -1,0 +1,289 @@
+<raven-app-header title="Visualization" (menuClicked)="onMenuClicked()">
+  <span class="spacer"></span>
+
+  <button
+    *ngIf="currentStateId !== '' && mode !== 'minimal'"
+    mat-icon-button
+    matTooltip="Apply State"
+    (click)="onApplyCurrentState()">
+    <mat-icon
+      aria-label="Apply State">
+      photo
+    </mat-icon>
+  </button>
+
+  <button
+    *ngIf="currentStateId !== '' && mode !== 'minimal'"
+    mat-icon-button
+    matTooltip="Apply Layout"
+    (click)="onApplyLayout()">
+    <mat-icon
+      aria-label="Apply Layout">
+      playlist_play
+    </mat-icon>
+  </button>
+
+  <button
+    *ngIf="currentStateId !== '' && mode !== 'minimal'"
+    mat-icon-button
+    matTooltip="Update State"
+    (click)="onUpdateCurrentState()">
+    <mat-icon
+      aria-label="Update State">
+      photo_library
+    </mat-icon>
+  </button>
+
+  <span class="name" *ngIf="currentStateId !== '' && mode !== 'minimal'">State: {{currentStateId}}</span>
+  <raven-pan-to-duration
+    (panTo)="onPanTo($event)">
+  </raven-pan-to-duration>
+
+  <button
+    mat-icon-button
+    matTooltip="Reset Time"
+    (click)="onReset()">
+    <mat-icon
+      aria-label="Reset Time">
+      restore
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Zoom In Time"
+    (click)="onZoomIn()">
+    <mat-icon
+      aria-label="Zoom In Time">
+      zoom_in
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Zoom Out Time"
+    (click)="onZoomOut()">
+    <mat-icon
+      aria-label="Zoom Out Time">
+      zoom_out
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Pan Left Time"
+    (click)="onPanLeft()">
+    <mat-icon
+      aria-label="Pan Left Time">
+      skip_previous
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Pan Right Time"
+    (click)="onPanRight()">
+    <mat-icon
+      aria-label="Pan Right Time">
+      skip_next
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Remove All Bands"
+    (click)="onRemoveAllBands()">
+    <mat-icon
+      aria-label="Remove All Bands">
+      clear
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Add Divider"
+    (click)="onAddDividerBand()">
+    <mat-icon
+      aria-label="Add Divider">
+      view_day
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Create Guide"
+    (click)="onAddGuide()">
+    <mat-icon
+      aria-label="Create Guide">
+      create
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Delete Guide"
+    (click)="onRemoveGuide()">
+    <mat-icon
+      aria-label="Delete Guide">
+      remove_circle_outline
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Remove All Guides"
+    (click)="onRemoveAllGuides()">
+    <mat-icon
+      aria-label="Remove All Guides">
+      remove_circle
+    </mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    matTooltip="Global Band Settings"
+    (click)="toggleGlobalSettingsDrawer()">
+    <mat-icon
+      aria-label="Settings">
+      settings
+    </mat-icon>
+  </button>
+
+  <button
+    [matMenuTriggerFor]="rootMenu"
+    mat-icon-button>
+    <mat-icon
+      aria-label="Menu">
+      more_vert
+    </mat-icon>
+  </button>
+
+  <mat-menu
+    #rootMenu="matMenu"
+    [overlapTrigger]="false"
+    y-position="below">
+    <button
+      mat-menu-item
+      [matMenuTriggerFor]="subMenu">
+      <mat-icon
+        aria-label="Panels">
+        view_quilt
+      </mat-icon>
+      Panels
+    </button>
+
+    <button
+      mat-menu-item
+      (click)="toggleEpochsDrawer()">
+      <mat-icon
+        aria-label="Epochs Drawer">
+        timelapse
+      </mat-icon>
+      Manage Epochs
+    </button>
+
+    <button
+      mat-menu-item
+      (click)="toggleOutputDrawer()">
+      <mat-icon
+        aria-label="Manage Output">
+        save_alt
+      </mat-icon>
+      Manage Output
+    </button>
+
+    <button
+      mat-menu-item
+      (click)="toggleTimeCursorDrawer()">
+      <mat-icon
+        aria-label="Time Cursor Drawer">
+        access_time
+      </mat-icon>
+      Manage Time Cursor
+    </button>
+
+    <button
+      mat-menu-item
+      (click)="toggleSituationalAwarenessDrawer()">
+      <mat-icon
+        aria-label="Situational Awareness Drawer">
+        timeline
+      </mat-icon>
+      Situational Awareness
+    </button>
+
+    <button
+      mat-menu-item
+      (click)="toggleShareableLinkDialog()">
+      <mat-icon
+        aria-label="Get Shareable Link">
+        link
+      </mat-icon>
+      Get Shareable Link
+    </button>
+
+    <button
+      mat-menu-item
+      (click)="toggleAboutDialog()">
+      <mat-icon
+        aria-label="About Raven">
+        info
+      </mat-icon>
+      About Raven
+    </button>
+  </mat-menu>
+
+  <mat-menu #subMenu="matMenu">
+    <button
+      *ngIf="mode !== 'minimal'"
+      mat-menu-item
+      (click)="toggleLeftPanel()">
+      <mat-icon
+        aria-label="Left Panel">
+        view_column
+      </mat-icon>
+      Toggle Left Panel
+    </button>
+
+    <button
+      mat-menu-item
+      (click)="toggleRightPanel()">
+      <mat-icon
+        aria-label="Right Panel">
+        show_chart
+      </mat-icon>
+      Toggle Right Panel
+    </button>
+
+    <button
+      mat-menu-item
+      (click)="toggleSouthBandsPanel()">
+      <mat-icon
+        aria-label="South Bands">
+        view_stream
+      </mat-icon>
+      Toggle South Bands Panel
+    </button>
+
+    <button
+      mat-menu-item
+      (click)="toggleDetailsPanel()">
+      <mat-icon
+        aria-label="Details">
+        assessment
+      </mat-icon>
+      Toggle Details Panel
+    </button>
+  </mat-menu>
+</raven-app-header>
+
+<div class="progress-container">
+  <mat-progress-bar mode="indeterminate" *ngIf="showProgressBar$ | async" color="accent">
+  </mat-progress-bar>
+</div>
+
+<div class="timeline-container">
+  <div class="timeline">
+    <app-timeline></app-timeline>
+  </div>
+</div>

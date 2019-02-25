@@ -1,0 +1,27 @@
+/**
+ * Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+ * Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.
+ * This software may be subject to U.S. export control laws and regulations.
+ * By accepting this document, the user agrees to comply with all applicable U.S. export laws and regulations.
+ * User has the responsibility to obtain export licenses, or other export authority as may be required
+ * before exporting such information to foreign countries or providing access to foreign persons
+ */
+
+:host {
+  display: block;
+}
+
+.raven-band {
+  isolation: isolate;
+}
+.raven-band--selected {
+  background-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 1) 0px,
+    rgba(0, 0, 0, 1) 2px,
+    rgba(0, 0, 0, 0) 2px
+  );
+}
+.raven-band__ctl {
+  mix-blend-mode: multiply;
+}

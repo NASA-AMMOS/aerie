@@ -1,0 +1,55 @@
+{
+    "bands": [
+        {
+            "color": "#000000",
+            "logTicks": false,
+            "height": 100,
+            "showIcon": false,
+            "fillColor": "#000000",
+            "source_id": [
+                "TEST_ATS/Resource_Test/flt_array_res_square_tol_1000/Resources/ArrayData/DataRate_1000/DataRate_1000[ONE]"
+            ],
+            "interpolation": "constant",
+            "type": "resource",
+            "heightPadding": 12,
+            "fill": false
+        },
+        {
+            "color": "#000000",
+            "logTicks": false,
+            "height": 100,
+            "showIcon": false,
+            "fillColor": "#000000",
+            "source_id": [
+                "TEST_ATS/Resource_Test/flt_array_res_square_tol_1000/Resources/ArrayData/DataRate_1000/DataRate_1000[TWO]"
+            ],
+            "interpolation": "constant",
+            "type": "resource",
+            "heightPadding": 12,
+            "fill": false
+        },
+        {
+            "color": "#000000",
+            "logTicks": false,
+            "height": 100,
+            "showIcon": false,
+            "fillColor": "#000000",
+            "source_id": [
+                "TEST_ATS/Resource_Test/sine/Resources/Data/DataVolume_megabits_100000"
+            ],
+            "interpolation": "linear",
+            "type": "resource",
+            "heightPadding": 12,
+            "fill": false
+        }
+    ],
+    "viewTimeRange": {
+        "start": "1262304010.111",
+        "end": "1262364010.111"
+    },
+    "defaultBandSettings": {
+        "showTooltip": true,
+        "labelWidth": 100,
+        "labelFontSize": 10
+    }
+}

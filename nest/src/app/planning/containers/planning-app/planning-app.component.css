@@ -1,0 +1,116 @@
+/**
+ * Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+ * Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.
+ * This software may be subject to U.S. export control laws and regulations.
+ * By accepting this document, the user agrees to comply with all applicable U.S. export laws and regulations.
+ * User has the responsibility to obtain export licenses, or other export authority as may be required
+ * before exporting such information to foreign countries or providing access to foreign persons
+ */
+
+:host {
+  display: grid;
+  grid-gap: 0px;
+  grid-template-areas: 'header' 'main';
+  grid-template-rows: 40px 1fr;
+  height: 100%;
+  margin: 0;
+}
+
+raven-app-header {
+  grid-area: header;
+}
+
+main {
+  grid-area: main;
+  overflow: hidden;
+}
+
+mat-sidenav-container {
+  height: 100%;
+}
+
+mat-sidenav-content {
+  padding: 3rem 2rem 1rem;
+}
+
+mat-sidenav {
+  width: 350px;
+  padding: 20px 16px;
+  overflow: hidden;
+}
+
+mat-form-field {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.plan-container {
+  display: grid;
+  grid-gap: 10px;
+}
+
+.plan-table-row {
+  cursor: pointer;
+}
+
+.form-controls {
+  display: grid;
+  justify-content: end;
+  grid-template-columns: min-content min-content;
+  grid-gap: 12px;
+}
+
+.highlight {
+  background-color: #fafafa;
+}
+
+raven-activity-type-list {
+  overflow-y: scroll;
+}
+
+.side-nav-container {
+  height: 100%;
+  position: relative;
+}
+
+.side-nav-wrapper:not([hidden]) {
+  display: grid;
+  grid-template-rows: 3rem 1fr;
+  height: 100%;
+}
+
+.side-nav-header {
+  display: grid;
+  grid-template-columns: 1fr min-content;
+}
+
+.empty {
+  background: rgba(0, 0, 0, 0.04);
+  margin-top: 16px;
+  padding: 24px;
+}
+
+.page-header {
+  align-items: center;
+  display: grid;
+  grid-gap: 12px;
+  grid-template-columns: auto 1fr auto;
+}
+
+.mat-display-1 {
+  margin-bottom: 0;
+  /* Add the same amount of padding as the select so they will line up */
+  padding-bottom: 1.34375rem;
+}
+
+#newActivity {
+  margin-bottom: 1.34735rem;
+}
+
+table {
+  width: 100%;
+}
+
+tr:not(.mat-header-row):hover {
+  background: #f5f5f5;
+}

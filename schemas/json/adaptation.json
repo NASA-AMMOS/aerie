@@ -1,0 +1,29 @@
+{
+  "$id": "#/Adaptation",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "javaType": "Adaptation",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "mission": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    }
+  },
+  "required": ["id", "location", "name", "mission", "owner", "version"],
+  "title": "Adaptation",
+  "type": "object"
+}

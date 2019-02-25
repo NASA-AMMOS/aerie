@@ -1,0 +1,26 @@
+{
+  "$id": "#/Plan",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "javaType": "Plan",
+  "properties": {
+    "adaptationId": {
+      "type": "string"
+    },
+    "endTimestamp": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "startTimestamp": {
+      "type": "string"
+    }
+  },
+  "required": ["adaptationId", "endTimestamp", "id", "name", "startTimestamp"],
+  "title": "Plan",
+  "type": "object"
+}

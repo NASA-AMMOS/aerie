@@ -1,0 +1,365 @@
+{
+    "bands": [
+        {
+            "activityHeight": 20,
+            "activityStyle": 1,
+            "addTo": false,
+            "alignLabel": 3,
+            "baselineLabel": 3,
+            "borderWidth": 1,
+            "filterTarget": null,
+            "height": 35,
+            "heightPadding": 10,
+            "icon": "circle",
+            "label": "ACT0_1000",
+            "labelColor": [
+                0,
+                0,
+                0
+            ],
+            "labelFont": "Georgia",
+            "labelPin": "",
+            "layout": 0,
+            "legend": "ACT0_1000",
+            "maxTimeRange": {
+                "end": 0,
+                "start": 0
+            },
+            "minorLabels": [],
+            "name": "ACT0_1000",
+            "points": [],
+            "showActivityTimes": false,
+            "showLabel": true,
+            "showLabelPin": false,
+            "showTooltip": true,
+            "sourceIds": [
+                "/TEST_ATS/Overlay_Test/apgen-activity-tol_1000/Activities by Legend/ACT0_1000",
+                "/TEST_ATS/Overlay_Test/apgen-activity-tol_1000/Activities by Type/Root Activities"
+            ],
+            "tableColumns": [],
+            "trimLabel": true,
+            "type": "activity",
+            "backgroundColor": "#FFFFFF",
+            "containerId": "0",
+            "sortOrder": 0
+        },
+        {
+            "activityHeight": 20,
+            "activityStyle": 1,
+            "addTo": false,
+            "alignLabel": 3,
+            "baselineLabel": 3,
+            "borderWidth": 1,
+            "filterTarget": null,
+            "height": 35,
+            "heightPadding": 10,
+            "icon": "circle",
+            "label": "ACT1_1000",
+            "labelColor": [
+                0,
+                0,
+                0
+            ],
+            "labelFont": "Georgia",
+            "labelPin": "",
+            "layout": 0,
+            "legend": "ACT1_1000",
+            "maxTimeRange": {
+                "end": 0,
+                "start": 0
+            },
+            "minorLabels": [],
+            "name": "ACT1_1000",
+            "points": [],
+            "showActivityTimes": false,
+            "showLabel": true,
+            "showLabelPin": false,
+            "showTooltip": true,
+            "sourceIds": [
+                "/TEST_ATS/Overlay_Test/apgen-activity-tol_1000/Activities by Type/Root Activities"
+            ],
+            "tableColumns": [],
+            "trimLabel": true,
+            "type": "activity",
+            "backgroundColor": "#FFFFFF",
+            "containerId": "0",
+            "sortOrder": 1
+        },
+        {
+            "activityHeight": 20,
+            "activityStyle": 1,
+            "addTo": false,
+            "alignLabel": 3,
+            "baselineLabel": 3,
+            "borderWidth": 1,
+            "filterTarget": null,
+            "height": 35,
+            "heightPadding": 10,
+            "icon": "circle",
+            "label": "ACT2_1000",
+            "labelColor": [
+                0,
+                0,
+                0
+            ],
+            "labelFont": "Georgia",
+            "labelPin": "",
+            "layout": 0,
+            "legend": "ACT2_1000",
+            "maxTimeRange": {
+                "end": 0,
+                "start": 0
+            },
+            "minorLabels": [],
+            "name": "ACT2_1000",
+            "points": [],
+            "showActivityTimes": false,
+            "showLabel": true,
+            "showLabelPin": false,
+            "showTooltip": true,
+            "sourceIds": [
+                "/TEST_ATS/Overlay_Test/apgen-activity-tol_1000/Activities by Type/Root Activities"
+            ],
+            "tableColumns": [],
+            "trimLabel": true,
+            "type": "activity",
+            "backgroundColor": "#FFFFFF",
+            "containerId": "0",
+            "sortOrder": 2
+        },
+        {
+            "activityHeight": 20,
+            "activityStyle": 1,
+            "addTo": false,
+            "alignLabel": 3,
+            "baselineLabel": 3,
+            "borderWidth": 1,
+            "filterTarget": null,
+            "height": 35,
+            "heightPadding": 10,
+            "icon": "circle",
+            "label": "ACT3_1000",
+            "labelColor": [
+                0,
+                0,
+                0
+            ],
+            "labelFont": "Georgia",
+            "labelPin": "",
+            "layout": 0,
+            "legend": "ACT3_1000",
+            "maxTimeRange": {
+                "end": 0,
+                "start": 0
+            },
+            "minorLabels": [],
+            "name": "ACT3_1000",
+            "points": [],
+            "showActivityTimes": false,
+            "showLabel": true,
+            "showLabelPin": false,
+            "showTooltip": true,
+            "sourceIds": [
+                "/TEST_ATS/Overlay_Test/apgen-activity-tol_1000/Activities by Type/Root Activities"
+            ],
+            "tableColumns": [],
+            "trimLabel": true,
+            "type": "activity",
+            "backgroundColor": "#FFFFFF",
+            "containerId": "0",
+            "sortOrder": 3
+        },
+        {
+            "activityHeight": 20,
+            "activityStyle": 1,
+            "addTo": false,
+            "alignLabel": 3,
+            "baselineLabel": 3,
+            "borderWidth": 1,
+            "filterTarget": null,
+            "height": 35,
+            "heightPadding": 10,
+            "icon": "circle",
+            "label": "ACT4_1000",
+            "labelColor": [
+                0,
+                0,
+                0
+            ],
+            "labelFont": "Georgia",
+            "labelPin": "",
+            "layout": 0,
+            "legend": "ACT4_1000",
+            "maxTimeRange": {
+                "end": 0,
+                "start": 0
+            },
+            "minorLabels": [],
+            "name": "ACT4_1000",
+            "points": [],
+            "showActivityTimes": false,
+            "showLabel": true,
+            "showLabelPin": false,
+            "showTooltip": true,
+            "sourceIds": [
+                "/TEST_ATS/Overlay_Test/apgen-activity-tol_1000/Activities by Type/Root Activities"
+            ],
+            "tableColumns": [],
+            "trimLabel": true,
+            "type": "activity",
+            "backgroundColor": "#FFFFFF",
+            "containerId": "0",
+            "sortOrder": 4
+        },
+        {
+            "activityHeight": 20,
+            "activityStyle": 1,
+            "addTo": false,
+            "alignLabel": 3,
+            "baselineLabel": 3,
+            "borderWidth": 1,
+            "filterTarget": null,
+            "height": 35,
+            "heightPadding": 10,
+            "icon": "circle",
+            "label": "ACT5_1000",
+            "labelColor": [
+                0,
+                0,
+                0
+            ],
+            "labelFont": "Georgia",
+            "labelPin": "",
+            "layout": 0,
+            "legend": "ACT5_1000",
+            "maxTimeRange": {
+                "end": 0,
+                "start": 0
+            },
+            "minorLabels": [],
+            "name": "ACT5_1000",
+            "points": [],
+            "showActivityTimes": false,
+            "showLabel": true,
+            "showLabelPin": false,
+            "showTooltip": true,
+            "sourceIds": [
+                "/TEST_ATS/Overlay_Test/apgen-activity-tol_1000/Activities by Type/Root Activities"
+            ],
+            "tableColumns": [],
+            "trimLabel": true,
+            "type": "activity",
+            "backgroundColor": "#FFFFFF",
+            "containerId": "0",
+            "sortOrder": 5
+        },
+        {
+            "addTo": false,
+            "autoScale": true,
+            "color": "#000000",
+            "decimate": false,
+            "fill": false,
+            "fillColor": "#000000",
+            "height": 100,
+            "heightPadding": 10,
+            "icon": "circle",
+            "interpolation": "linear",
+            "isDuration": false,
+            "isTime": false,
+            "label": "DataVolume_fltbits_1000",
+            "labelColor": "#000000",
+            "labelFont": "Georgia",
+            "labelPin": "",
+            "labelUnit": "megabits",
+            "logTicks": false,
+            "maxTimeRange": {
+                "end": 0,
+                "start": 0
+            },
+            "name": "DataVolume_fltbits_1000",
+            "points": [],
+            "scientificNotation": false,
+            "showIcon": false,
+            "showLabelPin": false,
+            "showLabelUnit": true,
+            "showTooltip": true,
+            "sourceIds": [
+                "/TEST_ATS/Overlay_Test/apgen-res-flt-tol_1000/Resources/Data/DataVolume_fltbits_1000"
+            ],
+            "tableColumns": [],
+            "type": "resource",
+            "backgroundColor": "#FFFFFF",
+            "containerId": "1",
+            "sortOrder": 0
+        },
+        {
+            "addTo": false,
+            "alignLabel": 3,
+            "baselineLabel": 3,
+            "borderWidth": 1,
+            "color": "#000000",
+            "fill": false,
+            "fillColor": "#000000",
+            "height": 30,
+            "heightPadding": 0,
+            "icon": "circle",
+            "isNumeric": false,
+            "label": "State_1000",
+            "labelColor": [
+                0,
+                0,
+                0
+            ],
+            "labelFont": "Georgia",
+            "labelPin": "",
+            "maxTimeRange": {
+                "end": 0,
+                "start": 0
+            },
+            "name": "State_1000",
+            "points": [],
+            "possibleStates": [
+                "LOW",
+                "MED",
+                "HIGH"
+            ],
+            "showIcon": false,
+            "showLabelPin": false,
+            "showStateChangeTimes": false,
+            "showTooltip": true,
+            "sourceIds": [
+                "/TEST_ATS/Overlay_Test/apgen_state-tol_1000/Resources/State_1000"
+            ],
+            "tableColumns": [],
+            "type": "state",
+            "backgroundColor": "#FFFFFF",
+            "containerId": "1",
+            "sortOrder": 1
+        }
+    ],
+    "defaultBandSettings": {
+        "activityLayout": 0,
+        "icon": "circle",
+        "iconEnabled": false,
+        "labelFont": "Georgia",
+        "labelFontSize": 10,
+        "labelWidth": 100,
+        "resourceColor": "#000000",
+        "resourceFillColor": "#000000",
+        "showLastClick": false,
+        "showTooltip": true
+    },
+    "guides": [],
+    "ignoreShareableLinkTimes": true,
+    "maxTimeRange": {
+        "end": 1262364290,
+        "start": 1262304000
+    },
+    "name": "Conversion_Test3_Raven2",
+    "pins": [],
+    "version": "1.0.0",
+    "viewTimeRange": {
+        "end": 1262320200,
+        "start": 1262318400
+    }
+}

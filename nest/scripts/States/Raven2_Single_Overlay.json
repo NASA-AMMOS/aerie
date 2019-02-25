@@ -1,0 +1,114 @@
+{
+    "bands": [
+        {
+            "compositeAutoScale": true,
+            "compositeLogTicks": false,
+            "compositeScientificNotation": false,
+            "compositeYAxisLabel": false,
+            "containerId": "0",
+            "height": 100,
+            "heightPadding": 10,
+            "name": "DataVolume_fltbits_1000",
+            "overlay": true,
+            "showTooltip": true,
+            "sortOrder": 0,
+            "subBands": [
+                {
+                    "addTo": false,
+                    "autoScale": true,
+                    "color": "#000000",
+                    "decimate": false,
+                    "fill": false,
+                    "fillColor": "#000000",
+                    "height": 100,
+                    "heightPadding": 10,
+                    "icon": "circle",
+                    "interpolation": "linear",
+                    "isDuration": false,
+                    "isTime": false,
+                    "label": "DataVolume_fltbits_1000",
+                    "labelColor": "#000000",
+                    "labelFont": "Georgia",
+                    "labelPin": "",
+                    "labelUnit": "megabits",
+                    "logTicks": false,
+                    "maxTimeRange": {
+                        "end": 0,
+                        "start": 0
+                    },
+                    "name": "DataVolume_fltbits_1000",
+                    "points": [],
+                    "scientificNotation": false,
+                    "showIcon": false,
+                    "showLabelPin": true,
+                    "showLabelUnit": true,
+                    "showTooltip": true,
+                    "sourceIds": [
+                        "/TEST_ATS/Overlay_Test/apgen-res-flt-tol_1000/Resources/Data/DataVolume_fltbits_1000"
+                    ],
+                    "tableColumns": [],
+                    "type": "resource"
+                },
+                {
+                    "addTo": false,
+                    "autoScale": true,
+                    "color": "#000000",
+                    "decimate": false,
+                    "fill": false,
+                    "fillColor": "#000000",
+                    "height": 100,
+                    "heightPadding": 10,
+                    "icon": "circle",
+                    "interpolation": "linear",
+                    "isDuration": false,
+                    "isTime": false,
+                    "label": "DataVolume_megabits_1000",
+                    "labelColor": "#000000",
+                    "labelFont": "Georgia",
+                    "labelPin": "",
+                    "labelUnit": "megabits",
+                    "logTicks": false,
+                    "maxTimeRange": {
+                        "end": 0,
+                        "start": 0
+                    },
+                    "name": "DataVolume_megabits_1000",
+                    "points": [],
+                    "scientificNotation": false,
+                    "showIcon": false,
+                    "showLabelPin": true,
+                    "showLabelUnit": true,
+                    "showTooltip": true,
+                    "sourceIds": [
+                        "/TEST_ATS/Overlay_Test/apgen-res-flt-tol_1000/Resources/Data/DataVolume_megabits_1000"
+                    ],
+                    "tableColumns": [],
+                    "type": "resource"
+                }
+            ],
+            "type": "composite"
+        }
+    ],
+    "defaultBandSettings": {
+        "activityLayout": 0,
+        "icon": "circle",
+        "iconEnabled": false,
+        "labelFont": "Georgia",
+        "labelFontSize": 9,
+        "labelWidth": 150,
+        "resourceColor": "#000000",
+        "resourceFillColor": "#000000",
+        "showTooltip": true
+    },
+    "maxTimeRange": {
+        "end": 1262364000,
+        "start": 1262304000
+    },
+    "name": "Single_Overlay_R2",
+    "pins": [],
+    "version": "1.0.0",
+    "viewTimeRange": {
+        "end": 1262364000,
+        "start": 1262304000
+    }
+}

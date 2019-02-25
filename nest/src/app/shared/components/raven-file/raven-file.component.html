@@ -1,0 +1,13 @@
+<raven-tree-node
+  [attr.data-source-id]="source.id"
+  [activated]="source.expanded"
+  [icon]="source.icon"
+  [label]="source.name"
+  [markerActivatedIcon]="(selectable) ? 'expand_more' : ' '"
+  [markerDeactivatedIcon]="(selectable) ? 'keyboard_arrow_right' : ' '"
+  [menu]="source.actions"
+  [status]="status"
+  (action)="action.emit({ event: $event, source: source })"
+  (activate)="onActivate()"
+  (deactivate)="onDeactivate()">
+</raven-tree-node>
