@@ -150,3 +150,19 @@ To report a defect in Nest, please create an ISA ticket and assign it to the SEQ
 ## Change Log
 
 See [CHANGELOG](./CHANGELOG.md)
+
+## Documentation Generation
+
+Documentation for NEST is generated via [compodoc](https://compodoc.app/). Documentation is hosted on the [gh-pages](https://github.jpl.nasa.gov/MPS/aerie/tree/gh-pages) branch of the Aerie repository. To generate the documentation for the [develop](https://github.jpl.nasa.gov/MPS/aerie/tree/develop) branch, from the root of the Aerie repository do:
+
+```
+git checkout develop
+git pull origin develop
+git checkout gh-pages
+git merge develop
+cd nest
+npm run docs
+git push origin gh-pages
+```
+
+We need to do this anytime NEST is updated so the documentation is kept in sync with `develop`.
