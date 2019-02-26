@@ -165,4 +165,4 @@ npm run docs
 git push origin gh-pages
 ```
 
-We need to do this anytime NEST is updated so the documentation is kept in sync with `develop`.
+We need to do this anytime NEST is updated so the documentation is kept in sync with `develop`. You can view the docs from the `gh-pages` branch [here](https://github.jpl.nasa.gov/pages/MPS/aerie/nest/documentation/overview.html).
