@@ -111,16 +111,15 @@ export class SourceExplorerComponent implements OnDestroy {
         takeUntil(this.ngUnsubscribe),
       )
       .subscribe((data: any) => {
-        if (data.detail === 'data source changed') {
-          const match = data.subject.match(
-            new RegExp('(.*/fs-mongodb)(/.*)/(.*)'),
-          );
-          const sourceId = `${match[2]}`;
-          const sourceUrl = `${match[1]}${match[2]}`;
-          this.store.dispatch(
-            new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl),
-          );
-        } else if (data.aspect === 'importJobStatus') {
+        if (
+          data.aspect === 'fileCreation' ||
+          data.aspect === 'fileChange' ||
+          data.aspect === 'folderCreation' ||
+          data.aspect === 'folderDeletion' ||
+          data.aspect === 'fileDeletion' ||
+          data.aspect === 'metadataChange' ||
+          data.aspect === 'importJobStatus'
+        ) {
           const match = data.subject.match(new RegExp('(.*)/(.*)'));
           const parentId = `${match[1]}`;
           if (this.tree[parentId]) {
