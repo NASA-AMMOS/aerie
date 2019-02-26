@@ -111,17 +111,18 @@ export class SourceExplorerComponent implements OnDestroy {
         ),
         takeUntil(this.ngUnsubscribe),
       )
-      .subscribe(({aspect, subject}: MpsServerWebSocketMessage) => {
-        if (
-          aspect === 'fileCreation' ||
-          aspect === 'fileChange' ||
-          aspect === 'folderCreation' ||
-          aspect === 'folderDeletion' ||
-          aspect === 'fileDeletion' ||
-          aspect === 'metadataChange' ||
-          aspect === 'importJobStatus'
-        ) {
-          const match =subject.match(new RegExp('(.*)/(.*)'));
+      .subscribe(({ aspect, subject }: MpsServerWebSocketMessage) => {
+        const ALLOWED_ASPECTS = [
+          'fileChange',
+          'fileCreation',
+          'fileDeletion',
+          'folderCreation',
+          'folderDeletion',
+          'importJobStatus',
+          'metadataChange',
+        ];
+        if (ALLOWED_ASPECTS.includes(aspect)) {
+          const match = subject.match(new RegExp('(.*)/(.*)'));
           if (match) {
             const parentId = match[1];
             if (this.tree[parentId]) {
