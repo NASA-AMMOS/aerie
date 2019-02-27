@@ -16,6 +16,7 @@
     "prebuild-prod": "npm run version",
     "prebuild-prod-mpsserver": "npm run version",
     "prestart": "npm run version",
+    "pretest-for-build": "npm run version",
     "protractor": "protractor ./e2e/protractor.conf.js",
     "start": "ng serve",
     "test": "ng test --code-coverage --source-map=false",
