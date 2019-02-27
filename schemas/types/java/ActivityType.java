@@ -39,6 +39,28 @@ public class ActivityType {
     private String typeName;
 
     /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public ActivityType() {
+    }
+
+    /**
+     * 
+     * @param listeners
+     * @param activityClass
+     * @param typeName
+     * @param parameters
+     */
+    public ActivityType(String activityClass, List<String> listeners, List<ActivityTypeParameter> parameters, String typeName) {
+        super();
+        this.activityClass = activityClass;
+        this.listeners = listeners;
+        this.parameters = parameters;
+        this.typeName = typeName;
+    }
+
+    /**
      * 
      * (Required)
      * 

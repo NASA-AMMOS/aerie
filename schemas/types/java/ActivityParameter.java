@@ -25,6 +25,24 @@ public class ActivityParameter {
     private String type;
 
     /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public ActivityParameter() {
+    }
+
+    /**
+     * 
+     * @param name
+     * @param type
+     */
+    public ActivityParameter(String name, String type) {
+        super();
+        this.name = name;
+        this.type = type;
+    }
+
+    /**
      * 
      * (Required)
      * 
