@@ -1,0 +1,13 @@
+.classpath
+.mvn
+.mvn
+.project
+.scannerwork
+.settings
+.settings
+coverage
+dist
+kernels
+lib
+node_modules
+target

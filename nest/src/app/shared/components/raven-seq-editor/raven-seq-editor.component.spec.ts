@@ -17,9 +17,7 @@ import { RavenSeqEditorModule } from './raven-seq-editor.module';
 @Component({
   selector: 'raven-seq-editor-test',
   template: `
-    <raven-seq-editor
-      [commands]="commands"
-      [commandsByName]="commandsByName">
+    <raven-seq-editor [commands]="commands" [commandsByName]="commandsByName">
     </raven-seq-editor>
   `,
 })

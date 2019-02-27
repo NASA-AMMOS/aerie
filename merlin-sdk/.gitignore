@@ -1,7 +1,5 @@
 target
-!target/adaptation*.jar
 !.mvn/wrapper/maven-wrapper.jar
-adaptation_files
 
 ### STS ###
 .apt_generated
