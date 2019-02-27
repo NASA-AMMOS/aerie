@@ -26,7 +26,8 @@ import {
     <hb-command-loader
       [dictionaries]="dictionaries"
       [selectedId]="selectedId"
-      (onSelected)="selectedDictionaryChanged">
+      (onSelected)="(selectedDictionaryChanged)"
+    >
     </hb-command-loader>
   `,
 })

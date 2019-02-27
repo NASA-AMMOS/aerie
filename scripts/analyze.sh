@@ -103,34 +103,32 @@ while [[ -n $1 ]]; do
   shift
 done
 
-# Install cloc if it isn't installed already
-if [ ! -d /tmp/cloc-${CLOC_REL} ]; then
-  echo "Installing cloc..."
-  wget -q ${CLOC_URL} -P /tmp/
-  tar -xzf /tmp/cloc-${CLOC_REL}.tar.gz -C /tmp/
-fi
-
-# Install sonar-scanner if it isn't installed already
-if [ ! -d /tmp/sonar-scanner-${SONAR_REL}-linux ]; then
-  echo "Installing sonar-scanner..."
-  wget -q ${SONAR_URL} -P /tmp/
-  unzip /tmp/sonar-scanner-cli-${SONAR_REL}-linux.zip -d /tmp/
-fi
-
-# Run cloc analysis
+# Run cloc analysis, use --exclude-dir because it is processed before files are
+# counted and thus has better perf. See https://stackoverflow.com/a/26679008
+# NOTE: path separators are not allowed, see documentation for --exclude-dir
 echo "Running cloc analysis..."
-/tmp/cloc-${CLOC_REL}/cloc --report-file=aerie-cloc-${tag}.txt ./
+clocignore=$(tr '\n' ',' < .clocignore)
+echo "$clocignore"
+cloc --report-file=aerie-cloc-${tag}.txt --exclude-dir="$clocignore" ./
 
 # Run sonar-scanner on changed projects that have sonar-project.properties files
-changed=$(git diff-tree --no-commit-id --name-only $commit)
+if [ ! -z ${branch} ]
+then
+  echo "Branch passed, building select projects..."
+  changed=$(git diff --name-only $branch... | cut -d "/" -f1 | uniq)
+else
+  echo "No branch detected, building everything..."
+  changed=$(ls -1)
+fi
+
 for d in $changed
 do
   if [ -d $d ]
   then
     cd $d
-    if [ -f sonar-project.properties ]
+    if [ -d == "nest" ]
     then
-      /tmp/sonar-scanner-${SONAR_REL}-linux/bin/sonar-scanner
+      npx sonar-scanner
     fi
     cd $root
   fi
