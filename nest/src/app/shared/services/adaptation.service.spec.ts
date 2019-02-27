@@ -16,7 +16,8 @@ describe('AdaptationService', () => {
     TestBed.configureTestingModule({
       imports: [HttpClientModule],
       providers: [HttpClient],
-    }));
+    }),
+  );
 
   it('should be created', () => {
     const service: AdaptationService = TestBed.get(AdaptationService);

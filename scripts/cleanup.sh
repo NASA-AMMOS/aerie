@@ -98,24 +98,20 @@ while [[ -n $1 ]]; do
   shift
 done
 
-changed=$(git diff-tree --no-commit-id --name-only $commit)
-for d in $changed
+tag_base="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie"
+tag_name="$tag_base/$d:$tag"
+
+docker_images=$(docker images | grep "$tag_base" | tr -s ' ' | cut -d ' ' -f 3)
+printf "\nRemoving Docker images:\n==================\n$docker_images\n\n"
+
+for d in $docker_images
 do
-  if [ -d $d ]
-  then
-    cd $d
-    if [ -f Dockerfile ]
-    then
-
-      tag_name="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/$d:$tag"
-      # Assume that we are already logged in on the server
-      docker rmi "$tag_name"
-      retval=$?
-      [ $retval -ne 0 ] && error_exit "docker rmi failed for $tag_name"
-
-    fi
-    cd $root
-  fi
+  echo "removing $d"
+  docker rmi $d
+  [ $? -ne 0 ] && echo "docker rmi failed for $d"
 done
+
+# This makes Jenkins exit with a proper exit code of 0
+echo "Finished."
 
 graceful_exit

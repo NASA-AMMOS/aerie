@@ -98,55 +98,83 @@ while [[ -n $1 ]]; do
   shift
 done
 
-# File only change: 3997569
-# Files and directories change: 7ea41f9
-# Directories only change: 34fc057
-# Nothing changed?: 9d28f3e
-# Single directory changed: 5ee8315
-changed=$(git diff-tree --no-commit-id --name-only $commit)
+if [ ! -z ${branch} ]
+then
+  echo "Branch passed, building select projects..."
+  changed=$(git diff --name-only $branch... | cut -d "/" -f1 | uniq)
+else
+  echo "No branch detected, building everything..."
+  changed=$(ls -1)
+fi
+
+printf "\nTop level changes:\n==================\n$changed\n\n"
+
 for d in $changed
 do
   if [ -d $d ]
   then
+
     cd $d
-    if [ -f Dockerfile ]
+    # 16001 is local, 2 is staging, 3 is release
+    tag_name="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/$d:$tag"
+
+    if [ $d == "nest" ]
     then
+      printf "\nBuilding $d...\n\n"
 
-      # PRE-BUILD STUFF
-      if [ $d == "nest" ]; then
-        # Create the special environment.ts file that the build script usually
-        # would generate but is now, not.
-        nest_version=$(grep -m 1 "version" ./package.json | sed -e "s/  \"version\"/packageJsonVersion/" | sed -e "s/\"/'/g")
-        echo "export const version = {\n  ${nest_version}\n  version: '${tag}'\n};" > src/environments/version.ts
-        cat src/environments/version.ts
-      fi
+      npm ci
+      [ $? -ne 0 ] && error_exit "npm ci failed"
 
-      # 16001 is local, 2 is staging, 3 is release
-      tag_name="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/$d:$tag"
-      echo "building container $tag_name..."
-      docker build -t "$tag_name" --rm .
-      RETVAL=$?
-      [ $RETVAL -ne 0 ] && error_exit "docker build failed for $tag_name"
+      npm run format:check
+      [ $? -ne 0 ] && error_exit "npm run format:check failed"
 
-      # POST BUILD STUFF
-      if [ $d == "nest" ]; then
-        # Copy the test-results and coverage to the host for later evaluation
-        echo "copying nest build files from container to host..."
+      npm run license:check
+      [ $? -ne 0 ] && error_exit "npm run license:check failed"
 
-        run_name="$project_$d_$tag"
-        docker run --name "$run_name" "$tag_name" date
-        docker cp "$run_name":/var/log/build_log.tar.gz ./
-        docker rm "$run_name"
-        tar -xf build_log.tar.gz
-        rm build_log.tar.gz
+      npm run test-for-build
+      [ $? -ne 0 ] && error_exit "npm run test-for-build failed"
 
-        # Tar the dist dir for legacy reasons
-        tar -zcf "$project_$d_dist_$tag.tar.gz" dist/
-        mv "$project_$d_dist_$tag.tar.gz" $root/
-      fi
+      npx webdriver-manager update
+      npm run e2e
+      [ $? -ne 0 ] && error_exit "npm run e2e failed"
+
+      npm run build-prod
+      [ $? -ne 0 ] && error_exit "npm run build-prod failed"
     fi
-    cd $root
   fi
+
+  # Java projects
+  # TODO: Don't skip tests!
+  if [ -f "pom.xml" ]
+  then
+    printf "\nBuilding $d...\n\n"
+
+    if [ -f "settings.xml" ]
+    then
+      echo "Using local settings.xml file"
+      mvn -B -f pom.xml -s settings.xml dependency:resolve
+      [ $? -ne 0 ] && error_exit "mvn dependency:resolve failed"
+
+      mvn -B -s settings.xml package -DskipTests
+      [ $? -ne 0 ] && error_exit "mvn package failed"
+    else
+      mvn -B -f pom.xml dependency:resolve
+      [ $? -ne 0 ] && error_exit "mvn dependency:resolve failed"
+
+      mvn -B package -DskipTests
+      [ $? -ne 0 ] && error_exit "mvn package failed"
+    fi
+  fi
+
+  # Build Docker containers
+  if [ -f Dockerfile ]
+  then
+      printf "\nBuilding $d Docker container: $tag_name...\n\n"
+      docker build -t "$tag_name" --rm .
+      [ $? -ne 0 ] && error_exit "Docker build failed for $tag_name"
+  fi
+  cd $root
+
 done
 
 graceful_exit

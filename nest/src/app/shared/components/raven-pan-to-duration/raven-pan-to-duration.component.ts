@@ -87,9 +87,8 @@ export class RavenPanToDurationComponent {
   constructor() {
     this.filteredDurations = this.panDurationControl.valueChanges.pipe(
       startWith(''),
-      map(
-        duration =>
-          duration ? this.filterDurations(duration) : [...this.durations],
+      map(duration =>
+        duration ? this.filterDurations(duration) : [...this.durations],
       ),
     );
   }

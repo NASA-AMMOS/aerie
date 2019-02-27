@@ -20,8 +20,7 @@ import { RavenPlanFormDialogModule } from './raven-plan-form-dialog.module';
 @Component({
   selector: 'raven-plan-form-dialog-test',
   template: `
-    <raven-plan-form-dialog>
-    </raven-plan-form-dialog>
+    <raven-plan-form-dialog> </raven-plan-form-dialog>
   `,
 })
 class RavenPlanFormDialogTestComponent {
