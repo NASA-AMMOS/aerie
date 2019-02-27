@@ -94,8 +94,8 @@ pipeline {
 		stage ('archive') {
 			steps {
 				echo 'archiving...'
-      			sh "tar -czf aerie-src-${getTag()}.tar.gz --exclude='.git' `ls -A`"
-				archiveArtifacts '*-src-*.tar.gz'
+				sh "tar -czf aerie-src-${getTag()}.tar.gz --exclude='.git' `ls -A`"
+				archiveArtifacts '*-src-*.tar.gz,nest/dist-mpsserver/*.tar.gz'
 			}
 		}
 
@@ -113,6 +113,11 @@ pipeline {
 							{
 								"pattern": "aerie-src-*.tar.gz",
 								"target": "general-develop/gov/nasa/jpl/ammos/mpsa/aerie/",
+								"recursive":false
+							},
+							{
+								"pattern": "nest/dist-mpsserver/*.tar.gz",
+								"target": "general-develop/gov/nasa/jpl/ammos/mpsa/nest/",
 								"recursive":false
 							}
 						]

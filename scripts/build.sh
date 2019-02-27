@@ -142,8 +142,12 @@ do
       [ $? -ne 0 ] && error_exit "npm run build-prod failed"
 
       # Build MPS Server, this will eventually go away
+      rm -rf dist-mpsserver
       npm run build-prod-mpsserver
       [ $? -ne 0 ] && error_exit "npm run build-prod-mpsserver failed"
+      cd dist-mpsserver
+        tar -czf nest-$tag.tar.gz `ls -A`
+      cd ..
     fi
   fi
 
