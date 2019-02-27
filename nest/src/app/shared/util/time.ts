@@ -391,6 +391,14 @@ export function getInitialPageStartEndTime(
 }
 
 /**
+ * Helper. Return name for local timezone.
+ */
+export function getLocalTimezoneName() {
+  const zoneName =  momentTz.guess();
+  return momentTz(zoneName).zoneAbbr()
+}
+
+/**
  * Helper. Return situationalAwareness startTime. If 'now' is used, startTime is now - nowMinus.
  */
 export function getSituationalAwarenessStartTime(
@@ -594,7 +602,3 @@ export function utc(time: string | number): number {
   return 0;
 }
 
-export function getLocalTimezoneName() {
-  const zoneName =  momentTz.guess();
-  return momentTz(zoneName).zoneAbbr()
-}
