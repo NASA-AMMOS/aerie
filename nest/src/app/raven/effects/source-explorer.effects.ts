@@ -1461,10 +1461,11 @@ export class SourceExplorerEffects {
                   subBands: band.subBands.map((subBand: RavenSubBand) => ({
                     ...subBand,
                     // cleanup source id by removing args
-                    sourceIds: subBand.sourceIds.map(srcId =>
-                      srcId.indexOf('?') > -1
-                        ? srcId.substring(0, srcId.indexOf('?'))
-                        : srcId,
+                    sourceIds: subBand.sourceIds.map(
+                      srcId =>
+                        srcId.indexOf('?') > -1
+                          ? srcId.substring(0, srcId.indexOf('?'))
+                          : srcId,
                     ),
                   })),
                 })),
