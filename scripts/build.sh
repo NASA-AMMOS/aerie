@@ -140,6 +140,10 @@ do
 
       npm run build-prod
       [ $? -ne 0 ] && error_exit "npm run build-prod failed"
+
+      # Build MPS Server, this will eventually go away
+      npm run build-prod-mpsserver
+      [ $? -ne 0 ] && error_exit "npm run build-prod-mpsserver failed"
     fi
   fi
 
