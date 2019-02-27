@@ -8,7 +8,7 @@ def getTag() {
 
 def remoteBranch = ''
 if (env.CHANGE_TARGET) {
-	remoteBranch = "origin/${env.CHANGE_TARGET}"
+	remoteBranch = "--branch origin/${env.CHANGE_TARGET}"
 }
 
 pipeline {
@@ -44,14 +44,14 @@ pipeline {
 					# analyze step, it will get data for all the node modules.
 					npm install -g cloc
 
-					chmod +x ./scripts/build.sh && ./scripts/build.sh --commit ${env.GIT_COMMIT} --branch ${remoteBranch} --tag ${getTag()}
+					chmod +x ./scripts/build.sh && ./scripts/build.sh --commit ${env.GIT_COMMIT} --tag ${getTag()} ${remoteBranch}
 					"""
 					if (statusCode > 0) {
 						error "Failure setting up node"
 					}
 				}
 				// TODO: Use this instead of the above script once node is installed on the server
-				// sh "chmod +x ./scripts/build.sh && ./scripts/build.sh --commit ${env.GIT_COMMIT} --branch ${remoteBranch} --tag ${getTag()}"
+				// sh "chmod +x ./scripts/build.sh && ./scripts/build.sh --commit ${env.GIT_COMMIT} --tag ${getTag()} ${remoteBranch}"
 
 				// TODO: Detect if there are any test-results-files, only run junit if there are
 				// e.g. tests = sh "find karma-test-results.xml"
@@ -80,14 +80,14 @@ pipeline {
 					# install/use proper node version
 					nvm install v10.13.0
 
-					chmod +x ./scripts/analyze.sh && ./scripts/analyze.sh --commit ${env.GIT_COMMIT} --branch ${remoteBranch} --tag ${getTag()}
+					chmod +x ./scripts/analyze.sh && ./scripts/analyze.sh --commit ${env.GIT_COMMIT} --tag ${getTag()} ${remoteBranch}
 					"""
 					if (statusCode > 0) {
 						error "Failure setting up node"
 					}
 				}
 				// TODO: Use this instead of the above script once node is installed on the server
-				// sh "chmod +x ./scripts/analyze.sh && ./scripts/analyze.sh --commit ${env.GIT_COMMIT} --branch ${remoteBranch} --tag ${getTag()}"
+				// sh "chmod +x ./scripts/analyze.sh && ./scripts/analyze.sh --commit ${env.GIT_COMMIT} --tag ${getTag()} ${remoteBranch}"
 			}
 		}
 
@@ -122,7 +122,7 @@ pipeline {
 				}
 
 				withCredentials([usernamePassword(credentialsId: '9db65bd3-f8f0-4de0-b344-449ae2782b86', passwordVariable: 'DOCKER_LOGIN_PASSWORD', usernameVariable: 'DOCKER_LOGIN_USERNAME')]) {
-					sh "chmod +x ./scripts/publish.sh && ./scripts/publish.sh --commit ${env.GIT_COMMIT} --branch ${remoteBranch} --tag ${getTag()}"
+					sh "chmod +x ./scripts/publish.sh && ./scripts/publish.sh --commit ${env.GIT_COMMIT} --tag ${getTag()} ${remoteBranch}"
 				}
 
 			}
@@ -132,7 +132,7 @@ pipeline {
 	post {
 		always {
 			echo "cleaning up..."
-			sh "chmod +x ./scripts/cleanup.sh && ./scripts/cleanup.sh --commit ${env.GIT_COMMIT} --branch ${remoteBranch} --tag ${getTag()}"
+			sh "chmod +x ./scripts/cleanup.sh && ./scripts/cleanup.sh --commit ${env.GIT_COMMIT} --tag ${getTag()} ${remoteBranch}"
 		}
 
 		unstable {
