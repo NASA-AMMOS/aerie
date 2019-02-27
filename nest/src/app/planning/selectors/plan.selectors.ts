@@ -28,8 +28,9 @@ export const getMaxTimeRange = createSelector(
   (state: PlanState) => state.maxTimeRange,
 );
 
-export const getPlans = createSelector(getPlanState, (state: PlanState) =>
-  Object.values(state.plans),
+export const getPlans = createSelector(
+  getPlanState,
+  (state: PlanState) => Object.values(state.plans),
 );
 
 export const getSelectedActivity = createSelector(

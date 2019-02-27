@@ -102,10 +102,17 @@ do
 
     if [ -z "$dry_run" ]; then
       cat $license_path $i >$i.new && mv $i.new $i
+    else
+      $files_missing_headers=1
     fi
 
   fi
 done
+
+if [ ! -z ${files_missing_headers}]
+then
+  error_exit "license header check failed"
+fi
 
 graceful_exit
 

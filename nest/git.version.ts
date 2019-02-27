@@ -48,7 +48,7 @@ function getVersion(branch: string, commit: string): string {
     const year = d.getFullYear();
     const month = ('00' + (d.getMonth() + 1)).slice(-2);
     const day = ('00' + d.getDate()).slice(-2);
-    return `${branchVersion}+b0.r${commit}.${year}${month}${day}`;
+    return `${branchVersion}_b0_r${commit}_${year}${month}${day}`;
   }
 }
 
