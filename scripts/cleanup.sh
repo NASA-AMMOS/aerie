@@ -101,7 +101,11 @@ done
 tag_base="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie"
 tag_name="$tag_base/$d:$tag"
 
-docker_images=$(docker images | grep "$tag_base" | tr -s ' ' | cut -d ' ' -f 3)
+# Only delete images with this $tag. Using $tag_base will result in all
+# images being cleared. While this is great for the hygiene fo the system
+# when there are multiple jobs running concurrently, it results in images
+# for other jobs being wiped out.
+docker_images=$(docker images | grep "$tag" | tr -s ' ' | cut -d ' ' -f 3)
 printf "\nRemoving Docker images:\n==================\n$docker_images\n\n"
 
 for d in $docker_images
