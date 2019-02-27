@@ -534,11 +534,10 @@ export function removeChildrenOrDescendants(
                   point.expandedFromPointId !== action.activityPoint.uniqueId
                 );
               })
-              .map(
-                (point: RavenActivityPoint) =>
-                  point.uniqueId === action.activityPoint.uniqueId
-                    ? { ...point, expansion: 'noExpansion' }
-                    : point,
+              .map((point: RavenActivityPoint) =>
+                point.uniqueId === action.activityPoint.uniqueId
+                  ? { ...point, expansion: 'noExpansion' }
+                  : point,
               ),
           });
 

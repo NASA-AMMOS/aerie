@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { getLocalTimezoneName} from './time';
+import { getLocalTimezoneName } from './time';
 
 describe('getLocalTimezoneName', () => {
   it(`should return PST for local time name`, () => {

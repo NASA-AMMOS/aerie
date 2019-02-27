@@ -394,8 +394,8 @@ export function getInitialPageStartEndTime(
  * Helper. Return name for local timezone.
  */
 export function getLocalTimezoneName() {
-  const zoneName =  momentTz.guess();
-  return momentTz(zoneName).zoneAbbr()
+  const zoneName = momentTz.guess();
+  return momentTz(zoneName).zoneAbbr();
 }
 
 /**
@@ -468,7 +468,9 @@ export function timestamp(time: number, includeMsecs: boolean = true): string {
  * Returns a YMD local timestamp (e.g. 2023-06-13 00:00:00) based on a time.
  */
 export function timestampYMD(time: number) {
-  return momentUtc(time * 1000).local().format('YYYY-MM-DD HH:mm:ss');
+  return momentUtc(time * 1000)
+    .local()
+    .format('YYYY-MM-DD HH:mm:ss');
 }
 
 /**
@@ -601,4 +603,3 @@ export function utc(time: string | number): number {
   }
   return 0;
 }
-
