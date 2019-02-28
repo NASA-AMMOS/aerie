@@ -23,19 +23,16 @@ public class PlansController {
     @Autowired
     private PlansRepository repository;
 
-    //@RequestMapping(value = "", method = RequestMethod.GET)
     @GetMapping("")
     public ResponseEntity<Object> getPlans() {
         return ResponseEntity.ok(repository.findAll());
     }
 
-    //@RequestMapping(value = "/{id}", method = RequestMethod.GET)
     @GetMapping("/{id}")
     public ResponseEntity<Object> getPlanDetail(@PathVariable("id") ObjectId id) {
         return ResponseEntity.ok(repository.findPlanDetailBy_id(id));
     }
 
-    //@RequestMapping(value = "/{id}", method = RequestMethod.PUT)
     @PutMapping("/{id}")
     public ResponseEntity<Object> replacePlan(@PathVariable("id") ObjectId id,
             @Valid @RequestBody PlanDetail planDetail) {
@@ -44,7 +41,6 @@ public class PlansController {
         return ResponseEntity.noContent().build();
     }
 
-    //@RequestMapping(value = "/{id}", method = RequestMethod.PATCH)
     @PatchMapping("/{id}")
     public ResponseEntity<Object> updatePlan(@PathVariable("id") ObjectId id,
             @Valid @RequestBody PlanDetail planDetail) {
@@ -53,7 +49,6 @@ public class PlansController {
 
     }
 
-    //@RequestMapping(value = "", method = RequestMethod.POST)
     @PutMapping("")
     public ResponseEntity<Object> createPlan(@Valid @RequestBody Plan plan) {
         plan.set_id(ObjectId.get());
@@ -61,14 +56,12 @@ public class PlansController {
         return ResponseEntity.ok(plan);
     }
 
-    //@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deletePlan(@PathVariable ObjectId id) {
         repository.delete(repository.findPlanBy_id(id));
         return ResponseEntity.noContent().build();
     }
 
-    //@RequestMapping(value = "/{planId}/activity_instances", method =RequestMethod.POST)
     @PostMapping("/{planId}/activity_instances")
     public ResponseEntity<Object> createActivityInstance(@PathVariable(
             "planId") ObjectId planId,
@@ -125,7 +118,6 @@ public class PlansController {
         return ResponseEntity.ok(activityInstance);
     }
 
-    //@RequestMapping(value = "/{planId}/activity_instances", method = RequestMethod.GET)
     @GetMapping("/{planId}/activity_instances")
     public ResponseEntity<Object> getActivityInstances(@PathVariable("planId") ObjectId planId) {
         PlanDetail planDetail = repository.findPlanDetailBy_id(planId);
@@ -136,7 +128,6 @@ public class PlansController {
         }
     }
 
-    //@RequestMapping(value = "/{planId}/activity_instances/{id}", method = RequestMethod.GET)
     @GetMapping("/{planId}/activity_instances/{id}")
     public ResponseEntity<Object> getActivityInstance(@PathVariable("planId") ObjectId planId,
             @PathVariable("id") UUID id) {
@@ -152,7 +143,6 @@ public class PlansController {
         return ResponseEntity.notFound().build();
     }
 
-    //@RequestMapping(value = "/{planId}/activity_instances/{id}", method = RequestMethod.PUT)
     @PutMapping("/{planId}/activity_instances/{id}")
     public ResponseEntity<Object> replaceActivityInstance(@PathVariable(
             "planId") ObjectId planId,
@@ -162,7 +152,6 @@ public class PlansController {
         return this.updateActivityInstance(planId, id, requestBodyActivityInstance);
     }
 
-    //@RequestMapping(value = "/{planId}/activity_instances/{id}", method = RequestMethod.PATCH)
     @PatchMapping("/{planId}/activity_instances/{id}")
     public ResponseEntity<Object> updateActivityInstance(@PathVariable(
             "planId") ObjectId planId,
@@ -183,7 +172,6 @@ public class PlansController {
         return ResponseEntity.notFound().build();
     }
 
-    //@RequestMapping(value = "/{planId}/activity_instances/{id}", method =RequestMethod.DELETE)
     @DeleteMapping("/{planId}/activity_instances/{id}")
     public ResponseEntity<Object> updateActivityInstance(@PathVariable(
             "planId") ObjectId planId,
