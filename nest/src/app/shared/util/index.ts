@@ -11,6 +11,7 @@ export * from './bands';
 export * from './color';
 export * from './epochs';
 export * from './ng-template-utils';
+export * from './mps';
 export * from './points';
 export * from './situational-awareness';
 export * from './source';

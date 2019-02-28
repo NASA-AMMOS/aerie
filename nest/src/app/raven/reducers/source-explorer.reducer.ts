@@ -43,6 +43,7 @@ import {
   RavenSourceAction,
   RavenState,
   StringTMap,
+  FilterState,
 } from '../../shared/models';
 
 export interface SourceExplorerState {
@@ -51,6 +52,7 @@ export interface SourceExplorerState {
   customFiltersBySourceId: StringTMap<RavenCustomFilter[]>;
   fetchPending: boolean;
   filtersByTarget: StringTMap<StringTMap<string[]>>; // Target refers to an id that ties filters to a graphable source.
+  filterState: FilterState;
   initialSourcesLoaded: boolean;
   layout: string;
   layoutPath: string;
@@ -69,6 +71,7 @@ export const initialState: SourceExplorerState = {
   customFiltersBySourceId: {},
   fetchPending: false,
   filtersByTarget: {},
+  filterState: FilterState.empty(),
   initialSourcesLoaded: false,
   layout: '',
   layoutPath: '',

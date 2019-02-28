@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build-prod": "ng build --configuration=prod",
-    "build-prod-mpsserver": "ng build --configuration=prod-mpsserver --base-href /mpsserver/raven/ --deploy-url /mpsserver/raven/",
+    "build-prod-mpsserver": "ng build --outputPath=dist-mpsserver --configuration=prod-mpsserver --base-href /mpsserver/raven/ --deploy-url /mpsserver/raven/",
     "docs": "compodoc -p src/tsconfig.app.json -s",
     "e2e": "ng e2e --webdriverUpdate=true",
     "format:check": "prettier --config ./.prettierrc.json --list-different \"src/{app,environments,assets}/**/*{.ts,.js,.json,.css,.scss}\"",
