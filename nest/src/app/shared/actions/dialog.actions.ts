@@ -9,17 +9,14 @@
 
 import { Action } from '@ngrx/store';
 
-// Action Types.
 export enum DialogActionTypes {
   OpenAboutDialog = '[dialog] open_about_dialog',
 }
 
-// Actions.
 export class OpenAboutDialog implements Action {
   readonly type = DialogActionTypes.OpenAboutDialog;
 
   constructor(public width: string) {}
 }
 
-// Union type of all actions.
 export type DialogAction = OpenAboutDialog;

@@ -7,14 +7,15 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Command, CommandDictionary } from '../../../../../schemas/types/ts';
+import { keyBy } from 'lodash';
+import { CommandDictionary } from '../../../../../schemas/types/ts';
 import { StringTMap } from '../../shared/models';
 import {
-  CommandDictionaryAction,
+  CommandDictionaryActions,
   CommandDictionaryActionTypes,
   FetchCommandDictionarySuccess,
 } from '../actions/command-dictionary.actions';
-import { keyCommandsByName } from '../util';
+import { Command } from '../models';
 
 export interface CommandDictionaryState {
   commandsByName: StringTMap<Command> | null;
@@ -34,7 +35,7 @@ export const initialState: CommandDictionaryState = {
  */
 export function reducer(
   state: CommandDictionaryState = initialState,
-  action: CommandDictionaryAction,
+  action: CommandDictionaryActions,
 ): CommandDictionaryState {
   switch (action.type) {
     case CommandDictionaryActionTypes.FetchCommandDictionarySuccess:
@@ -57,6 +58,6 @@ function fetchCommandDictionarySuccess(
 ) {
   return {
     ...state,
-    commandsByName: keyCommandsByName(action.data),
+    commandsByName: keyBy(action.data, 'name'),
   };
 }

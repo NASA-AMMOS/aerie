@@ -1,8 +1,8 @@
 {
-  "$id": "#/CommandParameter",
+  "$id": "#/MpsCommandParameter",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
-  "javaType": "CommandParameter",
+  "javaType": "MpsCommandParameter",
   "properties": {
     "defaultValue": {
       "type": "string"
@@ -10,19 +10,10 @@
     "help": {
       "type": "string"
     },
-    "max": {
-      "type": "number"
-    },
-    "min": {
-      "type": "number"
-    },
     "name": {
       "type": "string"
     },
     "range": {
-      "type": "string"
-    },
-    "regex": {
       "type": "string"
     },
     "type": {
@@ -32,7 +23,6 @@
       "type": "string"
     }
   },
-  "required": ["defaultValue", "name", "range", "type"],
-  "title": "CommandParameter",
+  "title": "MpsCommandParameter",
   "type": "object"
 }

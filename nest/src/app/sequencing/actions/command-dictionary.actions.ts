@@ -8,7 +8,8 @@
  */
 
 import { Action } from '@ngrx/store';
-import { Command, CommandDictionary } from '../../../../../schemas/types/ts';
+import { CommandDictionary } from '../../../../../schemas/types/ts';
+import { Command } from '../models';
 
 export enum CommandDictionaryActionTypes {
   FetchCommandDictionary = '[command_dictionary] fetch_command_dictionary',
@@ -17,7 +18,6 @@ export enum CommandDictionaryActionTypes {
   FetchCommandDictionaryList = '[command_dictionary] fetch_command_list',
   FetchCommandDictionaryListFailure = '[command_dictionary] fetch_command_list_failure',
   FetchCommandDictionaryListSuccess = '[command_dictionary] fetch_command_list_success',
-  SelectCommand = '[command_dictionary] select_command',
   SelectCommandDictionary = '[command_dictionary] select_command_dictionary',
 }
 
@@ -52,22 +52,16 @@ export class FetchCommandDictionaryListSuccess implements Action {
   constructor(public data: CommandDictionary[]) {}
 }
 
-export class SelectCommand implements Action {
-  readonly type = CommandDictionaryActionTypes.SelectCommand;
-  constructor(public command: string) {}
-}
-
 export class SelectCommandDictionary implements Action {
   readonly type = CommandDictionaryActionTypes.SelectCommandDictionary;
   constructor(public selectedId: string) {}
 }
 
-export type CommandDictionaryAction =
+export type CommandDictionaryActions =
   | FetchCommandDictionary
   | FetchCommandDictionaryFailure
   | FetchCommandDictionarySuccess
   | FetchCommandDictionaryList
   | FetchCommandDictionaryListFailure
   | FetchCommandDictionaryListSuccess
-  | SelectCommand
   | SelectCommandDictionary;

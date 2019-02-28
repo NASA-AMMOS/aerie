@@ -7,14 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { commands } from '../../shared/mocks/commands';
-import { mockCommandDictionaryList } from '../../shared/services/command-dictionary-mock.service';
+import { keyBy } from 'lodash';
 import {
   FetchCommandDictionaryListSuccess,
   FetchCommandDictionarySuccess,
   SelectCommandDictionary,
 } from '../actions/command-dictionary.actions';
-import { keyCommandsByName } from '../util';
+import { mpsCommands } from '../mocks/mps-commands';
+import { mockCommandDictionaryList } from '../services/command-dictionary-mock.service';
 import {
   CommandDictionaryState,
   initialState,
@@ -29,12 +29,12 @@ describe('Command Dictionary reducer', () => {
   it('should handle FetchCommandDictionarySuccess', () => {
     const result: CommandDictionaryState = reducer(
       initialState,
-      new FetchCommandDictionarySuccess(commands),
+      new FetchCommandDictionarySuccess(mpsCommands),
     );
 
     expect(result).toEqual({
       ...initialState,
-      commandsByName: keyCommandsByName(commands),
+      commandsByName: keyBy(mpsCommands, 'name'),
     });
   });
 

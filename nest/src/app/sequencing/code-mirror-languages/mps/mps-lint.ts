@@ -7,75 +7,55 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Command, CommandParameter } from '../../../../../schemas/types/ts';
-import { StringTMap } from '../../shared/models';
-
-export interface CommandLintError {
-  level: string;
-  lineNumber: number;
-  message: string;
-}
+import * as CodeMirror from 'codemirror';
+import {
+  MpsCommand,
+  MpsCommandParameter,
+} from '../../../../../../schemas/types/ts';
+import { StringTMap } from '../../../shared/models';
+import { CodeMirrorLintError } from '../../models';
 
 /**
- * Helper that takes a list of commands and returns a map of commands keyed by command name.
- * This function also adds some extra properties to the command that help with
- * editor hinting (autocomplete with templates) and linting (syntax correctness).
+ * Register a custom `mps` linter with Code Mirror.
  */
-export function keyCommandsByName(commands: Command[]): StringTMap<Command> {
-  const newCommands: StringTMap<Command> = {};
+export function buildMpsLint(commandsByName: StringTMap<MpsCommand>) {
+  CodeMirror.registerHelper('lint', 'mps', (text: string) => {
+    const found: CodeMirror.Annotation[] = [];
 
-  for (let i = 0, l = commands.length; i < l; ++i) {
-    let template = `${commands[i].name}`;
+    const parseError = (err: CodeMirrorLintError) => {
+      const loc = err.lineNumber;
 
-    const command = {
-      ...commands[i],
-      parameters: commands[i].parameters.map(param => {
-        const type = param.type.toLowerCase();
-        let range = [];
-        template += ` ${param.defaultValue}`;
-
-        switch (type) {
-          case 'boolean':
-            return {
-              ...param,
-              regex: '(^TRUE$)|(^FALSE$)|(^true$)|(^false$)',
-            };
-          case 'string':
-            range = param.range.split(',');
-            return {
-              ...param,
-              regex: regexFromRangeString(range),
-            };
-          case 'engineering':
-          case 'signed_decimal':
-          case 'unsigned_decimal':
-            range = param.range.split('...');
-            return {
-              ...param,
-              max: parseFloat(range[1]),
-              min: parseFloat(range[0]),
-            };
-          default:
-            return {
-              ...param,
-            };
-        }
-      }),
+      found.push({
+        from: CodeMirror.Pos(loc - 1, 0),
+        message: err.message,
+        severity: err.level,
+        to: CodeMirror.Pos(loc, 0),
+      });
     };
 
-    newCommands[command.name] = {
-      ...command,
-      template,
-    };
-  }
+    try {
+      const errors = verify(commandsByName, text);
 
-  return newCommands;
+      for (let i = 0, l = errors.length; i < l; ++i) {
+        parseError(errors[i]);
+      }
+    } catch (e) {
+      found.push({
+        from: CodeMirror.Pos(e.location.first_line, 0),
+        message: e.message,
+        severity: 'error',
+        to: CodeMirror.Pos(e.location.last_line, e.location.last_column),
+      });
+    }
+
+    return found;
+  });
 }
 
 /**
  * Get a param regex for a range of string values.
  */
-export function regexFromRangeString(range: string[]): string {
+export function regexFromRangeString(range: string[]): RegExp {
   let regex = '';
 
   range.forEach((str: string, i: number) => {
@@ -86,17 +66,17 @@ export function regexFromRangeString(range: string[]): string {
     }
   });
 
-  return regex;
+  return new RegExp(regex);
 }
 
 /**
  * Verify a blob of text line-by-line based on a command dictionary.
  */
 export function verify(
-  commandsByName: StringTMap<Command>,
+  commandsByName: StringTMap<MpsCommand>,
   text: string,
-): CommandLintError[] {
-  let errors: CommandLintError[] = [];
+): CodeMirrorLintError[] {
+  let errors: CodeMirrorLintError[] = [];
 
   text.split(/\r?\n/).forEach((line, i) => {
     if (line !== '') {
@@ -112,11 +92,11 @@ export function verify(
  * Verify an individual line based on a command dictionary.
  */
 export function verifyLine(
-  commandsByName: StringTMap<Command>,
+  commandsByName: StringTMap<MpsCommand>,
   line: string,
   lineNumber: number,
 ) {
-  const res: CommandLintError[] = [];
+  const res: CodeMirrorLintError[] = [];
   const tokens = line.split(' ');
   const name = tokens[0];
   const parameters = tokens
@@ -138,14 +118,26 @@ export function verifyLine(
       });
     } else {
       commandsByName[name].parameters.forEach(
-        (param: CommandParameter, i: number) => {
+        (param: MpsCommandParameter, i: number) => {
           const inputParam = parameters[i];
-          let value = 0.0;
 
           switch (param.type) {
             case 'string':
+              const stringRange = param.range ? param.range.split(',') : [];
+              const stringRegex = regexFromRangeString(stringRange);
+              if (stringRegex.exec(inputParam)) {
+                res.push({
+                  level: 'error',
+                  lineNumber,
+                  message: `Parameter ${i + 1} "${
+                    param.name
+                  }" has an incorrect value.`,
+                });
+              }
+              break;
             case 'boolean':
-              if (param.regex && !new RegExp(param.regex).exec(inputParam)) {
+              const booleanRegex = /(^TRUE$)|(^FALSE$)|(^true$)|(^false$)/;
+              if (booleanRegex.exec(inputParam)) {
                 res.push({
                   level: 'error',
                   lineNumber,
@@ -158,7 +150,10 @@ export function verifyLine(
             case 'engineering':
             case 'signed_decimal':
             case 'unsigned_decimal':
-              value = parseFloat(inputParam);
+              const value = parseFloat(inputParam);
+              const numRange = param.range ? param.range.split('...') : [];
+              const min = parseFloat(numRange[0]);
+              const max = parseFloat(numRange[1]);
 
               if (Number.isNaN(value)) {
                 res.push({
@@ -168,16 +163,13 @@ export function verifyLine(
                     param.name
                   }" is not a number.`,
                 });
-              } else if (
-                (param.min && value < param.min) ||
-                (param.max && value > param.max)
-              ) {
+              } else if ((min && value < min) || (max && value > max)) {
                 res.push({
                   level: 'error',
                   lineNumber,
                   message: `Parameter ${i + 1} "${
                     param.name
-                  }" is out of range [${param.min}, ${param.max}].`,
+                  }" is out of range [${min}, ${max}].`,
                 });
               }
               break;

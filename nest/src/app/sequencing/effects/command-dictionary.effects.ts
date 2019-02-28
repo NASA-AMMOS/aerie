@@ -9,10 +9,9 @@
 
 import { Injectable } from '@angular/core';
 import { Actions, Effect, ofType } from '@ngrx/effects';
-import { Action, Store } from '@ngrx/store';
+import { Action } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
-import { catchError, concatMap, map, withLatestFrom } from 'rxjs/operators';
-import { CommandDictionaryMockService } from '../../shared/services/command-dictionary-mock.service';
+import { catchError, concatMap, map } from 'rxjs/operators';
 import {
   CommandDictionaryActionTypes,
   FetchCommandDictionary,
@@ -21,17 +20,14 @@ import {
   FetchCommandDictionaryListFailure,
   FetchCommandDictionaryListSuccess,
   FetchCommandDictionarySuccess,
-  SelectCommand,
   SelectCommandDictionary,
 } from '../actions/command-dictionary.actions';
-import { SetText } from '../actions/editor.actions';
-import { SequencingAppState } from '../sequencing-store';
+import { CommandDictionaryMockService } from '../services/command-dictionary-mock.service';
 
 @Injectable()
 export class CommandDictionaryEffects {
   constructor(
     private actions$: Actions,
-    private store$: Store<SequencingAppState>,
     private commandDictionaryMockService: CommandDictionaryMockService,
   ) {}
 
@@ -71,34 +67,6 @@ export class CommandDictionaryEffects {
         }),
       ),
     ),
-  );
-
-  @Effect()
-  selectCommand$: Observable<Action> = this.actions$.pipe(
-    ofType<SelectCommand>(CommandDictionaryActionTypes.SelectCommand),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(({ action, state }) => {
-      const { commandsByName } = state.sequencing.commandDictionary;
-      const { line, text } = state.sequencing.editor;
-
-      if (commandsByName) {
-        const command = commandsByName[action.command].template || '';
-
-        if (text === '') {
-          return [new SetText(command)];
-        } else {
-          // Simply add the new command after the current cursor line.
-          // TODO: This will probably have to be updated to be more robust.
-          const lines = text.split('\n');
-          lines.splice(line + 1, 0, `${command}`);
-          const newText = lines.join('\n');
-          return [new SetText(newText)];
-        }
-      }
-
-      return [];
-    }),
   );
 
   @Effect()

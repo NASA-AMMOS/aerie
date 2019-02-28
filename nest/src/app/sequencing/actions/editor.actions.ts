@@ -10,18 +10,12 @@
 import { Action } from '@ngrx/store';
 
 export enum EditorActionTypes {
-  SetLine = '[editor] set_line',
-  SetText = '[editor] set_text',
+  AddNewLineWithText = '[editor] add_new_line_with_text',
 }
 
-export class SetLine implements Action {
-  readonly type = EditorActionTypes.SetLine;
-  constructor(public line: number) {}
-}
-
-export class SetText implements Action {
-  readonly type = EditorActionTypes.SetText;
+export class AddNewLineWithText implements Action {
+  readonly type = EditorActionTypes.AddNewLineWithText;
   constructor(public text: string) {}
 }
 
-export type EditorAction = SetLine | SetText;
+export type EditorActions = AddNewLineWithText;

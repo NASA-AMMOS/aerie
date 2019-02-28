@@ -7,10 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './mps-server-epochs';
-export * from './mps-server-situational-awareness-pef-entries';
-export * from './raven-bands';
-export * from './raven-epochs';
-export * from './raven-pef-entries';
-export * from './raven-points';
-export * from './raven-sources';
+import { ElementRef } from '@angular/core';
+
+export class MockElementRef extends ElementRef {
+  constructor() {
+    super(null);
+  }
+}

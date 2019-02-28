@@ -7,10 +7,26 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './mps-server-epochs';
-export * from './mps-server-situational-awareness-pef-entries';
-export * from './raven-bands';
-export * from './raven-epochs';
-export * from './raven-pef-entries';
-export * from './raven-points';
-export * from './raven-sources';
+import { MpsCommand } from '../../../../../../schemas/types/ts';
+import { StringTMap } from '../../../shared/models';
+
+/**
+ * Returns a template for an mps command used in autocomplete.
+ */
+export function getCommandTemplate(
+  commandName: string,
+  commandsByName: StringTMap<MpsCommand>,
+): string {
+  const command = commandsByName[commandName];
+  let template = '';
+
+  if (command) {
+    template = `${command.name}`;
+    for (let i = 0, l = command.parameters.length; i < l; ++i) {
+      const parameter = command.parameters[i];
+      template += ` ${parameter.defaultValue}`;
+    }
+  }
+
+  return template;
+}
