@@ -101,10 +101,7 @@ export class RavenTimeBandComponent
 
     // Epoch.
     if (changes.epoch && !changes.epoch.firstChange) {
-      this.ctlTimeBand.minorLabels =
-        this.getEpochLabel(this.epoch).length > 0
-          ? this.getEpochLabel(this.epoch)
-          : [getLocalTimezoneName()];
+      this.ctlTimeBand.minorLabels = this.getMinorLabel();
       shouldRedraw = true;
     }
 
@@ -180,10 +177,7 @@ export class RavenTimeBandComponent
       font: 'normal 9px Verdana',
       height: 37,
       label: 'SCET',
-      minorLabels:
-        this.getEpochLabel(this.epoch).length > 0
-          ? this.getEpochLabel(this.epoch)
-          : [getLocalTimezoneName()],
+      minorLabels: this.getMinorLabel(),
       onFormatNow: this.onFormatNow.bind(this),
       onFormatTimeTick: this.onFormatTimeTick.bind(this),
       onHideTooltip: this.onHideTooltip.bind(this),
@@ -305,5 +299,14 @@ export class RavenTimeBandComponent
       return [epoch.name];
     }
     return [];
+  }
+
+  /**
+   * Helper that returns an epoch name or local time name.
+   */
+  getMinorLabel() {
+    return this.getEpochLabel(this.epoch).length > 0
+      ? this.getEpochLabel(this.epoch)
+      : [getLocalTimezoneName()];
   }
 }
