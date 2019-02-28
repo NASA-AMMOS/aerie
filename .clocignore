@@ -1,0 +1,14 @@
+.classpath
+.mvn
+.mvn
+.project
+.scannerwork
+.settings
+.settings
+coverage
+dist
+dist-mpsserver
+kernels
+lib
+node_modules
+target

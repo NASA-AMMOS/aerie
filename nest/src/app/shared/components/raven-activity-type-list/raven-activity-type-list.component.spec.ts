@@ -11,7 +11,7 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
-import { ActivityType } from '../../../../../libs/schemas/types/ts';
+import { ActivityType } from '../../../../../../schemas/types/ts';
 import { StringTMap } from '../../models/map';
 import { getMockActivityTypes } from '../../services/adaptation-mock.service';
 import { RavenActivityTypeListComponent } from './raven-activity-type-list.component';
@@ -26,7 +26,7 @@ import { RavenActivityTypeListModule } from './raven-activity-type-list.module';
       (deleteActivityTypeClicked)="remove($event)"
       (updateActivityTypeClicked)="update($event)"
       (selectActivityTypeClicked)="select($event)"
-      >
+    >
     </raven-activity-type-list>
   `,
 })

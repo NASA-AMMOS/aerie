@@ -12,7 +12,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AbstractControl } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { Plan } from '../../../../../libs/schemas/types/ts';
+import { Plan } from '../../../../../../schemas/types/ts';
 import { RavenPlanFormDialogData } from '../../models/raven-plan-form-dialog-data';
 import { RavenPlanFormDialogComponent } from './raven-plan-form-dialog.component';
 import { RavenPlanFormDialogModule } from './raven-plan-form-dialog.module';
@@ -20,8 +20,7 @@ import { RavenPlanFormDialogModule } from './raven-plan-form-dialog.module';
 @Component({
   selector: 'raven-plan-form-dialog-test',
   template: `
-    <raven-plan-form-dialog>
-    </raven-plan-form-dialog>
+    <raven-plan-form-dialog> </raven-plan-form-dialog>
   `,
 })
 class RavenPlanFormDialogTestComponent {

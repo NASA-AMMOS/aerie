@@ -9,7 +9,7 @@
 
 import { Injectable } from '@angular/core';
 import { Observable, Observer } from 'rxjs';
-import { Activity, Plan } from '../../../../libs/schemas/types/ts';
+import { Activity, Plan } from '../../../../../schemas/types/ts';
 import { PlanServiceInterface } from './plan-service-interface';
 
 export function getMockActivities(): Activity[] {

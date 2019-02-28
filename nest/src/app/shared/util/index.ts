@@ -9,7 +9,6 @@
 
 export * from './bands';
 export * from './color';
-export * from './command-lint';
 export * from './epochs';
 export * from './ng-template-utils';
 export * from './points';

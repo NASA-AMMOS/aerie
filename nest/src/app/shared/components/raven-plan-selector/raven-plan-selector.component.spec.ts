@@ -10,7 +10,7 @@
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { Plan } from '../../../../../libs/schemas/types/ts';
+import { Plan } from '../../../../../../schemas/types/ts';
 import { getMockPlans } from '../../services/plan-mock.service';
 import { RavenPlanSelectorComponent } from './raven-plan-selector.component';
 import { RavenPlanSelectorModule } from './raven-plan-selector.module';
@@ -18,9 +18,7 @@ import { RavenPlanSelectorModule } from './raven-plan-selector.module';
 @Component({
   selector: 'raven-plan-selector-test',
   template: `
-    <raven-plan-selector
-      [plans]="plans"
-      (selectPlanClicked)="select($event)">
+    <raven-plan-selector [plans]="plans" (selectPlanClicked)="select($event)">
     </raven-plan-selector>
   `,
 })
