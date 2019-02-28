@@ -12,13 +12,27 @@ import { CommandDictionary } from '../../../../../schemas/types/ts';
 import { Command } from '../models';
 
 export enum CommandDictionaryActionTypes {
+  FetchCommandDictionaries = '[command_dictionary] fetch_command_dictionaries',
+  FetchCommandDictionariesFailure = '[command_dictionary] fetch_command_dictionaries_failure',
+  FetchCommandDictionariesSuccess = '[command_dictionary] fetch_command_dictionaries_success',
   FetchCommandDictionary = '[command_dictionary] fetch_command_dictionary',
   FetchCommandDictionaryFailure = '[command_dictionary] fetch_command_dictionary_failure',
   FetchCommandDictionarySuccess = '[command_dictionary] fetch_command_dictionary_success',
-  FetchCommandDictionaryList = '[command_dictionary] fetch_command_list',
-  FetchCommandDictionaryListFailure = '[command_dictionary] fetch_command_list_failure',
-  FetchCommandDictionaryListSuccess = '[command_dictionary] fetch_command_list_success',
   SelectCommandDictionary = '[command_dictionary] select_command_dictionary',
+}
+
+export class FetchCommandDictionaries implements Action {
+  readonly type = CommandDictionaryActionTypes.FetchCommandDictionaries;
+}
+
+export class FetchCommandDictionariesFailure implements Action {
+  readonly type = CommandDictionaryActionTypes.FetchCommandDictionariesFailure;
+  constructor(public error: Error) {}
+}
+
+export class FetchCommandDictionariesSuccess implements Action {
+  readonly type = CommandDictionaryActionTypes.FetchCommandDictionariesSuccess;
+  constructor(public data: CommandDictionary[]) {}
 }
 
 export class FetchCommandDictionary implements Action {
@@ -36,32 +50,16 @@ export class FetchCommandDictionarySuccess implements Action {
   constructor(public data: Command[]) {}
 }
 
-export class FetchCommandDictionaryList implements Action {
-  readonly type = CommandDictionaryActionTypes.FetchCommandDictionaryList;
-}
-
-export class FetchCommandDictionaryListFailure implements Action {
-  readonly type =
-    CommandDictionaryActionTypes.FetchCommandDictionaryListFailure;
-  constructor(public error: Error) {}
-}
-
-export class FetchCommandDictionaryListSuccess implements Action {
-  readonly type =
-    CommandDictionaryActionTypes.FetchCommandDictionaryListSuccess;
-  constructor(public data: CommandDictionary[]) {}
-}
-
 export class SelectCommandDictionary implements Action {
   readonly type = CommandDictionaryActionTypes.SelectCommandDictionary;
   constructor(public selectedId: string) {}
 }
 
 export type CommandDictionaryActions =
+  | FetchCommandDictionaries
+  | FetchCommandDictionariesFailure
+  | FetchCommandDictionariesSuccess
   | FetchCommandDictionary
   | FetchCommandDictionaryFailure
   | FetchCommandDictionarySuccess
-  | FetchCommandDictionaryList
-  | FetchCommandDictionaryListFailure
-  | FetchCommandDictionaryListSuccess
   | SelectCommandDictionary;

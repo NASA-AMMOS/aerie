@@ -14,11 +14,11 @@ import { Observable, of } from 'rxjs';
 import { catchError, concatMap, map } from 'rxjs/operators';
 import {
   CommandDictionaryActionTypes,
+  FetchCommandDictionaries,
+  FetchCommandDictionariesFailure,
+  FetchCommandDictionariesSuccess,
   FetchCommandDictionary,
   FetchCommandDictionaryFailure,
-  FetchCommandDictionaryList,
-  FetchCommandDictionaryListFailure,
-  FetchCommandDictionaryListSuccess,
   FetchCommandDictionarySuccess,
   SelectCommandDictionary,
 } from '../actions/command-dictionary.actions';
@@ -32,19 +32,19 @@ export class CommandDictionaryEffects {
   ) {}
 
   @Effect()
-  fetchCommandDictionaryList$: Observable<Action> = this.actions$.pipe(
-    ofType<FetchCommandDictionaryList>(
-      CommandDictionaryActionTypes.FetchCommandDictionaryList,
+  fetchCommandDictionaries$: Observable<Action> = this.actions$.pipe(
+    ofType<FetchCommandDictionaries>(
+      CommandDictionaryActionTypes.FetchCommandDictionaries,
     ),
     concatMap(() =>
       this.commandDictionaryMockService.getCommandDictionaryList().pipe(
-        map(data => new FetchCommandDictionaryListSuccess(data)),
+        map(data => new FetchCommandDictionariesSuccess(data)),
         catchError((e: Error) => {
           console.error(
-            'CommandDictionaryEffect - fetchCommandDictionaryList$: ',
+            'CommandDictionaryEffect - fetchCommandDictionaries$: ',
             e,
           );
-          return of(new FetchCommandDictionaryListFailure(e));
+          return of(new FetchCommandDictionariesFailure(e));
         }),
       ),
     ),

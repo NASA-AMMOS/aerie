@@ -40,7 +40,7 @@ export function reducer(
   switch (action.type) {
     case CommandDictionaryActionTypes.FetchCommandDictionarySuccess:
       return fetchCommandDictionarySuccess(state, action);
-    case CommandDictionaryActionTypes.FetchCommandDictionaryListSuccess:
+    case CommandDictionaryActionTypes.FetchCommandDictionariesSuccess:
       return { ...state, dictionaries: action.data };
     case CommandDictionaryActionTypes.SelectCommandDictionary:
       return { ...state, selectedDictionaryId: action.selectedId };

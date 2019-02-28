@@ -9,7 +9,7 @@
 
 import { keyBy } from 'lodash';
 import {
-  FetchCommandDictionaryListSuccess,
+  FetchCommandDictionariesSuccess,
   FetchCommandDictionarySuccess,
   SelectCommandDictionary,
 } from '../actions/command-dictionary.actions';
@@ -38,10 +38,10 @@ describe('Command Dictionary reducer', () => {
     });
   });
 
-  it('should handle FetchCommandDictionaryListSuccess', () => {
+  it('should handle FetchCommandDictionariesSuccess', () => {
     const result: CommandDictionaryState = reducer(
       initialState,
-      new FetchCommandDictionaryListSuccess(mockCommandDictionaryList),
+      new FetchCommandDictionariesSuccess(mockCommandDictionaryList),
     );
 
     expect(result).toEqual({

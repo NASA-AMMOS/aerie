@@ -15,7 +15,7 @@ import { CommandDictionary } from '../../../../../../schemas/types/ts';
 import { ToggleNavigationDrawer } from '../../../shared/actions/config.actions';
 import { StringTMap } from '../../../shared/models';
 import {
-  FetchCommandDictionaryList,
+  FetchCommandDictionaries,
   SelectCommandDictionary,
 } from '../../actions/command-dictionary.actions';
 import { AddNewLineWithText } from '../../actions/editor.actions';
@@ -59,7 +59,7 @@ export class SequencingAppComponent implements OnDestroy {
         this.commandsByName = commandsByName;
       });
 
-    this.store.dispatch(new FetchCommandDictionaryList());
+    this.store.dispatch(new FetchCommandDictionaries());
   }
 
   ngOnDestroy(): void {

@@ -14,11 +14,11 @@ import { Store, StoreModule } from '@ngrx/store';
 import { cold, hot } from 'jasmine-marbles';
 import { Observable, of } from 'rxjs';
 import {
+  FetchCommandDictionaries,
+  FetchCommandDictionariesFailure,
+  FetchCommandDictionariesSuccess,
   FetchCommandDictionary,
   FetchCommandDictionaryFailure,
-  FetchCommandDictionaryList,
-  FetchCommandDictionaryListFailure,
-  FetchCommandDictionaryListSuccess,
   FetchCommandDictionarySuccess,
   SelectCommandDictionary,
 } from '../actions/command-dictionary.actions';
@@ -34,7 +34,6 @@ describe('CommandDictionaryEffects', () => {
   let metadata: EffectsMetadata<CommandDictionaryEffects>;
   let commandDictionaryMockService: any;
   let actions: Observable<any> = of();
-  // let store: any;
 
   beforeEach(() => {
     commandDictionaryMockService = jasmine.createSpyObj(
@@ -60,17 +59,16 @@ describe('CommandDictionaryEffects', () => {
 
     effects = TestBed.get(CommandDictionaryEffects);
     metadata = getEffectsMetadata(effects);
-    // store = TestBed.get(Store);
   });
 
-  describe('fetchCommandDictionaryList$', () => {
-    it('should register fetchCommandDictionaryList$ that dispatches an action', () => {
-      expect(metadata.fetchCommandDictionaryList$).toEqual({ dispatch: true });
+  describe('fetchCommandDictionaries$', () => {
+    it('should register fetchCommandDictionaries$ that dispatches an action', () => {
+      expect(metadata.fetchCommandDictionaries$).toEqual({ dispatch: true });
     });
 
-    it('should return a FetchCommandDictionaryListSuccess with data on success', () => {
-      const action = new FetchCommandDictionaryList();
-      const success = new FetchCommandDictionaryListSuccess(
+    it('should return a FetchCommandDictionariesSuccess with data on success', () => {
+      const action = new FetchCommandDictionaries();
+      const success = new FetchCommandDictionariesSuccess(
         mockCommandDictionaryList,
       );
 
@@ -81,13 +79,13 @@ describe('CommandDictionaryEffects', () => {
       actions = hot('--a-', { a: action });
       const expected = cold('--b', { b: success });
 
-      expect(effects.fetchCommandDictionaryList$).toBeObservable(expected);
+      expect(effects.fetchCommandDictionaries$).toBeObservable(expected);
     });
 
-    it('should return a FetchCommandDictionaryListFailure with error on failure', () => {
-      const action = new FetchCommandDictionaryList();
+    it('should return a FetchCommandDictionariesFailure with error on failure', () => {
+      const action = new FetchCommandDictionaries();
       const error = new Error('MOCK_FAILURE');
-      const failure = new FetchCommandDictionaryListFailure(error);
+      const failure = new FetchCommandDictionariesFailure(error);
 
       // Make the service return a fake error observable
       commandDictionaryMockService.getCommandDictionaryList.and.returnValue(
@@ -100,7 +98,7 @@ describe('CommandDictionaryEffects', () => {
       // service to fail with the spy
       const expected = cold('---b', { b: failure });
 
-      expect(effects.fetchCommandDictionaryList$).toBeObservable(expected);
+      expect(effects.fetchCommandDictionaries$).toBeObservable(expected);
     });
   });
 
