@@ -12,7 +12,6 @@ import { NgModule } from '@angular/core';
 import { SourceExplorerComponent } from './source-explorer.component';
 
 import {
-  MatButtonModule,
   MatCardModule,
   MatIconModule,
   MatSidenavModule,
@@ -21,6 +20,7 @@ import {
 
 import {
   RavenFileMetadataModule,
+  RavenQuickFilterPanelModule,
   RavenTreeModule,
 } from '../../../shared/components/modules';
 
@@ -29,12 +29,12 @@ import {
   exports: [SourceExplorerComponent],
   imports: [
     CommonModule,
-    MatButtonModule,
     MatCardModule,
     MatIconModule,
     MatSidenavModule,
     MatTabsModule,
     RavenFileMetadataModule,
+    RavenQuickFilterPanelModule,
     RavenTreeModule,
   ],
 })

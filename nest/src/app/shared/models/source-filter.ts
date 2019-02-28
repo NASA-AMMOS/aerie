@@ -7,14 +7,26 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './bands';
-export * from './color';
-export * from './epochs';
-export * from './ng-template-utils';
-export * from './mps';
-export * from './points';
-export * from './situational-awareness';
-export * from './source';
-export * from './state';
-export * from './time';
-export * from './tooltip';
+export type StringPredicate = MatchesPredicate;
+export interface MatchesPredicate {
+  matches: string;
+}
+
+export interface TrueSourceFilter {}
+export interface NameSourceFilter {
+  name: StringPredicate;
+}
+
+export type SourceFilter = TrueSourceFilter | NameSourceFilter;
+
+export const SourceFilter = {
+  // A filter is the empty (vacuously true) filter if it's the empty object {}.
+  // `null` is a synonym for this filter.
+  isEmpty(filter: SourceFilter): boolean {
+    return Object.keys(filter).length === 0;
+  },
+
+  truth(): TrueSourceFilter {
+    return {};
+  },
+};

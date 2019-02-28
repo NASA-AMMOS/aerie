@@ -8,7 +8,7 @@
  */
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { RavenSource, StringTMap } from '../../shared/models';
+import { FilterState, RavenSource, StringTMap } from '../../shared/models';
 import { getSortedChildIds } from '../../shared/util';
 import { State } from '../raven-store';
 import { SourceExplorerState } from '../reducers/source-explorer.reducer';
@@ -36,6 +36,11 @@ export const getCustomFiltersBySourceId = createSelector(
   (state: SourceExplorerState) => state.customFiltersBySourceId,
 );
 
+export const getFilterState = createSelector(
+  getSourceExplorerState,
+  (state: SourceExplorerState) => state.filterState,
+);
+
 export const getFiltersByTarget = createSelector(
   getSourceExplorerState,
   (state: SourceExplorerState) => state.filtersByTarget,
@@ -59,6 +64,11 @@ export const getPins = createSelector(
 export const getSelectedSourceId = createSelector(
   getSourceExplorerState,
   (state: SourceExplorerState) => state.selectedSourceId,
+);
+
+export const getSourcesFilter = createSelector(
+  getFilterState,
+  (filterState: FilterState) => filterState.filter,
 );
 
 export const getTreeBySourceId = createSelector(
