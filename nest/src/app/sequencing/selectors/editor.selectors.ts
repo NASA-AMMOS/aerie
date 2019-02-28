@@ -7,13 +7,17 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './bands';
-export * from './color';
-export * from './epochs';
-export * from './ng-template-utils';
-export * from './points';
-export * from './situational-awareness';
-export * from './source';
-export * from './state';
-export * from './time';
-export * from './tooltip';
+import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { EditorState } from '../reducers/editor.reducer';
+import { State } from '../sequencing-store';
+
+const featureSelector = createFeatureSelector<State>('sequencing');
+export const getEditorState = createSelector(
+  featureSelector,
+  (state: State): EditorState => state.editor,
+);
+
+export const getText = createSelector(
+  getEditorState,
+  (state: EditorState) => state.text,
+);

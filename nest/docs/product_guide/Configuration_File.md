@@ -11,9 +11,6 @@ export interface ConfigState {
     production: boolean;
     version: string;
   };
-  hummingbird: {
-    // TODO. Add hummingbird specific config here.
-  };
   mpsServer: {
     apiUrl: string;
     ravenConfigUrl: string;
@@ -25,6 +22,9 @@ export interface ConfigState {
     defaultBandSettings: RavenDefaultBandSettings;
     itarMessage: string;
     shareableLinkStatesUrl: string;
+  };
+  sequencing: {
+    // TODO. Add sequencing specific config here.
   };
 }
 ```
@@ -39,7 +39,7 @@ export interface ConfigState {
 | ravenUrl      |  mpsserver/raven |
 | socketUrl     |  mpsserver/websocket/v1/topic/main |
 
-<TODO Hummingbird Default Setting>
+<TODO Sequencing Default Setting>
 
 ### Raven Default Settings
 

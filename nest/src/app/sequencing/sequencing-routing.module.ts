@@ -7,13 +7,19 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './bands';
-export * from './color';
-export * from './epochs';
-export * from './ng-template-utils';
-export * from './points';
-export * from './situational-awareness';
-export * from './source';
-export * from './state';
-export * from './time';
-export * from './tooltip';
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+import { SequencingAppComponent } from './containers';
+
+export const routes: Routes = [
+  {
+    component: SequencingAppComponent,
+    path: '',
+  },
+];
+
+@NgModule({
+  exports: [RouterModule],
+  imports: [RouterModule.forChild(routes)],
+})
+export class SequencingRoutingModule {}

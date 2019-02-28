@@ -7,13 +7,20 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './bands';
-export * from './color';
-export * from './epochs';
-export * from './ng-template-utils';
-export * from './points';
-export * from './situational-awareness';
-export * from './source';
-export * from './state';
-export * from './time';
-export * from './tooltip';
+import { NgModule } from '@angular/core';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreModule } from '@ngrx/store';
+import { SequencingAppModule } from './containers/sequencing-app/sequencing-app.module';
+import { CommandDictionaryEffects } from './effects/command-dictionary.effects';
+import { SequencingRoutingModule } from './sequencing-routing.module';
+import { reducers } from './sequencing-store';
+
+@NgModule({
+  imports: [
+    SequencingRoutingModule,
+    StoreModule.forFeature('sequencing', reducers),
+    EffectsModule.forFeature([CommandDictionaryEffects]),
+    SequencingAppModule,
+  ],
+})
+export class SequencingModule {}
