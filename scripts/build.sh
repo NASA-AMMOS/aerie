@@ -122,6 +122,9 @@ do
     then
       printf "\nBuilding $d...\n\n"
 
+      # clean before hand
+      rm -rf dist dist-mpsserver
+
       npm ci
       [ $? -ne 0 ] && error_exit "npm ci failed"
 
@@ -131,23 +134,22 @@ do
       npm run license:check
       [ $? -ne 0 ] && error_exit "npm run license:check failed"
 
+      npm run build-prod
+      [ $? -ne 0 ] && error_exit "npm run build-prod failed"
+
+      # Build MPS Server, this will eventually go away
+      npm run build-prod-mpsserver
+      [ $? -ne 0 ] && error_exit "npm run build-prod-mpsserver failed"
+      cd dist-mpsserver
+        tar -czf nest-$tag.tar.gz `ls -A`
+      cd ..
+
       npm run test-for-build
       [ $? -ne 0 ] && error_exit "npm run test-for-build failed"
 
       npx webdriver-manager update
       npm run e2e
       [ $? -ne 0 ] && error_exit "npm run e2e failed"
-
-      npm run build-prod
-      [ $? -ne 0 ] && error_exit "npm run build-prod failed"
-
-      # Build MPS Server, this will eventually go away
-      rm -rf dist-mpsserver
-      npm run build-prod-mpsserver
-      [ $? -ne 0 ] && error_exit "npm run build-prod-mpsserver failed"
-      cd dist-mpsserver
-        tar -czf nest-$tag.tar.gz `ls -A`
-      cd ..
     fi
   fi
 

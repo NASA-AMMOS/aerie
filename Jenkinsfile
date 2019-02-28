@@ -2,8 +2,8 @@
 def getTag() {
 	def branchName = env.BRANCH_NAME.replaceAll('/', '_').replace('release_', '')
 	def shortDate = new Date().format('yyyyMMdd') 
-	def shortCommit = env.GIT_COMMIT.take(8)
-	return "${branchName}_b${BUILD_NUMBER}_r${shortCommit}_${shortDate}"
+	def shortCommit = env.GIT_COMMIT.take(7)
+	return "${branchName}-b${BUILD_NUMBER}.r${shortCommit}.${shortDate}"
 }
 
 def remoteBranch = ''
