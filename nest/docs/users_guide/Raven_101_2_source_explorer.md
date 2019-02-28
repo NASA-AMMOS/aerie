@@ -32,7 +32,7 @@ There are different icons that represent every node in the Source Explorer tree.
  ###### To expand a node:
 
 1. Look for a collapsed Database, Folder or File source in the Source Explorer.
-2. Click the plus sign (`+`) icon previous to the source's name. As a result the child sources of the selected one will be expanded. 
+2. Click the plus sign (`+`) icon previous to the source's name. As a result the child sources of the selected one will be expanded.
 
 ###### To collapse a node:
 
@@ -50,7 +50,7 @@ To select a source in the Source Explorer:
 1. Browse for a Graphable Source to display.
 2. Click the Radio Button (<img src="./images/circle.svg" width="20" />) to select the source.
 
-As a result of your selection; a band is added to the *Main Bands Panel* and the Radio Button will change its state to selected (<img src="./images/selected_source.svg" width="20" />). 
+As a result of your selection; a band is added to the *Main Bands Panel* and the Radio Button will change its state to selected (<img src="./images/selected_source.svg" width="20" />).
 
 #### How To: Add/Delete Folders
 A user can add or remove folders from the Source Explorer. These actions need to be performed from the Source Explorer itself or using our server API. To do so,
@@ -96,3 +96,17 @@ A Pin is a subtree of the sources tree loaded in the Home Tab. It is used when a
 
 <p align="right"><a href="./Raven_101_3_bands.md">Next: Bands</a></p>
 
+
+## Filtering the source tree
+
+#### How To: Apply a filter
+
+1. Input a regular expression into the filter panel.
+2. Click the "Search" button in the filter panel.
+3. The source tree will be pruned: only items whose name matches the regular expression, folders containing those items, and files contained in those items will remain visible.
+
+#### How To: Remove a filter
+
+1. Clear any input in the filter panel.
+2. Click the "Search" button in the filter panel.
+3. The source tree will display all items, regardless of their names.

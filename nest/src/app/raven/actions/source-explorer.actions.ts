@@ -19,6 +19,7 @@ import {
   RavenGraphableFilterSource,
   RavenPin,
   RavenSource,
+  SourceFilter,
   StringTMap,
 } from '../../shared/models';
 
@@ -68,6 +69,7 @@ export enum SourceExplorerActionTypes {
   UpdateGraphAfterFilterAdd = '[sourceExplorer] update_graph_after_filter_add',
   UpdateGraphAfterFilterRemove = '[sourceExplorer] update_graph_after_filter_remove',
   UpdateSourceExplorer = '[sourceExplorer] update_source_explorer',
+  UpdateSourceFilter = '[sourceExplorer] update_source_filter',
   UpdateTreeSource = '[sourceExplorer] update_tree_source',
 }
 
@@ -337,6 +339,12 @@ export class UpdateSourceExplorer implements Action {
   constructor(public update: StringTMap<BaseType>) {}
 }
 
+export class UpdateSourceFilter implements Action {
+  readonly type = SourceExplorerActionTypes.UpdateSourceFilter;
+
+  constructor(public sourceFilter: SourceFilter) {}
+}
+
 export class UpdateTreeSource implements Action {
   readonly type = SourceExplorerActionTypes.UpdateTreeSource;
 
@@ -389,4 +397,5 @@ export type SourceExplorerAction =
   | UpdateGraphAfterFilterAdd
   | UpdateGraphAfterFilterRemove
   | UpdateSourceExplorer
+  | UpdateSourceFilter
   | UpdateTreeSource;
