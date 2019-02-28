@@ -1,5 +1,7 @@
-package gov.nasa.jpl.adaptation;
+package gov.nasa.jpl.adaptation.controller;
 
+import gov.nasa.jpl.adaptation.Adaptation;
+import gov.nasa.jpl.adaptation.AdaptationRepository;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;

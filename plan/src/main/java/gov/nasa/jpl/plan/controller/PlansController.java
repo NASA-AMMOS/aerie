@@ -1,4 +1,4 @@
-package gov.nasa.jpl.plan;
+package gov.nasa.jpl.plan.controller;
 
 import gov.nasa.jpl.plan.models.*;
 import gov.nasa.jpl.plan.repositories.PlansRepository;
