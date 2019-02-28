@@ -1,0 +1,40 @@
+# Compiled class file
+*.class
+
+# Log file
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Editor artifacts:
+\#*#
+*~
+*.swp
+
+# OS artifacts:
+**/.DS_Store
+
+# Package Files #
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+### But include these exceptions:
+!external_jars/*.jar
+/bin/
+
+# Build, IDE, and test output folders
+.idea/
+merlin-cli.iml
+out-tol.xml
+out/
+target/
