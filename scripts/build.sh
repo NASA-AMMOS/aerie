@@ -98,6 +98,9 @@ while [[ -n $1 ]]; do
   shift
 done
 
+# Create docker-compatible tag (remove + from tag)
+tag_docker=`echo ${tag} | sed -e 's/+/-/g'`
+
 if [ ! -z ${branch} ]
 then
   echo "Branch passed, building select projects..."
@@ -116,7 +119,7 @@ do
 
     cd $d
     # 16001 is local, 2 is staging, 3 is release
-    tag_name="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/$d:$tag"
+    tag_name="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/$d:$tag_docker"
 
     if [ $d == "nest" ]
     then
