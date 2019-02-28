@@ -7,13 +7,16 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './bands';
-export * from './color';
-export * from './epochs';
-export * from './ng-template-utils';
-export * from './points';
-export * from './situational-awareness';
-export * from './source';
-export * from './state';
-export * from './time';
-export * from './tooltip';
+import { ScrollingModule } from '@angular/cdk/scrolling';
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { MatCardModule } from '@angular/material/card';
+import { MatListModule } from '@angular/material/list';
+import { SeqCommandListComponent } from './seq-command-list.component';
+
+@NgModule({
+  declarations: [SeqCommandListComponent],
+  exports: [SeqCommandListComponent],
+  imports: [CommonModule, MatCardModule, MatListModule, ScrollingModule],
+})
+export class SeqCommandListModule {}

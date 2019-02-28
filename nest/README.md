@@ -82,7 +82,7 @@ appModules: [
   },
   {
     icon: 'dns',
-    path: 'hummingbird',
+    path: 'sequencing',
     title: 'Sequencing',
     version: '0.0.1',
   },

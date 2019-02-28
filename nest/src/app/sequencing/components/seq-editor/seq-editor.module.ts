@@ -7,13 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './bands';
-export * from './color';
-export * from './epochs';
-export * from './ng-template-utils';
-export * from './points';
-export * from './situational-awareness';
-export * from './source';
-export * from './state';
-export * from './time';
-export * from './tooltip';
+import { NgModule } from '@angular/core';
+import { SeqEditorComponent } from './seq-editor.component';
+
+@NgModule({
+  declarations: [SeqEditorComponent],
+  exports: [SeqEditorComponent],
+})
+export class SeqEditorModule {}

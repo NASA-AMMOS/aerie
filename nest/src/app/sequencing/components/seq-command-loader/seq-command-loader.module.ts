@@ -7,13 +7,15 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './bands';
-export * from './color';
-export * from './epochs';
-export * from './ng-template-utils';
-export * from './points';
-export * from './situational-awareness';
-export * from './source';
-export * from './state';
-export * from './time';
-export * from './tooltip';
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { SeqCommandLoaderComponent } from './seq-command-loader.component';
+
+@NgModule({
+  declarations: [SeqCommandLoaderComponent],
+  exports: [SeqCommandLoaderComponent],
+  imports: [CommonModule, MatSelectModule, MatFormFieldModule],
+})
+export class SeqCommandLoaderModule {}

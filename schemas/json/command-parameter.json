@@ -1,0 +1,38 @@
+{
+  "$id": "#/CommandParameter",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "javaType": "CommandParameter",
+  "properties": {
+    "defaultValue": {
+      "type": "string"
+    },
+    "help": {
+      "type": "string"
+    },
+    "max": {
+      "type": "number"
+    },
+    "min": {
+      "type": "number"
+    },
+    "name": {
+      "type": "string"
+    },
+    "range": {
+      "type": "string"
+    },
+    "regex": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "units": {
+      "type": "string"
+    }
+  },
+  "required": ["defaultValue", "name", "range", "type"],
+  "title": "CommandParameter",
+  "type": "object"
+}

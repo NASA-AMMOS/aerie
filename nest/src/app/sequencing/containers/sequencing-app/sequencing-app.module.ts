@@ -7,35 +7,24 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
-
-export const routes: Routes = [
-  {
-    path: '',
-    pathMatch: 'full',
-    redirectTo: 'raven',
-  },
-  {
-    loadChildren: './planning/planning.module#PlanningModule',
-    path: 'plans',
-  },
-  {
-    loadChildren: './sequencing/sequencing.module#SequencingModule',
-    path: 'sequencing',
-  },
-  {
-    loadChildren: './raven/raven.module#RavenModule',
-    path: 'raven',
-  },
-  {
-    path: '**',
-    redirectTo: 'raven',
-  },
-];
+import { MatToolbarModule } from '@angular/material';
+import { RavenAppHeaderModule } from '../../../shared/components/modules';
+import { SeqCommandListModule, SeqCommandLoaderModule } from '../../components';
+import { SeqEditorModule } from '../../components/seq-editor/seq-editor.module';
+import { SequencingAppComponent } from './sequencing-app.component';
 
 @NgModule({
-  exports: [RouterModule],
-  imports: [RouterModule.forRoot(routes, { useHash: true })],
+  declarations: [SequencingAppComponent],
+  exports: [SequencingAppComponent],
+  imports: [
+    CommonModule,
+    SeqCommandListModule,
+    SeqCommandLoaderModule,
+    MatToolbarModule,
+    RavenAppHeaderModule,
+    SeqEditorModule,
+  ],
 })
-export class AppRoutingModule {}
+export class SequencingAppModule {}

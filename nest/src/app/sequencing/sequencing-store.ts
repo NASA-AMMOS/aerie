@@ -7,13 +7,21 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './bands';
-export * from './color';
-export * from './epochs';
-export * from './ng-template-utils';
-export * from './points';
-export * from './situational-awareness';
-export * from './source';
-export * from './state';
-export * from './time';
-export * from './tooltip';
+import { ActionReducerMap } from '@ngrx/store';
+import * as fromRoot from '../app-store';
+import * as fromCommandDictionary from './reducers/command-dictionary.reducer';
+import * as fromEditor from './reducers/editor.reducer';
+
+export interface State {
+  commandDictionary: fromCommandDictionary.CommandDictionaryState;
+  editor: fromEditor.EditorState;
+}
+
+export const reducers: ActionReducerMap<State> = {
+  commandDictionary: fromCommandDictionary.reducer,
+  editor: fromEditor.reducer,
+};
+
+export interface SequencingAppState extends fromRoot.AppState {
+  sequencing: State;
+}
