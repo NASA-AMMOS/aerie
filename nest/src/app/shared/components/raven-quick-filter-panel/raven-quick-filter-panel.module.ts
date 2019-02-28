@@ -7,14 +7,28 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './bands';
-export * from './color';
-export * from './epochs';
-export * from './ng-template-utils';
-export * from './mps';
-export * from './points';
-export * from './situational-awareness';
-export * from './source';
-export * from './state';
-export * from './time';
-export * from './tooltip';
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { RavenQuickFilterPanelComponent } from './raven-quick-filter-panel.component';
+
+import {
+  MatButtonModule,
+  MatExpansionModule,
+  MatFormFieldModule,
+  MatInputModule,
+} from '@angular/material';
+
+@NgModule({
+  declarations: [RavenQuickFilterPanelComponent],
+  exports: [RavenQuickFilterPanelComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatButtonModule,
+    MatExpansionModule,
+    MatFormFieldModule,
+    MatInputModule,
+  ],
+})
+export class RavenQuickFilterPanelModule {}
