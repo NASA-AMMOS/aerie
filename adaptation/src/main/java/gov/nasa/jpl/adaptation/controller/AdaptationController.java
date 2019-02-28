@@ -1,7 +1,9 @@
-package gov.nasa.jpl.adaptation;
+package gov.nasa.jpl.adaptation.controller;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import gov.nasa.jpl.adaptation.Adaptation;
+import gov.nasa.jpl.adaptation.AdaptationRepository;
 import gov.nasa.jpl.adaptation.activities.ActivityType;
 import gov.nasa.jpl.adaptation.activities.ActivityTypeSerializer;
 import gov.nasa.jpl.engine.Setup;
