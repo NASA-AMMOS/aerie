@@ -98,6 +98,9 @@ while [[ -n $1 ]]; do
   shift
 done
 
+# Create docker-compatible tag (remove + from tag)
+tag_docker=`echo ${tag} | sed -e 's/+/-/g'`
+
 if [ ! -z ${branch} ]
 then
   echo "Branch passed, building select projects..."
@@ -116,11 +119,14 @@ do
 
     cd $d
     # 16001 is local, 2 is staging, 3 is release
-    tag_name="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/$d:$tag"
+    tag_name="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/$d:$tag_docker"
 
     if [ $d == "nest" ]
     then
       printf "\nBuilding $d...\n\n"
+
+      # clean before hand
+      rm -rf dist dist-mpsserver
 
       npm ci
       [ $? -ne 0 ] && error_exit "npm ci failed"
@@ -131,15 +137,22 @@ do
       npm run license:check
       [ $? -ne 0 ] && error_exit "npm run license:check failed"
 
+      npm run build-prod
+      [ $? -ne 0 ] && error_exit "npm run build-prod failed"
+
+      # Build MPS Server, this will eventually go away
+      npm run build-prod-mpsserver
+      [ $? -ne 0 ] && error_exit "npm run build-prod-mpsserver failed"
+      cd dist-mpsserver
+        tar -czf nest-$tag.tar.gz `ls -A`
+      cd ..
+
       npm run test-for-build
       [ $? -ne 0 ] && error_exit "npm run test-for-build failed"
 
       npx webdriver-manager update
       npm run e2e
       [ $? -ne 0 ] && error_exit "npm run e2e failed"
-
-      npm run build-prod
-      [ $? -ne 0 ] && error_exit "npm run build-prod failed"
     fi
   fi
 

@@ -98,6 +98,9 @@ while [[ -n $1 ]]; do
   shift
 done
 
+# Create docker-compatible tag (remove + from tag)
+tag_docker=`echo ${tag} | sed -e 's/+/-/g'`
+
 # TODO: Set PORT based on environment (16001 for dev, 16002 for staging, 16003 for release)
 echo "Logging into Docker with user ${DOCKER_LOGIN_USERNAME}"
 echo "${DOCKER_LOGIN_PASSWORD}" | docker login -u "${DOCKER_LOGIN_USERNAME}" cae-artifactory.jpl.nasa.gov:16001 --password-stdin
@@ -116,7 +119,7 @@ do
   if [ -d $d ]
   then
     cd $d
-    tag_name="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/$d:$tag"
+    tag_name="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/$d:$tag_docker"
 
     if [ $d == "merlin-sdk" ]
     then
