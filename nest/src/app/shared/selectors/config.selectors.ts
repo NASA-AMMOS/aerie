@@ -40,17 +40,14 @@ export const getVersion = createSelector(
   }),
 );
 
-export const getUrls = createSelector(
-  getConfigState,
-  (state: ConfigState) => ({
-    apiUrl: state.mpsServer.apiUrl,
-    baseUrl: state.app.baseUrl,
-    epochsUrl: state.mpsServer.epochsUrl,
-    ravenConfigUrl: state.mpsServer.ravenConfigUrl,
-    ravenUrl: state.mpsServer.ravenUrl,
-    socketUrl: state.mpsServer.socketUrl,
-  }),
-);
+export const getUrls = createSelector(getConfigState, (state: ConfigState) => ({
+  apiUrl: state.mpsServer.apiUrl,
+  baseUrl: state.app.baseUrl,
+  epochsUrl: state.mpsServer.epochsUrl,
+  ravenConfigUrl: state.mpsServer.ravenConfigUrl,
+  ravenUrl: state.mpsServer.ravenUrl,
+  socketUrl: state.mpsServer.socketUrl,
+}));
 
 export const getAppModules = createSelector(
   getConfigState,
