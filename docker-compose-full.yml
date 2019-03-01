@@ -22,6 +22,12 @@ services:
     image: mongo:3.2
     ports: ["27018:27018"]
     volumes: ["plan_mongo_data:/data/db"]
+  
+  # Message queue
+  activemq:
+    image: rmohr/activemq:5.15.6-alpine
+    ports: ["5672:5672", "8161:8161", "61616:61616"]
+    volumes: ["activemq_data:/opt/activemq/data"]
 
   # API gateway
   tyk_gateway:
