@@ -8,10 +8,7 @@
  */
 
 import * as CodeMirror from 'codemirror';
-import {
-  MpsCommand,
-  MpsCommandParameter,
-} from '../../../../../../schemas/types/ts';
+import { MpsCommand } from '../../../../../../schemas/types/ts';
 import { StringTMap } from '../../../shared/models';
 import { CodeMirrorLintError } from '../../models';
 
@@ -117,67 +114,7 @@ export function verifyLine(
         message: 'Command has too many parameters.',
       });
     } else {
-      commandsByName[name].parameters.forEach(
-        (param: MpsCommandParameter, i: number) => {
-          const inputParam = parameters[i];
-
-          switch (param.type) {
-            case 'string':
-              const stringRange = param.range ? param.range.split(',') : [];
-              const stringRegex = regexFromRangeString(stringRange);
-              if (stringRegex.exec(inputParam)) {
-                res.push({
-                  level: 'error',
-                  lineNumber,
-                  message: `Parameter ${i + 1} "${
-                    param.name
-                  }" has an incorrect value.`,
-                });
-              }
-              break;
-            case 'boolean':
-              const booleanRegex = /(^TRUE$)|(^FALSE$)|(^true$)|(^false$)/;
-              if (booleanRegex.exec(inputParam)) {
-                res.push({
-                  level: 'error',
-                  lineNumber,
-                  message: `Parameter ${i + 1} "${
-                    param.name
-                  }" has an incorrect value.`,
-                });
-              }
-              break;
-            case 'engineering':
-            case 'signed_decimal':
-            case 'unsigned_decimal':
-              const value = parseFloat(inputParam);
-              const numRange = param.range ? param.range.split('...') : [];
-              const min = parseFloat(numRange[0]);
-              const max = parseFloat(numRange[1]);
-
-              if (Number.isNaN(value)) {
-                res.push({
-                  level: 'error',
-                  lineNumber,
-                  message: `Parameter ${i + 1} "${
-                    param.name
-                  }" is not a number.`,
-                });
-              } else if ((min && value < min) || (max && value > max)) {
-                res.push({
-                  level: 'error',
-                  lineNumber,
-                  message: `Parameter ${i + 1} "${
-                    param.name
-                  }" is out of range [${min}, ${max}].`,
-                });
-              }
-              break;
-            default:
-              break;
-          }
-        },
-      );
+      // TODO: More detailed command linting.
     }
   } else {
     res.push({
