@@ -1,93 +1,96 @@
-<!-- Category. -->
-<raven-category
-  *ngIf="source.type === 'category'"
-  [source]="source"
-  (action)="action.emit($event)"
-  (collapse)="collapse.emit($event)"
-  (expand)="expand.emit($event)">
-</raven-category>
+<ng-container *ngIf="isVisible">
+  <!-- Category. -->
+  <raven-category
+    *ngIf="source.type === 'category'"
+    [source]="source"
+    (action)="action.emit($event)"
+    (collapse)="collapse.emit($event)"
+    (expand)="expand.emit($event)">
+  </raven-category>
 
-<!-- Custom Filter. -->
-<raven-custom-filter
-  *ngIf="source.type === 'customFilter'"
-  [source]="source"
-  (action)="action.emit($event)"
-  (selectCustomFilter)="selectCustomFilter.emit($event)">
-</raven-custom-filter>
+  <!-- Custom Filter. -->
+  <raven-custom-filter
+    *ngIf="source.type === 'customFilter'"
+    [source]="source"
+    (action)="action.emit($event)"
+    (selectCustomFilter)="selectCustomFilter.emit($event)">
+  </raven-custom-filter>
 
-<!-- Custom Graphable. -->
-<raven-custom-graphable
-  *ngIf="source.type === 'customGraphable'"
-  [source]="source"
-  (action)="action.emit($event)"
-  (addCustomGraph)="addCustomGraph.emit($event)">
-</raven-custom-graphable>
+  <!-- Custom Graphable. -->
+  <raven-custom-graphable
+    *ngIf="source.type === 'customGraphable'"
+    [source]="source"
+    (action)="action.emit($event)"
+    (addCustomGraph)="addCustomGraph.emit($event)">
+  </raven-custom-graphable>
 
-<!-- File. -->
-<raven-file
-  *ngIf="source.type === 'file'"
-  [source]="source"
-  (action)="action.emit($event)"
-  (collapse)="collapse.emit($event)"
-  (expand)="expand.emit($event)">
-</raven-file>
+  <!-- File. -->
+  <raven-file
+    *ngIf="source.type === 'file'"
+    [source]="source"
+    (action)="action.emit($event)"
+    (collapse)="collapse.emit($event)"
+    (expand)="expand.emit($event)">
+  </raven-file>
 
-<!-- Filter. -->
-<raven-filter
-  *ngIf="source.type === 'filter'"
-  [source]="source"
-  (addFilter)="addFilter.emit($event)"
-  (removeFilter)="removeFilter.emit($event)">
-</raven-filter>
+  <!-- Filter. -->
+  <raven-filter
+    *ngIf="source.type === 'filter'"
+    [source]="source"
+    (addFilter)="addFilter.emit($event)"
+    (removeFilter)="removeFilter.emit($event)">
+  </raven-filter>
 
-<!-- Folder. -->
-<raven-folder
-  *ngIf="source.type === 'folder'"
-  [source]="source"
-  (action)="action.emit($event)"
-  (collapse)="collapse.emit($event)"
-  (expand)="expand.emit($event)">
-</raven-folder>
+  <!-- Folder. -->
+  <raven-folder
+    *ngIf="source.type === 'folder'"
+    [source]="source"
+    (action)="action.emit($event)"
+    (collapse)="collapse.emit($event)"
+    (expand)="expand.emit($event)">
+  </raven-folder>
 
-<!-- Graphable. -->
-<raven-graphable
-  *ngIf="source.type === 'graphable'"
-  [source]="source"
-  (action)="action.emit($event)"
-  (close)="close.emit($event)"
-  (open)="open.emit($event)">
-</raven-graphable>
+  <!-- Graphable. -->
+  <raven-graphable
+    *ngIf="source.type === 'graphable'"
+    [source]="source"
+    (action)="action.emit($event)"
+    (close)="close.emit($event)"
+    (open)="open.emit($event)">
+  </raven-graphable>
 
-<!-- Graphable Filter. -->
-<raven-graphable-filter
-  *ngIf="source.type === 'graphableFilter'"
-  [source]="source"
-  (action)="action.emit($event)"
-  (addGraphableFilter)="addGraphableFilter.emit($event)"
-  (removeGraphableFilter)="removeGraphableFilter.emit($event)">
-</raven-graphable-filter>
+  <!-- Graphable Filter. -->
+  <raven-graphable-filter
+    *ngIf="source.type === 'graphableFilter'"
+    [source]="source"
+    (action)="action.emit($event)"
+    (addGraphableFilter)="addGraphableFilter.emit($event)"
+    (removeGraphableFilter)="removeGraphableFilter.emit($event)">
+  </raven-graphable-filter>
 
-<!-- Children Nodes. -->
-<ul *ngIf="source.expanded">
-  <li *ngFor="let childId of sortedChildIds; trackBy: trackByFn">
-    <raven-tree
-      [class]="tree[childId].name"
-      [id]="childId"
-      [source]="tree[childId]"
-      [tree]="tree"
-      (action)="action.emit($event)"
-      (addCustomGraph)="addCustomGraph.emit($event)"
-      (addFilter)="addFilter.emit($event)"
-      (addGraphableFilter)="addGraphableFilter.emit($event)"
-      (close)="close.emit($event)"
-      (collapse)="collapse.emit($event)"
-      (expand)="expand.emit($event)"
-      (open)="open.emit($event)"
-      (openMetadata)="openMetadata.emit($event)"
-      (removeFilter)="removeFilter.emit($event)"
-      (removeGraphableFilter)="removeGraphableFilter.emit($event)"
-      (select)="select.emit($event)"
-      (selectCustomFilter)="selectCustomFilter.emit($event)">
-    </raven-tree>
-  </li>
-</ul>
+  <!-- Children Nodes. -->
+  <ul *ngIf="source.expanded">
+    <li *ngFor="let childId of sortedChildIds; trackBy: trackByFn">
+      <raven-tree
+        [class]="tree[childId].name"
+        [id]="childId"
+        [source]="tree[childId]"
+        [tree]="tree"
+        [filter]="childFilter"
+        (action)="action.emit($event)"
+        (addCustomGraph)="addCustomGraph.emit($event)"
+        (addFilter)="addFilter.emit($event)"
+        (addGraphableFilter)="addGraphableFilter.emit($event)"
+        (close)="close.emit($event)"
+        (collapse)="collapse.emit($event)"
+        (expand)="expand.emit($event)"
+        (open)="open.emit($event)"
+        (openMetadata)="openMetadata.emit($event)"
+        (removeFilter)="removeFilter.emit($event)"
+        (removeGraphableFilter)="removeGraphableFilter.emit($event)"
+        (select)="select.emit($event)"
+        (selectCustomFilter)="selectCustomFilter.emit($event)">
+      </raven-tree>
+    </li>
+  </ul>
+</ng-container>

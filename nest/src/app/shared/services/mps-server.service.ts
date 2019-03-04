@@ -9,8 +9,14 @@
 
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { MpsServerSource, RavenSource, StringTMap } from '../models';
+import {
+  MpsServerSource,
+  RavenSource,
+  SourceFilter,
+  StringTMap,
+} from '../models';
 import { importState, toRavenSources } from '../util';
 
 @Injectable({
@@ -20,7 +26,7 @@ export class MpsServerService {
   constructor(private http: HttpClient) {}
 
   /**
-   * etches sources from MPS Server and maps them to Raven sources.
+   * Fetches sources from MPS Server and maps them to Raven sources.
    */
   fetchNewSources(
     url: string,
@@ -75,5 +81,20 @@ export class MpsServerService {
    */
   updateState(stateUrl: string, state: any) {
     return this.http.put(`${stateUrl}?timeline_type=state`, state);
+  }
+
+  /**
+   * Fetch sources in the filesystem at `fsUrl` that match the given filter.
+   */
+  getSourcesMatchingFilter(
+    fsUrl: string,
+    filter: SourceFilter,
+  ): Observable<MpsServerSource[]> {
+    return this.http.get<MpsServerSource[]>(fsUrl, {
+      params: {
+        scope: 'recursive',
+        filter: JSON.stringify(filter),
+      },
+    });
   }
 }

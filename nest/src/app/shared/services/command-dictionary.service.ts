@@ -8,12 +8,12 @@
  */
 
 import { Observable } from 'rxjs';
-import { HbCommand, HbCommandDictionary } from '../models';
+import { Command, CommandDictionary } from '../../../../../schemas/types/ts';
 
 /**
  * @todo Convert into a real service once one exists to get data from
  */
 export interface CommandDictionaryService {
-  getCommandDictionaryList(): Observable<HbCommandDictionary[]>;
-  getCommandDictionary(id: string): Observable<HbCommand[]>;
+  getCommandDictionaryList(): Observable<CommandDictionary[]>;
+  getCommandDictionary(id: string): Observable<Command[]>;
 }
