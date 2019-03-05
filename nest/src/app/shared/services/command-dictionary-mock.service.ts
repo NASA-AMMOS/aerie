@@ -9,7 +9,7 @@
 
 import { Injectable } from '@angular/core';
 import { Observable, Observer } from 'rxjs';
-import { Command, CommandDictionary } from '../../../../../schemas/types/ts';
+import { Command, CommandDictionary } from '../../../../../schemas';
 import { commands } from '../mocks/commands';
 
 export const mockCommandDictionaryList: CommandDictionary[] = [

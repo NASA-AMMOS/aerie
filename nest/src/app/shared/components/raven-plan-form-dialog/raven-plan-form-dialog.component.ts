@@ -15,7 +15,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
-import { Adaptation, Plan } from '../../../../../../schemas/types/ts';
+import { Adaptation, Plan } from '../../../../../../schemas';
 import { RavenPlanFormDialogData } from '../../models/raven-plan-form-dialog-data';
 
 @Component({

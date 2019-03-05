@@ -8,7 +8,7 @@
  */
 
 import { keyBy } from 'lodash';
-import { Activity, Plan } from '../../../../../schemas/types/ts';
+import { ActivityInstance, Plan } from '../../../../../schemas';
 import { RavenTimeRange, StringTMap } from '../../shared/models';
 import { getMaxTimeRange } from '../../shared/util';
 import {
@@ -22,10 +22,10 @@ import {
 } from '../actions/plan.actions';
 
 export interface PlanState {
-  activities: StringTMap<Activity> | null;
+  activities: StringTMap<ActivityInstance> | null;
   maxTimeRange: RavenTimeRange;
   plans: StringTMap<Plan>;
-  selectedActivity: Activity | null;
+  selectedActivity: ActivityInstance | null;
   selectedPlan: Plan | null;
   viewTimeRange: RavenTimeRange;
 }

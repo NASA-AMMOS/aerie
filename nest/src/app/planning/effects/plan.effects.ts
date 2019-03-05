@@ -15,7 +15,7 @@ import { Action, Store } from '@ngrx/store';
 import { cloneDeep, omitBy } from 'lodash';
 import { Observable, of, zip } from 'rxjs';
 import { catchError, map, switchMap, withLatestFrom } from 'rxjs/operators';
-import { Activity } from '../../../../../schemas/types/ts';
+import { ActivityInstance } from '../../../../../schemas';
 import { ShowToast } from '../../shared/actions/toast.actions';
 import { RavenPlanFormDialogComponent } from '../../shared/components/components';
 import { RavenPlanFormDialogData } from '../../shared/models/raven-plan-form-dialog-data';
@@ -187,7 +187,7 @@ export class PlanEffects {
           .getActivities(state.config.app.apiBaseUrl, action.planId)
           .pipe(
             map(
-              (activities: Activity[]) =>
+              (activities: ActivityInstance[]) =>
                 new FetchActivitiesSuccess(
                   action.planId,
                   action.activityId,
@@ -284,9 +284,9 @@ export class PlanEffects {
       return this.planService
         .updateActivity(
           apiBaseUrl,
-          selectedPlan.id,
+          selectedPlan.id || '',
           action.activityId,
-          changes as Activity,
+          changes as ActivityInstance,
         )
         .pipe(
           map(_ => new UpdateActivitySuccess(action.activityId, changes)),

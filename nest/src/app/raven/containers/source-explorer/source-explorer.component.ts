@@ -37,8 +37,8 @@ import {
 import { getUrls } from '../../../shared/selectors';
 
 import {
-  getFilterState,
   getFiltersByTarget,
+  getFilterState,
   getPins,
   getSelectedSourceId,
   getSourcesFilter,

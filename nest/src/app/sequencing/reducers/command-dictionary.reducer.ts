@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Command, CommandDictionary } from '../../../../../schemas/types/ts';
+import { Command, CommandDictionary } from '../../../../../schemas';
 import { StringTMap } from '../../shared/models';
 import {
   CommandDictionaryAction,

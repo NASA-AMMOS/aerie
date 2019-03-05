@@ -11,7 +11,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Activity, Plan } from '../../../../../schemas/types/ts';
+import { ActivityInstance, Plan } from '../../../../../schemas';
 import { PlanServiceInterface } from './plan-service-interface';
 
 @Injectable({
@@ -23,9 +23,9 @@ export class PlanService implements PlanServiceInterface {
   createActivity(
     apiBaseUrl: string,
     planId: string,
-    data: Activity,
-  ): Observable<Activity> {
-    return this.http.post<Activity>(
+    data: ActivityInstance,
+  ): Observable<ActivityInstance> {
+    return this.http.post<ActivityInstance>(
       `${apiBaseUrl}/plans/${planId}/activity_instances/`,
       data,
     );
@@ -49,8 +49,11 @@ export class PlanService implements PlanServiceInterface {
     return this.http.delete(`${apiBaseUrl}/plans/${planId}/`);
   }
 
-  getActivities(apiBaseUrl: string, planId: string): Observable<Activity[]> {
-    return this.http.get<Activity[]>(
+  getActivities(
+    apiBaseUrl: string,
+    planId: string,
+  ): Observable<ActivityInstance[]> {
+    return this.http.get<ActivityInstance[]>(
       `${apiBaseUrl}/plans/${planId}/activity_instances/`,
     );
   }
@@ -72,7 +75,7 @@ export class PlanService implements PlanServiceInterface {
     apiBaseUrl: string,
     planId: string,
     activityId: string,
-    activityInstance: Activity,
+    activityInstance: ActivityInstance,
   ): Observable<null> {
     return this.http.patch<null>(
       `${apiBaseUrl}/plans/${planId}/activity_instances/${activityId}/`,

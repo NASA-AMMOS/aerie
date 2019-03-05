@@ -26,10 +26,10 @@ export class RavenTreeNodeComponent {
   activated = false;
 
   @Input()
-  markerActivatedIcon: string = ' ';
+  markerActivatedIcon = ' ';
 
   @Input()
-  markerDeactivatedIcon: string = ' ';
+  markerDeactivatedIcon = ' ';
 
   @Input()
   markerTooltip?: string;

@@ -8,7 +8,7 @@
  */
 
 import { Observable } from 'rxjs';
-import { Command, CommandDictionary } from '../../../../../schemas/types/ts';
+import { Command, CommandDictionary } from '../../../../../schemas';
 
 /**
  * @todo Convert into a real service once one exists to get data from

@@ -8,7 +8,7 @@
  */
 
 import { keyBy } from 'lodash';
-import { Activity, Plan } from '../../../../../schemas/types/ts';
+import { ActivityInstance, Plan } from '../../../../../schemas';
 import { StringTMap } from '../../shared/models';
 import {
   ClearSelectedActivity,
@@ -22,8 +22,8 @@ import {
 import { initialState, reducer } from './plan.reducer';
 
 describe('Plan Reducer', () => {
-  let activities: Activity[];
-  let activitiesMap: StringTMap<Activity>;
+  let activities: ActivityInstance[];
+  let activitiesMap: StringTMap<ActivityInstance>;
   let plan: Plan;
   let plans: Plan[];
   let plansMap: StringTMap<Plan>;
@@ -115,7 +115,7 @@ describe('Plan Reducer', () => {
     it('should set an activities map upon fetch activities success', () => {
       const result = reducer(
         initialState,
-        new FetchActivitiesSuccess(plan.id, null, activities),
+        new FetchActivitiesSuccess(plan.id || '', null, activities),
       );
 
       expect(result).toEqual({
@@ -140,7 +140,7 @@ describe('Plan Reducer', () => {
     it('should set the selectedActivity', () => {
       const newInitialState = reducer(
         initialState,
-        new FetchActivitiesSuccess(plan.id, null, activities),
+        new FetchActivitiesSuccess(plan.id || '', null, activities),
       );
 
       const result = reducer(newInitialState, new SelectActivity('1'));
@@ -156,7 +156,7 @@ describe('Plan Reducer', () => {
     it('update an activity by id with the given update object', () => {
       const newInitialState = reducer(
         initialState,
-        new FetchActivitiesSuccess(plan.id, null, activities),
+        new FetchActivitiesSuccess(plan.id || '', null, activities),
       );
 
       const activityId = '1';

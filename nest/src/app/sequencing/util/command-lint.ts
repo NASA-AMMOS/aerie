@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Command, CommandParameter } from '../../../../../schemas/types/ts';
+import { Command, CommandParameter } from '../../../../../schemas';
 import { StringTMap } from '../../shared/models';
 
 export interface CommandLintError {

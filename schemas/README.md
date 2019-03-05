@@ -14,6 +14,7 @@ This folder contains [JSON Schema](https://json-schema.org/) `.json` files for a
 First install [Homebrew](https://brew.sh/) and [Node](https://nodejs.org/en/) then do:
 
 ```
+brew install maven
 brew install jsonschema2pojo
 npm i
 ```
@@ -23,3 +24,12 @@ npm i
 ```
 npm run build
 ```
+
+# Output
+
+The Input/Output folders and files are organized as follows:
+
+| Language | Input Folder | Intermediate Folder | Output Folder / File |
+| -------- | -------------| ------------------- | ------------- |
+| Java | json | src | target |
+| TypeScript | json | - | index.d.ts |

@@ -2,7 +2,7 @@
   "$id": "#/Command",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
-  "javaType": "Command",
+  "javaType": "gov.nasa.jpl.aerie.schemas.Command",
   "properties": {
     "name": {
       "type": "string"

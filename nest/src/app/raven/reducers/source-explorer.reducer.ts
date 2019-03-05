@@ -8,8 +8,18 @@
  */
 
 import { keyBy, omit, without } from 'lodash';
+import {
+  BaseType,
+  FilterState,
+  RavenCustomFilter,
+  RavenGraphableFilterSource,
+  RavenPin,
+  RavenSource,
+  RavenSourceAction,
+  RavenState,
+  StringTMap,
+} from '../../shared/models';
 import { getAllChildIds } from '../../shared/util';
-
 import {
   AddCustomFilter,
   AddFilter,
@@ -34,25 +44,13 @@ import {
   SubBandIdRemove,
 } from '../actions/source-explorer.actions';
 
-import {
-  BaseType,
-  RavenCustomFilter,
-  RavenGraphableFilterSource,
-  RavenPin,
-  RavenSource,
-  RavenSourceAction,
-  RavenState,
-  StringTMap,
-  FilterState,
-} from '../../shared/models';
-
 export interface SourceExplorerState {
   currentState: RavenState | null;
   currentStateId: string;
   customFiltersBySourceId: StringTMap<RavenCustomFilter[]>;
   fetchPending: boolean;
-  filtersByTarget: StringTMap<StringTMap<string[]>>; // Target refers to an id that ties filters to a graphable source.
   filterState: FilterState;
+  filtersByTarget: StringTMap<StringTMap<string[]>>; // Target refers to an id that ties filters to a graphable source.
   initialSourcesLoaded: boolean;
   layout: string;
   layoutPath: string;
@@ -70,8 +68,8 @@ export const initialState: SourceExplorerState = {
   currentStateId: '',
   customFiltersBySourceId: {},
   fetchPending: false,
-  filtersByTarget: {},
   filterState: FilterState.empty(),
+  filtersByTarget: {},
   initialSourcesLoaded: false,
   layout: '',
   layoutPath: '',

@@ -1,0 +1,76 @@
+{
+  "$id": "#/ActivityInstance",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "javaType": "gov.nasa.jpl.aerie.schemas.ActivityInstance",
+  "properties": {
+    "activityId": {
+      "type": "string"
+    },
+    "activityType": {
+      "type": "string"
+    },
+    "color": {
+      "type": "string"
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "$ref": "activity-instance-constraint.json"
+      }
+    },
+    "duration": {
+      "type": "number"
+    },
+    "end": {
+      "type": "number"
+    },
+    "endTimestamp": {
+      "type": "string"
+    },
+    "intent": {
+      "type": "string"
+    },
+    "listeners": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "name": {
+      "type": "string"
+    },
+    "parameters": {
+      "type": "array",
+      "items": {
+        "$ref": "activity-instance-parameter.json"
+      }
+    },
+    "start": {
+      "type": "number"
+    },
+    "startTimestamp": {
+      "type": "string"
+    },
+    "y": {
+      "type": ["number", "null"]
+    }
+  },
+  "required": [
+    "activityId",
+    "activityType",
+    "color",
+    "constraints",
+    "duration",
+    "end",
+    "endTimestamp",
+    "intent",
+    "name",
+    "parameters",
+    "start",
+    "startTimestamp",
+    "y"
+  ],
+  "title": "ActivityInstance",
+  "type": "object"
+}

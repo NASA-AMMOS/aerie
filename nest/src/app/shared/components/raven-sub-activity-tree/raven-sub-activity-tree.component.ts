@@ -16,7 +16,7 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-import { ActivityType } from '../../../../../../schemas/types/ts';
+import { ActivityType } from '../../../../../../schemas';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

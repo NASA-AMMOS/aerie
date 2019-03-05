@@ -92,8 +92,8 @@ export class MpsServerService {
   ): Observable<MpsServerSource[]> {
     return this.http.get<MpsServerSource[]>(fsUrl, {
       params: {
-        scope: 'recursive',
         filter: JSON.stringify(filter),
+        scope: 'recursive',
       },
     });
   }

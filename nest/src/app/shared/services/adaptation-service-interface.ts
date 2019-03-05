@@ -8,7 +8,7 @@
  */
 
 import { Observable } from 'rxjs';
-import { ActivityType, Adaptation } from '../../../../../schemas/types/ts';
+import { ActivityType, Adaptation } from '../../../../../schemas';
 import { StringTMap } from '../models';
 
 export interface AdaptationServiceInterface {

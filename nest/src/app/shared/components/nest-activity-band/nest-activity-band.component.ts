@@ -25,7 +25,7 @@ import {
 import * as d3 from 'd3';
 import { fromEvent, Subject, Subscription } from 'rxjs';
 import { filter, map, mergeMap, takeUntil, tap } from 'rxjs/operators';
-import { Activity } from '../../../../../../schemas/types/ts';
+import { ActivityInstance } from '../../../../../../schemas';
 import {
   RavenActivitySvg,
   RavenActivityUpdate,
@@ -69,10 +69,10 @@ export class NestActivityBandComponent
   maxTimeRange: RavenTimeRange = { end: 0, start: 0 };
 
   @Input()
-  points: Activity[] = [];
+  points: ActivityInstance[] = [];
 
   @Input()
-  selectedActivity: Activity | null;
+  selectedActivity: ActivityInstance | null;
 
   @Input()
   selectedActivityColor = '#fafafa';

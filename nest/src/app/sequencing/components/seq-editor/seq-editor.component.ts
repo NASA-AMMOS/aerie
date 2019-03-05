@@ -22,7 +22,7 @@ import * as CodeMirror from 'codemirror';
 import 'codemirror/addon/hint/show-hint';
 import 'codemirror/addon/lint/lint';
 import 'codemirror/addon/mode/simple';
-import { Command } from '../../../../../../schemas/types/ts';
+import { Command } from '../../../../../../schemas';
 import { StringTMap } from '../../../shared/models';
 import { CommandLintError, verify } from '../../util';
 

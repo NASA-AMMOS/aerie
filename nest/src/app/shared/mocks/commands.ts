@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Command } from '../../../../../schemas/types/ts';
+import { Command } from '../../../../../schemas';
 
 /* tslint:disable */
 

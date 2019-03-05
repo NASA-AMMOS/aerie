@@ -18,7 +18,7 @@ import { Store, StoreModule } from '@ngrx/store';
 import { cold, hot } from 'jasmine-marbles';
 import { keyBy } from 'lodash';
 import { Observable, of } from 'rxjs';
-import { Activity, Adaptation, Plan } from '../../../../../schemas/types/ts';
+import { ActivityInstance, Adaptation, Plan } from '../../../../../schemas';
 import { reducers as rootReducers } from '../../app-store';
 import { ShowToast } from '../../shared/actions/toast.actions';
 import { StringTMap } from '../../shared/models';
@@ -77,9 +77,9 @@ describe('PlanEffects', () => {
   let adaptations: Adaptation[];
   let plan: Plan;
   let plans: Plan[];
-  let activities: Activity[];
-  let activitiesMap: StringTMap<Activity>;
-  let activity: Activity;
+  let activities: ActivityInstance[];
+  let activitiesMap: StringTMap<ActivityInstance>;
+  let activity: ActivityInstance;
 
   const loadingBarShow = new LoadingBarShow();
   const loadingBarHide = new LoadingBarHide();
@@ -135,8 +135,8 @@ describe('PlanEffects', () => {
     });
 
     it('should return a CreateActivitySuccess action with data upon success', () => {
-      const action = new CreateActivity(plan.id, activity);
-      const success = new CreateActivitySuccess(plan.id);
+      const action = new CreateActivity(plan.id || '', activity);
+      const success = new CreateActivitySuccess(plan.id || '');
       const showToast = new ShowToast(
         'success',
         'New activity has been successfully created and saved.',
@@ -150,7 +150,7 @@ describe('PlanEffects', () => {
     });
 
     it('should return a CreateActivityFailure action with an error upon failure', () => {
-      const action = new CreateActivity(plan.id, activity);
+      const action = new CreateActivity(plan.id || '', activity);
       const error = new Error('CreateActivityFailure');
       const failure = new CreateActivityFailure(error);
       const showToast = new ShowToast(
@@ -250,7 +250,7 @@ describe('PlanEffects', () => {
     });
 
     it('should return a DeleteActivitySuccess action with data upon success', () => {
-      const action = new DeleteActivity(plan.id, activity.activityId);
+      const action = new DeleteActivity(plan.id || '', activity.activityId);
       const success = new DeleteActivitySuccess();
 
       actions$ = hot('-a', { a: action });
@@ -260,7 +260,7 @@ describe('PlanEffects', () => {
     });
 
     it('should return a DeleteActivityFailure action with an error upon failure', () => {
-      const action = new DeleteActivity(plan.id, activity.activityId);
+      const action = new DeleteActivity(plan.id || '', activity.activityId);
       const error = new Error('DeleteActivityFailure');
       const failure = new DeleteActivityFailure(error);
 
@@ -282,7 +282,7 @@ describe('PlanEffects', () => {
     });
 
     it('should return a DeletePlanSuccess action with data upon success', () => {
-      const action = new DeletePlan(plan.id);
+      const action = new DeletePlan(plan.id || '');
       const success = new DeletePlanSuccess();
 
       actions$ = hot('-a', { a: action });
@@ -292,7 +292,7 @@ describe('PlanEffects', () => {
     });
 
     it('should return a DeletePlanFailure action with an error upon failure', () => {
-      const action = new DeletePlan(plan.id);
+      const action = new DeletePlan(plan.id || '');
       const error = new Error('DeletePlanFailure');
       const failure = new DeletePlanFailure(error);
 
@@ -482,7 +482,7 @@ describe('PlanEffects', () => {
       store.dispatch(new FetchPlansSuccess(plans));
       store.dispatch(new FetchAdaptationsSuccess(adaptations));
       store.dispatch(
-        new FetchActivitiesSuccess(plan.id, selectedActivityId, activities),
+        new FetchActivitiesSuccess(plan.id || '', selectedActivityId, activities),
       );
       activity = activitiesMap[selectedActivityId];
 
@@ -520,7 +520,7 @@ describe('PlanEffects', () => {
 
     it('should route to the selected plan if a selected plan exists', () => {
       store.dispatch(new FetchPlansSuccess(plans));
-      store.dispatch(new FetchActivitiesSuccess(plan.id, null, activities));
+      store.dispatch(new FetchActivitiesSuccess(plan.id || '', null, activities));
 
       const action = new UpdateActivitySuccess('foo', {});
       actions$ = hot('-a', { a: action });

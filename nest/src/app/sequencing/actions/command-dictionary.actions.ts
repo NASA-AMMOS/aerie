@@ -8,7 +8,7 @@
  */
 
 import { Action } from '@ngrx/store';
-import { Command, CommandDictionary } from '../../../../../schemas/types/ts';
+import { Command, CommandDictionary } from '../../../../../schemas';
 
 export enum CommandDictionaryActionTypes {
   FetchCommandDictionary = '[command_dictionary] fetch_command_dictionary',

@@ -8,14 +8,14 @@
  */
 
 import { Observable } from 'rxjs';
-import { Activity, Plan } from '../../../../../schemas/types/ts';
+import { ActivityInstance, Plan } from '../../../../../schemas';
 
 export interface PlanServiceInterface {
   createActivity(
     apiBaseUrl: string,
     planId: string,
-    data: Activity,
-  ): Observable<Activity>;
+    data: ActivityInstance,
+  ): Observable<ActivityInstance>;
   createPlan(apiBaseUrl: string, plan: Plan): Observable<Plan>;
   deleteActivity(
     apiBaseUrl: string,
@@ -23,12 +23,15 @@ export interface PlanServiceInterface {
     activityId: string,
   ): Observable<{}>;
   deletePlan(apiBaseUrl: string, planId: string): Observable<{}>;
-  getActivities(apiBaseUrl: string, planId: string): Observable<Activity[]>;
+  getActivities(
+    apiBaseUrl: string,
+    planId: string,
+  ): Observable<ActivityInstance[]>;
   getPlans(apiBaseUrl: string): Observable<Plan[]>;
   updateActivity(
     apiBaseUrl: string,
     planId: string,
     activityId: string,
-    activityInstance: Activity,
+    activityInstance: ActivityInstance,
   ): Observable<null>;
 }

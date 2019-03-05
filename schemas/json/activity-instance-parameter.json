@@ -1,0 +1,17 @@
+{
+  "$id": "#/ActivityInstanceParameter",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "javaType": "gov.nasa.jpl.aerie.schemas.ActivityInstanceParameter",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    }
+  },
+  "required": ["name", "type"],
+  "title": "ActivityInstanceParameter",
+  "type": "object"
+}

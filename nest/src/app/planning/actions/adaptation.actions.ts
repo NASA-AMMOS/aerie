@@ -8,7 +8,7 @@
  */
 
 import { Action } from '@ngrx/store';
-import { ActivityType, Adaptation } from '../../../../../schemas/types/ts';
+import { ActivityType, Adaptation } from '../../../../../schemas';
 import { StringTMap } from '../../shared/models';
 
 export enum AdaptationActionTypes {

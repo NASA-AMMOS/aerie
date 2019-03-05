@@ -10,7 +10,7 @@
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { Plan } from '../../../../../../schemas/types/ts';
+import { Plan } from '../../../../../../schemas';
 import { getMockPlans } from '../../services/plan-mock.service';
 import { RavenPlanSelectorComponent } from './raven-plan-selector.component';
 import { RavenPlanSelectorModule } from './raven-plan-selector.module';
@@ -56,7 +56,7 @@ describe('RavenPlanSelectorComponent', () => {
 
   it('should emit the selectPlanClicked event', () => {
     spyOn(component, 'select');
-    component.childComponent.onSelectionChanged(component.plans[0].id);
+    component.childComponent.onSelectionChanged(component.plans[0].id || '');
     expect(component.select).toHaveBeenCalled();
   });
 
@@ -92,7 +92,7 @@ describe('RavenPlanSelectorComponent', () => {
     });
 
     it('should return the selectedId if there is a selectedPlan', () => {
-      expect(component.childComponent.selectedId).toBe(selectedPlan.id);
+      expect(component.childComponent.selectedId).toBe(selectedPlan.id || '');
     });
   });
 });

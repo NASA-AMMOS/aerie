@@ -10,7 +10,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { Command, CommandDictionary } from '../../../../../../schemas/types/ts';
+import { Command, CommandDictionary } from '../../../../../../schemas';
 import { ToggleNavigationDrawer } from '../../../shared/actions/config.actions';
 import { StringTMap } from '../../../shared/models';
 import {

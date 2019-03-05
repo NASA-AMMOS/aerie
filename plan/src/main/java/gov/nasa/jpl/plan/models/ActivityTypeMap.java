@@ -1,5 +1,6 @@
 package gov.nasa.jpl.plan.models;
 
+import gov.nasa.jpl.aerie.schemas.ActivityType;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,7 +11,6 @@ public class ActivityTypeMap {
     public ActivityTypeMap() {
         this.setActivityTypeMap(new HashMap<>());
     }
-
 
     public Map<String, ActivityType> getActivityTypeMap() {
         return activityTypeMap;

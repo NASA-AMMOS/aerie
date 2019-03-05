@@ -134,6 +134,9 @@ do
       npm run license:check
       [ $? -ne 0 ] && error_exit "npm run license:check failed"
 
+      npm run lint
+      [ $? -ne 0 ] && error_exit "npm run lint failed"
+
       npm run build-prod
       [ $? -ne 0 ] && error_exit "npm run build-prod failed"
 

@@ -14,7 +14,7 @@ import {
   Input,
   Output,
 } from '@angular/core';
-import { CommandDictionary } from '../../../../../../schemas/types/ts';
+import { CommandDictionary } from '../../../../../../schemas';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

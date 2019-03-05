@@ -2,7 +2,7 @@
   "$id": "#/ActivityTypeParameter",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
-  "javaType": "ActivityTypeParameter",
+  "javaType": "gov.nasa.jpl.aerie.schemas.ActivityTypeParameter",
   "properties": {
     "name": {
       "type": "string"

@@ -12,7 +12,9 @@ export interface MatchesPredicate {
   matches: string;
 }
 
+/* tslint:disable-next-line */
 export interface TrueSourceFilter {}
+
 export interface NameSourceFilter {
   name: StringPredicate;
 }

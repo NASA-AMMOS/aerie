@@ -54,6 +54,13 @@
             <artifactId>spring-data-mongodb</artifactId>
             <version>2.0.9.RELEASE</version>
         </dependency>
+        <dependency>
+            <groupId>gov.nasa.jpl.aerie</groupId>
+            <artifactId>schemas</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/../schemas/target/schemas-1.0-SNAPSHOT.jar</systemPath>
+        </dependency>
     </dependencies>
 
     <build>

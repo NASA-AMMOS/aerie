@@ -19,10 +19,10 @@ import { select, Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import {
-  Activity,
+  ActivityInstance,
   ActivityType,
   Plan,
-} from '../../../../../../schemas/types/ts';
+} from '../../../../../../schemas';
 import { NgTemplateUtils } from '../../../shared/util';
 import { CreateActivity, UpdateActivity } from '../../actions/plan.actions';
 import { PlanningAppState } from '../../planning-store';
@@ -40,12 +40,12 @@ export class ActivitiesComponent implements OnDestroy {
   activityTypes$: Observable<ActivityType[] | null>;
 
   // Plan state.
-  selectedActivity$: Observable<Activity | null>;
+  selectedActivity$: Observable<ActivityInstance | null>;
   selectedPlan$: Observable<Plan | null>;
 
   // Local derived state.
   activityForm: FormGroup;
-  selectedActivity: Activity;
+  selectedActivity: ActivityInstance;
   selectedPlan: Plan | null;
 
   // Helpers.
@@ -65,7 +65,7 @@ export class ActivitiesComponent implements OnDestroy {
   /**
    * Helper that just returns a new empty activity.
    */
-  get emptyActivity(): Activity {
+  get emptyActivity(): ActivityInstance {
     return {
       activityId: '',
       activityType: '',
@@ -122,7 +122,7 @@ export class ActivitiesComponent implements OnDestroy {
 
     this.selectedActivity$
       .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe((selectedActivity: Activity | null) => {
+      .subscribe((selectedActivity: ActivityInstance | null) => {
         if (selectedActivity) {
           this.selectedActivity = selectedActivity;
         } else {
@@ -149,8 +149,8 @@ export class ActivitiesComponent implements OnDestroy {
     }
   }
 
-  onSubmitActivityForm(value: Activity) {
-    if (this.activityForm.valid && this.selectedPlan) {
+  onSubmitActivityForm(value: ActivityInstance) {
+    if (this.activityForm.valid && this.selectedPlan && this.selectedPlan.id) {
       if (!this.isNew) {
         this.store.dispatch(
           new UpdateActivity(this.selectedActivity.activityId, value),
