@@ -26,7 +26,7 @@ import { RavenActivityTypeListModule } from './raven-activity-type-list.module';
       (deleteActivityTypeClicked)="remove($event)"
       (updateActivityTypeClicked)="update($event)"
       (selectActivityTypeClicked)="select($event)"
-      >
+    >
     </raven-activity-type-list>
   `,
 })

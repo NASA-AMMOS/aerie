@@ -3,11 +3,11 @@
 Most of the files that are required for a feature can be generated with the
 [`@ngrx/scaffold` package][scaffold] and `ng generate`. These are the steps
 that are required to generate all files for a new feature. Run the following
-commands from the `src/app/hummingbird` directory.
+commands from the `src/app/sequencing` directory.
 
 1. Change into the module directory that you are working on
-   (planning, hummingbird, raven)
-2. Change the reducer and feature schmematic in angular.json (project root)
+   (planning, sequencing, raven)
+2. Change the reducer and feature schematic in angular.json (project root)
    to point to the store in your current directory.
 3. Generate actions, effects, and reducers. *Do not prefix*.
 ```bash
@@ -42,11 +42,11 @@ export class RavenActivityTypeListModule {}
 ```diff
 + export * from './raven-activity-type-list/raven-activity-type-list.module';
 ```
-9. Remove the component from `hummingbird.module.ts` or the module that
+9. Remove the component from `sequencing.module.ts` or the module that
    corresponds to whatever directory you are in.
 ```diff
 - import { RavenActivityTypeListComponent } from './raven-activity-type-list/raven-activity-type-list.component';
-- declarations: [RavenActivitityTypeListComponent],
+- declarations: [RavenActivityTypeListComponent],
 ```
 
 [scaffold]: https://github.com/ngrx/platform/blob/master/docs/schematics/README.md

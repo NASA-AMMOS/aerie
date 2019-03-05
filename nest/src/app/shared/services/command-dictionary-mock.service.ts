@@ -9,10 +9,10 @@
 
 import { Injectable } from '@angular/core';
 import { Observable, Observer } from 'rxjs';
+import { Command, CommandDictionary } from '../../../../../schemas/types/ts';
 import { commands } from '../mocks/commands';
-import { HbCommand, HbCommandDictionary } from '../models';
 
-export const mockCommandDictionaryList: HbCommandDictionary[] = [
+export const mockCommandDictionaryList: CommandDictionary[] = [
   {
     id: 'TEST_1',
     name: 'Test 1',
@@ -25,15 +25,15 @@ export const mockCommandDictionaryList: HbCommandDictionary[] = [
   providedIn: 'root',
 })
 export class CommandDictionaryMockService {
-  getCommandDictionaryList(): Observable<HbCommandDictionary[]> {
-    return Observable.create((o: Observer<HbCommandDictionary[]>) => {
+  getCommandDictionaryList(): Observable<CommandDictionary[]> {
+    return Observable.create((o: Observer<CommandDictionary[]>) => {
       o.next(mockCommandDictionaryList);
       o.complete();
     });
   }
 
-  getCommandDictionary(id: string): Observable<HbCommand[]> {
-    return Observable.create((o: Observer<HbCommand[]>) => {
+  getCommandDictionary(id: string): Observable<Command[]> {
+    return Observable.create((o: Observer<Command[]>) => {
       o.next(commands);
       o.complete();
     });

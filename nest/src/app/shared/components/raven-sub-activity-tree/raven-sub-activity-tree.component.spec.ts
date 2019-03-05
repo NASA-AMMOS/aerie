@@ -15,8 +15,7 @@ import { RavenSubActivityTreeModule } from './raven-sub-activity-tree.module';
 @Component({
   selector: 'raven-sub-activity-tree-test',
   template: `
-    <raven-sub-activity-tree>
-    </raven-sub-activity-tree>
+    <raven-sub-activity-tree> </raven-sub-activity-tree>
   `,
 })
 class RavenSubActivityTreeTestComponent {

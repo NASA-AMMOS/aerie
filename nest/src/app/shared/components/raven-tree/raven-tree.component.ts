@@ -18,6 +18,7 @@ import {
 } from '@angular/core';
 
 import {
+  FilterState,
   RavenPin,
   RavenSource,
   RavenSourceActionEvent,
@@ -41,6 +42,9 @@ export class RavenTreeComponent implements OnChanges {
 
   @Input()
   tree: StringTMap<RavenSource>;
+
+  @Input()
+  filter: FilterState;
 
   @Output()
   action: EventEmitter<RavenSourceActionEvent> = new EventEmitter<
@@ -95,5 +99,20 @@ export class RavenTreeComponent implements OnChanges {
     if (changes.source) {
       this.sortedChildIds = getSortedChildIds(this.tree, this.source.childIds);
     }
+  }
+
+  get childFilter(): FilterState {
+    if (FilterState.isMatch(this.filter, this.source.id)) {
+      // All descendants of a filtered source should be visible.
+      return FilterState.empty();
+    } else {
+      return this.filter;
+    }
+  }
+
+  get isVisible(): boolean {
+    // This node is visible if it's the ancestor of a match.
+    // This allows us to actually navigate down to a match.
+    return FilterState.isAncestorOfMatch(this.filter, this.source.id);
   }
 }
