@@ -13,6 +13,7 @@ import {
   SetMode,
   ToggleApplyLayoutDrawer,
   ToggleEpochsDrawer,
+  ToggleFileMetadataDrawer,
   ToggleGlobalSettingsDrawer,
   ToggleOutputDrawer,
   ToggleSituationalAwarenessDrawer,
@@ -28,6 +29,7 @@ export interface LayoutState {
   showApplyLayoutDrawer: boolean;
   showDetailsPanel: boolean;
   showEpochsDrawer: boolean;
+  showFileMetadataDrawer: boolean;
   showGlobalSettingsDrawer: boolean;
   showLeftPanel: boolean;
   showOutputDrawer: boolean;
@@ -47,6 +49,7 @@ export const initialState: LayoutState = {
   showApplyLayoutDrawer: false,
   showDetailsPanel: true,
   showEpochsDrawer: false,
+  showFileMetadataDrawer: false,
   showGlobalSettingsDrawer: false,
   showLeftPanel: true,
   showOutputDrawer: false,
@@ -76,6 +79,8 @@ export function reducer(
       return { ...state, showDetailsPanel: !state.showDetailsPanel };
     case LayoutActionTypes.ToggleEpochsDrawer:
       return toggleEpochsDrawer(state, action);
+    case LayoutActionTypes.ToggleFileMetadataDrawer:
+      return toggleFileMetadataDrawer(state, action);
     case LayoutActionTypes.ToggleGlobalSettingsDrawer:
       return toggleGlobalSettingsDrawer(state, action);
     case LayoutActionTypes.ToggleLeftPanel:
@@ -149,6 +154,19 @@ export function toggleEpochsDrawer(
     showSituationalAwarenessDrawer: false,
     showTimeCursorDrawer: false,
   };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'ToggleFileMetadataDrawer' action.
+ */
+export function toggleFileMetadataDrawer(
+  state: LayoutState,
+  action: ToggleFileMetadataDrawer,
+): LayoutState {
+  const showFileMetadataDrawer =
+    action.opened !== undefined ? action.opened : !state.showFileMetadataDrawer;
+
+  return { ...state, showFileMetadataDrawer };
 }
 
 /**
