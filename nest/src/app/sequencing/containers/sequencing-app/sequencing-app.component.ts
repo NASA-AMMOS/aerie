@@ -18,7 +18,7 @@ import {
   FetchCommandDictionaries,
   SelectCommandDictionary,
 } from '../../actions/command-dictionary.actions';
-import { AddNewLineWithText } from '../../actions/editor.actions';
+import { AddText } from '../../actions/editor.actions';
 import { getCommandTemplate } from '../../code-mirror-languages/mps/helpers';
 import { Command } from '../../models';
 import {
@@ -76,7 +76,7 @@ export class SequencingAppComponent implements OnDestroy {
       commandName,
       this.commandsByName,
     );
-    this.store.dispatch(new AddNewLineWithText(commandTemplate));
+    this.store.dispatch(new AddText(commandTemplate));
   }
 
   onSelectDictionary(selectedId: string): void {

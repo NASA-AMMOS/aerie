@@ -42,13 +42,13 @@ describe('SeqEditorService', () => {
     expect(seqEditorService.editor).toBeDefined();
   });
 
-  it('the editor instance should have new text after calling addNewLineWithText', () => {
+  it('the editor instance should have new text after calling addText', () => {
     seqEditorService.setEditor(elementRef);
     const editor = seqEditorService.editor as CodeMirror.Editor;
 
     const text = 'racecar';
     expect(editor.getValue()).toEqual('');
-    seqEditorService.addNewLineWithText(text);
+    seqEditorService.addText(text);
     expect(editor.getValue()).toEqual(text);
   });
 });

@@ -12,10 +12,7 @@ import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import {
-  AddNewLineWithText,
-  EditorActionTypes,
-} from '../actions/editor.actions';
+import { AddText, EditorActionTypes } from '../actions/editor.actions';
 import { SeqEditorService } from '../services/seq-editor.service';
 
 @Injectable()
@@ -26,10 +23,11 @@ export class EditorEffects {
   ) {}
 
   @Effect({ dispatch: false })
-  addNewLineWithText$: Observable<Action> = this.actions$.pipe(
-    ofType<AddNewLineWithText>(EditorActionTypes.AddNewLineWithText),
+  addText$: Observable<Action> = this.actions$.pipe(
+    ofType<AddText>(EditorActionTypes.AddText),
     switchMap(action => {
-      this.seqEditorService.addNewLineWithText(action.text);
+      this.seqEditorService.addText(action.text);
+      this.seqEditorService.focusEditor();
       return [];
     }),
   );

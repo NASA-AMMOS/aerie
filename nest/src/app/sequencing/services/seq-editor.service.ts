@@ -23,6 +23,15 @@ export class SeqEditorService {
   editor: CodeMirror.Editor | null = null;
 
   /**
+   * Focus the Code Mirror editor instance.
+   */
+  focusEditor(): void {
+    if (this.editor) {
+      this.editor.focus();
+    }
+  }
+
+  /**
    * Initialize a new Code Mirror editor instance if one does not exist yet.
    */
   setEditor(
@@ -47,24 +56,33 @@ export class SeqEditorService {
   }
 
   /**
-   * Adds text to the document on a new line after the cursor.
+   * Replaces the entire document selection if one exists,
+   * or adds text to the document on a new line after the cursor.
    */
-  addNewLineWithText(text: string): void {
+  addText(text: string): void {
     if (this.editor) {
       const doc = this.editor.getDoc();
       const cursor = doc.getCursor();
       const line = doc.getLine(cursor.line);
+      const selection = doc.getSelection();
 
-      // Create a new object to avoid mutation of the original selection.
-      const pos: CodeMirror.Position = {
-        ch: line.length,
-        line: cursor.line,
-      };
-
-      if (!line.length) {
-        doc.replaceRange(text, pos);
+      if (selection !== '') {
+        // If there is a selection, replace the entire selection with the given text.
+        doc.replaceSelection(text);
       } else {
-        doc.replaceRange(`\n${text}`, pos);
+        // Create a new object to avoid mutation of the original selection.
+        const pos: CodeMirror.Position = {
+          ch: line.length,
+          line: cursor.line,
+        };
+
+        if (!line.length) {
+          // If the cursor is on an empty line, just add the text to that line.
+          doc.replaceRange(text, pos);
+        } else {
+          // Otherwise add the text on a new line below the current cursor line.
+          doc.replaceRange(`\n${text}`, pos);
+        }
       }
     }
   }

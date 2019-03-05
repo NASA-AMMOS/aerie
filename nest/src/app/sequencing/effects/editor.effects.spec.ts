@@ -12,7 +12,7 @@ import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { cold, hot } from 'jasmine-marbles';
 import { Observable } from 'rxjs';
-import { AddNewLineWithText } from '../actions/editor.actions';
+import { AddText } from '../actions/editor.actions';
 import { SeqEditorService } from '../services/seq-editor.service';
 import { EditorEffects } from './editor.effects';
 
@@ -38,21 +38,23 @@ describe('EditorEffects', () => {
     metadata = getEffectsMetadata(effects);
   });
 
-  describe('addNewLineWithText$', () => {
-    it('should register addNewLineWithText$ that does not dispatch an action', () => {
-      expect(metadata.addNewLineWithText$).toEqual({ dispatch: false });
+  describe('addText$', () => {
+    it('should register addText$ that does not dispatch an action', () => {
+      expect(metadata.addText$).toEqual({ dispatch: false });
     });
 
-    it('should not dispatch an action for AddNewLineWithText but should call addNewLineWithText in the SeqEditorService', () => {
-      const action = new AddNewLineWithText('that was easy');
+    it('should not dispatch an action for AddText but should call addText and focusEditor in the SeqEditorService', () => {
+      const action = new AddText('that was easy');
       const service = TestBed.get(SeqEditorService);
-      const addNewLineWithText = spyOn(service, 'addNewLineWithText');
+      const addText = spyOn(service, 'addText');
+      const focusEditor = spyOn(service, 'focusEditor');
 
       actions$ = hot('-a', { a: action });
       const expected = cold('-');
 
-      expect(effects.addNewLineWithText$).toBeObservable(expected);
-      expect(addNewLineWithText).toHaveBeenCalled();
+      expect(effects.addText$).toBeObservable(expected);
+      expect(addText).toHaveBeenCalled();
+      expect(focusEditor).toHaveBeenCalled();
     });
   });
 });
