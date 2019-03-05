@@ -12,36 +12,79 @@ import { TestBed } from '@angular/core/testing';
 import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { StoreModule } from '@ngrx/store';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
+
+import { hot, cold } from 'jasmine-marbles';
+
+import { FilterState } from '../../shared/models';
+import { reducers as storeReducers } from '../../app-store';
+import {
+  MockedFilters,
+  MpsServerMockService,
+} from '../../shared/services/mps-server-mock.service';
 import { MpsServerService } from '../../shared/services/mps-server.service';
+import {
+  UpdateSourceExplorer,
+  UpdateSourceFilter,
+} from '../actions/source-explorer.actions';
 import { SourceExplorerEffects } from './source-explorer.effects';
 
 describe('SourceExplorerEffects', () => {
   let effects: SourceExplorerEffects;
   let metadata: EffectsMetadata<SourceExplorerEffects>;
-  let mpsServerService: any;
-  const actions: Observable<any> = of();
+  let actions$: Observable<any>;
 
   beforeEach(() => {
-    mpsServerService = jasmine.createSpyObj('MpsServerService', [
-      'fetchNewSources',
-    ]);
-
     TestBed.configureTestingModule({
-      imports: [HttpClientModule, StoreModule.forRoot({})],
+      imports: [HttpClientModule, StoreModule.forRoot(storeReducers)],
       providers: [
         HttpClient,
         SourceExplorerEffects,
         {
           provide: MpsServerService,
-          useValue: mpsServerService,
+          useValue: new MpsServerMockService(),
         },
-        provideMockActions(() => actions),
+        provideMockActions(() => actions$),
       ],
     });
 
     effects = TestBed.get(SourceExplorerEffects);
     metadata = getEffectsMetadata(effects);
+  });
+
+  it('should emit UpdateSourceExplorer when an empty filter is applied', () => {
+    const filterState: FilterState = FilterState.empty();
+
+    actions$ = hot('a', { a: new UpdateSourceFilter(filterState.filter) });
+    const expected$ = cold('(bcd)', {
+      b: new UpdateSourceExplorer({ fetchPending: true }),
+      c: new UpdateSourceExplorer({ filterState }),
+      d: new UpdateSourceExplorer({ fetchPending: false }),
+    });
+
+    expect(effects.updateSourceFilter$).toBeObservable(expected$);
+  });
+
+  it('should emit UpdateSourceExplorer when a filter is applied successfully', () => {
+    const filterState: FilterState = {
+      filter: MockedFilters['name matches abc'],
+      filteredSources: new Set(['/mongo/db1/abc', '/mongo/db1/xabcy']),
+      visibleAncestors: new Set([
+        '/mongo',
+        '/mongo/db1',
+        '/mongo/db1/abc',
+        '/mongo/db1/xabcy',
+      ]),
+    };
+
+    actions$ = hot('a', { a: new UpdateSourceFilter(filterState.filter) });
+    const expected$ = cold('(bcd)', {
+      b: new UpdateSourceExplorer({ fetchPending: true }),
+      c: new UpdateSourceExplorer({ filterState }),
+      d: new UpdateSourceExplorer({ fetchPending: false }),
+    });
+
+    expect(effects.updateSourceFilter$).toBeObservable(expected$);
   });
 
   it('should register addCustomGraph$ that does dispatch an action', () => {
@@ -114,6 +157,10 @@ describe('SourceExplorerEffects', () => {
 
   it('should register updateGraphAfterFilterRemove$ that does dispatch an action', () => {
     expect(metadata.updateGraphAfterFilterRemove$).toEqual({ dispatch: true });
+  });
+
+  it('should register updateSourceFilter$ that does dispatch an action', () => {
+    expect(metadata.updateSourceFilter$).toEqual({ dispatch: true });
   });
 
   it('should not register expand', () => {
