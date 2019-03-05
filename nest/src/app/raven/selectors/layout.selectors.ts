@@ -57,6 +57,11 @@ export const getShowEpochsDrawer = createSelector(
   (state: LayoutState) => state.showEpochsDrawer,
 );
 
+export const getShowFileMetadataDrawer = createSelector(
+  getLayoutState,
+  (state: LayoutState) => state.showFileMetadataDrawer,
+);
+
 export const getShowGlobalSettingsDrawer = createSelector(
   getLayoutState,
   (state: LayoutState) => state.showGlobalSettingsDrawer,
