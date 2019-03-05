@@ -21,9 +21,6 @@ export interface ConfigState {
     version: string;
   };
   appModules: NestModule[];
-  hummingbird: {
-    // TODO. Add hummingbird specific config here.
-  };
   mpsServer: {
     apiUrl: string;
     ravenConfigUrl: string;
@@ -38,6 +35,9 @@ export interface ConfigState {
     ignoreShareableLinkTimes: boolean;
     itarMessage: string;
     shareableLinkStatesUrl: string;
+  };
+  sequencing: {
+    // TODO. Add sequencing specific config here.
   };
 }
 
@@ -58,7 +58,7 @@ export const config: ConfigState = {
     },
     {
       icon: 'dns',
-      path: 'hummingbird',
+      path: 'sequencing',
       title: 'Sequencing',
       version: '0.0.1',
     },
@@ -69,7 +69,6 @@ export const config: ConfigState = {
       version: version.packageJsonVersion,
     },
   ],
-  hummingbird: {},
   mpsServer: {
     apiUrl: 'mpsserver/api/v2/fs',
     epochsUrl: '',
@@ -96,4 +95,5 @@ export const config: ConfigState = {
     itarMessage: '',
     shareableLinkStatesUrl: 'TEST_ATS/STATES',
   },
+  sequencing: {},
 };

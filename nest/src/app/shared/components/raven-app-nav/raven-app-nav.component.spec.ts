@@ -21,7 +21,9 @@ import { RavenAppNavModule } from './raven-app-nav.module';
 
 @Component({
   selector: 'raven-app-header-test-host',
-  template: `<raven-app-nav></raven-app-nav>`,
+  template: `
+    <raven-app-nav></raven-app-nav>
+  `,
 })
 class RavenAppNavTestHostComponent {
   @ViewChild(RavenAppNavComponent)

@@ -49,6 +49,32 @@ public class Adaptation {
     private String version;
 
     /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public Adaptation() {
+    }
+
+    /**
+     * 
+     * @param owner
+     * @param mission
+     * @param name
+     * @param location
+     * @param id
+     * @param version
+     */
+    public Adaptation(String id, String location, String name, String mission, String owner, String version) {
+        super();
+        this.id = id;
+        this.location = location;
+        this.name = name;
+        this.mission = mission;
+        this.owner = owner;
+        this.version = version;
+    }
+
+    /**
      * 
      * (Required)
      * 

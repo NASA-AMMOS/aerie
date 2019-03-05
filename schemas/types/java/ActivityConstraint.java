@@ -25,6 +25,24 @@ public class ActivityConstraint {
     private String type;
 
     /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public ActivityConstraint() {
+    }
+
+    /**
+     * 
+     * @param name
+     * @param type
+     */
+    public ActivityConstraint(String name, String type) {
+        super();
+        this.name = name;
+        this.type = type;
+    }
+
+    /**
      * 
      * (Required)
      * 

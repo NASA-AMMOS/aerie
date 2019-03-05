@@ -35,8 +35,13 @@ services:
     ports: ["6379:6379"]
     volumes:
     - tyk_redis_data:/data
+  activemq:
+    image: rmohr/activemq:5.15.6-alpine
+    ports: ["5672:5672", "8161:8161", "61616:61616"]
+    volumes: ["activemq_data:/opt/activemq/data"]
 
 volumes:
+  activemq_data:
   adaptation_files:
   adaptation_logs:
   plan_logs:

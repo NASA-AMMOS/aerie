@@ -1,0 +1,23 @@
+{
+  "$id": "#/Command",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "javaType": "Command",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "parameters": {
+      "type": "array",
+      "items": {
+        "$ref": "command-parameter.json"
+      }
+    },
+    "template": {
+      "type": "string"
+    }
+  },
+  "required": ["name", "parameters"],
+  "title": "Command",
+  "type": "object"
+}

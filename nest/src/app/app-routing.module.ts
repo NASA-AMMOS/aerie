@@ -21,8 +21,8 @@ export const routes: Routes = [
     path: 'plans',
   },
   {
-    loadChildren: './hummingbird/hummingbird.module#HummingbirdModule',
-    path: 'hummingbird',
+    loadChildren: './sequencing/sequencing.module#SequencingModule',
+    path: 'sequencing',
   },
   {
     loadChildren: './raven/raven.module#RavenModule',

@@ -98,27 +98,45 @@ while [[ -n $1 ]]; do
   shift
 done
 
+# Create docker-compatible tag (remove + from tag)
+tag_docker=`echo ${tag} | sed -e 's/+/-/g'`
+
 # TODO: Set PORT based on environment (16001 for dev, 16002 for staging, 16003 for release)
 echo "Logging into Docker with user ${DOCKER_LOGIN_USERNAME}"
 echo "${DOCKER_LOGIN_PASSWORD}" | docker login -u "${DOCKER_LOGIN_USERNAME}" cae-artifactory.jpl.nasa.gov:16001 --password-stdin
 
-changed=$(git diff-tree --no-commit-id --name-only $commit)
+if [ ! -z ${branch} ]
+then
+  echo "Branch passed, building select projects..."
+  changed=$(git diff --name-only $branch... | cut -d "/" -f1 | uniq)
+else
+  echo "No branch detected, building everything..."
+  changed=$(ls -1)
+fi
+
 for d in $changed
 do
   if [ -d $d ]
   then
     cd $d
+    tag_name="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/$d:$tag_docker"
+
+    if [ $d == "merlin-sdk" ]
+    then
+      printf "\nPublishing $d...\n\n"
+      # TODO: Don't rebuild here, since the artifacts are already built
+      mvn -B -s settings.xml deploy -DskipTests 
+      [ $? -ne 0 ] && error_exit "mvn deploy failed"
+    fi
+
     if [ -f Dockerfile ]
     then
-
-      tag_name="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/$d:$tag"
       echo "Publishing $tag_name to Artifactory"
       docker push "$tag_name"
-      retval=$?
-      [ $retval -ne 0 ] && error_exit "docker push failed for $tag_name"
-
+      [ $? -ne 0 ] && error_exit "docker push failed for $tag_name"
     fi
     cd $root
+
   fi
 done
 

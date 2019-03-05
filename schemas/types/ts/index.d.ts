@@ -45,6 +45,31 @@ export interface Adaptation {
     version:  string;
 }
 
+export interface CommandDictionary {
+    id:       string;
+    name:     string;
+    selected: boolean;
+    version:  null | string;
+}
+
+export interface Command {
+    name:       string;
+    parameters: CommandParameter[];
+    template?:  string;
+}
+
+export interface CommandParameter {
+    defaultValue: string;
+    help?:        string;
+    max?:         number;
+    min?:         number;
+    name:         string;
+    range:        string;
+    regex?:       string;
+    type:         string;
+    units?:       string;
+}
+
 export interface Plan {
     adaptationId:   string;
     endTimestamp:   string;
