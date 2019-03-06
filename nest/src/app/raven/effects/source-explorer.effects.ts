@@ -107,7 +107,6 @@ import * as layoutActions from '../actions/layout.actions';
 import * as sourceExplorerActions from '../actions/source-explorer.actions';
 import * as timelineActions from '../actions/timeline.actions';
 
-import * as fromLayout from '../reducers/layout.reducer';
 import * as fromSourceExplorer from '../reducers/source-explorer.reducer';
 import * as fromTimeline from '../reducers/timeline.reducer';
 import { withLoadingBar } from './utils';
