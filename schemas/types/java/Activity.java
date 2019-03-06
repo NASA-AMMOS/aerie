@@ -93,6 +93,46 @@ public class Activity {
     private Double y;
 
     /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public Activity() {
+    }
+
+    /**
+     * 
+     * @param color
+     * @param start
+     * @param constraints
+     * @param intent
+     * @param duration
+     * @param activityId
+     * @param name
+     * @param y
+     * @param end
+     * @param activityType
+     * @param endTimestamp
+     * @param parameters
+     * @param startTimestamp
+     */
+    public Activity(String activityId, String activityType, String color, List<ActivityConstraint> constraints, Double duration, Double end, String endTimestamp, String intent, String name, List<ActivityParameter> parameters, Double start, String startTimestamp, Double y) {
+        super();
+        this.activityId = activityId;
+        this.activityType = activityType;
+        this.color = color;
+        this.constraints = constraints;
+        this.duration = duration;
+        this.end = end;
+        this.endTimestamp = endTimestamp;
+        this.intent = intent;
+        this.name = name;
+        this.parameters = parameters;
+        this.start = start;
+        this.startTimestamp = startTimestamp;
+        this.y = y;
+    }
+
+    /**
      * 
      * (Required)
      * 

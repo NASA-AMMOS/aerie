@@ -5,9 +5,9 @@ exports.config = {
   allScriptsTimeout: 11000,
   specs: ['./**/features/*.feature'],
   capabilities: {
-    browserName: 'chrome',
-    chromeOptions: {
-      args: ["--headless", "--disable-gpu", "--no-sandbox"]
+    browserName: 'firefox',
+    'moz:firefoxOptions': {
+      args: [ "--headless" ]
     }
   },
   directConnect: true,

@@ -51,6 +51,8 @@ import {
   UpdateCurrentState,
   UpdateGraphAfterFilterAdd,
   UpdateGraphAfterFilterRemove,
+  UpdateSourceExplorer,
+  UpdateSourceFilter,
 } from '../actions/source-explorer.actions';
 
 import {
@@ -60,6 +62,7 @@ import {
   getCustomFilterForLabel,
   getCustomFiltersBySourceId,
   getFormattedSourceUrl,
+  getMpsPathForSource,
   getParentSourceIds,
   getPinLabel,
   getRavenState,
@@ -80,6 +83,7 @@ import {
 } from '../../shared/util';
 
 import {
+  FilterState,
   MpsServerGraphData,
   MpsServerSource,
   RavenCompositeBand,
@@ -92,6 +96,7 @@ import {
   RavenSource,
   RavenState,
   RavenSubBand,
+  SourceFilter,
   StringTMap,
 } from '../../shared/models';
 
@@ -1050,6 +1055,46 @@ export class SourceExplorerEffects {
             }),
           ),
         ),
+    ),
+  );
+
+  @Effect()
+  updateSourceFilter$: Observable<Action> = this.actions$.pipe(
+    ofType<UpdateSourceFilter>(SourceExplorerActionTypes.UpdateSourceFilter),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    map(({ action, state }) => {
+      if (SourceFilter.isEmpty(action.sourceFilter)) {
+        // Remove all filtering.
+        return of(FilterState.empty());
+      } else {
+        // Apply a new filter.
+        const url = `${state.config.app.baseUrl}/${
+          state.config.mpsServer.apiUrl
+        }`;
+
+        return this.mpsServerService
+          .getSourcesMatchingFilter(url, action.sourceFilter)
+          .pipe(
+            map(mpsServerSources => mpsServerSources.map(getMpsPathForSource)),
+            map(sourceIds =>
+              FilterState.fromMatches(action.sourceFilter, sourceIds),
+            ),
+          );
+      }
+    }),
+    mergeMap((filterState$: Observable<FilterState>) =>
+      concat(
+        of(new UpdateSourceExplorer({ fetchPending: true })),
+        filterState$.pipe(
+          concatMap((filterState: FilterState) =>
+            of(
+              new UpdateSourceExplorer({ filterState }),
+              new UpdateSourceExplorer({ fetchPending: false }),
+            ),
+          ),
+        ),
+      ),
     ),
   );
 

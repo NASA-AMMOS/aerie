@@ -7,11 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { Command } from '../../../../../schemas/types/ts';
+
 /* tslint:disable */
 
-import { HbCommand } from '../models';
-
-export const commands: HbCommand[] = [
+export const commands: Command[] = [
   {
     name: 'HGA_HIST_PRM_DMP',
     parameters: [

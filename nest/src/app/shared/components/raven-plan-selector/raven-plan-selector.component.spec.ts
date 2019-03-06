@@ -18,9 +18,7 @@ import { RavenPlanSelectorModule } from './raven-plan-selector.module';
 @Component({
   selector: 'raven-plan-selector-test',
   template: `
-    <raven-plan-selector
-      [plans]="plans"
-      (selectPlanClicked)="select($event)">
+    <raven-plan-selector [plans]="plans" (selectPlanClicked)="select($event)">
     </raven-plan-selector>
   `,
 })

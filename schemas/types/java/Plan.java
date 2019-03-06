@@ -43,6 +43,30 @@ public class Plan {
     private String startTimestamp;
 
     /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public Plan() {
+    }
+
+    /**
+     * 
+     * @param adaptationId
+     * @param name
+     * @param id
+     * @param endTimestamp
+     * @param startTimestamp
+     */
+    public Plan(String adaptationId, String endTimestamp, String id, String name, String startTimestamp) {
+        super();
+        this.adaptationId = adaptationId;
+        this.endTimestamp = endTimestamp;
+        this.id = id;
+        this.name = name;
+        this.startTimestamp = startTimestamp;
+    }
+
+    /**
      * 
      * (Required)
      * 

@@ -34,6 +34,15 @@ import {
 import { getBandLabel } from './bands';
 
 /**
+ * Replace any slashes or '.' in a source name with dashes.
+ * Slashes delineate sources in the source-explorer.
+ * '.' cannot be be used in keys in mongodb.
+ */
+export function sanitizeSourceName(name: string): string {
+  return name.replace(/\.|\//g, '-');
+}
+
+/**
  * Transform form an MPS Server source to a Raven source.
  */
 export function toSource(
@@ -41,8 +50,7 @@ export function toSource(
   isServer: boolean,
   mSource: MpsServerSource,
 ): RavenSource {
-  // Replace any slashes or '.' in name with dashes since slashes delineate sources in the source-explorer and '.' cannot be be used in keys in mongodb.
-  const sourceName = mSource.name.replace(/\.|\//g, '-');
+  const sourceName = sanitizeSourceName(mSource.name);
 
   const rSource: RavenBaseSource = {
     actions: [],

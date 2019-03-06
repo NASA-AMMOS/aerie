@@ -7,21 +7,16 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  ChangeDetectionStrategy,
-  Component,
-  OnDestroy,
-  ViewChild,
-} from '@angular/core';
-import { MatDrawer } from '@angular/material';
+import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
 
 import { select, Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
-import { switchMap, takeUntil } from 'rxjs/operators';
+import { map, switchMap, takeUntil } from 'rxjs/operators';
 import { WebSocketSubject } from 'rxjs/webSocket';
 import { SourceExplorerState } from '../../reducers/source-explorer.reducer';
 
 import {
+  FilterState,
   RavenCustomFilterSource,
   RavenCustomGraphableSource,
   RavenFilterSource,
@@ -29,15 +24,19 @@ import {
   RavenPin,
   RavenSource,
   RavenSourceActionEvent,
+  SourceFilter,
   StringTMap,
 } from '../../../shared/models';
 
 import { getUrls } from '../../../shared/selectors';
 
 import {
+  getFilterState,
   getFiltersByTarget,
   getPins,
   getSelectedSourceId,
+  getShowFileMetadataDrawer,
+  getSourcesFilter,
   getTreeBySourceId,
   treeSortedChildIds,
 } from '../../selectors';
@@ -54,13 +53,14 @@ import * as sourceExplorerActions from '../../actions/source-explorer.actions';
   templateUrl: './source-explorer.component.html',
 })
 export class SourceExplorerComponent implements OnDestroy {
-  @ViewChild(MatDrawer)
-  fileMetadataDrawer: MatDrawer;
-
+  filterIsActive$: Observable<boolean>;
+  filterState$: Observable<FilterState>;
   filtersByTarget$: Observable<StringTMap<StringTMap<string[]>> | null>;
+  metadataDrawerVisible$: Observable<boolean>;
   pins$: Observable<RavenPin[]>;
   selectedSourceId$: Observable<string>;
   sortedChildIds$: Observable<string[]>;
+  sourceFilter$: Observable<SourceFilter>;
   tree$: Observable<StringTMap<RavenSource>>;
 
   tree: StringTMap<RavenSource>;
@@ -68,17 +68,30 @@ export class SourceExplorerComponent implements OnDestroy {
   private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(private store: Store<SourceExplorerState>) {
+    this.filterState$ = this.store.pipe(select(getFilterState));
     this.filtersByTarget$ = this.store.pipe(select(getFiltersByTarget));
+    this.metadataDrawerVisible$ = this.store.pipe(
+      select(getShowFileMetadataDrawer),
+    );
     this.pins$ = this.store.pipe(select(getPins));
     this.selectedSourceId$ = this.store.pipe(select(getSelectedSourceId));
     this.sortedChildIds$ = this.store.pipe(select(treeSortedChildIds));
+    this.sourceFilter$ = this.store.pipe(select(getSourcesFilter));
     this.tree$ = this.store.pipe(select(getTreeBySourceId));
+
+    this.filterIsActive$ = this.sourceFilter$.pipe(
+      map(x => !SourceFilter.isEmpty(x)),
+    );
 
     this.tree$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(tree => (this.tree = tree));
 
     this.connectToWebsocket();
+  }
+
+  onFilterSources(filter: SourceFilter) {
+    this.store.dispatch(new sourceExplorerActions.UpdateSourceFilter(filter));
   }
 
   ngOnDestroy() {
@@ -153,7 +166,7 @@ export class SourceExplorerComponent implements OnDestroy {
       );
     } else if (event === 'file-metadata') {
       this.store.dispatch(new sourceExplorerActions.SelectSource(source.id));
-      this.fileMetadataDrawer.open();
+      this.store.dispatch(new layoutActions.ToggleFileMetadataDrawer(true));
     } else if (event === 'folder-add') {
       this.store.dispatch(
         new dialogActions.OpenFolderDialog('add', source, '250px'),
@@ -260,5 +273,12 @@ export class SourceExplorerComponent implements OnDestroy {
     this.store.dispatch(
       new dialogActions.OpenCustomFilterDialog(source, '300px'),
     );
+  }
+
+  /**
+   * Helper. Dispatches an event to set the visibility of the file metadata drawer.
+   */
+  setShowFileMetadataDrawer(opened: boolean): void {
+    this.store.dispatch(new layoutActions.ToggleFileMetadataDrawer(opened));
   }
 }

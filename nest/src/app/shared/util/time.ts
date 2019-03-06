@@ -8,6 +8,7 @@
  */
 
 import { utc as momentUtc } from 'moment';
+import { tz as momentTz } from 'moment-timezone';
 import { SituationalAwarenessState } from '../../raven/reducers/situational-awareness.reducer';
 import { RavenEpoch, RavenEpochTime } from '../models';
 
@@ -390,6 +391,14 @@ export function getInitialPageStartEndTime(
 }
 
 /**
+ * Helper. Return name for local timezone.
+ */
+export function getLocalTimezoneName() {
+  const zoneName = momentTz.guess();
+  return momentTz(zoneName).zoneAbbr();
+}
+
+/**
  * Helper. Return situationalAwareness startTime. If 'now' is used, startTime is now - nowMinus.
  */
 export function getSituationalAwarenessStartTime(
@@ -456,31 +465,12 @@ export function timestamp(time: number, includeMsecs: boolean = true): string {
 }
 
 /**
- * Returns a YMD timestamp (e.g. 2023-06-13 00:00:00) based on a time.
+ * Returns a YMD local timestamp (e.g. 2023-06-13 00:00:00) based on a time.
  */
 export function timestampYMD(time: number) {
-  const date = new Date(time * 1000);
-  const year = date.getUTCFullYear();
-  const mon = date.getUTCMonth() + 1;
-  const day = date.getUTCDate();
-  const hour = date.getUTCHours();
-  const mins = date.getUTCMinutes();
-
-  let timeStr = '';
-  timeStr =
-    year +
-    '-' +
-    mon.toString().padStart(2, '0') +
-    '-' +
-    day.toString().padStart(2, '0') +
-    ' ';
-  timeStr +=
-    hour.toString().padStart(2, '0') + ':' + mins.toString().padStart(2, '0');
-
-  const secs = date.getUTCSeconds();
-  timeStr += ':' + secs.toString().padStart(2, '0');
-
-  return timeStr;
+  return momentUtc(time * 1000)
+    .local()
+    .format('YYYY-MM-DD HH:mm:ss');
 }
 
 /**

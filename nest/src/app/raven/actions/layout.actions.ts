@@ -18,6 +18,7 @@ export enum LayoutActionTypes {
   ToggleApplyLayoutDrawerEvent = '[layout] toggle_apply_layout_drawer_event',
   ToggleDetailsPanel = '[layout] toggle_details_panel',
   ToggleEpochsDrawer = '[layout] toggle_epochs_drawer',
+  ToggleFileMetadataDrawer = '[layout] toggle_file_metadata_drawer',
   ToggleGlobalSettingsDrawer = '[layout] toggle_global_settings_drawer',
   ToggleLeftPanel = '[layout] toggle_left_panel',
   ToggleOutputDrawer = '[layout] toggle_output_drawer',
@@ -63,6 +64,12 @@ export class ToggleDetailsPanel implements Action {
 
 export class ToggleEpochsDrawer implements Action {
   readonly type = LayoutActionTypes.ToggleEpochsDrawer;
+
+  constructor(public opened?: boolean) {}
+}
+
+export class ToggleFileMetadataDrawer implements Action {
+  readonly type = LayoutActionTypes.ToggleFileMetadataDrawer;
 
   constructor(public opened?: boolean) {}
 }
@@ -117,6 +124,7 @@ export type LayoutAction =
   | ToggleApplyLayoutDrawerEvent
   | ToggleDetailsPanel
   | ToggleEpochsDrawer
+  | ToggleFileMetadataDrawer
   | ToggleGlobalSettingsDrawer
   | ToggleLeftPanel
   | ToggleOutputDrawer
