@@ -16,6 +16,7 @@ import {
   ToggleApplyLayoutDrawerEvent,
   ToggleDetailsPanel,
   ToggleEpochsDrawer,
+  ToggleFileMetadataDrawer,
   ToggleGlobalSettingsDrawer,
   ToggleLeftPanel,
   ToggleRightPanel,
@@ -88,6 +89,46 @@ describe('layout reducer', () => {
       ...initialState,
       showEpochsDrawer: true,
       showGlobalSettingsDrawer: false,
+    });
+  });
+
+  it('should handle ToggleFileMetadataDrawer', () => {
+    // An action without a parameter should toggle the current state.
+    layoutState = reducer(layoutState, new ToggleFileMetadataDrawer());
+    expect(layoutState).toEqual({
+      ...initialState,
+      showFileMetadataDrawer: true,
+    });
+
+    layoutState = reducer(layoutState, new ToggleFileMetadataDrawer());
+    expect(layoutState).toEqual({
+      ...initialState,
+      showFileMetadataDrawer: false,
+    });
+
+    // An action with a parameter should set the state to that parameter.
+    layoutState = reducer(layoutState, new ToggleFileMetadataDrawer(true));
+    expect(layoutState).toEqual({
+      ...initialState,
+      showFileMetadataDrawer: true,
+    });
+
+    layoutState = reducer(layoutState, new ToggleFileMetadataDrawer(true));
+    expect(layoutState).toEqual({
+      ...initialState,
+      showFileMetadataDrawer: true,
+    });
+
+    layoutState = reducer(layoutState, new ToggleFileMetadataDrawer(false));
+    expect(layoutState).toEqual({
+      ...initialState,
+      showFileMetadataDrawer: false,
+    });
+
+    layoutState = reducer(layoutState, new ToggleFileMetadataDrawer(false));
+    expect(layoutState).toEqual({
+      ...initialState,
+      showFileMetadataDrawer: false,
     });
   });
 
