@@ -14,7 +14,7 @@ import {
   Input,
   Output,
 } from '@angular/core';
-import { Command } from '../../../../../../schemas/types/ts';
+import { Command } from '../../models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,12 +27,9 @@ export class SeqCommandListComponent {
   commands: Command[] | null;
 
   @Output()
-  selectedCommandChanged: EventEmitter<string> = new EventEmitter<string>();
+  selectCommand: EventEmitter<string> = new EventEmitter<string>();
 
-  /**
-   * Event. Called when a command is selected.
-   */
-  onSelection(command: Command) {
-    this.selectedCommandChanged.emit(command.name);
+  onSelectCommand(command: Command) {
+    this.selectCommand.emit(command.name);
   }
 }

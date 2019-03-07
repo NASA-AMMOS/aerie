@@ -7,15 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { Observable } from 'rxjs';
+import { CommandDictionary } from '../../../../../schemas/types/ts';
+import { Command } from '../models';
 
-export enum EditorActionTypes {
-  AddText = '[editor] add_text',
+export interface CommandDictionaryService {
+  getCommandDictionaryList(): Observable<CommandDictionary[]>;
+  getCommandDictionary(id: string): Observable<Command[]>;
 }
-
-export class AddText implements Action {
-  readonly type = EditorActionTypes.AddText;
-  constructor(public text: string) {}
-}
-
-export type EditorActions = AddText;

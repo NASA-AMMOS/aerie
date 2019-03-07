@@ -33,7 +33,7 @@ export const getDictionaries = createSelector(
   (state: CommandDictionaryState) => state.dictionaries,
 );
 
-export const getSelected = createSelector(
+export const getSelectedDictionaryId = createSelector(
   getCommandDictionaryState,
   (state: CommandDictionaryState) => state.selectedDictionaryId,
 );

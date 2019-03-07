@@ -7,15 +7,26 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { MpsCommand } from '../../../../../../schemas/types/ts';
+import { StringTMap } from '../../../shared/models';
 
-export enum EditorActionTypes {
-  AddText = '[editor] add_text',
+/**
+ * Returns a template for an mps command used in autocomplete.
+ */
+export function getCommandTemplate(
+  commandName: string,
+  commandsByName: StringTMap<MpsCommand>,
+): string {
+  const command = commandsByName[commandName];
+  let template = '';
+
+  if (command) {
+    template = `${command.name}`;
+    for (let i = 0, l = command.parameters.length; i < l; ++i) {
+      const parameter = command.parameters[i];
+      template += ` ${parameter.defaultValue}`;
+    }
+  }
+
+  return template;
 }
-
-export class AddText implements Action {
-  readonly type = EditorActionTypes.AddText;
-  constructor(public text: string) {}
-}
-
-export type EditorActions = AddText;

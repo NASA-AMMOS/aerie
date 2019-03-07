@@ -7,15 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { ElementRef } from '@angular/core';
 
-export enum EditorActionTypes {
-  AddText = '[editor] add_text',
+export class MockElementRef extends ElementRef {
+  constructor() {
+    super(null);
+  }
 }
-
-export class AddText implements Action {
-  readonly type = EditorActionTypes.AddText;
-  constructor(public text: string) {}
-}
-
-export type EditorActions = AddText;

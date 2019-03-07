@@ -7,13 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Observable } from 'rxjs';
-import { Command, CommandDictionary } from '../../../../../schemas/types/ts';
+import { MpsCommand } from '../../../../../schemas/types/ts';
 
-/**
- * @todo Convert into a real service once one exists to get data from
- */
-export interface CommandDictionaryService {
-  getCommandDictionaryList(): Observable<CommandDictionary[]>;
-  getCommandDictionary(id: string): Observable<Command[]>;
-}
+export type Command = MpsCommand;
