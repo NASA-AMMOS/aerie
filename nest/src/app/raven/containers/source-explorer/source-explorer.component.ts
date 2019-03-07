@@ -8,13 +8,10 @@
  */
 
 import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
-
 import { select, Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { map, switchMap, takeUntil } from 'rxjs/operators';
 import { WebSocketSubject } from 'rxjs/webSocket';
-import { SourceExplorerState } from '../../reducers/source-explorer.reducer';
-
 import {
   FilterState,
   RavenCustomFilterSource,
@@ -27,12 +24,15 @@ import {
   SourceFilter,
   StringTMap,
 } from '../../../shared/models';
-
 import { getUrls } from '../../../shared/selectors';
-
+import * as dialogActions from '../../actions/dialog.actions';
+import * as epochsActions from '../../actions/epochs.actions';
+import * as layoutActions from '../../actions/layout.actions';
+import * as sourceExplorerActions from '../../actions/source-explorer.actions';
+import { SourceExplorerState } from '../../reducers/source-explorer.reducer';
 import {
-  getFilterState,
   getFiltersByTarget,
+  getFilterState,
   getPins,
   getSelectedSourceId,
   getShowFileMetadataDrawer,
@@ -40,11 +40,6 @@ import {
   getTreeBySourceId,
   treeSortedChildIds,
 } from '../../selectors';
-
-import * as dialogActions from '../../actions/dialog.actions';
-import * as epochsActions from '../../actions/epochs.actions';
-import * as layoutActions from '../../actions/layout.actions';
-import * as sourceExplorerActions from '../../actions/source-explorer.actions';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
