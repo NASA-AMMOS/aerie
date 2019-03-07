@@ -22,45 +22,45 @@ import {
 
 const filesystem: StringTMap<MpsServerSource> = {
   '/mongo/db1': ({
-    __kind: 'fs_dir',
     __db_type: 'mongodb',
-    name: 'db1',
-    label: 'db1',
+    __kind: 'fs_dir',
     contents_url:
       'https://leucadia.jpl.nasa.gov:9443/mpsserver/api/v2/fs-mongodb/mongo/db1',
-    permissions: 'rw-r--r-- null all.usjpl',
     created: '2019-01-08 12:13:24-0800',
+    label: 'db1',
     modified: '2019-01-08 12:13:24-0800',
+    name: 'db1',
+    permissions: 'rw-r--r-- null all.usjpl',
   } as unknown) as MpsServerSource,
   '/mongo/db1/abc': ({
-    customMeta: [],
-    __kind: 'fs_file',
     __db_type: 'mongodb',
-    name: 'abc',
-    label: 'abc',
+    __kind: 'fs_file',
     __kind_sub: 'file_pef',
     contents_url:
       'https://leucadia.jpl.nasa.gov:9443/mpsserver/api/v2/list_pef-mongodb/mongo/db1/abc',
+    created: '2018-08-06 11:05:44-0700',
+    customMeta: [],
     file_data_url:
       'https://leucadia.jpl.nasa.gov:9443/mpsserver/api/v2/fs-mongodb/mongo/db1/abc',
-    permissions: 'rw-r--r-- null all.usjpl',
-    created: '2018-08-06 11:05:44-0700',
+    label: 'abc',
     modified: '2018-08-06 11:05:44-0700',
+    name: 'abc',
+    permissions: 'rw-r--r-- null all.usjpl',
   } as unknown) as MpsServerSource,
   '/mongo/db1/xabcy': ({
-    customMeta: [],
-    __kind: 'fs_file',
     __db_type: 'mongodb',
-    name: 'xabcy',
-    label: 'xabcy',
+    __kind: 'fs_file',
     __kind_sub: 'file_pef',
     contents_url:
       'https://leucadia.jpl.nasa.gov:9443/mpsserver/api/v2/list_pef-mongodb/mongo/db1/xabcy',
+    created: '2018-08-06 11:05:44-0700',
+    customMeta: [],
     file_data_url:
       'https://leucadia.jpl.nasa.gov:9443/mpsserver/api/v2/fs-mongodb/mongo/db1/xabcy',
-    permissions: 'rw-r--r-- null all.usjpl',
-    created: '2018-08-06 11:05:44-0700',
+    label: 'xabcy',
     modified: '2018-08-06 11:05:44-0700',
+    name: 'xabcy',
+    permissions: 'rw-r--r-- null all.usjpl',
   } as unknown) as MpsServerSource,
 };
 

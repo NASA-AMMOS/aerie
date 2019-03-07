@@ -28,7 +28,7 @@ export class RavenQuickFilterPanelComponent {
   filter: SourceFilter = SourceFilter.truth();
 
   @Input()
-  isActive: boolean = false;
+  isActive = false;
 
   @Output()
   applyFilter: EventEmitter<SourceFilter> = new EventEmitter<SourceFilter>();
