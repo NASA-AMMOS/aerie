@@ -27,11 +27,6 @@ export const getLayoutPending = createSelector(
   (state: LayoutState) => state.fetchPending,
 );
 
-export const getRightPanelSelectedTabIndex = createSelector(
-  getLayoutState,
-  (state: LayoutState) => state.rightPanelSelectedTabIndex,
-);
-
 export const getShowActivityPointMetadata = createSelector(
   getLayoutState,
   (state: LayoutState) => state.showActivityPointMetadata,

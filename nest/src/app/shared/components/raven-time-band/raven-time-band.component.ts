@@ -58,6 +58,9 @@ export class RavenTimeBandComponent
   epoch: RavenEpoch | null;
 
   @Input()
+  guides: number[];
+
+  @Input()
   labelWidth: number;
 
   @Input()
@@ -65,6 +68,9 @@ export class RavenTimeBandComponent
 
   @Input()
   showTooltip: boolean;
+
+  @Input()
+  sideMenuDivSize: number;
 
   @Input()
   viewTimeRange: RavenTimeRange;
@@ -102,6 +108,12 @@ export class RavenTimeBandComponent
     // Epoch.
     if (changes.epoch && !changes.epoch.firstChange) {
       this.ctlTimeBand.minorLabels = this.getMinorLabel();
+      shouldRedraw = true;
+    }
+
+
+    if (changes.guides && !changes.guides.firstChange) {
+      this.ctlTimeAxis.guideTimes = this.guides;
       shouldRedraw = true;
     }
 
@@ -176,6 +188,7 @@ export class RavenTimeBandComponent
     this.ctlTimeBand = new (window as any).TimeBand({
       font: 'normal 9px Verdana',
       height: 37,
+      // height: 75,
       label: 'SCET',
       minorLabels: this.getMinorLabel(),
       onFormatNow: this.onFormatNow.bind(this),
@@ -190,6 +203,8 @@ export class RavenTimeBandComponent
     });
     this.ctlTimeBand.timeCursorWidth = this.cursorWidth;
     this.ctlTimeBand.timeCursorColor = colorHexToRgbArray(this.cursorColor);
+
+    this.ctlTimeAxis.guideTimes = this.guides;
 
     this.ctlTimeAxis.updateTimes(
       this.maxTimeRange.start,
@@ -269,9 +284,9 @@ export class RavenTimeBandComponent
    */
   updateTimeAxisXCoordinates() {
     const offsetWidth = this.elementRef.nativeElement.offsetWidth;
-
-    this.ctlTimeAxis.updateXCoordinates(this.labelWidth, offsetWidth);
-    this.ctlViewTimeAxis.updateXCoordinates(this.labelWidth, offsetWidth);
+    console.log('time band offsetWidth:' + offsetWidth);
+    this.ctlTimeAxis.updateXCoordinates(this.labelWidth, offsetWidth+this.sideMenuDivSize);
+    this.ctlViewTimeAxis.updateXCoordinates(this.labelWidth, offsetWidth+this.sideMenuDivSize);
   }
 
   /**

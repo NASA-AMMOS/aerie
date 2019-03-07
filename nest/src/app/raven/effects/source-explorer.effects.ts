@@ -108,7 +108,6 @@ import * as sourceExplorerActions from '../actions/source-explorer.actions';
 import * as timelineActions from '../actions/timeline.actions';
 
 import { LayoutState } from '../reducers/layout.reducer';
-import * as fromSourceExplorer from '../reducers/source-explorer.reducer';
 import * as fromTimeline from '../reducers/timeline.reducer';
 import { withLoadingBar } from './utils';
 
@@ -210,8 +209,8 @@ export class SourceExplorerEffects {
         ...this.loadState(
           state,
           initialSources,
-          state.raven.sourceExplorer.currentState,
-          state.raven.sourceExplorer.currentStateId,
+          state.raven.timeline.currentState,
+          state.raven.timeline.currentStateId,
         ),
       ),
     ),
@@ -244,7 +243,7 @@ export class SourceExplorerEffects {
       state,
     })),
     concatMap(({ action, state, initialSources }) => {
-      const savedState = state.raven.sourceExplorer.currentState as RavenState;
+      const savedState = state.raven.timeline.currentState as RavenState;
 
       return forkJoin([
         of(action),
@@ -332,7 +331,7 @@ export class SourceExplorerEffects {
           updatedBands,
           initialSources,
           savedState,
-          state.raven.sourceExplorer.currentStateId,
+          state.raven.timeline.currentStateId,
           Object.values(action.update.pins),
         ),
       );
@@ -370,7 +369,7 @@ export class SourceExplorerEffects {
       concat(
         of(new sourceExplorerActions.NewSources('/', initialSources)),
         of(
-          new sourceExplorerActions.UpdateSourceExplorer({
+          new timelineActions.UpdateTimeline({
             currentState: savedState,
           }),
         ),
@@ -434,6 +433,7 @@ export class SourceExplorerEffects {
     map(([, state]) => state),
     concatMap(state =>
       concat(
+        of(new timelineActions.UpdateTimeline({ currentStateChanged: false})),
         this.restoreExpansion(
           state.raven.timeline.bands,
           state.raven.timeline.expansionByActivityId,
@@ -826,8 +826,9 @@ export class SourceExplorerEffects {
         .pipe(
           map(
             () =>
-              new sourceExplorerActions.UpdateSourceExplorer({
+              new timelineActions.UpdateTimeline({
                 currentState: getRavenState(action.name, state),
+                currentStateChanged: false,
                 currentStateId: `${action.source.id}/${action.name}`,
               }),
             new sourceExplorerActions.UpdateSourceExplorer({
@@ -1032,20 +1033,20 @@ export class SourceExplorerEffects {
       this.mpsServerService
         .updateState(
           `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${
-            state.raven.sourceExplorer.currentStateId
+            state.raven.timeline.currentStateId
           }`,
           getState(
-            getSourceNameFromId(state.raven.sourceExplorer.currentStateId),
+            getSourceNameFromId(state.raven.timeline.currentStateId),
             state,
           ),
         )
         .pipe(
           map(
             () =>
-              new sourceExplorerActions.UpdateSourceExplorer({
+              new timelineActions.UpdateTimeline({
                 currentState: getRavenState(
                   getSourceNameFromId(
-                    state.raven.sourceExplorer.currentStateId,
+                    state.raven.timeline.currentStateId,
                   ),
                   state,
                 ),
@@ -1332,9 +1333,6 @@ export class SourceExplorerEffects {
     return [
       of(
         new sourceExplorerActions.UpdateSourceExplorer({
-          ...fromSourceExplorer.initialState,
-          currentState: savedState,
-          currentStateId: sourceId,
           fetchPending: true,
         }),
       ),
@@ -1348,6 +1346,8 @@ export class SourceExplorerEffects {
               sourceIds: [],
             })),
           })),
+          currentState: savedState,
+          currentStateId: sourceId,
           expansionByActivityId: savedState.expansionByActivityId,
         }),
       ),
@@ -1381,9 +1381,6 @@ export class SourceExplorerEffects {
       return [
         of(
           new sourceExplorerActions.UpdateSourceExplorer({
-            ...fromSourceExplorer.initialState,
-            currentState: savedState,
-            currentStateId: sourceId,
             fetchPending: true,
           }),
         ),
@@ -1398,6 +1395,8 @@ export class SourceExplorerEffects {
                 sourceIds: [],
               })),
             })),
+            currentState: savedState,
+            currentStateId: sourceId,
             expansionByActivityId: savedState.expansionByActivityId,
             guides: savedState.guides ? savedState.guides : [],
             maxTimeRange: savedState.maxTimeRange,

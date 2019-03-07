@@ -68,6 +68,9 @@ export class RavenBandsComponent implements OnChanges, OnInit {
   guides: number[];
 
   @Input()
+  hoveredBandId: string;
+
+  @Input()
   labelFontSize: number;
 
   @Input()
@@ -95,14 +98,32 @@ export class RavenBandsComponent implements OnChanges, OnInit {
   viewTimeRange: RavenTimeRange;
 
   @Output()
+  addDivider: EventEmitter<string> = new EventEmitter<string>();
+
+  @Output()
   bandLeftClick: EventEmitter<RavenBandLeftClick> = new EventEmitter<
     RavenBandLeftClick
   >();
 
   @Output()
+  deleteBand: EventEmitter<string> = new EventEmitter<string>();
+
+  @Output()
+  settingsBand: EventEmitter<string> = new EventEmitter<string>();
+
+  @Output()
   newSort: EventEmitter<StringTMap<RavenSortMessage>> = new EventEmitter<
     StringTMap<RavenSortMessage>
   >();
+
+  @Output()
+  hoverBand: EventEmitter<string> = new EventEmitter<string>();
+
+  @Output()
+  updateAddTo: EventEmitter<any> = new EventEmitter<any>();
+
+  @Output()
+  updateOverlay: EventEmitter<any> = new EventEmitter<any>();
 
   @Output()
   updateViewTimeRange: EventEmitter<RavenTimeRange> = new EventEmitter<

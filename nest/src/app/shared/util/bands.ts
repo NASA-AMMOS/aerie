@@ -271,7 +271,7 @@ export function toDividerBand(): RavenDividerBand {
 
   const dividerBand: RavenDividerBand = {
     addTo: false,
-    color: [255, 255, 255],
+    color: '#ffffff',
     height: 10,
     heightPadding: 0,
     id,

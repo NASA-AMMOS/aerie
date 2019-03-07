@@ -7,18 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-:host {
-  display: block;
-}
+import { NgModule } from '@angular/core';
+import { RavenGuideBandComponent } from '../raven-guide-band/raven-guide-band.component';
 
-.heading {
-  padding-bottom: 10px;
-}
-
-.field {
-  padding: 10px;
-}
-
-.full-width {
-  width: 100%;
-}
+@NgModule({
+  declarations: [RavenGuideBandComponent],
+  exports: [RavenGuideBandComponent],
+})
+export class RavenGuideBandModule {}

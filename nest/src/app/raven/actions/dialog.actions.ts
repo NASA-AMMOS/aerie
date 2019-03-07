@@ -10,9 +10,9 @@
 import { Action } from '@ngrx/store';
 
 import {
+  RavenCompositeBand,
   RavenCustomFilterSource,
   RavenSource,
-  RavenSubBand,
 } from '../../shared/models';
 
 // Action Types.
@@ -21,13 +21,14 @@ export enum DialogActionTypes {
   OpenConfirmDialog = '[dialog] open_confirm_dialog',
   OpenCustomFilterDialog = '[dialog] open_custom_filter_dialog',
   OpenCustomGraphDialog = '[dialog] open_custom_graph_dialog',
+  OpenDeleteBandDialog = '[dialog] open_delete_band_dialog',
   OpenDeleteDialog = '[dialog] open_delete_dialog',
-  OpenDeleteSubBandDialog = '[dialog] open_delete_sub_band_dialog',
   OpenFileImportDialog = '[dialog] open_file_import_dialog',
   OpenFolderDialog = '[dialog] open_folder_dialog',
   OpenPinDialog = '[dialog] open_pin_dialog',
   OpenRemoveAllBandsDialog = '[dialog] remove_all_bands_dialog',
   OpenRemoveAllGuidesDialog = '[dialog] remove_all_guides_dialog',
+  OpenSettingsBandDialog = '[dialog] open_settings_band_dialog',
   OpenShareableLinkDialog = '[dialog] open_shareable_link_dialog',
   OpenStateApplyDialog = '[dialog] open_state_apply_dialog',
   OpenStateSaveDialog = '[dialog] open_state_save_dialog',
@@ -61,16 +62,16 @@ export class OpenCustomGraphDialog implements Action {
   constructor(public source: RavenSource, public width: string) {}
 }
 
+export class OpenDeleteBandDialog implements Action {
+  readonly type = DialogActionTypes.OpenDeleteBandDialog;
+
+  constructor(public band: RavenCompositeBand, public width: string) {}
+}
+
 export class OpenDeleteDialog implements Action {
   readonly type = DialogActionTypes.OpenDeleteDialog;
 
   constructor(public source: RavenSource, public width: string) {}
-}
-
-export class OpenDeleteSubBandDialog implements Action {
-  readonly type = DialogActionTypes.OpenDeleteSubBandDialog;
-
-  constructor(public subBand: RavenSubBand, public width: string) {}
 }
 
 export class OpenFileImportDialog implements Action {
@@ -111,6 +112,12 @@ export class OpenRemoveAllGuidesDialog implements Action {
   constructor(public width: string) {}
 }
 
+export class OpenSettingsBandDialog implements Action {
+  readonly type = DialogActionTypes.OpenSettingsBandDialog;
+
+  constructor(public bandId: string, public subBandId: string, public width: string) {}
+}
+
 export class OpenShareableLinkDialog implements Action {
   readonly type = DialogActionTypes.OpenShareableLinkDialog;
 
@@ -139,12 +146,14 @@ export type DialogAction =
   | OpenConfirmDialog
   | OpenCustomFilterDialog
   | OpenCustomGraphDialog
+  | OpenDeleteBandDialog
   | OpenDeleteDialog
   | OpenFileImportDialog
   | OpenFolderDialog
   | OpenPinDialog
   | OpenRemoveAllBandsDialog
   | OpenRemoveAllGuidesDialog
+  | OpenSettingsBandDialog
   | OpenShareableLinkDialog
   | OpenStateApplyDialog
   | OpenStateSaveDialog

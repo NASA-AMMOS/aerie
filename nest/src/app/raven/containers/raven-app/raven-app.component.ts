@@ -17,13 +17,10 @@ import {
 import { select, Store } from '@ngrx/store';
 import { combineLatest, Observable, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
-import { RavenTimeRange } from '../../../shared/models';
 import { getVersion } from '../../../shared/selectors';
-import { toCompositeBand, toDividerBand } from '../../../shared/util';
 import { SourceExplorerState } from '../../reducers/source-explorer.reducer';
 
 import {
-  getCurrentStateId,
   getLayoutPending,
   getMode,
   getSelectedBandId,
@@ -45,13 +42,11 @@ import * as timelineActions from '../../actions/timeline.actions';
 })
 export class RavenAppComponent implements OnDestroy {
   about$: Observable<string>;
-  currentStateId$: Observable<string>;
   showProgressBar$: Observable<boolean>;
   mode$: Observable<string>;
   selectedBandId$: Observable<string>;
 
   about: string;
-  currentStateId: string;
   mode: string;
   selectedBandId: string;
 
@@ -59,7 +54,6 @@ export class RavenAppComponent implements OnDestroy {
 
   constructor(private store: Store<SourceExplorerState>) {
     this.about$ = this.getAbout();
-    this.currentStateId$ = this.store.pipe(select(getCurrentStateId));
     this.mode$ = this.store.pipe(select(getMode));
     this.showProgressBar$ = this.getShowProgressBar();
     this.selectedBandId$ = this.store.pipe(select(getSelectedBandId));
@@ -67,10 +61,6 @@ export class RavenAppComponent implements OnDestroy {
     this.about$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(about => (this.about = about));
-
-    this.currentStateId$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(currentStateId => (this.currentStateId = currentStateId));
 
     this.mode$
       .pipe(takeUntil(this.ngUnsubscribe))
@@ -159,73 +149,10 @@ export class RavenAppComponent implements OnDestroy {
   }
 
   /**
-   * Event. Called when a `add-divider-band` event is fired.
-   */
-  onAddDividerBand(): void {
-    this.store.dispatch(
-      new timelineActions.AddBand(null, toCompositeBand(toDividerBand()), {
-        afterBandId: this.selectedBandId,
-      }),
-    );
-  }
-
-  onAddGuide() {
-    this.store.dispatch(new timelineActions.AddGuide());
-  }
-
-  /**
    * The hamburger menu was clicked
    */
   onMenuClicked() {
     this.store.dispatch(new configActions.ToggleNavigationDrawer());
-  }
-
-  onRemoveAllBands() {
-    this.store.dispatch(new dialogActions.OpenRemoveAllBandsDialog('400px'));
-  }
-
-  onRemoveGuide() {
-    this.store.dispatch(new timelineActions.RemoveGuide());
-  }
-
-  onRemoveAllGuides() {
-    this.store.dispatch(new dialogActions.OpenRemoveAllGuidesDialog('400px'));
-  }
-
-  onPanLeft() {
-    this.store.dispatch(new timelineActions.PanLeftViewTimeRange());
-  }
-
-  onPanRight() {
-    this.store.dispatch(new timelineActions.PanRightViewTimeRange());
-  }
-
-  onPanTo(viewTimeRange: RavenTimeRange) {
-    this.store.dispatch(new timelineActions.UpdateViewTimeRange(viewTimeRange));
-  }
-
-  onReset() {
-    this.store.dispatch(new timelineActions.ResetViewTimeRange());
-  }
-
-  onApplyCurrentState() {
-    this.store.dispatch(new dialogActions.OpenApplyCurrentStateDialog());
-  }
-
-  onApplyLayout() {
-    this.store.dispatch(new layoutActions.ToggleApplyLayoutDrawerEvent(true));
-  }
-
-  onUpdateCurrentState() {
-    this.store.dispatch(new dialogActions.OpenUpdateCurrentStateDialog());
-  }
-
-  onZoomIn() {
-    this.store.dispatch(new timelineActions.ZoomInViewTimeRange());
-  }
-
-  onZoomOut() {
-    this.store.dispatch(new timelineActions.ZoomOutViewTimeRange());
   }
 
   toggleAboutDialog() {
@@ -256,10 +183,6 @@ export class RavenAppComponent implements OnDestroy {
 
   toggleRightPanel() {
     this.store.dispatch(new layoutActions.ToggleRightPanel());
-  }
-
-  toggleShareableLinkDialog() {
-    this.store.dispatch(new dialogActions.OpenShareableLinkDialog('600px'));
   }
 
   toggleSituationalAwarenessDrawer() {

@@ -9,20 +9,38 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { MatButtonModule, MatCardModule, MatFormFieldModule } from '@angular/material';
-import { AgGridModule } from 'ag-grid-angular';
-import { RavenTableDetailComponent } from './raven-table-detail.component';
-import { RavenTableComponent } from './raven-table.component';
+import { ReactiveFormsModule } from '@angular/forms';
+import { RavenSettingsBandsDialogComponent } from './raven-settings-bands-dialog.component';
+
+import {
+  MatButtonModule,
+  MatCardModule,
+  MatDialogModule,
+  MatFormFieldModule,
+  MatIconModule,
+  MatInputModule,
+  MatSelectModule,
+  MatSlideToggleModule,
+} from '@angular/material';
+
+import {DragDropModule} from '@angular/cdk/drag-drop';
 
 @NgModule({
-  declarations: [RavenTableComponent, RavenTableDetailComponent],
-  exports: [RavenTableComponent],
+  declarations: [RavenSettingsBandsDialogComponent],
+  entryComponents: [RavenSettingsBandsDialogComponent],
+  exports: [RavenSettingsBandsDialogComponent],
   imports: [
-    AgGridModule.withComponents([RavenTableDetailComponent]),
     CommonModule,
-    MatCardModule,
+    DragDropModule,
     MatButtonModule,
+    MatCardModule,
+    MatIconModule,
+    MatDialogModule,
     MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatSlideToggleModule,
+    ReactiveFormsModule,
   ],
 })
-export class RavenTableModule {}
+export class RavenSettingsBandsDialogModule {}

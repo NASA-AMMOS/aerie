@@ -106,6 +106,9 @@ export class RavenActivityBandComponent
   points: RavenActivityPoint[];
 
   @Input()
+  selectedPoint: RavenActivityPoint | null;
+
+  @Input()
   showActivityTimes: boolean;
 
   @Input()
@@ -113,6 +116,9 @@ export class RavenActivityBandComponent
 
   @Input()
   showLabelPin: boolean;
+
+  @Input()
+  trimLabel: boolean;
 
   @Input()
   type: string;
@@ -273,6 +279,16 @@ export class RavenActivityBandComponent
       this.updateIntervals.emit({ subBandId: this.id, ...this.getIntervals() });
     }
 
+    // Selected Point.
+    if (changes.selectedPoint && !changes.selectedPoint.firstChange) {
+      this.updateSubBand.emit({
+        prop: 'showLabel',
+        subBandId: this.id,
+        subObject: 'painter',
+        value: this.showLabel,
+      });
+    }
+
     // Show Activity times.
     if (changes.showActivityTimes && !changes.showActivityTimes.firstChange) {
       this.updateSubBand.emit({
@@ -329,12 +345,13 @@ export class RavenActivityBandComponent
       layout: this.layout === 0 ? 1 : this.layout,
       minorLabels: this.minorLabels,
       name: this.name,
+      onIsHiddenActivity: this.onIsHiddenActivity.bind(this),
       showActivityTimes: this.showActivityTimes,
       showIcon: this.activityStyle === 3 ? true : false,
       showLabel: this.showLabel,
       style: this.activityStyle,
       timeAxis: this.ctlTimeAxis,
-      trimLabel: false,
+      // trimLabel: this.trimLabel,
       viewTimeAxis: this.ctlViewTimeAxis,
     });
 
@@ -442,5 +459,10 @@ export class RavenActivityBandComponent
       this.epoch,
       this.dayCode,
     );
+  }
+
+  onIsHiddenActivity(interval: any) {
+    const intervalPoint = this.points.find(point => point.uniqueId === interval.uniqueId);
+    return intervalPoint ? intervalPoint.hidden : false;
   }
 }

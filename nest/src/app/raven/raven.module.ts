@@ -34,6 +34,7 @@ import {
   RavenFileImportDialogModule,
   RavenFolderDialogModule,
   RavenPinDialogModule,
+  RavenSettingsBandsDialogModule,
   RavenShareableLinkDialogModule,
   RavenStateSaveDialogModule,
 } from '../shared/components/modules';
@@ -60,6 +61,7 @@ import {
     RavenFileImportDialogModule,
     RavenFolderDialogModule,
     RavenPinDialogModule,
+    RavenSettingsBandsDialogModule,
     RavenShareableLinkDialogModule,
     RavenStateSaveDialogModule,
   ],

@@ -1,4 +1,52 @@
-<ng-container *ngFor="let subBand of subBands; index as i; trackBy: subBandsTrackByFn">
+<!-- Settings and Close Icons. -->
+<div class="icon-div">
+  <mat-icon *ngIf="id === hoveredBandId"
+    class="icons"
+    matTooltip="Band Settings"
+    [id]="'band-settings-edit'"
+    (click)="settingsBand.emit(id)">
+    edit
+  </mat-icon>
+  <mat-icon *ngIf="id === hoveredBandId && !isOverlayAddTo() && !isDividerBand()"
+    class="icons"
+    matTooltip="Set Overlay"
+    [id]="'band-settings-overlay'"
+    (click)="updateOverlay.emit({bandId: id, overlay: true})">
+    layers
+  </mat-icon>
+  <mat-icon *ngIf="(id === hoveredBandId || id === selectedBandId) && overlay && !isDividerBand()"
+    [ngClass]="{overlay: overlay}"
+    class="icons"
+    matTooltip="set Add To"
+    [id]="'band-settings-add-to'"
+    (click)="switchToAddToOrNone(id)">
+    layers
+  </mat-icon>
+  <mat-icon *ngIf="(id === hoveredBandId || id === selectedBandId) && containAddToBand() && !isDividerBand()"
+    class="icons addTo"
+    matTooltip="set None"
+    [id]="'band-settings-none'"
+    (click)="switchToNone(id)">
+    add_box
+  </mat-icon>
+  <mat-icon *ngIf="id === hoveredBandId && !isDividerBand()"
+    class="icons"
+    matTooltip="Add Divider"
+    [id]="'band-settings-add-divider'"
+    (click)="addDivider.emit(id)">
+    list_alt
+  </mat-icon>
+  <mat-icon *ngIf="id === hoveredBandId"
+    class="icons"
+    matTooltip="Remove Band"
+    [id]="'band-settings-remove-band'"
+    (click)="deleteBand.emit(id)">
+    delete_outline
+  </mat-icon>
+</div>
+
+<div
+  *ngFor="let subBand of subBands; index as i; trackBy: subBandsTrackByFn">
   <!-- Activity Band. -->
   <raven-activity-band
     *ngIf="subBand.type === 'activity'"
@@ -28,9 +76,11 @@
     [minorLabels]="subBand.minorLabels"
     [name]="subBand.name"
     [points]="subBand.points"
+    [selectedPoint]="selectedPoint"
     [showActivityTimes]="subBand.showActivityTimes"
     [showLabel]="subBand.showLabel"
     [showLabelPin]="subBand.showLabelPin"
+    [trimLabel]="subBand.trimLabel"
     [type]="subBand.type"
     (addSubBand)="onAddSubBand($event)"
     (removeSubBand)="onRemoveSubBand($event)"
@@ -139,9 +189,9 @@
     (updateIntervals)="onUpdateIntervals($event)"
     (updateSubBand)="onUpdateSubBand($event)">
   </raven-state-band>
-</ng-container>
+</div>
 
-<div [ngClass]="{ 'raven-band': true, 'raven-band--selected': isSelected }">
+<div class="row" [ngClass]="{ 'raven-band': true, 'raven-band--selected': isSelected }">
   <div
     #ctlMount
     class="raven-band__ctl"

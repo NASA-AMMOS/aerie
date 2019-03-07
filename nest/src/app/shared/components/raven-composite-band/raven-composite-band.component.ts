@@ -91,6 +91,9 @@ export class RavenCompositeBandComponent
   heightPadding = 0;
 
   @Input()
+  hoveredBandId: string;
+
+  @Input()
   id = '';
 
   @Input()
@@ -109,6 +112,12 @@ export class RavenCompositeBandComponent
   maxTimeRange: RavenTimeRange = { end: 0, start: 0 };
 
   @Input()
+  overlay: boolean;
+
+  @Input()
+  selectedBandId: string;
+
+  @Input()
   selectedPoint: RavenPoint | null = null;
 
   @Input()
@@ -124,9 +133,27 @@ export class RavenCompositeBandComponent
   viewTimeRange: RavenTimeRange = { end: 0, start: 0 };
 
   @Output()
+  addDivider: EventEmitter<string> = new EventEmitter<string>();
+
+  @Output()
   bandLeftClick: EventEmitter<RavenBandLeftClick> = new EventEmitter<
     RavenBandLeftClick
   >();
+
+  @Output()
+  deleteBand: EventEmitter<string> = new EventEmitter<string>();
+
+  @Output()
+  settingsBand: EventEmitter<string> = new EventEmitter<string>();
+
+  @Output()
+  hoverBand: EventEmitter<string> = new EventEmitter<string>();
+
+  @Output()
+  updateAddTo: EventEmitter<any> = new EventEmitter<any>();
+
+  @Output()
+  updateOverlay: EventEmitter<any> = new EventEmitter<any>();
 
   @Output()
   updateViewTimeRange: EventEmitter<RavenTimeRange> = new EventEmitter<
@@ -142,7 +169,8 @@ export class RavenCompositeBandComponent
   ctlViewTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
   selectedPointColor = [255, 254, 13];
 
-  constructor(public elementRef: ElementRef) {}
+  constructor(
+     public elementRef: ElementRef) {}
 
   ngAfterViewInit() {
     this.resize();
@@ -376,6 +404,7 @@ export class RavenCompositeBandComponent
       onDblLeftClick: this.onDblLeftClick.bind(this),
       onHideTooltip: this.onHideTooltip.bind(this),
       onLeftClick: this.onLeftClick.bind(this),
+      onMouseEnter: this.onMouseEnter.bind(this),
       onRightClick: this.onRightClick.bind(this),
       onShowTooltip: this.onShowTooltip.bind(this),
       onUpdateView: this.onUpdateView.bind(this),
@@ -490,6 +519,10 @@ export class RavenCompositeBandComponent
    */
   onHideTooltip() {
     this.ctlTooltip.hide();
+  }
+
+  onMouseEnter() {
+    this.hoverBand.emit(this.id);
   }
 
   /**
@@ -694,7 +727,6 @@ export class RavenCompositeBandComponent
    */
   updateTimeAxisXCoordinates() {
     const offsetWidth = this.elementRef.nativeElement.offsetWidth;
-
     this.ctlTimeAxis.updateXCoordinates(this.labelWidth, offsetWidth);
     this.ctlViewTimeAxis.updateXCoordinates(this.labelWidth, offsetWidth);
 
@@ -769,6 +801,39 @@ export class RavenCompositeBandComponent
       if (subBand.type === 'resource') {
         subBand.autoScale = this.getResourceAutoScale(this.compositeAutoScale);
       }
+    }
+  }
+
+  isDividerBand() {
+    return this.subBands.length > 0 && this.subBands[0].type === 'divider';
+  }
+
+  isOverlayAddTo() {
+    return this.overlay || this.containAddToBand();
+  }
+
+  containAddToBand() {
+    for (let i=0,l=this.subBands.length;i<l;++i){
+      if (this.subBands[i].type === 'activity' &&  this.subBands[i].addTo) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  switchToAddToOrNone() {
+    this.updateOverlay.emit({bandId: this.id, overlay:false});
+    const activityBands = this.subBands.filter(band => band.type === 'activity');
+    if (activityBands && activityBands.length>0){
+        this.updateAddTo.emit ({bandId: this.id, subBandId: activityBands[0].id, addTo: true});
+    }
+  }
+
+  switchToNone() {
+    this.updateOverlay.emit({bandId: this.id, overlay:false});
+    const activityBands = this.subBands.filter(band => band.type === 'activity');
+    if (activityBands && activityBands.length>0){
+        this.updateAddTo.emit ({bandId: this.id, subBandId: activityBands[0].id, addTo: false});
     }
   }
 }

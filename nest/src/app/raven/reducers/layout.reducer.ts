@@ -23,7 +23,6 @@ import {
 export interface LayoutState {
   fetchPending: boolean;
   mode: string;
-  rightPanelSelectedTabIndex: number | null;
   showActivityPointMetadata: boolean;
   showActivityPointParameters: boolean;
   showApplyLayoutDrawer: boolean;
@@ -43,7 +42,6 @@ export interface LayoutState {
 export const initialState: LayoutState = {
   fetchPending: false,
   mode: 'default',
-  rightPanelSelectedTabIndex: 0,
   showActivityPointMetadata: false,
   showActivityPointParameters: true,
   showApplyLayoutDrawer: false,
@@ -57,7 +55,7 @@ export const initialState: LayoutState = {
   showSituationalAwarenessDrawer: false,
   showSouthBandsPanel: true,
   showTimeCursorDrawer: false,
-  timelinePanelSize: 50,
+  timelinePanelSize: 60,
 };
 
 /**

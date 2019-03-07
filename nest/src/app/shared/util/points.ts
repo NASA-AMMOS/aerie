@@ -125,6 +125,7 @@ export function getActivityPoint(
     endTimestamp,
     expandedFromPointId,
     expansion: 'noExpansion',
+    hidden: false,
     id,
     keywordLine,
     legend,

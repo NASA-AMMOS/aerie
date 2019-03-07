@@ -30,7 +30,7 @@ export class RavenDividerBandComponent implements OnChanges, OnDestroy, OnInit {
   borderWidth: number;
 
   @Input()
-  color: number[];
+  color: string;
 
   @Input()
   ctlTimeAxis: any;

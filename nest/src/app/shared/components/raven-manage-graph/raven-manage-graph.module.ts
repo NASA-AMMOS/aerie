@@ -9,30 +9,21 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { ReactiveFormsModule } from '@angular/forms';
-import { RavenSettingsBandsComponent } from './raven-settings-bands.component';
+import { RavenManageGraphComponent } from './raven-manage-graph.component';
+
+import { HttpClientModule } from "@angular/common/http";
+
+import { RavenPanToDurationModule } from '../raven-pan-to-duration/raven-pan-to-duration.module';
 
 import {
   MatButtonModule,
-  MatCardModule,
-  MatFormFieldModule,
-  MatInputModule,
-  MatSelectModule,
-  MatSlideToggleModule,
+  MatIconModule,
+  MatTooltipModule,
 } from '@angular/material';
 
 @NgModule({
-  declarations: [RavenSettingsBandsComponent],
-  exports: [RavenSettingsBandsComponent],
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatSlideToggleModule,
-    ReactiveFormsModule,
-  ],
+  declarations: [RavenManageGraphComponent],
+  exports: [RavenManageGraphComponent],
+  imports: [CommonModule, HttpClientModule, MatButtonModule, MatIconModule, MatTooltipModule, RavenPanToDurationModule],
 })
-export class RavenSettingsBandsModule {}
+export class RavenManageGraphModule {}

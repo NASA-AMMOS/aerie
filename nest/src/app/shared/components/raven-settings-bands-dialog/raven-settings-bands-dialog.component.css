@@ -1,0 +1,83 @@
+/**
+ * Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+ * Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.
+ * This software may be subject to U.S. export control laws and regulations.
+ * By accepting this document, the user agrees to comply with all applicable U.S. export laws and regulations.
+ * User has the responsibility to obtain export licenses, or other export authority as may be required
+ * before exporting such information to foreign countries or providing access to foreign persons
+ */
+
+:host {
+  display: block;
+}
+
+.heading {
+  padding-bottom: 10px;
+}
+
+.field {
+  padding: 10px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.row-container{
+  display: flex;
+}
+
+.flex-item {
+  flex: 1 0 auto;
+}
+
+.padded-icon {
+  cursor: pointer;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 25px;
+}
+.flex-field11 {
+  flex: 5%;
+}
+
+.flex-color-field11{
+  flex: 5%;
+  padding-bottom: 10px;
+}
+
+.color-container11 {
+  flex: 5%;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.checked-color-button {
+  font-size: 20px;
+  height: 24px;
+}
+
+.color-button {
+  font-size: 20px;
+  height: 24px;
+}
+
+.mat-card {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+h3 {
+  margin-top: 15px;
+  margin-bottom: 0px;
+  padding-bottom: 0px;
+  padding-left: 10px;
+}
+
+[mat-dialog-title] {
+  padding-top: 0px;
+  margin-top: 0px;
+  background-color: rgba(0, 0, 0, 0.2);
+  cursor: move;
+  text-align: center;
+}

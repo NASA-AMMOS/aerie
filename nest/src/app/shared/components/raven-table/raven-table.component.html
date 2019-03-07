@@ -11,6 +11,12 @@
       (click)="onResetColumns()">
       Reset Columns
     </button>
+    <ng-container *ngIf="selectedSubBand.type==='activity'">
+        <input
+          matInput
+          (keyup)="updateFilterActivityInSubBand.emit({bandId: selectedBandId, subBandId: selectedSubBand.id, filter: $event.target.value})"
+          placeholder="Filter Activities In Graph">
+    </ng-container>
   </div>
 
   <ag-grid-angular

@@ -12,7 +12,6 @@ import { initialState, reducer, TimelineState } from './timeline.reducer';
 
 import {
   AddBand,
-  AddGuide,
   AddPointsToSubBand,
   AddSubBand,
   ExpandChildrenOrDescendants,
@@ -24,7 +23,6 @@ import {
   RemoveBandsOrPointsForSource,
   RemoveBandsWithNoPoints,
   RemoveChildrenOrDescendants,
-  RemoveGuide,
   RemoveSourceIdFromSubBands,
   RemoveSubBand,
   ResetViewTimeRange,
@@ -33,6 +31,7 @@ import {
   SetCompositeYLabelDefault,
   SetPointsForSubBand,
   SortBands,
+  ToggleGuide,
   UpdateBand,
   UpdateLastClickTime,
   UpdateSubBand,
@@ -176,14 +175,17 @@ describe('timeline reducer', () => {
     });
   });
 
-  it('handle AddGuide', () => {
-    timelineState = reducer(timelineState, new UpdateLastClickTime(1665067939));
-    timelineState = reducer(timelineState, new AddGuide());
-
+  it('handle ToggleGuide', () => {
+    timelineState = reducer(timelineState, new ToggleGuide({guideTime: 1665067939, timePerPixel: 20}));
     expect(timelineState).toEqual({
       ...initialState,
       guides: [1665067939],
-      lastClickTime: 1665067939,
+    });
+
+    timelineState = reducer(timelineState, new ToggleGuide({guideTime: 1665067949, timePerPixel: 20}));
+    expect(timelineState).toEqual({
+      ...initialState,
+      guides: [],
     });
   });
 
@@ -568,18 +570,6 @@ describe('timeline reducer', () => {
       ),
     );
     expect(timelineState.bands[0].subBands[0].points).toEqual([activityPoint]);
-  });
-
-  it('handle RemoveGuide', () => {
-    timelineState = reducer(timelineState, new UpdateLastClickTime(1665067939));
-    timelineState = reducer(timelineState, new AddGuide());
-    timelineState = reducer(timelineState, new RemoveGuide());
-
-    expect(timelineState).toEqual({
-      ...initialState,
-      guides: [],
-      lastClickTime: 1665067939,
-    });
   });
 
   it('handle RemoveSourceIdFromSubBands', () => {

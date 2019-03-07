@@ -8,7 +8,7 @@
  */
 
 :host {
-  display: block;
+  display: flex;
 }
 
 .raven-band {
@@ -25,3 +25,28 @@
 .raven-band__ctl {
   mix-blend-mode: multiply;
 }
+
+.icon-div {
+  width: 12px;
+  height: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.icons {
+  cursor: pointer;
+  font-size: 12px;
+  padding-bottom: 2px;
+}
+
+.overlay{
+  color: blue;
+}
+
+.addTo {
+  color: orange;
+}
+.row {
+  flex: 1 0 auto;
+}
+

@@ -7,28 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { RavenTimeRange } from './index';
-
-/**
- * Note: Divider bands don't use all of these properties.
- * They are just here for easier typing of sub-bands.
- */
-
-export interface RavenDividerBand {
-  addTo: boolean;
-  color: string;
-  height: number;
-  heightPadding: number;
-  id: string;
-  label: string;
-  labelColor: number[];
-  labelPin: string;
-  maxTimeRange: RavenTimeRange;
-  name: string;
-  parentUniqueId: string | null;
-  points: any[]; // A divider bands should never actually have points.
-  showTooltip: boolean;
-  sourceIds: string[];
-  tableColumns: any[]; // TODO: Remove `any`.
-  type: string;
+export interface RavenGuidePoint {
+  guideTime: number;
+  timePerPixel: number;
 }

@@ -1,5 +1,5 @@
 <span class="pan-to">
-  <input
+  <input class="short"
     [formControl]="panToControl"
     placeholder="Pan To"
     type="text"
@@ -7,7 +7,7 @@
 </span>
 
 <span class="pan-duration">
-  <input
+  <input class="short"
     [formControl]="panDurationControl"
     [matAutocomplete]="auto"
     placeholder="Pan Duration"
@@ -25,6 +25,7 @@
   [disabled]="!panToControl.valid || !panDurationControl.valid"
   (click)="onPan()">
   <mat-icon
+    class="icon"
     aria-label="Perform Pan">
     search
   </mat-icon>

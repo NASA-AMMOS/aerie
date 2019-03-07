@@ -30,7 +30,6 @@ import {
   PinRename,
   RemoveAllBands,
   ResetViewTimeRange,
-  SelectPoint,
   UpdateViewTimeRange,
   ZoomInViewTimeRange,
   ZoomOutViewTimeRange,
@@ -61,7 +60,6 @@ import {
   toRavenDescendantsData,
 } from '../../shared/util';
 
-import * as layoutActions from '../actions/layout.actions';
 import * as sourceExplorerActions from '../actions/source-explorer.actions';
 import * as timelineActions from '../actions/timeline.actions';
 
@@ -155,33 +153,6 @@ export class TimelineEffects {
     concatMap(({ timeline, sourceExplorer }) =>
       this.updatePinLabels(timeline.bands, sourceExplorer.pins),
     ),
-  );
-
-  /**
-   * Effect for SelectPoint.
-   */
-  @Effect()
-  selectPoint$: Observable<Action> = this.actions$.pipe(
-    ofType<SelectPoint>(TimelineActionTypes.SelectPoint),
-    withLatestFrom(this.store$),
-    map(([, state]) => state.raven),
-    concatMap(raven => {
-      const actions: Action[] = [];
-
-      if (raven.timeline.selectedPoint) {
-        actions.push(
-          new layoutActions.UpdateLayout({
-            rightPanelSelectedTabIndex: 1,
-          }),
-        );
-
-        if (!raven.layout.showRightPanel) {
-          actions.push(new layoutActions.ToggleRightPanel());
-        }
-      }
-
-      return actions;
-    }),
   );
 
   /**

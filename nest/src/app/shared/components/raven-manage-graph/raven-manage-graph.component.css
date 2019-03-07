@@ -1,0 +1,22 @@
+.icon {
+  font-size: 15px;
+}
+
+.manage-graph {
+  padding-left: 2px;
+  height: 14px;
+  display: inline-flex;
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+.row-right {
+  flex-grow: 2;
+  display: inline-flex;
+  justify-content: flex-end;
+}
+
+.small-label {
+  padding-top: 10px;
+  font-size: 10px;
+}

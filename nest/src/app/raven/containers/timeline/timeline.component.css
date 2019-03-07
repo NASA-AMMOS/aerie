@@ -76,3 +76,24 @@ mat-sidenav-container {
 .timeline-1 {
   padding: 0.5em;
 }
+
+.row-container {
+  display: flex;
+}
+
+.emptyDiv {
+  width: 12px;
+  height: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.icons {
+  cursor: pointer;
+  font-size: 10px;
+  padding-bottom: 5px;
+}
+
+.row {
+  flex: 1 0 auto;
+}
