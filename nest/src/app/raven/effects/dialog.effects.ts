@@ -551,12 +551,14 @@ export class DialogEffects {
 
   removeAllSubBandsInBand(band: RavenCompositeBand) {
     const actions = [];
-    for (let i=0,l=band.subBands.length;i<l;++i){
+    for (let i = 0, l = band.subBands.length; i < l; ++i) {
       actions.push(new timelineActions.RemoveSubBand(band.subBands[i].id));
-      actions.push(new sourceExplorerActions.SubBandIdRemove(
-        band.subBands[i].sourceIds,
-        band.subBands[i].id,
-      ));
+      actions.push(
+        new sourceExplorerActions.SubBandIdRemove(
+          band.subBands[i].sourceIds,
+          band.subBands[i].id,
+        ),
+      );
     }
     return actions;
   }

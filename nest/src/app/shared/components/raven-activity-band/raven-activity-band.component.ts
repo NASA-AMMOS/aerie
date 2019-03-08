@@ -462,7 +462,9 @@ export class RavenActivityBandComponent
   }
 
   onIsHiddenActivity(interval: any) {
-    const intervalPoint = this.points.find(point => point.uniqueId === interval.uniqueId);
+    const intervalPoint = this.points.find(
+      point => point.uniqueId === interval.uniqueId,
+    );
     return intervalPoint ? intervalPoint.hidden : false;
   }
 }

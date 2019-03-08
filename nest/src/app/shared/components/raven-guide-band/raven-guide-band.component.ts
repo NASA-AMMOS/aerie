@@ -51,7 +51,9 @@ export class RavenGuideBandComponent
   viewTimeRange: RavenTimeRange = { end: 0, start: 0 };
 
   @Output()
-  toggleGuide: EventEmitter<RavenGuidePoint> = new EventEmitter<RavenGuidePoint>();
+  toggleGuide: EventEmitter<RavenGuidePoint> = new EventEmitter<
+    RavenGuidePoint
+  >();
 
   ctlTimeAxis: any;
   ctlViewTimeAxis: any;
@@ -168,7 +170,10 @@ export class RavenGuideBandComponent
    * CTL Event. Called when user left-click on this band.
    */
   onLeftClick(e: MouseEvent, ctlData: any) {
-    this.toggleGuide.emit({guideTime: ctlData.time, timePerPixel: this.ctlTimeAxis.getTimePerPixel()});
+    this.toggleGuide.emit({
+      guideTime: ctlData.time,
+      timePerPixel: this.ctlTimeAxis.getTimePerPixel(),
+    });
   }
   /**
    * Helper. Call when a composite-band should be resized.

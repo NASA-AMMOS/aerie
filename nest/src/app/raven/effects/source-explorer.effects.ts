@@ -433,7 +433,7 @@ export class SourceExplorerEffects {
     map(([, state]) => state),
     concatMap(state =>
       concat(
-        of(new timelineActions.UpdateTimeline({ currentStateChanged: false})),
+        of(new timelineActions.UpdateTimeline({ currentStateChanged: false })),
         this.restoreExpansion(
           state.raven.timeline.bands,
           state.raven.timeline.expansionByActivityId,
@@ -1045,9 +1045,7 @@ export class SourceExplorerEffects {
             () =>
               new timelineActions.UpdateTimeline({
                 currentState: getRavenState(
-                  getSourceNameFromId(
-                    state.raven.timeline.currentStateId,
-                  ),
+                  getSourceNameFromId(state.raven.timeline.currentStateId),
                   state,
                 ),
               }),

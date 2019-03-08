@@ -9,7 +9,11 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { MatButtonModule, MatCardModule, MatFormFieldModule } from '@angular/material';
+import {
+  MatButtonModule,
+  MatCardModule,
+  MatFormFieldModule,
+} from '@angular/material';
 import { AgGridModule } from 'ag-grid-angular';
 import { RavenTableDetailComponent } from './raven-table-detail.component';
 import { RavenTableComponent } from './raven-table.component';

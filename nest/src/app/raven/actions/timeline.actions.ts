@@ -259,9 +259,7 @@ export class SortBands implements Action {
 export class ToggleGuide implements Action {
   readonly type = TimelineActionTypes.ToggleGuide;
 
-  constructor(
-    public guide: RavenGuidePoint,
-  ) {}
+  constructor(public guide: RavenGuidePoint) {}
 }
 
 export class UpdateBand implements Action {

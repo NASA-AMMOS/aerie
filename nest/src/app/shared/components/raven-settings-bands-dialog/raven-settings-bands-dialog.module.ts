@@ -23,7 +23,7 @@ import {
   MatSlideToggleModule,
 } from '@angular/material';
 
-import {DragDropModule} from '@angular/cdk/drag-drop';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 @NgModule({
   declarations: [RavenSettingsBandsDialogComponent],

@@ -478,9 +478,7 @@ export class TimelineComponent implements OnDestroy {
 
   onDeleteBand(bandId: string): void {
     const band = bandById(this.bands, bandId) as RavenCompositeBand;
-    this.store.dispatch(
-      new dialogActions.OpenDeleteBandDialog(band, '300px'),
-    );
+    this.store.dispatch(new dialogActions.OpenDeleteBandDialog(band, '300px'));
   }
 
   /**
@@ -606,12 +604,18 @@ export class TimelineComponent implements OnDestroy {
 
   onUpdateAddTo(e: any): void {
     // this.store.dispatch(new timelineActions.UpdateAddTo(e.bandId, e.subBandId, e.addTo));
-    this.store.dispatch(new timelineActions.UpdateSubBand(e.bandId, e.subBandId, {addTo: e.addTo}));
+    this.store.dispatch(
+      new timelineActions.UpdateSubBand(e.bandId, e.subBandId, {
+        addTo: e.addTo,
+      }),
+    );
   }
 
   onUpdateOverlay(e: any): void {
     // this.store.dispatch(new timelineActions.UpdateOverlay(e.bandId, e.overlay));
-    this.store.dispatch(new timelineActions.UpdateBand(e.bandId, {overlay: e.overlay}));
+    this.store.dispatch(
+      new timelineActions.UpdateBand(e.bandId, { overlay: e.overlay }),
+    );
   }
 
   /**

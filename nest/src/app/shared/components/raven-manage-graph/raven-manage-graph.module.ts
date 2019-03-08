@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { RavenManageGraphComponent } from './raven-manage-graph.component';
 
-import { HttpClientModule } from "@angular/common/http";
+import { HttpClientModule } from '@angular/common/http';
 
 import { RavenPanToDurationModule } from '../raven-pan-to-duration/raven-pan-to-duration.module';
 
@@ -24,6 +24,13 @@ import {
 @NgModule({
   declarations: [RavenManageGraphComponent],
   exports: [RavenManageGraphComponent],
-  imports: [CommonModule, HttpClientModule, MatButtonModule, MatIconModule, MatTooltipModule, RavenPanToDurationModule],
+  imports: [
+    CommonModule,
+    HttpClientModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
+    RavenPanToDurationModule,
+  ],
 })
 export class RavenManageGraphModule {}

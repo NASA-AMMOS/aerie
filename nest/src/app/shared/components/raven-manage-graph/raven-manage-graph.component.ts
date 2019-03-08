@@ -1,8 +1,4 @@
-import {
-  EventEmitter,
-  Input,
-  Output,
-} from '@angular/core';
+import { EventEmitter, Input, Output } from '@angular/core';
 
 import { Component, OnInit } from '@angular/core';
 
@@ -25,44 +21,42 @@ export class RavenManageGraphComponent implements OnInit {
   mode: string;
 
   @Output()
-    applyCurrentLayout: EventEmitter<any> = new EventEmitter<any>();
+  applyCurrentLayout: EventEmitter<any> = new EventEmitter<any>();
 
   @Output()
-    applyCurrentState: EventEmitter<any> = new EventEmitter<any>();
+  applyCurrentState: EventEmitter<any> = new EventEmitter<any>();
 
   @Output()
-    panRight: EventEmitter<any> = new EventEmitter<any>();
+  panRight: EventEmitter<any> = new EventEmitter<any>();
 
   @Output()
-    panLeft: EventEmitter<any> = new EventEmitter<any>();
+  panLeft: EventEmitter<any> = new EventEmitter<any>();
 
   @Output()
-    panTo: EventEmitter<any> = new EventEmitter<any>();
+  panTo: EventEmitter<any> = new EventEmitter<any>();
 
   @Output()
-    removeAllBands: EventEmitter<any> = new EventEmitter<any>();
+  removeAllBands: EventEmitter<any> = new EventEmitter<any>();
 
   @Output()
-    removeAllGuides: EventEmitter<any> = new EventEmitter<any>();
+  removeAllGuides: EventEmitter<any> = new EventEmitter<any>();
 
   @Output()
-    resetView: EventEmitter<any> = new EventEmitter<any>();
+  resetView: EventEmitter<any> = new EventEmitter<any>();
 
   @Output()
-    shareableLink: EventEmitter<any> = new EventEmitter<any>();
+  shareableLink: EventEmitter<any> = new EventEmitter<any>();
 
   @Output()
-    updateCurrentState: EventEmitter<any> = new EventEmitter<any>();
+  updateCurrentState: EventEmitter<any> = new EventEmitter<any>();
 
   @Output()
-    zoomIn: EventEmitter<any> = new EventEmitter<any>();
+  zoomIn: EventEmitter<any> = new EventEmitter<any>();
 
   @Output()
-    zoomOut: EventEmitter<any> = new EventEmitter<any>();
+  zoomOut: EventEmitter<any> = new EventEmitter<any>();
 
   constructor() {}
 
-  ngOnInit() {
-  }
-
+  ngOnInit() {}
 }

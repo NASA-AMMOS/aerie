@@ -115,7 +115,11 @@ export class OpenRemoveAllGuidesDialog implements Action {
 export class OpenSettingsBandDialog implements Action {
   readonly type = DialogActionTypes.OpenSettingsBandDialog;
 
-  constructor(public bandId: string, public subBandId: string, public width: string) {}
+  constructor(
+    public bandId: string,
+    public subBandId: string,
+    public width: string,
+  ) {}
 }
 
 export class OpenShareableLinkDialog implements Action {

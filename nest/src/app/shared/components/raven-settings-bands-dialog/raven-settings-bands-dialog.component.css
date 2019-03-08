@@ -23,7 +23,7 @@
   width: 100%;
 }
 
-.row-container{
+.row-container {
   display: flex;
 }
 
@@ -41,7 +41,7 @@
   flex: 5%;
 }
 
-.flex-color-field11{
+.flex-color-field11 {
   flex: 5%;
   padding-bottom: 10px;
 }

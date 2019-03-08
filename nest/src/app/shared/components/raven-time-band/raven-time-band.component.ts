@@ -111,7 +111,6 @@ export class RavenTimeBandComponent
       shouldRedraw = true;
     }
 
-
     if (changes.guides && !changes.guides.firstChange) {
       this.ctlTimeAxis.guideTimes = this.guides;
       shouldRedraw = true;
@@ -285,8 +284,14 @@ export class RavenTimeBandComponent
   updateTimeAxisXCoordinates() {
     const offsetWidth = this.elementRef.nativeElement.offsetWidth;
     console.log('time band offsetWidth:' + offsetWidth);
-    this.ctlTimeAxis.updateXCoordinates(this.labelWidth, offsetWidth+this.sideMenuDivSize);
-    this.ctlViewTimeAxis.updateXCoordinates(this.labelWidth, offsetWidth+this.sideMenuDivSize);
+    this.ctlTimeAxis.updateXCoordinates(
+      this.labelWidth,
+      offsetWidth + this.sideMenuDivSize,
+    );
+    this.ctlViewTimeAxis.updateXCoordinates(
+      this.labelWidth,
+      offsetWidth + this.sideMenuDivSize,
+    );
   }
 
   /**

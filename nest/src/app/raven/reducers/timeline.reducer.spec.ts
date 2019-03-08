@@ -176,13 +176,19 @@ describe('timeline reducer', () => {
   });
 
   it('handle ToggleGuide', () => {
-    timelineState = reducer(timelineState, new ToggleGuide({guideTime: 1665067939, timePerPixel: 20}));
+    timelineState = reducer(
+      timelineState,
+      new ToggleGuide({ guideTime: 1665067939, timePerPixel: 20 }),
+    );
     expect(timelineState).toEqual({
       ...initialState,
       guides: [1665067939],
     });
 
-    timelineState = reducer(timelineState, new ToggleGuide({guideTime: 1665067949, timePerPixel: 20}));
+    timelineState = reducer(
+      timelineState,
+      new ToggleGuide({ guideTime: 1665067949, timePerPixel: 20 }),
+    );
     expect(timelineState).toEqual({
       ...initialState,
       guides: [],

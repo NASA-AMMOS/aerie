@@ -169,8 +169,7 @@ export class RavenCompositeBandComponent
   ctlViewTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
   selectedPointColor = [255, 254, 13];
 
-  constructor(
-     public elementRef: ElementRef) {}
+  constructor(public elementRef: ElementRef) {}
 
   ngAfterViewInit() {
     this.resize();
@@ -813,8 +812,8 @@ export class RavenCompositeBandComponent
   }
 
   containAddToBand() {
-    for (let i=0,l=this.subBands.length;i<l;++i){
-      if (this.subBands[i].type === 'activity' &&  this.subBands[i].addTo) {
+    for (let i = 0, l = this.subBands.length; i < l; ++i) {
+      if (this.subBands[i].type === 'activity' && this.subBands[i].addTo) {
         return true;
       }
     }
@@ -822,18 +821,30 @@ export class RavenCompositeBandComponent
   }
 
   switchToAddToOrNone() {
-    this.updateOverlay.emit({bandId: this.id, overlay:false});
-    const activityBands = this.subBands.filter(band => band.type === 'activity');
-    if (activityBands && activityBands.length>0){
-        this.updateAddTo.emit ({bandId: this.id, subBandId: activityBands[0].id, addTo: true});
+    this.updateOverlay.emit({ bandId: this.id, overlay: false });
+    const activityBands = this.subBands.filter(
+      band => band.type === 'activity',
+    );
+    if (activityBands && activityBands.length > 0) {
+      this.updateAddTo.emit({
+        bandId: this.id,
+        subBandId: activityBands[0].id,
+        addTo: true,
+      });
     }
   }
 
   switchToNone() {
-    this.updateOverlay.emit({bandId: this.id, overlay:false});
-    const activityBands = this.subBands.filter(band => band.type === 'activity');
-    if (activityBands && activityBands.length>0){
-        this.updateAddTo.emit ({bandId: this.id, subBandId: activityBands[0].id, addTo: false});
+    this.updateOverlay.emit({ bandId: this.id, overlay: false });
+    const activityBands = this.subBands.filter(
+      band => band.type === 'activity',
+    );
+    if (activityBands && activityBands.length > 0) {
+      this.updateAddTo.emit({
+        bandId: this.id,
+        subBandId: activityBands[0].id,
+        addTo: false,
+      });
     }
   }
 }
