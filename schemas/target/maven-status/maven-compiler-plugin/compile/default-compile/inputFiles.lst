@@ -1,9 +1,9 @@
 /Users/ccamargo/Projects/aerie/schemas/src/main/java/gov/nasa/jpl/aerie/schemas/ActivityInstance.java
 /Users/ccamargo/Projects/aerie/schemas/src/main/java/gov/nasa/jpl/aerie/schemas/CommandDictionary.java
-/Users/ccamargo/Projects/aerie/schemas/src/main/java/gov/nasa/jpl/aerie/schemas/CommandParameter.java
 /Users/ccamargo/Projects/aerie/schemas/src/main/java/gov/nasa/jpl/aerie/schemas/ActivityInstanceParameter.java
+/Users/ccamargo/Projects/aerie/schemas/src/main/java/gov/nasa/jpl/aerie/schemas/MpsCommandParameter.java
+/Users/ccamargo/Projects/aerie/schemas/src/main/java/gov/nasa/jpl/aerie/schemas/MpsCommand.java
 /Users/ccamargo/Projects/aerie/schemas/src/main/java/gov/nasa/jpl/aerie/schemas/Plan.java
-/Users/ccamargo/Projects/aerie/schemas/src/main/java/gov/nasa/jpl/aerie/schemas/Command.java
 /Users/ccamargo/Projects/aerie/schemas/src/main/java/gov/nasa/jpl/aerie/schemas/ActivityType.java
 /Users/ccamargo/Projects/aerie/schemas/src/main/java/gov/nasa/jpl/aerie/schemas/Adaptation.java
 /Users/ccamargo/Projects/aerie/schemas/src/main/java/gov/nasa/jpl/aerie/schemas/ActivityInstanceConstraint.java

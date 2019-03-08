@@ -6,12 +6,12 @@ import java.util.List;
 
 
 /**
- * Command
+ * MpsCommand
  * <p>
  * 
  * 
  */
-public class Command {
+public class MpsCommand {
 
     /**
      * 
@@ -24,27 +24,24 @@ public class Command {
      * (Required)
      * 
      */
-    private List<CommandParameter> parameters = new ArrayList<CommandParameter>();
-    private String template;
+    private List<MpsCommandParameter> parameters = new ArrayList<MpsCommandParameter>();
 
     /**
      * No args constructor for use in serialization
      * 
      */
-    public Command() {
+    public MpsCommand() {
     }
 
     /**
      * 
-     * @param template
      * @param name
      * @param parameters
      */
-    public Command(String name, List<CommandParameter> parameters, String template) {
+    public MpsCommand(String name, List<MpsCommandParameter> parameters) {
         super();
         this.name = name;
         this.parameters = parameters;
-        this.template = template;
     }
 
     /**
@@ -70,7 +67,7 @@ public class Command {
      * (Required)
      * 
      */
-    public List<CommandParameter> getParameters() {
+    public List<MpsCommandParameter> getParameters() {
         return parameters;
     }
 
@@ -79,16 +76,8 @@ public class Command {
      * (Required)
      * 
      */
-    public void setParameters(List<CommandParameter> parameters) {
+    public void setParameters(List<MpsCommandParameter> parameters) {
         this.parameters = parameters;
-    }
-
-    public String getTemplate() {
-        return template;
-    }
-
-    public void setTemplate(String template) {
-        this.template = template;
     }
 
 }
