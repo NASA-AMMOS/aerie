@@ -3,138 +3,100 @@
     (panTo)="panTo.emit($event)">
   </raven-pan-to-duration>
 
-  <button
-    mat-icon-button
+  <mat-icon
+    class="icon"
     matTooltip="Zoom In Time"
+    aria-label="Zoom In Time"
     (click)="zoomIn.emit()">
-    <mat-icon
-      class="icon"
-      aria-label="Zoom In Time">
-      zoom_in
-    </mat-icon>
-  </button>
+    zoom_in
+  </mat-icon>
 
-  <button
-    mat-icon-button
+  <mat-icon
+    class="icon"
     matTooltip="Zoom Out Time"
+    aria-label="Zoom Out Time"
     (click)="zoomOut.emit()">
-    <mat-icon
-      class="icon"
-      aria-label="Zoom Out Time">
-      zoom_out
-    </mat-icon>
-  </button>
+    zoom_out
+  </mat-icon>
 
-  <button
-    mat-icon-button
+  <mat-icon
+    class="icon"
     matTooltip="Reset Time"
+    aria-label="Reset Time"
     (click)="resetView.emit()">
-    <mat-icon
-      class="icon"
-      aria-label="Reset Time">
-      restore
-    </mat-icon>
-  </button>
+    restore
+  </mat-icon>
 
-  <button
-    mat-icon-button
+  <mat-icon
+    class="icon"
     matTooltip="Pan Left Time"
+    aria-label="Pan Left Time"
     (click)="panLeft.emit()">
-    <mat-icon
-      class="icon"
-      aria-label="Pan Left Time">
-      skip_previous
-    </mat-icon>
-  </button>
+    skip_previous
+  </mat-icon>
 
-  <button
-    mat-icon-button
+  <mat-icon
+    class="icon"
     matTooltip="Pan Right Time"
+    aria-label="Pan Right Time"
     (click)="panRight.emit()">
-    <mat-icon
-      class="icon"
-      aria-label="Pan Right Time">
-      skip_next
-    </mat-icon>
-  </button>
+    skip_next
+  </mat-icon>
 
   <div class="row-right">
-
-    <span class="item-right small-label" *ngIf="currentStateId !== '' && mode !== 'minimal'">State: {{currentStateId}}</span>
-  <button
-    *ngIf="currentStateId !== '' && mode !== 'minimal'"
-    class="item-right"
-    mat-icon-button
-    matTooltip="Apply Layout"
-    (click)="applyCurrentLayout.emit()">
+    <span class="item-right state-label" *ngIf="currentStateId !== '' && mode !== 'minimal'">State: {{currentStateId}}</span>
     <mat-icon
-      class="icon"
-      aria-label="Apply Layout">
+      *ngIf="currentStateId !== '' && mode !== 'minimal'"
+      class="item-right icon"
+      matTooltip="Apply Layout"
+      aria-label="Apply Layout"
+      (click)="applyCurrentLayout.emit()">
       open_in_browser
     </mat-icon>
-  </button>
-
-  <button
-    *ngIf="currentStateId !== '' && mode !== 'minimal'"
-    class="item-right"
-    mat-icon-button
-    matTooltip="Revert State"
-    (click)="applyCurrentState.emit()">
     <mat-icon
-      class="icon"
-      aria-label="Revert State">
+      class="item-right icon"
+      *ngIf="currentStateId !== '' && mode !== 'minimal'"
+      matTooltip="Revert State"
+      aria-label="Revert State"
+      (click)="applyCurrentState.emit()">
       restore_page
     </mat-icon>
-  </button>
-
-  <button
-    *ngIf="currentStateId !== '' && mode !== 'minimal'"
-    class="item-right"
-    mat-icon-button
-    matTooltip="Save"
-    [disabled]="!currentStateChanged"
-    (click)="updateCurrentState.emit()">
     <mat-icon
-      class="icon"
+      *ngIf="currentStateId !== '' && mode !== 'minimal' && currentStateChanged"
+      class="item-right icon"
+      matTooltip="Save"
+      aria-label="Save"
+      (click)="updateCurrentState.emit()">
+      save
+    </mat-icon>
+    <mat-icon
+      *ngIf="currentStateId !== '' && mode !== 'minimal' && !currentStateChanged"
+      class="item-right disabled-icon"
+      matTooltip="Save"
       aria-label="Save">
       save
     </mat-icon>
-  </button>
-
-  <button
-    *ngIf="guides.length>0"
-    class="item-right"
-    mat-icon-button
-    matTooltip="Remove All Guides"
-    (click)="removeAllGuides.emit()">
     <mat-icon
-      class="icon"
-      aria-label="Remove All Guides">
+      *ngIf="guides.length>0"
+      class="item-right icon"
+      matTooltip="Remove All Guides"
+      aria-label="Remove All Guides"
+      (click)="removeAllGuides.emit()">
       highlight_off
     </mat-icon>
-  </button>
-
-  <button
-    class="item-right"
-    mat-icon-button
-    matTooltip="Get Shareable link"
-    (click)="shareableLink.emit()">
     <mat-icon
-      class="icon"
-      aria-label="Get Shareable Link">
+      class="item-right icon"
+      matTooltip="Get Shareable link"
+      aria-label="Get Shareable Link"
+      (click)="shareableLink.emit()">
       link
     </mat-icon>
-  </button>
-
-  <button class="item-right"
-    mat-icon-button
-    matTooltip="Remove All Bands"
-    (click)="removeAllBands.emit()">
     <mat-icon
-      class="icon"
-      aria-label="Remove All Bands">
+      class="item-right icon"
+      matTooltip="Remove All Bands"
+      aria-label="Remove All Bands"
+      (click)="removeAllBands.emit()">
       delete_forever
     </mat-icon>
-  </button>
   </div>
 </div>

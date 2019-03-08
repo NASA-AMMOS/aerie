@@ -1,5 +1,11 @@
+.disabled-icon {
+  font-size: 15px;
+  opacity: 0.37;
+  padding-top: 10px;
+}
 .icon {
   font-size: 15px;
+  padding-top: 10px;
 }
 
 .manage-graph {
@@ -16,7 +22,8 @@
   justify-content: flex-end;
 }
 
-.small-label {
-  padding-top: 10px;
+.state-label {
+  padding-right: 10px;
+  padding-top: 7px;
   font-size: 10px;
 }

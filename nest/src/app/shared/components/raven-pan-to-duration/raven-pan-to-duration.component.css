@@ -17,4 +17,13 @@
 
 .icon {
   font-size: 15px;
+  padding-top: 10px;
+  margin-left: 10px;
+}
+
+.disabled-icon {
+  font-size: 15px;
+  opacity: 0.37;
+  padding-top: 10px;
+  margin-left: 10px;
 }
