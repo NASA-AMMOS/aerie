@@ -195,7 +195,6 @@ public class AdaptationController {
         for (int i = 0; file.exists(); ++i) {
             filename = location + basename + "_" + i;
             file = new File(filename);
-            i += 1;
         }
         return filename;
     }
