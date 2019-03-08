@@ -8,12 +8,9 @@
  */
 
 import { Observable } from 'rxjs';
-import { Command, CommandDictionary } from '../../../../../schemas';
+import { CommandDictionary, MpsCommand } from '../../../../../schemas';
 
-/**
- * @todo Convert into a real service once one exists to get data from
- */
 export interface CommandDictionaryService {
   getCommandDictionaryList(): Observable<CommandDictionary[]>;
-  getCommandDictionary(id: string): Observable<Command[]>;
+  getCommandDictionary(id: string): Observable<MpsCommand[]>;
 }

@@ -37,7 +37,7 @@ const filesystem: StringTMap<MpsServerSource> = {
     __kind: 'fs_file',
     __kind_sub: 'file_pef',
     contents_url:
-    'https://leucadia.jpl.nasa.gov:9443/mpsserver/api/v2/list_pef-mongodb/mongo/db1/abc',
+      'https://leucadia.jpl.nasa.gov:9443/mpsserver/api/v2/list_pef-mongodb/mongo/db1/abc',
     created: '2018-08-06 11:05:44-0700',
     customMeta: [],
     file_data_url:

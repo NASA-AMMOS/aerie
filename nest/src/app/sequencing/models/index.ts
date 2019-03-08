@@ -7,4 +7,5 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './command-lint';
+export * from './code-mirror-lint-error';
+export * from './command';

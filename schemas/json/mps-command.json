@@ -1,8 +1,8 @@
 {
-  "$id": "#/Command",
+  "$id": "#/MpsCommand",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
-  "javaType": "gov.nasa.jpl.aerie.schemas.Command",
+  "javaType": "gov.nasa.jpl.aerie.schemas.MpsCommand",
   "properties": {
     "name": {
       "type": "string"
@@ -10,14 +10,11 @@
     "parameters": {
       "type": "array",
       "items": {
-        "$ref": "command-parameter.json"
+        "$ref": "mps-command-parameter.json"
       }
-    },
-    "template": {
-      "type": "string"
     }
   },
   "required": ["name", "parameters"],
-  "title": "Command",
+  "title": "MpsCommand",
   "type": "object"
 }

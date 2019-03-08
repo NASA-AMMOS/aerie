@@ -7,24 +7,24 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
 import { select, Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
-import { Command, CommandDictionary } from '../../../../../../schemas';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { CommandDictionary, MpsCommand } from '../../../../../../schemas';
 import { ToggleNavigationDrawer } from '../../../shared/actions/config.actions';
 import { StringTMap } from '../../../shared/models';
 import {
-  FetchCommandDictionaryList,
-  SelectCommand,
+  FetchCommandDictionaries,
   SelectCommandDictionary,
 } from '../../actions/command-dictionary.actions';
-import { SetLine, SetText } from '../../actions/editor.actions';
+import { AddText } from '../../actions/editor.actions';
+import { getCommandTemplate } from '../../code-mirror-languages/mps/helpers';
 import {
   getCommands,
   getCommandsByName,
   getDictionaries,
-  getSelected,
-  getText,
+  getSelectedDictionaryId,
 } from '../../selectors';
 import { SequencingAppState } from '../../sequencing-store';
 
@@ -34,56 +34,51 @@ import { SequencingAppState } from '../../sequencing-store';
   styleUrls: ['./sequencing-app.component.css'],
   templateUrl: './sequencing-app.component.html',
 })
-export class SequencingAppComponent {
-  commands$: Observable<Command[] | null>;
-  commandsByName$: Observable<StringTMap<Command> | null>;
+export class SequencingAppComponent implements OnDestroy {
+  commands$: Observable<MpsCommand[] | null>;
+  commandsByName$: Observable<StringTMap<MpsCommand> | null>;
   dictionaries$: Observable<CommandDictionary[]>;
   selectedDictionaryId$: Observable<string | null>;
-  text$: Observable<string>;
+
+  commandsByName: StringTMap<MpsCommand>;
+
+  private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(private store: Store<SequencingAppState>) {
     this.commands$ = this.store.pipe(select(getCommands));
     this.commandsByName$ = this.store.pipe(select(getCommandsByName));
     this.dictionaries$ = this.store.pipe(select(getDictionaries));
-    this.selectedDictionaryId$ = this.store.pipe(select(getSelected));
-    this.text$ = this.store.pipe(select(getText));
+    this.selectedDictionaryId$ = this.store.pipe(
+      select(getSelectedDictionaryId),
+    );
 
-    this.store.dispatch(new FetchCommandDictionaryList());
+    this.commandsByName$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe((commandsByName: StringTMap<MpsCommand>) => {
+        this.commandsByName = commandsByName;
+      });
+
+    this.store.dispatch(new FetchCommandDictionaries());
   }
 
-  /**
-   * Called when the raven-seq-editor cursor value changes
-   */
-  onCursorLineChanged(line: number): void {
-    this.store.dispatch(new SetLine(line));
+  ngOnDestroy(): void {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
   }
 
-  /**
-   * The hamburger menu was clicked
-   */
   onMenuClicked(): void {
     this.store.dispatch(new ToggleNavigationDrawer());
   }
 
-  /**
-   * A Command from the list of commands was selected.
-   */
-  onSelectedCommand(command: string): void {
-    this.store.dispatch(new SelectCommand(command));
+  onSelectCommand(commandName: string): void {
+    const commandTemplate = getCommandTemplate(
+      commandName,
+      this.commandsByName,
+    );
+    this.store.dispatch(new AddText(commandTemplate));
   }
 
-  /**
-   * A dictionary from the list of dictionaries was selected
-   * @param dictionary The dictionary which was selected
-   */
-  onSelectedDictionary(selectedId: string): void {
+  onSelectDictionary(selectedId: string): void {
     this.store.dispatch(new SelectCommandDictionary(selectedId));
-  }
-
-  /**
-   * Called with the raven-seq-editor value changes.
-   */
-  onValueChanged(value: string): void {
-    this.store.dispatch(new SetText(value));
   }
 }

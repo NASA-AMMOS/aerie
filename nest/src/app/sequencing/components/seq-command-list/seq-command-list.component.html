@@ -3,7 +3,7 @@
 <mat-nav-list dense *ngIf="commands?.length">
   <cdk-virtual-scroll-viewport class="viewport" itemSize="50">
     <mat-list-item
-      (click)="onSelection(command)"
+      (click)="onSelectCommand(command)"
       class="command-list-item"
       *cdkVirtualFor="let command of commands">
       <span mat-line>

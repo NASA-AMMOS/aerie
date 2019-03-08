@@ -14,7 +14,7 @@ import {
   Input,
   Output,
 } from '@angular/core';
-import { Command } from '../../../../../../schemas';
+import { MpsCommand } from '../../../../../../schemas';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,15 +24,12 @@ import { Command } from '../../../../../../schemas';
 })
 export class SeqCommandListComponent {
   @Input()
-  commands: Command[] | null;
+  commands: MpsCommand[] | null;
 
   @Output()
-  selectedCommandChanged: EventEmitter<string> = new EventEmitter<string>();
+  selectCommand: EventEmitter<string> = new EventEmitter<string>();
 
-  /**
-   * Event. Called when a command is selected.
-   */
-  onSelection(command: Command) {
-    this.selectedCommandChanged.emit(command.name);
+  onSelectCommand(command: MpsCommand) {
+    this.selectCommand.emit(command.name);
   }
 }

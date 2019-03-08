@@ -7,17 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { EditorState } from '../reducers/editor.reducer';
-import { State } from '../sequencing-store';
-
-const featureSelector = createFeatureSelector<State>('sequencing');
-export const getEditorState = createSelector(
-  featureSelector,
-  (state: State): EditorState => state.editor,
-);
-
-export const getText = createSelector(
-  getEditorState,
-  (state: EditorState) => state.text,
-);
+:host {
+  display: block;
+  height: 100%;
+  width: 100%;
+}

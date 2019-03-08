@@ -128,14 +128,14 @@ do
       npm ci
       [ $? -ne 0 ] && error_exit "npm ci failed"
 
+      npm run lint
+      [ $? -ne 0 ] && error_exit "npm run lint failed"
+
       npm run format:check
       [ $? -ne 0 ] && error_exit "npm run format:check failed"
 
       npm run license:check
       [ $? -ne 0 ] && error_exit "npm run license:check failed"
-
-      npm run lint
-      [ $? -ne 0 ] && error_exit "npm run lint failed"
 
       npm run build-prod
       [ $? -ne 0 ] && error_exit "npm run build-prod failed"

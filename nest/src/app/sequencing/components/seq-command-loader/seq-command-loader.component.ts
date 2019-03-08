@@ -30,9 +30,9 @@ export class SeqCommandLoaderComponent {
   selectedId: string | null = null;
 
   @Output()
-  selectedDictionaryChanged: EventEmitter<string> = new EventEmitter<string>();
+  selectDictionary: EventEmitter<string> = new EventEmitter<string>();
 
-  onSelectionChanged(id: string) {
-    this.selectedDictionaryChanged.emit(id);
+  onSelectionDictionary(id: string) {
+    this.selectDictionary.emit(id);
   }
 }

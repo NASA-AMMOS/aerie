@@ -23,7 +23,7 @@ import {
 
 import { RavenEpoch, RavenTimeRange } from '../../models';
 import { colorHexToRgbArray } from '../../util/color';
-import { formatTimeTickTFormat } from '../../util/time';
+import { formatTimeTickTFormat, getLocalTimezoneName } from '../../util/time';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -101,7 +101,7 @@ export class RavenTimeBandComponent
 
     // Epoch.
     if (changes.epoch && !changes.epoch.firstChange) {
-      this.ctlTimeBand.minorLabels = this.getEpochLabel(this.epoch);
+      this.ctlTimeBand.minorLabels = this.getMinorLabel();
       shouldRedraw = true;
     }
 
@@ -177,7 +177,7 @@ export class RavenTimeBandComponent
       font: 'normal 9px Verdana',
       height: 37,
       label: 'SCET',
-      minorLabels: this.getEpochLabel(this.epoch),
+      minorLabels: this.getMinorLabel(),
       onFormatNow: this.onFormatNow.bind(this),
       onFormatTimeTick: this.onFormatTimeTick.bind(this),
       onHideTooltip: this.onHideTooltip.bind(this),
@@ -299,5 +299,14 @@ export class RavenTimeBandComponent
       return [epoch.name];
     }
     return [];
+  }
+
+  /**
+   * Helper that returns an epoch name or local time name.
+   */
+  getMinorLabel() {
+    return this.getEpochLabel(this.epoch).length > 0
+      ? this.getEpochLabel(this.epoch)
+      : [getLocalTimezoneName()];
   }
 }

@@ -10,14 +10,11 @@
     "name": {
       "type": "string"
     },
-    "selected": {
-      "type": "boolean"
-    },
     "version": {
       "type": ["string", "null"]
     }
   },
-  "required": ["id", "name", "selected", "version"],
+  "required": ["id", "name", "version"],
   "title": "CommandDictionary",
   "type": "object"
 }

@@ -47,28 +47,23 @@ export interface Adaptation {
 }
 
 export interface CommandDictionary {
-    id:       string;
-    name:     string;
-    selected: boolean;
-    version:  null | string;
+    id:      string;
+    name:    string;
+    version: null | string;
 }
 
-export interface Command {
+export interface MpsCommand {
     name:       string;
-    parameters: CommandParameter[];
-    template?:  string;
+    parameters: MpsCommandParameter[];
 }
 
-export interface CommandParameter {
-    defaultValue: string;
-    help?:        string;
-    max?:         number;
-    min?:         number;
-    name:         string;
-    range:        string;
-    regex?:       string;
-    type:         string;
-    units?:       string;
+export interface MpsCommandParameter {
+    defaultValue?: string;
+    help?:         string;
+    name?:         string;
+    range?:        string;
+    type?:         string;
+    units?:        string;
 }
 
 export interface Plan {

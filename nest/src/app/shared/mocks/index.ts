@@ -7,7 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './commands';
 export * from './mps-server-epochs';
 export * from './mps-server-situational-awareness-pef-entries';
 export * from './raven-bands';

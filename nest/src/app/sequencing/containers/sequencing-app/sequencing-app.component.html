@@ -1,24 +1,23 @@
-<raven-app-header title="Sequencing" (menuClicked)="onMenuClicked()">
+<raven-app-header
+  title="Sequencing"
+  (menuClicked)="onMenuClicked()">
 </raven-app-header>
 
 <main>
   <seq-editor
     [commands]="commands$ | async"
-    [commandsByName]="commandsByName$ | async"
-    [value]="text$ | async"
-    (cursorLineChanged)="onCursorLineChanged($event)"
-    (valueChanged)="onValueChanged($event)"
-  ></seq-editor>
+    [commandsByName]="commandsByName$ | async">
+  </seq-editor>
 </main>
 
 <aside>
   <seq-command-loader
     [selectedId]="selectedDictionaryId$ | async"
     [dictionaries]="dictionaries$ | async"
-    (selectedDictionaryChanged)="onSelectedDictionary($event)">
+    (selectDictionary)="onSelectDictionary($event)">
   </seq-command-loader>
   <seq-command-list
     [commands]="commands$ | async"
-    (selectedCommandChanged)="onSelectedCommand($event)">
+    (selectCommand)="onSelectCommand($event)">
   </seq-command-list>
 </aside>

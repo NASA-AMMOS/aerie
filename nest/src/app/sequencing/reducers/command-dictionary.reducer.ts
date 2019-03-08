@@ -7,17 +7,17 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Command, CommandDictionary } from '../../../../../schemas';
+import { keyBy } from 'lodash';
+import { CommandDictionary, MpsCommand } from '../../../../../schemas';
 import { StringTMap } from '../../shared/models';
 import {
-  CommandDictionaryAction,
+  CommandDictionaryActions,
   CommandDictionaryActionTypes,
   FetchCommandDictionarySuccess,
 } from '../actions/command-dictionary.actions';
-import { keyCommandsByName } from '../util';
 
 export interface CommandDictionaryState {
-  commandsByName: StringTMap<Command> | null;
+  commandsByName: StringTMap<MpsCommand> | null;
   dictionaries: CommandDictionary[];
   selectedDictionaryId: string | null;
 }
@@ -34,12 +34,12 @@ export const initialState: CommandDictionaryState = {
  */
 export function reducer(
   state: CommandDictionaryState = initialState,
-  action: CommandDictionaryAction,
+  action: CommandDictionaryActions,
 ): CommandDictionaryState {
   switch (action.type) {
     case CommandDictionaryActionTypes.FetchCommandDictionarySuccess:
       return fetchCommandDictionarySuccess(state, action);
-    case CommandDictionaryActionTypes.FetchCommandDictionaryListSuccess:
+    case CommandDictionaryActionTypes.FetchCommandDictionariesSuccess:
       return { ...state, dictionaries: action.data };
     case CommandDictionaryActionTypes.SelectCommandDictionary:
       return { ...state, selectedDictionaryId: action.selectedId };
@@ -57,6 +57,6 @@ function fetchCommandDictionarySuccess(
 ) {
   return {
     ...state,
-    commandsByName: keyCommandsByName(action.data),
+    commandsByName: keyBy(action.data, 'name'),
   };
 }

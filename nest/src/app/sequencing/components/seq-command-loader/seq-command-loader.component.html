@@ -2,7 +2,7 @@
   <mat-select
     placeholder="Command dictionary"
     [value]="selectedId"
-    (selectionChange)="onSelectionChanged($event.value)">
+    (selectionChange)="onSelectionDictionary($event.value)">
     <mat-option *ngFor="let command of dictionaries" [value]="command.id">
       {{command.name}}
     </mat-option>
