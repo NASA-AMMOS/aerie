@@ -827,9 +827,9 @@ export class RavenCompositeBandComponent
     );
     if (activityBands && activityBands.length > 0) {
       this.updateAddTo.emit({
+        addTo: true,
         bandId: this.id,
         subBandId: activityBands[0].id,
-        addTo: true,
       });
     }
   }
@@ -841,9 +841,9 @@ export class RavenCompositeBandComponent
     );
     if (activityBands && activityBands.length > 0) {
       this.updateAddTo.emit({
+        addTo: false,
         bandId: this.id,
         subBandId: activityBands[0].id,
-        addTo: false,
       });
     }
   }
