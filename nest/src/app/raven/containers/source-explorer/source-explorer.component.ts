@@ -14,6 +14,7 @@ import { map, switchMap, takeUntil } from 'rxjs/operators';
 import { WebSocketSubject } from 'rxjs/webSocket';
 import {
   FilterState,
+  MpsServerWebSocketMessage,
   RavenCustomFilterSource,
   RavenCustomGraphableSource,
   RavenFilterSource,
@@ -110,26 +111,28 @@ export class SourceExplorerComponent implements OnDestroy {
         ),
         takeUntil(this.ngUnsubscribe),
       )
-      .subscribe((data: any) => {
-        if (data.detail === 'data source changed') {
-          const match = data.subject.match(
-            new RegExp('(.*/fs-mongodb)(/.*)/(.*)'),
-          );
-          const sourceId = `${match[2]}`;
-          const sourceUrl = `${match[1]}${match[2]}`;
-          this.store.dispatch(
-            new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl),
-          );
-        } else if (data.aspect === 'importJobStatus') {
-          const match = data.subject.match(new RegExp('(.*)/(.*)'));
-          const parentId = `${match[1]}`;
-          if (this.tree[parentId]) {
-            this.store.dispatch(
-              new sourceExplorerActions.FetchNewSources(
-                parentId,
-                this.tree[parentId].url,
-              ),
-            );
+      .subscribe(({ aspect, subject }: MpsServerWebSocketMessage) => {
+        const ALLOWED_ASPECTS = [
+          'fileChange',
+          'fileCreation',
+          'fileDeletion',
+          'folderCreation',
+          'folderDeletion',
+          'importJobStatus',
+          'metadataChange',
+        ];
+        if (ALLOWED_ASPECTS.includes(aspect)) {
+          const match = subject.match(new RegExp('(.*)/(.*)'));
+          if (match) {
+            const parentId = match[1];
+            if (this.tree[parentId]) {
+              this.store.dispatch(
+                new sourceExplorerActions.FetchNewSources(
+                  parentId,
+                  this.tree[parentId].url,
+                ),
+              );
+            }
           }
         }
       });

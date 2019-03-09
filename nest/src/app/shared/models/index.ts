@@ -31,6 +31,7 @@ export * from './mps-server-source-graphable';
 export * from './mps-server-source';
 export * from './mps-server-state-metadata';
 export * from './mps-server-state-point';
+export * from './mps-server-web-socket-message';
 export * from './nest-module';
 export * from './raven-activity-band';
 export * from './raven-activity-point-expansion';
