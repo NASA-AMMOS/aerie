@@ -38,3 +38,4 @@ merlin-cli.iml
 out-tol.xml
 out/
 target/
+.settings
