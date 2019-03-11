@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { MpsCommand } from '../../../../../../schemas/types/ts';
+import { MpsCommand } from '../../../../../../schemas';
 import { StringTMap } from '../../../shared/models';
 
 /**

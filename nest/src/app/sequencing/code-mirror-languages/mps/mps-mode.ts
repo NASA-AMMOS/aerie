@@ -8,7 +8,7 @@
  */
 
 import * as CodeMirror from 'codemirror';
-import { MpsCommand } from '../../../../../../schemas/types/ts';
+import { MpsCommand } from '../../../../../../schemas';
 import { StringTMap } from '../../../shared/models';
 
 /**
