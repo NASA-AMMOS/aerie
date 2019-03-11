@@ -1,6 +1,6 @@
 package gov.nasa.jpl.schedule;
 
-import gov.nasa.jpl.schedule.models.Schedule;
+import gov.nasa.jpl.aerie.schemas.Schedule;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

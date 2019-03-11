@@ -41,12 +41,11 @@ public class NewActivityCommand implements Command, UndoableCommand {
 
 
         PlanDetail planDetail = new PlanDetail();
-        planDetail.set_id(this.planId);
+        planDetail.setId(this.planId);
         planDetail.setActivityInstances(activityInstances.getActivityInstances());
 
         String json = new Gson().toJson(planDetail, PlanDetail.class);
         Response response = target.request().put(Entity.entity(json, "application/json"));
-        String value = response.readEntity(String.class);
         response.close();
 
         // First, get the plan being used (or container of activities)

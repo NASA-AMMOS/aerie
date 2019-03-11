@@ -6,6 +6,6 @@ import gov.nasa.jpl.plan.models.PlanDetail;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface PlansRepository extends MongoRepository<Plan, String> {
-    Plan findPlanBy_id(String id);
-    PlanDetail findPlanDetailBy_id(String id);
+    Plan findPlanByid(String id);
+    PlanDetail findPlanDetailByid(String id);
 }

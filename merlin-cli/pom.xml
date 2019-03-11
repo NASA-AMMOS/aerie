@@ -150,5 +150,12 @@
             <artifactId>gson</artifactId>
             <version>2.8.2</version>
         </dependency>
+        <dependency>
+            <groupId>gov.nasa.jpl.aerie</groupId>
+            <artifactId>schemas</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/../schemas/target/schemas-1.0-SNAPSHOT.jar</systemPath>
+        </dependency>
     </dependencies>
 </project>

@@ -1,10 +1,9 @@
 package gov.nasa.jpl.schedule;
 
-import gov.nasa.jpl.schedule.models.Plan;
-import gov.nasa.jpl.schedule.models.Schedule;
+import gov.nasa.jpl.aerie.schemas.Plan;
+import gov.nasa.jpl.aerie.schemas.Schedule;
 
 public class ScheduleContext {
-
     private Strategy strategy;
     private String planId;
 
@@ -23,5 +22,4 @@ public class ScheduleContext {
         // call the Plan service (Camel route)
         return null;
     }
-
 }

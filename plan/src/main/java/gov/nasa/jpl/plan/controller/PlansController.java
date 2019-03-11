@@ -34,7 +34,7 @@ public class PlansController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Object> getPlanDetail(@PathVariable("id") String id) {
-        return ResponseEntity.ok(repository.findPlanDetailBy_id(id));
+        return ResponseEntity.ok(repository.findPlanDetailByid(id));
     }
 
     @PutMapping("/{id}")
@@ -62,7 +62,7 @@ public class PlansController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deletePlan(@PathVariable String id) {
-        repository.delete(repository.findPlanBy_id(id));
+        repository.delete(repository.findPlanByid(id));
         return ResponseEntity.noContent().build();
     }
 
@@ -114,7 +114,7 @@ public class PlansController {
         UUID uuid = UUID.randomUUID();
         activityInstance.setActivityId(uuid.toString());
 
-        PlanDetail planDetail = repository.findPlanDetailBy_id(planId);
+        PlanDetail planDetail = repository.findPlanDetailByid(planId);
         planDetail.addActivityInstance(activityInstance);
         planDetail.updateActivityInstance(uuid, requestBodyActivityInstance);
         repository.save(planDetail);
@@ -124,7 +124,7 @@ public class PlansController {
 
     @GetMapping("/{planId}/activity_instances")
     public ResponseEntity<Object> getActivityInstances(@PathVariable("planId") String planId) {
-        PlanDetail planDetail = repository.findPlanDetailBy_id(planId);
+        PlanDetail planDetail = repository.findPlanDetailByid(planId);
         if (planDetail != null) {
             return ResponseEntity.ok(planDetail.getActivityInstances());
         } else {
@@ -135,7 +135,7 @@ public class PlansController {
     @GetMapping("/{planId}/activity_instances/{id}")
     public ResponseEntity<Object> getActivityInstance(@PathVariable("planId") String planId,
             @PathVariable("id") UUID id) {
-        PlanDetail planDetail = repository.findPlanDetailBy_id(planId);
+        PlanDetail planDetail = repository.findPlanDetailByid(planId);
         if (planDetail != null) {
             for (ActivityInstance ai : planDetail.getActivityInstances()) {
                 if (ai.getActivityId().equals(id.toString())) {
@@ -162,7 +162,7 @@ public class PlansController {
             @PathVariable("id") UUID id,
             @Valid @RequestBody ActivityInstance requestBodyActivityInstance) {
 
-        PlanDetail planDetail = repository.findPlanDetailBy_id(planId);
+        PlanDetail planDetail = repository.findPlanDetailByid(planId);
         if (planDetail != null) {
             ActivityInstance activityInstance = planDetail.getActivityInstance(id);
             if (activityInstance != null) {
@@ -181,7 +181,7 @@ public class PlansController {
             "planId") String planId,
             @PathVariable("id") UUID id) {
 
-        PlanDetail planDetail = repository.findPlanDetailBy_id(planId);
+        PlanDetail planDetail = repository.findPlanDetailByid(planId);
         if (planDetail != null) {
             try {
                 planDetail.removeActivityInstance(id);

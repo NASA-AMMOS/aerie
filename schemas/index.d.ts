@@ -73,3 +73,7 @@ export interface Plan {
     name?:           string;
     startTimestamp?: string;
 }
+
+export interface Schedule {
+    id?: string;
+}
