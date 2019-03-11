@@ -482,7 +482,11 @@ describe('PlanEffects', () => {
       store.dispatch(new FetchPlansSuccess(plans));
       store.dispatch(new FetchAdaptationsSuccess(adaptations));
       store.dispatch(
-        new FetchActivitiesSuccess(plan.id || '', selectedActivityId, activities),
+        new FetchActivitiesSuccess(
+          plan.id || '',
+          selectedActivityId,
+          activities,
+        ),
       );
       activity = activitiesMap[selectedActivityId];
 
@@ -520,7 +524,9 @@ describe('PlanEffects', () => {
 
     it('should route to the selected plan if a selected plan exists', () => {
       store.dispatch(new FetchPlansSuccess(plans));
-      store.dispatch(new FetchActivitiesSuccess(plan.id || '', null, activities));
+      store.dispatch(
+        new FetchActivitiesSuccess(plan.id || '', null, activities),
+      );
 
       const action = new UpdateActivitySuccess('foo', {});
       actions$ = hot('-a', { a: action });
