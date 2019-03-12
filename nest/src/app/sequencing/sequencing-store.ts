@@ -10,16 +10,13 @@
 import { ActionReducerMap } from '@ngrx/store';
 import * as fromRoot from '../app-store';
 import * as fromCommandDictionary from './reducers/command-dictionary.reducer';
-import * as fromEditor from './reducers/editor.reducer';
 
 export interface State {
   commandDictionary: fromCommandDictionary.CommandDictionaryState;
-  editor: fromEditor.EditorState;
 }
 
 export const reducers: ActionReducerMap<State> = {
   commandDictionary: fromCommandDictionary.reducer,
-  editor: fromEditor.reducer,
 };
 
 export interface SequencingAppState extends fromRoot.AppState {

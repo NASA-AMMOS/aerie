@@ -6,12 +6,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Command
+ * MpsCommand
  * <p>
  * 
  * 
  */
-public class Command {
+public class MpsCommand {
 
     /**
      * 
@@ -24,8 +24,25 @@ public class Command {
      * (Required)
      * 
      */
-    private List<CommandParameter> parameters = new ArrayList<CommandParameter>();
-    private String template;
+    private List<MpsCommandParameter> parameters = new ArrayList<MpsCommandParameter>();
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public MpsCommand() {
+    }
+
+    /**
+     * 
+     * @param name
+     * @param parameters
+     */
+    public MpsCommand(String name, List<MpsCommandParameter> parameters) {
+        super();
+        this.name = name;
+        this.parameters = parameters;
+    }
 
     /**
      * 
@@ -50,7 +67,7 @@ public class Command {
      * (Required)
      * 
      */
-    public List<CommandParameter> getParameters() {
+    public List<MpsCommandParameter> getParameters() {
         return parameters;
     }
 
@@ -59,26 +76,18 @@ public class Command {
      * (Required)
      * 
      */
-    public void setParameters(List<CommandParameter> parameters) {
+    public void setParameters(List<MpsCommandParameter> parameters) {
         this.parameters = parameters;
-    }
-
-    public String getTemplate() {
-        return template;
-    }
-
-    public void setTemplate(String template) {
-        this.template = template;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("name", name).append("parameters", parameters).append("template", template).toString();
+        return new ToStringBuilder(this).append("name", name).append("parameters", parameters).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(template).append(parameters).toHashCode();
+        return new HashCodeBuilder().append(name).append(parameters).toHashCode();
     }
 
     @Override
@@ -86,11 +95,11 @@ public class Command {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Command) == false) {
+        if ((other instanceof MpsCommand) == false) {
             return false;
         }
-        Command rhs = ((Command) other);
-        return new EqualsBuilder().append(name, rhs.name).append(template, rhs.template).append(parameters, rhs.parameters).isEquals();
+        MpsCommand rhs = ((MpsCommand) other);
+        return new EqualsBuilder().append(name, rhs.name).append(parameters, rhs.parameters).isEquals();
     }
 
 }

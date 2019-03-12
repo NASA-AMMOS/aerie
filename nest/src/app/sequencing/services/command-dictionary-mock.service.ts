@@ -9,14 +9,14 @@
 
 import { Injectable } from '@angular/core';
 import { Observable, Observer } from 'rxjs';
-import { Command, CommandDictionary } from '../../../../../schemas/types/ts';
-import { commands } from '../mocks/commands';
+import { CommandDictionary } from '../../../../../schemas/types/ts';
+import { mpsCommands } from '../mocks/mps-commands';
+import { Command } from '../models';
 
 export const mockCommandDictionaryList: CommandDictionary[] = [
   {
     id: 'TEST_1',
     name: 'Test 1',
-    selected: false,
     version: '1.0.0',
   },
 ];
@@ -34,7 +34,7 @@ export class CommandDictionaryMockService {
 
   getCommandDictionary(id: string): Observable<Command[]> {
     return Observable.create((o: Observer<Command[]>) => {
-      o.next(commands);
+      o.next(mpsCommands);
       o.complete();
     });
   }

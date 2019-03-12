@@ -32,9 +32,9 @@ export const FilterState = {
     const filteredSources = new Set(matches);
 
     const visibleAncestors = new Set();
-    for (let sourceId of matches) {
+    for (const sourceId of matches) {
       visibleAncestors.add(sourceId);
-      for (let ancestorId of getParentSourceIds(sourceId)) {
+      for (const ancestorId of getParentSourceIds(sourceId)) {
         visibleAncestors.add(ancestorId);
       }
     }

@@ -9,21 +9,23 @@
 
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { commands } from '../../../shared/mocks';
-import { keyCommandsByName } from '../../util';
+import { keyBy } from 'lodash';
+import { mpsCommands } from '../../mocks';
 import { SeqEditorComponent } from './seq-editor.component';
 import { SeqEditorModule } from './seq-editor.module';
 
 @Component({
   selector: 'seq-editor-test',
   template: `
-    <seq-editor [commands]="commands" [commandsByName]="commandsByName">
+    <seq-editor
+      [commands]="commands"
+      [commandsByName]="commandsByName">
     </seq-editor>
   `,
 })
 class SeqEditorTestComponent {
-  commands = commands;
-  commandsByName = keyCommandsByName(commands);
+  commands = mpsCommands;
+  commandsByName = keyBy(mpsCommands, 'name');
 
   @ViewChild(SeqEditorComponent)
   childComponent: SeqEditorComponent;
@@ -50,14 +52,5 @@ describe('SeqEditorComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
-  });
-
-  it('should properly initialize a Codemirror editor instance', () => {
-    expect(component.childComponent.editor).not.toBeNull();
-  });
-
-  it(`should properly initialize the custom 'command' Codemirror mode`, () => {
-    const editor = component.childComponent.editor as CodeMirror.Editor;
-    expect(editor.getOption('mode')).toEqual('command');
   });
 });

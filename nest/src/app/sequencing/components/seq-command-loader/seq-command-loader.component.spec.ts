@@ -15,7 +15,7 @@ import {
   TestBed,
 } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { mockCommandDictionaryList } from '../../../shared/services/command-dictionary-mock.service';
+import { mockCommandDictionaryList } from '../../services/command-dictionary-mock.service';
 import { SeqCommandLoaderComponent } from './seq-command-loader.component';
 import { SeqCommandLoaderModule } from './seq-command-loader.module';
 
@@ -25,8 +25,7 @@ import { SeqCommandLoaderModule } from './seq-command-loader.module';
     <seq-command-loader
       [dictionaries]="dictionaries"
       [selectedId]="selectedId"
-      (onSelected)="(selectedDictionaryChanged)"
-    >
+      (onSelected)="(selectedDictionaryChanged)">
     </seq-command-loader>
   `,
 })

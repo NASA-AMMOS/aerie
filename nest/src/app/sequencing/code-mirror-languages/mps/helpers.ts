@@ -7,28 +7,26 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export type StringPredicate = MatchesPredicate;
-export interface MatchesPredicate {
-  matches: string;
+import { MpsCommand } from '../../../../../../schemas/types/ts';
+import { StringTMap } from '../../../shared/models';
+
+/**
+ * Returns a template for an mps command used in autocomplete.
+ */
+export function getCommandTemplate(
+  commandName: string,
+  commandsByName: StringTMap<MpsCommand>,
+): string {
+  const command = commandsByName[commandName];
+  let template = '';
+
+  if (command) {
+    template = `${command.name}`;
+    for (let i = 0, l = command.parameters.length; i < l; ++i) {
+      const parameter = command.parameters[i];
+      template += ` ${parameter.defaultValue}`;
+    }
+  }
+
+  return template;
 }
-
-/* tslint:disable-next-line no-empty-interface */
-export interface TrueSourceFilter {}
-
-export interface NameSourceFilter {
-  name: StringPredicate;
-}
-
-export type SourceFilter = TrueSourceFilter | NameSourceFilter;
-
-export const SourceFilter = {
-  // A filter is the empty (vacuously true) filter if it's the empty object {}.
-  // `null` is a synonym for this filter.
-  isEmpty(filter: SourceFilter): boolean {
-    return Object.keys(filter).length === 0;
-  },
-
-  truth(): TrueSourceFilter {
-    return {};
-  },
-};

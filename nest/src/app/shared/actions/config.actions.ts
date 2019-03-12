@@ -16,7 +16,6 @@ export enum NavigationDrawerStates {
   Collapsed = 'collapsed',
 }
 
-// Action Types.
 export enum ConfigActionTypes {
   FetchProjectConfig = '[config] fetch_project_config',
   FetchProjectConfigSuccess = '[config] fetch_project_config_success',
@@ -26,7 +25,6 @@ export enum ConfigActionTypes {
   UpdateRavenSettings = '[config] update_raven_settings',
 }
 
-// Actions.
 export class FetchProjectConfig implements Action {
   readonly type = ConfigActionTypes.FetchProjectConfig;
 
@@ -59,7 +57,6 @@ export class UpdateRavenSettings implements Action {
   constructor(public update: StringTMap<BaseType>) {}
 }
 
-// Union type of all actions.
 export type ConfigAction =
   | FetchProjectConfig
   | FetchProjectConfigSuccess

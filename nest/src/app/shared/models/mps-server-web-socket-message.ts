@@ -7,4 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './command-lint';
+export interface MpsServerWebSocketMessage {
+  aspect: string;
+  subject: string;
+  status: string;
+  detail: string | null;
+}

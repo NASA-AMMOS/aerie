@@ -28,13 +28,27 @@ public class CommandDictionary {
      * (Required)
      * 
      */
-    private Boolean selected;
+    private String version;
+
     /**
-     * 
-     * (Required)
+     * No args constructor for use in serialization
      * 
      */
-    private String version;
+    public CommandDictionary() {
+    }
+
+    /**
+     * 
+     * @param name
+     * @param id
+     * @param version
+     */
+    public CommandDictionary(String id, String name, String version) {
+        super();
+        this.id = id;
+        this.name = name;
+        this.version = version;
+    }
 
     /**
      * 
@@ -77,24 +91,6 @@ public class CommandDictionary {
      * (Required)
      * 
      */
-    public Boolean getSelected() {
-        return selected;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    public void setSelected(Boolean selected) {
-        this.selected = selected;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
     public String getVersion() {
         return version;
     }
@@ -110,12 +106,12 @@ public class CommandDictionary {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("name", name).append("selected", selected).append("version", version).toString();
+        return new ToStringBuilder(this).append("id", id).append("name", name).append("version", version).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(id).append(version).append(selected).toHashCode();
+        return new HashCodeBuilder().append(name).append(id).append(version).toHashCode();
     }
 
     @Override
@@ -127,7 +123,7 @@ public class CommandDictionary {
             return false;
         }
         CommandDictionary rhs = ((CommandDictionary) other);
-        return new EqualsBuilder().append(name, rhs.name).append(id, rhs.id).append(version, rhs.version).append(selected, rhs.selected).isEquals();
+        return new EqualsBuilder().append(name, rhs.name).append(id, rhs.id).append(version, rhs.version).isEquals();
     }
 
 }

@@ -8,8 +8,18 @@
  */
 
 import { keyBy, omit, without } from 'lodash';
+import {
+  BaseType,
+  FilterState,
+  RavenCustomFilter,
+  RavenGraphableFilterSource,
+  RavenPin,
+  RavenSource,
+  RavenSourceAction,
+  RavenState,
+  StringTMap,
+} from '../../shared/models';
 import { getAllChildIds } from '../../shared/util';
-
 import {
   AddCustomFilter,
   AddFilter,
@@ -33,18 +43,6 @@ import {
   SubBandIdAdd,
   SubBandIdRemove,
 } from '../actions/source-explorer.actions';
-
-import {
-  BaseType,
-  RavenCustomFilter,
-  RavenGraphableFilterSource,
-  RavenPin,
-  RavenSource,
-  RavenSourceAction,
-  RavenState,
-  StringTMap,
-  FilterState,
-} from '../../shared/models';
 
 export interface SourceExplorerState {
   currentState: RavenState | null;
@@ -70,8 +68,8 @@ export const initialState: SourceExplorerState = {
   currentStateId: '',
   customFiltersBySourceId: {},
   fetchPending: false,
-  filtersByTarget: {},
   filterState: FilterState.empty(),
+  filtersByTarget: {},
   initialSourcesLoaded: false,
   layout: '',
   layoutPath: '',

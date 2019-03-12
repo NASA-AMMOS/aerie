@@ -7,11 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Command } from '../../../../../schemas/types/ts';
+import { MpsCommand } from '../../../../../schemas/types/ts';
 
 /* tslint:disable */
 
-export const commands: Command[] = [
+export const mpsCommands: MpsCommand[] = [
   {
     name: 'HGA_HIST_PRM_DMP',
     parameters: [

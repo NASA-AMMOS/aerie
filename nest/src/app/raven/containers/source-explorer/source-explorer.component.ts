@@ -8,15 +8,13 @@
  */
 
 import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
-
 import { select, Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { map, switchMap, takeUntil } from 'rxjs/operators';
 import { WebSocketSubject } from 'rxjs/webSocket';
-import { SourceExplorerState } from '../../reducers/source-explorer.reducer';
-
 import {
   FilterState,
+  MpsServerWebSocketMessage,
   RavenCustomFilterSource,
   RavenCustomGraphableSource,
   RavenFilterSource,
@@ -27,12 +25,15 @@ import {
   SourceFilter,
   StringTMap,
 } from '../../../shared/models';
-
 import { getUrls } from '../../../shared/selectors';
-
+import * as dialogActions from '../../actions/dialog.actions';
+import * as epochsActions from '../../actions/epochs.actions';
+import * as layoutActions from '../../actions/layout.actions';
+import * as sourceExplorerActions from '../../actions/source-explorer.actions';
+import { SourceExplorerState } from '../../reducers/source-explorer.reducer';
 import {
-  getFilterState,
   getFiltersByTarget,
+  getFilterState,
   getPins,
   getSelectedSourceId,
   getShowFileMetadataDrawer,
@@ -40,11 +41,6 @@ import {
   getTreeBySourceId,
   treeSortedChildIds,
 } from '../../selectors';
-
-import * as dialogActions from '../../actions/dialog.actions';
-import * as epochsActions from '../../actions/epochs.actions';
-import * as layoutActions from '../../actions/layout.actions';
-import * as sourceExplorerActions from '../../actions/source-explorer.actions';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -115,26 +111,28 @@ export class SourceExplorerComponent implements OnDestroy {
         ),
         takeUntil(this.ngUnsubscribe),
       )
-      .subscribe((data: any) => {
-        if (data.detail === 'data source changed') {
-          const match = data.subject.match(
-            new RegExp('(.*/fs-mongodb)(/.*)/(.*)'),
-          );
-          const sourceId = `${match[2]}`;
-          const sourceUrl = `${match[1]}${match[2]}`;
-          this.store.dispatch(
-            new sourceExplorerActions.FetchNewSources(sourceId, sourceUrl),
-          );
-        } else if (data.aspect === 'importJobStatus') {
-          const match = data.subject.match(new RegExp('(.*)/(.*)'));
-          const parentId = `${match[1]}`;
-          if (this.tree[parentId]) {
-            this.store.dispatch(
-              new sourceExplorerActions.FetchNewSources(
-                parentId,
-                this.tree[parentId].url,
-              ),
-            );
+      .subscribe(({ aspect, subject }: MpsServerWebSocketMessage) => {
+        const ALLOWED_ASPECTS = [
+          'fileChange',
+          'fileCreation',
+          'fileDeletion',
+          'folderCreation',
+          'folderDeletion',
+          'importJobStatus',
+          'metadataChange',
+        ];
+        if (ALLOWED_ASPECTS.includes(aspect)) {
+          const match = subject.match(new RegExp('(.*)/(.*)'));
+          if (match) {
+            const parentId = match[1];
+            if (this.tree[parentId]) {
+              this.store.dispatch(
+                new sourceExplorerActions.FetchNewSources(
+                  parentId,
+                  this.tree[parentId].url,
+                ),
+              );
+            }
           }
         }
       });
