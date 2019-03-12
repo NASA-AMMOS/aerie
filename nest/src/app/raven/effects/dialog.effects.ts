@@ -408,6 +408,9 @@ export class DialogEffects {
     }),
   );
 
+  /**
+   * Effect for OpenSettingsBandDialog.
+   */
   @Effect()
   openSettingsBandDialog$: Observable<Action> = this.actions$.pipe(
     ofType<OpenSettingsBandDialog>(DialogActionTypes.OpenSettingsBandDialog),
@@ -428,10 +431,7 @@ export class DialogEffects {
 
       return zip(of(action), settingsBandDialog.afterClosed());
     }),
-    map(([action, result]) => ({ action, result })),
-    exhaustMap(({ action, result }) => {
-      return [];
-    }),
+    exhaustMap(() => []),
   );
 
   /**
@@ -549,6 +549,9 @@ export class DialogEffects {
     }),
   );
 
+  /**
+   * Helper. Remove all subBands in band.
+   */
   removeAllSubBandsInBand(band: RavenCompositeBand) {
     const actions = [];
     for (let i = 0, l = band.subBands.length; i < l; ++i) {

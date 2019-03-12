@@ -824,16 +824,17 @@ export class SourceExplorerEffects {
       this.mpsServerService
         .saveState(action.source.url, action.name, getState(action.name, state))
         .pipe(
-          map(
-            () =>
+          concatMap(() =>
+            of(
               new timelineActions.UpdateTimeline({
                 currentState: getRavenState(action.name, state),
                 currentStateChanged: false,
                 currentStateId: `${action.source.id}/${action.name}`,
               }),
-            new sourceExplorerActions.UpdateSourceExplorer({
-              fetchPending: false,
-            }),
+              new sourceExplorerActions.UpdateSourceExplorer({
+                fetchPending: false,
+              }),
+            ),
           ),
         ),
     ),
@@ -1041,17 +1042,18 @@ export class SourceExplorerEffects {
           ),
         )
         .pipe(
-          map(
-            () =>
+          concatMap(() =>
+            of(
               new timelineActions.UpdateTimeline({
                 currentState: getRavenState(
                   getSourceNameFromId(state.raven.timeline.currentStateId),
                   state,
                 ),
               }),
-            new sourceExplorerActions.UpdateSourceExplorer({
-              fetchPending: false,
-            }),
+              new sourceExplorerActions.UpdateSourceExplorer({
+                fetchPending: false,
+              }),
+            ),
           ),
         ),
     ),

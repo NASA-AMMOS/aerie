@@ -275,7 +275,7 @@ export function addPointsToSubBand(
   return {
     ...state,
     bands,
-    currentStateChanged: state.currentState ? true : false,
+    currentStateChanged: state.currentState !== null,
     ...updateTimeRanges(bands, state.viewTimeRange),
   };
 }
@@ -350,7 +350,7 @@ export function expandChildrenOrDescendants(
   return {
     ...state,
     bands,
-    currentStateChanged: state.currentState ? true : false,
+    currentStateChanged: state.currentState !== null,
     expansionByActivityId: {
       ...state.expansionByActivityId,
       [action.activityPoint.activityId]: action.expandType,
@@ -359,6 +359,9 @@ export function expandChildrenOrDescendants(
   };
 }
 
+/**
+ * Reduction Helper. Called when reducing the 'FilterActivityInSubBand' action.
+ */
 export function filterActivityInSubBand(
   state: TimelineState,
   action: FilterActivityInSubBand,
@@ -411,7 +414,7 @@ export function panLeftViewTimeRange(state: TimelineState): TimelineState {
 
   return {
     ...state,
-    currentStateChanged: state.currentState ? true : false,
+    currentStateChanged: state.currentState !== null,
     viewTimeRange: {
       end: newStart,
       start: newStart - currentViewWindow,
@@ -439,7 +442,7 @@ export function panRightViewTimeRange(state: TimelineState): TimelineState {
 
   return {
     ...state,
-    currentStateChanged: state.currentState ? true : false,
+    currentStateChanged: state.currentState !== null,
     viewTimeRange: {
       end: newStart + currentViewWindow,
       start: newStart,
@@ -483,7 +486,7 @@ export function removeAllPointsInSubBandWithParentSource(
   return {
     ...state,
     bands,
-    currentStateChanged: state.currentState ? true : false,
+    currentStateChanged: state.currentState !== null,
   };
 }
 
@@ -536,7 +539,7 @@ export function removeBandsOrPointsForSource(
   return {
     ...state,
     bands,
-    currentStateChanged: state.currentState ? true : false,
+    currentStateChanged: state.currentState !== null,
     ...updateSelectedBandIds(
       bands,
       state.selectedBandId,
@@ -610,7 +613,7 @@ export function removeChildrenOrDescendants(
   return {
     ...state,
     bands,
-    currentStateChanged: state.currentState ? true : false,
+    currentStateChanged: state.currentState !== null,
     expansionByActivityId: omit(
       state.expansionByActivityId,
       action.activityPoint.activityId,
@@ -644,7 +647,7 @@ export function removeSourceIdFromSubBands(
   return {
     ...state,
     bands,
-    currentStateChanged: state.currentState ? true : false,
+    currentStateChanged: state.currentState !== null,
   };
 }
 
@@ -675,7 +678,7 @@ export function removeSubBand(
   return {
     ...state,
     bands,
-    currentStateChanged: state.currentState ? true : false,
+    currentStateChanged: state.currentState !== null,
     ...updateSelectedBandIds(
       bands,
       state.selectedBandId,
@@ -746,7 +749,7 @@ export function setCompositeYLabelDefault(
         return band;
       }
     }),
-    currentStateChanged: state.currentState ? true : false,
+    currentStateChanged: state.currentState !== null,
   };
 }
 
@@ -782,7 +785,7 @@ export function setPointsForSubBand(
   return {
     ...state,
     bands,
-    currentStateChanged: state.currentState ? true : false,
+    currentStateChanged: state.currentState !== null,
     ...updateTimeRanges(bands, state.viewTimeRange),
   };
 }
@@ -838,55 +841,9 @@ export function sourceIdAdd(
   return {
     ...state,
     bands,
-    currentStateChanged: state.currentState ? true : false,
+    currentStateChanged: state.currentState !== null,
   };
 }
-
-// export function updateAddTo(
-//   state: TimelineState,
-//   action: UpdateAddTo,
-// ): TimelineState {
-//   const bands = state.bands.map((band: RavenCompositeBand) => {
-//     if (action.bandId === band.id) {
-//       return {
-//         ...band,
-//         subBands: band.subBands.map(subBand => {
-//           if (action.subBandId === subBand.id) {
-//             return {
-//               ...subBand,
-//               addTo: action.addTo,
-//             };
-//           }
-
-//           return subBand;
-//         }),
-//       };
-//     }
-
-//     return band;
-//   });
-
-//   return {
-//     ...state,
-//     bands,
-//   };
-// }
-
-// /**
-//  * Reduction Helper. Called when reducing the 'UpdateOverlay' action.
-//  */
-// export function updateOverlay(state: TimelineState, action: UpdateOverlay) {
-//   return {
-//     ...state,
-//     bands: state.bands.map(band => {
-//       if (band.id === action.bandId) {
-//         return { ...band, overlay: action.overlay };
-//       } else {
-//         return band;
-//       }
-//     }),
-//   };
-// }
 
 /**
  * Reduction Helper. Called when reducing the 'ToggleGuide' action.
@@ -900,7 +857,7 @@ export function toggleGuide(state: TimelineState, action: ToggleGuide) {
   console.log('existingGuide: ' + existingGuide);
   return {
     ...state,
-    currentStateChanged: state.currentState ? true : false,
+    currentStateChanged: state.currentState !== null,
     guides:
       existingGuide.length > 0
         ? state.guides.filter(guide => guide !== existingGuide[0])
@@ -927,7 +884,7 @@ export function updateBand(
 
       return band;
     }),
-    currentStateChanged: state.currentState ? true : false,
+    currentStateChanged: state.currentState !== null,
   };
 }
 
@@ -958,6 +915,6 @@ export function updateSubBand(
 
       return band;
     }),
-    currentStateChanged: state.currentState ? true : false,
+    currentStateChanged: state.currentState !== null,
   };
 }

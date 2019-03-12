@@ -63,8 +63,7 @@ mat-progress-bar {
   height: 14px;
   position: relative;
   display: inline-flex;
-  flex: 0 0 3px;
+  flex: 0 0 auto;
   margin-top: -3px;
-  min-width: 0;
   z-index: 1;
 }

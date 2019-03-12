@@ -45,19 +45,18 @@
               [currentStateId]="currentStateId$ | async"
               [guides]="guides$ | async"
               [mode]="mode$ | async"
+              (applyCurrentLayout)="onApplyCurrentLayout()"
+              (applyCurrentState)="onApplyCurrentState()"
               (panLeft)="onPanLeft()"
               (panRight)="onPanRight()"
               (panTo)="onPanTo($event)"
-              (resetView)="onResetView()"
-              (zoomIn)="onZoomIn()"
-              (zoomOut)="onZoomOut()"
-              (shareableLink)="onShareableLink()"
               (removeAllBands)="onRemoveAllBands()"
               (removeAllGuides)="onRemoveAllGuides()"
-              (applyCurrentLayout)="onApplyCurrentLayout()"
-              (applyCurrentState)="onApplyCurrentState()"
+              (resetView)="onResetView()"
+              (shareableLink)="onShareableLink()"
               (updateCurrentState)="onUpdateCurrentState()"
-            >
+              (zoomIn)="onZoomIn()"
+              (zoomOut)="onZoomOut()">
             </raven-manage-graph>
             <div class="row-container">
               <div class="emptyDiv"></div>
