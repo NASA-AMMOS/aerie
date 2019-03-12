@@ -1,0 +1,11 @@
+gov/nasa/jpl/aerie/schemas/Adaptation.class
+gov/nasa/jpl/aerie/schemas/MpsCommand.class
+gov/nasa/jpl/aerie/schemas/Plan.class
+gov/nasa/jpl/aerie/schemas/ActivityType.class
+gov/nasa/jpl/aerie/schemas/MpsCommandParameter.class
+gov/nasa/jpl/aerie/schemas/ActivityInstance.class
+gov/nasa/jpl/aerie/schemas/ActivityInstanceParameter.class
+gov/nasa/jpl/aerie/schemas/ActivityTypeParameter.class
+gov/nasa/jpl/aerie/schemas/ActivityInstanceConstraint.class
+gov/nasa/jpl/aerie/schemas/Schedule.class
+gov/nasa/jpl/aerie/schemas/CommandDictionary.class
