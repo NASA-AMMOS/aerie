@@ -520,6 +520,9 @@ export class RavenCompositeBandComponent
     this.ctlTooltip.hide();
   }
 
+  /**
+   *CTL Event. Called when mouse enters a band.
+   */
   onMouseEnter() {
     this.hoverBand.emit(this.id);
   }
@@ -598,6 +601,40 @@ export class RavenCompositeBandComponent
     // The band should be destroyed when all sub-bands are removed.
     if (this.ctlCompositeBand.bands.length) {
       this.redraw();
+    }
+  }
+
+  /**
+   * Event. Called when toggled from overlay mode and go to addTo mode if activity subBand exists. Otherwise, go to 'none' mode.
+   */
+  onSwitchToAddToOrNone() {
+    this.updateOverlay.emit({ bandId: this.id, overlay: false });
+    const activityBands = this.subBands.filter(
+      band => band.type === 'activity',
+    );
+    if (activityBands && activityBands.length > 0) {
+      this.updateAddTo.emit({
+        addTo: true,
+        bandId: this.id,
+        subBandId: activityBands[0].id,
+      });
+    }
+  }
+
+  /**
+   * Event. Called to exit addTo and return to 'none' mode.
+   */
+  onSwitchToNone() {
+    this.updateOverlay.emit({ bandId: this.id, overlay: false });
+    const activityBands = this.subBands.filter(
+      band => band.type === 'activity',
+    );
+    if (activityBands && activityBands.length > 0) {
+      this.updateAddTo.emit({
+        addTo: false,
+        bandId: this.id,
+        subBandId: activityBands[0].id,
+      });
     }
   }
 
@@ -688,6 +725,18 @@ export class RavenCompositeBandComponent
   }
 
   /**
+   * Helper. Returns true if a subBand is in addTo mode.
+   */
+  containAddToBand() {
+    for (let i = 0, l = this.subBands.length; i < l; ++i) {
+      if (this.subBands[i].type === 'activity' && this.subBands[i].addTo) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Helper that returns an auto-scale option for a CTL resource band.
    * VISIBLE_INTERVALS indicates auto-scale of the y-axis ticks.
    * ALL_INTERVALS indicates no auto-scale of the y-axis ticks.
@@ -697,6 +746,20 @@ export class RavenCompositeBandComponent
     return autoScale
       ? ctlResourceBand.VISIBLE_INTERVALS
       : ctlResourceBand.ALL_INTERVALS;
+  }
+
+  /**
+   * Helper. Returns true if this is a divider band.
+   */
+  isDividerBand() {
+    return this.subBands.length > 0 && this.subBands[0].type === 'divider';
+  }
+
+  /**
+   * Helper. Returns true if band is in overlay or contains a band in addTo mode.
+   */
+  isOverlayAddTo() {
+    return this.overlay || this.containAddToBand();
   }
 
   /**
@@ -800,51 +863,6 @@ export class RavenCompositeBandComponent
       if (subBand.type === 'resource') {
         subBand.autoScale = this.getResourceAutoScale(this.compositeAutoScale);
       }
-    }
-  }
-
-  isDividerBand() {
-    return this.subBands.length > 0 && this.subBands[0].type === 'divider';
-  }
-
-  isOverlayAddTo() {
-    return this.overlay || this.containAddToBand();
-  }
-
-  containAddToBand() {
-    for (let i = 0, l = this.subBands.length; i < l; ++i) {
-      if (this.subBands[i].type === 'activity' && this.subBands[i].addTo) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  switchToAddToOrNone() {
-    this.updateOverlay.emit({ bandId: this.id, overlay: false });
-    const activityBands = this.subBands.filter(
-      band => band.type === 'activity',
-    );
-    if (activityBands && activityBands.length > 0) {
-      this.updateAddTo.emit({
-        addTo: true,
-        bandId: this.id,
-        subBandId: activityBands[0].id,
-      });
-    }
-  }
-
-  switchToNone() {
-    this.updateOverlay.emit({ bandId: this.id, overlay: false });
-    const activityBands = this.subBands.filter(
-      band => band.type === 'activity',
-    );
-    if (activityBands && activityBands.length > 0) {
-      this.updateAddTo.emit({
-        addTo: false,
-        bandId: this.id,
-        subBandId: activityBands[0].id,
-      });
     }
   }
 }
