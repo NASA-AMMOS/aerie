@@ -187,7 +187,6 @@ export class RavenTimeBandComponent
     this.ctlTimeBand = new (window as any).TimeBand({
       font: 'normal 9px Verdana',
       height: 37,
-      // height: 75,
       label: 'SCET',
       minorLabels: this.getMinorLabel(),
       onFormatNow: this.onFormatNow.bind(this),
@@ -279,11 +278,29 @@ export class RavenTimeBandComponent
   }
 
   /**
+   * Helper that returns an epoch label based on an epoch if it exists.
+   */
+  getEpochLabel(epoch: RavenEpoch | null): string[] {
+    if (epoch !== null) {
+      return [epoch.name];
+    }
+    return [];
+  }
+
+  /**
+   * Helper that returns an epoch name or local time name.
+   */
+  getMinorLabel() {
+    return this.getEpochLabel(this.epoch).length > 0
+      ? this.getEpochLabel(this.epoch)
+      : [getLocalTimezoneName()];
+  }
+
+  /**
    * Helper. Recalculates x-coordinates of the band based on the label width.
    */
   updateTimeAxisXCoordinates() {
     const offsetWidth = this.elementRef.nativeElement.offsetWidth;
-    console.log('time band offsetWidth:' + offsetWidth);
     this.ctlTimeAxis.updateXCoordinates(
       this.labelWidth,
       offsetWidth + this.sideMenuDivSize,
@@ -309,24 +326,5 @@ export class RavenTimeBandComponent
   resize() {
     this.updateTimeAxisXCoordinates();
     this.redraw();
-  }
-
-  /**
-   * Helper that returns an epoch label based on an epoch if it exists.
-   */
-  getEpochLabel(epoch: RavenEpoch | null): string[] {
-    if (epoch !== null) {
-      return [epoch.name];
-    }
-    return [];
-  }
-
-  /**
-   * Helper that returns an epoch name or local time name.
-   */
-  getMinorLabel() {
-    return this.getEpochLabel(this.epoch).length > 0
-      ? this.getEpochLabel(this.epoch)
-      : [getLocalTimezoneName()];
   }
 }

@@ -854,7 +854,6 @@ export function toggleGuide(state: TimelineState, action: ToggleGuide) {
       action.guide.guideTime > guide - 2 * action.guide.timePerPixel &&
       action.guide.guideTime < guide + 2 * action.guide.timePerPixel,
   );
-  console.log('existingGuide: ' + existingGuide);
   return {
     ...state,
     currentStateChanged: state.currentState !== null,

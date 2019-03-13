@@ -8,7 +8,11 @@
  */
 
 import { Component, Inject, OnDestroy } from '@angular/core';
+import { FormControl, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material';
+import { Store } from '@ngrx/store';
+import { Subject } from 'rxjs';
+import { AppState } from '../../../app-store';
 
 import {
   RavenCompositeBand,
@@ -20,19 +24,10 @@ import {
   StringTMap,
 } from '../../../shared/models';
 
-import { RavenConfirmDialogComponent } from '../raven-confirm-dialog/raven-confirm-dialog.component';
-
-import { Store } from '@ngrx/store';
-import { AppState } from '../../../app-store';
-
 import * as sourceExplorerActions from '../../../raven/actions/source-explorer.actions';
 import * as timelineActions from '../../../raven/actions/timeline.actions';
-
 import { getBandLabel } from '../../util';
-
-import { FormControl, Validators } from '@angular/forms';
-
-import { Subject } from 'rxjs';
+import { RavenConfirmDialogComponent } from '../raven-confirm-dialog/raven-confirm-dialog.component';
 
 @Component({
   selector: 'raven-settings-bands-dialog',
