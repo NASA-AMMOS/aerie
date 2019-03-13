@@ -44,7 +44,10 @@
   </mat-icon>
 
   <div class="row-right">
-    <span class="item-right state-label" *ngIf="currentStateId !== '' && mode !== 'minimal'">State: {{currentStateId}}</span>
+    <span class="item-right state-label"
+    *ngIf="currentStateId !== '' && mode !== 'minimal'">
+      State: {{currentStateId}}
+    </span>
     <mat-icon
       *ngIf="currentStateId !== '' && mode !== 'minimal'"
       class="item-right icon"

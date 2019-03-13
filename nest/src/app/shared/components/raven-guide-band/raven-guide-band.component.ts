@@ -113,7 +113,6 @@ export class RavenGuideBandComponent
       const currentViewTimeRange = changes.viewTimeRange.currentValue;
       const previousViewTimeRange = changes.viewTimeRange.previousValue;
 
-      console.log('guide band detect timeRange change');
       // Make sure we don't redraw or update times unless the times actually changed.
       if (
         previousViewTimeRange.start !== currentViewTimeRange.start ||
@@ -129,7 +128,6 @@ export class RavenGuideBandComponent
   }
 
   ngOnInit() {
-    console.log('in createGuideBand');
     this.ctlTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
     this.ctlViewTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
     // Create Guide Band.
@@ -150,8 +148,6 @@ export class RavenGuideBandComponent
       viewTimeAxis: this.ctlViewTimeAxis,
     });
 
-    console.log('this.maxTimeRange: ' + JSON.stringify(this.maxTimeRange));
-    console.log('this.viewTimeRange: ' + JSON.stringify(this.viewTimeRange));
     this.ctlTimeAxis.updateTimes(
       this.maxTimeRange.start,
       this.maxTimeRange.end,
@@ -163,7 +159,6 @@ export class RavenGuideBandComponent
 
     // Create Intervals.
     this.ctlGuideBand.setIntervals(this.createEvents()); // This resets interpolation in CTL so we must re-set it on the next line.
-    // this.ctlGuideBand.type = 'activity';
     this.elementRef.nativeElement.appendChild(this.ctlGuideBand.div);
   }
 
@@ -184,39 +179,10 @@ export class RavenGuideBandComponent
       timePerPixel: this.ctlTimeAxis.getTimePerPixel(),
     });
   }
-  /**
-   * Helper. Call when a composite-band should be resized.
-   * Note that this triggers a redraw.
-   */
-  resize() {
-    console.log('guide band resize');
-    this.updateTimeAxisXCoordinates();
-    this.redraw();
-  }
 
   /**
-   * Helper. Recalculates x-coordinates of the band based on the label width.
+   * Helper. Create intervals representing existing guides.
    */
-  updateTimeAxisXCoordinates() {
-    const offsetWidth = this.elementRef.nativeElement.offsetWidth;
-    this.ctlTimeAxis.updateXCoordinates(
-      this.labelWidth,
-      offsetWidth + this.sideMenuDivSize,
-    );
-    this.ctlViewTimeAxis.updateXCoordinates(
-      this.labelWidth,
-      offsetWidth + this.sideMenuDivSize,
-    );
-  }
-
-  /**
-   * Helper. Call when a composite-band should be redrawn.
-   */
-  redraw() {
-    this.ctlGuideBand.revalidate();
-    this.ctlGuideBand.repaint();
-  }
-
   createEvents() {
     const intervals = [];
 
@@ -242,5 +208,37 @@ export class RavenGuideBandComponent
     intervals.sort((window as any).DrawableInterval.earlyStartEarlyEnd);
 
     return intervals;
+  }
+
+  /**
+   * Helper. Call when a composite-band should be redrawn.
+   */
+  redraw() {
+    this.ctlGuideBand.revalidate();
+    this.ctlGuideBand.repaint();
+  }
+
+  /**
+   * Helper. Call when a composite-band should be resized.
+   * Note that this triggers a redraw.
+   */
+  resize() {
+    this.updateTimeAxisXCoordinates();
+    this.redraw();
+  }
+
+  /**
+   * Helper. Recalculates x-coordinates of the band based on the label width.
+   */
+  updateTimeAxisXCoordinates() {
+    const offsetWidth = this.elementRef.nativeElement.offsetWidth;
+    this.ctlTimeAxis.updateXCoordinates(
+      this.labelWidth,
+      offsetWidth + this.sideMenuDivSize,
+    );
+    this.ctlViewTimeAxis.updateXCoordinates(
+      this.labelWidth,
+      offsetWidth + this.sideMenuDivSize,
+    );
   }
 }

@@ -9,14 +9,14 @@
 
 import { EventEmitter, Input, Output } from '@angular/core';
 
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'raven-manage-graph',
   styleUrls: ['./raven-manage-graph.component.css'],
   templateUrl: './raven-manage-graph.component.html',
 })
-export class RavenManageGraphComponent implements OnInit {
+export class RavenManageGraphComponent {
   @Input()
   currentStateChanged: boolean;
 
@@ -64,8 +64,4 @@ export class RavenManageGraphComponent implements OnInit {
 
   @Output()
   zoomOut: EventEmitter<any> = new EventEmitter<any>();
-
-  constructor() {}
-
-  ngOnInit() {}
 }
