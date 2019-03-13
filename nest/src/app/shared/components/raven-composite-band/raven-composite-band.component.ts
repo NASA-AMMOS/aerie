@@ -176,6 +176,7 @@ export class RavenCompositeBandComponent
   }
 
   ngOnChanges(changes: SimpleChanges) {
+    console.log('changed detected');
     let shouldRedraw = false;
     let shouldResize = false;
     let shouldUpdateTicks = false;
@@ -206,6 +207,7 @@ export class RavenCompositeBandComponent
       changes.compositeYAxisLabel &&
       !changes.compositeYAxisLabel.firstChange
     ) {
+      console.log('changed compositeYAxisLabel');
       this.ctlCompositeBand.compositeLabel = this.compositeYAxisLabel;
 
       if (this.compositeYAxisLabel) {

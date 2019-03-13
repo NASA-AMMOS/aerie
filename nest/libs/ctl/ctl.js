@@ -3432,8 +3432,10 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
 
   // RAVEN -- composite Y-axis should be black
   // labels should be black for composite labels
-  if (this.band.parent instanceof CompositeBand && this.band.parent.compositeLabel)
+  ctx.fillStyle = Util.rgbaToString(this.band.labelColor, 1);
+  if (this.band.parent instanceof CompositeBand && this.band.parent.compositeLabel) {
       ctx.fillStyle = Util.rgbaToString([0,0,0], 1);
+  }
 
   // render the values if its in the renderable range
   var maxTickLabelWidth = 0;
@@ -3450,7 +3452,6 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
       ctx.strokeStyle = Util.rgbaToString([255,0,0], 0.5);
     }
     else {
-      ctx.fillStyle = Util.rgbaToString(this.band.labelColor, 1);
       ctx.strokeStyle = Util.rgbaToString(this.band.labelColor, 0.5);
     }
     // skip if previously evaluated

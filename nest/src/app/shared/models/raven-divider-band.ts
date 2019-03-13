@@ -21,7 +21,7 @@ export interface RavenDividerBand {
   heightPadding: number;
   id: string;
   label: string;
-  labelColor: number[];
+  labelColor: string;
   labelPin: string;
   maxTimeRange: RavenTimeRange;
   name: string;

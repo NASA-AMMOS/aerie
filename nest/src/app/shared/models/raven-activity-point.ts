@@ -20,7 +20,7 @@ export interface RavenActivityPoint {
   ancestors: string[];
   arguments: number;
   childrenUrl: string;
-  color: number[];
+  color: string;
   descendantsUrl: string;
   duration: number;
   end: number;
