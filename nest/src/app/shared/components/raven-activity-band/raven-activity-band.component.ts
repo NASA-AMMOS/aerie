@@ -443,5 +443,4 @@ export class RavenActivityBandComponent
       this.dayCode,
     );
   }
-
 }

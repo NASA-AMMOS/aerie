@@ -171,7 +171,6 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
       width: '300px',
     });
     confirmDialogRef.afterClosed().subscribe(result => {
-      console.log('result: ' + JSON.stringify(result));
       if (result.confirm) {
         this.store.dispatch(new timelineActions.RemoveSubBand(subBand.id));
         this.store.dispatch(
