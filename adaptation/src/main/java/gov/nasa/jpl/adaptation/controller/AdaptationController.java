@@ -116,16 +116,16 @@ public class AdaptationController {
     }
 
     /**
-     * Delete the adaptation with given name and version
+     * Delete the adaptation with given id
      *
      * @param id
      */
-    @DeleteMapping("/{name}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteAdaptation(@PathVariable("id") Integer id) {
         logger.debug("DELETE adaptation/" + id);
 
         Optional<Adaptation> optAdapt = repository.findById(id);
-        if (!optAdapt.isPresent()) {
+        if (optAdapt.isPresent()) {
             Adaptation adaptation = optAdapt.get();
 
             // Ensure the file is deleted before removing the adaptation
@@ -195,7 +195,6 @@ public class AdaptationController {
         for (int i = 0; file.exists(); ++i) {
             filename = location + basename + "_" + i;
             file = new File(filename);
-            i += 1;
         }
         return filename;
     }
