@@ -8,8 +8,7 @@
  */
 
 import { keyBy } from 'lodash';
-import { ActivityInstance, Plan } from '../../../../../schemas';
-import { StringTMap } from '../../shared/models';
+import { ActivityInstance, Plan, StringTMap } from '../../shared/models';
 import {
   ClearSelectedActivity,
   ClearSelectedPlan,

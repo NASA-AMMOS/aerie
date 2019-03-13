@@ -16,8 +16,7 @@ import {
   OnInit,
   SimpleChanges,
 } from '@angular/core';
-import { MpsCommand } from '../../../../../../schemas';
-import { StringTMap } from '../../../shared/models';
+import { MpsCommand, StringTMap } from '../../../shared/models';
 import {
   buildMpsHint,
   buildMpsLint,

@@ -7,8 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ActivityType, Adaptation } from '../../../../../schemas';
-import { StringTMap } from '../../shared/models';
+import { ActivityType, Adaptation, StringTMap } from '../../shared/models';
 import {
   getMockActivityTypes,
   getMockAdaptations,

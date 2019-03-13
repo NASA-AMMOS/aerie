@@ -18,11 +18,7 @@ import { Router } from '@angular/router';
 import { select, Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import {
-  ActivityInstance,
-  ActivityType,
-  Plan,
-} from '../../../../../../schemas';
+import { ActivityInstance, ActivityType, Plan } from '../../../shared/models';
 import { NgTemplateUtils } from '../../../shared/util';
 import { CreateActivity, UpdateActivity } from '../../actions/plan.actions';
 import { PlanningAppState } from '../../planning-store';

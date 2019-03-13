@@ -14,7 +14,7 @@ import {
   Input,
   Output,
 } from '@angular/core';
-import { Plan } from '../../../../../../schemas';
+import { Plan } from '../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

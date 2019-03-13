@@ -9,7 +9,7 @@
 
 import { Injectable } from '@angular/core';
 import { Observable, Observer } from 'rxjs';
-import { CommandDictionary, MpsCommand } from '../../../../../schemas';
+import { CommandDictionary, MpsCommand } from '../../shared/models';
 import { mpsCommands } from '../mocks/mps-commands';
 
 export const mockCommandDictionaryList: CommandDictionary[] = [

@@ -8,8 +8,12 @@
  */
 
 import { Action } from '@ngrx/store';
-import { ActivityInstance, Plan } from '../../../../../schemas';
-import { RavenTimeRange, StringTMap } from '../../shared/models';
+import {
+  ActivityInstance,
+  Plan,
+  RavenTimeRange,
+  StringTMap,
+} from '../../shared/models';
 
 export enum PlanActionTypes {
   ClearSelectedActivity = '[plan] clear_selected_activity',

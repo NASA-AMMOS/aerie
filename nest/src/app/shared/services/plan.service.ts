@@ -11,7 +11,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ActivityInstance, Plan } from '../../../../../schemas';
+import { ActivityInstance, Plan } from '../../shared/models';
 import { PlanServiceInterface } from './plan-service-interface';
 
 @Injectable({

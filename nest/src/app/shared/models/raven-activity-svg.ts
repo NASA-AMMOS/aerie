@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ActivityInstance } from '../../../../../schemas';
+import { ActivityInstance } from '../../shared/models';
 
 export interface RavenActivitySvg extends ActivityInstance {
   fill: string;

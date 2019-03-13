@@ -8,8 +8,12 @@
  */
 
 import { keyBy } from 'lodash';
-import { ActivityInstance, Plan } from '../../../../../schemas';
-import { RavenTimeRange, StringTMap } from '../../shared/models';
+import {
+  ActivityInstance,
+  Plan,
+  RavenTimeRange,
+  StringTMap,
+} from '../../shared/models';
 import { getMaxTimeRange } from '../../shared/util';
 import {
   FetchActivitiesSuccess,

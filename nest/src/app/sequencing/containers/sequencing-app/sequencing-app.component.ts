@@ -11,9 +11,12 @@ import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { CommandDictionary, MpsCommand } from '../../../../../../schemas';
 import { ToggleNavigationDrawer } from '../../../shared/actions/config.actions';
-import { StringTMap } from '../../../shared/models';
+import {
+  CommandDictionary,
+  MpsCommand,
+  StringTMap,
+} from '../../../shared/models';
 import {
   FetchCommandDictionaries,
   SelectCommandDictionary,

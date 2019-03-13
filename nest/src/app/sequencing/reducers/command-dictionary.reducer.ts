@@ -8,8 +8,7 @@
  */
 
 import { keyBy } from 'lodash';
-import { CommandDictionary, MpsCommand } from '../../../../../schemas';
-import { StringTMap } from '../../shared/models';
+import { CommandDictionary, MpsCommand, StringTMap } from '../../shared/models';
 import {
   CommandDictionaryActions,
   CommandDictionaryActionTypes,

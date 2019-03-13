@@ -18,13 +18,14 @@ import { Router } from '@angular/router';
 import { select, Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { ToggleNavigationDrawer } from '../../../shared/actions/config.actions';
 import {
   ActivityInstance,
   ActivityType,
   Plan,
-} from '../../../../../../schemas';
-import { ToggleNavigationDrawer } from '../../../shared/actions/config.actions';
-import { RavenActivityUpdate, RavenTimeRange } from '../../../shared/models';
+  RavenActivityUpdate,
+  RavenTimeRange,
+} from '../../../shared/models';
 import { NgTemplateUtils, timestamp } from '../../../shared/util';
 import {
   ToggleActivityTypesDrawer,

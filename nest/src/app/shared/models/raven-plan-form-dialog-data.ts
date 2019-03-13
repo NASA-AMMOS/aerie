@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Adaptation, Plan } from '../../../../../schemas';
+import { Adaptation, Plan } from '../../shared/models';
 
 export interface RavenPlanFormDialogData {
   adaptations: Adaptation[];

@@ -7,8 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { MpsCommand } from '../../../../../../schemas';
-import { StringTMap } from '../../../shared/models';
+import { MpsCommand, StringTMap } from '../../../shared/models';
 
 /**
  * Returns a template for an mps command used in autocomplete.

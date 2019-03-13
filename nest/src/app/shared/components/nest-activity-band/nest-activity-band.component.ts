@@ -25,8 +25,8 @@ import {
 import * as d3 from 'd3';
 import { fromEvent, Subject, Subscription } from 'rxjs';
 import { filter, map, mergeMap, takeUntil, tap } from 'rxjs/operators';
-import { ActivityInstance } from '../../../../../../schemas';
 import {
+  ActivityInstance,
   RavenActivitySvg,
   RavenActivityUpdate,
   RavenTimeRange,

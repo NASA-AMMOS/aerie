@@ -8,7 +8,7 @@
  */
 
 import { Observable } from 'rxjs';
-import { ActivityInstance, Plan } from '../../../../../schemas';
+import { ActivityInstance, Plan } from '../../shared/models';
 
 export interface PlanServiceInterface {
   createActivity(

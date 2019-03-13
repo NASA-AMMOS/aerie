@@ -8,7 +8,7 @@
  */
 
 import { Action } from '@ngrx/store';
-import { CommandDictionary, MpsCommand } from '../../../../../schemas';
+import { CommandDictionary, MpsCommand } from '../../shared/models';
 
 export enum CommandDictionaryActionTypes {
   FetchCommandDictionaries = '[command_dictionary] fetch_command_dictionaries',

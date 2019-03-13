@@ -14,7 +14,7 @@ import {
   Input,
   Output,
 } from '@angular/core';
-import { MpsCommand } from '../../../../../../schemas';
+import { MpsCommand } from '../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

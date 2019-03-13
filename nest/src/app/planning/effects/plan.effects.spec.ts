@@ -18,11 +18,15 @@ import { Store, StoreModule } from '@ngrx/store';
 import { cold, hot } from 'jasmine-marbles';
 import { keyBy } from 'lodash';
 import { Observable, of } from 'rxjs';
-import { ActivityInstance, Adaptation, Plan } from '../../../../../schemas';
 import { reducers as rootReducers } from '../../app-store';
 import { ShowToast } from '../../shared/actions/toast.actions';
-import { StringTMap } from '../../shared/models';
-import { RavenPlanFormDialogData } from '../../shared/models/raven-plan-form-dialog-data';
+import {
+  ActivityInstance,
+  Adaptation,
+  Plan,
+  RavenPlanFormDialogData,
+  StringTMap,
+} from '../../shared/models';
 import {
   AdaptationMockService,
   getMockAdaptations,
