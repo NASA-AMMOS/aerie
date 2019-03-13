@@ -29,7 +29,7 @@ npm run build
 
 The Input/Output folders and files are organized as follows:
 
-| Language | Input Folder | Intermediate Folder | Output Folder / File |
-| -------- | -------------| ------------------- | ------------- |
-| Java | json | src | target |
-| TypeScript | json | - | index.d.ts |
+| Language | Input Folder | Output File |
+| -------- | -------------| ------------- |
+| Java | json | schemas-1.0-SNAPSHOT.jar |
+| TypeScript | json | index.d.ts |

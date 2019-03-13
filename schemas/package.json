@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "npm run clean && npm run buildjava && npm run buildts",
-    "buildjava": "jsonschema2pojo -E -S -a NONE -c -p gov.nasa.jpl.aerie.schemas --source ./json --target src/main/java && mvn package -q",
+    "build": "npm run clean-build && npm run buildjava && npm run buildts",
+    "buildjava": "jsonschema2pojo -E -S -a NONE -c -p gov.nasa.jpl.aerie.schemas --source ./json --target src/main/java && mvn package -q && npm run mv-java-jar && npm run clean-java",
     "buildts": "quicktype -s schema -l ts --just-types --alphabetize-properties -o index.d.ts ./json/*.json",
-    "clean": "rimraf index.d.ts && rimraf src && rimraf target"
+    "clean-build": "rimraf index.d.ts && rimraf schemas-1.0-SNAPSHOT.jar",
+    "clean-java": "rimraf target && rimraf src",
+    "mv-java-jar": "mv ./target/schemas-1.0-SNAPSHOT.jar ./schemas-1.0-SNAPSHOT.jar"
   },
   "dependencies": {
     "quicktype": "^15.0.174",
