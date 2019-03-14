@@ -27,6 +27,7 @@ import {
   RavenPoint,
   RavenSortMessage,
   RavenTimeRange,
+  RavenUpdate,
   StringTMap,
 } from '../../../shared/models';
 
@@ -120,10 +121,10 @@ export class RavenBandsComponent implements OnChanges, OnInit {
   hoverBand: EventEmitter<string> = new EventEmitter<string>();
 
   @Output()
-  updateAddTo: EventEmitter<any> = new EventEmitter<any>();
+  updateAddTo: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
 
   @Output()
-  updateOverlay: EventEmitter<any> = new EventEmitter<any>();
+  updateOverlay: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
 
   @Output()
   updateViewTimeRange: EventEmitter<RavenTimeRange> = new EventEmitter<

@@ -602,20 +602,22 @@ export class TimelineComponent implements OnDestroy {
     );
   }
 
-  onUpdateAddTo(e: any): void {
-    // this.store.dispatch(new timelineActions.UpdateAddTo(e.bandId, e.subBandId, e.addTo));
-    this.store.dispatch(
-      new timelineActions.UpdateSubBand(e.bandId, e.subBandId, {
-        addTo: e.addTo,
-      }),
-    );
+  onUpdateAddTo(e: RavenUpdate): void {
+    if (e.bandId && e.subBandId) {
+      this.store.dispatch(new timelineActions.SelectBand(e.bandId));
+      this.store.dispatch(
+        new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update),
+      );
+    }
   }
 
-  onUpdateOverlay(e: any): void {
-    // this.store.dispatch(new timelineActions.UpdateOverlay(e.bandId, e.overlay));
+  onUpdateOverlay(e: RavenUpdate): void {
+    if (e.bandId) {
+    this.store.dispatch(new timelineActions.SelectBand(e.bandId));
     this.store.dispatch(
-      new timelineActions.UpdateBand(e.bandId, { overlay: e.overlay }),
+      new timelineActions.UpdateBand(e.bandId, e.update),
     );
+    }
   }
 
   /**

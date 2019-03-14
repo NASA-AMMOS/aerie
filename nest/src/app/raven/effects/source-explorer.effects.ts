@@ -58,6 +58,7 @@ import {
 import {
   activityBandsWithLegend,
   getActivityPointInBand,
+  getAddToSubBandId,
   getBandsWithSourceId,
   getCustomFilterForLabel,
   getCustomFiltersBySourceId,
@@ -73,7 +74,6 @@ import {
   getState,
   getTargetFilters,
   hasActivityBandForFilterTarget,
-  isAddTo,
   isOverlay,
   toCompositeBand,
   toRavenBandData,
@@ -1642,18 +1642,20 @@ export class SourceExplorerEffects {
               });
             } else if (
               bandId &&
-              subBandId &&
-              isAddTo(currentBands, bandId, subBandId, subBand.type)
+              getAddToSubBandId(currentBands, bandId)
             ) {
-              actions.push(
-                new sourceExplorerActions.SubBandIdAdd(sourceId, subBandId),
-                new timelineActions.AddPointsToSubBand(
-                  sourceId,
-                  bandId,
-                  subBandId,
-                  subBand.points,
-                ),
-              );
+              const addToSubBandId = getAddToSubBandId(currentBands, bandId);
+              if (addToSubBandId) {
+                actions.push(
+                  new sourceExplorerActions.SubBandIdAdd(sourceId, addToSubBandId),
+                  new timelineActions.AddPointsToSubBand(
+                    sourceId,
+                    bandId,
+                    addToSubBandId,
+                    subBand.points,
+                  ),
+                );
+              }
             } else if (bandId && isOverlay(currentBands, bandId)) {
               actions.push(
                 new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id),

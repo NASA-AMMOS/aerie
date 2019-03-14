@@ -11,7 +11,7 @@
     class="icons"
     matTooltip="Set Overlay"
     [id]="'band-settings-overlay'"
-    (click)="updateOverlay.emit({bandId: id, overlay: true})">
+    (click)="updateOverlay.emit({bandId: id, update: {overlay: true}})">
     layers
   </mat-icon>
   <mat-icon *ngIf="(id === hoveredBandId || id === selectedBandId) && overlay && !isDividerBand()"

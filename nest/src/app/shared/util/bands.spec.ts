@@ -11,11 +11,11 @@ import {
   activityBandsWithLegend,
   bandById,
   changeZoom,
+  getAddToSubBandId,
   getBandLabel,
   getBandsWithSourceId,
   getCustomFiltersBySourceId,
   hasActivityBandForFilterTarget,
-  isAddTo,
   isMessageTypeActivity,
   isOverlay,
   sortOrderForBand,
@@ -146,25 +146,21 @@ describe('bands.ts', () => {
     });
   });
 
-  describe('isAddTo', () => {
-    it(`should return false if band id does not exist`, () => {
-      expect(isAddTo(bands, '42', '0', 'activity')).toBe(false);
+  describe('getAddToSubBandId', () => {
+    it(`should return null if band id does not exist`, () => {
+      expect(getAddToSubBandId(bands, '42')).toBe(null);
     });
 
-    it(`should return false if the sub-band id does not exist`, () => {
-      expect(isAddTo(bands, '100', '42', 'activity')).toBe(false);
+    it(`should return null if the band does not contain an activity type band`, () => {
+      expect(getAddToSubBandId(bands, '101')).toBe(null);
     });
 
-    it(`should return false if the type is wrong`, () => {
-      expect(isAddTo(bands, '100', '0', 'state')).toBe(false);
+    it(`should return null if id is correct and band does not contain an activity subBand in addTo mode`, () => {
+      expect(getAddToSubBandId(bands, '103')).toBe(null);
     });
 
-    it(`should return false if the ids and type are correct and the band is NOT in addTo mode`, () => {
-      expect(isAddTo(bands, '101', '1', 'state')).toBe(false);
-    });
-
-    it(`should return true if the ids and type are correct and the band is in addTo mode`, () => {
-      expect(isAddTo(bands, '100', '0', 'activity')).toBe(true);
+    it(`should return subBandId if the band id is correct and contains a subBand in addTo mode`, () => {
+      expect(getAddToSubBandId(bands, '100')).toBe('0');
     });
   });
 

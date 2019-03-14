@@ -29,6 +29,7 @@ import {
   RavenResourceBand,
   RavenSubBand,
   RavenTimeRange,
+  RavenUpdate,
 } from '../../models';
 
 import { bandById } from '../../util/bands';
@@ -150,10 +151,10 @@ export class RavenCompositeBandComponent
   hoverBand: EventEmitter<string> = new EventEmitter<string>();
 
   @Output()
-  updateAddTo: EventEmitter<any> = new EventEmitter<any>();
+  updateAddTo: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
 
   @Output()
-  updateOverlay: EventEmitter<any> = new EventEmitter<any>();
+  updateOverlay: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
 
   @Output()
   updateViewTimeRange: EventEmitter<RavenTimeRange> = new EventEmitter<
@@ -608,15 +609,15 @@ export class RavenCompositeBandComponent
    * Event. Called when toggled from overlay mode and go to addTo mode if activity subBand exists. Otherwise, go to 'none' mode.
    */
   onSwitchToAddToOrNone() {
-    this.updateOverlay.emit({ bandId: this.id, overlay: false });
+    this.updateOverlay.emit({ bandId: this.id, update: {overlay: false }});
     const activityBands = this.subBands.filter(
       band => band.type === 'activity',
     );
     if (activityBands && activityBands.length > 0) {
       this.updateAddTo.emit({
-        addTo: true,
         bandId: this.id,
         subBandId: activityBands[0].id,
+        update: {addTo: true},
       });
     }
   }
@@ -625,15 +626,15 @@ export class RavenCompositeBandComponent
    * Event. Called to exit addTo and return to 'none' mode.
    */
   onSwitchToNone() {
-    this.updateOverlay.emit({ bandId: this.id, overlay: false });
+    this.updateOverlay.emit({ bandId: this.id, update: {overlay: false }});
     const activityBands = this.subBands.filter(
       band => band.type === 'activity',
     );
     if (activityBands && activityBands.length > 0) {
       this.updateAddTo.emit({
-        addTo: false,
         bandId: this.id,
         subBandId: activityBands[0].id,
+        update: {addTo: false},
       });
     }
   }

@@ -196,7 +196,7 @@ export const bands: RavenCompositeBand[] = [
     subBands: [
       {
         ...activityBand,
-        addTo: true,
+        addTo: false,
         id: '3',
         name: 'test-activity-sub-band-3',
         parentUniqueId: '103',
