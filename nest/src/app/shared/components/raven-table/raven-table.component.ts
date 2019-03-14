@@ -175,6 +175,8 @@ export class RavenTableComponent implements OnChanges {
           prop !== 'activityParameters' &&
           prop !== 'ancestors' &&
           prop !== 'childrenUrl' &&
+          prop !== 'color' &&
+          prop !== 'hidden' &&
           prop !== 'descendantsUrl' &&
           prop !== 'endTimestamp' &&
           prop !== 'expandedFromPointId' &&
