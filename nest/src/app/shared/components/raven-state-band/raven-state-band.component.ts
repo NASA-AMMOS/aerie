@@ -515,7 +515,7 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
         endValue: point.value,
         id: point.id,
         label: point.value,
-        labelColor: '#000000',
+        labelColor: colorHexToRgbArray('#000000'),
         onGetTooltipText: this.onGetTooltipText.bind(this),
         opacity: 0.5,
         properties: {
