@@ -58,7 +58,7 @@ public class PlansController {
     return ResponseEntity.noContent().build();
   }
 
-  @PostMapping("/")
+  @PutMapping("/")
   public ResponseEntity<Object> createPlan(@Valid @RequestBody Plan plan) {
     plan.setId(ObjectId.get().toString());
     repository.save(plan);
