@@ -163,6 +163,13 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
   }
 
   /**
+   * Closes the dialog.
+   */
+  onClose() {
+    this.dialogRef.close();
+  }
+
+  /**
    * Event. Called when a subBand delete event is fired from the raven-settings-band-dialog component.
    */
   onDeleteSubBand(subBand: RavenSubBand) {

@@ -10,7 +10,7 @@
         <div
           *ngIf="subBands.length > 1"
           class="field">
-          <mat-form-field class="full-width">
+          <mat-form-field>
             <mat-select
               [value]="selectedSubBandId"
               (selectionChange)="onChangeSelectedSubBand($event.value)"
@@ -179,9 +179,8 @@
                   </mat-form-field>
                 </div>
 
-                <div class="row-container">
                   <!-- Align Label. -->
-                  <div class="field flex-field">
+                  <div class="field">
                     <mat-form-field>
                       <mat-select
                         placeholder="Horizontally Align Label"
@@ -194,7 +193,7 @@
                   </div>
 
                   <!-- Baseline Label. -->
-                  <div class="flex-field">
+                  <div class="field">
                     <mat-form-field>
                       <mat-select
                         placeholder="Vertically Align Label"
@@ -206,7 +205,6 @@
                       </mat-select>
                     </mat-form-field>
                   </div>
-                </div>
 
                 <!-- Layout. -->
                 <div class="field">
@@ -359,9 +357,8 @@
 
               <!-- State Settings (non-numeric). -->
               <ng-container *ngIf="subBand.type === 'state' && !isNumericStateBand">
-                <div class="row-container">
                   <!-- Align Label. -->
-                  <div class="field flex-field">
+                  <div class="field">
                     <mat-form-field>
                       <mat-select
                         id="raven-settings-align-label"
@@ -375,7 +372,7 @@
                   </div>
 
                   <!-- Baseline Label. -->
-                  <div class="field flex-field">
+                  <div class="field">
                     <mat-form-field>
                       <mat-select
                         id="raven-settings-baseline-label"
@@ -388,7 +385,6 @@
                       </mat-select>
                     </mat-form-field>
                   </div>
-                </div>
 
                 <!-- Show State Change Times. -->
                 <div class="field">
@@ -515,4 +511,7 @@
       </div>
     </mat-card-content>
   </mat-card>
+  <div class="btn-container">
+    <button id="close-btn" mat-raised-button (click)="onClose()">Close</button>
+  </div>
 

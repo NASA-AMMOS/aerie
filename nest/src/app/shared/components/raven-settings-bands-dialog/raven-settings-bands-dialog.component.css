@@ -11,31 +11,11 @@
   display: block;
 }
 
-.heading {
-  padding-bottom: 10px;
-}
-
-.field {
-  padding: 10px;
-}
-
-.full-width {
-  width: 100%;
-}
-
-.row-container {
+.btn-container {
+  margin-top: 20px;
   display: flex;
-}
-
-.flex-item {
-  flex: 1 0 auto;
-}
-
-.padded-icon {
-  cursor: pointer;
-  padding-left: 10px;
-  padding-right: 10px;
-  padding-top: 25px;
+  align-items: center;
+  justify-content: center;
 }
 
 .checked-color-button {
@@ -48,9 +28,33 @@
   height: 24px;
 }
 
+.field {
+  padding: 10px;
+}
+
+.flex-item {
+  flex: 1 0 auto;
+}
+
+.heading {
+  padding-bottom: 10px;
+}
+
 .mat-card {
   max-height: 500px;
   overflow-y: auto;
+}
+
+.padded-icon {
+  cursor: pointer;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 25px;
+  flex: 0 0 auto;
+}
+
+.row-container {
+  display: flex;
 }
 
 h3 {
