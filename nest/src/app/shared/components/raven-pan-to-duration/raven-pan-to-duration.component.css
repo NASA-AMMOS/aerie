@@ -16,6 +16,7 @@
 }
 
 .icon {
+  cursor: pointer;
   font-size: 15px;
   padding-top: 10px;
   margin-left: 10px;
