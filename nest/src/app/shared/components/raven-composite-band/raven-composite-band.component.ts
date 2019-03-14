@@ -609,7 +609,7 @@ export class RavenCompositeBandComponent
    * Event. Called when toggled from overlay mode and go to addTo mode if activity subBand exists. Otherwise, go to 'none' mode.
    */
   onSwitchToAddToOrNone() {
-    this.updateOverlay.emit({ bandId: this.id, update: {overlay: false }});
+    this.updateOverlay.emit({ bandId: this.id, update: { overlay: false } });
     const activityBands = this.subBands.filter(
       band => band.type === 'activity',
     );
@@ -617,7 +617,7 @@ export class RavenCompositeBandComponent
       this.updateAddTo.emit({
         bandId: this.id,
         subBandId: activityBands[0].id,
-        update: {addTo: true},
+        update: { addTo: true },
       });
     }
   }
@@ -626,7 +626,7 @@ export class RavenCompositeBandComponent
    * Event. Called to exit addTo and return to 'none' mode.
    */
   onSwitchToNone() {
-    this.updateOverlay.emit({ bandId: this.id, update: {overlay: false }});
+    this.updateOverlay.emit({ bandId: this.id, update: { overlay: false } });
     const activityBands = this.subBands.filter(
       band => band.type === 'activity',
     );
@@ -634,7 +634,7 @@ export class RavenCompositeBandComponent
       this.updateAddTo.emit({
         bandId: this.id,
         subBandId: activityBands[0].id,
-        update: {addTo: false},
+        update: { addTo: false },
       });
     }
   }

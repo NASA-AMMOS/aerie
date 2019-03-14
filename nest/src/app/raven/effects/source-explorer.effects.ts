@@ -1640,14 +1640,14 @@ export class SourceExplorerEffects {
                   );
                 }
               });
-            } else if (
-              bandId &&
-              getAddToSubBandId(currentBands, bandId)
-            ) {
+            } else if (bandId && getAddToSubBandId(currentBands, bandId)) {
               const addToSubBandId = getAddToSubBandId(currentBands, bandId);
               if (addToSubBandId) {
                 actions.push(
-                  new sourceExplorerActions.SubBandIdAdd(sourceId, addToSubBandId),
+                  new sourceExplorerActions.SubBandIdAdd(
+                    sourceId,
+                    addToSubBandId,
+                  ),
                   new timelineActions.AddPointsToSubBand(
                     sourceId,
                     bandId,

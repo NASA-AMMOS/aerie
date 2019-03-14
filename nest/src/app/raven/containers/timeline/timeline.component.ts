@@ -613,10 +613,8 @@ export class TimelineComponent implements OnDestroy {
 
   onUpdateOverlay(e: RavenUpdate): void {
     if (e.bandId) {
-    this.store.dispatch(new timelineActions.SelectBand(e.bandId));
-    this.store.dispatch(
-      new timelineActions.UpdateBand(e.bandId, e.update),
-    );
+      this.store.dispatch(new timelineActions.SelectBand(e.bandId));
+      this.store.dispatch(new timelineActions.UpdateBand(e.bandId, e.update));
     }
   }
 

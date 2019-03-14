@@ -716,8 +716,8 @@ export function getAddToSubBandId(
 ): string | null {
   const band = bandById(bands, bandId) as RavenCompositeBand;
   if (band && band.subBands) {
-      const addToSubBands = band.subBands.filter(subBand => subBand.addTo);
-      return addToSubBands.length > 0 ? addToSubBands[0].id : null;
+    const addToSubBands = band.subBands.filter(subBand => subBand.addTo);
+    return addToSubBands.length > 0 ? addToSubBands[0].id : null;
   }
   return null;
 }
