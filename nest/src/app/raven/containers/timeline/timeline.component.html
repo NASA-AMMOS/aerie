@@ -67,7 +67,7 @@
                 [lastClickTime]="lastClickTime$ | async"
                 [maxTimeRange]="maxTimeRange$ | async"
                 [showLastClick]="(defaultBandSettings$ | async).showLastClick"
-                [sideMenuDivSize]="12"
+                [sideMenuDivSize]="sideMenuDivSize"
                 [viewTimeRange]="viewTimeRange$ | async"
                 (toggleGuide)="onToggleGuide($event)">
               </raven-guide-band>
@@ -77,7 +77,7 @@
               <raven-time-scroll-bar class="row"
                 [labelWidth]="(defaultBandSettings$ | async).labelWidth"
                 [maxTimeRange]="maxTimeRange$ | async"
-                [sideMenuDivSize]="12"
+                [sideMenuDivSize]="sideMenuDivSize"
                 [viewTimeRange]="viewTimeRange$ | async"
                 (updateViewTimeRange)="onUpdateViewTimeRange($event)">
               </raven-time-scroll-bar>
@@ -95,7 +95,7 @@
                 [labelWidth]="(defaultBandSettings$ | async).labelWidth"
                 [maxTimeRange]="maxTimeRange$ | async"
                 [showTooltip]="(defaultBandSettings$ | async).showTooltip"
-                [sideMenuDivSize]="12"
+                [sideMenuDivSize]="sideMenuDivSize"
                 [viewTimeRange]="viewTimeRange$ | async"
                 (updateViewTimeRange)="onUpdateViewTimeRange($event)">
               </raven-time-band>

@@ -41,9 +41,9 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
   isNumericStateBand = false;
   selectedBandId: string;
   selectedBackgroundColor = '';
+  selectedFillColor = '';
   selectedSubBandId: string;
   selectedLineColor = '';
-  selectedFillColor = '';
   subBands: RavenSubBand[];
 
   colors = [
@@ -118,6 +118,14 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
     }
   }
 
+  ngOnDestroy(): void {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
+  }
+
+  /**
+   * Event. Called when a divider color change event is fired from the raven-settings-band-dialog component.
+   */
   onChangeBackgroundColor(bandId: string, subBandId: string, color: string) {
     this.selectedBackgroundColor = color;
     this.updateBand({ bandId, update: { backgroundColor: color } });
@@ -128,40 +136,36 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
     });
   }
 
+  /**
+   * Event. Called when a line color change event is fired from the raven-settings-band-dialog component.
+   */
   onChangeLineColor(bandId: string, subBandId: string, color: string) {
     this.selectedLineColor = color;
     this.updateSubBand({ bandId, subBandId, update: { color: color } });
   }
 
+  /**
+   * Event. Called when a fill color change event is fired from the raven-settings-band-dialog component.
+   */
   onChangeFillColor(bandId: string, subBandId: string, color: string) {
     this.selectedFillColor = color;
     this.updateSubBand({ bandId, subBandId, update: { fillColor: color } });
   }
 
-  ngOnDestroy(): void {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
+  /**
+   * Event. Called when a subBand selection event is fired from the raven-settings-band-dialog component.
+   */
+  onChangeSelectedSubBand(subBandId: string): void {
+    this.selectedSubBandId = subBandId;
+    this.store.dispatch(
+      new timelineActions.UpdateTimeline({ selectedSubBandId: subBandId }),
+    );
   }
 
   /**
-   * Returns true if the selected band contains more than one resource sub-band. False otherwise.
+   * Event. Called when a subBand delete event is fired from the raven-settings-band-dialog component.
    */
-  containsMultipleResourceBands(): boolean {
-    const subBands = this.bandsById[this.selectedBandId].subBands;
-    const resourceCount = subBands.reduce(
-      (count, subBand) => (subBand.type === 'resource' ? count + 1 : count),
-      0,
-    );
-    return resourceCount > 1;
-  }
-
-  conditionalUpdateBandAndSubBand(condition: boolean, updateDict: RavenUpdate) {
-    if (condition) {
-      this.updateBandAndSubBand(updateDict);
-    }
-  }
-
-  deleteSubBand(subBand: RavenSubBand) {
+  onDeleteSubBand(subBand: RavenSubBand) {
     const confirmDialogRef = this.dialog.open(RavenConfirmDialogComponent, {
       data: {
         cancelText: 'No',
@@ -212,13 +216,6 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
     }
   }
 
-  changeSelectedSubBand(subBandId: string): void {
-    this.selectedSubBandId = subBandId;
-    this.store.dispatch(
-      new timelineActions.UpdateTimeline({ selectedSubBandId: subBandId }),
-    );
-  }
-
   /**
    * Event. Called when an `update-sub-band` event is fired from the raven-settings component.
    */
@@ -244,7 +241,7 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
   }
 
   /**
-   * Change plot type changes the height and heightPadding. Height of CompositeBand needs to include heightPadding for top and bottom tick labels to show in a line plot.
+   * Event. Change plot type changes the height and heightPadding. Height of CompositeBand needs to include heightPadding for top and bottom tick labels to show in a line plot.
    */
   changePlotType(subBand: RavenSubBand, isNumeric: boolean) {
     this.isNumericStateBand = isNumeric;
@@ -272,7 +269,7 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
   }
 
   /**
-   * Change showStateChangeTimes requires change in heightPadding for the times to be shown.
+   * Event. Change showStateChangeTimes requires change in heightPadding for the times to be shown.
    */
   changeShowStateChangeTimes(
     subBand: RavenSubBand,
@@ -298,6 +295,27 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
         subBandId: this.selectedSubBandId,
         update: { stateLabelFontSize: labelFontSize },
       });
+    }
+  }
+
+  /**
+   * Helper. Returns true if the selected band contains more than one resource sub-band. False otherwise.
+   */
+  containsMultipleResourceBands(): boolean {
+    const subBands = this.bandsById[this.selectedBandId].subBands;
+    const resourceCount = subBands.reduce(
+      (count, subBand) => (subBand.type === 'resource' ? count + 1 : count),
+      0,
+    );
+    return resourceCount > 1;
+  }
+
+  /**
+   * Helper. Invoke updateBandAndSubBand if condition is true.
+   */
+  conditionalUpdateBandAndSubBand(condition: boolean, updateDict: RavenUpdate) {
+    if (condition) {
+      this.updateBandAndSubBand(updateDict);
     }
   }
 

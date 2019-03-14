@@ -37,20 +37,6 @@
   padding-right: 10px;
   padding-top: 25px;
 }
-.flex-field11 {
-  flex: 5%;
-}
-
-.flex-color-field11 {
-  flex: 5%;
-  padding-bottom: 10px;
-}
-
-.color-container11 {
-  flex: 5%;
-  display: flex;
-  flex-wrap: wrap;
-}
 
 .checked-color-button {
   font-size: 20px;

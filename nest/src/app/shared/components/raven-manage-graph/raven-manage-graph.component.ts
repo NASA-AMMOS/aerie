@@ -30,38 +30,38 @@ export class RavenManageGraphComponent {
   mode: string;
 
   @Output()
-  applyCurrentLayout: EventEmitter<any> = new EventEmitter<any>();
+  applyCurrentLayout: EventEmitter<any> = new EventEmitter();
 
   @Output()
-  applyCurrentState: EventEmitter<any> = new EventEmitter<any>();
+  applyCurrentState: EventEmitter<any> = new EventEmitter();
 
   @Output()
-  panRight: EventEmitter<any> = new EventEmitter<any>();
+  panRight: EventEmitter<any> = new EventEmitter();
 
   @Output()
-  panLeft: EventEmitter<any> = new EventEmitter<any>();
+  panLeft: EventEmitter<any> = new EventEmitter();
 
   @Output()
   panTo: EventEmitter<any> = new EventEmitter<any>();
 
   @Output()
-  removeAllBands: EventEmitter<any> = new EventEmitter<any>();
+  removeAllBands: EventEmitter<any> = new EventEmitter();
 
   @Output()
-  removeAllGuides: EventEmitter<any> = new EventEmitter<any>();
+  removeAllGuides: EventEmitter<any> = new EventEmitter();
 
   @Output()
-  resetView: EventEmitter<any> = new EventEmitter<any>();
+  resetView: EventEmitter<any> = new EventEmitter();
 
   @Output()
-  shareableLink: EventEmitter<any> = new EventEmitter<any>();
+  shareableLink: EventEmitter<any> = new EventEmitter();
 
   @Output()
-  updateCurrentState: EventEmitter<any> = new EventEmitter<any>();
+  updateCurrentState: EventEmitter<any> = new EventEmitter();
 
   @Output()
-  zoomIn: EventEmitter<any> = new EventEmitter<any>();
+  zoomIn: EventEmitter<any> = new EventEmitter();
 
   @Output()
-  zoomOut: EventEmitter<any> = new EventEmitter<any>();
+  zoomOut: EventEmitter<any> = new EventEmitter();
 }

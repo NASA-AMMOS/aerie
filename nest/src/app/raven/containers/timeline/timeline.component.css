@@ -84,8 +84,6 @@ mat-sidenav-container {
 .emptyDiv {
   width: 12px;
   height: 12px;
-  display: flex;
-  flex-direction: column;
 }
 
 .icons {
