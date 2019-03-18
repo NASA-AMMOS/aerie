@@ -177,7 +177,7 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
       data: {
         cancelText: 'No',
         confirmText: 'Yes',
-        message: 'Are you sure you want to delete subBand?',
+        message: `Are you sure you want to delete subBand ${subBand.label}?`,
       },
       width: '300px',
     });

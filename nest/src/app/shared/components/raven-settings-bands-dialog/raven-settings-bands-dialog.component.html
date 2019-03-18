@@ -25,7 +25,7 @@
           <ng-container *ngFor="let subBand of subBands; trackBy: trackByFn">
             <ng-container *ngIf="subBand.id === selectedSubBandId">
               <!-- source id -->
-              <div class="row-container">
+              <div *ngIf="subBand.type !== 'divider'" class="row-container">
                 <mat-form-field class="flex-item">
                   <textarea
                     id="raven-settings-source-id"
@@ -245,17 +245,6 @@
                     </mat-slide-toggle>
                   </div>
                 </ng-container>
-                </div>
-
-                <!-- Add To. -->
-                <div class="field">
-                  <mat-slide-toggle
-                    id="raven-settings-add-to"
-                    color="accent"
-                    [checked]="subBand.addTo"
-                    (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { addTo: $event.checked } })">
-                    Add To
-                  </mat-slide-toggle>
                 </div>
               </ng-container>
 
