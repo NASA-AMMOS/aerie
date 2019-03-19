@@ -59,7 +59,6 @@
               (zoomOut)="onZoomOut()">
             </raven-manage-graph>
             <div class="row-container">
-              <div class="emptyDiv"></div>
               <raven-guide-band class="row"
                 [guides]="guides$ | async"
                 [labelFontSize]="(defaultBandSettings$ | async).labelFontSize"
@@ -73,7 +72,6 @@
               </raven-guide-band>
             </div>
             <div class="row-container">
-              <div class="emptyDiv"></div>
               <raven-time-scroll-bar class="row"
                 [labelWidth]="(defaultBandSettings$ | async).labelWidth"
                 [maxTimeRange]="maxTimeRange$ | async"
@@ -83,7 +81,6 @@
               </raven-time-scroll-bar>
             </div>
             <div class="row-container">
-              <div class="emptyDiv"></div>
               <raven-time-band class="row"
                 [cursorColor]="cursorColor$ | async"
                 [cursorTime]="cursorTime$ | async"

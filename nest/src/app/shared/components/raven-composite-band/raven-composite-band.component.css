@@ -9,6 +9,8 @@
 
 :host {
   display: flex;
+  padding-left: 12px;
+  position: relative;
 }
 
 .raven-band {
@@ -27,8 +29,11 @@
 }
 
 .icon-div {
+  position: absolute;
+  left: 0px;
+  top: 0px;
   width: 12px;
-  height: 12px;
+  height: 0px;
   display: flex;
   flex-direction: column;
 }
@@ -36,7 +41,9 @@
 .icons {
   cursor: pointer;
   font-size: 12px;
-  padding-bottom: 2px;
+  height: 12px;
+  margin-bottom: 2px;
+  width: 12px;
 }
 
 .overlay {

@@ -79,11 +79,7 @@ mat-sidenav-container {
 
 .row-container {
   display: flex;
-}
-
-.emptyDiv {
-  width: 12px;
-  height: 12px;
+  padding-left: 12px;
 }
 
 .icons {
