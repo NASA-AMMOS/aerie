@@ -1579,7 +1579,7 @@ export class SourceExplorerEffects {
             ),
           );
         }
-
+console.log('sourceId: ' + sourceId);
         if (newSubBands.length > 0) {
           newSubBands.forEach((subBand: RavenSubBand) => {
             const activityBands =
@@ -1625,7 +1625,7 @@ export class SourceExplorerEffects {
                     // Romove the old state band.
                     new timelineActions.RemoveSubBand(existingBand.subBandId),
                   );
-                } else {
+                } else if (subBand.type !== 'activity' || isAddTo(currentBands, existingBand.bandId, existingBand.subBandId, 'activity')){
                   actions.push(
                     new sourceExplorerActions.SubBandIdAdd(
                       sourceId,
