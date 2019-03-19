@@ -128,7 +128,11 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
     this.ngUnsubscribe.complete();
   }
 
-  onChangeActivityStyle(bandId: string, subBandId: string, activityStyle: number) {
+  onChangeActivityStyle(
+    bandId: string,
+    subBandId: string,
+    activityStyle: number,
+  ) {
     this.activityStyle = activityStyle;
     this.updateSubBand({ bandId, subBandId, update: { activityStyle } });
   }
