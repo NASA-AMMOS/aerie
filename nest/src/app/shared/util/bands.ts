@@ -55,7 +55,7 @@ export function toRavenBandData(
 
   if (
     metadata.hasTimelineType === 'measurement' &&
-    (metadata as MpsServerStateMetadata).hasValueType === 'string_xdr'
+    (metadata as MpsServerStateMetadata).hasValueType.startsWith('string')
   ) {
     // State.
     const stateBand = toStateBand(
@@ -212,7 +212,7 @@ export function toActivityBands(
       parentUniqueId: null,
       points: legends[legend],
       showActivityTimes: false,
-      showLabel: !isMessageTypeActivity(legends[legend][0]), // Don't show labels for message type activities such as error, warning etc.
+      showLabel: legends[legend][0].activityName !== undefined,
       showLabelPin: true,
       showTooltip: true,
       sourceIds: [sourceId],
@@ -246,7 +246,7 @@ export function toCompositeBand(
     compositeYAxisLabel: false,
     containerId: containerId || '0',
     height: subBand.height + subBand.heightPadding,
-    heightPadding: 0,
+    heightPadding: 10,
     id: compositeBandUniqueId,
     name: subBand.name,
     overlay: false, // Composite bands with a single sub-band cannot be overlay by default.

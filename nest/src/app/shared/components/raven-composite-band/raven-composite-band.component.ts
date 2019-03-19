@@ -399,7 +399,7 @@ export class RavenCompositeBandComponent
     this.ctlCompositeBand = new (window as any).CompositeBand({
       compositeYAxisLabel: false,
       height: this.height,
-      heightPadding: 0,
+      heightPadding: this.heightPadding,
       id: this.id,
       onDblLeftClick: this.onDblLeftClick.bind(this),
       onHideTooltip: this.onHideTooltip.bind(this),

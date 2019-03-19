@@ -171,7 +171,7 @@
                     <mat-select
                       placeholder="Activity Style"
                       [value]="subBand.activityStyle"
-                      (selectionChange)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { activityStyle: $event.value } })">
+                      (selectionChange)="onChangeActivityStyle(selectedBandId, subBand.id, $event.value)">
                       <mat-option [value]="1">Bar</mat-option>
                       <mat-option [value]="3">Icon</mat-option>
                       <mat-option [value]="2">Line</mat-option>
@@ -235,7 +235,7 @@
                   </div>
 
                   <!-- Show Label. -->
-                  <div class="flex-field">
+                  <div class="field flex-field">
                     <mat-slide-toggle
                       id="raven-settings-show-label"
                       color="accent"
@@ -416,7 +416,7 @@
               </div>
 
               <!-- Icon. -->
-              <div *ngIf="subBand.type === 'resource' || (subBand.type === 'activity' && subBand.activityStyle === 3) || isNumericStateBand"
+              <div *ngIf="subBand.type === 'resource' || (subBand.type === 'activity' && activityStyle === 3) || isNumericStateBand"
                 class="field">
                 <mat-form-field>
                   <mat-select

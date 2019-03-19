@@ -15,6 +15,7 @@ import { Subject } from 'rxjs';
 import { AppState } from '../../../app-store';
 
 import {
+  RavenActivityBand,
   RavenCompositeBand,
   RavenDividerBand,
   RavenResourceBand,
@@ -37,6 +38,7 @@ import { RavenConfirmDialogComponent } from '../raven-confirm-dialog/raven-confi
 export class RavenSettingsBandsDialogComponent implements OnDestroy {
   private ngUnsubscribe: Subject<{}> = new Subject();
 
+  activityStyle: number;
   bandsById: StringTMap<RavenCompositeBand>;
   isNumericStateBand = false;
   selectedBandId: string;
@@ -115,12 +117,20 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
       if (selectedSubBand[0].type === 'state') {
         this.isNumericStateBand = (selectedSubBand[0] as RavenStateBand).isNumeric;
       }
+      if (selectedSubBand[0].type === 'activity') {
+        this.activityStyle = (selectedSubBand[0] as RavenActivityBand).activityStyle;
+      }
     }
   }
 
   ngOnDestroy(): void {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
+  }
+
+  onChangeActivityStyle(bandId: string, subBandId: string, activityStyle: number) {
+    this.activityStyle = activityStyle;
+    this.updateSubBand({ bandId, subBandId, update: { activityStyle } });
   }
 
   /**
