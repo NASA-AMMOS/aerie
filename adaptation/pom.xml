@@ -31,7 +31,7 @@
     <dependency>
       <groupId>gov.nasa.jpl.mgss.mpsa.seq</groupId>
       <artifactId>Blackbird</artifactId>
-      <version>1.0-20180809.202951-12</version>
+      <version>1.0-SNAPSHOT</version>
       <classifier>sdk</classifier>
     </dependency>
     <dependency>
@@ -101,7 +101,7 @@
         <configuration>
           <groupId>gov.nasa.jpl.mgss.mpsa.seq</groupId>
           <artifactId>Blackbird</artifactId>
-          <version>1.0-20180809.202951-12</version>
+          <version>1.0-SNAPSHOT</version>
           <classifier>sdk</classifier>
           <packaging>jar</packaging>
           <file>${basedir}/lib/Blackbird-1.0-20180809.202951-12-sdk.jar</file>
