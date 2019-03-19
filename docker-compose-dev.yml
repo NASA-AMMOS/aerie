@@ -1,14 +1,13 @@
 version: "3.3"
 services:
   adaptation:
-    image: cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/adaptation:leroy-jenkins_b57_r5e19da38_20190221
+    build:
+      context: adaptation
+      dockerfile: Dockerfile
     ports: ["27182:27182"]
     volumes:
       - adaptation_files:/usr/src/app/adaptation_files
       - adaptation_logs:/var/log/adaptation
-  nest:
-    image: cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/nest:leroy-jenkins_b57_r5e19da38_20190221
-    ports: ["8080:80"]
   plan:
     build:
       context: plan
@@ -37,13 +36,8 @@ services:
     ports: ["6379:6379"]
     volumes:
       - tyk_redis_data:/data
-  activemq:
-    image: rmohr/activemq:5.15.6-alpine
-    ports: ["5672:5672", "8161:8161", "61616:61616"]
-    volumes: ["activemq_data:/opt/activemq/data"]
 
 volumes:
-  activemq_data:
   adaptation_files:
   adaptation_logs:
   plan_logs:
