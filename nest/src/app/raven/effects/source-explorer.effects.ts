@@ -1579,7 +1579,6 @@ export class SourceExplorerEffects {
             ),
           );
         }
-console.log('sourceId: ' + sourceId);
         if (newSubBands.length > 0) {
           newSubBands.forEach((subBand: RavenSubBand) => {
             const activityBands =
