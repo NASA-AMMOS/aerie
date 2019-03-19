@@ -10,8 +10,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ActivityType, Adaptation } from '../../../../../schemas/types/ts';
-import { StringTMap } from '../models';
+import { ActivityType, Adaptation, StringTMap } from '../models';
 import { AdaptationServiceInterface } from './adaptation-service-interface';
 
 @Injectable({

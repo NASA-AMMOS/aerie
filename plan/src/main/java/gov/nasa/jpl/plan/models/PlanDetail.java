@@ -1,6 +1,8 @@
 package gov.nasa.jpl.plan.models;
 
-import org.bson.types.ObjectId;
+import gov.nasa.jpl.aerie.schemas.ActivityInstance;
+import gov.nasa.jpl.aerie.schemas.Plan;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
@@ -15,9 +17,9 @@ public class PlanDetail extends Plan {
     public PlanDetail() {
     }
 
-    public PlanDetail(ObjectId _id, String adaptationId, String endTimestamp, String name, String startTimestamp,
+    public PlanDetail(String adaptationId, String endTimestamp, String id, String name, String startTimestamp,
             ArrayList<ActivityInstance> activityInstances) {
-        super(_id, adaptationId, endTimestamp, name, startTimestamp);
+        super(adaptationId, endTimestamp, id, name, startTimestamp);
         this.setActivityInstances(activityInstances);
     }
 

@@ -10,9 +10,7 @@
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-
-import { ActivityType } from '../../../../../../schemas/types/ts';
-import { StringTMap } from '../../models/map';
+import { ActivityType, StringTMap } from '../../models';
 import { getMockActivityTypes } from '../../services/adaptation-mock.service';
 import { RavenActivityTypeListComponent } from './raven-activity-type-list.component';
 import { RavenActivityTypeListModule } from './raven-activity-type-list.module';

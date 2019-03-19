@@ -49,8 +49,8 @@ export interface SourceExplorerState {
   currentStateId: string;
   customFiltersBySourceId: StringTMap<RavenCustomFilter[]>;
   fetchPending: boolean;
-  filtersByTarget: StringTMap<StringTMap<string[]>>; // Target refers to an id that ties filters to a graphable source.
   filterState: FilterState;
+  filtersByTarget: StringTMap<StringTMap<string[]>>; // Target refers to an id that ties filters to a graphable source.
   initialSourcesLoaded: boolean;
   layout: string;
   layoutPath: string;

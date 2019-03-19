@@ -1,6 +1,7 @@
 package gov.nasa.jpl.mpsa.cli.models;
 
 import java.util.List;
+import gov.nasa.jpl.aerie.schemas.ActivityInstance;
 
 public class ActivityInstanceArray {
 

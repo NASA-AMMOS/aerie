@@ -8,8 +8,7 @@
  */
 
 import * as CodeMirror from 'codemirror';
-import { MpsCommand } from '../../../../../../schemas/types/ts';
-import { StringTMap } from '../../../shared/models';
+import { MpsCommand, StringTMap } from '../../../shared/models';
 
 /**
  * Register a custom `mps` mode with Code Mirror.

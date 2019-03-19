@@ -8,8 +8,12 @@
  */
 
 import { Action } from '@ngrx/store';
-import { Activity, Plan } from '../../../../../schemas/types/ts';
-import { RavenTimeRange, StringTMap } from '../../shared/models';
+import {
+  ActivityInstance,
+  Plan,
+  RavenTimeRange,
+  StringTMap,
+} from '../../shared/models';
 
 export enum PlanActionTypes {
   ClearSelectedActivity = '[plan] clear_selected_activity',
@@ -53,7 +57,7 @@ export class ClearSelectedPlan implements Action {
 
 export class CreateActivity implements Action {
   readonly type = PlanActionTypes.CreateActivity;
-  constructor(public planId: string, public data: Activity) {}
+  constructor(public planId: string, public data: ActivityInstance) {}
 }
 
 export class CreateActivityFailure implements Action {
@@ -124,7 +128,7 @@ export class FetchActivitiesSuccess implements Action {
   constructor(
     public planId: string,
     public activityId: string | null,
-    public activities: Activity[],
+    public activities: ActivityInstance[],
   ) {}
 }
 

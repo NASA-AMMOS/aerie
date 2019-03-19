@@ -11,16 +11,18 @@ import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { CommandDictionary } from '../../../../../../schemas/types/ts';
 import { ToggleNavigationDrawer } from '../../../shared/actions/config.actions';
-import { StringTMap } from '../../../shared/models';
+import {
+  CommandDictionary,
+  MpsCommand,
+  StringTMap,
+} from '../../../shared/models';
 import {
   FetchCommandDictionaries,
   SelectCommandDictionary,
 } from '../../actions/command-dictionary.actions';
 import { AddText } from '../../actions/editor.actions';
 import { getCommandTemplate } from '../../code-mirror-languages/mps/helpers';
-import { Command } from '../../models';
 import {
   getCommands,
   getCommandsByName,
@@ -36,12 +38,12 @@ import { SequencingAppState } from '../../sequencing-store';
   templateUrl: './sequencing-app.component.html',
 })
 export class SequencingAppComponent implements OnDestroy {
-  commands$: Observable<Command[] | null>;
-  commandsByName$: Observable<StringTMap<Command> | null>;
+  commands$: Observable<MpsCommand[] | null>;
+  commandsByName$: Observable<StringTMap<MpsCommand> | null>;
   dictionaries$: Observable<CommandDictionary[]>;
   selectedDictionaryId$: Observable<string | null>;
 
-  commandsByName: StringTMap<Command>;
+  commandsByName: StringTMap<MpsCommand>;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -55,7 +57,7 @@ export class SequencingAppComponent implements OnDestroy {
 
     this.commandsByName$
       .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe((commandsByName: StringTMap<Command>) => {
+      .subscribe((commandsByName: StringTMap<MpsCommand>) => {
         this.commandsByName = commandsByName;
       });
 

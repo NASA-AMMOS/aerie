@@ -1,3 +1,30 @@
+export interface ActivityInstance {
+    activityId:     string;
+    activityType:   string;
+    color:          string;
+    constraints:    ActivityInstanceConstraint[];
+    duration:       number;
+    end:            number;
+    endTimestamp:   string;
+    intent:         string;
+    listeners?:     string[];
+    name:           string;
+    parameters:     ActivityInstanceParameter[];
+    start:          number;
+    startTimestamp: string;
+    y:              number | null;
+}
+
+export interface ActivityInstanceConstraint {
+    name: string;
+    type: string;
+}
+
+export interface ActivityInstanceParameter {
+    name: string;
+    type: string;
+}
+
 export interface ActivityType {
     activityClass: string;
     listeners:     string[];
@@ -6,32 +33,6 @@ export interface ActivityType {
 }
 
 export interface ActivityTypeParameter {
-    name: string;
-    type: string;
-}
-
-export interface Activity {
-    activityId:     string;
-    activityType:   string;
-    color:          string;
-    constraints:    ActivityConstraint[];
-    duration:       number;
-    end:            number;
-    endTimestamp:   string;
-    intent:         string;
-    name:           string;
-    parameters:     ActivityParameter[];
-    start:          number;
-    startTimestamp: string;
-    y:              number | null;
-}
-
-export interface ActivityConstraint {
-    name: string;
-    type: string;
-}
-
-export interface ActivityParameter {
     name: string;
     type: string;
 }
@@ -66,9 +67,13 @@ export interface MpsCommandParameter {
 }
 
 export interface Plan {
-    adaptationId:   string;
-    endTimestamp:   string;
-    id:             string;
-    name:           string;
-    startTimestamp: string;
+    adaptationId?:   string;
+    endTimestamp?:   string;
+    id?:             string;
+    name?:           string;
+    startTimestamp?: string;
+}
+
+export interface Schedule {
+    id?: string;
 }
