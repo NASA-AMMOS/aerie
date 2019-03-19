@@ -137,6 +137,7 @@ pipeline {
 						server.publishBuildInfo buildInfo
 					} catch (Exception e) {
 						println("Publishing to Artifactory failed with exception: ${e.message}")
+						currentBuild.result = 'UNSTABLE'
 					}
 				}
 
