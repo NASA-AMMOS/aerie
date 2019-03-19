@@ -1624,7 +1624,15 @@ export class SourceExplorerEffects {
                     // Romove the old state band.
                     new timelineActions.RemoveSubBand(existingBand.subBandId),
                   );
-                } else if (subBand.type !== 'activity' || isAddTo(currentBands, existingBand.bandId, existingBand.subBandId, 'activity')){
+                } else if (
+                  subBand.type !== 'activity' ||
+                  isAddTo(
+                    currentBands,
+                    existingBand.bandId,
+                    existingBand.subBandId,
+                    'activity',
+                  )
+                ) {
                   actions.push(
                     new sourceExplorerActions.SubBandIdAdd(
                       sourceId,
