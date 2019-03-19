@@ -12,31 +12,6 @@
     <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
 
-  <repositories>
-    <repository>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <id>central</id>
-      <name>libs-release</name>
-      <url>https://cae-artifactory.jpl.nasa.gov:443/artifactory/libs-release</url>
-    </repository>
-    <repository>
-      <snapshots/>
-      <id>snapshots</id>
-      <name>libs-snapshot</name>
-      <url>https://cae-artifactory.jpl.nasa.gov:443/artifactory/maven-libs-snapshot-local</url>
-    </repository>
-  </repositories>
-
-  <distributionManagement>
-    <snapshotRepository>
-      <id>snapshots</id>
-      <name>CAE Artifactory-snapshots</name>
-      <url>https://cae-artifactory.jpl.nasa.gov:443/artifactory/maven-libs-snapshot-local</url>
-    </snapshotRepository>
-  </distributionManagement>
-
   <build>
     <plugins>
       <plugin>
