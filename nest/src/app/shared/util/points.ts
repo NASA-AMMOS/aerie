@@ -29,12 +29,13 @@ import {
 /**
  * Helper that set hidden for activities not matching filter.
  */
-export function filterActivityPoints(points: RavenActivityPoint[], filter: string) {
+export function filterActivityPoints(
+  points: RavenActivityPoint[],
+  filter: string,
+) {
   points = points.map((point: RavenActivityPoint) => {
     if (filter.length > 0) {
-      const match = point.activityName.match(
-        new RegExp(filter),
-      );
+      const match = point.activityName.match(new RegExp(filter));
       return { ...point, hidden: match === null };
     } else {
       return { ...point, hidden: false };

@@ -25,7 +25,7 @@ describe('points.ts', () => {
       const result = filterActivityPoints(activityPoints, 'AACS');
       expect(result).toEqual([
         activityPoints[0],
-        { ...activityPoints[1], hidden: true},
+        { ...activityPoints[1], hidden: true },
         activityPoints[2],
       ]);
     });

@@ -376,7 +376,10 @@ export function filterActivityInSubBand(
           if (action.subBandId === subBand.id && subBand.type === 'activity') {
             return {
               ...subBand,
-              points: filterActivityPoints((subBand as RavenActivityBand).points, action.filter),
+              points: filterActivityPoints(
+                (subBand as RavenActivityBand).points,
+                action.filter,
+              ),
             };
           }
 
