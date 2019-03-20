@@ -106,7 +106,7 @@
                     id="raven-settings-composite-y-axis"
                     color="accent"
                     [checked]="bandsById[selectedBandId].compositeYAxisLabel"
-                    (change)="updateBand({ bandId: selectedBandId, update: { compositeYAxisLabel: $event.checked } })">
+                    (change)="updateBandAndSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { compositeYAxisLabel: $event.checked } })">
                     Composite Y-axis Label
                   </mat-slide-toggle>
                 </div>
@@ -268,7 +268,7 @@
                     id="raven-settings-composite-auto-scale"
                     color="accent"
                     [checked]="bandsById[selectedBandId].compositeAutoScale"
-                    (change)="updateBand({ bandId: selectedBandId, update: { compositeAutoScale: $event.checked } })">
+                    (change)="updateBandAndSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { compositeAutoScale: $event.checked } })">
                     Composite Auto Scale
                   </mat-slide-toggle>
                 </div>
@@ -310,7 +310,7 @@
                       id="raven-settings-composite-log-scale"
                       color="accent"
                       [checked]="bandsById[selectedBandId].compositeLogTicks"
-                      (change)="updateBand({ bandId: selectedBandId, update: { compositeLogTicks: $event.checked } })">
+                      (change)="updateBandAndSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { compositeLogTicks: $event.checked } })">
                       Composite Log Scale
                     </mat-slide-toggle>
                   </div>
@@ -336,7 +336,7 @@
                       id="raven-settings-composite-scientific-notation"
                       color="accent"
                       [checked]="bandsById[selectedBandId].compositeScientificNotation"
-                      (change)="updateBand({ bandId: selectedBandId, update: { compositeScientificNotation: $event.checked } })">
+                      (change)="updateBandAndSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { compositeScientificNotation: $event.checked } })">
                       Composite Scientific Notation
                     </mat-slide-toggle>
                   </div>

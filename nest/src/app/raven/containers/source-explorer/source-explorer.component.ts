@@ -30,6 +30,7 @@ import * as dialogActions from '../../actions/dialog.actions';
 import * as epochsActions from '../../actions/epochs.actions';
 import * as layoutActions from '../../actions/layout.actions';
 import * as sourceExplorerActions from '../../actions/source-explorer.actions';
+import * as timelineActions from '../../actions/timeline.actions';
 import { SourceExplorerState } from '../../reducers/source-explorer.reducer';
 import {
   getFiltersByTarget,
@@ -145,7 +146,7 @@ export class SourceExplorerComponent implements OnDestroy {
     const { event, source } = action;
     if (event === 'apply-layout') {
       this.store.dispatch(
-        new sourceExplorerActions.UpdateSourceExplorer({
+        new timelineActions.UpdateTimeline({
           currentStateId: source.id,
         }),
       );
