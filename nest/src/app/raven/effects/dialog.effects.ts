@@ -411,7 +411,7 @@ export class DialogEffects {
   /**
    * Effect for OpenSettingsBandDialog.
    */
-  @Effect()
+  @Effect({dispatch: false})
   openSettingsBandDialog$: Observable<Action> = this.actions$.pipe(
     ofType<OpenSettingsBandDialog>(DialogActionTypes.OpenSettingsBandDialog),
     withLatestFrom(this.store$),
@@ -429,7 +429,7 @@ export class DialogEffects {
         },
       );
 
-      return zip(of(action), settingsBandDialog.afterClosed());
+      return settingsBandDialog.afterClosed();
     }),
     exhaustMap(() => []),
   );
