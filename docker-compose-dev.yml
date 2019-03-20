@@ -1,0 +1,46 @@
+version: "3.3"
+services:
+  adaptation:
+    build:
+      context: adaptation
+      dockerfile: Dockerfile
+    ports: ["27182:27182"]
+    volumes:
+      - adaptation_files:/usr/src/app/adaptation_files
+      - adaptation_logs:/var/log/adaptation
+  plan:
+    build:
+      context: plan
+      dockerfile: Dockerfile
+    command: ["--spring.profiles.active=production"]
+    depends_on: ["plan_mongo"]
+    ports: ["27183:27183"]
+    restart: always
+    volumes: ["plan_logs:/var/log/plan"]
+  plan_mongo:
+    command: ["mongod", "--port", "27018", "--smallfiles"]
+    image: mongo:3.2
+    ports: ["27018:27018"]
+    volumes: ["plan_mongo_data:/data/db"]
+  tyk_gateway:
+    image: tykio/tyk-gateway:latest
+    ports: ["8081:8080"]
+    depends_on:
+      - tyk_redis
+    restart: always
+    volumes:
+      - ./tyk_gateway/tyk_gateway_local.conf:/opt/tyk-gateway/tyk.conf
+      - ./tyk_gateway/apps:/opt/tyk-gateway/apps
+  tyk_redis:
+    image: redis
+    ports: ["6379:6379"]
+    volumes:
+      - tyk_redis_data:/data
+
+volumes:
+  adaptation_files:
+  adaptation_logs:
+  plan_logs:
+  plan_mongo_data:
+  tyk_mongo_data:
+  tyk_redis_data:

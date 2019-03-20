@@ -18,13 +18,14 @@ import { Router } from '@angular/router';
 import { select, Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { ToggleNavigationDrawer } from '../../../shared/actions/config.actions';
 import {
-  Activity,
+  ActivityInstance,
   ActivityType,
   Plan,
-} from '../../../../../../schemas/types/ts';
-import { ToggleNavigationDrawer } from '../../../shared/actions/config.actions';
-import { RavenActivityUpdate, RavenTimeRange } from '../../../shared/models';
+  RavenActivityUpdate,
+  RavenTimeRange,
+} from '../../../shared/models';
 import { NgTemplateUtils, timestamp } from '../../../shared/util';
 import {
   ToggleActivityTypesDrawer,
@@ -64,19 +65,19 @@ export class PlanningAppComponent implements OnDestroy {
   showLoadingBar$: Observable<boolean>;
 
   // Plan state.
-  activities$: Observable<Activity[] | null>;
+  activities$: Observable<ActivityInstance[] | null>;
   activityTypes$: Observable<ActivityType[]>;
   maxTimeRange$: Observable<RavenTimeRange>;
   plans$: Observable<Plan[]>;
-  selectedActivity$: Observable<Activity | null>;
+  selectedActivity$: Observable<ActivityInstance | null>;
   selectedPlan$: Observable<Plan | null>;
   viewTimeRange$: Observable<RavenTimeRange>;
 
   // Local derived state.
-  activities: Activity[] | null;
+  activities: ActivityInstance[] | null;
   displayedColumns: string[] = ['name', 'start', 'end', 'duration'];
   editActivityForm: FormGroup;
-  selectedActivity: Activity | null = null;
+  selectedActivity: ActivityInstance | null = null;
   selectedPlan: Plan | null = null;
 
   // Helpers.
@@ -117,13 +118,13 @@ export class PlanningAppComponent implements OnDestroy {
 
     this.activities$
       .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe((activities: Activity[] | null) => {
+      .subscribe((activities: ActivityInstance[] | null) => {
         this.activities = activities;
       });
 
     this.selectedActivity$
       .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe((selectedActivity: Activity | null) => {
+      .subscribe((selectedActivity: ActivityInstance | null) => {
         this.selectedActivity = selectedActivity;
         this.patchActivityForm();
       });

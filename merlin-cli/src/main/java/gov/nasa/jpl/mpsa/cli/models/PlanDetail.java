@@ -3,6 +3,9 @@ package gov.nasa.jpl.mpsa.cli.models;
 import java.util.ArrayList;
 import java.util.List;
 
+import gov.nasa.jpl.aerie.schemas.ActivityInstance;
+import gov.nasa.jpl.aerie.schemas.Plan;
+
 public class PlanDetail extends Plan {
     private List<ActivityInstance> activityInstances = new ArrayList<ActivityInstance>();
 

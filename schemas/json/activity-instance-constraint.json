@@ -1,8 +1,8 @@
 {
-  "$id": "#/ActivityConstraint",
+  "$id": "#/ActivityInstanceConstraint",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
-  "javaType": "ActivityConstraint",
+  "javaType": "gov.nasa.jpl.aerie.schemas.ActivityInstanceConstraint",
   "properties": {
     "name": {
       "type": "string"
@@ -12,6 +12,6 @@
     }
   },
   "required": ["name", "type"],
-  "title": "ActivityConstraint",
+  "title": "ActivityInstanceConstraint",
   "type": "object"
 }

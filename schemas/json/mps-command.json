@@ -2,7 +2,7 @@
   "$id": "#/MpsCommand",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
-  "javaType": "MpsCommand",
+  "javaType": "gov.nasa.jpl.aerie.schemas.MpsCommand",
   "properties": {
     "name": {
       "type": "string"

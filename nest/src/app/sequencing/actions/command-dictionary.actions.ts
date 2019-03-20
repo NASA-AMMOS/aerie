@@ -8,8 +8,7 @@
  */
 
 import { Action } from '@ngrx/store';
-import { CommandDictionary } from '../../../../../schemas/types/ts';
-import { Command } from '../models';
+import { CommandDictionary, MpsCommand } from '../../shared/models';
 
 export enum CommandDictionaryActionTypes {
   FetchCommandDictionaries = '[command_dictionary] fetch_command_dictionaries',
@@ -47,7 +46,7 @@ export class FetchCommandDictionaryFailure implements Action {
 
 export class FetchCommandDictionarySuccess implements Action {
   readonly type = CommandDictionaryActionTypes.FetchCommandDictionarySuccess;
-  constructor(public data: Command[]) {}
+  constructor(public data: MpsCommand[]) {}
 }
 
 export class SelectCommandDictionary implements Action {

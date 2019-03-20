@@ -1,10 +1,10 @@
 package gov.nasa.jpl.mpsa.cli;
 
+import gov.nasa.jpl.aerie.schemas.ActivityInstance;
+import gov.nasa.jpl.aerie.schemas.ActivityInstanceParameter;
 import gov.nasa.jpl.mpsa.cli.commands.Command;
 import gov.nasa.jpl.mpsa.cli.commands.impl.NewActivityCommand;
-import gov.nasa.jpl.mpsa.cli.models.ActivityInstance;
 import gov.nasa.jpl.mpsa.cli.models.ActivityInstanceArray;
-import gov.nasa.jpl.mpsa.cli.models.Parameter;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.time.StopWatch;
 
@@ -110,14 +110,12 @@ public class CommandOptions {
                 inputString += s + " ";
             }
 
-            List<Parameter> params = new ArrayList<>();
+            List<ActivityInstanceParameter> params = new ArrayList<>();
 
             // The parameter should come in a form like: <name>:<type>=<value>
             Pattern pattern = Pattern.compile("^(.+?)\\s+");
             Pattern patternParams = Pattern.compile("(\\S+):{1}(\\S+)={1}(\\S*)");
             Matcher matcher = pattern.matcher(inputString);
-
-            List<String> allMatches = new ArrayList<String>();
 
             // use regex to parse the value
             while (matcher.find()) {
@@ -128,7 +126,7 @@ public class CommandOptions {
 
             Matcher matcherParams = patternParams.matcher(inputString);
             while(matcherParams.find()) {
-                params.add(new Parameter(matcherParams.group(1), matcherParams.group(2), matcherParams.group(3)));
+                params.add(new ActivityInstanceParameter(matcherParams.group(1), matcherParams.group(2)));
 
             }
 

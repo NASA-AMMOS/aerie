@@ -16,13 +16,12 @@ import {
   OnInit,
   SimpleChanges,
 } from '@angular/core';
-import { StringTMap } from '../../../shared/models';
+import { MpsCommand, StringTMap } from '../../../shared/models';
 import {
   buildMpsHint,
   buildMpsLint,
   buildMpsMode,
 } from '../../code-mirror-languages/mps';
-import { Command } from '../../models';
 import { SeqEditorService } from '../../services/seq-editor.service';
 
 @Component({
@@ -36,10 +35,10 @@ export class SeqEditorComponent implements OnChanges, OnInit {
   autofocus = true;
 
   @Input()
-  commandsByName: StringTMap<Command> = {};
+  commandsByName: StringTMap<MpsCommand> = {};
 
   @Input()
-  commands: Command[] = [];
+  commands: MpsCommand[] = [];
 
   @Input()
   extraKeys = {

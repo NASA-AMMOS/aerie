@@ -9,10 +9,10 @@
 
 import { Injectable } from '@angular/core';
 import { Observable, Observer } from 'rxjs';
-import { Activity, Plan } from '../../../../../schemas/types/ts';
+import { ActivityInstance, Plan } from '../../shared/models';
 import { PlanServiceInterface } from './plan-service-interface';
 
-export function getMockActivities(): Activity[] {
+export function getMockActivities(): ActivityInstance[] {
   return [
     {
       activityId: 'SetArrayTrackingMode_25788',
@@ -104,9 +104,9 @@ export class PlanMockService implements PlanServiceInterface {
   createActivity(
     apiBaseUrl: string = '',
     planId: string,
-    data: Activity,
-  ): Observable<Activity> {
-    return Observable.create((o: Observer<Activity>) => {
+    data: ActivityInstance,
+  ): Observable<ActivityInstance> {
+    return Observable.create((o: Observer<ActivityInstance>) => {
       const activities = getMockActivities();
       const activityId = data.activityId || Date.now().toString();
       const mockDetail = activities[activityId];
@@ -142,8 +142,8 @@ export class PlanMockService implements PlanServiceInterface {
   getActivities(
     apiBaseUrl: string = '',
     planId: string,
-  ): Observable<Activity[]> {
-    return Observable.create((o: Observer<Activity[]>) => {
+  ): Observable<ActivityInstance[]> {
+    return Observable.create((o: Observer<ActivityInstance[]>) => {
       o.next(getMockActivities());
       o.complete();
     });
@@ -160,7 +160,7 @@ export class PlanMockService implements PlanServiceInterface {
     apiBaseUrl: string = '',
     planId: string = '',
     activityId: string = '',
-    activityInstance: Activity,
+    activityInstance: ActivityInstance,
   ): Observable<null> {
     return Observable.create((o: Observer<null>) => {
       o.next(null);
