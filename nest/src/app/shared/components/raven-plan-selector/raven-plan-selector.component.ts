@@ -14,7 +14,7 @@ import {
   Input,
   Output,
 } from '@angular/core';
-import { Plan } from '../../../../../../schemas/types/ts';
+import { Plan } from '../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,7 +38,7 @@ export class RavenPlanSelectorComponent {
    */
   get startDate(): string {
     if (this.selectedPlan) {
-      const d = new Date(this.selectedPlan.startTimestamp);
+      const d = new Date(this.selectedPlan.startTimestamp || '');
       return `${d.getMonth() + 1}.${d.getDate()}.${d.getFullYear()}`;
     }
     return 'from';
@@ -50,7 +50,7 @@ export class RavenPlanSelectorComponent {
    */
   get endDate(): string {
     if (this.selectedPlan) {
-      const d = new Date(this.selectedPlan.endTimestamp);
+      const d = new Date(this.selectedPlan.endTimestamp || '');
       return `${d.getMonth() + 1}.${d.getDate()}.${d.getFullYear()}`;
     }
     return 'to';
@@ -60,7 +60,7 @@ export class RavenPlanSelectorComponent {
    * ID of the selected plan or empty
    */
   get selectedId(): string {
-    if (this.selectedPlan) {
+    if (this.selectedPlan && this.selectedPlan.id) {
       return this.selectedPlan.id;
     }
     return '';

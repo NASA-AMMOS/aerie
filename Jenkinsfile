@@ -116,24 +116,29 @@ pipeline {
 			steps {
 				echo 'publishing...'
 				script {
-					def server = Artifactory.newServer url: 'https://cae-artifactory.jpl.nasa.gov/artifactory', credentialsId: '9db65bd3-f8f0-4de0-b344-449ae2782b86'
-					def uploadSpec =
-					'''{
-						"files": [
-							{
-								"pattern": "aerie-src-*.tar.gz",
-								"target": "general-develop/gov/nasa/jpl/ammos/mpsa/aerie/",
-								"recursive":false
-							},
-							{
-								"pattern": "nest/dist-mpsserver/*.tar.gz",
-								"target": "general-develop/gov/nasa/jpl/ammos/mpsa/nest/",
-								"recursive":false
-							}
-						]
-					}'''
-					def buildInfo = server.upload spec: uploadSpec
-					server.publishBuildInfo buildInfo
+					try {
+						def server = Artifactory.newServer url: 'https://cae-artifactory.jpl.nasa.gov/artifactory', credentialsId: '9db65bd3-f8f0-4de0-b344-449ae2782b86'
+						def uploadSpec =
+						'''{
+							"files": [
+								{
+									"pattern": "aerie-src-*.tar.gz",
+									"target": "general-develop/gov/nasa/jpl/ammos/mpsa/aerie/",
+									"recursive":false
+								},
+								{
+									"pattern": "nest/dist-mpsserver/*.tar.gz",
+									"target": "general-develop/gov/nasa/jpl/ammos/mpsa/nest/",
+									"recursive":false
+								}
+							]
+						}'''
+						def buildInfo = server.upload spec: uploadSpec
+						server.publishBuildInfo buildInfo
+					} catch (Exception e) {
+						println("Publishing to Artifactory failed with exception: ${e.message}")
+						currentBuild.result = 'UNSTABLE'
+					}
 				}
 
 				withCredentials([usernamePassword(credentialsId: '9db65bd3-f8f0-4de0-b344-449ae2782b86', passwordVariable: 'DOCKER_LOGIN_PASSWORD', usernameVariable: 'DOCKER_LOGIN_USERNAME')]) {

@@ -162,6 +162,7 @@ do
     if [ -f "settings.xml" ]
     then
       echo "Using local settings.xml file"
+      mvn -B -f pom.xml -s settings.xml install:install-file
       mvn -B -f pom.xml -s settings.xml dependency:resolve
       [ $? -ne 0 ] && error_exit "mvn dependency:resolve failed"
 

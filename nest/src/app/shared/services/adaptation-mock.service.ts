@@ -9,8 +9,7 @@
 
 import { Injectable } from '@angular/core';
 import { Observable, Observer } from 'rxjs';
-import { ActivityType, Adaptation } from '../../../../../schemas/types/ts';
-import { StringTMap } from '../models/map';
+import { ActivityType, Adaptation, StringTMap } from '../models';
 import { AdaptationServiceInterface } from './adaptation-service-interface';
 
 export function getMockAdaptations(): Adaptation[] {

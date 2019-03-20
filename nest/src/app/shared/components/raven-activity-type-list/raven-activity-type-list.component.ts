@@ -8,7 +8,7 @@
  */
 
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { ActivityType } from '../../../../../../schemas/types/ts';
+import { ActivityType } from '../../../shared/models';
 
 @Component({
   selector: 'raven-activity-type-list',

@@ -8,17 +8,15 @@
  */
 
 import { keyBy } from 'lodash';
-import { CommandDictionary } from '../../../../../schemas/types/ts';
-import { StringTMap } from '../../shared/models';
+import { CommandDictionary, MpsCommand, StringTMap } from '../../shared/models';
 import {
   CommandDictionaryActions,
   CommandDictionaryActionTypes,
   FetchCommandDictionarySuccess,
 } from '../actions/command-dictionary.actions';
-import { Command } from '../models';
 
 export interface CommandDictionaryState {
-  commandsByName: StringTMap<Command> | null;
+  commandsByName: StringTMap<MpsCommand> | null;
   dictionaries: CommandDictionary[];
   selectedDictionaryId: string | null;
 }
