@@ -411,7 +411,7 @@ export class DialogEffects {
   /**
    * Effect for OpenSettingsBandDialog.
    */
-  @Effect({dispatch: false})
+  @Effect({ dispatch: false })
   openSettingsBandDialog$: Observable<Action> = this.actions$.pipe(
     ofType<OpenSettingsBandDialog>(DialogActionTypes.OpenSettingsBandDialog),
     withLatestFrom(this.store$),
