@@ -3,7 +3,7 @@
 </mat-card>
 
 <mat-card
-  *ngIf="selectedSubBand"
+  *ngIf="selectedSubBand && selectedSubBand.type !== 'divider'"
   class="grid-container">
   <div class="reset-columns-button">
     <button
