@@ -36,7 +36,7 @@ import {
   OpenCustomFilterDialog,
   OpenCustomGraphDialog,
   OpenDeleteBandDialog,
-  OpenDeleteDialog,
+  OpenDeleteSourceDialog,
   OpenFileImportDialog,
   OpenFolderDialog,
   OpenPinDialog,
@@ -243,11 +243,11 @@ export class DialogEffects {
   );
 
   /**
-   * Effect for OpenDeleteDialog.
+   * Effect for OpenDeleteSourceDialog.
    */
   @Effect()
   openDeleteDialog$: Observable<Action> = this.actions$.pipe(
-    ofType<OpenDeleteDialog>(DialogActionTypes.OpenDeleteDialog),
+    ofType<OpenDeleteSourceDialog>(DialogActionTypes.OpenDeleteSourceDialog),
     exhaustMap(action => {
       const deleteDialog = this.dialog.open(RavenConfirmDialogComponent, {
         data: {

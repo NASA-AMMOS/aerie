@@ -22,7 +22,7 @@ export enum DialogActionTypes {
   OpenCustomFilterDialog = '[dialog] open_custom_filter_dialog',
   OpenCustomGraphDialog = '[dialog] open_custom_graph_dialog',
   OpenDeleteBandDialog = '[dialog] open_delete_band_dialog',
-  OpenDeleteDialog = '[dialog] open_delete_dialog',
+  OpenDeleteSourceDialog = '[dialog] open_delete_source_dialog',
   OpenFileImportDialog = '[dialog] open_file_import_dialog',
   OpenFolderDialog = '[dialog] open_folder_dialog',
   OpenPinDialog = '[dialog] open_pin_dialog',
@@ -68,8 +68,8 @@ export class OpenDeleteBandDialog implements Action {
   constructor(public band: RavenCompositeBand, public width: string) {}
 }
 
-export class OpenDeleteDialog implements Action {
-  readonly type = DialogActionTypes.OpenDeleteDialog;
+export class OpenDeleteSourceDialog implements Action {
+  readonly type = DialogActionTypes.OpenDeleteSourceDialog;
 
   constructor(public source: RavenSource, public width: string) {}
 }
@@ -151,7 +151,7 @@ export type DialogAction =
   | OpenCustomFilterDialog
   | OpenCustomGraphDialog
   | OpenDeleteBandDialog
-  | OpenDeleteDialog
+  | OpenDeleteSourceDialog
   | OpenFileImportDialog
   | OpenFolderDialog
   | OpenPinDialog

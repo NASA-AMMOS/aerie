@@ -156,7 +156,7 @@ export class SourceExplorerComponent implements OnDestroy {
         new dialogActions.OpenStateApplyDialog(source, '250px'),
       );
     } else if (event === 'delete') {
-      this.store.dispatch(new dialogActions.OpenDeleteDialog(source, '250px'));
+      this.store.dispatch(new dialogActions.OpenDeleteSourceDialog(source, '250px'));
     } else if (event === 'epoch-load') {
       this.onLoadEpochs(source);
     } else if (event === 'file-import') {
