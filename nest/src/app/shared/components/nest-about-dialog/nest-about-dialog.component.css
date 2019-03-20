@@ -10,3 +10,11 @@
 button {
   text-transform: uppercase;
 }
+
+.center {
+  text-align: center;
+}
+
+.container {
+  padding-top: 10px;
+}
