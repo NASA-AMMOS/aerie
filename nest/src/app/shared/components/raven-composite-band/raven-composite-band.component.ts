@@ -606,9 +606,9 @@ export class RavenCompositeBandComponent
   }
 
   /**
-   * Event. Called when toggled from overlay mode and go to addTo mode if activity subBand exists. Otherwise, go to 'none' mode.
+   * Event. Called when toggled from overlay mode and go to addTo mode if activity subBand exists.
    */
-  onSwitchToAddToOrNone() {
+  onSwitchToAddTo() {
     this.updateOverlay.emit({ bandId: this.id, update: { overlay: false } });
     const activityBands = this.subBands.filter(
       band => band.type === 'activity',
@@ -723,6 +723,18 @@ export class RavenCompositeBandComponent
         }
       }
     }
+  }
+
+  /**
+   * Helper. Returns true if this band contains an activity band.
+   */
+  containActivityBand() {
+    for (let i = 0, l = this.subBands.length; i < l; ++i) {
+      if (this.subBands[i].type === 'activity') {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

@@ -14,18 +14,26 @@
     (click)="updateOverlay.emit({bandId: id, update: {overlay: true}})">
     layers
   </mat-icon>
-  <mat-icon *ngIf="(id === hoveredBandId || id === selectedBandId) && overlay && !isDividerBand()"
+  <mat-icon *ngIf="(id === hoveredBandId || id === selectedBandId) && overlay && containActivityBand()"
     [ngClass]="{overlay: overlay}"
     class="icons"
     matTooltip="set Add To"
     [id]="'band-settings-add-to'"
-    (click)="onSwitchToAddToOrNone(id)">
+    (click)="onSwitchToAddTo(id)">
+    layers
+  </mat-icon>
+  <mat-icon *ngIf="(id === hoveredBandId || id === selectedBandId) && overlay && !isDividerBand() && !containActivityBand()"
+    [ngClass]="{overlay: overlay}"
+    class="icons"
+    matTooltip="set None"
+    [id]="'band-settings-none-1'"
+    (click)="onSwitchToNone(id)">
     layers
   </mat-icon>
   <mat-icon *ngIf="(id === hoveredBandId || id === selectedBandId) && containAddToBand() && !isDividerBand()"
     class="icons addTo"
     matTooltip="set None"
-    [id]="'band-settings-none'"
+    [id]="'band-settings-none-2'"
     (click)="onSwitchToNone(id)">
     add_box
   </mat-icon>
