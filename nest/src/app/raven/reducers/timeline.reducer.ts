@@ -50,6 +50,7 @@ import {
 } from '../../shared/util';
 
 import {
+  RavenActivityBand,
   RavenActivityPoint,
   RavenCompositeBand,
   RavenPoint,
@@ -371,8 +372,8 @@ export function filterActivityInSubBand(
       return {
         ...band,
         subBands: band.subBands.map(subBand => {
-          if (action.subBandId === subBand.id) {
-            let points = (subBand as any).points;
+          if (action.subBandId === subBand.id && subBand.type === 'activity') {
+            let points = (subBand as RavenActivityBand).points;
             points = points.map((point: RavenActivityPoint) => {
               if (action.filter.length > 0) {
                 const match = point.activityName.match(
