@@ -8,6 +8,7 @@
  */
 
 import {
+  filterActivityPoints,
   getActivityPointInBand,
   getColorFromActivityMetadata,
   getMaxTimeRange,
@@ -16,9 +17,19 @@ import {
   updateSelectedPoint,
 } from './points';
 
-import { activityPoint, bands } from '../mocks';
+import { activityPoint, activityPoints, bands } from '../mocks';
 
 describe('points.ts', () => {
+  describe('filterActivityPoints', () => {
+    it(`should return the second activity point with hidden set to true`, () => {
+      const result = filterActivityPoints(activityPoints, 'AACS');
+      expect(result).toEqual([
+        activityPoints[0],
+        { ...activityPoints[1], hidden: true},
+        activityPoints[2],
+      ]);
+    });
+  });
   describe('getActivityPointInBand', () => {
     it(`should return a correct an activity point with a given activityId`, () => {
       expect(getActivityPointInBand(bands, 'test-activity-point')).toEqual({

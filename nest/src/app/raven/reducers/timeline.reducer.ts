@@ -38,6 +38,7 @@ import {
 import {
   bandById,
   changeZoom,
+  filterActivityPoints,
   getMaxTimeRange,
   getParentSourceIds,
   getPoint,
@@ -373,21 +374,9 @@ export function filterActivityInSubBand(
         ...band,
         subBands: band.subBands.map(subBand => {
           if (action.subBandId === subBand.id && subBand.type === 'activity') {
-            let points = (subBand as RavenActivityBand).points;
-            points = points.map((point: RavenActivityPoint) => {
-              if (action.filter.length > 0) {
-                const match = point.activityName.match(
-                  new RegExp(action.filter),
-                );
-                return { ...point, hidden: match !== null };
-              } else {
-                return { ...point, hidden: false };
-              }
-            });
-
             return {
               ...subBand,
-              points,
+              points: filterActivityPoints((subBand as RavenActivityBand).points, action.filter),
             };
           }
 
