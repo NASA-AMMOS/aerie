@@ -18,8 +18,8 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-
 import { colorHexToRgbArray } from '../../util';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'raven-divider-band',
