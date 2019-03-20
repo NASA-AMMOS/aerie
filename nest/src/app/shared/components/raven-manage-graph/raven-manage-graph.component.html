@@ -49,6 +49,7 @@
       State: {{currentStateId}}
     </span>
     <mat-icon
+      id="apply-layout"
       *ngIf="currentStateId !== '' && mode !== 'minimal'"
       class="item-right icon"
       matTooltip="Apply Layout"
@@ -57,6 +58,7 @@
       open_in_browser
     </mat-icon>
     <mat-icon
+      id="revert-state"
       class="item-right icon"
       *ngIf="currentStateId !== '' && mode !== 'minimal'"
       matTooltip="Revert State"
@@ -65,6 +67,7 @@
       restore_page
     </mat-icon>
     <mat-icon
+      id="save-state"
       *ngIf="currentStateId !== '' && mode !== 'minimal' && currentStateChanged"
       class="item-right icon"
       matTooltip="Save"
@@ -80,6 +83,7 @@
       save
     </mat-icon>
     <mat-icon
+      id="remove-all-guides"
       *ngIf="guides.length>0"
       class="item-right icon"
       matTooltip="Remove All Guides"
@@ -88,6 +92,7 @@
       highlight_off
     </mat-icon>
     <mat-icon
+      id="get-shareable-link"
       class="item-right icon"
       matTooltip="Get Shareable link"
       aria-label="Get Shareable Link"
@@ -95,6 +100,7 @@
       link
     </mat-icon>
     <mat-icon
+      id="remove-all-bands"
       class="item-right icon"
       matTooltip="Remove All Bands"
       aria-label="Remove All Bands"

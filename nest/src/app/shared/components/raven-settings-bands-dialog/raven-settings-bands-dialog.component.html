@@ -12,6 +12,7 @@
           class="field">
           <mat-form-field>
             <mat-select
+              id="raven-settings-sub-band"
               [value]="selectedSubBandId"
               (selectionChange)="onChangeSelectedSubBand($event.value)"
               placeholder="Selected Sub-Band">
@@ -40,9 +41,9 @@
                   </textarea>
                 </mat-form-field>
                 <mat-icon
+                  id="raven-settings-remove-band"
                   matTooltip="Remove Band"
                   class="padded-icon"
-                  [id]="close"
                   (click)="onDeleteSubBand(subBand)">
                   delete_outline
                 </mat-icon>
@@ -89,6 +90,7 @@
                 <div class="field">
                   <mat-form-field class="full-width">
                     <input
+                      id="raven-settings-label-unit"
                       matInput
                       placeholder="Unit Label"
                       [value]="subBand.labelUnit"
@@ -101,6 +103,7 @@
                   *ngIf="containsMultipleResourceBands()"
                   class="field">
                   <mat-slide-toggle
+                    id="raven-settings-composite-y-axis"
                     color="accent"
                     [checked]="bandsById[selectedBandId].compositeYAxisLabel"
                     (change)="updateBand({ bandId: selectedBandId, update: { compositeYAxisLabel: $event.checked } })">
@@ -111,6 +114,7 @@
                 <!-- Show Label Unit. -->
                 <div class="field">
                   <mat-slide-toggle
+                    id="raven-settings-show-label-unit"
                     color="accent"
                     [checked]="subBand.showLabelUnit"
                     (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { showLabelUnit: $event.checked } })">
@@ -125,6 +129,7 @@
                   *ngIf="subBand.type !== 'divider'"
                   class="field flex-field">
                   <mat-slide-toggle
+                    id="raven-settings-show-label-pin"
                     color="accent"
                     [checked]="subBand.showLabelPin"
                     (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { showLabelPin: $event.checked } })">
@@ -138,6 +143,7 @@
                 <mat-form-field>
                   <input
                     matInput
+                    id="raven-settings-height"
                     [formControl]="heightControl"
                     [value]="bandsById[selectedBandId].height"
                     type="number"
@@ -156,6 +162,7 @@
                   <label>Activity Label Font Size</label>
                   <input
                    mat-input
+                    id="raven-settings-activity-label"
                     [value]="subBand.activityLabelFontSize"
                     type="number"
                     name="activityLabelFontSize"
@@ -169,6 +176,7 @@
                 <div class="field">
                   <mat-form-field>
                     <mat-select
+                      id="raven-settings-activity-style"
                       placeholder="Activity Style"
                       [value]="subBand.activityStyle"
                       (selectionChange)="onChangeActivityStyle(selectedBandId, subBand.id, $event.value)">
@@ -179,10 +187,11 @@
                   </mat-form-field>
                 </div>
 
-                  <!-- Align Label. -->
+                  <!-- Horizontally Align Label. -->
                   <div class="field">
                     <mat-form-field>
                       <mat-select
+                        id="raven-settings-horizontal-align-label"
                         placeholder="Horizontally Align Label"
                         [value]="subBand.alignLabel"
                         (selectionChange)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { alignLabel: $event.value } })">
@@ -192,10 +201,11 @@
                     </mat-form-field>
                   </div>
 
-                  <!-- Baseline Label. -->
+                  <!-- Vertically Align Label. -->
                   <div class="field">
                     <mat-form-field>
                       <mat-select
+                        id="raven-settings-vertical-align-label"
                         placeholder="Vertically Align Label"
                         [value]="subBand.baselineLabel"
                         (selectionChange)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
@@ -255,6 +265,7 @@
                   *ngIf="bandsById[selectedBandId].compositeYAxisLabel"
                   class="field">
                   <mat-slide-toggle
+                    id="raven-settings-composite-auto-scale"
                     color="accent"
                     [checked]="bandsById[selectedBandId].compositeAutoScale"
                     (change)="updateBand({ bandId: selectedBandId, update: { compositeAutoScale: $event.checked } })">
@@ -296,7 +307,7 @@
                     *ngIf="bandsById[selectedBandId].compositeYAxisLabel"
                     class="field flex-field">
                     <mat-slide-toggle
-                      id="raven-composite_log_ticks"
+                      id="raven-settings-composite-log-scale"
                       color="accent"
                       [checked]="bandsById[selectedBandId].compositeLogTicks"
                       (change)="updateBand({ bandId: selectedBandId, update: { compositeLogTicks: $event.checked } })">
@@ -309,7 +320,7 @@
                     *ngIf="!bandsById[selectedBandId].compositeYAxisLabel"
                     class="field flex-field">
                     <mat-slide-toggle
-                      id="raven-log_ticks"
+                      id="raven-settings-log-scale"
                       color="accent"
                       [checked]="subBand.logTicks"
                       (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { logTicks: $event.checked } })">
@@ -322,6 +333,7 @@
                     *ngIf="bandsById[selectedBandId].compositeYAxisLabel && !subBand.logTicks"
                     class="field flex-field">
                     <mat-slide-toggle
+                      id="raven-settings-composite-scientific-notation"
                       color="accent"
                       [checked]="bandsById[selectedBandId].compositeScientificNotation"
                       (change)="updateBand({ bandId: selectedBandId, update: { compositeScientificNotation: $event.checked } })">
@@ -334,7 +346,7 @@
                     *ngIf="!bandsById[selectedBandId].compositeYAxisLabel && !subBand.logTicks"
                     class="field flex-field">
                     <mat-slide-toggle
-                      id="raven-scientific_notation"
+                      id="raven-settings-scientific-notation"
                       color="accent"
                       [checked]="subBand.scientificNotation"
                       (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { scientificNotation: $event.checked } })">
@@ -350,7 +362,7 @@
                   <div class="field">
                     <mat-form-field>
                       <mat-select
-                        id="raven-settings-align-label"
+                        id="raven-settings-state-horizontally-align-label"
                         placeholder="Horizontally Align Label"
                         [value]="subBand.alignLabel"
                         (selectionChange)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { alignLabel: $event.value } })">
@@ -364,7 +376,7 @@
                   <div class="field">
                     <mat-form-field>
                       <mat-select
-                        id="raven-settings-baseline-label"
+                        id="raven-settings-state-vertically-align-label"
                         placeholder="Vertically Align Label"
                         [value]="subBand.baselineLabel"
                         (selectionChange)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
@@ -390,6 +402,7 @@
                 <div class="field">
                   <label>State Label Font Size</label>
                   <input
+                    id="raven-settings-label-font-size"
                     mat-input
                     [value]="subBand.stateLabelFontSize"
                     type="number"
@@ -406,6 +419,7 @@
                 class="field">
                 <mat-form-field>
                   <mat-select
+                    id="raven-settings-plot-type"
                     placeholder="Plot Type"
                     [value]="isNumericStateBand"
                     (selectionChange)="changePlotType(subBand, $event.value)">
@@ -420,6 +434,7 @@
                 class="field">
                 <mat-form-field>
                   <mat-select
+                    id="raven-settings-icon"
                     placeholder="Icon"
                     [value]="subBand.icon"
                     (selectionChange)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { icon: $event.value } })">
