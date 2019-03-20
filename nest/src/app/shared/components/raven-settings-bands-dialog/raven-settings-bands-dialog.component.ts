@@ -27,7 +27,7 @@ import {
 
 import * as sourceExplorerActions from '../../../raven/actions/source-explorer.actions';
 import * as timelineActions from '../../../raven/actions/timeline.actions';
-import { getBandLabel } from '../../util';
+import { defaultColors, getBandLabel } from '../../util';
 import { RavenConfirmDialogComponent } from '../raven-confirm-dialog/raven-confirm-dialog.component';
 
 @Component({
@@ -48,36 +48,7 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
   selectedLineColor = '';
   subBands: RavenSubBand[];
 
-  colors = [
-    '#000000',
-    '#AD1457',
-    '#F4511E',
-    '#E4C441',
-    '#0C8043',
-    '#3F51B5',
-    '#8E24AA',
-    '#E70FE7',
-    '#D81B60',
-    '#EF6C00',
-    '#C0CA33',
-    '#009688',
-    '#7986CB',
-    '#795548',
-    '#13EAEA',
-    '#D50000',
-    '#F09300',
-    '#7DB242',
-    '#039BE5',
-    '#B39DDB',
-    '#616161',
-    '#EEEE0F',
-    '#E67C73',
-    '#F6BF26',
-    '#33B679',
-    '#4285F4',
-    '#9E69AF',
-    '#A79B8E',
-  ];
+  colors = defaultColors;
 
   heightControl: FormControl = new FormControl('', [
     Validators.required,

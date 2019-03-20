@@ -15,6 +15,21 @@ mat-card-title {
   font-size: 18px;
 }
 
+.color-button {
+  font-size: 20px;
+  height: 24px;
+}
+
+.color-container {
+  max-width: 180px;
+  padding-bottom: 10px;
+}
+
 .field {
   padding: 10px;
 }
+
+.row-container {
+  display: flex;
+}
+

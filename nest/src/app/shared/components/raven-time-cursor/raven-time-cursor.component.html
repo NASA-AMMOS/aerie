@@ -78,12 +78,17 @@
       </div>
 
       <!-- Cursor Color. -->
-      <div class="field">
-        <label>Cursor Color </label>
-        <input
-          type="color"
-          [value]="cursorColor"
-          (input)="updateTimeCursorSettings.emit({ update: { cursorColor: $event.target.value } })">
+      <div class="color-container">
+        <h3>Cursor Color</h3>
+        <ng-container *ngFor="let color of colors">
+          <mat-icon
+            class="color-button"
+            [id]="color"
+            [ngStyle]="{'color':color}"
+            (click)="updateTimeCursorSettings.emit({ update: { cursorColor: color } })">
+            {{ cursorColor!==color && 'check_box_outline_blank' || 'check_box' }}
+          </mat-icon>
+        </ng-container>
       </div>
 
       <!-- Cursor Width. -->

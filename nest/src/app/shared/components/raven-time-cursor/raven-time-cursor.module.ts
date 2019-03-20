@@ -7,6 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RavenTimestampPipeModule } from '../../pipes';
@@ -15,6 +16,7 @@ import { RavenTimeCursorComponent } from './raven-time-cursor.component';
 import {
   MatCardModule,
   MatFormFieldModule,
+  MatIconModule,
   MatInputModule,
   MatSlideToggleModule,
 } from '@angular/material';
@@ -23,8 +25,10 @@ import {
   declarations: [RavenTimeCursorComponent],
   exports: [RavenTimeCursorComponent],
   imports: [
+    CommonModule,
     MatCardModule,
     MatFormFieldModule,
+    MatIconModule,
     MatInputModule,
     MatSlideToggleModule,
     RavenTimestampPipeModule,
