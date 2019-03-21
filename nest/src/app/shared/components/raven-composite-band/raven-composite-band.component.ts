@@ -728,7 +728,7 @@ export class RavenCompositeBandComponent
   /**
    * Helper. Returns true if this band contains an activity band.
    */
-  containActivityBand() {
+  get containActivityBand() {
     for (let i = 0, l = this.subBands.length; i < l; ++i) {
       if (this.subBands[i].type === 'activity') {
         return true;
@@ -740,7 +740,7 @@ export class RavenCompositeBandComponent
   /**
    * Helper. Returns true if a subBand is in addTo mode.
    */
-  containAddToBand() {
+  get containAddToBand() {
     for (let i = 0, l = this.subBands.length; i < l; ++i) {
       if (this.subBands[i].type === 'activity' && this.subBands[i].addTo) {
         return true;
@@ -764,7 +764,7 @@ export class RavenCompositeBandComponent
   /**
    * Helper. Returns true if this is a divider band.
    */
-  isDividerBand() {
+  get isDividerBand() {
     return this.subBands.length > 0 && this.subBands[0].type === 'divider';
   }
 
@@ -772,7 +772,7 @@ export class RavenCompositeBandComponent
    * Helper. Returns true if band is in overlay or contains a band in addTo mode.
    */
   isOverlayAddTo() {
-    return this.overlay || this.containAddToBand();
+    return this.overlay || this.containAddToBand;
   }
 
   /**
