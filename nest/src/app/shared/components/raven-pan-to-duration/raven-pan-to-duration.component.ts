@@ -98,9 +98,11 @@ export class RavenPanToDurationComponent {
    * Called when the pan search button is clicked.
    */
   onPan() {
-    const start: number = utc(this.panToControl.value);
-    const duration: number = fromDHMString(this.panDurationControl.value);
-    this.panTo.emit({ end: start + duration, start });
+    if (this.panDurationControl.valid && this.panToControl.valid) {
+      const start: number = utc(this.panToControl.value);
+      const duration: number = fromDHMString(this.panDurationControl.value);
+      this.panTo.emit({ end: start + duration, start });
+    }
   }
 
   /**
