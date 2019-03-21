@@ -19,17 +19,12 @@
   </mat-autocomplete>
 </span>
   <mat-icon
-    *ngIf="panToControl.valid && panDurationControl.valid"
-    class="icon"
+    [ngClass]="{
+      'icon': panToControl.valid && panDurationControl.valid,
+      'disabled-icon': !panToControl.valid || !panDurationControl.valid
+    }"
     matTooltip="Perform Pan"
     aria-label="Perform Pan"
     (click)="onPan()">
-    search
-  </mat-icon>
-  <mat-icon
-    *ngIf="!panToControl.valid || !panDurationControl.valid"
-    class="disabled-icon"
-    matTooltip="Perform Pan"
-    aria-label="Perform Pan">
     search
   </mat-icon>
