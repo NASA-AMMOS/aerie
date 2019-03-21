@@ -5,6 +5,7 @@
 
   <mat-icon
     class="icon"
+    id="zoom-in-time"
     matTooltip="Zoom In Time"
     aria-label="Zoom In Time"
     (click)="zoomIn.emit()">
@@ -13,6 +14,7 @@
 
   <mat-icon
     class="icon"
+    id="zoom-out-time"
     matTooltip="Zoom Out Time"
     aria-label="Zoom Out Time"
     (click)="zoomOut.emit()">
@@ -21,6 +23,7 @@
 
   <mat-icon
     class="icon"
+    id="reset-time"
     matTooltip="Reset Time"
     aria-label="Reset Time"
     (click)="resetView.emit()">
@@ -29,6 +32,7 @@
 
   <mat-icon
     class="icon"
+    id="pan-left-time"
     matTooltip="Pan Left Time"
     aria-label="Pan Left Time"
     (click)="panLeft.emit()">
@@ -37,6 +41,7 @@
 
   <mat-icon
     class="icon"
+    id="pan-right-time"
     matTooltip="Pan Right Time"
     aria-label="Pan Right Time"
     (click)="panRight.emit()">
@@ -45,7 +50,8 @@
 
   <div class="row-right">
     <span class="item-right state-label"
-    *ngIf="currentStateId !== '' && mode !== 'minimal'">
+      id="state-name"
+      *ngIf="currentStateId !== '' && mode !== 'minimal'">
       State: {{currentStateId}}
     </span>
     <mat-icon
@@ -76,6 +82,7 @@
       save
     </mat-icon>
     <mat-icon
+      id="save-state"
       *ngIf="currentStateId !== '' && mode !== 'minimal' && !currentStateChanged"
       class="item-right disabled-icon"
       matTooltip="Save"
