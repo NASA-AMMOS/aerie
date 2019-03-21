@@ -306,7 +306,7 @@ export function addSubBand(
   return {
     ...state,
     bands,
-    currentStateChanged: state.currentState ? true : false,
+    currentStateChanged: state.currentState !== null,
     ...updateTimeRanges(bands, state.viewTimeRange),
   };
 }
