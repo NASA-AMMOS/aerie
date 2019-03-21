@@ -191,7 +191,7 @@
                   <div class="field">
                     <mat-form-field>
                       <mat-select
-                        id="raven-settings-horizontal-align-label"
+                        id="raven-settings-horizontal"
                         placeholder="Horizontally Align Label"
                         [value]="subBand.alignLabel"
                         (selectionChange)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { alignLabel: $event.value } })">
@@ -205,7 +205,7 @@
                   <div class="field">
                     <mat-form-field>
                       <mat-select
-                        id="raven-settings-vertical-align-label"
+                        id="raven-settings-vertical"
                         placeholder="Vertically Align Label"
                         [value]="subBand.baselineLabel"
                         (selectionChange)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
@@ -362,7 +362,7 @@
                   <div class="field">
                     <mat-form-field>
                       <mat-select
-                        id="raven-settings-state-horizontally-align-label"
+                        id="raven-settings-horizontal"
                         placeholder="Horizontally Align Label"
                         [value]="subBand.alignLabel"
                         (selectionChange)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { alignLabel: $event.value } })">
@@ -376,7 +376,7 @@
                   <div class="field">
                     <mat-form-field>
                       <mat-select
-                        id="raven-settings-state-vertically-align-label"
+                        id="raven-settings-vertical"
                         placeholder="Vertically Align Label"
                         [value]="subBand.baselineLabel"
                         (selectionChange)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
