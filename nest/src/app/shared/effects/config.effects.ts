@@ -178,8 +178,8 @@ export class ConfigEffects {
     }/${shareableName}`;
 
     return [
-      ...this.loadLayout(layoutState, 'minimal'),
       ...this.loadState(configState, statePath, '', ''),
+      ...this.loadLayout(layoutState, 'minimal'),
     ];
   }
 
