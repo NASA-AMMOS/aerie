@@ -81,6 +81,7 @@ export class TimelineComponent implements OnDestroy {
   inUseEpoch$: Observable<RavenEpoch | null>;
 
   // Layout state.
+  mode$: Observable<string>;
   showActivityPointMetadata$: Observable<boolean>;
   showActivityPointParameters$: Observable<boolean>;
   showApplyLayoutDrawer$: Observable<boolean>;
@@ -176,6 +177,9 @@ export class TimelineComponent implements OnDestroy {
     this.inUseEpoch$ = this.store.pipe(select(epochsSelectors.getInUseEpochs));
 
     // Layout state.
+    this.mode$ = this.store.pipe(
+      select(layoutSelectors.getMode),
+    );
     this.showActivityPointMetadata$ = this.store.pipe(
       select(layoutSelectors.getShowActivityPointMetadata),
     );
