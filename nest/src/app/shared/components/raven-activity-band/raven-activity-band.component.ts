@@ -20,7 +20,7 @@ import {
 } from '@angular/core';
 
 import { RavenActivityPoint, RavenEpoch } from '../../models';
-import { getTooltipText } from '../../util';
+import { colorHexToRgbArray, getTooltipText } from '../../util';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -82,7 +82,7 @@ export class RavenActivityBandComponent
   label: string;
 
   @Input()
-  labelColor: number[];
+  labelColor: string;
 
   @Input()
   labelFont: string;
@@ -246,7 +246,7 @@ export class RavenActivityBandComponent
       this.updateSubBand.emit({
         prop: 'labelColor',
         subBandId: this.id,
-        value: this.labelColor,
+        value: colorHexToRgbArray(this.labelColor),
       });
     }
 
@@ -323,7 +323,7 @@ export class RavenActivityBandComponent
       id: this.id,
       intervals: [],
       label: this.getLabel(),
-      labelColor: this.labelColor,
+      labelColor: colorHexToRgbArray(this.labelColor),
       labelFont: this.labelFont,
       labelFontSize: this.labelFontSize,
       layout: this.layout === 0 ? 1 : this.layout,
@@ -390,7 +390,7 @@ export class RavenActivityBandComponent
         !this.excludeActivityTypes.includes(point.activityType)
       ) {
         const interval = new (window as any).DrawableInterval({
-          color: point.color,
+          color: colorHexToRgbArray(point.color),
           end: point.end,
           icon: this.activityStyle === 3 ? this.icon : null,
           id: point.id,

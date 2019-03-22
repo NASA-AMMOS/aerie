@@ -69,7 +69,7 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
   label: string;
 
   @Input()
-  labelColor: number[];
+  labelColor: string;
 
   @Input()
   labelFont: string;
@@ -257,7 +257,7 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
       this.updateSubBand.emit({
         prop: 'labelColor',
         subBandId: this.id,
-        value: this.labelColor,
+        value: colorHexToRgbArray(this.labelColor),
       });
     }
 
@@ -371,7 +371,7 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
         id: this.id,
         intervals: [],
         label: this.getLabel(),
-        labelColor: this.labelColor,
+        labelColor: colorHexToRgbArray(this.labelColor),
         labelFont: this.labelFont,
         labelFontSize: this.labelFontSize,
         name: this.name,
@@ -515,7 +515,7 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
         endValue: point.value,
         id: point.id,
         label: point.value,
-        labelColor: [0, 0, 0],
+        labelColor: colorHexToRgbArray('#000000'),
         onGetTooltipText: this.onGetTooltipText.bind(this),
         opacity: 0.5,
         properties: {

@@ -1083,6 +1083,7 @@ function Band(obj) {
   // add the tooltip hook
   $(this.canvas).mousemove(this.mousemove.bind(this));
   $(this.canvas).mouseout(this.mouseout.bind(this));
+  $(this.canvas).mouseenter(this.mouseenter.bind(this));
 
   // an array of an array of intervals to highlight
   this.intervalsList = [];
@@ -1590,6 +1591,12 @@ Band.prototype._mousemove = function(e) {
   return true;
 };
 
+Band.prototype.mouseenter = function(e) {
+  if (this.onMouseEnter) {
+      this.onMouseEnter();
+  }
+}
+
 Band.prototype.mousemove = function(e) {
   if(this._tooltipTimeout !== null) {
     clearTimeout(this._tooltipTimeout);
@@ -1830,6 +1837,7 @@ function CompositeBand(obj) {
   if(typeof obj === "undefined") return;
 
   if(!("decorator" in obj)) { obj.decorator = new Decorator(obj); }
+  if("onMouseEnter" in obj) { this.onMouseEnter = obj.onMouseEnter; }
   Band.prototype.constructor.call(this, obj);
 
   this.bands = [];
@@ -1989,7 +1997,7 @@ Decorator.prototype.paintGuideTimes = function() {
   var viewStart = viewTimeAxis.start;
   var viewEnd = viewTimeAxis.end;
 
-  var bandHeight = this.band.height + this.band.heightPadding;
+  var bandHeight = this.band.height + (this.band.heightPadding | 0);
   var ctx = this.band.canvas.getContext('2d');
   ctx.lineWidth = 2;
   ctx.strokeStyle = Util.rgbaToString(this.guideColor, 0.8);
@@ -2446,6 +2454,7 @@ function Painter(obj) {
     "triangle": {paint:Painter.paintTriangle, width:10},
     "Triangle": {paint:Painter.paintTriangle, width:10},
     "square":   {paint:Painter.paintSquare, width:10},
+    "circleCross":   {paint:Painter.paintCircleCross, width:10},
     "diamond":  {paint:Painter.paintDiamond, width:10},
     "Diamond":  {paint:Painter.paintDiamond, width:10}
   };
@@ -2569,6 +2578,7 @@ Painter.prototype.paintLabel = function(obj) {
         ctx.textBaseline = "bottom";
         labelY1 = ll.y;
       }
+
       ctx.fillText(label, labelX1, labelY1);
     }
   }
@@ -2808,6 +2818,39 @@ Painter.paintSquare = function(obj) {
     ctx.strokeStyle = color;
     ctx.strokeRect(x-width/2, y-width/2, width, width);
   }
+};
+
+Painter.paintCircleCross = function(obj) {
+  var band = obj.band;
+  var painter = band.painter;
+  var interval = obj.interval;
+  var color = obj.color;
+  var width = obj.width;
+  var ll = obj.ll;
+  var ul = obj.ul;
+  var ur = obj.ur;
+  var lr = obj.lr;
+
+  var ctx = band.canvas.getContext('2d');
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "rgba(200, 200, 200, 1.0)";
+
+  var x = ll.x+(lr.x-ll.x)/2;
+  var y = ll.y-(ll.y-ul.y)/2;
+
+  // draw the circle
+  var radius = width/2;
+  ctx.beginPath();
+  ctx.arc(x,y,radius,0,2*Math.PI);
+
+  // draw the X centered
+  ctx.moveTo(x-width/2, y-width/2);
+  ctx.lineTo(x+width/2, y+width/2);
+  ctx.moveTo(x-width/2, y+width/2);
+  ctx.lineTo(x+width/2, y-width/2);
+
+  ctx.closePath();
+  ctx.stroke();
 };
 
 Painter.paintDiamond = function(obj) {
@@ -3313,7 +3356,7 @@ ResourceBand.prototype.recomputeTickValues = function() {
   } catch (e) {}
 }
 
-ResourceDecorator.prototype = new Decorator();
+ResourceDecorator.prototype = new Decorator({});
 ResourceDecorator.prototype.constructor = ResourceDecorator;
 
 function ResourceDecorator(obj) {
@@ -3389,8 +3432,10 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
 
   // RAVEN -- composite Y-axis should be black
   // labels should be black for composite labels
-  if (this.band.parent instanceof CompositeBand && this.band.parent.compositeLabel)
+  ctx.fillStyle = Util.rgbaToString(this.band.labelColor, 1);
+  if (this.band.parent instanceof CompositeBand && this.band.parent.compositeLabel) {
       ctx.fillStyle = Util.rgbaToString([0,0,0], 1);
+  }
 
   // render the values if its in the renderable range
   var maxTickLabelWidth = 0;
@@ -3407,7 +3452,6 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
       ctx.strokeStyle = Util.rgbaToString([255,0,0], 0.5);
     }
     else {
-      ctx.fillStyle = Util.rgbaToString(this.band.labelColor, 1);
       ctx.strokeStyle = Util.rgbaToString(this.band.labelColor, 0.5);
     }
     // skip if previously evaluated
@@ -4754,6 +4798,10 @@ TimeAxis.prototype.getTimeFromX = function(x) {
   return time;
 };
 
+TimeAxis.prototype.getTimePerPixel = function() {
+  return this.getTimeFromX(this.x1+1)-this.start;
+}
+
 // guide times
 TimeAxis.prototype.addGuideTime = function(time) {
   this.guideTimes.push(time);
@@ -4766,6 +4814,9 @@ TimeAxis.prototype.clearGuideTimes = function() {
 // the TimeBand
 function TimeBand(obj) {
   if(typeof obj === "undefined") return;
+
+  this.decorator = new Decorator(obj);
+  this.decorator.band = this;
 
   //mandatory args
   this.timeAxis = obj.timeAxis;
@@ -5010,6 +5061,8 @@ TimeBand.prototype.repaint = function() {
   this.paintTicks();
   // paint the label
   this.paintLabel();
+
+  this.decorator.paintGuideTimes();
 
   // paint now
   var now        = this.viewTimeAxis.now;

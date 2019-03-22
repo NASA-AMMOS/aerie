@@ -14,6 +14,7 @@ import {
   BaseType,
   RavenActivityPoint,
   RavenCompositeBand,
+  RavenGuidePoint,
   RavenPin,
   RavenSortMessage,
   RavenSubBand,
@@ -24,12 +25,13 @@ import {
 // Action Types.
 export enum TimelineActionTypes {
   AddBand = '[timeline] add_band',
-  AddGuide = '[timeline] add_guide',
   AddPointsToSubBand = '[timeline] add_points_to_sub_band',
   AddSubBand = '[timeline] add_sub_band',
   ExpandChildrenOrDescendants = '[timeline] expand_children_or_descendants',
   FetchChildrenOrDescendants = '[timeline] fetch_children_or_descendants',
   FetchChildrenOrDescendantsSuccess = '[timeline] fetch_children_or_descendants_success',
+  FilterActivityInSubBand = '[timeline] filter_activity_in_sub_band',
+  HoverBand = '[timeline] hover_band',
   PanLeftViewTimeRange = '[timeline] pan_left_view_time_range',
   PanRightViewTimeRange = '[timeline] pan_right_view_time_range',
   PinAdd = '[timeline] pin_add',
@@ -41,7 +43,6 @@ export enum TimelineActionTypes {
   RemoveBandsOrPointsForSource = '[timeline] remove_bands_or_points_for_source',
   RemoveBandsWithNoPoints = '[timeline] remove_bands_with_no_points',
   RemoveChildrenOrDescendants = '[timeline] remove_children_or_descendants',
-  RemoveGuide = '[timeline] remove_guide',
   RemoveSourceIdFromSubBands = '[timeline] remove_source_from_sub_bands',
   RemoveSubBand = '[timeline] remove_sub_band',
   ResetViewTimeRange = '[timeline] reset_view_time_range',
@@ -51,6 +52,7 @@ export enum TimelineActionTypes {
   SetPointsForSubBand = '[timeline] set_points_for_sub_band',
   SortBands = '[timeline] sort_bands',
   SourceIdAdd = '[timeline] source_id_add',
+  ToggleGuide = '[timeline] toggle_guide',
   UpdateBand = '[timeline] update_band',
   UpdateLastClickTime = '[timeline] last_click_time',
   UpdateSubBand = '[timeline] update_sub_band',
@@ -69,10 +71,6 @@ export class AddBand implements Action {
     public band: RavenCompositeBand,
     public modifiers: AddBandModifiers = {},
   ) {}
-}
-
-export class AddGuide implements Action {
-  readonly type = TimelineActionTypes.AddGuide;
 }
 
 export class AddPointsToSubBand implements Action {
@@ -120,6 +118,22 @@ export class FetchChildrenOrDescendants implements Action {
 
 export class FetchChildrenOrDescendantsSuccess implements Action {
   readonly type = TimelineActionTypes.FetchChildrenOrDescendantsSuccess;
+}
+
+export class FilterActivityInSubBand implements Action {
+  readonly type = TimelineActionTypes.FilterActivityInSubBand;
+
+  constructor(
+    public bandId: string,
+    public subBandId: string,
+    public filter: string,
+  ) {}
+}
+
+export class HoverBand implements Action {
+  readonly type = TimelineActionTypes.HoverBand;
+
+  constructor(public bandId: string) {}
 }
 
 export class PanLeftViewTimeRange implements Action {
@@ -182,10 +196,6 @@ export class RemoveChildrenOrDescendants implements Action {
   ) {}
 }
 
-export class RemoveGuide implements Action {
-  readonly type = TimelineActionTypes.RemoveGuide;
-}
-
 export class RemoveSourceIdFromSubBands implements Action {
   readonly type = TimelineActionTypes.RemoveSourceIdFromSubBands;
 
@@ -246,6 +256,12 @@ export class SortBands implements Action {
   constructor(public sort: StringTMap<RavenSortMessage>) {}
 }
 
+export class ToggleGuide implements Action {
+  readonly type = TimelineActionTypes.ToggleGuide;
+
+  constructor(public guide: RavenGuidePoint) {}
+}
+
 export class UpdateBand implements Action {
   readonly type = TimelineActionTypes.UpdateBand;
 
@@ -291,11 +307,12 @@ export class ZoomOutViewTimeRange implements Action {
 // Union type of all actions.
 export type TimelineAction =
   | AddBand
-  | AddGuide
   | AddPointsToSubBand
   | AddSubBand
   | ExpandChildrenOrDescendants
   | FetchChildrenOrDescendants
+  | FilterActivityInSubBand
+  | HoverBand
   | PanLeftViewTimeRange
   | PanRightViewTimeRange
   | PinAdd
@@ -307,7 +324,6 @@ export type TimelineAction =
   | RemoveBandsOrPointsForSource
   | RemoveBandsWithNoPoints
   | RemoveChildrenOrDescendants
-  | RemoveGuide
   | RemoveSourceIdFromSubBands
   | RemoveSubBand
   | ResetViewTimeRange
@@ -317,6 +333,7 @@ export type TimelineAction =
   | SetPointsForSubBand
   | SortBands
   | SourceIdAdd
+  | ToggleGuide
   | UpdateBand
   | UpdateLastClickTime
   | UpdateSubBand

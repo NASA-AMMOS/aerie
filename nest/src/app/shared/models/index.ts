@@ -56,6 +56,7 @@ export * from './raven-file';
 export * from './raven-file-metadata';
 export * from './raven-file-source';
 export * from './raven-filter-source';
+export * from './raven-guide-point';
 export * from './raven-graphable-filter-source';
 export * from './raven-graphable-source';
 export * from './raven-pin';

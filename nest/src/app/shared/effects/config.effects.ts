@@ -25,6 +25,7 @@ import * as epochsActions from '../../raven/actions/epochs.actions';
 import * as layoutActions from '../../raven/actions/layout.actions';
 import * as sourceExplorerActions from '../../raven/actions/source-explorer.actions';
 import * as timeCursorActions from '../../raven/actions/time-cursor.actions';
+import * as timelineActions from '../../raven/actions/timeline.actions';
 import { RavenAppState } from '../../raven/raven-store';
 import { LayoutState } from '../../raven/reducers/layout.reducer';
 import {
@@ -177,8 +178,8 @@ export class ConfigEffects {
     }/${shareableName}`;
 
     return [
-      ...this.loadLayout(layoutState, 'minimal'),
       ...this.loadState(configState, statePath, '', ''),
+      ...this.loadLayout(layoutState, 'minimal'),
     ];
   }
 
@@ -220,7 +221,7 @@ export class ConfigEffects {
       ];
     } else if (layoutPath) {
       return [
-        new sourceExplorerActions.UpdateSourceExplorer({
+        new timelineActions.UpdateTimeline({
           currentStateId: layoutPath,
         }),
       ];

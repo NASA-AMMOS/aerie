@@ -20,7 +20,7 @@ export interface RavenActivityPoint {
   ancestors: string[];
   arguments: number;
   childrenUrl: string;
-  color: number[];
+  color: string;
   descendantsUrl: string;
   duration: number;
   end: number;
@@ -32,6 +32,7 @@ export interface RavenActivityPoint {
   legend: string;
   message: string | null;
   metadata: MpsServerActivityPointMetadata[];
+  hidden: boolean;
   sourceId: string;
   start: number;
   startTimestamp: string;

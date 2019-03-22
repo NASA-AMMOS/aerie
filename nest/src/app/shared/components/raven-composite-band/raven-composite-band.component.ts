@@ -29,6 +29,7 @@ import {
   RavenResourceBand,
   RavenSubBand,
   RavenTimeRange,
+  RavenUpdate,
 } from '../../models';
 
 import { bandById } from '../../util/bands';
@@ -91,6 +92,9 @@ export class RavenCompositeBandComponent
   heightPadding = 0;
 
   @Input()
+  hoveredBandId: string;
+
+  @Input()
   id = '';
 
   @Input()
@@ -109,6 +113,12 @@ export class RavenCompositeBandComponent
   maxTimeRange: RavenTimeRange = { end: 0, start: 0 };
 
   @Input()
+  overlay: boolean;
+
+  @Input()
+  selectedBandId: string;
+
+  @Input()
   selectedPoint: RavenPoint | null = null;
 
   @Input()
@@ -124,9 +134,27 @@ export class RavenCompositeBandComponent
   viewTimeRange: RavenTimeRange = { end: 0, start: 0 };
 
   @Output()
+  addDivider: EventEmitter<string> = new EventEmitter<string>();
+
+  @Output()
   bandLeftClick: EventEmitter<RavenBandLeftClick> = new EventEmitter<
     RavenBandLeftClick
   >();
+
+  @Output()
+  deleteBand: EventEmitter<string> = new EventEmitter<string>();
+
+  @Output()
+  settingsBand: EventEmitter<string> = new EventEmitter<string>();
+
+  @Output()
+  hoverBand: EventEmitter<string> = new EventEmitter<string>();
+
+  @Output()
+  updateAddTo: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
+
+  @Output()
+  updateOverlay: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
 
   @Output()
   updateViewTimeRange: EventEmitter<RavenTimeRange> = new EventEmitter<
@@ -371,11 +399,12 @@ export class RavenCompositeBandComponent
     this.ctlCompositeBand = new (window as any).CompositeBand({
       compositeYAxisLabel: false,
       height: this.height,
-      heightPadding: 0,
+      heightPadding: this.heightPadding,
       id: this.id,
       onDblLeftClick: this.onDblLeftClick.bind(this),
       onHideTooltip: this.onHideTooltip.bind(this),
       onLeftClick: this.onLeftClick.bind(this),
+      onMouseEnter: this.onMouseEnter.bind(this),
       onRightClick: this.onRightClick.bind(this),
       onShowTooltip: this.onShowTooltip.bind(this),
       onUpdateView: this.onUpdateView.bind(this),
@@ -493,6 +522,13 @@ export class RavenCompositeBandComponent
   }
 
   /**
+   *CTL Event. Called when mouse enters a band.
+   */
+  onMouseEnter() {
+    this.hoverBand.emit(this.id);
+  }
+
+  /**
    * CTL Event. Called when you left-click a composite band.
    */
   onLeftClick(e: MouseEvent, ctlData: any) {
@@ -566,6 +602,40 @@ export class RavenCompositeBandComponent
     // The band should be destroyed when all sub-bands are removed.
     if (this.ctlCompositeBand.bands.length) {
       this.redraw();
+    }
+  }
+
+  /**
+   * Event. Called when toggled from overlay mode and go to addTo mode if activity subBand exists.
+   */
+  onSwitchToAddTo() {
+    this.updateOverlay.emit({ bandId: this.id, update: { overlay: false } });
+    const activityBands = this.subBands.filter(
+      band => band.type === 'activity',
+    );
+    if (activityBands && activityBands.length > 0) {
+      this.updateAddTo.emit({
+        bandId: this.id,
+        subBandId: activityBands[0].id,
+        update: { addTo: true },
+      });
+    }
+  }
+
+  /**
+   * Event. Called to exit addTo and return to 'none' mode.
+   */
+  onSwitchToNone() {
+    this.updateOverlay.emit({ bandId: this.id, update: { overlay: false } });
+    const activityBands = this.subBands.filter(
+      band => band.type === 'activity',
+    );
+    if (activityBands && activityBands.length > 0) {
+      this.updateAddTo.emit({
+        bandId: this.id,
+        subBandId: activityBands[0].id,
+        update: { addTo: false },
+      });
     }
   }
 
@@ -656,6 +726,30 @@ export class RavenCompositeBandComponent
   }
 
   /**
+   * Helper. Returns true if this band contains an activity band.
+   */
+  get containActivityBand() {
+    for (let i = 0, l = this.subBands.length; i < l; ++i) {
+      if (this.subBands[i].type === 'activity') {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Helper. Returns true if a subBand is in addTo mode.
+   */
+  get containAddToBand() {
+    for (let i = 0, l = this.subBands.length; i < l; ++i) {
+      if (this.subBands[i].type === 'activity' && this.subBands[i].addTo) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Helper that returns an auto-scale option for a CTL resource band.
    * VISIBLE_INTERVALS indicates auto-scale of the y-axis ticks.
    * ALL_INTERVALS indicates no auto-scale of the y-axis ticks.
@@ -665,6 +759,20 @@ export class RavenCompositeBandComponent
     return autoScale
       ? ctlResourceBand.VISIBLE_INTERVALS
       : ctlResourceBand.ALL_INTERVALS;
+  }
+
+  /**
+   * Helper. Returns true if this is a divider band.
+   */
+  get isDividerBand() {
+    return this.subBands.length > 0 && this.subBands[0].type === 'divider';
+  }
+
+  /**
+   * Helper. Returns true if band is in overlay or contains a band in addTo mode.
+   */
+  isOverlayAddTo() {
+    return this.overlay || this.containAddToBand;
   }
 
   /**
@@ -694,7 +802,6 @@ export class RavenCompositeBandComponent
    */
   updateTimeAxisXCoordinates() {
     const offsetWidth = this.elementRef.nativeElement.offsetWidth;
-
     this.ctlTimeAxis.updateXCoordinates(this.labelWidth, offsetWidth);
     this.ctlViewTimeAxis.updateXCoordinates(this.labelWidth, offsetWidth);
 

@@ -30,7 +30,7 @@ export const activityBand: RavenActivityBand = {
   icon: 'circle',
   id: '100',
   label: 'test-activity-band',
-  labelColor: [0, 0, 0],
+  labelColor: '#000000',
   labelFont: 'Georgia',
   labelPin: '',
   layout: 1,
@@ -116,7 +116,7 @@ export const stateBand: RavenStateBand = {
   id: '102',
   isNumeric: false,
   label: 'test-state-band',
-  labelColor: [0, 0, 0],
+  labelColor: '#000000',
   labelFont: 'Georgia',
   labelPin: '',
   maxTimeRange: { end: 100, start: 10 },
@@ -196,7 +196,7 @@ export const bands: RavenCompositeBand[] = [
     subBands: [
       {
         ...activityBand,
-        addTo: true,
+        addTo: false,
         id: '3',
         name: 'test-activity-sub-band-3',
         parentUniqueId: '103',

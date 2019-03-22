@@ -16,12 +16,12 @@ import { RavenTimeRange } from './index';
 
 export interface RavenDividerBand {
   addTo: boolean;
-  color: number[];
+  color: string;
   height: number;
   heightPadding: number;
   id: string;
   label: string;
-  labelColor: number[];
+  labelColor: string;
   labelPin: string;
   maxTimeRange: RavenTimeRange;
   name: string;

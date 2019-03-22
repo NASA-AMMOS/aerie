@@ -18,6 +18,7 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
+import { colorHexToRgbArray } from '../../util';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,7 +31,7 @@ export class RavenDividerBandComponent implements OnChanges, OnDestroy, OnInit {
   borderWidth: number;
 
   @Input()
-  color: number[];
+  color: string;
 
   @Input()
   ctlTimeAxis: any;
@@ -48,7 +49,7 @@ export class RavenDividerBandComponent implements OnChanges, OnDestroy, OnInit {
   label: string;
 
   @Input()
-  labelColor: number[];
+  labelColor: string;
 
   @Input()
   labelFont: string;
@@ -98,7 +99,7 @@ export class RavenDividerBandComponent implements OnChanges, OnDestroy, OnInit {
       this.updateSubBand.emit({
         prop: 'labelColor',
         subBandId: this.id,
-        value: this.labelColor,
+        value: colorHexToRgbArray(this.labelColor),
       });
     }
 

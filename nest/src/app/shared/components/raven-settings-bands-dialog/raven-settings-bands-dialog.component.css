@@ -8,62 +8,66 @@
  */
 
 :host {
-  align-content: center;
-  align-items: stretch;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  height: 100%;
-  overflow: hidden;
-  width: 100%;
-}
-
-.icon {
-  font-size: 15px;
-}
-.spacer {
-  flex: 1 1 auto;
-}
-
-.timeline-container {
-  flex: 1 0 auto;
-  position: relative;
-}
-
-.timeline {
-  bottom: 0px;
-  left: 0px;
-  position: absolute;
-  right: 0px;
-  top: 0px;
-}
-
-.progress-container {
   display: block;
-  flex: 0 0 3px;
-  margin-top: -3px;
 }
 
-.name {
-  font-size: 9px;
+.btn-container {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checked-color-button {
+  font-size: 20px;
+  height: 24px;
+}
+
+.color-button {
+  font-size: 20px;
+  height: 24px;
+}
+
+.field {
+  padding: 10px;
+}
+
+.flex-item {
+  flex: 1 0 auto;
+}
+
+.heading {
+  padding-bottom: 10px;
+}
+
+.mat-card {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.padded-icon {
+  cursor: pointer;
+  padding-left: 10px;
   padding-right: 10px;
-}
-
-mat-progress-bar {
-  height: 3px;
-  z-index: 10;
-}
-
-.collapsed {
-  position: static !important;
-}
-
-.manage-graph {
-  background-color: aliceblue;
-  height: 14px;
-  position: relative;
-  display: inline-flex;
+  padding-top: 25px;
   flex: 0 0 auto;
-  margin-top: -3px;
-  z-index: 1;
+}
+
+.row-container {
+  display: flex;
+}
+
+h3 {
+  margin-top: 15px;
+  margin-bottom: 0px;
+  padding-bottom: 0px;
+  padding-left: 10px;
+}
+
+[mat-dialog-title] {
+  padding-top: 0px;
+  margin-top: 0px;
+  background-color: rgba(0, 0, 0, 0.2);
+  cursor: move;
+  text-align: center;
 }

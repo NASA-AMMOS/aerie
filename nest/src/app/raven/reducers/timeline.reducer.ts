@@ -11,15 +11,15 @@ import { omit, without } from 'lodash';
 
 import {
   AddBand,
-  AddGuide,
   AddPointsToSubBand,
   AddSubBand,
   ExpandChildrenOrDescendants,
+  FilterActivityInSubBand,
+  HoverBand,
   RemoveAllPointsInSubBandWithParentSource,
   RemoveBandsOrPointsForSource,
   RemoveBandsWithNoPoints,
   RemoveChildrenOrDescendants,
-  RemoveGuide,
   RemoveSourceIdFromSubBands,
   RemoveSubBand,
   SelectBand,
@@ -30,6 +30,7 @@ import {
   SourceIdAdd,
   TimelineAction,
   TimelineActionTypes,
+  ToggleGuide,
   UpdateBand,
   UpdateSubBand,
 } from '../actions/timeline.actions';
@@ -37,6 +38,7 @@ import {
 import {
   bandById,
   changeZoom,
+  filterActivityPoints,
   getMaxTimeRange,
   getParentSourceIds,
   getPoint,
@@ -49,9 +51,11 @@ import {
 } from '../../shared/util';
 
 import {
+  RavenActivityBand,
   RavenActivityPoint,
   RavenCompositeBand,
   RavenPoint,
+  RavenState,
   RavenSubBand,
   RavenTimeRange,
   StringTMap,
@@ -59,9 +63,13 @@ import {
 
 export interface TimelineState {
   bands: RavenCompositeBand[];
+  currentState: RavenState | null;
+  currentStateChanged: boolean;
+  currentStateId: string;
   expansionByActivityId: StringTMap<string>;
   fetchPending: boolean;
   guides: number[]; // in secs
+  hoveredBandId: string;
   lastClickTime: number | null;
   maxTimeRange: RavenTimeRange;
   panDelta: number;
@@ -74,9 +82,13 @@ export interface TimelineState {
 
 export const initialState: TimelineState = {
   bands: [],
+  currentState: null,
+  currentStateChanged: false,
+  currentStateId: '',
   expansionByActivityId: {},
   fetchPending: false,
   guides: [],
+  hoveredBandId: '',
   lastClickTime: null,
   maxTimeRange: { end: 0, start: 0 },
   panDelta: 10,
@@ -98,14 +110,16 @@ export function reducer(
   switch (action.type) {
     case TimelineActionTypes.AddBand:
       return addBand(state, action);
-    case TimelineActionTypes.AddGuide:
-      return addGuide(state, action);
     case TimelineActionTypes.AddPointsToSubBand:
       return addPointsToSubBand(state, action);
     case TimelineActionTypes.AddSubBand:
       return addSubBand(state, action);
     case TimelineActionTypes.ExpandChildrenOrDescendants:
       return expandChildrenOrDescendants(state, action);
+    case TimelineActionTypes.FilterActivityInSubBand:
+      return filterActivityInSubBand(state, action);
+    case TimelineActionTypes.HoverBand:
+      return hoverBand(state, action);
     case TimelineActionTypes.PanLeftViewTimeRange:
       return panLeftViewTimeRange(state);
     case TimelineActionTypes.PanRightViewTimeRange:
@@ -118,8 +132,6 @@ export function reducer(
       return removeBandsOrPointsForSource(state, action);
     case TimelineActionTypes.RemoveBandsWithNoPoints:
       return removeBandsWithNoPoints(state, action);
-    case TimelineActionTypes.RemoveGuide:
-      return removeGuide(state, action);
     case TimelineActionTypes.RemoveChildrenOrDescendants:
       return removeChildrenOrDescendants(state, action);
     case TimelineActionTypes.RemoveSourceIdFromSubBands:
@@ -140,6 +152,8 @@ export function reducer(
       return sortBands(state, action);
     case TimelineActionTypes.SourceIdAdd:
       return sourceIdAdd(state, action);
+    case TimelineActionTypes.ToggleGuide:
+      return toggleGuide(state, action);
     case TimelineActionTypes.UpdateBand:
       return updateBand(state, action);
     case TimelineActionTypes.UpdateLastClickTime:
@@ -223,18 +237,6 @@ export function addBand(state: TimelineState, action: AddBand): TimelineState {
 }
 
 /**
- * Reduction Helper. Called when reducing the 'AddGuide' action.
- */
-export function addGuide(state: TimelineState, action: AddGuide) {
-  return {
-    ...state,
-    guides: state.lastClickTime
-      ? state.guides.concat(state.lastClickTime)
-      : state.guides,
-  };
-}
-
-/**
  * Reduction Helper. Called when reducing the 'AddPointsToSubBand' action.
  *
  * TODO: Replace 'any' with a concrete type.
@@ -275,6 +277,7 @@ export function addPointsToSubBand(
   return {
     ...state,
     bands,
+    currentStateChanged: state.currentState !== null,
     ...updateTimeRanges(bands, state.viewTimeRange),
   };
 }
@@ -303,6 +306,7 @@ export function addSubBand(
   return {
     ...state,
     bands,
+    currentStateChanged: state.currentState !== null,
     ...updateTimeRanges(bands, state.viewTimeRange),
   };
 }
@@ -348,11 +352,48 @@ export function expandChildrenOrDescendants(
   return {
     ...state,
     bands,
+    currentStateChanged: state.currentState !== null,
     expansionByActivityId: {
       ...state.expansionByActivityId,
       [action.activityPoint.activityId]: action.expandType,
     },
     selectedPoint: activityPoint,
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'FilterActivityInSubBand' action.
+ */
+export function filterActivityInSubBand(
+  state: TimelineState,
+  action: FilterActivityInSubBand,
+): TimelineState {
+  const bands = state.bands.map((band: RavenCompositeBand) => {
+    if (action.bandId === band.id) {
+      return {
+        ...band,
+        subBands: band.subBands.map(subBand => {
+          if (action.subBandId === subBand.id && subBand.type === 'activity') {
+            return {
+              ...subBand,
+              points: filterActivityPoints(
+                (subBand as RavenActivityBand).points,
+                action.filter,
+              ),
+            };
+          }
+
+          return subBand;
+        }),
+      };
+    }
+
+    return band;
+  });
+
+  return {
+    ...state,
+    bands,
   };
 }
 
@@ -366,10 +407,21 @@ export function panLeftViewTimeRange(state: TimelineState): TimelineState {
 
   return {
     ...state,
+    currentStateChanged: state.currentState !== null,
     viewTimeRange: {
       end: newStart,
       start: newStart - currentViewWindow,
     },
+  };
+}
+
+export function hoverBand(
+  state: TimelineState,
+  action: HoverBand,
+): TimelineState {
+  return {
+    ...state,
+    hoveredBandId: action.bandId,
   };
 }
 
@@ -383,6 +435,7 @@ export function panRightViewTimeRange(state: TimelineState): TimelineState {
 
   return {
     ...state,
+    currentStateChanged: state.currentState !== null,
     viewTimeRange: {
       end: newStart + currentViewWindow,
       start: newStart,
@@ -426,6 +479,7 @@ export function removeAllPointsInSubBandWithParentSource(
   return {
     ...state,
     bands,
+    currentStateChanged: state.currentState !== null,
   };
 }
 
@@ -478,6 +532,7 @@ export function removeBandsOrPointsForSource(
   return {
     ...state,
     bands,
+    currentStateChanged: state.currentState !== null,
     ...updateSelectedBandIds(
       bands,
       state.selectedBandId,
@@ -551,27 +606,11 @@ export function removeChildrenOrDescendants(
   return {
     ...state,
     bands,
+    currentStateChanged: state.currentState !== null,
     expansionByActivityId: omit(
       state.expansionByActivityId,
       action.activityPoint.activityId,
     ),
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'RemoveGuide' action.
- */
-export function removeGuide(state: TimelineState, action: RemoveGuide) {
-  return {
-    ...state,
-    guides: state.guides.filter(time => {
-      if (state.lastClickTime) {
-        // remove guides within 10 sec threshold
-        const min = state.lastClickTime - 10;
-        const max = state.lastClickTime + 10;
-        return time >= max || time <= min;
-      } else return true;
-    }),
   };
 }
 
@@ -601,6 +640,7 @@ export function removeSourceIdFromSubBands(
   return {
     ...state,
     bands,
+    currentStateChanged: state.currentState !== null,
   };
 }
 
@@ -631,6 +671,7 @@ export function removeSubBand(
   return {
     ...state,
     bands,
+    currentStateChanged: state.currentState !== null,
     ...updateSelectedBandIds(
       bands,
       state.selectedBandId,
@@ -701,6 +742,7 @@ export function setCompositeYLabelDefault(
         return band;
       }
     }),
+    currentStateChanged: state.currentState !== null,
   };
 }
 
@@ -736,6 +778,7 @@ export function setPointsForSubBand(
   return {
     ...state,
     bands,
+    currentStateChanged: state.currentState !== null,
     ...updateTimeRanges(bands, state.viewTimeRange),
   };
 }
@@ -791,6 +834,28 @@ export function sourceIdAdd(
   return {
     ...state,
     bands,
+    currentStateChanged: state.currentState !== null,
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'ToggleGuide' action.
+ */
+export function toggleGuide(state: TimelineState, action: ToggleGuide) {
+  const existingGuide = state.guides.filter(guide =>
+    guideWithinTwoPixels(
+      guide,
+      action.guide.guideTime,
+      action.guide.timePerPixel,
+    ),
+  );
+  return {
+    ...state,
+    currentStateChanged: state.currentState !== null,
+    guides:
+      existingGuide.length > 0
+        ? state.guides.filter(guide => guide !== existingGuide[0])
+        : state.guides.concat(action.guide.guideTime),
   };
 }
 
@@ -813,6 +878,7 @@ export function updateBand(
 
       return band;
     }),
+    currentStateChanged: state.currentState !== null,
   };
 }
 
@@ -843,5 +909,19 @@ export function updateSubBand(
 
       return band;
     }),
+    currentStateChanged: state.currentState !== null,
   };
+}
+
+/**
+ * Helper. Returns true if guide is within 2 pixels of guideTime.
+ */
+export function guideWithinTwoPixels(
+  guide: number,
+  guideTime: number,
+  timePerPixel: number,
+) {
+  return (
+    guideTime > guide - 2 * timePerPixel && guideTime < guide + 2 * timePerPixel
+  );
 }

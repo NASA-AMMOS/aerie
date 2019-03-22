@@ -55,7 +55,7 @@ export function toRavenBandData(
 
   if (
     metadata.hasTimelineType === 'measurement' &&
-    (metadata as MpsServerStateMetadata).hasValueType === 'string_xdr'
+    (metadata as MpsServerStateMetadata).hasValueType.startsWith('string')
   ) {
     // State.
     const stateBand = toStateBand(
@@ -198,7 +198,7 @@ export function toActivityBands(
       icon: defaultBandSettings.icon,
       id: uniqueId(),
       label: `${legend}`,
-      labelColor: [0, 0, 0],
+      labelColor: '#000000',
       labelFont: defaultBandSettings.labelFont,
       labelPin: '',
       layout: defaultBandSettings.activityLayout,
@@ -212,7 +212,7 @@ export function toActivityBands(
       parentUniqueId: null,
       points: legends[legend],
       showActivityTimes: false,
-      showLabel: !isMessageTypeActivity(legends[legend][0]), // Don't show labels for message type activities such as error, warning etc.
+      showLabel: legends[legend][0].activityName !== undefined,
       showLabelPin: true,
       showTooltip: true,
       sourceIds: [sourceId],
@@ -246,7 +246,7 @@ export function toCompositeBand(
     compositeYAxisLabel: false,
     containerId: containerId || '0',
     height: subBand.height + subBand.heightPadding,
-    heightPadding: 0,
+    heightPadding: subBand.heightPadding,
     id: compositeBandUniqueId,
     name: subBand.name,
     overlay: false, // Composite bands with a single sub-band cannot be overlay by default.
@@ -271,12 +271,12 @@ export function toDividerBand(): RavenDividerBand {
 
   const dividerBand: RavenDividerBand = {
     addTo: false,
-    color: [255, 255, 255],
+    color: '#ffffff',
     height: 10,
     heightPadding: 0,
     id,
     label: `Divider ${id}`,
-    labelColor: [0, 0, 0],
+    labelColor: '#000000',
     labelPin: '',
     maxTimeRange: { start: 0, end: 0 },
     name: `Divider ${id}`,
@@ -376,7 +376,7 @@ export function toStateBand(
     id: uniqueId(),
     isNumeric: false,
     label: metadata.hasObjectName,
-    labelColor: [0, 0, 0],
+    labelColor: '#000000',
     labelFont: defaultBandSettings.labelFont,
     labelPin: '',
     maxTimeRange,
@@ -708,6 +708,21 @@ export function hasTwoResourceBands(band: RavenCompositeBand) {
 }
 
 /**
+ * Helper. Returns an addTo band. Returns null if none of the subBands in addTo mode.
+ */
+export function getAddToSubBandId(
+  bands: RavenCompositeBand[],
+  bandId: string,
+): string | null {
+  const band = bandById(bands, bandId) as RavenCompositeBand;
+  if (band && band.subBands) {
+    const addToSubBands = band.subBands.filter(subBand => subBand.addTo);
+    return addToSubBands.length > 0 ? addToSubBands[0].id : null;
+  }
+  return null;
+}
+
+/**
  * Helper. Returns all sub-bands that has source id.
  */
 export function getBandsWithSourceId(
@@ -763,24 +778,6 @@ export function subBandById(
     }
   }
   return null;
-}
-
-/**
- * Helper. Returns true if the given sub-band id in a list of bands is in add-to mode. False otherwise.
- */
-export function isAddTo(
-  bands: RavenCompositeBand[],
-  bandId: string,
-  subBandId: string,
-  type: string,
-): boolean {
-  const subBand = subBandById(bands, bandId, subBandId);
-
-  if (subBand && subBand.type === type) {
-    return subBand.addTo;
-  }
-
-  return false;
 }
 
 /**

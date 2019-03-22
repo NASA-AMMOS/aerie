@@ -58,6 +58,9 @@ export class RavenTimeBandComponent
   epoch: RavenEpoch | null;
 
   @Input()
+  guides: number[];
+
+  @Input()
   labelWidth: number;
 
   @Input()
@@ -65,6 +68,9 @@ export class RavenTimeBandComponent
 
   @Input()
   showTooltip: boolean;
+
+  @Input()
+  sideMenuDivSize: number;
 
   @Input()
   viewTimeRange: RavenTimeRange;
@@ -102,6 +108,11 @@ export class RavenTimeBandComponent
     // Epoch.
     if (changes.epoch && !changes.epoch.firstChange) {
       this.ctlTimeBand.minorLabels = this.getMinorLabel();
+      shouldRedraw = true;
+    }
+
+    if (changes.guides && !changes.guides.firstChange) {
+      this.ctlTimeAxis.guideTimes = this.guides;
       shouldRedraw = true;
     }
 
@@ -191,6 +202,8 @@ export class RavenTimeBandComponent
     this.ctlTimeBand.timeCursorWidth = this.cursorWidth;
     this.ctlTimeBand.timeCursorColor = colorHexToRgbArray(this.cursorColor);
 
+    this.ctlTimeAxis.guideTimes = this.guides;
+
     this.ctlTimeAxis.updateTimes(
       this.maxTimeRange.start,
       this.maxTimeRange.end,
@@ -265,13 +278,37 @@ export class RavenTimeBandComponent
   }
 
   /**
+   * Helper that returns an epoch label based on an epoch if it exists.
+   */
+  getEpochLabel(epoch: RavenEpoch | null): string[] {
+    if (epoch !== null) {
+      return [epoch.name];
+    }
+    return [];
+  }
+
+  /**
+   * Helper that returns an epoch name or local time name.
+   */
+  getMinorLabel() {
+    return this.getEpochLabel(this.epoch).length > 0
+      ? this.getEpochLabel(this.epoch)
+      : [getLocalTimezoneName()];
+  }
+
+  /**
    * Helper. Recalculates x-coordinates of the band based on the label width.
    */
   updateTimeAxisXCoordinates() {
     const offsetWidth = this.elementRef.nativeElement.offsetWidth;
-
-    this.ctlTimeAxis.updateXCoordinates(this.labelWidth, offsetWidth);
-    this.ctlViewTimeAxis.updateXCoordinates(this.labelWidth, offsetWidth);
+    this.ctlTimeAxis.updateXCoordinates(
+      this.labelWidth,
+      offsetWidth + this.sideMenuDivSize,
+    );
+    this.ctlViewTimeAxis.updateXCoordinates(
+      this.labelWidth,
+      offsetWidth + this.sideMenuDivSize,
+    );
   }
 
   /**
@@ -289,24 +326,5 @@ export class RavenTimeBandComponent
   resize() {
     this.updateTimeAxisXCoordinates();
     this.redraw();
-  }
-
-  /**
-   * Helper that returns an epoch label based on an epoch if it exists.
-   */
-  getEpochLabel(epoch: RavenEpoch | null): string[] {
-    if (epoch !== null) {
-      return [epoch.name];
-    }
-    return [];
-  }
-
-  /**
-   * Helper that returns an epoch name or local time name.
-   */
-  getMinorLabel() {
-    return this.getEpochLabel(this.epoch).length > 0
-      ? this.getEpochLabel(this.epoch)
-      : [getLocalTimezoneName()];
   }
 }

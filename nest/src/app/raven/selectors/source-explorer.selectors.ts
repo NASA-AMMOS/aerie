@@ -21,16 +21,6 @@ export const getSourceExplorerState = createSelector(
   (state: State): SourceExplorerState => state.sourceExplorer,
 );
 
-export const getCurrentState = createSelector(
-  getSourceExplorerState,
-  (state: SourceExplorerState) => state.currentState,
-);
-
-export const getCurrentStateId = createSelector(
-  getSourceExplorerState,
-  (state: SourceExplorerState) => state.currentStateId,
-);
-
 export const getCustomFiltersBySourceId = createSelector(
   getSourceExplorerState,
   (state: SourceExplorerState) => state.customFiltersBySourceId,

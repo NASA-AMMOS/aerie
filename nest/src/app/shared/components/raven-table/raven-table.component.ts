@@ -50,6 +50,9 @@ export class RavenTableComponent implements OnChanges {
   selectedPoint: RavenPoint;
 
   @Output()
+  updateFilterActivityInSubBand: EventEmitter<any> = new EventEmitter<any>();
+
+  @Output()
   updateTableColumns: EventEmitter<any> = new EventEmitter<any>();
 
   columnDefs: any[] = [];
@@ -172,6 +175,8 @@ export class RavenTableComponent implements OnChanges {
           prop !== 'activityParameters' &&
           prop !== 'ancestors' &&
           prop !== 'childrenUrl' &&
+          prop !== 'color' &&
+          prop !== 'hidden' &&
           prop !== 'descendantsUrl' &&
           prop !== 'endTimestamp' &&
           prop !== 'expandedFromPointId' &&

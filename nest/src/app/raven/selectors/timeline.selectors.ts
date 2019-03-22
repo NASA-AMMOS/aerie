@@ -14,6 +14,7 @@ import { State } from '../raven-store';
 import { TimelineState } from '../reducers/timeline.reducer';
 
 const bandsState = (state: TimelineState) => state.bands;
+const hoveredBandIdState = (state: TimelineState) => state.hoveredBandId;
 const selectedBandIdState = (state: TimelineState) => state.selectedBandId;
 const selectedSubBandIdState = (state: TimelineState) =>
   state.selectedSubBandId;
@@ -29,6 +30,26 @@ export const getBands = createSelector(getTimelineState, bandsState);
 export const getGuides = createSelector(
   getTimelineState,
   (state: TimelineState) => state.guides,
+);
+
+export const getCurrentState = createSelector(
+  getTimelineState,
+  (state: TimelineState) => state.currentState,
+);
+
+export const getCurrentStateChanged = createSelector(
+  getTimelineState,
+  (state: TimelineState) => state.currentStateChanged,
+);
+
+export const getCurrentStateId = createSelector(
+  getTimelineState,
+  (state: TimelineState) => state.currentStateId,
+);
+
+export const getHoveredBandId = createSelector(
+  getTimelineState,
+  hoveredBandIdState,
 );
 
 export const getLastClickTime = createSelector(

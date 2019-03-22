@@ -7,6 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { keyBy } from 'lodash';
+
 import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { Actions, Effect, ofType } from '@ngrx/effects';
@@ -22,6 +24,7 @@ import {
   RavenFileImportDialogComponent,
   RavenFolderDialogComponent,
   RavenPinDialogComponent,
+  RavenSettingsBandsDialogComponent,
   RavenShareableLinkDialogComponent,
   RavenStateSaveDialogComponent,
 } from '../../shared/components/components';
@@ -32,13 +35,14 @@ import {
   OpenConfirmDialog,
   OpenCustomFilterDialog,
   OpenCustomGraphDialog,
-  OpenDeleteDialog,
-  OpenDeleteSubBandDialog,
+  OpenDeleteBandDialog,
+  OpenDeleteSourceDialog,
   OpenFileImportDialog,
   OpenFolderDialog,
   OpenPinDialog,
   OpenRemoveAllBandsDialog,
   OpenRemoveAllGuidesDialog,
+  OpenSettingsBandDialog,
   OpenShareableLinkDialog,
   OpenStateApplyDialog,
   OpenStateSaveDialog,
@@ -47,6 +51,8 @@ import {
 
 import * as sourceExplorerActions from '../actions/source-explorer.actions';
 import * as timelineActions from '../actions/timeline.actions';
+
+import { RavenCompositeBand } from '../../shared/models';
 
 @Injectable()
 export class DialogEffects {
@@ -207,38 +213,11 @@ export class DialogEffects {
   );
 
   /**
-   * Effect for OpenDeleteDialog.
+   * Effect for OpenDeleteBandDialog.
    */
   @Effect()
-  openDeleteDialog$: Observable<Action> = this.actions$.pipe(
-    ofType<OpenDeleteDialog>(DialogActionTypes.OpenDeleteDialog),
-    exhaustMap(action => {
-      const deleteDialog = this.dialog.open(RavenConfirmDialogComponent, {
-        data: {
-          cancelText: 'No',
-          confirmText: 'Yes',
-          message: `Are you sure you want to delete ${action.source.name}?`,
-        },
-        width: action.width,
-      });
-
-      return zip(of(action), deleteDialog.afterClosed());
-    }),
-    map(([action, result]) => ({ action, result })),
-    exhaustMap(({ action, result }) => {
-      if (result && result.confirm) {
-        return of(new sourceExplorerActions.RemoveSourceEvent(action.source));
-      }
-      return [];
-    }),
-  );
-
-  /**
-   * Effect for OpenDeleteSubBandDialog.
-   */
-  @Effect()
-  openDeleteSubBandDialog$: Observable<Action> = this.actions$.pipe(
-    ofType<OpenDeleteSubBandDialog>(DialogActionTypes.OpenDeleteSubBandDialog),
+  openDeleteBandDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenDeleteBandDialog>(DialogActionTypes.OpenDeleteBandDialog),
     exhaustMap(action => {
       const deleteSubBandDialog = this.dialog.open(
         RavenConfirmDialogComponent,
@@ -255,15 +234,36 @@ export class DialogEffects {
       return zip(of(action), deleteSubBandDialog.afterClosed());
     }),
     map(([action, result]) => ({ action, result })),
-    exhaustMap(({ action: { subBand }, result }) => {
+    exhaustMap(({ action: { band }, result }) => {
       if (result && result.confirm) {
-        return [
-          new timelineActions.RemoveSubBand(subBand.id),
-          new sourceExplorerActions.SubBandIdRemove(
-            subBand.sourceIds,
-            subBand.id,
-          ),
-        ];
+        return this.removeAllSubBandsInBand(band);
+      }
+      return [];
+    }),
+  );
+
+  /**
+   * Effect for OpenDeleteSourceDialog.
+   */
+  @Effect()
+  openDeleteDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenDeleteSourceDialog>(DialogActionTypes.OpenDeleteSourceDialog),
+    exhaustMap(action => {
+      const deleteDialog = this.dialog.open(RavenConfirmDialogComponent, {
+        data: {
+          cancelText: 'No',
+          confirmText: 'Yes',
+          message: `Are you sure you want to delete ${action.source.name}?`,
+        },
+        width: action.width,
+      });
+
+      return zip(of(action), deleteDialog.afterClosed());
+    }),
+    map(([action, result]) => ({ action, result })),
+    exhaustMap(({ action, result }) => {
+      if (result && result.confirm) {
+        return of(new sourceExplorerActions.RemoveSourceEvent(action.source));
       }
       return [];
     }),
@@ -409,6 +409,32 @@ export class DialogEffects {
   );
 
   /**
+   * Effect for OpenSettingsBandDialog.
+   */
+  @Effect({ dispatch: false })
+  openSettingsBandDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenSettingsBandDialog>(DialogActionTypes.OpenSettingsBandDialog),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    exhaustMap(({ action, state: { raven } }) => {
+      const settingsBandDialog = this.dialog.open(
+        RavenSettingsBandsDialogComponent,
+        {
+          data: {
+            bandsById: keyBy(raven.timeline.bands, 'id'),
+            selectedBandId: action.bandId,
+            selectedSubBandId: action.subBandId,
+          },
+          width: '450px',
+        },
+      );
+
+      return settingsBandDialog.afterClosed();
+    }),
+    exhaustMap(() => []),
+  );
+
+  /**
    * Effect for OpenShareableLinkDialog.
    */
   @Effect({ dispatch: false })
@@ -522,4 +548,21 @@ export class DialogEffects {
       return [];
     }),
   );
+
+  /**
+   * Helper. Remove all subBands in band.
+   */
+  removeAllSubBandsInBand(band: RavenCompositeBand) {
+    const actions = [];
+    for (let i = 0, l = band.subBands.length; i < l; ++i) {
+      actions.push(new timelineActions.RemoveSubBand(band.subBands[i].id));
+      actions.push(
+        new sourceExplorerActions.SubBandIdRemove(
+          band.subBands[i].sourceIds,
+          band.subBands[i].id,
+        ),
+      );
+    }
+    return actions;
+  }
 }

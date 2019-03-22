@@ -8,12 +8,16 @@
  */
 
 import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
-import { MatTabChangeEvent } from '@angular/material';
 import { select, Store } from '@ngrx/store';
 import { combineLatest, Observable, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { ConfigState } from '../../../../config';
-import { getSourceIdsByLabelInBands } from '../../../shared/util';
+import {
+  bandById,
+  getSourceIdsByLabelInBands,
+  toCompositeBand,
+  toDividerBand,
+} from '../../../shared/util';
 import { TimeCursorState } from '../../reducers/time-cursor.reducer';
 import { TimelineState } from '../../reducers/timeline.reducer';
 
@@ -26,6 +30,7 @@ import {
   RavenCustomFilter,
   RavenDefaultBandSettings,
   RavenEpoch,
+  RavenGuidePoint,
   RavenPoint,
   RavenSituationalAwarenessPefEntry,
   RavenSortMessage,
@@ -76,7 +81,7 @@ export class TimelineComponent implements OnDestroy {
   inUseEpoch$: Observable<RavenEpoch | null>;
 
   // Layout state.
-  rightPanelSelectedTabIndex$: Observable<number | null>;
+  mode$: Observable<string>;
   showActivityPointMetadata$: Observable<boolean>;
   showActivityPointParameters$: Observable<boolean>;
   showApplyLayoutDrawer$: Observable<boolean>;
@@ -99,8 +104,6 @@ export class TimelineComponent implements OnDestroy {
   outputSourceIdsByLabel$: Observable<StringTMap<string[]>>;
 
   // Source Explorer state.
-  currentState$: Observable<RavenState | null>;
-  currentStateId$: Observable<string>;
   customFiltersBySourceId$: Observable<StringTMap<RavenCustomFilter[]>>;
   filtersByTarget$: Observable<StringTMap<StringTMap<string[]>>>;
   treeBySourceId$: Observable<StringTMap<RavenSource>>;
@@ -126,7 +129,11 @@ export class TimelineComponent implements OnDestroy {
 
   // Timeline state.
   bands$: Observable<RavenCompositeBand[]>;
+  currentState$: Observable<RavenState | null>;
+  currentStateChanged$: Observable<boolean>;
+  currentStateId$: Observable<string>;
   guides$: Observable<number[]>;
+  hoveredBandId$: Observable<string>;
   lastClickTime$: Observable<number | null>;
   maxTimeRange$: Observable<RavenTimeRange>;
   selectedBandId$: Observable<string>;
@@ -140,8 +147,11 @@ export class TimelineComponent implements OnDestroy {
   // Local (non-Observable) state. Derived from store state.
   bands: RavenCompositeBand[];
   baseUrl: string;
+  hoveredBandId: string;
   selectedBandId: string;
   selectedSubBandId: string;
+
+  sideMenuDivSize = 12;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -167,9 +177,7 @@ export class TimelineComponent implements OnDestroy {
     this.inUseEpoch$ = this.store.pipe(select(epochsSelectors.getInUseEpochs));
 
     // Layout state.
-    this.rightPanelSelectedTabIndex$ = this.store.pipe(
-      select(layoutSelectors.getRightPanelSelectedTabIndex),
-    );
+    this.mode$ = this.store.pipe(select(layoutSelectors.getMode));
     this.showActivityPointMetadata$ = this.store.pipe(
       select(layoutSelectors.getShowActivityPointMetadata),
     );
@@ -243,12 +251,6 @@ export class TimelineComponent implements OnDestroy {
     this.useNow$ = this.store.pipe(select(situAwareSelectors.getUseNow));
 
     // Source Explorer state.
-    this.currentState$ = this.store.pipe(
-      select(sourceExplorerSelectors.getCurrentState),
-    );
-    this.currentStateId$ = this.store.pipe(
-      select(sourceExplorerSelectors.getCurrentStateId),
-    );
     this.customFiltersBySourceId$ = this.store.pipe(
       select(sourceExplorerSelectors.getCustomFiltersBySourceId),
     );
@@ -283,7 +285,19 @@ export class TimelineComponent implements OnDestroy {
 
     // Timeline state.
     this.bands$ = this.store.pipe(select(timelineSelectors.getBands));
+    this.currentState$ = this.store.pipe(
+      select(timelineSelectors.getCurrentState),
+    );
+    this.currentStateChanged$ = this.store.pipe(
+      select(timelineSelectors.getCurrentStateChanged),
+    );
+    this.currentStateId$ = this.store.pipe(
+      select(timelineSelectors.getCurrentStateId),
+    );
     this.guides$ = this.store.pipe(select(timelineSelectors.getGuides));
+    this.hoveredBandId$ = this.store.pipe(
+      select(timelineSelectors.getHoveredBandId),
+    );
     this.lastClickTime$ = this.store.pipe(
       select(timelineSelectors.getLastClickTime),
     );
@@ -347,6 +361,9 @@ export class TimelineComponent implements OnDestroy {
     this.baseUrl$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(baseUrl => (this.baseUrl = baseUrl));
+    this.hoveredBandId$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(hoveredBandId => (this.hoveredBandId = hoveredBandId));
     this.selectedBandId$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(selectedBandId => (this.selectedBandId = selectedBandId));
@@ -360,6 +377,22 @@ export class TimelineComponent implements OnDestroy {
   ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
+  }
+
+  onFilterActivityInSubBand(e: any) {
+    if (e.bandId && e.subBandId) {
+      this.store.dispatch(
+        new timelineActions.FilterActivityInSubBand(
+          e.bandId,
+          e.subBandId,
+          e.filter,
+        ),
+      );
+    }
+  }
+
+  onToggleGuide(e: RavenGuidePoint): void {
+    this.store.dispatch(new timelineActions.ToggleGuide(e));
   }
 
   /**
@@ -447,12 +480,19 @@ export class TimelineComponent implements OnDestroy {
     this.store.dispatch(new outputActions.CreateOutput());
   }
 
+  onDeleteBand(bandId: string): void {
+    const band = bandById(this.bands, bandId) as RavenCompositeBand;
+    this.store.dispatch(new dialogActions.OpenDeleteBandDialog(band, '300px'));
+  }
+
   /**
-   * Event. Called when a `delete-sub-band` event is fired from the raven-settings component.
+   * Event. Called when a `add-divider-band` event is fired.
    */
-  onDeleteSubBand(subBand: RavenSubBand): void {
+  onAddDividerBand(selectedBandId: string): void {
     this.store.dispatch(
-      new dialogActions.OpenDeleteSubBandDialog(subBand, '300px'),
+      new timelineActions.AddBand(null, toCompositeBand(toDividerBand()), {
+        afterBandId: selectedBandId,
+      }),
     );
   }
 
@@ -468,6 +508,13 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
+   * Event. Called when a 'hover' event is fired from ctl.
+   */
+  onHoverBand(bandId: string) {
+    this.store.dispatch(new timelineActions.HoverBand(bandId));
+  }
+
+  /**
    * Event. Called when a `import-epochs` event is fired from the raven-epochs component.
    */
   onImportEpochs(epochs: RavenEpoch[]) {
@@ -475,11 +522,17 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
-   * Event. Called when a tab is changed.
+   * Event. Called when settings icon is clicked.
    */
-  onSelectedTabChange(e: MatTabChangeEvent) {
+  onSettingsBand(bandId: string): void {
+    this.store.dispatch(new timelineActions.SelectBand(bandId));
+    const band = bandById(this.bands, bandId) as RavenCompositeBand;
     this.store.dispatch(
-      new layoutActions.UpdateLayout({ rightPanelSelectedTabIndex: e.index }),
+      new dialogActions.OpenSettingsBandDialog(
+        bandId,
+        band.subBands[0].id,
+        '300px',
+      ),
     );
   }
 
@@ -553,24 +606,19 @@ export class TimelineComponent implements OnDestroy {
     );
   }
 
-  /**
-   * Event. Called when an `update-band` event is fired from the raven-settings component.
-   */
-  onUpdateBand(e: RavenUpdate): void {
-    if (e.bandId) {
-      this.store.dispatch(new timelineActions.UpdateBand(e.bandId, e.update));
-    }
-  }
-
-  /**
-   * Event. Called when an `update-band-and-sub-band` event is fired from the raven-settings component.
-   */
-  onUpdateBandAndSubBand(e: RavenUpdate): void {
+  onUpdateAddTo(e: RavenUpdate): void {
     if (e.bandId && e.subBandId) {
-      this.store.dispatch(new timelineActions.UpdateBand(e.bandId, e.update));
+      this.store.dispatch(new timelineActions.SelectBand(e.bandId));
       this.store.dispatch(
         new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update),
       );
+    }
+  }
+
+  onUpdateOverlay(e: RavenUpdate): void {
+    if (e.bandId) {
+      this.store.dispatch(new timelineActions.SelectBand(e.bandId));
+      this.store.dispatch(new timelineActions.UpdateBand(e.bandId, e.update));
     }
   }
 
@@ -645,5 +693,53 @@ export class TimelineComponent implements OnDestroy {
    */
   resize() {
     this.store.dispatch(new layoutActions.Resize());
+  }
+
+  onPanLeft() {
+    this.store.dispatch(new timelineActions.PanLeftViewTimeRange());
+  }
+
+  onPanRight() {
+    this.store.dispatch(new timelineActions.PanRightViewTimeRange());
+  }
+
+  onPanTo(viewTimeRange: RavenTimeRange) {
+    this.store.dispatch(new timelineActions.UpdateViewTimeRange(viewTimeRange));
+  }
+
+  onResetView() {
+    this.store.dispatch(new timelineActions.ResetViewTimeRange());
+  }
+
+  onZoomIn() {
+    this.store.dispatch(new timelineActions.ZoomInViewTimeRange());
+  }
+
+  onZoomOut() {
+    this.store.dispatch(new timelineActions.ZoomOutViewTimeRange());
+  }
+
+  onRemoveAllBands() {
+    this.store.dispatch(new dialogActions.OpenRemoveAllBandsDialog('400px'));
+  }
+
+  onRemoveAllGuides() {
+    this.store.dispatch(new dialogActions.OpenRemoveAllGuidesDialog('400px'));
+  }
+
+  onShareableLink() {
+    this.store.dispatch(new dialogActions.OpenShareableLinkDialog('600px'));
+  }
+
+  onApplyCurrentState() {
+    this.store.dispatch(new dialogActions.OpenApplyCurrentStateDialog());
+  }
+
+  onApplyCurrentLayout() {
+    this.store.dispatch(new layoutActions.ToggleApplyLayoutDrawerEvent(true));
+  }
+
+  onUpdateCurrentState() {
+    this.store.dispatch(new dialogActions.OpenUpdateCurrentStateDialog());
   }
 }

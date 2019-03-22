@@ -8,6 +8,7 @@
  */
 
 import {
+  filterActivityPoints,
   getActivityPointInBand,
   getColorFromActivityMetadata,
   getMaxTimeRange,
@@ -16,9 +17,19 @@ import {
   updateSelectedPoint,
 } from './points';
 
-import { activityPoint, bands } from '../mocks';
+import { activityPoint, activityPoints, bands } from '../mocks';
 
 describe('points.ts', () => {
+  describe('filterActivityPoints', () => {
+    it(`should return the second activity point with hidden set to true`, () => {
+      const result = filterActivityPoints(activityPoints, 'AACS');
+      expect(result).toEqual([
+        activityPoints[0],
+        { ...activityPoints[1], hidden: true },
+        activityPoints[2],
+      ]);
+    });
+  });
   describe('getActivityPointInBand', () => {
     it(`should return a correct an activity point with a given activityId`, () => {
       expect(getActivityPointInBand(bands, 'test-activity-point')).toEqual({
@@ -87,13 +98,13 @@ describe('points.ts', () => {
     it(`should return [66, 130, 198 ] for Dodger Blue`, () => {
       expect(
         getColorFromActivityMetadata([{ Name: 'color', Value: 'Dodger Blue' }]),
-      ).toEqual([66, 130, 198]);
+      ).toEqual('#4282c6');
     });
 
     it(`should return [255, 0, 0 ] for #ff0000`, () => {
       expect(
         getColorFromActivityMetadata([{ Name: 'color', Value: '#ff0000' }]),
-      ).toEqual([255, 0, 0]);
+      ).toEqual('#ff0000');
     });
 
     it(`should return [255, 255, 198 ] for [255, 255, 198]`, () => {
@@ -101,7 +112,7 @@ describe('points.ts', () => {
         getColorFromActivityMetadata([
           { Name: 'color', Value: [255, 255, 198] },
         ]),
-      ).toEqual([255, 255, 198]);
+      ).toEqual('#FFFFC6');
     });
   });
 

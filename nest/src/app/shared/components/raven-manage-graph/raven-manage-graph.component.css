@@ -7,18 +7,33 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-:host {
-  display: block;
+.disabled-icon {
+  font-size: 15px;
+  opacity: 0.37;
+  padding-top: 10px;
 }
 
-.heading {
-  padding-bottom: 10px;
+.icon {
+  cursor: pointer;
+  font-size: 15px;
+  padding-top: 10px;
 }
 
-.field {
-  padding: 10px;
-}
-
-.full-width {
+.manage-graph {
+  padding-left: 2px;
+  display: inline-flex;
+  flex: 1 1 auto;
   width: 100%;
+}
+
+.row-right {
+  flex-grow: 2;
+  display: inline-flex;
+  justify-content: flex-end;
+}
+
+.state-label {
+  padding-right: 10px;
+  padding-top: 7px;
+  font-size: 10px;
 }

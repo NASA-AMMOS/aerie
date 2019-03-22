@@ -1,5 +1,5 @@
 <span class="pan-to">
-  <input
+  <input class="short"
     [formControl]="panToControl"
     placeholder="Pan To"
     type="text"
@@ -7,7 +7,7 @@
 </span>
 
 <span class="pan-duration">
-  <input
+  <input class="short"
     [formControl]="panDurationControl"
     [matAutocomplete]="auto"
     placeholder="Pan Duration"
@@ -18,14 +18,13 @@
     </mat-option>
   </mat-autocomplete>
 </span>
-
-<button
-  mat-icon-button
-  matTooltip="Perform Pan"
-  [disabled]="!panToControl.valid || !panDurationControl.valid"
-  (click)="onPan()">
   <mat-icon
-    aria-label="Perform Pan">
+    [ngClass]="{
+      'icon': panToControl.valid && panDurationControl.valid,
+      'disabled-icon': !panToControl.valid || !panDurationControl.valid
+    }"
+    matTooltip="Perform Pan"
+    aria-label="Perform Pan"
+    (click)="onPan()">
     search
   </mat-icon>
-</button>

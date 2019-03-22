@@ -10,24 +10,32 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { RavenSettingsBandsComponent } from './raven-settings-bands.component';
+import { RavenSettingsBandsDialogComponent } from './raven-settings-bands-dialog.component';
 
 import {
   MatButtonModule,
   MatCardModule,
+  MatDialogModule,
   MatFormFieldModule,
+  MatIconModule,
   MatInputModule,
   MatSelectModule,
   MatSlideToggleModule,
 } from '@angular/material';
 
+import { DragDropModule } from '@angular/cdk/drag-drop';
+
 @NgModule({
-  declarations: [RavenSettingsBandsComponent],
-  exports: [RavenSettingsBandsComponent],
+  declarations: [RavenSettingsBandsDialogComponent],
+  entryComponents: [RavenSettingsBandsDialogComponent],
+  exports: [RavenSettingsBandsDialogComponent],
   imports: [
     CommonModule,
+    DragDropModule,
     MatButtonModule,
     MatCardModule,
+    MatIconModule,
+    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
@@ -35,4 +43,4 @@ import {
     ReactiveFormsModule,
   ],
 })
-export class RavenSettingsBandsModule {}
+export class RavenSettingsBandsDialogModule {}

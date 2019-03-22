@@ -21,6 +21,7 @@
       [excludeActivityTypes]="excludeActivityTypes"
       [guides]="guides"
       [height]="band.height"
+      [hoveredBandId]="hoveredBandId"
       [heightPadding]="band.heightPadding"
       [id]="band.id"
       [isSelected]="band.id === selectedBandId"
@@ -28,13 +29,21 @@
       [labelWidth]="labelWidth"
       [lastClickTime]="lastClickTime"
       [maxTimeRange]="maxTimeRange"
+      [overlay]="band.overlay"
+      [selectedBandId]="selectedBandId"
       [selectedPoint]="selectedPoint"
       [showLastClick]="showLastClick"
       [showTooltip]="showTooltip"
       [subBands]="band.subBands"
       [viewTimeRange]="viewTimeRange"
+      (addDivider)="addDivider.emit($event)"
       (bandLeftClick)="bandLeftClick.emit($event)"
-      (updateViewTimeRange)="updateViewTimeRange.emit($event)">
+      (deleteBand)="deleteBand.emit($event)"
+      (settingsBand)="settingsBand.emit($event)"
+      (hoverBand)="hoverBand.emit($event)"
+      (updateViewTimeRange)="updateViewTimeRange.emit($event)"
+      (updateAddTo)="updateAddTo.emit($event)"
+      (updateOverlay)="updateOverlay.emit($event)">
     </raven-composite-band>
   </div>
 </div>

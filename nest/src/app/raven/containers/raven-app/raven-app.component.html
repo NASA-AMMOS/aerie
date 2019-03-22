@@ -1,151 +1,23 @@
 <raven-app-header title="Visualization" (menuClicked)="onMenuClicked()">
-  <span class="spacer"></span>
-
-  <button
-    *ngIf="currentStateId !== '' && mode !== 'minimal'"
-    mat-icon-button
-    matTooltip="Apply State"
-    (click)="onApplyCurrentState()">
-    <mat-icon
-      aria-label="Apply State">
-      photo
-    </mat-icon>
-  </button>
-
-  <button
-    *ngIf="currentStateId !== '' && mode !== 'minimal'"
-    mat-icon-button
-    matTooltip="Apply Layout"
-    (click)="onApplyLayout()">
-    <mat-icon
-      aria-label="Apply Layout">
-      playlist_play
-    </mat-icon>
-  </button>
-
-  <button
-    *ngIf="currentStateId !== '' && mode !== 'minimal'"
-    mat-icon-button
-    matTooltip="Update State"
-    (click)="onUpdateCurrentState()">
-    <mat-icon
-      aria-label="Update State">
-      photo_library
-    </mat-icon>
-  </button>
-
-  <span class="name" *ngIf="currentStateId !== '' && mode !== 'minimal'">State: {{currentStateId}}</span>
-  <raven-pan-to-duration
-    (panTo)="onPanTo($event)">
-  </raven-pan-to-duration>
-
-  <button
-    mat-icon-button
-    matTooltip="Reset Time"
-    (click)="onReset()">
-    <mat-icon
-      aria-label="Reset Time">
-      restore
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Zoom In Time"
-    (click)="onZoomIn()">
-    <mat-icon
-      aria-label="Zoom In Time">
-      zoom_in
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Zoom Out Time"
-    (click)="onZoomOut()">
-    <mat-icon
-      aria-label="Zoom Out Time">
-      zoom_out
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Pan Left Time"
-    (click)="onPanLeft()">
-    <mat-icon
-      aria-label="Pan Left Time">
-      skip_previous
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Pan Right Time"
-    (click)="onPanRight()">
-    <mat-icon
-      aria-label="Pan Right Time">
-      skip_next
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Remove All Bands"
-    (click)="onRemoveAllBands()">
-    <mat-icon
-      aria-label="Remove All Bands">
-      clear
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Add Divider"
-    (click)="onAddDividerBand()">
-    <mat-icon
-      aria-label="Add Divider">
-      view_day
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Create Guide"
-    (click)="onAddGuide()">
-    <mat-icon
-      aria-label="Create Guide">
-      create
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Delete Guide"
-    (click)="onRemoveGuide()">
-    <mat-icon
-      aria-label="Delete Guide">
-      remove_circle_outline
-    </mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    matTooltip="Remove All Guides"
-    (click)="onRemoveAllGuides()">
-    <mat-icon
-      aria-label="Remove All Guides">
-      remove_circle
-    </mat-icon>
-  </button>
-
   <button
     mat-icon-button
     matTooltip="Global Band Settings"
     (click)="toggleGlobalSettingsDrawer()">
     <mat-icon
+      class="icon"
       aria-label="Settings">
       settings
+    </mat-icon>
+  </button>
+
+  <button
+    [matMenuTriggerFor]="subMenu"
+    mat-icon-button
+    matTooltip="Panels">
+    <mat-icon
+      class="icon"
+      aria-label="Panels">
+      view_quilt
     </mat-icon>
   </button>
 
@@ -153,6 +25,7 @@
     [matMenuTriggerFor]="rootMenu"
     mat-icon-button>
     <mat-icon
+      class="icon"
       aria-label="Menu">
       more_vert
     </mat-icon>
@@ -162,16 +35,6 @@
     #rootMenu="matMenu"
     [overlapTrigger]="false"
     y-position="below">
-    <button
-      mat-menu-item
-      [matMenuTriggerFor]="subMenu">
-      <mat-icon
-        aria-label="Panels">
-        view_quilt
-      </mat-icon>
-      Panels
-    </button>
-
     <button
       mat-menu-item
       (click)="toggleEpochsDrawer()">
@@ -210,26 +73,6 @@
         timeline
       </mat-icon>
       Situational Awareness
-    </button>
-
-    <button
-      mat-menu-item
-      (click)="toggleShareableLinkDialog()">
-      <mat-icon
-        aria-label="Get Shareable Link">
-        link
-      </mat-icon>
-      Get Shareable Link
-    </button>
-
-    <button
-      mat-menu-item
-      (click)="toggleAboutDialog()">
-      <mat-icon
-        aria-label="About Raven">
-        info
-      </mat-icon>
-      About Raven
     </button>
   </mat-menu>
 

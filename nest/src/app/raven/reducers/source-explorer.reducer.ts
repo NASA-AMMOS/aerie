@@ -16,7 +16,6 @@ import {
   RavenPin,
   RavenSource,
   RavenSourceAction,
-  RavenState,
   StringTMap,
 } from '../../shared/models';
 import { getAllChildIds } from '../../shared/util';
@@ -45,8 +44,6 @@ import {
 } from '../actions/source-explorer.actions';
 
 export interface SourceExplorerState {
-  currentState: RavenState | null;
-  currentStateId: string;
   customFiltersBySourceId: StringTMap<RavenCustomFilter[]>;
   fetchPending: boolean;
   filterState: FilterState;
@@ -64,8 +61,6 @@ export interface SourceExplorerState {
 }
 
 export const initialState: SourceExplorerState = {
-  currentState: null,
-  currentStateId: '',
   customFiltersBySourceId: {},
   fetchPending: false,
   filterState: FilterState.empty(),
@@ -308,40 +303,44 @@ export function newSources(
   action: NewSources,
 ): SourceExplorerState {
   const parentSource = state.treeBySourceId[action.sourceId];
-  const sources = action.sources;
-  const newChildIds = sources.map(source => source.id);
-  const originalChildIds = parentSource.childIds;
+  if (parentSource) {
+    const sources = action.sources;
+    const newChildIds = sources.map(source => source.id);
+    const originalChildIds = parentSource.childIds;
 
-  const deletedSourceIds: string[] = [];
-  originalChildIds.forEach(originalChildId => {
-    if (!newChildIds.includes(originalChildId)) {
-      // Source has been deleted, remove source and its descendants.
-      deletedSourceIds.push(
-        originalChildId,
-        ...getAllChildIds(state.treeBySourceId, originalChildId),
-      );
-    } else if (
-      state.treeBySourceId[originalChildId].fileMetadata.createdOn !==
-      sources.filter(source => source.id === originalChildId)[0].fileMetadata
-        .createdOn
-    ) {
-      // Source has been updated, remove its descedants.
-      deletedSourceIds.push(
-        ...getAllChildIds(state.treeBySourceId, originalChildId),
-      );
-    }
-  });
-  return {
-    ...state,
-    treeBySourceId: {
-      ...omit(state.treeBySourceId, deletedSourceIds),
-      ...keyBy(sources, 'id'),
-      [action.sourceId]: {
-        ...parentSource,
-        childIds: sources.map(source => source.id),
+    const deletedSourceIds: string[] = [];
+    originalChildIds.forEach(originalChildId => {
+      if (!newChildIds.includes(originalChildId)) {
+        // Source has been deleted, remove source and its descendants.
+        deletedSourceIds.push(
+          originalChildId,
+          ...getAllChildIds(state.treeBySourceId, originalChildId),
+        );
+      } else if (
+        state.treeBySourceId[originalChildId].fileMetadata.createdOn !==
+        sources.filter(source => source.id === originalChildId)[0].fileMetadata
+          .createdOn
+      ) {
+        // Source has been updated, remove its descedants.
+        deletedSourceIds.push(
+          ...getAllChildIds(state.treeBySourceId, originalChildId),
+        );
+      }
+    });
+    return {
+      ...state,
+      treeBySourceId: {
+        ...omit(state.treeBySourceId, deletedSourceIds),
+        ...keyBy(sources, 'id'),
+        [action.sourceId]: {
+          ...parentSource,
+          childIds: sources.map(source => source.id),
+        },
       },
-    },
-  };
+    };
+  } else {
+    return { ...state };
+  }
 }
 
 /**

@@ -30,6 +30,7 @@ import * as dialogActions from '../../actions/dialog.actions';
 import * as epochsActions from '../../actions/epochs.actions';
 import * as layoutActions from '../../actions/layout.actions';
 import * as sourceExplorerActions from '../../actions/source-explorer.actions';
+import * as timelineActions from '../../actions/timeline.actions';
 import { SourceExplorerState } from '../../reducers/source-explorer.reducer';
 import {
   getFiltersByTarget,
@@ -145,7 +146,7 @@ export class SourceExplorerComponent implements OnDestroy {
     const { event, source } = action;
     if (event === 'apply-layout') {
       this.store.dispatch(
-        new sourceExplorerActions.UpdateSourceExplorer({
+        new timelineActions.UpdateTimeline({
           currentStateId: source.id,
         }),
       );
@@ -155,7 +156,9 @@ export class SourceExplorerComponent implements OnDestroy {
         new dialogActions.OpenStateApplyDialog(source, '250px'),
       );
     } else if (event === 'delete') {
-      this.store.dispatch(new dialogActions.OpenDeleteDialog(source, '250px'));
+      this.store.dispatch(
+        new dialogActions.OpenDeleteSourceDialog(source, '250px'),
+      );
     } else if (event === 'epoch-load') {
       this.onLoadEpochs(source);
     } else if (event === 'file-import') {

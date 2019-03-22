@@ -7,46 +7,27 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-.top-bar {
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.24);
-  height: 40px;
-  position: relative;
-  z-index: 10;
-}
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { RavenManageGraphComponent } from './raven-manage-graph.component';
 
-.top-bar-nav-icon {
-  height: 48px;
-  width: 48px;
-}
+import { RavenPanToDurationModule } from '../raven-pan-to-duration/raven-pan-to-duration.module';
 
-.top-bar-title {
-  margin-left: 20px;
-}
+import {
+  MatButtonModule,
+  MatIconModule,
+  MatTooltipModule,
+} from '@angular/material';
 
-.top-bar-row {
-  box-sizing: border-box;
-  display: flex;
-  position: relative;
-  width: 100%;
-}
-
-.top-bar-row-left,
-.top-bar-row-right {
-  align-items: center;
-  display: inline-flex;
-  flex: 1 1 auto;
-  min-width: 0;
-  z-index: 1;
-}
-
-.top-bar-row-left {
-  justify-content: flex-start;
-}
-
-.top-bar-row-right {
-  justify-content: flex-end;
-}
-
-.top-bar.mat-primary {
-  background: #525e66;
-}
+@NgModule({
+  declarations: [RavenManageGraphComponent],
+  exports: [RavenManageGraphComponent],
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
+    RavenPanToDurationModule,
+  ],
+})
+export class RavenManageGraphModule {}

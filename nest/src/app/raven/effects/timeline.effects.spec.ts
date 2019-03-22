@@ -38,10 +38,6 @@ describe('TimelineEffects', () => {
     expect(metadata.updatePinLabels$).toEqual({ dispatch: true });
   });
 
-  it('should register selectPoint$ that does dispatch an action', () => {
-    expect(metadata.selectPoint$).toEqual({ dispatch: true });
-  });
-
   it('should register updateViewTimeRange$ that does dispatch an action', () => {
     expect(metadata.updateViewTimeRange$).toEqual({ dispatch: true });
   });

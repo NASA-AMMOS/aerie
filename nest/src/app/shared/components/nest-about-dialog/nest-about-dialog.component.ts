@@ -17,6 +17,7 @@ import { NestModule } from '../../models';
   templateUrl: './nest-about-dialog.component.html',
 })
 export class NestAboutDialogComponent {
+  copyright = `Copyright ${new Date().getFullYear()}, by the California Institute of Technology. ALL RIGHTS RESERVED.\nUnited States Government sponsorship acknowledged. Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.`;
   constructor(
     public dialogRef: MatDialogRef<NestAboutDialogComponent>,
     @Inject(MAT_DIALOG_DATA)

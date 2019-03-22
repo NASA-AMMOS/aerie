@@ -27,7 +27,7 @@ import {
 
 import * as layoutActions from '../actions/layout.actions';
 import * as situationalAwarenessActions from '../actions/situational-awareness.actions';
-import * as sourceExplorerActions from '../actions/source-explorer.actions';
+import * as timelineActions from '../actions/timeline.actions';
 
 @Injectable()
 export class LayoutEffects {
@@ -75,17 +75,17 @@ export class LayoutEffects {
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     switchMap(({ action, state }) => {
-      if (action.opened && state.raven.sourceExplorer.currentStateId !== '') {
+      if (action.opened && state.raven.timeline.currentStateId !== '') {
         return this.http
           .get(
             `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${
-              state.raven.sourceExplorer.currentStateId
+              state.raven.timeline.currentStateId
             }`,
           )
           .pipe(
             map(res => importState(res[0])),
             switchMap(currentState => [
-              new sourceExplorerActions.UpdateSourceExplorer({
+              new timelineActions.UpdateTimeline({
                 currentState,
               }),
               new layoutActions.ToggleApplyLayoutDrawer(action.opened),
@@ -95,7 +95,7 @@ export class LayoutEffects {
       }
 
       return [
-        new sourceExplorerActions.UpdateSourceExplorer({
+        new timelineActions.UpdateTimeline({
           currentState: null,
           fetchPending: false,
         }),
@@ -115,7 +115,7 @@ export class LayoutEffects {
       if (raven.layout.showRightPanel && raven.layout.showLeftPanel) {
         return new layoutActions.UpdateLayout({ timelinePanelSize: 50 });
       } else {
-        return new layoutActions.UpdateLayout({ timelinePanelSize: 75 });
+        return new layoutActions.UpdateLayout({ timelinePanelSize: 85 });
       }
     }),
   );

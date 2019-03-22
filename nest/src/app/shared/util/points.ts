@@ -8,7 +8,7 @@
  */
 
 import { uniqueId } from 'lodash';
-import { colorHexToRgbArray, colorMap, getRandomColor } from './color';
+import { colorMap, colorRgbArrayToHex, getRandomColor } from './color';
 import { fromDuration, timestamp, utc } from './time';
 
 import {
@@ -27,11 +27,29 @@ import {
 } from '../models';
 
 /**
+ * Helper that set hidden for activities not matching filter.
+ */
+export function filterActivityPoints(
+  points: RavenActivityPoint[],
+  filter: string,
+) {
+  points = points.map((point: RavenActivityPoint) => {
+    if (filter.length > 0) {
+      const match = point.activityName.match(new RegExp(filter));
+      return { ...point, hidden: match === null };
+    } else {
+      return { ...point, hidden: false };
+    }
+  });
+  return points;
+}
+
+/**
  * Helper that gets a color from activity metadata.
  */
 export function getColorFromActivityMetadata(
   metadata: MpsServerActivityPointMetadata[],
-): number[] {
+): string {
   let color = null;
 
   for (let i = 0, l = metadata.length; i < l; ++i) {
@@ -39,10 +57,10 @@ export function getColorFromActivityMetadata(
 
     if (data.Name.toLowerCase() === 'color') {
       if (Array.isArray(data.Value)) {
-        return data.Value;
+        return colorRgbArrayToHex(data.Value);
       } else {
         if (data.Value.startsWith('#')) {
-          return colorHexToRgbArray(data.Value);
+          return data.Value;
         } else {
           color = colorMap[data.Value];
         }
@@ -125,6 +143,7 @@ export function getActivityPoint(
     endTimestamp,
     expandedFromPointId,
     expansion: 'noExpansion',
+    hidden: false,
     id,
     keywordLine,
     legend,

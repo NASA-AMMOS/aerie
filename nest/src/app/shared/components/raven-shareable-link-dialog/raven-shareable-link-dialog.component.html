@@ -13,7 +13,7 @@
     <div
       *ngIf="overwriteWarning"
       class="alert alert-warning">
-      There is already a state named "{{shareableNameInput.value}}" in the /{{data.state.raven.config.shareableLinkStatesUrl}} folder. Copying the shareable link will overwrite it. Are you sure you want this?
+      There is already a state name {{shareableNameControl.value}} in the /{{data.state.config.raven.shareableLinkStatesUrl}} folder. Copying the shareable link will overwrite it. Are you sure you want this?
     </div>
 
     <!-- Shareable Link. -->

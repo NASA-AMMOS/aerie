@@ -19,6 +19,7 @@ import {
 import { FormControl, Validators } from '@angular/forms';
 import { RavenUpdate } from '../../../shared/models';
 import { timestamp, utc } from '../../../shared/util/time';
+import { defaultColors } from '../../util/color';
 
 @Component({
   selector: 'raven-time-cursor',
@@ -57,6 +58,8 @@ export class RavenTimeCursorComponent implements OnChanges {
   updateTimeCursorSettings: EventEmitter<RavenUpdate> = new EventEmitter<
     RavenUpdate
   >();
+
+  colors = defaultColors;
 
   cursorWidthControl: FormControl = new FormControl('', [
     Validators.min(1),

@@ -29,7 +29,7 @@ export interface RavenStateBand {
   id: string;
   isNumeric: boolean;
   label: string;
-  labelColor: number[];
+  labelColor: string;
   labelFont: string;
   labelPin: string;
   maxTimeRange: RavenTimeRange;
