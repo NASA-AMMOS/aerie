@@ -177,9 +177,7 @@ export class TimelineComponent implements OnDestroy {
     this.inUseEpoch$ = this.store.pipe(select(epochsSelectors.getInUseEpochs));
 
     // Layout state.
-    this.mode$ = this.store.pipe(
-      select(layoutSelectors.getMode),
-    );
+    this.mode$ = this.store.pipe(select(layoutSelectors.getMode));
     this.showActivityPointMetadata$ = this.store.pipe(
       select(layoutSelectors.getShowActivityPointMetadata),
     );
