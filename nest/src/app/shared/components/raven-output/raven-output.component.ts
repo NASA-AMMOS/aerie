@@ -20,7 +20,7 @@ import {
 } from '@angular/core';
 
 import { AgGridNg2 } from 'ag-grid-angular';
-import { RavenUpdate, StringTMap } from '../../../shared/models';
+import { RavenSource, RavenUpdate, StringTMap } from '../../../shared/models';
 
 @Component({
   selector: 'raven-output',
@@ -41,6 +41,9 @@ export class RavenOutputComponent implements AfterViewInit, OnChanges {
   decimateOutputData: boolean;
 
   @Input()
+  filtersByTarget: StringTMap<StringTMap<string[]>>;
+
+  @Input()
   outputFormat: string;
 
   @Input()
@@ -48,6 +51,9 @@ export class RavenOutputComponent implements AfterViewInit, OnChanges {
 
   @Input()
   subBandSourceIdsByLabel: StringTMap<string[]>;
+
+  @Input()
+  treeBySourceId: StringTMap<RavenSource>;
 
   @Output()
   createOutput: EventEmitter<any> = new EventEmitter<any>();
@@ -64,6 +70,11 @@ export class RavenOutputComponent implements AfterViewInit, OnChanges {
   ngAfterViewInit() {
     this.sizeColumnsToFit();
     this.applyCurrentOutputSelections();
+    console.log(
+      'subBand source: ' + JSON.stringify(this.subBandSourceIdsByLabel),
+    );
+
+    console.log('filtersByTarget: ' + JSON.stringify(this.filtersByTarget));
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -165,32 +176,39 @@ export class RavenOutputComponent implements AfterViewInit, OnChanges {
 
     Object.keys(subBandSourceIdsByLabel).forEach(label => {
       const sourceIds = subBandSourceIdsByLabel[label];
+      let firstLabel = true;
       sourceIds.forEach(sourceId => {
-        const pathNameArgs = sourceId.match(
-          new RegExp('(.*)/([^\\?]*)(\\?.*)?'),
-        );
+        if (
+          this.treeBySourceId[sourceId].type !== 'graphableFilter' ||
+          firstLabel
+        ) {
+          const pathNameArgs = sourceId.match(
+            new RegExp('(.*)/([^\\?]*)(\\?.*)?'),
+          );
 
-        if (pathNameArgs) {
-          const [, path, name, args] = pathNameArgs;
-          let filter = '';
+          if (pathNameArgs) {
+            const [, path, name, args] = pathNameArgs;
+            let filter = '';
 
-          if (args) {
-            const labelFilter = args.match(
-              new RegExp('\\?label=(.*)&filter=(.*)'),
-            );
+            if (args) {
+              const labelFilter = args.match(
+                new RegExp('\\?label=(.*)&filter=(.*)'),
+              );
 
-            if (labelFilter) {
-              label = labelFilter[1];
-              filter = labelFilter[2];
+              if (labelFilter) {
+                label = labelFilter[1];
+                filter = labelFilter[2];
+              }
             }
-          }
 
-          rowData.push({
-            filter,
-            id: `${path}/${name}`,
-            label,
-            name,
-          });
+            rowData.push({
+              filter,
+              id: `${path}/${name}`,
+              label,
+              name,
+            });
+          }
+          firstLabel = false;
         }
       });
     });

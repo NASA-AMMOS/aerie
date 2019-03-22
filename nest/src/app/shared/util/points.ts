@@ -430,7 +430,7 @@ export function getActivityPointInBand(
  */
 export function getUniqueActivityId(point: RavenActivityPoint): string {
   return point.activityId
-    ? `${point.activityId}-${point.start}-${point.end}`
+    ? `${point.activityId}-${uniqueId()}`
     : uniqueId();
 }
 
