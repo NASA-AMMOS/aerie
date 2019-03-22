@@ -62,6 +62,24 @@
                 </mat-form-field>
               </div>
 
+              <ng-container *ngIf="subBand.type === 'resource' || selectedSubBand.isNumeric">
+              <!-- Line Color. -->
+              <div class="flex-field">
+                <h3>Line Color</h3>
+                <div class="color-container">
+                  <ng-container *ngFor="let color of colors">
+                    <mat-icon
+                      class="color-button"
+                      [id]="color"
+                      [ngStyle]="{'color':color}"
+                      (click)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { color: color } })">
+                      {{ selectedSubBand.color!==color && 'check_box_outline_blank' || 'check_box' }}
+                    </mat-icon>
+                  </ng-container>
+                </div>
+              </div>
+              </ng-container>
+
               <!-- Divider Band Settings -->
               <ng-container *ngIf="subBand.type === 'divider'">
                 <div class="field">
@@ -476,23 +494,6 @@
                   </div>
                 </div>
 
-                <div class="row-container">
-                  <!-- Line Color. -->
-                  <div class="flex-field">
-                    <h3>Line Color</h3>
-                    <div class="color-container">
-                      <ng-container *ngFor="let color of colors">
-                        <mat-icon
-                          class="color-button"
-                          [id]="color"
-                          [ngStyle]="{'color':color}"
-                          (click)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { color: color } })">
-                          {{ selectedSubBand.color!==color && 'check_box_outline_blank' || 'check_box' }}
-                        </mat-icon>
-                      </ng-container>
-                    </div>
-                  </div>
-
                   <div class="flex-field">
                     <!-- Fill Color. -->
                     <h3>Fill Color</h3>
@@ -508,7 +509,7 @@
                       </ng-container>
                     </div>
                   </div>
-                </div>
+
               </ng-container>
             </ng-container>
           </ng-container>
