@@ -70,11 +70,6 @@ export class RavenOutputComponent implements AfterViewInit, OnChanges {
   ngAfterViewInit() {
     this.sizeColumnsToFit();
     this.applyCurrentOutputSelections();
-    console.log(
-      'subBand source: ' + JSON.stringify(this.subBandSourceIdsByLabel),
-    );
-
-    console.log('filtersByTarget: ' + JSON.stringify(this.filtersByTarget));
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -176,11 +171,11 @@ export class RavenOutputComponent implements AfterViewInit, OnChanges {
 
     Object.keys(subBandSourceIdsByLabel).forEach(label => {
       const sourceIds = subBandSourceIdsByLabel[label];
-      let firstLabel = true;
+      let firstGraphableLabel = true;
       sourceIds.forEach(sourceId => {
         if (
           this.treeBySourceId[sourceId].type !== 'graphableFilter' ||
-          firstLabel
+          firstGraphableLabel
         ) {
           const pathNameArgs = sourceId.match(
             new RegExp('(.*)/([^\\?]*)(\\?.*)?'),
@@ -208,7 +203,7 @@ export class RavenOutputComponent implements AfterViewInit, OnChanges {
               name,
             });
           }
-          firstLabel = false;
+          firstGraphableLabel = false;
         }
       });
     });
