@@ -74,6 +74,7 @@ import {
   getState,
   getTargetFilters,
   hasActivityBandForFilterTarget,
+  isAddTo,
   isOverlay,
   toCompositeBand,
   toRavenBandData,
