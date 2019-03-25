@@ -8,15 +8,13 @@
  */
 
 .disabled-icon {
-  font-size: 15px;
+  font-size: 24px;
   opacity: 0.37;
-  padding-top: 10px;
 }
 
 .icon {
   cursor: pointer;
-  font-size: 15px;
-  padding-top: 10px;
+  font-size: 24px;
 }
 
 .manage-graph {

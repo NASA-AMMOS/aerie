@@ -845,7 +845,7 @@ export function sourceIdAdd(
  */
 export function toggleGuide(state: TimelineState, action: ToggleGuide) {
   const existingGuide = state.guides.filter(guide =>
-    guideWithinTwoPixels(
+    guideWithinFivePixels(
       guide,
       action.guide.guideTime,
       action.guide.timePerPixel,
@@ -916,14 +916,14 @@ export function updateSubBand(
 }
 
 /**
- * Helper. Returns true if guide is within 2 pixels of guideTime.
+ * Helper. Returns true if guide is within 5 pixels of guideTime.
  */
-export function guideWithinTwoPixels(
+export function guideWithinFivePixels(
   guide: number,
   guideTime: number,
   timePerPixel: number,
 ) {
   return (
-    guideTime > guide - 2 * timePerPixel && guideTime < guide + 2 * timePerPixel
+    guideTime > guide - 5 * timePerPixel && guideTime < guide + 5 * timePerPixel
   );
 }

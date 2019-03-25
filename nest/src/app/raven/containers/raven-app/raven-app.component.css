@@ -19,7 +19,7 @@
 }
 
 .icon {
-  font-size: 15px;
+  font-size: 24px;
 }
 .spacer {
   flex: 1 1 auto;
@@ -58,12 +58,3 @@ mat-progress-bar {
   position: static !important;
 }
 
-.manage-graph {
-  background-color: aliceblue;
-  height: 14px;
-  position: relative;
-  display: inline-flex;
-  flex: 0 0 auto;
-  margin-top: -3px;
-  z-index: 1;
-}

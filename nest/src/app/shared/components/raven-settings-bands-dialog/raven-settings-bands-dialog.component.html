@@ -51,7 +51,7 @@
               </div>
 
               <!-- Label -->
-              <div class="field">
+              <div class="flex-item">
                 <mat-form-field class="full-width">
                   <input
                     id="raven-settings-label"
@@ -65,7 +65,7 @@
               <ng-container *ngIf="subBand.type === 'resource' || selectedSubBand.isNumeric">
               <!-- Line Color. -->
               <div class="flex-field">
-                <h3>Line Color</h3>
+                <span class="title">Line Color</span>
                 <div class="color-container">
                   <ng-container *ngFor="let color of colors">
                     <mat-icon
@@ -323,7 +323,7 @@
                 <!-- Composite Log Scale. -->
                 <div class="row-container">
                   <div
-                    *ngIf="bandsById[selectedBandId].compositeYAxisLabel"
+                    *ngIf="bandsById[selectedBandId].compositeYAxisLabel && !bandsById[selectedBandId].compositeScientificNotation"
                     class="field flex-field">
                     <mat-slide-toggle
                       id="raven-settings-composite-log-scale"
@@ -336,7 +336,7 @@
 
                   <!-- Log Scale. -->
                   <div
-                    *ngIf="!bandsById[selectedBandId].compositeYAxisLabel"
+                    *ngIf="!bandsById[selectedBandId].compositeYAxisLabel && !selectedSubBand.scientificNotation"
                     class="field flex-field">
                     <mat-slide-toggle
                       id="raven-settings-log-scale"
@@ -346,7 +346,9 @@
                     Log Scale
                     </mat-slide-toggle>
                   </div>
+                </div>
 
+                <div class="row-container">
                   <!-- Composite Scientific Notation. -->
                   <div
                     *ngIf="bandsById[selectedBandId].compositeYAxisLabel && !bandsById[selectedBandId].compositeLogTicks"
@@ -481,7 +483,8 @@
                       Show Icon
                     </mat-slide-toggle>
                   </div>
-
+                </div>
+                <div class="row-container">
                   <!-- Fill. -->
                   <div class="field flex-field">
                     <mat-slide-toggle
@@ -494,22 +497,19 @@
                   </div>
                 </div>
 
-                  <div class="flex-field">
-                    <!-- Fill Color. -->
-                    <h3>Fill Color</h3>
-                    <div class="color-container">
-                      <ng-container *ngFor="let color of colors">
-                        <mat-icon
-                          class="color-button"
-                          [id]="color"
-                          [ngStyle]="{'color':color}"
-                          (click)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { fillColor: color } })">
-                          {{ selectedSubBand.fillColor!==color && 'check_box_outline_blank' || 'check_box' }}
-                        </mat-icon>
-                      </ng-container>
-                    </div>
-                  </div>
-
+                <!-- Fill Color. -->
+                <span class="title">Fill Color</span>
+                <div class="color-container">
+                  <ng-container *ngFor="let color of colors">
+                    <mat-icon
+                      class="color-button"
+                      [id]="color"
+                      [ngStyle]="{'color':color}"
+                      (click)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { fillColor: color } })">
+                      {{ selectedSubBand.fillColor!==color && 'check_box_outline_blank' || 'check_box' }}
+                    </mat-icon>
+                  </ng-container>
+                </div>
               </ng-container>
             </ng-container>
           </ng-container>
