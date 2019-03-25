@@ -3,6 +3,7 @@
     [ngStyle]="{'max-height': maxHeight+'px'}">
     <mat-card-content>
       <div
+        class="dialog-content"
         id="raven-settings-selected-band"
         fxLayout="row"
         fxLayoutAlign="start center"
@@ -46,7 +47,7 @@
                   matTooltip="Remove Band"
                   class="padded-icon"
                   (click)="onDeleteSubBand(selectedSubBand)">
-                  delete_outline
+                  delete_forever
                 </mat-icon>
               </div>
 
@@ -450,8 +451,24 @@
                 </mat-form-field>
               </div>
 
+              <!-- Resource or Numeric. -->
+              <ng-container *ngIf="subBand.type === 'resource' || selectedSubBand.isNumeric">
+                  <div class="row-container">
+                    <!-- Show Icon. -->
+                    <div class="field flex-field">
+                      <mat-slide-toggle
+                        id="raven-settings-show-icon"
+                        color="accent"
+                        [checked]="subBand.showIcon"
+                        (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { showIcon: $event.checked } })">
+                        Show Icon
+                      </mat-slide-toggle>
+                    </div>
+                  </div>
+              </ng-container>
+
               <!-- Icon. -->
-              <div *ngIf="subBand.type === 'resource' || (subBand.type === 'activity' && selectedSubBand.activityStyle === 3) || selectedSubBand.isNumeric"
+              <div *ngIf="subBand.showIcon || (subBand.type === 'activity' && selectedSubBand.activityStyle === 3)"
                 class="field">
                 <mat-form-field>
                   <mat-select
@@ -472,18 +489,6 @@
 
               <!-- Resource or Numeric. -->
               <ng-container *ngIf="subBand.type === 'resource' || selectedSubBand.isNumeric">
-                <div class="row-container">
-                  <!-- Show Icon. -->
-                  <div class="field flex-field">
-                    <mat-slide-toggle
-                      id="raven-settings-show-icon"
-                      color="accent"
-                      [checked]="subBand.showIcon"
-                      (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { showIcon: $event.checked } })">
-                      Show Icon
-                    </mat-slide-toggle>
-                  </div>
-                </div>
                 <div class="row-container">
                   <!-- Fill. -->
                   <div class="field flex-field">
@@ -517,6 +522,7 @@
       </div>
     </mat-card-content>
   </mat-card>
+
   <div class="btn-container">
     <button id="close-btn" mat-raised-button (click)="onClose()">Close</button>
   </div>
