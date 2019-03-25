@@ -1,5 +1,5 @@
 <!-- Settings and Close Icons. -->
-<div class="icon-div">
+<div class="icon-div" [ngStyle]="{'z-index':id === hoveredBandId ? 9 : 0 }">
   <mat-icon *ngIf="id === hoveredBandId"
     class="icons"
     matTooltip="Band Settings"
@@ -42,7 +42,7 @@
     matTooltip="Add Divider"
     [id]="'band-settings-add-divider'"
     (click)="addDivider.emit(id)">
-    calendar_view_day
+    view_day
   </mat-icon>
   <mat-icon *ngIf="id === hoveredBandId"
     class="icons"

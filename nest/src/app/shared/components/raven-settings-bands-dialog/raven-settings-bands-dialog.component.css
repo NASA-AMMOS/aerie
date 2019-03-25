@@ -56,11 +56,10 @@
   display: flex;
 }
 
-h3 {
+.title {
   margin-top: 15px;
   margin-bottom: 0px;
   padding-bottom: 0px;
-  padding-left: 10px;
 }
 
 [mat-dialog-title] {
