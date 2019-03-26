@@ -114,17 +114,14 @@ export class OutputEffects {
     );
 
     if (source.type === 'graphableFilter') {
+      const targetFilters = getTargetFilters(
+        treeBySourceId,
+        filtersByTarget,
+        (source as RavenGraphableFilterSource).filterTarget,
+      );
       if (output.outputFormat === 'CSV') {
         return this.http
-          .post(
-            outputDataUrl,
-            getTargetFilters(
-              treeBySourceId,
-              filtersByTarget,
-              (source as RavenGraphableFilterSource).filterTarget,
-            ),
-            { responseType: 'text' },
-          )
+          .post(outputDataUrl, targetFilters, { responseType: 'text' })
           .pipe(
             switchMap(data => {
               this.writeToFile(data, label, 'csv');
@@ -133,15 +130,9 @@ export class OutputEffects {
           );
       } else {
         return this.http
-          .post<MpsServerGraphData>(
-            outputDataUrl,
-            getTargetFilters(
-              treeBySourceId,
-              filtersByTarget,
-              (source as RavenGraphableFilterSource).filterTarget,
-            ),
-            { responseType: 'json' },
-          )
+          .post<MpsServerGraphData>(outputDataUrl, targetFilters, {
+            responseType: 'json',
+          })
           .pipe(
             map(data => JSON.stringify(data)),
             switchMap(jsonData => {
