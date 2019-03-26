@@ -44,10 +44,6 @@
   overflow-y: auto;
 }
 
-.dialog-content {
-  overflow-x: hidden;
-}
-
 .padded-icon {
   cursor: pointer;
   height: 24px;
