@@ -114,9 +114,10 @@ printf "\nTop level changes:\n==================\n$changed\n\n"
 
 for d in $changed
 do
-  if [ -d $d ]
+  if [ -d "$d" ]
   then
 
+    echo "cd $d"
     cd $d
     # 16001 is local, 2 is staging, 3 is release
     tag_name="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/$d:$tag_docker"
@@ -151,40 +152,45 @@ do
       npm run e2e
       [ $? -ne 0 ] && error_exit "npm run e2e failed"
     fi
-  fi
 
-  # Java projects
-  # TODO: Don't skip tests!
-  if [ -f "pom.xml" ]
-  then
-    printf "\nBuilding $d...\n\n"
-
-    if [ -f "settings.xml" ]
+    # Java projects
+    # TODO: Don't skip tests!
+    if [ -f "pom.xml" ]
     then
-      echo "Using local settings.xml file"
-      mvn -B -f pom.xml -s settings.xml install:install-file
-      mvn -B -f pom.xml -s settings.xml dependency:resolve
-      [ $? -ne 0 ] && error_exit "mvn dependency:resolve failed"
+      printf "\nBuilding $d...\n\n"
 
-      mvn -B -s settings.xml package -DskipTests
-      [ $? -ne 0 ] && error_exit "mvn package failed"
-    else
-      mvn -B -f pom.xml dependency:resolve
-      [ $? -ne 0 ] && error_exit "mvn dependency:resolve failed"
+      if [ -f "settings.xml" ]
+      then
+        echo "Using local settings.xml file"
 
-      mvn -B package -DskipTests
-      [ $? -ne 0 ] && error_exit "mvn package failed"
+	# If this module has local dependencies, install them
+	if grep --quiet "maven-install-plugin"; then
+	  mvn -B -f pom.xml -s settings.xml install:install-file
+	fi
+
+        mvn -B -f pom.xml -s settings.xml dependency:resolve
+        [ $? -ne 0 ] && error_exit "mvn dependency:resolve failed"
+
+        mvn -B -s settings.xml package -DskipTests
+        [ $? -ne 0 ] && error_exit "mvn package failed"
+      else
+        mvn -B -f pom.xml dependency:resolve
+        [ $? -ne 0 ] && error_exit "mvn dependency:resolve failed"
+
+        mvn -B package -DskipTests
+        [ $? -ne 0 ] && error_exit "mvn package failed"
+      fi
     fi
-  fi
 
-  # Build Docker containers
-  if [ -f Dockerfile ]
-  then
-      printf "\nBuilding $d Docker container: $tag_name...\n\n"
-      docker build -t "$tag_name" --rm .
-      [ $? -ne 0 ] && error_exit "Docker build failed for $tag_name"
+    # Build Docker containers
+    if [ -f Dockerfile ]
+    then
+        printf "\nBuilding $d Docker container: $tag_name...\n\n"
+        docker build -t "$tag_name" --rm .
+        [ $? -ne 0 ] && error_exit "Docker build failed for $tag_name"
+    fi
+    cd $root
   fi
-  cd $root
 
 done
 
