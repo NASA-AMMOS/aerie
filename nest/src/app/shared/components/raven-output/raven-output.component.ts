@@ -165,6 +165,7 @@ export class RavenOutputComponent implements AfterViewInit, OnChanges {
   /**
    * Build row data for the output table.
    * Returns rows based on  the name, filter, path from sourceId, and label.
+   * For graphableFilter sources, only one entry should be generated for the filter target.
    */
   createRowData(subBandSourceIdsByLabel: StringTMap<string[]>) {
     const rowData: any[] = [];
