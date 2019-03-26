@@ -429,9 +429,7 @@ export function getActivityPointInBand(
  * This adds the start/end times to ensure uniqueness.
  */
 export function getUniqueActivityId(point: RavenActivityPoint): string {
-  return point.activityId
-    ? `${point.activityId}-${uniqueId()}`
-    : uniqueId();
+  return point.activityId ? `${point.activityId}-${uniqueId()}` : uniqueId();
 }
 
 /**
