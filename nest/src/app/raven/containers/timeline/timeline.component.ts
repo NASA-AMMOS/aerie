@@ -151,8 +151,6 @@ export class TimelineComponent implements OnDestroy {
   selectedBandId: string;
   selectedSubBandId: string;
 
-  sideMenuDivSize = 15;
-
   private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(

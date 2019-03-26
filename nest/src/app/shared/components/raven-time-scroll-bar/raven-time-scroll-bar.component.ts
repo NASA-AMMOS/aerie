@@ -44,9 +44,6 @@ export class RavenTimeScrollBarComponent
   maxTimeRange: RavenTimeRange;
 
   @Input()
-  sideMenuDivSize: number;
-
-  @Input()
   viewTimeRange: RavenTimeRange;
 
   @Output()
@@ -164,14 +161,8 @@ export class RavenTimeScrollBarComponent
   updateTimeAxisXCoordinates() {
     const offsetWidth = this.elementRef.nativeElement.offsetWidth;
 
-    this.ctlTimeAxis.updateXCoordinates(
-      this.labelWidth,
-      offsetWidth + this.sideMenuDivSize,
-    );
-    this.ctlViewTimeAxis.updateXCoordinates(
-      this.labelWidth,
-      offsetWidth + this.sideMenuDivSize,
-    );
+    this.ctlTimeAxis.updateXCoordinates(this.labelWidth, offsetWidth);
+    this.ctlViewTimeAxis.updateXCoordinates(this.labelWidth, offsetWidth);
   }
 
   /**
