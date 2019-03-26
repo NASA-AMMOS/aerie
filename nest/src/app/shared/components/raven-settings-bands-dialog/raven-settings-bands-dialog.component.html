@@ -502,18 +502,20 @@
                 </div>
 
                 <!-- Fill Color. -->
-                <span class="title">Fill Color</span>
-                <div class="color-container">
-                  <ng-container *ngFor="let color of colors">
-                    <mat-icon
-                      class="color-button"
-                      [id]="color"
-                      [ngStyle]="{'color':color}"
-                      (click)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { fillColor: color } })">
-                      {{ selectedSubBand.fillColor!==color && 'check_box_outline_blank' || 'check_box' }}
-                    </mat-icon>
-                  </ng-container>
-                </div>
+                <ng-container *ngIf="subBand.fill">
+                  <span class="title">Fill Color</span>
+                  <div class="color-container">
+                    <ng-container *ngFor="let color of colors">
+                      <mat-icon
+                        class="color-button"
+                        [id]="color"
+                        [ngStyle]="{'color':color}"
+                        (click)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { fillColor: color } })">
+                        {{ selectedSubBand.fillColor!==color && 'check_box_outline_blank' || 'check_box' }}
+                      </mat-icon>
+                    </ng-container>
+                  </div>
+                </ng-container>
               </ng-container>
             </ng-container>
           </ng-container>
