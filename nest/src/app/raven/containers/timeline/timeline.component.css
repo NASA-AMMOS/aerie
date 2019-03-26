@@ -78,10 +78,11 @@ mat-sidenav-container {
 }
 
 .row-container {
-  display: flex;
+  /* display: flex; */
   padding-left: 15px;
 }
 
 .row {
   flex: 1 0 auto;
+  padding-left: 15px;
 }

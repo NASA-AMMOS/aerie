@@ -58,7 +58,7 @@
               (zoomIn)="onZoomIn()"
               (zoomOut)="onZoomOut()">
             </raven-manage-graph>
-            <div class="row-container">
+            <div>
               <raven-guide-band class="row"
                 [guides]="guides$ | async"
                 [labelFontSize]="(defaultBandSettings$ | async).labelFontSize"
@@ -66,21 +66,19 @@
                 [lastClickTime]="lastClickTime$ | async"
                 [maxTimeRange]="maxTimeRange$ | async"
                 [showLastClick]="(defaultBandSettings$ | async).showLastClick"
-                [sideMenuDivSize]="sideMenuDivSize"
                 [viewTimeRange]="viewTimeRange$ | async"
                 (toggleGuide)="onToggleGuide($event)">
               </raven-guide-band>
             </div>
-            <div class="row-container">
+            <div>
               <raven-time-scroll-bar class="row"
                 [labelWidth]="(defaultBandSettings$ | async).labelWidth"
                 [maxTimeRange]="maxTimeRange$ | async"
-                [sideMenuDivSize]="sideMenuDivSize"
                 [viewTimeRange]="viewTimeRange$ | async"
                 (updateViewTimeRange)="onUpdateViewTimeRange($event)">
               </raven-time-scroll-bar>
             </div>
-            <div class="row-container">
+            <div>
               <raven-time-band class="row"
                 [cursorColor]="cursorColor$ | async"
                 [cursorTime]="cursorTime$ | async"
@@ -92,13 +90,11 @@
                 [labelWidth]="(defaultBandSettings$ | async).labelWidth"
                 [maxTimeRange]="maxTimeRange$ | async"
                 [showTooltip]="(defaultBandSettings$ | async).showTooltip"
-                [sideMenuDivSize]="sideMenuDivSize"
                 [viewTimeRange]="viewTimeRange$ | async"
                 (updateViewTimeRange)="onUpdateViewTimeRange($event)">
               </raven-time-band>
             </div>
           </div>
-
           <raven-bands
             class="raven-bands-0"
             [cursorColor]="cursorColor$ | async"
