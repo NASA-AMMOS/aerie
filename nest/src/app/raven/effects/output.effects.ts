@@ -94,7 +94,7 @@ export class OutputEffects {
   );
 
   /**
-   * Helper. Get data for source and write to file.
+   * Helper. Get data for source and write to file. If source is graphableFilter, POST is issue instead of GET. Body of the POST contains the filters.
    */
   createFileForSource(
     output: fromOutput.OutputState,
