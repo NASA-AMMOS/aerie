@@ -8,7 +8,6 @@
  */
 
 export const environment = {
-
   adaptationServiceBaseUrl: 'http://localhost:27182/api',
   baseUrl: 'https://leucadia.jpl.nasa.gov:9443',
   // baseUrl: 'https://localhost:8443',
