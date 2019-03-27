@@ -74,15 +74,14 @@ public class PlanDetail extends Plan {
     }
 
     public void updateActivityInstance(UUID id, ActivityInstance activityInstanceToMerge) {
-        ActivityInstance activityInstance = this.getActivityInstance(id);
+        int index = this.getActivityInstanceIndex(id);
 
-        if (activityInstance != null) {
+        if (index != -1) {
+            ActivityInstance activityInstance = this.activityInstances.get(index);
             mergeObjects(activityInstanceToMerge, activityInstance);
-            int index = this.getActivityInstanceIndex(id);
-            if (index > -1) {
-                this.activityInstances.set(index, activityInstance);
-                return;
-            }
+
+            this.activityInstances.set(index, activityInstance);
+            return;
         }
 
         throw new NoSuchElementException();
