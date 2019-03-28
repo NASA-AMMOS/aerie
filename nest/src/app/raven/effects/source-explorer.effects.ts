@@ -1583,9 +1583,7 @@ export class SourceExplorerEffects {
         if (newSubBands.length > 0) {
           newSubBands.forEach((subBand: RavenSubBand) => {
             const activityBands =
-              treeBySourceId[sourceId].type === 'customGraphable'
-                ? []
-                : activityBandsWithLegend(
+                activityBandsWithLegend(
                     currentBands,
                     subBand,
                     getPinLabel(treeBySourceId[sourceId].id, pins),
