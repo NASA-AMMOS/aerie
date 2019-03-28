@@ -1571,7 +1571,6 @@ export class SourceExplorerEffects {
     ).pipe(
       concatMap((newSubBands: RavenSubBand[]) => {
         const actions: Action[] = [];
-
         if (treeBySourceId[sourceId].type === 'graphableFilter') {
           // Clear existing points regardless if fetch returns any data.
           actions.push(
@@ -1646,7 +1645,7 @@ export class SourceExplorerEffects {
                   );
                 }
               });
-            } else if (bandId && getAddToSubBandId(currentBands, bandId)) {
+            } else if (subBand.type === 'activity' && bandId && getAddToSubBandId(currentBands, bandId)) {
               const addToSubBandId = getAddToSubBandId(currentBands, bandId);
               if (addToSubBandId) {
                 actions.push(
