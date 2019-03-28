@@ -50,6 +50,8 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
 
   colors = defaultColors;
 
+  maxHeight = window.innerHeight - 200;
+
   heightControl: FormControl = new FormControl('', [
     Validators.required,
     Validators.min(5),
