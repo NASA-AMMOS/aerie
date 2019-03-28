@@ -1581,12 +1581,11 @@ export class SourceExplorerEffects {
         }
         if (newSubBands.length > 0) {
           newSubBands.forEach((subBand: RavenSubBand) => {
-            const activityBands =
-                activityBandsWithLegend(
-                    currentBands,
-                    subBand,
-                    getPinLabel(treeBySourceId[sourceId].id, pins),
-                  );
+            const activityBands = activityBandsWithLegend(
+              currentBands,
+              subBand,
+              getPinLabel(treeBySourceId[sourceId].id, pins),
+            );
             const existingBands = graphAgain
               ? []
               : getBandsWithSourceId(currentBands, sourceId);
@@ -1645,7 +1644,11 @@ export class SourceExplorerEffects {
                   );
                 }
               });
-            } else if (subBand.type === 'activity' && bandId && getAddToSubBandId(currentBands, bandId)) {
+            } else if (
+              subBand.type === 'activity' &&
+              bandId &&
+              getAddToSubBandId(currentBands, bandId)
+            ) {
               const addToSubBandId = getAddToSubBandId(currentBands, bandId);
               if (addToSubBandId) {
                 actions.push(
