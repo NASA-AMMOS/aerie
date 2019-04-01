@@ -2,7 +2,7 @@
   "$id": "#/ActivityInstance",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
-  "javaType": "gov.nasa.jpl.aerie.schemas.ActivityInstance",
+  "javaType": "gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstance",
   "properties": {
     "activityId": {
       "type": "string"

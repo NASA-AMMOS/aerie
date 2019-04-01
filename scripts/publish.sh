@@ -114,23 +114,25 @@ else
   changed=$(ls -1)
 fi
 
+printf "\nPublishing schemas...\n\n"
+cd schemas
+mvn -B -s settings.xml deploy -DskipTests
+[ $? -ne 0 ] && error_exit "mvn deploy failed"
+cd $root
+
+printf "\nPublishing merlin-sdk...\n\n"
+cd merlin-sdk
+mvn -B -s settings.xml deploy -DskipTests
+[ $? -ne 0 ] && error_exit "mvn deploy failed"
+cd $root
+
 for d in $changed
 do
-  if [ -d $d ]
-  then
+  if [ -d $d ]; then
     cd $d
     tag_name="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/$d:$tag_docker"
 
-    if [ $d == "merlin-sdk" ]
-    then
-      printf "\nPublishing $d...\n\n"
-      # TODO: Don't rebuild here, since the artifacts are already built
-      mvn -B -s settings.xml deploy -DskipTests 
-      [ $? -ne 0 ] && error_exit "mvn deploy failed"
-    fi
-
-    if [ -f Dockerfile ]
-    then
+    if [ -f Dockerfile ]; then
       echo "Publishing $tag_name to Artifactory"
       docker push "$tag_name"
       [ $? -ne 0 ] && error_exit "docker push failed for $tag_name"

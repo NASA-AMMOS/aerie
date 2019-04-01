@@ -2,7 +2,7 @@
   "$id": "#/Schedule",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
-  "javaType": "gov.nasa.jpl.aerie.schemas.Schedule",
+  "javaType": "gov.nasa.jpl.ammos.mpsa.aerie.schemas.Schedule",
   "properties": {
     "id": {
       "type": "string"

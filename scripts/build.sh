@@ -112,86 +112,62 @@ fi
 
 printf "\nTop level changes:\n==================\n$changed\n\n"
 
+# Build Java modules
+# Always build all the maven modules from the root rather than being selective
+# This is because maven figures out the correct build order and handles dependencies
+# between modules more intelligently than the above git command.
+echo "Building all maven modules from the root..."
+mvn -B -f pom.xml -s settings.xml install
+[ $? -ne 0 ] && error_exit "mvn install failed"
+
+# Build nest
+
+if echo "$changed" | grep --quiet "nest"; then
+  printf "\nBuilding nest...\n\n"
+  cd nest
+
+  npm ci
+  [ $? -ne 0 ] && error_exit "npm ci failed"
+
+  npm run lint
+  [ $? -ne 0 ] && error_exit "npm run lint failed"
+
+  npm run format:check
+  [ $? -ne 0 ] && error_exit "npm run format:check failed"
+
+  npm run license:check
+  [ $? -ne 0 ] && error_exit "npm run license:check failed"
+
+  npm run build-prod
+  [ $? -ne 0 ] && error_exit "npm run build-prod failed"
+
+  # Build MPS Server, this will eventually go away
+  npm run build-prod-mpsserver
+  [ $? -ne 0 ] && error_exit "npm run build-prod-mpsserver failed"
+
+  npm run test-for-build
+  [ $? -ne 0 ] && error_exit "npm run test-for-build failed"
+
+  npx webdriver-manager update
+  npm run e2e
+  [ $? -ne 0 ] && error_exit "npm run e2e failed"
+
+  cd $root
+fi
+
+# Build Docker containers
 for d in $changed
 do
-  if [ -d "$d" ]
-  then
-
-    echo "cd $d"
-    cd $d
-    # 16001 is local, 2 is staging, 3 is release
+  if [ -d "$d" ]; then
     tag_name="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/$d:$tag_docker"
-
-    if [ $d == "nest" ]
-    then
-      printf "\nBuilding $d...\n\n"
-
-      npm ci
-      [ $? -ne 0 ] && error_exit "npm ci failed"
-
-      npm run lint
-      [ $? -ne 0 ] && error_exit "npm run lint failed"
-
-      npm run format:check
-      [ $? -ne 0 ] && error_exit "npm run format:check failed"
-
-      npm run license:check
-      [ $? -ne 0 ] && error_exit "npm run license:check failed"
-
-      npm run build-prod
-      [ $? -ne 0 ] && error_exit "npm run build-prod failed"
-
-      # Build MPS Server, this will eventually go away
-      npm run build-prod-mpsserver
-      [ $? -ne 0 ] && error_exit "npm run build-prod-mpsserver failed"
-
-      npm run test-for-build
-      [ $? -ne 0 ] && error_exit "npm run test-for-build failed"
-
-      npx webdriver-manager update
-      npm run e2e
-      [ $? -ne 0 ] && error_exit "npm run e2e failed"
-    fi
-
-    # Java projects
-    # TODO: Don't skip tests!
-    if [ -f "pom.xml" ]
-    then
-      printf "\nBuilding $d...\n\n"
-
-      if [ -f "settings.xml" ]
-      then
-        echo "Using local settings.xml file"
-
-	# If this module has local dependencies, install them
-	if grep --quiet "maven-install-plugin"; then
-	  mvn -B -f pom.xml -s settings.xml install:install-file
-	fi
-
-        mvn -B -f pom.xml -s settings.xml dependency:resolve
-        [ $? -ne 0 ] && error_exit "mvn dependency:resolve failed"
-
-        mvn -B -s settings.xml package -DskipTests
-        [ $? -ne 0 ] && error_exit "mvn package failed"
-      else
-        mvn -B -f pom.xml dependency:resolve
-        [ $? -ne 0 ] && error_exit "mvn dependency:resolve failed"
-
-        mvn -B package -DskipTests
-        [ $? -ne 0 ] && error_exit "mvn package failed"
-      fi
-    fi
-
-    # Build Docker containers
-    if [ -f Dockerfile ]
-    then
+    cd $d
+    if [ -f Dockerfile ]; then
         printf "\nBuilding $d Docker container: $tag_name...\n\n"
         docker build -t "$tag_name" --rm .
         [ $? -ne 0 ] && error_exit "Docker build failed for $tag_name"
     fi
     cd $root
   fi
-
 done
 
 graceful_exit

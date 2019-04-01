@@ -2,7 +2,7 @@
   "$id": "#/Plan",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
-  "javaType": "gov.nasa.jpl.aerie.schemas.Plan",
+  "javaType": "gov.nasa.jpl.ammos.mpsa.aerie.schemas.Plan",
   "properties": {
     "adaptationId": {
       "type": "string"

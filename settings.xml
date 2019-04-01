@@ -3,4 +3,68 @@
   xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.1.0 http://maven.apache.org/xsd/settings-1.1.0.xsd" 
   xmlns="http://maven.apache.org/SETTINGS/1.1.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <!--
+    Install dependencies to the project folder to avoid conflicts with other builds that may
+    be happening on the build server (e.g. package A installs schemas with class foo, package B
+    installs schemas with class bar, package A attempts to test for foo and fails because package
+    B overwrote the installed version of the dependency).
+  -->
+  <localRepository>./.m2/repositories</localRepository>
+
+  <servers>
+    <server>
+      <username>${env.DOCKER_LOGIN_USERNAME}</username>
+      <password>${env.DOCKER_LOGIN_PASSWORD}</password>
+      <id>central</id>
+    </server>
+    <server>
+      <username>${env.DOCKER_LOGIN_USERNAME}</username>
+      <password>${env.DOCKER_LOGIN_PASSWORD}</password>
+      <id>snapshots</id>
+    </server>
+  </servers>
+  <profiles>
+    <profile>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <repositories>
+        <repository>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+          <id>central</id>
+          <name>libs-release</name>
+          <url>https://cae-artifactory.jpl.nasa.gov:443/artifactory/libs-release</url>
+        </repository>
+        <repository>
+          <snapshots />
+          <id>snapshots</id>
+          <name>libs-snapshot</name>
+          <url>https://cae-artifactory.jpl.nasa.gov:443/artifactory/maven-libs-snapshot-local</url>
+        </repository>
+      </repositories>
+      <pluginRepositories>
+        <pluginRepository>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+          <id>central</id>
+          <name>maven-plugins-release-virtual</name>
+          <url>https://cae-artifactory.jpl.nasa.gov:443/artifactory/maven-plugins-release-virtual</url>
+        </pluginRepository>
+        <pluginRepository>
+          <snapshots />
+          <id>snapshots</id>
+          <name>maven-plugins-release-virtual</name>
+          <url>https://cae-artifactory.jpl.nasa.gov:443/artifactory/maven-plugins-release-virtual</url>
+        </pluginRepository>
+      </pluginRepositories>
+      <id>artifactory</id>
+    </profile>
+  </profiles>
+  <activeProfiles>
+    <activeProfile>artifactory</activeProfile>
+  </activeProfiles>
 </settings>

@@ -3,10 +3,10 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <groupId>gov.nasa.jpl.ammos.mpsa.aerie</groupId>
   <artifactId>schemas</artifactId>
-  <groupId>gov.nasa.jpl.aerie</groupId>
   <packaging>jar</packaging>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.1-SNAPSHOT</version>
 
   <properties>
     <java.version>1.8</java.version>
@@ -41,7 +41,7 @@
         <version>1.0.0</version>
         <configuration>
           <sourceDirectory>${basedir}/src/main/resources</sourceDirectory>
-          <targetPackage>gov.nasa.jpl.aerie.schemas</targetPackage>
+          <targetPackage>gov.nasa.jpl.ammos.mpsa.aerie.schemas</targetPackage>
           <includeHashcodeAndEquals>false</includeHashcodeAndEquals>
           <includeToString>false</includeToString>
           <annotationStyle>none</annotationStyle>
@@ -58,4 +58,12 @@
       </plugin>
     </plugins>
   </build>
+
+  <distributionManagement>
+    <snapshotRepository>
+      <id>snapshots</id>
+      <name>CAE Artifactory-snapshots</name>
+      <url>https://cae-artifactory.jpl.nasa.gov:443/artifactory/maven-libs-snapshot-local</url>
+    </snapshotRepository>
+  </distributionManagement>
 </project>

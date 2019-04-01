@@ -2,7 +2,7 @@
   "$id": "#/ActivityInstanceConstraint",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
-  "javaType": "gov.nasa.jpl.aerie.schemas.ActivityInstanceConstraint",
+  "javaType": "gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstanceConstraint",
   "properties": {
     "name": {
       "type": "string"
