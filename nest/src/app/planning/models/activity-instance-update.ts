@@ -9,6 +9,7 @@
 
 export interface ActivityInstanceUpdate {
   activityId: string;
+  duration: number;
   end: number;
   start: number;
   y: number;
