@@ -1,0 +1,16 @@
+<form>
+  <mat-form-field class="full-width">
+    <input
+      (input)="filterActivityTypes($event.target.value)"
+      matInput
+      placeholder="Search Activity Types"
+    />
+  </mat-form-field>
+</form>
+
+<mat-nav-list>
+  <mat-list-item *ngFor="let activityType of filteredActivityTypes">
+    {{ activityType.activityClass }}
+    <mat-divider></mat-divider>
+  </mat-list-item>
+</mat-nav-list>

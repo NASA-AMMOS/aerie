@@ -10,7 +10,7 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { MatToolbarModule } from '@angular/material';
-import { RavenAppHeaderModule } from '../../../shared/components/modules';
+import { NestAppHeaderModule } from '../../../shared/components/modules';
 import { SeqCommandListModule, SeqCommandLoaderModule } from '../../components';
 import { SeqEditorModule } from '../../components/seq-editor/seq-editor.module';
 import { SequencingAppComponent } from './sequencing-app.component';
@@ -23,7 +23,7 @@ import { SequencingAppComponent } from './sequencing-app.component';
     SeqCommandListModule,
     SeqCommandLoaderModule,
     MatToolbarModule,
-    RavenAppHeaderModule,
+    NestAppHeaderModule,
     SeqEditorModule,
   ],
 })

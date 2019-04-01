@@ -1,0 +1,74 @@
+<mat-table mat-table [dataSource]="activities" class="mat-elevation-z2">
+  <ng-container matColumnDef="name">
+    <mat-header-cell *matHeaderCellDef>Activity Name</mat-header-cell>
+    <mat-cell
+      *matCellDef="let element"
+      (click)="selectActivity.emit(element.activityId)"
+      >{{ element.name }}</mat-cell
+    >
+  </ng-container>
+
+  <ng-container matColumnDef="start">
+    <mat-header-cell *matHeaderCellDef>Start Date and Time</mat-header-cell>
+    <mat-cell
+      *matCellDef="let element"
+      (click)="selectActivity.emit(element.activityId)"
+    >
+      {{ element.startTimestamp }}
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="end">
+    <mat-header-cell *matHeaderCellDef>End Date and Time</mat-header-cell>
+    <mat-cell
+      *matCellDef="let element"
+      (click)="selectActivity.emit(element.activityId)"
+    >
+      {{ element.endTimestamp }}
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="duration">
+    <mat-header-cell *matHeaderCellDef>Duration</mat-header-cell>
+    <mat-cell
+      *matCellDef="let element"
+      (click)="selectActivity.emit(element.activityId)"
+    >
+      {{ element.duration }}
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="options">
+    <mat-header-cell *matHeaderCellDef></mat-header-cell>
+    <mat-cell *matCellDef="let element" class="option-group">
+      <button
+        class="option"
+        mat-icon-button
+        color="primary"
+        (click)="openActivity.emit(element.activityId)"
+      >
+        <mat-icon aria-label="Open Activity">
+          open_in_browser
+        </mat-icon>
+      </button>
+      <button
+        class="option"
+        mat-icon-button
+        color="primary"
+        (click)="deleteActivity.emit(element.activityId)"
+      >
+        <mat-icon aria-label="Delete Activity">
+          delete
+        </mat-icon>
+      </button>
+    </mat-cell>
+  </ng-container>
+
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row
+    *matRowDef="let row; columns: displayedColumns"
+    [ngClass]="{
+      highlight: activity?.activityId === row.activityId
+    }"
+  ></mat-row>
+</mat-table>

@@ -11,7 +11,7 @@ import { ConfigState } from '../../../config';
 
 import {
   NavigationDrawerStates,
-  ToggleNavigationDrawer,
+  ToggleNestNavigationDrawer,
   UpdateDefaultBandSettings,
   UpdateMpsServerSettings,
   UpdateRavenSettings,
@@ -201,13 +201,13 @@ describe('config reducer', () => {
       NavigationDrawerStates.Collapsed,
     );
 
-    configState = reducer(configState, new ToggleNavigationDrawer());
+    configState = reducer(configState, new ToggleNestNavigationDrawer());
 
     expect(configState.navigationDrawerState).toBe(
       NavigationDrawerStates.Closed,
     );
 
-    configState = reducer(configState, new ToggleNavigationDrawer());
+    configState = reducer(configState, new ToggleNestNavigationDrawer());
 
     expect(configState.navigationDrawerState).toBe(
       NavigationDrawerStates.Opened,

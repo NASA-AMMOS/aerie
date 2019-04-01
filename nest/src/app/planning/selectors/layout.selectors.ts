@@ -27,7 +27,22 @@ export const getShowActivityTypesDrawer = createSelector(
   (state: LayoutState) => state.showActivityTypesDrawer,
 );
 
+export const getShowAddActivityDrawer = createSelector(
+  getLayoutState,
+  (state: LayoutState) => state.showAddActivityDrawer,
+);
+
+export const getShowCreatePlanDrawer = createSelector(
+  getLayoutState,
+  (state: LayoutState) => state.showCreatePlanDrawer,
+);
+
 export const getShowEditActivityDrawer = createSelector(
   getLayoutState,
   (state: LayoutState) => state.showEditActivityDrawer,
+);
+
+export const getShowEditPlanDrawer = createSelector(
+  getLayoutState,
+  (state: LayoutState) => state.showEditPlanDrawer,
 );

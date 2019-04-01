@@ -36,7 +36,9 @@ export class LayoutEffects {
   toggleDrawer$: Observable<Action> = this.actions$.pipe(
     ofType<ToggleActivityTypesDrawer | ToggleEditActivityDrawer>(
       LayoutActionTypes.ToggleActivityTypesDrawer,
+      LayoutActionTypes.ToggleCreatePlanDrawer,
       LayoutActionTypes.ToggleEditActivityDrawer,
+      LayoutActionTypes.ToggleCreatePlanDrawer,
     ),
     map(_ => new Resize()),
   );

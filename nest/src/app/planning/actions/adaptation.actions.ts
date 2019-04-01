@@ -21,7 +21,7 @@ export enum AdaptationActionTypes {
 
 export class FetchActivityTypes implements Action {
   readonly type = AdaptationActionTypes.FetchActivityTypes;
-  constructor(public adaptationId: string) {}
+  constructor(public planId: string) {}
 }
 
 export class FetchActivityTypesSuccess implements Action {

@@ -15,6 +15,7 @@ import {
   FetchActivitiesSuccess,
   FetchPlansSuccess,
   SelectActivity,
+  SelectPlan,
   UpdateActivitySuccess,
   UpdateViewTimeRange,
 } from '../actions/plan.actions';
@@ -147,6 +148,23 @@ describe('Plan Reducer', () => {
       expect(result).toEqual({
         ...newInitialState,
         selectedActivity: activitiesMap['1'],
+      });
+    });
+  });
+
+  describe('SelectPlan', () => {
+    it('should set the selectedPlan', () => {
+      const planId = plan.id || '';
+      const newInitialState = reducer(
+        initialState,
+        new FetchPlansSuccess(plans),
+      );
+
+      const result = reducer(newInitialState, new SelectPlan(planId));
+
+      expect(result).toEqual({
+        ...newInitialState,
+        selectedPlan: plansMap[planId],
       });
     });
   });

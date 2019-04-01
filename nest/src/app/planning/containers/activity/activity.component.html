@@ -1,0 +1,18 @@
+<nest-app-header [title]="title" contextual="true" (menuClicked)="onNavBack()">
+</nest-app-header>
+
+<main class="content">
+  <mat-progress-bar
+    mode="indeterminate"
+    *ngIf="(planningService.showLoadingBar$ | async)"
+    color="accent"
+  >
+  </mat-progress-bar>
+
+  <activity-form-full
+    [activityTypes]="activityTypes$ | async"
+    [isNew]="isNew"
+    [selectedActivity]="selectedActivity$ | async"
+    (cancel)="onNavBack()"
+  ></activity-form-full>
+</main>

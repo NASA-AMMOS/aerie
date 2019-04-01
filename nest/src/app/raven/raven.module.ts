@@ -28,7 +28,7 @@ import {
 } from './effects';
 
 import {
-  RavenConfirmDialogModule,
+  NestConfirmDialogModule,
   RavenCustomFilterDialogModule,
   RavenCustomGraphDialogModule,
   RavenFileImportDialogModule,
@@ -55,7 +55,7 @@ import {
       TimelineEffects,
     ]),
     RavenAppModule,
-    RavenConfirmDialogModule,
+    NestConfirmDialogModule,
     RavenCustomFilterDialogModule,
     RavenCustomGraphDialogModule,
     RavenFileImportDialogModule,

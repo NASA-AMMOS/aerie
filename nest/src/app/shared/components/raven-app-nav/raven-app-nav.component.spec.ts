@@ -20,7 +20,7 @@ import {
 import { RavenAppNavModule } from './raven-app-nav.module';
 
 @Component({
-  selector: 'raven-app-header-test-host',
+  selector: 'nest-app-header-test-host',
   template: `
     <raven-app-nav></raven-app-nav>
   `,

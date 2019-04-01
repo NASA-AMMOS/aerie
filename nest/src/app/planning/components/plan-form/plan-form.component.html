@@ -1,0 +1,45 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit(form.value)">
+  <mat-form-field appearance="fill">
+    <mat-label>Name</mat-label>
+    <input
+      matInput
+      placeholder="Plan Name"
+      type="text"
+      [formControl]="form.controls['name']"
+      required
+    />
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Plan Start</mat-label>
+    <input
+      matInput
+      placeholder="Start time"
+      [formControl]="form.controls['startTimestamp']"
+      required
+    />
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Plan End</mat-label>
+    <input
+      matInput
+      placeholder="End time"
+      [formControl]="form.controls['endTimestamp']"
+      required
+    />
+  </mat-form-field>
+
+  <mat-form-field appearance="fill" floatLabel="always">
+    <mat-label>Adaptation</mat-label>
+    <select matNativeControl [formControl]="form.controls['adaptationId']">
+      <option *ngFor="let adaptation of adaptations" [value]="adaptation.id"
+        >{{ adaptation.name }} {{ adaptation.version }}</option
+      >
+    </select>
+  </mat-form-field>
+
+  <div class="form-controls">
+    <button mat-raised-button color="accent">Save</button>
+  </div>
+</form>

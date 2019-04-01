@@ -67,11 +67,11 @@ export interface MpsCommandParameter {
 }
 
 export interface Plan {
-    adaptationId?:   string;
-    endTimestamp?:   string;
-    id?:             string;
-    name?:           string;
-    startTimestamp?: string;
+    adaptationId:   string;
+    endTimestamp:   string;
+    id:             string;
+    name:           string;
+    startTimestamp: string;
 }
 
 export interface Schedule {

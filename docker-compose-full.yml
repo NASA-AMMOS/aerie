@@ -1,18 +1,18 @@
-version: '3.3'
+version: "3.3"
 services:
   # Core services
   adaptation:
     image: cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/adaptation:leroy-jenkins_b57_r5e19da38_20190221
     ports: ["27182:27182"]
     volumes:
-    - adaptation_files:/usr/src/app/adaptation_files
-    - adaptation_logs:/var/log/adaptation
+      - adaptation_files:/usr/src/app/adaptation_files
+      - adaptation_logs:/var/log/adaptation
   nest:
     image: cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/nest:leroy-jenkins_b57_r5e19da38_20190221
     ports: ["8080:80"]
   plan:
     image: cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/plan:leroy-jenkins_b57_r5e19da38_20190221
-    command: ["--spring.profiles.active=production"] 
+    command: ["--spring.profiles.active=production"]
     depends_on: ["plan_mongo"]
     ports: ["27183:27183"]
     restart: always
@@ -22,7 +22,7 @@ services:
     image: mongo:3.2
     ports: ["27018:27018"]
     volumes: ["plan_mongo_data:/data/db"]
-  
+
   # Message queue
   activemq:
     image: rmohr/activemq:5.15.6-alpine
@@ -36,8 +36,8 @@ services:
     depends_on: ["tyk_redis"]
     restart: always
     volumes:
-    - ./tyk_gateway/tyk_gateway_dashboard.conf:/opt/tyk-gateway/tyk.conf
-    - ./tyk_gateway/apps:/opt/tyk-gateway/apps
+      - ./tyk_gateway/tyk_gateway_dashboard.conf:/opt/tyk-gateway/tyk.conf
+      - ./tyk_gateway/apps:/opt/tyk-gateway/apps
   tyk_redis:
     image: redis
     ports: ["6379:6379"]
@@ -47,19 +47,22 @@ services:
   tyk_dashboard:
     image: tykio/tyk-dashboard:latest
     ports:
-    - "3000:3000"
-    - "5000:5000"
+      - "3000:3000"
+      - "5000:5000"
     depends_on:
-    - tyk_redis
-    - tyk_mongo
+      - tyk_redis
+      - tyk_mongo
     restart: always
-    volumes: ["./tyk_dashboard/tyk_dashboard.conf:/opt/tyk-dashboard/tyk_analytics.conf"]
+    volumes:
+      [
+        "./tyk_dashboard/tyk_dashboard.conf:/opt/tyk-dashboard/tyk_analytics.conf",
+      ]
   tyk_pump:
     image: tykio/tyk-pump-docker-pub:latest
     depends_on:
-    - tyk_redis
-    - tyk_mongo
-    - tyk_gateway
+      - tyk_redis
+      - tyk_mongo
+      - tyk_gateway
     restart: always
     volumes: ["./tyk_pump/tyk_pump.conf:/opt/tyk-pump/pump.conf"]
   tyk_mongo:
@@ -73,13 +76,13 @@ services:
     image: matomo
     ports: ["31423:80"]
     volumes:
-    - ./analytics/config.ini.php:/var/www/html/config/config.ini.php
-    - matomo_app:/matomo
+      - ./analytics/config.ini.php:/var/www/html/config/config.ini.php
+      - matomo_app:/matomo
     depends_on: ["matomo_database"]
   matomo_database:
-    image: mariadb 
+    image: mariadb
     ports: ["3306:3306"]
-    env_file: ./analytics/analytics.env      
+    env_file: ./analytics/analytics.env
     volumes: ["matomo_data:/var/lib/mysql"]
 
   # Logging
@@ -115,7 +118,7 @@ services:
 networks:
   elk:
     driver: bridge
-      
+
 volumes:
   adaptation_files:
   adaptation_logs:
@@ -126,4 +129,3 @@ volumes:
   plan_mongo_data:
   tyk_mongo_data:
   tyk_redis_data:
-    

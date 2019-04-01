@@ -9,13 +9,13 @@
 
 import { ActivityType, Adaptation, StringTMap } from '../../shared/models';
 import {
-  getMockActivityTypes,
-  getMockAdaptations,
-} from '../../shared/services/adaptation-mock.service';
-import {
   FetchActivityTypesSuccess,
   FetchAdaptationsSuccess,
 } from '../actions/adaptation.actions';
+import {
+  getMockActivityTypes,
+  getMockAdaptations,
+} from '../services/adaptation-mock.service';
 import { AdaptationState, initialState, reducer } from './adaptation.reducer';
 
 describe('Adaptation Reducer', () => {

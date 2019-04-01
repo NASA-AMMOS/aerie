@@ -18,7 +18,7 @@ import { exhaustMap, map, withLatestFrom } from 'rxjs/operators';
 import { RavenAppState } from '../raven-store';
 
 import {
-  RavenConfirmDialogComponent,
+  NestConfirmDialogComponent,
   RavenCustomFilterDialogComponent,
   RavenCustomGraphDialogComponent,
   RavenFileImportDialogComponent,
@@ -72,7 +72,7 @@ export class DialogEffects {
     ),
     exhaustMap(action => {
       const applyCurrentStateDialog = this.dialog.open(
-        RavenConfirmDialogComponent,
+        NestConfirmDialogComponent,
         {
           data: {
             cancelText: 'No',
@@ -104,7 +104,7 @@ export class DialogEffects {
     ),
     exhaustMap(action => {
       const removeAllBandsDialog = this.dialog.open(
-        RavenConfirmDialogComponent,
+        NestConfirmDialogComponent,
         {
           data: {
             cancelText: 'No',
@@ -133,7 +133,7 @@ export class DialogEffects {
   openConfirmDialog$: Observable<Action> = this.actions$.pipe(
     ofType<OpenConfirmDialog>(DialogActionTypes.OpenConfirmDialog),
     exhaustMap(action => {
-      this.dialog.open(RavenConfirmDialogComponent, {
+      this.dialog.open(NestConfirmDialogComponent, {
         data: {
           cancelText: action.cancelText,
           message: action.message,
@@ -219,17 +219,14 @@ export class DialogEffects {
   openDeleteBandDialog$: Observable<Action> = this.actions$.pipe(
     ofType<OpenDeleteBandDialog>(DialogActionTypes.OpenDeleteBandDialog),
     exhaustMap(action => {
-      const deleteSubBandDialog = this.dialog.open(
-        RavenConfirmDialogComponent,
-        {
-          data: {
-            cancelText: 'No',
-            confirmText: 'Yes',
-            message: 'Are you sure you want to delete this band?',
-          },
-          width: action.width,
+      const deleteSubBandDialog = this.dialog.open(NestConfirmDialogComponent, {
+        data: {
+          cancelText: 'No',
+          confirmText: 'Yes',
+          message: 'Are you sure you want to delete this band?',
         },
-      );
+        width: action.width,
+      });
 
       return zip(of(action), deleteSubBandDialog.afterClosed());
     }),
@@ -249,7 +246,7 @@ export class DialogEffects {
   openDeleteDialog$: Observable<Action> = this.actions$.pipe(
     ofType<OpenDeleteSourceDialog>(DialogActionTypes.OpenDeleteSourceDialog),
     exhaustMap(action => {
-      const deleteDialog = this.dialog.open(RavenConfirmDialogComponent, {
+      const deleteDialog = this.dialog.open(NestConfirmDialogComponent, {
         data: {
           cancelText: 'No',
           confirmText: 'Yes',
@@ -386,7 +383,7 @@ export class DialogEffects {
     ),
     exhaustMap(action => {
       const removeAllGuidesDialog = this.dialog.open(
-        RavenConfirmDialogComponent,
+        NestConfirmDialogComponent,
         {
           data: {
             cancelText: 'No',
@@ -462,7 +459,7 @@ export class DialogEffects {
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     exhaustMap(({ action, state }) => {
-      const applyStateDialog = this.dialog.open(RavenConfirmDialogComponent, {
+      const applyStateDialog = this.dialog.open(NestConfirmDialogComponent, {
         data: {
           cancelText: 'No',
           confirmText: 'Yes',
@@ -527,7 +524,7 @@ export class DialogEffects {
     ),
     exhaustMap(action => {
       const updateCurrentStateDialog = this.dialog.open(
-        RavenConfirmDialogComponent,
+        NestConfirmDialogComponent,
         {
           data: {
             cancelText: 'No',

@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { keyBy } from 'lodash';
+import { keyBy, omit } from 'lodash';
 import {
   ActivityInstance,
   Plan,
@@ -16,11 +16,16 @@ import {
 } from '../../shared/models';
 import { getMaxTimeRange } from '../../shared/util';
 import {
+  CreateActivitySuccess,
+  CreatePlanSuccess,
+  DeleteActivitySuccess,
+  DeletePlanSuccess,
   FetchActivitiesSuccess,
   FetchPlansSuccess,
   PlanActions,
   PlanActionTypes,
   SelectActivity,
+  SelectPlan,
   UpdateActivitySuccess,
   UpdateViewTimeRange,
 } from '../actions/plan.actions';
@@ -56,12 +61,22 @@ export function reducer(
       return { ...state, selectedActivity: null };
     case PlanActionTypes.ClearSelectedPlan:
       return { ...state, selectedPlan: null };
+    case PlanActionTypes.CreateActivitySuccess:
+      return createActivitySuccess(state, action);
+    case PlanActionTypes.CreatePlanSuccess:
+      return createPlanSuccess(state, action);
+    case PlanActionTypes.DeleteActivitySuccess:
+      return deleteActivitySuccess(state, action);
+    case PlanActionTypes.DeletePlanSuccess:
+      return deletePlanSuccess(state, action);
     case PlanActionTypes.FetchActivitiesSuccess:
       return fetchActivitiesSuccess(state, action);
     case PlanActionTypes.FetchPlansSuccess:
       return fetchPlansSuccess(state, action);
     case PlanActionTypes.SelectActivity:
       return selectActivity(state, action);
+    case PlanActionTypes.SelectPlan:
+      return selectPlan(state, action);
     case PlanActionTypes.UpdateActivitySuccess:
       return updateActivitySuccess(state, action);
     case PlanActionTypes.UpdateViewTimeRange:
@@ -69,6 +84,68 @@ export function reducer(
     default:
       return state;
   }
+}
+
+/**
+ * Reduction helper. Called when a 'CreateActivitySuccess' action occurs.
+ */
+function createActivitySuccess(
+  state: PlanState,
+  action: CreateActivitySuccess,
+): PlanState {
+  return {
+    ...state,
+    activities: {
+      ...state.activities,
+      [action.activity.activityId]: {
+        ...action.activity,
+      },
+    },
+  };
+}
+
+/**
+ * Reduction helper. Called when a 'CreatePlanSuccess' action occurs.
+ */
+function createPlanSuccess(
+  state: PlanState,
+  action: CreatePlanSuccess,
+): PlanState {
+  return {
+    ...state,
+    plans: {
+      ...state.plans,
+      [action.plan.id]: {
+        ...action.plan,
+      },
+    },
+  };
+}
+
+/**
+ * Reduction helper. Called when a 'DeleteActivitySuccess' action occurs.
+ */
+function deleteActivitySuccess(
+  state: PlanState,
+  action: DeleteActivitySuccess,
+): PlanState {
+  return {
+    ...state,
+    activities: omit(state.activities, action.activityId),
+  };
+}
+
+/**
+ * Reduction helper. Called when a 'DeletePlanSuccess' action occurs.
+ */
+function deletePlanSuccess(
+  state: PlanState,
+  action: DeletePlanSuccess,
+): PlanState {
+  return {
+    ...state,
+    plans: omit(state.plans, action.deletedPlanId),
+  };
 }
 
 /**
@@ -126,6 +203,25 @@ function selectActivity(state: PlanState, action: SelectActivity): PlanState {
   return {
     ...state,
     selectedActivity: null,
+  };
+}
+
+/**
+ * Reduction helper. Called when a 'SelectPlan' action occurs.
+ */
+function selectPlan(state: PlanState, action: SelectPlan): PlanState {
+  const { plans } = state;
+
+  if (action.id !== null && plans && plans[action.id]) {
+    return {
+      ...state,
+      selectedPlan: plans[action.id],
+    };
+  }
+
+  return {
+    ...state,
+    selectedPlan: null,
   };
 }
 

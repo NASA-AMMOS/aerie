@@ -12,7 +12,6 @@ import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
 import { catchError, map, switchMap, withLatestFrom } from 'rxjs/operators';
-import { AdaptationService } from '../../shared/services/adaptation.service';
 import {
   AdaptationActionTypes,
   FetchActivityTypes,
@@ -23,6 +22,7 @@ import {
   FetchAdaptationsSuccess,
 } from '../actions/adaptation.actions';
 import { PlanningAppState } from '../planning-store';
+import { AdaptationService } from '../services/adaptation.service';
 import { withLoadingBar } from './utils';
 
 @Injectable()
@@ -41,7 +41,11 @@ export class AdaptationEffects {
     switchMap(({ action, state }) =>
       withLoadingBar([
         this.adaptationService
-          .getActivityTypes(state.config.app.apiBaseUrl, action.adaptationId)
+          .getActivityTypes(
+            state.config.app.planServiceBaseUrl,
+            state.config.app.adaptationServiceBaseUrl,
+            action.planId,
+          )
           .pipe(
             map(data => new FetchActivityTypesSuccess(data)),
             catchError((e: Error) => {
@@ -60,13 +64,15 @@ export class AdaptationEffects {
     map(([_, state]) => state),
     switchMap((state: PlanningAppState) =>
       withLoadingBar([
-        this.adaptationService.getAdaptations(state.config.app.apiBaseUrl).pipe(
-          map(data => new FetchAdaptationsSuccess(data)),
-          catchError((e: Error) => {
-            console.error('AdaptationEffects - fetchAdaptations$: ', e);
-            return of(new FetchAdaptationsFailure(e));
-          }),
-        ),
+        this.adaptationService
+          .getAdaptations(state.config.app.adaptationServiceBaseUrl)
+          .pipe(
+            map(data => new FetchAdaptationsSuccess(data)),
+            catchError((e: Error) => {
+              console.error('AdaptationEffects - fetchAdaptations$: ', e);
+              return of(new FetchAdaptationsFailure(e));
+            }),
+          ),
       ]),
     ),
   );

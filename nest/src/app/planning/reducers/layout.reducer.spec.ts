@@ -12,7 +12,10 @@ import {
   LoadingBarShow,
   Resize,
   ToggleActivityTypesDrawer,
+  ToggleAddActivityDrawer,
+  ToggleCreatePlanDrawer,
   ToggleEditActivityDrawer,
+  ToggleEditPlanDrawer,
 } from '../actions/layout.actions';
 import { initialState, LayoutState, reducer } from './layout.reducer';
 
@@ -25,13 +28,6 @@ describe('layout reducer', () => {
 
   it('handle default', () => {
     expect(layoutState).toEqual(initialState);
-  });
-
-  it('handle Resize', () => {
-    layoutState = reducer(layoutState, new Resize());
-    expect(layoutState).toEqual({
-      ...initialState,
-    });
   });
 
   it('handle LoadingBarHide', () => {
@@ -51,12 +47,34 @@ describe('layout reducer', () => {
     });
   });
 
+  it('handle Resize', () => {
+    layoutState = reducer(layoutState, new Resize());
+    expect(layoutState).toEqual({
+      ...initialState,
+    });
+  });
+
   it('handle ToggleActivityTypesDrawer', () => {
     layoutState = reducer(layoutState, new ToggleActivityTypesDrawer());
     expect(layoutState).toEqual({
       ...initialState,
       showActivityTypesDrawer: true,
-      showEditActivityDrawer: false,
+    });
+  });
+
+  it('handle ToggleAddActivityDrawer', () => {
+    layoutState = reducer(layoutState, new ToggleAddActivityDrawer());
+    expect(layoutState).toEqual({
+      ...initialState,
+      showAddActivityDrawer: true,
+    });
+  });
+
+  it('handle ToggleCreatePlanDrawer', () => {
+    layoutState = reducer(layoutState, new ToggleCreatePlanDrawer());
+    expect(layoutState).toEqual({
+      ...initialState,
+      showCreatePlanDrawer: true,
     });
   });
 
@@ -64,8 +82,15 @@ describe('layout reducer', () => {
     layoutState = reducer(layoutState, new ToggleEditActivityDrawer());
     expect(layoutState).toEqual({
       ...initialState,
-      showActivityTypesDrawer: false,
       showEditActivityDrawer: true,
+    });
+  });
+
+  it('handle ToggleEditPlanDrawer', () => {
+    layoutState = reducer(layoutState, new ToggleEditPlanDrawer());
+    expect(layoutState).toEqual({
+      ...initialState,
+      showEditPlanDrawer: true,
     });
   });
 });

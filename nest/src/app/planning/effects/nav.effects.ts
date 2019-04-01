@@ -11,12 +11,16 @@ import { Injectable } from '@angular/core';
 import { Actions, Effect } from '@ngrx/effects';
 import { switchMap } from 'rxjs/operators';
 import { mapToParam, mapToParams, ofRoute } from '../../../../libs/ngrx-router';
-import { FetchAdaptations } from '../actions/adaptation.actions';
+import {
+  FetchActivityTypes,
+  FetchAdaptations,
+} from '../actions/adaptation.actions';
 import {
   ClearSelectedActivity,
-  ClearSelectedPlan,
   FetchActivities,
   FetchPlans,
+  SelectActivity,
+  SelectPlan,
 } from '../actions/plan.actions';
 
 @Injectable()
@@ -26,11 +30,7 @@ export class NavEffects {
   @Effect()
   navPlans$ = this.actions$.pipe(
     ofRoute('plans'),
-    switchMap(_ => [
-      new FetchPlans(),
-      new FetchAdaptations(),
-      new ClearSelectedPlan(),
-    ]),
+    switchMap(_ => [new FetchPlans(), new FetchAdaptations()]),
   );
 
   @Effect()
@@ -40,28 +40,36 @@ export class NavEffects {
     switchMap(planId => [
       new FetchPlans(),
       new FetchAdaptations(),
+      new FetchActivityTypes(planId),
       new FetchActivities(planId, null),
+      new SelectPlan(planId),
     ]),
   );
 
   @Effect()
   navActivities$ = this.actions$.pipe(
-    ofRoute('plans/:planId/activities'),
-    switchMap(_ => [
+    ofRoute('plans/:planId/activity'),
+    mapToParam<string>('planId'),
+    switchMap(planId => [
       new FetchPlans(),
       new FetchAdaptations(),
+      new FetchActivityTypes(planId),
+      new SelectPlan(planId),
       new ClearSelectedActivity(),
     ]),
   );
 
   @Effect()
   navActivitiesWithId$ = this.actions$.pipe(
-    ofRoute('plans/:planId/activities/:activityId'),
+    ofRoute('plans/:planId/activity/:activityId'),
     mapToParams(),
     switchMap(({ activityId, planId }) => [
       new FetchPlans(),
       new FetchAdaptations(),
+      new FetchActivityTypes(planId),
       new FetchActivities(planId, activityId),
+      new SelectPlan(planId),
+      new SelectActivity(activityId),
     ]),
   );
 }

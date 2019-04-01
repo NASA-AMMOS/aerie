@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 
 import {
-  RavenAppHeaderModule,
+  NestAppHeaderModule,
   RavenPanToDurationModule,
 } from '../../../shared/components/modules';
 import { TimelineModule } from '../timeline/timeline.module';
@@ -39,7 +39,7 @@ import {
     MatTooltipModule,
     RavenPanToDurationModule,
     TimelineModule,
-    RavenAppHeaderModule,
+    NestAppHeaderModule,
   ],
 })
 export class RavenAppModule {}

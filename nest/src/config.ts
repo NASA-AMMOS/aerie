@@ -14,9 +14,10 @@ import { version } from './environments/version';
 
 export interface ConfigState {
   app: {
-    apiBaseUrl: string;
+    adaptationServiceBaseUrl: string;
     baseUrl: string;
     packageJsonVersion: string;
+    planServiceBaseUrl: string;
     production: boolean;
     version: string;
   };
@@ -43,9 +44,10 @@ export interface ConfigState {
 
 export const config: ConfigState = {
   app: {
-    apiBaseUrl: environment.apiBaseUrl,
+    adaptationServiceBaseUrl: environment.adaptationServiceBaseUrl,
     baseUrl: environment.baseUrl,
     packageJsonVersion: version.packageJsonVersion,
+    planServiceBaseUrl: environment.planServiceBaseUrl,
     production: environment.production,
     version: version.version,
   },

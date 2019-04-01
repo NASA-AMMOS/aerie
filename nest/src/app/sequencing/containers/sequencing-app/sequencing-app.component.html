@@ -1,12 +1,11 @@
-<raven-app-header
-  title="Sequencing"
-  (menuClicked)="onMenuClicked()">
-</raven-app-header>
+<nest-app-header title="Sequencing" (menuClicked)="onMenuClicked()">
+</nest-app-header>
 
 <main>
   <seq-editor
     [commands]="commands$ | async"
-    [commandsByName]="commandsByName$ | async">
+    [commandsByName]="commandsByName$ | async"
+  >
   </seq-editor>
 </main>
 
@@ -14,10 +13,12 @@
   <seq-command-loader
     [selectedId]="selectedDictionaryId$ | async"
     [dictionaries]="dictionaries$ | async"
-    (selectDictionary)="onSelectDictionary($event)">
+    (selectDictionary)="onSelectDictionary($event)"
+  >
   </seq-command-loader>
   <seq-command-list
     [commands]="commands$ | async"
-    (selectCommand)="onSelectCommand($event)">
+    (selectCommand)="onSelectCommand($event)"
+  >
   </seq-command-list>
 </aside>

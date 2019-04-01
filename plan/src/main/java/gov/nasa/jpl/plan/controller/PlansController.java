@@ -4,21 +4,34 @@ import gov.nasa.jpl.aerie.schemas.ActivityInstance;
 import gov.nasa.jpl.aerie.schemas.ActivityInstanceParameter;
 import gov.nasa.jpl.aerie.schemas.ActivityType;
 import gov.nasa.jpl.aerie.schemas.ActivityTypeParameter;
-import gov.nasa.jpl.aerie.schemas.Plan;
-import gov.nasa.jpl.plan.models.*;
+import gov.nasa.jpl.plan.models.Plan;
+import gov.nasa.jpl.plan.models.PlanDetail;
 import gov.nasa.jpl.plan.repositories.PlansRepository;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.NoSuchElementException;
+import java.util.UUID;
+import javax.validation.Valid;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import javax.validation.Valid;
-import java.util.*;
-
+@CrossOrigin
 @RestController
 @RequestMapping("/plans")
 public class PlansController {
@@ -35,8 +48,9 @@ public class PlansController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<Object> getPlanDetail(@PathVariable("id") String id) {
-    return ResponseEntity.ok(repository.findPlanDetailByid(id));
+  public ResponseEntity<Object> getPlan(@PathVariable("id") ObjectId _id) {
+    Plan plan = repository.findPlanBy_id(_id);
+    return ResponseEntity.ok(plan);
   }
 
   @PutMapping("/{id}")
@@ -58,22 +72,22 @@ public class PlansController {
     return ResponseEntity.noContent().build();
   }
 
-  @PutMapping("/")
+  @PostMapping("/")
   public ResponseEntity<Object> createPlan(@Valid @RequestBody Plan plan) {
-    plan.setId(ObjectId.get().toString());
+    plan.set_id(ObjectId.get());
     repository.save(plan);
     return ResponseEntity.ok(plan);
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Object> deletePlan(@PathVariable String id) {
-    repository.delete(repository.findPlanByid(id));
+  public ResponseEntity<Object> deletePlan(@PathVariable("id") ObjectId _id) {
+    repository.delete(repository.findPlanBy_id(_id));
     return ResponseEntity.noContent().build();
   }
 
   @PostMapping("/{planId}/activity_instances")
   public ResponseEntity<Object> createActivityInstance(
-      @PathVariable("planId") String planId,
+      @PathVariable("planId") ObjectId _id,
       @RequestParam(value = "adaptationId", required = false) String adaptationId,
       @RequestParam(value = "activityTypeId", required = false) String activityTypeId,
       @Valid @RequestBody ActivityInstance requestBodyActivityInstance
@@ -116,7 +130,7 @@ public class PlansController {
     UUID uuid = UUID.randomUUID();
     activityInstance.setActivityId(uuid.toString());
 
-    PlanDetail planDetail = repository.findPlanDetailByid(planId);
+    PlanDetail planDetail = repository.findPlanDetailBy_id(_id);
     planDetail.addActivityInstance(activityInstance);
     planDetail.updateActivityInstance(uuid, requestBodyActivityInstance);
     repository.save(planDetail);
@@ -125,8 +139,8 @@ public class PlansController {
   }
 
   @GetMapping("/{planId}/activity_instances")
-  public ResponseEntity<Object> getActivityInstances(@PathVariable("planId") String planId) {
-    PlanDetail planDetail = repository.findPlanDetailByid(planId);
+  public ResponseEntity<Object> getActivityInstances(@PathVariable("planId") ObjectId _id) {
+    PlanDetail planDetail = repository.findPlanDetailBy_id(_id);
     if (planDetail != null) {
       return ResponseEntity.ok(planDetail.getActivityInstances());
     } else {
@@ -136,10 +150,10 @@ public class PlansController {
 
   @GetMapping("/{planId}/activity_instances/{id}")
   public ResponseEntity<Object> getActivityInstance(
-      @PathVariable("planId") String planId,
+      @PathVariable("planId") ObjectId _id,
       @PathVariable("id") UUID id
   ) {
-    PlanDetail planDetail = repository.findPlanDetailByid(planId);
+    PlanDetail planDetail = repository.findPlanDetailBy_id(_id);
 
     if (planDetail != null) {
       for (ActivityInstance ai : planDetail.getActivityInstances()) {
@@ -154,20 +168,20 @@ public class PlansController {
 
   @PutMapping("/{planId}/activity_instances/{id}")
   public ResponseEntity<Object> replaceActivityInstance(
-      @PathVariable("planId") String planId,
+      @PathVariable("planId") ObjectId _id,
       @PathVariable("id") UUID id,
       @Valid @RequestBody ActivityInstance requestBodyActivityInstance
   ) {
-    return this.updateActivityInstance(planId, id, requestBodyActivityInstance);
+    return this.updateActivityInstance(_id, id, requestBodyActivityInstance);
   }
 
   @PatchMapping("/{planId}/activity_instances/{id}")
   public ResponseEntity<Object> updateActivityInstance(
-      @PathVariable("planId") String planId,
+      @PathVariable("planId") ObjectId _id,
       @PathVariable("id") UUID id,
       @Valid @RequestBody ActivityInstance requestBodyActivityInstance
   ) {
-    PlanDetail planDetail = repository.findPlanDetailByid(planId);
+    PlanDetail planDetail = repository.findPlanDetailBy_id(_id);
 
     if (planDetail != null) {
       ActivityInstance activityInstance = planDetail.getActivityInstance(id);
@@ -184,10 +198,10 @@ public class PlansController {
 
   @DeleteMapping("/{planId}/activity_instances/{id}")
   public ResponseEntity<Object> updateActivityInstance(
-      @PathVariable("planId") String planId,
+      @PathVariable("planId") ObjectId _id,
       @PathVariable("id") UUID id
   ) {
-    PlanDetail planDetail = repository.findPlanDetailByid(planId);
+    PlanDetail planDetail = repository.findPlanDetailBy_id(_id);
 
     if (planDetail != null) {
       try {

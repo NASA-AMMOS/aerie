@@ -7,5 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './activities/activities.component';
-export * from './planning-app/planning-app.component';
+export * from './activity/activity.component';
+export * from './plan/plan.component';
+export * from './plans/plans.component';

@@ -36,8 +36,8 @@ export enum PlanActionTypes {
   FetchPlans = '[plan] fetch_plans',
   FetchPlansFailure = '[plan] fetch_plans_failure',
   FetchPlansSuccess = '[plan] fetch_plans_success',
-  OpenPlanFormDialog = '[plan] open_plan_form_dialog',
   SelectActivity = '[plan] select_activity',
+  SelectPlan = '[plan] select_plan',
   UpdateActivity = '[plan] update_activity',
   UpdateActivityFailure = '[plan] update_activity_failure',
   UpdateActivitySuccess = '[plan] update_activity_success',
@@ -67,7 +67,7 @@ export class CreateActivityFailure implements Action {
 
 export class CreateActivitySuccess implements Action {
   readonly type = PlanActionTypes.CreateActivitySuccess;
-  constructor(public planId: string) {}
+  constructor(public planId: string, public activity: ActivityInstance) {}
 }
 
 export class CreatePlan implements Action {
@@ -97,6 +97,7 @@ export class DeleteActivityFailure implements Action {
 
 export class DeleteActivitySuccess implements Action {
   readonly type = PlanActionTypes.DeleteActivitySuccess;
+  constructor(public activityId: string) {}
 }
 
 export class DeletePlan implements Action {
@@ -111,6 +112,7 @@ export class DeletePlanFailure implements Action {
 
 export class DeletePlanSuccess implements Action {
   readonly type = PlanActionTypes.DeletePlanSuccess;
+  constructor(public deletedPlanId: string) {}
 }
 
 export class FetchActivities implements Action {
@@ -146,19 +148,23 @@ export class FetchPlansSuccess implements Action {
   constructor(public data: Plan[]) {}
 }
 
-export class OpenPlanFormDialog implements Action {
-  readonly type = PlanActionTypes.OpenPlanFormDialog;
-  constructor(public id: string | null) {}
-}
-
 export class SelectActivity implements Action {
   readonly type = PlanActionTypes.SelectActivity;
   constructor(public id: string | null) {}
 }
 
+export class SelectPlan implements Action {
+  readonly type = PlanActionTypes.SelectPlan;
+  constructor(public id: string) {}
+}
+
 export class UpdateActivity implements Action {
   readonly type = PlanActionTypes.UpdateActivity;
-  constructor(public activityId: string, public update: StringTMap<any>) {}
+  constructor(
+    public planId: string,
+    public activityId: string,
+    public update: StringTMap<any>,
+  ) {}
 }
 
 export class UpdateActivityFailure implements Action {
@@ -208,11 +214,11 @@ export type PlanActions =
   | FetchPlans
   | FetchPlansFailure
   | FetchPlansSuccess
-  | OpenPlanFormDialog
   | CreateActivity
   | CreateActivityFailure
   | CreateActivitySuccess
   | SelectActivity
+  | SelectPlan
   | UpdateActivity
   | UpdateActivityFailure
   | UpdateActivitySuccess

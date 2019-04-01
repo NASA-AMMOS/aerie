@@ -25,6 +25,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/adaptations")
 public class AdaptationController {

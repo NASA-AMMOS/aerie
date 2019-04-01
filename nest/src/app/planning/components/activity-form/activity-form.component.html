@@ -1,0 +1,80 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit(form.value)">
+  <mat-form-field appearance="fill" floatLabel="always">
+    <mat-label>Activity Type</mat-label>
+    <mat-select
+      placeholder="Select Activity Type"
+      [formControl]="form.controls['activityType']"
+      [compareWith]="ngTemplateUtils.compareSelectValues"
+      readonly
+    >
+      <mat-option
+        *ngFor="let activityType of activityTypes"
+        [value]="activityType.activityClass"
+      >
+        {{ activityType.activityClass }}
+      </mat-option>
+    </mat-select>
+    <mat-icon matSuffix>lock</mat-icon>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Activity Name</mat-label>
+    <input
+      matInput
+      placeholder="Activity Name"
+      type="text"
+      [formControl]="form.controls['name']"
+      required
+    />
+    <mat-icon matSuffix>mode_edit</mat-icon>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Start</mat-label>
+    <input
+      matInput
+      placeholder="Start time"
+      type="text"
+      [formControl]="form.controls['start']"
+      required
+    />
+    <mat-hint align="start">UTC within plan bounds</mat-hint>
+    <mat-icon matSuffix>event</mat-icon>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Duration</mat-label>
+    <input
+      matInput
+      placeholder="Duration"
+      type="number"
+      [formControl]="form.controls['duration']"
+      required
+    />
+    <mat-hint align="start">000</mat-hint>
+    <mat-icon matSuffix>hourglass_empty</mat-icon>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Intent</mat-label>
+    <textarea
+      matInput
+      placeholder="Add intent"
+      [formControl]="form.controls['intent']"
+    >
+    </textarea>
+    <mat-hint align="start">Optional</mat-hint>
+  </mat-form-field>
+
+  <div class="form-controls">
+    <button
+      mat-stroked-button
+      color="primary"
+      type="button"
+      (click)="clickAdvanced.emit(activity?.activityId)"
+    >
+      Advanced
+    </button>
+    <button mat-raised-button color="accent">Save</button>
+  </div>
+</form>

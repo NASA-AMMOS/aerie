@@ -10,9 +10,9 @@
 import { OverlayModule } from '@angular/cdk/overlay';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material';
 import { Router } from '@angular/router';
-import { Actions, EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
+import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { Store, StoreModule } from '@ngrx/store';
 import { cold, hot } from 'jasmine-marbles';
@@ -24,25 +24,11 @@ import {
   ActivityInstance,
   Adaptation,
   Plan,
-  RavenPlanFormDialogData,
   StringTMap,
 } from '../../shared/models';
-import {
-  AdaptationMockService,
-  getMockAdaptations,
-} from '../../shared/services/adaptation-mock.service';
-import { AdaptationService } from '../../shared/services/adaptation.service';
-import {
-  getMockActivities,
-  getMockPlan,
-  getMockPlans,
-  PlanMockService,
-} from '../../shared/services/plan-mock.service';
-import { PlanService } from '../../shared/services/plan.service';
 import { FetchAdaptationsSuccess } from '../actions/adaptation.actions';
 import { LoadingBarHide, LoadingBarShow } from '../actions/layout.actions';
 import {
-  ClearSelectedActivity,
   CreateActivity,
   CreateActivityFailure,
   CreateActivitySuccess,
@@ -61,12 +47,23 @@ import {
   FetchPlans,
   FetchPlansFailure,
   FetchPlansSuccess,
-  OpenPlanFormDialog,
   UpdateActivity,
   UpdateActivityFailure,
   UpdateActivitySuccess,
 } from '../actions/plan.actions';
 import { reducers } from '../planning-store';
+import {
+  AdaptationMockService,
+  getMockAdaptations,
+} from '../services/adaptation-mock.service';
+import { AdaptationService } from '../services/adaptation.service';
+import {
+  getMockActivities,
+  getMockPlan,
+  getMockPlans,
+  PlanMockService,
+} from '../services/plan-mock.service';
+import { PlanService } from '../services/plan.service';
 import { AdaptationEffects } from './adaptation.effects';
 import { PlanEffects } from './plan.effects';
 
@@ -139,8 +136,9 @@ describe('PlanEffects', () => {
     });
 
     it('should return a CreateActivitySuccess action with data upon success', () => {
-      const action = new CreateActivity(plan.id || '', activity);
-      const success = new CreateActivitySuccess(plan.id || '');
+      const planId = plan.id || '';
+      const action = new CreateActivity(planId, activity);
+      const success = new CreateActivitySuccess(planId, activity);
       const showToast = new ShowToast(
         'success',
         'New activity has been successfully created and saved.',
@@ -154,7 +152,8 @@ describe('PlanEffects', () => {
     });
 
     it('should return a CreateActivityFailure action with an error upon failure', () => {
-      const action = new CreateActivity(plan.id || '', activity);
+      const planId = plan.id || '';
+      const action = new CreateActivity(planId, activity);
       const error = new Error('CreateActivityFailure');
       const failure = new CreateActivityFailure(error);
       const showToast = new ShowToast(
@@ -181,7 +180,7 @@ describe('PlanEffects', () => {
     });
 
     it('should navigate to the actions given planId', () => {
-      const action = new CreateActivitySuccess('foo');
+      const action = new CreateActivitySuccess('foo', activity);
 
       actions$ = hot('-a', { a: action });
       const expected = cold('-');
@@ -231,50 +230,64 @@ describe('PlanEffects', () => {
     });
   });
 
-  describe('createPlanSuccess$', () => {
-    it('should register createPlanSuccess$ that does not dispatch an action', () => {
-      expect(metadata.createPlanSuccess$).toEqual({ dispatch: false });
-    });
-
-    it('should route to the actions plan.id and also clear the selected activity', () => {
-      const action = new CreatePlanSuccess(plan);
-      const clearSelectedActivity = new ClearSelectedActivity();
-
-      actions$ = hot('-a', { a: action });
-      const expected = cold('-b', { b: clearSelectedActivity });
-
-      expect(effects.createPlanSuccess$).toBeObservable(expected);
-      expect(mockRouter.navigate).toHaveBeenCalledWith([`/plans/${plan.id}`]);
-    });
-  });
-
   describe('deleteActivity$', () => {
     it('should register deleteActivity$ that dispatches an action', () => {
       expect(metadata.deleteActivity$).toEqual({ dispatch: true });
     });
 
     it('should return a DeleteActivitySuccess action with data upon success', () => {
-      const action = new DeleteActivity(plan.id || '', activity.activityId);
-      const success = new DeleteActivitySuccess();
+      spyOn(dialog, 'open').and.returnValue({
+        afterClosed() {
+          return of({ confirm: true });
+        },
+      });
+
+      const planId = plan.id || '';
+      const action = new DeleteActivity(planId, activity.activityId);
+      const success = new DeleteActivitySuccess(activity.activityId);
+      const showToast = new ShowToast(
+        'success',
+        'Activity has been successfully deleted.',
+        'Delete Activity Success',
+      );
 
       actions$ = hot('-a', { a: action });
-      const expected = cold('-b', { b: success });
+      const expected = cold('-(bcde)', {
+        b: loadingBarShow,
+        c: success,
+        d: showToast,
+        e: loadingBarHide,
+      });
 
       expect(effects.deleteActivity$).toBeObservable(expected);
     });
 
     it('should return a DeleteActivityFailure action with an error upon failure', () => {
-      const action = new DeleteActivity(plan.id || '', activity.activityId);
+      spyOn(dialog, 'open').and.returnValue({
+        afterClosed() {
+          return of({ confirm: true });
+        },
+      });
+
+      const planId = plan.id || '';
+      const action = new DeleteActivity(planId, activity.activityId);
       const error = new Error('DeleteActivityFailure');
       const failure = new DeleteActivityFailure(error);
-
-      const service = TestBed.get(PlanService);
-      spyOn(service, 'deleteActivity').and.returnValue(
-        cold('-#|', null, error),
+      const showToast = new ShowToast(
+        'error',
+        error.message,
+        'Delete Activity Failure',
       );
 
+      const service = TestBed.get(PlanService);
+      spyOn(service, 'deleteActivity').and.returnValue(cold('#|', null, error));
       actions$ = hot('-a', { a: action });
-      const expected = cold('--b', { b: failure });
+      const expected = cold('-(bcde)', {
+        b: loadingBarShow,
+        c: failure,
+        d: showToast,
+        e: loadingBarHide,
+      });
 
       expect(effects.deleteActivity$).toBeObservable(expected);
     });
@@ -286,25 +299,59 @@ describe('PlanEffects', () => {
     });
 
     it('should return a DeletePlanSuccess action with data upon success', () => {
-      const action = new DeletePlan(plan.id || '');
-      const success = new DeletePlanSuccess();
+      spyOn(dialog, 'open').and.returnValue({
+        afterClosed() {
+          return of({ confirm: true });
+        },
+      });
+
+      const planId = plan.id || '';
+      const action = new DeletePlan(planId);
+      const success = new DeletePlanSuccess(planId);
+      const showToast = new ShowToast(
+        'success',
+        'Plan has been successfully deleted.',
+        'Delete Plan Success',
+      );
 
       actions$ = hot('-a', { a: action });
-      const expected = cold('-b', { b: success });
+      const expected = cold('-(bcde)', {
+        b: loadingBarShow,
+        c: success,
+        d: showToast,
+        e: loadingBarHide,
+      });
 
       expect(effects.deletePlan$).toBeObservable(expected);
     });
 
     it('should return a DeletePlanFailure action with an error upon failure', () => {
-      const action = new DeletePlan(plan.id || '');
+      spyOn(dialog, 'open').and.returnValue({
+        afterClosed() {
+          return of({ confirm: true });
+        },
+      });
+
+      const planId = plan.id || '';
+      const action = new DeletePlan(planId);
       const error = new Error('DeletePlanFailure');
       const failure = new DeletePlanFailure(error);
+      const showToast = new ShowToast(
+        'error',
+        error.message,
+        'Delete Plan Failure',
+      );
 
       const service = TestBed.get(PlanService);
-      spyOn(service, 'deletePlan').and.returnValue(cold('-#|', null, error));
+      spyOn(service, 'deletePlan').and.returnValue(cold('#|', null, error));
 
       actions$ = hot('-a', { a: action });
-      const expected = cold('--b', { b: failure });
+      const expected = cold('-(bcde)', {
+        b: loadingBarShow,
+        c: failure,
+        d: showToast,
+        e: loadingBarHide,
+      });
 
       expect(effects.deletePlan$).toBeObservable(expected);
     });
@@ -394,107 +441,22 @@ describe('PlanEffects', () => {
     });
   });
 
-  describe('openUpdatePlanFormDialog$', () => {
-    it('should return a CreatePlan with the new plan and creation flag on save', () => {
-      const result: Plan = {
-        adaptationId: 'ops',
-        endTimestamp: '1995-12-17T03:28:00',
-        id: 'make_sandwich',
-        name: 'Make me a sandwich',
-        startTimestamp: '1995-12-17T03:24:00',
-      };
-
-      spyOn(dialog, 'open').and.returnValue({
-        afterClosed() {
-          return of(result);
-        },
-      });
-
-      const a = new OpenPlanFormDialog(null);
-      const b = new CreatePlan(result);
-
-      actions$ = hot('-a', { a });
-      const expected = cold('-b', { b });
-
-      expect(effects.openUpdatePlanFormDialog$).toBeObservable(expected);
-    });
-
-    /**
-     * In order to verify that the data that was passed into the dialog can
-     * be updated and passed back, the store's select method needs to be
-     * mocked so that we can verify the data before and after.
-     */
-    it('should return a CreatePlan with the updated plan and creation flag on save', () => {
-      const initial: Plan = {
-        adaptationId: 'ops',
-        endTimestamp: '1995-12-17T03:28:00',
-        id: 'make_sandwich',
-        name: 'Make me a sandwich',
-        startTimestamp: '1995-12-17T03:24:00',
-      };
-
-      // Dispatch to set up initial conditions of the store
-      store.dispatch(new FetchPlansSuccess([initial]));
-
-      // Overwrite the dialog.open method so that we can pass `data`
-      // back to `afterClosed` and verify that the whole process worked.
-      dialog.open = function(
-        component: any,
-        // This is Typescript's weird way of typing destructured object params,
-        // see https://blog.mariusschulz.com/2015/11/13/typing-destructured-object-parameters-in-typescript
-        { data }: { data: RavenPlanFormDialogData },
-      ) {
-        return {
-          afterClosed() {
-            return of(data.selectedPlan);
-          },
-        };
-      };
-
-      // Select an plan from the mock store which we populated above
-      const a = new OpenPlanFormDialog('make_sandwich');
-
-      // Verify that the same object we passed in comes back without any
-      // modification (since no dialog/form was displayed and no use
-      // input was accepted the result should be the same as the input).
-      const b = new CreatePlan(initial);
-
-      actions$ = hot('-a', { a });
-
-      // **IMPORTANT**:
-      // Manually create an activity of the effects and pass it our initialized classes
-      effects = new PlanEffects(
-        new Actions(actions$),
-        store,
-        new PlanMockService() as PlanService,
-        dialog,
-        mockRouter as Router,
-      );
-
-      const expected = cold('-b', { b });
-      expect(effects.openUpdatePlanFormDialog$).toBeObservable(expected);
-    });
-  });
-
   describe('updateActivity$', () => {
     it('should register updateActivity$ that dispatches an action', () => {
       expect(metadata.updateActivity$).toEqual({ dispatch: true });
     });
 
     it('should return a UpdateActivitySuccess action with data on success', () => {
+      const planId = plan.id || '';
       const selectedActivityId = 'SetArrayTrackingMode_25788';
       store.dispatch(new FetchPlansSuccess(plans));
       store.dispatch(new FetchAdaptationsSuccess(adaptations));
       store.dispatch(
-        new FetchActivitiesSuccess(
-          plan.id || '',
-          selectedActivityId,
-          activities,
-        ),
+        new FetchActivitiesSuccess(planId, selectedActivityId, activities),
       );
       activity = activitiesMap[selectedActivityId];
 
-      const action = new UpdateActivity(activity.activityId, activity);
+      const action = new UpdateActivity(planId, activity.activityId, activity);
 
       // Success case should be empty since UpdateActivity patches, and
       // since we just passed in the original unchanged activity, there should
@@ -507,10 +469,10 @@ describe('PlanEffects', () => {
       expect(effects.updateActivity$).toBeObservable(expected);
     });
 
-    it('should return a UpdateActivityFailure action with a NoSelectedPlan error on failure', () => {
-      const action = new UpdateActivity('', activity);
+    it('should return a UpdateActivityFailure action with a NoActivities error on failure', () => {
+      const action = new UpdateActivity('', '', activity);
       const error = new Error(
-        'UpdateActivity: UpdateActivityFailure: NoSelectedPlan',
+        'UpdateActivity: UpdateActivityFailure: NoActivities',
       );
       const failure = new UpdateActivityFailure(error);
 
@@ -527,10 +489,9 @@ describe('PlanEffects', () => {
     });
 
     it('should route to the selected plan if a selected plan exists', () => {
+      const planId = plan.id || '';
       store.dispatch(new FetchPlansSuccess(plans));
-      store.dispatch(
-        new FetchActivitiesSuccess(plan.id || '', null, activities),
-      );
+      store.dispatch(new FetchActivitiesSuccess(planId, null, activities));
 
       const action = new UpdateActivitySuccess('foo', {});
       actions$ = hot('-a', { a: action });

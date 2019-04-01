@@ -1,0 +1,20 @@
+<div *ngIf="(activities$ | async)?.length">
+  <time-band
+    [maxTimeRange]="maxTimeRange$ | async"
+    [viewTimeRange]="viewTimeRange$ | async"
+    (updateViewTimeRange)="onUpdateViewTimeRange($event)"
+  ></time-band>
+
+  <activity-band
+    [maxTimeRange]="maxTimeRange$ | async"
+    [points]="activities$ | async"
+    [selectedActivity]="selectedActivity$ | async"
+    [viewTimeRange]="viewTimeRange$ | async"
+    (selectActivity)="onSelectActivity($event, false)"
+    (updateSelectedActivity)="onUpdateSelectedActivity($event)"
+  ></activity-band>
+</div>
+
+<mat-card *ngIf="!(activities$ | async)?.length">
+  This plan currently has no activities.
+</mat-card>

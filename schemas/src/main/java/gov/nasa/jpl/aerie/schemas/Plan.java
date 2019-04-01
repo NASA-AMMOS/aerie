@@ -11,10 +11,35 @@ package gov.nasa.jpl.aerie.schemas;
  */
 public class Plan {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     private String adaptationId;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     private String endTimestamp;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     private String id;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     private String name;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     private String startTimestamp;
 
     /**
@@ -41,42 +66,92 @@ public class Plan {
         this.startTimestamp = startTimestamp;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     public String getAdaptationId() {
         return adaptationId;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     public void setAdaptationId(String adaptationId) {
         this.adaptationId = adaptationId;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     public String getEndTimestamp() {
         return endTimestamp;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     public void setEndTimestamp(String endTimestamp) {
         this.endTimestamp = endTimestamp;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     public String getStartTimestamp() {
         return startTimestamp;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     public void setStartTimestamp(String startTimestamp) {
         this.startTimestamp = startTimestamp;
     }

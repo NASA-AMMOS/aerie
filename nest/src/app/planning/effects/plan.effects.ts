@@ -12,17 +12,14 @@ import { MatDialog } from '@angular/material';
 import { Router } from '@angular/router';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
-import { cloneDeep, omitBy } from 'lodash';
-import { Observable, of, zip } from 'rxjs';
+import { omitBy } from 'lodash';
+import { forkJoin, Observable, of } from 'rxjs';
 import { catchError, map, switchMap, withLatestFrom } from 'rxjs/operators';
 import { ShowToast } from '../../shared/actions/toast.actions';
-import { RavenPlanFormDialogComponent } from '../../shared/components/components';
+import { NestConfirmDialogComponent } from '../../shared/components/components';
 import { ActivityInstance } from '../../shared/models';
-import { RavenPlanFormDialogData } from '../../shared/models/raven-plan-form-dialog-data';
-import { PlanService } from '../../shared/services/plan.service';
 import { timestamp } from '../../shared/util';
 import {
-  ClearSelectedActivity,
   CreateActivity,
   CreateActivityFailure,
   CreateActivitySuccess,
@@ -41,13 +38,13 @@ import {
   FetchPlans,
   FetchPlansFailure,
   FetchPlansSuccess,
-  OpenPlanFormDialog,
   PlanActionTypes,
   UpdateActivity,
   UpdateActivityFailure,
   UpdateActivitySuccess,
 } from '../actions/plan.actions';
 import { PlanningAppState } from '../planning-store';
+import { PlanService } from '../services/plan.service';
 import { withLoadingBar } from './utils';
 
 @Injectable()
@@ -66,24 +63,27 @@ export class PlanEffects {
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     switchMap(({ action, state }) => {
-      // TODO: Should we let the service handle the filling in of blank values here?
-
       const end = action.data.start + action.data.duration;
+      const activity: ActivityInstance = {
+        color: '#ffffff',
+        constraints: [],
+        end,
+        endTimestamp: timestamp(end),
+        parameters: [],
+        startTimestamp: timestamp(action.data.start),
+        y: null,
+        ...action.data,
+      };
 
       return this.planService
-        .createActivity(state.config.app.apiBaseUrl, action.planId, {
-          ...action.data,
-          color: '#ffffff',
-          constraints: [],
-          end,
-          endTimestamp: timestamp(end),
-          parameters: [],
-          startTimestamp: timestamp(action.data.start),
-          y: null,
-        })
+        .createActivity(
+          state.config.app.planServiceBaseUrl,
+          action.planId,
+          activity,
+        )
         .pipe(
           switchMap(() => [
-            new CreateActivitySuccess(action.planId),
+            new CreateActivitySuccess(action.planId, activity),
             new ShowToast(
               'success',
               'New activity has been successfully created and saved.',
@@ -114,9 +114,8 @@ export class PlanEffects {
     map(([action, state]) => ({ action, state })),
     switchMap(({ action, state }) =>
       this.planService
-        .createPlan(state.config.app.apiBaseUrl, action.plan)
+        .createPlan(state.config.app.planServiceBaseUrl, action.plan)
         .pipe(
-          // TODO: Strongly type. Back end should pass back id instead of _id.
           switchMap((plan: any) => [
             new CreatePlanSuccess({ ...plan, id: plan._id || plan.id }),
             new ShowToast(
@@ -133,32 +132,51 @@ export class PlanEffects {
     ),
   );
 
-  @Effect({ dispatch: false })
-  createPlanSuccess$: Observable<Action> = this.actions$.pipe(
-    ofType<CreatePlanSuccess>(PlanActionTypes.CreatePlanSuccess),
-    switchMap(action => {
-      this.router.navigate([`/plans/${action.plan.id}`]);
-      return of(new ClearSelectedActivity());
-    }),
-  );
-
   @Effect()
   deleteActivity$: Observable<Action> = this.actions$.pipe(
     ofType<DeleteActivity>(PlanActionTypes.DeleteActivity),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
-    switchMap(({ action, state }) =>
-      this.planService
-        .deleteActivity(
-          state.config.app.apiBaseUrl,
-          action.planId,
-          action.activityId,
-        )
-        .pipe(
-          map(() => new DeleteActivitySuccess()),
-          catchError((e: Error) => of(new DeleteActivityFailure(e))),
-        ),
-    ),
+    switchMap(({ action, state }) => {
+      const deletePlanDialog = this.dialog.open(NestConfirmDialogComponent, {
+        data: {
+          cancelText: 'No',
+          confirmText: 'Yes',
+          message: `Are you sure you want to delete this activity?`,
+        },
+        width: '400px',
+      });
+
+      return forkJoin(of(action), of(state), deletePlanDialog.afterClosed());
+    }),
+    map(([action, state, result]) => ({ action, state, result })),
+    switchMap(({ action, state, result: { confirm } }) => {
+      if (confirm) {
+        return withLoadingBar([
+          this.planService
+            .deleteActivity(
+              state.config.app.planServiceBaseUrl,
+              action.planId,
+              action.activityId,
+            )
+            .pipe(
+              switchMap(() => [
+                new DeleteActivitySuccess(action.activityId),
+                new ShowToast(
+                  'success',
+                  'Activity has been successfully deleted.',
+                  'Delete Activity Success',
+                ),
+              ]),
+              catchError((e: Error) => [
+                new DeleteActivityFailure(e),
+                new ShowToast('error', e.message, 'Delete Activity Failure'),
+              ]),
+            ),
+        ]);
+      }
+      return [];
+    }),
   );
 
   @Effect()
@@ -166,14 +184,42 @@ export class PlanEffects {
     ofType<DeletePlan>(PlanActionTypes.DeletePlan),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
-    switchMap(({ action, state }) =>
-      this.planService
-        .deletePlan(state.config.app.apiBaseUrl, action.planId)
-        .pipe(
-          map(() => new DeletePlanSuccess()),
-          catchError((e: Error) => of(new DeletePlanFailure(e))),
-        ),
-    ),
+    switchMap(({ action, state }) => {
+      const deletePlanDialog = this.dialog.open(NestConfirmDialogComponent, {
+        data: {
+          cancelText: 'No',
+          confirmText: 'Yes',
+          message: `Are you sure you want to delete this plan?`,
+        },
+        width: '400px',
+      });
+
+      return forkJoin(of(action), of(state), deletePlanDialog.afterClosed());
+    }),
+    map(([action, state, result]) => ({ action, state, result })),
+    switchMap(({ action, state, result: { confirm } }) => {
+      if (confirm) {
+        return withLoadingBar([
+          this.planService
+            .deletePlan(state.config.app.planServiceBaseUrl, action.planId)
+            .pipe(
+              switchMap(() => [
+                new DeletePlanSuccess(action.planId),
+                new ShowToast(
+                  'success',
+                  'Plan has been successfully deleted.',
+                  'Delete Plan Success',
+                ),
+              ]),
+              catchError((e: Error) => [
+                new DeletePlanFailure(e),
+                new ShowToast('error', e.message, 'Delete Plan Failure'),
+              ]),
+            ),
+        ]);
+      }
+      return [];
+    }),
   );
 
   @Effect()
@@ -184,7 +230,7 @@ export class PlanEffects {
     switchMap(({ action, state }) =>
       withLoadingBar([
         this.planService
-          .getActivities(state.config.app.apiBaseUrl, action.planId)
+          .getActivities(state.config.app.planServiceBaseUrl, action.planId)
           .pipe(
             map(
               (activities: ActivityInstance[]) =>
@@ -207,7 +253,7 @@ export class PlanEffects {
     map(([_, state]) => state),
     switchMap(state =>
       withLoadingBar([
-        this.planService.getPlans(state.config.app.apiBaseUrl).pipe(
+        this.planService.getPlans(state.config.app.planServiceBaseUrl).pipe(
           map(data => new FetchPlansSuccess(data)),
           catchError((e: Error) => of(new FetchPlansFailure(e))),
         ),
@@ -216,48 +262,13 @@ export class PlanEffects {
   );
 
   @Effect()
-  openUpdatePlanFormDialog$: Observable<Action> = this.actions$.pipe(
-    ofType<OpenPlanFormDialog>(PlanActionTypes.OpenPlanFormDialog),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    switchMap(({ action, state }) => {
-      const data: RavenPlanFormDialogData = {
-        adaptations: cloneDeep(state.planning.adaptation.adaptations),
-        selectedPlan: state.planning.plan.plans[action.id as string] || null,
-      };
-
-      const componentDialog = this.dialog.open(RavenPlanFormDialogComponent, {
-        data: data || {},
-        width: '500px',
-      });
-
-      return zip(of(action), componentDialog.afterClosed());
-    }),
-    map(([_, result]) => result),
-    switchMap(result => {
-      if (result) {
-        return of(new CreatePlan(result));
-      }
-      return [];
-    }),
-  );
-
-  @Effect()
   updateActivity$: Observable<Action> = this.actions$.pipe(
     ofType<UpdateActivity>(PlanActionTypes.UpdateActivity),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     switchMap(({ state, action }) => {
-      const { activities, selectedPlan } = state.planning.plan;
-      const { apiBaseUrl } = state.config.app;
-
-      if (!selectedPlan) {
-        return of(
-          new UpdateActivityFailure(
-            new Error('UpdateActivity: UpdateActivityFailure: NoSelectedPlan'),
-          ),
-        );
-      }
+      const { activities } = state.planning.plan;
+      const { planServiceBaseUrl } = state.config.app;
 
       if (!activities) {
         return of(
@@ -283,8 +294,8 @@ export class PlanEffects {
 
       return this.planService
         .updateActivity(
-          apiBaseUrl,
-          selectedPlan.id || '',
+          planServiceBaseUrl,
+          action.planId,
           action.activityId,
           changes as ActivityInstance,
         )

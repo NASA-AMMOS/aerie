@@ -13,12 +13,16 @@ import { provideMockActions } from '@ngrx/effects/testing';
 import { cold, hot } from 'jasmine-marbles';
 import { Observable } from 'rxjs';
 import { RouterNavigation } from '../../../../libs/ngrx-router';
-import { FetchAdaptations } from '../actions/adaptation.actions';
+import {
+  FetchActivityTypes,
+  FetchAdaptations,
+} from '../actions/adaptation.actions';
 import {
   ClearSelectedActivity,
-  ClearSelectedPlan,
   FetchActivities,
   FetchPlans,
+  SelectActivity,
+  SelectPlan,
 } from '../actions/plan.actions';
 import { NavEffects } from './nav.effects';
 
@@ -46,10 +50,9 @@ describe('NavEffects', () => {
       const action = new RouterNavigation({ path: 'plans' });
 
       actions$ = hot('-a', { a: action });
-      const expected = cold('-(bcd)', {
+      const expected = cold('-(bc)', {
         b: new FetchPlans(),
         c: new FetchAdaptations(),
-        d: new ClearSelectedPlan(),
       });
 
       expect(effects.navPlans$).toBeObservable(expected);
@@ -69,10 +72,12 @@ describe('NavEffects', () => {
       });
 
       actions$ = hot('-a', { a: action });
-      const expected = cold('-(bcd)', {
+      const expected = cold('-(bcdef)', {
         b: new FetchPlans(),
         c: new FetchAdaptations(),
-        d: new FetchActivities(planId, null),
+        d: new FetchActivityTypes(planId),
+        e: new FetchActivities(planId, null),
+        f: new SelectPlan(planId),
       });
 
       expect(effects.navPlansWithId$).toBeObservable(expected);
@@ -84,18 +89,20 @@ describe('NavEffects', () => {
       expect(metadata.navActivities$).toEqual({ dispatch: true });
     });
 
-    it('should dispatch the appropriate actions when navigating to plans/:planId/activities', () => {
+    it('should dispatch the appropriate actions when navigating to plans/:planId/activity', () => {
       const planId = '42';
       const action = new RouterNavigation({
         params: { planId },
-        path: 'plans/:planId/activities',
+        path: 'plans/:planId/activity',
       });
 
       actions$ = hot('-a', { a: action });
-      const expected = cold('-(bcd)', {
+      const expected = cold('-(bcdef)', {
         b: new FetchPlans(),
         c: new FetchAdaptations(),
-        d: new ClearSelectedActivity(),
+        d: new FetchActivityTypes(planId),
+        e: new SelectPlan(planId),
+        f: new ClearSelectedActivity(),
       });
 
       expect(effects.navActivities$).toBeObservable(expected);
@@ -107,19 +114,22 @@ describe('NavEffects', () => {
       expect(metadata.navActivitiesWithId$).toEqual({ dispatch: true });
     });
 
-    it('should dispatch the appropriate actions when navigating to plans/:planId/activities/:activityId', () => {
+    it('should dispatch the appropriate actions when navigating to plans/:planId/activity/:activityId', () => {
       const planId = '42';
       const activityId = '52';
       const action = new RouterNavigation({
         params: { activityId, planId },
-        path: 'plans/:planId/activities/:activityId',
+        path: 'plans/:planId/activity/:activityId',
       });
 
       actions$ = hot('-a', { a: action });
-      const expected = cold('-(bcd)', {
+      const expected = cold('-(bcdefg)', {
         b: new FetchPlans(),
         c: new FetchAdaptations(),
-        d: new FetchActivities(planId, activityId),
+        d: new FetchActivityTypes(planId),
+        e: new FetchActivities(planId, activityId),
+        f: new SelectPlan(planId),
+        g: new SelectActivity(activityId),
       });
 
       expect(effects.navActivitiesWithId$).toBeObservable(expected);

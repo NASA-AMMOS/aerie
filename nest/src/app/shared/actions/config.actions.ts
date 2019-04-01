@@ -19,7 +19,7 @@ export enum NavigationDrawerStates {
 export enum ConfigActionTypes {
   FetchProjectConfig = '[config] fetch_project_config',
   FetchProjectConfigSuccess = '[config] fetch_project_config_success',
-  ToggleNavigationDrawer = '[config] toggle_menu',
+  ToggleNestNavigationDrawer = '[config] toggle_nest_navigation_drawer',
   UpdateDefaultBandSettings = '[config] update_default_band_settings',
   UpdateMpsServerSettings = '[config] update_mpsserver_settings',
   UpdateRavenSettings = '[config] update_raven_settings',
@@ -35,8 +35,8 @@ export class FetchProjectConfigSuccess implements Action {
   readonly type = ConfigActionTypes.FetchProjectConfigSuccess;
 }
 
-export class ToggleNavigationDrawer implements Action {
-  readonly type = ConfigActionTypes.ToggleNavigationDrawer;
+export class ToggleNestNavigationDrawer implements Action {
+  readonly type = ConfigActionTypes.ToggleNestNavigationDrawer;
 }
 
 export class UpdateDefaultBandSettings implements Action {
@@ -60,7 +60,7 @@ export class UpdateRavenSettings implements Action {
 export type ConfigAction =
   | FetchProjectConfig
   | FetchProjectConfigSuccess
-  | ToggleNavigationDrawer
+  | ToggleNestNavigationDrawer
   | UpdateDefaultBandSettings
   | UpdateMpsServerSettings
   | UpdateRavenSettings;

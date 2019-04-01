@@ -38,7 +38,7 @@ export function reducer(
       return updateMpsServerSettings(state, action);
     case ConfigActionTypes.UpdateRavenSettings:
       return updateRavenSettings(state, action);
-    case ConfigActionTypes.ToggleNavigationDrawer:
+    case ConfigActionTypes.ToggleNestNavigationDrawer:
       return { ...state, navigationDrawerState: toggleDrawer(state) };
     default:
       return state;

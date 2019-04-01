@@ -1,75 +1,50 @@
-<raven-app-header title="Visualization" (menuClicked)="onMenuClicked()">
+<nest-app-header title="Visualization" (menuClicked)="onMenuClicked()">
   <button
     mat-icon-button
     matTooltip="Global Band Settings"
-    (click)="toggleGlobalSettingsDrawer()">
-    <mat-icon
-      class="icon"
-      aria-label="Settings">
+    (click)="toggleGlobalSettingsDrawer()"
+  >
+    <mat-icon class="icon" aria-label="Settings">
       settings
     </mat-icon>
   </button>
 
-  <button
-    [matMenuTriggerFor]="subMenu"
-    mat-icon-button
-    matTooltip="Panels">
-    <mat-icon
-      class="icon"
-      aria-label="Panels">
+  <button [matMenuTriggerFor]="subMenu" mat-icon-button matTooltip="Panels">
+    <mat-icon class="icon" aria-label="Panels">
       view_quilt
     </mat-icon>
   </button>
 
-  <button
-    [matMenuTriggerFor]="rootMenu"
-    mat-icon-button>
-    <mat-icon
-      class="icon"
-      aria-label="Menu">
+  <button [matMenuTriggerFor]="rootMenu" mat-icon-button>
+    <mat-icon class="icon" aria-label="Menu">
       more_vert
     </mat-icon>
   </button>
 
-  <mat-menu
-    #rootMenu="matMenu"
-    [overlapTrigger]="false"
-    y-position="below">
-    <button
-      mat-menu-item
-      (click)="toggleEpochsDrawer()">
-      <mat-icon
-        aria-label="Epochs Drawer">
+  <mat-menu #rootMenu="matMenu" [overlapTrigger]="false" y-position="below">
+    <button mat-menu-item (click)="toggleEpochsDrawer()">
+      <mat-icon aria-label="Epochs Drawer">
         timelapse
       </mat-icon>
       Manage Epochs
     </button>
 
-    <button
-      mat-menu-item
-      (click)="toggleOutputDrawer()">
-      <mat-icon
-        aria-label="Manage Output">
+    <button mat-menu-item (click)="toggleOutputDrawer()">
+      <mat-icon aria-label="Manage Output">
         save_alt
       </mat-icon>
       Manage Output
     </button>
 
-    <button
-      mat-menu-item
-      (click)="toggleTimeCursorDrawer()">
-      <mat-icon
-        aria-label="Time Cursor Drawer">
+    <button mat-menu-item (click)="toggleTimeCursorDrawer()">
+      <mat-icon aria-label="Time Cursor Drawer">
         access_time
       </mat-icon>
       Manage Time Cursor
     </button>
 
-    <button
-      mat-menu-item
-      (click)="toggleSituationalAwarenessDrawer()">
-      <mat-icon
-        aria-label="Situational Awareness Drawer">
+    <button mat-menu-item (click)="toggleSituationalAwarenessDrawer()">
+      <mat-icon aria-label="Situational Awareness Drawer">
         timeline
       </mat-icon>
       Situational Awareness
@@ -80,48 +55,43 @@
     <button
       *ngIf="mode !== 'minimal'"
       mat-menu-item
-      (click)="toggleLeftPanel()">
-      <mat-icon
-        aria-label="Left Panel">
+      (click)="toggleLeftPanel()"
+    >
+      <mat-icon aria-label="Left Panel">
         view_column
       </mat-icon>
       Toggle Left Panel
     </button>
 
-    <button
-      mat-menu-item
-      (click)="toggleRightPanel()">
-      <mat-icon
-        aria-label="Right Panel">
+    <button mat-menu-item (click)="toggleRightPanel()">
+      <mat-icon aria-label="Right Panel">
         show_chart
       </mat-icon>
       Toggle Right Panel
     </button>
 
-    <button
-      mat-menu-item
-      (click)="toggleSouthBandsPanel()">
-      <mat-icon
-        aria-label="South Bands">
+    <button mat-menu-item (click)="toggleSouthBandsPanel()">
+      <mat-icon aria-label="South Bands">
         view_stream
       </mat-icon>
       Toggle South Bands Panel
     </button>
 
-    <button
-      mat-menu-item
-      (click)="toggleDetailsPanel()">
-      <mat-icon
-        aria-label="Details">
+    <button mat-menu-item (click)="toggleDetailsPanel()">
+      <mat-icon aria-label="Details">
         assessment
       </mat-icon>
       Toggle Details Panel
     </button>
   </mat-menu>
-</raven-app-header>
+</nest-app-header>
 
 <div class="progress-container">
-  <mat-progress-bar mode="indeterminate" *ngIf="showProgressBar$ | async" color="accent">
+  <mat-progress-bar
+    mode="indeterminate"
+    *ngIf="(showProgressBar$ | async)"
+    color="accent"
+  >
   </mat-progress-bar>
 </div>
 

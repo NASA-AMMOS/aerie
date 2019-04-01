@@ -28,7 +28,7 @@ import {
 import * as sourceExplorerActions from '../../../raven/actions/source-explorer.actions';
 import * as timelineActions from '../../../raven/actions/timeline.actions';
 import { defaultColors, getBandLabel } from '../../util';
-import { RavenConfirmDialogComponent } from '../raven-confirm-dialog/raven-confirm-dialog.component';
+import { NestConfirmDialogComponent } from '../nest-confirm-dialog/nest-confirm-dialog.component';
 
 import * as timelineSelectors from '../../../raven/selectors/timeline.selectors';
 
@@ -123,7 +123,7 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
    * Event. Called when a subBand delete event is fired from the raven-settings-band-dialog component.
    */
   onDeleteSubBand(subBand: RavenSubBand) {
-    const confirmDialogRef = this.dialog.open(RavenConfirmDialogComponent, {
+    const confirmDialogRef = this.dialog.open(NestConfirmDialogComponent, {
       data: {
         cancelText: 'No',
         confirmText: 'Yes',

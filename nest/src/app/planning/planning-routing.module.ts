@@ -9,26 +9,26 @@
 
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { ActivitiesComponent, PlanningAppComponent } from './containers';
+import { ActivityComponent, PlanComponent, PlansComponent } from './containers';
 
 export const routes: Routes = [
   {
-    component: ActivitiesComponent,
-    path: ':planId/activities',
-    pathMatch: 'full',
+    component: PlansComponent,
+    path: '',
   },
   {
-    component: ActivitiesComponent,
-    path: ':planId/activities/:activityId',
-    pathMatch: 'full',
-  },
-  {
-    component: PlanningAppComponent,
+    component: PlanComponent,
     path: ':planId',
   },
   {
-    component: PlanningAppComponent,
-    path: '',
+    component: ActivityComponent,
+    path: ':planId/activity',
+    pathMatch: 'full',
+  },
+  {
+    component: ActivityComponent,
+    path: ':planId/activity/:activityId',
+    pathMatch: 'full',
   },
 ];
 

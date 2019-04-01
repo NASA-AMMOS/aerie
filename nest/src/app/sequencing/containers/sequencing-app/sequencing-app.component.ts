@@ -11,7 +11,7 @@ import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { ToggleNavigationDrawer } from '../../../shared/actions/config.actions';
+import { ToggleNestNavigationDrawer } from '../../../shared/actions/config.actions';
 import {
   CommandDictionary,
   MpsCommand,
@@ -70,7 +70,7 @@ export class SequencingAppComponent implements OnDestroy {
   }
 
   onMenuClicked(): void {
-    this.store.dispatch(new ToggleNavigationDrawer());
+    this.store.dispatch(new ToggleNestNavigationDrawer());
   }
 
   onSelectCommand(commandName: string): void {

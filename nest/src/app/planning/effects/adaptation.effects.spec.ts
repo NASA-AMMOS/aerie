@@ -18,12 +18,6 @@ import { cold, hot } from 'jasmine-marbles';
 import { Observable } from 'rxjs';
 import { reducers as rootReducers } from '../../app-store';
 import {
-  AdaptationMockService,
-  getMockActivityTypes,
-  getMockAdaptations,
-} from '../../shared/services/adaptation-mock.service';
-import { AdaptationService } from '../../shared/services/adaptation.service';
-import {
   FetchActivityTypes,
   FetchActivityTypesFailure,
   FetchActivityTypesSuccess,
@@ -33,6 +27,12 @@ import {
 } from '../actions/adaptation.actions';
 import { LoadingBarHide, LoadingBarShow } from '../actions/layout.actions';
 import { reducers } from '../planning-store';
+import {
+  AdaptationMockService,
+  getMockActivityTypes,
+  getMockAdaptations,
+} from '../services/adaptation-mock.service';
+import { AdaptationService } from '../services/adaptation.service';
 import { AdaptationEffects } from './adaptation.effects';
 
 describe('AdaptationEffects', () => {

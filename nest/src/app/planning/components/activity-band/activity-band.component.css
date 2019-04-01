@@ -1,0 +1,56 @@
+/**
+ * Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+ * Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.
+ * This software may be subject to U.S. export control laws and regulations.
+ * By accepting this document, the user agrees to comply with all applicable U.S. export laws and regulations.
+ * User has the responsibility to obtain export licenses, or other export authority as may be required
+ * before exporting such information to foreign countries or providing access to foreign persons
+ */
+
+:host {
+  border: 1px solid lightgrey;
+  display: block;
+  height: var(--band-height);
+  position: relative;
+  width: 100%;
+}
+
+::ng-deep g.activity-band-axis--y > .tick {
+  display: none;
+}
+
+::ng-deep g.activity-band-axis--x .tick > line {
+  shape-rendering: crispEdges;
+  stroke: lightgrey;
+  stroke-opacity: 0.6;
+}
+
+.cursor-move {
+  cursor: move;
+}
+
+.drag-handle-left,
+.drag-handle-right {
+  cursor: col-resize;
+}
+
+.axis-container,
+.canvas-container,
+.svg-container {
+  cursor: pointer;
+  height: inherit;
+  position: absolute;
+  width: inherit;
+}
+
+.axis-container {
+  z-index: -1;
+}
+
+.canvas-container {
+  z-index: 0;
+}
+
+.svg-container {
+  z-index: 1;
+}

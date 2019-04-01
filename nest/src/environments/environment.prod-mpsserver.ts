@@ -8,12 +8,13 @@
  */
 
 export const environment = {
-  apiBaseUrl: 'http://localhost:8081',
+  adaptationServiceBaseUrl: 'http://localhost:27182/api',
   baseUrl:
     window.location.protocol +
     '//' +
     window.location.hostname +
     ':' +
     window.location.port,
+  planServiceBaseUrl: 'http://localhost:27183/api',
   production: true,
 };

@@ -152,7 +152,7 @@ export class RavenAppComponent implements OnDestroy {
    * The hamburger menu was clicked
    */
   onMenuClicked() {
-    this.store.dispatch(new configActions.ToggleNavigationDrawer());
+    this.store.dispatch(new configActions.ToggleNestNavigationDrawer());
   }
 
   toggleAboutDialog() {

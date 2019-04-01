@@ -11,9 +11,9 @@ import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
-import { RavenPlanFormDialogModule } from '../shared/components/modules';
-import { ActivitiesModule } from './containers/activities/activities.module';
-import { PlanningAppModule } from './containers/planning-app/planning-app.module';
+import { ActivityModule } from './containers/activity/activity.module';
+import { PlanModule } from './containers/plan/plan.module';
+import { PlansModule } from './containers/plans/plans.module';
 import {
   AdaptationEffects,
   LayoutEffects,
@@ -22,6 +22,7 @@ import {
 } from './effects';
 import { PlanningRoutingModule } from './planning-routing.module';
 import { reducers } from './planning-store';
+import { PlanningService } from './services/planning.service';
 
 @NgModule({
   imports: [
@@ -34,9 +35,10 @@ import { reducers } from './planning-store';
       NavEffects,
       PlanEffects,
     ]),
-    PlanningAppModule,
-    ActivitiesModule,
-    RavenPlanFormDialogModule,
+    PlanModule,
+    PlansModule,
+    ActivityModule,
   ],
+  providers: [PlanningService],
 })
 export class PlanningModule {}
