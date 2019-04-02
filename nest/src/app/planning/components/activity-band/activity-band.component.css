@@ -35,7 +35,8 @@
   z-index: 5;
   margin-top: 12px;
   margin-left: 12px;
-  display: none;
+  /* display: none; */
+  opacity: 0;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
 }
 

@@ -413,9 +413,14 @@ export class ActivityBandComponent
 
     tooltip
       .html(tooltipTemplate)
-      .style('display', 'block')
+      .style('opacity', 0)
+      .transition()
+      .duration(50)
       .style('left', `${event.clientX + xOffset}px`)
-      .style('top', `${event.clientY + yOffset}px`);
+      .style('top', `${event.clientY + yOffset}px`)
+      .transition()
+      .duration(150)
+      .style('opacity', 1);
   }
 
   /**
