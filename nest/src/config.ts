@@ -7,8 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { RavenDefaultBandSettings } from './app/raven/models';
 import { NavigationDrawerStates } from './app/shared/actions/config.actions';
-import { NestModule, RavenDefaultBandSettings } from './app/shared/models';
+import { NestModule } from './app/shared/models';
 import { environment } from './environments/environment';
 import { version } from './environments/version';
 

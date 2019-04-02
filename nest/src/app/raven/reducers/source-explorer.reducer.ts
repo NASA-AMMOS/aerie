@@ -8,17 +8,7 @@
  */
 
 import { keyBy, omit, without } from 'lodash';
-import {
-  BaseType,
-  FilterState,
-  RavenCustomFilter,
-  RavenGraphableFilterSource,
-  RavenPin,
-  RavenSource,
-  RavenSourceAction,
-  StringTMap,
-} from '../../shared/models';
-import { getAllChildIds } from '../../shared/util';
+import { BaseType, StringTMap } from '../../shared/models';
 import {
   AddCustomFilter,
   AddFilter,
@@ -42,6 +32,15 @@ import {
   SubBandIdAdd,
   SubBandIdRemove,
 } from '../actions/source-explorer.actions';
+import {
+  FilterState,
+  RavenCustomFilter,
+  RavenGraphableFilterSource,
+  RavenPin,
+  RavenSource,
+  RavenSourceAction,
+} from '../models';
+import { getAllChildIds } from '../util';
 
 export interface SourceExplorerState {
   customFiltersBySourceId: StringTMap<RavenCustomFilter[]>;
@@ -309,7 +308,7 @@ export function newSources(
     const originalChildIds = parentSource.childIds;
 
     const deletedSourceIds: string[] = [];
-    originalChildIds.forEach(originalChildId => {
+    originalChildIds.forEach((originalChildId: string) => {
       if (!newChildIds.includes(originalChildId)) {
         // Source has been deleted, remove source and its descendants.
         deletedSourceIds.push(
@@ -417,7 +416,7 @@ export function pinRemove(
         ...state.treeBySourceId[action.sourceId],
         actions: state.treeBySourceId[action.sourceId].actions
           .filter(
-            currentAction =>
+            (currentAction: any) =>
               currentAction.event !== 'pin-remove' &&
               currentAction.event !== 'pin-rename',
           )
@@ -519,7 +518,7 @@ export function removeSource(
         [parentSource.id]: {
           ...parentSource,
           childIds: parentSource.childIds.filter(
-            childId => childId !== action.sourceId,
+            (childId: string) => childId !== action.sourceId,
           ),
         },
       },
@@ -680,7 +679,7 @@ export function subBandIdRemove(
       ...action.sourceIds.reduce((sourceIds, sourceId) => {
         if (state.treeBySourceId[sourceId]) {
           const subBandIds = state.treeBySourceId[sourceId].subBandIds.filter(
-            subBandId => subBandId !== action.subBandId,
+            (subBandId: string) => subBandId !== action.subBandId,
           );
           const opened = subBandIds.length > 0;
           sourceIds[sourceId] = {

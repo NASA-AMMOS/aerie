@@ -12,9 +12,6 @@ import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
 import { interval } from 'rxjs/observable/interval';
-import { RavenTimeRange } from '../../shared/models';
-import { RavenAppState } from '../raven-store';
-
 import {
   concatMap,
   exhaustMap,
@@ -23,15 +20,15 @@ import {
   takeUntil,
   withLatestFrom,
 } from 'rxjs/operators';
-
+import { TimeRange } from '../../shared/models';
 import {
   HideTimeCursor,
   ShowTimeCursor,
   TimeCursorActionTypes,
 } from '../actions/time-cursor.actions';
-
 import * as timeCursorActions from '../actions/time-cursor.actions';
 import * as timelineActions from '../actions/timeline.actions';
+import { RavenAppState } from '../raven-store';
 
 @Injectable()
 export class TimeCursorEffects {
@@ -94,7 +91,7 @@ export class TimeCursorEffects {
     clockRate: number,
     clockUpdateIntervalInSecs: number,
     autoPage: boolean,
-    viewTimeRange: RavenTimeRange,
+    viewTimeRange: TimeRange,
   ) {
     const actions = [];
 

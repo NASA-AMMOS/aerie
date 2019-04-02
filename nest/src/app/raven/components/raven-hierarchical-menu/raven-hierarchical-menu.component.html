@@ -1,0 +1,22 @@
+<mat-menu #menuRef="matMenu" [overlapTrigger]="false" y-position="below">
+  <ng-container *ngFor="let option of options">
+    <ng-container *ngIf="isExpandOption(option)">
+      <button mat-menu-item [matMenuTriggerFor]="childMenu.menuRef">
+        {{ option.name }}
+      </button>
+
+      <raven-hierarchical-menu
+        #childMenu
+        [options]="option.event"
+        (action)="action.emit($event)"
+      >
+      </raven-hierarchical-menu>
+    </ng-container>
+
+    <ng-container *ngIf="isEmitOption(option)">
+      <button mat-menu-item (click)="action.emit(option.event)">
+        {{ option.name }}
+      </button>
+    </ng-container>
+  </ng-container>
+</mat-menu>

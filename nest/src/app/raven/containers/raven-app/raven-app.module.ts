@@ -9,14 +9,6 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-
-import {
-  NestAppHeaderModule,
-  RavenPanToDurationModule,
-} from '../../../shared/components/modules';
-import { TimelineModule } from '../timeline/timeline.module';
-import { RavenAppComponent } from './raven-app.component';
-
 import {
   MatButtonModule,
   MatIconModule,
@@ -25,6 +17,9 @@ import {
   MatToolbarModule,
   MatTooltipModule,
 } from '@angular/material';
+import { NestAppHeaderModule } from '../../../shared/components';
+import { TimelineModule } from '../timeline/timeline.module';
+import { RavenAppComponent } from './raven-app.component';
 
 @NgModule({
   declarations: [RavenAppComponent],
@@ -37,9 +32,8 @@ import {
     MatProgressBarModule,
     MatToolbarModule,
     MatTooltipModule,
-    RavenPanToDurationModule,
-    TimelineModule,
     NestAppHeaderModule,
+    TimelineModule,
   ],
 })
 export class RavenAppModule {}

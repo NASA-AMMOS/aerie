@@ -10,7 +10,6 @@
 import { Action } from '@ngrx/store';
 import { BaseType, StringTMap } from '../../shared/models';
 
-// Action Types.
 export enum LayoutActionTypes {
   Resize = '[layout] resize',
   SetMode = '[layout] set_mode',
@@ -29,7 +28,6 @@ export enum LayoutActionTypes {
   UpdateLayout = '[layout] update_layout',
 }
 
-// Actions.
 export class Resize implements Action {
   readonly type = LayoutActionTypes.Resize;
 }
@@ -116,7 +114,6 @@ export class UpdateLayout implements Action {
   constructor(public update: StringTMap<BaseType>) {}
 }
 
-// Union type of all actions.
 export type LayoutAction =
   | Resize
   | SetMode

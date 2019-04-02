@@ -1,0 +1,57 @@
+<div
+  class="node"
+  [ngClass]="{
+    'node--activated': status === 'normal' && activated,
+    'node--pending': status === 'pending',
+    'node--failure': status === 'failure',
+    'node--highlighted': highlighted
+  }"
+  (click)="onClick()"
+  (mouseenter)="onMouseOverState(true)"
+  (mouseleave)="onMouseOverState(false)"
+>
+  <mat-icon
+    class="node-icon"
+    [matTooltip]="markerTooltip"
+    matTooltipShowDelay="500"
+  >
+    <ng-container *ngIf="activated">{{ markerActivatedIcon }}</ng-container>
+    <ng-container *ngIf="!activated">{{ markerDeactivatedIcon }}</ng-container>
+  </mat-icon>
+
+  <span class="name">
+    <i aria-hidden="true" *ngIf="status === 'normal'" [class]="icon"></i>
+    <i
+      aria-hidden="true"
+      *ngIf="status === 'pending'"
+      class="fa fa-hourglass"
+    ></i>
+    <i
+      aria-hidden="true"
+      *ngIf="status === 'failure'"
+      class="fa fa-exclamation-triangle"
+    ></i>
+    {{ label }}
+  </span>
+
+  <ng-container *ngIf="menu.length > 0">
+    <button
+      *ngIf="highlighted"
+      class="menu-icon"
+      mat-icon-button
+      [matMenuTriggerFor]="contextMenu.menuRef"
+      (click)="$event.stopPropagation()"
+      (menuClosed)="onMenuOpenState(false)"
+      (menuOpened)="onMenuOpenState(true)"
+    >
+      <mat-icon>more_vert</mat-icon>
+    </button>
+
+    <raven-hierarchical-menu
+      #contextMenu
+      [options]="menu"
+      (action)="action.emit($event)"
+    >
+    </raven-hierarchical-menu>
+  </ng-container>
+</div>

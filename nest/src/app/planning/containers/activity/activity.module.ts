@@ -10,7 +10,7 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { MatProgressBarModule } from '@angular/material';
-import { NestAppHeaderModule } from '../../../shared/components/modules';
+import { NestAppHeaderModule } from '../../../shared/components';
 import { ActivityFormFullModule } from '../../components';
 import { ActivityComponent } from './activity.component';
 

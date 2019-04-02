@@ -8,7 +8,8 @@
  */
 
 import { omit, without } from 'lodash';
-
+import { StringTMap, TimeRange } from '../../shared/models';
+import { getMaxTimeRange } from '../../shared/util';
 import {
   AddBand,
   AddPointsToSubBand,
@@ -34,12 +35,18 @@ import {
   UpdateBand,
   UpdateSubBand,
 } from '../actions/timeline.actions';
-
+import {
+  RavenActivityBand,
+  RavenActivityPoint,
+  RavenCompositeBand,
+  RavenPoint,
+  RavenState,
+  RavenSubBand,
+} from '../models';
 import {
   bandById,
   changeZoom,
   filterActivityPoints,
-  getMaxTimeRange,
   getParentSourceIds,
   getPoint,
   hasTwoResourceBands,
@@ -48,18 +55,7 @@ import {
   updateSelectedPoint,
   updateSortOrder,
   updateTimeRanges,
-} from '../../shared/util';
-
-import {
-  RavenActivityBand,
-  RavenActivityPoint,
-  RavenCompositeBand,
-  RavenPoint,
-  RavenState,
-  RavenSubBand,
-  RavenTimeRange,
-  StringTMap,
-} from '../../shared/models';
+} from '../util';
 
 export interface TimelineState {
   bands: RavenCompositeBand[];
@@ -71,12 +67,12 @@ export interface TimelineState {
   guides: number[]; // in secs
   hoveredBandId: string;
   lastClickTime: number | null;
-  maxTimeRange: RavenTimeRange;
+  maxTimeRange: TimeRange;
   panDelta: number;
   selectedBandId: string;
   selectedPoint: RavenPoint | null;
   selectedSubBandId: string;
-  viewTimeRange: RavenTimeRange;
+  viewTimeRange: TimeRange;
   zoomDelta: number;
 }
 
@@ -204,7 +200,7 @@ export function addBand(state: TimelineState, action: AddBand): TimelineState {
       ...action.band,
       containerId: '0',
       sortOrder: prevSort + 1,
-      subBands: action.band.subBands.map(subBand => {
+      subBands: action.band.subBands.map((subBand: RavenSubBand) => {
         if (action.sourceId) {
           return {
             ...subBand,
@@ -510,14 +506,14 @@ export function removeBandsOrPointsForSource(
                   point.expandedFromPointId,
               ),
               sourceIds: subBand.sourceIds.filter(
-                sourceId => sourceId !== action.sourceId,
+                (sourceId: string) => sourceId !== action.sourceId,
               ),
             });
           }
 
           return subBands;
         }, [])
-        .filter(subBand => subBand.points.length !== 0),
+        .filter((subBand: RavenSubBand) => subBand.points.length !== 0),
     }))
     .filter(band => band.subBands.length !== 0)
     .map(band => ({
@@ -599,7 +595,7 @@ export function removeChildrenOrDescendants(
 
           return subBands;
         }, [])
-        .filter(subBand => subBand.points.length !== 0),
+        .filter((subBand: RavenSubBand) => subBand.points.length !== 0),
     }))
     .filter(band => band.subBands.length !== 0);
 
@@ -628,7 +624,7 @@ export function removeSourceIdFromSubBands(
         subBands.push({
           ...subBand,
           sourceIds: subBand.sourceIds.filter(
-            sourceId => sourceId !== action.sourceId,
+            (sourceId: string) => sourceId !== action.sourceId,
           ),
         });
         return subBands;

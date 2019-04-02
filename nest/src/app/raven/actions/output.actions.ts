@@ -10,7 +10,6 @@
 import { Action } from '@ngrx/store';
 import { BaseType, StringTMap } from '../../shared/models';
 
-// Action Types.
 export enum OutputActionTypes {
   AppendData = '[output] append_data',
   CreateOutput = '[output] create_output',
@@ -18,7 +17,6 @@ export enum OutputActionTypes {
   WriteFile = '[output] write_file',
 }
 
-// Actions.
 export class AppendData implements Action {
   readonly type = OutputActionTypes.AppendData;
 
@@ -39,7 +37,6 @@ export class WriteFile implements Action {
   readonly type = OutputActionTypes.WriteFile;
 }
 
-// Union type of all actions.
 export type OutputAction =
   | AppendData
   | CreateOutput

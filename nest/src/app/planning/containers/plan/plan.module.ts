@@ -18,7 +18,7 @@ import {
   MatSidenavModule,
   MatTabsModule,
 } from '@angular/material';
-import { NestAppHeaderModule } from '../../../shared/components/modules';
+import { NestAppHeaderModule } from '../../../shared/components';
 import {
   ActivityFormModule,
   ActivityTableModule,

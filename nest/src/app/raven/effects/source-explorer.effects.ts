@@ -13,9 +13,6 @@ import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 import { flatten, uniqueId } from 'lodash';
 import { combineLatest, concat, forkJoin, Observable, of } from 'rxjs';
-import { MpsServerService } from '../../shared/services/mps-server.service';
-import { RavenAppState } from '../raven-store';
-
 import {
   catchError,
   concatMap,
@@ -26,7 +23,12 @@ import {
   timeout,
   withLatestFrom,
 } from 'rxjs/operators';
-
+import { StringTMap } from '../../shared/models';
+import {
+  getSituationalAwarenessPageDuration,
+  getSituationalAwarenessStartTime,
+  utc,
+} from '../../shared/util';
 import {
   AddCustomGraph,
   AddGraphableFilter,
@@ -54,34 +56,6 @@ import {
   UpdateSourceExplorer,
   UpdateSourceFilter,
 } from '../actions/source-explorer.actions';
-
-import {
-  activityBandsWithLegend,
-  getActivityPointInBand,
-  getAddToSubBandId,
-  getBandsWithSourceId,
-  getCustomFilterForLabel,
-  getCustomFiltersBySourceId,
-  getFormattedSourceUrl,
-  getMpsPathForSource,
-  getParentSourceIds,
-  getPinLabel,
-  getRavenState,
-  getSituationalAwarenessPageDuration,
-  getSituationalAwarenessStartTime,
-  getSourceIds,
-  getSourceNameFromId,
-  getState,
-  getTargetFilters,
-  hasActivityBandForFilterTarget,
-  isOverlay,
-  toCompositeBand,
-  toRavenBandData,
-  toRavenSources,
-  updateSourceId,
-  utc,
-} from '../../shared/util';
-
 import {
   FilterState,
   MpsServerGraphData,
@@ -97,8 +71,32 @@ import {
   RavenState,
   RavenSubBand,
   SourceFilter,
-  StringTMap,
-} from '../../shared/models';
+} from '../models';
+import { RavenAppState } from '../raven-store';
+import { MpsServerService } from '../services/mps-server.service';
+import {
+  activityBandsWithLegend,
+  getActivityPointInBand,
+  getAddToSubBandId,
+  getBandsWithSourceId,
+  getCustomFilterForLabel,
+  getCustomFiltersBySourceId,
+  getFormattedSourceUrl,
+  getMpsPathForSource,
+  getParentSourceIds,
+  getPinLabel,
+  getRavenState,
+  getSourceIds,
+  getSourceNameFromId,
+  getState,
+  getTargetFilters,
+  hasActivityBandForFilterTarget,
+  isOverlay,
+  toCompositeBand,
+  toRavenBandData,
+  toRavenSources,
+  updateSourceId,
+} from '../util';
 
 import * as configActions from '../../shared/actions/config.actions';
 import * as toastActions from '../../shared/actions/toast.actions';
@@ -283,7 +281,7 @@ export class SourceExplorerEffects {
                 ...subBand,
                 id: uniqueId(),
                 parentUniqueId: parentId,
-                sourceIds: subBand.sourceIds.map(sourceId =>
+                sourceIds: subBand.sourceIds.map((sourceId: string) =>
                   updateSourceId(
                     sourceId,
                     targetSource.id,
@@ -310,7 +308,7 @@ export class SourceExplorerEffects {
                 ...subBand,
                 id: uniqueId(),
                 parentUniqueId: parentId,
-                sourceIds: subBand.sourceIds.map(sourceId =>
+                sourceIds: subBand.sourceIds.map((sourceId: string) =>
                   updateSourceId(
                     sourceId,
                     targetSourceId,
@@ -1508,7 +1506,7 @@ export class SourceExplorerEffects {
                     ...subBand,
                     // cleanup source id by removing args
                     sourceIds: subBand.sourceIds.map(
-                      srcId =>
+                      (srcId: string) =>
                         srcId.indexOf('?') > -1
                           ? srcId.substring(0, srcId.indexOf('?'))
                           : srcId,
@@ -1869,7 +1867,7 @@ export class SourceExplorerEffects {
 
     bands.forEach((band: RavenCompositeBand) => {
       band.subBands.forEach((subBand: RavenSubBand) => {
-        subBand.sourceIds.forEach(sourceId => {
+        subBand.sourceIds.forEach((sourceId: string) => {
           if (
             treeBySourceId[sourceId] &&
             treeBySourceId[sourceId].type === 'filter'

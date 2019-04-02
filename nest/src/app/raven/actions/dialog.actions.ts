@@ -8,14 +8,12 @@
  */
 
 import { Action } from '@ngrx/store';
-
 import {
   RavenCompositeBand,
   RavenCustomFilterSource,
   RavenSource,
-} from '../../shared/models';
+} from '../models';
 
-// Action Types.
 export enum DialogActionTypes {
   OpenApplyCurrentStateDialog = '[dialog] open_apply_current_state_dialog',
   OpenConfirmDialog = '[dialog] open_confirm_dialog',
@@ -35,7 +33,6 @@ export enum DialogActionTypes {
   OpenUpdateCurrentStateDialog = '[dialog open_update_current_state_dialog',
 }
 
-// Actions.
 export class OpenApplyCurrentStateDialog implements Action {
   readonly type = DialogActionTypes.OpenApplyCurrentStateDialog;
 }
@@ -144,7 +141,6 @@ export class OpenUpdateCurrentStateDialog implements Action {
   readonly type = DialogActionTypes.OpenUpdateCurrentStateDialog;
 }
 
-// Union type of all actions.
 export type DialogAction =
   | OpenApplyCurrentStateDialog
   | OpenConfirmDialog

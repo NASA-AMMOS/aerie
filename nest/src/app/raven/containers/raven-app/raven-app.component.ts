@@ -13,13 +13,15 @@ import {
   HostListener,
   OnDestroy,
 } from '@angular/core';
-
 import { select, Store } from '@ngrx/store';
 import { combineLatest, Observable, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
+import * as configActions from '../../../shared/actions/config.actions';
 import { getVersion } from '../../../shared/selectors';
+import * as dialogActions from '../../actions/dialog.actions';
+import * as layoutActions from '../../actions/layout.actions';
+import * as timelineActions from '../../actions/timeline.actions';
 import { SourceExplorerState } from '../../reducers/source-explorer.reducer';
-
 import {
   getLayoutPending,
   getMode,
@@ -28,11 +30,6 @@ import {
   getSourceExplorerPending,
   getTimelinePending,
 } from '../../selectors';
-
-import * as configActions from '../../../shared/actions/config.actions';
-import * as dialogActions from '../../actions/dialog.actions';
-import * as layoutActions from '../../actions/layout.actions';
-import * as timelineActions from '../../actions/timeline.actions';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -8,19 +8,24 @@
  */
 
 import { Injectable } from '@angular/core';
-import { Store } from '@ngrx/store';
-import { Observable, of } from 'rxjs';
-import { map, withLatestFrom } from 'rxjs/operators';
-import { RavenAppState } from '../raven-store';
-
 import {
   ActivatedRouteSnapshot,
   CanActivate,
   RouterStateSnapshot,
 } from '@angular/router';
-
-import { catchError, filter, switchMap, take, tap } from 'rxjs/operators';
+import { Store } from '@ngrx/store';
+import { Observable, of } from 'rxjs';
+import {
+  catchError,
+  filter,
+  map,
+  switchMap,
+  take,
+  tap,
+  withLatestFrom,
+} from 'rxjs/operators';
 import * as sourceExplorerActions from '../actions/source-explorer.actions';
+import { RavenAppState } from '../raven-store';
 
 @Injectable()
 export class RavenGuard implements CanActivate {

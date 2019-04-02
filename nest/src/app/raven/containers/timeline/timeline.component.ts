@@ -12,15 +12,15 @@ import { select, Store } from '@ngrx/store';
 import { combineLatest, Observable, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { ConfigState } from '../../../../config';
+import { StringTMap, TimeRange } from '../../../shared/models';
+import { TimeCursorState } from '../../reducers/time-cursor.reducer';
+import { TimelineState } from '../../reducers/timeline.reducer';
 import {
   bandById,
   getSourceIdsByLabelInBands,
   toCompositeBand,
   toDividerBand,
-} from '../../../shared/util';
-import { TimeCursorState } from '../../reducers/time-cursor.reducer';
-import { TimelineState } from '../../reducers/timeline.reducer';
-
+} from '../../util';
 import {
   RavenActivityPoint,
   RavenActivityPointExpansion,
@@ -37,10 +37,8 @@ import {
   RavenSource,
   RavenState,
   RavenSubBand,
-  RavenTimeRange,
   RavenUpdate,
-  StringTMap,
-} from '../../../shared/models';
+} from './../../models';
 
 import * as configSelectors from '../../../shared/selectors/config.selectors';
 import * as epochsSelectors from '../../selectors/epochs.selectors';
@@ -135,14 +133,14 @@ export class TimelineComponent implements OnDestroy {
   guides$: Observable<number[]>;
   hoveredBandId$: Observable<string>;
   lastClickTime$: Observable<number | null>;
-  maxTimeRange$: Observable<RavenTimeRange>;
+  maxTimeRange$: Observable<TimeRange>;
   selectedBandId$: Observable<string>;
   selectedPoint$: Observable<RavenPoint | null>;
   selectedSubBand$: Observable<RavenSubBand | null>;
   selectedSubBandId$: Observable<string>;
   selectedSubBandPoints$: Observable<RavenPoint[]>;
   subBandSourceIdsByLabel$: Observable<StringTMap<string[]>>;
-  viewTimeRange$: Observable<RavenTimeRange>;
+  viewTimeRange$: Observable<TimeRange>;
 
   // Local (non-Observable) state. Derived from store state.
   bands: RavenCompositeBand[];
@@ -684,7 +682,7 @@ export class TimelineComponent implements OnDestroy {
   /**
    * Event. Called when catching an `update-view-time-range` event.
    */
-  onUpdateViewTimeRange(viewTimeRange: RavenTimeRange): void {
+  onUpdateViewTimeRange(viewTimeRange: TimeRange): void {
     this.store.dispatch(new timelineActions.UpdateViewTimeRange(viewTimeRange));
   }
 
@@ -703,7 +701,7 @@ export class TimelineComponent implements OnDestroy {
     this.store.dispatch(new timelineActions.PanRightViewTimeRange());
   }
 
-  onPanTo(viewTimeRange: RavenTimeRange) {
+  onPanTo(viewTimeRange: TimeRange) {
     this.store.dispatch(new timelineActions.UpdateViewTimeRange(viewTimeRange));
   }
 

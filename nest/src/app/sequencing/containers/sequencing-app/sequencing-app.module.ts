@@ -10,9 +10,12 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { MatToolbarModule } from '@angular/material';
-import { NestAppHeaderModule } from '../../../shared/components/modules';
-import { SeqCommandListModule, SeqCommandLoaderModule } from '../../components';
-import { SeqEditorModule } from '../../components/seq-editor/seq-editor.module';
+import { NestAppHeaderModule } from '../../../shared/components';
+import {
+  SeqCommandListModule,
+  SeqCommandLoaderModule,
+  SeqEditorModule,
+} from '../../components';
 import { SequencingAppComponent } from './sequencing-app.component';
 
 @NgModule({

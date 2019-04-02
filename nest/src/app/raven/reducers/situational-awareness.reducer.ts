@@ -7,8 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { RavenSituationalAwarenessPefEntry } from '../../shared/models';
-
+import { RavenSituationalAwarenessPefEntry } from '../models';
 import {
   SituationalAwarenessAction,
   SituationalAwarenessActionTypes,

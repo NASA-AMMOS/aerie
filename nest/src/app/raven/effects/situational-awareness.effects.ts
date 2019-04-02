@@ -12,8 +12,6 @@ import { Injectable } from '@angular/core';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 import { concat, Observable, of } from 'rxjs';
-import { RavenAppState } from '../raven-store';
-
 import {
   catchError,
   concatMap,
@@ -21,27 +19,20 @@ import {
   switchMap,
   withLatestFrom,
 } from 'rxjs/operators';
-
+import { getInitialPageStartEndTime } from '../../shared/util';
 import {
   FetchPefEntries,
   SituationalAwarenessActionTypes,
 } from '../actions/situational-awareness.actions';
-
-import {
-  getInitialPageStartEndTime,
-  toCompositeBand,
-  toRavenBandData,
-  toRavenPefEntries,
-} from '../../shared/util';
-
+import * as situationalAwarenessActions from '../actions/situational-awareness.actions';
+import * as timelineActions from '../actions/timeline.actions';
 import {
   MpsServerGraphData,
   MpsServerSituationalAwarenessPefEntry,
   RavenDefaultBandSettings,
-} from '../../shared/models';
-
-import * as situationalAwarenessActions from '../actions/situational-awareness.actions';
-import * as timelineActions from '../actions/timeline.actions';
+} from '../models';
+import { RavenAppState } from '../raven-store';
+import { toCompositeBand, toRavenBandData, toRavenPefEntries } from '../util';
 
 @Injectable()
 export class SituationalAwarenessEffects {

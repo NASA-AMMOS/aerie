@@ -9,20 +9,18 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { SourceExplorerComponent } from './source-explorer.component';
-
 import {
   MatCardModule,
   MatIconModule,
   MatSidenavModule,
   MatTabsModule,
 } from '@angular/material';
-
 import {
   RavenFileMetadataModule,
   RavenQuickFilterPanelModule,
   RavenTreeModule,
-} from '../../../shared/components/modules';
+} from '../../components';
+import { SourceExplorerComponent } from './source-explorer.component';
 
 @NgModule({
   declarations: [SourceExplorerComponent],

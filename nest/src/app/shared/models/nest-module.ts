@@ -11,20 +11,8 @@
  */
 
 export interface NestModule {
-  /**
-   * Material icon name, see https://material.io/tools/icons/?style=baseline
-   */
   icon: string;
-  /**
-   * Default path to this module
-   */
   path: string;
-  /**
-   * Title of this module for display purposes
-   */
   title: string;
-  /**
-   * Version of this module in semantic versioning format
-   */
   version: string;
 }

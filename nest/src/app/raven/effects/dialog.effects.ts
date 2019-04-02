@@ -7,28 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { keyBy } from 'lodash';
-
 import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
+import { keyBy } from 'lodash';
 import { Observable, of, zip } from 'rxjs';
 import { exhaustMap, map, withLatestFrom } from 'rxjs/operators';
-import { RavenAppState } from '../raven-store';
-
-import {
-  NestConfirmDialogComponent,
-  RavenCustomFilterDialogComponent,
-  RavenCustomGraphDialogComponent,
-  RavenFileImportDialogComponent,
-  RavenFolderDialogComponent,
-  RavenPinDialogComponent,
-  RavenSettingsBandsDialogComponent,
-  RavenShareableLinkDialogComponent,
-  RavenStateSaveDialogComponent,
-} from '../../shared/components/components';
-
+import { NestConfirmDialogComponent } from '../../shared/components/nest-confirm-dialog/nest-confirm-dialog.component';
 import {
   DialogActionTypes,
   OpenApplyCurrentStateDialog,
@@ -48,11 +34,18 @@ import {
   OpenStateSaveDialog,
   OpenUpdateCurrentStateDialog,
 } from '../actions/dialog.actions';
-
 import * as sourceExplorerActions from '../actions/source-explorer.actions';
 import * as timelineActions from '../actions/timeline.actions';
-
-import { RavenCompositeBand } from '../../shared/models';
+import { RavenCustomFilterDialogComponent } from '../components/raven-custom-filter-dialog/raven-custom-filter-dialog.component';
+import { RavenCustomGraphDialogComponent } from '../components/raven-custom-graph-dialog/raven-custom-graph-dialog.component';
+import { RavenFileImportDialogComponent } from '../components/raven-file-import-dialog/raven-file-import-dialog.component';
+import { RavenFolderDialogComponent } from '../components/raven-folder-dialog/raven-folder-dialog.component';
+import { RavenPinDialogComponent } from '../components/raven-pin-dialog/raven-pin-dialog.component';
+import { RavenSettingsBandsDialogComponent } from '../components/raven-settings-bands-dialog/raven-settings-bands-dialog.component';
+import { RavenShareableLinkDialogComponent } from '../components/raven-shareable-link-dialog/raven-shareable-link-dialog.component';
+import { RavenStateSaveDialogComponent } from '../components/raven-state-save-dialog/raven-state-save-dialog.component';
+import { RavenCompositeBand } from '../models';
+import { RavenAppState } from '../raven-store';
 
 @Injectable()
 export class DialogEffects {

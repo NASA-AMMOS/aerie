@@ -7,14 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { RavenPin, RavenSource } from '../../shared/models';
-
-import {
-  initialState,
-  reducer,
-  SourceExplorerState,
-} from './source-explorer.reducer';
-
 import {
   AddCustomFilter,
   AddFilter,
@@ -43,14 +35,19 @@ import {
   UpdateSourceExplorer,
   UpdateTreeSource,
 } from '../actions/source-explorer.actions';
-
 import {
   categorySource,
   childSource,
   customFilterSource,
   filterSourceLocation,
   rootSource,
-} from '../../shared/mocks';
+} from '../mocks';
+import { RavenPin, RavenSource } from '../models';
+import {
+  initialState,
+  reducer,
+  SourceExplorerState,
+} from './source-explorer.reducer';
 
 describe('source-explorer reducer', () => {
   let sourceExplorerState: SourceExplorerState;

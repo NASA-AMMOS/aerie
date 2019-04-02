@@ -19,7 +19,7 @@ import {
 import {
   NestAppHeaderModule,
   NestConfirmDialogModule,
-} from '../../../shared/components/modules';
+} from '../../../shared/components';
 import { PlanFormModule, PlanTableModule } from '../../components';
 import { PlansComponent } from './plans.component';
 

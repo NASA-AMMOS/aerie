@@ -7,13 +7,12 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { initialState, reducer, TimeCursorState } from './time-cursor.reducer';
-
 import {
   HideTimeCursor,
   ShowTimeCursor,
   UpdateTimeCursorSettings,
 } from '../actions/time-cursor.actions';
+import { initialState, reducer, TimeCursorState } from './time-cursor.reducer';
 
 describe('time-cursor reducer', () => {
   let timeCursorState: TimeCursorState;

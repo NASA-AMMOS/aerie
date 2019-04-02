@@ -10,14 +10,12 @@
 import { Action } from '@ngrx/store';
 import { BaseType, StringTMap } from '../../shared/models';
 
-// Action Types.
 export enum TimeCursorActionTypes {
   HideTimeCursor = '[timeCursor] hide_time_cursor',
   ShowTimeCursor = '[timeCursor] show_time_cursor',
   UpdateTimeCursorSettings = '[timeCursor] update_time_cursor_settings',
 }
 
-// Actions.
 export class HideTimeCursor implements Action {
   readonly type = TimeCursorActionTypes.HideTimeCursor;
 }
@@ -32,7 +30,6 @@ export class UpdateTimeCursorSettings implements Action {
   constructor(public update: StringTMap<BaseType>) {}
 }
 
-// Union type of all actions.
 export type TimeCursorAction =
   | HideTimeCursor
   | ShowTimeCursor

@@ -8,21 +8,17 @@
  */
 
 import { Action } from '@ngrx/store';
-
+import { BaseType, StringTMap, TimeRange } from '../../shared/models';
 import {
   AddBandModifiers,
-  BaseType,
   RavenActivityPoint,
   RavenCompositeBand,
   RavenGuidePoint,
   RavenPin,
   RavenSortMessage,
   RavenSubBand,
-  RavenTimeRange,
-  StringTMap,
-} from '../../shared/models';
+} from '../models';
 
-// Action Types.
 export enum TimelineActionTypes {
   AddBand = '[timeline] add_band',
   AddPointsToSubBand = '[timeline] add_points_to_sub_band',
@@ -62,7 +58,6 @@ export enum TimelineActionTypes {
   ZoomOutViewTimeRange = '[timeline] zoom_out_view_time_range',
 }
 
-// Actions.
 export class AddBand implements Action {
   readonly type = TimelineActionTypes.AddBand;
 
@@ -293,7 +288,7 @@ export class UpdateTimeline implements Action {
 export class UpdateViewTimeRange implements Action {
   readonly type = TimelineActionTypes.UpdateViewTimeRange;
 
-  constructor(public viewTimeRange: RavenTimeRange) {}
+  constructor(public viewTimeRange: TimeRange) {}
 }
 
 export class ZoomInViewTimeRange implements Action {
@@ -304,7 +299,6 @@ export class ZoomOutViewTimeRange implements Action {
   readonly type = TimelineActionTypes.ZoomOutViewTimeRange;
 }
 
-// Union type of all actions.
 export type TimelineAction =
   | AddBand
   | AddPointsToSubBand

@@ -9,18 +9,16 @@
 
 import { Injectable } from '@angular/core';
 import { Actions, Effect, ofType } from '@ngrx/effects';
-import { Action, Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
-import { map, mergeMap, withLatestFrom } from 'rxjs/operators';
-import { RavenAppState } from '../raven-store';
-
 import {
   RouterNavigationAction,
   SerializedRouterStateSnapshot,
 } from '@ngrx/router-store';
-
+import { Action, Store } from '@ngrx/store';
+import { Observable } from 'rxjs';
+import { map, mergeMap, withLatestFrom } from 'rxjs/operators';
 import * as configActions from '../../shared/actions/config.actions';
 import * as sourceExplorerActions from '../actions/source-explorer.actions';
+import { RavenAppState } from '../raven-store';
 
 @Injectable()
 export class RouterEffects {

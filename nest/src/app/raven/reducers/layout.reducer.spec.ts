@@ -7,8 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { initialState, LayoutState, reducer } from './layout.reducer';
-
 import {
   Resize,
   SetMode,
@@ -23,6 +21,7 @@ import {
   ToggleSouthBandsPanel,
   UpdateLayout,
 } from '../actions/layout.actions';
+import { initialState, LayoutState, reducer } from './layout.reducer';
 
 describe('layout reducer', () => {
   let layoutState: LayoutState;

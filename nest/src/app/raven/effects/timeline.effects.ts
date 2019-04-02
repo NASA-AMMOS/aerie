@@ -11,13 +11,13 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
-import { TimelineActionTypes } from '../actions/timeline.actions';
-import { RavenAppState } from '../raven-store';
-
 import { concat, Observable, of } from 'rxjs';
-
 import { concatMap, map, switchMap, withLatestFrom } from 'rxjs/operators';
-
+import { StringTMap, TimeRange } from '../../shared/models';
+import { timestamp } from '../../shared/util';
+import * as sourceExplorerActions from '../actions/source-explorer.actions';
+import { TimelineActionTypes } from '../actions/timeline.actions';
+import * as timelineActions from '../actions/timeline.actions';
 import {
   AddBand,
   AddSubBand,
@@ -34,7 +34,6 @@ import {
   ZoomInViewTimeRange,
   ZoomOutViewTimeRange,
 } from '../actions/timeline.actions';
-
 import {
   MpsServerGraphData,
   MpsServerResourceMetadata,
@@ -46,22 +45,16 @@ import {
   RavenResourceBand,
   RavenSource,
   RavenSubBand,
-  RavenTimeRange,
-  StringTMap,
-} from '../../shared/models';
-
+} from '../models';
+import { RavenAppState } from '../raven-store';
 import {
   activityBandsWithLegend,
   getPinLabel,
   getResourcePoints,
   subBandById,
-  timestamp,
   toCompositeBand,
   toRavenDescendantsData,
-} from '../../shared/util';
-
-import * as sourceExplorerActions from '../actions/source-explorer.actions';
-import * as timelineActions from '../actions/timeline.actions';
+} from '../util';
 
 @Injectable()
 export class TimelineEffects {
@@ -291,7 +284,7 @@ export class TimelineEffects {
    * Helper. Fetches new resource points for a given time range.
    * Good for use on decimated data.
    */
-  fetchNewResourcePoints(source: RavenSource, viewTimeRange: RavenTimeRange) {
+  fetchNewResourcePoints(source: RavenSource, viewTimeRange: TimeRange) {
     const { end, start } = viewTimeRange;
     const url = `${source.url}&start=${timestamp(start)}&end=${timestamp(end)}`;
 

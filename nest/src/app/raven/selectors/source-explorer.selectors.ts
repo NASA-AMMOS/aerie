@@ -8,10 +8,11 @@
  */
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { FilterState, RavenSource, StringTMap } from '../../shared/models';
-import { getSortedChildIds } from '../../shared/util';
+import { StringTMap } from '../../shared/models';
+import { FilterState, RavenSource } from '../models';
 import { State } from '../raven-store';
 import { SourceExplorerState } from '../reducers/source-explorer.reducer';
+import { getSortedChildIds } from '../util';
 
 const treeBySourceId = (state: SourceExplorerState) => state.treeBySourceId;
 

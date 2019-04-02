@@ -9,3 +9,4 @@
 
 export * from './seq-command-loader/seq-command-loader.module';
 export * from './seq-command-list/seq-command-list.module';
+export * from './seq-editor/seq-editor.module';

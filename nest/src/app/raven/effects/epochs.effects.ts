@@ -14,10 +14,10 @@ import { Action } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { catchError, concatMap, map } from 'rxjs/operators';
 import * as toastActions from '../../shared/actions/toast.actions';
-import { MpsServerEpoch, RavenEpoch } from '../../shared/models';
-import { toRavenEpochs } from '../../shared/util';
 import { EpochsActionTypes, FetchEpochs } from '../actions/epochs.actions';
 import * as epochsActions from '../actions/epochs.actions';
+import { MpsServerEpoch, RavenEpoch } from '../models';
+import { toRavenEpochs } from '../util';
 
 @Injectable()
 export class EpochsEffects {

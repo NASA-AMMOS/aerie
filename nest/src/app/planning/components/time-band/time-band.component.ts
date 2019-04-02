@@ -20,7 +20,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import * as d3 from 'd3';
-import { RavenTimeRange } from '../../../shared/models';
+import { TimeRange } from '../../../shared/models';
 
 @Component({
   selector: 'time-band',
@@ -44,15 +44,13 @@ export class TimeBandComponent implements AfterViewInit, OnChanges {
   marginTop = 10;
 
   @Input()
-  maxTimeRange: RavenTimeRange;
+  maxTimeRange: TimeRange;
 
   @Input()
-  viewTimeRange: RavenTimeRange;
+  viewTimeRange: TimeRange;
 
   @Output()
-  updateViewTimeRange: EventEmitter<RavenTimeRange> = new EventEmitter<
-    RavenTimeRange
-  >();
+  updateViewTimeRange: EventEmitter<TimeRange> = new EventEmitter<TimeRange>();
 
   @ViewChild('axisX')
   axisXTarget: ElementRef;

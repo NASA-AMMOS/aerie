@@ -10,7 +10,7 @@
 import { browser, by, element, promise, until } from 'protractor';
 
 export class NestAppPage {
-  aboutButton = element(by.css('.raven-app-nav-about-button'));
+  aboutButton = element(by.css('.nest-app-nav-about-button'));
 
   navigateTo(): promise.Promise<any> {
     return browser.get('/#/plans');

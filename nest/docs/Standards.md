@@ -7,8 +7,8 @@ connecting to the ngrx Store to select state and dispatch events. You can think 
 
 ## Components
 
-A `component` folder should contain pure Angular Components with selectors prefixed with `raven`. Pure components should be "dumb", meaning they should not have any internal state or any knowledge of the ngrx Store. They should just have `Inputs` and `Outputs`. 
-All a pure components state is passed in the `Inputs`. 
+A `component` folder should contain pure Angular Components with selectors prefixed with `raven`. Pure components should be "dumb", meaning they should not have any internal state or any knowledge of the ngrx Store. They should just have `Inputs` and `Outputs`.
+All a pure components state is passed in the `Inputs`.
 Anytime a component needs to communicate to it's parent it should emit an `Output`.
 Pure components should use the `OnPush` [change detection strategy](https://angular.io/api/core/ChangeDetectionStrategy).
 It should be easy to move a pure component into another application with little to no work at all.
@@ -28,7 +28,8 @@ All functions should have a [JavaDoc](http://typedoc.org/guides/doccomments/) st
 ```ts
 /**
  * Returns the square of the input number.
- */ 
+ */
+
 function square(x: number): number {
   return x * x;
 }
@@ -40,6 +41,34 @@ Any other inline comments should use `//`. These comments should start with a ca
 // This is a nice comment.
 ```
 
+## Imports
+
+All imports should be tightly grouped and ordered alphabetically so Git diffs are kept as clean as possible. For example:
+
+```ts
+import {
+  AfterViewChecked,
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+} from '@angular/core';
+import * as d3 from 'd3';
+import { fromEvent, Subject, Subscription } from 'rxjs';
+import { filter, map, mergeMap, takeUntil, tap } from 'rxjs/operators';
+import {
+  ActivityInstance,
+  StringTMap,
+  TimeRange,
+} from '../../../shared/models';
+import { ActivityInstanceSvg, ActivityInstanceUpdate } from '../../models';
+```
+
+Notice there are no newlines between any of these imports. TSLint should automatically enforce alphabetical ordering.
+
+## .html and .css Files in Components
+
+If a component does not need an .html or .css file they can be omitted (i.e. we do not need to include empty .html or .css files in the project).
+
 ## Formatting
 
 Previously, we had to painstakingly format every file with no assistance from
@@ -49,10 +78,10 @@ format a file again _and_ the entire codebase will use the exact same style.
 We use [Prettier][prettier] for formatting. There is a lot of documentation
 there, but here is the summary of what Prettier is:
 
-* An opinionated code formatter. It doesn't lint. It just reformats your code into a standard style.
-* Supports many languages - JS, TS, CSS, Markdown, YAML, JSX, etc. with tons more in progress.
-* Integrates with most editors. VS Code, VIM, Emacs, Atom, Sublime, etc.
-* Has few options. It is mostly config free except for the few things that cause holy wars among devs
+- An opinionated code formatter. It doesn't lint. It just reformats your code into a standard style.
+- Supports many languages - JS, TS, CSS, Markdown, YAML, JSX, etc. with tons more in progress.
+- Integrates with most editors. VS Code, VIM, Emacs, Atom, Sublime, etc.
+- Has few options. It is mostly config free except for the few things that cause holy wars among devs
 
 **Formatting as you go**
 
@@ -69,5 +98,5 @@ for member variables but Prettier doesn't make that distinction. So that is a
 compromise we have to make. Make sure to include a new line between decorated
 items because Prettier won't add them for you. Here is an issue which discusses
 inline Decorators in Angular: https://github.com/prettier/prettier/issues/4924
-and here is the Prettier issue where the decision was made: 
+and here is the Prettier issue where the decision was made:
 https://github.com/prettier/prettier/issues/2613.

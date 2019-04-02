@@ -37,12 +37,12 @@ import { getAppModules, getNavigationDrawerState } from './shared/selectors';
           mode="side"
           [opened]="(navigationDrawerState | async) !== 'closed'"
         >
-          <raven-app-nav
+          <nest-app-nav
             [modules]="appModules | async"
             [iconsOnly]="(navigationDrawerState | async) === 'collapsed'"
             (aboutClicked)="onAboutClicked()"
           >
-          </raven-app-nav>
+          </nest-app-nav>
         </mat-sidenav>
         <mat-sidenav-content #sidenavContent class="app-sidenav-content">
           <router-outlet></router-outlet>
@@ -63,7 +63,7 @@ export class AppComponent {
   }
 
   /**
-   * Callback event. Called when the About button is clicked inside the `raven-app-nav` component.
+   * Callback event. Called when the About button is clicked inside the `nest-app-nav` component.
    */
   onAboutClicked() {
     this.store.dispatch(new dialogActions.OpenAboutDialog('400px'));

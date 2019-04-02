@@ -8,10 +8,10 @@
  */
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { RavenSubBand } from '../../shared/models';
-import { subBandById } from '../../shared/util';
+import { RavenSubBand } from '../models';
 import { State } from '../raven-store';
 import { TimelineState } from '../reducers/timeline.reducer';
+import { subBandById } from '../util';
 
 const bandsState = (state: TimelineState) => state.bands;
 const hoveredBandIdState = (state: TimelineState) => state.hoveredBandId;

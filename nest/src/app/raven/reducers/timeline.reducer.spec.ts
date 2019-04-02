@@ -7,9 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { RavenActivityPoint, RavenSource } from '../../shared/models';
-import { initialState, reducer, TimelineState } from './timeline.reducer';
-
 import {
   AddBand,
   AddPointsToSubBand,
@@ -40,7 +37,6 @@ import {
   ZoomInViewTimeRange,
   ZoomOutViewTimeRange,
 } from '../actions/timeline.actions';
-
 import {
   activityBand,
   activityPoint,
@@ -50,9 +46,10 @@ import {
   resourceBand,
   rootSource,
   stateBand,
-} from '../../shared/mocks';
-
-import { hasTwoResourceBands } from '../../shared/util';
+} from '../mocks';
+import { RavenActivityPoint, RavenSource } from '../models';
+import { hasTwoResourceBands } from '../util';
+import { initialState, reducer, TimelineState } from './timeline.reducer';
 
 describe('timeline reducer', () => {
   let timelineState: TimelineState;

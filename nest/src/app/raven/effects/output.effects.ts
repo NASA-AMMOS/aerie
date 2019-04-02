@@ -13,10 +13,6 @@ import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 import { saveAs } from 'file-saver';
 import { concat, Observable, of } from 'rxjs';
-import { getCustomFilterForLabel, getOutputDataUrl } from '../../shared/util';
-import { OutputActionTypes } from '../actions/output.actions';
-import { RavenAppState } from '../raven-store';
-
 import {
   concatMap,
   exhaustMap,
@@ -24,15 +20,13 @@ import {
   switchMap,
   withLatestFrom,
 } from 'rxjs/operators';
-
-import {
-  RavenCustomFilter,
-  RavenSource,
-  StringTMap,
-} from '../../shared/models';
-
+import { StringTMap } from '../../shared/models';
 import * as outputActions from '../actions/output.actions';
+import { OutputActionTypes } from '../actions/output.actions';
+import { RavenCustomFilter, RavenSource } from '../models';
+import { RavenAppState } from '../raven-store';
 import * as fromOutput from '../reducers/output.reducer';
+import { getCustomFilterForLabel, getOutputDataUrl } from '../util';
 
 @Injectable()
 export class OutputEffects {

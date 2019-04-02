@@ -7,9 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { EpochsState, initialState, reducer } from './epochs.reducer';
-
 import { AddEpochs, UpdateEpochs } from '../actions/epochs.actions';
+import { EpochsState, initialState, reducer } from './epochs.reducer';
 
 describe('epochs reducer', () => {
   let epochsState: EpochsState;

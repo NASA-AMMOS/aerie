@@ -10,14 +10,12 @@
 import { Action } from '@ngrx/store';
 import { BaseType, StringTMap } from './../../shared/models';
 
-// Action Types.
 export enum SituationalAwarenessActionTypes {
   ChangeSituationalAwareness = '[situationalAwareness] change_situational_awareness',
   FetchPefEntries = '[situationalAwareness] fetch_pef_entries',
   UpdateSituationalAwarenessSettings = '[situationalAwareness] update_situational_awareness_settings',
 }
 
-// Actions.
 export class ChangeSituationalAwareness implements Action {
   readonly type = SituationalAwarenessActionTypes.ChangeSituationalAwareness;
 
@@ -37,7 +35,6 @@ export class UpdateSituationalAwarenessSettings implements Action {
   constructor(public update: StringTMap<BaseType>) {}
 }
 
-// Union type of all actions.
 export type SituationalAwarenessAction =
   | ChangeSituationalAwareness
   | FetchPefEntries

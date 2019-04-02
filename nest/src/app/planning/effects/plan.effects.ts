@@ -16,7 +16,7 @@ import { omitBy } from 'lodash';
 import { forkJoin, Observable, of } from 'rxjs';
 import { catchError, map, switchMap, withLatestFrom } from 'rxjs/operators';
 import { ShowToast } from '../../shared/actions/toast.actions';
-import { NestConfirmDialogComponent } from '../../shared/components/components';
+import { NestConfirmDialogComponent } from '../../shared/components/nest-confirm-dialog/nest-confirm-dialog.component';
 import { ActivityInstance } from '../../shared/models';
 import { timestamp } from '../../shared/util';
 import {

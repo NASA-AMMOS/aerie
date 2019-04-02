@@ -7,8 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { RavenEpoch } from '../../shared/models/raven-epoch';
 import { EpochsAction, EpochsActionTypes } from '../actions/epochs.actions';
+import { RavenEpoch } from '../models/raven-epoch';
 
 export interface EpochsState {
   dayCode: string;

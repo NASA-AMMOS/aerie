@@ -9,8 +9,8 @@
 
 import { utc as momentUtc } from 'moment';
 import { tz as momentTz } from 'moment-timezone';
+import { RavenEpoch, RavenEpochTime } from '../../raven/models';
 import { SituationalAwarenessState } from '../../raven/reducers/situational-awareness.reducer';
-import { RavenEpoch, RavenEpochTime } from '../models';
 
 /**
  * Converts a JS Date object to a timestring.
@@ -214,7 +214,7 @@ export function fromDuration(duration: string): number {
 }
 
 /**
- * Helper that returns a default day code if `dayCode` is the empty string.
+ * Returns a default day code if `dayCode` is the empty string.
  */
 export function formatDayCode(dayCode: string): string {
   return dayCode === '' ? ' days ' : dayCode;
@@ -391,7 +391,7 @@ export function getInitialPageStartEndTime(
 }
 
 /**
- * Helper. Return name for local timezone.
+ * Return name for local timezone.
  */
 export function getLocalTimezoneName() {
   const zoneName = momentTz.guess();
@@ -399,7 +399,37 @@ export function getLocalTimezoneName() {
 }
 
 /**
- * Helper. Return situationalAwareness startTime. If 'now' is used, startTime is now - nowMinus.
+ * Recalculates the max time-range from a list of values with start and end number props.
+ */
+export function getMaxTimeRange(arr: any[]) {
+  let maxTime = Number.MIN_SAFE_INTEGER;
+  let minTime = Number.MAX_SAFE_INTEGER;
+
+  for (let i = 0, l = arr.length; i < l; ++i) {
+    const value = arr[i];
+    const start = value.start;
+    let end = value.end;
+
+    if (!value.duration) {
+      end = start;
+    }
+
+    if (start < minTime) {
+      minTime = start;
+    }
+    if (end > maxTime) {
+      maxTime = end;
+    }
+  }
+
+  return {
+    end: maxTime,
+    start: minTime,
+  };
+}
+
+/**
+ * Return situationalAwareness startTime. If 'now' is used, startTime is now - nowMinus.
  */
 export function getSituationalAwarenessStartTime(
   situationalAwareness: SituationalAwarenessState,
@@ -417,7 +447,7 @@ export function getSituationalAwarenessStartTime(
 }
 
 /**
- * Helper. Return situationAwareness pageDuration.
+ * Return situationAwareness pageDuration.
  */
 export function getSituationalAwarenessPageDuration(
   situationalAwareness: SituationalAwarenessState,

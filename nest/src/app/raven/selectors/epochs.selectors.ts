@@ -8,7 +8,7 @@
  */
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { RavenEpoch } from '../../shared/models';
+import { RavenEpoch } from '../models';
 import { State } from '../raven-store';
 import { EpochsState } from '../reducers/epochs.reducer';
 

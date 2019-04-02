@@ -12,7 +12,7 @@ import { ActivatedRoute } from '@angular/router';
 import { select, Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { ActivityInstance, RavenTimeRange } from '../../../shared/models';
+import { ActivityInstance, TimeRange } from '../../../shared/models';
 import { timestamp } from '../../../shared/util';
 import {
   SelectActivity,
@@ -36,9 +36,9 @@ import {
 })
 export class PlanScheduleComponent implements OnDestroy {
   activities$: Observable<ActivityInstance[] | null>;
-  maxTimeRange$: Observable<RavenTimeRange>;
+  maxTimeRange$: Observable<TimeRange>;
   selectedActivity$: Observable<ActivityInstance | null>;
-  viewTimeRange$: Observable<RavenTimeRange>;
+  viewTimeRange$: Observable<TimeRange>;
 
   selectedActivity: ActivityInstance | null = null;
 
@@ -84,7 +84,7 @@ export class PlanScheduleComponent implements OnDestroy {
     }
   }
 
-  onUpdateViewTimeRange(viewTimeRange: RavenTimeRange): void {
+  onUpdateViewTimeRange(viewTimeRange: TimeRange): void {
     this.store.dispatch(new UpdateViewTimeRange(viewTimeRange));
   }
 }

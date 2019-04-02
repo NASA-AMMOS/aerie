@@ -8,17 +8,15 @@
  */
 
 import { Action } from '@ngrx/store';
+import { BaseType, StringTMap } from '../../shared/models';
+import { RavenEpoch } from '../models';
 
-import { BaseType, RavenEpoch, StringTMap } from '../../shared/models';
-
-// Action Types.
 export enum EpochsActionTypes {
   AddEpochs = '[epochs] add_epochs',
   FetchEpochs = '[epochs] fetch_epochs',
   UpdateEpochs = '[epochs] update_epochs',
 }
 
-// Actions.
 export class AddEpochs implements Action {
   readonly type = EpochsActionTypes.AddEpochs;
 
@@ -37,5 +35,4 @@ export class UpdateEpochs implements Action {
   constructor(public update: StringTMap<BaseType>) {}
 }
 
-// Union type of all actions.
 export type EpochsAction = AddEpochs | FetchEpochs | UpdateEpochs;

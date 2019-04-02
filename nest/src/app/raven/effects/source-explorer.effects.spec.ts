@@ -15,16 +15,16 @@ import { StoreModule } from '@ngrx/store';
 import { cold, hot } from 'jasmine-marbles';
 import { Observable } from 'rxjs';
 import { reducers as storeReducers } from '../../app-store';
-import { FilterState } from '../../shared/models';
-import {
-  MockedFilters,
-  MpsServerMockService,
-} from '../../shared/services/mps-server-mock.service';
-import { MpsServerService } from '../../shared/services/mps-server.service';
 import {
   UpdateSourceExplorer,
   UpdateSourceFilter,
 } from '../actions/source-explorer.actions';
+import { FilterState } from '../models';
+import {
+  MockedFilters,
+  MpsServerMockService,
+} from '../services/mps-server-mock.service';
+import { MpsServerService } from '../services/mps-server.service';
 import { SourceExplorerEffects } from './source-explorer.effects';
 
 describe('SourceExplorerEffects', () => {

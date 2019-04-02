@@ -12,6 +12,13 @@ import { select, Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { map, switchMap, takeUntil } from 'rxjs/operators';
 import { WebSocketSubject } from 'rxjs/webSocket';
+import { StringTMap } from '../../../shared/models';
+import { getUrls } from '../../../shared/selectors';
+import * as dialogActions from '../../actions/dialog.actions';
+import * as epochsActions from '../../actions/epochs.actions';
+import * as layoutActions from '../../actions/layout.actions';
+import * as sourceExplorerActions from '../../actions/source-explorer.actions';
+import * as timelineActions from '../../actions/timeline.actions';
 import {
   FilterState,
   MpsServerWebSocketMessage,
@@ -23,14 +30,7 @@ import {
   RavenSource,
   RavenSourceActionEvent,
   SourceFilter,
-  StringTMap,
-} from '../../../shared/models';
-import { getUrls } from '../../../shared/selectors';
-import * as dialogActions from '../../actions/dialog.actions';
-import * as epochsActions from '../../actions/epochs.actions';
-import * as layoutActions from '../../actions/layout.actions';
-import * as sourceExplorerActions from '../../actions/source-explorer.actions';
-import * as timelineActions from '../../actions/timeline.actions';
+} from '../../models';
 import { SourceExplorerState } from '../../reducers/source-explorer.reducer';
 import {
   getFiltersByTarget,

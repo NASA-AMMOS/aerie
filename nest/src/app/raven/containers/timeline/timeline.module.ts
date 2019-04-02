@@ -9,11 +9,6 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { AngularSplitModule } from 'angular-split';
-import { RavenKeyByPipeModule } from '../../../shared/pipes';
-import { SourceExplorerModule } from '../source-explorer/source-explorer.module';
-import { TimelineComponent } from './timeline.component';
-
 import {
   MatButtonModule,
   MatCardModule,
@@ -21,7 +16,7 @@ import {
   MatSidenavModule,
   MatTabsModule,
 } from '@angular/material';
-
+import { AngularSplitModule } from 'angular-split';
 import {
   RavenActivityPointModule,
   RavenBandsModule,
@@ -38,7 +33,10 @@ import {
   RavenTimeBandModule,
   RavenTimeCursorModule,
   RavenTimeScrollBarModule,
-} from '../../../shared/components/modules';
+} from '../../components';
+import { RavenKeyByPipeModule } from '../../pipes';
+import { SourceExplorerModule } from '../source-explorer/source-explorer.module';
+import { TimelineComponent } from './timeline.component';
 
 @NgModule({
   declarations: [TimelineComponent],

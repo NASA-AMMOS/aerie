@@ -27,8 +27,8 @@ import { fromEvent, Subject, Subscription } from 'rxjs';
 import { filter, map, mergeMap, takeUntil, tap } from 'rxjs/operators';
 import {
   ActivityInstance,
-  RavenTimeRange,
   StringTMap,
+  TimeRange,
 } from '../../../shared/models';
 import { ActivityInstanceSvg, ActivityInstanceUpdate } from '../../models';
 
@@ -65,7 +65,7 @@ export class ActivityBandComponent
   marginTop = 10;
 
   @Input()
-  maxTimeRange: RavenTimeRange = { end: 0, start: 0 };
+  maxTimeRange: TimeRange = { end: 0, start: 0 };
 
   @Input()
   points: ActivityInstance[] = [];
@@ -83,7 +83,7 @@ export class ActivityBandComponent
   showYAxis = false;
 
   @Input()
-  viewTimeRange: RavenTimeRange = { end: 0, start: 0 };
+  viewTimeRange: TimeRange = { end: 0, start: 0 };
 
   @Output()
   selectActivity: EventEmitter<string | null> = new EventEmitter<

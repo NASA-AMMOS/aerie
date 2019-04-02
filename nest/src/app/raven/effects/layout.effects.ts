@@ -13,9 +13,6 @@ import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
 import { concatMap, map, switchMap, withLatestFrom } from 'rxjs/operators';
-import { importState } from '../../shared/util';
-import { RavenAppState } from '../raven-store';
-
 import {
   LayoutActionTypes,
   Resize,
@@ -24,10 +21,11 @@ import {
   ToggleRightPanel,
   ToggleSituationalAwarenessDrawer,
 } from '../actions/layout.actions';
-
 import * as layoutActions from '../actions/layout.actions';
 import * as situationalAwarenessActions from '../actions/situational-awareness.actions';
 import * as timelineActions from '../actions/timeline.actions';
+import { RavenAppState } from '../raven-store';
+import { importState } from '../util';
 
 @Injectable()
 export class LayoutEffects {

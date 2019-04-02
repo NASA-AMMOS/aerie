@@ -11,8 +11,8 @@ import { keyBy, omit } from 'lodash';
 import {
   ActivityInstance,
   Plan,
-  RavenTimeRange,
   StringTMap,
+  TimeRange,
 } from '../../shared/models';
 import { getMaxTimeRange } from '../../shared/util';
 import {
@@ -32,11 +32,11 @@ import {
 
 export interface PlanState {
   activities: StringTMap<ActivityInstance> | null;
-  maxTimeRange: RavenTimeRange;
+  maxTimeRange: TimeRange;
   plans: StringTMap<Plan>;
   selectedActivity: ActivityInstance | null;
   selectedPlan: Plan | null;
-  viewTimeRange: RavenTimeRange;
+  viewTimeRange: TimeRange;
 }
 
 export const initialState: PlanState = {

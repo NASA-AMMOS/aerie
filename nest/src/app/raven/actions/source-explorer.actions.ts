@@ -8,9 +8,8 @@
  */
 
 import { Action } from '@ngrx/store';
-
+import { BaseType, StringTMap } from '../../shared/models';
 import {
-  BaseType,
   RavenApplyLayoutUpdate,
   RavenCustomFilterSource,
   RavenExpandableSource,
@@ -20,10 +19,8 @@ import {
   RavenPin,
   RavenSource,
   SourceFilter,
-  StringTMap,
-} from '../../shared/models';
+} from '../models';
 
-// Action Types.
 export enum SourceExplorerActionTypes {
   AddCustomFilter = '[sourceExplorer] add_custom_filter',
   AddCustomGraph = '[sourceExplorer] add_custom_graph',
@@ -73,7 +70,6 @@ export enum SourceExplorerActionTypes {
   UpdateTreeSource = '[sourceExplorer] update_tree_source',
 }
 
-// Actions.
 export class AddCustomFilter implements Action {
   readonly type = SourceExplorerActionTypes.AddCustomFilter;
 
@@ -351,7 +347,6 @@ export class UpdateTreeSource implements Action {
   constructor(public sourceId: string, public update: StringTMap<BaseType>) {}
 }
 
-// Union type of all actions.
 export type SourceExplorerAction =
   | AddCustomFilter
   | AddCustomGraph

@@ -11,8 +11,8 @@ import { Action } from '@ngrx/store';
 import {
   ActivityInstance,
   Plan,
-  RavenTimeRange,
   StringTMap,
+  TimeRange,
 } from '../../shared/models';
 
 export enum PlanActionTypes {
@@ -193,7 +193,7 @@ export class UpdatePlanSuccess implements Action {
 
 export class UpdateViewTimeRange implements Action {
   readonly type = PlanActionTypes.UpdateViewTimeRange;
-  constructor(public viewTimeRange: RavenTimeRange) {}
+  constructor(public viewTimeRange: TimeRange) {}
 }
 
 export type PlanActions =
