@@ -11,6 +11,8 @@
   </canvas>
 </div>
 
+<div id="activity-tooltip-container"></div>
+
 <!-- SVG. -->
 <svg class="svg-container">
   <g
@@ -24,7 +26,7 @@
           'cursor-move':
             selectedActivity && selectedActivity.activityId === point.activityId
         }"
-        (click)="onActivitySelected(point.activityId)"
+        (click)="onActivitySelected($event, point.activityId)"
       >
         <rect
           [attr.fill]="

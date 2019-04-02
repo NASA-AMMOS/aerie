@@ -25,6 +25,24 @@
   stroke-opacity: 0.6;
 }
 
+#activity-tooltip-container {
+  position: absolute;
+  padding: 12px;
+  padding-bottom: 0px;
+  border-radius: 3px;
+  border-top: 5px #a64600 solid;
+  background: #ffffff94;
+  z-index: 5;
+  margin-top: 12px;
+  margin-left: 12px;
+  display: none;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+}
+
+::ng-deep .activity-tooltip-name {
+  font-size: 24px;
+}
+
 .cursor-move {
   cursor: move;
 }
