@@ -376,8 +376,51 @@ export class ActivityBandComponent
   /**
    * Click callback. Called when an activity <g> element is clicked.
    */
-  onActivitySelected(id: string): void {
+  onActivitySelected(event: MouseEvent, id: string): void {
+    this.setUpTooltip(id, event);
     this.selectActivity.emit(id);
+  }
+
+  /**
+   * Populates and positions the tooltip for the selected activity
+   */
+  setUpTooltip(id: string, event: MouseEvent): void {
+    const tooltip = d3.select('#activity-tooltip-container');
+    const point = this.svgPointsMap[id];
+
+    const tooltipTemplate = `
+      <div id="activity-tooltip">
+        <p class="activity-tooltip-name">
+          ${point.name}
+        </p>
+        <p>
+          ${point.activityType}
+        </p>
+        <p>
+          ${point.activityId}
+        </p>
+        <p>
+          ${point.duration}
+        </p>
+        <p>
+          ${point.intent}
+        </p>
+      </div>
+    `;
+
+    const xOffset = -100;
+    const yOffset = -325;
+
+    tooltip
+      .html(tooltipTemplate)
+      .style('opacity', 0)
+      .transition()
+      .duration(50)
+      .style('left', `${event.clientX + xOffset}px`)
+      .style('top', `${event.clientY + yOffset}px`)
+      .transition()
+      .duration(150)
+      .style('opacity', 1);
   }
 
   /**
