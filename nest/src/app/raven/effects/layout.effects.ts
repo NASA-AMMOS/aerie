@@ -113,9 +113,13 @@ export class LayoutEffects {
     map(([, state]) => state.raven),
     map(raven => {
       if (raven.layout.showRightPanel && raven.layout.showLeftPanel) {
-        return new layoutActions.UpdateLayout({ timelinePanelSize: raven.layout.showLeftPanel ? 60 : 75 });
+        return new layoutActions.UpdateLayout({
+          timelinePanelSize: raven.layout.showLeftPanel ? 60 : 75,
+        });
       } else {
-        return new layoutActions.UpdateLayout({ timelinePanelSize: raven.layout.showLeftPanel ? 75 : 100  });
+        return new layoutActions.UpdateLayout({
+          timelinePanelSize: raven.layout.showLeftPanel ? 75 : 100,
+        });
       }
     }),
   );

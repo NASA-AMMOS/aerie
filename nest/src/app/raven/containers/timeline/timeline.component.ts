@@ -377,7 +377,8 @@ export class TimelineComponent implements OnDestroy {
     this.showDetailsPanel$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(
-        showDetailsPanel => (this.detailsPanelHeight = showDetailsPanel ? 20 : 0),
+        showDetailsPanel =>
+          (this.detailsPanelHeight = showDetailsPanel ? 20 : 0),
       );
     this.showSouthBandsPanel$
       .pipe(takeUntil(this.ngUnsubscribe))
@@ -396,7 +397,12 @@ export class TimelineComponent implements OnDestroy {
    * Helper. Caiculate the main chart height.
    */
   getMainChartHeight() {
-    return 100 - this.topContainerHeight - this.southPanelHeight - this.detailsPanelHeight;
+    return (
+      100 -
+      this.topContainerHeight -
+      this.southPanelHeight -
+      this.detailsPanelHeight
+    );
   }
 
   /**
