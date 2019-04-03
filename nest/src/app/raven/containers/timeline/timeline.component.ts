@@ -147,9 +147,12 @@ export class TimelineComponent implements OnDestroy {
   // Local (non-Observable) state. Derived from store state.
   bands: RavenCompositeBand[];
   baseUrl: string;
+  detailsPanelHeight = 20;
   hoveredBandId: string;
   selectedBandId: string;
   selectedSubBandId: string;
+  southPanelHeight = 20;
+  topContainerHeight = 10;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -370,6 +373,18 @@ export class TimelineComponent implements OnDestroy {
       .subscribe(
         selectedSubBandId => (this.selectedSubBandId = selectedSubBandId),
       );
+
+    this.showDetailsPanel$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(
+        showDetailsPanel => (this.detailsPanelHeight = showDetailsPanel ? 20 : 0),
+      );
+    this.showSouthBandsPanel$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(
+        showSouthBandsPanel =>
+          (this.southPanelHeight = showSouthBandsPanel ? 20 : 0),
+      );
   }
 
   ngOnDestroy() {
@@ -377,6 +392,16 @@ export class TimelineComponent implements OnDestroy {
     this.ngUnsubscribe.complete();
   }
 
+  /**
+   * Helper. Caiculate the main chart height.
+   */
+  getMainChartHeight() {
+    return 100 - this.topContainerHeight - this.southPanelHeight - this.detailsPanelHeight;
+  }
+
+  /**
+   * Event. Called when filter activities is clicked.
+   */
   onFilterActivityInSubBand(e: any) {
     if (e.bandId && e.subBandId) {
       this.store.dispatch(
@@ -389,6 +414,9 @@ export class TimelineComponent implements OnDestroy {
     }
   }
 
+  /**
+   * Event. Called when a point in the Guide band is clicked.
+   */
   onToggleGuide(e: RavenGuidePoint): void {
     this.store.dispatch(new timelineActions.ToggleGuide(e));
   }
