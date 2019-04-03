@@ -253,7 +253,7 @@ public class AdaptationController {
 
     // Find classes in the jpl package which implement the MerlinSDK Adaptation interface
     // And return the first one that is found
-    String adaptationInterface = "MerlinSDKAdaptation";
+    String adaptationInterface = "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinSDKAdaptation";
 
     for (Class loadedClass : pkgClasses) {
       try {
