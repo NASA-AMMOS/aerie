@@ -44,6 +44,10 @@
   font-size: 24px;
 }
 
+.activity-instance-text {
+  pointer-events: none;
+}
+
 .cursor-move {
   cursor: move;
 }
