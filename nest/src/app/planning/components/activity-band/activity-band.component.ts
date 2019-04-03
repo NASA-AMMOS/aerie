@@ -155,6 +155,7 @@ export class ActivityBandComponent
     this.setDragSelectedActivityEvents();
     this.setDragHandles('left');
     this.setDragHandles('right');
+    this.setUpTooltips();
   }
 
   /**
@@ -380,17 +381,18 @@ export class ActivityBandComponent
     if (!this.selectedActivity || this.selectedActivity.activityId !== id) {
       this.selectActivity.emit(id);
     }
-    this.setUpTooltip(id, event);
   }
 
   /**
-   * Populates and positions the tooltip for the selected activity
+   * Sets up on hover tooltip for activity instances
    */
-  setUpTooltip(id: string, event: MouseEvent): void {
-    const tooltip = d3.select('#activity-tooltip-container');
-    const point = this.svgPointsMap[id];
+  setUpTooltips(): void {
+    for (let i = 0; i < this.svgPoints.length; i++) {
+      const point = this.svgPoints[i];
+      const id = point.activityId;
 
-    const tooltipTemplate = `
+      // TODO: Change tooltip color to the same color as the activity instance in point.color
+      const tooltipTemplate = `
       <div id="activity-tooltip">
         <p class="activity-tooltip-name">
           ${point.name}
@@ -409,20 +411,51 @@ export class ActivityBandComponent
         </p>
       </div>
     `;
+      const rectTarget = d3.select(`#rect-${id}`);
 
-    const xOffset = -100;
-    const yOffset = -325;
+      const tooltip = d3
+        .select('#activity-tooltip-container')
+        .html(tooltipTemplate);
 
-    tooltip
-      .html(tooltipTemplate)
-      .style('opacity', 0)
-      .transition()
-      .duration(50)
-      .style('left', `${event.clientX + xOffset}px`)
-      .style('top', `${event.clientY + yOffset}px`)
-      .transition()
-      .duration(150)
-      .style('opacity', 1);
+      // Used to position tooltip so it isn't out of bounds
+      const xTolerance = 300;
+      const containerWidth = this.drawWidth;
+
+      const xOffset = -85;
+      const yOffset = -350;
+
+      rectTarget
+        .on('mouseover', () => {
+          tooltip
+            .transition()
+            .ease(d3.easeLinear)
+            .duration(100)
+            .style('opacity', 1);
+        })
+        .on('mousemove', () => {
+          let xPosition = d3.event.clientX + xOffset;
+          let yPosition = d3.event.clientY + yOffset;
+
+          if (containerWidth - xPosition < xTolerance) {
+            xPosition = d3.event.clientX - xTolerance + xOffset;
+          }
+
+          if (yPosition < 0) {
+            yPosition += 200;
+          }
+
+          tooltip
+            .style('top', `${yPosition}px`)
+            .style('left', `${xPosition}px`);
+        })
+        .on('mouseout', () => {
+          tooltip
+            .transition()
+            .ease(d3.easeLinear)
+            .duration(100)
+            .style('opacity', 0);
+        });
+    }
   }
 
   /**
