@@ -1,5 +1,6 @@
 <as-split
   direction="horizontal"
+  gutterSize="7"
   (dragEnd)="resize()">
   <as-split-area
     [visible]="showLeftPanel$ | async"
@@ -13,11 +14,13 @@
     [size]="timelinePanelSize$ | async">
     <as-split
       direction="vertical"
+      gutterSize="7"
       (dragEnd)="resize()">
+
       <as-split-area
         class="scroll"
         [order]="2"
-        size="80">
+        [size]="topContainerHeight">
         <ng-container *ngIf="itarMessage$ | async as itarMessage">
           <div
             *ngIf="itarMessage !== ''"
@@ -37,8 +40,7 @@
         </div>
 
         <div
-          *ngIf="bands.length > 0"
-          class="timeline-0">
+          *ngIf="bands.length > 0">
           <div class="time-bands-container">
             <raven-manage-graph
               [currentStateChanged]="currentStateChanged$ | async"
@@ -95,6 +97,14 @@
               </raven-time-band>
             </div>
           </div>
+        </div>
+      </as-split-area>
+
+      <as-split-area
+        class="scroll"
+        [order]="3"
+        [size]="getMainChartHeight()">
+          <div class="timeline-0">
           <raven-bands
             class="raven-bands-0"
             [cursorColor]="cursorColor$ | async"
@@ -134,8 +144,8 @@
       <as-split-area
         class="scroll"
         [visible]="showSouthBandsPanel$ | async"
-        [order]="3"
-        size="20">
+        [order]="4"
+        [size]="southPanelHeight">
         <div class="timeline-1">
           <raven-bands
             class="raven-bands-1"
@@ -175,8 +185,8 @@
 
       <as-split-area
         [visible]="showDetailsPanel$ | async"
-        [order]="4"
-        size="20">
+        [order]="5"
+        [size]="detailsPanelHeight">
         <raven-table
           class="raven-table"
           [points]="selectedSubBandPoints$ | async"
@@ -192,7 +202,7 @@
 
   <as-split-area
     [visible]="showRightPanel$ | async"
-    [order]="5"
+    [order]="6"
     size="15">
     <!-- Selected Point. -->
         <div class="selected-point">

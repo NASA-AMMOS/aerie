@@ -67,16 +67,6 @@ mat-sidenav-container {
   height: 100%;
 }
 
-.details,
-.raven-table,
-.selected-band,
-.selected-point,
-.sidenav-content,
-.timeline-0,
-.timeline-1 {
-  padding: 0.5em;
-}
-
 .row {
   flex: 1 0 auto;
   padding-left: 15px;
