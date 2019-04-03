@@ -65,14 +65,19 @@ export class PlanEffects {
     switchMap(({ action, state }) => {
       const end = action.data.start + action.data.duration;
       const activity: ActivityInstance = {
+        activityId: action.data.activityId,
+        activityType: action.data.activityType,
         color: '#ffffff',
         constraints: [],
+        duration: action.data.duration,
         end,
         endTimestamp: timestamp(end),
+        intent: action.data.intent,
+        name: action.data.name,
         parameters: [],
+        start: action.data.start,
         startTimestamp: timestamp(action.data.start),
-        y: null,
-        ...action.data,
+        y: 0.0,
       };
 
       return this.planService

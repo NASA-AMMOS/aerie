@@ -23,8 +23,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import * as d3 from 'd3';
-import { fromEvent, Subject, Subscription } from 'rxjs';
-import { filter, map, mergeMap, takeUntil, tap } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 import {
   ActivityInstance,
   StringTMap,
@@ -110,9 +109,10 @@ export class ActivityBandComponent
   public svgPoints: ActivityInstanceSvg[] = [];
   public svgPointsMap: StringTMap<ActivityInstanceSvg> = {};
 
-  private dragSubscription: Subscription;
   private el: HTMLElement;
   private ngUnsubscribe: Subject<{}> = new Subject();
+  private xScale: d3.ScaleTime<number, number> = d3.scaleTime();
+  private yScale: d3.ScaleLinear<number, number> = d3.scaleLinear();
 
   constructor(el: ElementRef) {
     this.el = el.nativeElement;
@@ -129,8 +129,9 @@ export class ActivityBandComponent
       shouldRedraw = true;
     }
 
-    if (changes.viewTimeRange && !changes.viewTimeRange.firstChange) {
+    if (changes.viewTimeRange) {
       shouldRedraw = true;
+      this.setXScale();
     }
 
     // Only resize OR redraw once to maintain performance.
@@ -152,6 +153,8 @@ export class ActivityBandComponent
 
   ngAfterViewChecked(): void {
     this.setDragSelectedActivityEvents();
+    this.setDragHandles('left');
+    this.setDragHandles('right');
   }
 
   /**
@@ -208,7 +211,6 @@ export class ActivityBandComponent
     this.svgPoints = [];
     this.svgPointsMap = {};
 
-    const xScale = this.getXScale();
     const rowHeight = Math.max(
       5,
       Math.floor(this.drawHeight / this.points.length),
@@ -219,8 +221,8 @@ export class ActivityBandComponent
     for (let i = 0, l = this.points.length; i < l; ++i) {
       const point = this.points[i];
 
-      const start = xScale(point.start * 1000);
-      const end = xScale((point.start + point.duration) * 1000);
+      const start = this.xScale(point.start * 1000);
+      const end = this.xScale((point.start + point.duration) * 1000);
       const range = end - start;
 
       const fill = point.color;
@@ -274,9 +276,8 @@ export class ActivityBandComponent
    */
   drawXAxis(): void {
     if (this.showXAxis) {
-      const x = this.getXScale();
       const xAxis = d3
-        .axisBottom(x)
+        .axisBottom(this.xScale)
         .ticks(5)
         .tickFormat(d3.timeFormat('%B %d, %Y'))
         .tickSizeInner(-this.drawHeight);
@@ -290,8 +291,7 @@ export class ActivityBandComponent
    */
   drawYAxis(): void {
     if (this.showYAxis) {
-      const y = this.getYScale();
-      const yAxis = d3.axisLeft(y);
+      const yAxis = d3.axisLeft(this.yScale);
       const axis = d3.select(this.axisYTarget.nativeElement);
       const container = d3.select(this.axisContainerGroupTarget.nativeElement);
 
@@ -349,12 +349,12 @@ export class ActivityBandComponent
   }
 
   /**
-   * Returns x-scale.
+   * Set the x-scale.
    * Note the view time ranges start and end are in seconds so we need to convert
    * them to milliseconds since thats that the date constructor expects.
    */
-  getXScale(): d3.ScaleTime<number, number> {
-    return d3
+  setXScale(): void {
+    this.xScale = d3
       .scaleTime()
       .domain([
         new Date(this.viewTimeRange.start * 1000),
@@ -364,10 +364,10 @@ export class ActivityBandComponent
   }
 
   /**
-   * Returns y-scale.
+   * Set the y-scale.
    */
-  getYScale(): d3.ScaleLinear<number, number> {
-    return d3
+  setYScale(): void {
+    this.yScale = d3
       .scaleLinear()
       .domain([0, this.drawHeight])
       .range([this.drawHeight, 0]);
@@ -377,8 +377,10 @@ export class ActivityBandComponent
    * Click callback. Called when an activity <g> element is clicked.
    */
   onActivitySelected(event: MouseEvent, id: string): void {
+    if (!this.selectedActivity || this.selectedActivity.activityId !== id) {
+      this.selectActivity.emit(id);
+    }
     this.setUpTooltip(id, event);
-    this.selectActivity.emit(id);
   }
 
   /**
@@ -435,107 +437,112 @@ export class ActivityBandComponent
    */
   redraw(): void {
     this.setDrawBounds();
+    this.setYScale();
     this.drawXAxis();
     this.drawYAxis();
     this.drawSvgActivities();
   }
 
   /**
-   * Helper that sets drag events for the selected activity.
+   * Sets drag events for start and end handles for the selected activity instance
+   */
+  setDragHandles(selector: string): void {
+    if (this.selectedActivity) {
+      const id = this.selectedActivity.activityId;
+      const rectTarget = this.el.querySelector(`#rect-${id}`) as SVGRectElement;
+      const handle = this.el.querySelector(
+        `#circle-drag-handle-${selector}-${id}`,
+      ) as SVGElement;
+      const point = this.svgPointsMap[id];
+
+      const dragHandler = d3
+        .drag()
+        .on('drag', () => {
+          const currentPosition = this.getMousePosition(
+            rectTarget,
+            d3.event.sourceEvent,
+          );
+
+          const newX = currentPosition.x;
+          const newXTime = this.xScale.invert(newX).getTime() / 1000;
+          let newDuration;
+
+          if (selector === 'left') {
+            newDuration = point.duration - (newXTime - point.start);
+            this.svgPointsMap[id].start = newXTime;
+            this.svgPointsMap[id].x = newX;
+          } else if (selector === 'right') {
+            newDuration = newXTime - point.start;
+          } else {
+            // TODO: Error handling or extend for up and down direction
+            newDuration = point.duration;
+          }
+
+          this.svgPointsMap[id].duration = newDuration;
+
+          this.updateRect(id, point.x, null);
+        })
+        .on('end', () => {
+          this.setNewStartAndEnd(id, point.x, null, point.duration);
+        });
+
+      dragHandler(d3.select(handle));
+    }
+  }
+
+  /**
+   * Sets drag events for the selected activity rect.
    */
   setDragSelectedActivityEvents(): void {
     if (this.selectedActivity) {
-      if (this.dragSubscription) {
-        this.dragSubscription.unsubscribe();
-      }
-
       const id = this.selectedActivity.activityId;
       const gTarget = this.el.querySelector(`#g-${id}`) as SVGGElement;
       const rectTarget = this.el.querySelector(`#rect-${id}`) as SVGRectElement;
-
       const rectTargetHeight = parseFloat(rectTarget.getAttribute(
         'height',
       ) as string);
+      const point = this.svgPointsMap[id];
 
-      const mousedown = fromEvent(gTarget, 'mousedown');
-      const mousemove = fromEvent(document, 'mousemove');
-      const mouseup = fromEvent(document, 'mouseup');
-
-      this.dragSubscription = mousedown
-        .pipe(
-          mergeMap((md: MouseEvent) => {
-            md.preventDefault();
-
-            const rectX = parseFloat(rectTarget.getAttribute('x') as string);
-            const rectY = parseFloat(rectTarget.getAttribute('y') as string);
-
-            const offset = this.getMousePosition(rectTarget, md);
-            offset.x -= rectX;
-            offset.y -= rectY;
-
-            return mousemove.pipe(
-              map((mm: MouseEvent) => {
-                mm.preventDefault();
-                const pos = this.getMousePosition(rectTarget, mm);
-                return {
-                  x: pos.x - offset.x,
-                  y: pos.y - offset.y,
-                };
-              }),
-              takeUntil(
-                mouseup.pipe(
-                  tap((mu: MouseEvent) => {
-                    mu.preventDefault();
-                    const pos = this.getMousePosition(rectTarget, mu);
-                    const x = pos.x - offset.x;
-                    let y = pos.y - offset.y;
-
-                    // Clamp y.
-                    if (y < 0) {
-                      y = 0;
-                    } else if (y > this.drawHeight - rectTargetHeight) {
-                      y = this.drawHeight - rectTargetHeight;
-                    }
-
-                    this.setNewStartAndEnd(id, x, y);
-                  }),
-                ),
-              ),
-            );
-          }),
-          filter(({ y }) => y >= 0 && y <= this.drawHeight - rectTargetHeight),
-          takeUntil(this.ngUnsubscribe),
-        )
-        .subscribe(({ x, y }) => {
-          const point = this.svgPointsMap[id];
-
-          const labelWidth = this.getLabelWidth(
-            point.name,
-            `${point.labelFontSize}px ${point.labelFontFamily}`,
+      let offsetX = 0;
+      let offsetY = 0;
+      const dragHandler = d3
+        .drag()
+        .on('start', () => {
+          const clickPosition = this.getMousePosition(
+            rectTarget,
+            d3.event.sourceEvent,
           );
-          const labelX = this.getLabelXPosition(x, point.width, labelWidth);
-          const labelY = this.getLabelYPosition(
-            y,
-            point.height,
-            point.labelFontSize,
+          offsetX = clickPosition.x - point.x;
+          offsetY = clickPosition.y - point.y;
+        })
+        .on('drag', () => {
+          const currentPosition = this.getMousePosition(
+            rectTarget,
+            d3.event.sourceEvent,
           );
+          const x = currentPosition.x - offsetX;
+          const y = currentPosition.y - offsetY;
 
-          d3.select(`#rect-${id}`)
-            .attr('x', x)
-            .attr('y', y);
+          if (y >= 0 && y <= this.drawHeight - rectTargetHeight) {
+            this.updateRect(id, x, y);
+          }
+        })
+        .on('end', () => {
+          const pos = this.getMousePosition(rectTarget, d3.event.sourceEvent);
+          const x = pos.x - offsetX;
+          let y = pos.y - offsetY;
 
-          d3.select(`#text-${id}`)
-            .attr('x', labelX)
-            .attr('y', labelY);
+          // Clamp y.
+          if (y < 0) {
+            y = 0;
+          } else if (y > this.drawHeight - rectTargetHeight) {
+            y = this.drawHeight - rectTargetHeight;
+          }
 
-          d3.select(`#circle-drag-handle-left-${id}`)
-            .attr('cx', x)
-            .attr('cy', this.getYDragHandle(y, point.height));
-
-          d3.select(`#circle-drag-handle-right-${id}`)
-            .attr('cx', this.getXDragHandleRight(x, point.width))
-            .attr('cy', this.getYDragHandle(y, point.height));
+          this.setNewStartAndEnd(id, x, y, null);
         });
+
+      dragHandler(d3.select(gTarget));
     }
   }
 
@@ -551,18 +558,60 @@ export class ActivityBandComponent
   /**
    * Emits new start and end time for an activity after a drag event.
    */
-  setNewStartAndEnd(id: string, x: number, y: number) {
+  setNewStartAndEnd(
+    id: string,
+    x: number,
+    newY: number | null,
+    newDuration: number | null,
+  ): void {
     const point = this.svgPointsMap[id];
-    const xScale = this.getXScale();
-    const newStart = xScale.invert(x).getTime() / 1000;
-    const duration = point.duration;
+    const newStart = this.xScale.invert(x).getTime() / 1000;
+    const duration = newDuration || point.duration;
     const newEnd = newStart + duration;
+    const y = newY || point.y;
 
     this.updateSelectedActivity.emit({
       activityId: id,
+      duration,
       end: newEnd,
       start: newStart,
       y,
     });
+  }
+
+  /**
+   * Updates the activity band svg drawing based on drag interactions
+   */
+  updateRect(id: string, x: number, newY: number | null) {
+    const point = this.svgPointsMap[id];
+
+    const start = this.xScale(point.start * 1000);
+    const end = this.xScale((point.start + point.duration) * 1000);
+    const width = end - start;
+    const y = newY || point.y;
+
+    const labelWidth = this.getLabelWidth(
+      point.name,
+      `${point.labelFontSize}px ${point.labelFontFamily}`,
+    );
+    const labelX = this.getLabelXPosition(x, width, labelWidth);
+    const labelY = this.getLabelYPosition(y, point.height, point.labelFontSize);
+
+    d3.select(`#rect-${id}`)
+      .attr('x', x)
+      .attr('width', width)
+      .attr('y', y);
+
+    d3.select(`#text-${id}`)
+      .attr('x', labelX)
+      .attr('y', labelY);
+
+    d3.select(`#circle-drag-handle-left-${id}`)
+      .attr('cx', x)
+      .attr('cy', this.getYDragHandle(y, point.height));
+
+    d3.select(`#circle-drag-handle-right-${id}`)
+      .attr('cx', this.getXDragHandleRight(x, width))
+      .attr('cy', this.getYDragHandle(y, point.height));
   }
 }

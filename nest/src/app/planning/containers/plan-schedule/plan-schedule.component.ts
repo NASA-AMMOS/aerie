@@ -74,6 +74,7 @@ export class PlanScheduleComponent implements OnDestroy {
       const { planId } = this.route.snapshot.paramMap['params'];
       this.store.dispatch(
         new UpdateActivity(planId, this.selectedActivity.activityId, {
+          duration: update.duration,
           end: update.end,
           endTimestamp: timestamp(update.end),
           start: update.start,
