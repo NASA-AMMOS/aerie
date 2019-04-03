@@ -539,7 +539,11 @@ export class RavenCompositeBandComponent
       const bandIntervals = ctlData.intervals.filter(
         (interval: any) => interval.bandId === this.selectedSubBandId,
       );
-      if (bandIntervals && bandIntervals.length > 0 && bandIntervals[0].intervals.length > 0) {
+      if (
+        bandIntervals &&
+        bandIntervals.length > 0 &&
+        bandIntervals[0].intervals.length > 0
+      ) {
         this.bandLeftClick.emit({
           bandId: ctlData.band.id,
           pointId: bandIntervals[0].intervals[0].uniqueId,
