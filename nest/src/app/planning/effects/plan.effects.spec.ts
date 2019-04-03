@@ -138,7 +138,12 @@ describe('PlanEffects', () => {
     it('should return a CreateActivitySuccess action with data upon success', () => {
       const planId = plan.id || '';
       const action = new CreateActivity(planId, activity);
-      const success = new CreateActivitySuccess(planId, activity);
+      const success = new CreateActivitySuccess(planId, {
+        ...activity,
+        constraints: [],
+        parameters: [],
+        y: 0,
+      });
       const showToast = new ShowToast(
         'success',
         'New activity has been successfully created and saved.',
