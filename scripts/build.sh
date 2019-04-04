@@ -122,7 +122,7 @@ mvn -B -f pom.xml -s settings.xml install
 
 # Build nest
 
-if echo "$changed" | grep --quiet "nest"; then
+if echo "$changed" | grep --quiet "\(nest\|schemas\)"; then
   printf "\nBuilding nest...\n\n"
   cd nest
 
