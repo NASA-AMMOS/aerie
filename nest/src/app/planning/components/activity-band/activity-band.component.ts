@@ -29,6 +29,7 @@ import {
   StringTMap,
   TimeRange,
 } from '../../../shared/models';
+import { timestamp } from '../../../shared/util/time';
 import { ActivityInstanceSvg, ActivityInstanceUpdate } from '../../models';
 
 @Component({
@@ -535,9 +536,11 @@ export class ActivityBandComponent
         'height',
       ) as string);
       const point = this.svgPointsMap[id];
+      const startTooltip = d3.select('#activity-tooltip-start');
 
       let offsetX = 0;
       let offsetY = 0;
+
       const dragHandler = d3
         .drag()
         .on('start', () => {
@@ -547,6 +550,12 @@ export class ActivityBandComponent
           );
           offsetX = clickPosition.x - point.x;
           offsetY = clickPosition.y - point.y;
+
+          startTooltip
+            .transition()
+            .ease(d3.easeLinear)
+            .duration(100)
+            .style('opacity', 1);
         })
         .on('drag', () => {
           const currentPosition = this.getMousePosition(
@@ -557,6 +566,23 @@ export class ActivityBandComponent
           const y = currentPosition.y - offsetY;
 
           if (y >= 0 && y <= this.drawHeight - rectTargetHeight) {
+            const tooltipX = x < 0 ? 0 : x;
+            const tooltipY = y <= 5 ? 125 : y;
+            let xDeltaSvg = currentPosition.x - offsetX;
+            const flipSign = xDeltaSvg < 0;
+            xDeltaSvg = flipSign ? -xDeltaSvg : xDeltaSvg;
+            let newStartMs = this.xScale.invert(xDeltaSvg).getTime() / 1000;
+            newStartMs = flipSign ? -newStartMs : newStartMs;
+
+            startTooltip
+              .style('top', `${tooltipY - 100}px`)
+              .style('left', `${tooltipX}px`)
+              .html(
+                `<p><strong>New Start Time:</strong></p><p>${timestamp(
+                  newStartMs,
+                )}</p>`,
+              );
+
             this.updateRect(id, x, y);
           }
         })
@@ -571,6 +597,12 @@ export class ActivityBandComponent
           } else if (y > this.drawHeight - rectTargetHeight) {
             y = this.drawHeight - rectTargetHeight;
           }
+
+          startTooltip
+            .transition()
+            .ease(d3.easeLinear)
+            .duration(100)
+            .style('opacity', 0);
 
           this.setNewStartAndEnd(id, x, y, null);
         });
