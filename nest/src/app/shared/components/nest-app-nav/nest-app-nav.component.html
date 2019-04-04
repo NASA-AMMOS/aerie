@@ -5,6 +5,10 @@
     *ngFor="let module of modules"
     routerLinkActive="nav-item-active"
     routerLink="{{ module.path }}"
+    matTooltip="{{ module.title }}"
+    matTooltipPosition="right"
+    matTooltipShowDelay="100"
+    routerLinkActive="nav-item-active"
   >
     <mat-icon mat-list-icon>{{ module.icon }}</mat-icon>
     <span matLine>{{ module.title }}</span>
@@ -13,6 +17,9 @@
     mat-list-item
     class="nav-item nest-app-nav-about-button"
     (click)="aboutClicked.emit($event)"
+    matTooltip="About"
+    matTooltipPosition="right"
+    matTooltipShowDelay="100"
   >
     <mat-icon mat-list-icon>info</mat-icon>
     <span matLine>About</span>

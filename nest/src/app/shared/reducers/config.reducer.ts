@@ -103,11 +103,9 @@ export function updateRavenSettings(
 export function toggleDrawer(state: ConfigState) {
   switch (state.navigationDrawerState) {
     case NavigationDrawerStates.Closed:
-      return NavigationDrawerStates.Opened;
-    case NavigationDrawerStates.Collapsed:
-      return NavigationDrawerStates.Closed;
-    case NavigationDrawerStates.Opened:
-    default:
       return NavigationDrawerStates.Collapsed;
+    case NavigationDrawerStates.Collapsed:
+    default:
+      return NavigationDrawerStates.Closed;
   }
 }

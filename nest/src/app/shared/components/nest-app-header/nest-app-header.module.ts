@@ -9,16 +9,23 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatToolbarModule } from '@angular/material/toolbar';
-
+import {
+  MatButtonModule,
+  MatIconModule,
+  MatToolbarModule,
+  MatTooltipModule,
+} from '@angular/material';
 import { NestAppHeaderComponent } from './nest-app-header.component';
 
 @NgModule({
   declarations: [NestAppHeaderComponent],
   exports: [NestAppHeaderComponent],
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatToolbarModule],
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatIconModule,
+    MatToolbarModule,
+    MatTooltipModule,
+  ],
 })
 export class NestAppHeaderModule {}
