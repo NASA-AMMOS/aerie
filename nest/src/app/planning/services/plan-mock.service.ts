@@ -41,6 +41,7 @@ export function getMockActivities(): ActivityInstance[] {
         {
           name: 'Image Resolution',
           type: '',
+          value: '',
         },
       ],
       start: 1656459134.184,
@@ -70,6 +71,7 @@ export function getMockActivities(): ActivityInstance[] {
         {
           name: 'Image Resolution',
           type: '',
+          value: '',
         },
       ],
       start: 1656462099.447,
