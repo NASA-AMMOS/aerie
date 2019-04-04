@@ -118,10 +118,13 @@ public class PlansController {
         ArrayList<String> listeners = new ArrayList<>(at.getListeners());
         activityInstance.setListeners(listeners);
 
+        // TODO This is not doing what needs to be done. We need to get the value from the request body
         ArrayList<ActivityInstanceParameter> parameters = new ArrayList<>();
         for (ActivityTypeParameter parameter : at.getParameters()) {
+          String name = parameter.getName();
+          String value = "FIX ME";
           parameters.add(new ActivityInstanceParameter(parameter.getType(),
-              parameter.getName()));
+              name, value));
         }
         activityInstance.setParameters(parameters);
       }

@@ -9,9 +9,12 @@
     },
     "type": {
       "type": "string"
+    },
+    "value": {
+      "type": "string"
     }
   },
-  "required": ["name", "type"],
+  "required": ["name", "type", "value"],
   "title": "ActivityInstanceParameter",
   "type": "object"
 }

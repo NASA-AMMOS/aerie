@@ -23,6 +23,12 @@ public class ActivityInstanceParameter {
      * 
      */
     private String type;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    private String value;
 
     /**
      * No args constructor for use in serialization
@@ -35,11 +41,13 @@ public class ActivityInstanceParameter {
      * 
      * @param name
      * @param type
+     * @param value
      */
-    public ActivityInstanceParameter(String name, String type) {
+    public ActivityInstanceParameter(String name, String type, String value) {
         super();
         this.name = name;
         this.type = type;
+        this.value = value;
     }
 
     /**
@@ -76,6 +84,24 @@ public class ActivityInstanceParameter {
      */
     public void setType(String type) {
         this.type = type;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    public String getValue() {
+        return value;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    public void setValue(String value) {
+        this.value = value;
     }
 
 }

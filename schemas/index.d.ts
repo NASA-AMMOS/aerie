@@ -21,8 +21,9 @@ export interface ActivityInstanceConstraint {
 }
 
 export interface ActivityInstanceParameter {
-    name: string;
-    type: string;
+    name:  string;
+    type:  string;
+    value: string;
 }
 
 export interface ActivityType {

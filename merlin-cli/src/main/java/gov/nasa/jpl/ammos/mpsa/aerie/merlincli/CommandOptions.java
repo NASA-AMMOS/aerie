@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.UpdatePlanCommand;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstanceParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
@@ -8,20 +9,19 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.ActivityInstanceArray;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.time.StopWatch;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CommandOptions {
 
-    Options options = new Options();
+    private Options options = new Options();
     private String[] args = null;
     private String planId;
-    Command command;
-
+    private Command command;
 
     public CommandOptions(String[] args) {
         this.args = args;
@@ -30,7 +30,7 @@ public class CommandOptions {
                 .longOpt("add-activity")
                 .argName("parameters")
                 .hasArgs()
-                .desc("Add activity to the plan passing the name and the parameters to be used")
+                .desc("Add activity to the plan passing the name and the parameters to be used. Mutually exclusive with -u")
                 .build();
 
         Option setPlan   = Option.builder("p")
@@ -39,6 +39,13 @@ public class CommandOptions {
                 .hasArg()
                 .required()
                 .desc("Specify the plan Id to use")
+                .build();
+
+        Option replacePlan = Option.builder("u")
+                .longOpt("update")
+                .argName("file")
+                .hasArgs()
+                .desc("Set the plan contents based on an adaptationId, start time, end time and plan file. Mutually exclusive with -a")
                 .build();
 
         options.addOption(addActivity);
@@ -50,6 +57,7 @@ public class CommandOptions {
         options.addOption("k", "load-kernels", true, "List of paths for Kernels to use");
         options.addOption("m", "move-activity", true, "Where to move the activity");
         options.addOption(setPlan);
+        options.addOption(replacePlan);
         options.addOption("P", "create-plan", true, "Add a new plan passing the name, adaptation to use and the version");
         options.addOption("q", "sequence", true, "Extracts and stores the start/end times for writing sequences.");
         options.addOption("r", "remodel", true, "Run simulation for the plan");
@@ -60,9 +68,7 @@ public class CommandOptions {
 
     }
 
-
     public void parse() {
-
 
         CommandLineParser parser = new BasicParser();
         CommandLine cmd = null;
@@ -70,17 +76,37 @@ public class CommandOptions {
         try {
             cmd = parser.parse(options, args);
 
+            if (cmd.hasOption("h")) {
+                printUsage();
+                return;
+            }
+
             // WE MUST RECEIVE A PLAN ID, OTHERWISE WE DON'T KNOW WHAT TO DO WITH ACTIVITIES
             if (cmd.hasOption("p")) {
                 System.out.println("Specifying plan -p=" + cmd.getOptionValue("p"));
                 this.planId = cmd.getOptionValue("p");
             }
 
+            if (cmd.hasOption("a") && cmd.hasOption("u")) {
+                System.err.println("Options -a and -u both specified but only one allowed.");
+                printUsage();
+                return;
+            }
+
             if (cmd.hasOption("a")) {
                 addActivity(cmd.getOptionValues("a"));
-
-            } else if (cmd.hasOption("h")) {
-                printUsage();
+            } else if (cmd.hasOption("u")) {
+                String[] opts = cmd.getOptionValues("u");
+                if (opts.length < 4) {
+                    System.err.println("-u requires an adaptationId, start time, end time and plan file");
+                    printUsage();
+                } else {
+                    String adaptationId = opts[0];
+                    String start = opts[1];
+                    String end = opts[2];
+                    String path = opts[3];
+                    updatePlan(adaptationId, start, end, path);
+                }
             } else {
                 System.err.println("Missing option [arguments]");
                 printUsage();
@@ -89,10 +115,13 @@ public class CommandOptions {
             System.err.println("Failed to parse command line properties" + e);
             printUsage();
         }
-
     }
 
+    private void printUsage() {
 
+        HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp("Merlin Adaptation", options);
+    }
 
     private void addActivity(String[] args) {
 
@@ -126,7 +155,7 @@ public class CommandOptions {
 
             Matcher matcherParams = patternParams.matcher(inputString);
             while(matcherParams.find()) {
-                params.add(new ActivityInstanceParameter(matcherParams.group(1), matcherParams.group(2)));
+                params.add(new ActivityInstanceParameter(matcherParams.group(1), matcherParams.group(2), matcherParams.group(3)));
 
             }
 
@@ -154,9 +183,107 @@ public class CommandOptions {
 
     }
 
-    private void printUsage() {
+    private void updatePlan(String adaptationId, String startTimestamp, String endTimestamp, String path) {
+        File file = new File(path);
 
-        HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("Merlin Adaptation", options);
+        try {
+            List<ActivityInstance> instances = parsePlan(file);
+
+            command = new UpdatePlanCommand(this.planId, startTimestamp, endTimestamp, adaptationId, new ActivityInstanceArray(instances));
+            command.execute();
+        } catch (MalformedFileException e) {
+            System.err.println(e.getMessage());
+        }
+    }
+
+    public static List<ActivityInstance> parsePlan(File file) throws MalformedFileException {
+        List<ActivityInstance> instances = new ArrayList<>();
+
+        try {
+            Scanner sc = new Scanner(file);
+
+            if (!sc.hasNextLine()) {
+                throw new MalformedFileException(file, "File has no contents.");
+            }
+
+            while (sc.hasNextLine()) {
+                String spec = sc.nextLine();
+                String[] specs = spec.split("\\s+");
+
+                // We expect at least 2 components to an activity instance definition
+                // 1. Activity Type
+                // 2. Start Time
+                // There may be more parameters, but these are the minimum.
+                if (specs.length >= 2) {
+                    String type = specs[0];
+
+                    List<ActivityInstanceParameter> parameters = parseActivityParameters(Arrays.copyOfRange(specs, 1, specs.length));
+
+                    ActivityInstance instance = new ActivityInstance();
+                    instance.setActivityType(type);
+                    instance.setParameters(parameters);
+                    instances.add(instance);
+                }
+                else {
+                    throw new MalformedFileException(file, String.format("Activity instance specification insufficient: %s", spec));
+                }
+            }
+        } catch (FileNotFoundException | MalformedParameterStringException e) {
+            throw new MalformedFileException(file, e.getMessage());
+        }
+
+        return instances;
+    }
+
+    public static List<ActivityInstanceParameter> parseActivityParameters(String[] params) throws MalformedParameterStringException {
+        Pattern inputParamPattern = Pattern.compile("(\\S+):(\\S+)=(\\S+)");
+        List<ActivityInstanceParameter> parameters = new ArrayList<>();
+
+        for (String param : params) {
+            Matcher matcher = inputParamPattern.matcher(param);
+            if (matcher.find()) {
+                String name = matcher.group(1);
+                String type = matcher.group(2);
+                String value = matcher.group(3);
+                parameters.add(new ActivityInstanceParameter(name, type, value));
+            } else {
+                throw new MalformedParameterStringException(param);
+            }
+        }
+        return parameters;
+    }
+
+    public static class MalformedFileException extends Exception {
+        private String fileName;
+        private String reason;
+
+        public MalformedFileException(File file, String reason) {
+            this.fileName = file.toString();
+            this.reason = reason;
+        }
+
+        public String toString() {
+            return String.format("Unable to parse file %s. %s", fileName, reason);
+        }
+
+        public String getMessage() {
+            return this.toString();
+        }
+    }
+
+    public static class MalformedParameterStringException extends Exception {
+        private String param;
+
+        public MalformedParameterStringException(String param) {
+            this.param = param;
+        }
+
+        public String toString() {
+            return String.format("Unexpected format for parameter definition: %s", param);
+        }
+
+        public String getMessage() {
+            return this.toString();
+        }
     }
 }
