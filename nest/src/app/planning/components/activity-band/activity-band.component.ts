@@ -418,13 +418,6 @@ export class ActivityBandComponent
         .select('#activity-tooltip-container')
         .html(tooltipTemplate);
 
-      // Used to position tooltip so it isn't out of bounds
-      const xTolerance = 300;
-      const containerWidth = this.drawWidth;
-
-      const xOffset = -85;
-      const yOffset = -350;
-
       rectTarget
         .on('mouseover', () => {
           tooltip
@@ -434,16 +427,9 @@ export class ActivityBandComponent
             .style('opacity', 1);
         })
         .on('mousemove', () => {
-          let xPosition = d3.event.clientX + xOffset;
-          let yPosition = d3.event.clientY + yOffset;
-
-          if (containerWidth - xPosition < xTolerance) {
-            xPosition = d3.event.clientX - xTolerance + xOffset;
-          }
-
-          if (yPosition < 0) {
-            yPosition += 200;
-          }
+          const { xPosition, yPosition } = this.calculateTooltipPosition(
+            d3.event,
+          );
 
           tooltip
             .style('top', `${yPosition}px`)
@@ -457,6 +443,29 @@ export class ActivityBandComponent
             .style('opacity', 0);
         });
     }
+  }
+
+  /**
+   * Calculates the position for the activity instance tooltip
+   */
+  calculateTooltipPosition(event: MouseEvent) {
+    const xTolerance = 300;
+    const containerWidth = this.drawWidth;
+    // Offsets are used to position tooltip so it isn't out of bounds
+    const xOffset = -85;
+    const yOffset = -350;
+    let xPosition = event.clientX + xOffset;
+    let yPosition = event.clientY + yOffset;
+
+    if (containerWidth - xPosition < xTolerance) {
+      xPosition = d3.event.clientX - xTolerance + xOffset;
+    }
+
+    if (yPosition < 0) {
+      yPosition += 200;
+    }
+
+    return { xPosition, yPosition };
   }
 
   /**
@@ -488,6 +497,9 @@ export class ActivityBandComponent
         `#circle-drag-handle-${selector}-${id}`,
       ) as SVGElement;
       const point = this.svgPointsMap[id];
+      const tooltip = this.el.querySelector(
+        '#activity-tooltip-container',
+      ) as HTMLElement;
 
       const dragHandler = d3
         .drag()
@@ -514,9 +526,11 @@ export class ActivityBandComponent
 
           this.svgPointsMap[id].duration = newDuration;
 
+          tooltip.style.visibility = 'hidden';
           this.updateRect(id, point.x, null);
         })
         .on('end', () => {
+          tooltip.style.visibility = 'visible';
           this.setNewStartAndEnd(id, point.x, null, point.duration);
         });
 
@@ -537,6 +551,9 @@ export class ActivityBandComponent
       ) as string);
       const point = this.svgPointsMap[id];
       const startTooltip = d3.select('#activity-tooltip-start');
+      const tooltip = this.el.querySelector(
+        '#activity-tooltip-container',
+      ) as HTMLElement;
 
       let offsetX = 0;
       let offsetY = 0;
@@ -556,6 +573,9 @@ export class ActivityBandComponent
             .ease(d3.easeLinear)
             .duration(100)
             .style('opacity', 1);
+
+          // Hides the metadata tooltip during drag
+          tooltip.style.visibility = 'hidden';
         })
         .on('drag', () => {
           const currentPosition = this.getMousePosition(
@@ -597,6 +617,15 @@ export class ActivityBandComponent
           } else if (y > this.drawHeight - rectTargetHeight) {
             y = this.drawHeight - rectTargetHeight;
           }
+
+          // Sets the metadata tooltip to appear after drag is done
+          const { xPosition, yPosition } = this.calculateTooltipPosition(
+            d3.event.sourceEvent,
+          );
+
+          tooltip.style.top = `${yPosition}px`;
+          tooltip.style.left = `${xPosition}px`;
+          tooltip.style.visibility = 'visible';
 
           startTooltip
             .transition()
