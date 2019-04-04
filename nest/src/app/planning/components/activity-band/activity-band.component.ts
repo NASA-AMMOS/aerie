@@ -569,10 +569,10 @@ export class ActivityBandComponent
             const tooltipX = x < 0 ? 0 : x;
             const tooltipY = y <= 5 ? 125 : y;
             let xDeltaSvg = currentPosition.x - offsetX;
-            const flipSign = xDeltaSvg < 0 ? true : false;
-            xDeltaSvg = flipSign ? -1 * xDeltaSvg : xDeltaSvg;
+            const flipSign = xDeltaSvg < 0;
+            xDeltaSvg = flipSign ? -xDeltaSvg : xDeltaSvg;
             let newStartMs = this.xScale.invert(xDeltaSvg).getTime() / 1000;
-            newStartMs = flipSign ? -1 * newStartMs : newStartMs;
+            newStartMs = flipSign ? -newStartMs : newStartMs;
 
             startTooltip
               .style('top', `${tooltipY - 100}px`)
