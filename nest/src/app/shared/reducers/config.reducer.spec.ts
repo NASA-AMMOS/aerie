@@ -210,18 +210,12 @@ describe('config reducer', () => {
     configState = reducer(configState, new ToggleNestNavigationDrawer());
 
     expect(configState.navigationDrawerState).toBe(
-      NavigationDrawerStates.Opened,
+      NavigationDrawerStates.Collapsed,
     );
   });
 
-  it('should open a closed drawer', () => {
+  it('should collapse a closed drawer', () => {
     configState.navigationDrawerState = NavigationDrawerStates.Closed;
-    const drawer = toggleDrawer(configState);
-    expect(drawer).toBe(NavigationDrawerStates.Opened);
-  });
-
-  it('should collapse an opened drawer', () => {
-    configState.navigationDrawerState = NavigationDrawerStates.Opened;
     const drawer = toggleDrawer(configState);
     expect(drawer).toBe(NavigationDrawerStates.Collapsed);
   });
