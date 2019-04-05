@@ -15,7 +15,7 @@
       <mat-form-field>
         <mat-select placeholder="Sources" [formControl]="sourcesFormControl" required multiple>
           <mat-option *ngFor="let source of filteredSources" [value]="source">
-            {{source.name}}
+            {{source.id}}
           </mat-option>
         </mat-select>
       </mat-form-field>
