@@ -45,7 +45,9 @@ import { getAppModules, getNavigationDrawerState } from './shared/selectors';
           </nest-app-nav>
         </mat-sidenav>
         <mat-sidenav-content #sidenavContent class="app-sidenav-content">
+        <main>
           <router-outlet></router-outlet>
+        </main>
         </mat-sidenav-content>
       </mat-sidenav-container>
     </div>

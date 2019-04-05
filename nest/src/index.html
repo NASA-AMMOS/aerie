@@ -7,55 +7,70 @@
  * before exporting such information to foreign countries or providing access to foreign persons
 -->
 
-<!doctype html>
+<!DOCTYPE html>
 
 <html lang="en">
   <head>
     <!-- Meta. -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="Description" content="NEST application" />
 
     <!-- Title. -->
     <title>NEST</title>
 
     <!-- Base ref for routing. -->
-    <base href="/">
+    <base href="/" />
 
     <!-- Favicon (dummy for now). -->
-    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
-
-    <style>
-      html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
-
-      app-root {
-        display: block;
-        height: 100%;
-      }
-    </style>
-
-    <!-- Matomo -->
-    <script src="./assets/site-id.js"></script>
-    <script type="text/javascript">
-    var _paq = _paq || [];
-    /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
-    _paq.push(['trackPageView']);
-    _paq.push(['enableLinkTracking']);
-    (function() {
-        var u="//localhost:31423/";
-        _paq.push(['setTrackerUrl', u+'piwik.php']);
-        _paq.push(['setSiteId', ('' + _siteId) || '1']);
-        var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-        g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
-    })();
-    </script>
-    <!-- End Matomo Code -->
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon" />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="./assets/fonts/roboto-v19-latin-300.woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="./assets/fonts/roboto-v19-latin-regular.woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="./assets/fonts/roboto-v19-latin-700.woff2"
+      crossorigin
+    />
   </head>
 
   <body class="mat-typography">
     <app-root></app-root>
+
+    <!-- Matomo -->
+    <script src="./assets/site-id.js"></script>
+    <script type="text/javascript">
+      var _paq = _paq || [];
+      /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+      _paq.push(['trackPageView']);
+      _paq.push(['enableLinkTracking']);
+      (function() {
+        var u = '//localhost:31423/';
+        _paq.push(['setTrackerUrl', u + 'piwik.php']);
+        _paq.push(['setSiteId', '' + _siteId || '1']);
+        var d = document,
+          g = d.createElement('script'),
+          s = d.getElementsByTagName('script')[0];
+        g.type = 'text/javascript';
+        g.async = true;
+        g.defer = true;
+        g.src = u + 'piwik.js';
+        s.parentNode.insertBefore(g, s);
+      })();
+    </script>
+    <!-- End Matomo Code -->
   </body>
 </html>
