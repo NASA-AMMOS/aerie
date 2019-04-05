@@ -11,12 +11,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { NestModule } from '../../models/nest-module';
 
 /**
- * Width of the drawer when it is open
- */
-export const OPENED_WIDTH = 250;
-
-/**
- * Width of the drawer when it is collapsed
+ * Width of the drawer when it is collapsed (when the drawer is open)
  */
 export const COLLAPSED_WIDTH = 66;
 
@@ -25,7 +20,7 @@ export const COLLAPSED_WIDTH = 66;
   styles: [
     `
       mat-nav-list {
-        width: ${OPENED_WIDTH}px;
+        width: ${COLLAPSED_WIDTH}px;
       }
 
       mat-nav-list.iconsOnly {
@@ -33,7 +28,7 @@ export const COLLAPSED_WIDTH = 66;
       }
 
       .nav-item-active {
-        background: rgba(0, 0, 0, 0.04);
+        background: rgba(0, 0, 0, 0.15) !important;
       }
     `,
   ],

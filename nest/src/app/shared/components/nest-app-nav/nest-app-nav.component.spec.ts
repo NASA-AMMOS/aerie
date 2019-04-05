@@ -12,11 +12,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 
 import { NestModule } from '../../models';
-import {
-  COLLAPSED_WIDTH,
-  NestAppNavComponent,
-  OPENED_WIDTH,
-} from './nest-app-nav.component';
+import { NestAppNavComponent } from './nest-app-nav.component';
 import { NestAppNavModule } from './nest-app-nav.module';
 
 @Component({
@@ -91,18 +87,6 @@ describe('NestAppNavComponent', () => {
     expect(listItem.getAttribute('href')).toBe(`/${module.path}`);
     expect(icon.innerText).toBe(module.icon);
     expect(text.innerText).toBe(module.title);
-  });
-
-  it('should hide the labels', () => {
-    const navList: HTMLElement =
-      element.querySelector('.mat-nav-list') || new HTMLElement();
-
-    expect(navList.clientWidth).toBe(OPENED_WIDTH as number);
-
-    component.childComponent.iconsOnly = true;
-    fixture.detectChanges();
-
-    expect(navList.clientWidth).toBe(COLLAPSED_WIDTH as number);
   });
 
   it('should emit an aboutClicked event when the About mat-list-item is clicked', () => {
