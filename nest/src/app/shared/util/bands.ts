@@ -781,6 +781,24 @@ export function subBandById(
 }
 
 /**
+ * Helper. Returns true if the given sub-band id in a list of bands is in add-to mode. False otherwise.
+ */
+export function isAddTo(
+  bands: RavenCompositeBand[],
+  bandId: string,
+  subBandId: string,
+  type: string,
+): boolean {
+  const subBand = subBandById(bands, bandId, subBandId);
+
+  if (subBand && subBand.type === type) {
+    return subBand.addTo;
+  }
+
+  return false;
+}
+
+/**
  * Helper. Returns true if an activity is a `message` type. False otherwise.
  */
 export function isMessageTypeActivity(activity: RavenActivityPoint): boolean {
