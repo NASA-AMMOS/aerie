@@ -3,20 +3,33 @@
     mat-icon-button
     matTooltip="Global Band Settings"
     (click)="toggleGlobalSettingsDrawer()"
+    role="button"
+    aria-label="Settings"
   >
-    <mat-icon class="icon" aria-label="Settings">
+    <mat-icon class="icon">
       settings
     </mat-icon>
   </button>
 
-  <button [matMenuTriggerFor]="subMenu" mat-icon-button matTooltip="Panels">
-    <mat-icon class="icon" aria-label="Panels">
+  <button
+    [matMenuTriggerFor]="subMenu"
+    mat-icon-button
+    matTooltip="Panels"
+    role="button"
+    aria-label="Panels"
+  >
+    <mat-icon class="icon">
       view_quilt
     </mat-icon>
   </button>
 
-  <button [matMenuTriggerFor]="rootMenu" mat-icon-button>
-    <mat-icon class="icon" aria-label="Menu">
+  <button
+    [matMenuTriggerFor]="rootMenu"
+    mat-icon-button
+    role="button"
+    aria-label="Menu"
+  >
+    <mat-icon class="icon">
       more_vert
     </mat-icon>
   </button>

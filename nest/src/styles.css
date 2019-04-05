@@ -1,8 +1,49 @@
 /* NOTE: external styles should be defined in angular.json and karma.js,
    or you will get 404s on them in the tests. */
 
+/* roboto-300 - latin */
+@font-face {
+  font-family: 'Roboto';
+  font-weight: 300;
+  font-style: normal;
+  src: local('Roboto Light'), local('Roboto-Light'),
+    url('./assets/fonts/roboto-v19-latin-300.woff2') format('woff2'),
+    /* Chrome 26+, Opera 23+, Firefox 39+ */
+      url('./assets/fonts/roboto-v19-latin-300.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+  font-display: swap;
+}
+
+/* roboto-regular - latin */
+@font-face {
+  font-family: 'Roboto';
+  font-weight: 400;
+  font-style: normal;
+  src: local('Roboto'), local('Roboto-Regular'),
+    url('./assets/fonts/roboto-v19-latin-regular.woff2') format('woff2'),
+    /* Chrome 26+, Opera 23+, Firefox 39+ */
+      url('./assets/fonts/roboto-v19-latin-regular.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+  font-display: swap;
+}
+
+/* roboto-700 - latin */
+@font-face {
+  font-family: 'Roboto';
+  font-weight: 700;
+  font-style: bold;
+  src: local('Roboto Bold'), local('Roboto-Bold'),
+    url('./assets/fonts/roboto-v19-latin-700.woff2') format('woff2'),
+    /* Chrome 26+, Opera 23+, Firefox 39+ */
+      url('./assets/fonts/roboto-v19-latin-700.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+  font-display: swap;
+}
+
 * {
   box-sizing: border-box;
+}
+
+app-root {
+  display: block;
+  height: 100%;
 }
 
 html {
@@ -11,15 +52,23 @@ html {
   overflow: auto;
 }
 
+html,
+body,
+main {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 .ag-theme-fresh .ag-row-selected {
   background-color: #fffe0d;
 }
 
 .alert {
   border: 1px solid transparent;
-  border-radius: .25rem;
+  border-radius: 0.25rem;
   margin-bottom: 1rem;
-  padding: .75rem 1.25rem;
+  padding: 0.75rem 1.25rem;
   position: relative;
 }
 
@@ -42,7 +91,7 @@ html {
 }
 
 .toast-container {
-  font-family: Roboto,"Helvetica Neue",sans-serif;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
 }
 
 /* Override default CodeMirror class so we can have auto resizing. */
