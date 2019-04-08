@@ -7,12 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { select, Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-import { ActivityInstance, ActivityType } from '../../../shared/models';
+import { Observable } from 'rxjs';
+import { ActivityInstance, ActivityType, Plan } from '../../../shared/models';
 import {
   ToggleActivityTypesDrawer,
   ToggleAddActivityDrawer,
@@ -29,6 +28,7 @@ import {
   getActivities,
   getActivityTypes,
   getSelectedActivity,
+  getSelectedPlan,
   getShowActivityTypesDrawer,
   getShowAddActivityDrawer,
   getShowEditActivityDrawer,
@@ -41,17 +41,14 @@ import { PlanningService } from '../../services/planning.service';
   styleUrls: ['./plan.component.css'],
   templateUrl: './plan.component.html',
 })
-export class PlanComponent implements OnDestroy {
+export class PlanComponent {
   activities$: Observable<ActivityInstance[] | null>;
   activityTypes$: Observable<ActivityType[]>;
   selectedActivity$: Observable<ActivityInstance | null>;
+  selectedPlan$: Observable<Plan | null>;
   showActivityTypesDrawer$: Observable<boolean>;
   showAddActivityDrawer$: Observable<boolean>;
   showEditActivityDrawer$: Observable<boolean>;
-
-  selectedActivity: ActivityInstance | null = null;
-
-  private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(
     private store: Store<PlanningAppState>,
@@ -62,6 +59,7 @@ export class PlanComponent implements OnDestroy {
     this.activities$ = this.store.pipe(select(getActivities));
     this.activityTypes$ = this.store.pipe(select(getActivityTypes));
     this.selectedActivity$ = this.store.pipe(select(getSelectedActivity));
+    this.selectedPlan$ = this.store.pipe(select(getSelectedPlan));
     this.showActivityTypesDrawer$ = this.store.pipe(
       select(getShowActivityTypesDrawer),
     );
@@ -71,17 +69,6 @@ export class PlanComponent implements OnDestroy {
     this.showEditActivityDrawer$ = this.store.pipe(
       select(getShowEditActivityDrawer),
     );
-
-    this.selectedActivity$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe((selectedActivity: ActivityInstance | null) => {
-        this.selectedActivity = selectedActivity;
-      });
-  }
-
-  ngOnDestroy(): void {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
   }
 
   /**
