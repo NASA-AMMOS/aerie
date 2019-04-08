@@ -4747,10 +4747,7 @@ TimeAxis.prototype.computeTickTimes = function() {
   }
 
   this.tickTimes = [];
-  var quantizedStart = TimeUnit.quantizeUpByTimeUnit(this.start, 0, this.tickUnit);
-  if(this.start == quantizedStart) {
-    this.tickTimes.push(this.start);
-  }
+  this.tickTimes.push(this.start);
   for(var time = TimeUnit.quantizeUpByTimeUnit(this.start, 1, this.tickUnit);
       time < this.end;
       time = TimeUnit.quantizeUpByTimeUnit(time, 1, this.tickUnit)) {
@@ -4978,6 +4975,15 @@ TimeBand.prototype.paintTicks = function() {
     }
     ctx.stroke();
     ctx.closePath();
+
+    // make sure we have enough space for the start tick label
+    if (i === 0) {
+        var nextTime = tickTimes[1];
+        var nextX = this.viewTimeAxis.getXFromTime(nextTime);
+        if (nextX - timeX < ctx.measureText("yyyy-dddThh:mm:ss").width) {
+            continue;
+        }
+    }
 
     // compute the date/time string
     var formattedTimes = this.onFormatTimeTick({timeBand:this, time:time});
