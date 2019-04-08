@@ -77,7 +77,7 @@ export class PlanEffects {
         parameters: [],
         start: action.data.start,
         startTimestamp: timestamp(action.data.start),
-        y: 0.0,
+        y: null,
       };
 
       return this.planService
@@ -87,8 +87,8 @@ export class PlanEffects {
           activity,
         )
         .pipe(
-          switchMap(() => [
-            new CreateActivitySuccess(action.planId, activity),
+          switchMap((newActivity: ActivityInstance) => [
+            new CreateActivitySuccess(action.planId, newActivity),
             new ShowToast(
               'success',
               'New activity has been successfully created and saved.',

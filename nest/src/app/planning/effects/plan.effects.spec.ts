@@ -142,7 +142,7 @@ describe('PlanEffects', () => {
         ...activity,
         constraints: [],
         parameters: [],
-        y: 0,
+        y: null,
       });
       const showToast = new ShowToast(
         'success',

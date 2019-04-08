@@ -93,6 +93,9 @@ function createActivitySuccess(
   state: PlanState,
   action: CreateActivitySuccess,
 ): PlanState {
+  const maxTimeRange = getMaxTimeRange([action.activity]);
+  const viewTimeRange = { ...maxTimeRange };
+
   return {
     ...state,
     activities: {
@@ -101,6 +104,8 @@ function createActivitySuccess(
         ...action.activity,
       },
     },
+    maxTimeRange,
+    viewTimeRange,
   };
 }
 
