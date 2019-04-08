@@ -12,7 +12,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { select, Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { ActivityInstance, ActivityType } from '../../../shared/models';
+import { ActivityInstance, ActivityType, Plan } from '../../../shared/models';
 import {
   ToggleActivityTypesDrawer,
   ToggleAddActivityDrawer,
@@ -29,6 +29,7 @@ import {
   getActivities,
   getActivityTypes,
   getSelectedActivity,
+  getSelectedPlan,
   getShowActivityTypesDrawer,
   getShowAddActivityDrawer,
   getShowEditActivityDrawer,
@@ -45,6 +46,7 @@ export class PlanComponent implements OnDestroy {
   activities$: Observable<ActivityInstance[] | null>;
   activityTypes$: Observable<ActivityType[]>;
   selectedActivity$: Observable<ActivityInstance | null>;
+  selectedPlan$: Observable<Plan | null>;
   showActivityTypesDrawer$: Observable<boolean>;
   showAddActivityDrawer$: Observable<boolean>;
   showEditActivityDrawer$: Observable<boolean>;
@@ -62,6 +64,7 @@ export class PlanComponent implements OnDestroy {
     this.activities$ = this.store.pipe(select(getActivities));
     this.activityTypes$ = this.store.pipe(select(getActivityTypes));
     this.selectedActivity$ = this.store.pipe(select(getSelectedActivity));
+    this.selectedPlan$ = this.store.pipe(select(getSelectedPlan));
     this.showActivityTypesDrawer$ = this.store.pipe(
       select(getShowActivityTypesDrawer),
     );
