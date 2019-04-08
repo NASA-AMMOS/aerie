@@ -7,11 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { select, Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import { ActivityInstance, ActivityType, Plan } from '../../../shared/models';
 import {
   ToggleActivityTypesDrawer,
@@ -42,7 +41,7 @@ import { PlanningService } from '../../services/planning.service';
   styleUrls: ['./plan.component.css'],
   templateUrl: './plan.component.html',
 })
-export class PlanComponent implements OnDestroy {
+export class PlanComponent {
   activities$: Observable<ActivityInstance[] | null>;
   activityTypes$: Observable<ActivityType[]>;
   selectedActivity$: Observable<ActivityInstance | null>;
@@ -50,10 +49,6 @@ export class PlanComponent implements OnDestroy {
   showActivityTypesDrawer$: Observable<boolean>;
   showAddActivityDrawer$: Observable<boolean>;
   showEditActivityDrawer$: Observable<boolean>;
-
-  selectedActivity: ActivityInstance | null = null;
-
-  private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(
     private store: Store<PlanningAppState>,
@@ -74,17 +69,6 @@ export class PlanComponent implements OnDestroy {
     this.showEditActivityDrawer$ = this.store.pipe(
       select(getShowEditActivityDrawer),
     );
-
-    this.selectedActivity$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe((selectedActivity: ActivityInstance | null) => {
-        this.selectedActivity = selectedActivity;
-      });
-  }
-
-  ngOnDestroy(): void {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
   }
 
   /**
