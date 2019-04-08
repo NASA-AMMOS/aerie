@@ -1,5 +1,5 @@
 <nest-app-header
-  [title]="'Planning Cycle'"
+  [title]="'Planning Cycle: ' + (selectedPlan$ | async)?.name"
   contextual="true"
   (menuClicked)="onNavBack()"
 >
