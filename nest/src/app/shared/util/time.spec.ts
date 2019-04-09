@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { getMaxTimeRange } from './time';
+import { datetimeToEpoch, getMaxTimeRange } from './time';
 
 describe('time.ts', () => {
   describe('getMaxTimeRange', () => {
@@ -60,5 +60,12 @@ describe('time.ts', () => {
         start: 5,
       });
     });
-  });
+  }),
+    describe('datetimeToEpoch', () => {
+      it('should convert a datetime string to epoch', () => {
+        const datetime = new Date('2019-04-09T20:39:07.000Z');
+
+        expect(datetimeToEpoch(datetime)).toEqual(1554842347);
+      });
+    });
 });

@@ -70,6 +70,13 @@ export function dateToTimestring(
 }
 
 /**
+ * Converts a datetime string (2019-04-10T18:02:59.000Z) to epoch (1554919379000)
+ */
+export function datetimeToEpoch(datetime: Date) {
+  return datetime.getTime() / 1000;
+}
+
+/**
  * Converts a duration to a DHMS (days, hours, minutes, seconds) string.
  */
 export function dhms(duration: number): string {

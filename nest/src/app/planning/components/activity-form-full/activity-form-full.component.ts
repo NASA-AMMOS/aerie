@@ -23,7 +23,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivityInstance, ActivityType } from '../../../shared/models';
-import { NgTemplateUtils } from '../../../shared/util';
+import { datetimeToEpoch, NgTemplateUtils } from '../../../shared/util';
 import { PlanningService } from '../../services/planning.service';
 
 @Component({
@@ -75,7 +75,10 @@ export class ActivityFormFullComponent implements OnChanges {
       !this.isNew
     ) {
       this.addParametersFormControl();
-      this.form.patchValue(this.selectedActivity);
+      this.form.patchValue({
+        ...this.selectedActivity,
+        start: new Date(this.selectedActivity.start * 1000),
+      });
     }
   }
 
@@ -108,9 +111,15 @@ export class ActivityFormFullComponent implements OnChanges {
   onSubmit(value: ActivityInstance) {
     if (this.form.valid) {
       if (!this.isNew) {
-        this.updateActivity.emit(value);
+        this.updateActivity.emit({
+          ...value,
+          start: datetimeToEpoch(new Date(value.start)),
+        });
       } else {
-        this.createActivity.emit(value);
+        this.createActivity.emit({
+          ...value,
+          start: datetimeToEpoch(new Date(value.start)),
+        });
       }
     }
   }

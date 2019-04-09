@@ -17,6 +17,7 @@ import {
   MatInputModule,
   MatSelectModule,
 } from '@angular/material';
+import { OwlDateTimeModule, OwlNativeDateTimeModule } from 'ng-pick-datetime';
 import { ActivityFormComponent } from './activity-form.component';
 
 @NgModule({
@@ -24,6 +25,8 @@ import { ActivityFormComponent } from './activity-form.component';
   exports: [ActivityFormComponent],
   imports: [
     CommonModule,
+    OwlDateTimeModule,
+    OwlNativeDateTimeModule,
     MatButtonModule,
     MatFormFieldModule,
     MatIconModule,

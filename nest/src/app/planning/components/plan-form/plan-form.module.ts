@@ -16,6 +16,7 @@ import {
   MatInputModule,
   MatSelectModule,
 } from '@angular/material';
+import { OwlDateTimeModule, OwlNativeDateTimeModule } from 'ng-pick-datetime';
 import { PlanFormComponent } from './plan-form.component';
 
 @NgModule({
@@ -27,6 +28,8 @@ import { PlanFormComponent } from './plan-form.component';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    OwlDateTimeModule,
+    OwlNativeDateTimeModule,
     ReactiveFormsModule,
   ],
 })

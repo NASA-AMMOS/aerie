@@ -23,7 +23,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivityInstance, ActivityType } from '../../../shared/models';
-import { NgTemplateUtils } from '../../../shared/util';
+import { datetimeToEpoch, NgTemplateUtils } from '../../../shared/util';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -69,16 +69,28 @@ export class ActivityFormComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.activity && this.activity && !this.isNew) {
-      this.form.patchValue(this.activity);
+      this.form.patchValue({
+        ...this.activity,
+        start: new Date(this.activity.start * 1000),
+      });
     }
   }
 
   onSubmit(value: ActivityInstance) {
+    // Transforming start here due to activity instance expecting start to be a number but the datetime picker returns a date
+    // TODO: revisit this when schema for activity instances is finalized
     if (this.form.valid) {
       if (!this.isNew && this.activity) {
-        this.updateActivity.emit({ ...this.activity, ...value });
+        this.updateActivity.emit({
+          ...this.activity,
+          ...value,
+          start: datetimeToEpoch(new Date(value.start)),
+        });
       } else {
-        this.createActivity.emit(value);
+        this.createActivity.emit({
+          ...value,
+          start: datetimeToEpoch(new Date(value.start)),
+        });
       }
     }
   }
