@@ -74,6 +74,7 @@ import {
   getState,
   getTargetFilters,
   hasActivityBandForFilterTarget,
+  isAddTo,
   isOverlay,
   toCompositeBand,
   toRavenBandData,
@@ -1570,7 +1571,6 @@ export class SourceExplorerEffects {
     ).pipe(
       concatMap((newSubBands: RavenSubBand[]) => {
         const actions: Action[] = [];
-
         if (treeBySourceId[sourceId].type === 'graphableFilter') {
           // Clear existing points regardless if fetch returns any data.
           actions.push(
@@ -1579,17 +1579,13 @@ export class SourceExplorerEffects {
             ),
           );
         }
-
         if (newSubBands.length > 0) {
           newSubBands.forEach((subBand: RavenSubBand) => {
-            const activityBands =
-              treeBySourceId[sourceId].type === 'customGraphable'
-                ? []
-                : activityBandsWithLegend(
-                    currentBands,
-                    subBand,
-                    getPinLabel(treeBySourceId[sourceId].id, pins),
-                  );
+            const activityBands = activityBandsWithLegend(
+              currentBands,
+              subBand,
+              getPinLabel(treeBySourceId[sourceId].id, pins),
+            );
             const existingBands = graphAgain
               ? []
               : getBandsWithSourceId(currentBands, sourceId);
@@ -1625,7 +1621,15 @@ export class SourceExplorerEffects {
                     // Romove the old state band.
                     new timelineActions.RemoveSubBand(existingBand.subBandId),
                   );
-                } else {
+                } else if (
+                  subBand.type !== 'activity' ||
+                  isAddTo(
+                    currentBands,
+                    existingBand.bandId,
+                    existingBand.subBandId,
+                    'activity',
+                  )
+                ) {
                   actions.push(
                     new sourceExplorerActions.SubBandIdAdd(
                       sourceId,
@@ -1640,7 +1644,11 @@ export class SourceExplorerEffects {
                   );
                 }
               });
-            } else if (bandId && getAddToSubBandId(currentBands, bandId)) {
+            } else if (
+              subBand.type === 'activity' &&
+              bandId &&
+              getAddToSubBandId(currentBands, bandId)
+            ) {
               const addToSubBandId = getAddToSubBandId(currentBands, bandId);
               if (addToSubBandId) {
                 actions.push(

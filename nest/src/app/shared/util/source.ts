@@ -34,12 +34,11 @@ import {
 import { getBandLabel } from './bands';
 
 /**
- * Replace any slashes or '.' in a source name with dashes.
+ * Replace any slashes in a source name with dashes.
  * Slashes delineate sources in the source-explorer.
- * '.' cannot be be used in keys in mongodb.
  */
 export function sanitizeSourceName(name: string): string {
-  return name.replace(/\.|\//g, '-');
+  return name.replace(/\//g, '-');
 }
 
 /**

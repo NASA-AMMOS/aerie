@@ -517,7 +517,9 @@ export function removeBandsOrPointsForSource(
 
           return subBands;
         }, [])
-        .filter(subBand => subBand.points.length !== 0),
+        .filter(
+          subBand => subBand.points.length !== 0 || subBand.type === 'divider',
+        ),
     }))
     .filter(band => band.subBands.length !== 0)
     .map(band => ({

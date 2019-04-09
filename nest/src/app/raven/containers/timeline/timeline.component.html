@@ -341,9 +341,11 @@
         [allInOneFile]="allInOneFile$ | async"
         [allInOneFilename]="allInOneFilename$ | async"
         [decimateOutputData]="decimateOutputData$ | async"
+        [filtersByTarget]="filtersByTarget$ | async"
         [outputFormat]="outputFormat$ | async"
         [outputSourceIdsByLabel]="outputSourceIdsByLabel$ | async"
         [subBandSourceIdsByLabel]="subBandSourceIdsByLabel$ | async"
+        [treeBySourceId]="treeBySourceId$ | async"
         (createOutput)="onCreateOutput()"
         (updateOutputSettings)="onUpdateOutputSettings($event)">
       </raven-output>
