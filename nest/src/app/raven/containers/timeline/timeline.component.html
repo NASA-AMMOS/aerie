@@ -104,7 +104,7 @@
         class="scroll"
         [order]="3"
         [size]="getMainChartHeight()">
-          <div class="timeline-0">
+        <div class="timeline-0">
           <raven-bands
             class="raven-bands-0"
             [cursorColor]="cursorColor$ | async"
@@ -203,38 +203,39 @@
     [order]="6"
     size="15">
     <!-- Selected Point. -->
-        <div class="selected-point">
-          <ng-container *ngIf="!(selectedPoint$ | async)">
-            <mat-card>
-              No point is currently selected.
-            </mat-card>
-          </ng-container>
+    <div class="selected-point">
+      <ng-container *ngIf="!(selectedPoint$ | async)">
+        <mat-card>
+          No point is currently selected.
+        </mat-card>
+      </ng-container>
 
-          <ng-container *ngIf="selectedPoint$ | async">
-            <ng-container *ngIf="(selectedPoint$ | async).type === 'activity'">
-              <raven-activity-point
-                [selectedPoint]="selectedPoint$ | async"
-                [showActivityPointMetadata]="showActivityPointMetadata"
-                [showActivityPointParameters]="showActivityPointParameters"
-                (changeActivityExpansion)="onChangeActivityExpansion($event)"
-                (toggleShowActivityPointMetadata)="onToggleShowActivityPointMetadata($event)"
-                (toggleShowActivityPointParameters)="onToggleShowActivityPointParameters($event)">
-              </raven-activity-point>
-            </ng-container>
+      <ng-container *ngIf="selectedPoint$ | async">
+        <ng-container *ngIf="(selectedPoint$ | async).type === 'activity'">
+          <raven-activity-point
+            [selectedPoint]="selectedPoint$ | async"
+            [showActivityPointMetadata]="showActivityPointMetadata"
+            [showActivityPointParameters]="showActivityPointParameters"
+            (changeActivityExpansion)="onChangeActivityExpansion($event)"
+            (toggleShowActivityPointMetadata)="onToggleShowActivityPointMetadata($event)"
+            (toggleShowActivityPointParameters)="onToggleShowActivityPointParameters($event)">
+          </raven-activity-point>
+        </ng-container>
 
-            <ng-container *ngIf="(selectedPoint$ | async).type === 'state'">
-              <raven-state-point
-                [selectedPoint]="selectedPoint$ | async">
-              </raven-state-point>
-            </ng-container>
+        <ng-container *ngIf="(selectedPoint$ | async).type === 'state'">
+          <raven-state-point
+            [selectedPoint]="selectedPoint$ | async">
+          </raven-state-point>
+        </ng-container>
 
-            <ng-container *ngIf="(selectedPoint$ | async).type === 'resource'">
-              <raven-resource-point
-                [selectedPoint]="selectedPoint$ | async">
-              </raven-resource-point>
-            </ng-container>
-          </ng-container>
-        </div>
+
+        <ng-container *ngIf="(selectedPoint$ | async).type === 'resource'">
+          <raven-resource-point
+            [selectedPoint]="selectedPoint$ | async">
+          </raven-resource-point>
+        </ng-container>
+      </ng-container>
+    </div>
   </as-split-area>
 </as-split>
 
