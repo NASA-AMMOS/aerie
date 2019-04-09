@@ -1,5 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.conditional.ConditionalConstraint;
+
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.Serializable;
@@ -81,6 +83,13 @@ public abstract class Constraint implements Serializable, PropertyChangeListener
     public abstract void propertyChange(PropertyChangeEvent evt);
 
     public abstract void addListenersToChildren(Constraint condition);
+
+    public void printAllListeners(){
+        System.out.println("Condition " + this.getName() + " has the following listeners: ");
+        for (Object x : treeNodeListeners){
+            System.out.println(((ConditionalConstraint) x).getName());
+        }
+    }
 
 
 

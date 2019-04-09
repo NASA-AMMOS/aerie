@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.builders;
 import static org.junit.Assert.assertEquals;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Parameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 import org.junit.Test;
 
 public class ParameterBuilderTests {

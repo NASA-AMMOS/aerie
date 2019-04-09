@@ -1,7 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.builders;
 
-// TODO: Use schemas.ActivityTypeParameter, add readOnly and value fields
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Parameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+
+// TODO: Use schemas.ActivityTypeParameter, add readOnly and value fields
+
 
 public class ParameterBuilder {
 

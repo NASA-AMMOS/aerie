@@ -1,5 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+
 // TODO: Use schemas.ActivityTypeParameter instead
 public class Parameter {
 
@@ -41,5 +43,6 @@ public class Parameter {
     public void setReadOnly(boolean readOnly) {
         this.readOnly = readOnly;
     }
+
 
 }

@@ -121,10 +121,10 @@ public class ConditionalConstraint<V extends Comparable> extends Constraint {
     }
 
     @Override
-    public void addListenersToChildren(Constraint conditoinalConstraint){
-        ConditionalConstraint condition = (ConditionalConstraint) conditoinalConstraint;
+    public void addListenersToChildren(Constraint conditinalConstraint){
+        ConditionalConstraint condition = (ConditionalConstraint) conditinalConstraint;
         if (condition.left != null){
-            condition.right.addTreeNodeChangeListener(this);
+            condition.left.addTreeNodeChangeListener(this);
         }
 
         if (condition.right != null){

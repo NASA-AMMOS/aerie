@@ -9,6 +9,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Parameter;
 import java.util.List;
 import java.util.UUID;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 import org.junit.Test;
 
 public class ActivityTypeBuilderTests {

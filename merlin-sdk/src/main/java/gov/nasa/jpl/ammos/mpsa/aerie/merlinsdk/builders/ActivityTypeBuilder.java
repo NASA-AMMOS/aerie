@@ -7,6 +7,7 @@ import java.util.UUID;
 
 // TODO: Possibly use or extend schemas.ActivityType instead
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.operations.AdaptationModel;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 
 public class ActivityTypeBuilder {
 

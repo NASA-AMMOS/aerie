@@ -5,6 +5,7 @@ import static org.junit.Assert.assertSame;
 import java.util.HashSet;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 import org.junit.Test;
 
 public class ResourceBuilderTests {
