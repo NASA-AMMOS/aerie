@@ -8,6 +8,7 @@
  */
 
 import {
+  CloseAllDrawers,
   LayoutActions,
   LayoutActionTypes,
   LoadingBarHide,
@@ -45,6 +46,8 @@ export function reducer(
   action: LayoutActions,
 ): LayoutState {
   switch (action.type) {
+    case LayoutActionTypes.CloseAllDrawers:
+      return closeAllDrawers(state, action);
     case LayoutActionTypes.LoadingBarHide:
       return loadingBarHide(state, action);
     case LayoutActionTypes.LoadingBarShow:
@@ -62,6 +65,23 @@ export function reducer(
     default:
       return state;
   }
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'CloseAllDrawers' action.
+ */
+export function closeAllDrawers(
+  state: LayoutState,
+  _: CloseAllDrawers,
+): LayoutState {
+  return {
+    ...state,
+    showActivityTypesDrawer: false,
+    showAddActivityDrawer: false,
+    showCreatePlanDrawer: false,
+    showEditActivityDrawer: false,
+    showEditPlanDrawer: false,
+  };
 }
 
 /**

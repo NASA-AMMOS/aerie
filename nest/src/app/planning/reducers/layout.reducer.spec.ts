@@ -8,6 +8,7 @@
  */
 
 import {
+  CloseAllDrawers,
   LoadingBarHide,
   LoadingBarShow,
   Resize,
@@ -28,6 +29,13 @@ describe('layout reducer', () => {
 
   it('handle default', () => {
     expect(layoutState).toEqual(initialState);
+  });
+
+  it('handle CloseAllDrawers', () => {
+    layoutState = reducer(layoutState, new CloseAllDrawers());
+    expect(layoutState).toEqual({
+      ...initialState,
+    });
   });
 
   it('handle LoadingBarHide', () => {

@@ -14,5 +14,7 @@
     [isNew]="isNew"
     [selectedActivity]="selectedActivity$ | async"
     (cancel)="onNavBack()"
+    (createActivity)="onCreateActivity($event)"
+    (updateActivity)="onUpdateActivity($event)"
   ></activity-form-full>
 </main>

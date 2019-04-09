@@ -12,7 +12,6 @@ import { MatDialog } from '@angular/material';
 import { Router } from '@angular/router';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
-import { omitBy } from 'lodash';
 import { forkJoin, Observable, of } from 'rxjs';
 import { catchError, map, switchMap, withLatestFrom } from 'rxjs/operators';
 import { ShowToast } from '../../shared/actions/toast.actions';
@@ -293,39 +292,29 @@ export class PlanEffects {
         );
       }
 
-      // Since we are sending a PATCH, make sure that we are only
-      // sending value that changed.
-      const changes = omitBy(action.update, (v, k) => activity[k] === v);
-
-      return this.planService
-        .updateActivity(
-          planServiceBaseUrl,
-          action.planId,
-          action.activityId,
-          changes as ActivityInstance,
-        )
-        .pipe(
-          map(_ => new UpdateActivitySuccess(action.activityId, changes)),
-          catchError((e: Error) => of(new UpdateActivityFailure(e))),
-        );
-    }),
-  );
-
-  @Effect({ dispatch: false })
-  updateActivitySuccess$: Observable<Action> = this.actions$.pipe(
-    ofType<UpdateActivitySuccess>(PlanActionTypes.UpdateActivitySuccess),
-    withLatestFrom(this.store$),
-    map(([_, state]) => state),
-    switchMap(state => {
-      const { selectedPlan } = state.planning.plan;
-
-      if (selectedPlan) {
-        this.router.navigate([`/plans/${selectedPlan.id}`]);
-      } else {
-        console.error('UpdateActivitySuccess: NoSelectedPlan');
-      }
-
-      return [];
+      return withLoadingBar([
+        this.planService
+          .updateActivity(
+            planServiceBaseUrl,
+            action.planId,
+            action.activityId,
+            action.update as ActivityInstance,
+          )
+          .pipe(
+            switchMap(_ => [
+              new UpdateActivitySuccess(action.activityId, action.update),
+              new ShowToast(
+                'success',
+                'Activity has been successfully updated.',
+                'Update Activity Success',
+              ),
+            ]),
+            catchError((e: Error) => [
+              new UpdateActivityFailure(e),
+              new ShowToast('error', e.message, 'Update Activity Failure'),
+            ]),
+          ),
+      ]);
     }),
   );
 }

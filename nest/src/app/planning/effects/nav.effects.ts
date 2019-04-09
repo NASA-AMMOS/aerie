@@ -15,6 +15,7 @@ import {
   FetchActivityTypes,
   FetchAdaptations,
 } from '../actions/adaptation.actions';
+import { CloseAllDrawers } from '../actions/layout.actions';
 import {
   ClearSelectedActivity,
   FetchActivities,
@@ -30,7 +31,11 @@ export class NavEffects {
   @Effect()
   navPlans$ = this.actions$.pipe(
     ofRoute('plans'),
-    switchMap(_ => [new FetchPlans(), new FetchAdaptations()]),
+    switchMap(_ => [
+      new CloseAllDrawers(),
+      new FetchPlans(),
+      new FetchAdaptations(),
+    ]),
   );
 
   @Effect()
@@ -38,6 +43,7 @@ export class NavEffects {
     ofRoute('plans/:planId'),
     mapToParam<string>('planId'),
     switchMap(planId => [
+      new CloseAllDrawers(),
       new FetchPlans(),
       new FetchAdaptations(),
       new FetchActivityTypes(planId),
@@ -51,6 +57,7 @@ export class NavEffects {
     ofRoute('plans/:planId/activity'),
     mapToParam<string>('planId'),
     switchMap(planId => [
+      new CloseAllDrawers(),
       new FetchPlans(),
       new FetchAdaptations(),
       new FetchActivityTypes(planId),
@@ -64,6 +71,7 @@ export class NavEffects {
     ofRoute('plans/:planId/activity/:activityId'),
     mapToParams(),
     switchMap(({ activityId, planId }) => [
+      new CloseAllDrawers(),
       new FetchPlans(),
       new FetchAdaptations(),
       new FetchActivityTypes(planId),

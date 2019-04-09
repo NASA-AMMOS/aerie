@@ -12,6 +12,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { ActivityInstance, ActivityType } from '../../../shared/models';
+import { CreateActivity, UpdateActivity } from '../../actions/plan.actions';
 import { PlanningAppState } from '../../planning-store';
 import { getSelectedActivity } from '../../selectors';
 import { getActivityTypes } from '../../selectors';
@@ -51,8 +52,18 @@ export class ActivityComponent {
     }
   }
 
+  onCreateActivity(activity: ActivityInstance): void {
+    const { planId } = this.route.snapshot.paramMap['params'];
+    this.store.dispatch(new CreateActivity(planId, activity));
+  }
+
   onNavBack() {
     const { planId } = this.route.snapshot.paramMap['params'];
     this.router.navigate([`/plans/${planId}`]);
+  }
+
+  onUpdateActivity(activity: ActivityInstance): void {
+    const { activityId, planId } = this.route.snapshot.paramMap['params'];
+    this.store.dispatch(new UpdateActivity(planId, activityId, activity));
   }
 }

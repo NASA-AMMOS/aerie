@@ -452,6 +452,7 @@ describe('PlanEffects', () => {
     });
 
     it('should return a UpdateActivitySuccess action with data on success', () => {
+      // Setup.
       const planId = plan.id || '';
       const selectedActivityId = 'SetArrayTrackingMode_25788';
       store.dispatch(new FetchPlansSuccess(plans));
@@ -461,61 +462,59 @@ describe('PlanEffects', () => {
       );
       activity = activitiesMap[selectedActivityId];
 
+      // Test.
       const action = new UpdateActivity(planId, activity.activityId, activity);
+      const success = new UpdateActivitySuccess(activity.activityId, activity);
+      const showToast = new ShowToast(
+        'success',
+        'Activity has been successfully updated.',
+        'Update Activity Success',
+      );
 
-      // Success case should be empty since UpdateActivity patches, and
-      // since we just passed in the original unchanged activity, there should
-      // be no update.
-      const success = new UpdateActivitySuccess(activity.activityId, {});
-
-      actions$ = hot('--a-', { a: action });
-      const expected = cold('--b', { b: success });
+      actions$ = hot('-a', { a: action });
+      const expected = cold('-(bcde)', {
+        b: loadingBarShow,
+        c: success,
+        d: showToast,
+        e: loadingBarHide,
+      });
 
       expect(effects.updateActivity$).toBeObservable(expected);
     });
 
     it('should return a UpdateActivityFailure action with a NoActivities error on failure', () => {
-      const action = new UpdateActivity('', '', activity);
-      const error = new Error(
-        'UpdateActivity: UpdateActivityFailure: NoActivities',
+      // Setup.
+      const planId = plan.id || '';
+      const selectedActivityId = 'SetArrayTrackingMode_25788';
+      store.dispatch(new FetchPlansSuccess(plans));
+      store.dispatch(new FetchAdaptationsSuccess(adaptations));
+      store.dispatch(
+        new FetchActivitiesSuccess(planId, selectedActivityId, activities),
       );
-      const failure = new UpdateActivityFailure(error);
+      activity = activitiesMap[selectedActivityId];
 
-      actions$ = hot('--a-', { a: action });
-      const expected = cold('--b', { b: failure });
+      // Test.
+      const action = new UpdateActivity(planId, activity.activityId, activity);
+      const error = new Error('UpdateActivity: UpdateActivityFailure');
+      const failure = new UpdateActivityFailure(error);
+      const showToast = new ShowToast(
+        'error',
+        error.message,
+        'Update Activity Failure',
+      );
+
+      const service = TestBed.get(PlanService);
+      spyOn(service, 'updateActivity').and.returnValue(cold('#|', null, error));
+
+      actions$ = hot('-a', { a: action });
+      const expected = cold('-(bcde)', {
+        b: loadingBarShow,
+        c: failure,
+        d: showToast,
+        e: loadingBarHide,
+      });
 
       expect(effects.updateActivity$).toBeObservable(expected);
-    });
-  });
-
-  describe('updateActivitySuccess$', () => {
-    it('should register updateActivitySuccess$ that does not dispatch an action', () => {
-      expect(metadata.updateActivitySuccess$).toEqual({ dispatch: false });
-    });
-
-    it('should route to the selected plan if a selected plan exists', () => {
-      const planId = plan.id || '';
-      store.dispatch(new FetchPlansSuccess(plans));
-      store.dispatch(new FetchActivitiesSuccess(planId, null, activities));
-
-      const action = new UpdateActivitySuccess('foo', {});
-      actions$ = hot('-a', { a: action });
-      const expected = cold('-');
-
-      expect(effects.updateActivitySuccess$).toBeObservable(expected);
-      expect(mockRouter.navigate).toHaveBeenCalledWith([`/plans/${plan.id}`]);
-    });
-
-    it('should not route at all if no selected plan exists', () => {
-      const action = new UpdateActivitySuccess('foo', {});
-
-      actions$ = hot('-a', { a: action });
-      const expected = cold('-');
-
-      expect(effects.updateActivitySuccess$).toBeObservable(expected);
-      expect(mockRouter.navigate).not.toHaveBeenCalledWith([
-        `/plans/${plan.id}`,
-      ]);
     });
   });
 });

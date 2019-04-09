@@ -9,13 +9,12 @@
 
 import { Injectable } from '@angular/core';
 import { Actions, Effect, ofType } from '@ngrx/effects';
-import { tap } from 'rxjs/operators';
-import { AnalyticsService, EventType } from '../services/analytics.service';
-
 import {
   RouterNavigationAction,
   SerializedRouterStateSnapshot,
 } from '@ngrx/router-store';
+import { tap } from 'rxjs/operators';
+import { AnalyticsService, EventType } from '../services/analytics.service';
 
 @Injectable()
 export class NavEffects {

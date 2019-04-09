@@ -17,6 +17,7 @@ import {
   FetchActivityTypes,
   FetchAdaptations,
 } from '../actions/adaptation.actions';
+import { CloseAllDrawers } from '../actions/layout.actions';
 import {
   ClearSelectedActivity,
   FetchActivities,
@@ -50,9 +51,10 @@ describe('NavEffects', () => {
       const action = new RouterNavigation({ path: 'plans' });
 
       actions$ = hot('-a', { a: action });
-      const expected = cold('-(bc)', {
-        b: new FetchPlans(),
-        c: new FetchAdaptations(),
+      const expected = cold('-(bcd)', {
+        b: new CloseAllDrawers(),
+        c: new FetchPlans(),
+        d: new FetchAdaptations(),
       });
 
       expect(effects.navPlans$).toBeObservable(expected);
@@ -72,12 +74,13 @@ describe('NavEffects', () => {
       });
 
       actions$ = hot('-a', { a: action });
-      const expected = cold('-(bcdef)', {
-        b: new FetchPlans(),
-        c: new FetchAdaptations(),
-        d: new FetchActivityTypes(planId),
-        e: new FetchActivities(planId, null),
-        f: new SelectPlan(planId),
+      const expected = cold('-(bcdefg)', {
+        b: new CloseAllDrawers(),
+        c: new FetchPlans(),
+        d: new FetchAdaptations(),
+        e: new FetchActivityTypes(planId),
+        f: new FetchActivities(planId, null),
+        g: new SelectPlan(planId),
       });
 
       expect(effects.navPlansWithId$).toBeObservable(expected);
@@ -97,12 +100,13 @@ describe('NavEffects', () => {
       });
 
       actions$ = hot('-a', { a: action });
-      const expected = cold('-(bcdef)', {
-        b: new FetchPlans(),
-        c: new FetchAdaptations(),
-        d: new FetchActivityTypes(planId),
-        e: new SelectPlan(planId),
-        f: new ClearSelectedActivity(),
+      const expected = cold('-(bcdefg)', {
+        b: new CloseAllDrawers(),
+        c: new FetchPlans(),
+        d: new FetchAdaptations(),
+        e: new FetchActivityTypes(planId),
+        f: new SelectPlan(planId),
+        g: new ClearSelectedActivity(),
       });
 
       expect(effects.navActivities$).toBeObservable(expected);
@@ -123,13 +127,14 @@ describe('NavEffects', () => {
       });
 
       actions$ = hot('-a', { a: action });
-      const expected = cold('-(bcdefg)', {
-        b: new FetchPlans(),
-        c: new FetchAdaptations(),
-        d: new FetchActivityTypes(planId),
-        e: new FetchActivities(planId, activityId),
-        f: new SelectPlan(planId),
-        g: new SelectActivity(activityId),
+      const expected = cold('-(bcdefgh)', {
+        b: new CloseAllDrawers(),
+        c: new FetchPlans(),
+        d: new FetchAdaptations(),
+        e: new FetchActivityTypes(planId),
+        f: new FetchActivities(planId, activityId),
+        g: new SelectPlan(planId),
+        h: new SelectActivity(activityId),
       });
 
       expect(effects.navActivitiesWithId$).toBeObservable(expected);

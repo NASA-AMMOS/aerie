@@ -7,6 +7,16 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './ng-template-utils';
-export * from './test';
-export * from './time';
+import { SimpleChange } from '@angular/core';
+
+/**
+ * Call `ngOnChanges` for a given component on given `Inputs`.
+ */
+export function doNgOnChanges(component: any, inputs: string[]): void {
+  component.ngOnChanges(
+    inputs.reduce((changes, change) => {
+      changes[change] = new SimpleChange(null, component[change], true);
+      return changes;
+    }, {}),
+  );
+}

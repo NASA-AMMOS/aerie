@@ -155,8 +155,9 @@ public class CommandOptions {
 
             Matcher matcherParams = patternParams.matcher(inputString);
             while(matcherParams.find()) {
-                params.add(new ActivityInstanceParameter(matcherParams.group(1), matcherParams.group(2), matcherParams.group(3)));
-
+                String defaultValue = "";
+                List<String> range = new ArrayList<String>();
+                params.add(new ActivityInstanceParameter(defaultValue, matcherParams.group(1), range, matcherParams.group(2), matcherParams.group(3)));
             }
 
             List<ActivityInstance> instancesToInsert = new ArrayList<>();
@@ -242,10 +243,12 @@ public class CommandOptions {
         for (String param : params) {
             Matcher matcher = inputParamPattern.matcher(param);
             if (matcher.find()) {
+                String defaultValue = "";
                 String name = matcher.group(1);
                 String type = matcher.group(2);
+                List<String> range = new ArrayList<String>();
                 String value = matcher.group(3);
-                parameters.add(new ActivityInstanceParameter(name, type, value));
+                parameters.add(new ActivityInstanceParameter(defaultValue, name, range, type, value));
             } else {
                 throw new MalformedParameterStringException(param);
             }

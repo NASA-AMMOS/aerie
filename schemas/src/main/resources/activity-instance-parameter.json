@@ -4,8 +4,17 @@
   "additionalProperties": false,
   "javaType": "gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstanceParameter",
   "properties": {
+    "defaultValue": {
+      "type": "string"
+    },
     "name": {
       "type": "string"
+    },
+    "range": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "type": {
       "type": "string"

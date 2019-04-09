@@ -33,10 +33,13 @@ mat-form-field {
   grid-gap: 12px;
 }
 
-.panels {
+.tab {
+  padding-top: 15px;
+  overflow: hidden;
+}
+
+.tab-grid {
   display: grid;
   grid-gap: 15px;
   grid-template-columns: 50% 50%;
-  overflow: hidden;
-  padding-top: 10px;
 }

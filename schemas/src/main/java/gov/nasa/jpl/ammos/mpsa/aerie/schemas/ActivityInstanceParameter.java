@@ -1,6 +1,8 @@
 
 package gov.nasa.jpl.ammos.mpsa.aerie.schemas;
 
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -11,12 +13,14 @@ package gov.nasa.jpl.ammos.mpsa.aerie.schemas;
  */
 public class ActivityInstanceParameter {
 
+    private String defaultValue;
     /**
      * 
      * (Required)
      * 
      */
     private String name;
+    private List<String> range = new ArrayList<String>();
     /**
      * 
      * (Required)
@@ -39,15 +43,27 @@ public class ActivityInstanceParameter {
 
     /**
      * 
+     * @param defaultValue
      * @param name
+     * @param range
      * @param type
      * @param value
      */
-    public ActivityInstanceParameter(String name, String type, String value) {
+    public ActivityInstanceParameter(String defaultValue, String name, List<String> range, String type, String value) {
         super();
+        this.defaultValue = defaultValue;
         this.name = name;
+        this.range = range;
         this.type = type;
         this.value = value;
+    }
+
+    public String getDefaultValue() {
+        return defaultValue;
+    }
+
+    public void setDefaultValue(String defaultValue) {
+        this.defaultValue = defaultValue;
     }
 
     /**
@@ -66,6 +82,14 @@ public class ActivityInstanceParameter {
      */
     public void setName(String name) {
         this.name = name;
+    }
+
+    public List<String> getRange() {
+        return range;
+    }
+
+    public void setRange(List<String> range) {
+        this.range = range;
     }
 
     /**

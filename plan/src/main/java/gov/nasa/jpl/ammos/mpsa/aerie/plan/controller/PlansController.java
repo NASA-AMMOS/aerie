@@ -1,14 +1,15 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.controller;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.PlanDetail;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.repositories.PlansRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstanceParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityTypeParameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.PlanDetail;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import javax.validation.Valid;
@@ -54,20 +55,14 @@ public class PlansController {
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<Object> replacePlan(
-      @PathVariable("id") String id,
-      @Valid @RequestBody PlanDetail planDetail
-  ) {
+  public ResponseEntity<Object> replacePlan(@PathVariable("id") String id, @Valid @RequestBody PlanDetail planDetail) {
     planDetail.setId(id);
     repository.save(planDetail);
     return ResponseEntity.noContent().build();
   }
 
   @PatchMapping("/{id}")
-  public ResponseEntity<Object> updatePlan(
-      @PathVariable("id") String id,
-      @Valid @RequestBody PlanDetail planDetail
-  ) {
+  public ResponseEntity<Object> updatePlan(@PathVariable("id") String id, @Valid @RequestBody PlanDetail planDetail) {
     repository.save(planDetail);
     return ResponseEntity.noContent().build();
   }
@@ -86,28 +81,22 @@ public class PlansController {
   }
 
   @PostMapping("/{planId}/activity_instances")
-  public ResponseEntity<Object> createActivityInstance(
-      @PathVariable("planId") ObjectId _id,
+  public ResponseEntity<Object> createActivityInstance(@PathVariable("planId") ObjectId _id,
       @RequestParam(value = "adaptationId", required = false) String adaptationId,
       @RequestParam(value = "activityTypeId", required = false) String activityTypeId,
-      @Valid @RequestBody ActivityInstance requestBodyActivityInstance
-  ) {
+      @Valid @RequestBody ActivityInstance requestBodyActivityInstance) {
     ActivityInstance activityInstance = new ActivityInstance();
 
     // Get activity type from adaptation service
     if (adaptationId != null && activityTypeId != null) {
       RestTemplate restTemplate = new RestTemplate();
-      String uri = String.format("%s/%s/activities", adaptationUri,
-          adaptationId);
+      String uri = String.format("%s/%s/activities", adaptationUri, adaptationId);
 
-      ResponseEntity<HashMap<String, ActivityType>> response =
-          restTemplate.exchange(uri, HttpMethod.GET, null,
-              new ParameterizedTypeReference<HashMap<String,
-                  ActivityType>>() {
-              });
+      ResponseEntity<HashMap<String, ActivityType>> response = restTemplate.exchange(uri, HttpMethod.GET, null,
+          new ParameterizedTypeReference<HashMap<String, ActivityType>>() {
+          });
 
-      HashMap<String, ActivityType> activityTypes =
-          response.getBody();
+      HashMap<String, ActivityType> activityTypes = response.getBody();
 
       if (activityTypes.containsKey(activityTypeId)) {
         ActivityType at = activityTypes.get(activityTypeId);
@@ -118,13 +107,16 @@ public class PlansController {
         ArrayList<String> listeners = new ArrayList<>(at.getListeners());
         activityInstance.setListeners(listeners);
 
-        // TODO This is not doing what needs to be done. We need to get the value from the request body
+        // TODO This is not doing what needs to be done. We need to get the value from
+        // the request body
         ArrayList<ActivityInstanceParameter> parameters = new ArrayList<>();
         for (ActivityTypeParameter parameter : at.getParameters()) {
+          String defaultValue = "";
           String name = parameter.getName();
+          List<String> range = new ArrayList<String>();
+          String type = parameter.getType();
           String value = "FIX ME";
-          parameters.add(new ActivityInstanceParameter(parameter.getType(),
-              name, value));
+          parameters.add(new ActivityInstanceParameter(defaultValue, type, range, name, value));
         }
         activityInstance.setParameters(parameters);
       }
@@ -152,10 +144,7 @@ public class PlansController {
   }
 
   @GetMapping("/{planId}/activity_instances/{id}")
-  public ResponseEntity<Object> getActivityInstance(
-      @PathVariable("planId") ObjectId _id,
-      @PathVariable("id") UUID id
-  ) {
+  public ResponseEntity<Object> getActivityInstance(@PathVariable("planId") ObjectId _id, @PathVariable("id") UUID id) {
     PlanDetail planDetail = repository.findPlanDetailBy_id(_id);
 
     if (planDetail != null) {
@@ -170,20 +159,14 @@ public class PlansController {
   }
 
   @PutMapping("/{planId}/activity_instances/{id}")
-  public ResponseEntity<Object> replaceActivityInstance(
-      @PathVariable("planId") ObjectId _id,
-      @PathVariable("id") UUID id,
-      @Valid @RequestBody ActivityInstance requestBodyActivityInstance
-  ) {
+  public ResponseEntity<Object> replaceActivityInstance(@PathVariable("planId") ObjectId _id,
+      @PathVariable("id") UUID id, @Valid @RequestBody ActivityInstance requestBodyActivityInstance) {
     return this.updateActivityInstance(_id, id, requestBodyActivityInstance);
   }
 
   @PatchMapping("/{planId}/activity_instances/{id}")
-  public ResponseEntity<Object> updateActivityInstance(
-      @PathVariable("planId") ObjectId _id,
-      @PathVariable("id") UUID id,
-      @Valid @RequestBody ActivityInstance requestBodyActivityInstance
-  ) {
+  public ResponseEntity<Object> updateActivityInstance(@PathVariable("planId") ObjectId _id,
+      @PathVariable("id") UUID id, @Valid @RequestBody ActivityInstance requestBodyActivityInstance) {
     PlanDetail planDetail = repository.findPlanDetailBy_id(_id);
 
     if (planDetail != null) {
@@ -200,10 +183,8 @@ public class PlansController {
   }
 
   @DeleteMapping("/{planId}/activity_instances/{id}")
-  public ResponseEntity<Object> updateActivityInstance(
-      @PathVariable("planId") ObjectId _id,
-      @PathVariable("id") UUID id
-  ) {
+  public ResponseEntity<Object> updateActivityInstance(@PathVariable("planId") ObjectId _id,
+      @PathVariable("id") UUID id) {
     PlanDetail planDetail = repository.findPlanDetailBy_id(_id);
 
     if (planDetail != null) {

@@ -10,6 +10,7 @@
 import { Action } from '@ngrx/store';
 
 export enum LayoutActionTypes {
+  CloseAllDrawers = '[layout] close_all_drawers',
   LoadingBarHide = '[layout] loading_bar_hide',
   LoadingBarShow = '[layout] loading_bar_show',
   Resize = '[layout] resize',
@@ -18,6 +19,10 @@ export enum LayoutActionTypes {
   ToggleCreatePlanDrawer = '[layout] toggle_create_plan_drawer',
   ToggleEditActivityDrawer = '[layout] toggle_edit_activity_drawer',
   ToggleEditPlanDrawer = '[layout] toggle_edit_plan_drawer',
+}
+
+export class CloseAllDrawers implements Action {
+  readonly type = LayoutActionTypes.CloseAllDrawers;
 }
 
 export class LoadingBarHide implements Action {
@@ -59,6 +64,7 @@ export class ToggleEditPlanDrawer implements Action {
 }
 
 export type LayoutActions =
+  | CloseAllDrawers
   | LoadingBarHide
   | LoadingBarShow
   | Resize

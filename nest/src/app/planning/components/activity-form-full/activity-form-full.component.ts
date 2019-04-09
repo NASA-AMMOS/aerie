@@ -14,6 +14,7 @@ import {
   Input,
   OnChanges,
   Output,
+  SimpleChanges,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -60,7 +61,6 @@ export class ActivityFormFullComponent implements OnChanges {
   constructor(public fb: FormBuilder, public planningService: PlanningService) {
     this.form = this.fb.group({
       activityType: new FormControl(''),
-      constraints: this.fb.array([]),
       duration: new FormControl(0, [Validators.required]),
       intent: new FormControl(''),
       name: new FormControl('', [Validators.required]),
@@ -68,9 +68,40 @@ export class ActivityFormFullComponent implements OnChanges {
     });
   }
 
-  ngOnChanges(): void {
-    if (this.selectedActivity !== null && !this.isNew) {
+  ngOnChanges(changes: SimpleChanges): void {
+    if (
+      changes.selectedActivity &&
+      this.selectedActivity !== null &&
+      !this.isNew
+    ) {
+      this.addParametersFormControl();
       this.form.patchValue(this.selectedActivity);
+    }
+  }
+
+  /**
+   * Add control for parameters dynamically since we can have an arbitrary number of them.
+   */
+  addParametersFormControl() {
+    if (this.selectedActivity && this.selectedActivity.parameters) {
+      this.form.addControl(
+        'parameters',
+        this.fb.array(
+          this.selectedActivity.parameters.map(parameter =>
+            this.fb.group({
+              defaultValue: new FormControl(parameter.defaultValue),
+              name: new FormControl(parameter.name),
+              range: this.fb.array(
+                parameter.range
+                  ? parameter.range.map(range => new FormControl(range))
+                  : [],
+              ),
+              type: new FormControl(parameter.type),
+              value: new FormControl(parameter.value),
+            }),
+          ),
+        ),
+      );
     }
   }
 

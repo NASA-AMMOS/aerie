@@ -7,6 +7,4 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './ng-template-utils';
-export * from './test';
-export * from './time';
+export * from './activity';
