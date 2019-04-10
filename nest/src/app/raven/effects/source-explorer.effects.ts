@@ -56,7 +56,7 @@ import {
 } from '../actions/source-explorer.actions';
 
 import {
-  activityBandsWithLegend,
+  activityBandsWithLegendAndSourceId,
   getActivityPointInBand,
   getAddToSubBandId,
   getBandsWithSourceId,
@@ -155,6 +155,7 @@ export class SourceExplorerEffects {
             getSituationalAwarenessStartTime(situationalAwareness),
             getSituationalAwarenessPageDuration(situationalAwareness),
             true,
+            false,
           ),
           of(new sourceExplorerActions.LoadErrorsDisplay()),
           of(
@@ -322,7 +323,6 @@ export class SourceExplorerEffects {
               })),
             };
           });
-
           updatedBands.push(...bands);
         });
       }
@@ -656,6 +656,7 @@ export class SourceExplorerEffects {
           getSituationalAwarenessStartTime(raven.situationalAwareness),
           getSituationalAwarenessPageDuration(raven.situationalAwareness),
           true,
+          false,
         ),
       ]).pipe(
         catchError((e: Error) => {
@@ -732,6 +733,7 @@ export class SourceExplorerEffects {
           raven.situationalAwareness.situationalAware,
           getSituationalAwarenessStartTime(raven.situationalAwareness),
           getSituationalAwarenessPageDuration(raven.situationalAwareness),
+          false,
           false,
         ),
         of(
@@ -1357,7 +1359,7 @@ export class SourceExplorerEffects {
           ...savedState.defaultBandSettings,
         }),
       ),
-      ...this.load(bands, initialSources, pins),
+      ...this.load(bands, initialSources, pins, true),
       of(new timelineActions.RemoveBandsWithNoPoints()),
       ...pins.map(pin => of(new sourceExplorerActions.PinAdd(pin))),
       ...pins.map(pin => of(new timelineActions.PinAdd(pin))),
@@ -1414,7 +1416,7 @@ export class SourceExplorerEffects {
             ...savedState.defaultBandSettings,
           }),
         ),
-        ...this.load(savedState.bands, initialSources, savedState.pins),
+        ...this.load(savedState.bands, initialSources, savedState.pins, false),
         ...savedState.pins.map(pin =>
           of(new sourceExplorerActions.PinAdd(pin)),
         ),
@@ -1439,6 +1441,7 @@ export class SourceExplorerEffects {
     bands: RavenCompositeBand[],
     initialSources: RavenSource[],
     pins: RavenPin[],
+    restoringState: boolean,
   ): Observable<Action>[] {
     const { parentSourceIds, sourceIds } = getSourceIds(bands);
 
@@ -1525,6 +1528,7 @@ export class SourceExplorerEffects {
                 getSituationalAwarenessPageDuration(
                   state.raven.situationalAwareness,
                 ),
+                restoringState,
               ),
               of(
                 new sourceExplorerActions.UpdateTreeSource(sourceId, {
@@ -1558,6 +1562,7 @@ export class SourceExplorerEffects {
     startTime: string,
     pageDuration: string,
     graphAgain: boolean,
+    restoringState: boolean,
   ) {
     return this.fetchSubBands(
       treeBySourceId,
@@ -1581,10 +1586,11 @@ export class SourceExplorerEffects {
         }
         if (newSubBands.length > 0) {
           newSubBands.forEach((subBand: RavenSubBand) => {
-            const activityBands = activityBandsWithLegend(
+            const activityBands = activityBandsWithLegendAndSourceId(
               currentBands,
               subBand,
               getPinLabel(treeBySourceId[sourceId].id, pins),
+              restoringState ? sourceId : '',
             );
             const existingBands = graphAgain
               ? []
@@ -1728,6 +1734,7 @@ export class SourceExplorerEffects {
     situAware: boolean,
     startTime: string,
     pageDuration: string,
+    restoringState: boolean,
   ): Observable<Action>[] {
     if (customFilters) {
       return customFilters.map(customFilter =>
@@ -1745,6 +1752,7 @@ export class SourceExplorerEffects {
           startTime,
           pageDuration,
           false,
+          restoringState,
         ),
       );
     }
@@ -1782,6 +1790,7 @@ export class SourceExplorerEffects {
             startTime,
             pageDuration,
             false,
+            restoringState,
           ),
         ];
       }

@@ -639,21 +639,26 @@ export function getFilterLabel(
 }
 
 /**
- * Helper. Returns an activity-by-type band locator if a given band exists in the list of bands for a legend.
+ * Helper. Returns an activity-by-type band locator if a given band exists in the list of bands for a legend and sourceId.
  * `null` otherwise.
  */
-export function activityBandsWithLegend(
+export function activityBandsWithLegendAndSourceId(
   bands: RavenCompositeBand[],
   band: RavenSubBand,
   pinLabel: string,
+  sourceId: string,
 ) {
   const bandsWithLegend = [];
   if (band.type === 'activity') {
     for (let i = 0, l = bands.length; i < l; ++i) {
       for (let j = 0, ll = bands[i].subBands.length; j < ll; ++j) {
         const subBand = bands[i].subBands[j] as RavenActivityBand;
+        const withSourceId = sourceId.length
+          ? subBand.sourceIds.includes(sourceId)
+          : true;
         if (
           subBand.type === 'activity' &&
+          withSourceId &&
           subBand.legend === (band as RavenActivityBand).legend &&
           subBand.labelPin === pinLabel
         ) {
