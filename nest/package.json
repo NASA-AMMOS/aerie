@@ -28,7 +28,7 @@
   },
   "lint-staged": {
     "src/**/*.{ts,js}": [
-      "node ./scripts/lint-staged.js lint",
+      "node ./scripts/lint-staged.js lint-prod",
       "git add"
     ]
   },
