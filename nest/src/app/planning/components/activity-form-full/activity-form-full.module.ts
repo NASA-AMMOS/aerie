@@ -20,6 +20,7 @@ import {
   MatSidenavModule,
   MatTabsModule,
 } from '@angular/material';
+import { OwlDateTimeModule, OwlNativeDateTimeModule } from 'ng-pick-datetime';
 import { SubActivityTreeModule } from '../sub-activity-tree/sub-activity-tree.module';
 import { ActivityFormFullComponent } from './activity-form-full.component';
 
@@ -28,6 +29,8 @@ import { ActivityFormFullComponent } from './activity-form-full.component';
   exports: [ActivityFormFullComponent],
   imports: [
     CommonModule,
+    OwlDateTimeModule,
+    OwlNativeDateTimeModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatCardModule,

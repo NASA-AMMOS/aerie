@@ -14,20 +14,26 @@
     <mat-label>Plan Start</mat-label>
     <input
       matInput
-      placeholder="Start time"
+      [owlDateTime]="startTimestamp"
+      [owlDateTimeTrigger]="startTimestamp"
       [formControl]="form.controls['startTimestamp']"
+      placeholder="Plan Start"
       required
     />
+    <owl-date-time #startTimestamp></owl-date-time>
   </mat-form-field>
 
   <mat-form-field appearance="fill">
     <mat-label>Plan End</mat-label>
     <input
       matInput
-      placeholder="End time"
+      [owlDateTime]="endTimestamp"
+      [owlDateTimeTrigger]="endTimestamp"
       [formControl]="form.controls['endTimestamp']"
+      placeholder="Plan End"
       required
     />
+    <owl-date-time #endTimestamp></owl-date-time>
   </mat-form-field>
 
   <mat-form-field appearance="fill" floatLabel="always">

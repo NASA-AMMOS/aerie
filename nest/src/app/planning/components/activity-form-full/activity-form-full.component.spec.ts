@@ -76,7 +76,7 @@ describe('ActivityFormFullComponent', () => {
         component.selectedActivity.name,
       );
       expect(component.form.controls.start.value).toEqual(
-        component.selectedActivity.start,
+        new Date(component.selectedActivity.start * 1000),
       );
     });
   });
@@ -109,10 +109,15 @@ describe('ActivityFormFullComponent', () => {
       doNgOnChanges(component, ['selectedActivity', 'isNew']);
       component.updateActivity.subscribe(
         (updatedActivity: ActivityInstance) => {
-          expect(updatedActivity).toEqual(activity);
+          expect(updatedActivity).toEqual({
+            ...activity,
+          });
         },
       );
-      component.onSubmit(activity);
+      component.onSubmit({
+        ...activity,
+        start: activity.start * 1000,
+      });
     });
 
     it('if isNew is true then createActivity should emit with the form value', () => {

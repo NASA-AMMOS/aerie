@@ -33,11 +33,13 @@
     <mat-label>Start</mat-label>
     <input
       matInput
-      placeholder="Start time"
-      type="number"
+      [owlDateTime]="startTime"
+      [owlDateTimeTrigger]="startTime"
       [formControl]="form.controls['start']"
+      placeholder="Start time"
       required
     />
+    <owl-date-time #startTime></owl-date-time>
     <mat-hint align="start">UTC within plan bounds</mat-hint>
     <mat-icon matSuffix>event</mat-icon>
   </mat-form-field>
