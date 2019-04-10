@@ -104,6 +104,7 @@
     "lint-staged": "^8.1.5",
     "ngrx-store-freeze": "^0.2.4",
     "prettier": "^1.14.3",
+    "pretty-quick": "^1.10.0",
     "sonar-scanner": "^3.1.0",
     "sonarjs": "^1.0.0",
     "pretty-quick": "^1.10.0",
