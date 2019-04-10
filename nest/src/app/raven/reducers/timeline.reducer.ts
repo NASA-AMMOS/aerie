@@ -844,13 +844,9 @@ export function sourceIdAdd(
  * Reduction Helper. Called when reducing the 'ToggleGuide' action.
  */
 export function toggleGuide(state: TimelineState, action: ToggleGuide) {
-  const existingGuide = state.guides.filter(guide =>
-    guideWithinFivePixels(
-      guide,
-      action.guide.guideTime,
-      action.guide.timePerPixel,
-    ),
-  );
+  const withinFivePixels = (guide: number) =>
+    Math.abs(action.guide.guideTime - guide) / action.guide.timePerPixel <= 5;
+  const existingGuide = state.guides.filter(guide => withinFivePixels(guide));
   return {
     ...state,
     currentStateChanged: state.currentState !== null,
@@ -913,17 +909,4 @@ export function updateSubBand(
     }),
     currentStateChanged: state.currentState !== null,
   };
-}
-
-/**
- * Helper. Returns true if guide is within 5 pixels of guideTime.
- */
-export function guideWithinFivePixels(
-  guide: number,
-  guideTime: number,
-  timePerPixel: number,
-) {
-  return (
-    guideTime > guide - 5 * timePerPixel && guideTime < guide + 5 * timePerPixel
-  );
 }

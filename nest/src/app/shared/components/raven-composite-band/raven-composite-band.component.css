@@ -28,6 +28,10 @@
   mix-blend-mode: multiply;
 }
 
+.hovered {
+  z-index: 1;
+}
+
 .icon-div {
   position: absolute;
   left: 0px;
