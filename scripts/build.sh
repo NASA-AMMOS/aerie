@@ -128,7 +128,7 @@ if echo "$changed" | grep --quiet "\(nest\|schemas\)"; then
 
   npm ci
   [ $? -ne 0 ] && error_exit "npm ci failed"
-
+  
   npm run license:check
   [ $? -ne 0 ] && error_exit "npm run license:check failed"
 
