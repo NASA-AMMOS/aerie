@@ -396,7 +396,7 @@ export class TimelineComponent implements OnDestroy {
   /**
    * Helper. Caiculate the main chart height.
    */
-  getMainChartHeight() {
+  getMainChartHeightPercent() {
     return (
       100 -
       this.topContainerHeight -
