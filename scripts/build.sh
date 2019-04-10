@@ -148,10 +148,6 @@ if echo "$changed" | grep --quiet "\(nest\|schemas\)"; then
   npm run test-for-build
   [ $? -ne 0 ] && error_exit "npm run test-for-build failed"
 
-  npx webdriver-manager update
-  npm run e2e
-  [ $? -ne 0 ] && error_exit "npm run e2e failed"
-
   cd $root
 fi
 

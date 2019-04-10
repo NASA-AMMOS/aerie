@@ -37,7 +37,6 @@ documentation
 
 # testing
 karma-test-results.xml
-/e2e/*.map
 /reports
 
 # System Files
