@@ -129,8 +129,8 @@ if echo "$changed" | grep --quiet "\(nest\|schemas\)"; then
   npm ci
   [ $? -ne 0 ] && error_exit "npm ci failed"
 
-  npm run lint
-  [ $? -ne 0 ] && error_exit "npm run lint failed"
+  npm run lint-prod
+  [ $? -ne 0 ] && error_exit "npm run lint-prod failed"
 
   npm run format:check
   [ $? -ne 0 ] && error_exit "npm run format:check failed"
