@@ -1560,52 +1560,62 @@ export class SourceExplorerEffects {
    * Helper. Returns a stream of actions that need to occur when opening a source explorer source.
    * The order of the cases in this function are very important. Do not change the order.
    */
-  open(openArgs: RavenOpenArgs) {
+  open({
+    bandId,
+    currentBands,
+    customFilter,
+    defaultBandSettings,
+    filtersByTarget,
+    graphAgain,
+    pageDuration,
+    pins,
+    restoringLayout,
+    situAware,
+    sourceId,
+    startTime,
+    subBandId,
+    treeBySourceId,
+  }: RavenOpenArgs) {
     return this.fetchSubBands(
-      openArgs.treeBySourceId,
-      openArgs.sourceId,
-      openArgs.defaultBandSettings,
-      openArgs.customFilter,
-      openArgs.filtersByTarget,
-      openArgs.situAware,
-      openArgs.startTime,
-      openArgs.pageDuration,
+      treeBySourceId,
+      sourceId,
+      defaultBandSettings,
+      customFilter,
+      filtersByTarget,
+      situAware,
+      startTime,
+      pageDuration,
     ).pipe(
       concatMap((newSubBands: RavenSubBand[]) => {
         const actions: Action[] = [];
-        if (
-          openArgs.treeBySourceId[openArgs.sourceId].type === 'graphableFilter'
-        ) {
+        if (treeBySourceId[sourceId].type === 'graphableFilter') {
           // Clear existing points regardless if fetch returns any data.
           actions.push(
             new timelineActions.RemoveAllPointsInSubBandWithParentSource(
-              openArgs.treeBySourceId[openArgs.sourceId].parentId,
+              treeBySourceId[sourceId].parentId,
             ),
           );
         }
         if (newSubBands.length > 0) {
           newSubBands.forEach((subBand: RavenSubBand) => {
             const activityBands = activityBandsWithLegendAndSourceId(
-              openArgs.currentBands,
+              currentBands,
               subBand,
-              getPinLabel(
-                openArgs.treeBySourceId[openArgs.sourceId].id,
-                openArgs.pins,
-              ),
-              openArgs.restoringLayout ? openArgs.sourceId : '',
+              getPinLabel(treeBySourceId[sourceId].id, pins),
+              restoringLayout ? sourceId : '',
             );
-            const existingBands = openArgs.graphAgain
+            const existingBands = graphAgain
               ? []
-              : getBandsWithSourceId(openArgs.currentBands, openArgs.sourceId);
-            if (!openArgs.graphAgain && activityBands.length > 0) {
+              : getBandsWithSourceId(currentBands, sourceId);
+            if (!graphAgain && activityBands.length > 0) {
               activityBands.forEach(activityBand =>
                 actions.push(
                   new sourceExplorerActions.SubBandIdAdd(
-                    openArgs.sourceId,
+                    sourceId,
                     activityBand.subBandId,
                   ),
                   new timelineActions.AddPointsToSubBand(
-                    openArgs.sourceId,
+                    sourceId,
                     activityBand.bandId,
                     activityBand.subBandId,
                     subBand.points,
@@ -1618,11 +1628,11 @@ export class SourceExplorerEffects {
                   // Use the newly create state band with possibly updated possibleStates.
                   actions.push(
                     new sourceExplorerActions.SubBandIdAdd(
-                      openArgs.sourceId,
+                      sourceId,
                       subBand.id,
                     ),
                     new timelineActions.AddSubBand(
-                      openArgs.sourceId,
+                      sourceId,
                       existingBand.bandId,
                       subBand,
                     ),
@@ -1632,7 +1642,7 @@ export class SourceExplorerEffects {
                 } else if (
                   subBand.type !== 'activity' ||
                   isAddTo(
-                    openArgs.currentBands,
+                    currentBands,
                     existingBand.bandId,
                     existingBand.subBandId,
                     'activity',
@@ -1640,11 +1650,11 @@ export class SourceExplorerEffects {
                 ) {
                   actions.push(
                     new sourceExplorerActions.SubBandIdAdd(
-                      openArgs.sourceId,
+                      sourceId,
                       existingBand.subBandId,
                     ),
                     new timelineActions.AddPointsToSubBand(
-                      openArgs.sourceId,
+                      sourceId,
                       existingBand.bandId,
                       existingBand.subBandId,
                       subBand.points,
@@ -1654,65 +1664,43 @@ export class SourceExplorerEffects {
               });
             } else if (
               subBand.type === 'activity' &&
-              openArgs.bandId &&
-              getAddToSubBandId(openArgs.currentBands, openArgs.bandId)
+              bandId &&
+              getAddToSubBandId(currentBands, bandId)
             ) {
-              const addToSubBandId = getAddToSubBandId(
-                openArgs.currentBands,
-                openArgs.bandId,
-              );
+              const addToSubBandId = getAddToSubBandId(currentBands, bandId);
               if (addToSubBandId) {
                 actions.push(
                   new sourceExplorerActions.SubBandIdAdd(
-                    openArgs.sourceId,
+                    sourceId,
                     addToSubBandId,
                   ),
                   new timelineActions.AddPointsToSubBand(
-                    openArgs.sourceId,
-                    openArgs.bandId,
+                    sourceId,
+                    bandId,
                     addToSubBandId,
                     subBand.points,
                   ),
                 );
               }
-            } else if (
-              openArgs.bandId &&
-              isOverlay(openArgs.currentBands, openArgs.bandId)
-            ) {
+            } else if (bandId && isOverlay(currentBands, bandId)) {
               actions.push(
-                new sourceExplorerActions.SubBandIdAdd(
-                  openArgs.sourceId,
-                  subBand.id,
-                ),
-                new timelineActions.AddSubBand(
-                  openArgs.sourceId,
-                  openArgs.bandId,
-                  subBand,
-                ),
-                new timelineActions.SetCompositeYLabelDefault(openArgs.bandId),
+                new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id),
+                new timelineActions.AddSubBand(sourceId, bandId, subBand),
+                new timelineActions.SetCompositeYLabelDefault(bandId),
               );
             } else {
               actions.push(
-                new sourceExplorerActions.SubBandIdAdd(
-                  openArgs.sourceId,
-                  subBand.id,
-                ),
-                new timelineActions.AddBand(
-                  openArgs.sourceId,
-                  toCompositeBand(subBand),
-                ),
+                new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id),
+                new timelineActions.AddBand(sourceId, toCompositeBand(subBand)),
               );
             }
 
             // Make sure that if we are dealing with a custom graphable source that we update the custom filters with the new sub-band id.
-            if (
-              openArgs.treeBySourceId[openArgs.sourceId].type ===
-              'customGraphable'
-            ) {
+            if (treeBySourceId[sourceId].type === 'customGraphable') {
               actions.push(
                 new sourceExplorerActions.SetCustomFilterSubBandId(
-                  openArgs.sourceId,
-                  openArgs.customFilter ? openArgs.customFilter.label : '',
+                  sourceId,
+                  customFilter ? customFilter.label : '',
                   subBand.id,
                 ),
               );
@@ -1723,20 +1711,17 @@ export class SourceExplorerEffects {
           actions.push(new layoutActions.Resize());
         } else {
           // Notify user no bands will be drawn.
-          actions.push(
-            new sourceExplorerActions.LoadErrorsAdd([openArgs.sourceId]),
-          );
+          actions.push(new sourceExplorerActions.LoadErrorsAdd([sourceId]));
 
           // Remove custom filter if custom source
           if (
-            openArgs.treeBySourceId[openArgs.sourceId].type ===
-              'customGraphable' &&
-            openArgs.customFilter
+            treeBySourceId[sourceId].type === 'customGraphable' &&
+            customFilter
           ) {
             actions.push(
               new sourceExplorerActions.RemoveCustomFilter(
-                openArgs.sourceId,
-                openArgs.customFilter.label,
+                sourceId,
+                customFilter.label,
               ),
             );
           }
