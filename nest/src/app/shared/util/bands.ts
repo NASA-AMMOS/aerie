@@ -639,7 +639,7 @@ export function getFilterLabel(
 }
 
 /**
- * Helper. Returns an activity-by-type band locator if a given band exists in the list of bands for a legend and sourceId.
+ * Helper. Returns an activity-by-type band locator if a given band exists in the list of bands for a legend and sourceId if not ''.
  * `null` otherwise.
  */
 export function activityBandsWithLegendAndSourceId(

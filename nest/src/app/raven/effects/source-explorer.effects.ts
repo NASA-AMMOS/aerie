@@ -323,6 +323,7 @@ export class SourceExplorerEffects {
               })),
             };
           });
+
           updatedBands.push(...bands);
         });
       }
