@@ -1442,7 +1442,7 @@ export class SourceExplorerEffects {
     bands: RavenCompositeBand[],
     initialSources: RavenSource[],
     pins: RavenPin[],
-    restoringState: boolean,
+    restoringLayout: boolean,
   ): Observable<Action>[] {
     const { parentSourceIds, sourceIds } = getSourceIds(bands);
 
@@ -1529,7 +1529,7 @@ export class SourceExplorerEffects {
                 getSituationalAwarenessPageDuration(
                   state.raven.situationalAwareness,
                 ),
-                restoringState,
+                restoringLayout,
               ),
               of(
                 new sourceExplorerActions.UpdateTreeSource(sourceId, {
@@ -1563,7 +1563,7 @@ export class SourceExplorerEffects {
     startTime: string,
     pageDuration: string,
     graphAgain: boolean,
-    restoringState: boolean,
+    restoringLayout: boolean,
   ) {
     return this.fetchSubBands(
       treeBySourceId,
@@ -1591,7 +1591,7 @@ export class SourceExplorerEffects {
               currentBands,
               subBand,
               getPinLabel(treeBySourceId[sourceId].id, pins),
-              restoringState ? sourceId : '',
+              restoringLayout ? sourceId : '',
             );
             const existingBands = graphAgain
               ? []
@@ -1735,7 +1735,7 @@ export class SourceExplorerEffects {
     situAware: boolean,
     startTime: string,
     pageDuration: string,
-    restoringState: boolean,
+    restoringLayout: boolean,
   ): Observable<Action>[] {
     if (customFilters) {
       return customFilters.map(customFilter =>
@@ -1753,7 +1753,7 @@ export class SourceExplorerEffects {
           startTime,
           pageDuration,
           false,
-          restoringState,
+          restoringLayout,
         ),
       );
     }
@@ -1791,7 +1791,7 @@ export class SourceExplorerEffects {
             startTime,
             pageDuration,
             false,
-            restoringState,
+            restoringLayout,
           ),
         ];
       }
