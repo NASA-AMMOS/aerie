@@ -1629,7 +1629,7 @@ export class SourceExplorerEffects {
                       existingBand.subBandId,
                     ),
 
-                    // Use new possibeStates since that can change from one adaptation to another.
+                    // Use new possibleStates since that can change from one adaptation to another.
                     new timelineActions.UpdateSubBand(
                       existingBand.bandId,
                       existingBand.subBandId,
