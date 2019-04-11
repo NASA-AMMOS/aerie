@@ -49,13 +49,19 @@ mat-sidenav {
 
 .side-nav-wrapper {
   display: grid;
-  grid-template-rows: 3rem 1fr;
+  grid-template-rows: 4rem 1fr;
   height: 100%;
 }
 
 .side-nav-header {
   display: grid;
   grid-template-columns: 1fr min-content;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.side-nav-header h2 {
+  margin: 0;
 }
 
 .tab {
