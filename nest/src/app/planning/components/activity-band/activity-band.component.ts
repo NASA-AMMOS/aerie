@@ -664,6 +664,11 @@ export class ActivityBandComponent
     const newEnd = newStart + duration;
     const y = newY || point.y;
 
+    // If no attributes have changed, skip the update
+    if (newStart === point.start && duration === point.duration && y === newY) {
+      return;
+    }
+
     this.updateSelectedActivity.emit({
       activityId: id,
       duration,
