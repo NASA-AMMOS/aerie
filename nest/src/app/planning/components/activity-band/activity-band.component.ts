@@ -414,13 +414,12 @@ export class ActivityBandComponent
     `;
       const rectTarget = d3.select(`#rect-${id}`);
 
-      const tooltip = d3
-        .select('#activity-tooltip-container')
-        .html(tooltipTemplate);
+      const tooltip = d3.select('#activity-tooltip-container');
 
       rectTarget
         .on('mouseover', () => {
           tooltip
+            .html(tooltipTemplate)
             .transition()
             .ease(d3.easeLinear)
             .duration(100)
