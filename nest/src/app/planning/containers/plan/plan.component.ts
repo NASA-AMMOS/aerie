@@ -8,9 +8,10 @@
  */
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
+import { NavigateByUrl } from '../../../../../libs/ngrx-router';
 import { ActivityInstance, ActivityType, Plan } from '../../../shared/models';
 import {
   ToggleActivityTypesDrawer,
@@ -52,7 +53,6 @@ export class PlanComponent {
 
   constructor(
     private store: Store<PlanningAppState>,
-    private router: Router,
     private route: ActivatedRoute,
     public planningService: PlanningService,
   ) {
@@ -76,7 +76,7 @@ export class PlanComponent {
    */
   navigateToNewActivityPage() {
     const { planId } = this.route.snapshot.paramMap['params'];
-    this.router.navigateByUrl(`/plans/${planId}/activity`);
+    this.store.dispatch(new NavigateByUrl(`/plans/${planId}/activity`));
   }
 
   /**
@@ -84,7 +84,9 @@ export class PlanComponent {
    */
   navigateToEditActivityPage(activityId: string): void {
     const { planId } = this.route.snapshot.paramMap['params'];
-    this.router.navigateByUrl(`/plans/${planId}/activity/${activityId}`);
+    this.store.dispatch(
+      new NavigateByUrl(`/plans/${planId}/activity/${activityId}`),
+    );
   }
 
   /**
@@ -107,7 +109,7 @@ export class PlanComponent {
    * Event. Called when we want to nav back to the plans container.
    */
   onNavBack() {
-    this.router.navigate([`/plans`]);
+    this.store.dispatch(new NavigateByUrl(`/plans`));
   }
 
   /**

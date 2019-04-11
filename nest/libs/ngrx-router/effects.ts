@@ -5,6 +5,7 @@ import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { debounce, filter, map, tap } from 'rxjs/operators';
 import {
+  NavigateByUrl,
   RouterActionTypes,
   RouterBack,
   RouterForward,
@@ -24,24 +25,31 @@ export class RouterEffects {
   }
 
   @Effect({ dispatch: false })
-  navigate$ = this.actions$.pipe(
-    ofType<RouterGo>(RouterActionTypes.RouterGo),
-    map((action: any) => action.payload),
-    tap(({ path, queryParams, extras }) =>
-      setTimeout(() => this.router.navigate(path, { queryParams, ...extras })),
-    ),
+  navigateByUrl$ = this.actions$.pipe(
+    ofType<NavigateByUrl>(RouterActionTypes.NavigateByUrl),
+    map((action: NavigateByUrl) => action.url),
+    tap(url => this.router.navigateByUrl(url)),
   );
 
   @Effect({ dispatch: false })
-  navigateBack$ = this.actions$.pipe(
+  routerBack$ = this.actions$.pipe(
     ofType<RouterBack>(RouterActionTypes.RouterBack),
     tap(() => setTimeout(() => this.location.back())),
   );
 
   @Effect({ dispatch: false })
-  navigateForward$ = this.actions$.pipe(
+  routerForward$ = this.actions$.pipe(
     ofType<RouterForward>(RouterActionTypes.RouterForward),
     tap(() => setTimeout(() => this.location.forward())),
+  );
+
+  @Effect({ dispatch: false })
+  routerGo$ = this.actions$.pipe(
+    ofType<RouterGo>(RouterActionTypes.RouterGo),
+    map((action: any) => action.payload),
+    tap(({ path, queryParams, extras }) =>
+      setTimeout(() => this.router.navigate(path, { queryParams, ...extras })),
+    ),
   );
 
   private navEnd$ = this.router.events.pipe(

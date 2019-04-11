@@ -8,9 +8,9 @@
  */
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { Router } from '@angular/router';
 import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
+import { NavigateByUrl } from '../../../../../libs/ngrx-router';
 import { Adaptation, Plan } from '../../../shared/models';
 import {
   ToggleCreatePlanDrawer,
@@ -47,7 +47,6 @@ export class PlansComponent {
 
   constructor(
     private store: Store<PlanningAppState>,
-    private router: Router,
     public planningService: PlanningService,
   ) {
     this.adaptations$ = this.store.pipe(select(getAdaptations));
@@ -68,7 +67,7 @@ export class PlansComponent {
   }
 
   onOpenPlan(planId: string): void {
-    this.router.navigateByUrl(`/plans/${planId}`);
+    this.store.dispatch(new NavigateByUrl(`/plans/${planId}`));
   }
 
   onSelectPlan(planId: string): void {

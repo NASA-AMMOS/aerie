@@ -2,10 +2,16 @@ import { NavigationExtras } from '@angular/router';
 import { Action } from '@ngrx/store';
 
 export enum RouterActionTypes {
+  NavigateByUrl = '[router] navigate_by_url',
   RouterBack = '[router] back',
   RouterForward = '[router] forward',
   RouterGo = '[router] go',
   RouterNavigation = '[router] navigation',
+}
+
+export class NavigateByUrl implements Action {
+  readonly type = RouterActionTypes.NavigateByUrl;
+  constructor(public url: string) {}
 }
 
 export class RouterBack implements Action {
