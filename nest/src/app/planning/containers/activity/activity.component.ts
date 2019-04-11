@@ -8,9 +8,10 @@
  */
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
+import { NavigateByUrl } from '../../../../../libs/ngrx-router';
 import { ActivityInstance, ActivityType } from '../../../shared/models';
 import { CreateActivity, UpdateActivity } from '../../actions/plan.actions';
 import { PlanningAppState } from '../../planning-store';
@@ -33,7 +34,6 @@ export class ActivityComponent {
 
   constructor(
     private store: Store<PlanningAppState>,
-    private router: Router,
     private route: ActivatedRoute,
     public planningService: PlanningService,
   ) {
@@ -59,7 +59,7 @@ export class ActivityComponent {
 
   onNavBack() {
     const { planId } = this.route.snapshot.paramMap['params'];
-    this.router.navigate([`/plans/${planId}`]);
+    this.store.dispatch(new NavigateByUrl(`/plans/${planId}`));
   }
 
   onUpdateActivity(activity: ActivityInstance): void {
