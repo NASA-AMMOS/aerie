@@ -25,6 +25,11 @@ main {
   overflow: hidden;
 }
 
+mat-progress-bar {
+  position: absolute;
+  z-index: 5;
+}
+
 mat-sidenav-container {
   height: 100%;
 }

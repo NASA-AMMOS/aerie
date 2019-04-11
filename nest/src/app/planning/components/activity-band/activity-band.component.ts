@@ -414,13 +414,12 @@ export class ActivityBandComponent
     `;
       const rectTarget = d3.select(`#rect-${id}`);
 
-      const tooltip = d3
-        .select('#activity-tooltip-container')
-        .html(tooltipTemplate);
+      const tooltip = d3.select('#activity-tooltip-container');
 
       rectTarget
         .on('mouseover', () => {
           tooltip
+            .html(tooltipTemplate)
             .transition()
             .ease(d3.easeLinear)
             .duration(100)
@@ -663,6 +662,11 @@ export class ActivityBandComponent
     const duration = newDuration || point.duration;
     const newEnd = newStart + duration;
     const y = newY || point.y;
+
+    // If no attributes have changed, skip the update
+    if (newStart === point.start && duration === point.duration && y === newY) {
+      return;
+    }
 
     this.updateSelectedActivity.emit({
       activityId: id,
