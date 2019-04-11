@@ -52,4 +52,10 @@ mat-sidenav {
 .side-nav-header {
   display: grid;
   grid-template-columns: 1fr min-content;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.side-nav-header h2 {
+  margin: 0;
 }
