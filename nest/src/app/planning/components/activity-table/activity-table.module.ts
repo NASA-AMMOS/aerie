@@ -13,12 +13,19 @@ import {
   MatButtonModule,
   MatIconModule,
   MatTableModule,
+  MatTooltipModule,
 } from '@angular/material';
 import { ActivityTableComponent } from './activity-table.component';
 
 @NgModule({
   declarations: [ActivityTableComponent],
   exports: [ActivityTableComponent],
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatTableModule],
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTableModule,
+    MatTooltipModule,
+  ],
 })
 export class ActivityTableModule {}

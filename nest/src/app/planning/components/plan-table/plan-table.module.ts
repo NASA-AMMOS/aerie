@@ -13,12 +13,19 @@ import {
   MatButtonModule,
   MatIconModule,
   MatTableModule,
+  MatTooltipModule,
 } from '@angular/material';
 import { PlanTableComponent } from './plan-table.component';
 
 @NgModule({
   declarations: [PlanTableComponent],
   exports: [PlanTableComponent],
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatTableModule],
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTableModule,
+    MatTooltipModule,
+  ],
 })
 export class PlanTableModule {}
