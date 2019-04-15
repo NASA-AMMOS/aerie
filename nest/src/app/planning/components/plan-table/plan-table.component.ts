@@ -39,8 +39,5 @@ export class PlanTableComponent {
   deletePlan: EventEmitter<string> = new EventEmitter<string>();
 
   @Output()
-  openPlan: EventEmitter<string> = new EventEmitter<string>();
-
-  @Output()
   selectPlan: EventEmitter<string> = new EventEmitter<string>();
 }

@@ -22,7 +22,6 @@
           *ngIf="plans.length"
           [plans]="plans"
           (deletePlan)="onDeletePlan($event)"
-          (openPlan)="onOpenPlan($event)"
           (selectPlan)="onSelectPlan($event)"
         >
         </plan-table>
@@ -56,36 +55,6 @@
               [adaptations]="adaptations$ | async"
               [isNew]="true"
               (create)="onCreatePlan($event)"
-            ></plan-form>
-          </div>
-        </div>
-      </div>
-    </mat-sidenav>
-
-    <mat-sidenav
-      *ngIf="(showEditPlanDrawer$ | async)"
-      mode="side"
-      position="end"
-      [opened]="showEditPlanDrawer$ | async"
-      (closedStart)="onToggleEditPlanDrawer(false)"
-    >
-      <div class="side-nav-container">
-        <div class="side-nav-wrapper">
-          <div class="side-nav-header">
-            <h2>Edit Plan</h2>
-            <button mat-icon-button (click)="onToggleEditPlanDrawer(false)">
-              <mat-icon aria-label="Clear">
-                clear
-              </mat-icon>
-            </button>
-          </div>
-
-          <div>
-            <plan-form
-              [adaptations]="adaptations$ | async"
-              [isNew]="false"
-              [plan]="selectedPlan$ | async"
-              (update)="onUpdatePlan($event)"
             ></plan-form>
           </div>
         </div>

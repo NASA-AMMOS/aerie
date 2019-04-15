@@ -37,7 +37,7 @@
                   [activities]="activities$ | async"
                   [activity]="selectedActivity$ | async"
                   (deleteActivity)="onDeleteActivity($event)"
-                  (openActivity)="navigateToEditActivityPage($event)"
+                  (editActivity)="onEditActivity($event)"
                   (selectActivity)="onSelectActivity($event)"
                 ></activity-table>
               </div>
@@ -135,13 +135,13 @@
       mode="side"
       position="end"
       [opened]="showEditActivityDrawer$ | async"
-      (closedStart)="onToggleEditActivityDrawer(false)"
+      (closedStart)="onCloseEditActivityDrawer()"
     >
       <div class="side-nav-container">
         <div class="side-nav-wrapper">
           <div class="side-nav-header">
             <h2>Edit Activity</h2>
-            <button mat-icon-button (click)="onToggleEditActivityDrawer(false)">
+            <button mat-icon-button (click)="onCloseEditActivityDrawer()">
               <mat-icon aria-label="Clear">
                 clear
               </mat-icon>
@@ -152,7 +152,7 @@
             [activity]="selectedActivity$ | async"
             [activityTypes]="activityTypes$ | async"
             [isNew]="false"
-            (clickAdvanced)="navigateToEditActivityPage($event)"
+            (clickAdvanced)="onSelectActivity($event)"
             (updateActivity)="onUpdateActivity($event)"
           ></activity-form>
         </div>

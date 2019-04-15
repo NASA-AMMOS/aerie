@@ -41,8 +41,3 @@ export const getShowEditActivityDrawer = createSelector(
   getLayoutState,
   (state: LayoutState) => state.showEditActivityDrawer,
 );
-
-export const getShowEditPlanDrawer = createSelector(
-  getLayoutState,
-  (state: LayoutState) => state.showEditPlanDrawer,
-);

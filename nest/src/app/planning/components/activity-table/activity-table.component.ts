@@ -36,7 +36,7 @@ export class ActivityTableComponent {
   deleteActivity: EventEmitter<string> = new EventEmitter<string>();
 
   @Output()
-  openActivity: EventEmitter<string> = new EventEmitter<string>();
+  editActivity: EventEmitter<string> = new EventEmitter<string>();
 
   @Output()
   selectActivity: EventEmitter<string> = new EventEmitter<string>();

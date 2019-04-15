@@ -16,7 +16,6 @@ import {
   ToggleAddActivityDrawer,
   ToggleCreatePlanDrawer,
   ToggleEditActivityDrawer,
-  ToggleEditPlanDrawer,
 } from '../actions/layout.actions';
 import { initialState, LayoutState, reducer } from './layout.reducer';
 
@@ -91,14 +90,6 @@ describe('layout reducer', () => {
     expect(layoutState).toEqual({
       ...initialState,
       showEditActivityDrawer: true,
-    });
-  });
-
-  it('handle ToggleEditPlanDrawer', () => {
-    layoutState = reducer(layoutState, new ToggleEditPlanDrawer());
-    expect(layoutState).toEqual({
-      ...initialState,
-      showEditPlanDrawer: true,
     });
   });
 });

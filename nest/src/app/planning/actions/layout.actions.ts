@@ -18,7 +18,6 @@ export enum LayoutActionTypes {
   ToggleAddActivityDrawer = '[layout] toggle_add_activity_drawer',
   ToggleCreatePlanDrawer = '[layout] toggle_create_plan_drawer',
   ToggleEditActivityDrawer = '[layout] toggle_edit_activity_drawer',
-  ToggleEditPlanDrawer = '[layout] toggle_edit_plan_drawer',
 }
 
 export class CloseAllDrawers implements Action {
@@ -58,11 +57,6 @@ export class ToggleEditActivityDrawer implements Action {
   constructor(public opened?: boolean) {}
 }
 
-export class ToggleEditPlanDrawer implements Action {
-  readonly type = LayoutActionTypes.ToggleEditPlanDrawer;
-  constructor(public opened?: boolean) {}
-}
-
 export type LayoutActions =
   | CloseAllDrawers
   | LoadingBarHide
@@ -71,5 +65,4 @@ export type LayoutActions =
   | ToggleActivityTypesDrawer
   | ToggleAddActivityDrawer
   | ToggleCreatePlanDrawer
-  | ToggleEditActivityDrawer
-  | ToggleEditPlanDrawer;
+  | ToggleEditActivityDrawer;

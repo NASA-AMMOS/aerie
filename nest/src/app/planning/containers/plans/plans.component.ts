@@ -12,23 +12,14 @@ import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { NavigateByUrl } from '../../../../../libs/ngrx-router';
 import { Adaptation, Plan } from '../../../shared/models';
-import {
-  ToggleCreatePlanDrawer,
-  ToggleEditPlanDrawer,
-} from '../../actions/layout.actions';
-import {
-  CreatePlan,
-  DeletePlan,
-  SelectPlan,
-  UpdatePlan,
-} from '../../actions/plan.actions';
+import { ToggleCreatePlanDrawer } from '../../actions/layout.actions';
+import { CreatePlan, DeletePlan } from '../../actions/plan.actions';
 import { PlanningAppState } from '../../planning-store';
 import {
   getAdaptations,
   getPlans,
   getSelectedPlan,
   getShowCreatePlanDrawer,
-  getShowEditPlanDrawer,
 } from '../../selectors';
 import { PlanningService } from '../../services/planning.service';
 
@@ -42,7 +33,6 @@ export class PlansComponent {
   adaptations$: Observable<Adaptation[]>;
   plans$: Observable<Plan[]>;
   showCreatePlanDrawer$: Observable<boolean>;
-  showEditPlanDrawer$: Observable<boolean>;
   selectedPlan$: Observable<Plan | null>;
 
   constructor(
@@ -54,7 +44,6 @@ export class PlansComponent {
     this.showCreatePlanDrawer$ = this.store.pipe(
       select(getShowCreatePlanDrawer),
     );
-    this.showEditPlanDrawer$ = this.store.pipe(select(getShowEditPlanDrawer));
     this.selectedPlan$ = this.store.pipe(select(getSelectedPlan));
   }
 
@@ -66,24 +55,11 @@ export class PlansComponent {
     this.store.dispatch(new DeletePlan(planId));
   }
 
-  onOpenPlan(planId: string): void {
-    this.store.dispatch(new NavigateByUrl(`/plans/${planId}`));
-  }
-
   onSelectPlan(planId: string): void {
-    this.store.dispatch(new SelectPlan(planId));
-    this.store.dispatch(new ToggleEditPlanDrawer(true));
+    this.store.dispatch(new NavigateByUrl(`/plans/${planId}`));
   }
 
   onToggleCreatePlanDrawer(opened?: boolean): void {
     this.store.dispatch(new ToggleCreatePlanDrawer(opened));
-  }
-
-  onToggleEditPlanDrawer(opened?: boolean): void {
-    this.store.dispatch(new ToggleEditPlanDrawer(opened));
-  }
-
-  onUpdatePlan(plan: Plan): void {
-    this.store.dispatch(new UpdatePlan(plan.id || '', plan));
   }
 }

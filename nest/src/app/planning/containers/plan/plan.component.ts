@@ -80,13 +80,12 @@ export class PlanComponent {
   }
 
   /**
-   * Event. Called when the user clicks the 'Advanced' button in the Edit Activity form.
+   * Event. Called when we close the edit activity drawer.
+   * De-select the selected activity when we close the drawer since we don't need it selected anymore.
    */
-  navigateToEditActivityPage(activityId: string): void {
-    const { planId } = this.route.snapshot.paramMap['params'];
-    this.store.dispatch(
-      new NavigateByUrl(`/plans/${planId}/activity/${activityId}`),
-    );
+  onCloseEditActivityDrawer() {
+    this.store.dispatch(new SelectActivity(null));
+    this.store.dispatch(new ToggleEditActivityDrawer(false));
   }
 
   /**
@@ -106,18 +105,28 @@ export class PlanComponent {
   }
 
   /**
+   * Event. Called when the user clicks the edit activity button.
+   */
+  onEditActivity(activityId: string): void {
+    this.store.dispatch(new SelectActivity(activityId));
+    this.store.dispatch(new ToggleEditActivityDrawer(true));
+  }
+
+  /**
    * Event. Called when we want to nav back to the plans container.
    */
-  onNavBack() {
+  onNavBack(): void {
     this.store.dispatch(new NavigateByUrl(`/plans`));
   }
 
   /**
    * Event. Set the selected activity and show the edit activity drawer.
    */
-  onSelectActivity(id: string): void {
-    this.store.dispatch(new SelectActivity(id));
-    this.store.dispatch(new ToggleEditActivityDrawer(true));
+  onSelectActivity(activityId: string): void {
+    const { planId } = this.route.snapshot.paramMap['params'];
+    this.store.dispatch(
+      new NavigateByUrl(`/plans/${planId}/activity/${activityId}`),
+    );
   }
 
   /**
@@ -132,13 +141,6 @@ export class PlanComponent {
    */
   onToggleAddActivityDrawer(opened?: boolean): void {
     this.store.dispatch(new ToggleAddActivityDrawer(opened));
-  }
-
-  /**
-   * Event. Called when a toggle event is fired from the edit activity drawer.
-   */
-  onToggleEditActivityDrawer(opened?: boolean): void {
-    this.store.dispatch(new ToggleEditActivityDrawer(opened));
   }
 
   /**

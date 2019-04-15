@@ -45,10 +45,20 @@
         class="option"
         mat-icon-button
         color="primary"
-        (click)="openActivity.emit(element.activityId)"
+        (click)="selectActivity.emit(element.activityId)"
       >
         <mat-icon aria-label="Open Activity">
           open_in_browser
+        </mat-icon>
+      </button>
+      <button
+        class="option"
+        mat-icon-button
+        color="primary"
+        (click)="editActivity.emit(element.activityId)"
+      >
+        <mat-icon aria-label="Edit Activity">
+          edit
         </mat-icon>
       </button>
       <button

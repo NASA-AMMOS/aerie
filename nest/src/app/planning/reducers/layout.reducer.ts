@@ -16,7 +16,6 @@ import {
   ToggleAddActivityDrawer,
   ToggleCreatePlanDrawer,
   ToggleEditActivityDrawer,
-  ToggleEditPlanDrawer,
 } from '../actions/layout.actions';
 
 export interface LayoutState {
@@ -24,7 +23,6 @@ export interface LayoutState {
   showAddActivityDrawer: boolean;
   showCreatePlanDrawer: boolean;
   showEditActivityDrawer: boolean;
-  showEditPlanDrawer: boolean;
   showLoadingBar: number;
 }
 
@@ -33,7 +31,6 @@ export const initialState: LayoutState = {
   showAddActivityDrawer: false,
   showCreatePlanDrawer: false,
   showEditActivityDrawer: false,
-  showEditPlanDrawer: false,
   showLoadingBar: 0,
 };
 
@@ -60,8 +57,6 @@ export function reducer(
       return toggleCreatePlanDrawer(state, action);
     case LayoutActionTypes.ToggleEditActivityDrawer:
       return toggleEditActivityDrawer(state, action);
-    case LayoutActionTypes.ToggleEditPlanDrawer:
-      return toggleEditPlanDrawer(state, action);
     default:
       return state;
   }
@@ -80,7 +75,6 @@ export function closeAllDrawers(
     showAddActivityDrawer: false,
     showCreatePlanDrawer: false,
     showEditActivityDrawer: false,
-    showEditPlanDrawer: false,
   };
 }
 
@@ -114,7 +108,6 @@ export function toggleActivityTypesDrawer(
     showAddActivityDrawer: false,
     showCreatePlanDrawer: false,
     showEditActivityDrawer: false,
-    showEditPlanDrawer: false,
   };
 }
 
@@ -134,7 +127,6 @@ export function toggleAddActivityDrawer(
         : !state.showAddActivityDrawer,
     showCreatePlanDrawer: false,
     showEditActivityDrawer: false,
-    showEditPlanDrawer: false,
   };
 }
 
@@ -152,7 +144,6 @@ export function toggleCreatePlanDrawer(
     showCreatePlanDrawer:
       action.opened !== undefined ? action.opened : !state.showCreatePlanDrawer,
     showEditActivityDrawer: false,
-    showEditPlanDrawer: false,
   };
 }
 
@@ -172,24 +163,5 @@ export function toggleEditActivityDrawer(
       action.opened !== undefined
         ? action.opened
         : !state.showEditActivityDrawer,
-    showEditPlanDrawer: false,
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'ToggleEditPlanDrawer' action.
- */
-export function toggleEditPlanDrawer(
-  state: LayoutState,
-  action: ToggleEditPlanDrawer,
-): LayoutState {
-  return {
-    ...state,
-    showActivityTypesDrawer: false,
-    showAddActivityDrawer: false,
-    showCreatePlanDrawer: false,
-    showEditActivityDrawer: false,
-    showEditPlanDrawer:
-      action.opened !== undefined ? action.opened : !state.showEditPlanDrawer,
   };
 }
