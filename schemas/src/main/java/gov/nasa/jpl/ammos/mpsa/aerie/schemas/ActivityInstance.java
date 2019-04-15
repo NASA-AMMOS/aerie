@@ -30,7 +30,7 @@ public class ActivityInstance {
      * (Required)
      * 
      */
-    private String color;
+    private String backgroundColor;
     /**
      * 
      * (Required)
@@ -91,6 +91,12 @@ public class ActivityInstance {
      * (Required)
      * 
      */
+    private String textColor;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     private Double y;
 
     /**
@@ -102,11 +108,12 @@ public class ActivityInstance {
 
     /**
      * 
-     * @param color
+     * @param backgroundColor
      * @param listeners
      * @param start
      * @param constraints
      * @param intent
+     * @param textColor
      * @param duration
      * @param activityId
      * @param name
@@ -117,11 +124,11 @@ public class ActivityInstance {
      * @param parameters
      * @param startTimestamp
      */
-    public ActivityInstance(String activityId, String activityType, String color, List<ActivityInstanceConstraint> constraints, Double duration, Double end, String endTimestamp, String intent, List<String> listeners, String name, List<ActivityInstanceParameter> parameters, Double start, String startTimestamp, Double y) {
+    public ActivityInstance(String activityId, String activityType, String backgroundColor, List<ActivityInstanceConstraint> constraints, Double duration, Double end, String endTimestamp, String intent, List<String> listeners, String name, List<ActivityInstanceParameter> parameters, Double start, String startTimestamp, String textColor, Double y) {
         super();
         this.activityId = activityId;
         this.activityType = activityType;
-        this.color = color;
+        this.backgroundColor = backgroundColor;
         this.constraints = constraints;
         this.duration = duration;
         this.end = end;
@@ -132,6 +139,7 @@ public class ActivityInstance {
         this.parameters = parameters;
         this.start = start;
         this.startTimestamp = startTimestamp;
+        this.textColor = textColor;
         this.y = y;
     }
 
@@ -176,8 +184,8 @@ public class ActivityInstance {
      * (Required)
      * 
      */
-    public String getColor() {
-        return color;
+    public String getBackgroundColor() {
+        return backgroundColor;
     }
 
     /**
@@ -185,8 +193,8 @@ public class ActivityInstance {
      * (Required)
      * 
      */
-    public void setColor(String color) {
-        this.color = color;
+    public void setBackgroundColor(String backgroundColor) {
+        this.backgroundColor = backgroundColor;
     }
 
     /**
@@ -357,6 +365,24 @@ public class ActivityInstance {
      */
     public void setStartTimestamp(String startTimestamp) {
         this.startTimestamp = startTimestamp;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    public String getTextColor() {
+        return textColor;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    public void setTextColor(String textColor) {
+        this.textColor = textColor;
     }
 
     /**

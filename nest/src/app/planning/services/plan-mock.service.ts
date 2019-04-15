@@ -17,7 +17,7 @@ export function getMockActivities(): ActivityInstance[] {
     {
       activityId: 'SetArrayTrackingMode_25788',
       activityType: 'SetArrayTrackingMode',
-      color: '#ffffff',
+      backgroundColor: '#ffffff',
       constraints: [
         {
           name: 'Latest Start',
@@ -46,12 +46,13 @@ export function getMockActivities(): ActivityInstance[] {
       ],
       start: 1656459134.184,
       startTimestamp: '2022-179T23:32:14.184',
+      textColor: '#000000',
       y: null,
     },
     {
       activityId: 'SetArrayTrackingMode_25920',
       activityType: 'SetArrayTrackingMode',
-      color: '#ffffff',
+      backgroundColor: '#ffffff',
       constraints: [
         {
           name: 'Time',
@@ -76,6 +77,7 @@ export function getMockActivities(): ActivityInstance[] {
       ],
       start: 1656462099.447,
       startTimestamp: '2022-180T00:21:39.447',
+      textColor: '#000000',
       y: null,
     },
   ];

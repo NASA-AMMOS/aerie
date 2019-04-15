@@ -7,7 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+} from '@angular/core';
 import { ActivityType } from '../../../shared/models';
 
 @Component({
@@ -19,6 +26,11 @@ export class ActivityTypeListComponent implements OnChanges {
   @Input()
   activityTypes: ActivityType[];
 
+  @Output()
+  selectActivityType: EventEmitter<ActivityType> = new EventEmitter<
+    ActivityType
+  >();
+
   filteredActivityTypes: ActivityType[] = [];
   searchText = '';
 
@@ -28,10 +40,14 @@ export class ActivityTypeListComponent implements OnChanges {
     }
   }
 
-  filterActivityTypes(text: string) {
+  filterActivityTypes(text: string): void {
     this.filteredActivityTypes = this.activityTypes.filter(activityType =>
       activityType.activityClass.toLowerCase().includes(text.toLowerCase()),
     );
     this.searchText = text;
+  }
+
+  onActivityTypeSelect(activityType: ActivityType): void {
+    this.selectActivityType.emit(activityType);
   }
 }

@@ -12,7 +12,7 @@
     matTooltip="Activity types list"
     (click)="onToggleActivityTypesDrawer()"
   >
-    <mat-icon aria-label="Activity types list">
+    <mat-icon aria-label="Activity Types List">
       chrome_reader_mode
     </mat-icon>
   </button>
@@ -91,6 +91,7 @@
             <activity-type-list
               *ngIf="activityTypes && activityTypes.length"
               [activityTypes]="activityTypes"
+              (selectActivityType)="onSelectNewActivity($event)"
             >
             </activity-type-list>
 
@@ -123,6 +124,7 @@
           <activity-form
             [activityTypes]="activityTypes$ | async"
             [isNew]="true"
+            [selectedActivityType]="selectedActivityType"
             (clickAdvanced)="navigateToNewActivityPage()"
             (createActivity)="onCreateActivity($event)"
           ></activity-form>

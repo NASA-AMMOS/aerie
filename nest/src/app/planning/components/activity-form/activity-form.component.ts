@@ -13,6 +13,7 @@ import {
   EventEmitter,
   Input,
   OnChanges,
+  OnInit,
   Output,
   SimpleChanges,
 } from '@angular/core';
@@ -22,6 +23,7 @@ import {
   FormGroup,
   Validators,
 } from '@angular/forms';
+import { ColorEvent } from 'ngx-color';
 import { ActivityInstance, ActivityType } from '../../../shared/models';
 import { datetimeToEpoch, NgTemplateUtils } from '../../../shared/util';
 
@@ -31,7 +33,7 @@ import { datetimeToEpoch, NgTemplateUtils } from '../../../shared/util';
   styleUrls: ['./activity-form.component.css'],
   templateUrl: './activity-form.component.html',
 })
-export class ActivityFormComponent implements OnChanges {
+export class ActivityFormComponent implements OnChanges, OnInit {
   @Input()
   activity: ActivityInstance | null;
 
@@ -40,6 +42,9 @@ export class ActivityFormComponent implements OnChanges {
 
   @Input()
   isNew = false;
+
+  @Input()
+  selectedActivityType: ActivityType | null;
 
   @Output()
   clickAdvanced: EventEmitter<string> = new EventEmitter<string>();
@@ -60,10 +65,24 @@ export class ActivityFormComponent implements OnChanges {
   constructor(fb: FormBuilder) {
     this.form = fb.group({
       activityType: new FormControl(''),
+      backgroundColor: new FormControl('#FFFFFF'),
       duration: new FormControl(0, [Validators.required]),
       intent: new FormControl(''),
       name: new FormControl('', [Validators.required]),
       start: new FormControl(0, [Validators.required]),
+      textColor: new FormControl('#000000'),
+    });
+  }
+
+  ngOnInit() {
+    // If activity form is opened normally
+    if (!this.selectedActivityType) {
+      this.selectedActivityType = this.activityTypes[0];
+    }
+
+    // If activity form is opened from selecting an activity type
+    this.form.patchValue({
+      activityType: this.selectedActivityType.activityClass,
     });
   }
 
@@ -93,5 +112,9 @@ export class ActivityFormComponent implements OnChanges {
         });
       }
     }
+  }
+
+  updateColor($event: ColorEvent, type: string) {
+    this.form.patchValue({ [type]: $event.color.hex });
   }
 }

@@ -66,7 +66,7 @@ export class PlanEffects {
       const activity: ActivityInstance = {
         activityId: action.data.activityId,
         activityType: action.data.activityType,
-        color: '#ffffff',
+        backgroundColor: action.data.backgroundColor,
         constraints: [],
         duration: action.data.duration,
         end,
@@ -76,6 +76,7 @@ export class PlanEffects {
         parameters: [],
         start: action.data.start,
         startTimestamp: timestamp(action.data.start),
+        textColor: action.data.textColor,
         y: null,
       };
 

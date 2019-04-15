@@ -17,6 +17,7 @@ import {
   MatProgressBarModule,
   MatSidenavModule,
   MatTabsModule,
+  MatTooltipModule,
 } from '@angular/material';
 import { NestAppHeaderModule } from '../../../shared/components';
 import {
@@ -42,6 +43,7 @@ import { PlanComponent } from './plan.component';
     MatProgressBarModule,
     MatSidenavModule,
     MatTabsModule,
+    MatTooltipModule,
     PlanScheduleModule,
     NestAppHeaderModule,
   ],

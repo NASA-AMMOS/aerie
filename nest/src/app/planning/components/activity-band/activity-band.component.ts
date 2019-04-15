@@ -227,13 +227,13 @@ export class ActivityBandComponent
       const end = this.xScale((point.start + point.duration) * 1000);
       const range = end - start;
 
-      const fill = point.color;
+      const fill = point.backgroundColor;
       const height = activityHeight;
       const stroke = 'black';
       const width = Math.max(1.0, range);
       const y = (point.y !== null ? point.y : rowY) as number;
 
-      const labelFill = 'black';
+      const labelFill = point.textColor;
       const labelFontFamily = 'Verdana';
       const labelFontSize = 10;
       const labelWidth = this.getLabelWidth(
@@ -420,6 +420,7 @@ export class ActivityBandComponent
         .on('mouseover', () => {
           tooltip
             .html(tooltipTemplate)
+            .style('border-top-color', point.fill)
             .transition()
             .ease(d3.easeLinear)
             .duration(100)

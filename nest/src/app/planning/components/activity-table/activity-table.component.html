@@ -29,12 +29,22 @@
   </ng-container>
 
   <ng-container matColumnDef="duration">
-    <mat-header-cell *matHeaderCellDef>Duration</mat-header-cell>
+    <mat-header-cell *matHeaderCellDef>Duration (ms)</mat-header-cell>
     <mat-cell
       *matCellDef="let element"
       (click)="selectActivity.emit(element.activityId)"
     >
       {{ element.duration }}
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="activityType">
+    <mat-header-cell *matHeaderCellDef>Type</mat-header-cell>
+    <mat-cell
+      *matCellDef="let element"
+      (click)="selectActivity.emit(element.activityId)"
+    >
+      {{ element.activityType || 'No Type' }}
     </mat-cell>
   </ng-container>
 

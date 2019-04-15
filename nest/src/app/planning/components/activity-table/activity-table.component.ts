@@ -30,7 +30,14 @@ export class ActivityTableComponent {
   activity: ActivityInstance | null;
 
   @Input()
-  displayedColumns: string[] = ['name', 'start', 'end', 'duration', 'options'];
+  displayedColumns: string[] = [
+    'name',
+    'start',
+    'end',
+    'duration',
+    'activityType',
+    'options',
+  ];
 
   @Output()
   deleteActivity: EventEmitter<string> = new EventEmitter<string>();
