@@ -235,6 +235,17 @@ export class RavenOutputComponent implements AfterViewInit, OnChanges {
   }
 
   /**
+   * Helper. Returns true if no row is selected.
+   */
+  noneSelected() {
+    if (this.agGrid && this.agGrid.api) {
+      return this.agGrid.api.getSelectedRows().length === 0;
+    } else {
+      return true;
+    }
+  }
+
+  /**
    * Event. Called when the `Create Output` button is clicked.
    */
   onCreateOutput() {
