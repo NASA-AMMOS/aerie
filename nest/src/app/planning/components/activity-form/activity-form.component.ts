@@ -13,6 +13,7 @@ import {
   EventEmitter,
   Input,
   OnChanges,
+  OnInit,
   Output,
   SimpleChanges,
 } from '@angular/core';
@@ -31,7 +32,7 @@ import { datetimeToEpoch, NgTemplateUtils } from '../../../shared/util';
   styleUrls: ['./activity-form.component.css'],
   templateUrl: './activity-form.component.html',
 })
-export class ActivityFormComponent implements OnChanges {
+export class ActivityFormComponent implements OnChanges, OnInit {
   @Input()
   activity: ActivityInstance | null;
 
@@ -40,6 +41,9 @@ export class ActivityFormComponent implements OnChanges {
 
   @Input()
   isNew = false;
+
+  @Input()
+  selectedActivityType: ActivityType | null;
 
   @Output()
   clickAdvanced: EventEmitter<string> = new EventEmitter<string>();
@@ -64,6 +68,18 @@ export class ActivityFormComponent implements OnChanges {
       intent: new FormControl(''),
       name: new FormControl('', [Validators.required]),
       start: new FormControl(0, [Validators.required]),
+    });
+  }
+
+  ngOnInit() {
+    // If activity form is opened normally
+    if (!this.selectedActivityType) {
+      this.selectedActivityType = this.activityTypes[0];
+    }
+
+    // If activity form is opened from selecting an activity type
+    this.form.patchValue({
+      activityType: this.selectedActivityType.activityClass,
     });
   }
 

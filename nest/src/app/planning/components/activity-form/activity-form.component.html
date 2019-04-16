@@ -2,10 +2,8 @@
   <mat-form-field appearance="fill" floatLabel="always">
     <mat-label>Activity Type</mat-label>
     <mat-select
-      placeholder="Select Activity Type"
       [formControl]="form.controls['activityType']"
-      [compareWith]="ngTemplateUtils.compareSelectValues"
-      readonly
+      [(value)]="selectedActivityType!.activityClass"
     >
       <mat-option
         *ngFor="let activityType of activityTypes"
