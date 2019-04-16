@@ -84,7 +84,7 @@ describe('util.ts', () => {
 
     it('should get the path for files', () => {
       expect(fileEntries.map(getMpsPathForSource)).toEqual([
-        '/TEST_ATS/Big_Combo_Test/pef/prelim/test-json',
+        '/TEST_ATS/Big_Combo_Test/pef/prelim/test.json',
         '/TEST_ATS/LAYOUTS/states_layouts_and_links_layout',
         '/TEST_ATS/STATES/states_layouts_and_links_state',
       ]);

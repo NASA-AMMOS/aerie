@@ -95,9 +95,20 @@ pipeline {
 				script {
 					def statusCode = sh returnStatus: true, script:
 					"""
+					# setup nvm/node
+					export NVM_DIR="\$HOME/.nvm"
+					if [ ! -d \$NVM_DIR ]; then
+						curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
+					fi
+					[ -s "\$NVM_DIR/nvm.sh" ] && . "\$NVM_DIR/nvm.sh"
+					nvm install v10.13.0
+					# tar up entire build directory as deliverable
+					tar -czf aerie-${getTag()}.tar.gz --exclude='.git' --exclude='aerie-src-*.tar.gz' --exclude='nest/node_modules' `ls -A`
+					# create nest tar file
 					if [ -d nest/dist-mpsserver ]; then
+						export NEST_PACKAGE_VERSION=`node -p "require('./nest/package.json').version"`
 						cd nest/dist-mpsserver
-						tar -czf nest-${getTag()}.tar.gz `ls -A`
+						tar -czf nest-\${NEST_PACKAGE_VERSION}-${getTag()}.tar.gz `ls -A`
 						cd ../../
 					fi
 					"""
@@ -105,7 +116,7 @@ pipeline {
 						error "Failure compressing mpsserver-dist"
 					}
 				}
-				archiveArtifacts 'README.md,*-src-*.tar.gz,*-cloc-*.txt,**/target/*.jar,nest/dist-mpsserver/*.tar.gz'
+				archiveArtifacts '*.tar.gz,*-cloc-*.txt,nest/dist-mpsserver/*.tar.gz'
 			}
 		}
 
@@ -122,7 +133,7 @@ pipeline {
 						'''{
 							"files": [
 								{
-									"pattern": "aerie-src-*.tar.gz",
+									"pattern": "aerie-*.tar.gz",
 									"target": "general-develop/gov/nasa/jpl/ammos/mpsa/aerie/",
 									"recursive":false
 								},

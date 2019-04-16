@@ -679,7 +679,8 @@ ActivityPainter.prototype.paintLabelAndTimes = function (act, actX1, actX2, actY
   }
 
   // paint start and end times of activity
-  if (this.showActivityTimes && this.rowPadding > 12) {
+  if ((this.layout !== ActivityPainter.WATERFALL_LAYOUT && this.showActivityTimes) || 
+      (this.layout === ActivityPainter.WATERFALL_LAYOUT && this.rowPadding > 12)) {
       paintedTimeX2 = this.paintActivityTimes({interval:act,
                      ll:{x:actX1, y:actY2},
                      ul:{x:actX1, y:actY1},
@@ -884,9 +885,7 @@ ActivityPainter.prototype.paintActivity = function(rowY, act, previousAct, previ
 
 ActivityPainter.prototype.paintActivitiesWaterfallLayout = function(acts) {
   // 0,0 corresponds to the upper left hand corner.
-  //this.showLabel = true;
   this.trimLabel = false;
-  this.showActivityTimes = true;
   // set min row height to 5
   this.rowHeight = Math.max(5,Math.floor(this.band.height/acts.length));
   this.rowPadding = Math.ceil(this.rowHeight/3);
@@ -2580,6 +2579,7 @@ Painter.prototype.paintLabel = function(obj) {
       }
 
       ctx.fillText(label, labelX1, labelY1);
+      ctx.textBaseline = "middle";
     }
   }
 };
@@ -4747,10 +4747,7 @@ TimeAxis.prototype.computeTickTimes = function() {
   }
 
   this.tickTimes = [];
-  var quantizedStart = TimeUnit.quantizeUpByTimeUnit(this.start, 0, this.tickUnit);
-  if(this.start == quantizedStart) {
-    this.tickTimes.push(this.start);
-  }
+  this.tickTimes.push(this.start);
   for(var time = TimeUnit.quantizeUpByTimeUnit(this.start, 1, this.tickUnit);
       time < this.end;
       time = TimeUnit.quantizeUpByTimeUnit(time, 1, this.tickUnit)) {
@@ -4978,6 +4975,15 @@ TimeBand.prototype.paintTicks = function() {
     }
     ctx.stroke();
     ctx.closePath();
+
+    // make sure we have enough space for the start tick label
+    if (i === 0) {
+        var nextTime = tickTimes[1];
+        var nextX = this.viewTimeAxis.getXFromTime(nextTime);
+        if (nextX - timeX < ctx.measureText("yyyy-dddThh:mm:ss").width) {
+            continue;
+        }
+    }
 
     // compute the date/time string
     var formattedTimes = this.onFormatTimeTick({timeBand:this, time:time});

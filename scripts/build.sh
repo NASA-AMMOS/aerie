@@ -88,7 +88,7 @@ while [[ -n $1 ]]; do
     -c | --commit)
       shift; commit="$1" ;;
     -t | --tag)
-      shift; tag="$1" ;;
+      shift; tag="$1" ; export SEQBASETAG=$tag ;;
     -* | --*)
       usage
       error_exit "Unknown option $1" ;;
