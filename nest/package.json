@@ -24,7 +24,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "pretty-quick --staged && lint-staged"
+      "pre-commit": "pretty-quick --staged --no-restage --pattern 'src/**/*.{js,ts,css,html} --verbose --bail' && lint-staged"
     }
   },
   "lint-staged": {

@@ -7,6 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+.activity-metadata {
+  color: #666;
+}
+
 .full-width {
   width: 100%;
 }
