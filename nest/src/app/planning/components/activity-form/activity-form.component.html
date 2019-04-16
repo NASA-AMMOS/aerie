@@ -30,19 +30,42 @@
   </mat-form-field>
 
   <mat-form-field appearance="fill">
-    <mat-label>Start</mat-label>
-    <input
-      matInput
-      [owlDateTime]="startTime"
-      [owlDateTimeTrigger]="startTime"
-      [formControl]="form.controls['start']"
-      placeholder="Start time"
-      required
-    />
-    <owl-date-time #startTime></owl-date-time>
+    <mat-label *ngIf="!manualTimeInput">Start Time (datetime)</mat-label>
+    <mat-label *ngIf="manualTimeInput">Start Time (epoch)</mat-label>
+
+    <div *ngIf="!manualTimeInput">
+      <input
+        matInput
+        [owlDateTime]="startTime"
+        [owlDateTimeTrigger]="startTime"
+        [formControl]="form.controls['start']"
+        required
+      />
+      <owl-date-time #startTime></owl-date-time>
+    </div>
+
+    <div *ngIf="manualTimeInput">
+      <input
+        matInput
+        [formControl]="form.controls['start']"
+        type="number"
+        required
+      />
+      <owl-date-time #startTime></owl-date-time>
+    </div>
+
     <mat-hint align="start">UTC within plan bounds</mat-hint>
     <mat-icon matSuffix>event</mat-icon>
   </mat-form-field>
+
+  <div class="datetime-input-hint">
+    <mat-slide-toggle
+      [(ngModel)]="manualTimeInput"
+      [ngModelOptions]="{ standalone: true }"
+    >
+      Enter Start as epoch
+    </mat-slide-toggle>
+  </div>
 
   <mat-form-field appearance="fill">
     <mat-label>Duration</mat-label>
