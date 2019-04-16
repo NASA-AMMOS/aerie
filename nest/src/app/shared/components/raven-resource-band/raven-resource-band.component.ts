@@ -438,7 +438,7 @@ export class RavenResourceBandComponent
   onFormatTickValue(tick: any, showMilliseconds: boolean) {
     if (this.isDuration) {
       // Format duration resources ticks.
-      return toDuration(tick, false);
+      return toDuration(tick, showMilliseconds);
     } else if (this.isTime) {
       // Format time resources ticks.
       return dateToTimestring(new Date(tick * 1000), showMilliseconds);
