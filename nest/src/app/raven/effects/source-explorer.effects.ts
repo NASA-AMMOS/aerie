@@ -97,6 +97,7 @@ import {
   RavenPin,
   RavenSource,
   RavenState,
+  RavenStateBand,
   RavenSubBand,
   SourceFilter,
   StringTMap,
@@ -1625,19 +1626,32 @@ export class SourceExplorerEffects {
             } else if (existingBands.length > 0) {
               existingBands.forEach(existingBand => {
                 if (subBand.type === 'state') {
-                  // Use the newly create state band with possibly updated possibleStates.
                   actions.push(
                     new sourceExplorerActions.SubBandIdAdd(
                       sourceId,
-                      subBand.id,
+                      existingBand.subBandId,
                     ),
-                    new timelineActions.AddSubBand(
-                      sourceId,
+                    new timelineActions.SetPointsForSubBand(
                       existingBand.bandId,
-                      subBand,
+                      existingBand.subBandId,
+                      subBand.points,
                     ),
-                    // Romove the old state band.
-                    new timelineActions.RemoveSubBand(existingBand.subBandId),
+
+                    // Add source id to existing band.
+                    new timelineActions.SourceIdAdd(
+                      sourceId,
+                      existingBand.subBandId,
+                    ),
+
+                    // Use new possibleStates since that can change from one adaptation to another.
+                    new timelineActions.UpdateSubBand(
+                      existingBand.bandId,
+                      existingBand.subBandId,
+                      {
+                        possibleStates: (subBand as RavenStateBand)
+                          .possibleStates,
+                      },
+                    ),
                   );
                 } else if (
                   subBand.type !== 'activity' ||
