@@ -122,6 +122,9 @@ export class RavenCompositeBandComponent
   selectedPoint: RavenPoint | null = null;
 
   @Input()
+  selectedSubBandId: string | null = null;
+
+  @Input()
   showLastClick = true;
 
   @Input()
@@ -532,13 +535,22 @@ export class RavenCompositeBandComponent
    * CTL Event. Called when you left-click a composite band.
    */
   onLeftClick(e: MouseEvent, ctlData: any) {
-    if (ctlData.interval) {
-      this.bandLeftClick.emit({
-        bandId: ctlData.band.id,
-        pointId: ctlData.interval.uniqueId,
-        subBandId: ctlData.interval.subBandId,
-        time: ctlData.time,
-      });
+    if (ctlData.intervals && this.selectedSubBandId) {
+      const bandIntervals = ctlData.intervals.filter(
+        (interval: any) => interval.bandId === this.selectedSubBandId,
+      );
+      if (
+        bandIntervals &&
+        bandIntervals.length > 0 &&
+        bandIntervals[0].intervals.length > 0
+      ) {
+        this.bandLeftClick.emit({
+          bandId: ctlData.band.id,
+          pointId: bandIntervals[0].intervals[0].uniqueId,
+          subBandId: bandIntervals[0].intervals[0].subBandId,
+          time: ctlData.time,
+        });
+      }
     } else {
       this.bandLeftClick.emit({
         bandId: ctlData.band.id,

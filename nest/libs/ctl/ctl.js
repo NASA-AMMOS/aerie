@@ -1263,6 +1263,34 @@ Band.prototype.findForegroundIntervals = function(x, y) {
   return matchingIntervals;
 };
 
+Band.prototype.findIntervalsByBand = function(x, y) {
+  let intervalsByBand = [];
+  if (this instanceof CompositeBand) {
+      let bands = this.bands;
+      let first = true;
+      for (let k=0; k<bands.length; k++) {
+          var matchingIntervals = [];
+          let band = bands[k];
+          if(band._intervalCoords === null) { return []; }
+
+          for(var i=0, length=band._intervalCoords.length; i<length; ++i) {
+            var coord = band._intervalCoords[i];
+            var interval = coord[0];
+            // RAVEN look within +/- 2 pixels
+            var x1 = coord[1]-2;
+            var x2 = coord[2]+2;
+            var y1 = coord[3]-2;
+            var y2 = coord[4]+2;
+            if(x >= x1 && x <= x2 && y >= y1 && y <= y2) {
+              matchingIntervals.push(interval);
+            }
+          }
+          intervalsByBand.push ({ bandId: band.id, intervals: matchingIntervals });
+      }
+  }
+  return intervalsByBand;
+}
+
 Band.prototype.findIntervals = function(x, y) {
   if (this instanceof CompositeBand) {
       let bands = this.bands;
@@ -1642,14 +1670,9 @@ Band.prototype.mousedown = function(e) {
   var y = e.pageY - $(e.target).offset().top;
   var mouseTime = this.viewTimeAxis.getTimeFromX(x);
 
-  var interval = null;
-  var intervals = this.findIntervals(x, y);
-  if(intervals && intervals.length !== 0) {
-    interval = intervals[intervals.length-1];
-  }
-
   if(e.which === 1) {
-    if(this.onLeftClick !== null) { this.onLeftClick(e, {band:this, interval:interval, time:mouseTime}); }
+    var intervals = this.findIntervalsByBand(x, y);
+    if(this.onLeftClick !== null) { this.onLeftClick(e, {band:this, intervals, time:mouseTime}); }
 
     if(x >= this.viewTimeAxis.x1 && this.onUpdateView !== null) {
       // enable dragging if on timeline area
@@ -1659,6 +1682,12 @@ Band.prototype.mousedown = function(e) {
   }
   else {
     if(this.onRightClick === null) { return true; }
+
+    var interval = null;
+    var intervals = this.findIntervals(x, y);
+    if(intervals && intervals.length !== 0) {
+      interval = intervals[intervals.length-1];
+    }
 
     // right click
     if(interval === null) {
@@ -3685,7 +3714,7 @@ ResourcePainter.prototype.paintUnit = function(prevUnit, unit) {
                      lr:{x:drawX2, y:drawY2}});
   }
 
-  return [drawX1, drawX2, 0, this.band.height + this.band.heightPadding];
+  return [drawX1, drawX2, drawY1, drawY2];
 };
 
 ResourcePainter.prototype.paint = function() {
