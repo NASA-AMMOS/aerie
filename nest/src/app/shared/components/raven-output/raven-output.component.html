@@ -69,7 +69,7 @@
     <button
       mat-raised-button
       color="accent"
-      [disabled]="!isValid()"
+      [disabled]="noneSelected() || !isValid()"
       (click)="onCreateOutput()">
       Create Output
     </button>
