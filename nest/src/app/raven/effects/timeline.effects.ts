@@ -51,7 +51,7 @@ import {
 } from '../../shared/models';
 
 import {
-  activityBandsWithLegend,
+  activityBandsWithLegendAndSourceId,
   getPinLabel,
   getResourcePoints,
   subBandById,
@@ -254,10 +254,11 @@ export class TimelineEffects {
 
         if (newSubBands.length > 0) {
           newSubBands.forEach((subBand: RavenSubBand) => {
-            const activityBands = activityBandsWithLegend(
+            const activityBands = activityBandsWithLegendAndSourceId(
               currentBands,
               subBand,
               pinLabel,
+              '',
             );
             if (activityBands.length > 0) {
               activityBands.forEach(activityBand => {
