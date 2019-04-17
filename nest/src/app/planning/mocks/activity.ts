@@ -12,7 +12,7 @@ import { ActivityInstance } from '../../shared/models';
 export const activity: ActivityInstance = {
   activityId: '9e8f7d40-01b3-4e27-b7e5-a9661ba8aa07',
   activityType: 'PeelBanana',
-  color: '#ffffff',
+  backgroundColor: '#ffffff',
   constraints: [],
   duration: 2.66899991035461,
   end: 1656459369.638,
@@ -52,5 +52,6 @@ export const activity: ActivityInstance = {
   ],
   start: 1656459366.969,
   startTimestamp: '2022-179T23:36:06.969',
+  textColor: '#000000',
   y: 138.0,
 };

@@ -12,6 +12,7 @@ import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {
   MatButtonModule,
+  MatDividerModule,
   MatFormFieldModule,
   MatIconModule,
   MatInputModule,
@@ -19,6 +20,7 @@ import {
   MatSlideToggleModule,
 } from '@angular/material';
 import { OwlDateTimeModule, OwlNativeDateTimeModule } from 'ng-pick-datetime';
+import { ColorTwitterModule } from 'ngx-color/twitter';
 import { ActivityFormComponent } from './activity-form.component';
 
 @NgModule({
@@ -26,10 +28,12 @@ import { ActivityFormComponent } from './activity-form.component';
   exports: [ActivityFormComponent],
   imports: [
     CommonModule,
+    ColorTwitterModule,
     FormsModule,
     OwlDateTimeModule,
     OwlNativeDateTimeModule,
     MatButtonModule,
+    MatDividerModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,

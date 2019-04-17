@@ -7,5 +7,19 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './activity';
-export * from './activityTypes';
+import { ActivityType } from '../../shared/models';
+
+export const activityTypes: ActivityType[] = [
+  {
+    activityClass: 'PeelBanana',
+    listeners: [],
+    parameters: [],
+    typeName: 'PeelBanana',
+  },
+  {
+    activityClass: 'EatBanana',
+    listeners: [],
+    parameters: [],
+    typeName: 'EatBanana',
+  },
+];

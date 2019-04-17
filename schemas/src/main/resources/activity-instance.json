@@ -10,7 +10,7 @@
     "activityType": {
       "type": "string"
     },
-    "color": {
+    "backgroundColor": {
       "type": "string"
     },
     "constraints": {
@@ -52,6 +52,9 @@
     "startTimestamp": {
       "type": "string"
     },
+    "textColor": {
+      "type": "string"
+    },
     "y": {
       "type": ["number", "null"]
     }
@@ -59,7 +62,7 @@
   "required": [
     "activityId",
     "activityType",
-    "color",
+    "backgroundColor",
     "constraints",
     "duration",
     "end",
@@ -69,6 +72,7 @@
     "parameters",
     "start",
     "startTimestamp",
+    "textColor",
     "y"
   ],
   "title": "ActivityInstance",

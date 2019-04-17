@@ -89,6 +89,36 @@
     <mat-hint align="start">Optional</mat-hint>
   </mat-form-field>
 
+  <div class="custom-mat-form-field">
+    <p class="custom-label">Background Color</p>
+    <color-twitter
+      triangle="hide"
+      [color]="form.controls['backgroundColor']"
+      (onChangeComplete)="updateColor($event, 'backgroundColor')"
+    ></color-twitter>
+  </div>
+
+  <div class="custom-mat-form-field">
+    <p class="custom-label">Text Color</p>
+    <color-twitter
+      triangle="hide"
+      [color]="form.controls['textColor']"
+      (onChangeComplete)="updateColor($event, 'textColor')"
+    ></color-twitter>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <h3 class="activity-preview-header">Display Preview</h3>
+  <div
+    *ngIf="form"
+    class="activity-preview"
+    [style.background-color]="form.get('backgroundColor').value"
+    [style.color]="form.get('textColor').value"
+  >
+    <p>{{ form.get('name').value }}</p>
+  </div>
+
   <div class="form-controls">
     <button
       mat-stroked-button

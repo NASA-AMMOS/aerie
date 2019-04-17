@@ -66,6 +66,7 @@
     "moment": "^2.22.2",
     "moment-timezone": "^0.5.23",
     "ng-pick-datetime": "^7.0.0",
+    "ngx-color": "^2.0.6",
     "ngx-toastr": "^9.1.1",
     "rxjs": "~6.3.3",
     "rxjs-compat": "~6.3.3",

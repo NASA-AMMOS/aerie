@@ -23,6 +23,7 @@ import {
   FormGroup,
   Validators,
 } from '@angular/forms';
+import { ColorEvent } from 'ngx-color';
 import { ActivityInstance, ActivityType } from '../../../shared/models';
 import { datetimeToEpoch, NgTemplateUtils } from '../../../shared/util';
 
@@ -65,10 +66,12 @@ export class ActivityFormComponent implements OnChanges, OnInit {
   constructor(fb: FormBuilder) {
     this.form = fb.group({
       activityType: new FormControl(''),
+      backgroundColor: new FormControl('#FFFFFF'),
       duration: new FormControl(0, [Validators.required]),
       intent: new FormControl(''),
       name: new FormControl('', [Validators.required]),
       start: new FormControl('', [Validators.required]),
+      textColor: new FormControl('#000000'),
     });
   }
 
@@ -125,5 +128,9 @@ export class ActivityFormComponent implements OnChanges, OnInit {
         });
       }
     }
+  }
+
+  updateColor($event: ColorEvent, type: string) {
+    this.form.patchValue({ [type]: $event.color.hex });
   }
 }
