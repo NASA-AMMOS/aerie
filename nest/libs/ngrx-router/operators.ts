@@ -33,8 +33,8 @@ export function mapToParam<T>(
   return map<RouterNavigation, T>(action => action.payload.params[key]);
 }
 
-export function mapToParams<T>(): OperatorFunction<RouterNavigation, T> {
-  return map<RouterNavigation, T>(action => action.payload.params);
+export function mapToParams<_>(): OperatorFunction<RouterNavigation, any> {
+  return map<RouterNavigation, any>(action => action.payload.params);
 }
 
 export function mapToQueryParam<T>(

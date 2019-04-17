@@ -44,3 +44,10 @@ export class RouterNavigation implements Action {
     },
   ) {}
 }
+
+export type RouterActions =
+  | NavigateByUrl
+  | RouterBack
+  | RouterForward
+  | RouterGo
+  | RouterNavigation;
