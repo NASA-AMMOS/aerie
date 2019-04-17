@@ -9,7 +9,7 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {
   MatButtonModule,
   MatDividerModule,
@@ -17,6 +17,7 @@ import {
   MatIconModule,
   MatInputModule,
   MatSelectModule,
+  MatSlideToggleModule,
 } from '@angular/material';
 import { OwlDateTimeModule, OwlNativeDateTimeModule } from 'ng-pick-datetime';
 import { ColorTwitterModule } from 'ngx-color/twitter';
@@ -28,6 +29,7 @@ import { ActivityFormComponent } from './activity-form.component';
   imports: [
     CommonModule,
     ColorTwitterModule,
+    FormsModule,
     OwlDateTimeModule,
     OwlNativeDateTimeModule,
     MatButtonModule,
@@ -36,6 +38,7 @@ import { ActivityFormComponent } from './activity-form.component';
     MatIconModule,
     MatInputModule,
     MatSelectModule,
+    MatSlideToggleModule,
     ReactiveFormsModule,
   ],
 })

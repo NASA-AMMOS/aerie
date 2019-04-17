@@ -50,6 +50,11 @@ mat-form-field {
   grid-gap: 12px;
 }
 
+.datetime-input-hint {
+  margin-bottom: 12px;
+  text-align: right;
+}
+
 ::ng-deep .twitter-body {
   padding: unset !important;
 }
