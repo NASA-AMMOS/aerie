@@ -9,13 +9,14 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {
   MatButtonModule,
   MatFormFieldModule,
   MatIconModule,
   MatInputModule,
   MatSelectModule,
+  MatSlideToggleModule,
 } from '@angular/material';
 import { OwlDateTimeModule, OwlNativeDateTimeModule } from 'ng-pick-datetime';
 import { ActivityFormComponent } from './activity-form.component';
@@ -25,6 +26,7 @@ import { ActivityFormComponent } from './activity-form.component';
   exports: [ActivityFormComponent],
   imports: [
     CommonModule,
+    FormsModule,
     OwlDateTimeModule,
     OwlNativeDateTimeModule,
     MatButtonModule,
@@ -32,6 +34,7 @@ import { ActivityFormComponent } from './activity-form.component';
     MatIconModule,
     MatInputModule,
     MatSelectModule,
+    MatSlideToggleModule,
     ReactiveFormsModule,
   ],
 })

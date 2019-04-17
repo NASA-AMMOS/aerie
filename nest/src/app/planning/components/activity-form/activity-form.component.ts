@@ -60,6 +60,7 @@ export class ActivityFormComponent implements OnChanges, OnInit {
 
   form: FormGroup;
   ngTemplateUtils: NgTemplateUtils = new NgTemplateUtils();
+  manualTimeInput = false;
 
   constructor(fb: FormBuilder) {
     this.form = fb.group({
@@ -67,7 +68,7 @@ export class ActivityFormComponent implements OnChanges, OnInit {
       duration: new FormControl(0, [Validators.required]),
       intent: new FormControl(''),
       name: new FormControl('', [Validators.required]),
-      start: new FormControl(0, [Validators.required]),
+      start: new FormControl('', [Validators.required]),
     });
   }
 
@@ -85,10 +86,23 @@ export class ActivityFormComponent implements OnChanges, OnInit {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.activity && this.activity && !this.isNew) {
+      const start = this.transformTime(this.activity.start);
+
       this.form.patchValue({
         ...this.activity,
-        start: new Date(this.activity.start * 1000),
+        start,
       });
+    }
+  }
+
+  /*
+  * Returns the correct datetime format
+  */
+  transformTime(newStart: Date | number): number {
+    if (this.manualTimeInput) {
+      return newStart as number;
+    } else {
+      return datetimeToEpoch(new Date(newStart));
     }
   }
 
@@ -96,16 +110,18 @@ export class ActivityFormComponent implements OnChanges, OnInit {
     // Transforming start here due to activity instance expecting start to be a number but the datetime picker returns a date
     // TODO: revisit this when schema for activity instances is finalized
     if (this.form.valid) {
+      const start = this.transformTime(value.start);
+
       if (!this.isNew && this.activity) {
         this.updateActivity.emit({
           ...this.activity,
           ...value,
-          start: datetimeToEpoch(new Date(value.start)),
+          start,
         });
       } else {
         this.createActivity.emit({
           ...value,
-          start: datetimeToEpoch(new Date(value.start)),
+          start,
         });
       }
     }

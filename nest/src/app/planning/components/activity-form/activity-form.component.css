@@ -18,3 +18,8 @@ mat-form-field {
   grid-template-columns: min-content min-content;
   grid-gap: 12px;
 }
+
+.datetime-input-hint {
+  margin-bottom: 12px;
+  text-align: right;
+}
