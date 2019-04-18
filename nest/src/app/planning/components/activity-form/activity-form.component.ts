@@ -13,7 +13,6 @@ import {
   EventEmitter,
   Input,
   OnChanges,
-  OnInit,
   Output,
   SimpleChanges,
 } from '@angular/core';
@@ -33,7 +32,7 @@ import { datetimeToEpoch, NgTemplateUtils } from '../../../shared/util';
   styleUrls: ['./activity-form.component.css'],
   templateUrl: './activity-form.component.html',
 })
-export class ActivityFormComponent implements OnChanges, OnInit {
+export class ActivityFormComponent implements OnChanges {
   @Input()
   activity: ActivityInstance | null;
 
@@ -41,10 +40,19 @@ export class ActivityFormComponent implements OnChanges, OnInit {
   activityTypes: ActivityType[] = [];
 
   @Input()
+  displayActions: boolean | null = true;
+
+  @Input()
   isNew = false;
 
   @Input()
-  selectedActivityType: ActivityType | null;
+  parentForm: FormGroup | null;
+
+  @Input()
+  selectedActivityType: ActivityType | null = null;
+
+  @Output()
+  cancel: EventEmitter<null> = new EventEmitter<null>();
 
   @Output()
   clickAdvanced: EventEmitter<string> = new EventEmitter<string>();
@@ -75,32 +83,35 @@ export class ActivityFormComponent implements OnChanges, OnInit {
     });
   }
 
-  ngOnInit() {
-    // If activity form is opened normally
-    if (!this.selectedActivityType) {
-      this.selectedActivityType = this.activityTypes[0];
-    }
-
-    // If activity form is opened from selecting an activity type
-    this.form.patchValue({
-      activityType: this.selectedActivityType.activityClass,
-    });
-  }
-
   ngOnChanges(changes: SimpleChanges) {
+    // Editing selectedActivity
     if (changes.activity && this.activity && !this.isNew) {
-      const start = this.transformTime(this.activity.start);
-
       this.form.patchValue({
         ...this.activity,
-        start,
+        start: new Date(this.activity.start * 1000),
       });
+    }
+
+    // Create new activity from selecting activityType from activityType list
+    if (changes.selectedActivityType && this.selectedActivityType) {
+      this.form.patchValue({
+        activityType: this.selectedActivityType.activityClass,
+      });
+    }
+
+    // Handles when using activity-form independently or nested in full-activity form
+    if (
+      changes.parentForm &&
+      this.parentForm &&
+      this.form !== this.parentForm
+    ) {
+      this.form = this.parentForm;
     }
   }
 
-  /*
-  * Returns the correct datetime format
-  */
+  /**
+   * Returns the correct datetime format
+   */
   transformTime(newStart: Date | number): number {
     if (this.manualTimeInput) {
       return newStart as number;
@@ -109,9 +120,11 @@ export class ActivityFormComponent implements OnChanges, OnInit {
     }
   }
 
+  /**
+   * Transforming start here due to activity instance expecting start to be a number but the datetime picker returns a date
+   * @todo revisit this when schema for activity instances is finalized
+   */
   onSubmit(value: ActivityInstance) {
-    // Transforming start here due to activity instance expecting start to be a number but the datetime picker returns a date
-    // TODO: revisit this when schema for activity instances is finalized
     if (this.form.valid) {
       const start = this.transformTime(value.start);
 
@@ -132,5 +145,21 @@ export class ActivityFormComponent implements OnChanges, OnInit {
 
   updateColor($event: ColorEvent, type: string) {
     this.form.patchValue({ [type]: $event.color.hex });
+  }
+
+  onManualTimeInputChange() {
+    this.manualTimeInput = !this.manualTimeInput;
+
+    let start;
+    if (!this.manualTimeInput) {
+      // show datetime
+      start = new Date(this.form.controls.start.value * 1000);
+    } else if (this.activity) {
+      // show epoch
+      start = this.activity.start;
+    }
+    this.form.patchValue({
+      start,
+    });
   }
 }
