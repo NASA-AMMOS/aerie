@@ -7,15 +7,20 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { keyBy } from 'lodash';
+import { keyBy, omit } from 'lodash';
 import { ActivityInstance, Plan, StringTMap } from '../../shared/models';
 import {
   ClearSelectedActivity,
   ClearSelectedPlan,
-  FetchActivitiesSuccess,
-  FetchPlansSuccess,
+  CreateActivitySuccess,
+  CreatePlanSuccess,
+  DeleteActivitySuccess,
+  DeletePlanSuccess,
   SelectActivity,
-  SelectPlan,
+  SetActivities,
+  SetActivitiesAndSelectedActivity,
+  SetPlans,
+  SetPlansAndSelectedPlan,
   UpdateActivitySuccess,
   UpdateViewTimeRange,
 } from '../actions/plan.actions';
@@ -82,91 +87,159 @@ describe('Plan Reducer', () => {
   });
 
   describe('ClearSelectedActivity', () => {
-    it('should clear the selected activity', () => {
+    it('should clear the selected activity id', () => {
       const newInitialState = {
         ...initialState,
-        selectedActivity: activities['1'],
+        selectedActivityId: '1',
       };
 
       const result = reducer(newInitialState, new ClearSelectedActivity());
 
       expect(result).toEqual({
         ...newInitialState,
-        selectedActivity: null,
+        selectedActivityId: null,
       });
     });
   });
 
   describe('ClearSelectedPlan', () => {
-    it('should clear the selected plan', () => {
+    it('should clear the selected plan id', () => {
       const newInitialState = {
         ...initialState,
-        selectedPlan: plan,
+        selectedPlanId: plan.id,
       };
 
       const result = reducer(newInitialState, new ClearSelectedPlan());
 
       expect(result).toEqual({
         ...newInitialState,
-        selectedPlan: null,
+        selectedPlanId: null,
       });
     });
   });
 
-  describe('FetchActivitiesSuccess', () => {
-    it('should set an activities map upon fetch activities success', () => {
-      const result = reducer(
+  describe('CreateActivitySuccess', () => {
+    it('should add a new activity with the correct time ranges', () => {
+      const activityId = '1';
+      const newState = reducer(
         initialState,
-        new FetchActivitiesSuccess(plan.id || '', null, activities),
+        new CreateActivitySuccess(plan.id, activitiesMap[activityId]),
       );
-
-      expect(result).toEqual({
+      expect(newState).toEqual({
         ...initialState,
-        activities: activitiesMap,
+        activities: {
+          [activityId]: activitiesMap[activityId],
+        },
+        maxTimeRange: { end: 0, start: 0 },
+        viewTimeRange: { end: 0, start: 0 },
       });
     });
   });
 
-  describe('FetchPlansSuccess', () => {
-    it('should set the list of plans as a map upon fetch plan list success', () => {
-      const result = reducer(initialState, new FetchPlansSuccess(plans));
-
-      expect(result).toEqual({
+  describe('CreatePlanSuccess', () => {
+    it('should add a new plan to the plans', () => {
+      const newState = reducer(initialState, new CreatePlanSuccess(plan));
+      expect(newState).toEqual({
         ...initialState,
         plans: plansMap,
       });
     });
   });
 
-  describe('SelectActivity', () => {
-    it('should set the selectedActivity', () => {
-      const newInitialState = reducer(
-        initialState,
-        new FetchActivitiesSuccess(plan.id || '', null, activities),
+  describe('DeleteActivitySuccess', () => {
+    it('should delete an activity from activities', () => {
+      const deleteActivityId = '1';
+      const newInitialState = { ...initialState, activities: activitiesMap };
+      const newState = reducer(
+        newInitialState,
+        new DeleteActivitySuccess(deleteActivityId),
       );
-
-      const result = reducer(newInitialState, new SelectActivity('1'));
-
-      expect(result).toEqual({
-        ...newInitialState,
-        selectedActivity: activitiesMap['1'],
+      expect(newState).toEqual({
+        ...initialState,
+        activities: omit(activitiesMap, deleteActivityId),
       });
     });
   });
 
-  describe('SelectPlan', () => {
-    it('should set the selectedPlan', () => {
-      const planId = plan.id || '';
-      const newInitialState = reducer(
-        initialState,
-        new FetchPlansSuccess(plans),
+  describe('DeletePlanSuccess', () => {
+    it('should delete a plan from plans', () => {
+      const deletePlanId = '1';
+      const newInitialState = { ...initialState, plans: plansMap };
+      const newState = reducer(
+        newInitialState,
+        new DeletePlanSuccess(deletePlanId),
       );
+      expect(newState).toEqual({
+        ...initialState,
+        plans: omit(plansMap, deletePlanId),
+      });
+    });
+  });
 
-      const result = reducer(newInitialState, new SelectPlan(planId));
+  describe('SelectActivity', () => {
+    it('should properly set the selected activity id', () => {
+      const selectedActivityId = 'foo';
+      const newState = reducer(
+        initialState,
+        new SelectActivity(selectedActivityId),
+      );
+      expect(newState).toEqual({
+        ...initialState,
+        selectedActivityId,
+      });
+    });
+  });
 
-      expect(result).toEqual({
-        ...newInitialState,
-        selectedPlan: plansMap[planId],
+  describe('SetActivities', () => {
+    it('should properly set activities and time ranges', () => {
+      const newState = reducer(initialState, new SetActivities(activities));
+      expect(newState).toEqual({
+        ...initialState,
+        activities: activitiesMap,
+        maxTimeRange: { end: 0, start: 0 },
+        viewTimeRange: { end: 0, start: 0 },
+      });
+    });
+  });
+
+  describe('SetActivitiesAndSelectedActivity', () => {
+    it('should properly set activities, time ranges, and a selected activity id', () => {
+      const selectedActivityId = '1';
+      const newState = reducer(
+        initialState,
+        new SetActivitiesAndSelectedActivity(activities, selectedActivityId),
+      );
+      expect(newState).toEqual({
+        ...initialState,
+        activities: activitiesMap,
+        maxTimeRange: { end: 0, start: 0 },
+        selectedActivityId,
+        viewTimeRange: { end: 0, start: 0 },
+      });
+    });
+  });
+
+  describe('SetPlans', () => {
+    it('should properly set plans', () => {
+      const newState = reducer(initialState, new SetPlans(plans));
+      expect(newState).toEqual({
+        ...initialState,
+        plans: plansMap,
+      });
+    });
+  });
+
+  describe('SetPlansAndSelectedPlan', () => {
+    it('should properly set plans and a selected plan id', () => {
+      const selectedPlanId = 'foo';
+      const newState = reducer(
+        initialState,
+        new SetPlansAndSelectedPlan(plans, selectedPlanId),
+      );
+      expect(newState).toEqual({
+        ...initialState,
+        plans: plansMap,
+        selectedPlanId,
       });
     });
   });
@@ -175,7 +248,7 @@ describe('Plan Reducer', () => {
     it('update an activity by id with the given update object', () => {
       const newInitialState = reducer(
         initialState,
-        new FetchActivitiesSuccess(plan.id || '', null, activities),
+        new SetActivities(activities),
       );
 
       const activityId = '1';

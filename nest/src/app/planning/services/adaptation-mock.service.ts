@@ -8,8 +8,13 @@
  */
 
 import { Injectable } from '@angular/core';
+import { Action } from '@ngrx/store';
 import { Observable, Observer } from 'rxjs';
-import { ActivityType, Adaptation, StringTMap } from '../../shared/models';
+import { ActivityType, Adaptation } from '../../shared/models';
+import {
+  SetActivityTypes,
+  SetAdaptations,
+} from '../actions/adaptation.actions';
 import { AdaptationServiceInterface } from './adaptation-service-interface';
 
 export function getMockAdaptations(): Adaptation[] {
@@ -50,17 +55,16 @@ export function getMockAdaptations(): Adaptation[] {
   return adaptations;
 }
 
-export function getMockActivityTypes(): StringTMap<ActivityType> {
-  const activityTypes: StringTMap<ActivityType> = {};
+export function getMockActivityTypes(): ActivityType[] {
+  const activityTypes: ActivityType[] = [];
 
   for (let i = 0, len = 10; i < len; ++i) {
-    const activityClass = `some.adaptation.DoSomething.${i}`;
-    activityTypes[activityClass] = {
-      activityClass,
+    activityTypes.push({
+      activityClass: `some.adaptation.DoSomething.${i}`,
       listeners: [],
       parameters: [],
       typeName: '',
-    };
+    });
   }
 
   return activityTypes;
@@ -74,9 +78,20 @@ export class AdaptationMockService implements AdaptationServiceInterface {
     planServiceBaseUrl: string,
     adaptationServiceBaseUrl: string,
     planId: string,
-  ): Observable<StringTMap<ActivityType>> {
-    return Observable.create((o: Observer<StringTMap<ActivityType>>) => {
+  ): Observable<ActivityType[]> {
+    return Observable.create((o: Observer<ActivityType[]>) => {
       o.next(getMockActivityTypes());
+      o.complete();
+    });
+  }
+
+  getActivityTypesWithActions(
+    planServiceBaseUrl: string,
+    adaptationServiceBaseUrl: string,
+    planId: string,
+  ): Observable<Action> {
+    return Observable.create((o: Observer<Action>) => {
+      o.next(new SetActivityTypes(getMockActivityTypes()));
       o.complete();
     });
   }
@@ -84,6 +99,13 @@ export class AdaptationMockService implements AdaptationServiceInterface {
   getAdaptations(baseUrl: string = ''): Observable<Adaptation[]> {
     return Observable.create((o: Observer<Adaptation[]>) => {
       o.next(getMockAdaptations());
+      o.complete();
+    });
+  }
+
+  getAdaptationsWithActions(baseUrl: string): Observable<Action> {
+    return Observable.create((o: Observer<Action>) => {
+      o.next(new SetAdaptations(getMockAdaptations()));
       o.complete();
     });
   }

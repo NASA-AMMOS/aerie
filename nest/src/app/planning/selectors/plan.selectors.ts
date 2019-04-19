@@ -8,6 +8,7 @@
  */
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { ActivityInstance, Plan, StringTMap } from '../../shared/models';
 import { State } from '../planning-store';
 import { PlanState } from '../reducers/plan.reducer';
 
@@ -19,8 +20,13 @@ export const getPlanState = createSelector(
 
 export const getActivities = createSelector(
   getPlanState,
-  (state: PlanState) =>
-    state.activities ? Object.values(state.activities) : [],
+  (state: PlanState) => state.activities,
+);
+
+export const getActivitiesAsList = createSelector(
+  getActivities,
+  (activities: StringTMap<ActivityInstance> | null) =>
+    activities ? Object.values(activities) : [],
 );
 
 export const getMaxTimeRange = createSelector(
@@ -28,18 +34,41 @@ export const getMaxTimeRange = createSelector(
   (state: PlanState) => state.maxTimeRange,
 );
 
-export const getPlans = createSelector(getPlanState, (state: PlanState) =>
-  Object.values(state.plans),
+export const getPlans = createSelector(
+  getPlanState,
+  (state: PlanState) => state.plans,
+);
+
+export const getPlansAsList = createSelector(
+  getPlans,
+  (plans: StringTMap<Plan> | null) => (plans ? Object.values(plans) : []),
+);
+
+export const getSelectedActivityId = createSelector(
+  getPlanState,
+  (state: PlanState) => state.selectedActivityId,
 );
 
 export const getSelectedActivity = createSelector(
+  getActivities,
+  getSelectedActivityId,
+  (
+    activities: StringTMap<ActivityInstance> | null,
+    selectedActivityId: string | null,
+  ) =>
+    activities && selectedActivityId ? activities[selectedActivityId] : null,
+);
+
+export const getSelectedPlanId = createSelector(
   getPlanState,
-  (state: PlanState) => state.selectedActivity,
+  (state: PlanState) => state.selectedPlanId,
 );
 
 export const getSelectedPlan = createSelector(
-  getPlanState,
-  (state: PlanState) => state.selectedPlan,
+  getPlans,
+  getSelectedPlanId,
+  (plans: StringTMap<Plan> | null, selectedPlanId: string | null) =>
+    plans && selectedPlanId ? plans[selectedPlanId] : null,
 );
 
 export const getViewTimeRange = createSelector(

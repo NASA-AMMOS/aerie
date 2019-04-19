@@ -31,12 +31,6 @@ import {
   DeletePlan,
   DeletePlanFailure,
   DeletePlanSuccess,
-  FetchActivities,
-  FetchActivitiesFailure,
-  FetchActivitiesSuccess,
-  FetchPlans,
-  FetchPlansFailure,
-  FetchPlansSuccess,
   PlanActionTypes,
   UpdateActivity,
   UpdateActivityFailure,
@@ -225,45 +219,6 @@ export class PlanEffects {
       }
       return [];
     }),
-  );
-
-  @Effect()
-  fetchActivities$: Observable<Action> = this.actions$.pipe(
-    ofType<FetchActivities>(PlanActionTypes.FetchActivities),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    switchMap(({ action, state }) =>
-      withLoadingBar([
-        this.planService
-          .getActivities(state.config.app.planServiceBaseUrl, action.planId)
-          .pipe(
-            map(
-              (activities: ActivityInstance[]) =>
-                new FetchActivitiesSuccess(
-                  action.planId,
-                  action.activityId,
-                  activities,
-                ),
-            ),
-            catchError((e: Error) => of(new FetchActivitiesFailure(e))),
-          ),
-      ]),
-    ),
-  );
-
-  @Effect()
-  fetchPlans$: Observable<Action> = this.actions$.pipe(
-    ofType<FetchPlans>(PlanActionTypes.FetchPlans),
-    withLatestFrom(this.store$),
-    map(([_, state]) => state),
-    switchMap(state =>
-      withLoadingBar([
-        this.planService.getPlans(state.config.app.planServiceBaseUrl).pipe(
-          map(data => new FetchPlansSuccess(data)),
-          catchError((e: Error) => of(new FetchPlansFailure(e))),
-        ),
-      ]),
-    ),
   );
 
   @Effect()

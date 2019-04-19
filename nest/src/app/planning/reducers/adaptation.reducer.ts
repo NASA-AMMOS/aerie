@@ -7,19 +7,19 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ActivityType, Adaptation, StringTMap } from '../../shared/models';
+import { ActivityType, Adaptation } from '../../shared/models';
 import {
   AdaptationActions,
   AdaptationActionTypes,
 } from '../actions/adaptation.actions';
 
 export interface AdaptationState {
-  activityTypes: StringTMap<ActivityType>;
+  activityTypes: ActivityType[];
   adaptations: Adaptation[];
 }
 
 export const initialState: AdaptationState = {
-  activityTypes: {},
+  activityTypes: [],
   adaptations: [],
 };
 
@@ -32,10 +32,10 @@ export function reducer(
   action: AdaptationActions,
 ): AdaptationState {
   switch (action.type) {
-    case AdaptationActionTypes.FetchActivityTypesSuccess:
-      return { ...state, activityTypes: action.data };
-    case AdaptationActionTypes.FetchAdaptationsSuccess:
-      return { ...state, adaptations: action.data };
+    case AdaptationActionTypes.SetActivityTypes:
+      return { ...state, activityTypes: action.activityTypes };
+    case AdaptationActionTypes.SetAdaptations:
+      return { ...state, adaptations: action.adaptations };
     default:
       return state;
   }

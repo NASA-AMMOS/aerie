@@ -17,8 +17,7 @@ import { CreatePlan, DeletePlan } from '../../actions/plan.actions';
 import { PlanningAppState } from '../../planning-store';
 import {
   getAdaptations,
-  getPlans,
-  getSelectedPlan,
+  getPlansAsList,
   getShowCreatePlanDrawer,
 } from '../../selectors';
 import { PlanningService } from '../../services/planning.service';
@@ -33,18 +32,16 @@ export class PlansComponent {
   adaptations$: Observable<Adaptation[]>;
   plans$: Observable<Plan[]>;
   showCreatePlanDrawer$: Observable<boolean>;
-  selectedPlan$: Observable<Plan | null>;
 
   constructor(
     private store: Store<PlanningAppState>,
     public planningService: PlanningService,
   ) {
     this.adaptations$ = this.store.pipe(select(getAdaptations));
-    this.plans$ = this.store.pipe(select(getPlans));
+    this.plans$ = this.store.pipe(select(getPlansAsList));
     this.showCreatePlanDrawer$ = this.store.pipe(
       select(getShowCreatePlanDrawer),
     );
-    this.selectedPlan$ = this.store.pipe(select(getSelectedPlan));
   }
 
   onCreatePlan(plan: Plan): void {

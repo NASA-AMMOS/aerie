@@ -7,6 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { Action } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { ActivityInstance, Plan } from '../../shared/models';
 
@@ -27,7 +28,16 @@ export interface PlanServiceInterface {
     baseUrl: string,
     planId: string,
   ): Observable<ActivityInstance[]>;
+  getActivitiesWithActions(
+    baseUrl: string,
+    planId: string,
+    activityId: string | null,
+  ): Observable<Action>;
   getPlans(baseUrl: string): Observable<Plan[]>;
+  getPlansWithActions(
+    baseUrl: string,
+    planId: string | null,
+  ): Observable<Action>;
   updateActivity(
     baseUrl: string,
     planId: string,

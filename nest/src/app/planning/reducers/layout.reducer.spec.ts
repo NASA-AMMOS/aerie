@@ -7,6 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { RouterNavigation } from '../../../../libs/ngrx-router';
 import {
   CloseAllDrawers,
   LoadingBarHide,
@@ -58,6 +59,14 @@ describe('layout reducer', () => {
     layoutState = reducer(layoutState, new Resize());
     expect(layoutState).toEqual({
       ...initialState,
+    });
+  });
+
+  it('handle RouterNavigation', () => {
+    layoutState = reducer(layoutState, new RouterNavigation({ path: '/foo' }));
+    expect(layoutState).toEqual({
+      ...initialState,
+      showLoadingBar: 1,
     });
   });
 

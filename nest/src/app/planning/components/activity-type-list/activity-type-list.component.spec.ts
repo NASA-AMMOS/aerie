@@ -10,7 +10,7 @@
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { ActivityType, StringTMap } from '../../../shared/models';
+import { ActivityType } from '../../../shared/models';
 import { getMockActivityTypes } from '../../services/adaptation-mock.service';
 import { ActivityTypeListComponent } from './activity-type-list.component';
 import { ActivityTypeListModule } from './activity-type-list.module';
@@ -19,14 +19,13 @@ import { ActivityTypeListModule } from './activity-type-list.module';
   selector: 'activity-type-list-test',
   template: `
     <activity-type-list
-      [activityTypes]="activityTypesList"
+      [activityTypes]="activityTypes"
     >
     </activity-type-list>
   `,
 })
 class ActivityTypeListTestComponent {
-  activityTypes: StringTMap<ActivityType> = getMockActivityTypes();
-  activityTypesList: ActivityType[] = Object.values(this.activityTypes);
+  activityTypes: ActivityType[] = getMockActivityTypes();
 
   @ViewChild(ActivityTypeListComponent)
   component: ActivityTypeListComponent;

@@ -9,14 +9,17 @@
 
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { Action } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { catchError, map, switchMap } from 'rxjs/operators';
+import { ShowToast } from '../../shared/actions/toast.actions';
+import { ActivityType, Adaptation, Plan } from '../../shared/models';
 import {
-  ActivityType,
-  Adaptation,
-  Plan,
-  StringTMap,
-} from '../../shared/models';
+  FetchActivityTypesFailure,
+  FetchAdaptationsFailure,
+  SetActivityTypes,
+  SetAdaptations,
+} from '../actions/adaptation.actions';
 import { AdaptationServiceInterface } from './adaptation-service-interface';
 
 @Injectable({
@@ -36,12 +39,12 @@ export class AdaptationService implements AdaptationServiceInterface {
     planServiceBaseUrl: string,
     adaptationServiceBaseUrl: string,
     planId: string,
-  ): Observable<StringTMap<ActivityType>> {
+  ): Observable<ActivityType[]> {
     return this.http
       .get<Plan>(`${planServiceBaseUrl}/plans/${planId}/`)
       .pipe(
         switchMap((plan: Plan) =>
-          this.http.get<StringTMap<ActivityType>>(
+          this.http.get<ActivityType[]>(
             `${adaptationServiceBaseUrl}/adaptations/${
               plan.adaptationId
             }/activities/`,
@@ -50,7 +53,35 @@ export class AdaptationService implements AdaptationServiceInterface {
       );
   }
 
+  getActivityTypesWithActions(
+    planServiceBaseUrl: string,
+    adaptationServiceBaseUrl: string,
+    planId: string,
+  ): Observable<Action> {
+    return this.getActivityTypes(
+      planServiceBaseUrl,
+      adaptationServiceBaseUrl,
+      planId,
+    ).pipe(
+      map(activityTypes => new SetActivityTypes(activityTypes)),
+      catchError(error => [
+        new FetchActivityTypesFailure(new Error(error)),
+        new ShowToast('error', error.message, 'Fetching Activity Types Failed'),
+      ]),
+    );
+  }
+
   getAdaptations(baseUrl: string): Observable<Adaptation[]> {
     return this.http.get<Adaptation[]>(`${baseUrl}/adaptations/`);
+  }
+
+  getAdaptationsWithActions(baseUrl: string): Observable<Action> {
+    return this.getAdaptations(baseUrl).pipe(
+      map(adaptations => new SetAdaptations(adaptations)),
+      catchError(error => [
+        new FetchAdaptationsFailure(new Error(error)),
+        new ShowToast('error', error.message, 'Fetching Adaptations Failed'),
+      ]),
+    );
   }
 }

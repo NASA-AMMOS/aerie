@@ -26,7 +26,7 @@ import {
   Plan,
   StringTMap,
 } from '../../shared/models';
-import { FetchAdaptationsSuccess } from '../actions/adaptation.actions';
+import { SetAdaptations } from '../actions/adaptation.actions';
 import { LoadingBarHide, LoadingBarShow } from '../actions/layout.actions';
 import {
   CreateActivity,
@@ -41,12 +41,8 @@ import {
   DeletePlan,
   DeletePlanFailure,
   DeletePlanSuccess,
-  FetchActivities,
-  FetchActivitiesFailure,
-  FetchActivitiesSuccess,
-  FetchPlans,
-  FetchPlansFailure,
-  FetchPlansSuccess,
+  SetActivities,
+  SetPlans,
   UpdateActivity,
   UpdateActivityFailure,
   UpdateActivitySuccess,
@@ -60,11 +56,9 @@ import { AdaptationService } from '../services/adaptation.service';
 import {
   getMockActivities,
   getMockPlan,
-  getMockPlans,
   PlanMockService,
 } from '../services/plan-mock.service';
 import { PlanService } from '../services/plan.service';
-import { AdaptationEffects } from './adaptation.effects';
 import { PlanEffects } from './plan.effects';
 
 describe('PlanEffects', () => {
@@ -98,7 +92,6 @@ describe('PlanEffects', () => {
       ],
       providers: [
         PlanEffects,
-        AdaptationEffects,
         provideMockActions(() => actions$),
         {
           provide: PlanService,
@@ -362,90 +355,6 @@ describe('PlanEffects', () => {
     });
   });
 
-  describe('fetchActivities$', () => {
-    it('should register fetchActivities$ that dispatches an action', () => {
-      expect(metadata.fetchActivities$).toEqual({ dispatch: true });
-    });
-
-    it('should return a FetchActivitiesSuccess action with data upon success', () => {
-      const planId = 'someId';
-      const activityId = null;
-      const action = new FetchActivities(planId, activityId);
-      const success = new FetchActivitiesSuccess(
-        planId,
-        activityId,
-        getMockActivities(),
-      );
-
-      actions$ = hot('-a', { a: action });
-      const expected = cold('-(bcd)', {
-        b: loadingBarShow,
-        c: success,
-        d: loadingBarHide,
-      });
-
-      expect(effects.fetchActivities$).toBeObservable(expected);
-    });
-
-    it('should return a FetchActivitiesFailure action with an error upon failure', () => {
-      const planId = 'someOtherId';
-      const activityId = null;
-      const action = new FetchActivities(planId, activityId);
-      const error = new Error('FetchActivitiesFailure');
-      const failure = new FetchActivitiesFailure(error);
-
-      const service = TestBed.get(PlanService);
-      spyOn(service, 'getActivities').and.returnValue(cold('#|', null, error));
-
-      actions$ = hot('-a', { a: action });
-      const expected = cold('-(bcd)', {
-        b: loadingBarShow,
-        c: failure,
-        d: loadingBarHide,
-      });
-
-      expect(effects.fetchActivities$).toBeObservable(expected);
-    });
-  });
-
-  describe('fetchPlans$', () => {
-    it('should register fetchPlans$ that dispatches an action', () => {
-      expect(metadata.fetchPlans$).toEqual({ dispatch: true });
-    });
-
-    it('should return a FetchPlansSuccess action with data upon success', () => {
-      const action = new FetchPlans();
-      const success = new FetchPlansSuccess(getMockPlans());
-
-      actions$ = hot('-a', { a: action });
-      const expected = cold('-(bcd)', {
-        b: loadingBarShow,
-        c: success,
-        d: loadingBarHide,
-      });
-
-      expect(effects.fetchPlans$).toBeObservable(expected);
-    });
-
-    it('should return a FetchPlansFailure action with an error upon failure', () => {
-      const action = new FetchPlans();
-      const error = new Error('FetchPlansFailure');
-      const failure = new FetchPlansFailure(error);
-
-      const service = TestBed.get(PlanService);
-      spyOn(service, 'getPlans').and.returnValue(cold('#|', null, error));
-
-      actions$ = hot('-a', { a: action });
-      const expected = cold('-(bcd)', {
-        b: loadingBarShow,
-        c: failure,
-        d: loadingBarHide,
-      });
-
-      expect(effects.fetchPlans$).toBeObservable(expected);
-    });
-  });
-
   describe('updateActivity$', () => {
     it('should register updateActivity$ that dispatches an action', () => {
       expect(metadata.updateActivity$).toEqual({ dispatch: true });
@@ -455,11 +364,9 @@ describe('PlanEffects', () => {
       // Setup.
       const planId = plan.id || '';
       const selectedActivityId = 'SetArrayTrackingMode_25788';
-      store.dispatch(new FetchPlansSuccess(plans));
-      store.dispatch(new FetchAdaptationsSuccess(adaptations));
-      store.dispatch(
-        new FetchActivitiesSuccess(planId, selectedActivityId, activities),
-      );
+      store.dispatch(new SetPlans(plans));
+      store.dispatch(new SetAdaptations(adaptations));
+      store.dispatch(new SetActivities(activities));
       activity = activitiesMap[selectedActivityId];
 
       // Test.
@@ -486,11 +393,9 @@ describe('PlanEffects', () => {
       // Setup.
       const planId = plan.id || '';
       const selectedActivityId = 'SetArrayTrackingMode_25788';
-      store.dispatch(new FetchPlansSuccess(plans));
-      store.dispatch(new FetchAdaptationsSuccess(adaptations));
-      store.dispatch(
-        new FetchActivitiesSuccess(planId, selectedActivityId, activities),
-      );
+      store.dispatch(new SetPlans(plans));
+      store.dispatch(new SetAdaptations(adaptations));
+      store.dispatch(new SetActivities(activities));
       activity = activitiesMap[selectedActivityId];
 
       // Test.

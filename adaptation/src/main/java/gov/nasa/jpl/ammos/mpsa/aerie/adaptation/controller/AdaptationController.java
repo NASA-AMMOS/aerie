@@ -43,8 +43,8 @@ public class AdaptationController {
   private final String ADAPTATION_FILE_PATH = new File("").getAbsolutePath() + "/adaptation_files/";
 
   /**
-   * @return Adaptation with specified name and version, or list of adaptations with name (if no
-   * version provided)
+   * @return Adaptation with specified name and version, or list of adaptations
+   *         with name (if no version provided)
    */
   @GetMapping("/{id}")
   public ResponseEntity<Object> getAdaptation(@PathVariable("id") Integer id) {
@@ -69,19 +69,18 @@ public class AdaptationController {
    * Create a new adaptation
    *
    * @param multipartFile The JAR file containing the adaptation
-   * @param name Name of the adaptation
-   * @param owner User who owns this adaptation
-   * @param version Version number for this adaptation
-   * @param mission Mission the adaptation is for
-   * <p>
-   * TODO: Process the adaptation when it is uploaded TODO: Store activity types in database for
-   * quick reference later on
+   * @param name          Name of the adaptation
+   * @param owner         User who owns this adaptation
+   * @param version       Version number for this adaptation
+   * @param mission       Mission the adaptation is for
+   *                      <p>
+   *                      TODO: Process the adaptation when it is uploaded TODO:
+   *                      Store activity types in database for quick reference
+   *                      later on
    */
   @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<Object> addAdaptation(@RequestParam("file") MultipartFile multipartFile,
-      @RequestParam("name") String name,
-      @RequestParam("owner") String owner,
-      @RequestParam("version") String version,
+      @RequestParam("name") String name, @RequestParam("owner") String owner, @RequestParam("version") String version,
       @RequestParam("mission") String mission) {
 
     logger.debug("POST adaptation/ to create a new adaptation");
@@ -108,8 +107,8 @@ public class AdaptationController {
     }
 
     Adaptation adaptation = new Adaptation(name, version, owner, mission, filePath);
-    logger.debug("Now creating adaptation: " + name + " version: " + version + " by " + owner
-        + "for mission: " + mission + " in path: " + filePath);
+    logger.debug("Now creating adaptation: " + name + " version: " + version + " by " + owner + "for mission: "
+        + mission + " in path: " + filePath);
     // Check if this adaptation already exists
     for (Adaptation adapt : repository.findAll()) {
       if (adaptation.equals(adapt)) {
@@ -172,11 +171,11 @@ public class AdaptationController {
         }
 
         AdaptationBuilder builder = userAdaptation.init();
+        List<ActivityType> activityTypes = new ArrayList<>();
 
-        HashMap<String, ActivityType> activityTypes = new HashMap<>();
         builder.getActivivityTypes().forEach((a) -> {
           ActivityType activityType = a.getActivityType();
-          activityTypes.put(activityType.getName(), activityType);
+          activityTypes.add(activityType);
         });
 
         GsonBuilder gsonMapBuilder = new GsonBuilder();
@@ -186,8 +185,8 @@ public class AdaptationController {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        return new ResponseEntity(JSONObject, headers, HttpStatus.OK);
 
+        return new ResponseEntity<Object>(JSONObject, headers, HttpStatus.OK);
       } catch (IOException e) {
         // Could not load the adaptation
         logger.error("ClassPathLoaderError:\n " + e.getMessage());
@@ -214,8 +213,8 @@ public class AdaptationController {
   /**
    * @param location Path to the directory for the file to be placed
    * @param basename Basename for the file
-   * @return String path followed by _X where X is the smallest positive integer that makes the
-   * filename unique (unless basename is already unique)
+   * @return String path followed by _X where X is the smallest positive integer
+   *         that makes the filename unique (unless basename is already unique)
    */
   private String getUniqueFilePath(String location, String basename) {
     String filename = location + basename;
@@ -228,10 +227,11 @@ public class AdaptationController {
   }
 
   // TODO: Move this into the Adaptation Runtime Service when it is complete
-  private MerlinSDKAdaptation loadAdaptation(Adaptation adaptation) throws IOException, InstantiationException, IllegalAccessException {
+  private MerlinSDKAdaptation loadAdaptation(Adaptation adaptation)
+      throws IOException, InstantiationException, IllegalAccessException {
     // Load the adaptation jar
     URL adaptationURL = new File(adaptation.getLocation()).toURI().toURL();
-    URLClassLoader loader = new URLClassLoader(new URL[]{adaptationURL},
+    URLClassLoader loader = new URLClassLoader(new URL[] { adaptationURL },
         Thread.currentThread().getContextClassLoader());
 
     ClassPath classpath = ClassPath.from(loader);
@@ -241,8 +241,8 @@ public class AdaptationController {
     UnmodifiableIterator classes = classpath.getTopLevelClassesRecursive(pkg).iterator();
 
     List<Class<?>> pkgClasses = new ArrayList();
-    while(classes.hasNext()) {
-      ClassInfo classInfo = (ClassInfo)classes.next();
+    while (classes.hasNext()) {
+      ClassInfo classInfo = (ClassInfo) classes.next();
 
       try {
         pkgClasses.add(classInfo.load());
@@ -251,7 +251,8 @@ public class AdaptationController {
       }
     }
 
-    // Find classes in the jpl package which implement the MerlinSDK Adaptation interface
+    // Find classes in the jpl package which implement the MerlinSDK Adaptation
+    // interface
     // And return the first one that is found
     String adaptationInterface = "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinSDKAdaptation";
 

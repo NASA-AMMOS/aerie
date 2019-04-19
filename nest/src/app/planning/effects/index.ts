@@ -7,7 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './adaptation.effects';
 export * from './layout.effects';
 export * from './nav.effects';
 export * from './plan.effects';

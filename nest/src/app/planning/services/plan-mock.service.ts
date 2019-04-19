@@ -8,8 +8,15 @@
  */
 
 import { Injectable } from '@angular/core';
+import { Action } from '@ngrx/store';
 import { Observable, Observer } from 'rxjs';
 import { ActivityInstance, Plan } from '../../shared/models';
+import {
+  SetActivities,
+  SetActivitiesAndSelectedActivity,
+  SetPlans,
+  SetPlansAndSelectedPlan,
+} from '../actions/plan.actions';
 import { PlanServiceInterface } from './plan-service-interface';
 
 export function getMockActivities(): ActivityInstance[] {
@@ -153,9 +160,40 @@ export class PlanMockService implements PlanServiceInterface {
     });
   }
 
+  getActivitiesWithActions(
+    baseUrl: string,
+    planId: string,
+    activityId: string | null,
+  ): Observable<Action> {
+    return Observable.create((o: Observer<Action>) => {
+      const activities = getMockActivities();
+      o.next(
+        activityId
+          ? new SetActivitiesAndSelectedActivity(activities, activityId)
+          : new SetActivities(activities),
+      );
+      o.complete();
+    });
+  }
+
   getPlans(baseUrl: string = ''): Observable<Plan[]> {
     return Observable.create((o: Observer<Plan[]>) => {
       o.next(getMockPlans());
+      o.complete();
+    });
+  }
+
+  getPlansWithActions(
+    baseUrl: string,
+    planId: string | null,
+  ): Observable<Action> {
+    return Observable.create((o: Observer<Action>) => {
+      const plans = getMockPlans();
+      o.next(
+        planId
+          ? new SetPlansAndSelectedPlan(plans, planId)
+          : new SetPlans(plans),
+      );
       o.complete();
     });
   }
