@@ -30,11 +30,7 @@
         (click)="onActivitySelected($event, point.activityId)"
       >
         <rect
-          [attr.fill]="
-            selectedActivity && selectedActivity.activityId === point.activityId
-              ? selectedActivityColor
-              : point.fill
-          "
+          [attr.fill]="point.fill"
           [attr.height]="point.height"
           [attr.stroke]="point.stroke"
           [attr.width]="point.width"

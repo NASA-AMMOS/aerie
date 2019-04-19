@@ -73,7 +73,7 @@
   padding-bottom: 0px;
   border-radius: 3px;
   border-top: 5px #a64600 solid;
-  background: #ffffff94;
+  background: rgba(255, 255, 255, 0.9);
   z-index: 5;
   margin-top: 12px;
   margin-left: 12px;

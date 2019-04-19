@@ -24,7 +24,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "pretty-quick --staged && lint-staged"
+      "pre-commit": "pretty-quick --staged --no-restage --pattern 'src/**/*.{js,ts,css,html} --verbose --bail' && lint-staged"
     }
   },
   "lint-staged": {
@@ -66,6 +66,7 @@
     "moment": "^2.22.2",
     "moment-timezone": "^0.5.23",
     "ng-pick-datetime": "^7.0.0",
+    "ngx-color": "^2.0.6",
     "ngx-toastr": "^9.1.1",
     "rxjs": "~6.3.3",
     "rxjs-compat": "~6.3.3",
@@ -114,6 +115,7 @@
     "tslint": "~5.11.0",
     "tslint-config-prettier": "^1.15.0",
     "tslint-eslint-rules": "^5.4.0",
+    "tslint-plugin-jasmine": "^1.0.3",
     "typescript": "~3.2.2"
   }
 }

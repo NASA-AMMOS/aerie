@@ -13,6 +13,7 @@ import {
   EventEmitter,
   Input,
   OnChanges,
+  OnInit,
   Output,
   SimpleChanges,
 } from '@angular/core';
@@ -22,6 +23,7 @@ import {
   FormGroup,
   Validators,
 } from '@angular/forms';
+import { ColorEvent } from 'ngx-color';
 import { ActivityInstance, ActivityType } from '../../../shared/models';
 import { datetimeToEpoch, NgTemplateUtils } from '../../../shared/util';
 
@@ -31,7 +33,7 @@ import { datetimeToEpoch, NgTemplateUtils } from '../../../shared/util';
   styleUrls: ['./activity-form.component.css'],
   templateUrl: './activity-form.component.html',
 })
-export class ActivityFormComponent implements OnChanges {
+export class ActivityFormComponent implements OnChanges, OnInit {
   @Input()
   activity: ActivityInstance | null;
 
@@ -40,6 +42,9 @@ export class ActivityFormComponent implements OnChanges {
 
   @Input()
   isNew = false;
+
+  @Input()
+  selectedActivityType: ActivityType | null;
 
   @Output()
   clickAdvanced: EventEmitter<string> = new EventEmitter<string>();
@@ -56,23 +61,51 @@ export class ActivityFormComponent implements OnChanges {
 
   form: FormGroup;
   ngTemplateUtils: NgTemplateUtils = new NgTemplateUtils();
+  manualTimeInput = false;
 
   constructor(fb: FormBuilder) {
     this.form = fb.group({
       activityType: new FormControl(''),
+      backgroundColor: new FormControl('#FFFFFF'),
       duration: new FormControl(0, [Validators.required]),
       intent: new FormControl(''),
       name: new FormControl('', [Validators.required]),
-      start: new FormControl(0, [Validators.required]),
+      start: new FormControl('', [Validators.required]),
+      textColor: new FormControl('#000000'),
+    });
+  }
+
+  ngOnInit() {
+    // If activity form is opened normally
+    if (!this.selectedActivityType) {
+      this.selectedActivityType = this.activityTypes[0];
+    }
+
+    // If activity form is opened from selecting an activity type
+    this.form.patchValue({
+      activityType: this.selectedActivityType.activityClass,
     });
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.activity && this.activity && !this.isNew) {
+      const start = this.transformTime(this.activity.start);
+
       this.form.patchValue({
         ...this.activity,
-        start: new Date(this.activity.start * 1000),
+        start,
       });
+    }
+  }
+
+  /*
+  * Returns the correct datetime format
+  */
+  transformTime(newStart: Date | number): number {
+    if (this.manualTimeInput) {
+      return newStart as number;
+    } else {
+      return datetimeToEpoch(new Date(newStart));
     }
   }
 
@@ -80,18 +113,24 @@ export class ActivityFormComponent implements OnChanges {
     // Transforming start here due to activity instance expecting start to be a number but the datetime picker returns a date
     // TODO: revisit this when schema for activity instances is finalized
     if (this.form.valid) {
+      const start = this.transformTime(value.start);
+
       if (!this.isNew && this.activity) {
         this.updateActivity.emit({
           ...this.activity,
           ...value,
-          start: datetimeToEpoch(new Date(value.start)),
+          start,
         });
       } else {
         this.createActivity.emit({
           ...value,
-          start: datetimeToEpoch(new Date(value.start)),
+          start,
         });
       }
     }
+  }
+
+  updateColor($event: ColorEvent, type: string) {
+    this.form.patchValue({ [type]: $event.color.hex });
   }
 }

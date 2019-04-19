@@ -51,6 +51,8 @@ export class PlanComponent {
   showAddActivityDrawer$: Observable<boolean>;
   showEditActivityDrawer$: Observable<boolean>;
 
+  selectedActivityType: ActivityType | null;
+
   constructor(
     private store: Store<PlanningAppState>,
     private route: ActivatedRoute,
@@ -129,6 +131,11 @@ export class PlanComponent {
     );
   }
 
+  onSelectNewActivity(activityType: ActivityType): void {
+    this.selectedActivityType = activityType;
+    this.store.dispatch(new ToggleAddActivityDrawer(true));
+  }
+
   /**
    * Event. Called when a toggle event is fired from the activity types drawer.
    */
@@ -140,6 +147,9 @@ export class PlanComponent {
    * Event. Called when a toggle event is fired from the add activity drawer.
    */
   onToggleAddActivityDrawer(opened?: boolean): void {
+    if (!opened) {
+      this.selectedActivityType = null;
+    }
     this.store.dispatch(new ToggleAddActivityDrawer(opened));
   }
 

@@ -2,10 +2,8 @@
   <mat-form-field appearance="fill" floatLabel="always">
     <mat-label>Activity Type</mat-label>
     <mat-select
-      placeholder="Select Activity Type"
       [formControl]="form.controls['activityType']"
-      [compareWith]="ngTemplateUtils.compareSelectValues"
-      readonly
+      [(value)]="selectedActivityType!.activityClass"
     >
       <mat-option
         *ngFor="let activityType of activityTypes"
@@ -30,19 +28,42 @@
   </mat-form-field>
 
   <mat-form-field appearance="fill">
-    <mat-label>Start</mat-label>
-    <input
-      matInput
-      [owlDateTime]="startTime"
-      [owlDateTimeTrigger]="startTime"
-      [formControl]="form.controls['start']"
-      placeholder="Start time"
-      required
-    />
-    <owl-date-time #startTime></owl-date-time>
+    <mat-label *ngIf="!manualTimeInput">Start Time (datetime)</mat-label>
+    <mat-label *ngIf="manualTimeInput">Start Time (epoch)</mat-label>
+
+    <div *ngIf="!manualTimeInput">
+      <input
+        matInput
+        [owlDateTime]="startTime"
+        [owlDateTimeTrigger]="startTime"
+        [formControl]="form.controls['start']"
+        required
+      />
+      <owl-date-time #startTime></owl-date-time>
+    </div>
+
+    <div *ngIf="manualTimeInput">
+      <input
+        matInput
+        [formControl]="form.controls['start']"
+        type="number"
+        required
+      />
+      <owl-date-time #startTime></owl-date-time>
+    </div>
+
     <mat-hint align="start">UTC within plan bounds</mat-hint>
     <mat-icon matSuffix>event</mat-icon>
   </mat-form-field>
+
+  <div class="datetime-input-hint">
+    <mat-slide-toggle
+      [(ngModel)]="manualTimeInput"
+      [ngModelOptions]="{ standalone: true }"
+    >
+      Enter Start as epoch
+    </mat-slide-toggle>
+  </div>
 
   <mat-form-field appearance="fill">
     <mat-label>Duration</mat-label>
@@ -67,6 +88,36 @@
     </textarea>
     <mat-hint align="start">Optional</mat-hint>
   </mat-form-field>
+
+  <div class="custom-mat-form-field">
+    <p class="custom-label">Background Color</p>
+    <color-twitter
+      triangle="hide"
+      [color]="form.controls['backgroundColor']"
+      (onChangeComplete)="updateColor($event, 'backgroundColor')"
+    ></color-twitter>
+  </div>
+
+  <div class="custom-mat-form-field">
+    <p class="custom-label">Text Color</p>
+    <color-twitter
+      triangle="hide"
+      [color]="form.controls['textColor']"
+      (onChangeComplete)="updateColor($event, 'textColor')"
+    ></color-twitter>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <h3 class="activity-preview-header">Display Preview</h3>
+  <div
+    *ngIf="form"
+    class="activity-preview"
+    [style.background-color]="form.get('backgroundColor').value"
+    [style.color]="form.get('textColor').value"
+  >
+    <p>{{ form.get('name').value }}</p>
+  </div>
 
   <div class="form-controls">
     <button

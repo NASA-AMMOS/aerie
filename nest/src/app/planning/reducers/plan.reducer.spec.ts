@@ -38,7 +38,7 @@ describe('Plan Reducer', () => {
       {
         activityId: '1',
         activityType: '000',
-        color: '#7cbfb7',
+        backgroundColor: '#7cbfb7',
         constraints: [],
         duration: 0,
         end: 0,
@@ -48,12 +48,13 @@ describe('Plan Reducer', () => {
         parameters: [],
         start: 0,
         startTimestamp: '2022-10-29T14:55:00',
+        textColor: '#000000',
         y: null,
       },
       {
         activityId: '2',
         activityType: '001',
-        color: '#7cbfb7',
+        backgroundColor: '#7cbfb7',
         constraints: [],
         duration: 0,
         end: 0,
@@ -63,6 +64,7 @@ describe('Plan Reducer', () => {
         parameters: [],
         start: 0,
         startTimestamp: '2023-11-28T15:54:10',
+        textColor: '#000000',
         y: null,
       },
     ];

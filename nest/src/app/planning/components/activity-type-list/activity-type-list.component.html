@@ -1,16 +1,34 @@
 <form>
-  <mat-form-field class="full-width">
+  <mat-form-field class="full-width" appearance="fill">
+    <mat-label>Search Activity Types</mat-label>
     <input
       (input)="filterActivityTypes($event.target.value)"
+      type="text"
       matInput
-      placeholder="Search Activity Types"
+      autocomplete="off"
     />
+    <mat-icon matSuffix>search</mat-icon>
   </mat-form-field>
 </form>
 
 <mat-nav-list>
-  <mat-list-item *ngFor="let activityType of filteredActivityTypes">
-    {{ activityType.activityClass }}
+  <mat-list-item
+    *ngFor="let activityType of filteredActivityTypes"
+    (click)="onActivityTypeSelect(activityType)"
+  >
+    <h4 mat-line>
+      {{ activityType.activityClass }}
+    </h4>
+
+    <p mat-line class="activity-metadata">
+      metadata will be here
+    </p>
+
+    <mat-icon>chevron_right</mat-icon>
     <mat-divider></mat-divider>
+  </mat-list-item>
+
+  <mat-list-item *ngIf="filteredActivityTypes.length === 0">
+    No Activities Found
   </mat-list-item>
 </mat-nav-list>
