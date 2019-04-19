@@ -555,7 +555,7 @@ export class RavenCompositeBandComponent
           pointId: ctlData.intervals[0].bandIntervals[0].uniqueId,
           subBandId: ctlData.intervals[0].bandIntervals[0].subBandId,
           time: ctlData.time,
-        })
+        });
       }
     } else {
       this.bandLeftClick.emit({
