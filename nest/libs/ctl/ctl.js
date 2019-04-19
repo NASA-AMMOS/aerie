@@ -679,7 +679,7 @@ ActivityPainter.prototype.paintLabelAndTimes = function (act, actX1, actX2, actY
   }
 
   // paint start and end times of activity
-  if ((this.layout !== ActivityPainter.WATERFALL_LAYOUT && this.showActivityTimes) || 
+  if ((this.layout !== ActivityPainter.WATERFALL_LAYOUT && this.showActivityTimes) ||
       (this.layout === ActivityPainter.WATERFALL_LAYOUT && this.rowPadding > 12)) {
       paintedTimeX2 = this.paintActivityTimes({interval:act,
                      ll:{x:actX1, y:actY2},
@@ -1262,6 +1262,36 @@ Band.prototype.findForegroundIntervals = function(x, y) {
   }
   return matchingIntervals;
 };
+
+Band.prototype.findIntervalsByBand = function(x, y) {
+  let intervalsByBand = [];
+  if (this instanceof CompositeBand) {
+      let bands = this.bands;
+      let first = true;
+      for (let k=0; k<bands.length; k++) {
+          var matchingIntervals = [];
+          let band = bands[k];
+          if(band._intervalCoords === null) { return []; }
+
+          for(var i=0, length=band._intervalCoords.length; i<length; ++i) {
+            var coord = band._intervalCoords[i];
+            var interval = coord[0];
+            // RAVEN look within +/- 2 pixels
+            var x1 = coord[1]-2;
+            var x2 = coord[2]+2;
+            var y1 = coord[3]-2;
+            var y2 = coord[4]+2;
+            if(x >= x1 && x <= x2 && y >= y1 && y <= y2) {
+              matchingIntervals.push(interval);
+            }
+          }
+          if (matchingIntervals.length > 0) {
+            intervalsByBand.push ({ bandId: band.id, bandIntervals: matchingIntervals });
+          }
+      }
+  }
+  return intervalsByBand;
+}
 
 Band.prototype.findIntervals = function(x, y) {
   if (this instanceof CompositeBand) {
