@@ -90,9 +90,6 @@ export class RavenBandsComponent implements OnChanges, OnInit {
   selectedPoint: RavenPoint;
 
   @Input()
-  selectedSubBandId: string | null;
-
-  @Input()
   showLastClick: boolean;
 
   @Input()
