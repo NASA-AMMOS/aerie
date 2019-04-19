@@ -54,7 +54,12 @@ import { ToastEffects } from './shared/effects/toast.effects';
     StoreRouterConnectingModule.forRoot({
       stateKey: 'router',
     }),
-    ToastrModule.forRoot(),
+    ToastrModule.forRoot({
+      countDuplicates: true,
+      maxOpened: 3,
+      preventDuplicates: true,
+      resetTimeoutOnDuplicate: true,
+    }),
     MatButtonModule,
     MatIconModule,
     MatSidenavModule,
