@@ -7,6 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { RouterActions, RouterActionTypes } from '../../../../libs/ngrx-router';
 import {
   CloseAllDrawers,
   LayoutActions,
@@ -37,10 +38,13 @@ export const initialState: LayoutState = {
 /**
  * Reducer.
  * If a case takes more than one line then it should be in it's own helper function.
+ *
+ * Show loading bar on LoadingBarShow or RouterNavigation action.
+ * This assumes the router navigation actions hide the loading bar after they complete.
  */
 export function reducer(
   state: LayoutState = initialState,
-  action: LayoutActions,
+  action: LayoutActions | RouterActions,
 ): LayoutState {
   switch (action.type) {
     case LayoutActionTypes.CloseAllDrawers:
@@ -48,6 +52,7 @@ export function reducer(
     case LayoutActionTypes.LoadingBarHide:
       return loadingBarHide(state, action);
     case LayoutActionTypes.LoadingBarShow:
+    case RouterActionTypes.RouterNavigation:
       return { ...state, showLoadingBar: state.showLoadingBar + 1 };
     case LayoutActionTypes.ToggleActivityTypesDrawer:
       return toggleActivityTypesDrawer(state, action);

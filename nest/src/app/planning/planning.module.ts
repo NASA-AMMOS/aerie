@@ -14,12 +14,7 @@ import { StoreModule } from '@ngrx/store';
 import { ActivityModule } from './containers/activity/activity.module';
 import { PlanModule } from './containers/plan/plan.module';
 import { PlansModule } from './containers/plans/plans.module';
-import {
-  AdaptationEffects,
-  LayoutEffects,
-  NavEffects,
-  PlanEffects,
-} from './effects';
+import { LayoutEffects, NavEffects, PlanEffects } from './effects';
 import { PlanningRoutingModule } from './planning-routing.module';
 import { reducers } from './planning-store';
 import { PlanningService } from './services/planning.service';
@@ -29,12 +24,7 @@ import { PlanningService } from './services/planning.service';
     HttpClientModule,
     PlanningRoutingModule,
     StoreModule.forFeature('planning', reducers),
-    EffectsModule.forFeature([
-      AdaptationEffects,
-      LayoutEffects,
-      NavEffects,
-      PlanEffects,
-    ]),
+    EffectsModule.forFeature([LayoutEffects, NavEffects, PlanEffects]),
     PlanModule,
     PlansModule,
     ActivityModule,

@@ -7,10 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ActivityType, Adaptation, StringTMap } from '../../shared/models';
+import { ActivityType, Adaptation } from '../../shared/models';
 import {
-  FetchActivityTypesSuccess,
-  FetchAdaptationsSuccess,
+  SetActivityTypes,
+  SetAdaptations,
 } from '../actions/adaptation.actions';
 import {
   getMockActivityTypes,
@@ -19,12 +19,12 @@ import {
 import { AdaptationState, initialState, reducer } from './adaptation.reducer';
 
 describe('Adaptation Reducer', () => {
-  describe('FetchActivityTypesSuccess', () => {
-    it('should return a list of activity types', () => {
-      const activityTypes: StringTMap<ActivityType> = getMockActivityTypes();
+  describe('SetActivityTypes', () => {
+    it('should set a list of activity types', () => {
+      const activityTypes: ActivityType[] = getMockActivityTypes();
       const result: AdaptationState = reducer(
         { ...initialState },
-        new FetchActivityTypesSuccess(activityTypes),
+        new SetActivityTypes(activityTypes),
       );
 
       expect(result).toEqual({
@@ -34,12 +34,12 @@ describe('Adaptation Reducer', () => {
     });
   });
 
-  describe('FetchAdaptationsSuccess', () => {
-    it('should return a list of adaptations', () => {
+  describe('SetAdaptations', () => {
+    it('should set a list of adaptations', () => {
       const adaptations: Adaptation[] = getMockAdaptations();
       const result: AdaptationState = reducer(
         initialState,
-        new FetchAdaptationsSuccess(adaptations),
+        new SetAdaptations(adaptations),
       );
 
       expect(result).toEqual({

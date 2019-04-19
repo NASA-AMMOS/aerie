@@ -7,14 +7,21 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { Action } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { ActivityType, Adaptation, StringTMap } from '../../shared/models';
+import { ActivityType, Adaptation } from '../../shared/models';
 
 export interface AdaptationServiceInterface {
   getActivityTypes(
     planServiceBaseUrl: string,
     adaptationServiceBaseUrl: string,
     planId: string,
-  ): Observable<StringTMap<ActivityType>>;
+  ): Observable<ActivityType[]>;
+  getActivityTypesWithActions(
+    planServiceBaseUrl: string,
+    adaptationServiceBaseUrl: string,
+    planId: string,
+  ): Observable<Action>;
   getAdaptations(baseUrl: string): Observable<Adaptation[]>;
+  getAdaptationsWithActions(baseUrl: string): Observable<Action>;
 }

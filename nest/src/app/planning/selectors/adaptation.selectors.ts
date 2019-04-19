@@ -19,7 +19,7 @@ export const getAdaptationState = createSelector(
 
 export const getActivityTypes = createSelector(
   getAdaptationState,
-  (state: AdaptationState) => Object.values(state.activityTypes),
+  (state: AdaptationState) => state.activityTypes,
 );
 
 export const getAdaptations = createSelector(

@@ -9,9 +9,19 @@
 
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { Action } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
+import { ShowToast } from '../../shared/actions/toast.actions';
 import { ActivityInstance, Plan } from '../../shared/models';
+import {
+  FetchActivitiesFailure,
+  FetchPlansFailure,
+  SetActivities,
+  SetActivitiesAndSelectedActivity,
+  SetPlans,
+  SetPlansAndSelectedPlan,
+} from '../actions/plan.actions';
 import { PlanServiceInterface } from './plan-service-interface';
 
 @Injectable({
@@ -58,15 +68,52 @@ export class PlanService implements PlanServiceInterface {
     );
   }
 
+  getActivitiesWithActions(
+    baseUrl: string,
+    planId: string,
+    activityId: string | null,
+  ): Observable<Action> {
+    return this.getActivities(baseUrl, planId).pipe(
+      map(
+        activities =>
+          activityId
+            ? new SetActivitiesAndSelectedActivity(activities, activityId)
+            : new SetActivities(activities),
+      ),
+      catchError(error => [
+        new FetchActivitiesFailure(new Error(error)),
+        new ShowToast('error', error.message, 'Fetching Activities Failed'),
+      ]),
+    );
+  }
+
   getPlans(baseUrl: string): Observable<Plan[]> {
-    return this.http.get<any[]>(`${baseUrl}/plans/`).pipe(
+    return this.http.get<Plan[]>(`${baseUrl}/plans/`).pipe(
       map(plans =>
         // Map _id to id.
         // TODO: Do this on the server.
         plans.map(plan => ({
           ...plan,
-          id: plan._id,
+          id: (plan as any)._id,
         })),
+      ),
+    );
+  }
+
+  getPlansWithActions(
+    baseUrl: string,
+    planId: string | null,
+  ): Observable<Action> {
+    return this.getPlans(baseUrl).pipe(
+      map(
+        plans =>
+          planId
+            ? new SetPlansAndSelectedPlan(plans, planId)
+            : new SetPlans(plans),
+        catchError(error => [
+          new FetchPlansFailure(new Error(error)),
+          new ShowToast('error', error.message, 'Fetching Plans Failed'),
+        ]),
       ),
     );
   }

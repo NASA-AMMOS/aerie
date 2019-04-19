@@ -8,25 +8,13 @@
  */
 
 import { Action } from '@ngrx/store';
-import { ActivityType, Adaptation, StringTMap } from '../../shared/models';
+import { ActivityType, Adaptation } from '../../shared/models';
 
 export enum AdaptationActionTypes {
-  FetchActivityTypes = '[adaptation] fetch_activity_types',
   FetchActivityTypesFailure = '[adaptation] fetch_activity_types_failure',
-  FetchActivityTypesSuccess = '[adaptation] fetch_activity_types_success',
-  FetchAdaptations = '[adaptation] fetch_adaptations',
   FetchAdaptationsFailure = '[adaptation] fetch_adaptations_failure',
-  FetchAdaptationsSuccess = '[adaptation] fetch_adaptations_success',
-}
-
-export class FetchActivityTypes implements Action {
-  readonly type = AdaptationActionTypes.FetchActivityTypes;
-  constructor(public planId: string) {}
-}
-
-export class FetchActivityTypesSuccess implements Action {
-  readonly type = AdaptationActionTypes.FetchActivityTypesSuccess;
-  constructor(public data: StringTMap<ActivityType>) {}
+  SetActivityTypes = '[adaptation] set_activity_types',
+  SetAdaptations = '[adaptation] set_adaptations',
 }
 
 export class FetchActivityTypesFailure implements Action {
@@ -34,24 +22,23 @@ export class FetchActivityTypesFailure implements Action {
   constructor(public error: Error) {}
 }
 
-export class FetchAdaptations implements Action {
-  readonly type = AdaptationActionTypes.FetchAdaptations;
-}
-
 export class FetchAdaptationsFailure implements Action {
   readonly type = AdaptationActionTypes.FetchAdaptationsFailure;
   constructor(public error: Error) {}
 }
 
-export class FetchAdaptationsSuccess implements Action {
-  readonly type = AdaptationActionTypes.FetchAdaptationsSuccess;
-  constructor(public data: Adaptation[]) {}
+export class SetActivityTypes implements Action {
+  readonly type = AdaptationActionTypes.SetActivityTypes;
+  constructor(public activityTypes: ActivityType[]) {}
+}
+
+export class SetAdaptations implements Action {
+  readonly type = AdaptationActionTypes.SetAdaptations;
+  constructor(public adaptations: Adaptation[]) {}
 }
 
 export type AdaptationActions =
-  | FetchActivityTypes
   | FetchActivityTypesFailure
-  | FetchActivityTypesSuccess
-  | FetchAdaptations
   | FetchAdaptationsFailure
-  | FetchAdaptationsSuccess;
+  | SetActivityTypes
+  | SetAdaptations;

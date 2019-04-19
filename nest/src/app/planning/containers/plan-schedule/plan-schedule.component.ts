@@ -22,7 +22,7 @@ import {
 import { ActivityInstanceUpdate } from '../../models';
 import { PlanningAppState } from '../../planning-store';
 import {
-  getActivities,
+  getActivitiesAsList,
   getMaxTimeRange,
   getSelectedActivity,
   getViewTimeRange,
@@ -48,7 +48,7 @@ export class PlanScheduleComponent implements OnDestroy {
     private store: Store<PlanningAppState>,
     private route: ActivatedRoute,
   ) {
-    this.activities$ = this.store.pipe(select(getActivities));
+    this.activities$ = this.store.pipe(select(getActivitiesAsList));
     this.maxTimeRange$ = this.store.pipe(select(getMaxTimeRange));
     this.selectedActivity$ = this.store.pipe(select(getSelectedActivity));
     this.viewTimeRange$ = this.store.pipe(select(getViewTimeRange));

@@ -26,7 +26,7 @@ import {
 } from '../../actions/plan.actions';
 import { PlanningAppState } from '../../planning-store';
 import {
-  getActivities,
+  getActivitiesAsList,
   getActivityTypes,
   getSelectedActivity,
   getSelectedPlan,
@@ -56,7 +56,7 @@ export class PlanComponent {
     private route: ActivatedRoute,
     public planningService: PlanningService,
   ) {
-    this.activities$ = this.store.pipe(select(getActivities));
+    this.activities$ = this.store.pipe(select(getActivitiesAsList));
     this.activityTypes$ = this.store.pipe(select(getActivityTypes));
     this.selectedActivity$ = this.store.pipe(select(getSelectedActivity));
     this.selectedPlan$ = this.store.pipe(select(getSelectedPlan));
@@ -74,7 +74,7 @@ export class PlanComponent {
   /**
    * Event. Called when the user clicks the 'Advanced' button in the New Activity form.
    */
-  navigateToNewActivityPage() {
+  navigateToNewActivityPage(): void {
     const { planId } = this.route.snapshot.paramMap['params'];
     this.store.dispatch(new NavigateByUrl(`/plans/${planId}/activity`));
   }
@@ -83,7 +83,7 @@ export class PlanComponent {
    * Event. Called when we close the edit activity drawer.
    * De-select the selected activity when we close the drawer since we don't need it selected anymore.
    */
-  onCloseEditActivityDrawer() {
+  onCloseEditActivityDrawer(): void {
     this.store.dispatch(new SelectActivity(null));
     this.store.dispatch(new ToggleEditActivityDrawer(false));
   }

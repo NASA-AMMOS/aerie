@@ -20,12 +20,12 @@ import {
   CreatePlanSuccess,
   DeleteActivitySuccess,
   DeletePlanSuccess,
-  FetchActivitiesSuccess,
-  FetchPlansSuccess,
   PlanActions,
   PlanActionTypes,
-  SelectActivity,
-  SelectPlan,
+  SetActivities,
+  SetActivitiesAndSelectedActivity,
+  SetPlans,
+  SetPlansAndSelectedPlan,
   UpdateActivitySuccess,
   UpdateViewTimeRange,
 } from '../actions/plan.actions';
@@ -34,8 +34,8 @@ export interface PlanState {
   activities: StringTMap<ActivityInstance> | null;
   maxTimeRange: TimeRange;
   plans: StringTMap<Plan>;
-  selectedActivity: ActivityInstance | null;
-  selectedPlan: Plan | null;
+  selectedActivityId: string | null;
+  selectedPlanId: string | null;
   viewTimeRange: TimeRange;
 }
 
@@ -43,8 +43,8 @@ export const initialState: PlanState = {
   activities: null,
   maxTimeRange: { end: 0, start: 0 },
   plans: {},
-  selectedActivity: null,
-  selectedPlan: null,
+  selectedActivityId: null,
+  selectedPlanId: null,
   viewTimeRange: { end: 0, start: 0 },
 };
 
@@ -58,9 +58,9 @@ export function reducer(
 ): PlanState {
   switch (action.type) {
     case PlanActionTypes.ClearSelectedActivity:
-      return { ...state, selectedActivity: null };
+      return { ...state, selectedActivityId: null };
     case PlanActionTypes.ClearSelectedPlan:
-      return { ...state, selectedPlan: null };
+      return { ...state, selectedPlanId: null };
     case PlanActionTypes.CreateActivitySuccess:
       return createActivitySuccess(state, action);
     case PlanActionTypes.CreatePlanSuccess:
@@ -69,14 +69,16 @@ export function reducer(
       return deleteActivitySuccess(state, action);
     case PlanActionTypes.DeletePlanSuccess:
       return deletePlanSuccess(state, action);
-    case PlanActionTypes.FetchActivitiesSuccess:
-      return fetchActivitiesSuccess(state, action);
-    case PlanActionTypes.FetchPlansSuccess:
-      return fetchPlansSuccess(state, action);
     case PlanActionTypes.SelectActivity:
-      return selectActivity(state, action);
-    case PlanActionTypes.SelectPlan:
-      return selectPlan(state, action);
+      return { ...state, selectedActivityId: action.id };
+    case PlanActionTypes.SetActivities:
+      return setActivities(state, action);
+    case PlanActionTypes.SetActivitiesAndSelectedActivity:
+      return setActivitiesAndSelectedActivity(state, action);
+    case PlanActionTypes.SetPlans:
+      return setPlans(state, action);
+    case PlanActionTypes.SetPlansAndSelectedPlan:
+      return setPlansAndSelectedPlan(state, action);
     case PlanActionTypes.UpdateActivitySuccess:
       return updateActivitySuccess(state, action);
     case PlanActionTypes.UpdateViewTimeRange:
@@ -93,17 +95,18 @@ function createActivitySuccess(
   state: PlanState,
   action: CreateActivitySuccess,
 ): PlanState {
-  const maxTimeRange = getMaxTimeRange([action.activity]);
+  const activities = {
+    ...state.activities,
+    [action.activity.activityId]: {
+      ...action.activity,
+    },
+  };
+  const maxTimeRange = getMaxTimeRange(Object.values(activities));
   const viewTimeRange = { ...maxTimeRange };
 
   return {
     ...state,
-    activities: {
-      ...state.activities,
-      [action.activity.activityId]: {
-        ...action.activity,
-      },
-    },
+    activities,
     maxTimeRange,
     viewTimeRange,
   };
@@ -154,79 +157,55 @@ function deletePlanSuccess(
 }
 
 /**
- * Reduction helper. Called when a 'FetchActivitiesSuccess' action occurs.
- * If `action.activityId` is non-null we set a selectedActivity.
+ * Reduction helper. Called when a 'SetActivities' action occurs.
  */
-function fetchActivitiesSuccess(
-  state: PlanState,
-  action: FetchActivitiesSuccess,
-): PlanState {
-  const selectedPlan = state.plans[action.planId] || null;
+function setActivities(state: PlanState, action: SetActivities): PlanState {
+  const activities = keyBy(action.activities, 'activityId');
   const maxTimeRange = getMaxTimeRange(action.activities);
   const viewTimeRange = { ...maxTimeRange };
-  const activities = keyBy(action.activities, 'activityId');
-  const selectedActivity = action.activityId
-    ? activities[action.activityId]
-    : null;
 
   return {
     ...state,
     activities,
     maxTimeRange,
-    selectedActivity,
-    selectedPlan,
     viewTimeRange,
   };
 }
 
 /**
- * Reduction helper. Called when a 'FetchPlansSuccess' action occurs.
+ * Reduction helper. Called when a 'SetActivitiesAndSelectedActivity' action occurs.
  */
-function fetchPlansSuccess(
+function setActivitiesAndSelectedActivity(
   state: PlanState,
-  action: FetchPlansSuccess,
+  action: SetActivitiesAndSelectedActivity,
+): PlanState {
+  return {
+    ...setActivities(state, (action as unknown) as SetActivities),
+    selectedActivityId: action.activityId,
+  };
+}
+
+/**
+ * Reduction helper. Called when a 'SetPlans' action occurs.
+ */
+function setPlans(state: PlanState, action: SetPlans): PlanState {
+  return {
+    ...state,
+    plans: keyBy(action.plans, 'id'),
+  };
+}
+
+/**
+ * Reduction helper. Called when a 'SetPlansAndSelectedPlan' action occurs.
+ */
+function setPlansAndSelectedPlan(
+  state: PlanState,
+  action: SetPlansAndSelectedPlan,
 ): PlanState {
   return {
     ...state,
-    plans: keyBy(action.data, 'id'),
-  };
-}
-
-/**
- * Reduction helper. Called when a 'SelectActivity' action occurs.
- */
-function selectActivity(state: PlanState, action: SelectActivity): PlanState {
-  const { activities } = state;
-
-  if (action.id !== null && activities && activities[action.id]) {
-    return {
-      ...state,
-      selectedActivity: activities[action.id],
-    };
-  }
-
-  return {
-    ...state,
-    selectedActivity: null,
-  };
-}
-
-/**
- * Reduction helper. Called when a 'SelectPlan' action occurs.
- */
-function selectPlan(state: PlanState, action: SelectPlan): PlanState {
-  const { plans } = state;
-
-  if (action.id !== null && plans && plans[action.id]) {
-    return {
-      ...state,
-      selectedPlan: plans[action.id],
-    };
-  }
-
-  return {
-    ...state,
-    selectedPlan: null,
+    plans: keyBy(action.plans, 'id'),
+    selectedPlanId: action.planId,
   };
 }
 

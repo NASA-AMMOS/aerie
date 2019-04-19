@@ -17,7 +17,7 @@ import { ActivityType } from '../../../shared/models';
 })
 export class ActivityTypeListComponent implements OnChanges {
   @Input()
-  activityTypes: ActivityType[];
+  activityTypes: ActivityType[] = [];
 
   filteredActivityTypes: ActivityType[] = [];
   searchText = '';

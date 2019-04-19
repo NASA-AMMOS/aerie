@@ -30,14 +30,13 @@ export enum PlanActionTypes {
   DeletePlan = '[plan] delete_plan',
   DeletePlanFailure = '[plan] delete_plan_failure',
   DeletePlanSuccess = '[plan] delete_plan_success',
-  FetchActivities = '[plan] fetch_activities',
   FetchActivitiesFailure = '[plan] fetch_activities_failure',
-  FetchActivitiesSuccess = '[plan] fetch_activities_success',
-  FetchPlans = '[plan] fetch_plans',
   FetchPlansFailure = '[plan] fetch_plans_failure',
-  FetchPlansSuccess = '[plan] fetch_plans_success',
   SelectActivity = '[plan] select_activity',
-  SelectPlan = '[plan] select_plan',
+  SetActivities = '[plan] set_activities',
+  SetActivitiesAndSelectedActivity = '[plan] set_activities_and_selected_activity',
+  SetPlans = '[plan] set_plans',
+  SetPlansAndSelectedPlan = '[plan] set_plans_and_selected_plan',
   UpdateActivity = '[plan] update_activity',
   UpdateActivityFailure = '[plan] update_activity_failure',
   UpdateActivitySuccess = '[plan] update_activity_success',
@@ -115,27 +114,9 @@ export class DeletePlanSuccess implements Action {
   constructor(public deletedPlanId: string) {}
 }
 
-export class FetchActivities implements Action {
-  readonly type = PlanActionTypes.FetchActivities;
-  constructor(public planId: string, public activityId: string | null) {}
-}
-
 export class FetchActivitiesFailure implements Action {
   readonly type = PlanActionTypes.FetchActivitiesFailure;
   constructor(public error: Error) {}
-}
-
-export class FetchActivitiesSuccess implements Action {
-  readonly type = PlanActionTypes.FetchActivitiesSuccess;
-  constructor(
-    public planId: string,
-    public activityId: string | null,
-    public activities: ActivityInstance[],
-  ) {}
-}
-
-export class FetchPlans implements Action {
-  readonly type = PlanActionTypes.FetchPlans;
 }
 
 export class FetchPlansFailure implements Action {
@@ -143,19 +124,32 @@ export class FetchPlansFailure implements Action {
   constructor(public error: Error) {}
 }
 
-export class FetchPlansSuccess implements Action {
-  readonly type = PlanActionTypes.FetchPlansSuccess;
-  constructor(public data: Plan[]) {}
-}
-
 export class SelectActivity implements Action {
   readonly type = PlanActionTypes.SelectActivity;
   constructor(public id: string | null) {}
 }
 
-export class SelectPlan implements Action {
-  readonly type = PlanActionTypes.SelectPlan;
-  constructor(public id: string) {}
+export class SetActivities implements Action {
+  readonly type = PlanActionTypes.SetActivities;
+  constructor(public activities: ActivityInstance[]) {}
+}
+
+export class SetActivitiesAndSelectedActivity implements Action {
+  readonly type = PlanActionTypes.SetActivitiesAndSelectedActivity;
+  constructor(
+    public activities: ActivityInstance[],
+    public activityId: string,
+  ) {}
+}
+
+export class SetPlans implements Action {
+  readonly type = PlanActionTypes.SetPlans;
+  constructor(public plans: Plan[]) {}
+}
+
+export class SetPlansAndSelectedPlan implements Action {
+  readonly type = PlanActionTypes.SetPlansAndSelectedPlan;
+  constructor(public plans: Plan[], public planId: string) {}
 }
 
 export class UpdateActivity implements Action {
@@ -208,17 +202,16 @@ export type PlanActions =
   | DeletePlan
   | DeletePlanFailure
   | DeletePlanSuccess
-  | FetchActivities
   | FetchActivitiesFailure
-  | FetchActivitiesSuccess
-  | FetchPlans
   | FetchPlansFailure
-  | FetchPlansSuccess
   | CreateActivity
   | CreateActivityFailure
   | CreateActivitySuccess
   | SelectActivity
-  | SelectPlan
+  | SetActivities
+  | SetActivitiesAndSelectedActivity
+  | SetPlans
+  | SetPlansAndSelectedPlan
   | UpdateActivity
   | UpdateActivityFailure
   | UpdateActivitySuccess
