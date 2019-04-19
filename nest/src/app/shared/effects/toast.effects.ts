@@ -15,6 +15,9 @@ import { Observable } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
 import { ShowToast, ToastActionTypes } from '../actions/toast.actions';
 
+// TODO: Provide individual options: https://www.npmjs.com/package/ngx-toastr
+const defaultIndividualConfig = {};
+
 @Injectable()
 export class ToastEffects {
   constructor(private actions$: Actions, private toastr: ToastrService) {}
@@ -23,11 +26,10 @@ export class ToastEffects {
   showToast$: Observable<Action> = this.actions$.pipe(
     ofType<ShowToast>(ToastActionTypes.ShowToast),
     mergeMap(action => {
-      this.toastr[action.toastType](
-        action.message,
-        action.title,
-        action.config,
-      );
+      this.toastr[action.toastType](action.message, action.title, {
+        ...action.config,
+        ...defaultIndividualConfig,
+      });
       return [];
     }),
   );
