@@ -533,20 +533,29 @@ export class RavenCompositeBandComponent
 
   /**
    * CTL Event. Called when you left-click a composite band.
+   * If only one band has intervals clicked, use the first interval.
+   * If no interval clicked, just select the band.
+   * If intervals clicked across multiple bands, pick the interval in the selected band.
    */
   onLeftClick(e: MouseEvent, ctlData: any) {
-    if (ctlData.intervals && this.selectedSubBandId) {
-      const bandIntervals = ctlData.intervals.filter(
+    if (ctlData.intervals.length > 0) {
+      const bandWithIntervals = ctlData.intervals.filter(
         (interval: any) => interval.bandId === this.selectedSubBandId,
       );
-
-      if (bandIntervals && bandIntervals.length > 0 && bandIntervals[0].intervals.length > 0) {
+      if (bandWithIntervals.length > 0) {
         this.bandLeftClick.emit({
           bandId: ctlData.band.id,
-          pointId: bandIntervals[0].intervals[0].uniqueId,
-          subBandId: bandIntervals[0].intervals[0].subBandId,
+          pointId: bandWithIntervals[0].bandIntervals[0].uniqueId,
+          subBandId: bandWithIntervals[0].bandIntervals[0].subBandId,
           time: ctlData.time,
         });
+      } else {
+        this.bandLeftClick.emit({
+          bandId: ctlData.band.id,
+          pointId: ctlData.intervals[0].bandIntervals[0].uniqueId,
+          subBandId: ctlData.intervals[0].bandIntervals[0].subBandId,
+          time: ctlData.time,
+        })
       }
     } else {
       this.bandLeftClick.emit({

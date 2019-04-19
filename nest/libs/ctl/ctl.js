@@ -1285,7 +1285,9 @@ Band.prototype.findIntervalsByBand = function(x, y) {
               matchingIntervals.push(interval);
             }
           }
-          intervalsByBand.push ({ bandId: band.id, intervals: matchingIntervals });
+          if (matchingIntervals.length > 0) {
+            intervalsByBand.push ({ bandId: band.id, bandIntervals: matchingIntervals });
+          }
       }
   }
   return intervalsByBand;
