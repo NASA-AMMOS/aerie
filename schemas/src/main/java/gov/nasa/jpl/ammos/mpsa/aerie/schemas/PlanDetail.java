@@ -1,15 +1,17 @@
 
 package gov.nasa.jpl.ammos.mpsa.aerie.schemas;
 
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
  * Plan
  * <p>
- * A container used to associate an Adaptation with a collection of Activity Instances
+ * A collection of Activity Instances, optionally pre-arranged to form a schedule.
  * 
  */
-public class Plan {
+public class PlanDetail {
 
     /**
      * The ID of the associated adaptation
@@ -41,12 +43,17 @@ public class Plan {
      * 
      */
     private String startTimestamp;
+    /**
+     * List of activity instances that comprise this plan
+     * 
+     */
+    private List<ActivityInstance> activityInstances = new ArrayList<ActivityInstance>();
 
     /**
      * No args constructor for use in serialization
      * 
      */
-    public Plan() {
+    public PlanDetail() {
     }
 
     /**
@@ -56,14 +63,16 @@ public class Plan {
      * @param id
      * @param endTimestamp
      * @param startTimestamp
+     * @param activityInstances
      */
-    public Plan(String adaptationId, String endTimestamp, String id, String name, String startTimestamp) {
+    public PlanDetail(String adaptationId, String endTimestamp, String id, String name, String startTimestamp, List<ActivityInstance> activityInstances) {
         super();
         this.adaptationId = adaptationId;
         this.endTimestamp = endTimestamp;
         this.id = id;
         this.name = name;
         this.startTimestamp = startTimestamp;
+        this.activityInstances = activityInstances;
     }
 
     /**
@@ -154,6 +163,22 @@ public class Plan {
      */
     public void setStartTimestamp(String startTimestamp) {
         this.startTimestamp = startTimestamp;
+    }
+
+    /**
+     * List of activity instances that comprise this plan
+     * 
+     */
+    public List<ActivityInstance> getActivityInstances() {
+        return activityInstances;
+    }
+
+    /**
+     * List of activity instances that comprise this plan
+     * 
+     */
+    public void setActivityInstances(List<ActivityInstance> activityInstances) {
+        this.activityInstances = activityInstances;
     }
 
 }

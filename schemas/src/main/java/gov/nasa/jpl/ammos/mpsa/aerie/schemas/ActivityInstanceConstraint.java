@@ -12,13 +12,13 @@ package gov.nasa.jpl.ammos.mpsa.aerie.schemas;
 public class ActivityInstanceConstraint {
 
     /**
-     * 
+     * Name of the constraint
      * (Required)
      * 
      */
     private String name;
     /**
-     * 
+     * Type of the constraint
      * (Required)
      * 
      */
@@ -43,7 +43,7 @@ public class ActivityInstanceConstraint {
     }
 
     /**
-     * 
+     * Name of the constraint
      * (Required)
      * 
      */
@@ -52,7 +52,7 @@ public class ActivityInstanceConstraint {
     }
 
     /**
-     * 
+     * Name of the constraint
      * (Required)
      * 
      */
@@ -61,7 +61,7 @@ public class ActivityInstanceConstraint {
     }
 
     /**
-     * 
+     * Type of the constraint
      * (Required)
      * 
      */
@@ -70,7 +70,7 @@ public class ActivityInstanceConstraint {
     }
 
     /**
-     * 
+     * Type of the constraint
      * (Required)
      * 
      */

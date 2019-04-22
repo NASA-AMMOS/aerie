@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "build": "quicktype -s schema -l ts --just-types --alphabetize-properties -o index.d.ts ./src/main/resources/*.json",
-    "clean": "rimraf index.d.ts"
+    "clean": "rimraf index.d.ts",
+    "start": "docson -d ./src/main/resources/"
   },
-  "dependencies": {
+  "devDependencies": {
+    "docson": "^2.1.0",
     "quicktype": "^15.0.174",
     "rimraf": "^2.6.3"
   }

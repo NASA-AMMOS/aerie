@@ -5,57 +5,72 @@
   "javaType": "gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstance",
   "properties": {
     "activityId": {
+      "description": "ID of the activity instance",
       "type": "string"
     },
     "activityType": {
+      "description": "The name of the activity type that this instance is based on",
       "type": "string"
     },
     "backgroundColor": {
+      "description": "Background color of the activity instance within an activity band",
       "type": "string"
     },
     "constraints": {
+      "description": "List of constraints associated with the activity instance",
       "type": "array",
       "items": {
         "$ref": "activity-instance-constraint.json"
       }
     },
     "duration": {
+      "description": "How long the activity instance lasts",
       "type": "number"
     },
     "end": {
+      "description": "When the activity instance ends, as a Unix timestamp",
       "type": "number"
     },
     "endTimestamp": {
+      "description": "When the activity instances ends, as an ISO 8601 formatted date string",
       "type": "string"
     },
     "intent": {
+      "description": "Description of the activity instance",
       "type": "string"
     },
     "listeners": {
+      "description": "A list of listeners",
       "type": "array",
       "items": {
         "type": "string"
       }
     },
     "name": {
+      "description": "Name of the activity instance",
       "type": "string"
     },
     "parameters": {
+      "description": "Parameters which augment the runtime behavior of the instance",
       "type": "array",
       "items": {
         "$ref": "activity-instance-parameter.json"
       }
     },
     "start": {
+      "description": "When the activity instance starts, as a Unix timestamp",
       "type": "number"
     },
     "startTimestamp": {
+      "description": "When the activity instances starts, as an ISO 8601 formatted date string",
       "type": "string"
     },
     "textColor": {
+      "description": "Text color of the activity instance within an activity band",
       "type": "string"
     },
     "y": {
+      "description": "The y position of the activity instance within an activity band",
       "type": ["number", "null"]
     }
   },

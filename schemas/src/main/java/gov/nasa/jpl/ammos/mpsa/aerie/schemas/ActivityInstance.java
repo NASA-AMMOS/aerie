@@ -14,86 +14,90 @@ import java.util.List;
 public class ActivityInstance {
 
     /**
-     * 
+     * ID of the activity instance
      * (Required)
      * 
      */
     private String activityId;
     /**
-     * 
+     * The name of the activity type that this instance is based on
      * (Required)
      * 
      */
     private String activityType;
     /**
-     * 
+     * Background color of the activity instance within an activity band
      * (Required)
      * 
      */
     private String backgroundColor;
     /**
-     * 
+     * List of constraints associated with the activity instance
      * (Required)
      * 
      */
     private List<ActivityInstanceConstraint> constraints = new ArrayList<ActivityInstanceConstraint>();
     /**
-     * 
+     * How long the activity instance lasts
      * (Required)
      * 
      */
     private Double duration;
     /**
-     * 
+     * When the activity instance ends, as a Unix timestamp
      * (Required)
      * 
      */
     private Double end;
     /**
-     * 
+     * When the activity instances ends, as an ISO 8601 formatted date string
      * (Required)
      * 
      */
     private String endTimestamp;
     /**
-     * 
+     * Description of the activity instance
      * (Required)
      * 
      */
     private String intent;
+    /**
+     * A list of listeners
+     * 
+     */
     private List<String> listeners = new ArrayList<String>();
     /**
-     * 
+     * Name of the activity instance
      * (Required)
      * 
      */
     private String name;
     /**
-     * 
+     * Parameters which augment the runtime behavior of the instance
      * (Required)
      * 
      */
     private List<ActivityInstanceParameter> parameters = new ArrayList<ActivityInstanceParameter>();
     /**
-     * 
+     * When the activity instance starts, as a Unix timestamp
      * (Required)
      * 
      */
     private Double start;
     /**
-     * 
+     * When the activity instances starts, as an ISO 8601 formatted date string
      * (Required)
      * 
      */
     private String startTimestamp;
     /**
-     * 
+     * Text color of the activity instance within an activity band
      * (Required)
      * 
      */
     private String textColor;
     /**
-     * 
+     * The y position of the activity instance within an activity band
      * (Required)
      * 
      */
@@ -144,7 +148,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * ID of the activity instance
      * (Required)
      * 
      */
@@ -153,7 +157,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * ID of the activity instance
      * (Required)
      * 
      */
@@ -162,7 +166,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * The name of the activity type that this instance is based on
      * (Required)
      * 
      */
@@ -171,7 +175,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * The name of the activity type that this instance is based on
      * (Required)
      * 
      */
@@ -180,7 +184,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * Background color of the activity instance within an activity band
      * (Required)
      * 
      */
@@ -189,7 +193,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * Background color of the activity instance within an activity band
      * (Required)
      * 
      */
@@ -198,7 +202,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * List of constraints associated with the activity instance
      * (Required)
      * 
      */
@@ -207,7 +211,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * List of constraints associated with the activity instance
      * (Required)
      * 
      */
@@ -216,7 +220,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * How long the activity instance lasts
      * (Required)
      * 
      */
@@ -225,7 +229,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * How long the activity instance lasts
      * (Required)
      * 
      */
@@ -234,7 +238,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * When the activity instance ends, as a Unix timestamp
      * (Required)
      * 
      */
@@ -243,7 +247,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * When the activity instance ends, as a Unix timestamp
      * (Required)
      * 
      */
@@ -252,7 +256,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * When the activity instances ends, as an ISO 8601 formatted date string
      * (Required)
      * 
      */
@@ -261,7 +265,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * When the activity instances ends, as an ISO 8601 formatted date string
      * (Required)
      * 
      */
@@ -270,7 +274,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * Description of the activity instance
      * (Required)
      * 
      */
@@ -279,7 +283,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * Description of the activity instance
      * (Required)
      * 
      */
@@ -287,16 +291,24 @@ public class ActivityInstance {
         this.intent = intent;
     }
 
+    /**
+     * A list of listeners
+     * 
+     */
     public List<String> getListeners() {
         return listeners;
     }
 
+    /**
+     * A list of listeners
+     * 
+     */
     public void setListeners(List<String> listeners) {
         this.listeners = listeners;
     }
 
     /**
-     * 
+     * Name of the activity instance
      * (Required)
      * 
      */
@@ -305,7 +317,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * Name of the activity instance
      * (Required)
      * 
      */
@@ -314,7 +326,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * Parameters which augment the runtime behavior of the instance
      * (Required)
      * 
      */
@@ -323,7 +335,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * Parameters which augment the runtime behavior of the instance
      * (Required)
      * 
      */
@@ -332,7 +344,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * When the activity instance starts, as a Unix timestamp
      * (Required)
      * 
      */
@@ -341,7 +353,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * When the activity instance starts, as a Unix timestamp
      * (Required)
      * 
      */
@@ -350,7 +362,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * When the activity instances starts, as an ISO 8601 formatted date string
      * (Required)
      * 
      */
@@ -359,7 +371,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * When the activity instances starts, as an ISO 8601 formatted date string
      * (Required)
      * 
      */
@@ -368,7 +380,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * Text color of the activity instance within an activity band
      * (Required)
      * 
      */
@@ -377,7 +389,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * Text color of the activity instance within an activity band
      * (Required)
      * 
      */
@@ -386,7 +398,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * The y position of the activity instance within an activity band
      * (Required)
      * 
      */
@@ -395,7 +407,7 @@ public class ActivityInstance {
     }
 
     /**
-     * 
+     * The y position of the activity instance within an activity band
      * (Required)
      * 
      */

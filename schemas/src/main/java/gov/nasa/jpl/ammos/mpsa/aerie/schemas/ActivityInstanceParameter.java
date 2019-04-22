@@ -13,22 +13,30 @@ import java.util.List;
  */
 public class ActivityInstanceParameter {
 
+    /**
+     * Default value of the parameter
+     * 
+     */
     private String defaultValue;
     /**
-     * 
+     * Name of the parameter
      * (Required)
      * 
      */
     private String name;
+    /**
+     * A range of values, for instance min/max and enum
+     * 
+     */
     private List<String> range = new ArrayList<String>();
     /**
-     * 
+     * The type of this parameter
      * (Required)
      * 
      */
     private String type;
     /**
-     * 
+     * The value of the parameter
      * (Required)
      * 
      */
@@ -58,16 +66,24 @@ public class ActivityInstanceParameter {
         this.value = value;
     }
 
+    /**
+     * Default value of the parameter
+     * 
+     */
     public String getDefaultValue() {
         return defaultValue;
     }
 
+    /**
+     * Default value of the parameter
+     * 
+     */
     public void setDefaultValue(String defaultValue) {
         this.defaultValue = defaultValue;
     }
 
     /**
-     * 
+     * Name of the parameter
      * (Required)
      * 
      */
@@ -76,7 +92,7 @@ public class ActivityInstanceParameter {
     }
 
     /**
-     * 
+     * Name of the parameter
      * (Required)
      * 
      */
@@ -84,16 +100,24 @@ public class ActivityInstanceParameter {
         this.name = name;
     }
 
+    /**
+     * A range of values, for instance min/max and enum
+     * 
+     */
     public List<String> getRange() {
         return range;
     }
 
+    /**
+     * A range of values, for instance min/max and enum
+     * 
+     */
     public void setRange(List<String> range) {
         this.range = range;
     }
 
     /**
-     * 
+     * The type of this parameter
      * (Required)
      * 
      */
@@ -102,7 +126,7 @@ public class ActivityInstanceParameter {
     }
 
     /**
-     * 
+     * The type of this parameter
      * (Required)
      * 
      */
@@ -111,7 +135,7 @@ public class ActivityInstanceParameter {
     }
 
     /**
-     * 
+     * The value of the parameter
      * (Required)
      * 
      */
@@ -120,7 +144,7 @@ public class ActivityInstanceParameter {
     }
 
     /**
-     * 
+     * The value of the parameter
      * (Required)
      * 
      */

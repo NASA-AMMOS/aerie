@@ -1,9 +1,9 @@
 {
-  "$id": "#/Plan",
+  "$id": "#/PlanDetail",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
-  "javaType": "gov.nasa.jpl.ammos.mpsa.aerie.schemas.Plan",
-  "description": "A container used to associate an Adaptation with a collection of Activity Instances",
+  "javaType": "gov.nasa.jpl.ammos.mpsa.aerie.schemas.PlanDetail",
+  "description": "A collection of Activity Instances, optionally pre-arranged to form a schedule.",
   "properties": {
     "adaptationId": {
       "description": "The ID of the associated adaptation",
@@ -24,6 +24,13 @@
     "startTimestamp": {
       "description": "When the plan ends. Will be changed to a Unix timestamp.",
       "type": "string"
+    },
+    "activityInstances": {
+      "description": "List of activity instances that comprise this plan",
+      "type": "array",
+      "items": {
+        "$ref": "activity-instance.json"
+      }
     }
   },
   "required": ["adaptationId", "endTimestamp", "id", "name", "startTimestamp"],

@@ -5,9 +5,11 @@
   "javaType": "gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstanceConstraint",
   "properties": {
     "name": {
+      "description": "Name of the constraint",
       "type": "string"
     },
     "type": {
+      "description": "Type of the constraint",
       "type": "string"
     }
   },
