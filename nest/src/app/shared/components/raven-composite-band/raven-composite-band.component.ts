@@ -567,7 +567,6 @@ export class RavenCompositeBandComponent
     }
   }
 
-
   /**
    * CTL Event. Called when you right-click a composite band.
    */
