@@ -125,6 +125,7 @@
             [activityTypes]="activityTypes$ | async"
             [isNew]="true"
             [selectedActivityType]="selectedActivityType"
+            (cancel)="onToggleActivityTypesDrawer(false)"
             (clickAdvanced)="navigateToNewActivityPage()"
             (createActivity)="onCreateActivity($event)"
           ></activity-form>

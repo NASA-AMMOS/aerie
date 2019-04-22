@@ -35,6 +35,8 @@ describe('ActivityFormFullComponent', () => {
     }).compileComponents();
     fixture = TestBed.createComponent(ActivityFormFullComponent);
     component = fixture.componentInstance;
+
+    component.ngOnInit();
   }));
 
   it('should create', () => {
@@ -66,6 +68,9 @@ describe('ActivityFormFullComponent', () => {
       expect(component.form.controls.activityType.value).toEqual(
         component.selectedActivity.activityType,
       );
+      expect(component.form.controls.backgroundColor.value).toEqual(
+        component.selectedActivity.backgroundColor,
+      );
       expect(component.form.controls.duration.value).toEqual(
         component.selectedActivity.duration,
       );
@@ -77,6 +82,9 @@ describe('ActivityFormFullComponent', () => {
       );
       expect(component.form.controls.start.value).toEqual(
         new Date(component.selectedActivity.start * 1000),
+      );
+      expect(component.form.controls.textColor.value).toEqual(
+        component.selectedActivity.textColor,
       );
     });
   });
@@ -94,10 +102,12 @@ describe('ActivityFormFullComponent', () => {
       component.isNew = true;
       doNgOnChanges(component, ['selectedActivity', 'isNew']);
       expect(component.form.controls.activityType.value).toEqual('');
+      expect(component.form.controls.backgroundColor.value).toEqual('#FFFFFF');
       expect(component.form.controls.duration.value).toEqual(0);
       expect(component.form.controls.intent.value).toEqual('');
       expect(component.form.controls.name.value).toEqual('');
-      expect(component.form.controls.start.value).toEqual(0);
+      expect(component.form.controls.start.value).toEqual('');
+      expect(component.form.controls.textColor.value).toEqual('#000000');
     });
   });
 

@@ -14,7 +14,7 @@ import { activity, activityTypes } from '../../mocks';
 import { ActivityFormComponent } from './activity-form.component';
 import { ActivityFormModule } from './activity-form.module';
 
-fdescribe('ActivityBandComponent', () => {
+describe('ActivityBandComponent', () => {
   let component: ActivityFormComponent;
   let fixture: ComponentFixture<ActivityFormComponent>;
 
@@ -43,20 +43,19 @@ fdescribe('ActivityBandComponent', () => {
     expect(component.form.valid).toBeTruthy();
   });
 
-  it('activityType is set to the first of activityTypes if not selected', () => {
-    const expectedActivityType = activityTypes[0];
-    component.ngOnInit();
+  it('activityType is set to nothing if no selected activity', () => {
+    component.activityTypes = activityTypes;
 
-    expect(component.selectedActivityType).toBe(expectedActivityType);
-    expect(component.form.controls.activityType.value).toBe(
-      expectedActivityType.activityClass,
-    );
+    doNgOnChanges(component, ['selectedActivityType', 'activityType']);
+
+    expect(component.selectedActivityType).toBeNull();
   });
 
   it('activityType is set to the selected activityType', () => {
     const selectedActivityType = activityTypes[0];
     component.selectedActivityType = selectedActivityType;
-    component.ngOnInit();
+
+    doNgOnChanges(component, ['selectedActivityType']);
 
     expect(component.form.controls.activityType.value).toBe(
       selectedActivityType.activityClass,

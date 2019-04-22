@@ -38,6 +38,10 @@
   margin-bottom: 5px;
 }
 
+.form-controls {
+  grid-template-columns: repeat(3, 1fr) !important;
+}
+
 mat-form-field {
   display: block;
   margin-bottom: 1rem;

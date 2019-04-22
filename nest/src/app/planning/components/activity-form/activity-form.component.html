@@ -1,9 +1,33 @@
 <form [formGroup]="form" (ngSubmit)="onSubmit(form.value)">
-  <mat-form-field appearance="fill" floatLabel="always">
+  <mat-form-field
+    appearance="fill"
+    floatLabel="always"
+    *ngIf="selectedActivityType"
+  >
     <mat-label>Activity Type</mat-label>
     <mat-select
-      [formControl]="form.controls['activityType']"
+      [formControlName]="'activityType'"
       [(value)]="selectedActivityType!.activityClass"
+    >
+      <mat-option
+        *ngFor="let activityType of activityTypes"
+        [value]="activityType.activityClass"
+      >
+        {{ activityType.activityClass }}
+      </mat-option>
+    </mat-select>
+    <mat-icon matSuffix>lock</mat-icon>
+  </mat-form-field>
+
+  <mat-form-field
+    appearance="fill"
+    floatLabel="always"
+    *ngIf="!selectedActivityType"
+  >
+    <mat-label>Activity Type</mat-label>
+    <mat-select
+      placeholder="Select Activity Type"
+      [formControlName]="'activityType'"
     >
       <mat-option
         *ngFor="let activityType of activityTypes"
@@ -21,7 +45,7 @@
       matInput
       placeholder="Activity Name"
       type="text"
-      [formControl]="form.controls['name']"
+      [formControlName]="'name'"
       required
     />
     <mat-icon matSuffix>mode_edit</mat-icon>
@@ -36,19 +60,14 @@
         matInput
         [owlDateTime]="startTime"
         [owlDateTimeTrigger]="startTime"
-        [formControl]="form.controls['start']"
+        [formControlName]="'start'"
         required
       />
       <owl-date-time #startTime></owl-date-time>
     </div>
 
     <div *ngIf="manualTimeInput">
-      <input
-        matInput
-        [formControl]="form.controls['start']"
-        type="number"
-        required
-      />
+      <input matInput [formControlName]="'start'" type="number" required />
       <owl-date-time #startTime></owl-date-time>
     </div>
 
@@ -58,8 +77,8 @@
 
   <div class="datetime-input-hint">
     <mat-slide-toggle
-      [(ngModel)]="manualTimeInput"
-      [ngModelOptions]="{ standalone: true }"
+      [checked]="manualTimeInput"
+      (change)="onManualTimeInputChange()"
     >
       Enter Start as epoch
     </mat-slide-toggle>
@@ -71,7 +90,7 @@
       matInput
       placeholder="Duration"
       type="number"
-      [formControl]="form.controls['duration']"
+      [formControlName]="'duration'"
       required
     />
     <mat-hint align="start">000</mat-hint>
@@ -80,11 +99,7 @@
 
   <mat-form-field appearance="fill">
     <mat-label>Intent</mat-label>
-    <textarea
-      matInput
-      placeholder="Add intent"
-      [formControl]="form.controls['intent']"
-    >
+    <textarea matInput placeholder="Add intent" [formControlName]="'intent'">
     </textarea>
     <mat-hint align="start">Optional</mat-hint>
   </mat-form-field>
@@ -119,10 +134,18 @@
     <p>{{ form.get('name').value }}</p>
   </div>
 
-  <div class="form-controls">
+  <div class="form-controls" *ngIf="displayActions">
     <button
-      mat-stroked-button
-      color="primary"
+      mat-raised-button
+      color="warn"
+      type="button"
+      (click)="cancel.emit()"
+    >
+      Cancel
+    </button>
+    <button
+      mat-raised-button
+      color="basic"
       type="button"
       (click)="clickAdvanced.emit(activity?.activityId)"
     >

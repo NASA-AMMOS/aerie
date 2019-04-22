@@ -13,6 +13,7 @@ import {
   EventEmitter,
   Input,
   OnChanges,
+  OnInit,
   Output,
   SimpleChanges,
 } from '@angular/core';
@@ -32,7 +33,7 @@ import { PlanningService } from '../../services/planning.service';
   styleUrls: ['./activity-form-full.component.css'],
   templateUrl: './activity-form-full.component.html',
 })
-export class ActivityFormFullComponent implements OnChanges {
+export class ActivityFormFullComponent implements OnInit, OnChanges {
   @Input()
   activityTypes: ActivityType[] | null;
 
@@ -58,13 +59,20 @@ export class ActivityFormFullComponent implements OnChanges {
   form: FormGroup;
   ngTemplateUtils: NgTemplateUtils = new NgTemplateUtils();
 
-  constructor(public fb: FormBuilder, public planningService: PlanningService) {
+  constructor(
+    private fb: FormBuilder,
+    public planningService: PlanningService,
+  ) {}
+
+  ngOnInit() {
     this.form = this.fb.group({
       activityType: new FormControl(''),
+      backgroundColor: new FormControl('#FFFFFF'),
       duration: new FormControl(0, [Validators.required]),
       intent: new FormControl(''),
       name: new FormControl('', [Validators.required]),
-      start: new FormControl(0, [Validators.required]),
+      start: new FormControl('', [Validators.required]),
+      textColor: new FormControl('#000000'),
     });
   }
 
