@@ -1672,14 +1672,9 @@ Band.prototype.mousedown = function(e) {
   var y = e.pageY - $(e.target).offset().top;
   var mouseTime = this.viewTimeAxis.getTimeFromX(x);
 
-  var interval = null;
-  var intervals = this.findIntervals(x, y);
-  if(intervals && intervals.length !== 0) {
-    interval = intervals[intervals.length-1];
-  }
-
   if(e.which === 1) {
-    if(this.onLeftClick !== null) { this.onLeftClick(e, {band:this, interval:interval, time:mouseTime}); }
+    var intervals = this.findIntervalsByBand(x, y);
+    if(this.onLeftClick !== null) { this.onLeftClick(e, {band:this, intervals, time:mouseTime}); }
 
     if(x >= this.viewTimeAxis.x1 && this.onUpdateView !== null) {
       // enable dragging if on timeline area
@@ -1689,6 +1684,12 @@ Band.prototype.mousedown = function(e) {
   }
   else {
     if(this.onRightClick === null) { return true; }
+
+    var interval = null;
+    var intervals = this.findIntervals(x, y);
+    if(intervals && intervals.length !== 0) {
+      interval = intervals[intervals.length-1];
+    }
 
     // right click
     if(interval === null) {
