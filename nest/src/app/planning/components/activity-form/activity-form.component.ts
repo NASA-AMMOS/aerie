@@ -13,6 +13,7 @@ import {
   EventEmitter,
   Input,
   OnChanges,
+  OnInit,
   Output,
   SimpleChanges,
 } from '@angular/core';
@@ -32,7 +33,7 @@ import { datetimeToEpoch, NgTemplateUtils } from '../../../shared/util';
   styleUrls: ['./activity-form.component.css'],
   templateUrl: './activity-form.component.html',
 })
-export class ActivityFormComponent implements OnChanges {
+export class ActivityFormComponent implements OnInit, OnChanges {
   @Input()
   activity: ActivityInstance | null;
 
@@ -81,6 +82,13 @@ export class ActivityFormComponent implements OnChanges {
       start: new FormControl('', [Validators.required]),
       textColor: new FormControl('#000000'),
     });
+  }
+
+  ngOnInit() {
+    // Disable the activityType form if we are editing an activity instance
+    if (!this.isNew) {
+      this.form.controls.activityType.disable();
+    }
   }
 
   ngOnChanges(changes: SimpleChanges) {

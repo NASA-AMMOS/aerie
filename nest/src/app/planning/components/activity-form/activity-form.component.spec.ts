@@ -8,6 +8,7 @@
  */
 
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { ActivityInstance } from '../../../shared/models';
 import { doNgOnChanges } from '../../../shared/util';
 import { activity, activityTypes } from '../../mocks';
@@ -94,5 +95,28 @@ describe('ActivityBandComponent', () => {
         start: activity.start * 1000,
       });
     });
+  });
+
+  it('activityType input is enabled when creating a new activity', () => {
+    component.isNew = true;
+    doNgOnChanges(component, ['isNew']);
+    const result = fixture.debugElement.query(
+      By.css('.mat-form-field-disabled'),
+    );
+
+    expect(result).toBeDefined();
+  });
+
+  it('activityType input is disabled when editing an activity', () => {
+    component.form.clearValidators();
+    component.isNew = true;
+    component.activity = activity;
+    doNgOnChanges(component, ['activity', 'isNew']);
+
+    const result = fixture.debugElement.query(
+      By.css('.mat-form-field-disabled'),
+    );
+
+    expect(result).toBeNull();
   });
 });
