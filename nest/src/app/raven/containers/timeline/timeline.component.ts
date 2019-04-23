@@ -152,7 +152,6 @@ export class TimelineComponent implements OnDestroy {
   selectedBandId: string;
   selectedSubBandId: string;
   southPanelHeight = 20;
-  topContainerHeight = 10;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -397,12 +396,7 @@ export class TimelineComponent implements OnDestroy {
    * Helper. Caiculate the main chart height.
    */
   getMainChartHeightPercent() {
-    return (
-      100 -
-      this.topContainerHeight -
-      this.southPanelHeight -
-      this.detailsPanelHeight
-    );
+    return 100 - this.southPanelHeight - this.detailsPanelHeight;
   }
 
   /**

@@ -41,14 +41,14 @@ mat-sidenav-container {
   z-index: 5;
 }
 
-.scroll {
-  overflow-y: scroll !important; /* Always show scrollbar track so bands always align. */
-}
-
 .time-bands-container {
   background: white;
-  position: sticky;
-  top: 0px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 19px;
+  height: 90px;
+
   z-index: 1;
 }
 
@@ -70,4 +70,39 @@ mat-sidenav-container {
 .row {
   flex: 1 0 auto;
   padding-left: 15px;
+}
+
+.north-container {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+}
+
+.south-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.timeline-0 {
+  position: absolute;
+  top: 90px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: calc(100% - 90px);
+
+  overflow-y: scroll;
+}
+
+.timeline-1 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  overflow-y: scroll;
 }
