@@ -46,10 +46,10 @@ mat-sidenav-container {
   position: absolute;
   top: 0;
   left: 0;
-  right: 19px;
-  height: 90px;
+  right: 0px;
 
   z-index: 1;
+  overflow-y: scroll;
 }
 
 .get-started {
