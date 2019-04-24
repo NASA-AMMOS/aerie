@@ -94,6 +94,7 @@ mat-sidenav-container {
 
   height: calc(100% - 90px);
 
+  overflow-x: hidden;
   overflow-y: scroll;
 }
 
@@ -104,5 +105,6 @@ mat-sidenav-container {
   right: 0;
   bottom: 0;
 
+  overflow-x: hidden;
   overflow-y: scroll;
 }
