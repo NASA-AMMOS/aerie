@@ -155,6 +155,8 @@
     >
       Advanced
     </button>
-    <button mat-raised-button color="accent">Save</button>
+    <button mat-raised-button color="accent" [disabled]="!form.valid">
+      Save
+    </button>
   </div>
 </form>
