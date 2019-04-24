@@ -44,7 +44,7 @@ export class ActivityFormComponent implements OnInit, OnChanges {
   displayActions: boolean | null = true;
 
   @Input()
-  isNew = false;
+  isNew: boolean;
 
   @Input()
   parentForm: FormGroup | null;
@@ -98,6 +98,8 @@ export class ActivityFormComponent implements OnInit, OnChanges {
         ...this.activity,
         start: new Date(this.activity.start * 1000),
       });
+
+      this.form.controls.activityType.disable();
     }
 
     // Create new activity from selecting activityType from activityType list

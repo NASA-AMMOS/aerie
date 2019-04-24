@@ -155,6 +155,7 @@
             [activity]="selectedActivity$ | async"
             [activityTypes]="activityTypes$ | async"
             [isNew]="false"
+            (cancel)="onToggleActivityTypesDrawer(false)"
             (clickAdvanced)="onSelectActivity($event)"
             (updateActivity)="onUpdateActivity($event)"
           ></activity-form>

@@ -1,4 +1,8 @@
-<form [formGroup]="form" (ngSubmit)="onSubmit(form.value)">
+<form
+  [formGroup]="form"
+  (ngSubmit)="onSubmit(form.value)"
+  *ngIf="activity || isNew"
+>
   <mat-form-field
     appearance="fill"
     floatLabel="always"

@@ -38,7 +38,7 @@ export class ActivityFormFullComponent implements OnInit, OnChanges {
   activityTypes: ActivityType[] | null;
 
   @Input()
-  isNew = false;
+  isNew: boolean;
 
   @Input()
   selectedActivity: ActivityInstance | null;
@@ -80,7 +80,8 @@ export class ActivityFormFullComponent implements OnInit, OnChanges {
     if (
       changes.selectedActivity &&
       this.selectedActivity !== null &&
-      !this.isNew
+      !this.isNew &&
+      this.form
     ) {
       this.addParametersFormControl();
       this.form.patchValue({
