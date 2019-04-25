@@ -25,7 +25,10 @@ export const getTimelineState = createSelector(
   (state: State): TimelineState => state.timeline,
 );
 
-export const getBands = createSelector(getTimelineState, bandsState);
+export const getBands = createSelector(
+  getTimelineState,
+  bandsState,
+);
 
 export const getGuides = createSelector(
   getTimelineState,

@@ -591,11 +591,10 @@ export function removeChildrenOrDescendants(
                   point.expandedFromPointId !== action.activityPoint.uniqueId
                 );
               })
-              .map(
-                (point: RavenActivityPoint) =>
-                  point.uniqueId === action.activityPoint.uniqueId
-                    ? { ...point, expansion: 'noExpansion' }
-                    : point,
+              .map((point: RavenActivityPoint) =>
+                point.uniqueId === action.activityPoint.uniqueId
+                  ? { ...point, expansion: 'noExpansion' }
+                  : point,
               ),
           });
 
@@ -844,13 +843,9 @@ export function sourceIdAdd(
  * Reduction Helper. Called when reducing the 'ToggleGuide' action.
  */
 export function toggleGuide(state: TimelineState, action: ToggleGuide) {
-  const existingGuide = state.guides.filter(guide =>
-    guideWithinTwoPixels(
-      guide,
-      action.guide.guideTime,
-      action.guide.timePerPixel,
-    ),
-  );
+  const withinFivePixels = (guide: number) =>
+    Math.abs(action.guide.guideTime - guide) / action.guide.timePerPixel <= 5;
+  const existingGuide = state.guides.filter(guide => withinFivePixels(guide));
   return {
     ...state,
     currentStateChanged: state.currentState !== null,
@@ -913,17 +908,4 @@ export function updateSubBand(
     }),
     currentStateChanged: state.currentState !== null,
   };
-}
-
-/**
- * Helper. Returns true if guide is within 2 pixels of guideTime.
- */
-export function guideWithinTwoPixels(
-  guide: number,
-  guideTime: number,
-  timePerPixel: number,
-) {
-  return (
-    guideTime > guide - 2 * timePerPixel && guideTime < guide + 2 * timePerPixel
-  );
 }

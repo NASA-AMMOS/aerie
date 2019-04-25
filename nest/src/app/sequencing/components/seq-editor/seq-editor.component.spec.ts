@@ -17,9 +17,7 @@ import { SeqEditorModule } from './seq-editor.module';
 @Component({
   selector: 'seq-editor-test',
   template: `
-    <seq-editor
-      [commands]="commands"
-      [commandsByName]="commandsByName">
+    <seq-editor [commands]="commands" [commandsByName]="commandsByName">
     </seq-editor>
   `,
 })
