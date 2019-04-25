@@ -25,7 +25,8 @@ import { SeqCommandLoaderModule } from './seq-command-loader.module';
     <seq-command-loader
       [dictionaries]="dictionaries"
       [selectedId]="selectedId"
-      (onSelected)="(selectedDictionaryChanged)">
+      (onSelected)="(selectedDictionaryChanged)"
+    >
     </seq-command-loader>
   `,
 })

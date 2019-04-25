@@ -17,8 +17,7 @@ import { PlanTableModule } from './plan-table.module';
 @Component({
   selector: 'plan-table-test',
   template: `
-    <plan-table [plans]="plans">
-    </plan-table>
+    <plan-table [plans]="plans"> </plan-table>
   `,
 })
 class PlanTableTestComponent {

@@ -18,9 +18,7 @@ import { ActivityTypeListModule } from './activity-type-list.module';
 @Component({
   selector: 'activity-type-list-test',
   template: `
-    <activity-type-list
-      [activityTypes]="activityTypesList"
-    >
+    <activity-type-list [activityTypes]="activityTypesList">
     </activity-type-list>
   `,
 })
