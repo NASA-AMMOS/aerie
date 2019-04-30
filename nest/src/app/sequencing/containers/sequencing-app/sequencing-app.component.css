@@ -9,7 +9,7 @@
 
 :host {
   display: grid;
-  grid-gap: 12px;
+  grid-column-gap: 12px;
   grid-template-areas:
     'header header'
     'aside main';

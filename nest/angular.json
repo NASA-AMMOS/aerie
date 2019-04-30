@@ -40,7 +40,6 @@
             "assets": ["src/assets"],
             "styles": [
               "src/theme.scss",
-              "node_modules/material-design-icons/iconfont/material-icons.css",
               "node_modules/font-awesome/css/font-awesome.min.css",
               "node_modules/ag-grid-community/dist/styles/ag-grid.css",
               "node_modules/ag-grid-community/dist/styles/ag-theme-fresh.css",
@@ -49,6 +48,7 @@
               "node_modules/codemirror/theme/monokai.css",
               "node_modules/codemirror/addon/lint/lint.css",
               "node_modules/codemirror/addon/hint/show-hint.css",
+              "node_modules/codemirror/addon/display/fullscreen.css",
               "src/styles.css",
               "libs/ctl/ctl.css"
             ],

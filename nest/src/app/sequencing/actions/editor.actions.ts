@@ -11,6 +11,7 @@ import { Action } from '@ngrx/store';
 
 export enum EditorActionTypes {
   AddText = '[editor] add_text',
+  OpenEditorHelpDialog = '[editor] open_editor_help_dialog',
 }
 
 export class AddText implements Action {
@@ -18,4 +19,10 @@ export class AddText implements Action {
   constructor(public text: string) {}
 }
 
-export type EditorActions = AddText;
+export class OpenEditorHelpDialog implements Action {
+  readonly type = EditorActionTypes.OpenEditorHelpDialog;
+
+  constructor(public width: string = '400px') {}
+}
+
+export type EditorActions = AddText | OpenEditorHelpDialog;

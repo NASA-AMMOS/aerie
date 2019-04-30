@@ -7,8 +7,29 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-:host {
+:host,
+#sequencing-editor-mount {
   display: block;
   height: 100%;
   width: 100%;
+}
+
+#sequencing-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+#sequencing-toolbar > button {
+  margin: 8px 8px 8px 0px;
+}
+
+#sequencing-filename {
+  margin-right: auto;
+  margin-bottom: 0;
+}
+
+::ng-deep .CodeMirror-fullscreen {
+  z-index: 10 !important;
 }

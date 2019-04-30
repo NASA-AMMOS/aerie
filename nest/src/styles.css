@@ -99,6 +99,9 @@ main {
 /* Override default CodeMirror class so we can have auto resizing. */
 /* https://codemirror.net/demo/resize.html */
 .CodeMirror {
-  border: 1px solid #eee;
   height: 100%;
+}
+
+.mat-drawer-side {
+  z-index: 1 !important;
 }

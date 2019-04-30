@@ -38,6 +38,7 @@ documentation
 # testing
 karma-test-results.xml
 /reports
+e2e/results/*.json
 
 # System Files
 .DS_Store
