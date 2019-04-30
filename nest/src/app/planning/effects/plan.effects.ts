@@ -116,7 +116,7 @@ export class PlanEffects {
         .createPlan(state.config.app.planServiceBaseUrl, action.plan)
         .pipe(
           switchMap((plan: any) => [
-            new CreatePlanSuccess({ ...plan, id: plan._id || plan.id }),
+            new CreatePlanSuccess({ ...plan }),
             new ShowToast(
               'success',
               'New plan has been successfully created and saved.',

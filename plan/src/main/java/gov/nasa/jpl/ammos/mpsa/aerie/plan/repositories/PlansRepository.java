@@ -7,6 +7,5 @@ import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface PlansRepository extends MongoRepository<Plan, String> {
-    Plan findPlanBy_id(ObjectId _id);
-    PlanDetail findPlanDetailBy_id(ObjectId _id);
+    PlanDetail findPlanDetailById(String id);
 }

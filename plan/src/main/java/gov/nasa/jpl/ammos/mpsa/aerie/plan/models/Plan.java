@@ -1,27 +1,33 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.models;
 
-import org.bson.types.ObjectId;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
+
 @Document("plans")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Plan extends gov.nasa.jpl.ammos.mpsa.aerie.schemas.Plan {
-  @Id()
-  private ObjectId _id;
+    @Id()
+    public String id;
 
-  public Plan() {
-  }
+    public Plan() {
+        super();
+    }
 
-  public Plan(String adaptationId, String endTimestamp, String id, String name,
-      String startTimestamp) {
-    super(adaptationId, endTimestamp, id, name, startTimestamp);
-  }
+    public Plan(String adaptationId, String endTimestamp, String id, String name, String startTimestamp) {
+        super(adaptationId, endTimestamp, id, name, startTimestamp);
+    }
 
-  public String get_id() {
-    return _id.toHexString();
-  }
+    @Override
+    public String getId() {
+        return id;
+    }
 
-  public void set_id(ObjectId _id) {
-    this._id = _id;
-  }
+    @Override
+    public void setId(String id) {
+        this.id = id;
+    }
 }

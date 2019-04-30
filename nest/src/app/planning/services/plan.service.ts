@@ -74,11 +74,10 @@ export class PlanService implements PlanServiceInterface {
     activityId: string | null,
   ): Observable<Action> {
     return this.getActivities(baseUrl, planId).pipe(
-      map(
-        activities =>
-          activityId
-            ? new SetActivitiesAndSelectedActivity(activities, activityId)
-            : new SetActivities(activities),
+      map(activities =>
+        activityId
+          ? new SetActivitiesAndSelectedActivity(activities, activityId)
+          : new SetActivities(activities),
       ),
       catchError(error => [
         new FetchActivitiesFailure(new Error(error)),
@@ -88,16 +87,7 @@ export class PlanService implements PlanServiceInterface {
   }
 
   getPlans(baseUrl: string): Observable<Plan[]> {
-    return this.http.get<Plan[]>(`${baseUrl}/plans/`).pipe(
-      map(plans =>
-        // Map _id to id.
-        // TODO: Do this on the server.
-        plans.map(plan => ({
-          ...plan,
-          id: (plan as any)._id,
-        })),
-      ),
-    );
+    return this.http.get<Plan[]>(`${baseUrl}/plans/`);
   }
 
   getPlansWithActions(
