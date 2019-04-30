@@ -20,12 +20,15 @@ export function buildMpsLint(commandsByName: StringTMap<MpsCommand>) {
 
     const parseError = (err: CodeMirrorLintError) => {
       const loc = err.lineNumber;
+      const markStart = err.start || 0;
+      const markEnd = err.end || 0;
+      const lineEnd = err.end ? loc - 1 : loc;
 
       found.push({
-        from: CodeMirror.Pos(loc - 1, 0),
+        from: CodeMirror.Pos(loc - 1, markStart),
         message: err.message,
         severity: err.level,
-        to: CodeMirror.Pos(loc, 0),
+        to: CodeMirror.Pos(lineEnd, markEnd),
       });
     };
 
@@ -99,36 +102,104 @@ export function verifyLine(
     .slice(1, tokens.length)
     .filter(t => t !== '' && t !== ' ');
 
-  if (commandsByName.hasOwnProperty(name)) {
-    if (parameters.length < commandsByName[name].parameters.length) {
+  const validCommand = commandsByName.hasOwnProperty(name);
+  let commandParameters;
+
+  if (validCommand) {
+    const actualNumParams = parameters.length;
+    const expectedNumParams = commandsByName[name].parameters.length;
+    commandParameters = commandsByName[name].parameters;
+
+    let message = '';
+    let hasArgError = false;
+
+    if (actualNumParams !== expectedNumParams) {
+      hasArgError = true;
+      message = `${name} received the wrong number of parameters. Expected ${expectedNumParams} parameters, got ${actualNumParams}.`;
+    }
+
+    if (hasArgError) {
+      message = `${message}
+      -----
+      ${commandsByName[name].parameters
+        .map(p => {
+          return `${p.name}: ${p.type} (${p.units})
+          Description:\t ${p.help}
+          Default:\t ${p.defaultValue}
+          Range:\t ${p.range}`;
+        })
+        .join('\n\n')}
+      `;
+
       res.push({
+        end: null,
         level: 'error',
         lineNumber,
-        message: 'Command does not have enough parameters.',
+        message,
+        start: null,
       });
-    } else if (parameters.length > commandsByName[name].parameters.length) {
-      res.push({
-        level: 'error',
-        lineNumber,
-        message: 'Command has too many parameters.',
-      });
-    } else {
-      // TODO: More detailed command linting.
     }
   } else {
     res.push({
+      end: null,
       level: 'error',
       lineNumber,
-      message: 'Command is not in the command dictionary.',
+      message: `${name} is not in the command dictionary.`,
+      start: null,
     });
   }
 
   if (tokens[tokens.length - 1] === '') {
     res.push({
+      end: null,
       level: 'warning',
       lineNumber,
-      message: 'Command should not have any trailing whitespace.',
+      message: `${name} should not have any trailing whitespace.`,
+      start: null,
     });
+  }
+
+  // Check if arguments are in range as defined in command dictionary
+  if (validCommand && commandParameters) {
+    let curCharPos = name.length;
+
+    for (let i = 0, length = parameters.length; i < length; i++) {
+      const curCommand = commandParameters[i];
+      // Add 1 to pos to account for whitespace because we split based on whitespace
+      curCharPos += parameters[i].length + 1;
+
+      if (
+        curCommand &&
+        (curCommand.type === 'UNSIGNED_DECIMAL' ||
+          curCommand.type === 'SIGNED_DECIMAL' ||
+          curCommand.type === 'ENGINEERING') &&
+        curCommand.range
+      ) {
+        const [lowerBound, upperBound] = curCommand.range
+          .split('...')
+          .map(num => parseFloat(num));
+        const curArgument = parseFloat(parameters[i]);
+
+        // If the argument is out of range, push an error
+        if (!(curArgument >= lowerBound && curArgument <= upperBound)) {
+          const start = curCharPos - parameters[i].length;
+          const end = curCharPos;
+
+          res.push({
+            end,
+            level: 'error',
+            lineNumber,
+            message: `${name} is expecting an argument between ${lowerBound} and ${upperBound}, received ${curArgument}.
+            -----
+            ${curCommand.name}: ${curCommand.type} (${curCommand.units})
+            Description:\t ${curCommand.help}
+            Default:\t ${curCommand.defaultValue}
+            `,
+            start,
+          });
+        }
+      }
+    }
   }
 
   return res;

@@ -8,7 +8,9 @@
  */
 
 export interface CodeMirrorLintError {
+  end: number | null;
   level: string;
   lineNumber: number;
   message: string;
+  start: number | null;
 }
