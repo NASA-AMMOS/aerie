@@ -256,6 +256,7 @@ export function formatEpochDuration(
 export function formatEpochTime(
   epochTime: RavenEpochTime,
   dayCode: string,
+  includeMilli: boolean,
 ): string {
   const day = formatDayCode(dayCode);
   const hours = epochTime.hours.toString().padStart(2, '0');
@@ -267,7 +268,7 @@ export function formatEpochTime(
     epochTime.sign +
     Math.abs(epochTime.epoch) +
     day +
-    `${hours}:${minutes}:${seconds}.${milliseconds}`
+    `${hours}:${minutes}:${seconds}${includeMilli ? '.' + milliseconds : ''}`
   );
 }
 
@@ -305,9 +306,9 @@ export function formatEpochTimeRange(
   };
 
   return (
-    formatEpochTime(startEpoch, dayCode) +
+    formatEpochTime(startEpoch, dayCode, true) +
     ' to ' +
-    formatEpochTime(endEpoch, dayCode) +
+    formatEpochTime(endEpoch, dayCode, true) +
     ' (' +
     formatEpochDuration(epochDuration, dayCode) +
     ')'
@@ -337,7 +338,7 @@ export function formatTimeTickTFormat(
 
   if (epoch) {
     const epochTime = toEpochTime(time, earthSecPerEpochSec, epoch);
-    const formattedEpoch = formatEpochTime(epochTime, dayCode);
+    const formattedEpoch = formatEpochTime(epochTime, dayCode, false);
 
     formattedTimes.push({
       formattedTime: formattedEpoch,

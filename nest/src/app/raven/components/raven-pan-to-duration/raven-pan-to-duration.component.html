@@ -1,23 +1,24 @@
-<span class="pan-to">
-  <input class="short"
-    [formControl]="panToControl"
-    placeholder="Pan To"
-    type="text"
-    title="Use yyyy-dddThh:mm:ss Format">
-</span>
+<div class="pan-container">
+  <span class="pan-to">
+    <input
+      [formControl]="panToControl"
+      placeholder="Pan To"
+      type="text"
+      title="Use yyyy-dddThh:mm:ss Format">
+  </span>
 
-<span class="pan-duration">
-  <input class="short"
-    [formControl]="panDurationControl"
-    [matAutocomplete]="auto"
-    placeholder="Pan Duration"
-    type="text">
-  <mat-autocomplete #auto="matAutocomplete">
-    <mat-option *ngFor="let duration of filteredDurations | async" [value]="duration">
-      {{duration}}
-    </mat-option>
-  </mat-autocomplete>
-</span>
+  <span>
+    <input
+      [formControl]="panDurationControl"
+      [matAutocomplete]="auto"
+      placeholder="Pan Duration"
+      type="text">
+      <mat-autocomplete #auto="matAutocomplete">
+        <mat-option *ngFor="let duration of filteredDurations | async" [value]="duration">
+          {{duration}}
+        </mat-option>
+      </mat-autocomplete>
+  </span>
   <mat-icon
     [ngClass]="{
       'icon': panToControl.valid && panDurationControl.valid,
@@ -28,3 +29,4 @@
     (click)="onPan()">
     search
   </mat-icon>
+</div>

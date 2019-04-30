@@ -33,12 +33,11 @@ import {
 import { getBandLabel } from './bands';
 
 /**
- * Replace any slashes or '.' in a source name with dashes.
+ * Replace any slashes in a source name with dashes.
  * Slashes delineate sources in the source-explorer.
- * '.' cannot be be used in keys in mongodb.
  */
 export function sanitizeSourceName(name: string): string {
-  return name.replace(/\.|\//g, '-');
+  return name.replace(/\//g, '-');
 }
 
 /**
@@ -582,11 +581,10 @@ export function getFilters(
   treeBySourceId: StringTMap<RavenSource>,
   sourceIds: string[],
 ) {
-  return sourceIds.map(
-    sourceId =>
-      treeBySourceId[sourceId].type === 'customFilter'
-        ? (treeBySourceId[sourceId] as RavenCustomFilterSource).filter
-        : treeBySourceId[sourceId].name,
+  return sourceIds.map(sourceId =>
+    treeBySourceId[sourceId].type === 'customFilter'
+      ? (treeBySourceId[sourceId] as RavenCustomFilterSource).filter
+      : treeBySourceId[sourceId].name,
   );
 }
 
@@ -701,9 +699,8 @@ export function getPin(sourceId: string, pins: RavenPin[]): RavenPin | null {
     // The `filteredPins` list contains all pins that contain source id sub-strings of the given `sourceId`.
     // We want to reduce those pins to a single pin such that the pins source id is the longest `sourceId` sub-string.
     // Convince yourself that this is analogous to finding the closest parent pin for the given `sourceId`.
-    return filteredPins.reduce(
-      (aPin, bPin) =>
-        aPin.sourceId.length >= bPin.sourceId.length ? aPin : bPin,
+    return filteredPins.reduce((aPin, bPin) =>
+      aPin.sourceId.length >= bPin.sourceId.length ? aPin : bPin,
     );
   }
 
@@ -834,8 +831,8 @@ export function toRavenFileMetadata(
       mSource.__kind === 'fs_dir'
         ? 'folder'
         : mSource.__kind_sub === 'file_maros'
-          ? 'Generic CSV'
-          : mSource.__kind_sub,
+        ? 'Generic CSV'
+        : mSource.__kind_sub,
     lastModified: mSource.modified ? mSource.modified : '',
     permissions: mSource.permissions
       ? mSource.permissions.substring(0, mSource.permissions.indexOf(' '))

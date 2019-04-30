@@ -197,7 +197,7 @@ def create_activity_band(raven_one_band, sources, default_band_settings):
         "heightPadding": raven_one_band["graphSettings"].get("heightPadding", 10),
         "icon": default_band_settings["icon"],
         "label": strip_units(raven_one_band["label"]),
-        "labelColor": [0, 0, 0],
+        "labelColor": "#000000",
         "labelFont": default_band_settings["labelFont"],
         "labelPin": raven_one_band.get("suffix") or "",
         "layout": LAYOUTS[int(raven_one_band["graphSettings"]["activityLayout"])],
@@ -233,7 +233,7 @@ def create_state_band(raven_one_band, sources, default_band_settings):
         "icon": default_band_settings["icon"],
         "isNumeric": raven_one_band["graphSettings"].get("statePlotType") in ["line"],
         "label": strip_units(raven_one_band["label"]),  # TODO: default metadata.hasObjectName
-        "labelColor": raven_one_band["graphSettings"].get("labelColor") or [0, 0, 0],
+        "labelColor": convert_color(raven_one_band["graphSettings"].get("labelColor") or [0, 0, 0]),
         "labelFont": default_band_settings["labelFont"],
         "labelPin": raven_one_band.get("suffix") or "",
         "maxTimeRange": {
@@ -255,11 +255,11 @@ def create_state_band(raven_one_band, sources, default_band_settings):
 def create_divider_band(raven_one_band, sources, default_band_settings):
     return {
         "addTo": False,
-        "color": [255, 255, 255],
+        "color": "#FFFFFF",
         "height": raven_one_band["graphSettings"].get("height", 7),
         "heightPadding": 10,
         "label": strip_units(raven_one_band["label"]),
-        "labelColor": [0, 0, 0],
+        "labelColor": "#000000",
         "maxTimeRange": {
             "start": 0,
             "end": 0,

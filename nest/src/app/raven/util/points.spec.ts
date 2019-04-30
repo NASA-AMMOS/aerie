@@ -87,7 +87,7 @@ describe('points.ts', () => {
 
   describe('getUniqueActivityId', () => {
     it(`should return a correct unique activity id`, () => {
-      expect(getUniqueActivityId(activityPoint)).toEqual(
+      expect(getUniqueActivityId(activityPoint)).not.toEqual(
         'test-activity-point-0-500',
       );
     });

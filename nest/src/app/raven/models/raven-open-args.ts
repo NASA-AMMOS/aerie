@@ -7,53 +7,31 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-:host {
-  align-content: center;
-  align-items: stretch;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  height: 100%;
-  overflow: hidden;
-  width: 100%;
-}
+import {
+  RavenCompositeBand,
+  RavenCustomFilter,
+  RavenDefaultBandSettings,
+  RavenPin,
+  RavenSource,
+} from './index';
 
-.icon {
-  font-size: 24px;
-}
-.spacer {
-  flex: 1 1 auto;
-}
+import {
+  StringTMap,
+} from '../../shared/models/index';
 
-.timeline-container {
-  flex: 1 0 auto;
-  position: relative;
-}
-
-.timeline {
-  bottom: 0px;
-  left: 0px;
-  position: absolute;
-  right: 0px;
-  top: 0px;
-}
-
-.progress-container {
-  display: block;
-  flex: 0 0 3px;
-  margin-top: -3px;
-}
-
-.name {
-  font-size: 9px;
-  padding-right: 10px;
-}
-
-mat-progress-bar {
-  height: 3px;
-  z-index: 10;
-}
-
-.collapsed {
-  position: static !important;
+export interface RavenOpenArgs {
+  bandId: string | null;
+  currentBands: RavenCompositeBand[];
+  customFilter: RavenCustomFilter | null;
+  defaultBandSettings: RavenDefaultBandSettings;
+  filtersByTarget: StringTMap<StringTMap<string[]>>;
+  graphAgain: boolean;
+  pageDuration: string;
+  pins: RavenPin[];
+  restoringLayout: boolean;
+  situAware: boolean;
+  sourceId: string;
+  startTime: string;
+  subBandId: string | null;
+  treeBySourceId: StringTMap<RavenSource>;
 }

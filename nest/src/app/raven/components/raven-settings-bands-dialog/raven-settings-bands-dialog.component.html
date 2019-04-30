@@ -1,159 +1,178 @@
 <h3 mat-dialog-title cdkDrag cdkDragRootElement=".cdk-overlay-pane" cdkDragHandle>Band Settings</h3>
-<mat-card>
-    <mat-card-content>
+<mat-card
+  [ngStyle]="{'max-height': maxHeight+'px'}">
+  <mat-card-content>
+    <div
+      id="raven-settings-selected-band"
+      fxLayout="row"
+      fxLayoutAlign="start center"
+      fxLayoutWrap>
+      <!-- Selected Sub Band. -->
       <div
-        id="raven-settings-selected-band"
-        fxLayout="row"
-        fxLayoutAlign="start center"
-        fxLayoutWrap>
-        <!-- Selected Sub Band. -->
-        <div
-          *ngIf="subBands.length > 1"
-          class="field">
-          <mat-form-field>
-            <mat-select
-              id="raven-settings-sub-band"
-              [value]="selectedSubBand.id"
-              (selectionChange)="onChangeSelectedSubBand($event.value)"
-              placeholder="Selected Sub-Band">
-              <ng-container *ngFor="let subBand of subBands; trackBy: trackByFn">
-                <mat-option [value]="subBand.id">{{getSubBandLabel(subBand)}}</mat-option>
-              </ng-container>
-            </mat-select>
-          </mat-form-field>
-        </div>
-        <ng-container *ngIf="bandsById[selectedBandId]">
-          <ng-container *ngFor="let subBand of subBands; trackBy: trackByFn">
-            <ng-container *ngIf="subBand.id === selectedSubBand.id">
-              <!-- source id -->
-              <div *ngIf="subBand.type !== 'divider'" class="row-container">
-                <mat-form-field class="flex-item">
-                  <textarea
-                    id="raven-settings-source-id"
-                    matInput
-                    ngReadonly
-                    cdkTextareaAutosize
-                    #autosize="cdkTextareaAutosize"
-                    cdkAutosizeMinRows="1"
-                    cdkAutosizeMaxRows="2"
-                    placeholder="Source"
-                    [value]="selectedSubBand.sourceIds[0]">
-                  </textarea>
-                </mat-form-field>
-                <mat-icon
-                  id="raven-settings-remove-band"
-                  matTooltip="Remove Band"
-                  class="padded-icon"
-                  (click)="onDeleteSubBand(selectedSubBand)">
-                  delete_outline
-                </mat-icon>
-              </div>
+        *ngIf="subBands.length > 1"
+        class="field">
+        <mat-form-field>
+          <mat-select
+            id="raven-settings-sub-band"
+            [value]="selectedSubBand.id"
+            (selectionChange)="onChangeSelectedSubBand($event.value)"
+            placeholder="Selected Sub-Band">
+            <ng-container *ngFor="let subBand of subBands; trackBy: trackByFn">
+              <mat-option [value]="subBand.id">{{getSubBandLabel(subBand)}}</mat-option>
+            </ng-container>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <ng-container *ngIf="bandsById[selectedBandId]">
+        <ng-container *ngFor="let subBand of subBands; trackBy: trackByFn">
+          <ng-container *ngIf="subBand.id === selectedSubBand.id">
+            <!-- source id -->
+            <div *ngIf="subBand.type !== 'divider'" class="row-container">
+              <mat-form-field class="flex-item">
+                <textarea
+                  id="raven-settings-source-id"
+                  matInput
+                  ngReadonly
+                  cdkTextareaAutosize
+                  #autosize="cdkTextareaAutosize"
+                  cdkAutosizeMinRows="1"
+                  cdkAutosizeMaxRows="2"
+                  placeholder="Source"
+                  [value]="selectedSubBand.sourceIds[0]">
+                </textarea>
+              </mat-form-field>
+              <mat-icon
+                id="raven-settings-remove-band"
+                matTooltip="Remove Band"
+                class="padded-icon"
+                (click)="onDeleteSubBand(selectedSubBand)">
+                delete_forever
+              </mat-icon>
+            </div>
 
-              <!-- Label -->
+            <!-- Label -->
+            <div class="flex-item">
+              <mat-form-field class="full-width">
+                <input
+                  id="raven-settings-label"
+                  matInput
+                  placeholder="Label"
+                  [value]="subBand.label"
+                  (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { label: $event.target.value } })">
+              </mat-form-field>
+            </div>
+
+            <ng-container *ngIf="subBand.type === 'resource' || selectedSubBand.isNumeric">
+              <!-- Line Color. -->
+              <div class="flex-field">
+                <span class="title">Line Color</span>
+                <div class="color-container">
+                  <ng-container *ngFor="let color of colors">
+                    <mat-icon
+                      class="color-button"
+                      [id]="color"
+                      [ngStyle]="{'color':color}"
+                      (click)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { color: color } })">
+                      {{ selectedSubBand.color!==color && 'check_box_outline_blank' || 'check_box' }}
+                    </mat-icon>
+                  </ng-container>
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- Divider Band Settings -->
+            <ng-container *ngIf="subBand.type === 'divider'">
               <div class="field">
-                <mat-form-field class="full-width">
-                  <input
-                    id="raven-settings-label"
-                    matInput
-                    placeholder="Label"
-                    [value]="subBand.label"
-                    (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { label: $event.target.value } })">
-                </mat-form-field>
-              </div>
-
-              <!-- Divider Band Settings -->
-              <ng-container *ngIf="subBand.type === 'divider'">
-                <div class="field">
-                  <div class="row-container">
-                    <!-- Divider Color. -->
-                    <div class="flex-field">
-                      <h3>Divider Color</h3>
-                      <div class="color-container">
-                        <ng-container *ngFor="let color of colors">
-                          <mat-icon
-                            class="color-button"
-                            [id]="color"
-                            [ngStyle]="{'color':color}"
-                            (click)="updateBandAndSubBand({ bandId: selectedBandId, subBandId: selectedSubBand.id, update: { backgroundColor: color } })">
-                            {{ selectedSubBand.backgroundColor!==color && 'check_box_outline_blank' || 'check_box' }}
-                          </mat-icon>
-                        </ng-container>
-                      </div>
+                <div class="row-container">
+                  <!-- Divider Color. -->
+                  <div class="flex-field">
+                    <h3>Divider Color</h3>
+                    <div class="color-container">
+                      <ng-container *ngFor="let color of colors">
+                        <mat-icon
+                          class="color-button"
+                          [id]="color"
+                          [ngStyle]="{'color':color}"
+                          (click)="updateBandAndSubBand({ bandId: selectedBandId, subBandId: selectedSubBand.id, update: { backgroundColor: color } })">
+                          {{ selectedSubBand.backgroundColor!==color && 'check_box_outline_blank' || 'check_box' }}
+                        </mat-icon>
+                      </ng-container>
                     </div>
                   </div>
                 </div>
-              </ng-container>
-
-              <!-- Resource Band Settings for Label Unit and Show Label Unit. -->
-              <ng-container *ngIf="subBand.type === 'resource'">
-                <!-- Label Unit. -->
-                <div class="field">
-                  <mat-form-field class="full-width">
-                    <input
-                      id="raven-settings-label-unit"
-                      matInput
-                      placeholder="Unit Label"
-                      [value]="subBand.labelUnit"
-                      (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { labelUnit: $event.target.value } })">
-                  </mat-form-field>
-                </div>
-
-                <!-- Composite Y-axis. -->
-                <div
-                  *ngIf="containsMultipleResourceBands()"
-                  class="field">
-                  <mat-slide-toggle
-                    id="raven-settings-composite-y-axis"
-                    color="accent"
-                    [checked]="bandsById[selectedBandId].compositeYAxisLabel"
-                    (change)="updateBandAndSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { compositeYAxisLabel: $event.checked } })">
-                    Composite Y-axis Label
-                  </mat-slide-toggle>
-                </div>
-
-                <!-- Show Label Unit. -->
-                <div class="field">
-                  <mat-slide-toggle
-                    id="raven-settings-show-label-unit"
-                    color="accent"
-                    [checked]="subBand.showLabelUnit"
-                    (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { showLabelUnit: $event.checked } })">
-                    Show Unit Label
-                  </mat-slide-toggle>
-                </div>
-              </ng-container>
-
-              <!-- Show Label Pin. -->
-              <div class="row-container">
-                <div
-                  *ngIf="subBand.type !== 'divider'"
-                  class="field flex-field">
-                  <mat-slide-toggle
-                    id="raven-settings-show-label-pin"
-                    color="accent"
-                    [checked]="subBand.showLabelPin"
-                    (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { showLabelPin: $event.checked } })">
-                    Show Pin Label
-                  </mat-slide-toggle>
-                </div>
               </div>
+            </ng-container>
 
-              <!-- Height (applies to all sub-bands). -->
+            <!-- Resource Band Settings for Label Unit and Show Label Unit. -->
+            <ng-container *ngIf="subBand.type === 'resource'">
+              <!-- Label Unit. -->
               <div class="field">
-                <mat-form-field>
+                <mat-form-field class="full-width">
                   <input
+                    id="raven-settings-label-unit"
                     matInput
-                    id="raven-settings-height"
-                    [formControl]="heightControl"
-                    [value]="bandsById[selectedBandId].height"
-                    type="number"
-                    placeholder="Height"
-                    name="height"
-                    step="1"
-                    min="5"
-                    (change)="conditionalUpdateBandAndSubBand(!heightControl.invalid, { bandId: selectedBandId, subBandId: subBand.id, update: { height: $event.target.valueAsNumber } })">
+                    placeholder="Unit Label"
+                    [value]="subBand.labelUnit"
+                    (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { labelUnit: $event.target.value } })">
                 </mat-form-field>
               </div>
+
+              <!-- Composite Y-axis. -->
+              <div
+                *ngIf="containsMultipleResourceBands()"
+                class="field">
+                <mat-slide-toggle
+                  id="raven-settings-composite-y-axis"
+                  color="accent"
+                  [checked]="bandsById[selectedBandId].compositeYAxisLabel"
+                  (change)="updateBandAndSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { compositeYAxisLabel: $event.checked } })">
+                  Composite Y-axis Label
+                </mat-slide-toggle>
+              </div>
+
+              <!-- Show Label Unit. -->
+              <div class="field">
+                <mat-slide-toggle
+                  id="raven-settings-show-label-unit"
+                  color="accent"
+                  [checked]="subBand.showLabelUnit"
+                  (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { showLabelUnit: $event.checked } })">
+                  Show Unit Label
+                </mat-slide-toggle>
+              </div>
+            </ng-container>
+
+            <!-- Show Label Pin. -->
+            <div class="row-container">
+              <div
+                *ngIf="subBand.type !== 'divider'"
+                class="field flex-field">
+                <mat-slide-toggle
+                  id="raven-settings-show-label-pin"
+                  color="accent"
+                  [checked]="subBand.showLabelPin"
+                  (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { showLabelPin: $event.checked } })">
+                  Show Pin Label
+                </mat-slide-toggle>
+              </div>
+            </div>
+
+            <!-- Height (applies to all sub-bands). -->
+            <div class="field">
+              <mat-form-field>
+                <input
+                  matInput
+                  id="raven-settings-height"
+                  [formControl]="heightControl"
+                  [value]="bandsById[selectedBandId].height"
+                  type="number"
+                  placeholder="Height"
+                  name="height"
+                  step="1"
+                  min="5"
+                  (change)="conditionalUpdateBandAndSubBand(!heightControl.invalid, { bandId: selectedBandId, subBandId: subBand.id, update: { height: $event.target.valueAsNumber } })">
+              </mat-form-field>
+            </div>
 
               <!-- Activity Settings. -->
               <ng-container *ngIf="subBand.type === 'activity'">
@@ -187,34 +206,34 @@
                   </mat-form-field>
                 </div>
 
-                  <!-- Horizontally Align Label. -->
-                  <div class="field">
-                    <mat-form-field>
-                      <mat-select
-                        id="raven-settings-horizontal"
-                        placeholder="Horizontally Align Label"
-                        [value]="subBand.alignLabel"
-                        (selectionChange)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { alignLabel: $event.value } })">
-                        <mat-option [value]="1">Left</mat-option>
-                        <mat-option [value]="3">Center</mat-option>
-                      </mat-select>
-                    </mat-form-field>
-                  </div>
+                <!-- Horizontally Align Label. -->
+                <div class="field">
+                  <mat-form-field>
+                    <mat-select
+                      id="raven-settings-horizontal"
+                      placeholder="Horizontally Align Label"
+                      [value]="subBand.alignLabel"
+                      (selectionChange)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { alignLabel: $event.value } })">
+                      <mat-option [value]="1">Left</mat-option>
+                      <mat-option [value]="3">Center</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
 
-                  <!-- Vertically Align Label. -->
-                  <div class="field">
-                    <mat-form-field>
-                      <mat-select
-                        id="raven-settings-vertical"
-                        placeholder="Vertically Align Label"
-                        [value]="subBand.baselineLabel"
-                        (selectionChange)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
-                        <mat-option [value]="1">Top</mat-option>
-                        <mat-option [value]="2">Bottom</mat-option>
-                        <mat-option [value]="3">Center</mat-option>
-                      </mat-select>
-                    </mat-form-field>
-                  </div>
+                <!-- Vertically Align Label. -->
+                <div class="field">
+                  <mat-form-field>
+                    <mat-select
+                      id="raven-settings-vertical"
+                      placeholder="Vertically Align Label"
+                      [value]="subBand.baselineLabel"
+                      (selectionChange)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
+                      <mat-option [value]="1">Top</mat-option>
+                      <mat-option [value]="2">Bottom</mat-option>
+                      <mat-option [value]="3">Center</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
 
                 <!-- Layout. -->
                 <div class="field">
@@ -232,29 +251,29 @@
                 </div>
 
                 <div class="row-container">
-                <ng-container *ngIf="selectedSubBand.layout !== 2">
-                  <!-- Show Activity Times. -->
-                  <div class="field flex-field">
-                    <mat-slide-toggle
-                      id="raven-settings-show-activity-times"
-                      color="accent"
-                      [checked]="selectedSubBand.showActivityTimes"
-                      (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { showActivityTimes: $event.checked } })">
-                      Show Activity Times
-                    </mat-slide-toggle>
-                  </div>
+                  <ng-container *ngIf="selectedSubBand.layout !== 2">
+                    <!-- Show Activity Times. -->
+                    <div class="field flex-field">
+                      <mat-slide-toggle
+                        id="raven-settings-show-activity-times"
+                        color="accent"
+                        [checked]="selectedSubBand.showActivityTimes"
+                        (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { showActivityTimes: $event.checked } })">
+                        Show Activity Times
+                      </mat-slide-toggle>
+                    </div>
 
-                  <!-- Show Label. -->
-                  <div class="field flex-field">
-                    <mat-slide-toggle
-                      id="raven-settings-show-label"
-                      color="accent"
-                      [checked]="subBand.showLabel"
-                      (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { showLabel: $event.checked } })">
-                      Show Labels
-                    </mat-slide-toggle>
-                  </div>
-                </ng-container>
+                    <!-- Show Label. -->
+                    <div class="field flex-field">
+                      <mat-slide-toggle
+                        id="raven-settings-show-label"
+                        color="accent"
+                        [checked]="subBand.showLabel"
+                        (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { showLabel: $event.checked } })">
+                        Show Labels
+                      </mat-slide-toggle>
+                    </div>
+                  </ng-container>
                 </div>
               </ng-container>
 
@@ -304,7 +323,7 @@
                 <!-- Composite Log Scale. -->
                 <div class="row-container">
                   <div
-                    *ngIf="bandsById[selectedBandId].compositeYAxisLabel"
+                    *ngIf="bandsById[selectedBandId].compositeYAxisLabel && !bandsById[selectedBandId].compositeScientificNotation"
                     class="field flex-field">
                     <mat-slide-toggle
                       id="raven-settings-composite-log-scale"
@@ -317,17 +336,19 @@
 
                   <!-- Log Scale. -->
                   <div
-                    *ngIf="!bandsById[selectedBandId].compositeYAxisLabel"
+                    *ngIf="!bandsById[selectedBandId].compositeYAxisLabel && !selectedSubBand.scientificNotation"
                     class="field flex-field">
                     <mat-slide-toggle
                       id="raven-settings-log-scale"
                       color="accent"
                       [checked]="subBand.logTicks"
                       (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { logTicks: $event.checked } })">
-                    Log Scale
+                      Log Scale
                     </mat-slide-toggle>
                   </div>
+                </div>
 
+                <div class="row-container">
                   <!-- Composite Scientific Notation. -->
                   <div
                     *ngIf="bandsById[selectedBandId].compositeYAxisLabel && !bandsById[selectedBandId].compositeLogTicks"
@@ -358,34 +379,34 @@
 
               <!-- State Settings (non-numeric). -->
               <ng-container *ngIf="subBand.type === 'state' && !selectedSubBand.isNumeric">
-                  <!-- Align Label. -->
-                  <div class="field">
-                    <mat-form-field>
-                      <mat-select
-                        id="raven-settings-horizontal"
-                        placeholder="Horizontally Align Label"
-                        [value]="subBand.alignLabel"
-                        (selectionChange)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { alignLabel: $event.value } })">
-                        <mat-option [value]="1">Left</mat-option>
-                        <mat-option [value]="3">Center</mat-option>
-                      </mat-select>
-                    </mat-form-field>
-                  </div>
+                <!-- Align Label. -->
+                <div class="field">
+                  <mat-form-field>
+                    <mat-select
+                      id="raven-settings-horizontal"
+                      placeholder="Horizontally Align Label"
+                      [value]="subBand.alignLabel"
+                      (selectionChange)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { alignLabel: $event.value } })">
+                      <mat-option [value]="1">Left</mat-option>
+                      <mat-option [value]="3">Center</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
 
-                  <!-- Baseline Label. -->
-                  <div class="field">
-                    <mat-form-field>
-                      <mat-select
-                        id="raven-settings-vertical"
-                        placeholder="Vertically Align Label"
-                        [value]="subBand.baselineLabel"
-                        (selectionChange)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
-                        <mat-option [value]="1">Top</mat-option>
-                        <mat-option [value]="2">Bottom</mat-option>
-                        <mat-option [value]="3">Center</mat-option>
-                      </mat-select>
-                    </mat-form-field>
-                  </div>
+                <!-- Baseline Label. -->
+                <div class="field">
+                  <mat-form-field>
+                    <mat-select
+                      id="raven-settings-vertical"
+                      placeholder="Vertically Align Label"
+                      [value]="subBand.baselineLabel"
+                      (selectionChange)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { baselineLabel: $event.value } })">
+                      <mat-option [value]="1">Top</mat-option>
+                      <mat-option [value]="2">Bottom</mat-option>
+                      <mat-option [value]="3">Center</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
 
                 <!-- Show State Change Times. -->
                 <div class="field">
@@ -429,8 +450,24 @@
                 </mat-form-field>
               </div>
 
+              <!-- Resource or Numeric. -->
+              <ng-container *ngIf="subBand.type === 'resource' || selectedSubBand.isNumeric">
+                <div class="row-container">
+                  <!-- Show Icon. -->
+                  <div class="field flex-field">
+                    <mat-slide-toggle
+                      id="raven-settings-show-icon"
+                      color="accent"
+                      [checked]="subBand.showIcon"
+                      (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { showIcon: $event.checked } })">
+                      Show Icon
+                    </mat-slide-toggle>
+                  </div>
+                </div>
+              </ng-container>
+
               <!-- Icon. -->
-              <div *ngIf="subBand.type === 'resource' || (subBand.type === 'activity' && selectedSubBand.activityStyle === 3) || selectedSubBand.isNumeric"
+              <div *ngIf="subBand.showIcon || (subBand.type === 'activity' && selectedSubBand.activityStyle === 3)"
                 class="field">
                 <mat-form-field>
                   <mat-select
@@ -452,17 +489,6 @@
               <!-- Resource or Numeric. -->
               <ng-container *ngIf="subBand.type === 'resource' || selectedSubBand.isNumeric">
                 <div class="row-container">
-                  <!-- Show Icon. -->
-                  <div class="field flex-field">
-                    <mat-slide-toggle
-                      id="raven-settings-show-icon"
-                      color="accent"
-                      [checked]="subBand.showIcon"
-                      (change)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { showIcon: $event.checked } })">
-                      Show Icon
-                    </mat-slide-toggle>
-                  </div>
-
                   <!-- Fill. -->
                   <div class="field flex-field">
                     <mat-slide-toggle
@@ -475,39 +501,21 @@
                   </div>
                 </div>
 
-                <div class="row-container">
-                  <!-- Line Color. -->
-                  <div class="flex-field">
-                    <h3>Line Color</h3>
-                    <div class="color-container">
-                      <ng-container *ngFor="let color of colors">
-                        <mat-icon
-                          class="color-button"
-                          [id]="color"
-                          [ngStyle]="{'color':color}"
-                          (click)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { color: color } })">
-                          {{ selectedSubBand.color!==color && 'check_box_outline_blank' || 'check_box' }}
-                        </mat-icon>
-                      </ng-container>
-                    </div>
+                <!-- Fill Color. -->
+                <ng-container *ngIf="subBand.fill">
+                  <span class="title">Fill Color</span>
+                  <div class="color-container">
+                    <ng-container *ngFor="let color of colors">
+                      <mat-icon
+                        class="color-button"
+                        [id]="color"
+                        [ngStyle]="{'color':color}"
+                        (click)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { fillColor: color } })">
+                        {{ selectedSubBand.fillColor!==color && 'check_box_outline_blank' || 'check_box' }}
+                      </mat-icon>
+                    </ng-container>
                   </div>
-
-                  <div class="flex-field">
-                    <!-- Fill Color. -->
-                    <h3>Fill Color</h3>
-                    <div class="color-container">
-                      <ng-container *ngFor="let color of colors">
-                        <mat-icon
-                          class="color-button"
-                          [id]="color"
-                          [ngStyle]="{'color':color}"
-                          (click)="updateSubBand({ bandId: selectedBandId, subBandId: subBand.id, update: { fillColor: color } })">
-                          {{ selectedSubBand.fillColor!==color && 'check_box_outline_blank' || 'check_box' }}
-                        </mat-icon>
-                      </ng-container>
-                    </div>
-                  </div>
-                </div>
+                </ng-container>
               </ng-container>
             </ng-container>
           </ng-container>
@@ -515,6 +523,7 @@
       </div>
     </mat-card-content>
   </mat-card>
+
   <div class="btn-container">
     <button id="close-btn" mat-raised-button (click)="onClose()">Close</button>
   </div>

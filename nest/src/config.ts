@@ -68,7 +68,7 @@ export const config: ConfigState = {
     {
       icon: 'poll',
       path: 'raven',
-      title: 'Visualization',
+      title: 'RAVEN',
       version: version.packageJsonVersion,
     },
   ],

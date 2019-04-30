@@ -18,7 +18,7 @@ import {
   treeBySourceId,
 } from '../mocks';
 import {
-  activityBandsWithLegend,
+  activityBandsWithLegendAndSourceId,
   bandById,
   changeZoom,
   getAddToSubBandId,
@@ -95,12 +95,16 @@ describe('bands.ts', () => {
   describe('activityBandsWithLegend', () => {
     it(`should return null if the given band is not an activity band`, () => {
       const stateBand = bands[1].subBands[0];
-      expect(activityBandsWithLegend(bands, stateBand, '')).toEqual([]);
+      expect(
+        activityBandsWithLegendAndSourceId(bands, stateBand, '', ''),
+      ).toEqual([]);
     });
 
     it(`should return all sub-bands if it is an activity by-type sub-band with the same legend as the given band`, () => {
       const byTypeActivityBand = bands[4].subBands[0];
-      expect(activityBandsWithLegend(bands, byTypeActivityBand, '')).toEqual([
+      expect(
+        activityBandsWithLegendAndSourceId(bands, byTypeActivityBand, '', ''),
+      ).toEqual([
         {
           bandId: '100',
           subBandId: '0',
@@ -108,6 +112,23 @@ describe('bands.ts', () => {
         {
           bandId: '104',
           subBandId: '4',
+        },
+      ]);
+    });
+
+    it(`should return all sub-bands if it is an activity by-type sub-band with the same legend and sourceId as the given band`, () => {
+      const byTypeActivityBand = bands[4].subBands[0];
+      expect(
+        activityBandsWithLegendAndSourceId(
+          bands,
+          byTypeActivityBand,
+          '',
+          '/a/b/c/d/e/w',
+        ),
+      ).toEqual([
+        {
+          bandId: '100',
+          subBandId: '0',
         },
       ]);
     });

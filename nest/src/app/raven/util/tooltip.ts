@@ -58,13 +58,13 @@ export function getInterpolatedTooltipText(
     time,
   );
   valueAtTime = band.onFormatTickValue
-    ? band.onFormatTickValue(valueAtTime)
+    ? band.onFormatTickValue(valueAtTime, true)
     : valueAtTime;
   const startValue = band.onFormatTickValue
-    ? band.onFormatTickValue(interval.startValue)
+    ? band.onFormatTickValue(interval.startValue, true)
     : interval.startValue;
   const endValue = band.onFormatTickValue
-    ? band.onFormatTickValue(interval.endValue)
+    ? band.onFormatTickValue(interval.endValue, true)
     : interval.endValue;
 
   return `
@@ -146,7 +146,7 @@ export function getTooltipText(
     dayCode,
   );
   const value = band.onFormatTickValue
-    ? band.onFormatTickValue(interval.properties.Value)
+    ? band.onFormatTickValue(interval.properties.Value, true)
     : interval.properties.Value;
 
   let parameterString = '';

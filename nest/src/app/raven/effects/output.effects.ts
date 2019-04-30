@@ -23,10 +23,19 @@ import {
 import { StringTMap } from '../../shared/models';
 import * as outputActions from '../actions/output.actions';
 import { OutputActionTypes } from '../actions/output.actions';
-import { RavenCustomFilter, RavenSource } from '../models';
+import {
+  MpsServerGraphData,
+  RavenCustomFilter,
+  RavenGraphableFilterSource,
+  RavenSource,
+} from '../models';
 import { RavenAppState } from '../raven-store';
 import * as fromOutput from '../reducers/output.reducer';
-import { getCustomFilterForLabel, getOutputDataUrl } from '../util';
+import {
+  getCustomFilterForLabel,
+  getOutputDataUrl,
+  getTargetFilters,
+} from '../util';
 
 @Injectable()
 export class OutputEffects {
@@ -82,7 +91,7 @@ export class OutputEffects {
   );
 
   /**
-   * Helper. Get data for source and write to file.
+   * Helper. Get data for source and write to file. If source is graphableFilter, POST is issue instead of GET. Body of the POST contains the filters.
    */
   createFileForSource(
     output: fromOutput.OutputState,
@@ -101,21 +110,51 @@ export class OutputEffects {
       output.decimateOutputData,
     );
 
-    if (output.outputFormat === 'CSV') {
-      return this.http.get(outputDataUrl, { responseType: 'text' }).pipe(
-        switchMap(data => {
-          this.writeToFile(data, label, 'csv');
-          return [];
-        }),
+    if (source.type === 'graphableFilter') {
+      const targetFilters = getTargetFilters(
+        treeBySourceId,
+        filtersByTarget,
+        (source as RavenGraphableFilterSource).filterTarget,
       );
+      if (output.outputFormat === 'CSV') {
+        return this.http
+          .post(outputDataUrl, targetFilters, { responseType: 'text' })
+          .pipe(
+            switchMap(data => {
+              this.writeToFile(data, label, 'csv');
+              return [];
+            }),
+          );
+      } else {
+        return this.http
+          .post<MpsServerGraphData>(outputDataUrl, targetFilters, {
+            responseType: 'json',
+          })
+          .pipe(
+            map(data => JSON.stringify(data)),
+            switchMap(jsonData => {
+              this.writeToFile(jsonData, label, 'json');
+              return [];
+            }),
+          );
+      }
     } else {
-      return this.http.get(outputDataUrl).pipe(
-        map(data => JSON.stringify(data)),
-        switchMap(jsonData => {
-          this.writeToFile(jsonData, label, 'json');
-          return [];
-        }),
-      );
+      if (output.outputFormat === 'CSV') {
+        return this.http.get(outputDataUrl, { responseType: 'text' }).pipe(
+          switchMap(data => {
+            this.writeToFile(data, label, 'csv');
+            return [];
+          }),
+        );
+      } else {
+        return this.http.get(outputDataUrl).pipe(
+          map(data => JSON.stringify(data)),
+          switchMap(jsonData => {
+            this.writeToFile(jsonData, label, 'json');
+            return [];
+          }),
+        );
+      }
     }
   }
 

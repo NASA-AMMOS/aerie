@@ -11,20 +11,19 @@
   padding-right: 10px;
 }
 
-.short {
-  height: 15px;
-}
-
 .icon {
   cursor: pointer;
-  font-size: 15px;
-  padding-top: 10px;
+  font-size: 24px;
   margin-left: 10px;
 }
 
 .disabled-icon {
-  font-size: 15px;
+  font-size: 24px;
   opacity: 0.37;
-  padding-top: 10px;
   margin-left: 10px;
+}
+
+.pan-container {
+  display: flex;
+  align-items: center;
 }

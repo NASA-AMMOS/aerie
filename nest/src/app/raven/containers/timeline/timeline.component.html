@@ -1,5 +1,6 @@
 <as-split
   direction="horizontal"
+  gutterSize="7"
   (dragEnd)="resize()">
   <as-split-area
     [visible]="showLeftPanel$ | async"
@@ -13,11 +14,12 @@
     [size]="timelinePanelSize$ | async">
     <as-split
       direction="vertical"
+      gutterSize="7"
       (dragEnd)="resize()">
+
       <as-split-area
-        class="scroll"
-        [order]="2"
-        size="80">
+        [order]="3"
+        [size]="getMainChartHeightPercent()">
         <ng-container *ngIf="itarMessage$ | async as itarMessage">
           <div
             *ngIf="itarMessage !== ''"
@@ -38,7 +40,7 @@
 
         <div
           *ngIf="bands.length > 0"
-          class="timeline-0">
+          class="north-container">
           <div class="time-bands-container">
             <raven-manage-graph
               [currentStateChanged]="currentStateChanged$ | async"
@@ -47,8 +49,8 @@
               [mode]="mode$ | async"
               (applyCurrentLayout)="onApplyCurrentLayout()"
               (applyCurrentState)="onApplyCurrentState()"
-              (panLeft)="onPanLeft()"
-              (panRight)="onPanRight()"
+              (panToLeft)="onPanLeft()"
+              (panToRight)="onPanRight()"
               (panTo)="onPanTo($event)"
               (removeAllBands)="onRemoveAllBands()"
               (removeAllGuides)="onRemoveAllGuides()"
@@ -58,7 +60,7 @@
               (zoomIn)="onZoomIn()"
               (zoomOut)="onZoomOut()">
             </raven-manage-graph>
-            <div class="row-container">
+            <div>
               <raven-guide-band class="row"
                 [guides]="guides$ | async"
                 [labelFontSize]="(defaultBandSettings$ | async).labelFontSize"
@@ -66,21 +68,19 @@
                 [lastClickTime]="lastClickTime$ | async"
                 [maxTimeRange]="maxTimeRange$ | async"
                 [showLastClick]="(defaultBandSettings$ | async).showLastClick"
-                [sideMenuDivSize]="sideMenuDivSize"
                 [viewTimeRange]="viewTimeRange$ | async"
                 (toggleGuide)="onToggleGuide($event)">
               </raven-guide-band>
             </div>
-            <div class="row-container">
+            <div>
               <raven-time-scroll-bar class="row"
                 [labelWidth]="(defaultBandSettings$ | async).labelWidth"
                 [maxTimeRange]="maxTimeRange$ | async"
-                [sideMenuDivSize]="sideMenuDivSize"
                 [viewTimeRange]="viewTimeRange$ | async"
                 (updateViewTimeRange)="onUpdateViewTimeRange($event)">
               </raven-time-scroll-bar>
             </div>
-            <div class="row-container">
+            <div>
               <raven-time-band class="row"
                 [cursorColor]="cursorColor$ | async"
                 [cursorTime]="cursorTime$ | async"
@@ -92,93 +92,94 @@
                 [labelWidth]="(defaultBandSettings$ | async).labelWidth"
                 [maxTimeRange]="maxTimeRange$ | async"
                 [showTooltip]="(defaultBandSettings$ | async).showTooltip"
-                [sideMenuDivSize]="sideMenuDivSize"
                 [viewTimeRange]="viewTimeRange$ | async"
                 (updateViewTimeRange)="onUpdateViewTimeRange($event)">
               </raven-time-band>
             </div>
           </div>
 
-          <raven-bands
-            class="raven-bands-0"
-            [cursorColor]="cursorColor$ | async"
-            [cursorTime]="cursorTime$ | async"
-            [cursorWidth]="cursorWidth$ | async"
-            [bands]="bands"
-            [containerId]="'0'"
-            [dayCode]="dayCode$ | async"
-            [earthSecToEpochSec]="earthSecToEpochSec$ | async"
-            [epoch]="inUseEpoch$ | async"
-            [excludeActivityTypes]="excludeActivityTypes$ | async"
-            [guides]="guides$ | async"
-            [hoveredBandId]="hoveredBandId$ | async"
-            [labelFontSize]="(defaultBandSettings$ | async).labelFontSize"
-            [labelWidth]="(defaultBandSettings$ | async).labelWidth"
-            [lastClickTime]="lastClickTime$ | async"
-            [maxTimeRange]="maxTimeRange$ | async"
-            [selectedBandId]="selectedBandId$ | async"
-            [selectedPoint]="selectedPoint$ | async"
-            [showLastClick]="(defaultBandSettings$ | async).showLastClick"
-            [showTooltip]="(defaultBandSettings$ | async).showTooltip"
-            [viewTimeRange]="viewTimeRange$ | async"
-            (addDivider)="onAddDividerBand($event)"
-            (bandLeftClick)="onBandLeftClick($event)"
-            (deleteBand)="onDeleteBand($event)"
-            (hoverBand)="onHoverBand($event)"
-            (newSort)="onSort($event)"
-            (settingsBand)="onSettingsBand($event)"
-            (updateAddTo)="onUpdateAddTo($event)"
-            (updateOverlay)="onUpdateOverlay($event)"
-            (updateViewTimeRange)="onUpdateViewTimeRange($event)">
-          </raven-bands>
+          <div class="timeline-0">
+            <raven-bands
+              class="raven-bands-0"
+              [cursorColor]="cursorColor$ | async"
+              [cursorTime]="cursorTime$ | async"
+              [cursorWidth]="cursorWidth$ | async"
+              [bands]="bands"
+              [containerId]="'0'"
+              [dayCode]="dayCode$ | async"
+              [earthSecToEpochSec]="earthSecToEpochSec$ | async"
+              [epoch]="inUseEpoch$ | async"
+              [excludeActivityTypes]="excludeActivityTypes$ | async"
+              [guides]="guides$ | async"
+              [hoveredBandId]="hoveredBandId$ | async"
+              [labelFontSize]="(defaultBandSettings$ | async).labelFontSize"
+              [labelWidth]="(defaultBandSettings$ | async).labelWidth"
+              [lastClickTime]="lastClickTime$ | async"
+              [maxTimeRange]="maxTimeRange$ | async"
+              [selectedBandId]="selectedBandId$ | async"
+              [selectedPoint]="selectedPoint$ | async"
+              [showLastClick]="(defaultBandSettings$ | async).showLastClick"
+              [showTooltip]="(defaultBandSettings$ | async).showTooltip"
+              [viewTimeRange]="viewTimeRange$ | async"
+              (addDivider)="onAddDividerBand($event)"
+              (bandLeftClick)="onBandLeftClick($event)"
+              (deleteBand)="onDeleteBand($event)"
+              (hoverBand)="onHoverBand($event)"
+              (newSort)="onSort($event)"
+              (settingsBand)="onSettingsBand($event)"
+              (updateAddTo)="onUpdateAddTo($event)"
+              (updateOverlay)="onUpdateOverlay($event)"
+              (updateViewTimeRange)="onUpdateViewTimeRange($event)">
+            </raven-bands>
+          </div>
         </div>
       </as-split-area>
 
       <as-split-area
-        class="scroll"
         [visible]="showSouthBandsPanel$ | async"
-        [order]="3"
-        size="20">
-        <div class="timeline-1">
-          <raven-bands
-            class="raven-bands-1"
-            [cursorColor]="cursorColor$ | async"
-            [cursorTime]="cursorTime$ | async"
-            [cursorWidth]="cursorWidth$ | async"
-            [bands]="bands"
-            [containerId]="'1'"
-            [dayCode]="dayCode$ | async"
-            [earthSecToEpochSec]="earthSecToEpochSec$ | async"
-            [epoch]="inUseEpoch$ | async"
-            [excludeActivityTypes]="excludeActivityTypes$ | async"
-            [guides]="guides$ | async"
-            [hoveredBandId]="hoveredBandId$ | async"
-            [labelFontSize]="(defaultBandSettings$ | async).labelFontSize"
-            [labelWidth]="(defaultBandSettings$ | async).labelWidth"
-            [lastClickTime]="lastClickTime$ | async"
-            [maxTimeRange]="maxTimeRange$ | async"
-            [selectedBandId]="selectedBandId$ | async"
-            [selectedPoint]="selectedPoint$ | async"
-            [showLastClick]="(defaultBandSettings$ | async).showLastClick"
-            [showTooltip]="(defaultBandSettings$ | async).showTooltip"
-            [viewTimeRange]="viewTimeRange$ | async"
-            (addDivider)="onAddDividerBand($event)"
-            (bandLeftClick)="onBandLeftClick($event)"
-            (deleteBand)="onDeleteBand($event)"
-            (hoverBand)="onHoverBand($event)"
-            (newSort)="onSort($event)"
-            (settingsBand)="onSettingsBand($event)"
-            (updateAddTo)="onUpdateAddTo($event)"
-            (updateOverlay)="onUpdateOverlay($event)"
-            (updateViewTimeRange)="onUpdateViewTimeRange($event)">
-          </raven-bands>
+        [size]="southPanelHeight">
+        <div class="south-container">
+          <div class="timeline-1">
+            <raven-bands
+              class="raven-bands-1"
+              [cursorColor]="cursorColor$ | async"
+              [cursorTime]="cursorTime$ | async"
+              [cursorWidth]="cursorWidth$ | async"
+              [bands]="bands"
+              [containerId]="'1'"
+              [dayCode]="dayCode$ | async"
+              [earthSecToEpochSec]="earthSecToEpochSec$ | async"
+              [epoch]="inUseEpoch$ | async"
+              [excludeActivityTypes]="excludeActivityTypes$ | async"
+              [guides]="guides$ | async"
+              [hoveredBandId]="hoveredBandId$ | async"
+              [labelFontSize]="(defaultBandSettings$ | async).labelFontSize"
+              [labelWidth]="(defaultBandSettings$ | async).labelWidth"
+              [lastClickTime]="lastClickTime$ | async"
+              [maxTimeRange]="maxTimeRange$ | async"
+              [selectedBandId]="selectedBandId$ | async"
+              [selectedPoint]="selectedPoint$ | async"
+              [showLastClick]="(defaultBandSettings$ | async).showLastClick"
+              [showTooltip]="(defaultBandSettings$ | async).showTooltip"
+              [viewTimeRange]="viewTimeRange$ | async"
+              (addDivider)="onAddDividerBand($event)"
+              (bandLeftClick)="onBandLeftClick($event)"
+              (deleteBand)="onDeleteBand($event)"
+              (hoverBand)="onHoverBand($event)"
+              (newSort)="onSort($event)"
+              (settingsBand)="onSettingsBand($event)"
+              (updateAddTo)="onUpdateAddTo($event)"
+              (updateOverlay)="onUpdateOverlay($event)"
+              (updateViewTimeRange)="onUpdateViewTimeRange($event)">
+            </raven-bands>
+          </div>
         </div>
       </as-split-area>
 
       <as-split-area
         [visible]="showDetailsPanel$ | async"
-        [order]="4"
-        size="20">
+        [order]="5"
+        [size]="detailsPanelHeight">
         <raven-table
           class="raven-table"
           [points]="selectedSubBandPoints$ | async"
@@ -194,41 +195,42 @@
 
   <as-split-area
     [visible]="showRightPanel$ | async"
-    [order]="5"
+    [order]="6"
     size="15">
     <!-- Selected Point. -->
-        <div class="selected-point">
-          <ng-container *ngIf="!(selectedPoint$ | async)">
-            <mat-card>
-              No point is currently selected.
-            </mat-card>
-          </ng-container>
+    <div class="selected-point">
+      <ng-container *ngIf="!(selectedPoint$ | async)">
+        <mat-card>
+          No point is currently selected.
+        </mat-card>
+      </ng-container>
 
-          <ng-container *ngIf="selectedPoint$ | async">
-            <ng-container *ngIf="(selectedPoint$ | async).type === 'activity'">
-              <raven-activity-point
-                [selectedPoint]="selectedPoint$ | async"
-                [showActivityPointMetadata]="showActivityPointMetadata"
-                [showActivityPointParameters]="showActivityPointParameters"
-                (changeActivityExpansion)="onChangeActivityExpansion($event)"
-                (toggleShowActivityPointMetadata)="onToggleShowActivityPointMetadata($event)"
-                (toggleShowActivityPointParameters)="onToggleShowActivityPointParameters($event)">
-              </raven-activity-point>
-            </ng-container>
+      <ng-container *ngIf="selectedPoint$ | async">
+        <ng-container *ngIf="(selectedPoint$ | async).type === 'activity'">
+          <raven-activity-point
+            [selectedPoint]="selectedPoint$ | async"
+            [showActivityPointMetadata]="showActivityPointMetadata"
+            [showActivityPointParameters]="showActivityPointParameters"
+            (changeActivityExpansion)="onChangeActivityExpansion($event)"
+            (toggleShowActivityPointMetadata)="onToggleShowActivityPointMetadata($event)"
+            (toggleShowActivityPointParameters)="onToggleShowActivityPointParameters($event)">
+          </raven-activity-point>
+        </ng-container>
 
-            <ng-container *ngIf="(selectedPoint$ | async).type === 'state'">
-              <raven-state-point
-                [selectedPoint]="selectedPoint$ | async">
-              </raven-state-point>
-            </ng-container>
+        <ng-container *ngIf="(selectedPoint$ | async).type === 'state'">
+          <raven-state-point
+            [selectedPoint]="selectedPoint$ | async">
+          </raven-state-point>
+        </ng-container>
 
-            <ng-container *ngIf="(selectedPoint$ | async).type === 'resource'">
-              <raven-resource-point
-                [selectedPoint]="selectedPoint$ | async">
-              </raven-resource-point>
-            </ng-container>
-          </ng-container>
-        </div>
+
+        <ng-container *ngIf="(selectedPoint$ | async).type === 'resource'">
+          <raven-resource-point
+            [selectedPoint]="selectedPoint$ | async">
+          </raven-resource-point>
+        </ng-container>
+      </ng-container>
+    </div>
   </as-split-area>
 </as-split>
 
@@ -341,9 +343,11 @@
         [allInOneFile]="allInOneFile$ | async"
         [allInOneFilename]="allInOneFilename$ | async"
         [decimateOutputData]="decimateOutputData$ | async"
+        [filtersByTarget]="filtersByTarget$ | async"
         [outputFormat]="outputFormat$ | async"
         [outputSourceIdsByLabel]="outputSourceIdsByLabel$ | async"
         [subBandSourceIdsByLabel]="subBandSourceIdsByLabel$ | async"
+        [treeBySourceId]="treeBySourceId$ | async"
         (createOutput)="onCreateOutput()"
         (updateOutputSettings)="onUpdateOutputSettings($event)">
       </raven-output>

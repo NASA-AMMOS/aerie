@@ -54,9 +54,6 @@ export class RavenGuideBandComponent
   showLastClick = true;
 
   @Input()
-  sideMenuDivSize: number;
-
-  @Input()
   viewTimeRange: TimeRange = { end: 0, start: 0 };
 
   @Output()
@@ -232,13 +229,7 @@ export class RavenGuideBandComponent
    */
   updateTimeAxisXCoordinates() {
     const offsetWidth = this.elementRef.nativeElement.offsetWidth;
-    this.ctlTimeAxis.updateXCoordinates(
-      this.labelWidth,
-      offsetWidth + this.sideMenuDivSize,
-    );
-    this.ctlViewTimeAxis.updateXCoordinates(
-      this.labelWidth,
-      offsetWidth + this.sideMenuDivSize,
-    );
+    this.ctlTimeAxis.updateXCoordinates(this.labelWidth, offsetWidth);
+    this.ctlViewTimeAxis.updateXCoordinates(this.labelWidth, offsetWidth);
   }
 }

@@ -679,7 +679,8 @@ ActivityPainter.prototype.paintLabelAndTimes = function (act, actX1, actX2, actY
   }
 
   // paint start and end times of activity
-  if (this.showActivityTimes && this.rowPadding > 12) {
+  if ((this.layout !== ActivityPainter.WATERFALL_LAYOUT && this.showActivityTimes) ||
+      (this.layout === ActivityPainter.WATERFALL_LAYOUT && this.rowPadding > 12)) {
       paintedTimeX2 = this.paintActivityTimes({interval:act,
                      ll:{x:actX1, y:actY2},
                      ul:{x:actX1, y:actY1},
@@ -884,9 +885,7 @@ ActivityPainter.prototype.paintActivity = function(rowY, act, previousAct, previ
 
 ActivityPainter.prototype.paintActivitiesWaterfallLayout = function(acts) {
   // 0,0 corresponds to the upper left hand corner.
-  //this.showLabel = true;
   this.trimLabel = false;
-  this.showActivityTimes = true;
   // set min row height to 5
   this.rowHeight = Math.max(5,Math.floor(this.band.height/acts.length));
   this.rowPadding = Math.ceil(this.rowHeight/3);
@@ -1263,6 +1262,36 @@ Band.prototype.findForegroundIntervals = function(x, y) {
   }
   return matchingIntervals;
 };
+
+Band.prototype.findIntervalsByBand = function(x, y) {
+  let intervalsByBand = [];
+  if (this instanceof CompositeBand) {
+      let bands = this.bands;
+      let first = true;
+      for (let k=0; k<bands.length; k++) {
+          var matchingIntervals = [];
+          let band = bands[k];
+          if(band._intervalCoords === null) { return []; }
+
+          for(var i=0, length=band._intervalCoords.length; i<length; ++i) {
+            var coord = band._intervalCoords[i];
+            var interval = coord[0];
+            // RAVEN look within +/- 2 pixels
+            var x1 = coord[1]-2;
+            var x2 = coord[2]+2;
+            var y1 = coord[3]-2;
+            var y2 = coord[4]+2;
+            if(x >= x1 && x <= x2 && y >= y1 && y <= y2) {
+              matchingIntervals.push(interval);
+            }
+          }
+          if (matchingIntervals.length > 0) {
+            intervalsByBand.push ({ bandId: band.id, bandIntervals: matchingIntervals });
+          }
+      }
+  }
+  return intervalsByBand;
+}
 
 Band.prototype.findIntervals = function(x, y) {
   if (this instanceof CompositeBand) {
@@ -1643,14 +1672,9 @@ Band.prototype.mousedown = function(e) {
   var y = e.pageY - $(e.target).offset().top;
   var mouseTime = this.viewTimeAxis.getTimeFromX(x);
 
-  var interval = null;
-  var intervals = this.findIntervals(x, y);
-  if(intervals && intervals.length !== 0) {
-    interval = intervals[intervals.length-1];
-  }
-
   if(e.which === 1) {
-    if(this.onLeftClick !== null) { this.onLeftClick(e, {band:this, interval:interval, time:mouseTime}); }
+    var intervals = this.findIntervalsByBand(x, y);
+    if(this.onLeftClick !== null) { this.onLeftClick(e, {band:this, intervals, time:mouseTime}); }
 
     if(x >= this.viewTimeAxis.x1 && this.onUpdateView !== null) {
       // enable dragging if on timeline area
@@ -1660,6 +1684,12 @@ Band.prototype.mousedown = function(e) {
   }
   else {
     if(this.onRightClick === null) { return true; }
+
+    var interval = null;
+    var intervals = this.findIntervals(x, y);
+    if(intervals && intervals.length !== 0) {
+      interval = intervals[intervals.length-1];
+    }
 
     // right click
     if(interval === null) {
@@ -2580,6 +2610,7 @@ Painter.prototype.paintLabel = function(obj) {
       }
 
       ctx.fillText(label, labelX1, labelY1);
+      ctx.textBaseline = "middle";
     }
   }
 };
@@ -4747,10 +4778,7 @@ TimeAxis.prototype.computeTickTimes = function() {
   }
 
   this.tickTimes = [];
-  var quantizedStart = TimeUnit.quantizeUpByTimeUnit(this.start, 0, this.tickUnit);
-  if(this.start == quantizedStart) {
-    this.tickTimes.push(this.start);
-  }
+  this.tickTimes.push(this.start);
   for(var time = TimeUnit.quantizeUpByTimeUnit(this.start, 1, this.tickUnit);
       time < this.end;
       time = TimeUnit.quantizeUpByTimeUnit(time, 1, this.tickUnit)) {
@@ -4978,6 +5006,15 @@ TimeBand.prototype.paintTicks = function() {
     }
     ctx.stroke();
     ctx.closePath();
+
+    // make sure we have enough space for the start tick label
+    if (i === 0) {
+        var nextTime = tickTimes[1];
+        var nextX = this.viewTimeAxis.getXFromTime(nextTime);
+        if (nextX - timeX < ctx.measureText("yyyy-dddThh:mm:ss").width) {
+            continue;
+        }
+    }
 
     // compute the date/time string
     var formattedTimes = this.onFormatTimeTick({timeBand:this, time:time});

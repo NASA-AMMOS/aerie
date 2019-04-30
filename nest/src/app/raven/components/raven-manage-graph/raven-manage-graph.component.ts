@@ -35,10 +35,10 @@ export class RavenManageGraphComponent {
   applyCurrentState: EventEmitter<any> = new EventEmitter();
 
   @Output()
-  panRight: EventEmitter<any> = new EventEmitter();
+  panToRight: EventEmitter<any> = new EventEmitter();
 
   @Output()
-  panLeft: EventEmitter<any> = new EventEmitter();
+  panToLeft: EventEmitter<any> = new EventEmitter();
 
   @Output()
   panTo: EventEmitter<any> = new EventEmitter<any>();

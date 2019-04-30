@@ -41,27 +41,25 @@
 }
 
 .mat-card {
-  max-height: 500px;
   overflow-y: auto;
 }
 
 .padded-icon {
   cursor: pointer;
-  padding-left: 10px;
-  padding-right: 10px;
-  padding-top: 25px;
-  flex: 0 0 auto;
+  height: 24px;
+  margin-left: 10px;
+  width: 24px;
 }
 
 .row-container {
+  align-items: baseline;
   display: flex;
 }
 
-h3 {
+.title {
   margin-top: 15px;
   margin-bottom: 0px;
   padding-bottom: 0px;
-  padding-left: 10px;
 }
 
 [mat-dialog-title] {
