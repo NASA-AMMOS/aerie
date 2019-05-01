@@ -40,4 +40,5 @@ raven-seq-editor {
 aside {
   grid-area: aside;
   margin-left: 12px;
+  padding-top: 8px;
 }
