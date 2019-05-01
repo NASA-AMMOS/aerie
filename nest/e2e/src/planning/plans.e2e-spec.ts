@@ -14,17 +14,17 @@ describe('/plans', () => {
   });
 
   it('[C125559] WHEN the Plans View is Loaded THEN it SHOULD have a create plan button in the header', () => {
-    expect(page.newPlanButton).toBeDefined();
+    expect(page.newPlanButton.isDisplayed()).toBe(true);
   });
 
   it('[C125565] WHEN the Create Plan form is shown THEN the form SHOULD require Name, Plan Start and End and Adaptation fields', () => {
     page.newPlanButton.click();
 
     expect(page.formTitle.getText()).toBe('Create Plan');
-    expect(page.nameInput).toBeDefined();
-    expect(page.planStartInput).toBeDefined();
-    expect(page.planEndInput).toBeDefined();
-    expect(page.adaptationInput).toBeDefined();
+    expect(page.nameInput.isDisplayed()).toBe(true);
+    expect(page.planStartInput.isDisplayed()).toBe(true);
+    expect(page.planEndInput.isDisplayed()).toBe(true);
+    expect(page.adaptationInput.isDisplayed()).toBe(true);
   });
 
   it('[C125576] WHEN the Create Plan form is shown THEN the form SHOULD NOT allow the user to click Save when the required fields are not filled', () => {

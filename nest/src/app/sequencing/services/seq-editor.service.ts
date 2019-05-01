@@ -40,14 +40,12 @@ export class SeqEditorService {
   ): void {
     if (!this.editor) {
       this.editor = CodeMirror(elementRef.nativeElement, options);
-
       this.editor.on('blur', () => {
         // Always show the cursor even when we are not focused on the editor
         // so we can visually see where new commands are going to be added.
         const cursors = document.querySelector(
           '.CodeMirror-cursors',
         ) as HTMLElement;
-
         if (cursors) {
           cursors.style.visibility = 'visible';
         }

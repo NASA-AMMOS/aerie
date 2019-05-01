@@ -7,43 +7,33 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { keyBy } from 'lodash';
 import { mpsCommands } from '../../mocks';
 import { SeqEditorComponent } from './seq-editor.component';
 import { SeqEditorModule } from './seq-editor.module';
 
-@Component({
-  selector: 'seq-editor-test',
-  template: `
-    <seq-editor [commands]="commands" [commandsByName]="commandsByName">
-    </seq-editor>
-  `,
-})
-class SeqEditorTestComponent {
-  commands = mpsCommands;
-  commandsByName = keyBy(mpsCommands, 'name');
-
-  @ViewChild(SeqEditorComponent)
-  childComponent: SeqEditorComponent;
-}
-
 describe('SeqEditorComponent', () => {
-  let component: SeqEditorTestComponent;
-  let fixture: ComponentFixture<SeqEditorTestComponent>;
+  let component: SeqEditorComponent;
+  let fixture: ComponentFixture<SeqEditorComponent>;
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      declarations: [SeqEditorTestComponent],
       imports: [SeqEditorModule],
     }).compileComponents();
 
-    await TestBed.compileComponents();
+    fixture = TestBed.createComponent(SeqEditorComponent);
+    component = fixture.componentInstance;
+
+    const commands = mpsCommands;
+    const commandsByName = keyBy(mpsCommands, 'name');
+
+    component.commands = commands;
+    component.commandsByName = commandsByName;
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(SeqEditorTestComponent);
+    fixture = TestBed.createComponent(SeqEditorComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

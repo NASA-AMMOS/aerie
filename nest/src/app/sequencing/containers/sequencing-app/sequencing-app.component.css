@@ -9,7 +9,7 @@
 
 :host {
   display: grid;
-  grid-gap: 12px;
+  grid-column-gap: 12px;
   grid-template-areas:
     'header header'
     'aside main';
@@ -40,4 +40,5 @@ raven-seq-editor {
 aside {
   grid-area: aside;
   margin-left: 12px;
+  padding-top: 8px;
 }

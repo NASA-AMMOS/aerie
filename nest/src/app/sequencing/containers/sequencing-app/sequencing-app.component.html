@@ -5,6 +5,7 @@
   <seq-editor
     [commands]="commands$ | async"
     [commandsByName]="commandsByName$ | async"
+    (openHelpDialog)="onOpenEditorHelpDialog()"
   >
   </seq-editor>
 </main>

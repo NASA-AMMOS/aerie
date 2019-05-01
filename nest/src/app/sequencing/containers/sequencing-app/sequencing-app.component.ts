@@ -21,7 +21,7 @@ import {
   FetchCommandDictionaries,
   SelectCommandDictionary,
 } from '../../actions/command-dictionary.actions';
-import { AddText } from '../../actions/editor.actions';
+import { AddText, OpenEditorHelpDialog } from '../../actions/editor.actions';
 import { getCommandTemplate } from '../../code-mirror-languages/mps/helpers';
 import {
   getCommands,
@@ -71,6 +71,10 @@ export class SequencingAppComponent implements OnDestroy {
 
   onMenuClicked(): void {
     this.store.dispatch(new ToggleNestNavigationDrawer());
+  }
+
+  onOpenEditorHelpDialog(): void {
+    this.store.dispatch(new OpenEditorHelpDialog());
   }
 
   onSelectCommand(commandName: string): void {

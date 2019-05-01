@@ -8,6 +8,7 @@
  */
 
 import { TestBed } from '@angular/core/testing';
+import { MatDialogModule } from '@angular/material';
 import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { cold, hot } from 'jasmine-marbles';
@@ -23,7 +24,7 @@ describe('EditorEffects', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [],
+      imports: [MatDialogModule],
       providers: [
         EditorEffects,
         provideMockActions(() => actions$),
@@ -55,6 +56,12 @@ describe('EditorEffects', () => {
       expect(effects.addText$).toBeObservable(expected);
       expect(addText).toHaveBeenCalled();
       expect(focusEditor).toHaveBeenCalled();
+    });
+  });
+
+  describe('openEditorHelpDialog', () => {
+    it('should register openEditorHelpDialog$ that does not dispatch an action', () => {
+      expect(metadata.openEditorHelpDialog$).toEqual({ dispatch: false });
     });
   });
 });

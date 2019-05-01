@@ -1,11 +1,12 @@
 <h2>Commands</h2>
 
-<mat-nav-list dense *ngIf="commands?.length">
+<mat-nav-list dense *ngIf="commands?.length" id="sequencing-command-list">
   <cdk-virtual-scroll-viewport class="viewport" itemSize="50">
     <mat-list-item
       (click)="onSelectCommand(command)"
       class="command-list-item"
-      *cdkVirtualFor="let command of commands">
+      *cdkVirtualFor="let command of commands"
+    >
       <span mat-line>
         {{ command.name }}
       </span>
@@ -13,6 +14,6 @@
   </cdk-virtual-scroll-viewport>
 </mat-nav-list>
 
-<mat-card *ngIf="!commands?.length">
+<mat-card *ngIf="!commands?.length" id="sequencing-no-commands-prompt">
   Select a command dictionary to view commands.
 </mat-card>
