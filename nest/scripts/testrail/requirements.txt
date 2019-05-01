@@ -1,0 +1,10 @@
+autopep8==1.4.4
+certifi==2019.3.9
+chardet==3.0.4
+configparser==3.7.4
+idna==2.8
+pprint==0.1
+pycodestyle==2.5.0
+requests==2.21.0
+tqdm==4.31.1
+urllib3==1.24.2

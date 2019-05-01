@@ -1,0 +1,6 @@
+# Rename this file to 'creds' and delete this line
+# Generate API key: https://cae-testrail.jpl.nasa.gov/testrail/index.php?/mysettings#
+# MAKE SURE TO CLICK SAVE
+[TESTRAIL]
+Email =
+APIKey = 
