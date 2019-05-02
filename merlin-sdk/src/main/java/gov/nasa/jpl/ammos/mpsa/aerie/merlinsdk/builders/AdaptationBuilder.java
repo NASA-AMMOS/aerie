@@ -1,7 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.builders;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.Adaptation;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,6 +45,12 @@ public class AdaptationBuilder {
 
     public ResourceBuilder createResource() {
         ResourceBuilder resource = new ResourceBuilder();
+        _resources.add(resource);
+        return resource;
+    }
+
+    public ResourceBuilder createLinearCombinationResource(ImmutableMap<Resource, ? extends Number> terms) {
+        ResourceBuilder resource = new LinearCombinationResourceBuilder(terms);
         _resources.add(resource);
         return resource;
     }
