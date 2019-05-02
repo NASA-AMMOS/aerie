@@ -1,22 +1,17 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources;
 
-
+import com.google.common.collect.ImmutableMap;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.*;
 
 public class LinearCombinationResource extends Resource implements PropertyChangeListener {
 
-    private HashMap<Resource, Number> terms;
+    private ImmutableMap<Resource, ? extends Number> terms;
 
-    public LinearCombinationResource() {
+    public LinearCombinationResource(ImmutableMap<Resource, ? extends Number> terms) {
         super();
-        terms = new HashMap<>();
-    }
-
-    public void setTerms(HashMap<Resource, ? extends Number> terms) {
+        this.terms = terms;
         for (Resource resource : terms.keySet()) {
-            this.terms.put(resource, terms.get(resource));
             resource.addChangeListener(this);
         }
         setValue(computeSum());

@@ -6,7 +6,7 @@ import java.util.Set;
 
 public class ResourceBuilder {
 
-  private Resource _resource;
+  protected Resource _resource;
 
   public ResourceBuilder() {
     _resource = new Resource();
