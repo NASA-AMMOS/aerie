@@ -22,6 +22,14 @@
     <mat-icon aria-label="fullscreen">fullscreen</mat-icon>
     Fullscreen
   </button>
+  <button
+    mat-raised-button
+    (click)="toggleTooltips()"
+    [color]="showTooltips ? 'primary' : ''"
+  >
+    <mat-icon aria-label="tooltips">message</mat-icon>
+    Tooltips
+  </button>
   <button mat-raised-button (click)="openHelpDialog.emit()">
     <mat-icon aria-label="help">help</mat-icon>
     Help
