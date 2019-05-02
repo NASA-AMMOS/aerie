@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.builders;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.LinearCombinationResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
 
-import java.lang.reflect.*;
 import java.util.Set;
 
 public class ResourceBuilder {
