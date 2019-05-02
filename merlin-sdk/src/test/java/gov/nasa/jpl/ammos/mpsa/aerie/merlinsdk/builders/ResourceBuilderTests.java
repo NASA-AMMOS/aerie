@@ -1,9 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.builders;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
 import java.util.HashSet;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.LinearCombinationResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 import org.junit.Test;
@@ -119,6 +121,78 @@ public class ResourceBuilderTests {
     ResourceBuilder builder = new ResourceBuilder().isFrozen(isFrozen);
     Resource resource = builder.getResource();
     assertSame(resource.isFrozen(), isFrozen);
+  }
+
+  @Test
+  public void testResourceBuilderLinearCombinationFromDoubleResources() {
+    Resource powerDraw1 = new ResourceBuilder()
+                .withName("Power_Draw_1")
+                .withInitialValue(1.2)
+                .getResource();
+    Resource powerDraw2 = new ResourceBuilder()
+                .withName("Power_Draw_2")
+                .withInitialValue(2.2)
+                .getResource();
+    Resource totalPowerDraw = new ResourceBuilder(LinearCombinationResource.class)
+                .withName("Total_Power_Draw")
+                .withTerm(powerDraw1, 1)
+                .withTerm(powerDraw2, 1)
+                .getResource();
+    assertEquals(3.4, (double) totalPowerDraw.getCurrentValue(), 1e-15);
+  }
+
+  @Test
+  public void testResourceBuilderLinearCombinationFromIntegerResources() {
+    Resource powerDraw1 = new ResourceBuilder()
+                .withName("Power_Draw_1")
+                .withInitialValue(1)
+                .getResource();
+    Resource powerDraw2 = new ResourceBuilder()
+                .withName("Power_Draw_2")
+                .withInitialValue(2)
+                .getResource();
+    Resource totalPowerDraw = new ResourceBuilder(LinearCombinationResource.class)
+                .withName("Total_Power_Draw")
+                .withTerm(powerDraw1, 1)
+                .withTerm(powerDraw2, 1)
+                .getResource();
+    assertEquals(3.0, (double) totalPowerDraw.getCurrentValue(), 1e-15);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testResourceBuilderLinearCombinationFromStringResources() {
+    Resource powerDraw1 = new ResourceBuilder()
+                .withName("Power_Draw_1")
+                .withInitialValue("A")
+                .getResource();
+    Resource powerDraw2 = new ResourceBuilder()
+                .withName("Power_Draw_2")
+                .withInitialValue("B")
+                .getResource();
+    Resource totalPowerDraw = new ResourceBuilder(LinearCombinationResource.class)
+                .withName("Total_Power_Draw")
+                .withTerm(powerDraw1, 1)
+                .withTerm(powerDraw2, 1)
+                .getResource();
+  }
+
+  @Test
+  public void testLinearCombinationResourcePropertyChange() {
+    Resource powerDraw1 = new ResourceBuilder()
+                .withName("Power_Draw_1")
+                .withInitialValue(1.2)
+                .getResource();
+    Resource powerDraw2 = new ResourceBuilder()
+                .withName("Power_Draw_2")
+                .withInitialValue(2.2)
+                .getResource();
+    Resource totalPowerDraw = new ResourceBuilder(LinearCombinationResource.class)
+                .withName("Total_Power_Draw")
+                .withTerm(powerDraw1, 1)
+                .withTerm(powerDraw2, 1)
+                .getResource();
+    powerDraw1.setValue(0.2);
+    assertEquals(2.4, (double) totalPowerDraw.getCurrentValue(), 1e-15);
   }
 
 }

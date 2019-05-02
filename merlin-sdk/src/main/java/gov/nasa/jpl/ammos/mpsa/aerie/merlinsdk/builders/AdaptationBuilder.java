@@ -49,12 +49,6 @@ public class AdaptationBuilder {
         return resource;
     }
 
-    public ResourceBuilder createLinearCombinationResource(ImmutableMap<Resource, ? extends Number> terms) {
-        ResourceBuilder resource = new LinearCombinationResourceBuilder(terms);
-        _resources.add(resource);
-        return resource;
-    }
-
     public List<ResourceBuilder> getResources() {
         return _resources;
     }
