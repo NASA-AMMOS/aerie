@@ -9,7 +9,11 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { MatToolbarModule } from '@angular/material';
+import {
+  MatIconModule,
+  MatTabsModule,
+  MatToolbarModule,
+} from '@angular/material';
 import { NestAppHeaderModule } from '../../../shared/components';
 import {
   SeqCommandListModule,
@@ -25,6 +29,8 @@ import { SequencingAppComponent } from './sequencing-app.component';
     CommonModule,
     SeqCommandListModule,
     SeqCommandLoaderModule,
+    MatIconModule,
+    MatTabsModule,
     MatToolbarModule,
     NestAppHeaderModule,
     SeqEditorModule,

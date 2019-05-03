@@ -11,15 +11,31 @@
 </main>
 
 <aside>
-  <seq-command-loader
-    [selectedId]="selectedDictionaryId$ | async"
-    [dictionaries]="dictionaries$ | async"
-    (selectDictionary)="onSelectDictionary($event)"
-  >
-  </seq-command-loader>
-  <seq-command-list
-    [commands]="commands$ | async"
-    (selectCommand)="onSelectCommand($event)"
-  >
-  </seq-command-list>
+  <mat-tab-group animationDuration="0ms">
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">code</mat-icon> Commands
+      </ng-template>
+
+      <seq-command-loader
+        [selectedId]="selectedDictionaryId$ | async"
+        [dictionaries]="dictionaries$ | async"
+        (selectDictionary)="onSelectDictionary($event)"
+      >
+      </seq-command-loader>
+
+      <seq-command-list
+        [commands]="commands$ | async"
+        (selectCommand)="onSelectCommand($event)"
+      >
+      </seq-command-list>
+    </mat-tab>
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">folder</mat-icon> Files
+      </ng-template>
+
+      <h3>Files</h3>
+    </mat-tab>
+  </mat-tab-group>
 </aside>
