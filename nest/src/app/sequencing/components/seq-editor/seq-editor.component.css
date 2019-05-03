@@ -33,3 +33,18 @@
 ::ng-deep .CodeMirror-fullscreen {
   z-index: 10 !important;
 }
+
+::ng-deep .CodeMirror-lint-tooltip {
+  position: absolute;
+  z-index: 5;
+  padding: 10px;
+  max-width: 400px;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  max-height: 600px;
+  overflow-y: scroll;
+  border: 1px solid #9effff;
+  background: rgb(39, 40, 34);
+  color: white;
+  font-family: inherit;
+}
