@@ -127,16 +127,19 @@ public class ResourceBuilderTests {
   public void testResourceBuilderLinearCombinationFromDoubleResources() {
     Resource powerDraw1 = new ResourceBuilder()
                 .withName("Power_Draw_1")
-                .withInitialValue(1.2)
+                .withInitialValue(1200.0)
+                .withUnits("mW")
                 .getResource();
     Resource powerDraw2 = new ResourceBuilder()
                 .withName("Power_Draw_2")
                 .withInitialValue(2.2)
+                .withUnits("W")
                 .getResource();
     Resource totalPowerDraw = new ResourceBuilder(LinearCombinationResource.class)
                 .withName("Total_Power_Draw")
-                .withTerm(powerDraw1, 1)
-                .withTerm(powerDraw2, 1)
+                .withTerm(powerDraw1, 0.001)
+                .withTerm(powerDraw2, 1.0)
+                .withUnits("W")
                 .getResource();
     assertEquals(3.4, (double) totalPowerDraw.getCurrentValue(), 1e-15);
   }
@@ -146,15 +149,18 @@ public class ResourceBuilderTests {
     Resource powerDraw1 = new ResourceBuilder()
                 .withName("Power_Draw_1")
                 .withInitialValue(1)
+                .withUnits("W")
                 .getResource();
     Resource powerDraw2 = new ResourceBuilder()
                 .withName("Power_Draw_2")
                 .withInitialValue(2)
+                .withUnits("W")
                 .getResource();
     Resource totalPowerDraw = new ResourceBuilder(LinearCombinationResource.class)
                 .withName("Total_Power_Draw")
-                .withTerm(powerDraw1, 1)
-                .withTerm(powerDraw2, 1)
+                .withTerm(powerDraw1, 1.0)
+                .withTerm(powerDraw2, 1.0)
+                .withUnits("W")
                 .getResource();
     assertEquals(3.0, (double) totalPowerDraw.getCurrentValue(), 1e-15);
   }
@@ -164,15 +170,18 @@ public class ResourceBuilderTests {
     Resource powerDraw1 = new ResourceBuilder()
                 .withName("Power_Draw_1")
                 .withInitialValue("A")
+                .withUnits("W")
                 .getResource();
     Resource powerDraw2 = new ResourceBuilder()
                 .withName("Power_Draw_2")
                 .withInitialValue("B")
+                .withUnits("W")
                 .getResource();
     Resource totalPowerDraw = new ResourceBuilder(LinearCombinationResource.class)
                 .withName("Total_Power_Draw")
                 .withTerm(powerDraw1, 1)
                 .withTerm(powerDraw2, 1)
+                .withUnits("W")
                 .getResource();
   }
 
@@ -181,16 +190,20 @@ public class ResourceBuilderTests {
     Resource powerDraw1 = new ResourceBuilder()
                 .withName("Power_Draw_1")
                 .withInitialValue(1.2)
+                .withUnits("W")
                 .getResource();
     Resource powerDraw2 = new ResourceBuilder()
                 .withName("Power_Draw_2")
                 .withInitialValue(2.2)
+                .withUnits("W")
                 .getResource();
     Resource totalPowerDraw = new ResourceBuilder(LinearCombinationResource.class)
                 .withName("Total_Power_Draw")
                 .withTerm(powerDraw1, 1)
                 .withTerm(powerDraw2, 1)
+                .withUnits("W")
                 .getResource();
+    assertEquals(3.4, (double) totalPowerDraw.getCurrentValue(), 1e-15);
     powerDraw1.setValue(0.2);
     assertEquals(2.4, (double) totalPowerDraw.getCurrentValue(), 1e-15);
   }

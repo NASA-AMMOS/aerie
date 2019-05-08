@@ -12,20 +12,22 @@ public class LinearCombinationResource extends Resource implements PropertyChang
         super();
         terms = new HashMap<>();
         setValue(0.0);
+        // TODO: determine if we should set the type internally or if this is not transparent to the user
         setType(Double.class);
-        // TODO: set min/max based upon input resources
     }
 
     public void addTerm(Resource resource, Number coefficient) {
         this.terms.put(resource, coefficient);
         resource.addChangeListener(this);
-        double resourceValue;
+        double resourceValue;   // resource's current value
+        // TODO: handle resources that do not have current values (and will throw NullPointerExceptions)
         try {
             resourceValue = ((Number) resource.getCurrentValue()).doubleValue();
         } catch (ClassCastException e) {
             throw new IllegalArgumentException("Resource value must be a Numeric type");
         }
-        setValue((double) getCurrentValue() + resourceValue);
+        setValue((double) getCurrentValue() + coefficient.doubleValue() * resourceValue);
+        // TODO: determine if we should set the minimum and maximum values internally as a function of the input values
     }
 
     @Override
