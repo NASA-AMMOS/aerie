@@ -13,13 +13,20 @@ public class ResourceBuilder {
     _resource = new Resource();
   }
 
+  /**
+   * An alternative constructor for building subclasses of the Resource class rather than a Resource
+   * 
+   * @param cls the class from which a resource should be built (must be a subclass of Resource)
+   */
   public ResourceBuilder(Class<? extends Resource> cls) {
     try {
         _resource = cls.newInstance();
     } catch (IllegalAccessException e) {
         //TODO: handle exception
+        e.printStackTrace();
     } catch (InstantiationException e) {
         //TODO: handle exception
+        e.printStackTrace();
     }
   }
 
@@ -70,11 +77,19 @@ public class ResourceBuilder {
     return this;
   }
 
-  public ResourceBuilder withTerm(Resource resource, Number n) {
+  /**
+   * Adds a term to a LinearCombinationResource.
+   * 
+   * @param resource the input Resource whose value forms part of the linear combination
+   * @param coefficient the coefficient that should be applied to the input Resource's value
+   * @throws UnsupportedOperationException if the resource's type is not LinearCombinationResource
+   * @return
+   */
+  public ResourceBuilder withTerm(Resource resource, Number coefficient) {
     if (_resource instanceof LinearCombinationResource) {
-        ((LinearCombinationResource) _resource).addTerm(resource, n);
+        ((LinearCombinationResource) _resource).addTerm(resource, coefficient);
     } else {
-        // TODO: figure out what to do here
+        throw new UnsupportedOperationException("'withTerm' not supported for Resources of this type");
     }
     return this;
   }
