@@ -8,16 +8,16 @@ import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstance;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
@@ -41,7 +41,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * https://www.javarticles.com/2016/03/spring-dirtiescontext-annotation-example.html
  * Example: @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
  */
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(
     classes = PlanApplication.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -55,7 +55,7 @@ public class PlansControllerIntegrationTest {
   // see https://rtmccormick.com/2017/07/30/solved-testing-patch-spring-boot-testresttemplate/
   private RestTemplate patchRestTemplate;
 
-  @Before
+  @BeforeEach
   public void setup() {
     this.patchRestTemplate = restTemplate.getRestTemplate();
     HttpClient httpClient = HttpClientBuilder.create().build();
