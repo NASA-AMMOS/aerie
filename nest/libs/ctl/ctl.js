@@ -6464,6 +6464,10 @@ var Util = {
       ticks.push(tick.toString());
     }
 
+    // add the top log tick
+    tick *= 10;
+    ticks.push(tick.toString());
+
     return ticks;
   },
 
