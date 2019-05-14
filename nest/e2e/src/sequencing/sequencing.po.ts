@@ -14,6 +14,11 @@ export class SequencingPage {
       '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/main/seq-editor/div[2]/div',
     ),
   );
+  codeMirrorTextArea = element(
+    by.xpath(
+      '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/main/seq-editor/div[2]/div/div[1]/textarea',
+    ),
+  );
   filename = element(by.xpath('//*[@id="sequencing-filename"]'));
   toolbar = element(by.xpath('//*[@id="sequencing-toolbar"]'));
   helpButton = element(
@@ -37,6 +42,12 @@ export class SequencingPage {
       '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/main/seq-editor/div[1]/button[4]',
     ),
   );
+  autocompleteButton = element(
+    by.xpath(
+      '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/main/seq-editor/div[1]/button[3]',
+    ),
+  );
+  hintsContainer = element(by.css('.CodeMirror-hints'));
 
   navigateTo(route: string) {
     return browser.get(`${browser.baseUrl}/#/${route}`) as Promise<any>;
