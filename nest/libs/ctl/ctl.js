@@ -3483,6 +3483,7 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
       ctx.strokeStyle = Util.rgbaToString([255,0,0], 0.5);
     }
     else {
+      ctx.fillStyle = Util.rgbaToString(this.band.labelColor, 1);
       ctx.strokeStyle = Util.rgbaToString(this.band.labelColor, 0.5);
     }
     // skip if previously evaluated
