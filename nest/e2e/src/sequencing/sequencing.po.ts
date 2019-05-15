@@ -1,7 +1,9 @@
 import { browser, by, element } from 'protractor';
+import { config } from '../../../src/config';
 
 export class SequencingPage {
   routeTitle = element(by.css('.top-bar-title'));
+  config = config.appModules[1];
   commandDictionarySelect = element(by.css('#sequencing-command-select'));
   testCommandDictionary = element(by.xpath('//*[@id="mat-option-1"]'));
   commandList = element(by.xpath('//*[@id="sequencing-command-list"]'));
