@@ -1,41 +1,96 @@
 <nest-app-header title="Falcon" (menuClicked)="onMenuClicked()">
+  <button
+    [matMenuTriggerFor]="panelMenu"
+    mat-icon-button
+    matTooltip="Panels"
+    role="button"
+    aria-label="Panels"
+  >
+    <mat-icon class="icon">
+      view_quilt
+    </mat-icon>
+  </button>
+
+  <mat-menu #panelMenu>
+    <button mat-menu-item (click)="togglePanelView('leftPanel')">
+      <mat-icon aria-label="Toggle Left Menu">
+        border_left
+      </mat-icon>
+      Toggle Left Menu
+    </button>
+    <button mat-menu-item (click)="togglePanelView('rightPanel')">
+      <mat-icon aria-label="Toggle Right Menu">
+        border_right
+      </mat-icon>
+      Toggle Right Menu
+    </button>
+  </mat-menu>
 </nest-app-header>
 
-<main>
-  <seq-editor
-    [commands]="commands$ | async"
-    [commandsByName]="commandsByName$ | async"
-    (openHelpDialog)="onOpenEditorHelpDialog()"
+<as-split
+  unit="percent"
+  useTransition="true"
+  (dragEnd)="dragEnd($event)"
+  #split
+>
+  <as-split-area
+    [size]="panels.leftPanel.size"
+    [visible]="panels.leftPanel.visible"
+    order="1"
+    #leftPanel
   >
-  </seq-editor>
-</main>
+    <mat-tab-group animationDuration="0ms">
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">folder</mat-icon> Files
+        </ng-template>
 
-<aside>
-  <mat-tab-group animationDuration="0ms">
-    <mat-tab>
-      <ng-template mat-tab-label>
-        <mat-icon class="tab-icon">code</mat-icon> Commands
-      </ng-template>
+        <h3>Files</h3>
+      </mat-tab>
+    </mat-tab-group>
+  </as-split-area>
 
-      <seq-command-loader
-        [selectedId]="selectedDictionaryId$ | async"
-        [dictionaries]="dictionaries$ | async"
-        (selectDictionary)="onSelectDictionary($event)"
-      >
-      </seq-command-loader>
-
-      <seq-command-list
+  <as-split-area
+    [size]="panels.middlePanel.size"
+    [visible]="panels.middlePanel.visible"
+    order="2"
+    #editor
+  >
+    <main>
+      <seq-editor
         [commands]="commands$ | async"
-        (selectCommand)="onSelectCommand($event)"
+        [commandsByName]="commandsByName$ | async"
+        (openHelpDialog)="onOpenEditorHelpDialog()"
       >
-      </seq-command-list>
-    </mat-tab>
-    <mat-tab>
-      <ng-template mat-tab-label>
-        <mat-icon class="tab-icon">folder</mat-icon> Files
-      </ng-template>
+      </seq-editor>
+    </main>
+  </as-split-area>
 
-      <h3>Files</h3>
-    </mat-tab>
-  </mat-tab-group>
-</aside>
+  <as-split-area
+    [size]="panels.rightPanel.size"
+    [visible]="panels.rightPanel.visible"
+    order="3"
+    #rightPanel
+  >
+    <mat-tab-group animationDuration="0ms">
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">code</mat-icon> Commands
+        </ng-template>
+
+        <seq-command-loader
+          [selectedId]="selectedDictionaryId$ | async"
+          [dictionaries]="dictionaries$ | async"
+          (selectDictionary)="onSelectDictionary($event)"
+        >
+        </seq-command-loader>
+
+        <seq-command-list
+          [commands]="commands$ | async"
+          (selectCommand)="onSelectCommand($event)"
+        >
+        </seq-command-list>
+      </mat-tab>
+    </mat-tab-group>
+  </as-split-area>
+</as-split>

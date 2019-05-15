@@ -1,4 +1,11 @@
-import { browser, by, element, logging, protractor } from 'protractor';
+import {
+  browser,
+  by,
+  element,
+  ExpectedConditions as EC,
+  logging,
+  protractor,
+} from 'protractor';
 import { click, hasClass } from '../utils';
 import { selectMpsDictionary } from './helpers';
 import { SequencingPage } from './sequencing.po';
@@ -77,27 +84,27 @@ describe('/sequencing', () => {
     // One off selectors for this test
     const commandToken = element(
       by.xpath(
-        '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/main/seq-editor/div[2]/div/div[6]/div[1]/div/div/div/div[5]/div/pre/span/span[1]',
+        '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/as-split/as-split-area[2]/main/seq-editor/div[2]/div/div[6]/div[1]/div/div/div/div[5]/div/pre/span/span[1]',
       ),
     );
     const arg1Token = element(
       by.xpath(
-        '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/main/seq-editor/div[2]/div/div[6]/div[1]/div/div/div/div[5]/div/pre/span/span[2]',
+        '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/as-split/as-split-area[2]/main/seq-editor/div[2]/div/div[6]/div[1]/div/div/div/div[5]/div/pre/span/span[2]',
       ),
     );
     const arg2Token = element(
       by.xpath(
-        '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/main/seq-editor/div[2]/div/div[6]/div[1]/div/div/div/div[5]/div/pre/span/span[3]',
+        '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/as-split/as-split-area[2]/main/seq-editor/div[2]/div/div[6]/div[1]/div/div/div/div[5]/div/pre/span/span[3]',
       ),
     );
     const arg3Token = element(
       by.xpath(
-        '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/main/seq-editor/div[2]/div/div[6]/div[1]/div/div/div/div[5]/div/pre/span/span[4]',
+        '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/as-split/as-split-area[2]/main/seq-editor/div[2]/div/div[6]/div[1]/div/div/div/div[5]/div/pre/span/span[4]',
       ),
     );
     const arg4Token = element(
       by.xpath(
-        '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/main/seq-editor/div[2]/div/div[6]/div[1]/div/div/div/div[5]/div/pre/span/span[5]',
+        '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/as-split/as-split-area[2]/main/seq-editor/div[2]/div/div[6]/div[1]/div/div/div/div[5]/div/pre/span/span[5]',
       ),
     );
 
@@ -164,6 +171,62 @@ describe('/sequencing', () => {
     );
     page.fullscreenButton.click();
     expect(hasClass(page.codeMirrorEditor, 'CodeMirror-fullscreen')).toBe(true);
+  });
+
+  it('[C136493] A user SHOULD be able to open the panel menu', () => {
+    browser.navigate().refresh();
+    page.panelButton.click();
+    browser.wait(EC.visibilityOf(page.panelMenu));
+    expect(page.panelMenu.isDisplayed()).toBe(true);
+  });
+
+  it('[C136494] A user SHOULD be able to toggle the left panel off and on', () => {
+    browser.navigate().refresh();
+    expect(page.leftPanel.isDisplayed()).toBe(true);
+
+    page.panelButton.click();
+
+    browser.wait(EC.visibilityOf(page.panelMenu), 1000);
+    page.leftPanelToggleButton.click();
+    browser.wait(EC.invisibilityOf(page.leftPanel), 1000);
+
+    expect(page.leftPanel.isDisplayed()).toBe(false);
+
+    page.panelButton.click();
+
+    browser.wait(EC.visibilityOf(page.panelMenu), 1000);
+    page.leftPanelToggleButton.click();
+    browser.wait(EC.visibilityOf(page.leftPanel), 1000);
+
+    expect(page.leftPanel.isDisplayed()).toBe(true);
+  });
+
+  it('[C136495] A user SHOULD be able to toggle the right panel off and on', () => {
+    browser.navigate().refresh();
+    expect(page.rightPanel.isDisplayed()).toBe(true);
+
+    page.panelButton.click();
+
+    browser.wait(EC.visibilityOf(page.panelMenu), 1000);
+    page.rightPanelToggleButton.click();
+    browser.wait(EC.invisibilityOf(page.rightPanel), 1000);
+
+    expect(page.rightPanel.isDisplayed()).toBe(false);
+
+    page.panelButton.click();
+
+    browser.wait(EC.visibilityOf(page.panelMenu), 1000);
+    page.rightPanelToggleButton.click();
+    browser.wait(EC.visibilityOf(page.rightPanel), 1000);
+
+    expect(page.rightPanel.isDisplayed()).toBe(true);
+  });
+
+  it('[C136496] A user SHOULD be shown all 3 panels on load', () => {
+    browser.navigate().refresh();
+    expect(page.leftPanel.isDisplayed()).toBe(true);
+    expect(page.middlePanel.isDisplayed()).toBe(true);
+    expect(page.rightPanel.isDisplayed()).toBe(true);
   });
 
   afterEach(async () => {
