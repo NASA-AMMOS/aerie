@@ -4,6 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinSDKAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.builders.AdaptationBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.Adaptation;
+import spice.basic.CSPICE;
 
 public class Main {
 
@@ -14,6 +15,7 @@ public class Main {
     Adaptation adaptation = builder.getAdaptation();
 
     System.out.println("adaptation name: " + adaptation.getName());
+    System.out.println("speed of light: " + CSPICE.clight());
     builder.getActivivityTypes().forEach((a) -> {
       ActivityType activityType = a.getActivityType();
       System.out.println("activity type: " + activityType.getName());
