@@ -8,13 +8,16 @@
  */
 
 import {
+  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  EventEmitter,
   Input,
   OnChanges,
-  OnInit,
+  Output,
   SimpleChanges,
+  ViewChild,
 } from '@angular/core';
 import { MpsCommand, StringTMap } from '../../../shared/models';
 import {
@@ -28,9 +31,9 @@ import { SeqEditorService } from '../../services/seq-editor.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'seq-editor',
   styleUrls: ['./seq-editor.component.css'],
-  template: ``,
+  templateUrl: `./seq-editor.component.html`,
 })
-export class SeqEditorComponent implements OnChanges, OnInit {
+export class SeqEditorComponent implements AfterViewInit, OnChanges {
   @Input()
   autofocus = true;
 
@@ -44,6 +47,9 @@ export class SeqEditorComponent implements OnChanges, OnInit {
   extraKeys = {
     'Ctrl-Space': 'autocomplete',
   };
+
+  @Input()
+  filename = 'FileName.mps';
 
   @Input()
   gutters: string[] = ['CodeMirror-lint-markers'];
@@ -63,24 +69,17 @@ export class SeqEditorComponent implements OnChanges, OnInit {
   @Input()
   value = '';
 
-  constructor(
-    private elementRef: ElementRef,
-    private seqEditorService: SeqEditorService,
-  ) {}
+  @Output()
+  openHelpDialog: EventEmitter<null> = new EventEmitter<null>();
 
-  ngOnInit(): void {
-    this.seqEditorService.setEditor(this.elementRef, {
-      autofocus: this.autofocus,
-      extraKeys: this.extraKeys,
-      gutters: this.gutters,
-      lineNumbers: this.lineNumbers,
-      lineWrapping: this.lineWrapping,
-      lint: true,
-      mode: this.mode,
-      theme: this.theme,
-      value: this.value,
-    });
-  }
+  @ViewChild('editor')
+  editorMount: ElementRef;
+
+  autocomplete = true;
+  fullscreen = false;
+  userTheme = 'dark';
+
+  constructor(private seqEditorService: SeqEditorService) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.commandsByName || changes.mode) {
@@ -104,6 +103,45 @@ export class SeqEditorComponent implements OnChanges, OnInit {
     }
   }
 
+  ngAfterViewInit() {
+    this.seqEditorService.setEditor(this.editorMount, {
+      autofocus: this.autofocus,
+      extraKeys: {
+        ...this.extraKeys,
+        'Ctrl-R': this.redo.bind(this),
+        'Ctrl-Z': this.undo.bind(this),
+        Esc: this.toggleFullscreen.bind(this),
+      },
+      gutters: this.gutters,
+      lineNumbers: this.lineNumbers,
+      lineWrapping: this.lineWrapping,
+      lint: true,
+      mode: this.mode,
+      theme: this.theme,
+      value: this.value,
+    });
+    if (this.seqEditorService.editor) {
+      // Event is casted to any because CodeMirror type defs are not up to date/do not have a type for it
+      this.seqEditorService.editor.on(
+        'keyup',
+        (cm: CodeMirror.Editor, event: any) => {
+          // Don't open autocomplete menu again if the menu is open
+          // and if user is moving up/down options
+          if (
+            this.autocomplete &&
+            this.seqEditorService.editor &&
+            !cm.state.completeActive &&
+            event.keyCode !== 13 &&
+            event.keyCode !== 40 &&
+            event.keyCode !== 38
+          ) {
+            this.seqEditorService.editor.execCommand('autocomplete');
+          }
+        },
+      );
+    }
+  }
+
   /**
    * Set Code Mirror mode and addons.
    * Order matters here! Make sure we register the mode first with Code Mirror
@@ -123,6 +161,54 @@ export class SeqEditorComponent implements OnChanges, OnInit {
           buildMpsLint(this.commandsByName);
           break;
       }
+    }
+  }
+
+  undo() {
+    if (this.seqEditorService.editor) {
+      this.seqEditorService.editor.execCommand('undo');
+      this.seqEditorService.editor.focus();
+    }
+  }
+
+  redo() {
+    if (this.seqEditorService.editor) {
+      this.seqEditorService.editor.execCommand('redo');
+      this.seqEditorService.editor.focus();
+    }
+  }
+
+  toggleAutocomplete() {
+    if (this.seqEditorService.editor) {
+      this.autocomplete = !this.autocomplete;
+      this.seqEditorService.editor.focus();
+    }
+  }
+
+  toggleFullscreen() {
+    if (this.seqEditorService.editor) {
+      this.fullscreen = !this.fullscreen;
+      this.seqEditorService.editor.setOption('fullScreen', this.fullscreen);
+      this.seqEditorService.editor.focus();
+    }
+  }
+
+  toggleTheme() {
+    if (this.seqEditorService.editor) {
+      switch (this.userTheme) {
+        case 'dark':
+          this.userTheme = 'light';
+          this.seqEditorService.editor.setOption('theme', 'default');
+          break;
+        case 'light':
+          this.userTheme = 'dark';
+          this.seqEditorService.editor.setOption('theme', 'monokai');
+          break;
+        default:
+          this.userTheme = 'dark';
+          this.seqEditorService.editor.setOption('theme', 'monokai');
+      }
+      this.seqEditorService.editor.focus();
     }
   }
 }

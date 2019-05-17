@@ -8,17 +8,24 @@
  */
 
 import { Injectable } from '@angular/core';
+import { MatDialog } from '@angular/material';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { AddText, EditorActionTypes } from '../actions/editor.actions';
+import { NestConfirmDialogComponent } from '../../shared/components/nest-confirm-dialog/nest-confirm-dialog.component';
+import {
+  AddText,
+  EditorActionTypes,
+  OpenEditorHelpDialog,
+} from '../actions/editor.actions';
 import { SeqEditorService } from '../services/seq-editor.service';
 
 @Injectable()
 export class EditorEffects {
   constructor(
     private actions$: Actions,
+    private dialog: MatDialog,
     private seqEditorService: SeqEditorService,
   ) {}
 
@@ -28,6 +35,22 @@ export class EditorEffects {
     switchMap(action => {
       this.seqEditorService.addText(action.text);
       this.seqEditorService.focusEditor();
+      return [];
+    }),
+  );
+
+  @Effect({ dispatch: false })
+  openEditorHelpDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenEditorHelpDialog>(EditorActionTypes.OpenEditorHelpDialog),
+    switchMap(() => {
+      this.dialog.open(NestConfirmDialogComponent, {
+        data: {
+          cancelText: 'CLOSE',
+          message: 'Help text goes here',
+        },
+        width: '400px',
+      });
+
       return [];
     }),
   );

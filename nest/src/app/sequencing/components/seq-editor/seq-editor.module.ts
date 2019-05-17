@@ -7,11 +7,18 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import {
+  MatButtonModule,
+  MatIconModule,
+  MatTooltipModule,
+} from '@angular/material';
 import { SeqEditorComponent } from './seq-editor.component';
 
 @NgModule({
   declarations: [SeqEditorComponent],
   exports: [SeqEditorComponent],
+  imports: [CommonModule, MatButtonModule, MatIconModule, MatTooltipModule],
 })
 export class SeqEditorModule {}

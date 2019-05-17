@@ -60,6 +60,7 @@ main {
   height: 100%;
   margin: 0;
   padding: 0;
+  overflow: hidden;
 }
 
 .ag-theme-fresh .ag-row-selected {
@@ -99,6 +100,9 @@ main {
 /* Override default CodeMirror class so we can have auto resizing. */
 /* https://codemirror.net/demo/resize.html */
 .CodeMirror {
-  border: 1px solid #eee;
   height: 100%;
+}
+
+.mat-drawer-side {
+  z-index: 1 !important;
 }

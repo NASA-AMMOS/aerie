@@ -1,0 +1,36 @@
+<div id="sequencing-toolbar">
+  <h3 id="sequencing-filename">{{ filename }}</h3>
+  <button mat-raised-button (click)="undo()" matTooltip="Undo">
+    <mat-icon aria-label="undo">undo</mat-icon>
+  </button>
+  <button mat-raised-button (click)="redo()" matTooltip="Redo">
+    <mat-icon aria-label="redo">redo</mat-icon>
+  </button>
+  <button
+    mat-raised-button
+    (click)="toggleAutocomplete()"
+    [color]="autocomplete ? 'primary' : ''"
+    matTooltip="Toggle Autocomplete"
+  >
+    <mat-icon aria-label="autocomplete">text_rotation_none</mat-icon>
+  </button>
+  <button
+    mat-raised-button
+    (click)="toggleTheme()"
+    matTooltip="Toggle Color Scheme"
+  >
+    <mat-icon aria-label="color_lens">color_lens</mat-icon>
+  </button>
+  <button
+    mat-raised-button
+    (click)="toggleFullscreen()"
+    matTooltip="Enter Fullscreen Mode"
+  >
+    <mat-icon aria-label="fullscreen">fullscreen</mat-icon>
+  </button>
+  <button mat-raised-button (click)="openHelpDialog.emit()" matTooltip="Help">
+    <mat-icon aria-label="help">help</mat-icon>
+  </button>
+</div>
+
+<div id="sequencing-editor-mount" #editor></div>

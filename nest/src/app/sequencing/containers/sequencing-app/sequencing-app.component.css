@@ -7,24 +7,12 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-:host {
-  display: grid;
-  grid-gap: 12px;
-  grid-template-areas:
-    'header header'
-    'aside main';
-  grid-template-columns: 300px 1fr;
-  grid-template-rows: 40px 1fr;
+mat-sidenav-container {
   margin: 0;
   height: 100%;
 }
 
-nest-app-header {
-  grid-area: header;
-}
-
 main {
-  grid-area: main;
   height: 100%;
   position: relative;
 }
@@ -37,7 +25,10 @@ raven-seq-editor {
   top: 0;
 }
 
-aside {
-  grid-area: aside;
-  margin-left: 12px;
+::ng-deep .mat-tab-body-wrapper {
+  padding: 15px 20px;
+}
+
+::ng-deep .mat-tab-body-wrapper {
+  padding-top: 30px;
 }

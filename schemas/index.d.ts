@@ -19,6 +19,17 @@ export interface Adaptation {
     version:  string;
 }
 
+export interface AMQPMessage {
+    data?:        { [key: string]: any };
+    messageType?: AMQPMessageTypeEnum;
+}
+
+export enum AMQPMessageTypeEnum {
+    LoadAdaptation = "LoadAdaptation",
+    SimulateActivity = "SimulateActivity",
+    UnloadAdaptation = "UnloadAdaptation",
+}
+
 export interface CommandDictionary {
     id:      string;
     name:    string;

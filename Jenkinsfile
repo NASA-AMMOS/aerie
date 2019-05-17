@@ -35,6 +35,7 @@ pipeline {
 		stage ('build') {
 			steps {
 				echo "building ${getTag()}..."
+				withCredentials([usernamePassword(credentialsId: '9db65bd3-f8f0-4de0-b344-449ae2782b86', passwordVariable: 'DOCKER_LOGIN_PASSWORD', usernameVariable: 'DOCKER_LOGIN_USERNAME')]) {
 				script {
 					def statusCode = sh returnStatus: true, script:
 					"""
@@ -54,6 +55,7 @@ pipeline {
 				}
 				// TODO: Use this instead of the above script once node is installed on the server
 				// sh "./scripts/build.sh --commit ${env.GIT_COMMIT} --tag ${getTag()} ${remoteBranch}"
+				}
 
 				junit allowEmptyResults: true, healthScaleFactor: 10.0, keepLongStdio: true, testResults: '**/karma-test-results.xml'
 			}

@@ -10,6 +10,7 @@
 import { NgModule } from '@angular/core';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
+import { NestConfirmDialogModule } from '../shared/components';
 import { SequencingAppModule } from './containers/sequencing-app/sequencing-app.module';
 import { CommandDictionaryEffects } from './effects/command-dictionary.effects';
 import { EditorEffects } from './effects/editor.effects';
@@ -21,6 +22,7 @@ import { reducers } from './sequencing-store';
     SequencingRoutingModule,
     StoreModule.forFeature('sequencing', reducers),
     EffectsModule.forFeature([CommandDictionaryEffects, EditorEffects]),
+    NestConfirmDialogModule,
     SequencingAppModule,
   ],
 })

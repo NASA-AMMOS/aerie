@@ -9,28 +9,36 @@
 
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { config } from '../config';
+
+const merlinModule = config.appModules[0];
+const falconModule = config.appModules[1];
+const ravenModule = config.appModules[2];
 
 export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'raven',
+    redirectTo: ravenModule.path,
   },
   {
+    data: { title: merlinModule.title },
     loadChildren: './planning/planning.module#PlanningModule',
-    path: 'plans',
+    path: merlinModule.path,
   },
   {
+    data: { title: falconModule.title },
     loadChildren: './sequencing/sequencing.module#SequencingModule',
-    path: 'sequencing',
+    path: falconModule.path,
   },
   {
+    data: { title: ravenModule.title },
     loadChildren: './raven/raven.module#RavenModule',
-    path: 'raven',
+    path: ravenModule.path,
   },
   {
     path: '**',
-    redirectTo: 'raven',
+    redirectTo: ravenModule.path,
   },
 ];
 
