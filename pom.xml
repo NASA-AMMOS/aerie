@@ -15,7 +15,6 @@
         <module>adaptation</module>
         <module>aerie-sdk</module>
         <module>banananation</module>
-        <!-- <module>JNISpice</module> -->
         <module>merlin-cli</module>
         <module>merlin-sdk</module>
         <module>plan</module>
