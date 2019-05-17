@@ -56,13 +56,13 @@ export const config: ConfigState = {
     {
       icon: 'event',
       path: 'plans',
-      title: 'Planning',
+      title: 'Merlin',
       version: '0.0.1',
     },
     {
       icon: 'dns',
       path: 'sequencing',
-      title: 'Sequencing',
+      title: 'Falcon',
       version: '0.0.1',
     },
     {

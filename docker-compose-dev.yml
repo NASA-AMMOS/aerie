@@ -8,6 +8,15 @@ services:
     volumes:
       - adaptation_files:/usr/src/app/adaptation_files
       - adaptation_logs:/var/log/adaptation
+  adaptation_runtime:
+    build:
+      context: adaptation-runtime
+      dockerfile: Dockerfile
+    command: ["--spring.profiles.active=production"]
+    depends_on: ["rabbitmq", "adaptation", "tyk_gateway"]
+    restart: always
+    volumes:
+      - adaptation_files:/usr/src/app/adaptation_files
   plan:
     build:
       context: plan
@@ -22,9 +31,27 @@ services:
     image: mongo:3.2
     ports: ["27018:27018"]
     volumes: ["plan_mongo_data:/data/db"]
+  simulation:
+    build:
+      context: simulation
+      dockerfile: Dockerfile
+    command: ["--spring.profiles.active=production"]
+    depends_on: ["rabbitmq"]
+    ports: ["27185:27185"]
+    restart: always
+    volumes: ["simulation_logs:/var/log/simulation"]
+
+  rabbitmq:
+    image: rabbitmq:3
+    hostname: rabbitmq
+    ports: ["5672:5672"]
+    volumes: ["rabbitmq_data:/var/lib/rabbitmq/mnesia/rabbit@rabbitmq"]
+
   tyk_gateway:
     image: tykio/tyk-gateway:latest
-    ports: ["8081:8080"]
+    ports: ["8081:8081"]
+    environment:
+      TYKLISTENPORT: 8081
     depends_on:
       - tyk_redis
     restart: always
@@ -36,37 +63,12 @@ services:
     ports: ["6379:6379"]
     volumes:
       - tyk_redis_data:/data
-  tyk_dashboard:
-    image: tykio/tyk-dashboard:latest
-    ports:
-      - "3000:3000"
-      - "5000:5000"
-    depends_on:
-      - tyk_redis
-      - tyk_mongo
-    restart: always
-    volumes:
-      [
-        "./tyk_dashboard/tyk_dashboard.conf:/opt/tyk-dashboard/tyk_analytics.conf",
-      ]
-  tyk_pump:
-    image: tykio/tyk-pump-docker-pub:latest
-    depends_on:
-      - tyk_redis
-      - tyk_mongo
-      - tyk_gateway
-    restart: always
-    volumes: ["./tyk_pump/tyk_pump.conf:/opt/tyk-pump/pump.conf"]
-  tyk_mongo:
-    image: mongo:3.2
-    command: ["mongod", "--smallfiles"]
-    ports: ["27017:27017"]
-    volumes: ["tyk_mongo_data:/data/db"]
 
 volumes:
   adaptation_files:
   adaptation_logs:
   plan_logs:
   plan_mongo_data:
-  tyk_mongo_data:
+  rabbitmq_data:
   tyk_redis_data:
+  simulation_logs:

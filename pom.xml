@@ -11,7 +11,9 @@
     <version>1.0-SNAPSHOT</version>
 
     <modules>
+        <module>adaptation-runtime</module>
         <module>adaptation</module>
+        <module>aerie-sdk</module>
         <module>banananation</module>
         <!-- <module>JNISpice</module> -->
         <module>merlin-cli</module>
@@ -19,6 +21,7 @@
         <module>plan</module>
         <module>schedule</module>
         <module>schemas</module>
+        <module>simulation</module>
     </modules>
 
     <distributionManagement>
