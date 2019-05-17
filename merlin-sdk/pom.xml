@@ -53,7 +53,7 @@
     <dependency>
         <groupId>gov.nasa.jpl.ammos.mpsa</groupId>
         <artifactId>JNISpice</artifactId>
-        <version>1.0-20190516.202731-1</version>
+        <version>1.0-20190517.205223-2</version>
     </dependency>
     <dependency>
       <groupId>com.sun.jersey</groupId>
