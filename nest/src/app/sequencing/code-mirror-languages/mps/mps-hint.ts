@@ -9,7 +9,7 @@
 
 import * as CodeMirror from 'codemirror';
 import { MpsCommand, StringTMap } from '../../../shared/models';
-
+import { getCommandTemplate } from './helpers';
 /**
  * Register a custom `mps` hinter with Code Mirror.
  * Hinters are used for Code Mirror autocomplete.
@@ -29,11 +29,21 @@ export function buildMpsHint(commandsByName: StringTMap<MpsCommand>): void {
     const cur = editor.getCursor();
     const token = getToken(editor, cur);
 
+    // The list of autocomplete suggests based on the current stem
+    // displayText is what is shown in the menu
+    // text is what gets placed in the text editor
+    const list = keywords
+      .filter(word => word.toLowerCase().startsWith(token.string.toLowerCase()))
+      .map(w => {
+        return {
+          displayText: w,
+          text: `${getCommandTemplate(w, commandsByName)}`,
+        };
+      });
+
     return {
       from: CodeMirror.Pos(cur.line, token.start),
-      list: keywords.filter(word =>
-        word.toLowerCase().startsWith(token.string.toLowerCase()),
-      ),
+      list,
       to: CodeMirror.Pos(cur.line, token.end),
     };
   }

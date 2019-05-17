@@ -21,6 +21,12 @@ services:
     image: mongo:3.2
     ports: ["27018:27018"]
     volumes: ["plan_mongo_data:/data/db"]
+  # Message queue, for RabbitMQ a hostname must be specified so that data isn't
+  # assigned to a random directory
+  rabbitmq:
+    image: rabbitmq:3
+    ports: ["5672:5672"]
+    volumes: ["rabbitmq_data:/var/lib/rabbitmq/mnesia/rabbit@rabbitmq"]
   tyk_gateway:
     image: tykio/tyk-gateway:latest
     ports: ["8081:8080"]

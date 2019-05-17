@@ -84,6 +84,12 @@
       <artifactId>springfox-swagger-ui</artifactId>
       <version>2.9.2</version>
     </dependency>
+    <dependency>
+      <groupId>gov.nasa.jpl.ammos.mpsa.aerie</groupId>
+      <artifactId>aerie-sdk</artifactId>
+      <version>1.0-SNAPSHOT</version>
+      <scope>compile</scope>
+    </dependency>
   </dependencies>
 
   <build>

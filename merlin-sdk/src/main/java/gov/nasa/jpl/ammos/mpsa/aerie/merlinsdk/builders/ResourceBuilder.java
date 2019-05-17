@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.builders;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.LinearCombinationResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
 
 import java.util.Set;
@@ -10,6 +11,23 @@ public class ResourceBuilder {
 
   public ResourceBuilder() {
     _resource = new Resource();
+  }
+
+  /**
+   * An alternative constructor for building subclasses of the Resource class rather than a Resource
+   * 
+   * @param cls the class from which a resource should be built (must be a subclass of Resource)
+   */
+  public ResourceBuilder(Class<? extends Resource> cls) {
+    try {
+        _resource = cls.newInstance();
+    } catch (IllegalAccessException e) {
+        //TODO: handle exception
+        e.printStackTrace();
+    } catch (InstantiationException e) {
+        //TODO: handle exception
+        e.printStackTrace();
+    }
   }
 
   public ResourceBuilder withName(String name) {
@@ -56,6 +74,23 @@ public class ResourceBuilder {
 
   public ResourceBuilder withMax(Object maximum) {
     _resource.setMaximum(maximum);
+    return this;
+  }
+
+  /**
+   * Adds a term to a LinearCombinationResource.
+   * 
+   * @param resource the input Resource whose value forms part of the linear combination
+   * @param coefficient the coefficient that should be applied to the input Resource's value
+   * @throws UnsupportedOperationException if the resource's type is not LinearCombinationResource
+   * @return
+   */
+  public ResourceBuilder withTerm(Resource resource, Number coefficient) {
+    if (_resource instanceof LinearCombinationResource) {
+        ((LinearCombinationResource) _resource).addTerm(resource, coefficient);
+    } else {
+        throw new UnsupportedOperationException("'withTerm' not supported for Resources of this type");
+    }
     return this;
   }
 

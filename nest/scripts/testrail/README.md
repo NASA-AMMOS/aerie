@@ -13,6 +13,6 @@
    3. `source env/bin/activate`
    4. `pip install -r requirements.txt`
       - This installs the script dependencies. You only need to run this once.
-4. Now you can run `npm run e2e` and `npm run e2e-report <run-id>` in `/nest`
+4. Now you can run `npm run e2e` and `npm run e2e:upload <run-id>` in `/nest`
 5. `run-id` is a TestRail "Test Runs" `id`. Find your test run [here](https://cae-testrail.jpl.nasa.gov/testrail/index.php?/runs/overview/20).
 6. If you want to exit the virtual environment, just type `deactivate`
