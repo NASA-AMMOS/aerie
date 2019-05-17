@@ -50,16 +50,6 @@
       <artifactId>javaluator</artifactId>
       <version>3.0.2</version>
     </dependency>
-    <!-- <dependency>
-      <groupId>gov.nasa.jpl.mgss.mpsa.seq</groupId>
-      <artifactId>JNISpice</artifactId>
-      <version>1.0-20180716.173405-1</version>
-    </dependency> -->
-    <!-- <dependency>
-      <groupId>gov.nasa.jpl.ammos.mpsa</groupId>
-      <artifactId>JNISpice</artifactId>
-      <version>1.0-20190516.202731-1</version>
-    </dependency> -->
     <dependency>
       <groupId>gov.nasa.jpl.ammos.mpsa.aerie</groupId>
       <artifactId>JNISpice</artifactId>
