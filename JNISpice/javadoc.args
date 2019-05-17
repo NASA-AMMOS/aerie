@@ -1,0 +1,5 @@
+-doctitle 'Alpha Test JNISpice Version 2.0.0 API Specification'
+-overview overview.html
+-header '<b>JNISpice</b><br><font size="-1">version 2.0.0 </font>'
+-bottom ' JNISpice Alpha Test Version 2.0.0 28-JAN-2017 (NJB)'
+spice.basic spice.testutils spice.tspice 
