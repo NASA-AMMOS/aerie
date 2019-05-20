@@ -77,6 +77,16 @@ export class SequencingPage {
       '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/as-split/as-split-area[3]',
     ),
   );
+  firstCommand = element(
+    by.xpath(
+      '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/as-split/as-split-area[3]/mat-tab-group/div/mat-tab-body/div/seq-command-list/mat-nav-list/mat-accordion/cdk-virtual-scroll-viewport/div[1]/mat-expansion-panel[1]/mat-expansion-panel-header/span/mat-panel-title',
+    ),
+  );
+  firstCommandExpansion = element(
+    by.xpath(
+      '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/as-split/as-split-area[3]/mat-tab-group/div/mat-tab-body/div/seq-command-list/mat-nav-list/mat-accordion/cdk-virtual-scroll-viewport/div[1]/mat-expansion-panel[1]/div',
+    ),
+  );
 
   navigateTo(route: string) {
     return browser.get(`${browser.baseUrl}/#/${route}`) as Promise<any>;

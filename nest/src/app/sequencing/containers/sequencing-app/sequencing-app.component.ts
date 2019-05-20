@@ -44,6 +44,7 @@ export class SequencingAppComponent implements OnDestroy {
   selectedDictionaryId$: Observable<string | null>;
 
   commandsByName: StringTMap<MpsCommand>;
+  commandFilterQuery = '';
 
   // TODO: Move to reducer when implementing user config for app
   panels = {
