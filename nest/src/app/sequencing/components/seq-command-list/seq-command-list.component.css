@@ -18,3 +18,15 @@
 .viewport {
   height: 600px;
 }
+
+mat-expansion-panel:hover .add-command-button {
+  display: block;
+}
+
+.add-command-button {
+  display: none;
+}
+
+.mat-expansion-panel-header-title {
+  align-items: center;
+}

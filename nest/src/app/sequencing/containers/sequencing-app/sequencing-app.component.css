@@ -12,6 +12,10 @@ mat-sidenav-container {
   height: 100%;
 }
 
+#command-filter-input {
+  width: 100%;
+}
+
 main {
   height: 100%;
   position: relative;

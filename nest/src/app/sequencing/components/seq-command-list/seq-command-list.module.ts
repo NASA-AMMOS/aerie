@@ -10,13 +10,28 @@
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
-import { MatListModule } from '@angular/material/list';
+import {
+  MatButtonModule,
+  MatCardModule,
+  MatExpansionModule,
+  MatIconModule,
+  MatListModule,
+  MatTooltipModule,
+} from '@angular/material';
 import { SeqCommandListComponent } from './seq-command-list.component';
 
 @NgModule({
   declarations: [SeqCommandListComponent],
   exports: [SeqCommandListComponent],
-  imports: [CommonModule, MatCardModule, MatListModule, ScrollingModule],
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatCardModule,
+    MatExpansionModule,
+    MatIconModule,
+    MatListModule,
+    MatTooltipModule,
+    ScrollingModule,
+  ],
 })
 export class SeqCommandListModule {}

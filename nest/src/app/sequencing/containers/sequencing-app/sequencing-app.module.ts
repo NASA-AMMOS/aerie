@@ -9,9 +9,12 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import {
   MatButtonModule,
+  MatFormFieldModule,
   MatIconModule,
+  MatInputModule,
   MatMenuModule,
   MatSidenavModule,
   MatTabsModule,
@@ -33,16 +36,19 @@ import { SequencingAppComponent } from './sequencing-app.component';
   imports: [
     AngularSplitModule.forChild(),
     CommonModule,
-    SeqCommandListModule,
-    SeqCommandLoaderModule,
+    FormsModule,
     MatButtonModule,
+    MatFormFieldModule,
     MatIconModule,
+    MatInputModule,
     MatMenuModule,
     MatSidenavModule,
     MatTabsModule,
     MatToolbarModule,
     MatTooltipModule,
     NestAppHeaderModule,
+    SeqCommandListModule,
+    SeqCommandLoaderModule,
     SeqEditorModule,
   ],
 })
