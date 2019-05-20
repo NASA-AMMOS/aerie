@@ -5,8 +5,8 @@ project. Docker Compose utilizes YAML configuration files which are
 located in the root of the project. The YAML configs include everything
 that is required to run Aerie with [Docker][docker] and [Docker Compose][compose].
 
-> Compose is a tool for defining and running multi-container Docker 
-> applications. With Compose, you use a Compose file to configure your 
+> Compose is a tool for defining and running multi-container Docker
+> applications. With Compose, you use a Compose file to configure your
 > application’s services. Then, using a single command, you create and start
 > all the services from your configuration.
 
@@ -19,7 +19,7 @@ from our local JPL installation of DockerHub which is hosted on
 Once the necessary containers are pulled down, Docker Compose will orchestrate
 the network of services and start them up.
 
-## Important Note 
+## Important Note
 
 This demo is NOT designed for production use or performance
 testing. It has not been optimized in any way. It WILL be slow and should not be
@@ -38,8 +38,9 @@ The basic steps are:
 
 1. Clone the repository using Git
 2. Log in to Docker Hub
-3. Configure services (if running the full configuration)
-4. Start the services using the appropriate configuration file
+3. Create an Artifactory settings.xml file for local development
+4. Configure services (if running the full configuration)
+5. Start the services using the appropriate configuration file
 
 ## Authentication
 
@@ -53,9 +54,21 @@ docker login -u $USERNAME cae-artifactory.jpl.nasa.gov:16001
 Where `$USERNAME` is your LDAP username. You will be prompted to enter your
 password. Once successful, you are logged in and can pull down MPSA images.
 
-NOTE: Access is intended for MPSA Aerie Developers. If you have tried to login 
+NOTE: Access is intended for MPSA Aerie Developers. If you have tried to login
 and you get an access denied message, please contact seq.support@jpl.nasa.gov
-to request access. 
+to request access.
+
+## Artifactory Settings.xml
+
+You need an Artifactory settings.xml file with your JPL credentials so you can download and use Artifactory packages locally. Follow these steps to set this file up:
+
+1. Go to https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/artifacts/browse/tree/General/maven-libs-snapshot-local and log in with your JPL credentials
+2. Click "Set Me Up"
+3. Type in your JPL password
+4. Use the settings shown below.
+![](artifactory_maven_setup.png)
+5. Click "Generate Maven Settings" and then "Generate Settings" which will download a `settings.xml` file
+6. Move `settings.xml` into `~/.m2/`, replacing the old `settings.xml` if it exists.
 
 ## Configuration
 
@@ -77,11 +90,11 @@ The services may take several minutes to start. Once the logging output from
 `docker-compose` has slowed down, you should be able to access the services as
 per their individual documentation.
 
-Press `cmd+c` or `ctrl+c` to stop all services if docker-compose is running in 
+Press `cmd+c` or `ctrl+c` to stop all services if docker-compose is running in
 the foreground. Or to stop an application which has been started in the background,
 run the following:
 
-    docker-compose [-f <docker-compose-ARG>.yml] stop 
+    docker-compose [-f <docker-compose-ARG>.yml] stop
 
 Where the `<docker-compose-ARG>.yml` file corresponds to the environment
 which you started the application with.
@@ -95,7 +108,7 @@ are working on. In this environment images are retrieved from Artifactory.
 
 ### docker-compose-full.yml
 
-This is the the *entire* stack, including logging, analytics, the full API
+This is the the _entire_ stack, including logging, analytics, the full API
 gateway dashboard, and all of the core services. This is intended for use in a
 production environment, with a host that has a healthy amount of RAM, CPU,
 and disk space. It _can_ be run locally, but may not provide great performance.
@@ -132,8 +145,8 @@ Then you can use the `tyk` and `tyk_local` files. See step 3, below.
 127.0.0.1 www.tyk-test.com
 ```
 
-Note that the IP may be different depending on your installation, Windows users 
-may find it running on `10.x.x.x`, it is important the URL stays the same 
+Note that the IP may be different depending on your installation, Windows users
+may find it running on `10.x.x.x`, it is important the URL stays the same
 because our `setup.sh` assumes this is the one you are using.
 
 2. Add your dashboard license
@@ -144,15 +157,15 @@ to the `"license_key": ""` section.
 3. Start the full stack
 
 ```
-docker-compose -f docker-compose-full.yml up 
+docker-compose -f docker-compose-full.yml up
 ```
 
 4. Bootstrap the instance (creates a test user):
 
 ```
 cd ../tyk_dashboard
-chmod +x setup.sh 
-./setup.sh 
+chmod +x setup.sh
+./setup.sh
 ```
 
 Make sure you save the passwords somewhere. Optionally, create a user with the
@@ -160,7 +173,7 @@ methods used in the `setup.sh` file.
 
 5. Log in with the credentials provided.
 
-The setup script will provide a username and password, as well as the URL of 
+The setup script will provide a username and password, as well as the URL of
 your portal, please note that this will be running on port 3000, not port 80.
 
 [artifactory]: https://cae-artifactory.jpl.nasa.gov
