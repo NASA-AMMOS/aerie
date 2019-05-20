@@ -28,6 +28,7 @@
 #sequencing-filename {
   margin-right: auto;
   margin-bottom: 0;
+  margin-left: 8px;
 }
 
 ::ng-deep .CodeMirror-fullscreen {

@@ -21,8 +21,10 @@ truncated version of the mathematical constant E, to make it easy to remember.
 | Service       | Port   |
 | ---           | ---    |
 | adaptation    | 27182  |
-| plan          | 27183  |
+| adaptation-runtime | 27184 |
 | nest          | 8080   |
+| plan          | 27183  |
+| simulation    | 27185  |
 | tyk_gateway   | 8081   |
 
 ### Support services
@@ -37,6 +39,7 @@ other words, the Primary services can function completely without them.
 | kibana          | 5601  |
 | matomo          | 31423 |
 | matomo_database | 3306  |
+| rabbitmq | 5672 |
 | tyk_dashboard   | 3000  |
 | tyk_dashboard   | 5000  |
 | tyk_mongo       | 27017 |

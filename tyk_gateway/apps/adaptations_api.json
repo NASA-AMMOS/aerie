@@ -80,6 +80,30 @@
                   "code": 200,
                   "data": "",
                   "headers": {}
+                },
+                "OPTIONS": {
+                  "action": "no_action",
+                  "code": 200,
+                  "data": "",
+                  "headers": {}
+                },
+                "PATCH": {
+                  "action": "no_action",
+                  "code": 200,
+                  "data": "",
+                  "headers": {}
+                },
+                "POST": {
+                  "action": "no_action",
+                  "code": 200,
+                  "data": "",
+                  "headers": {}
+                },
+                "PUT": {
+                  "action": "no_action",
+                  "code": 200,
+                  "data": "",
+                  "headers": {}
                 }
               }
             }

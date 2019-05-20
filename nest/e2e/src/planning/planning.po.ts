@@ -1,7 +1,9 @@
 import { browser, by, element } from 'protractor';
+import { config } from '../../../src/config';
 
 export class PlanningPage {
   routeTitle = element(by.css('.top-bar-title'));
+  config = config.appModules[0];
   formTitle = element(
     by.xpath(
       '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/plans-app/main/mat-sidenav-container/mat-sidenav/div/div/div/div[1]/h2',

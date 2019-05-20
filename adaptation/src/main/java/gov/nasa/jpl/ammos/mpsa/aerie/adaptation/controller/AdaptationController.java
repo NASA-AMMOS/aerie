@@ -6,6 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.activities.ActivityTypeSerializer;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.AdaptationUtils;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.builders.AdaptationBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinSDKAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityType;
@@ -22,13 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.*;
-import java.net.URLClassLoader;
-
-import com.google.common.collect.UnmodifiableIterator;
-import com.google.common.reflect.ClassPath;
-import com.google.common.reflect.ClassPath.ClassInfo;
 
 @CrossOrigin
 @RestController
@@ -164,7 +159,7 @@ public class AdaptationController {
     if (optAdapt.isPresent()) {
       Adaptation adaptation = optAdapt.get();
       try {
-        MerlinSDKAdaptation userAdaptation = loadAdaptation(adaptation);
+        MerlinSDKAdaptation userAdaptation = AdaptationUtils.loadAdaptation(adaptation.getLocation());
         if (userAdaptation == null) {
           logger.error("NullAdaptation:\n loadAdaptation returned a null adaptation");
           return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -224,51 +219,6 @@ public class AdaptationController {
       file = new File(filename);
     }
     return filename;
-  }
-
-  // TODO: Move this into the Adaptation Runtime Service when it is complete
-  private MerlinSDKAdaptation loadAdaptation(Adaptation adaptation)
-      throws IOException, InstantiationException, IllegalAccessException {
-    // Load the adaptation jar
-    URL adaptationURL = new File(adaptation.getLocation()).toURI().toURL();
-    URLClassLoader loader = new URLClassLoader(new URL[] { adaptationURL },
-        Thread.currentThread().getContextClassLoader());
-
-    ClassPath classpath = ClassPath.from(loader);
-
-    // Find all classes in the jpl package
-    String pkg = "gov.nasa.jpl";
-    UnmodifiableIterator classes = classpath.getTopLevelClassesRecursive(pkg).iterator();
-
-    List<Class<?>> pkgClasses = new ArrayList();
-    while (classes.hasNext()) {
-      ClassInfo classInfo = (ClassInfo) classes.next();
-
-      try {
-        pkgClasses.add(classInfo.load());
-      } catch (NoClassDefFoundError e) {
-
-      }
-    }
-
-    // Find classes in the jpl package which implement the MerlinSDK Adaptation
-    // interface
-    // And return the first one that is found
-    String adaptationInterface = "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinSDKAdaptation";
-
-    for (Class loadedClass : pkgClasses) {
-      try {
-        if (Class.forName(adaptationInterface).isAssignableFrom(loadedClass)
-            && !Class.forName(adaptationInterface).equals(loadedClass)) {
-          MerlinSDKAdaptation loadedAdaptation = (MerlinSDKAdaptation) loadedClass.newInstance();
-          return loadedAdaptation;
-        }
-      } catch (ClassNotFoundException e) {
-        // Ignore this error and move on to the next class
-      }
-    }
-
-    return null;
   }
 
 }

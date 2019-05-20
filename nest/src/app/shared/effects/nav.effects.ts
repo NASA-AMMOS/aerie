@@ -8,12 +8,14 @@
  */
 
 import { Injectable } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import {
   RouterNavigationAction,
   SerializedRouterStateSnapshot,
 } from '@ngrx/router-store';
 import { tap } from 'rxjs/operators';
+import { RouterNavigation } from '../../../../libs/ngrx-router';
 import { AnalyticsService, EventType } from '../services/analytics.service';
 
 @Injectable()
@@ -21,6 +23,7 @@ export class NavEffects {
   constructor(
     private update$: Actions,
     private analyticsService: AnalyticsService,
+    private titleService: Title,
   ) {}
 
   @Effect({ dispatch: false })
@@ -31,6 +34,15 @@ export class NavEffects {
         EventType.NavigationEvent,
         action.payload.event.url,
       );
+    }),
+  );
+
+  @Effect({ dispatch: false })
+  updateTitle$ = this.update$.pipe(
+    ofType('[router] navigation'),
+    tap((action: RouterNavigation) => {
+      const title = action.payload.data.title;
+      this.titleService.setTitle(title);
     }),
   );
 }

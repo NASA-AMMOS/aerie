@@ -1,30 +1,35 @@
 <div id="sequencing-toolbar">
   <h3 id="sequencing-filename">{{ filename }}</h3>
-  <button mat-raised-button (click)="undo()">
-    <mat-icon aria-label="undo">undo</mat-icon> Undo
+  <button mat-raised-button (click)="undo()" matTooltip="Undo">
+    <mat-icon aria-label="undo">undo</mat-icon>
   </button>
-  <button mat-raised-button (click)="redo()">
-    <mat-icon aria-label="redo">redo</mat-icon> Redo
+  <button mat-raised-button (click)="redo()" matTooltip="Redo">
+    <mat-icon aria-label="redo">redo</mat-icon>
   </button>
   <button
     mat-raised-button
     (click)="toggleAutocomplete()"
     [color]="autocomplete ? 'primary' : ''"
+    matTooltip="Toggle Autocomplete"
   >
     <mat-icon aria-label="autocomplete">text_rotation_none</mat-icon>
-    Autocomplete
   </button>
-  <button mat-raised-button (click)="toggleTheme()">
+  <button
+    mat-raised-button
+    (click)="toggleTheme()"
+    matTooltip="Toggle Color Scheme"
+  >
     <mat-icon aria-label="color_lens">color_lens</mat-icon>
-    {{ userTheme === 'dark' ? 'Toggle Light Theme' : 'Toggle Dark Theme' }}
   </button>
-  <button mat-raised-button (click)="toggleFullscreen()">
+  <button
+    mat-raised-button
+    (click)="toggleFullscreen()"
+    matTooltip="Enter Fullscreen Mode"
+  >
     <mat-icon aria-label="fullscreen">fullscreen</mat-icon>
-    Fullscreen
   </button>
-  <button mat-raised-button (click)="openHelpDialog.emit()">
+  <button mat-raised-button (click)="openHelpDialog.emit()" matTooltip="Help">
     <mat-icon aria-label="help">help</mat-icon>
-    Help
   </button>
 </div>
 
