@@ -120,6 +120,24 @@ echo "Building all maven modules from the root..."
 mvn -B -f pom.xml -s settings.xml install
 [ $? -ne 0 ] && error_exit "mvn install failed"
 
+# Build sequencing
+
+if echo "$changed" | grep --quiet "\(sequencing\|schemas\)"; then
+  printf "\nBuilding sequencing...\n\n"
+  cd sequencing
+
+  npm ci
+  [ $? -ne 0 ] && error_exit "npm ci failed"
+
+  npm run test
+  [ $? -ne 0 ] && error_exit "npm run test failed"
+
+  npm run build
+  [ $? -ne 0 ] && error_exit "npm run build failed"
+
+  cd $root
+fi
+
 # Build nest
 
 if echo "$changed" | grep --quiet "\(nest\|schemas\)"; then
