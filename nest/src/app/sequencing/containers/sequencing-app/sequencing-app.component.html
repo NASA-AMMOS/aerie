@@ -61,6 +61,7 @@
         [commands]="commands$ | async"
         [commandsByName]="commandsByName$ | async"
         (openHelpDialog)="onOpenEditorHelpDialog()"
+        id="command-filter-input"
       >
       </seq-editor>
     </main>
@@ -85,8 +86,22 @@
         >
         </seq-command-loader>
 
+        <mat-form-field
+          id="command-filter-input"
+          *ngIf="selectedDictionaryId$ | async"
+        >
+          <input
+            matInput
+            placeholder="Command Filter"
+            [(ngModel)]="commandFilterQuery"
+          />
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
         <seq-command-list
           [commands]="commands$ | async"
+          [commandsByName]="commandsByName$ | async"
+          [commandFilterQuery]="commandFilterQuery"
           (selectCommand)="onSelectCommand($event)"
         >
         </seq-command-list>

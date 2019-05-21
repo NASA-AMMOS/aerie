@@ -24,14 +24,15 @@
   width: 100%;
 }
 
-.row-right {
-  flex-grow: 2;
-  display: inline-flex;
-  justify-content: flex-end;
-}
-
 .state-label {
   padding-right: 10px;
-  padding-top: 7px;
+  padding-top: 4px;
   font-size: 10px;
+  flex: 1;
+
+  text-align: right;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  min-width: 8ch;
 }

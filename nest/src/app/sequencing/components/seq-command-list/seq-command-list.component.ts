@@ -12,9 +12,11 @@ import {
   Component,
   EventEmitter,
   Input,
+  OnChanges,
   Output,
+  SimpleChanges,
 } from '@angular/core';
-import { MpsCommand } from '../../../shared/models';
+import { MpsCommand, StringTMap } from '../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -22,14 +24,59 @@ import { MpsCommand } from '../../../shared/models';
   styleUrls: ['./seq-command-list.component.css'],
   templateUrl: './seq-command-list.component.html',
 })
-export class SeqCommandListComponent {
+export class SeqCommandListComponent implements OnChanges {
   @Input()
   commands: MpsCommand[] | null;
+
+  @Input()
+  commandsByName: StringTMap<MpsCommand> = {};
+
+  @Input()
+  commandFilterQuery: string;
 
   @Output()
   selectCommand: EventEmitter<string> = new EventEmitter<string>();
 
-  onSelectCommand(command: MpsCommand) {
+  sortedCommands: MpsCommand[] = [];
+  sortedAndFilteredCommands: MpsCommand[] = [];
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (this.commands && changes.commands) {
+      this.sortedCommands = this.commands.sort((a, b) => {
+        if (a.name < b.name) return -1;
+        if (a.name > b.name) return 1;
+        return 0;
+      });
+      this.sortedAndFilteredCommands = this.sortedCommands;
+    }
+
+    if (changes.commandFilterQuery) {
+      if (this.commandFilterQuery === '') {
+        this.sortedAndFilteredCommands = this.sortedCommands;
+      } else {
+        this.filteredCommands();
+      }
+    }
+  }
+
+  onSelectCommand(event: MouseEvent, command: MpsCommand) {
+    // Prevents the click event from propagating to the mat-expansion-panel so it doesn't open
+    // when the user clicks on the add command button
+    event.stopPropagation();
     this.selectCommand.emit(command.name);
+  }
+
+  /**
+   * Getter for the sorted and filtered commands
+   */
+  // TODO: Should debounce the filter if performance issues arise
+  filteredCommands() {
+    if (this.commandFilterQuery !== '') {
+      this.sortedAndFilteredCommands = this.sortedCommands.filter(command => {
+        return command.name.startsWith(this.commandFilterQuery);
+      });
+    } else {
+      this.sortedAndFilteredCommands = this.sortedCommands;
+    }
   }
 }

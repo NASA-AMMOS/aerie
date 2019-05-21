@@ -229,6 +229,48 @@ describe('/sequencing', () => {
     expect(page.rightPanel.isDisplayed()).toBe(true);
   });
 
+  it('[C137585] WHEN a user clicks on a command, an expansion panel SHOULD open up with more information', async () => {
+    browser.navigate().refresh();
+    selectMpsDictionary(page);
+    expect(page.firstCommand.isDisplayed()).toBe(true);
+    expect(page.firstCommandExpansion.getCssValue('height')).toBe('0px');
+    expect(page.firstCommandExpansion.getCssValue('visibility')).toBe('hidden');
+
+    page.firstCommand.click();
+    browser.wait(EC.visibilityOf(page.firstCommandExpansion), 5000);
+
+    const heightPx = await page.firstCommandExpansion.getCssValue('height');
+    const heightNum = Number(heightPx.split('px')[0]);
+    expect(heightNum).toBeGreaterThan(0);
+
+    expect(page.firstCommandExpansion.getCssValue('visibility')).toBe(
+      'visible',
+    );
+  });
+
+  it('[C137586] WHEN a user clicks on a command to expand it, they SHOULD be able to click it again to collapse it', async () => {
+    browser.navigate().refresh();
+    selectMpsDictionary(page);
+    expect(page.firstCommand.isDisplayed()).toBe(true);
+    expect(page.firstCommandExpansion.getCssValue('height')).toBe('0px');
+    expect(page.firstCommandExpansion.getCssValue('visibility')).toBe('hidden');
+
+    page.firstCommand.click();
+    browser.wait(EC.visibilityOf(page.firstCommandExpansion), 5000);
+
+    const heightPx = await page.firstCommandExpansion.getCssValue('height');
+    const heightNum = Number(heightPx.split('px')[0]);
+    expect(heightNum).toBeGreaterThan(0);
+
+    expect(page.firstCommandExpansion.getCssValue('visibility')).toBe(
+      'visible',
+    );
+
+    page.firstCommand.click();
+    browser.wait(EC.invisibilityOf(page.firstCommandExpansion), 5000);
+    expect(page.firstCommandExpansion.getCssValue('visibility')).toBe('hidden');
+  });
+
   afterEach(async () => {
     // Assert that there are no errors emitted from the browser
     const logs = await browser
