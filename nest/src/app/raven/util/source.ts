@@ -615,7 +615,7 @@ export function getFormattedSourceUrl(
             customGraphableSource.arg
           }=${filterArg}&`
         : `legend=${customFilter.label}&`;
-    sourceUrl = `${sourceUrl}&${queryOptions}`;
+    sourceUrl = `${sourceUrl}&${encodeURI(queryOptions)}`;
   }
 
   // If situAware, add query options.

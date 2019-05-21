@@ -126,7 +126,7 @@ describe('source.ts', () => {
           '',
         ),
       ).toEqual(
-        'https://a/b/c?format=TMS&legend=ips&filter=(command=[.*IPS.*])&',
+        'https://a/b/c?format=TMS&legend=ips&filter=(command=%5B.*IPS.*%5D)&',
       );
     });
 
@@ -159,7 +159,7 @@ describe('source.ts', () => {
           false,
         ),
       ).toEqual(
-        'https://a/b/c?format=CSV&legend=ips&filter=(command=[.*IPS.*])&',
+        'https://a/b/c?format=CSV&legend=ips&filter=(command=%5B.*IPS.*%5D)&',
       );
     });
 
@@ -174,7 +174,7 @@ describe('source.ts', () => {
           false,
         ),
       ).toEqual(
-        'https://a/b/c?format=JSON&legend=ips&filter=(command=[.*IPS.*])&',
+        'https://a/b/c?format=JSON&legend=ips&filter=(command=%5B.*IPS.*%5D)&',
       );
     });
 

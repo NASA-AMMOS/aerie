@@ -44,6 +44,14 @@ export class SequencingAppComponent implements OnDestroy {
   selectedDictionaryId$: Observable<string | null>;
 
   commandsByName: StringTMap<MpsCommand>;
+  commandFilterQuery = '';
+
+  // TODO: Move to reducer when implementing user config for app
+  panels = {
+    leftPanel: { size: 20, visible: true },
+    middlePanel: { size: 60, visible: true },
+    rightPanel: { size: 20, visible: true },
+  };
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -87,5 +95,27 @@ export class SequencingAppComponent implements OnDestroy {
 
   onSelectDictionary(selectedId: string): void {
     this.store.dispatch(new SelectCommandDictionary(selectedId));
+  }
+
+  dragEnd(event: { gutterNum: number; sizes: Array<number> }) {
+    const { sizes } = event;
+    this.panels.leftPanel.size = sizes[0];
+    this.panels.middlePanel.size = sizes[1];
+    this.panels.rightPanel.size = sizes[2];
+  }
+
+  togglePanelView(type: string) {
+    switch (type) {
+      case 'leftPanel':
+        this.panels.leftPanel.visible = !this.panels.leftPanel.visible;
+        break;
+      case 'rightPanel':
+        this.panels.rightPanel.visible = !this.panels.rightPanel.visible;
+        break;
+      default:
+        for (const panel in this.panels) {
+          this.panels[panel].visible = true;
+        }
+    }
   }
 }

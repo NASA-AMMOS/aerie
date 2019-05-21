@@ -79,7 +79,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   @ViewChild('editor')
   editorMount: ElementRef;
 
-  autocomplete = false;
+  autocomplete = true;
   fullscreen = false;
   userTheme = 'dark';
   tooltip: HTMLElement;
