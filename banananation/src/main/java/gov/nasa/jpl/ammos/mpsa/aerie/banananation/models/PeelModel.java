@@ -5,6 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.operations.AdaptationM
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.ResourcesContainer;
 import java.util.List;
+import spice.basic.CSPICE;
 
 public class PeelModel implements AdaptationModel {
 
@@ -12,6 +13,7 @@ public class PeelModel implements AdaptationModel {
   String direction = "";
 
   public void setup(List<Parameter> parameters) {
+    double speedOfLight = CSPICE.clight();
     for (Parameter p : parameters) {
       if (p.getName().equals("direction")) {
         direction = (String) p.getValue();
