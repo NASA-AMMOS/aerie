@@ -6,6 +6,41 @@
  * User has the responsibility to obtain export licenses, or other export authority as may be required
  * before exporting such information to foreign countries or providing access to foreign persons
  */
+::ng-deep .CodeMirror-tooltip {
+  position: absolute;
+  z-index: 5;
+  padding: 1.5em;
+  max-width: 400px;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  background: rgb(224, 224, 224);
+  color: #333;
+  border-radius: 1em;
+}
+
+::ng-deep .CodeMirror-tooltip h3 {
+  color: #ae4b00;
+  margin: 0;
+  margin-bottom: 1em;
+}
+
+::ng-deep .CodeMirror-tooltip h4 {
+  color: #6f818e;
+  margin: 0;
+  margin-bottom: 0.5em;
+}
+
+::ng-deep .CodeMirror-tooltip .parameter-help {
+  margin-left: 2em;
+}
+
+::ng-deep .CodeMirror-tooltip .parameter-name {
+  color: #ae4b00;
+}
+
+::ng-deep .CodeMirror-tooltip p:last-of-type {
+  margin-bottom: 0px;
+}
 
 :host,
 #sequencing-editor-mount {
