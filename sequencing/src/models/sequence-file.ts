@@ -9,25 +9,36 @@
 
 import * as t from 'io-ts';
 
-export const tSequenceFileCreateBody = t.strict({
-  content: t.string,
-  name: t.string,
-});
+export const tSequenceFileCreateBody = t.intersection([
+  t.type({
+    childIds: t.array(t.string),
+    content: t.string,
+    name: t.string,
+    type: t.string,
+  }),
+  t.partial({
+    id: t.string,
+  }),
+]);
 
 export const tSequenceFileUpdateBody = t.strict({
+  childIds: t.array(t.string),
   content: t.string,
   id: t.string,
   name: t.string,
   timeCreated: t.number,
   timeLastUpdated: t.number,
+  type: t.string,
 });
 
 export const tSequenceFile = t.strict({
+  childIds: t.array(t.string),
   content: t.string,
   id: t.string,
   name: t.string,
   timeCreated: t.number,
   timeLastUpdated: t.number,
+  type: t.string,
 });
 
 export type SequenceFile = t.TypeOf<typeof tSequenceFile>;

@@ -37,6 +37,7 @@ app.post(
   files.create,
 );
 app.get('/sequencing/files/:id', files.read);
+app.get('/sequencing/files/:id/children', files.readChildren);
 app.get('/sequencing/files', files.readAll);
 app.put(
   '/sequencing/files/:id',
