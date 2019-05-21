@@ -1,6 +1,6 @@
 # sequencing
 
-A service for managing sequences
+A service for managing sequences.
 
 ## Developing Locally
 
@@ -25,7 +25,7 @@ npm t
 ### Start Server
 
 ```bash
-npm start:local
+npm run start:local
 ```
 
 ### Watch & Reload on Changes
