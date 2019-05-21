@@ -8,6 +8,7 @@
  */
 
 import * as CodeMirror from 'codemirror';
+import { MpsCommandParameter } from '../../../../../../schemas';
 import { MpsCommand, StringTMap } from '../../../shared/models';
 import { CodeMirrorLintError } from '../../models';
 
@@ -95,33 +96,171 @@ export function verifyLine(
   line: string,
   lineNumber: number,
 ) {
-  const res: CodeMirrorLintError[] = [];
+  const lintMessages: CodeMirrorLintError[] = [];
   const tokens = line.split(' ');
-  const name = tokens[0];
+  const command = tokens[0];
   const parameters = tokens
     .slice(1, tokens.length)
     .filter(t => t !== '' && t !== ' ');
 
-  const validCommand = commandsByName.hasOwnProperty(name);
+  const commandDefinition = commandsByName[command];
   let commandParameters;
 
-  if (validCommand) {
+  if (commandDefinition) {
+    // If the command exists in the command dictionary
     const actualNumParams = parameters.length;
-    const expectedNumParams = commandsByName[name].parameters.length;
-    commandParameters = commandsByName[name].parameters;
+    const expectedNumParams = commandDefinition.parameters.length;
+    commandParameters = commandDefinition.parameters;
 
-    let message = '';
-    let hasArgError = false;
-
+    // Lint for correct number of parameters
     if (actualNumParams !== expectedNumParams) {
-      hasArgError = true;
-      message = `${name} received the wrong number of parameters. Expected ${expectedNumParams} parameters, got ${actualNumParams}.`;
+      let message = `${command} received the wrong number of parameters. Expected ${expectedNumParams} parameters, got ${actualNumParams}.`;
+      message = `${message} ${generateCommandHelp(
+        commandDefinition.parameters,
+      )}`;
+
+      lintMessages.push({
+        end: null,
+        level: 'error',
+        lineNumber,
+        message,
+        start: null,
+      });
     }
 
-    if (hasArgError) {
-      message = `${message}
+    // Check if parameters are within specified ranges
+  } else {
+    // If the command does not exist in the command dictionary
+    lintMessages.push({
+      end: null,
+      level: 'error',
+      lineNumber,
+      message: `${command} is not in the command dictionary.`,
+      start: null,
+    });
+  }
+
+  // Linting for whitespace at the end
+  if (tokens[tokens.length - 1] === '') {
+    lintMessages.push({
+      end: null,
+      level: 'warning',
+      lineNumber,
+      message: `${command} should not have any trailing whitespace.`,
+      start: null,
+    });
+  }
+
+  // Check if arguments are in range as defined in command dictionary
+  if (commandParameters) {
+    let curCharPos = command.length;
+
+    for (let i = 0, length = parameters.length; i < length; i++) {
+      const expectedParameter = commandParameters[i];
+      // Add 1 to pos to account for whitespace because we split based on whitespace
+      curCharPos += parameters[i].length + 1;
+
+      if (expectedParameter) {
+        // Linting for numerical types
+        if (
+          (expectedParameter.type === 'UNSIGNED_DECIMAL' ||
+            expectedParameter.type === 'SIGNED_DECIMAL' ||
+            expectedParameter.type === 'ENGINEERING' ||
+            expectedParameter.type === 'INTEGER' ||
+            expectedParameter.type === 'HEXADECIMAL' ||
+            expectedParameter.type === 'OCTAL' ||
+            expectedParameter.type === 'BINARY' ||
+            expectedParameter.type === 'FLOAT' ||
+            expectedParameter.type === 'DURATION' ||
+            expectedParameter.type === 'TIME') &&
+          expectedParameter.range
+        ) {
+          const [lowerBound, upperBound] = expectedParameter.range
+            .split('...')
+            .map(num => parseFloat(num));
+          const curParameter = parseFloat(parameters[i]);
+          const start = curCharPos - parameters[i].length;
+          const end = curCharPos;
+
+          // If the argument is out of range, push an error
+          if (!(curParameter >= lowerBound && curParameter <= upperBound)) {
+            lintMessages.push({
+              end,
+              level: 'error',
+              lineNumber,
+              message: `${command} is expecting an argument between ${lowerBound} and ${upperBound}, received ${curParameter}.
+            -----
+            ${expectedParameter.name}: ${expectedParameter.type} (${
+                expectedParameter.units
+              })
+            Description:\t ${expectedParameter.help}
+            Default:\t ${expectedParameter.defaultValue}
+            `,
+              start,
+            });
+          }
+        }
+
+        // Linting for booleans
+        if (expectedParameter.type === 'BOOLEAN') {
+          const curParameter = parameters[i];
+          if (curParameter !== 'TRUE' && curParameter !== 'FALSE') {
+            const start = curCharPos - parameters[i].length;
+            const end = curCharPos;
+
+            lintMessages.push({
+              end,
+              level: 'error',
+              lineNumber,
+              message: `${
+                expectedParameter.name
+              } is expecting TRUE or FALSE. Received ${curParameter}.\n---\n${
+                expectedParameter.help
+              }
+              `,
+              start,
+            });
+          }
+        }
+
+        // Linting for enums (called STRING in mps command dictionary)
+        if (expectedParameter.type === 'STRING') {
+          // Remove quotes around enum
+          const curParameter = parameters[i].substr(
+            1,
+            parameters[i].length - 2,
+          );
+          if (expectedParameter.range) {
+            const enums = expectedParameter.range
+              .split(',')
+              .map(e => e.substring(1, e.length - 1));
+
+            if (!enums.includes(curParameter)) {
+              const start = curCharPos - parameters[i].length;
+              const end = curCharPos;
+
+              lintMessages.push({
+                end,
+                level: 'error',
+                lineNumber,
+                message: `${
+                  expectedParameter.name
+                } is expecting enum: ${enums}. Received ${curParameter}`,
+                start,
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+  return lintMessages;
+}
+
+function generateCommandHelp(parameters: MpsCommandParameter[]) {
+  return `
       -----
-      ${commandsByName[name].parameters
+      ${parameters
         .map(p => {
           return `${p.name}: ${p.type} (${p.units})
           Description:\t ${p.help}
@@ -130,77 +269,4 @@ export function verifyLine(
         })
         .join('\n\n')}
       `;
-
-      res.push({
-        end: null,
-        level: 'error',
-        lineNumber,
-        message,
-        start: null,
-      });
-    }
-  } else {
-    res.push({
-      end: null,
-      level: 'error',
-      lineNumber,
-      message: `${name} is not in the command dictionary.`,
-      start: null,
-    });
-  }
-
-  if (tokens[tokens.length - 1] === '') {
-    res.push({
-      end: null,
-      level: 'warning',
-      lineNumber,
-      message: `${name} should not have any trailing whitespace.`,
-      start: null,
-    });
-  }
-
-  // Check if arguments are in range as defined in command dictionary
-  if (validCommand && commandParameters) {
-    let curCharPos = name.length;
-
-    for (let i = 0, length = parameters.length; i < length; i++) {
-      const curCommand = commandParameters[i];
-      // Add 1 to pos to account for whitespace because we split based on whitespace
-      curCharPos += parameters[i].length + 1;
-
-      if (
-        curCommand &&
-        (curCommand.type === 'UNSIGNED_DECIMAL' ||
-          curCommand.type === 'SIGNED_DECIMAL' ||
-          curCommand.type === 'ENGINEERING') &&
-        curCommand.range
-      ) {
-        const [lowerBound, upperBound] = curCommand.range
-          .split('...')
-          .map(num => parseFloat(num));
-        const curArgument = parseFloat(parameters[i]);
-
-        // If the argument is out of range, push an error
-        if (!(curArgument >= lowerBound && curArgument <= upperBound)) {
-          const start = curCharPos - parameters[i].length;
-          const end = curCharPos;
-
-          res.push({
-            end,
-            level: 'error',
-            lineNumber,
-            message: `${name} is expecting an argument between ${lowerBound} and ${upperBound}, received ${curArgument}.
-            -----
-            ${curCommand.name}: ${curCommand.type} (${curCommand.units})
-            Description:\t ${curCommand.help}
-            Default:\t ${curCommand.defaultValue}
-            `,
-            start,
-          });
-        }
-      }
-    }
-  }
-
-  return res;
 }
