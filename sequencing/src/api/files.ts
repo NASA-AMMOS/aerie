@@ -20,7 +20,7 @@ export async function create(req: Request, res: Response): Promise<void> {
     const id = v4();
     const newFile: SequenceFile = {
       ...req.body,
-      id,
+      id: req.body.id || id,
       timeCreated: currentUnixTime,
       timeLastUpdated: currentUnixTime,
     };
@@ -36,10 +36,10 @@ export async function create(req: Request, res: Response): Promise<void> {
   }
 }
 
-export async function readAll(_: Request, res: Response): Promise<void> {
+export async function readAll(req: Request, res: Response): Promise<void> {
   try {
     const collection = getCollection<SequenceFile>('sequencing', 'files');
-    const result = await findToArray<SequenceFile>(collection);
+    const result = await findToArray<SequenceFile>(collection, req.query);
     const files = result.map(file => omit(file, '_id')) as SequenceFile[];
     logger.info(JSON.stringify(files));
     res.send(files);
@@ -59,6 +59,30 @@ export async function read(req: Request, res: Response): Promise<void> {
       const file = omit(result, '_id') as SequenceFile;
       logger.info(JSON.stringify(file));
       res.send(file);
+    } else {
+      const message = `File With ID ${id} Not Found`;
+      logger.info(message);
+      res.status(404).send({ message });
+    }
+  } catch (e) {
+    logger.error(e.message);
+    res.status(500).send(e);
+  }
+}
+
+export async function readChildren(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const collection = getCollection<SequenceFile>('sequencing', 'files');
+    const file = await findOne<SequenceFile>(collection, { id });
+
+    if (file) {
+      const children = await findToArray<SequenceFile>(collection, {
+        id: { $in: file.childIds },
+      });
+      const files = children.map(child => omit(child, '_id')) as SequenceFile[];
+      logger.info(JSON.stringify(files));
+      res.send(files);
     } else {
       const message = `File With ID ${id} Not Found`;
       logger.info(message);

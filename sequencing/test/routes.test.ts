@@ -51,13 +51,14 @@ describe('routes', () => {
       const getCollection = sinon.stub(db, 'getCollection').throws();
       await request(app)
         .post('/sequencing/files')
-        .send(mocks.sequenceFile)
+        .send(mocks.file0)
         .expect(500);
       getCollection.restore();
     });
 
     it('should return a 500 when the POST body is not the proper schema', async () => {
       const badPostBody = {
+        content: 'stuff',
         name: 'Sequence_0',
       };
 
@@ -67,19 +68,47 @@ describe('routes', () => {
         .expect(500);
     });
 
-    it('should return 200 with the new sequence file that was added', async () => {
+    it('should return a 500 when the POST body just provides an id', async () => {
+      const badPostBody = {
+        id: 'foo',
+      };
+
       await request(app)
         .post('/sequencing/files')
-        .send(mocks.sequenceFile)
+        .send(badPostBody)
+        .expect(500);
+    });
+
+    it('should return 200 with the new sequence file that was added with a custom id', async () => {
+      await request(app)
+        .post('/sequencing/files')
+        .send(mocks.file0)
         .expect(200)
         .expect(res => {
           // These fields are created in the service.
           // Make sure they match our mock here.
-          res.body.id = mocks.sequenceFile.id;
-          res.body.timeCreated = mocks.sequenceFile.timeCreated;
-          res.body.timeLastUpdated = mocks.sequenceFile.timeLastUpdated;
+          res.body.timeCreated = mocks.file0.timeCreated;
+          res.body.timeLastUpdated = mocks.file0.timeLastUpdated;
         })
-        .expect(mocks.sequenceFile);
+        .expect(mocks.file0);
+    });
+
+    it('should return 200 with the new sequence file that was added with a generated id', async () => {
+      const file = { ...mocks.file0 };
+      delete file.id;
+
+      await request(app)
+        .post('/sequencing/files')
+        .send(file)
+        .expect(200)
+        .expect(res => {
+          // These fields are created in the service.
+          // Make sure they match our mock here.
+          res.body.id = mocks.file0.id;
+          res.body.timeCreated = mocks.file0.timeCreated;
+          res.body.timeLastUpdated = mocks.file0.timeLastUpdated;
+        })
+        .expect(mocks.file0);
     });
   });
 
@@ -106,7 +135,7 @@ describe('routes', () => {
       before(async () => {
         // Setup so we have a file in the database.
         const collection = db.getCollection('sequencing', 'files');
-        const { ops } = await collection.insertOne(mocks.sequenceFile);
+        const { ops } = await collection.insertOne({ ...mocks.file0 });
         sequenceFile = omit(ops.pop(), '_id') as SequenceFile;
       });
 
@@ -122,6 +151,47 @@ describe('routes', () => {
           .get(`/sequencing/files/${id}`)
           .expect(200)
           .expect(sequenceFile);
+      });
+    });
+  });
+
+  describe('GET /sequencing/files/:id/children', () => {
+    it('should return 500 when getCollection throws', async () => {
+      const getCollection = sinon.stub(db, 'getCollection').throws();
+      await request(app)
+        .get('/sequencing/files/1/children')
+        .expect(500);
+      getCollection.restore();
+    });
+
+    it('should return a 404 with a status message when the file with the given id is not found', async () => {
+      const id = '42';
+      await request(app)
+        .get(`/sequencing/files/${id}/children`)
+        .expect(404)
+        .expect({ message: `File With ID ${id} Not Found` });
+    });
+
+    describe('get a files children by id', () => {
+      before(async () => {
+        // Setup so we have a file in the database.
+        const collection = db.getCollection('sequencing', 'files');
+        const files = mocks.getFiles();
+        await collection.insertMany(files);
+      });
+
+      after(async () => {
+        // Delete all files after this test suite.
+        const collection = db.getCollection('sequencing', 'files');
+        await collection.deleteMany({});
+      });
+
+      it('should return a 200 and the files children when the given file id is found', async () => {
+        const id = 'root';
+        await request(app)
+          .get(`/sequencing/files/${id}/children`)
+          .expect(200)
+          .expect([{ ...mocks.file0 }, { ...mocks.file1 }]);
       });
     });
   });
@@ -149,33 +219,42 @@ describe('routes', () => {
         .expect(200, []);
     });
 
-    it('should return a 200 with an array of sequence files when the files collection is non-empty', async () => {
-      const findToArray = sinon
-        .stub(db, 'findToArray')
-        .returns(new Promise(resolve => resolve(mocks.sequenceFiles)));
-      await request(app)
-        .get('/sequencing/files')
-        .expect(200, mocks.sequenceFiles);
-      findToArray.restore();
+    describe('get files when collection is non-empty', () => {
+      before(async () => {
+        // Setup so we have a file in the database.
+        const collection = db.getCollection('sequencing', 'files');
+        const files = mocks.getFiles();
+        await collection.insertMany(files);
+      });
+
+      after(async () => {
+        // Delete all files after this test suite.
+        const collection = db.getCollection('sequencing', 'files');
+        await collection.deleteMany({});
+      });
+
+      it('should return a 200 with an array of sequence files', async () => {
+        await request(app)
+          .get('/sequencing/files')
+          .expect(200, mocks.files);
+      });
+
+      it('should return a 200 with an array of a single sequence file based on a query string', async () => {
+        await request(app)
+          .get(`/sequencing/files?id=${mocks.files[0].id}`)
+          .expect(200, [mocks.files[0]]);
+      });
     });
   });
 
   describe('PUT /sequencing/files/:id', () => {
-    it('should return 500 when getCollection throws', async () => {
-      const getCollection = sinon.stub(db, 'getCollection').throws();
-      await request(app)
-        .put('/sequencing/files/1')
-        .expect(500);
-      getCollection.restore();
-    });
-
     describe('update a single file by id', () => {
       let sequenceFile: SequenceFile;
 
       before(async () => {
         // Setup so we have a file in the database.
         const collection = db.getCollection('sequencing', 'files');
-        const { ops } = await collection.insertOne(mocks.sequenceFile);
+        const { ops } = await collection.insertOne({ ...mocks.file0 });
         sequenceFile = omit(ops.pop(), '_id') as SequenceFile;
       });
 
@@ -183,6 +262,21 @@ describe('routes', () => {
         // Delete all files after this test suite.
         const collection = db.getCollection('sequencing', 'files');
         await collection.deleteMany({});
+      });
+
+      it('should return 500 when getCollection throws when sending a valid body', async () => {
+        const getCollection = sinon.stub(db, 'getCollection').throws();
+        await request(app)
+          .put('/sequencing/files/1')
+          .send({ ...sequenceFile })
+          .expect(500);
+        getCollection.restore();
+      });
+
+      it('should return 500 when sending an empty body', async () => {
+        await request(app)
+          .put('/sequencing/files/1')
+          .expect(500);
       });
 
       it('should return a 500 when the PUT body is not the proper schema', async () => {
@@ -241,7 +335,7 @@ describe('routes', () => {
       before(async () => {
         // Setup so we have a file in the database.
         const collection = db.getCollection('sequencing', 'files');
-        const { ops } = await collection.insertOne(mocks.sequenceFile);
+        const { ops } = await collection.insertOne({ ...mocks.file0 });
         sequenceFile = omit(ops.pop(), '_id') as SequenceFile;
       });
 
