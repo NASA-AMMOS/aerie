@@ -7,7 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { MpsCommand, StringTMap } from '../../../shared/models';
+import {
+  MpsCommand,
+  MpsCommandParameter,
+  StringTMap,
+} from '../../../shared/models';
 
 /**
  * Returns a template for an mps command used in autocomplete.
@@ -28,4 +32,75 @@ export function getCommandTemplate(
   }
 
   return template;
+}
+
+/**
+ * Returns a template of the parameters for a mps command
+ */
+export function getCommandParameterHelpTemplate(
+  commandName: string,
+  commandsByName: StringTMap<MpsCommand>,
+): string {
+  const command = commandsByName[commandName];
+
+  if (command) {
+    return `
+      <h3>${commandName}</h3>
+      ${command.parameters.length > 0 ? '<h4>Parameters</h4>' : 'No Parameters'}
+      ${command.parameters
+        .map(p => {
+          return `<p class="parameter-help"><strong class="parameter-name">${
+            p.name
+          }</strong>: ${p.help}</p>`;
+        })
+        .join(' ')}
+    `;
+  }
+
+  return '';
+}
+
+/**
+ * Returns the tooltip template for hovering over a parameter
+ * @param commandName The command we are looking up a parameter for
+ * @param parameterName The parameter we are looking up
+ * @param lineTokens The CodeMirror line that the user is hovering over
+ * @param commandsByName The dictionary of commands
+ */
+export function getCommandParameterDescriptionTemplate(
+  commandName: string,
+  parameterName: string,
+  lineTokens: CodeMirror.Token[],
+  commandsByName: StringTMap<MpsCommand>,
+) {
+  const commandObject = commandsByName[commandName];
+
+  // Remove the whitespace tokens
+  const filteredLineTokens = lineTokens.filter(t => t.string !== ' ');
+
+  // Find the parameter object that matches the one we're looking up
+  const parameterIndex = filteredLineTokens.findIndex(
+    t => t.string === parameterName,
+  );
+
+  if (parameterIndex !== -1) {
+    const targetParameter = commandObject.parameters[parameterIndex];
+
+    return getParameterTooltip(targetParameter);
+  }
+  return '';
+}
+
+/**
+ * Generates the tooltip content for a provided parameter
+ */
+export function getParameterTooltip(parameterObject: MpsCommandParameter) {
+  return `
+    <h3>${parameterObject.name}</h3>
+    <p>${parameterObject.help}</p>
+    <p>Range: ${parameterObject.range}</p>
+    <p>Type: ${parameterObject.type}</p>
+    <p>Units: ${parameterObject.units}</p>
+    <p>Default Value: ${parameterObject.defaultValue}</p>
+  `;
 }
