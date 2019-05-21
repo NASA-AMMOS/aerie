@@ -51,9 +51,9 @@
       <version>3.0.2</version>
     </dependency>
     <dependency>
-      <groupId>gov.nasa.jpl.mgss.mpsa.seq</groupId>
-      <artifactId>JNISpice</artifactId>
-      <version>1.0-20180716.173405-1</version>
+        <groupId>gov.nasa.jpl.ammos.mpsa</groupId>
+        <artifactId>JNISpice</artifactId>
+        <version>1.0-20190517.205223-2</version>
     </dependency>
     <dependency>
       <groupId>com.sun.jersey</groupId>
