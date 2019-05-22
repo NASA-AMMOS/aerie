@@ -13,9 +13,9 @@ import dotenv from 'dotenv';
 import express from 'express';
 import morgan from 'morgan';
 import * as files from './api/files';
-import { tSequenceFileCreateBody, tSequenceFileUpdateBody } from './models';
-import { validateWithCodecs } from './util/io';
+import { gSequenceFileCreateBody, gSequenceFileUpdateBody } from './models';
 import { WinstonStream } from './util/logger';
+import { validateWithGuards } from './util/validators';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 const morganFormat = (process.env.MORGAN_FORMAT as string) || 'tiny';
@@ -33,7 +33,7 @@ app.use(cors({ origin: true }));
 // Routes.
 app.post(
   '/sequencing/files',
-  validateWithCodecs({ body: tSequenceFileCreateBody }),
+  validateWithGuards({ body: gSequenceFileCreateBody }),
   files.create,
 );
 app.get('/sequencing/files/:id', files.read);
@@ -41,7 +41,7 @@ app.get('/sequencing/files/:id/children', files.readChildren);
 app.get('/sequencing/files', files.readAll);
 app.put(
   '/sequencing/files/:id',
-  validateWithCodecs({ body: tSequenceFileUpdateBody }),
+  validateWithGuards({ body: gSequenceFileUpdateBody }),
   files.update,
 );
 app.delete('/sequencing/files/:id', files.remove);

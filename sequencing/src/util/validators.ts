@@ -7,9 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import * as d from 'decoders';
 import { Request, Response } from 'express';
-import * as t from 'io-ts';
-import { PathReporter } from 'io-ts/lib/PathReporter';
 import logger from './logger';
 
 type ExpressMiddleware = (
@@ -18,25 +17,22 @@ type ExpressMiddleware = (
   next: () => void,
 ) => void;
 
-interface Codecs {
-  body?: t.Any;
-  response?: t.Any;
+interface Guards {
+  body?: d.Guard<any>;
+  response?: d.Guard<any>;
 }
 
-export function validateWithCodecs(codecs: Codecs): ExpressMiddleware {
+export function validateWithGuards(guards: Guards): ExpressMiddleware {
   return (req: Request, res: Response, next: () => void): void => {
-    if (codecs.body) {
-      const bodyCodec = codecs.body;
-      const decoded = bodyCodec.decode(req.body);
+    if (guards.body) {
+      const bodyGuard = guards.body;
 
-      if (decoded.isRight()) {
-        req.body = decoded.value;
+      try {
+        const decoded = bodyGuard(req.body);
+        req.body = decoded;
         next();
-      } else {
-        const report = PathReporter.report(decoded);
-        const reportMessage = report.length ? report[0] : 'UnknownError';
-        const body = JSON.stringify(req.body);
-        const message = `Request body validation failed for ${body}: ${reportMessage}`;
+      } catch (e) {
+        const message = `Request body validation failed: ${e.message}`;
         logger.log({ message, level: 'error' });
         res.status(500).send(message);
       }

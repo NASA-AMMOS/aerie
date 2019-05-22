@@ -25,10 +25,10 @@
   "dependencies": {
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
+    "decoders": "^1.13.1",
     "dotenv": "^8.0.0",
     "errorhandler": "^1.5.1",
     "express": "^4.16.4",
-    "io-ts": "^1.8.6",
     "ip": "^1.1.5",
     "lodash": "^4.17.11",
     "mongodb": "^3.2.4",

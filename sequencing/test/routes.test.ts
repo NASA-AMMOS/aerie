@@ -14,7 +14,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import sinon from 'sinon';
 import request from 'supertest';
 import app from '../src/app';
-import { SequenceFile } from '../src/models';
+import { SequenceFile, SequenceFileCreateBody } from '../src/models';
 import * as db from '../src/util/db';
 import * as mocks from './mocks';
 
@@ -48,18 +48,42 @@ describe('routes', () => {
     });
 
     it('should return 500 when getCollection throws', async () => {
+      const newFile: SequenceFileCreateBody = {
+        childIds: ['someChildId'],
+        content: 'UNSET 0;',
+        id: '123456789',
+        name: 'seq_42',
+        type: 'file',
+      };
+
       const getCollection = sinon.stub(db, 'getCollection').throws();
       await request(app)
         .post('/sequencing/files')
-        .send(mocks.file0)
+        .send(newFile)
         .expect(500);
       getCollection.restore();
     });
 
-    it('should return a 500 when the POST body is not the proper schema', async () => {
+    it('should return a 500 when the POST body has too few keys', async () => {
       const badPostBody = {
         content: 'stuff',
         name: 'Sequence_0',
+      };
+
+      await request(app)
+        .post('/sequencing/files')
+        .send(badPostBody)
+        .expect(500);
+    });
+
+    it('should return a 500 when the POST body has too many keys', async () => {
+      const badPostBody = {
+        childIds: [],
+        content: 'SCAN 0;',
+        id: 'abc',
+        name: 'seq_22',
+        someBadExtraKey: 'abc123',
+        type: 'file',
       };
 
       await request(app)
@@ -80,35 +104,48 @@ describe('routes', () => {
     });
 
     it('should return 200 with the new sequence file that was added with a custom id', async () => {
-      await request(app)
+      const newFile = {
+        childIds: ['someChildId'],
+        content: 'SET 0;',
+        id: '42',
+        name: 'seq_0',
+        type: 'file',
+      };
+
+      const { body } = await request(app)
         .post('/sequencing/files')
-        .send(mocks.file0)
-        .expect(200)
-        .expect(res => {
-          // These fields are created in the service.
-          // Make sure they match our mock here.
-          res.body.timeCreated = mocks.file0.timeCreated;
-          res.body.timeLastUpdated = mocks.file0.timeLastUpdated;
-        })
-        .expect(mocks.file0);
+        .send(newFile)
+        .expect(200);
+
+      assert.deepStrictEqual(body.childIds, newFile.childIds);
+      assert.deepStrictEqual(body.content, newFile.content);
+      assert.deepStrictEqual(body.id, newFile.id);
+      assert.deepStrictEqual(body.name, newFile.name);
+      assert.notStrictEqual(body.timeCreated, undefined);
+      assert.notStrictEqual(body.timeLastUpdated, undefined);
+      assert.deepStrictEqual(body.type, newFile.type);
     });
 
     it('should return 200 with the new sequence file that was added with a generated id', async () => {
-      const file = { ...mocks.file0 };
-      delete file.id;
+      const newFile = {
+        childIds: ['someChildId'],
+        content: 'SET 1;',
+        name: 'seq_1',
+        type: 'file',
+      };
 
-      await request(app)
+      const { body } = await request(app)
         .post('/sequencing/files')
-        .send(file)
-        .expect(200)
-        .expect(res => {
-          // These fields are created in the service.
-          // Make sure they match our mock here.
-          res.body.id = mocks.file0.id;
-          res.body.timeCreated = mocks.file0.timeCreated;
-          res.body.timeLastUpdated = mocks.file0.timeLastUpdated;
-        })
-        .expect(mocks.file0);
+        .send(newFile)
+        .expect(200);
+
+      assert.deepStrictEqual(body.childIds, newFile.childIds);
+      assert.deepStrictEqual(body.content, newFile.content);
+      assert.notStrictEqual(body.id, undefined);
+      assert.deepStrictEqual(body.name, newFile.name);
+      assert.notStrictEqual(body.timeCreated, undefined);
+      assert.notStrictEqual(body.timeLastUpdated, undefined);
+      assert.deepStrictEqual(body.type, newFile.type);
     });
   });
 
@@ -279,13 +316,26 @@ describe('routes', () => {
           .expect(500);
       });
 
-      it('should return a 500 when the PUT body is not the proper schema', async () => {
+      it('should return a 500 when the PUT body has too few keys', async () => {
         const id = sequenceFile.id;
         const newName = 'rocket';
 
         const badPutBody = {
           id,
           name: newName,
+        };
+
+        await request(app)
+          .put(`/sequencing/files/${id}`)
+          .send(badPutBody)
+          .expect(500);
+      });
+
+      it('should return a 500 when the PUT body has too many keys', async () => {
+        const id = sequenceFile.id;
+        const badPutBody = {
+          ...sequenceFile,
+          someBadExtraKey: '123abc',
         };
 
         await request(app)

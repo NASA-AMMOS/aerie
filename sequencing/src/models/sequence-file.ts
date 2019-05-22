@@ -7,39 +7,44 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import * as t from 'io-ts';
+import * as d from 'decoders';
 
-export const tSequenceFile = t.strict({
-  childIds: t.array(t.string),
-  content: t.string,
-  id: t.string,
-  name: t.string,
-  timeCreated: t.number,
-  timeLastUpdated: t.number,
-  type: t.string,
+export const dSequenceFile = d.exact({
+  childIds: d.array(d.string),
+  content: d.string,
+  id: d.string,
+  name: d.string,
+  timeCreated: d.number,
+  timeLastUpdated: d.number,
+  type: d.string,
 });
 
-export const tSequenceFileCreateBody = t.intersection([
-  t.type({
-    childIds: t.array(t.string),
-    content: t.string,
-    name: t.string,
-    type: t.string,
-  }),
-  t.partial({
-    id: t.string,
-  }),
-]);
-
-export const tSequenceFileUpdateBody = t.strict({
-  childIds: t.array(t.string),
-  content: t.string,
-  id: t.string,
-  name: t.string,
-  timeCreated: t.number,
-  timeLastUpdated: t.number,
-  type: t.string,
+export const dSequenceFileCreateBody = d.exact({
+  childIds: d.array(d.string),
+  content: d.string,
+  id: d.optional(d.string),
+  name: d.string,
+  type: d.string,
 });
 
-export type SequenceFile = t.TypeOf<typeof tSequenceFile>;
-export type SequenceFileCreateBody = t.TypeOf<typeof tSequenceFileCreateBody>;
+export const dSequenceFileUpdateBody = d.exact({
+  childIds: d.array(d.string),
+  content: d.string,
+  id: d.string,
+  name: d.string,
+  timeCreated: d.number,
+  timeLastUpdated: d.number,
+  type: d.string,
+});
+
+export const gSequenceFile = d.guard(dSequenceFile);
+export const gSequenceFileCreateBody = d.guard(dSequenceFileCreateBody);
+export const gSequenceFileUpdateBody = d.guard(dSequenceFileUpdateBody);
+
+export type SequenceFile = d.$DecoderType<typeof dSequenceFile>;
+export type SequenceFileCreateBody = d.$DecoderType<
+  typeof dSequenceFileCreateBody
+>;
+export type SequenceFileUpdateBody = d.$DecoderType<
+  typeof dSequenceFileUpdateBody
+>;
