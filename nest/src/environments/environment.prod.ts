@@ -12,4 +12,5 @@ export const environment = {
   baseUrl: 'https://leucadia.jpl.nasa.gov:9443',
   planServiceBaseUrl: 'http://localhost:27183/api',
   production: true,
+  sequencingServiceBaseUrl: 'http://localhost:27186/sequencing',
 };

@@ -17,4 +17,5 @@ export const environment = {
     window.location.port,
   planServiceBaseUrl: 'http://localhost:27183/api',
   production: true,
+  sequencingServiceBaseUrl: 'http://localhost:27186/sequencing',
 };

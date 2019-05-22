@@ -7,11 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export const environment = {
-  adaptationServiceBaseUrl: 'http://localhost:27182/api',
-  baseUrl: 'https://leucadia.jpl.nasa.gov:9443',
-  // baseUrl: 'https://localhost:8443',
-  planServiceBaseUrl: 'http://localhost:27183/api',
-  production: false,
-  sequencingServiceBaseUrl: 'http://localhost:27186/sequencing',
-};
+import { Observable } from 'rxjs';
+import { SequenceFile } from '../../../../../sequencing/src/models';
+
+export interface SequencingServiceInterface {
+  readChildren(baseUrl: string, fileId: string): Observable<SequenceFile[]>;
+}

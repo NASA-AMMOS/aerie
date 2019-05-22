@@ -29,4 +29,4 @@
 /build/
 
 ### VS Code ###
-.vscode/
+.vscode/settings.json

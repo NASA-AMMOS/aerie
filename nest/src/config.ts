@@ -20,6 +20,7 @@ export interface ConfigState {
     packageJsonVersion: string;
     planServiceBaseUrl: string;
     production: boolean;
+    sequencingServiceBaseUrl: string;
     version: string;
   };
   appModules: NestModule[];
@@ -50,6 +51,7 @@ export const config: ConfigState = {
     packageJsonVersion: version.packageJsonVersion,
     planServiceBaseUrl: environment.planServiceBaseUrl,
     production: environment.production,
+    sequencingServiceBaseUrl: environment.sequencingServiceBaseUrl,
     version: version.version,
   },
   appModules: [
