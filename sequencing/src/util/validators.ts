@@ -17,25 +17,18 @@ type ExpressMiddleware = (
   next: () => void,
 ) => void;
 
-interface Guards {
-  body?: d.Guard<any>;
-  response?: d.Guard<any>;
-}
-
-export function validateWithGuards(guards: Guards): ExpressMiddleware {
+export function validateRequestBody<T>(
+  bodyGuard: d.Guard<T>,
+): ExpressMiddleware {
   return (req: Request, res: Response, next: () => void): void => {
-    if (guards.body) {
-      const bodyGuard = guards.body;
-
-      try {
-        const decoded = bodyGuard(req.body);
-        req.body = decoded;
-        next();
-      } catch (e) {
-        const message = `Request body validation failed: ${e.message}`;
-        logger.log({ message, level: 'error' });
-        res.status(500).send(message);
-      }
+    try {
+      const decoded = bodyGuard(req.body);
+      req.body = decoded;
+      next();
+    } catch (e) {
+      const message = `Request body validation failed: ${e.message}`;
+      logger.log({ message, level: 'error' });
+      res.status(500).send(message);
     }
   };
 }
