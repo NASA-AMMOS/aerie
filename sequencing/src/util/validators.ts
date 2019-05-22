@@ -17,12 +17,10 @@ type ExpressMiddleware = (
   next: () => void,
 ) => void;
 
-export function validateRequestBody<T>(
-  bodyGuard: d.Guard<T>,
-): ExpressMiddleware {
+export function validateRequestBody<T>(guard: d.Guard<T>): ExpressMiddleware {
   return (req: Request, res: Response, next: () => void): void => {
     try {
-      const decoded = bodyGuard(req.body);
+      const decoded = guard(req.body);
       req.body = decoded;
       next();
     } catch (e) {
