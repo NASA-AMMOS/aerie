@@ -122,7 +122,7 @@ mvn -B -f pom.xml -s settings.xml install
 
 # Build sequencing
 
-if echo "$changed" | grep --quiet "\(sequencing\|schemas\)"; then
+if echo "$changed" | grep --quiet "\(nest|sequencing\|schemas\)"; then
   printf "\nBuilding sequencing...\n\n"
   cd sequencing
 
