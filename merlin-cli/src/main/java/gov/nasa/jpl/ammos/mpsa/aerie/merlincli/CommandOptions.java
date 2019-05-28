@@ -1,71 +1,89 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.UpdatePlanCommand;
-import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstance;
-import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstanceParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.NewActivityCommand;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.ActivityInstanceArray;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidTokenException;
 import org.apache.commons.cli.*;
-import org.apache.commons.lang3.time.StopWatch;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
+@Service
 public class CommandOptions {
 
+    @Bean
+    public RestTemplate restTemplate() {
+        return new MerlinRestTemplate();
+    }
+
+    @Autowired
+    RestTemplate restTemplate;
+
     private Options options = new Options();
+    private OptionGroup planGroup = new OptionGroup();
     private String[] args = null;
     private String planId;
     private Command command;
+    private boolean lastCommandStatus;
+
+    // Empty constructor for use by Spring
+    public CommandOptions() {}
 
     public CommandOptions(String[] args) {
+        
+        // For the tests, RestTemplate is autowired
+        // but for actual use we don't use Spring
+        // so we need to instantiate it
+        if (restTemplate == null)
+            restTemplate = new MerlinRestTemplate();
+
+        consumeArgs(args);
+    }
+
+    public CommandOptions consumeArgs(String[] args) {
         this.args = args;
 
         Option addActivity   = Option.builder("a")
                 .longOpt("add-activity")
                 .argName("parameters")
                 .hasArgs()
-                .desc("Add activity to the plan passing the name and the parameters to be used. Mutually exclusive with -u")
+                .desc("Add activity to the plan passing the name and the parameters to be used.")
                 .build();
 
-        Option setPlan   = Option.builder("p")
-                .longOpt("plan-id")
-                .argName("id")
-                .hasArg()
-                .required()
-                .desc("Specify the plan Id to use")
-                .build();
-
-        Option replacePlan = Option.builder("u")
-                .longOpt("update")
-                .argName("file")
+        Option updateActivityOption = Option.builder("updact")
+                .longOpt("update-activity")
                 .hasArgs()
-                .desc("Set the plan contents based on an adaptationId, start time, end time and plan file. Mutually exclusive with -a")
+                .desc("Update an activity from a plan")
                 .build();
 
-        options.addOption(addActivity);
-        options.addOption("d", "decompose", true, "Run decomposition for activity again");
-        options.addOption("e", "edit-activity", true, "Pass the activity to edit");
-        options.addOption("f", "final-condition", false, "Generate final state of the system. Returns the ID of the recorded state");
-        options.addOption("h", "help", false, "show help.");
-        options.addOption("i", "init-condition", true, "Set initial state of the system, the argument is the ID of the state");
-        options.addOption("k", "load-kernels", true, "List of paths for Kernels to use");
-        options.addOption("m", "move-activity", true, "Where to move the activity");
-        options.addOption(setPlan);
-        options.addOption(replacePlan);
-        options.addOption("P", "create-plan", true, "Add a new plan passing the name, adaptation to use and the version");
-        options.addOption("q", "sequence", true, "Extracts and stores the start/end times for writing sequences.");
-        options.addOption("r", "remodel", true, "Run simulation for the plan");
-        options.addOption("s", "schedule", true, "Generate schedule of the plan");
-        options.addOption("S", "severe-activity", true, "Severe an activity");
-        options.addOption("w", "write", true, "Generate a product");
-        options.addOption("x", "set-parameter", true, "Set parameter for activity instance");
+        Option updatePlanOption = Option.builder("u")
+                .longOpt("update-plan")
+                .hasArgs()
+                .desc("Update the plan metadata")
+                .build();
 
+        options.addOption("p", "plan-id", true, "Specify the plan ID to use");
+
+        // Being in a group makes options mutually exclusive
+        planGroup.addOption(new Option("P", "create-plan", true, "Add a new plan passing the name of a PlanDetail JSON"));
+        planGroup.addOption(new Option("D", "delete-plan",false, "Delete a plan."));
+        planGroup.addOption(new Option("U", "update-plan-from-file", true, "Update plan based on values in plan file"));
+        planGroup.addOption(updatePlanOption);
+        planGroup.addOption(new Option("pull", "download-plan", true, "Download a plan into a file"));
+        planGroup.addOption(new Option("naf", "new-activity-file", true,"Create a new activity instance from a json"));
+        planGroup.addOption(new Option("dispact", "display-activity", true, "Display an activity from a plan"));
+        planGroup.addOption(updateActivityOption);
+        planGroup.addOption(new Option("delact", "delete-activity", true, "Delete an activity from a plan"));
+
+        options.addOptionGroup(planGroup);
+
+        return this;
     }
 
     public void parse() {
@@ -81,40 +99,70 @@ public class CommandOptions {
                 return;
             }
 
-            // WE MUST RECEIVE A PLAN ID, OTHERWISE WE DON'T KNOW WHAT TO DO WITH ACTIVITIES
-            if (cmd.hasOption("p")) {
-                System.out.println("Specifying plan -p=" + cmd.getOptionValue("p"));
-                this.planId = cmd.getOptionValue("p");
-            }
-
-            if (cmd.hasOption("a") && cmd.hasOption("u")) {
-                System.err.println("Options -a and -u both specified but only one allowed.");
-                printUsage();
-                return;
-            }
-
-            if (cmd.hasOption("a")) {
-                addActivity(cmd.getOptionValues("a"));
-            } else if (cmd.hasOption("u")) {
-                String[] opts = cmd.getOptionValues("u");
-                if (opts.length < 4) {
-                    System.err.println("-u requires an adaptationId, start time, end time and plan file");
+            if (planGroup.getSelected() != null) {
+                if (!planGroup.getSelected().equals("P") && !cmd.hasOption("p")) {
+                    System.err.println(String.format("Option '%s' requires --plan-id.", planGroup.getSelected()));
                     printUsage();
-                } else {
-                    String adaptationId = opts[0];
-                    String start = opts[1];
-                    String end = opts[2];
-                    String path = opts[3];
-                    updatePlan(adaptationId, start, end, path);
+                    return;
+                } else if (planGroup.getSelected().equals("P") && cmd.hasOption("p")) {
+                    System.err.println("Option 'P' is mutually exclusive with --plan-id");
                 }
-            } else {
-                System.err.println("Missing option [arguments]");
-                printUsage();
             }
+
+            if (cmd.hasOption("P")) {
+                String path = cmd.getOptionValue("P");
+                lastCommandStatus = createPlan(path);
+
+            } else if (cmd.hasOption("U")) {
+                String planId = cmd.getOptionValue("p");
+                String path = cmd.getOptionValue("U");
+                lastCommandStatus = updatePlanFromFile(planId, path);
+
+            } else if (cmd.hasOption("u")) {
+                String planId = cmd.getOptionValue("p");
+                String[] tokens = cmd.getOptionValues("u");
+                lastCommandStatus = updatePlan(planId, tokens);
+
+            } else if (cmd.hasOption("D")) {
+                String planId = cmd.getOptionValue("p");
+                lastCommandStatus = deletePlan(planId);
+
+            } else if (cmd.hasOption("pull")) {
+                String planId = cmd.getOptionValue("p");
+                String outName = cmd.getOptionValue("pull");
+                lastCommandStatus = downloadPlan(planId, outName);
+
+            } else if (cmd.hasOption("naf")) {
+                String planId = cmd.getOptionValue("p");
+                String path = cmd.getOptionValue("naf");
+                lastCommandStatus = addActivity(planId, path);
+
+            } else if (cmd.hasOption("dispact")) {
+                String planId = cmd.getOptionValue("p");
+                String activityId = cmd.getOptionValue("dispact");
+                lastCommandStatus = displayActivity(planId, activityId);
+
+            } else if (cmd.hasOption("updact")) {
+                String planId = cmd.getOptionValue("p");
+                String[] args = cmd.getOptionValues("updact");
+                String activityId = args[0];
+                String[] tokens = Arrays.copyOfRange(args, 1, args.length);
+                lastCommandStatus = updateActivity(planId, activityId, tokens);
+
+            } else if (cmd.hasOption("delact")) {
+                String planId = cmd.getOptionValue("p");
+                String activityId = cmd.getOptionValue("delact");
+                lastCommandStatus = deleteActivity(planId, activityId);
+            }
+
         } catch (ParseException e) {
             System.err.println("Failed to parse command line properties" + e);
             printUsage();
         }
+    }
+
+    public boolean lastCommandSuccessful() {
+        return this.lastCommandStatus;
     }
 
     private void printUsage() {
@@ -123,170 +171,245 @@ public class CommandOptions {
         formatter.printHelp("Merlin Adaptation", options);
     }
 
-    private void addActivity(String[] args) {
-
-        StopWatch watch = new StopWatch();
-        watch.start();
-        System.out.println("Starting execution of ADD ACTIVITY");
-
-
-        String activity = "";
-
-        if( this.planId != null && !this.planId.equals("")) {
-
-            String inputString = "";
-            for(String s: args) {
-                inputString += s + " ";
-            }
-
-            List<ActivityInstanceParameter> params = new ArrayList<>();
-
-            // The parameter should come in a form like: <name>:<type>=<value>
-            Pattern pattern = Pattern.compile("^(.+?)\\s+");
-            Pattern patternParams = Pattern.compile("(\\S+):{1}(\\S+)={1}(\\S*)");
-            Matcher matcher = pattern.matcher(inputString);
-
-            // use regex to parse the value
-            while (matcher.find()) {
-                if(matcher.group(1) != null) {
-                    activity = matcher.group(1);
-                }
-            }
-
-            Matcher matcherParams = patternParams.matcher(inputString);
-            while(matcherParams.find()) {
-                String defaultValue = "";
-                List<String> range = new ArrayList<String>();
-                params.add(new ActivityInstanceParameter(defaultValue, matcherParams.group(1), range, matcherParams.group(2), matcherParams.group(3)));
-            }
-
-            List<ActivityInstance> instancesToInsert = new ArrayList<>();
-
-            for(int i=0; i<150000; i++) {
-                ActivityInstance activityInstance = new ActivityInstance();
-                activityInstance.setActivityId(UUID.randomUUID().toString());
-                activityInstance.setActivityType(activity);
-                activityInstance.setParameters(params);
-                instancesToInsert.add(activityInstance);
-            }
-
-            command = new NewActivityCommand(activity, this.planId, new ActivityInstanceArray(instancesToInsert));
-            command.execute();
-
-
-        } else {
-            // TODO: Return an error indicating that the planId is missing.
-        }
-
-        watch.stop();
-
-        System.out.println("It took " + watch.getTime(TimeUnit.MILLISECONDS) + " milliseconds to execute");
-
-    }
-
-    private void updatePlan(String adaptationId, String startTimestamp, String endTimestamp, String path) {
-        File file = new File(path);
-
+    private boolean createPlan(String path) {
         try {
-            List<ActivityInstance> instances = parsePlan(file);
-
-            command = new UpdatePlanCommand(this.planId, startTimestamp, endTimestamp, adaptationId, new ActivityInstanceArray(instances));
+            NewPlanCommand command = new NewPlanCommand(restTemplate, path);
             command.execute();
-        } catch (MalformedFileException e) {
+            int status = command.getStatus();
+
+            switch(status) {
+                case 201:
+                    String planId = command.getId();
+                    System.out.println(String.format("CREATED: Plan successfully created with id %s.", planId));
+                    return true;
+
+                case 409:
+                    System.err.println("CONFLICT: Plan already exists.");
+                    break;
+
+                case 400:
+                    System.err.println("BAD REQUEST: Check validity of Plan JSON.");
+                    break;
+
+                default:
+                    System.err.println(String.format("Unexpected status: %s", status));
+            }
+        } catch (IOException e) {
             System.err.println(e.getMessage());
         }
+
+        System.err.println("Plan upload failed.");
+        return false;
     }
 
-    public static List<ActivityInstance> parsePlan(File file) throws MalformedFileException {
-        List<ActivityInstance> instances = new ArrayList<>();
-
+    private boolean updatePlanFromFile(String planId, String path) {
         try {
-            Scanner sc = new Scanner(file);
+            UpdatePlanFileCommand command = new UpdatePlanFileCommand(restTemplate, planId, path);
+            command.execute();
+            int status = command.getStatus();
 
-            if (!sc.hasNextLine()) {
-                throw new MalformedFileException(file, "File has no contents.");
+            switch(status) {
+                case 200:
+                case 204:
+                    System.out.println("SUCCESS: Plan successfully updated.");
+                    return true;
+
+                case 404:
+                    System.err.println(String.format("NOT FOUND: Plan with id %s does not exist.", planId));
+                    break;
+
+                case 400:
+                    System.err.println("BAD REQUEST: Check validity of Plan JSON.");
+                    break;
+
+                default:
+                    System.err.println(String.format("Unexpected status: %s", status));
             }
-
-            while (sc.hasNextLine()) {
-                String spec = sc.nextLine();
-                String[] specs = spec.split("\\s+");
-
-                // We expect at least 2 components to an activity instance definition
-                // 1. Activity Type
-                // 2. Start Time
-                // There may be more parameters, but these are the minimum.
-                if (specs.length >= 2) {
-                    String type = specs[0];
-
-                    List<ActivityInstanceParameter> parameters = parseActivityParameters(Arrays.copyOfRange(specs, 1, specs.length));
-
-                    ActivityInstance instance = new ActivityInstance();
-                    instance.setActivityType(type);
-                    instance.setParameters(parameters);
-                    instances.add(instance);
-                }
-                else {
-                    throw new MalformedFileException(file, String.format("Activity instance specification insufficient: %s", spec));
-                }
-            }
-        } catch (FileNotFoundException | MalformedParameterStringException e) {
-            throw new MalformedFileException(file, e.getMessage());
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
         }
 
-        return instances;
+        System.err.println("Plan update failed.");
+        return false;
     }
 
-    public static List<ActivityInstanceParameter> parseActivityParameters(String[] params) throws MalformedParameterStringException {
-        Pattern inputParamPattern = Pattern.compile("(\\S+):(\\S+)=(\\S+)");
-        List<ActivityInstanceParameter> parameters = new ArrayList<>();
+    private boolean updatePlan(String planId, String[] tokens) {
+        try {
+            UpdatePlanCommand command = new UpdatePlanCommand(restTemplate, planId, tokens);
+            command.execute();
+            int status = command.getStatus();
 
-        for (String param : params) {
-            Matcher matcher = inputParamPattern.matcher(param);
-            if (matcher.find()) {
-                String defaultValue = "";
-                String name = matcher.group(1);
-                String type = matcher.group(2);
-                List<String> range = new ArrayList<String>();
-                String value = matcher.group(3);
-                parameters.add(new ActivityInstanceParameter(defaultValue, name, range, type, value));
-            } else {
-                throw new MalformedParameterStringException(param);
+            switch(status) {
+                case 200:
+                case 204:
+                    System.out.println("SUCCESS: Plan successfully updated.");
+                    return true;
+
+                case 404:
+                    System.err.println(String.format("NOT FOUND: Plan with id %s does not exist.", planId));
+                    break;
+
+                default:
+                    System.err.println(String.format("Unexpected status: %s", status));
             }
-        }
-        return parameters;
-    }
 
-    public static class MalformedFileException extends Exception {
-        private String fileName;
-        private String reason;
-
-        public MalformedFileException(File file, String reason) {
-            this.fileName = file.toString();
-            this.reason = reason;
-        }
-
-        public String toString() {
-            return String.format("Unable to parse file %s. %s", fileName, reason);
-        }
-
-        public String getMessage() {
-            return this.toString();
+            System.err.println("Plan update failed.");
+            return false;
+        } catch (InvalidTokenException e) {
+            System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
+            return false;
         }
     }
 
-    public static class MalformedParameterStringException extends Exception {
-        private String param;
+    private boolean deletePlan(String planId) {
+        DeletePlanCommand command = new DeletePlanCommand(restTemplate, planId);
+        command.execute();
+        int status = command.getStatus();
 
-        public MalformedParameterStringException(String param) {
-            this.param = param;
+        switch(status) {
+            case 200:
+            case 204:
+                System.out.println("SUCCESS: Plan successfully deleted.");
+                return true;
+
+            case 404:
+                System.err.println(String.format("NOT FOUND: Plan with id %s does not exist.", planId));
+                break;
+
+            default:
+                System.err.println(String.format("Unexpected status: %s", status));
         }
 
-        public String toString() {
-            return String.format("Unexpected format for parameter definition: %s", param);
+        System.err.println("Plan delete failed.");
+        return false;
+    }
+
+    private boolean downloadPlan(String planId, String outName) {
+        if (new File(outName).exists()) {
+            System.err.println(String.format("File %s already exists.", outName));
+            return false;
         }
 
-        public String getMessage() {
-            return this.toString();
+        DownloadPlanCommand command = new DownloadPlanCommand(restTemplate, planId, outName);
+        command.execute();
+        int status = command.getStatus();
+
+        switch(status) {
+            case 200:
+                System.out.println("SUCCESS: Plan successfully downloaded.");
+                return true;
+
+            case 404:
+                System.err.println(String.format("NOT FOUND: Plan with id %s does not exist.", planId));
+                break;
+
+            default:
+                System.err.println(String.format("Unexpected status: %s", status));
         }
+
+        System.err.println("Plan download failed.");
+        return false;
+    }
+
+    private boolean addActivity(String planId, String path) {
+        try {
+            NewActivityFileCommand command = new NewActivityFileCommand(restTemplate, planId, path);
+            command.execute();
+            int status = command.getStatus();
+            String activityId = command.getId();
+
+            switch(status) {
+                case 201:
+                    System.out.println(String.format("CREATED: Activity successfully created with id %s.", activityId));
+                    return true;
+
+                case 400:
+                    System.err.println("BAD REQUEST: Check validity of Activity JSON.");
+                    break;
+
+                default:
+                    System.err.println(String.format("Unexpected status: %s", status));
+            }
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+        }
+
+        System.err.println("Activity creation failed.");
+        return false;
+    }
+
+    private boolean displayActivity(String planId, String activityId) {
+        GetActivityCommand command = new GetActivityCommand(restTemplate, planId, activityId);
+        command.execute();
+        int status = command.getStatus();
+
+        switch(status) {
+            case 200:
+                System.out.println("OK: Activity retrieval successful.");
+                System.out.println(command.getResponseBody());
+                return true;
+
+            case 404:
+                System.err.println("NOT FOUND: The requested activity could not be found");
+                break;
+
+            default:
+                System.err.println(String.format("Unexpected status: %s", status));
+        }
+
+        System.err.println("Activity request failed.");
+        return false;
+    }
+
+    private boolean updateActivity(String planId, String activityId, String[] tokens) {
+        try {
+            UpdateActivityCommand command = new UpdateActivityCommand(restTemplate, planId, activityId, tokens);
+
+            command.execute();
+            int status = command.getStatus();
+
+            switch(status) {
+                case 200:
+                case 204:
+                    System.out.println("SUCCESS: Activity successfully updated.");
+                    return true;
+
+                case 404:
+                    System.err.println(String.format("NOT FOUND: Activity with id %s in plan with id %s does not exist.", activityId, planId));
+                    break;
+
+                default:
+                    System.err.println(String.format("Unexpected status: %s", status));
+            }
+
+            System.err.println("Activity update failed.");
+            return false;
+        } catch (InvalidTokenException e) {
+            System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
+            return false;
+        }
+    }
+
+    private boolean deleteActivity(String planId, String activityId) {
+        DeleteActivityCommand command = new DeleteActivityCommand(restTemplate, planId, activityId);
+        command.execute();
+        int status = command.getStatus();
+
+        switch(status) {
+            case 200:
+            case 204:
+                System.out.println("SUCCESS: Activity successfully deleted.");
+                return true;
+
+            case 404:
+                System.err.println("NOT FOUND: The requested activity could not be found.");
+                break;
+
+            default:
+                System.err.println(String.format("Unexpected status: %s", status));
+        }
+
+        System.err.println("Plan delete failed.");
+        return false;
     }
 }
