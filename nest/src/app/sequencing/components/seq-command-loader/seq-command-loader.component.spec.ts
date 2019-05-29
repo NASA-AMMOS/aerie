@@ -34,7 +34,7 @@ class SeqCommandLoaderTestComponent {
   dictionaries: any[] = mockCommandDictionaryList;
   selectedId: string | null = null;
 
-  @ViewChild(SeqCommandLoaderComponent)
+  @ViewChild(SeqCommandLoaderComponent, { static: false })
   component: SeqCommandLoaderComponent;
 
   selectedDictionaryChanged = jasmine.createSpy(

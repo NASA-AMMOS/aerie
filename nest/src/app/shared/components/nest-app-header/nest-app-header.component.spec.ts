@@ -20,7 +20,7 @@ import { NestAppHeaderModule } from './nest-app-header.module';
   `,
 })
 class NestAppHeaderTestHostComponent {
-  @ViewChild(NestAppHeaderComponent)
+  @ViewChild(NestAppHeaderComponent, { static: false })
   childComponent: NestAppHeaderComponent;
 
   onMenuClicked() {}

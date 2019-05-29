@@ -18,16 +18,13 @@ import { ActivityTypeListModule } from './activity-type-list.module';
 @Component({
   selector: 'activity-type-list-test',
   template: `
-    <activity-type-list
-      [activityTypes]="activityTypes"
-    >
-    </activity-type-list>
+    <activity-type-list [activityTypes]="activityTypes"> </activity-type-list>
   `,
 })
 class ActivityTypeListTestComponent {
   activityTypes: ActivityType[] = getMockActivityTypes();
 
-  @ViewChild(ActivityTypeListComponent)
+  @ViewChild(ActivityTypeListComponent, { static: false })
   component: ActivityTypeListComponent;
 }
 

@@ -23,17 +23,17 @@ export const routes: Routes = [
   },
   {
     data: { title: merlinModule.title },
-    loadChildren: './planning/planning.module#PlanningModule',
+    loadChildren: () => import('./planning/planning.module').then(m => m.PlanningModule),
     path: merlinModule.path,
   },
   {
     data: { title: falconModule.title },
-    loadChildren: './sequencing/sequencing.module#SequencingModule',
+    loadChildren: () => import('./sequencing/sequencing.module').then(m => m.SequencingModule),
     path: falconModule.path,
   },
   {
     data: { title: ravenModule.title },
-    loadChildren: './raven/raven.module#RavenModule',
+    loadChildren: () => import('./raven/raven.module').then(m => m.RavenModule),
     path: ravenModule.path,
   },
   {

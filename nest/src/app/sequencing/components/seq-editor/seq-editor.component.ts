@@ -76,7 +76,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   @Output()
   openHelpDialog: EventEmitter<null> = new EventEmitter<null>();
 
-  @ViewChild('editor')
+  @ViewChild('editor', { static: true })
   editorMount: ElementRef;
 
   autocomplete = true;

@@ -23,7 +23,7 @@ import { PlanTableModule } from './plan-table.module';
 class PlanTableTestComponent {
   plans = getMockPlans();
 
-  @ViewChild(PlanTableComponent)
+  @ViewChild(PlanTableComponent, { static: false })
   childComponent: PlanTableComponent;
 }
 

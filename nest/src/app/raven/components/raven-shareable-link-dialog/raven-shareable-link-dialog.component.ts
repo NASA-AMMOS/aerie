@@ -34,10 +34,10 @@ import { getState } from '../../util/state';
 })
 export class RavenShareableLinkDialogComponent
   implements AfterViewInit, OnDestroy, OnInit {
-  @ViewChild('shareableLinkInput')
+  @ViewChild('shareableLinkInput', { static: true })
   shareableLinkInput: ElementRef;
 
-  @ViewChild('shareableNameInput')
+  @ViewChild('shareableNameInput', { static: true })
   shareableNameInput: ElementRef;
 
   invalidShareableName = false;

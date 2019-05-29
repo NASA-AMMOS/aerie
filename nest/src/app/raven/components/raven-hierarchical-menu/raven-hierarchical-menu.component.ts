@@ -31,7 +31,7 @@ export class RavenHierarchicalMenuComponent {
   @Output()
   action: EventEmitter<string> = new EventEmitter<string>();
 
-  @ViewChild('menuRef')
+  @ViewChild('menuRef', { static: true })
   public menuRef: ElementRef;
 
   isExpandOption(option: RavenSourceAction): boolean {

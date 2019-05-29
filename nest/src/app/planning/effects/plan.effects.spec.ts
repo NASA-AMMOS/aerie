@@ -15,7 +15,7 @@ import { Router } from '@angular/router';
 import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { Store, StoreModule } from '@ngrx/store';
-import { cold, hot } from 'jasmine-marbles';
+import { addMatchers, cold, hot, initTestScheduler } from 'jasmine-marbles';
 import { keyBy } from 'lodash';
 import { Observable, of } from 'rxjs';
 import { reducers as rootReducers } from '../../app-store';
@@ -109,6 +109,9 @@ describe('PlanEffects', () => {
         },
       ],
     });
+
+    initTestScheduler();
+    addMatchers();
 
     effects = TestBed.get(PlanEffects);
     metadata = getEffectsMetadata(effects);

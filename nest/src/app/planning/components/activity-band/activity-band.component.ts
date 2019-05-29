@@ -95,13 +95,13 @@ export class ActivityBandComponent
     ActivityInstanceUpdate
   > = new EventEmitter<ActivityInstanceUpdate>();
 
-  @ViewChild('axisContainerGroup')
+  @ViewChild('axisContainerGroup', { static: true })
   axisContainerGroupTarget: ElementRef;
 
-  @ViewChild('axisX')
+  @ViewChild('axisX', { static: true })
   axisXTarget: ElementRef;
 
-  @ViewChild('axisY')
+  @ViewChild('axisY', { static: true })
   axisYTarget: ElementRef;
 
   public drawHeight: number;

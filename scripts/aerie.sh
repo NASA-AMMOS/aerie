@@ -182,12 +182,12 @@ mvn_build() {
 
 mvn_clean() {
   echo -e "Running mvn clean..."
-  mvn clean -f pom.xml -q
+  mvn clean -f pom.xml
 }
 
 mvn_install() {
   echo -e "Running mvn install..."
-  mvn install install -f pom.xml -DskipTests -q
+  mvn install install -f pom.xml -DskipTests
 }
 
 rm_m2() {

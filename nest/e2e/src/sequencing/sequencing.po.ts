@@ -23,32 +23,16 @@ export class SequencingPage {
   );
   filename = element(by.xpath('//*[@id="sequencing-filename"]'));
   toolbar = element(by.xpath('//*[@id="sequencing-toolbar"]'));
-  helpButton = element(
-    by.xpath(
-      '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/as-split/as-split-area[2]/main/seq-editor/div[1]/button[6]',
-    ),
-  );
+  helpButton = element(by.id('seq-toolbar-help-button'));
   helpDialog = element(by.css('.mat-dialog-container'));
   helpDialogCloseButton = element(
     by.xpath(
       '/html/body/div[3]/div[2]/div/mat-dialog-container/nest-confirm-dialog/div[2]/div/button',
     ),
   );
-  fullscreenButton = element(
-    by.xpath(
-      '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/as-split/as-split-area[2]/main/seq-editor/div[1]/button[5]',
-    ),
-  );
-  toggleThemeButton = element(
-    by.xpath(
-      '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/as-split/as-split-area[2]/main/seq-editor/div[1]/button[4]',
-    ),
-  );
-  autocompleteButton = element(
-    by.xpath(
-      '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/as-split/as-split-area[2]/main/seq-editor/div[1]/button[3]',
-    ),
-  );
+  fullscreenButton = element(by.id('seq-toolbar-fullscreen-button'));
+  toggleThemeButton = element(by.id('seq-toolbar-theme-button'));
+  autocompleteButton = element(by.id('seq-toolbar-autocomplete-button'));
   hintsContainer = element(by.css('.CodeMirror-hints'));
   panelButton = element(
     by.xpath(

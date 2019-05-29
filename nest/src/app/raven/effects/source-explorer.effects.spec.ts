@@ -12,7 +12,7 @@ import { TestBed } from '@angular/core/testing';
 import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { StoreModule } from '@ngrx/store';
-import { cold, hot } from 'jasmine-marbles';
+import { addMatchers, cold, hot, initTestScheduler } from 'jasmine-marbles';
 import { Observable } from 'rxjs';
 import { reducers as storeReducers } from '../../app-store';
 import {
@@ -46,6 +46,8 @@ describe('SourceExplorerEffects', () => {
       ],
     });
 
+    initTestScheduler();
+    addMatchers();
     effects = TestBed.get(SourceExplorerEffects);
     metadata = getEffectsMetadata(effects);
   });

@@ -10,7 +10,7 @@
 import { TestBed } from '@angular/core/testing';
 import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
-import { cold, hot } from 'jasmine-marbles';
+import { addMatchers, cold, hot, initTestScheduler } from 'jasmine-marbles';
 import { Observable } from 'rxjs';
 import {
   Resize,
@@ -30,6 +30,8 @@ describe('LayoutEffects', () => {
       providers: [LayoutEffects, provideMockActions(() => actions$)],
     });
 
+    initTestScheduler();
+    addMatchers();
     effects = TestBed.get(LayoutEffects);
     metadata = getEffectsMetadata(effects);
   });

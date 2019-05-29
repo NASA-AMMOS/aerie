@@ -28,7 +28,7 @@ import { RavenSource, RavenUpdate } from '../../models';
   templateUrl: './raven-output.component.html',
 })
 export class RavenOutputComponent implements AfterViewInit, OnChanges {
-  @ViewChild('agGrid')
+  @ViewChild('agGrid', { static: true })
   agGrid: AgGridNg2;
 
   @Input()

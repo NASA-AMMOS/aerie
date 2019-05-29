@@ -160,7 +160,7 @@ export class RavenCompositeBandComponent
   @Output()
   updateViewTimeRange: EventEmitter<TimeRange> = new EventEmitter<TimeRange>();
 
-  @ViewChild('ctlMount')
+  @ViewChild('ctlMount', { static: true })
   ctlMountElementRef: ElementRef;
 
   ctlCompositeBand: any;

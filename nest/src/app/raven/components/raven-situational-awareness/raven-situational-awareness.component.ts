@@ -30,7 +30,7 @@ import { RavenSituationalAwarenessPefEntry, RavenUpdate } from '../../models';
 })
 export class RavenSituationalAwarenessComponent
   implements AfterViewInit, OnChanges {
-  @ViewChild('agGrid')
+  @ViewChild('agGrid', { static: true })
   agGrid: AgGridNg2;
 
   @Input()

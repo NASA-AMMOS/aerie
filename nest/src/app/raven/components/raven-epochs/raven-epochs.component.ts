@@ -27,7 +27,7 @@ import { RavenEpoch, RavenUpdate } from '../../models';
   templateUrl: './raven-epochs.component.html',
 })
 export class RavenEpochsComponent implements AfterViewInit, OnChanges {
-  @ViewChild('agGrid')
+  @ViewChild('agGrid', { static: true })
   agGrid: AgGridNg2;
 
   @Input()

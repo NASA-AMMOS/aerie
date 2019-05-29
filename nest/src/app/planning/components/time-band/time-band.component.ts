@@ -52,10 +52,10 @@ export class TimeBandComponent implements AfterViewInit, OnChanges {
   @Output()
   updateViewTimeRange: EventEmitter<TimeRange> = new EventEmitter<TimeRange>();
 
-  @ViewChild('axisX')
+  @ViewChild('axisX', { static: true })
   axisXTarget: ElementRef;
 
-  @ViewChild('brush')
+  @ViewChild('brush', { static: true })
   brushTarget: ElementRef;
 
   public drawHeight: number;

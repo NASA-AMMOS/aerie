@@ -22,7 +22,7 @@ import { NestAppNavModule } from './nest-app-nav.module';
   `,
 })
 class NestAppNavTestHostComponent {
-  @ViewChild(NestAppNavComponent)
+  @ViewChild(NestAppNavComponent, { static: false })
   childComponent: NestAppNavComponent;
 }
 

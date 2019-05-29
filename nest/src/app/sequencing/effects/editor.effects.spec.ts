@@ -11,7 +11,7 @@ import { TestBed } from '@angular/core/testing';
 import { MatDialogModule } from '@angular/material';
 import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
-import { cold, hot } from 'jasmine-marbles';
+import { addMatchers, cold, hot, initTestScheduler } from 'jasmine-marbles';
 import { Observable } from 'rxjs';
 import { AddText } from '../actions/editor.actions';
 import { SeqEditorService } from '../services/seq-editor.service';
@@ -35,6 +35,8 @@ describe('EditorEffects', () => {
       ],
     });
 
+    initTestScheduler();
+    addMatchers();
     effects = TestBed.get(EditorEffects);
     metadata = getEffectsMetadata(effects);
   });

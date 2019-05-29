@@ -19,7 +19,7 @@ import { SubActivityTreeModule } from './sub-activity-tree.module';
   `,
 })
 class SubActivityTreeTestComponent {
-  @ViewChild(SubActivityTreeComponent)
+  @ViewChild(SubActivityTreeComponent, { static: false })
   childComponent: SubActivityTreeComponent;
 }
 

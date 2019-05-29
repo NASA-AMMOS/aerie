@@ -36,7 +36,7 @@ import { RavenTableDetailComponent } from './raven-table-detail.component';
   templateUrl: './raven-table.component.html',
 })
 export class RavenTableComponent implements OnChanges {
-  @ViewChild('agGrid')
+  @ViewChild('agGrid', { static: false })
   agGrid: AgGridNg2;
 
   @Input()

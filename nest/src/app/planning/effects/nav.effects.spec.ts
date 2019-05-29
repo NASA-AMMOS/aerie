@@ -12,7 +12,7 @@ import { TestBed } from '@angular/core/testing';
 import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { Store, StoreModule } from '@ngrx/store';
-import { cold, hot } from 'jasmine-marbles';
+import { addMatchers, cold, hot, initTestScheduler } from 'jasmine-marbles';
 import { Observable, of } from 'rxjs';
 import { RouterNavigation } from '../../../../libs/ngrx-router';
 import { reducers as rootReducers } from '../../app-store';
@@ -100,6 +100,8 @@ describe('NavEffects', () => {
       ],
     });
 
+    initTestScheduler();
+    addMatchers();
     effects = TestBed.get(NavEffects);
     metadata = getEffectsMetadata(effects);
   });
