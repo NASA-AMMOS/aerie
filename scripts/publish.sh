@@ -137,14 +137,6 @@ do
       echo "Publishing $tag_name to Artifactory"
       docker push "$tag_name"
       [ $? -ne 0 ] && error_exit "docker push failed for $tag_name"
-
-      if [ -z ${branch} ]
-      then
-        tag_name_latest="$tag_name_base/$d"
-        echo "Publishing $tag_name_latest to Artifactory"
-        docker push "$tag_name_latest"
-        [ $? -ne 0 ] && error_exit "docker push failed for $tag_name_latest"
-      fi
     fi
     cd $root
 
