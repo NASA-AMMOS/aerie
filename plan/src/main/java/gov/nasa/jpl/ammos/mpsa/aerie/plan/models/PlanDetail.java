@@ -11,13 +11,11 @@ import java.util.UUID;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document("plans")
-public class PlanDetail extends Plan {
-
-    private ArrayList<ActivityInstance> activityInstances = new ArrayList<ActivityInstance>();
-
+public class PlanDetail extends gov.nasa.jpl.ammos.mpsa.aerie.schemas.PlanDetail {
     public PlanDetail() {
         super();
     }
@@ -30,8 +28,13 @@ public class PlanDetail extends Plan {
             String startTimestamp,
             ArrayList<ActivityInstance> activityInstances
     ) {
-        super(adaptationId, endTimestamp, id, name, startTimestamp);
-        this.setActivityInstances(activityInstances);
+        super(adaptationId, endTimestamp, id, name, startTimestamp, activityInstances);
+    }
+
+    @Id
+    @Override
+    public String getId() {
+        return super.getId();
     }
 
     /**
@@ -72,16 +75,8 @@ public class PlanDetail extends Plan {
         return emptyNames.toArray(result);
     }
 
-    public ArrayList<ActivityInstance> getActivityInstances() {
-        return activityInstances;
-    }
-
-    public void setActivityInstances(ArrayList<ActivityInstance> activityInstances) {
-        this.activityInstances = activityInstances;
-    }
-
     public void addActivityInstance(ActivityInstance activityInstance) {
-        this.activityInstances.add(activityInstance);
+        getActivityInstances().add(activityInstance);
     }
 
     public void replaceActivityInstance(UUID id, ActivityInstance replacement) {
@@ -91,17 +86,17 @@ public class PlanDetail extends Plan {
             throw new NoSuchElementException();
         }
 
-        this.activityInstances.set(index, replacement);
+        getActivityInstances().set(index, replacement);
     }
 
     public void updateActivityInstance(UUID id, ActivityInstance activityInstanceToMerge) {
         int index = this.getActivityInstanceIndex(id);
 
         if (index != -1) {
-            ActivityInstance activityInstance = this.activityInstances.get(index);
+            ActivityInstance activityInstance = getActivityInstances().get(index);
             mergeObjects(activityInstanceToMerge, activityInstance);
 
-            this.activityInstances.set(index, activityInstance);
+            getActivityInstances().set(index, activityInstance);
             return;
         }
 
@@ -111,7 +106,7 @@ public class PlanDetail extends Plan {
     public void removeActivityInstance(UUID id) {
         int index = this.getActivityInstanceIndex(id);
         if (index > -1) {
-            this.activityInstances.remove(index);
+            getActivityInstances().remove(index);
         }
         // TODO: Error handling?
     }

@@ -25,6 +25,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -82,6 +83,15 @@ public class PlansControllerIntegrationTest {
   public void shouldReturnA400WhenPostPlanBodyIsNotSpecified() {
     ResponseEntity<String> response = restTemplate.postForEntity("/plans/", null, String.class);
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
+  public void shouldReturnA422WhenPostPlanIsInvalid() {
+    Plan plan = generateRandomPlan();
+    plan.setName(null);
+
+    ResponseEntity<String> response = restTemplate.postForEntity("/plans/", plan, String.class);
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
   }
 
   @Test
@@ -199,11 +209,39 @@ public class PlansControllerIntegrationTest {
 
   @Test
   @DirtiesContext
-  public void shouldUpdateAPlan() throws IOException {
-    Plan originalPlan = postRandomPlan();
-    Plan updatedPlan = generateRandomPlan();
+  public void shouldReturnA422WhenPutPlanIsIncomplete() throws IOException {
+    PlanDetail plan = generateRandomPlanDetail();
 
-    HttpEntity<Plan> responseEntity = new HttpEntity<>(updatedPlan, new HttpHeaders());
+    // Upload an initial plan.
+    {
+      ResponseEntity<String> response = restTemplate.postForEntity("/plans/", plan, String.class);
+
+      ObjectMapper objectMapper = new ObjectMapper();
+      PlanDetail responsePlan = objectMapper.readValue(response.getBody(), PlanDetail.class);
+
+      plan.setId(responsePlan.getId());
+    }
+
+    // Remove the name from this plan.
+    plan.setName(null);
+
+    // Attempt to update the plan.
+    HttpEntity<PlanDetail> responseEntity = new HttpEntity<>(plan, new HttpHeaders());
+    ResponseEntity<String> putResponse =
+        restTemplate.exchange("/plans/" + plan.getId(), HttpMethod.PUT, responseEntity, String.class);
+
+    assertThat(putResponse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+  }
+
+  @Test
+  @DirtiesContext
+  public void shouldUpdateAPlan() throws IOException {
+    final Plan originalPlan = postRandomPlan();
+
+    final Plan planPatch = new Plan();
+    planPatch.setName(originalPlan.getName() + "-patched");
+
+    final HttpEntity<Plan> responseEntity = new HttpEntity<>(planPatch, new HttpHeaders());
     ResponseEntity<String> patchResponse =
         restTemplate.exchange(
             "/plans/" + originalPlan.getId(), HttpMethod.PATCH, responseEntity, String.class);
@@ -211,19 +249,19 @@ public class PlansControllerIntegrationTest {
     assertThat(patchResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
     // Get the patched Plan and verify that it has actually been replaced
-    ResponseEntity<String> getResponse =
+    final ResponseEntity<String> getResponse =
         restTemplate.getForEntity("/plans/" + originalPlan.getId(), String.class);
     assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-    ObjectMapper objectMapper = new ObjectMapper();
-    String body = getResponse.getBody();
-    PlanDetail responsePlan = objectMapper.readValue(body, PlanDetail.class);
+    final ObjectMapper objectMapper = new ObjectMapper();
+    final String body = getResponse.getBody();
+    final PlanDetail responsePlan = objectMapper.readValue(body, PlanDetail.class);
 
     assertThat(responsePlan.getId()).isEqualTo(originalPlan.getId());
-    assertThat(responsePlan.getName()).isEqualTo(updatedPlan.getName());
-    assertThat(responsePlan.getEndTimestamp()).isEqualTo(updatedPlan.getEndTimestamp());
-    assertThat(responsePlan.getStartTimestamp()).isEqualTo(updatedPlan.getStartTimestamp());
-    assertThat(responsePlan.getAdaptationId()).isEqualTo(updatedPlan.getAdaptationId());
+    assertThat(responsePlan.getName()).isEqualTo(planPatch.getName());
+    assertThat(responsePlan.getEndTimestamp()).isEqualTo(originalPlan.getEndTimestamp());
+    assertThat(responsePlan.getStartTimestamp()).isEqualTo(originalPlan.getStartTimestamp());
+    assertThat(responsePlan.getAdaptationId()).isEqualTo(originalPlan.getAdaptationId());
   }
 
   @Test
@@ -330,8 +368,44 @@ public class PlansControllerIntegrationTest {
 
     // Verify
     assertThat(modifiedPlan.getActivityInstances().size()).isEqualTo(1);
+    assertThat(modifiedPlan.getActivityInstances().get(0).getActivityId()).isNotNull();
     assertThat(modifiedPlan.getActivityInstances().get(0).getActivityId())
         .isEqualTo(addActivityInstancesPlan.getActivityId());
+  }
+
+  @Test
+  @DirtiesContext
+  public void shouldCreateActivityInstanceWithFreshId() throws IOException {
+    // Setup: create a plan
+    Plan originalPlan = postRandomPlan();
+
+    ResponseEntity<String> response =
+        restTemplate.getForEntity("/plans/" + originalPlan.getId(), String.class);
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    String body = response.getBody();
+    PlanDetail responsePlan = objectMapper.readValue(body, PlanDetail.class);
+
+    assertThat(responsePlan.getActivityInstances().size()).isEqualTo(0);
+
+    // Setup: Add activity instances to the plan
+    UUID initialIgnoredId = UUID.randomUUID();
+    ActivityInstance activityInstance = generateRandomActivityInstance();
+    activityInstance.setActivityId(initialIgnoredId.toString());
+    ResponseEntity<String> addActivityInstancesResponse =
+        restTemplate.postForEntity(
+            "/plans/" + originalPlan.getId() + "/activity_instances",
+            activityInstance,
+            String.class);
+
+    ObjectMapper addActivityInstancesObjectMapper = new ObjectMapper();
+    String addActivityInstancesBody = addActivityInstancesResponse.getBody();
+    ActivityInstance addedActivityInstance =
+        addActivityInstancesObjectMapper.readValue(
+            addActivityInstancesBody, ActivityInstance.class);
+
+    assertThat(addedActivityInstance.getActivityId()).isNotEqualTo(initialIgnoredId.toString());
   }
 
   @Test
@@ -468,23 +542,6 @@ public class PlansControllerIntegrationTest {
 
   @Test
   @DirtiesContext
-  public void replaceActivityInstanceShouldPassIfIncomplete() throws IOException {
-    Plan plan = postRandomPlan();
-    ActivityInstance original = postRandomActivityInstance(plan.getId());
-    Map<String, String> replacement = new HashMap<>();
-    replacement.put("name", generateRandomString(8));
-
-    HttpEntity<Map<String, String>> putResponseEntity =
-            new HttpEntity<>(replacement, new HttpHeaders());
-    String putUrl = "/plans/" + plan.getId() + "/activity_instances/" + original.getActivityId();
-    ResponseEntity<String> putResponse =
-            restTemplate.exchange(putUrl, HttpMethod.PUT, putResponseEntity, String.class);
-
-    assertThat(putResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-  }
-
-  @Test
-  @DirtiesContext
   public void shouldUpdateAnActivityInstance() throws IOException {
     Plan plan = postRandomPlan();
     ActivityInstance original = postRandomActivityInstance(plan.getId());
@@ -556,11 +613,15 @@ public class PlansControllerIntegrationTest {
   }
 
   public Plan generateRandomPlan() {
-    Plan plan = new Plan();
-    plan.setName(generateRandomString(8));
-    plan.setEndTimestamp(generateRandomDate());
-    plan.setEndTimestamp(generateRandomDate());
+    return Plan.fromDetail(generateRandomPlanDetail());
+  }
+
+  public PlanDetail generateRandomPlanDetail() {
+    final PlanDetail plan = new PlanDetail();
     plan.setAdaptationId(generateRandomString(8));
+    plan.setEndTimestamp(generateRandomDate());
+    plan.setName(generateRandomString(8));
+    plan.setStartTimestamp(generateRandomDate());
     return plan;
   }
 

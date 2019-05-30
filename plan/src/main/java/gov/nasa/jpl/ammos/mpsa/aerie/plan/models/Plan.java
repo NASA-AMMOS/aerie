@@ -10,9 +10,6 @@ import javax.validation.constraints.Null;
 @Document("plans")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Plan extends gov.nasa.jpl.ammos.mpsa.aerie.schemas.Plan {
-    @Id()
-    public String id;
-
     public Plan() {
         super();
     }
@@ -21,13 +18,13 @@ public class Plan extends gov.nasa.jpl.ammos.mpsa.aerie.schemas.Plan {
         super(adaptationId, endTimestamp, id, name, startTimestamp);
     }
 
-    @Override
-    public String getId() {
-        return id;
+    public static Plan fromDetail(PlanDetail plan) {
+        return new Plan(plan.getAdaptationId(), plan.getEndTimestamp(), plan.getId(), plan.getName(), plan.getStartTimestamp());
     }
 
+    @Id
     @Override
-    public void setId(String id) {
-        this.id = id;
+    public String getId() {
+        return super.getId();
     }
 }

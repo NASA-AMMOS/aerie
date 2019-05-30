@@ -7,7 +7,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstanceParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityTypeParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.schemas.Validator;
 
+import java.io.IOException;
 import java.util.*;
 import javax.validation.Valid;
 
@@ -15,6 +17,7 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -39,12 +42,12 @@ public class PlansController {
 
     @GetMapping("")
     public ResponseEntity<Object> getPlans() {
-        return ResponseEntity.ok(repository.findAll());
+        return ResponseEntity.ok(repository.findAll().stream().map(plan -> Plan.fromDetail(plan)));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Object> getPlan(@PathVariable("id") ObjectId _id) {
-        Optional<Plan> plan = repository.findById(_id.toHexString());
+        Optional<PlanDetail> plan = repository.findById(_id.toHexString());
         if (plan.isPresent()) {
             return ResponseEntity.ok(plan);
         } else {
@@ -58,6 +61,15 @@ public class PlansController {
         String id = _id.toHexString();
         if (repository.existsById(id)) {
             planDetail.setId(_id.toHexString());
+
+            try {
+                if (!Validator.validate(planDetail)) {
+                    return ResponseEntity.unprocessableEntity().build();
+                }
+            } catch (IOException ex) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+
             repository.save(planDetail);
             return ResponseEntity.noContent().build();
         } else {
@@ -67,28 +79,47 @@ public class PlansController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<Object> updatePlan(
-            @PathVariable("id") ObjectId _id, @Valid @RequestBody PlanDetail planDetail) {
+            @PathVariable("id") ObjectId _id,
+            @Valid @RequestBody PlanDetail planDetail
+    ) {
         String id = _id.toHexString();
         PlanDetail existing = repository.findPlanDetailById(id);
-        if (existing != null) {
-
-            planDetail.setId(_id.toHexString());
-
-            if (planDetail.getAdaptationId() != null) existing.setAdaptationId(planDetail.getAdaptationId());
-            if (planDetail.getEndTimestamp() != null) existing.setEndTimestamp(planDetail.getEndTimestamp());
-            if (planDetail.getName() != null) existing.setName(planDetail.getName());
-            if (planDetail.getStartTimestamp() != null) existing.setStartTimestamp(planDetail.getStartTimestamp());
-            if (planDetail.getActivityInstances() != null) existing.setActivityInstances(planDetail.getActivityInstances());
-
-            repository.save(existing);
-            return ResponseEntity.noContent().build();
-        } else {
+        if (existing == null) {
             return ResponseEntity.notFound().build();
         }
+
+        planDetail.setId(id);
+
+        if (planDetail.getAdaptationId() != null) existing.setAdaptationId(planDetail.getAdaptationId());
+        if (planDetail.getEndTimestamp() != null) existing.setEndTimestamp(planDetail.getEndTimestamp());
+        if (planDetail.getName() != null) existing.setName(planDetail.getName());
+        if (planDetail.getStartTimestamp() != null) existing.setStartTimestamp(planDetail.getStartTimestamp());
+        if (planDetail.getActivityInstances() != null) existing.setActivityInstances(planDetail.getActivityInstances());
+
+        try {
+            if (!Validator.validate(existing)) {
+                return ResponseEntity.unprocessableEntity().build();
+            }
+        } catch (IOException ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+        repository.save(existing);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/")
-    public ResponseEntity<Object> createPlan(@Valid @RequestBody Plan plan) {
+    public ResponseEntity<Object> createPlan(@Valid @RequestBody PlanDetail plan) {
+        plan.setId(new ObjectId().toString());
+
+        try {
+            if (!Validator.validate(plan)) {
+                return ResponseEntity.unprocessableEntity().build();
+            }
+        } catch (IOException ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
         repository.save(plan);
         return ResponseEntity.ok(plan);
     }
@@ -153,13 +184,23 @@ public class PlansController {
 
         UUID uuid = UUID.randomUUID();
         activityInstance.setActivityId(uuid.toString());
+        requestBodyActivityInstance.setActivityId(uuid.toString());
 
         PlanDetail planDetail = repository.findPlanDetailById(_id.toHexString());
         planDetail.addActivityInstance(activityInstance);
         planDetail.updateActivityInstance(uuid, requestBodyActivityInstance);
+
+        try {
+            if (!Validator.validate(planDetail)) {
+                return ResponseEntity.unprocessableEntity().build();
+            }
+        } catch (IOException ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
         repository.save(planDetail);
 
-        return ResponseEntity.ok(activityInstance);
+        return ResponseEntity.ok(planDetail.getActivityInstance(uuid));
     }
 
     @GetMapping("/{planId}/activity_instances")
@@ -207,19 +248,30 @@ public class PlansController {
             @Valid @RequestBody ActivityInstance requestBodyActivityInstance) {
 
         PlanDetail planDetail = repository.findPlanDetailById(planId.toHexString());
-
-        if (planDetail != null) {
-            ActivityInstance activityInstance = planDetail.getActivityInstance(activityInstanceId);
-            if (activityInstance != null) {
-                // Ensure that there is always an activityId, even if the user hasn't passed one
-                requestBodyActivityInstance.setActivityId(activityInstance.getActivityId());
-                planDetail.replaceActivityInstance(activityInstanceId, requestBodyActivityInstance);
-                repository.save(planDetail);
-                return ResponseEntity.noContent().build();
-            }
+        if (planDetail == null) {
+            return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.notFound().build();
+        ActivityInstance activityInstance = planDetail.getActivityInstance(activityInstanceId);
+        if (activityInstance == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Ensure that there is always an activityId, even if the user hasn't passed one
+        requestBodyActivityInstance.setActivityId(activityInstance.getActivityId());
+
+        try {
+            if (!Validator.validate(requestBodyActivityInstance)) {
+                return ResponseEntity.unprocessableEntity().build();
+            }
+        } catch (IOException ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+        planDetail.replaceActivityInstance(activityInstanceId, requestBodyActivityInstance);
+        repository.save(planDetail);
+
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{planId}/activity_instances/{id}")
@@ -228,17 +280,27 @@ public class PlansController {
             @PathVariable("id") UUID id,
             @Valid @RequestBody ActivityInstance requestBodyActivityInstance) {
         PlanDetail planDetail = repository.findPlanDetailById(_id.toHexString());
-
-        if (planDetail != null) {
-            ActivityInstance activityInstance = planDetail.getActivityInstance(id);
-            if (activityInstance != null) {
-                planDetail.updateActivityInstance(id, requestBodyActivityInstance);
-                repository.save(planDetail);
-                return ResponseEntity.noContent().build();
-            }
+        if (planDetail == null) {
+          return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.notFound().build();
+        ActivityInstance activityInstance = planDetail.getActivityInstance(id);
+        if (activityInstance == null) {
+          return ResponseEntity.notFound().build();
+        }
+
+        planDetail.updateActivityInstance(id, requestBodyActivityInstance);
+
+        try {
+            if (!Validator.validate(planDetail)) {
+                return ResponseEntity.unprocessableEntity().build();
+            }
+        } catch (IOException ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+        repository.save(planDetail);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{planId}/activity_instances/{id}")

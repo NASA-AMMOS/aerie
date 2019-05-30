@@ -1,85 +1,3 @@
-export interface ActivityType {
-    activityClass: string;
-    listeners:     string[];
-    parameters:    ActivityTypeParameter[];
-    typeName:      string;
-}
-
-export interface ActivityTypeParameter {
-    name: string;
-    type: string;
-}
-
-export interface Adaptation {
-    id:       string;
-    location: string;
-    mission:  string;
-    name:     string;
-    owner:    string;
-    version:  string;
-}
-
-export interface AMQPMessage {
-    data?:        { [key: string]: any };
-    messageType?: AMQPMessageTypeEnum;
-}
-
-export enum AMQPMessageTypeEnum {
-    LoadAdaptation = "LoadAdaptation",
-    SimulateActivity = "SimulateActivity",
-    UnloadAdaptation = "UnloadAdaptation",
-}
-
-export interface CommandDictionary {
-    id:      string;
-    name:    string;
-    version: null | string;
-}
-
-export interface MpsCommand {
-    name:       string;
-    parameters: MpsCommandParameter[];
-}
-
-export interface MpsCommandParameter {
-    defaultValue?: string;
-    help?:         string;
-    name?:         string;
-    range?:        string;
-    type?:         string;
-    units?:        string;
-}
-
-/**
- * A collection of Activity Instances, optionally pre-arranged to form a schedule.
- */
-export interface Plan {
-    /**
-     * List of activity instances that comprise this plan
-     */
-    activityInstances?: ActivityInstance[];
-    /**
-     * The ID of the associated adaptation
-     */
-    adaptationId: string;
-    /**
-     * When the plan ends. Will be changed to a Unix timestamp.
-     */
-    endTimestamp: string;
-    /**
-     * ID of the plan. Currently a stringified MongoDB object ID.
-     */
-    id: string;
-    /**
-     * Name of the plan
-     */
-    name: string;
-    /**
-     * When the plan ends. Will be changed to a Unix timestamp.
-     */
-    startTimestamp: string;
-}
-
 export interface ActivityInstance {
     /**
      * ID of the activity instance
@@ -175,6 +93,84 @@ export interface ActivityInstanceParameter {
      * The value of the parameter
      */
     value: string;
+}
+
+export interface ActivityType {
+    activityClass: string;
+    listeners:     string[];
+    parameters:    ActivityTypeParameter[];
+    typeName:      string;
+}
+
+export interface ActivityTypeParameter {
+    name: string;
+    type: string;
+}
+
+export interface Adaptation {
+    id:       string;
+    location: string;
+    mission:  string;
+    name:     string;
+    owner:    string;
+    version:  string;
+}
+
+export interface AMQPMessage {
+    data?:        { [key: string]: any };
+    messageType?: AMQPMessageTypeEnum;
+}
+
+export enum AMQPMessageTypeEnum {
+    LoadAdaptation = "LoadAdaptation",
+    SimulateActivity = "SimulateActivity",
+    UnloadAdaptation = "UnloadAdaptation",
+}
+
+export interface CommandDictionary {
+    id:      string;
+    name:    string;
+    version: null | string;
+}
+
+export interface MpsCommand {
+    name:       string;
+    parameters: MpsCommandParameter[];
+}
+
+export interface MpsCommandParameter {
+    defaultValue?: string;
+    help?:         string;
+    name?:         string;
+    range?:        string;
+    type?:         string;
+    units?:        string;
+}
+
+/**
+ * A container used to associate an Adaptation with a collection of Activity Instances
+ */
+export interface Plan {
+    /**
+     * The ID of the associated adaptation
+     */
+    adaptationId: string;
+    /**
+     * When the plan ends. Will be changed to a Unix timestamp.
+     */
+    endTimestamp: string;
+    /**
+     * ID of the plan. Currently a stringified MongoDB object ID.
+     */
+    id: string;
+    /**
+     * Name of the plan
+     */
+    name: string;
+    /**
+     * When the plan ends. Will be changed to a Unix timestamp.
+     */
+    startTimestamp: string;
 }
 
 export interface Schedule {
