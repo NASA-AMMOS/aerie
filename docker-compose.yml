@@ -1,16 +1,16 @@
 version: "3.3"
 services:
   adaptation:
-    image: cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/adaptation:latest
+    image: cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/adaptation
     ports: ["27182:27182"]
     volumes:
       - adaptation_files:/usr/src/app/adaptation_files
       - adaptation_logs:/var/log/adaptation
   nest:
-    image: cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/nest:latest
+    image: cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/nest
     ports: ["8080:80"]
   plan:
-    image: cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/plan:latest
+    image: cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/plan
     command: ["--spring.profiles.active=production"]
     depends_on: ["plan_mongo"]
     ports: ["27183:27183"]
@@ -22,7 +22,7 @@ services:
     ports: ["27018:27018"]
     volumes: ["plan_mongo_data:/data/db"]
   sequencing:
-    image: cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/sequencing:latest
+    image: cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/sequencing
     command: ["npm", "run", "start:prod"]
     depends_on: ["sequencing_mongo"]
     ports: ["27186:27186"]
