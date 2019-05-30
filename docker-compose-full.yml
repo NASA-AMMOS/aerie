@@ -2,16 +2,16 @@ version: "3.3"
 services:
   # Core services
   adaptation:
-    image: "${ARTIFACTORY_DOCKER_URL}/adaptation:${DOCKER_TAG}"
+    image: "${DOCKER_URL}/adaptation:${DOCKER_TAG}"
     ports: ["27182:27182"]
     volumes:
       - adaptation_files:/usr/src/app/adaptation_files
       - adaptation_logs:/var/log/adaptation
   nest:
-    image: "${ARTIFACTORY_DOCKER_URL}/nest:${DOCKER_TAG}"
+    image: "${DOCKER_URL}/nest:${DOCKER_TAG}"
     ports: ["8080:80"]
   plan:
-    image: "${ARTIFACTORY_DOCKER_URL}/plan:${DOCKER_TAG}"
+    image: "${DOCKER_URL}/plan:${DOCKER_TAG}"
     command: ["--spring.profiles.active=production"]
     depends_on: ["plan_mongo"]
     ports: ["27183:27183"]
