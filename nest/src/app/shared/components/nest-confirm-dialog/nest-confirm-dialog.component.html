@@ -18,7 +18,13 @@
     >
       {{ data.confirmText }}
     </button>
-    <button mat-button color="accent" (click)="onCancel()" matDialogClose>
+    <button
+      mat-button
+      color="accent"
+      (click)="onCancel()"
+      matDialogClose
+      id="confirm-dialog-cancel-button"
+    >
       {{ data.cancelText }}
     </button>
   </div>

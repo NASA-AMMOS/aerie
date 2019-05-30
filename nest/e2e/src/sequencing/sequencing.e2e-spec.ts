@@ -6,7 +6,7 @@ import {
   logging,
   protractor,
 } from 'protractor';
-import { click, hasClass } from '../utils';
+import { click, clickHarder, hasClass } from '../utils';
 import { selectMpsDictionary } from './helpers';
 import { SequencingPage } from './sequencing.po';
 
@@ -176,7 +176,7 @@ describe('/sequencing', () => {
   it('[C136493] A user SHOULD be able to open the panel menu', () => {
     browser.navigate().refresh();
     page.panelButton.click();
-    browser.wait(EC.visibilityOf(page.panelMenu));
+    browser.wait(EC.visibilityOf(page.panelMenu), 1000);
     expect(page.panelMenu.isDisplayed()).toBe(true);
   });
 
@@ -186,17 +186,37 @@ describe('/sequencing', () => {
 
     page.panelButton.click();
 
-    browser.wait(EC.visibilityOf(page.panelMenu), 1000);
-    page.leftPanelToggleButton.click();
-    browser.wait(EC.invisibilityOf(page.leftPanel), 1000);
+    browser.wait(
+      EC.visibilityOf(page.panelMenu),
+      1000,
+      'Panels menu should appear',
+    );
+
+    clickHarder('#sequencing-panels-left-toggle-button');
+
+    browser.wait(
+      EC.invisibilityOf(page.leftPanel),
+      2000,
+      'Left panel should no longer be visible',
+    );
 
     expect(page.leftPanel.isDisplayed()).toBe(false);
 
     page.panelButton.click();
 
-    browser.wait(EC.visibilityOf(page.panelMenu), 1000);
-    page.leftPanelToggleButton.click();
-    browser.wait(EC.visibilityOf(page.leftPanel), 1000);
+    browser.wait(
+      EC.visibilityOf(page.panelMenu),
+      1000,
+      'Panels menu should appear',
+    );
+
+    clickHarder('#sequencing-panels-left-toggle-button');
+
+    browser.wait(
+      EC.visibilityOf(page.leftPanel),
+      1000,
+      'Left panel should be visible',
+    );
 
     expect(page.leftPanel.isDisplayed()).toBe(true);
   });
@@ -208,7 +228,7 @@ describe('/sequencing', () => {
     page.panelButton.click();
 
     browser.wait(EC.visibilityOf(page.panelMenu), 1000);
-    page.rightPanelToggleButton.click();
+    clickHarder('#sequencing-panels-right-toggle-button');
     browser.wait(EC.invisibilityOf(page.rightPanel), 1000);
 
     expect(page.rightPanel.isDisplayed()).toBe(false);
@@ -216,7 +236,7 @@ describe('/sequencing', () => {
     page.panelButton.click();
 
     browser.wait(EC.visibilityOf(page.panelMenu), 1000);
-    page.rightPanelToggleButton.click();
+    clickHarder('#sequencing-panels-right-toggle-button');
     browser.wait(EC.visibilityOf(page.rightPanel), 1000);
 
     expect(page.rightPanel.isDisplayed()).toBe(true);
