@@ -1,17 +1,17 @@
-version: '3.3'
+version: "3.3"
 services:
   adaptation:
-    image: cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/adaptation:leroy-jenkins_b57_r5e19da38_20190221
+    image: cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/adaptation:latest
     ports: ["27182:27182"]
     volumes:
-    - adaptation_files:/usr/src/app/adaptation_files
-    - adaptation_logs:/var/log/adaptation
+      - adaptation_files:/usr/src/app/adaptation_files
+      - adaptation_logs:/var/log/adaptation
   nest:
-    image: cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/nest:leroy-jenkins_b57_r5e19da38_20190221
+    image: cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/nest:latest
     ports: ["8080:80"]
   plan:
-    image: cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/plan:leroy-jenkins_b57_r5e19da38_20190221
-    command: ["--spring.profiles.active=production"] 
+    image: cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/plan:latest
+    command: ["--spring.profiles.active=production"]
     depends_on: ["plan_mongo"]
     ports: ["27183:27183"]
     restart: always
@@ -21,37 +21,23 @@ services:
     image: mongo:3.2
     ports: ["27018:27018"]
     volumes: ["plan_mongo_data:/data/db"]
-  # Message queue, for RabbitMQ a hostname must be specified so that data isn't
-  # assigned to a random directory
-  rabbitmq:
-    image: rabbitmq:3
-    ports: ["5672:5672"]
-    volumes: ["rabbitmq_data:/var/lib/rabbitmq/mnesia/rabbit@rabbitmq"]
-  tyk_gateway:
-    image: tykio/tyk-gateway:latest
-    ports: ["8081:8080"]
-    depends_on:
-    - tyk_redis
+  sequencing:
+    image: cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/sequencing:latest
+    command: ["npm", "run", "start:prod"]
+    depends_on: ["sequencing_mongo"]
+    ports: ["27186:27186"]
     restart: always
-    volumes:
-    - ./tyk_gateway/tyk_gateway_local.conf:/opt/tyk-gateway/tyk.conf
-    - ./tyk_gateway/apps:/opt/tyk-gateway/apps
-  tyk_redis:
-    image: redis
-    ports: ["6379:6379"]
-    volumes:
-    - tyk_redis_data:/data
-  activemq:
-    image: rmohr/activemq:5.15.6-alpine
-    ports: ["5672:5672", "8161:8161", "61616:61616"]
-    volumes: ["activemq_data:/opt/activemq/data"]
+    volumes: ["sequencing_logs:/var/log/sequencing"]
+  sequencing_mongo:
+    command: ["mongod", "--port", "27019"]
+    image: mongo:3.2
+    ports: ["27019:27019"]
+    volumes: ["sequencing_mongo_data:/data/db"]
 
 volumes:
-  activemq_data:
   adaptation_files:
   adaptation_logs:
   plan_logs:
   plan_mongo_data:
-  tyk_mongo_data:
-  tyk_redis_data:
-    
+  sequencing_logs:
+  sequencing_mongo_data:

@@ -130,12 +130,21 @@ for d in $changed
 do
   if [ -d $d ]; then
     cd $d
-    tag_name="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/$d:$tag_docker"
+    tag_name_base="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie"
 
     if [ -f Dockerfile ]; then
+      tag_name="$tag_name_base/$d:$tag_docker"
       echo "Publishing $tag_name to Artifactory"
       docker push "$tag_name"
       [ $? -ne 0 ] && error_exit "docker push failed for $tag_name"
+
+      if [ -z ${branch} ]
+      then
+        tag_name_latest="$tag_name_base/$d:latest"
+        echo "Publishing $tag_name_latest to Artifactory"
+        docker push "$tag_name_latest"
+        [ $? -ne 0 ] && error_exit "docker push failed for $tag_name_latest"
+      fi
     fi
     cd $root
 
