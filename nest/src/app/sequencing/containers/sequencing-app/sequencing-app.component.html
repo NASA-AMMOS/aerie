@@ -5,20 +5,29 @@
     matTooltip="Panels"
     role="button"
     aria-label="Panels"
+    id="sequencing-panels-button"
   >
     <mat-icon class="icon">
       view_quilt
     </mat-icon>
   </button>
 
-  <mat-menu #panelMenu>
-    <button mat-menu-item (click)="togglePanelView('leftPanel')">
+  <mat-menu #panelMenu id="panels-menu-container">
+    <button
+      mat-menu-item
+      (click)="togglePanelView('leftPanel')"
+      id="sequencing-panels-left-toggle-button"
+    >
       <mat-icon aria-label="Toggle Left Menu">
         border_left
       </mat-icon>
       Toggle Left Menu
     </button>
-    <button mat-menu-item (click)="togglePanelView('rightPanel')">
+    <button
+      mat-menu-item
+      (click)="togglePanelView('rightPanel')"
+      id="sequencing-panels-right-toggle-button"
+    >
       <mat-icon aria-label="Toggle Right Menu">
         border_right
       </mat-icon>
@@ -38,6 +47,7 @@
     [visible]="panels.leftPanel.visible"
     order="1"
     #leftPanel
+    id="left-panel-area"
   >
     <mat-tab-group animationDuration="0ms">
       <mat-tab>
@@ -55,6 +65,7 @@
     [visible]="panels.middlePanel.visible"
     order="2"
     #editor
+    id="middle-panel-area"
   >
     <main>
       <seq-editor
@@ -72,6 +83,7 @@
     [visible]="panels.rightPanel.visible"
     order="3"
     #rightPanel
+    id="right-panel-area"
   >
     <mat-tab-group animationDuration="0ms">
       <mat-tab>
