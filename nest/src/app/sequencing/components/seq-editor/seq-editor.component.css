@@ -6,7 +6,8 @@
  * User has the responsibility to obtain export licenses, or other export authority as may be required
  * before exporting such information to foreign countries or providing access to foreign persons
  */
-::ng-deep .CodeMirror-tooltip {
+::ng-deep .CodeMirror-tooltip,
+::ng-deep .CodeMirror-lint-tooltip {
   position: absolute;
   z-index: 5;
   padding: 1.5em;
@@ -14,8 +15,9 @@
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
   background: rgb(224, 224, 224);
-  color: #333;
+  color: #333 !important;
   border-radius: 1em;
+  font: 400 14px/20px Roboto, 'Helvetica Neue', sans-serif;
 }
 
 ::ng-deep .CodeMirror-tooltip h3 {
@@ -70,17 +72,11 @@
   z-index: 10 !important;
 }
 
-::ng-deep .CodeMirror-lint-tooltip {
-  position: absolute;
-  z-index: 5;
-  padding: 10px;
-  max-width: 400px;
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-  max-height: 600px;
-  overflow-y: scroll;
-  border: 1px solid #9effff;
-  background: rgb(39, 40, 34);
-  color: white;
-  font-family: inherit;
+.hint-description {
+  position: fixed;
+  background: #ffffff;
+  z-index: 10;
+  display: none;
+  padding: 6px;
+  border: 2px solid #ccc;
 }

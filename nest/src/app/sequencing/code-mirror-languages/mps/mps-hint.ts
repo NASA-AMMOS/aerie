@@ -55,4 +55,84 @@ export function buildMpsHint(commandsByName: StringTMap<MpsCommand>): void {
       (e: CodeMirror.Editor, cur: CodeMirror.Position) => e.getTokenAt(cur),
     ),
   );
+
+  // Sets up the autocomplete description view
+  // @ts-ignore: CodeMirror typing doesn't have hint
+  const mpsHint = CodeMirror.hint.mps;
+  // @ts-ignore: CodeMirror typing doesn't have hint
+  CodeMirror.hint.mps = function(
+    cm: CodeMirror.Editor,
+    options: CodeMirror.EditorConfiguration,
+  ) {
+    const suggestions = mpsHint(cm, options);
+    if (suggestions) {
+      CodeMirror.on(suggestions, 'shown', function() {
+        showHintDescription();
+      });
+      CodeMirror.on(suggestions, 'select', function(
+        completion: CodeMirrorCompletion,
+        Element: HTMLElement,
+      ) {
+        fillHintDescription(completion);
+      });
+      CodeMirror.on(suggestions, 'close', function() {
+        closeHintDescription();
+      });
+    }
+
+    return suggestions;
+  };
+}
+
+/**
+ * Handles the positioning of the description box
+ * by calculating the offset from the suggestions
+ * container
+ */
+function showHintDescription() {
+  const hintDescription = document.querySelector(
+    '.hint-description',
+  ) as HTMLElement;
+  const hintSuggestions = document.querySelector(
+    '.CodeMirror-hint, .monokai',
+  ) as Element;
+
+  const hintSuggestionsStyles = getComputedStyle(hintSuggestions);
+  const { left, top, width } = hintSuggestionsStyles;
+
+  if (left && width) {
+    hintDescription.style.display = 'block';
+    const offsetLeft = `${parseInt(left, 10) + parseInt(width, 10)}px`;
+    hintDescription.style.left = offsetLeft;
+    hintDescription.style.top = top;
+  }
+}
+
+/**
+ * Handles changing the content of the hint description
+ * TODO: Change to useful content
+ * @param completion The currently selected suggestion
+ */
+function fillHintDescription(completion: CodeMirrorCompletion) {
+  const hintDescription = document.querySelector(
+    '.hint-description',
+  ) as HTMLElement;
+
+  hintDescription.innerText = completion.text;
+}
+
+/**
+ * Handles hiding the hint description
+ */
+function closeHintDescription() {
+  const hintDescription = document.querySelector(
+    '.hint-description',
+  ) as HTMLElement;
+
+  hintDescription.style.display = 'none';
+}
+
+interface CodeMirrorCompletion {
+  displayText: string;
+  text: string;
 }
