@@ -514,11 +514,12 @@ public class PlansControllerIntegrationTest {
 
   @Test
   @DirtiesContext
-  public void shouldReplaceAnActivityInstanceWithNoId() throws IOException {
+  public void shouldReplaceAnActivityInstanceWithFreshId() throws IOException {
     Plan plan = postRandomPlan();
     ActivityInstance original = postRandomActivityInstance(plan.getId());
+
     ActivityInstance replacement = generateRandomActivityInstance();
-    replacement.setActivityId(null);
+    replacement.setActivityId(original.getActivityId() + "-patched");
 
     HttpEntity<ActivityInstance> putResponseEntity =
         new HttpEntity<>(replacement, new HttpHeaders());

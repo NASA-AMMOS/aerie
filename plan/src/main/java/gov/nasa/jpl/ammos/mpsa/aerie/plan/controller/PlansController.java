@@ -257,7 +257,7 @@ public class PlansController {
             return ResponseEntity.notFound().build();
         }
 
-        // Ensure that there is always an activityId, even if the user hasn't passed one
+        // Ensure that there is always an activityId, and ignore a user-provided id.
         requestBodyActivityInstance.setActivityId(activityInstance.getActivityId());
 
         try {
@@ -289,6 +289,8 @@ public class PlansController {
           return ResponseEntity.notFound().build();
         }
 
+        // Ensure that there is always an activityId, and ignore a user-provided id.
+        requestBodyActivityInstance.setActivityId(activityInstance.getActivityId());
         planDetail.updateActivityInstance(id, requestBodyActivityInstance);
 
         try {
