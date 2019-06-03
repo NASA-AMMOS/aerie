@@ -1,13 +1,19 @@
-// Protractor configuration file, see link for more information
-// https://github.com/angular/protractor/blob/master/lib/config.ts
-
 const { SpecReporter } = require('jasmine-spec-reporter');
 
 exports.config = {
   allScriptsTimeout: 11000,
-  specs: ['./src/**/*.e2e-spec.ts'],
+  specs: [
+    './src/planning/plans.e2e-spec.ts',
+    './src/sequencing/sequencing.codemirror.e2e-spec.ts',
+    './src/sequencing/sequencing.commanddictionary.e2e-spec.ts',
+    './src/sequencing/sequencing.pageinit.e2e-spec.ts',
+    './src/sequencing/sequencing.panels.e2e-spec.ts',
+    './src/sequencing/sequencing.toolbar.e2e-spec.ts',
+  ],
   capabilities: {
     browserName: 'chrome',
+    shardTestFiles: true,
+    maxInstances: 4,
   },
   directConnect: true,
   baseUrl: 'http://localhost:4200',

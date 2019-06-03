@@ -183,6 +183,7 @@ mvn_build() {
 mvn_clean() {
   echo -e "Running mvn clean..."
   mvn clean -f pom.xml
+  rm_m2
 }
 
 mvn_install() {

@@ -23,11 +23,8 @@ import {
 } from '@angular/material';
 import { AngularSplitModule } from 'angular-split';
 import { NestAppHeaderModule } from '../../../shared/components';
-import {
-  SeqCommandListModule,
-  SeqCommandLoaderModule,
-  SeqEditorModule,
-} from '../../components';
+import { SeqCommandListModule, SeqCommandLoaderModule } from '../../components';
+import { SequencingWorkspaceModule } from '../sequencing-workspace/sequencing-workspace.module';
 import { SequencingAppComponent } from './sequencing-app.component';
 
 @NgModule({
@@ -47,9 +44,9 @@ import { SequencingAppComponent } from './sequencing-app.component';
     MatToolbarModule,
     MatTooltipModule,
     NestAppHeaderModule,
+    SequencingWorkspaceModule,
     SeqCommandListModule,
     SeqCommandLoaderModule,
-    SeqEditorModule,
   ],
 })
 export class SequencingAppModule {}

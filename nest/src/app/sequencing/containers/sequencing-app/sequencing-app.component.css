@@ -21,14 +21,6 @@ main {
   position: relative;
 }
 
-raven-seq-editor {
-  bottom: 0;
-  left: 0;
-  position: absolute;
-  right: 0;
-  top: 0;
-}
-
 ::ng-deep .mat-tab-body-wrapper {
   padding: 15px 20px;
 }

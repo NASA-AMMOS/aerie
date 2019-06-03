@@ -1,0 +1,28 @@
+<seq-navbar
+  *ngIf="commands$ | async"
+  [openedTabs]="openedTabs$ | async"
+  [currentTab]="currentTab$ | async"
+  [openedTabsByName]="openedTabsByName$ | async"
+  (createTab)="onCreateTab($event)"
+  (closeTab)="onCloseTab($event)"
+  (switchTab)="onSwitchTab($event)"
+  (updateTab)="onUpdateTab($event)"
+></seq-navbar>
+
+<seq-editor
+  [commands]="commands$ | async"
+  [commandsByName]="commandsByName$ | async"
+  [currentTab]="currentTab$ | async"
+  [file]="file$ | async"
+  (openHelpDialog)="onOpenEditorHelpDialog()"
+  (updateTab)="onUpdateTab($event)"
+>
+</seq-editor>
+
+<div id="no-files-message">
+  <div id="no-files-message-text">
+    <mat-card>
+      <h1>No Files Opened</h1>
+    </mat-card>
+  </div>
+</div>

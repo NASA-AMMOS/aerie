@@ -1,4 +1,5 @@
 import { browser, ExpectedConditions as EC, logging } from 'protractor';
+import { click } from '../utils';
 import { PlanningPage } from './planning.po';
 
 describe('/plans', () => {
@@ -52,31 +53,30 @@ describe('/plans', () => {
 
     page.nameInput.sendKeys('Test Plan 1002');
 
-    page.planStartInput.click();
-    page.testPlanStart.click();
-    browser.sleep(500);
-    page.datetimeSetButton.click();
+    click(page.planStartInput);
+    click(page.testPlanStart);
+    browser.sleep(2000); // Sleep or se can't click 'Set'.
+    click(page.datetimeSetButton);
 
     browser.wait(
       EC.not(EC.visibilityOf(page.datetimeContainer)),
-      1000,
+      5000,
       'Datetime picker did not go away',
     );
 
-    page.planEndInput.click();
-    browser.sleep(500);
-    page.testPlanEnd.click();
-    page.datetimeSetButton.click();
+    click(page.planEndInput);
+    click(page.testPlanEnd);
+    browser.sleep(2000); // Sleep or se can't click 'Set'.
+    click(page.datetimeSetButton);
 
     browser.wait(
       EC.not(EC.visibilityOf(page.datetimeContainer)),
-      1000,
+      5000,
       'Datetime picker did not go away',
     );
 
     page.adaptationOptions.first().click();
-
-    page.saveButton.click();
+    click(page.saveButton);
 
     expect(page.toastSuccess.isDisplayed()).toBeTruthy();
   });

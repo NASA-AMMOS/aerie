@@ -1,0 +1,19 @@
+<div id="seq-tabs-container">
+  <seq-tab
+    *ngFor="let tab of openedTabs"
+    [tab]="tab"
+    (textClick)="switchTab.emit(tab.id)"
+    (iconClick)="closeTab.emit(tab.id); switchTab.emit(tab.id)"
+    [isActive]="currentTab === tab.id"
+  ></seq-tab>
+</div>
+
+<button
+  mat-mini-fab
+  color="primary"
+  id="seq-create-tab-button"
+  (click)="createTab.emit()"
+  matTooltip="Add a new tab"
+>
+  <mat-icon>add</mat-icon>
+</button>

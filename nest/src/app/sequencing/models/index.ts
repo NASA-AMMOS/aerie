@@ -9,3 +9,4 @@
 
 export * from './code-mirror-lint-error';
 export * from './command';
+export * from './sequence-tab';

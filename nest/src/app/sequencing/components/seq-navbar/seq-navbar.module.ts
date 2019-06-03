@@ -7,8 +7,15 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './seq-command-loader/seq-command-loader.module';
-export * from './seq-command-list/seq-command-list.module';
-export * from './seq-editor/seq-editor.module';
-export * from './seq-navbar/seq-navbar.module';
-export * from './seq-tab/seq-tab.module';
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { MatButtonModule, MatIconModule } from '@angular/material';
+import { SeqTabModule } from '../seq-tab/seq-tab.module';
+import { SeqNavbarComponent } from './seq-navbar.component';
+
+@NgModule({
+  declarations: [SeqNavbarComponent],
+  exports: [SeqNavbarComponent],
+  imports: [CommonModule, MatButtonModule, MatIconModule, SeqTabModule],
+})
+export class SeqNavbarModule {}

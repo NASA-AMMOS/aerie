@@ -11,14 +11,25 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import {
   MatButtonModule,
+  MatCardModule,
   MatIconModule,
   MatTooltipModule,
 } from '@angular/material';
+import { NgFloatingActionMenuModule } from 'ng-floating-action-menu';
+import { SeqTabModule } from '../seq-tab/seq-tab.module';
 import { SeqEditorComponent } from './seq-editor.component';
 
 @NgModule({
   declarations: [SeqEditorComponent],
   exports: [SeqEditorComponent],
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatTooltipModule],
+  imports: [
+    CommonModule,
+    NgFloatingActionMenuModule,
+    MatButtonModule,
+    MatCardModule,
+    MatIconModule,
+    MatTooltipModule,
+    SeqTabModule,
+  ],
 })
 export class SeqEditorModule {}

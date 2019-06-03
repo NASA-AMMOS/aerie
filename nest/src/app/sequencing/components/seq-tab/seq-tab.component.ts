@@ -7,8 +7,24 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './seq-command-loader/seq-command-loader.module';
-export * from './seq-command-list/seq-command-list.module';
-export * from './seq-editor/seq-editor.module';
-export * from './seq-navbar/seq-navbar.module';
-export * from './seq-tab/seq-tab.module';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { SequenceTab } from '../../models';
+
+@Component({
+  selector: 'seq-tab',
+  styleUrls: ['./seq-tab.component.css'],
+  templateUrl: './seq-tab.component.html',
+})
+export class SeqTabComponent {
+  @Input()
+  tab: SequenceTab;
+
+  @Output()
+  iconClick: EventEmitter<any> = new EventEmitter<any>();
+
+  @Output()
+  textClick: EventEmitter<any> = new EventEmitter<any>();
+
+  @Input()
+  isActive: boolean;
+}

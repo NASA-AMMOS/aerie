@@ -19,6 +19,8 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
+import * as CodeMirror from 'codemirror';
+import { FloatingActionButton } from 'ng-floating-action-menu';
 import { MpsCommand, StringTMap } from '../../../shared/models';
 import {
   buildMpsHint,
@@ -29,6 +31,7 @@ import {
   getCommandParameterDescriptionTemplate,
   getCommandParameterHelpTemplate,
 } from '../../code-mirror-languages/mps/helpers';
+import { SequenceTab } from '../../models';
 import { SeqEditorService } from '../../services/seq-editor.service';
 
 @Component({
@@ -53,9 +56,6 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   };
 
   @Input()
-  filename = 'FileName.mps';
-
-  @Input()
   gutters: string[] = ['CodeMirror-lint-markers'];
 
   @Input()
@@ -73,8 +73,17 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   @Input()
   value = '';
 
+  @Input()
+  file: SequenceTab | null;
+
+  @Input()
+  currentTab: string | null;
+
   @Output()
   openHelpDialog: EventEmitter<null> = new EventEmitter<null>();
+
+  @Output()
+  updateTab: EventEmitter<any> = new EventEmitter<any>();
 
   @ViewChild('editor', { static: true })
   editorMount: ElementRef;
@@ -84,6 +93,43 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   userTheme = 'dark';
   tooltip: HTMLElement;
   showTooltips = false;
+  buttons: Array<FloatingActionButton> = [
+    {
+      iconClass: 'fa fa-undo',
+      label: 'Undo',
+      onClick: () => this.undo(),
+    },
+    {
+      iconClass: 'fa fa-repeat',
+      label: 'Redo',
+      onClick: () => this.redo(),
+    },
+    {
+      iconClass: 'fa fa-magic',
+      label: 'Toggle Autocomplete Off',
+      onClick: () => this.toggleAutocomplete(),
+    },
+    {
+      iconClass: 'fa fa-paint-brush',
+      label: 'Color Scheme',
+      onClick: () => this.toggleTheme(),
+    },
+    {
+      iconClass: 'fa fa-arrows-alt',
+      label: 'Toggle Fullscreen',
+      onClick: () => this.toggleFullscreen(),
+    },
+    {
+      iconClass: 'fa fa-info-circle',
+      label: 'Toggle Tooltips On',
+      onClick: () => this.toggleTooltips(),
+    },
+    {
+      iconClass: 'fa fa-question',
+      label: 'Help',
+      onClick: () => this.openHelpDialog.emit(),
+    },
+  ];
 
   constructor(private seqEditorService: SeqEditorService) {}
 
@@ -107,6 +153,12 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
     if (this.seqEditorService.editor && changes.value) {
       this.seqEditorService.editor.getDoc().setValue(this.value);
     }
+
+    if (this.seqEditorService.editor && changes.currentTab) {
+      const text = this.file ? this.file.text : '';
+
+      this.seqEditorService.editor.setValue(text);
+    }
   }
 
   ngAfterViewInit() {
@@ -114,6 +166,37 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
     this.setupAutocomplete();
     this.setupTooltip();
     this.setupTooltipHandler();
+    this.initializeEditor();
+  }
+
+  initializeEditor() {
+    this.seqEditorService.setEditor(this.editorMount, {
+      autofocus: this.autofocus,
+      extraKeys: {
+        ...this.extraKeys,
+        'Ctrl-R': this.redo.bind(this),
+        'Ctrl-Z': this.undo.bind(this),
+        Esc: this.toggleFullscreen.bind(this),
+      },
+      gutters: this.gutters,
+      lineNumbers: this.lineNumbers,
+      lineWrapping: this.lineWrapping,
+      lint: true,
+      mode: this.mode,
+      theme: this.theme,
+      value: this.value,
+    });
+
+    if (this.seqEditorService.editor) {
+      this.seqEditorService.editor.on('change', () => {
+        if (this.seqEditorService.editor && this.file) {
+          this.onUpdateTab(
+            this.file.id,
+            this.seqEditorService.editor.getValue(),
+          );
+        }
+      });
+    }
   }
 
   /**
@@ -155,6 +238,12 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   toggleAutocomplete() {
     if (this.seqEditorService.editor) {
       this.autocomplete = !this.autocomplete;
+
+      if (this.autocomplete) {
+        this.buttons[2].label = 'Toggle Autocomplete Off';
+      } else {
+        this.buttons[2].label = 'Toggle Autocomplete On';
+      }
       this.seqEditorService.editor.focus();
     }
   }
@@ -189,6 +278,12 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   toggleTooltips() {
     if (this.seqEditorService.editor) {
       this.showTooltips = !this.showTooltips;
+
+      if (this.showTooltips) {
+        this.buttons[5].label = 'Toggle Tooltips Off';
+      } else {
+        this.buttons[5].label = 'Toggle Tooltips On';
+      }
       this.seqEditorService.editor.focus();
     }
   }
@@ -376,5 +471,9 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
         this.tooltip.style.display = 'none';
       }, 250);
     }
+  }
+
+  onUpdateTab(id: string, text: string) {
+    this.updateTab.emit({ id, text });
   }
 }

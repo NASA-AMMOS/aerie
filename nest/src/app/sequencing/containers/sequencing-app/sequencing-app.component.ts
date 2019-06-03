@@ -21,7 +21,7 @@ import {
   FetchCommandDictionaries,
   SelectCommandDictionary,
 } from '../../actions/command-dictionary.actions';
-import { AddText, OpenEditorHelpDialog } from '../../actions/editor.actions';
+import { AddText } from '../../actions/editor.actions';
 import { getCommandTemplate } from '../../code-mirror-languages/mps/helpers';
 import {
   getCommands,
@@ -49,8 +49,8 @@ export class SequencingAppComponent implements OnDestroy {
   // TODO: Move to reducer when implementing user config for app
   panels = {
     leftPanel: { size: 20, visible: true },
-    middlePanel: { size: 60, visible: true },
-    rightPanel: { size: 20, visible: true },
+    middlePanel: { size: 50, visible: true },
+    rightPanel: { size: 30, visible: true },
   };
 
   private ngUnsubscribe: Subject<{}> = new Subject();
@@ -79,10 +79,6 @@ export class SequencingAppComponent implements OnDestroy {
 
   onMenuClicked(): void {
     this.store.dispatch(new ToggleNestNavigationDrawer());
-  }
-
-  onOpenEditorHelpDialog(): void {
-    this.store.dispatch(new OpenEditorHelpDialog());
   }
 
   onSelectCommand(commandName: string): void {

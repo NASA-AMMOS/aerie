@@ -51,21 +51,24 @@
   width: 100%;
 }
 
-#sequencing-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  flex-wrap: wrap;
+#sequencing-editor-mount {
+  background: #272822;
 }
 
-#sequencing-toolbar > button {
+#helper-buttons {
+  margin-top: 8px;
+  right: 8px;
+  z-index: 5;
+  opacity: 0.5;
+  transition: opacity 0.25s;
+}
+
+#helper-buttons:hover {
+  opacity: 1;
+}
+
+#helper-buttons > button {
   margin: 8px 8px 8px 0px;
-}
-
-#sequencing-filename {
-  margin-right: auto;
-  margin-bottom: 0;
-  margin-left: 8px;
 }
 
 ::ng-deep .CodeMirror-fullscreen {

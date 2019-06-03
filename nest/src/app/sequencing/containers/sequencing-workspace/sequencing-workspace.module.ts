@@ -7,8 +7,15 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './seq-command-loader/seq-command-loader.module';
-export * from './seq-command-list/seq-command-list.module';
-export * from './seq-editor/seq-editor.module';
-export * from './seq-navbar/seq-navbar.module';
-export * from './seq-tab/seq-tab.module';
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { MatCardModule } from '@angular/material';
+import { SeqEditorModule, SeqNavbarModule } from '../../components';
+import { SequencingWorkspaceComponent } from './sequencing-workspace.component';
+
+@NgModule({
+  declarations: [SequencingWorkspaceComponent],
+  exports: [SequencingWorkspaceComponent],
+  imports: [CommonModule, MatCardModule, SeqEditorModule, SeqNavbarModule],
+})
+export class SequencingWorkspaceModule {}

@@ -1,6 +1,8 @@
-import { browser, ElementFinder } from 'protractor';
+import { browser, ElementFinder, ExpectedConditions } from 'protractor';
 
 export function click(el: ElementFinder): void {
+  const isClickable = ExpectedConditions.elementToBeClickable(el);
+  browser.wait(isClickable, 5000);
   browser
     .actions()
     .click(el)
@@ -17,11 +19,16 @@ export function clickHarder(selector: string) {
   browser.executeScript(`
       const element = document.querySelector('${selector}');
       element.click();
-    `);
+  `);
 }
 
 export function hasClass(targetElement: any, className: string) {
   return targetElement.getAttribute('class').then((classes: string) => {
     return classes.split(' ').indexOf(className) !== -1;
   });
+}
+
+export function waitTilClickable(el: ElementFinder, timeout: number): void {
+  const isClickable = ExpectedConditions.elementToBeClickable(el);
+  browser.wait(isClickable, timeout);
 }

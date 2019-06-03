@@ -7,8 +7,40 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './seq-command-loader/seq-command-loader.module';
-export * from './seq-command-list/seq-command-list.module';
-export * from './seq-editor/seq-editor.module';
-export * from './seq-navbar/seq-navbar.module';
-export * from './seq-tab/seq-tab.module';
+div {
+  display: flex;
+  align-items: center;
+  height: 30px;
+  margin-right: 6px;
+  background: white;
+}
+
+.active-tab button {
+  background: #ae4b00;
+  color: white;
+}
+
+button {
+  border: none;
+  cursor: pointer;
+  height: 100%;
+  background: none;
+  border: 1px solid #33333394;
+  transition: 0.1s filter ease-in;
+}
+
+button:hover {
+  filter: brightness(0.8);
+}
+
+.seq-tab-text {
+  border-radius: 4px 0px 0px 4px;
+}
+
+.seq-tab-icon {
+  display: flex;
+  align-items: center;
+
+  border-left: none;
+  border-radius: 0px 4px 4px 0px;
+}

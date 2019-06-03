@@ -68,13 +68,7 @@
     id="middle-panel-area"
   >
     <main>
-      <seq-editor
-        [commands]="commands$ | async"
-        [commandsByName]="commandsByName$ | async"
-        (openHelpDialog)="onOpenEditorHelpDialog()"
-        id="command-filter-input"
-      >
-      </seq-editor>
+      <sequencing-workspace></sequencing-workspace>
     </main>
   </as-split-area>
 

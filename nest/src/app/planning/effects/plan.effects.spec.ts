@@ -137,8 +137,9 @@ describe('PlanEffects', () => {
       const success = new CreateActivitySuccess(planId, {
         ...activity,
         constraints: [],
+        listeners: [],
         parameters: [],
-        y: null,
+        y: 0,
       });
       const showToast = new ShowToast(
         'success',
