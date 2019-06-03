@@ -9,7 +9,13 @@
 
 import { omit, uniqueId } from 'lodash';
 import { StringTMap } from '../../shared/models';
-import { FileActions, FileActionTypes } from '../actions/file.actions';
+import {
+  CloseTab,
+  FileActions,
+  FileActionTypes,
+  SwitchTab,
+  UpdateTab,
+} from '../actions/file.actions';
 import { SequenceTab } from '../models';
 
 export interface FileState {
@@ -22,22 +28,39 @@ export const initialState: FileState = {
   openedTabs: null,
 };
 
+/**
+ * Reducer.
+ * If a case takes more than one line then it should be in it's own helper function.
+ */
 export function reducer(state: FileState = initialState, action: FileActions) {
   switch (action.type) {
-    case FileActionTypes.CreateTab:
-      return CreateTab(state);
-    case FileActionTypes.SwitchTab:
-      return SwitchTab(state, action.switchToId);
     case FileActionTypes.CloseTab:
-      return CloseTab(state, action.docIdToClose);
+      return closeTab(state, action);
+    case FileActionTypes.CreateTab:
+      return createTab(state);
+    case FileActionTypes.SwitchTab:
+      return switchTab(state, action);
     case FileActionTypes.UpdateTab:
-      return UpdateTab(state, action.docIdToUpdate, action.text);
+      return updateTab(state, action);
     default:
       return state;
   }
 }
 
-function CreateTab(state: FileState) {
+/**
+ * Reduction helper. Called when reducing the `CloseTab` action.
+ */
+function closeTab(state: FileState, action: CloseTab): FileState {
+  return {
+    ...state,
+    openedTabs: omit(state.openedTabs, action.docIdToClose),
+  };
+}
+
+/**
+ * Reduction helper. Called when reducing the `CreateTab` action.
+ */
+function createTab(state: FileState): FileState {
   const id = uniqueId();
   const newTab = {
     filename: `New File ${id}`,
@@ -64,8 +87,13 @@ function CreateTab(state: FileState) {
   return newState;
 }
 
-function SwitchTab(state: FileState, switchToId: string) {
+/**
+ * Reduction helper. Called when reducing the `SwitchTab` action.
+ */
+function switchTab(state: FileState, action: SwitchTab): FileState {
   if (state.openedTabs) {
+    const { switchToId } = action;
+
     if (switchToId in state.openedTabs) {
       // If the key still exists, switch to that tab
       return {
@@ -87,15 +115,13 @@ function SwitchTab(state: FileState, switchToId: string) {
   return state;
 }
 
-function CloseTab(state: FileState, docIdToClose: string) {
-  return {
-    ...state,
-    openedTabs: omit(state.openedTabs, docIdToClose),
-  };
-}
-
-function UpdateTab(state: FileState, docIdToUpdate: string, text: string) {
+/**
+ * Reduction helper. Called when reducing the `UpdateTab` action.
+ */
+function updateTab(state: FileState, action: UpdateTab): FileState {
   if (state.openedTabs) {
+    const { docIdToUpdate, text } = action;
+
     return {
       ...state,
       openedTabs: {

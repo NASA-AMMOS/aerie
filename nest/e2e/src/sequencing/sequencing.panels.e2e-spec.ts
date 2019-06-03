@@ -15,7 +15,7 @@ describe('/sequencing.panels', () => {
 
   it('[C136493] A user SHOULD be able to open the panel menu', () => {
     page.panelButton.click();
-    browser.wait(EC.visibilityOf(page.panelMenu), 1000);
+    browser.wait(EC.visibilityOf(page.panelMenu), 5000);
     expect(page.panelMenu.isDisplayed()).toBe(true);
   });
 
@@ -64,17 +64,17 @@ describe('/sequencing.panels', () => {
 
     page.panelButton.click();
 
-    browser.wait(EC.visibilityOf(page.panelMenu), 1000);
+    browser.wait(EC.visibilityOf(page.panelMenu), 5000);
     clickHarder('#sequencing-panels-right-toggle-button');
-    browser.wait(EC.invisibilityOf(page.rightPanel), 1000);
+    browser.wait(EC.invisibilityOf(page.rightPanel), 5000);
 
     expect(page.rightPanel.isDisplayed()).toBe(false);
 
     page.panelButton.click();
 
-    browser.wait(EC.visibilityOf(page.panelMenu), 1000);
+    browser.wait(EC.visibilityOf(page.panelMenu), 5000);
     clickHarder('#sequencing-panels-right-toggle-button');
-    browser.wait(EC.visibilityOf(page.rightPanel), 1000);
+    browser.wait(EC.visibilityOf(page.rightPanel), 5000);
 
     expect(page.rightPanel.isDisplayed()).toBe(true);
   });

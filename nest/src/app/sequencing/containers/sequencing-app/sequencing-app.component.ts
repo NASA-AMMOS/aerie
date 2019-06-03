@@ -22,11 +22,22 @@ import {
   SelectCommandDictionary,
 } from '../../actions/command-dictionary.actions';
 import { AddText } from '../../actions/editor.actions';
+import {
+  SetPanelSizes,
+  ToggleLeftPanelVisible,
+  ToggleRightPanelVisible,
+} from '../../actions/layout.actions';
 import { getCommandTemplate } from '../../code-mirror-languages/mps/helpers';
 import {
   getCommands,
   getCommandsByName,
   getDictionaries,
+  getLeftPanelSize,
+  getLeftPanelVisible,
+  getMiddlePanelSize,
+  getMiddlePanelVisible,
+  getRightPanelSize,
+  getRightPanelVisible,
   getSelectedDictionaryId,
 } from '../../selectors';
 import { SequencingAppState } from '../../sequencing-store';
@@ -41,17 +52,16 @@ export class SequencingAppComponent implements OnDestroy {
   commands$: Observable<MpsCommand[] | null>;
   commandsByName$: Observable<StringTMap<MpsCommand> | null>;
   dictionaries$: Observable<CommandDictionary[]>;
+  leftPanelSize$: Observable<number>;
+  leftPanelVisible$: Observable<boolean>;
+  middlePanelSize$: Observable<number>;
+  middlePanelVisible$: Observable<boolean>;
+  rightPanelSize$: Observable<number>;
+  rightPanelVisible$: Observable<boolean>;
   selectedDictionaryId$: Observable<string | null>;
 
   commandsByName: StringTMap<MpsCommand>;
   commandFilterQuery = '';
-
-  // TODO: Move to reducer when implementing user config for app
-  panels = {
-    leftPanel: { size: 20, visible: true },
-    middlePanel: { size: 50, visible: true },
-    rightPanel: { size: 30, visible: true },
-  };
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -59,6 +69,12 @@ export class SequencingAppComponent implements OnDestroy {
     this.commands$ = this.store.pipe(select(getCommands));
     this.commandsByName$ = this.store.pipe(select(getCommandsByName));
     this.dictionaries$ = this.store.pipe(select(getDictionaries));
+    this.leftPanelSize$ = this.store.pipe(select(getLeftPanelSize));
+    this.leftPanelVisible$ = this.store.pipe(select(getLeftPanelVisible));
+    this.middlePanelSize$ = this.store.pipe(select(getMiddlePanelSize));
+    this.middlePanelVisible$ = this.store.pipe(select(getMiddlePanelVisible));
+    this.rightPanelSize$ = this.store.pipe(select(getRightPanelSize));
+    this.rightPanelVisible$ = this.store.pipe(select(getRightPanelVisible));
     this.selectedDictionaryId$ = this.store.pipe(
       select(getSelectedDictionaryId),
     );
@@ -77,6 +93,10 @@ export class SequencingAppComponent implements OnDestroy {
     this.ngUnsubscribe.complete();
   }
 
+  dragEnd(event: { gutterNum: number; sizes: Array<number> }) {
+    this.store.dispatch(new SetPanelSizes(event.sizes));
+  }
+
   onMenuClicked(): void {
     this.store.dispatch(new ToggleNestNavigationDrawer());
   }
@@ -93,25 +113,11 @@ export class SequencingAppComponent implements OnDestroy {
     this.store.dispatch(new SelectCommandDictionary(selectedId));
   }
 
-  dragEnd(event: { gutterNum: number; sizes: Array<number> }) {
-    const { sizes } = event;
-    this.panels.leftPanel.size = sizes[0];
-    this.panels.middlePanel.size = sizes[1];
-    this.panels.rightPanel.size = sizes[2];
+  toggleLeftPanelVisible() {
+    this.store.dispatch(new ToggleLeftPanelVisible());
   }
 
-  togglePanelView(type: string) {
-    switch (type) {
-      case 'leftPanel':
-        this.panels.leftPanel.visible = !this.panels.leftPanel.visible;
-        break;
-      case 'rightPanel':
-        this.panels.rightPanel.visible = !this.panels.rightPanel.visible;
-        break;
-      default:
-        for (const panel in this.panels) {
-          this.panels[panel].visible = true;
-        }
-    }
+  toggleRightPanelVisible() {
+    this.store.dispatch(new ToggleRightPanelVisible());
   }
 }

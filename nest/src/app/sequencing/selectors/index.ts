@@ -9,3 +9,4 @@
 
 export * from './command-dictionary.selectors';
 export * from './file.selectors';
+export * from './layout.selectors';

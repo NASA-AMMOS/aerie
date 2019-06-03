@@ -15,23 +15,23 @@
   <mat-menu #panelMenu id="panels-menu-container">
     <button
       mat-menu-item
-      (click)="togglePanelView('leftPanel')"
+      (click)="toggleLeftPanelVisible()"
       id="sequencing-panels-left-toggle-button"
     >
-      <mat-icon aria-label="Toggle Left Menu">
+      <mat-icon aria-label="Toggle Left Panel">
         border_left
       </mat-icon>
-      Toggle Left Menu
+      Toggle Left Panel
     </button>
     <button
       mat-menu-item
-      (click)="togglePanelView('rightPanel')"
+      (click)="toggleRightPanelVisible()"
       id="sequencing-panels-right-toggle-button"
     >
-      <mat-icon aria-label="Toggle Right Menu">
+      <mat-icon aria-label="Toggle Right Panel">
         border_right
       </mat-icon>
-      Toggle Right Menu
+      Toggle Right Panel
     </button>
   </mat-menu>
 </nest-app-header>
@@ -43,8 +43,8 @@
   #split
 >
   <as-split-area
-    [size]="panels.leftPanel.size"
-    [visible]="panels.leftPanel.visible"
+    [size]="leftPanelSize$ | async"
+    [visible]="leftPanelVisible$ | async"
     order="1"
     #leftPanel
     id="left-panel-area"
@@ -61,8 +61,8 @@
   </as-split-area>
 
   <as-split-area
-    [size]="panels.middlePanel.size"
-    [visible]="panels.middlePanel.visible"
+    [size]="middlePanelSize$ | async"
+    [visible]="middlePanelVisible$ | async"
     order="2"
     #editor
     id="middle-panel-area"
@@ -73,8 +73,8 @@
   </as-split-area>
 
   <as-split-area
-    [size]="panels.rightPanel.size"
-    [visible]="panels.rightPanel.visible"
+    [size]="rightPanelSize$ | async"
+    [visible]="rightPanelVisible$ | async"
     order="3"
     #rightPanel
     id="right-panel-area"
