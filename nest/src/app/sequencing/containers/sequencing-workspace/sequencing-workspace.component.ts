@@ -7,7 +7,12 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  Input,
+} from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { MpsCommand, StringTMap } from '../../../shared/models';
@@ -19,13 +24,13 @@ import {
   UpdateTab,
 } from '../../actions/file.actions';
 import { SequenceTab } from '../../models';
+import { Editor } from '../../reducers/file.reducer';
 import {
   getCommands,
   getCommandsByName,
   getCurrentFile,
   getCurrentTab,
   getOpenedTabs,
-  getOpenedTabsByName,
 } from '../../selectors';
 import { SequencingAppState } from '../../sequencing-store';
 
@@ -35,40 +40,58 @@ import { SequencingAppState } from '../../sequencing-store';
   styleUrls: ['./sequencing-workspace.component.css'],
   templateUrl: './sequencing-workspace.component.html',
 })
-export class SequencingWorkspaceComponent {
+export class SequencingWorkspaceComponent implements AfterViewInit {
+  @Input()
+  editor: Editor;
+
   commands$: Observable<MpsCommand[] | null>;
   commandsByName$: Observable<StringTMap<MpsCommand> | null>;
   currentTab$: Observable<string | null>;
   file$: Observable<SequenceTab | null>;
   openedTabs$: Observable<SequenceTab[]>;
-  openedTabsByName$: Observable<StringTMap<SequenceTab> | null>;
 
   constructor(private store: Store<SequencingAppState>) {
     this.commands$ = this.store.pipe(select(getCommands));
     this.commandsByName$ = this.store.pipe(select(getCommandsByName));
-    this.currentTab$ = this.store.pipe(select(getCurrentTab));
-    this.file$ = this.store.pipe(select(getCurrentFile));
-    this.openedTabs$ = this.store.pipe(select(getOpenedTabs));
-    this.openedTabsByName$ = this.store.pipe(select(getOpenedTabsByName));
   }
 
-  onCloseTab(id: string) {
-    this.store.dispatch(new CloseTab(id));
+  ngAfterViewInit() {
+    this.currentTab$ = this.store.pipe(
+      select(getCurrentTab, { editorId: this.editor.id }),
+    );
+    this.file$ = this.store.pipe(
+      select(getCurrentFile, { editorId: this.editor.id }),
+    );
+    this.openedTabs$ = this.store.pipe(
+      select(getOpenedTabs, { editorId: this.editor.id }),
+    );
   }
 
-  onCreateTab() {
-    this.store.dispatch(new CreateTab());
+  onCloseTab(id: string, editorId: string) {
+    this.store.dispatch(new CloseTab(id, editorId));
+  }
+
+  onCreateTab(editorId: string) {
+    this.store.dispatch(new CreateTab(editorId));
   }
 
   onOpenEditorHelpDialog(): void {
     this.store.dispatch(new OpenEditorHelpDialog());
   }
 
-  onSwitchTab(switchToId: string) {
-    this.store.dispatch(new SwitchTab(switchToId));
+  onSwitchTab(switchToId: string, editorId: string) {
+    this.store.dispatch(new SwitchTab(switchToId, editorId));
   }
 
-  onUpdateTab({ id, text }: { id: string; text: string }) {
-    this.store.dispatch(new UpdateTab(id, text));
+  onUpdateTab({
+    id,
+    text,
+    editorId,
+  }: {
+    id: string;
+    text: string;
+    editorId: string;
+  }) {
+    this.store.dispatch(new UpdateTab(id, text, editorId));
   }
 }

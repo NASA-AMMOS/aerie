@@ -7,24 +7,34 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { StringTMap } from '../../../shared/models';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+} from '@angular/core';
 import { SequenceTab } from '../../models';
+import { Editor } from '../../reducers/file.reducer';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'seq-navbar',
   styleUrls: ['./seq-navbar.component.css'],
   templateUrl: './seq-navbar.component.html',
 })
 export class SeqNavbarComponent {
   @Input()
-  openedTabs: SequenceTab[];
-
-  @Input()
-  openedTabsByName: StringTMap<SequenceTab> = {};
+  openedTabs: SequenceTab[] | null;
 
   @Input()
   currentTab: string;
+
+  @Input()
+  editorId: string;
+
+  @Input()
+  editor: Editor;
 
   @Output()
   createTab: EventEmitter<any> = new EventEmitter<any>();

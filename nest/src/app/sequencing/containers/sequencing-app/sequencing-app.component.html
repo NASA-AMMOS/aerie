@@ -34,6 +34,18 @@
       Toggle Right Panel
     </button>
   </mat-menu>
+
+  <button
+    mat-icon-button
+    matTooltip="Add Editor Panel"
+    role="button"
+    aria-label="Add Editor Panel"
+    (click)="addEditorPane()"
+  >
+    <mat-icon class="icon">
+      add
+    </mat-icon>
+  </button>
 </nest-app-header>
 
 <as-split
@@ -68,11 +80,10 @@
     id="middle-panel-area"
   >
     <as-split direction="vertical">
-      <as-split-area>
-        <sequencing-workspace></sequencing-workspace>
-      </as-split-area>
-      <as-split-area>
-        <sequencing-workspace></sequencing-workspace>
+      <as-split-area
+        *ngFor="let editor of editorsList$ | async; trackBy: editorTrackByFn"
+      >
+        <sequencing-workspace [editor]="editor"></sequencing-workspace>
       </as-split-area>
     </as-split>
   </as-split-area>

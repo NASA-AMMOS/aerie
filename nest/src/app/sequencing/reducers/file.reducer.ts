@@ -11,6 +11,7 @@ import { omit, uniqueId } from 'lodash';
 import { StringTMap } from '../../shared/models';
 import {
   CloseTab,
+  CreateTab,
   FileActions,
   FileActionTypes,
   SwitchTab,
@@ -18,14 +19,29 @@ import {
 } from '../actions/file.actions';
 import { SequenceTab } from '../models';
 
-export interface FileState {
+export interface Editor {
   currentTab: string | null;
+  id: string;
   openedTabs: StringTMap<SequenceTab> | null;
 }
 
+export interface FileState {
+  editors: StringTMap<Editor>;
+}
+
 export const initialState: FileState = {
-  currentTab: null,
-  openedTabs: null,
+  editors: {
+    editor1: {
+      currentTab: null,
+      id: 'editor1',
+      openedTabs: null,
+    },
+    editor2: {
+      currentTab: null,
+      id: 'editor2',
+      openedTabs: null,
+    },
+  },
 };
 
 /**
@@ -37,7 +53,7 @@ export function reducer(state: FileState = initialState, action: FileActions) {
     case FileActionTypes.CloseTab:
       return closeTab(state, action);
     case FileActionTypes.CreateTab:
-      return createTab(state);
+      return createTab(state, action);
     case FileActionTypes.SwitchTab:
       return switchTab(state, action);
     case FileActionTypes.UpdateTab:
@@ -53,61 +69,95 @@ export function reducer(state: FileState = initialState, action: FileActions) {
 function closeTab(state: FileState, action: CloseTab): FileState {
   return {
     ...state,
-    openedTabs: omit(state.openedTabs, action.docIdToClose),
+    editors: {
+      ...state.editors,
+      [action.editorId]: {
+        ...state.editors.editorId,
+        openedTabs: omit(
+          state.editors.editorId.openedTabs,
+          action.docIdToClose,
+        ),
+      },
+    },
   };
 }
 
 /**
  * Reduction helper. Called when reducing the `CreateTab` action.
  */
-function createTab(state: FileState): FileState {
+function createTab(state: FileState, action: CreateTab): FileState {
   const id = uniqueId();
+
   const newTab = {
     filename: `New File ${id}`,
     id,
     text: '',
   };
 
-  let newCurrentTab = state.currentTab;
+  let newCurrentTab = state.editors[action.editorId].currentTab;
   // If there are currently no open tabs, set the currentTab to the
   // newly created tab
-  if (!state.currentTab) {
+  if (!newCurrentTab) {
     newCurrentTab = id;
   }
 
-  const newState = {
+  return {
     ...state,
-    currentTab: newCurrentTab,
-    openedTabs: {
-      ...state.openedTabs,
-      [id]: newTab,
+    editors: {
+      ...state.editors,
+      [action.editorId]: {
+        ...state.editors[action.editorId],
+        currentTab: newCurrentTab,
+        openedTabs: {
+          ...state.editors[action.editorId].openedTabs,
+          [id]: newTab,
+        },
+      },
     },
   };
-
-  return newState;
 }
 
 /**
  * Reduction helper. Called when reducing the `SwitchTab` action.
  */
 function switchTab(state: FileState, action: SwitchTab): FileState {
-  if (state.openedTabs) {
+  const editor = state.editors[action.editorId];
+
+  if (editor.openedTabs) {
     const { switchToId } = action;
 
-    if (switchToId in state.openedTabs) {
+    if (switchToId in editor.openedTabs) {
       // If the key still exists, switch to that tab
       return {
         ...state,
-        currentTab: switchToId,
+        editors: {
+          ...state.editors,
+          [action.editorId]: {
+            ...state.editors[action.editorId],
+            [action.editorId]: {
+              ...state.editors[action.editorId],
+              currentTab: action.switchToId,
+            },
+          },
+        },
       };
     } else {
       // If the key was deleted, switch to the farthest right tab
-      const openedTabKeys = Object.keys(state.openedTabs);
+      const openedTabKeys = Object.keys(editor.openedTabs);
       const lastTabKey = openedTabKeys[openedTabKeys.length - 1];
 
       return {
         ...state,
-        currentTab: lastTabKey,
+        editors: {
+          ...state.editors,
+          [action.editorId]: {
+            ...state.editors[action.editorId],
+            [action.editorId]: {
+              ...state.editors[action.editorId],
+              currentTab: lastTabKey,
+            },
+          },
+        },
       };
     }
   }
@@ -119,16 +169,24 @@ function switchTab(state: FileState, action: SwitchTab): FileState {
  * Reduction helper. Called when reducing the `UpdateTab` action.
  */
 function updateTab(state: FileState, action: UpdateTab): FileState {
-  if (state.openedTabs) {
+  const { openedTabs } = state.editors[action.editorId];
+
+  if (openedTabs) {
     const { docIdToUpdate, text } = action;
 
     return {
       ...state,
-      openedTabs: {
-        ...state.openedTabs,
-        [docIdToUpdate]: {
-          ...state.openedTabs[docIdToUpdate],
-          text,
+      editors: {
+        ...state.editors,
+        [action.editorId]: {
+          ...state.editors[action.editorId],
+          openedTabs: {
+            ...openedTabs,
+            [docIdToUpdate]: {
+              ...openedTabs[docIdToUpdate],
+              text,
+            },
+          },
         },
       },
     };

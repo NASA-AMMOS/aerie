@@ -16,7 +16,7 @@ export enum EditorActionTypes {
 
 export class AddText implements Action {
   readonly type = EditorActionTypes.AddText;
-  constructor(public text: string) {}
+  constructor(public text: string, public editorId: string) {}
 }
 
 export class OpenEditorHelpDialog implements Action {

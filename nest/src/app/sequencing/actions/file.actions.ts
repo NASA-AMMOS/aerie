@@ -18,24 +18,30 @@ export enum FileActionTypes {
 
 export class CreateTab implements Action {
   readonly type = FileActionTypes.CreateTab;
+
+  constructor(public editorId: string) {}
 }
 
 export class CloseTab implements Action {
   readonly type = FileActionTypes.CloseTab;
 
-  constructor(public docIdToClose: string) {}
+  constructor(public docIdToClose: string, public editorId: string) {}
 }
 
 export class SwitchTab implements Action {
   readonly type = FileActionTypes.SwitchTab;
 
-  constructor(public switchToId: string) {}
+  constructor(public switchToId: string, public editorId: string) {}
 }
 
 export class UpdateTab implements Action {
   readonly type = FileActionTypes.UpdateTab;
 
-  constructor(public docIdToUpdate: string, public text: string) {}
+  constructor(
+    public docIdToUpdate: string,
+    public text: string,
+    public editorId: string,
+  ) {}
 }
 
 export type FileActions = CreateTab | CloseTab | SwitchTab | UpdateTab;

@@ -11,6 +11,7 @@ import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { v4 as uuid } from 'uuid';
 import { ToggleNestNavigationDrawer } from '../../../shared/actions/config.actions';
 import {
   CommandDictionary,
@@ -28,10 +29,12 @@ import {
   ToggleRightPanelVisible,
 } from '../../actions/layout.actions';
 import { getCommandTemplate } from '../../code-mirror-languages/mps/helpers';
+import { Editor } from '../../reducers/file.reducer';
 import {
   getCommands,
   getCommandsByName,
   getDictionaries,
+  getEditorsList,
   getLeftPanelSize,
   getLeftPanelVisible,
   getMiddlePanelSize,
@@ -59,9 +62,11 @@ export class SequencingAppComponent implements OnDestroy {
   rightPanelSize$: Observable<number>;
   rightPanelVisible$: Observable<boolean>;
   selectedDictionaryId$: Observable<string | null>;
+  editorsList$: Observable<Editor[]>;
 
   commandsByName: StringTMap<MpsCommand>;
   commandFilterQuery = '';
+  editorPanes = [{ id: 'id0' }];
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -78,6 +83,7 @@ export class SequencingAppComponent implements OnDestroy {
     this.selectedDictionaryId$ = this.store.pipe(
       select(getSelectedDictionaryId),
     );
+    this.editorsList$ = this.store.pipe(select(getEditorsList));
 
     this.commandsByName$
       .pipe(takeUntil(this.ngUnsubscribe))
@@ -106,7 +112,7 @@ export class SequencingAppComponent implements OnDestroy {
       commandName,
       this.commandsByName,
     );
-    this.store.dispatch(new AddText(commandTemplate));
+    this.store.dispatch(new AddText(commandTemplate, 'editor1'));
   }
 
   onSelectDictionary(selectedId: string): void {
@@ -119,5 +125,14 @@ export class SequencingAppComponent implements OnDestroy {
 
   toggleRightPanelVisible() {
     this.store.dispatch(new ToggleRightPanelVisible());
+  }
+
+  addEditorPane() {
+    const id = uuid();
+    this.editorPanes.push({ id });
+  }
+
+  editorTrackByFn(_: number, item: any): string {
+    return item.id;
   }
 }
