@@ -10,5 +10,6 @@
 export * from './seq-command-loader/seq-command-loader.module';
 export * from './seq-command-list/seq-command-list.module';
 export * from './seq-editor/seq-editor.module';
+export * from './seq-file-tree/seq-file-tree.module';
 export * from './seq-navbar/seq-navbar.module';
 export * from './seq-tab/seq-tab.module';

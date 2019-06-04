@@ -24,13 +24,16 @@ export const root: SequenceFile = {
 };
 
 export const file0: SequenceFile = {
-  childIds: [],
-  content: 'START 0',
+  childIds: [
+    '717f2355-9d1e-44d2-9cae-78d913924668',
+    'a1b802ae-cfd1-4ffa-bc91-aa52ff907ca6',
+  ],
+  content: '',
   id: '13c2c7ac-9e8c-43d5-8b4d-095e3747feb2',
-  name: 'Sequence 0',
+  name: 'Sequences',
   timeCreated: 1558112161536,
   timeLastUpdated: 1558114056664,
-  type: 'file',
+  type: 'directory',
 };
 
 export const file1: SequenceFile = {
@@ -43,7 +46,33 @@ export const file1: SequenceFile = {
   type: 'file',
 };
 
-export const files: SequenceFile[] = [{ ...root }, { ...file0 }, { ...file1 }];
+export const file2: SequenceFile = {
+  childIds: [],
+  content: 'START 0',
+  id: '717f2355-9d1e-44d2-9cae-78d913924668',
+  name: 'Sequence 2',
+  timeCreated: 1559683148272,
+  timeLastUpdated: 1559683148272,
+  type: 'file',
+};
+
+export const file3: SequenceFile = {
+  childIds: [],
+  content: 'RETURN 0',
+  id: 'a1b802ae-cfd1-4ffa-bc91-aa52ff907ca6',
+  name: 'Sequence 3',
+  timeCreated: 1559683661286,
+  timeLastUpdated: 1559683661286,
+  type: 'file',
+};
+
+export const files: SequenceFile[] = [
+  { ...root },
+  { ...file0 },
+  { ...file1 },
+  { ...file2 },
+  { ...file3 },
+];
 
 /**
  * Get a new set of cloned files.

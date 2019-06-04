@@ -7,6 +7,20 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './file-explorer/file-explorer.component';
-export * from './sequencing-app/sequencing-app.component';
-export * from './sequencing-workspace/sequencing-workspace.component';
+import { Action } from '@ngrx/store';
+import { concat, Observable, of } from 'rxjs';
+import { LoadingBarHide, LoadingBarShow } from '../actions/layout.actions';
+
+/**
+ * Wraps a list of actions around loading bar show/hide actions.
+ * Uses `concat` so the actions happen in the given order (synchronously).
+ */
+export function withLoadingBar(
+  actions$: Observable<Action>[],
+): Observable<Action> {
+  return concat(
+    of(new LoadingBarShow()),
+    ...actions$,
+    of(new LoadingBarHide()),
+  );
+}

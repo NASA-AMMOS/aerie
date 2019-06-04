@@ -7,9 +7,4 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Observable } from 'rxjs';
-import { SequenceFile } from '../../../../../sequencing/src/models';
-
-export interface SequencingServiceInterface {
-  readChildren(baseUrl: string, fileId: string): Observable<SequenceFile[]>;
-}
+/* TODO */

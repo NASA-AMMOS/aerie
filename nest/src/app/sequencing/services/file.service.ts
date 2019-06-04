@@ -7,6 +7,19 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './file-explorer/file-explorer.component';
-export * from './sequencing-app/sequencing-app.component';
-export * from './sequencing-workspace/sequencing-workspace.component';
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { SequenceFile } from '../../../../../sequencing/src/models';
+import { FileServiceInterface } from './file-service-interface';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class FileService implements FileServiceInterface {
+  constructor(private http: HttpClient) {}
+
+  fetchChildren(baseUrl: string, fileId: string): Observable<SequenceFile[]> {
+    return this.http.get<SequenceFile[]>(`${baseUrl}/files/${fileId}/children`);
+  }
+}

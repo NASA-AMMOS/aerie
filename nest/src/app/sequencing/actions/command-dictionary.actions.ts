@@ -11,13 +11,13 @@ import { Action } from '@ngrx/store';
 import { CommandDictionary, MpsCommand } from '../../shared/models';
 
 export enum CommandDictionaryActionTypes {
-  FetchCommandDictionaries = '[command_dictionary] fetch_command_dictionaries',
-  FetchCommandDictionariesFailure = '[command_dictionary] fetch_command_dictionaries_failure',
-  FetchCommandDictionariesSuccess = '[command_dictionary] fetch_command_dictionaries_success',
-  FetchCommandDictionary = '[command_dictionary] fetch_command_dictionary',
-  FetchCommandDictionaryFailure = '[command_dictionary] fetch_command_dictionary_failure',
-  FetchCommandDictionarySuccess = '[command_dictionary] fetch_command_dictionary_success',
-  SelectCommandDictionary = '[command_dictionary] select_command_dictionary',
+  FetchCommandDictionaries = '[sequencing-command_dictionary] fetch_command_dictionaries',
+  FetchCommandDictionariesFailure = '[sequencing-command_dictionary] fetch_command_dictionaries_failure',
+  FetchCommandDictionariesSuccess = '[sequencing-command_dictionary] fetch_command_dictionaries_success',
+  FetchCommandDictionary = '[sequencing-command_dictionary] fetch_command_dictionary',
+  FetchCommandDictionaryFailure = '[sequencing-command_dictionary] fetch_command_dictionary_failure',
+  FetchCommandDictionarySuccess = '[sequencing-command_dictionary] fetch_command_dictionary_success',
+  SelectCommandDictionary = '[sequencing-command_dictionary] select_command_dictionary',
 }
 
 export class FetchCommandDictionaries implements Action {

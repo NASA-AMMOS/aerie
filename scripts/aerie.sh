@@ -199,7 +199,7 @@ rm_m2() {
 run() {
   echo -e "Running..."
   cd_workdir
-  docker-compose -f docker-compose-dev.yml up --build
+  docker-compose -f docker-compose-local.yml up --build
 }
 
 main() {

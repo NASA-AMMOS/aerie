@@ -7,6 +7,19 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './file-explorer/file-explorer.component';
-export * from './sequencing-app/sequencing-app.component';
-export * from './sequencing-workspace/sequencing-workspace.component';
+import { Component, Input } from '@angular/core';
+import { SequenceFile } from '../../../../../../sequencing/src/models';
+import { StringTMap } from '../../../shared/models';
+
+@Component({
+  selector: 'seq-file-tree',
+  styleUrls: ['./seq-file-tree.component.css'],
+  templateUrl: './seq-file-tree.component.html',
+})
+export class SeqFileTreeComponent {
+  @Input()
+  file: SequenceFile;
+
+  @Input()
+  files: StringTMap<SequenceFile>;
+}

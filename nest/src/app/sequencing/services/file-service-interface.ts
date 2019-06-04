@@ -7,19 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { SequenceFile } from '../../../../../sequencing/src/models';
-import { SequencingServiceInterface } from './sequencing-service-interface';
 
-@Injectable({
-  providedIn: 'root',
-})
-export class SequencingService implements SequencingServiceInterface {
-  constructor(private http: HttpClient) {}
-
-  readChildren(baseUrl: string, fileId: string): Observable<SequenceFile[]> {
-    return this.http.get<SequenceFile[]>(`${baseUrl}/files/${fileId}/children`);
-  }
+export interface FileServiceInterface {
+  fetchChildren(baseUrl: string, fileId: string): Observable<SequenceFile[]>;
 }

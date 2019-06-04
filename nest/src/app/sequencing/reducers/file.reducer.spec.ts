@@ -7,12 +7,15 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { keyBy } from 'lodash';
 import {
   CloseTab,
   CreateTab,
   SwitchTab,
+  UpdateChildren,
   UpdateTab,
 } from '../actions/file.actions';
+import { getChildren } from '../services/file-mock.service';
 import { initialState, reducer } from './file.reducer';
 
 const mockFile1 = {
@@ -33,21 +36,6 @@ const mockFile3 = {
   text: '',
 };
 
-const mockStateAfterCreateTab = {
-  currentTab: '11',
-  openedTabs: { '11': mockFile1 },
-};
-
-const emptyState = {
-  currentTab: '11',
-  openedTabs: {},
-};
-
-const mockStateForSwitchTab = {
-  currentTab: '12',
-  openedTabs: { '12': mockFile2, '13': mockFile3 },
-};
-
 describe('File reducer', () => {
   it('handle default', () => {
     expect(initialState).toEqual(initialState);
@@ -55,28 +43,61 @@ describe('File reducer', () => {
 
   it('should handle CreateTab', () => {
     const result = reducer(initialState, new CreateTab());
-
-    expect(result).toEqual(mockStateAfterCreateTab);
+    expect(result).toEqual({
+      ...initialState,
+      currentTab: '11',
+      openedTabs: { '11': mockFile1 },
+    });
   });
 
   it('should handle CloseTab', () => {
-    const result = reducer(mockStateAfterCreateTab, new CloseTab('11'));
-
-    expect(result).toEqual(emptyState);
+    const newInitialState = {
+      ...initialState,
+      currentTab: '11',
+      openedTabs: { '11': mockFile1 },
+    };
+    const result = reducer(newInitialState, new CloseTab('11'));
+    expect(result).toEqual({
+      ...initialState,
+      currentTab: '11',
+      openedTabs: {},
+    });
   });
 
-  it('should handle switchTab', () => {
-    let result = reducer(initialState, new CreateTab());
-    result = reducer(result, new CreateTab());
+  it('should handle SwitchTab', () => {
+    const newInitialState = {
+      ...initialState,
+      currentTab: '12',
+      openedTabs: { '12': mockFile2, '13': mockFile3 },
+    };
 
-    expect(result).toEqual(mockStateForSwitchTab);
-
-    result = reducer(result, new SwitchTab('13'));
+    const result = reducer(newInitialState, new SwitchTab('13'));
 
     expect(result.currentTab).toBe('13');
   });
 
-  it('should handle updateTab', () => {
+  it('should handle UpdateChildren', () => {
+    const parentId = 'root';
+    const children = getChildren(parentId);
+    const childIds = getChildren(parentId).map(child => child.id);
+    const result = reducer(
+      initialState,
+      new UpdateChildren(parentId, children),
+    );
+    expect(result).toEqual({
+      ...initialState,
+      files: {
+        ...initialState.files,
+        [parentId]: {
+          ...initialState.files[parentId],
+          childIds,
+        },
+        ...keyBy(children, 'id'),
+      },
+    });
+  });
+
+  it('should handle UpdateTab', () => {
     let result = reducer(initialState, new CreateTab());
     result = reducer(result, new UpdateTab('14', 'hello'));
 

@@ -46,3 +46,8 @@ export const getRightPanelVisible = createSelector(
   getLayoutState,
   (state: LayoutState): boolean => state.rightPanelVisible,
 );
+
+export const getShowLoadingBar = createSelector(
+  getLayoutState,
+  (state: LayoutState): boolean => state.showLoadingBar > 0,
+);
