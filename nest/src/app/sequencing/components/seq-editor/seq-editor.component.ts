@@ -21,6 +21,7 @@ import {
 } from '@angular/core';
 import * as CodeMirror from 'codemirror';
 import { FloatingActionButton } from 'ng-floating-action-menu';
+import { v4 as uuid } from 'uuid';
 import { MpsCommand, StringTMap } from '../../../shared/models';
 import {
   buildMpsHint,
@@ -130,6 +131,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
       onClick: () => this.openHelpDialog.emit(),
     },
   ];
+  editor: CodeMirror.Editor | null;
 
   constructor(private seqEditorService: SeqEditorService) {}
 
@@ -138,26 +140,28 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
       this.setMode();
     }
 
-    if (this.seqEditorService.editor && changes.lineNumbers) {
-      this.seqEditorService.editor.setOption('lineNumbers', this.lineNumbers);
-    }
+    if (this.editor) {
+      if (changes.lineNumbers) {
+        this.editor.setOption('lineNumbers', this.lineNumbers);
+      }
 
-    if (this.seqEditorService.editor && changes.lineWrapping) {
-      this.seqEditorService.editor.setOption('lineWrapping', this.lineWrapping);
-    }
+      if (changes.lineWrapping) {
+        this.editor.setOption('lineWrapping', this.lineWrapping);
+      }
 
-    if (this.seqEditorService.editor && changes.theme) {
-      this.seqEditorService.editor.setOption('theme', this.theme);
-    }
+      if (changes.theme) {
+        this.editor.setOption('theme', this.theme);
+      }
 
-    if (this.seqEditorService.editor && changes.value) {
-      this.seqEditorService.editor.getDoc().setValue(this.value);
-    }
+      if (changes.value) {
+        this.editor.getDoc().setValue(this.value);
+      }
 
-    if (this.seqEditorService.editor && changes.currentTab) {
-      const text = this.file ? this.file.text : '';
+      if (changes.currentTab) {
+        const text = this.file ? this.file.text : '';
 
-      this.seqEditorService.editor.setValue(text);
+        this.editor.setValue(text);
+      }
     }
   }
 
@@ -166,37 +170,6 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
     this.setupAutocomplete();
     this.setupTooltip();
     this.setupTooltipHandler();
-    this.initializeEditor();
-  }
-
-  initializeEditor() {
-    this.seqEditorService.setEditor(this.editorMount, {
-      autofocus: this.autofocus,
-      extraKeys: {
-        ...this.extraKeys,
-        'Ctrl-R': this.redo.bind(this),
-        'Ctrl-Z': this.undo.bind(this),
-        Esc: this.toggleFullscreen.bind(this),
-      },
-      gutters: this.gutters,
-      lineNumbers: this.lineNumbers,
-      lineWrapping: this.lineWrapping,
-      lint: true,
-      mode: this.mode,
-      theme: this.theme,
-      value: this.value,
-    });
-
-    if (this.seqEditorService.editor) {
-      this.seqEditorService.editor.on('change', () => {
-        if (this.seqEditorService.editor && this.file) {
-          this.onUpdateTab(
-            this.file.id,
-            this.seqEditorService.editor.getValue(),
-          );
-        }
-      });
-    }
   }
 
   /**
@@ -205,7 +178,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
    * before registering the hinter and linter.
    */
   private setMode() {
-    if (this.seqEditorService.editor) {
+    if (this.editor) {
       switch (this.mode) {
         case 'ait':
           // TODO.
@@ -213,7 +186,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
         case 'mps':
         default:
           buildMpsMode(this.commandsByName);
-          this.seqEditorService.editor.setOption('mode', 'mps');
+          this.editor.setOption('mode', 'mps');
           buildMpsHint(this.commandsByName);
           buildMpsLint(this.commandsByName);
           break;
@@ -222,21 +195,22 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   }
 
   undo() {
-    if (this.seqEditorService.editor) {
-      this.seqEditorService.editor.execCommand('undo');
-      this.seqEditorService.editor.focus();
+    console.debug('undo', this.editor);
+    if (this.editor) {
+      this.editor.execCommand('undo');
+      this.editor.focus();
     }
   }
 
   redo() {
-    if (this.seqEditorService.editor) {
-      this.seqEditorService.editor.execCommand('redo');
-      this.seqEditorService.editor.focus();
+    if (this.editor) {
+      this.editor.execCommand('redo');
+      this.editor.focus();
     }
   }
 
   toggleAutocomplete() {
-    if (this.seqEditorService.editor) {
+    if (this.editor) {
       this.autocomplete = !this.autocomplete;
 
       if (this.autocomplete) {
@@ -244,39 +218,39 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
       } else {
         this.buttons[2].label = 'Toggle Autocomplete On';
       }
-      this.seqEditorService.editor.focus();
+      this.editor.focus();
     }
   }
 
   toggleFullscreen() {
-    if (this.seqEditorService.editor) {
+    if (this.editor) {
       this.fullscreen = !this.fullscreen;
-      this.seqEditorService.editor.setOption('fullScreen', this.fullscreen);
-      this.seqEditorService.editor.focus();
+      this.editor.setOption('fullScreen', this.fullscreen);
+      this.editor.focus();
     }
   }
 
   toggleTheme() {
-    if (this.seqEditorService.editor) {
+    if (this.editor) {
       switch (this.userTheme) {
         case 'dark':
           this.userTheme = 'light';
-          this.seqEditorService.editor.setOption('theme', 'default');
+          this.editor.setOption('theme', 'default');
           break;
         case 'light':
           this.userTheme = 'dark';
-          this.seqEditorService.editor.setOption('theme', 'monokai');
+          this.editor.setOption('theme', 'monokai');
           break;
         default:
           this.userTheme = 'dark';
-          this.seqEditorService.editor.setOption('theme', 'monokai');
+          this.editor.setOption('theme', 'monokai');
       }
-      this.seqEditorService.editor.focus();
+      this.editor.focus();
     }
   }
 
   toggleTooltips() {
-    if (this.seqEditorService.editor) {
+    if (this.editor) {
       this.showTooltips = !this.showTooltips;
 
       if (this.showTooltips) {
@@ -284,12 +258,19 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
       } else {
         this.buttons[5].label = 'Toggle Tooltips On';
       }
-      this.seqEditorService.editor.focus();
+      this.editor.focus();
     }
   }
 
+  /**
+   * Mounts and sets up the CodeMirror instance
+   * Each CodeMirror instance is assigned an ID
+   * The store is updated when the text changes
+   */
   setupEditor() {
-    this.seqEditorService.setEditor(this.editorMount, {
+    const id = uuid();
+
+    this.seqEditorService.setEditor(this.editorMount, id, {
       autofocus: this.autofocus,
       extraKeys: {
         ...this.extraKeys,
@@ -305,32 +286,39 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
       theme: this.theme,
       value: this.value,
     });
+
+    this.editor = this.seqEditorService.editors[id];
+
+    if (this.editor) {
+      this.editor.on('change', () => {
+        if (this.editor && this.file) {
+          this.onUpdateTab(this.file.id, this.editor.getValue());
+        }
+      });
+    }
   }
 
   setupAutocomplete() {
-    if (this.seqEditorService.editor) {
+    if (this.editor) {
       // Disables the autocomplete from automatically autocompleting when there is only 1 option
-      this.seqEditorService.editor.setOption('hintOptions', {
+      this.editor.setOption('hintOptions', {
         completeSingle: false,
       });
 
-      this.seqEditorService.editor.on(
-        'keyup',
-        (cm: CodeMirror.Editor, event: KeyboardEvent) => {
-          // Don't open autocomplete menu again if the menu is open
-          // and if user is moving up/down options
-          if (
-            this.autocomplete &&
-            this.seqEditorService.editor &&
-            !cm.state.completeActive &&
-            event.key !== 'Enter' &&
-            event.key !== 'ArrowDown' &&
-            event.key !== 'ArrowUp'
-          ) {
-            this.seqEditorService.editor.execCommand('autocomplete');
-          }
-        },
-      );
+      this.editor.on('keyup', (cm: CodeMirror.Editor, event: KeyboardEvent) => {
+        // Don't open autocomplete menu again if the menu is open
+        // and if user is moving up/down options
+        if (
+          this.autocomplete &&
+          this.editor &&
+          !cm.state.completeActive &&
+          event.key !== 'Enter' &&
+          event.key !== 'ArrowDown' &&
+          event.key !== 'ArrowUp'
+        ) {
+          this.editor.execCommand('autocomplete');
+        }
+      });
     }
   }
 
@@ -344,21 +332,17 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   }
 
   setupTooltipHandler() {
-    if (this.seqEditorService.editor) {
-      this.seqEditorService.editor
+    if (this.editor) {
+      this.editor
         .getWrapperElement()
         .addEventListener('mousemove', (e: MouseEvent) => {
-          if (
-            this.commandsByName &&
-            this.showTooltips &&
-            this.seqEditorService.editor
-          ) {
+          if (this.commandsByName && this.showTooltips && this.editor) {
             // Used to give a tolerance for the mouse to be nearby the text, mouse doesn't have to be exactly on the text
             const nearby = [0, 0, 0, 5];
             // tslint:disable-next-line: deprecation
             const node = (e.target || e.srcElement) as HTMLElement;
             const text = node.innerText || node.textContent;
-            const cm = this.seqEditorService.editor;
+            const cm = this.editor;
             let target;
 
             // Check nearby positions to see if text is nearby mouse

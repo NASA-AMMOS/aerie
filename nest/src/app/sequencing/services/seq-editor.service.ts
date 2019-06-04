@@ -9,6 +9,7 @@
 
 import { ElementRef, Injectable } from '@angular/core';
 import * as CodeMirror from 'codemirror';
+import { StringTMap } from '../../shared/models';
 
 /**
  * This service stores the Code Mirror editor instance used
@@ -21,13 +22,15 @@ import * as CodeMirror from 'codemirror';
 })
 export class SeqEditorService {
   editor: CodeMirror.Editor | null = null;
+  editors: StringTMap<CodeMirror.Editor | null> = {};
 
   /**
    * Focus the Code Mirror editor instance.
    */
-  focusEditor(): void {
-    if (this.editor) {
-      this.editor.focus();
+  focusEditor(id: string): void {
+    const editor = this.editors[id];
+    if (editor) {
+      editor.focus();
     }
   }
 
@@ -36,11 +39,14 @@ export class SeqEditorService {
    */
   setEditor(
     elementRef: ElementRef,
+    id: string,
     options?: CodeMirror.EditorConfiguration,
   ): void {
-    if (!this.editor) {
-      this.editor = CodeMirror(elementRef.nativeElement, options);
-      this.editor.on('blur', () => {
+    let editor = this.editors[id];
+
+    if (!editor) {
+      editor = CodeMirror(elementRef.nativeElement, options);
+      editor.on('blur', () => {
         // Always show the cursor even when we are not focused on the editor
         // so we can visually see where new commands are going to be added.
         const cursors = document.querySelector(
@@ -50,6 +56,8 @@ export class SeqEditorService {
           cursors.style.visibility = 'visible';
         }
       });
+
+      this.editors[id] = editor;
     }
   }
 
@@ -57,9 +65,11 @@ export class SeqEditorService {
    * Replaces the entire document selection if one exists,
    * or adds text to the document on a new line after the cursor.
    */
-  addText(text: string): void {
-    if (this.editor) {
-      const doc = this.editor.getDoc();
+  addText(text: string, id: string): void {
+    const editor = this.editors[id];
+
+    if (editor) {
+      const doc = editor.getDoc();
       const cursor = doc.getCursor();
       const line = doc.getLine(cursor.line);
       const selection = doc.getSelection();
