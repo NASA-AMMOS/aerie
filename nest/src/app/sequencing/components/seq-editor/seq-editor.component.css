@@ -46,9 +46,7 @@
 
 :host,
 #sequencing-editor-mount {
-  display: block;
   height: 100%;
-  width: 100%;
 }
 
 #sequencing-editor-mount {

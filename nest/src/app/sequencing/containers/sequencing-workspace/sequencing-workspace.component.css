@@ -7,6 +7,12 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+:host {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 #no-files-message {
   position: absolute;
   left: 50%;
