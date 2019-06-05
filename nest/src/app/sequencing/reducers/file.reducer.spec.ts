@@ -74,10 +74,32 @@ const mockStateAfterCreateTab = {
       openedTabs: { '11': mockFile1.editors.editor1.openedTabs[11] },
     },
   },
+  files: {
+    root: {
+      childIds: [],
+      content: '',
+      id: 'root',
+      name: 'root',
+      timeCreated: 0,
+      timeLastUpdated: 0,
+      type: 'directory',
+    },
+  },
 };
 
 const emptyState = {
   editors: {},
+  files: {
+    root: {
+      childIds: [],
+      content: '',
+      id: 'root',
+      name: 'root',
+      timeCreated: 0,
+      timeLastUpdated: 0,
+      type: 'directory',
+    },
+  },
 };
 
 const mockStateForSwitchTab = {
@@ -89,6 +111,17 @@ const mockStateForSwitchTab = {
         '12': mockFile2.editors.editor1.openedTabs[12],
         '13': mockFile3.editors.editor1.openedTabs[13],
       },
+    },
+  },
+  files: {
+    root: {
+      childIds: [],
+      content: '',
+      id: 'root',
+      name: 'root',
+      timeCreated: 0,
+      timeLastUpdated: 0,
+      type: 'directory',
     },
   },
 };
