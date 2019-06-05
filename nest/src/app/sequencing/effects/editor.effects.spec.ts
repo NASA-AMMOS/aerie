@@ -47,7 +47,7 @@ describe('EditorEffects', () => {
     });
 
     it('should not dispatch an action for AddText but should call addText and focusEditor in the SeqEditorService', () => {
-      const action = new AddText('that was easy');
+      const action = new AddText('that was easy', 'editor1');
       const service = TestBed.get(SeqEditorService);
       const addText = spyOn(service, 'addText');
       const focusEditor = spyOn(service, 'focusEditor');

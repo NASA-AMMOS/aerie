@@ -16,36 +16,78 @@ import {
 import { initialState, reducer } from './file.reducer';
 
 const mockFile1 = {
-  filename: `New File 11`,
-  id: '11',
-  text: '',
+  editors: {
+    editor1: {
+      currentTab: null,
+      id: 'editor1',
+      openedTabs: {
+        '11': {
+          filename: `New File 11`,
+          id: '11',
+          text: '',
+        },
+      },
+    },
+  },
 };
 
 const mockFile2 = {
-  filename: `New File 12`,
-  id: '12',
-  text: '',
+  editors: {
+    editor1: {
+      currentTab: null,
+      id: 'editor1',
+      openedTabs: {
+        '12': {
+          filename: `New File 12`,
+          id: '12',
+          text: '',
+        },
+      },
+    },
+  },
 };
 
 const mockFile3 = {
-  filename: `New File 13`,
-  id: '13',
-  text: '',
+  editors: {
+    editor1: {
+      currentTab: null,
+      id: 'editor1',
+      openedTabs: {
+        '13': {
+          filename: `New File 13`,
+          id: '13',
+          text: '',
+        },
+      },
+    },
+  },
 };
 
 const mockStateAfterCreateTab = {
-  currentTab: '11',
-  openedTabs: { '11': mockFile1 },
+  editors: {
+    editor1: {
+      currentTab: '11',
+      id: 'editor1',
+      openedTabs: { '11': mockFile1.editors.editor1.openedTabs[11] },
+    },
+  },
 };
 
 const emptyState = {
-  currentTab: '11',
-  openedTabs: {},
+  editors: {},
 };
 
 const mockStateForSwitchTab = {
-  currentTab: '12',
-  openedTabs: { '12': mockFile2, '13': mockFile3 },
+  editors: {
+    editor1: {
+      currentTab: '12',
+      id: 'editor1',
+      openedTabs: {
+        '12': mockFile2.editors.editor1.openedTabs[12],
+        '13': mockFile3.editors.editor1.openedTabs[13],
+      },
+    },
+  },
 };
 
 describe('File reducer', () => {
@@ -54,32 +96,36 @@ describe('File reducer', () => {
   });
 
   it('should handle CreateTab', () => {
-    const result = reducer(initialState, new CreateTab());
+    const result = reducer(initialState, new CreateTab('editor1'));
 
     expect(result).toEqual(mockStateAfterCreateTab);
   });
 
   it('should handle CloseTab', () => {
-    const result = reducer(mockStateAfterCreateTab, new CloseTab('11'));
+    const result = reducer(
+      mockStateAfterCreateTab,
+      new CloseTab('11', 'editor1'),
+    );
 
     expect(result).toEqual(emptyState);
   });
 
   it('should handle switchTab', () => {
-    let result = reducer(initialState, new CreateTab());
-    result = reducer(result, new CreateTab());
+    let result = reducer(initialState, new CreateTab('editor1'));
+    result = reducer(result, new CreateTab('editor1'));
 
     expect(result).toEqual(mockStateForSwitchTab);
 
-    result = reducer(result, new SwitchTab('13'));
+    result = reducer(result, new SwitchTab('13', 'editor1'));
 
-    expect(result.currentTab).toBe('13');
+    expect(result.editors.editor1.currentTab).toBe('13');
   });
 
   it('should handle updateTab', () => {
-    let result = reducer(initialState, new CreateTab());
-    result = reducer(result, new UpdateTab('14', 'hello'));
+    let result = reducer(initialState, new CreateTab('editor1'));
+    result = reducer(result, new UpdateTab('14', 'hello', 'editor1'));
 
-    if (result.openedTabs) expect(result.openedTabs['14'].text).toBe('hello');
+    if (result.editors.editor1.openedTabs)
+      expect(result.editors.editor1.openedTabs['14'].text).toBe('hello');
   });
 });
