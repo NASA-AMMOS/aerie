@@ -72,9 +72,9 @@ function closeTab(state: FileState, action: CloseTab): FileState {
     editors: {
       ...state.editors,
       [action.editorId]: {
-        ...state.editors.editorId,
+        ...state.editors[action.editorId],
         openedTabs: omit(
-          state.editors.editorId.openedTabs,
+          state.editors[action.editorId].openedTabs,
           action.docIdToClose,
         ),
       },
@@ -134,10 +134,7 @@ function switchTab(state: FileState, action: SwitchTab): FileState {
           ...state.editors,
           [action.editorId]: {
             ...state.editors[action.editorId],
-            [action.editorId]: {
-              ...state.editors[action.editorId],
-              currentTab: action.switchToId,
-            },
+            currentTab: action.switchToId,
           },
         },
       };
@@ -152,10 +149,7 @@ function switchTab(state: FileState, action: SwitchTab): FileState {
           ...state.editors,
           [action.editorId]: {
             ...state.editors[action.editorId],
-            [action.editorId]: {
-              ...state.editors[action.editorId],
-              currentTab: lastTabKey,
-            },
+            currentTab: lastTabKey,
           },
         },
       };

@@ -2,10 +2,14 @@
   <seq-tab
     *ngFor="let tab of openedTabs"
     [tab]="tab"
-    (textClick)="switchTab.emit(tab.id)"
-    (iconClick)="closeTab.emit(tab.id); switchTab.emit(tab.id)"
-    [isActive]="currentTab === tab.id"
-  ></seq-tab>
+    (textClick)="switchTab.emit({ tabId: tab.id, editorId: editor.id })"
+    (iconClick)="
+      closeTab.emit({ tabId: tab.id, editorId: editor.id });
+      switchTab.emit({ tabId: tab.id, editorId: editor.id })
+    "
+    [isActive]="editor.currentTab === tab.id"
+  >
+  </seq-tab>
 </div>
 
 <button

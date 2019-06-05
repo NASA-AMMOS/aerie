@@ -1,13 +1,10 @@
 <seq-navbar
   *ngIf="commands$ | async"
   [openedTabs]="openedTabs$ | async"
-  [currentTab]="currentTab$ | async"
-  [editorId]="editor.id"
   [editor]="editor"
   (createTab)="onCreateTab($event)"
   (closeTab)="onCloseTab($event)"
   (switchTab)="onSwitchTab($event)"
-  (updateTab)="onUpdateTab($event)"
 ></seq-navbar>
 
 <seq-editor

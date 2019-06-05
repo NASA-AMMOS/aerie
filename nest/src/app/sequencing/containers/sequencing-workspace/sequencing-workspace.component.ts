@@ -67,8 +67,8 @@ export class SequencingWorkspaceComponent implements AfterViewInit {
     );
   }
 
-  onCloseTab(id: string, editorId: string) {
-    this.store.dispatch(new CloseTab(id, editorId));
+  onCloseTab({ tabId, editorId }: { tabId: string; editorId: string }) {
+    this.store.dispatch(new CloseTab(tabId, editorId));
   }
 
   onCreateTab(editorId: string) {
@@ -79,8 +79,8 @@ export class SequencingWorkspaceComponent implements AfterViewInit {
     this.store.dispatch(new OpenEditorHelpDialog());
   }
 
-  onSwitchTab(switchToId: string, editorId: string) {
-    this.store.dispatch(new SwitchTab(switchToId, editorId));
+  onSwitchTab({ tabId, editorId }: { tabId: string; editorId: string }) {
+    this.store.dispatch(new SwitchTab(tabId, editorId));
   }
 
   onUpdateTab({

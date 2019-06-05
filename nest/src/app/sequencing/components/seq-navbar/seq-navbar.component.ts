@@ -28,12 +28,6 @@ export class SeqNavbarComponent {
   openedTabs: SequenceTab[] | null;
 
   @Input()
-  currentTab: string;
-
-  @Input()
-  editorId: string;
-
-  @Input()
   editor: Editor;
 
   @Output()
@@ -44,7 +38,4 @@ export class SeqNavbarComponent {
 
   @Output()
   switchTab: EventEmitter<any> = new EventEmitter<any>();
-
-  @Output()
-  updateTab: EventEmitter<any> = new EventEmitter<any>();
 }
