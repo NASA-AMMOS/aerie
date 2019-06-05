@@ -8,6 +8,7 @@
 ></seq-navbar>
 
 <seq-editor
+  *ngIf="editor"
   [commands]="commands$ | async"
   [commandsByName]="commandsByName$ | async"
   [currentTab]="currentTab$ | async"
