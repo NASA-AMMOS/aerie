@@ -10,9 +10,19 @@
 import { Action } from '@ngrx/store';
 
 export enum LayoutActionTypes {
-  SetPanelSizes = '[layout] set_panel_sizes',
-  ToggleLeftPanelVisible = '[layout] toggle_left_panel_visible',
-  ToggleRightPanelVisible = '[layout] toggle_right_panel_visible',
+  LoadingBarHide = '[sequencing-layout] loading_bar_hide',
+  LoadingBarShow = '[sequencing-layout] loading_bar_show',
+  SetPanelSizes = '[sequencing-layout] set_panel_sizes',
+  ToggleLeftPanelVisible = '[sequencing-layout] toggle_left_panel_visible',
+  ToggleRightPanelVisible = '[sequencing-layout] toggle_right_panel_visible',
+}
+
+export class LoadingBarHide implements Action {
+  readonly type = LayoutActionTypes.LoadingBarHide;
+}
+
+export class LoadingBarShow implements Action {
+  readonly type = LayoutActionTypes.LoadingBarShow;
 }
 
 export class SetPanelSizes implements Action {
@@ -29,6 +39,8 @@ export class ToggleRightPanelVisible implements Action {
 }
 
 export type LayoutActions =
+  | LoadingBarHide
+  | LoadingBarShow
   | SetPanelSizes
   | ToggleLeftPanelVisible
   | ToggleRightPanelVisible;

@@ -10,6 +10,7 @@
 import {
   LayoutActions,
   LayoutActionTypes,
+  LoadingBarHide,
   SetPanelSizes,
 } from '../actions/layout.actions';
 
@@ -20,6 +21,7 @@ export interface LayoutState {
   middlePanelVisible: boolean;
   rightPanelSize: number;
   rightPanelVisible: boolean;
+  showLoadingBar: number;
 }
 
 export const initialState: LayoutState = {
@@ -29,6 +31,7 @@ export const initialState: LayoutState = {
   middlePanelVisible: true,
   rightPanelSize: 30,
   rightPanelVisible: true,
+  showLoadingBar: 0,
 };
 
 /**
@@ -40,6 +43,10 @@ export function reducer(
   action: LayoutActions,
 ) {
   switch (action.type) {
+    case LayoutActionTypes.LoadingBarHide:
+      return loadingBarHide(state, action);
+    case LayoutActionTypes.LoadingBarShow:
+      return { ...state, showLoadingBar: state.showLoadingBar + 1 };
     case LayoutActionTypes.SetPanelSizes:
       return setPanelSizes(state, action);
     case LayoutActionTypes.ToggleLeftPanelVisible:
@@ -49,6 +56,20 @@ export function reducer(
     default:
       return state;
   }
+}
+
+/**
+ * Reduction Helper. Called when reducing the `LoadingBarHide` action.
+ */
+export function loadingBarHide(
+  state: LayoutState,
+  _: LoadingBarHide,
+): LayoutState {
+  const showLoadingBar = state.showLoadingBar - 1;
+  return {
+    ...state,
+    showLoadingBar: showLoadingBar < 0 ? 0 : showLoadingBar,
+  };
 }
 
 /**

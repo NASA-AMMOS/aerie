@@ -8,12 +8,16 @@
  */
 
 import { Action } from '@ngrx/store';
+import { SequenceFile } from '../../../../../sequencing/src/models';
 
 export enum FileActionTypes {
-  CreateTab = '[file] create_tab',
-  CloseTab = '[file] remove_tab',
-  SwitchTab = '[file] switch_tab',
-  UpdateTab = '[file] update_tab',
+  CreateTab = '[sequencing-file] create_tab',
+  CloseTab = '[sequencing-file] remove_tab',
+  FetchChildren = '[sequencing-file] fetch_children',
+  FetchChildrenFailure = '[sequencing-file] fetch_children_failure',
+  SwitchTab = '[sequencing-file] switch_tab',
+  UpdateChildren = '[sequencing-file] update_children',
+  UpdateTab = '[sequencing-file] update_tab',
 }
 
 export class CreateTab implements Action {
@@ -22,20 +26,38 @@ export class CreateTab implements Action {
 
 export class CloseTab implements Action {
   readonly type = FileActionTypes.CloseTab;
-
   constructor(public docIdToClose: string) {}
+}
+
+export class FetchChildren implements Action {
+  readonly type = FileActionTypes.FetchChildren;
+  constructor(public parentId: string) {}
+}
+
+export class FetchChildrenFailure implements Action {
+  readonly type = FileActionTypes.FetchChildrenFailure;
+  constructor(public error: Error) {}
 }
 
 export class SwitchTab implements Action {
   readonly type = FileActionTypes.SwitchTab;
-
   constructor(public switchToId: string) {}
+}
+
+export class UpdateChildren implements Action {
+  readonly type = FileActionTypes.UpdateChildren;
+  constructor(public parentId: string, public children: SequenceFile[]) {}
 }
 
 export class UpdateTab implements Action {
   readonly type = FileActionTypes.UpdateTab;
-
   constructor(public docIdToUpdate: string, public text: string) {}
 }
 
-export type FileActions = CreateTab | CloseTab | SwitchTab | UpdateTab;
+export type FileActions =
+  | CreateTab
+  | CloseTab
+  | FetchChildren
+  | SwitchTab
+  | UpdateChildren
+  | UpdateTab;

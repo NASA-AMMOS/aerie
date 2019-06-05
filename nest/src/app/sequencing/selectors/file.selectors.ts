@@ -8,6 +8,8 @@
  */
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { SequenceFile } from '../../../../../sequencing/src/models';
+import { StringTMap } from '../../shared/models';
 import { FileState } from '../reducers/file.reducer';
 import { State } from '../sequencing-store';
 
@@ -15,6 +17,11 @@ const featureSelector = createFeatureSelector<State>('sequencing');
 export const getFileState = createSelector(
   featureSelector,
   (state: State): FileState => state.file,
+);
+
+export const getFiles = createSelector(
+  getFileState,
+  (state: FileState) => state.files,
 );
 
 export const getOpenedTabs = createSelector(
@@ -39,4 +46,9 @@ export const getCurrentFile = createSelector(
     state.openedTabs && state.currentTab
       ? state.openedTabs[state.currentTab]
       : null,
+);
+
+export const getRootFileChildIds = createSelector(
+  getFiles,
+  (files: StringTMap<SequenceFile>) => files.root.childIds,
 );

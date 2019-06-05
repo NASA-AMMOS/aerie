@@ -7,6 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './file-explorer/file-explorer.component';
-export * from './sequencing-app/sequencing-app.component';
-export * from './sequencing-workspace/sequencing-workspace.component';
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { SeqFileTreeModule } from '../../components';
+import { FileExplorerComponent } from './file-explorer.component';
+
+@NgModule({
+  declarations: [FileExplorerComponent],
+  exports: [FileExplorerComponent],
+  imports: [CommonModule, SeqFileTreeModule],
+})
+export class FileExplorerModule {}

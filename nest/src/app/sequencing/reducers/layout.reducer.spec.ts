@@ -8,6 +8,8 @@
  */
 
 import {
+  LoadingBarHide,
+  LoadingBarShow,
   SetPanelSizes,
   ToggleLeftPanelVisible,
   ToggleRightPanelVisible,
@@ -17,6 +19,27 @@ import { initialState, reducer } from './layout.reducer';
 describe('Layout reducer', () => {
   it('handle default', () => {
     expect(initialState).toEqual(initialState);
+  });
+
+  it('should handle LoadingBarHide', () => {
+    let result = reducer(initialState, new LoadingBarShow());
+    result = reducer(result, new LoadingBarShow());
+    result = reducer(result, new LoadingBarShow());
+    result = reducer(result, new LoadingBarHide());
+
+    expect(result).toEqual({
+      ...initialState,
+      showLoadingBar: 2,
+    });
+  });
+
+  it('should handle LoadingBarShow', () => {
+    const result = reducer(initialState, new LoadingBarShow());
+
+    expect(result).toEqual({
+      ...initialState,
+      showLoadingBar: 1,
+    });
   });
 
   it('should handle SetPanelSizes', () => {

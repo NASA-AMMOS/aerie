@@ -10,8 +10,8 @@
 import { Action } from '@ngrx/store';
 
 export enum EditorActionTypes {
-  AddText = '[editor] add_text',
-  OpenEditorHelpDialog = '[editor] open_editor_help_dialog',
+  AddText = '[sequencing-editor] add_text',
+  OpenEditorHelpDialog = '[sequencing-editor] open_editor_help_dialog',
 }
 
 export class AddText implements Action {
