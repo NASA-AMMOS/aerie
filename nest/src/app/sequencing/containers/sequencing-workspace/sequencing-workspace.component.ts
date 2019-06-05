@@ -23,8 +23,7 @@ import {
   SwitchTab,
   UpdateTab,
 } from '../../actions/file.actions';
-import { SequenceTab } from '../../models';
-import { Editor } from '../../reducers/file.reducer';
+import { Editor, SequenceTab } from '../../models';
 import {
   getCommands,
   getCommandsByName,

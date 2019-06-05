@@ -7,7 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './code-mirror-lint-error';
-export * from './command';
-export * from './sequence-tab';
-export * from './editor';
+import { StringTMap } from '../../shared/models';
+import { SequenceTab } from '.';
+
+export interface Editor {
+  currentTab: string | null;
+  id: string;
+  openedTabs: StringTMap<SequenceTab> | null;
+}

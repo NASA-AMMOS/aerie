@@ -21,7 +21,6 @@ import { StringTMap } from '../../shared/models';
   providedIn: 'root',
 })
 export class SeqEditorService {
-  editor: CodeMirror.Editor | null = null;
   editors: StringTMap<CodeMirror.Editor | null> = {};
 
   /**
@@ -93,5 +92,12 @@ export class SeqEditorService {
         }
       }
     }
+  }
+
+  getEditor(id: string) {
+    if (id in this.editors) {
+      return this.editors[id];
+    }
+    return null;
   }
 }

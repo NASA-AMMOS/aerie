@@ -32,8 +32,7 @@ import {
   getCommandParameterDescriptionTemplate,
   getCommandParameterHelpTemplate,
 } from '../../code-mirror-languages/mps/helpers';
-import { SequenceTab } from '../../models';
-import { Editor } from '../../reducers/file.reducer';
+import { Editor, SequenceTab } from '../../models';
 import { SeqEditorService } from '../../services/seq-editor.service';
 
 @Component({
@@ -138,6 +137,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
       onClick: () => this.openHelpDialog.emit(),
     },
   ];
+
   editor: CodeMirror.Editor | null;
 
   constructor(private seqEditorService: SeqEditorService) {}
@@ -163,14 +163,6 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
       if (changes.value) {
         this.editor.getDoc().setValue(this.value);
       }
-
-      // Updates the view of the text value if the file is being edited elsewhere
-      // if (changes.file && this.file) {
-      //   this.editor.getDoc().setValue(this.file.text);
-      //   // Moves the cursor to the end of the line
-      //   // Original behavior makes the cursor move to the beginning of the line
-      //   this.editor.getDoc().setCursor(this.editor.getDoc().lineCount(), 0);
-      // }
 
       if (changes.currentTab) {
         const text = this.file ? this.file.text : '';
@@ -210,7 +202,6 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   }
 
   undo() {
-    console.debug('undo', this.editor);
     if (this.editor) {
       this.editor.execCommand('undo');
       this.editor.focus();
@@ -302,7 +293,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
       value: this.value,
     });
 
-    this.editor = this.seqEditorService.editors[id];
+    this.editor = this.seqEditorService.getEditor(id);
 
     if (this.editor) {
       this.editor.on('change', () => {

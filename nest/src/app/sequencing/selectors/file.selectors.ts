@@ -24,13 +24,17 @@ export const getFiles = createSelector(
   (state: FileState) => state.files,
 );
 
+interface EditorProps {
+  editorId: string;
+}
+
 /**
  * Gets a list of the opened tabs for a editor instance
  * Used to enumerate a tabs list view
  */
 export const getOpenedTabs = createSelector(
   getFileState,
-  (state: FileState, props: any) => {
+  (state: FileState, props: EditorProps) => {
     if (props.editorId in state.editors) {
       const editor = state.editors[props.editorId];
       const { openedTabs } = editor;
@@ -45,7 +49,8 @@ export const getOpenedTabs = createSelector(
 
 export const getOpenedTabsByName = createSelector(
   getFileState,
-  (state: FileState, props: any) => state.editors[props.editorId].openedTabs,
+  (state: FileState, props: EditorProps) =>
+    state.editors[props.editorId].openedTabs,
 );
 
 /**
@@ -53,7 +58,7 @@ export const getOpenedTabsByName = createSelector(
  */
 export const getCurrentTab = createSelector(
   getFileState,
-  (state: FileState, props: any) => {
+  (state: FileState, props: EditorProps) => {
     if (props.editorId in state.editors) {
       return state.editors[props.editorId].currentTab;
     }
@@ -68,7 +73,7 @@ export const getCurrentTab = createSelector(
  */
 export const getCurrentFile = createSelector(
   getFileState,
-  (state: FileState, props: any) => {
+  (state: FileState, props: EditorProps) => {
     const editor = state.editors[props.editorId];
     const { currentTab, openedTabs } = editor;
 

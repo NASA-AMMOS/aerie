@@ -29,7 +29,7 @@ import {
   ToggleRightPanelVisible,
 } from '../../actions/layout.actions';
 import { getCommandTemplate } from '../../code-mirror-languages/mps/helpers';
-import { Editor } from '../../reducers/file.reducer';
+import { Editor } from '../../models';
 import {
   getCommands,
   getCommandsByName,

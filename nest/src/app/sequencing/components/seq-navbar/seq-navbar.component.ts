@@ -14,8 +14,7 @@ import {
   Input,
   Output,
 } from '@angular/core';
-import { SequenceTab } from '../../models';
-import { Editor } from '../../reducers/file.reducer';
+import { Editor, SequenceTab } from '../../models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

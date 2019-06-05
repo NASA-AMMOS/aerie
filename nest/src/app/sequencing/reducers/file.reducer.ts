@@ -20,13 +20,7 @@ import {
   UpdateChildren,
   UpdateTab,
 } from '../actions/file.actions';
-import { SequenceTab } from '../models';
-
-export interface Editor {
-  currentTab: string | null;
-  id: string;
-  openedTabs: StringTMap<SequenceTab> | null;
-}
+import { Editor } from '../models';
 
 export interface FileState {
   editors: StringTMap<Editor>;
@@ -60,6 +54,8 @@ export const initialState: FileState = {
  */
 export function reducer(state: FileState = initialState, action: FileActions) {
   switch (action.type) {
+    case FileActionTypes.AddEditor:
+      return addEditor(state);
     case FileActionTypes.CloseTab:
       return closeTab(state, action);
     case FileActionTypes.CreateTab:
@@ -70,8 +66,6 @@ export function reducer(state: FileState = initialState, action: FileActions) {
       return updateChildren(state, action);
     case FileActionTypes.UpdateTab:
       return updateTab(state, action);
-    case FileActionTypes.AddEditor:
-      return addEditor(state);
     default:
       return state;
   }
