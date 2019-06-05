@@ -79,6 +79,22 @@ describe('/sequencing.panels', () => {
     expect(page.rightPanel.isDisplayed()).toBe(true);
   });
 
+  it('[C141205] A user SHOULD be able to create a new editor panel', () => {
+    page.panelButton.click();
+    browser.wait(EC.visibilityOf(page.panelMenu), 5000);
+    clickHarder('#sequencing-add-editor-pane-button');
+
+    expect(page.editorPanels.count()).toBe(2);
+  });
+
+  it('[C141206] An editor panel SHOULD be removed if there are no tabs', () => {
+    page.prepareForCodeMirrorTesting();
+
+    page.tabCloseButtons.get(0).click();
+
+    expect(page.editorPanels.count()).toBe(0);
+  });
+
   afterEach(async () => {
     // Assert that there are no errors emitted from the browser
     const logs = await browser

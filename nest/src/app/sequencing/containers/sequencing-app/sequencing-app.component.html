@@ -83,6 +83,7 @@
     <as-split direction="vertical">
       <as-split-area
         *ngFor="let editor of editorsList$ | async; trackBy: editorTrackByFn"
+        class="editor-panel"
       >
         <sequencing-workspace [editor]="editor"></sequencing-workspace>
       </as-split-area>

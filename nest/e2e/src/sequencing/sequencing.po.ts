@@ -41,9 +41,11 @@ export class SequencingPage {
   rightPanelToggleButton = element(
     by.id('sequencing-panels-right-toggle-button'),
   );
+  addEditorPanelButton = element(by.id('sequencing-add-editor-pane-button'));
   leftPanel = element(by.id('left-panel-area'));
   middlePanel = element(by.id('middle-panel-area'));
   rightPanel = element(by.id('right-panel-area'));
+  editorPanels = element.all(by.className('editor-panel'));
 
   firstCommand = element
     .all(
