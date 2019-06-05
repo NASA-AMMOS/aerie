@@ -12,6 +12,7 @@
   [commandsByName]="commandsByName$ | async"
   [currentTab]="currentTab$ | async"
   [file]="(editor.currentTab && editor.openedTabs[editor.currentTab]) || null"
+  [editorState]="editor"
   (openHelpDialog)="onOpenEditorHelpDialog()"
   (updateTab)="onUpdateTab($event)"
 >

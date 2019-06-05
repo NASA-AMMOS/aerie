@@ -161,23 +161,28 @@ function switchTab(state: FileState, action: SwitchTab): FileState {
 
 /**
  * Reduction helper. Called when reducing the `UpdateTab` action.
+ * Finds the editor instance and updates the document text
  */
 function updateTab(state: FileState, action: UpdateTab): FileState {
-  const { openedTabs } = state.editors[action.editorId];
+  const { docIdToUpdate, text, editorId } = action;
+  const { openedTabs } = state.editors[editorId];
+  let doc = null;
 
   if (openedTabs) {
-    const { docIdToUpdate, text } = action;
+    doc = openedTabs[docIdToUpdate];
+  }
 
+  if (doc) {
     return {
       ...state,
       editors: {
         ...state.editors,
-        [action.editorId]: {
-          ...state.editors[action.editorId],
+        [editorId]: {
+          ...state.editors[editorId],
           openedTabs: {
-            ...openedTabs,
+            ...state.editors[editorId].openedTabs,
             [docIdToUpdate]: {
-              ...openedTabs[docIdToUpdate],
+              ...doc,
               text,
             },
           },
@@ -185,5 +190,6 @@ function updateTab(state: FileState, action: UpdateTab): FileState {
       },
     };
   }
+
   return state;
 }

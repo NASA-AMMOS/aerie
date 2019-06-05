@@ -33,6 +33,7 @@ import {
   getCommandParameterHelpTemplate,
 } from '../../code-mirror-languages/mps/helpers';
 import { SequenceTab } from '../../models';
+import { Editor } from '../../reducers/file.reducer';
 import { SeqEditorService } from '../../services/seq-editor.service';
 
 @Component({
@@ -82,6 +83,9 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
 
   @Input()
   editors: any;
+
+  @Input()
+  editorState: Editor;
 
   @Output()
   openHelpDialog: EventEmitter<null> = new EventEmitter<null>();
@@ -303,7 +307,11 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
     if (this.editor) {
       this.editor.on('change', () => {
         if (this.editor && this.file) {
-          this.onUpdateTab(this.file.id, this.editor.getValue());
+          this.onUpdateTab(
+            this.file.id,
+            this.editor.getValue(),
+            this.editorState.id,
+          );
         }
       });
     }
@@ -468,7 +476,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
     }
   }
 
-  onUpdateTab(id: string, text: string) {
-    this.updateTab.emit({ id, text });
+  onUpdateTab(id: string, text: string, editorId: string) {
+    this.updateTab.emit({ id, text, editorId });
   }
 }
