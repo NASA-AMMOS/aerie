@@ -21,7 +21,7 @@ import {
   FetchCommandDictionaries,
   SelectCommandDictionary,
 } from '../../actions/command-dictionary.actions';
-import { AddText } from '../../actions/editor.actions';
+import { AddText, OpenEditorHelpDialog } from '../../actions/editor.actions';
 import { AddEditor } from '../../actions/file.actions';
 import {
   SetPanelSizes,
@@ -68,6 +68,11 @@ export class SequencingAppComponent implements OnDestroy {
 
   commandsByName: StringTMap<MpsCommand>;
   commandFilterQuery = '';
+  editorOptions = {
+    autocomplete: true,
+    darkTheme: true,
+    showTooltips: false,
+  };
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -135,5 +140,16 @@ export class SequencingAppComponent implements OnDestroy {
 
   addEditor() {
     this.store.dispatch(new AddEditor());
+  }
+
+  toggleEditorOption(key: string) {
+    this.editorOptions = {
+      ...this.editorOptions,
+      [key]: !this.editorOptions[key],
+    };
+  }
+
+  onOpenEditorHelpDialog(): void {
+    this.store.dispatch(new OpenEditorHelpDialog());
   }
 }

@@ -14,7 +14,7 @@
   [currentTab]="currentTab$ | async"
   [file]="(editor.currentTab && editor.openedTabs[editor.currentTab]) || null"
   [editorState]="editor"
-  (openHelpDialog)="onOpenEditorHelpDialog()"
+  [editorOptions]="editorOptions"
   (updateTab)="onUpdateTab($event)"
 >
 </seq-editor>

@@ -20,7 +20,6 @@ import {
   ViewChild,
 } from '@angular/core';
 import * as CodeMirror from 'codemirror';
-import { FloatingActionButton } from 'ng-floating-action-menu';
 import { v4 as uuid } from 'uuid';
 import { MpsCommand, StringTMap } from '../../../shared/models';
 import {
@@ -32,7 +31,7 @@ import {
   getCommandParameterDescriptionTemplate,
   getCommandParameterHelpTemplate,
 } from '../../code-mirror-languages/mps/helpers';
-import { Editor, SequenceTab } from '../../models';
+import { Editor, EditorOptions, SequenceTab } from '../../models';
 import { SeqEditorService } from '../../services/seq-editor.service';
 
 @Component({
@@ -69,9 +68,6 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   mode = 'mps';
 
   @Input()
-  theme = 'monokai';
-
-  @Input()
   value = '';
 
   @Input()
@@ -81,13 +77,13 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   currentTab: string | null;
 
   @Input()
-  editors: any;
+  editors: Editor[];
 
   @Input()
   editorState: Editor;
 
-  @Output()
-  openHelpDialog: EventEmitter<null> = new EventEmitter<null>();
+  @Input()
+  editorOptions: EditorOptions;
 
   @Output()
   updateTab: EventEmitter<any> = new EventEmitter<any>();
@@ -95,48 +91,9 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   @ViewChild('editor', { static: true })
   editorMount: ElementRef;
 
-  autocomplete = true;
   fullscreen = false;
-  userTheme = 'dark';
   tooltip: HTMLElement;
-  showTooltips = false;
-  buttons: Array<FloatingActionButton> = [
-    {
-      iconClass: 'fa fa-undo',
-      label: 'Undo',
-      onClick: () => this.undo(),
-    },
-    {
-      iconClass: 'fa fa-repeat',
-      label: 'Redo',
-      onClick: () => this.redo(),
-    },
-    {
-      iconClass: 'fa fa-magic',
-      label: 'Toggle Autocomplete Off',
-      onClick: () => this.toggleAutocomplete(),
-    },
-    {
-      iconClass: 'fa fa-paint-brush',
-      label: 'Color Scheme',
-      onClick: () => this.toggleTheme(),
-    },
-    {
-      iconClass: 'fa fa-arrows-alt',
-      label: 'Toggle Fullscreen',
-      onClick: () => this.toggleFullscreen(),
-    },
-    {
-      iconClass: 'fa fa-info-circle',
-      label: 'Toggle Tooltips On',
-      onClick: () => this.toggleTooltips(),
-    },
-    {
-      iconClass: 'fa fa-question',
-      label: 'Help',
-      onClick: () => this.openHelpDialog.emit(),
-    },
-  ];
+  defaultTheme = 'monokai';
 
   editor: CodeMirror.Editor | null;
 
@@ -156,10 +113,6 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
         this.editor.setOption('lineWrapping', this.lineWrapping);
       }
 
-      if (changes.theme) {
-        this.editor.setOption('theme', this.theme);
-      }
-
       if (changes.value) {
         this.editor.getDoc().setValue(this.value);
       }
@@ -168,6 +121,16 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
         const text = this.file ? this.file.text : '';
 
         this.editor.setValue(text);
+      }
+
+      if (changes.editorOptions) {
+        const isDarkTheme = changes.editorOptions.currentValue.darkTheme;
+
+        if (isDarkTheme) {
+          this.editor.setOption('theme', 'monokai');
+        } else {
+          this.editor.setOption('theme', 'default');
+        }
       }
     }
   }
@@ -215,55 +178,10 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
     }
   }
 
-  toggleAutocomplete() {
-    if (this.editor) {
-      this.autocomplete = !this.autocomplete;
-
-      if (this.autocomplete) {
-        this.buttons[2].label = 'Toggle Autocomplete Off';
-      } else {
-        this.buttons[2].label = 'Toggle Autocomplete On';
-      }
-      this.editor.focus();
-    }
-  }
-
   toggleFullscreen() {
     if (this.editor) {
       this.fullscreen = !this.fullscreen;
       this.editor.setOption('fullScreen', this.fullscreen);
-      this.editor.focus();
-    }
-  }
-
-  toggleTheme() {
-    if (this.editor) {
-      switch (this.userTheme) {
-        case 'dark':
-          this.userTheme = 'light';
-          this.editor.setOption('theme', 'default');
-          break;
-        case 'light':
-          this.userTheme = 'dark';
-          this.editor.setOption('theme', 'monokai');
-          break;
-        default:
-          this.userTheme = 'dark';
-          this.editor.setOption('theme', 'monokai');
-      }
-      this.editor.focus();
-    }
-  }
-
-  toggleTooltips() {
-    if (this.editor) {
-      this.showTooltips = !this.showTooltips;
-
-      if (this.showTooltips) {
-        this.buttons[5].label = 'Toggle Tooltips Off';
-      } else {
-        this.buttons[5].label = 'Toggle Tooltips On';
-      }
       this.editor.focus();
     }
   }
@@ -289,7 +207,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
       lineWrapping: this.lineWrapping,
       lint: true,
       mode: this.mode,
-      theme: this.theme,
+      theme: this.defaultTheme,
       value: this.value,
     });
 
@@ -319,7 +237,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
         // Don't open autocomplete menu again if the menu is open
         // and if user is moving up/down options
         if (
-          this.autocomplete &&
+          this.editorOptions.autocomplete &&
           this.editor &&
           !cm.state.completeActive &&
           event.key !== 'Enter' &&
@@ -346,7 +264,11 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
       this.editor
         .getWrapperElement()
         .addEventListener('mousemove', (e: MouseEvent) => {
-          if (this.commandsByName && this.showTooltips && this.editor) {
+          if (
+            this.commandsByName &&
+            this.editorOptions.showTooltips &&
+            this.editor
+          ) {
             // Used to give a tolerance for the mouse to be nearby the text, mouse doesn't have to be exactly on the text
             const nearby = [0, 0, 0, 5];
             // tslint:disable-next-line: deprecation

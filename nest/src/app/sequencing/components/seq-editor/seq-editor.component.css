@@ -53,22 +53,6 @@
   background: #272822;
 }
 
-#helper-buttons {
-  margin-top: 8px;
-  right: 8px;
-  z-index: 5;
-  opacity: 0.5;
-  transition: opacity 0.25s;
-}
-
-#helper-buttons:hover {
-  opacity: 1;
-}
-
-#helper-buttons > button {
-  margin: 8px 8px 8px 0px;
-}
-
 ::ng-deep .CodeMirror-fullscreen {
   z-index: 10 !important;
 }
@@ -80,4 +64,17 @@
   display: none;
   padding: 6px;
   border: 2px solid #ccc;
+}
+
+#fullscreen-toggle {
+  position: absolute;
+  right: 6px;
+  z-index: 10;
+  opacity: 0.25;
+  transition: opacity 0.25s ease-in;
+  margin-top: 6px;
+}
+
+#fullscreen-toggle:hover {
+  opacity: 1;
 }

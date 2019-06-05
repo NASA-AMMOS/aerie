@@ -1,19 +1,18 @@
-<ng-floating-action-menu
-  *ngIf="file"
-  placement="br"
-  effect="mfb-zoomin"
-  label="Tools"
-  iconClass="fa fa-bars"
-  activeIconClass="fa fa-chevron-circle-down"
-  toggle="click"
-  [buttons]="buttons"
->
-</ng-floating-action-menu>
-
 <div class="hint-description"></div>
 
 <div
   [style.visibility]="file ? 'visible' : 'hidden'"
   id="sequencing-editor-mount"
   #editor
-></div>
+>
+  <div id="fullscreen-toggle">
+    <button
+      mat-mini-fab
+      aria-label="Toggle Fullscreen"
+      matTooltip="Toggle Fullscreen"
+      (click)="toggleFullscreen()"
+    >
+      <mat-icon>fullscreen</mat-icon>
+    </button>
+  </div>
+</div>

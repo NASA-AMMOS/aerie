@@ -15,3 +15,9 @@ export interface Editor {
   id: string;
   openedTabs: StringTMap<SequenceTab> | null;
 }
+
+export interface EditorOptions {
+  autocomplete: boolean;
+  darkTheme: boolean;
+  showTooltips: boolean;
+}

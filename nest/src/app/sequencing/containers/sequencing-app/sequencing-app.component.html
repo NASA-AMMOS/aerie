@@ -47,6 +47,62 @@
       Add Editor Panel
     </button>
   </mat-menu>
+
+  <button
+    [matMenuTriggerFor]="editorMenu"
+    mat-icon-button
+    matTooltip="Editor"
+    role="button"
+    aria-label="Editor"
+    id="sequencing-editor-button"
+  >
+    <mat-icon class="icon">
+      settings
+    </mat-icon>
+  </button>
+
+  <mat-menu #editorMenu id="editor-menu-container">
+    <button
+      mat-menu-item
+      (click)="toggleEditorOption('autocomplete')"
+      id="sequencing-editor-toggle-autocomplete-button"
+    >
+      <mat-icon aria-label="Toggle Autocomplete">
+        text_rotation_none
+      </mat-icon>
+      Toggle Autocomplete
+    </button>
+    <button
+      mat-menu-item
+      (click)="toggleEditorOption('darkTheme')"
+      id="sequencing-editor-toggle-color-scheme-button"
+    >
+      <mat-icon aria-label="Toggle Color Scheme">
+        color_lens
+      </mat-icon>
+      Toggle Color Scheme
+    </button>
+    <button
+      mat-menu-item
+      (click)="toggleEditorOption('showTooltips')"
+      id="sequencing-editor-toggle-tooltips-button"
+    >
+      <mat-icon aria-label="Toggle Tooltips">
+        message
+      </mat-icon>
+      Toggle Tooltips
+    </button>
+    <button
+      mat-menu-item
+      (click)="onOpenEditorHelpDialog()"
+      id="sequencing-editor-help-button"
+    >
+      <mat-icon aria-label="Help">
+        help
+      </mat-icon>
+      Help
+    </button>
+  </mat-menu>
 </nest-app-header>
 
 <mat-progress-bar
@@ -92,7 +148,10 @@
         *ngFor="let editor of editorsList$ | async; trackBy: editorTrackByFn"
         class="editor-panel"
       >
-        <sequencing-workspace [editor]="editor"></sequencing-workspace>
+        <sequencing-workspace
+          [editor]="editor"
+          [editorOptions]="editorOptions"
+        ></sequencing-workspace>
       </as-split-area>
     </as-split>
   </as-split-area>

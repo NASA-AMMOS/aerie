@@ -16,14 +16,13 @@ import {
 import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { MpsCommand, StringTMap } from '../../../shared/models';
-import { OpenEditorHelpDialog } from '../../actions/editor.actions';
 import {
   CloseTab,
   CreateTab,
   SwitchTab,
   UpdateTab,
 } from '../../actions/file.actions';
-import { Editor, SequenceTab } from '../../models';
+import { Editor, EditorOptions, SequenceTab } from '../../models';
 import {
   getCommands,
   getCommandsByName,
@@ -42,6 +41,9 @@ import { SequencingAppState } from '../../sequencing-store';
 export class SequencingWorkspaceComponent implements AfterViewInit {
   @Input()
   editor: Editor;
+
+  @Input()
+  editorOptions: EditorOptions;
 
   commands$: Observable<MpsCommand[] | null>;
   commandsByName$: Observable<StringTMap<MpsCommand> | null>;
@@ -72,10 +74,6 @@ export class SequencingWorkspaceComponent implements AfterViewInit {
 
   onCreateTab(editorId: string) {
     this.store.dispatch(new CreateTab(editorId));
-  }
-
-  onOpenEditorHelpDialog(): void {
-    this.store.dispatch(new OpenEditorHelpDialog());
   }
 
   onSwitchTab({ tabId, editorId }: { tabId: string; editorId: string }) {

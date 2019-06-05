@@ -68,7 +68,6 @@
     "material-design-icons": "^3.0.1",
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.25",
-    "ng-floating-action-menu": "0.0.3",
     "ng-pick-datetime": "^7.0.0",
     "ngx-color": "^2.0.6",
     "ngx-toastr": "^10.0.2",
