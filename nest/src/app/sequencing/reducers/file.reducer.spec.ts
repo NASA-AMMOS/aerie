@@ -87,21 +87,6 @@ const mockStateAfterCreateTab = {
   },
 };
 
-const emptyState = {
-  editors: {},
-  files: {
-    root: {
-      childIds: [],
-      content: '',
-      id: 'root',
-      name: 'root',
-      timeCreated: 0,
-      timeLastUpdated: 0,
-      type: 'directory',
-    },
-  },
-};
-
 const mockStateForSwitchTab = {
   editors: {
     editor1: {
@@ -143,7 +128,7 @@ describe('File reducer', () => {
       new CloseTab('11', 'editor1'),
     );
 
-    expect(result).toEqual(emptyState);
+    expect(result).toEqual(initialState);
   });
 
   it('should handle switchTab', () => {

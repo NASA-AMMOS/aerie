@@ -101,7 +101,7 @@ function closeTab(state: FileState, action: CloseTab): FileState {
   );
   const editors = Object.keys(state.editors);
 
-  // If closing the tab results in the editor having no opened tabs, remove the editor instance
+  // If an editor has no open tabs and it's not the only editor instance, remove the editor instance
   if (openedTabs.length === 0 && editors.length > 1) {
     return {
       ...state,
@@ -109,6 +109,22 @@ function closeTab(state: FileState, action: CloseTab): FileState {
     };
   }
 
+  // If an editor has no open tabs and it is the only editor instance, reset the editor instance
+  if (openedTabs.length === 0 && editors.length === 1) {
+    return {
+      ...state,
+      editors: {
+        ...state.editors,
+        [action.editorId]: {
+          currentTab: null,
+          id: action.editorId,
+          openedTabs: null,
+        },
+      },
+    };
+  }
+
+  // Otherwise remove the tab
   return {
     ...state,
     editors: {
