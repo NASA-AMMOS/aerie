@@ -99,9 +99,10 @@ function closeTab(state: FileState, action: CloseTab): FileState {
   const openedTabs = Object.keys(
     omit(state.editors[action.editorId].openedTabs, action.docIdToClose),
   );
+  const editors = Object.keys(state.editors);
 
   // If closing the tab results in the editor having no opened tabs, remove the editor instance
-  if (openedTabs.length === 0) {
+  if (openedTabs.length === 0 && editors.length > 1) {
     return {
       ...state,
       editors: omit(state.editors, action.editorId),
