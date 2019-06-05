@@ -49,6 +49,13 @@
   </mat-menu>
 </nest-app-header>
 
+<mat-progress-bar
+  mode="indeterminate"
+  *ngIf="showLoadingBar$ | async"
+  color="accent"
+>
+</mat-progress-bar>
+
 <as-split
   unit="percent"
   useTransition="true"
@@ -68,7 +75,7 @@
           <mat-icon class="tab-icon">folder</mat-icon> Files
         </ng-template>
 
-        <h3>Files</h3>
+        <file-explorer></file-explorer>
       </mat-tab>
     </mat-tab-group>
   </as-split-area>

@@ -7,22 +7,19 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { SequenceFile } from '../../../../../sequencing/src/models';
+import { FileServiceInterface } from './file-service-interface';
 
-export enum EditorActionTypes {
-  AddText = '[sequencing-editor] add_text',
-  OpenEditorHelpDialog = '[sequencing-editor] open_editor_help_dialog',
+@Injectable({
+  providedIn: 'root',
+})
+export class FileService implements FileServiceInterface {
+  constructor(private http: HttpClient) {}
+
+  fetchChildren(baseUrl: string, fileId: string): Observable<SequenceFile[]> {
+    return this.http.get<SequenceFile[]>(`${baseUrl}/files/${fileId}/children`);
+  }
 }
-
-export class AddText implements Action {
-  readonly type = EditorActionTypes.AddText;
-  constructor(public text: string, public editorId: string) {}
-}
-
-export class OpenEditorHelpDialog implements Action {
-  readonly type = EditorActionTypes.OpenEditorHelpDialog;
-
-  constructor(public width: string = '400px') {}
-}
-
-export type EditorActions = AddText | OpenEditorHelpDialog;

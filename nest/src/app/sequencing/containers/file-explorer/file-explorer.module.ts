@@ -7,22 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { SeqFileTreeModule } from '../../components';
+import { FileExplorerComponent } from './file-explorer.component';
 
-export enum EditorActionTypes {
-  AddText = '[sequencing-editor] add_text',
-  OpenEditorHelpDialog = '[sequencing-editor] open_editor_help_dialog',
-}
-
-export class AddText implements Action {
-  readonly type = EditorActionTypes.AddText;
-  constructor(public text: string, public editorId: string) {}
-}
-
-export class OpenEditorHelpDialog implements Action {
-  readonly type = EditorActionTypes.OpenEditorHelpDialog;
-
-  constructor(public width: string = '400px') {}
-}
-
-export type EditorActions = AddText | OpenEditorHelpDialog;
+@NgModule({
+  declarations: [FileExplorerComponent],
+  exports: [FileExplorerComponent],
+  imports: [CommonModule, SeqFileTreeModule],
+})
+export class FileExplorerModule {}

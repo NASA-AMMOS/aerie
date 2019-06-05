@@ -8,21 +8,19 @@
  */
 
 import { Action } from '@ngrx/store';
+import { concat, Observable, of } from 'rxjs';
+import { LoadingBarHide, LoadingBarShow } from '../actions/layout.actions';
 
-export enum EditorActionTypes {
-  AddText = '[sequencing-editor] add_text',
-  OpenEditorHelpDialog = '[sequencing-editor] open_editor_help_dialog',
+/**
+ * Wraps a list of actions around loading bar show/hide actions.
+ * Uses `concat` so the actions happen in the given order (synchronously).
+ */
+export function withLoadingBar(
+  actions$: Observable<Action>[],
+): Observable<Action> {
+  return concat(
+    of(new LoadingBarShow()),
+    ...actions$,
+    of(new LoadingBarHide()),
+  );
 }
-
-export class AddText implements Action {
-  readonly type = EditorActionTypes.AddText;
-  constructor(public text: string, public editorId: string) {}
-}
-
-export class OpenEditorHelpDialog implements Action {
-  readonly type = EditorActionTypes.OpenEditorHelpDialog;
-
-  constructor(public width: string = '400px') {}
-}
-
-export type EditorActions = AddText | OpenEditorHelpDialog;

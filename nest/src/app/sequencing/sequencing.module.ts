@@ -14,6 +14,7 @@ import { NestConfirmDialogModule } from '../shared/components';
 import { SequencingAppModule } from './containers/sequencing-app/sequencing-app.module';
 import { CommandDictionaryEffects } from './effects/command-dictionary.effects';
 import { EditorEffects } from './effects/editor.effects';
+import { FileEffects } from './effects/file.effects';
 import { SequencingRoutingModule } from './sequencing-routing.module';
 import { reducers } from './sequencing-store';
 
@@ -21,7 +22,11 @@ import { reducers } from './sequencing-store';
   imports: [
     SequencingRoutingModule,
     StoreModule.forFeature('sequencing', reducers),
-    EffectsModule.forFeature([CommandDictionaryEffects, EditorEffects]),
+    EffectsModule.forFeature([
+      CommandDictionaryEffects,
+      EditorEffects,
+      FileEffects,
+    ]),
     NestConfirmDialogModule,
     SequencingAppModule,
   ],

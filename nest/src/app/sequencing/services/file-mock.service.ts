@@ -12,29 +12,35 @@ import { keyBy } from 'lodash';
 import { Observable, Observer } from 'rxjs';
 import { SequenceFile } from '../../../../../sequencing/src/models';
 import * as mocks from '../../../../../sequencing/test/mocks';
-import { SequencingServiceInterface } from './sequencing-service-interface';
+import { FileServiceInterface } from './file-service-interface';
 
 const mockFiles = mocks.getFiles();
 const mockFilesById = keyBy(mockFiles, 'id');
 
+export function getChildren(fileId: string): SequenceFile[] {
+  const { childIds = [] } = mockFilesById[fileId];
+  const children = childIds.reduce((files: SequenceFile[], id: string) => {
+    const file = mockFilesById[id];
+    if (file) {
+      files.push(file);
+    }
+    return files;
+  }, []);
+  return children;
+}
+
 @Injectable({
   providedIn: 'root',
 })
-export class SequencingMockService implements SequencingServiceInterface {
-  readChildren(
+export class FileMockService implements FileServiceInterface {
+  fetchChildren(
     baseUrl: string = '',
     fileId: string,
   ): Observable<SequenceFile[]> {
-    return Observable.create((o: Observer<SequenceFile[]>) => {
-      const { childIds = [] } = mockFilesById[fileId];
-      const children = childIds.reduce((files: SequenceFile[], id: string) => {
-        const file = mockFilesById[id];
-        if (file) {
-          files.push(file);
-        }
-        return files;
-      }, []);
+    return new Observable((o: Observer<SequenceFile[]>) => {
+      const children = getChildren(fileId);
       o.next(children);
+      o.complete();
     });
   }
 }

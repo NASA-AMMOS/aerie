@@ -17,6 +17,7 @@ import {
   MatIconModule,
   MatInputModule,
   MatMenuModule,
+  MatProgressBarModule,
   MatSidenavModule,
   MatTabsModule,
   MatToolbarModule,
@@ -25,6 +26,7 @@ import {
 import { AngularSplitModule } from 'angular-split';
 import { NestAppHeaderModule } from '../../../shared/components';
 import { SeqCommandListModule, SeqCommandLoaderModule } from '../../components';
+import { FileExplorerModule } from '../file-explorer/file-explorer.module';
 import { SequencingWorkspaceModule } from '../sequencing-workspace/sequencing-workspace.module';
 import { SequencingAppComponent } from './sequencing-app.component';
 
@@ -41,11 +43,13 @@ import { SequencingAppComponent } from './sequencing-app.component';
     MatIconModule,
     MatInputModule,
     MatMenuModule,
+    MatProgressBarModule,
     MatSidenavModule,
     MatTabsModule,
     MatToolbarModule,
     MatTooltipModule,
     NestAppHeaderModule,
+    FileExplorerModule,
     SequencingWorkspaceModule,
     SeqCommandListModule,
     SeqCommandLoaderModule,

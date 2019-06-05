@@ -42,6 +42,7 @@ import {
   getRightPanelSize,
   getRightPanelVisible,
   getSelectedDictionaryId,
+  getShowLoadingBar,
 } from '../../selectors';
 import { SequencingAppState } from '../../sequencing-store';
 
@@ -63,6 +64,7 @@ export class SequencingAppComponent implements OnDestroy {
   rightPanelVisible$: Observable<boolean>;
   selectedDictionaryId$: Observable<string | null>;
   editorsList$: Observable<Editor[]>;
+  showLoadingBar$: Observable<boolean>;
 
   commandsByName: StringTMap<MpsCommand>;
   commandFilterQuery = '';
@@ -83,6 +85,7 @@ export class SequencingAppComponent implements OnDestroy {
       select(getSelectedDictionaryId),
     );
     this.editorsList$ = this.store.pipe(select(getEditorsList));
+    this.showLoadingBar$ = this.store.pipe(select(getShowLoadingBar));
 
     this.commandsByName$
       .pipe(takeUntil(this.ngUnsubscribe))

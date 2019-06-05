@@ -7,22 +7,19 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { Component, Input } from '@angular/core';
+import { SequenceFile } from '../../../../../../sequencing/src/models';
+import { StringTMap } from '../../../shared/models';
 
-export enum EditorActionTypes {
-  AddText = '[sequencing-editor] add_text',
-  OpenEditorHelpDialog = '[sequencing-editor] open_editor_help_dialog',
+@Component({
+  selector: 'seq-file-tree',
+  styleUrls: ['./seq-file-tree.component.css'],
+  templateUrl: './seq-file-tree.component.html',
+})
+export class SeqFileTreeComponent {
+  @Input()
+  file: SequenceFile;
+
+  @Input()
+  files: StringTMap<SequenceFile>;
 }
-
-export class AddText implements Action {
-  readonly type = EditorActionTypes.AddText;
-  constructor(public text: string, public editorId: string) {}
-}
-
-export class OpenEditorHelpDialog implements Action {
-  readonly type = EditorActionTypes.OpenEditorHelpDialog;
-
-  constructor(public width: string = '400px') {}
-}
-
-export type EditorActions = AddText | OpenEditorHelpDialog;

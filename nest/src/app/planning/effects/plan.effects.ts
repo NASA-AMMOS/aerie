@@ -147,7 +147,7 @@ export class PlanEffects {
         width: '400px',
       });
 
-      return forkJoin(of(action), of(state), deletePlanDialog.afterClosed());
+      return forkJoin([of(action), of(state), deletePlanDialog.afterClosed()]);
     }),
     map(([action, state, result]) => ({ action, state, result })),
     switchMap(({ action, state, result: { confirm } }) => {
@@ -194,7 +194,7 @@ export class PlanEffects {
         width: '400px',
       });
 
-      return forkJoin(of(action), of(state), deletePlanDialog.afterClosed());
+      return forkJoin([of(action), of(state), deletePlanDialog.afterClosed()]);
     }),
     map(([action, state, result]) => ({ action, state, result })),
     switchMap(({ action, state, result: { confirm } }) => {

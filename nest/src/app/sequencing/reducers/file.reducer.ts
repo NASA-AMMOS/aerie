@@ -7,8 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { omit, uniqueId } from 'lodash';
+import { keyBy, omit, uniqueId } from 'lodash';
 import { v4 as uuid } from 'uuid';
+import { SequenceFile } from '../../../../../sequencing/src/models';
 import { StringTMap } from '../../shared/models';
 import {
   CloseTab,
@@ -16,6 +17,7 @@ import {
   FileActions,
   FileActionTypes,
   SwitchTab,
+  UpdateChildren,
   UpdateTab,
 } from '../actions/file.actions';
 import { SequenceTab } from '../models';
@@ -28,6 +30,7 @@ export interface Editor {
 
 export interface FileState {
   editors: StringTMap<Editor>;
+  files: StringTMap<SequenceFile>;
 }
 
 export const initialState: FileState = {
@@ -36,6 +39,17 @@ export const initialState: FileState = {
       currentTab: null,
       id: 'editor1',
       openedTabs: null,
+    },
+  },
+  files: {
+    root: {
+      childIds: [],
+      content: '',
+      id: 'root',
+      name: 'root',
+      timeCreated: 0,
+      timeLastUpdated: 0,
+      type: 'directory',
     },
   },
 };
@@ -52,6 +66,8 @@ export function reducer(state: FileState = initialState, action: FileActions) {
       return createTab(state, action);
     case FileActionTypes.SwitchTab:
       return switchTab(state, action);
+    case FileActionTypes.UpdateChildren:
+      return updateChildren(state, action);
     case FileActionTypes.UpdateTab:
       return updateTab(state, action);
     case FileActionTypes.AddEditor:
@@ -193,6 +209,22 @@ function switchTab(state: FileState, action: SwitchTab): FileState {
   }
 
   return state;
+}
+
+/**
+ * Reduction helper. Called when reducing the `UpdateChildren` action.
+ */
+function updateChildren(state: FileState, action: UpdateChildren): FileState {
+  return {
+    ...state,
+    files: {
+      [action.parentId]: {
+        ...state.files[action.parentId],
+        childIds: action.children.map(child => child.id),
+      },
+      ...keyBy(action.children, 'id'),
+    },
+  };
 }
 
 /**
