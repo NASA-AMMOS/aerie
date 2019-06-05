@@ -21,15 +21,17 @@ import { StringTMap } from '../../shared/models';
   providedIn: 'root',
 })
 export class SeqEditorService {
-  editors: StringTMap<CodeMirror.Editor | null> = {};
+  editors: StringTMap<CodeMirror.Editor | null> | null = null;
 
   /**
    * Focus the Code Mirror editor instance.
    */
   focusEditor(id: string): void {
-    const editor = this.editors[id];
-    if (editor) {
-      editor.focus();
+    if (this.editors) {
+      const editor = this.editors[id];
+      if (editor) {
+        editor.focus();
+      }
     }
   }
 
@@ -41,6 +43,11 @@ export class SeqEditorService {
     id: string,
     options?: CodeMirror.EditorConfiguration,
   ): void {
+    // Initialize editors when setting the first editor instance
+    if (!this.editors) {
+      this.editors = {};
+    }
+
     let editor = this.editors[id];
 
     if (!editor) {
@@ -65,38 +72,42 @@ export class SeqEditorService {
    * or adds text to the document on a new line after the cursor.
    */
   addText(text: string, id: string): void {
-    const editor = this.editors[id];
+    if (this.editors) {
+      const editor = this.editors[id];
 
-    if (editor) {
-      const doc = editor.getDoc();
-      const cursor = doc.getCursor();
-      const line = doc.getLine(cursor.line);
-      const selection = doc.getSelection();
+      if (editor) {
+        const doc = editor.getDoc();
+        const cursor = doc.getCursor();
+        const line = doc.getLine(cursor.line);
+        const selection = doc.getSelection();
 
-      if (selection !== '') {
-        // If there is a selection, replace the entire selection with the given text.
-        doc.replaceSelection(text);
-      } else {
-        // Create a new object to avoid mutation of the original selection.
-        const pos: CodeMirror.Position = {
-          ch: line.length,
-          line: cursor.line,
-        };
-
-        if (!line.length) {
-          // If the cursor is on an empty line, just add the text to that line.
-          doc.replaceRange(text, pos);
+        if (selection !== '') {
+          // If there is a selection, replace the entire selection with the given text.
+          doc.replaceSelection(text);
         } else {
-          // Otherwise add the text on a new line below the current cursor line.
-          doc.replaceRange(`\n${text}`, pos);
+          // Create a new object to avoid mutation of the original selection.
+          const pos: CodeMirror.Position = {
+            ch: line.length,
+            line: cursor.line,
+          };
+
+          if (!line.length) {
+            // If the cursor is on an empty line, just add the text to that line.
+            doc.replaceRange(text, pos);
+          } else {
+            // Otherwise add the text on a new line below the current cursor line.
+            doc.replaceRange(`\n${text}`, pos);
+          }
         }
       }
     }
   }
 
   getEditor(id: string) {
-    if (id in this.editors) {
-      return this.editors[id];
+    if (this.editors) {
+      if (id in this.editors) {
+        return this.editors[id];
+      }
     }
     return null;
   }

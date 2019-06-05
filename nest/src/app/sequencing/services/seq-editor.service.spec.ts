@@ -34,17 +34,17 @@ describe('SeqEditorService', () => {
   });
 
   it('the editor instance should initially be null', () => {
-    expect(seqEditorService.editor).toBeNull();
+    expect(seqEditorService.editors).toBeNull();
   });
 
   it('the editor instance should be initialized after calling setEditor', () => {
     seqEditorService.setEditor(elementRef, 'editor1');
-    expect(seqEditorService.editor).toBeDefined();
+    expect(seqEditorService.editors).toBeDefined();
   });
 
   it('the editor instance should have new text after calling addText', () => {
     seqEditorService.setEditor(elementRef, 'editor1');
-    const editor = seqEditorService.editors['editor1'] as CodeMirror.Editor;
+    const editor = seqEditorService.getEditor('editor1') as CodeMirror.Editor;
 
     const text = 'racecar';
     expect(editor.getValue()).toEqual('');
