@@ -8,6 +8,7 @@
  */
 
 import { omit, uniqueId } from 'lodash';
+import { v4 as uuid } from 'uuid';
 import { StringTMap } from '../../shared/models';
 import {
   CloseTab,
@@ -36,11 +37,6 @@ export const initialState: FileState = {
       id: 'editor1',
       openedTabs: null,
     },
-    editor2: {
-      currentTab: null,
-      id: 'editor2',
-      openedTabs: null,
-    },
   },
 };
 
@@ -58,9 +54,31 @@ export function reducer(state: FileState = initialState, action: FileActions) {
       return switchTab(state, action);
     case FileActionTypes.UpdateTab:
       return updateTab(state, action);
+    case FileActionTypes.AddEditor:
+      return addEditor(state);
     default:
       return state;
   }
+}
+
+/**
+ * Creates and adds a new editor instance
+ */
+function addEditor(state: FileState) {
+  const id = uuid();
+  const newEditor = {
+    currentTab: null,
+    id,
+    openedTabs: null,
+  };
+
+  return {
+    ...state,
+    editors: {
+      ...state.editors,
+      [id]: newEditor,
+    },
+  };
 }
 
 /**

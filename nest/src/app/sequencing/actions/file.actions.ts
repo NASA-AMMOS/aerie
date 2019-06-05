@@ -10,10 +10,15 @@
 import { Action } from '@ngrx/store';
 
 export enum FileActionTypes {
+  AddEditor = '[editor] add_editor',
   CreateTab = '[file] create_tab',
   CloseTab = '[file] remove_tab',
   SwitchTab = '[file] switch_tab',
   UpdateTab = '[file] update_tab',
+}
+
+export class AddEditor implements Action {
+  readonly type = FileActionTypes.AddEditor;
 }
 
 export class CreateTab implements Action {
@@ -44,4 +49,9 @@ export class UpdateTab implements Action {
   ) {}
 }
 
-export type FileActions = CreateTab | CloseTab | SwitchTab | UpdateTab;
+export type FileActions =
+  | AddEditor
+  | CreateTab
+  | CloseTab
+  | SwitchTab
+  | UpdateTab;

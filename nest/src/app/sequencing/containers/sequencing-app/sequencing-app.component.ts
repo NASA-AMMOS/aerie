@@ -11,7 +11,6 @@ import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { v4 as uuid } from 'uuid';
 import { ToggleNestNavigationDrawer } from '../../../shared/actions/config.actions';
 import {
   CommandDictionary,
@@ -23,6 +22,7 @@ import {
   SelectCommandDictionary,
 } from '../../actions/command-dictionary.actions';
 import { AddText } from '../../actions/editor.actions';
+import { AddEditor } from '../../actions/file.actions';
 import {
   SetPanelSizes,
   ToggleLeftPanelVisible,
@@ -66,7 +66,6 @@ export class SequencingAppComponent implements OnDestroy {
 
   commandsByName: StringTMap<MpsCommand>;
   commandFilterQuery = '';
-  editorPanes = [{ id: 'id0' }];
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -127,12 +126,11 @@ export class SequencingAppComponent implements OnDestroy {
     this.store.dispatch(new ToggleRightPanelVisible());
   }
 
-  addEditorPane() {
-    const id = uuid();
-    this.editorPanes.push({ id });
-  }
-
   editorTrackByFn(_: number, item: any): string {
     return item.id;
+  }
+
+  addEditor() {
+    this.store.dispatch(new AddEditor());
   }
 }
