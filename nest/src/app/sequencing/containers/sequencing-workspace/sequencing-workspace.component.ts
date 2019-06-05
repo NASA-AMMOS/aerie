@@ -48,7 +48,7 @@ export class SequencingWorkspaceComponent implements AfterViewInit {
   commandsByName$: Observable<StringTMap<MpsCommand> | null>;
   currentTab$: Observable<string | null>;
   file$: Observable<SequenceTab | null>;
-  openedTabs$: Observable<SequenceTab[]>;
+  openedTabs$: Observable<SequenceTab[] | null>;
 
   constructor(private store: Store<SequencingAppState>) {
     this.commands$ = this.store.pipe(select(getCommands));

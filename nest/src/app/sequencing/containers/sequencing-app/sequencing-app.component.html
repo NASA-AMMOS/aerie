@@ -33,19 +33,20 @@
       </mat-icon>
       Toggle Right Panel
     </button>
+    <mat-divider></mat-divider>
+    <button
+      mat-menu-item
+      id="sequencing-add-editor-pane-button"
+      matTooltip="Add Editor Panel"
+      aria-label="Add Editor Panel"
+      (click)="addEditor()"
+    >
+      <mat-icon class="icon">
+        add
+      </mat-icon>
+      Add Editor Panel
+    </button>
   </mat-menu>
-
-  <button
-    mat-icon-button
-    matTooltip="Add Editor Panel"
-    role="button"
-    aria-label="Add Editor Panel"
-    (click)="addEditor()"
-  >
-    <mat-icon class="icon">
-      add
-    </mat-icon>
-  </button>
 </nest-app-header>
 
 <as-split

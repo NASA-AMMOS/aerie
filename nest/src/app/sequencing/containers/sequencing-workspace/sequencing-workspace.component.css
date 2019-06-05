@@ -14,13 +14,7 @@
 }
 
 #no-files-message {
-  position: absolute;
-  left: 50%;
-  top: 50%;
+  height: 100%;
   z-index: -1;
-}
-
-#no-files-message-text {
-  position: relative;
-  left: -50%;
+  text-align: center;
 }
