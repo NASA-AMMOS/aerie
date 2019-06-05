@@ -24,10 +24,15 @@ export const getFileState = createSelector(
 export const getOpenedTabs = createSelector(
   getFileState,
   (state: FileState, props: any) => {
-    const editor = state.editors[props.editorId];
-    const { openedTabs } = editor;
+    if (props.editorId in state.editors) {
+      const editor = state.editors[props.editorId];
+      const { openedTabs } = editor;
 
-    return openedTabs ? Object.values(openedTabs) : [];
+      return openedTabs ? Object.values(openedTabs) : [];
+    }
+
+    // Handles the case where the editor was removed
+    return null;
   },
 );
 
@@ -41,7 +46,14 @@ export const getOpenedTabsByName = createSelector(
  */
 export const getCurrentTab = createSelector(
   getFileState,
-  (state: FileState, props: any) => state.editors[props.editorId].currentTab,
+  (state: FileState, props: any) => {
+    if (props.editorId in state.editors) {
+      return state.editors[props.editorId].currentTab;
+    }
+
+    // Handles the case where the editor was removed
+    return null;
+  },
 );
 
 /**

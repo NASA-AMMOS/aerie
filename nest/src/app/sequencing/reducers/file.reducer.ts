@@ -83,8 +83,21 @@ function addEditor(state: FileState) {
 
 /**
  * Reduction helper. Called when reducing the `CloseTab` action.
+ * Removes the editor instance if there are no open tabs left
  */
 function closeTab(state: FileState, action: CloseTab): FileState {
+  const openedTabs = Object.keys(
+    omit(state.editors[action.editorId].openedTabs, action.docIdToClose),
+  );
+
+  // If closing the tab results in the editor having no opened tabs, remove the editor instance
+  if (openedTabs.length === 0) {
+    return {
+      ...state,
+      editors: omit(state.editors, action.editorId),
+    };
+  }
+
   return {
     ...state,
     editors: {
@@ -139,6 +152,11 @@ function createTab(state: FileState, action: CreateTab): FileState {
  * Reduction helper. Called when reducing the `SwitchTab` action.
  */
 function switchTab(state: FileState, action: SwitchTab): FileState {
+  // If the editor was removed, skip
+  if (!(action.editorId in state.editors)) {
+    return state;
+  }
+
   const editor = state.editors[action.editorId];
 
   if (editor.openedTabs) {
