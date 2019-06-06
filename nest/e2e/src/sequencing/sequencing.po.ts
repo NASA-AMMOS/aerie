@@ -1,4 +1,4 @@
-import { browser, by, element, ExpectedConditions as EC } from 'protractor';
+import { browser, by, element } from 'protractor';
 import { config } from '../../../src/config';
 import { click } from '../utils';
 
@@ -7,31 +7,25 @@ export class SequencingPage {
 
   config = config.appModules[1];
 
+  waitTimeout = 5000;
+
   commandDictionarySelect = element(by.css('#sequencing-command-select'));
   testCommandDictionary = element(by.id('mat-option-1'));
   commandList = element(by.id('sequencing-command-list'));
   commands = element.all(by.css('.mat-list-text'));
   noCommandsPrompt = element(by.id('sequencing-no-commands-prompt'));
 
-  codeMirrorEditor = element(by.css('#sequencing-editor-mount > div'));
+  codeMirrorEditor = element(
+    by.css('#sequencing-editor-mount > div:nth-of-type(2)'),
+  );
   codeMirrorTextArea = element(
     by.css('#sequencing-editor-mount > div > div > textarea'),
   );
   codeMirrorWrapper = element(by.css('.CodeMirror-wrap'));
 
-  toolsToggleButton = element(by.className('mfb-component__button--main'));
-  toolButtons = element.all(by.className('mfb-component__button--child'));
-  helpButtonIndex = 6;
-  tooltipButtonIndex = 5;
-  fullscreenButtonIndex = 4;
-  colorschemeButtonIndex = 3;
-  autocompleteButtonIndex = 2;
-  redoButtonIndex = 1;
-  undoButtonIndex = 0;
-
   hintsContainer = element(by.css('.CodeMirror-hints'));
 
-  helpDialog = element(by.css('.mat-dialog-container'));
+  helpDialog = element(by.className('mat-dialog-container'));
 
   panelButton = element(by.id('sequencing-panels-button'));
   panelMenu = element(by.css('.mat-menu-content'));
@@ -46,6 +40,17 @@ export class SequencingPage {
   middlePanel = element(by.id('middle-panel-area'));
   rightPanel = element(by.id('right-panel-area'));
   editorPanels = element.all(by.className('editor-panel'));
+
+  toolsButton = element(by.id('sequencing-editor-button'));
+  toolsMenu = element(by.className('mat-menu-content'));
+  autocompleteButton = element(
+    by.id('sequencing-editor-toggle-autocomplete-button'),
+  );
+  colorschemeButton = element(
+    by.id('sequencing-editor-toggle-color-scheme-button'),
+  );
+  tooltipsButton = element(by.id('sequencing-editor-toggle-tooltips-button'));
+  helpButton = element(by.id('sequencing-editor-help-button'));
 
   firstCommand = element
     .all(
@@ -66,6 +71,7 @@ export class SequencingPage {
   tabs = element.all(by.className('seq-tab'));
   tabTitles = element.all(by.css('.seq-tab-text'));
   tabCloseButtons = element.all(by.css('.seq-tab-icon'));
+  fullscreenButton = element(by.css('#fullscreen-toggle > button'));
 
   selectTestCommandDictionary() {
     this.commandDictionarySelect.click();
@@ -93,30 +99,6 @@ export class SequencingPage {
   sendKeysToCodeMirror(text: string) {
     click(this.codeMirrorWrapper);
     this.codeMirrorTextArea.sendKeys(text);
-  }
-
-  openToolbar() {
-    browser.wait(
-      EC.visibilityOf(this.toolsToggleButton),
-      1000,
-      'Tools toggle button did not appear',
-    );
-
-    this.toolsToggleButton.click();
-  }
-
-  closeToolbar() {
-    this.toolsToggleButton.click();
-  }
-
-  clickToolbarItem(index: number) {
-    browser.wait(
-      EC.visibilityOf(this.toolButtons.get(index)),
-      1000,
-      'Toolbar button did not appear',
-    );
-
-    this.toolButtons.get(index).click();
   }
 
   /**

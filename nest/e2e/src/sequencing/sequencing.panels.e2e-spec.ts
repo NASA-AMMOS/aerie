@@ -15,7 +15,7 @@ describe('/sequencing.panels', () => {
 
   it('[C136493] A user SHOULD be able to open the panel menu', () => {
     page.panelButton.click();
-    browser.wait(EC.visibilityOf(page.panelMenu), 5000);
+    browser.wait(EC.visibilityOf(page.panelMenu), page.waitTimeout);
     expect(page.panelMenu.isDisplayed()).toBe(true);
   });
 
@@ -64,35 +64,48 @@ describe('/sequencing.panels', () => {
 
     page.panelButton.click();
 
-    browser.wait(EC.visibilityOf(page.panelMenu), 5000);
+    browser.wait(EC.visibilityOf(page.panelMenu), page.waitTimeout);
     clickHarder('#sequencing-panels-right-toggle-button');
-    browser.wait(EC.invisibilityOf(page.rightPanel), 5000);
+    browser.wait(EC.invisibilityOf(page.rightPanel), page.waitTimeout);
 
     expect(page.rightPanel.isDisplayed()).toBe(false);
 
     page.panelButton.click();
 
-    browser.wait(EC.visibilityOf(page.panelMenu), 5000);
+    browser.wait(EC.visibilityOf(page.panelMenu), page.waitTimeout);
     clickHarder('#sequencing-panels-right-toggle-button');
-    browser.wait(EC.visibilityOf(page.rightPanel), 5000);
+    browser.wait(EC.visibilityOf(page.rightPanel), page.waitTimeout);
 
     expect(page.rightPanel.isDisplayed()).toBe(true);
   });
 
   it('[C141205] A user SHOULD be able to create a new editor panel', () => {
     page.panelButton.click();
-    browser.wait(EC.visibilityOf(page.panelMenu), 5000);
+    browser.wait(EC.visibilityOf(page.panelMenu), page.waitTimeout);
     clickHarder('#sequencing-add-editor-pane-button');
 
     expect(page.editorPanels.count()).toBe(2);
   });
 
-  it('[C141206] An editor panel SHOULD be removed if there are no tabs', () => {
+  it('[C141206] An editor panel SHOULD be removed if there are no tabs AND there is not one editor panel', () => {
+    page.prepareForCodeMirrorTesting();
+
+    page.panelButton.click();
+    browser.wait(EC.visibilityOf(page.panelMenu), page.waitTimeout);
+    clickHarder('#sequencing-add-editor-pane-button');
+    page.addTab();
+    page.tabCloseButtons.get(0).click();
+    page.tabCloseButtons.get(0).click();
+
+    expect(page.editorPanels.count()).toBe(1);
+  });
+
+  it('[C141410] WHEN a user closes a tab resulting in no tabs in the only editor, the editor instance SHOULD still be there', () => {
     page.prepareForCodeMirrorTesting();
 
     page.tabCloseButtons.get(0).click();
 
-    expect(page.editorPanels.count()).toBe(0);
+    expect(page.editorPanels.count()).toBe(1);
   });
 
   afterEach(async () => {

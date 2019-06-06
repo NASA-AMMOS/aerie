@@ -1,7 +1,14 @@
-import { browser, logging, protractor } from 'protractor';
-import { hasClass, waitTilClickable } from '../utils';
+import {
+  browser,
+  ExpectedConditions as EC,
+  logging,
+  protractor,
+} from 'protractor';
+import { clickHarder, hasClass } from '../utils';
+// import { waitTilClickable } from '../utils';
 import { SequencingPage } from './sequencing.po';
 
+// tslint:disable-next-line: no-focused-tests
 describe('/sequencing.toolbar', () => {
   let page: SequencingPage;
 
@@ -14,30 +21,47 @@ describe('/sequencing.toolbar', () => {
   });
 
   it('[C135060] WHEN the user clicks the help button, a dialog pops up', () => {
-    page.openToolbar();
-    page.clickToolbarItem(page.helpButtonIndex);
-
-    waitTilClickable(page.helpDialog, 10000);
+    browser.wait(
+      EC.visibilityOf(page.toolsButton),
+      page.waitTimeout,
+      'Tools button is not visible',
+    );
+    page.toolsButton.click();
+    browser.wait(
+      EC.visibilityOf(page.toolsMenu),
+      page.waitTimeout,
+      'Tools menu did not appear',
+    );
+    clickHarder('#sequencing-editor-help-button');
     expect(page.helpDialog.isDisplayed()).toBe(true);
   });
 
   it('[C135064] WHEN a user clicks the toggle theme button, the theme should switch to the alternative theme', () => {
+    page.prepareForCodeMirrorTesting();
     const darkTheme = 'cm-s-monokai';
     const lightTheme = 'cm-s-default';
 
     expect(hasClass(page.codeMirrorEditor, darkTheme)).toBe(true);
-    expect(hasClass(page.codeMirrorEditor, lightTheme)).toBe(false);
 
-    page.openToolbar();
-    page.clickToolbarItem(page.colorschemeButtonIndex);
+    browser.wait(
+      EC.visibilityOf(page.toolsButton),
+      page.waitTimeout,
+      'Tools button is not visible',
+    );
+    page.toolsButton.click();
+    browser.wait(
+      EC.visibilityOf(page.toolsMenu),
+      page.waitTimeout,
+      'Tools menu did not appear',
+    );
+    clickHarder('#sequencing-editor-toggle-color-scheme-button');
 
-    expect(hasClass(page.codeMirrorEditor, darkTheme)).toBe(false);
     expect(hasClass(page.codeMirrorEditor, lightTheme)).toBe(true);
   });
 
   it('[C135063] WHEN the editor is fullscreen, the user can press ESC to exit fullscreen', () => {
-    page.openToolbar();
-    page.clickToolbarItem(page.fullscreenButtonIndex);
+    page.prepareForCodeMirrorTesting();
+    page.fullscreenButton.click();
 
     expect(hasClass(page.codeMirrorEditor, 'CodeMirror-fullscreen')).toBe(true);
 
@@ -49,8 +73,8 @@ describe('/sequencing.toolbar', () => {
   });
 
   it('[C135062] WHEN a user clicks the fullscreen button, the editor SHOULD be fullscreen', () => {
-    page.openToolbar();
-    page.clickToolbarItem(page.fullscreenButtonIndex);
+    page.prepareForCodeMirrorTesting();
+    page.fullscreenButton.click();
 
     expect(hasClass(page.codeMirrorEditor, 'CodeMirror-fullscreen')).toBe(true);
   });

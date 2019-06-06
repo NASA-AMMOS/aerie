@@ -30,7 +30,7 @@ describe('/sequencing.commanddictionary', () => {
     expect(page.firstCommandExpansion.getCssValue('visibility')).toBe('hidden');
 
     page.firstCommand.click();
-    browser.wait(EC.visibilityOf(page.firstCommandExpansion), 5000);
+    browser.wait(EC.visibilityOf(page.firstCommandExpansion), page.waitTimeout);
 
     const heightPx = await page.firstCommandExpansion.getCssValue('height');
     const heightNum = Number(heightPx.split('px')[0]);
@@ -49,7 +49,7 @@ describe('/sequencing.commanddictionary', () => {
     expect(page.firstCommandExpansion.getCssValue('visibility')).toBe('hidden');
 
     page.firstCommand.click();
-    browser.wait(EC.visibilityOf(page.firstCommandExpansion), 5000);
+    browser.wait(EC.visibilityOf(page.firstCommandExpansion), page.waitTimeout);
 
     const heightPx = await page.firstCommandExpansion.getCssValue('height');
     const heightNum = Number(heightPx.split('px')[0]);
@@ -60,7 +60,10 @@ describe('/sequencing.commanddictionary', () => {
     );
 
     page.firstCommand.click();
-    browser.wait(EC.invisibilityOf(page.firstCommandExpansion), 5000);
+    browser.wait(
+      EC.invisibilityOf(page.firstCommandExpansion),
+      page.waitTimeout,
+    );
     expect(page.firstCommandExpansion.getCssValue('visibility')).toBe('hidden');
   });
 

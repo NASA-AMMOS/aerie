@@ -28,7 +28,7 @@ export class AddEditor implements Action {
 export class CreateTab implements Action {
   readonly type = FileActionTypes.CreateTab;
 
-  constructor(public id?: string) {}
+  constructor(public editorId: string, public id?: string) {}
 }
 
 export class CloseTab implements Action {

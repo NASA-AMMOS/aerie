@@ -27,10 +27,6 @@ describe('/sequencing.pageinit', () => {
     expect(page.codeMirrorEditor.isDisplayed()).toBe(false);
   });
 
-  it('[C135058] The tools toggle button SHOULD NOT be visible when the page is loaded', () => {
-    expect(page.toolsToggleButton.isPresent()).toBe(false);
-  });
-
   it('[C136496] A user SHOULD be shown all 3 panels on load', () => {
     expect(page.leftPanel.isDisplayed()).toBe(true);
     expect(page.middlePanel.isDisplayed()).toBe(true);
