@@ -144,8 +144,7 @@ function closeTab(state: FileState, action: CloseTab): FileState {
  * Reduction helper. Called when reducing the `CreateTab` action.
  */
 function createTab(state: FileState, action: CreateTab): FileState {
-  const id = uniqueId();
-
+  const id = action.id || uniqueId();
   const newTab = {
     filename: `New File ${id}`,
     id,
