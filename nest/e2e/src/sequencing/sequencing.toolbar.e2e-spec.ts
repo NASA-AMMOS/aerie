@@ -33,6 +33,12 @@ describe('/sequencing.toolbar', () => {
       'Tools menu did not appear',
     );
     clickHarder('#sequencing-editor-help-button');
+    browser.wait(
+      EC.visibilityOf(page.helpDialog),
+      page.waitTimeout,
+      'Help dialog did not appear',
+    );
+
     expect(page.helpDialog.isDisplayed()).toBe(true);
   });
 
