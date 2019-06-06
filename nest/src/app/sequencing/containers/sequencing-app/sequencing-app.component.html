@@ -66,6 +66,9 @@
       mat-menu-item
       (click)="toggleEditorOption('autocomplete')"
       id="sequencing-editor-toggle-autocomplete-button"
+      [style.background-color]="
+        editorOptions.autocomplete ? 'rgba(174, 75, 0, 0.58)' : ''
+      "
     >
       <mat-icon aria-label="Toggle Autocomplete">
         text_rotation_none
@@ -86,6 +89,9 @@
       mat-menu-item
       (click)="toggleEditorOption('showTooltips')"
       id="sequencing-editor-toggle-tooltips-button"
+      [style.background-color]="
+        editorOptions.showTooltips ? 'rgba(174, 75, 0, 0.58)' : ''
+      "
     >
       <mat-icon aria-label="Toggle Tooltips">
         message
