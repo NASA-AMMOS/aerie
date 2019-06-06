@@ -20,7 +20,6 @@ import {
   ViewChild,
 } from '@angular/core';
 import * as CodeMirror from 'codemirror';
-import { v4 as uuid } from 'uuid';
 import { MpsCommand, StringTMap } from '../../../shared/models';
 import {
   buildMpsHint,
@@ -32,6 +31,7 @@ import {
   getCommandParameterHelpTemplate,
 } from '../../code-mirror-languages/mps/helpers';
 import { Editor, EditorOptions, SequenceTab } from '../../models';
+import { defaultEditorId } from '../../reducers/file.reducer';
 import { SeqEditorService } from '../../services/seq-editor.service';
 
 @Component({
@@ -192,7 +192,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
    * The store is updated when the text changes
    */
   setupEditor() {
-    const id = uuid();
+    const id = (this.editorState && this.editorState.id) || defaultEditorId;
 
     this.seqEditorService.setEditor(this.editorMount, id, {
       autofocus: this.autofocus,

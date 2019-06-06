@@ -16,6 +16,7 @@ import {
   CreateTab,
   FileActions,
   FileActionTypes,
+  SetActiveEditor,
   SwitchTab,
   UpdateChildren,
   UpdateTab,
@@ -23,15 +24,19 @@ import {
 import { Editor } from '../models';
 
 export interface FileState {
+  activeEditor: string;
   editors: StringTMap<Editor>;
   files: StringTMap<SequenceFile>;
 }
 
+export const defaultEditorId = 'editor1';
+
 export const initialState: FileState = {
+  activeEditor: defaultEditorId,
   editors: {
-    editor1: {
+    [defaultEditorId]: {
       currentTab: null,
-      id: 'editor1',
+      id: defaultEditorId,
       openedTabs: null,
     },
   },
@@ -60,6 +65,8 @@ export function reducer(state: FileState = initialState, action: FileActions) {
       return closeTab(state, action);
     case FileActionTypes.CreateTab:
       return createTab(state, action);
+    case FileActionTypes.SetActiveEditor:
+      return setActiveEditor(state, action);
     case FileActionTypes.SwitchTab:
       return switchTab(state, action);
     case FileActionTypes.UpdateChildren:
@@ -171,6 +178,18 @@ function createTab(state: FileState, action: CreateTab): FileState {
         },
       },
     },
+  };
+}
+
+/**
+ * Sets the active editor
+ * Used for when an action in the UI requires interacting with the active editor instance
+ * @example Adding commands from the list to the active editor instance
+ */
+function setActiveEditor(state: FileState, action: SetActiveEditor): FileState {
+  return {
+    ...state,
+    activeEditor: action.editorId,
   };
 }
 

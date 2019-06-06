@@ -73,7 +73,7 @@ export class SeqEditorService {
    */
   addText(text: string, id: string): void {
     if (this.editors) {
-      const editor = this.editors[id];
+      const editor = this.getEditor(id);
 
       if (editor) {
         const doc = editor.getDoc();

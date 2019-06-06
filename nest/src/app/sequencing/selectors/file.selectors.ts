@@ -98,3 +98,8 @@ export const getRootFileChildIds = createSelector(
   getFiles,
   (files: StringTMap<SequenceFile>) => files.root.childIds,
 );
+
+export const getActiveEditor = createSelector(
+  getFileState,
+  (state: FileState) => state.activeEditor,
+);

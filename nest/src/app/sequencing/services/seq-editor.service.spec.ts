@@ -10,6 +10,7 @@
 import { ElementRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { MockElementRef } from '../mocks';
+import { defaultEditorId } from '../reducers/file.reducer';
 import { SeqEditorService } from './seq-editor.service';
 
 describe('SeqEditorService', () => {
@@ -38,17 +39,19 @@ describe('SeqEditorService', () => {
   });
 
   it('the editor instance should be initialized after calling setEditor', () => {
-    seqEditorService.setEditor(elementRef, 'editor1');
+    seqEditorService.setEditor(elementRef, defaultEditorId);
     expect(seqEditorService.editors).toBeDefined();
   });
 
   it('the editor instance should have new text after calling addText', () => {
-    seqEditorService.setEditor(elementRef, 'editor1');
-    const editor = seqEditorService.getEditor('editor1') as CodeMirror.Editor;
+    seqEditorService.setEditor(elementRef, defaultEditorId);
+    const editor = seqEditorService.getEditor(
+      defaultEditorId,
+    ) as CodeMirror.Editor;
 
     const text = 'racecar';
     expect(editor.getValue()).toEqual('');
-    seqEditorService.addText(text, 'editor1');
+    seqEditorService.addText(text, defaultEditorId);
     expect(editor.getValue()).toEqual(text);
   });
 });

@@ -22,7 +22,7 @@ import {
   SelectCommandDictionary,
 } from '../../actions/command-dictionary.actions';
 import { AddText, OpenEditorHelpDialog } from '../../actions/editor.actions';
-import { AddEditor } from '../../actions/file.actions';
+import { AddEditor, SetActiveEditor } from '../../actions/file.actions';
 import {
   SetPanelSizes,
   ToggleLeftPanelVisible,
@@ -31,6 +31,7 @@ import {
 import { getCommandTemplate } from '../../code-mirror-languages/mps/helpers';
 import { Editor } from '../../models';
 import {
+  getActiveEditor,
   getCommands,
   getCommandsByName,
   getDictionaries,
@@ -53,6 +54,7 @@ import { SequencingAppState } from '../../sequencing-store';
   templateUrl: './sequencing-app.component.html',
 })
 export class SequencingAppComponent implements OnDestroy {
+  activeEditor$: Observable<string>;
   commands$: Observable<MpsCommand[] | null>;
   commandsByName$: Observable<StringTMap<MpsCommand> | null>;
   dictionaries$: Observable<CommandDictionary[]>;
@@ -77,6 +79,7 @@ export class SequencingAppComponent implements OnDestroy {
   private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(private store: Store<SequencingAppState>) {
+    this.activeEditor$ = this.store.pipe(select(getActiveEditor));
     this.commands$ = this.store.pipe(select(getCommands));
     this.commandsByName$ = this.store.pipe(select(getCommandsByName));
     this.dictionaries$ = this.store.pipe(select(getDictionaries));
@@ -114,12 +117,18 @@ export class SequencingAppComponent implements OnDestroy {
     this.store.dispatch(new ToggleNestNavigationDrawer());
   }
 
-  onSelectCommand(commandName: string): void {
+  onSelectCommand({
+    commandName,
+    editorId,
+  }: {
+    commandName: string;
+    editorId: string;
+  }): void {
     const commandTemplate = getCommandTemplate(
       commandName,
       this.commandsByName,
     );
-    this.store.dispatch(new AddText(commandTemplate, 'editor1'));
+    this.store.dispatch(new AddText(commandTemplate, editorId));
   }
 
   onSelectDictionary(selectedId: string): void {
@@ -151,5 +160,9 @@ export class SequencingAppComponent implements OnDestroy {
 
   onOpenEditorHelpDialog(): void {
     this.store.dispatch(new OpenEditorHelpDialog());
+  }
+
+  onSetActiveEditor(editorId: string) {
+    this.store.dispatch(new SetActiveEditor(editorId));
   }
 }

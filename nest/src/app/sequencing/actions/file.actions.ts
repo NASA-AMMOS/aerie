@@ -16,6 +16,7 @@ export enum FileActionTypes {
   CloseTab = '[sequencing-file] remove_tab',
   FetchChildren = '[sequencing-file] fetch_children',
   FetchChildrenFailure = '[sequencing-file] fetch_children_failure',
+  SetActiveEditor = '[sequencing-file] set_active_editor',
   SwitchTab = '[sequencing-file] switch_tab',
   UpdateChildren = '[sequencing-file] update_children',
   UpdateTab = '[sequencing-file] update_tab',
@@ -47,6 +48,12 @@ export class FetchChildrenFailure implements Action {
   constructor(public error: Error) {}
 }
 
+export class SetActiveEditor implements Action {
+  readonly type = FileActionTypes.SetActiveEditor;
+
+  constructor(public editorId: string) {}
+}
+
 export class SwitchTab implements Action {
   readonly type = FileActionTypes.SwitchTab;
 
@@ -74,6 +81,7 @@ export type FileActions =
   | CloseTab
   | FetchChildren
   | FetchChildrenFailure
+  | SetActiveEditor
   | SwitchTab
   | UpdateChildren
   | UpdateTab;

@@ -157,6 +157,7 @@
         <sequencing-workspace
           [editor]="editor"
           [editorOptions]="editorOptions"
+          (click)="onSetActiveEditor(editor.id)"
         ></sequencing-workspace>
       </as-split-area>
     </as-split>
@@ -195,6 +196,7 @@
         </mat-form-field>
 
         <seq-command-list
+          [activeEditor]="activeEditor$ | async"
           [commands]="commands$ | async"
           [commandsByName]="commandsByName$ | async"
           [commandFilterQuery]="commandFilterQuery"
