@@ -5,7 +5,6 @@ import {
   protractor,
 } from 'protractor';
 import { clickHarder, hasClass } from '../utils';
-// import { waitTilClickable } from '../utils';
 import { SequencingPage } from './sequencing.po';
 
 // tslint:disable-next-line: no-focused-tests
