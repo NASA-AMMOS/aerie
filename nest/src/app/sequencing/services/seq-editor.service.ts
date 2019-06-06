@@ -9,6 +9,7 @@
 
 import { ElementRef, Injectable } from '@angular/core';
 import * as CodeMirror from 'codemirror';
+import { StringTMap } from '../../shared/models';
 
 /**
  * This service stores the Code Mirror editor instance used
@@ -20,14 +21,17 @@ import * as CodeMirror from 'codemirror';
   providedIn: 'root',
 })
 export class SeqEditorService {
-  editor: CodeMirror.Editor | null = null;
+  editors: StringTMap<CodeMirror.Editor | null> | null = null;
 
   /**
    * Focus the Code Mirror editor instance.
    */
-  focusEditor(): void {
-    if (this.editor) {
-      this.editor.focus();
+  focusEditor(id: string): void {
+    if (this.editors) {
+      const editor = this.editors[id];
+      if (editor) {
+        editor.focus();
+      }
     }
   }
 
@@ -36,11 +40,19 @@ export class SeqEditorService {
    */
   setEditor(
     elementRef: ElementRef,
+    id: string,
     options?: CodeMirror.EditorConfiguration,
   ): void {
-    if (!this.editor) {
-      this.editor = CodeMirror(elementRef.nativeElement, options);
-      this.editor.on('blur', () => {
+    // Initialize editors when setting the first editor instance
+    if (!this.editors) {
+      this.editors = {};
+    }
+
+    let editor = this.editors[id];
+
+    if (!editor) {
+      editor = CodeMirror(elementRef.nativeElement, options);
+      editor.on('blur', () => {
         // Always show the cursor even when we are not focused on the editor
         // so we can visually see where new commands are going to be added.
         const cursors = document.querySelector(
@@ -50,6 +62,8 @@ export class SeqEditorService {
           cursors.style.visibility = 'visible';
         }
       });
+
+      this.editors[id] = editor;
     }
   }
 
@@ -57,31 +71,44 @@ export class SeqEditorService {
    * Replaces the entire document selection if one exists,
    * or adds text to the document on a new line after the cursor.
    */
-  addText(text: string): void {
-    if (this.editor) {
-      const doc = this.editor.getDoc();
-      const cursor = doc.getCursor();
-      const line = doc.getLine(cursor.line);
-      const selection = doc.getSelection();
+  addText(text: string, id: string): void {
+    if (this.editors) {
+      const editor = this.getEditor(id);
 
-      if (selection !== '') {
-        // If there is a selection, replace the entire selection with the given text.
-        doc.replaceSelection(text);
-      } else {
-        // Create a new object to avoid mutation of the original selection.
-        const pos: CodeMirror.Position = {
-          ch: line.length,
-          line: cursor.line,
-        };
+      if (editor) {
+        const doc = editor.getDoc();
+        const cursor = doc.getCursor();
+        const line = doc.getLine(cursor.line);
+        const selection = doc.getSelection();
 
-        if (!line.length) {
-          // If the cursor is on an empty line, just add the text to that line.
-          doc.replaceRange(text, pos);
+        if (selection !== '') {
+          // If there is a selection, replace the entire selection with the given text.
+          doc.replaceSelection(text);
         } else {
-          // Otherwise add the text on a new line below the current cursor line.
-          doc.replaceRange(`\n${text}`, pos);
+          // Create a new object to avoid mutation of the original selection.
+          const pos: CodeMirror.Position = {
+            ch: line.length,
+            line: cursor.line,
+          };
+
+          if (!line.length) {
+            // If the cursor is on an empty line, just add the text to that line.
+            doc.replaceRange(text, pos);
+          } else {
+            // Otherwise add the text on a new line below the current cursor line.
+            doc.replaceRange(`\n${text}`, pos);
+          }
         }
       }
     }
+  }
+
+  getEditor(id: string) {
+    if (this.editors) {
+      if (id in this.editors) {
+        return this.editors[id];
+      }
+    }
+    return null;
   }
 }

@@ -15,7 +15,6 @@ import {
   MatIconModule,
   MatTooltipModule,
 } from '@angular/material';
-import { NgFloatingActionMenuModule } from 'ng-floating-action-menu';
 import { SeqTabModule } from '../seq-tab/seq-tab.module';
 import { SeqEditorComponent } from './seq-editor.component';
 
@@ -24,7 +23,6 @@ import { SeqEditorComponent } from './seq-editor.component';
   exports: [SeqEditorComponent],
   imports: [
     CommonModule,
-    NgFloatingActionMenuModule,
     MatButtonModule,
     MatCardModule,
     MatIconModule,

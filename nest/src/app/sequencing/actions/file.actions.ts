@@ -11,23 +11,31 @@ import { Action } from '@ngrx/store';
 import { SequenceFile } from '../../../../../sequencing/src/models';
 
 export enum FileActionTypes {
+  AddEditor = '[sequencing-file] add_editor',
   CreateTab = '[sequencing-file] create_tab',
   CloseTab = '[sequencing-file] remove_tab',
   FetchChildren = '[sequencing-file] fetch_children',
   FetchChildrenFailure = '[sequencing-file] fetch_children_failure',
+  SetActiveEditor = '[sequencing-file] set_active_editor',
   SwitchTab = '[sequencing-file] switch_tab',
   UpdateChildren = '[sequencing-file] update_children',
   UpdateTab = '[sequencing-file] update_tab',
 }
 
+export class AddEditor implements Action {
+  readonly type = FileActionTypes.AddEditor;
+}
+
 export class CreateTab implements Action {
   readonly type = FileActionTypes.CreateTab;
-  constructor(public id?: string) {}
+
+  constructor(public editorId: string, public id?: string) {}
 }
 
 export class CloseTab implements Action {
   readonly type = FileActionTypes.CloseTab;
-  constructor(public docIdToClose: string) {}
+
+  constructor(public docIdToClose: string, public editorId: string) {}
 }
 
 export class FetchChildren implements Action {
@@ -40,9 +48,16 @@ export class FetchChildrenFailure implements Action {
   constructor(public error: Error) {}
 }
 
+export class SetActiveEditor implements Action {
+  readonly type = FileActionTypes.SetActiveEditor;
+
+  constructor(public editorId: string) {}
+}
+
 export class SwitchTab implements Action {
   readonly type = FileActionTypes.SwitchTab;
-  constructor(public switchToId: string) {}
+
+  constructor(public switchToId: string, public editorId: string) {}
 }
 
 export class UpdateChildren implements Action {
@@ -52,13 +67,21 @@ export class UpdateChildren implements Action {
 
 export class UpdateTab implements Action {
   readonly type = FileActionTypes.UpdateTab;
-  constructor(public docIdToUpdate: string, public text: string) {}
+
+  constructor(
+    public docIdToUpdate: string,
+    public text: string,
+    public editorId: string,
+  ) {}
 }
 
 export type FileActions =
+  | AddEditor
   | CreateTab
   | CloseTab
   | FetchChildren
+  | FetchChildrenFailure
+  | SetActiveEditor
   | SwitchTab
   | UpdateChildren
   | UpdateTab;

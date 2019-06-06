@@ -25,37 +25,15 @@ describe('/sequencing.codemirror', () => {
     page.sendKeysToCodeMirror(protractor.Key.ENTER);
 
     // One off selectors for this test
-    const commandToken = element(
-      by.xpath(
-        '//*[@id="middle-panel-area"]/main/sequencing-workspace/seq-editor/div[2]/div/div[6]/div[1]/div/div/div/div[5]/div/pre/span/span[1]',
-      ),
-    );
-    const arg1Token = element(
-      by.xpath(
-        '//*[@id="middle-panel-area"]/main/sequencing-workspace/seq-editor/div[2]/div/div[6]/div[1]/div/div/div/div[5]/div/pre/span/span[2]',
-      ),
-    );
-    const arg2Token = element(
-      by.xpath(
-        '//*[@id="middle-panel-area"]/main/sequencing-workspace/seq-editor/div[2]/div/div[6]/div[1]/div/div/div/div[5]/div/pre/span/span[3]',
-      ),
-    );
-    const arg3Token = element(
-      by.xpath(
-        '//*[@id="middle-panel-area"]/main/sequencing-workspace/seq-editor/div[2]/div/div[6]/div[1]/div/div/div/div[5]/div/pre/span/span[4]',
-      ),
-    );
-    const arg4Token = element(
-      by.xpath(
-        '//*[@id="middle-panel-area"]/main/sequencing-workspace/seq-editor/div[2]/div/div[6]/div[1]/div/div/div/div[5]/div/pre/span/span[5]',
-      ),
-    );
+    const commandToken = element(by.className('cm-variable-2'));
+    const numToken = element(by.className('cm-number'));
+    const stringTokens = element.all(by.className('cm-string'));
 
     expect(commandToken.getText()).toBe('IAL_IMG_PRM_SET');
-    expect(arg1Token.getText()).toBe('"NAVF"');
-    expect(arg2Token.getText()).toBe('1');
-    expect(arg3Token.getText()).toBe('"GND"');
-    expect(arg4Token.getText()).toBe('"GND"');
+    expect(numToken.getText()).toBe('1');
+    expect(stringTokens.get(0).getText()).toBe('"NAVF"');
+    expect(stringTokens.get(1).getText()).toBe('"GND"');
+    expect(stringTokens.get(2).getText()).toBe('"GND"');
   });
 
   it("[C136008] WHEN a user types a valid stem and selects a suggestion that doesn't have parameters then the editor SHOULD be filled with just the command", () => {

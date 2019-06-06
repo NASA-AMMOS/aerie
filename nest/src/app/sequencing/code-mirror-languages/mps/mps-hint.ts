@@ -94,7 +94,7 @@ function showHintDescription() {
     '.hint-description',
   ) as HTMLElement;
   const hintSuggestions = document.querySelector(
-    '.CodeMirror-hint, .monokai',
+    '.CodeMirror-hints',
   ) as Element;
 
   const hintSuggestionsStyles = getComputedStyle(hintSuggestions);

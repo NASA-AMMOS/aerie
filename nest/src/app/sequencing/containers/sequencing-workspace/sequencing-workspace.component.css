@@ -7,14 +7,22 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-#no-files-message {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  z-index: -1;
+:host {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
 
-#no-files-message-text {
-  position: relative;
-  left: -50%;
+#no-files-message {
+  z-index: -1;
+  text-align: center;
+
+  position: absolute;
+  margin: 0 auto;
+  left: 0;
+  right: 0;
+  width: 300px;
+  transform: translateY(-50%);
+  top: 50%;
 }

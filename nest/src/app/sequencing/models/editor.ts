@@ -7,22 +7,17 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { StringTMap } from '../../shared/models';
+import { SequenceTab } from '.';
 
-export enum EditorActionTypes {
-  AddText = '[sequencing-editor] add_text',
-  OpenEditorHelpDialog = '[sequencing-editor] open_editor_help_dialog',
+export interface Editor {
+  currentTab: string | null;
+  id: string;
+  openedTabs: StringTMap<SequenceTab> | null;
 }
 
-export class AddText implements Action {
-  readonly type = EditorActionTypes.AddText;
-  constructor(public text: string, public editorId: string) {}
+export interface EditorOptions {
+  autocomplete: boolean;
+  darkTheme: boolean;
+  showTooltips: boolean;
 }
-
-export class OpenEditorHelpDialog implements Action {
-  readonly type = EditorActionTypes.OpenEditorHelpDialog;
-
-  constructor(public width: string = '400px') {}
-}
-
-export type EditorActions = AddText | OpenEditorHelpDialog;

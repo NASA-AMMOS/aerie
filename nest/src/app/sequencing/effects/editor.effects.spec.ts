@@ -14,6 +14,7 @@ import { provideMockActions } from '@ngrx/effects/testing';
 import { addMatchers, cold, hot, initTestScheduler } from 'jasmine-marbles';
 import { Observable } from 'rxjs';
 import { AddText } from '../actions/editor.actions';
+import { defaultEditorId } from '../reducers/file.reducer';
 import { SeqEditorService } from '../services/seq-editor.service';
 import { EditorEffects } from './editor.effects';
 
@@ -47,7 +48,7 @@ describe('EditorEffects', () => {
     });
 
     it('should not dispatch an action for AddText but should call addText and focusEditor in the SeqEditorService', () => {
-      const action = new AddText('that was easy');
+      const action = new AddText('that was easy', defaultEditorId);
       const service = TestBed.get(SeqEditorService);
       const addText = spyOn(service, 'addText');
       const focusEditor = spyOn(service, 'focusEditor');

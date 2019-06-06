@@ -33,8 +33,8 @@ export class EditorEffects {
   addText$: Observable<Action> = this.actions$.pipe(
     ofType<AddText>(EditorActionTypes.AddText),
     switchMap(action => {
-      this.seqEditorService.addText(action.text);
-      this.seqEditorService.focusEditor();
+      this.seqEditorService.addText(action.text, action.editorId);
+      this.seqEditorService.focusEditor(action.editorId);
       return [];
     }),
   );

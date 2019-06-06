@@ -26,6 +26,9 @@ import { MpsCommand, StringTMap } from '../../../shared/models';
 })
 export class SeqCommandListComponent implements OnChanges {
   @Input()
+  activeEditor: string;
+
+  @Input()
   commands: MpsCommand[] | null;
 
   @Input()
@@ -35,7 +38,10 @@ export class SeqCommandListComponent implements OnChanges {
   commandFilterQuery: string;
 
   @Output()
-  selectCommand: EventEmitter<string> = new EventEmitter<string>();
+  selectCommand: EventEmitter<{
+    commandName: string;
+    editorId: string;
+  }> = new EventEmitter<{ commandName: string; editorId: string }>();
 
   sortedCommands: MpsCommand[] = [];
   sortedAndFilteredCommands: MpsCommand[] = [];
@@ -63,7 +69,10 @@ export class SeqCommandListComponent implements OnChanges {
     // Prevents the click event from propagating to the mat-expansion-panel so it doesn't open
     // when the user clicks on the add command button
     event.stopPropagation();
-    this.selectCommand.emit(command.name);
+    this.selectCommand.emit({
+      commandName: command.name,
+      editorId: this.activeEditor,
+    });
   }
 
   /**

@@ -24,31 +24,82 @@ export const getFiles = createSelector(
   (state: FileState) => state.files,
 );
 
+interface EditorProps {
+  editorId: string;
+}
+
+/**
+ * Gets a list of the opened tabs for a editor instance
+ * Used to enumerate a tabs list view
+ */
 export const getOpenedTabs = createSelector(
   getFileState,
-  (state: FileState) =>
-    state.openedTabs ? Object.values(state.openedTabs) : [],
+  (state: FileState, props: EditorProps) => {
+    if (props.editorId in state.editors) {
+      const editor = state.editors[props.editorId];
+      const { openedTabs } = editor;
+
+      return openedTabs ? Object.values(openedTabs) : [];
+    }
+
+    // Handles the case where the editor was removed
+    return null;
+  },
 );
 
 export const getOpenedTabsByName = createSelector(
   getFileState,
-  (state: FileState) => state.openedTabs,
+  (state: FileState, props: EditorProps) =>
+    state.editors[props.editorId].openedTabs,
 );
 
+/**
+ * Gets the current tab id for an editor instance
+ */
 export const getCurrentTab = createSelector(
   getFileState,
-  (state: FileState) => state.currentTab,
+  (state: FileState, props: EditorProps) => {
+    if (props.editorId in state.editors) {
+      return state.editors[props.editorId].currentTab;
+    }
+
+    // Handles the case where the editor was removed
+    return null;
+  },
 );
 
+/**
+ * Gets the current active file for an editor instance
+ */
 export const getCurrentFile = createSelector(
   getFileState,
-  (state: FileState) =>
-    state.openedTabs && state.currentTab
-      ? state.openedTabs[state.currentTab]
-      : null,
+  (state: FileState, props: EditorProps) => {
+    const editor = state.editors[props.editorId];
+    const { currentTab, openedTabs } = editor;
+
+    if (editor && openedTabs && currentTab) {
+      return openedTabs[currentTab];
+    }
+    return null;
+  },
+);
+
+export const getEditors = createSelector(
+  getFileState,
+  (state: FileState) => state.editors,
+);
+
+export const getEditorsList = createSelector(
+  getFileState,
+  (state: FileState) => Object.values(state.editors),
 );
 
 export const getRootFileChildIds = createSelector(
   getFiles,
   (files: StringTMap<SequenceFile>) => files.root.childIds,
+);
+
+export const getActiveEditor = createSelector(
+  getFileState,
+  (state: FileState) => state.activeEditor,
 );
