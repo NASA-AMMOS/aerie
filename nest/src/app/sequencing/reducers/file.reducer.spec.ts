@@ -117,12 +117,8 @@ describe('File reducer', () => {
   });
 
   it('should handle CreateTab', () => {
-    const result = reducer(initialState, new CreateTab('11'));
-    expect(result).toEqual({
-      ...initialState,
-      currentTab: '11',
-      openedTabs: { '11': mockFile1 },
-    });
+    const result = reducer(initialState, new CreateTab('editor1'));
+    expect(result).toEqual(mockStateAfterCreateTab);
   });
 
   it('should handle CloseTab', () => {
@@ -172,12 +168,5 @@ describe('File reducer', () => {
         ...keyBy(children, 'id'),
       },
     });
-  });
-
-  it('should handle UpdateTab', () => {
-    let result = reducer(initialState, new CreateTab('14'));
-    result = reducer(result, new UpdateTab('14', 'hello'));
-
-    if (result.openedTabs) expect(result.openedTabs['14'].text).toBe('hello');
   });
 });
