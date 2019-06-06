@@ -12,6 +12,7 @@ import { SequenceFile } from '../../../../../sequencing/src/models';
 import { StringTMap } from '../../shared/models';
 import {
   CloseTab,
+  CreateTab,
   FileActions,
   FileActionTypes,
   SwitchTab,
@@ -51,7 +52,7 @@ export function reducer(state: FileState = initialState, action: FileActions) {
     case FileActionTypes.CloseTab:
       return closeTab(state, action);
     case FileActionTypes.CreateTab:
-      return createTab(state);
+      return createTab(state, action);
     case FileActionTypes.SwitchTab:
       return switchTab(state, action);
     case FileActionTypes.UpdateChildren:
@@ -76,8 +77,8 @@ function closeTab(state: FileState, action: CloseTab): FileState {
 /**
  * Reduction helper. Called when reducing the `CreateTab` action.
  */
-function createTab(state: FileState): FileState {
-  const id = uniqueId();
+function createTab(state: FileState, action: CreateTab): FileState {
+  const id = action.id || uniqueId();
   const newTab = {
     filename: `New File ${id}`,
     id,

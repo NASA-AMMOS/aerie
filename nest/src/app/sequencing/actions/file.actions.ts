@@ -22,6 +22,7 @@ export enum FileActionTypes {
 
 export class CreateTab implements Action {
   readonly type = FileActionTypes.CreateTab;
+  constructor(public id?: string) {}
 }
 
 export class CloseTab implements Action {
