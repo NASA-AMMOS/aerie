@@ -3,10 +3,10 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "javaType": "gov.nasa.jpl.ammos.mpsa.aerie.schemas.Plan",
-  "description": "A container used to associate an Adaptation with a collection of Activity Instances",
+  "description": "A container used to associate an Adaptation with a collection of Activity Instances.",
   "properties": {
     "adaptationId": {
-      "description": "The ID of the associated adaptation",
+      "description": "The ID of the associated adaptation.",
       "type": "string"
     },
     "endTimestamp": {
@@ -14,11 +14,11 @@
       "type": "string"
     },
     "id": {
-      "description": "ID of the plan. Currently a stringified MongoDB object ID.",
+      "description": "ID of the plan.",
       "type": "string"
     },
     "name": {
-      "description": "Name of the plan",
+      "description": "Name of the plan.",
       "type": "string"
     },
     "startTimestamp": {

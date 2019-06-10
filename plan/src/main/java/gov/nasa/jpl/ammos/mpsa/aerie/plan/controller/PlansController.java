@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.*;
 import javax.validation.Valid;
 
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -22,9 +21,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-/**
- * NOTE: ObjectId is used throughout to validate that a MongoDB formatted ID is passed
- */
 @CrossOrigin
 @RestController
 @RequestMapping("/plans")
@@ -45,9 +41,9 @@ public class PlansController {
         return ResponseEntity.ok(repository.findAll().stream().map(plan -> Plan.fromDetail(plan)));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Object> getPlan(@PathVariable("id") ObjectId _id) {
-        Optional<PlanDetail> plan = repository.findById(_id.toHexString());
+    @GetMapping("/{planId}")
+    public ResponseEntity<Object> getPlan(@PathVariable("planId") UUID planId) {
+        Optional<PlanDetail> plan = repository.findById(planId.toString());
         if (plan.isPresent()) {
             return ResponseEntity.ok(plan);
         } else {
@@ -55,12 +51,11 @@ public class PlansController {
         }
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{planId}")
     public ResponseEntity<Object> replacePlan(
-            @PathVariable("id") ObjectId _id, @Valid @RequestBody PlanDetail planDetail) {
-        String id = _id.toHexString();
-        if (repository.existsById(id)) {
-            planDetail.setId(_id.toHexString());
+            @PathVariable("planId") UUID planId, @Valid @RequestBody PlanDetail planDetail) {
+        if (repository.existsById(planId.toString())) {
+            planDetail.setId(planId.toString());
 
             try {
                 if (!Validator.validate(planDetail)) {
@@ -77,18 +72,17 @@ public class PlansController {
         }
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/{planId}")
     public ResponseEntity<Object> updatePlan(
-            @PathVariable("id") ObjectId _id,
+            @PathVariable("planId") UUID planId,
             @Valid @RequestBody PlanDetail planDetail
     ) {
-        String id = _id.toHexString();
-        PlanDetail existing = repository.findPlanDetailById(id);
+        PlanDetail existing = repository.findPlanDetailById(planId.toString());
         if (existing == null) {
             return ResponseEntity.notFound().build();
         }
 
-        planDetail.setId(id);
+        planDetail.setId(planId.toString());
 
         if (planDetail.getAdaptationId() != null) existing.setAdaptationId(planDetail.getAdaptationId());
         if (planDetail.getEndTimestamp() != null) existing.setEndTimestamp(planDetail.getEndTimestamp());
@@ -110,7 +104,7 @@ public class PlansController {
 
     @PostMapping("/")
     public ResponseEntity<Object> createPlan(@Valid @RequestBody PlanDetail plan) {
-        plan.setId(new ObjectId().toString());
+        plan.setId(UUID.randomUUID().toString());
 
         try {
             if (!Validator.validate(plan)) {
@@ -124,11 +118,10 @@ public class PlansController {
         return ResponseEntity.ok(plan);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Object> deletePlan(@PathVariable("id") ObjectId _id) {
-        String id = _id.toHexString();
-        if (repository.existsById(id)) {
-            repository.deleteById(id);
+    @DeleteMapping("/{planId}")
+    public ResponseEntity<Object> deletePlan(@PathVariable("planId") UUID planId) {
+        if (repository.existsById(planId.toString())) {
+            repository.deleteById(planId.toString());
             return ResponseEntity.noContent().build();
         } else {
             return ResponseEntity.notFound().build();
@@ -137,7 +130,7 @@ public class PlansController {
 
     @PostMapping("/{planId}/activity_instances")
     public ResponseEntity<Object> createActivityInstance(
-            @PathVariable("planId") ObjectId _id,
+            @PathVariable("planId") UUID planId,
             @RequestParam(value = "adaptationId", required = false) String adaptationId,
             @RequestParam(value = "activityTypeId", required = false) String activityTypeId,
             @Valid @RequestBody ActivityInstance requestBodyActivityInstance) {
@@ -186,7 +179,7 @@ public class PlansController {
         activityInstance.setActivityId(uuid.toString());
         requestBodyActivityInstance.setActivityId(uuid.toString());
 
-        PlanDetail planDetail = repository.findPlanDetailById(_id.toHexString());
+        PlanDetail planDetail = repository.findPlanDetailById(planId.toString());
         planDetail.addActivityInstance(activityInstance);
         planDetail.updateActivityInstance(uuid, requestBodyActivityInstance);
 
@@ -204,8 +197,8 @@ public class PlansController {
     }
 
     @GetMapping("/{planId}/activity_instances")
-    public ResponseEntity<Object> getActivityInstances(@PathVariable("planId") ObjectId _id) {
-        PlanDetail planDetail = repository.findPlanDetailById(_id.toHexString());
+    public ResponseEntity<Object> getActivityInstances(@PathVariable("planId") UUID planId) {
+        PlanDetail planDetail = repository.findPlanDetailById(planId.toString());
         if (planDetail != null) {
             return ResponseEntity.ok(planDetail.getActivityInstances());
         } else {
@@ -213,14 +206,14 @@ public class PlansController {
         }
     }
 
-    @GetMapping("/{planId}/activity_instances/{id}")
+    @GetMapping("/{planId}/activity_instances/{activityId}")
     public ResponseEntity<Object> getActivityInstance(
-            @PathVariable("planId") ObjectId _id, @PathVariable("id") UUID id) {
-        PlanDetail planDetail = repository.findPlanDetailById(_id.toHexString());
+            @PathVariable("planId") UUID planId, @PathVariable("activityId") UUID activityId) {
+        PlanDetail planDetail = repository.findPlanDetailById(planId.toString());
 
         if (planDetail != null) {
             for (ActivityInstance ai : planDetail.getActivityInstances()) {
-                if (ai.getActivityId().equals(id.toString())) {
+                if (ai.getActivityId().equals(activityId.toString())) {
                     return ResponseEntity.ok(ai);
                 }
             }
@@ -241,13 +234,13 @@ public class PlansController {
      * @param requestBodyActivityInstance The replacement activity instance
      * @return An empty response body
      */
-    @PutMapping("/{planId}/activity_instances/{id}")
+    @PutMapping("/{planId}/activity_instances/{activityId}")
     public ResponseEntity<Object> replaceActivityInstance(
-            @PathVariable("planId") ObjectId planId,
-            @PathVariable("id") UUID activityInstanceId,
+            @PathVariable("planId") UUID planId,
+            @PathVariable("activityId") UUID activityInstanceId,
             @Valid @RequestBody ActivityInstance requestBodyActivityInstance) {
 
-        PlanDetail planDetail = repository.findPlanDetailById(planId.toHexString());
+        PlanDetail planDetail = repository.findPlanDetailById(planId.toString());
         if (planDetail == null) {
             return ResponseEntity.notFound().build();
         }
@@ -274,24 +267,24 @@ public class PlansController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{planId}/activity_instances/{id}")
+    @PatchMapping("/{planId}/activity_instances/{activityId}")
     public ResponseEntity<Object> updateActivityInstance(
-            @PathVariable("planId") ObjectId _id,
-            @PathVariable("id") UUID id,
+            @PathVariable("planId") UUID planId,
+            @PathVariable("activityId") UUID activityId,
             @Valid @RequestBody ActivityInstance requestBodyActivityInstance) {
-        PlanDetail planDetail = repository.findPlanDetailById(_id.toHexString());
+        PlanDetail planDetail = repository.findPlanDetailById(planId.toString());
         if (planDetail == null) {
           return ResponseEntity.notFound().build();
         }
 
-        ActivityInstance activityInstance = planDetail.getActivityInstance(id);
+        ActivityInstance activityInstance = planDetail.getActivityInstance(activityId);
         if (activityInstance == null) {
           return ResponseEntity.notFound().build();
         }
 
         // Ensure that there is always an activityId, and ignore a user-provided id.
         requestBodyActivityInstance.setActivityId(activityInstance.getActivityId());
-        planDetail.updateActivityInstance(id, requestBodyActivityInstance);
+        planDetail.updateActivityInstance(activityId, requestBodyActivityInstance);
 
         try {
             if (!Validator.validate(planDetail)) {
@@ -305,14 +298,14 @@ public class PlansController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{planId}/activity_instances/{id}")
+    @DeleteMapping("/{planId}/activity_instances/{activityId}")
     public ResponseEntity<Object> deleteActivityInstance(
-            @PathVariable("planId") ObjectId _id, @PathVariable("id") UUID id) {
-        PlanDetail planDetail = repository.findPlanDetailById(_id.toHexString());
+            @PathVariable("planId") UUID planId, @PathVariable("activityId") UUID activityId) {
+        PlanDetail planDetail = repository.findPlanDetailById(planId.toString());
 
         if (planDetail != null) {
             try {
-                planDetail.removeActivityInstance(id);
+                planDetail.removeActivityInstance(activityId);
                 repository.save(planDetail);
                 return ResponseEntity.noContent().build();
             } catch (NoSuchElementException e) {

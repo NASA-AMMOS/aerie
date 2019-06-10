@@ -119,7 +119,7 @@ public class PlansControllerIntegrationTest {
 
   @Test
   public void shouldReturn404WhenGetPlanByIdIsMalformed() {
-    String id = "542c2b97bac0595474108b48";
+    String id = "2482d296-8665-11e9-bc42-526af7764f64";
     ResponseEntity<String> response = restTemplate.getForEntity("/plans/" + id, String.class);
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
   }
@@ -183,7 +183,7 @@ public class PlansControllerIntegrationTest {
 
   @Test
   public void shouldReturnA400WhenPutPlanBodyIsNotSpecified() {
-    String id = "542c2b97bac0595474108b48";
+    String id = "2482d296-8665-11e9-bc42-526af7764f64";
     HttpEntity<Plan> responseEntity = new HttpEntity<>(null, new HttpHeaders());
     ResponseEntity<String> putResponse =
         restTemplate.exchange("/plans/" + id, HttpMethod.PUT, responseEntity, String.class);
@@ -192,7 +192,7 @@ public class PlansControllerIntegrationTest {
 
   @Test
   public void shouldReturnA404WhenPutPlanIdDoesntExist() {
-    String id = "542c2b97bac0595474108b48";
+    String id = "2482d296-8665-11e9-bc42-526af7764f64";
     HttpEntity<Plan> responseEntity = new HttpEntity<>(new Plan(), new HttpHeaders());
     ResponseEntity<String> putResponse =
         restTemplate.exchange("/plans/" + id, HttpMethod.PUT, responseEntity, String.class);
@@ -274,7 +274,7 @@ public class PlansControllerIntegrationTest {
 
   @Test
   public void shouldReturnA400WhenPatchPlanBodyIsNotSpecified() {
-    String id = "542c2b97bac0595474108b48";
+    String id = "2482d296-8665-11e9-bc42-526af7764f64";
     HttpEntity<Plan> responseEntity = new HttpEntity<>(null, new HttpHeaders());
     ResponseEntity<String> patchResponse =
         restTemplate.exchange("/plans/" + id, HttpMethod.PATCH, responseEntity, String.class);
@@ -283,7 +283,7 @@ public class PlansControllerIntegrationTest {
 
   @Test
   public void shouldReturnA404WhenPatchPlanIdDoesntExist() {
-    String id = "542c2b97bac0595474108b48";
+    String id = "2482d296-8665-11e9-bc42-526af7764f64";
     HttpEntity<Plan> responseEntity = new HttpEntity<>(new Plan(), new HttpHeaders());
     ResponseEntity<String> patchResponse =
         restTemplate.exchange("/plans/" + id, HttpMethod.PATCH, responseEntity, String.class);
@@ -317,7 +317,7 @@ public class PlansControllerIntegrationTest {
 
   @Test
   public void shouldReturnA404WhenDeletePlanIdDoesntExist() {
-    String id = "542c2b97bac0595474108b48";
+    String id = "2482d296-8665-11e9-bc42-526af7764f64";
     HttpEntity responseEntity = new HttpEntity<>(null, new HttpHeaders());
     ResponseEntity deleteResponse =
         restTemplate.exchange("/plans/" + id, HttpMethod.DELETE, responseEntity, String.class);

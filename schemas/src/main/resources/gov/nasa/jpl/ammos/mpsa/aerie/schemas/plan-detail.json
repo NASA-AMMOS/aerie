@@ -6,7 +6,7 @@
   "description": "A collection of Activity Instances, optionally pre-arranged to form a schedule.",
   "properties": {
     "adaptationId": {
-      "description": "The ID of the associated adaptation",
+      "description": "The ID of the associated adaptation.",
       "type": "string"
     },
     "endTimestamp": {
@@ -14,11 +14,11 @@
       "type": "string"
     },
     "id": {
-      "description": "ID of the plan. Currently a stringified MongoDB object ID.",
+      "description": "ID of the plan.",
       "type": "string"
     },
     "name": {
-      "description": "Name of the plan",
+      "description": "Name of the plan.",
       "type": "string"
     },
     "startTimestamp": {
@@ -26,7 +26,7 @@
       "type": "string"
     },
     "activityInstances": {
-      "description": "List of activity instances that comprise this plan",
+      "description": "List of activity instances that comprise this plan.",
       "type": "array",
       "items": {
         "$ref": "activity-instance.json"
