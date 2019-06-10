@@ -24,7 +24,8 @@
     "pretest-for-build": "npm run version",
     "start": "ng serve",
     "start-dev": "bash ../scripts/post-adaptation.sh && ng serve",
-    "test": "ng test --code-coverage",
+    "test": "ng test --code-coverage --watch=false",
+    "test:watch": "ng test",
     "test-for-build": "ng test --code-coverage --watch=false --browsers FirefoxHeadless",
     "version": "ts-node git.version.ts"
   },
@@ -101,7 +102,7 @@
     "karma-chrome-launcher": "~2.2.0",
     "karma-coverage-istanbul-reporter": "^2.0.5",
     "karma-firefox-launcher": "^1.1.0",
-    "karma-jasmine": "~2.0.1",
+    "karma-jasmine": "^2.0.1",
     "karma-jasmine-html-reporter": "^1.4.2",
     "karma-junit-reporter": "^1.2.0",
     "prettier": "^1.18.2",
