@@ -17,7 +17,7 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import { AgGridNg2 } from 'ag-grid-angular';
+import { AgGridAngular } from 'ag-grid-angular';
 import { RowNode } from 'ag-grid-community';
 import { pickBy, startsWith } from 'lodash';
 import {
@@ -37,7 +37,7 @@ import { RavenTableDetailComponent } from './raven-table-detail.component';
 })
 export class RavenTableComponent implements OnChanges {
   @ViewChild('agGrid', { static: false })
-  agGrid: AgGridNg2;
+  agGrid: AgGridAngular;
 
   @Input()
   points: RavenPoint[];

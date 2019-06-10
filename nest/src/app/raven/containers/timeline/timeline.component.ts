@@ -314,10 +314,10 @@ export class TimelineComponent implements OnDestroy {
     this.selectedSubBandId$ = this.store.pipe(
       select(timelineSelectors.getSelectedSubBandId),
     );
-    this.selectedSubBandPoints$ = combineLatest(
+    this.selectedSubBandPoints$ = combineLatest([
       this.selectedSubBand$,
       this.excludeActivityTypes$,
-    ).pipe(
+    ]).pipe(
       map(([selectedSubBand, excludeActivityTypes]) => {
         if (selectedSubBand) {
           // Filter points in excludeActivityTypes.
@@ -333,12 +333,12 @@ export class TimelineComponent implements OnDestroy {
         return [];
       }),
     );
-    this.subBandSourceIdsByLabel$ = combineLatest(
+    this.subBandSourceIdsByLabel$ = combineLatest([
       this.bands$,
       this.customFiltersBySourceId$,
       this.filtersByTarget$,
       this.treeBySourceId$,
-    ).pipe(
+    ]).pipe(
       map(([bands, customFiltersBySourceId, filtersByTarget, treeBySourceId]) =>
         getSourceIdsByLabelInBands(
           bands,

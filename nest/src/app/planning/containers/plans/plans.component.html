@@ -10,14 +10,14 @@
 <main>
   <mat-progress-bar
     mode="indeterminate"
-    *ngIf="(planningService.showLoadingBar$ | async)"
+    *ngIf="planningService.showLoadingBar$ | async"
     color="accent"
   >
   </mat-progress-bar>
 
   <mat-sidenav-container hasBackdrop="false">
     <mat-sidenav-content>
-      <ng-container *ngIf="(plans$ | async) as plans">
+      <ng-container *ngIf="plans$ | async as plans">
         <plan-table
           *ngIf="plans.length"
           [plans]="plans"
@@ -33,7 +33,7 @@
     </mat-sidenav-content>
 
     <mat-sidenav
-      *ngIf="(showCreatePlanDrawer$ | async)"
+      *ngIf="showCreatePlanDrawer$ | async"
       mode="side"
       position="end"
       [opened]="showCreatePlanDrawer$ | async"

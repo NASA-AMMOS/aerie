@@ -119,12 +119,12 @@ export class RavenAppComponent implements OnDestroy {
    * Returns an Observable that we use to show a progress bar.
    */
   getShowProgressBar(): Observable<boolean> {
-    return combineLatest(
+    return combineLatest([
       this.store.pipe(select(getLayoutPending)),
       this.store.pipe(select(getSituationalAwarenessPending)),
       this.store.pipe(select(getSourceExplorerPending)),
       this.store.pipe(select(getTimelinePending)),
-    ).pipe(
+    ]).pipe(
       map(pending => pending[0] || pending[1] || pending[2] || pending[3]),
     );
   }

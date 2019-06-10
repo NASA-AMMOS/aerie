@@ -8,7 +8,6 @@
  */
 
 import { TestBed } from '@angular/core/testing';
-import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { Store, StoreModule } from '@ngrx/store';
 import { addMatchers, cold, hot, initTestScheduler } from 'jasmine-marbles';
@@ -31,7 +30,6 @@ import { CommandDictionaryEffects } from './command-dictionary.effects';
 
 describe('CommandDictionaryEffects', () => {
   let effects: CommandDictionaryEffects;
-  let metadata: EffectsMetadata<CommandDictionaryEffects>;
   let commandDictionaryMockService: any;
   let actions: Observable<any> = of();
 
@@ -60,14 +58,9 @@ describe('CommandDictionaryEffects', () => {
     initTestScheduler();
     addMatchers();
     effects = TestBed.get(CommandDictionaryEffects);
-    metadata = getEffectsMetadata(effects);
   });
 
   describe('fetchCommandDictionaries$', () => {
-    it('should register fetchCommandDictionaries$ that dispatches an action', () => {
-      expect(metadata.fetchCommandDictionaries$).toEqual({ dispatch: true });
-    });
-
     it('should return a FetchCommandDictionariesSuccess with data on success', () => {
       const action = new FetchCommandDictionaries();
       const success = new FetchCommandDictionariesSuccess(
@@ -105,10 +98,6 @@ describe('CommandDictionaryEffects', () => {
   });
 
   describe('fetchCommandDictionary$', () => {
-    it('should register fetchCommandDictionary$ that dispatches an action', () => {
-      expect(metadata.fetchCommandDictionary$).toEqual({ dispatch: true });
-    });
-
     it('should return a FetchCommandDictionarySuccess with data on success', () => {
       const name = mockCommandDictionaryList[0].id;
       const action = new FetchCommandDictionary(name);
@@ -149,10 +138,6 @@ describe('CommandDictionaryEffects', () => {
   });
 
   describe('selectCommandDictionary$', () => {
-    it('should register selectCommandDictionary$ that dispatches an action', () => {
-      expect(metadata.selectCommandDictionary$).toEqual({ dispatch: true });
-    });
-
     it('should return a FetchCommandDictionary with an id', () => {
       const id = '42';
       const action = new SelectCommandDictionary(id);

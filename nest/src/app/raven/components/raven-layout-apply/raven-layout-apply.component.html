@@ -3,28 +3,27 @@
     Apply Layout from State
   </mat-card-title>
 
-  <mat-card-subtitle>
-    State: {{currentStateId}}
-  </mat-card-subtitle>
+  <mat-card-subtitle> State: {{ currentStateId }} </mat-card-subtitle>
 
   <mat-card-content>
     <!-- Select Sources. -->
-    <div
-      *ngIf="!currentState?.pins.length"
-      class="container field">
+    <div *ngIf="!currentState?.pins.length" class="container field">
       <mat-form-field>
-        <mat-select placeholder="Sources" [formControl]="sourcesFormControl" required multiple>
+        <mat-select
+          placeholder="Sources"
+          [formControl]="sourcesFormControl"
+          required
+          multiple
+        >
           <mat-option *ngFor="let source of filteredSources" [value]="source">
-            {{source.id}}
+            {{ source.id }}
           </mat-option>
         </mat-select>
       </mat-form-field>
     </div>
 
     <!-- Pins. -->
-    <div
-      *ngIf="currentState?.pins.length"
-      class="field">
+    <div *ngIf="currentState?.pins.length" class="field">
       <mat-card-title>
         Pins
       </mat-card-title>
@@ -41,26 +40,24 @@
 
         <tr *ngFor="let pin of currentState?.pins">
           <td>
-            {{pin.name}}
+            {{ pin.name }}
           </td>
-          <td
-            *ngIf="applyPins === '0'"
-            class="full-width">
-            {{pin.sourceId}}
+          <td *ngIf="applyPins === '0'" class="full-width">
+            {{ pin.sourceId }}
           </td>
-          <td
-            *ngIf="applyPins === '1'"
-            class="full-width">
+          <td *ngIf="applyPins === '1'" class="full-width">
             <mat-form-field class="full-width">
               <mat-select
                 placeholder="Sources"
                 required
                 [value]="applyPinsByName[pin.name]?.sourceId"
-                (selectionChange)="onSelectionChange($event, pin)">
+                (selectionChange)="onSelectionChange($event, pin)"
+              >
                 <mat-option
                   *ngFor="let source of filteredSources"
-                  [value]="source.id">
-                  {{source.id}}
+                  [value]="source.id"
+                >
+                  {{ source.id }}
                 </mat-option>
               </mat-select>
             </mat-form-field>
@@ -81,7 +78,8 @@
         color="accent"
         mat-button
         (click)="onApply()"
-        [disabled]="!canApplyLayout()">
+        [disabled]="!canApplyLayout()"
+      >
         Apply
       </button>
     </div>

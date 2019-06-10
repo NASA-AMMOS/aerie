@@ -18,7 +18,7 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import { AgGridNg2 } from 'ag-grid-angular';
+import { AgGridAngular } from 'ag-grid-angular';
 import { RavenEpoch, RavenUpdate } from '../../models';
 
 @Component({
@@ -28,7 +28,7 @@ import { RavenEpoch, RavenUpdate } from '../../models';
 })
 export class RavenEpochsComponent implements AfterViewInit, OnChanges {
   @ViewChild('agGrid', { static: true })
-  agGrid: AgGridNg2;
+  agGrid: AgGridAngular;
 
   @Input()
   dayCode: string;

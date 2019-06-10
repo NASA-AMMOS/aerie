@@ -18,7 +18,7 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import { AgGridNg2 } from 'ag-grid-angular';
+import { AgGridAngular } from 'ag-grid-angular';
 import { StringTMap } from '../../../shared/models';
 import { RavenSource, RavenUpdate } from '../../models';
 
@@ -29,7 +29,7 @@ import { RavenSource, RavenUpdate } from '../../models';
 })
 export class RavenOutputComponent implements AfterViewInit, OnChanges {
   @ViewChild('agGrid', { static: true })
-  agGrid: AgGridNg2;
+  agGrid: AgGridAngular;
 
   @Input()
   allInOneFile: boolean;

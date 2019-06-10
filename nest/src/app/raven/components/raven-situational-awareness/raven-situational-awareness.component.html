@@ -9,7 +9,8 @@
       <mat-slide-toggle
         color="accent"
         [checked]="situationalAware"
-        (change)="changeSituationalAwareness.emit($event.checked)">
+        (change)="changeSituationalAwareness.emit($event.checked)"
+      >
         Enable Situational Awareness
       </mat-slide-toggle>
     </div>
@@ -20,7 +21,12 @@
         <mat-select
           placeholder="Time Used"
           [value]="useNow"
-          (selectionChange)="updateSituationalAwarenessSettings.emit({ update: { useNow: $event.value } })">
+          (selectionChange)="
+            updateSituationalAwarenessSettings.emit({
+              update: { useNow: $event.value }
+            })
+          "
+        >
           <mat-option [value]="true">Now</mat-option>
           <mat-option [value]="false">Input Time</mat-option>
         </mat-select>
@@ -36,7 +42,8 @@
           [value]="nowMinus | duration"
           [formControl]="nowMinusControl"
           placeholder="dddThh:mm:ss.mmm"
-          (keyup)="onSetMinusDelta()"/>
+          (keyup)="onSetMinusDelta()"
+        />
       </mat-form-field>
 
       <!-- Plus Delta. -->
@@ -47,7 +54,8 @@
           [value]="nowPlus | duration"
           [formControl]="nowPlusControl"
           placeholder="dddThh:mm:ss.mmm"
-          (keyup)="onSetPlusDelta()"/>
+          (keyup)="onSetPlusDelta()"
+        />
       </mat-form-field>
     </ng-container>
 
@@ -61,7 +69,8 @@
           [formControl]="startTimeControl"
           placeholder="yyyy-dddThh:mm:ss.mmm"
           type="text"
-          (keyup)="onSetStartTime()"/>
+          (keyup)="onSetStartTime()"
+        />
       </mat-form-field>
 
       <!-- Page Duration. -->
@@ -72,7 +81,8 @@
           [value]="pageDuration | duration"
           [formControl]="pageDurationControl"
           placeholder="dddThh:mm:ss.mmm"
-          (keyup)="onSetPageDuration()"/>
+          (keyup)="onSetPageDuration()"
+        />
       </mat-form-field>
     </ng-container>
 
@@ -84,7 +94,8 @@
       [enableColResize]="true"
       [enableSorting]="true"
       [enableFilter]="true"
-      [rowData]="rowData">
+      [rowData]="rowData"
+    >
     </ag-grid-angular>
   </mat-card-content>
 </mat-card>

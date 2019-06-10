@@ -23,12 +23,14 @@ export const routes: Routes = [
   },
   {
     data: { title: merlinModule.title },
-    loadChildren: () => import('./planning/planning.module').then(m => m.PlanningModule),
+    loadChildren: () =>
+      import('./planning/planning.module').then(m => m.PlanningModule),
     path: merlinModule.path,
   },
   {
     data: { title: falconModule.title },
-    loadChildren: () => import('./sequencing/sequencing.module').then(m => m.SequencingModule),
+    loadChildren: () =>
+      import('./sequencing/sequencing.module').then(m => m.SequencingModule),
     path: falconModule.path,
   },
   {

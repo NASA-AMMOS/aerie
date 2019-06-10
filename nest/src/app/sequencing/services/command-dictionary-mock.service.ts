@@ -25,14 +25,14 @@ export const mockCommandDictionaryList: CommandDictionary[] = [
 })
 export class CommandDictionaryMockService {
   getCommandDictionaryList(): Observable<CommandDictionary[]> {
-    return Observable.create((o: Observer<CommandDictionary[]>) => {
+    return new Observable((o: Observer<CommandDictionary[]>) => {
       o.next(mockCommandDictionaryList);
       o.complete();
     });
   }
 
   getCommandDictionary(id: string): Observable<MpsCommand[]> {
-    return Observable.create((o: Observer<MpsCommand[]>) => {
+    return new Observable((o: Observer<MpsCommand[]>) => {
       o.next(mpsCommands);
       o.complete();
     });

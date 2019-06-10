@@ -1,46 +1,32 @@
-<as-split
-  direction="horizontal"
-  gutterSize="7"
-  (dragEnd)="resize()">
-  <as-split-area
-    [visible]="showLeftPanel$ | async"
-    [order]="0"
-    size="25">
+<as-split direction="horizontal" gutterSize="7" (dragEnd)="resize()">
+  <as-split-area [visible]="showLeftPanel$ | async" [order]="0" size="25">
     <app-source-explorer></app-source-explorer>
   </as-split-area>
 
-  <as-split-area
-    [order]="1"
-    [size]="timelinePanelSize$ | async">
-    <as-split
-      direction="vertical"
-      gutterSize="7"
-      (dragEnd)="resize()">
-
-      <as-split-area
-        [order]="3"
-        [size]="getMainChartHeightPercent()">
+  <as-split-area [order]="1" [size]="timelinePanelSize$ | async">
+    <as-split direction="vertical" gutterSize="7" (dragEnd)="resize()">
+      <as-split-area [order]="3" [size]="getMainChartHeightPercent()">
         <ng-container *ngIf="itarMessage$ | async as itarMessage">
-          <div
-            *ngIf="itarMessage !== ''"
-            class="itar-message">
+          <div *ngIf="itarMessage !== ''" class="itar-message">
             <mat-card>
-              {{itarMessage}}
+              {{ itarMessage }}
             </mat-card>
           </div>
         </ng-container>
 
-        <div
-          *ngIf="bands.length === 0"
-          class="get-started">
+        <div *ngIf="bands.length === 0" class="get-started">
           <mat-card>
-            To get started, select some <i class="fa fa-area-chart" style="color: #17a923" aria-hidden="true"></i> Data Sources from the source explorer.
+            To get started, select some
+            <i
+              class="fa fa-area-chart"
+              style="color: #17a923"
+              aria-hidden="true"
+            ></i>
+            Data Sources from the source explorer.
           </mat-card>
         </div>
 
-        <div
-          *ngIf="bands.length > 0"
-          class="north-container">
+        <div *ngIf="bands.length > 0" class="north-container">
           <div class="time-bands-container">
             <raven-manage-graph
               [currentStateChanged]="currentStateChanged$ | async"
@@ -58,10 +44,12 @@
               (shareableLink)="onShareableLink()"
               (updateCurrentState)="onUpdateCurrentState()"
               (zoomIn)="onZoomIn()"
-              (zoomOut)="onZoomOut()">
+              (zoomOut)="onZoomOut()"
+            >
             </raven-manage-graph>
             <div>
-              <raven-guide-band class="row"
+              <raven-guide-band
+                class="row"
                 [guides]="guides$ | async"
                 [labelFontSize]="(defaultBandSettings$ | async).labelFontSize"
                 [labelWidth]="(defaultBandSettings$ | async).labelWidth"
@@ -69,19 +57,23 @@
                 [maxTimeRange]="maxTimeRange$ | async"
                 [showLastClick]="(defaultBandSettings$ | async).showLastClick"
                 [viewTimeRange]="viewTimeRange$ | async"
-                (toggleGuide)="onToggleGuide($event)">
+                (toggleGuide)="onToggleGuide($event)"
+              >
               </raven-guide-band>
             </div>
             <div>
-              <raven-time-scroll-bar class="row"
+              <raven-time-scroll-bar
+                class="row"
                 [labelWidth]="(defaultBandSettings$ | async).labelWidth"
                 [maxTimeRange]="maxTimeRange$ | async"
                 [viewTimeRange]="viewTimeRange$ | async"
-                (updateViewTimeRange)="onUpdateViewTimeRange($event)">
+                (updateViewTimeRange)="onUpdateViewTimeRange($event)"
+              >
               </raven-time-scroll-bar>
             </div>
             <div>
-              <raven-time-band class="row"
+              <raven-time-band
+                class="row"
                 [cursorColor]="cursorColor$ | async"
                 [cursorTime]="cursorTime$ | async"
                 [cursorWidth]="cursorWidth$ | async"
@@ -93,7 +85,8 @@
                 [maxTimeRange]="maxTimeRange$ | async"
                 [showTooltip]="(defaultBandSettings$ | async).showTooltip"
                 [viewTimeRange]="viewTimeRange$ | async"
-                (updateViewTimeRange)="onUpdateViewTimeRange($event)">
+                (updateViewTimeRange)="onUpdateViewTimeRange($event)"
+              >
               </raven-time-band>
             </div>
           </div>
@@ -129,7 +122,8 @@
               (settingsBand)="onSettingsBand($event)"
               (updateAddTo)="onUpdateAddTo($event)"
               (updateOverlay)="onUpdateOverlay($event)"
-              (updateViewTimeRange)="onUpdateViewTimeRange($event)">
+              (updateViewTimeRange)="onUpdateViewTimeRange($event)"
+            >
             </raven-bands>
           </div>
         </div>
@@ -137,7 +131,8 @@
 
       <as-split-area
         [visible]="showSouthBandsPanel$ | async"
-        [size]="southPanelHeight">
+        [size]="southPanelHeight"
+      >
         <div class="south-container">
           <div class="timeline-1">
             <raven-bands
@@ -170,7 +165,8 @@
               (settingsBand)="onSettingsBand($event)"
               (updateAddTo)="onUpdateAddTo($event)"
               (updateOverlay)="onUpdateOverlay($event)"
-              (updateViewTimeRange)="onUpdateViewTimeRange($event)">
+              (updateViewTimeRange)="onUpdateViewTimeRange($event)"
+            >
             </raven-bands>
           </div>
         </div>
@@ -179,7 +175,8 @@
       <as-split-area
         [visible]="showDetailsPanel$ | async"
         [order]="5"
-        [size]="detailsPanelHeight">
+        [size]="detailsPanelHeight"
+      >
         <raven-table
           class="raven-table"
           [points]="selectedSubBandPoints$ | async"
@@ -187,16 +184,14 @@
           [selectedSubBand]="selectedSubBand$ | async"
           [selectedPoint]="selectedPoint$ | async"
           (updateFilterActivityInSubBand)="onFilterActivityInSubBand($event)"
-          (updateTableColumns)="onUpdateSubBand($event)">
+          (updateTableColumns)="onUpdateSubBand($event)"
+        >
         </raven-table>
       </as-split-area>
     </as-split>
   </as-split-area>
 
-  <as-split-area
-    [visible]="showRightPanel$ | async"
-    [order]="6"
-    size="15">
+  <as-split-area [visible]="showRightPanel$ | async" [order]="6" size="15">
     <!-- Selected Point. -->
     <div class="selected-point">
       <ng-container *ngIf="!(selectedPoint$ | async)">
@@ -212,21 +207,23 @@
             [showActivityPointMetadata]="showActivityPointMetadata"
             [showActivityPointParameters]="showActivityPointParameters"
             (changeActivityExpansion)="onChangeActivityExpansion($event)"
-            (toggleShowActivityPointMetadata)="onToggleShowActivityPointMetadata($event)"
-            (toggleShowActivityPointParameters)="onToggleShowActivityPointParameters($event)">
+            (toggleShowActivityPointMetadata)="
+              onToggleShowActivityPointMetadata($event)
+            "
+            (toggleShowActivityPointParameters)="
+              onToggleShowActivityPointParameters($event)
+            "
+          >
           </raven-activity-point>
         </ng-container>
 
         <ng-container *ngIf="(selectedPoint$ | async).type === 'state'">
-          <raven-state-point
-            [selectedPoint]="selectedPoint$ | async">
+          <raven-state-point [selectedPoint]="selectedPoint$ | async">
           </raven-state-point>
         </ng-container>
 
-
         <ng-container *ngIf="(selectedPoint$ | async).type === 'resource'">
-          <raven-resource-point
-            [selectedPoint]="selectedPoint$ | async">
+          <raven-resource-point [selectedPoint]="selectedPoint$ | async">
           </raven-resource-point>
         </ng-container>
       </ng-container>
@@ -244,13 +241,11 @@
     [fixedInViewport]="true"
     [fixedTopGap]="40"
     [opened]="showApplyLayoutDrawer$ | async"
-    (closedStart)="onToggleApplyLayoutDrawer(false)">
+    (closedStart)="onToggleApplyLayoutDrawer(false)"
+  >
     <div class="sidenav-content">
-      <button
-        mat-icon-button
-        (click)="onToggleApplyLayoutDrawer(false)">
-        <mat-icon
-          aria-label="Clear">
+      <button mat-icon-button (click)="onToggleApplyLayoutDrawer(false)">
+        <mat-icon aria-label="Clear">
           clear
         </mat-icon>
       </button>
@@ -259,7 +254,8 @@
         [currentStateId]="currentStateId$ | async"
         [treeBySourceId]="treeBySourceId$ | async"
         (applyLayout)="onApplyLayout($event)"
-        (applyState)="onApplyState($event)">
+        (applyState)="onApplyState($event)"
+      >
       </raven-layout-apply>
     </div>
   </mat-sidenav>
@@ -272,20 +268,19 @@
     [fixedInViewport]="true"
     [fixedTopGap]="40"
     [opened]="showGlobalSettingsDrawer$ | async"
-    (closedStart)="onToggleGlobalSettingsDrawer(false)">
+    (closedStart)="onToggleGlobalSettingsDrawer(false)"
+  >
     <div class="sidenav-content">
-      <button
-        mat-icon-button
-        (click)="onToggleGlobalSettingsDrawer(false)">
-        <mat-icon
-          aria-label="Clear">
+      <button mat-icon-button (click)="onToggleGlobalSettingsDrawer(false)">
+        <mat-icon aria-label="Clear">
           clear
         </mat-icon>
       </button>
       <raven-settings-global
         [defaultBandSettings]="defaultBandSettings$ | async"
         (updateDefaultBandSettings)="onUpdateDefaultBandSettings($event)"
-        (updateTimeline)="onUpdateTimeline($event)">
+        (updateTimeline)="onUpdateTimeline($event)"
+      >
       </raven-settings-global>
     </div>
   </mat-sidenav>
@@ -299,13 +294,11 @@
     [fixedInViewport]="true"
     [fixedTopGap]="40"
     [opened]="showEpochsDrawer$ | async"
-    (closedStart)="onToggleEpochsDrawer(false)">
+    (closedStart)="onToggleEpochsDrawer(false)"
+  >
     <div class="sidenav-content">
-      <button
-        mat-icon-button
-        (click)="onToggleEpochsDrawer(false)">
-        <mat-icon
-          aria-label="Clear">
+      <button mat-icon-button (click)="onToggleEpochsDrawer(false)">
+        <mat-icon aria-label="Clear">
           clear
         </mat-icon>
       </button>
@@ -315,7 +308,8 @@
         [earthSecToEpochSec]="earthSecToEpochSec$ | async"
         [inUseEpoch]="inUseEpoch$ | async"
         (importEpochs)="onImportEpochs($event)"
-        (updateEpochs)="onUpdateEpochs($event)">
+        (updateEpochs)="onUpdateEpochs($event)"
+      >
       </raven-epochs>
     </div>
   </mat-sidenav>
@@ -329,13 +323,11 @@
     [fixedInViewport]="true"
     [fixedTopGap]="40"
     [opened]="showOutputDrawer$ | async"
-    (closedStart)="onToggleOutputDrawer(false)">
+    (closedStart)="onToggleOutputDrawer(false)"
+  >
     <div class="sidenav-content">
-      <button
-        mat-icon-button
-        (click)="onToggleOutputDrawer(false)">
-        <mat-icon
-          aria-label="Clear">
+      <button mat-icon-button (click)="onToggleOutputDrawer(false)">
+        <mat-icon aria-label="Clear">
           clear
         </mat-icon>
       </button>
@@ -349,7 +341,8 @@
         [subBandSourceIdsByLabel]="subBandSourceIdsByLabel$ | async"
         [treeBySourceId]="treeBySourceId$ | async"
         (createOutput)="onCreateOutput()"
-        (updateOutputSettings)="onUpdateOutputSettings($event)">
+        (updateOutputSettings)="onUpdateOutputSettings($event)"
+      >
       </raven-output>
     </div>
   </mat-sidenav>
@@ -363,14 +356,14 @@
     [fixedInViewport]="true"
     [fixedTopGap]="40"
     [opened]="showSituationalAwarenessDrawer$ | async"
-    (closedStart)="onToggleSituationalAwarenessDrawer(false)">
+    (closedStart)="onToggleSituationalAwarenessDrawer(false)"
+  >
     <div class="sidenav-content">
       <button
         mat-icon-button
-        (click)="onToggleSituationalAwarenessDrawer(false)">
-        <mat-icon
-          class="mat-24"
-          aria-label="Clear">
+        (click)="onToggleSituationalAwarenessDrawer(false)"
+      >
+        <mat-icon class="mat-24" aria-label="Clear">
           clear
         </mat-icon>
       </button>
@@ -383,7 +376,10 @@
         [startTime]="startTime$ | async"
         [useNow]="useNow$ | async"
         (changeSituationalAwareness)="onChangeSituationalAwareness($event)"
-        (updateSituationalAwarenessSettings)="onUpdateSituationalAwarenessSettings($event)">
+        (updateSituationalAwarenessSettings)="
+          onUpdateSituationalAwarenessSettings($event)
+        "
+      >
       </raven-situational-awareness>
     </div>
   </mat-sidenav>
@@ -397,13 +393,11 @@
     [fixedInViewport]="true"
     [fixedTopGap]="40"
     [opened]="showTimeCursorDrawer$ | async"
-    (closedStart)="onToggleTimeCursorDrawer(false)">
+    (closedStart)="onToggleTimeCursorDrawer(false)"
+  >
     <div class="sidenav-content">
-      <button
-        mat-icon-button
-        (click)="onToggleTimeCursorDrawer(false)">
-        <mat-icon
-          aria-label="Clear">
+      <button mat-icon-button (click)="onToggleTimeCursorDrawer(false)">
+        <mat-icon aria-label="Clear">
           clear
         </mat-icon>
       </button>
@@ -417,7 +411,8 @@
         [showTimeCursor]="showTimeCursor$ | async"
         [setCursorTime]="setCursorTime$ | async"
         (displayTimeCursor)="onDisplayTimeCursor($event)"
-        (updateTimeCursorSettings)="onUpdateTimeCursorSettings($event)">
+        (updateTimeCursorSettings)="onUpdateTimeCursorSettings($event)"
+      >
       </raven-time-cursor>
     </div>
   </mat-sidenav>

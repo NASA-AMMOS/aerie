@@ -117,7 +117,7 @@ export class PlanMockService implements PlanServiceInterface {
     planId: string,
     data: ActivityInstance,
   ): Observable<ActivityInstance> {
-    return Observable.create((o: Observer<ActivityInstance>) => {
+    return new Observable((o: Observer<ActivityInstance>) => {
       const activities = getMockActivities();
       const activityId = data.activityId || Date.now().toString();
       const mockDetail = activities[activityId];
@@ -126,7 +126,7 @@ export class PlanMockService implements PlanServiceInterface {
   }
 
   createPlan(baseUrl: string, plan: Plan): Observable<Plan> {
-    return Observable.create((o: Observer<Plan>) => {
+    return new Observable((o: Observer<Plan>) => {
       o.next(plan);
       o.complete();
     });
@@ -137,14 +137,14 @@ export class PlanMockService implements PlanServiceInterface {
     planId: string,
     activityId: string,
   ): Observable<{}> {
-    return Observable.create((o: Observer<{}>) => {
+    return new Observable((o: Observer<{}>) => {
       o.next({});
       o.complete();
     });
   }
 
   deletePlan(baseUrl: string, planId: string): Observable<{}> {
-    return Observable.create((o: Observer<{}>) => {
+    return new Observable((o: Observer<{}>) => {
       o.next({});
       o.complete();
     });
@@ -154,7 +154,7 @@ export class PlanMockService implements PlanServiceInterface {
     baseUrl: string = '',
     planId: string,
   ): Observable<ActivityInstance[]> {
-    return Observable.create((o: Observer<ActivityInstance[]>) => {
+    return new Observable((o: Observer<ActivityInstance[]>) => {
       o.next(getMockActivities());
       o.complete();
     });
@@ -165,7 +165,7 @@ export class PlanMockService implements PlanServiceInterface {
     planId: string,
     activityId: string | null,
   ): Observable<Action> {
-    return Observable.create((o: Observer<Action>) => {
+    return new Observable((o: Observer<Action>) => {
       const activities = getMockActivities();
       o.next(
         activityId
@@ -177,7 +177,7 @@ export class PlanMockService implements PlanServiceInterface {
   }
 
   getPlans(baseUrl: string = ''): Observable<Plan[]> {
-    return Observable.create((o: Observer<Plan[]>) => {
+    return new Observable((o: Observer<Plan[]>) => {
       o.next(getMockPlans());
       o.complete();
     });
@@ -187,7 +187,7 @@ export class PlanMockService implements PlanServiceInterface {
     baseUrl: string,
     planId: string | null,
   ): Observable<Action> {
-    return Observable.create((o: Observer<Action>) => {
+    return new Observable((o: Observer<Action>) => {
       const plans = getMockPlans();
       o.next(
         planId
@@ -204,7 +204,7 @@ export class PlanMockService implements PlanServiceInterface {
     activityId: string = '',
     activityInstance: ActivityInstance,
   ): Observable<null> {
-    return Observable.create((o: Observer<null>) => {
+    return new Observable((o: Observer<null>) => {
       o.next(null);
       o.complete();
     });

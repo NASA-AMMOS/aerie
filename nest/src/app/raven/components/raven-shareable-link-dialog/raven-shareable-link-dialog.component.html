@@ -1,19 +1,20 @@
 <h4 mat-dialog-title>
-  {{titleMessage}}
+  {{ titleMessage }}
 </h4>
 
 <div mat-dialog-content>
   <div class="container">
-    <div
-      *ngIf="invalidShareableName"
-      class="alert alert-danger">
-      A shareable name is required and you can only use letters, numbers, dashes and underscores.
+    <div *ngIf="invalidShareableName" class="alert alert-danger">
+      A shareable name is required and you can only use letters, numbers, dashes
+      and underscores.
     </div>
 
-    <div
-      *ngIf="overwriteWarning"
-      class="alert alert-warning">
-      There is already a state name {{shareableNameControl.value}} in the /{{data.state.config.raven.shareableLinkStatesUrl}} folder. Copying the shareable link will overwrite it. Are you sure you want this?
+    <div *ngIf="overwriteWarning" class="alert alert-warning">
+      There is already a state name {{ shareableNameControl.value }} in the /{{
+        data.state.config.raven.shareableLinkStatesUrl
+      }}
+      folder. Copying the shareable link will overwrite it. Are you sure you
+      want this?
     </div>
 
     <!-- Shareable Link. -->
@@ -24,7 +25,8 @@
         [formControl]="shareableLinkControl"
         readonly
         type="text"
-        (click)="onShareableLinkClick()">
+        (click)="onShareableLinkClick()"
+      />
     </span>
 
     <!-- Shareable Name. -->
@@ -33,7 +35,8 @@
       <input
         #shareableNameInput
         [formControl]="shareableNameControl"
-        type="text">
+        type="text"
+      />
     </span>
   </div>
 </div>

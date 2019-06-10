@@ -1,9 +1,9 @@
 <div
   class="sortable-bands"
   [sortablejs]="sortedAndFilteredBands"
-  [sortablejsOptions]="sortablejsOptions">
-  <div
-    *ngFor="let band of sortedAndFilteredBands; trackBy: bandsTrackByFn">
+  [sortablejsOptions]="sortablejsOptions"
+>
+  <div *ngFor="let band of sortedAndFilteredBands; trackBy: bandsTrackByFn">
     <raven-composite-band
       [backgroundColor]="band.backgroundColor"
       [class]="'raven-band-' + band.name"
@@ -44,7 +44,8 @@
       (hoverBand)="hoverBand.emit($event)"
       (updateViewTimeRange)="updateViewTimeRange.emit($event)"
       (updateAddTo)="updateAddTo.emit($event)"
-      (updateOverlay)="updateOverlay.emit($event)">
+      (updateOverlay)="updateOverlay.emit($event)"
+    >
     </raven-composite-band>
   </div>
 </div>

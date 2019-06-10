@@ -12,7 +12,6 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { MatDialog, MatDialogModule } from '@angular/material';
 import { Router } from '@angular/router';
-import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { Store, StoreModule } from '@ngrx/store';
 import { addMatchers, cold, hot, initTestScheduler } from 'jasmine-marbles';
@@ -64,7 +63,6 @@ import { PlanEffects } from './plan.effects';
 describe('PlanEffects', () => {
   let actions$: Observable<any>;
   let effects: PlanEffects;
-  let metadata: EffectsMetadata<PlanEffects>;
   let dialog: any;
   let store: any;
   let mockRouter: any;
@@ -114,7 +112,6 @@ describe('PlanEffects', () => {
     addMatchers();
 
     effects = TestBed.get(PlanEffects);
-    metadata = getEffectsMetadata(effects);
     dialog = TestBed.get(MatDialog);
     store = TestBed.get(Store);
 
@@ -127,10 +124,6 @@ describe('PlanEffects', () => {
   });
 
   describe('createActivity$', () => {
-    it('should register createActivity$ that dispatches an action', () => {
-      expect(metadata.createActivity$).toEqual({ dispatch: true });
-    });
-
     it('should return a CreateActivitySuccess action with data upon success', () => {
       const planId = plan.id || '';
       const action = new CreateActivity(planId, activity);
@@ -177,10 +170,6 @@ describe('PlanEffects', () => {
   });
 
   describe('createActivitySuccess$', () => {
-    it('should register createActivitySuccess$ that does not dispatch an action', () => {
-      expect(metadata.createActivitySuccess$).toEqual({ dispatch: false });
-    });
-
     it('should navigate to the actions given planId', () => {
       const action = new CreateActivitySuccess('foo', activity);
 
@@ -193,10 +182,6 @@ describe('PlanEffects', () => {
   });
 
   describe('createPlan$', () => {
-    it('should register createPlan$ that dispatches an action', () => {
-      expect(metadata.createPlan$).toEqual({ dispatch: true });
-    });
-
     it('should return a CreatePlanSuccess action with data upon success', () => {
       const action = new CreatePlan(plan);
       const success = new CreatePlanSuccess(plan);
@@ -233,10 +218,6 @@ describe('PlanEffects', () => {
   });
 
   describe('deleteActivity$', () => {
-    it('should register deleteActivity$ that dispatches an action', () => {
-      expect(metadata.deleteActivity$).toEqual({ dispatch: true });
-    });
-
     it('should return a DeleteActivitySuccess action with data upon success', () => {
       spyOn(dialog, 'open').and.returnValue({
         afterClosed() {
@@ -296,10 +277,6 @@ describe('PlanEffects', () => {
   });
 
   describe('deletePlan$', () => {
-    it('should register deletePlan$ that dispatches an action', () => {
-      expect(metadata.deletePlan$).toEqual({ dispatch: true });
-    });
-
     it('should return a DeletePlanSuccess action with data upon success', () => {
       spyOn(dialog, 'open').and.returnValue({
         afterClosed() {
@@ -360,10 +337,6 @@ describe('PlanEffects', () => {
   });
 
   describe('updateActivity$', () => {
-    it('should register updateActivity$ that dispatches an action', () => {
-      expect(metadata.updateActivity$).toEqual({ dispatch: true });
-    });
-
     it('should return a UpdateActivitySuccess action with data on success', () => {
       // Setup.
       const planId = plan.id || '';

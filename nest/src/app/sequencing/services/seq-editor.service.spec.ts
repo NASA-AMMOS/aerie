@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ElementRef } from '@angular/core';
+import { ElementRef, Type } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { MockElementRef } from '../mocks';
 import { defaultEditorId } from '../reducers/file.reducer';
@@ -26,7 +26,7 @@ describe('SeqEditorService', () => {
       ],
     });
 
-    elementRef = TestBed.get(ElementRef);
+    elementRef = TestBed.get(ElementRef as Type<ElementRef>);
     seqEditorService = TestBed.get(SeqEditorService);
   });
 

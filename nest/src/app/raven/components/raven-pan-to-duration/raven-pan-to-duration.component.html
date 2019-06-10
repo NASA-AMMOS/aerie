@@ -4,7 +4,8 @@
       [formControl]="panToControl"
       placeholder="Pan To"
       type="text"
-      title="Use yyyy-dddThh:mm:ss Format">
+      title="Use yyyy-dddThh:mm:ss Format"
+    />
   </span>
 
   <span>
@@ -12,21 +13,26 @@
       [formControl]="panDurationControl"
       [matAutocomplete]="auto"
       placeholder="Pan Duration"
-      type="text">
-      <mat-autocomplete #auto="matAutocomplete">
-        <mat-option *ngFor="let duration of filteredDurations | async" [value]="duration">
-          {{duration}}
-        </mat-option>
-      </mat-autocomplete>
+      type="text"
+    />
+    <mat-autocomplete #auto="matAutocomplete">
+      <mat-option
+        *ngFor="let duration of filteredDurations | async"
+        [value]="duration"
+      >
+        {{ duration }}
+      </mat-option>
+    </mat-autocomplete>
   </span>
   <mat-icon
     [ngClass]="{
-      'icon': panToControl.valid && panDurationControl.valid,
+      icon: panToControl.valid && panDurationControl.valid,
       'disabled-icon': !panToControl.valid || !panDurationControl.valid
     }"
     matTooltip="Perform Pan"
     aria-label="Perform Pan"
-    (click)="onPan()">
+    (click)="onPan()"
+  >
     search
   </mat-icon>
 </div>

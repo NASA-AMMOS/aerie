@@ -10,7 +10,12 @@
 
   <form (submit)="onSubmit()">
     <mat-form-field>
-      <input matInput name="name-pattern" placeholder="File name" [(ngModel)]="namePattern">
+      <input
+        matInput
+        name="name-pattern"
+        placeholder="File name"
+        [(ngModel)]="namePattern"
+      />
     </mat-form-field>
 
     <button mat-button>Search</button>

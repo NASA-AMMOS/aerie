@@ -1,13 +1,14 @@
 <div mat-dialog-content>
   <div class="filter">
-    <label>{{data.source.name}} Filter</label>
+    <label>{{ data.source.name }} Filter</label>
   </div>
   <div class="container">
     <mat-form-field>
       <input
         matInput
         [(ngModel)]="filter"
-        placeholder={{data.source.arg}}>
+        placeholder="{{ data.source.arg }}"
+      />
     </mat-form-field>
   </div>
 </div>

@@ -4,7 +4,7 @@
 <main class="content">
   <mat-progress-bar
     mode="indeterminate"
-    *ngIf="(planningService.showLoadingBar$ | async)"
+    *ngIf="planningService.showLoadingBar$ | async"
     color="accent"
   >
   </mat-progress-bar>

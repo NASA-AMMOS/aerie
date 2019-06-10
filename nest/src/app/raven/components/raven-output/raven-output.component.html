@@ -19,7 +19,8 @@
       [rowData]="rowData"
       [rowSelection]="rowSelection"
       [suppressRowClickSelection]="true"
-      (selectionChanged)="onSelectionChanged()">
+      (selectionChanged)="onSelectionChanged()"
+    >
     </ag-grid-angular>
 
     <!-- Output Format. -->
@@ -27,7 +28,15 @@
       <mat-select
         placeholder="Output Format"
         [(value)]="outputFormat"
-        (selectionChange)="updateOutputSettings.emit({ update: { outputFormat: $event.value, allInOneFile:  $event.value === 'JSON' ? false : allInOneFile } })">
+        (selectionChange)="
+          updateOutputSettings.emit({
+            update: {
+              outputFormat: $event.value,
+              allInOneFile: $event.value === 'JSON' ? false : allInOneFile
+            }
+          })
+        "
+      >
         <mat-option [value]="'CSV'">CSV</mat-option>
         <mat-option [value]="'JSON'">JSON</mat-option>
       </mat-select>
@@ -37,31 +46,47 @@
       class="inputs"
       fxLayout="row"
       fxLayoutAlign="space center"
-      fxLayoutWrap>
+      fxLayoutWrap
+    >
       <!-- Decimate Output Data. -->
       <mat-slide-toggle
         color="accent"
         [checked]="decimateOutputData"
-        (change)="updateOutputSettings.emit({ update: { decimateOutputData: $event.checked } })">
+        (change)="
+          updateOutputSettings.emit({
+            update: { decimateOutputData: $event.checked }
+          })
+        "
+      >
         Decimate Output Data
       </mat-slide-toggle>
 
       <!-- All-in-one File Toggle. -->
       <mat-slide-toggle
-        *ngIf="outputFormat==='CSV' && moreThanOneSelected()"
+        *ngIf="outputFormat === 'CSV' && moreThanOneSelected()"
         color="accent"
         [checked]="allInOneFile"
-        (change)="updateOutputSettings.emit({ update: { allInOneFile: $event.checked } })">
+        (change)="
+          updateOutputSettings.emit({
+            update: { allInOneFile: $event.checked }
+          })
+        "
+      >
         All-in-one File
       </mat-slide-toggle>
 
       <!-- All-in-one File Name. -->
-      <mat-form-field *ngIf="outputFormat==='CSV' && allInOneFile">
+      <mat-form-field *ngIf="outputFormat === 'CSV' && allInOneFile">
         <input
           matInput
-          (keyup)="updateOutputSettings.emit({ update: { allInOneFilename: $event.target.value } })"
+          (keyup)="
+            updateOutputSettings.emit({
+              update: { allInOneFilename: $event.target.value }
+            })
+          "
           [value]="allInOneFilename"
-          placeholder="Output Filename">
+          placeholder="Output Filename"
+        />
       </mat-form-field>
     </div>
 
@@ -70,7 +95,8 @@
       mat-raised-button
       color="accent"
       [disabled]="noneSelected() || !isValid()"
-      (click)="onCreateOutput()">
+      (click)="onCreateOutput()"
+    >
       Create Output
     </button>
   </mat-card-content>

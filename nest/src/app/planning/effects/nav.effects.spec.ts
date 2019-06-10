@@ -9,7 +9,6 @@
 
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { Store, StoreModule } from '@ngrx/store';
 import { addMatchers, cold, hot, initTestScheduler } from 'jasmine-marbles';
@@ -57,7 +56,6 @@ import { NavEffects } from './nav.effects';
 describe('NavEffects', () => {
   let actions$: Observable<any>;
   let effects: NavEffects;
-  let metadata: EffectsMetadata<NavEffects>;
 
   // Mock data.
   const activities: ActivityInstance[] = getMockActivities();
@@ -103,14 +101,9 @@ describe('NavEffects', () => {
     initTestScheduler();
     addMatchers();
     effects = TestBed.get(NavEffects);
-    metadata = getEffectsMetadata(effects);
   });
 
   describe('navPlans$', () => {
-    it('should register navPlans$ that dispatches an action', () => {
-      expect(metadata.navPlans$).toEqual({ dispatch: true });
-    });
-
     it('should dispatch the appropriate actions when navigating to /plans', () => {
       const action = new RouterNavigation({ path: 'plans' });
 
@@ -154,10 +147,6 @@ describe('NavEffects', () => {
   });
 
   describe('navPlansWithId$', () => {
-    it('should register navPlansWithId$ that dispatches an action', () => {
-      expect(metadata.navPlansWithId$).toEqual({ dispatch: true });
-    });
-
     it('should dispatch the appropriate actions when navigating to plans/:planId', () => {
       const planId = '42';
       const action = new RouterNavigation({
@@ -213,10 +202,6 @@ describe('NavEffects', () => {
   });
 
   describe('navActivity$', () => {
-    it('should register navActivity$ that dispatches an action', () => {
-      expect(metadata.navActivity$).toEqual({ dispatch: true });
-    });
-
     it('should dispatch the appropriate actions when navigating to plans/:planId/activity', () => {
       const planId = '42';
       const action = new RouterNavigation({
@@ -267,10 +252,6 @@ describe('NavEffects', () => {
   });
 
   describe('navActivityWithId$', () => {
-    it('should register navActivityWithId$ that dispatches an action', () => {
-      expect(metadata.navActivityWithId$).toEqual({ dispatch: true });
-    });
-
     it('should dispatch the appropriate actions when navigating to plans/:planId/activity/:activityId', () => {
       const planId = '42';
       const activityId = '52';

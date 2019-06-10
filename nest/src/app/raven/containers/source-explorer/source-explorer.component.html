@@ -3,12 +3,10 @@
     [opened]="metadataDrawerVisible$ | async"
     (openedChange)="setShowFileMetadataDrawer($event)"
     mode="over"
-    position="end">
-    <button
-      mat-icon-button
-      (click)="setShowFileMetadataDrawer(false)">
-      <mat-icon
-        aria-label="Clear">
+    position="end"
+  >
+    <button mat-icon-button (click)="setShowFileMetadataDrawer(false)">
+      <mat-icon aria-label="Clear">
         clear
       </mat-icon>
     </button>
@@ -16,7 +14,8 @@
       <raven-file-metadata
         *ngIf="selectedSourceId !== ''"
         [fileMetadata]="tree[selectedSourceId].fileMetadata"
-        [name]="tree[selectedSourceId].name">
+        [name]="tree[selectedSourceId].name"
+      >
       </raven-file-metadata>
     </ng-container>
   </mat-drawer>
@@ -24,7 +23,8 @@
   <raven-quick-filter-panel
     [filter]="sourceFilter$ | async"
     [isActive]="filterIsActive$ | async"
-    (applyFilter)="onFilterSources($event)">
+    (applyFilter)="onFilterSources($event)"
+  >
   </raven-quick-filter-panel>
 
   <mat-tab-group>
@@ -46,7 +46,8 @@
             (open)="onOpen($event)"
             (removeFilter)="onRemoveFilter($event)"
             (removeGraphableFilter)="onRemoveGraphableFilter($event)"
-            (selectCustomFilter)="onSelectCustomFilter($event)">
+            (selectCustomFilter)="onSelectCustomFilter($event)"
+          >
           </raven-tree>
         </ng-container>
       </div>
@@ -73,7 +74,8 @@
           (open)="onOpen($event)"
           (removeFilter)="onRemoveFilter($event)"
           (removeGraphableFilter)="onRemoveGraphableFilter($event)"
-          (selectCustomFilter)="onSelectCustomFilter($event)">
+          (selectCustomFilter)="onSelectCustomFilter($event)"
+        >
         </raven-tree>
       </div>
     </mat-tab>

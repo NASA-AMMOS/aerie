@@ -19,7 +19,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
-import { AgGridNg2 } from 'ag-grid-angular';
+import { AgGridAngular } from 'ag-grid-angular';
 import { fromDuration, utc } from '../../../shared/util/time';
 import { RavenSituationalAwarenessPefEntry, RavenUpdate } from '../../models';
 
@@ -31,7 +31,7 @@ import { RavenSituationalAwarenessPefEntry, RavenUpdate } from '../../models';
 export class RavenSituationalAwarenessComponent
   implements AfterViewInit, OnChanges {
   @ViewChild('agGrid', { static: true })
-  agGrid: AgGridNg2;
+  agGrid: AgGridAngular;
 
   @Input()
   nowMinus: number | null;

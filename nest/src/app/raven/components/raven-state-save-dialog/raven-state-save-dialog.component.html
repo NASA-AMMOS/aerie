@@ -1,21 +1,14 @@
 <div mat-dialog-content>
-  <div class="save-to">
-    Save To: {{data.source.name}}
-  </div>
+  <div class="save-to">Save To: {{ data.source.name }}</div>
 
   <div class="container">
-    <div
-      *ngIf="overwriteWarning"
-      class="alert alert-warning">
-      There is already a file named "{{name.value}}" in this folder. Saving will overwrite it. Are you sure you want this?
+    <div *ngIf="overwriteWarning" class="alert alert-warning">
+      There is already a file named "{{ name.value }}" in this folder. Saving
+      will overwrite it. Are you sure you want this?
     </div>
 
     <mat-form-field>
-      <input
-        [formControl]="name"
-        matInput
-        placeholder="Name"
-        required>
+      <input [formControl]="name" matInput placeholder="Name" required />
     </mat-form-field>
   </div>
 </div>

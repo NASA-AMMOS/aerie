@@ -79,7 +79,7 @@ export class AdaptationMockService implements AdaptationServiceInterface {
     adaptationServiceBaseUrl: string,
     planId: string,
   ): Observable<ActivityType[]> {
-    return Observable.create((o: Observer<ActivityType[]>) => {
+    return new Observable((o: Observer<ActivityType[]>) => {
       o.next(getMockActivityTypes());
       o.complete();
     });
@@ -90,21 +90,21 @@ export class AdaptationMockService implements AdaptationServiceInterface {
     adaptationServiceBaseUrl: string,
     planId: string,
   ): Observable<Action> {
-    return Observable.create((o: Observer<Action>) => {
+    return new Observable((o: Observer<Action>) => {
       o.next(new SetActivityTypes(getMockActivityTypes()));
       o.complete();
     });
   }
 
   getAdaptations(baseUrl: string = ''): Observable<Adaptation[]> {
-    return Observable.create((o: Observer<Adaptation[]>) => {
+    return new Observable((o: Observer<Adaptation[]>) => {
       o.next(getMockAdaptations());
       o.complete();
     });
   }
 
   getAdaptationsWithActions(baseUrl: string): Observable<Action> {
-    return Observable.create((o: Observer<Action>) => {
+    return new Observable((o: Observer<Action>) => {
       o.next(new SetAdaptations(getMockAdaptations()));
       o.complete();
     });

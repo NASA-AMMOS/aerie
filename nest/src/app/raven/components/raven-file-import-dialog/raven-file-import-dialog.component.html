@@ -1,21 +1,13 @@
 <div mat-dialog-content>
-  <div class="import-to">
-    <label>Import To:</label> {{data.source.name}}
-  </div>
+  <div class="import-to"><label>Import To:</label> {{ data.source.name }}</div>
 
   <div class="container">
     <mat-form-field>
-      <input
-        [(ngModel)]="file.name"
-        matInput
-        placeholder="Name"
-        required>
+      <input [(ngModel)]="file.name" matInput placeholder="Name" required />
     </mat-form-field>
 
     <mat-form-field>
-      <mat-select
-        placeholder="File Type"
-        [(value)]="file.type">
+      <mat-select placeholder="File Type" [(value)]="file.type">
         <mat-option [value]="'epoch'">Epoch</mat-option>
         <mat-option [value]="'generic'">Generic CSV</mat-option>
         <mat-option [value]="'pef'">PEF</mat-option>
@@ -24,25 +16,16 @@
 
     <div class="file">
       <label>File</label>
-      <input
-        type="file"
-        (change)="readFile($event.target.files[0], false)">
+      <input type="file" (change)="readFile($event.target.files[0], false)" />
     </div>
 
-    <div
-      *ngIf="file.type === 'generic'"
-      class="mapping-file">
+    <div *ngIf="file.type === 'generic'" class="mapping-file">
       <label>Mapping File</label>
-      <input
-        type="file"
-        (change)="readFile($event.target.files[0], true)">
+      <input type="file" (change)="readFile($event.target.files[0], true)" />
     </div>
 
-    <mat-form-field
-      *ngIf="file.type === 'generic'">
-      <mat-select
-        placeholder="Time Format"
-        [(value)]="file.timeFormat">
+    <mat-form-field *ngIf="file.type === 'generic'">
+      <mat-select placeholder="Time Format" [(value)]="file.timeFormat">
         <mat-option [value]="'doy'">DOY (YYYY-DDDTHH:MM:SS.sss)</mat-option>
         <mat-option [value]="'dom'">DOM (YYYY-MM-DDTHH:MM:SS.sss)</mat-option>
         <mat-option [value]="'julian'">Julian</mat-option>

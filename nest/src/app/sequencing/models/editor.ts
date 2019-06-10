@@ -8,7 +8,7 @@
  */
 
 import { StringTMap } from '../../shared/models';
-import { SequenceTab } from '.';
+import { SequenceTab } from './sequence-tab';
 
 export interface Editor {
   currentTab: string | null;

@@ -37,7 +37,7 @@ export class RavenStateSaveDialogComponent implements OnDestroy {
     ]);
     this.overwriteWarning = false;
 
-    combineLatest(this.name.valueChanges, this.http.get(data.source.url))
+    combineLatest([this.name.valueChanges, this.http.get(data.source.url)])
       .pipe(
         map(([value, sources]) => ({ value, sources })),
         takeUntil(this.ngUnsubscribe),

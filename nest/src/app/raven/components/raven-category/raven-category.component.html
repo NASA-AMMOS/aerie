@@ -8,5 +8,6 @@
   [menu]="source.actions"
   (action)="action.emit({ event: $event, source: source })"
   (activate)="expand.emit(source)"
-  (deactivate)="collapse.emit(source)">
+  (deactivate)="collapse.emit(source)"
+>
 </raven-tree-node>

@@ -190,9 +190,7 @@ export function verifyLine(
               lineNumber,
               message: `${command} is expecting an argument between ${lowerBound} and ${upperBound}, received ${curParameter}.
             -----
-            ${expectedParameter.name}: ${expectedParameter.type} (${
-                expectedParameter.units
-              })
+            ${expectedParameter.name}: ${expectedParameter.type} (${expectedParameter.units})
             Description:\t ${expectedParameter.help}
             Default:\t ${expectedParameter.defaultValue}
             `,
@@ -212,11 +210,7 @@ export function verifyLine(
               end,
               level: 'error',
               lineNumber,
-              message: `${
-                expectedParameter.name
-              } is expecting TRUE or FALSE. Received ${curParameter}.\n---\n${
-                expectedParameter.help
-              }
+              message: `${expectedParameter.name} is expecting TRUE or FALSE. Received ${curParameter}.\n---\n${expectedParameter.help}
               `,
               start,
             });
@@ -243,9 +237,7 @@ export function verifyLine(
                 end,
                 level: 'error',
                 lineNumber,
-                message: `${
-                  expectedParameter.name
-                } is expecting enum: ${enums}. Received ${curParameter}`,
+                message: `${expectedParameter.name} is expecting enum: ${enums}. Received ${curParameter}`,
                 start,
               });
             }

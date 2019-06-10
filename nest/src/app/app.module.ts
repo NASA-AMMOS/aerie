@@ -50,7 +50,15 @@ import { ToastEffects } from './shared/effects/toast.effects';
     OverlayModule,
     SortablejsModule.forRoot({}),
     AngularSplitModule.forRoot(),
-    StoreModule.forRoot(reducers, { metaReducers }),
+    StoreModule.forRoot(reducers, {
+      metaReducers,
+      runtimeChecks: {
+        strictActionImmutability: !environment.production,
+        strictActionSerializability: false,
+        strictStateImmutability: !environment.production,
+        strictStateSerializability: false,
+      },
+    }),
     StoreRouterConnectingModule.forRoot({
       stateKey: 'router',
     }),

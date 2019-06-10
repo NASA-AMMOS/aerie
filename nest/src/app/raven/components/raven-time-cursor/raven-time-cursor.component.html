@@ -4,16 +4,14 @@
   </mat-card-title>
 
   <mat-card-content>
-    <div
-      fxLayout="row"
-      fxLayoutAlign="start center"
-      fxLayoutWrap>
+    <div fxLayout="row" fxLayoutAlign="start center" fxLayoutWrap>
       <!-- Show Time Cursor. -->
       <div class="field">
         <mat-slide-toggle
           color="accent"
           [checked]="showTimeCursor"
-          (change)="displayTimeCursor.emit($event.checked)">
+          (change)="displayTimeCursor.emit($event.checked)"
+        >
           Show Time Cursor
         </mat-slide-toggle>
       </div>
@@ -25,7 +23,8 @@
             matInput
             readonly
             placeholder="Current Cursor Time"
-            [value]="cursorTime | timestamp">
+            [value]="cursorTime | timestamp"
+          />
         </mat-form-field>
       </div>
 
@@ -38,7 +37,8 @@
             [formControl]="setCursorTimeControl"
             placeholder="yyyy-dddThh:mm:ss.mmm"
             type="text"
-            (keyup.enter)="onSetCursorTime()">
+            (keyup.enter)="onSetCursorTime()"
+          />
         </mat-form-field>
       </div>
 
@@ -47,7 +47,12 @@
         <mat-slide-toggle
           color="accent"
           [checked]="autoPage"
-          (change)="updateTimeCursorSettings.emit({ update: { autoPage: $event.checked } })">
+          (change)="
+            updateTimeCursorSettings.emit({
+              update: { autoPage: $event.checked }
+            })
+          "
+        >
           Auto-page
         </mat-slide-toggle>
       </div>
@@ -62,7 +67,12 @@
           step="1"
           type="number"
           [value]="clockRate"
-          (change)="updateTimeCursorSettings.emit({ update: { clockRate: $event.target.valueAsNumber } })">
+          (change)="
+            updateTimeCursorSettings.emit({
+              update: { clockRate: $event.target.valueAsNumber }
+            })
+          "
+        />
       </div>
 
       <!-- Current Time Delta. -->
@@ -73,7 +83,12 @@
             placeholder="Current Time Delta(sec)"
             type="number"
             [value]="currentTimeDelta"
-            (change)="updateTimeCursorSettings.emit({ update: { currentTimeDelta: $event.target.valueAsNumber } })">
+            (change)="
+              updateTimeCursorSettings.emit({
+                update: { currentTimeDelta: $event.target.valueAsNumber }
+              })
+            "
+          />
         </mat-form-field>
       </div>
 
@@ -84,9 +99,15 @@
           <mat-icon
             class="color-button"
             [id]="color"
-            [ngStyle]="{'color':color}"
-            (click)="updateTimeCursorSettings.emit({ update: { cursorColor: color } })">
-            {{ cursorColor!==color && 'check_box_outline_blank' || 'check_box' }}
+            [ngStyle]="{ color: color }"
+            (click)="
+              updateTimeCursorSettings.emit({ update: { cursorColor: color } })
+            "
+          >
+            {{
+              (cursorColor !== color && 'check_box_outline_blank') ||
+                'check_box'
+            }}
           </mat-icon>
         </ng-container>
       </div>
@@ -103,7 +124,8 @@
             type="number"
             [formControl]="cursorWidthControl"
             [value]="cursorWidth"
-            (change)="onSetCursorWidth($event.target.valueAsNumber)">
+            (change)="onSetCursorWidth($event.target.valueAsNumber)"
+          />
         </mat-form-field>
       </div>
     </div>

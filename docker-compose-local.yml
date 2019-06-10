@@ -22,6 +22,15 @@ services:
     image: mongo:3.2
     ports: ["27018:27018"]
     volumes: ["plan_mongo_data:/data/db"]
+  sequencing:
+    build:
+      context: sequencing
+      dockerfile: Dockerfile
+    command: ["npm", "run", "start:dev"]
+    depends_on: ["sequencing_mongo"]
+    ports: ["27186:27186"]
+    restart: always
+    volumes: ["sequencing_logs:/var/log/sequencing"]
   sequencing_mongo:
     command: ["mongod", "--port", "27019"]
     image: mongo:3.2

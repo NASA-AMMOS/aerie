@@ -8,9 +8,12 @@
     <mat-form-field>
       <input
         matInput
-        (keyup)="updateEpochs.emit({ update: { dayCode: $event.target.value } })"
+        (keyup)="
+          updateEpochs.emit({ update: { dayCode: $event.target.value } })
+        "
         [value]="dayCode"
-        placeholder="Day Code">
+        placeholder="Day Code"
+      />
     </mat-form-field>
 
     <!-- Earth Sec to Epoch Sec. -->
@@ -18,9 +21,14 @@
       <input
         matInput
         type="number"
-        (keyup)="updateEpochs.emit({ update: { earthSecToEpochSec: $event.target.valueAsNumber } })"
+        (keyup)="
+          updateEpochs.emit({
+            update: { earthSecToEpochSec: $event.target.valueAsNumber }
+          })
+        "
         [value]="earthSecToEpochSec"
-        placeholder="Earth Sec to Epoch Sec">
+        placeholder="Earth Sec to Epoch Sec"
+      />
     </mat-form-field>
 
     <!-- Table. -->
@@ -32,7 +40,8 @@
       [enableSorting]="true"
       [enableFilter]="true"
       [rowData]="rowData"
-      (selectionChanged)="onSelectionChanged()">
+      (selectionChanged)="onSelectionChanged()"
+    >
     </ag-grid-angular>
   </mat-card-content>
 </mat-card>

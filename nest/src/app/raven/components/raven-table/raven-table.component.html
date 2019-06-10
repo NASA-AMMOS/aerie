@@ -4,11 +4,10 @@
 
 <mat-card
   *ngIf="selectedSubBand && selectedSubBand.type !== 'divider'"
-  class="grid-container">
+  class="grid-container"
+>
   <div class="reset-columns-button">
-    <button
-      mat-raised-button
-      (click)="onResetColumns()">
+    <button mat-raised-button (click)="onResetColumns()">
       Reset Columns
     </button>
   </div>
@@ -28,6 +27,7 @@
     (columnVisible)="emitUpdateTableColumns()"
     (columnMoved)="emitUpdateTableColumns()"
     (columnResized)="emitUpdateTableColumns()"
-    (sortChanged)="emitUpdateTableColumns()">
+    (sortChanged)="emitUpdateTableColumns()"
+  >
   </ag-grid-angular>
 </mat-card>

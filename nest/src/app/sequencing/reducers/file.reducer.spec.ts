@@ -119,7 +119,7 @@ describe('File reducer', () => {
   });
 
   it('should handle CreateTab', () => {
-    const result = reducer(initialState, new CreateTab(defaultEditorId));
+    const result = reducer(initialState, new CreateTab(defaultEditorId, '11'));
     expect(result).toEqual(mockStateAfterCreateTab);
   });
 
@@ -133,8 +133,8 @@ describe('File reducer', () => {
   });
 
   it('should handle switchTab', () => {
-    let result = reducer(initialState, new CreateTab(defaultEditorId));
-    result = reducer(result, new CreateTab(defaultEditorId));
+    let result = reducer(initialState, new CreateTab(defaultEditorId, '12'));
+    result = reducer(result, new CreateTab(defaultEditorId, '13'));
 
     expect(result).toEqual(mockStateForSwitchTab);
 
@@ -144,7 +144,7 @@ describe('File reducer', () => {
   });
 
   it('should handle updateTab', () => {
-    let result = reducer(initialState, new CreateTab(defaultEditorId));
+    let result = reducer(initialState, new CreateTab(defaultEditorId, '14'));
     result = reducer(result, new UpdateTab('14', 'hello', defaultEditorId));
 
     if (result.editors.editor1.openedTabs)

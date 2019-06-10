@@ -9,7 +9,6 @@
 
 import * as fromRouter from '@ngrx/router-store';
 import { ActionReducer, ActionReducerMap, MetaReducer } from '@ngrx/store';
-import { storeFreeze } from 'ngrx-store-freeze';
 import { ConfigState } from '../config';
 import { environment } from '../environments/environment';
 import * as fromConfig from './shared/reducers/config.reducer';
@@ -41,5 +40,5 @@ export function logger(
 }
 
 export const metaReducers: MetaReducer<AppState>[] = !environment.production
-  ? [logger, storeFreeze]
+  ? [logger]
   : [];

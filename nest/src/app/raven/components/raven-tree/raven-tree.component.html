@@ -5,7 +5,8 @@
     [source]="source"
     (action)="action.emit($event)"
     (collapse)="collapse.emit($event)"
-    (expand)="expand.emit($event)">
+    (expand)="expand.emit($event)"
+  >
   </raven-category>
 
   <!-- Custom Filter. -->
@@ -13,7 +14,8 @@
     *ngIf="source.type === 'customFilter'"
     [source]="source"
     (action)="action.emit($event)"
-    (selectCustomFilter)="selectCustomFilter.emit($event)">
+    (selectCustomFilter)="selectCustomFilter.emit($event)"
+  >
   </raven-custom-filter>
 
   <!-- Custom Graphable. -->
@@ -21,7 +23,8 @@
     *ngIf="source.type === 'customGraphable'"
     [source]="source"
     (action)="action.emit($event)"
-    (addCustomGraph)="addCustomGraph.emit($event)">
+    (addCustomGraph)="addCustomGraph.emit($event)"
+  >
   </raven-custom-graphable>
 
   <!-- File. -->
@@ -30,7 +33,8 @@
     [source]="source"
     (action)="action.emit($event)"
     (collapse)="collapse.emit($event)"
-    (expand)="expand.emit($event)">
+    (expand)="expand.emit($event)"
+  >
   </raven-file>
 
   <!-- Filter. -->
@@ -38,7 +42,8 @@
     *ngIf="source.type === 'filter'"
     [source]="source"
     (addFilter)="addFilter.emit($event)"
-    (removeFilter)="removeFilter.emit($event)">
+    (removeFilter)="removeFilter.emit($event)"
+  >
   </raven-filter>
 
   <!-- Folder. -->
@@ -47,7 +52,8 @@
     [source]="source"
     (action)="action.emit($event)"
     (collapse)="collapse.emit($event)"
-    (expand)="expand.emit($event)">
+    (expand)="expand.emit($event)"
+  >
   </raven-folder>
 
   <!-- Graphable. -->
@@ -56,7 +62,8 @@
     [source]="source"
     (action)="action.emit($event)"
     (close)="close.emit($event)"
-    (open)="open.emit($event)">
+    (open)="open.emit($event)"
+  >
   </raven-graphable>
 
   <!-- Graphable Filter. -->
@@ -65,7 +72,8 @@
     [source]="source"
     (action)="action.emit($event)"
     (addGraphableFilter)="addGraphableFilter.emit($event)"
-    (removeGraphableFilter)="removeGraphableFilter.emit($event)">
+    (removeGraphableFilter)="removeGraphableFilter.emit($event)"
+  >
   </raven-graphable-filter>
 
   <!-- Children Nodes. -->
@@ -89,7 +97,8 @@
         (removeFilter)="removeFilter.emit($event)"
         (removeGraphableFilter)="removeGraphableFilter.emit($event)"
         (select)="select.emit($event)"
-        (selectCustomFilter)="selectCustomFilter.emit($event)">
+        (selectCustomFilter)="selectCustomFilter.emit($event)"
+      >
       </raven-tree>
     </li>
   </ul>

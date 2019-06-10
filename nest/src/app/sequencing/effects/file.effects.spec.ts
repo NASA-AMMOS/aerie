@@ -9,7 +9,6 @@
 
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { Store, StoreModule } from '@ngrx/store';
 import { addMatchers, cold, hot, initTestScheduler } from 'jasmine-marbles';
@@ -30,7 +29,6 @@ import { FileEffects } from './file.effects';
 describe('FileEffects', () => {
   let actions$: Observable<any>;
   let effects: FileEffects;
-  let metadata: EffectsMetadata<FileEffects>;
 
   const loadingBarShow = new LoadingBarShow();
   const loadingBarHide = new LoadingBarHide();
@@ -57,14 +55,9 @@ describe('FileEffects', () => {
     initTestScheduler();
     addMatchers();
     effects = TestBed.get(FileEffects);
-    metadata = getEffectsMetadata(effects);
   });
 
   describe('fetchChildren$', () => {
-    it('should register fetchChildren$ that does dispatch an action', () => {
-      expect(metadata.fetchChildren$).toEqual({ dispatch: true });
-    });
-
     it('should return a UpdateChildren action with data upon success', () => {
       const parentId = 'root';
       const children = getChildren(parentId);

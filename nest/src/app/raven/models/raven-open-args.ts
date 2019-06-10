@@ -15,9 +15,7 @@ import {
   RavenSource,
 } from './index';
 
-import {
-  StringTMap,
-} from '../../shared/models/index';
+import { StringTMap } from '../../shared/models/index';
 
 export interface RavenOpenArgs {
   bandId: string | null;

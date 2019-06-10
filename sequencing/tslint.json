@@ -1,5 +1,5 @@
 {
-  "extends": ["tslint-eslint-rules", "tslint-config-prettier"],
+  "extends": ["tslint-config-prettier"],
   "rules": {
     "arrow-return-shorthand": true,
     "callable-types": true,
@@ -39,7 +39,6 @@
     "no-switch-case-fall-through": true,
     "no-unnecessary-initializer": true,
     "no-unused-expression": true,
-    "no-use-before-declare": true,
     "no-var-keyword": true,
     "object-literal-sort-keys": true,
     "ordered-imports": true,

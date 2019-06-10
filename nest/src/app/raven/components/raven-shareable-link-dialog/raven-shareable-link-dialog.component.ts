@@ -56,10 +56,10 @@ export class RavenShareableLinkDialogComponent
     public http: HttpClient,
     @Inject(MAT_DIALOG_DATA) public data: { state: RavenAppState },
   ) {
-    combineLatest(
+    combineLatest([
       this.shareableNameControl.valueChanges,
       this.http.get(this.getStateUrl()),
-    )
+    ])
       .pipe(
         map(([value, sources]) => ({ value, sources })),
         takeUntil(this.ngUnsubscribe),

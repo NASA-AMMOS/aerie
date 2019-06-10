@@ -9,5 +9,6 @@
   [menu]="source.actions"
   [multiselectable]="true"
   (action)="action.emit({ event: $event, source: source })"
-  (activate)="selectCustomFilter.emit(source)">
+  (activate)="selectCustomFilter.emit(source)"
+>
 </raven-tree-node>

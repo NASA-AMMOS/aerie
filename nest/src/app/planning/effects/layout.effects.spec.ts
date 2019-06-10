@@ -8,7 +8,6 @@
  */
 
 import { TestBed } from '@angular/core/testing';
-import { EffectsMetadata, getEffectsMetadata } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { addMatchers, cold, hot, initTestScheduler } from 'jasmine-marbles';
 import { Observable } from 'rxjs';
@@ -22,7 +21,6 @@ import { LayoutEffects } from './layout.effects';
 describe('LayoutEffects', () => {
   let actions$: Observable<any>;
   let effects: LayoutEffects;
-  let metadata: EffectsMetadata<LayoutEffects>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -33,20 +31,9 @@ describe('LayoutEffects', () => {
     initTestScheduler();
     addMatchers();
     effects = TestBed.get(LayoutEffects);
-    metadata = getEffectsMetadata(effects);
-  });
-
-  describe('resize$', () => {
-    it('should register resize$ that does not dispatch an action', () => {
-      expect(metadata.resize$).toEqual({ dispatch: false });
-    });
   });
 
   describe('toggleDrawer$', () => {
-    it('should register toggleDrawer$ that dispatches an action', () => {
-      expect(metadata.toggleDrawer$).toEqual({ dispatch: true });
-    });
-
     it('should return a Resize() for a ToggleActivityTypesDrawer', () => {
       const action = new ToggleActivityTypesDrawer();
       const result = new Resize();
