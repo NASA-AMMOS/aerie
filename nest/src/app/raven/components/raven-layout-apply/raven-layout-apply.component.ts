@@ -18,7 +18,7 @@ import {
 } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatSelect } from '@angular/material';
-import keyBy from 'lodash/keyBy';
+import keyBy from 'lodash-es/keyBy';
 import { StringTMap } from '../../../shared/models';
 import {
   RavenApplyLayoutUpdate,

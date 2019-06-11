@@ -8,7 +8,7 @@
  */
 
 import { Pipe, PipeTransform } from '@angular/core';
-import keyBy from 'lodash/keyBy';
+import keyBy from 'lodash-es/keyBy';
 
 @Pipe({
   name: 'keyBy',

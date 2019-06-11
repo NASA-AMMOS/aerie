@@ -7,8 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import omit from 'lodash/omit';
-import without from 'lodash/without';
+import omit from 'lodash-es/omit';
+import without from 'lodash-es/without';
 import { StringTMap, TimeRange } from '../../shared/models';
 import { getMaxTimeRange } from '../../shared/util';
 import {

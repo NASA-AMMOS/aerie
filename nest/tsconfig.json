@@ -17,11 +17,8 @@
     "suppressImplicitAnyIndexErrors": true,
     "noUnusedLocals": true,
     "target": "es2015",
-    "typeRoots": ["node_modules/@types", "manual_typings"],
+    "typeRoots": ["node_modules/@types"],
     "lib": ["es2017", "dom"],
-    "allowSyntheticDefaultImports": true,
-    "paths": {
-      "lodash/*": ["node_modules/@types/lodash-es/*"]
-    }
+    "allowSyntheticDefaultImports": true
   }
 }

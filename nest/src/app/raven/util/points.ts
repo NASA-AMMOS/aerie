@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import uniqueId from 'lodash/uniqueId';
+import uniqueId from 'lodash-es/uniqueId';
 import { StringTMap } from '../../shared/models';
 import { fromDuration, timestamp, utc } from '../../shared/util/time';
 import {
