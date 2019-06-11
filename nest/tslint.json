@@ -8,7 +8,7 @@
     "deprecation": {
       "severity": "warn"
     },
-    "import-blacklist": [true, "rxjs/Rx", "lodash"],
+    "import-blacklist": [true, "rxjs/Rx", "lodash-es"],
     "interface-over-type-literal": true,
     "label-position": true,
     "member-access": false,
