@@ -3,7 +3,7 @@
   "version": "2.2.0",
   "private": true,
   "scripts": {
-    "analyze": "webpack-bundle-analyzer ./dist/stats.json",
+    "analyze": "npx webpack-bundle-analyzer ./dist/stats.json",
     "build-prod": "ng build --configuration=prod",
     "build:stats": "ng build --configuration=prod --stats-json",
     "build-prod-mpsserver": "ng build --outputPath=dist-mpsserver --configuration=prod-mpsserver --base-href /mpsserver/raven/ --deploy-url /mpsserver/raven/",
