@@ -8,7 +8,7 @@
  */
 
 import { Injectable } from '@angular/core';
-import { keyBy } from 'lodash';
+import keyBy from 'lodash/keyBy';
 import { Observable, Observer } from 'rxjs';
 import { SequenceFile } from '../../../../../sequencing/src/models';
 import * as mocks from '../../../../../sequencing/test/mocks';

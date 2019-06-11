@@ -7,7 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { sortBy, uniqueId } from 'lodash';
+import sortBy from 'lodash/sortBy';
+import uniqueId from 'lodash/uniqueId';
 import { StringTMap, TimeRange } from '../../shared/models';
 import {
   MpsServerActivityPoint,

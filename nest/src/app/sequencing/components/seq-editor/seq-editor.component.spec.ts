@@ -8,7 +8,7 @@
  */
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { keyBy } from 'lodash';
+import keyBy from 'lodash/keyBy';
 import { mpsCommands } from '../../mocks';
 import { SeqEditorComponent } from './seq-editor.component';
 import { SeqEditorModule } from './seq-editor.module';

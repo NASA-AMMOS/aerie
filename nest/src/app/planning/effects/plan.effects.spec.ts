@@ -15,7 +15,7 @@ import { Router } from '@angular/router';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { Store, StoreModule } from '@ngrx/store';
 import { addMatchers, cold, hot, initTestScheduler } from 'jasmine-marbles';
-import { keyBy } from 'lodash';
+import keyBy from 'lodash/keyBy';
 import { Observable, of } from 'rxjs';
 import { reducers as rootReducers } from '../../app-store';
 import { ShowToast } from '../../shared/actions/toast.actions';

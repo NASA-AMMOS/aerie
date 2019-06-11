@@ -7,7 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { keyBy, omit } from 'lodash';
+import keyBy from 'lodash/keyBy';
+import omit from 'lodash/omit';
 import {
   ActivityInstance,
   Plan,

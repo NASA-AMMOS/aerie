@@ -11,7 +11,7 @@ import { Component, Inject, OnDestroy } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material';
 import { select, Store } from '@ngrx/store';
-import { keyBy } from 'lodash';
+import keyBy from 'lodash/keyBy';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AppState } from '../../../app-store';

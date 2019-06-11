@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { keyBy } from 'lodash';
+import keyBy from 'lodash/keyBy';
 import { CommandDictionary, MpsCommand, StringTMap } from '../../shared/models';
 import {
   CommandDictionaryActions,
