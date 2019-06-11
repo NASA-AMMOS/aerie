@@ -8,7 +8,6 @@
  */
 
 import { ConfigState } from '../../../config';
-
 import {
   NavigationDrawerStates,
   ToggleNestNavigationDrawer,
@@ -16,7 +15,6 @@ import {
   UpdateMpsServerSettings,
   UpdateRavenSettings,
 } from '../actions/config.actions';
-
 import { initialState, reducer, toggleDrawer } from './config.reducer';
 
 describe('config reducer', () => {
@@ -31,11 +29,11 @@ describe('config reducer', () => {
   });
 
   it('handle UpdateDefaultBandSettings activityLayout', () => {
-    configState = reducer(
+    const result = reducer(
       configState,
       new UpdateDefaultBandSettings({ activityLayout: 2 }),
     );
-    expect(configState).toEqual({
+    expect(result).toEqual({
       ...initialState,
       raven: {
         ...initialState.raven,
@@ -48,11 +46,11 @@ describe('config reducer', () => {
   });
 
   it('handle UpdateDefaultBandSettings icon', () => {
-    configState = reducer(
+    const result = reducer(
       configState,
       new UpdateDefaultBandSettings({ icon: 'triangle' }),
     );
-    expect(configState).toEqual({
+    expect(result).toEqual({
       ...initialState,
       raven: {
         ...initialState.raven,
@@ -65,11 +63,11 @@ describe('config reducer', () => {
   });
 
   it('handle UpdateDefaultBandSettings labelFont', () => {
-    configState = reducer(
+    const result = reducer(
       configState,
       new UpdateDefaultBandSettings({ labelFont: 'Courier' }),
     );
-    expect(configState).toEqual({
+    expect(result).toEqual({
       ...initialState,
       raven: {
         ...initialState.raven,
@@ -82,11 +80,11 @@ describe('config reducer', () => {
   });
 
   it('handle UpdateDefaultBandSettings labelFontSize', () => {
-    configState = reducer(
+    const result = reducer(
       configState,
       new UpdateDefaultBandSettings({ labelFontSize: 11 }),
     );
-    expect(configState).toEqual({
+    expect(result).toEqual({
       ...initialState,
       raven: {
         ...initialState.raven,
@@ -99,11 +97,11 @@ describe('config reducer', () => {
   });
 
   it('handle UpdateDefaultBandSettings labelWidth', () => {
-    configState = reducer(
+    const result = reducer(
       configState,
       new UpdateDefaultBandSettings({ labelWidth: 50 }),
     );
-    expect(configState).toEqual({
+    expect(result).toEqual({
       ...initialState,
       raven: {
         ...initialState.raven,
@@ -116,11 +114,11 @@ describe('config reducer', () => {
   });
 
   it('handle UpdateDefaultBandSettings resourceColor', () => {
-    configState = reducer(
+    const result = reducer(
       configState,
       new UpdateDefaultBandSettings({ resourceColor: '#00ff00' }),
     );
-    expect(configState).toEqual({
+    expect(result).toEqual({
       ...initialState,
       raven: {
         ...initialState.raven,
@@ -133,11 +131,11 @@ describe('config reducer', () => {
   });
 
   it('handle UpdateDefaultBandSettings resourceFillColor', () => {
-    configState = reducer(
+    const result = reducer(
       configState,
       new UpdateDefaultBandSettings({ resourceFillColor: '#ff0000' }),
     );
-    expect(configState).toEqual({
+    expect(result).toEqual({
       ...initialState,
       raven: {
         ...initialState.raven,
@@ -150,11 +148,11 @@ describe('config reducer', () => {
   });
 
   it('handle UpdateDefaultBandSettings showTooltip', () => {
-    configState = reducer(
+    const result = reducer(
       configState,
       new UpdateDefaultBandSettings({ showTooltip: true }),
     );
-    expect(configState).toEqual({
+    expect(result).toEqual({
       ...initialState,
       raven: {
         ...initialState.raven,
@@ -167,13 +165,13 @@ describe('config reducer', () => {
   });
 
   it('handle UpdateMpsServerSettings epochsUrl', () => {
-    configState = reducer(
+    const result = reducer(
       configState,
       new UpdateMpsServerSettings({
         epochsUrl: 'mpsserver/api/v2/fs-mongodb/leucadia/someEpoch.csv',
       }),
     );
-    expect(configState).toEqual({
+    expect(result).toEqual({
       ...initialState,
       mpsServer: {
         ...initialState.mpsServer,
@@ -183,11 +181,11 @@ describe('config reducer', () => {
   });
 
   it('handle UpdateRavenSettings itarMessage', () => {
-    configState = reducer(
+    const result = reducer(
       configState,
       new UpdateRavenSettings({ itarMessage: 'test itar message' }),
     );
-    expect(configState).toEqual({
+    expect(result).toEqual({
       ...initialState,
       raven: {
         ...initialState.raven,
@@ -201,28 +199,28 @@ describe('config reducer', () => {
       NavigationDrawerStates.Collapsed,
     );
 
-    configState = reducer(configState, new ToggleNestNavigationDrawer());
+    let result = reducer(configState, new ToggleNestNavigationDrawer());
+    expect(result.navigationDrawerState).toBe(NavigationDrawerStates.Closed);
 
-    expect(configState.navigationDrawerState).toBe(
-      NavigationDrawerStates.Closed,
-    );
-
-    configState = reducer(configState, new ToggleNestNavigationDrawer());
-
-    expect(configState.navigationDrawerState).toBe(
-      NavigationDrawerStates.Collapsed,
-    );
+    result = reducer(result, new ToggleNestNavigationDrawer());
+    expect(result.navigationDrawerState).toBe(NavigationDrawerStates.Collapsed);
   });
 
   it('should collapse a closed drawer', () => {
-    configState.navigationDrawerState = NavigationDrawerStates.Closed;
-    const drawer = toggleDrawer(configState);
-    expect(drawer).toBe(NavigationDrawerStates.Collapsed);
+    const newConfigState = {
+      ...configState,
+      navigationDrawerState: NavigationDrawerStates.Closed,
+    };
+    const result = toggleDrawer(newConfigState);
+    expect(result).toBe(NavigationDrawerStates.Collapsed);
   });
 
   it('should close a collapsed drawer', () => {
-    configState.navigationDrawerState = NavigationDrawerStates.Collapsed;
-    const drawer = toggleDrawer(configState);
-    expect(drawer).toBe(NavigationDrawerStates.Closed);
+    const newConfigState = {
+      ...configState,
+      navigationDrawerState: NavigationDrawerStates.Collapsed,
+    };
+    const result = toggleDrawer(newConfigState);
+    expect(result).toBe(NavigationDrawerStates.Closed);
   });
 });

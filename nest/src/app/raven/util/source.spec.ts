@@ -129,11 +129,6 @@ describe('source.ts', () => {
         'https://a/b/c?format=TMS&legend=ips&filter=(command=%5B.*IPS.*%5D)&',
       );
     });
-
-    it(`should return sourceUrl with filter`, () => {
-      // TODO.
-      // expect(getFormattedSourceUrl(graphableFilterKickoff, customFilter, filtersByTarget)).toEqual('https://a/b/c?events=kickoff&');
-    });
   });
 
   describe('getOutputDataUrl', () => {
@@ -309,12 +304,6 @@ describe('source.ts', () => {
           '/a/b/c/d/e/v',
         ],
       });
-    });
-  });
-
-  describe('getSourceIdsForSubBand', () => {
-    it(`should return all related filter sourceIds for subBand`, () => {
-      // TODO
     });
   });
 

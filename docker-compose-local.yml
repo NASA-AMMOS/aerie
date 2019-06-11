@@ -42,4 +42,5 @@ volumes:
   adaptation_logs:
   plan_logs:
   plan_mongo_data:
+  sequencing_logs:
   sequencing_mongo_data:
