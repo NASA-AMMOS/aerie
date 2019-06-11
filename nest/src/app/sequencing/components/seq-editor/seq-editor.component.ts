@@ -140,6 +140,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
     this.setupAutocomplete();
     this.setupTooltip();
     this.setupTooltipHandler();
+    this.populateEditors();
   }
 
   /**
@@ -391,5 +392,16 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
 
   onUpdateTab(id: string, text: string, editorId: string) {
     this.updateTab.emit({ id, text, editorId });
+  }
+
+  /**
+   * Fills the editors with the opened files values
+   * Use Case: A user edits files then switches to another app
+   * When the user comes back, the editors need to be repopulated with the previous text
+   */
+  private populateEditors() {
+    if (this.file) {
+      this.onUpdateTab(this.file.id, this.file.text, this.editorState.id);
+    }
   }
 }
