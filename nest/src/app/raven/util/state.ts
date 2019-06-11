@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { uniqueId } from 'lodash';
+import uniqueId from 'lodash-es/uniqueId';
 import { timestamp } from '../../shared/util/time';
 import { RavenState, RavenSubBand } from '../models';
 import { RavenAppState } from '../raven-store';

@@ -19,7 +19,8 @@ import {
 } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { RowNode } from 'ag-grid-community';
-import { pickBy, startsWith } from 'lodash';
+import pickBy from 'lodash-es/pickBy';
+import startsWith from 'lodash-es/startsWith';
 import {
   dateToTimestring,
   dhms,
