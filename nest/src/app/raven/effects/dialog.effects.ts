@@ -11,7 +11,7 @@ import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
-import { keyBy } from 'lodash';
+import keyBy from 'lodash-es/keyBy';
 import { Observable, of, zip } from 'rxjs';
 import { exhaustMap, map, withLatestFrom } from 'rxjs/operators';
 import { NestConfirmDialogComponent } from '../../shared/components/nest-confirm-dialog/nest-confirm-dialog.component';

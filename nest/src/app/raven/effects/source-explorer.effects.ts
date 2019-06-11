@@ -11,7 +11,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
-import { flatten, uniqueId } from 'lodash';
+import flatten from 'lodash-es/flatten';
+import uniqueId from 'lodash-es/uniqueId';
 import { combineLatest, concat, forkJoin, Observable, of } from 'rxjs';
 import {
   catchError,
