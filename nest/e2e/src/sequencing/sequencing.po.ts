@@ -30,8 +30,11 @@ export class SequencingPage {
 
   helpDialog = element(by.className('mat-dialog-container'));
 
+  editorToolbarMenus = element.all(by.className('mat-menu-content'));
+  panelMenuIndex = 0;
+  toolsMenuIndex = 1;
+
   panelButton = element(by.id('sequencing-panels-button'));
-  panelMenu = element(by.css('.mat-menu-content'));
   leftPanelToggleButton = element(
     by.id('sequencing-panels-left-toggle-button'),
   );
@@ -39,13 +42,16 @@ export class SequencingPage {
     by.id('sequencing-panels-right-toggle-button'),
   );
   addEditorPanelButton = element(by.id('sequencing-add-editor-pane-button'));
+  toggleEditorPanelsDirectionButton = element(
+    by.id('sequencing-toggle-editor-pane-direction'),
+  );
   leftPanel = element(by.id('left-panel-area'));
   middlePanel = element(by.id('middle-panel-area'));
+  editorPanelSplit = element(by.id('sequencing-editor-panel-split'));
   rightPanel = element(by.id('right-panel-area'));
   editorPanels = element.all(by.className('editor-panel'));
 
   toolsButton = element(by.id('sequencing-editor-button'));
-  toolsMenu = element(by.className('mat-menu-content'));
   autocompleteButton = element(
     by.id('sequencing-editor-toggle-autocomplete-button'),
   );
@@ -70,7 +76,7 @@ export class SequencingPage {
     )
     .first();
 
-  addTabButton = element(by.id('seq-create-tab-button'));
+  addTabButton = element.all(by.id('seq-create-tab-button'));
   tabs = element.all(by.className('seq-tab'));
   tabTitles = element.all(by.css('.seq-tab-text'));
   tabCloseButtons = element.all(by.css('.seq-tab-icon'));
@@ -96,7 +102,7 @@ export class SequencingPage {
   }
 
   addTab() {
-    this.addTabButton.click();
+    this.addTabButton.get(0).click();
   }
 
   sendKeysToCodeMirror(text: string) {

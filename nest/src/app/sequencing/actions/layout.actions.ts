@@ -13,8 +13,13 @@ export enum LayoutActionTypes {
   LoadingBarHide = '[sequencing-layout] loading_bar_hide',
   LoadingBarShow = '[sequencing-layout] loading_bar_show',
   SetPanelSizes = '[sequencing-layout] set_panel_sizes',
+  ToggleEditorPanelsDirection = '[sequencing-layout] toggle_editor_panels_direction',
   ToggleLeftPanelVisible = '[sequencing-layout] toggle_left_panel_visible',
   ToggleRightPanelVisible = '[sequencing-layout] toggle_right_panel_visible',
+}
+
+export class ToggleEditorPanelsDirection implements Action {
+  readonly type = LayoutActionTypes.ToggleEditorPanelsDirection;
 }
 
 export class LoadingBarHide implements Action {
@@ -42,5 +47,6 @@ export type LayoutActions =
   | LoadingBarHide
   | LoadingBarShow
   | SetPanelSizes
+  | ToggleEditorPanelsDirection
   | ToggleLeftPanelVisible
   | ToggleRightPanelVisible;

@@ -15,6 +15,7 @@ import {
 } from '../actions/layout.actions';
 
 export interface LayoutState {
+  editorPanelsDirection: string;
   leftPanelSize: number;
   leftPanelVisible: boolean;
   middlePanelSize: number;
@@ -25,6 +26,7 @@ export interface LayoutState {
 }
 
 export const initialState: LayoutState = {
+  editorPanelsDirection: 'vertical',
   leftPanelSize: 20,
   leftPanelVisible: true,
   middlePanelSize: 50,
@@ -49,6 +51,8 @@ export function reducer(
       return { ...state, showLoadingBar: state.showLoadingBar + 1 };
     case LayoutActionTypes.SetPanelSizes:
       return setPanelSizes(state, action);
+    case LayoutActionTypes.ToggleEditorPanelsDirection:
+      return toggleEditorPanelsDirection(state);
     case LayoutActionTypes.ToggleLeftPanelVisible:
       return { ...state, leftPanelVisible: !state.leftPanelVisible };
     case LayoutActionTypes.ToggleRightPanelVisible:
@@ -82,5 +86,16 @@ function setPanelSizes(state: LayoutState, action: SetPanelSizes): LayoutState {
     leftPanelSize,
     middlePanelSize,
     rightPanelSize,
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the `ToggleEditorPanelsDirection` action.
+ */
+function toggleEditorPanelsDirection(state: LayoutState): LayoutState {
+  return {
+    ...state,
+    editorPanelsDirection:
+      state.editorPanelsDirection === 'horizontal' ? 'vertical' : 'horizontal',
   };
 }

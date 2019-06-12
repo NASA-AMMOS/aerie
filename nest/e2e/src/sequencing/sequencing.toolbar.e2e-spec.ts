@@ -7,7 +7,6 @@ import {
 import { clickHarder, hasClass } from '../utils';
 import { SequencingPage } from './sequencing.po';
 
-// tslint:disable-next-line: no-focused-tests
 describe('/sequencing.toolbar', () => {
   let page: SequencingPage;
 
@@ -27,7 +26,7 @@ describe('/sequencing.toolbar', () => {
     );
     page.toolsButton.click();
     browser.wait(
-      EC.visibilityOf(page.toolsMenu),
+      EC.visibilityOf(page.editorToolbarMenus.get(0)),
       page.waitTimeout,
       'Tools menu did not appear',
     );
@@ -55,7 +54,7 @@ describe('/sequencing.toolbar', () => {
     );
     page.toolsButton.click();
     browser.wait(
-      EC.visibilityOf(page.toolsMenu),
+      EC.visibilityOf(page.editorToolbarMenus.get(0)),
       page.waitTimeout,
       'Tools menu did not appear',
     );

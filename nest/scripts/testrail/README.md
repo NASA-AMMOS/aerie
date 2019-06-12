@@ -1,5 +1,7 @@
 # TestRail
 
+This folder contains the [testrail.py](./testrail.py) script that is used to upload test results directly to TestRail.
+
 ## Upload Protractor Test Results
 
 1. Create an API Key in [TestRail](https://cae-testrail.jpl.nasa.gov/testrail/index.php?/mysettings) in your TestRail user settings.
