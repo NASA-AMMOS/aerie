@@ -11,9 +11,9 @@ import {
   LoadingBarHide,
   LoadingBarShow,
   SetPanelSizes,
+  ToggleEditorPanelsDirection,
   ToggleLeftPanelVisible,
   ToggleRightPanelVisible,
-  ToggleEditorPanelsDirection,
 } from '../actions/layout.actions';
 import { initialState, reducer } from './layout.reducer';
 
