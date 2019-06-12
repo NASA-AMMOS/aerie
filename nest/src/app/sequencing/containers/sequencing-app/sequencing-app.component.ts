@@ -25,6 +25,7 @@ import { AddText, OpenEditorHelpDialog } from '../../actions/editor.actions';
 import { AddEditor, SetActiveEditor } from '../../actions/file.actions';
 import {
   SetPanelSizes,
+  ToggleEditorPanelsDirection,
   ToggleLeftPanelVisible,
   ToggleRightPanelVisible,
 } from '../../actions/layout.actions';
@@ -35,6 +36,7 @@ import {
   getCommands,
   getCommandsByName,
   getDictionaries,
+  getEditorPanelsDirection,
   getEditorsList,
   getLeftPanelSize,
   getLeftPanelVisible,
@@ -66,6 +68,7 @@ export class SequencingAppComponent implements OnDestroy {
   rightPanelVisible$: Observable<boolean>;
   selectedDictionaryId$: Observable<string | null>;
   editorsList$: Observable<Editor[]>;
+  editorPanelsDirection$: Observable<string>;
   showLoadingBar$: Observable<boolean>;
 
   commandsByName: StringTMap<MpsCommand>;
@@ -93,6 +96,9 @@ export class SequencingAppComponent implements OnDestroy {
       select(getSelectedDictionaryId),
     );
     this.editorsList$ = this.store.pipe(select(getEditorsList));
+    this.editorPanelsDirection$ = this.store.pipe(
+      select(getEditorPanelsDirection),
+    );
     this.showLoadingBar$ = this.store.pipe(select(getShowLoadingBar));
 
     this.commandsByName$
@@ -156,6 +162,10 @@ export class SequencingAppComponent implements OnDestroy {
       ...this.editorOptions,
       [key]: !this.editorOptions[key],
     };
+  }
+
+  toggleEditorPanelsDirection() {
+    this.store.dispatch(new ToggleEditorPanelsDirection());
   }
 
   onOpenEditorHelpDialog(): void {

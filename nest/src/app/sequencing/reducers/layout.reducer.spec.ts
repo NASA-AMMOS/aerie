@@ -13,6 +13,7 @@ import {
   SetPanelSizes,
   ToggleLeftPanelVisible,
   ToggleRightPanelVisible,
+  ToggleEditorPanelsDirection,
 } from '../actions/layout.actions';
 import { initialState, reducer } from './layout.reducer';
 
@@ -75,6 +76,25 @@ describe('Layout reducer', () => {
     expect(result).toEqual({
       ...initialState,
       rightPanelVisible: false,
+    });
+  });
+
+  it('should handle ToggleEditorPanelsDirection', () => {
+    const horizontalState = reducer(
+      initialState,
+      new ToggleEditorPanelsDirection(),
+    );
+    const verticalState = reducer(
+      horizontalState,
+      new ToggleEditorPanelsDirection(),
+    );
+
+    expect(horizontalState).toEqual({
+      ...initialState,
+      editorPanelsDirection: 'horizontal',
+    });
+    expect(verticalState).toEqual({
+      ...initialState,
     });
   });
 });

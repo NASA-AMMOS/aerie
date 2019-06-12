@@ -1,5 +1,5 @@
 import { browser, ExpectedConditions as EC, logging } from 'protractor';
-import { clickHarder } from '../utils';
+import { clickHarder, hasClass } from '../utils';
 import { SequencingPage } from './sequencing.po';
 
 describe('/sequencing.panels', () => {
@@ -15,8 +15,14 @@ describe('/sequencing.panels', () => {
 
   it('[C136493] A user SHOULD be able to open the panel menu', () => {
     page.panelButton.click();
-    browser.wait(EC.visibilityOf(page.panelMenu), page.waitTimeout);
-    expect(page.panelMenu.isDisplayed()).toBe(true);
+    browser.wait(
+      EC.visibilityOf(page.editorToolbarMenus.get(page.panelMenuIndex)),
+      page.waitTimeout,
+      'Panel menu did not appear',
+    );
+    expect(page.editorToolbarMenus.get(page.panelMenuIndex).isDisplayed()).toBe(
+      true,
+    );
   });
 
   it('[C136494] A user SHOULD be able to toggle the left panel off and on', () => {
@@ -25,17 +31,17 @@ describe('/sequencing.panels', () => {
     page.panelButton.click();
 
     browser.wait(
-      EC.visibilityOf(page.panelMenu),
-      1000,
-      'Panels menu should appear',
+      EC.visibilityOf(page.editorToolbarMenus.get(0)),
+      page.waitTimeout,
+      'Panels menu did not appear',
     );
 
     clickHarder('#sequencing-panels-left-toggle-button');
 
     browser.wait(
       EC.invisibilityOf(page.leftPanel),
-      2000,
-      'Left panel should no longer be visible',
+      page.waitTimeout,
+      'Left panel is still visible',
     );
 
     expect(page.leftPanel.isDisplayed()).toBe(false);
@@ -43,17 +49,17 @@ describe('/sequencing.panels', () => {
     page.panelButton.click();
 
     browser.wait(
-      EC.visibilityOf(page.panelMenu),
-      1000,
-      'Panels menu should appear',
+      EC.visibilityOf(page.editorToolbarMenus.get(0)),
+      page.waitTimeout,
+      'Panels is not visible',
     );
 
     clickHarder('#sequencing-panels-left-toggle-button');
 
     browser.wait(
       EC.visibilityOf(page.leftPanel),
-      1000,
-      'Left panel should be visible',
+      page.waitTimeout,
+      'Left panel is not visible',
     );
 
     expect(page.leftPanel.isDisplayed()).toBe(true);
@@ -64,7 +70,11 @@ describe('/sequencing.panels', () => {
 
     page.panelButton.click();
 
-    browser.wait(EC.visibilityOf(page.panelMenu), page.waitTimeout);
+    browser.wait(
+      EC.visibilityOf(page.editorToolbarMenus.get(0)),
+      page.waitTimeout,
+      'Panels panel did not appear',
+    );
     clickHarder('#sequencing-panels-right-toggle-button');
     browser.wait(EC.invisibilityOf(page.rightPanel), page.waitTimeout);
 
@@ -72,7 +82,11 @@ describe('/sequencing.panels', () => {
 
     page.panelButton.click();
 
-    browser.wait(EC.visibilityOf(page.panelMenu), page.waitTimeout);
+    browser.wait(
+      EC.visibilityOf(page.editorToolbarMenus.get(0)),
+      page.waitTimeout,
+      'Panels panel did not appear',
+    );
     clickHarder('#sequencing-panels-right-toggle-button');
     browser.wait(EC.visibilityOf(page.rightPanel), page.waitTimeout);
 
@@ -81,7 +95,10 @@ describe('/sequencing.panels', () => {
 
   it('[C141205] A user SHOULD be able to create a new editor panel', () => {
     page.panelButton.click();
-    browser.wait(EC.visibilityOf(page.panelMenu), page.waitTimeout);
+    browser.wait(
+      EC.visibilityOf(page.editorToolbarMenus.get(page.panelMenuIndex)),
+      page.waitTimeout,
+    );
     clickHarder('#sequencing-add-editor-pane-button');
 
     expect(page.editorPanels.count()).toBe(2);
@@ -91,7 +108,10 @@ describe('/sequencing.panels', () => {
     page.prepareForCodeMirrorTesting();
 
     page.panelButton.click();
-    browser.wait(EC.visibilityOf(page.panelMenu), page.waitTimeout);
+    browser.wait(
+      EC.visibilityOf(page.editorToolbarMenus.get(page.panelMenuIndex)),
+      page.waitTimeout,
+    );
     clickHarder('#sequencing-add-editor-pane-button');
     page.addTab();
     page.tabCloseButtons.get(0).click();
@@ -106,6 +126,63 @@ describe('/sequencing.panels', () => {
     page.tabCloseButtons.get(0).click();
 
     expect(page.editorPanels.count()).toBe(1);
+  });
+
+  it('[C143141] WHEN a user has 2 or more editor panels, they SHOULD be initially horizontal', () => {
+    page.prepareForCodeMirrorTesting();
+
+    page.panelButton.click();
+    browser.wait(
+      EC.visibilityOf(page.editorToolbarMenus.get(page.panelMenuIndex)),
+      page.waitTimeout,
+    );
+    clickHarder('#sequencing-add-editor-pane-button');
+
+    expect(hasClass(page.editorPanelSplit, 'as-vertical')).toBe(true);
+  });
+
+  it('[C143142] WHEN a user has 2 or more editor panels, they SHOULD be able to toggle to vertical', () => {
+    page.prepareForCodeMirrorTesting();
+
+    page.panelButton.click();
+    browser.wait(
+      EC.visibilityOf(page.editorToolbarMenus.get(page.panelMenuIndex)),
+      page.waitTimeout,
+    );
+    clickHarder('#sequencing-add-editor-pane-button');
+    page.panelButton.click();
+    browser.wait(
+      EC.visibilityOf(page.editorToolbarMenus.get(page.panelMenuIndex)),
+      page.waitTimeout,
+    );
+    clickHarder('#sequencing-toggle-editor-pane-direction');
+
+    expect(hasClass(page.editorPanelSplit, 'as-horizontal')).toBe(true);
+  });
+
+  it('[C143143] WHEN a user has 2 or more editor panels in vertical, they SHOULD be able to toggle to horizontal', () => {
+    page.prepareForCodeMirrorTesting();
+
+    page.panelButton.click();
+    browser.wait(
+      EC.visibilityOf(page.editorToolbarMenus.get(page.panelMenuIndex)),
+      page.waitTimeout,
+    );
+    clickHarder('#sequencing-add-editor-pane-button');
+    page.panelButton.click();
+    browser.wait(
+      EC.visibilityOf(page.editorToolbarMenus.get(page.panelMenuIndex)),
+      page.waitTimeout,
+    );
+    clickHarder('#sequencing-toggle-editor-pane-direction');
+    page.panelButton.click();
+    browser.wait(
+      EC.visibilityOf(page.editorToolbarMenus.get(page.panelMenuIndex)),
+      page.waitTimeout,
+    );
+    clickHarder('#sequencing-toggle-editor-pane-direction');
+
+    expect(hasClass(page.editorPanelSplit, 'as-vertical')).toBe(true);
   });
 
   afterEach(async () => {
