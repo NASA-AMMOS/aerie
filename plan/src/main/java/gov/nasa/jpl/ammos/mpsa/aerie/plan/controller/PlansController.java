@@ -57,6 +57,17 @@ public class PlansController {
         if (repository.existsById(planId.toString())) {
             planDetail.setId(planId.toString());
 
+            // If no activity list was specified, make an empty list
+            List<ActivityInstance> activityInstanceList = planDetail.getActivityInstances();
+            if ( activityInstanceList == null ) {
+                planDetail.setActivityInstances(new ArrayList<>());
+            }
+
+            // Generate IDs for the activity instances
+            for (ActivityInstance act : planDetail.getActivityInstances()) {
+                act.setActivityId(UUID.randomUUID().toString());
+            }
+
             try {
                 if (!Validator.validate(planDetail)) {
                     return ResponseEntity.unprocessableEntity().build();
@@ -88,7 +99,12 @@ public class PlansController {
         if (planDetail.getEndTimestamp() != null) existing.setEndTimestamp(planDetail.getEndTimestamp());
         if (planDetail.getName() != null) existing.setName(planDetail.getName());
         if (planDetail.getStartTimestamp() != null) existing.setStartTimestamp(planDetail.getStartTimestamp());
-        if (planDetail.getActivityInstances() != null) existing.setActivityInstances(planDetail.getActivityInstances());
+        if (planDetail.getActivityInstances() != null) {
+            for (ActivityInstance act : planDetail.getActivityInstances()) {
+                act.setActivityId(UUID.randomUUID().toString());
+            }
+            existing.setActivityInstances(planDetail.getActivityInstances());
+        }
 
         try {
             if (!Validator.validate(existing)) {
@@ -102,9 +118,20 @@ public class PlansController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/")
+    @PostMapping("")
     public ResponseEntity<Object> createPlan(@Valid @RequestBody PlanDetail plan) {
         plan.setId(UUID.randomUUID().toString());
+
+        // If no activity list was specified, make an empty list
+        List<ActivityInstance> activityInstanceList = plan.getActivityInstances();
+        if ( activityInstanceList == null ) {
+            plan.setActivityInstances(new ArrayList<>());
+        }
+
+        // Generate IDs for the activity instances
+        for (ActivityInstance act : plan.getActivityInstances()) {
+            act.setActivityId(UUID.randomUUID().toString());
+        }
 
         try {
             if (!Validator.validate(plan)) {
