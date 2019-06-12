@@ -121,6 +121,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
         const text = this.file ? this.file.text : '';
 
         this.editor.setValue(text);
+        this.editor.focus();
       }
 
       if (changes.editorOptions) {
