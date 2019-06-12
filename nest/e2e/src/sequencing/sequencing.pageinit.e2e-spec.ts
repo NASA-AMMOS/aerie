@@ -41,6 +41,10 @@ describe('/sequencing.pageinit', () => {
     expect(page.addTabButton.isPresent()).toBe(false);
   });
 
+  it('[C143144] A user SHOULD not have access to the editor toggle button WHEN the app is initialized', () => {
+    expect(page.toggleEditorPanelsDirectionButton.isPresent()).toBe(false);
+  });
+
   afterEach(async () => {
     // Assert that there are no errors emitted from the browser
     const logs = await browser

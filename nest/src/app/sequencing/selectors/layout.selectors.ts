@@ -17,6 +17,11 @@ export const getLayoutState = createSelector(
   (state: State): LayoutState => state.layout,
 );
 
+export const getEditorPanelsDirection = createSelector(
+  getLayoutState,
+  (state: LayoutState) => state.editorPanelsDirection,
+);
+
 export const getLeftPanelSize = createSelector(
   getLayoutState,
   (state: LayoutState): number => state.leftPanelSize,

@@ -11,6 +11,7 @@ import {
   LoadingBarHide,
   LoadingBarShow,
   SetPanelSizes,
+  ToggleEditorPanelsDirection,
   ToggleLeftPanelVisible,
   ToggleRightPanelVisible,
 } from '../actions/layout.actions';
@@ -75,6 +76,25 @@ describe('Layout reducer', () => {
     expect(result).toEqual({
       ...initialState,
       rightPanelVisible: false,
+    });
+  });
+
+  it('should handle ToggleEditorPanelsDirection', () => {
+    const horizontalState = reducer(
+      initialState,
+      new ToggleEditorPanelsDirection(),
+    );
+    const verticalState = reducer(
+      horizontalState,
+      new ToggleEditorPanelsDirection(),
+    );
+
+    expect(horizontalState).toEqual({
+      ...initialState,
+      editorPanelsDirection: 'horizontal',
+    });
+    expect(verticalState).toEqual({
+      ...initialState,
     });
   });
 });

@@ -46,6 +46,20 @@
       </mat-icon>
       Add Editor Panel
     </button>
+
+    <button
+      *ngIf="(editorsList$ | async).length > 1"
+      mat-menu-item
+      id="sequencing-toggle-editor-pane-direction"
+      matTooltip="Toggle Editor Panel Direction"
+      aria-label="Toggle Editor Panel Direction"
+      (click)="toggleEditorPanelsDirection()"
+    >
+      <mat-icon class="icon">
+        rotate_right
+      </mat-icon>
+      Toggle Editor Panel Direction
+    </button>
   </mat-menu>
 
   <button
@@ -149,7 +163,10 @@
     #editor
     id="middle-panel-area"
   >
-    <as-split direction="vertical">
+    <as-split
+      [direction]="editorPanelsDirection$ | async"
+      id="sequencing-editor-panel-split"
+    >
       <as-split-area
         *ngFor="let editor of editorsList$ | async; trackBy: editorTrackByFn"
         class="editor-panel"
