@@ -13,17 +13,6 @@ consumes:
 produces:
   - application/json
 
-definitions:
-  ExampleBody:
-    type: object
-    title: example
-    required:
-      - name
-    properties:
-      name:
-        type: string
-        example: no_stress
-
 paths:
   /spec:
     get:
@@ -41,10 +30,8 @@ paths:
       parameters:
         - name: example
           in: body
-          description: an example
+          description: A Europa Command Dictionary in XML
           required: true
-          schema:
-            $ref: "#/definitions/ExampleBody"
       responses:
         200:
           description: Return a MPS Command Dictionary (JSON)
