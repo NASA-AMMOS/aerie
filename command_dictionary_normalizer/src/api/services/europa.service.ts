@@ -1,26 +1,15 @@
 import Promise from "bluebird";
 import L from "../../common/logger";
-
-let id = 0;
-interface Example {
-  id: number;
-  name: string;
-}
-
-const examples: Example[] = [
-  { id: id++, name: "example 0" },
-  { id: id++, name: "example 1" }
-];
+import { europaConverter } from "../converters/europa.converter";
+import { EuropaDictionaryInput } from "../types/europa.type";
 
 export class EuropaService {
-  convert(name: string): Promise<Example> {
+  convert(xml: EuropaDictionaryInput): Promise<any> {
     L.info(`Received Europa Command Dictionary`);
-    const example: Example = {
-      id: id++,
-      name
-    };
-    examples.push(example);
-    return Promise.resolve(example);
+
+    const jsonData = europaConverter(xml);
+
+    return Promise.resolve(jsonData);
   }
 }
 

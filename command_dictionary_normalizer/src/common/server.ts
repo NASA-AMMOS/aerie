@@ -1,12 +1,11 @@
 import bodyParser from "body-parser";
 import express from "express";
 import { Application } from "express";
+import xmlparser from "express-xml-bodyparser";
 import http from "http";
 import path from "path";
-
-import installValidator from "./swagger";
-
 import l from "./logger";
+import installValidator from "./swagger";
 
 const app = express();
 
@@ -20,21 +19,24 @@ export default class ExpressServer {
         extended: true
       })
     );
+    app.use(xmlparser());
     app.use(express.static(`${root}/public/api-explorer`));
   }
 
   router(routes: (app: Application) => void): ExpressServer {
     installValidator(app, routes);
+
     return this;
   }
 
   listen(p: string | number = process.env.PORT || 3000): Application {
     const welcome = (port: string | number) => () =>
       l.info(
-        `up and running in ${process.env.NODE_ENV ||
+        `Running in ${process.env.NODE_ENV ||
           "development"} at: http://localhost:${port}`
       );
     http.createServer(app).listen(p, welcome(p));
+
     return app;
   }
 }
