@@ -21,7 +21,7 @@ export default class ExpressServer {
         limit: process.env.REQUEST_LIMIT || "100kb"
       })
     );
-    app.use(express.static(`${root}/public`));
+    app.use(express.static(`${root}/public/api-explorer`));
   }
 
   router(routes: (app: Application) => void): ExpressServer {
