@@ -5,16 +5,13 @@ info:
   description: Normalizes command dictionaries
 basePath: /api
 tags:
-  - name: Examples
-    description: Simple example endpoints
   - name: Specification
     description: The swagger API specification
 
 consumes:
-  - application/json
+  - application/xml
 produces:
   - application/json
-
 
 definitions:
   ExampleBody:
@@ -28,45 +25,6 @@ definitions:
         example: no_stress
 
 paths:
-  /examples:
-    get:
-      tags:
-        - Examples
-      description: Fetch all examples
-      responses:
-        200:
-          description: Returns all examples
-    post:
-      tags:
-        - Examples
-      description: Create a new example
-      parameters:
-        - name: example
-          in: body
-          description: an example
-          required: true
-          schema: 
-            $ref: "#/definitions/ExampleBody"
-      responses:
-        200:
-          description: Returns all examples
-
-  /examples/{id}:
-    get:
-      tags:
-        - Examples
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The id of the example to retrieve
-          type: integer
-      responses:
-        200:
-          description: Return the example with the specified id
-        404:
-          description: Example not found
-
   /spec:
     get:
       tags:
@@ -74,3 +32,21 @@ paths:
       responses:
         200:
           description: Return the API specification
+
+  /europa:
+    post:
+      tags:
+        - Europa
+      description: Accepts a Europa Command Dictionary (XML) and returns a MPS Command Dictionary (JSON)
+      parameters:
+        - name: example
+          in: body
+          description: an example
+          required: true
+          schema:
+            $ref: "#/definitions/ExampleBody"
+      responses:
+        200:
+          description: Return a MPS Command Dictionary (JSON)
+        400:
+          description: An error occured while parsing the Europa Command Dictionary. Please check if it's in the correct format.
