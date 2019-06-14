@@ -78,24 +78,26 @@ const getEnumDefinitions = (root: any) => {
  * @param enumDefinitions A dictionary mapping enum types to it's enumerations
  */
 const normalizeCommands = (root: any, enumDefinitions: any) => {
-  const hwCommands = _normalizeHwCommands(
-    root["command_definitions"][0]["hw_command"]
-  );
+  // const hwCommands = _normalizeHwCommands(
+  //   root["command_definitions"][0]["hw_command"]
+  // );
   const fswCommands = _normalizeFswCommands(
     root["command_definitions"][0]["fsw_command"],
     enumDefinitions
   );
 
-  return [...hwCommands, ...fswCommands];
+  return [...fswCommands];
+  // return [...hwCommands, ...fswCommands];
 };
 
 /**
  * Helper function to normalize HW Commands
  */
+// @ts-ignore
 const _normalizeHwCommands = (commands: any) => {
   const hwCommandsXml = commands;
   return hwCommandsXml.map((command: any) => {
-    const { stem: name, opcode } = command["$"];
+    const { stem: name } = command["$"];
     const description = command["description"][0];
     const opsCategory = command["categories"][0]["ops_category"];
 
@@ -103,7 +105,6 @@ const _normalizeHwCommands = (commands: any) => {
       completion: "",
       description,
       name,
-      opcode,
       opsCategory,
       parameters: []
     };
@@ -116,7 +117,7 @@ const _normalizeHwCommands = (commands: any) => {
 const _normalizeFswCommands = (commands: any, enumDefinitions: any) => {
   const fswCommandsXmls = commands;
   return fswCommandsXmls.map((command: any) => {
-    const { stem: name, opcode } = command["$"];
+    const { stem: name } = command["$"];
     const description = command["description"][0];
     const completion = command["completion"][0];
     const opsCategory = command["categories"][0]["ops_category"];
@@ -133,7 +134,6 @@ const _normalizeFswCommands = (commands: any, enumDefinitions: any) => {
       completion,
       description,
       name,
-      opcode,
       opsCategory,
       parameters
     };
