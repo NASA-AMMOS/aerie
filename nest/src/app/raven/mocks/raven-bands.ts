@@ -17,6 +17,7 @@ import {
 import { activityPoint } from './raven-points';
 
 export const activityBand: RavenActivityBand = {
+  activityFilter: '',
   activityHeight: 20,
   activityLabelFontSize: 9,
   activityStyle: 1,

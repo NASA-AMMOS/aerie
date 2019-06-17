@@ -33,6 +33,7 @@ import {
   TimelineAction,
   TimelineActionTypes,
   ToggleGuide,
+  UpdateAllActivityBandFilter,
   UpdateBand,
   UpdateSubBand,
 } from '../actions/timeline.actions';
@@ -151,6 +152,8 @@ export function reducer(
       return sourceIdAdd(state, action);
     case TimelineActionTypes.ToggleGuide:
       return toggleGuide(state, action);
+    case TimelineActionTypes.UpdateAllActivityBandFilter:
+      return updateAllActivityBandFilter(state, action);
     case TimelineActionTypes.UpdateBand:
       return updateBand(state, action);
     case TimelineActionTypes.UpdateLastClickTime:
@@ -376,6 +379,7 @@ export function filterActivityInSubBand(
               points: filterActivityPoints(
                 (subBand as RavenActivityBand).points,
                 action.filter,
+                action.activityInitiallyHidden,
               ),
             };
           }
@@ -715,9 +719,36 @@ export function selectPoint(
 ): TimelineState {
   const alreadySelected =
     state.selectedPoint && state.selectedPoint.uniqueId === action.pointId;
+  const bands = state.bands.map((band: RavenCompositeBand) => {
+    if (action.bandId === band.id) {
+      return {
+        ...band,
+        subBands: band.subBands.map(subBand => {
+          if (action.subBandId === subBand.id) {
+            return {
+              ...subBand,
+              points: (subBand as any).points.map(
+                (point: RavenActivityPoint) => {
+                  if (point.uniqueId === action.pointId) {
+                    return { ...point, selected: !point.selected };
+                  } else {
+                    return { ...point, selected: false };
+                  }
+                },
+              ),
+            };
+          }
+          return subBand;
+        }),
+      };
+    } else {
+      return band;
+    }
+  });
 
   return {
     ...state,
+    bands,
     selectedPoint: alreadySelected
       ? null
       : getPoint(state.bands, action.bandId, action.subBandId, action.pointId),
@@ -850,6 +881,35 @@ export function toggleGuide(state: TimelineState, action: ToggleGuide) {
       existingGuide.length > 0
         ? state.guides.filter(guide => guide !== existingGuide[0])
         : state.guides.concat(action.guide.guideTime),
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'UpdateAllActivityBandFilter' action.
+ */
+export function updateAllActivityBandFilter(
+  state: TimelineState,
+  action: UpdateAllActivityBandFilter,
+): TimelineState {
+  return {
+    ...state,
+    bands: state.bands.map((band: RavenCompositeBand) => {
+      return {
+        ...band,
+        subBands: band.subBands.map(subBand => {
+          if (
+            subBand.type === 'activity' &&
+            (subBand as RavenActivityBand).activityFilter === ''
+          ) {
+            return {
+              ...subBand,
+              activityFilter: action.filter,
+            };
+          }
+          return subBand;
+        }),
+      };
+    }),
   };
 }
 

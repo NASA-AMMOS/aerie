@@ -20,7 +20,7 @@ import {
 describe('points.ts', () => {
   describe('filterActivityPoints', () => {
     it(`should return the second activity point with hidden set to true`, () => {
-      const result = filterActivityPoints(activityPoints, 'AACS');
+      const result = filterActivityPoints(activityPoints, 'AACS', false);
       expect(result).toEqual([
         activityPoints[0],
         { ...activityPoints[1], hidden: true },

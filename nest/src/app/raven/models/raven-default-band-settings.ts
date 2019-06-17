@@ -8,6 +8,7 @@
  */
 
 export interface RavenDefaultBandSettings {
+  activityInitiallyHidden: boolean;
   activityLayout: number;
   icon: string;
   iconEnabled: boolean;

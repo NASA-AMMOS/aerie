@@ -179,10 +179,15 @@
       >
         <raven-table
           class="raven-table"
+          [activityFilter]="(selectedSubBand$ | async)?.activityFilter"
+          [activityInitiallyHidden]="
+            (defaultBandSettings$ | async).activityInitiallyHidden
+          "
           [points]="selectedSubBandPoints$ | async"
           [selectedBandId]="selectedBandId$ | async"
           [selectedSubBand]="selectedSubBand$ | async"
           [selectedPoint]="selectedPoint$ | async"
+          (updateFilter)="onUpdateSubBand($event)"
           (updateFilterActivityInSubBand)="onFilterActivityInSubBand($event)"
           (updateTableColumns)="onUpdateSubBand($event)"
         >
@@ -280,6 +285,7 @@
         [defaultBandSettings]="defaultBandSettings$ | async"
         (updateDefaultBandSettings)="onUpdateDefaultBandSettings($event)"
         (updateTimeline)="onUpdateTimeline($event)"
+        (updateBandsActivityFilter)="onUpdateBandsActivityFilter($event)"
       >
       </raven-settings-global>
     </div>
