@@ -153,17 +153,19 @@ const normalizeParameters = (parametersXmlInput: any, enumDefinitions: any) => {
     parameters = parametersXml[type].map((param: any) => {
       switch (mpsType) {
         case 'ENUM':
+          const enums = enumDefinitions[param['$']['enum_name']]['enums'];
+
           return {
-            defaultValue: '',
+            defaultValue: enums[0],
             help: param['description'][0],
             name: param['$'].name,
-            range: enumDefinitions[param['$']['enum_name']]['enums'],
+            range: enums,
             type: param['$']['enum_name'],
             units: '',
           };
         case 'STRING':
           return {
-            defaultValue: '',
+            defaultValue: 'STRING_DEFAULT_VALUE',
             help: param['description'][0],
             name: param['$'].name,
             range: '',
@@ -172,14 +174,17 @@ const normalizeParameters = (parametersXmlInput: any, enumDefinitions: any) => {
           };
         case 'UNSIGNED_DECIMAL':
           let range = '';
+          let lowerBound;
+          let upperBound;
+
           if (param['range_of_values']) {
-            range = `${
-              param['range_of_values'][0]['include'][0]['$']['min']
-            }...${param['range_of_values'][0]['include'][0]['$']['max']}`;
+            lowerBound = param['range_of_values'][0]['include'][0]['$']['min'];
+            upperBound = param['range_of_values'][0]['include'][0]['$']['max'];
+            range = `${lowerBound}...${upperBound}`;
           }
 
           return {
-            defaultValue: '',
+            defaultValue: lowerBound,
             help: param['description'][0],
             name: param['$'].name,
             range,
@@ -189,7 +194,7 @@ const normalizeParameters = (parametersXmlInput: any, enumDefinitions: any) => {
         case 'FLOAT':
         case 'SIGNED_DECIMAL':
           return {
-            defaultValue: '',
+            defaultValue: 0.0,
             help: param['description'][0],
             name: param['$'].name,
             range: '',
