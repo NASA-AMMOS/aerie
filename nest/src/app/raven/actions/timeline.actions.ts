@@ -49,6 +49,7 @@ export enum TimelineActionTypes {
   SortBands = '[timeline] sort_bands',
   SourceIdAdd = '[timeline] source_id_add',
   ToggleGuide = '[timeline] toggle_guide',
+  UpdateAllActivityBandFilter = '[timeline] update-all-activity-band-filter',
   UpdateBand = '[timeline] update_band',
   UpdateLastClickTime = '[timeline] last_click_time',
   UpdateSubBand = '[timeline] update_sub_band',
@@ -122,6 +123,7 @@ export class FilterActivityInSubBand implements Action {
     public bandId: string,
     public subBandId: string,
     public filter: string,
+    public activityInitiallyHidden: boolean,
   ) {}
 }
 
@@ -257,6 +259,12 @@ export class ToggleGuide implements Action {
   constructor(public guide: RavenGuidePoint) {}
 }
 
+export class UpdateAllActivityBandFilter implements Action {
+  readonly type = TimelineActionTypes.UpdateAllActivityBandFilter;
+
+  constructor(public filter: string) {}
+}
+
 export class UpdateBand implements Action {
   readonly type = TimelineActionTypes.UpdateBand;
 
@@ -328,6 +336,7 @@ export type TimelineAction =
   | SortBands
   | SourceIdAdd
   | ToggleGuide
+  | UpdateAllActivityBandFilter
   | UpdateBand
   | UpdateLastClickTime
   | UpdateSubBand

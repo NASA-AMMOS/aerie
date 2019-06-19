@@ -48,23 +48,18 @@ export class SeqEditorService {
       this.editors = {};
     }
 
-    let editor = this.editors[id];
-
-    if (!editor) {
-      editor = CodeMirror(elementRef.nativeElement, options);
-      editor.on('blur', () => {
-        // Always show the cursor even when we are not focused on the editor
-        // so we can visually see where new commands are going to be added.
-        const cursors = document.querySelector(
-          '.CodeMirror-cursors',
-        ) as HTMLElement;
-        if (cursors) {
-          cursors.style.visibility = 'visible';
-        }
-      });
-
-      this.editors[id] = editor;
-    }
+    const editor = CodeMirror(elementRef.nativeElement, options);
+    editor.on('blur', () => {
+      // Always show the cursor even when we are not focused on the editor
+      // so we can visually see where new commands are going to be added.
+      const cursors = document.querySelector(
+        '.CodeMirror-cursors',
+      ) as HTMLElement;
+      if (cursors) {
+        cursors.style.visibility = 'visible';
+      }
+    });
+    this.editors[id] = editor;
   }
 
   /**

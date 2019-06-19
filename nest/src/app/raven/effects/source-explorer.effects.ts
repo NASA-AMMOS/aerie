@@ -61,6 +61,7 @@ import {
   FilterState,
   MpsServerGraphData,
   MpsServerSource,
+  RavenActivityBand,
   RavenCompositeBand,
   RavenCustomFilter,
   RavenCustomFilterSource,
@@ -96,6 +97,7 @@ import {
   hasActivityBandForFilterTarget,
   isAddTo,
   isOverlay,
+  subBandById,
   toCompositeBand,
   toRavenBandData,
   toRavenSources,
@@ -1599,7 +1601,7 @@ export class SourceExplorerEffects {
               ? []
               : getBandsWithSourceId(currentBands, sourceId);
             if (!graphAgain && activityBands.length > 0) {
-              activityBands.forEach(activityBand =>
+              activityBands.forEach(activityBand => {
                 actions.push(
                   new sourceExplorerActions.SubBandIdAdd(
                     sourceId,
@@ -1611,8 +1613,23 @@ export class SourceExplorerEffects {
                     activityBand.subBandId,
                     subBand.points,
                   ),
-                ),
-              );
+                );
+                const band = subBandById(
+                  currentBands,
+                  activityBand.bandId,
+                  activityBand.subBandId,
+                ) as RavenActivityBand;
+                if (band && band.activityFilter !== '') {
+                  actions.push(
+                    new timelineActions.FilterActivityInSubBand(
+                      activityBand.bandId,
+                      activityBand.subBandId,
+                      band.activityFilter,
+                      defaultBandSettings.activityInitiallyHidden,
+                    ),
+                  );
+                }
+              });
             } else if (existingBands.length > 0) {
               existingBands.forEach(existingBand => {
                 if (subBand.type === 'state') {
