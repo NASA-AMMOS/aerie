@@ -1,13 +1,13 @@
 import bodyParser from 'body-parser';
-import { Application } from 'express';
 import express from 'express';
+import { Application } from 'express';
 import xmlparser from 'express-xml-bodyparser';
 import http from 'http';
 import morgan from 'morgan';
 import path from 'path';
 import { WinstonStream } from '../../../sequencing/src/util/logger';
 import logger from '../../../sequencing/src/util/logger';
-import installValidator from './swagger';
+import errorHandler from '../api/middlewares/error.handler';
 
 const app = express();
 
@@ -23,11 +23,11 @@ export default class ExpressServer {
     );
     app.use(xmlparser());
     app.use(morgan('tiny', { stream: new WinstonStream() }));
-    app.use(express.static(`${root}/public/api-explorer`));
+    app.use(errorHandler);
   }
 
   router(routes: (app: Application) => void): ExpressServer {
-    installValidator(app, routes);
+    routes(app);
 
     return this;
   }
