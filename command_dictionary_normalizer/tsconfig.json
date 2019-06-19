@@ -31,6 +31,6 @@
     "strict": true,
     "suppressImplicitAnyIndexErrors": false
   },
-  "include": ["typings.d.ts", "src/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": ["src/**/*.ts"],
+  "exclude": []
 }
