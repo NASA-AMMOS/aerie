@@ -54,6 +54,17 @@
         </mat-slide-toggle>
       </div>
 
+      <!-- Activity Initially Hidden. -->
+      <div class="field">
+        <mat-slide-toggle
+          color="accent"
+          [checked]="defaultBandSettings.activityInitiallyHidden"
+          (change)="onChangeActivityInitiallyHidden($event.checked)"
+        >
+          Activity Initially Hidden
+        </mat-slide-toggle>
+      </div>
+
       <!-- Default Activity Layout. -->
       <div class="field">
         <mat-form-field>

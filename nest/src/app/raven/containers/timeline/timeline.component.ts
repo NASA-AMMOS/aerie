@@ -18,10 +18,12 @@ import { TimelineState } from '../../reducers/timeline.reducer';
 import {
   bandById,
   getSourceIdsByLabelInBands,
+  subBandById,
   toCompositeBand,
   toDividerBand,
 } from '../../util';
 import {
+  RavenActivityBand,
   RavenActivityPoint,
   RavenActivityPointExpansion,
   RavenApplyLayoutUpdate,
@@ -143,6 +145,7 @@ export class TimelineComponent implements OnDestroy {
   viewTimeRange$: Observable<TimeRange>;
 
   // Local (non-Observable) state. Derived from store state.
+  activityInitiallyHidden: boolean;
   bands: RavenCompositeBand[];
   baseUrl: string;
   detailsPanelHeight = 20;
@@ -359,6 +362,13 @@ export class TimelineComponent implements OnDestroy {
     this.baseUrl$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(baseUrl => (this.baseUrl = baseUrl));
+    this.defaultBandSettings$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(
+        defaultBandSettings =>
+          (this.activityInitiallyHidden =
+            defaultBandSettings.activityInitiallyHidden),
+      );
     this.hoveredBandId$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(hoveredBandId => (this.hoveredBandId = hoveredBandId));
@@ -390,6 +400,19 @@ export class TimelineComponent implements OnDestroy {
     this.ngUnsubscribe.complete();
   }
 
+  getActivityFilter() {
+    const band = subBandById(
+      this.bands,
+      this.selectedBandId,
+      this.selectedSubBandId,
+    );
+    if (band && band.type === 'activity') {
+      return (band as RavenActivityBand).activityFilter;
+    } else {
+      return '';
+    }
+  }
+
   /**
    * Helper. Caiculate the main chart height.
    */
@@ -403,10 +426,16 @@ export class TimelineComponent implements OnDestroy {
   onFilterActivityInSubBand(e: any) {
     if (e.bandId && e.subBandId) {
       this.store.dispatch(
+        new timelineActions.UpdateSubBand(e.bandId, e.subBandId, {
+          activityFilter: e.filter,
+        }),
+      );
+      this.store.dispatch(
         new timelineActions.FilterActivityInSubBand(
           e.bandId,
           e.subBandId,
           e.filter,
+          this.activityInitiallyHidden,
         ),
       );
     }
@@ -644,6 +673,15 @@ export class TimelineComponent implements OnDestroy {
       this.store.dispatch(new timelineActions.SelectBand(e.bandId));
       this.store.dispatch(new timelineActions.UpdateBand(e.bandId, e.update));
     }
+  }
+
+  /**
+   * Event. Called when an `updateBandsActivityFilter` event is fired from the raven-settings-global component.
+   */
+  onUpdateBandsActivityFilter(filter: string) {
+    this.store.dispatch(
+      new timelineActions.UpdateAllActivityBandFilter(filter),
+    );
   }
 
   /**

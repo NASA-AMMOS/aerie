@@ -170,6 +170,7 @@ export function toActivityBands(
     sourceName,
     expandedFromPointId,
     timelineData,
+    defaultBandSettings.activityInitiallyHidden,
   );
   const bands: RavenActivityBand[] = [];
   const customGraphableSource = treeBySourceId[sourceId]
@@ -179,6 +180,7 @@ export function toActivityBands(
   // Map each legend to a band.
   Object.keys(legends).forEach(legend => {
     const activityBand: RavenActivityBand = {
+      activityFilter: '',
       activityHeight: isMessageTypeActivity(legends[legend][0]) ? 5 : 20,
       activityLabelFontSize: 9,
       activityStyle: isMessageTypeActivity(legends[legend][0]) ? 2 : 1,

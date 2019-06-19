@@ -17,18 +17,27 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
+
 import { AgGridAngular } from 'ag-grid-angular';
-import { RowNode } from 'ag-grid-community';
+import { AgGridEvent, IDatasource, RowNode } from 'ag-grid-community';
 import pickBy from 'lodash-es/pickBy';
 import startsWith from 'lodash-es/startsWith';
+
 import {
   dateToTimestring,
   dhms,
   timestamp,
   toDuration,
 } from '../../../shared/util';
-import { RavenActivityPoint, RavenPoint, RavenSubBand } from '../../models';
+import {
+  RavenActivityPoint,
+  RavenPoint,
+  RavenSubBand,
+  RavenUpdate,
+} from '../../models';
 import { RavenTableDetailComponent } from './raven-table-detail.component';
+
+import { GridOptions } from 'ag-grid-community';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,6 +48,12 @@ import { RavenTableDetailComponent } from './raven-table-detail.component';
 export class RavenTableComponent implements OnChanges {
   @ViewChild('agGrid', { static: false })
   agGrid: AgGridAngular;
+
+  @Input()
+  activityFilter: string;
+
+  @Input()
+  activityInitiallyHidden: boolean;
 
   @Input()
   points: RavenPoint[];
@@ -53,20 +68,88 @@ export class RavenTableComponent implements OnChanges {
   selectedPoint: RavenPoint;
 
   @Output()
+  updateFilter: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
+
+  @Output()
   updateFilterActivityInSubBand: EventEmitter<any> = new EventEmitter<any>();
 
   @Output()
   updateTableColumns: EventEmitter<any> = new EventEmitter<any>();
 
+  displayedFilter: string;
+
   columnDefs: any[] = [];
   rowData: any[] = [];
 
+  dataSource: IDatasource;
+
+  private gridApi: any;
+  public gridOptions: GridOptions;
+
+  constructor() {
+    this.gridOptions = {
+      infiniteInitialRowCount: 1,
+      rowModelType: 'infinite',
+    };
+    this.dataSource = {
+      getRows: (params: any) => {
+        const data = this.rowData.slice(params.startRow, params.endRow);
+        let lastRow = -1;
+        if (this.rowData.length <= params.endRow) {
+          lastRow = this.rowData.length;
+        }
+        params.successCallback(data, lastRow);
+      },
+    };
+
+    this.gridOptions.datasource = this.dataSource;
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes.activityFilter) {
+      this.displayedFilter = this.activityFilter;
+    }
+    if (changes.activityFilter) {
+      const selectedPoint = this.selectedPoint;
+      if (this.activityFilter !== '') {
+        this.gridOptions.getRowStyle = function(params: any) {
+          if (
+            selectedPoint &&
+            params.data &&
+            params.data.uniqueId === selectedPoint.uniqueId
+          ) {
+            return { background: 'yellow' };
+          } else if (
+            params.data &&
+            params.data.type === 'activity' &&
+            !params.data.hidden
+          ) {
+            return { background: '#e8eaf6' };
+          } else {
+            return {};
+          }
+        };
+      } else {
+        this.gridOptions.getRowStyle = function(params: any) {
+          if (
+            selectedPoint &&
+            params.data &&
+            params.data.uniqueId === selectedPoint.uniqueId
+          ) {
+            return { background: 'yellow' };
+          } else {
+            return {};
+          }
+        };
+      }
+    }
     // Points (any length).
     if (changes.points) {
       this.rowData = this.createRowData(this.points);
+      if (this.gridOptions.api) {
+        this.gridOptions.api.setDatasource(this.dataSource);
+      }
     }
-
     // Points (length > 0).
     if (changes.points && this.points.length && this.selectedSubBand) {
       if (this.selectedSubBand.tableColumns.length) {
@@ -79,6 +162,10 @@ export class RavenTableComponent implements OnChanges {
 
       this.setColumnHeader(); // Set the header since it may have changed if we are coming from saved columns.
       this.highlightRowForSelectedPoint();
+
+      if (this.gridApi) {
+        this.gridApi.refreshInfiniteCache();
+      }
     }
 
     // Selected Sub Band.
@@ -191,6 +278,7 @@ export class RavenTableComponent implements OnChanges {
           prop !== 'keywordLine' &&
           prop !== 'legend' &&
           prop !== 'plan' &&
+          prop !== 'selected' &&
           prop !== 'sourceId' &&
           prop !== 'span' &&
           prop !== 'startTimestamp' &&
@@ -352,6 +440,7 @@ export class RavenTableComponent implements OnChanges {
         this.agGrid.api.forEachNode(node => {
           if (
             this.selectedPoint &&
+            node.data &&
             node.data.uniqueId === this.selectedPoint.uniqueId
           ) {
             this.agGrid.api.ensureIndexVisible(node.rowIndex);
@@ -362,6 +451,10 @@ export class RavenTableComponent implements OnChanges {
         });
       }
     });
+  }
+
+  onGridReady(params: AgGridEvent) {
+    this.gridApi = params.api;
   }
 
   /**
