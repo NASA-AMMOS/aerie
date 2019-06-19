@@ -101,13 +101,10 @@ const _normalizeHwCommands = (commands: any) => {
   return hwCommandsXml.map((command: any) => {
     const { stem: name } = command['$'];
     const description = command['description'][0];
-    const opsCategory = command['categories'][0]['ops_category'];
 
     return {
-      completion: '',
       description,
       name,
-      opsCategory,
       parameters: [],
     };
   });
@@ -121,8 +118,6 @@ const _normalizeFswCommands = (commands: any, enumDefinitions: any) => {
   return fswCommandsXmls.map((command: any) => {
     const { stem: name } = command['$'];
     const description = command['description'][0];
-    const completion = command['completion'][0];
-    const opsCategory = command['categories'][0]['ops_category'];
 
     const parametersXml = command['arguments'];
 
@@ -133,10 +128,8 @@ const _normalizeFswCommands = (commands: any, enumDefinitions: any) => {
     }
 
     return {
-      completion,
       description,
       name,
-      opsCategory,
       parameters,
     };
   });
@@ -180,7 +173,9 @@ const normalizeParameters = (parametersXmlInput: any, enumDefinitions: any) => {
         case 'UNSIGNED_DECIMAL':
           let range = '';
           if (param['range_of_values']) {
-            range = `${param['range_of_values'][0]['include'][0]['$']['min']}...${param['range_of_values'][0]['include'][0]['$']['max']}`;
+            range = `${
+              param['range_of_values'][0]['include'][0]['$']['min']
+            }...${param['range_of_values'][0]['include'][0]['$']['max']}`;
           }
 
           return {
@@ -213,7 +208,9 @@ const normalizeParameters = (parametersXmlInput: any, enumDefinitions: any) => {
           };
         default:
           throw new Error(
-            `Parameter ${param['$'].name} for command ${name} has an unknown parameter type of ${type}.`,
+            `Parameter ${
+              param['$'].name
+            } for command ${name} has an unknown parameter type of ${type}.`,
           );
       }
     });
