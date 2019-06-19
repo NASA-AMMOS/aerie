@@ -80,34 +80,12 @@ const getEnumDefinitions = (root: any) => {
  * @param enumDefinitions A dictionary mapping enum types to it's enumerations
  */
 const normalizeCommands = (root: any, enumDefinitions: any) => {
-  // const hwCommands = _normalizeHwCommands(
-  //   root["command_definitions"][0]["hw_command"]
-  // );
   const fswCommands = _normalizeFswCommands(
     root['command_definitions'][0]['fsw_command'],
     enumDefinitions,
   );
 
-  return [...fswCommands];
-  // return [...hwCommands, ...fswCommands];
-};
-
-/**
- * Helper function to normalize HW Commands
- */
-// @ts-ignore
-const _normalizeHwCommands = (commands: any) => {
-  const hwCommandsXml = commands;
-  return hwCommandsXml.map((command: any) => {
-    const { stem: name } = command['$'];
-    const description = command['description'][0];
-
-    return {
-      description,
-      name,
-      parameters: [],
-    };
-  });
+  return fswCommands;
 };
 
 /**
