@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import l from '../../common/logger';
+import logger from '../../../../sequencing/src/util/logger';
 
 export default function errorHandler(
   err: any,
@@ -9,7 +9,7 @@ export default function errorHandler(
 ) {
   const errorMessage = `${err.status || 500} Error: ${err.message}`;
 
-  l.error(errorMessage);
+  logger.error(errorMessage);
   res.status(err.status || 500);
   res.send(errorMessage);
 }
