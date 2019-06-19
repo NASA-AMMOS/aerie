@@ -1,0 +1,36 @@
+{
+  "name": "command-dictionary-normalizer",
+  "version": "1.0.0",
+  "description": "Normalizes command dictionaries",
+  "main": "src/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.jpl.nasa.gov/MPS/aerie"
+  },
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "nodemon src/index.ts",
+    "dev:debug": "nodemon --exec 'node -r ts-node/register --inspect-brk' src/index.ts",
+    "lint": "tslint -c tslint.json -p tsconfig.json"
+  },
+  "author": "JPL",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4",
+    "express-openapi-validator": "^1.0.0",
+    "express-xml-bodyparser": "^0.3.0",
+    "morgan": "^1.9.1",
+    "winston": "^3.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.16.1",
+    "@types/express-xml-bodyparser": "^0.3.1",
+    "@types/morgan": "^1.7.35",
+    "nodemon": "^1.19.0",
+    "ts-node": "^8.0.2",
+    "tslint": "^5.13.1",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.4.5"
+  }
+}
