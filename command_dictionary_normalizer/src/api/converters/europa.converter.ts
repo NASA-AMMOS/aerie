@@ -1,13 +1,13 @@
-import { EuropaDictionaryInput } from "../types/europa.type";
-import { MpsParameter } from "../types/mps.types";
-import { europaEnumArgumentMapping } from "../util/europa.enum.parameter.mapping";
+import { EuropaDictionaryInput } from '../types/europa.type';
+import { MpsParameter } from '../types/mps.types';
+import { europaEnumArgumentMapping } from '../util/europa.enum.parameter.mapping';
 
 /**
  * Returns a normalized command dictionary in JSON
  * @param xml XML received from a POST request
  */
 export const europaConverter = (xml: EuropaDictionaryInput) => {
-  const root = xml["command_dictionary"];
+  const root = xml['command_dictionary'];
 
   const metadata = getMetadata(root);
   const uplinkFileTypes = getUplinkFileTypes(root);
@@ -17,7 +17,7 @@ export const europaConverter = (xml: EuropaDictionaryInput) => {
   return {
     commands,
     metadata,
-    uplinkFileTypes
+    uplinkFileTypes,
   };
 };
 
@@ -27,14 +27,14 @@ export const europaConverter = (xml: EuropaDictionaryInput) => {
  */
 const getMetadata = (root: any) => {
   const { mission_name, spacecraft_id, version, schema_version } = root[
-    "header"
-  ][0]["$"];
+    'header'
+  ][0]['$'];
 
   return {
     mission_name,
     schema_version,
     spacecraft_id,
-    version
+    version,
   };
 };
 
@@ -43,13 +43,13 @@ const getMetadata = (root: any) => {
  * @param The root of the XML tree
  */
 const getUplinkFileTypes = (root: any) => {
-  const uplinkFileTypesXml = root["uplink_file_types"][0]["file_type"];
+  const uplinkFileTypesXml = root['uplink_file_types'][0]['file_type'];
   return uplinkFileTypesXml.map(({ $: fileType }: any) => {
     return {
       extension: fileType.extension,
       fileFormatSpec: fileType.file_format_spec,
       id: fileType.id,
-      name: fileType.name
+      name: fileType.name,
     };
   });
 };
@@ -59,13 +59,15 @@ const getUplinkFileTypes = (root: any) => {
  * @param root The root of the XML tree
  */
 const getEnumDefinitions = (root: any) => {
-  const enumDefinitionsXml = root["enum_definitions"][0]["enum_table"];
+  const enumDefinitionsXml = root['enum_definitions'][0]['enum_table'];
   const enumDefinitions: any = {};
 
   enumDefinitionsXml.forEach((enumDef: any) => {
-    const commandName: string = enumDef["$"].name;
+    const commandName: string = enumDef['$'].name;
     enumDefinitions[commandName] = {
-      enums: enumDef["values"][0]["enum"].map((value: any) => value["$"].symbol)
+      enums: enumDef['values'][0]['enum'].map(
+        (value: any) => value['$'].symbol,
+      ),
     };
   });
 
@@ -82,8 +84,8 @@ const normalizeCommands = (root: any, enumDefinitions: any) => {
   //   root["command_definitions"][0]["hw_command"]
   // );
   const fswCommands = _normalizeFswCommands(
-    root["command_definitions"][0]["fsw_command"],
-    enumDefinitions
+    root['command_definitions'][0]['fsw_command'],
+    enumDefinitions,
   );
 
   return [...fswCommands];
@@ -97,16 +99,16 @@ const normalizeCommands = (root: any, enumDefinitions: any) => {
 const _normalizeHwCommands = (commands: any) => {
   const hwCommandsXml = commands;
   return hwCommandsXml.map((command: any) => {
-    const { stem: name } = command["$"];
-    const description = command["description"][0];
-    const opsCategory = command["categories"][0]["ops_category"];
+    const { stem: name } = command['$'];
+    const description = command['description'][0];
+    const opsCategory = command['categories'][0]['ops_category'];
 
     return {
-      completion: "",
+      completion: '',
       description,
       name,
       opsCategory,
-      parameters: []
+      parameters: [],
     };
   });
 };
@@ -117,12 +119,12 @@ const _normalizeHwCommands = (commands: any) => {
 const _normalizeFswCommands = (commands: any, enumDefinitions: any) => {
   const fswCommandsXmls = commands;
   return fswCommandsXmls.map((command: any) => {
-    const { stem: name } = command["$"];
-    const description = command["description"][0];
-    const completion = command["completion"][0];
-    const opsCategory = command["categories"][0]["ops_category"];
+    const { stem: name } = command['$'];
+    const description = command['description'][0];
+    const completion = command['completion'][0];
+    const opsCategory = command['categories'][0]['ops_category'];
 
-    const parametersXml = command["arguments"];
+    const parametersXml = command['arguments'];
 
     let parameters: MpsParameter[] = [];
     // If the command has arguments
@@ -135,7 +137,7 @@ const _normalizeFswCommands = (commands: any, enumDefinitions: any) => {
       description,
       name,
       opsCategory,
-      parameters
+      parameters,
     };
   });
 };
@@ -157,65 +159,61 @@ const normalizeParameters = (parametersXmlInput: any, enumDefinitions: any) => {
 
     parameters = parametersXml[type].map((param: any) => {
       switch (mpsType) {
-        case "ENUM":
+        case 'ENUM':
           return {
-            defaultValue: "",
-            help: param["description"][0],
-            name: param["$"].name,
-            range: enumDefinitions[param["$"]["enum_name"]]["enums"],
-            type: param["$"]["enum_name"],
-            units: ""
+            defaultValue: '',
+            help: param['description'][0],
+            name: param['$'].name,
+            range: enumDefinitions[param['$']['enum_name']]['enums'],
+            type: param['$']['enum_name'],
+            units: '',
           };
-        case "STRING":
+        case 'STRING':
           return {
-            defaultValue: "",
-            help: param["description"][0],
-            name: param["$"].name,
-            range: "",
+            defaultValue: '',
+            help: param['description'][0],
+            name: param['$'].name,
+            range: '',
             type: mpsType,
-            units: mpsType
+            units: mpsType,
           };
-        case "UNSIGNED_DECIMAL":
-          let range = "";
-          if (param["range_of_values"]) {
-            range = `${
-              param["range_of_values"][0]["include"][0]["$"]["min"]
-            }...${param["range_of_values"][0]["include"][0]["$"]["max"]}`;
+        case 'UNSIGNED_DECIMAL':
+          let range = '';
+          if (param['range_of_values']) {
+            range = `${param['range_of_values'][0]['include'][0]['$']['min']}...${param['range_of_values'][0]['include'][0]['$']['max']}`;
           }
 
           return {
-            defaultValue: "",
-            help: param["description"][0],
-            name: param["$"].name,
+            defaultValue: '',
+            help: param['description'][0],
+            name: param['$'].name,
             range,
             type: mpsType,
-            units: param["$"]["units"]
+            units: param['$']['units'],
           };
-        case "FLOAT":
-        case "SIGNED_DECIMAL":
+        case 'FLOAT':
+        case 'SIGNED_DECIMAL':
           return {
-            defaultValue: "",
-            help: param["description"][0],
-            name: param["$"].name,
-            range: "",
+            defaultValue: '',
+            help: param['description'][0],
+            name: param['$'].name,
+            range: '',
             type: mpsType,
-            units: param["$"]["units"]
+            units: param['$']['units'],
           };
         // TODO: How do we handle lists?
-        case "LIST":
+        case 'LIST':
           return {
-            defaultValue: "",
-            help: "",
-            name: param["$"].name,
-            range: "",
-            type: "",
-            units: ""
+            defaultValue: '',
+            help: '',
+            name: param['$'].name,
+            range: '',
+            type: '',
+            units: '',
           };
         default:
           throw new Error(
-            `Parameter ${
-              param["$"].name
-            } for command ${name} has an unknown parameter type of ${type}.`
+            `Parameter ${param['$'].name} for command ${name} has an unknown parameter type of ${type}.`,
           );
       }
     });

@@ -1,4 +1,4 @@
-import express from "express";
-import controller from "./controller";
+import express from 'express';
+import controller from './controller';
 
-export default express.Router().post("/", controller.convert);
+export default express.Router().post('/', controller.convert);

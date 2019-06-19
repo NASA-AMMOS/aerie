@@ -1,14 +1,14 @@
-import express from "express";
-import { OpenApiValidator } from "express-openapi-validator";
-import path from "path";
-import errorHandler from "../api/middlewares/error.handler";
+import express from 'express';
+import { OpenApiValidator } from 'express-openapi-validator';
+import path from 'path';
+import errorHandler from '../api/middlewares/error.handler';
 
 export default function openapi(app: any, routes: any) {
-  const apiSpecPath = path.join(__dirname, "api.yml");
-  app.use(process.env.OPENAPI_SPEC || "/spec", express.static(apiSpecPath));
+  const apiSpecPath = path.join(__dirname, 'api.yml');
+  app.use(process.env.OPENAPI_SPEC || '/spec', express.static(apiSpecPath));
 
   new OpenApiValidator({
-    apiSpecPath
+    apiSpecPath,
   }).install(app);
 
   routes(app);

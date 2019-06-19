@@ -12,7 +12,7 @@
     "compile": "ts-node build.ts && tsc",
     "dev": "nodemon src/index.ts | pino-pretty",
     "dev:debug": "nodemon --exec 'node -r ts-node/register --inspect-brk' src/index.ts | pino-pretty",
-    "lint": "npx tslint -c tslint.json -p tsconfig.json",
+    "lint": "tslint -c tslint.json -p tsconfig.json",
     "test": "mocha test/**/*.ts --exit",
     "test:debug": "mocha --inspect-brk test/**/*.ts --exit"
   },
