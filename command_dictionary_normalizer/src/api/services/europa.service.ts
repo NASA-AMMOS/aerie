@@ -1,4 +1,3 @@
-import Promise from 'bluebird';
 import L from '../../common/logger';
 import { europaConverter } from '../converters/europa.converter';
 import { EuropaDictionaryInput } from '../types/europa.type';
