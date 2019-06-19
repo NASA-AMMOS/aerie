@@ -11,6 +11,7 @@ import { TimeRange } from '../../shared/models';
 import { RavenActivityPoint } from './index';
 
 export interface RavenActivityBand {
+  activityFilter: string;
   activityHeight: number;
   activityLabelFontSize: number;
   activityStyle: number;

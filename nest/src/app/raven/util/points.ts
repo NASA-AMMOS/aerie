@@ -31,13 +31,14 @@ import { colorMap, colorRgbArrayToHex, getRandomColor } from './color';
 export function filterActivityPoints(
   points: RavenActivityPoint[],
   filter: string,
+  activityInitiallyHidden: boolean,
 ) {
   points = points.map((point: RavenActivityPoint) => {
     if (filter.length > 0) {
       const match = point.activityName.match(new RegExp(filter));
       return { ...point, hidden: match === null };
     } else {
-      return { ...point, hidden: false };
+      return { ...point, hidden: activityInitiallyHidden };
     }
   });
   return points;
@@ -93,6 +94,7 @@ export function getActivityPoint(
   sourceId: string,
   data: MpsServerActivityPoint,
   expandedFromPointId: string | null,
+  activityInitiallyHidden: boolean,
 ): RavenActivityPoint {
   const activityId = data['Activity ID'];
   const activityName = data['Activity Name'];
@@ -142,12 +144,13 @@ export function getActivityPoint(
     endTimestamp,
     expandedFromPointId,
     expansion: 'noExpansion',
-    hidden: false,
+    hidden: activityInitiallyHidden,
     id,
     keywordLine,
     legend,
     message,
     metadata,
+    selected: false,
     sourceId,
     start,
     startTimestamp,
@@ -172,6 +175,7 @@ export function getActivityPointsByLegend(
   sourceName: string,
   expandedFromPointId: string | null,
   timelineData: MpsServerActivityPoint[],
+  activityInitiallyHidden: boolean,
 ) {
   const legends: StringTMap<RavenActivityPoint[]> = {};
 
@@ -184,6 +188,7 @@ export function getActivityPointsByLegend(
       sourceId,
       data,
       expandedFromPointId,
+      activityInitiallyHidden,
     );
 
     if (point.start < minTime) {
@@ -257,6 +262,7 @@ export function getResourcePoints(
       id,
       isDuration,
       isTime,
+      selected: false,
       sourceId,
       start,
       subBandId: '',
@@ -318,6 +324,7 @@ export function getStatePoints(
       end,
       id,
       interpolateEnding: true,
+      selected: false,
       sourceId,
       start,
       subBandId: '',

@@ -6,10 +6,34 @@
   *ngIf="selectedSubBand && selectedSubBand.type !== 'divider'"
   class="grid-container"
 >
-  <div class="reset-columns-button">
+  <div class="reset-columns-container">
     <button mat-raised-button (click)="onResetColumns()">
       Reset Columns
     </button>
+    <ng-container *ngIf="selectedSubBand.type === 'activity'">
+      <input
+        class="flex-filter"
+        matInput
+        placeholder="Filter Activities In Graph By Name (e.g. DSS.*85.*|DSS.*86.*)"
+        [(ngModel)]="displayedFilter"
+      />
+      <span class="filter-message" *ngIf="displayedFilter !== activityFilter"
+        >Click filter icon to apply filter</span
+      >
+      <mat-icon
+        class="filter-icon"
+        matTooltip="Filter Activities"
+        (click)="
+          updateFilterActivityInSubBand.emit({
+            bandId: selectedBandId,
+            subBandId: selectedSubBand.id,
+            filter: displayedFilter
+          })
+        "
+      >
+        filter_list
+      </mat-icon>
+    </ng-container>
   </div>
 
   <ag-grid-angular
@@ -22,11 +46,12 @@
     [fullWidthCellRendererFramework]="getFullWidthCellRenderer()"
     [getNodeChildDetails]="getNodeChildDetails"
     [getRowHeight]="getRowHeight"
+    [gridOptions]="gridOptions"
     [isFullWidthCell]="isFullWidthCell"
-    [rowData]="rowData"
     (columnVisible)="emitUpdateTableColumns()"
     (columnMoved)="emitUpdateTableColumns()"
     (columnResized)="emitUpdateTableColumns()"
+    (gridReady)="onGridReady($event)"
     (sortChanged)="emitUpdateTableColumns()"
   >
   </ag-grid-angular>

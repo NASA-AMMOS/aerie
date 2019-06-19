@@ -33,6 +33,7 @@ export interface RavenActivityPoint {
   message: string | null;
   metadata: MpsServerActivityPointMetadata[];
   hidden: boolean;
+  selected: boolean;
   sourceId: string;
   start: number;
   startTimestamp: string;
