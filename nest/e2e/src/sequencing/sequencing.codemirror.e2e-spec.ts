@@ -52,6 +52,22 @@ describe('/sequencing.codemirror', () => {
     expect(commandTokens.count()).toBe(1);
   });
 
+  it('[C143203] WHEN a user has data in Sequencer AND switches to another app THEN comes back, the data should still be there', () => {
+    page.sendKeysToCodeMirror('HGA_HIST_PRM_S');
+    page.sendKeysToCodeMirror(protractor.Key.ENTER);
+    // One off selectors for this test
+    // Holds the individual tokens for a command "CMD 1 2 3" would be [CMD, 1, 2, 3]
+    // We are testing the case where the command is "CMD", expecting [CMD]
+    const commandTokens = element.all(
+      by.css('.CodeMirror-line > span:nth-child(1) span'),
+    );
+    page.planAppNavButton.click();
+    page.sequencingAppNavButton.click();
+
+    expect(commandTokens.count()).toBe(1);
+    expect(page.tabs.count()).toBe(1);
+  });
+
   afterEach(async () => {
     // Assert that there are no errors emitted from the browser
     const logs = await browser

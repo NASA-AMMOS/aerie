@@ -9,6 +9,9 @@ export class SequencingPage {
 
   waitTimeout = 5000;
 
+  planAppNavButton = element(by.css('a.nav-item:nth-child(1)'));
+  sequencingAppNavButton = element(by.css('a.nav-item:nth-child(2)'));
+
   commandDictionarySelect = element(by.css('#sequencing-command-select'));
   testCommandDictionary = element(by.id('mat-option-1'));
   commandList = element(by.id('sequencing-command-list'));

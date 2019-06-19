@@ -26,6 +26,23 @@ mat-card {
   overflow: hidden;
 }
 
-.reset-columns-button {
+.reset-columns-container {
   padding-bottom: 10px;
+  display: flex;
+}
+
+.flex-filter {
+  margin-left: 15px;
+  flex: 1 0 auto;
+}
+
+.filter-icon {
+  padding-top: 7px;
+}
+
+.filter-message {
+  margin-left: 10px;
+  margin-right: 10px;
+  margin-top: 10px;
+  color: red;
 }

@@ -20,9 +20,24 @@ export class RavenSettingsGlobalComponent {
   defaultBandSettings: RavenDefaultBandSettings;
 
   @Output()
+  updateBandsActivityFilter: EventEmitter<string> = new EventEmitter<string>();
+
+  @Output()
   updateDefaultBandSettings: EventEmitter<RavenUpdate> = new EventEmitter<
     RavenUpdate
   >();
+
+  /**
+   * Event. ActivityInitiallyHidden Change callback.
+   */
+  onChangeActivityInitiallyHidden(hidden: boolean) {
+    this.updateDefaultBandSettings.emit({
+      update: { activityInitiallyHidden: hidden },
+    });
+    if (hidden) {
+      this.updateBandsActivityFilter.emit('.*');
+    }
+  }
 
   /**
    * Event. Change callback. Only allow label font size between the min/max font size ranges.

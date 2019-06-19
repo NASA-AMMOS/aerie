@@ -84,6 +84,7 @@ export const config: ConfigState = {
   navigationDrawerState: NavigationDrawerStates.Collapsed,
   raven: {
     defaultBandSettings: {
+      activityInitiallyHidden: false,
       activityLayout: 0,
       icon: 'circle',
       iconEnabled: false,
