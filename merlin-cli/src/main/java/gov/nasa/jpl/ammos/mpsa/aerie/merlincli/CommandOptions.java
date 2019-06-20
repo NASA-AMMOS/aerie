@@ -180,14 +180,14 @@ public class CommandOptions {
             switch(status) {
                 case 201:
                     String planId = command.getId();
-                    System.out.println(String.format("CREATED: Plan successfully created with id %s.", planId));
+                    System.out.println(String.format("CREATED: Plan successfully created at: %s.", planId));
                     return true;
 
                 case 409:
                     System.err.println("CONFLICT: Plan already exists.");
                     break;
 
-                case 400:
+                case 422:
                     System.err.println("BAD REQUEST: Check validity of Plan JSON.");
                     break;
 
@@ -218,7 +218,7 @@ public class CommandOptions {
                     System.err.println(String.format("NOT FOUND: Plan with id %s does not exist.", planId));
                     break;
 
-                case 400:
+                case 422:
                     System.err.println("BAD REQUEST: Check validity of Plan JSON.");
                     break;
 
@@ -323,7 +323,7 @@ public class CommandOptions {
                     System.out.println(String.format("CREATED: Activity successfully created with id %s.", activityId));
                     return true;
 
-                case 400:
+                case 422:
                     System.err.println("BAD REQUEST: Check validity of Activity JSON.");
                     break;
 

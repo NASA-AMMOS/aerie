@@ -75,7 +75,7 @@ public class PlansControllerIntegrationTest {
     String body = response.getBody();
     Plan responsePlan = objectMapper.readValue(body, Plan.class);
 
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(responsePlan.getName()).isEqualTo(plan.getName());
   }
 
@@ -348,7 +348,7 @@ public class PlansControllerIntegrationTest {
             activityInstance,
             String.class);
 
-    assertThat(addActivityInstancesResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(addActivityInstancesResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
     ObjectMapper addActivityInstancesObjectMapper = new ObjectMapper();
     String addActivityInstancesBody = addActivityInstancesResponse.getBody();
@@ -592,7 +592,7 @@ public class PlansControllerIntegrationTest {
     Plan plan = generateRandomPlan();
 
     ResponseEntity<String> response = restTemplate.postForEntity("/plans/", plan, String.class);
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
     ObjectMapper objectMapper = new ObjectMapper();
     String body = response.getBody();
@@ -605,7 +605,7 @@ public class PlansControllerIntegrationTest {
         restTemplate.postForEntity(
             "/plans/" + planId + "/activity_instances", activityInstance, String.class);
 
-    assertThat(addActivityInstancesResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(addActivityInstancesResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
     ObjectMapper addActivityInstancesObjectMapper = new ObjectMapper();
     String addActivityInstancesBody = addActivityInstancesResponse.getBody();
