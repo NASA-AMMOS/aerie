@@ -44,6 +44,18 @@
   margin-bottom: 0px;
 }
 
+::ng-deep .CodeMirror-lint-marker-error {
+  background-image: none;
+  background: #ff7b7b;
+  left: 30px;
+  width: 3px;
+  height: 20px;
+}
+
+::ng-deep .CodeMirror-linenumber {
+  left: unset !important;
+}
+
 :host,
 #sequencing-editor-mount {
   height: 100%;
