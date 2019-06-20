@@ -13,7 +13,7 @@
   padding: 1.5em;
   max-width: 400px;
   opacity: 0;
-  transition: opacity 0.3s ease-in-out;
+  transition: all 0.15s ease-in-out;
   background: rgb(224, 224, 224);
   color: #333 !important;
   border-radius: 1em;

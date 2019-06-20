@@ -82,7 +82,7 @@ export function getCommandParameterDescriptionTemplate(
   );
 
   if (parameterIndex !== -1) {
-    const targetParameter = commandObject.parameters[parameterIndex];
+    const targetParameter = commandObject.parameters[parameterIndex - 1];
 
     return getParameterTooltip(targetParameter);
   }
@@ -93,7 +93,8 @@ export function getCommandParameterDescriptionTemplate(
  * Generates the tooltip content for a provided parameter
  */
 export function getParameterTooltip(parameterObject: MpsCommandParameter) {
-  return `
+  if (parameterObject) {
+    return `
     <h3>${parameterObject.name}</h3>
     <p>${parameterObject.help}</p>
     <p>Range: ${parameterObject.range}</p>
@@ -101,4 +102,6 @@ export function getParameterTooltip(parameterObject: MpsCommandParameter) {
     <p>Units: ${parameterObject.units}</p>
     <p>Default Value: ${parameterObject.defaultValue}</p>
   `;
+  }
+  return ``;
 }

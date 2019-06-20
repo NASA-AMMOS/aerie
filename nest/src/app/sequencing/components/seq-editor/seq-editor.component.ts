@@ -278,13 +278,19 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
       this.editor
         .getWrapperElement()
         .addEventListener('mousemove', (e: MouseEvent) => {
+          // If there is an error tooltip, don't show the description tooltip
+          const errorTooltip = document.querySelector(
+            '.CodeMirror-lint-tooltip',
+          );
+
           if (
             this.commandsByName &&
             this.editorOptions.showTooltips &&
-            this.editor
+            this.editor &&
+            !errorTooltip
           ) {
             // Used to give a tolerance for the mouse to be nearby the text, mouse doesn't have to be exactly on the text
-            const nearby = [0, 0, 0, 5];
+            const nearby = [0, 0, 0, 5, 0, -5, 5, 0, -5, 0];
             // tslint:disable-next-line: deprecation
             const node = (e.target || e.srcElement) as HTMLElement;
             const text = node.innerText || node.textContent;
@@ -292,7 +298,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
             let target;
 
             // Check nearby positions to see if text is nearby mouse
-            for (let i = 0; i < nearby.length; i += 2) {
+            for (let i = 0, length = nearby.length; i < length; i += 2) {
               const pos = cm.coordsChar({
                 left: e.clientX + nearby[i],
                 top: e.clientY + nearby[i + 1],
@@ -307,6 +313,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
                   token,
                 };
 
+                // Hides the tooltip when the user moves off the token
                 node.addEventListener(
                   'mouseleave',
                   (mouseLeaveEvent: MouseEvent) => {
@@ -341,7 +348,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
                 // CodeMirror indexes line numbers starting at 0, need to offset
                 const hoveredParameter = target.token.string;
 
-                const currentLine = target.pos.line + 1;
+                const currentLine = target.pos.line;
                 const lineTokens = cm.getLineTokens(currentLine);
 
                 const newTooltipContent = getCommandParameterDescriptionTemplate(
@@ -351,13 +358,9 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
                   this.commandsByName,
                 );
 
-                // Only update the content if it's different than the current content
-                // Handles the case where the user is moving their mouse over the same token
-                if (this.tooltip.innerHTML !== newTooltipContent) {
-                  this.tooltip.innerHTML = newTooltipContent;
-                  this.positionTooltip(node);
-                  this.showTooltip(true);
-                }
+                this.tooltip.innerHTML = newTooltipContent;
+                this.positionTooltip(node);
+                this.showTooltip(true);
               } else {
                 // If the mouse is on blank space
                 this.showTooltip(false);
@@ -374,10 +377,11 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   positionTooltip(node: HTMLElement) {
     const target_rect = node.getBoundingClientRect();
     const tooltip_rect = this.tooltip.getBoundingClientRect();
+    const yOffset = -20;
 
     if (tooltip_rect.height <= target_rect.top) {
       this.tooltip.style.top =
-        target_rect.top - tooltip_rect.height + 20 + 'px';
+        target_rect.top - tooltip_rect.height + yOffset + 'px';
     } else {
       this.tooltip.style.top = target_rect.bottom + 'px';
     }
@@ -392,14 +396,10 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   private showTooltip(state: boolean) {
     if (state) {
       this.tooltip.style.opacity = '1';
-      setTimeout(() => {
-        this.tooltip.style.display = 'block';
-      }, 250);
+      this.tooltip.style.visibility = 'visible';
     } else {
       this.tooltip.style.opacity = '0';
-      setTimeout(() => {
-        this.tooltip.style.display = 'none';
-      }, 250);
+      this.tooltip.style.visibility = 'hidden';
     }
   }
 
