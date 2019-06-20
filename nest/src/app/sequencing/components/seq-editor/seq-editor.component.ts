@@ -246,7 +246,14 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
           event.key !== 'ArrowDown' &&
           event.key !== 'ArrowUp'
         ) {
-          this.editor.execCommand('autocomplete');
+          // @ts-ignore: CodeMirror types are not up to date, doesn't have getCursor()
+          const cursor = this.editor.getCursor();
+          const currentLine = this.editor.getLineTokens(cursor.line);
+
+          // Only show the autocomplete prompt if there is at least 1 character
+          if (currentLine.length > 0) {
+            this.editor.execCommand('autocomplete');
+          }
         }
       });
     }
