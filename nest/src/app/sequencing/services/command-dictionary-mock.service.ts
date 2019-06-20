@@ -10,12 +10,17 @@
 import { Injectable } from '@angular/core';
 import { Observable, Observer } from 'rxjs';
 import { CommandDictionary, MpsCommand } from '../../shared/models';
-import { mpsCommands } from '../mocks/mps-commands';
+import { europaCommands, mpsCommands } from '../mocks';
 
 export const mockCommandDictionaryList: CommandDictionary[] = [
   {
     id: 'TEST_1',
     name: 'Test 1',
+    version: '1.0.0',
+  },
+  {
+    id: 'EUROPA_CLIPPER_1',
+    name: 'Europa Clipper',
     version: '1.0.0',
   },
 ];
@@ -33,7 +38,17 @@ export class CommandDictionaryMockService {
 
   getCommandDictionary(id: string): Observable<MpsCommand[]> {
     return new Observable((o: Observer<MpsCommand[]>) => {
-      o.next(mpsCommands);
+      switch (id) {
+        case 'TEST_1':
+          o.next(mpsCommands);
+          break;
+        case 'EUROPA_CLIPPER_1':
+          o.next(europaCommands);
+          break;
+        default:
+          o.next(mpsCommands);
+          break;
+      }
       o.complete();
     });
   }

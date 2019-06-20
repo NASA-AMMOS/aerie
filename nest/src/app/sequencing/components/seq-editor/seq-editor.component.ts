@@ -100,7 +100,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   constructor(private seqEditorService: SeqEditorService) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.commandsByName || changes.mode) {
+    if (changes.commands || changes.mode) {
       this.setMode();
     }
 
@@ -163,6 +163,11 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
           buildMpsLint(this.commandsByName);
           break;
       }
+
+      // We reset the linter so it clears previous lint messages
+      // Useful for when switching between command dictionaries
+      this.editor.setOption('lint', false);
+      this.editor.setOption('lint', true);
     }
   }
 
@@ -246,7 +251,14 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
           event.key !== 'ArrowDown' &&
           event.key !== 'ArrowUp'
         ) {
-          this.editor.execCommand('autocomplete');
+          // @ts-ignore: CodeMirror types are not up to date, doesn't have getCursor()
+          const cursor = this.editor.getCursor();
+          const currentLine = this.editor.getLineTokens(cursor.line);
+
+          // Only show the autocomplete prompt if there is at least 1 character
+          if (currentLine.length > 0) {
+            this.editor.execCommand('autocomplete');
+          }
         }
       });
     }

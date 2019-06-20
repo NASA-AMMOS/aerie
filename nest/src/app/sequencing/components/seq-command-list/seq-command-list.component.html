@@ -23,7 +23,10 @@
         </mat-expansion-panel-header>
 
         <ng-template matExpansionPanelContent>
-          {{ commandsByName[command.name].parameters | json }}
+          {{
+            commandsByName[command.name].description ||
+              (commandsByName[command.name].parameters | json)
+          }}
         </ng-template>
       </mat-expansion-panel>
 
