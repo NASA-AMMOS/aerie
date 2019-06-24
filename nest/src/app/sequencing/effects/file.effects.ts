@@ -28,7 +28,7 @@ import { withLoadingBar } from './utils';
 @Injectable()
 export class FileEffects {
   private fileService: FileService;
-  private useMockFileService = false;
+  private useMockFileService = true;
 
   constructor(
     private store$: Store<SequencingAppState>,
@@ -57,7 +57,7 @@ export class FileEffects {
           .pipe(
             map(
               (children: SequenceFile[]) =>
-                new UpdateChildren(action.parentId, children),
+                new UpdateChildren(action.parentId, children, action.options),
             ),
             catchError((e: Error) => {
               console.error('FileEffects - fetchChildren$: ', e);

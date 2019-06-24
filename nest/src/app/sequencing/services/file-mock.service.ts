@@ -8,24 +8,15 @@
  */
 
 import { Injectable } from '@angular/core';
-import keyBy from 'lodash-es/keyBy';
 import { Observable, Observer } from 'rxjs';
 import { SequenceFile } from '../../../../../sequencing/src/models';
 import * as mocks from '../../../../../sequencing/test/mocks';
 import { FileServiceInterface } from './file-service-interface';
 
 const mockFiles = mocks.getFiles();
-const mockFilesById = keyBy(mockFiles, 'id');
 
 export function getChildren(fileId: string): SequenceFile[] {
-  const { childIds = [] } = mockFilesById[fileId];
-  const children = childIds.reduce((files: SequenceFile[], id: string) => {
-    const file = mockFilesById[id];
-    if (file) {
-      files.push(file);
-    }
-    return files;
-  }, []);
+  const children = mockFiles.filter(file => file.parentId === fileId);
   return children;
 }
 

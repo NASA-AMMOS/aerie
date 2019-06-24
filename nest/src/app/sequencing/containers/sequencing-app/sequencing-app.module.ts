@@ -12,6 +12,7 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   MatButtonModule,
+  MatCardModule,
   MatDividerModule,
   MatFormFieldModule,
   MatIconModule,
@@ -38,6 +39,7 @@ import { SequencingAppComponent } from './sequencing-app.component';
     CommonModule,
     FormsModule,
     MatButtonModule,
+    MatCardModule,
     MatDividerModule,
     MatFormFieldModule,
     MatIconModule,

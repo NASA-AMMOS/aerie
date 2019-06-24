@@ -12,8 +12,10 @@ import * as d from 'decoders';
 export const dSequenceFile = d.exact({
   childIds: d.array(d.string),
   content: d.string,
+  expanded: d.boolean,
   id: d.string,
   name: d.string,
+  parentId: d.string,
   timeCreated: d.number,
   timeLastUpdated: d.number,
   type: d.string,
@@ -24,6 +26,7 @@ export const dSequenceFileCreateBody = d.exact({
   content: d.string,
   id: d.optional(d.string),
   name: d.string,
+  parentId: d.string,
   type: d.string,
 });
 
@@ -32,6 +35,7 @@ export const dSequenceFileUpdateBody = d.exact({
   content: d.string,
   id: d.string,
   name: d.string,
+  parentId: d.string,
   timeCreated: d.number,
   timeLastUpdated: d.number,
   type: d.string,

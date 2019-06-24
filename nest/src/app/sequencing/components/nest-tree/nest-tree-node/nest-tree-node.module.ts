@@ -9,12 +9,11 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { NestTreeModule } from '../../components';
-import { FileExplorerComponent } from './file-explorer.component';
+import { NestTreeNodeComponent } from './nest-tree-node.component';
 
 @NgModule({
-  declarations: [FileExplorerComponent],
-  exports: [FileExplorerComponent],
-  imports: [CommonModule, NestTreeModule],
+  declarations: [NestTreeNodeComponent],
+  exports: [NestTreeNodeComponent],
+  imports: [CommonModule],
 })
-export class FileExplorerModule {}
+export class NestTreeNodeModule {}

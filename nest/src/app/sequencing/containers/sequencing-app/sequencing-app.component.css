@@ -22,9 +22,13 @@ main {
 }
 
 ::ng-deep .mat-tab-body-wrapper {
+  padding-top: 30px;
+}
+
+.tab-commands {
   padding: 15px 20px;
 }
 
-::ng-deep .mat-tab-body-wrapper {
-  padding-top: 30px;
+.no-files-or-folders {
+  padding: 15px;
 }

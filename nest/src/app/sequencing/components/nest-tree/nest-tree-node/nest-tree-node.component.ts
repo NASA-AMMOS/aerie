@@ -7,14 +7,15 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { CommonModule } from '@angular/common';
-import { NgModule } from '@angular/core';
-import { NestTreeModule } from '../../components';
-import { FileExplorerComponent } from './file-explorer.component';
+import { Component, Input } from '@angular/core';
+import { SequenceFile } from '../../../../../../../sequencing/src/models';
 
-@NgModule({
-  declarations: [FileExplorerComponent],
-  exports: [FileExplorerComponent],
-  imports: [CommonModule, NestTreeModule],
+@Component({
+  selector: 'nest-tree-node',
+  styleUrls: ['./nest-tree-node.component.css'],
+  templateUrl: './nest-tree-node.component.html',
 })
-export class FileExplorerModule {}
+export class NestTreeNodeComponent {
+  @Input()
+  file: SequenceFile;
+}

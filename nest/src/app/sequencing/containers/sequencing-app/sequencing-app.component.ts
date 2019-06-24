@@ -22,7 +22,11 @@ import {
   SelectCommandDictionary,
 } from '../../actions/command-dictionary.actions';
 import { AddText, OpenEditorHelpDialog } from '../../actions/editor.actions';
-import { AddEditor, SetActiveEditor } from '../../actions/file.actions';
+import {
+  AddEditor,
+  FetchChildren,
+  SetActiveEditor,
+} from '../../actions/file.actions';
 import {
   SetPanelSizes,
   ToggleEditorPanelsDirection,
@@ -46,6 +50,7 @@ import {
   getRightPanelVisible,
   getSelectedDictionaryId,
   getShowLoadingBar,
+  hasFiles,
 } from '../../selectors';
 import { SequencingAppState } from '../../sequencing-store';
 
@@ -60,6 +65,7 @@ export class SequencingAppComponent implements OnDestroy {
   commands$: Observable<MpsCommand[] | null>;
   commandsByName$: Observable<StringTMap<MpsCommand> | null>;
   dictionaries$: Observable<CommandDictionary[]>;
+  hasFiles$: Observable<boolean>;
   leftPanelSize$: Observable<number>;
   leftPanelVisible$: Observable<boolean>;
   middlePanelSize$: Observable<number>;
@@ -86,6 +92,7 @@ export class SequencingAppComponent implements OnDestroy {
     this.commands$ = this.store.pipe(select(getCommands));
     this.commandsByName$ = this.store.pipe(select(getCommandsByName));
     this.dictionaries$ = this.store.pipe(select(getDictionaries));
+    this.hasFiles$ = this.store.pipe(select(hasFiles));
     this.leftPanelSize$ = this.store.pipe(select(getLeftPanelSize));
     this.leftPanelVisible$ = this.store.pipe(select(getLeftPanelVisible));
     this.middlePanelSize$ = this.store.pipe(select(getMiddlePanelSize));
@@ -107,6 +114,7 @@ export class SequencingAppComponent implements OnDestroy {
         this.commandsByName = commandsByName;
       });
 
+    this.store.dispatch(new FetchChildren('root'));
     this.store.dispatch(new FetchCommandDictionaries());
   }
 

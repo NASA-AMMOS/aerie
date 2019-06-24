@@ -151,7 +151,13 @@
           <mat-icon class="tab-icon">folder</mat-icon> Files
         </ng-template>
 
-        <file-explorer></file-explorer>
+        <file-explorer *ngIf="hasFiles$ | async"></file-explorer>
+
+        <div class="no-files-or-folders" *ngIf="!(hasFiles$ | async)">
+          <mat-card>
+            You have not created a folder or file yet.
+          </mat-card>
+        </div>
       </mat-tab>
     </mat-tab-group>
   </as-split-area>
@@ -193,33 +199,35 @@
           <mat-icon class="tab-icon">code</mat-icon> Commands
         </ng-template>
 
-        <seq-command-loader
-          [selectedId]="selectedDictionaryId$ | async"
-          [dictionaries]="dictionaries$ | async"
-          (selectDictionary)="onSelectDictionary($event)"
-        >
-        </seq-command-loader>
+        <div class="tab-commands">
+          <seq-command-loader
+            [selectedId]="selectedDictionaryId$ | async"
+            [dictionaries]="dictionaries$ | async"
+            (selectDictionary)="onSelectDictionary($event)"
+          >
+          </seq-command-loader>
 
-        <mat-form-field
-          id="command-filter-input"
-          *ngIf="selectedDictionaryId$ | async"
-        >
-          <input
-            matInput
-            placeholder="Command Filter"
-            [(ngModel)]="commandFilterQuery"
-          />
-          <mat-icon matSuffix>search</mat-icon>
-        </mat-form-field>
+          <mat-form-field
+            id="command-filter-input"
+            *ngIf="selectedDictionaryId$ | async"
+          >
+            <input
+              matInput
+              placeholder="Command Filter"
+              [(ngModel)]="commandFilterQuery"
+            />
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
 
-        <seq-command-list
-          [activeEditor]="activeEditor$ | async"
-          [commands]="commands$ | async"
-          [commandsByName]="commandsByName$ | async"
-          [commandFilterQuery]="commandFilterQuery"
-          (selectCommand)="onSelectCommand($event)"
-        >
-        </seq-command-list>
+          <seq-command-list
+            [activeEditor]="activeEditor$ | async"
+            [commands]="commands$ | async"
+            [commandsByName]="commandsByName$ | async"
+            [commandFilterQuery]="commandFilterQuery"
+            (selectCommand)="onSelectCommand($event)"
+          >
+          </seq-command-list>
+        </div>
       </mat-tab>
     </mat-tab-group>
   </as-split-area>

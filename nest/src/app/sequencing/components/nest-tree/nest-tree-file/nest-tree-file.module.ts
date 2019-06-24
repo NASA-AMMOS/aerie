@@ -7,19 +7,16 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Component, Input } from '@angular/core';
-import { SequenceFile } from '../../../../../../sequencing/src/models';
-import { StringTMap } from '../../../shared/models';
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { MatIconModule } from '@angular/material';
+import { ContextMenuModule } from 'ngx-contextmenu';
+import { NestTreeNodeModule } from '../nest-tree-node/nest-tree-node.module';
+import { NestTreeFileComponent } from './nest-tree-file.component';
 
-@Component({
-  selector: 'seq-file-tree',
-  styleUrls: ['./seq-file-tree.component.css'],
-  templateUrl: './seq-file-tree.component.html',
+@NgModule({
+  declarations: [NestTreeFileComponent],
+  exports: [NestTreeFileComponent],
+  imports: [CommonModule, ContextMenuModule, MatIconModule, NestTreeNodeModule],
 })
-export class SeqFileTreeComponent {
-  @Input()
-  file: SequenceFile;
-
-  @Input()
-  files: StringTMap<SequenceFile>;
-}
+export class NestTreeFileModule {}

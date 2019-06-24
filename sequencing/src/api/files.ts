@@ -74,20 +74,13 @@ export async function readChildren(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
     const collection = getCollection<SequenceFile>('sequencing', 'files');
-    const file = await findOne<SequenceFile>(collection, { id });
 
-    if (file) {
-      const children = await findToArray<SequenceFile>(collection, {
-        id: { $in: file.childIds },
-      });
-      const files = children.map(child => omit(child, '_id')) as SequenceFile[];
-      logger.info(JSON.stringify(files));
-      res.send(files);
-    } else {
-      const message = `File With ID ${id} Not Found`;
-      logger.info(message);
-      res.status(404).send({ message });
-    }
+    const children = await findToArray<SequenceFile>(collection, {
+      parentId: { $eq: id },
+    });
+    const files = children.map(child => omit(child, '_id')) as SequenceFile[];
+    logger.info(JSON.stringify(files));
+    res.send(files);
   } catch (e) {
     logger.error(e.message);
     res.status(500).send(e);

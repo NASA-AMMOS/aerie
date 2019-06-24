@@ -96,10 +96,21 @@ export const getEditorsList = createSelector(
 
 export const getRootFileChildIds = createSelector(
   getFiles,
-  (files: StringTMap<SequenceFile>) => files.root.childIds,
+  (files: StringTMap<SequenceFile>) =>
+    Object.values(files)
+      .filter(file => file.parentId === 'root')
+      .map(file => file.id),
 );
 
 export const getActiveEditor = createSelector(
   getFileState,
   (state: FileState) => state.activeEditor,
+);
+
+export const hasFiles = createSelector(
+  getFiles,
+  (files: StringTMap<SequenceFile>): boolean => {
+    console.log(files);
+    return Object.values(files).length > 0;
+  },
 );

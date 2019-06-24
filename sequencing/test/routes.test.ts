@@ -53,6 +53,7 @@ describe('routes', () => {
         content: 'UNSET 0;',
         id: '123456789',
         name: 'seq_42',
+        parentId: 'root',
         type: 'file',
       };
 
@@ -109,6 +110,7 @@ describe('routes', () => {
         content: 'SET 0;',
         id: '42',
         name: 'seq_0',
+        parentId: 'root',
         type: 'file',
       };
 
@@ -121,6 +123,7 @@ describe('routes', () => {
       assert.deepStrictEqual(body.content, newFile.content);
       assert.deepStrictEqual(body.id, newFile.id);
       assert.deepStrictEqual(body.name, newFile.name);
+      assert.deepStrictEqual(body.parentId, newFile.parentId);
       assert.notStrictEqual(body.timeCreated, undefined);
       assert.notStrictEqual(body.timeLastUpdated, undefined);
       assert.deepStrictEqual(body.type, newFile.type);
@@ -131,6 +134,7 @@ describe('routes', () => {
         childIds: ['someChildId'],
         content: 'SET 1;',
         name: 'seq_1',
+        parentId: 'root',
         type: 'file',
       };
 
@@ -143,6 +147,7 @@ describe('routes', () => {
       assert.deepStrictEqual(body.content, newFile.content);
       assert.notStrictEqual(body.id, undefined);
       assert.deepStrictEqual(body.name, newFile.name);
+      assert.deepStrictEqual(body.parentId, newFile.parentId);
       assert.notStrictEqual(body.timeCreated, undefined);
       assert.notStrictEqual(body.timeLastUpdated, undefined);
       assert.deepStrictEqual(body.type, newFile.type);
@@ -199,14 +204,6 @@ describe('routes', () => {
         .get('/sequencing/files/1/children')
         .expect(500);
       getCollection.restore();
-    });
-
-    it('should return a 404 with a status message when the file with the given id is not found', async () => {
-      const id = '42';
-      await request(app)
-        .get(`/sequencing/files/${id}/children`)
-        .expect(404)
-        .expect({ message: `File With ID ${id} Not Found` });
     });
 
     describe('get a files children by id', () => {

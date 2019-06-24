@@ -7,14 +7,24 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { CommonModule } from '@angular/common';
-import { NgModule } from '@angular/core';
-import { NestTreeModule } from '../../components';
-import { FileExplorerComponent } from './file-explorer.component';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { SequenceFile } from '../../../../../../sequencing/src/models';
+import { StringTMap } from '../../../shared/models';
 
-@NgModule({
-  declarations: [FileExplorerComponent],
-  exports: [FileExplorerComponent],
-  imports: [CommonModule, NestTreeModule],
+@Component({
+  selector: 'nest-tree',
+  styleUrls: ['./nest-tree.component.css'],
+  templateUrl: './nest-tree.component.html',
 })
-export class FileExplorerModule {}
+export class NestTreeComponent {
+  @Input()
+  file: SequenceFile;
+
+  @Input()
+  files: StringTMap<SequenceFile>;
+
+  @Output()
+  expandFolderEvent: EventEmitter<SequenceFile> = new EventEmitter<
+    SequenceFile
+  >();
+}

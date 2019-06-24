@@ -10,37 +10,28 @@
 import { clone } from 'lodash';
 import { SequenceFile } from '../src/models';
 
-export const root: SequenceFile = {
-  childIds: [
-    '13c2c7ac-9e8c-43d5-8b4d-095e3747feb2',
-    'b255320a-a640-4cc9-8f4b-36d7590c98fd',
-  ],
-  content: '',
-  id: 'root',
-  name: 'root',
-  timeCreated: 0,
-  timeLastUpdated: 0,
-  type: 'directory',
-};
-
 export const file0: SequenceFile = {
   childIds: [
     '717f2355-9d1e-44d2-9cae-78d913924668',
     'a1b802ae-cfd1-4ffa-bc91-aa52ff907ca6',
   ],
   content: '',
+  expanded: false,
   id: '13c2c7ac-9e8c-43d5-8b4d-095e3747feb2',
   name: 'Sequences',
+  parentId: 'root',
   timeCreated: 1558112161536,
   timeLastUpdated: 1558114056664,
-  type: 'directory',
+  type: 'folder',
 };
 
 export const file1: SequenceFile = {
   childIds: [],
   content: 'END 0',
+  expanded: false,
   id: 'b255320a-a640-4cc9-8f4b-36d7590c98fd',
   name: 'Sequence 1',
+  parentId: 'root',
   timeCreated: 1558114039168,
   timeLastUpdated: 1558114039168,
   type: 'file',
@@ -49,8 +40,10 @@ export const file1: SequenceFile = {
 export const file2: SequenceFile = {
   childIds: [],
   content: 'START 0',
+  expanded: false,
   id: '717f2355-9d1e-44d2-9cae-78d913924668',
   name: 'Sequence 2',
+  parentId: '13c2c7ac-9e8c-43d5-8b4d-095e3747feb2',
   timeCreated: 1559683148272,
   timeLastUpdated: 1559683148272,
   type: 'file',
@@ -59,19 +52,46 @@ export const file2: SequenceFile = {
 export const file3: SequenceFile = {
   childIds: [],
   content: 'RETURN 0',
+  expanded: false,
   id: 'a1b802ae-cfd1-4ffa-bc91-aa52ff907ca6',
   name: 'Sequence 3',
+  parentId: '13c2c7ac-9e8c-43d5-8b4d-095e3747feb2',
   timeCreated: 1559683661286,
   timeLastUpdated: 1559683661286,
   type: 'file',
 };
 
+export const file4: SequenceFile = {
+  childIds: [],
+  content: '',
+  expanded: false,
+  id: '8559ef8d-062f-4c21-8ebc-b80bc8271304',
+  name: 'More Sequences',
+  parentId: '13c2c7ac-9e8c-43d5-8b4d-095e3747feb2',
+  timeCreated: 1560986868095,
+  timeLastUpdated: 1560986868095,
+  type: 'folder',
+};
+
+export const file5: SequenceFile = {
+  childIds: [],
+  content: '',
+  expanded: false,
+  id: 'af3cf754-9ec2-47b8-bd3b-fda7b2bc096a',
+  name: 'Sequence 4',
+  parentId: '8559ef8d-062f-4c21-8ebc-b80bc8271304',
+  timeCreated: 1560986906025,
+  timeLastUpdated: 1560986906025,
+  type: 'file',
+};
+
 export const files: SequenceFile[] = [
-  { ...root },
   { ...file0 },
   { ...file1 },
   { ...file2 },
   { ...file3 },
+  { ...file4 },
+  { ...file5 },
 ];
 
 /**

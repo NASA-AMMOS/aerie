@@ -7,13 +7,20 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { CommonModule } from '@angular/common';
-import { NgModule } from '@angular/core';
-import { SeqFileTreeComponent } from './seq-file-tree.component';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { SequenceFile } from '../../../../../../../sequencing/src/models';
 
-@NgModule({
-  declarations: [SeqFileTreeComponent],
-  exports: [SeqFileTreeComponent],
-  imports: [CommonModule],
+@Component({
+  selector: 'nest-tree-folder',
+  styleUrls: ['./nest-tree-folder.component.css'],
+  templateUrl: './nest-tree-folder.component.html',
 })
-export class SeqFileTreeModule {}
+export class NestTreeFolderComponent {
+  @Input()
+  file: SequenceFile;
+
+  @Output()
+  expandFolderEvent: EventEmitter<SequenceFile> = new EventEmitter<
+    SequenceFile
+  >();
+}

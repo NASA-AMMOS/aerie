@@ -7,11 +7,18 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+:host {
+  display: block;
+  width: auto;
+}
+
 ul {
+  list-style: none;
   margin: 0;
-  padding-left: 25px;
+  padding: 0;
 }
 
 li {
-  list-style-type: none;
+  margin: 0;
+  padding-left: 20px;
 }

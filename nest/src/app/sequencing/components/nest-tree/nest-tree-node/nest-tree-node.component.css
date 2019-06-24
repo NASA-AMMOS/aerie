@@ -7,14 +7,23 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { CommonModule } from '@angular/common';
-import { NgModule } from '@angular/core';
-import { NestTreeModule } from '../../components';
-import { FileExplorerComponent } from './file-explorer.component';
+:host {
+  cursor: pointer;
+  display: block;
+  width: auto;
+}
 
-@NgModule({
-  declarations: [FileExplorerComponent],
-  exports: [FileExplorerComponent],
-  imports: [CommonModule, NestTreeModule],
-})
-export class FileExplorerModule {}
+:host:hover {
+  background-color: rgba(200, 200, 200, 0.3);
+  margin-left: -100%;
+  padding-left: 100%;
+}
+
+.node {
+  align-items: center;
+  display: inline-flex;
+  flex-direction: row;
+  justify-content: center;
+  padding-left: 10px;
+  user-select: none;
+}

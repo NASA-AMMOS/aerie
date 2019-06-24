@@ -46,11 +46,13 @@ export const initialState: FileState = {
     root: {
       childIds: [],
       content: '',
+      expanded: false,
       id: 'root',
       name: 'root',
+      parentId: '',
       timeCreated: 0,
       timeLastUpdated: 0,
-      type: 'directory',
+      type: 'folder',
     },
   },
 };
@@ -249,9 +251,11 @@ function updateChildren(state: FileState, action: UpdateChildren): FileState {
   return {
     ...state,
     files: {
+      ...state.files,
       [action.parentId]: {
         ...state.files[action.parentId],
         childIds: action.children.map(child => child.id),
+        ...action.options,
       },
       ...keyBy(action.children, 'id'),
     },

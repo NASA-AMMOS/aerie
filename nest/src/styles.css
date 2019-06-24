@@ -106,3 +106,33 @@ main {
 .mat-drawer-side {
   z-index: 1 !important;
 }
+
+.ngx-contextmenu .dropdown-menu {
+  background-color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 5px 0;
+}
+
+.ngx-contextmenu .dropdown-menu .divider {
+  background-color: #e5e5e5;
+  height: 1px;
+  margin: 9px 0;
+  overflow: hidden;
+}
+
+.ngx-contextmenu .dropdown-menu li {
+  font-size: 14px;
+  list-style: none;
+}
+
+.ngx-contextmenu .dropdown-menu li a {
+  background-color: transparent;
+  color: #333;
+  display: block;
+  padding: 0.5em 1em;
+  text-decoration: none;
+}
+
+.ngx-contextmenu .dropdown-menu a:hover {
+  background-color: rgb(231, 231, 231);
+}
