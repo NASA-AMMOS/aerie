@@ -84,6 +84,20 @@ export class SequencingPage {
   editorToolsPanelButton = element(by.id('seq-editor-tools-button'));
   fullscreenButton = element(by.id('seq-editor-fullscreen-button'));
 
+  parameterEditorTabButton = element(
+    by.xpath(
+      '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/as-split/as-split-area[3]/mat-tab-group/mat-tab-header/div[2]/div/div/div[2]',
+    ),
+  );
+  noActiveCommandPrompt = element(
+    by.id('seq-parameter-form-no-active-command-prompt'),
+  );
+  noParameterPrompt = element(by.id('seq-parameter-form-no-parameters-prompt'));
+  parameterFormContainer = element(by.id('seq-command-form-editor'));
+  activeCommandName = element(by.id('seq-parameter-form-command-name'));
+  updateParametersButton = element(by.id('seq-parameter-form-update-button'));
+  parameterInputFields = element.all(by.className('mat-input-element'));
+
   selectTestCommandDictionary() {
     this.commandDictionarySelect.click();
     element(
@@ -124,6 +138,10 @@ export class SequencingPage {
 
   refreshBrowser() {
     browser.navigate().refresh();
+  }
+
+  navigateToParameterEditorPanel() {
+    this.parameterEditorTabButton.click();
   }
 
   navigateTo(route: string) {

@@ -8,10 +8,12 @@
  */
 
 import { Action } from '@ngrx/store';
+import { CurrentLine } from '../models';
 
 export enum EditorActionTypes {
   AddText = '[sequencing-editor] add_text',
   OpenEditorHelpDialog = '[sequencing-editor] open_editor_help_dialog',
+  SetCurrentLine = '[sequencing-editor] set_current_line',
 }
 
 export class AddText implements Action {
@@ -25,4 +27,10 @@ export class OpenEditorHelpDialog implements Action {
   constructor(public width: string = '400px') {}
 }
 
-export type EditorActions = AddText | OpenEditorHelpDialog;
+export class SetCurrentLine implements Action {
+  readonly type = EditorActionTypes.SetCurrentLine;
+
+  constructor(public currentLine: CurrentLine) {}
+}
+
+export type EditorActions = AddText | OpenEditorHelpDialog | SetCurrentLine;

@@ -25,7 +25,7 @@ main {
   padding-top: 30px;
 }
 
-.tab-commands {
+::ng-deep .mat-tab-body-content {
   padding: 15px 20px;
 }
 

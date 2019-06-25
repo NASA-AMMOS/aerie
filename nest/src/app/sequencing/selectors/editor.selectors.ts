@@ -7,30 +7,17 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { StringTMap } from '../../shared/models';
-import { SequenceTab } from './sequence-tab';
+import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { EditorState } from '../reducers/editor.reducer';
+import { State } from '../sequencing-store';
 
-export interface Editor {
-  currentTab: string | null;
-  id: string;
-  openedTabs: StringTMap<SequenceTab> | null;
-}
+const featureSelector = createFeatureSelector<State>('sequencing');
+export const getEditorState = createSelector(
+  featureSelector,
+  (state: State): EditorState => state.editor,
+);
 
-export interface EditorOptions {
-  autocomplete: boolean;
-  darkTheme: boolean;
-  showTooltips: boolean;
-}
-
-export interface Parameter {
-  name: string;
-  help: string | undefined;
-  type: string | undefined;
-  units: string | undefined;
-  value: string;
-}
-
-export interface CurrentLine {
-  commandName: string;
-  parameters: Parameter[];
-}
+export const getCurrentLine = createSelector(
+  getEditorState,
+  (state: EditorState) => state.currentLine,
+);

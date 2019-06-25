@@ -7,30 +7,28 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { StringTMap } from '../../shared/models';
-import { SequenceTab } from './sequence-tab';
-
-export interface Editor {
-  currentTab: string | null;
-  id: string;
-  openedTabs: StringTMap<SequenceTab> | null;
+mat-form-field {
+  margin-bottom: 30px;
+  width: 100%;
 }
 
-export interface EditorOptions {
-  autocomplete: boolean;
-  darkTheme: boolean;
-  showTooltips: boolean;
+#seq-parameter-form-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
 }
 
-export interface Parameter {
-  name: string;
-  help: string | undefined;
-  type: string | undefined;
-  units: string | undefined;
-  value: string;
+#seq-parameter-form-update-button {
+  margin-left: auto;
 }
 
-export interface CurrentLine {
-  commandName: string;
-  parameters: Parameter[];
+#seq-parameter-form-command-name {
+  margin: 0;
+  font-weight: 800;
+}
+
+::ng-deep #seq-command-form-editor .mat-form-field-label {
+  text-transform: uppercase;
+  color: #ae4b00 !important;
+  font-weight: 800 !important;
 }

@@ -14,10 +14,12 @@
   [commands]="commands$ | async"
   [commandsByName]="commandsByName$ | async"
   [currentTab]="currentTab$ | async"
+  [currentLine]="currentLine$ | async"
   [file]="getFile()"
   [editorState]="editor"
   [editorOptions]="editorOptions"
   (updateTab)="onUpdateTab($event)"
+  (setCurrentLine)="onSetCurrentLine($event)"
 >
 </seq-editor>
 

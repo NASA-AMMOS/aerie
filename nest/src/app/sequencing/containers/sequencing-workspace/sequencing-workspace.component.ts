@@ -16,13 +16,14 @@ import {
 import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { MpsCommand, StringTMap } from '../../../shared/models';
+import { SetCurrentLine } from '../../actions/editor.actions';
 import {
   CloseTab,
   CreateTab,
   SwitchTab,
   UpdateTab,
 } from '../../actions/file.actions';
-import { Editor, EditorOptions, SequenceTab } from '../../models';
+import { CurrentLine, Editor, EditorOptions, SequenceTab } from '../../models';
 import {
   getActiveEditor,
   getCommands,
@@ -31,6 +32,7 @@ import {
   getCurrentTab,
   getOpenedTabs,
 } from '../../selectors';
+import { getCurrentLine } from '../../selectors/editor.selectors';
 import { SequencingAppState } from '../../sequencing-store';
 
 @Component({
@@ -50,6 +52,7 @@ export class SequencingWorkspaceComponent implements AfterViewInit {
   commands$: Observable<MpsCommand[] | null>;
   commandsByName$: Observable<StringTMap<MpsCommand> | null>;
   currentTab$: Observable<string | null>;
+  currentLine$: Observable<CurrentLine | null>;
   file$: Observable<SequenceTab | null>;
   openedTabs$: Observable<SequenceTab[] | null>;
 
@@ -63,6 +66,7 @@ export class SequencingWorkspaceComponent implements AfterViewInit {
     this.currentTab$ = this.store.pipe(
       select(getCurrentTab, { editorId: this.editor.id }),
     );
+    this.currentLine$ = this.store.pipe(select(getCurrentLine));
     this.file$ = this.store.pipe(
       select(getCurrentFile, { editorId: this.editor.id }),
     );
@@ -93,6 +97,10 @@ export class SequencingWorkspaceComponent implements AfterViewInit {
     editorId: string;
   }) {
     this.store.dispatch(new UpdateTab(id, text, editorId));
+  }
+
+  onSetCurrentLine(line: CurrentLine) {
+    this.store.dispatch(new SetCurrentLine(line));
   }
 
   getFile() {

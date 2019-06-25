@@ -21,7 +21,11 @@ import {
   FetchCommandDictionaries,
   SelectCommandDictionary,
 } from '../../actions/command-dictionary.actions';
-import { AddText, OpenEditorHelpDialog } from '../../actions/editor.actions';
+import {
+  AddText,
+  OpenEditorHelpDialog,
+  SetCurrentLine,
+} from '../../actions/editor.actions';
 import {
   AddEditor,
   FetchChildren,
@@ -34,7 +38,7 @@ import {
   ToggleRightPanelVisible,
 } from '../../actions/layout.actions';
 import { getCommandTemplate } from '../../code-mirror-languages/mps/helpers';
-import { Editor } from '../../models';
+import { CurrentLine, Editor } from '../../models';
 import {
   getActiveEditor,
   getCommands,
@@ -52,6 +56,7 @@ import {
   getShowLoadingBar,
   hasFiles,
 } from '../../selectors';
+import { getCurrentLine } from '../../selectors/editor.selectors';
 import { SequencingAppState } from '../../sequencing-store';
 
 @Component({
@@ -64,6 +69,7 @@ export class SequencingAppComponent implements OnDestroy {
   activeEditor$: Observable<string>;
   commands$: Observable<MpsCommand[] | null>;
   commandsByName$: Observable<StringTMap<MpsCommand> | null>;
+  currentLine$: Observable<CurrentLine | null>;
   dictionaries$: Observable<CommandDictionary[]>;
   hasFiles$: Observable<boolean>;
   leftPanelSize$: Observable<number>;
@@ -91,6 +97,7 @@ export class SequencingAppComponent implements OnDestroy {
     this.activeEditor$ = this.store.pipe(select(getActiveEditor));
     this.commands$ = this.store.pipe(select(getCommands));
     this.commandsByName$ = this.store.pipe(select(getCommandsByName));
+    this.currentLine$ = this.store.pipe(select(getCurrentLine));
     this.dictionaries$ = this.store.pipe(select(getDictionaries));
     this.hasFiles$ = this.store.pipe(select(hasFiles));
     this.leftPanelSize$ = this.store.pipe(select(getLeftPanelSize));
@@ -182,5 +189,9 @@ export class SequencingAppComponent implements OnDestroy {
 
   onSetActiveEditor(editorId: string) {
     this.store.dispatch(new SetActiveEditor(editorId));
+  }
+
+  onSetCurrentLine(line: CurrentLine) {
+    this.store.dispatch(new SetCurrentLine(line));
   }
 }

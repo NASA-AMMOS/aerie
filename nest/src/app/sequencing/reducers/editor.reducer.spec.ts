@@ -7,30 +7,27 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { StringTMap } from '../../shared/models';
-import { SequenceTab } from './sequence-tab';
+import { SetCurrentLine } from '../actions/editor.actions';
+import { CurrentLine } from '../models';
+import { initialState, reducer } from './editor.reducer';
 
-export interface Editor {
-  currentTab: string | null;
-  id: string;
-  openedTabs: StringTMap<SequenceTab> | null;
-}
+const mockLine: CurrentLine = {
+  commandName: 'CONSUME_BOBA',
+  parameters: [
+    {
+      name: 'Boba',
+      help: 'Everyone likes boba',
+      type: 'string',
+      units: 'Boba Balls',
+      value: 'Milk Tea',
+    },
+  ],
+};
 
-export interface EditorOptions {
-  autocomplete: boolean;
-  darkTheme: boolean;
-  showTooltips: boolean;
-}
+describe('Editor reducer', () => {
+  it('should handle SetCurrentLine', () => {
+    const result = reducer(initialState, new SetCurrentLine(mockLine));
 
-export interface Parameter {
-  name: string;
-  help: string | undefined;
-  type: string | undefined;
-  units: string | undefined;
-  value: string;
-}
-
-export interface CurrentLine {
-  commandName: string;
-  parameters: Parameter[];
-}
+    expect(result).toEqual({ currentLine: mockLine });
+  });
+});

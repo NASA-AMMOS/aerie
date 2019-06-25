@@ -1,0 +1,48 @@
+<div
+  *ngIf="currentLine && currentLine.commandName; else noCommandPrompt"
+  id="seq-command-form-editor"
+>
+  <div id="seq-parameter-form-header">
+    <h3 id="seq-parameter-form-command-name">{{ currentLine.commandName }}</h3>
+    <button
+      id="seq-parameter-form-update-button"
+      mat-mini-fab
+      (click)="updateParameters()"
+      matTooltip="Update Parameters"
+    >
+      <mat-icon>update</mat-icon>
+    </button>
+  </div>
+
+  <div
+    id="seq-parameter-form-input-fields"
+    *ngIf="
+      currentLine.parameters && currentLine.parameters.length > 0;
+      else noParameterPrompt
+    "
+    [formGroup]="form"
+  >
+    <mat-form-field
+      *ngFor="let parameter of currentLine.parameters"
+      [hintLabel]="parameter.help"
+    >
+      <input
+        matInput
+        [placeholder]="formatParameterName(parameter.name)"
+        [formControlName]="parameter.name"
+      />
+      <mat-hint align="end">{{ parameter.type }}</mat-hint>
+    </mat-form-field>
+  </div>
+  <ng-template #noParameterPrompt>
+    <mat-card id="seq-parameter-form-no-parameters-prompt"
+      >No Parameters</mat-card
+    >
+  </ng-template>
+</div>
+
+<ng-template #noCommandPrompt
+  ><mat-card id="seq-parameter-form-no-active-command-prompt">
+    No Active Command
+  </mat-card></ng-template
+>

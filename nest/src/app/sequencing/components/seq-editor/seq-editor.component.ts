@@ -30,7 +30,8 @@ import {
   getCommandParameterDescriptionTemplate,
   getCommandParameterHelpTemplate,
 } from '../../code-mirror-languages/mps/helpers';
-import { Editor, EditorOptions, SequenceTab } from '../../models';
+import { CurrentLine, Editor, EditorOptions, SequenceTab } from '../../models';
+import { initialState } from '../../reducers/editor.reducer';
 import { defaultEditorId } from '../../reducers/file.reducer';
 import { SeqEditorService } from '../../services/seq-editor.service';
 
@@ -49,6 +50,9 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
 
   @Input()
   commands: MpsCommand[] = [];
+
+  @Input()
+  currentLine: CurrentLine | null;
 
   @Input()
   extraKeys = {
@@ -87,6 +91,9 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
 
   @Output()
   updateTab: EventEmitter<any> = new EventEmitter<any>();
+
+  @Output()
+  setCurrentLine: EventEmitter<any> = new EventEmitter<any>();
 
   @ViewChild('editor', { static: true })
   editorMount: ElementRef;
@@ -133,6 +140,10 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
           this.editor.setOption('theme', 'default');
         }
       }
+
+      if (changes.currentLine) {
+        this.updateCurrentLine();
+      }
     }
   }
 
@@ -141,6 +152,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
     this.setupAutocomplete();
     this.setupTooltip();
     this.setupTooltipHandler();
+    this.setupCommandFormEditor();
     this.populateEditors();
   }
 
@@ -385,6 +397,68 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   }
 
   /**
+   * Sets up the event listener for the cursor
+   * When the cursor moves, it will check the current line for it's content
+   * This is used for the parameter form editor
+   */
+  setupCommandFormEditor() {
+    if (this.editor) {
+      this.editor.on('cursorActivity', (doc: CodeMirror.Editor) => {
+        const currentLine = this.seqEditorService.getCurrentLine(
+          this.editorState.id,
+        );
+
+        // If the line is blank, don't do anything
+        if (currentLine.length === 0) {
+          this.setCurrentLine.emit(initialState);
+          return;
+        }
+
+        const commandName = currentLine[0].string.trim();
+
+        // If the line content is the same as the previous state, don't do anything
+        if (this.currentLine && commandName === this.currentLine.commandName)
+          return;
+
+        const commandDescription = this.commandsByName[commandName];
+
+        // This happens when
+        // 1. The user is typing
+        if (!commandDescription) return;
+
+        const parameterDefinitions = commandDescription.parameters;
+        // Index 0 contains the command name, we exclude so we can line up the parameter definitions with the actual parameters
+        const lineParameters = currentLine
+          .filter(token => token.string !== ' ')
+          .slice(1);
+
+        const formPayload: CurrentLine = {
+          commandName,
+          parameters: [],
+        };
+
+        // Transform the line into the expected shape
+        for (let i = 0, length = parameterDefinitions.length; i < length; i++) {
+          const currentParameter = parameterDefinitions[i];
+          const { name, type, units, help } = currentParameter;
+          const value = lineParameters[i].string;
+
+          if (name) {
+            formPayload['parameters'].push({
+              help,
+              name,
+              type,
+              units,
+              value,
+            });
+          }
+        }
+
+        this.setCurrentLine.emit(formPayload);
+      });
+    }
+  }
+  /**
    * Used to position the hover tooltips near the mouse
    */
   positionTooltip(node: HTMLElement) {
@@ -434,6 +508,25 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   private populateEditors() {
     if (this.file) {
       this.onUpdateTab(this.file.id, this.file.text, this.editorState.id);
+    }
+  }
+
+  /**
+   * Called when the parameter form is used to update the parameter values
+   */
+  updateCurrentLine() {
+    if (this.currentLine) {
+      const { commandName, parameters } = this.currentLine;
+      if (parameters) {
+        const newLine = `${commandName} ${parameters
+          .map(parameter => {
+            return `${parameter.value}`;
+          })
+          .join(' ')
+          .split(',')
+          .join(' ')}`.trim();
+        this.seqEditorService.replaceText(newLine, this.editorState.id);
+      }
     }
   }
 }

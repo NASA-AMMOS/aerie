@@ -98,6 +98,28 @@ export class SeqEditorService {
     }
   }
 
+  /**
+   * Replaces the current line with the input text
+   * Used for the parameter form editor
+   */
+  replaceText(text: string, id: string) {
+    if (this.editors) {
+      const editor = this.getEditor(id);
+
+      if (editor) {
+        const doc = editor.getDoc();
+        const { line } = doc.getCursor();
+
+        doc.replaceRange(
+          text,
+          { line, ch: 0 },
+          // @ts-ignore: CodeMirror Types not up to date
+          { line },
+        );
+      }
+    }
+  }
+
   getEditor(id: string) {
     if (this.editors) {
       if (id in this.editors) {
@@ -105,5 +127,22 @@ export class SeqEditorService {
       }
     }
     return null;
+  }
+
+  /**
+   * Returns the current line's content
+   */
+  getCurrentLine(id: string) {
+    const editor = this.getEditor(id);
+
+    if (editor) {
+      // @ts-ignore: CodeMirror types are not up to date, doesn't have getCursor()
+      const cursor = editor.getCursor();
+      const currentLine = editor.getLineTokens(cursor.line);
+
+      return currentLine;
+    }
+
+    return [];
   }
 }

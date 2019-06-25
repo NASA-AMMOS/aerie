@@ -229,6 +229,16 @@
           </seq-command-list>
         </div>
       </mat-tab>
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">code</mat-icon> Parameter Editor
+        </ng-template>
+
+        <seq-command-form-editor
+          [currentLine]="currentLine$ | async"
+          (setCurrentLine)="onSetCurrentLine($event)"
+        ></seq-command-form-editor>
+      </mat-tab>
     </mat-tab-group>
   </as-split-area>
 </as-split>
