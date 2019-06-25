@@ -126,7 +126,7 @@ do
   if [ -d $d ]
   then
     cd $d
-    if [ -d == "nest" ]
+    if [ $d == "nest" ]
     then
       npx sonar-scanner
     fi
