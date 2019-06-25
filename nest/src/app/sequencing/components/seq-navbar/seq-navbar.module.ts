@@ -9,13 +9,23 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { MatButtonModule, MatIconModule } from '@angular/material';
+import {
+  MatButtonModule,
+  MatIconModule,
+  MatMenuModule,
+} from '@angular/material';
 import { SeqTabModule } from '../seq-tab/seq-tab.module';
 import { SeqNavbarComponent } from './seq-navbar.component';
 
 @NgModule({
   declarations: [SeqNavbarComponent],
   exports: [SeqNavbarComponent],
-  imports: [CommonModule, MatButtonModule, MatIconModule, SeqTabModule],
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatIconModule,
+    MatMenuModule,
+    SeqTabModule,
+  ],
 })
 export class SeqNavbarModule {}

@@ -69,7 +69,7 @@ describe('/sequencing.commanddictionary', () => {
 
   it('[C139219] The create tab button SHOULD be visible after selecting a command dictionary', () => {
     page.selectTestCommandDictionary();
-    expect(page.addTabButton.isPresent()).toBe(true);
+    expect(page.addTabButton.get(0).isPresent()).toBe(true);
   });
 
   afterEach(async () => {

@@ -24,6 +24,7 @@ import {
 } from '../../actions/file.actions';
 import { Editor, EditorOptions, SequenceTab } from '../../models';
 import {
+  getActiveEditor,
   getCommands,
   getCommandsByName,
   getCurrentFile,
@@ -45,6 +46,7 @@ export class SequencingWorkspaceComponent implements AfterViewInit {
   @Input()
   editorOptions: EditorOptions;
 
+  activeEditor$: Observable<string>;
   commands$: Observable<MpsCommand[] | null>;
   commandsByName$: Observable<StringTMap<MpsCommand> | null>;
   currentTab$: Observable<string | null>;
@@ -57,6 +59,7 @@ export class SequencingWorkspaceComponent implements AfterViewInit {
   }
 
   ngAfterViewInit() {
+    this.activeEditor$ = this.store.pipe(select(getActiveEditor));
     this.currentTab$ = this.store.pipe(
       select(getCurrentTab, { editorId: this.editor.id }),
     );
@@ -90,5 +93,12 @@ export class SequencingWorkspaceComponent implements AfterViewInit {
     editorId: string;
   }) {
     this.store.dispatch(new UpdateTab(id, text, editorId));
+  }
+
+  getFile() {
+    if (this.editor && this.editor.openedTabs && this.editor.currentTab) {
+      return this.editor.openedTabs[this.editor.currentTab];
+    }
+    return null;
   }
 }

@@ -38,7 +38,7 @@ describe('/sequencing.pageinit', () => {
   });
 
   it('[C139218] The create tab button SHOULD NOT be visible when the page first loads', () => {
-    expect(page.addTabButton.isPresent()).toBe(false);
+    expect(page.addTabButton.get(0).isPresent()).toBe(false);
   });
 
   it('[C143144] A user SHOULD not have access to the editor toggle button WHEN the app is initialized', () => {

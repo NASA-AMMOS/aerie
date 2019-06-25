@@ -77,16 +77,3 @@
   padding: 6px;
   border: 2px solid #ccc;
 }
-
-#fullscreen-toggle {
-  position: absolute;
-  right: 6px;
-  z-index: 10;
-  opacity: 0.25;
-  transition: opacity 0.25s ease-in;
-  margin-top: 6px;
-}
-
-#fullscreen-toggle:hover {
-  opacity: 1;
-}

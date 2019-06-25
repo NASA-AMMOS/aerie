@@ -193,6 +193,18 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
     }
   }
 
+  find() {
+    if (this.editor) {
+      this.editor.execCommand('find');
+    }
+  }
+
+  replace() {
+    if (this.editor) {
+      this.editor.execCommand('replace');
+    }
+  }
+
   /**
    * Mounts and sets up the CodeMirror instance
    * Each CodeMirror instance is assigned an ID
@@ -205,6 +217,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
       autofocus: this.autofocus,
       extraKeys: {
         ...this.extraKeys,
+        'Ctrl-/': this.toggleComment.bind(this),
         'Ctrl-R': this.redo.bind(this),
         'Ctrl-Z': this.undo.bind(this),
         Esc: this.toggleFullscreen.bind(this),
@@ -405,6 +418,12 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
 
   onUpdateTab(id: string, text: string, editorId: string) {
     this.updateTab.emit({ id, text, editorId });
+  }
+
+  toggleComment() {
+    if (this.editor) {
+      this.editor.execCommand('toggleComment');
+    }
   }
 
   /**

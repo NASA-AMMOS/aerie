@@ -60,8 +60,14 @@ import 'zone.js/dist/zone'; // Included with Angular CLI.
 /***************************************************************************************************
  * APPLICATION IMPORTS
  */
+import 'codemirror/addon/comment/comment';
+import 'codemirror/addon/dialog/dialog';
 import 'codemirror/addon/display/fullscreen';
 import 'codemirror/addon/hint/show-hint';
 import 'codemirror/addon/lint/lint';
 import 'codemirror/addon/mode/simple';
+import 'codemirror/addon/search/jump-to-line';
+import 'codemirror/addon/search/matchesonscrollbar';
+import 'codemirror/addon/search/search';
+import 'codemirror/addon/search/searchcursor';
 import 'hammerjs';

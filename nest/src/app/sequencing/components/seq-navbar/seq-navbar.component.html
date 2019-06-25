@@ -21,3 +21,63 @@
 >
   <mat-icon>add</mat-icon>
 </button>
+
+<mat-menu
+  #editorTools="matMenu"
+  xPosition="before"
+  class="tools-menu-container"
+>
+  <ng-template matMenuContent>
+    <button
+      mat-menu-item
+      class="tool-button"
+      (click)="editorRef.toggleFullscreen()"
+      id="seq-editor-fullscreen-button"
+    >
+      <mat-icon class="tool-icon">fullscreen</mat-icon>
+      <span class="tool-name">Full Screen</span>
+      <span class="tool-key-shortcut">ESC</span>
+    </button>
+    <button mat-menu-item class="tool-button" (click)="editorRef.undo()">
+      <mat-icon class="tool-icon">undo</mat-icon>
+      <span class="tool-name">Undo</span>
+      <span class="tool-key-shortcut">^z</span>
+    </button>
+    <button mat-menu-item class="tool-button" (click)="editorRef.redo()">
+      <mat-icon class="tool-icon">redo</mat-icon>
+      <span class="tool-name">redo</span>
+      <span class="tool-key-shortcut">^r</span>
+    </button>
+    <button
+      mat-menu-item
+      class="tool-button"
+      (click)="editorRef.toggleComment()"
+    >
+      <mat-icon class="tool-icon">format_strikethrough</mat-icon>
+      <span class="tool-name">Toggle Comment</span>
+      <span class="tool-key-shortcut">^/</span>
+    </button>
+    <button mat-menu-item class="tool-button" (click)="onFind($event)">
+      <mat-icon class="tool-icon">find_in_page</mat-icon>
+      <span class="tool-name">Find</span>
+      <span class="tool-key-shortcut">^f</span>
+    </button>
+    <button mat-menu-item class="tool-button" (click)="onReplace($event)">
+      <mat-icon class="tool-icon">find_replace</mat-icon>
+      <span class="tool-name">Replace</span>
+      <span class="tool-key-shortcut"></span>
+    </button>
+  </ng-template>
+</mat-menu>
+
+<ng-template [ngIf]="isActive && openedTabs?.length > 0">
+  <button
+    id="seq-editor-tools-button"
+    mat-icon-button
+    [matMenuTriggerFor]="editorTools"
+  >
+    <mat-icon>more_vert</mat-icon>
+  </button>
+
+  <div id="seq-active-indicator"></div>
+</ng-template>

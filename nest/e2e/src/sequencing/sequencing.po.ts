@@ -19,7 +19,7 @@ export class SequencingPage {
   noCommandsPrompt = element(by.id('sequencing-no-commands-prompt'));
 
   codeMirrorEditor = element(
-    by.css('#sequencing-editor-mount > div:nth-of-type(2)'),
+    by.css('#sequencing-editor-mount > div:nth-of-type(1)'),
   );
   codeMirrorTextArea = element(
     by.css('#sequencing-editor-mount > div > div > textarea'),
@@ -80,7 +80,9 @@ export class SequencingPage {
   tabs = element.all(by.className('seq-tab'));
   tabTitles = element.all(by.css('.seq-tab-text'));
   tabCloseButtons = element.all(by.css('.seq-tab-icon'));
-  fullscreenButton = element(by.css('#fullscreen-toggle > button'));
+
+  editorToolsPanelButton = element(by.id('seq-editor-tools-button'));
+  fullscreenButton = element(by.id('seq-editor-fullscreen-button'));
 
   selectTestCommandDictionary() {
     this.commandDictionarySelect.click();
