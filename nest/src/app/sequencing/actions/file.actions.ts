@@ -40,7 +40,7 @@ export class CloseTab implements Action {
 
 export class FetchChildren implements Action {
   readonly type = FileActionTypes.FetchChildren;
-  constructor(public parentId: string) {}
+  constructor(public parentId: string, public options?: any) {}
 }
 
 export class FetchChildrenFailure implements Action {
@@ -62,7 +62,11 @@ export class SwitchTab implements Action {
 
 export class UpdateChildren implements Action {
   readonly type = FileActionTypes.UpdateChildren;
-  constructor(public parentId: string, public children: SequenceFile[]) {}
+  constructor(
+    public parentId: string,
+    public children: SequenceFile[],
+    public options?: any,
+  ) {}
 }
 
 export class UpdateTab implements Action {

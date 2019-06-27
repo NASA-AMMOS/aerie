@@ -22,6 +22,7 @@ import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { SortablejsModule } from 'angular-sortablejs/dist';
 import { AngularSplitModule } from 'angular-split';
+import { ContextMenuModule } from 'ngx-contextmenu';
 import { ToastrModule } from 'ngx-toastr';
 import { RouterEffects } from '../../libs/ngrx-router';
 import { environment } from '../environments/environment';
@@ -50,6 +51,7 @@ import { ToastEffects } from './shared/effects/toast.effects';
     OverlayModule,
     SortablejsModule.forRoot({}),
     AngularSplitModule.forRoot(),
+    ContextMenuModule.forRoot(),
     StoreModule.forRoot(reducers, {
       metaReducers,
       runtimeChecks: {

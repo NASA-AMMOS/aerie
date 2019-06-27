@@ -16,20 +16,23 @@ import {
 import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { MpsCommand, StringTMap } from '../../../shared/models';
+import { SetCurrentLine } from '../../actions/editor.actions';
 import {
   CloseTab,
   CreateTab,
   SwitchTab,
   UpdateTab,
 } from '../../actions/file.actions';
-import { Editor, EditorOptions, SequenceTab } from '../../models';
+import { CurrentLine, Editor, EditorOptions, SequenceTab } from '../../models';
 import {
+  getActiveEditor,
   getCommands,
   getCommandsByName,
   getCurrentFile,
   getCurrentTab,
   getOpenedTabs,
 } from '../../selectors';
+import { getCurrentLine } from '../../selectors/editor.selectors';
 import { SequencingAppState } from '../../sequencing-store';
 
 @Component({
@@ -45,9 +48,11 @@ export class SequencingWorkspaceComponent implements AfterViewInit {
   @Input()
   editorOptions: EditorOptions;
 
+  activeEditor$: Observable<string>;
   commands$: Observable<MpsCommand[] | null>;
   commandsByName$: Observable<StringTMap<MpsCommand> | null>;
   currentTab$: Observable<string | null>;
+  currentLine$: Observable<CurrentLine | null>;
   file$: Observable<SequenceTab | null>;
   openedTabs$: Observable<SequenceTab[] | null>;
 
@@ -57,9 +62,11 @@ export class SequencingWorkspaceComponent implements AfterViewInit {
   }
 
   ngAfterViewInit() {
+    this.activeEditor$ = this.store.pipe(select(getActiveEditor));
     this.currentTab$ = this.store.pipe(
       select(getCurrentTab, { editorId: this.editor.id }),
     );
+    this.currentLine$ = this.store.pipe(select(getCurrentLine));
     this.file$ = this.store.pipe(
       select(getCurrentFile, { editorId: this.editor.id }),
     );
@@ -90,5 +97,16 @@ export class SequencingWorkspaceComponent implements AfterViewInit {
     editorId: string;
   }) {
     this.store.dispatch(new UpdateTab(id, text, editorId));
+  }
+
+  onSetCurrentLine(line: CurrentLine) {
+    this.store.dispatch(new SetCurrentLine(line));
+  }
+
+  getFile() {
+    if (this.editor && this.editor.openedTabs && this.editor.currentTab) {
+      return this.editor.openedTabs[this.editor.currentTab];
+    }
+    return null;
   }
 }

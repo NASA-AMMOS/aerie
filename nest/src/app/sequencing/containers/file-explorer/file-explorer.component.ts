@@ -29,7 +29,11 @@ export class FileExplorerComponent {
   constructor(private store: Store<SequencingAppState>) {
     this.files$ = this.store.pipe(select(getFiles));
     this.rootFileChildIds$ = this.store.pipe(select(getRootFileChildIds));
+  }
 
-    this.store.dispatch(new FetchChildren('root'));
+  onExpandFolderEvent(file: SequenceFile): void {
+    this.store.dispatch(
+      new FetchChildren(file.id, { expanded: !file.expanded }),
+    );
   }
 }

@@ -85,7 +85,7 @@ describe('FileEffects', () => {
         'Fetch Children Failed',
       );
 
-      const service = TestBed.get(FileService);
+      const service = TestBed.get(FileMockService);
       spyOn(service, 'fetchChildren').and.returnValue(cold('#|', null, error));
       actions$ = hot('-a', { a: action });
       const expected = cold('-(bcde)', {

@@ -1,0 +1,18 @@
+<nest-tree-file *ngIf="file.type === 'file'" [file]="file"></nest-tree-file>
+
+<nest-tree-folder
+  *ngIf="file.type === 'folder'"
+  [file]="file"
+  (expandFolderEvent)="expandFolderEvent.emit(file)"
+></nest-tree-folder>
+
+<ul *ngIf="file.expanded">
+  <li *ngFor="let childId of file.childIds">
+    <nest-tree
+      *ngIf="files[childId]"
+      [file]="files[childId]"
+      [files]="files"
+      (expandFolderEvent)="expandFolderEvent.emit(files[childId])"
+    ></nest-tree>
+  </li>
+</ul>

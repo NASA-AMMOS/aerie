@@ -12,6 +12,7 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   MatButtonModule,
+  MatCardModule,
   MatDividerModule,
   MatFormFieldModule,
   MatIconModule,
@@ -26,6 +27,7 @@ import {
 import { AngularSplitModule } from 'angular-split';
 import { NestAppHeaderModule } from '../../../shared/components';
 import { SeqCommandListModule, SeqCommandLoaderModule } from '../../components';
+import { SeqCommandFormEditorModule } from '../../components/seq-command-form-editor/seq-command-form-editor.module';
 import { FileExplorerModule } from '../file-explorer/file-explorer.module';
 import { SequencingWorkspaceModule } from '../sequencing-workspace/sequencing-workspace.module';
 import { SequencingAppComponent } from './sequencing-app.component';
@@ -38,6 +40,7 @@ import { SequencingAppComponent } from './sequencing-app.component';
     CommonModule,
     FormsModule,
     MatButtonModule,
+    MatCardModule,
     MatDividerModule,
     MatFormFieldModule,
     MatIconModule,
@@ -51,6 +54,7 @@ import { SequencingAppComponent } from './sequencing-app.component';
     NestAppHeaderModule,
     FileExplorerModule,
     SequencingWorkspaceModule,
+    SeqCommandFormEditorModule,
     SeqCommandListModule,
     SeqCommandLoaderModule,
   ],

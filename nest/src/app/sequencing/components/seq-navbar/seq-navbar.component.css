@@ -15,6 +15,14 @@
   position: relative;
 }
 
+#seq-active-indicator {
+  height: 5px;
+  width: 100%;
+  background: #ae4b00;
+  position: absolute;
+  bottom: 0;
+}
+
 #seq-tabs-container {
   margin-top: 8px;
   position: absolute;
@@ -29,4 +37,29 @@
 #seq-create-tab-button {
   margin-left: auto;
   margin-right: 8px;
+}
+
+.tool-button {
+  display: flex;
+  align-items: center;
+}
+
+.tool-icon {
+  color: #ae4b00;
+}
+
+.tool-name {
+  color: white;
+  margin-right: 10px;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.tool-key-shortcut {
+  color: white;
+  margin-left: auto;
+}
+
+::ng-deep .tools-menu-container {
+  background: rgba(0, 0, 0, 0.25);
 }

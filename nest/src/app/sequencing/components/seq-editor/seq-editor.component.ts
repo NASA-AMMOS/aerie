@@ -30,7 +30,8 @@ import {
   getCommandParameterDescriptionTemplate,
   getCommandParameterHelpTemplate,
 } from '../../code-mirror-languages/mps/helpers';
-import { Editor, EditorOptions, SequenceTab } from '../../models';
+import { CurrentLine, Editor, EditorOptions, SequenceTab } from '../../models';
+import { initialState } from '../../reducers/editor.reducer';
 import { defaultEditorId } from '../../reducers/file.reducer';
 import { SeqEditorService } from '../../services/seq-editor.service';
 
@@ -49,6 +50,9 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
 
   @Input()
   commands: MpsCommand[] = [];
+
+  @Input()
+  currentLine: CurrentLine | null;
 
   @Input()
   extraKeys = {
@@ -88,6 +92,9 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   @Output()
   updateTab: EventEmitter<any> = new EventEmitter<any>();
 
+  @Output()
+  setCurrentLine: EventEmitter<any> = new EventEmitter<any>();
+
   @ViewChild('editor', { static: true })
   editorMount: ElementRef;
 
@@ -100,7 +107,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   constructor(private seqEditorService: SeqEditorService) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.commandsByName || changes.mode) {
+    if (changes.commands || changes.mode) {
       this.setMode();
     }
 
@@ -133,6 +140,10 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
           this.editor.setOption('theme', 'default');
         }
       }
+
+      if (changes.currentLine) {
+        this.updateCurrentLine();
+      }
     }
   }
 
@@ -141,6 +152,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
     this.setupAutocomplete();
     this.setupTooltip();
     this.setupTooltipHandler();
+    this.setupCommandFormEditor();
     this.populateEditors();
   }
 
@@ -163,6 +175,11 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
           buildMpsLint(this.commandsByName);
           break;
       }
+
+      // We reset the linter so it clears previous lint messages
+      // Useful for when switching between command dictionaries
+      this.editor.setOption('lint', false);
+      this.editor.setOption('lint', true);
     }
   }
 
@@ -188,6 +205,18 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
     }
   }
 
+  find() {
+    if (this.editor) {
+      this.editor.execCommand('find');
+    }
+  }
+
+  replace() {
+    if (this.editor) {
+      this.editor.execCommand('replace');
+    }
+  }
+
   /**
    * Mounts and sets up the CodeMirror instance
    * Each CodeMirror instance is assigned an ID
@@ -200,6 +229,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
       autofocus: this.autofocus,
       extraKeys: {
         ...this.extraKeys,
+        'Ctrl-/': this.toggleComment.bind(this),
         'Ctrl-R': this.redo.bind(this),
         'Ctrl-Z': this.undo.bind(this),
         Esc: this.toggleFullscreen.bind(this),
@@ -246,7 +276,14 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
           event.key !== 'ArrowDown' &&
           event.key !== 'ArrowUp'
         ) {
-          this.editor.execCommand('autocomplete');
+          // @ts-ignore: CodeMirror types are not up to date, doesn't have getCursor()
+          const cursor = this.editor.getCursor();
+          const currentLine = this.editor.getLineTokens(cursor.line);
+
+          // Only show the autocomplete prompt if there is at least 1 character
+          if (currentLine.length > 0) {
+            this.editor.execCommand('autocomplete');
+          }
         }
       });
     }
@@ -266,13 +303,19 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
       this.editor
         .getWrapperElement()
         .addEventListener('mousemove', (e: MouseEvent) => {
+          // If there is an error tooltip, don't show the description tooltip
+          const errorTooltip = document.querySelector(
+            '.CodeMirror-lint-tooltip',
+          );
+
           if (
             this.commandsByName &&
             this.editorOptions.showTooltips &&
-            this.editor
+            this.editor &&
+            !errorTooltip
           ) {
             // Used to give a tolerance for the mouse to be nearby the text, mouse doesn't have to be exactly on the text
-            const nearby = [0, 0, 0, 5];
+            const nearby = [0, 0, 0, 5, 0, -5, 5, 0, -5, 0];
             // tslint:disable-next-line: deprecation
             const node = (e.target || e.srcElement) as HTMLElement;
             const text = node.innerText || node.textContent;
@@ -280,7 +323,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
             let target;
 
             // Check nearby positions to see if text is nearby mouse
-            for (let i = 0; i < nearby.length; i += 2) {
+            for (let i = 0, length = nearby.length; i < length; i += 2) {
               const pos = cm.coordsChar({
                 left: e.clientX + nearby[i],
                 top: e.clientY + nearby[i + 1],
@@ -295,6 +338,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
                   token,
                 };
 
+                // Hides the tooltip when the user moves off the token
                 node.addEventListener(
                   'mouseleave',
                   (mouseLeaveEvent: MouseEvent) => {
@@ -329,7 +373,7 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
                 // CodeMirror indexes line numbers starting at 0, need to offset
                 const hoveredParameter = target.token.string;
 
-                const currentLine = target.pos.line + 1;
+                const currentLine = target.pos.line;
                 const lineTokens = cm.getLineTokens(currentLine);
 
                 const newTooltipContent = getCommandParameterDescriptionTemplate(
@@ -339,13 +383,9 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
                   this.commandsByName,
                 );
 
-                // Only update the content if it's different than the current content
-                // Handles the case where the user is moving their mouse over the same token
-                if (this.tooltip.innerHTML !== newTooltipContent) {
-                  this.tooltip.innerHTML = newTooltipContent;
-                  this.positionTooltip(node);
-                  this.showTooltip(true);
-                }
+                this.tooltip.innerHTML = newTooltipContent;
+                this.positionTooltip(node);
+                this.showTooltip(true);
               } else {
                 // If the mouse is on blank space
                 this.showTooltip(false);
@@ -357,15 +397,78 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   }
 
   /**
+   * Sets up the event listener for the cursor
+   * When the cursor moves, it will check the current line for it's content
+   * This is used for the parameter form editor
+   */
+  setupCommandFormEditor() {
+    if (this.editor) {
+      this.editor.on('cursorActivity', (doc: CodeMirror.Editor) => {
+        const currentLine = this.seqEditorService.getCurrentLine(
+          this.editorState.id,
+        );
+
+        // If the line is blank, don't do anything
+        if (currentLine.length === 0) {
+          this.setCurrentLine.emit(initialState);
+          return;
+        }
+
+        const commandName = currentLine[0].string.trim();
+
+        // If the line content is the same as the previous state, don't do anything
+        if (this.currentLine && commandName === this.currentLine.commandName)
+          return;
+
+        const commandDescription = this.commandsByName[commandName];
+
+        // This happens when
+        // 1. The user is typing
+        if (!commandDescription) return;
+
+        const parameterDefinitions = commandDescription.parameters;
+        // Index 0 contains the command name, we exclude so we can line up the parameter definitions with the actual parameters
+        const lineParameters = currentLine
+          .filter(token => token.string !== ' ')
+          .slice(1);
+
+        const formPayload: CurrentLine = {
+          commandName,
+          parameters: [],
+        };
+
+        // Transform the line into the expected shape
+        for (let i = 0, length = parameterDefinitions.length; i < length; i++) {
+          const currentParameter = parameterDefinitions[i];
+          const { name, type, units, help } = currentParameter;
+          const value = lineParameters[i].string;
+
+          if (name) {
+            formPayload['parameters'].push({
+              help,
+              name,
+              type,
+              units,
+              value,
+            });
+          }
+        }
+
+        this.setCurrentLine.emit(formPayload);
+      });
+    }
+  }
+  /**
    * Used to position the hover tooltips near the mouse
    */
   positionTooltip(node: HTMLElement) {
     const target_rect = node.getBoundingClientRect();
     const tooltip_rect = this.tooltip.getBoundingClientRect();
+    const yOffset = -20;
 
     if (tooltip_rect.height <= target_rect.top) {
       this.tooltip.style.top =
-        target_rect.top - tooltip_rect.height + 20 + 'px';
+        target_rect.top - tooltip_rect.height + yOffset + 'px';
     } else {
       this.tooltip.style.top = target_rect.bottom + 'px';
     }
@@ -380,19 +483,21 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   private showTooltip(state: boolean) {
     if (state) {
       this.tooltip.style.opacity = '1';
-      setTimeout(() => {
-        this.tooltip.style.display = 'block';
-      }, 250);
+      this.tooltip.style.visibility = 'visible';
     } else {
       this.tooltip.style.opacity = '0';
-      setTimeout(() => {
-        this.tooltip.style.display = 'none';
-      }, 250);
+      this.tooltip.style.visibility = 'hidden';
     }
   }
 
   onUpdateTab(id: string, text: string, editorId: string) {
     this.updateTab.emit({ id, text, editorId });
+  }
+
+  toggleComment() {
+    if (this.editor) {
+      this.editor.execCommand('toggleComment');
+    }
   }
 
   /**
@@ -403,6 +508,25 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   private populateEditors() {
     if (this.file) {
       this.onUpdateTab(this.file.id, this.file.text, this.editorState.id);
+    }
+  }
+
+  /**
+   * Called when the parameter form is used to update the parameter values
+   */
+  updateCurrentLine() {
+    if (this.currentLine) {
+      const { commandName, parameters } = this.currentLine;
+      if (parameters) {
+        const newLine = `${commandName} ${parameters
+          .map(parameter => {
+            return `${parameter.value}`;
+          })
+          .join(' ')
+          .split(',')
+          .join(' ')}`.trim();
+        this.seqEditorService.replaceText(newLine, this.editorState.id);
+      }
     }
   }
 }

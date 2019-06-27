@@ -130,14 +130,16 @@ export function verifyLine(
 
     // Check if parameters are within specified ranges
   } else {
-    // If the command does not exist in the command dictionary
-    lintMessages.push({
-      end: null,
-      level: 'error',
-      lineNumber,
-      message: `${command} is not in the command dictionary.`,
-      start: null,
-    });
+    // If the command does not exist in the command dictionary OR it's not a comment
+    if (!command.startsWith('#')) {
+      lintMessages.push({
+        end: null,
+        level: 'error',
+        lineNumber,
+        message: `${command} is not in the command dictionary.`,
+        start: null,
+      });
+    }
   }
 
   // Linting for whitespace at the end

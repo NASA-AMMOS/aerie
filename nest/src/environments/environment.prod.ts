@@ -7,10 +7,12 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+const windowBaseUrl = `${window.location.protocol}//${window.location.hostname}`;
+
 export const environment = {
-  adaptationServiceBaseUrl: 'http://localhost:27182/api',
+  adaptationServiceBaseUrl: `${windowBaseUrl}:27182/api`,
   baseUrl: 'https://leucadia.jpl.nasa.gov:9443',
-  planServiceBaseUrl: 'http://localhost:27183/api',
+  planServiceBaseUrl: `${windowBaseUrl}:27183/api`,
   production: true,
-  sequencingServiceBaseUrl: 'http://localhost:27186/sequencing',
+  sequencingServiceBaseUrl: `${windowBaseUrl}:27186/sequencing`,
 };

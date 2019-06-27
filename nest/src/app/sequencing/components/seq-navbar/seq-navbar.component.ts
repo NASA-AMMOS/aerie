@@ -15,6 +15,7 @@ import {
   Output,
 } from '@angular/core';
 import { Editor, SequenceTab } from '../../models';
+import { SeqEditorComponent } from '../seq-editor/seq-editor.component';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,10 +25,16 @@ import { Editor, SequenceTab } from '../../models';
 })
 export class SeqNavbarComponent {
   @Input()
+  isActive: boolean;
+
+  @Input()
   openedTabs: SequenceTab[] | null;
 
   @Input()
   editor: Editor;
+
+  @Input()
+  editorRef: SeqEditorComponent;
 
   @Output()
   createTab: EventEmitter<any> = new EventEmitter<any>();
@@ -37,4 +44,33 @@ export class SeqNavbarComponent {
 
   @Output()
   switchTab: EventEmitter<any> = new EventEmitter<any>();
+
+  /**
+   * Called when the user clicks the find button in the tools menu for an editor
+   */
+  onFind(event: MouseEvent) {
+    this.editorRef.find();
+    this.handleToolsMenuExit(event);
+  }
+
+  onReplace(event: MouseEvent) {
+    this.editorRef.replace();
+    this.handleToolsMenuExit(event);
+  }
+
+  /**
+    We are stopping the event from propagating because that triggers
+    the search dialog to disappear.
+    We then hide the tools menu manually
+   */
+  handleToolsMenuExit(event: MouseEvent) {
+    event.stopPropagation();
+    const toolsMenu = document.querySelector(
+      '.tools-menu-container',
+    ) as HTMLElement;
+
+    if (toolsMenu) {
+      toolsMenu.style.display = 'none';
+    }
+  }
 }

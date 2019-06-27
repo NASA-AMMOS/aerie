@@ -1,5 +1,9 @@
 <ng-container *ngIf="files$ | async as files">
   <ng-container *ngFor="let childId of rootFileChildIds$ | async">
-    <seq-file-tree [file]="files[childId]" [files]="files"></seq-file-tree>
+    <nest-tree
+      [file]="files[childId]"
+      [files]="files"
+      (expandFolderEvent)="onExpandFolderEvent($event)"
+    ></nest-tree>
   </ng-container>
 </ng-container>

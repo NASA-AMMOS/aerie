@@ -21,3 +21,16 @@ export interface EditorOptions {
   darkTheme: boolean;
   showTooltips: boolean;
 }
+
+export interface Parameter {
+  name: string;
+  help: string | undefined;
+  type: string | undefined;
+  units: string | undefined;
+  value: string;
+}
+
+export interface CurrentLine {
+  commandName: string;
+  parameters: Parameter[];
+}

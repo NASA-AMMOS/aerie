@@ -10,6 +10,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityTypeParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.Validator;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import javax.validation.Valid;
 
@@ -29,7 +31,10 @@ public class PlansController {
     @Value("${adaptation-url}")
     private String adaptationUri;
 
-    //  @Autowired
+    // Controller requestMapping
+    private final String controllerLocation = this.getClass().getAnnotation(RequestMapping.class).value()[0];
+
+    // @Autowired
     private PlansRepository repository;
 
     public PlansController(PlansRepository plansRepository) {
@@ -141,8 +146,15 @@ public class PlansController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
+        URI location = null;
+        try {
+            location = new URI(String.format("%s/%s", controllerLocation, plan.getId()));
+        } catch (URISyntaxException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
         repository.save(plan);
-        return ResponseEntity.ok(plan);
+        return ResponseEntity.created(location).body(plan);
     }
 
     @DeleteMapping("/{planId}")
@@ -187,8 +199,7 @@ public class PlansController {
                 ArrayList<String> listeners = new ArrayList<>(at.getListeners());
                 activityInstance.setListeners(listeners);
 
-                // TODO This is not doing what needs to be done. We need to get the value from
-                // the request body
+                // TODO This is not doing what needs to be done. We need to get the value from the request body
                 ArrayList<ActivityInstanceParameter> parameters = new ArrayList<>();
                 for (ActivityTypeParameter parameter : at.getParameters()) {
                     String defaultValue = "";
@@ -218,9 +229,14 @@ public class PlansController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
+        URI location = null;
+        try {
+            location = new URI(String.format("%s/%s/activity_instances/%s", controllerLocation, planDetail.getId(), uuid.toString()));
+        } catch (URISyntaxException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
         repository.save(planDetail);
-
-        return ResponseEntity.ok(planDetail.getActivityInstance(uuid));
+        return ResponseEntity.created(location).body(planDetail.getActivityInstance(uuid));
     }
 
     @GetMapping("/{planId}/activity_instances")

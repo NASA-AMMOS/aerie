@@ -79,11 +79,13 @@ const mockStateAfterCreateTab = {
     root: {
       childIds: [],
       content: '',
+      expanded: false,
       id: 'root',
       name: 'root',
+      parentId: '',
       timeCreated: 0,
       timeLastUpdated: 0,
-      type: 'directory',
+      type: 'folder',
     },
   },
 };
@@ -104,11 +106,13 @@ const mockStateForSwitchTab = {
     root: {
       childIds: [],
       content: '',
+      expanded: false,
       id: 'root',
       name: 'root',
+      parentId: '',
       timeCreated: 0,
       timeLastUpdated: 0,
-      type: 'directory',
+      type: 'folder',
     },
   },
 };

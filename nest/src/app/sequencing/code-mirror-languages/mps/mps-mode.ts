@@ -33,7 +33,9 @@ export function buildMpsMode(commandsByName: StringTMap<MpsCommand>): void {
         token: null,
       },
     ],
-    meta: {},
+    meta: {
+      lineComment: '#',
+    },
     start: [
       // Highlight an instruction without any arguments (for convenience).
       {
@@ -60,6 +62,10 @@ export function buildMpsMode(commandsByName: StringTMap<MpsCommand>): void {
       {
         regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i,
         token: 'number',
+      },
+      {
+        regex: /#.*/,
+        token: 'comment',
       },
     ],
   });

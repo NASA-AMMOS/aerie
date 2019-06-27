@@ -9,6 +9,7 @@ exports.config = {
     './src/sequencing/sequencing.commanddictionary.e2e-spec.ts',
     './src/sequencing/sequencing.panels.e2e-spec.ts',
     './src/sequencing/sequencing.toolbar.e2e-spec.ts',
+    './src/sequencing/sequencing.parameter-editor.e2e-spec.ts',
   ],
   capabilities: {
     browserName: 'chrome',

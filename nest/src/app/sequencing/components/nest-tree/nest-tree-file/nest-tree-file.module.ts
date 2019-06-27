@@ -7,11 +7,16 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-ul {
-  margin: 0;
-  padding-left: 25px;
-}
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { MatIconModule } from '@angular/material';
+import { ContextMenuModule } from 'ngx-contextmenu';
+import { NestTreeNodeModule } from '../nest-tree-node/nest-tree-node.module';
+import { NestTreeFileComponent } from './nest-tree-file.component';
 
-li {
-  list-style-type: none;
-}
+@NgModule({
+  declarations: [NestTreeFileComponent],
+  exports: [NestTreeFileComponent],
+  imports: [CommonModule, ContextMenuModule, MatIconModule, NestTreeNodeModule],
+})
+export class NestTreeFileModule {}

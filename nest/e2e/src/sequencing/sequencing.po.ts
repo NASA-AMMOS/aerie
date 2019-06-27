@@ -19,7 +19,7 @@ export class SequencingPage {
   noCommandsPrompt = element(by.id('sequencing-no-commands-prompt'));
 
   codeMirrorEditor = element(
-    by.css('#sequencing-editor-mount > div:nth-of-type(2)'),
+    by.css('#sequencing-editor-mount > div:nth-of-type(1)'),
   );
   codeMirrorTextArea = element(
     by.css('#sequencing-editor-mount > div > div > textarea'),
@@ -80,7 +80,23 @@ export class SequencingPage {
   tabs = element.all(by.className('seq-tab'));
   tabTitles = element.all(by.css('.seq-tab-text'));
   tabCloseButtons = element.all(by.css('.seq-tab-icon'));
-  fullscreenButton = element(by.css('#fullscreen-toggle > button'));
+
+  editorToolsPanelButton = element(by.id('seq-editor-tools-button'));
+  fullscreenButton = element(by.id('seq-editor-fullscreen-button'));
+
+  parameterEditorTabButton = element(
+    by.xpath(
+      '/html/body/app-root/div/mat-sidenav-container/mat-sidenav-content/main/sequencing-app/as-split/as-split-area[3]/mat-tab-group/mat-tab-header/div[2]/div/div/div[2]',
+    ),
+  );
+  noActiveCommandPrompt = element(
+    by.id('seq-parameter-form-no-active-command-prompt'),
+  );
+  noParameterPrompt = element(by.id('seq-parameter-form-no-parameters-prompt'));
+  parameterFormContainer = element(by.id('seq-command-form-editor'));
+  activeCommandName = element(by.id('seq-parameter-form-command-name'));
+  updateParametersButton = element(by.id('seq-parameter-form-update-button'));
+  parameterInputFields = element.all(by.className('mat-input-element'));
 
   selectTestCommandDictionary() {
     this.commandDictionarySelect.click();
@@ -122,6 +138,10 @@ export class SequencingPage {
 
   refreshBrowser() {
     browser.navigate().refresh();
+  }
+
+  navigateToParameterEditorPanel() {
+    this.parameterEditorTabButton.click();
   }
 
   navigateTo(route: string) {

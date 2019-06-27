@@ -7,19 +7,28 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Component, Input } from '@angular/core';
-import { SequenceFile } from '../../../../../../sequencing/src/models';
-import { StringTMap } from '../../../shared/models';
+mat-form-field {
+  margin-bottom: 30px;
+  width: 100%;
+}
 
-@Component({
-  selector: 'seq-file-tree',
-  styleUrls: ['./seq-file-tree.component.css'],
-  templateUrl: './seq-file-tree.component.html',
-})
-export class SeqFileTreeComponent {
-  @Input()
-  file: SequenceFile;
+#seq-parameter-form-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+}
 
-  @Input()
-  files: StringTMap<SequenceFile>;
+#seq-parameter-form-update-button {
+  margin-left: auto;
+}
+
+#seq-parameter-form-command-name {
+  margin: 0;
+  font-weight: 800;
+}
+
+::ng-deep #seq-command-form-editor .mat-form-field-label {
+  text-transform: uppercase;
+  color: #ae4b00 !important;
+  font-weight: 800 !important;
 }

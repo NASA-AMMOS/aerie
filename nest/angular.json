@@ -49,6 +49,8 @@
               "node_modules/codemirror/addon/lint/lint.css",
               "node_modules/codemirror/addon/hint/show-hint.css",
               "node_modules/codemirror/addon/display/fullscreen.css",
+              "node_modules/codemirror/addon/dialog/dialog.css",
+              "node_modules/codemirror/addon/search/matchesonscrollbar.css",
               "src/styles.css",
               "libs/ctl/ctl.css"
             ],

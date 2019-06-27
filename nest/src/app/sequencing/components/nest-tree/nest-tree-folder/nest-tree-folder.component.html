@@ -1,0 +1,23 @@
+<nest-tree-node
+  [contextMenu]="contextMenu"
+  [contextMenuSubject]
+  [file]="file"
+  (click)="expandFolderEvent.emit(file)"
+>
+  <mat-icon *ngIf="!file.expanded" [inline]="true">chevron_right</mat-icon>
+  <mat-icon *ngIf="file.expanded" [inline]="true">expand_more</mat-icon>
+</nest-tree-node>
+
+<context-menu #contextMenu>
+  <ng-template contextMenuItem>
+    New File
+  </ng-template>
+  <ng-template contextMenuItem divider="true"></ng-template>
+  <ng-template contextMenuItem>
+    New Folder
+  </ng-template>
+  <ng-template contextMenuItem divider="true"></ng-template>
+  <ng-template contextMenuItem>
+    Delete
+  </ng-template>
+</context-menu>

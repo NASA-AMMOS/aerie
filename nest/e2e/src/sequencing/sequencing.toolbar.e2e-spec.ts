@@ -41,7 +41,6 @@ describe('/sequencing.toolbar', () => {
   });
 
   it('[C135064] WHEN a user clicks the toggle theme button, the theme should switch to the alternative theme', () => {
-    page.prepareForCodeMirrorTesting();
     const darkTheme = 'cm-s-monokai';
     const lightTheme = 'cm-s-default';
 
@@ -64,11 +63,8 @@ describe('/sequencing.toolbar', () => {
   });
 
   it('[C135063] WHEN the editor is fullscreen, the user can press ESC to exit fullscreen', () => {
-    page.prepareForCodeMirrorTesting();
-    page.fullscreenButton.click();
-
-    expect(hasClass(page.codeMirrorEditor, 'CodeMirror-fullscreen')).toBe(true);
-
+    page.editorToolsPanelButton.click();
+    clickHarder('#seq-editor-fullscreen-button');
     page.sendGlobalKeys(protractor.Key.ESCAPE);
 
     expect(hasClass(page.codeMirrorEditor, 'CodeMirror-fullscreen')).toBe(
@@ -77,8 +73,8 @@ describe('/sequencing.toolbar', () => {
   });
 
   it('[C135062] WHEN a user clicks the fullscreen button, the editor SHOULD be fullscreen', () => {
-    page.prepareForCodeMirrorTesting();
-    page.fullscreenButton.click();
+    page.editorToolsPanelButton.click();
+    clickHarder('#seq-editor-fullscreen-button');
 
     expect(hasClass(page.codeMirrorEditor, 'CodeMirror-fullscreen')).toBe(true);
   });
