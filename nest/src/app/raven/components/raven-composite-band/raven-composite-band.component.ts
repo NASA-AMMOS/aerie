@@ -143,13 +143,19 @@ export class RavenCompositeBandComponent
   >();
 
   @Output()
+  decreaseBandHeight: EventEmitter<string> = new EventEmitter<string>();
+
+  @Output()
   deleteBand: EventEmitter<string> = new EventEmitter<string>();
 
   @Output()
-  settingsBand: EventEmitter<string> = new EventEmitter<string>();
+  hoverBand: EventEmitter<string> = new EventEmitter<string>();
 
   @Output()
-  hoverBand: EventEmitter<string> = new EventEmitter<string>();
+  increaseBandHeight: EventEmitter<any> = new EventEmitter<any>();
+
+  @Output()
+  settingsBand: EventEmitter<string> = new EventEmitter<string>();
 
   @Output()
   updateAddTo: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();

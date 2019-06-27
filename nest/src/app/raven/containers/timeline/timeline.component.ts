@@ -153,6 +153,7 @@ export class TimelineComponent implements OnDestroy {
   selectedBandId: string;
   selectedSubBandId: string;
   southPanelHeight = 20;
+  heightChangeDelta = 0.1;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
@@ -536,6 +537,24 @@ export class TimelineComponent implements OnDestroy {
   onDeleteBand(bandId: string): void {
     const band = bandById(this.bands, bandId) as RavenCompositeBand;
     this.store.dispatch(new dialogActions.OpenDeleteBandDialog(band, '300px'));
+  }
+
+  onDecreaseBandHeight(bandId: string): void {
+    const band = bandById(this.bands, bandId) as RavenCompositeBand;
+    this.store.dispatch(
+      new timelineActions.UpdateBand(bandId, {
+        height: band.height * (1 - this.heightChangeDelta),
+      }),
+    );
+  }
+
+  onIncreaseBandHeight(bandId: string): void {
+    const band = bandById(this.bands, bandId) as RavenCompositeBand;
+    this.store.dispatch(
+      new timelineActions.UpdateBand(bandId, {
+        height: band.height * (1 + this.heightChangeDelta),
+      }),
+    );
   }
 
   /**

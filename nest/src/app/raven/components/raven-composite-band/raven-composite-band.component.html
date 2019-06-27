@@ -78,6 +78,24 @@
   >
     delete_forever
   </mat-icon>
+  <mat-icon
+    *ngIf="id === hoveredBandId"
+    class="icons"
+    matTooltip="Increase Band Height"
+    [id]="'band-settings-increase-band-height'"
+    (click)="increaseBandHeight.emit(id)"
+  >
+    add_circle
+  </mat-icon>
+  <mat-icon
+    *ngIf="id === hoveredBandId"
+    class="icons"
+    matTooltip="Decrease Band Height"
+    [id]="'band-settings-decrease-band-height'"
+    (click)="decreaseBandHeight.emit(id)"
+  >
+    remove_circle
+  </mat-icon>
 </div>
 
 <div *ngFor="let subBand of subBands; index as i; trackBy: subBandsTrackByFn">

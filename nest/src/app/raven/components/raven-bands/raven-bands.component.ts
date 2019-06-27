@@ -107,7 +107,13 @@ export class RavenBandsComponent implements OnChanges, OnInit {
   >();
 
   @Output()
+  decreaseBandHeight: EventEmitter<string> = new EventEmitter<string>();
+
+  @Output()
   deleteBand: EventEmitter<string> = new EventEmitter<string>();
+
+  @Output()
+  increaseBandHeight: EventEmitter<string> = new EventEmitter<string>();
 
   @Output()
   settingsBand: EventEmitter<string> = new EventEmitter<string>();
