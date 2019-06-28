@@ -87,6 +87,7 @@ export function toRavenBandData(
       defaultBandSettings,
       customFilter,
       treeBySourceId,
+      (metadata as MpsServerStateMetadata).editable
     );
     return activityBands;
   } else {
@@ -137,6 +138,7 @@ export function toRavenDescendantsData(
       defaultBandSettings,
       customFilter,
       treeBySourceId,
+      false,
     );
     return activityBands;
   } else {
@@ -164,6 +166,7 @@ export function toActivityBands(
   defaultBandSettings: RavenDefaultBandSettings,
   customFilter: RavenCustomFilter | null,
   treeBySourceId: StringTMap<RavenSource>,
+  editable: boolean,
 ): RavenActivityBand[] {
   const { legends, maxTimeRange } = getActivityPointsByLegend(
     sourceId,
@@ -171,6 +174,7 @@ export function toActivityBands(
     expandedFromPointId,
     timelineData,
     defaultBandSettings.activityInitiallyHidden,
+    editable,
   );
   const bands: RavenActivityBand[] = [];
   const customGraphableSource = treeBySourceId[sourceId]
@@ -358,7 +362,7 @@ export function toStateBand(
   defaultBandSettings: RavenDefaultBandSettings,
   treeBySourceId: StringTMap<RavenSource>,
 ): RavenStateBand {
-  const { maxTimeRange, points } = getStatePoints(sourceId, timelineData);
+  const { maxTimeRange, points } = getStatePoints(sourceId, timelineData, metadata.editable);
 
   const stateBand: RavenStateBand = {
     addTo: false,

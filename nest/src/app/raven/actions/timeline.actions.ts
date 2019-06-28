@@ -52,6 +52,7 @@ export enum TimelineActionTypes {
   UpdateAllActivityBandFilter = '[timeline] update-all-activity-band-filter',
   UpdateBand = '[timeline] update_band',
   UpdateLastClickTime = '[timeline] last_click_time',
+  UpdatePointInSubBand = '[timeline] update_point_in_sub_band]',
   UpdateSubBand = '[timeline] update_sub_band',
   UpdateSubBandTimeDelta = '[timeline] update_sub_band_time_delta',
   UpdateTimeline = '[timeline] update_timeline',
@@ -278,6 +279,17 @@ export class UpdateLastClickTime implements Action {
   constructor(public time: number) {}
 }
 
+export class UpdatePointInSubBand implements Action {
+  readonly type = TimelineActionTypes.UpdatePointInSubBand;
+
+  constructor(
+    public bandId: string,
+    public subBandId: string,
+    public pointId: string,
+    public update: StringTMap<BaseType>,
+  ) {}
+}
+
 export class UpdateSubBand implements Action {
   readonly type = TimelineActionTypes.UpdateSubBand;
 
@@ -350,6 +362,7 @@ export type TimelineAction =
   | UpdateAllActivityBandFilter
   | UpdateBand
   | UpdateLastClickTime
+  | UpdatePointInSubBand
   | UpdateSubBand
   | UpdateSubBandTimeDelta
   | UpdateTimeline

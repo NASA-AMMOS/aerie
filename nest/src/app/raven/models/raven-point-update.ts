@@ -7,17 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export interface MpsServerResourceMetadata {
-  decimatedData: boolean;
-  editable: boolean;
-  hasInterpolatorType: string;
-  hasObjectName: string;
-  hasObjectNamespace: string;
-  hasObjectType: string;
-  hasTimeSystem: string;
-  hasTimelineType: string;
-  hasUnits: string;
-  hasValueType: string;
-  maxLimit?: number;
-  minLimit?: number;
+import { BaseType, StringTMap } from '../../shared/models';
+
+export interface RavenPointUpdate {
+  bandId: string;
+  pointId: string;
+  subBandId: string;
+  update: StringTMap<BaseType>;
 }

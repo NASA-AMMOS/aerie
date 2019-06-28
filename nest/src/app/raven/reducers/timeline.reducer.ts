@@ -35,6 +35,7 @@ import {
   ToggleGuide,
   UpdateAllActivityBandFilter,
   UpdateBand,
+  UpdatePointInSubBand,
   UpdateSubBand,
   UpdateSubBandTimeDelta,
 } from '../actions/timeline.actions';
@@ -160,6 +161,8 @@ export function reducer(
       return updateBand(state, action);
     case TimelineActionTypes.UpdateLastClickTime:
       return { ...state, lastClickTime: action.time };
+    case TimelineActionTypes.UpdatePointInSubBand:
+      return updatePointInSubBand(state, action);
     case TimelineActionTypes.UpdateSubBand:
       return updateSubBand(state, action);
     case TimelineActionTypes.UpdateSubBandTimeDelta:
@@ -950,6 +953,43 @@ export function updateBand(
       return band;
     }),
     currentStateChanged: state.currentState !== null,
+  };
+}
+
+export function updatePointInSubBand(
+  state: TimelineState,
+  action: UpdatePointInSubBand,
+): TimelineState {
+  const bands = state.bands.map((band: RavenCompositeBand) => {
+    if (action.bandId === band.id) {
+      return {
+        ...band,
+        subBands: band.subBands.map(subBand => {
+          if (action.subBandId === subBand.id) {
+            return {
+              ...subBand,
+              points: (subBand as any).points.map(
+                (point: RavenActivityPoint) => {
+                  if (point.id === action.pointId) {
+                    return { ...point, ...action.update };
+                  } else {
+                    return point;
+                  }
+                },
+              ),
+            };
+          }
+          return subBand;
+        }),
+      };
+    } else {
+      return band;
+    }
+  });
+
+  return {
+    ...state,
+    bands,
   };
 }
 

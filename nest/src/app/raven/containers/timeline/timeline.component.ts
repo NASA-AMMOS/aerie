@@ -52,6 +52,7 @@ import {
   RavenEpoch,
   RavenGuidePoint,
   RavenPoint,
+  RavenPointUpdate,
   RavenSituationalAwarenessPefEntry,
   RavenSortMessage,
   RavenSource,
@@ -744,6 +745,17 @@ export class TimelineComponent implements OnDestroy {
         selected: e.selected,
         value: e.value,
       }),
+    );
+  }
+
+  onUpdatePoint(e: RavenPointUpdate) {
+    this.store.dispatch(
+      new timelineActions.UpdatePointInSubBand(
+        e.bandId,
+        e.subBandId,
+        e.pointId,
+        e.update,
+      ),
     );
   }
 
