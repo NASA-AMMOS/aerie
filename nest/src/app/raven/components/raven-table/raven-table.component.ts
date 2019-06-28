@@ -76,7 +76,9 @@ export class RavenTableComponent implements OnChanges {
   updateFilterActivityInSubBand: EventEmitter<any> = new EventEmitter<any>();
 
   @Output()
-  updatePoint: EventEmitter<RavenPointUpdate> = new EventEmitter<RavenPointUpdate>();
+  updatePoint: EventEmitter<RavenPointUpdate> = new EventEmitter<
+    RavenPointUpdate
+  >();
 
   @Output()
   updateTableColumns: EventEmitter<any> = new EventEmitter<any>();
@@ -246,7 +248,6 @@ export class RavenTableComponent implements OnChanges {
     const subBandId = this.selectedSubBand.id;
     const updatePoint = this.updatePoint;
 
-
     if (point) {
       // First push the sub-grid menu column for opening/closing the detail panel if it exists.
       children.push({
@@ -304,21 +305,39 @@ export class RavenTableComponent implements OnChanges {
             field: prop,
             headerName: prop.charAt(0).toUpperCase() + prop.slice(1), // Capitalize header.
             hide: false,
-            valueSetter: point.editable && this.colEditable(prop) ? function(params: any) {
-              const times = ['start', 'end']
-              console.log('params.node.data: ' + JSON.stringify(params.node.data));
-              console.log('params.column.id: ' + JSON.stringify(params.column.getId()));
-              console.log('params.node.rowIndex: ' + params.node.rowIndex);
-              console.log('params.newValue: ' + JSON.stringify(params.newValue));
-              const value = params.newValue;
-              updatePoint.emit({
-                bandId,
-                pointId: params.node.data.id,
-                subBandId,
-                update: {[params.column.getId()]: times.includes(params.column.getId()) ? utc(value) : value },
-              });
-              return true;
-            } : null,
+            valueSetter:
+              point.editable && this.colEditable(prop)
+                ? function(params: any) {
+                    const times = ['start', 'end'];
+                    console.log(
+                      'params.node.data: ' + JSON.stringify(params.node.data),
+                    );
+                    console.log(
+                      'params.column.id: ' +
+                        JSON.stringify(params.column.getId()),
+                    );
+                    console.log(
+                      'params.node.rowIndex: ' + params.node.rowIndex,
+                    );
+                    console.log(
+                      'params.newValue: ' + JSON.stringify(params.newValue),
+                    );
+                    const value = params.newValue;
+                    updatePoint.emit({
+                      bandId,
+                      pointId: params.node.data.id,
+                      subBandId,
+                      update: {
+                        [params.column.getId()]: times.includes(
+                          params.column.getId(),
+                        )
+                          ? utc(value)
+                          : value,
+                      },
+                    });
+                    return true;
+                  }
+                : null,
           });
         }
       });
@@ -334,7 +353,7 @@ export class RavenTableComponent implements OnChanges {
   }
 
   colEditable(prop: string): boolean {
-    const editables= [ 'activityName', 'start', 'end', 'value'];
+    const editables = ['activityName', 'start', 'end', 'value'];
     return editables.includes(prop);
   }
 

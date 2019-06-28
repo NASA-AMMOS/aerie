@@ -9,7 +9,7 @@
 
 export interface MpsServerStateMetadata {
   decimatedData: boolean;
-  editable: boolean,
+  editable: boolean;
   hasInterpolatorType: string;
   hasObjectName: string;
   hasObjectNamespace: string;

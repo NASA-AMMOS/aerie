@@ -87,7 +87,7 @@ export function toRavenBandData(
       defaultBandSettings,
       customFilter,
       treeBySourceId,
-      (metadata as MpsServerStateMetadata).editable
+      (metadata as MpsServerStateMetadata).editable,
     );
     return activityBands;
   } else {
@@ -362,7 +362,11 @@ export function toStateBand(
   defaultBandSettings: RavenDefaultBandSettings,
   treeBySourceId: StringTMap<RavenSource>,
 ): RavenStateBand {
-  const { maxTimeRange, points } = getStatePoints(sourceId, timelineData, metadata.editable);
+  const { maxTimeRange, points } = getStatePoints(
+    sourceId,
+    timelineData,
+    metadata.editable,
+  );
 
   const stateBand: RavenStateBand = {
     addTo: false,

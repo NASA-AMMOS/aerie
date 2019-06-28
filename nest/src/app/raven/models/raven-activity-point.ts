@@ -23,7 +23,7 @@ export interface RavenActivityPoint {
   color: string;
   descendantsUrl: string;
   duration: number;
-  editable: boolean,
+  editable: boolean;
   end: number;
   endTimestamp: string;
   expandedFromPointId: string | null;
