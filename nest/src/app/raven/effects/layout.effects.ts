@@ -76,7 +76,9 @@ export class LayoutEffects {
       if (action.opened && state.raven.timeline.currentStateId !== '') {
         return this.http
           .get(
-            `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${state.raven.timeline.currentStateId}`,
+            `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${
+              state.raven.timeline.currentStateId
+            }`,
           )
           .pipe(
             map(res => importState(res[0])),
@@ -134,7 +136,9 @@ export class LayoutEffects {
       if (state.raven.layout.showSituationalAwarenessDrawer) {
         return of(
           new situationalAwarenessActions.FetchPefEntries(
-            `${state.config.app.baseUrl}/mpsserver/api/v2/situational_awareness?`,
+            `${
+              state.config.app.baseUrl
+            }/mpsserver/api/v2/situational_awareness?`,
           ),
         );
       } else {

@@ -173,7 +173,9 @@ export class ConfigEffects {
     layoutState: LayoutState,
     shareableName: string,
   ): Action[] {
-    const statePath = `/${configState.raven.shareableLinkStatesUrl}/${shareableName}`;
+    const statePath = `/${
+      configState.raven.shareableLinkStatesUrl
+    }/${shareableName}`;
 
     return [
       ...this.loadState(configState, statePath, '', ''),
@@ -194,7 +196,9 @@ export class ConfigEffects {
     if (statePath) {
       return [
         new sourceExplorerActions.ApplyState(
-          `${configState.app.baseUrl}/${configState.mpsServer.apiUrl}${statePath}`,
+          `${configState.app.baseUrl}/${
+            configState.mpsServer.apiUrl
+          }${statePath}`,
           statePath,
         ),
       ];
@@ -208,7 +212,9 @@ export class ConfigEffects {
           fetchPending: true,
         }),
         new sourceExplorerActions.ApplyLayoutToSources(
-          `${configState.app.baseUrl}/${configState.mpsServer.apiUrl}${layoutPath}`,
+          `${configState.app.baseUrl}/${
+            configState.mpsServer.apiUrl
+          }${layoutPath}`,
           layoutPath,
           sourcePath.split(','),
         ),

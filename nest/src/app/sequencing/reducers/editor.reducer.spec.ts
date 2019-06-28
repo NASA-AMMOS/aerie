@@ -15,8 +15,8 @@ const mockLine: CurrentLine = {
   commandName: 'CONSUME_BOBA',
   parameters: [
     {
-      name: 'Boba',
       help: 'Everyone likes boba',
+      name: 'Boba',
       type: 'string',
       units: 'Boba Balls',
       value: 'Milk Tea',

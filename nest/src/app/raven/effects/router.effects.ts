@@ -46,7 +46,9 @@ export class RouterEffects {
       // Get project config.
       actions.push(
         new configActions.FetchProjectConfig(
-          `${state.config.app.baseUrl}/${state.config.mpsServer.ravenConfigUrl}`,
+          `${state.config.app.baseUrl}/${
+            state.config.mpsServer.ravenConfigUrl
+          }`,
         ),
       );
       if (shareableName) {

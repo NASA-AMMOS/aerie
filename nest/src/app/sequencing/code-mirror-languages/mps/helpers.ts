@@ -49,7 +49,9 @@ export function getCommandParameterHelpTemplate(
       ${command.parameters.length > 0 ? '<h4>Parameters</h4>' : 'No Parameters'}
       ${command.parameters
         .map(p => {
-          return `<p class="parameter-help"><strong class="parameter-name">${p.name}</strong>: ${p.help}</p>`;
+          return `<p class="parameter-help"><strong class="parameter-name">${
+            p.name
+          }</strong>: ${p.help}</p>`;
         })
         .join(' ')}
     `;

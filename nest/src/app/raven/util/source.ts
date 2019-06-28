@@ -493,7 +493,9 @@ export function getSourceIdsForSubBand(
         );
         savedSourceIds.push(
           customFilter
-            ? `${source.id}?label=${customFilter.label}&filter=${customFilter.filter}`
+            ? `${source.id}?label=${customFilter.label}&filter=${
+                customFilter.filter
+              }`
             : source.id,
         );
       } else if (source.type === 'graphableFilter' && filtersByTarget) {
@@ -609,7 +611,9 @@ export function getFormattedSourceUrl(
         : customFilter.filter;
     const queryOptions =
       customGraphableSource.arg !== 'filter' || customFilter.filter
-        ? `legend=${customFilter.label}&${customGraphableSource.arg}=${filterArg}&`
+        ? `legend=${customFilter.label}&${
+            customGraphableSource.arg
+          }=${filterArg}&`
         : `legend=${customFilter.label}&`;
     sourceUrl = `${sourceUrl}&${encodeURI(queryOptions)}`;
   }
@@ -764,8 +768,12 @@ export function getTargetFilterSourceIds(
             sourceId
           ] as RavenCustomFilterSource;
           targetFilterSourceIds[
-            `${customSource.id}?${customSource.filterSetOf}=${customSource.filter}`
-          ] = `${customSource.id}?${customSource.filterSetOf}=${customSource.filter}`;
+            `${customSource.id}?${customSource.filterSetOf}=${
+              customSource.filter
+            }`
+          ] = `${customSource.id}?${customSource.filterSetOf}=${
+            customSource.filter
+          }`;
         } else {
           targetFilterSourceIds[`${sourceId}`] = `${sourceId}`;
         }

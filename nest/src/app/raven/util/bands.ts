@@ -91,7 +91,9 @@ export function toRavenBandData(
     return activityBands;
   } else {
     console.error(
-      `raven2 - bands.ts - toRavenBandData - parameter 'graphData' has a timeline type we do not recognize: ${metadata.hasTimelineType}`,
+      `raven2 - bands.ts - toRavenBandData - parameter 'graphData' has a timeline type we do not recognize: ${
+        metadata.hasTimelineType
+      }`,
     );
     return [];
   }
@@ -141,7 +143,9 @@ export function toRavenDescendantsData(
     return activityBands;
   } else {
     console.error(
-      `raven2 - bands.ts - toRavenDescendantData - parameter 'graphData' has a timeline type not valid for descendants: ${metadata.hasTimelineType}`,
+      `raven2 - bands.ts - toRavenDescendantData - parameter 'graphData' has a timeline type not valid for descendants: ${
+        metadata.hasTimelineType
+      }`,
     );
     return [];
   }
