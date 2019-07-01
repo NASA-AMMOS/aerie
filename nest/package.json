@@ -33,7 +33,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-push": "node ./scripts/pre-push.js"
+      "pre-commit": "[[ \"$PWD\" =~ nest ]] && node ./scripts/pre-push.js"
     }
   },
   "dependencies": {

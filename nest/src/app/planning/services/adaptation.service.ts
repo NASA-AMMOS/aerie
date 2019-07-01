@@ -45,9 +45,7 @@ export class AdaptationService implements AdaptationServiceInterface {
       .pipe(
         switchMap((plan: Plan) =>
           this.http.get<ActivityType[]>(
-            `${adaptationServiceBaseUrl}/adaptations/${
-              plan.adaptationId
-            }/activities/`,
+            `${adaptationServiceBaseUrl}/adaptations/${plan.adaptationId}/activities/`,
           ),
         ),
       );

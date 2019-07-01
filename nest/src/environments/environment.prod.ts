@@ -7,9 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-const windowBaseUrl = `${window.location.protocol}//${
-  window.location.hostname
-}`;
+const windowBaseUrl = `${window.location.protocol}//${window.location.hostname}`;
 
 export const environment = {
   adaptationServiceBaseUrl: `${windowBaseUrl}:27182/api`,

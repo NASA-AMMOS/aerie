@@ -1050,9 +1050,7 @@ export class SourceExplorerEffects {
     concatMap(({ state }) =>
       this.mpsServerService
         .updateState(
-          `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${
-            state.raven.timeline.currentStateId
-          }`,
+          `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${state.raven.timeline.currentStateId}`,
           getState(
             getSourceNameFromId(state.raven.timeline.currentStateId),
             state,
@@ -1087,9 +1085,7 @@ export class SourceExplorerEffects {
         return of(FilterState.empty());
       } else {
         // Apply a new filter.
-        const url = `${state.config.app.baseUrl}/${
-          state.config.mpsServer.apiUrl
-        }`;
+        const url = `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`;
 
         return this.mpsServerService
           .getSourcesMatchingFilter(url, action.sourceFilter)
@@ -1122,9 +1118,7 @@ export class SourceExplorerEffects {
   createFolder(action: sourceExplorerActions.FolderAdd, state: RavenAppState) {
     const headers = new HttpHeaders().set('Content-Type', `application/json`);
     const responseType = 'text';
-    const url = `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${
-      action.folder.url
-    }/${action.folder.name}`;
+    const url = `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${action.folder.url}/${action.folder.name}`;
 
     return this.http.put(url, '', { headers, responseType }).pipe(
       concatMap(() => {
@@ -1306,9 +1300,7 @@ export class SourceExplorerEffects {
       'Content-Type',
       `${action.file.type === 'pef' ? 'application/json' : 'text/csv'}`,
     );
-    const url = `${action.source.url}/${action.file.name}?timeline_type=${
-      action.file.type
-    }&time_format=${action.file.timeFormat}`;
+    const url = `${action.source.url}/${action.file.name}?timeline_type=${action.file.type}&time_format=${action.file.timeFormat}`;
 
     return this.http
       .put(url, action.file.data, { headers: headers, responseType: 'text' })
@@ -1857,9 +1849,7 @@ export class SourceExplorerEffects {
       Object.keys(sourceIds).map(sourceId =>
         this.http
           .get(
-            `${state.config.app.baseUrl}/${
-              state.config.mpsServer.apiUrl
-            }${sourceId}`,
+            `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${sourceId}`,
           )
           .pipe(
             timeout(3000), // Timeout long requests since MPS Server returns type information quickly, and long requests probably are not what we are looking for.
