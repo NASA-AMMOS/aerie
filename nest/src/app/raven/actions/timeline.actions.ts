@@ -15,6 +15,7 @@ import {
   RavenCompositeBand,
   RavenGuidePoint,
   RavenPin,
+  RavenPoint,
   RavenSortMessage,
   RavenSubBand,
 } from '../models';
@@ -39,6 +40,7 @@ export enum TimelineActionTypes {
   RemoveBandsOrPointsForSource = '[timeline] remove_bands_or_points_for_source',
   RemoveBandsWithNoPoints = '[timeline] remove_bands_with_no_points',
   RemoveChildrenOrDescendants = '[timeline] remove_children_or_descendants',
+  RemovePointsInSubBand = '[timeline] remove_points_in_sub_band',
   RemoveSourceIdFromSubBands = '[timeline] remove_source_from_sub_bands',
   RemoveSubBand = '[timeline] remove_sub_band',
   ResetViewTimeRange = '[timeline] reset_view_time_range',
@@ -192,6 +194,16 @@ export class RemoveChildrenOrDescendants implements Action {
     public bandId: string,
     public subBandId: string,
     public activityPoint: RavenActivityPoint,
+  ) {}
+}
+
+export class RemovePointsInSubBand implements Action {
+  readonly type = TimelineActionTypes.RemovePointsInSubBand;
+
+  constructor(
+    public bandId: string,
+    public subBandId: string,
+    public points: RavenPoint[],
   ) {}
 }
 
@@ -349,6 +361,7 @@ export type TimelineAction =
   | RemoveBandsOrPointsForSource
   | RemoveBandsWithNoPoints
   | RemoveChildrenOrDescendants
+  | RemovePointsInSubBand
   | RemoveSourceIdFromSubBands
   | RemoveSubBand
   | ResetViewTimeRange

@@ -13,8 +13,7 @@
 }
 
 ag-grid-angular {
-  height: 85%;
-  width: 100%;
+  flex: 1 0 auto;
 }
 
 mat-card {
@@ -45,4 +44,21 @@ mat-card {
   margin-right: 10px;
   margin-top: 10px;
   color: red;
+}
+
+.two-column-container {
+  display: flex;
+  height: 90%;
+}
+
+.edit-button-container {
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-button {
+  margin-top: 10px;
+  margin-left: 10px;
+  flex: 0 1 auto;
 }

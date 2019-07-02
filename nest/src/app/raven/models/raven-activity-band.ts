@@ -35,6 +35,7 @@ export interface RavenActivityBand {
   name: string;
   parentUniqueId: string | null;
   points: RavenActivityPoint[];
+  pointsChanged: boolean;
   showActivityTimes: boolean;
   showLabel: boolean;
   showLabelPin: boolean;

@@ -22,6 +22,7 @@ import {
   RemoveBandsOrPointsForSource,
   RemoveBandsWithNoPoints,
   RemoveChildrenOrDescendants,
+  RemovePointsInSubBand,
   RemoveSourceIdFromSubBands,
   RemoveSubBand,
   SelectBand,
@@ -135,6 +136,8 @@ export function reducer(
       return removeBandsWithNoPoints(state, action);
     case TimelineActionTypes.RemoveChildrenOrDescendants:
       return removeChildrenOrDescendants(state, action);
+    case TimelineActionTypes.RemovePointsInSubBand:
+      return removePointsInSubBand(state, action);
     case TimelineActionTypes.RemoveSourceIdFromSubBands:
       return removeSourceIdFromSubBands(state, action);
     case TimelineActionTypes.RemoveSubBand:
@@ -636,6 +639,44 @@ export function removeChildrenOrDescendants(
   };
 }
 
+export function removePointsInSubBand(
+  state: TimelineState,
+  action: RemovePointsInSubBand,
+): TimelineState {
+  const bands = state.bands.map((band: RavenCompositeBand) => {
+    const deletePoints = action.points.map(deletePoint => deletePoint.uniqueId);
+    if (action.bandId === band.id) {
+      return {
+        ...band,
+        subBands: band.subBands.map(subBand => {
+          if (action.subBandId === subBand.id) {
+            const points = subBand.points.filter(point=> !deletePoints.includes(point.uniqueId));
+            const maxTimeRange = getMaxTimeRange(points);
+
+            return {
+              ...subBand,
+              maxTimeRange,
+              points,
+              pointsChanged: true,
+            };
+          }
+
+          return subBand;
+        }),
+      };
+    }
+
+    return band;
+  });
+
+  return {
+    ...state,
+    bands,
+    currentStateChanged: state.currentState !== null,
+    ...updateTimeRanges(bands, state.viewTimeRange),
+  };
+}
+
 /**
  * Reduction Helper. Called when reducing the 'RemoveSourceIdFromSubBands' action.
  */
@@ -977,6 +1018,7 @@ export function updatePointInSubBand(
                   }
                 },
               ),
+              pointsChanged: true,
             };
           }
           return subBand;

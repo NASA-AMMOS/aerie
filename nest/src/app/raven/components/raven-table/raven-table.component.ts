@@ -8,6 +8,7 @@
  */
 
 import {
+  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
   EventEmitter,
@@ -47,9 +48,10 @@ import { GridOptions } from 'ag-grid-community';
   styleUrls: ['./raven-table.component.css'],
   templateUrl: './raven-table.component.html',
 })
-export class RavenTableComponent implements OnChanges {
+export class RavenTableComponent implements AfterViewInit, OnChanges {
   @ViewChild('agGrid', { static: false })
   agGrid: AgGridAngular;
+
 
   @Input()
   activityFilter: string;
@@ -70,6 +72,9 @@ export class RavenTableComponent implements OnChanges {
   selectedPoint: RavenPoint;
 
   @Output()
+  removePointsInSubBand : EventEmitter<RavenPoint[]> = new EventEmitter<RavenPoint[]>();
+
+  @Output()
   updateFilter: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
 
   @Output()
@@ -87,11 +92,13 @@ export class RavenTableComponent implements OnChanges {
 
   columnDefs: any[] = [];
   rowData: any[] = [];
+  rowSelection: string;
 
   dataSource: IDatasource;
 
   private gridApi: any;
   public gridOptions: GridOptions;
+
 
   constructor() {
     this.gridOptions = {
@@ -110,6 +117,10 @@ export class RavenTableComponent implements OnChanges {
     };
 
     this.gridOptions.datasource = this.dataSource;
+  }
+
+  ngAfterViewInit() {
+    this.rowSelection = 'multiple';
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -575,5 +586,21 @@ export class RavenTableComponent implements OnChanges {
     }
 
     return point;
+  }
+
+  onAdd() {
+    if (this.selectedSubBand.type='activity'){
+
+    }
+  }
+
+  onRemove() {
+    const selectedPoints = this.gridApi.getSelectedRows();
+    console.log('removing: ' + selectedPoints.length);
+    this.removePointsInSubBand.emit(selectedPoints);
+  }
+
+  onSave() {
+
   }
 }

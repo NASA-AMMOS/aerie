@@ -609,6 +609,11 @@ export class TimelineComponent implements OnDestroy {
     this.store.dispatch(new epochsActions.AppendAndReplaceEpochs(epochs));
   }
 
+  onRemovePointsInSubBand(removePoints: RavenPoint[]){
+    this.store.dispatch(new timelineActions.RemovePointsInSubBand(this.selectedBandId, this.selectedSubBandId,
+      removePoints));
+  }
+
   /**
    * Event. Called when settings icon is clicked.
    */

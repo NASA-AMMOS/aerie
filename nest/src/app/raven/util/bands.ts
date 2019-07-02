@@ -211,6 +211,7 @@ export function toActivityBands(
       name: legend,
       parentUniqueId: null,
       points: legends[legend],
+      pointsChanged: false,
       showActivityTimes: false,
       showLabel: legends[legend][0].activityName !== undefined,
       showLabelPin: true,
@@ -332,6 +333,7 @@ export function toResourceBand(
     name: metadata.hasObjectName,
     parentUniqueId: null,
     points,
+    pointsChanged: false,
     scientificNotation: false,
     showIcon: false,
     showLabelPin: true,
@@ -389,6 +391,7 @@ export function toStateBand(
     name: metadata.hasObjectName,
     parentUniqueId: null,
     points,
+    pointsChanged: false,
     possibleStates: metadata.hasPossibleStates
       ? metadata.hasPossibleStates
       : [],
