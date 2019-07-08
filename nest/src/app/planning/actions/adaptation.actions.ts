@@ -7,38 +7,25 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 import { ActivityType, Adaptation } from '../../shared/models';
 
-export enum AdaptationActionTypes {
-  FetchActivityTypesFailure = '[adaptation] fetch_activity_types_failure',
-  FetchAdaptationsFailure = '[adaptation] fetch_adaptations_failure',
-  SetActivityTypes = '[adaptation] set_activity_types',
-  SetAdaptations = '[adaptation] set_adaptations',
-}
+export const fetchActivityTypesFailure = createAction(
+  '[adaptation] fetch_activity_types_failure',
+  props<{ error: Error }>(),
+);
 
-export class FetchActivityTypesFailure implements Action {
-  readonly type = AdaptationActionTypes.FetchActivityTypesFailure;
-  constructor(public error: Error) {}
-}
+export const fetchAdaptationsFailure = createAction(
+  '[adaptation] fetch_adaptations_failure',
+  props<{ error: Error }>(),
+);
 
-export class FetchAdaptationsFailure implements Action {
-  readonly type = AdaptationActionTypes.FetchAdaptationsFailure;
-  constructor(public error: Error) {}
-}
+export const setActivityTypes = createAction(
+  '[adaptation] set_activity_types',
+  props<{ activityTypes: ActivityType[] }>(),
+);
 
-export class SetActivityTypes implements Action {
-  readonly type = AdaptationActionTypes.SetActivityTypes;
-  constructor(public activityTypes: ActivityType[]) {}
-}
-
-export class SetAdaptations implements Action {
-  readonly type = AdaptationActionTypes.SetAdaptations;
-  constructor(public adaptations: Adaptation[]) {}
-}
-
-export type AdaptationActions =
-  | FetchActivityTypesFailure
-  | FetchAdaptationsFailure
-  | SetActivityTypes
-  | SetAdaptations;
+export const setAdaptations = createAction(
+  '[adaptation] set_adaptations',
+  props<{ adaptations: Adaptation[] }>(),
+);

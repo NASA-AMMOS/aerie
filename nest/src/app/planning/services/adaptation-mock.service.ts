@@ -11,10 +11,7 @@ import { Injectable } from '@angular/core';
 import { Action } from '@ngrx/store';
 import { Observable, Observer } from 'rxjs';
 import { ActivityType, Adaptation } from '../../shared/models';
-import {
-  SetActivityTypes,
-  SetAdaptations,
-} from '../actions/adaptation.actions';
+import { AdaptationActions } from '../actions';
 import { AdaptationServiceInterface } from './adaptation-service-interface';
 
 export function getMockAdaptations(): Adaptation[] {
@@ -91,7 +88,11 @@ export class AdaptationMockService implements AdaptationServiceInterface {
     planId: string,
   ): Observable<Action> {
     return new Observable((o: Observer<Action>) => {
-      o.next(new SetActivityTypes(getMockActivityTypes()));
+      o.next(
+        AdaptationActions.setActivityTypes({
+          activityTypes: getMockActivityTypes(),
+        }),
+      );
       o.complete();
     });
   }
@@ -105,7 +106,9 @@ export class AdaptationMockService implements AdaptationServiceInterface {
 
   getAdaptationsWithActions(baseUrl: string): Observable<Action> {
     return new Observable((o: Observer<Action>) => {
-      o.next(new SetAdaptations(getMockAdaptations()));
+      o.next(
+        AdaptationActions.setAdaptations({ adaptations: getMockAdaptations() }),
+      );
       o.complete();
     });
   }

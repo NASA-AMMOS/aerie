@@ -8,16 +8,12 @@
  */
 
 import { Injectable } from '@angular/core';
-import { Actions, Effect } from '@ngrx/effects';
+import { Actions, createEffect } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 import { forkJoin } from 'rxjs';
 import { map, switchMap, withLatestFrom } from 'rxjs/operators';
 import { mapToParam, mapToParams, ofRoute } from '../../../../libs/ngrx-router';
-import { CloseAllDrawers, LoadingBarHide } from '../actions/layout.actions';
-import {
-  ClearSelectedActivity,
-  ClearSelectedPlan,
-} from '../actions/plan.actions';
+import { LayoutActions, PlanActions } from '../actions';
 import { PlanningAppState } from '../planning-store';
 import { AdaptationService } from '../services/adaptation.service';
 import { PlanService } from '../services/plan.service';
@@ -25,124 +21,128 @@ import { PlanService } from '../services/plan.service';
 @Injectable()
 export class NavEffects {
   constructor(
-    private actions$: Actions,
-    private store$: Store<PlanningAppState>,
+    private actions: Actions,
+    private store: Store<PlanningAppState>,
     private adaptationService: AdaptationService,
     private planService: PlanService,
   ) {}
 
-  @Effect()
-  navPlans$ = this.actions$.pipe(
-    ofRoute('plans'),
-    withLatestFrom(this.store$),
-    map(([_, state]) => state),
-    switchMap(state =>
-      forkJoin([
-        this.adaptationService.getAdaptationsWithActions(
-          state.config.app.adaptationServiceBaseUrl,
-        ),
-        this.planService.getPlansWithActions(
-          state.config.app.planServiceBaseUrl,
-          null,
-        ),
+  navPlans = createEffect(() =>
+    this.actions.pipe(
+      ofRoute('plans'),
+      withLatestFrom(this.store),
+      map(([_, state]) => state),
+      switchMap(state =>
+        forkJoin([
+          this.adaptationService.getAdaptationsWithActions(
+            state.config.app.adaptationServiceBaseUrl,
+          ),
+          this.planService.getPlansWithActions(
+            state.config.app.planServiceBaseUrl,
+            null,
+          ),
+        ]),
+      ),
+      switchMap((actions: Action[]) => [
+        ...actions,
+        LayoutActions.closeAllDrawers(),
+        PlanActions.clearSelectedPlan(),
+        PlanActions.clearSelectedActivity(),
+        LayoutActions.loadingBarHide(),
       ]),
     ),
-    switchMap((actions: Action[]) => [
-      ...actions,
-      new CloseAllDrawers(),
-      new ClearSelectedPlan(),
-      new ClearSelectedActivity(),
-      new LoadingBarHide(),
-    ]),
   );
 
-  @Effect()
-  navPlansWithId$ = this.actions$.pipe(
-    ofRoute('plans/:planId'),
-    mapToParam<string>('planId'),
-    withLatestFrom(this.store$),
-    map(([planId, state]) => ({ planId, state })),
-    switchMap(({ planId, state }) =>
-      forkJoin([
-        this.adaptationService.getActivityTypesWithActions(
-          state.config.app.planServiceBaseUrl,
-          state.config.app.adaptationServiceBaseUrl,
-          planId,
-        ),
-        this.planService.getPlansWithActions(
-          state.config.app.planServiceBaseUrl,
-          planId,
-        ),
-        this.planService.getActivitiesWithActions(
-          state.config.app.planServiceBaseUrl,
-          planId,
-          null,
-        ),
+  navPlansWithId = createEffect(() =>
+    this.actions.pipe(
+      ofRoute('plans/:planId'),
+      mapToParam<string>('planId'),
+      withLatestFrom(this.store),
+      map(([planId, state]) => ({ planId, state })),
+      switchMap(({ planId, state }) =>
+        forkJoin([
+          this.adaptationService.getActivityTypesWithActions(
+            state.config.app.planServiceBaseUrl,
+            state.config.app.adaptationServiceBaseUrl,
+            planId,
+          ),
+          this.planService.getPlansWithActions(
+            state.config.app.planServiceBaseUrl,
+            planId,
+          ),
+          this.planService.getActivitiesWithActions(
+            state.config.app.planServiceBaseUrl,
+            planId,
+            null,
+          ),
+        ]),
+      ),
+      switchMap((actions: Action[]) => [
+        ...actions,
+        LayoutActions.closeAllDrawers(),
+        PlanActions.clearSelectedActivity(),
+        LayoutActions.loadingBarHide(),
       ]),
     ),
-    switchMap((actions: Action[]) => [
-      ...actions,
-      new CloseAllDrawers(),
-      new ClearSelectedActivity(),
-      new LoadingBarHide(),
-    ]),
   );
 
-  @Effect()
-  navActivity$ = this.actions$.pipe(
-    ofRoute('plans/:planId/activity'),
-    mapToParam<string>('planId'),
-    withLatestFrom(this.store$),
-    map(([planId, state]) => ({ planId, state })),
-    switchMap(({ planId, state }) =>
-      forkJoin([
-        this.adaptationService.getActivityTypesWithActions(
-          state.config.app.planServiceBaseUrl,
-          state.config.app.adaptationServiceBaseUrl,
-          planId,
-        ),
-        this.planService.getPlansWithActions(
-          state.config.app.planServiceBaseUrl,
-          planId,
-        ),
+  navActivity = createEffect(() =>
+    this.actions.pipe(
+      ofRoute('plans/:planId/activity'),
+      mapToParam<string>('planId'),
+      withLatestFrom(this.store),
+      map(([planId, state]) => ({ planId, state })),
+      switchMap(({ planId, state }) =>
+        forkJoin([
+          this.adaptationService.getActivityTypesWithActions(
+            state.config.app.planServiceBaseUrl,
+            state.config.app.adaptationServiceBaseUrl,
+            planId,
+          ),
+          this.planService.getPlansWithActions(
+            state.config.app.planServiceBaseUrl,
+            planId,
+          ),
+        ]),
+      ),
+      switchMap((actions: Action[]) => [
+        ...actions,
+        LayoutActions.closeAllDrawers(),
+        PlanActions.clearSelectedActivity(),
+        LayoutActions.loadingBarHide(),
       ]),
     ),
-    switchMap((actions: Action[]) => [
-      ...actions,
-      new CloseAllDrawers(),
-      new ClearSelectedActivity(),
-      new LoadingBarHide(),
-    ]),
   );
 
-  @Effect()
-  navActivityWithId$ = this.actions$.pipe(
-    ofRoute('plans/:planId/activity/:activityId'),
-    mapToParams(),
-    withLatestFrom(this.store$),
-    map(([params, state]) => ({ params, state })),
-    switchMap(({ params: { activityId, planId }, state }) =>
-      forkJoin([
-        this.adaptationService.getActivityTypesWithActions(
-          state.config.app.planServiceBaseUrl,
-          state.config.app.adaptationServiceBaseUrl,
-          planId,
-        ),
-        this.planService.getPlansWithActions(
-          state.config.app.planServiceBaseUrl,
-          planId,
-        ),
-        this.planService.getActivitiesWithActions(
-          state.config.app.planServiceBaseUrl,
-          planId,
-          activityId,
-        ),
+  navActivityWithId = createEffect(() =>
+    this.actions.pipe(
+      ofRoute('plans/:planId/activity/:activityId'),
+      mapToParams(),
+      withLatestFrom(this.store),
+      map(([params, state]) => ({ params, state })),
+      switchMap(({ params: { activityId, planId }, state }) =>
+        forkJoin([
+          this.adaptationService.getActivityTypesWithActions(
+            state.config.app.planServiceBaseUrl,
+            state.config.app.adaptationServiceBaseUrl,
+            planId,
+          ),
+          this.planService.getPlansWithActions(
+            state.config.app.planServiceBaseUrl,
+            planId,
+          ),
+          this.planService.getActivitiesWithActions(
+            state.config.app.planServiceBaseUrl,
+            planId,
+            activityId,
+          ),
+        ]),
+      ),
+      switchMap((actions: Action[]) => [
+        ...actions,
+        LayoutActions.closeAllDrawers(),
+        LayoutActions.loadingBarHide(),
       ]),
     ),
-    switchMap((actions: Action[]) => [
-      ...actions,
-      new CloseAllDrawers(),
-      new LoadingBarHide(),
-    ]),
   );
 }

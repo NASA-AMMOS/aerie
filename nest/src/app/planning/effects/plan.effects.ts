@@ -10,32 +10,15 @@
 import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { Router } from '@angular/router';
-import { Actions, Effect, ofType } from '@ngrx/effects';
-import { Action, Store } from '@ngrx/store';
-import { forkJoin, Observable, of } from 'rxjs';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Store } from '@ngrx/store';
+import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap, withLatestFrom } from 'rxjs/operators';
 import { ShowToast } from '../../shared/actions/toast.actions';
 import { NestConfirmDialogComponent } from '../../shared/components/nest-confirm-dialog/nest-confirm-dialog.component';
 import { ActivityInstance } from '../../shared/models';
 import { timestamp } from '../../shared/util';
-import {
-  CreateActivity,
-  CreateActivityFailure,
-  CreateActivitySuccess,
-  CreatePlan,
-  CreatePlanFailure,
-  CreatePlanSuccess,
-  DeleteActivity,
-  DeleteActivityFailure,
-  DeleteActivitySuccess,
-  DeletePlan,
-  DeletePlanFailure,
-  DeletePlanSuccess,
-  PlanActionTypes,
-  UpdateActivity,
-  UpdateActivityFailure,
-  UpdateActivitySuccess,
-} from '../actions/plan.actions';
+import { PlanActions } from '../actions';
 import { PlanningAppState } from '../planning-store';
 import { PlanService } from '../services/plan.service';
 import { withLoadingBar } from './utils';
@@ -43,235 +26,273 @@ import { withLoadingBar } from './utils';
 @Injectable()
 export class PlanEffects {
   constructor(
-    private actions$: Actions,
-    private store$: Store<PlanningAppState>,
-    private planService: PlanService,
+    private actions: Actions,
     private dialog: MatDialog,
+    private planService: PlanService,
     private router: Router,
+    private store: Store<PlanningAppState>,
   ) {}
 
-  @Effect()
-  createActivity$: Observable<Action> = this.actions$.pipe(
-    ofType<CreateActivity>(PlanActionTypes.CreateActivity),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    switchMap(({ action, state }) => {
-      const end = action.data.start + action.data.duration;
-      const activity: ActivityInstance = {
-        activityId: action.data.activityId || '',
-        activityType: action.data.activityType,
-        backgroundColor: action.data.backgroundColor,
-        constraints: [],
-        duration: action.data.duration,
-        end,
-        endTimestamp: timestamp(end),
-        intent: action.data.intent,
-        listeners: [],
-        name: action.data.name,
-        parameters: [],
-        start: action.data.start,
-        startTimestamp: timestamp(action.data.start),
-        textColor: action.data.textColor,
-        y: 0,
-      };
+  createActivity = createEffect(() =>
+    this.actions.pipe(
+      ofType(PlanActions.createActivity),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      switchMap(({ action, state }) => {
+        const end = action.data.start + action.data.duration;
+        const activity: ActivityInstance = {
+          activityId: action.data.activityId || '',
+          activityType: action.data.activityType,
+          backgroundColor: action.data.backgroundColor,
+          constraints: [],
+          duration: action.data.duration,
+          end,
+          endTimestamp: timestamp(end),
+          intent: action.data.intent,
+          listeners: [],
+          name: action.data.name,
+          parameters: [],
+          start: action.data.start,
+          startTimestamp: timestamp(action.data.start),
+          textColor: action.data.textColor,
+          y: 0,
+        };
 
-      return this.planService
-        .createActivity(
-          state.config.app.planServiceBaseUrl,
-          action.planId,
-          activity,
-        )
-        .pipe(
-          switchMap((newActivity: ActivityInstance) => [
-            new CreateActivitySuccess(action.planId, newActivity),
-            new ShowToast(
-              'success',
-              'New activity has been successfully created and saved.',
-              'Create Activity Success',
-            ),
-          ]),
-          catchError((e: Error) => [
-            new CreateActivityFailure(e),
-            new ShowToast('error', e.message, 'Create Activity Failed'),
-          ]),
-        );
-    }),
-  );
-
-  @Effect({ dispatch: false })
-  createActivitySuccess$: Observable<Action> = this.actions$.pipe(
-    ofType<CreateActivitySuccess>(PlanActionTypes.CreateActivitySuccess),
-    switchMap(action => {
-      this.router.navigate([`/plans/${action.planId}`]);
-      return [];
-    }),
-  );
-
-  @Effect()
-  createPlan$: Observable<Action> = this.actions$.pipe(
-    ofType<CreatePlan>(PlanActionTypes.CreatePlan),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    switchMap(({ action, state }) =>
-      this.planService
-        .createPlan(state.config.app.planServiceBaseUrl, action.plan)
-        .pipe(
-          switchMap((plan: any) => [
-            new CreatePlanSuccess({ ...plan }),
-            new ShowToast(
-              'success',
-              'New plan has been successfully created and saved.',
-              'Create Plan Success',
-            ),
-          ]),
-          catchError((e: Error) => [
-            new CreatePlanFailure(e),
-            new ShowToast('error', e.message, 'Create Plan Failure'),
-          ]),
-        ),
+        return this.planService
+          .createActivity(
+            state.config.app.planServiceBaseUrl,
+            action.planId,
+            activity,
+          )
+          .pipe(
+            switchMap((newActivity: ActivityInstance) => [
+              PlanActions.createActivitySuccess({
+                activity: newActivity,
+                planId: action.planId,
+              }),
+              new ShowToast(
+                'success',
+                'New activity has been successfully created and saved.',
+                'Create Activity Success',
+              ),
+            ]),
+            catchError((error: Error) => [
+              PlanActions.createActivityFailure({ error }),
+              new ShowToast('error', error.message, 'Create Activity Failed'),
+            ]),
+          );
+      }),
     ),
   );
 
-  @Effect()
-  deleteActivity$: Observable<Action> = this.actions$.pipe(
-    ofType<DeleteActivity>(PlanActionTypes.DeleteActivity),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    switchMap(({ action, state }) => {
-      const deletePlanDialog = this.dialog.open(NestConfirmDialogComponent, {
-        data: {
-          cancelText: 'No',
-          confirmText: 'Yes',
-          message: `Are you sure you want to delete this activity?`,
-        },
-        width: '400px',
-      });
-
-      return forkJoin([of(action), of(state), deletePlanDialog.afterClosed()]);
-    }),
-    map(([action, state, result]) => ({ action, state, result })),
-    switchMap(({ action, state, result: { confirm } }) => {
-      if (confirm) {
-        return withLoadingBar([
-          this.planService
-            .deleteActivity(
-              state.config.app.planServiceBaseUrl,
-              action.planId,
-              action.activityId,
-            )
-            .pipe(
-              switchMap(() => [
-                new DeleteActivitySuccess(action.activityId),
-                new ShowToast(
-                  'success',
-                  'Activity has been successfully deleted.',
-                  'Delete Activity Success',
-                ),
-              ]),
-              catchError((e: Error) => [
-                new DeleteActivityFailure(e),
-                new ShowToast('error', e.message, 'Delete Activity Failure'),
-              ]),
-            ),
-        ]);
-      }
-      return [];
-    }),
+  createActivitySuccess = createEffect(
+    () =>
+      this.actions.pipe(
+        ofType(PlanActions.createActivitySuccess),
+        switchMap(({ planId }) => {
+          this.router.navigate([`/plans/${planId}`]);
+          return [];
+        }),
+      ),
+    { dispatch: false },
   );
 
-  @Effect()
-  deletePlan$: Observable<Action> = this.actions$.pipe(
-    ofType<DeletePlan>(PlanActionTypes.DeletePlan),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    switchMap(({ action, state }) => {
-      const deletePlanDialog = this.dialog.open(NestConfirmDialogComponent, {
-        data: {
-          cancelText: 'No',
-          confirmText: 'Yes',
-          message: `Are you sure you want to delete this plan?`,
-        },
-        width: '400px',
-      });
-
-      return forkJoin([of(action), of(state), deletePlanDialog.afterClosed()]);
-    }),
-    map(([action, state, result]) => ({ action, state, result })),
-    switchMap(({ action, state, result: { confirm } }) => {
-      if (confirm) {
-        return withLoadingBar([
-          this.planService
-            .deletePlan(state.config.app.planServiceBaseUrl, action.planId)
-            .pipe(
-              switchMap(() => [
-                new DeletePlanSuccess(action.planId),
-                new ShowToast(
-                  'success',
-                  'Plan has been successfully deleted.',
-                  'Delete Plan Success',
-                ),
-              ]),
-              catchError((e: Error) => [
-                new DeletePlanFailure(e),
-                new ShowToast('error', e.message, 'Delete Plan Failure'),
-              ]),
-            ),
-        ]);
-      }
-      return [];
-    }),
-  );
-
-  @Effect()
-  updateActivity$: Observable<Action> = this.actions$.pipe(
-    ofType<UpdateActivity>(PlanActionTypes.UpdateActivity),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    switchMap(({ state, action }) => {
-      const { activities } = state.planning.plan;
-      const { planServiceBaseUrl } = state.config.app;
-
-      if (!activities) {
-        return of(
-          new UpdateActivityFailure(
-            new Error('UpdateActivity: UpdateActivityFailure: NoActivities'),
-          ),
-        );
-      }
-
-      const activity = activities[action.activityId];
-
-      if (!activity) {
-        return of(
-          new UpdateActivityFailure(
-            new Error('UpdateActivity: UpdateActivityFailure: NoActivityFound'),
-          ),
-        );
-      }
-
-      return withLoadingBar([
+  createPlan = createEffect(() =>
+    this.actions.pipe(
+      ofType(PlanActions.createPlan),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      switchMap(({ action, state }) =>
         this.planService
-          .updateActivity(
-            planServiceBaseUrl,
-            action.planId,
-            action.activityId,
-            action.update as ActivityInstance,
-          )
+          .createPlan(state.config.app.planServiceBaseUrl, action.plan)
           .pipe(
-            switchMap(_ => [
-              new UpdateActivitySuccess(action.activityId, action.update),
+            switchMap((plan: any) => [
+              PlanActions.createPlanSuccess({ plan }),
               new ShowToast(
                 'success',
-                'Activity has been successfully updated.',
-                'Update Activity Success',
+                'New plan has been successfully created and saved.',
+                'Create Plan Success',
               ),
             ]),
-            catchError((e: Error) => [
-              new UpdateActivityFailure(e),
-              new ShowToast('error', e.message, 'Update Activity Failure'),
+            catchError((error: Error) => [
+              PlanActions.createPlanFailure({ error }),
+              new ShowToast('error', error.message, 'Create Plan Failure'),
             ]),
           ),
-      ]);
-    }),
+      ),
+    ),
+  );
+
+  deleteActivity = createEffect(() =>
+    this.actions.pipe(
+      ofType(PlanActions.deleteActivity),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      switchMap(({ action, state }) => {
+        const deletePlanDialog = this.dialog.open(NestConfirmDialogComponent, {
+          data: {
+            cancelText: 'No',
+            confirmText: 'Yes',
+            message: `Are you sure you want to delete this activity?`,
+          },
+          width: '400px',
+        });
+
+        return forkJoin([
+          of(action),
+          of(state),
+          deletePlanDialog.afterClosed(),
+        ]);
+      }),
+      map(([action, state, result]) => ({ action, state, result })),
+      switchMap(({ action, state, result: { confirm } }) => {
+        if (confirm) {
+          return withLoadingBar([
+            this.planService
+              .deleteActivity(
+                state.config.app.planServiceBaseUrl,
+                action.planId,
+                action.activityId,
+              )
+              .pipe(
+                switchMap(() => [
+                  PlanActions.deleteActivitySuccess({
+                    activityId: action.activityId,
+                  }),
+                  new ShowToast(
+                    'success',
+                    'Activity has been successfully deleted.',
+                    'Delete Activity Success',
+                  ),
+                ]),
+                catchError((error: Error) => [
+                  PlanActions.deleteActivityFailure({ error }),
+                  new ShowToast(
+                    'error',
+                    error.message,
+                    'Delete Activity Failure',
+                  ),
+                ]),
+              ),
+          ]);
+        }
+        return [];
+      }),
+    ),
+  );
+
+  deletePlan = createEffect(() =>
+    this.actions.pipe(
+      ofType(PlanActions.deletePlan),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      switchMap(({ action, state }) => {
+        const deletePlanDialog = this.dialog.open(NestConfirmDialogComponent, {
+          data: {
+            cancelText: 'No',
+            confirmText: 'Yes',
+            message: `Are you sure you want to delete this plan?`,
+          },
+          width: '400px',
+        });
+
+        return forkJoin([
+          of(action),
+          of(state),
+          deletePlanDialog.afterClosed(),
+        ]);
+      }),
+      map(([action, state, result]) => ({ action, state, result })),
+      switchMap(({ action, state, result: { confirm } }) => {
+        if (confirm) {
+          return withLoadingBar([
+            this.planService
+              .deletePlan(state.config.app.planServiceBaseUrl, action.planId)
+              .pipe(
+                switchMap(() => [
+                  PlanActions.deletePlanSuccess({
+                    deletedPlanId: action.planId,
+                  }),
+                  new ShowToast(
+                    'success',
+                    'Plan has been successfully deleted.',
+                    'Delete Plan Success',
+                  ),
+                ]),
+                catchError((error: Error) => [
+                  PlanActions.deletePlanFailure({ error }),
+                  new ShowToast('error', error.message, 'Delete Plan Failure'),
+                ]),
+              ),
+          ]);
+        }
+        return [];
+      }),
+    ),
+  );
+
+  updateActivity = createEffect(() =>
+    this.actions.pipe(
+      ofType(PlanActions.updateActivity),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      switchMap(({ state, action }) => {
+        const { activities } = state.planning.plan;
+        const { planServiceBaseUrl } = state.config.app;
+
+        if (!activities) {
+          return of(
+            PlanActions.updateActivityFailure({
+              error: new Error(
+                'UpdateActivity: UpdateActivityFailure: NoActivities',
+              ),
+            }),
+          );
+        }
+
+        const activity = activities[action.activityId];
+
+        if (!activity) {
+          return of(
+            PlanActions.updateActivityFailure({
+              error: new Error(
+                'UpdateActivity: UpdateActivityFailure: NoActivityFound',
+              ),
+            }),
+          );
+        }
+
+        return withLoadingBar([
+          this.planService
+            .updateActivity(
+              planServiceBaseUrl,
+              action.planId,
+              action.activityId,
+              action.update as ActivityInstance,
+            )
+            .pipe(
+              switchMap(_ => [
+                PlanActions.updateActivitySuccess({
+                  activityId: action.activityId,
+                  update: action.update,
+                }),
+                new ShowToast(
+                  'success',
+                  'Activity has been successfully updated.',
+                  'Update Activity Success',
+                ),
+              ]),
+              catchError((error: Error) => [
+                PlanActions.updateActivityFailure({ error }),
+                new ShowToast(
+                  'error',
+                  error.message,
+                  'Update Activity Failure',
+                ),
+              ]),
+            ),
+        ]);
+      }),
+    ),
   );
 }

@@ -13,17 +13,7 @@ import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { NavigateByUrl } from '../../../../../libs/ngrx-router';
 import { ActivityInstance, ActivityType, Plan } from '../../../shared/models';
-import {
-  ToggleActivityTypesDrawer,
-  ToggleAddActivityDrawer,
-  ToggleEditActivityDrawer,
-} from '../../actions/layout.actions';
-import {
-  CreateActivity,
-  DeleteActivity,
-  SelectActivity,
-  UpdateActivity,
-} from '../../actions/plan.actions';
+import { LayoutActions, PlanActions } from '../../actions';
 import { PlanningAppState } from '../../planning-store';
 import {
   getActivitiesAsList,
@@ -86,8 +76,10 @@ export class PlanComponent {
    * De-select the selected activity when we close the drawer since we don't need it selected anymore.
    */
   onCloseEditActivityDrawer(): void {
-    this.store.dispatch(new SelectActivity(null));
-    this.store.dispatch(new ToggleEditActivityDrawer(false));
+    this.store.dispatch(PlanActions.selectActivity({ id: null }));
+    this.store.dispatch(
+      LayoutActions.toggleEditActivityDrawer({ opened: false }),
+    );
   }
 
   /**
@@ -95,7 +87,7 @@ export class PlanComponent {
    */
   onCreateActivity(activity: ActivityInstance): void {
     const { planId } = this.route.snapshot.paramMap['params'];
-    this.store.dispatch(new CreateActivity(planId, activity));
+    this.store.dispatch(PlanActions.createActivity({ data: activity, planId }));
   }
 
   /**
@@ -103,15 +95,17 @@ export class PlanComponent {
    */
   onDeleteActivity(activityId: string): void {
     const { planId } = this.route.snapshot.paramMap['params'];
-    this.store.dispatch(new DeleteActivity(planId, activityId));
+    this.store.dispatch(PlanActions.deleteActivity({ activityId, planId }));
   }
 
   /**
    * Event. Called when the user clicks the edit activity button.
    */
-  onEditActivity(activityId: string): void {
-    this.store.dispatch(new SelectActivity(activityId));
-    this.store.dispatch(new ToggleEditActivityDrawer(true));
+  onEditActivity(id: string): void {
+    this.store.dispatch(PlanActions.selectActivity({ id }));
+    this.store.dispatch(
+      LayoutActions.toggleEditActivityDrawer({ opened: true }),
+    );
   }
 
   /**
@@ -133,14 +127,16 @@ export class PlanComponent {
 
   onSelectNewActivity(activityType: ActivityType): void {
     this.selectedActivityType = activityType;
-    this.store.dispatch(new ToggleAddActivityDrawer(true));
+    this.store.dispatch(
+      LayoutActions.toggleAddActivityDrawer({ opened: true }),
+    );
   }
 
   /**
    * Event. Called when a toggle event is fired from the activity types drawer.
    */
   onToggleActivityTypesDrawer(opened?: boolean): void {
-    this.store.dispatch(new ToggleActivityTypesDrawer(opened));
+    this.store.dispatch(LayoutActions.toggleActivityTypesDrawer({ opened }));
   }
 
   /**
@@ -150,7 +146,7 @@ export class PlanComponent {
     if (!opened) {
       this.selectedActivityType = null;
     }
-    this.store.dispatch(new ToggleAddActivityDrawer(opened));
+    this.store.dispatch(LayoutActions.toggleAddActivityDrawer({ opened }));
   }
 
   /**
@@ -159,7 +155,11 @@ export class PlanComponent {
   onUpdateActivity(activity: ActivityInstance): void {
     const { planId } = this.route.snapshot.paramMap['params'];
     this.store.dispatch(
-      new UpdateActivity(planId, activity.activityId, activity),
+      PlanActions.updateActivity({
+        activityId: activity.activityId,
+        planId,
+        update: activity,
+      }),
     );
   }
 }

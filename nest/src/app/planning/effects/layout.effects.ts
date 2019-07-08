@@ -8,38 +8,34 @@
  */
 
 import { Injectable } from '@angular/core';
-import { Actions, Effect, ofType } from '@ngrx/effects';
-import { Action } from '@ngrx/store';
-import { Observable } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
-import {
-  LayoutActionTypes,
-  Resize,
-  ToggleActivityTypesDrawer,
-  ToggleEditActivityDrawer,
-} from '../actions/layout.actions';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { map, tap } from 'rxjs/operators';
+import { LayoutActions } from '../actions';
 
 @Injectable()
 export class LayoutEffects {
-  constructor(private actions$: Actions) {}
+  constructor(private actions: Actions) {}
 
-  @Effect({ dispatch: false })
-  resize$: Observable<Action> = this.actions$.pipe(
-    ofType<Resize>(LayoutActionTypes.Resize),
-    switchMap(action => {
-      setTimeout(() => dispatchEvent(new Event('resize')), action.timeout || 0);
-      return [];
-    }),
+  resize = createEffect(
+    () =>
+      this.actions.pipe(
+        ofType(LayoutActions.resize),
+        tap(({ timeout }) => {
+          setTimeout(() => dispatchEvent(new Event('resize')), timeout || 0);
+        }),
+      ),
+    { dispatch: false },
   );
 
-  @Effect()
-  toggleDrawer$: Observable<Action> = this.actions$.pipe(
-    ofType<ToggleActivityTypesDrawer | ToggleEditActivityDrawer>(
-      LayoutActionTypes.ToggleActivityTypesDrawer,
-      LayoutActionTypes.ToggleCreatePlanDrawer,
-      LayoutActionTypes.ToggleEditActivityDrawer,
-      LayoutActionTypes.ToggleCreatePlanDrawer,
+  toggleDrawer = createEffect(() =>
+    this.actions.pipe(
+      ofType(
+        LayoutActions.toggleActivityTypesDrawer,
+        LayoutActions.toggleCreatePlanDrawer,
+        LayoutActions.toggleEditActivityDrawer,
+        LayoutActions.toggleCreatePlanDrawer,
+      ),
+      map(_ => LayoutActions.resize({})),
     ),
-    map(_ => new Resize()),
   );
 }

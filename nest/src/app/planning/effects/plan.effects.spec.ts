@@ -25,27 +25,7 @@ import {
   Plan,
   StringTMap,
 } from '../../shared/models';
-import { SetAdaptations } from '../actions/adaptation.actions';
-import { LoadingBarHide, LoadingBarShow } from '../actions/layout.actions';
-import {
-  CreateActivity,
-  CreateActivityFailure,
-  CreateActivitySuccess,
-  CreatePlan,
-  CreatePlanFailure,
-  CreatePlanSuccess,
-  DeleteActivity,
-  DeleteActivityFailure,
-  DeleteActivitySuccess,
-  DeletePlan,
-  DeletePlanFailure,
-  DeletePlanSuccess,
-  SetActivities,
-  SetPlans,
-  UpdateActivity,
-  UpdateActivityFailure,
-  UpdateActivitySuccess,
-} from '../actions/plan.actions';
+import { AdaptationActions, LayoutActions, PlanActions } from '../actions';
 import { reducers } from '../planning-store';
 import {
   AdaptationMockService,
@@ -61,7 +41,7 @@ import { PlanService } from '../services/plan.service';
 import { PlanEffects } from './plan.effects';
 
 describe('PlanEffects', () => {
-  let actions$: Observable<any>;
+  let actions: Observable<any>;
   let effects: PlanEffects;
   let dialog: any;
   let store: any;
@@ -74,8 +54,8 @@ describe('PlanEffects', () => {
   let activitiesMap: StringTMap<ActivityInstance>;
   let activity: ActivityInstance;
 
-  const loadingBarShow = new LoadingBarShow();
-  const loadingBarHide = new LoadingBarHide();
+  const loadingBarShow = LayoutActions.loadingBarShow();
+  const loadingBarHide = LayoutActions.loadingBarHide();
 
   beforeEach(() => {
     mockRouter = jasmine.createSpyObj('Router', ['navigate']);
@@ -90,7 +70,7 @@ describe('PlanEffects', () => {
       ],
       providers: [
         PlanEffects,
-        provideMockActions(() => actions$),
+        provideMockActions(() => actions),
         {
           provide: PlanService,
           useValue: new PlanMockService(),
@@ -123,16 +103,19 @@ describe('PlanEffects', () => {
     activity = activitiesMap['SetArrayTrackingMode_25788'];
   });
 
-  describe('createActivity$', () => {
+  describe('createActivity', () => {
     it('should return a CreateActivitySuccess action with data upon success', () => {
       const planId = plan.id || '';
-      const action = new CreateActivity(planId, activity);
-      const success = new CreateActivitySuccess(planId, {
-        ...activity,
-        constraints: [],
-        listeners: [],
-        parameters: [],
-        y: 0,
+      const action = PlanActions.createActivity({ planId, data: activity });
+      const success = PlanActions.createActivitySuccess({
+        activity: {
+          ...activity,
+          constraints: [],
+          listeners: [],
+          parameters: [],
+          y: 0,
+        },
+        planId,
       });
       const showToast = new ShowToast(
         'success',
@@ -140,17 +123,17 @@ describe('PlanEffects', () => {
         'Create Activity Success',
       );
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-(bc)', { b: success, c: showToast });
 
-      expect(effects.createActivity$).toBeObservable(expected);
+      expect(effects.createActivity).toBeObservable(expected);
     });
 
     it('should return a CreateActivityFailure action with an error upon failure', () => {
       const planId = plan.id || '';
-      const action = new CreateActivity(planId, activity);
+      const action = PlanActions.createActivity({ data: activity, planId });
       const error = new Error('CreateActivityFailure');
-      const failure = new CreateActivityFailure(error);
+      const failure = PlanActions.createActivityFailure({ error });
       const showToast = new ShowToast(
         'error',
         error.message,
@@ -162,45 +145,48 @@ describe('PlanEffects', () => {
         cold('-#|', null, error),
       );
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('--(bc)', { b: failure, c: showToast });
 
-      expect(effects.createActivity$).toBeObservable(expected);
+      expect(effects.createActivity).toBeObservable(expected);
     });
   });
 
-  describe('createActivitySuccess$', () => {
+  describe('createActivitySuccess', () => {
     it('should navigate to the actions given planId', () => {
-      const action = new CreateActivitySuccess('foo', activity);
+      const action = PlanActions.createActivitySuccess({
+        activity,
+        planId: 'foo',
+      });
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-');
 
-      expect(effects.createActivitySuccess$).toBeObservable(expected);
+      expect(effects.createActivitySuccess).toBeObservable(expected);
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/plans/foo']);
     });
   });
 
-  describe('createPlan$', () => {
+  describe('createPlan', () => {
     it('should return a CreatePlanSuccess action with data upon success', () => {
-      const action = new CreatePlan(plan);
-      const success = new CreatePlanSuccess(plan);
+      const action = PlanActions.createPlan({ plan });
+      const success = PlanActions.createPlanSuccess({ plan });
       const showToast = new ShowToast(
         'success',
         'New plan has been successfully created and saved.',
         'Create Plan Success',
       );
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-(bc)', { b: success, c: showToast });
 
-      expect(effects.createPlan$).toBeObservable(expected);
+      expect(effects.createPlan).toBeObservable(expected);
     });
 
     it('should return a CreatePlanFailure action with an error upon failure', () => {
-      const action = new CreatePlan(plan);
+      const action = PlanActions.createPlan({ plan });
       const error = new Error('CreatePlanFailure');
-      const failure = new CreatePlanFailure(error);
+      const failure = PlanActions.createPlanFailure({ error });
       const showToast = new ShowToast(
         'error',
         error.message,
@@ -210,14 +196,14 @@ describe('PlanEffects', () => {
       const service = TestBed.get(PlanService);
       spyOn(service, 'createPlan').and.returnValue(cold('-#|', null, error));
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('--(bc)', { b: failure, c: showToast });
 
-      expect(effects.createPlan$).toBeObservable(expected);
+      expect(effects.createPlan).toBeObservable(expected);
     });
   });
 
-  describe('deleteActivity$', () => {
+  describe('deleteActivity', () => {
     it('should return a DeleteActivitySuccess action with data upon success', () => {
       spyOn(dialog, 'open').and.returnValue({
         afterClosed() {
@@ -226,15 +212,20 @@ describe('PlanEffects', () => {
       });
 
       const planId = plan.id || '';
-      const action = new DeleteActivity(planId, activity.activityId);
-      const success = new DeleteActivitySuccess(activity.activityId);
+      const action = PlanActions.deleteActivity({
+        activityId: activity.activityId,
+        planId,
+      });
+      const success = PlanActions.deleteActivitySuccess({
+        activityId: activity.activityId,
+      });
       const showToast = new ShowToast(
         'success',
         'Activity has been successfully deleted.',
         'Delete Activity Success',
       );
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-(bcde)', {
         b: loadingBarShow,
         c: success,
@@ -242,7 +233,7 @@ describe('PlanEffects', () => {
         e: loadingBarHide,
       });
 
-      expect(effects.deleteActivity$).toBeObservable(expected);
+      expect(effects.deleteActivity).toBeObservable(expected);
     });
 
     it('should return a DeleteActivityFailure action with an error upon failure', () => {
@@ -253,9 +244,12 @@ describe('PlanEffects', () => {
       });
 
       const planId = plan.id || '';
-      const action = new DeleteActivity(planId, activity.activityId);
+      const action = PlanActions.deleteActivity({
+        activityId: activity.activityId,
+        planId,
+      });
       const error = new Error('DeleteActivityFailure');
-      const failure = new DeleteActivityFailure(error);
+      const failure = PlanActions.deleteActivityFailure({ error });
       const showToast = new ShowToast(
         'error',
         error.message,
@@ -264,7 +258,7 @@ describe('PlanEffects', () => {
 
       const service = TestBed.get(PlanService);
       spyOn(service, 'deleteActivity').and.returnValue(cold('#|', null, error));
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-(bcde)', {
         b: loadingBarShow,
         c: failure,
@@ -272,11 +266,11 @@ describe('PlanEffects', () => {
         e: loadingBarHide,
       });
 
-      expect(effects.deleteActivity$).toBeObservable(expected);
+      expect(effects.deleteActivity).toBeObservable(expected);
     });
   });
 
-  describe('deletePlan$', () => {
+  describe('deletePlan', () => {
     it('should return a DeletePlanSuccess action with data upon success', () => {
       spyOn(dialog, 'open').and.returnValue({
         afterClosed() {
@@ -285,15 +279,15 @@ describe('PlanEffects', () => {
       });
 
       const planId = plan.id || '';
-      const action = new DeletePlan(planId);
-      const success = new DeletePlanSuccess(planId);
+      const action = PlanActions.deletePlan({ planId });
+      const success = PlanActions.deletePlanSuccess({ deletedPlanId: planId });
       const showToast = new ShowToast(
         'success',
         'Plan has been successfully deleted.',
         'Delete Plan Success',
       );
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-(bcde)', {
         b: loadingBarShow,
         c: success,
@@ -301,7 +295,7 @@ describe('PlanEffects', () => {
         e: loadingBarHide,
       });
 
-      expect(effects.deletePlan$).toBeObservable(expected);
+      expect(effects.deletePlan).toBeObservable(expected);
     });
 
     it('should return a DeletePlanFailure action with an error upon failure', () => {
@@ -312,9 +306,9 @@ describe('PlanEffects', () => {
       });
 
       const planId = plan.id || '';
-      const action = new DeletePlan(planId);
+      const action = PlanActions.deletePlan({ planId });
       const error = new Error('DeletePlanFailure');
-      const failure = new DeletePlanFailure(error);
+      const failure = PlanActions.deletePlanFailure({ error });
       const showToast = new ShowToast(
         'error',
         error.message,
@@ -324,7 +318,7 @@ describe('PlanEffects', () => {
       const service = TestBed.get(PlanService);
       spyOn(service, 'deletePlan').and.returnValue(cold('#|', null, error));
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-(bcde)', {
         b: loadingBarShow,
         c: failure,
@@ -332,30 +326,37 @@ describe('PlanEffects', () => {
         e: loadingBarHide,
       });
 
-      expect(effects.deletePlan$).toBeObservable(expected);
+      expect(effects.deletePlan).toBeObservable(expected);
     });
   });
 
-  describe('updateActivity$', () => {
+  describe('updateActivity', () => {
     it('should return a UpdateActivitySuccess action with data on success', () => {
       // Setup.
       const planId = plan.id || '';
       const selectedActivityId = 'SetArrayTrackingMode_25788';
-      store.dispatch(new SetPlans(plans));
-      store.dispatch(new SetAdaptations(adaptations));
-      store.dispatch(new SetActivities(activities));
+      store.dispatch(PlanActions.setPlans({ plans }));
+      store.dispatch(AdaptationActions.setAdaptations({ adaptations }));
+      store.dispatch(PlanActions.setActivities({ activities }));
       activity = activitiesMap[selectedActivityId];
 
       // Test.
-      const action = new UpdateActivity(planId, activity.activityId, activity);
-      const success = new UpdateActivitySuccess(activity.activityId, activity);
+      const action = PlanActions.updateActivity({
+        activityId: activity.activityId,
+        planId,
+        update: activity,
+      });
+      const success = PlanActions.updateActivitySuccess({
+        activityId: activity.activityId,
+        update: activity,
+      });
       const showToast = new ShowToast(
         'success',
         'Activity has been successfully updated.',
         'Update Activity Success',
       );
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-(bcde)', {
         b: loadingBarShow,
         c: success,
@@ -363,22 +364,26 @@ describe('PlanEffects', () => {
         e: loadingBarHide,
       });
 
-      expect(effects.updateActivity$).toBeObservable(expected);
+      expect(effects.updateActivity).toBeObservable(expected);
     });
 
     it('should return a UpdateActivityFailure action with a NoActivities error on failure', () => {
       // Setup.
       const planId = plan.id || '';
       const selectedActivityId = 'SetArrayTrackingMode_25788';
-      store.dispatch(new SetPlans(plans));
-      store.dispatch(new SetAdaptations(adaptations));
-      store.dispatch(new SetActivities(activities));
+      store.dispatch(PlanActions.setPlans({ plans }));
+      store.dispatch(AdaptationActions.setAdaptations({ adaptations }));
+      store.dispatch(PlanActions.setActivities({ activities }));
       activity = activitiesMap[selectedActivityId];
 
       // Test.
-      const action = new UpdateActivity(planId, activity.activityId, activity);
+      const action = PlanActions.updateActivity({
+        activityId: activity.activityId,
+        planId,
+        update: activity,
+      });
       const error = new Error('UpdateActivity: UpdateActivityFailure');
-      const failure = new UpdateActivityFailure(error);
+      const failure = PlanActions.updateActivityFailure({ error });
       const showToast = new ShowToast(
         'error',
         error.message,
@@ -388,7 +393,7 @@ describe('PlanEffects', () => {
       const service = TestBed.get(PlanService);
       spyOn(service, 'updateActivity').and.returnValue(cold('#|', null, error));
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-(bcde)', {
         b: loadingBarShow,
         c: failure,
@@ -396,7 +401,7 @@ describe('PlanEffects', () => {
         e: loadingBarHide,
       });
 
-      expect(effects.updateActivity$).toBeObservable(expected);
+      expect(effects.updateActivity).toBeObservable(expected);
     });
   });
 });

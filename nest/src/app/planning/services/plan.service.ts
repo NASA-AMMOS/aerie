@@ -14,14 +14,7 @@ import { Observable } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { ShowToast } from '../../shared/actions/toast.actions';
 import { ActivityInstance, Plan } from '../../shared/models';
-import {
-  FetchActivitiesFailure,
-  FetchPlansFailure,
-  SetActivities,
-  SetActivitiesAndSelectedActivity,
-  SetPlans,
-  SetPlansAndSelectedPlan,
-} from '../actions/plan.actions';
+import { PlanActions } from '../actions';
 import { PlanServiceInterface } from './plan-service-interface';
 
 @Injectable({
@@ -76,11 +69,14 @@ export class PlanService implements PlanServiceInterface {
     return this.getActivities(baseUrl, planId).pipe(
       map(activities =>
         activityId
-          ? new SetActivitiesAndSelectedActivity(activities, activityId)
-          : new SetActivities(activities),
+          ? PlanActions.setActivities({
+              activities,
+              activityId,
+            })
+          : PlanActions.setActivities({ activities }),
       ),
       catchError(error => [
-        new FetchActivitiesFailure(new Error(error)),
+        PlanActions.fetchActivitiesFailure({ error: new Error(error) }),
         new ShowToast('error', error.message, 'Fetching Activities Failed'),
       ]),
     );
@@ -98,10 +94,10 @@ export class PlanService implements PlanServiceInterface {
       map(
         plans =>
           planId
-            ? new SetPlansAndSelectedPlan(plans, planId)
-            : new SetPlans(plans),
+            ? PlanActions.setPlansAndSelectedPlan({ plans, planId })
+            : PlanActions.setPlans({ plans }),
         catchError(error => [
-          new FetchPlansFailure(new Error(error)),
+          PlanActions.fetchPlansFailure({ error: new Error(error) }),
           new ShowToast('error', error.message, 'Fetching Plans Failed'),
         ]),
       ),

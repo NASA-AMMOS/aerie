@@ -13,7 +13,7 @@ import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { NavigateByUrl } from '../../../../../libs/ngrx-router';
 import { ActivityInstance, ActivityType } from '../../../shared/models';
-import { CreateActivity, UpdateActivity } from '../../actions/plan.actions';
+import { PlanActions } from '../../actions';
 import { PlanningAppState } from '../../planning-store';
 import { getSelectedActivity } from '../../selectors';
 import { getActivityTypes } from '../../selectors';
@@ -52,9 +52,9 @@ export class ActivityComponent {
     }
   }
 
-  onCreateActivity(activity: ActivityInstance): void {
+  onCreateActivity(data: ActivityInstance): void {
     const { planId } = this.route.snapshot.paramMap['params'];
-    this.store.dispatch(new CreateActivity(planId, activity));
+    this.store.dispatch(PlanActions.createActivity({ data, planId }));
   }
 
   onNavBack() {
@@ -62,8 +62,10 @@ export class ActivityComponent {
     this.store.dispatch(new NavigateByUrl(`/plans/${planId}`));
   }
 
-  onUpdateActivity(activity: ActivityInstance): void {
+  onUpdateActivity(update: ActivityInstance): void {
     const { activityId, planId } = this.route.snapshot.paramMap['params'];
-    this.store.dispatch(new UpdateActivity(planId, activityId, activity));
+    this.store.dispatch(
+      PlanActions.updateActivity({ activityId, planId, update }),
+    );
   }
 }

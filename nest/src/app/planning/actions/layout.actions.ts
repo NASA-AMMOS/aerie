@@ -7,62 +7,33 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 
-export enum LayoutActionTypes {
-  CloseAllDrawers = '[layout] close_all_drawers',
-  LoadingBarHide = '[layout] loading_bar_hide',
-  LoadingBarShow = '[layout] loading_bar_show',
-  Resize = '[layout] resize',
-  ToggleActivityTypesDrawer = '[layout] toggle_activity_types_drawer',
-  ToggleAddActivityDrawer = '[layout] toggle_add_activity_drawer',
-  ToggleCreatePlanDrawer = '[layout] toggle_create_plan_drawer',
-  ToggleEditActivityDrawer = '[layout] toggle_edit_activity_drawer',
-}
+export const closeAllDrawers = createAction('[layout] close_all_drawers');
+export const loadingBarHide = createAction('[layout] loading_bar_hide');
+export const loadingBarShow = createAction('[layout] loading_bar_show');
 
-export class CloseAllDrawers implements Action {
-  readonly type = LayoutActionTypes.CloseAllDrawers;
-}
+export const resize = createAction(
+  '[layout] resize',
+  props<{ timeout?: number }>(),
+);
 
-export class LoadingBarHide implements Action {
-  readonly type = LayoutActionTypes.LoadingBarHide;
-}
+export const toggleActivityTypesDrawer = createAction(
+  '[layout] toggle_activity_types_drawer',
+  props<{ opened?: boolean }>(),
+);
 
-export class LoadingBarShow implements Action {
-  readonly type = LayoutActionTypes.LoadingBarShow;
-}
+export const toggleAddActivityDrawer = createAction(
+  '[layout] toggle_add_activity_drawer',
+  props<{ opened?: boolean }>(),
+);
 
-export class Resize implements Action {
-  readonly type = LayoutActionTypes.Resize;
-  constructor(public timeout?: number) {}
-}
+export const toggleCreatePlanDrawer = createAction(
+  '[layout] toggle_create_plan_drawer',
+  props<{ opened?: boolean }>(),
+);
 
-export class ToggleActivityTypesDrawer implements Action {
-  readonly type = LayoutActionTypes.ToggleActivityTypesDrawer;
-  constructor(public opened?: boolean) {}
-}
-
-export class ToggleAddActivityDrawer implements Action {
-  readonly type = LayoutActionTypes.ToggleAddActivityDrawer;
-  constructor(public opened?: boolean) {}
-}
-
-export class ToggleCreatePlanDrawer implements Action {
-  readonly type = LayoutActionTypes.ToggleCreatePlanDrawer;
-  constructor(public opened?: boolean) {}
-}
-
-export class ToggleEditActivityDrawer implements Action {
-  readonly type = LayoutActionTypes.ToggleEditActivityDrawer;
-  constructor(public opened?: boolean) {}
-}
-
-export type LayoutActions =
-  | CloseAllDrawers
-  | LoadingBarHide
-  | LoadingBarShow
-  | Resize
-  | ToggleActivityTypesDrawer
-  | ToggleAddActivityDrawer
-  | ToggleCreatePlanDrawer
-  | ToggleEditActivityDrawer;
+export const toggleEditActivityDrawer = createAction(
+  '[layout] toggle_edit_activity_drawer',
+  props<{ opened?: boolean }>(),
+);

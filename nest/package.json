@@ -26,8 +26,8 @@
     "pretest-for-build": "npm run version",
     "start": "ng serve",
     "start-dev": "bash ../scripts/post-adaptation.sh && ng serve",
-    "test": "ng test --code-coverage --watch=false",
-    "test:watch": "ng test",
+    "test": "ng test --code-coverage --watch=false --browsers FirefoxHeadless",
+    "test:watch": "ng test --browsers FirefoxHeadless",
     "test-for-build": "ng test --code-coverage --watch=false --browsers FirefoxHeadless",
     "version": "ts-node git.version.ts"
   },

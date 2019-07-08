@@ -14,12 +14,7 @@ import { Observable } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { ShowToast } from '../../shared/actions/toast.actions';
 import { ActivityType, Adaptation, Plan } from '../../shared/models';
-import {
-  FetchActivityTypesFailure,
-  FetchAdaptationsFailure,
-  SetActivityTypes,
-  SetAdaptations,
-} from '../actions/adaptation.actions';
+import { AdaptationActions } from '../actions';
 import { AdaptationServiceInterface } from './adaptation-service-interface';
 
 @Injectable({
@@ -61,11 +56,19 @@ export class AdaptationService implements AdaptationServiceInterface {
       adaptationServiceBaseUrl,
       planId,
     ).pipe(
-      map(activityTypes => new SetActivityTypes(activityTypes)),
-      catchError(error => [
-        new FetchActivityTypesFailure(new Error(error)),
-        new ShowToast('error', error.message, 'Fetching Activity Types Failed'),
-      ]),
+      map(
+        activityTypes => AdaptationActions.setActivityTypes({ activityTypes }),
+        catchError(error => [
+          AdaptationActions.fetchActivityTypesFailure({
+            error: new Error(error),
+          }),
+          new ShowToast(
+            'error',
+            error.message,
+            'Fetching Activity Types Failed',
+          ),
+        ]),
+      ),
     );
   }
 
@@ -75,11 +78,15 @@ export class AdaptationService implements AdaptationServiceInterface {
 
   getAdaptationsWithActions(baseUrl: string): Observable<Action> {
     return this.getAdaptations(baseUrl).pipe(
-      map(adaptations => new SetAdaptations(adaptations)),
-      catchError(error => [
-        new FetchAdaptationsFailure(new Error(error)),
-        new ShowToast('error', error.message, 'Fetching Adaptations Failed'),
-      ]),
+      map(
+        adaptations => AdaptationActions.setAdaptations({ adaptations }),
+        catchError(error => [
+          AdaptationActions.fetchAdaptationsFailure({
+            error: new Error(error),
+          }),
+          new ShowToast('error', error.message, 'Fetching Adaptations Failed'),
+        ]),
+      ),
     );
   }
 }

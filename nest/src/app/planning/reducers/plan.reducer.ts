@@ -7,6 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { createReducer, on } from '@ngrx/store';
 import keyBy from 'lodash-es/keyBy';
 import omit from 'lodash-es/omit';
 import {
@@ -16,20 +17,7 @@ import {
   TimeRange,
 } from '../../shared/models';
 import { getMaxTimeRange } from '../../shared/util';
-import {
-  CreateActivitySuccess,
-  CreatePlanSuccess,
-  DeleteActivitySuccess,
-  DeletePlanSuccess,
-  PlanActions,
-  PlanActionTypes,
-  SetActivities,
-  SetActivitiesAndSelectedActivity,
-  SetPlans,
-  SetPlansAndSelectedPlan,
-  UpdateActivitySuccess,
-  UpdateViewTimeRange,
-} from '../actions/plan.actions';
+import { PlanActions } from '../actions';
 
 export interface PlanState {
   activities: StringTMap<ActivityInstance> | null;
@@ -49,78 +37,34 @@ export const initialState: PlanState = {
   viewTimeRange: { end: 0, start: 0 },
 };
 
-/**
- * Reducer.
- * If a case takes more than one line then it should be in it's own helper function.
- */
-export function reducer(
-  state: PlanState = initialState,
-  action: PlanActions,
-): PlanState {
-  switch (action.type) {
-    case PlanActionTypes.ClearSelectedActivity:
-      return { ...state, selectedActivityId: null };
-    case PlanActionTypes.ClearSelectedPlan:
-      return { ...state, selectedPlanId: null };
-    case PlanActionTypes.CreateActivitySuccess:
-      return createActivitySuccess(state, action);
-    case PlanActionTypes.CreatePlanSuccess:
-      return createPlanSuccess(state, action);
-    case PlanActionTypes.DeleteActivitySuccess:
-      return deleteActivitySuccess(state, action);
-    case PlanActionTypes.DeletePlanSuccess:
-      return deletePlanSuccess(state, action);
-    case PlanActionTypes.SelectActivity:
-      return { ...state, selectedActivityId: action.id };
-    case PlanActionTypes.SetActivities:
-      return setActivities(state, action);
-    case PlanActionTypes.SetActivitiesAndSelectedActivity:
-      return setActivitiesAndSelectedActivity(state, action);
-    case PlanActionTypes.SetPlans:
-      return setPlans(state, action);
-    case PlanActionTypes.SetPlansAndSelectedPlan:
-      return setPlansAndSelectedPlan(state, action);
-    case PlanActionTypes.UpdateActivitySuccess:
-      return updateActivitySuccess(state, action);
-    case PlanActionTypes.UpdateViewTimeRange:
-      return updateViewTimeRange(state, action);
-    default:
-      return state;
-  }
-}
-
-/**
- * Reduction helper. Called when a 'CreateActivitySuccess' action occurs.
- */
-function createActivitySuccess(
-  state: PlanState,
-  action: CreateActivitySuccess,
-): PlanState {
-  const activities = {
-    ...state.activities,
-    [action.activity.activityId]: {
-      ...action.activity,
-    },
-  };
-  const maxTimeRange = getMaxTimeRange(Object.values(activities));
-  const viewTimeRange = { ...maxTimeRange };
-
-  return {
+export const reducer = createReducer(
+  initialState,
+  on(PlanActions.clearSelectedActivity, state => ({
     ...state,
-    activities,
-    maxTimeRange,
-    viewTimeRange,
-  };
-}
+    selectedActivityId: null,
+  })),
+  on(PlanActions.clearSelectedPlan, state => ({
+    ...state,
+    selectedPlanId: null,
+  })),
+  on(PlanActions.createActivitySuccess, (state, { activity }) => {
+    const activities = {
+      ...state.activities,
+      [activity.activityId]: {
+        ...activity,
+      },
+    };
+    const maxTimeRange = getMaxTimeRange(Object.values(activities));
+    const viewTimeRange = { ...maxTimeRange };
 
-/**
- * Reduction helper. Called when a 'CreatePlanSuccess' action occurs.
- */
-function createPlanSuccess(
-  state: PlanState,
-  action: CreatePlanSuccess,
-): PlanState {
-  return {
+    return {
+      ...state,
+      activities,
+      maxTimeRange,
+      viewTimeRange,
+    };
+  }),
+  on(PlanActions.createPlanSuccess, (state, action) => ({
     ...state,
     plans: {
       ...state.plans,
@@ -128,122 +72,61 @@ function createPlanSuccess(
         ...action.plan,
       },
     },
-  };
-}
-
-/**
- * Reduction helper. Called when a 'DeleteActivitySuccess' action occurs.
- */
-function deleteActivitySuccess(
-  state: PlanState,
-  action: DeleteActivitySuccess,
-): PlanState {
-  return {
+  })),
+  on(PlanActions.deleteActivitySuccess, (state, action) => ({
     ...state,
     activities: omit(state.activities, action.activityId),
-  };
-}
-
-/**
- * Reduction helper. Called when a 'DeletePlanSuccess' action occurs.
- */
-function deletePlanSuccess(
-  state: PlanState,
-  action: DeletePlanSuccess,
-): PlanState {
-  return {
+  })),
+  on(PlanActions.deletePlanSuccess, (state, action) => ({
     ...state,
     plans: omit(state.plans, action.deletedPlanId),
-  };
-}
-
-/**
- * Reduction helper. Called when a 'SetActivities' action occurs.
- */
-function setActivities(state: PlanState, action: SetActivities): PlanState {
-  const activities = keyBy(action.activities, 'activityId');
-  const maxTimeRange = getMaxTimeRange(action.activities);
-  const viewTimeRange = { ...maxTimeRange };
-
-  return {
+  })),
+  on(PlanActions.selectActivity, (state, action) => ({
     ...state,
-    activities,
-    maxTimeRange,
-    viewTimeRange,
-  };
-}
+    selectedActivityId: action.id,
+  })),
+  on(PlanActions.setActivities, (state, action) => {
+    const activities = keyBy(action.activities, 'activityId');
+    const maxTimeRange = getMaxTimeRange(action.activities);
+    const viewTimeRange = { ...maxTimeRange };
 
-/**
- * Reduction helper. Called when a 'SetActivitiesAndSelectedActivity' action occurs.
- */
-function setActivitiesAndSelectedActivity(
-  state: PlanState,
-  action: SetActivitiesAndSelectedActivity,
-): PlanState {
-  return {
-    ...setActivities(state, (action as unknown) as SetActivities),
-    selectedActivityId: action.activityId,
-  };
-}
-
-/**
- * Reduction helper. Called when a 'SetPlans' action occurs.
- */
-function setPlans(state: PlanState, action: SetPlans): PlanState {
-  return {
+    return {
+      ...state,
+      activities,
+      maxTimeRange,
+      selectedActivityId: action.activityId || state.selectedActivityId,
+      viewTimeRange,
+    };
+  }),
+  on(PlanActions.setPlans, (state, action) => ({
     ...state,
     plans: keyBy(action.plans, 'id'),
-  };
-}
-
-/**
- * Reduction helper. Called when a 'SetPlansAndSelectedPlan' action occurs.
- */
-function setPlansAndSelectedPlan(
-  state: PlanState,
-  action: SetPlansAndSelectedPlan,
-): PlanState {
-  return {
+  })),
+  on(PlanActions.setPlansAndSelectedPlan, (state, action) => ({
     ...state,
     plans: keyBy(action.plans, 'id'),
     selectedPlanId: action.planId,
-  };
-}
+  })),
+  on(PlanActions.updateActivitySuccess, (state, action) => {
+    if (!state.activities) {
+      throw new Error(
+        'plan.reducer.ts: updateActivitySuccess: NoActivityInstances',
+      );
+    }
 
-/**
- * Reduction helper. Called when a 'UpdateActivitySuccess' action occurs.
- */
-function updateActivitySuccess(
-  state: PlanState,
-  action: UpdateActivitySuccess,
-): PlanState {
-  if (!state.activities) {
-    throw new Error(
-      'plan.reducer.ts: updateActivitySuccess: NoActivityInstances',
-    );
-  }
-
-  return {
-    ...state,
-    activities: {
-      ...state.activities,
-      [action.activityId]: {
-        ...state.activities[action.activityId],
-        ...action.update,
+    return {
+      ...state,
+      activities: {
+        ...state.activities,
+        [action.activityId]: {
+          ...state.activities[action.activityId],
+          ...action.update,
+        },
       },
-    },
-  };
-}
-
-/**
- * Reduction helper. Called when a 'UpdateViewTimeRange' action occurs.
- */
-function updateViewTimeRange(
-  state: PlanState,
-  action: UpdateViewTimeRange,
-): PlanState {
-  return {
+    };
+  }),
+  on(PlanActions.updateViewTimeRange, (state, action) => ({
     ...state,
     viewTimeRange: { ...action.viewTimeRange },
-  };
-}
+  })),
+);

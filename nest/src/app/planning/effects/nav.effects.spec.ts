@@ -21,23 +21,7 @@ import {
   Adaptation,
   Plan,
 } from '../../shared/models';
-import {
-  FetchActivityTypesFailure,
-  FetchAdaptationsFailure,
-  SetActivityTypes,
-  SetAdaptations,
-} from '../actions/adaptation.actions';
-import { CloseAllDrawers, LoadingBarHide } from '../actions/layout.actions';
-import {
-  ClearSelectedActivity,
-  ClearSelectedPlan,
-  FetchActivitiesFailure,
-  FetchPlansFailure,
-  SetActivities,
-  SetActivitiesAndSelectedActivity,
-  SetPlans,
-  SetPlansAndSelectedPlan,
-} from '../actions/plan.actions';
+import { AdaptationActions, LayoutActions, PlanActions } from '../actions';
 import { reducers } from '../planning-store';
 import {
   AdaptationMockService,
@@ -54,7 +38,7 @@ import { PlanService } from '../services/plan.service';
 import { NavEffects } from './nav.effects';
 
 describe('NavEffects', () => {
-  let actions$: Observable<any>;
+  let actions: Observable<any>;
   let effects: NavEffects;
 
   // Mock data.
@@ -64,16 +48,18 @@ describe('NavEffects', () => {
   const plans: Plan[] = getMockPlans();
 
   // Failure actions.
-  const activitiesFailure = new FetchActivitiesFailure(
-    new Error('FetchActivitiesFailure'),
-  );
-  const activityTypesFailure = new FetchActivityTypesFailure(
-    new Error('FetchActivityTypesFailure'),
-  );
-  const adaptationFailure = new FetchAdaptationsFailure(
-    new Error('FetchAdaptationsFailure'),
-  );
-  const plansFailure = new FetchPlansFailure(new Error('FetchPlansFailure'));
+  const activitiesFailure = PlanActions.fetchActivitiesFailure({
+    error: new Error('FetchActivitiesFailure'),
+  });
+  const activityTypesFailure = AdaptationActions.fetchActivityTypesFailure({
+    error: new Error('FetchActivityTypesFailure'),
+  });
+  const adaptationFailure = AdaptationActions.fetchAdaptationsFailure({
+    error: new Error('FetchAdaptationsFailure'),
+  });
+  const plansFailure = PlanActions.fetchPlansFailure({
+    error: new Error('FetchPlansFailure'),
+  });
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -86,7 +72,7 @@ describe('NavEffects', () => {
         NavEffects,
         HttpClient,
         Store,
-        provideMockActions(() => actions$),
+        provideMockActions(() => actions),
         {
           provide: PlanService,
           useValue: new PlanMockService(),
@@ -103,21 +89,21 @@ describe('NavEffects', () => {
     effects = TestBed.get(NavEffects);
   });
 
-  describe('navPlans$', () => {
+  describe('navPlans', () => {
     it('should dispatch the appropriate actions when navigating to /plans', () => {
       const action = new RouterNavigation({ path: 'plans' });
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-(bcdefg)', {
-        b: new SetAdaptations(adaptations),
-        c: new SetPlans(plans),
-        d: new CloseAllDrawers(),
-        e: new ClearSelectedPlan(),
-        f: new ClearSelectedActivity(),
-        g: new LoadingBarHide(),
+        b: AdaptationActions.setAdaptations({ adaptations }),
+        c: PlanActions.setPlans({ plans }),
+        d: LayoutActions.closeAllDrawers(),
+        e: PlanActions.clearSelectedPlan(),
+        f: PlanActions.clearSelectedActivity(),
+        g: LayoutActions.loadingBarHide(),
       });
 
-      expect(effects.navPlans$).toBeObservable(expected);
+      expect(effects.navPlans).toBeObservable(expected);
     });
 
     it('should dispatch the appropriate actions when navigating to /plans when getting adaptations and plans fails', () => {
@@ -132,21 +118,21 @@ describe('NavEffects', () => {
         of(plansFailure),
       );
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-(bcdefg)', {
         b: adaptationFailure,
         c: plansFailure,
-        d: new CloseAllDrawers(),
-        e: new ClearSelectedPlan(),
-        f: new ClearSelectedActivity(),
-        g: new LoadingBarHide(),
+        d: LayoutActions.closeAllDrawers(),
+        e: PlanActions.clearSelectedPlan(),
+        f: PlanActions.clearSelectedActivity(),
+        g: LayoutActions.loadingBarHide(),
       });
 
-      expect(effects.navPlans$).toBeObservable(expected);
+      expect(effects.navPlans).toBeObservable(expected);
     });
   });
 
-  describe('navPlansWithId$', () => {
+  describe('navPlansWithId', () => {
     it('should dispatch the appropriate actions when navigating to plans/:planId', () => {
       const planId = '42';
       const action = new RouterNavigation({
@@ -154,17 +140,17 @@ describe('NavEffects', () => {
         path: 'plans/:planId',
       });
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-(bcdefg)', {
-        b: new SetActivityTypes(activityTypes),
-        c: new SetPlansAndSelectedPlan(plans, planId),
-        d: new SetActivities(activities),
-        e: new CloseAllDrawers(),
-        f: new ClearSelectedActivity(),
-        g: new LoadingBarHide(),
+        b: AdaptationActions.setActivityTypes({ activityTypes }),
+        c: PlanActions.setPlansAndSelectedPlan({ plans, planId }),
+        d: PlanActions.setActivities({ activities }),
+        e: LayoutActions.closeAllDrawers(),
+        f: PlanActions.clearSelectedActivity(),
+        g: LayoutActions.loadingBarHide(),
       });
 
-      expect(effects.navPlansWithId$).toBeObservable(expected);
+      expect(effects.navPlansWithId).toBeObservable(expected);
     });
 
     it('should dispatch the appropriate actions when navigating to plans/:planId when getting activity types, plans, and activities fails', () => {
@@ -187,21 +173,21 @@ describe('NavEffects', () => {
         of(activitiesFailure),
       );
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-(bcdefg)', {
         b: activityTypesFailure,
         c: plansFailure,
         d: activitiesFailure,
-        e: new CloseAllDrawers(),
-        f: new ClearSelectedActivity(),
-        g: new LoadingBarHide(),
+        e: LayoutActions.closeAllDrawers(),
+        f: PlanActions.clearSelectedActivity(),
+        g: LayoutActions.loadingBarHide(),
       });
 
-      expect(effects.navPlansWithId$).toBeObservable(expected);
+      expect(effects.navPlansWithId).toBeObservable(expected);
     });
   });
 
-  describe('navActivity$', () => {
+  describe('navActivity', () => {
     it('should dispatch the appropriate actions when navigating to plans/:planId/activity', () => {
       const planId = '42';
       const action = new RouterNavigation({
@@ -209,16 +195,16 @@ describe('NavEffects', () => {
         path: 'plans/:planId/activity',
       });
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-(bcdef)', {
-        b: new SetActivityTypes(activityTypes),
-        c: new SetPlansAndSelectedPlan(plans, planId),
-        d: new CloseAllDrawers(),
-        e: new ClearSelectedActivity(),
-        f: new LoadingBarHide(),
+        b: AdaptationActions.setActivityTypes({ activityTypes }),
+        c: PlanActions.setPlansAndSelectedPlan({ plans, planId }),
+        d: LayoutActions.closeAllDrawers(),
+        e: PlanActions.clearSelectedActivity(),
+        f: LayoutActions.loadingBarHide(),
       });
 
-      expect(effects.navActivity$).toBeObservable(expected);
+      expect(effects.navActivity).toBeObservable(expected);
     });
 
     it('should dispatch the appropriate actions when navigating to plans/:planId/activity when getting activity types and plans fails', () => {
@@ -238,20 +224,20 @@ describe('NavEffects', () => {
         of(plansFailure),
       );
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-(bcdef)', {
         b: activityTypesFailure,
         c: plansFailure,
-        d: new CloseAllDrawers(),
-        e: new ClearSelectedActivity(),
-        f: new LoadingBarHide(),
+        d: LayoutActions.closeAllDrawers(),
+        e: PlanActions.clearSelectedActivity(),
+        f: LayoutActions.loadingBarHide(),
       });
 
-      expect(effects.navActivity$).toBeObservable(expected);
+      expect(effects.navActivity).toBeObservable(expected);
     });
   });
 
-  describe('navActivityWithId$', () => {
+  describe('navActivityWithId', () => {
     it('should dispatch the appropriate actions when navigating to plans/:planId/activity/:activityId', () => {
       const planId = '42';
       const activityId = '52';
@@ -260,16 +246,16 @@ describe('NavEffects', () => {
         path: 'plans/:planId/activity/:activityId',
       });
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-(bcdef)', {
-        b: new SetActivityTypes(activityTypes),
-        c: new SetPlansAndSelectedPlan(plans, planId),
-        d: new SetActivitiesAndSelectedActivity(activities, activityId),
-        e: new CloseAllDrawers(),
-        f: new LoadingBarHide(),
+        b: AdaptationActions.setActivityTypes({ activityTypes }),
+        c: PlanActions.setPlansAndSelectedPlan({ plans, planId }),
+        d: PlanActions.setActivities({ activities, activityId }),
+        e: LayoutActions.closeAllDrawers(),
+        f: LayoutActions.loadingBarHide(),
       });
 
-      expect(effects.navActivityWithId$).toBeObservable(expected);
+      expect(effects.navActivityWithId).toBeObservable(expected);
     });
 
     it('should dispatch the appropriate actions when navigating to plans/:planId/activity/:activityId when getting activity types, plans, and activities fails', () => {
@@ -293,16 +279,16 @@ describe('NavEffects', () => {
         of(activitiesFailure),
       );
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-(bcdef)', {
         b: activityTypesFailure,
         c: plansFailure,
         d: activitiesFailure,
-        e: new CloseAllDrawers(),
-        f: new LoadingBarHide(),
+        e: LayoutActions.closeAllDrawers(),
+        f: LayoutActions.loadingBarHide(),
       });
 
-      expect(effects.navActivityWithId$).toBeObservable(expected);
+      expect(effects.navActivityWithId).toBeObservable(expected);
     });
   });
 });

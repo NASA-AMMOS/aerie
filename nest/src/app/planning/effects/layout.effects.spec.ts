@@ -11,21 +11,16 @@ import { TestBed } from '@angular/core/testing';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { addMatchers, cold, hot, initTestScheduler } from 'jasmine-marbles';
 import { Observable } from 'rxjs';
-import {
-  Resize,
-  ToggleActivityTypesDrawer,
-  ToggleEditActivityDrawer,
-} from '../actions/layout.actions';
+import { LayoutActions } from '../actions';
 import { LayoutEffects } from './layout.effects';
 
 describe('LayoutEffects', () => {
-  let actions$: Observable<any>;
+  let actions: Observable<any>;
   let effects: LayoutEffects;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [],
-      providers: [LayoutEffects, provideMockActions(() => actions$)],
+      providers: [LayoutEffects, provideMockActions(() => actions)],
     });
 
     initTestScheduler();
@@ -35,23 +30,23 @@ describe('LayoutEffects', () => {
 
   describe('toggleDrawer$', () => {
     it('should return a Resize() for a ToggleActivityTypesDrawer', () => {
-      const action = new ToggleActivityTypesDrawer();
-      const result = new Resize();
+      const action = LayoutActions.toggleActivityTypesDrawer({});
+      const result = LayoutActions.resize({});
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-b', { b: result });
 
-      expect(effects.toggleDrawer$).toBeObservable(expected);
+      expect(effects.toggleDrawer).toBeObservable(expected);
     });
 
     it('should return a Resize() for a ToggleEditActivityDrawer', () => {
-      const action = new ToggleEditActivityDrawer();
-      const result = new Resize();
+      const action = LayoutActions.toggleEditActivityDrawer({});
+      const result = LayoutActions.resize({});
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-b', { b: result });
 
-      expect(effects.toggleDrawer$).toBeObservable(expected);
+      expect(effects.toggleDrawer).toBeObservable(expected);
     });
   });
 });

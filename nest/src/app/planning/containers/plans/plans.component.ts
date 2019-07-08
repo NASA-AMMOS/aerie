@@ -12,8 +12,7 @@ import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { NavigateByUrl } from '../../../../../libs/ngrx-router';
 import { Adaptation, Plan } from '../../../shared/models';
-import { ToggleCreatePlanDrawer } from '../../actions/layout.actions';
-import { CreatePlan, DeletePlan } from '../../actions/plan.actions';
+import { LayoutActions, PlanActions } from '../../actions';
 import { PlanningAppState } from '../../planning-store';
 import {
   getAdaptations,
@@ -45,11 +44,11 @@ export class PlansComponent {
   }
 
   onCreatePlan(plan: Plan): void {
-    this.store.dispatch(new CreatePlan(plan));
+    this.store.dispatch(PlanActions.createPlan({ plan }));
   }
 
   onDeletePlan(planId: string): void {
-    this.store.dispatch(new DeletePlan(planId));
+    this.store.dispatch(PlanActions.deletePlan({ planId }));
   }
 
   onSelectPlan(planId: string): void {
@@ -57,6 +56,6 @@ export class PlansComponent {
   }
 
   onToggleCreatePlanDrawer(opened?: boolean): void {
-    this.store.dispatch(new ToggleCreatePlanDrawer(opened));
+    this.store.dispatch(LayoutActions.toggleCreatePlanDrawer({ opened }));
   }
 }

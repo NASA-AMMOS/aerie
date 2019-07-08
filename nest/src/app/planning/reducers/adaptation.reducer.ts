@@ -7,11 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { createReducer, on } from '@ngrx/store';
 import { ActivityType, Adaptation } from '../../shared/models';
-import {
-  AdaptationActions,
-  AdaptationActionTypes,
-} from '../actions/adaptation.actions';
+import { AdaptationActions } from '../actions';
 
 export interface AdaptationState {
   activityTypes: ActivityType[];
@@ -23,20 +21,14 @@ export const initialState: AdaptationState = {
   adaptations: [],
 };
 
-/**
- * Reducer.
- * If a case takes more than one line then it should be in it's own helper function.
- */
-export function reducer(
-  state: AdaptationState = initialState,
-  action: AdaptationActions,
-): AdaptationState {
-  switch (action.type) {
-    case AdaptationActionTypes.SetActivityTypes:
-      return { ...state, activityTypes: action.activityTypes };
-    case AdaptationActionTypes.SetAdaptations:
-      return { ...state, adaptations: action.adaptations };
-    default:
-      return state;
-  }
-}
+export const reducer = createReducer(
+  initialState,
+  on(AdaptationActions.setActivityTypes, (state, { activityTypes }) => ({
+    ...state,
+    activityTypes: activityTypes,
+  })),
+  on(AdaptationActions.setAdaptations, (state, { adaptations }) => ({
+    ...state,
+    adaptations: adaptations,
+  })),
+);

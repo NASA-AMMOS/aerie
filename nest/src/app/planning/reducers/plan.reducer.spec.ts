@@ -10,21 +10,7 @@
 import keyBy from 'lodash-es/keyBy';
 import omit from 'lodash-es/omit';
 import { ActivityInstance, Plan, StringTMap } from '../../shared/models';
-import {
-  ClearSelectedActivity,
-  ClearSelectedPlan,
-  CreateActivitySuccess,
-  CreatePlanSuccess,
-  DeleteActivitySuccess,
-  DeletePlanSuccess,
-  SelectActivity,
-  SetActivities,
-  SetActivitiesAndSelectedActivity,
-  SetPlans,
-  SetPlansAndSelectedPlan,
-  UpdateActivitySuccess,
-  UpdateViewTimeRange,
-} from '../actions/plan.actions';
+import { PlanActions } from '../actions';
 import { initialState, reducer } from './plan.reducer';
 
 describe('Plan Reducer', () => {
@@ -94,7 +80,10 @@ describe('Plan Reducer', () => {
         selectedActivityId: '1',
       };
 
-      const result = reducer(newInitialState, new ClearSelectedActivity());
+      const result = reducer(
+        newInitialState,
+        PlanActions.clearSelectedActivity(),
+      );
 
       expect(result).toEqual({
         ...newInitialState,
@@ -110,7 +99,7 @@ describe('Plan Reducer', () => {
         selectedPlanId: plan.id,
       };
 
-      const result = reducer(newInitialState, new ClearSelectedPlan());
+      const result = reducer(newInitialState, PlanActions.clearSelectedPlan());
 
       expect(result).toEqual({
         ...newInitialState,
@@ -124,7 +113,10 @@ describe('Plan Reducer', () => {
       const activityId = '1';
       const newState = reducer(
         initialState,
-        new CreateActivitySuccess(plan.id, activitiesMap[activityId]),
+        PlanActions.createActivitySuccess({
+          activity: activitiesMap[activityId],
+          planId: plan.id,
+        }),
       );
       expect(newState).toEqual({
         ...initialState,
@@ -139,7 +131,10 @@ describe('Plan Reducer', () => {
 
   describe('CreatePlanSuccess', () => {
     it('should add a new plan to the plans', () => {
-      const newState = reducer(initialState, new CreatePlanSuccess(plan));
+      const newState = reducer(
+        initialState,
+        PlanActions.createPlanSuccess({ plan }),
+      );
       expect(newState).toEqual({
         ...initialState,
         plans: plansMap,
@@ -153,7 +148,7 @@ describe('Plan Reducer', () => {
       const newInitialState = { ...initialState, activities: activitiesMap };
       const newState = reducer(
         newInitialState,
-        new DeleteActivitySuccess(deleteActivityId),
+        PlanActions.deleteActivitySuccess({ activityId: deleteActivityId }),
       );
       expect(newState).toEqual({
         ...initialState,
@@ -168,7 +163,7 @@ describe('Plan Reducer', () => {
       const newInitialState = { ...initialState, plans: plansMap };
       const newState = reducer(
         newInitialState,
-        new DeletePlanSuccess(deletePlanId),
+        PlanActions.deletePlanSuccess({ deletedPlanId: deletePlanId }),
       );
       expect(newState).toEqual({
         ...initialState,
@@ -182,7 +177,7 @@ describe('Plan Reducer', () => {
       const selectedActivityId = 'foo';
       const newState = reducer(
         initialState,
-        new SelectActivity(selectedActivityId),
+        PlanActions.selectActivity({ id: selectedActivityId }),
       );
       expect(newState).toEqual({
         ...initialState,
@@ -193,7 +188,10 @@ describe('Plan Reducer', () => {
 
   describe('SetActivities', () => {
     it('should properly set activities and time ranges', () => {
-      const newState = reducer(initialState, new SetActivities(activities));
+      const newState = reducer(
+        initialState,
+        PlanActions.setActivities({ activities }),
+      );
       expect(newState).toEqual({
         ...initialState,
         activities: activitiesMap,
@@ -203,12 +201,15 @@ describe('Plan Reducer', () => {
     });
   });
 
-  describe('SetActivitiesAndSelectedActivity', () => {
+  describe('SetActivities with activityId', () => {
     it('should properly set activities, time ranges, and a selected activity id', () => {
       const selectedActivityId = '1';
       const newState = reducer(
         initialState,
-        new SetActivitiesAndSelectedActivity(activities, selectedActivityId),
+        PlanActions.setActivities({
+          activities,
+          activityId: selectedActivityId,
+        }),
       );
       expect(newState).toEqual({
         ...initialState,
@@ -222,7 +223,7 @@ describe('Plan Reducer', () => {
 
   describe('SetPlans', () => {
     it('should properly set plans', () => {
-      const newState = reducer(initialState, new SetPlans(plans));
+      const newState = reducer(initialState, PlanActions.setPlans({ plans }));
       expect(newState).toEqual({
         ...initialState,
         plans: plansMap,
@@ -235,7 +236,7 @@ describe('Plan Reducer', () => {
       const selectedPlanId = 'foo';
       const newState = reducer(
         initialState,
-        new SetPlansAndSelectedPlan(plans, selectedPlanId),
+        PlanActions.setPlansAndSelectedPlan({ plans, planId: selectedPlanId }),
       );
       expect(newState).toEqual({
         ...initialState,
@@ -249,14 +250,14 @@ describe('Plan Reducer', () => {
     it('update an activity by id with the given update object', () => {
       const newInitialState = reducer(
         initialState,
-        new SetActivities(activities),
+        PlanActions.setActivities({ activities }),
       );
 
       const activityId = '1';
       const update = { color: '#000000' };
       const result = reducer(
         newInitialState,
-        new UpdateActivitySuccess(activityId, update),
+        PlanActions.updateActivitySuccess({ activityId, update }),
       );
 
       expect(result).toEqual({
@@ -276,7 +277,9 @@ describe('Plan Reducer', () => {
     it('should update the viewTimeRange', () => {
       const result = reducer(
         initialState,
-        new UpdateViewTimeRange({ end: 314, start: 272 }),
+        PlanActions.updateViewTimeRange({
+          viewTimeRange: { end: 314, start: 272 },
+        }),
       );
 
       expect(result).toEqual({

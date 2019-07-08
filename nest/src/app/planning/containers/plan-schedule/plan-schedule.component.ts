@@ -14,11 +14,7 @@ import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ActivityInstance, TimeRange } from '../../../shared/models';
 import { timestamp } from '../../../shared/util';
-import {
-  SelectActivity,
-  UpdateActivity,
-  UpdateViewTimeRange,
-} from '../../actions/plan.actions';
+import { PlanActions } from '../../actions';
 import { ActivityInstanceUpdate } from '../../models';
 import { PlanningAppState } from '../../planning-store';
 import {
@@ -66,26 +62,30 @@ export class PlanScheduleComponent implements OnDestroy {
   }
 
   onSelectActivity(id: string): void {
-    this.store.dispatch(new SelectActivity(id));
+    this.store.dispatch(PlanActions.selectActivity({ id }));
   }
 
   onUpdateSelectedActivity(update: ActivityInstanceUpdate): void {
     if (this.selectedActivity) {
       const { planId } = this.route.snapshot.paramMap['params'];
       this.store.dispatch(
-        new UpdateActivity(planId, this.selectedActivity.activityId, {
-          duration: update.duration,
-          end: update.end,
-          endTimestamp: timestamp(update.end),
-          start: update.start,
-          startTimestamp: timestamp(update.start),
-          y: update.y,
+        PlanActions.updateActivity({
+          activityId: this.selectedActivity.activityId,
+          planId,
+          update: {
+            duration: update.duration,
+            end: update.end,
+            endTimestamp: timestamp(update.end),
+            start: update.start,
+            startTimestamp: timestamp(update.start),
+            y: update.y,
+          },
         }),
       );
     }
   }
 
   onUpdateViewTimeRange(viewTimeRange: TimeRange): void {
-    this.store.dispatch(new UpdateViewTimeRange(viewTimeRange));
+    this.store.dispatch(PlanActions.updateViewTimeRange({ viewTimeRange }));
   }
 }

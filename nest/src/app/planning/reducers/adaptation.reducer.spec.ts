@@ -8,10 +8,7 @@
  */
 
 import { ActivityType, Adaptation } from '../../shared/models';
-import {
-  SetActivityTypes,
-  SetAdaptations,
-} from '../actions/adaptation.actions';
+import { AdaptationActions } from '../actions';
 import {
   getMockActivityTypes,
   getMockAdaptations,
@@ -24,7 +21,7 @@ describe('Adaptation Reducer', () => {
       const activityTypes: ActivityType[] = getMockActivityTypes();
       const result: AdaptationState = reducer(
         { ...initialState },
-        new SetActivityTypes(activityTypes),
+        AdaptationActions.setActivityTypes({ activityTypes }),
       );
 
       expect(result).toEqual({
@@ -39,7 +36,7 @@ describe('Adaptation Reducer', () => {
       const adaptations: Adaptation[] = getMockAdaptations();
       const result: AdaptationState = reducer(
         initialState,
-        new SetAdaptations(adaptations),
+        AdaptationActions.setAdaptations({ adaptations }),
       );
 
       expect(result).toEqual({

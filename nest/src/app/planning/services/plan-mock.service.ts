@@ -11,12 +11,7 @@ import { Injectable } from '@angular/core';
 import { Action } from '@ngrx/store';
 import { Observable, Observer } from 'rxjs';
 import { ActivityInstance, Plan } from '../../shared/models';
-import {
-  SetActivities,
-  SetActivitiesAndSelectedActivity,
-  SetPlans,
-  SetPlansAndSelectedPlan,
-} from '../actions/plan.actions';
+import { PlanActions } from '../actions';
 import { PlanServiceInterface } from './plan-service-interface';
 
 export function getMockActivities(): ActivityInstance[] {
@@ -169,8 +164,11 @@ export class PlanMockService implements PlanServiceInterface {
       const activities = getMockActivities();
       o.next(
         activityId
-          ? new SetActivitiesAndSelectedActivity(activities, activityId)
-          : new SetActivities(activities),
+          ? PlanActions.setActivities({
+              activities,
+              activityId,
+            })
+          : PlanActions.setActivities({ activities }),
       );
       o.complete();
     });
@@ -191,8 +189,8 @@ export class PlanMockService implements PlanServiceInterface {
       const plans = getMockPlans();
       o.next(
         planId
-          ? new SetPlansAndSelectedPlan(plans, planId)
-          : new SetPlans(plans),
+          ? PlanActions.setPlansAndSelectedPlan({ plans, planId })
+          : PlanActions.setPlans({ plans }),
       );
       o.complete();
     });

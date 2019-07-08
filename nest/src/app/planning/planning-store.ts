@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ActionReducerMap } from '@ngrx/store';
+import { Action, combineReducers } from '@ngrx/store';
 import * as fromRoot from '../app-store';
 import * as fromAdaptation from './reducers/adaptation.reducer';
 import * as fromLayout from './reducers/layout.reducer';
@@ -19,12 +19,14 @@ export interface State {
   plan: fromPlan.PlanState;
 }
 
-export const reducers: ActionReducerMap<State> = {
-  adaptation: fromAdaptation.reducer,
-  layout: fromLayout.reducer,
-  plan: fromPlan.reducer,
-};
-
 export interface PlanningAppState extends fromRoot.AppState {
   planning: State;
+}
+
+export function reducers(state: State | undefined, action: Action) {
+  return combineReducers({
+    adaptation: fromAdaptation.reducer,
+    layout: fromLayout.reducer,
+    plan: fromPlan.reducer,
+  })(state, action);
 }

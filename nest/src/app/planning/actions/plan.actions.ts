@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 import {
   ActivityInstance,
   Plan,
@@ -15,207 +15,130 @@ import {
   TimeRange,
 } from '../../shared/models';
 
-export enum PlanActionTypes {
-  ClearSelectedActivity = '[plan] clear_selected_activity',
-  ClearSelectedPlan = '[plan] clear_selected_plan',
-  CreateActivity = '[plan] create_activity',
-  CreateActivityFailure = '[plan] create_activity_failure',
-  CreateActivitySuccess = '[plan] create_activity_success',
-  CreatePlan = '[plan] create_plan',
-  CreatePlanFailure = '[plan] create_plan_failure',
-  CreatePlanSuccess = '[plan] create_plan_success',
-  DeleteActivity = '[plan] delete_activity',
-  DeleteActivityFailure = '[plan] delete_activity_failure',
-  DeleteActivitySuccess = '[plan] delete_activity_success',
-  DeletePlan = '[plan] delete_plan',
-  DeletePlanFailure = '[plan] delete_plan_failure',
-  DeletePlanSuccess = '[plan] delete_plan_success',
-  FetchActivitiesFailure = '[plan] fetch_activities_failure',
-  FetchPlansFailure = '[plan] fetch_plans_failure',
-  SelectActivity = '[plan] select_activity',
-  SetActivities = '[plan] set_activities',
-  SetActivitiesAndSelectedActivity = '[plan] set_activities_and_selected_activity',
-  SetPlans = '[plan] set_plans',
-  SetPlansAndSelectedPlan = '[plan] set_plans_and_selected_plan',
-  UpdateActivity = '[plan] update_activity',
-  UpdateActivityFailure = '[plan] update_activity_failure',
-  UpdateActivitySuccess = '[plan] update_activity_success',
-  UpdatePlan = '[plan] update_plan',
-  UpdatePlanFailure = '[plan] update_plan_failure',
-  UpdatePlanSuccess = '[plan] update_plan_success',
-  UpdateViewTimeRange = '[plan] update_view_time_range',
-}
+export const clearSelectedActivity = createAction(
+  '[plan] clear_selected_activity',
+);
 
-export class ClearSelectedActivity implements Action {
-  readonly type = PlanActionTypes.ClearSelectedActivity;
-}
+export const clearSelectedPlan = createAction('[plan] clear_selected_plan');
 
-export class ClearSelectedPlan implements Action {
-  readonly type = PlanActionTypes.ClearSelectedPlan;
-}
+export const createActivity = createAction(
+  '[plan] create_activity',
+  props<{ data: ActivityInstance; planId: string }>(),
+);
 
-export class CreateActivity implements Action {
-  readonly type = PlanActionTypes.CreateActivity;
-  constructor(public planId: string, public data: ActivityInstance) {}
-}
+export const createActivityFailure = createAction(
+  '[plan] create_activity_failure',
+  props<{ error: Error }>(),
+);
 
-export class CreateActivityFailure implements Action {
-  readonly type = PlanActionTypes.CreateActivityFailure;
-  constructor(public error: Error) {}
-}
+export const createActivitySuccess = createAction(
+  '[plan] create_activity_success',
+  props<{ activity: ActivityInstance; planId: string }>(),
+);
 
-export class CreateActivitySuccess implements Action {
-  readonly type = PlanActionTypes.CreateActivitySuccess;
-  constructor(public planId: string, public activity: ActivityInstance) {}
-}
+export const createPlan = createAction(
+  '[plan] create_plan',
+  props<{ plan: Plan }>(),
+);
 
-export class CreatePlan implements Action {
-  readonly type = PlanActionTypes.CreatePlan;
-  constructor(public plan: Plan) {}
-}
+export const createPlanFailure = createAction(
+  '[plan] create_plan_failure',
+  props<{ error: Error }>(),
+);
 
-export class CreatePlanFailure implements Action {
-  readonly type = PlanActionTypes.CreatePlanFailure;
-  constructor(public error: Error) {}
-}
+export const createPlanSuccess = createAction(
+  '[plan] create_plan_success',
+  props<{ plan: Plan }>(),
+);
 
-export class CreatePlanSuccess implements Action {
-  readonly type = PlanActionTypes.CreatePlanSuccess;
-  constructor(public plan: Plan) {}
-}
+export const deleteActivity = createAction(
+  '[plan] delete_activity',
+  props<{ activityId: string; planId: string }>(),
+);
 
-export class DeleteActivity implements Action {
-  readonly type = PlanActionTypes.DeleteActivity;
-  constructor(public planId: string, public activityId: string) {}
-}
+export const deleteActivityFailure = createAction(
+  '[plan] delete_activity_failure',
+  props<{ error: Error }>(),
+);
 
-export class DeleteActivityFailure implements Action {
-  readonly type = PlanActionTypes.DeleteActivityFailure;
-  constructor(public error: Error) {}
-}
+export const deleteActivitySuccess = createAction(
+  '[plan] delete_activity_success',
+  props<{ activityId: string }>(),
+);
 
-export class DeleteActivitySuccess implements Action {
-  readonly type = PlanActionTypes.DeleteActivitySuccess;
-  constructor(public activityId: string) {}
-}
+export const deletePlan = createAction(
+  '[plan] delete_plan',
+  props<{ planId: string }>(),
+);
 
-export class DeletePlan implements Action {
-  readonly type = PlanActionTypes.DeletePlan;
-  constructor(public planId: string) {}
-}
+export const deletePlanFailure = createAction(
+  '[plan] delete_plan_failure',
+  props<{ error: Error }>(),
+);
 
-export class DeletePlanFailure implements Action {
-  readonly type = PlanActionTypes.DeletePlanFailure;
-  constructor(public error: Error) {}
-}
+export const deletePlanSuccess = createAction(
+  '[plan] delete_plan_success',
+  props<{ deletedPlanId: string }>(),
+);
 
-export class DeletePlanSuccess implements Action {
-  readonly type = PlanActionTypes.DeletePlanSuccess;
-  constructor(public deletedPlanId: string) {}
-}
+export const fetchActivitiesFailure = createAction(
+  '[plan] fetch_activities_failure',
+  props<{ error: Error }>(),
+);
 
-export class FetchActivitiesFailure implements Action {
-  readonly type = PlanActionTypes.FetchActivitiesFailure;
-  constructor(public error: Error) {}
-}
+export const fetchPlansFailure = createAction(
+  '[plan] fetch_plans_failure',
+  props<{ error: Error }>(),
+);
 
-export class FetchPlansFailure implements Action {
-  readonly type = PlanActionTypes.FetchPlansFailure;
-  constructor(public error: Error) {}
-}
+export const selectActivity = createAction(
+  '[plan] select_activity',
+  props<{ id: string | null }>(),
+);
 
-export class SelectActivity implements Action {
-  readonly type = PlanActionTypes.SelectActivity;
-  constructor(public id: string | null) {}
-}
+export const setActivities = createAction(
+  '[plan] set_activities',
+  props<{ activities: ActivityInstance[]; activityId?: string }>(),
+);
 
-export class SetActivities implements Action {
-  readonly type = PlanActionTypes.SetActivities;
-  constructor(public activities: ActivityInstance[]) {}
-}
+export const setPlans = createAction(
+  '[plan] set_plans',
+  props<{ plans: Plan[] }>(),
+);
 
-export class SetActivitiesAndSelectedActivity implements Action {
-  readonly type = PlanActionTypes.SetActivitiesAndSelectedActivity;
-  constructor(
-    public activities: ActivityInstance[],
-    public activityId: string,
-  ) {}
-}
+export const setPlansAndSelectedPlan = createAction(
+  '[plan] set_plans_and_selected_plan',
+  props<{ planId: string; plans: Plan[] }>(),
+);
 
-export class SetPlans implements Action {
-  readonly type = PlanActionTypes.SetPlans;
-  constructor(public plans: Plan[]) {}
-}
+export const updateActivity = createAction(
+  '[plan] update_activity',
+  props<{ activityId: string; planId: string; update: StringTMap<any> }>(),
+);
 
-export class SetPlansAndSelectedPlan implements Action {
-  readonly type = PlanActionTypes.SetPlansAndSelectedPlan;
-  constructor(public plans: Plan[], public planId: string) {}
-}
+export const updateActivityFailure = createAction(
+  '[plan] update_activity_failure',
+  props<{ error: Error }>(),
+);
 
-export class UpdateActivity implements Action {
-  readonly type = PlanActionTypes.UpdateActivity;
-  constructor(
-    public planId: string,
-    public activityId: string,
-    public update: StringTMap<any>,
-  ) {}
-}
+export const updateActivitySuccess = createAction(
+  '[plan] update_activity_success',
+  props<{ activityId: string; update: StringTMap<any> }>(),
+);
 
-export class UpdateActivityFailure implements Action {
-  readonly type = PlanActionTypes.UpdateActivityFailure;
-  constructor(public error: Error) {}
-}
+export const updatePlan = createAction(
+  '[plan] update_plan',
+  props<{ planId: string; update: StringTMap<any> }>(),
+);
 
-export class UpdateActivitySuccess implements Action {
-  readonly type = PlanActionTypes.UpdateActivitySuccess;
-  constructor(public activityId: string, public update: StringTMap<any>) {}
-}
+export const updatePlanFailure = createAction(
+  '[plan] update_plan_failure',
+  props<{ error: Error }>(),
+);
 
-export class UpdatePlan implements Action {
-  readonly type = PlanActionTypes.UpdatePlan;
-  constructor(public planId: string, public update: StringTMap<any>) {}
-}
+export const updatePlanSuccess = createAction('[plan] update_plan_success');
 
-export class UpdatePlanFailure implements Action {
-  readonly type = PlanActionTypes.UpdatePlanFailure;
-  constructor(public error: Error) {}
-}
-
-export class UpdatePlanSuccess implements Action {
-  readonly type = PlanActionTypes.UpdatePlanSuccess;
-}
-
-export class UpdateViewTimeRange implements Action {
-  readonly type = PlanActionTypes.UpdateViewTimeRange;
-  constructor(public viewTimeRange: TimeRange) {}
-}
-
-export type PlanActions =
-  | ClearSelectedActivity
-  | ClearSelectedPlan
-  | CreatePlan
-  | CreatePlanFailure
-  | CreatePlanSuccess
-  | DeleteActivity
-  | DeleteActivityFailure
-  | DeleteActivitySuccess
-  | DeletePlan
-  | DeletePlanFailure
-  | DeletePlanSuccess
-  | FetchActivitiesFailure
-  | FetchPlansFailure
-  | CreateActivity
-  | CreateActivityFailure
-  | CreateActivitySuccess
-  | SelectActivity
-  | SetActivities
-  | SetActivitiesAndSelectedActivity
-  | SetPlans
-  | SetPlansAndSelectedPlan
-  | UpdateActivity
-  | UpdateActivityFailure
-  | UpdateActivitySuccess
-  | UpdatePlan
-  | UpdatePlanFailure
-  | UpdatePlanSuccess
-  | UpdateViewTimeRange;
+export const updateViewTimeRange = createAction(
+  '[plan] update_view_time_range',
+  props<{ viewTimeRange: TimeRange }>(),
+);

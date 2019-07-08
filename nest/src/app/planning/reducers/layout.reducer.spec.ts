@@ -7,17 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { RouterNavigation } from '../../../../libs/ngrx-router';
-import {
-  CloseAllDrawers,
-  LoadingBarHide,
-  LoadingBarShow,
-  Resize,
-  ToggleActivityTypesDrawer,
-  ToggleAddActivityDrawer,
-  ToggleCreatePlanDrawer,
-  ToggleEditActivityDrawer,
-} from '../actions/layout.actions';
+import { LayoutActions } from '../actions';
 import { initialState, LayoutState, reducer } from './layout.reducer';
 
 describe('layout reducer', () => {
@@ -32,14 +22,14 @@ describe('layout reducer', () => {
   });
 
   it('handle CloseAllDrawers', () => {
-    layoutState = reducer(layoutState, new CloseAllDrawers());
+    layoutState = reducer(layoutState, LayoutActions.closeAllDrawers());
     expect(layoutState).toEqual({
       ...initialState,
     });
   });
 
   it('handle LoadingBarHide', () => {
-    layoutState = reducer(layoutState, new LoadingBarHide());
+    layoutState = reducer(layoutState, LayoutActions.loadingBarHide());
     expect(layoutState).toEqual({
       ...initialState,
       showLoadingBar: 0,
@@ -47,8 +37,8 @@ describe('layout reducer', () => {
   });
 
   it('handle LoadingBarShow', () => {
-    layoutState = reducer(layoutState, new LoadingBarShow());
-    layoutState = reducer(layoutState, new LoadingBarShow());
+    layoutState = reducer(layoutState, LayoutActions.loadingBarShow());
+    layoutState = reducer(layoutState, LayoutActions.loadingBarShow());
     expect(layoutState).toEqual({
       ...initialState,
       showLoadingBar: 2,
@@ -56,22 +46,17 @@ describe('layout reducer', () => {
   });
 
   it('handle Resize', () => {
-    layoutState = reducer(layoutState, new Resize());
+    layoutState = reducer(layoutState, LayoutActions.resize({}));
     expect(layoutState).toEqual({
       ...initialState,
-    });
-  });
-
-  it('handle RouterNavigation', () => {
-    layoutState = reducer(layoutState, new RouterNavigation({ path: '/foo' }));
-    expect(layoutState).toEqual({
-      ...initialState,
-      showLoadingBar: 1,
     });
   });
 
   it('handle ToggleActivityTypesDrawer', () => {
-    layoutState = reducer(layoutState, new ToggleActivityTypesDrawer());
+    layoutState = reducer(
+      layoutState,
+      LayoutActions.toggleActivityTypesDrawer({}),
+    );
     expect(layoutState).toEqual({
       ...initialState,
       showActivityTypesDrawer: true,
@@ -79,7 +64,10 @@ describe('layout reducer', () => {
   });
 
   it('handle ToggleAddActivityDrawer', () => {
-    layoutState = reducer(layoutState, new ToggleAddActivityDrawer());
+    layoutState = reducer(
+      layoutState,
+      LayoutActions.toggleAddActivityDrawer({}),
+    );
     expect(layoutState).toEqual({
       ...initialState,
       showAddActivityDrawer: true,
@@ -87,15 +75,21 @@ describe('layout reducer', () => {
   });
 
   it('handle ToggleCreatePlanDrawer', () => {
-    layoutState = reducer(layoutState, new ToggleCreatePlanDrawer());
+    layoutState = reducer(
+      layoutState,
+      LayoutActions.toggleCreatePlanDrawer({}),
+    );
     expect(layoutState).toEqual({
       ...initialState,
       showCreatePlanDrawer: true,
     });
   });
 
-  it('handle ToggleGlobalSettingsDrawer', () => {
-    layoutState = reducer(layoutState, new ToggleEditActivityDrawer());
+  it('handle ToggleEditActivityDrawer', () => {
+    layoutState = reducer(
+      layoutState,
+      LayoutActions.toggleEditActivityDrawer({}),
+    );
     expect(layoutState).toEqual({
       ...initialState,
       showEditActivityDrawer: true,
