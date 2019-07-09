@@ -7,12 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  LayoutActions,
-  LayoutActionTypes,
-  LoadingBarHide,
-  SetPanelSizes,
-} from '../actions/layout.actions';
+import { createReducer, on } from '@ngrx/store';
+import { LayoutActions } from '../actions';
 
 export interface LayoutState {
   editorPanelsDirection: string;
@@ -36,66 +32,39 @@ export const initialState: LayoutState = {
   showLoadingBar: 0,
 };
 
-/**
- * Reducer.
- * If a case takes more than one line then it should be in it's own helper function.
- */
-export function reducer(
-  state: LayoutState = initialState,
-  action: LayoutActions,
-) {
-  switch (action.type) {
-    case LayoutActionTypes.LoadingBarHide:
-      return loadingBarHide(state, action);
-    case LayoutActionTypes.LoadingBarShow:
-      return { ...state, showLoadingBar: state.showLoadingBar + 1 };
-    case LayoutActionTypes.SetPanelSizes:
-      return setPanelSizes(state, action);
-    case LayoutActionTypes.ToggleEditorPanelsDirection:
-      return toggleEditorPanelsDirection(state);
-    case LayoutActionTypes.ToggleLeftPanelVisible:
-      return { ...state, leftPanelVisible: !state.leftPanelVisible };
-    case LayoutActionTypes.ToggleRightPanelVisible:
-      return { ...state, rightPanelVisible: !state.rightPanelVisible };
-    default:
-      return state;
-  }
-}
-
-/**
- * Reduction Helper. Called when reducing the `LoadingBarHide` action.
- */
-export function loadingBarHide(
-  state: LayoutState,
-  _: LoadingBarHide,
-): LayoutState {
-  const showLoadingBar = state.showLoadingBar - 1;
-  return {
+export const reducer = createReducer(
+  initialState,
+  on(LayoutActions.loadingBarHide, state => {
+    const showLoadingBar = state.showLoadingBar - 1;
+    return {
+      ...state,
+      showLoadingBar: showLoadingBar < 0 ? 0 : showLoadingBar,
+    };
+  }),
+  on(LayoutActions.loadingBarShow, state => ({
     ...state,
-    showLoadingBar: showLoadingBar < 0 ? 0 : showLoadingBar,
-  };
-}
-
-/**
- * Reduction helper. Called when reducing the `SetPanelSizes` action.
- */
-function setPanelSizes(state: LayoutState, action: SetPanelSizes): LayoutState {
-  const [leftPanelSize, middlePanelSize, rightPanelSize] = action.sizes;
-  return {
-    ...state,
-    leftPanelSize,
-    middlePanelSize,
-    rightPanelSize,
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the `ToggleEditorPanelsDirection` action.
- */
-function toggleEditorPanelsDirection(state: LayoutState): LayoutState {
-  return {
+    showLoadingBar: state.showLoadingBar + 1,
+  })),
+  on(LayoutActions.setPanelSizes, (state, { sizes }) => {
+    const [leftPanelSize, middlePanelSize, rightPanelSize] = sizes;
+    return {
+      ...state,
+      leftPanelSize,
+      middlePanelSize,
+      rightPanelSize,
+    };
+  }),
+  on(LayoutActions.toggleEditorPanelsDirection, state => ({
     ...state,
     editorPanelsDirection:
       state.editorPanelsDirection === 'horizontal' ? 'vertical' : 'horizontal',
-  };
-}
+  })),
+  on(LayoutActions.toggleLeftPanelVisible, state => ({
+    ...state,
+    leftPanelVisible: !state.leftPanelVisible,
+  })),
+  on(LayoutActions.toggleRightPanelVisible, state => ({
+    ...state,
+    rightPanelVisible: !state.rightPanelVisible,
+  })),
+);

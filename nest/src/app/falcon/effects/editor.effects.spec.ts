@@ -12,13 +12,13 @@ import { MatDialogModule } from '@angular/material';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { addMatchers, cold, hot, initTestScheduler } from 'jasmine-marbles';
 import { Observable } from 'rxjs';
-import { AddText } from '../actions/editor.actions';
+import { EditorActions } from '../actions';
 import { defaultEditorId } from '../reducers/file.reducer';
 import { SeqEditorService } from '../services/seq-editor.service';
 import { EditorEffects } from './editor.effects';
 
 describe('EditorEffects', () => {
-  let actions$: Observable<any>;
+  let actions: Observable<any>;
   let effects: EditorEffects;
 
   beforeEach(() => {
@@ -26,7 +26,7 @@ describe('EditorEffects', () => {
       imports: [MatDialogModule],
       providers: [
         EditorEffects,
-        provideMockActions(() => actions$),
+        provideMockActions(() => actions),
         {
           provide: SeqEditorService,
           useValue: new SeqEditorService(),
@@ -39,17 +39,20 @@ describe('EditorEffects', () => {
     effects = TestBed.get(EditorEffects);
   });
 
-  describe('addText$', () => {
+  describe('addText', () => {
     it('should not dispatch an action for AddText but should call addText and focusEditor in the SeqEditorService', () => {
-      const action = new AddText('that was easy', defaultEditorId);
+      const action = EditorActions.addText({
+        editorId: defaultEditorId,
+        text: 'that was easy',
+      });
       const service = TestBed.get(SeqEditorService);
       const addText = spyOn(service, 'addText');
       const focusEditor = spyOn(service, 'focusEditor');
 
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-');
 
-      expect(effects.addText$).toBeObservable(expected);
+      expect(effects.addText).toBeObservable(expected);
       expect(addText).toHaveBeenCalled();
       expect(focusEditor).toHaveBeenCalled();
     });

@@ -7,30 +7,19 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 import { CurrentLine } from '../models';
 
-export enum EditorActionTypes {
-  AddText = '[falcon-editor] add_text',
-  OpenEditorHelpDialog = '[falcon-editor] open_editor_help_dialog',
-  SetCurrentLine = '[falcon-editor] set_current_line',
-}
+export const addText = createAction(
+  '[falcon-editor] add_text',
+  props<{ editorId: string; text: string }>(),
+);
 
-export class AddText implements Action {
-  readonly type = EditorActionTypes.AddText;
-  constructor(public text: string, public editorId: string) {}
-}
+export const openEditorHelpDialog = createAction(
+  '[falcon-editor] open_editor_help_dialog',
+);
 
-export class OpenEditorHelpDialog implements Action {
-  readonly type = EditorActionTypes.OpenEditorHelpDialog;
-
-  constructor(public width: string = '400px') {}
-}
-
-export class SetCurrentLine implements Action {
-  readonly type = EditorActionTypes.SetCurrentLine;
-
-  constructor(public currentLine: CurrentLine) {}
-}
-
-export type EditorActions = AddText | OpenEditorHelpDialog | SetCurrentLine;
+export const setCurrentLine = createAction(
+  '[falcon-editor] set_current_line',
+  props<{ currentLine: CurrentLine }>(),
+);

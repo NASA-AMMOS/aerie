@@ -8,13 +8,7 @@
  */
 
 import keyBy from 'lodash-es/keyBy';
-import {
-  CloseTab,
-  CreateTab,
-  SwitchTab,
-  UpdateChildren,
-  UpdateTab,
-} from '../actions/file.actions';
+import { FileActions } from '../actions';
 import { getChildren } from '../services/file-mock.service';
 import { defaultEditorId, initialState, reducer } from './file.reducer';
 
@@ -123,33 +117,55 @@ describe('File reducer', () => {
   });
 
   it('should handle CreateTab', () => {
-    const result = reducer(initialState, new CreateTab(defaultEditorId, '11'));
+    const result = reducer(
+      initialState,
+      FileActions.createTab({ editorId: defaultEditorId, id: '11' }),
+    );
     expect(result).toEqual(mockStateAfterCreateTab);
   });
 
   it('should handle CloseTab', () => {
     const result = reducer(
       mockStateAfterCreateTab,
-      new CloseTab('11', defaultEditorId),
+      FileActions.closeTab({ docIdToClose: '11', editorId: defaultEditorId }),
     );
 
     expect(result).toEqual(initialState);
   });
 
   it('should handle switchTab', () => {
-    let result = reducer(initialState, new CreateTab(defaultEditorId, '12'));
-    result = reducer(result, new CreateTab(defaultEditorId, '13'));
+    let result = reducer(
+      initialState,
+      FileActions.createTab({ editorId: defaultEditorId, id: '12' }),
+    );
+    result = reducer(
+      result,
+      FileActions.createTab({ editorId: defaultEditorId, id: '13' }),
+    );
 
     expect(result).toEqual(mockStateForSwitchTab);
 
-    result = reducer(result, new SwitchTab('13', defaultEditorId));
+    result = reducer(
+      result,
+      FileActions.switchTab({ editorId: defaultEditorId, switchToId: '13' }),
+    );
 
     expect(result.editors.editor1.currentTab).toBe('13');
   });
 
   it('should handle updateTab', () => {
-    let result = reducer(initialState, new CreateTab(defaultEditorId, '14'));
-    result = reducer(result, new UpdateTab('14', 'hello', defaultEditorId));
+    let result = reducer(
+      initialState,
+      FileActions.createTab({ editorId: defaultEditorId, id: '14' }),
+    );
+    result = reducer(
+      result,
+      FileActions.updateTab({
+        docIdToUpdate: '14',
+        editorId: defaultEditorId,
+        text: 'hello',
+      }),
+    );
 
     if (result.editors.editor1.openedTabs)
       expect(result.editors.editor1.openedTabs['14'].text).toBe('hello');
@@ -161,7 +177,7 @@ describe('File reducer', () => {
     const childIds = getChildren(parentId).map(child => child.id);
     const result = reducer(
       initialState,
-      new UpdateChildren(parentId, children),
+      FileActions.updateChildren({ parentId, children }),
     );
     expect(result).toEqual({
       ...initialState,

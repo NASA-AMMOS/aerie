@@ -7,6 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './command-dictionary.selectors';
-export * from './file.selectors';
-export * from './layout.selectors';
+import * as CommandDictionarySelectors from './command-dictionary.selectors';
+import * as EditorSelectors from './editor.selectors';
+import * as FileSelectors from './file.selectors';
+import * as LayoutSelectors from './layout.selectors';
+
+export {
+  CommandDictionarySelectors,
+  EditorSelectors,
+  FileSelectors,
+  LayoutSelectors,
+};

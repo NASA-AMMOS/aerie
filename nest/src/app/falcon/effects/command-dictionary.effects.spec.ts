@@ -12,15 +12,7 @@ import { provideMockActions } from '@ngrx/effects/testing';
 import { Store, StoreModule } from '@ngrx/store';
 import { addMatchers, cold, hot, initTestScheduler } from 'jasmine-marbles';
 import { Observable, of } from 'rxjs';
-import {
-  FetchCommandDictionaries,
-  FetchCommandDictionariesFailure,
-  FetchCommandDictionariesSuccess,
-  FetchCommandDictionary,
-  FetchCommandDictionaryFailure,
-  FetchCommandDictionarySuccess,
-  SelectCommandDictionary,
-} from '../actions/command-dictionary.actions';
+import { CommandDictionaryActions } from '../actions';
 import { reducers } from '../falcon-store';
 import {
   CommandDictionaryMockService,
@@ -60,12 +52,12 @@ describe('CommandDictionaryEffects', () => {
     effects = TestBed.get(CommandDictionaryEffects);
   });
 
-  describe('fetchCommandDictionaries$', () => {
+  describe('fetchCommandDictionaries', () => {
     it('should return a FetchCommandDictionariesSuccess with data on success', () => {
-      const action = new FetchCommandDictionaries();
-      const success = new FetchCommandDictionariesSuccess(
-        mockCommandDictionaryList,
-      );
+      const action = CommandDictionaryActions.fetchCommandDictionaries();
+      const success = CommandDictionaryActions.fetchCommandDictionariesSuccess({
+        data: mockCommandDictionaryList,
+      });
 
       commandDictionaryMockService.getCommandDictionaryList.and.returnValue(
         of(mockCommandDictionaryList),
@@ -74,13 +66,15 @@ describe('CommandDictionaryEffects', () => {
       actions = hot('--a-', { a: action });
       const expected = cold('--b', { b: success });
 
-      expect(effects.fetchCommandDictionaries$).toBeObservable(expected);
+      expect(effects.fetchCommandDictionaries).toBeObservable(expected);
     });
 
     it('should return a FetchCommandDictionariesFailure with error on failure', () => {
-      const action = new FetchCommandDictionaries();
+      const action = CommandDictionaryActions.fetchCommandDictionaries();
       const error = new Error('MOCK_FAILURE');
-      const failure = new FetchCommandDictionariesFailure(error);
+      const failure = CommandDictionaryActions.fetchCommandDictionariesFailure({
+        error,
+      });
 
       // Make the service return a fake error observable
       commandDictionaryMockService.getCommandDictionaryList.and.returnValue(
@@ -93,18 +87,17 @@ describe('CommandDictionaryEffects', () => {
       // service to fail with the spy
       const expected = cold('---b', { b: failure });
 
-      expect(effects.fetchCommandDictionaries$).toBeObservable(expected);
+      expect(effects.fetchCommandDictionaries).toBeObservable(expected);
     });
   });
 
-  describe('fetchCommandDictionary$', () => {
+  describe('fetchCommandDictionary', () => {
     it('should return a FetchCommandDictionarySuccess with data on success', () => {
       const name = mockCommandDictionaryList[0].id;
-      const action = new FetchCommandDictionary(name);
-      const success = new FetchCommandDictionarySuccess(
-        commandDictionaryMockService.getCommandDictionary(),
-      );
-
+      const action = CommandDictionaryActions.fetchCommandDictionary({ name });
+      const success = CommandDictionaryActions.fetchCommandDictionarySuccess({
+        data: commandDictionaryMockService.getCommandDictionary(),
+      });
       commandDictionaryMockService.getCommandDictionary.and.returnValue(
         of(commandDictionaryMockService.getCommandDictionary()),
       );
@@ -112,15 +105,17 @@ describe('CommandDictionaryEffects', () => {
       actions = hot('--a-', { a: action });
       const expected = cold('--b', { b: success });
 
-      expect(effects.fetchCommandDictionary$).toBeObservable(expected);
+      expect(effects.fetchCommandDictionary).toBeObservable(expected);
     });
 
     it('should return a FetchCommandDictionaryFailure with error on failure', () => {
-      const action = new FetchCommandDictionary(
-        mockCommandDictionaryList[0].id,
-      );
+      const action = CommandDictionaryActions.fetchCommandDictionary({
+        name: mockCommandDictionaryList[0].id,
+      });
       const error = new Error('MOCK_FAILURE');
-      const failure = new FetchCommandDictionaryFailure(error);
+      const failure = CommandDictionaryActions.fetchCommandDictionaryFailure({
+        error,
+      });
 
       // Make the service return a fake error observable
       commandDictionaryMockService.getCommandDictionary.and.returnValue(
@@ -133,20 +128,24 @@ describe('CommandDictionaryEffects', () => {
       // service to fail with the spy
       const expected = cold('---b', { b: failure });
 
-      expect(effects.fetchCommandDictionary$).toBeObservable(expected);
+      expect(effects.fetchCommandDictionary).toBeObservable(expected);
     });
   });
 
-  describe('selectCommandDictionary$', () => {
+  describe('selectCommandDictionary', () => {
     it('should return a FetchCommandDictionary with an id', () => {
-      const id = '42';
-      const action = new SelectCommandDictionary(id);
-      const success = new FetchCommandDictionary(id);
+      const selectedId = '42';
+      const action = CommandDictionaryActions.selectCommandDictionary({
+        selectedId,
+      });
+      const success = CommandDictionaryActions.fetchCommandDictionary({
+        name: selectedId,
+      });
 
       actions = hot('--a-', { a: action });
       const expected = cold('--b', { b: success });
 
-      expect(effects.selectCommandDictionary$).toBeObservable(expected);
+      expect(effects.selectCommandDictionary).toBeObservable(expected);
     });
   });
 });

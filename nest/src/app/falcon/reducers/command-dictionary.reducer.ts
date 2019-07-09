@@ -7,13 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { createReducer, on } from '@ngrx/store';
 import keyBy from 'lodash-es/keyBy';
 import { CommandDictionary, MpsCommand, StringTMap } from '../../shared/models';
-import {
-  CommandDictionaryActions,
-  CommandDictionaryActionTypes,
-  FetchCommandDictionarySuccess,
-} from '../actions/command-dictionary.actions';
+import { CommandDictionaryActions } from '../actions';
 
 export interface CommandDictionaryState {
   commandsByName: StringTMap<MpsCommand> | null;
@@ -27,35 +24,27 @@ export const initialState: CommandDictionaryState = {
   selectedDictionaryId: null,
 };
 
-/**
- * Reducer.
- * If a case takes more than one line then it should be in it's own helper function.
- */
-export function reducer(
-  state: CommandDictionaryState = initialState,
-  action: CommandDictionaryActions,
-): CommandDictionaryState {
-  switch (action.type) {
-    case CommandDictionaryActionTypes.FetchCommandDictionarySuccess:
-      return fetchCommandDictionarySuccess(state, action);
-    case CommandDictionaryActionTypes.FetchCommandDictionariesSuccess:
-      return { ...state, dictionaries: action.data };
-    case CommandDictionaryActionTypes.SelectCommandDictionary:
-      return { ...state, selectedDictionaryId: action.selectedId };
-    default:
-      return state;
-  }
-}
-
-/**
- * Reduction helper. Called when reducing the `FetchCommandDictionarySuccess` action.
- */
-function fetchCommandDictionarySuccess(
-  state: CommandDictionaryState,
-  action: FetchCommandDictionarySuccess,
-) {
-  return {
-    ...state,
-    commandsByName: keyBy(action.data, 'name'),
-  };
-}
+export const reducer = createReducer(
+  initialState,
+  on(
+    CommandDictionaryActions.fetchCommandDictionarySuccess,
+    (state, { data }) => ({
+      ...state,
+      commandsByName: keyBy(data, 'name'),
+    }),
+  ),
+  on(
+    CommandDictionaryActions.fetchCommandDictionariesSuccess,
+    (state, { data }) => ({
+      ...state,
+      dictionaries: data,
+    }),
+  ),
+  on(
+    CommandDictionaryActions.selectCommandDictionary,
+    (state, { selectedId }) => ({
+      ...state,
+      selectedDictionaryId: selectedId,
+    }),
+  ),
+);

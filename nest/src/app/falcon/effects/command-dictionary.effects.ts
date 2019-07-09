@@ -8,72 +8,73 @@
  */
 
 import { Injectable } from '@angular/core';
-import { Actions, Effect, ofType } from '@ngrx/effects';
-import { Action } from '@ngrx/store';
-import { Observable, of } from 'rxjs';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { of } from 'rxjs';
 import { catchError, concatMap, map } from 'rxjs/operators';
-import {
-  CommandDictionaryActionTypes,
-  FetchCommandDictionaries,
-  FetchCommandDictionariesFailure,
-  FetchCommandDictionariesSuccess,
-  FetchCommandDictionary,
-  FetchCommandDictionaryFailure,
-  FetchCommandDictionarySuccess,
-  SelectCommandDictionary,
-} from '../actions/command-dictionary.actions';
+import { CommandDictionaryActions } from '../actions';
 import { CommandDictionaryMockService } from '../services/command-dictionary-mock.service';
 
 @Injectable()
 export class CommandDictionaryEffects {
   constructor(
-    private actions$: Actions,
+    private actions: Actions,
     private commandDictionaryMockService: CommandDictionaryMockService,
   ) {}
 
-  @Effect()
-  fetchCommandDictionaries$: Observable<Action> = this.actions$.pipe(
-    ofType<FetchCommandDictionaries>(
-      CommandDictionaryActionTypes.FetchCommandDictionaries,
-    ),
-    concatMap(() =>
-      this.commandDictionaryMockService.getCommandDictionaryList().pipe(
-        map(data => new FetchCommandDictionariesSuccess(data)),
-        catchError((e: Error) => {
-          console.error(
-            'CommandDictionaryEffect - fetchCommandDictionaries$: ',
-            e,
-          );
-          return of(new FetchCommandDictionariesFailure(e));
-        }),
+  fetchCommandDictionaries = createEffect(() =>
+    this.actions.pipe(
+      ofType(CommandDictionaryActions.fetchCommandDictionaries),
+      concatMap(() =>
+        this.commandDictionaryMockService.getCommandDictionaryList().pipe(
+          map(data =>
+            CommandDictionaryActions.fetchCommandDictionariesSuccess({ data }),
+          ),
+          catchError((error: Error) => {
+            console.error(
+              'CommandDictionaryEffect - fetchCommandDictionaries: ',
+              error.message,
+            );
+            return of(
+              CommandDictionaryActions.fetchCommandDictionariesFailure({
+                error,
+              }),
+            );
+          }),
+        ),
       ),
     ),
   );
 
-  @Effect()
-  fetchCommandDictionary$: Observable<Action> = this.actions$.pipe(
-    ofType<FetchCommandDictionary>(
-      CommandDictionaryActionTypes.FetchCommandDictionary,
-    ),
-    concatMap(action =>
-      this.commandDictionaryMockService.getCommandDictionary(action.name).pipe(
-        map(data => new FetchCommandDictionarySuccess(data)),
-        catchError((e: Error) => {
-          console.error(
-            'CommandDictionaryEffect - fetchCommandDictionary$: ',
-            e,
-          );
-          return of(new FetchCommandDictionaryFailure(e));
-        }),
+  fetchCommandDictionary = createEffect(() =>
+    this.actions.pipe(
+      ofType(CommandDictionaryActions.fetchCommandDictionary),
+      concatMap(({ name }) =>
+        this.commandDictionaryMockService.getCommandDictionary(name).pipe(
+          map(data =>
+            CommandDictionaryActions.fetchCommandDictionarySuccess({ data }),
+          ),
+          catchError((error: Error) => {
+            console.error(
+              'CommandDictionaryEffect - fetchCommandDictionary: ',
+              error.message,
+            );
+            return of(
+              CommandDictionaryActions.fetchCommandDictionaryFailure({
+                error,
+              }),
+            );
+          }),
+        ),
       ),
     ),
   );
 
-  @Effect()
-  selectCommandDictionary$: Observable<Action> = this.actions$.pipe(
-    ofType<SelectCommandDictionary>(
-      CommandDictionaryActionTypes.SelectCommandDictionary,
+  selectCommandDictionary = createEffect(() =>
+    this.actions.pipe(
+      ofType(CommandDictionaryActions.selectCommandDictionary),
+      map(({ selectedId }) =>
+        CommandDictionaryActions.fetchCommandDictionary({ name: selectedId }),
+      ),
     ),
-    map(action => new FetchCommandDictionary(action.selectedId)),
   );
 }

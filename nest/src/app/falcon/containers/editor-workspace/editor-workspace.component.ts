@@ -16,24 +16,14 @@ import {
 import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { MpsCommand, StringTMap } from '../../../shared/models';
-import { SetCurrentLine } from '../../actions/editor.actions';
-import {
-  CloseTab,
-  CreateTab,
-  SwitchTab,
-  UpdateTab,
-} from '../../actions/file.actions';
+import { EditorActions, FileActions } from '../../actions';
 import { FalconAppState } from '../../falcon-store';
 import { CurrentLine, Editor, EditorOptions, SequenceTab } from '../../models';
 import {
-  getActiveEditor,
-  getCommands,
-  getCommandsByName,
-  getCurrentFile,
-  getCurrentTab,
-  getOpenedTabs,
+  CommandDictionarySelectors,
+  EditorSelectors,
+  FileSelectors,
 } from '../../selectors';
-import { getCurrentLine } from '../../selectors/editor.selectors';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -49,42 +39,45 @@ export class EditorWorkspaceComponent implements AfterViewInit {
   editorOptions: EditorOptions;
 
   activeEditor$: Observable<string>;
-  commands$: Observable<MpsCommand[] | null>;
-  commandsByName$: Observable<StringTMap<MpsCommand> | null>;
+  commands$: Observable<MpsCommand[] | null> = this.store.pipe(
+    select(CommandDictionarySelectors.getCommands),
+  );
+  commandsByName$: Observable<StringTMap<MpsCommand> | null> = this.store.pipe(
+    select(CommandDictionarySelectors.getCommandsByName),
+  );
   currentTab$: Observable<string | null>;
   currentLine$: Observable<CurrentLine | null>;
   file$: Observable<SequenceTab | null>;
   openedTabs$: Observable<SequenceTab[] | null>;
 
-  constructor(private store: Store<FalconAppState>) {
-    this.commands$ = this.store.pipe(select(getCommands));
-    this.commandsByName$ = this.store.pipe(select(getCommandsByName));
-  }
+  constructor(private store: Store<FalconAppState>) {}
 
   ngAfterViewInit() {
-    this.activeEditor$ = this.store.pipe(select(getActiveEditor));
+    this.activeEditor$ = this.store.pipe(select(FileSelectors.getActiveEditor));
     this.currentTab$ = this.store.pipe(
-      select(getCurrentTab, { editorId: this.editor.id }),
+      select(FileSelectors.getCurrentTab, { editorId: this.editor.id }),
     );
-    this.currentLine$ = this.store.pipe(select(getCurrentLine));
+    this.currentLine$ = this.store.pipe(select(EditorSelectors.getCurrentLine));
     this.file$ = this.store.pipe(
-      select(getCurrentFile, { editorId: this.editor.id }),
+      select(FileSelectors.getCurrentFile, { editorId: this.editor.id }),
     );
     this.openedTabs$ = this.store.pipe(
-      select(getOpenedTabs, { editorId: this.editor.id }),
+      select(FileSelectors.getOpenedTabs, { editorId: this.editor.id }),
     );
   }
 
   onCloseTab({ tabId, editorId }: { tabId: string; editorId: string }) {
-    this.store.dispatch(new CloseTab(tabId, editorId));
+    this.store.dispatch(
+      FileActions.closeTab({ editorId, docIdToClose: tabId }),
+    );
   }
 
   onCreateTab(editorId: string) {
-    this.store.dispatch(new CreateTab(editorId));
+    this.store.dispatch(FileActions.createTab({ editorId }));
   }
 
   onSwitchTab({ tabId, editorId }: { tabId: string; editorId: string }) {
-    this.store.dispatch(new SwitchTab(tabId, editorId));
+    this.store.dispatch(FileActions.switchTab({ editorId, switchToId: tabId }));
   }
 
   onUpdateTab({
@@ -96,11 +89,13 @@ export class EditorWorkspaceComponent implements AfterViewInit {
     text: string;
     editorId: string;
   }) {
-    this.store.dispatch(new UpdateTab(id, text, editorId));
+    this.store.dispatch(
+      FileActions.updateTab({ editorId, docIdToUpdate: id, text }),
+    );
   }
 
-  onSetCurrentLine(line: CurrentLine) {
-    this.store.dispatch(new SetCurrentLine(line));
+  onSetCurrentLine(currentLine: CurrentLine) {
+    this.store.dispatch(EditorActions.setCurrentLine({ currentLine }));
   }
 
   getFile() {

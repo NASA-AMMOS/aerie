@@ -18,46 +18,20 @@ import {
   StringTMap,
 } from '../../../shared/models';
 import {
-  FetchCommandDictionaries,
-  SelectCommandDictionary,
-} from '../../actions/command-dictionary.actions';
-import {
-  AddText,
-  OpenEditorHelpDialog,
-  SetCurrentLine,
-} from '../../actions/editor.actions';
-import {
-  AddEditor,
-  FetchChildren,
-  SetActiveEditor,
-} from '../../actions/file.actions';
-import {
-  SetPanelSizes,
-  ToggleEditorPanelsDirection,
-  ToggleLeftPanelVisible,
-  ToggleRightPanelVisible,
-} from '../../actions/layout.actions';
+  CommandDictionaryActions,
+  EditorActions,
+  FileActions,
+  LayoutActions,
+} from '../../actions';
 import { getCommandTemplate } from '../../code-mirror-languages/mps/helpers';
 import { FalconAppState } from '../../falcon-store';
 import { CurrentLine, Editor } from '../../models';
 import {
-  getActiveEditor,
-  getCommands,
-  getCommandsByName,
-  getDictionaries,
-  getEditorPanelsDirection,
-  getEditorsList,
-  getLeftPanelSize,
-  getLeftPanelVisible,
-  getMiddlePanelSize,
-  getMiddlePanelVisible,
-  getRightPanelSize,
-  getRightPanelVisible,
-  getSelectedDictionaryId,
-  getShowLoadingBar,
-  hasFiles,
+  CommandDictionarySelectors,
+  EditorSelectors,
+  FileSelectors,
+  LayoutSelectors,
 } from '../../selectors';
-import { getCurrentLine } from '../../selectors/editor.selectors';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -66,22 +40,54 @@ import { getCurrentLine } from '../../selectors/editor.selectors';
   templateUrl: './falcon-app.component.html',
 })
 export class FalconAppComponent implements OnDestroy {
-  activeEditor$: Observable<string>;
-  commands$: Observable<MpsCommand[] | null>;
-  commandsByName$: Observable<StringTMap<MpsCommand> | null>;
-  currentLine$: Observable<CurrentLine | null>;
-  dictionaries$: Observable<CommandDictionary[]>;
-  hasFiles$: Observable<boolean>;
-  leftPanelSize$: Observable<number>;
-  leftPanelVisible$: Observable<boolean>;
-  middlePanelSize$: Observable<number>;
-  middlePanelVisible$: Observable<boolean>;
-  rightPanelSize$: Observable<number>;
-  rightPanelVisible$: Observable<boolean>;
-  selectedDictionaryId$: Observable<string | null>;
-  editorsList$: Observable<Editor[]>;
-  editorPanelsDirection$: Observable<string>;
-  showLoadingBar$: Observable<boolean>;
+  activeEditor$: Observable<string> = this.store.pipe(
+    select(FileSelectors.getActiveEditor),
+  );
+  commands$: Observable<MpsCommand[] | null> = this.store.pipe(
+    select(CommandDictionarySelectors.getCommands),
+  );
+  commandsByName$: Observable<StringTMap<MpsCommand> | null> = this.store.pipe(
+    select(CommandDictionarySelectors.getCommandsByName),
+  );
+  currentLine$: Observable<CurrentLine | null> = this.store.pipe(
+    select(EditorSelectors.getCurrentLine),
+  );
+  dictionaries$: Observable<CommandDictionary[]> = this.store.pipe(
+    select(CommandDictionarySelectors.getDictionaries),
+  );
+  hasFiles$: Observable<boolean> = this.store.pipe(
+    select(FileSelectors.hasFiles),
+  );
+  leftPanelSize$: Observable<number> = this.store.pipe(
+    select(LayoutSelectors.getLeftPanelSize),
+  );
+  leftPanelVisible$: Observable<boolean> = this.store.pipe(
+    select(LayoutSelectors.getLeftPanelVisible),
+  );
+  middlePanelSize$: Observable<number> = this.store.pipe(
+    select(LayoutSelectors.getMiddlePanelSize),
+  );
+  middlePanelVisible$: Observable<boolean> = this.store.pipe(
+    select(LayoutSelectors.getMiddlePanelVisible),
+  );
+  rightPanelSize$: Observable<number> = this.store.pipe(
+    select(LayoutSelectors.getRightPanelSize),
+  );
+  rightPanelVisible$: Observable<boolean> = this.store.pipe(
+    select(LayoutSelectors.getRightPanelVisible),
+  );
+  selectedDictionaryId$: Observable<string | null> = this.store.pipe(
+    select(CommandDictionarySelectors.getSelectedDictionaryId),
+  );
+  editorsList$: Observable<Editor[]> = this.store.pipe(
+    select(FileSelectors.getEditorsList),
+  );
+  editorPanelsDirection$: Observable<string> = this.store.pipe(
+    select(LayoutSelectors.getEditorPanelsDirection),
+  );
+  showLoadingBar$: Observable<boolean> = this.store.pipe(
+    select(LayoutSelectors.getShowLoadingBar),
+  );
 
   commandsByName: StringTMap<MpsCommand>;
   commandFilterQuery = '';
@@ -94,35 +100,14 @@ export class FalconAppComponent implements OnDestroy {
   private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(private store: Store<FalconAppState>) {
-    this.activeEditor$ = this.store.pipe(select(getActiveEditor));
-    this.commands$ = this.store.pipe(select(getCommands));
-    this.commandsByName$ = this.store.pipe(select(getCommandsByName));
-    this.currentLine$ = this.store.pipe(select(getCurrentLine));
-    this.dictionaries$ = this.store.pipe(select(getDictionaries));
-    this.hasFiles$ = this.store.pipe(select(hasFiles));
-    this.leftPanelSize$ = this.store.pipe(select(getLeftPanelSize));
-    this.leftPanelVisible$ = this.store.pipe(select(getLeftPanelVisible));
-    this.middlePanelSize$ = this.store.pipe(select(getMiddlePanelSize));
-    this.middlePanelVisible$ = this.store.pipe(select(getMiddlePanelVisible));
-    this.rightPanelSize$ = this.store.pipe(select(getRightPanelSize));
-    this.rightPanelVisible$ = this.store.pipe(select(getRightPanelVisible));
-    this.selectedDictionaryId$ = this.store.pipe(
-      select(getSelectedDictionaryId),
-    );
-    this.editorsList$ = this.store.pipe(select(getEditorsList));
-    this.editorPanelsDirection$ = this.store.pipe(
-      select(getEditorPanelsDirection),
-    );
-    this.showLoadingBar$ = this.store.pipe(select(getShowLoadingBar));
-
     this.commandsByName$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe((commandsByName: StringTMap<MpsCommand>) => {
         this.commandsByName = commandsByName;
       });
 
-    this.store.dispatch(new FetchChildren('root'));
-    this.store.dispatch(new FetchCommandDictionaries());
+    this.store.dispatch(FileActions.fetchChildren({ parentId: 'root' }));
+    this.store.dispatch(CommandDictionaryActions.fetchCommandDictionaries());
   }
 
   ngOnDestroy(): void {
@@ -131,7 +116,7 @@ export class FalconAppComponent implements OnDestroy {
   }
 
   dragEnd(event: { gutterNum: number; sizes: Array<number> }) {
-    this.store.dispatch(new SetPanelSizes(event.sizes));
+    this.store.dispatch(LayoutActions.setPanelSizes({ sizes: event.sizes }));
   }
 
   onMenuClicked(): void {
@@ -149,19 +134,23 @@ export class FalconAppComponent implements OnDestroy {
       commandName,
       this.commandsByName,
     );
-    this.store.dispatch(new AddText(commandTemplate, editorId));
+    this.store.dispatch(
+      EditorActions.addText({ editorId, text: commandTemplate }),
+    );
   }
 
   onSelectDictionary(selectedId: string): void {
-    this.store.dispatch(new SelectCommandDictionary(selectedId));
+    this.store.dispatch(
+      CommandDictionaryActions.selectCommandDictionary({ selectedId }),
+    );
   }
 
   toggleLeftPanelVisible() {
-    this.store.dispatch(new ToggleLeftPanelVisible());
+    this.store.dispatch(LayoutActions.toggleLeftPanelVisible());
   }
 
   toggleRightPanelVisible() {
-    this.store.dispatch(new ToggleRightPanelVisible());
+    this.store.dispatch(LayoutActions.toggleRightPanelVisible());
   }
 
   editorTrackByFn(_: number, item: any): string {
@@ -169,7 +158,7 @@ export class FalconAppComponent implements OnDestroy {
   }
 
   addEditor() {
-    this.store.dispatch(new AddEditor());
+    this.store.dispatch(FileActions.addEditor());
   }
 
   toggleEditorOption(key: string) {
@@ -180,18 +169,18 @@ export class FalconAppComponent implements OnDestroy {
   }
 
   toggleEditorPanelsDirection() {
-    this.store.dispatch(new ToggleEditorPanelsDirection());
+    this.store.dispatch(LayoutActions.toggleEditorPanelsDirection());
   }
 
   onOpenEditorHelpDialog(): void {
-    this.store.dispatch(new OpenEditorHelpDialog());
+    this.store.dispatch(EditorActions.openEditorHelpDialog());
   }
 
   onSetActiveEditor(editorId: string) {
-    this.store.dispatch(new SetActiveEditor(editorId));
+    this.store.dispatch(FileActions.setActiveEditor({ editorId }));
   }
 
-  onSetCurrentLine(line: CurrentLine) {
-    this.store.dispatch(new SetCurrentLine(line));
+  onSetCurrentLine(currentLine: CurrentLine) {
+    this.store.dispatch(EditorActions.setCurrentLine({ currentLine }));
   }
 }

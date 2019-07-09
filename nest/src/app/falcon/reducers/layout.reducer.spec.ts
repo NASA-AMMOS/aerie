@@ -7,14 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  LoadingBarHide,
-  LoadingBarShow,
-  SetPanelSizes,
-  ToggleEditorPanelsDirection,
-  ToggleLeftPanelVisible,
-  ToggleRightPanelVisible,
-} from '../actions/layout.actions';
+import { LayoutActions } from '../actions';
 import { initialState, reducer } from './layout.reducer';
 
 describe('Layout reducer', () => {
@@ -23,10 +16,10 @@ describe('Layout reducer', () => {
   });
 
   it('should handle LoadingBarHide', () => {
-    let result = reducer(initialState, new LoadingBarShow());
-    result = reducer(result, new LoadingBarShow());
-    result = reducer(result, new LoadingBarShow());
-    result = reducer(result, new LoadingBarHide());
+    let result = reducer(initialState, LayoutActions.loadingBarShow());
+    result = reducer(result, LayoutActions.loadingBarShow());
+    result = reducer(result, LayoutActions.loadingBarShow());
+    result = reducer(result, LayoutActions.loadingBarHide());
 
     expect(result).toEqual({
       ...initialState,
@@ -35,7 +28,7 @@ describe('Layout reducer', () => {
   });
 
   it('should handle LoadingBarShow', () => {
-    const result = reducer(initialState, new LoadingBarShow());
+    const result = reducer(initialState, LayoutActions.loadingBarShow());
 
     expect(result).toEqual({
       ...initialState,
@@ -50,7 +43,9 @@ describe('Layout reducer', () => {
 
     const result = reducer(
       initialState,
-      new SetPanelSizes([leftPanelSize, middlePanelSize, rightPanelSize]),
+      LayoutActions.setPanelSizes({
+        sizes: [leftPanelSize, middlePanelSize, rightPanelSize],
+      }),
     );
 
     expect(result).toEqual({
@@ -62,7 +57,10 @@ describe('Layout reducer', () => {
   });
 
   it('should handle ToggleLeftPanelVisible', () => {
-    const result = reducer(initialState, new ToggleLeftPanelVisible());
+    const result = reducer(
+      initialState,
+      LayoutActions.toggleLeftPanelVisible(),
+    );
 
     expect(result).toEqual({
       ...initialState,
@@ -71,7 +69,10 @@ describe('Layout reducer', () => {
   });
 
   it('should handle ToggleRightPanelVisible', () => {
-    const result = reducer(initialState, new ToggleRightPanelVisible());
+    const result = reducer(
+      initialState,
+      LayoutActions.toggleRightPanelVisible(),
+    );
 
     expect(result).toEqual({
       ...initialState,
@@ -82,11 +83,11 @@ describe('Layout reducer', () => {
   it('should handle ToggleEditorPanelsDirection', () => {
     const horizontalState = reducer(
       initialState,
-      new ToggleEditorPanelsDirection(),
+      LayoutActions.toggleEditorPanelsDirection(),
     );
     const verticalState = reducer(
       horizontalState,
-      new ToggleEditorPanelsDirection(),
+      LayoutActions.toggleEditorPanelsDirection(),
     );
 
     expect(horizontalState).toEqual({
