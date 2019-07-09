@@ -9,43 +9,31 @@
 
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { config } from '../config';
-
-const merlinModule = config.appModules[0];
-const falconModule = config.appModules[1];
-const ravenModule = config.appModules[2];
+import { ActivityComponent, PlanComponent, PlansComponent } from './containers';
 
 export const routes: Routes = [
   {
+    component: PlansComponent,
     path: '',
+  },
+  {
+    component: PlanComponent,
+    path: ':planId',
+  },
+  {
+    component: ActivityComponent,
+    path: ':planId/activity',
     pathMatch: 'full',
-    redirectTo: ravenModule.path,
   },
   {
-    data: { title: merlinModule.title },
-    loadChildren: () =>
-      import('./merlin/merlin.module').then(m => m.MerlinModule),
-    path: merlinModule.path,
-  },
-  {
-    data: { title: falconModule.title },
-    loadChildren: () =>
-      import('./sequencing/sequencing.module').then(m => m.SequencingModule),
-    path: falconModule.path,
-  },
-  {
-    data: { title: ravenModule.title },
-    loadChildren: () => import('./raven/raven.module').then(m => m.RavenModule),
-    path: ravenModule.path,
-  },
-  {
-    path: '**',
-    redirectTo: ravenModule.path,
+    component: ActivityComponent,
+    path: ':planId/activity/:activityId',
+    pathMatch: 'full',
   },
 ];
 
 @NgModule({
   exports: [RouterModule],
-  imports: [RouterModule.forRoot(routes, { useHash: true })],
+  imports: [RouterModule.forChild(routes)],
 })
-export class AppRoutingModule {}
+export class MerlinRoutingModule {}

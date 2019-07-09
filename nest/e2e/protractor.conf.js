@@ -3,7 +3,7 @@ const { SpecReporter } = require('jasmine-spec-reporter');
 exports.config = {
   allScriptsTimeout: 11000,
   specs: [
-    './src/planning/plans.e2e-spec.ts',
+    './src/merlin/plans.e2e-spec.ts',
     './src/sequencing/sequencing.pageinit.e2e-spec.ts',
     './src/sequencing/sequencing.codemirror.e2e-spec.ts',
     './src/sequencing/sequencing.commanddictionary.e2e-spec.ts',

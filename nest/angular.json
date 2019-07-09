@@ -16,16 +16,6 @@
         "@ngrx/schematics:effect": {
           "group": true,
           "spec": true
-        },
-        "@ngrx/schematics:reducer": {
-          "group": true,
-          "spec": true,
-          "reducers": "./planning-store.ts"
-        },
-        "@ngrx/schematics:feature": {
-          "group": true,
-          "spec": true,
-          "reducers": "./planning-store.ts"
         }
       },
       "architect": {

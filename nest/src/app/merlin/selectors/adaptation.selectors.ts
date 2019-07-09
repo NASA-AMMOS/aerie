@@ -1,7 +1,4 @@
 /**
- * Defines basic information about a top-level module (e.g. Merlin, Raven)
- *
- * @license
  * Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
  * Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.
  * This software may be subject to U.S. export control laws and regulations.
@@ -10,9 +7,22 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export interface NestModule {
-  icon: string;
-  path: string;
-  title: string;
-  version: string;
-}
+import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { State } from '../merlin-store';
+import { AdaptationState } from '../reducers/adaptation.reducer';
+
+const featureSelector = createFeatureSelector<State>('merlin');
+export const getAdaptationState = createSelector(
+  featureSelector,
+  (state: State): AdaptationState => state.adaptation,
+);
+
+export const getActivityTypes = createSelector(
+  getAdaptationState,
+  (state: AdaptationState) => state.activityTypes,
+);
+
+export const getAdaptations = createSelector(
+  getAdaptationState,
+  (state: AdaptationState) => state.adaptations,
+);
