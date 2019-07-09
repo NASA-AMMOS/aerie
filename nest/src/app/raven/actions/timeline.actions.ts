@@ -53,6 +53,8 @@ export enum TimelineActionTypes {
   ToggleGuide = '[timeline] toggle_guide',
   UpdateAllActivityBandFilter = '[timeline] update-all-activity-band-filter',
   UpdateBand = '[timeline] update_band',
+  UpdateFile = '[timeline] update_file',
+  UpdateFileSuccess = '[timeline] update_file_success',
   UpdateLastClickTime = '[timeline] last_click_time',
   UpdatePointInSubBand = '[timeline] update_point_in_sub_band]',
   UpdateSubBand = '[timeline] update_sub_band',
@@ -285,6 +287,22 @@ export class UpdateBand implements Action {
   constructor(public bandId: string, public update: StringTMap<BaseType>) {}
 }
 
+export class UpdateFile implements Action {
+  readonly type = TimelineActionTypes.UpdateFile;
+
+  constructor(
+    public selectedBandId: string,
+    public selectedSubBandId: string,
+    public sourceId: string,
+    public points: RavenPoint[],
+    public headerMap: StringTMap<string>,
+  ) {}
+}
+
+export class UpdateFileSuccess implements Action {
+  readonly type = TimelineActionTypes.UpdateFileSuccess;
+}
+
 export class UpdateLastClickTime implements Action {
   readonly type = TimelineActionTypes.UpdateLastClickTime;
 
@@ -365,6 +383,7 @@ export type TimelineAction =
   | RemoveSourceIdFromSubBands
   | RemoveSubBand
   | ResetViewTimeRange
+  | UpdateFile
   | SelectBand
   | SelectPoint
   | SetCompositeYLabelDefault

@@ -28,12 +28,13 @@ export interface RavenActivityPoint {
   endTimestamp: string;
   expandedFromPointId: string | null;
   expansion: string;
+  hidden: boolean;
   id: string;
   keywordLine: string;
   legend: string;
   message: string | null;
   metadata: MpsServerActivityPointMetadata[];
-  hidden: boolean;
+  pointStatus: string;
   selected: boolean;
   sourceId: string;
   start: number;

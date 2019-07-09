@@ -14,6 +14,7 @@ export * from './mps-server-activity-point-metadata';
 export * from './mps-server-activity-point-parameter';
 export * from './mps-server-activity-point';
 export * from './mps-server-annotation';
+export * from './mps-server-document-id';
 export * from './mps-server-epoch';
 export * from './mps-server-graph-data';
 export * from './mps-server-metadata';

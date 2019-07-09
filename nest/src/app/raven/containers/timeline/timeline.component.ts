@@ -153,9 +153,11 @@ export class TimelineComponent implements OnDestroy {
   detailsPanelHeight = 20;
   hoveredBandId: string;
   selectedBandId: string;
+  selectedSubBand: RavenSubBand | null;
   selectedSubBandId: string;
   southPanelHeight = 20;
   heightChangeDelta = 0.1;
+  treeBySourceId: StringTMap<RavenSource>;
 
   private subscriptions = new Subscription();
 
@@ -400,9 +402,25 @@ export class TimelineComponent implements OnDestroy {
       ),
     );
     this.subscriptions.add(
+      this.selectedSubBand$.subscribe(
+        selectedSubBand => (this.selectedSubBand = selectedSubBand),
+      ),
+    );
+    this.subscriptions.add(
+      this.selectedSubBandId$.subscribe(
+        selectedSubBandId => (this.selectedSubBandId = selectedSubBandId),
+      ),
+    );
+
+    this.subscriptions.add(
       this.showSouthBandsPanel$.subscribe(
         showSouthBandsPanel =>
           (this.southPanelHeight = showSouthBandsPanel ? 20 : 0),
+      ),
+    );
+    this.subscriptions.add(
+      this.treeBySourceId$.subscribe(
+        treeBySourceId => (this.treeBySourceId = treeBySourceId),
       ),
     );
   }
@@ -609,9 +627,57 @@ export class TimelineComponent implements OnDestroy {
     this.store.dispatch(new epochsActions.AppendAndReplaceEpochs(epochs));
   }
 
-  onRemovePointsInSubBand(removePoints: RavenPoint[]){
-    this.store.dispatch(new timelineActions.RemovePointsInSubBand(this.selectedBandId, this.selectedSubBandId,
-      removePoints));
+  onAddPointToSubBand(point: RavenPoint) {
+    this.store.dispatch(
+      new timelineActions.AddPointsToSubBand(
+        point.sourceId,
+        this.selectedBandId,
+        this.selectedSubBandId,
+        [point],
+      ),
+    );
+  }
+
+  onRemovePointsInSubBand(removePoints: RavenPoint[]) {
+    this.store.dispatch(
+      new timelineActions.RemovePointsInSubBand(
+        this.selectedBandId,
+        this.selectedSubBandId,
+        removePoints,
+      ),
+    );
+  }
+
+  onSave() {
+    if (this.selectedSubBand) {
+      console.log('sourceId: ' + this.selectedSubBand.sourceIds[0]);
+      // console.log('points: ' + JSON.stringify(this.selectedSubBand.points));
+      const source = this.treeBySourceId[this.selectedSubBand.sourceIds[0]];
+      const headerMap = {};
+
+      let url = decodeURIComponent(source.url);
+      url = url.replace(/[+]/g, ' ');
+      const mapString = url.match(new RegExp('.*map=\\((.*)\\)&'));
+      if (mapString) {
+        const [, mapStr] = mapString;
+        console.log('mapStr: ' + mapStr);
+        mapStr.split(',').forEach(keyValue => {
+          const kv = keyValue.split('=');
+          headerMap[kv[0]] = kv[1];
+        });
+      }
+
+      console.log('sourceUrl: ' + source.url);
+      this.store.dispatch(
+        new timelineActions.UpdateFile(
+          this.selectedBandId,
+          this.selectedSubBandId,
+          this.selectedSubBand.sourceIds[0],
+          this.selectedSubBand.points,
+          headerMap,
+        ),
+      );
+    }
   }
 
   /**

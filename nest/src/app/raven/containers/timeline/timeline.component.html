@@ -191,6 +191,8 @@
           [selectedBandId]="selectedBandId$ | async"
           [selectedSubBand]="selectedSubBand$ | async"
           [selectedPoint]="selectedPoint$ | async"
+          (addPointToSubBand)="onAddPointToSubBand($event)"
+          (save)="onSave()"
           (removePointsInSubBand)="onRemovePointsInSubBand($event)"
           (updateFilter)="onUpdateSubBand($event)"
           (updateFilterActivityInSubBand)="onFilterActivityInSubBand($event)"

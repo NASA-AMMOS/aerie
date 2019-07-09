@@ -650,13 +650,13 @@ export function removePointsInSubBand(
         ...band,
         subBands: band.subBands.map(subBand => {
           if (action.subBandId === subBand.id) {
-            const points = subBand.points.filter(point=> !deletePoints.includes(point.uniqueId));
-            const maxTimeRange = getMaxTimeRange(points);
-
             return {
               ...subBand,
-              maxTimeRange,
-              points,
+              points: (subBand as any).points.map((point: RavenActivityPoint) =>
+                deletePoints.includes(point.uniqueId)
+                  ? { ...point, pointStatus: 'deleted' }
+                  : point,
+              ),
               pointsChanged: true,
             };
           }
@@ -1012,7 +1012,11 @@ export function updatePointInSubBand(
               points: (subBand as any).points.map(
                 (point: RavenActivityPoint) => {
                   if (point.id === action.pointId) {
-                    return { ...point, ...action.update };
+                    return {
+                      ...point,
+                      ...action.update,
+                      pointStatus: point.pointStatus === 'unchanged' ? 'updated' : point.pointStatus,
+                    };
                   } else {
                     return point;
                   }

@@ -7,12 +7,19 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 import { concat, Observable, of } from 'rxjs';
-import { concatMap, map, switchMap, withLatestFrom } from 'rxjs/operators';
+import {
+  catchError,
+  concatMap,
+  map,
+  switchMap,
+  withLatestFrom,
+} from 'rxjs/operators';
+import * as toastActions from '../../shared/actions/toast.actions';
 import { StringTMap, TimeRange } from '../../shared/models';
 import { timestamp } from '../../shared/util';
 import * as sourceExplorerActions from '../actions/source-explorer.actions';
@@ -30,11 +37,13 @@ import {
   PinRename,
   RemoveAllBands,
   ResetViewTimeRange,
+  UpdateFile,
   UpdateViewTimeRange,
   ZoomInViewTimeRange,
   ZoomOutViewTimeRange,
 } from '../actions/timeline.actions';
 import {
+  MpsServerDocumentId,
   MpsServerGraphData,
   MpsServerResourceMetadata,
   MpsServerResourcePoint,
@@ -42,7 +51,9 @@ import {
   RavenCompositeBand,
   RavenDefaultBandSettings,
   RavenPin,
+  RavenPoint,
   RavenResourceBand,
+  RavenResourcePoint,
   RavenSource,
   RavenSubBand,
 } from '../models';
@@ -125,6 +136,25 @@ export class TimelineEffects {
       this.removeAllBands(
         raven.timeline.bands,
         raven.sourceExplorer.treeBySourceId,
+      ),
+    ),
+  );
+
+  @Effect()
+  updateFile$: Observable<Action> = this.actions$.pipe(
+    ofType<UpdateFile>(TimelineActionTypes.UpdateFile),
+    withLatestFrom(this.store$),
+    map(([action, state]) => ({ action, state })),
+    concatMap(({ action, state }) =>
+      concat(
+        ...this.updateFile(
+          state,
+          action.selectedBandId,
+          action.selectedSubBandId,
+          action.sourceId,
+          action.points,
+          action.headerMap,
+        ),
       ),
     ),
   );
@@ -367,6 +397,153 @@ export class TimelineEffects {
       });
     });
 
+    return actions;
+  }
+
+  updateFile(
+    state: RavenAppState,
+    selectedBandId: string,
+    selectedSubBandId: string,
+    dataSourceUrl: string,
+    points: RavenPoint[],
+    headerMap: StringTMap<string>,
+  ) {
+    const headers = new HttpHeaders().set('Content-Type', `application/json`);
+    const responseType = 'text';
+
+    const actions: Observable<Action>[] = [];
+
+    points.forEach(point => {
+      const fileUrl = dataSourceUrl.substring(
+        0,
+        dataSourceUrl.lastIndexOf('/'),
+      );
+      let url = `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${fileUrl}?__document_id=${point.id}`;
+      if (point.pointStatus === 'deleted') {
+        actions.push(
+          this.http.delete(url, { responseType: 'text' }).pipe(
+            concatMap(() => {
+              return of(new timelineActions.UpdateFileSuccess());
+            }),
+            catchError((e: Error) => {
+              return [
+                new toastActions.ShowToast(
+                  'warning',
+                  'Failed To Update File',
+                  '',
+                ),
+              ];
+            }),
+          ),
+        );
+      } else if (
+        point.pointStatus === 'updated' ||
+        point.pointStatus === 'added'
+      ) {
+        // map point data to what the server need
+        const serverData =
+          point.type === 'activity'
+            ? {
+                'Activity Name': (point as RavenActivityPoint).activityName,
+                'Activity Type': (point as RavenActivityPoint).activityType,
+                'Tend Assigned': timestamp((point as RavenActivityPoint).end),
+                'Tstart Assigned': timestamp(
+                  (point as RavenActivityPoint).start,
+                ),
+              }
+            : {
+                'Data Timestamp': timestamp(
+                  (point as RavenResourcePoint).start,
+                ),
+                'Data Value': (point as RavenResourcePoint).value,
+              };
+        let data: string;
+        if (Object.keys(headerMap).length > 0) {
+          console.log('HeaderMap: ' + JSON.stringify(headerMap));
+          const mappedData = {};
+          Object.keys(headerMap).forEach(
+            key => (mappedData[headerMap[key]] = serverData[key]),
+          );
+          console.log('mappedData: ' + JSON.stringify(mappedData));
+          data = JSON.stringify(mappedData);
+        } else {
+          data = JSON.stringify(serverData);
+        }
+        if (point.pointStatus === 'added') {
+          url = url.substring(0, url.indexOf('?'));
+          actions.push(
+            this.http
+              .post(url, data, {
+                headers,
+                responseType,
+              })
+              .pipe(
+                map((idstr: any) => JSON.parse(idstr)),
+                concatMap((ids: MpsServerDocumentId[]) => {
+                  console.log('id: ' + JSON.stringify(ids[0]['_id']['$oid']));
+                  // new timelineActions.UpdatePointInSubBand(selectedBandId, selectedSubBandId, point.id, { id: ids[0]['_id']['$oid'] });
+                  return of(
+                    new timelineActions.UpdatePointInSubBand(
+                      selectedBandId,
+                      selectedSubBandId,
+                      point.id,
+                      { id: ids[0]['_id']['$oid'] },
+                    ),
+                    new timelineActions.UpdateFileSuccess(),
+                    new timelineActions.UpdatePointInSubBand(
+                      selectedBandId,
+                      selectedSubBandId,
+                      ids[0]['_id']['$oid'],
+                      { pointStatus: 'unchanged' },
+                    ),
+                  );
+                }),
+                catchError((e: Error) => {
+                  return [
+                    new toastActions.ShowToast(
+                      'warning',
+                      'Failed To Update File',
+                      '',
+                    ),
+                  ];
+                }),
+              ),
+          );
+        } else {
+          actions.push(
+            this.http
+              .put(url, data, {
+                headers,
+                responseType,
+              })
+              .pipe(
+                concatMap(() => {
+                  return of(
+                    new timelineActions.UpdateFileSuccess(),
+                    new timelineActions.UpdatePointInSubBand(
+                      selectedBandId,
+                      selectedSubBandId,
+                      point.id,
+                      { pointStatus: 'unchanged' },
+                    ),
+                  );
+                }),
+                catchError((e: Error) => {
+                  return [
+                    new toastActions.ShowToast(
+                      'warning',
+                      'Failed To Update File',
+                      '',
+                    ),
+                  ];
+                }),
+              ),
+          );
+        }
+      } else if (point.pointStatus === 'deleted') {
+        // delete document
+      }
+    });
     return actions;
   }
 

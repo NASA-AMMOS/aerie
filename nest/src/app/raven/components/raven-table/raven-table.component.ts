@@ -24,6 +24,8 @@ import { AgGridEvent, IDatasource, RowNode } from 'ag-grid-community';
 import pickBy from 'lodash-es/pickBy';
 import startsWith from 'lodash-es/startsWith';
 
+import uniqueId from 'lodash-es/uniqueId';
+
 import {
   dateToTimestring,
   dhms,
@@ -52,7 +54,6 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
   @ViewChild('agGrid', { static: false })
   agGrid: AgGridAngular;
 
-
   @Input()
   activityFilter: string;
 
@@ -72,7 +73,15 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
   selectedPoint: RavenPoint;
 
   @Output()
-  removePointsInSubBand : EventEmitter<RavenPoint[]> = new EventEmitter<RavenPoint[]>();
+  addPointToSubBand: EventEmitter<RavenPoint> = new EventEmitter<RavenPoint>();
+
+  @Output()
+  removePointsInSubBand: EventEmitter<RavenPoint[]> = new EventEmitter<
+    RavenPoint[]
+  >();
+
+  @Output()
+  save: EventEmitter<any> = new EventEmitter<any>();
 
   @Output()
   updateFilter: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
@@ -98,7 +107,6 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
 
   private gridApi: any;
   public gridOptions: GridOptions;
-
 
   constructor() {
     this.gridOptions = {
@@ -300,6 +308,7 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
           prop !== 'keywordLine' &&
           prop !== 'legend' &&
           prop !== 'plan' &&
+          prop !== 'pointStatus' &&
           prop !== 'selected' &&
           prop !== 'sourceId' &&
           prop !== 'span' &&
@@ -346,6 +355,21 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
                           : value,
                       },
                     });
+
+                    // recalculate duration when either start or end changed
+                    if (params.node.data.end) {
+                      updatePoint.emit({
+                        bandId,
+                        pointId: params.node.data.id,
+                        subBandId,
+                        update: {
+                          duration:
+                            params.column.getId() === 'start'
+                              ? utc(params.node.data.end) - utc(value)
+                              : utc(value) - utc(params.node.data.start),
+                        },
+                      });
+                    }
                     return true;
                   }
                 : null,
@@ -383,21 +407,23 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
     let index = 0;
 
     for (let i = 0, l = points.length; i < l; ++i) {
-      const point = {
-        ...this.timestampPoint(points[i]),
-        index,
-      } as RavenActivityPoint; // This is so typings work out.
+      if (points[i].pointStatus !== 'deleted') {
+        const point = {
+          ...this.timestampPoint(points[i]),
+          index,
+        } as RavenActivityPoint; // This is so typings work out.
 
-      if (point.type !== 'activity') {
-        newPoints.push(point);
-        ++index;
-      } else if (
-        point.type === 'activity' &&
-        !pointsByActivityId[point.uniqueId]
-      ) {
-        pointsByActivityId[point.uniqueId] = true; // Track that we have now seen this unique activity id so we don't add it again.
-        newPoints.push(point);
-        ++index;
+        if (point.type !== 'activity') {
+          newPoints.push(point);
+          ++index;
+        } else if (
+          point.type === 'activity' &&
+          !pointsByActivityId[point.uniqueId]
+        ) {
+          pointsByActivityId[point.uniqueId] = true; // Track that we have now seen this unique activity id so we don't add it again.
+          newPoints.push(point);
+          ++index;
+        }
       }
     }
 
@@ -589,18 +615,46 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
   }
 
   onAdd() {
-    if (this.selectedSubBand.type='activity'){
-
+    let newPoint: RavenPoint;
+    if ((this.selectedSubBand.type === 'activity')) {
+      newPoint = {
+        duration: null,
+        editable: true,
+        id: 'newFromEdit',
+        isDuration: false,
+        isTime: false,
+        pointStatus: 'added',
+        selected: false,
+        sourceId: this.points[0].sourceId,
+        start: 0,
+        subBandId: this.selectedSubBand.id,
+        type: 'resource',
+        uniqueId: uniqueId(),
+        value: 0,
+      };
+    } else {
+      newPoint = {
+        duration: null,
+        editable: true,
+        id: 'newFromEdit',
+        isDuration: false,
+        isTime: false,
+        pointStatus: 'added',
+        selected: false,
+        sourceId: this.points[0].sourceId,
+        start: 0,
+        subBandId: this.selectedSubBand.id,
+        type: 'resource',
+        uniqueId: uniqueId(),
+        value: 0,
+      };
     }
+    this.addPointToSubBand.emit(newPoint);
   }
 
   onRemove() {
     const selectedPoints = this.gridApi.getSelectedRows();
     console.log('removing: ' + selectedPoints.length);
     this.removePointsInSubBand.emit(selectedPoints);
-  }
-
-  onSave() {
-
   }
 }

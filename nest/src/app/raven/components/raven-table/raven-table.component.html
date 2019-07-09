@@ -67,7 +67,7 @@
         Remove
       </button>
       <button *ngIf="selectedSubBand.pointsChanged" mat-raised-button class="edit-button"
-      (click)="onSave()">
+      (click)="save.emit()">
         Save
       </button>
     </div>
