@@ -353,6 +353,7 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
                         )
                           ? utc(value)
                           : value,
+                        pointStatus: params.node.data.pointStatus === 'added' ? 'added' : 'updated',
                       },
                     });
 

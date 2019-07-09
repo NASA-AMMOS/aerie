@@ -1015,10 +1015,6 @@ export function updatePointInSubBand(
                     return {
                       ...point,
                       ...action.update,
-                      pointStatus:
-                        point.pointStatus === 'unchanged'
-                          ? 'updated'
-                          : point.pointStatus,
                     };
                   } else {
                     return point;

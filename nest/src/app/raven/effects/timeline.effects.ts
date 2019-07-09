@@ -423,7 +423,14 @@ export class TimelineEffects {
         actions.push(
           this.http.delete(url, { responseType: 'text' }).pipe(
             concatMap(() => {
-              return of(new timelineActions.UpdateFileSuccess());
+              return of(
+                new timelineActions.UpdateFileSuccess(),
+                new timelineActions.UpdateSubBand(
+                  selectedBandId,
+                  selectedSubBandId,
+                  { pointsChanged: false },
+                ),
+              );
             }),
             catchError((e: Error) => {
               return [
@@ -487,14 +494,13 @@ export class TimelineEffects {
                       selectedBandId,
                       selectedSubBandId,
                       point.id,
-                      { id: ids[0]['_id']['$oid'] },
+                      { id: ids[0]['_id']['$oid'], pointStatus: 'unchanged' },
                     ),
                     new timelineActions.UpdateFileSuccess(),
-                    new timelineActions.UpdatePointInSubBand(
+                    new timelineActions.UpdateSubBand(
                       selectedBandId,
                       selectedSubBandId,
-                      ids[0]['_id']['$oid'],
-                      { pointStatus: 'unchanged' },
+                      { pointsChanged: false },
                     ),
                   );
                 }),
@@ -526,6 +532,11 @@ export class TimelineEffects {
                       point.id,
                       { pointStatus: 'unchanged' },
                     ),
+                    new timelineActions.UpdateSubBand(
+                      selectedBandId,
+                      selectedSubBandId,
+                      { pointsChanged: false },
+                    ),
                   );
                 }),
                 catchError((e: Error) => {
@@ -540,8 +551,6 @@ export class TimelineEffects {
               ),
           );
         }
-      } else if (point.pointStatus === 'deleted') {
-        // delete document
       }
     });
     return actions;
