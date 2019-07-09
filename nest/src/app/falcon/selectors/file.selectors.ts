@@ -110,7 +110,6 @@ export const getActiveEditor = createSelector(
 export const hasFiles = createSelector(
   getFiles,
   (files: StringTMap<SequenceFile>): boolean => {
-    console.log(files);
     return Object.values(files).length > 0;
   },
 );
