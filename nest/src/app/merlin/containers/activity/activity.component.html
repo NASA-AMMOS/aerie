@@ -1,0 +1,20 @@
+<nest-app-header [title]="title" contextual="true" (menuClicked)="onNavBack()">
+</nest-app-header>
+
+<main class="content">
+  <mat-progress-bar
+    mode="indeterminate"
+    *ngIf="merlinService.showLoadingBar$ | async"
+    color="accent"
+  >
+  </mat-progress-bar>
+
+  <activity-form-full
+    [activityTypes]="activityTypes$ | async"
+    [isNew]="isNew"
+    [selectedActivity]="selectedActivity$ | async"
+    (cancel)="onNavBack()"
+    (createActivity)="onCreateActivity($event)"
+    (updateActivity)="onUpdateActivity($event)"
+  ></activity-form-full>
+</main>

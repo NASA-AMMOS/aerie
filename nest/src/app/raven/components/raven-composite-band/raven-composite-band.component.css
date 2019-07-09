@@ -9,7 +9,7 @@
 
 :host {
   display: flex;
-  padding-left: 15px;
+  padding-left: 18px;
   position: relative;
 }
 
@@ -36,7 +36,7 @@
   position: absolute;
   left: 0px;
   top: 0px;
-  width: 15px;
+  width: 18px;
   height: 0px;
   display: flex;
   flex-direction: column;
@@ -44,8 +44,8 @@
 
 .icons {
   cursor: pointer;
-  font-size: 15px;
-  height: 15px;
+  font-size: 18px;
+  height: 18px;
   margin-bottom: 2px;
 }
 
@@ -58,4 +58,10 @@
 }
 .row {
   flex: 1 0 auto;
+}
+
+div.hovered {
+  border-style: solid;
+  border-color: grey;
+  border-width: 1px;
 }

@@ -63,7 +63,7 @@ export const config: ConfigState = {
     },
     {
       icon: 'dns',
-      path: 'sequencing',
+      path: 'falcon',
       title: 'Falcon',
       version: '0.0.1',
     },

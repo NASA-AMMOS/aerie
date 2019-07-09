@@ -22,16 +22,16 @@ export const routes: Routes = [
     redirectTo: ravenModule.path,
   },
   {
-    data: { title: merlinModule.title },
-    loadChildren: () =>
-      import('./planning/planning.module').then(m => m.PlanningModule),
-    path: merlinModule.path,
-  },
-  {
     data: { title: falconModule.title },
     loadChildren: () =>
-      import('./sequencing/sequencing.module').then(m => m.SequencingModule),
+      import('./falcon/falcon.module').then(m => m.FalconModule),
     path: falconModule.path,
+  },
+  {
+    data: { title: merlinModule.title },
+    loadChildren: () =>
+      import('./merlin/merlin.module').then(m => m.MerlinModule),
+    path: merlinModule.path,
   },
   {
     data: { title: ravenModule.title },

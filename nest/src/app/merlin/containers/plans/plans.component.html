@@ -1,0 +1,64 @@
+<nest-app-header
+  title="Plan Catalog"
+  (menuClicked)="merlinService.onToggleNestNavigationDrawer()"
+>
+  <button mat-button (click)="onToggleCreatePlanDrawer()">
+    <mat-icon>add</mat-icon> Plan
+  </button>
+</nest-app-header>
+
+<main>
+  <mat-progress-bar
+    mode="indeterminate"
+    *ngIf="merlinService.showLoadingBar$ | async"
+    color="accent"
+  >
+  </mat-progress-bar>
+
+  <mat-sidenav-container hasBackdrop="false">
+    <mat-sidenav-content>
+      <ng-container *ngIf="plans$ | async as plans">
+        <plan-table
+          *ngIf="plans.length"
+          [plans]="plans"
+          (deletePlan)="onDeletePlan($event)"
+          (selectPlan)="onSelectPlan($event)"
+        >
+        </plan-table>
+
+        <mat-card *ngIf="!plans.length">
+          No plans found.
+        </mat-card>
+      </ng-container>
+    </mat-sidenav-content>
+
+    <mat-sidenav
+      *ngIf="showCreatePlanDrawer$ | async"
+      mode="side"
+      position="end"
+      [opened]="showCreatePlanDrawer$ | async"
+      (closedStart)="onToggleCreatePlanDrawer(false)"
+    >
+      <div class="side-nav-container">
+        <div class="side-nav-wrapper">
+          <div class="side-nav-header">
+            <h2>Create Plan</h2>
+            <button mat-icon-button (click)="onToggleCreatePlanDrawer(false)">
+              <mat-icon aria-label="Clear">
+                clear
+              </mat-icon>
+            </button>
+          </div>
+
+          <div>
+            <plan-form
+              [adaptations]="adaptations$ | async"
+              [isNew]="true"
+              (create)="onCreatePlan($event)"
+            ></plan-form>
+          </div>
+        </div>
+      </div>
+    </mat-sidenav>
+  </mat-sidenav-container>
+</main>

@@ -3,10 +3,9 @@
 Most of the files that are required for a feature can be generated with the
 [`@ngrx/scaffold` package][scaffold] and `ng generate`. These are the steps
 that are required to generate all files for a new feature. Run the following
-commands from the `src/app/sequencing` directory.
+commands from the `src/app/falcon` directory.
 
-1. Change into the module directory that you are working on
-   (planning, sequencing, raven)
+1. Change into the module directory that you are working on (e.g. falcon, merlin, raven)
 2. Change the reducer and feature schematic in angular.json (project root)
    to point to the store in your current directory.
 3. Generate actions, effects, and reducers. *Do not prefix*.
@@ -42,7 +41,7 @@ export class RavenActivityTypeListModule {}
 ```diff
 + export * from './raven-activity-type-list/raven-activity-type-list.module';
 ```
-9. Remove the component from `sequencing.module.ts` or the module that
+9. Remove the component from `falcon.module.ts` or the module that
    corresponds to whatever directory you are in.
 ```diff
 - import { RavenActivityTypeListComponent } from './raven-activity-type-list/raven-activity-type-list.component';
