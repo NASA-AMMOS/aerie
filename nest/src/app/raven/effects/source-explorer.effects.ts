@@ -1267,7 +1267,8 @@ export class SourceExplorerEffects {
     pageDuration: string,
   ) {
     const source = treeBySourceId[sourceId];
-    if (source.openable) {
+    const graphables = ['graphableFilter', 'customFilter', 'customGraphable'];
+    if (source.openable || graphables.includes(source.type)) {
       return this.http
         .get<MpsServerGraphData>(
           getFormattedSourceUrl(
