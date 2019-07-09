@@ -57,17 +57,22 @@
       (sortChanged)="emitUpdateTableColumns()"
     >
     </ag-grid-angular>
-    <div class="edit-button-container" *ngIf="points.length > 0 && points[0].editable">
-      <button mat-raised-button class="edit-button"
-        (click)="onAdd()">
+    <div
+      class="edit-button-container"
+      *ngIf="points.length > 0 && points[0].editable"
+    >
+      <button mat-raised-button class="edit-button" (click)="onAdd()">
         Add
       </button>
-      <button mat-raised-button class="edit-button"
-        (click)="onRemove()">
+      <button mat-raised-button class="edit-button" (click)="onRemove()">
         Remove
       </button>
-      <button *ngIf="selectedSubBand.pointsChanged" mat-raised-button class="edit-button"
-      (click)="save.emit()">
+      <button
+        *ngIf="selectedSubBand.pointsChanged"
+        mat-raised-button
+        class="edit-button"
+        (click)="save.emit()"
+      >
         Save
       </button>
     </div>

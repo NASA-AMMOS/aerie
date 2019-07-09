@@ -616,7 +616,7 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
 
   onAdd() {
     let newPoint: RavenPoint;
-    if ((this.selectedSubBand.type === 'activity')) {
+    if (this.selectedSubBand.type === 'activity') {
       newPoint = {
         duration: null,
         editable: true,

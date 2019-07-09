@@ -10,5 +10,5 @@
 export interface MpsServerDocumentId {
   _id: {
     $oid: string;
-  }
+  };
 }
