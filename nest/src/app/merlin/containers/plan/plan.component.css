@@ -30,10 +30,6 @@ mat-progress-bar {
   z-index: 5;
 }
 
-mat-sidenav-container {
-  height: 100%;
-}
-
 mat-sidenav-content {
   padding: 1rem 1rem 1rem;
 }
@@ -44,12 +40,15 @@ mat-sidenav {
   overflow: hidden;
 }
 
-.activity-types-sidenav {
-  width: 450px;
-}
-
+mat-sidenav-container,
+mat-tab-group,
+::ng-deep .mat-tab-body-wrapper,
 .side-nav-container {
   height: 100%;
+}
+
+.activity-types-sidenav {
+  width: 450px;
 }
 
 .side-nav-wrapper {
@@ -70,5 +69,6 @@ mat-sidenav {
 }
 
 .tab {
+  height: 100%;
   padding: 1rem 1rem 1rem;
 }

@@ -7,11 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  EditorActions,
-  EditorActionTypes,
-  SetCurrentLine,
-} from '../actions/editor.actions';
+import { createReducer, on } from '@ngrx/store';
+import { EditorActions } from '../actions';
 import { CurrentLine } from '../models';
 
 export interface EditorState {
@@ -22,25 +19,10 @@ export const initialState: EditorState = {
   currentLine: null,
 };
 
-export function reducer(
-  state: EditorState = initialState,
-  action: EditorActions,
-) {
-  switch (action.type) {
-    case EditorActionTypes.SetCurrentLine:
-      return setCurrentLine(state, action);
-    default:
-      return state;
-  }
-}
-
-/**
- * Reduction helper.
- * Sets the current active line in an editor
- */
-function setCurrentLine(state: EditorState, action: SetCurrentLine) {
-  return {
+export const reducer = createReducer(
+  initialState,
+  on(EditorActions.setCurrentLine, (state, { currentLine }) => ({
     ...state,
-    currentLine: action.currentLine,
-  };
-}
+    currentLine,
+  })),
+);

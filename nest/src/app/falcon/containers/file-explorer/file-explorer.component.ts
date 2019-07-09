@@ -12,9 +12,9 @@ import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { SequenceFile } from '../../../../../../sequencing/src/models';
 import { StringTMap } from '../../../shared/models';
-import { FetchChildren } from '../../actions/file.actions';
+import { FileActions } from '../../actions';
 import { FalconAppState } from '../../falcon-store';
-import { getFiles, getRootFileChildIds } from '../../selectors';
+import { FileSelectors } from '../../selectors';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -23,17 +23,21 @@ import { getFiles, getRootFileChildIds } from '../../selectors';
   templateUrl: './file-explorer.component.html',
 })
 export class FileExplorerComponent {
-  files$: Observable<StringTMap<SequenceFile>>;
-  rootFileChildIds$: Observable<string[]>;
+  files$: Observable<StringTMap<SequenceFile>> = this.store.pipe(
+    select(FileSelectors.getFiles),
+  );
+  rootFileChildIds$: Observable<string[]> = this.store.pipe(
+    select(FileSelectors.getRootFileChildIds),
+  );
 
-  constructor(private store: Store<FalconAppState>) {
-    this.files$ = this.store.pipe(select(getFiles));
-    this.rootFileChildIds$ = this.store.pipe(select(getRootFileChildIds));
-  }
+  constructor(private store: Store<FalconAppState>) {}
 
   onExpandFolderEvent(file: SequenceFile): void {
     this.store.dispatch(
-      new FetchChildren(file.id, { expanded: !file.expanded }),
+      FileActions.fetchChildren({
+        options: { expanded: !file.expanded },
+        parentId: file.id,
+      }),
     );
   }
 }

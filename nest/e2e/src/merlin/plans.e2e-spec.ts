@@ -8,6 +8,7 @@ describe('/plans', () => {
   beforeEach(() => {
     page = new MerlinPage();
     page.navigateTo('plans');
+    browser.navigate().refresh();
   });
 
   it('[C136472] WHEN the Merlin is loaded, the browser tab title SHOULD be Merlin', () => {

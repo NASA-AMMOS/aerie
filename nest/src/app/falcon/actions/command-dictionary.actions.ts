@@ -7,58 +7,39 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 import { CommandDictionary, MpsCommand } from '../../shared/models';
 
-export enum CommandDictionaryActionTypes {
-  FetchCommandDictionaries = '[falcon-command-dictionary] fetch_command_dictionaries',
-  FetchCommandDictionariesFailure = '[falcon-command-dictionary] fetch_command_dictionaries_failure',
-  FetchCommandDictionariesSuccess = '[falcon-command-dictionary] fetch_command_dictionaries_success',
-  FetchCommandDictionary = '[falcon-command-dictionary] fetch_command_dictionary',
-  FetchCommandDictionaryFailure = '[falcon-command-dictionary] fetch_command_dictionary_failure',
-  FetchCommandDictionarySuccess = '[falcon-command-dictionary] fetch_command_dictionary_success',
-  SelectCommandDictionary = '[falcon-command-dictionary] select_command_dictionary',
-}
+export const fetchCommandDictionaries = createAction(
+  '[falcon-command-dictionary] fetch_command_dictionaries',
+);
 
-export class FetchCommandDictionaries implements Action {
-  readonly type = CommandDictionaryActionTypes.FetchCommandDictionaries;
-}
+export const fetchCommandDictionariesFailure = createAction(
+  '[falcon-command-dictionary] fetch_command_dictionaries_failure',
+  props<{ error: Error }>(),
+);
 
-export class FetchCommandDictionariesFailure implements Action {
-  readonly type = CommandDictionaryActionTypes.FetchCommandDictionariesFailure;
-  constructor(public error: Error) {}
-}
+export const fetchCommandDictionariesSuccess = createAction(
+  '[falcon-command-dictionary] fetch_command_dictionaries_success',
+  props<{ data: CommandDictionary[] }>(),
+);
 
-export class FetchCommandDictionariesSuccess implements Action {
-  readonly type = CommandDictionaryActionTypes.FetchCommandDictionariesSuccess;
-  constructor(public data: CommandDictionary[]) {}
-}
+export const fetchCommandDictionary = createAction(
+  '[falcon-command-dictionary] fetch_command_dictionary',
+  props<{ name: string }>(),
+);
 
-export class FetchCommandDictionary implements Action {
-  readonly type = CommandDictionaryActionTypes.FetchCommandDictionary;
-  constructor(public name: string) {}
-}
+export const fetchCommandDictionaryFailure = createAction(
+  '[falcon-command-dictionary] fetch_command_dictionary_failure',
+  props<{ error: Error }>(),
+);
 
-export class FetchCommandDictionaryFailure implements Action {
-  readonly type = CommandDictionaryActionTypes.FetchCommandDictionaryFailure;
-  constructor(public error: Error) {}
-}
+export const fetchCommandDictionarySuccess = createAction(
+  '[falcon-command-dictionary] fetch_command_dictionary_success',
+  props<{ data: MpsCommand[] }>(),
+);
 
-export class FetchCommandDictionarySuccess implements Action {
-  readonly type = CommandDictionaryActionTypes.FetchCommandDictionarySuccess;
-  constructor(public data: MpsCommand[]) {}
-}
-
-export class SelectCommandDictionary implements Action {
-  readonly type = CommandDictionaryActionTypes.SelectCommandDictionary;
-  constructor(public selectedId: string) {}
-}
-
-export type CommandDictionaryActions =
-  | FetchCommandDictionaries
-  | FetchCommandDictionariesFailure
-  | FetchCommandDictionariesSuccess
-  | FetchCommandDictionary
-  | FetchCommandDictionaryFailure
-  | FetchCommandDictionarySuccess
-  | SelectCommandDictionary;
+export const selectCommandDictionary = createAction(
+  '[falcon-command-dictionary] select_command_dictionary',
+  props<{ selectedId: string }>(),
+);

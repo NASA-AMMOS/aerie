@@ -9,18 +9,18 @@
 
 import { Action } from '@ngrx/store';
 import { concat, Observable, of } from 'rxjs';
-import { LoadingBarHide, LoadingBarShow } from '../actions/layout.actions';
+import { LayoutActions } from '../actions';
 
 /**
  * Wraps a list of actions around loading bar show/hide actions.
  * Uses `concat` so the actions happen in the given order (synchronously).
  */
 export function withLoadingBar(
-  actions$: Observable<Action>[],
+  actions: Observable<Action>[],
 ): Observable<Action> {
   return concat(
-    of(new LoadingBarShow()),
-    ...actions$,
-    of(new LoadingBarHide()),
+    of(LayoutActions.loadingBarShow()),
+    ...actions,
+    of(LayoutActions.loadingBarHide()),
   );
 }

@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ActionReducerMap } from '@ngrx/store';
+import { Action, combineReducers } from '@ngrx/store';
 import * as fromRoot from '../app-store';
 import * as fromCommandDictionary from './reducers/command-dictionary.reducer';
 import * as fromEditor from './reducers/editor.reducer';
@@ -25,9 +25,11 @@ export interface FalconAppState extends fromRoot.AppState {
   falcon: State;
 }
 
-export const reducers: ActionReducerMap<State> = {
-  commandDictionary: fromCommandDictionary.reducer,
-  editor: fromEditor.reducer,
-  file: fromFile.reducer,
-  layout: fromLayout.reducer,
-};
+export function reducers(state: State | undefined, action: Action) {
+  return combineReducers({
+    commandDictionary: fromCommandDictionary.reducer,
+    editor: fromEditor.reducer,
+    file: fromFile.reducer,
+    layout: fromLayout.reducer,
+  })(state, action);
+}

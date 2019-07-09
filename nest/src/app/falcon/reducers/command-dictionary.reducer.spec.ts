@@ -8,11 +8,7 @@
  */
 
 import keyBy from 'lodash-es/keyBy';
-import {
-  FetchCommandDictionariesSuccess,
-  FetchCommandDictionarySuccess,
-  SelectCommandDictionary,
-} from '../actions/command-dictionary.actions';
+import { CommandDictionaryActions } from '../actions';
 import { mpsCommands } from '../mocks/mps-commands';
 import { mockCommandDictionaryList } from '../services/command-dictionary-mock.service';
 import {
@@ -29,7 +25,9 @@ describe('Command Dictionary reducer', () => {
   it('should handle FetchCommandDictionarySuccess', () => {
     const result: CommandDictionaryState = reducer(
       initialState,
-      new FetchCommandDictionarySuccess(mpsCommands),
+      CommandDictionaryActions.fetchCommandDictionarySuccess({
+        data: mpsCommands,
+      }),
     );
 
     expect(result).toEqual({
@@ -41,7 +39,9 @@ describe('Command Dictionary reducer', () => {
   it('should handle FetchCommandDictionariesSuccess', () => {
     const result: CommandDictionaryState = reducer(
       initialState,
-      new FetchCommandDictionariesSuccess(mockCommandDictionaryList),
+      CommandDictionaryActions.fetchCommandDictionariesSuccess({
+        data: mockCommandDictionaryList,
+      }),
     );
 
     expect(result).toEqual({
@@ -53,7 +53,7 @@ describe('Command Dictionary reducer', () => {
   it('should handle SelectCommandDictionary', () => {
     const result: CommandDictionaryState = reducer(
       initialState,
-      new SelectCommandDictionary('42'),
+      CommandDictionaryActions.selectCommandDictionary({ selectedId: '42' }),
     );
     expect(result).toEqual({
       ...initialState,

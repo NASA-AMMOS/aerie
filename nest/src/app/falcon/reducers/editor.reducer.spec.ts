@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { SetCurrentLine } from '../actions/editor.actions';
+import { EditorActions } from '../actions';
 import { CurrentLine } from '../models';
 import { initialState, reducer } from './editor.reducer';
 
@@ -26,7 +26,10 @@ const mockLine: CurrentLine = {
 
 describe('Editor reducer', () => {
   it('should handle SetCurrentLine', () => {
-    const result = reducer(initialState, new SetCurrentLine(mockLine));
+    const result = reducer(
+      initialState,
+      EditorActions.setCurrentLine({ currentLine: mockLine }),
+    );
 
     expect(result).toEqual({ currentLine: mockLine });
   });

@@ -15,23 +15,18 @@ import { addMatchers, cold, hot, initTestScheduler } from 'jasmine-marbles';
 import { Observable } from 'rxjs';
 import { reducers as rootReducers } from '../../app-store';
 import { ShowToast } from '../../shared/actions/toast.actions';
-import {
-  FetchChildren,
-  FetchChildrenFailure,
-  UpdateChildren,
-} from '../actions/file.actions';
-import { LoadingBarHide, LoadingBarShow } from '../actions/layout.actions';
+import { FileActions, LayoutActions } from '../actions';
 import { reducers } from '../falcon-store';
 import { FileMockService, getChildren } from '../services/file-mock.service';
 import { FileService } from '../services/file.service';
 import { FileEffects } from './file.effects';
 
 describe('FileEffects', () => {
-  let actions$: Observable<any>;
+  let actions: Observable<any>;
   let effects: FileEffects;
 
-  const loadingBarShow = new LoadingBarShow();
-  const loadingBarHide = new LoadingBarHide();
+  const loadingBarShow = LayoutActions.loadingBarShow();
+  const loadingBarHide = LayoutActions.loadingBarHide();
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -42,7 +37,7 @@ describe('FileEffects', () => {
       ],
       providers: [
         FileEffects,
-        provideMockActions(() => actions$),
+        provideMockActions(() => actions),
         {
           provide: FileService,
           useValue: new FileMockService(),
@@ -57,28 +52,31 @@ describe('FileEffects', () => {
     effects = TestBed.get(FileEffects);
   });
 
-  describe('fetchChildren$', () => {
+  describe('fetchChildren', () => {
     it('should return a UpdateChildren action with data upon success', () => {
       const parentId = 'root';
       const children = getChildren(parentId);
-      const action = new FetchChildren(parentId);
-      const success = new UpdateChildren(parentId, children);
-
-      actions$ = hot('-a', { a: action });
+      const action = FileActions.fetchChildren({ parentId, options: {} });
+      const success = FileActions.updateChildren({
+        children,
+        options: {},
+        parentId,
+      });
+      actions = hot('-a', { a: action });
       const expected = cold('-(bcd)', {
         b: loadingBarShow,
         c: success,
         d: loadingBarHide,
       });
 
-      expect(effects.fetchChildren$).toBeObservable(expected);
+      expect(effects.fetchChildren).toBeObservable(expected);
     });
 
     it('should return a FetchChildrenFailure action with an error upon failure', () => {
       const parentId = 'root';
-      const action = new FetchChildren(parentId);
+      const action = FileActions.fetchChildren({ parentId });
       const error = new Error('FetchChildrenFailed');
-      const failure = new FetchChildrenFailure(error);
+      const failure = FileActions.fetchChildrenFailure({ error });
       const showToast = new ShowToast(
         'error',
         error.message,
@@ -87,7 +85,7 @@ describe('FileEffects', () => {
 
       const service = TestBed.get(FileMockService);
       spyOn(service, 'fetchChildren').and.returnValue(cold('#|', null, error));
-      actions$ = hot('-a', { a: action });
+      actions = hot('-a', { a: action });
       const expected = cold('-(bcde)', {
         b: loadingBarShow,
         c: failure,
@@ -95,7 +93,7 @@ describe('FileEffects', () => {
         e: loadingBarHide,
       });
 
-      expect(effects.fetchChildren$).toBeObservable(expected);
+      expect(effects.fetchChildren).toBeObservable(expected);
     });
   });
 });

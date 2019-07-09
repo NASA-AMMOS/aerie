@@ -7,15 +7,11 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { MatCardModule } from '@angular/material';
-import { ActivityBandModule, TimeBandModule } from '../../components';
 import { PlanScheduleComponent } from './plan-schedule.component';
 
 @NgModule({
   declarations: [PlanScheduleComponent],
   exports: [PlanScheduleComponent],
-  imports: [CommonModule, ActivityBandModule, MatCardModule, TimeBandModule],
 })
 export class PlanScheduleModule {}

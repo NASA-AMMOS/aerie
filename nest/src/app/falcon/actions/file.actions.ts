@@ -7,85 +7,47 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 import { SequenceFile } from '../../../../../sequencing/src/models';
 
-export enum FileActionTypes {
-  AddEditor = '[falcon-file] add_editor',
-  CreateTab = '[falcon-file] create_tab',
-  CloseTab = '[falcon-file] remove_tab',
-  FetchChildren = '[falcon-file] fetch_children',
-  FetchChildrenFailure = '[falcon-file] fetch_children_failure',
-  SetActiveEditor = '[falcon-file] set_active_editor',
-  SwitchTab = '[falcon-file] switch_tab',
-  UpdateChildren = '[falcon-file] update_children',
-  UpdateTab = '[falcon-file] update_tab',
-}
+export const addEditor = createAction('[falcon-file] add_editor');
 
-export class AddEditor implements Action {
-  readonly type = FileActionTypes.AddEditor;
-}
+export const createTab = createAction(
+  '[falcon-file] create_tab',
+  props<{ editorId: string; id?: string }>(),
+);
 
-export class CreateTab implements Action {
-  readonly type = FileActionTypes.CreateTab;
+export const closeTab = createAction(
+  '[falcon-file] close_tab',
+  props<{ docIdToClose: string; editorId: string }>(),
+);
 
-  constructor(public editorId: string, public id?: string) {}
-}
+export const fetchChildren = createAction(
+  '[falcon-file] fetch_children',
+  props<{ parentId: string; options?: any }>(),
+);
 
-export class CloseTab implements Action {
-  readonly type = FileActionTypes.CloseTab;
+export const fetchChildrenFailure = createAction(
+  '[falcon-file] fetch_children_failure',
+  props<{ error: Error }>(),
+);
 
-  constructor(public docIdToClose: string, public editorId: string) {}
-}
+export const setActiveEditor = createAction(
+  '[falcon-file] set_active_editor',
+  props<{ editorId: string }>(),
+);
 
-export class FetchChildren implements Action {
-  readonly type = FileActionTypes.FetchChildren;
-  constructor(public parentId: string, public options?: any) {}
-}
+export const switchTab = createAction(
+  '[falcon-file] switch_tab',
+  props<{ editorId: string; switchToId: string }>(),
+);
 
-export class FetchChildrenFailure implements Action {
-  readonly type = FileActionTypes.FetchChildrenFailure;
-  constructor(public error: Error) {}
-}
+export const updateChildren = createAction(
+  '[falcon-file] update_children',
+  props<{ parentId: string; children: SequenceFile[]; options?: any }>(),
+);
 
-export class SetActiveEditor implements Action {
-  readonly type = FileActionTypes.SetActiveEditor;
-
-  constructor(public editorId: string) {}
-}
-
-export class SwitchTab implements Action {
-  readonly type = FileActionTypes.SwitchTab;
-
-  constructor(public switchToId: string, public editorId: string) {}
-}
-
-export class UpdateChildren implements Action {
-  readonly type = FileActionTypes.UpdateChildren;
-  constructor(
-    public parentId: string,
-    public children: SequenceFile[],
-    public options?: any,
-  ) {}
-}
-
-export class UpdateTab implements Action {
-  readonly type = FileActionTypes.UpdateTab;
-
-  constructor(
-    public docIdToUpdate: string,
-    public text: string,
-    public editorId: string,
-  ) {}
-}
-
-export type FileActions =
-  | AddEditor
-  | CreateTab
-  | CloseTab
-  | FetchChildren
-  | FetchChildrenFailure
-  | SetActiveEditor
-  | SwitchTab
-  | UpdateChildren
-  | UpdateTab;
+export const updateTab = createAction(
+  '[falcon-file] update_tab',
+  props<{ docIdToUpdate: string; editorId: string; text: string }>(),
+);

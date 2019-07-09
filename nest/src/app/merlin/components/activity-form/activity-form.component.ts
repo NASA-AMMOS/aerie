@@ -17,13 +17,7 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  Validators,
-} from '@angular/forms';
-import { ColorEvent } from 'ngx-color';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivityInstance, ActivityType } from '../../../shared/models';
 import { datetimeToEpoch, NgTemplateUtils } from '../../../shared/util';
 
@@ -74,18 +68,17 @@ export class ActivityFormComponent implements OnInit, OnChanges {
 
   constructor(fb: FormBuilder) {
     this.form = fb.group({
-      activityType: new FormControl(''),
-      backgroundColor: new FormControl('#FFFFFF'),
-      duration: new FormControl(0, [Validators.required]),
-      intent: new FormControl(''),
-      name: new FormControl('', [Validators.required]),
-      start: new FormControl('', [Validators.required]),
-      textColor: new FormControl('#000000'),
+      activityType: [''],
+      backgroundColor: ['#FFFFFF'],
+      duration: [0, Validators.required],
+      intent: [''],
+      name: ['', Validators.required],
+      start: ['', Validators.required],
+      textColor: ['#000000'],
     });
   }
 
   ngOnInit() {
-    // Disable the activityType form if we are editing an activity instance
     if (!this.isNew) {
       this.form.controls.activityType.disable();
     }
@@ -151,10 +144,6 @@ export class ActivityFormComponent implements OnInit, OnChanges {
         });
       }
     }
-  }
-
-  updateColor($event: ColorEvent, type: string) {
-    this.form.patchValue({ [type]: $event.color.hex });
   }
 
   onManualTimeInputChange() {

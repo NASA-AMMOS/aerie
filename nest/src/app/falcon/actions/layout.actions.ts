@@ -7,46 +7,24 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 
-export enum LayoutActionTypes {
-  LoadingBarHide = '[falcon-layout] loading_bar_hide',
-  LoadingBarShow = '[falcon-layout] loading_bar_show',
-  SetPanelSizes = '[falcon-layout] set_panel_sizes',
-  ToggleEditorPanelsDirection = '[falcon-layout] toggle_editor_panels_direction',
-  ToggleLeftPanelVisible = '[falcon-layout] toggle_left_panel_visible',
-  ToggleRightPanelVisible = '[falcon-layout] toggle_right_panel_visible',
-}
+export const loadingBarHide = createAction('[falcon-layout] loading_bar_hide');
+export const loadingBarShow = createAction('[falcon-layout] loading_bar_show');
 
-export class ToggleEditorPanelsDirection implements Action {
-  readonly type = LayoutActionTypes.ToggleEditorPanelsDirection;
-}
+export const setPanelSizes = createAction(
+  '[falcon-layout] set_panel_sizes',
+  props<{ sizes: number[] }>(),
+);
 
-export class LoadingBarHide implements Action {
-  readonly type = LayoutActionTypes.LoadingBarHide;
-}
+export const toggleEditorPanelsDirection = createAction(
+  '[falcon-layout] toggle_editor_panels_direction',
+);
 
-export class LoadingBarShow implements Action {
-  readonly type = LayoutActionTypes.LoadingBarShow;
-}
+export const toggleLeftPanelVisible = createAction(
+  '[falcon-layout] toggle_left_panel_visible',
+);
 
-export class SetPanelSizes implements Action {
-  readonly type = LayoutActionTypes.SetPanelSizes;
-  constructor(public sizes: number[]) {}
-}
-
-export class ToggleLeftPanelVisible implements Action {
-  readonly type = LayoutActionTypes.ToggleLeftPanelVisible;
-}
-
-export class ToggleRightPanelVisible implements Action {
-  readonly type = LayoutActionTypes.ToggleRightPanelVisible;
-}
-
-export type LayoutActions =
-  | LoadingBarHide
-  | LoadingBarShow
-  | SetPanelSizes
-  | ToggleEditorPanelsDirection
-  | ToggleLeftPanelVisible
-  | ToggleRightPanelVisible;
+export const toggleRightPanelVisible = createAction(
+  '[falcon-layout] toggle_right_panel_visible',
+);

@@ -9,49 +9,49 @@
 
 import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material';
-import { Actions, Effect, ofType } from '@ngrx/effects';
-import { Action } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { switchMap } from 'rxjs/operators';
 import { NestConfirmDialogComponent } from '../../shared/components/nest-confirm-dialog/nest-confirm-dialog.component';
-import {
-  AddText,
-  EditorActionTypes,
-  OpenEditorHelpDialog,
-} from '../actions/editor.actions';
+import { EditorActions } from '../actions';
 import { SeqEditorService } from '../services/seq-editor.service';
 
 @Injectable()
 export class EditorEffects {
   constructor(
-    private actions$: Actions,
+    private actions: Actions,
     private dialog: MatDialog,
     private seqEditorService: SeqEditorService,
   ) {}
 
-  @Effect({ dispatch: false })
-  addText$: Observable<Action> = this.actions$.pipe(
-    ofType<AddText>(EditorActionTypes.AddText),
-    switchMap(action => {
-      this.seqEditorService.addText(action.text, action.editorId);
-      this.seqEditorService.focusEditor(action.editorId);
-      return [];
-    }),
+  addText = createEffect(
+    () =>
+      this.actions.pipe(
+        ofType(EditorActions.addText),
+        switchMap(action => {
+          this.seqEditorService.addText(action.text, action.editorId);
+          this.seqEditorService.focusEditor(action.editorId);
+          return [];
+        }),
+      ),
+    { dispatch: false },
   );
 
-  @Effect({ dispatch: false })
-  openEditorHelpDialog$: Observable<Action> = this.actions$.pipe(
-    ofType<OpenEditorHelpDialog>(EditorActionTypes.OpenEditorHelpDialog),
-    switchMap(() => {
-      this.dialog.open(NestConfirmDialogComponent, {
-        data: {
-          cancelText: 'CLOSE',
-          message: 'Help text goes here',
-        },
-        width: '400px',
-      });
+  openEditorHelpDialog = createEffect(
+    () =>
+      this.actions.pipe(
+        ofType(EditorActions.openEditorHelpDialog),
+        switchMap(() => {
+          this.dialog.open(NestConfirmDialogComponent, {
+            data: {
+              cancelText: 'CLOSE',
+              message: 'Help text goes here',
+            },
+            width: '400px',
+          });
 
-      return [];
-    }),
+          return [];
+        }),
+      ),
+    { dispatch: false },
   );
 }
