@@ -1,0 +1,244 @@
+<nest-app-header title="Falcon" (menuClicked)="onMenuClicked()">
+  <button
+    [matMenuTriggerFor]="panelMenu"
+    mat-icon-button
+    matTooltip="Panels"
+    role="button"
+    aria-label="Panels"
+    id="falcon-panels-button"
+  >
+    <mat-icon class="icon">
+      view_quilt
+    </mat-icon>
+  </button>
+
+  <mat-menu #panelMenu id="panels-menu-container">
+    <button
+      mat-menu-item
+      (click)="toggleLeftPanelVisible()"
+      id="falcon-panels-left-toggle-button"
+    >
+      <mat-icon aria-label="Toggle Left Panel">
+        border_left
+      </mat-icon>
+      Toggle Left Panel
+    </button>
+    <button
+      mat-menu-item
+      (click)="toggleRightPanelVisible()"
+      id="falcon-panels-right-toggle-button"
+    >
+      <mat-icon aria-label="Toggle Right Panel">
+        border_right
+      </mat-icon>
+      Toggle Right Panel
+    </button>
+    <mat-divider></mat-divider>
+    <button
+      mat-menu-item
+      id="falcon-add-editor-pane-button"
+      matTooltip="Add Editor Panel"
+      aria-label="Add Editor Panel"
+      (click)="addEditor()"
+    >
+      <mat-icon class="icon">
+        add
+      </mat-icon>
+      Add Editor Panel
+    </button>
+
+    <button
+      *ngIf="(editorsList$ | async).length > 1"
+      mat-menu-item
+      id="falcon-toggle-editor-pane-direction"
+      matTooltip="Toggle Editor Panel Direction"
+      aria-label="Toggle Editor Panel Direction"
+      (click)="toggleEditorPanelsDirection()"
+    >
+      <mat-icon class="icon">
+        rotate_right
+      </mat-icon>
+      Toggle Editor Panel Direction
+    </button>
+  </mat-menu>
+
+  <button
+    [matMenuTriggerFor]="editorMenu"
+    mat-icon-button
+    matTooltip="Editor"
+    role="button"
+    aria-label="Editor"
+    id="falcon-editor-button"
+  >
+    <mat-icon class="icon">
+      settings
+    </mat-icon>
+  </button>
+
+  <mat-menu #editorMenu id="editor-menu-container">
+    <button
+      mat-menu-item
+      (click)="toggleEditorOption('autocomplete')"
+      id="falcon-editor-toggle-autocomplete-button"
+      [style.background-color]="
+        editorOptions.autocomplete ? 'rgba(174, 75, 0, 0.58)' : ''
+      "
+    >
+      <mat-icon aria-label="Toggle Autocomplete">
+        text_rotation_none
+      </mat-icon>
+      Toggle Autocomplete
+    </button>
+    <button
+      mat-menu-item
+      (click)="toggleEditorOption('darkTheme')"
+      id="falcon-editor-toggle-color-scheme-button"
+    >
+      <mat-icon aria-label="Toggle Color Scheme">
+        color_lens
+      </mat-icon>
+      Toggle Color Scheme
+    </button>
+    <button
+      mat-menu-item
+      (click)="toggleEditorOption('showTooltips')"
+      id="falcon-editor-toggle-tooltips-button"
+      [style.background-color]="
+        editorOptions.showTooltips ? 'rgba(174, 75, 0, 0.58)' : ''
+      "
+    >
+      <mat-icon aria-label="Toggle Tooltips">
+        message
+      </mat-icon>
+      Toggle Tooltips
+    </button>
+    <button
+      mat-menu-item
+      (click)="onOpenEditorHelpDialog()"
+      id="falcon-editor-help-button"
+    >
+      <mat-icon aria-label="Help">
+        help
+      </mat-icon>
+      Help
+    </button>
+  </mat-menu>
+</nest-app-header>
+
+<mat-progress-bar
+  mode="indeterminate"
+  *ngIf="showLoadingBar$ | async"
+  color="accent"
+>
+</mat-progress-bar>
+
+<as-split
+  unit="percent"
+  useTransition="true"
+  (dragEnd)="dragEnd($event)"
+  #split
+>
+  <as-split-area
+    [size]="leftPanelSize$ | async"
+    [visible]="leftPanelVisible$ | async"
+    order="1"
+    #leftPanel
+    id="left-panel-area"
+  >
+    <mat-tab-group animationDuration="0ms">
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">folder</mat-icon> Files
+        </ng-template>
+
+        <file-explorer *ngIf="hasFiles$ | async"></file-explorer>
+
+        <div class="no-files-or-folders" *ngIf="!(hasFiles$ | async)">
+          <mat-card>
+            You have not created a folder or file yet.
+          </mat-card>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </as-split-area>
+
+  <as-split-area
+    [size]="middlePanelSize$ | async"
+    [visible]="middlePanelVisible$ | async"
+    order="2"
+    #editor
+    id="middle-panel-area"
+  >
+    <as-split
+      [direction]="editorPanelsDirection$ | async"
+      id="falcon-editor-panel-split"
+    >
+      <as-split-area
+        *ngFor="let editor of editorsList$ | async; trackBy: editorTrackByFn"
+        class="editor-panel"
+      >
+        <editor-workspace
+          [editor]="editor"
+          [editorOptions]="editorOptions"
+          (click)="onSetActiveEditor(editor.id)"
+        ></editor-workspace>
+      </as-split-area>
+    </as-split>
+  </as-split-area>
+
+  <as-split-area
+    [size]="rightPanelSize$ | async"
+    [visible]="rightPanelVisible$ | async"
+    order="3"
+    #rightPanel
+    id="right-panel-area"
+  >
+    <mat-tab-group animationDuration="0ms">
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">code</mat-icon> Commands
+        </ng-template>
+
+        <div class="tab-commands">
+          <seq-command-loader
+            [selectedId]="selectedDictionaryId$ | async"
+            [dictionaries]="dictionaries$ | async"
+            (selectDictionary)="onSelectDictionary($event)"
+          >
+          </seq-command-loader>
+
+          <mat-form-field
+            id="command-filter-input"
+            *ngIf="selectedDictionaryId$ | async"
+          >
+            <input
+              matInput
+              placeholder="Command Filter"
+              [(ngModel)]="commandFilterQuery"
+            />
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+
+          <seq-command-list
+            [activeEditor]="activeEditor$ | async"
+            [commands]="commands$ | async"
+            [commandsByName]="commandsByName$ | async"
+            [commandFilterQuery]="commandFilterQuery"
+            (selectCommand)="onSelectCommand($event)"
+          >
+          </seq-command-list>
+        </div>
+      </mat-tab>
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">code</mat-icon> Parameter Editor
+        </ng-template>
+
+        <seq-command-form-editor
+          [currentLine]="currentLine$ | async"
+          (setCurrentLine)="onSetCurrentLine($event)"
+        ></seq-command-form-editor>
+      </mat-tab>
+    </mat-tab-group>
+  </as-split-area>
+</as-split>

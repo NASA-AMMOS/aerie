@@ -3,13 +3,13 @@ const { SpecReporter } = require('jasmine-spec-reporter');
 exports.config = {
   allScriptsTimeout: 11000,
   specs: [
+    './src/falcon/pageinit.e2e-spec.ts',
+    './src/falcon/codemirror.e2e-spec.ts',
+    './src/falcon/command-dictionary.e2e-spec.ts',
+    './src/falcon/panels.e2e-spec.ts',
+    './src/falcon/toolbar.e2e-spec.ts',
+    './src/falcon/parameter-editor.e2e-spec.ts',
     './src/merlin/plans.e2e-spec.ts',
-    './src/sequencing/sequencing.pageinit.e2e-spec.ts',
-    './src/sequencing/sequencing.codemirror.e2e-spec.ts',
-    './src/sequencing/sequencing.commanddictionary.e2e-spec.ts',
-    './src/sequencing/sequencing.panels.e2e-spec.ts',
-    './src/sequencing/sequencing.toolbar.e2e-spec.ts',
-    './src/sequencing/sequencing.parameter-editor.e2e-spec.ts',
   ],
   capabilities: {
     browserName: 'chrome',

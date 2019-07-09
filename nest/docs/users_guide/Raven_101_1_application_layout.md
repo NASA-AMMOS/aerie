@@ -42,15 +42,15 @@ The Main Menu displays options such as: Manipulation of the Layout, Management o
 
 #### 6 - NEST Modules Navigation
 
-RAVEN is part of the platform NEST. The NEST platform is a graphical display components of the Advanced Mission Planning and Analysis (MPSA) system that will allow users to access system capabilities needed to peform key tasks in operations, including activity planning, sequencing, generating uplink products.
+RAVEN is part of the platform NEST. The NEST platform is a graphical display components of the Advanced Mission Planning and Analysis (MPSA) system that will allow users to access system capabilities needed to perform key tasks in operations, including activity planning, sequencing, generating uplink products.
 
 The following are the modules that NEST provides, with a description of each one.
 
 | Icon                                                      | Module        | Description                                                  |
 | --------------------------------------------------------- | ------------- | ------------------------------------------------------------ |
-| <img src="./images/baseline-event-24px.svg" width="23" /> | Planning      | Allow users to perform all planning related tasks. It is responsible for creating instances of Activity Types, Creating Schedules, Initiating Simulations, Constrain checking and more. |
-| <img src="./images/baseline-dns-24px.svg" width="23" />   | Sequencing    | Collaboration syntax editor to create sequences.             |
-| <img src="./images/baseline-poll-24px.svg" width="23" />  | Visualization | Allow users to view science planning, spacecraft activities, resource usage and predicted data, and/or any time-based data. |
+| <img src="./images/baseline-event-24px.svg" width="23" /> | Merlin      | Allow users to perform all planning related tasks. It is responsible for creating instances of Activity Types, Creating Schedules, Initiating Simulations, Constrain checking and more. |
+| <img src="./images/baseline-dns-24px.svg" width="23" />   | Falcon    | Collaboration syntax editor to create sequences.             |
+| <img src="./images/baseline-poll-24px.svg" width="23" />  | Raven | Allow users to view science planning, spacecraft activities, resource usage and predicted data, and/or any time-based data. |
 
 Each mission could have a different configuration that can include or exclude some of these modules. It can be the case that not all them are available to the user.
 
