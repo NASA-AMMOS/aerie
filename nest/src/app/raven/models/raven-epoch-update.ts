@@ -7,23 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { MpsServerEpoch, RavenEpoch } from '../models';
-
-/**
- * Transform an array of MPS Server epochs to Raven epochs.
- */
-export function toRavenEpochs(mpsServerEpochs: MpsServerEpoch[]) {
-  const ravenEpochs: RavenEpoch[] = [];
-
-  for (let i = 0, l = mpsServerEpochs.length; i < l; ++i) {
-    const serverEpoch: MpsServerEpoch = mpsServerEpochs[i];
-
-    ravenEpochs.push({
-      name: serverEpoch.name,
-      selected: false,
-      value: serverEpoch.value,
-    });
-  }
-
-  return ravenEpochs;
+export interface RavenEpochUpdate {
+  name: string;
+  rowIndex: number;
+  selected: boolean;
+  value: string;
 }

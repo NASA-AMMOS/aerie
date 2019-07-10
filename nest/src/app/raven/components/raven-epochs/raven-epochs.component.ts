@@ -18,8 +18,14 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
+import { FormControl, Validators } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
-import { RavenEpoch, RavenUpdate } from '../../models';
+import { RavenEpoch, RavenEpochUpdate, RavenUpdate } from '../../models';
+
+import { RavenCheckboxRendererComponent } from '../raven-checkbox-renderer/raven-checkbox-renderer.component';
+
+import { GridOptions, ValueSetterParams } from 'ag-grid-community';
+import { utc } from '../../../shared/util';
 
 @Component({
   selector: 'raven-epochs',
@@ -40,31 +46,66 @@ export class RavenEpochsComponent implements AfterViewInit, OnChanges {
   epochs: RavenEpoch[];
 
   @Input()
+  epochsModified: boolean;
+
+  @Input()
   inUseEpoch: RavenEpoch | null;
 
-  @Output()
-  importEpochs: EventEmitter<RavenEpoch[]> = new EventEmitter<RavenEpoch[]>();
+  @Input()
+  projectEpochsUrl: string;
 
   @Output()
-  updateEpochs: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
+  addEpoch: EventEmitter<RavenEpoch> = new EventEmitter<RavenEpoch>();
 
+  @Output()
+  removeEpochs: EventEmitter<RavenEpoch[]> = new EventEmitter<RavenEpoch[]>();
+
+  @Output()
+  saveNewEpochFile: EventEmitter<null> = new EventEmitter<null>();
+
+  @Output()
+  updateEpochSetting: EventEmitter<RavenUpdate> = new EventEmitter<
+    RavenUpdate
+  >();
+
+  @Output()
+  updateEpochData: EventEmitter<RavenEpochUpdate> = new EventEmitter<
+    RavenEpochUpdate
+  >();
+
+  @Output()
+  updateProjectEpochs: EventEmitter<any> = new EventEmitter<any>();
+
+  @Output()
+  epochError: EventEmitter<string> = new EventEmitter<string>();
+
+  gridApi: any;
+  public gridOptions: GridOptions;
   columnDefs: any[] = [];
-  rowData: any[] = [];
+  rowSelection: string;
+
+  epochSecControl: FormControl = new FormControl('', [
+    Validators.required,
+    Validators.min(0),
+  ]);
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.epochs) {
       this.columnDefs = this.createColumnDefs();
-      this.rowData = this.epochs;
-      this.highlightRowForInUseEpoch();
-    }
-
-    if (changes.inUseEpoch) {
-      this.highlightRowForInUseEpoch();
     }
   }
 
   ngAfterViewInit() {
     this.sizeColumnsToFit();
+    this.rowSelection = 'multiple';
+  }
+
+  constructor() {
+    this.gridOptions = {
+      context: {
+        componentParent: this,
+      },
+    } as GridOptions;
   }
 
   /**
@@ -76,30 +117,72 @@ export class RavenEpochsComponent implements AfterViewInit, OnChanges {
     this.sizeColumnsToFit();
   }
 
+  public toggleEpoch(index: number) {
+    const epoch = this.epochs[index];
+    if (epoch.name === '') {
+      this.epochError.emit('Cannot select empty epoch name');
+    } else if (utc(epoch.value) === 0) {
+      this.epochError.emit('Cannot select epoch with invalid value');
+    } else {
+      this.updateEpochData.emit({
+        ...epoch,
+        rowIndex: index,
+        selected:
+          epoch.name === '' || utc(epoch.value) === 0 ? false : !epoch.selected,
+      });
+    }
+  }
+
   /**
    * Calculates and returns `columnDefs` for use in the grid based on a point.
    */
   createColumnDefs() {
+    const update = this.updateEpochData;
+    const epochs = this.epochs;
+    const epochError = this.epochError;
     const columnDefs: any[] = [
       {
-        checkboxSelection: true,
+        cellRendererFramework: RavenCheckboxRendererComponent,
         colId: 'select',
         field: 'select',
-        headerName: '',
+        headerName: 'Epoch Used',
         hide: false,
-        width: 80,
+        width: 120,
       },
       {
         colId: 'name',
+        editable: true,
         field: 'name',
         headerName: 'Name',
         hide: false,
+        valueSetter: (params: ValueSetterParams) => {
+          const dup = epochs.filter(epoch => epoch.name === params.newValue);
+          if (dup.length > 0) {
+            epochError.emit('Epoch name already exists');
+            return false;
+          }
+          update.emit({
+            ...params.node.data,
+            name: params.newValue,
+            rowIndex: params.node.childIndex,
+          });
+          return true;
+        },
       },
       {
         colId: 'value',
+        editable: true,
         field: 'value',
         headerName: 'Value',
         hide: false,
+        valueSetter: (params: ValueSetterParams) => {
+          update.emit({
+            ...params.node.data,
+            rowIndex: params.node.childIndex,
+            value: params.newValue,
+          });
+          return true;
+        },
       },
     ];
 
@@ -107,36 +190,26 @@ export class RavenEpochsComponent implements AfterViewInit, OnChanges {
   }
 
   /**
-   * Helper that highlights the row in the grid for the currently in-use epoch.
-   * Note the setTimeout. This is to ensure Ag Grid is finished rendering before doing any selection.
+   * Helper. Invoke updateEpochSetting if condition is true.
    */
-  highlightRowForInUseEpoch() {
-    setTimeout(() => {
-      if (this.agGrid && this.agGrid.api) {
-        this.agGrid.api.forEachNode(node => {
-          if (this.inUseEpoch && node.data.name === this.inUseEpoch.name) {
-            this.agGrid.api.ensureIndexVisible(node.rowIndex);
-            node.setSelected(true);
-          } else {
-            node.setSelected(false);
-          }
-        });
-      }
-    });
+  conditionalUpdateEpochSetting(condition: boolean, updateDict: RavenUpdate) {
+    if (condition) {
+      this.updateEpochSetting.emit(updateDict);
+    }
   }
 
-  /**
-   * Event. Called when the row selection changes.
-   */
-  onSelectionChanged() {
-    // Get the first row element since we can only select one row at a time.
-    const row = this.agGrid.api.getSelectedRows()[0];
+  onAddRow() {
+    const newEpoch = { name: 'newEpoch', selected: false, value: 'value' };
+    this.addEpoch.emit(newEpoch);
+  }
 
-    if (row) {
-      this.updateEpochs.emit({ update: { inUseEpoch: row } });
-    } else {
-      this.updateEpochs.emit({ update: { inUseEpoch: null } });
-    }
+  onRemoveSelected() {
+    const selectedData = this.gridApi.getSelectedRows();
+    this.removeEpochs.emit(selectedData);
+  }
+
+  onGridReady(params: any) {
+    this.gridApi = params.api;
   }
 
   /**

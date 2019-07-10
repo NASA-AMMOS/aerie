@@ -33,6 +33,11 @@ export const getEpochs = createSelector(
   (state: EpochsState): RavenEpoch[] => state.epochs,
 );
 
+export const getEpochsModified = createSelector(
+  getEpochsState,
+  (state: EpochsState): boolean => state.modified,
+);
+
 export const getInUseEpochs = createSelector(
   getEpochsState,
   (state: EpochsState): RavenEpoch | null => state.inUseEpoch,

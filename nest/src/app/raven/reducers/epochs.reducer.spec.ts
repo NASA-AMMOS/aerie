@@ -7,7 +7,13 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { AddEpochs, UpdateEpochs } from '../actions/epochs.actions';
+import {
+  AddEpochs,
+  AppendAndReplaceEpochs,
+  RemoveEpochs,
+  UpdateEpochData,
+  UpdateEpochSetting,
+} from '../actions/epochs.actions';
 import { EpochsState, initialState, reducer } from './epochs.reducer';
 
 describe('epochs reducer', () => {
@@ -25,31 +31,34 @@ describe('epochs reducer', () => {
     epochsState = reducer(
       epochsState,
       new AddEpochs([
-        { name: 'Day1', value: '2018-134T12:00:00.000' },
-        { name: 'Day2', value: '2018-156T23:00:00.000' },
+        { name: 'Day1', value: '2018-134T12:00:00.000', selected: false },
+        { name: 'Day2', value: '2018-156T23:00:00.000', selected: false },
       ]),
     );
     expect(epochsState).toEqual({
       ...initialState,
       epochs: [
-        { name: 'Day1', value: '2018-134T12:00:00.000' },
-        { name: 'Day2', value: '2018-156T23:00:00.000' },
+        { name: 'Day1', value: '2018-134T12:00:00.000', selected: false },
+        { name: 'Day2', value: '2018-156T23:00:00.000', selected: false },
       ],
     });
   });
 
-  it('handle UpdateEpochs dayCode', () => {
-    epochsState = reducer(epochsState, new UpdateEpochs({ dayCode: 'D' }));
+  it('handle UpdateEpochSetting dayCode', () => {
+    epochsState = reducer(
+      epochsState,
+      new UpdateEpochSetting({ dayCode: 'D' }),
+    );
     expect(epochsState).toEqual({
       ...initialState,
       dayCode: 'D',
     });
   });
 
-  it('handle UpdateEpochs earthSecToEpochSec', () => {
+  it('handle UpdateEpochSetting earthSecToEpochSec', () => {
     epochsState = reducer(
       epochsState,
-      new UpdateEpochs({ earthSecToEpochSec: 1.16 }),
+      new UpdateEpochSetting({ earthSecToEpochSec: 1.16 }),
     );
     expect(epochsState).toEqual({
       ...initialState,
@@ -57,30 +66,175 @@ describe('epochs reducer', () => {
     });
   });
 
-  it('handle UpdateEpochs inUseEpoch', () => {
+  it('handle UpdateEpochSetting inUseEpoch', () => {
     epochsState = reducer(
       epochsState,
       new AddEpochs([
-        { name: 'Day1', value: '2018-134T12:00:00.000' },
-        { name: 'Day2', value: '2018-156T23:00:00.000' },
+        { name: 'Day1', value: '2018-134T12:00:00.000', selected: false },
+        { name: 'Day2', value: '2018-156T23:00:00.000', selected: false },
       ]),
     );
     epochsState = reducer(
       epochsState,
-      new UpdateEpochs({
-        inUseEpoch: { name: 'Day2', value: '2018-156T23:00:00.000' },
+      new UpdateEpochSetting({
+        inUseEpoch: {
+          name: 'Day2',
+          selected: true,
+          value: '2018-156T23:00:00.000',
+        },
       }),
     );
     expect(epochsState).toEqual({
       ...initialState,
       epochs: [
-        { name: 'Day1', value: '2018-134T12:00:00.000' },
-        { name: 'Day2', value: '2018-156T23:00:00.000' },
+        { name: 'Day1', value: '2018-134T12:00:00.000', selected: false },
+        { name: 'Day2', value: '2018-156T23:00:00.000', selected: false },
       ],
       inUseEpoch: {
         name: 'Day2',
+        selected: true,
         value: '2018-156T23:00:00.000',
       },
+    });
+  });
+
+  it('handle AddEpochs abd AppendAndReplaceEpochs', () => {
+    epochsState = reducer(
+      epochsState,
+      new AddEpochs([
+        { name: 'Day1', value: '2018-134T12:00:00.000', selected: false },
+        { name: 'Day2', value: '2018-156T23:00:00.000', selected: false },
+      ]),
+    );
+    epochsState = reducer(
+      epochsState,
+      new AppendAndReplaceEpochs([
+        { name: 'DayA', value: '2019-134T12:00:00.000', selected: false },
+        { name: 'DayB', value: '2019-156T23:00:00.000', selected: false },
+      ]),
+    );
+    expect(epochsState).toEqual({
+      ...initialState,
+      epochs: [
+        { name: 'Day1', value: '2018-134T12:00:00.000', selected: false },
+        { name: 'Day2', value: '2018-156T23:00:00.000', selected: false },
+        { name: 'DayA', value: '2019-134T12:00:00.000', selected: false },
+        { name: 'DayB', value: '2019-156T23:00:00.000', selected: false },
+      ],
+      modified: true,
+    });
+  });
+
+  it('handle AddEpochs(AppendAndreplace)', () => {
+    epochsState = reducer(
+      epochsState,
+      new AddEpochs([
+        { name: 'Day1', value: '2018-134T12:00:00.000', selected: false },
+        { name: 'Day2', value: '2018-156T23:00:00.000', selected: false },
+      ]),
+    );
+    epochsState = reducer(
+      epochsState,
+      new AppendAndReplaceEpochs([
+        { name: 'Day1', value: '2019-134T12:00:00.000', selected: false },
+        { name: 'DayB', value: '2019-156T23:00:00.000', selected: false },
+      ]),
+    );
+    expect(epochsState).toEqual({
+      ...initialState,
+      epochs: [
+        { name: 'Day1', value: '2019-134T12:00:00.000', selected: false },
+        { name: 'Day2', value: '2018-156T23:00:00.000', selected: false },
+        { name: 'DayB', value: '2019-156T23:00:00.000', selected: false },
+      ],
+      modified: true,
+    });
+  });
+
+  it('handle AddEpochs(RemoveAll)', () => {
+    epochsState = reducer(
+      epochsState,
+      new AddEpochs([
+        { name: 'Day1', value: '2018-134T12:00:00.000', selected: false },
+        { name: 'Day2', value: '2018-156T23:00:00.000', selected: false },
+      ]),
+    );
+    epochsState = reducer(
+      epochsState,
+      new AddEpochs([
+        { name: 'DayA', value: '2019-134T12:00:00.000', selected: false },
+        { name: 'DayB', value: '2019-156T23:00:00.000', selected: false },
+      ]),
+    );
+    expect(epochsState).toEqual({
+      ...initialState,
+      epochs: [
+        { name: 'DayA', value: '2019-134T12:00:00.000', selected: false },
+        { name: 'DayB', value: '2019-156T23:00:00.000', selected: false },
+      ],
+      modified: true,
+    });
+  });
+
+  it('handle RemoveEpochs', () => {
+    epochsState = reducer(
+      epochsState,
+      new AddEpochs([
+        { name: 'Day1', value: '2018-134T12:00:00.000', selected: false },
+        { name: 'Day2', value: '2018-156T23:00:00.000', selected: false },
+      ]),
+    );
+    epochsState = reducer(
+      epochsState,
+      new AppendAndReplaceEpochs([
+        { name: 'DayA', value: '2019-134T12:00:00.000', selected: false },
+        { name: 'DayB', value: '2019-156T23:00:00.000', selected: false },
+      ]),
+    );
+    epochsState = reducer(
+      epochsState,
+      new RemoveEpochs([
+        { name: 'Day1', value: '2018-134T12:00:00.000', selected: false },
+        { name: 'DayB', value: '2019-156T23:00:00.000', selected: false },
+      ]),
+    );
+    expect(epochsState).toEqual({
+      ...initialState,
+      epochs: [
+        { name: 'Day2', value: '2018-156T23:00:00.000', selected: false },
+        { name: 'DayA', value: '2019-134T12:00:00.000', selected: false },
+      ],
+      modified: true,
+    });
+  });
+
+  it('handle UpdateEpochData', () => {
+    epochsState = reducer(
+      epochsState,
+      new AddEpochs([
+        { name: 'Day1', value: '2018-134T12:00:00.000', selected: false },
+        { name: 'Day2', value: '2018-156T23:00:00.000', selected: false },
+        { name: 'DayA', value: '2019-134T12:00:00.000', selected: false },
+        { name: 'DayB', value: '2019-156T23:00:00.000', selected: false },
+      ]),
+    );
+    epochsState = reducer(
+      epochsState,
+      new UpdateEpochData(1, {
+        name: 'Epoch1',
+        selected: false,
+        value: '2023-123T12:00:00',
+      }),
+    );
+    expect(epochsState).toEqual({
+      ...initialState,
+      epochs: [
+        { name: 'Day1', value: '2018-134T12:00:00.000', selected: false },
+        { name: 'Epoch1', value: '2023-123T12:00:00', selected: false },
+        { name: 'DayA', value: '2019-134T12:00:00.000', selected: false },
+        { name: 'DayB', value: '2019-156T23:00:00.000', selected: false },
+      ],
+      modified: true,
     });
   });
 });

@@ -25,22 +25,28 @@ import {
   OpenDeleteSourceDialog,
   OpenFileImportDialog,
   OpenFolderDialog,
+  OpenLoadEpochDialog,
   OpenPinDialog,
   OpenRemoveAllBandsDialog,
   OpenRemoveAllGuidesDialog,
+  OpenSaveNewEpochFileDialog,
   OpenSettingsBandDialog,
   OpenShareableLinkDialog,
   OpenStateApplyDialog,
   OpenStateSaveDialog,
   OpenUpdateCurrentStateDialog,
+  OpenUpdateProjectEpochsDialog,
 } from '../actions/dialog.actions';
+import * as epochActions from '../actions/epochs.actions';
 import * as sourceExplorerActions from '../actions/source-explorer.actions';
 import * as timelineActions from '../actions/timeline.actions';
 import { RavenCustomFilterDialogComponent } from '../components/raven-custom-filter-dialog/raven-custom-filter-dialog.component';
 import { RavenCustomGraphDialogComponent } from '../components/raven-custom-graph-dialog/raven-custom-graph-dialog.component';
 import { RavenFileImportDialogComponent } from '../components/raven-file-import-dialog/raven-file-import-dialog.component';
 import { RavenFolderDialogComponent } from '../components/raven-folder-dialog/raven-folder-dialog.component';
+import { RavenLoadEpochDialogComponent } from '../components/raven-load-epoch-dialog/raven-load-epoch-dialog.component';
 import { RavenPinDialogComponent } from '../components/raven-pin-dialog/raven-pin-dialog.component';
+import { RavenSaveNewEpochFileDialogComponent } from '../components/raven-save-new-epoch-file-dialog/raven-save-new-epoch-file-dialog.component';
 import { RavenSettingsBandsDialogComponent } from '../components/raven-settings-bands-dialog/raven-settings-bands-dialog.component';
 import { RavenShareableLinkDialogComponent } from '../components/raven-shareable-link-dialog/raven-shareable-link-dialog.component';
 import { RavenStateSaveDialogComponent } from '../components/raven-state-save-dialog/raven-state-save-dialog.component';
@@ -314,6 +320,37 @@ export class DialogEffects {
   );
 
   /**
+   * Effect for OpenLoadEpochDialog.
+   */
+  @Effect()
+  openLoadEpochDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenLoadEpochDialog>(DialogActionTypes.OpenLoadEpochDialog),
+    exhaustMap(action => {
+      const openLoadEpochDialog = this.dialog.open(
+        RavenLoadEpochDialogComponent,
+        {
+          data: {
+            sourceUrl: action.sourceUrl,
+          },
+          width: '600px',
+        },
+      );
+      return openLoadEpochDialog.afterClosed();
+    }),
+    exhaustMap((result: any) => {
+      if (result && result.replaceAction) {
+        return [
+          new epochActions.FetchEpochs(
+            result.sourceUrl,
+            result.replaceAction,
+          ) as Action,
+        ];
+      }
+      return [];
+    }),
+  );
+
+  /**
    * Effect for OpenPinDialog.
    * NOTE: In this effect we have two separate `PinAdd`, `PinRemove`, and `PinRename` actions for the
    *       timeline and source explorer reducers. This is to keep these reducers as decoupled as possible.
@@ -393,6 +430,36 @@ export class DialogEffects {
     exhaustMap(({ result }) => {
       if (result && result.confirm) {
         return [new timelineActions.RemoveAllGuides()];
+      }
+      return [];
+    }),
+  );
+
+  /**
+   * Effect for OpenSaveNewEpochFileDialog.
+   */
+  @Effect()
+  openSaveNewEpochFileDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenSaveNewEpochFileDialog>(
+      DialogActionTypes.OpenSaveNewEpochFileDialog,
+    ),
+    exhaustMap(() => {
+      const saveNewEpochFileDialog = this.dialog.open(
+        RavenSaveNewEpochFileDialogComponent,
+        {
+          data: {
+            cancelText: 'Cancel',
+          },
+          width: '400px',
+        },
+      );
+      return saveNewEpochFileDialog.afterClosed();
+    }),
+    exhaustMap((result: any) => {
+      if (result && result.filePathName) {
+        return [
+          new epochActions.SaveNewEpochFile(result.filePathName) as Action,
+        ];
       }
       return [];
     }),
@@ -534,6 +601,46 @@ export class DialogEffects {
     exhaustMap(({ result }) => {
       if (result && result.confirm) {
         return of(new sourceExplorerActions.UpdateCurrentState());
+      }
+      return [];
+    }),
+  );
+
+  /**
+   * Effect for OpenUpdateProjectEpochsDialog.
+   */
+  @Effect()
+  openUpdateProjectEpochsDialog$: Observable<Action> = this.actions$.pipe(
+    ofType<OpenUpdateProjectEpochsDialog>(
+      DialogActionTypes.OpenUpdateProjectEpochsDialog,
+    ),
+    withLatestFrom(this.store$),
+    map(([, state]) => state),
+    exhaustMap(state => {
+      let epochPath = '';
+      const match = state.config.mpsServer.epochsUrl.match(
+        new RegExp('.*/(fs|fs-mongodb)/(.*)'),
+      );
+      if (match) {
+        const [, , path] = match;
+        epochPath = path;
+      }
+      const updateProjectEpochDialog = this.dialog.open(
+        NestConfirmDialogComponent,
+        {
+          data: {
+            cancelText: 'No',
+            confirmText: 'Yes',
+            message: `Are you sure you want to update project epochs in repository: ${epochPath}?`,
+          },
+          width: '400px',
+        },
+      );
+      return updateProjectEpochDialog.afterClosed();
+    }),
+    exhaustMap(result => {
+      if (result && result.confirm) {
+        return of(new epochActions.UpdateProjectEpochs());
       }
       return [];
     }),

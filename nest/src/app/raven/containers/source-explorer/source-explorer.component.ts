@@ -24,6 +24,7 @@ import {
   MpsServerWebSocketMessage,
   RavenCustomFilterSource,
   RavenCustomGraphableSource,
+  RavenEpoch,
   RavenFilterSource,
   RavenGraphableFilterSource,
   RavenPin,
@@ -43,6 +44,8 @@ import {
   treeSortedChildIds,
 } from '../../selectors';
 
+import * as epochsSelectors from '../../selectors/epochs.selectors';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-source-explorer',
@@ -50,6 +53,7 @@ import {
   templateUrl: './source-explorer.component.html',
 })
 export class SourceExplorerComponent implements OnDestroy {
+  epochs$: Observable<RavenEpoch[]>;
   filterIsActive$: Observable<boolean>;
   filterState$: Observable<FilterState>;
   filtersByTarget$: Observable<StringTMap<StringTMap<string[]>> | null>;
@@ -60,11 +64,13 @@ export class SourceExplorerComponent implements OnDestroy {
   sourceFilter$: Observable<SourceFilter>;
   tree$: Observable<StringTMap<RavenSource>>;
 
+  epochs: RavenEpoch[];
   tree: StringTMap<RavenSource>;
 
   private ngUnsubscribe: Subject<{}> = new Subject();
 
   constructor(private store: Store<SourceExplorerState>) {
+    this.epochs$ = this.store.pipe(select(epochsSelectors.getEpochs));
     this.filterState$ = this.store.pipe(select(getFilterState));
     this.filtersByTarget$ = this.store.pipe(select(getFiltersByTarget));
     this.metadataDrawerVisible$ = this.store.pipe(
@@ -79,6 +85,10 @@ export class SourceExplorerComponent implements OnDestroy {
     this.filterIsActive$ = this.sourceFilter$.pipe(
       map(x => !SourceFilter.isEmpty(x)),
     );
+
+    this.epochs$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(epochs => (this.epochs = epochs));
 
     this.tree$
       .pipe(takeUntil(this.ngUnsubscribe))
@@ -241,7 +251,13 @@ export class SourceExplorerComponent implements OnDestroy {
    * Event. Called when a `load-epoch` event is caught from the source action menu.
    */
   onLoadEpochs(source: RavenSource): void {
-    this.store.dispatch(new epochsActions.FetchEpochs(source.url));
+    if (this.epochs.length === 0) {
+      this.store.dispatch(
+        new epochsActions.FetchEpochs(source.url, 'AppendAndReplace'),
+      );
+    } else {
+      this.store.dispatch(new dialogActions.OpenLoadEpochDialog(source.url));
+    }
   }
 
   /**

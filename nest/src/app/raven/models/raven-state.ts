@@ -14,12 +14,14 @@ import {
   RavenPin,
   RavenTimeRangeDoy,
 } from './index';
+import { RavenEpoch } from './raven-epoch';
 
 export interface RavenState {
   bands: RavenCompositeBand[];
   expansionByActivityId: StringTMap<string>;
   defaultBandSettings: RavenDefaultBandSettings;
   ignoreShareableLinkTimes: boolean;
+  inUseEpoch: RavenEpoch | null;
   guides: number[];
   maxTimeRange: TimeRange;
   name: string;

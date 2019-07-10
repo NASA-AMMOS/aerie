@@ -10,14 +10,17 @@
 export const ravenEpochs = [
   {
     name: 'dayA',
+    selected: false,
     value: '2023-001T12:00:00.000',
   },
   {
     name: 'dayB',
+    selected: false,
     value: '2024-002T12:00:00.000',
   },
   {
     name: 'dayC',
+    selected: false,
     value: '2025-003T12:00:00.000',
   },
 ];

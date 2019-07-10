@@ -20,6 +20,7 @@ import { AngularSplitModule } from 'angular-split';
 import {
   RavenActivityPointModule,
   RavenBandsModule,
+  RavenCheckboxRendererModule,
   RavenEpochsModule,
   RavenGuideBandModule,
   RavenLayoutApplyModule,
@@ -51,6 +52,7 @@ import { TimelineComponent } from './timeline.component';
     MatSidenavModule,
     RavenActivityPointModule,
     RavenBandsModule,
+    RavenCheckboxRendererModule,
     RavenEpochsModule,
     RavenGuideBandModule,
     RavenKeyByPipeModule,

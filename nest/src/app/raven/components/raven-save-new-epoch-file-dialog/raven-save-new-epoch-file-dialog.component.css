@@ -7,23 +7,20 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { MpsServerEpoch, RavenEpoch } from '../models';
+:host {
+  display: block;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+}
 
-/**
- * Transform an array of MPS Server epochs to Raven epochs.
- */
-export function toRavenEpochs(mpsServerEpochs: MpsServerEpoch[]) {
-  const ravenEpochs: RavenEpoch[] = [];
+.actions {
+  justify-content: center;
+}
 
-  for (let i = 0, l = mpsServerEpochs.length; i < l; ++i) {
-    const serverEpoch: MpsServerEpoch = mpsServerEpochs[i];
+.container {
+  display: flex;
+  flex-direction: column;
+}
 
-    ravenEpochs.push({
-      name: serverEpoch.name,
-      selected: false,
-      value: serverEpoch.value,
-    });
-  }
-
-  return ravenEpochs;
+.container > * {
+  width: 100%;
 }

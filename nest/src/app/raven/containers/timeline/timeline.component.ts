@@ -52,6 +52,7 @@ import * as timeCursorSelectors from '../../selectors/time-cursor.selectors';
 import * as timelineSelectors from '../../selectors/timeline.selectors';
 
 import * as configActions from '../../../shared/actions/config.actions';
+import * as toastActions from '../../../shared/actions/toast.actions';
 import * as dialogActions from '../../actions/dialog.actions';
 import * as epochsActions from '../../actions/epochs.actions';
 import * as layoutActions from '../../actions/layout.actions';
@@ -79,6 +80,7 @@ export class TimelineComponent implements OnDestroy {
   earthSecToEpochSec$: Observable<number>;
   epochs$: Observable<RavenEpoch[]>;
   inUseEpoch$: Observable<RavenEpoch | null>;
+  epochsModified$: Observable<boolean>;
 
   // Layout state.
   mode$: Observable<string>;
@@ -136,6 +138,7 @@ export class TimelineComponent implements OnDestroy {
   hoveredBandId$: Observable<string>;
   lastClickTime$: Observable<number | null>;
   maxTimeRange$: Observable<TimeRange>;
+  projectEpochsUrl$: Observable<string>;
   selectedBandId$: Observable<string>;
   selectedPoint$: Observable<RavenPoint | null>;
   selectedSubBand$: Observable<RavenSubBand | null>;
@@ -166,6 +169,9 @@ export class TimelineComponent implements OnDestroy {
       select(configSelectors.getExcludeActivityTypes),
     );
     this.itarMessage$ = this.store.pipe(select(configSelectors.getItarMessage));
+    this.projectEpochsUrl$ = this.store.pipe(
+      select(configSelectors.getProjectEpochsUrl),
+    );
     this.defaultBandSettings$ = this.store.pipe(
       select(configSelectors.getDefaultBandSettings),
     );
@@ -177,6 +183,9 @@ export class TimelineComponent implements OnDestroy {
     );
     this.epochs$ = this.store.pipe(select(epochsSelectors.getEpochs));
     this.inUseEpoch$ = this.store.pipe(select(epochsSelectors.getInUseEpochs));
+    this.epochsModified$ = this.store.pipe(
+      select(epochsSelectors.getEpochsModified),
+    );
 
     // Layout state.
     this.mode$ = this.store.pipe(select(layoutSelectors.getMode));
@@ -569,6 +578,12 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
+   * Event. Called when a `epochError` event is fired.
+   */
+  onEpochError(message: string): void {
+    this.store.dispatch(new toastActions.ShowToast('warning', message, ''));
+  }
+  /**
    * Event. Called when a `change-time-cursor` event is fired from the raven-time-cursor component.
    */
   onDisplayTimeCursor(show: boolean): void {
@@ -590,7 +605,7 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when a `import-epochs` event is fired from the raven-epochs component.
    */
   onImportEpochs(epochs: RavenEpoch[]) {
-    this.store.dispatch(new epochsActions.AddEpochs(epochs));
+    this.store.dispatch(new epochsActions.AppendAndReplaceEpochs(epochs));
   }
 
   /**
@@ -710,11 +725,37 @@ export class TimelineComponent implements OnDestroy {
     this.store.dispatch(new configActions.UpdateDefaultBandSettings(e.update));
   }
 
+  onAddEpoch(epoch: RavenEpoch): void {
+    this.store.dispatch(new epochsActions.AppendAndReplaceEpochs([epoch]));
+  }
+
+  onRemoveEpochs(epochs: RavenEpoch[]): void {
+    this.store.dispatch(new epochsActions.RemoveEpochs(epochs));
+  }
+
+  onSaveNewEpochFile(): void {
+    this.store.dispatch(new dialogActions.OpenSaveNewEpochFileDialog());
+  }
+
+  onUpdateEpochData(e: any): void {
+    this.store.dispatch(
+      new epochsActions.UpdateEpochData(e.rowIndex, {
+        name: e.name,
+        selected: e.selected,
+        value: e.value,
+      }),
+    );
+  }
+
   /**
    * Event. Called when an `update-epochs` event is fired from the raven-epochs component.
    */
-  onUpdateEpochs(e: RavenUpdate): void {
-    this.store.dispatch(new epochsActions.UpdateEpochs(e.update));
+  onUpdateEpochSetting(e: RavenUpdate): void {
+    this.store.dispatch(new epochsActions.UpdateEpochSetting(e.update));
+  }
+
+  onUpdateProjectEpochs(): void {
+    this.store.dispatch(new dialogActions.OpenUpdateProjectEpochsDialog());
   }
 
   /**

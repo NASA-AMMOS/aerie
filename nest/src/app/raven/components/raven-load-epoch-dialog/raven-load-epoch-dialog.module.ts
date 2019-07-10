@@ -7,31 +7,26 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import {
   MatButtonModule,
-  MatCardModule,
+  MatDialogModule,
   MatFormFieldModule,
   MatInputModule,
 } from '@angular/material';
-import { AgGridModule } from 'ag-grid-angular';
-import { RavenCheckboxRendererModule } from '../raven-checkbox-renderer/raven-checkbox-renderer.module';
-import { RavenEpochsComponent } from './raven-epochs.component';
+import { RavenLoadEpochDialogComponent } from './raven-load-epoch-dialog.component';
 
 @NgModule({
-  declarations: [RavenEpochsComponent],
-  exports: [RavenEpochsComponent],
+  declarations: [RavenLoadEpochDialogComponent],
+  entryComponents: [RavenLoadEpochDialogComponent],
+  exports: [RavenLoadEpochDialogComponent],
   imports: [
-    AgGridModule.withComponents([]),
-    CommonModule,
+    FormsModule,
     MatButtonModule,
-    MatCardModule,
+    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
-    RavenCheckboxRendererModule,
-    ReactiveFormsModule,
   ],
 })
-export class RavenEpochsModule {}
+export class RavenLoadEpochDialogModule {}

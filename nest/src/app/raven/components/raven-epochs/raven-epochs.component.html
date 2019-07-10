@@ -9,11 +9,12 @@
       <input
         matInput
         (keyup)="
-          updateEpochs.emit({ update: { dayCode: $event.target.value } })
+          updateEpochSetting.emit({ update: { dayCode: $event.target.value } })
         "
         [value]="dayCode"
         placeholder="Day Code"
       />
+      <mat-hint>e.g. 'Sol' for Mars or 'D' for Earth day</mat-hint>
     </mat-form-field>
 
     <!-- Earth Sec to Epoch Sec. -->
@@ -21,13 +22,15 @@
       <input
         matInput
         type="number"
-        (keyup)="
-          updateEpochs.emit({
+        min="0"
+        [formControl]="epochSecControl"
+        [value]="earthSecToEpochSec"
+        placeholder="Earth Sec to Epoch Sec"
+        (change)="
+          conditionalUpdateEpochSetting(!epochSecControl.invalid, {
             update: { earthSecToEpochSec: $event.target.valueAsNumber }
           })
         "
-        [value]="earthSecToEpochSec"
-        placeholder="Earth Sec to Epoch Sec"
       />
     </mat-form-field>
 
@@ -39,9 +42,36 @@
       [enableColResize]="true"
       [enableSorting]="true"
       [enableFilter]="true"
-      [rowData]="rowData"
-      (selectionChanged)="onSelectionChanged()"
+      [rowData]="epochs"
+      [rowSelection]="rowSelection"
+      [gridOptions]="gridOptions"
+      (gridReady)="onGridReady($event)"
     >
     </ag-grid-angular>
+
+    <div class="form-control">
+      <button id="add-button" mat-raised-button (click)="onRemoveSelected()">
+        Remove Selected
+      </button>
+      <button id="remove-button" mat-raised-button (click)="onAddRow()">
+        Add
+      </button>
+      <button
+        *ngIf="epochsModified && projectEpochsUrl !== ''"
+        id="save-button"
+        mat-raised-button
+        (click)="updateProjectEpochs.emit()"
+      >
+        Update Project Epochs
+      </button>
+      <button
+        *ngIf="epochsModified && epochs.length > 0"
+        id="save-as-button"
+        mat-raised-button
+        (click)="saveNewEpochFile.emit()"
+      >
+        Save As
+      </button>
+    </div>
   </mat-card-content>
 </mat-card>

@@ -313,12 +313,19 @@
         </mat-icon>
       </button>
       <raven-epochs
-        [epochs]="epochs$ | async"
         [dayCode]="dayCode$ | async"
         [earthSecToEpochSec]="earthSecToEpochSec$ | async"
+        [epochs]="epochs$ | async"
+        [epochsModified]="epochsModified$ | async"
         [inUseEpoch]="inUseEpoch$ | async"
-        (importEpochs)="onImportEpochs($event)"
-        (updateEpochs)="onUpdateEpochs($event)"
+        [projectEpochsUrl]="projectEpochsUrl$ | async"
+        (addEpoch)="onAddEpoch($event)"
+        (epochError)="onEpochError($event)"
+        (removeEpochs)="onRemoveEpochs($event)"
+        (saveNewEpochFile)="onSaveNewEpochFile()"
+        (updateEpochData)="onUpdateEpochData($event)"
+        (updateEpochSetting)="onUpdateEpochSetting($event)"
+        (updateProjectEpochs)="onUpdateProjectEpochs()"
       >
       </raven-epochs>
     </div>

@@ -92,6 +92,7 @@ export class ConfigEffects {
             actions.push(
               new epochsActions.FetchEpochs(
                 `${state.config.app.baseUrl}/${epochUrl}`,
+                'AppendAndReplace',
               ),
             );
           }

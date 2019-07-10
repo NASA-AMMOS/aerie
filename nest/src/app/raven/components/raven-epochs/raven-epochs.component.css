@@ -30,6 +30,13 @@ mat-form-field {
   padding-bottom: 15px;
 }
 
+.form-control {
+  display: grid;
+  grid-gap: 12px;
+  grid-template-columns: min-content min-content min-content min-content;
+  padding-top: 20px;
+}
+
 .import {
   padding-bottom: 12px;
   padding-top: 10px;

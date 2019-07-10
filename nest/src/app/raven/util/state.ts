@@ -45,6 +45,7 @@ export function getRavenState(name: string, state: RavenAppState): RavenState {
     expansionByActivityId: state.raven.timeline.expansionByActivityId,
     guides: state.raven.timeline.guides,
     ignoreShareableLinkTimes: state.config.raven.ignoreShareableLinkTimes,
+    inUseEpoch: state.raven.epochs.inUseEpoch,
     maxTimeRange: state.raven.timeline.maxTimeRange,
     name,
     pins: state.raven.sourceExplorer.pins,

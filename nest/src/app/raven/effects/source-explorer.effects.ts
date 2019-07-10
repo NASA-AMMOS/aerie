@@ -66,6 +66,7 @@ import {
   RavenCustomFilter,
   RavenCustomFilterSource,
   RavenDefaultBandSettings,
+  RavenEpoch,
   RavenFilterSource,
   RavenGraphableFilterSource,
   RavenOpenArgs,
@@ -107,6 +108,7 @@ import {
 import * as configActions from '../../shared/actions/config.actions';
 import * as toastActions from '../../shared/actions/toast.actions';
 import * as dialogActions from '../actions/dialog.actions';
+import * as epochsActions from '../actions/epochs.actions';
 import * as layoutActions from '../actions/layout.actions';
 import * as sourceExplorerActions from '../actions/source-explorer.actions';
 import * as timelineActions from '../actions/timeline.actions';
@@ -1398,6 +1400,7 @@ export class SourceExplorerEffects {
             fetchPending: true,
           }),
         ),
+        ...this.updateInUseEpoch(savedState.inUseEpoch),
         ...this.updatePanels(savedState, state.raven.layout),
         of(
           new timelineActions.UpdateTimeline({
@@ -1957,6 +1960,17 @@ export class SourceExplorerEffects {
       });
     });
 
+    return actions;
+  }
+
+  /**
+   * Helper. Returns an action if inUseEpoch is not null.
+   */
+  updateInUseEpoch(inUseEpoch: RavenEpoch | null) {
+    const actions: Observable<Action>[] = [];
+    if (inUseEpoch) {
+      actions.push(of(new epochsActions.SetInUseEpochByName(inUseEpoch.name)));
+    }
     return actions;
   }
 

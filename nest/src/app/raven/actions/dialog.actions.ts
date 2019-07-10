@@ -23,14 +23,17 @@ export enum DialogActionTypes {
   OpenDeleteSourceDialog = '[dialog] open_delete_source_dialog',
   OpenFileImportDialog = '[dialog] open_file_import_dialog',
   OpenFolderDialog = '[dialog] open_folder_dialog',
+  OpenLoadEpochDialog = '[dialog] open_load_epoch_dialog',
   OpenPinDialog = '[dialog] open_pin_dialog',
   OpenRemoveAllBandsDialog = '[dialog] remove_all_bands_dialog',
   OpenRemoveAllGuidesDialog = '[dialog] remove_all_guides_dialog',
+  OpenSaveNewEpochFileDialog = '[dialog open_save_new_epoch_file_dialog',
   OpenSettingsBandDialog = '[dialog] open_settings_band_dialog',
   OpenShareableLinkDialog = '[dialog] open_shareable_link_dialog',
   OpenStateApplyDialog = '[dialog] open_state_apply_dialog',
   OpenStateSaveDialog = '[dialog] open_state_save_dialog',
-  OpenUpdateCurrentStateDialog = '[dialog open_update_current_state_dialog',
+  OpenUpdateCurrentStateDialog = '[dialog] open_update_current_state_dialog',
+  OpenUpdateProjectEpochsDialog = '[dialog] open_update_project_epochs_dialog',
 }
 
 export class OpenApplyCurrentStateDialog implements Action {
@@ -87,6 +90,12 @@ export class OpenFolderDialog implements Action {
   ) {}
 }
 
+export class OpenLoadEpochDialog implements Action {
+  readonly type = DialogActionTypes.OpenLoadEpochDialog;
+
+  constructor(public sourceUrl: string) {}
+}
+
 export class OpenPinDialog implements Action {
   readonly type = DialogActionTypes.OpenPinDialog;
 
@@ -107,6 +116,10 @@ export class OpenRemoveAllGuidesDialog implements Action {
   readonly type = DialogActionTypes.OpenRemoveAllGuidesDialog;
 
   constructor(public width: string) {}
+}
+
+export class OpenSaveNewEpochFileDialog implements Action {
+  readonly type = DialogActionTypes.OpenSaveNewEpochFileDialog;
 }
 
 export class OpenSettingsBandDialog implements Action {
@@ -141,6 +154,10 @@ export class OpenUpdateCurrentStateDialog implements Action {
   readonly type = DialogActionTypes.OpenUpdateCurrentStateDialog;
 }
 
+export class OpenUpdateProjectEpochsDialog implements Action {
+  readonly type = DialogActionTypes.OpenUpdateProjectEpochsDialog;
+}
+
 export type DialogAction =
   | OpenApplyCurrentStateDialog
   | OpenConfirmDialog
@@ -150,11 +167,14 @@ export type DialogAction =
   | OpenDeleteSourceDialog
   | OpenFileImportDialog
   | OpenFolderDialog
+  | OpenLoadEpochDialog
   | OpenPinDialog
   | OpenRemoveAllBandsDialog
   | OpenRemoveAllGuidesDialog
+  | OpenSaveNewEpochFileDialog
   | OpenSettingsBandDialog
   | OpenShareableLinkDialog
   | OpenStateApplyDialog
   | OpenStateSaveDialog
-  | OpenUpdateCurrentStateDialog;
+  | OpenUpdateCurrentStateDialog
+  | OpenUpdateProjectEpochsDialog;

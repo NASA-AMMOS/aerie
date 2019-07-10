@@ -13,8 +13,16 @@ import { RavenEpoch } from '../models';
 
 export enum EpochsActionTypes {
   AddEpochs = '[epochs] add_epochs',
+  AppendAndReplaceEpochs = '[epochs] append_and_replace_epochs',
   FetchEpochs = '[epochs] fetch_epochs',
-  UpdateEpochs = '[epochs] update_epochs',
+  RemoveEpochs = '[epochs] remove_epochs',
+  SaveNewEpochFile = '[epochs] save_new_epoch_file',
+  SaveNewEpochFileSuccess = '[epochs] save_new_epoch_file_success',
+  SetInUseEpochByName = '[epochs] set_in_use_epoch_by_name',
+  UpdateEpochData = '[epochs] update_epoch_data',
+  UpdateEpochSetting = '[epochs] update_epoch_setting',
+  UpdateProjectEpochs = '[epochs] update_project_epochs',
+  UpdateProjectEpochsSuccess = '[epochs] update_project_epochs_success',
 }
 
 export class AddEpochs implements Action {
@@ -23,16 +31,69 @@ export class AddEpochs implements Action {
   constructor(public epochs: RavenEpoch[]) {}
 }
 
+export class AppendAndReplaceEpochs implements Action {
+  readonly type = EpochsActionTypes.AppendAndReplaceEpochs;
+
+  constructor(public epochs: RavenEpoch[]) {}
+}
+
 export class FetchEpochs implements Action {
   readonly type = EpochsActionTypes.FetchEpochs;
 
-  constructor(public url: string) {}
+  constructor(public url: string, public replaceAction: string) {}
 }
 
-export class UpdateEpochs implements Action {
-  readonly type = EpochsActionTypes.UpdateEpochs;
+export class RemoveEpochs implements Action {
+  readonly type = EpochsActionTypes.RemoveEpochs;
+
+  constructor(public epochs: RavenEpoch[]) {}
+}
+
+export class SaveNewEpochFile implements Action {
+  readonly type = EpochsActionTypes.SaveNewEpochFile;
+
+  constructor(public filePathName: string) {}
+}
+
+export class SaveNewEpochFileSuccess implements Action {
+  readonly type = EpochsActionTypes.SaveNewEpochFileSuccess;
+}
+
+export class SetInUseEpochByName implements Action {
+  readonly type = EpochsActionTypes.SetInUseEpochByName;
+
+  constructor(public epochName: string) {}
+}
+
+export class UpdateEpochData implements Action {
+  readonly type = EpochsActionTypes.UpdateEpochData;
+
+  constructor(public index: number, public data: RavenEpoch) {}
+}
+
+export class UpdateEpochSetting implements Action {
+  readonly type = EpochsActionTypes.UpdateEpochSetting;
 
   constructor(public update: StringTMap<BaseType>) {}
 }
 
-export type EpochsAction = AddEpochs | FetchEpochs | UpdateEpochs;
+export class UpdateProjectEpochs implements Action {
+  readonly type = EpochsActionTypes.UpdateProjectEpochs;
+}
+
+export class UpdateProjectEpochsSuccess implements Action {
+  readonly type = EpochsActionTypes.UpdateProjectEpochsSuccess;
+}
+
+export type EpochsAction =
+  | AddEpochs
+  | AppendAndReplaceEpochs
+  | FetchEpochs
+  | RemoveEpochs
+  | SaveNewEpochFile
+  | SaveNewEpochFileSuccess
+  | SetInUseEpochByName
+  | UpdateEpochData
+  | UpdateEpochSetting
+  | UpdateProjectEpochs
+  | UpdateProjectEpochsSuccess;

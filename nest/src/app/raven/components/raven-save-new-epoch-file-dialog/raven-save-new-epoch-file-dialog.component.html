@@ -1,0 +1,21 @@
+<div mat-dialog-content>
+  <div>
+    <label>New Epoch File</label>
+  </div>
+  <div class="container">
+    <mat-form-field>
+      <input
+        matInput
+        [(ngModel)]="filePathName"
+        placeholder="Epoch File Path Name"
+      />
+    </mat-form-field>
+  </div>
+</div>
+
+<div class="container">
+  <div class="actions" mat-dialog-actions>
+    <button mat-button (click)="onCancel()">Cancel</button>
+    <button mat-button (click)="onSaveNewEpochFile()">OK</button>
+  </div>
+</div>

@@ -44,6 +44,7 @@ export * from './raven-custom-graphable-source';
 export * from './raven-default-band-settings';
 export * from './raven-divider-band';
 export * from './raven-epoch-time';
+export * from './raven-epoch-update';
 export * from './raven-epoch';
 export * from './raven-expandable-source';
 export * from './raven-file-metadata';
