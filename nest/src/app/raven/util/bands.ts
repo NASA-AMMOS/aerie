@@ -314,7 +314,7 @@ export function toResourceBand(
     heightPadding: 10,
     icon: defaultBandSettings.icon,
     id: uniqueId(),
-    interpolation: 'linear',
+    interpolation: metadata.hasInterpolatorType || 'linear',
     isDuration: metadata.hasValueType.toLowerCase() === 'duration',
     isTime: metadata.hasValueType.toLowerCase() === 'time',
     label: metadata.hasObjectName,
