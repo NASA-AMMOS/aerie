@@ -37,7 +37,7 @@ import {
   PinRename,
   RemoveAllBands,
   ResetViewTimeRange,
-  UpdateFile,
+  UpdateCsvFile,
   UpdateViewTimeRange,
   ZoomInViewTimeRange,
   ZoomOutViewTimeRange,
@@ -142,7 +142,7 @@ export class TimelineEffects {
 
   @Effect()
   updateFile$: Observable<Action> = this.actions$.pipe(
-    ofType<UpdateFile>(TimelineActionTypes.UpdateFile),
+    ofType<UpdateCsvFile>(TimelineActionTypes.UpdateCsvFile),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     concatMap(({ action, state }) =>
@@ -424,7 +424,7 @@ export class TimelineEffects {
           this.http.delete(url, { responseType: 'text' }).pipe(
             concatMap(() => {
               return of(
-                new timelineActions.UpdateFileSuccess(),
+                new timelineActions.UpdateCsvFileSuccess(),
                 new timelineActions.UpdateSubBand(
                   selectedBandId,
                   selectedSubBandId,
@@ -496,7 +496,7 @@ export class TimelineEffects {
                       point.id,
                       { id: ids[0]['_id']['$oid'], pointStatus: 'unchanged' },
                     ),
-                    new timelineActions.UpdateFileSuccess(),
+                    new timelineActions.UpdateCsvFileSuccess(),
                     new timelineActions.UpdateSubBand(
                       selectedBandId,
                       selectedSubBandId,
@@ -525,7 +525,7 @@ export class TimelineEffects {
               .pipe(
                 concatMap(() => {
                   return of(
-                    new timelineActions.UpdateFileSuccess(),
+                    new timelineActions.UpdateCsvFileSuccess(),
                     new timelineActions.UpdatePointInSubBand(
                       selectedBandId,
                       selectedSubBandId,

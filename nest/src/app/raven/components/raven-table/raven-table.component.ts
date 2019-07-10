@@ -329,19 +329,6 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
               point.editable && this.colEditable(prop)
                 ? function(params: any) {
                     const times = ['start', 'end'];
-                    console.log(
-                      'params.node.data: ' + JSON.stringify(params.node.data),
-                    );
-                    console.log(
-                      'params.column.id: ' +
-                        JSON.stringify(params.column.getId()),
-                    );
-                    console.log(
-                      'params.node.rowIndex: ' + params.node.rowIndex,
-                    );
-                    console.log(
-                      'params.newValue: ' + JSON.stringify(params.newValue),
-                    );
                     const value = params.newValue;
                     updatePoint.emit({
                       bandId,
@@ -622,19 +609,37 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
     let newPoint: RavenPoint;
     if (this.selectedSubBand.type === 'activity') {
       newPoint = {
-        duration: null,
+        activityId: 'newAct',
+        activityName: 'newAct',
+        activityParameters: [],
+        activityType: '',
+        ancestors: [],
+        arguments: 0,
+        childrenUrl: '',
+        color: '#4287f5',
+        descendantsUrl: '',
+        duration: 0,
         editable: true,
+        end: 0,
+        endTimestamp: '',
+        expandedFromPointId: '',
+        expansion: '',
+        hidden: false,
         id: 'newFromEdit',
         isDuration: false,
         isTime: false,
+        keywordLine: '',
+        legend: '',
+        message: '',
+        metadata: [],
         pointStatus: 'added',
         selected: false,
         sourceId: this.points[0].sourceId,
         start: 0,
+        startTimestamp: '',
         subBandId: this.selectedSubBand.id,
         type: 'resource',
         uniqueId: uniqueId(),
-        value: 0,
       };
     } else {
       newPoint = {

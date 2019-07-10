@@ -53,8 +53,8 @@ export enum TimelineActionTypes {
   ToggleGuide = '[timeline] toggle_guide',
   UpdateAllActivityBandFilter = '[timeline] update-all-activity-band-filter',
   UpdateBand = '[timeline] update_band',
-  UpdateFile = '[timeline] update_file',
-  UpdateFileSuccess = '[timeline] update_file_success',
+  UpdateCsvFile = '[timeline] update_csv_file',
+  UpdateCsvFileSuccess = '[timeline] update_csv_file_success',
   UpdateLastClickTime = '[timeline] last_click_time',
   UpdatePointInSubBand = '[timeline] update_point_in_sub_band]',
   UpdateSubBand = '[timeline] update_sub_band',
@@ -287,8 +287,8 @@ export class UpdateBand implements Action {
   constructor(public bandId: string, public update: StringTMap<BaseType>) {}
 }
 
-export class UpdateFile implements Action {
-  readonly type = TimelineActionTypes.UpdateFile;
+export class UpdateCsvFile implements Action {
+  readonly type = TimelineActionTypes.UpdateCsvFile;
 
   constructor(
     public selectedBandId: string,
@@ -299,8 +299,8 @@ export class UpdateFile implements Action {
   ) {}
 }
 
-export class UpdateFileSuccess implements Action {
-  readonly type = TimelineActionTypes.UpdateFileSuccess;
+export class UpdateCsvFileSuccess implements Action {
+  readonly type = TimelineActionTypes.UpdateCsvFileSuccess;
 }
 
 export class UpdateLastClickTime implements Action {
@@ -383,7 +383,6 @@ export type TimelineAction =
   | RemoveSourceIdFromSubBands
   | RemoveSubBand
   | ResetViewTimeRange
-  | UpdateFile
   | SelectBand
   | SelectPoint
   | SetCompositeYLabelDefault
@@ -393,6 +392,8 @@ export type TimelineAction =
   | ToggleGuide
   | UpdateAllActivityBandFilter
   | UpdateBand
+  | UpdateCsvFile
+  | UpdateCsvFileSuccess
   | UpdateLastClickTime
   | UpdatePointInSubBand
   | UpdateSubBand

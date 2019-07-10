@@ -46,7 +46,7 @@ mat-card {
   color: red;
 }
 
-.two-column-container {
+.flex-container {
   display: flex;
   height: 90%;
 }

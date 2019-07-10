@@ -669,7 +669,7 @@ export class TimelineComponent implements OnDestroy {
 
       console.log('sourceUrl: ' + source.url);
       this.store.dispatch(
-        new timelineActions.UpdateFile(
+        new timelineActions.UpdateCsvFile(
           this.selectedBandId,
           this.selectedSubBandId,
           this.selectedSubBand.sourceIds[0],
