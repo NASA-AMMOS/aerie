@@ -1267,29 +1267,34 @@ export class SourceExplorerEffects {
     pageDuration: string,
   ) {
     const source = treeBySourceId[sourceId];
-    return this.http
-      .get<MpsServerGraphData>(
-        getFormattedSourceUrl(
-          treeBySourceId,
-          source,
-          customFilter,
-          situAware,
-          startTime,
-          pageDuration,
-        ),
-      )
-      .pipe(
-        map((graphData: MpsServerGraphData) =>
-          toRavenBandData(
-            sourceId,
-            source.name,
-            graphData,
-            defaultBandSettings,
-            customFilter,
+    const graphables = ['graphableFilter', 'customFilter', 'customGraphable'];
+    if (source.openable || graphables.includes(source.type)) {
+      return this.http
+        .get<MpsServerGraphData>(
+          getFormattedSourceUrl(
             treeBySourceId,
+            source,
+            customFilter,
+            situAware,
+            startTime,
+            pageDuration,
           ),
-        ),
-      );
+        )
+        .pipe(
+          map((graphData: MpsServerGraphData) =>
+            toRavenBandData(
+              sourceId,
+              source.name,
+              graphData,
+              defaultBandSettings,
+              customFilter,
+              treeBySourceId,
+            ),
+          ),
+        );
+    } else {
+      return of([]);
+    }
   }
 
   /**
