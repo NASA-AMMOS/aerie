@@ -607,10 +607,13 @@ describe('timeline reducer', () => {
       timelineState,
       new RemovePointsInSubBand(band.id, '2', [activityPoint]),
     );
-    expect(timelineState.bands[0].subBands[0].points[0].pointStatus).toEqual('deleted');
-    expect(timelineState.bands[0].subBands[0].points[1].pointStatus).toEqual('unchanged');
+    expect(timelineState.bands[0].subBands[0].points[0].pointStatus).toEqual(
+      'deleted',
+    );
+    expect(timelineState.bands[0].subBands[0].points[1].pointStatus).toEqual(
+      'unchanged',
+    );
   });
-
 
   it('handle RemoveSourceIdFromSubBands', () => {
     const source: RavenSource = grandChildSource;
