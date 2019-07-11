@@ -20,6 +20,7 @@ import {
   RemoveBandsOrPointsForSource,
   RemoveBandsWithNoPoints,
   RemoveChildrenOrDescendants,
+  RemovePointsInSubBand,
   RemoveSourceIdFromSubBands,
   RemoveSubBand,
   ResetViewTimeRange,
@@ -577,6 +578,40 @@ describe('timeline reducer', () => {
     expect(timelineState.bands[0].subBands[0].points).toEqual([activityPoint]);
   });
 
+  it('handle RemovePointsInSubBand', () => {
+    const source: RavenSource = rootSource;
+    const band = {
+      ...compositeBand,
+      id: '1',
+      subBands: [
+        {
+          ...activityBand,
+          id: '2',
+          parentUniqueId: '1',
+          points: [
+            {
+              ...activityPoint,
+            },
+            {
+              ...activityPoint,
+              id: 'abc',
+              uniqueId: '_abc',
+            },
+          ],
+        },
+      ],
+    };
+
+    timelineState = reducer(timelineState, new AddBand(source.id, band));
+    timelineState = reducer(
+      timelineState,
+      new RemovePointsInSubBand(band.id, '2', [activityPoint]),
+    );
+    expect(timelineState.bands[0].subBands[0].points[0].pointStatus).toEqual('deleted');
+    expect(timelineState.bands[0].subBands[0].points[1].pointStatus).toEqual('unchanged');
+  });
+
+
   it('handle RemoveSourceIdFromSubBands', () => {
     const source: RavenSource = grandChildSource;
     const band = {
@@ -882,9 +917,37 @@ describe('timeline reducer', () => {
     timelineState = reducer(timelineState, new AddBand(source.id, band));
     timelineState = reducer(
       timelineState,
-      new UpdatePointInSubBand(source.id, band.id, '123', { start: 67890 }),
+      new UpdatePointInSubBand(band.id, '2', '123', { start: 67890 }),
     );
     expect(timelineState.bands[0].subBands[0].points[0].start).toEqual(67890);
+  });
+
+  it('handle UpdatePointInSubBand', () => {
+    const source: RavenSource = rootSource;
+    const band = {
+      ...compositeBand,
+      id: '1',
+      subBands: [
+        {
+          ...activityBand,
+          id: '2',
+          parentUniqueId: '1',
+          points: [
+            {
+              ...activityPoint,
+              id: '123',
+            },
+          ],
+        },
+      ],
+    };
+
+    timelineState = reducer(timelineState, new AddBand(source.id, band));
+    timelineState = reducer(
+      timelineState,
+      new UpdatePointInSubBand(band.id, '2', '123', { end: 67890 }),
+    );
+    expect(timelineState.bands[0].subBands[0].points[0].end).toEqual(67890);
   });
 
   it('handle UpdateBand', () => {
