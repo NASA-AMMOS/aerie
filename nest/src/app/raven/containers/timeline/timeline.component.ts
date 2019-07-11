@@ -650,8 +650,6 @@ export class TimelineComponent implements OnDestroy {
 
   onSave() {
     if (this.selectedSubBand) {
-      console.log('sourceId: ' + this.selectedSubBand.sourceIds[0]);
-      // console.log('points: ' + JSON.stringify(this.selectedSubBand.points));
       const source = this.treeBySourceId[this.selectedSubBand.sourceIds[0]];
       const headerMap = {};
 
@@ -660,14 +658,11 @@ export class TimelineComponent implements OnDestroy {
       const mapString = url.match(new RegExp('.*map=\\((.*)\\)&'));
       if (mapString) {
         const [, mapStr] = mapString;
-        console.log('mapStr: ' + mapStr);
         mapStr.split(',').forEach(keyValue => {
           const kv = keyValue.split('=');
           headerMap[kv[0]] = kv[1];
         });
       }
-
-      console.log('sourceUrl: ' + source.url);
       this.store.dispatch(
         new timelineActions.UpdateCsvFile(
           this.selectedBandId,

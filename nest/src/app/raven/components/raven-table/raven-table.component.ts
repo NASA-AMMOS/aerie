@@ -23,7 +23,6 @@ import { AgGridAngular } from 'ag-grid-angular';
 import { AgGridEvent, IDatasource, RowNode } from 'ag-grid-community';
 import pickBy from 'lodash-es/pickBy';
 import startsWith from 'lodash-es/startsWith';
-
 import uniqueId from 'lodash-es/uniqueId';
 
 import {
@@ -81,7 +80,7 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
   >();
 
   @Output()
-  save: EventEmitter<any> = new EventEmitter<any>();
+  save: EventEmitter<null> = new EventEmitter<null>();
 
   @Output()
   updateFilter: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
@@ -290,9 +289,9 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
         if (
           typeof point[prop] !== 'object' &&
           !startsWith(prop, '__') &&
+          !(prop === 'end' && this.selectedSubBand.type !== 'activity') &&
           prop !== 'activityId' &&
           prop !== 'activityParameters' &&
-          !(prop === 'end' && this.selectedSubBand.type !== 'activity') &&
           prop !== 'ancestors' &&
           prop !== 'childrenUrl' &&
           prop !== 'color' &&
@@ -349,7 +348,7 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
                     });
 
                     // Recalculate duration when either start or end changed.
-                    if (params.node.data.end) {
+                    if (['start', 'end'].includes(params.column.getId()) && params.node.data.duration !== undefined) {
                       updatePoint.emit({
                         bandId,
                         pointId: params.node.data.id,
@@ -379,6 +378,9 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
     ];
   }
 
+  /**
+   * Helper. Return if column is editable.
+   */
   colEditable(prop: string): boolean {
     return ['activityName', 'start', 'end', 'value'].includes(prop);
   }

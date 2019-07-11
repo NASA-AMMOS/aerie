@@ -141,13 +141,13 @@ export class TimelineEffects {
   );
 
   @Effect()
-  updateFile$: Observable<Action> = this.actions$.pipe(
+  updateCsvFile$: Observable<Action> = this.actions$.pipe(
     ofType<UpdateCsvFile>(TimelineActionTypes.UpdateCsvFile),
     withLatestFrom(this.store$),
     map(([action, state]) => ({ action, state })),
     concatMap(({ action, state }) =>
       concat(
-        ...this.updateFile(
+        ...this.updateCsvFile(
           state,
           action.selectedBandId,
           action.selectedSubBandId,
@@ -400,7 +400,7 @@ export class TimelineEffects {
     return actions;
   }
 
-  updateFile(
+  updateCsvFile(
     state: RavenAppState,
     selectedBandId: string,
     selectedSubBandId: string,
@@ -447,7 +447,7 @@ export class TimelineEffects {
         point.pointStatus === 'updated' ||
         point.pointStatus === 'added'
       ) {
-        // map point data to what the server need
+        // Map point data to what the server need.
         const serverData =
           point.type === 'activity'
             ? {
@@ -464,14 +464,14 @@ export class TimelineEffects {
                 ),
                 'Data Value': (point as RavenResourcePoint).value,
               };
+
+        // Map to Csv data.
         let data: string;
         if (Object.keys(headerMap).length > 0) {
-          console.log('HeaderMap: ' + JSON.stringify(headerMap));
           const mappedData = {};
           Object.keys(headerMap).forEach(
             key => (mappedData[headerMap[key]] = serverData[key]),
           );
-          console.log('mappedData: ' + JSON.stringify(mappedData));
           data = JSON.stringify(mappedData);
         } else {
           data = JSON.stringify(serverData);
@@ -487,8 +487,6 @@ export class TimelineEffects {
               .pipe(
                 map((idstr: any) => JSON.parse(idstr)),
                 concatMap((ids: MpsServerDocumentId[]) => {
-                  console.log('id: ' + JSON.stringify(ids[0]['_id']['$oid']));
-                  // new timelineActions.UpdatePointInSubBand(selectedBandId, selectedSubBandId, point.id, { id: ids[0]['_id']['$oid'] });
                   return of(
                     new timelineActions.UpdatePointInSubBand(
                       selectedBandId,
@@ -508,7 +506,7 @@ export class TimelineEffects {
                   return [
                     new toastActions.ShowToast(
                       'warning',
-                      'Failed To Update File',
+                      'Failed To Update CSV File',
                       '',
                     ),
                   ];
@@ -543,7 +541,7 @@ export class TimelineEffects {
                   return [
                     new toastActions.ShowToast(
                       'warning',
-                      'Failed To Update File',
+                      'Failed To Update CSV File',
                       '',
                     ),
                   ];
