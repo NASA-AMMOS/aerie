@@ -348,7 +348,10 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
                     });
 
                     // Recalculate duration when either start or end changed.
-                    if (['start', 'end'].includes(params.column.getId()) && params.node.data.duration !== undefined) {
+                    if (
+                      ['start', 'end'].includes(params.column.getId()) &&
+                      params.node.data.duration !== undefined
+                    ) {
                       updatePoint.emit({
                         bandId,
                         pointId: params.node.data.id,

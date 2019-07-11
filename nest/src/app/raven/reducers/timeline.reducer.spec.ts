@@ -31,6 +31,7 @@ import {
   ToggleGuide,
   UpdateBand,
   UpdateLastClickTime,
+  UpdatePointInSubBand,
   UpdateSubBand,
   UpdateSubBandTimeDelta,
   UpdateTimeline,
@@ -856,6 +857,31 @@ describe('timeline reducer', () => {
         },
       ],
     });
+  });
+
+  it('handle UpdatePointInSubBand', () => {
+    const source: RavenSource = rootSource;
+    const band = {
+      ...compositeBand,
+      id: '1',
+      subBands: [
+        {
+          ...activityBand,
+          id: '2',
+          parentUniqueId: '1',
+          points: [
+            {
+              ...activityPoint,
+              id: '123',
+            },
+          ],
+        },
+      ],
+    };
+
+    timelineState = reducer(timelineState, new AddBand(source.id, band));
+    timelineState = reducer(timelineState, new UpdatePointInSubBand(source.id, band.id, '123', {start: 67890}));
+    expect(timelineState.bands[0].subBands[0].points[0].start).toEqual(67890);
   });
 
   it('handle UpdateBand', () => {
