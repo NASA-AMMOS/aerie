@@ -328,14 +328,14 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
             valueSetter:
               point.editable && this.colEditable(prop)
                 ? (params: ValueSetterParams) => {
-                    const times = ['start', 'end'];
+                    const timeIds = ['start', 'end'];
                     const value = params.newValue;
                     updatePoint.emit({
                       bandId,
                       pointId: params.node.data.id,
                       subBandId,
                       update: {
-                        [params.column.getId()]: times.includes(
+                        [params.column.getId()]: timeIds.includes(
                           params.column.getId(),
                         )
                           ? utc(value)
@@ -349,7 +349,7 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
 
                     // Recalculate duration when either start or end changed.
                     if (
-                      ['start', 'end'].includes(params.column.getId()) &&
+                      timeIds.includes(params.column.getId()) &&
                       params.node.data.duration !== undefined
                     ) {
                       updatePoint.emit({

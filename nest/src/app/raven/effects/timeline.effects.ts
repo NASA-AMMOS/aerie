@@ -443,10 +443,7 @@ export class TimelineEffects {
             }),
           ),
         );
-      } else if (
-        point.pointStatus === 'updated' ||
-        point.pointStatus === 'added'
-      ) {
+      } else if (point.pointStatus !== 'unchanged') {
         // Map point data back to what the server sent to Raven.
         const serverData =
           point.type === 'activity'

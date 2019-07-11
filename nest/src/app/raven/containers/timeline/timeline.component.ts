@@ -627,6 +627,9 @@ export class TimelineComponent implements OnDestroy {
     this.store.dispatch(new epochsActions.AppendAndReplaceEpochs(epochs));
   }
 
+  /**
+   * Event. Called when a `AddPointToSubBand' event is fired from the raven-table component.
+   */
   onAddPointToSubBand(point: RavenPoint) {
     this.store.dispatch(
       new timelineActions.AddPointsToSubBand(
@@ -638,6 +641,9 @@ export class TimelineComponent implements OnDestroy {
     );
   }
 
+  /**
+   * Event. Called when a `RemovePointsInSubBand' event is fired from the raven-table component.
+   */
   onRemovePointsInSubBand(removePoints: RavenPoint[]) {
     this.store.dispatch(
       new timelineActions.RemovePointsInSubBand(
@@ -648,11 +654,15 @@ export class TimelineComponent implements OnDestroy {
     );
   }
 
+  /**
+   * Event. Called when a `Save' event is fired from the raven-table component.
+   */
   onSave() {
     if (this.selectedSubBand) {
       const source = this.treeBySourceId[this.selectedSubBand.sourceIds[0]];
       const csvHeaderMap = {};
 
+      // Get the mapping data from the sourceUrl.
       let url = decodeURIComponent(source.url);
       url = url.replace(/[+]/g, ' ');
       const mapString = url.match(new RegExp('.*map=\\((.*)\\)&'));
@@ -814,6 +824,9 @@ export class TimelineComponent implements OnDestroy {
     );
   }
 
+  /**
+   * Event. Called when a `UpdatePoint' event is fired from the raven-table component.
+   */
   onUpdatePoint(e: RavenPointUpdate) {
     this.store.dispatch(
       new timelineActions.UpdatePointInSubBand(
