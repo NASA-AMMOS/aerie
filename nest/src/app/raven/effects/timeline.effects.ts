@@ -425,10 +425,10 @@ export class TimelineEffects {
             concatMap(() => {
               return of(
                 new timelineActions.UpdateCsvFileSuccess(),
-                new timelineActions.UpdateSubBand(
+                new timelineActions.RemovePointsInSubBand(
                   selectedBandId,
                   selectedSubBandId,
-                  { pointsChanged: false },
+                  [point],
                 ),
               );
             }),
@@ -492,11 +492,6 @@ export class TimelineEffects {
                       { id: ids[0]['_id']['$oid'], pointStatus: 'unchanged' },
                     ),
                     new timelineActions.UpdateCsvFileSuccess(),
-                    new timelineActions.UpdateSubBand(
-                      selectedBandId,
-                      selectedSubBandId,
-                      { pointsChanged: false },
-                    ),
                   );
                 }),
                 catchError((e: Error) => {
@@ -527,11 +522,6 @@ export class TimelineEffects {
                       point.id,
                       { pointStatus: 'unchanged' },
                     ),
-                    new timelineActions.UpdateSubBand(
-                      selectedBandId,
-                      selectedSubBandId,
-                      { pointsChanged: false },
-                    ),
                   );
                 }),
                 catchError((e: Error) => {
@@ -548,6 +538,11 @@ export class TimelineEffects {
         }
       }
     });
+    actions.push(of(new timelineActions.UpdateSubBand(
+      selectedBandId,
+      selectedSubBandId,
+      { pointsChanged: false },
+    )));
     return actions;
   }
 

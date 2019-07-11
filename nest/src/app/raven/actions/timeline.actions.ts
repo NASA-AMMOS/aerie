@@ -29,6 +29,7 @@ export enum TimelineActionTypes {
   FetchChildrenOrDescendantsSuccess = '[timeline] fetch_children_or_descendants_success',
   FilterActivityInSubBand = '[timeline] filter_activity_in_sub_band',
   HoverBand = '[timeline] hover_band',
+  MarkRemovePointsInSubBand = '[timeline] mark_remove_points_in_sub_band',
   PanLeftViewTimeRange = '[timeline] pan_left_view_time_range',
   PanRightViewTimeRange = '[timeline] pan_right_view_time_range',
   PinAdd = '[timeline] pin_add',
@@ -137,6 +138,16 @@ export class HoverBand implements Action {
   readonly type = TimelineActionTypes.HoverBand;
 
   constructor(public bandId: string) {}
+}
+
+export class MarkRemovePointsInSubBand implements Action {
+  readonly type = TimelineActionTypes.MarkRemovePointsInSubBand;
+
+  constructor(
+    public bandId: string,
+    public subBandId: string,
+    public points: RavenPoint[],
+  ) {}
 }
 
 export class PanLeftViewTimeRange implements Action {
@@ -368,6 +379,7 @@ export type TimelineAction =
   | FetchChildrenOrDescendants
   | FilterActivityInSubBand
   | HoverBand
+  | MarkRemovePointsInSubBand
   | PanLeftViewTimeRange
   | PanRightViewTimeRange
   | PinAdd

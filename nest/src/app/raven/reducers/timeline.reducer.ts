@@ -18,6 +18,7 @@ import {
   ExpandChildrenOrDescendants,
   FilterActivityInSubBand,
   HoverBand,
+  MarkRemovePointsInSubBand,
   RemoveAllPointsInSubBandWithParentSource,
   RemoveBandsOrPointsForSource,
   RemoveBandsWithNoPoints,
@@ -122,6 +123,8 @@ export function reducer(
       return filterActivityInSubBand(state, action);
     case TimelineActionTypes.HoverBand:
       return hoverBand(state, action);
+    case TimelineActionTypes.MarkRemovePointsInSubBand:
+      return markRemovePointsInSubBand(state, action);
     case TimelineActionTypes.PanLeftViewTimeRange:
       return panLeftViewTimeRange(state);
     case TimelineActionTypes.PanRightViewTimeRange:
@@ -422,6 +425,47 @@ export function filterActivityInSubBand(
 }
 
 /**
+ * Reduction Helper. Called when reducing the 'MarkRemovePointsInSubBands' action.
+ */
+export function markRemovePointsInSubBand(
+  state: TimelineState,
+  action: MarkRemovePointsInSubBand,
+): TimelineState {
+  const bands = state.bands.map((band: RavenCompositeBand) => {
+    const deletePoints = action.points.map(deletePoint => deletePoint.uniqueId);
+    if (action.bandId === band.id) {
+      return {
+        ...band,
+        subBands: band.subBands.map(subBand => {
+          if (action.subBandId === subBand.id) {
+            return {
+              ...subBand,
+              points: (subBand as any).points.map((point: RavenActivityPoint) =>
+                deletePoints.includes(point.uniqueId)
+                  ? { ...point, pointStatus: 'deleted' }
+                  : point,
+              ),
+              pointsChanged: true,
+            };
+          }
+
+          return subBand;
+        }),
+      };
+    }
+
+    return band;
+  });
+
+  return {
+    ...state,
+    bands,
+    currentStateChanged: state.currentState !== null,
+    ...updateTimeRanges(bands, state.viewTimeRange),
+  };
+}
+
+/**
  * Reduction Helper. Called when reducing the 'PanLeftViewTimeRange' action.
  */
 export function panLeftViewTimeRange(state: TimelineState): TimelineState {
@@ -639,6 +683,9 @@ export function removeChildrenOrDescendants(
   };
 }
 
+/**
+ * Reduction Helper. Called when reducing the 'RemovePointsInSubBands' action.
+ */
 export function removePointsInSubBand(
   state: TimelineState,
   action: RemovePointsInSubBand,
@@ -652,10 +699,9 @@ export function removePointsInSubBand(
           if (action.subBandId === subBand.id) {
             return {
               ...subBand,
-              points: (subBand as any).points.map((point: RavenActivityPoint) =>
-                deletePoints.includes(point.uniqueId)
-                  ? { ...point, pointStatus: 'deleted' }
-                  : point,
+              points: (subBand as any).points.filter(
+                (point: RavenActivityPoint) =>
+                  !deletePoints.includes(point.uniqueId),
               ),
               pointsChanged: true,
             };

@@ -646,7 +646,7 @@ export class TimelineComponent implements OnDestroy {
    */
   onRemovePointsInSubBand(removePoints: RavenPoint[]) {
     this.store.dispatch(
-      new timelineActions.RemovePointsInSubBand(
+      new timelineActions.MarkRemovePointsInSubBand(
         this.selectedBandId,
         this.selectedSubBandId,
         removePoints,

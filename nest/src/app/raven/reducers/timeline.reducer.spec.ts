@@ -12,6 +12,7 @@ import {
   AddPointsToSubBand,
   AddSubBand,
   ExpandChildrenOrDescendants,
+  MarkRemovePointsInSubBand,
   PanLeftViewTimeRange,
   PanRightViewTimeRange,
   PinRemove,
@@ -20,7 +21,6 @@ import {
   RemoveBandsOrPointsForSource,
   RemoveBandsWithNoPoints,
   RemoveChildrenOrDescendants,
-  RemovePointsInSubBand,
   RemoveSourceIdFromSubBands,
   RemoveSubBand,
   ResetViewTimeRange,
@@ -578,7 +578,7 @@ describe('timeline reducer', () => {
     expect(timelineState.bands[0].subBands[0].points).toEqual([activityPoint]);
   });
 
-  it('handle RemovePointsInSubBand', () => {
+  it('handle MarkRemovePointsInSubBand', () => {
     const source: RavenSource = rootSource;
     const band = {
       ...compositeBand,
@@ -605,7 +605,7 @@ describe('timeline reducer', () => {
     timelineState = reducer(timelineState, new AddBand(source.id, band));
     timelineState = reducer(
       timelineState,
-      new RemovePointsInSubBand(band.id, '2', [activityPoint]),
+      new MarkRemovePointsInSubBand(band.id, '2', [activityPoint]),
     );
     expect(timelineState.bands[0].subBands[0].points[0].pointStatus).toEqual(
       'deleted',
