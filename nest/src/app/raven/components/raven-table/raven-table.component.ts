@@ -23,7 +23,6 @@ import { AgGridAngular } from 'ag-grid-angular';
 import { AgGridEvent, IDatasource, RowNode } from 'ag-grid-community';
 import pickBy from 'lodash-es/pickBy';
 import startsWith from 'lodash-es/startsWith';
-import uniqueId from 'lodash-es/uniqueId';
 
 import {
   dateToTimestring,
@@ -32,6 +31,12 @@ import {
   toDuration,
   utc,
 } from '../../../shared/util';
+import {
+  createNewActivityPoint,
+  createNewResourcePoint,
+  createNewStatePoint,
+} from '../../util';
+
 import {
   RavenActivityPoint,
   RavenPoint,
@@ -613,71 +618,20 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
   onAdd() {
     let newPoint: RavenPoint;
     if (this.selectedSubBand.type === 'activity') {
-      newPoint = {
-        activityId: 'newAct',
-        activityName: 'newAct',
-        activityParameters: [],
-        activityType: '',
-        ancestors: [],
-        arguments: 0,
-        childrenUrl: '',
-        color: '#4287f5',
-        descendantsUrl: '',
-        duration: 0,
-        editable: true,
-        end: 0,
-        endTimestamp: '',
-        expandedFromPointId: '',
-        expansion: '',
-        hidden: false,
-        id: 'newFromEdit',
-        isDuration: false,
-        isTime: false,
-        keywordLine: '',
-        legend: '',
-        message: '',
-        metadata: [],
-        pointStatus: 'added',
-        selected: false,
-        sourceId: this.points[0].sourceId,
-        start: 0,
-        startTimestamp: '',
-        subBandId: this.selectedSubBand.id,
-        type: 'activity',
-        uniqueId: uniqueId(),
-      };
+      newPoint = createNewActivityPoint(
+        this.points[0].sourceId,
+        this.selectedSubBand.id,
+      );
     } else if (this.selectedSubBand.type === 'state') {
-      newPoint = {
-        duration: 0,
-        editable: true,
-        end: 0,
-        id: 'newFromEdit',
-        interpolateEnding: true,
-        pointStatus: 'added',
-        selected: false,
-        sourceId: this.points[0].sourceId,
-        start: 0,
-        subBandId: this.selectedSubBand.id,
-        type: 'state',
-        uniqueId: uniqueId(),
-        value: 'newValue',
-      };
+      newPoint = createNewStatePoint(
+        this.points[0].sourceId,
+        this.selectedSubBand.id,
+      );
     } else {
-      newPoint = {
-        duration: null,
-        editable: true,
-        id: 'newFromEdit',
-        isDuration: false,
-        isTime: false,
-        pointStatus: 'added',
-        selected: false,
-        sourceId: this.points[0].sourceId,
-        start: 0,
-        subBandId: this.selectedSubBand.id,
-        type: 'resource',
-        uniqueId: uniqueId(),
-        value: 0,
-      };
+      newPoint = createNewResourcePoint(
+        this.points[0].sourceId,
+        this.selectedSubBand.id,
+      );
     }
     this.addPointToSubBand.emit(newPoint);
   }

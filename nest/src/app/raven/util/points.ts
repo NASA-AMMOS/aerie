@@ -26,6 +26,94 @@ import {
 import { colorMap, colorRgbArrayToHex, getRandomColor } from './color';
 
 /**
+ * Helper that return an activity point.
+ */
+export function createNewActivityPoint(
+  sourceId: string,
+  subBandId: string,
+): RavenActivityPoint {
+  return {
+    activityId: 'newAct',
+    activityName: 'newAct',
+    activityParameters: [],
+    activityType: '',
+    ancestors: [],
+    arguments: 0,
+    childrenUrl: '',
+    color: '#4287f5',
+    descendantsUrl: '',
+    duration: 0,
+    editable: true,
+    end: 0,
+    endTimestamp: '',
+    expandedFromPointId: '',
+    expansion: '',
+    hidden: false,
+    id: 'newId',
+    keywordLine: '',
+    legend: '',
+    message: '',
+    metadata: [],
+    pointStatus: 'added',
+    selected: false,
+    sourceId,
+    start: 0,
+    startTimestamp: '',
+    subBandId,
+    type: 'activity',
+    uniqueId: uniqueId(),
+  };
+}
+
+/**
+ * Helper that return a resource point.
+ */
+export function createNewResourcePoint(
+  sourceId: string,
+  subBandId: string,
+): RavenResourcePoint {
+  return {
+    duration: null,
+    editable: true,
+    id: 'newId',
+    isDuration: false,
+    isTime: false,
+    pointStatus: 'added',
+    selected: false,
+    sourceId,
+    start: 0,
+    subBandId,
+    type: 'resource',
+    uniqueId: uniqueId(),
+    value: 0,
+  };
+}
+
+/**
+ * Helper that return a state point.
+ */
+export function createNewStatePoint(
+  sourceId: string,
+  subBandId: string,
+): RavenStatePoint {
+  return {
+    duration: 0,
+    editable: true,
+    end: 0,
+    id: 'newId',
+    interpolateEnding: true,
+    pointStatus: 'added',
+    selected: false,
+    sourceId,
+    start: 0,
+    subBandId,
+    type: 'state',
+    uniqueId: uniqueId(),
+    value: 'newValue',
+  };
+}
+
+/**
  * Helper that set hidden for activities not matching filter.
  */
 export function filterActivityPoints(
