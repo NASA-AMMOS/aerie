@@ -638,9 +638,25 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
         start: 0,
         startTimestamp: '',
         subBandId: this.selectedSubBand.id,
-        type: 'resource',
+        type: 'activity',
         uniqueId: uniqueId(),
       };
+    } else if (this.selectedSubBand.type === 'state'){
+      newPoint = {
+        duration: 0,
+        editable: true,
+        end: 0,
+        id: 'newFromEdit',
+        interpolateEnding: true,
+        pointStatus: 'added',
+        selected: false,
+        sourceId: this.points[0].sourceId,
+        start: 0,
+        subBandId: this.selectedSubBand.id,
+        type: 'state',
+        uniqueId: uniqueId(),
+        value: 'newValue',
+      }
     } else {
       newPoint = {
         duration: null,
