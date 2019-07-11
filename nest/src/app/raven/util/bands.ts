@@ -213,6 +213,7 @@ export function toActivityBands(
       showTooltip: true,
       sourceIds: [sourceId],
       tableColumns: [],
+      timeDelta: 0,
       trimLabel: true,
       type: 'activity',
     };
@@ -334,6 +335,7 @@ export function toResourceBand(
     showTooltip: true,
     sourceIds: [sourceId],
     tableColumns: [],
+    timeDelta: 0,
     type: 'resource',
   };
   if (metadata.maxLimit !== undefined) {
@@ -389,6 +391,7 @@ export function toStateBand(
     sourceIds: [sourceId],
     stateLabelFontSize: 9,
     tableColumns: [],
+    timeDelta: 0,
     type: 'state',
   };
 

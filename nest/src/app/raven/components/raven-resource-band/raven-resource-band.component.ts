@@ -125,6 +125,9 @@ export class RavenResourceBandComponent
   showLabelUnit: boolean;
 
   @Input()
+  timeDelta: number;
+
+  @Input()
   type: string;
 
   @Output()
@@ -309,6 +312,16 @@ export class RavenResourceBandComponent
         value: this.getLabel(),
       });
     }
+
+    // timeDelta.
+    if (changes.timeDelta && !changes.timeDelta.firstChange) {
+      this.updateSubBand.emit({
+        prop: 'label',
+        subBandId: this.id,
+        value:
+          this.timeDelta !== 0 ? `[*] ${this.getLabel()}` : this.getLabel(),
+      });
+    }
   }
 
   ngOnInit() {
@@ -322,7 +335,7 @@ export class RavenResourceBandComponent
       id: this.id,
       interpolation: this.interpolation,
       intervals: [],
-      label: this.getLabel(),
+      label: this.timeDelta !== 0 ? `[*] ${this.getLabel()}` : this.getLabel(),
       labelColor: colorHexToRgbArray(this.color),
       labelFont: this.labelFont,
       labelFontSize: this.labelFontSize,
@@ -381,7 +394,6 @@ export class RavenResourceBandComponent
 
     for (let i = 0, l = this.points.length; i < l; ++i) {
       const point = this.points[i];
-
       const interval = new (window as any).DrawableInterval({
         color: colorHexToRgbArray(color),
         end: point.start,

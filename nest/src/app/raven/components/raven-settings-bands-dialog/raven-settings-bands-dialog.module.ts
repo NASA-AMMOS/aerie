@@ -23,6 +23,8 @@ import {
 } from '@angular/material';
 import { RavenSettingsBandsDialogComponent } from './raven-settings-bands-dialog.component';
 
+import { RavenDurationPipeModule } from '../../pipes';
+
 @NgModule({
   declarations: [RavenSettingsBandsDialogComponent],
   entryComponents: [RavenSettingsBandsDialogComponent],
@@ -39,6 +41,7 @@ import { RavenSettingsBandsDialogComponent } from './raven-settings-bands-dialog
     MatSelectModule,
     MatSlideToggleModule,
     ReactiveFormsModule,
+    RavenDurationPipeModule,
   ],
 })
 export class RavenSettingsBandsDialogModule {}

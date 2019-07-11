@@ -20,6 +20,7 @@ import * as timelineActions from '../../../raven/actions/timeline.actions';
 import * as timelineSelectors from '../../../raven/selectors/timeline.selectors';
 import { NestConfirmDialogComponent } from '../../../shared/components/nest-confirm-dialog/nest-confirm-dialog.component';
 import { StringTMap } from '../../../shared/models';
+import { fromDuration } from '../../../shared/util/time';
 import {
   RavenCompositeBand,
   RavenStateBand,
@@ -51,6 +52,10 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
   heightControl: FormControl = new FormControl('', [
     Validators.required,
     Validators.min(5),
+  ]);
+
+  timeDeltaControl: FormControl = new FormControl('', [
+    Validators.pattern(/(\d\d\d)T(\d\d):(\d\d):(\d\d)\.?(\d\d\d)?$/),
   ]);
 
   constructor(
@@ -140,6 +145,24 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
         );
       }
     });
+  }
+
+  /**
+   * Event. Helper that emits a new time delta when the user updates the `Time Delta` input.
+   */
+  onSetTimeDelta(): void {
+    if (this.timeDeltaControl.valid && this.timeDeltaControl.value) {
+      const timeDelta = fromDuration(this.timeDeltaControl.value);
+      if (this.selectedSubBand) {
+        this.store.dispatch(
+          new timelineActions.UpdateSubBandTimeDelta(
+            this.selectedBandId,
+            this.selectedSubBand.id,
+            timeDelta,
+          ),
+        );
+      }
+    }
   }
 
   /**

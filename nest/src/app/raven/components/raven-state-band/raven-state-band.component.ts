@@ -98,6 +98,9 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
   stateLabelFontSize: number;
 
   @Input()
+  timeDelta: number;
+
+  @Input()
   type: string;
 
   // These Inputs are used when isNumeric is true.
@@ -338,6 +341,16 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
         value: `normal ${this.stateLabelFontSize}px Verdana`,
       });
     }
+
+    // timeDelta.
+    if (changes.timeDelta && !changes.timeDelta.firstChange) {
+      this.updateSubBand.emit({
+        prop: 'label',
+        subBandId: this.id,
+        value:
+          this.timeDelta !== 0 ? `[*] ${this.getLabel()}` : this.getLabel(),
+      });
+    }
   }
 
   ngOnInit() {
@@ -369,7 +382,8 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
         heightPadding: this.heightPadding,
         id: this.id,
         intervals: [],
-        label: this.getLabel(),
+        label:
+          this.timeDelta !== 0 ? `[*] ${this.getLabel()}` : this.getLabel(),
         labelColor: colorHexToRgbArray(this.labelColor),
         labelFont: this.labelFont,
         labelFontSize: this.labelFontSize,
@@ -507,7 +521,6 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
 
     for (let i = 0, l = this.points.length; i < l; ++i) {
       const point = this.points[i];
-
       const interval = new (window as any).DrawableInterval({
         color: null,
         end: point.end,

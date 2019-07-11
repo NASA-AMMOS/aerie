@@ -53,6 +53,7 @@ export enum TimelineActionTypes {
   UpdateBand = '[timeline] update_band',
   UpdateLastClickTime = '[timeline] last_click_time',
   UpdateSubBand = '[timeline] update_sub_band',
+  UpdateSubBandTimeDelta = '[timeline] update_sub_band_time_delta',
   UpdateTimeline = '[timeline] update_timeline',
   UpdateViewTimeRange = '[timeline] update_view_time_range',
   ZoomInViewTimeRange = '[timeline] zoom_in_view_time_range',
@@ -287,6 +288,16 @@ export class UpdateSubBand implements Action {
   ) {}
 }
 
+export class UpdateSubBandTimeDelta implements Action {
+  readonly type = TimelineActionTypes.UpdateSubBandTimeDelta;
+
+  constructor(
+    public bandId: string,
+    public subBandId: string,
+    public timeDelta: number,
+  ) {}
+}
+
 export class UpdateTimeline implements Action {
   readonly type = TimelineActionTypes.UpdateTimeline;
 
@@ -340,6 +351,7 @@ export type TimelineAction =
   | UpdateBand
   | UpdateLastClickTime
   | UpdateSubBand
+  | UpdateSubBandTimeDelta
   | UpdateTimeline
   | UpdateViewTimeRange
   | ZoomInViewTimeRange

@@ -48,5 +48,6 @@ export interface RavenStateBand {
   sourceIds: string[];
   stateLabelFontSize: number;
   tableColumns: any[]; // TODO: Remove `any`.
+  timeDelta: number;
   type: string;
 }

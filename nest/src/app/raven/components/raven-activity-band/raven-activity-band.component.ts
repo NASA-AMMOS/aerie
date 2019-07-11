@@ -114,6 +114,9 @@ export class RavenActivityBandComponent
   showLabelPin: boolean;
 
   @Input()
+  timeDelta: number;
+
+  @Input()
   type: string;
 
   @Output()
@@ -306,6 +309,16 @@ export class RavenActivityBandComponent
         value: this.getLabel(),
       });
     }
+
+    // timeDelta.
+    if (changes.timeDelta && !changes.timeDelta.firstChange) {
+      this.updateSubBand.emit({
+        prop: 'label',
+        subBandId: this.id,
+        value:
+          this.timeDelta !== 0 ? `[*] ${this.getLabel()}` : this.getLabel(),
+      });
+    }
   }
 
   ngOnInit() {
@@ -321,7 +334,7 @@ export class RavenActivityBandComponent
       heightPadding: this.heightPadding,
       id: this.id,
       intervals: [],
-      label: this.getLabel(),
+      label: this.timeDelta !== 0 ? `[*] ${this.getLabel()}` : this.getLabel(),
       labelColor: colorHexToRgbArray(this.labelColor),
       labelFont: this.labelFont,
       labelFontSize: this.labelFontSize,

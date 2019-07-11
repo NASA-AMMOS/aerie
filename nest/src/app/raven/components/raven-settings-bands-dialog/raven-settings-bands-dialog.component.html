@@ -79,6 +79,21 @@
               </mat-form-field>
             </div>
 
+            <!-- Time Delta -->
+            <div *ngIf="subBand.type !== 'divider'" class="flex-item">
+              <mat-form-field>
+                <mat-label>Time Delta applied to data</mat-label>
+                <input
+                  id="raven-settings-delta"
+                  matInput
+                  [value]="subBand.timeDelta | duration"
+                  [formControl]="timeDeltaControl"
+                  placeholder="dddThh:mm:ss.mmm"
+                  (keyup)="onSetTimeDelta()"
+                />
+              </mat-form-field>
+            </div>
+
             <ng-container
               *ngIf="subBand.type === 'resource' || selectedSubBand.isNumeric"
             >

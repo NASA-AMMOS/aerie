@@ -36,12 +36,14 @@ import {
   UpdateAllActivityBandFilter,
   UpdateBand,
   UpdateSubBand,
+  UpdateSubBandTimeDelta,
 } from '../actions/timeline.actions';
 import {
   RavenActivityBand,
   RavenActivityPoint,
   RavenCompositeBand,
   RavenPoint,
+  RavenResourceBand,
   RavenState,
   RavenSubBand,
 } from '../models';
@@ -160,6 +162,8 @@ export function reducer(
       return { ...state, lastClickTime: action.time };
     case TimelineActionTypes.UpdateSubBand:
       return updateSubBand(state, action);
+    case TimelineActionTypes.UpdateSubBandTimeDelta:
+      return updateSubBandTimeDelta(state, action);
     case TimelineActionTypes.UpdateTimeline:
       return { ...state, ...action.update };
     case TimelineActionTypes.UpdateViewTimeRange:
@@ -251,7 +255,20 @@ export function addPointsToSubBand(
         ...band,
         subBands: band.subBands.map(subBand => {
           if (action.subBandId === subBand.id) {
-            const points = (subBand as any).points.concat(action.points);
+            const newPoints =
+              subBand.type === 'resource'
+                ? action.points.map(point => ({
+                    ...point,
+                    start:
+                      point.start + (subBand as RavenResourceBand).timeDelta,
+                  }))
+                : action.points.map(point => ({
+                    ...point,
+                    end: point.end + (subBand as RavenResourceBand).timeDelta,
+                    start:
+                      point.start + (subBand as RavenResourceBand).timeDelta,
+                  }));
+            const points = (subBand as any).points.concat(newPoints);
             const maxTimeRange = getMaxTimeRange(points);
             const sourceIds = without(
               subBand.sourceIds,
@@ -954,6 +971,56 @@ export function updateSubBand(
               return {
                 ...subBand,
                 ...action.update,
+              };
+            }
+            return subBand;
+          }),
+        };
+      }
+
+      return band;
+    }),
+    currentStateChanged: state.currentState !== null,
+  };
+}
+
+/**
+ * Reduction Helper. Called when reducing the 'UpdateSubBandTimeDelta' action.
+ */
+export function updateSubBandTimeDelta(
+  state: TimelineState,
+  action: UpdateSubBandTimeDelta,
+): TimelineState {
+  return {
+    ...state,
+    bands: state.bands.map((band: RavenCompositeBand) => {
+      if (action.bandId === band.id) {
+        return {
+          ...band,
+          subBands: band.subBands.map(subBand => {
+            const currentTimeDelta = (subBand as RavenActivityBand).timeDelta;
+            if (action.subBandId === subBand.id) {
+              return {
+                ...subBand,
+                points: (subBand as any).points.map(
+                  (point: RavenActivityPoint) => {
+                    if (subBand.type === 'resource') {
+                      return {
+                        ...point,
+                        start:
+                          point.start - currentTimeDelta + action.timeDelta,
+                      };
+                    } else {
+                      return {
+                        ...point,
+                        end: point.end - currentTimeDelta + action.timeDelta,
+                        start:
+                          point.start - currentTimeDelta + action.timeDelta,
+                      };
+                    }
+                  },
+                ),
+                timeDelta: action.timeDelta,
               };
             }
             return subBand;

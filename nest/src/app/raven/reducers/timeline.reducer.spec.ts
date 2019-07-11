@@ -32,6 +32,7 @@ import {
   UpdateBand,
   UpdateLastClickTime,
   UpdateSubBand,
+  UpdateSubBandTimeDelta,
   UpdateTimeline,
   UpdateViewTimeRange,
   ZoomInViewTimeRange,
@@ -919,6 +920,70 @@ describe('timeline reducer', () => {
       new UpdateSubBand(band.id, '1', { height: 42 }),
     );
     expect(timelineState.bands[0].subBands[0].height).toEqual(42);
+  });
+
+  it('handle UpdateSubBandTimeDelta', () => {
+    const source: RavenSource = rootSource;
+    const points = [
+      {
+        duration: null,
+        end: 12000,
+        id: '1',
+        interpolateEnding: true,
+        selected: false,
+        sourceId: '',
+        start: 11000,
+        subBandId: '',
+        type: 'state',
+        uniqueId: '123',
+        value: 'on',
+      },
+      {
+        duration: null,
+        end: 22000,
+        id: '2',
+        interpolateEnding: true,
+        selected: false,
+        sourceId: '',
+        start: 21000,
+        subBandId: '',
+        type: 'state',
+        uniqueId: '1234',
+        value: 'off',
+      },
+    ];
+
+    const band = {
+      ...compositeBand,
+      height: 50,
+      id: '0',
+      subBands: [
+        {
+          ...stateBand,
+          points,
+        },
+      ],
+    };
+
+    timelineState = reducer(timelineState, new AddBand(source.id, band));
+    timelineState = reducer(
+      timelineState,
+      new UpdateSubBandTimeDelta(band.id, stateBand.id, 200),
+    );
+    expect(timelineState.bands[0].subBands[0].points).toEqual([
+      { ...points[0], end: 12200, start: 11200 },
+      { ...points[1], end: 22200, start: 21200 },
+    ]);
+
+    timelineState = reducer(timelineState, new AddBand(source.id, band));
+    timelineState = reducer(
+      timelineState,
+      new UpdateSubBandTimeDelta(band.id, stateBand.id, 0),
+    );
+    expect(timelineState.bands[0].subBands[0].points).toEqual([
+      { ...points[0], end: 12000, start: 11000 },
+      { ...points[1], end: 22000, start: 21000 },
+    ]);
   });
 
   it('handle UpdateTimeline', () => {
