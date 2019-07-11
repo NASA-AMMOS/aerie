@@ -21,6 +21,7 @@ import {
   RemoveBandsOrPointsForSource,
   RemoveBandsWithNoPoints,
   RemoveChildrenOrDescendants,
+  RemovePointsInSubBand,
   RemoveSourceIdFromSubBands,
   RemoveSubBand,
   ResetViewTimeRange,
@@ -374,6 +375,43 @@ describe('timeline reducer', () => {
     expect(hasTwoResourceBands(timelineState.bands[0])).toBe(false);
   });
 
+  it('handle MarkRemovePointsInSubBand', () => {
+    const source: RavenSource = rootSource;
+    const band = {
+      ...compositeBand,
+      id: '1',
+      subBands: [
+        {
+          ...activityBand,
+          id: '2',
+          parentUniqueId: '1',
+          points: [
+            {
+              ...activityPoint,
+            },
+            {
+              ...activityPoint,
+              id: 'abc',
+              uniqueId: '_abc',
+            },
+          ],
+        },
+      ],
+    };
+
+    timelineState = reducer(timelineState, new AddBand(source.id, band));
+    timelineState = reducer(
+      timelineState,
+      new MarkRemovePointsInSubBand(band.id, '2', [activityPoint]),
+    );
+    expect(timelineState.bands[0].subBands[0].points[0].pointStatus).toEqual(
+      'deleted',
+    );
+    expect(timelineState.bands[0].subBands[0].points[1].pointStatus).toEqual(
+      'unchanged',
+    );
+  });
+
   it('handle PanLeftViewTimeRange', () => {
     // First set the timeline state to have realistic time ranges we can test.
     timelineState = {
@@ -578,7 +616,7 @@ describe('timeline reducer', () => {
     expect(timelineState.bands[0].subBands[0].points).toEqual([activityPoint]);
   });
 
-  it('handle MarkRemovePointsInSubBand', () => {
+  it('handle RemovePointsInSubBand', () => {
     const source: RavenSource = rootSource;
     const band = {
       ...compositeBand,
@@ -605,13 +643,14 @@ describe('timeline reducer', () => {
     timelineState = reducer(timelineState, new AddBand(source.id, band));
     timelineState = reducer(
       timelineState,
-      new MarkRemovePointsInSubBand(band.id, '2', [activityPoint]),
+      new RemovePointsInSubBand(band.id, '2', [activityPoint]),
     );
-    expect(timelineState.bands[0].subBands[0].points[0].pointStatus).toEqual(
-      'deleted',
-    );
-    expect(timelineState.bands[0].subBands[0].points[1].pointStatus).toEqual(
-      'unchanged',
+    expect(timelineState.bands[0].subBands[0].points[0]).toEqual(
+      {
+        ...activityPoint,
+        id: 'abc',
+        uniqueId: '_abc',
+      }
     );
   });
 
