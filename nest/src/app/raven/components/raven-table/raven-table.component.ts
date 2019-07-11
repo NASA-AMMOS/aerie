@@ -42,7 +42,7 @@ import {
 } from '../../models';
 import { RavenTableDetailComponent } from './raven-table-detail.component';
 
-import { GridOptions } from 'ag-grid-community';
+import { GridOptions, ValueSetterParams } from 'ag-grid-community';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -292,6 +292,7 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
           !startsWith(prop, '__') &&
           prop !== 'activityId' &&
           prop !== 'activityParameters' &&
+          !(prop === 'end' && this.selectedSubBand.type !== 'activity') &&
           prop !== 'ancestors' &&
           prop !== 'childrenUrl' &&
           prop !== 'color' &&
@@ -327,7 +328,7 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
             hide: false,
             valueSetter:
               point.editable && this.colEditable(prop)
-                ? function(params: any) {
+                ? (params: ValueSetterParams) => {
                     const times = ['start', 'end'];
                     const value = params.newValue;
                     updatePoint.emit({
@@ -347,7 +348,7 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
                       },
                     });
 
-                    // recalculate duration when either start or end changed
+                    // Recalculate duration when either start or end changed.
                     if (params.node.data.end) {
                       updatePoint.emit({
                         bandId,
@@ -379,8 +380,7 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
   }
 
   colEditable(prop: string): boolean {
-    const editables = ['activityName', 'start', 'end', 'value'];
-    return editables.includes(prop);
+    return ['activityName', 'start', 'end', 'value'].includes(prop);
   }
 
   /**
@@ -641,7 +641,7 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
         type: 'activity',
         uniqueId: uniqueId(),
       };
-    } else if (this.selectedSubBand.type === 'state'){
+    } else if (this.selectedSubBand.type === 'state') {
       newPoint = {
         duration: 0,
         editable: true,
@@ -656,7 +656,7 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
         type: 'state',
         uniqueId: uniqueId(),
         value: 'newValue',
-      }
+      };
     } else {
       newPoint = {
         duration: null,
