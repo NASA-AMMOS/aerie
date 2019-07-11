@@ -880,7 +880,10 @@ describe('timeline reducer', () => {
     };
 
     timelineState = reducer(timelineState, new AddBand(source.id, band));
-    timelineState = reducer(timelineState, new UpdatePointInSubBand(source.id, band.id, '123', {start: 67890}));
+    timelineState = reducer(
+      timelineState,
+      new UpdatePointInSubBand(source.id, band.id, '123', { start: 67890 }),
+    );
     expect(timelineState.bands[0].subBands[0].points[0].start).toEqual(67890);
   });
 
