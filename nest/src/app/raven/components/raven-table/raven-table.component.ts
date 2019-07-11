@@ -294,7 +294,6 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
         if (
           typeof point[prop] !== 'object' &&
           !startsWith(prop, '__') &&
-          !(prop === 'end' && this.selectedSubBand.type !== 'activity') &&
           prop !== 'activityId' &&
           prop !== 'activityParameters' &&
           prop !== 'ancestors' &&
@@ -638,7 +637,6 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
 
   onRemove() {
     const selectedPoints = this.gridApi.getSelectedRows();
-    console.log('removing: ' + selectedPoints.length);
     this.removePointsInSubBand.emit(selectedPoints);
   }
 }
