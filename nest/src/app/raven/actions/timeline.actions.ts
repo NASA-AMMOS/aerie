@@ -295,7 +295,7 @@ export class UpdateCsvFile implements Action {
     public selectedSubBandId: string,
     public sourceId: string,
     public points: RavenPoint[],
-    public headerMap: StringTMap<string>,
+    public csvHeaderMap: StringTMap<string>,
   ) {}
 }
 

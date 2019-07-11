@@ -153,7 +153,7 @@ export class TimelineEffects {
           action.selectedSubBandId,
           action.sourceId,
           action.points,
-          action.headerMap,
+          action.csvHeaderMap,
         ),
       ),
     ),
@@ -406,7 +406,7 @@ export class TimelineEffects {
     selectedSubBandId: string,
     dataSourceUrl: string,
     points: RavenPoint[],
-    headerMap: StringTMap<string>,
+    csvHeaderMap: StringTMap<string>,
   ) {
     const headers = new HttpHeaders().set('Content-Type', `application/json`);
     const responseType = 'text';
@@ -436,7 +436,7 @@ export class TimelineEffects {
               return [
                 new toastActions.ShowToast(
                   'warning',
-                  'Failed To Update File',
+                  'Failed To Update CSV File',
                   '',
                 ),
               ];
@@ -447,7 +447,7 @@ export class TimelineEffects {
         point.pointStatus === 'updated' ||
         point.pointStatus === 'added'
       ) {
-        // Map point data to what the server need.
+        // Map point data back to what the server sent to Raven.
         const serverData =
           point.type === 'activity'
             ? {
@@ -465,12 +465,12 @@ export class TimelineEffects {
                 'Data Value': (point as RavenResourcePoint).value,
               };
 
-        // Map to Csv data.
+        // Map to original CSV data.
         let data: string;
-        if (Object.keys(headerMap).length > 0) {
+        if (Object.keys(csvHeaderMap).length > 0) {
           const mappedData = {};
-          Object.keys(headerMap).forEach(
-            key => (mappedData[headerMap[key]] = serverData[key]),
+          Object.keys(csvHeaderMap).forEach(
+            key => (mappedData[csvHeaderMap[key]] = serverData[key]),
           );
           data = JSON.stringify(mappedData);
         } else {

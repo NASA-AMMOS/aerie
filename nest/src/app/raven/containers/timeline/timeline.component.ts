@@ -651,7 +651,7 @@ export class TimelineComponent implements OnDestroy {
   onSave() {
     if (this.selectedSubBand) {
       const source = this.treeBySourceId[this.selectedSubBand.sourceIds[0]];
-      const headerMap = {};
+      const csvHeaderMap = {};
 
       let url = decodeURIComponent(source.url);
       url = url.replace(/[+]/g, ' ');
@@ -660,7 +660,7 @@ export class TimelineComponent implements OnDestroy {
         const [, mapStr] = mapString;
         mapStr.split(',').forEach(keyValue => {
           const kv = keyValue.split('=');
-          headerMap[kv[0]] = kv[1];
+          csvHeaderMap[kv[0]] = kv[1];
         });
       }
       this.store.dispatch(
@@ -669,7 +669,7 @@ export class TimelineComponent implements OnDestroy {
           this.selectedSubBandId,
           this.selectedSubBand.sourceIds[0],
           this.selectedSubBand.points,
-          headerMap,
+          csvHeaderMap,
         ),
       );
     }
