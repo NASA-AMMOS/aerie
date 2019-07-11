@@ -538,11 +538,13 @@ export class TimelineEffects {
         }
       }
     });
-    actions.push(of(new timelineActions.UpdateSubBand(
-      selectedBandId,
-      selectedSubBandId,
-      { pointsChanged: false },
-    )));
+    actions.push(
+      of(
+        new timelineActions.UpdateSubBand(selectedBandId, selectedSubBandId, {
+          pointsChanged: false,
+        }),
+      ),
+    );
     return actions;
   }
 
