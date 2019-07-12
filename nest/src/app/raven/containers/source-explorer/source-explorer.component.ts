@@ -9,8 +9,8 @@
 
 import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
 import { select, Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
-import { map, switchMap, takeUntil } from 'rxjs/operators';
+import { Observable, Subscription } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { WebSocketSubject } from 'rxjs/webSocket';
 import { StringTMap } from '../../../shared/models';
 import { getUrls } from '../../../shared/selectors';
@@ -43,7 +43,6 @@ import {
   getTreeBySourceId,
   treeSortedChildIds,
 } from '../../selectors';
-
 import * as epochsSelectors from '../../selectors/epochs.selectors';
 
 @Component({
@@ -67,7 +66,7 @@ export class SourceExplorerComponent implements OnDestroy {
   epochs: RavenEpoch[];
   tree: StringTMap<RavenSource>;
 
-  private ngUnsubscribe: Subject<{}> = new Subject();
+  private subscriptions = new Subscription();
 
   constructor(private store: Store<SourceExplorerState>) {
     this.epochs$ = this.store.pipe(select(epochsSelectors.getEpochs));
@@ -86,13 +85,10 @@ export class SourceExplorerComponent implements OnDestroy {
       map(x => !SourceFilter.isEmpty(x)),
     );
 
-    this.epochs$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(epochs => (this.epochs = epochs));
-
-    this.tree$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(tree => (this.tree = tree));
+    this.subscriptions.add(
+      this.epochs$.subscribe(epochs => (this.epochs = epochs)),
+    );
+    this.subscriptions.add(this.tree$.subscribe(tree => (this.tree = tree)));
 
     this.connectToWebsocket();
   }
@@ -102,8 +98,7 @@ export class SourceExplorerComponent implements OnDestroy {
   }
 
   ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
+    this.subscriptions.unsubscribe();
   }
 
   /**
@@ -111,42 +106,43 @@ export class SourceExplorerComponent implements OnDestroy {
    * When a data sources changes we fetch new sources to update the source explorer.
    */
   connectToWebsocket() {
-    this.store
-      .pipe(
-        select(getUrls),
-        switchMap(
-          config =>
-            new WebSocketSubject(
-              `${config.baseUrl.replace('https', 'wss')}/${config.socketUrl}`,
-            ),
-        ),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(({ aspect, subject }: MpsServerWebSocketMessage) => {
-        const ALLOWED_ASPECTS = [
-          'fileChange',
-          'fileCreation',
-          'fileDeletion',
-          'folderCreation',
-          'folderDeletion',
-          'importJobStatus',
-          'metadataChange',
-        ];
-        if (ALLOWED_ASPECTS.includes(aspect)) {
-          const match = subject.match(new RegExp('(.*)/(.*)'));
-          if (match) {
-            const parentId = match[1];
-            if (this.tree[parentId]) {
-              this.store.dispatch(
-                new sourceExplorerActions.FetchNewSources(
-                  parentId,
-                  this.tree[parentId].url,
-                ),
-              );
+    this.subscriptions.add(
+      this.store
+        .pipe(
+          select(getUrls),
+          switchMap(
+            config =>
+              new WebSocketSubject(
+                `${config.baseUrl.replace('https', 'wss')}/${config.socketUrl}`,
+              ),
+          ),
+        )
+        .subscribe(({ aspect, subject }: MpsServerWebSocketMessage) => {
+          const ALLOWED_ASPECTS = [
+            'fileChange',
+            'fileCreation',
+            'fileDeletion',
+            'folderCreation',
+            'folderDeletion',
+            'importJobStatus',
+            'metadataChange',
+          ];
+          if (ALLOWED_ASPECTS.includes(aspect)) {
+            const match = subject.match(new RegExp('(.*)/(.*)'));
+            if (match) {
+              const parentId = match[1];
+              if (this.tree[parentId]) {
+                this.store.dispatch(
+                  new sourceExplorerActions.FetchNewSources(
+                    parentId,
+                    this.tree[parentId].url,
+                  ),
+                );
+              }
             }
           }
-        }
-      });
+        }),
+    );
   }
 
   /**

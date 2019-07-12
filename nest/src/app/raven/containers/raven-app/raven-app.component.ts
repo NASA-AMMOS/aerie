@@ -14,8 +14,8 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { select, Store } from '@ngrx/store';
-import { combineLatest, Observable, Subject } from 'rxjs';
-import { map, takeUntil } from 'rxjs/operators';
+import { combineLatest, Observable, Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 import * as configActions from '../../../shared/actions/config.actions';
 import { getVersion } from '../../../shared/selectors';
 import * as dialogActions from '../../actions/dialog.actions';
@@ -47,7 +47,7 @@ export class RavenAppComponent implements OnDestroy {
   mode: string;
   selectedBandId: string;
 
-  private ngUnsubscribe: Subject<{}> = new Subject();
+  private subscriptions = new Subscription();
 
   constructor(private store: Store<SourceExplorerState>) {
     this.about$ = this.getAbout();
@@ -55,22 +55,19 @@ export class RavenAppComponent implements OnDestroy {
     this.showProgressBar$ = this.getShowProgressBar();
     this.selectedBandId$ = this.store.pipe(select(getSelectedBandId));
 
-    this.about$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(about => (this.about = about));
-
-    this.mode$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(mode => (this.mode = mode));
-
-    this.selectedBandId$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(selectedBandId => (this.selectedBandId = selectedBandId));
+    this.subscriptions.add(
+      this.about$.subscribe(about => (this.about = about)),
+    );
+    this.subscriptions.add(this.mode$.subscribe(mode => (this.mode = mode)));
+    this.subscriptions.add(
+      this.selectedBandId$.subscribe(
+        selectedBandId => (this.selectedBandId = selectedBandId),
+      ),
+    );
   }
 
   ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
+    this.subscriptions.unsubscribe();
   }
 
   /**

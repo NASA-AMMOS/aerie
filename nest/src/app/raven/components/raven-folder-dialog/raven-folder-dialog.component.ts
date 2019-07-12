@@ -11,8 +11,8 @@ import { HttpClient } from '@angular/common/http';
 import { Component, Inject, OnDestroy } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
-import { combineLatest, Subject } from 'rxjs';
-import { map, takeUntil } from 'rxjs/operators';
+import { combineLatest, Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { MpsServerSource } from '../../models';
 import { RavenExpandableSource } from '../../models';
 
@@ -25,7 +25,7 @@ export class RavenFolderDialogComponent implements OnDestroy {
   name: FormControl;
   duplicateError: boolean;
 
-  private ngUnsubscribe: Subject<{}> = new Subject();
+  private subscriptions = new Subscription();
 
   constructor(
     public dialogRef: MatDialogRef<RavenFolderDialogComponent>,
@@ -38,29 +38,27 @@ export class RavenFolderDialogComponent implements OnDestroy {
     ]);
     this.duplicateError = false;
 
-    combineLatest([this.name.valueChanges, this.http.get(data.source.url)])
-      .pipe(
-        map(([value, sources]) => ({ value, sources })),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(({ value, sources }) => {
-        const children = (sources as MpsServerSource[]).map(
-          source => source.name,
-        );
+    this.subscriptions.add(
+      combineLatest([this.name.valueChanges, this.http.get(data.source.url)])
+        .pipe(map(([value, sources]) => ({ value, sources })))
+        .subscribe(({ value, sources }) => {
+          const children = (sources as MpsServerSource[]).map(
+            source => source.name,
+          );
 
-        // If the current source has a child with the name we are trying to Add,
-        // then display a proper overwrite warning.
-        if (children.find(name => name === value)) {
-          this.duplicateError = true;
-        } else {
-          this.duplicateError = false;
-        }
-      });
+          // If the current source has a child with the name we are trying to Add,
+          // then display a proper overwrite warning.
+          if (children.find(name => name === value)) {
+            this.duplicateError = true;
+          } else {
+            this.duplicateError = false;
+          }
+        }),
+    );
   }
 
   ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
+    this.subscriptions.unsubscribe();
   }
 
   onAdd() {

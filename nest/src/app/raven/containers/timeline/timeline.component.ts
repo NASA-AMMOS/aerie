@@ -9,12 +9,30 @@
 
 import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
 import { select, Store } from '@ngrx/store';
-import { combineLatest, Observable, Subject } from 'rxjs';
-import { map, takeUntil } from 'rxjs/operators';
+import { combineLatest, Observable, Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ConfigState } from '../../../../config';
+import * as configActions from '../../../shared/actions/config.actions';
+import * as toastActions from '../../../shared/actions/toast.actions';
 import { StringTMap, TimeRange } from '../../../shared/models';
+import * as configSelectors from '../../../shared/selectors/config.selectors';
+import * as dialogActions from '../../actions/dialog.actions';
+import * as epochsActions from '../../actions/epochs.actions';
+import * as layoutActions from '../../actions/layout.actions';
+import * as outputActions from '../../actions/output.actions';
+import * as situationalAwarenessActions from '../../actions/situational-awareness.actions';
+import * as sourceExplorerActions from '../../actions/source-explorer.actions';
+import * as timeCursorActions from '../../actions/time-cursor.actions';
+import * as timelineActions from '../../actions/timeline.actions';
 import { TimeCursorState } from '../../reducers/time-cursor.reducer';
 import { TimelineState } from '../../reducers/timeline.reducer';
+import * as epochsSelectors from '../../selectors/epochs.selectors';
+import * as layoutSelectors from '../../selectors/layout.selectors';
+import * as outputSelectors from '../../selectors/output.selectors';
+import * as situAwareSelectors from '../../selectors/situational-awareness.selectors';
+import * as sourceExplorerSelectors from '../../selectors/source-explorer.selectors';
+import * as timeCursorSelectors from '../../selectors/time-cursor.selectors';
+import * as timelineSelectors from '../../selectors/timeline.selectors';
 import {
   bandById,
   getSourceIdsByLabelInBands,
@@ -41,26 +59,6 @@ import {
   RavenSubBand,
   RavenUpdate,
 } from './../../models';
-
-import * as configSelectors from '../../../shared/selectors/config.selectors';
-import * as epochsSelectors from '../../selectors/epochs.selectors';
-import * as layoutSelectors from '../../selectors/layout.selectors';
-import * as outputSelectors from '../../selectors/output.selectors';
-import * as situAwareSelectors from '../../selectors/situational-awareness.selectors';
-import * as sourceExplorerSelectors from '../../selectors/source-explorer.selectors';
-import * as timeCursorSelectors from '../../selectors/time-cursor.selectors';
-import * as timelineSelectors from '../../selectors/timeline.selectors';
-
-import * as configActions from '../../../shared/actions/config.actions';
-import * as toastActions from '../../../shared/actions/toast.actions';
-import * as dialogActions from '../../actions/dialog.actions';
-import * as epochsActions from '../../actions/epochs.actions';
-import * as layoutActions from '../../actions/layout.actions';
-import * as outputActions from '../../actions/output.actions';
-import * as situationalAwarenessActions from '../../actions/situational-awareness.actions';
-import * as sourceExplorerActions from '../../actions/source-explorer.actions';
-import * as timeCursorActions from '../../actions/time-cursor.actions';
-import * as timelineActions from '../../actions/timeline.actions';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -158,7 +156,7 @@ export class TimelineComponent implements OnDestroy {
   southPanelHeight = 20;
   heightChangeDelta = 0.1;
 
-  private ngUnsubscribe: Subject<{}> = new Subject();
+  private subscriptions = new Subscription();
 
   constructor(
     private store: Store<TimelineState | ConfigState | TimeCursorState>,
@@ -366,48 +364,50 @@ export class TimelineComponent implements OnDestroy {
     );
 
     // Subscribed state. For local use here in the component.
-    this.bands$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(bands => (this.bands = bands));
-    this.baseUrl$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(baseUrl => (this.baseUrl = baseUrl));
-    this.defaultBandSettings$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(
+    this.subscriptions.add(
+      this.bands$.subscribe(bands => (this.bands = bands)),
+    );
+    this.subscriptions.add(
+      this.baseUrl$.subscribe(baseUrl => (this.baseUrl = baseUrl)),
+    );
+    this.subscriptions.add(
+      this.defaultBandSettings$.subscribe(
         defaultBandSettings =>
           (this.activityInitiallyHidden =
             defaultBandSettings.activityInitiallyHidden),
-      );
-    this.hoveredBandId$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(hoveredBandId => (this.hoveredBandId = hoveredBandId));
-    this.selectedBandId$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(selectedBandId => (this.selectedBandId = selectedBandId));
-    this.selectedSubBandId$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(
+      ),
+    );
+    this.subscriptions.add(
+      this.hoveredBandId$.subscribe(
+        hoveredBandId => (this.hoveredBandId = hoveredBandId),
+      ),
+    );
+    this.subscriptions.add(
+      this.selectedBandId$.subscribe(
+        selectedBandId => (this.selectedBandId = selectedBandId),
+      ),
+    );
+    this.subscriptions.add(
+      this.selectedSubBandId$.subscribe(
         selectedSubBandId => (this.selectedSubBandId = selectedSubBandId),
-      );
-
-    this.showDetailsPanel$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(
+      ),
+    );
+    this.subscriptions.add(
+      this.showDetailsPanel$.subscribe(
         showDetailsPanel =>
           (this.detailsPanelHeight = showDetailsPanel ? 20 : 0),
-      );
-    this.showSouthBandsPanel$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(
+      ),
+    );
+    this.subscriptions.add(
+      this.showSouthBandsPanel$.subscribe(
         showSouthBandsPanel =>
           (this.southPanelHeight = showSouthBandsPanel ? 20 : 0),
-      );
+      ),
+    );
   }
 
   ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
+    this.subscriptions.unsubscribe();
   }
 
   getActivityFilter() {
@@ -424,7 +424,7 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
-   * Helper. Caiculate the main chart height.
+   * Helper. Calculate the main chart height.
    */
   getMainChartHeightPercent() {
     return 100 - this.southPanelHeight - this.detailsPanelHeight;

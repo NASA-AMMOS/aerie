@@ -20,8 +20,8 @@ import {
 } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
-import { combineLatest, Subject } from 'rxjs';
-import { map, takeUntil } from 'rxjs/operators';
+import { combineLatest, Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { v4 as uuidv4 } from 'uuid';
 import { RavenAppState } from '../../../raven/raven-store';
 import { MpsServerSource } from '../../models';
@@ -49,49 +49,48 @@ export class RavenShareableLinkDialogComponent
   ]);
   titleMessage = 'Copy Shareable Link';
 
-  private ngUnsubscribe: Subject<{}> = new Subject();
+  private subscriptions = new Subscription();
 
   constructor(
     public dialogRef: MatDialogRef<RavenShareableLinkDialogComponent>,
     public http: HttpClient,
     @Inject(MAT_DIALOG_DATA) public data: { state: RavenAppState },
   ) {
-    combineLatest([
-      this.shareableNameControl.valueChanges,
-      this.http.get(this.getStateUrl()),
-    ])
-      .pipe(
-        map(([value, sources]) => ({ value, sources })),
-        takeUntil(this.ngUnsubscribe),
-      )
-      .subscribe(({ value, sources }) => {
-        this.shareableLinkControl.setValue(this.getShareableLink(value));
+    this.subscriptions.add(
+      combineLatest([
+        this.shareableNameControl.valueChanges,
+        this.http.get(this.getStateUrl()),
+      ])
+        .pipe(map(([value, sources]) => ({ value, sources })))
+        .subscribe(({ value, sources }) => {
+          this.shareableLinkControl.setValue(this.getShareableLink(value));
 
-        const children = (sources as MpsServerSource[]).map(
-          source => source.name,
-        );
+          const children = (sources as MpsServerSource[]).map(
+            source => source.name,
+          );
 
-        // If the current source has a child with the name we are trying to save,
-        // then display a proper overwrite warning.
-        if (children.find(name => name === value)) {
-          this.overwriteWarning = true;
-        } else {
-          this.overwriteWarning = false;
-        }
+          // If the current source has a child with the name we are trying to save,
+          // then display a proper overwrite warning.
+          if (children.find(name => name === value)) {
+            this.overwriteWarning = true;
+          } else {
+            this.overwriteWarning = false;
+          }
 
-        // This is to make sure the input field turns red if the user deletes the text.
-        // If we dont blur and focus we don't see the input turn red right away.
-        if (value === '') {
-          this.shareableNameInput.nativeElement.blur();
-          this.shareableNameInput.nativeElement.focus();
-        }
+          // This is to make sure the input field turns red if the user deletes the text.
+          // If we don't blur and focus we don't see the input turn red right away.
+          if (value === '') {
+            this.shareableNameInput.nativeElement.blur();
+            this.shareableNameInput.nativeElement.focus();
+          }
 
-        if (this.shareableNameControl.valid) {
-          this.invalidShareableName = false;
-        } else {
-          this.invalidShareableName = true;
-        }
-      });
+          if (this.shareableNameControl.valid) {
+            this.invalidShareableName = false;
+          } else {
+            this.invalidShareableName = true;
+          }
+        }),
+    );
   }
 
   /**
@@ -108,13 +107,14 @@ export class RavenShareableLinkDialogComponent
       const shareableName = this.shareableNameControl.value;
       this.titleMessage = 'Link text copied!';
 
-      this.http
-        .put(
-          `${this.getStateUrl(shareableName)}?timeline_type=state`,
-          getState(shareableName, this.data.state),
-        )
-        .pipe(takeUntil(this.ngUnsubscribe))
-        .subscribe(() => this.dialogRef.close());
+      this.subscriptions.add(
+        this.http
+          .put(
+            `${this.getStateUrl(shareableName)}?timeline_type=state`,
+            getState(shareableName, this.data.state),
+          )
+          .subscribe(() => this.dialogRef.close()),
+      );
     }
   }
 
@@ -124,8 +124,7 @@ export class RavenShareableLinkDialogComponent
   }
 
   ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
+    this.subscriptions.unsubscribe();
   }
 
   ngOnInit() {

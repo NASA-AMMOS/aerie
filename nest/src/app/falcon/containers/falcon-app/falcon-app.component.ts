@@ -9,8 +9,7 @@
 
 import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
 import { select, Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Observable, Subscription } from 'rxjs';
 import { ToggleNestNavigationDrawer } from '../../../shared/actions/config.actions';
 import {
   CommandDictionary,
@@ -97,22 +96,23 @@ export class FalconAppComponent implements OnDestroy {
     showTooltips: false,
   };
 
-  private ngUnsubscribe: Subject<{}> = new Subject();
+  private subscriptions = new Subscription();
 
   constructor(private store: Store<FalconAppState>) {
-    this.commandsByName$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe((commandsByName: StringTMap<MpsCommand>) => {
-        this.commandsByName = commandsByName;
-      });
+    this.subscriptions.add(
+      this.commandsByName$.subscribe(
+        (commandsByName: StringTMap<MpsCommand>) => {
+          this.commandsByName = commandsByName;
+        },
+      ),
+    );
 
     this.store.dispatch(FileActions.fetchChildren({ parentId: 'root' }));
     this.store.dispatch(CommandDictionaryActions.fetchCommandDictionaries());
   }
 
   ngOnDestroy(): void {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
+    this.subscriptions.unsubscribe();
   }
 
   dragEnd(event: { gutterNum: number; sizes: Array<number> }) {

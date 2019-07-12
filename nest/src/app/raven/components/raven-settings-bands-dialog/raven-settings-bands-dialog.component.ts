@@ -12,8 +12,7 @@ import { FormControl, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material';
 import { select, Store } from '@ngrx/store';
 import keyBy from 'lodash-es/keyBy';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Observable, Subscription } from 'rxjs';
 import { AppState } from '../../../app-store';
 import * as sourceExplorerActions from '../../../raven/actions/source-explorer.actions';
 import * as timelineActions from '../../../raven/actions/timeline.actions';
@@ -35,8 +34,6 @@ import { defaultColors, getBandLabel } from '../../util';
   templateUrl: './raven-settings-bands-dialog.component.html',
 })
 export class RavenSettingsBandsDialogComponent implements OnDestroy {
-  private ngUnsubscribe: Subject<{}> = new Subject();
-
   bands$: Observable<RavenCompositeBand[]>;
   selectedSubBand$: Observable<RavenSubBand | null>;
 
@@ -46,7 +43,6 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
   subBands: RavenSubBand[];
 
   colors = defaultColors;
-
   maxHeight = window.innerHeight - 200;
 
   heightControl: FormControl = new FormControl('', [
@@ -57,6 +53,8 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
   timeDeltaControl: FormControl = new FormControl('', [
     Validators.pattern(/(\d\d\d)T(\d\d):(\d\d):(\d\d)\.?(\d\d\d)?$/),
   ]);
+
+  private subscriptions = new Subscription();
 
   constructor(
     public dialogRef: MatDialogRef<RavenSettingsBandsDialogComponent>,
@@ -75,26 +73,30 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
     }
 
     this.bands$ = this.store.pipe(select(timelineSelectors.getBands));
-    this.bands$.pipe(takeUntil(this.ngUnsubscribe)).subscribe(bands => {
-      this.bandsById = keyBy(bands, 'id');
-      if (this.bandsById[this.selectedBandId] !== undefined) {
-        this.subBands = this.bandsById[this.selectedBandId].subBands;
-      } else {
-        this.dialogRef.close();
-      }
-    });
-
     this.selectedSubBand$ = this.store.pipe(
       select(timelineSelectors.getSelectedSubBand),
     );
-    this.selectedSubBand$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(selectedSubBand => (this.selectedSubBand = selectedSubBand));
+
+    this.subscriptions.add(
+      this.bands$.subscribe(bands => {
+        this.bandsById = keyBy(bands, 'id');
+        if (this.bandsById[this.selectedBandId] !== undefined) {
+          this.subBands = this.bandsById[this.selectedBandId].subBands;
+        } else {
+          this.dialogRef.close();
+        }
+      }),
+    );
+
+    this.subscriptions.add(
+      this.selectedSubBand$.subscribe(
+        selectedSubBand => (this.selectedSubBand = selectedSubBand),
+      ),
+    );
   }
 
   ngOnDestroy(): void {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
+    this.subscriptions.unsubscribe();
   }
 
   onChangeActivityStyle(
@@ -109,7 +111,6 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
    * Event. Called when a subBand selection event is fired from the raven-settings-band-dialog component.
    */
   onChangeSelectedSubBand(subBandId: string): void {
-    // this.selectedSubBandId = subBandId;
     this.store.dispatch(
       new timelineActions.UpdateTimeline({ selectedSubBandId: subBandId }),
     );
@@ -134,17 +135,19 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
       },
       width: '300px',
     });
-    confirmDialogRef.afterClosed().subscribe(result => {
-      if (result.confirm) {
-        this.store.dispatch(new timelineActions.RemoveSubBand(subBand.id));
-        this.store.dispatch(
-          new sourceExplorerActions.SubBandIdRemove(
-            subBand.sourceIds,
-            subBand.id,
-          ),
-        );
-      }
-    });
+    this.subscriptions.add(
+      confirmDialogRef.afterClosed().subscribe(result => {
+        if (result.confirm) {
+          this.store.dispatch(new timelineActions.RemoveSubBand(subBand.id));
+          this.store.dispatch(
+            new sourceExplorerActions.SubBandIdRemove(
+              subBand.sourceIds,
+              subBand.id,
+            ),
+          );
+        }
+      }),
+    );
   }
 
   /**
@@ -298,7 +301,7 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
   /**
    * trackBy for subBands.
    */
-  trackByFn(index: number, item: RavenSubBand) {
+  trackByFn(_: number, item: RavenSubBand) {
     return item.id;
   }
 }
