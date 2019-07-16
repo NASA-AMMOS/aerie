@@ -1,9 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation_runtime.message;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.AdaptationUtils;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinSDKAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.builders.AdaptationBuilder;
-import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.AmqpMessage;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.AmqpMessageData;
@@ -11,11 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
 import java.util.HashMap;
 
 public class LoadAdaptationMessageStrategy implements MessageStrategy {
@@ -44,23 +40,22 @@ public class LoadAdaptationMessageStrategy implements MessageStrategy {
       }
 
       try {
-        MerlinSDKAdaptation userAdaptation =
+        MerlinAdaptation userAdaptation =
             AdaptationUtils.loadAdaptation(adaptation.getLocation());
         if (userAdaptation == null) {
           logger.error("loadAdaptation returned a null value for adaptation " + adaptationId);
           return;
         }
 
-        AdaptationBuilder builder = userAdaptation.init();
-        if (builder == null) {
-          logger.error("Adaptation could not be initialized (adaptation id " + adaptationId + ")");
-          return;
-        }
+        final var adaptationAnnotation = userAdaptation.getClass()
+            .getAnnotation(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Adaptation.class);
 
         // TODO: Wire up signal listener
         // TODO: Create dedicated topic for this adaptation
         // TODO: Prevent this runtime from managing other adaptations until this one is unloaded
-        logger.info("Successfully loaded adaptation " + builder.getAdaptation().getName());
+        logger.info(
+            "Successfully loaded adaptation " + adaptationAnnotation.name() +
+            ", version " + adaptationAnnotation.version());
 
       } catch (Exception e) {
         logger.error("Error loading adaptation " + adaptationId, e);

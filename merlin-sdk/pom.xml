@@ -1,25 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project
-  xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>gov.nasa.jpl.ammos.mpsa.aerie</groupId>
   <artifactId>merlin-sdk</artifactId>
-  <version>1.0-SNAPSHOT</version>
-
-  <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-  </properties>
+  <version>1.1-SNAPSHOT</version>
 
   <dependencies>
-    <dependency>
-      <groupId>org.sonarsource.scanner.maven</groupId>
-      <artifactId>sonar-maven-plugin</artifactId>
-      <version>3.2</version>
-    </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
@@ -27,38 +16,18 @@
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
-      <artifactId>commons-collections4</artifactId>
-      <version>4.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.commons</groupId>
       <artifactId>commons-math3</artifactId>
       <version>3.6.1</version>
     </dependency>
     <dependency>
-      <groupId>janino</groupId>
-      <artifactId>janino</artifactId>
-      <version>2.5.10</version>
+      <groupId>gov.nasa.jpl.ammos.mpsa</groupId>
+      <artifactId>JNISpice</artifactId>
+      <version>1.0-20190517.205223-2</version>
     </dependency>
     <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>23.6-jre</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fathzer</groupId>
-      <artifactId>javaluator</artifactId>
-      <version>3.0.2</version>
-    </dependency>
-    <dependency>
-        <groupId>gov.nasa.jpl.ammos.mpsa</groupId>
-        <artifactId>JNISpice</artifactId>
-        <version>1.0-20190517.205223-2</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-bundle</artifactId>
-      <version>1.19.4</version>
+      <groupId>com.squareup</groupId>
+      <artifactId>javapoet</artifactId>
+      <version>1.11.1</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -66,12 +35,8 @@
       <version>4.12</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>gov.nasa.jpl.ammos.mpsa.aerie</groupId>
-      <artifactId>schemas</artifactId>
-      <version>1.1-SNAPSHOT</version>
-    </dependency>
   </dependencies>
+
   <build>
     <plugins>
       <plugin>
@@ -79,25 +44,33 @@
         <artifactId>sonar-maven-plugin</artifactId>
         <version>3.4.0.905</version>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.7.0</version>
+        <version>3.8.0</version>
+
         <configuration>
+          <source>11</source>
+          <target>11</target>
           <compilerArgs>
             <arg>-parameters</arg>
+            <arg>-Xlint:unchecked</arg>
           </compilerArgs>
         </configuration>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.0.0-M3</version>
       </plugin>
+
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
         <version>0.8.1</version>
+
         <executions>
           <execution>
             <id>pre-unit-test</id>
@@ -109,6 +82,7 @@
               <propertyName>surefireArgLine</propertyName>
             </configuration>
           </execution>
+
           <execution>
             <id>post-unit-test</id>
             <phase>test</phase>
@@ -124,12 +98,15 @@
       </plugin>
     </plugins>
   </build>
+
   <profiles>
     <profile>
       <id>sonar</id>
+
       <activation>
         <activeByDefault>true</activeByDefault>
       </activation>
+
       <properties>
         <sonar.host.url>
           http://100.64.92.84:9000
@@ -151,21 +128,8 @@
         </sonar.jacoco.reportPaths>
       </properties>
     </profile>
-    <profile>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <repositories>
-        <repository>
-          <snapshots />
-          <id>snapshots</id>
-          <name>libs-snapshot</name>
-          <url>https://cae-artifactory.jpl.nasa.gov/artifactory/maven-libs-snapshot-local</url>
-        </repository>
-      </repositories>
-      <id>artifactory</id>
-    </profile>
   </profiles>
+
   <distributionManagement>
     <snapshotRepository>
       <id>snapshots</id>

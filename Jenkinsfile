@@ -39,6 +39,12 @@ pipeline {
 				script {
 					def statusCode = sh returnStatus: true, script:
 					"""
+					# setup env
+					export JAVA_HOME=/usr/lib/jvm/java-11-openjdk
+					export MAVEN_HOME=/usr/local/share/maven
+					export PATH=\$JAVA_HOME/bin:\$MAVEN_HOME/bin:/usr/local/bin:/usr/bin
+					export LD_LIBRARY_PATH=/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib
+
 					# setup nvm/node
 					export NVM_DIR="\$HOME/.nvm"
 					if [ ! -d \$NVM_DIR ]; then
@@ -46,6 +52,9 @@ pipeline {
 					fi
 					[ -s "\$NVM_DIR/nvm.sh" ] && . "\$NVM_DIR/nvm.sh"
 					nvm install v10.13.0
+
+					echo -e "\ncurrent environment variables:\n"
+					env | sort
 
 					./scripts/build.sh --commit ${env.GIT_COMMIT} --tag ${getTag()} ${remoteBranch}
 					"""

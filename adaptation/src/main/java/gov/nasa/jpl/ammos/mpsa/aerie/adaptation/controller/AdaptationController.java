@@ -4,12 +4,11 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.AdaptationRepository;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.activities.ActivityTypeSerializer;
-
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.activities.ParameterSchemaSerializer;
 import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.AdaptationUtils;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.builders.AdaptationBuilder;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinSDKAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ParameterSchema;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -158,42 +157,34 @@ public class AdaptationController {
     Optional<Adaptation> optAdapt = repository.findById(id);
     if (optAdapt.isPresent()) {
       Adaptation adaptation = optAdapt.get();
+
+      final MerlinAdaptation userAdaptation;
       try {
-        MerlinSDKAdaptation userAdaptation = AdaptationUtils.loadAdaptation(adaptation.getLocation());
-        if (userAdaptation == null) {
-          logger.error("NullAdaptation:\n loadAdaptation returned a null adaptation");
-          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        userAdaptation = AdaptationUtils.loadAdaptation(adaptation.getLocation());
+      } catch (IOException e) {
+        // Could not load the adaptation
+        logger.error("ClassPathLoaderError:\n " + e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+      }
 
-        AdaptationBuilder builder = userAdaptation.init();
-        List<ActivityType> activityTypes = new ArrayList<>();
+      if (userAdaptation == null) {
+        logger.error("NullAdaptation:\n loadAdaptation returned a null adaptation");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+      }
 
-        builder.getActivivityTypes().forEach((a) -> {
-          ActivityType activityType = a.getActivityType();
-          activityTypes.add(activityType);
-        });
+      try {
+        final ActivityMapper activityMapper = userAdaptation.getActivityMapper();
+        final Map<String, ParameterSchema> activitySchemas = activityMapper.getActivitySchemas();
 
         GsonBuilder gsonMapBuilder = new GsonBuilder();
-        gsonMapBuilder.registerTypeAdapter(ActivityType.class, new ActivityTypeSerializer());
+        gsonMapBuilder.registerTypeAdapter(ParameterSchema.class, new ParameterSchemaSerializer());
         Gson gsonObject = gsonMapBuilder.create();
-        String JSONObject = gsonObject.toJson(activityTypes);
+        String JSONObject = gsonObject.toJson(activitySchemas);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         return new ResponseEntity<Object>(JSONObject, headers, HttpStatus.OK);
-      } catch (IOException e) {
-        // Could not load the adaptation
-        logger.error("ClassPathLoaderError:\n " + e.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-      } catch (InstantiationException e) {
-        // Could not instantiate the adaptation
-        logger.error("InstantiationException:\n " + e.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-      } catch (IllegalAccessException e) {
-        // Could not access the adaptation
-        logger.error("IllegalAccessException:\n " + e.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
       } catch (Exception e) {
         // Generic error
         logger.error("Exception:\n" + e.getMessage());
