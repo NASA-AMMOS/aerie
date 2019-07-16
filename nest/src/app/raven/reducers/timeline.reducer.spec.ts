@@ -645,13 +645,11 @@ describe('timeline reducer', () => {
       timelineState,
       new RemovePointsInSubBand(band.id, '2', [activityPoint]),
     );
-    expect(timelineState.bands[0].subBands[0].points[0]).toEqual(
-      {
-        ...activityPoint,
-        id: 'abc',
-        uniqueId: '_abc',
-      }
-    );
+    expect(timelineState.bands[0].subBands[0].points[0]).toEqual({
+      ...activityPoint,
+      id: 'abc',
+      uniqueId: '_abc',
+    });
   });
 
   it('handle RemoveSourceIdFromSubBands', () => {
