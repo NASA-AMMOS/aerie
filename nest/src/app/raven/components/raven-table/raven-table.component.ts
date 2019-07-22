@@ -20,7 +20,12 @@ import {
 } from '@angular/core';
 
 import { AgGridAngular } from 'ag-grid-angular';
-import { AgGridEvent, IDatasource, RowNode } from 'ag-grid-community';
+import {
+  AgGridEvent,
+  IDatasource,
+  RowNode,
+  SelectionChangedEvent,
+} from 'ag-grid-community';
 import pickBy from 'lodash-es/pickBy';
 import startsWith from 'lodash-es/startsWith';
 
@@ -40,6 +45,7 @@ import {
 import {
   RavenActivityPoint,
   RavenPoint,
+  RavenPointIndex,
   RavenPointUpdate,
   RavenSubBand,
   RavenUpdate,
@@ -65,6 +71,9 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
   activityInitiallyHidden: boolean;
 
   @Input()
+  mode: string;
+
+  @Input()
   points: RavenPoint[];
 
   @Input()
@@ -77,7 +86,9 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
   selectedPoint: RavenPoint;
 
   @Output()
-  addPointToSubBand: EventEmitter<RavenPoint> = new EventEmitter<RavenPoint>();
+  addPointToSubBand: EventEmitter<RavenPointIndex> = new EventEmitter<
+    RavenPointIndex
+  >();
 
   @Output()
   removePointsInSubBand: EventEmitter<RavenPoint[]> = new EventEmitter<
@@ -86,6 +97,9 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
 
   @Output()
   save: EventEmitter<null> = new EventEmitter<null>();
+
+  @Output()
+  selectPoint: EventEmitter<RavenPoint> = new EventEmitter<RavenPoint>();
 
   @Output()
   updateFilter: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
@@ -614,6 +628,17 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
     return point;
   }
 
+  /**
+   * Helper. Returns true if no row is selected.
+   */
+  noneSelected() {
+    if (this.agGrid && this.agGrid.api) {
+      return this.agGrid.api.getSelectedRows().length === 0;
+    } else {
+      return true;
+    }
+  }
+
   onAdd() {
     let newPoint: RavenPoint;
     if (this.selectedSubBand.type === 'activity') {
@@ -632,11 +657,27 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
         this.selectedSubBand.id,
       );
     }
-    this.addPointToSubBand.emit(newPoint);
+
+    this.addPointToSubBand.emit({
+      index:
+        this.gridApi.getSelectedNodes().length > 0
+          ? this.gridApi.getSelectedNodes()[0].rowIndex+1
+          : this.gridApi.getDisplayedRowCount(),
+      point: newPoint,
+    });
   }
 
   onRemove() {
     const selectedPoints = this.gridApi.getSelectedRows();
     this.removePointsInSubBand.emit(selectedPoints);
+  }
+
+  onSelectionChanged(event: SelectionChangedEvent) {
+    if (event.api.getSelectedNodes().length > 0) {
+      const point = event.api.getSelectedNodes()[0].data;
+      if (!point.selected) {
+        this.selectPoint.emit(point);
+      }
+    }
   }
 }

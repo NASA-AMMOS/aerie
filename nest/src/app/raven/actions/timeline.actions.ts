@@ -22,6 +22,7 @@ import {
 
 export enum TimelineActionTypes {
   AddBand = '[timeline] add_band',
+  AddPointAtIndex = '[timeline] add_point_at_index',
   AddPointsToSubBand = '[timeline] add_points_to_sub_band',
   AddSubBand = '[timeline] add_sub_band',
   ExpandChildrenOrDescendants = '[timeline] expand_children_or_descendants',
@@ -73,6 +74,17 @@ export class AddBand implements Action {
     public sourceId: string | null,
     public band: RavenCompositeBand,
     public modifiers: AddBandModifiers = {},
+  ) {}
+}
+
+export class AddPointAtIndex implements Action {
+  readonly type = TimelineActionTypes.AddPointAtIndex;
+
+  constructor(
+    public bandId: string,
+    public subBandId: string,
+    public point: RavenPoint,
+    public index: number,
   ) {}
 }
 
@@ -373,6 +385,7 @@ export class ZoomOutViewTimeRange implements Action {
 
 export type TimelineAction =
   | AddBand
+  | AddPointAtIndex
   | AddPointsToSubBand
   | AddSubBand
   | ExpandChildrenOrDescendants

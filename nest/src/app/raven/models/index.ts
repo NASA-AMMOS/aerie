@@ -58,6 +58,7 @@ export * from './raven-guide-point';
 export * from './raven-open-args';
 export * from './raven-pin';
 export * from './raven-point';
+export * from './raven-point-index';
 export * from './raven-point-update';
 export * from './raven-resource-band';
 export * from './raven-resource-point';

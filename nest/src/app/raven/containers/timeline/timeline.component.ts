@@ -52,6 +52,7 @@ import {
   RavenEpoch,
   RavenGuidePoint,
   RavenPoint,
+  RavenPointIndex,
   RavenPointUpdate,
   RavenSituationalAwarenessPefEntry,
   RavenSortMessage,
@@ -630,13 +631,13 @@ export class TimelineComponent implements OnDestroy {
   /**
    * Event. Called when a `AddPointToSubBand' event is fired from the raven-table component.
    */
-  onAddPointToSubBand(point: RavenPoint) {
+  onAddPointToSubBand(e: RavenPointIndex) {
     this.store.dispatch(
-      new timelineActions.AddPointsToSubBand(
-        point.sourceId,
+      new timelineActions.AddPointAtIndex(
         this.selectedBandId,
         this.selectedSubBandId,
-        [point],
+        e.point,
+        e.index,
       ),
     );
   }
@@ -812,6 +813,12 @@ export class TimelineComponent implements OnDestroy {
 
   onSaveNewEpochFile(): void {
     this.store.dispatch(new dialogActions.OpenSaveNewEpochFileDialog());
+  }
+
+  onSelectPoint(point: RavenPoint) {
+    this.store.dispatch(
+      new timelineActions.SelectPoint(this.selectedBandId, this.selectedSubBandId, point.uniqueId),
+    );
   }
 
   onUpdateEpochData(e: any): void {

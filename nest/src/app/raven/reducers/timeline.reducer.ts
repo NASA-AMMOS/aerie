@@ -13,6 +13,7 @@ import { StringTMap, TimeRange } from '../../shared/models';
 import { getMaxTimeRange } from '../../shared/util';
 import {
   AddBand,
+  AddPointAtIndex,
   AddPointsToSubBand,
   AddSubBand,
   ExpandChildrenOrDescendants,
@@ -113,6 +114,8 @@ export function reducer(
   switch (action.type) {
     case TimelineActionTypes.AddBand:
       return addBand(state, action);
+    case TimelineActionTypes.AddPointAtIndex:
+        return addPointAtIndex(state, action);
     case TimelineActionTypes.AddPointsToSubBand:
       return addPointsToSubBand(state, action);
     case TimelineActionTypes.AddSubBand:
@@ -246,6 +249,39 @@ export function addBand(state: TimelineState, action: AddBand): TimelineState {
         ? action.band.subBands[0].id
         : '',
     ...updateTimeRanges(bands, state.viewTimeRange),
+  };
+}
+
+export function addPointAtIndex(
+  state: TimelineState,
+  action: AddPointAtIndex,
+) : TimelineState {
+  const bands = state.bands.map((band: RavenCompositeBand) => {
+    if (action.bandId === band.id) {
+      return {
+        ...band,
+        subBands: band.subBands.map(subBand => {
+          if (action.subBandId === subBand.id) {
+            const points = [...(subBand as any).points];
+            points.splice(action.index, 0, action.point);
+            return {
+              ...subBand,
+              points,
+            };
+          }
+
+          return subBand;
+        }),
+      };
+    }
+
+    return band;
+  });
+
+  return {
+    ...state,
+    bands,
+    currentStateChanged: state.currentState !== null,
   };
 }
 
@@ -1053,20 +1089,23 @@ export function updatePointInSubBand(
         ...band,
         subBands: band.subBands.map(subBand => {
           if (action.subBandId === subBand.id) {
+            const points = (subBand as any).points.map(
+              (point: RavenActivityPoint) => {
+                if (point.id === action.pointId) {
+                  return {
+                    ...point,
+                    ...action.update,
+                  };
+                } else {
+                  return point;
+                }
+              },
+            );
+            const maxTimeRange = getMaxTimeRange(points);
             return {
               ...subBand,
-              points: (subBand as any).points.map(
-                (point: RavenActivityPoint) => {
-                  if (point.id === action.pointId) {
-                    return {
-                      ...point,
-                      ...action.update,
-                    };
-                  } else {
-                    return point;
-                  }
-                },
-              ),
+              maxTimeRange,
+              points,
               pointsChanged: true,
             };
           }
@@ -1081,6 +1120,7 @@ export function updatePointInSubBand(
   return {
     ...state,
     bands,
+    ...updateTimeRanges(bands, state.viewTimeRange),
   };
 }
 

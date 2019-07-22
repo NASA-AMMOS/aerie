@@ -54,17 +54,20 @@
       (columnMoved)="emitUpdateTableColumns()"
       (columnResized)="emitUpdateTableColumns()"
       (gridReady)="onGridReady($event)"
+      (selectionChanged)="onSelectionChanged($event)"
       (sortChanged)="emitUpdateTableColumns()"
     >
     </ag-grid-angular>
     <div
       class="edit-button-container"
-      *ngIf="points.length > 0 && points[0].editable"
+      *ngIf="points.length > 0 && points[0].editable && mode !== 'minimal'"
     >
       <button mat-raised-button class="edit-button" (click)="onAdd()">
         Add
       </button>
-      <button mat-raised-button class="edit-button" (click)="onRemove()">
+      <button
+        *ngIf="!noneSelected()"
+        mat-raised-button class="edit-button" (click)="onRemove()">
         Remove
       </button>
       <button
