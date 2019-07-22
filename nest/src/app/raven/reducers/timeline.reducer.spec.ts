@@ -235,15 +235,20 @@ describe('timeline reducer', () => {
     expect(timelineState.bands[0].subBands[0].points).toEqual([]);
     timelineState = reducer(
       timelineState,
-      new AddPointsToSubBand(source.id, newBand.id, activityBand.id, activityPoints),
+      new AddPointsToSubBand(
+        source.id,
+        newBand.id,
+        activityBand.id,
+        activityPoints,
+      ),
     );
     timelineState = reducer(
       timelineState,
-      new AddPointAtIndex(newBand.id, activityBand.id,
-        activityPointToAdd, 1,
-      ),
+      new AddPointAtIndex(newBand.id, activityBand.id, activityPointToAdd, 1),
     );
-    expect(timelineState.bands[0].subBands[0].points[1]).toEqual(activityPointToAdd);
+    expect(timelineState.bands[0].subBands[0].points[1]).toEqual(
+      activityPointToAdd,
+    );
   });
 
   it('handle AddPointsToSubBand', () => {
