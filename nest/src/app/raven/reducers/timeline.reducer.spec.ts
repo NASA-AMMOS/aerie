@@ -9,6 +9,7 @@
 
 import {
   AddBand,
+  AddPointAtIndex,
   AddPointsToSubBand,
   AddSubBand,
   ExpandChildrenOrDescendants,
@@ -44,6 +45,8 @@ import {
 import {
   activityBand,
   activityPoint,
+  activityPoints,
+  activityPointToAdd,
   compositeBand,
   grandChildSource,
   overlayResourceBands,
@@ -213,6 +216,34 @@ describe('timeline reducer', () => {
     );
 
     expect(sortedBands.map(b => b.id)).toEqual(['0', '42', '1']);
+  });
+
+  it('handle AddPointAtIndex', () => {
+    const source: RavenSource = rootSource;
+    const newBand = {
+      ...compositeBand,
+      subBands: [
+        {
+          ...activityBand,
+        },
+      ],
+    };
+
+    // First add band to state so we have something to add point to.
+    timelineState = reducer(timelineState, new AddBand(source.id, newBand));
+
+    expect(timelineState.bands[0].subBands[0].points).toEqual([]);
+    timelineState = reducer(
+      timelineState,
+      new AddPointsToSubBand(source.id, newBand.id, activityBand.id, activityPoints),
+    );
+    timelineState = reducer(
+      timelineState,
+      new AddPointAtIndex(newBand.id, activityBand.id,
+        activityPointToAdd, 1,
+      ),
+    );
+    expect(timelineState.bands[0].subBands[0].points[1]).toEqual(activityPointToAdd);
   });
 
   it('handle AddPointsToSubBand', () => {

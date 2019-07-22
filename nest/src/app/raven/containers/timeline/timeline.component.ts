@@ -815,6 +815,9 @@ export class TimelineComponent implements OnDestroy {
     this.store.dispatch(new dialogActions.OpenSaveNewEpochFileDialog());
   }
 
+  /**
+   * Event. Called when an `select-point` event is fired from the raven-table component.
+   */
   onSelectPoint(point: RavenPoint) {
     this.store.dispatch(
       new timelineActions.SelectPoint(

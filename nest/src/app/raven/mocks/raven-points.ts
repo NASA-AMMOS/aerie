@@ -41,6 +41,38 @@ export const activityPoint: RavenActivityPoint = {
   uniqueId: '400',
 };
 
+export const activityPointToAdd: RavenActivityPoint = {
+  activityId: 'test-activity-point',
+  activityName: 'test-activity-point',
+  activityParameters: [{ Name: '', Value: '' }],
+  activityType: '',
+  ancestors: [],
+  arguments: 0,
+  childrenUrl: '',
+  color: '#000000',
+  descendantsUrl: '',
+  duration: 10,
+  editable: false,
+  end: 500,
+  endTimestamp: '',
+  expandedFromPointId: null,
+  expansion: 'noExpansion',
+  hidden: false,
+  id: '501',
+  keywordLine: '',
+  legend: '',
+  message: null,
+  metadata: [],
+  pointStatus: 'unchanged',
+  selected: false,
+  sourceId: '/a/b/c/d/e/v',
+  start: 0,
+  startTimestamp: '',
+  subBandId: '4',
+  type: 'activity',
+  uniqueId: '501',
+};
+
 export const activityPoints: RavenActivityPoint[] = [
   {
     activityId: '',
