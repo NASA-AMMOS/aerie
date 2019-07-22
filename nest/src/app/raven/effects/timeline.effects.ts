@@ -407,7 +407,7 @@ export class TimelineEffects {
     dataSourceUrl: string,
     points: RavenPoint[],
     csvHeaderMap: StringTMap<string>,
-  ) {
+  ): Observable<Action>[] {
     const headers = new HttpHeaders().set('Content-Type', `application/json`);
     const responseType = 'text';
 
