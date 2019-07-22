@@ -8,7 +8,6 @@
  */
 
 import {
-  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
   EventEmitter,
@@ -60,7 +59,7 @@ import { GridOptions, ValueSetterParams } from 'ag-grid-community';
   styleUrls: ['./raven-table.component.css'],
   templateUrl: './raven-table.component.html',
 })
-export class RavenTableComponent implements AfterViewInit, OnChanges {
+export class RavenTableComponent implements OnChanges {
   @ViewChild('agGrid', { static: false })
   agGrid: AgGridAngular;
 
@@ -119,7 +118,7 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
 
   columnDefs: any[] = [];
   rowData: any[] = [];
-  rowSelection: string;
+  rowSelection = 'multiple';
 
   dataSource: IDatasource;
 
@@ -143,10 +142,6 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
     };
 
     this.gridOptions.datasource = this.dataSource;
-  }
-
-  ngAfterViewInit() {
-    this.rowSelection = 'multiple';
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -305,37 +300,40 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
       ).forEach(prop => {
         // `pickBy` removes nulls or undefined props.
         // Exclude table columns we do not want to show.
+        const excludeProps = [
+          'activityId',
+          'activityParameters',
+          'ancestors',
+          'childrenUrl',
+          'color',
+          'hidden',
+          'descendantsUrl',
+          'editable',
+          'endTimestamp',
+          'expandedFromPointId',
+          'expansion',
+          'id',
+          'interpolateEnding',
+          'isDuration',
+          'isTime',
+          'keywordLine',
+          'legend',
+          'plan',
+          'pointStatus',
+          'selected',
+          'sourceId',
+          'span',
+          'startTimestamp',
+          'status',
+          'subBandId',
+          'subsystem',
+          'type',
+          'uniqueId'
+        ];
         if (
           typeof point[prop] !== 'object' &&
           !startsWith(prop, '__') &&
-          prop !== 'activityId' &&
-          prop !== 'activityParameters' &&
-          prop !== 'ancestors' &&
-          prop !== 'childrenUrl' &&
-          prop !== 'color' &&
-          prop !== 'hidden' &&
-          prop !== 'descendantsUrl' &&
-          prop !== 'editable' &&
-          prop !== 'endTimestamp' &&
-          prop !== 'expandedFromPointId' &&
-          prop !== 'expansion' &&
-          prop !== 'id' &&
-          prop !== 'interpolateEnding' &&
-          prop !== 'isDuration' &&
-          prop !== 'isTime' &&
-          prop !== 'keywordLine' &&
-          prop !== 'legend' &&
-          prop !== 'plan' &&
-          prop !== 'pointStatus' &&
-          prop !== 'selected' &&
-          prop !== 'sourceId' &&
-          prop !== 'span' &&
-          prop !== 'startTimestamp' &&
-          prop !== 'status' &&
-          prop !== 'subBandId' &&
-          prop !== 'subsystem' &&
-          prop !== 'type' &&
-          prop !== 'uniqueId'
+          !excludeProps.includes(prop)
         ) {
           children.push({
             colId: prop,
