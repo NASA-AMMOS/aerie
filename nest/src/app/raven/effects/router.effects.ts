@@ -8,65 +8,63 @@
  */
 
 import { Injectable } from '@angular/core';
-import { Actions, Effect, ofType } from '@ngrx/effects';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
 import {
   RouterNavigationAction,
   SerializedRouterStateSnapshot,
 } from '@ngrx/router-store';
 import { Action, Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
 import { map, mergeMap, withLatestFrom } from 'rxjs/operators';
-import * as configActions from '../../shared/actions/config.actions';
-import * as sourceExplorerActions from '../actions/source-explorer.actions';
+import { ConfigActions } from '../../shared/actions';
+import { SourceExplorerActions } from '../actions';
 import { RavenAppState } from '../raven-store';
 
 @Injectable()
 export class RouterEffects {
-  constructor(
-    private actions$: Actions,
-    private store$: Store<RavenAppState>,
-  ) {}
+  constructor(private actions: Actions, private store: Store<RavenAppState>) {}
 
-  @Effect()
-  routerNavigation$: Observable<Action> = this.actions$.pipe(
-    ofType<RouterNavigationAction<SerializedRouterStateSnapshot>>(
-      '@ngrx/router-store/navigation',
+  routerNavigation = createEffect(() =>
+    this.actions.pipe(
+      ofType<RouterNavigationAction<SerializedRouterStateSnapshot>>(
+        '@ngrx/router-store/navigation',
+      ),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      mergeMap(({ state, action }) => {
+        const { queryParams } = action.payload.routerState.root;
+
+        const layoutPath = queryParams.layout;
+        const shareableName = queryParams.s;
+        const statePath = queryParams.state;
+        const sourcePath = queryParams.source;
+
+        const actions: Action[] = [];
+
+        // Get project config.
+        actions.push(
+          ConfigActions.fetchProjectConfig({
+            url: `${state.config.app.baseUrl}/${state.config.mpsServer.ravenConfigUrl}`,
+          }),
+        );
+
+        if (shareableName) {
+          // If there is an `s` query parameter then use it to load a shareable link.
+          SourceExplorerActions.updateSourceExplorer({
+            update: { shareableName },
+          });
+        } else {
+          // Otherwise use other query parameters to load an app layout and/or state.
+          SourceExplorerActions.updateSourceExplorer({
+            update: {
+              layoutPath,
+              sourcePath,
+              statePath,
+            },
+          });
+        }
+
+        return actions;
+      }),
     ),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    mergeMap(({ state, action }) => {
-      const { queryParams } = action.payload.routerState.root;
-
-      const layoutPath = queryParams.layout;
-      const shareableName = queryParams.s;
-      const statePath = queryParams.state;
-      const sourcePath = queryParams.source;
-
-      const actions: Action[] = [];
-      // Get project config.
-      actions.push(
-        new configActions.FetchProjectConfig(
-          `${state.config.app.baseUrl}/${state.config.mpsServer.ravenConfigUrl}`,
-        ),
-      );
-      if (shareableName) {
-        // If there is an `s` query parameter then use it to load a shareable link.
-        actions.push(
-          new sourceExplorerActions.UpdateSourceExplorer({ shareableName }),
-        );
-      } else {
-        // Otherwise use other query parameters to load an app layout and/or state.
-        actions.push(
-          new sourceExplorerActions.UpdateSourceExplorer({ layoutPath }),
-        );
-        actions.push(
-          new sourceExplorerActions.UpdateSourceExplorer({ sourcePath }),
-        );
-        actions.push(
-          new sourceExplorerActions.UpdateSourceExplorer({ statePath }),
-        );
-      }
-      return actions;
-    }),
   );
 }

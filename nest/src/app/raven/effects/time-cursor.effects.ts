@@ -8,7 +8,7 @@
  */
 
 import { Injectable } from '@angular/core';
-import { Actions, Effect, ofType } from '@ngrx/effects';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 import { interval, Observable, of } from 'rxjs';
 import {
@@ -19,95 +19,67 @@ import {
   takeUntil,
   withLatestFrom,
 } from 'rxjs/operators';
-import { TimeRange } from '../../shared/models';
-import {
-  HideTimeCursor,
-  ShowTimeCursor,
-  TimeCursorActionTypes,
-} from '../actions/time-cursor.actions';
-import * as timeCursorActions from '../actions/time-cursor.actions';
-import * as timelineActions from '../actions/timeline.actions';
+import { TimeCursorActions, TimelineActions } from '../actions';
 import { RavenAppState } from '../raven-store';
 
 @Injectable()
 export class TimeCursorEffects {
-  constructor(
-    private actions$: Actions,
-    private store$: Store<RavenAppState>,
-  ) {}
+  constructor(private actions: Actions, private store: Store<RavenAppState>) {}
 
   /**
-   * Effect for HideTimeCursor.
-   * Note how we return an empty action here {}. This is so `cursorInterval$` `takeUntil` fires.
+   * @note We return an empty action here {}. This is so `cursorInterval$` `takeUntil` fires.
    * If we return an empty observable here (e.g. [] or of()), `takeUntil` will never fire.
    */
-  @Effect({ dispatch: false })
-  hideTimeCursor$: Observable<Action> = this.actions$.pipe(
-    ofType<HideTimeCursor>(TimeCursorActionTypes.HideTimeCursor),
-    concatMap(() => of({} as Action)),
+  hideTimeCursor = createEffect(
+    () =>
+      this.actions.pipe(
+        ofType(TimeCursorActions.hideTimeCursor),
+        concatMap(() => of({} as Action)),
+      ),
+    { dispatch: false },
   );
 
-  /**
-   * Effect for ShowTimeCursor.
-   */
-  @Effect()
-  showTimeCursor$: Observable<Action> = this.actions$.pipe(
-    ofType<ShowTimeCursor>(TimeCursorActionTypes.ShowTimeCursor),
-    withLatestFrom(this.store$),
-    map(([, state]) => state.raven),
-    exhaustMap(({ timeCursor: { clockUpdateIntervalInSecs } }) =>
-      this.cursorInterval$(clockUpdateIntervalInSecs),
+  showTimeCursor = createEffect(() =>
+    this.actions.pipe(
+      ofType(TimeCursorActions.showTimeCursor),
+      withLatestFrom(this.store),
+      map(([, state]) => state.raven),
+      exhaustMap(({ timeCursor: { clockUpdateIntervalInSecs } }) =>
+        this.cursorInterval$(clockUpdateIntervalInSecs),
+      ),
     ),
   );
 
   /**
    * Helper. Returns a cursor time interval Observable that fires every `clockUpdateIntervalInSecs` seconds.
-   * Update the time cursor at each tick of the interval until the `hideTimeCursor$` Observable fires.
+   * Update the time cursor at each tick of the interval until the `hideTimeCursor` Observable fires.
    */
   cursorInterval$(clockUpdateIntervalInSecs: number): Observable<Action> {
     return interval(clockUpdateIntervalInSecs * 1000).pipe(
-      withLatestFrom(this.store$),
+      withLatestFrom(this.store),
       map(([, state]) => state.raven),
-      switchMap(raven =>
-        this.updateCursor(
-          raven.timeCursor.cursorTime,
-          raven.timeCursor.clockRate,
-          raven.timeCursor.clockUpdateIntervalInSecs,
-          raven.timeCursor.autoPage,
-          raven.timeline.viewTimeRange,
-        ),
-      ),
-      takeUntil(this.hideTimeCursor$),
-    );
-  }
+      switchMap(({ timeCursor, timeline: { viewTimeRange } }) => {
+        const actions = [];
 
-  /**
-   * Helper. Dispatches actions that updates the time cursor time.
-   * Pans the timeline right if needed.
-   */
-  updateCursor(
-    cursorTime: number | null,
-    clockRate: number,
-    clockUpdateIntervalInSecs: number,
-    autoPage: boolean,
-    viewTimeRange: TimeRange,
-  ) {
-    const actions = [];
+        const { autoPage, clockRate, cursorTime } = timeCursor;
+        const newCursorTime = cursorTime
+          ? cursorTime + clockRate * clockUpdateIntervalInSecs
+          : null;
 
-    const newCursorTime = cursorTime
-      ? cursorTime + clockRate * clockUpdateIntervalInSecs
-      : null;
-    actions.push(
-      new timeCursorActions.UpdateTimeCursorSettings({
-        cursorTime: newCursorTime,
+        actions.push(
+          TimeCursorActions.updateTimeCursorSettings({
+            update: { cursorTime: newCursorTime },
+          }),
+        );
+
+        // If we are auto-paging and our time cursor goes outside the view window, then pan the view window right.
+        if (autoPage && newCursorTime && newCursorTime > viewTimeRange.end) {
+          actions.push(TimelineActions.panRightViewTimeRange());
+        }
+
+        return actions;
       }),
+      takeUntil(this.hideTimeCursor),
     );
-
-    // If we are auto-paging and our time cursor goes outside the view window, then pan the view window right.
-    if (autoPage && newCursorTime && newCursorTime > viewTimeRange.end) {
-      actions.push(new timelineActions.PanRightViewTimeRange());
-    }
-
-    return actions;
   }
 }

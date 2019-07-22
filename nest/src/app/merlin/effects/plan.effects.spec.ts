@@ -17,8 +17,8 @@ import { Store, StoreModule } from '@ngrx/store';
 import { addMatchers, cold, hot, initTestScheduler } from 'jasmine-marbles';
 import keyBy from 'lodash-es/keyBy';
 import { Observable, of } from 'rxjs';
-import { reducers as rootReducers } from '../../app-store';
-import { ShowToast } from '../../shared/actions/toast.actions';
+import { ROOT_REDUCERS } from '../../app-store';
+import { ToastActions } from '../../shared/actions';
 import {
   ActivityInstance,
   Adaptation,
@@ -65,7 +65,7 @@ describe('PlanEffects', () => {
         HttpClientModule,
         MatDialogModule,
         OverlayModule,
-        StoreModule.forRoot(rootReducers),
+        StoreModule.forRoot(ROOT_REDUCERS),
         StoreModule.forFeature('merlin', reducers),
       ],
       providers: [
@@ -117,11 +117,11 @@ describe('PlanEffects', () => {
         },
         planId,
       });
-      const showToast = new ShowToast(
-        'success',
-        'New activity has been successfully created and saved.',
-        'Create Activity Success',
-      );
+      const showToast = ToastActions.showToast({
+        message: 'New activity has been successfully created and saved.',
+        title: 'Create Activity Success',
+        toastType: 'success',
+      });
 
       actions = hot('-a', { a: action });
       const expected = cold('-(bc)', { b: success, c: showToast });
@@ -134,11 +134,11 @@ describe('PlanEffects', () => {
       const action = PlanActions.createActivity({ data: activity, planId });
       const error = new Error('CreateActivityFailure');
       const failure = PlanActions.createActivityFailure({ error });
-      const showToast = new ShowToast(
-        'error',
-        error.message,
-        'Create Activity Failed',
-      );
+      const showToast = ToastActions.showToast({
+        message: error.message,
+        title: 'Create Activity Failed',
+        toastType: 'error',
+      });
 
       const service = TestBed.get(PlanService);
       spyOn(service, 'createActivity').and.returnValue(
@@ -171,11 +171,11 @@ describe('PlanEffects', () => {
     it('should return a CreatePlanSuccess action with data upon success', () => {
       const action = PlanActions.createPlan({ plan });
       const success = PlanActions.createPlanSuccess({ plan });
-      const showToast = new ShowToast(
-        'success',
-        'New plan has been successfully created and saved.',
-        'Create Plan Success',
-      );
+      const showToast = ToastActions.showToast({
+        message: 'New plan has been successfully created and saved.',
+        title: 'Create Plan Success',
+        toastType: 'success',
+      });
 
       actions = hot('-a', { a: action });
       const expected = cold('-(bc)', { b: success, c: showToast });
@@ -187,11 +187,11 @@ describe('PlanEffects', () => {
       const action = PlanActions.createPlan({ plan });
       const error = new Error('CreatePlanFailure');
       const failure = PlanActions.createPlanFailure({ error });
-      const showToast = new ShowToast(
-        'error',
-        error.message,
-        'Create Plan Failure',
-      );
+      const showToast = ToastActions.showToast({
+        message: error.message,
+        title: 'Create Plan Failure',
+        toastType: 'error',
+      });
 
       const service = TestBed.get(PlanService);
       spyOn(service, 'createPlan').and.returnValue(cold('-#|', null, error));
@@ -219,11 +219,11 @@ describe('PlanEffects', () => {
       const success = PlanActions.deleteActivitySuccess({
         activityId: activity.activityId,
       });
-      const showToast = new ShowToast(
-        'success',
-        'Activity has been successfully deleted.',
-        'Delete Activity Success',
-      );
+      const showToast = ToastActions.showToast({
+        message: 'Activity has been successfully deleted.',
+        title: 'Delete Activity Success',
+        toastType: 'success',
+      });
 
       actions = hot('-a', { a: action });
       const expected = cold('-(bcde)', {
@@ -250,11 +250,11 @@ describe('PlanEffects', () => {
       });
       const error = new Error('DeleteActivityFailure');
       const failure = PlanActions.deleteActivityFailure({ error });
-      const showToast = new ShowToast(
-        'error',
-        error.message,
-        'Delete Activity Failure',
-      );
+      const showToast = ToastActions.showToast({
+        message: error.message,
+        title: 'Delete Activity Failure',
+        toastType: 'error',
+      });
 
       const service = TestBed.get(PlanService);
       spyOn(service, 'deleteActivity').and.returnValue(cold('#|', null, error));
@@ -281,11 +281,11 @@ describe('PlanEffects', () => {
       const planId = plan.id || '';
       const action = PlanActions.deletePlan({ planId });
       const success = PlanActions.deletePlanSuccess({ deletedPlanId: planId });
-      const showToast = new ShowToast(
-        'success',
-        'Plan has been successfully deleted.',
-        'Delete Plan Success',
-      );
+      const showToast = ToastActions.showToast({
+        message: 'Plan has been successfully deleted.',
+        title: 'Delete Plan Success',
+        toastType: 'success',
+      });
 
       actions = hot('-a', { a: action });
       const expected = cold('-(bcde)', {
@@ -309,11 +309,11 @@ describe('PlanEffects', () => {
       const action = PlanActions.deletePlan({ planId });
       const error = new Error('DeletePlanFailure');
       const failure = PlanActions.deletePlanFailure({ error });
-      const showToast = new ShowToast(
-        'error',
-        error.message,
-        'Delete Plan Failure',
-      );
+      const showToast = ToastActions.showToast({
+        message: error.message,
+        title: 'Delete Plan Failure',
+        toastType: 'error',
+      });
 
       const service = TestBed.get(PlanService);
       spyOn(service, 'deletePlan').and.returnValue(cold('#|', null, error));
@@ -350,11 +350,11 @@ describe('PlanEffects', () => {
         activityId: activity.activityId,
         update: activity,
       });
-      const showToast = new ShowToast(
-        'success',
-        'Activity has been successfully updated.',
-        'Update Activity Success',
-      );
+      const showToast = ToastActions.showToast({
+        message: 'Activity has been successfully updated.',
+        title: 'Update Activity Success',
+        toastType: 'success',
+      });
 
       actions = hot('-a', { a: action });
       const expected = cold('-(bcde)', {
@@ -384,11 +384,11 @@ describe('PlanEffects', () => {
       });
       const error = new Error('UpdateActivity: UpdateActivityFailure');
       const failure = PlanActions.updateActivityFailure({ error });
-      const showToast = new ShowToast(
-        'error',
-        error.message,
-        'Update Activity Failure',
-      );
+      const showToast = ToastActions.showToast({
+        message: error.message,
+        title: 'Update Activity Failure',
+        toastType: 'error',
+      });
 
       const service = TestBed.get(PlanService);
       spyOn(service, 'updateActivity').and.returnValue(cold('#|', null, error));

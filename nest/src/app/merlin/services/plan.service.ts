@@ -12,7 +12,7 @@ import { Injectable } from '@angular/core';
 import { Action } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { ShowToast } from '../../shared/actions/toast.actions';
+import { ToastActions } from '../../shared/actions';
 import { ActivityInstance, Plan } from '../../shared/models';
 import { PlanActions } from '../actions';
 import { PlanServiceInterface } from './plan-service-interface';
@@ -77,7 +77,11 @@ export class PlanService implements PlanServiceInterface {
       ),
       catchError(error => [
         PlanActions.fetchActivitiesFailure({ error: new Error(error) }),
-        new ShowToast('error', error.message, 'Fetching Activities Failed'),
+        ToastActions.showToast({
+          message: error.message,
+          title: 'Fetching Activities Failed',
+          toastType: 'error',
+        }),
       ]),
     );
   }
@@ -98,7 +102,11 @@ export class PlanService implements PlanServiceInterface {
             : PlanActions.setPlans({ plans }),
         catchError(error => [
           PlanActions.fetchPlansFailure({ error: new Error(error) }),
-          new ShowToast('error', error.message, 'Fetching Plans Failed'),
+          ToastActions.showToast({
+            message: error.message,
+            title: 'Fetching Plans Failed',
+            toastType: 'error',
+          }),
         ]),
       ),
     );

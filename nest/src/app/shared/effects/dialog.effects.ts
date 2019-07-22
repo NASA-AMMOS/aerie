@@ -9,42 +9,41 @@
 
 import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material';
-import { Actions, Effect, ofType } from '@ngrx/effects';
-import { Action, Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Store } from '@ngrx/store';
 import { exhaustMap, map, withLatestFrom } from 'rxjs/operators';
 import { AppState } from '../../app-store';
-import { DialogActionTypes, OpenAboutDialog } from '../actions/dialog.actions';
+import { DialogActions } from '../actions';
 import { NestAboutDialogComponent } from '../components/nest-about-dialog/nest-about-dialog.component';
 
 @Injectable()
 export class DialogEffects {
   constructor(
-    private actions$: Actions,
+    private actions: Actions,
     private dialog: MatDialog,
-    private store$: Store<AppState>,
+    private store: Store<AppState>,
   ) {}
 
-  /**
-   * Effect for OpenAboutDialog.
-   */
-  @Effect({ dispatch: false })
-  openAboutDialog$: Observable<Action> = this.actions$.pipe(
-    ofType<OpenAboutDialog>(DialogActionTypes.OpenAboutDialog),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    exhaustMap(({ action, state }) => {
-      const { version } = state.config.app;
+  openAboutDialog = createEffect(
+    () =>
+      this.actions.pipe(
+        ofType(DialogActions.openAboutDialog),
+        withLatestFrom(this.store),
+        map(([action, state]) => ({ action, state })),
+        exhaustMap(({ action, state }) => {
+          const { version } = state.config.app;
 
-      this.dialog.open(NestAboutDialogComponent, {
-        data: {
-          modules: state.config.appModules,
-          version: `Nest ${version}`,
-        },
-        width: action.width,
-      });
+          this.dialog.open(NestAboutDialogComponent, {
+            data: {
+              modules: state.config.appModules,
+              version: `Nest ${version}`,
+            },
+            width: action.width,
+          });
 
-      return [];
-    }),
+          return [];
+        }),
+      ),
+    { dispatch: false },
   );
 }

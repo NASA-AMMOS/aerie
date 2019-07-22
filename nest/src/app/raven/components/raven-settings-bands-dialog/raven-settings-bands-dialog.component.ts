@@ -14,12 +14,11 @@ import { select, Store } from '@ngrx/store';
 import keyBy from 'lodash-es/keyBy';
 import { Observable, Subscription } from 'rxjs';
 import { AppState } from '../../../app-store';
-import * as sourceExplorerActions from '../../../raven/actions/source-explorer.actions';
-import * as timelineActions from '../../../raven/actions/timeline.actions';
 import * as timelineSelectors from '../../../raven/selectors/timeline.selectors';
 import { NestConfirmDialogComponent } from '../../../shared/components/nest-confirm-dialog/nest-confirm-dialog.component';
 import { StringTMap } from '../../../shared/models';
 import { fromDuration } from '../../../shared/util/time';
+import { SourceExplorerActions, TimelineActions } from '../../actions';
 import {
   RavenCompositeBand,
   RavenStateBand,
@@ -112,7 +111,9 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
    */
   onChangeSelectedSubBand(subBandId: string): void {
     this.store.dispatch(
-      new timelineActions.UpdateTimeline({ selectedSubBandId: subBandId }),
+      TimelineActions.updateTimeline({
+        update: { selectedSubBandId: subBandId },
+      }),
     );
   }
 
@@ -138,12 +139,14 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
     this.subscriptions.add(
       confirmDialogRef.afterClosed().subscribe(result => {
         if (result.confirm) {
-          this.store.dispatch(new timelineActions.RemoveSubBand(subBand.id));
           this.store.dispatch(
-            new sourceExplorerActions.SubBandIdRemove(
-              subBand.sourceIds,
-              subBand.id,
-            ),
+            TimelineActions.removeSubBand({ subBandId: subBand.id }),
+          );
+          this.store.dispatch(
+            SourceExplorerActions.subBandIdRemove({
+              sourceIds: subBand.sourceIds,
+              subBandId: subBand.id,
+            }),
           );
         }
       }),
@@ -158,11 +161,11 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
       const timeDelta = fromDuration(this.timeDeltaControl.value);
       if (this.selectedSubBand) {
         this.store.dispatch(
-          new timelineActions.UpdateSubBandTimeDelta(
-            this.selectedBandId,
-            this.selectedSubBand.id,
+          TimelineActions.updateSubBandTimeDelta({
+            bandId: this.selectedBandId,
+            subBandId: this.selectedSubBand.id,
             timeDelta,
-          ),
+          }),
         );
       }
     }
@@ -173,7 +176,9 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
    */
   updateBand(e: RavenUpdate): void {
     if (e.bandId) {
-      this.store.dispatch(new timelineActions.UpdateBand(e.bandId, e.update));
+      this.store.dispatch(
+        TimelineActions.updateBand({ bandId: e.bandId, update: e.update }),
+      );
     }
   }
 
@@ -182,9 +187,15 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
    */
   updateBandAndSubBand(e: RavenUpdate): void {
     if (e.bandId && e.subBandId) {
-      this.store.dispatch(new timelineActions.UpdateBand(e.bandId, e.update));
       this.store.dispatch(
-        new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update),
+        TimelineActions.updateBand({ bandId: e.bandId, update: e.update }),
+      );
+      this.store.dispatch(
+        TimelineActions.updateSubBand({
+          bandId: e.bandId,
+          subBandId: e.subBandId,
+          update: e.update,
+        }),
       );
     }
   }
@@ -195,7 +206,11 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
   updateSubBand(e: RavenUpdate): void {
     if (e.bandId && e.subBandId) {
       this.store.dispatch(
-        new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update),
+        TimelineActions.updateSubBand({
+          bandId: e.bandId,
+          subBandId: e.subBandId,
+          update: e.update,
+        }),
       );
     }
   }

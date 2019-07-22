@@ -7,18 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  LayoutAction,
-  LayoutActionTypes,
-  SetMode,
-  ToggleApplyLayoutDrawer,
-  ToggleEpochsDrawer,
-  ToggleFileMetadataDrawer,
-  ToggleGlobalSettingsDrawer,
-  ToggleOutputDrawer,
-  ToggleSituationalAwarenessDrawer,
-  ToggleTimeCursorDrawer,
-} from '../actions/layout.actions';
+import { createReducer, on } from '@ngrx/store';
+import { LayoutActions } from '../actions';
 
 export interface LayoutState {
   fetchPending: boolean;
@@ -58,70 +48,17 @@ export const initialState: LayoutState = {
   timelinePanelSize: 60,
 };
 
-/**
- * Reducer.
- * If a case takes more than one line then it should be in it's own helper function.
- */
-export function reducer(
-  state: LayoutState = initialState,
-  action: LayoutAction,
-): LayoutState {
-  switch (action.type) {
-    case LayoutActionTypes.SetMode:
-      return setMode(state, action);
-    case LayoutActionTypes.ToggleApplyLayoutDrawer:
-      return toggleApplyLayoutDrawer(state, action);
-    case LayoutActionTypes.ToggleApplyLayoutDrawerEvent:
-      return { ...state, fetchPending: true };
-    case LayoutActionTypes.ToggleDetailsPanel:
-      return { ...state, showDetailsPanel: !state.showDetailsPanel };
-    case LayoutActionTypes.ToggleEpochsDrawer:
-      return toggleEpochsDrawer(state, action);
-    case LayoutActionTypes.ToggleFileMetadataDrawer:
-      return toggleFileMetadataDrawer(state, action);
-    case LayoutActionTypes.ToggleGlobalSettingsDrawer:
-      return toggleGlobalSettingsDrawer(state, action);
-    case LayoutActionTypes.ToggleLeftPanel:
-      return { ...state, showLeftPanel: !state.showLeftPanel };
-    case LayoutActionTypes.ToggleOutputDrawer:
-      return toggleOutputDrawer(state, action);
-    case LayoutActionTypes.ToggleRightPanel:
-      return { ...state, showRightPanel: !state.showRightPanel };
-    case LayoutActionTypes.ToggleSituationalAwarenessDrawer:
-      return toggleSituationalAwarenessDrawer(state, action);
-    case LayoutActionTypes.ToggleSouthBandsPanel:
-      return { ...state, showSouthBandsPanel: !state.showSouthBandsPanel };
-    case LayoutActionTypes.ToggleTimeCursorDrawer:
-      return toggleTimeCursorDrawer(state, action);
-    case LayoutActionTypes.UpdateLayout:
-      return { ...state, ...action.update };
-    default:
-      return state;
-  }
-}
-
-/**
- * Reduction Helper. Called when reducing the 'SetMode' action.
- */
-export function setMode(state: LayoutState, action: SetMode): LayoutState {
-  return {
+export const reducer = createReducer(
+  initialState,
+  on(LayoutActions.setMode, (state, action) => ({
     ...state,
     mode: action.mode,
     showDetailsPanel: action.showDetailsPanel,
     showLeftPanel: action.showLeftPanel,
     showRightPanel: action.showRightPanel,
     showSouthBandsPanel: action.showSouthBandsPanel,
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'ToggleApplyLayoutDrawer' action.
- */
-export function toggleApplyLayoutDrawer(
-  state: LayoutState,
-  action: ToggleApplyLayoutDrawer,
-): LayoutState {
-  return {
+  })),
+  on(LayoutActions.toggleApplyLayoutDrawer, (state, action) => ({
     ...state,
     showApplyLayoutDrawer:
       action.opened !== undefined
@@ -132,17 +69,16 @@ export function toggleApplyLayoutDrawer(
     showOutputDrawer: false,
     showSituationalAwarenessDrawer: false,
     showTimeCursorDrawer: false,
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'ToggleEpochsDrawer' action.
- */
-export function toggleEpochsDrawer(
-  state: LayoutState,
-  action: ToggleEpochsDrawer,
-): LayoutState {
-  return {
+  })),
+  on(LayoutActions.toggleApplyLayoutDrawerEvent, state => ({
+    ...state,
+    fetchPending: true,
+  })),
+  on(LayoutActions.toggleDetailsPanel, state => ({
+    ...state,
+    showDetailsPanel: !state.showDetailsPanel,
+  })),
+  on(LayoutActions.toggleEpochsDrawer, (state, action) => ({
     ...state,
     showApplyLayoutDrawer: false,
     showEpochsDrawer:
@@ -151,30 +87,16 @@ export function toggleEpochsDrawer(
     showOutputDrawer: false,
     showSituationalAwarenessDrawer: false,
     showTimeCursorDrawer: false,
-  };
-}
+  })),
+  on(LayoutActions.toggleFileMetadataDrawer, (state, action) => {
+    const showFileMetadataDrawer =
+      action.opened !== undefined
+        ? action.opened
+        : !state.showFileMetadataDrawer;
 
-/**
- * Reduction Helper. Called when reducing the 'ToggleFileMetadataDrawer' action.
- */
-export function toggleFileMetadataDrawer(
-  state: LayoutState,
-  action: ToggleFileMetadataDrawer,
-): LayoutState {
-  const showFileMetadataDrawer =
-    action.opened !== undefined ? action.opened : !state.showFileMetadataDrawer;
-
-  return { ...state, showFileMetadataDrawer };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'ToggleGlobalSettingsDrawer' action.
- */
-export function toggleGlobalSettingsDrawer(
-  state: LayoutState,
-  action: ToggleGlobalSettingsDrawer,
-): LayoutState {
-  return {
+    return { ...state, showFileMetadataDrawer };
+  }),
+  on(LayoutActions.toggleGlobalSettingsDrawer, (state, action) => ({
     ...state,
     showApplyLayoutDrawer: false,
     showEpochsDrawer: false,
@@ -185,17 +107,12 @@ export function toggleGlobalSettingsDrawer(
     showOutputDrawer: false,
     showSituationalAwarenessDrawer: false,
     showTimeCursorDrawer: false,
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'ToggleOutputDrawer' action.
- */
-export function toggleOutputDrawer(
-  state: LayoutState,
-  action: ToggleOutputDrawer,
-): LayoutState {
-  return {
+  })),
+  on(LayoutActions.toggleLeftPanel, state => ({
+    ...state,
+    showLeftPanel: !state.showLeftPanel,
+  })),
+  on(LayoutActions.toggleOutputDrawer, (state, action) => ({
     ...state,
     showApplyLayoutDrawer: false,
     showEpochsDrawer: false,
@@ -204,17 +121,12 @@ export function toggleOutputDrawer(
       action.opened !== undefined ? action.opened : !state.showOutputDrawer,
     showSituationalAwarenessDrawer: false,
     showTimeCursorDrawer: false,
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'ToggleSituationalAwarenessDrawer' action.
- */
-export function toggleSituationalAwarenessDrawer(
-  state: LayoutState,
-  action: ToggleSituationalAwarenessDrawer,
-): LayoutState {
-  return {
+  })),
+  on(LayoutActions.toggleRightPanel, state => ({
+    ...state,
+    showRightPanel: !state.showRightPanel,
+  })),
+  on(LayoutActions.toggleSituationalAwarenessDrawer, (state, action) => ({
     ...state,
     showApplyLayoutDrawer: false,
     showEpochsDrawer: false,
@@ -225,17 +137,12 @@ export function toggleSituationalAwarenessDrawer(
         ? action.opened
         : !state.showSituationalAwarenessDrawer,
     showTimeCursorDrawer: false,
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'ToggleTimeCursorDrawer' action.
- */
-export function toggleTimeCursorDrawer(
-  state: LayoutState,
-  action: ToggleTimeCursorDrawer,
-): LayoutState {
-  return {
+  })),
+  on(LayoutActions.toggleSouthBandsPanel, state => ({
+    ...state,
+    showSouthBandsPanel: !state.showSouthBandsPanel,
+  })),
+  on(LayoutActions.toggleTimeCursorDrawer, (state, action) => ({
     ...state,
     showApplyLayoutDrawer: false,
     showEpochsDrawer: false,
@@ -244,5 +151,9 @@ export function toggleTimeCursorDrawer(
     showSituationalAwarenessDrawer: false,
     showTimeCursorDrawer:
       action.opened !== undefined ? action.opened : !state.showTimeCursorDrawer,
-  };
-}
+  })),
+  on(LayoutActions.updateLayout, (state, { update }) => ({
+    ...state,
+    ...update,
+  })),
+);

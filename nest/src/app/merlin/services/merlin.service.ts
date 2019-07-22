@@ -10,7 +10,7 @@
 import { Injectable } from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { ToggleNestNavigationDrawer } from '../../shared/actions/config.actions';
+import { ConfigActions } from '../../shared/actions';
 import { MerlinAppState } from '../merlin-store';
 import { getShowLoadingBar } from '../selectors';
 
@@ -27,6 +27,6 @@ export class MerlinService {
   }
 
   onToggleNestNavigationDrawer() {
-    this.store.dispatch(new ToggleNestNavigationDrawer());
+    this.store.dispatch(ConfigActions.toggleNestNavigationDrawer());
   }
 }

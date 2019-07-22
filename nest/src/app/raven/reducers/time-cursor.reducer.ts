@@ -7,10 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  TimeCursorAction,
-  TimeCursorActionTypes,
-} from '../actions/time-cursor.actions';
+import { createReducer, on } from '@ngrx/store';
+import { TimeCursorActions } from '../actions';
 
 export interface TimeCursorState {
   autoPage: boolean;
@@ -36,35 +34,22 @@ export const initialState: TimeCursorState = {
   showTimeCursor: false,
 };
 
-/**
- * Reducer.
- * If a case takes more than one line then it should be in it's own helper function.
- */
-export function reducer(
-  state: TimeCursorState = initialState,
-  action: TimeCursorAction,
-): TimeCursorState {
-  switch (action.type) {
-    case TimeCursorActionTypes.HideTimeCursor:
-      return { ...state, cursorTime: null, showTimeCursor: false };
-    case TimeCursorActionTypes.ShowTimeCursor:
-      return showTimeCursor(state);
-    case TimeCursorActionTypes.UpdateTimeCursorSettings:
-      return { ...state, ...action.update };
-    default:
-      return state;
-  }
-}
-
-/**
- * Reduction Helper. Called when reducing the 'ShowTimeCursor' action.
- */
-export function showTimeCursor(state: TimeCursorState): TimeCursorState {
-  return {
+export const reducer = createReducer(
+  initialState,
+  on(TimeCursorActions.hideTimeCursor, state => ({
+    ...state,
+    cursorTime: null,
+    showTimeCursor: false,
+  })),
+  on(TimeCursorActions.showTimeCursor, state => ({
     ...state,
     cursorTime: state.setCursorTime
       ? state.setCursorTime
       : Date.now() / 1000 + state.currentTimeDelta,
     showTimeCursor: true,
-  };
-}
+  })),
+  on(TimeCursorActions.updateTimeCursorSettings, (state, { update }) => ({
+    ...state,
+    ...update,
+  })),
+);

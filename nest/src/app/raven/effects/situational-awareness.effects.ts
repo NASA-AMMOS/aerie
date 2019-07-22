@@ -9,9 +9,9 @@
 
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Actions, Effect, ofType } from '@ngrx/effects';
-import { Action, Store } from '@ngrx/store';
-import { concat, Observable, of } from 'rxjs';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Store } from '@ngrx/store';
+import { concat, of } from 'rxjs';
 import {
   catchError,
   concatMap,
@@ -20,12 +20,7 @@ import {
   withLatestFrom,
 } from 'rxjs/operators';
 import { getInitialPageStartEndTime } from '../../shared/util';
-import {
-  FetchPefEntries,
-  SituationalAwarenessActionTypes,
-} from '../actions/situational-awareness.actions';
-import * as situationalAwarenessActions from '../actions/situational-awareness.actions';
-import * as timelineActions from '../actions/timeline.actions';
+import { SituationalAwarenessActions, TimelineActions } from '../actions';
 import {
   MpsServerGraphData,
   MpsServerSituationalAwarenessPefEntry,
@@ -37,72 +32,84 @@ import { toCompositeBand, toRavenBandData, toRavenPefEntries } from '../util';
 @Injectable()
 export class SituationalAwarenessEffects {
   constructor(
+    private actions: Actions,
     private http: HttpClient,
-    private actions$: Actions,
-    private store$: Store<RavenAppState>,
+    private store: Store<RavenAppState>,
   ) {}
 
-  @Effect()
-  changeSituationalAwareness$: Observable<Action> = this.actions$.pipe(
-    ofType<situationalAwarenessActions.ChangeSituationalAwareness>(
-      SituationalAwarenessActionTypes.ChangeSituationalAwareness,
-    ),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(({ state, action }) =>
-      concat(
-        of(
-          new situationalAwarenessActions.UpdateSituationalAwarenessSettings({
-            situationalAware: action.situAware,
-          }),
-        ),
-        action.situAware
-          ? this.getPefEntriesAsState(
-              action.url,
-              state.config.raven.defaultBandSettings,
-            )
-          : of(
-              new timelineActions.RemoveBandsOrPointsForSource('situAwarePef'),
-            ),
-        action.situAware
-          ? of(
-              new timelineActions.UpdateViewTimeRange(
-                getInitialPageStartEndTime(state.raven.situationalAwareness),
+  changeSituationalAwareness = createEffect(() =>
+    this.actions.pipe(
+      ofType(SituationalAwarenessActions.changeSituationalAwareness),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      concatMap(({ state, action }) =>
+        concat(
+          of(
+            SituationalAwarenessActions.updateSituationalAwarenessSettings({
+              update: {
+                situationalAware: action.situAware,
+              },
+            }),
+          ),
+          action.situAware
+            ? this.getPefEntriesAsState(
+                action.url,
+                state.config.raven.defaultBandSettings,
+              )
+            : of(
+                TimelineActions.removeBandsOrPointsForSource({
+                  sourceId: 'situAwarePef',
+                }),
               ),
-            )
-          : [],
-        of(
-          new situationalAwarenessActions.UpdateSituationalAwarenessSettings({
-            fetchPending: false,
-          }),
+          action.situAware
+            ? of(
+                TimelineActions.updateViewTimeRange({
+                  viewTimeRange: getInitialPageStartEndTime(
+                    state.raven.situationalAwareness,
+                  ),
+                }),
+              )
+            : [],
+          of(
+            SituationalAwarenessActions.updateSituationalAwarenessSettings({
+              update: {
+                fetchPending: false,
+              },
+            }),
+          ),
         ),
       ),
+      catchError(() => {
+        return of(
+          SituationalAwarenessActions.updateSituationalAwarenessSettings({
+            update: {
+              fetchPending: false,
+              pefEntries: [],
+            },
+          }),
+        );
+      }),
     ),
-    catchError((e: Error) => {
-      return of(
-        new situationalAwarenessActions.UpdateSituationalAwarenessSettings({
-          fetchPending: false,
-          pefEntries: [],
-        }),
-      );
-    }),
   );
 
-  @Effect()
-  fetchPefEntries$: Observable<Action> = this.actions$.pipe(
-    ofType<FetchPefEntries>(SituationalAwarenessActionTypes.FetchPefEntries),
-    concatMap(action => this.getPefEntries(action.url)),
-    catchError((e: Error) => {
-      console.error(
-        'SituationalAwarenessEffects - fetchSituationalAwareness$: ',
-        e,
-      );
-      return of(
-        new situationalAwarenessActions.UpdateSituationalAwarenessSettings({
-          pefEntries: [],
-        }),
-      );
-    }),
+  fetchPefEntries = createEffect(() =>
+    this.actions.pipe(
+      ofType(SituationalAwarenessActions.fetchPefEntries),
+      concatMap(action => this.getPefEntries(action.url)),
+      catchError((e: Error) => {
+        console.error(
+          'SituationalAwarenessEffects - fetchSituationalAwareness: ',
+          e.message,
+        );
+        return of(
+          SituationalAwarenessActions.updateSituationalAwarenessSettings({
+            update: {
+              pefEntries: [],
+            },
+          }),
+        );
+      }),
+    ),
   );
 
   /**
@@ -115,8 +122,10 @@ export class SituationalAwarenessEffects {
       ),
       switchMap(pefEntries =>
         of(
-          new situationalAwarenessActions.UpdateSituationalAwarenessSettings({
-            pefEntries,
+          SituationalAwarenessActions.updateSituationalAwarenessSettings({
+            update: {
+              pefEntries,
+            },
           }),
         ),
       ),
@@ -143,10 +152,10 @@ export class SituationalAwarenessEffects {
       ),
       switchMap(subBands =>
         of(
-          new timelineActions.AddBand(
-            'situAwarePef',
-            toCompositeBand(subBands[0]),
-          ),
+          TimelineActions.addBand({
+            band: toCompositeBand(subBands[0]),
+            sourceId: 'situAwarePef',
+          }),
         ),
       ),
     );

@@ -12,7 +12,7 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { catchError, map, switchMap, withLatestFrom } from 'rxjs/operators';
 import { SequenceFile } from '../../../../../sequencing/src/models';
-import { ShowToast } from '../../shared/actions/toast.actions';
+import { ToastActions } from '../../shared/actions';
 import { FileActions } from '../actions';
 import { FalconAppState } from '../falcon-store';
 import { FileMockService } from '../services/file-mock.service';
@@ -60,11 +60,11 @@ export class FileEffects {
                 console.error('FileEffects - fetchChildren$: ', error.message);
                 return [
                   FileActions.fetchChildrenFailure({ error }),
-                  new ShowToast(
-                    'error',
-                    error.message,
-                    'Fetch Children Failed',
-                  ),
+                  ToastActions.showToast({
+                    message: error.message,
+                    title: 'Fetch Children Failed',
+                    toastType: 'error',
+                  }),
                 ];
               }),
             ),

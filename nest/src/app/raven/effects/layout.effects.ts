@@ -9,54 +9,43 @@
 
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Actions, Effect, ofType } from '@ngrx/effects';
-import { Action, Store } from '@ngrx/store';
-import { Observable, of } from 'rxjs';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Store } from '@ngrx/store';
+import { of } from 'rxjs';
 import { concatMap, map, switchMap, withLatestFrom } from 'rxjs/operators';
 import {
-  LayoutActionTypes,
-  Resize,
-  ToggleApplyLayoutDrawerEvent,
-  ToggleLeftPanel,
-  ToggleRightPanel,
-  ToggleSituationalAwarenessDrawer,
-} from '../actions/layout.actions';
-import * as layoutActions from '../actions/layout.actions';
-import * as situationalAwarenessActions from '../actions/situational-awareness.actions';
-import * as timelineActions from '../actions/timeline.actions';
+  LayoutActions,
+  SituationalAwarenessActions,
+  TimelineActions,
+} from '../actions';
 import { RavenAppState } from '../raven-store';
 import { importState } from '../util';
 
 @Injectable()
 export class LayoutEffects {
   constructor(
-    private actions$: Actions,
+    private actions: Actions,
     private http: HttpClient,
-    private store$: Store<RavenAppState>,
+    private store: Store<RavenAppState>,
   ) {}
 
-  /**
-   * Effect for triggering a band resize after any panels are resized.
-   */
-  @Effect()
-  panelsResized$: Observable<Action> = this.actions$.pipe(
-    ofType<ToggleLeftPanel | ToggleRightPanel>(
-      LayoutActionTypes.ToggleLeftPanel,
-      LayoutActionTypes.ToggleRightPanel,
+  panelsResized = createEffect(() =>
+    this.actions.pipe(
+      ofType(LayoutActions.toggleLeftPanel, LayoutActions.toggleRightPanel),
+      map(() => LayoutActions.resize()),
     ),
-    map(() => new Resize()),
   );
 
-  /**
-   * Effect for Resize.
-   */
-  @Effect({ dispatch: false })
-  resize$: Observable<Action> = this.actions$.pipe(
-    ofType<Resize>(LayoutActionTypes.Resize),
-    switchMap(() => {
-      setTimeout(() => dispatchEvent(new Event('resize')));
-      return [];
-    }),
+  resize = createEffect(
+    () =>
+      this.actions.pipe(
+        ofType(LayoutActions.resize),
+        switchMap(() => {
+          setTimeout(() => dispatchEvent(new Event('resize')));
+          return [];
+        }),
+      ),
+    { dispatch: false },
   );
 
   /**
@@ -65,81 +54,84 @@ export class LayoutEffects {
    * apply layout drawer when it opens.
    * If there is no current state id it should set the current state to null.
    */
-  @Effect()
-  toggleApplyLayoutDrawerEvent$: Observable<Action> = this.actions$.pipe(
-    ofType<ToggleApplyLayoutDrawerEvent>(
-      LayoutActionTypes.ToggleApplyLayoutDrawerEvent,
+  toggleApplyLayoutDrawerEvent = createEffect(() =>
+    this.actions.pipe(
+      ofType(LayoutActions.toggleApplyLayoutDrawerEvent),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      switchMap(({ action, state }) => {
+        if (action.opened && state.raven.timeline.currentStateId !== '') {
+          return this.http
+            .get(
+              `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${state.raven.timeline.currentStateId}`,
+            )
+            .pipe(
+              map(res => importState(res[0])),
+              switchMap(currentState => [
+                TimelineActions.updateTimeline({
+                  update: {
+                    currentState,
+                  },
+                }),
+                LayoutActions.toggleApplyLayoutDrawer({
+                  opened: action.opened,
+                }),
+                LayoutActions.updateLayout({ update: { fetchPending: false } }),
+              ]),
+            );
+        }
+
+        return [
+          TimelineActions.updateTimeline({
+            update: {
+              currentState: null,
+              fetchPending: false,
+            },
+          }),
+        ];
+      }),
     ),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    switchMap(({ action, state }) => {
-      if (action.opened && state.raven.timeline.currentStateId !== '') {
-        return this.http
-          .get(
-            `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${state.raven.timeline.currentStateId}`,
-          )
-          .pipe(
-            map(res => importState(res[0])),
-            switchMap(currentState => [
-              new timelineActions.UpdateTimeline({
-                currentState,
-              }),
-              new layoutActions.ToggleApplyLayoutDrawer(action.opened),
-              new layoutActions.UpdateLayout({ fetchPending: false }),
-            ]),
+  );
+
+  toggleRightPanel = createEffect(() =>
+    this.actions.pipe(
+      ofType(LayoutActions.toggleRightPanel),
+      withLatestFrom(this.store),
+      map(([, state]) => state.raven),
+      map(raven => {
+        if (raven.layout.showRightPanel && raven.layout.showLeftPanel) {
+          return LayoutActions.updateLayout({
+            update: {
+              timelinePanelSize: raven.layout.showLeftPanel ? 60 : 75,
+            },
+          });
+        } else {
+          return LayoutActions.updateLayout({
+            update: {
+              timelinePanelSize: raven.layout.showLeftPanel ? 75 : 100,
+            },
+          });
+        }
+      }),
+    ),
+  );
+
+  toggleSituationalAwarenessDrawer = createEffect(() =>
+    this.actions.pipe(
+      ofType(LayoutActions.toggleSituationalAwarenessDrawer),
+      withLatestFrom(this.store),
+      map(([, state]) => state),
+      concatMap(state => {
+        if (state.raven.layout.showSituationalAwarenessDrawer) {
+          return of(
+            SituationalAwarenessActions.fetchPefEntries({
+              url: `${state.config.app.baseUrl}/mpsserver/api/v2/situational_awareness?`,
+            }),
           );
-      }
-
-      return [
-        new timelineActions.UpdateTimeline({
-          currentState: null,
-          fetchPending: false,
-        }),
-      ];
-    }),
-  );
-
-  /**
-   * Effect for ToggleRightPanel.
-   */
-  @Effect()
-  toggleRightPanel$: Observable<Action> = this.actions$.pipe(
-    ofType<ToggleRightPanel>(LayoutActionTypes.ToggleRightPanel),
-    withLatestFrom(this.store$),
-    map(([, state]) => state.raven),
-    map(raven => {
-      if (raven.layout.showRightPanel && raven.layout.showLeftPanel) {
-        return new layoutActions.UpdateLayout({
-          timelinePanelSize: raven.layout.showLeftPanel ? 60 : 75,
-        });
-      } else {
-        return new layoutActions.UpdateLayout({
-          timelinePanelSize: raven.layout.showLeftPanel ? 75 : 100,
-        });
-      }
-    }),
-  );
-
-  /**
-   * Effect for ToggleSituationalAwarenessDrawer.
-   */
-  @Effect()
-  toggleSituationalAwarenessDrawer$: Observable<Action> = this.actions$.pipe(
-    ofType<ToggleSituationalAwarenessDrawer>(
-      LayoutActionTypes.ToggleSituationalAwarenessDrawer,
+        } else {
+          return [];
+        }
+      }),
     ),
-    withLatestFrom(this.store$),
-    map(([, state]) => state),
-    concatMap(state => {
-      if (state.raven.layout.showSituationalAwarenessDrawer) {
-        return of(
-          new situationalAwarenessActions.FetchPefEntries(
-            `${state.config.app.baseUrl}/mpsserver/api/v2/situational_awareness?`,
-          ),
-        );
-      } else {
-        return [];
-      }
-    }),
   );
 }

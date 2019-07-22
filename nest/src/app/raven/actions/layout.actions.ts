@@ -7,126 +7,77 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 import { BaseType, StringTMap } from '../../shared/models';
 
-export enum LayoutActionTypes {
-  Resize = '[layout] resize',
-  SetMode = '[layout] set_mode',
-  ToggleApplyLayoutDrawer = '[layout] toggle_apply_layout_drawer',
-  ToggleApplyLayoutDrawerEvent = '[layout] toggle_apply_layout_drawer_event',
-  ToggleDetailsPanel = '[layout] toggle_details_panel',
-  ToggleEpochsDrawer = '[layout] toggle_epochs_drawer',
-  ToggleFileMetadataDrawer = '[layout] toggle_file_metadata_drawer',
-  ToggleGlobalSettingsDrawer = '[layout] toggle_global_settings_drawer',
-  ToggleLeftPanel = '[layout] toggle_left_panel',
-  ToggleOutputDrawer = '[layout] toggle_output_drawer',
-  ToggleRightPanel = '[layout] toggle_right_panel',
-  ToggleSituationalAwarenessDrawer = '[layout] toggle_situational_awareness_drawer',
-  ToggleSouthBandsPanel = '[layout] toggle_south_bands_panel',
-  ToggleTimeCursorDrawer = '[layout] toggle_time_cursor_drawer',
-  UpdateLayout = '[layout] update_layout',
-}
+export const resize = createAction('[raven-layout] resize');
 
-export class Resize implements Action {
-  readonly type = LayoutActionTypes.Resize;
-}
+export const setMode = createAction(
+  '[raven-layout] set_mode',
+  props<{
+    mode: string;
+    showDetailsPanel: boolean;
+    showLeftPanel: boolean;
+    showRightPanel: boolean;
+    showSouthBandsPanel: boolean;
+  }>(),
+);
 
-export class SetMode implements Action {
-  readonly type = LayoutActionTypes.SetMode;
+export const toggleApplyLayoutDrawer = createAction(
+  '[raven-layout] toggle_apply_layout_drawer',
+  props<{ opened?: boolean }>(),
+);
 
-  constructor(
-    public mode: string,
-    public showDetailsPanel: boolean,
-    public showLeftPanel: boolean,
-    public showRightPanel: boolean,
-    public showSouthBandsPanel: boolean,
-  ) {}
-}
+export const toggleApplyLayoutDrawerEvent = createAction(
+  '[raven-layout] toggle_apply_layout_drawer_event',
+  props<{ opened?: boolean }>(),
+);
 
-export class ToggleApplyLayoutDrawer implements Action {
-  readonly type = LayoutActionTypes.ToggleApplyLayoutDrawer;
+export const toggleDetailsPanel = createAction(
+  '[raven-layout] toggle_details_panel',
+);
 
-  constructor(public opened?: boolean) {}
-}
+export const toggleEpochsDrawer = createAction(
+  '[raven-layout] toggle_epochs_drawer',
+  props<{ opened?: boolean }>(),
+);
 
-export class ToggleApplyLayoutDrawerEvent implements Action {
-  readonly type = LayoutActionTypes.ToggleApplyLayoutDrawerEvent;
+export const toggleFileMetadataDrawer = createAction(
+  '[raven-layout] toggle_file_metadata_drawer',
+  props<{ opened?: boolean }>(),
+);
 
-  constructor(public opened?: boolean) {}
-}
+export const toggleGlobalSettingsDrawer = createAction(
+  '[raven-layout] toggle_global_settings_drawer',
+  props<{ opened?: boolean }>(),
+);
 
-export class ToggleDetailsPanel implements Action {
-  readonly type = LayoutActionTypes.ToggleDetailsPanel;
-}
+export const toggleLeftPanel = createAction('[raven-layout] toggle_left_panel');
 
-export class ToggleEpochsDrawer implements Action {
-  readonly type = LayoutActionTypes.ToggleEpochsDrawer;
+export const toggleOutputDrawer = createAction(
+  '[raven-layout] toggle_output_drawer',
+  props<{ opened?: boolean }>(),
+);
 
-  constructor(public opened?: boolean) {}
-}
+export const toggleRightPanel = createAction(
+  '[raven-layout] toggle_right_panel',
+);
 
-export class ToggleFileMetadataDrawer implements Action {
-  readonly type = LayoutActionTypes.ToggleFileMetadataDrawer;
+export const toggleSituationalAwarenessDrawer = createAction(
+  '[raven-layout] toggle_situational_awareness_drawer',
+  props<{ opened?: boolean }>(),
+);
 
-  constructor(public opened?: boolean) {}
-}
+export const toggleSouthBandsPanel = createAction(
+  '[raven-layout] toggle_south_bands_panel',
+);
 
-export class ToggleGlobalSettingsDrawer implements Action {
-  readonly type = LayoutActionTypes.ToggleGlobalSettingsDrawer;
+export const toggleTimeCursorDrawer = createAction(
+  '[raven-layout] toggle_time_cursor_drawer',
+  props<{ opened?: boolean }>(),
+);
 
-  constructor(public opened?: boolean) {}
-}
-
-export class ToggleLeftPanel implements Action {
-  readonly type = LayoutActionTypes.ToggleLeftPanel;
-}
-
-export class ToggleOutputDrawer implements Action {
-  readonly type = LayoutActionTypes.ToggleOutputDrawer;
-
-  constructor(public opened?: boolean) {}
-}
-
-export class ToggleRightPanel implements Action {
-  readonly type = LayoutActionTypes.ToggleRightPanel;
-}
-
-export class ToggleSituationalAwarenessDrawer implements Action {
-  readonly type = LayoutActionTypes.ToggleSituationalAwarenessDrawer;
-
-  constructor(public opened?: boolean) {}
-}
-
-export class ToggleSouthBandsPanel implements Action {
-  readonly type = LayoutActionTypes.ToggleSouthBandsPanel;
-}
-
-export class ToggleTimeCursorDrawer implements Action {
-  readonly type = LayoutActionTypes.ToggleTimeCursorDrawer;
-
-  constructor(public opened?: boolean) {}
-}
-
-export class UpdateLayout implements Action {
-  readonly type = LayoutActionTypes.UpdateLayout;
-
-  constructor(public update: StringTMap<BaseType>) {}
-}
-
-export type LayoutAction =
-  | Resize
-  | SetMode
-  | ToggleApplyLayoutDrawer
-  | ToggleApplyLayoutDrawerEvent
-  | ToggleDetailsPanel
-  | ToggleEpochsDrawer
-  | ToggleFileMetadataDrawer
-  | ToggleGlobalSettingsDrawer
-  | ToggleLeftPanel
-  | ToggleOutputDrawer
-  | ToggleRightPanel
-  | ToggleSituationalAwarenessDrawer
-  | ToggleSouthBandsPanel
-  | ToggleTimeCursorDrawer
-  | UpdateLayout;
+export const updateLayout = createAction(
+  '[raven-layout] update_layout',
+  props<{ update: StringTMap<BaseType> }>(),
+);

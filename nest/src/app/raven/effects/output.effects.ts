@@ -9,7 +9,7 @@
 
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Actions, Effect, ofType } from '@ngrx/effects';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 import { saveAs } from 'file-saver';
 import { concat, Observable, of } from 'rxjs';
@@ -21,8 +21,7 @@ import {
   withLatestFrom,
 } from 'rxjs/operators';
 import { StringTMap } from '../../shared/models';
-import * as outputActions from '../actions/output.actions';
-import { OutputActionTypes } from '../actions/output.actions';
+import { OutputActions } from '../actions';
 import {
   MpsServerGraphData,
   RavenCustomFilter,
@@ -40,58 +39,58 @@ import {
 @Injectable()
 export class OutputEffects {
   constructor(
-    private actions$: Actions,
+    private actions: Actions,
     private http: HttpClient,
-    private store$: Store<RavenAppState>,
+    private store: Store<RavenAppState>,
   ) {}
 
-  /**
-   * Effect for CreateOutput.
-   */
-  @Effect()
-  createOutput$: Observable<Action> = this.actions$.pipe(
-    ofType<outputActions.CreateOutput>(OutputActionTypes.CreateOutput),
-    withLatestFrom(this.store$),
-    map(([, state]) => state.raven),
-    exhaustMap(({ output, sourceExplorer }) =>
-      concat(
-        ...(output.allInOneFile
-          ? this.generateOutputFile(
-              output,
-              sourceExplorer.treeBySourceId,
-              sourceExplorer.customFiltersBySourceId,
-              sourceExplorer.filtersByTarget,
-            )
-          : this.generateOutputFiles(
-              output,
-              sourceExplorer.treeBySourceId,
-              sourceExplorer.customFiltersBySourceId,
-              sourceExplorer.filtersByTarget,
-            )),
+  createOutput = createEffect(() =>
+    this.actions.pipe(
+      ofType(OutputActions.createOutput),
+      withLatestFrom(this.store),
+      map(([, state]) => state.raven),
+      exhaustMap(({ output, sourceExplorer }) =>
+        concat(
+          ...(output.allInOneFile
+            ? this.generateOutputFile(
+                output,
+                sourceExplorer.treeBySourceId,
+                sourceExplorer.customFiltersBySourceId,
+                sourceExplorer.filtersByTarget,
+              )
+            : this.generateOutputFiles(
+                output,
+                sourceExplorer.treeBySourceId,
+                sourceExplorer.customFiltersBySourceId,
+                sourceExplorer.filtersByTarget,
+              )),
+        ),
       ),
     ),
   );
 
-  /**
-   * Effect for WriteFile.
-   */
-  @Effect({ dispatch: false })
-  writeFile$: Observable<Action> = this.actions$.pipe(
-    ofType<outputActions.WriteFile>(OutputActionTypes.WriteFile),
-    withLatestFrom(this.store$),
-    map(([, state]) => state.raven),
-    concatMap(({ output }) => {
-      this.writeToFile(
-        output.outputData,
-        output.allInOneFilename,
-        output.outputFormat.toLowerCase(),
-      );
-      return [];
-    }),
+  writeFile = createEffect(
+    () =>
+      this.actions.pipe(
+        ofType(OutputActions.writeFile),
+        withLatestFrom(this.store),
+        map(([, state]) => state.raven),
+        concatMap(({ output }) => {
+          this.writeToFile(
+            output.outputData,
+            output.allInOneFilename,
+            output.outputFormat.toLowerCase(),
+          );
+          return [];
+        }),
+      ),
+    { dispatch: false },
   );
 
   /**
-   * Helper. Get data for source and write to file. If source is graphableFilter, POST is issue instead of GET. Body of the POST contains the filters.
+   * Helper. Get data for source and write to file.
+   * If source is graphableFilter, POST is issue instead of GET.
+   * Body of the POST contains the filters.
    */
   createFileForSource(
     output: fromOutput.OutputState,
@@ -171,7 +170,7 @@ export class OutputEffects {
     let keepHeader = true;
 
     actions.push(
-      of(new outputActions.UpdateOutputSettings({ outputData: '' })),
+      of(OutputActions.updateOutputSettings({ update: { outputData: '' } })),
     );
 
     Object.keys(output.outputSourceIdsByLabel).forEach(label => {
@@ -192,7 +191,7 @@ export class OutputEffects {
       });
     });
 
-    actions.push(of(new outputActions.WriteFile()));
+    actions.push(of(OutputActions.writeFile()));
 
     return actions;
   }
@@ -250,7 +249,7 @@ export class OutputEffects {
 
     return this.http.get(outputDataUrl, { responseType: 'text' }).pipe(
       map(dataWithHeader => this.sanitizeData(dataWithHeader, keepHeader)),
-      switchMap(data => of(new outputActions.AppendData(data))),
+      switchMap(data => of(OutputActions.appendData({ data }))),
     );
   }
 

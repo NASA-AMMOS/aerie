@@ -14,7 +14,7 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap, withLatestFrom } from 'rxjs/operators';
-import { ShowToast } from '../../shared/actions/toast.actions';
+import { ToastActions } from '../../shared/actions';
 import { NestConfirmDialogComponent } from '../../shared/components/nest-confirm-dialog/nest-confirm-dialog.component';
 import { ActivityInstance } from '../../shared/models';
 import { timestamp } from '../../shared/util';
@@ -70,15 +70,20 @@ export class PlanEffects {
                 activity: newActivity,
                 planId: action.planId,
               }),
-              new ShowToast(
-                'success',
-                'New activity has been successfully created and saved.',
-                'Create Activity Success',
-              ),
+              ToastActions.showToast({
+                message:
+                  'New activity has been successfully created and saved.',
+                title: 'Create Activity Success',
+                toastType: 'success',
+              }),
             ]),
             catchError((error: Error) => [
               PlanActions.createActivityFailure({ error }),
-              new ShowToast('error', error.message, 'Create Activity Failed'),
+              ToastActions.showToast({
+                message: error.message,
+                title: 'Create Activity Failed',
+                toastType: 'error',
+              }),
             ]),
           );
       }),
@@ -108,15 +113,19 @@ export class PlanEffects {
           .pipe(
             switchMap((plan: any) => [
               PlanActions.createPlanSuccess({ plan }),
-              new ShowToast(
-                'success',
-                'New plan has been successfully created and saved.',
-                'Create Plan Success',
-              ),
+              ToastActions.showToast({
+                message: 'New plan has been successfully created and saved.',
+                title: 'Create Plan Success',
+                toastType: 'success',
+              }),
             ]),
             catchError((error: Error) => [
               PlanActions.createPlanFailure({ error }),
-              new ShowToast('error', error.message, 'Create Plan Failure'),
+              ToastActions.showToast({
+                message: error.message,
+                title: 'Create Plan Failure',
+                toastType: 'error',
+              }),
             ]),
           ),
       ),
@@ -159,19 +168,19 @@ export class PlanEffects {
                   PlanActions.deleteActivitySuccess({
                     activityId: action.activityId,
                   }),
-                  new ShowToast(
-                    'success',
-                    'Activity has been successfully deleted.',
-                    'Delete Activity Success',
-                  ),
+                  ToastActions.showToast({
+                    message: 'Activity has been successfully deleted.',
+                    title: 'Delete Activity Success',
+                    toastType: 'success',
+                  }),
                 ]),
                 catchError((error: Error) => [
                   PlanActions.deleteActivityFailure({ error }),
-                  new ShowToast(
-                    'error',
-                    error.message,
-                    'Delete Activity Failure',
-                  ),
+                  ToastActions.showToast({
+                    message: error.message,
+                    title: 'Delete Activity Failure',
+                    toastType: 'error',
+                  }),
                 ]),
               ),
           ]);
@@ -213,15 +222,19 @@ export class PlanEffects {
                   PlanActions.deletePlanSuccess({
                     deletedPlanId: action.planId,
                   }),
-                  new ShowToast(
-                    'success',
-                    'Plan has been successfully deleted.',
-                    'Delete Plan Success',
-                  ),
+                  ToastActions.showToast({
+                    message: 'Plan has been successfully deleted.',
+                    title: 'Delete Plan Success',
+                    toastType: 'success',
+                  }),
                 ]),
                 catchError((error: Error) => [
                   PlanActions.deletePlanFailure({ error }),
-                  new ShowToast('error', error.message, 'Delete Plan Failure'),
+                  ToastActions.showToast({
+                    message: error.message,
+                    title: 'Delete Plan Failure',
+                    toastType: 'error',
+                  }),
                 ]),
               ),
           ]);
@@ -276,19 +289,19 @@ export class PlanEffects {
                   activityId: action.activityId,
                   update: action.update,
                 }),
-                new ShowToast(
-                  'success',
-                  'Activity has been successfully updated.',
-                  'Update Activity Success',
-                ),
+                ToastActions.showToast({
+                  message: 'Activity has been successfully updated.',
+                  title: 'Update Activity Success',
+                  toastType: 'success',
+                }),
               ]),
               catchError((error: Error) => [
                 PlanActions.updateActivityFailure({ error }),
-                new ShowToast(
-                  'error',
-                  error.message,
-                  'Update Activity Failure',
-                ),
+                ToastActions.showToast({
+                  message: error.message,
+                  title: 'Update Activity Failure',
+                  toastType: 'error',
+                }),
               ]),
             ),
         ]);

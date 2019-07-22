@@ -24,7 +24,7 @@ import {
   tap,
   withLatestFrom,
 } from 'rxjs/operators';
-import * as sourceExplorerActions from '../actions/source-explorer.actions';
+import { SourceExplorerActions } from '../actions';
 import { RavenAppState } from '../raven-store';
 
 @Injectable()
@@ -55,7 +55,7 @@ export class RavenGuard implements CanActivate {
       map(([, state]) => state),
       tap(state => {
         if (!state.raven.sourceExplorer.initialSourcesLoaded) {
-          this.store$.dispatch(new sourceExplorerActions.FetchInitialSources());
+          this.store$.dispatch(SourceExplorerActions.fetchInitialSources());
         }
       }),
       filter((initialSourcesLoaded: any) => initialSourcesLoaded), // TODO: Strongly type?

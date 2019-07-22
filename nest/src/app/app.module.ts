@@ -27,7 +27,7 @@ import { ToastrModule } from 'ngx-toastr';
 import { RouterEffects } from '../../libs/ngrx-router';
 import { environment } from '../environments/environment';
 import { AppRoutingModule } from './app-routing.module';
-import { metaReducers, reducers } from './app-store';
+import { metaReducers, ROOT_REDUCERS } from './app-store';
 import { AppComponent } from './app.component';
 import { NestAboutDialogModule } from './shared/components/nest-about-dialog/nest-about-dialog.module';
 import { NestAppNavModule } from './shared/components/nest-app-nav/nest-app-nav.module';
@@ -52,7 +52,7 @@ import { ToastEffects } from './shared/effects/toast.effects';
     SortablejsModule.forRoot({}),
     AngularSplitModule.forRoot(),
     ContextMenuModule.forRoot(),
-    StoreModule.forRoot(reducers, {
+    StoreModule.forRoot(ROOT_REDUCERS, {
       metaReducers,
       runtimeChecks: {
         strictActionImmutability: !environment.production,

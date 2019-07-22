@@ -7,16 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 
-export enum DialogActionTypes {
-  OpenAboutDialog = '[dialog] open_about_dialog',
-}
-
-export class OpenAboutDialog implements Action {
-  readonly type = DialogActionTypes.OpenAboutDialog;
-
-  constructor(public width: string) {}
-}
-
-export type DialogAction = OpenAboutDialog;
+export const openAboutDialog = createAction(
+  '[nest-dialog] open_about_dialog',
+  props<{ width: string }>(),
+);

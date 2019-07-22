@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ActionReducerMap } from '@ngrx/store';
+import { Action, combineReducers } from '@ngrx/store';
 import * as fromRoot from '../app-store';
 import * as fromEpochs from './reducers/epochs.reducer';
 import * as fromLayout from './reducers/layout.reducer';
@@ -27,16 +27,18 @@ export interface State {
   timeline: fromTimeline.TimelineState;
 }
 
-export const reducers: ActionReducerMap<State> = {
-  epochs: fromEpochs.reducer,
-  layout: fromLayout.reducer,
-  output: fromOutput.reducer,
-  situationalAwareness: fromSituationalAwareness.reducer,
-  sourceExplorer: fromSourceExplorer.reducer,
-  timeCursor: fromTimeCursor.reducer,
-  timeline: fromTimeline.reducer,
-};
-
 export interface RavenAppState extends fromRoot.AppState {
   raven: State;
+}
+
+export function reducers(state: State | undefined, action: Action) {
+  return combineReducers({
+    epochs: fromEpochs.reducer,
+    layout: fromLayout.reducer,
+    output: fromOutput.reducer,
+    situationalAwareness: fromSituationalAwareness.reducer,
+    sourceExplorer: fromSourceExplorer.reducer,
+    timeCursor: fromTimeCursor.reducer,
+    timeline: fromTimeline.reducer,
+  })(state, action);
 }

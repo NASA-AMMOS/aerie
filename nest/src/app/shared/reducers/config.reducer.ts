@@ -7,52 +7,15 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { createReducer, on } from '@ngrx/store';
 import { config, ConfigState } from '../../../config';
-import {
-  ConfigAction,
-  ConfigActionTypes,
-  NavigationDrawerStates,
-  UpdateDefaultBandSettings,
-  UpdateMpsServerSettings,
-  UpdateRavenSettings,
-} from '../actions/config.actions';
+import { ConfigActions } from '../actions';
 
-// Config State Interface.
-// Defined in the top-level `config.ts` file.
-
-// Config State.
 export const initialState: ConfigState = config;
 
-/**
- * Reducer.
- * If a case takes more than one line then it should be in it's own helper function.
- */
-export function reducer(
-  state: ConfigState = initialState,
-  action: ConfigAction,
-): ConfigState {
-  switch (action.type) {
-    case ConfigActionTypes.UpdateDefaultBandSettings:
-      return updateDefaultBandSettings(state, action);
-    case ConfigActionTypes.UpdateMpsServerSettings:
-      return updateMpsServerSettings(state, action);
-    case ConfigActionTypes.UpdateRavenSettings:
-      return updateRavenSettings(state, action);
-    case ConfigActionTypes.ToggleNestNavigationDrawer:
-      return { ...state, navigationDrawerState: toggleDrawer(state) };
-    default:
-      return state;
-  }
-}
-
-/**
- * Reduction Helper. Called when reducing the 'UpdateDefaultBandSettings' action.
- */
-export function updateDefaultBandSettings(
-  state: ConfigState,
-  action: UpdateDefaultBandSettings,
-): ConfigState {
-  return {
+export const reducer = createReducer(
+  initialState,
+  on(ConfigActions.updateDefaultBandSettings, (state, action) => ({
     ...state,
     raven: {
       ...state.raven,
@@ -61,52 +24,27 @@ export function updateDefaultBandSettings(
         ...action.update,
       },
     },
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'UpdateMpsServerSettings' action.
- */
-export function updateMpsServerSettings(
-  state: ConfigState,
-  action: UpdateMpsServerSettings,
-): ConfigState {
-  return {
+  })),
+  on(ConfigActions.updateMpsServerSettings, (state, action) => ({
     ...state,
     mpsServer: {
       ...state.mpsServer,
       ...action.update,
     },
-  };
-}
-
-/**
- * Reduction Helper. Called when reducing the 'UpdateRavenSettings' action.
- */
-export function updateRavenSettings(
-  state: ConfigState,
-  action: UpdateRavenSettings,
-): ConfigState {
-  return {
+  })),
+  on(ConfigActions.updateRavenSettings, (state, action) => ({
     ...state,
     raven: {
       ...state.raven,
       ...action.update,
     },
-  };
-}
-
-/**
- * The drawer can be toggled three ways: open, closed, or collapsed.
- * At the moment, however, the design decision was to avoid closed.
- */
-export function toggleDrawer(state: ConfigState) {
-  switch (state.navigationDrawerState) {
-    case NavigationDrawerStates.Closed:
-      return NavigationDrawerStates.Collapsed;
-    case NavigationDrawerStates.Collapsed:
-      return NavigationDrawerStates.Closed;
-    default:
-      return NavigationDrawerStates.Closed;
-  }
-}
+  })),
+  on(ConfigActions.toggleNestNavigationDrawer, state => ({
+    ...state,
+    navigationDrawerState:
+      state.navigationDrawerState ===
+      ConfigActions.NavigationDrawerStates.Closed
+        ? ConfigActions.NavigationDrawerStates.Collapsed
+        : ConfigActions.NavigationDrawerStates.Closed,
+  })),
+);

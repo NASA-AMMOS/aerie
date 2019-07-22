@@ -14,11 +14,13 @@ import { map, switchMap } from 'rxjs/operators';
 import { WebSocketSubject } from 'rxjs/webSocket';
 import { StringTMap } from '../../../shared/models';
 import { getUrls } from '../../../shared/selectors';
-import * as dialogActions from '../../actions/dialog.actions';
-import * as epochsActions from '../../actions/epochs.actions';
-import * as layoutActions from '../../actions/layout.actions';
-import * as sourceExplorerActions from '../../actions/source-explorer.actions';
-import * as timelineActions from '../../actions/timeline.actions';
+import {
+  DialogActions,
+  EpochsActions,
+  LayoutActions,
+  SourceExplorerActions,
+  TimelineActions,
+} from '../../actions';
 import {
   FilterState,
   MpsServerWebSocketMessage,
@@ -93,8 +95,10 @@ export class SourceExplorerComponent implements OnDestroy {
     this.connectToWebsocket();
   }
 
-  onFilterSources(filter: SourceFilter) {
-    this.store.dispatch(new sourceExplorerActions.UpdateSourceFilter(filter));
+  onFilterSources(sourceFilter: SourceFilter) {
+    this.store.dispatch(
+      SourceExplorerActions.updateSourceFilter({ sourceFilter }),
+    );
   }
 
   ngOnDestroy() {
@@ -133,10 +137,10 @@ export class SourceExplorerComponent implements OnDestroy {
               const parentId = match[1];
               if (this.tree[parentId]) {
                 this.store.dispatch(
-                  new sourceExplorerActions.FetchNewSources(
-                    parentId,
-                    this.tree[parentId].url,
-                  ),
+                  SourceExplorerActions.fetchNewSources({
+                    sourceId: parentId,
+                    sourceUrl: this.tree[parentId].url,
+                  }),
                 );
               }
             }
@@ -152,49 +156,75 @@ export class SourceExplorerComponent implements OnDestroy {
     const { event, source } = action;
     if (event === 'apply-layout') {
       this.store.dispatch(
-        new timelineActions.UpdateTimeline({
-          currentStateId: source.id,
+        TimelineActions.updateTimeline({
+          update: {
+            currentStateId: source.id,
+          },
         }),
       );
-      this.store.dispatch(new layoutActions.ToggleApplyLayoutDrawerEvent(true));
+      this.store.dispatch(
+        LayoutActions.toggleApplyLayoutDrawerEvent({ opened: true }),
+      );
     } else if (event === 'apply-state') {
       this.store.dispatch(
-        new dialogActions.OpenStateApplyDialog(source, '250px'),
+        DialogActions.openStateApplyDialog({ source, width: '250px' }),
       );
     } else if (event === 'delete') {
       this.store.dispatch(
-        new dialogActions.OpenDeleteSourceDialog(source, '250px'),
+        DialogActions.openDeleteSourceDialog({ source, width: '250px' }),
       );
     } else if (event === 'epoch-load') {
       this.onLoadEpochs(source);
     } else if (event === 'file-import') {
       this.store.dispatch(
-        new dialogActions.OpenFileImportDialog(source, '300px'),
+        DialogActions.openFileImportDialog({ source, width: '300px' }),
       );
     } else if (event === 'file-metadata') {
-      this.store.dispatch(new sourceExplorerActions.SelectSource(source.id));
-      this.store.dispatch(new layoutActions.ToggleFileMetadataDrawer(true));
+      this.store.dispatch(
+        SourceExplorerActions.selectSource({ sourceId: source.id }),
+      );
+      this.store.dispatch(
+        LayoutActions.toggleFileMetadataDrawer({ opened: true }),
+      );
     } else if (event === 'folder-add') {
       this.store.dispatch(
-        new dialogActions.OpenFolderDialog('add', source, '250px'),
+        DialogActions.openFolderDialog({
+          folderAction: 'add',
+          source,
+          width: '250px',
+        }),
       );
     } else if (event === 'graph-again') {
-      this.store.dispatch(new sourceExplorerActions.GraphAgainEvent(source.id));
+      this.store.dispatch(
+        SourceExplorerActions.graphAgainEvent({ sourceId: source.id }),
+      );
     } else if (event === 'pin-add') {
       this.store.dispatch(
-        new dialogActions.OpenPinDialog('add', source, '250px'),
+        DialogActions.openPinDialog({
+          pinAction: 'add',
+          source,
+          width: '250px',
+        }),
       );
     } else if (event === 'pin-remove') {
       this.store.dispatch(
-        new dialogActions.OpenPinDialog('remove', source, '250px'),
+        DialogActions.openPinDialog({
+          pinAction: 'remove',
+          source,
+          width: '250px',
+        }),
       );
     } else if (event === 'pin-rename') {
       this.store.dispatch(
-        new dialogActions.OpenPinDialog('rename', source, '250px'),
+        DialogActions.openPinDialog({
+          pinAction: 'rename',
+          source,
+          width: '250px',
+        }),
       );
     } else if (event === 'save') {
       this.store.dispatch(
-        new dialogActions.OpenStateSaveDialog(source, '300px'),
+        DialogActions.openStateSaveDialog({ source, width: '300px' }),
       );
     }
   }
@@ -204,7 +234,7 @@ export class SourceExplorerComponent implements OnDestroy {
    */
   onAddCustomGraph(source: RavenCustomGraphableSource): void {
     this.store.dispatch(
-      new dialogActions.OpenCustomGraphDialog(source, '300px'),
+      DialogActions.openCustomGraphDialog({ source, width: '300px' }),
     );
   }
 
@@ -212,35 +242,41 @@ export class SourceExplorerComponent implements OnDestroy {
    * Event. Called when a filter is selected
    */
   onAddFilter(source: RavenFilterSource): void {
-    this.store.dispatch(new sourceExplorerActions.AddFilter(source));
+    this.store.dispatch(SourceExplorerActions.addFilter({ source }));
   }
 
   /**
    * Event. Called when a graphable filter is selected.
    */
   onAddGraphableFilter(source: RavenGraphableFilterSource): void {
-    this.store.dispatch(new sourceExplorerActions.AddGraphableFilter(source));
+    this.store.dispatch(SourceExplorerActions.addGraphableFilter({ source }));
   }
 
   /**
    * Event. Called when a `close` event is fired from a raven-tree.
    */
   onClose(source: RavenSource): void {
-    this.store.dispatch(new sourceExplorerActions.CloseEvent(source.id));
+    this.store.dispatch(
+      SourceExplorerActions.closeEvent({ sourceId: source.id }),
+    );
   }
 
   /**
    * Event. Called when a `collapse` event is fired from a raven-tree.
    */
   onCollapse(source: RavenSource): void {
-    this.store.dispatch(new sourceExplorerActions.CollapseEvent(source.id));
+    this.store.dispatch(
+      SourceExplorerActions.collapseEvent({ sourceId: source.id }),
+    );
   }
 
   /**
    * Event. Called when an `expand` event is fired from a raven-tree.
    */
   onExpand(source: RavenSource): void {
-    this.store.dispatch(new sourceExplorerActions.ExpandEvent(source.id));
+    this.store.dispatch(
+      SourceExplorerActions.expandEvent({ sourceId: source.id }),
+    );
   }
 
   /**
@@ -249,10 +285,15 @@ export class SourceExplorerComponent implements OnDestroy {
   onLoadEpochs(source: RavenSource): void {
     if (this.epochs.length === 0) {
       this.store.dispatch(
-        new epochsActions.FetchEpochs(source.url, 'AppendAndReplace'),
+        EpochsActions.fetchEpochs({
+          replaceAction: 'AppendAndReplace',
+          url: source.url,
+        }),
       );
     } else {
-      this.store.dispatch(new dialogActions.OpenLoadEpochDialog(source.url));
+      this.store.dispatch(
+        DialogActions.openLoadEpochDialog({ sourceUrl: source.url }),
+      );
     }
   }
 
@@ -260,14 +301,16 @@ export class SourceExplorerComponent implements OnDestroy {
    * Event. Called when an `open` event is fired from a raven-tree.
    */
   onOpen(source: RavenSource): void {
-    this.store.dispatch(new sourceExplorerActions.OpenEvent(source.id));
+    this.store.dispatch(
+      SourceExplorerActions.openEvent({ sourceId: source.id }),
+    );
   }
 
   /**
    * Event. Called when a filter is unselected
    */
   onRemoveFilter(source: RavenFilterSource): void {
-    this.store.dispatch(new sourceExplorerActions.RemoveFilter(source));
+    this.store.dispatch(SourceExplorerActions.removeFilter({ source }));
   }
 
   /**
@@ -275,7 +318,7 @@ export class SourceExplorerComponent implements OnDestroy {
    */
   onRemoveGraphableFilter(source: RavenGraphableFilterSource): void {
     this.store.dispatch(
-      new sourceExplorerActions.RemoveGraphableFilter(source),
+      SourceExplorerActions.removeGraphableFilter({ source }),
     );
   }
 
@@ -284,7 +327,7 @@ export class SourceExplorerComponent implements OnDestroy {
    */
   onSelectCustomFilter(source: RavenCustomFilterSource): void {
     this.store.dispatch(
-      new dialogActions.OpenCustomFilterDialog(source, '300px'),
+      DialogActions.openCustomFilterDialog({ source, width: '300px' }),
     );
   }
 
@@ -292,6 +335,6 @@ export class SourceExplorerComponent implements OnDestroy {
    * Helper. Dispatches an event to set the visibility of the file metadata drawer.
    */
   setShowFileMetadataDrawer(opened: boolean): void {
-    this.store.dispatch(new layoutActions.ToggleFileMetadataDrawer(opened));
+    this.store.dispatch(LayoutActions.toggleFileMetadataDrawer({ opened }));
   }
 }

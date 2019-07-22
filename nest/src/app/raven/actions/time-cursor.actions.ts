@@ -7,30 +7,17 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 import { BaseType, StringTMap } from '../../shared/models';
 
-export enum TimeCursorActionTypes {
-  HideTimeCursor = '[timeCursor] hide_time_cursor',
-  ShowTimeCursor = '[timeCursor] show_time_cursor',
-  UpdateTimeCursorSettings = '[timeCursor] update_time_cursor_settings',
-}
+export const hideTimeCursor = createAction(
+  '[raven-time-cursor] hide_time_cursor',
+);
+export const showTimeCursor = createAction(
+  '[raven-time-cursor] show_time_cursor',
+);
 
-export class HideTimeCursor implements Action {
-  readonly type = TimeCursorActionTypes.HideTimeCursor;
-}
-
-export class ShowTimeCursor implements Action {
-  readonly type = TimeCursorActionTypes.ShowTimeCursor;
-}
-
-export class UpdateTimeCursorSettings implements Action {
-  readonly type = TimeCursorActionTypes.UpdateTimeCursorSettings;
-
-  constructor(public update: StringTMap<BaseType>) {}
-}
-
-export type TimeCursorAction =
-  | HideTimeCursor
-  | ShowTimeCursor
-  | UpdateTimeCursorSettings;
+export const updateTimeCursorSettings = createAction(
+  '[raven-time-cursor] update_time_cursor_settings',
+  props<{ update: StringTMap<BaseType> }>(),
+);

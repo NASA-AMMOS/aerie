@@ -7,35 +7,20 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 import { BaseType, StringTMap } from './../../shared/models';
 
-export enum SituationalAwarenessActionTypes {
-  ChangeSituationalAwareness = '[situationalAwareness] change_situational_awareness',
-  FetchPefEntries = '[situationalAwareness] fetch_pef_entries',
-  UpdateSituationalAwarenessSettings = '[situationalAwareness] update_situational_awareness_settings',
-}
+export const changeSituationalAwareness = createAction(
+  '[raven-situational-awareness] change_situational_awareness',
+  props<{ url: string; situAware: boolean }>(),
+);
 
-export class ChangeSituationalAwareness implements Action {
-  readonly type = SituationalAwarenessActionTypes.ChangeSituationalAwareness;
+export const fetchPefEntries = createAction(
+  '[raven-situational-awareness] fetch_pef_entries',
+  props<{ url: string }>(),
+);
 
-  constructor(public url: string, public situAware: boolean) {}
-}
-
-export class FetchPefEntries implements Action {
-  readonly type = SituationalAwarenessActionTypes.FetchPefEntries;
-
-  constructor(public url: string) {}
-}
-
-export class UpdateSituationalAwarenessSettings implements Action {
-  readonly type =
-    SituationalAwarenessActionTypes.UpdateSituationalAwarenessSettings;
-
-  constructor(public update: StringTMap<BaseType>) {}
-}
-
-export type SituationalAwarenessAction =
-  | ChangeSituationalAwareness
-  | FetchPefEntries
-  | UpdateSituationalAwarenessSettings;
+export const updateSituationalAwarenessSettings = createAction(
+  '[raven-situational-awareness] update_situational_awareness_settings',
+  props<{ update: StringTMap<BaseType> }>(),
+);

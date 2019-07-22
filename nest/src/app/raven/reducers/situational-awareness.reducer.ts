@@ -7,11 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { createReducer, on } from '@ngrx/store';
+import { SituationalAwarenessActions } from '../actions';
 import { RavenSituationalAwarenessPefEntry } from '../models';
-import {
-  SituationalAwarenessAction,
-  SituationalAwarenessActionTypes,
-} from './../actions/situational-awareness.actions';
 
 export interface SituationalAwarenessState {
   fetchPending: boolean;
@@ -35,20 +33,17 @@ export const initialState: SituationalAwarenessState = {
   useNow: true,
 };
 
-/**
- * Reducer.
- * If a case takes more than one line then it should be in it's own helper function.
- */
-export function reducer(
-  state: SituationalAwarenessState = initialState,
-  action: SituationalAwarenessAction,
-): SituationalAwarenessState {
-  switch (action.type) {
-    case SituationalAwarenessActionTypes.ChangeSituationalAwareness:
-      return { ...state, fetchPending: true };
-    case SituationalAwarenessActionTypes.UpdateSituationalAwarenessSettings:
-      return { ...state, ...action.update };
-    default:
-      return state;
-  }
-}
+export const reducer = createReducer(
+  initialState,
+  on(SituationalAwarenessActions.changeSituationalAwareness, state => ({
+    ...state,
+    fetchPending: true,
+  })),
+  on(
+    SituationalAwarenessActions.updateSituationalAwarenessSettings,
+    (state, { update }) => ({
+      ...state,
+      ...update,
+    }),
+  ),
+);

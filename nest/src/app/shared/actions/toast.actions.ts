@@ -7,21 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 
-export enum ToastActionTypes {
-  ShowToast = '[toast] show_toast',
-}
-
-export class ShowToast implements Action {
-  readonly type = ToastActionTypes.ShowToast;
-
-  constructor(
-    public toastType: string,
-    public message: string,
-    public title: string,
-    public config?: any,
-  ) {}
-}
-
-export type ToastrAction = ShowToast;
+export const showToast = createAction(
+  '[nest-toast] show_toast',
+  props<{ toastType: string; message: string; title: string; config?: any }>(),
+);

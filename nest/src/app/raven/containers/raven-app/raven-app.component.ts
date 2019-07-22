@@ -16,11 +16,9 @@ import {
 import { select, Store } from '@ngrx/store';
 import { combineLatest, Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import * as configActions from '../../../shared/actions/config.actions';
+import { ConfigActions } from '../../../shared/actions';
 import { getVersion } from '../../../shared/selectors';
-import * as dialogActions from '../../actions/dialog.actions';
-import * as layoutActions from '../../actions/layout.actions';
-import * as timelineActions from '../../actions/timeline.actions';
+import { DialogActions, LayoutActions, TimelineActions } from '../../actions';
 import { SourceExplorerState } from '../../reducers/source-explorer.reducer';
 import {
   getLayoutPending,
@@ -84,31 +82,31 @@ export class RavenAppComponent implements OnDestroy {
       this.mode !== 'minimal'
     ) {
       // Ctrl+Shift+1.
-      this.store.dispatch(new layoutActions.ToggleLeftPanel());
+      this.store.dispatch(LayoutActions.toggleLeftPanel());
     } else if (e.ctrlKey && e.shiftKey && e.code === 'Digit2') {
       // Ctrl+Shift+2.
-      this.store.dispatch(new layoutActions.ToggleRightPanel());
+      this.store.dispatch(LayoutActions.toggleRightPanel());
     } else if (e.ctrlKey && e.shiftKey && e.code === 'Digit3') {
       // Ctrl+Shift+3.
-      this.store.dispatch(new layoutActions.ToggleSouthBandsPanel());
+      this.store.dispatch(LayoutActions.toggleSouthBandsPanel());
     } else if (e.ctrlKey && e.shiftKey && e.code === 'Digit4') {
       // Ctrl+Shift+4.
-      this.store.dispatch(new layoutActions.ToggleDetailsPanel());
+      this.store.dispatch(LayoutActions.toggleDetailsPanel());
     } else if (e.ctrlKey && e.shiftKey && e.code === 'Digit5') {
       // Ctrl+Shift+5.
-      this.store.dispatch(new layoutActions.ToggleGlobalSettingsDrawer());
+      this.store.dispatch(LayoutActions.toggleGlobalSettingsDrawer({}));
     } else if (e.ctrlKey && e.shiftKey && e.code === 'Equal') {
       // Ctrl+Shift+Equal.
-      this.store.dispatch(new timelineActions.ZoomInViewTimeRange());
+      this.store.dispatch(TimelineActions.zoomInViewTimeRange());
     } else if (e.ctrlKey && e.shiftKey && e.code === 'Minus') {
       // Ctrl+Shift+Minus.
-      this.store.dispatch(new timelineActions.ZoomOutViewTimeRange());
+      this.store.dispatch(TimelineActions.zoomOutViewTimeRange());
     } else if (e.ctrlKey && e.shiftKey && e.code === 'ArrowRight') {
       // Ctrl+Shift+ArrowRight.
-      this.store.dispatch(new timelineActions.PanRightViewTimeRange());
+      this.store.dispatch(TimelineActions.panRightViewTimeRange());
     } else if (e.ctrlKey && e.shiftKey && e.code === 'ArrowLeft') {
       // Ctrl+Shift+ArrowLeft.
-      this.store.dispatch(new timelineActions.PanLeftViewTimeRange());
+      this.store.dispatch(TimelineActions.panLeftViewTimeRange());
     }
   }
 
@@ -146,48 +144,52 @@ export class RavenAppComponent implements OnDestroy {
    * The hamburger menu was clicked
    */
   onMenuClicked() {
-    this.store.dispatch(new configActions.ToggleNestNavigationDrawer());
+    this.store.dispatch(ConfigActions.toggleNestNavigationDrawer());
   }
 
   toggleAboutDialog() {
     this.store.dispatch(
-      new dialogActions.OpenConfirmDialog('Close', this.about, '400px'),
+      DialogActions.openConfirmDialog({
+        cancelText: 'Close',
+        message: this.about,
+        width: '400px',
+      }),
     );
   }
 
   toggleDetailsPanel() {
-    this.store.dispatch(new layoutActions.ToggleDetailsPanel());
+    this.store.dispatch(LayoutActions.toggleDetailsPanel());
   }
 
   toggleEpochsDrawer() {
-    this.store.dispatch(new layoutActions.ToggleEpochsDrawer());
+    this.store.dispatch(LayoutActions.toggleEpochsDrawer({}));
   }
 
   toggleGlobalSettingsDrawer() {
-    this.store.dispatch(new layoutActions.ToggleGlobalSettingsDrawer());
+    this.store.dispatch(LayoutActions.toggleGlobalSettingsDrawer({}));
   }
 
   toggleLeftPanel() {
-    this.store.dispatch(new layoutActions.ToggleLeftPanel());
+    this.store.dispatch(LayoutActions.toggleLeftPanel());
   }
 
   toggleOutputDrawer() {
-    this.store.dispatch(new layoutActions.ToggleOutputDrawer());
+    this.store.dispatch(LayoutActions.toggleOutputDrawer({}));
   }
 
   toggleRightPanel() {
-    this.store.dispatch(new layoutActions.ToggleRightPanel());
+    this.store.dispatch(LayoutActions.toggleRightPanel());
   }
 
   toggleSituationalAwarenessDrawer() {
-    this.store.dispatch(new layoutActions.ToggleSituationalAwarenessDrawer());
+    this.store.dispatch(LayoutActions.toggleSituationalAwarenessDrawer({}));
   }
 
   toggleSouthBandsPanel() {
-    this.store.dispatch(new layoutActions.ToggleSouthBandsPanel());
+    this.store.dispatch(LayoutActions.toggleSouthBandsPanel());
   }
 
   toggleTimeCursorDrawer() {
-    this.store.dispatch(new layoutActions.ToggleTimeCursorDrawer());
+    this.store.dispatch(LayoutActions.toggleTimeCursorDrawer({}));
   }
 }

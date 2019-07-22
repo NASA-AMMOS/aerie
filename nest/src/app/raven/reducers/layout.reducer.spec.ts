@@ -7,20 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  Resize,
-  SetMode,
-  ToggleApplyLayoutDrawer,
-  ToggleApplyLayoutDrawerEvent,
-  ToggleDetailsPanel,
-  ToggleEpochsDrawer,
-  ToggleFileMetadataDrawer,
-  ToggleGlobalSettingsDrawer,
-  ToggleLeftPanel,
-  ToggleRightPanel,
-  ToggleSouthBandsPanel,
-  UpdateLayout,
-} from '../actions/layout.actions';
+import { LayoutActions } from '../actions';
 import { initialState, LayoutState, reducer } from './layout.reducer';
 
 describe('layout reducer', () => {
@@ -35,7 +22,7 @@ describe('layout reducer', () => {
   });
 
   it('handle Resize', () => {
-    layoutState = reducer(layoutState, new Resize());
+    layoutState = reducer(layoutState, LayoutActions.resize());
     expect(layoutState).toEqual({
       ...initialState,
     });
@@ -44,7 +31,13 @@ describe('layout reducer', () => {
   it('handle SetMode', () => {
     layoutState = reducer(
       layoutState,
-      new SetMode('custom', false, false, true, false),
+      LayoutActions.setMode({
+        mode: 'custom',
+        showDetailsPanel: false,
+        showLeftPanel: false,
+        showRightPanel: true,
+        showSouthBandsPanel: false,
+      }),
     );
 
     expect(layoutState).toEqual({
@@ -58,7 +51,7 @@ describe('layout reducer', () => {
   });
 
   it('handle ToggleDetailsPanel', () => {
-    layoutState = reducer(layoutState, new ToggleDetailsPanel());
+    layoutState = reducer(layoutState, LayoutActions.toggleDetailsPanel());
     expect(layoutState).toEqual({
       ...initialState,
       showDetailsPanel: !initialState.showDetailsPanel,
@@ -66,7 +59,10 @@ describe('layout reducer', () => {
   });
 
   it('handle ToggleApplyLayoutDrawer', () => {
-    layoutState = reducer(layoutState, new ToggleApplyLayoutDrawer());
+    layoutState = reducer(
+      layoutState,
+      LayoutActions.toggleApplyLayoutDrawer({}),
+    );
     expect(layoutState).toEqual({
       ...initialState,
       showApplyLayoutDrawer: true,
@@ -75,7 +71,10 @@ describe('layout reducer', () => {
   });
 
   it('handle ToggleApplyLayoutDrawerEvent', () => {
-    layoutState = reducer(layoutState, new ToggleApplyLayoutDrawerEvent());
+    layoutState = reducer(
+      layoutState,
+      LayoutActions.toggleApplyLayoutDrawerEvent({}),
+    );
     expect(layoutState).toEqual({
       ...initialState,
       fetchPending: true,
@@ -83,7 +82,7 @@ describe('layout reducer', () => {
   });
 
   it('handle ToggleEpochsDrawer', () => {
-    layoutState = reducer(layoutState, new ToggleEpochsDrawer());
+    layoutState = reducer(layoutState, LayoutActions.toggleEpochsDrawer({}));
     expect(layoutState).toEqual({
       ...initialState,
       showEpochsDrawer: true,
@@ -93,38 +92,56 @@ describe('layout reducer', () => {
 
   it('should handle ToggleFileMetadataDrawer', () => {
     // An action without a parameter should toggle the current state.
-    layoutState = reducer(layoutState, new ToggleFileMetadataDrawer());
+    layoutState = reducer(
+      layoutState,
+      LayoutActions.toggleFileMetadataDrawer({}),
+    );
     expect(layoutState).toEqual({
       ...initialState,
       showFileMetadataDrawer: true,
     });
 
-    layoutState = reducer(layoutState, new ToggleFileMetadataDrawer());
+    layoutState = reducer(
+      layoutState,
+      LayoutActions.toggleFileMetadataDrawer({}),
+    );
     expect(layoutState).toEqual({
       ...initialState,
       showFileMetadataDrawer: false,
     });
 
     // An action with a parameter should set the state to that parameter.
-    layoutState = reducer(layoutState, new ToggleFileMetadataDrawer(true));
+    layoutState = reducer(
+      layoutState,
+      LayoutActions.toggleFileMetadataDrawer({ opened: true }),
+    );
     expect(layoutState).toEqual({
       ...initialState,
       showFileMetadataDrawer: true,
     });
 
-    layoutState = reducer(layoutState, new ToggleFileMetadataDrawer(true));
+    layoutState = reducer(
+      layoutState,
+      LayoutActions.toggleFileMetadataDrawer({ opened: true }),
+    );
     expect(layoutState).toEqual({
       ...initialState,
       showFileMetadataDrawer: true,
     });
 
-    layoutState = reducer(layoutState, new ToggleFileMetadataDrawer(false));
+    layoutState = reducer(
+      layoutState,
+      LayoutActions.toggleFileMetadataDrawer({ opened: false }),
+    );
     expect(layoutState).toEqual({
       ...initialState,
       showFileMetadataDrawer: false,
     });
 
-    layoutState = reducer(layoutState, new ToggleFileMetadataDrawer(false));
+    layoutState = reducer(
+      layoutState,
+      LayoutActions.toggleFileMetadataDrawer({ opened: false }),
+    );
     expect(layoutState).toEqual({
       ...initialState,
       showFileMetadataDrawer: false,
@@ -132,7 +149,10 @@ describe('layout reducer', () => {
   });
 
   it('handle ToggleGlobalSettingsDrawer', () => {
-    layoutState = reducer(layoutState, new ToggleGlobalSettingsDrawer());
+    layoutState = reducer(
+      layoutState,
+      LayoutActions.toggleGlobalSettingsDrawer({}),
+    );
     expect(layoutState).toEqual({
       ...initialState,
       showEpochsDrawer: false,
@@ -141,7 +161,7 @@ describe('layout reducer', () => {
   });
 
   it('handle ToggleLeftPanel', () => {
-    layoutState = reducer(layoutState, new ToggleLeftPanel());
+    layoutState = reducer(layoutState, LayoutActions.toggleLeftPanel());
     expect(layoutState).toEqual({
       ...initialState,
       showLeftPanel: !initialState.showLeftPanel,
@@ -149,7 +169,7 @@ describe('layout reducer', () => {
   });
 
   it('handle ToggleRightPanel', () => {
-    layoutState = reducer(layoutState, new ToggleRightPanel());
+    layoutState = reducer(layoutState, LayoutActions.toggleRightPanel());
     expect(layoutState).toEqual({
       ...initialState,
       showRightPanel: !initialState.showRightPanel,
@@ -157,7 +177,7 @@ describe('layout reducer', () => {
   });
 
   it('handle ToggleSouthBandsPanel', () => {
-    layoutState = reducer(layoutState, new ToggleSouthBandsPanel());
+    layoutState = reducer(layoutState, LayoutActions.toggleSouthBandsPanel());
     expect(layoutState).toEqual({
       ...initialState,
       showSouthBandsPanel: !initialState.showSouthBandsPanel,
@@ -167,7 +187,7 @@ describe('layout reducer', () => {
   it('handle UpdateLayout', () => {
     layoutState = reducer(
       layoutState,
-      new UpdateLayout({ timelinePanelSize: 50 }),
+      LayoutActions.updateLayout({ update: { timelinePanelSize: 50 } }),
     );
     expect(layoutState).toEqual({ ...initialState, timelinePanelSize: 50 });
   });

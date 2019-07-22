@@ -9,19 +9,12 @@
 
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Actions, Effect, ofType } from '@ngrx/effects';
-import { Action, Store } from '@ngrx/store';
-import { concat, Observable, of } from 'rxjs';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Store } from '@ngrx/store';
+import { concat, of } from 'rxjs';
 import { catchError, concatMap, map, withLatestFrom } from 'rxjs/operators';
-import * as toastActions from '../../shared/actions/toast.actions';
-import {
-  EpochsActionTypes,
-  FetchEpochs,
-  SaveNewEpochFile,
-  UpdateProjectEpochs,
-} from '../actions/epochs.actions';
-import * as epochsActions from '../actions/epochs.actions';
-import * as sourceExplorerActions from '../actions/source-explorer.actions';
+import { ToastActions } from '../../shared/actions';
+import { EpochsActions, SourceExplorerActions } from '../actions';
 import { MpsServerEpoch, RavenEpoch } from '../models';
 import { RavenAppState } from '../raven-store';
 import { toRavenEpochs } from '../util';
@@ -29,128 +22,138 @@ import { toRavenEpochs } from '../util';
 @Injectable()
 export class EpochsEffects {
   constructor(
+    private actions: Actions,
     private http: HttpClient,
-    private actions$: Actions,
-    private store$: Store<RavenAppState>,
+    private store: Store<RavenAppState>,
   ) {}
 
-  @Effect()
-  fetchEpochs$: Observable<Action> = this.actions$.pipe(
-    ofType<FetchEpochs>(EpochsActionTypes.FetchEpochs),
-    concatMap(action =>
-      concat(
-        of(
-          new sourceExplorerActions.UpdateSourceExplorer({
-            fetchPending: true,
-          }),
-        ),
-        this.http.get(action.url).pipe(
-          map((mpsServerEpochs: MpsServerEpoch[]) =>
-            toRavenEpochs(mpsServerEpochs),
+  fetchEpochs = createEffect(() =>
+    this.actions.pipe(
+      ofType(EpochsActions.fetchEpochs),
+      concatMap(action =>
+        concat(
+          of(
+            SourceExplorerActions.updateSourceExplorer({
+              update: { fetchPending: true },
+            }),
           ),
-          map((ravenEpochs: RavenEpoch[]) =>
-            action.replaceAction === 'AppendAndReplace'
-              ? new epochsActions.AppendAndReplaceEpochs(ravenEpochs)
-              : new epochsActions.AddEpochs(ravenEpochs),
+          this.http.get(action.url).pipe(
+            map((mpsServerEpochs: MpsServerEpoch[]) =>
+              toRavenEpochs(mpsServerEpochs),
+            ),
+            map((epochs: RavenEpoch[]) =>
+              action.replaceAction === 'AppendAndReplace'
+                ? EpochsActions.appendAndReplaceEpochs({ epochs })
+                : EpochsActions.addEpochs({ epochs }),
+            ),
           ),
-        ),
-        of(
-          new sourceExplorerActions.UpdateSourceExplorer({
-            fetchPending: false,
-          }),
+          of(
+            SourceExplorerActions.updateSourceExplorer({
+              update: { fetchPending: false },
+            }),
+          ),
         ),
       ),
-    ),
-    catchError((e: Error) => {
-      console.error('EpochsEffects - fetchEpochs$: ', e);
-      return [
-        new toastActions.ShowToast('warning', 'Failed to fetch epochs', ''),
-      ];
-    }),
-  );
-
-  @Effect()
-  saveNewEpochFile$: Observable<Action> = this.actions$.pipe(
-    ofType<SaveNewEpochFile>(EpochsActionTypes.SaveNewEpochFile),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(({ action, state }) =>
-      this.saveNewEpochFile(state, action.filePathName),
+      catchError((e: Error) => {
+        console.error('EpochsEffects - fetchEpochs: ', e.message);
+        return [
+          ToastActions.showToast({
+            message: 'Failed to fetch epochs',
+            title: '',
+            toastType: 'warning',
+          }),
+        ];
+      }),
     ),
   );
 
-  @Effect()
-  updateProjectEpochs$: Observable<Action> = this.actions$.pipe(
-    ofType<UpdateProjectEpochs>(EpochsActionTypes.UpdateProjectEpochs),
-    withLatestFrom(this.store$),
-    map(([, state]) => ({ state })),
-    concatMap(({ state }) => this.updateProjectEpochs(state)),
-  );
-
-  saveNewEpochFile(state: RavenAppState, fileUrl: string) {
-    const headers = new HttpHeaders().set('Content-Type', `application/json`);
-    const responseType = 'text';
-    const url = `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}/${fileUrl}?timeline_type=epoch`;
-
-    return this.http
-      .put(url, JSON.stringify(state.raven.epochs.epochs), {
-        headers,
-        responseType,
-      })
-      .pipe(
-        concatMap(() => {
-          return of(new epochsActions.SaveNewEpochFileSuccess());
-        }),
-        catchError((e: Error) => {
-          console.error('EpochEffects - saveNewEpochFile$: ', e);
-          return [
-            new toastActions.ShowToast(
-              'warning',
-              'Failed To Save New Epoch File',
-              '',
-            ),
-          ];
-        }),
-      );
-  }
-
-  updateProjectEpochs(state: RavenAppState) {
-    if (
-      state.config.mpsServer.epochsUrl &&
-      state.config.mpsServer.epochsUrl.length > 0
-    ) {
-      const headers = new HttpHeaders().set('Content-Type', `application/json`);
-      const responseType = 'text';
-      const url = `${state.config.app.baseUrl}/${state.config.mpsServer.epochsUrl}?timeline_type=epoch`;
-
-      return this.http
-        .put(url, JSON.stringify(state.raven.epochs.epochs), {
-          headers,
-          responseType,
-        })
-        .pipe(
-          concatMap(() => {
-            return of(new epochsActions.UpdateProjectEpochsSuccess());
-          }),
-          catchError((e: Error) => {
-            console.error('EpochEffects - updateEProjectEpochs$: ', e);
-            return [
-              new toastActions.ShowToast(
-                'warning',
-                'Failed To Update Project Epochs',
-                '',
-              ),
-            ];
-          }),
+  saveNewEpochFile = createEffect(() =>
+    this.actions.pipe(
+      ofType(EpochsActions.saveNewEpochFile),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      concatMap(({ action, state }) => {
+        const headers = new HttpHeaders().set(
+          'Content-Type',
+          'application/json',
         );
-    } else {
-      return [
-        new toastActions.ShowToast(
-          'warning',
-          'Project Epochs has not been defined. Update failed',
-          '',
-        ),
-      ];
-    }
-  }
+        const responseType = 'text';
+        const url = `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}/${action.filePathName}?timeline_type=epoch`;
+
+        return this.http
+          .put(url, JSON.stringify(state.raven.epochs.epochs), {
+            headers,
+            responseType,
+          })
+          .pipe(
+            concatMap(() => {
+              return of(EpochsActions.saveNewEpochFileSuccess());
+            }),
+            catchError((e: Error) => {
+              console.error('EpochEffects - saveNewEpochFile: ', e.message);
+              return [
+                ToastActions.showToast({
+                  message: 'Failed To Save New Epoch File',
+                  title: '',
+                  toastType: 'warning',
+                }),
+              ];
+            }),
+          );
+      }),
+    ),
+  );
+
+  updateProjectEpochs = createEffect(() =>
+    this.actions.pipe(
+      ofType(EpochsActions.updateProjectEpochs),
+      withLatestFrom(this.store),
+      map(([, state]) => ({ state })),
+      concatMap(({ state }) => {
+        if (
+          state.config.mpsServer.epochsUrl &&
+          state.config.mpsServer.epochsUrl.length > 0
+        ) {
+          const headers = new HttpHeaders().set(
+            'Content-Type',
+            `application/json`,
+          );
+          const responseType = 'text';
+          const url = `${state.config.app.baseUrl}/${state.config.mpsServer.epochsUrl}?timeline_type=epoch`;
+
+          return this.http
+            .put(url, JSON.stringify(state.raven.epochs.epochs), {
+              headers,
+              responseType,
+            })
+            .pipe(
+              concatMap(() => {
+                return of(EpochsActions.updateProjectEpochsSuccess());
+              }),
+              catchError((e: Error) => {
+                console.error(
+                  'EpochEffects - updateEProjectEpochs: ',
+                  e.message,
+                );
+                return [
+                  ToastActions.showToast({
+                    message: 'Failed To Update Project Epochs',
+                    title: '',
+                    toastType: 'warning',
+                  }),
+                ];
+              }),
+            );
+        } else {
+          return [
+            ToastActions.showToast({
+              message: 'Project Epochs has not been defined. Update failed.',
+              title: '',
+              toastType: 'warning',
+            }),
+          ];
+        }
+      }),
+    ),
+  );
 }

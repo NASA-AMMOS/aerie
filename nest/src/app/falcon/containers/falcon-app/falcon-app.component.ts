@@ -10,7 +10,7 @@
 import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { Observable, Subscription } from 'rxjs';
-import { ToggleNestNavigationDrawer } from '../../../shared/actions/config.actions';
+import { ConfigActions } from '../../../shared/actions';
 import {
   CommandDictionary,
   MpsCommand,
@@ -120,7 +120,7 @@ export class FalconAppComponent implements OnDestroy {
   }
 
   onMenuClicked(): void {
-    this.store.dispatch(new ToggleNestNavigationDrawer());
+    this.store.dispatch(ConfigActions.toggleNestNavigationDrawer());
   }
 
   onSelectCommand({
