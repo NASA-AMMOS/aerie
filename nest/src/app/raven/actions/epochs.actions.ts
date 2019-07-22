@@ -7,93 +7,58 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 import { BaseType, StringTMap } from '../../shared/models';
 import { RavenEpoch } from '../models';
 
-export enum EpochsActionTypes {
-  AddEpochs = '[epochs] add_epochs',
-  AppendAndReplaceEpochs = '[epochs] append_and_replace_epochs',
-  FetchEpochs = '[epochs] fetch_epochs',
-  RemoveEpochs = '[epochs] remove_epochs',
-  SaveNewEpochFile = '[epochs] save_new_epoch_file',
-  SaveNewEpochFileSuccess = '[epochs] save_new_epoch_file_success',
-  SetInUseEpochByName = '[epochs] set_in_use_epoch_by_name',
-  UpdateEpochData = '[epochs] update_epoch_data',
-  UpdateEpochSetting = '[epochs] update_epoch_setting',
-  UpdateProjectEpochs = '[epochs] update_project_epochs',
-  UpdateProjectEpochsSuccess = '[epochs] update_project_epochs_success',
-}
+export const addEpochs = createAction(
+  '[raven-epochs] add_epochs',
+  props<{ epochs: RavenEpoch[] }>(),
+);
 
-export class AddEpochs implements Action {
-  readonly type = EpochsActionTypes.AddEpochs;
+export const appendAndReplaceEpochs = createAction(
+  '[raven-epochs] append_and_replace_epochs',
+  props<{ epochs: RavenEpoch[] }>(),
+);
 
-  constructor(public epochs: RavenEpoch[]) {}
-}
+export const fetchEpochs = createAction(
+  '[raven-epochs] fetch_epochs',
+  props<{ url: string; replaceAction: string }>(),
+);
 
-export class AppendAndReplaceEpochs implements Action {
-  readonly type = EpochsActionTypes.AppendAndReplaceEpochs;
+export const removeEpochs = createAction(
+  '[raven-epochs] remove_epochs',
+  props<{ epochs: RavenEpoch[] }>(),
+);
 
-  constructor(public epochs: RavenEpoch[]) {}
-}
+export const saveNewEpochFile = createAction(
+  '[raven-epochs] save_new_epoch_file',
+  props<{ filePathName: string }>(),
+);
 
-export class FetchEpochs implements Action {
-  readonly type = EpochsActionTypes.FetchEpochs;
+export const saveNewEpochFileSuccess = createAction(
+  '[raven-epochs] save_new_epoch_file_success',
+);
 
-  constructor(public url: string, public replaceAction: string) {}
-}
+export const setInUseEpochByName = createAction(
+  '[raven-epochs] set_in_use_epoch_by_name',
+  props<{ epochName: string }>(),
+);
 
-export class RemoveEpochs implements Action {
-  readonly type = EpochsActionTypes.RemoveEpochs;
+export const updateEpochData = createAction(
+  '[raven-epochs] update_epoch_data',
+  props<{ index: number; data: RavenEpoch }>(),
+);
 
-  constructor(public epochs: RavenEpoch[]) {}
-}
+export const updateEpochSetting = createAction(
+  '[raven-epochs] update_epoch_setting',
+  props<{ update: StringTMap<BaseType> }>(),
+);
 
-export class SaveNewEpochFile implements Action {
-  readonly type = EpochsActionTypes.SaveNewEpochFile;
+export const updateProjectEpochs = createAction(
+  '[raven-epochs] update_project_epochs',
+);
 
-  constructor(public filePathName: string) {}
-}
-
-export class SaveNewEpochFileSuccess implements Action {
-  readonly type = EpochsActionTypes.SaveNewEpochFileSuccess;
-}
-
-export class SetInUseEpochByName implements Action {
-  readonly type = EpochsActionTypes.SetInUseEpochByName;
-
-  constructor(public epochName: string) {}
-}
-
-export class UpdateEpochData implements Action {
-  readonly type = EpochsActionTypes.UpdateEpochData;
-
-  constructor(public index: number, public data: RavenEpoch) {}
-}
-
-export class UpdateEpochSetting implements Action {
-  readonly type = EpochsActionTypes.UpdateEpochSetting;
-
-  constructor(public update: StringTMap<BaseType>) {}
-}
-
-export class UpdateProjectEpochs implements Action {
-  readonly type = EpochsActionTypes.UpdateProjectEpochs;
-}
-
-export class UpdateProjectEpochsSuccess implements Action {
-  readonly type = EpochsActionTypes.UpdateProjectEpochsSuccess;
-}
-
-export type EpochsAction =
-  | AddEpochs
-  | AppendAndReplaceEpochs
-  | FetchEpochs
-  | RemoveEpochs
-  | SaveNewEpochFile
-  | SaveNewEpochFileSuccess
-  | SetInUseEpochByName
-  | UpdateEpochData
-  | UpdateEpochSetting
-  | UpdateProjectEpochs
-  | UpdateProjectEpochsSuccess;
+export const updateProjectEpochsSuccess = createAction(
+  '[raven-epochs] update_project_epochs_success',
+);

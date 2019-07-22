@@ -7,37 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  AddBand,
-  AddPointsToSubBand,
-  AddSubBand,
-  ExpandChildrenOrDescendants,
-  PanLeftViewTimeRange,
-  PanRightViewTimeRange,
-  PinRemove,
-  PinRename,
-  RemoveAllPointsInSubBandWithParentSource,
-  RemoveBandsOrPointsForSource,
-  RemoveBandsWithNoPoints,
-  RemoveChildrenOrDescendants,
-  RemoveSourceIdFromSubBands,
-  RemoveSubBand,
-  ResetViewTimeRange,
-  SelectBand,
-  SelectPoint,
-  SetCompositeYLabelDefault,
-  SetPointsForSubBand,
-  SortBands,
-  ToggleGuide,
-  UpdateBand,
-  UpdateLastClickTime,
-  UpdateSubBand,
-  UpdateSubBandTimeDelta,
-  UpdateTimeline,
-  UpdateViewTimeRange,
-  ZoomInViewTimeRange,
-  ZoomOutViewTimeRange,
-} from '../actions/timeline.actions';
+import { TimelineActions } from '../actions';
 import {
   activityBand,
   activityPoint,
@@ -73,7 +43,10 @@ describe('timeline reducer', () => {
         },
       ],
     };
-    timelineState = reducer(timelineState, new AddBand(source.id, newBand));
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: source.id, band: newBand }),
+    );
 
     expect(timelineState).toEqual({
       ...initialState,
@@ -110,8 +83,12 @@ describe('timeline reducer', () => {
     };
     timelineState = reducer(
       timelineState,
-      new AddBand(source.id, newBand, {
-        additionalSubBandProps: { filterTarget: 'DKF' },
+      TimelineActions.addBand({
+        band: newBand,
+        modifiers: {
+          additionalSubBandProps: { filterTarget: 'DKF' },
+        },
+        sourceId: source.id,
       }),
     );
 
@@ -148,7 +125,10 @@ describe('timeline reducer', () => {
         },
       ],
     };
-    timelineState = reducer(timelineState, new AddBand(null, newBand));
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: null, band: newBand }),
+    );
 
     expect(timelineState).toEqual({
       ...initialState,
@@ -176,7 +156,9 @@ describe('timeline reducer', () => {
   it('handle ToggleGuide', () => {
     timelineState = reducer(
       timelineState,
-      new ToggleGuide({ guideTime: 1665067939, timePerPixel: 20 }),
+      TimelineActions.toggleGuide({
+        guide: { guideTime: 1665067939, timePerPixel: 20 },
+      }),
     );
     expect(timelineState).toEqual({
       ...initialState,
@@ -185,7 +167,9 @@ describe('timeline reducer', () => {
 
     timelineState = reducer(
       timelineState,
-      new ToggleGuide({ guideTime: 1665067949, timePerPixel: 20 }),
+      TimelineActions.toggleGuide({
+        guide: { guideTime: 1665067949, timePerPixel: 20 },
+      }),
     );
     expect(timelineState).toEqual({
       ...initialState,
@@ -195,9 +179,19 @@ describe('timeline reducer', () => {
 
   it('handle AddBand (insert after named band)', () => {
     const actions = [
-      new AddBand(null, { ...compositeBand, id: '0' }),
-      new AddBand(null, { ...compositeBand, id: '1' }),
-      new AddBand(null, { ...compositeBand, id: '42' }, { afterBandId: '0' }),
+      TimelineActions.addBand({
+        band: { ...compositeBand, id: '0' },
+        sourceId: null,
+      }),
+      TimelineActions.addBand({
+        band: { ...compositeBand, id: '1' },
+        sourceId: null,
+      }),
+      TimelineActions.addBand({
+        band: { ...compositeBand, id: '42' },
+        modifiers: { afterBandId: '0' },
+        sourceId: null,
+      }),
     ];
 
     timelineState = actions.reduce(
@@ -224,14 +218,20 @@ describe('timeline reducer', () => {
     };
 
     // First add band to state so we have something to add points to.
-    timelineState = reducer(timelineState, new AddBand(source.id, newBand));
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: source.id, band: newBand }),
+    );
 
     expect(timelineState.bands[0].subBands[0].points).toEqual([]);
     timelineState = reducer(
       timelineState,
-      new AddPointsToSubBand(source.id, newBand.id, activityBand.id, [
-        activityPoint,
-      ]),
+      TimelineActions.addPointsToSubBand({
+        bandId: newBand.id,
+        points: [activityPoint],
+        sourceId: source.id,
+        subBandId: activityBand.id,
+      }),
     );
     expect(timelineState.bands[0].subBands[0].points).toEqual([activityPoint]);
   });
@@ -248,12 +248,19 @@ describe('timeline reducer', () => {
     };
 
     // First add band to state so we have something to add a sub-band to.
-    timelineState = reducer(timelineState, new AddBand(source.id, newBand));
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: source.id, band: newBand }),
+    );
 
     expect(timelineState.bands[0].subBands.length).toEqual(1);
     timelineState = reducer(
       timelineState,
-      new AddSubBand(source.id, newBand.id, activityBand),
+      TimelineActions.addSubBand({
+        bandId: newBand.id,
+        sourceId: source.id,
+        subBand: activityBand,
+      }),
     );
     expect(timelineState.bands[0].subBands.length).toEqual(2);
     expect(timelineState).toEqual({
@@ -296,21 +303,27 @@ describe('timeline reducer', () => {
     };
 
     // First add band to state so we have something to add points to.
-    timelineState = reducer(timelineState, new AddBand(source.id, newBand));
     timelineState = reducer(
       timelineState,
-      new AddPointsToSubBand(source.id, newBand.id, activityBand.id, [
-        activityPoint,
-      ]),
+      TimelineActions.addBand({ sourceId: source.id, band: newBand }),
     );
     timelineState = reducer(
       timelineState,
-      new ExpandChildrenOrDescendants(
-        newBand.id,
-        activityBand.id,
+      TimelineActions.addPointsToSubBand({
+        bandId: newBand.id,
+        points: [activityPoint],
+        sourceId: source.id,
+        subBandId: activityBand.id,
+      }),
+    );
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.expandChildrenOrDescendants({
         activityPoint,
-        'expandChildren',
-      ),
+        bandId: newBand.id,
+        expandType: 'expandChildren',
+        subBandId: activityBand.id,
+      }),
     );
     expect(timelineState.bands[0].subBands[0].points).toEqual([
       { ...activityPoint, expansion: 'expandChildren' },
@@ -329,21 +342,27 @@ describe('timeline reducer', () => {
     };
 
     // First add band to state so we have something to add points to.
-    timelineState = reducer(timelineState, new AddBand(source.id, newBand));
     timelineState = reducer(
       timelineState,
-      new AddPointsToSubBand(source.id, newBand.id, activityBand.id, [
-        activityPoint,
-      ]),
+      TimelineActions.addBand({ sourceId: source.id, band: newBand }),
     );
     timelineState = reducer(
       timelineState,
-      new ExpandChildrenOrDescendants(
-        newBand.id,
-        activityBand.id,
+      TimelineActions.addPointsToSubBand({
+        bandId: newBand.id,
+        points: [activityPoint],
+        sourceId: source.id,
+        subBandId: activityBand.id,
+      }),
+    );
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.expandChildrenOrDescendants({
         activityPoint,
-        'expandDescendants',
-      ),
+        bandId: newBand.id,
+        expandType: 'expandDescendants',
+        subBandId: activityBand.id,
+      }),
     );
     expect(timelineState.bands[0].subBands[0].points).toEqual([
       { ...activityPoint, expansion: 'expandDescendants' },
@@ -354,7 +373,10 @@ describe('timeline reducer', () => {
     const source: RavenSource = rootSource;
     timelineState = reducer(
       timelineState,
-      new AddBand(source.id, overlayResourceBands),
+      TimelineActions.addBand({
+        band: overlayResourceBands,
+        sourceId: source.id,
+      }),
     );
     expect(hasTwoResourceBands(timelineState.bands[0])).toBe(true);
   });
@@ -368,7 +390,10 @@ describe('timeline reducer', () => {
         },
       ],
     };
-    timelineState = reducer(timelineState, new AddBand(newBand.id, newBand));
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: newBand.id, band: newBand }),
+    );
     expect(hasTwoResourceBands(timelineState.bands[0])).toBe(false);
   });
 
@@ -379,7 +404,10 @@ describe('timeline reducer', () => {
       viewTimeRange: { end: 1741564830, start: 1655143200 },
     };
 
-    timelineState = reducer(timelineState, new PanLeftViewTimeRange());
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.panLeftViewTimeRange(),
+    );
     expect(timelineState).toEqual({
       ...initialState,
       viewTimeRange: { end: 1663785363, start: 1577363733 },
@@ -393,7 +421,10 @@ describe('timeline reducer', () => {
       viewTimeRange: { end: 1741564830, start: 1655143200 },
     };
 
-    timelineState = reducer(timelineState, new PanRightViewTimeRange());
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.panRightViewTimeRange(),
+    );
     expect(timelineState).toEqual({
       ...initialState,
       viewTimeRange: { end: 1819344297, start: 1732922667 },
@@ -401,12 +432,18 @@ describe('timeline reducer', () => {
   });
 
   it('handle PinRemove', () => {
-    timelineState = reducer(timelineState, new PinRemove('/'));
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.pinRemove({ sourceId: '/' }),
+    );
     expect(timelineState).toEqual(initialState);
   });
 
   it('handle PinRename', () => {
-    timelineState = reducer(timelineState, new PinRename('/', 'hello'));
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.pinRename({ sourceId: '/', newName: 'hello' }),
+    );
     expect(timelineState).toEqual(initialState);
   });
 
@@ -438,10 +475,15 @@ describe('timeline reducer', () => {
       ],
     };
 
-    timelineState = reducer(timelineState, new AddBand(source.id, band));
     timelineState = reducer(
       timelineState,
-      new RemoveAllPointsInSubBandWithParentSource('/child'),
+      TimelineActions.addBand({ sourceId: source.id, band }),
+    );
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.removeAllPointsInSubBandWithParentSource({
+        parentSourceId: '/child',
+      }),
     );
     expect(timelineState.bands[0].subBands[0].points).toEqual([]);
   });
@@ -474,19 +516,22 @@ describe('timeline reducer', () => {
       ],
     };
 
-    timelineState = reducer(timelineState, new AddBand(source.id, band));
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: source.id, band }),
+    );
     expect(timelineState.bands[0].subBands[0].points.length).toEqual(2);
 
     timelineState = reducer(
       timelineState,
-      new RemoveBandsOrPointsForSource('/'),
+      TimelineActions.removeBandsOrPointsForSource({ sourceId: '/' }),
     );
     expect(timelineState.bands[0].subBands[0].points[0].id).toEqual('101');
     expect(timelineState.bands[0].subBands[0].points.length).toEqual(1);
 
     timelineState = reducer(
       timelineState,
-      new RemoveBandsOrPointsForSource('/child'),
+      TimelineActions.removeBandsOrPointsForSource({ sourceId: '/child' }),
     );
     expect(timelineState.bands.length).toEqual(0);
   });
@@ -528,9 +573,18 @@ describe('timeline reducer', () => {
       ],
     };
 
-    timelineState = reducer(timelineState, new AddBand(source.id, band0));
-    timelineState = reducer(timelineState, new AddBand(source.id, band1));
-    timelineState = reducer(timelineState, new RemoveBandsWithNoPoints());
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: source.id, band: band0 }),
+    );
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: source.id, band: band1 }),
+    );
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.removeBandsWithNoPoints(),
+    );
     expect(timelineState.bands.length).toEqual(1);
   });
 
@@ -546,32 +600,38 @@ describe('timeline reducer', () => {
     };
 
     // First add band to state so we have something to add points to.
-    timelineState = reducer(timelineState, new AddBand(source.id, newBand));
     timelineState = reducer(
       timelineState,
-      new AddPointsToSubBand(source.id, newBand.id, activityBand.id, [
-        activityPoint,
-      ]),
+      TimelineActions.addBand({ sourceId: source.id, band: newBand }),
     );
     timelineState = reducer(
       timelineState,
-      new ExpandChildrenOrDescendants(
-        newBand.id,
-        activityBand.id,
+      TimelineActions.addPointsToSubBand({
+        bandId: newBand.id,
+        points: [activityPoint],
+        sourceId: source.id,
+        subBandId: activityBand.id,
+      }),
+    );
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.expandChildrenOrDescendants({
         activityPoint,
-        'expandChildren',
-      ),
+        bandId: newBand.id,
+        expandType: 'expandChildren',
+        subBandId: activityBand.id,
+      }),
     );
     expect(timelineState.bands[0].subBands[0].points).toEqual([
       { ...activityPoint, expansion: 'expandChildren' },
     ]);
     timelineState = reducer(
       timelineState,
-      new RemoveChildrenOrDescendants(
-        newBand.id,
-        activityBand.id,
+      TimelineActions.removeChildrenOrDescendants({
         activityPoint,
-      ),
+        bandId: newBand.id,
+        subBandId: activityBand.id,
+      }),
     );
     expect(timelineState.bands[0].subBands[0].points).toEqual([activityPoint]);
   });
@@ -603,7 +663,10 @@ describe('timeline reducer', () => {
       ],
     };
 
-    timelineState = reducer(timelineState, new AddBand(source.id, band));
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: source.id, band }),
+    );
     expect(timelineState.bands[0].subBands[0].sourceIds).toEqual([
       '/',
       '/child',
@@ -611,7 +674,9 @@ describe('timeline reducer', () => {
     ]);
     timelineState = reducer(
       timelineState,
-      new RemoveSourceIdFromSubBands('/child/grandChild'),
+      TimelineActions.removeSourceIdFromSubBands({
+        sourceId: '/child/grandChild',
+      }),
     );
     expect(timelineState.bands[0].subBands[0].sourceIds).toEqual([
       '/',
@@ -641,16 +706,25 @@ describe('timeline reducer', () => {
     };
 
     // First add a band with some sub-bands so we can remove them.
-    timelineState = reducer(timelineState, new AddBand(source.id, band));
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: source.id, band }),
+    );
     expect(timelineState.bands[0].subBands.length).toEqual(2);
     expect(timelineState.bands[0].subBands[0].id).toEqual('1');
     expect(timelineState.bands[0].subBands[1].id).toEqual('2');
 
-    timelineState = reducer(timelineState, new RemoveSubBand('1'));
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.removeSubBand({ subBandId: '1' }),
+    );
     expect(timelineState.bands[0].subBands.length).toEqual(1);
     expect(timelineState.bands[0].subBands[0].id).toEqual('2');
 
-    timelineState = reducer(timelineState, new RemoveSubBand('2'));
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.removeSubBand({ subBandId: '2' }),
+    );
     expect(timelineState.bands.length).toEqual(0);
   });
 
@@ -662,7 +736,10 @@ describe('timeline reducer', () => {
       viewTimeRange: { end: 1000, start: 0 },
     };
 
-    timelineState = reducer(timelineState, new ResetViewTimeRange());
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.resetViewTimeRange(),
+    );
     expect(timelineState).toEqual({
       ...initialState,
       maxTimeRange: { end: 1741564830, start: 1655143200 },
@@ -690,8 +767,14 @@ describe('timeline reducer', () => {
     expect(timelineState.selectedSubBandId).toEqual('');
 
     // Add a band and select it.
-    timelineState = reducer(timelineState, new AddBand(source.id, newBand));
-    timelineState = reducer(timelineState, new SelectBand('0'));
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: source.id, band: newBand }),
+    );
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.selectBand({ bandId: '0' }),
+    );
 
     expect(timelineState.selectedBandId).toEqual('0');
     expect(timelineState.selectedSubBandId).toEqual('1');
@@ -728,8 +811,18 @@ describe('timeline reducer', () => {
     expect(timelineState.selectedSubBandId).toEqual('');
 
     // Add a band and and select a point from it.
-    timelineState = reducer(timelineState, new AddBand(source.id, newBand));
-    timelineState = reducer(timelineState, new SelectPoint('0', '1', '400'));
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: source.id, band: newBand }),
+    );
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.selectPoint({
+        bandId: '0',
+        pointId: '400',
+        subBandId: '1',
+      }),
+    );
 
     expect(timelineState.selectedPoint).toEqual(point);
   });
@@ -738,12 +831,17 @@ describe('timeline reducer', () => {
     const source: RavenSource = rootSource;
     timelineState = reducer(
       timelineState,
-      new AddBand(source.id, overlayResourceBands),
+      TimelineActions.addBand({
+        band: overlayResourceBands,
+        sourceId: source.id,
+      }),
     );
     expect(timelineState.bands[0].compositeYAxisLabel).toBe(false);
     timelineState = reducer(
       timelineState,
-      new SetCompositeYLabelDefault(overlayResourceBands.id),
+      TimelineActions.setCompositeYLabelDefault({
+        bandId: overlayResourceBands.id,
+      }),
     );
     expect(timelineState.bands[0].compositeYAxisLabel).toBe(true);
   });
@@ -757,10 +855,13 @@ describe('timeline reducer', () => {
         },
       ],
     };
-    timelineState = reducer(timelineState, new AddBand(newBand.id, newBand));
     timelineState = reducer(
       timelineState,
-      new SetCompositeYLabelDefault(newBand.id),
+      TimelineActions.addBand({ sourceId: newBand.id, band: newBand }),
+    );
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.setCompositeYLabelDefault({ bandId: newBand.id }),
     );
     expect(timelineState.bands[0].compositeYAxisLabel).toBe(false);
   });
@@ -793,10 +894,17 @@ describe('timeline reducer', () => {
       ],
     };
 
-    timelineState = reducer(timelineState, new AddBand(source.id, band));
     timelineState = reducer(
       timelineState,
-      new SetPointsForSubBand('0', '1', points),
+      TimelineActions.addBand({ sourceId: source.id, band }),
+    );
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.setPointsForSubBand({
+        bandId: '0',
+        points,
+        subBandId: '1',
+      }),
     );
     expect(timelineState.bands[0].subBands[0].points).toEqual(points);
   });
@@ -831,15 +939,21 @@ describe('timeline reducer', () => {
     };
 
     // First add some bands we can sort.
-    timelineState = reducer(timelineState, new AddBand(source.id, stateBand1));
-    timelineState = reducer(timelineState, new AddBand(source.id, stateBand2));
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: source.id, band: stateBand1 }),
+    );
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: source.id, band: stateBand2 }),
+    );
 
     const sort = {
       [stateBand1.id]: { containerId: '0', sortOrder: 1 },
       [stateBand2.id]: { containerId: '1', sortOrder: 0 },
     };
 
-    timelineState = reducer(timelineState, new SortBands(sort));
+    timelineState = reducer(timelineState, TimelineActions.sortBands({ sort }));
 
     expect(timelineState).toEqual({
       ...timelineState,
@@ -875,18 +989,24 @@ describe('timeline reducer', () => {
       ],
     };
 
-    timelineState = reducer(timelineState, new AddBand(source.id, band));
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: source.id, band }),
+    );
     expect(timelineState.bands[0].height).toEqual(50);
 
     timelineState = reducer(
       timelineState,
-      new UpdateBand(band.id, { height: 42 }),
+      TimelineActions.updateBand({ bandId: band.id, update: { height: 42 } }),
     );
     expect(timelineState.bands[0].height).toEqual(42);
   });
 
   it('handle UpdateLastClickTime', () => {
-    timelineState = reducer(timelineState, new UpdateLastClickTime(1665067123));
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.updateLastClickTime({ time: 1665067123 }),
+    );
 
     expect(timelineState).toEqual({
       ...initialState,
@@ -912,12 +1032,19 @@ describe('timeline reducer', () => {
       ],
     };
 
-    timelineState = reducer(timelineState, new AddBand(source.id, band));
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: source.id, band }),
+    );
     expect(timelineState.bands[0].subBands[0].height).toEqual(50);
 
     timelineState = reducer(
       timelineState,
-      new UpdateSubBand(band.id, '1', { height: 42 }),
+      TimelineActions.updateSubBand({
+        bandId: band.id,
+        subBandId: '1',
+        update: { height: 42 },
+      }),
     );
     expect(timelineState.bands[0].subBands[0].height).toEqual(42);
   });
@@ -965,20 +1092,34 @@ describe('timeline reducer', () => {
       ],
     };
 
-    timelineState = reducer(timelineState, new AddBand(source.id, band));
     timelineState = reducer(
       timelineState,
-      new UpdateSubBandTimeDelta(band.id, stateBand.id, 200),
+      TimelineActions.addBand({ sourceId: source.id, band }),
+    );
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.updateSubBandTimeDelta({
+        bandId: band.id,
+        subBandId: stateBand.id,
+        timeDelta: 200,
+      }),
     );
     expect(timelineState.bands[0].subBands[0].points).toEqual([
       { ...points[0], end: 12200, start: 11200 },
       { ...points[1], end: 22200, start: 21200 },
     ]);
 
-    timelineState = reducer(timelineState, new AddBand(source.id, band));
     timelineState = reducer(
       timelineState,
-      new UpdateSubBandTimeDelta(band.id, stateBand.id, 0),
+      TimelineActions.addBand({ sourceId: source.id, band }),
+    );
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.updateSubBandTimeDelta({
+        bandId: band.id,
+        subBandId: stateBand.id,
+        timeDelta: 0,
+      }),
     );
     expect(timelineState.bands[0].subBands[0].points).toEqual([
       { ...points[0], end: 12000, start: 11000 },
@@ -989,8 +1130,10 @@ describe('timeline reducer', () => {
   it('handle UpdateTimeline', () => {
     timelineState = reducer(
       timelineState,
-      new UpdateTimeline({
-        viewTimeRange: { end: 314, start: 272 },
+      TimelineActions.updateTimeline({
+        update: {
+          viewTimeRange: { end: 314, start: 272 },
+        },
       }),
     );
     expect(timelineState).toEqual({
@@ -1002,7 +1145,9 @@ describe('timeline reducer', () => {
   it('handle UpdateViewTimeRange', () => {
     timelineState = reducer(
       timelineState,
-      new UpdateViewTimeRange({ end: 314, start: 272 }),
+      TimelineActions.updateViewTimeRange({
+        viewTimeRange: { end: 314, start: 272 },
+      }),
     );
     expect(timelineState).toEqual({
       ...initialState,
@@ -1018,7 +1163,10 @@ describe('timeline reducer', () => {
       viewTimeRange: { end: 1741564830, start: 1655143200 },
     };
 
-    timelineState = reducer(timelineState, new ZoomInViewTimeRange());
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.zoomInViewTimeRange(),
+    );
     expect(timelineState).toEqual({
       ...initialState,
       maxTimeRange: { end: 1741564830, start: 1655143200 },
@@ -1034,7 +1182,10 @@ describe('timeline reducer', () => {
       viewTimeRange: { end: 1741564830, start: 1655143200 },
     };
 
-    timelineState = reducer(timelineState, new ZoomOutViewTimeRange());
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.zoomOutViewTimeRange(),
+    );
     expect(timelineState).toEqual({
       ...initialState,
       maxTimeRange: { end: 1741564830, start: 1655143200 },

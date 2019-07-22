@@ -9,9 +9,9 @@
 
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Actions, Effect, ofType } from '@ngrx/effects';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { of } from 'rxjs';
 import {
   catchError,
   concatMap,
@@ -21,117 +21,123 @@ import {
 } from 'rxjs/operators';
 import * as stripJsonComments from 'strip-json-comments';
 import { ConfigState } from '../../../config';
-import * as epochsActions from '../../raven/actions/epochs.actions';
-import * as layoutActions from '../../raven/actions/layout.actions';
-import * as sourceExplorerActions from '../../raven/actions/source-explorer.actions';
-import * as timeCursorActions from '../../raven/actions/time-cursor.actions';
-import * as timelineActions from '../../raven/actions/timeline.actions';
+import {
+  EpochsActions,
+  LayoutActions,
+  SourceExplorerActions,
+  TimeCursorActions,
+  TimelineActions,
+} from '../../raven/actions';
 import { RavenAppState } from '../../raven/raven-store';
 import { LayoutState } from '../../raven/reducers/layout.reducer';
-import {
-  ConfigActionTypes,
-  FetchProjectConfig,
-} from '../actions/config.actions';
-import * as configActions from '../actions/config.actions';
+import { ConfigActions } from '../actions';
 
 @Injectable()
 export class ConfigEffects {
   constructor(
+    private actions: Actions,
     private http: HttpClient,
-    private actions$: Actions,
-    private store$: Store<RavenAppState>,
+    private store: Store<RavenAppState>,
   ) {}
 
-  @Effect()
-  fetchProjectConfig$: Observable<Action> = this.actions$.pipe(
-    ofType<FetchProjectConfig>(ConfigActionTypes.FetchProjectConfig),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(({ action, state }) =>
-      this.http.get(action.url, { responseType: 'text' }).pipe(
-        map((mpsServerConfig: any) =>
-          JSON.parse(stripJsonComments(mpsServerConfig)),
-        ),
-        concatMap(projectConfig => {
-          let epochUrl = state.config.mpsServer.epochsUrl;
-          const actions: Action[] = [];
-          Object.keys(projectConfig).forEach(key => {
-            if (key === 'epochsUrl') {
-              epochUrl = projectConfig[key];
+  fetchProjectConfig = createEffect(() =>
+    this.actions.pipe(
+      ofType(ConfigActions.fetchProjectConfig),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      concatMap(({ action, state }) =>
+        this.http.get(action.url, { responseType: 'text' }).pipe(
+          map((mpsServerConfig: any) =>
+            JSON.parse(stripJsonComments(mpsServerConfig)),
+          ),
+          concatMap(projectConfig => {
+            let epochUrl = state.config.mpsServer.epochsUrl;
+            const actions: Action[] = [];
+            Object.keys(projectConfig).forEach(key => {
+              if (key === 'epochsUrl') {
+                epochUrl = projectConfig[key];
+                actions.push(
+                  ConfigActions.updateMpsServerSettings({
+                    update: {
+                      [key]: projectConfig[key],
+                    },
+                  }),
+                );
+              } else if (
+                key === 'excludeActivityTypes' ||
+                key === 'ignoreShareableLinkTimes' ||
+                key === 'itarMessage' ||
+                key === 'shareableLinkStatesUrl'
+              ) {
+                actions.push(
+                  ConfigActions.updateRavenSettings({
+                    update: {
+                      [key]: projectConfig[key],
+                    },
+                  }),
+                );
+              } else if (
+                key === 'showTimeCursor' &&
+                projectConfig['showTimeCursor']
+              ) {
+                actions.push(TimeCursorActions.showTimeCursor());
+              } else {
+                actions.push(
+                  ConfigActions.updateDefaultBandSettings({
+                    update: {
+                      [key]: projectConfig[key],
+                    },
+                  }),
+                );
+              }
+            });
+            actions.push(ConfigActions.fetchProjectConfigSuccess());
+            if (epochUrl) {
               actions.push(
-                new configActions.UpdateMpsServerSettings({
-                  [key]: projectConfig[key],
-                }),
-              );
-            } else if (
-              key === 'excludeActivityTypes' ||
-              key === 'ignoreShareableLinkTimes' ||
-              key === 'itarMessage' ||
-              key === 'shareableLinkStatesUrl'
-            ) {
-              actions.push(
-                new configActions.UpdateRavenSettings({
-                  [key]: projectConfig[key],
-                }),
-              );
-            } else if (
-              key === 'showTimeCursor' &&
-              projectConfig['showTimeCursor']
-            ) {
-              actions.push(new timeCursorActions.ShowTimeCursor());
-            } else {
-              actions.push(
-                new configActions.UpdateDefaultBandSettings({
-                  [key]: projectConfig[key],
+                EpochsActions.fetchEpochs({
+                  replaceAction: 'AppendAndReplace',
+                  url: `${state.config.app.baseUrl}/${epochUrl}`,
                 }),
               );
             }
-          });
-          actions.push(new configActions.FetchProjectConfigSuccess());
-          if (epochUrl) {
-            actions.push(
-              new epochsActions.FetchEpochs(
-                `${state.config.app.baseUrl}/${epochUrl}`,
-                'AppendAndReplace',
-              ),
-            );
-          }
-          return actions;
-        }),
+            return actions;
+          }),
+        ),
       ),
+      catchError(() => {
+        return of(ConfigActions.fetchProjectConfigSuccess());
+      }),
     ),
-    catchError((e: Error) => {
-      return [new configActions.FetchProjectConfigSuccess()];
-    }),
   );
 
-  @Effect()
-  fetchProjectConfigSuccess$: Observable<Action> = this.actions$.pipe(
-    ofType<FetchProjectConfig>(ConfigActionTypes.FetchProjectConfigSuccess),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ state })),
-    mergeMap(({ state }) => {
-      const layout = state.raven.sourceExplorer.layout;
-      const shareableName = state.raven.sourceExplorer.shareableName;
-      const statePath = state.raven.sourceExplorer.statePath;
-      const layoutPath = state.raven.sourceExplorer.layoutPath;
-      const sourcePath = state.raven.sourceExplorer.sourcePath;
-      if (shareableName) {
-        return [
-          ...this.loadShareableLink(
-            state.config,
-            state.raven.layout,
-            shareableName,
-          ),
-        ];
-      } else {
-        // Otherwise use other query parameters to load an app layout and/or state.
-        return [
-          ...this.loadLayout(state.raven.layout, layout),
-          ...this.loadState(state.config, statePath, layoutPath, sourcePath),
-        ];
-      }
-    }),
+  fetchProjectConfigSuccess = createEffect(() =>
+    this.actions.pipe(
+      ofType(ConfigActions.fetchProjectConfigSuccess),
+      withLatestFrom(this.store),
+      map(([, state]) => ({ state })),
+      mergeMap(({ state }) => {
+        const layout = state.raven.sourceExplorer.layout;
+        const shareableName = state.raven.sourceExplorer.shareableName;
+        const statePath = state.raven.sourceExplorer.statePath;
+        const layoutPath = state.raven.sourceExplorer.layoutPath;
+        const sourcePath = state.raven.sourceExplorer.sourcePath;
+        if (shareableName) {
+          return [
+            ...this.loadShareableLink(
+              state.config,
+              state.raven.layout,
+              shareableName,
+            ),
+          ];
+        } else {
+          // Otherwise use other query parameters to load an app layout and/or state.
+          return [
+            ...this.loadLayout(state.raven.layout, layout),
+            ...this.loadState(state.config, statePath, layoutPath, sourcePath),
+          ];
+        }
+      }),
+    ),
   );
 
   /**
@@ -142,21 +148,33 @@ export class ConfigEffects {
 
     if (layout === 'minimal') {
       actions.push(
-        new layoutActions.SetMode('minimal', true, false, false, true),
+        LayoutActions.setMode({
+          mode: 'minimal',
+          showDetailsPanel: true,
+          showLeftPanel: false,
+          showRightPanel: false,
+          showSouthBandsPanel: true,
+        }),
       );
     } else if (layout === 'default') {
       actions.push(
-        new layoutActions.SetMode('default', true, true, false, true),
+        LayoutActions.setMode({
+          mode: 'default',
+          showDetailsPanel: true,
+          showLeftPanel: true,
+          showRightPanel: false,
+          showSouthBandsPanel: true,
+        }),
       );
     } else {
       actions.push(
-        new layoutActions.SetMode(
-          'custom',
-          layoutState.showDetailsPanel,
-          layoutState.showLeftPanel,
-          layoutState.showRightPanel,
-          layoutState.showSouthBandsPanel,
-        ),
+        LayoutActions.setMode({
+          mode: 'custom',
+          showDetailsPanel: layoutState.showDetailsPanel,
+          showLeftPanel: layoutState.showLeftPanel,
+          showRightPanel: layoutState.showRightPanel,
+          showSouthBandsPanel: layoutState.showSouthBandsPanel,
+        }),
       );
     }
 
@@ -194,30 +212,31 @@ export class ConfigEffects {
   ): Action[] {
     if (statePath) {
       return [
-        new sourceExplorerActions.ApplyState(
-          `${configState.app.baseUrl}/${configState.mpsServer.apiUrl}${statePath}`,
-          statePath,
-        ),
+        SourceExplorerActions.applyState({
+          sourceId: statePath,
+          sourceUrl: `${configState.app.baseUrl}/${configState.mpsServer.apiUrl}${statePath}`,
+        }),
       ];
     } else if (layoutPath && sourcePath) {
-      // apply layout to sourcePath
       return [
-        new sourceExplorerActions.UpdateSourceExplorer({
-          currentStateId: layoutPath,
+        SourceExplorerActions.updateSourceExplorer({
+          update: {
+            currentStateId: layoutPath,
+            fetchPending: true,
+          },
         }),
-        new sourceExplorerActions.UpdateSourceExplorer({
-          fetchPending: true,
+        SourceExplorerActions.applyLayoutToSources({
+          layoutSourceId: layoutPath,
+          layoutSourceUrl: `${configState.app.baseUrl}/${configState.mpsServer.apiUrl}${layoutPath}`,
+          sourcePaths: sourcePath.split(','),
         }),
-        new sourceExplorerActions.ApplyLayoutToSources(
-          `${configState.app.baseUrl}/${configState.mpsServer.apiUrl}${layoutPath}`,
-          layoutPath,
-          sourcePath.split(','),
-        ),
       ];
     } else if (layoutPath) {
       return [
-        new timelineActions.UpdateTimeline({
-          currentStateId: layoutPath,
+        TimelineActions.updateTimeline({
+          update: {
+            currentStateId: layoutPath,
+          },
         }),
       ];
     }

@@ -8,14 +8,8 @@
  */
 
 import { ConfigState } from '../../../config';
-import {
-  NavigationDrawerStates,
-  ToggleNestNavigationDrawer,
-  UpdateDefaultBandSettings,
-  UpdateMpsServerSettings,
-  UpdateRavenSettings,
-} from '../actions/config.actions';
-import { initialState, reducer, toggleDrawer } from './config.reducer';
+import { ConfigActions } from '../actions';
+import { initialState, reducer } from './config.reducer';
 
 describe('config reducer', () => {
   let configState: ConfigState;
@@ -31,7 +25,9 @@ describe('config reducer', () => {
   it('handle UpdateDefaultBandSettings activityLayout', () => {
     const result = reducer(
       configState,
-      new UpdateDefaultBandSettings({ activityLayout: 2 }),
+      ConfigActions.updateDefaultBandSettings({
+        update: { activityLayout: 2 },
+      }),
     );
     expect(result).toEqual({
       ...initialState,
@@ -48,7 +44,7 @@ describe('config reducer', () => {
   it('handle UpdateDefaultBandSettings icon', () => {
     const result = reducer(
       configState,
-      new UpdateDefaultBandSettings({ icon: 'triangle' }),
+      ConfigActions.updateDefaultBandSettings({ update: { icon: 'triangle' } }),
     );
     expect(result).toEqual({
       ...initialState,
@@ -65,7 +61,9 @@ describe('config reducer', () => {
   it('handle UpdateDefaultBandSettings labelFont', () => {
     const result = reducer(
       configState,
-      new UpdateDefaultBandSettings({ labelFont: 'Courier' }),
+      ConfigActions.updateDefaultBandSettings({
+        update: { labelFont: 'Courier' },
+      }),
     );
     expect(result).toEqual({
       ...initialState,
@@ -82,7 +80,9 @@ describe('config reducer', () => {
   it('handle UpdateDefaultBandSettings labelFontSize', () => {
     const result = reducer(
       configState,
-      new UpdateDefaultBandSettings({ labelFontSize: 11 }),
+      ConfigActions.updateDefaultBandSettings({
+        update: { labelFontSize: 11 },
+      }),
     );
     expect(result).toEqual({
       ...initialState,
@@ -99,7 +99,9 @@ describe('config reducer', () => {
   it('handle UpdateDefaultBandSettings labelWidth', () => {
     const result = reducer(
       configState,
-      new UpdateDefaultBandSettings({ labelWidth: 50 }),
+      ConfigActions.updateDefaultBandSettings({
+        update: { labelWidth: 50 },
+      }),
     );
     expect(result).toEqual({
       ...initialState,
@@ -116,7 +118,9 @@ describe('config reducer', () => {
   it('handle UpdateDefaultBandSettings resourceColor', () => {
     const result = reducer(
       configState,
-      new UpdateDefaultBandSettings({ resourceColor: '#00ff00' }),
+      ConfigActions.updateDefaultBandSettings({
+        update: { resourceColor: '#00ff00' },
+      }),
     );
     expect(result).toEqual({
       ...initialState,
@@ -133,7 +137,9 @@ describe('config reducer', () => {
   it('handle UpdateDefaultBandSettings resourceFillColor', () => {
     const result = reducer(
       configState,
-      new UpdateDefaultBandSettings({ resourceFillColor: '#ff0000' }),
+      ConfigActions.updateDefaultBandSettings({
+        update: { resourceFillColor: '#ff0000' },
+      }),
     );
     expect(result).toEqual({
       ...initialState,
@@ -150,7 +156,9 @@ describe('config reducer', () => {
   it('handle UpdateDefaultBandSettings showTooltip', () => {
     const result = reducer(
       configState,
-      new UpdateDefaultBandSettings({ showTooltip: true }),
+      ConfigActions.updateDefaultBandSettings({
+        update: { showTooltip: true },
+      }),
     );
     expect(result).toEqual({
       ...initialState,
@@ -167,8 +175,10 @@ describe('config reducer', () => {
   it('handle UpdateMpsServerSettings epochsUrl', () => {
     const result = reducer(
       configState,
-      new UpdateMpsServerSettings({
-        epochsUrl: 'mpsserver/api/v2/fs-mongodb/leucadia/someEpoch.csv',
+      ConfigActions.updateMpsServerSettings({
+        update: {
+          epochsUrl: 'mpsserver/api/v2/fs-mongodb/leucadia/someEpoch.csv',
+        },
       }),
     );
     expect(result).toEqual({
@@ -183,7 +193,9 @@ describe('config reducer', () => {
   it('handle UpdateRavenSettings itarMessage', () => {
     const result = reducer(
       configState,
-      new UpdateRavenSettings({ itarMessage: 'test itar message' }),
+      ConfigActions.updateRavenSettings({
+        update: { itarMessage: 'test itar message' },
+      }),
     );
     expect(result).toEqual({
       ...initialState,
@@ -196,31 +208,20 @@ describe('config reducer', () => {
 
   it('should toggle the state of the navigation drawer', () => {
     expect(configState.navigationDrawerState).toBe(
-      NavigationDrawerStates.Collapsed,
+      ConfigActions.NavigationDrawerStates.Collapsed,
     );
 
-    let result = reducer(configState, new ToggleNestNavigationDrawer());
-    expect(result.navigationDrawerState).toBe(NavigationDrawerStates.Closed);
+    let result = reducer(
+      configState,
+      ConfigActions.toggleNestNavigationDrawer(),
+    );
+    expect(result.navigationDrawerState).toBe(
+      ConfigActions.NavigationDrawerStates.Closed,
+    );
 
-    result = reducer(result, new ToggleNestNavigationDrawer());
-    expect(result.navigationDrawerState).toBe(NavigationDrawerStates.Collapsed);
-  });
-
-  it('should collapse a closed drawer', () => {
-    const newConfigState = {
-      ...configState,
-      navigationDrawerState: NavigationDrawerStates.Closed,
-    };
-    const result = toggleDrawer(newConfigState);
-    expect(result).toBe(NavigationDrawerStates.Collapsed);
-  });
-
-  it('should close a collapsed drawer', () => {
-    const newConfigState = {
-      ...configState,
-      navigationDrawerState: NavigationDrawerStates.Collapsed,
-    };
-    const result = toggleDrawer(newConfigState);
-    expect(result).toBe(NavigationDrawerStates.Closed);
+    result = reducer(result, ConfigActions.toggleNestNavigationDrawer());
+    expect(result.navigationDrawerState).toBe(
+      ConfigActions.NavigationDrawerStates.Collapsed,
+    );
   });
 });

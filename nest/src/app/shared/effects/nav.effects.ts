@@ -9,40 +9,23 @@
 
 import { Injectable } from '@angular/core';
 import { Title } from '@angular/platform-browser';
-import { Actions, Effect, ofType } from '@ngrx/effects';
-import {
-  RouterNavigationAction,
-  SerializedRouterStateSnapshot,
-} from '@ngrx/router-store';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { tap } from 'rxjs/operators';
 import { RouterNavigation } from '../../../../libs/ngrx-router';
-import { AnalyticsService, EventType } from '../services/analytics.service';
 
 @Injectable()
 export class NavEffects {
-  constructor(
-    private update$: Actions,
-    private analyticsService: AnalyticsService,
-    private titleService: Title,
-  ) {}
+  constructor(private actions: Actions, private titleService: Title) {}
 
-  @Effect({ dispatch: false })
-  navigate$ = this.update$.pipe(
-    ofType('@ngrx/router-store/navigation'),
-    tap((action: RouterNavigationAction<SerializedRouterStateSnapshot>) => {
-      this.analyticsService.trackEvent(
-        EventType.NavigationEvent,
-        action.payload.event.url,
-      );
-    }),
-  );
-
-  @Effect({ dispatch: false })
-  updateTitle$ = this.update$.pipe(
-    ofType('[router] navigation'),
-    tap((action: RouterNavigation) => {
-      const title = action.payload.data.title;
-      this.titleService.setTitle(title);
-    }),
+  updateTitle = createEffect(
+    () =>
+      this.actions.pipe(
+        ofType('[router] navigation'),
+        tap((action: RouterNavigation) => {
+          const title = action.payload.data.title;
+          this.titleService.setTitle(title);
+        }),
+      ),
+    { dispatch: false },
   );
 }

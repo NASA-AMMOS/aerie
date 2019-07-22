@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 import { BaseType, StringTMap, TimeRange } from '../../shared/models';
 import {
   AddBandModifiers,
@@ -19,340 +19,213 @@ import {
   RavenSubBand,
 } from '../models';
 
-export enum TimelineActionTypes {
-  AddBand = '[timeline] add_band',
-  AddPointsToSubBand = '[timeline] add_points_to_sub_band',
-  AddSubBand = '[timeline] add_sub_band',
-  ExpandChildrenOrDescendants = '[timeline] expand_children_or_descendants',
-  FetchChildrenOrDescendants = '[timeline] fetch_children_or_descendants',
-  FetchChildrenOrDescendantsSuccess = '[timeline] fetch_children_or_descendants_success',
-  FilterActivityInSubBand = '[timeline] filter_activity_in_sub_band',
-  HoverBand = '[timeline] hover_band',
-  PanLeftViewTimeRange = '[timeline] pan_left_view_time_range',
-  PanRightViewTimeRange = '[timeline] pan_right_view_time_range',
-  PinAdd = '[timeline] pin_add',
-  PinRemove = '[timeline] pin_remove',
-  PinRename = '[timeline] pin_rename',
-  RemoveAllBands = '[timeline] remove_all_bands',
-  RemoveAllGuides = '[timeline] remove_all_guides',
-  RemoveAllPointsInSubBandWithParentSource = '[timeline] remove_all_points_in_sub_band_with_parent_source',
-  RemoveBandsOrPointsForSource = '[timeline] remove_bands_or_points_for_source',
-  RemoveBandsWithNoPoints = '[timeline] remove_bands_with_no_points',
-  RemoveChildrenOrDescendants = '[timeline] remove_children_or_descendants',
-  RemoveSourceIdFromSubBands = '[timeline] remove_source_from_sub_bands',
-  RemoveSubBand = '[timeline] remove_sub_band',
-  ResetViewTimeRange = '[timeline] reset_view_time_range',
-  SelectBand = '[timeline] select_band',
-  SelectPoint = '[timeline] select_point',
-  SetCompositeYLabelDefault = '[timeline] set_composite_y_label_default',
-  SetPointsForSubBand = '[timeline] set_points_for_sub_band',
-  SortBands = '[timeline] sort_bands',
-  SourceIdAdd = '[timeline] source_id_add',
-  ToggleGuide = '[timeline] toggle_guide',
-  UpdateAllActivityBandFilter = '[timeline] update-all-activity-band-filter',
-  UpdateBand = '[timeline] update_band',
-  UpdateLastClickTime = '[timeline] last_click_time',
-  UpdateSubBand = '[timeline] update_sub_band',
-  UpdateSubBandTimeDelta = '[timeline] update_sub_band_time_delta',
-  UpdateTimeline = '[timeline] update_timeline',
-  UpdateViewTimeRange = '[timeline] update_view_time_range',
-  ZoomInViewTimeRange = '[timeline] zoom_in_view_time_range',
-  ZoomOutViewTimeRange = '[timeline] zoom_out_view_time_range',
-}
-
-export class AddBand implements Action {
-  readonly type = TimelineActionTypes.AddBand;
-
-  constructor(
-    public sourceId: string | null,
-    public band: RavenCompositeBand,
-    public modifiers: AddBandModifiers = {},
-  ) {}
-}
-
-export class AddPointsToSubBand implements Action {
-  readonly type = TimelineActionTypes.AddPointsToSubBand;
-
-  constructor(
-    public sourceId: string,
-    public bandId: string,
-    public subBandId: string,
-    public points: any[],
-  ) {}
-}
-
-export class AddSubBand implements Action {
-  readonly type = TimelineActionTypes.AddSubBand;
-
-  constructor(
-    public sourceId: string,
-    public bandId: string,
-    public subBand: RavenSubBand,
-  ) {}
-}
-
-export class ExpandChildrenOrDescendants implements Action {
-  readonly type = TimelineActionTypes.ExpandChildrenOrDescendants;
-
-  constructor(
-    public bandId: string,
-    public subBandId: string,
-    public activityPoint: RavenActivityPoint,
-    public expandType: string,
-  ) {}
-}
-
-export class FetchChildrenOrDescendants implements Action {
-  readonly type = TimelineActionTypes.FetchChildrenOrDescendants;
-
-  constructor(
-    public bandId: string,
-    public subBandId: string,
-    public activityPoint: RavenActivityPoint,
-    public expandType: string,
-  ) {}
-}
-
-export class FetchChildrenOrDescendantsSuccess implements Action {
-  readonly type = TimelineActionTypes.FetchChildrenOrDescendantsSuccess;
-}
-
-export class FilterActivityInSubBand implements Action {
-  readonly type = TimelineActionTypes.FilterActivityInSubBand;
-
-  constructor(
-    public bandId: string,
-    public subBandId: string,
-    public filter: string,
-    public activityInitiallyHidden: boolean,
-  ) {}
-}
-
-export class HoverBand implements Action {
-  readonly type = TimelineActionTypes.HoverBand;
-
-  constructor(public bandId: string) {}
-}
-
-export class PanLeftViewTimeRange implements Action {
-  readonly type = TimelineActionTypes.PanLeftViewTimeRange;
-}
-
-export class PanRightViewTimeRange implements Action {
-  readonly type = TimelineActionTypes.PanRightViewTimeRange;
-}
-
-export class PinAdd implements Action {
-  readonly type = TimelineActionTypes.PinAdd;
-
-  constructor(public pin: RavenPin) {}
-}
-
-export class PinRemove implements Action {
-  readonly type = TimelineActionTypes.PinRemove;
-
-  constructor(public sourceId: string) {}
-}
-
-export class PinRename implements Action {
-  readonly type = TimelineActionTypes.PinRename;
-
-  constructor(public sourceId: string, public newName: string) {}
-}
-
-export class RemoveAllBands implements Action {
-  readonly type = TimelineActionTypes.RemoveAllBands;
-}
-
-export class RemoveAllGuides implements Action {
-  readonly type = TimelineActionTypes.RemoveAllGuides;
-}
-
-export class RemoveAllPointsInSubBandWithParentSource implements Action {
-  readonly type = TimelineActionTypes.RemoveAllPointsInSubBandWithParentSource;
-
-  constructor(public parentSourceId: string) {}
-}
-
-export class RemoveBandsOrPointsForSource implements Action {
-  readonly type = TimelineActionTypes.RemoveBandsOrPointsForSource;
-
-  constructor(public sourceId: string) {}
-}
-
-export class RemoveBandsWithNoPoints implements Action {
-  readonly type = TimelineActionTypes.RemoveBandsWithNoPoints;
-}
-
-export class RemoveChildrenOrDescendants implements Action {
-  readonly type = TimelineActionTypes.RemoveChildrenOrDescendants;
-
-  constructor(
-    public bandId: string,
-    public subBandId: string,
-    public activityPoint: RavenActivityPoint,
-  ) {}
-}
-
-export class RemoveSourceIdFromSubBands implements Action {
-  readonly type = TimelineActionTypes.RemoveSourceIdFromSubBands;
-
-  constructor(public sourceId: string) {}
-}
-
-export class RemoveSubBand implements Action {
-  readonly type = TimelineActionTypes.RemoveSubBand;
-
-  constructor(public subBandId: string) {}
-}
-
-export class ResetViewTimeRange implements Action {
-  readonly type = TimelineActionTypes.ResetViewTimeRange;
-}
-
-export class SelectBand implements Action {
-  readonly type = TimelineActionTypes.SelectBand;
-
-  constructor(public bandId: string) {}
-}
-
-export class SelectPoint implements Action {
-  readonly type = TimelineActionTypes.SelectPoint;
-
-  constructor(
-    public bandId: string,
-    public subBandId: string,
-    public pointId: string,
-  ) {}
-}
-
-export class SetCompositeYLabelDefault implements Action {
-  readonly type = TimelineActionTypes.SetCompositeYLabelDefault;
-
-  constructor(public bandId: string) {}
-}
-
-export class SetPointsForSubBand implements Action {
-  readonly type = TimelineActionTypes.SetPointsForSubBand;
-
-  constructor(
-    public bandId: string,
-    public subBandId: string,
-    public points: any[],
-  ) {}
-}
-
-export class SourceIdAdd implements Action {
-  readonly type = TimelineActionTypes.SourceIdAdd;
-
-  constructor(public sourceId: string, public subBandId: string) {}
-}
-
-export class SortBands implements Action {
-  readonly type = TimelineActionTypes.SortBands;
-
-  constructor(public sort: StringTMap<RavenSortMessage>) {}
-}
-
-export class ToggleGuide implements Action {
-  readonly type = TimelineActionTypes.ToggleGuide;
-
-  constructor(public guide: RavenGuidePoint) {}
-}
-
-export class UpdateAllActivityBandFilter implements Action {
-  readonly type = TimelineActionTypes.UpdateAllActivityBandFilter;
-
-  constructor(public filter: string) {}
-}
-
-export class UpdateBand implements Action {
-  readonly type = TimelineActionTypes.UpdateBand;
-
-  constructor(public bandId: string, public update: StringTMap<BaseType>) {}
-}
-
-export class UpdateLastClickTime implements Action {
-  readonly type = TimelineActionTypes.UpdateLastClickTime;
-
-  constructor(public time: number) {}
-}
-
-export class UpdateSubBand implements Action {
-  readonly type = TimelineActionTypes.UpdateSubBand;
-
-  constructor(
-    public bandId: string,
-    public subBandId: string,
-    public update: StringTMap<BaseType>,
-  ) {}
-}
-
-export class UpdateSubBandTimeDelta implements Action {
-  readonly type = TimelineActionTypes.UpdateSubBandTimeDelta;
-
-  constructor(
-    public bandId: string,
-    public subBandId: string,
-    public timeDelta: number,
-  ) {}
-}
-
-export class UpdateTimeline implements Action {
-  readonly type = TimelineActionTypes.UpdateTimeline;
-
-  constructor(public update: StringTMap<BaseType>) {}
-}
-
-export class UpdateViewTimeRange implements Action {
-  readonly type = TimelineActionTypes.UpdateViewTimeRange;
-
-  constructor(public viewTimeRange: TimeRange) {}
-}
-
-export class ZoomInViewTimeRange implements Action {
-  readonly type = TimelineActionTypes.ZoomInViewTimeRange;
-}
-
-export class ZoomOutViewTimeRange implements Action {
-  readonly type = TimelineActionTypes.ZoomOutViewTimeRange;
-}
-
-export type TimelineAction =
-  | AddBand
-  | AddPointsToSubBand
-  | AddSubBand
-  | ExpandChildrenOrDescendants
-  | FetchChildrenOrDescendants
-  | FilterActivityInSubBand
-  | HoverBand
-  | PanLeftViewTimeRange
-  | PanRightViewTimeRange
-  | PinAdd
-  | PinRemove
-  | PinRename
-  | RemoveAllBands
-  | RemoveAllGuides
-  | RemoveAllPointsInSubBandWithParentSource
-  | RemoveBandsOrPointsForSource
-  | RemoveBandsWithNoPoints
-  | RemoveChildrenOrDescendants
-  | RemoveSourceIdFromSubBands
-  | RemoveSubBand
-  | ResetViewTimeRange
-  | SelectBand
-  | SelectPoint
-  | SetCompositeYLabelDefault
-  | SetPointsForSubBand
-  | SortBands
-  | SourceIdAdd
-  | ToggleGuide
-  | UpdateAllActivityBandFilter
-  | UpdateBand
-  | UpdateLastClickTime
-  | UpdateSubBand
-  | UpdateSubBandTimeDelta
-  | UpdateTimeline
-  | UpdateViewTimeRange
-  | ZoomInViewTimeRange
-  | ZoomOutViewTimeRange;
+export const addBand = createAction(
+  '[raven-timeline] add_band',
+  props<{
+    sourceId: string | null;
+    band: RavenCompositeBand;
+    modifiers?: AddBandModifiers;
+  }>(),
+);
+
+export const addPointsToSubBand = createAction(
+  '[raven-timeline] add_points_to_sub_band',
+  props<{
+    sourceId: string;
+    bandId: string;
+    subBandId: string;
+    points: any[];
+  }>(),
+);
+
+export const addSubBand = createAction(
+  '[raven-timeline] add_sub_band',
+  props<{
+    sourceId: string;
+    bandId: string;
+    subBand: RavenSubBand;
+  }>(),
+);
+
+export const expandChildrenOrDescendants = createAction(
+  '[raven-timeline] expand_children_or_descendants',
+  props<{
+    bandId: string;
+    subBandId: string;
+    activityPoint: RavenActivityPoint;
+    expandType: string;
+  }>(),
+);
+
+export const fetchChildrenOrDescendants = createAction(
+  '[raven-timeline] fetch_children_or_descendants',
+  props<{
+    bandId: string;
+    subBandId: string;
+    activityPoint: RavenActivityPoint;
+    expandType: string;
+  }>(),
+);
+
+export const fetchChildrenOrDescendantsSuccess = createAction(
+  '[raven-timeline] fetch_children_or_descendants_success',
+);
+
+export const filterActivityInSubBand = createAction(
+  '[raven-timeline] filter_activity_in_sub_band',
+  props<{
+    bandId: string;
+    subBandId: string;
+    filter: string;
+    activityInitiallyHidden: boolean;
+  }>(),
+);
+
+export const hoverBand = createAction(
+  '[raven-timeline] hover_band',
+  props<{ bandId: string }>(),
+);
+
+export const panLeftViewTimeRange = createAction(
+  '[raven-timeline] pan_left_view_time_range',
+);
+
+export const panRightViewTimeRange = createAction(
+  '[raven-timeline] pan_right_view_time_range',
+);
+
+export const pinAdd = createAction(
+  '[raven-timeline] pin_add',
+  props<{ pin: RavenPin }>(),
+);
+
+export const pinRemove = createAction(
+  '[raven-timeline] pin_remove',
+  props<{ sourceId: string }>(),
+);
+
+export const pinRename = createAction(
+  '[raven-timeline] pin_rename',
+  props<{ sourceId: string; newName: string }>(),
+);
+
+export const removeAllBands = createAction('[raven-timeline] remove_all_bands');
+
+export const removeAllGuides = createAction(
+  '[raven-timeline] remove_all_guides',
+);
+
+export const removeAllPointsInSubBandWithParentSource = createAction(
+  '[raven-timeline] remove_all_points_in_sub_band_with_parent_source',
+  props<{ parentSourceId: string }>(),
+);
+
+export const removeBandsOrPointsForSource = createAction(
+  '[raven-timeline] remove_bands_or_points_for_source',
+  props<{ sourceId: string }>(),
+);
+
+export const removeBandsWithNoPoints = createAction(
+  '[raven-timeline] remove_bands_with_no_points',
+);
+
+export const removeChildrenOrDescendants = createAction(
+  '[raven-timeline] remove_children_or_descendants',
+  props<{
+    bandId: string;
+    subBandId: string;
+    activityPoint: RavenActivityPoint;
+  }>(),
+);
+
+export const removeSourceIdFromSubBands = createAction(
+  '[raven-timeline] remove_source_id_from_sub_bands',
+  props<{ sourceId: string }>(),
+);
+
+export const removeSubBand = createAction(
+  '[raven-timeline] remove_sub_band',
+  props<{ subBandId: string }>(),
+);
+
+export const resetViewTimeRange = createAction(
+  '[raven-timeline] reset_view_time_range',
+);
+
+export const selectBand = createAction(
+  '[raven-timeline] select_band',
+  props<{ bandId: string }>(),
+);
+
+export const selectPoint = createAction(
+  '[raven-timeline] select_point',
+  props<{ bandId: string; subBandId: string; pointId: string }>(),
+);
+
+export const setCompositeYLabelDefault = createAction(
+  '[raven-timeline] set_composite_y_label_default',
+  props<{ bandId: string }>(),
+);
+
+export const setPointsForSubBand = createAction(
+  '[raven-timeline] set_points_for_sub_band',
+  props<{ bandId: string; subBandId: string; points: any[] }>(),
+);
+
+export const sourceIdAdd = createAction(
+  '[raven-timeline] source_id_add',
+  props<{ sourceId: string; subBandId: string }>(),
+);
+
+export const sortBands = createAction(
+  '[raven-timeline] sort_bands',
+  props<{ sort: StringTMap<RavenSortMessage> }>(),
+);
+
+export const toggleGuide = createAction(
+  '[raven-timeline] toggle_guide',
+  props<{ guide: RavenGuidePoint }>(),
+);
+
+export const updateAllActivityBandFilter = createAction(
+  '[raven-timeline] update_all_activity_band_filter',
+  props<{ filter: string }>(),
+);
+
+export const updateBand = createAction(
+  '[raven-timeline] update_band',
+  props<{ bandId: string; update: StringTMap<BaseType> }>(),
+);
+
+export const updateLastClickTime = createAction(
+  '[raven-timeline] update_last_click_time',
+  props<{ time: number }>(),
+);
+
+export const updateSubBand = createAction(
+  '[raven-timeline] update_sub_band',
+  props<{ bandId: string; subBandId: string; update: StringTMap<BaseType> }>(),
+);
+
+export const updateSubBandTimeDelta = createAction(
+  '[raven-timeline] update_sub_band_time_delta',
+  props<{ bandId: string; subBandId: string; timeDelta: number }>(),
+);
+
+export const updateTimeline = createAction(
+  '[raven-timeline] update_timeline',
+  props<{ update: StringTMap<BaseType> }>(),
+);
+
+export const updateViewTimeRange = createAction(
+  '[raven-timeline] update_view_time_range',
+  props<{ viewTimeRange: TimeRange }>(),
+);
+
+export const zoomInViewTimeRange = createAction(
+  '[raven-timeline] zoom_in_view_time_range',
+);
+
+export const zoomOutViewTimeRange = createAction(
+  '[raven-timeline] zoom_out_view_time_range',
+);

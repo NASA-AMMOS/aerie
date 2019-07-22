@@ -7,8 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { createReducer, on } from '@ngrx/store';
 import { StringTMap } from '../../shared/models';
-import { OutputAction, OutputActionTypes } from '../actions/output.actions';
+import { OutputActions } from '../actions';
 
 export interface OutputState {
   allInOneFile: boolean;
@@ -28,20 +29,14 @@ export const initialState: OutputState = {
   outputSourceIdsByLabel: {},
 };
 
-/**
- * Reducer.
- * If a case takes more than one line then it should be in it's own helper function.
- */
-export function reducer(
-  state: OutputState = initialState,
-  action: OutputAction,
-): OutputState {
-  switch (action.type) {
-    case OutputActionTypes.UpdateOutputSettings:
-      return { ...state, ...action.update };
-    case OutputActionTypes.AppendData:
-      return { ...state, outputData: state.outputData.concat(action.data) };
-    default:
-      return state;
-  }
-}
+export const reducer = createReducer(
+  initialState,
+  on(OutputActions.appendData, (state, { data }) => ({
+    ...state,
+    outputData: state.outputData.concat(data),
+  })),
+  on(OutputActions.updateOutputSettings, (state, { update }) => ({
+    ...state,
+    ...update,
+  })),
+);

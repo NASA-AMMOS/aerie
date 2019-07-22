@@ -7,34 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  AddCustomFilter,
-  AddFilter,
-  AddGraphableFilter,
-  ApplyLayout,
-  ApplyState,
-  CloseEvent,
-  CollapseEvent,
-  ExpandEvent,
-  FetchInitialSources,
-  LoadErrorsAdd,
-  NewSources,
-  OpenEvent,
-  PinAdd,
-  PinRemove,
-  PinRename,
-  RemoveFilter,
-  RemoveSource,
-  RemoveSourceEvent,
-  SaveState,
-  SelectSource,
-  SetCustomFilter,
-  SetCustomFilterSubBandId,
-  SubBandIdAdd,
-  SubBandIdRemove,
-  UpdateSourceExplorer,
-  UpdateTreeSource,
-} from '../actions/source-explorer.actions';
+import { SourceExplorerActions } from '../actions';
 import {
   categorySource,
   childSource,
@@ -63,7 +36,11 @@ describe('source-explorer reducer', () => {
   it('handle AddCustomFilter', () => {
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new AddCustomFilter('/child', 'ips', '.*IPS.*'),
+      SourceExplorerActions.addCustomFilter({
+        customFilter: '.*IPS.*',
+        label: 'ips',
+        sourceId: '/child',
+      }),
     );
     expect(sourceExplorerState).toEqual({
       ...initialState,
@@ -76,15 +53,21 @@ describe('source-explorer reducer', () => {
   it('handle AddFilter', () => {
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new NewSources(rootSource.id, [categorySource]),
+      SourceExplorerActions.newSources({
+        sourceId: rootSource.id,
+        sources: [categorySource],
+      }),
     );
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new NewSources(categorySource.id, [filterSourceLocation]),
+      SourceExplorerActions.newSources({
+        sourceId: categorySource.id,
+        sources: [filterSourceLocation],
+      }),
     );
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new AddFilter(filterSourceLocation),
+      SourceExplorerActions.addFilter({ source: filterSourceLocation }),
     );
     expect(sourceExplorerState.filtersByTarget).toEqual({
       '/SequenceTracker': { meeting: [filterSourceLocation.id] },
@@ -94,7 +77,7 @@ describe('source-explorer reducer', () => {
   it('handle AddGraphableFilter', () => {
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new AddGraphableFilter(customFilterSource),
+      SourceExplorerActions.addGraphableFilter({ source: customFilterSource }),
     );
     expect(sourceExplorerState).toEqual({
       ...initialState,
@@ -105,7 +88,9 @@ describe('source-explorer reducer', () => {
   it('handle ApplyLayout', () => {
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new ApplyLayout({ pins: {}, targetSourceIds: ['/source1'] }),
+      SourceExplorerActions.applyLayout({
+        update: { pins: {}, targetSourceIds: ['/source1'] },
+      }),
     );
     expect(sourceExplorerState).toEqual({
       ...initialState,
@@ -116,7 +101,10 @@ describe('source-explorer reducer', () => {
   it('handle ApplyState', () => {
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new ApplyState(rootSource.url, rootSource.id),
+      SourceExplorerActions.applyState({
+        sourceId: rootSource.id,
+        sourceUrl: rootSource.url,
+      }),
     );
     expect(sourceExplorerState).toEqual({
       ...initialState,
@@ -127,7 +115,7 @@ describe('source-explorer reducer', () => {
   it('handle CloseEvent', () => {
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new CloseEvent(rootSource.id),
+      SourceExplorerActions.closeEvent({ sourceId: rootSource.id }),
     );
     expect(sourceExplorerState).toEqual({
       ...initialState,
@@ -137,7 +125,7 @@ describe('source-explorer reducer', () => {
   it('handle CollapseEvent', () => {
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new CollapseEvent(rootSource.id),
+      SourceExplorerActions.collapseEvent({ sourceId: rootSource.id }),
     );
     expect(sourceExplorerState).toEqual({
       ...initialState,
@@ -147,7 +135,7 @@ describe('source-explorer reducer', () => {
   it('handle ExpandEvent', () => {
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new ExpandEvent(rootSource.id),
+      SourceExplorerActions.expandEvent({ sourceId: rootSource.id }),
     );
     expect(sourceExplorerState).toEqual({
       ...initialState,
@@ -165,7 +153,7 @@ describe('source-explorer reducer', () => {
   it('handle FetchInitialSources', () => {
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new FetchInitialSources(),
+      SourceExplorerActions.fetchInitialSources(),
     );
     expect(sourceExplorerState).toEqual({
       ...initialState,
@@ -177,7 +165,7 @@ describe('source-explorer reducer', () => {
     const loadErrors = ['/id1', '/id2'];
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new LoadErrorsAdd(loadErrors),
+      SourceExplorerActions.loadErrorsAdd({ sourceIds: loadErrors }),
     );
     expect(sourceExplorerState.loadErrors).toEqual(loadErrors);
   });
@@ -187,7 +175,7 @@ describe('source-explorer reducer', () => {
 
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new NewSources(rootSource.id, sources),
+      SourceExplorerActions.newSources({ sourceId: rootSource.id, sources }),
     );
     expect(sourceExplorerState).toEqual({
       ...initialState,
@@ -207,7 +195,7 @@ describe('source-explorer reducer', () => {
   it('handle OpenEvent', () => {
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new OpenEvent(rootSource.id),
+      SourceExplorerActions.openEvent({ sourceId: rootSource.id }),
     );
     expect(sourceExplorerState).toEqual({
       ...initialState,
@@ -230,7 +218,10 @@ describe('source-explorer reducer', () => {
     };
 
     const pin: RavenPin = { name: 'somePin', sourceId: '/' };
-    sourceExplorerState = reducer(sourceExplorerState, new PinAdd(pin));
+    sourceExplorerState = reducer(
+      sourceExplorerState,
+      SourceExplorerActions.pinAdd({ pin }),
+    );
 
     expect(sourceExplorerState).toEqual({
       ...initialState,
@@ -260,10 +251,16 @@ describe('source-explorer reducer', () => {
 
     // Add a pin that we can remove.
     const pin: RavenPin = { name: 'somePin', sourceId: '/' };
-    sourceExplorerState = reducer(sourceExplorerState, new PinAdd(pin));
+    sourceExplorerState = reducer(
+      sourceExplorerState,
+      SourceExplorerActions.pinAdd({ pin }),
+    );
 
     // Finally remove the pin.
-    sourceExplorerState = reducer(sourceExplorerState, new PinRemove('/'));
+    sourceExplorerState = reducer(
+      sourceExplorerState,
+      SourceExplorerActions.pinRemove({ sourceId: '/' }),
+    );
     expect(sourceExplorerState).toEqual({
       ...initialState,
       pins: [],
@@ -289,12 +286,18 @@ describe('source-explorer reducer', () => {
 
     // Add a pin that we can rename.
     const pin: RavenPin = { name: 'somePin', sourceId: '/' };
-    sourceExplorerState = reducer(sourceExplorerState, new PinAdd(pin));
+    sourceExplorerState = reducer(
+      sourceExplorerState,
+      SourceExplorerActions.pinAdd({ pin }),
+    );
 
     // Finally rename the pin.
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new PinRename('/', 'someNewNamePin'),
+      SourceExplorerActions.pinRename({
+        newName: 'someNewNamePin',
+        sourceId: '/',
+      }),
     );
     expect(sourceExplorerState).toEqual({
       ...initialState,
@@ -320,19 +323,25 @@ describe('source-explorer reducer', () => {
   it('handle RemoveFilter', () => {
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new NewSources(rootSource.id, [categorySource]),
+      SourceExplorerActions.newSources({
+        sourceId: rootSource.id,
+        sources: [categorySource],
+      }),
     );
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new NewSources(categorySource.id, [filterSourceLocation]),
+      SourceExplorerActions.newSources({
+        sourceId: categorySource.id,
+        sources: [filterSourceLocation],
+      }),
     );
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new AddFilter(filterSourceLocation),
+      SourceExplorerActions.addFilter({ source: filterSourceLocation }),
     );
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new RemoveFilter(filterSourceLocation),
+      SourceExplorerActions.removeFilter({ source: filterSourceLocation }),
     );
     expect(sourceExplorerState.filtersByTarget).toEqual({
       '/SequenceTracker': { meeting: [] },
@@ -343,11 +352,14 @@ describe('source-explorer reducer', () => {
     // First add a source we can remove.
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new NewSources(rootSource.id, [childSource]),
+      SourceExplorerActions.newSources({
+        sourceId: rootSource.id,
+        sources: [childSource],
+      }),
     );
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new RemoveSource(childSource.id),
+      SourceExplorerActions.removeSource({ sourceId: childSource.id }),
     );
     expect(sourceExplorerState).toEqual({
       ...initialState,
@@ -357,7 +369,7 @@ describe('source-explorer reducer', () => {
   it('handle RemoveSourceEvent', () => {
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new RemoveSourceEvent(rootSource),
+      SourceExplorerActions.removeSourceEvent({ source: rootSource }),
     );
     expect(sourceExplorerState).toEqual({
       ...initialState,
@@ -368,7 +380,7 @@ describe('source-explorer reducer', () => {
   it('handle SaveState', () => {
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new SaveState(rootSource, 'hello'),
+      SourceExplorerActions.saveState({ source: rootSource, name: 'hello' }),
     );
     expect(sourceExplorerState).toEqual({
       ...initialState,
@@ -381,7 +393,10 @@ describe('source-explorer reducer', () => {
     const initState: SourceExplorerState = sourceExplorerState;
 
     // Select node.
-    sourceExplorerState = reducer(initState, new SelectSource(source.id));
+    sourceExplorerState = reducer(
+      initState,
+      SourceExplorerActions.selectSource({ sourceId: source.id }),
+    );
 
     expect(sourceExplorerState).toEqual({
       ...initState,
@@ -389,7 +404,10 @@ describe('source-explorer reducer', () => {
     });
 
     // Deselect node.
-    sourceExplorerState = reducer(sourceExplorerState, new SelectSource(''));
+    sourceExplorerState = reducer(
+      sourceExplorerState,
+      SourceExplorerActions.selectSource({ sourceId: '' }),
+    );
 
     expect(sourceExplorerState).toEqual({
       ...initState,
@@ -400,15 +418,24 @@ describe('source-explorer reducer', () => {
   it('handle SetCustomFilter', () => {
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new NewSources(rootSource.id, [categorySource]),
+      SourceExplorerActions.newSources({
+        sourceId: rootSource.id,
+        sources: [categorySource],
+      }),
     );
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new NewSources(categorySource.id, [customFilterSource]),
+      SourceExplorerActions.newSources({
+        sourceId: categorySource.id,
+        sources: [customFilterSource],
+      }),
     );
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new SetCustomFilter(customFilterSource, 'jm0132'),
+      SourceExplorerActions.setCustomFilter({
+        filter: 'jm0132',
+        source: customFilterSource,
+      }),
     );
     expect(customFilterSource).toEqual({
       ...customFilterSource,
@@ -419,11 +446,19 @@ describe('source-explorer reducer', () => {
   it('handle SetCustomFilterSubBandId', () => {
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new AddCustomFilter('/child', 'ips', '.*IPS.*'),
+      SourceExplorerActions.addCustomFilter({
+        customFilter: '.*IPS.*',
+        label: 'ips',
+        sourceId: '/child',
+      }),
     );
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new SetCustomFilterSubBandId('/child', 'ips', '45'),
+      SourceExplorerActions.setCustomFilterSubBandId({
+        label: 'ips',
+        sourceId: '/child',
+        subBandId: '45',
+      }),
     );
     expect(sourceExplorerState).toEqual({
       ...initialState,
@@ -436,7 +471,10 @@ describe('source-explorer reducer', () => {
   it('handle SubBandIdAdd', () => {
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new SubBandIdAdd(rootSource.id, '100'),
+      SourceExplorerActions.subBandIdAdd({
+        sourceId: rootSource.id,
+        subBandId: '100',
+      }),
     );
     expect(sourceExplorerState).toEqual({
       ...initialState,
@@ -454,11 +492,17 @@ describe('source-explorer reducer', () => {
     // First add a sub-band id we can remove.
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new SubBandIdAdd(rootSource.id, '100'),
+      SourceExplorerActions.subBandIdAdd({
+        sourceId: rootSource.id,
+        subBandId: '100',
+      }),
     );
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new SubBandIdRemove(['/'], '100'),
+      SourceExplorerActions.subBandIdRemove({
+        sourceIds: ['/'],
+        subBandId: '100',
+      }),
     );
     expect(sourceExplorerState).toEqual({
       ...initialState,
@@ -476,7 +520,9 @@ describe('source-explorer reducer', () => {
   it('handle UpdateSourceExplorer', () => {
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new UpdateSourceExplorer({ selectedSourceId: '42' }),
+      SourceExplorerActions.updateSourceExplorer({
+        update: { selectedSourceId: '42' },
+      }),
     );
 
     expect(sourceExplorerState).toEqual({
@@ -488,9 +534,9 @@ describe('source-explorer reducer', () => {
   it('handle UpdateTreeSource', () => {
     sourceExplorerState = reducer(
       sourceExplorerState,
-      new UpdateTreeSource(rootSource.id, {
-        label: 'hi',
-        opened: true,
+      SourceExplorerActions.updateTreeSource({
+        sourceId: rootSource.id,
+        update: { label: 'hi', opened: true },
       }),
     );
     expect(sourceExplorerState).toEqual({

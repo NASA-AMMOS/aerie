@@ -7,38 +7,19 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 import { BaseType, StringTMap } from '../../shared/models';
 
-export enum OutputActionTypes {
-  AppendData = '[output] append_data',
-  CreateOutput = '[output] create_output',
-  UpdateOutputSettings = '[output] update_output_settings',
-  WriteFile = '[output] write_file',
-}
+export const appendData = createAction(
+  '[raven-output] append_data',
+  props<{ data: string }>(),
+);
 
-export class AppendData implements Action {
-  readonly type = OutputActionTypes.AppendData;
+export const createOutput = createAction('[raven-output] create_output');
 
-  constructor(public data: string) {}
-}
+export const updateOutputSettings = createAction(
+  '[raven-output] update_output_settings',
+  props<{ update: StringTMap<BaseType> }>(),
+);
 
-export class CreateOutput implements Action {
-  readonly type = OutputActionTypes.CreateOutput;
-}
-
-export class UpdateOutputSettings implements Action {
-  readonly type = OutputActionTypes.UpdateOutputSettings;
-
-  constructor(public update: StringTMap<BaseType>) {}
-}
-
-export class WriteFile implements Action {
-  readonly type = OutputActionTypes.WriteFile;
-}
-
-export type OutputAction =
-  | AppendData
-  | CreateOutput
-  | UpdateOutputSettings
-  | WriteFile;
+export const writeFile = createAction('[raven-output] write_file');

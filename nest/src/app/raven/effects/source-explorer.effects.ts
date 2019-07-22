@@ -9,7 +9,7 @@
 
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Actions, Effect, ofType } from '@ngrx/effects';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 import flatten from 'lodash-es/flatten';
 import uniqueId from 'lodash-es/uniqueId';
@@ -24,6 +24,7 @@ import {
   timeout,
   withLatestFrom,
 } from 'rxjs/operators';
+import { ConfigActions, ToastActions } from '../../shared/actions';
 import { StringTMap } from '../../shared/models';
 import {
   getSituationalAwarenessPageDuration,
@@ -31,32 +32,12 @@ import {
   utc,
 } from '../../shared/util';
 import {
-  AddCustomGraph,
-  AddGraphableFilter,
-  ApplyCurrentState,
-  ApplyLayout,
-  ApplyLayoutToSources,
-  ApplyState,
-  ApplyStateOrLayoutSuccess,
-  CloseEvent,
-  ExpandEvent,
-  FetchInitialSources,
-  FetchNewSources,
-  FolderAdd,
-  GraphAgainEvent,
-  GraphCustomSource,
-  ImportFile,
-  LoadErrorsDisplay,
-  OpenEvent,
-  RemoveSourceEvent,
-  SaveState,
-  SourceExplorerActionTypes,
-  UpdateCurrentState,
-  UpdateGraphAfterFilterAdd,
-  UpdateGraphAfterFilterRemove,
-  UpdateSourceExplorer,
-  UpdateSourceFilter,
-} from '../actions/source-explorer.actions';
+  DialogActions,
+  EpochsActions,
+  LayoutActions,
+  SourceExplorerActions,
+  TimelineActions,
+} from '../actions';
 import {
   FilterState,
   MpsServerGraphData,
@@ -78,6 +59,8 @@ import {
   SourceFilter,
 } from '../models';
 import { RavenAppState } from '../raven-store';
+import { LayoutState } from '../reducers/layout.reducer';
+import * as fromTimeline from '../reducers/timeline.reducer';
 import { MpsServerService } from '../services/mps-server.service';
 import {
   activityBandsWithLegendAndSourceId,
@@ -104,891 +87,972 @@ import {
   toRavenSources,
   updateSourceId,
 } from '../util';
-
-import * as configActions from '../../shared/actions/config.actions';
-import * as toastActions from '../../shared/actions/toast.actions';
-import * as dialogActions from '../actions/dialog.actions';
-import * as epochsActions from '../actions/epochs.actions';
-import * as layoutActions from '../actions/layout.actions';
-import * as sourceExplorerActions from '../actions/source-explorer.actions';
-import * as timelineActions from '../actions/timeline.actions';
-
-import { LayoutState } from '../reducers/layout.reducer';
-import * as fromTimeline from '../reducers/timeline.reducer';
 import { withLoadingBar } from './utils';
 
 @Injectable()
 export class SourceExplorerEffects {
   constructor(
-    private actions$: Actions,
+    private actions: Actions,
     private http: HttpClient,
     private mpsServerService: MpsServerService,
-    private store$: Store<RavenAppState>,
+    private store: Store<RavenAppState>,
   ) {}
 
-  /**
-   * Effect for AddCustomGraph.
-   */
-  @Effect()
-  addCustomGraph$: Observable<Action> = this.actions$.pipe(
-    ofType<AddCustomGraph>(SourceExplorerActionTypes.AddCustomGraph),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(
-      ({
-        state: {
-          config,
-          raven: { sourceExplorer, timeline, situationalAwareness },
-        },
-        action: { label, sourceId },
-      }) =>
+  addCustomGraph = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.addCustomGraph),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      concatMap(
+        ({
+          state: {
+            config,
+            raven: { sourceExplorer, timeline, situationalAwareness },
+          },
+          action: { label, sourceId },
+        }) =>
+          concat(
+            this.open({
+              bandId: timeline.selectedBandId,
+              currentBands: timeline.bands,
+              customFilter: getCustomFilterForLabel(
+                label,
+                sourceExplorer.customFiltersBySourceId[sourceId],
+              ),
+              defaultBandSettings: config.raven.defaultBandSettings,
+              filtersByTarget: sourceExplorer.filtersByTarget,
+              graphAgain: true,
+              pageDuration: getSituationalAwarenessPageDuration(
+                situationalAwareness,
+              ),
+              pins: sourceExplorer.pins,
+              restoringLayout: false,
+              situAware: situationalAwareness.situationalAware,
+              sourceId,
+              startTime: getSituationalAwarenessStartTime(situationalAwareness),
+              subBandId: timeline.selectedSubBandId,
+              treeBySourceId: sourceExplorer.treeBySourceId,
+            }),
+            of(SourceExplorerActions.loadErrorsDisplay()),
+            of(
+              SourceExplorerActions.updateSourceExplorer({
+                update: { fetchPending: false },
+              }),
+            ),
+          ),
+      ),
+    ),
+  );
+
+  addGraphableFilter = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.addGraphableFilter),
+      concatMap(({ source }) =>
         concat(
-          this.open({
-            bandId: timeline.selectedBandId,
-            currentBands: timeline.bands,
-            customFilter: getCustomFilterForLabel(
-              label,
-              sourceExplorer.customFiltersBySourceId[sourceId],
-            ),
-            defaultBandSettings: config.raven.defaultBandSettings,
-            filtersByTarget: sourceExplorer.filtersByTarget,
-            graphAgain: true,
-            pageDuration: getSituationalAwarenessPageDuration(
-              situationalAwareness,
-            ),
-            pins: sourceExplorer.pins,
-            restoringLayout: false,
-            situAware: situationalAwareness.situationalAware,
-            sourceId,
-            startTime: getSituationalAwarenessStartTime(situationalAwareness),
-            subBandId: timeline.selectedSubBandId,
-            treeBySourceId: sourceExplorer.treeBySourceId,
-          }),
-          of(new sourceExplorerActions.LoadErrorsDisplay()),
+          of(SourceExplorerActions.addFilter({ source })),
           of(
-            new sourceExplorerActions.UpdateSourceExplorer({
-              fetchPending: false,
+            SourceExplorerActions.updateGraphAfterFilterAdd({
+              sourceId: source.id,
             }),
           ),
         ),
-    ),
-  );
-
-  /**
-   * Effect for AddGraphableFilter.
-   */
-  @Effect()
-  addGraphableFilter$: Observable<Action> = this.actions$.pipe(
-    ofType<AddGraphableFilter>(SourceExplorerActionTypes.AddGraphableFilter),
-    concatMap(action =>
-      concat(
-        of(new sourceExplorerActions.AddFilter(action.source)),
-        of(
-          new sourceExplorerActions.UpdateGraphAfterFilterAdd(action.source.id),
-        ),
       ),
     ),
   );
 
-  /**
-   * Effect for ApplyState.
-   */
-  @Effect()
-  applyCurrentState$: Observable<Action> = this.actions$.pipe(
-    ofType<ApplyCurrentState>(SourceExplorerActionTypes.ApplyCurrentState),
-    withLatestFrom(this.store$),
-    map(([, state]) => ({ state })),
-    concatMap(({ state }) =>
-      forkJoin([
-        of(state),
-        this.mpsServerService.fetchNewSources(
-          `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
-          '/',
-          true,
-          null,
-        ),
-      ]),
-    ),
-    map(([state, initialSources]) => ({
-      initialSources,
-      state,
-    })),
-    concatMap(({ state, initialSources }) =>
-      concat(
-        ...this.loadState(
-          state,
-          initialSources,
-          state.raven.timeline.currentState,
-          state.raven.timeline.currentStateId,
-        ),
-      ),
-    ),
-  );
-
-  /**
-   * Effect for ApplyLayout.
-   * Note that right now we are only applying layouts to the `fs_file` type.
-   */
-  @Effect()
-  applyLayout$: Observable<Action> = this.actions$.pipe(
-    ofType<ApplyLayout>(SourceExplorerActionTypes.ApplyLayout),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(({ action, state }) =>
-      forkJoin([
-        of(action),
-        of(state),
-        this.mpsServerService.fetchNewSources(
-          `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
-          '/',
-          true,
-          null,
-        ),
-      ]),
-    ),
-    map(([action, state, initialSources]) => ({
-      action,
-      initialSources,
-      state,
-    })),
-    concatMap(({ action, state, initialSources }) => {
-      const savedState = state.raven.timeline.currentState as RavenState;
-
-      return forkJoin([
-        of(action),
-        of(state),
-        of(savedState),
-        of(initialSources),
-        this.fetchSourcesByType(
-          state,
-          getSourceIds(savedState.bands).parentSourceIds,
-        ),
-      ]);
-    }),
-    map(([action, state, savedState, initialSources, sourceTypes]) => ({
-      action,
-      initialSources,
-      savedState,
-      sourceTypes,
-      state,
-    })),
-    concatMap(({ action, state, savedState, initialSources, sourceTypes }) => {
-      let updatedBands: RavenCompositeBand[] = [];
-      if (Object.keys(action.update.pins).length > 0) {
-        // Apply layout with pins.
-        updatedBands = savedState.bands.map((band: RavenCompositeBand) => {
-          const parentId = uniqueId();
-
-          return {
-            ...band,
-            id: parentId,
-            subBands: band.subBands.map((subBand: RavenSubBand) => {
-              const labelPin = subBand.labelPin;
-              const pin = action.update.pins[labelPin];
-              const targetSource =
-                state.raven.sourceExplorer.treeBySourceId[pin.sourceId];
-
-              return {
-                ...subBand,
-                id: uniqueId(),
-                parentUniqueId: parentId,
-                sourceIds: subBand.sourceIds.map((sourceId: string) =>
-                  updateSourceId(
-                    sourceId,
-                    targetSource.id,
-                    sourceTypes,
-                    targetSource.type,
-                  ),
-                ),
-              };
-            }),
-          };
-        });
-      } else {
-        action.update.targetSourceIds.forEach((targetSourceId: string) => {
-          targetSourceId = targetSourceId.trim();
-          const bands = savedState.bands.map((band: RavenCompositeBand) => {
-            const parentId = uniqueId();
-            const targetSource =
-              state.raven.sourceExplorer.treeBySourceId[targetSourceId];
-
-            return {
-              ...band,
-              id: parentId,
-              subBands: band.subBands.map((subBand: RavenSubBand) => ({
-                ...subBand,
-                id: uniqueId(),
-                parentUniqueId: parentId,
-                sourceIds: subBand.sourceIds.map((sourceId: string) =>
-                  updateSourceId(
-                    sourceId,
-                    targetSourceId,
-                    sourceTypes,
-                    targetSource.type,
-                  ),
-                ),
-              })),
-            };
-          });
-
-          updatedBands.push(...bands);
-        });
-      }
-      return concat(
-        ...this.loadLayout(
-          state,
-          updatedBands,
-          initialSources,
-          savedState,
-          state.raven.timeline.currentStateId,
-          Object.values(action.update.pins),
-        ),
-      );
-    }),
-  );
-
-  /**
-   * Effect for ApplyLayoutToSources.
-   */
-  @Effect()
-  applyLayoutToSources$: Observable<Action> = this.actions$.pipe(
-    ofType<ApplyLayoutToSources>(
-      SourceExplorerActionTypes.ApplyLayoutToSources,
-    ),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(({ action, state }) =>
-      forkJoin([
-        of(action),
-        this.mpsServerService.fetchState(action.layoutSourceUrl),
-        this.mpsServerService.fetchNewSources(
-          `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
-          '/',
-          true,
-          null,
-        ),
-      ]),
-    ),
-    map(([action, savedState, initialSources]) => ({
-      action,
-      initialSources,
-      savedState,
-    })),
-    concatMap(({ action, initialSources, savedState }) =>
-      concat(
-        of(new sourceExplorerActions.NewSources('/', initialSources)),
-        of(
-          new timelineActions.UpdateTimeline({
-            currentState: savedState,
-          }),
-        ),
-        ...this.expandSourcePaths(action.sourcePaths),
-        of(
-          new sourceExplorerActions.ApplyLayout({
-            pins: savedState.pins.reduce((allPins, pin) => {
-              allPins[pin.name] = pin.sourceId;
-              return allPins;
-            }, {}),
-            targetSourceIds: action.sourcePaths,
-          }),
-        ),
-      ),
-    ),
-  );
-
-  /**
-   * Effect for ApplyState.
-   */
-  @Effect()
-  applyState$: Observable<Action> = this.actions$.pipe(
-    ofType<ApplyState>(SourceExplorerActionTypes.ApplyState),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(({ action, state }) =>
-      forkJoin([
-        of(action),
-        of(state),
-        this.mpsServerService.fetchState(action.sourceUrl),
-        this.mpsServerService.fetchNewSources(
-          `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
-          '/',
-          true,
-          null,
-        ),
-      ]),
-    ),
-    map(([action, state, savedState, initialSources]) => ({
-      action,
-      initialSources,
-      savedState,
-      state,
-    })),
-    concatMap(({ action, initialSources, savedState, state }) =>
-      concat(
-        ...this.loadState(state, initialSources, savedState, action.sourceId),
-      ),
-    ),
-  );
-
-  /**
-   * Effect for ApplyStateOrLayoutSuccess.
-   */
-  @Effect()
-  applyStateOrLayoutSuccess$: Observable<Action> = this.actions$.pipe(
-    ofType<ApplyStateOrLayoutSuccess>(
-      SourceExplorerActionTypes.ApplyStateOrLayoutSuccess,
-    ),
-    withLatestFrom(this.store$),
-    map(([, state]) => state),
-    concatMap(state =>
-      concat(
-        of(new timelineActions.UpdateTimeline({ currentStateChanged: false })),
-        this.restoreExpansion(
-          state.raven.timeline.bands,
-          state.raven.timeline.expansionByActivityId,
-        ),
-      ),
-    ),
-  );
-
-  /**
-   * Effect for CloseEvent.
-   */
-  @Effect()
-  closeEvent$: Observable<Action> = this.actions$.pipe(
-    ofType<CloseEvent>(SourceExplorerActionTypes.CloseEvent),
-    switchMap(action => [
-      new timelineActions.RemoveBandsOrPointsForSource(action.sourceId),
-      new sourceExplorerActions.UpdateTreeSource(action.sourceId, {
-        opened: false,
-      }),
-      new layoutActions.Resize(), // Resize bands when we `close` to make sure they are all resized properly.
-    ]),
-  );
-
-  @Effect()
-  createFolder$: Observable<Action> = this.actions$.pipe(
-    ofType<FolderAdd>(SourceExplorerActionTypes.FolderAdd),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(({ action, state }) =>
-      concat(
-        withLoadingBar([this.createFolder(action, state)]),
-        of(new sourceExplorerActions.ExpandEvent(action.folder.url)),
-      ),
-    ),
-  );
-
-  /**
-   * Effect for ExpandEvent.
-   */
-  @Effect()
-  expandEvent$: Observable<Action> = this.actions$.pipe(
-    ofType<ExpandEvent>(SourceExplorerActionTypes.ExpandEvent),
-    withLatestFrom(this.store$),
-    map(
-      ([action, state]) =>
-        state.raven.sourceExplorer.treeBySourceId[action.sourceId],
-    ),
-    switchMap(source =>
-      concat(
-        ...this.expand(source),
-        of(
-          new sourceExplorerActions.UpdateSourceExplorer({
-            fetchPending: false,
-          }),
-        ),
-        of(
-          new sourceExplorerActions.UpdateTreeSource(source.id, {
-            expanded: true,
-          }),
-        ),
-      ).pipe(
-        catchError((e: Error) => {
-          console.error('SourceExplorerEffects - expandEvent$: ', e);
-          return [
-            new toastActions.ShowToast(
-              'warning',
-              `Failed To Expand Source "${source.name}"`,
-              '',
-            ),
-            new sourceExplorerActions.UpdateSourceExplorer({
-              fetchPending: false,
-            }),
-            new sourceExplorerActions.UpdateTreeSource(source.id, {
-              expanded: false,
-            }),
-          ];
-        }),
-      ),
-    ),
-  );
-
-  /**
-   * Effect for FetchInitialSources.
-   */
-  @Effect()
-  fetchInitialSources$: Observable<Action> = this.actions$.pipe(
-    ofType<FetchInitialSources>(SourceExplorerActionTypes.FetchInitialSources),
-    withLatestFrom(this.store$),
-    map(([, state]) => state),
-    concatMap((state: RavenAppState) =>
-      concat(
-        this.mpsServerService
-          .fetchNewSources(
+  applyCurrentState = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.applyCurrentState),
+      withLatestFrom(this.store),
+      map(([, state]) => ({ state })),
+      concatMap(({ state }) =>
+        forkJoin([
+          of(state),
+          this.mpsServerService.fetchNewSources(
             `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
             '/',
             true,
             null,
-          )
-          .pipe(
-            map(
-              (sources: RavenSource[]) =>
-                new sourceExplorerActions.NewSources('/', sources) as Action,
-            ),
           ),
-        of(
-          new sourceExplorerActions.UpdateSourceExplorer({
-            fetchPending: false,
-            initialSourcesLoaded: true,
-          }),
-        ),
-      ).pipe(
-        catchError((e: Error) => {
-          console.error('SourceExplorerEffects - fetchInitialSources$: ', e);
-          return [
-            new toastActions.ShowToast(
-              'warning',
-              'Failed To Fetch Initial Sources',
-              '',
-            ),
-            new sourceExplorerActions.UpdateSourceExplorer({
-              fetchPending: false,
-              initialSourcesLoaded: false,
-            }),
-          ];
-        }),
+        ]),
       ),
-    ),
-  );
-
-  /**
-   * Effect for FetchNewSources.
-   */
-  @Effect()
-  fetchNewSources$: Observable<Action> = this.actions$.pipe(
-    ofType<FetchNewSources>(SourceExplorerActionTypes.FetchNewSources),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(({ action, state }) =>
-      concat(
-        this.mpsServerService
-          .fetchNewSources(
-            action.sourceUrl,
-            action.sourceId,
-            false,
-            state.raven.sourceExplorer.treeBySourceId,
-          )
-          .pipe(
-            concatMap((sources: RavenSource[]) => [
-              new sourceExplorerActions.NewSources(action.sourceId, sources),
-            ]),
-          ),
-        of(
-          new sourceExplorerActions.UpdateSourceExplorer({
-            fetchPending: false,
-          }),
-        ),
-      ).pipe(
-        catchError((e: Error) => {
-          console.error('SourceExplorerEffects - fetchNewSources$: ', e);
-          return [
-            new toastActions.ShowToast(
-              'warning',
-              'Failed To Fetch Sources',
-              '',
-            ),
-            new sourceExplorerActions.UpdateSourceExplorer({
-              fetchPending: false,
-            }),
-          ];
-        }),
-      ),
-    ),
-  );
-
-  /**
-   * Effect for GraphCustomSource.
-   */
-  @Effect()
-  graphCustomSource$: Observable<Action> = this.actions$.pipe(
-    ofType<GraphCustomSource>(SourceExplorerActionTypes.GraphCustomSource),
-    concatMap(action =>
-      concat(
-        of(
-          new sourceExplorerActions.AddCustomFilter(
-            action.sourceId,
-            action.label,
-            action.filter,
-          ),
-        ),
-        of(
-          new sourceExplorerActions.AddCustomGraph(
-            action.sourceId,
-            action.label,
-            action.filter,
-          ),
-        ),
-      ),
-    ),
-  );
-
-  @Effect()
-  graphAgainEvent$: Observable<Action> = this.actions$.pipe(
-    ofType<GraphAgainEvent>(SourceExplorerActionTypes.GraphAgainEvent),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    mergeMap(({ state: { config, raven }, action }) =>
-      withLoadingBar([
-        this.open({
-          bandId: raven.timeline.selectedBandId,
-          currentBands: raven.timeline.bands,
-          customFilter: null,
-          defaultBandSettings: config.raven.defaultBandSettings,
-          filtersByTarget: raven.sourceExplorer.filtersByTarget,
-          graphAgain: true,
-          pageDuration: getSituationalAwarenessPageDuration(
-            raven.situationalAwareness,
-          ),
-          pins: raven.sourceExplorer.pins,
-          restoringLayout: false,
-          situAware: raven.situationalAwareness.situationalAware,
-          sourceId: action.sourceId,
-          startTime: getSituationalAwarenessStartTime(
-            raven.situationalAwareness,
-          ),
-          subBandId: raven.timeline.selectedSubBandId,
-          treeBySourceId: raven.sourceExplorer.treeBySourceId,
-        }),
-      ]).pipe(
-        catchError((e: Error) => {
-          console.error('SourceExplorerEffects - graphAgainEvent$: ', e);
-          return [
-            new toastActions.ShowToast(
-              'warning',
-              'Failed To Graph Again Source',
-              '',
-            ),
-            new sourceExplorerActions.UpdateSourceExplorer({
-              fetchPending: false,
-            }),
-          ];
-        }),
-      ),
-    ),
-  );
-
-  /**
-   * Effect for ImportFile.
-   */
-  @Effect()
-  importFile$: Observable<Action> = this.actions$.pipe(
-    ofType<ImportFile>(SourceExplorerActionTypes.ImportFile),
-    concatMap(action => withLoadingBar([this.importFile(action)])),
-  );
-
-  /**
-   * Effect for LoadErrorsDisplay.
-   */
-  @Effect()
-  loadErrorsDisplay$: Observable<Action> = this.actions$.pipe(
-    ofType<LoadErrorsDisplay>(SourceExplorerActionTypes.LoadErrorsDisplay),
-    withLatestFrom(this.store$),
-    map(([, state]) => state.raven.sourceExplorer.loadErrors),
-    switchMap(loadErrors => {
-      if (loadErrors.length) {
-        const errors = loadErrors.map(error => `${error}\n\n`);
-
-        return [
-          new dialogActions.OpenConfirmDialog(
-            'OK',
-            `Data sets empty or do not exist.\nTimeline will not be drawn for:\n\n ${errors}`,
-            '350px',
-          ),
-          new sourceExplorerActions.UpdateSourceExplorer({ loadErrors: [] }),
-        ];
-      }
-      return [];
-    }),
-  );
-
-  /**
-   * Effect for OpenEvent.
-   */
-  @Effect()
-  openEvent$: Observable<Action> = this.actions$.pipe(
-    ofType<OpenEvent>(SourceExplorerActionTypes.OpenEvent),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    mergeMap(({ state: { config, raven }, action }) =>
-      concat(
-        this.open({
-          bandId: raven.timeline.selectedBandId,
-          currentBands: raven.timeline.bands,
-          customFilter: null,
-          defaultBandSettings: config.raven.defaultBandSettings,
-          filtersByTarget: raven.sourceExplorer.filtersByTarget,
-          graphAgain: false,
-          pageDuration: getSituationalAwarenessPageDuration(
-            raven.situationalAwareness,
-          ),
-          pins: raven.sourceExplorer.pins,
-          restoringLayout: false,
-          situAware: raven.situationalAwareness.situationalAware,
-          sourceId: action.sourceId,
-          startTime: getSituationalAwarenessStartTime(
-            raven.situationalAwareness,
-          ),
-          subBandId: raven.timeline.selectedSubBandId,
-          treeBySourceId: raven.sourceExplorer.treeBySourceId,
-        }),
-        of(
-          new sourceExplorerActions.UpdateSourceExplorer({
-            fetchPending: false,
-          }),
-        ),
-        of(
-          new sourceExplorerActions.UpdateTreeSource(action.sourceId, {
-            opened: true,
-          }),
-        ),
-      ).pipe(
-        catchError((e: Error) => {
-          console.error('SourceExplorerEffects - openEvent$: ', e);
-          return [
-            new toastActions.ShowToast('warning', 'Failed To Open Source', ''),
-            new sourceExplorerActions.UpdateSourceExplorer({
-              fetchPending: false,
-            }),
-            new sourceExplorerActions.UpdateTreeSource(action.sourceId, {
-              opened: false,
-            }),
-          ];
-        }),
-      ),
-    ),
-  );
-
-  /**
-   * Effect for RemoveGraphableFilter.
-   */
-  @Effect()
-  removeGraphableFilter$: Observable<Action> = this.actions$.pipe(
-    ofType<sourceExplorerActions.RemoveGraphableFilter>(
-      SourceExplorerActionTypes.RemoveGraphableFilter,
-    ),
-    concatMap(action =>
-      concat(
-        of(
-          new sourceExplorerActions.RemoveFilter(
-            action.source as RavenFilterSource,
-          ),
-        ),
-        of(
-          new sourceExplorerActions.SubBandIdRemove(
-            [action.source.id],
-            action.source.subBandIds[0],
-          ),
-        ),
-        of(
-          new sourceExplorerActions.UpdateGraphAfterFilterRemove(
-            action.source.id,
-          ),
-        ),
-      ),
-    ),
-  );
-
-  /**
-   * Effect for RemoveSourceEvent.
-   */
-  @Effect()
-  removeSourceEvent$: Observable<Action> = this.actions$.pipe(
-    ofType<RemoveSourceEvent>(SourceExplorerActionTypes.RemoveSourceEvent),
-    concatMap(action =>
-      concat(
-        this.mpsServerService
-          .removeSource(action.source.url, action.source.id)
-          .pipe(
-            map(() => new sourceExplorerActions.RemoveSource(action.source.id)),
-          ),
-        of(
-          new sourceExplorerActions.UpdateSourceExplorer({
-            fetchPending: false,
-          }),
-        ),
-      ),
-    ),
-  );
-
-  /**
-   * Effect for SaveState.
-   */
-  @Effect()
-  saveState$: Observable<Action> = this.actions$.pipe(
-    ofType<SaveState>(SourceExplorerActionTypes.SaveState),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(({ state, action }) =>
-      this.mpsServerService
-        .saveState(action.source.url, action.name, getState(action.name, state))
-        .pipe(
-          concatMap(() =>
-            of(
-              new timelineActions.UpdateTimeline({
-                currentState: getRavenState(action.name, state),
-                currentStateChanged: false,
-                currentStateId: `${action.source.id}/${action.name}`,
-              }),
-              new sourceExplorerActions.UpdateSourceExplorer({
-                fetchPending: false,
-              }),
-            ),
-          ),
-        ),
-    ),
-  );
-
-  /**
-   * Effect for SaveState.
-   */
-  @Effect()
-  updateGraphAfterFilterAdd$: Observable<Action> = this.actions$.pipe(
-    ofType<UpdateGraphAfterFilterAdd>(
-      SourceExplorerActionTypes.UpdateGraphAfterFilterAdd,
-    ),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(
-      ({
-        state: {
-          config,
-          raven: { sourceExplorer, situationalAwareness },
-        },
-        action,
-      }) =>
+      map(([state, initialSources]) => ({
+        initialSources,
+        state,
+      })),
+      concatMap(({ state, initialSources }) =>
         concat(
-          this.fetchGraphableFilters(
-            sourceExplorer.treeBySourceId,
-            action.sourceId,
-            config.raven.defaultBandSettings,
-            null,
-            sourceExplorer.filtersByTarget,
-            situationalAwareness.situationalAware,
-            getSituationalAwarenessStartTime(situationalAwareness),
-            getSituationalAwarenessPageDuration(situationalAwareness),
-          ).pipe(
-            withLatestFrom(this.store$),
-            map(([newSubBands, state]) => ({ newSubBands, state })),
-            concatMap(({ newSubBands, state: { raven: { timeline } } }) => {
-              const actions: Action[] = [];
-              const filterTarget = (sourceExplorer.treeBySourceId[
-                action.sourceId
-              ] as RavenFilterSource).filterTarget;
+          ...this.loadState(
+            state,
+            initialSources,
+            state.raven.timeline.currentState,
+            state.raven.timeline.currentStateId,
+          ),
+        ),
+      ),
+    ),
+  );
 
-              newSubBands.forEach((subBand: RavenSubBand) => {
-                const activityBand = hasActivityBandForFilterTarget(
-                  timeline.bands,
-                  filterTarget,
-                );
-                if (activityBand) {
-                  actions.push(
-                    // Add filterSource id to existing band.
-                    new timelineActions.SourceIdAdd(
-                      action.sourceId,
-                      activityBand.subBandId,
+  /**
+   * @note Right now we are only applying layouts to the `fs_file` type.
+   */
+  applyLayout = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.applyLayout),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      concatMap(({ action, state }) =>
+        forkJoin([
+          of(action),
+          of(state),
+          this.mpsServerService.fetchNewSources(
+            `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
+            '/',
+            true,
+            null,
+          ),
+        ]),
+      ),
+      map(([action, state, initialSources]) => ({
+        action,
+        initialSources,
+        state,
+      })),
+      concatMap(({ action, state, initialSources }) => {
+        const savedState = state.raven.timeline.currentState as RavenState;
+
+        return forkJoin([
+          of(action),
+          of(state),
+          of(savedState),
+          of(initialSources),
+          this.fetchSourcesByType(
+            state,
+            getSourceIds(savedState.bands).parentSourceIds,
+          ),
+        ]);
+      }),
+      map(([action, state, savedState, initialSources, sourceTypes]) => ({
+        action,
+        initialSources,
+        savedState,
+        sourceTypes,
+        state,
+      })),
+      concatMap(
+        ({ action, state, savedState, initialSources, sourceTypes }) => {
+          let updatedBands: RavenCompositeBand[] = [];
+          if (Object.keys(action.update.pins).length > 0) {
+            // Apply layout with pins.
+            updatedBands = savedState.bands.map((band: RavenCompositeBand) => {
+              const parentId = uniqueId();
+
+              return {
+                ...band,
+                id: parentId,
+                subBands: band.subBands.map((subBand: RavenSubBand) => {
+                  const labelPin = subBand.labelPin;
+                  const pin = action.update.pins[labelPin];
+                  const targetSource =
+                    state.raven.sourceExplorer.treeBySourceId[pin.sourceId];
+
+                  return {
+                    ...subBand,
+                    id: uniqueId(),
+                    parentUniqueId: parentId,
+                    sourceIds: subBand.sourceIds.map((sourceId: string) =>
+                      updateSourceId(
+                        sourceId,
+                        targetSource.id,
+                        sourceTypes,
+                        targetSource.type,
+                      ),
                     ),
-                    // Replace points in band.
-                    new timelineActions.SetPointsForSubBand(
-                      activityBand.bandId,
-                      activityBand.subBandId,
-                      subBand.points,
+                  };
+                }),
+              };
+            });
+          } else {
+            action.update.targetSourceIds.forEach((targetSourceId: string) => {
+              targetSourceId = targetSourceId.trim();
+              const bands = savedState.bands.map((band: RavenCompositeBand) => {
+                const parentId = uniqueId();
+                const targetSource =
+                  state.raven.sourceExplorer.treeBySourceId[targetSourceId];
+
+                return {
+                  ...band,
+                  id: parentId,
+                  subBands: band.subBands.map((subBand: RavenSubBand) => ({
+                    ...subBand,
+                    id: uniqueId(),
+                    parentUniqueId: parentId,
+                    sourceIds: subBand.sourceIds.map((sourceId: string) =>
+                      updateSourceId(
+                        sourceId,
+                        targetSourceId,
+                        sourceTypes,
+                        targetSource.type,
+                      ),
                     ),
-                  );
-                } else {
-                  actions.push(
-                    new sourceExplorerActions.SubBandIdAdd(
-                      action.sourceId,
-                      subBand.id,
-                    ),
-                    new timelineActions.AddBand(
-                      action.sourceId,
-                      toCompositeBand(subBand),
-                      {
-                        additionalSubBandProps: {
-                          filterTarget: (sourceExplorer.treeBySourceId[
-                            action.sourceId
-                          ] as RavenFilterSource).filterTarget,
-                        },
-                      },
-                    ),
-                  );
-                }
+                  })),
+                };
               });
 
-              return actions;
+              updatedBands.push(...bands);
+            });
+          }
+          return concat(
+            ...this.loadLayout(
+              updatedBands,
+              initialSources,
+              savedState,
+              state.raven.timeline.currentStateId,
+              Object.values(action.update.pins),
+            ),
+          );
+        },
+      ),
+    ),
+  );
+
+  applyLayoutToSources = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.applyLayoutToSources),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      concatMap(({ action, state }) =>
+        forkJoin([
+          of(action),
+          this.mpsServerService.fetchState(action.layoutSourceUrl),
+          this.mpsServerService.fetchNewSources(
+            `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
+            '/',
+            true,
+            null,
+          ),
+        ]),
+      ),
+      map(([action, savedState, initialSources]) => ({
+        action,
+        initialSources,
+        savedState,
+      })),
+      concatMap(({ action, initialSources, savedState }) =>
+        concat(
+          of(
+            SourceExplorerActions.newSources({
+              sourceId: '/',
+              sources: initialSources,
             }),
           ),
           of(
-            new sourceExplorerActions.UpdateSourceExplorer({
-              fetchPending: false,
+            TimelineActions.updateTimeline({
+              update: { currentState: savedState },
+            }),
+          ),
+          ...this.expandSourcePaths(action.sourcePaths),
+          of(
+            SourceExplorerActions.applyLayout({
+              update: {
+                pins: savedState.pins.reduce((allPins, pin) => {
+                  allPins[pin.name] = pin.sourceId;
+                  return allPins;
+                }, {}),
+                targetSourceIds: action.sourcePaths,
+              },
             }),
           ),
         ),
+      ),
     ),
   );
 
-  /**
-   * Effect for UpdateGraphAfterFilterRemove.
-   */
-  @Effect()
-  updateGraphAfterFilterRemove$: Observable<Action> = this.actions$.pipe(
-    ofType<UpdateGraphAfterFilterRemove>(
-      SourceExplorerActionTypes.UpdateGraphAfterFilterRemove,
-    ),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(
-      ({
-        state: {
-          config,
-          raven: {
-            sourceExplorer,
-            timeline: { bands },
-            situationalAwareness,
-          },
-        },
-        action,
-      }) =>
-        concat(
-          this.fetchGraphableFilters(
-            sourceExplorer.treeBySourceId,
-            action.sourceId,
-            config.raven.defaultBandSettings,
+  applyState = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.applyState),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      concatMap(({ action, state }) =>
+        forkJoin([
+          of(action),
+          of(state),
+          this.mpsServerService.fetchState(action.sourceUrl),
+          this.mpsServerService.fetchNewSources(
+            `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
+            '/',
+            true,
             null,
-            sourceExplorer.filtersByTarget,
-            situationalAwareness.situationalAware,
-            getSituationalAwarenessStartTime(situationalAwareness),
-            getSituationalAwarenessPageDuration(situationalAwareness),
-          ).pipe(
-            concatMap((newSubBands: RavenSubBand[]) => {
-              const actions: Action[] = [];
-              const target = (sourceExplorer.treeBySourceId[
-                action.sourceId
-              ] as RavenFilterSource).filterTarget;
+          ),
+        ]),
+      ),
+      map(([action, state, savedState, initialSources]) => ({
+        action,
+        initialSources,
+        savedState,
+        state,
+      })),
+      concatMap(({ action, initialSources, savedState, state }) =>
+        concat(
+          ...this.loadState(state, initialSources, savedState, action.sourceId),
+        ),
+      ),
+    ),
+  );
 
-              if (newSubBands.length) {
+  applyStateOrLayoutSuccess = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.applyStateOrLayoutSuccess),
+      withLatestFrom(this.store),
+      map(([, state]) => state),
+      concatMap(state =>
+        concat(
+          of(
+            TimelineActions.updateTimeline({
+              update: { currentStateChanged: false },
+            }),
+          ),
+          this.restoreExpansion(
+            state.raven.timeline.bands,
+            state.raven.timeline.expansionByActivityId,
+          ),
+        ),
+      ),
+    ),
+  );
+
+  closeEvent = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.closeEvent),
+      switchMap(({ sourceId }) => [
+        TimelineActions.removeBandsOrPointsForSource({ sourceId }),
+        SourceExplorerActions.updateTreeSource({
+          sourceId,
+          update: { opened: false },
+        }),
+        LayoutActions.resize(), // Resize bands when we `close` to make sure they are all resized properly.
+      ]),
+    ),
+  );
+
+  createFolder = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.folderAdd),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      concatMap(({ action, state }) => {
+        const headers = new HttpHeaders().set(
+          'Content-Type',
+          `application/json`,
+        );
+        const responseType = 'text';
+        const url = `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${action.folder.url}/${action.folder.name}`;
+
+        const request = this.http.put(url, '', { headers, responseType }).pipe(
+          concatMap(() => {
+            return of(SourceExplorerActions.folderAddSuccess());
+          }),
+          catchError((e: Error) => {
+            console.error('SourceExplorerEffects - createFolder: ', e);
+            return [
+              ToastActions.showToast({
+                message: 'Failed To Create Folder',
+                title: '',
+                toastType: 'warning',
+              }),
+              SourceExplorerActions.folderAddFailure(),
+            ];
+          }),
+        );
+
+        return concat(
+          withLoadingBar([request]),
+          of(
+            SourceExplorerActions.expandEvent({ sourceId: action.folder.url }),
+          ),
+        );
+      }),
+    ),
+  );
+
+  expandEvent = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.expandEvent),
+      withLatestFrom(this.store),
+      map(
+        ([action, state]) =>
+          state.raven.sourceExplorer.treeBySourceId[action.sourceId],
+      ),
+      switchMap(source =>
+        concat(
+          ...this.expand(source),
+          of(
+            SourceExplorerActions.updateSourceExplorer({
+              update: { fetchPending: false },
+            }),
+          ),
+          of(
+            SourceExplorerActions.updateTreeSource({
+              sourceId: source.id,
+              update: { expanded: true },
+            }),
+          ),
+        ).pipe(
+          catchError((e: Error) => {
+            console.error('SourceExplorerEffects - expandEvent: ', e.message);
+            return [
+              ToastActions.showToast({
+                message: `Failed To Expand Source "${source.name}"`,
+                title: '',
+                toastType: 'warning',
+              }),
+
+              SourceExplorerActions.updateSourceExplorer({
+                update: { fetchPending: false },
+              }),
+              SourceExplorerActions.updateTreeSource({
+                sourceId: source.id,
+                update: { expanded: false },
+              }),
+            ];
+          }),
+        ),
+      ),
+    ),
+  );
+
+  fetchInitialSources = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.fetchInitialSources),
+      withLatestFrom(this.store),
+      map(([, state]) => state),
+      concatMap((state: RavenAppState) =>
+        concat(
+          this.mpsServerService
+            .fetchNewSources(
+              `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`,
+              '/',
+              true,
+              null,
+            )
+            .pipe(
+              map((sources: RavenSource[]) =>
+                SourceExplorerActions.newSources({ sourceId: '/', sources }),
+              ),
+            ),
+          of(
+            SourceExplorerActions.updateSourceExplorer({
+              update: {
+                fetchPending: false,
+                initialSourcesLoaded: true,
+              },
+            }),
+          ),
+        ).pipe(
+          catchError((e: Error) => {
+            console.error(
+              'SourceExplorerEffects - fetchInitialSources: ',
+              e.message,
+            );
+            return [
+              ToastActions.showToast({
+                message: 'Failed To Fetch Initial Sources',
+                title: '',
+                toastType: 'warning',
+              }),
+              SourceExplorerActions.updateSourceExplorer({
+                update: {
+                  fetchPending: false,
+                  initialSourcesLoaded: false,
+                },
+              }),
+            ];
+          }),
+        ),
+      ),
+    ),
+  );
+
+  fetchNewSources = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.fetchNewSources),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      concatMap(({ action, state }) =>
+        concat(
+          this.mpsServerService
+            .fetchNewSources(
+              action.sourceUrl,
+              action.sourceId,
+              false,
+              state.raven.sourceExplorer.treeBySourceId,
+            )
+            .pipe(
+              concatMap((sources: RavenSource[]) => [
+                SourceExplorerActions.newSources({
+                  sourceId: action.sourceId,
+                  sources,
+                }),
+              ]),
+            ),
+          of(
+            SourceExplorerActions.updateSourceExplorer({
+              update: { fetchPending: false },
+            }),
+          ),
+        ).pipe(
+          catchError((e: Error) => {
+            console.error(
+              'SourceExplorerEffects - fetchNewSources: ',
+              e.message,
+            );
+            return [
+              ToastActions.showToast({
+                message: 'Failed To Fetch Sources',
+                title: '',
+                toastType: 'warning',
+              }),
+              SourceExplorerActions.updateSourceExplorer({
+                update: { fetchPending: false },
+              }),
+            ];
+          }),
+        ),
+      ),
+    ),
+  );
+
+  graphCustomSource = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.graphCustomSource),
+      concatMap(action =>
+        concat(
+          of(
+            SourceExplorerActions.addCustomFilter({
+              customFilter: action.filter,
+              label: action.label,
+              sourceId: action.sourceId,
+            }),
+          ),
+          of(
+            SourceExplorerActions.addCustomGraph({
+              customFilter: action.filter,
+              label: action.label,
+              sourceId: action.sourceId,
+            }),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  graphAgainEvent = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.graphAgainEvent),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      mergeMap(({ state: { config, raven }, action }) =>
+        withLoadingBar([
+          this.open({
+            bandId: raven.timeline.selectedBandId,
+            currentBands: raven.timeline.bands,
+            customFilter: null,
+            defaultBandSettings: config.raven.defaultBandSettings,
+            filtersByTarget: raven.sourceExplorer.filtersByTarget,
+            graphAgain: true,
+            pageDuration: getSituationalAwarenessPageDuration(
+              raven.situationalAwareness,
+            ),
+            pins: raven.sourceExplorer.pins,
+            restoringLayout: false,
+            situAware: raven.situationalAwareness.situationalAware,
+            sourceId: action.sourceId,
+            startTime: getSituationalAwarenessStartTime(
+              raven.situationalAwareness,
+            ),
+            subBandId: raven.timeline.selectedSubBandId,
+            treeBySourceId: raven.sourceExplorer.treeBySourceId,
+          }),
+        ]).pipe(
+          catchError((e: Error) => {
+            console.error(
+              'SourceExplorerEffects - graphAgainEvent: ',
+              e.message,
+            );
+            return [
+              ToastActions.showToast({
+                message: 'Failed To Graph Again Source',
+                title: '',
+                toastType: 'warning',
+              }),
+              SourceExplorerActions.updateSourceExplorer({
+                update: { fetchPending: false },
+              }),
+            ];
+          }),
+        ),
+      ),
+    ),
+  );
+
+  importFile = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.importFile),
+      concatMap(action => {
+        const headers = new HttpHeaders().set(
+          'Content-Type',
+          `${action.file.type === 'pef' ? 'application/json' : 'text/csv'}`,
+        );
+        const url = `${action.source.url}/${action.file.name}?timeline_type=${action.file.type}&time_format=${action.file.timeFormat}`;
+
+        const importFileRequest = this.http
+          .put(url, action.file.data, {
+            headers: headers,
+            responseType: 'text',
+          })
+          .pipe(
+            concatMap(() => {
+              if (action.file.mapping) {
+                return this.mpsServerService
+                  .importMappingFile(
+                    action.source.url,
+                    action.file.name,
+                    action.file.mapping,
+                  )
+                  .pipe(map(() => SourceExplorerActions.importFileSuccess()));
+              } else {
+                return of(SourceExplorerActions.importFileSuccess());
+              }
+            }),
+            catchError((e: Error) => {
+              console.error('SourceExplorerEffects - importFile: ', e.message);
+              return [
+                ToastActions.showToast({
+                  message: 'Failed To Import File',
+                  title: '',
+                  toastType: 'warning',
+                }),
+                SourceExplorerActions.importFileFailure(),
+              ];
+            }),
+          );
+
+        return withLoadingBar([importFileRequest]);
+      }),
+    ),
+  );
+
+  loadErrorsDisplay = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.loadErrorsDisplay),
+      withLatestFrom(this.store),
+      map(([, state]) => state.raven.sourceExplorer.loadErrors),
+      switchMap(loadErrors => {
+        if (loadErrors.length) {
+          const errors = loadErrors.map(error => `${error}\n\n`);
+
+          return [
+            DialogActions.openConfirmDialog({
+              cancelText: 'OK',
+              message: `Data sets empty or do not exist.\nTimeline will not be drawn for:\n\n ${errors}`,
+              width: '350px ',
+            }),
+            SourceExplorerActions.updateSourceExplorer({
+              update: { loadErrors: [] },
+            }),
+          ];
+        }
+        return [];
+      }),
+    ),
+  );
+
+  openEvent = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.openEvent),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      mergeMap(({ state: { config, raven }, action }) =>
+        concat(
+          this.open({
+            bandId: raven.timeline.selectedBandId,
+            currentBands: raven.timeline.bands,
+            customFilter: null,
+            defaultBandSettings: config.raven.defaultBandSettings,
+            filtersByTarget: raven.sourceExplorer.filtersByTarget,
+            graphAgain: false,
+            pageDuration: getSituationalAwarenessPageDuration(
+              raven.situationalAwareness,
+            ),
+            pins: raven.sourceExplorer.pins,
+            restoringLayout: false,
+            situAware: raven.situationalAwareness.situationalAware,
+            sourceId: action.sourceId,
+            startTime: getSituationalAwarenessStartTime(
+              raven.situationalAwareness,
+            ),
+            subBandId: raven.timeline.selectedSubBandId,
+            treeBySourceId: raven.sourceExplorer.treeBySourceId,
+          }),
+          of(
+            SourceExplorerActions.updateSourceExplorer({
+              update: { fetchPending: false },
+            }),
+          ),
+          of(
+            SourceExplorerActions.updateTreeSource({
+              sourceId: action.sourceId,
+              update: { opened: true },
+            }),
+          ),
+        ).pipe(
+          catchError((e: Error) => {
+            console.error('SourceExplorerEffects - openEvent: ', e.message);
+            return [
+              ToastActions.showToast({
+                message: 'Failed To Open Source',
+                title: '',
+                toastType: 'warning',
+              }),
+              SourceExplorerActions.updateSourceExplorer({
+                update: { fetchPending: false },
+              }),
+              SourceExplorerActions.updateTreeSource({
+                sourceId: action.sourceId,
+                update: { opened: false },
+              }),
+            ];
+          }),
+        ),
+      ),
+    ),
+  );
+
+  removeGraphableFilter = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.removeGraphableFilter),
+      concatMap(action =>
+        concat(
+          of(
+            SourceExplorerActions.removeFilter({
+              source: action.source as RavenFilterSource,
+            }),
+          ),
+          of(
+            SourceExplorerActions.subBandIdRemove({
+              sourceIds: [action.source.id],
+              subBandId: action.source.subBandIds[0],
+            }),
+          ),
+          of(
+            SourceExplorerActions.updateGraphAfterFilterRemove({
+              sourceId: action.source.id,
+            }),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  removeSourceEvent = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.removeSourceEvent),
+      concatMap(action =>
+        concat(
+          this.mpsServerService
+            .removeSource(action.source.url, action.source.id)
+            .pipe(
+              map(() =>
+                SourceExplorerActions.removeSource({
+                  sourceId: action.source.id,
+                }),
+              ),
+            ),
+          of(
+            SourceExplorerActions.updateSourceExplorer({
+              update: { fetchPending: false },
+            }),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  saveState = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.saveState),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      concatMap(({ state, action }) =>
+        this.mpsServerService
+          .saveState(
+            action.source.url,
+            action.name,
+            getState(action.name, state),
+          )
+          .pipe(
+            concatMap(() =>
+              of(
+                TimelineActions.updateTimeline({
+                  update: {
+                    currentState: getRavenState(action.name, state),
+                    currentStateChanged: false,
+                    currentStateId: `${action.source.id}/${action.name}`,
+                  },
+                }),
+                SourceExplorerActions.updateSourceExplorer({
+                  update: { fetchPending: false },
+                }),
+              ),
+            ),
+          ),
+      ),
+    ),
+  );
+
+  updateGraphAfterFilterAdd = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.updateGraphAfterFilterAdd),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      concatMap(
+        ({
+          state: {
+            config,
+            raven: { sourceExplorer, situationalAwareness },
+          },
+          action,
+        }) =>
+          concat(
+            this.fetchGraphableFilters(
+              sourceExplorer.treeBySourceId,
+              action.sourceId,
+              config.raven.defaultBandSettings,
+              null,
+              sourceExplorer.filtersByTarget,
+              situationalAwareness.situationalAware,
+              getSituationalAwarenessStartTime(situationalAwareness),
+              getSituationalAwarenessPageDuration(situationalAwareness),
+            ).pipe(
+              withLatestFrom(this.store),
+              map(([newSubBands, state]) => ({ newSubBands, state })),
+              concatMap(({ newSubBands, state: { raven: { timeline } } }) => {
+                const actions: Action[] = [];
+                const filterTarget = (sourceExplorer.treeBySourceId[
+                  action.sourceId
+                ] as RavenFilterSource).filterTarget;
+
                 newSubBands.forEach((subBand: RavenSubBand) => {
+                  const activityBand = hasActivityBandForFilterTarget(
+                    timeline.bands,
+                    filterTarget,
+                  );
+                  if (activityBand) {
+                    actions.push(
+                      // Add filterSource id to existing band.
+                      TimelineActions.sourceIdAdd({
+                        sourceId: action.sourceId,
+                        subBandId: activityBand.subBandId,
+                      }),
+                      // Replace points in band.
+                      TimelineActions.setPointsForSubBand({
+                        bandId: activityBand.bandId,
+                        points: subBand.points,
+                        subBandId: activityBand.subBandId,
+                      }),
+                    );
+                  } else {
+                    actions.push(
+                      SourceExplorerActions.subBandIdAdd({
+                        sourceId: action.sourceId,
+                        subBandId: subBand.id,
+                      }),
+                      TimelineActions.addBand({
+                        band: toCompositeBand(subBand),
+                        modifiers: {
+                          additionalSubBandProps: {
+                            filterTarget: (sourceExplorer.treeBySourceId[
+                              action.sourceId
+                            ] as RavenFilterSource).filterTarget,
+                          },
+                        },
+                        sourceId: action.sourceId,
+                      }),
+                    );
+                  }
+                });
+
+                return actions;
+              }),
+            ),
+            of(
+              SourceExplorerActions.updateSourceExplorer({
+                update: { fetchPending: false },
+              }),
+            ),
+          ),
+      ),
+    ),
+  );
+
+  updateGraphAfterFilterRemove = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.updateGraphAfterFilterRemove),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      concatMap(
+        ({
+          state: {
+            config,
+            raven: {
+              sourceExplorer,
+              timeline: { bands },
+              situationalAwareness,
+            },
+          },
+          action,
+        }) =>
+          concat(
+            this.fetchGraphableFilters(
+              sourceExplorer.treeBySourceId,
+              action.sourceId,
+              config.raven.defaultBandSettings,
+              null,
+              sourceExplorer.filtersByTarget,
+              situationalAwareness.situationalAware,
+              getSituationalAwarenessStartTime(situationalAwareness),
+              getSituationalAwarenessPageDuration(situationalAwareness),
+            ).pipe(
+              concatMap((newSubBands: RavenSubBand[]) => {
+                const actions: Action[] = [];
+                const target = (sourceExplorer.treeBySourceId[
+                  action.sourceId
+                ] as RavenFilterSource).filterTarget;
+
+                if (newSubBands.length) {
+                  newSubBands.forEach((subBand: RavenSubBand) => {
+                    const activityBand = hasActivityBandForFilterTarget(
+                      bands,
+                      target,
+                    );
+
+                    if (activityBand) {
+                      actions.push(
+                        // Remove sourceId from band.
+                        TimelineActions.removeSourceIdFromSubBands({
+                          sourceId: action.sourceId,
+                        }),
+                        // Replace band points.
+                        TimelineActions.setPointsForSubBand({
+                          bandId: activityBand.bandId,
+                          points: subBand.points,
+                          subBandId: activityBand.subBandId,
+                        }),
+                      );
+                    }
+                  });
+                } else {
+                  // When the last graphable filter source is unselected.
                   const activityBand = hasActivityBandForFilterTarget(
                     bands,
                     target,
@@ -997,144 +1061,117 @@ export class SourceExplorerEffects {
                   if (activityBand) {
                     actions.push(
                       // Remove sourceId from band.
-                      new timelineActions.RemoveSourceIdFromSubBands(
-                        action.sourceId,
-                      ),
-                      // Replace band points.
-                      new timelineActions.SetPointsForSubBand(
-                        activityBand.bandId,
-                        activityBand.subBandId,
-                        subBand.points,
-                      ),
+                      TimelineActions.removeSourceIdFromSubBands({
+                        sourceId: action.sourceId,
+                      }),
+                      // Set empty data points.
+                      TimelineActions.setPointsForSubBand({
+                        bandId: activityBand.bandId,
+                        points: [],
+                        subBandId: activityBand.subBandId,
+                      }),
                     );
                   }
-                });
-              } else {
-                // When the last graphable filter source is unselected.
-                const activityBand = hasActivityBandForFilterTarget(
-                  bands,
-                  target,
-                );
-
-                if (activityBand) {
-                  actions.push(
-                    // Remove sourceId from band.
-                    new timelineActions.RemoveSourceIdFromSubBands(
-                      action.sourceId,
-                    ),
-                    // Set empty data points.
-                    new timelineActions.SetPointsForSubBand(
-                      activityBand.bandId,
-                      activityBand.subBandId,
-                      [],
-                    ),
-                  );
                 }
-              }
 
-              return actions;
-            }),
-          ),
-          of(
-            new sourceExplorerActions.UpdateSourceExplorer({
-              fetchPending: false,
-            }),
-          ),
-        ),
-    ),
-  );
-
-  @Effect()
-  updateCurrentState$: Observable<Action> = this.actions$.pipe(
-    ofType<UpdateCurrentState>(SourceExplorerActionTypes.UpdateCurrentState),
-    withLatestFrom(this.store$),
-    map(([, state]) => ({ state })),
-    concatMap(({ state }) =>
-      this.mpsServerService
-        .updateState(
-          `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${state.raven.timeline.currentStateId}`,
-          getState(
-            getSourceNameFromId(state.raven.timeline.currentStateId),
-            state,
-          ),
-        )
-        .pipe(
-          concatMap(() =>
-            of(
-              new timelineActions.UpdateTimeline({
-                currentState: getRavenState(
-                  getSourceNameFromId(state.raven.timeline.currentStateId),
-                  state,
-                ),
+                return actions;
               }),
-              new sourceExplorerActions.UpdateSourceExplorer({
-                fetchPending: false,
+            ),
+            of(
+              SourceExplorerActions.updateSourceExplorer({
+                update: { fetchPending: false },
               }),
             ),
           ),
-        ),
+      ),
     ),
   );
 
-  @Effect()
-  updateSourceFilter$: Observable<Action> = this.actions$.pipe(
-    ofType<UpdateSourceFilter>(SourceExplorerActionTypes.UpdateSourceFilter),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    map(({ action, state }) => {
-      if (SourceFilter.isEmpty(action.sourceFilter)) {
-        // Remove all filtering.
-        return of(FilterState.empty());
-      } else {
-        // Apply a new filter.
-        const url = `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`;
-
-        return this.mpsServerService
-          .getSourcesMatchingFilter(url, action.sourceFilter)
+  updateCurrentState = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.updateCurrentState),
+      withLatestFrom(this.store),
+      map(([, state]) => ({ state })),
+      concatMap(({ state }) =>
+        this.mpsServerService
+          .updateState(
+            `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${state.raven.timeline.currentStateId}`,
+            getState(
+              getSourceNameFromId(state.raven.timeline.currentStateId),
+              state,
+            ),
+          )
           .pipe(
-            map(mpsServerSources => mpsServerSources.map(getMpsPathForSource)),
-            map(sourceIds =>
-              FilterState.fromMatches(action.sourceFilter, sourceIds),
+            concatMap(() =>
+              of(
+                TimelineActions.updateTimeline({
+                  update: {
+                    currentState: getRavenState(
+                      getSourceNameFromId(state.raven.timeline.currentStateId),
+                      state,
+                    ),
+                  },
+                }),
+                SourceExplorerActions.updateSourceExplorer({
+                  update: { fetchPending: false },
+                }),
+              ),
             ),
-          );
-      }
-    }),
-    mergeMap((filterState$: Observable<FilterState>) =>
-      concat(
-        of(new UpdateSourceExplorer({ fetchPending: true })),
-        filterState$.pipe(
-          concatMap((filterState: FilterState) =>
-            of(
-              new UpdateSourceExplorer({ filterState }),
-              new UpdateSourceExplorer({ fetchPending: false }),
+          ),
+      ),
+    ),
+  );
+
+  updateSourceFilter = createEffect(() =>
+    this.actions.pipe(
+      ofType(SourceExplorerActions.updateSourceFilter),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      map(({ action, state }) => {
+        if (SourceFilter.isEmpty(action.sourceFilter)) {
+          // Remove all filtering.
+          return of(FilterState.empty());
+        } else {
+          // Apply a new filter.
+          const url = `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}`;
+
+          return this.mpsServerService
+            .getSourcesMatchingFilter(url, action.sourceFilter)
+            .pipe(
+              map(mpsServerSources =>
+                mpsServerSources.map(getMpsPathForSource),
+              ),
+              map(sourceIds =>
+                FilterState.fromMatches(action.sourceFilter, sourceIds),
+              ),
+            );
+        }
+      }),
+      mergeMap((filterState$: Observable<FilterState>) =>
+        concat(
+          of(
+            SourceExplorerActions.updateSourceExplorer({
+              update: {
+                fetchPending: true,
+              },
+            }),
+          ),
+          filterState$.pipe(
+            concatMap((filterState: FilterState) =>
+              of(
+                SourceExplorerActions.updateSourceExplorer({
+                  update: {
+                    fetchPending: false,
+                    filterState,
+                  },
+                }),
+              ),
             ),
           ),
         ),
       ),
     ),
   );
-
-  /**
-   * Helper. api call to mps server to create the folder
-   */
-  createFolder(action: sourceExplorerActions.FolderAdd, state: RavenAppState) {
-    const headers = new HttpHeaders().set('Content-Type', `application/json`);
-    const responseType = 'text';
-    const url = `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${action.folder.url}/${action.folder.name}`;
-
-    return this.http.put(url, '', { headers, responseType }).pipe(
-      concatMap(() => {
-        return of(new sourceExplorerActions.FolderAddSuccess());
-      }),
-      catchError((e: Error) => {
-        console.error('SourceExplorerEffects - createFolder$: ', e);
-        return [
-          new toastActions.ShowToast('warning', 'Failed To Create Folder', ''),
-          new sourceExplorerActions.FolderAddFailure(),
-        ];
-      }),
-    );
-  }
 
   /**
    * Helper. Returns a stream of actions that need to occur when expanding a source explorer source.
@@ -1147,10 +1184,10 @@ export class SourceExplorerEffects {
         if (source.content) {
           actions.push(
             of(
-              new sourceExplorerActions.NewSources(
-                source.id,
-                toRavenSources(source.id, false, source.content, null),
-              ),
+              SourceExplorerActions.newSources({
+                sourceId: source.id,
+                sources: toRavenSources(source.id, false, source.content, null),
+              }),
             ),
           );
         } else {
@@ -1159,7 +1196,10 @@ export class SourceExplorerEffects {
               .fetchNewSources(source.url, source.id, false, null)
               .pipe(
                 concatMap((sources: RavenSource[]) => [
-                  new sourceExplorerActions.NewSources(source.id, sources), // Add new sources to the source-explorer.
+                  SourceExplorerActions.newSources({
+                    sourceId: source.id,
+                    sources,
+                  }),
                 ]),
               ),
           );
@@ -1179,7 +1219,7 @@ export class SourceExplorerEffects {
     return sourcePaths.reduce((actions: Observable<Action>[], sourcePath) => {
       actions.push(
         ...getParentSourceIds(sourcePath).map((sourceId: string) =>
-          combineLatest([this.store$]).pipe(
+          combineLatest([this.store]).pipe(
             take(1),
             map(
               (state: RavenAppState[]) =>
@@ -1190,8 +1230,9 @@ export class SourceExplorerEffects {
                 return concat(
                   ...this.expand(source),
                   of(
-                    new sourceExplorerActions.UpdateTreeSource(source.id, {
-                      expanded: true,
+                    SourceExplorerActions.updateTreeSource({
+                      sourceId: source.id,
+                      update: { expanded: true },
                     }),
                   ),
                 );
@@ -1200,7 +1241,11 @@ export class SourceExplorerEffects {
                   'source-explorer.effect: load: source does not exist: ',
                   sourceId,
                 );
-                return of(new sourceExplorerActions.LoadErrorsAdd([sourceId]));
+                return of(
+                  SourceExplorerActions.loadErrorsAdd({
+                    sourceIds: [sourceId],
+                  }),
+                );
               }
             }),
           ),
@@ -1263,7 +1308,6 @@ export class SourceExplorerEffects {
     sourceId: string,
     defaultBandSettings: RavenDefaultBandSettings,
     customFilter: RavenCustomFilter | null,
-    filtersByTarget: StringTMap<StringTMap<string[]>>,
     situAware: boolean,
     startTime: string,
     pageDuration: string,
@@ -1300,46 +1344,9 @@ export class SourceExplorerEffects {
   }
 
   /**
-   * Helper. Returns a stream of actions that need to occur when importing a file.
-   */
-  importFile(action: sourceExplorerActions.ImportFile) {
-    const headers = new HttpHeaders().set(
-      'Content-Type',
-      `${action.file.type === 'pef' ? 'application/json' : 'text/csv'}`,
-    );
-    const url = `${action.source.url}/${action.file.name}?timeline_type=${action.file.type}&time_format=${action.file.timeFormat}`;
-
-    return this.http
-      .put(url, action.file.data, { headers: headers, responseType: 'text' })
-      .pipe(
-        concatMap(() => {
-          if (action.file.mapping) {
-            return this.mpsServerService
-              .importMappingFile(
-                action.source.url,
-                action.file.name,
-                action.file.mapping,
-              )
-              .pipe(map(() => new sourceExplorerActions.ImportFileSuccess()));
-          } else {
-            return of(new sourceExplorerActions.ImportFileSuccess());
-          }
-        }),
-        catchError((e: Error) => {
-          console.error('SourceExplorerEffects - importFile$: ', e);
-          return [
-            new toastActions.ShowToast('warning', 'Failed To Import File', ''),
-            new sourceExplorerActions.ImportFileFailure(),
-          ];
-        }),
-      );
-  }
-
-  /**
    * Helper. Returns a stream of actions that need to occur when loading a layout.
    */
   loadLayout(
-    state: RavenAppState,
     bands: RavenCompositeBand[],
     initialSources: RavenSource[],
     savedState: RavenState,
@@ -1348,38 +1355,44 @@ export class SourceExplorerEffects {
   ) {
     return [
       of(
-        new sourceExplorerActions.UpdateSourceExplorer({
-          fetchPending: true,
+        SourceExplorerActions.updateSourceExplorer({
+          update: { fetchPending: true },
         }),
       ),
       of(
-        new timelineActions.UpdateTimeline({
-          ...fromTimeline.initialState,
-          bands: bands.map(band => ({
-            ...band,
-            subBands: band.subBands.map((subBand: RavenSubBand) => ({
-              ...subBand,
-              sourceIds: [],
+        TimelineActions.updateTimeline({
+          update: {
+            ...fromTimeline.initialState,
+            bands: bands.map(band => ({
+              ...band,
+              subBands: band.subBands.map((subBand: RavenSubBand) => ({
+                ...subBand,
+                sourceIds: [],
+              })),
             })),
-          })),
-          currentState: savedState,
-          currentStateId: sourceId,
-          expansionByActivityId: savedState.expansionByActivityId,
+            currentState: savedState,
+            currentStateId: sourceId,
+            expansionByActivityId: savedState.expansionByActivityId,
+          },
         }),
       ),
       of(
-        new configActions.UpdateDefaultBandSettings({
-          ...savedState.defaultBandSettings,
+        ConfigActions.updateDefaultBandSettings({
+          update: {
+            ...savedState.defaultBandSettings,
+          },
         }),
       ),
       ...this.load(bands, initialSources, pins, true),
-      of(new timelineActions.RemoveBandsWithNoPoints()),
-      ...pins.map(pin => of(new sourceExplorerActions.PinAdd(pin))),
-      ...pins.map(pin => of(new timelineActions.PinAdd(pin))),
-      of(new timelineActions.ResetViewTimeRange()),
-      of(new sourceExplorerActions.ApplyStateOrLayoutSuccess()),
+      of(TimelineActions.removeBandsWithNoPoints()),
+      ...pins.map(pin => of(SourceExplorerActions.pinAdd({ pin }))),
+      ...pins.map(pin => of(TimelineActions.pinAdd({ pin }))),
+      of(TimelineActions.resetViewTimeRange()),
+      of(SourceExplorerActions.applyStateOrLayoutSuccess()),
       of(
-        new sourceExplorerActions.UpdateSourceExplorer({ fetchPending: false }),
+        SourceExplorerActions.updateSourceExplorer({
+          update: { fetchPending: false },
+        }),
       ),
     ];
   }
@@ -1396,49 +1409,53 @@ export class SourceExplorerEffects {
     if (savedState) {
       return [
         of(
-          new sourceExplorerActions.UpdateSourceExplorer({
-            fetchPending: true,
+          SourceExplorerActions.updateSourceExplorer({
+            update: { fetchPending: true },
           }),
         ),
         ...this.updateInUseEpoch(savedState.inUseEpoch),
         ...this.updatePanels(savedState, state.raven.layout),
         of(
-          new timelineActions.UpdateTimeline({
-            ...fromTimeline.initialState,
-            bands: savedState.bands.map(band => ({
-              ...band,
-              subBands: band.subBands.map((subBand: RavenSubBand) => ({
-                ...subBand,
-                sourceIds: [],
+          TimelineActions.updateTimeline({
+            update: {
+              ...fromTimeline.initialState,
+              bands: savedState.bands.map(band => ({
+                ...band,
+                subBands: band.subBands.map((subBand: RavenSubBand) => ({
+                  ...subBand,
+                  sourceIds: [],
+                })),
               })),
-            })),
-            currentState: savedState,
-            currentStateId: sourceId,
-            expansionByActivityId: savedState.expansionByActivityId,
-            guides: savedState.guides ? savedState.guides : [],
-            maxTimeRange: savedState.maxTimeRange,
-            viewTimeRange: savedState.ignoreShareableLinkTimes
-              ? { end: 0, start: 0 }
-              : {
-                  end: utc(savedState.viewTimeRange.end),
-                  start: utc(savedState.viewTimeRange.start),
-                },
+              currentState: savedState,
+              currentStateId: sourceId,
+              expansionByActivityId: savedState.expansionByActivityId,
+              guides: savedState.guides ? savedState.guides : [],
+              maxTimeRange: savedState.maxTimeRange,
+              viewTimeRange: savedState.ignoreShareableLinkTimes
+                ? { end: 0, start: 0 }
+                : {
+                    end: utc(savedState.viewTimeRange.end),
+                    start: utc(savedState.viewTimeRange.start),
+                  },
+            },
           }),
         ),
         of(
-          new configActions.UpdateDefaultBandSettings({
-            ...savedState.defaultBandSettings,
+          ConfigActions.updateDefaultBandSettings({
+            update: {
+              ...savedState.defaultBandSettings,
+            },
           }),
         ),
         ...this.load(savedState.bands, initialSources, savedState.pins, false),
         ...savedState.pins.map(pin =>
-          of(new sourceExplorerActions.PinAdd(pin)),
+          of(SourceExplorerActions.pinAdd({ pin })),
         ),
-        ...savedState.pins.map(pin => of(new timelineActions.PinAdd(pin))),
-        of(new sourceExplorerActions.ApplyStateOrLayoutSuccess()),
+        ...savedState.pins.map(pin => of(TimelineActions.pinAdd({ pin }))),
+        of(SourceExplorerActions.applyStateOrLayoutSuccess()),
         of(
-          new sourceExplorerActions.UpdateSourceExplorer({
-            fetchPending: false,
+          SourceExplorerActions.updateSourceExplorer({
+            update: { fetchPending: false },
           }),
         ),
       ];
@@ -1460,9 +1477,14 @@ export class SourceExplorerEffects {
     const { parentSourceIds, sourceIds } = getSourceIds(bands);
 
     return [
-      of(new sourceExplorerActions.NewSources('/', initialSources)),
+      of(
+        SourceExplorerActions.newSources({
+          sourceId: '/',
+          sources: initialSources,
+        }),
+      ),
       ...parentSourceIds.map((sourceId: string) =>
-        combineLatest([this.store$]).pipe(
+        combineLatest([this.store]).pipe(
           take(1),
           map(
             (state: RavenAppState[]) =>
@@ -1473,8 +1495,9 @@ export class SourceExplorerEffects {
               return concat(
                 ...this.expand(source),
                 of(
-                  new sourceExplorerActions.UpdateTreeSource(source.id, {
-                    expanded: true,
+                  SourceExplorerActions.updateTreeSource({
+                    sourceId: source.id,
+                    update: { expanded: true },
                   }),
                 ),
               );
@@ -1483,23 +1506,27 @@ export class SourceExplorerEffects {
                 'source-explorer.effect: load: source does not exist: ',
                 sourceId,
               );
-              return of(new sourceExplorerActions.LoadErrorsAdd([sourceId]));
+              return of(
+                SourceExplorerActions.loadErrorsAdd({ sourceIds: [sourceId] }),
+              );
             }
           }),
         ),
       ),
-      combineLatest([this.store$]).pipe(
+      combineLatest([this.store]).pipe(
         take(1),
         map((state: RavenAppState[]) => state[0]),
         concatMap((state: RavenAppState) =>
           // Restore filters after the explorer tree has been restored since we need to know the source type.
           concat(
             of(
-              new sourceExplorerActions.UpdateSourceExplorer({
-                customFiltersBySourceId: getCustomFiltersBySourceId(
-                  bands,
-                  state.raven.sourceExplorer.treeBySourceId,
-                ),
+              SourceExplorerActions.updateSourceExplorer({
+                update: {
+                  customFiltersBySourceId: getCustomFiltersBySourceId(
+                    bands,
+                    state.raven.sourceExplorer.treeBySourceId,
+                  ),
+                },
               }),
             ),
             this.restoreFilters(
@@ -1510,7 +1537,7 @@ export class SourceExplorerEffects {
         ),
       ),
       ...sourceIds.map((sourceId: string) =>
-        combineLatest([this.store$]).pipe(
+        combineLatest([this.store]).pipe(
           take(1),
           map((state: RavenAppState[]) => state[0]),
           concatMap((state: RavenAppState) =>
@@ -1544,16 +1571,17 @@ export class SourceExplorerEffects {
                 restoringLayout,
               ),
               of(
-                new sourceExplorerActions.UpdateTreeSource(sourceId, {
-                  opened: true,
+                SourceExplorerActions.updateTreeSource({
+                  sourceId,
+                  update: { opened: true },
                 }),
               ),
             ),
           ),
         ),
       ),
-      of(new layoutActions.Resize()),
-      of(new sourceExplorerActions.LoadErrorsDisplay()),
+      of(LayoutActions.resize()),
+      of(SourceExplorerActions.loadErrorsDisplay()),
     ];
   }
 
@@ -1582,7 +1610,6 @@ export class SourceExplorerEffects {
       sourceId,
       defaultBandSettings,
       customFilter,
-      filtersByTarget,
       situAware,
       startTime,
       pageDuration,
@@ -1592,9 +1619,9 @@ export class SourceExplorerEffects {
         if (treeBySourceId[sourceId].type === 'graphableFilter') {
           // Clear existing points regardless if fetch returns any data.
           actions.push(
-            new timelineActions.RemoveAllPointsInSubBandWithParentSource(
-              treeBySourceId[sourceId].parentId,
-            ),
+            TimelineActions.removeAllPointsInSubBandWithParentSource({
+              parentSourceId: treeBySourceId[sourceId].parentId,
+            }),
           );
         }
         if (newSubBands.length > 0) {
@@ -1611,16 +1638,16 @@ export class SourceExplorerEffects {
             if (!graphAgain && activityBands.length > 0) {
               activityBands.forEach(activityBand => {
                 actions.push(
-                  new sourceExplorerActions.SubBandIdAdd(
+                  SourceExplorerActions.subBandIdAdd({
                     sourceId,
-                    activityBand.subBandId,
-                  ),
-                  new timelineActions.AddPointsToSubBand(
+                    subBandId: activityBand.subBandId,
+                  }),
+                  TimelineActions.addPointsToSubBand({
+                    bandId: activityBand.bandId,
+                    points: subBand.points,
                     sourceId,
-                    activityBand.bandId,
-                    activityBand.subBandId,
-                    subBand.points,
-                  ),
+                    subBandId: activityBand.subBandId,
+                  }),
                 );
                 const band = subBandById(
                   currentBands,
@@ -1629,12 +1656,13 @@ export class SourceExplorerEffects {
                 ) as RavenActivityBand;
                 if (band && band.activityFilter !== '') {
                   actions.push(
-                    new timelineActions.FilterActivityInSubBand(
-                      activityBand.bandId,
-                      activityBand.subBandId,
-                      band.activityFilter,
-                      defaultBandSettings.activityInitiallyHidden,
-                    ),
+                    TimelineActions.filterActivityInSubBand({
+                      activityInitiallyHidden:
+                        defaultBandSettings.activityInitiallyHidden,
+                      bandId: activityBand.bandId,
+                      filter: band.activityFilter,
+                      subBandId: activityBand.subBandId,
+                    }),
                   );
                 }
               });
@@ -1642,31 +1670,30 @@ export class SourceExplorerEffects {
               existingBands.forEach(existingBand => {
                 if (subBand.type === 'state') {
                   actions.push(
-                    new sourceExplorerActions.SubBandIdAdd(
+                    SourceExplorerActions.subBandIdAdd({
                       sourceId,
-                      existingBand.subBandId,
-                    ),
-                    new timelineActions.SetPointsForSubBand(
-                      existingBand.bandId,
-                      existingBand.subBandId,
-                      subBand.points,
-                    ),
-
+                      subBandId: existingBand.subBandId,
+                    }),
+                    TimelineActions.setPointsForSubBand({
+                      bandId: existingBand.bandId,
+                      points: subBand.points,
+                      subBandId: existingBand.subBandId,
+                    }),
                     // Add source id to existing band.
-                    new timelineActions.SourceIdAdd(
+                    TimelineActions.sourceIdAdd({
                       sourceId,
-                      existingBand.subBandId,
-                    ),
+                      subBandId: existingBand.subBandId,
+                    }),
 
                     // Use new possibleStates since that can change from one adaptation to another.
-                    new timelineActions.UpdateSubBand(
-                      existingBand.bandId,
-                      existingBand.subBandId,
-                      {
+                    TimelineActions.updateSubBand({
+                      bandId: existingBand.bandId,
+                      subBandId: existingBand.subBandId,
+                      update: {
                         possibleStates: (subBand as RavenStateBand)
                           .possibleStates,
                       },
-                    ),
+                    }),
                   );
                 } else if (
                   subBand.type !== 'activity' ||
@@ -1678,16 +1705,16 @@ export class SourceExplorerEffects {
                   )
                 ) {
                   actions.push(
-                    new sourceExplorerActions.SubBandIdAdd(
+                    SourceExplorerActions.subBandIdAdd({
                       sourceId,
-                      existingBand.subBandId,
-                    ),
-                    new timelineActions.AddPointsToSubBand(
+                      subBandId: existingBand.subBandId,
+                    }),
+                    TimelineActions.addPointsToSubBand({
+                      bandId: existingBand.bandId,
+                      points: subBand.points,
                       sourceId,
-                      existingBand.bandId,
-                      existingBand.subBandId,
-                      subBand.points,
-                    ),
+                      subBandId: existingBand.subBandId,
+                    }),
                   );
                 }
               });
@@ -1699,48 +1726,59 @@ export class SourceExplorerEffects {
               const addToSubBandId = getAddToSubBandId(currentBands, bandId);
               if (addToSubBandId) {
                 actions.push(
-                  new sourceExplorerActions.SubBandIdAdd(
+                  SourceExplorerActions.subBandIdAdd({
                     sourceId,
-                    addToSubBandId,
-                  ),
-                  new timelineActions.AddPointsToSubBand(
-                    sourceId,
+                    subBandId: addToSubBandId,
+                  }),
+                  TimelineActions.addPointsToSubBand({
                     bandId,
-                    addToSubBandId,
-                    subBand.points,
-                  ),
+                    points: subBand.points,
+                    sourceId,
+                    subBandId: addToSubBandId,
+                  }),
                 );
               }
             } else if (bandId && isOverlay(currentBands, bandId)) {
               actions.push(
-                new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id),
-                new timelineActions.AddSubBand(sourceId, bandId, subBand),
-                new timelineActions.SetCompositeYLabelDefault(bandId),
+                SourceExplorerActions.subBandIdAdd({
+                  sourceId,
+                  subBandId: subBand.id,
+                }),
+                TimelineActions.addSubBand({ sourceId, bandId, subBand }),
+                TimelineActions.setCompositeYLabelDefault({ bandId }),
               );
             } else {
               actions.push(
-                new sourceExplorerActions.SubBandIdAdd(sourceId, subBand.id),
-                new timelineActions.AddBand(sourceId, toCompositeBand(subBand)),
+                SourceExplorerActions.subBandIdAdd({
+                  sourceId,
+                  subBandId: subBand.id,
+                }),
+                TimelineActions.addBand({
+                  band: toCompositeBand(subBand),
+                  sourceId,
+                }),
               );
             }
 
             // Make sure that if we are dealing with a custom graphable source that we update the custom filters with the new sub-band id.
             if (treeBySourceId[sourceId].type === 'customGraphable') {
               actions.push(
-                new sourceExplorerActions.SetCustomFilterSubBandId(
+                SourceExplorerActions.setCustomFilterSubBandId({
+                  label: customFilter ? customFilter.label : '',
                   sourceId,
-                  customFilter ? customFilter.label : '',
-                  subBand.id,
-                ),
+                  subBandId: subBand.id,
+                }),
               );
             }
           });
 
           // Resize bands when we `open` to make sure they are all resized properly.
-          actions.push(new layoutActions.Resize());
+          actions.push(LayoutActions.resize());
         } else {
           // Notify user no bands will be drawn.
-          actions.push(new sourceExplorerActions.LoadErrorsAdd([sourceId]));
+          actions.push(
+            SourceExplorerActions.loadErrorsAdd({ sourceIds: [sourceId] }),
+          );
 
           // Remove custom filter if custom source
           if (
@@ -1748,10 +1786,10 @@ export class SourceExplorerEffects {
             customFilter
           ) {
             actions.push(
-              new sourceExplorerActions.RemoveCustomFilter(
+              SourceExplorerActions.removeCustomFilter({
+                label: customFilter.label,
                 sourceId,
-                customFilter.label,
-              ),
+              }),
             );
           }
         }
@@ -1810,9 +1848,9 @@ export class SourceExplorerEffects {
       if (treeBySourceId[sourceId].type === 'graphableFilter') {
         return [
           of(
-            new sourceExplorerActions.AddGraphableFilter(treeBySourceId[
-              sourceId
-            ] as RavenGraphableFilterSource),
+            SourceExplorerActions.addGraphableFilter({
+              source: treeBySourceId[sourceId] as RavenGraphableFilterSource,
+            }),
           ),
         ];
       } else {
@@ -1894,21 +1932,19 @@ export class SourceExplorerEffects {
       const activityPointInBand = getActivityPointInBand(bands, activityId);
       if (activityPointInBand) {
         actions.push(
-          new timelineActions.ExpandChildrenOrDescendants(
-            activityPointInBand.bandId,
-            activityPointInBand.subBandId,
-            activityPointInBand.activityPoint,
-            expansionByActivityId[activityId],
-          ),
-        ),
-          actions.push(
-            new timelineActions.FetchChildrenOrDescendants(
-              activityPointInBand.bandId,
-              activityPointInBand.subBandId,
-              activityPointInBand.activityPoint,
-              expansionByActivityId[activityId],
-            ),
-          );
+          TimelineActions.expandChildrenOrDescendants({
+            activityPoint: activityPointInBand.activityPoint,
+            bandId: activityPointInBand.bandId,
+            expandType: expansionByActivityId[activityId],
+            subBandId: activityPointInBand.subBandId,
+          }),
+          TimelineActions.fetchChildrenOrDescendants({
+            activityPoint: activityPointInBand.activityPoint,
+            bandId: activityPointInBand.bandId,
+            expandType: expansionByActivityId[activityId],
+            subBandId: activityPointInBand.subBandId,
+          }),
+        );
       }
     });
     return actions;
@@ -1931,9 +1967,9 @@ export class SourceExplorerEffects {
             treeBySourceId[sourceId].type === 'filter'
           ) {
             actions.push(
-              new sourceExplorerActions.AddFilter(treeBySourceId[
-                sourceId
-              ] as RavenFilterSource),
+              SourceExplorerActions.addFilter({
+                source: treeBySourceId[sourceId] as RavenFilterSource,
+              }),
             );
           } else {
             const hasQueryString = sourceId.match(new RegExp('(.*)\\?(.*)'));
@@ -1947,10 +1983,10 @@ export class SourceExplorerEffects {
 
                 if (hasQueryStringArgs) {
                   actions.push(
-                    new sourceExplorerActions.SetCustomFilter(
+                    SourceExplorerActions.setCustomFilter({
+                      filter: hasQueryStringArgs[2],
                       source,
-                      hasQueryStringArgs[2],
-                    ),
+                    }),
                   );
                 }
               }
@@ -1969,7 +2005,9 @@ export class SourceExplorerEffects {
   updateInUseEpoch(inUseEpoch: RavenEpoch | null) {
     const actions: Observable<Action>[] = [];
     if (inUseEpoch) {
-      actions.push(of(new epochsActions.SetInUseEpochByName(inUseEpoch.name)));
+      actions.push(
+        of(EpochsActions.setInUseEpochByName({ epochName: inUseEpoch.name })),
+      );
     }
     return actions;
   }
@@ -1983,16 +2021,16 @@ export class SourceExplorerEffects {
   ): Observable<Action>[] {
     const actions: Observable<Action>[] = [];
     if (savedState.showDetailsPanel !== layout.showDetailsPanel) {
-      actions.push(of(new layoutActions.ToggleDetailsPanel()));
+      actions.push(of(LayoutActions.toggleDetailsPanel()));
     }
     if (savedState.showRightPanel !== layout.showRightPanel) {
-      actions.push(of(new layoutActions.ToggleRightPanel()));
+      actions.push(of(LayoutActions.toggleRightPanel()));
     }
     if (savedState.showLeftPanel !== layout.showLeftPanel) {
-      actions.push(of(new layoutActions.ToggleLeftPanel()));
+      actions.push(of(LayoutActions.toggleLeftPanel()));
     }
     if (savedState.showSouthBandsPanel !== layout.showSouthBandsPanel) {
-      actions.push(of(new layoutActions.ToggleSouthBandsPanel()));
+      actions.push(of(LayoutActions.toggleSouthBandsPanel()));
     }
     return actions;
   }

@@ -10,7 +10,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Store, StoreModule } from '@ngrx/store';
-import { reducers as rootReducers } from '../../../app-store';
+import { ROOT_REDUCERS } from '../../../app-store';
 import { ActivityInstance } from '../../../shared/models';
 import { doNgOnChanges } from '../../../shared/util';
 import { reducers } from '../../merlin-store';
@@ -28,7 +28,7 @@ describe('ActivityFormFullComponent', () => {
       imports: [
         ActivityFormFullModule,
         NoopAnimationsModule,
-        StoreModule.forRoot(rootReducers),
+        StoreModule.forRoot(ROOT_REDUCERS),
         StoreModule.forFeature('merlin', reducers),
       ],
       providers: [MerlinService, Store],

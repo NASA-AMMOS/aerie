@@ -8,29 +8,30 @@
  */
 
 import { Injectable } from '@angular/core';
-import { Actions, Effect, ofType } from '@ngrx/effects';
-import { Action } from '@ngrx/store';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { ToastrService } from 'ngx-toastr';
-import { Observable } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
-import { ShowToast, ToastActionTypes } from '../actions/toast.actions';
+import { ToastActions } from '../actions';
 
 // TODO: Provide individual options: https://www.npmjs.com/package/ngx-toastr
 const defaultIndividualConfig = {};
 
 @Injectable()
 export class ToastEffects {
-  constructor(private actions$: Actions, private toastr: ToastrService) {}
+  constructor(private actions: Actions, private toastr: ToastrService) {}
 
-  @Effect({ dispatch: false })
-  showToast$: Observable<Action> = this.actions$.pipe(
-    ofType<ShowToast>(ToastActionTypes.ShowToast),
-    mergeMap(action => {
-      this.toastr[action.toastType](action.message, action.title, {
-        ...action.config,
-        ...defaultIndividualConfig,
-      });
-      return [];
-    }),
+  showToast = createEffect(
+    () =>
+      this.actions.pipe(
+        ofType(ToastActions.showToast),
+        mergeMap(action => {
+          this.toastr[action.toastType](action.message, action.title, {
+            ...action.config,
+            ...defaultIndividualConfig,
+          });
+          return [];
+        }),
+      ),
+    { dispatch: false },
   );
 }

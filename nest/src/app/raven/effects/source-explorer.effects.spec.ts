@@ -13,11 +13,8 @@ import { provideMockActions } from '@ngrx/effects/testing';
 import { StoreModule } from '@ngrx/store';
 import { addMatchers, cold, hot, initTestScheduler } from 'jasmine-marbles';
 import { Observable } from 'rxjs';
-import { reducers as storeReducers } from '../../app-store';
-import {
-  UpdateSourceExplorer,
-  UpdateSourceFilter,
-} from '../actions/source-explorer.actions';
+import { ROOT_REDUCERS } from '../../app-store';
+import { SourceExplorerActions } from '../actions';
 import { FilterState } from '../models';
 import {
   MockedFilters,
@@ -28,11 +25,11 @@ import { SourceExplorerEffects } from './source-explorer.effects';
 
 describe('SourceExplorerEffects', () => {
   let effects: SourceExplorerEffects;
-  let actions$: Observable<any>;
+  let actions: Observable<any>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientModule, StoreModule.forRoot(storeReducers)],
+      imports: [HttpClientModule, StoreModule.forRoot(ROOT_REDUCERS)],
       providers: [
         HttpClient,
         SourceExplorerEffects,
@@ -40,7 +37,7 @@ describe('SourceExplorerEffects', () => {
           provide: MpsServerService,
           useValue: new MpsServerMockService(),
         },
-        provideMockActions(() => actions$),
+        provideMockActions(() => actions),
       ],
     });
 
@@ -52,14 +49,22 @@ describe('SourceExplorerEffects', () => {
   it('should emit UpdateSourceExplorer when an empty filter is applied', () => {
     const filterState: FilterState = FilterState.empty();
 
-    actions$ = hot('a', { a: new UpdateSourceFilter(filterState.filter) });
-    const expected$ = cold('(bcd)', {
-      b: new UpdateSourceExplorer({ fetchPending: true }),
-      c: new UpdateSourceExplorer({ filterState }),
-      d: new UpdateSourceExplorer({ fetchPending: false }),
+    actions = hot('a', {
+      a: SourceExplorerActions.updateSourceFilter({
+        sourceFilter: filterState.filter,
+      }),
     });
 
-    expect(effects.updateSourceFilter$).toBeObservable(expected$);
+    const expected = cold('(bc)', {
+      b: SourceExplorerActions.updateSourceExplorer({
+        update: { fetchPending: true },
+      }),
+      c: SourceExplorerActions.updateSourceExplorer({
+        update: { fetchPending: false, filterState },
+      }),
+    });
+
+    expect(effects.updateSourceFilter).toBeObservable(expected);
   });
 
   it('should emit UpdateSourceExplorer when a filter is applied successfully', () => {
@@ -74,13 +79,21 @@ describe('SourceExplorerEffects', () => {
       ]),
     };
 
-    actions$ = hot('a', { a: new UpdateSourceFilter(filterState.filter) });
-    const expected$ = cold('(bcd)', {
-      b: new UpdateSourceExplorer({ fetchPending: true }),
-      c: new UpdateSourceExplorer({ filterState }),
-      d: new UpdateSourceExplorer({ fetchPending: false }),
+    actions = hot('a', {
+      a: SourceExplorerActions.updateSourceFilter({
+        sourceFilter: filterState.filter,
+      }),
     });
 
-    expect(effects.updateSourceFilter$).toBeObservable(expected$);
+    const expected = cold('(bc)', {
+      b: SourceExplorerActions.updateSourceExplorer({
+        update: { fetchPending: true },
+      }),
+      c: SourceExplorerActions.updateSourceExplorer({
+        update: { fetchPending: false, filterState },
+      }),
+    });
+
+    expect(effects.updateSourceFilter).toBeObservable(expected);
   });
 });

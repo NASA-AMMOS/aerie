@@ -13,8 +13,8 @@ import { provideMockActions } from '@ngrx/effects/testing';
 import { Store, StoreModule } from '@ngrx/store';
 import { addMatchers, cold, hot, initTestScheduler } from 'jasmine-marbles';
 import { Observable } from 'rxjs';
-import { reducers as rootReducers } from '../../app-store';
-import { ShowToast } from '../../shared/actions/toast.actions';
+import { ROOT_REDUCERS } from '../../app-store';
+import { ToastActions } from '../../shared/actions';
 import { FileActions, LayoutActions } from '../actions';
 import { reducers } from '../falcon-store';
 import { FileMockService, getChildren } from '../services/file-mock.service';
@@ -32,7 +32,7 @@ describe('FileEffects', () => {
     TestBed.configureTestingModule({
       imports: [
         HttpClientModule,
-        StoreModule.forRoot(rootReducers),
+        StoreModule.forRoot(ROOT_REDUCERS),
         StoreModule.forFeature('falcon', reducers),
       ],
       providers: [
@@ -77,11 +77,11 @@ describe('FileEffects', () => {
       const action = FileActions.fetchChildren({ parentId });
       const error = new Error('FetchChildrenFailed');
       const failure = FileActions.fetchChildrenFailure({ error });
-      const showToast = new ShowToast(
-        'error',
-        error.message,
-        'Fetch Children Failed',
-      );
+      const showToast = ToastActions.showToast({
+        message: error.message,
+        title: 'Fetch Children Failed',
+        toastType: 'error',
+      });
 
       const service = TestBed.get(FileMockService);
       spyOn(service, 'fetchChildren').and.returnValue(cold('#|', null, error));

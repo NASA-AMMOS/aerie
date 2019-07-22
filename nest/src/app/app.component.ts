@@ -11,8 +11,8 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { AppState } from './app-store';
+import { DialogActions } from './shared/actions';
 import { NavigationDrawerStates } from './shared/actions/config.actions';
-import * as dialogActions from './shared/actions/dialog.actions';
 import { NestModule } from './shared/models';
 import { getAppModules, getNavigationDrawerState } from './shared/selectors';
 
@@ -64,10 +64,7 @@ export class AppComponent {
     );
   }
 
-  /**
-   * Callback event. Called when the About button is clicked inside the `nest-app-nav` component.
-   */
   onAboutClicked() {
-    this.store.dispatch(new dialogActions.OpenAboutDialog('400px'));
+    this.store.dispatch(DialogActions.openAboutDialog({ width: '400px' }));
   }
 }

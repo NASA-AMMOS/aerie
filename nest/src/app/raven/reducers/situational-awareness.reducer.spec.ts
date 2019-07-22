@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { UpdateSituationalAwarenessSettings } from '../actions/situational-awareness.actions';
+import { SituationalAwarenessActions } from '../actions';
 import {
   initialState,
   reducer,
@@ -28,14 +28,16 @@ describe('situationalAwareness reducer', () => {
   it('handle UpdateSituationalAwarenessSettings', () => {
     situationalAwarenessState = reducer(
       situationalAwarenessState,
-      new UpdateSituationalAwarenessSettings({
-        nowMinus: 104800,
-        nowPlus: 5184000,
-        pageDuration: 604800,
-        pefEntries: [],
-        situationalAware: true,
-        startTime: null,
-        useNow: true,
+      SituationalAwarenessActions.updateSituationalAwarenessSettings({
+        update: {
+          nowMinus: 104800,
+          nowPlus: 5184000,
+          pageDuration: 604800,
+          pefEntries: [],
+          situationalAware: true,
+          startTime: null,
+          useNow: true,
+        },
       }),
     );
     expect(situationalAwarenessState).toEqual({

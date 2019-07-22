@@ -7,174 +7,100 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 import {
   RavenCompositeBand,
   RavenCustomFilterSource,
   RavenSource,
 } from '../models';
 
-export enum DialogActionTypes {
-  OpenApplyCurrentStateDialog = '[dialog] open_apply_current_state_dialog',
-  OpenConfirmDialog = '[dialog] open_confirm_dialog',
-  OpenCustomFilterDialog = '[dialog] open_custom_filter_dialog',
-  OpenCustomGraphDialog = '[dialog] open_custom_graph_dialog',
-  OpenDeleteBandDialog = '[dialog] open_delete_band_dialog',
-  OpenDeleteSourceDialog = '[dialog] open_delete_source_dialog',
-  OpenFileImportDialog = '[dialog] open_file_import_dialog',
-  OpenFolderDialog = '[dialog] open_folder_dialog',
-  OpenLoadEpochDialog = '[dialog] open_load_epoch_dialog',
-  OpenPinDialog = '[dialog] open_pin_dialog',
-  OpenRemoveAllBandsDialog = '[dialog] remove_all_bands_dialog',
-  OpenRemoveAllGuidesDialog = '[dialog] remove_all_guides_dialog',
-  OpenSaveNewEpochFileDialog = '[dialog open_save_new_epoch_file_dialog',
-  OpenSettingsBandDialog = '[dialog] open_settings_band_dialog',
-  OpenShareableLinkDialog = '[dialog] open_shareable_link_dialog',
-  OpenStateApplyDialog = '[dialog] open_state_apply_dialog',
-  OpenStateSaveDialog = '[dialog] open_state_save_dialog',
-  OpenUpdateCurrentStateDialog = '[dialog] open_update_current_state_dialog',
-  OpenUpdateProjectEpochsDialog = '[dialog] open_update_project_epochs_dialog',
-}
+export const openApplyCurrentStateDialog = createAction(
+  '[raven-dialog] open_apply_current_state_dialog',
+);
 
-export class OpenApplyCurrentStateDialog implements Action {
-  readonly type = DialogActionTypes.OpenApplyCurrentStateDialog;
-}
+export const openConfirmDialog = createAction(
+  '[raven-dialog] open_confirm_dialog',
+  props<{ cancelText: string; message: string; width: string }>(),
+);
 
-export class OpenConfirmDialog implements Action {
-  readonly type = DialogActionTypes.OpenConfirmDialog;
+export const openCustomFilterDialog = createAction(
+  '[raven-dialog] open_custom_filter_dialog',
+  props<{ source: RavenCustomFilterSource; width: string }>(),
+);
 
-  constructor(
-    public cancelText: string,
-    public message: string,
-    public width: string,
-  ) {}
-}
+export const openCustomGraphDialog = createAction(
+  '[raven-dialog] open_custom_graph_dialog',
+  props<{ source: RavenSource; width: string }>(),
+);
 
-export class OpenCustomFilterDialog implements Action {
-  readonly type = DialogActionTypes.OpenCustomFilterDialog;
+export const openDeleteBandDialog = createAction(
+  '[raven-dialog] open_delete_band_dialog',
+  props<{ band: RavenCompositeBand; width: string }>(),
+);
 
-  constructor(public source: RavenCustomFilterSource, public width: string) {}
-}
+export const openDeleteSourceDialog = createAction(
+  '[raven-dialog] open_delete_source_dialog',
+  props<{ source: RavenSource; width: string }>(),
+);
 
-export class OpenCustomGraphDialog implements Action {
-  readonly type = DialogActionTypes.OpenCustomGraphDialog;
+export const openFileImportDialog = createAction(
+  '[raven-dialog] open_file_import_dialog',
+  props<{ source: RavenSource; width: string }>(),
+);
 
-  constructor(public source: RavenSource, public width: string) {}
-}
+export const openFolderDialog = createAction(
+  '[raven-dialog] open_folder_dialog',
+  props<{ folderAction: string; source: RavenSource; width: string }>(),
+);
 
-export class OpenDeleteBandDialog implements Action {
-  readonly type = DialogActionTypes.OpenDeleteBandDialog;
+export const openLoadEpochDialog = createAction(
+  '[raven-dialog] open_load_epoch_dialog',
+  props<{ sourceUrl: string }>(),
+);
 
-  constructor(public band: RavenCompositeBand, public width: string) {}
-}
+export const openPinDialog = createAction(
+  '[raven-dialog] open_pin_dialog',
+  props<{ pinAction: string; source: RavenSource; width: string }>(),
+);
 
-export class OpenDeleteSourceDialog implements Action {
-  readonly type = DialogActionTypes.OpenDeleteSourceDialog;
+export const openRemoveAllBandsDialog = createAction(
+  '[raven-dialog] open_remove_all_bands_dialog',
+  props<{ width: string }>(),
+);
 
-  constructor(public source: RavenSource, public width: string) {}
-}
+export const openRemoveAllGuidesDialog = createAction(
+  '[raven-dialog] open_remove_all_guides_dialog',
+  props<{ width: string }>(),
+);
 
-export class OpenFileImportDialog implements Action {
-  readonly type = DialogActionTypes.OpenFileImportDialog;
+export const openSaveNewEpochFileDialog = createAction(
+  '[dialog open_save_new_epoch_file_dialog',
+);
 
-  constructor(public source: RavenSource, public width: string) {}
-}
+export const openSettingsBandDialog = createAction(
+  '[raven-dialog] open_settings_band_dialog',
+  props<{ bandId: string; subBandId: string; width: string }>(),
+);
 
-export class OpenFolderDialog implements Action {
-  readonly type = DialogActionTypes.OpenFolderDialog;
+export const openShareableLinkDialog = createAction(
+  '[raven-dialog] open_shareable_link_dialog',
+  props<{ width: string }>(),
+);
 
-  constructor(
-    public folderAction: string,
-    public source: RavenSource,
-    public width: string,
-  ) {}
-}
+export const openStateApplyDialog = createAction(
+  '[raven-dialog] open_state_apply_dialog',
+  props<{ source: RavenSource; width: string }>(),
+);
 
-export class OpenLoadEpochDialog implements Action {
-  readonly type = DialogActionTypes.OpenLoadEpochDialog;
+export const openStateSaveDialog = createAction(
+  '[raven-dialog] open_state_save_dialog',
+  props<{ source: RavenSource; width: string }>(),
+);
 
-  constructor(public sourceUrl: string) {}
-}
+export const openUpdateCurrentStateDialog = createAction(
+  '[raven-dialog] open_update_current_state_dialog',
+);
 
-export class OpenPinDialog implements Action {
-  readonly type = DialogActionTypes.OpenPinDialog;
-
-  constructor(
-    public pinAction: string,
-    public source: RavenSource,
-    public width: string,
-  ) {}
-}
-
-export class OpenRemoveAllBandsDialog implements Action {
-  readonly type = DialogActionTypes.OpenRemoveAllBandsDialog;
-
-  constructor(public width: string) {}
-}
-
-export class OpenRemoveAllGuidesDialog implements Action {
-  readonly type = DialogActionTypes.OpenRemoveAllGuidesDialog;
-
-  constructor(public width: string) {}
-}
-
-export class OpenSaveNewEpochFileDialog implements Action {
-  readonly type = DialogActionTypes.OpenSaveNewEpochFileDialog;
-}
-
-export class OpenSettingsBandDialog implements Action {
-  readonly type = DialogActionTypes.OpenSettingsBandDialog;
-
-  constructor(
-    public bandId: string,
-    public subBandId: string,
-    public width: string,
-  ) {}
-}
-
-export class OpenShareableLinkDialog implements Action {
-  readonly type = DialogActionTypes.OpenShareableLinkDialog;
-
-  constructor(public width: string) {}
-}
-
-export class OpenStateApplyDialog implements Action {
-  readonly type = DialogActionTypes.OpenStateApplyDialog;
-
-  constructor(public source: RavenSource, public width: string) {}
-}
-
-export class OpenStateSaveDialog implements Action {
-  readonly type = DialogActionTypes.OpenStateSaveDialog;
-
-  constructor(public source: RavenSource, public width: string) {}
-}
-
-export class OpenUpdateCurrentStateDialog implements Action {
-  readonly type = DialogActionTypes.OpenUpdateCurrentStateDialog;
-}
-
-export class OpenUpdateProjectEpochsDialog implements Action {
-  readonly type = DialogActionTypes.OpenUpdateProjectEpochsDialog;
-}
-
-export type DialogAction =
-  | OpenApplyCurrentStateDialog
-  | OpenConfirmDialog
-  | OpenCustomFilterDialog
-  | OpenCustomGraphDialog
-  | OpenDeleteBandDialog
-  | OpenDeleteSourceDialog
-  | OpenFileImportDialog
-  | OpenFolderDialog
-  | OpenLoadEpochDialog
-  | OpenPinDialog
-  | OpenRemoveAllBandsDialog
-  | OpenRemoveAllGuidesDialog
-  | OpenSaveNewEpochFileDialog
-  | OpenSettingsBandDialog
-  | OpenShareableLinkDialog
-  | OpenStateApplyDialog
-  | OpenStateSaveDialog
-  | OpenUpdateCurrentStateDialog
-  | OpenUpdateProjectEpochsDialog;
+export const openUpdateProjectEpochsDialog = createAction(
+  '[raven-dialog] open_update_project_epochs_dialog',
+);

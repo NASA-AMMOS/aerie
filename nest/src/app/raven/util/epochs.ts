@@ -9,6 +9,15 @@
 
 import { MpsServerEpoch, RavenEpoch } from '../models';
 
+export function getInUseEpochs(epochs: RavenEpoch[]): RavenEpoch | null {
+  const selectedEpochs = epochs.filter(epoch => epoch.selected);
+  if (selectedEpochs.length > 0) {
+    return selectedEpochs[0];
+  } else {
+    return null;
+  }
+}
+
 /**
  * Transform an array of MPS Server epochs to Raven epochs.
  */

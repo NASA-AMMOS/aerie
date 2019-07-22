@@ -7,8 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { InjectionToken } from '@angular/core';
 import * as fromRouter from '@ngrx/router-store';
-import { ActionReducer, ActionReducerMap, MetaReducer } from '@ngrx/store';
+import {
+  Action,
+  ActionReducer,
+  ActionReducerMap,
+  MetaReducer,
+} from '@ngrx/store';
 import { ConfigState } from '../config';
 import { environment } from '../environments/environment';
 import * as fromConfig from './shared/reducers/config.reducer';
@@ -18,10 +24,14 @@ export interface AppState {
   router: fromRouter.RouterReducerState;
 }
 
-export const reducers: ActionReducerMap<AppState> = {
-  config: fromConfig.reducer,
-  router: fromRouter.routerReducer,
-};
+export const ROOT_REDUCERS = new InjectionToken<
+  ActionReducerMap<AppState, Action>
+>('Root reducers token', {
+  factory: () => ({
+    config: fromConfig.reducer,
+    router: fromRouter.routerReducer,
+  }),
+});
 
 export function logger(
   reducer: ActionReducer<AppState>,

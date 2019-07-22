@@ -7,11 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  HideTimeCursor,
-  ShowTimeCursor,
-  UpdateTimeCursorSettings,
-} from '../actions/time-cursor.actions';
+import { TimeCursorActions } from '../actions';
 import { initialState, reducer, TimeCursorState } from './time-cursor.reducer';
 
 describe('time-cursor reducer', () => {
@@ -26,7 +22,10 @@ describe('time-cursor reducer', () => {
   });
 
   it('handle HideTimeCursor', () => {
-    timeCursorState = reducer(timeCursorState, new HideTimeCursor());
+    timeCursorState = reducer(
+      timeCursorState,
+      TimeCursorActions.hideTimeCursor(),
+    );
     expect(timeCursorState).toEqual({
       ...initialState,
       cursorTime: null,
@@ -35,7 +34,10 @@ describe('time-cursor reducer', () => {
   });
 
   it('handle ShowTimeCursor', () => {
-    timeCursorState = reducer(timeCursorState, new ShowTimeCursor());
+    timeCursorState = reducer(
+      timeCursorState,
+      TimeCursorActions.showTimeCursor(),
+    );
     expect(timeCursorState).toEqual({
       ...initialState,
       cursorTime: timeCursorState.cursorTime,
@@ -46,10 +48,12 @@ describe('time-cursor reducer', () => {
   it('handle UpdateTimeCursorSettings', () => {
     timeCursorState = reducer(
       timeCursorState,
-      new UpdateTimeCursorSettings({
-        autoPage: true,
-        clockRate: 42,
-        clockUpdateIntervalInSecs: 1,
+      TimeCursorActions.updateTimeCursorSettings({
+        update: {
+          autoPage: true,
+          clockRate: 42,
+          clockUpdateIntervalInSecs: 1,
+        },
       }),
     );
 

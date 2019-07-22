@@ -9,7 +9,7 @@
 
 import { Action } from '@ngrx/store';
 import { concat, Observable, of } from 'rxjs';
-import { UpdateSourceExplorer } from '../actions/source-explorer.actions';
+import { SourceExplorerActions } from '../actions';
 
 /**
  * Wraps a list of actions around loading bar show/hide actions.
@@ -20,14 +20,14 @@ export function withLoadingBar(
 ): Observable<Action> {
   return concat(
     of(
-      new UpdateSourceExplorer({
-        fetchPending: true,
+      SourceExplorerActions.updateSourceExplorer({
+        update: { fetchPending: true },
       }),
     ),
     ...actions$,
     of(
-      new UpdateSourceExplorer({
-        fetchPending: false,
+      SourceExplorerActions.updateSourceExplorer({
+        update: { fetchPending: false },
       }),
     ),
   );

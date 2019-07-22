@@ -12,18 +12,19 @@ import { select, Store } from '@ngrx/store';
 import { combineLatest, Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ConfigState } from '../../../../config';
-import * as configActions from '../../../shared/actions/config.actions';
-import * as toastActions from '../../../shared/actions/toast.actions';
+import { ConfigActions, ToastActions } from '../../../shared/actions';
 import { StringTMap, TimeRange } from '../../../shared/models';
 import * as configSelectors from '../../../shared/selectors/config.selectors';
-import * as dialogActions from '../../actions/dialog.actions';
-import * as epochsActions from '../../actions/epochs.actions';
-import * as layoutActions from '../../actions/layout.actions';
-import * as outputActions from '../../actions/output.actions';
-import * as situationalAwarenessActions from '../../actions/situational-awareness.actions';
-import * as sourceExplorerActions from '../../actions/source-explorer.actions';
-import * as timeCursorActions from '../../actions/time-cursor.actions';
-import * as timelineActions from '../../actions/timeline.actions';
+import {
+  DialogActions,
+  EpochsActions,
+  LayoutActions,
+  OutputActions,
+  SituationalAwarenessActions,
+  SourceExplorerActions,
+  TimeCursorActions,
+  TimelineActions,
+} from '../../actions';
 import { TimeCursorState } from '../../reducers/time-cursor.reducer';
 import { TimelineState } from '../../reducers/timeline.reducer';
 import * as epochsSelectors from '../../selectors/epochs.selectors';
@@ -436,17 +437,19 @@ export class TimelineComponent implements OnDestroy {
   onFilterActivityInSubBand(e: any) {
     if (e.bandId && e.subBandId) {
       this.store.dispatch(
-        new timelineActions.UpdateSubBand(e.bandId, e.subBandId, {
-          activityFilter: e.filter,
+        TimelineActions.updateSubBand({
+          bandId: e.bandId,
+          subBandId: e.subBandId,
+          update: { activityFilter: e.filter },
         }),
       );
       this.store.dispatch(
-        new timelineActions.FilterActivityInSubBand(
-          e.bandId,
-          e.subBandId,
-          e.filter,
-          this.activityInitiallyHidden,
-        ),
+        TimelineActions.filterActivityInSubBand({
+          activityInitiallyHidden: this.activityInitiallyHidden,
+          bandId: e.bandId,
+          filter: e.filter,
+          subBandId: e.subBandById,
+        }),
       );
     }
   }
@@ -454,15 +457,15 @@ export class TimelineComponent implements OnDestroy {
   /**
    * Event. Called when a point in the Guide band is clicked.
    */
-  onToggleGuide(e: RavenGuidePoint): void {
-    this.store.dispatch(new timelineActions.ToggleGuide(e));
+  onToggleGuide(guide: RavenGuidePoint): void {
+    this.store.dispatch(TimelineActions.toggleGuide({ guide }));
   }
 
   /**
    * Event. Called when an `apply-layout` event is fired from the raven-layout-apply component.
    */
   onApplyLayout(update: RavenApplyLayoutUpdate): void {
-    this.store.dispatch(new sourceExplorerActions.ApplyLayout(update));
+    this.store.dispatch(SourceExplorerActions.applyLayout({ update }));
   }
 
   /**
@@ -470,7 +473,10 @@ export class TimelineComponent implements OnDestroy {
    */
   onApplyState(source: RavenSource): void {
     this.store.dispatch(
-      new sourceExplorerActions.ApplyState(source.url, source.id),
+      SourceExplorerActions.applyState({
+        sourceId: source.id,
+        sourceUrl: source.url,
+      }),
     );
   }
 
@@ -478,12 +484,16 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when a band is left clicked in a raven-bands component.
    */
   onBandLeftClick(e: RavenBandLeftClick): void {
-    this.store.dispatch(new timelineActions.SelectBand(e.bandId));
-    this.store.dispatch(new timelineActions.UpdateLastClickTime(e.time));
+    this.store.dispatch(TimelineActions.selectBand({ bandId: e.bandId }));
+    this.store.dispatch(TimelineActions.updateLastClickTime({ time: e.time }));
 
     if (e.subBandId && e.pointId) {
       this.store.dispatch(
-        new timelineActions.SelectPoint(e.bandId, e.subBandId, e.pointId),
+        TimelineActions.selectPoint({
+          bandId: e.bandId,
+          pointId: e.pointId,
+          subBandId: e.subBandId,
+        }),
       );
     }
   }
@@ -497,29 +507,29 @@ export class TimelineComponent implements OnDestroy {
    */
   onChangeActivityExpansion(e: RavenActivityPointExpansion) {
     this.store.dispatch(
-      new timelineActions.RemoveChildrenOrDescendants(
-        this.selectedBandId,
-        this.selectedSubBandId,
-        e.activityPoint,
-      ),
+      TimelineActions.removeChildrenOrDescendants({
+        activityPoint: e.activityPoint,
+        bandId: this.selectedBandId,
+        subBandId: this.selectedSubBandId,
+      }),
     );
     if (e.expansion !== 'noExpansion') {
       this.store.dispatch(
-        new timelineActions.ExpandChildrenOrDescendants(
-          this.selectedBandId,
-          this.selectedSubBandId,
-          e.activityPoint,
-          e.expansion,
-        ),
-      ),
-        this.store.dispatch(
-          new timelineActions.FetchChildrenOrDescendants(
-            this.selectedBandId,
-            this.selectedSubBandId,
-            e.activityPoint,
-            e.expansion,
-          ),
-        );
+        TimelineActions.expandChildrenOrDescendants({
+          activityPoint: e.activityPoint,
+          bandId: this.selectedBandId,
+          expandType: e.expansion,
+          subBandId: this.selectedSubBandId,
+        }),
+      );
+      this.store.dispatch(
+        TimelineActions.fetchChildrenOrDescendants({
+          activityPoint: e.activityPoint,
+          bandId: this.selectedBandId,
+          expandType: e.expansion,
+          subBandId: this.selectedSubBandId,
+        }),
+      );
     }
   }
 
@@ -529,10 +539,10 @@ export class TimelineComponent implements OnDestroy {
    */
   onChangeSituationalAwareness(situAware: boolean): void {
     this.store.dispatch(
-      new situationalAwarenessActions.ChangeSituationalAwareness(
-        `${this.baseUrl}/mpsserver/api/v2/situational_awareness?`,
+      SituationalAwarenessActions.changeSituationalAwareness({
         situAware,
-      ),
+        url: `${this.baseUrl}/mpsserver/api/v2/situational_awareness?`,
+      }),
     );
   }
 
@@ -540,19 +550,24 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when a `create-output` event is fired from the raven-output component.
    */
   onCreateOutput(): void {
-    this.store.dispatch(new outputActions.CreateOutput());
+    this.store.dispatch(OutputActions.createOutput());
   }
 
   onDeleteBand(bandId: string): void {
     const band = bandById(this.bands, bandId) as RavenCompositeBand;
-    this.store.dispatch(new dialogActions.OpenDeleteBandDialog(band, '300px'));
+    this.store.dispatch(
+      DialogActions.openDeleteBandDialog({ band, width: '300px' }),
+    );
   }
 
   onDecreaseBandHeight(bandId: string): void {
     const band = bandById(this.bands, bandId) as RavenCompositeBand;
     this.store.dispatch(
-      new timelineActions.UpdateBand(bandId, {
-        height: band.height * (1 - this.heightChangeDelta),
+      TimelineActions.updateBand({
+        bandId,
+        update: {
+          height: band.height * (1 - this.heightChangeDelta),
+        },
       }),
     );
   }
@@ -560,8 +575,11 @@ export class TimelineComponent implements OnDestroy {
   onIncreaseBandHeight(bandId: string): void {
     const band = bandById(this.bands, bandId) as RavenCompositeBand;
     this.store.dispatch(
-      new timelineActions.UpdateBand(bandId, {
-        height: band.height * (1 + this.heightChangeDelta),
+      TimelineActions.updateBand({
+        bandId,
+        update: {
+          height: band.height * (1 + this.heightChangeDelta),
+        },
       }),
     );
   }
@@ -571,8 +589,12 @@ export class TimelineComponent implements OnDestroy {
    */
   onAddDividerBand(selectedBandId: string): void {
     this.store.dispatch(
-      new timelineActions.AddBand(null, toCompositeBand(toDividerBand()), {
-        afterBandId: selectedBandId,
+      TimelineActions.addBand({
+        band: toCompositeBand(toDividerBand()),
+        modifiers: {
+          afterBandId: selectedBandId,
+        },
+        sourceId: null,
       }),
     );
   }
@@ -581,16 +603,19 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when a `epochError` event is fired.
    */
   onEpochError(message: string): void {
-    this.store.dispatch(new toastActions.ShowToast('warning', message, ''));
+    this.store.dispatch(
+      ToastActions.showToast({ toastType: 'warning', message, title: '' }),
+    );
   }
+
   /**
    * Event. Called when a `change-time-cursor` event is fired from the raven-time-cursor component.
    */
   onDisplayTimeCursor(show: boolean): void {
     if (show) {
-      this.store.dispatch(new timeCursorActions.ShowTimeCursor());
+      this.store.dispatch(TimeCursorActions.showTimeCursor());
     } else {
-      this.store.dispatch(new timeCursorActions.HideTimeCursor());
+      this.store.dispatch(TimeCursorActions.hideTimeCursor());
     }
   }
 
@@ -598,28 +623,28 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when a 'hover' event is fired from ctl.
    */
   onHoverBand(bandId: string) {
-    this.store.dispatch(new timelineActions.HoverBand(bandId));
+    this.store.dispatch(TimelineActions.hoverBand({ bandId }));
   }
 
   /**
    * Event. Called when a `import-epochs` event is fired from the raven-epochs component.
    */
   onImportEpochs(epochs: RavenEpoch[]) {
-    this.store.dispatch(new epochsActions.AppendAndReplaceEpochs(epochs));
+    this.store.dispatch(EpochsActions.appendAndReplaceEpochs({ epochs }));
   }
 
   /**
    * Event. Called when settings icon is clicked.
    */
   onSettingsBand(bandId: string): void {
-    this.store.dispatch(new timelineActions.SelectBand(bandId));
+    this.store.dispatch(TimelineActions.selectBand({ bandId }));
     const band = bandById(this.bands, bandId) as RavenCompositeBand;
     this.store.dispatch(
-      new dialogActions.OpenSettingsBandDialog(
+      DialogActions.openSettingsBandDialog({
         bandId,
-        band.subBands[0].id,
-        '300px',
-      ),
+        subBandId: band.subBands[0].id,
+        width: '300px',
+      }),
     );
   }
 
@@ -627,43 +652,43 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when a `new-sort` event is fired from raven-bands.
    */
   onSort(sort: StringTMap<RavenSortMessage>): void {
-    this.store.dispatch(new timelineActions.SortBands(sort));
-    this.store.dispatch(new layoutActions.Resize());
+    this.store.dispatch(TimelineActions.sortBands({ sort }));
+    this.store.dispatch(LayoutActions.resize());
   }
 
   /**
    * Event. Called when a toggle event is fired from the apply layout drawer.
    */
   onToggleApplyLayoutDrawer(opened?: boolean) {
-    this.store.dispatch(new layoutActions.ToggleApplyLayoutDrawer(opened));
+    this.store.dispatch(LayoutActions.toggleApplyLayoutDrawer({ opened }));
   }
 
   /**
    * Event. Called when a toggle event is fired from the epochs drawer.
    */
   onToggleEpochsDrawer(opened?: boolean) {
-    this.store.dispatch(new layoutActions.ToggleEpochsDrawer(opened));
+    this.store.dispatch(LayoutActions.toggleEpochsDrawer({ opened }));
   }
 
   /**
    * Event. Called when a toggle event is fired from the epochs drawer.
    */
   onToggleTimeCursorDrawer(opened?: boolean) {
-    this.store.dispatch(new layoutActions.ToggleTimeCursorDrawer(opened));
+    this.store.dispatch(LayoutActions.toggleTimeCursorDrawer({ opened }));
   }
 
   /**
    * Event. Called when a toggle event is fired from the global settings drawer.
    */
   onToggleGlobalSettingsDrawer(opened?: boolean) {
-    this.store.dispatch(new layoutActions.ToggleGlobalSettingsDrawer(opened));
+    this.store.dispatch(LayoutActions.toggleGlobalSettingsDrawer({ opened }));
   }
 
   /**
    * Event. Called when a toggle event is fired from the output drawer.
    */
   onToggleOutputDrawer(opened?: boolean) {
-    this.store.dispatch(new layoutActions.ToggleOutputDrawer(opened));
+    this.store.dispatch(LayoutActions.toggleOutputDrawer({ opened }));
   }
 
   /**
@@ -671,7 +696,9 @@ export class TimelineComponent implements OnDestroy {
    */
   onToggleShowActivityPointMetadata(show: boolean) {
     this.store.dispatch(
-      new layoutActions.UpdateLayout({ showActivityPointMetadata: show }),
+      LayoutActions.updateLayout({
+        update: { showActivityPointMetadata: show },
+      }),
     );
   }
 
@@ -680,7 +707,9 @@ export class TimelineComponent implements OnDestroy {
    */
   onToggleShowActivityPointParameters(show: boolean) {
     this.store.dispatch(
-      new layoutActions.UpdateLayout({ showActivityPointParameters: show }),
+      LayoutActions.updateLayout({
+        update: { showActivityPointParameters: show },
+      }),
     );
   }
 
@@ -689,23 +718,29 @@ export class TimelineComponent implements OnDestroy {
    */
   onToggleSituationalAwarenessDrawer(opened?: boolean) {
     this.store.dispatch(
-      new layoutActions.ToggleSituationalAwarenessDrawer(opened),
+      LayoutActions.toggleSituationalAwarenessDrawer({ opened }),
     );
   }
 
   onUpdateAddTo(e: RavenUpdate): void {
     if (e.bandId && e.subBandId) {
-      this.store.dispatch(new timelineActions.SelectBand(e.bandId));
+      this.store.dispatch(TimelineActions.selectBand({ bandId: e.bandId }));
       this.store.dispatch(
-        new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update),
+        TimelineActions.updateSubBand({
+          bandId: e.bandId,
+          subBandId: e.subBandId,
+          update: e.update,
+        }),
       );
     }
   }
 
   onUpdateOverlay(e: RavenUpdate): void {
     if (e.bandId) {
-      this.store.dispatch(new timelineActions.SelectBand(e.bandId));
-      this.store.dispatch(new timelineActions.UpdateBand(e.bandId, e.update));
+      this.store.dispatch(TimelineActions.selectBand({ bandId: e.bandId }));
+      this.store.dispatch(
+        TimelineActions.updateBand({ bandId: e.bandId, update: e.update }),
+      );
     }
   }
 
@@ -714,7 +749,7 @@ export class TimelineComponent implements OnDestroy {
    */
   onUpdateBandsActivityFilter(filter: string) {
     this.store.dispatch(
-      new timelineActions.UpdateAllActivityBandFilter(filter),
+      TimelineActions.updateAllActivityBandFilter({ filter }),
     );
   }
 
@@ -722,27 +757,34 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when an `update-default-band-settings` event is fired from the raven-settings-global component.
    */
   onUpdateDefaultBandSettings(e: RavenUpdate): void {
-    this.store.dispatch(new configActions.UpdateDefaultBandSettings(e.update));
+    this.store.dispatch(
+      ConfigActions.updateDefaultBandSettings({ update: e.update }),
+    );
   }
 
   onAddEpoch(epoch: RavenEpoch): void {
-    this.store.dispatch(new epochsActions.AppendAndReplaceEpochs([epoch]));
+    this.store.dispatch(
+      EpochsActions.appendAndReplaceEpochs({ epochs: [epoch] }),
+    );
   }
 
   onRemoveEpochs(epochs: RavenEpoch[]): void {
-    this.store.dispatch(new epochsActions.RemoveEpochs(epochs));
+    this.store.dispatch(EpochsActions.removeEpochs({ epochs }));
   }
 
   onSaveNewEpochFile(): void {
-    this.store.dispatch(new dialogActions.OpenSaveNewEpochFileDialog());
+    this.store.dispatch(DialogActions.openSaveNewEpochFileDialog());
   }
 
   onUpdateEpochData(e: any): void {
     this.store.dispatch(
-      new epochsActions.UpdateEpochData(e.rowIndex, {
-        name: e.name,
-        selected: e.selected,
-        value: e.value,
+      EpochsActions.updateEpochData({
+        data: {
+          name: e.name,
+          selected: e.selected,
+          value: e.value,
+        },
+        index: e.rowIndex,
       }),
     );
   }
@@ -751,18 +793,20 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when an `update-epochs` event is fired from the raven-epochs component.
    */
   onUpdateEpochSetting(e: RavenUpdate): void {
-    this.store.dispatch(new epochsActions.UpdateEpochSetting(e.update));
+    this.store.dispatch(EpochsActions.updateEpochSetting({ update: e.update }));
   }
 
   onUpdateProjectEpochs(): void {
-    this.store.dispatch(new dialogActions.OpenUpdateProjectEpochsDialog());
+    this.store.dispatch(DialogActions.openUpdateProjectEpochsDialog());
   }
 
   /**
    * Event. Called when an `update-output-settings` event is fired from the raven-output component.
    */
   onUpdateOutputSettings(e: RavenUpdate): void {
-    this.store.dispatch(new outputActions.UpdateOutputSettings(e.update));
+    this.store.dispatch(
+      OutputActions.updateOutputSettings({ update: e.update }),
+    );
   }
 
   /**
@@ -770,9 +814,9 @@ export class TimelineComponent implements OnDestroy {
    */
   onUpdateSituationalAwarenessSettings(e: RavenUpdate): void {
     this.store.dispatch(
-      new situationalAwarenessActions.UpdateSituationalAwarenessSettings(
-        e.update,
-      ),
+      SituationalAwarenessActions.updateSituationalAwarenessSettings({
+        update: e.update,
+      }),
     );
   }
 
@@ -782,7 +826,11 @@ export class TimelineComponent implements OnDestroy {
   onUpdateSubBand(e: RavenUpdate): void {
     if (e.bandId && e.subBandId) {
       this.store.dispatch(
-        new timelineActions.UpdateSubBand(e.bandId, e.subBandId, e.update),
+        TimelineActions.updateSubBand({
+          bandId: e.bandId,
+          subBandId: e.subBandId,
+          update: e.update,
+        }),
       );
     }
   }
@@ -792,7 +840,7 @@ export class TimelineComponent implements OnDestroy {
    */
   onUpdateTimeCursorSettings(e: RavenUpdate): void {
     this.store.dispatch(
-      new timeCursorActions.UpdateTimeCursorSettings(e.update),
+      TimeCursorActions.updateTimeCursorSettings({ update: e.update }),
     );
   }
 
@@ -800,68 +848,76 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when an `update-timeline` event is fired from the raven-settings component.
    */
   onUpdateTimeline(e: RavenUpdate): void {
-    this.store.dispatch(new timelineActions.UpdateTimeline(e.update));
+    this.store.dispatch(TimelineActions.updateTimeline({ update: e.update }));
   }
 
   /**
    * Event. Called when catching an `update-view-time-range` event.
    */
   onUpdateViewTimeRange(viewTimeRange: TimeRange): void {
-    this.store.dispatch(new timelineActions.UpdateViewTimeRange(viewTimeRange));
+    this.store.dispatch(TimelineActions.updateViewTimeRange({ viewTimeRange }));
   }
 
   /**
    * Helper that dispatches a resize event.
    */
   resize() {
-    this.store.dispatch(new layoutActions.Resize());
+    this.store.dispatch(LayoutActions.resize());
   }
 
   onPanLeft() {
-    this.store.dispatch(new timelineActions.PanLeftViewTimeRange());
+    this.store.dispatch(TimelineActions.panLeftViewTimeRange());
   }
 
   onPanRight() {
-    this.store.dispatch(new timelineActions.PanRightViewTimeRange());
+    this.store.dispatch(TimelineActions.panRightViewTimeRange());
   }
 
   onPanTo(viewTimeRange: TimeRange) {
-    this.store.dispatch(new timelineActions.UpdateViewTimeRange(viewTimeRange));
+    this.store.dispatch(TimelineActions.updateViewTimeRange({ viewTimeRange }));
   }
 
   onResetView() {
-    this.store.dispatch(new timelineActions.ResetViewTimeRange());
+    this.store.dispatch(TimelineActions.resetViewTimeRange());
   }
 
   onZoomIn() {
-    this.store.dispatch(new timelineActions.ZoomInViewTimeRange());
+    this.store.dispatch(TimelineActions.zoomInViewTimeRange());
   }
 
   onZoomOut() {
-    this.store.dispatch(new timelineActions.ZoomOutViewTimeRange());
+    this.store.dispatch(TimelineActions.zoomOutViewTimeRange());
   }
 
   onRemoveAllBands() {
-    this.store.dispatch(new dialogActions.OpenRemoveAllBandsDialog('400px'));
+    this.store.dispatch(
+      DialogActions.openRemoveAllBandsDialog({ width: '400px' }),
+    );
   }
 
   onRemoveAllGuides() {
-    this.store.dispatch(new dialogActions.OpenRemoveAllGuidesDialog('400px'));
+    this.store.dispatch(
+      DialogActions.openRemoveAllGuidesDialog({ width: '400px' }),
+    );
   }
 
   onShareableLink() {
-    this.store.dispatch(new dialogActions.OpenShareableLinkDialog('600px'));
+    this.store.dispatch(
+      DialogActions.openShareableLinkDialog({ width: '600px' }),
+    );
   }
 
   onApplyCurrentState() {
-    this.store.dispatch(new dialogActions.OpenApplyCurrentStateDialog());
+    this.store.dispatch(DialogActions.openApplyCurrentStateDialog());
   }
 
   onApplyCurrentLayout() {
-    this.store.dispatch(new layoutActions.ToggleApplyLayoutDrawerEvent(true));
+    this.store.dispatch(
+      LayoutActions.toggleApplyLayoutDrawerEvent({ opened: true }),
+    );
   }
 
   onUpdateCurrentState() {
-    this.store.dispatch(new dialogActions.OpenUpdateCurrentStateDialog());
+    this.store.dispatch(DialogActions.openUpdateCurrentStateDialog());
   }
 }

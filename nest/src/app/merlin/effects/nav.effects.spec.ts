@@ -14,7 +14,7 @@ import { Store, StoreModule } from '@ngrx/store';
 import { addMatchers, cold, hot, initTestScheduler } from 'jasmine-marbles';
 import { Observable, of } from 'rxjs';
 import { RouterNavigation } from '../../../../libs/ngrx-router';
-import { reducers as rootReducers } from '../../app-store';
+import { ROOT_REDUCERS } from '../../app-store';
 import {
   ActivityInstance,
   ActivityType,
@@ -65,7 +65,7 @@ describe('NavEffects', () => {
     TestBed.configureTestingModule({
       imports: [
         HttpClientModule,
-        StoreModule.forRoot(rootReducers),
+        StoreModule.forRoot(ROOT_REDUCERS),
         StoreModule.forFeature('merlin', reducers),
       ],
       providers: [

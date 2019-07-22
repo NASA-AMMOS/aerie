@@ -9,39 +9,19 @@
 
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Actions, Effect, ofType } from '@ngrx/effects';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 import { concat, Observable, of } from 'rxjs';
 import { concatMap, map, switchMap, withLatestFrom } from 'rxjs/operators';
-import { StringTMap, TimeRange } from '../../shared/models';
+import { TimeRange } from '../../shared/models';
 import { timestamp } from '../../shared/util';
-import * as sourceExplorerActions from '../actions/source-explorer.actions';
-import { TimelineActionTypes } from '../actions/timeline.actions';
-import * as timelineActions from '../actions/timeline.actions';
-import {
-  AddBand,
-  AddSubBand,
-  FetchChildrenOrDescendants,
-  FetchChildrenOrDescendantsSuccess,
-  PanLeftViewTimeRange,
-  PanRightViewTimeRange,
-  PinAdd,
-  PinRemove,
-  PinRename,
-  RemoveAllBands,
-  ResetViewTimeRange,
-  UpdateViewTimeRange,
-  ZoomInViewTimeRange,
-  ZoomOutViewTimeRange,
-} from '../actions/timeline.actions';
+import { SourceExplorerActions, TimelineActions } from '../actions';
 import {
   MpsServerGraphData,
   MpsServerResourceMetadata,
   MpsServerResourcePoint,
   RavenActivityPoint,
   RavenCompositeBand,
-  RavenDefaultBandSettings,
-  RavenPin,
   RavenResourceBand,
   RavenSource,
   RavenSubBand,
@@ -59,92 +39,203 @@ import {
 @Injectable()
 export class TimelineEffects {
   constructor(
-    private actions$: Actions,
+    private actions: Actions,
     private http: HttpClient,
-    private store$: Store<RavenAppState>,
+    private store: Store<RavenAppState>,
   ) {}
 
-  @Effect()
-  fetchChildrenOrDescendants$: Observable<Action> = this.actions$.pipe(
-    ofType<FetchChildrenOrDescendants>(
-      TimelineActionTypes.FetchChildrenOrDescendants,
-    ),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    concatMap(({ action, state }) =>
-      concat(
-        of(new timelineActions.UpdateTimeline({ fetchPending: true })),
-        this.fetchChildrenOrDescendants(
-          state.raven.timeline.bands
-            ? subBandById(
-                state.raven.timeline.bands,
-                action.bandId,
-                action.subBandId,
-              )
-            : null,
-          action.activityPoint.uniqueId,
+  fetchChildrenOrDescendants = createEffect(() =>
+    this.actions.pipe(
+      ofType(TimelineActions.fetchChildrenOrDescendants),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      concatMap(({ action, state }) => {
+        let sourceId = '';
+        let pinLabel = '';
+
+        const activityPointId = action.activityPoint.uniqueId;
+        const parentSubBand = state.raven.timeline.bands
+          ? subBandById(
+              state.raven.timeline.bands,
+              action.bandId,
+              action.subBandId,
+            )
+          : null;
+        const url =
           action.expandType === 'expandChildren'
             ? action.activityPoint.childrenUrl
-            : action.activityPoint.descendantsUrl,
-          state.config.raven.defaultBandSettings,
-          state.raven.sourceExplorer.treeBySourceId,
-          state.raven.timeline.bands,
-          state.raven.timeline.expansionByActivityId,
-        ),
-        of(new timelineActions.UpdateTimeline({ fetchPending: false })),
-      ),
+            : action.activityPoint.descendantsUrl;
+        const defaultBandSettings = state.config.raven.defaultBandSettings;
+        const treeBySourceId = state.raven.sourceExplorer.treeBySourceId;
+        const currentBands = state.raven.timeline.bands;
+
+        if (parentSubBand) {
+          sourceId = parentSubBand.sourceIds[0];
+          pinLabel = parentSubBand.labelPin;
+        }
+
+        return concat(
+          of(
+            TimelineActions.updateTimeline({ update: { fetchPending: true } }),
+          ),
+          this.http.get(url).pipe(
+            map((graphData: MpsServerGraphData) =>
+              toRavenDescendantsData(
+                '__childrenOrDescendants',
+                activityPointId,
+                graphData,
+                defaultBandSettings,
+                null,
+                treeBySourceId,
+              ),
+            ),
+            concatMap((newSubBands: RavenSubBand[]) => {
+              const actions: Action[] = [];
+
+              if (newSubBands.length > 0) {
+                newSubBands.forEach((subBand: RavenSubBand) => {
+                  const activityBands = activityBandsWithLegendAndSourceId(
+                    currentBands,
+                    subBand,
+                    pinLabel,
+                    '',
+                  );
+                  if (activityBands.length > 0) {
+                    activityBands.forEach(activityBand => {
+                      actions.push(
+                        TimelineActions.addPointsToSubBand({
+                          bandId: activityBand.bandId,
+                          points: subBand.points,
+                          sourceId,
+                          subBandId: activityBand.subBandId,
+                        }),
+                      );
+                    });
+                  } else {
+                    const ravenCompositeBand = toCompositeBand(subBand);
+                    actions.push(
+                      TimelineActions.addBand({
+                        band: ravenCompositeBand,
+                        sourceId: '__childrenOrDescendants',
+                      }),
+                    );
+                  }
+                });
+                actions.push(
+                  TimelineActions.fetchChildrenOrDescendantsSuccess(),
+                );
+              }
+              return actions;
+            }),
+          ),
+          of(
+            TimelineActions.updateTimeline({ update: { fetchPending: false } }),
+          ),
+        );
+      }),
     ),
   );
 
-  @Effect()
-  fetchChildrenOrDescendantsSuccess$: Observable<Action> = this.actions$.pipe(
-    ofType<FetchChildrenOrDescendantsSuccess>(
-      TimelineActionTypes.FetchChildrenOrDescendantsSuccess,
-    ),
-    withLatestFrom(this.store$),
-    map(([, state]) => state.raven.timeline),
-    concatMap(timeline =>
-      concat(
-        this.getChildrenOfExpandedPoints(
-          timeline.bands,
-          timeline.expansionByActivityId,
-        ),
-      ),
+  fetchChildrenOrDescendantsSuccess = createEffect(() =>
+    this.actions.pipe(
+      ofType(TimelineActions.fetchChildrenOrDescendantsSuccess),
+      withLatestFrom(this.store),
+      map(([, state]) => state.raven.timeline),
+      concatMap(({ bands, expansionByActivityId }) => {
+        const actions: Action[] = [];
+
+        for (let i = 0, l = bands.length; i < l; i++) {
+          for (let j = 0, ll = bands[i].subBands.length; j < ll; j++) {
+            const subBand = bands[i].subBands[j];
+            for (let k = 0, lll = subBand.points.length; k < lll; k++) {
+              const activityPoint = subBand.points[k] as RavenActivityPoint;
+              if (
+                activityPoint.expansion === 'noExpansion' &&
+                expansionByActivityId[activityPoint.activityId]
+              ) {
+                actions.push(
+                  TimelineActions.expandChildrenOrDescendants({
+                    activityPoint,
+                    bandId: bands[i].id,
+                    expandType: expansionByActivityId[activityPoint.activityId],
+                    subBandId: subBand.id,
+                  }),
+                  TimelineActions.fetchChildrenOrDescendants({
+                    activityPoint,
+                    bandId: bands[i].id,
+                    expandType: expansionByActivityId[activityPoint.activityId],
+                    subBandId: subBand.id,
+                  }),
+                );
+                return actions;
+              }
+            }
+          }
+        }
+
+        return concat(actions);
+      }),
     ),
   );
 
-  /**
-   * Effect for RemoveAllBands.
-   */
-  @Effect()
-  removeAllBands$: Observable<Action> = this.actions$.pipe(
-    ofType<RemoveAllBands>(TimelineActionTypes.RemoveAllBands),
-    withLatestFrom(this.store$),
-    map(([, state]) => state.raven),
-    concatMap(raven =>
-      this.removeAllBands(
-        raven.timeline.bands,
-        raven.sourceExplorer.treeBySourceId,
-      ),
+  removeAllBands = createEffect(() =>
+    this.actions.pipe(
+      ofType(TimelineActions.removeAllBands),
+      withLatestFrom(this.store),
+      map(([, state]) => state.raven),
+      concatMap(raven => {
+        const actions: Action[] = [];
+
+        raven.timeline.bands.forEach((band: RavenCompositeBand) => {
+          band.subBands.forEach((subBand: RavenSubBand) => {
+            actions.push(
+              TimelineActions.removeSubBand({ subBandId: subBand.id }),
+              SourceExplorerActions.subBandIdRemove({
+                sourceIds: subBand.sourceIds,
+                subBandId: subBand.id,
+              }),
+            );
+          });
+        });
+
+        return actions;
+      }),
     ),
   );
 
-  /**
-   * Effect for AddBand | PinAdd | PinRemove | PinRename.
-   */
-  @Effect()
-  updatePinLabels$: Observable<Action> = this.actions$.pipe(
-    ofType<AddBand | AddSubBand | PinAdd | PinRemove | PinRename>(
-      TimelineActionTypes.AddBand,
-      TimelineActionTypes.AddSubBand,
-      TimelineActionTypes.PinAdd,
-      TimelineActionTypes.PinRemove,
-      TimelineActionTypes.PinRename,
-    ),
-    withLatestFrom(this.store$),
-    map(([, state]) => state.raven),
-    concatMap(({ timeline, sourceExplorer }) =>
-      this.updatePinLabels(timeline.bands, sourceExplorer.pins),
+  updatePinLabels = createEffect(() =>
+    this.actions.pipe(
+      ofType(
+        TimelineActions.addBand,
+        TimelineActions.addSubBand,
+        TimelineActions.pinAdd,
+        TimelineActions.pinRemove,
+        TimelineActions.pinRename,
+      ),
+      withLatestFrom(this.store),
+      map(([, state]) => state.raven),
+      concatMap(({ timeline, sourceExplorer }) => {
+        const actions: Action[] = [];
+
+        timeline.bands.forEach(band => {
+          band.subBands.forEach(subBand => {
+            actions.push(
+              TimelineActions.updateSubBand({
+                bandId: band.id,
+                subBandId: subBand.id,
+                update: {
+                  labelPin: getPinLabel(
+                    subBand.sourceIds[0],
+                    sourceExplorer.pins,
+                  ),
+                },
+              }),
+            );
+          });
+        });
+
+        return actions;
+      }),
     ),
   );
 
@@ -159,131 +250,75 @@ export class TimelineEffects {
    * 4.         fetch new resource points for each source in the sub-band and add those new points to the sub-band via UpdateSubBand action.
    * 5.         fetchPending false action.
    */
-  @Effect()
-  updateViewTimeRange$: Observable<Action> = this.actions$.pipe(
-    ofType<
-      | ResetViewTimeRange
-      | PanLeftViewTimeRange
-      | PanRightViewTimeRange
-      | UpdateViewTimeRange
-      | ZoomInViewTimeRange
-      | ZoomOutViewTimeRange
-    >(
-      TimelineActionTypes.ResetViewTimeRange,
-      TimelineActionTypes.PanLeftViewTimeRange,
-      TimelineActionTypes.PanRightViewTimeRange,
-      TimelineActionTypes.UpdateViewTimeRange,
-      TimelineActionTypes.ZoomInViewTimeRange,
-      TimelineActionTypes.ZoomOutViewTimeRange,
-    ),
-    withLatestFrom(this.store$),
-    map(([action, state]) => ({ action, state })),
-    switchMap(({ action, state: { raven: { sourceExplorer, timeline } } }) => {
-      const actions: Observable<Action>[] = [];
-      const viewTimeRange =
-        (action as UpdateViewTimeRange).viewTimeRange || timeline.viewTimeRange;
+  updateViewTimeRange = createEffect(() =>
+    this.actions.pipe(
+      ofType(
+        TimelineActions.resetViewTimeRange,
+        TimelineActions.panLeftViewTimeRange,
+        TimelineActions.panRightViewTimeRange,
+        TimelineActions.updateViewTimeRange,
+        TimelineActions.zoomInViewTimeRange,
+        TimelineActions.zoomOutViewTimeRange,
+      ),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      switchMap(
+        ({
+          action,
+          state: {
+            raven: { sourceExplorer, timeline },
+          },
+        }) => {
+          const actions: Observable<Action>[] = [];
+          const viewTimeRange =
+            (action as any).viewTimeRange || timeline.viewTimeRange;
 
-      timeline.bands.forEach((band: RavenCompositeBand) => {
-        band.subBands.forEach((subBand: RavenResourceBand) => {
-          // Only resources with the `decimate` flag should re-query for data.
-          if (subBand.type === 'resource' && subBand.decimate) {
-            subBand.sourceIds.forEach(sourceId => {
-              actions.push(
-                of(new timelineActions.UpdateTimeline({ fetchPending: true })),
-                this.fetchNewResourcePoints(
-                  sourceExplorer.treeBySourceId[sourceId],
-                  viewTimeRange,
-                ).pipe(
-                  switchMap(({ points }) => [
-                    new timelineActions.UpdateSubBand(band.id, subBand.id, {
-                      points: subBand.points
-                        .filter(point => point.sourceId !== sourceId)
-                        .concat(points),
-                    }),
-                  ]),
-                ),
-                of(new timelineActions.UpdateTimeline({ fetchPending: false })),
-              );
+          timeline.bands.forEach((band: RavenCompositeBand) => {
+            band.subBands.forEach((subBand: RavenResourceBand) => {
+              // Only resources with the `decimate` flag should re-query for data.
+              if (subBand.type === 'resource' && subBand.decimate) {
+                subBand.sourceIds.forEach(sourceId => {
+                  actions.push(
+                    of(
+                      TimelineActions.updateTimeline({
+                        update: { fetchPending: true },
+                      }),
+                    ),
+                    this.fetchNewResourcePoints(
+                      sourceExplorer.treeBySourceId[sourceId],
+                      viewTimeRange,
+                    ).pipe(
+                      switchMap(({ points }) => [
+                        TimelineActions.updateSubBand({
+                          bandId: band.id,
+                          subBandId: subBand.id,
+                          update: {
+                            points: subBand.points
+                              .filter(point => point.sourceId !== sourceId)
+                              .concat(points),
+                          },
+                        }),
+                      ]),
+                    ),
+                    of(
+                      TimelineActions.updateTimeline({
+                        update: { fetchPending: false },
+                      }),
+                    ),
+                  );
+                });
+              }
             });
-          }
-        });
-      });
+          });
 
-      return concat(...actions);
-    }),
+          return concat(...actions);
+        },
+      ),
+    ),
   );
 
   /**
-   * Helper. Fetches children or descendants of an activity point
-   */
-  fetchChildrenOrDescendants(
-    parentSubBand: RavenSubBand | null,
-    activityPointId: string,
-    url: string,
-    defaultBandSettings: RavenDefaultBandSettings,
-    treeBySourceId: StringTMap<RavenSource>,
-    currentBands: RavenCompositeBand[],
-    expansionByActivityId: StringTMap<string>,
-  ) {
-    let sourceId = '';
-    let pinLabel = '';
-    if (parentSubBand) {
-      sourceId = parentSubBand.sourceIds[0];
-      pinLabel = parentSubBand.labelPin;
-    }
-    return this.http.get(url).pipe(
-      map((graphData: MpsServerGraphData) =>
-        toRavenDescendantsData(
-          '__childrenOrDescendants',
-          activityPointId,
-          graphData,
-          defaultBandSettings,
-          null,
-          treeBySourceId,
-        ),
-      ),
-      concatMap((newSubBands: RavenSubBand[]) => {
-        const actions: Action[] = [];
-
-        if (newSubBands.length > 0) {
-          newSubBands.forEach((subBand: RavenSubBand) => {
-            const activityBands = activityBandsWithLegendAndSourceId(
-              currentBands,
-              subBand,
-              pinLabel,
-              '',
-            );
-            if (activityBands.length > 0) {
-              activityBands.forEach(activityBand => {
-                actions.push(
-                  new timelineActions.AddPointsToSubBand(
-                    sourceId,
-                    activityBand.bandId,
-                    activityBand.subBandId,
-                    subBand.points,
-                  ),
-                );
-              });
-            } else {
-              const ravenCompositeBand = toCompositeBand(subBand);
-              actions.push(
-                new timelineActions.AddBand(
-                  '__childrenOrDescendants',
-                  ravenCompositeBand,
-                ),
-              );
-            }
-          });
-          actions.push(new timelineActions.FetchChildrenOrDescendantsSuccess());
-        }
-        return actions;
-      }),
-    );
-  }
-
-  /**
-   * Helper. Fetches new resource points for a given time range.
-   * Good for use on decimated data.
+   * Fetches new resource points for a given time range.
    */
   fetchNewResourcePoints(source: RavenSource, viewTimeRange: TimeRange) {
     const { end, start } = viewTimeRange;
@@ -300,92 +335,5 @@ export class TimelineEffects {
           ),
         ),
       );
-  }
-
-  /**
-   * Helper. Returns list of Actions to fetch children of expanded activity points.
-   */
-  getChildrenOfExpandedPoints(
-    allCompositeBands: RavenCompositeBand[],
-    expansionByActivityId: StringTMap<string>,
-  ) {
-    const actions: Action[] = [];
-    for (let i = 0, l = allCompositeBands.length; i < l; i++) {
-      for (let j = 0, ll = allCompositeBands[i].subBands.length; j < ll; j++) {
-        const subBand = allCompositeBands[i].subBands[j];
-        for (let k = 0, lll = subBand.points.length; k < lll; k++) {
-          const point = subBand.points[k];
-          if (
-            (point as RavenActivityPoint).expansion === 'noExpansion' &&
-            expansionByActivityId[point.activityId]
-          ) {
-            actions.push(
-              new timelineActions.ExpandChildrenOrDescendants(
-                allCompositeBands[i].id,
-                subBand.id,
-                point,
-                expansionByActivityId[(point as RavenActivityPoint).activityId],
-              ),
-            ),
-              actions.push(
-                new timelineActions.FetchChildrenOrDescendants(
-                  allCompositeBands[i].id,
-                  subBand.id,
-                  point as RavenActivityPoint,
-                  expansionByActivityId[
-                    (point as RavenActivityPoint).activityId
-                  ],
-                ),
-              );
-            return actions;
-          }
-        }
-      }
-    }
-    return actions;
-  }
-
-  /**
-   *
-   * Helper. Returns a list of action to remove bands from timeline and update source explorer.
-   */
-  removeAllBands(
-    bands: RavenCompositeBand[],
-    treeBySourceId: StringTMap<RavenSource>,
-  ) {
-    const actions: Action[] = [];
-
-    bands.forEach((band: RavenCompositeBand) => {
-      band.subBands.forEach((subBand: RavenSubBand) => {
-        actions.push(new timelineActions.RemoveSubBand(subBand.id)),
-          actions.push(
-            new sourceExplorerActions.SubBandIdRemove(
-              subBand.sourceIds,
-              subBand.id,
-            ),
-          );
-      });
-    });
-
-    return actions;
-  }
-
-  /**
-   * Helper. Returns a list of actions that update the pin labels for all bands and their sub-bands.
-   */
-  updatePinLabels(bands: RavenCompositeBand[], pins: RavenPin[]): Action[] {
-    const actions: Action[] = [];
-
-    bands.forEach(band => {
-      band.subBands.forEach(subBand => {
-        actions.push(
-          new timelineActions.UpdateSubBand(band.id, subBand.id, {
-            labelPin: getPinLabel(subBand.sourceIds[0], pins),
-          }),
-        );
-      });
-    });
-
-    return actions;
   }
 }

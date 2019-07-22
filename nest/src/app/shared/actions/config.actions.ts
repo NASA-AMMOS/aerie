@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Action } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 import { BaseType, StringTMap } from '../models';
 
 export enum NavigationDrawerStates {
@@ -16,51 +16,30 @@ export enum NavigationDrawerStates {
   Collapsed = 'collapsed',
 }
 
-export enum ConfigActionTypes {
-  FetchProjectConfig = '[config] fetch_project_config',
-  FetchProjectConfigSuccess = '[config] fetch_project_config_success',
-  ToggleNestNavigationDrawer = '[config] toggle_nest_navigation_drawer',
-  UpdateDefaultBandSettings = '[config] update_default_band_settings',
-  UpdateMpsServerSettings = '[config] update_mpsserver_settings',
-  UpdateRavenSettings = '[config] update_raven_settings',
-}
+export const fetchProjectConfig = createAction(
+  '[nest-config] fetch_project_config',
+  props<{ url: string }>(),
+);
 
-export class FetchProjectConfig implements Action {
-  readonly type = ConfigActionTypes.FetchProjectConfig;
+export const fetchProjectConfigSuccess = createAction(
+  '[nest-config] fetch_project_config_success',
+);
 
-  constructor(public url: string) {}
-}
+export const toggleNestNavigationDrawer = createAction(
+  '[nest-config] toggle_nest_navigation_drawer',
+);
 
-export class FetchProjectConfigSuccess implements Action {
-  readonly type = ConfigActionTypes.FetchProjectConfigSuccess;
-}
+export const updateDefaultBandSettings = createAction(
+  '[nest-config] update_default_band_settings',
+  props<{ update: StringTMap<BaseType> }>(),
+);
 
-export class ToggleNestNavigationDrawer implements Action {
-  readonly type = ConfigActionTypes.ToggleNestNavigationDrawer;
-}
+export const updateMpsServerSettings = createAction(
+  '[nest-config] update_mpsserver_settings',
+  props<{ update: StringTMap<BaseType> }>(),
+);
 
-export class UpdateDefaultBandSettings implements Action {
-  readonly type = ConfigActionTypes.UpdateDefaultBandSettings;
-
-  constructor(public update: StringTMap<BaseType>) {}
-}
-
-export class UpdateMpsServerSettings implements Action {
-  readonly type = ConfigActionTypes.UpdateMpsServerSettings;
-
-  constructor(public update: StringTMap<BaseType>) {}
-}
-
-export class UpdateRavenSettings implements Action {
-  readonly type = ConfigActionTypes.UpdateRavenSettings;
-
-  constructor(public update: StringTMap<BaseType>) {}
-}
-
-export type ConfigAction =
-  | FetchProjectConfig
-  | FetchProjectConfigSuccess
-  | ToggleNestNavigationDrawer
-  | UpdateDefaultBandSettings
-  | UpdateMpsServerSettings
-  | UpdateRavenSettings;
+export const updateRavenSettings = createAction(
+  '[nest-config] update_raven_settings',
+  props<{ update: StringTMap<BaseType> }>(),
+);

@@ -12,7 +12,7 @@ import { Injectable } from '@angular/core';
 import { Action } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
-import { ShowToast } from '../../shared/actions/toast.actions';
+import { ToastActions } from '../../shared/actions';
 import { ActivityType, Adaptation, Plan } from '../../shared/models';
 import { AdaptationActions } from '../actions';
 import { AdaptationServiceInterface } from './adaptation-service-interface';
@@ -62,11 +62,11 @@ export class AdaptationService implements AdaptationServiceInterface {
           AdaptationActions.fetchActivityTypesFailure({
             error: new Error(error),
           }),
-          new ShowToast(
-            'error',
-            error.message,
-            'Fetching Activity Types Failed',
-          ),
+          ToastActions.showToast({
+            message: error.message,
+            title: 'Fetching Activity Types Failed',
+            toastType: 'error',
+          }),
         ]),
       ),
     );
@@ -84,7 +84,11 @@ export class AdaptationService implements AdaptationServiceInterface {
           AdaptationActions.fetchAdaptationsFailure({
             error: new Error(error),
           }),
-          new ShowToast('error', error.message, 'Fetching Adaptations Failed'),
+          ToastActions.showToast({
+            message: error.message,
+            title: 'Fetching Adaptations Failed',
+            toastType: 'error',
+          }),
         ]),
       ),
     );
