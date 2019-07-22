@@ -639,6 +639,9 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
     }
   }
 
+  /**
+   * Event. Helper that emits a new point to be added.
+   */
   onAdd() {
     let newPoint: RavenPoint;
     if (this.selectedSubBand.type === 'activity') {
@@ -667,11 +670,17 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
     });
   }
 
+  /**
+   * Event. Helper that emits points to be removed.
+   */
   onRemove() {
     const selectedPoints = this.gridApi.getSelectedRows();
     this.removePointsInSubBand.emit(selectedPoints);
   }
 
+  /**
+   * Event. Helper that emits a selected point.
+   */
   onSelectionChanged(event: SelectionChangedEvent) {
     if (event.api.getSelectedNodes().length > 0) {
       const point = event.api.getSelectedNodes()[0].data;
