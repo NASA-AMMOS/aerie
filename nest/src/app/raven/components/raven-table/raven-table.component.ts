@@ -328,7 +328,7 @@ export class RavenTableComponent implements OnChanges {
           'subBandId',
           'subsystem',
           'type',
-          'uniqueId'
+          'uniqueId',
         ];
         if (
           typeof point[prop] !== 'object' &&
