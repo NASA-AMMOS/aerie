@@ -1079,6 +1079,9 @@ export function updateBand(
   };
 }
 
+/**
+ * Reduction Helper. Called when reducing the 'UpdatePointInSubBand' action.
+ */
 export function updatePointInSubBand(
   state: TimelineState,
   action: UpdatePointInSubBand,
