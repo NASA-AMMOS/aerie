@@ -115,7 +115,7 @@ export function reducer(
     case TimelineActionTypes.AddBand:
       return addBand(state, action);
     case TimelineActionTypes.AddPointAtIndex:
-        return addPointAtIndex(state, action);
+      return addPointAtIndex(state, action);
     case TimelineActionTypes.AddPointsToSubBand:
       return addPointsToSubBand(state, action);
     case TimelineActionTypes.AddSubBand:
@@ -255,7 +255,7 @@ export function addBand(state: TimelineState, action: AddBand): TimelineState {
 export function addPointAtIndex(
   state: TimelineState,
   action: AddPointAtIndex,
-) : TimelineState {
+): TimelineState {
   const bands = state.bands.map((band: RavenCompositeBand) => {
     if (action.bandId === band.id) {
       return {

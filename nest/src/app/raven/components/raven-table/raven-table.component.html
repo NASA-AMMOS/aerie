@@ -67,7 +67,10 @@
       </button>
       <button
         *ngIf="!noneSelected()"
-        mat-raised-button class="edit-button" (click)="onRemove()">
+        mat-raised-button
+        class="edit-button"
+        (click)="onRemove()"
+      >
         Remove
       </button>
       <button

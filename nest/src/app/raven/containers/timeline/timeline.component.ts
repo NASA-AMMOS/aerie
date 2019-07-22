@@ -817,7 +817,11 @@ export class TimelineComponent implements OnDestroy {
 
   onSelectPoint(point: RavenPoint) {
     this.store.dispatch(
-      new timelineActions.SelectPoint(this.selectedBandId, this.selectedSubBandId, point.uniqueId),
+      new timelineActions.SelectPoint(
+        this.selectedBandId,
+        this.selectedSubBandId,
+        point.uniqueId,
+      ),
     );
   }
 

@@ -661,7 +661,7 @@ export class RavenTableComponent implements AfterViewInit, OnChanges {
     this.addPointToSubBand.emit({
       index:
         this.gridApi.getSelectedNodes().length > 0
-          ? this.gridApi.getSelectedNodes()[0].rowIndex+1
+          ? this.gridApi.getSelectedNodes()[0].rowIndex + 1
           : this.gridApi.getDisplayedRowCount(),
       point: newPoint,
     });
