@@ -87,6 +87,7 @@ export function toRavenBandData(
       defaultBandSettings,
       customFilter,
       treeBySourceId,
+      (metadata as MpsServerStateMetadata).editable,
     );
     return activityBands;
   } else {
@@ -137,6 +138,7 @@ export function toRavenDescendantsData(
       defaultBandSettings,
       customFilter,
       treeBySourceId,
+      false,
     );
     return activityBands;
   } else {
@@ -164,6 +166,7 @@ export function toActivityBands(
   defaultBandSettings: RavenDefaultBandSettings,
   customFilter: RavenCustomFilter | null,
   treeBySourceId: StringTMap<RavenSource>,
+  editable: boolean,
 ): RavenActivityBand[] {
   const { legends, maxTimeRange } = getActivityPointsByLegend(
     sourceId,
@@ -171,6 +174,7 @@ export function toActivityBands(
     expandedFromPointId,
     timelineData,
     defaultBandSettings.activityInitiallyHidden,
+    editable,
   );
   const bands: RavenActivityBand[] = [];
   const customGraphableSource = treeBySourceId[sourceId]
@@ -207,6 +211,7 @@ export function toActivityBands(
       name: legend,
       parentUniqueId: null,
       points: legends[legend],
+      pointsChanged: false,
       showActivityTimes: false,
       showLabel: legends[legend][0].activityName !== undefined,
       showLabelPin: true,
@@ -328,6 +333,7 @@ export function toResourceBand(
     name: metadata.hasObjectName,
     parentUniqueId: null,
     points,
+    pointsChanged: false,
     scientificNotation: false,
     showIcon: false,
     showLabelPin: true,
@@ -358,7 +364,11 @@ export function toStateBand(
   defaultBandSettings: RavenDefaultBandSettings,
   treeBySourceId: StringTMap<RavenSource>,
 ): RavenStateBand {
-  const { maxTimeRange, points } = getStatePoints(sourceId, timelineData);
+  const { maxTimeRange, points } = getStatePoints(
+    sourceId,
+    timelineData,
+    metadata.editable,
+  );
 
   const stateBand: RavenStateBand = {
     addTo: false,
@@ -381,6 +391,7 @@ export function toStateBand(
     name: metadata.hasObjectName,
     parentUniqueId: null,
     points,
+    pointsChanged: false,
     possibleStates: metadata.hasPossibleStates
       ? metadata.hasPossibleStates
       : [],

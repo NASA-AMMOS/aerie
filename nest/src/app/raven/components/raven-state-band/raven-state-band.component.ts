@@ -481,27 +481,29 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
 
     for (let i = 0, l = this.points.length; i < l; ++i) {
       const point = this.points[i];
-      const interval = new (window as any).DrawableInterval({
-        color: colorHexToRgbArray(this.color),
-        end: point.start,
-        endValue: keyValueMap[point.value],
-        icon: this.icon,
-        id: point.id,
-        onGetTooltipText: this.onGetTooltipText.bind(this),
-        opacity: 0.9,
-        properties: {
-          Value: keyValueMap[point.value],
-        },
-        start: point.start,
-        startValue: keyValueMap[point.value],
-      });
+      if (point.pointStatus !== 'deleted') {
+        const interval = new (window as any).DrawableInterval({
+          color: colorHexToRgbArray(this.color),
+          end: point.start,
+          endValue: keyValueMap[point.value],
+          icon: this.icon,
+          id: point.id,
+          onGetTooltipText: this.onGetTooltipText.bind(this),
+          opacity: 0.9,
+          properties: {
+            Value: keyValueMap[point.value],
+          },
+          start: point.start,
+          startValue: keyValueMap[point.value],
+        });
 
-      // Set the sub-band ID and unique ID separately since they are not a DrawableInterval prop.
-      interval.subBandId = this.id;
-      interval.uniqueId = point.uniqueId;
+        // Set the sub-band ID and unique ID separately since they are not a DrawableInterval prop.
+        interval.subBandId = this.id;
+        interval.uniqueId = point.uniqueId;
 
-      intervals.push(interval);
-      intervalsById[interval.uniqueId] = interval;
+        intervals.push(interval);
+        intervalsById[interval.uniqueId] = interval;
+      }
     }
 
     intervals.sort((window as any).DrawableInterval.earlyStartEarlyEnd);
@@ -521,28 +523,31 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
 
     for (let i = 0, l = this.points.length; i < l; ++i) {
       const point = this.points[i];
-      const interval = new (window as any).DrawableInterval({
-        color: null,
-        end: point.end,
-        endValue: point.value,
-        id: point.id,
-        label: point.value,
-        labelColor: colorHexToRgbArray('#000000'),
-        onGetTooltipText: this.onGetTooltipText.bind(this),
-        opacity: 0.5,
-        properties: {
-          Value: point.value,
-        },
-        start: point.start,
-        startValue: point.value,
-      });
 
-      // Set the sub-band ID and unique ID separately since they are not a DrawableInterval prop.
-      interval.subBandId = this.id;
-      interval.uniqueId = point.uniqueId;
+      if (point.pointStatus !== 'deleted') {
+        const interval = new (window as any).DrawableInterval({
+          color: null,
+          end: point.end,
+          endValue: point.value,
+          id: point.id,
+          label: point.value,
+          labelColor: colorHexToRgbArray('#000000'),
+          onGetTooltipText: this.onGetTooltipText.bind(this),
+          opacity: 0.5,
+          properties: {
+            Value: point.value,
+          },
+          start: point.start,
+          startValue: point.value,
+        });
 
-      intervals.push(interval);
-      intervalsById[interval.uniqueId] = interval;
+        // Set the sub-band ID and unique ID separately since they are not a DrawableInterval prop.
+        interval.subBandId = this.id;
+        interval.uniqueId = point.uniqueId;
+
+        intervals.push(interval);
+        intervalsById[interval.uniqueId] = interval;
+      }
     }
 
     intervals.sort((window as any).DrawableInterval.earlyStartEarlyEnd);

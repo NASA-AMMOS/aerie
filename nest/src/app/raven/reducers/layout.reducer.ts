@@ -32,7 +32,7 @@ export interface LayoutState {
 export const initialState: LayoutState = {
   fetchPending: false,
   mode: 'default',
-  showActivityPointMetadata: false,
+  showActivityPointMetadata: true,
   showActivityPointParameters: true,
   showApplyLayoutDrawer: false,
   showDetailsPanel: true,

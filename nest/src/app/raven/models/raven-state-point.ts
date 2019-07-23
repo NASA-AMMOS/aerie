@@ -9,9 +9,11 @@
 
 export interface RavenStatePoint {
   duration: number;
+  editable: boolean;
   end: number;
   id: string;
   interpolateEnding: boolean;
+  pointStatus: string;
   selected: boolean;
   sourceId: string;
   start: number;

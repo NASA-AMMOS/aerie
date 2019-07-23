@@ -394,27 +394,30 @@ export class RavenResourceBandComponent
 
     for (let i = 0, l = this.points.length; i < l; ++i) {
       const point = this.points[i];
-      const interval = new (window as any).DrawableInterval({
-        color: colorHexToRgbArray(color),
-        end: point.start,
-        endValue: point.value,
-        icon: this.icon,
-        id: point.id,
-        onGetTooltipText: this.onGetTooltipText.bind(this),
-        opacity: 0.9,
-        properties: {
-          Value: point.value,
-        },
-        start: point.start,
-        startValue: point.value,
-      });
 
-      // Set the sub-band ID and unique ID separately since they are not a DrawableInterval prop.
-      interval.subBandId = this.id;
-      interval.uniqueId = point.uniqueId;
+      if (point.pointStatus !== 'deleted') {
+        const interval = new (window as any).DrawableInterval({
+          color: colorHexToRgbArray(color),
+          end: point.start,
+          endValue: point.value,
+          icon: this.icon,
+          id: point.id,
+          onGetTooltipText: this.onGetTooltipText.bind(this),
+          opacity: 0.9,
+          properties: {
+            Value: point.value,
+          },
+          start: point.start,
+          startValue: point.value,
+        });
 
-      intervals.push(interval);
-      intervalsById[interval.uniqueId] = interval;
+        // Set the sub-band ID and unique ID separately since they are not a DrawableInterval prop.
+        interval.subBandId = this.id;
+        interval.uniqueId = point.uniqueId;
+
+        intervals.push(interval);
+        intervalsById[interval.uniqueId] = interval;
+      }
     }
 
     intervals.sort((window as any).DrawableInterval.earlyStartEarlyEnd);

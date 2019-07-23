@@ -9,9 +9,11 @@
 
 export interface RavenResourcePoint {
   duration: number | null;
+  editable: boolean;
   id: string;
   isDuration: boolean; // Does the point belong to a `duration` resource band?
   isTime: boolean; // Does the point belong to a `time` resource band?
+  pointStatus: string;
   selected: boolean;
   sourceId: string;
   start: number;

@@ -19,7 +19,12 @@ import {
 } from '@angular/core';
 
 import { AgGridAngular } from 'ag-grid-angular';
-import { AgGridEvent, IDatasource, RowNode } from 'ag-grid-community';
+import {
+  AgGridEvent,
+  IDatasource,
+  RowNode,
+  SelectionChangedEvent,
+} from 'ag-grid-community';
 import pickBy from 'lodash-es/pickBy';
 import startsWith from 'lodash-es/startsWith';
 
@@ -28,16 +33,25 @@ import {
   dhms,
   timestamp,
   toDuration,
+  utc,
 } from '../../../shared/util';
+import {
+  createNewActivityPoint,
+  createNewResourcePoint,
+  createNewStatePoint,
+} from '../../util';
+
 import {
   RavenActivityPoint,
   RavenPoint,
+  RavenPointIndex,
+  RavenPointUpdate,
   RavenSubBand,
   RavenUpdate,
 } from '../../models';
 import { RavenTableDetailComponent } from './raven-table-detail.component';
 
-import { GridOptions } from 'ag-grid-community';
+import { GridOptions, ValueSetterParams } from 'ag-grid-community';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -56,6 +70,9 @@ export class RavenTableComponent implements OnChanges {
   activityInitiallyHidden: boolean;
 
   @Input()
+  mode: string;
+
+  @Input()
   points: RavenPoint[];
 
   @Input()
@@ -68,10 +85,31 @@ export class RavenTableComponent implements OnChanges {
   selectedPoint: RavenPoint;
 
   @Output()
+  addPointToSubBand: EventEmitter<RavenPointIndex> = new EventEmitter<
+    RavenPointIndex
+  >();
+
+  @Output()
+  removePointsInSubBand: EventEmitter<RavenPoint[]> = new EventEmitter<
+    RavenPoint[]
+  >();
+
+  @Output()
+  save: EventEmitter<null> = new EventEmitter<null>();
+
+  @Output()
+  selectPoint: EventEmitter<RavenPoint> = new EventEmitter<RavenPoint>();
+
+  @Output()
   updateFilter: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
 
   @Output()
   updateFilterActivityInSubBand: EventEmitter<any> = new EventEmitter<any>();
+
+  @Output()
+  updatePoint: EventEmitter<RavenPointUpdate> = new EventEmitter<
+    RavenPointUpdate
+  >();
 
   @Output()
   updateTableColumns: EventEmitter<any> = new EventEmitter<any>();
@@ -80,6 +118,7 @@ export class RavenTableComponent implements OnChanges {
 
   columnDefs: any[] = [];
   rowData: any[] = [];
+  rowSelection = 'multiple';
 
   dataSource: IDatasource;
 
@@ -236,7 +275,10 @@ export class RavenTableComponent implements OnChanges {
    * Calculates and returns `columnDefs` for use in the grid based on a point.
    */
   createColumnDefs(point: RavenPoint) {
+    const bandId = this.selectedBandId;
     const children: any[] = [];
+    const subBandId = this.selectedSubBand.id;
+    const updatePoint = this.updatePoint;
 
     if (point) {
       // First push the sub-grid menu column for opening/closing the detail panel if it exists.
@@ -258,41 +300,89 @@ export class RavenTableComponent implements OnChanges {
       ).forEach(prop => {
         // `pickBy` removes nulls or undefined props.
         // Exclude table columns we do not want to show.
+        const excludeProps = [
+          'activityId',
+          'activityParameters',
+          'ancestors',
+          'childrenUrl',
+          'color',
+          'hidden',
+          'descendantsUrl',
+          'editable',
+          'endTimestamp',
+          'expandedFromPointId',
+          'expansion',
+          'id',
+          'interpolateEnding',
+          'isDuration',
+          'isTime',
+          'keywordLine',
+          'legend',
+          'plan',
+          'pointStatus',
+          'selected',
+          'sourceId',
+          'span',
+          'startTimestamp',
+          'status',
+          'subBandId',
+          'subsystem',
+          'type',
+          'uniqueId',
+        ];
         if (
           typeof point[prop] !== 'object' &&
           !startsWith(prop, '__') &&
-          prop !== 'activityId' &&
-          prop !== 'activityParameters' &&
-          prop !== 'ancestors' &&
-          prop !== 'childrenUrl' &&
-          prop !== 'color' &&
-          prop !== 'hidden' &&
-          prop !== 'descendantsUrl' &&
-          prop !== 'endTimestamp' &&
-          prop !== 'expandedFromPointId' &&
-          prop !== 'expansion' &&
-          prop !== 'id' &&
-          prop !== 'interpolateEnding' &&
-          prop !== 'isDuration' &&
-          prop !== 'isTime' &&
-          prop !== 'keywordLine' &&
-          prop !== 'legend' &&
-          prop !== 'plan' &&
-          prop !== 'selected' &&
-          prop !== 'sourceId' &&
-          prop !== 'span' &&
-          prop !== 'startTimestamp' &&
-          prop !== 'status' &&
-          prop !== 'subBandId' &&
-          prop !== 'subsystem' &&
-          prop !== 'type' &&
-          prop !== 'uniqueId'
+          !excludeProps.includes(prop)
         ) {
           children.push({
             colId: prop,
+            editable: point.editable && this.colEditable(prop),
             field: prop,
             headerName: prop.charAt(0).toUpperCase() + prop.slice(1), // Capitalize header.
             hide: false,
+            valueSetter:
+              point.editable && this.colEditable(prop)
+                ? (params: ValueSetterParams) => {
+                    const timeIds = ['start', 'end'];
+                    const value = params.newValue;
+                    updatePoint.emit({
+                      bandId,
+                      pointId: params.node.data.id,
+                      subBandId,
+                      update: {
+                        [params.column.getId()]: timeIds.includes(
+                          params.column.getId(),
+                        )
+                          ? utc(value)
+                          : value,
+                        pointStatus:
+                          params.node.data.pointStatus === 'added'
+                            ? 'added'
+                            : 'updated',
+                      },
+                    });
+
+                    // Recalculate duration when either start or end changed.
+                    if (
+                      timeIds.includes(params.column.getId()) &&
+                      params.node.data.duration !== undefined
+                    ) {
+                      updatePoint.emit({
+                        bandId,
+                        pointId: params.node.data.id,
+                        subBandId,
+                        update: {
+                          duration:
+                            params.column.getId() === 'start'
+                              ? utc(params.node.data.end) - utc(value)
+                              : utc(value) - utc(params.node.data.start),
+                        },
+                      });
+                    }
+                    return true;
+                  }
+                : null,
           });
         }
       });
@@ -305,6 +395,13 @@ export class RavenTableComponent implements OnChanges {
         headerName: this.selectedSubBand.label,
       },
     ];
+  }
+
+  /**
+   * Helper. Return if column is editable.
+   */
+  colEditable(prop: string): boolean {
+    return ['activityName', 'start', 'end', 'value'].includes(prop);
   }
 
   /**
@@ -322,21 +419,23 @@ export class RavenTableComponent implements OnChanges {
     let index = 0;
 
     for (let i = 0, l = points.length; i < l; ++i) {
-      const point = {
-        ...this.timestampPoint(points[i]),
-        index,
-      } as RavenActivityPoint; // This is so typings work out.
+      if (points[i].pointStatus !== 'deleted') {
+        const point = {
+          ...this.timestampPoint(points[i]),
+          index,
+        } as RavenActivityPoint; // This is so typings work out.
 
-      if (point.type !== 'activity') {
-        newPoints.push(point);
-        ++index;
-      } else if (
-        point.type === 'activity' &&
-        !pointsByActivityId[point.uniqueId]
-      ) {
-        pointsByActivityId[point.uniqueId] = true; // Track that we have now seen this unique activity id so we don't add it again.
-        newPoints.push(point);
-        ++index;
+        if (point.type !== 'activity') {
+          newPoints.push(point);
+          ++index;
+        } else if (
+          point.type === 'activity' &&
+          !pointsByActivityId[point.uniqueId]
+        ) {
+          pointsByActivityId[point.uniqueId] = true; // Track that we have now seen this unique activity id so we don't add it again.
+          newPoints.push(point);
+          ++index;
+        }
       }
     }
 
@@ -525,5 +624,67 @@ export class RavenTableComponent implements OnChanges {
     }
 
     return point;
+  }
+
+  /**
+   * Helper. Returns true if no row is selected.
+   */
+  noneSelected() {
+    if (this.agGrid && this.agGrid.api) {
+      return this.agGrid.api.getSelectedRows().length === 0;
+    } else {
+      return true;
+    }
+  }
+
+  /**
+   * Event. Helper that emits a new point to be added.
+   */
+  onAdd() {
+    let newPoint: RavenPoint;
+    if (this.selectedSubBand.type === 'activity') {
+      newPoint = createNewActivityPoint(
+        this.points[0].sourceId,
+        this.selectedSubBand.id,
+      );
+    } else if (this.selectedSubBand.type === 'state') {
+      newPoint = createNewStatePoint(
+        this.points[0].sourceId,
+        this.selectedSubBand.id,
+      );
+    } else {
+      newPoint = createNewResourcePoint(
+        this.points[0].sourceId,
+        this.selectedSubBand.id,
+      );
+    }
+
+    this.addPointToSubBand.emit({
+      index:
+        this.gridApi.getSelectedNodes().length > 0
+          ? this.gridApi.getSelectedNodes()[0].rowIndex + 1
+          : this.gridApi.getDisplayedRowCount(),
+      point: newPoint,
+    });
+  }
+
+  /**
+   * Event. Helper that emits points to be removed.
+   */
+  onRemove() {
+    const selectedPoints = this.gridApi.getSelectedRows();
+    this.removePointsInSubBand.emit(selectedPoints);
+  }
+
+  /**
+   * Event. Helper that emits a selected point.
+   */
+  onSelectionChanged(event: SelectionChangedEvent) {
+    if (event.api.getSelectedNodes().length > 0) {
+      const point = event.api.getSelectedNodes()[0].data;
+      if (!point.selected) {
+        this.selectPoint.emit(point);
+      }
+    }
   }
 }

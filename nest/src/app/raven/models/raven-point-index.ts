@@ -7,17 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export interface MpsServerResourceMetadata {
-  decimatedData: boolean;
-  editable: boolean;
-  hasInterpolatorType: string;
-  hasObjectName: string;
-  hasObjectNamespace: string;
-  hasObjectType: string;
-  hasTimeSystem: string;
-  hasTimelineType: string;
-  hasUnits: string;
-  hasValueType: string;
-  maxLimit?: number;
-  minLimit?: number;
+import { RavenPoint } from '../models';
+
+export interface RavenPointIndex {
+  index: number;
+  point: RavenPoint;
 }

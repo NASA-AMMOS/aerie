@@ -36,23 +36,51 @@
     </ng-container>
   </div>
 
-  <ag-grid-angular
-    #agGrid
-    class="ag-theme-fresh"
-    [columnDefs]="columnDefs"
-    [enableColResize]="true"
-    [enableSorting]="true"
-    [enableFilter]="true"
-    [fullWidthCellRendererFramework]="getFullWidthCellRenderer()"
-    [getNodeChildDetails]="getNodeChildDetails"
-    [getRowHeight]="getRowHeight"
-    [gridOptions]="gridOptions"
-    [isFullWidthCell]="isFullWidthCell"
-    (columnVisible)="emitUpdateTableColumns()"
-    (columnMoved)="emitUpdateTableColumns()"
-    (columnResized)="emitUpdateTableColumns()"
-    (gridReady)="onGridReady($event)"
-    (sortChanged)="emitUpdateTableColumns()"
-  >
-  </ag-grid-angular>
+  <div class="flex-container">
+    <ag-grid-angular
+      #agGrid
+      class="ag-theme-fresh"
+      [columnDefs]="columnDefs"
+      [enableColResize]="true"
+      [enableSorting]="true"
+      [enableFilter]="true"
+      [fullWidthCellRendererFramework]="getFullWidthCellRenderer()"
+      [getNodeChildDetails]="getNodeChildDetails"
+      [getRowHeight]="getRowHeight"
+      [gridOptions]="gridOptions"
+      [isFullWidthCell]="isFullWidthCell"
+      [rowSelection]="rowSelection"
+      (columnVisible)="emitUpdateTableColumns()"
+      (columnMoved)="emitUpdateTableColumns()"
+      (columnResized)="emitUpdateTableColumns()"
+      (gridReady)="onGridReady($event)"
+      (selectionChanged)="onSelectionChanged($event)"
+      (sortChanged)="emitUpdateTableColumns()"
+    >
+    </ag-grid-angular>
+    <div
+      class="edit-button-container"
+      *ngIf="points.length > 0 && points[0].editable && mode !== 'minimal'"
+    >
+      <button mat-raised-button class="edit-button" (click)="onAdd()">
+        Add
+      </button>
+      <button
+        *ngIf="!noneSelected()"
+        mat-raised-button
+        class="edit-button"
+        (click)="onRemove()"
+      >
+        Remove
+      </button>
+      <button
+        *ngIf="selectedSubBand.pointsChanged"
+        mat-raised-button
+        class="edit-button"
+        (click)="save.emit()"
+      >
+        Save
+      </button>
+    </div>
+  </div>
 </mat-card>

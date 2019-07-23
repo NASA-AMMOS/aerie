@@ -36,6 +36,7 @@ export interface RavenResourceBand {
   name: string;
   parentUniqueId: string | null;
   points: RavenResourcePoint[];
+  pointsChanged: boolean;
   scientificNotation: boolean;
   showIcon: boolean;
   showLabelPin: boolean;

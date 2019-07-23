@@ -127,6 +127,35 @@ export const reducer = createReducer(
       ...updateTimeRanges(bands, state.viewTimeRange),
     };
   }),
+  on(TimelineActions.addPointAtIndex, (state, action) => {
+    const bands = state.bands.map((band: RavenCompositeBand) => {
+      if (action.bandId === band.id) {
+        return {
+          ...band,
+          subBands: band.subBands.map(subBand => {
+            if (action.subBandId === subBand.id) {
+              const points = [...(subBand as any).points];
+              points.splice(action.index, 0, action.point);
+              return {
+                ...subBand,
+                points,
+              };
+            }
+
+            return subBand;
+          }),
+        };
+      }
+
+      return band;
+    });
+
+    return {
+      ...state,
+      bands,
+      currentStateChanged: state.currentState !== null,
+    };
+  }),
   on(TimelineActions.addPointsToSubBand, (state, action) => {
     const bands = state.bands.map((band: RavenCompositeBand) => {
       if (action.bandId === band.id) {
@@ -279,6 +308,43 @@ export const reducer = createReducer(
     ...state,
     hoveredBandId: bandId,
   })),
+  on(TimelineActions.markRemovePointsInSubBand, (state, action) => {
+    const bands = state.bands.map((band: RavenCompositeBand) => {
+      const deletePoints = action.points.map(
+        deletePoint => deletePoint.uniqueId,
+      );
+      if (action.bandId === band.id) {
+        return {
+          ...band,
+          subBands: band.subBands.map(subBand => {
+            if (action.subBandId === subBand.id) {
+              return {
+                ...subBand,
+                points: (subBand as any).points.map(
+                  (point: RavenActivityPoint) =>
+                    deletePoints.includes(point.uniqueId)
+                      ? { ...point, pointStatus: 'deleted' }
+                      : point,
+                ),
+                pointsChanged: true,
+              };
+            }
+
+            return subBand;
+          }),
+        };
+      }
+
+      return band;
+    });
+
+    return {
+      ...state,
+      bands,
+      currentStateChanged: state.currentState !== null,
+      ...updateTimeRanges(bands, state.viewTimeRange),
+    };
+  }),
   on(TimelineActions.panLeftViewTimeRange, state => {
     const currentViewWindow =
       state.viewTimeRange.end - state.viewTimeRange.start;
@@ -456,6 +522,41 @@ export const reducer = createReducer(
         state.expansionByActivityId,
         action.activityPoint.activityId,
       ),
+    };
+  }),
+  on(TimelineActions.removePointsInSubBand, (state, action) => {
+    const bands = state.bands.map((band: RavenCompositeBand) => {
+      const deletePoints = action.points.map(
+        deletePoint => deletePoint.uniqueId,
+      );
+      if (action.bandId === band.id) {
+        return {
+          ...band,
+          subBands: band.subBands.map(subBand => {
+            if (action.subBandId === subBand.id) {
+              return {
+                ...subBand,
+                points: (subBand as any).points.filter(
+                  (point: RavenActivityPoint) =>
+                    !deletePoints.includes(point.uniqueId),
+                ),
+                pointsChanged: true,
+              };
+            }
+
+            return subBand;
+          }),
+        };
+      }
+
+      return band;
+    });
+
+    return {
+      ...state,
+      bands,
+      currentStateChanged: state.currentState !== null,
+      ...updateTimeRanges(bands, state.viewTimeRange),
     };
   }),
   on(TimelineActions.removeSourceIdFromSubBands, (state, action) => {
@@ -707,6 +808,47 @@ export const reducer = createReducer(
     ...state,
     lastClickTime: time,
   })),
+  on(TimelineActions.updatePointInSubBand, (state, action) => {
+    const bands = state.bands.map((band: RavenCompositeBand) => {
+      if (action.bandId === band.id) {
+        return {
+          ...band,
+          subBands: band.subBands.map(subBand => {
+            if (action.subBandId === subBand.id) {
+              const points = (subBand as any).points.map(
+                (point: RavenActivityPoint) => {
+                  if (point.id === action.pointId) {
+                    return {
+                      ...point,
+                      ...action.update,
+                    };
+                  } else {
+                    return point;
+                  }
+                },
+              );
+              const maxTimeRange = getMaxTimeRange(points);
+              return {
+                ...subBand,
+                maxTimeRange,
+                points,
+                pointsChanged: true,
+              };
+            }
+            return subBand;
+          }),
+        };
+      } else {
+        return band;
+      }
+    });
+
+    return {
+      ...state,
+      bands,
+      ...updateTimeRanges(bands, state.viewTimeRange),
+    };
+  }),
   on(TimelineActions.updateSubBand, (state, action) => ({
     ...state,
     bands: state.bands.map((band: RavenCompositeBand) => {

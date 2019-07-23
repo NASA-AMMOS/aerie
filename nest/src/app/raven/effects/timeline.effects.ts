@@ -7,22 +7,32 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 import { concat, Observable, of } from 'rxjs';
-import { concatMap, map, switchMap, withLatestFrom } from 'rxjs/operators';
-import { TimeRange } from '../../shared/models';
+import {
+  catchError,
+  concatMap,
+  map,
+  switchMap,
+  withLatestFrom,
+} from 'rxjs/operators';
+import { ToastActions } from '../../shared/actions';
+import { StringTMap, TimeRange } from '../../shared/models';
 import { timestamp } from '../../shared/util';
 import { SourceExplorerActions, TimelineActions } from '../actions';
 import {
+  MpsServerDocumentId,
   MpsServerGraphData,
   MpsServerResourceMetadata,
   MpsServerResourcePoint,
   RavenActivityPoint,
   RavenCompositeBand,
+  RavenPoint,
   RavenResourceBand,
+  RavenResourcePoint,
   RavenSource,
   RavenSubBand,
 } from '../models';
@@ -203,6 +213,26 @@ export class TimelineEffects {
     ),
   );
 
+  updateCsvFile = createEffect(() =>
+    this.actions.pipe(
+      ofType(TimelineActions.updateCsvFile),
+      withLatestFrom(this.store),
+      map(([action, state]) => ({ action, state })),
+      concatMap(({ action, state }) =>
+        concat(
+          ...this.doUpdateCsvFile(
+            state,
+            action.bandId,
+            action.subBandId,
+            action.sourceId,
+            action.points,
+            action.csvHeaderMap,
+          ),
+        ),
+      ),
+    ),
+  );
+
   updatePinLabels = createEffect(() =>
     this.actions.pipe(
       ofType(
@@ -335,5 +365,160 @@ export class TimelineEffects {
           ),
         ),
       );
+  }
+
+  doUpdateCsvFile(
+    state: RavenAppState,
+    selectedBandId: string,
+    selectedSubBandId: string,
+    dataSourceUrl: string,
+    points: RavenPoint[],
+    csvHeaderMap: StringTMap<string>,
+  ): Observable<Action>[] {
+    const headers = new HttpHeaders().set('Content-Type', `application/json`);
+    const responseType = 'text';
+
+    const actions: Observable<Action>[] = [];
+
+    points.forEach(point => {
+      const fileUrl = dataSourceUrl.substring(
+        0,
+        dataSourceUrl.lastIndexOf('/'),
+      );
+      let url = `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${fileUrl}?__document_id=${point.id}`;
+      if (point.pointStatus === 'deleted') {
+        actions.push(
+          this.http.delete(url, { responseType: 'text' }).pipe(
+            concatMap(() => {
+              return of(
+                TimelineActions.updateCsvFileSuccess(),
+                TimelineActions.removePointsInSubBand({
+                  bandId: selectedBandId,
+                  points: [point],
+                  subBandId: selectedSubBandId,
+                }),
+              );
+            }),
+            catchError((e: Error) => {
+              return [
+                ToastActions.showToast({
+                  message: 'Failed To Update CSV File',
+                  title: '',
+                  toastType: 'warning',
+                }),
+              ];
+            }),
+          ),
+        );
+      } else if (point.pointStatus !== 'unchanged') {
+        // Map point data back to what the server sent to Raven.
+        const serverData =
+          point.type === 'activity'
+            ? {
+                'Activity Name': (point as RavenActivityPoint).activityName,
+                'Activity Type': (point as RavenActivityPoint).activityType,
+                'Tend Assigned': timestamp((point as RavenActivityPoint).end),
+                'Tstart Assigned': timestamp(
+                  (point as RavenActivityPoint).start,
+                ),
+              }
+            : {
+                'Data Timestamp': timestamp(
+                  (point as RavenResourcePoint).start,
+                ),
+                'Data Value': (point as RavenResourcePoint).value,
+              };
+
+        // Map to original CSV data.
+        let data: string;
+        if (Object.keys(csvHeaderMap).length > 0) {
+          const mappedData = {};
+          Object.keys(csvHeaderMap).forEach(
+            key => (mappedData[csvHeaderMap[key]] = serverData[key]),
+          );
+          data = JSON.stringify(mappedData);
+        } else {
+          data = JSON.stringify(serverData);
+        }
+        if (point.pointStatus === 'added') {
+          url = url.substring(0, url.indexOf('?'));
+          actions.push(
+            this.http
+              .post(url, data, {
+                headers,
+                responseType,
+              })
+              .pipe(
+                map((idstr: any) => JSON.parse(idstr)),
+                concatMap((ids: MpsServerDocumentId[]) => {
+                  return of(
+                    TimelineActions.updatePointInSubBand({
+                      bandId: selectedBandId,
+                      pointId: point.id,
+                      subBandId: selectedSubBandId,
+                      update: {
+                        id: ids[0]['_id']['$oid'],
+                        pointStatus: 'unchanged',
+                      },
+                    }),
+                    TimelineActions.updateCsvFileSuccess(),
+                  );
+                }),
+                catchError((e: Error) => {
+                  return [
+                    ToastActions.showToast({
+                      message: 'Failed To Update CSV File',
+                      title: '',
+                      toastType: 'warning',
+                    }),
+                  ];
+                }),
+              ),
+          );
+        } else {
+          actions.push(
+            this.http
+              .put(url, data, {
+                headers,
+                responseType,
+              })
+              .pipe(
+                concatMap(() => {
+                  return of(
+                    TimelineActions.updateCsvFileSuccess(),
+                    TimelineActions.updatePointInSubBand({
+                      bandId: selectedBandId,
+                      pointId: point.id,
+                      subBandId: selectedSubBandId,
+                      update: { pointStatus: 'unchanged' },
+                    }),
+                  );
+                }),
+                catchError((e: Error) => {
+                  return [
+                    ToastActions.showToast({
+                      message: 'Failed To Update CSV File',
+                      title: '',
+                      toastType: 'warning',
+                    }),
+                  ];
+                }),
+              ),
+          );
+        }
+      }
+    });
+    actions.push(
+      of(
+        TimelineActions.updateSubBand({
+          bandId: selectedBandId,
+          subBandId: selectedSubBandId,
+          update: {
+            pointsChanged: false,
+          },
+        }),
+      ),
+    );
+    return actions;
   }
 }

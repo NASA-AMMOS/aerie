@@ -53,6 +53,8 @@ import {
   RavenEpoch,
   RavenGuidePoint,
   RavenPoint,
+  RavenPointIndex,
+  RavenPointUpdate,
   RavenSituationalAwarenessPefEntry,
   RavenSortMessage,
   RavenSource,
@@ -153,9 +155,11 @@ export class TimelineComponent implements OnDestroy {
   detailsPanelHeight = 20;
   hoveredBandId: string;
   selectedBandId: string;
+  selectedSubBand: RavenSubBand | null;
   selectedSubBandId: string;
   southPanelHeight = 20;
   heightChangeDelta = 0.1;
+  treeBySourceId: StringTMap<RavenSource>;
 
   private subscriptions = new Subscription();
 
@@ -400,9 +404,25 @@ export class TimelineComponent implements OnDestroy {
       ),
     );
     this.subscriptions.add(
+      this.selectedSubBand$.subscribe(
+        selectedSubBand => (this.selectedSubBand = selectedSubBand),
+      ),
+    );
+    this.subscriptions.add(
+      this.selectedSubBandId$.subscribe(
+        selectedSubBandId => (this.selectedSubBandId = selectedSubBandId),
+      ),
+    );
+
+    this.subscriptions.add(
       this.showSouthBandsPanel$.subscribe(
         showSouthBandsPanel =>
           (this.southPanelHeight = showSouthBandsPanel ? 20 : 0),
+      ),
+    );
+    this.subscriptions.add(
+      this.treeBySourceId$.subscribe(
+        treeBySourceId => (this.treeBySourceId = treeBySourceId),
       ),
     );
   }
@@ -634,6 +654,64 @@ export class TimelineComponent implements OnDestroy {
   }
 
   /**
+   * Event. Called when a `AddPointToSubBand' event is fired from the raven-table component.
+   */
+  onAddPointToSubBand(e: RavenPointIndex) {
+    this.store.dispatch(
+      TimelineActions.addPointAtIndex({
+        bandId: this.selectedBandId,
+        index: e.index,
+        point: e.point,
+        subBandId: this.selectedSubBandId,
+      }),
+    );
+  }
+
+  /**
+   * Event. Called when a `RemovePointsInSubBand' event is fired from the raven-table component.
+   */
+  onRemovePointsInSubBand(removePoints: RavenPoint[]) {
+    this.store.dispatch(
+      TimelineActions.markRemovePointsInSubBand({
+        bandId: this.selectedBandId,
+        points: removePoints,
+        subBandId: this.selectedSubBandId,
+      }),
+    );
+  }
+
+  /**
+   * Event. Called when a `Save' event is fired from the raven-table component.
+   */
+  onSave() {
+    if (this.selectedSubBand) {
+      const source = this.treeBySourceId[this.selectedSubBand.sourceIds[0]];
+      const csvHeaderMap = {};
+
+      // Get the mapping data from the sourceUrl.
+      let url = decodeURIComponent(source.url);
+      url = url.replace(/[+]/g, ' ');
+      const mapString = url.match(new RegExp('.*map=\\((.*)\\)&'));
+      if (mapString) {
+        const [, mapStr] = mapString;
+        mapStr.split(',').forEach(keyValue => {
+          const kv = keyValue.split('=');
+          csvHeaderMap[kv[0]] = kv[1];
+        });
+      }
+      this.store.dispatch(
+        TimelineActions.updateCsvFile({
+          bandId: this.selectedBandId,
+          csvHeaderMap,
+          points: this.selectedSubBand.points,
+          sourceId: this.selectedSubBand.sourceIds[0],
+          subBandId: this.selectedSubBandId,
+        }),
+      );
+    }
+  }
+
+  /**
    * Event. Called when settings icon is clicked.
    */
   onSettingsBand(bandId: string): void {
@@ -776,6 +854,19 @@ export class TimelineComponent implements OnDestroy {
     this.store.dispatch(DialogActions.openSaveNewEpochFileDialog());
   }
 
+  /**
+   * Event. Called when an `select-point` event is fired from the raven-table component.
+   */
+  onSelectPoint(point: RavenPoint) {
+    this.store.dispatch(
+      TimelineActions.selectPoint({
+        bandId: this.selectedBandId,
+        pointId: point.uniqueId,
+        subBandId: this.selectedSubBandId,
+      }),
+    );
+  }
+
   onUpdateEpochData(e: any): void {
     this.store.dispatch(
       EpochsActions.updateEpochData({
@@ -785,6 +876,20 @@ export class TimelineComponent implements OnDestroy {
           value: e.value,
         },
         index: e.rowIndex,
+      }),
+    );
+  }
+
+  /**
+   * Event. Called when a `UpdatePoint' event is fired from the raven-table component.
+   */
+  onUpdatePoint(e: RavenPointUpdate) {
+    this.store.dispatch(
+      TimelineActions.updatePointInSubBand({
+        bandId: e.bandId,
+        pointId: e.pointId,
+        subBandId: e.subBandId,
+        update: e.update,
       }),
     );
   }

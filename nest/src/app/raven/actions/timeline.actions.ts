@@ -15,6 +15,7 @@ import {
   RavenCompositeBand,
   RavenGuidePoint,
   RavenPin,
+  RavenPoint,
   RavenSortMessage,
   RavenSubBand,
 } from '../models';
@@ -25,6 +26,16 @@ export const addBand = createAction(
     sourceId: string | null;
     band: RavenCompositeBand;
     modifiers?: AddBandModifiers;
+  }>(),
+);
+
+export const addPointAtIndex = createAction(
+  '[raven-timeline] add_point_at_index',
+  props<{
+    bandId: string;
+    subBandId: string;
+    point: RavenPoint;
+    index: number;
   }>(),
 );
 
@@ -86,6 +97,15 @@ export const hoverBand = createAction(
   props<{ bandId: string }>(),
 );
 
+export const markRemovePointsInSubBand = createAction(
+  '[raven-timeline] mark_remove_points_in_sub_band',
+  props<{
+    bandId: string;
+    subBandId: string;
+    points: RavenPoint[];
+  }>(),
+);
+
 export const panLeftViewTimeRange = createAction(
   '[raven-timeline] pan_left_view_time_range',
 );
@@ -135,6 +155,15 @@ export const removeChildrenOrDescendants = createAction(
     bandId: string;
     subBandId: string;
     activityPoint: RavenActivityPoint;
+  }>(),
+);
+
+export const removePointsInSubBand = createAction(
+  '[raven-timeline] remove_points_in_sub_band',
+  props<{
+    bandId: string;
+    subBandId: string;
+    points: RavenPoint[];
   }>(),
 );
 
@@ -197,9 +226,34 @@ export const updateBand = createAction(
   props<{ bandId: string; update: StringTMap<BaseType> }>(),
 );
 
+export const updateCsvFile = createAction(
+  '[raven-timeline] update_csv_file',
+  props<{
+    bandId: string;
+    subBandId: string;
+    sourceId: string;
+    points: RavenPoint[];
+    csvHeaderMap: StringTMap<string>;
+  }>(),
+);
+
+export const updateCsvFileSuccess = createAction(
+  '[raven-timeline] update_csv_file_success',
+);
+
 export const updateLastClickTime = createAction(
   '[raven-timeline] update_last_click_time',
   props<{ time: number }>(),
+);
+
+export const updatePointInSubBand = createAction(
+  '[raven-timeline] update_point_in_sub_band',
+  props<{
+    bandId: string;
+    subBandId: string;
+    pointId: string;
+    update: StringTMap<BaseType>;
+  }>(),
 );
 
 export const updateSubBand = createAction(

@@ -11,6 +11,8 @@ import { TimelineActions } from '../actions';
 import {
   activityBand,
   activityPoint,
+  activityPoints,
+  activityPointToAdd,
   compositeBand,
   grandChildSource,
   overlayResourceBands,
@@ -153,6 +155,134 @@ describe('timeline reducer', () => {
     });
   });
 
+  it('handle AddPointAtIndex', () => {
+    const source: RavenSource = rootSource;
+    const newBand = {
+      ...compositeBand,
+      subBands: [
+        {
+          ...activityBand,
+        },
+      ],
+    };
+
+    // First add band to state so we have something to add point to.
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: source.id, band: newBand }),
+    );
+
+    expect(timelineState.bands[0].subBands[0].points).toEqual([]);
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addPointsToSubBand({
+        bandId: newBand.id,
+        points: activityPoints,
+        sourceId: source.id,
+        subBandId: activityBand.id,
+      }),
+    );
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addPointAtIndex({
+        bandId: newBand.id,
+        index: 1,
+        point: activityPointToAdd,
+        subBandId: activityBand.id,
+      }),
+    );
+    expect(timelineState.bands[0].subBands[0].points[1]).toEqual(
+      activityPointToAdd,
+    );
+  });
+
+  it('handle MarkRemovePointsInSubBand', () => {
+    const source: RavenSource = rootSource;
+    const band = {
+      ...compositeBand,
+      id: '1',
+      subBands: [
+        {
+          ...activityBand,
+          id: '2',
+          parentUniqueId: '1',
+          points: [
+            {
+              ...activityPoint,
+            },
+            {
+              ...activityPoint,
+              id: 'abc',
+              uniqueId: '_abc',
+            },
+          ],
+        },
+      ],
+    };
+
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: source.id, band }),
+    );
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.markRemovePointsInSubBand({
+        bandId: band.id,
+        points: [activityPoint],
+        subBandId: '2',
+      }),
+    );
+    expect(timelineState.bands[0].subBands[0].points[0].pointStatus).toEqual(
+      'deleted',
+    );
+    expect(timelineState.bands[0].subBands[0].points[1].pointStatus).toEqual(
+      'unchanged',
+    );
+  });
+
+  it('handle RemovePointsInSubBand', () => {
+    const source: RavenSource = rootSource;
+    const band = {
+      ...compositeBand,
+      id: '1',
+      subBands: [
+        {
+          ...activityBand,
+          id: '2',
+          parentUniqueId: '1',
+          points: [
+            {
+              ...activityPoint,
+            },
+            {
+              ...activityPoint,
+              id: 'abc',
+              uniqueId: '_abc',
+            },
+          ],
+        },
+      ],
+    };
+
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: source.id, band }),
+    );
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.removePointsInSubBand({
+        bandId: band.id,
+        points: [activityPoint],
+        subBandId: '2',
+      }),
+    );
+    expect(timelineState.bands[0].subBands[0].points[0]).toEqual({
+      ...activityPoint,
+      id: 'abc',
+      uniqueId: '_abc',
+    });
+  });
+
   it('handle ToggleGuide', () => {
     timelineState = reducer(
       timelineState,
@@ -175,6 +305,42 @@ describe('timeline reducer', () => {
       ...initialState,
       guides: [],
     });
+  });
+
+  it('handle UpdatePointInSubBand', () => {
+    const source: RavenSource = rootSource;
+    const band = {
+      ...compositeBand,
+      id: '1',
+      subBands: [
+        {
+          ...activityBand,
+          id: '2',
+          parentUniqueId: '1',
+          points: [
+            {
+              ...activityPoint,
+              id: '123',
+            },
+          ],
+        },
+      ],
+    };
+
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: source.id, band }),
+    );
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.updatePointInSubBand({
+        bandId: band.id,
+        pointId: '123',
+        subBandId: '2',
+        update: { start: 67890 },
+      }),
+    );
+    expect(timelineState.bands[0].subBands[0].points[0].start).toEqual(67890);
   });
 
   it('handle AddBand (insert after named band)', () => {

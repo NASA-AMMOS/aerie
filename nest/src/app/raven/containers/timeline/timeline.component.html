@@ -187,12 +187,18 @@
           [activityInitiallyHidden]="
             (defaultBandSettings$ | async).activityInitiallyHidden
           "
+          [mode]="mode$ | async"
           [points]="selectedSubBandPoints$ | async"
           [selectedBandId]="selectedBandId$ | async"
           [selectedSubBand]="selectedSubBand$ | async"
           [selectedPoint]="selectedPoint$ | async"
+          (addPointToSubBand)="onAddPointToSubBand($event)"
+          (save)="onSave()"
+          (selectPoint)="onSelectPoint($event)"
+          (removePointsInSubBand)="onRemovePointsInSubBand($event)"
           (updateFilter)="onUpdateSubBand($event)"
           (updateFilterActivityInSubBand)="onFilterActivityInSubBand($event)"
+          (updatePoint)="onUpdatePoint($event)"
           (updateTableColumns)="onUpdateSubBand($event)"
         >
         </raven-table>
@@ -213,8 +219,8 @@
         <ng-container *ngIf="(selectedPoint$ | async).type === 'activity'">
           <raven-activity-point
             [selectedPoint]="selectedPoint$ | async"
-            [showActivityPointMetadata]="showActivityPointMetadata"
-            [showActivityPointParameters]="showActivityPointParameters"
+            [showActivityPointMetadata]="showActivityPointMetadata$ | async"
+            [showActivityPointParameters]="showActivityPointParameters$ | async"
             (changeActivityExpansion)="onChangeActivityExpansion($event)"
             (toggleShowActivityPointMetadata)="
               onToggleShowActivityPointMetadata($event)

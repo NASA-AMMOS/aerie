@@ -37,6 +37,7 @@ export interface RavenStateBand {
   name: string;
   parentUniqueId: string | null;
   points: RavenStatePoint[];
+  pointsChanged: boolean;
   possibleStates: string[];
 
   // Use in line plot only.
