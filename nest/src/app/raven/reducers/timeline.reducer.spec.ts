@@ -167,7 +167,10 @@ describe('timeline reducer', () => {
     };
 
     // First add band to state so we have something to add point to.
-    timelineState = reducer(timelineState, TimelineActions.addBand({sourceId: source.id, band: newBand}));
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.addBand({ sourceId: source.id, band: newBand }),
+    );
 
     expect(timelineState.bands[0].subBands[0].points).toEqual([]);
     timelineState = reducer(
@@ -177,12 +180,16 @@ describe('timeline reducer', () => {
         points: activityPoints,
         sourceId: source.id,
         subBandId: activityBand.id,
-      }
-      ),
+      }),
     );
     timelineState = reducer(
       timelineState,
-      TimelineActions.addPointAtIndex({bandId: newBand.id, subBandId: activityBand.id, point: activityPointToAdd, index: 1}),
+      TimelineActions.addPointAtIndex({
+        bandId: newBand.id,
+        index: 1,
+        point: activityPointToAdd,
+        subBandId: activityBand.id,
+      }),
     );
     expect(timelineState.bands[0].subBands[0].points[1]).toEqual(
       activityPointToAdd,
@@ -213,10 +220,17 @@ describe('timeline reducer', () => {
       ],
     };
 
-    timelineState = reducer(timelineState, TimelineActions.addBand({sourceId: source.id, band}));
     timelineState = reducer(
       timelineState,
-      TimelineActions.markRemovePointsInSubBand({bandId: band.id, subBandId: '2', points: [activityPoint]}),
+      TimelineActions.addBand({ sourceId: source.id, band }),
+    );
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.markRemovePointsInSubBand({
+        bandId: band.id,
+        points: [activityPoint],
+        subBandId: '2',
+      }),
     );
     expect(timelineState.bands[0].subBands[0].points[0].pointStatus).toEqual(
       'deleted',
@@ -250,10 +264,17 @@ describe('timeline reducer', () => {
       ],
     };
 
-    timelineState = reducer(timelineState, TimelineActions.addBand({sourceId: source.id, band}));
     timelineState = reducer(
       timelineState,
-      TimelineActions.removePointsInSubBand({bandId: band.id, subBandId: '2', points: [activityPoint]}),
+      TimelineActions.addBand({ sourceId: source.id, band }),
+    );
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.removePointsInSubBand({
+        bandId: band.id,
+        points: [activityPoint],
+        subBandId: '2',
+      }),
     );
     expect(timelineState.bands[0].subBands[0].points[0]).toEqual({
       ...activityPoint,
@@ -306,10 +327,18 @@ describe('timeline reducer', () => {
       ],
     };
 
-    timelineState = reducer(timelineState, TimelineActions.addBand({sourceId: source.id, band}));
     timelineState = reducer(
       timelineState,
-      TimelineActions.updatePointInSubBand({bandId: band.id, subBandId: '2', pointId: '123', update: { start: 67890 }}),
+      TimelineActions.addBand({ sourceId: source.id, band }),
+    );
+    timelineState = reducer(
+      timelineState,
+      TimelineActions.updatePointInSubBand({
+        bandId: band.id,
+        pointId: '123',
+        subBandId: '2',
+        update: { start: 67890 },
+      }),
     );
     expect(timelineState.bands[0].subBands[0].points[0].start).toEqual(67890);
   });

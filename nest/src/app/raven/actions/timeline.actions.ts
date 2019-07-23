@@ -226,14 +226,14 @@ export const updateBand = createAction(
   props<{ bandId: string; update: StringTMap<BaseType> }>(),
 );
 
-export const updateCsvFile = createAction (
+export const updateCsvFile = createAction(
   '[raven-timeline] update_csv_file',
   props<{
     bandId: string;
     subBandId: string;
     sourceId: string;
-    points: RavenPoint[],
-    csvHeaderMap: StringTMap<string>,
+    points: RavenPoint[];
+    csvHeaderMap: StringTMap<string>;
   }>(),
 );
 
@@ -252,7 +252,7 @@ export const updatePointInSubBand = createAction(
     bandId: string;
     subBandId: string;
     pointId: string;
-    update: StringTMap<BaseType>,
+    update: StringTMap<BaseType>;
   }>(),
 );
 

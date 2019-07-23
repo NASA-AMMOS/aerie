@@ -310,7 +310,9 @@ export const reducer = createReducer(
   })),
   on(TimelineActions.markRemovePointsInSubBand, (state, action) => {
     const bands = state.bands.map((band: RavenCompositeBand) => {
-      const deletePoints = action.points.map(deletePoint => deletePoint.uniqueId);
+      const deletePoints = action.points.map(
+        deletePoint => deletePoint.uniqueId,
+      );
       if (action.bandId === band.id) {
         return {
           ...band,
@@ -318,10 +320,11 @@ export const reducer = createReducer(
             if (action.subBandId === subBand.id) {
               return {
                 ...subBand,
-                points: (subBand as any).points.map((point: RavenActivityPoint) =>
-                  deletePoints.includes(point.uniqueId)
-                    ? { ...point, pointStatus: 'deleted' }
-                    : point,
+                points: (subBand as any).points.map(
+                  (point: RavenActivityPoint) =>
+                    deletePoints.includes(point.uniqueId)
+                      ? { ...point, pointStatus: 'deleted' }
+                      : point,
                 ),
                 pointsChanged: true,
               };
@@ -523,7 +526,9 @@ export const reducer = createReducer(
   }),
   on(TimelineActions.removePointsInSubBand, (state, action) => {
     const bands = state.bands.map((band: RavenCompositeBand) => {
-      const deletePoints = action.points.map(deletePoint => deletePoint.uniqueId);
+      const deletePoints = action.points.map(
+        deletePoint => deletePoint.uniqueId,
+      );
       if (action.bandId === band.id) {
         return {
           ...band,
