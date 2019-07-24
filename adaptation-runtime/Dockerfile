@@ -1,4 +1,4 @@
-FROM openjdk:8-alpine
+FROM adoptopenjdk:11-jre-hotspot
 WORKDIR /usr/src/app
 COPY ./target/adaptation-runtime*.jar /usr/src/app/adaptation-runtime.jar
 RUN mkdir /usr/src/app/adaptation_files
