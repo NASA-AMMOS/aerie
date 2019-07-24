@@ -7,11 +7,58 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { RavenState, RavenSubBand } from '../models';
-import { exportState, importState } from './state';
+import { RavenCompositeBand, RavenSubBand } from '../models';
+import { RavenExportBand } from '../models/export-state';
+import { exportBand, importBand } from './state';
 
-export const preExportBands: any[] = [
+const commonCompositeProperties = {
+  compositeAutoScale: false,
+  compositeLogTicks: false,
+  compositeScientificNotation: false,
+  compositeYAxisLabel: false,
+  height: 50,
+  heightPadding: 0,
+  overlay: false,
+  showTooltip: false,
+  type: 'composite',
+};
+
+const commonResourceProperties = {
+  addTo: false,
+  autoScale: false,
+  color: '#FFEEDD',
+  decimate: false,
+  fill: false,
+  fillColor: '#DDEEFF',
+  height: 50,
+  heightPadding: 0,
+  icon: 'circle',
+  interpolation: 'linear',
+  isDuration: false,
+  isTime: false,
+  label: 'label',
+  labelColor: '#AABBCC',
+  labelFont: 'Helvetica',
+  labelPin: '',
+  labelUnit: 'mibibits',
+  logTicks: false,
+  maxLimit: undefined,
+  maxTimeRange: { end: 0, start: 0 },
+  minLimit: undefined,
+  points: [],
+  scientificNotation: false,
+  showIcon: false,
+  showLabelPin: false,
+  showLabelUnit: false,
+  showTooltip: false,
+  sourceIds: [],
+  tableColumns: [],
+  type: 'resource',
+};
+
+export const preExportBands: RavenCompositeBand[] = [
   {
+    ...commonCompositeProperties,
     backgroundColor: '#FFFFFF',
     containerId: '0',
     id: '100',
@@ -19,13 +66,15 @@ export const preExportBands: any[] = [
     sortOrder: 0,
     subBands: [
       {
+        ...commonResourceProperties,
         id: '0',
-        name: 'test-activity-sub-band-0',
+        name: 'test-resource-sub-band-0',
         parentUniqueId: '100',
       },
     ],
   },
   {
+    ...commonCompositeProperties,
     backgroundColor: '#DDDDDD',
     containerId: '0',
     id: '101',
@@ -33,18 +82,21 @@ export const preExportBands: any[] = [
     sortOrder: 1,
     subBands: [
       {
+        ...commonResourceProperties,
         id: '0',
-        name: 'test-resource-sub-band-0',
+        name: 'test-resource-sub-band-1',
         parentUniqueId: '101',
       },
       {
+        ...commonResourceProperties,
         id: '1',
-        name: 'test-resource-sub-band-1',
+        name: 'test-resource-sub-band-2',
         parentUniqueId: '101',
       },
     ],
   },
   {
+    ...commonCompositeProperties,
     backgroundColor: '#222222',
     containerId: '1',
     id: '102',
@@ -52,55 +104,61 @@ export const preExportBands: any[] = [
     sortOrder: 0,
     subBands: [
       {
+        ...commonResourceProperties,
         id: '0',
-        name: 'test-divider-sub-band-0',
+        name: 'test-resource-sub-band-3',
         parentUniqueId: '102',
       },
     ],
   },
 ];
 
-export const postExportBands: any[] = [
+export const postExportBands: RavenExportBand[] = [
   {
+    ...commonResourceProperties,
     backgroundColor: '#FFFFFF',
     containerId: '0',
-    name: 'test-activity-sub-band-0',
+    name: 'test-resource-sub-band-0',
     sortOrder: 0,
   },
   {
+    ...commonCompositeProperties,
     backgroundColor: '#DDDDDD',
     containerId: '0',
     name: 'test-composite-band-1',
     sortOrder: 1,
     subBands: [
       {
-        name: 'test-resource-sub-band-0',
+        ...commonResourceProperties,
+        name: 'test-resource-sub-band-1',
       },
       {
-        name: 'test-resource-sub-band-1',
+        ...commonResourceProperties,
+        name: 'test-resource-sub-band-2',
       },
     ],
   },
   {
+    ...commonResourceProperties,
     backgroundColor: '#222222',
     containerId: '1',
-    name: 'test-divider-sub-band-0',
+    name: 'test-resource-sub-band-3',
     sortOrder: 0,
   },
 ];
 
 describe('state.ts', () => {
-  describe('exportState', () => {
-    it('should properly export a state', () => {
-      expect(exportState({ bands: preExportBands } as RavenState)).toEqual({
-        bands: postExportBands,
-      });
+  describe('exportBand', () => {
+    it('should properly export bands', () => {
+      expect(preExportBands.map(band => exportBand(band))).toEqual(
+        postExportBands,
+      );
     });
   });
 
-  describe('importState', () => {
-    it('should properly import a state', () => {
-      const { bands } = importState({ bands: postExportBands });
+  describe('importBand', () => {
+    it('should properly import bands', () => {
+      const bands = postExportBands.map(band => importBand(band));
 
       // Make sure all bands are composite bands.
       bands.forEach(band => {
