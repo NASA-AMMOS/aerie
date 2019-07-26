@@ -46,5 +46,6 @@ export interface RavenExportStateSubBand {
   sourceIds: string[];
   stateLabelFontSize: number;
   tableColumns: any[];
+  timeDelta?: number;
   type: string;
 }

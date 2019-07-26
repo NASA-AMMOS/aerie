@@ -165,6 +165,7 @@ export function importSubBand(
       labelColor,
       parentUniqueId,
       pointsChanged: false,
+      timeDelta: subBand.timeDelta === undefined ? 0 : subBand.timeDelta,
     };
   } else if (isExportStateSubBand(subBand)) {
     return {
@@ -173,6 +174,7 @@ export function importSubBand(
       labelColor,
       parentUniqueId,
       pointsChanged: false,
+      timeDelta: subBand.timeDelta === undefined ? 0 : subBand.timeDelta,
     };
   } else {
     return {
