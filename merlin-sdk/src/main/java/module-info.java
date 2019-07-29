@@ -7,11 +7,12 @@ module gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk {
   requires static com.squareup.javapoet;
   requires transitive static jdk.compiler;
 
-  requires org.apache.commons.lang3;
+  requires com.fasterxml.jackson.core;
   requires commons.math3;
   requires java.desktop;
   requires java.scripting;
   requires JNISpice;
+  requires org.apache.commons.lang3;
 
   exports gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
   exports gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities;

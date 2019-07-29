@@ -9,6 +9,14 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Bite a banana.
+ *
+ * This activity causes a piece of banana to be bitten off and consumed.
+ *
+ * @subsystem fruit
+ * @contact John Doe
+ */
 @ActivityType("BiteBanana")
 public final class BiteBananaActivity implements Activity {
   @Parameter
