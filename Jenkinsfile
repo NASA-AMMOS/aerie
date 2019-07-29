@@ -134,7 +134,19 @@ pipeline {
 				}
 
 				withCredentials([usernamePassword(credentialsId: '9db65bd3-f8f0-4de0-b344-449ae2782b86', passwordVariable: 'DOCKER_LOGIN_PASSWORD', usernameVariable: 'DOCKER_LOGIN_USERNAME')]) {
-					sh "./scripts/publish.sh --commit ${env.GIT_COMMIT} --tag ${getTag()} ${remoteBranch}"
+					script {
+						def statusCode = sh returnStatus: true, script:
+						"""
+						export JAVA_HOME=/usr/lib/jvm/java-11-openjdk
+						export MAVEN_HOME=/usr/local/share/maven
+						export PATH=\$JAVA_HOME/bin:\$MAVEN_HOME/bin:/usr/local/bin:/usr/bin
+
+						./scripts/publish.sh --commit ${env.GIT_COMMIT} --tag ${getTag()} ${remoteBranch}
+						"""
+						if (statusCode > 0) {
+							error "Failure publishing aerie"
+						}
+					}
 				}
 
 			}

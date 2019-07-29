@@ -23,6 +23,39 @@
         <module>simulation</module>
     </modules>
 
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>3.0.0-M2</version>
+                    <executions>
+                        <execution>
+                            <id>enforce-java</id>
+                            <goals>
+                                <goal>enforce</goal>
+                            </goals>
+                            <configuration>
+                                <rules>
+                                    <requireJavaVersion>
+                                        <version>[11.0.2, 12)</version>
+                                    </requireJavaVersion>
+                                    <requireProperty>
+                                        <property>java.runtime.name</property>
+                                        <message>Java Runtime must be OpenJDK</message>
+                                        <regex>^.*\b(OpenJDK)\b.*$</regex>
+                                        <regexMessage>Java Runtime must be OpenJDK</regexMessage>
+                                    </requireProperty>
+                                </rules>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
     <distributionManagement>
         <snapshotRepository>
             <id>snapshots</id>
