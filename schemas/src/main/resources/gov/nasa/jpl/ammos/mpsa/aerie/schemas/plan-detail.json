@@ -30,7 +30,8 @@
       "type": "array",
       "items": {
         "$ref": "activity-instance.json"
-      }
+      },
+      "default": null
     }
   },
   "required": ["adaptationId", "endTimestamp", "id", "name", "startTimestamp"],

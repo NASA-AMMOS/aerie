@@ -22,10 +22,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -236,12 +233,12 @@ public class PlansControllerIntegrationTest {
   @Test
   @DirtiesContext
   public void shouldUpdateAPlan() throws IOException {
-    final Plan originalPlan = postRandomPlan();
+    final PlanDetail originalPlan = postRandomPlanDetail();
 
-    final Plan planPatch = new Plan();
+    final PlanDetail planPatch = new PlanDetail();
     planPatch.setName(originalPlan.getName() + "-patched");
 
-    final HttpEntity<Plan> responseEntity = new HttpEntity<>(planPatch, new HttpHeaders());
+    final HttpEntity<PlanDetail> responseEntity = new HttpEntity<>(planPatch, new HttpHeaders());
     ResponseEntity<String> patchResponse =
         restTemplate.exchange(
             "/plans/" + originalPlan.getId(), HttpMethod.PATCH, responseEntity, String.class);
@@ -262,6 +259,11 @@ public class PlansControllerIntegrationTest {
     assertThat(responsePlan.getEndTimestamp()).isEqualTo(originalPlan.getEndTimestamp());
     assertThat(responsePlan.getStartTimestamp()).isEqualTo(originalPlan.getStartTimestamp());
     assertThat(responsePlan.getAdaptationId()).isEqualTo(originalPlan.getAdaptationId());
+    assertThat(responsePlan.getActivityInstances().size()).isEqualTo(originalPlan.getActivityInstances().size());
+      for (int i=0; i<responsePlan.getActivityInstances().size(); i++) {
+          assertThat(responsePlan.getActivityInstances().get(i).getActivityId()).isEqualTo(originalPlan.getActivityInstances().get(i).getActivityId());
+      }
+
   }
 
   @Test
@@ -599,6 +601,18 @@ public class PlansControllerIntegrationTest {
     return objectMapper.readValue(body, Plan.class);
   }
 
+  public PlanDetail postRandomPlanDetail() throws IOException {
+
+    PlanDetail plan = generateRandomPlanDetail();
+
+    ResponseEntity<String> response = restTemplate.postForEntity("/plans/", plan, String.class);
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    String body = response.getBody();
+    return objectMapper.readValue(body, PlanDetail.class);
+  }
+
   public ActivityInstance postRandomActivityInstance(String planId) throws IOException {
     ActivityInstance activityInstance = generateRandomActivityInstance();
     ResponseEntity<String> addActivityInstancesResponse =
@@ -623,6 +637,13 @@ public class PlansControllerIntegrationTest {
     plan.setEndTimestamp(generateRandomDate());
     plan.setName(generateRandomString(8));
     plan.setStartTimestamp(generateRandomDate());
+
+    int numInstances = generateRandomInteger(8) + 2;
+    List<ActivityInstance> instances = new ArrayList<>();
+    for (int i=0; i<numInstances; i++) {
+      instances.add(generateRandomActivityInstance());
+    }
+    plan.setActivityInstances(instances);
     return plan;
   }
 
@@ -653,5 +674,9 @@ public class PlansControllerIntegrationTest {
     LocalDate now = LocalDate.now();
     LocalDate randomDaysAgo = now.minusDays(new Random().nextInt());
     return randomDaysAgo.toString();
+  }
+
+  public int generateRandomInteger(int bound) {
+    return new Random().nextInt(bound);
   }
 }

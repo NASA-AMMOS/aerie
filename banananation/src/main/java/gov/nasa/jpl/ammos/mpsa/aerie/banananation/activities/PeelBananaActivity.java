@@ -9,6 +9,16 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Peel a banana, in preparation for consumption.
+ *
+ * This activity causes a banana to enter the peeled state, allowing
+ * it to be bitten later. Peeling from the wrong end will cause some
+ * amount of banana to become unbiteable.
+ *
+ * @subsystem fruit
+ * @contact Jane Doe
+ */
 @ActivityType("PeelBanana")
 public final class PeelBananaActivity implements Activity {
   private static final double MASHED_BANANA_AMOUNT = 1.0;
