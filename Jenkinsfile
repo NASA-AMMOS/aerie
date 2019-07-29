@@ -70,36 +70,6 @@ pipeline {
 			}
 		}
 
-		stage ('analyze') {
-			when {
-				expression { BRANCH_NAME ==~ /(develop|^release.*)/ }
-			}
-			steps {
-				echo 'analyzing...'
-				script {
-					def statusCode = sh returnStatus: true, script:
-					"""
-					# setup nvm/node
-					export NVM_DIR="\$HOME/.nvm"
-					if [ ! -d \$NVM_DIR ]; then
-						curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
-					fi
-					[ -s "\$NVM_DIR/nvm.sh" ] && . "\$NVM_DIR/nvm.sh"
-					nvm install v10.13.0
-					# install cloc for lines-of-code analysis
-					npm install -g cloc
-
-					./scripts/analyze.sh --commit ${env.GIT_COMMIT} --tag ${getTag()} ${remoteBranch}
-					"""
-					if (statusCode > 0) {
-						error "Failure setting up node"
-					}
-				}
-				// TODO: Use this instead of the above script once node is installed on the server
-				// sh "./scripts/analyze.sh --commit ${env.GIT_COMMIT} --tag ${getTag()} ${remoteBranch}"
-			}
-		}
-
 		stage ('build archive') {
 			steps {
 				echo 'archiving build files...'
@@ -127,7 +97,7 @@ pipeline {
 						error "Failure compressing mpsserver-dist"
 					}
 				}
-				archiveArtifacts '*.tar.gz,*-cloc-*.txt,nest/dist-mpsserver/*.tar.gz'
+				archiveArtifacts allowEmptyArchive: true, artifacts: 'nest/dist-mpsserver/*.tar.gz'
 			}
 		}
 
