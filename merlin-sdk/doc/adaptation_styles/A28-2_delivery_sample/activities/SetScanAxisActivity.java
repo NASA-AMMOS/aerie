@@ -14,7 +14,7 @@ import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
  *
  * @subsystem GNC
  * @version 1.0.0
- * @contacts john.doe@jpl.nasa.gov
+ * @contacts jdoe
  * @stakeholders GNC
  * @labels gnc
  * @dateCreated 2019-07-30

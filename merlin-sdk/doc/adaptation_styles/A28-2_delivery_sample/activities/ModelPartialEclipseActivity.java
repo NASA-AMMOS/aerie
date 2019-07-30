@@ -22,7 +22,7 @@ import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
  *
  * @subsystem Geometry
  * @version 1.1.2
- * @contacts john.doe@jpl.nasa.gov, foo.bar@jpl.nasa.gov
+ * @contacts jdoe, fbar
  * @stakeholders Geometry, GNC
  * @labels geometry, gnc
  * @dateCreated 2019-07-30

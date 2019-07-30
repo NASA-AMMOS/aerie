@@ -25,7 +25,7 @@ import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
  *
  * @subsystem GNC
  * @version 0.0.4
- * @contacts jonny.appleseed@jpl.nasa.gov
+ * @contacts jappleseed
  * @stakeholders GNC, Propulsion
  * @labels gnc, prop, nav
  * @dateCreated 2019-07-30
