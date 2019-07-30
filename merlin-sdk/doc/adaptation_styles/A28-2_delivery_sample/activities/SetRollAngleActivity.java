@@ -8,6 +8,16 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 
 import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
 
+/**
+ * Sets the spacecraft roll angle
+ *
+ * @subsystem GNC
+ * @version 1.2.3
+ * @contacts john.doe@jpl.nasa.gov, foo.bar@jpl.nasa.gov
+ * @stakeholders GNC
+ * @labels gnc
+ * @refs https://madeuplink.com/SetRollAngle
+ */
 @ActivityType("SetRollAngle")
 public class SetRollAngleActivity implements Activity {
 

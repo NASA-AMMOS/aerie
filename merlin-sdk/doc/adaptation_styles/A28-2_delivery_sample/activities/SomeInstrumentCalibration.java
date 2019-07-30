@@ -14,6 +14,24 @@ import gov.nasa.jpl.europa.clipper.merlin.gnc.classes.Enums.GNCControlMode;
 import gov.nasa.jpl.europa.clipper.merlin.someinstrument.classes.Enums.SomeInstrumentOpMode;
 import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
 
+/**
+ * Performs a someInstrument calibration
+ * 
+ * The instrument calibration activity requires that the spacecraft perform a scan provided a specified
+ * scanStartAttitude and scanFinalAttitude with the instrument in a specified operational mode. To achieve this,
+ * the instrument warmup and slew to scanStart occur in parallel. Once the slew to scanStart is complete, the
+ * spacecraft will switch its GNC control authority to reaction wheels if it is currently using thrusters. After
+ * warmup, slew to scanStart, and the control authority switchover are complete, we proceed with the calibration. The
+ * activity sets the instrument's operational mode to a calibration setting, performs the scan, and turns the
+ * instrument off. To conclude, it slews to an Earth-pointing attitude for downlink.
+ *
+ * @subsystem SomeInstrument
+ * @version 1.0.0
+ * @contacts jane.doe@jpl.nasa.gov
+ * @stakeholders GNC, SomeInstrument
+ * @labels gnc, someinstrument
+ * @refs https://madeuplink.com/SomeInstrumentCalibration
+ */
 @ActivityType("SomeInstrumentCalibration")
 public class SomeInstrumentCalibrationActivity implements Activity {
 

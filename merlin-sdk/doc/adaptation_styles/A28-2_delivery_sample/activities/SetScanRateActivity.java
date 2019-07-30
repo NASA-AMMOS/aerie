@@ -8,6 +8,16 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 
 import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
 
+/**
+ * Sets the spacecraft scan rate
+ *
+ * @subsystem GNC
+ * @version 0.5.1
+ * @contacts john.doe@jpl.nasa.gov
+ * @stakeholders GNC
+ * @labels gnc
+ * @refs https://madeuplink.com/SetScanAxis
+ */
 @ActivityType("SetScanRate")
 public class SetScanRateActivity implements Activity {
 

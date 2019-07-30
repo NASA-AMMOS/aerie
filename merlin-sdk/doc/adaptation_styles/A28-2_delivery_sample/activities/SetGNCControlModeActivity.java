@@ -9,6 +9,19 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.simulation.annotations.Simulation
 import gov.nasa.jpl.europa.clipper.merlin.gnc.classes.Enums.GNCControlMode;
 import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
 
+/**
+ * Sets the GNC Control Authority
+ *
+ * This activity sets the GNC control authority of the spacecraft to either RCS or RWA
+ * (thrusters or reaction wheels)
+ *
+ * @subsystem GNC
+ * @version 3.1.4
+ * @contacts john.doe@jpl.nasa.gov, foo.bar@jpl.nasa.gov
+ * @stakeholders GNC
+ * @labels gnc
+ * @refs https://madeuplink.com/SetGNCControlMode
+ */
 @ActivityType("SetGNCControlMode")
 public class SetGNCControlModeActivity implements Activity {
 

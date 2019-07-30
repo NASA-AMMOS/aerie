@@ -14,6 +14,19 @@ import gov.nasa.jpl.europa.clipper.merlin.gnc.classes.Enums.GNCControlMode;
 import gov.nasa.jpl.europa.clipper.merlin.gnc.classes.Enums.SolarArrayMode;
 import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
 
+/**
+ * Models a partial eclipse
+ *
+ * This activity serves more as a geometric event rather than an activity useful for planning. Nevertheless,
+ * it uses SPICE to compute the fraction of the sun not blocked by eclipse and sets the appropriate spacecraft state.
+ *
+ * @subsystem Geometry
+ * @version 1.1.2
+ * @contacts john.doe@jpl.nasa.gov, foo.bar@jpl.nasa.gov
+ * @stakeholders Geometry, GNC
+ * @labels geometry, gnc
+ * @refs https://madeuplink.com/ModelPartialEclipseActivity
+ */
 @ActivityType("ModelPartialEclipse")
 public class ModelPartialEclipseActivity implements Activity {
 

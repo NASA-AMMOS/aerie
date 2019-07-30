@@ -15,6 +15,21 @@ import gov.nasa.jpl.europa.clipper.merlin.gnc.classes.Enums.GNCControlMode;
 import gov.nasa.jpl.europa.clipper.merlin.someinstrument.classes.Enums.SomeInstrumentOpMode;
 import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
 
+/**
+ * Performs a trajectory correction maneuver (TCM)
+ * 
+ * This maneuver primarily consists of a series of three TCM stages: prep, burn, and cleanup. The effect model also
+ * handles GNC control authority switches to thrusters for the maneuver and to finalGNCControlMode if applicable. Upon
+ * completion of the maneuver, it will also perform UVS and SUDA decontamination activities if specified by the
+ * activity parameters.
+ *
+ * @subsystem GNC
+ * @version 0.0.4
+ * @contacts jonny.appleseed@jpl.nasa.gov
+ * @stakeholders GNC, Propulsion
+ * @labels gnc, prop, nav
+ * @refs https://madeuplink.com/TCM
+ */
 @ActivityType("TCM")
 public class TCMActivity implements Activity {
 
