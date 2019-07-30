@@ -3,9 +3,15 @@ services:
   adaptation:
     image: "${DOCKER_URL}/adaptation:${DOCKER_TAG}"
     ports: ["27182:27182"]
+    depends_on: ["adaptation_mongo"]
     volumes:
       - adaptation_files:/usr/src/app/adaptation_files
       - adaptation_logs:/var/log/adaptation
+  adaptation_mongo:
+    command: ["mongod", "--port", "27020", "--smallfiles"]
+    image: mongo:3.2
+    ports: ["27020:27020"]
+    volumes: ["adaptation_mongo_data:/data/db"]
   nest:
     image: "${DOCKER_URL}/nest:${DOCKER_TAG}"
     ports: ["8080:80"]
@@ -37,6 +43,7 @@ services:
 volumes:
   adaptation_files:
   adaptation_logs:
+  adaptation_mongo:
   plan_logs:
   plan_mongo_data:
   sequencing_logs:

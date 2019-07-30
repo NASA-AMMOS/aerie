@@ -4,26 +4,20 @@
   "additionalProperties": false,
   "javaType": "gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityType",
   "properties": {
-    "activityClass": {
+    "id": {
       "type": "string"
     },
-    "listeners": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+    "name": {
+      "type": "string"
     },
     "parameters": {
       "type": "array",
       "items": {
         "$ref": "activity-type-parameter.json"
       }
-    },
-    "typeName": {
-      "type": "string"
     }
   },
-  "required": ["activityClass", "listeners", "parameters", "typeName"],
+  "required": ["name", "parameters"],
   "title": "ActivityType",
   "type": "object"
 }

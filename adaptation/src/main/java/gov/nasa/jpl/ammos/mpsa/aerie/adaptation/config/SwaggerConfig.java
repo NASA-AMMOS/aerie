@@ -19,7 +19,7 @@ public class SwaggerConfig {
     public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2)
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("gov.nasa.jpl.adaptation.controller"))
+                .apis(RequestHandlerSelectors.basePackage("gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controller"))
                 .paths(PathSelectors.any())
                 .build()
                 .apiInfo(apiInfo());

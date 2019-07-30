@@ -1,51 +1,47 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controller;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.Adaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.AdaptationRepository;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.activities.ParameterSchemaSerializer;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.Repositories.AdaptationRepository;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationProjection;
 import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.AdaptationUtils;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ParameterSchema;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
+import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityTypeParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @CrossOrigin
 @RestController
 @RequestMapping("/adaptations")
 public class AdaptationController {
 
-  @Autowired
-  private AdaptationRepository repository;
-
-  private static final Logger logger = LoggerFactory.getLogger(AdaptationController.class);
-
   private final String ADAPTATION_FILE_PATH = new File("").getAbsolutePath() + "/adaptation_files/";
 
+  private AdaptationRepository repository;
+
+  public AdaptationController(AdaptationRepository adaptationRepository) {
+    this.repository = adaptationRepository;
+  }
+
   /**
-   * @return Adaptation with specified name and version, or list of adaptations
-   *         with name (if no version provided)
+   * @return Adaptation with specified ID
    */
-  @GetMapping("/{id}")
-  public ResponseEntity<Object> getAdaptation(@PathVariable("id") Integer id) {
-    logger.debug("GET adaptation/" + id + " requested");
-    Optional<Adaptation> optAdapt = repository.findById(id);
+  @GetMapping("/{adaptationId}")
+  public ResponseEntity<Object> getAdaptation(@PathVariable("adaptationId") UUID adaptationId) {
+    Optional<Adaptation> optAdapt = repository.findById(adaptationId.toString());
     if (optAdapt.isPresent()) {
-      logger.debug("returning " + optAdapt.get());
       return ResponseEntity.ok(optAdapt.get());
     }
     return ResponseEntity.notFound().build();
@@ -55,31 +51,49 @@ public class AdaptationController {
    * @return All adaptations
    */
   @GetMapping("")
-  public ResponseEntity<Object> getAvailableAdaptations() {
-    return ResponseEntity.ok(repository.findAll());
+  public ResponseEntity<Object> getAvailableAdaptations(@RequestParam(value = "mission", required = false) String mission,
+                                                        @RequestParam(value = "owner", required = false) String owner
+  ) {
+    List<AdaptationProjection> filteredAdaptations = repository.findAllProjectedBy()
+            .stream()
+            .filter(a -> mission == null || a.getMission().equals(mission))
+            .filter(a -> owner == null || a.getOwner().equals(owner))
+            .collect(Collectors.toList());
+
+    return ResponseEntity.ok(filteredAdaptations);
   }
 
   /**
    * Create a new adaptation
    *
    * @param multipartFile The JAR file containing the adaptation
-   * @param name          Name of the adaptation
-   * @param owner         User who owns this adaptation
-   * @param version       Version number for this adaptation
-   * @param mission       Mission the adaptation is for
-   *                      <p>
-   *                      TODO: Process the adaptation when it is uploaded TODO:
-   *                      Store activity types in database for quick reference
-   *                      later on
+   * @param adaptation The adaptation to upload
+   *
+   *                      TODO: Process the adaptation when it is uploaded
+   *                      TODO: Store activity types in database for quick reference later on
    */
   @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<Object> addAdaptation(@RequestParam("file") MultipartFile multipartFile,
-      @RequestParam("name") String name, @RequestParam("owner") String owner, @RequestParam("version") String version,
-      @RequestParam("mission") String mission) {
+                                              @Valid Adaptation adaptation)
+  {
+    adaptation.setId(UUID.randomUUID().toString());
 
-    logger.debug("POST adaptation/ to create a new adaptation");
+   if (adaptation.getMission() == null) {
+     adaptation.setMission("");
+   }
 
-    String location = ADAPTATION_FILE_PATH + mission + "/";
+   if (adaptation.getOwner() == null) {
+     adaptation.setOwner("");
+   }
+
+    // Check if this adaptation already exists
+    for (Adaptation adapt : repository.findAll()) {
+      if (adaptation.equals(adapt)) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).build();
+      }
+    }
+
+    String location = getStorageLocation(adaptation);
     File path = new File(location);
     // Ensure the path exists by making any missing directories in location
     path.mkdirs();
@@ -88,112 +102,145 @@ public class AdaptationController {
     String filePath = getUniqueFilePath(location, multipartFile.getOriginalFilename());
     File file = new File(filePath);
 
-    logger.debug("creating a file in path: " + filePath);
     // Transfer the contents of the uploaded file to the created file
     try {
-      logger.debug("starting file transfer");
       file.createNewFile();
       multipartFile.transferTo(file);
+      adaptation.setLocation(filePath);
     } catch (IOException e) {
       e.printStackTrace();
-      logger.error("Exception uploading file for adaptation: " + e.getMessage());
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
 
-    Adaptation adaptation = new Adaptation(name, version, owner, mission, filePath);
-    logger.debug("Now creating adaptation: " + name + " version: " + version + " by " + owner + "for mission: "
-        + mission + " in path: " + filePath);
-    // Check if this adaptation already exists
-    for (Adaptation adapt : repository.findAll()) {
-      if (adaptation.equals(adapt)) {
-        logger.error("adaptation conflict");
-        return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    try {
+      Map<String, ParameterSchema> activityList = loadActivities(adaptation);
+
+      if (activityList == null) return ResponseEntity.unprocessableEntity().build();
+
+      List<ActivityType> activityTypes = new ArrayList<>();
+      for (String activityTypeName : activityList.keySet()) {
+        ParameterSchema parameterSchema = activityList.get(activityTypeName);
+        List<ActivityTypeParameter> parameters = buildParameterList(parameterSchema);
+
+        if (parameters == null) {
+          return ResponseEntity.unprocessableEntity().build();
+        }
+
+        activityTypes.add(new ActivityType(UUID.randomUUID().toString(), activityTypeName, parameters));
       }
+      adaptation.setActivityTypes(activityTypes);
+
+
+    } catch (IOException e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
 
     repository.save(adaptation);
-    logger.debug("saving adapatation");
     return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 
   /**
    * Delete the adaptation with given id
    */
-  @DeleteMapping("/{id}")
-  public ResponseEntity<Object> deleteAdaptation(@PathVariable("id") Integer id) {
-    logger.debug("DELETE adaptation/" + id);
-
-    Optional<Adaptation> optAdapt = repository.findById(id);
-    if (optAdapt.isPresent()) {
-      Adaptation adaptation = optAdapt.get();
-
-      // Ensure the file is deleted before removing the adaptation
-      String location = adaptation.getLocation();
-      File file = new File(location);
-      if (file.exists() && !file.delete()) {
-        logger.error("Adaptation " + id + " error trying to delete file");
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-      }
-
-      repository.delete(adaptation);
-      logger.debug("DELETED adaptation" + id);
-      return ResponseEntity.ok().build();
-    } else {
-      logger.error("Adaptation " + id + " not found");
+  @DeleteMapping("/{adaptationId}")
+  public ResponseEntity<Object> deleteAdaptation(@PathVariable("adaptationId") UUID adaptationId) {
+    Optional<Adaptation> optAdapt = repository.findById(adaptationId.toString());
+    if (!optAdapt.isPresent()) {
       return ResponseEntity.notFound().build();
     }
+
+    Adaptation adaptation = optAdapt.get();
+
+    // Ensure the file is deleted before removing the adaptation
+    String location = adaptation.getLocation();
+    if (location == null) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+
+    File file = new File(location);
+    if (file.exists() && !file.delete()) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+
+    repository.delete(adaptation);
+    return ResponseEntity.ok().build();
   }
 
   /**
-   * Get the Activity Types in the Adaptation
+   * Get the Activity Types in an Adaptation
    *
    * @return Array of Activity Type objects
    */
-  @GetMapping("/{id}/activities")
-  public ResponseEntity<Object> getActivityTypesForAdaptation(@PathVariable("id") Integer id) {
+  @GetMapping("/{adaptationId}/activities")
+  public ResponseEntity<Object> getActivityTypesForAdaptation(@PathVariable("adaptationId") UUID adaptationId) {
+    Optional<Adaptation> adaptationOpt = repository.findById(adaptationId.toString());
 
-    logger.debug("GET adaptation/" + id + " /activities");
+    if (!adaptationOpt.isPresent()) return ResponseEntity.notFound().build();
 
-    Optional<Adaptation> optAdapt = repository.findById(id);
-    if (optAdapt.isPresent()) {
-      Adaptation adaptation = optAdapt.get();
+    Adaptation adaptation = adaptationOpt.get();
+    List<ActivityType> activityTypes = adaptation.getActivityTypes();
+    return ResponseEntity.ok(activityTypes);
+  }
 
-      final MerlinAdaptation userAdaptation;
-      try {
-        userAdaptation = AdaptationUtils.loadAdaptation(adaptation.getLocation());
-      } catch (IOException e) {
-        // Could not load the adaptation
-        logger.error("ClassPathLoaderError:\n " + e.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-      }
+  /**
+   * Get an Activity Type in an Adaptation
+   *
+   * @return Array of Activity Type objects
+   */
+  @GetMapping("/{adaptationId}/activities/{activityId}")
+  public ResponseEntity<Object> getActivityTypeForAdaptation(@PathVariable("adaptationId") UUID adaptationId,
+                                                             @PathVariable("activityId") UUID activityId) {
 
-      if (userAdaptation == null) {
-        logger.error("NullAdaptation:\n loadAdaptation returned a null adaptation");
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-      }
+    Optional<Adaptation> adaptationOpt = repository.findById(adaptationId.toString());
 
-      try {
-        final ActivityMapper activityMapper = userAdaptation.getActivityMapper();
-        final Map<String, ParameterSchema> activitySchemas = activityMapper.getActivitySchemas();
+    if (!adaptationOpt.isPresent()) return ResponseEntity.notFound().build();
 
-        GsonBuilder gsonMapBuilder = new GsonBuilder();
-        gsonMapBuilder.registerTypeAdapter(ParameterSchema.class, new ParameterSchemaSerializer());
-        Gson gsonObject = gsonMapBuilder.create();
-        String JSONObject = gsonObject.toJson(activitySchemas);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        return new ResponseEntity<Object>(JSONObject, headers, HttpStatus.OK);
-      } catch (Exception e) {
-        // Generic error
-        logger.error("Exception:\n" + e.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    Adaptation adaptation = adaptationOpt.get();
+    List<ActivityType> activityTypes = adaptation.getActivityTypes();
+    for (ActivityType activityType : activityTypes) {
+      if (activityType.getId().equals(activityId.toString())) {
+        return ResponseEntity.ok(activityType);
       }
     }
-
-    logger.error("Getting activities for adaptation " + id + " NOT FOUND");
     return ResponseEntity.notFound().build();
+  }
+
+  /**
+   * Get the Parameters for an Activity Type in an Adaptation
+   *
+   * @return Array of Activity Type objects
+   */
+  @GetMapping("/{adaptationId}/activities/{activityId}/parameters")
+  public ResponseEntity<Object> getParametersForActivityType(@PathVariable("adaptationId") UUID adaptationId,
+                                                             @PathVariable("activityId") UUID activityId) {
+
+    Optional<Adaptation> adaptationOpt = repository.findById(adaptationId.toString());
+
+    if (!adaptationOpt.isPresent()) return ResponseEntity.notFound().build();
+
+    Adaptation adaptation = adaptationOpt.get();
+    List<ActivityType> activityTypes = adaptation.getActivityTypes();
+    for (ActivityType activityType : activityTypes) {
+      if (activityType.getId().equals(activityId.toString())) {
+        return ResponseEntity.ok(activityType.getParameters());
+      }
+    }
+    return ResponseEntity.notFound().build();
+  }
+
+  /**
+   * Determine the storage location for an adaptation
+   * @param adaptation - The adaptation to be stored
+   * @return Full path to directory where adaptation should be stored
+   */
+  private String getStorageLocation(Adaptation adaptation) {
+    final String subdir;
+    if (adaptation.getMission() == null || adaptation.getMission().equals("")) {
+      subdir = "other";
+    } else {
+      subdir = adaptation.getMission();
+    }
+    return ADAPTATION_FILE_PATH + subdir + "/";
   }
 
   /**
@@ -212,4 +259,33 @@ public class AdaptationController {
     return filename;
   }
 
+  private Map<String, ParameterSchema> loadActivities(Adaptation adaptation) throws IOException {
+    final MerlinAdaptation userAdaptation = AdaptationUtils.loadAdaptation(adaptation.getLocation());
+
+    if (userAdaptation == null) {
+      return null;
+    }
+
+    final ActivityMapper activityMapper = userAdaptation.getActivityMapper();
+    final Map<String, ParameterSchema> activitySchemas = activityMapper.getActivitySchemas();
+
+    return activitySchemas;
+
+  }
+
+  private List<ActivityTypeParameter> buildParameterList(ParameterSchema parameterSchema) {
+    List<ActivityTypeParameter> parameters = new ArrayList<>();
+
+    Optional<Map<String, ParameterSchema>> parameterMapOpt = parameterSchema.asMap();
+
+    if (!parameterMapOpt.isPresent()) return null;
+
+    for (var parameterEntry : parameterMapOpt.get().entrySet()) {
+      String parameterName = parameterEntry.getKey();
+      String parameterType = parameterEntry.getValue().match(new SchemaTypeNameVisitor());
+      parameters.add(new ActivityTypeParameter(parameterName, parameterType));
+    }
+
+    return parameters;
+  }
 }
