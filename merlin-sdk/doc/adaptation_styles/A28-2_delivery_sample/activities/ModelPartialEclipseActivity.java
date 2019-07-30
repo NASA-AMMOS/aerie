@@ -5,6 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityTy
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.simulation.Context;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.simulation.annotations.SimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 
 import gov.nasa.jpl.ammos.mpsa.merlin.multimissionmodels.geometry.classes.GeometryEnums.Body;
 
@@ -37,7 +38,7 @@ public class ModelPartialEclipseActivity implements Activity {
 
     public void modelEffects() {
         clipper = ctx.getStates();
-        Time eclipseEnd = context.now().plus(eclipseDuration);
+        Time eclipseEnd = ctx.now().plus(eclipseDuration);
 
         int segments = 10;
         Duration stepTime = eclipseDuration.dividedBy(segments);
@@ -48,7 +49,7 @@ public class ModelPartialEclipseActivity implements Activity {
 
             // Adapters can call some utility functions they've defined elsewhere
             // if they don't want all logic in the `modelEffects()` method
-            EclipseType eclipseType = GeometryUtils.getWorstCurrentEclipse(context, clipper);
+            EclipseType eclipseType = GeometryUtils.getWorstCurrentEclipse(ctx, clipper);
 
             // calculate the fraction of sun that isn't blocked by the eclipse
             switch (eclipseType) {
@@ -64,17 +65,17 @@ public class ModelPartialEclipseActivity implements Activity {
                 fracSunNotBlocked = CSPICE.vzfrac(NAIF.ids.get(occultingBody),
                         NAIF.bodyFrames.get(occultingBody),GeometryUtils.bodyRadii.get(occultingBody),
                         NAIF.ids.get(targetBody), NAIF.bodyFrames.get(targetBody),
-                        GeometryUtils.bodyRadii.get(targetBody), Config.spacecraftId, context.now());
+                        GeometryUtils.bodyRadii.get(targetBody), Config.spacecraftId, ctx.now());
                 break;
             }
             // set a spacecraft state
             clipper.geometry.eclipseFactor.set(fracSunNotBlocked);
 
             // wait for step size OR until the end of the eclipse
-            if (context.now().plus(stepTime).isBefore(eclipseEnd)) {
-                context.wait(stepTime);
+            if (ctx.now().plus(stepTime).isBefore(eclipseEnd)) {
+                ctx.wait(stepTime);
             } else {
-                context.wait(eclipseEnd.minus(context.now()));
+                ctx.wait(eclipseEnd.minus(ctx.now()));
             }
         }
     }
