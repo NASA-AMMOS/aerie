@@ -18,7 +18,7 @@ import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
  * @labels gnc
  * @dateCreated 2019-07-30
  * @dateLastModified 2019-07-30
- * @refs https://madeuplink.com/SetRollAngle
+ * @refs https://example.com/SetRollAngle
  */
 @ActivityType("SetRollAngle")
 public class SetRollAngleActivity implements Activity {
@@ -38,7 +38,7 @@ public class SetRollAngleActivity implements Activity {
     Context<ClipperStates> ctx;
 
     public void modelEffects() {
-        clipper = ctx.getStates();
+        ClipperStates clipper = ctx.getStates();
         clipper.gnc.rollAngle.set(newRollAngle);
     }
 

@@ -19,7 +19,7 @@ import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
  * @labels gnc
  * @dateCreated 2019-07-30
  * @dateLastModified 2019-07-30
- * @refs https://madeuplink.com/SetScanAxis
+ * @refs https://example.com/SetScanAxis
  */
 @ActivityType("SetScanAxis")
 public class SetScanAxisActivity implements Activity {
@@ -38,7 +38,7 @@ public class SetScanAxisActivity implements Activity {
     Context<ClipperStates> ctx;
 
     public void modelEffects() {
-        clipper = ctx.getStates();
+        ClipperStates clipper = ctx.getStates();
         clipper.gnc.scanAxis.set(newScanAxis);
     }
 

@@ -32,7 +32,7 @@ import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
  * @labels gnc, someinstrument
  * @dateCreated 2019-07-30
  * @dateLastModified 2019-07-30
- * @refs https://madeuplink.com/SomeInstrumentCalibration
+ * @refs https://example.com/SomeInstrumentCalibration
  */
 @ActivityType("SomeInstrumentCalibration")
 public class SomeInstrumentCalibrationActivity implements Activity {
@@ -80,10 +80,10 @@ public class SomeInstrumentCalibrationActivity implements Activity {
     Context<ClipperStates> ctx;
 
     public void modelEffects() {
-        clipper = ctx.getStates();
+        ClipperStates clipper = ctx.getStates();
 
         // mark the calibration as in-progress
-        clipper.instruments.someInstrument.calibrationInProgress.setValue(true);
+        clipper.instruments.someInstrument.calibrationInProgress.set(true);
 
         // in parallel: warm up the instrument and change the attitude to the starting
         // scan attitude
@@ -133,7 +133,7 @@ public class SomeInstrumentCalibrationActivity implements Activity {
             new SetSomeInstrumentOpModeActivity(SomeInstrumentOpMode.SURVIVAL)
         );
 
-        clipper.instruments.someInstrument.calibrationInProgress.setValue(false);
+        clipper.instruments.someInstrument.calibrationInProgress.set(false);
 
         // change attitude to Earth-pointing after the calibration
         ctx.callActivity(

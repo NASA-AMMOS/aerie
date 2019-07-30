@@ -25,7 +25,9 @@ import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
  * @contacts john.doe@jpl.nasa.gov, foo.bar@jpl.nasa.gov
  * @stakeholders Geometry, GNC
  * @labels geometry, gnc
- * @refs https://madeuplink.com/ModelPartialEclipseActivity
+ * @dateCreated 2019-07-30
+ * @dateLastModified 2019-07-30
+ * @refs https://example.com/ModelPartialEclipseActivity
  */
 @ActivityType("ModelPartialEclipse")
 public class ModelPartialEclipseActivity implements Activity {
@@ -50,7 +52,7 @@ public class ModelPartialEclipseActivity implements Activity {
     Context<ClipperStates> ctx;
 
     public void modelEffects() {
-        clipper = ctx.getStates();
+        ClipperStates clipper = ctx.getStates();
         Time eclipseEnd = ctx.now().plus(eclipseDuration);
 
         int segments = 10;
@@ -58,7 +60,7 @@ public class ModelPartialEclipseActivity implements Activity {
 
         for (int i = 0; i < segments; i++) {
 
-            Double fracSunNotBlocked;
+            double fracSunNotBlocked;
 
             // Adapters can call some utility functions they've defined elsewhere
             // if they don't want all logic in the `modelEffects()` method
