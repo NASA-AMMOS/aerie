@@ -30,6 +30,8 @@ import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
  * @contacts jane.doe@jpl.nasa.gov
  * @stakeholders GNC, SomeInstrument
  * @labels gnc, someinstrument
+ * @dateCreated 2019-07-30
+ * @dateLastModified 2019-07-30
  * @refs https://madeuplink.com/SomeInstrumentCalibration
  */
 @ActivityType("SomeInstrumentCalibration")

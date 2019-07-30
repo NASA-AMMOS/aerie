@@ -16,6 +16,8 @@ import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
  * @contacts john.doe@jpl.nasa.gov
  * @stakeholders GNC
  * @labels gnc
+ * @dateCreated 2019-07-30
+ * @dateLastModified 2019-07-30
  * @refs https://madeuplink.com/SetScanAxis
  */
 @ActivityType("SetScanRate")

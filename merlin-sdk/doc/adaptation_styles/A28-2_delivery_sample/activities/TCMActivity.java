@@ -28,6 +28,8 @@ import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
  * @contacts jonny.appleseed@jpl.nasa.gov
  * @stakeholders GNC, Propulsion
  * @labels gnc, prop, nav
+ * @dateCreated 2019-07-30
+ * @dateLastModified 2019-07-30
  * @refs https://madeuplink.com/TCM
  */
 @ActivityType("TCM")
