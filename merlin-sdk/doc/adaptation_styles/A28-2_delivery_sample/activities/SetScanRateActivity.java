@@ -13,12 +13,12 @@ import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
  *
  * @subsystem GNC
  * @version 0.5.1
- * @contacts john.doe@jpl.nasa.gov
+ * @contacts jdoe
  * @stakeholders GNC
  * @labels gnc
  * @dateCreated 2019-07-30
  * @dateLastModified 2019-07-30
- * @refs https://madeuplink.com/SetScanAxis
+ * @refs https://example.com/SetScanAxis
  */
 @ActivityType("SetScanRate")
 public class SetScanRateActivity implements Activity {
@@ -33,7 +33,7 @@ public class SetScanRateActivity implements Activity {
     Context<ClipperStates> ctx;
 
     public void modelEffects() {
-        clipper = ctx.getStates();
+        ClipperStates clipper = ctx.getStates();
         clipper.gnc.scanRate.set(newScanRate);
     }
 

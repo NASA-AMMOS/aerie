@@ -25,12 +25,12 @@ import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
  *
  * @subsystem GNC
  * @version 0.0.4
- * @contacts jonny.appleseed@jpl.nasa.gov
+ * @contacts jappleseed
  * @stakeholders GNC, Propulsion
  * @labels gnc, prop, nav
  * @dateCreated 2019-07-30
  * @dateLastModified 2019-07-30
- * @refs https://madeuplink.com/TCM
+ * @refs https://example.com/TCM
  */
 @ActivityType("TCM")
 public class TCMActivity implements Activity {
@@ -128,12 +128,12 @@ public class TCMActivity implements Activity {
     Context<ClipperStates> ctx;
 
     public void modelEffects() {
-        clipper = ctx.getStates();
+        ClipperStates clipper = ctx.getStates();
 
         // modify some states at the beginning of a TCM
-        clipper.gnc.tcmInProgress.setValue(true);
-        clipper.gnc.tcmName.setValue(tcmId);
-        clipper.gnc.lastTCMExecuted.setValue(ctx.now());
+        clipper.gnc.tcmInProgress.set(true);
+        clipper.gnc.tcmName.set(tcmId);
+        clipper.gnc.lastTCMExecuted.set(ctx.now());
 
         // switch GNC control mode to RCS if we're currently running on RWA
         if (clipper.gnc.GNCControlMode == GNCControlMode.RWA) {
@@ -171,7 +171,7 @@ public class TCMActivity implements Activity {
         TCMCleanupActivity cleanup = new TCMCleanupActivity(this.tcmId);
         ctx.callActivity(cleanup);
 
-        clipper.gnc.tcmInProgress.setValue(false);
+        clipper.gnc.tcmInProgress.set(false);
 
         // switch from RCS to RWA if necessary
         if (finalGNCControlMode == finalGNCControlMode.RWA) {

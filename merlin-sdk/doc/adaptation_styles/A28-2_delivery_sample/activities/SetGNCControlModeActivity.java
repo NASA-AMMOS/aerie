@@ -17,12 +17,12 @@ import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
  *
  * @subsystem GNC
  * @version 3.1.4
- * @contacts john.doe@jpl.nasa.gov, foo.bar@jpl.nasa.gov
+ * @contacts jdoe, fbar
  * @stakeholders GNC
  * @labels gnc
  * @dateCreated 2019-07-30
  * @dateLastModified 2019-07-30
- * @refs https://madeuplink.com/SetGNCControlMode
+ * @refs https://example.com/SetGNCControlMode
  */
 @ActivityType("SetGNCControlMode")
 public class SetGNCControlModeActivity implements Activity {
@@ -41,7 +41,7 @@ public class SetGNCControlModeActivity implements Activity {
     Context<ClipperStates> ctx;
 
     public void modelEffects() {
-        clipper = ctx.getStates();
+        ClipperStates clipper = ctx.getStates();
         clipper.gnc.controlMode.set(newControlMode);
     }
 
