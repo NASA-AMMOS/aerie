@@ -23,7 +23,6 @@ public class SetScanRateActivity implements Activity {
     public void modelEffects() {
         clipper = ctx.getStates();
         clipper.gnc.scanRate.set(newScanRate);
-        ctx.wait(1, Time.second);
     }
 
 }

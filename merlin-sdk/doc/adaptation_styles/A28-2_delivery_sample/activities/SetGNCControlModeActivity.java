@@ -28,7 +28,6 @@ public class SetGNCControlModeActivity implements Activity {
     public void modelEffects() {
         clipper = ctx.getStates();
         clipper.gnc.controlMode.set(newControlMode);
-        ctx.wait(1, Time.second);
     }
 
 }

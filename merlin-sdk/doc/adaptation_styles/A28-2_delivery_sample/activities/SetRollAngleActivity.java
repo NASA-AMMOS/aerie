@@ -28,7 +28,6 @@ public class SetRollAngleActivity implements Activity {
     public void modelEffects() {
         clipper = ctx.getStates();
         clipper.gnc.rollAngle.set(newRollAngle);
-        ctx.wait(1, Time.second);
     }
 
 }

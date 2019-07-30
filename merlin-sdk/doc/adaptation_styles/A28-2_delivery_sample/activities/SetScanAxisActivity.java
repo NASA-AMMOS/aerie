@@ -28,7 +28,6 @@ public class SetScanAxisActivity implements Activity {
     public void modelEffects() {
         clipper = ctx.getStates();
         clipper.gnc.scanAxis.set(newScanAxis);
-        ctx.wait(1, Time.second);
     }
 
 }
