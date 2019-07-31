@@ -1,6 +1,6 @@
 {
   "name": "nest",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "private": true,
   "scripts": {
     "analyze": "npx webpack-bundle-analyzer ./dist/stats.json",
