@@ -254,7 +254,7 @@ public class MerlinCLITests extends AbstractJUnit4SpringContextTests {
      * specified file.
      */
     @Test
-    public void testActivityCreation() {
+    public void testAppendActivities() {
         String planId = "s38j2";
         String path = String.format("%s/rotten_apple_activity.json", resourcesRoot);
         String expectedBody = null;
@@ -272,7 +272,7 @@ public class MerlinCLITests extends AbstractJUnit4SpringContextTests {
                 .andExpect(content().string(new JSONMatcher(expectedBody)))
                 .andRespond(withCreatedEntity(location));
 
-        String[] args = { "-p", planId, "--new-activity-file", path };
+        String[] args = { "-p", planId, "--append-activities", path };
         commandOptions.consumeArgs(args).parse();
 
         mockServer.verify();

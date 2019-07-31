@@ -75,8 +75,8 @@ public class CommandOptions {
         planGroup.addOption(new Option("D", "delete-plan",false, "Delete a plan."));
         planGroup.addOption(new Option("U", "update-plan-from-file", true, "Update plan based on values in plan file"));
         planGroup.addOption(updatePlanOption);
+        planGroup.addOption(new Option("A", "append-activities", true,"Append new activity instances to a planfrom a json"));
         planGroup.addOption(new Option("pull", "download-plan", true, "Download a plan into a file"));
-        planGroup.addOption(new Option("naf", "new-activity-file", true,"Create a new activity instance from a json"));
         planGroup.addOption(new Option("dispact", "display-activity", true, "Display an activity from a plan"));
         planGroup.addOption(updateActivityOption);
         planGroup.addOption(new Option("delact", "delete-activity", true, "Delete an activity from a plan"));
@@ -132,10 +132,10 @@ public class CommandOptions {
                 String outName = cmd.getOptionValue("pull");
                 lastCommandStatus = downloadPlan(planId, outName);
 
-            } else if (cmd.hasOption("naf")) {
+            } else if (cmd.hasOption("A")) {
                 String planId = cmd.getOptionValue("p");
-                String path = cmd.getOptionValue("naf");
-                lastCommandStatus = addActivity(planId, path);
+                String path = cmd.getOptionValue("A");
+                lastCommandStatus = appendActivities(planId, path);
 
             } else if (cmd.hasOption("dispact")) {
                 String planId = cmd.getOptionValue("p");
@@ -311,16 +311,14 @@ public class CommandOptions {
         return false;
     }
 
-    private boolean addActivity(String planId, String path) {
+    private boolean appendActivities(String planId, String path) {
         try {
-            NewActivityFileCommand command = new NewActivityFileCommand(restTemplate, planId, path);
+            AppendActivitiesCommand command = new AppendActivitiesCommand(restTemplate, planId, path);
             command.execute();
             int status = command.getStatus();
-            String activityId = command.getId();
-
             switch(status) {
                 case 201:
-                    System.out.println(String.format("CREATED: Activity successfully created with id %s.", activityId));
+                    System.out.println(String.format("CREATED: Activities successfully created."));
                     return true;
 
                 case 422:
