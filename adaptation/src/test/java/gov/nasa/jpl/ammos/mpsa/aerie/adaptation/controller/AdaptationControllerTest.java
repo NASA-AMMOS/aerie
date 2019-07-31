@@ -74,13 +74,13 @@ public class AdaptationControllerTest {
         List<ActivityType> activityTypes = new ArrayList<>();
 
         List<ActivityTypeParameter> act1Parameters = new ArrayList<>();
-        act1Parameters.add(new ActivityTypeParameter("param1", "type1"));
-        act1Parameters.add(new ActivityTypeParameter("param2", "type2"));
+        act1Parameters.add(createActivityTypeParameter("param1", "type1"));
+        act1Parameters.add(createActivityTypeParameter("param2", "type2"));
         activityTypes.add(new ActivityType("13d77a34-b2ff-11e9-a2a3-2a2ae2dbcce4", "activity1", act1Parameters));
 
         List<ActivityTypeParameter> act2Parameters = new ArrayList<>();
-        act2Parameters.add(new ActivityTypeParameter("param3", "type3"));
-        act2Parameters.add(new ActivityTypeParameter("param4", "type4"));
+        act2Parameters.add(createActivityTypeParameter("param3", "type3"));
+        act2Parameters.add(createActivityTypeParameter("param4", "type4"));
         activityTypes.add(new ActivityType("13d777c8-b2ff-11e9-a2a3-2a2ae2dbcce4", "activity2", act2Parameters));
 
         fullAdaptation = new Adaptation("0a074a3e-b2ff-11e9-a2a3-2a2ae2dbcce4", "name", "version", "owner", "mission", "location", activityTypes);
@@ -201,6 +201,13 @@ public class AdaptationControllerTest {
         String expected = String.format("[{\"name\":\"param3\",\"type\":\"type3\"},{\"name\":\"param4\",\"type\":\"type4\"}]");
 
         JSONAssert.assertEquals(expected, result.getResponse().getContentAsString(), false);
+    }
+
+    public static ActivityTypeParameter createActivityTypeParameter(String name, String type) {
+        ActivityTypeParameter param = new ActivityTypeParameter();
+        param.setName(name);
+        param.setType(type);
+        return param;
     }
 
 }

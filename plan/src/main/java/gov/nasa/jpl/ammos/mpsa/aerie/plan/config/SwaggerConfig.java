@@ -2,6 +2,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.plan.config;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.PlanValidator;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.PlanValidatorInterface;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.services.AdaptationService;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.services.RemoteAdaptationService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,8 +34,15 @@ public class SwaggerConfig {
     }
 
     @Bean
-    public PlanValidatorInterface planValidator() {
-        return new PlanValidator(adaptationUri);
+    public PlanValidatorInterface planValidator(
+        final AdaptationService adaptationService
+    ) {
+        return new PlanValidator(adaptationService);
+    }
+
+    @Bean
+    public AdaptationService adaptationService() {
+        return new RemoteAdaptationService(adaptationUri);
     }
 
     private ApiInfo apiInfo() {

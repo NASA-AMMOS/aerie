@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.PlanDetail;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.services.AdaptationService;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstanceParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityType;
@@ -17,38 +18,16 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class PlanValidator implements PlanValidatorInterface {
-    private final String adaptationUri;
+    private final AdaptationService adaptationService;
 
-    public PlanValidator(final String adaptationUri) {
-        this.adaptationUri = adaptationUri;
-    }
-
-    public Map<String, ActivityType> loadAdaptation(String adaptationId) {
-        RestTemplate restTemplate = new RestTemplate();
-        String uri = String.format("%s/%s/activities", adaptationUri, adaptationId);
-
-        ResponseEntity<List<ActivityType>> response =
-                restTemplate.exchange(
-                        uri,
-                        HttpMethod.GET,
-                        null,
-                        new ParameterizedTypeReference<List<ActivityType>>() {
-                        });
-
-        // TODO: Check that the request succeeded
-
-        List<ActivityType> typeList = response.getBody();
-        Map<String, ActivityType> activityTypes = typeList
-                .stream()
-                .collect(Collectors.toMap(type -> type.getName(), type -> type));
-
-        return activityTypes;
+    public PlanValidator(final AdaptationService adaptationService) {
+        this.adaptationService = adaptationService;
     }
 
     @Override
     public void validateActivitiesForPlan(PlanDetail plan) throws ValidationException {
         List<ActivityInstance> instanceList = plan.getActivityInstances();
-        Map<String, ActivityType> activityTypeMap = loadAdaptation(plan.getAdaptationId());
+        Map<String, ActivityType> activityTypeMap = adaptationService.getActivityTypes(plan.getAdaptationId());
 
         for (ActivityInstance activityInstance : instanceList) {
             String activityTypeName = activityInstance.getActivityType();

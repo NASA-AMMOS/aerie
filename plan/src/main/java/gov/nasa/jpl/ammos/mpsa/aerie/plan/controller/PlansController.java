@@ -5,6 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.PlanValidatorInterface;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.PlanDetail;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.repositories.PlansRepository;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.services.AdaptationService;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstanceParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityType;
@@ -17,35 +18,27 @@ import java.net.URISyntaxException;
 import java.util.*;
 import javax.validation.Valid;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
 @CrossOrigin
 @RestController
 @RequestMapping("/plans")
 public class PlansController {
-
-    @Value("${adaptation-url}")
-    private String adaptationUri;
-
     // Controller requestMapping
     private final String controllerLocation = this.getClass().getAnnotation(RequestMapping.class).value()[0];
 
-    // @Autowired
-    private PlansRepository repository;
-
-    private PlanValidatorInterface planValidator;
-
+    private final AdaptationService adaptationService;
+    private final PlansRepository repository;
+    private final PlanValidatorInterface planValidator;
 
     public PlansController(
-            PlanValidatorInterface planValidator,
-            PlansRepository plansRepository
+        AdaptationService adaptationService,
+        PlanValidatorInterface planValidator,
+        PlansRepository plansRepository
     ) {
+        this.adaptationService = adaptationService;
         this.planValidator = planValidator;
         this.repository = plansRepository;
     }
@@ -184,57 +177,70 @@ public class PlansController {
         }
     }
 
+    /**
+     * Add a list of activity instances to a plan
+     */
     @PostMapping("/{planId}/activity_instances")
     public ResponseEntity<Object> createActivityInstance(
             @PathVariable("planId") UUID planId,
-            @RequestParam(value = "adaptationId", required = false) String adaptationId,
-            @RequestParam(value = "activityTypeId", required = false) String activityTypeId,
-            @Valid @RequestBody ActivityInstance requestBodyActivityInstance) {
-        ActivityInstance activityInstance = new ActivityInstance();
+            @Valid @RequestBody List<ActivityInstance> requestActivityInstanceList) {
+
+        if (!repository.existsById(planId.toString())) {
+            return ResponseEntity.notFound().build();
+        }
+        PlanDetail planDetail = repository.findPlanDetailById(planId.toString());
+        String adaptationId = planDetail.getAdaptationId();
 
         // Get activity type from adaptation service
-        if (adaptationId != null && activityTypeId != null) {
-            RestTemplate restTemplate = new RestTemplate();
-            String uri = String.format("%s/%s/activities", adaptationUri, adaptationId);
+        if (adaptationId != null) {
+            Map<String, ActivityType> activityTypes = adaptationService.getActivityTypes(adaptationId);
 
-            ResponseEntity<HashMap<String, ActivityType>> response =
-                    restTemplate.exchange(
-                            uri,
-                            HttpMethod.GET,
-                            null,
-                            new ParameterizedTypeReference<HashMap<String, ActivityType>>() {
-                            });
+            for (ActivityInstance activityInstance : requestActivityInstanceList) {
+                String activityType = activityInstance.getActivityType();
+                if (activityTypes.containsKey(activityType)) {
+                    ActivityType at = activityTypes.get(activityType);
+                    List<ActivityInstanceParameter> requestParameters = activityInstance.getParameters();
 
-            HashMap<String, ActivityType> activityTypes = response.getBody();
+                    // Build a list and map containing the instance parameters
+                    // We use the map to replace default values, but the list is needed to
+                    // assign them to the activity instance we are creating
+                    List<ActivityInstanceParameter> parameterList = new ArrayList<>();
+                    Map<String, ActivityInstanceParameter> actualParameters = new HashMap<>();
+                    for (ActivityTypeParameter parameter : at.getParameters()) {
+                        String parameterName = parameter.getName();
 
-            if (activityTypes.containsKey(activityTypeId)) {
-                ActivityType at = activityTypes.get(activityTypeId);
+                        ActivityInstanceParameter instanceParameter = new ActivityInstanceParameter();
+                        instanceParameter.setName(parameterName);
+                        instanceParameter.setType(parameter.getType());
+                        instanceParameter.setValue(parameter.getDefaultValue());
 
-                activityInstance.setName(activityTypeId);
-                activityInstance.setActivityType(at.getName());
+                        parameterList.add(instanceParameter);
+                        actualParameters.put(parameterName, instanceParameter);
+                    }
 
-                // TODO This is not doing what needs to be done. We need to get the value from the request body
-                ArrayList<ActivityInstanceParameter> parameters = new ArrayList<>();
-                for (ActivityTypeParameter parameter : at.getParameters()) {
-                    String defaultValue = "";
-                    String name = parameter.getName();
-                    List<String> range = new ArrayList<String>();
-                    String type = parameter.getType();
-                    String value = "FIX ME";
-                    parameters.add(new ActivityInstanceParameter(defaultValue, type, range, name, value));
+                    for (ActivityInstanceParameter requestParameter : requestParameters ) {
+
+                        // If the parameter isn't in the list of type params, explode
+                        if (!actualParameters.containsKey(requestParameter.getName())) {
+                            return ResponseEntity.unprocessableEntity().build();
+                        }
+
+                        // Replace the default value with this parameter's value
+                        actualParameters.get(requestParameter.getName()).setValue(requestParameter.getValue());
+                    }
+
+                    activityInstance.setParameters(parameterList);
+                    activityInstance.setActivityId(UUID.randomUUID().toString());
                 }
-                activityInstance.setParameters(parameters);
             }
         }
 
-        UUID uuid = UUID.randomUUID();
-        activityInstance.setActivityId(uuid.toString());
-        requestBodyActivityInstance.setActivityId(uuid.toString());
+        // TODO: We should add the ability to add a list of activity instances and use that instead of a loop here
+        for (ActivityInstance activityInstance : requestActivityInstanceList) {
+            planDetail.addActivityInstance(activityInstance);
+        }
 
-        PlanDetail planDetail = repository.findPlanDetailById(planId.toString());
-        planDetail.addActivityInstance(activityInstance);
-        planDetail.updateActivityInstance(uuid, requestBodyActivityInstance);
-
+        // Validate the new activities before adding them to the plan, by validating the entire plan
         try {
             if (!Validator.validate(planDetail)) {
                 return ResponseEntity.unprocessableEntity().build();
@@ -243,14 +249,21 @@ public class PlansController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
+        // Plan semantic validation (against the adaptation)
+        try {
+            planValidator.validateActivitiesForPlan(planDetail);
+        } catch (PlanValidator.ValidationException e) {
+            return ResponseEntity.unprocessableEntity().body(e.getMessage());
+        }
+
         URI location = null;
         try {
-            location = new URI(String.format("%s/%s/activity_instances/%s", controllerLocation, planDetail.getId(), uuid.toString()));
+            location = new URI(String.format("%s/%s/activity_instances", controllerLocation, planDetail.getId()));
         } catch (URISyntaxException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
         repository.save(planDetail);
-        return ResponseEntity.created(location).body(planDetail.getActivityInstance(uuid));
+        return ResponseEntity.created(location).body(planDetail.getActivityInstances());
     }
 
     @GetMapping("/{planId}/activity_instances")

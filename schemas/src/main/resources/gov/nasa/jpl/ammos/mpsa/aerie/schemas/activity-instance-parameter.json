@@ -4,20 +4,9 @@
   "additionalProperties": false,
   "javaType": "gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstanceParameter",
   "properties": {
-    "defaultValue": {
-      "description": "Default value of the parameter",
-      "type": "string"
-    },
     "name": {
       "description": "Name of the parameter",
       "type": "string"
-    },
-    "range": {
-      "description": "A range of values, for instance min/max and enum",
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
     },
     "type": {
       "description": "The type of this parameter",

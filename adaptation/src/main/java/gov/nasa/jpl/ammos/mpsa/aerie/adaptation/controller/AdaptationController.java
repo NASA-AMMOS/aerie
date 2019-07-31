@@ -283,7 +283,11 @@ public class AdaptationController {
     for (var parameterEntry : parameterMapOpt.get().entrySet()) {
       String parameterName = parameterEntry.getKey();
       String parameterType = parameterEntry.getValue().match(new SchemaTypeNameVisitor());
-      parameters.add(new ActivityTypeParameter(parameterName, parameterType));
+
+      ActivityTypeParameter typeParam = new ActivityTypeParameter();
+      typeParam.setName(parameterName);
+      typeParam.setType(parameterType);
+      parameters.add(typeParam);
     }
 
     return parameters;

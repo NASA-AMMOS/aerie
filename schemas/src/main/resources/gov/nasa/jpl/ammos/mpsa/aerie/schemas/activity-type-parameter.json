@@ -9,6 +9,17 @@
     },
     "type": {
       "type": "string"
+    },
+    "defaultValue": {
+      "description": "Default value of the parameter",
+      "type": "string"
+    },
+    "range": {
+      "description": "A range of values, for instance min/max and enum",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
   },
   "required": ["name", "type"],
