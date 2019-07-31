@@ -8,11 +8,15 @@ import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstance;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -45,9 +49,15 @@ import static org.assertj.core.api.Assertions.assertThat;
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class PlansControllerIntegrationTest {
 
-  @Autowired private PlansRepository plansRepository;
+  @Autowired
+  private PlansRepository plansRepository;
 
-  @Autowired private TestRestTemplate restTemplate;
+  @Autowired
+  private TestRestTemplate restTemplate;
+
+  @MockBean
+  private PlanValidatorInterface planValidator;
+
 
   // TestRestTemplate doesn't support PATCH, work around this with the Apache HttpClient
   // see https://rtmccormick.com/2017/07/30/solved-testing-patch-spring-boot-testresttemplate/
@@ -59,6 +69,15 @@ public class PlansControllerIntegrationTest {
     HttpClient httpClient = HttpClientBuilder.create().build();
     this.patchRestTemplate.setRequestFactory(
         new HttpComponentsClientHttpRequestFactory(httpClient));
+  }
+
+  @BeforeClass
+  public void setupMocks() {
+      try {
+          Mockito.doNothing().when(planValidator).validateActivitiesForPlan(null);
+      } catch (Exception _unused) {
+          // We're just configuring Mockito here -- no exceptions to bother us.
+      }
   }
 
   @Test

@@ -1,5 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.controller;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.PlanValidator;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.PlanValidatorInterface;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.PlanDetail;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.repositories.PlansRepository;
@@ -37,7 +39,14 @@ public class PlansController {
     // @Autowired
     private PlansRepository repository;
 
-    public PlansController(PlansRepository plansRepository) {
+    private PlanValidatorInterface planValidator;
+
+
+    public PlansController(
+            PlanValidatorInterface planValidator,
+            PlansRepository plansRepository
+    ) {
+        this.planValidator = planValidator;
         this.repository = plansRepository;
     }
 
@@ -138,12 +147,20 @@ public class PlansController {
             act.setActivityId(UUID.randomUUID().toString());
         }
 
+        // Plan syntax validation
         try {
             if (!Validator.validate(plan)) {
                 return ResponseEntity.unprocessableEntity().build();
             }
         } catch (IOException ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+        // Plan semantic validation (against the adaptation)
+        try {
+            planValidator.validateActivitiesForPlan(plan);
+        } catch (PlanValidator.ValidationException e) {
+            return ResponseEntity.unprocessableEntity().body(e.getMessage());
         }
 
         URI location = null;

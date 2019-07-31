@@ -1,5 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.config;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.PlanValidator;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.PlanValidatorInterface;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.PathSelectors;
@@ -15,6 +18,9 @@ import java.util.Collections;
 @Configuration
 @EnableSwagger2
 public class SwaggerConfig {
+    @Value("${adaptation-url}")
+    private String adaptationUri;
+
     @Bean
     public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2)
@@ -23,6 +29,11 @@ public class SwaggerConfig {
                 .paths(PathSelectors.any())
                 .build()
                 .apiInfo(apiInfo());
+    }
+
+    @Bean
+    public PlanValidatorInterface planValidator() {
+        return new PlanValidator(adaptationUri);
     }
 
     private ApiInfo apiInfo() {
