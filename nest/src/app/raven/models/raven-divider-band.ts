@@ -17,6 +17,7 @@ import { TimeRange } from '../../shared/models';
 export interface RavenDividerBand {
   addTo: boolean;
   color: string;
+  editable: boolean;
   height: number;
   heightPadding: number;
   id: string;

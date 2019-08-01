@@ -18,6 +18,10 @@ export interface RavenStateBand {
 
   // Use in line plot only.
   color: string;
+
+  editable: boolean;
+
+  // Use in line plot only.
   fill: boolean;
   fillColor: string;
 

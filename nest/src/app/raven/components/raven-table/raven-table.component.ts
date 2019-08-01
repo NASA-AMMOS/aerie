@@ -308,7 +308,6 @@ export class RavenTableComponent implements OnChanges {
           'color',
           'hidden',
           'descendantsUrl',
-          'editable',
           'endTimestamp',
           'expandedFromPointId',
           'expansion',
@@ -337,12 +336,12 @@ export class RavenTableComponent implements OnChanges {
         ) {
           children.push({
             colId: prop,
-            editable: point.editable && this.colEditable(prop),
+            editable: this.selectedSubBand.editable && this.colEditable(prop),
             field: prop,
             headerName: prop.charAt(0).toUpperCase() + prop.slice(1), // Capitalize header.
             hide: false,
             valueSetter:
-              point.editable && this.colEditable(prop)
+              this.selectedSubBand.editable && this.colEditable(prop)
                 ? (params: ValueSetterParams) => {
                     const timeIds = ['start', 'end'];
                     const value = params.newValue;
@@ -644,17 +643,17 @@ export class RavenTableComponent implements OnChanges {
     let newPoint: RavenPoint;
     if (this.selectedSubBand.type === 'activity') {
       newPoint = createNewActivityPoint(
-        this.points[0].sourceId,
+        this.selectedSubBand.sourceIds[0],
         this.selectedSubBand.id,
       );
     } else if (this.selectedSubBand.type === 'state') {
       newPoint = createNewStatePoint(
-        this.points[0].sourceId,
+        this.selectedSubBand.sourceIds[0],
         this.selectedSubBand.id,
       );
     } else {
       newPoint = createNewResourcePoint(
-        this.points[0].sourceId,
+        this.selectedSubBand.sourceIds[0],
         this.selectedSubBand.id,
       );
     }

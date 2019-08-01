@@ -60,13 +60,13 @@
     </ag-grid-angular>
     <div
       class="edit-button-container"
-      *ngIf="points.length > 0 && points[0].editable && mode !== 'minimal'"
+      *ngIf="selectedSubBand.editable && mode !== 'minimal'"
     >
       <button mat-raised-button class="edit-button" (click)="onAdd()">
         Add
       </button>
       <button
-        *ngIf="!noneSelected()"
+        *ngIf="points.length > 0 && !noneSelected()"
         mat-raised-button
         class="edit-button"
         (click)="onRemove()"

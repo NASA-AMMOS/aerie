@@ -43,7 +43,6 @@ export function createNewActivityPoint(
     color: '#4287f5',
     descendantsUrl: '',
     duration: 0,
-    editable: true,
     end: 0,
     endTimestamp: '',
     expandedFromPointId: '',
@@ -74,7 +73,6 @@ export function createNewResourcePoint(
 ): RavenResourcePoint {
   return {
     duration: null,
-    editable: true,
     id: uniqueId(),
     isDuration: false,
     isTime: false,
@@ -98,7 +96,6 @@ export function createNewStatePoint(
 ): RavenStatePoint {
   return {
     duration: 0,
-    editable: true,
     end: 0,
     id: uniqueId(),
     interpolateEnding: true,
@@ -183,7 +180,6 @@ export function getActivityPoint(
   data: MpsServerActivityPoint,
   expandedFromPointId: string | null,
   activityInitiallyHidden: boolean,
-  editable: boolean,
 ): RavenActivityPoint {
   const activityId = data['Activity ID'];
   const activityName = data['Activity Name'];
@@ -229,7 +225,6 @@ export function getActivityPoint(
     color,
     descendantsUrl,
     duration,
-    editable,
     end,
     endTimestamp,
     expandedFromPointId,
@@ -267,7 +262,6 @@ export function getActivityPointsByLegend(
   expandedFromPointId: string | null,
   timelineData: MpsServerActivityPoint[],
   activityInitiallyHidden: boolean,
-  editable: boolean,
 ) {
   const legends: StringTMap<RavenActivityPoint[]> = {};
 
@@ -281,7 +275,6 @@ export function getActivityPointsByLegend(
       data,
       expandedFromPointId,
       activityInitiallyHidden,
-      editable,
     );
 
     if (point.start < minTime) {
@@ -352,7 +345,6 @@ export function getResourcePoints(
 
     points.push({
       duration: null,
-      editable: metadata.editable,
       id,
       isDuration,
       isTime,
@@ -383,7 +375,6 @@ export function getResourcePoints(
 export function getStatePoints(
   sourceId: string,
   timelineData: MpsServerStatePoint[],
-  editable: boolean,
 ) {
   const points: RavenStatePoint[] = [];
 
@@ -417,7 +408,6 @@ export function getStatePoints(
 
     points.push({
       duration,
-      editable,
       end,
       id,
       interpolateEnding: true,

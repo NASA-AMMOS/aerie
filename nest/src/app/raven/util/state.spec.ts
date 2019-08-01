@@ -28,6 +28,7 @@ const commonResourceProperties = {
   autoScale: false,
   color: '#FFEEDD',
   decimate: false,
+  editable: false,
   fill: false,
   fillColor: '#DDEEFF',
   height: 50,
