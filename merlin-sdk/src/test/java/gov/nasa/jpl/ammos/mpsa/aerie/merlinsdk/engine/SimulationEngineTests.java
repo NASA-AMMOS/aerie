@@ -23,16 +23,16 @@ public class SimulationEngineTests {
         @Override
         // public void modelEffects(SimulationContext ctx, SampleStates states) {
         public void modelEffects(SimulationContext ctx) {
-            System.out.println("Activity1 effect model - part 1!");
+            System.out.println("\tActivity1 effect model - part 1!");
             ctx.delay(new Duration(4 * Duration.ONE_DAY));
 
             Activity1A child = new Activity1A();
-            System.out.println("Spawning child Activity1A in parallel!");
+            System.out.println("\tSpawning child Activity1A in parallel!");
             ctx.spawnActivity(child);
 
-            System.out.println("Activity1 effect model - part 2!");
+            System.out.println("\tActivity1 effect model - part 2!");
             ctx.delay(new Duration(2 * Duration.ONE_DAY));
-            System.out.println("Activity1 effect model - part 3!");
+            System.out.println("\tActivity1 effect model - part 3!");
         }
 
     }
@@ -42,9 +42,9 @@ public class SimulationEngineTests {
         @Override
         // public void modelEffects(SimulationContext ctx, SampleStates states) {
         public void modelEffects(SimulationContext ctx) {
-            System.out.println("Activity2 effect model - part 1!");
+            System.out.println("\tActivity2 effect model - part 1!");
             ctx.delay(new Duration(1 * Duration.ONE_DAY));
-            System.out.println("Activity2 effect model - part 2!");
+            System.out.println("\tActivity2 effect model - part 2!");
         }
         
     }
@@ -54,11 +54,11 @@ public class SimulationEngineTests {
         @Override
         // public void modelEffects(SimulationContext ctx, SampleStates states) {
         public void modelEffects(SimulationContext ctx) {
-            System.out.println("Activity3 effect model - part 1!");
+            System.out.println("\tActivity3 effect model - part 1!");
             ctx.delay(new Duration(1 * Duration.ONE_SECOND));
-            System.out.println("Activity3 effect model - part 2!");
+            System.out.println("\tActivity3 effect model - part 2!");
             ctx.delay(new Duration(10 * Duration.ONE_DAY));
-            System.out.println("Activity3 effect model - part 3!");
+            System.out.println("\tActivity3 effect model - part 3!");
         }
 
     }
@@ -67,7 +67,7 @@ public class SimulationEngineTests {
 
         @Override
         public void modelEffects(SimulationContext ctx) {
-            System.out.println("Activity1A effect model!");
+            System.out.println("\tActivity1A effect model!");
             ctx.delay(new Duration(1 * Duration.ONE_SECOND));
         }
     }

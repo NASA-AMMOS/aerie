@@ -38,7 +38,8 @@ public class SimulationEngine {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            System.out.println("====== EFFECT MODEL COMPLETE OR PAUSED ======");
+            System.out.println("============ EFFECT MODEL COMPLETE OR PAUSED ============");
+            System.out.println();
         }
     }
 
