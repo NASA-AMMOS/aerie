@@ -26,7 +26,14 @@ public class SimulationContext {
     }
 
     public void spawnActivity(Activity<?> activity) {
+        //TODO: need to track parent-child relationship here
         ActivityThread actThread = new ActivityThread(activity, this.now());
+        engine.pendingEventQueue.add(actThread);
+    }
+
+    public void spawnActivity(Activity<?> activity, Time t) {
+        //TODO: need to track parent-child relationship here
+        ActivityThread actThread = new ActivityThread(activity, t);
         engine.pendingEventQueue.add(actThread);
     }
 

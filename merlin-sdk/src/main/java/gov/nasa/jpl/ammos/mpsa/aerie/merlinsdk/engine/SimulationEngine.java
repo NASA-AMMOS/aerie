@@ -14,8 +14,6 @@ public class SimulationEngine {
     PendingEventQueue pendingEventQueue;
     Map<Activity<?>, ActivityThread> activityToThreadMap;
     Thread engineThread;
-    // private final Lock lock = new ReentrantLock();
-    private final Object monitor = new Object();
 
     public void simulate() {
         engineThread = Thread.currentThread();
@@ -46,7 +44,7 @@ public class SimulationEngine {
     }
 
     public void dispatchContext(ActivityThread activityThread) {
-        // TODO: see if we need to detach from this later with resumes
+        // TODO: see if we need to detach from this later
         SimulationContext ctx = new SimulationContext(this, activityThread);
         activityThread.setContext(ctx);
     }
@@ -56,7 +54,6 @@ public class SimulationEngine {
     }
 
     public void executeActivity(ActivityThread thread) {
-        // TODO: make this synchronous queue its own thread with clearer method names
         ControlChannel channel;
 
         if (thread.isSuspended()) {
