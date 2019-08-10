@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ControlChannel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 
@@ -12,6 +13,7 @@ public class ActivityThread implements Runnable, Comparable<ActivityThread> {
     Activity<?> activity;
     Boolean threadIsSuspended = false;
     SimulationContext ctx;
+    ControlChannel channel;
 
     public ActivityThread(Activity<?> activityInstance, Time startTime) {
         name = activityInstance.toString();
@@ -20,36 +22,28 @@ public class ActivityThread implements Runnable, Comparable<ActivityThread> {
         t = new Thread(this, name);
     }
 
-    public void execute() {
+    public void execute(ControlChannel channel) {
         System.out.println("Calling execute() method");
-        if (threadIsSuspended) {
-            System.out.println("Resuming from execute() method");
-            resume();
-        }
-        else {
-            t.start();
-        }
+        this.channel = channel;
+        t.start();
     }
 
     public void run() {
+        channel.takeControl();
+        System.out.println("ActivityThread took control (in `run()`)!");
         activity.modelEffects(ctx);
-        ctx.resumeEngine();
+        System.out.println("ActivityThread yielding control (in `run()`)!");
+        channel.yieldControl();
     }
 
     public synchronized void suspend() {
         System.out.println("suspend() called");
         threadIsSuspended = true;
-        try {
-            wait();
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
-
-    public synchronized void resume() {
-        System.out.println("resume() called");
-        notify();
+        System.out.println("ActivityThread yielding channel (in `suspend()`)!");
+        channel.yieldControl();
+        channel.takeControl();
+        System.out.println("ActivityThread took control (in `suspend()`)!");
+        threadIsSuspended = false;
     }
 
     public Time getEventTime() {
@@ -74,5 +68,17 @@ public class ActivityThread implements Runnable, Comparable<ActivityThread> {
 
     public void setEventTime(Time t) {
         this.eventTime = t;
+    }
+
+    public Boolean isSuspended() {
+        return this.threadIsSuspended;
+    }
+
+    public ControlChannel getChannel() {
+        return this.channel;
+    }
+
+    public String getName() {
+        return this.name;
     }
 }
