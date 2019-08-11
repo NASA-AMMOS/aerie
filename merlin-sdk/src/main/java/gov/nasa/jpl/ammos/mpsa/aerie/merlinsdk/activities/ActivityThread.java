@@ -31,7 +31,10 @@ public class ActivityThread implements Runnable, Comparable<ActivityThread> {
     public void run() {
         channel.takeControl();
         System.out.println("ActivityThread took control (in `run()`)!");
+
         activity.modelEffects(ctx);
+        ctx.notifyActivityListeners();
+        
         System.out.println("ActivityThread yielding control (in `run()`)!");
         channel.yieldControl();
     }
@@ -39,7 +42,7 @@ public class ActivityThread implements Runnable, Comparable<ActivityThread> {
     public synchronized void suspend() {
         System.out.println("suspend() called");
         threadIsSuspended = true;
-        System.out.println("ActivityThread yielding channel (in `suspend()`)!");
+        System.out.println("ActivityThread yielding control (in `suspend()`)!");
         channel.yieldControl();
         channel.takeControl();
         System.out.println("ActivityThread took control (in `suspend()`)!");
@@ -80,5 +83,10 @@ public class ActivityThread implements Runnable, Comparable<ActivityThread> {
 
     public String getName() {
         return this.name;
+    }
+
+    public void reinsertIntoQueue(Time t) {
+        this.setEventTime(t);
+        ctx.reinsertActivity();
     }
 }

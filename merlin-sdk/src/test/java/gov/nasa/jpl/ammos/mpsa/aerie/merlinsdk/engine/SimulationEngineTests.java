@@ -33,6 +33,9 @@ public class SimulationEngineTests {
             System.out.println("\tActivity1 effect model - part 2!");
             ctx.delay(new Duration(2 * Duration.ONE_DAY));
             System.out.println("\tActivity1 effect model - part 3!");
+
+            ctx.callActivity(new Activity1B());
+            System.out.println("\tActivity1 effect model part 4 (should be 5 seconds after Activity1B starts)");
         }
 
     }
@@ -69,6 +72,15 @@ public class SimulationEngineTests {
         public void modelEffects(SimulationContext ctx) {
             System.out.println("\tActivity1A effect model!");
             ctx.delay(new Duration(1 * Duration.ONE_SECOND));
+        }
+    }
+
+    public class Activity1B implements Activity<SampleStates> {
+
+        @Override
+        public void modelEffects(SimulationContext ctx) {
+            System.out.println("\tActivity1B effect model!");
+            ctx.delay(new Duration(5 * Duration.ONE_SECOND));
         }
     }
 
