@@ -51,7 +51,6 @@ public class SimulationEngine {
     }
 
     public void dispatchContext(ActivityThread activityThread) {
-        // TODO: see if we need to detach from this later
         SimulationContext ctx = new SimulationContext(this, activityThread);
         activityThread.setContext(ctx);
     }

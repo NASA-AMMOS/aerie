@@ -106,4 +106,20 @@ public class SimulationEngineTests {
         engine.simulate();
     }
 
+    // @Test
+    // public void sequentialSimulation2() {
+    //     Time simStart = new Time();
+
+    //     List<ActivityThread> actList = new ArrayList<>();
+    //     for (int i = 0; i < 10000; i++) {
+    //         ActivityThread actThread = new ActivityThread(
+    //             new Activity2(), simStart.add(new Duration(2 * Duration.ONE_DAY))
+    //         );
+    //         actList.add(actThread);
+    //     }
+
+    //     SimulationEngine engine = new SimulationEngine(simStart, actList);
+    //     engine.simulate();
+    // }
+
 }
