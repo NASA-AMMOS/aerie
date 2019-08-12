@@ -108,13 +108,9 @@ describe('PlanEffects', () => {
       const planId = plan.id || '';
       const action = PlanActions.createActivity({ planId, data: activity });
       const success = PlanActions.createActivitySuccess({
-        activity: {
-          ...activity,
-          constraints: [],
-          listeners: [],
-          parameters: [],
-          y: 0,
-        },
+        activities: [
+          { ...activity, constraints: [], listeners: [], parameters: [], y: 0 },
+        ],
         planId,
       });
       const showToast = ToastActions.showToast({
@@ -155,7 +151,7 @@ describe('PlanEffects', () => {
   describe('createActivitySuccess', () => {
     it('should navigate to the actions given planId', () => {
       const action = PlanActions.createActivitySuccess({
-        activity,
+        activities: [activity],
         planId: 'foo',
       });
 

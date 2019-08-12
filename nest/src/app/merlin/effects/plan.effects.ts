@@ -40,6 +40,23 @@ export class PlanEffects {
       map(([action, state]) => ({ action, state })),
       switchMap(({ action, state }) => {
         const end = action.data.start + action.data.duration;
+        const parameters = [];
+
+        // TODO. Add default parameters in a better way.
+        if (action.data.activityType === 'PeelBanana') {
+          parameters.push({
+            name: 'peelDirection',
+            type: 'string',
+            value: 'down',
+          });
+        } else if (action.data.activityType === 'BiteBanana') {
+          parameters.push({
+            name: 'biteSize',
+            type: 'double',
+            value: '2.0',
+          });
+        }
+
         const activity: ActivityInstance = {
           activityId: action.data.activityId || '',
           activityType: action.data.activityType,
@@ -51,7 +68,7 @@ export class PlanEffects {
           intent: action.data.intent,
           listeners: [],
           name: action.data.name,
-          parameters: [],
+          parameters,
           start: action.data.start,
           startTimestamp: timestamp(action.data.start),
           textColor: action.data.textColor,
@@ -65,9 +82,9 @@ export class PlanEffects {
             activity,
           )
           .pipe(
-            switchMap((newActivity: ActivityInstance) => [
+            switchMap((activities: ActivityInstance[]) => [
               PlanActions.createActivitySuccess({
-                activity: newActivity,
+                activities,
                 planId: action.planId,
               }),
               ToastActions.showToast({

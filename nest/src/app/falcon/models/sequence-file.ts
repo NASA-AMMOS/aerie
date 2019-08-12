@@ -7,26 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import * as d from 'decoders';
-import { Request, Response } from 'express';
-import logger from './logger';
-
-type ExpressMiddleware = (
-  req: Request,
-  res: Response,
-  next: () => void,
-) => void;
-
-export function validateRequestBody<T>(guard: d.Guard<T>): ExpressMiddleware {
-  return (req: Request, res: Response, next: () => void): void => {
-    try {
-      const decoded = guard(req.body);
-      req.body = decoded;
-      next();
-    } catch (e) {
-      const message = `Request body validation failed: ${e.message}`;
-      logger.log({ message, level: 'error' });
-      res.status(500).send(message);
-    }
-  };
+export interface SequenceFile {
+  childIds: string[];
+  content: string;
+  expanded: boolean;
+  id: string;
+  name: string;
+  parentId: string;
+  timeCreated: number;
+  timeLastUpdated: number;
+  type: string;
 }

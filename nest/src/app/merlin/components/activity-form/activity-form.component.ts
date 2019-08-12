@@ -98,7 +98,7 @@ export class ActivityFormComponent implements OnInit, OnChanges {
     // Create new activity from selecting activityType from activityType list
     if (changes.selectedActivityType && this.selectedActivityType) {
       this.form.patchValue({
-        activityType: this.selectedActivityType.activityClass,
+        activityType: this.selectedActivityType.name,
       });
     }
 

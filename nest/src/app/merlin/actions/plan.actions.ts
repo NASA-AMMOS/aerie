@@ -33,7 +33,7 @@ export const createActivityFailure = createAction(
 
 export const createActivitySuccess = createAction(
   '[plan] create_activity_success',
-  props<{ activity: ActivityInstance; planId: string }>(),
+  props<{ activities: ActivityInstance[]; planId: string }>(),
 );
 
 export const createPlan = createAction(

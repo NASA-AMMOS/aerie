@@ -3,20 +3,8 @@
   "compounds": [
     {
       "name": "all",
-      "configurations": ["sequencing"]
+      "configurations": []
     }
   ],
-  "configurations": [
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "sequencing",
-      "cwd": "${workspaceRoot}/sequencing",
-      "program": "${workspaceRoot}/sequencing/dist/main.js",
-      "outputCapture": "std",
-      "env": {
-        "NODE_ENV": "local"
-      }
-    }
-  ]
+  "configurations": []
 }

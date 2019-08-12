@@ -14,5 +14,4 @@ export const environment = {
   baseUrl: 'https://leucadia.jpl.nasa.gov:9443',
   planServiceBaseUrl: `${windowBaseUrl}:27183/api`,
   production: true,
-  sequencingServiceBaseUrl: `${windowBaseUrl}:27186/sequencing`,
 };

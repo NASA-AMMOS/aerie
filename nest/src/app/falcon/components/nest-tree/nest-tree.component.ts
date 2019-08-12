@@ -8,8 +8,8 @@
  */
 
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { SequenceFile } from '../../../../../../sequencing/src/models';
 import { StringTMap } from '../../../shared/models';
+import { SequenceFile } from '../../models';
 
 @Component({
   selector: 'nest-tree',

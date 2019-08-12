@@ -159,10 +159,9 @@ clean() {
   mvn_clean
 
   docker-compose down
-  docker stop aerie_plan_1 aerie_tyk_gateway_1 aerie_adaptation_1 aerie_plan_mongo_1 aerie_tyk_redis_1 aerie_tyk_pump_1 aerie_tyk_dashboard_1 aerie_tyk_mongo_1 aerie_sequencing_mongo_1 aerie_sequencing_1 aerie_adaptation_runtime_1 aerie_simulation_1 aerie_rabbitmq_1
-  docker rm aerie_plan_1 aerie_tyk_gateway_1 aerie_adaptation_1 aerie_plan_mongo_1 aerie_tyk_redis_1 aerie_tyk_pump_1 aerie_tyk_dashboard_1 aerie_tyk_mongo_1 aerie_sequencing_mongo_1 aerie_sequencing_1 aerie_adaptation_runtime_1 aerie_simulation_1 aerie_rabbitmq_1
-  docker rmi aerie_plan aerie_adaptation aerie_adaptation_runtime aerie_simulation aerie_sequencing
-
+  docker stop aerie_plan_1 aerie_tyk_gateway_1 aerie_adaptation_1 aerie_plan_mongo_1 aerie_tyk_redis_1 aerie_tyk_pump_1 aerie_tyk_dashboard_1 aerie_tyk_mongo_1 aerie_adaptation_runtime_1 aerie_simulation_1 aerie_rabbitmq_1
+  docker rm aerie_plan_1 aerie_tyk_gateway_1 aerie_adaptation_1 aerie_adaptation_mongo_1 aerie_plan_mongo_1 aerie_tyk_redis_1 aerie_tyk_pump_1 aerie_tyk_dashboard_1 aerie_tyk_mongo_1 aerie_adaptation_runtime_1 aerie_simulation_1 aerie_rabbitmq_1
+  docker rmi aerie_plan aerie_adaptation aerie_adaptation_runtime aerie_simulation
   echo -e "\nDocker Images:"
   docker images
   echo -e "\nDocker Containers:"

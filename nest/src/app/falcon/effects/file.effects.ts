@@ -9,12 +9,10 @@
 
 import { Injectable, Injector } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { Store } from '@ngrx/store';
-import { catchError, map, switchMap, withLatestFrom } from 'rxjs/operators';
-import { SequenceFile } from '../../../../../sequencing/src/models';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import { ToastActions } from '../../shared/actions';
 import { FileActions } from '../actions';
-import { FalconAppState } from '../falcon-store';
+import { SequenceFile } from '../models';
 import { FileMockService } from '../services/file-mock.service';
 import { FileService } from '../services/file.service';
 import { withLoadingBar } from './utils';
@@ -24,11 +22,7 @@ export class FileEffects {
   private fileService: FileService;
   private useMockFileService = true;
 
-  constructor(
-    private actions: Actions,
-    private injector: Injector,
-    private store: Store<FalconAppState>,
-  ) {
+  constructor(private actions: Actions, private injector: Injector) {
     if (this.useMockFileService) {
       this.fileService = this.injector.get(FileMockService) as FileService;
     } else {
@@ -39,35 +33,28 @@ export class FileEffects {
   fetchChildren = createEffect(() =>
     this.actions.pipe(
       ofType(FileActions.fetchChildren),
-      withLatestFrom(this.store),
-      map(([action, state]) => ({ action, state })),
-      switchMap(({ action, state }) =>
+      switchMap(action =>
         withLoadingBar([
-          this.fileService
-            .fetchChildren(
-              state.config.app.sequencingServiceBaseUrl,
-              action.parentId,
-            )
-            .pipe(
-              map((children: SequenceFile[]) =>
-                FileActions.updateChildren({
-                  children,
-                  options: action.options,
-                  parentId: action.parentId,
-                }),
-              ),
-              catchError((error: Error) => {
-                console.error('FileEffects - fetchChildren$: ', error.message);
-                return [
-                  FileActions.fetchChildrenFailure({ error }),
-                  ToastActions.showToast({
-                    message: error.message,
-                    title: 'Fetch Children Failed',
-                    toastType: 'error',
-                  }),
-                ];
+          this.fileService.fetchChildren('', action.parentId).pipe(
+            map((children: SequenceFile[]) =>
+              FileActions.updateChildren({
+                children,
+                options: action.options,
+                parentId: action.parentId,
               }),
             ),
+            catchError((error: Error) => {
+              console.error('FileEffects - fetchChildren$: ', error.message);
+              return [
+                FileActions.fetchChildrenFailure({ error }),
+                ToastActions.showToast({
+                  message: error.message,
+                  title: 'Fetch Children Failed',
+                  toastType: 'error',
+                }),
+              ];
+            }),
+          ),
         ]),
       ),
     ),

@@ -47,19 +47,13 @@ export const reducer = createReducer(
     ...state,
     selectedPlanId: null,
   })),
-  on(PlanActions.createActivitySuccess, (state, { activity }) => {
-    const activities = {
-      ...state.activities,
-      [activity.activityId]: {
-        ...activity,
-      },
-    };
-    const maxTimeRange = getMaxTimeRange(Object.values(activities));
+  on(PlanActions.createActivitySuccess, (state, action) => {
+    const maxTimeRange = getMaxTimeRange(action.activities);
     const viewTimeRange = { ...maxTimeRange };
 
     return {
       ...state,
-      activities,
+      activities: keyBy(action.activities, 'activityId'),
       maxTimeRange,
       viewTimeRange,
     };

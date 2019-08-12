@@ -57,8 +57,7 @@ export function getMockActivityTypes(): ActivityType[] {
 
   for (let i = 0, len = 10; i < len; ++i) {
     activityTypes.push({
-      activityClass: `some.adaptation.DoSomething.${i}`,
-      listeners: [],
+      name: `some.adaptation.DoSomething.${i}`,
       parameters: [],
       typeName: '',
     });

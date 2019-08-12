@@ -59,7 +59,7 @@ describe('ActivityBandComponent', () => {
     doNgOnChanges(component, ['selectedActivityType']);
 
     expect(component.form.controls.activityType.value).toBe(
-      selectedActivityType.activityClass,
+      selectedActivityType.name,
     );
   });
 
