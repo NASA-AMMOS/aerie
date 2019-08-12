@@ -82,7 +82,7 @@ export class RavenTableComponent implements OnChanges {
   selectedSubBand: RavenSubBand;
 
   @Input()
-  selectedPoint: RavenPoint;
+  selectedPoint: RavenPoint | null;
 
   @Output()
   addPointToSubBand: EventEmitter<RavenPointIndex> = new EventEmitter<
@@ -542,6 +542,7 @@ export class RavenTableComponent implements OnChanges {
             node.data.uniqueId === this.selectedPoint.uniqueId
           ) {
             this.agGrid.api.ensureIndexVisible(node.rowIndex);
+            node.data.selected = true;
             node.setSelected(true);
           } else {
             node.setSelected(false);
@@ -681,7 +682,7 @@ export class RavenTableComponent implements OnChanges {
   onSelectionChanged(event: SelectionChangedEvent) {
     if (event.api.getSelectedNodes().length > 0) {
       const point = event.api.getSelectedNodes()[0].data;
-      if (!point.selected) {
+      if (!point.selected && event.api.getSelectedNodes()[0].isSelected()) {
         this.selectPoint.emit(point);
       }
     }
