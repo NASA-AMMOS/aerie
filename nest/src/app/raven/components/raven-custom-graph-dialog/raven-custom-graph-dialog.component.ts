@@ -36,10 +36,7 @@ export class RavenCustomGraphDialogComponent {
         Validators.pattern('^[1-9][0-9]?$|^100$'),
       ]);
     } else {
-      this.filter = new FormControl('', [
-        Validators.pattern('[a-zA-Z0-9-_.*$;]*'),
-        this.validateFilter,
-      ]);
+      this.filter = new FormControl('', [this.validateFilter]);
     }
 
     this.form = new FormGroup({

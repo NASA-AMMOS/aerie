@@ -16,6 +16,7 @@ export interface RavenExportActivitySubBand {
   alignLabel: number;
   baselineLabel: number;
   borderWidth: number;
+  editable: boolean;
   filterTarget: string | null;
   height: number;
   heightPadding: number;

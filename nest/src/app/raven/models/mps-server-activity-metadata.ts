@@ -9,6 +9,7 @@
 
 export interface MpsServerActivityMetadata {
   decimatedData: boolean;
+  editable: boolean;
   hasObjectName: string;
   hasObjectNamespace: string;
   hasObjectType: string;

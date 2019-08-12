@@ -87,7 +87,7 @@ export function toRavenBandData(
       defaultBandSettings,
       customFilter,
       treeBySourceId,
-      (metadata as MpsServerStateMetadata).editable,
+      metadata.editable,
     );
     return activityBands;
   } else {
@@ -174,7 +174,6 @@ export function toActivityBands(
     expandedFromPointId,
     timelineData,
     defaultBandSettings.activityInitiallyHidden,
-    editable,
   );
   const bands: RavenActivityBand[] = [];
   const customGraphableSource = treeBySourceId[sourceId]
@@ -192,6 +191,7 @@ export function toActivityBands(
       alignLabel: 3,
       baselineLabel: 3,
       borderWidth: 1,
+      editable: editable,
       filterTarget: null,
       height: 50,
       heightPadding: 10,
@@ -274,6 +274,7 @@ export function toDividerBand(): RavenDividerBand {
   const dividerBand: RavenDividerBand = {
     addTo: false,
     color: '#ffffff',
+    editable: false,
     height: 10,
     heightPadding: 0,
     id,
@@ -314,6 +315,7 @@ export function toResourceBand(
     autoScale: true,
     color: defaultBandSettings.resourceColor,
     decimate: metadata.decimatedData,
+    editable: metadata.editable,
     fill: false,
     fillColor: defaultBandSettings.resourceFillColor,
     height: 100,
@@ -364,11 +366,7 @@ export function toStateBand(
   defaultBandSettings: RavenDefaultBandSettings,
   treeBySourceId: StringTMap<RavenSource>,
 ): RavenStateBand {
-  const { maxTimeRange, points } = getStatePoints(
-    sourceId,
-    timelineData,
-    metadata.editable,
-  );
+  const { maxTimeRange, points } = getStatePoints(sourceId, timelineData);
 
   const stateBand: RavenStateBand = {
     addTo: false,
@@ -376,6 +374,7 @@ export function toStateBand(
     baselineLabel: 3,
     borderWidth: 1,
     color: defaultBandSettings.resourceColor,
+    editable: metadata.editable,
     fill: false,
     fillColor: defaultBandSettings.resourceFillColor,
     height: 50,

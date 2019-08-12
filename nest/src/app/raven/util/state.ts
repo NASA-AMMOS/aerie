@@ -152,6 +152,7 @@ export function importSubBand(
       ...subBand,
       activityFilter:
         subBand.activityFilter === undefined ? '' : subBand.activityFilter,
+      editable: subBand.editable === undefined ? false : subBand.editable,
       id: uniqueId(),
       labelColor,
       parentUniqueId,
@@ -161,6 +162,7 @@ export function importSubBand(
   } else if (isExportResourceSubBand(subBand)) {
     return {
       ...subBand,
+      editable: subBand.editable === undefined ? false : subBand.editable,
       id: uniqueId(),
       labelColor,
       parentUniqueId,
@@ -170,6 +172,7 @@ export function importSubBand(
   } else if (isExportStateSubBand(subBand)) {
     return {
       ...subBand,
+      editable: subBand.editable === undefined ? false : subBand.editable,
       id: uniqueId(),
       labelColor,
       parentUniqueId,
@@ -179,6 +182,7 @@ export function importSubBand(
   } else {
     return {
       ...subBand,
+      editable: false,
       id: uniqueId(),
       labelColor,
       parentUniqueId,

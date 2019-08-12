@@ -12,6 +12,7 @@ export interface RavenExportResourceSubBand {
   autoScale: boolean;
   color: string;
   decimate: boolean;
+  editable: boolean;
   fill: boolean;
   fillColor: string;
   height: number;
