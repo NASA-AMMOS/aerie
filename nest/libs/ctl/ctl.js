@@ -4827,8 +4827,15 @@ TimeAxis.prototype.getTimeFromX = function(x) {
   return time;
 };
 
-TimeAxis.prototype.getTimePerPixel = function() {
-  return this.getTimeFromX(this.x1+1)-this.start;
+TimeAxis.prototype.getMilliSecFromX = function(x) {
+  var timeScale = (this.x2 - this.x1) / (this.end - this.start);
+  var time = (((x - this.x1)/ timeScale) + this.start) * 1000;
+  return time;
+};
+
+TimeAxis.prototype.getMilliSecPerPixel = function() {
+  const delta = this.getMilliSecFromX(this.x1+1)-this.getMilliSecFromX(this.x1);
+  return Math.max(delta, 1);
 }
 
 // guide times

@@ -9,5 +9,5 @@
 
 export interface RavenGuidePoint {
   guideTime: number;
-  timePerPixel: number;
+  milliSecPerPixel: number;
 }

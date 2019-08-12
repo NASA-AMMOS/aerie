@@ -287,7 +287,7 @@ describe('timeline reducer', () => {
     timelineState = reducer(
       timelineState,
       TimelineActions.toggleGuide({
-        guide: { guideTime: 1665067939, timePerPixel: 20 },
+        guide: { guideTime: 1665067939, milliSecPerPixel: 20000 },
       }),
     );
     expect(timelineState).toEqual({
@@ -298,7 +298,7 @@ describe('timeline reducer', () => {
     timelineState = reducer(
       timelineState,
       TimelineActions.toggleGuide({
-        guide: { guideTime: 1665067949, timePerPixel: 20 },
+        guide: { guideTime: 1665067949, milliSecPerPixel: 20000 },
       }),
     );
     expect(timelineState).toEqual({
