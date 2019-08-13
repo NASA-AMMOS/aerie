@@ -13,12 +13,12 @@ public class EventBin extends HashSet<ActivityThread> {
         this.eventTime = eventTime;
     }
 
-    public void executeAll() {
-        for (ActivityThread t: this) {
-            // will start or resume the associated ActivityThread
-            t.execute();
-        }
-    }
+    // public void executeAll() {
+    //     for (ActivityThread t: this) {
+    //         // will start or resume the associated ActivityThread
+    //         t.execute();
+    //     }
+    // }
 
     public Time getEventTime() {
         return this.eventTime;
