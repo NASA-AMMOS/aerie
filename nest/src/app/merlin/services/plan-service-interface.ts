@@ -16,7 +16,7 @@ export interface PlanServiceInterface {
     baseUrl: string,
     planId: string,
     data: ActivityInstance,
-  ): Observable<ActivityInstance[]>;
+  ): Observable<string[]>;
   createPlan(baseUrl: string, plan: Plan): Observable<Plan>;
   deleteActivity(
     baseUrl: string,

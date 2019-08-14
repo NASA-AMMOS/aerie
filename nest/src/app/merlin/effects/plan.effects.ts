@@ -46,13 +46,13 @@ export class PlanEffects {
         if (action.data.activityType === 'PeelBanana') {
           parameters.push({
             name: 'peelDirection',
-            type: 'string',
+            type: 'String',
             value: 'down',
           });
         } else if (action.data.activityType === 'BiteBanana') {
           parameters.push({
             name: 'biteSize',
-            type: 'double',
+            type: 'Double',
             value: '2.0',
           });
         }
@@ -82,18 +82,20 @@ export class PlanEffects {
             activity,
           )
           .pipe(
-            switchMap((activities: ActivityInstance[]) => [
-              PlanActions.createActivitySuccess({
-                activities,
-                planId: action.planId,
-              }),
-              ToastActions.showToast({
-                message:
-                  'New activity has been successfully created and saved.',
-                title: 'Create Activity Success',
-                toastType: 'success',
-              }),
-            ]),
+            switchMap(([activityId]) => {
+              return [
+                PlanActions.createActivitySuccess({
+                  activity: { ...activity, activityId },
+                  planId: action.planId,
+                }),
+                ToastActions.showToast({
+                  message:
+                    'New activity has been successfully created and saved.',
+                  title: 'Create Activity Success',
+                  toastType: 'success',
+                }),
+              ];
+            }),
             catchError((error: Error) => [
               PlanActions.createActivityFailure({ error }),
               ToastActions.showToast({

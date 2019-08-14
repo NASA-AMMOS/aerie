@@ -121,6 +121,27 @@ describe('Plan Reducer', () => {
     });
   });
 
+  describe('CreateActivitySuccess', () => {
+    it('should add a new activity with the correct time ranges', () => {
+      const activityId = '1';
+      const newState = reducer(
+        initialState,
+        PlanActions.createActivitySuccess({
+          activity: activitiesMap[activityId],
+          planId: plan.id,
+        }),
+      );
+      expect(newState).toEqual({
+        ...initialState,
+        activities: {
+          [activityId]: activitiesMap[activityId],
+        },
+        maxTimeRange: { end: 0, start: 0 },
+        viewTimeRange: { end: 0, start: 0 },
+      });
+    });
+  });
+
   describe('DeleteActivitySuccess', () => {
     it('should delete an activity from activities', () => {
       const deleteActivityId = '1';

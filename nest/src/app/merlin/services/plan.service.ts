@@ -27,8 +27,8 @@ export class PlanService implements PlanServiceInterface {
     baseUrl: string,
     planId: string,
     data: ActivityInstance,
-  ): Observable<ActivityInstance[]> {
-    return this.http.post<ActivityInstance[]>(
+  ): Observable<string[]> {
+    return this.http.post<string[]>(
       `${baseUrl}/plans/${planId}/activity_instances/`,
       [data],
     );

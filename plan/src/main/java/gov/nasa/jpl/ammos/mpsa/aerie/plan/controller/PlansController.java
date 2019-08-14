@@ -181,9 +181,12 @@ public class PlansController {
      * Add a list of activity instances to a plan
      */
     @PostMapping("/{planId}/activity_instances")
-    public ResponseEntity<Object> createActivityInstance(
+    public ResponseEntity<Object> appendActivityInstances(
             @PathVariable("planId") UUID planId,
             @Valid @RequestBody List<ActivityInstance> requestActivityInstanceList) {
+
+        // If the request is valid, we will return a list of IDs for the created instances
+        List<String> createdIDs = new ArrayList<>();
 
         if (!repository.existsById(planId.toString())) {
             return ResponseEntity.notFound().build();
@@ -230,7 +233,9 @@ public class PlansController {
                     }
 
                     activityInstance.setParameters(parameterList);
-                    activityInstance.setActivityId(UUID.randomUUID().toString());
+                    String instanceID = UUID.randomUUID().toString();
+                    activityInstance.setActivityId(instanceID);
+                    createdIDs.add(instanceID);
                 }
             }
         }
@@ -263,7 +268,7 @@ public class PlansController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
         repository.save(planDetail);
-        return ResponseEntity.created(location).body(planDetail.getActivityInstances());
+        return ResponseEntity.created(location).body(createdIDs);
     }
 
     @GetMapping("/{planId}/activity_instances")
