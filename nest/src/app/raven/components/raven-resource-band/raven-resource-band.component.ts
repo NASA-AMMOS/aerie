@@ -395,7 +395,7 @@ export class RavenResourceBandComponent
     for (let i = 0, l = this.points.length; i < l; ++i) {
       const point = this.points[i];
 
-      if (point.pointStatus !== 'deleted') {
+      if (point.pointStatus !== 'deleted' && point.start > 0) {
         const interval = new (window as any).DrawableInterval({
           color: colorHexToRgbArray(color),
           end: point.start,

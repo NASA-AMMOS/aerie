@@ -277,7 +277,7 @@ export function getActivityPointsByLegend(
       activityInitiallyHidden,
     );
 
-    if (point.start < minTime) {
+    if (point.start > 0 && point.start < minTime) {
       minTime = point.start;
     }
     if (point.end > maxTime) {
@@ -328,6 +328,7 @@ export function getResourcePoints(
 
     const id = data.__document_id;
     const start = utc(data['Data Timestamp']);
+
     let value = data['Data Value'];
 
     if (isDuration && typeof value === 'string') {
@@ -336,11 +337,13 @@ export function getResourcePoints(
       value = utc(value as string);
     }
 
-    if (start < minTime) {
-      minTime = start;
-    }
-    if (start > maxTime) {
-      maxTime = start;
+    if (start > 0) {
+      if (start < minTime) {
+        minTime = start;
+      }
+      if (start > maxTime) {
+        maxTime = start;
+      }
     }
 
     points.push({
@@ -399,11 +402,13 @@ export function getStatePoints(
     const duration = utc(endTimestamp) - utc(startTimestamp);
     const end = start + duration;
 
-    if (start < minTime) {
-      minTime = start;
-    }
-    if (end > maxTime) {
-      maxTime = end;
+    if (start > 0) {
+      if (start < minTime) {
+        minTime = start;
+      }
+      if (end > maxTime) {
+        maxTime = end;
+      }
     }
 
     points.push({
