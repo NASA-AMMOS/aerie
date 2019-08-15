@@ -50,7 +50,7 @@ export const reducer = createReducer(
   on(PlanActions.createActivitySuccess, (state, { activity }) => {
     const activities = {
       ...state.activities,
-      [activity.activityId]: {
+      [activity.activityId as string]: {
         ...activity,
       },
     };

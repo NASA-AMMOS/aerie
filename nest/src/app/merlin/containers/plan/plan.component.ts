@@ -156,7 +156,7 @@ export class PlanComponent {
     const { planId } = this.route.snapshot.paramMap['params'];
     this.store.dispatch(
       PlanActions.updateActivity({
-        activityId: activity.activityId,
+        activityId: activity.activityId as string,
         planId,
         update: activity,
       }),

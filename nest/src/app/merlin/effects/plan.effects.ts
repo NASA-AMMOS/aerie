@@ -39,7 +39,9 @@ export class PlanEffects {
       withLatestFrom(this.store),
       map(([action, state]) => ({ action, state })),
       switchMap(({ action, state }) => {
-        const end = action.data.start + action.data.duration;
+        const start = action.data.start as number;
+        const duration = action.data.duration as number;
+        const end = start + duration;
         const parameters = [];
 
         // TODO. Add default parameters in a better way.
@@ -70,7 +72,7 @@ export class PlanEffects {
           name: action.data.name,
           parameters,
           start: action.data.start,
-          startTimestamp: timestamp(action.data.start),
+          startTimestamp: timestamp(start),
           textColor: action.data.textColor,
           y: 0,
         };

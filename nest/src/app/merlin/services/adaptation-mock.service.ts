@@ -59,7 +59,6 @@ export function getMockActivityTypes(): ActivityType[] {
     activityTypes.push({
       name: `some.adaptation.DoSomething.${i}`,
       parameters: [],
-      typeName: '',
     });
   }
 

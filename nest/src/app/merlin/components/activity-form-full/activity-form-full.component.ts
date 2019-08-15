@@ -77,6 +77,7 @@ export class ActivityFormFullComponent implements OnInit, OnChanges {
     if (
       changes.selectedActivity &&
       this.selectedActivity !== null &&
+      this.selectedActivity.start &&
       !this.isNew &&
       this.form
     ) {
@@ -109,7 +110,7 @@ export class ActivityFormFullComponent implements OnInit, OnChanges {
   }
 
   onSubmit(value: ActivityInstance) {
-    if (this.form.valid) {
+    if (this.form.valid && value.start) {
       if (!this.isNew) {
         this.updateActivity.emit({
           ...value,

@@ -13,11 +13,9 @@ export const activityTypes: ActivityType[] = [
   {
     name: 'PeelBanana',
     parameters: [],
-    typeName: 'PeelBanana',
   },
   {
     name: 'EatBanana',
     parameters: [],
-    typeName: 'EatBanana',
   },
 ];

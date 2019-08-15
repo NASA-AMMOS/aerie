@@ -59,13 +59,13 @@
 
           <mat-tab label="Constraints">
             <div class="tab">
-              <mat-card *ngIf="!selectedActivity?.constraints.length">
+              <mat-card *ngIf="!selectedActivity?.constraints?.length">
                 This activity instance has no constraints.
               </mat-card>
 
               <div
                 class="tab-grid"
-                *ngIf="selectedActivity?.constraints.length"
+                *ngIf="selectedActivity?.constraints?.length"
               >
                 <ng-container
                   *ngFor="let group of form.get('constraints')?.controls"

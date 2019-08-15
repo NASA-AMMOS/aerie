@@ -92,7 +92,7 @@ describe('ActivityBandComponent', () => {
       );
       component.onSubmit({
         ...activity,
-        start: activity.start * 1000,
+        start: (activity.start as number) * 1000,
       });
     });
   });
