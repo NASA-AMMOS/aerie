@@ -26,7 +26,6 @@ truncated version of the mathematical constant E, to make it easy to remember.
 | nest               | 8080  |
 | plan               | 27183 |
 | simulation         | 27185 |
-| sequencing         | 27186 |
 | tyk_gateway        | 8081  |
 | sequence-files     | 27186 |
 

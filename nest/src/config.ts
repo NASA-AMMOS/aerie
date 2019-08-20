@@ -20,7 +20,6 @@ export interface ConfigState {
     packageJsonVersion: string;
     planServiceBaseUrl: string;
     production: boolean;
-    sequencingServiceBaseUrl: string;
     version: string;
   };
   appModules: NestModule[];
@@ -39,9 +38,6 @@ export interface ConfigState {
     itarMessage: string;
     shareableLinkStatesUrl: string;
   };
-  sequencing: {
-    // TODO. Add sequencing specific config here.
-  };
 }
 
 export const config: ConfigState = {
@@ -51,7 +47,6 @@ export const config: ConfigState = {
     packageJsonVersion: version.packageJsonVersion,
     planServiceBaseUrl: environment.planServiceBaseUrl,
     production: environment.production,
-    sequencingServiceBaseUrl: environment.sequencingServiceBaseUrl,
     version: version.version,
   },
   appModules: [
@@ -101,5 +96,4 @@ export const config: ConfigState = {
     itarMessage: '',
     shareableLinkStatesUrl: 'TEST_ATS/STATES',
   },
-  sequencing: {},
 };

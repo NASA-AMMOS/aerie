@@ -12,9 +12,9 @@ import keyBy from 'lodash-es/keyBy';
 import omit from 'lodash-es/omit';
 import uniqueId from 'lodash-es/uniqueId';
 import { v4 as uuid } from 'uuid';
-import { SequenceFile } from '../../../../../sequencing/src/models';
 import { StringTMap } from '../../shared/models';
 import { FileActions } from '../actions';
+import { SequenceFile } from '../models';
 import { Editor } from '../models';
 
 export interface FileState {

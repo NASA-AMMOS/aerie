@@ -8,7 +8,7 @@
  */
 
 import { Observable } from 'rxjs';
-import { SequenceFile } from '../../../../../sequencing/src/models';
+import { SequenceFile } from '../models';
 
 export interface FileServiceInterface {
   fetchChildren(baseUrl: string, fileId: string): Observable<SequenceFile[]>;

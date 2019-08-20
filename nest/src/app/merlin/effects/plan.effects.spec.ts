@@ -213,11 +213,11 @@ describe('PlanEffects', () => {
 
       const planId = plan.id || '';
       const action = PlanActions.deleteActivity({
-        activityId: activity.activityId,
+        activityId: activity.activityId as string,
         planId,
       });
       const success = PlanActions.deleteActivitySuccess({
-        activityId: activity.activityId,
+        activityId: activity.activityId as string,
       });
       const showToast = ToastActions.showToast({
         message: 'Activity has been successfully deleted.',
@@ -245,7 +245,7 @@ describe('PlanEffects', () => {
 
       const planId = plan.id || '';
       const action = PlanActions.deleteActivity({
-        activityId: activity.activityId,
+        activityId: activity.activityId as string,
         planId,
       });
       const error = new Error('DeleteActivityFailure');
@@ -342,12 +342,12 @@ describe('PlanEffects', () => {
 
       // Test.
       const action = PlanActions.updateActivity({
-        activityId: activity.activityId,
+        activityId: activity.activityId as string,
         planId,
         update: activity,
       });
       const success = PlanActions.updateActivitySuccess({
-        activityId: activity.activityId,
+        activityId: activity.activityId as string,
         update: activity,
       });
       const showToast = ToastActions.showToast({
@@ -378,7 +378,7 @@ describe('PlanEffects', () => {
 
       // Test.
       const action = PlanActions.updateActivity({
-        activityId: activity.activityId,
+        activityId: activity.activityId as string,
         planId,
         update: activity,
       });

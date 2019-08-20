@@ -10,10 +10,10 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { SequenceFile } from '../../../../../../sequencing/src/models';
 import { StringTMap } from '../../../shared/models';
 import { FileActions } from '../../actions';
 import { FalconAppState } from '../../falcon-store';
+import { SequenceFile } from '../../models';
 import { FileSelectors } from '../../selectors';
 
 @Component({

@@ -59,7 +59,7 @@ describe('ActivityBandComponent', () => {
     doNgOnChanges(component, ['selectedActivityType']);
 
     expect(component.form.controls.activityType.value).toBe(
-      selectedActivityType.activityClass,
+      selectedActivityType.name,
     );
   });
 
@@ -92,7 +92,7 @@ describe('ActivityBandComponent', () => {
       );
       component.onSubmit({
         ...activity,
-        start: activity.start * 1000,
+        start: (activity.start as number) * 1000,
       });
     });
   });

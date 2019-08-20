@@ -12,7 +12,7 @@ To Start, open RAVEN using the link provided from your system administrator. [Wh
 
 The "Left Panel" in the application is the Source Explorer. In the Source Explorer you can navigate between your sources and select the items that you want to visualize. 
 
-The (<img src="./images/chart-area.svg" width="20" />) icon in the source explorer denotes a graphable source. It means that when you click on it, it will be displayed in a timeband on the main panel.  [What do the icons mean?](./Raven_101_2_source_explorer.md#iconography)
+The (<img src="./images/chart-area.svg" width="20" />) icon in the source explorer denotes a graphable source. It means that when you click on it, it will be displayed in a time band on the main panel.  [What do the icons mean?](./Raven_101_2_source_explorer.md#iconography)
 
 *Voila!* A new band will be added in the "Bands Panel" with your data.
 

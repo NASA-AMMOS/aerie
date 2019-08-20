@@ -111,12 +111,10 @@ export class PlanMockService implements PlanServiceInterface {
     baseUrl: string = '',
     planId: string,
     data: ActivityInstance,
-  ): Observable<ActivityInstance> {
-    return new Observable((o: Observer<ActivityInstance>) => {
-      const activities = getMockActivities();
+  ): Observable<string[]> {
+    return new Observable((o: Observer<string[]>) => {
       const activityId = data.activityId || Date.now().toString();
-      const mockDetail = activities[activityId];
-      o.next({ ...mockDetail, ...data, activityId });
+      o.next([activityId]);
     });
   }
 

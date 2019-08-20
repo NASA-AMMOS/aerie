@@ -2,7 +2,7 @@ export interface ActivityInstance {
     /**
      * ID of the activity instance
      */
-    activityId: string;
+    activityId?: string;
     /**
      * The name of the activity type that this instance is based on
      */
@@ -10,27 +10,27 @@ export interface ActivityInstance {
     /**
      * Background color of the activity instance within an activity band
      */
-    backgroundColor: string;
+    backgroundColor?: string;
     /**
      * List of constraints associated with the activity instance
      */
-    constraints: ActivityInstanceConstraint[];
+    constraints?: ActivityInstanceConstraint[];
     /**
      * How long the activity instance lasts
      */
-    duration: number;
+    duration?: number;
     /**
      * When the activity instance ends, as a Unix timestamp
      */
-    end: number;
+    end?: number;
     /**
      * When the activity instances ends, as an ISO 8601 formatted date string
      */
-    endTimestamp: string;
+    endTimestamp?: string;
     /**
      * Description of the activity instance
      */
-    intent: string;
+    intent?: string;
     /**
      * A list of listeners
      */
@@ -38,7 +38,7 @@ export interface ActivityInstance {
     /**
      * Name of the activity instance
      */
-    name: string;
+    name?: string;
     /**
      * Parameters which augment the runtime behavior of the instance
      */
@@ -46,7 +46,7 @@ export interface ActivityInstance {
     /**
      * When the activity instance starts, as a Unix timestamp
      */
-    start: number;
+    start?: number;
     /**
      * When the activity instances starts, as an ISO 8601 formatted date string
      */
@@ -54,11 +54,11 @@ export interface ActivityInstance {
     /**
      * Text color of the activity instance within an activity band
      */
-    textColor: string;
+    textColor?: string;
     /**
      * The y position of the activity instance within an activity band
      */
-    y: number | null;
+    y?: number | null;
 }
 
 export interface ActivityInstanceConstraint {
@@ -74,17 +74,9 @@ export interface ActivityInstanceConstraint {
 
 export interface ActivityInstanceParameter {
     /**
-     * Default value of the parameter
-     */
-    defaultValue?: string;
-    /**
      * Name of the parameter
      */
     name: string;
-    /**
-     * A range of values, for instance min/max and enum
-     */
-    range?: string[];
     /**
      * The type of this parameter
      */
@@ -96,15 +88,22 @@ export interface ActivityInstanceParameter {
 }
 
 export interface ActivityType {
-    activityClass: string;
-    listeners:     string[];
-    parameters:    ActivityTypeParameter[];
-    typeName:      string;
+    id?:        string;
+    name:       string;
+    parameters: ActivityTypeParameter[];
 }
 
 export interface ActivityTypeParameter {
-    name: string;
-    type: string;
+    /**
+     * Default value of the parameter
+     */
+    defaultValue?: string;
+    name:          string;
+    /**
+     * A range of values, for instance min/max and enum
+     */
+    range?: string[];
+    type:   string;
 }
 
 export interface Adaptation {
@@ -148,11 +147,11 @@ export interface MpsCommandParameter {
 }
 
 /**
- * A container used to associate an Adaptation with a collection of Activity Instances
+ * A container used to associate an Adaptation with a collection of Activity Instances.
  */
 export interface Plan {
     /**
-     * The ID of the associated adaptation
+     * The ID of the associated adaptation.
      */
     adaptationId: string;
     /**
@@ -160,11 +159,11 @@ export interface Plan {
      */
     endTimestamp: string;
     /**
-     * ID of the plan. Currently a stringified MongoDB object ID.
+     * ID of the plan.
      */
     id: string;
     /**
-     * Name of the plan
+     * Name of the plan.
      */
     name: string;
     /**

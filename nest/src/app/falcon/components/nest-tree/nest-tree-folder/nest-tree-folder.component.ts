@@ -8,7 +8,7 @@
  */
 
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { SequenceFile } from '../../../../../../../sequencing/src/models';
+import { SequenceFile } from '../../../models';
 
 @Component({
   selector: 'nest-tree-folder',

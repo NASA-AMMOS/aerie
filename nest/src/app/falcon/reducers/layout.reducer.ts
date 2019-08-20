@@ -24,8 +24,8 @@ export interface LayoutState {
 export const initialState: LayoutState = {
   editorPanelsDirection: 'vertical',
   leftPanelSize: 20,
-  leftPanelVisible: true,
-  middlePanelSize: 50,
+  leftPanelVisible: false,
+  middlePanelSize: 70,
   middlePanelVisible: true,
   rightPanelSize: 30,
   rightPanelVisible: true,
