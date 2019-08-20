@@ -6473,8 +6473,10 @@ var Util = {
     }
 
     // add the top log tick
-    tick *= 10;
-    ticks.push(tick.toString());
+    if (max > tick) {
+        tick *= 10;
+        ticks.push(tick.toString());
+    }
 
     return ticks;
   },
