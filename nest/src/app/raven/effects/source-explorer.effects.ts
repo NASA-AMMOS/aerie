@@ -251,24 +251,30 @@ export class SourceExplorerEffects {
                 ...band,
                 id: parentId,
                 subBands: band.subBands.map((subBand: RavenSubBand) => {
-                  const labelPin = subBand.labelPin;
-                  const pin = action.update.pins[labelPin];
-                  const targetSource =
-                    state.raven.sourceExplorer.treeBySourceId[pin.sourceId];
+                  if (subBand.type === 'divider') {
+                    return {
+                      ...subBand,
+                    };
+                  } else {
+                    const labelPin = subBand.labelPin;
+                    const pin = action.update.pins[labelPin];
+                    const targetSource =
+                      state.raven.sourceExplorer.treeBySourceId[pin.sourceId];
 
-                  return {
-                    ...subBand,
-                    id: uniqueId(),
-                    parentUniqueId: parentId,
-                    sourceIds: subBand.sourceIds.map((sourceId: string) =>
-                      updateSourceId(
-                        sourceId,
-                        targetSource.id,
-                        sourceTypes,
-                        targetSource.type,
+                    return {
+                      ...subBand,
+                      id: uniqueId(),
+                      parentUniqueId: parentId,
+                      sourceIds: subBand.sourceIds.map((sourceId: string) =>
+                        updateSourceId(
+                          sourceId,
+                          targetSource.id,
+                          sourceTypes,
+                          targetSource.type,
+                        ),
                       ),
-                    ),
-                  };
+                    };
+                  }
                 }),
               };
             });
