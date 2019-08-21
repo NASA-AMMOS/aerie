@@ -265,7 +265,10 @@ export class RavenCompositeBandComponent
       this.ctlTimeAxis.lastClickTime = this.showLastClick
         ? this.lastClickTime
         : null;
-      shouldRedraw = true;
+      shouldRedraw =
+        this.lastClickTime && this.lastClickTime > this.ctlViewTimeAxis.start
+          ? true
+          : false;
     }
 
     // Max Time Range.

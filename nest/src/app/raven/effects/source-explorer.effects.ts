@@ -1777,9 +1777,6 @@ export class SourceExplorerEffects {
               );
             }
           });
-
-          // Resize bands when we `open` to make sure they are all resized properly.
-          actions.push(LayoutActions.resize());
         } else {
           // Notify user no bands will be drawn.
           actions.push(
