@@ -6,9 +6,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityThread;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 
-public class PendingEventQueue extends PriorityQueue<ActivityThread<? extends StateContainer>> {
+public class PendingEventQueue<T extends StateContainer> extends PriorityQueue<ActivityThread<T>> {
 
-    // what is this??
+    // FIXME: what is this??
     private static final long serialVersionUID = 1L;
     
     public Time getNextEventTime() {

@@ -3,19 +3,21 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ControlChannel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 
 public class ActivityThread<T extends StateContainer> implements Runnable, Comparable<ActivityThread<T>> {
 
     // TODO: detach threads for garbage collection?
-    Time eventTime;
-    String name;
-    Thread t;
-    Activity<T> activity;
-    Boolean threadIsSuspended = false;
-    SimulationContext<T> ctx;
-    ControlChannel channel;
-    T states;
+    private Time eventTime;
+    private String name;
+    private Thread t;
+    private Activity<T> activity;
+    private Boolean threadHasStarted = false;
+    private SimulationContext<T> ctx;
+    private ControlChannel channel;
+    private T states;
+    private Boolean effectModelComplete = false;
 
     public ActivityThread(Activity<T> activityInstance, Time startTime) {
         //TODO: don't use reflection here. get the instance name
@@ -32,24 +34,24 @@ public class ActivityThread<T extends StateContainer> implements Runnable, Compa
 
     public void run() {
         channel.takeControl();
-        System.out.println("ActivityThread took control!");
+
+        threadHasStarted = true;
+        Time startTime = ctx.now();
 
         activity.modelEffects(ctx, states);
-        System.out.println("Effect model complete. Notifying listeners...");
+        ctx.waitForChildren();
+        effectModelComplete = true;
+
+        Duration activityDuration = ctx.now().subtract(startTime);
+        ctx.logActivityDuration(activityDuration);
         ctx.notifyActivityListeners();
         
-        System.out.println("ActivityThread yielding control!");
         channel.yieldControl();
     }
 
     public synchronized void suspend() {
-        System.out.println("suspend() called");
-        threadIsSuspended = true;
-        System.out.println("ActivityThread yielding control!");
         channel.yieldControl();
         channel.takeControl();
-        System.out.println("ActivityThread took control!");
-        threadIsSuspended = false;
     }
 
     public Time getEventTime() {
@@ -58,10 +60,6 @@ public class ActivityThread<T extends StateContainer> implements Runnable, Compa
 
     public Activity<T> getActivity() {
         return this.activity;
-    }
-
-    public void join() throws InterruptedException {
-        this.t.join();
     }
 
     public int compareTo(ActivityThread<T> other) {
@@ -76,8 +74,8 @@ public class ActivityThread<T extends StateContainer> implements Runnable, Compa
         this.eventTime = t;
     }
 
-    public Boolean isSuspended() {
-        return this.threadIsSuspended;
+    public Boolean hasStarted() {
+        return this.threadHasStarted;
     }
 
     public ControlChannel getChannel() {
@@ -88,16 +86,15 @@ public class ActivityThread<T extends StateContainer> implements Runnable, Compa
         return this.name;
     }
 
-    public void reinsertIntoQueue(Time t) {
-        this.setEventTime(t);
-        ctx.reinsertActivity();
-    }
-
-    public void setStates(T states2) {
-        this.states = states2;
+    public void setStates(T states) {
+        this.states = states;
     }
 
     public String toString() {
         return this.name;
+    }
+
+    public Boolean effectModelIsComplete() {
+        return this.effectModelComplete;
     }
 }

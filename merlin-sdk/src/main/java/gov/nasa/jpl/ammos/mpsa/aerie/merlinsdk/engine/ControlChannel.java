@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 import java.util.concurrent.SynchronousQueue;
 
 public class ControlChannel {
-    
     private final SynchronousQueue<Object> channel = new SynchronousQueue<>();
 
     public void yieldControl() {

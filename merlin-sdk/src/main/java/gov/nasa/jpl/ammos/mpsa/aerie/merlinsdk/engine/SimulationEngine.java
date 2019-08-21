@@ -9,37 +9,29 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityThread;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.SettableState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 
 public class SimulationEngine<T extends StateContainer> {
 
     //TODO: various detachments/map deletions to encourage garbage collection of old events
 
-    Time currentSimulationTime;
-    PendingEventQueue pendingEventQueue;
-    Map<Activity<T>, ActivityThread<T>> activityToThreadMap;
-    Map<Activity<T>, List<Activity<T>>> parentChildMap;
-    Map<ActivityThread<T>, List<ActivityThread<T>>> activityListenerMap;
-    Thread engineThread;
-    T states;
+    private Time currentSimulationTime;
+    private PendingEventQueue<T> pendingEventQueue;
+    private Map<Activity<T>, ActivityThread<T>> activityToThreadMap;
+    private Map<Activity<T>, List<Activity<T>>> parentChildMap;
+    private Map<Activity<T>, Duration> activityDurationMap;
+    private Map<ActivityThread<T>, List<ActivityThread<T>>> activityListenerMap;
+    private Thread engineThread;
+    private T states;
 
     public void simulate() {
         engineThread = Thread.currentThread();
 
         while (!pendingEventQueue.isEmpty()) {
-            // TODO: figure out the right usage here to avoid casts
-
-            ActivityThread<T> thread = (ActivityThread<T>) pendingEventQueue.remove();
-            // ActivityThread<T> thread = pendingEventQueue.remove();
-            System.out.println("Dequeued activity thread: " + thread.toString());
-
-            System.out.println("Advancing from T=" + currentSimulationTime.toString() + " to T=" + thread.getEventTime());
+            ActivityThread<T> thread = pendingEventQueue.remove();
             currentSimulationTime = thread.getEventTime();
-
             this.executeActivity(thread);
-
-            System.out.println("============ EFFECT MODEL COMPLETE OR PAUSED ============");
-            System.out.println();
         }
     }
 
@@ -48,10 +40,11 @@ public class SimulationEngine<T extends StateContainer> {
         registerStates(states.getStateList());
 
         currentSimulationTime = simulationStartTime;
-        pendingEventQueue = new PendingEventQueue();
+        pendingEventQueue = new PendingEventQueue<>();
         activityToThreadMap = new HashMap<>();
         parentChildMap = new HashMap<>();
         activityListenerMap = new HashMap<>();
+        activityDurationMap = new HashMap<>();
 
         for (ActivityThread<T> thread: activityThreads) {
             pendingEventQueue.add(thread);
@@ -72,19 +65,17 @@ public class SimulationEngine<T extends StateContainer> {
     public void executeActivity(ActivityThread<T> thread) {
         ControlChannel channel;
 
-        if (thread.isSuspended()) {
+        if (thread.hasStarted()) {
+            // resume activity
             channel = thread.getChannel();
-            System.out.println("Resuming activity thread");
         } else {
+            // start activity
             this.dispatchContext(thread);
             channel = new ControlChannel();
             thread.execute(channel);
-            System.out.println("Starting activity thread");
         }
-        System.out.println("Main thread yielding control!");
         channel.yieldControl();
         channel.takeControl();
-        System.out.println("Main thread taking control!");
     }
 
     public void addParentChildRelationship(Activity<T> parent, Activity<T> child) {
@@ -113,6 +104,34 @@ public class SimulationEngine<T extends StateContainer> {
         for (SettableState<?> state : stateList) {
             state.setEngine(this);
         }
+    }
+
+    public void insertIntoQueue(ActivityThread<T> activityThread) {
+        pendingEventQueue.add(activityThread);
+    }
+
+    public void registerActivityAndThread(Activity<T> activity, ActivityThread<T> activityThread) {
+        activityToThreadMap.put(activity, activityThread);
+    }
+
+    public ActivityThread<T> getActivityThread(Activity<T> activity) {
+        return activityToThreadMap.get(activity);
+    }
+
+    public List<ActivityThread<T>> getActivityListeners(ActivityThread<T> thread) {
+        return activityListenerMap.get(thread);
+    }
+
+    public List<Activity<T>> getActivityChildren(Activity<T> activity) {
+        return parentChildMap.get(activity);
+    }
+
+    public void logActivityDuration(Activity<T> activity, Duration d) {
+        activityDurationMap.put(activity, d);
+    }
+
+    public Duration getActivityDuration(Activity<T> activity) {
+        return activityDurationMap.get(activity);
     }
 
 }

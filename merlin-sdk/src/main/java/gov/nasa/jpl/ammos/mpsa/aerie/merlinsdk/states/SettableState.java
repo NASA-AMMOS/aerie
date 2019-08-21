@@ -6,6 +6,7 @@ import java.util.Map;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 
+// FIXME: integrate with Meghana's state work
 public class SettableState<T>{
 
     private T value;
