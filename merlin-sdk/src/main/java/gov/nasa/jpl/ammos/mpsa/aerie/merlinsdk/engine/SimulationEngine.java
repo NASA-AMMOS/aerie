@@ -53,7 +53,7 @@ public class SimulationEngine<T extends StateContainer> {
     }
 
     public void dispatchContext(ActivityThread<T> activityThread) {
-        SimulationContext<T> ctx = new SimulationContext<>(this, activityThread);
+        FullContext<T> ctx = new FullContext<>(this, activityThread);
         activityThread.setContext(ctx);
         activityThread.setStates(states);
     }

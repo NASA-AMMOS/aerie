@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ControlChannel;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.FullContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
@@ -14,7 +14,7 @@ public class ActivityThread<T extends StateContainer> implements Runnable, Compa
     private Thread t;
     private Activity<T> activity;
     private Boolean threadHasStarted = false;
-    private SimulationContext<T> ctx;
+    private FullContext<T> ctx;
     private ControlChannel channel;
     private T states;
     private Boolean effectModelComplete = false;
@@ -39,7 +39,7 @@ public class ActivityThread<T extends StateContainer> implements Runnable, Compa
         Time startTime = ctx.now();
 
         activity.modelEffects(ctx, states);
-        ctx.waitForChildren();
+        ctx.waitForAllChildren();
         effectModelComplete = true;
 
         Duration activityDuration = ctx.now().subtract(startTime);
@@ -66,7 +66,7 @@ public class ActivityThread<T extends StateContainer> implements Runnable, Compa
         return this.eventTime.compareTo(other.eventTime);
     }
 
-    public void setContext(SimulationContext<T> ctx) {
+    public void setContext(FullContext<T> ctx) {
         this.ctx = ctx;
     }
 
