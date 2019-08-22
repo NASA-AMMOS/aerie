@@ -10,7 +10,7 @@ public interface SimulationContext<T extends StateContainer> {
     /**
      * spawns a child activity and blocks until its completion
      */
-    public void callActivity(Activity<T> childActivity);
+    public Activity<T> callActivity(Activity<T> childActivity);
 
     /**
      * spawns a child activity in the background

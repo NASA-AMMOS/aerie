@@ -52,6 +52,9 @@ public class ThreadContext<T extends StateContainer> implements SimulationContex
      * resumes it.
      */
     public void delay(Duration d) {
+        if (d.totalSeconds() < 0.0) {
+            throw new IllegalArgumentException("Duration `d` must be non-negative");
+        }
         activityThread.setEventTime(activityThread.getEventTime().add(d));
         engine.insertIntoQueue(activityThread);
         activityThread.suspend();
@@ -65,7 +68,9 @@ public class ThreadContext<T extends StateContainer> implements SimulationContex
      * resumes it.
      */
     public void delayUntil(Time t) {
-        // FIXME: we should probably bar people from inserting events in the past, right?
+        if (t.lessThan(this.now())) {
+            throw new IllegalArgumentException("Time `t` must occur in the future");
+        }
         activityThread.setEventTime(t);
         engine.insertIntoQueue(activityThread);
         activityThread.suspend();
@@ -103,15 +108,19 @@ public class ThreadContext<T extends StateContainer> implements SimulationContex
      * 
      * If non-blocking behavior is desired, see `spawnActivity()`.
      * 
+     * This method returns the input `childActivity` to allow the user to instantiate the activity in-line with the
+     * `callActivity()` call and store it in a variable for later usage.
+     * 
      * @param childActivity the child activity that should be spawned and blocked on
      * @return the input child activity
      */
-    public void callActivity(Activity<T> childActivity) {
+    public Activity<T> callActivity(Activity<T> childActivity) {
         ActivityThread<T> childActivityThread = new ActivityThread<>(childActivity, this.now());
         engine.addParentChildRelationship(activityThread.getActivity(), childActivity);
         engine.insertIntoQueue(childActivityThread);
         engine.registerActivityAndThread(childActivity, childActivityThread);
         waitForChild(childActivity);
+        return childActivity;
     }
 
     /**
