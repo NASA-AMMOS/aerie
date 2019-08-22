@@ -1,9 +1,4 @@
-import {
-  browser,
-  ExpectedConditions as EC,
-  logging,
-  protractor,
-} from 'protractor';
+import { browser, ExpectedConditions as EC, logging } from 'protractor';
 import { clickHarder, hasClass } from '../utils';
 import { FalconPage } from './falcon.po';
 
@@ -60,16 +55,6 @@ describe('toolbar', () => {
     clickHarder('#falcon-editor-toggle-color-scheme-button');
 
     expect(hasClass(page.codeMirrorEditor, lightTheme)).toBe(true);
-  });
-
-  it('[C135063] WHEN the editor is fullscreen, the user can press ESC to exit fullscreen', () => {
-    page.editorToolsPanelButton.click();
-    clickHarder('#seq-editor-fullscreen-button');
-    page.sendGlobalKeys(protractor.Key.ESCAPE);
-
-    expect(hasClass(page.codeMirrorEditor, 'CodeMirror-fullscreen')).toBe(
-      false,
-    );
   });
 
   it('[C135062] WHEN a user clicks the fullscreen button, the editor SHOULD be fullscreen', () => {
