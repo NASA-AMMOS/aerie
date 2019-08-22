@@ -152,17 +152,22 @@ public class SimulationEngine<T extends StateContainer> {
     public void executeActivity(ActivityThread<T> activityThread) {
         ControlChannel channel;
 
-        if (activityThread.hasStarted()) {
-            // resume activity
-            channel = activityThread.getChannel();
-        } else {
-            // start activity
-            this.dispatchContext(activityThread);
-            this.dispatchStates(activityThread);
-            channel = new ControlChannel();
-            activityThread.setChannel(channel);
-            activityThread.start();
-        }
+        switch (activityThread.getStatus()) {
+            case NotStarted:
+                this.dispatchContext(activityThread);
+                this.dispatchStates(activityThread);
+                channel = new ControlChannel();
+                activityThread.setChannel(channel);
+                activityThread.start();
+                break;
+            case InProgress:
+                channel = activityThread.getChannel();
+                break;
+            case Complete:
+                throw new IllegalStateException("Completed activity is somehow in the pending event queue.");
+            default:
+                throw new IllegalStateException("Unknown activity status");
+            }
         channel.yieldControl();
         channel.takeControl();
     }

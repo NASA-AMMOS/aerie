@@ -22,6 +22,10 @@ public class ActivityThread<T extends StateContainer> implements Runnable, Compa
 
     // TODO: detach threads for garbage collection?
 
+    public enum ActivityStatus {
+        NotStarted, InProgress, Complete
+    }
+
     /**
      * The start or resumption time of the effect model owned by this thread.
      * 
@@ -32,11 +36,6 @@ public class ActivityThread<T extends StateContainer> implements Runnable, Compa
     private Time eventTime;
 
     /**
-     * ??
-     */
-    private String name;
-
-    /**
      * The actual `Thread` object that runs this class's `run()` method
      */
     private Thread t;
@@ -45,12 +44,6 @@ public class ActivityThread<T extends StateContainer> implements Runnable, Compa
      * The activity instance that this thread "owns"
      */
     private Activity<T> activity;
-
-    /**
-     * Whether or not the activity's effect model has begun. This will remain true even if delays occur within the
-     * effect model.
-     */
-    private Boolean threadHasStarted = false;
 
     /**
      * Serves as a bridge between this thread and the engine. It is passed down to the activity's effect model as the
@@ -68,19 +61,13 @@ public class ActivityThread<T extends StateContainer> implements Runnable, Compa
      */
     private T states;
 
-    /**
-     * Whether this thread's activity instance's effect model is complete. This is false throughout the duration of the
-     * effect model, and it is only set to true once the activity's effect model is finished AND all of the activity's
-     * children's effect models are finished.
-     */
-    private Boolean effectModelComplete = false;
+    ActivityStatus status = ActivityStatus.NotStarted;
 
     public ActivityThread(Activity<T> activityInstance, Time startTime) {
-        //TODO: don't use reflection here. get the instance name
-        name = activityInstance.getClass().getName();
         activity = activityInstance;
         eventTime = startTime;
-        t = new Thread(this, name);
+        //TODO: don't use reflection here. use some sort of proper name
+        t = new Thread(this, activityInstance.getClass().getName());
     }
 
     /**
@@ -98,15 +85,16 @@ public class ActivityThread<T extends StateContainer> implements Runnable, Compa
      * this target. A `ControlChannel` is used to ensure that the engine is not executing at the same time; execution
      * control is explicitly handed back-and-forth between the engine and activity thread via yields and takes.
      */
+    @Override
     public void run() {
         channel.takeControl();
 
-        threadHasStarted = true;
+        status = ActivityStatus.InProgress;
         Time startTime = ctx.now();
 
         activity.modelEffects(ctx, states);
         ctx.waitForAllChildren();
-        effectModelComplete = true;
+        status = ActivityStatus.Complete;
 
         Duration activityDuration = ctx.now().subtract(startTime);
         ctx.logActivityDuration(activityDuration);
@@ -126,6 +114,7 @@ public class ActivityThread<T extends StateContainer> implements Runnable, Compa
     /**
      * Compares `ActivityThread` objects by their event times
      */
+    @Override
     public int compareTo(ActivityThread<T> other) {
         return this.eventTime.compareTo(other.eventTime);
     }
@@ -146,10 +135,6 @@ public class ActivityThread<T extends StateContainer> implements Runnable, Compa
         this.eventTime = t;
     }
 
-    public Boolean hasStarted() {
-        return this.threadHasStarted;
-    }
-
     public ControlChannel getChannel() {
         return this.channel;
     }
@@ -158,19 +143,17 @@ public class ActivityThread<T extends StateContainer> implements Runnable, Compa
         this.channel = channel;
     }
 
-    public String getName() {
-        return this.name;
-    }
-
     public void setStates(T states) {
         this.states = states;
     }
 
     public String toString() {
-        return this.name;
+        // TODO: map to actual name in the future
+        return this.t.getName();
     }
 
-    public Boolean effectModelIsComplete() {
-        return this.effectModelComplete;
+    public ActivityStatus getStatus() {
+        return this.status;
     }
+
 }

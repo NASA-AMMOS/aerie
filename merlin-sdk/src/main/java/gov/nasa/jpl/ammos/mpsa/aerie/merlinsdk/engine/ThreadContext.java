@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityThread;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityThread.ActivityStatus;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
@@ -132,7 +133,7 @@ public class ThreadContext<T extends StateContainer> implements SimulationContex
         ActivityThread<T> childActivityThread = engine.getActivityThread(childActivity);
         // handle case where activity is already complete:
         // we don't want to block on it because we will never receive a notification that it is complete
-        if (childActivityThread.effectModelIsComplete()) {
+        if (childActivityThread.getStatus() == ActivityStatus.Complete) {
             return;
         }
         engine.addActivityListener(childActivityThread, this.activityThread);
