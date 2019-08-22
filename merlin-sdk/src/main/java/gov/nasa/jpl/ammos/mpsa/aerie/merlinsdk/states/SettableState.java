@@ -15,6 +15,13 @@ public class SettableState<T>{
 
     private Map<Time, T> stateHistory = new LinkedHashMap<>();
 
+    public SettableState() {
+    }
+    
+    public SettableState(T value) {
+        this.setValue(value);
+    }
+
     public void setValue(T value) {
         this.value = value;
         stateHistory.put(engine.getCurrentSimulationTime(), value);
