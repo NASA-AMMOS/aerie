@@ -143,12 +143,8 @@ public class ThreadContext<T extends StateContainer> implements SimulationContex
      * Blocks a parent activity thread on the completion of all of its children
      */
     public void waitForAllChildren() {
-        try {
-            for (Activity<T> child: engine.getActivityChildren(this.activityThread.getActivity())) {
-                waitForChild(child);
-            }
-        } catch (NullPointerException e) {
-            // no children
+        for (Activity<T> child: engine.getActivityChildren(this.activityThread.getActivity())) {
+            waitForChild(child);
         }
     }
 
@@ -160,15 +156,11 @@ public class ThreadContext<T extends StateContainer> implements SimulationContex
      * TODO: we may want to refactor this and allow for generic listener behavior
      */
     public void notifyActivityListeners() {
-        try {
-            for (ActivityThread<T> listener: engine.getActivityListeners(activityThread)) {
-                listener.setEventTime(this.now());
-                ControlChannel channel = listener.getChannel();
-                channel.yieldControl();
-                channel.takeControl();
-            }
-        } catch (NullPointerException e) {
-            // no listeners
+        for (ActivityThread<T> listener: engine.getActivityListeners(activityThread)) {
+            listener.setEventTime(this.now());
+            ControlChannel channel = listener.getChannel();
+            channel.yieldControl();
+            channel.takeControl();
         }
     }
 

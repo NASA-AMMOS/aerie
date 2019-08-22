@@ -2,8 +2,10 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityThread;
@@ -63,7 +65,7 @@ public class SimulationEngine<T extends StateContainer> {
     /**
      * A map of target activity threads to their listeners (activity threads that are blocking on the target's completion)
      */
-    private Map<ActivityThread<T>, List<ActivityThread<T>>> activityListenerMap = new HashMap<>();
+    private Map<ActivityThread<T>, Set<ActivityThread<T>>> activityListenerMap = new HashMap<>();
 
     /**
      * The thread in which the simulation engine is running
@@ -192,13 +194,13 @@ public class SimulationEngine<T extends StateContainer> {
      * @param listener the activity thread that is blocked until the target's effect model completes
      */
     public void addActivityListener(ActivityThread<T> target, ActivityThread<T> listener) {
-        List<ActivityThread<T>> listenerList = activityListenerMap.get(target);
-        if (listenerList == null) {
-            List<ActivityThread<T>> list = new ArrayList<>();
-            list.add(listener);
-            activityListenerMap.put(target, list);
+        Set<ActivityThread<T>> listenerSet = activityListenerMap.get(target);
+        if (listenerSet == null) {
+            Set<ActivityThread<T>> set = new HashSet<>();
+            set.add(listener);
+            activityListenerMap.put(target, set);
         } else {
-            listenerList.add(listener);
+            listenerSet.add(listener);
         }
     }
 
@@ -246,20 +248,28 @@ public class SimulationEngine<T extends StateContainer> {
      * Returns the listeners on a given activity thread
      * 
      * @param thread the target activity thread whose completion listeners are blocking on
-     * @return a list of the listeners that are blocked on the target thread's completion (or null)
+     * @return a set of the listeners that are blocked on the target thread's completion
      */
-    public List<ActivityThread<T>> getActivityListeners(ActivityThread<T> thread) {
-        return activityListenerMap.get(thread);
+    public Set<ActivityThread<T>> getActivityListeners(ActivityThread<T> thread) {
+        Set<ActivityThread<T>> listenerSet = activityListenerMap.get(thread);
+        if (listenerSet == null) {
+            return new HashSet<ActivityThread<T>>();
+        }
+        return listenerSet;
     }
     
     /**
      * Returns a list of child activities for a given parent (or null if no children exist)
      * 
      * @param activity the parent activity
-     * @return the list of child activities (or null)
+     * @return the list of child activities
      */
     public List<Activity<T>> getActivityChildren(Activity<T> activity) {
-        return parentChildMap.get(activity);
+        List<Activity<T>> childList = parentChildMap.get(activity);
+        if (childList == null) {
+            return new ArrayList<Activity<T>>();
+        }
+        return childList;
     }
 
     /**
