@@ -18,135 +18,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 
 public class SimulationEngineTests {
 
-    // public class SampleStates implements StateContainer {
-    //     public final SettableState<Double> stateA = new SettableState<>();
-    //     public final SettableState<String> stateB = new SettableState<>();
-
-    //     public List<SettableState<?>> getStateList() {
-    //         return List.of(stateA, stateB);
-    //     }
-    // }
-
-    // public class Activity1 implements Activity<SampleStates> {
-
-    //     @Override
-    //     public void modelEffects(SimulationContext<SampleStates> ctx, SampleStates states) {
-    //         System.out.println("\tActivity1 effect model - part 1!");
-    //         states.stateA.setValue(1.1);
-    //         ctx.delay(new Duration(4 * Duration.ONE_DAY));
-
-    //         Activity1A child = new Activity1A();
-    //         System.out.println("\tSpawning child Activity1A in parallel!");
-    //         ctx.spawnActivity(child);
-    //         System.out.println("\tActivity1 effect model - part 2!");
-    //         states.stateA.setValue(1.2);
-    //         ctx.delay(new Duration(2 * Duration.ONE_DAY));
-
-    //         System.out.println("\tActivity1 effect model - part 3!");
-    //         states.stateA.setValue(1.3);
-    //         ctx.callActivity(new Activity1B());
-
-    //         System.out.println("\tActivity1 effect model part 4 (should be 5 seconds after Activity1B first starts)");
-    //         states.stateA.setValue(1.4);
-    //     }
-
-    // }
-
-    // public class Activity2 implements Activity<SampleStates> {
-
-    //     @Override
-    //     public void modelEffects(SimulationContext<SampleStates> ctx, SampleStates states) {
-    //         System.out.println("\tActivity2 effect model - part 1!");
-    //         states.stateA.setValue(2.1);
-    //         ctx.delay(new Duration(1 * Duration.ONE_DAY));
-
-    //         System.out.println("\tActivity2 effect model - part 2!");
-    //         states.stateA.setValue(2.2);
-    //     }
-        
-    // }
-
-    // public class Activity3 implements Activity<SampleStates> {
-
-    //     @Override
-    //     public void modelEffects(SimulationContext<SampleStates> ctx, SampleStates states) {
-    //         System.out.println("\tActivity3 effect model - part 1!");
-    //         states.stateA.setValue(3.1);
-    //         ctx.delay(new Duration(1 * Duration.ONE_SECOND));
-
-    //         System.out.println("\tActivity3 effect model - part 2!");
-    //         states.stateA.setValue(3.2);
-    //         ctx.delay(new Duration(10 * Duration.ONE_DAY));
-
-    //         System.out.println("\tActivity3 effect model - part 3!");
-    //         states.stateA.setValue(3.3);
-    //     }
-
-    // }
-
-    // public class Activity1A implements Activity<SampleStates> {
-
-    //     @Override
-    //     public void modelEffects(SimulationContext<SampleStates> ctx, SampleStates states) {
-    //         System.out.println("\tActivity1A effect model!");
-    //         states.stateB.setValue("1A");
-    //         ctx.delay(new Duration(1 * Duration.ONE_SECOND));
-    //     }
-    // }
-
-    // public class Activity1B implements Activity<SampleStates> {
-
-    //     @Override
-    //     public void modelEffects(SimulationContext<SampleStates> ctx, SampleStates states) {
-    //         System.out.println("\tActivity1B effect model!");
-    //         states.stateB.setValue("1B");
-    //         ctx.delay(new Duration(5 * Duration.ONE_SECOND));
-    //     }
-    // }
-
-    // @Test
-    // public void sequentialSimulation() {
-    //     Time simStart = new Time();
-
-    //     ActivityThread<SampleStates> act1Thread = new ActivityThread<>(
-    //         new Activity1(), simStart.add(new Duration(Duration.ONE_DAY))
-    //     );
-    //     ActivityThread<SampleStates> act2Thread = new ActivityThread<>(
-    //         new Activity2(), simStart.add(new Duration(2 * Duration.ONE_DAY))
-    //     );
-    //     ActivityThread<SampleStates> act3Thread = new ActivityThread<>(
-    //         new Activity3(), simStart.add(new Duration(3 * Duration.ONE_DAY))
-    //     );
-
-    //     List<ActivityThread<SampleStates>> actList = new ArrayList<>();
-    //     actList.add(act1Thread);
-    //     actList.add(act2Thread);
-    //     actList.add(act3Thread);
-
-    //     System.out.println("======================= INPUT PLAN ======================");
-    //     for (ActivityThread<SampleStates> thread : actList) {
-    //         System.out.println("\tActivity: " + thread.toString() + " | Start Time: " + thread.getEventTime());
-    //     }
-
-    //     SampleStates states = new SampleStates();
-
-    //     SimulationEngine<SampleStates> engine = new SimulationEngine<>(simStart, actList, states);
-    //     System.out.println("=================== SIMULATION START ====================\n");
-    //     engine.simulate();
-    //     System.out.println("================== SIMULATION COMPLETE ==================");
-    //     System.out.println("=========================================================");
-
-    //     System.out.println("StateA History:");
-    //     for (Map.Entry<Time, ?> entry : states.stateA.getHistory().entrySet()) {
-    //         System.out.println("\tTime: " + entry.getKey().toString() + " | Value: " + entry.getValue().toString());
-    //     }
-
-    //     System.out.println("StateB History:");
-    //     for (Map.Entry<Time, ?> entry : states.stateB.getHistory().entrySet()) {
-    //         System.out.println("\tTime: " + entry.getKey().toString() + " | Value: " + entry.getValue().toString());
-    //     }
-    // }
-
     public class DiverseStates implements StateContainer {
         public final SettableState<Double> floatState = new SettableState<>();
         public final SettableState<String> stringState = new SettableState<>();
@@ -157,6 +28,8 @@ public class SimulationEngineTests {
             return List.of(floatState, stringState, arrayState, booleanState);
         }
     }
+
+    /* ------------------------ SIMULATION BASELINE TEST ------------------------ */
 
     public class ParentActivity implements Activity<DiverseStates> {
 
@@ -209,8 +82,9 @@ public class SimulationEngineTests {
         }
     }
 
-    
-
+    /**
+     * Runs a baseline integration test with 1000 activity instances (that decompose into 1000 more)
+     */
     @Test
     public void sequentialSimulationBaselineTest() {
         Time simStart = new Time();
@@ -237,6 +111,214 @@ public class SimulationEngineTests {
         engine.simulate();
     }
 
+    /* --------------------------- TIME-ORDERING TEST --------------------------- */
+
+    public class TimeOrderingTestActivity implements Activity<DiverseStates> {
+
+        @Parameter
+        Double floatValue = 0.0;
+
+        @Override
+        public void modelEffects(SimulationContext<DiverseStates> ctx, DiverseStates states) {
+            states.floatState.setValue(floatValue);
+        }
+    }
+
+    /**
+     * Tests that activities are executed in order by event time and that state changes at those event times are
+     * accurate.
+     */
+    @Test
+    public void timeOrderingTest() {
+        Time simStart = new Time();
+
+        List<ActivityThread<DiverseStates>> actList = new ArrayList<>();
+        for (int i = 1; i <= 3; i++) {
+           TimeOrderingTestActivity act = new TimeOrderingTestActivity();
+            {
+                act.floatValue = i * 1.0;
+            }
+            ActivityThread<DiverseStates> actThread = new ActivityThread<>(
+                act, simStart.add(new Duration(i * 1 * Duration.ONE_HOUR))
+            );
+            actList.add(actThread);
+        }
+
+        DiverseStates states = new DiverseStates();
+
+        SimulationEngine<DiverseStates> engine = new SimulationEngine<>(simStart, actList, states);
+        engine.simulate();
+
+        Map<Time, Double> floatStateHistory = states.floatState.getHistory();
+
+        assertEquals((Double) 1.0, floatStateHistory.get(simStart.add(new Duration(1 * Duration.ONE_HOUR))));
+        assertEquals((Double) 2.0, floatStateHistory.get(simStart.add(new Duration(2 * Duration.ONE_HOUR))));
+        assertEquals((Double) 3.0, floatStateHistory.get(simStart.add(new Duration(3 * Duration.ONE_HOUR))));
+    }
+
+    /* ------------------------------- DELAY TEST ------------------------------- */
+
+    public class DelayTestActivity implements Activity<DiverseStates> {
+        
+        @Override
+        public void modelEffects(SimulationContext<DiverseStates> ctx, DiverseStates states) {
+            states.floatState.setValue(1.0);
+            ctx.delay(new Duration(1 * Duration.ONE_HOUR));
+            states.floatState.setValue(2.0);
+        }
+    }
+
+    /**
+     * Tests the functionality of delays within effect models
+     */
+    @Test
+    public void delayTest() {
+        Time simStart = new Time();
+
+        List<ActivityThread<DiverseStates>> actList = new ArrayList<>();
+        DelayTestActivity act = new DelayTestActivity();
+        Time executionTime = simStart.add(new Duration(1 * Duration.ONE_HOUR));
+        ActivityThread<DiverseStates> actThread = new ActivityThread<>(
+            act, executionTime
+        );
+        actList.add(actThread);
+
+        DiverseStates states = new DiverseStates();
+
+        SimulationEngine<DiverseStates> engine = new SimulationEngine<>(simStart, actList, states);
+        engine.simulate();
+
+        Map<Time, Double> floatStateHistory = states.floatState.getHistory();
+
+        assertEquals((Double) 1.0, floatStateHistory.get(simStart.add(new Duration(1 * Duration.ONE_HOUR))));
+        assertEquals((Double) 2.0, floatStateHistory.get(simStart.add(new Duration(2 * Duration.ONE_HOUR))));
+    }
+
+    /* --------------------------- SPAWN ACTIVITY TEST -------------------------- */
+
+    public class SpawnTestParentActivity implements Activity<DiverseStates> {
+
+        @Override
+        public void modelEffects(SimulationContext<DiverseStates> ctx, DiverseStates states) {
+            SpawnTestChildActivity child = new SpawnTestChildActivity();
+            ctx.spawnActivity(child);
+        }
+    }
+
+    public class SpawnTestChildActivity implements Activity<DiverseStates> {
+        @Override
+        public void modelEffects(SimulationContext<DiverseStates> ctx, DiverseStates states) {
+            states.floatState.setValue(5.0);
+        }
+    }
+
+    /**
+     * Tests that child activities created with `spawnActivity()` are inserted into the queue and that their effect
+     * models are run at the proper simulation time.
+     */
+    @Test
+    public void spawnActivityTimingTest() {
+        Time simStart = new Time();
+
+        List<ActivityThread<DiverseStates>> actList = new ArrayList<>();
+        SpawnTestParentActivity parent = new SpawnTestParentActivity();
+        Time parentExecutionTime = simStart.add(new Duration(1 * Duration.ONE_HOUR));
+        ActivityThread<DiverseStates> parentThread = new ActivityThread<>(
+            parent, parentExecutionTime
+        );
+        actList.add(parentThread);
+
+        DiverseStates states = new DiverseStates();
+
+        SimulationEngine<DiverseStates> engine = new SimulationEngine<>(simStart, actList, states);
+        engine.simulate();
+
+        Map<Time, Double> floatStateHistory = states.floatState.getHistory();
+
+        assertEquals((Double) 5.0, floatStateHistory.get(parentExecutionTime));
+    }
+
+    /* --------------------------- CALL ACTIVITY TEST --------------------------- */
+
+    public class CallTestParentActivity implements Activity<DiverseStates> {
+
+        @Override
+        public void modelEffects(SimulationContext<DiverseStates> ctx, DiverseStates states) {
+            CallTestChildActivity child = new CallTestChildActivity();
+            ctx.callActivity(child);
+            states.floatState.setValue(5.0);
+        }
+    }
+
+    public class CallTestChildActivity implements Activity<DiverseStates> {
+        @Override
+        public void modelEffects(SimulationContext<DiverseStates> ctx, DiverseStates states) {
+            ctx.delay(new Duration(2 * Duration.ONE_HOUR));
+        }
+    }
+
+    /**
+     * Tests that child activities created with `callActivity()` block the parent until effect model completion.
+     */
+    @Test
+    public void callActivityTimingTest() {
+        Time simStart = new Time();
+
+        List<ActivityThread<DiverseStates>> actList = new ArrayList<>();
+        CallTestParentActivity parent = new CallTestParentActivity();
+        Time parentExecutionTime = simStart.add(new Duration(1 * Duration.ONE_HOUR));
+        ActivityThread<DiverseStates> parentThread = new ActivityThread<>(
+            parent, parentExecutionTime
+        );
+        actList.add(parentThread);
+
+        DiverseStates states = new DiverseStates();
+
+        SimulationEngine<DiverseStates> engine = new SimulationEngine<>(simStart, actList, states);
+        engine.simulate();
+
+        Map<Time, Double> floatStateHistory = states.floatState.getHistory();
+        Time queryTime = parentExecutionTime.add(new Duration(2 * Duration.ONE_HOUR));
+
+        assertEquals((Double) 5.0, floatStateHistory.get(queryTime));
+    }
+
+    /* -------------------------- SIMPLE DURATION TEST -------------------------- */
+
+    public class SimpleDurationTestActivity implements Activity<DiverseStates> {
+        
+        @Override
+        public void modelEffects(SimulationContext<DiverseStates> ctx, DiverseStates states) {
+            ctx.delay(new Duration(10 * Duration.ONE_SECOND));
+        }
+    }
+
+    /**
+     * Tests that the duration of an activity is the length in simulation time of its effect model. This test does not
+     * test this condition is true for decompositions. See `parentChildDurationTest()` for that test.
+     */
+    @Test
+    public void simpleDurationTest() {
+        Time simStart = new Time();
+
+        List<ActivityThread<DiverseStates>> actList = new ArrayList<>();
+        SimpleDurationTestActivity act = new SimpleDurationTestActivity();
+        Time executionTime = simStart.add(new Duration(1 * Duration.ONE_HOUR));
+        ActivityThread<DiverseStates> actThread = new ActivityThread<>(
+            act, executionTime
+        );
+        actList.add(actThread);
+
+        DiverseStates states = new DiverseStates();
+
+        SimulationEngine<DiverseStates> engine = new SimulationEngine<>(simStart, actList, states);
+        engine.simulate();
+
+        assertEquals(new Duration(10 * Duration.ONE_SECOND), engine.getActivityDuration(act));
+    }
+
+    /* ----------------------- PARENT-CHILD DURATION TEST ----------------------- */
+
     public class DurationTestParentActivity implements Activity<DiverseStates> {
 
         @Override
@@ -262,8 +344,11 @@ public class SimulationEngineTests {
         }
     }
 
+    /**
+     * Tests that the duration of a parent activity matches the effect models of its children
+     */
     @Test
-    public void durationTest() {
+    public void parentChildDurationTest() {
         Time simStart = new Time();
 
         List<ActivityThread<DiverseStates>> actList = new ArrayList<>();
@@ -280,5 +365,4 @@ public class SimulationEngineTests {
 
         assertEquals(new Duration(10 * Duration.ONE_SECOND), engine.getActivityDuration(parent));
     }
-
 }
