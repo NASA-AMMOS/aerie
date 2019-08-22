@@ -12,6 +12,8 @@ import java.util.List;
  * Mission activities should implement this interface, as well as the {@link ActivityType}
  * protocol. Implementations of this interface provide methods used by the Merlin system
  * to interact with activity instances.
+ * 
+ * @param <T> the type of the adapter-provided state index structure
  */
 public interface Activity<T extends StateContainer> {
   /**
