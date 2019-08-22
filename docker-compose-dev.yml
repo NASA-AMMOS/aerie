@@ -73,7 +73,7 @@ services:
 volumes:
   adaptation_files:
   adaptation_logs:
-  adaptation_mongo:
+  adaptation_mongo_data:
   plan_logs:
   plan_mongo_data:
   rabbitmq_data:

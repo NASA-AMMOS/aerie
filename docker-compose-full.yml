@@ -129,7 +129,7 @@ networks:
 volumes:
   adaptation_files:
   adaptation_logs:
-  adaptation_mongo:
+  adaptation_mongo_data:
   elasticsearch_data:
   matomo_app:
   matomo_data:
