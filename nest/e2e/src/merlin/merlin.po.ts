@@ -43,7 +43,6 @@ export class MerlinPage {
       '/html/body/div[2]/div[2]/div/owl-date-time-container/div[2]/owl-date-time-calendar/div[2]/owl-date-time-month-view/table/tbody/tr[5]/td[3]',
     ),
   );
-  toastSuccess = element(by.css('.toast-success'));
 
   navigateTo(route: string) {
     return browser.get(`${browser.baseUrl}/#/${route}`) as Promise<any>;

@@ -27,8 +27,8 @@ describe('pageinit', () => {
     expect(page.codeMirrorEditor.isDisplayed()).toBe(false);
   });
 
-  it('[C136496] A user SHOULD be shown all 3 panels on load', () => {
-    expect(page.leftPanel.isDisplayed()).toBe(true);
+  it('[C136496] A user SHOULD be shown only 2 panels on load', () => {
+    expect(page.leftPanel.isDisplayed()).toBe(false);
     expect(page.middlePanel.isDisplayed()).toBe(true);
     expect(page.rightPanel.isDisplayed()).toBe(true);
   });
