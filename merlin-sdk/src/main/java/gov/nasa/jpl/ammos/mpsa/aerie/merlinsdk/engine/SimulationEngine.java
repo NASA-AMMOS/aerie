@@ -33,8 +33,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
  * Additional information that is tracked in `Map`s at the engine level: -
  * activity instances and their owning threads - parent activities and their
  * child activities - activities and their durations (in simulation time) -
- * activity threads and their listeners (other activity threads blocking on the
- * key's completion)
+ * activities and their listeners (other activities blocking on the key's
+ * completion)
  * 
  * @param <T> the type of the adapter-provided state index structure
  */
@@ -70,10 +70,10 @@ public class SimulationEngine<T extends StateContainer> {
     private Map<Activity<T>, Duration> activityDurationMap = new HashMap<>();
 
     /**
-     * A map of target activity threads to their listeners (activity threads that
-     * are blocking on the target's completion)
+     * A map of target activity to their listeners (activities that are blocking on
+     * the target's completion)
      */
-    private Map<ActivityThread<T>, Set<ActivityThread<T>>> activityListenerMap = new HashMap<>();
+    private Map<Activity<T>, Set<Activity<T>>> activityListenerMap = new HashMap<>();
 
     /**
      * The thread in which the simulation engine is running
@@ -198,16 +198,16 @@ public class SimulationEngine<T extends StateContainer> {
     /**
      * Adds a target-listener relationship to the engine's map of said relationships
      * 
-     * Blocked listener activity threads will be notified upon the target activity
-     * threads completion, giving the listeners the opportunity to resume their
-     * effect models.
+     * Blocked listener activities will be notified upon the target activity's
+     * completion, giving the listeners the opportunity to resume their effect
+     * models.
      * 
-     * @param target   the activity thread whose completion the listener is blocking
+     * @param target   the activity whose completion the listener is blocking
      *                 against
-     * @param listener the activity thread that is blocked until the target's effect
-     *                 model completes
+     * @param listener the activity that is blocked until the target's effect model
+     *                 completes
      */
-    public void addActivityListener(ActivityThread<T> target, ActivityThread<T> listener) {
+    public void addActivityListener(Activity<T> target, Activity<T> listener) {
         this.activityListenerMap.putIfAbsent(target, new HashSet<>());
         this.activityListenerMap.get(target).add(listener);
     }
@@ -256,12 +256,10 @@ public class SimulationEngine<T extends StateContainer> {
     /**
      * Returns the listeners on a given activity thread
      * 
-     * @param target the target activity thread whose completion listeners are
-     *               blocking on
-     * @return a set of the listeners that are blocked on the target thread's
-     *         completion
+     * @param target the target activity whose completion listeners are blocking on
+     * @return a set of the listeners that are blocked on the target's completion
      */
-    public Set<ActivityThread<T>> getActivityListeners(ActivityThread<T> target) {
+    public Set<Activity<T>> getActivityListeners(Activity<T> target) {
         return Collections.unmodifiableSet(activityListenerMap.getOrDefault(target, Collections.emptySet()));
     }
 

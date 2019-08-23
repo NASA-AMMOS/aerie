@@ -136,7 +136,7 @@ public class ThreadContext<T extends StateContainer> implements SimulationContex
         if (childActivityThread.getStatus() == ActivityStatus.Complete) {
             return;
         }
-        this.engine.addActivityListener(childActivityThread, this.activityThread);
+        this.engine.addActivityListener(childActivity, this.activityThread.getActivity());
         this.activityThread.suspend();
     }
 
@@ -157,9 +157,10 @@ public class ThreadContext<T extends StateContainer> implements SimulationContex
      * TODO: we may want to refactor this and allow for generic listener behavior
      */
     public void notifyActivityListeners() {
-        for (ActivityThread<T> listener: this.engine.getActivityListeners(this.activityThread)) {
-            listener.setEventTime(this.now());
-            ControlChannel channel = listener.getChannel();
+        for (Activity<T> listener: this.engine.getActivityListeners(this.activityThread.getActivity())) {
+            ActivityThread<T> listenerThread = this.engine.getActivityThread(listener);
+            listenerThread.setEventTime(this.now());
+            ControlChannel channel = listenerThread.getChannel();
             channel.yieldControl();
             channel.takeControl();
         }
