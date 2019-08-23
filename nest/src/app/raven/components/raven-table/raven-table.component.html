@@ -12,12 +12,12 @@
     </button>
     <ng-container *ngIf="selectedSubBand.type === 'activity'">
       <mat-form-field class="flex-filter">
-      <input
-        [formControl]="filterControl"
-        matInput
-        placeholder="Filter Activities In Graph By Name (e.g. DSS.*85.*|DSS.*86.*)"
-        [(ngModel)]="displayedFilter"
-      />
+        <input
+          [formControl]="filterControl"
+          matInput
+          placeholder="Filter Activities In Graph By Name (e.g. DSS.*85.*|DSS.*86.*)"
+          [(ngModel)]="displayedFilter"
+        />
       </mat-form-field>
       <ng-container *ngIf="filterControl.valid">
         <span class="filter-message" *ngIf="displayedFilter !== activityFilter">
