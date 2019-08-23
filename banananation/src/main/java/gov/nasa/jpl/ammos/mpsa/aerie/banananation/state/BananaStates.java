@@ -11,7 +11,7 @@ public class BananaStates implements StateContainer {
 
     @Override
     public List<SettableState<?>> getStateList() {
-		return List.of(fruitState, peelState);
-	}
-    
+        return List.of(fruitState, peelState);
+    }
+
 }

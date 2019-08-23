@@ -25,11 +25,13 @@ public class ControlChannel {
      * See class-level docs for more information.
      */
     public void yieldControl() {
-        try {
-            this.channel.put(new Object());
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        while(true) {
+            try {
+                this.channel.put(new Object());
+                break;
+            } catch (InterruptedException e) {
+                continue;
+            }
         }
     }
 
@@ -39,11 +41,13 @@ public class ControlChannel {
      * See class-level docs for more information.
      */
     public void takeControl() {
-        try {
-            this.channel.take();
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        while(true) {
+            try {
+                this.channel.take();
+                break;
+            } catch (InterruptedException e) {
+                continue;
+            }
         }
     }
 

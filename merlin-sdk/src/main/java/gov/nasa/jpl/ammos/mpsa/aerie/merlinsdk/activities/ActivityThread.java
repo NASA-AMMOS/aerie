@@ -61,7 +61,7 @@ public class ActivityThread<T extends StateContainer> implements Runnable, Compa
      */
     private T states;
 
-    ActivityStatus status = ActivityStatus.NotStarted;
+    private ActivityStatus status = ActivityStatus.NotStarted;
 
     public ActivityThread(Activity<T> activityInstance, Time startTime) {
         activity = activityInstance;
