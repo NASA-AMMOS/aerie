@@ -213,6 +213,18 @@ public class SimulationEngine<T extends StateContainer> {
     }
 
     /**
+     * Removes a target-listener relationship from the engine's map of said relationships
+     * 
+     * @param target   the activity whose completion the listener is blocking
+     *                 against
+     * @param listener the activity that is blocked until the target's effect model
+     *                 completes
+     */
+    public void removeActivityListener(Activity<T> target, Activity<T> listener) {
+        this.activityListenerMap.get(target).remove(listener);
+    }
+
+    /**
      * Given a list of states, registers the engine in each state
      * 
      * @param stateList the list of states to be registered

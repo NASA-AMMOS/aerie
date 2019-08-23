@@ -158,8 +158,11 @@ public class ThreadContext<T extends StateContainer> implements SimulationContex
      */
     public void notifyActivityListeners() {
         for (Activity<T> listener: this.engine.getActivityListeners(this.activityThread.getActivity())) {
+            this.engine.removeActivityListener(this.activityThread.getActivity(), listener);
+            
             ActivityThread<T> listenerThread = this.engine.getActivityThread(listener);
             listenerThread.setEventTime(this.now());
+            
             ControlChannel channel = listenerThread.getChannel();
             channel.yieldControl();
             channel.takeControl();
