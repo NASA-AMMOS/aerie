@@ -56,9 +56,9 @@ public class ThreadContext<T extends StateContainer> implements SimulationContex
         if (d.totalSeconds() < 0.0) {
             throw new IllegalArgumentException("Duration `d` must be non-negative");
         }
-        activityThread.setEventTime(activityThread.getEventTime().add(d));
-        engine.insertIntoQueue(activityThread);
-        activityThread.suspend();
+        this.activityThread.setEventTime(this.activityThread.getEventTime().add(d));
+        this.engine.insertIntoQueue(this.activityThread);
+        this.activityThread.suspend();
     }
 
     /**
@@ -72,9 +72,9 @@ public class ThreadContext<T extends StateContainer> implements SimulationContex
         if (t.lessThan(this.now())) {
             throw new IllegalArgumentException("Time `t` must occur in the future");
         }
-        activityThread.setEventTime(t);
-        engine.insertIntoQueue(activityThread);
-        activityThread.suspend();
+        this.activityThread.setEventTime(t);
+        this.engine.insertIntoQueue(this.activityThread);
+        this.activityThread.suspend();
     }
 
     /**
@@ -93,9 +93,9 @@ public class ThreadContext<T extends StateContainer> implements SimulationContex
      */
     public Activity<T> spawnActivity(Activity<T> childActivity) {
         ActivityThread<T> childActivityThread = new ActivityThread<>(childActivity, this.now());
-        engine.addParentChildRelationship(activityThread.getActivity(), childActivityThread.getActivity());
-        engine.insertIntoQueue(childActivityThread);
-        engine.registerActivityAndThread(childActivity, childActivityThread);
+        this.engine.addParentChildRelationship(this.activityThread.getActivity(), childActivityThread.getActivity());
+        this.engine.insertIntoQueue(childActivityThread);
+        this.engine.registerActivityAndThread(childActivity, childActivityThread);
         return childActivity;
     }
 
@@ -117,10 +117,10 @@ public class ThreadContext<T extends StateContainer> implements SimulationContex
      */
     public Activity<T> callActivity(Activity<T> childActivity) {
         ActivityThread<T> childActivityThread = new ActivityThread<>(childActivity, this.now());
-        engine.addParentChildRelationship(activityThread.getActivity(), childActivity);
-        engine.insertIntoQueue(childActivityThread);
-        engine.registerActivityAndThread(childActivity, childActivityThread);
-        waitForChild(childActivity);
+        this.engine.addParentChildRelationship(this.activityThread.getActivity(), childActivity);
+        this.engine.insertIntoQueue(childActivityThread);
+        this.engine.registerActivityAndThread(childActivity, childActivityThread);
+        this.waitForChild(childActivity);
         return childActivity;
     }
 
@@ -136,16 +136,16 @@ public class ThreadContext<T extends StateContainer> implements SimulationContex
         if (childActivityThread.getStatus() == ActivityStatus.Complete) {
             return;
         }
-        engine.addActivityListener(childActivityThread, this.activityThread);
-        activityThread.suspend();
+        this.engine.addActivityListener(childActivityThread, this.activityThread);
+        this.activityThread.suspend();
     }
 
     /**
      * Blocks a parent activity thread on the completion of all of its children
      */
     public void waitForAllChildren() {
-        for (Activity<T> child: engine.getActivityChildren(this.activityThread.getActivity())) {
-            waitForChild(child);
+        for (Activity<T> child: this.engine.getActivityChildren(this.activityThread.getActivity())) {
+            this.waitForChild(child);
         }
     }
 
@@ -157,7 +157,7 @@ public class ThreadContext<T extends StateContainer> implements SimulationContex
      * TODO: we may want to refactor this and allow for generic listener behavior
      */
     public void notifyActivityListeners() {
-        for (ActivityThread<T> listener: engine.getActivityListeners(activityThread)) {
+        for (ActivityThread<T> listener: this.engine.getActivityListeners(this.activityThread)) {
             listener.setEventTime(this.now());
             ControlChannel channel = listener.getChannel();
             channel.yieldControl();
@@ -171,7 +171,7 @@ public class ThreadContext<T extends StateContainer> implements SimulationContex
      * @return current simulation time
      */
     public Time now() {
-        return engine.getCurrentSimulationTime();
+        return this.engine.getCurrentSimulationTime();
     }
 
     /**
@@ -180,7 +180,7 @@ public class ThreadContext<T extends StateContainer> implements SimulationContex
      * @param d the length in simulation time of the activity's effect model
      */
     public void logActivityDuration(Duration d) {
-        engine.logActivityDuration(this.activityThread.getActivity(), d);
+        this.engine.logActivityDuration(this.activityThread.getActivity(), d);
     }
 
 }

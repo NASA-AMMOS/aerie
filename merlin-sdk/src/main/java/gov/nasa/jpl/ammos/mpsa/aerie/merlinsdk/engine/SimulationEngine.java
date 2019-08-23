@@ -94,13 +94,13 @@ public class SimulationEngine<T extends StateContainer> {
      */
     public SimulationEngine(Time simulationStartTime, List<ActivityThread<T>> activityThreads, T states) {
         this.states = states;
-        registerStates(states.getStateList());
+        registerStates(this.states.getStateList());
 
-        currentSimulationTime = simulationStartTime;
+        this.currentSimulationTime = simulationStartTime;
 
         for (ActivityThread<T> thread : activityThreads) {
-            pendingEventQueue.add(thread);
-            activityToThreadMap.put(thread.getActivity(), thread);
+            this.pendingEventQueue.add(thread);
+            this.activityToThreadMap.put(thread.getActivity(), thread);
         }
     }
 
@@ -110,11 +110,11 @@ public class SimulationEngine<T extends StateContainer> {
      * See the class-level docs for more information.
      */
     public void simulate() {
-        engineThread = Thread.currentThread();
+        this.engineThread = Thread.currentThread();
 
-        while (!pendingEventQueue.isEmpty()) {
+        while (!this.pendingEventQueue.isEmpty()) {
             ActivityThread<T> thread = pendingEventQueue.remove();
-            currentSimulationTime = thread.getEventTime();
+            this.currentSimulationTime = thread.getEventTime();
             this.executeActivity(thread);
         }
     }
@@ -137,7 +137,7 @@ public class SimulationEngine<T extends StateContainer> {
      *                       states
      */
     public void dispatchStates(ActivityThread<T> activityThread) {
-        activityThread.setStates(states);
+        activityThread.setStates(this.states);
     }
 
     /**
@@ -191,8 +191,8 @@ public class SimulationEngine<T extends StateContainer> {
      * @param child  the child activity into which the parent is decomposing
      */
     public void addParentChildRelationship(Activity<T> parent, Activity<T> child) {
-        parentChildMap.putIfAbsent(parent, new ArrayList<>());
-        parentChildMap.get(parent).add(child);
+        this.parentChildMap.putIfAbsent(parent, new ArrayList<>());
+        this.parentChildMap.get(parent).add(child);
     }
 
     /**
@@ -208,8 +208,8 @@ public class SimulationEngine<T extends StateContainer> {
      *                 model completes
      */
     public void addActivityListener(ActivityThread<T> target, ActivityThread<T> listener) {
-        activityListenerMap.putIfAbsent(target, new HashSet<>());
-        activityListenerMap.get(target).add(listener);
+        this.activityListenerMap.putIfAbsent(target, new HashSet<>());
+        this.activityListenerMap.get(target).add(listener);
     }
 
     /**
@@ -229,7 +229,7 @@ public class SimulationEngine<T extends StateContainer> {
      * @param activityThread the thread to be inserted
      */
     public void insertIntoQueue(ActivityThread<T> activityThread) {
-        pendingEventQueue.add(activityThread);
+        this.pendingEventQueue.add(activityThread);
     }
 
     /**
@@ -240,7 +240,7 @@ public class SimulationEngine<T extends StateContainer> {
      * @param activityThread the `ActivityThread` that owns the `Activity`
      */
     public void registerActivityAndThread(Activity<T> activity, ActivityThread<T> activityThread) {
-        activityToThreadMap.put(activity, activityThread);
+        this.activityToThreadMap.put(activity, activityThread);
     }
 
     /**
@@ -250,7 +250,7 @@ public class SimulationEngine<T extends StateContainer> {
      * @return the `ActivityThread` that owns the given activity
      */
     public ActivityThread<T> getActivityThread(Activity<T> activity) {
-        return activityToThreadMap.get(activity);
+        return this.activityToThreadMap.get(activity);
     }
 
     /**
@@ -284,7 +284,7 @@ public class SimulationEngine<T extends StateContainer> {
      * @param d        the length in simulation time of the activity's effect model
      */
     public void logActivityDuration(Activity<T> activity, Duration d) {
-        activityDurationMap.put(activity, d);
+        this.activityDurationMap.put(activity, d);
     }
 
     /**
@@ -295,7 +295,7 @@ public class SimulationEngine<T extends StateContainer> {
      * @return the length in simulation time of that activity's effect model
      */
     public Duration getActivityDuration(Activity<T> activity) {
-        return activityDurationMap.get(activity);
+        return this.activityDurationMap.get(activity);
     }
 
 }

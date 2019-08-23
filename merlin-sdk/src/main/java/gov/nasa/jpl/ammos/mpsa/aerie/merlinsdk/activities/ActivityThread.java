@@ -64,8 +64,8 @@ public class ActivityThread<T extends StateContainer> implements Runnable, Compa
     private ActivityStatus status = ActivityStatus.NotStarted;
 
     public ActivityThread(Activity<T> activityInstance, Time startTime) {
-        activity = activityInstance;
-        eventTime = startTime;
+        this.activity = activityInstance;
+        this.eventTime = startTime;
         //TODO: don't use reflection here. use some sort of proper name
         t = new Thread(this, activityInstance.getClass().getName());
     }
@@ -74,7 +74,7 @@ public class ActivityThread<T extends StateContainer> implements Runnable, Compa
      * Starts this thread.
      */
     public void start() {
-        t.start();
+        this.t.start();
     }
 
     /**
@@ -87,28 +87,28 @@ public class ActivityThread<T extends StateContainer> implements Runnable, Compa
      */
     @Override
     public void run() {
-        channel.takeControl();
+        this.channel.takeControl();
 
-        status = ActivityStatus.InProgress;
-        Time startTime = ctx.now();
+        this.status = ActivityStatus.InProgress;
+        Time startTime = this.ctx.now();
 
-        activity.modelEffects(ctx, states);
-        ctx.waitForAllChildren();
-        status = ActivityStatus.Complete;
+        activity.modelEffects(this.ctx, this.states);
+        this.ctx.waitForAllChildren();
+        this.status = ActivityStatus.Complete;
 
-        Duration activityDuration = ctx.now().subtract(startTime);
-        ctx.logActivityDuration(activityDuration);
-        ctx.notifyActivityListeners();
+        Duration activityDuration = this.ctx.now().subtract(startTime);
+        this.ctx.logActivityDuration(activityDuration);
+        this.ctx.notifyActivityListeners();
         
-        channel.yieldControl();
+        this.channel.yieldControl();
     }
 
     /**
      * Suspends the activity thread until execution control is explicitly given back to it
      */
     public synchronized void suspend() {
-        channel.yieldControl();
-        channel.takeControl();
+        this.channel.yieldControl();
+        this.channel.takeControl();
     }
     
     /**
