@@ -26,7 +26,8 @@ mat-card {
 }
 
 .reset-columns-container {
-  padding-bottom: 10px;
+  padding-bottom: 2px;
+  height: 40px;
   display: flex;
 }
 
@@ -48,7 +49,7 @@ mat-card {
 
 .flex-container {
   display: flex;
-  height: 90%;
+  height: calc(100% - 40px);
 }
 
 .edit-button-container {
