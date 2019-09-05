@@ -19,6 +19,8 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,6 +28,8 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/adaptations")
 public class AdaptationController {
+  // Controller requestMapping
+  private final String controllerLocation = this.getClass().getAnnotation(RequestMapping.class).value()[0];
 
   private final String ADAPTATION_FILE_PATH = new File("").getAbsolutePath() + "/adaptation_files/";
 
@@ -135,8 +139,15 @@ public class AdaptationController {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
 
+    URI accessLocation = null;
+    try {
+      accessLocation = new URI(String.format("%s/%s", controllerLocation, adaptation.getId()));
+    } catch (URISyntaxException e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+
     repository.save(adaptation);
-    return ResponseEntity.status(HttpStatus.CREATED).build();
+    return ResponseEntity.created(accessLocation).body(adaptation);
   }
 
   /**

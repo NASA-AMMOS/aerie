@@ -1,9 +1,5 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -13,9 +9,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities.writeJson;
 
 /**
  * Command to download a plan to a file
@@ -45,34 +39,12 @@ public class DownloadPlanCommand implements Command {
             this.status = response.getStatusCode().value();
 
             if (status == 200) {
-                writeJson(response.getBody().toString());
+                writeJson(response.getBody().toString(), this.outName);
             }
         }
         catch (HttpClientErrorException | HttpServerErrorException e) {
             this.status = e.getStatusCode().value();
         }
-    }
-
-    private boolean writeJson(String body) {
-        try {
-            String json = prettify(body);
-            new File(this.outName).createNewFile();
-            FileOutputStream writer = new FileOutputStream(this.outName);
-            writer.write(json.getBytes());
-            writer.close();
-        }
-        catch (IOException e) {
-            System.err.println(e.getMessage());
-            return false;
-        }
-        return true;
-    }
-
-    private String prettify(String json) {
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        JsonParser jp = new JsonParser();
-        JsonElement je = jp.parse(json);
-        return gson.toJson(je);
     }
 
     public int getStatus() {

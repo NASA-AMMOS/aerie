@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 
 import com.google.gson.Gson;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;

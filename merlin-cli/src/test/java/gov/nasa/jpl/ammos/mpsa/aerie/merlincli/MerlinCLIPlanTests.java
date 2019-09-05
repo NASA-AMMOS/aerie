@@ -1,9 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.matchers.JSONMatcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,7 +17,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Scanner;
 
 import static junit.framework.TestCase.fail;
 import static junit.framework.TestCase.assertTrue;
@@ -32,7 +28,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 @ContextConfiguration(locations = {"classpath:/applicationContext-test.xml"})
-public class MerlinCLITests extends AbstractJUnit4SpringContextTests {
+public class MerlinCLIPlanTests extends AbstractJUnit4SpringContextTests {
 
     private String resourcesRoot = "src/test/resources";
     private final String test_file_name = "test38294582.json";
@@ -69,6 +65,32 @@ public class MerlinCLITests extends AbstractJUnit4SpringContextTests {
         mockServer = MockRestServiceServer.createServer(restTemplate);
     }
 
+    @Test
+    public void testReadPlanList() {
+        String body = "[" +
+                  "{" +
+                    "\"name\": \"testPlan\"," +
+                    "\"adaptationId\": \"1234-5678-9abc-def0\"," +
+                    "\"version\": \"0.4\"," +
+                    "\"startTimestamp\": \"2018-331T11:00:00\"" +
+                  "}" +
+                "]";
+
+        mockServer.expect(requestTo(baseURL))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(body, MediaType.APPLICATION_JSON));
+
+        String[] args = { "--list-plans" };
+        commandOptions.consumeArgs(args).parse();
+
+        mockServer.verify();
+        assertTrue(commandOptions.lastCommandSuccessful());
+
+        String output = outContent.toString();
+        String result = output.substring(output.indexOf('['));
+        assertTrue(new JSONMatcher(body).matches(result));
+    }
+
     /**
      * Tests that the CLI issues a GET and writes a file containing
      * the response from the server, when issued -pull
@@ -76,6 +98,7 @@ public class MerlinCLITests extends AbstractJUnit4SpringContextTests {
     @Test
     public void testPlanPull() {
 
+        // Ensure test file doesn't exist before performing the test
         removeFile(test_file_name);
         String planId = "234";
         String body = "{" +
@@ -298,8 +321,8 @@ public class MerlinCLITests extends AbstractJUnit4SpringContextTests {
                     "\"constraints\": []," +
                     "\"listeners\"  : []," +
                     "\"parameters\" : [" +
-                        "{ \"name\": \"color\", \"value\": \"purple\", \"range\": [] }," +
-                        "{ \"name\": \"age\"  , \"value\": \"7\"     , \"range\": [] }" +
+                        "{ \"name\": \"color\", \"value\": \"purple\" }," +
+                        "{ \"name\": \"age\"  , \"value\": \"7\"      }"  +
                     "]" +
                 "}";
 
@@ -353,30 +376,5 @@ public class MerlinCLITests extends AbstractJUnit4SpringContextTests {
      */
     public String readFile(String path) throws IOException {
         return new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
-    }
-
-    /**
-     * Used to match JSON strings based on their content
-     * as opposed to matching each character in a string
-     */
-    private static class JSONMatcher extends BaseMatcher {
-
-        private JsonParser parser;
-        private JsonElement json;
-
-        public JSONMatcher(String body) {
-            parser = new JsonParser();
-            json = parser.parse(body);
-        }
-
-        @Override
-        public boolean matches(Object o) {
-            return o instanceof String && json.equals(parser.parse((String)o));
-        }
-
-        @Override
-        public void describeTo(Description description) {
-
-        }
     }
 }

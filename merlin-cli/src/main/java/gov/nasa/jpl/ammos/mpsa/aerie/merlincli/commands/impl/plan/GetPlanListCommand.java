@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
 import org.springframework.http.HttpEntity;
@@ -9,18 +9,19 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities.prettify;
+
 /**
- * Command to delete a plan
+ * Read the metadata of an adaptation
  */
-public class DeletePlanCommand implements Command {
+public class GetPlanListCommand implements Command {
 
     private RestTemplate restTemplate;
-    private String planId;
+    private String responseBody;
     private int status;
 
-    public DeletePlanCommand(RestTemplate restTemplate, String planId) {
+    public GetPlanListCommand(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
-        this.planId = planId;
         this.status = -1;
     }
 
@@ -29,9 +30,14 @@ public class DeletePlanCommand implements Command {
         HttpHeaders headers = new HttpHeaders();
         HttpEntity requestBody = new HttpEntity(null, headers);
         try {
-            String url = String.format("http://localhost:27183/api/plans/%s", this.planId);
-            ResponseEntity response = restTemplate.exchange(url, HttpMethod.DELETE, requestBody, String.class);
+            String url = String.format("http://localhost:27183/api/plans");
+            ResponseEntity response = restTemplate.exchange(url, HttpMethod.GET, requestBody, String.class);
             this.status = response.getStatusCodeValue();
+
+            if (status == 200) {
+                this.responseBody = prettify(response.getBody().toString());
+            }
+
         }
         catch (HttpClientErrorException | HttpServerErrorException e) {
             this.status = e.getStatusCode().value();
@@ -40,5 +46,9 @@ public class DeletePlanCommand implements Command {
 
     public int getStatus() {
         return status;
+    }
+
+    public String getResponseBody() {
+        return responseBody;
     }
 }

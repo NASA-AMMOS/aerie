@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.adaptation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
 import org.springframework.http.HttpEntity;
@@ -9,38 +9,46 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-/**
- * Command to delete an activity from a plan
- */
-public class DeleteActivityCommand implements Command {
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities.prettify;
+
+public class GetActivityTypeListCommand implements Command {
 
     private RestTemplate restTemplate;
-    private String planId;
-    private String activityId;
+    private String adaptationId;
+    private String responseBody;
     private int status;
 
-    public DeleteActivityCommand(RestTemplate restTemplate, String planId, String outName) {
+    public GetActivityTypeListCommand(RestTemplate restTemplate, String adaptationId) {
         this.restTemplate = restTemplate;
-        this.planId = planId;
-        this.activityId = outName;
+        this.adaptationId = adaptationId;
         this.status = -1;
     }
 
-    @Override
     public void execute() {
         HttpHeaders headers = new HttpHeaders();
         HttpEntity requestBody = new HttpEntity(null, headers);
         try {
-            String url = String.format("http://localhost:27183/api/plans/%s/activity_instances/%s", this.planId, this.activityId);
-            ResponseEntity response = restTemplate.exchange(url, HttpMethod.DELETE, requestBody, String.class);
+            String url = String.format("http://localhost:27182/api/adaptations/%s/activities", this.adaptationId);
+            ResponseEntity response = restTemplate.exchange(url, HttpMethod.GET, requestBody, String.class);
             this.status = response.getStatusCodeValue();
+
+            if (status == 200) {
+                this.responseBody = prettify(response.getBody().toString());
+            }
+
         }
         catch (HttpClientErrorException | HttpServerErrorException e) {
             this.status = e.getStatusCode().value();
         }
     }
 
+    // TODO: This function is defined in multiple commands, it should be moved to a separate file commands include.
+
     public int getStatus() {
         return status;
+    }
+
+    public String getResponseBody() {
+        return responseBody;
     }
 }

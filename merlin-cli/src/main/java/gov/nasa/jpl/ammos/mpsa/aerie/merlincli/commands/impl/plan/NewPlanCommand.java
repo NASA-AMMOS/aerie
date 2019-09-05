@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
 import org.springframework.http.*;
@@ -11,19 +11,19 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 /**
- * Command to update a plan using a file
- * This is the only way to update the activity instance list from the CLI
+ * Command for creating a new plan
  */
-public class UpdatePlanFileCommand implements Command {
+public class NewPlanCommand implements Command {
 
     private RestTemplate restTemplate;
-    private String planId;
+    private String path;
     private String body;
     private int status;
+    private String id;
 
-    public UpdatePlanFileCommand(RestTemplate restTemplate, String planId, String path) throws IOException {
+    public NewPlanCommand(RestTemplate restTemplate, String path) throws IOException {
         this.restTemplate = restTemplate;
-        this.planId = planId;
+        this.path = path;
         this.status = -1;
 
         this.body = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
@@ -35,16 +35,21 @@ public class UpdatePlanFileCommand implements Command {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity requestBody = new HttpEntity(this.body, headers);
         try {
-            String url = String.format("http://localhost:27183/api/plans/%s", this.planId);
-            ResponseEntity response = restTemplate.exchange(url, HttpMethod.PATCH, requestBody, String.class);
+            ResponseEntity response = restTemplate.exchange("http://localhost:27183/api/plans", HttpMethod.POST, requestBody, String.class);
             this.status = response.getStatusCodeValue();
+            this.id = response.getHeaders().getFirst("location");
+
         }
-        catch (HttpServerErrorException | HttpClientErrorException e) {
+        catch (HttpClientErrorException | HttpServerErrorException e) {
             this.status = e.getStatusCode().value();
         }
     }
 
     public int getStatus() {
         return status;
+    }
+
+    public String getId() {
+        return id;
     }
 }

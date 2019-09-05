@@ -1,9 +1,5 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
 import org.springframework.http.*;
 import org.springframework.web.client.HttpClientErrorException;
@@ -15,16 +11,17 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 /**
- * Command to create a new activity based on a JSON file
+ * Command to update a plan using a file
+ * This is the only way to update the activity instance list from the CLI
  */
-public class AppendActivitiesCommand implements Command {
+public class UpdatePlanFileCommand implements Command {
 
     private RestTemplate restTemplate;
     private String planId;
     private String body;
     private int status;
 
-    public AppendActivitiesCommand(RestTemplate restTemplate, String planId, String path) throws IOException {
+    public UpdatePlanFileCommand(RestTemplate restTemplate, String planId, String path) throws IOException {
         this.restTemplate = restTemplate;
         this.planId = planId;
         this.status = -1;
@@ -38,11 +35,11 @@ public class AppendActivitiesCommand implements Command {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity requestBody = new HttpEntity(this.body, headers);
         try {
-            String url = String.format("http://localhost:27183/api/plans/%s/activity_instances", this.planId);
-            ResponseEntity response = restTemplate.exchange(url, HttpMethod.POST, requestBody, String.class);
+            String url = String.format("http://localhost:27183/api/plans/%s", this.planId);
+            ResponseEntity response = restTemplate.exchange(url, HttpMethod.PATCH, requestBody, String.class);
             this.status = response.getStatusCodeValue();
         }
-        catch (HttpClientErrorException | HttpServerErrorException e) {
+        catch (HttpServerErrorException | HttpClientErrorException e) {
             this.status = e.getStatusCode().value();
         }
     }
