@@ -122,63 +122,61 @@
 
       <!-- Default Resource Color. -->
       <div class="field">
-          <label>Default Resource Color</label>
-          <div class="row-container">
-            <div class="flex-field">
-              <div class="color-container">
-                <ng-container *ngFor="let color of colors">
-                  <mat-icon
-                    class="color-button"
-                    [id]="color"
-                    [ngStyle]="{ color: color }"
-                    (click)="
-                      updateDefaultBandSettings.emit({
-                        update: { resourceColor: color }
-                      })
-                    "
-                  >
-                    {{
-                      (defaultBandSettings.resourceColor !== color &&
-                        'check_box_outline_blank') ||
-                        'check_box'
-                    }}
-                  </mat-icon>
-                </ng-container>
-              </div>
+        <label>Default Resource Color</label>
+        <div class="row-container">
+          <div class="flex-field">
+            <div class="color-container">
+              <ng-container *ngFor="let color of colors">
+                <mat-icon
+                  class="color-button"
+                  [id]="color"
+                  [ngStyle]="{ color: color }"
+                  (click)="
+                    updateDefaultBandSettings.emit({
+                      update: { resourceColor: color }
+                    })
+                  "
+                >
+                  {{
+                    (defaultBandSettings.resourceColor !== color &&
+                      'check_box_outline_blank') ||
+                      'check_box'
+                  }}
+                </mat-icon>
+              </ng-container>
             </div>
           </div>
         </div>
-
-
+      </div>
 
       <!-- Default Resource Fill Color. -->
       <div class="field">
-          <label>Default Resource Fill Color</label>
-          <div class="row-container">
-            <div class="flex-field">
-              <div class="color-container">
-                <ng-container *ngFor="let color of colors">
-                  <mat-icon
-                    class="color-button"
-                    [id]="color"
-                    [ngStyle]="{ color: color }"
-                    (click)="
-                      updateDefaultBandSettings.emit({
-                        update: { resourceFillColor: color }
-                      })
-                    "
-                  >
-                    {{
-                      (defaultBandSettings.resourceFillColor !== color &&
-                        'check_box_outline_blank') ||
-                        'check_box'
-                    }}
-                  </mat-icon>
-                </ng-container>
-              </div>
+        <label>Default Resource Fill Color</label>
+        <div class="row-container">
+          <div class="flex-field">
+            <div class="color-container">
+              <ng-container *ngFor="let color of colors">
+                <mat-icon
+                  class="color-button"
+                  [id]="color"
+                  [ngStyle]="{ color: color }"
+                  (click)="
+                    updateDefaultBandSettings.emit({
+                      update: { resourceFillColor: color }
+                    })
+                  "
+                >
+                  {{
+                    (defaultBandSettings.resourceFillColor !== color &&
+                      'check_box_outline_blank') ||
+                      'check_box'
+                  }}
+                </mat-icon>
+              </ng-container>
             </div>
           </div>
         </div>
+      </div>
 
       <!-- Divider Height. -->
       <div class="field">
@@ -230,7 +228,6 @@
           </div>
         </div>
       </div>
-
 
       <!-- Default Icon. -->
       <div class="field">

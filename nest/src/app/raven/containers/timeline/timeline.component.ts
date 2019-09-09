@@ -617,7 +617,7 @@ export class TimelineComponent implements OnDestroy {
           toDividerBand(this.defaultDividerHeight, this.defaultDividerColor),
           undefined,
           undefined,
-          this.defaultDividerColor
+          this.defaultDividerColor,
         ),
         modifiers: {
           afterBandId: selectedBandId,

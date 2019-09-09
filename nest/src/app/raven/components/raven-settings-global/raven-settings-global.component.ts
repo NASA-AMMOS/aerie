@@ -60,7 +60,10 @@ export class RavenSettingsGlobalComponent {
   /**
    * Helper. Invoke updateDefaultSettings if condition is true.
    */
-  conditionalUpdateDefaultDividerHeight(condition: boolean, updateDict: RavenUpdate) {
+  conditionalUpdateDefaultDividerHeight(
+    condition: boolean,
+    updateDict: RavenUpdate,
+  ) {
     if (condition) {
       this.updateDefaultBandSettings.emit(updateDict);
     }
