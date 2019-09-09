@@ -25,7 +25,11 @@ import {
   RavenSubBand,
   RavenUpdate,
 } from '../../models';
-import { defaultColors, getBandLabel } from '../../util';
+import {
+  defaultColors,
+  getBandLabel,
+  getNumericStateBandsWithUniquePossibleStates,
+} from '../../util';
 
 @Component({
   selector: 'raven-settings-bands-dialog',
@@ -286,15 +290,19 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
   }
 
   /**
-   * Helper. Returns true if the selected band contains more than one resource sub-band. False otherwise.
+   * Helper. Returns true if the selected band contains more than one resource sub-band or multiple state bands with identical possible states.
+   * False otherwise.
    */
-  containsMultipleResourceBands(): boolean {
+  containsMultipleResourceBandsOrIdenticalPossibleValueStateBands(): boolean {
     const subBands = this.bandsById[this.selectedBandId].subBands;
     const resourceCount = subBands.reduce(
       (count, subBand) => (subBand.type === 'resource' ? count + 1 : count),
       0,
     );
-    return resourceCount > 1;
+    return (
+      resourceCount > 1 ||
+      getNumericStateBandsWithUniquePossibleStates(this.subBands).length > 0
+    );
   }
 
   /**

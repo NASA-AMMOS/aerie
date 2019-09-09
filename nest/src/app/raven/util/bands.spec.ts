@@ -14,7 +14,12 @@ import {
   bandsWithFilterTarget,
   keywordLineActivityPoint,
   messageTypeActivityPoint,
+  multipleStateBands,
   resourceBand,
+  stateBand,
+  stateBandsWithDifferentPossibleStates,
+  stateBandsWithIdenticalPossibleStates,
+  stateBandsWithOneNumericStates,
   treeBySourceId,
 } from '../mocks';
 import {
@@ -25,6 +30,7 @@ import {
   getBandLabel,
   getBandsWithSourceId,
   getCustomFiltersBySourceId,
+  getNumericStateBandsWithUniquePossibleStates,
   hasActivityBandForFilterTarget,
   isMessageTypeActivity,
   isOverlay,
@@ -92,11 +98,66 @@ describe('bands.ts', () => {
     });
   });
 
+  describe('getNumericStateBandsWithUniquePossibleStates', () => {
+    it(`should return a list of two states`, () => {
+      expect(
+        getNumericStateBandsWithUniquePossibleStates(
+          stateBandsWithIdenticalPossibleStates.subBands,
+        ),
+      ).toEqual([
+        {
+          ...stateBand,
+          id: '2',
+          isNumeric: true,
+          name: 'test-resource-sub-band-0',
+          possibleStates: ['a', 'b', 'c'],
+        },
+        {
+          ...stateBand,
+          id: '3',
+          isNumeric: true,
+          name: 'test-resource-sub-band-1',
+          possibleStates: ['a', 'b', 'c'],
+        },
+      ]);
+    });
+  });
+
+  describe('getNumericStateBandsWithUniquePossibleStates', () => {
+    it(`should return an empty list for states with different possible states`, () => {
+      expect(
+        getNumericStateBandsWithUniquePossibleStates(
+          stateBandsWithDifferentPossibleStates.subBands,
+        ),
+      ).toEqual([]);
+    });
+  });
+
+  describe('getNumericStateBandsWithUniquePossibleStates', () => {
+    it(`should return an empty list with multiple different possible states`, () => {
+      expect(
+        getNumericStateBandsWithUniquePossibleStates(
+          multipleStateBands.subBands,
+        ),
+      ).toEqual([]);
+    });
+  });
+
+  describe('getNumericStateBandsWithUniquePossibleStates', () => {
+    it(`should return an empty list with only one numeric states`, () => {
+      expect(
+        getNumericStateBandsWithUniquePossibleStates(
+          stateBandsWithOneNumericStates.subBands,
+        ),
+      ).toEqual([]);
+    });
+  });
+
   describe('activityBandsWithLegend', () => {
     it(`should return null if the given band is not an activity band`, () => {
-      const stateBand = bands[1].subBands[0];
+      const aStateBand = bands[1].subBands[0];
       expect(
-        activityBandsWithLegendAndSourceId(bands, stateBand, '', ''),
+        activityBandsWithLegendAndSourceId(bands, aStateBand, '', ''),
       ).toEqual([]);
     });
 

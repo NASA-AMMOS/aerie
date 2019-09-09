@@ -392,3 +392,105 @@ export const overlayResourceBands: RavenCompositeBand = {
     },
   ],
 };
+
+export const stateBandsWithDifferentPossibleStates: RavenCompositeBand = {
+  ...compositeBand,
+  id: '102',
+  name: 'test-composite-band-2',
+  overlay: true,
+  sortOrder: 2,
+  subBands: [
+    {
+      ...stateBand,
+      id: '2',
+      isNumeric: true,
+      name: 'test-resource-sub-band-0',
+      possibleStates: ['a', 'b', 'c'],
+    },
+    {
+      ...stateBand,
+      id: '3',
+      isNumeric: true,
+      name: 'test-resource-sub-band-1',
+      possibleStates: ['x', 'y'],
+    },
+  ],
+};
+
+export const stateBandsWithIdenticalPossibleStates: RavenCompositeBand = {
+  ...compositeBand,
+  id: '102',
+  name: 'test-composite-band-2',
+  overlay: true,
+  sortOrder: 2,
+  subBands: [
+    {
+      ...stateBand,
+      id: '2',
+      isNumeric: true,
+      name: 'test-resource-sub-band-0',
+      possibleStates: ['a', 'b', 'c'],
+    },
+    {
+      ...stateBand,
+      id: '3',
+      isNumeric: true,
+      name: 'test-resource-sub-band-1',
+      possibleStates: ['a', 'b', 'c'],
+    },
+  ],
+};
+
+export const stateBandsWithOneNumericStates: RavenCompositeBand = {
+  ...compositeBand,
+  id: '102',
+  name: 'test-composite-band-2',
+  overlay: true,
+  sortOrder: 2,
+  subBands: [
+    {
+      ...stateBand,
+      id: '2',
+      name: 'test-resource-sub-band-0',
+      possibleStates: ['a', 'b', 'c'],
+    },
+    {
+      ...stateBand,
+      id: '3',
+      isNumeric: true,
+      name: 'test-resource-sub-band-1',
+      possibleStates: ['a', 'b', 'c'],
+    },
+  ],
+};
+
+export const multipleStateBands: RavenCompositeBand = {
+  ...compositeBand,
+  id: '102',
+  name: 'test-composite-band-2',
+  overlay: true,
+  sortOrder: 2,
+  subBands: [
+    {
+      ...stateBand,
+      id: '2',
+      isNumeric: true,
+      name: 'test-resource-sub-band-0',
+      possibleStates: ['a', 'b', 'c'],
+    },
+    {
+      ...stateBand,
+      id: '3',
+      isNumeric: true,
+      name: 'test-resource-sub-band-1',
+      possibleStates: ['x', 'y'],
+    },
+    {
+      ...stateBand,
+      id: '4',
+      isNumeric: true,
+      name: 'test-resource-sub-band-2',
+      possibleStates: ['x', 'y'],
+    },
+  ],
+};

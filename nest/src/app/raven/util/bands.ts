@@ -760,6 +760,28 @@ export function getBandsWithSourceId(
 }
 
 /**
+ *
+ * Helper. Returns a list of state bands with one identical possible values. [] otherwise.
+ */
+export function getNumericStateBandsWithUniquePossibleStates(
+  subBands: RavenSubBand[],
+): RavenSubBand[] {
+  const numericStateBands = subBands.filter(
+    band => band.type === 'state' && (band as RavenStateBand).isNumeric,
+  );
+  const bandsPossibleStates = numericStateBands.map(band =>
+    (band as RavenStateBand).possibleStates.join(','),
+  );
+  const uniqueStateBands = bandsPossibleStates.filter(
+    (bandPossibleStates, index) =>
+      bandsPossibleStates.indexOf(bandPossibleStates) === index,
+  );
+  return numericStateBands.length > 1 && uniqueStateBands.length === 1
+    ? numericStateBands
+    : [];
+}
+
+/**
  * Helper. Returns a band from a list of bands with the given id. Null otherwise.
  */
 export function bandById(

@@ -30,7 +30,10 @@ import {
   RavenSubBand,
   RavenUpdate,
 } from '../../models';
-import { bandById } from '../../util/bands';
+import {
+  bandById,
+  getNumericStateBandsWithUniquePossibleStates,
+} from '../../util/bands';
 import { colorHexToRgbArray } from '../../util/color';
 
 @Component({
@@ -450,49 +453,74 @@ export class RavenCompositeBandComponent
    * Only show ticks for one sub-band.
    */
   computeMinMaxTickValuesForCompositeScale() {
-    let resourceBandCounter = 0;
-    let min = null;
-    let max = null;
+    const subBands = this.subBands;
+    const resourceCount = subBands.reduce(
+      (count, subBand) => (subBand.type === 'resource' ? count + 1 : count),
+      0,
+    );
+    if (resourceCount > 1) {
+      let resourceBandCounter = 0;
+      let min = null;
+      let max = null;
 
-    for (
-      let i = 0, length = this.ctlCompositeBand.bands.length;
-      i < length;
-      ++i
-    ) {
-      const band = this.ctlCompositeBand.bands[i];
+      for (
+        let i = 0, length = this.ctlCompositeBand.bands.length;
+        i < length;
+        ++i
+      ) {
+        const band = this.ctlCompositeBand.bands[i];
+        if (band.type === 'resource') {
+          band.autoScale = this.getResourceAutoScale(this.compositeAutoScale);
+          // Clear tickValues here to make sure computeMinMaxValues works properly for logTicks.
+          band.tickValues = [];
+          band.computeMinMaxValues();
+          band.computeMinMaxPaintValues();
+          min = min ? Math.min(min, band.minPaintValue) : band.minPaintValue;
+          max = max ? Math.max(max, band.maxPaintValue) : band.maxPaintValue;
 
-      if (band.type === 'resource') {
-        band.autoScale = this.getResourceAutoScale(this.compositeAutoScale);
-        // Clear tickValues here to make sure computeMinMaxValues works properly for logTicks.
-        band.tickValues = [];
-        band.computeMinMaxValues();
-        band.computeMinMaxPaintValues();
-        min = min ? Math.min(min, band.minPaintValue) : band.minPaintValue;
-        max = max ? Math.max(max, band.maxPaintValue) : band.maxPaintValue;
-
-        if (resourceBandCounter > 0) {
-          // Keep only one axis for the resource bands.
-          band.hideTicks = true;
+          if (resourceBandCounter > 0) {
+            // Keep only one axis for the resource bands.
+            band.hideTicks = true;
+          }
+          resourceBandCounter++;
         }
-
-        resourceBandCounter++;
       }
-    }
+      // Set minPaintValue and maxPaintValue for all resource bands.
+      for (
+        let i = 0, length = this.ctlCompositeBand.bands.length;
+        i < length;
+        ++i
+      ) {
+        const band = this.ctlCompositeBand.bands[i];
 
-    // Set minPaintValue and maxPaintValue for all resource bands.
-    for (
-      let i = 0, length = this.ctlCompositeBand.bands.length;
-      i < length;
-      ++i
-    ) {
-      const band = this.ctlCompositeBand.bands[i];
-
-      if (band.type === 'resource') {
-        band.maxPaintValue = max;
-        band.minPaintValue = min;
-        band.logTicks = this.compositeLogTicks;
-        band.scientificNotation = this.compositeScientificNotation;
-        band.recomputeTickValues();
+        if (band.type === 'resource') {
+          band.maxPaintValue = max;
+          band.minPaintValue = min;
+          band.logTicks = this.compositeLogTicks;
+          band.scientificNotation = this.compositeScientificNotation;
+          band.recomputeTickValues();
+        }
+      }
+    } else {
+      const numericStateBands = getNumericStateBandsWithUniquePossibleStates(
+        this.subBands,
+      );
+      if (numericStateBands.length > 0) {
+        let resourceBandCounter = 0;
+        for (let i = 0, alength = numericStateBands.length; i < alength; ++i) {
+          for (
+            let j = 0, blength = this.ctlCompositeBand.bands.length;
+            j < blength;
+            ++j
+          ) {
+            if (this.ctlCompositeBand.bands[j].id === numericStateBands[i].id) {
+              if (resourceBandCounter > 0) {
+                this.ctlCompositeBand.bands[j].hideTicks = true;
+              }
+              resourceBandCounter++;
+            }
+          }
+        }
       }
     }
   }
@@ -868,6 +896,9 @@ export class RavenCompositeBandComponent
           ctlBand.hideTicks = false;
           ctlBand.labelColor = ctlBand.painter.color;
         }
+      } else {
+        // unhide Y-axis label
+        ctlBand.hideTicks = false;
       }
     }
   }
