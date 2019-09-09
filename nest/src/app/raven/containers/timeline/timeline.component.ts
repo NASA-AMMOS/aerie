@@ -153,6 +153,8 @@ export class TimelineComponent implements OnDestroy {
   bands: RavenCompositeBand[];
   baseUrl: string;
   detailsPanelHeight = 20;
+  defaultDividerHeight: number;
+  defaultDividerColor: string;
   hoveredBandId: string;
   selectedBandId: string;
   selectedSubBand: RavenSubBand | null;
@@ -376,11 +378,12 @@ export class TimelineComponent implements OnDestroy {
       this.baseUrl$.subscribe(baseUrl => (this.baseUrl = baseUrl)),
     );
     this.subscriptions.add(
-      this.defaultBandSettings$.subscribe(
-        defaultBandSettings =>
-          (this.activityInitiallyHidden =
-            defaultBandSettings.activityInitiallyHidden),
-      ),
+      this.defaultBandSettings$.subscribe(defaultBandSettings => {
+        this.activityInitiallyHidden =
+          defaultBandSettings.activityInitiallyHidden;
+        this.defaultDividerColor = defaultBandSettings.dividerColor;
+        this.defaultDividerHeight = defaultBandSettings.dividerHeight;
+      }),
     );
     this.subscriptions.add(
       this.hoveredBandId$.subscribe(
@@ -610,7 +613,12 @@ export class TimelineComponent implements OnDestroy {
   onAddDividerBand(selectedBandId: string): void {
     this.store.dispatch(
       TimelineActions.addBand({
-        band: toCompositeBand(toDividerBand()),
+        band: toCompositeBand(
+          toDividerBand(this.defaultDividerHeight, this.defaultDividerColor),
+          undefined,
+          undefined,
+          this.defaultDividerColor
+        ),
         modifiers: {
           afterBandId: selectedBandId,
         },

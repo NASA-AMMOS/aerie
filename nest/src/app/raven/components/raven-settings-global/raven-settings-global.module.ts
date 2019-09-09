@@ -14,6 +14,8 @@ import {
   MatButtonModule,
   MatCardModule,
   MatFormFieldModule,
+  MatIconModule,
+  MatInputModule,
   MatSelectModule,
   MatSlideToggleModule,
 } from '@angular/material';
@@ -27,6 +29,8 @@ import { RavenSettingsGlobalComponent } from './raven-settings-global.component'
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
     MatSelectModule,
     MatSlideToggleModule,
     ReactiveFormsModule,

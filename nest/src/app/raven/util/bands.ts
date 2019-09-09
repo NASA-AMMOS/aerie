@@ -268,14 +268,14 @@ export function toCompositeBand(
 /**
  * Returns a default divider band.
  */
-export function toDividerBand(): RavenDividerBand {
+export function toDividerBand(dividerHeight: number, dividerColor: string): RavenDividerBand {
   const id = uniqueId();
 
   const dividerBand: RavenDividerBand = {
     addTo: false,
-    color: '#ffffff',
+    color: dividerColor,
     editable: false,
-    height: 10,
+    height: dividerHeight,
     heightPadding: 0,
     id,
     label: `Divider ${id}`,

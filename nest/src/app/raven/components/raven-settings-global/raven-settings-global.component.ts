@@ -8,7 +8,9 @@
  */
 
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { FormControl, Validators } from '@angular/forms';
 import { RavenDefaultBandSettings, RavenUpdate } from '../../models';
+import { defaultColors } from '../../util';
 
 @Component({
   selector: 'raven-settings-global',
@@ -26,6 +28,13 @@ export class RavenSettingsGlobalComponent {
   updateDefaultBandSettings: EventEmitter<RavenUpdate> = new EventEmitter<
     RavenUpdate
   >();
+
+  colors = defaultColors;
+
+  heightControl: FormControl = new FormControl('', [
+    Validators.required,
+    Validators.min(1),
+  ]);
 
   /**
    * Event. ActivityInitiallyHidden Change callback.
@@ -45,6 +54,15 @@ export class RavenSettingsGlobalComponent {
   onLabelFontSizeChange(labelFontSize: number) {
     if (labelFontSize > 5 && labelFontSize < 31) {
       this.updateDefaultBandSettings.emit({ update: { labelFontSize } });
+    }
+  }
+
+  /**
+   * Helper. Invoke updateDefaultSettings if condition is true.
+   */
+  conditionalUpdateDefaultDividerHeight(condition: boolean, updateDict: RavenUpdate) {
+    if (condition) {
+      this.updateDefaultBandSettings.emit(updateDict);
     }
   }
 }

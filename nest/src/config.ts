@@ -81,6 +81,8 @@ export const config: ConfigState = {
     defaultBandSettings: {
       activityInitiallyHidden: false,
       activityLayout: 0,
+      dividerColor: '#EF6C00',
+      dividerHeight: 15,
       icon: 'circle',
       iconEnabled: false,
       labelFont: 'Georgia',

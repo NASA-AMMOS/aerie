@@ -29,6 +29,10 @@ mat-sidenav.epochs-drawer {
   width: 600px;
 }
 
+mat-sidenav.global-settings-drawer {
+  width: 425px;
+}
+
 mat-sidenav.output-drawer {
   width: 900px;
 }
