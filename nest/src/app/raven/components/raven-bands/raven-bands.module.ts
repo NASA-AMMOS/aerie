@@ -13,9 +13,16 @@ import { SortablejsModule } from 'angular-sortablejs';
 import { RavenCompositeBandModule } from '../raven-composite-band/raven-composite-band.module';
 import { RavenBandsComponent } from './raven-bands.component';
 
+import { MatIconModule } from '@angular/material';
+
 @NgModule({
   declarations: [RavenBandsComponent],
   exports: [RavenBandsComponent],
-  imports: [CommonModule, RavenCompositeBandModule, SortablejsModule],
+  imports: [
+    CommonModule,
+    MatIconModule,
+    RavenCompositeBandModule,
+    SortablejsModule,
+  ],
 })
 export class RavenBandsModule {}

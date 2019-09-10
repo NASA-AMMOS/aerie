@@ -27,6 +27,7 @@ import {
   RavenSortMessage,
   RavenUpdate,
 } from '../../models';
+import { bandById } from '../../util';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -190,6 +191,98 @@ export class RavenBandsComponent implements OnChanges, OnInit {
 
     if (Object.keys(sort).length) {
       this.newSort.emit(sort);
+    }
+  }
+
+  /**
+   * Helper. Returns true if this band contains an activity band.
+   */
+  containActivityBand(bandId: string): boolean {
+    const compositeBand = bandById(this.bands, bandId) as RavenCompositeBand;
+    for (let i = 0, l = compositeBand.subBands.length; i < l; ++i) {
+      if (compositeBand.subBands[i].type === 'activity') {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Helper. Returns true if a subBand is in addTo mode.
+   */
+  containAddToBand(bandId: string): boolean {
+    const compositeBand = bandById(this.bands, bandId) as RavenCompositeBand;
+    for (let i = 0, l = compositeBand.subBands.length; i < l; ++i) {
+      if (
+        compositeBand.subBands[i].type === 'activity' &&
+        compositeBand.subBands[i].addTo
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Helper. Returns true if this is a divider band.
+   */
+  isDividerBand(bandId: string): boolean {
+    const compositeBand = bandById(this.bands, bandId) as RavenCompositeBand;
+    return (
+      compositeBand.subBands.length > 0 &&
+      compositeBand.subBands[0].type === 'divider'
+    );
+  }
+
+  /**
+   * Helper. Returns true if band is in overlay mode.
+   */
+  isOverlay(bandId: string): boolean {
+    const compositeBand = bandById(this.bands, bandId) as RavenCompositeBand;
+    return compositeBand.overlay;
+  }
+
+  /**
+   * Helper. Returns true if band is in overlay or contains a band in addTo mode.
+   */
+  isOverlayAddTo(bandId: string): boolean {
+    const compositeBand = bandById(this.bands, bandId) as RavenCompositeBand;
+    return compositeBand.overlay || this.containAddToBand(bandId);
+  }
+
+  /**
+   * Event. Called when toggled from overlay mode and go to addTo mode if activity subBand exists.
+   */
+  onSwitchToAddTo(bandId: string) {
+    this.updateOverlay.emit({ bandId, update: { overlay: false } });
+    const compositeBand = bandById(this.bands, bandId) as RavenCompositeBand;
+    const activityBands = compositeBand.subBands.filter(
+      band => band.type === 'activity',
+    );
+    if (activityBands && activityBands.length > 0) {
+      this.updateAddTo.emit({
+        bandId,
+        subBandId: activityBands[0].id,
+        update: { addTo: true },
+      });
+    }
+  }
+
+  /**
+   * Event. Called to exit addTo and return to 'none' mode.
+   */
+  onSwitchToNone(bandId: string) {
+    this.updateOverlay.emit({ bandId, update: { overlay: false } });
+    const compositeBand = bandById(this.bands, bandId) as RavenCompositeBand;
+    const activityBands = compositeBand.subBands.filter(
+      band => band.type === 'activity',
+    );
+    if (activityBands && activityBands.length > 0) {
+      this.updateAddTo.emit({
+        bandId,
+        subBandId: activityBands[0].id,
+        update: { addTo: false },
+      });
     }
   }
 }

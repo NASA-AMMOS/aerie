@@ -323,12 +323,7 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
       this.updateSubBand.emit({
         prop: 'heightPadding',
         subBandId: this.id,
-        value: this.showStateChangeTimes ? 12 : 0,
-      });
-      this.updateSubBand.emit({
-        prop: 'height',
-        subBandId: this.id,
-        value: this.showStateChangeTimes ? this.height - 12 : this.height,
+        value: this.showStateChangeTimes ? 10 : 0,
       });
     }
 
@@ -378,7 +373,7 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
         baselineLabel: this.baselineLabel,
         borderWidth: this.borderWidth,
         font: `normal ${this.stateLabelFontSize}px Verdana`,
-        height: this.height - this.heightPadding,
+        height: this.height,
         heightPadding: this.heightPadding,
         id: this.id,
         intervals: [],

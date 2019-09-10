@@ -239,10 +239,7 @@ export class RavenCompositeBandComponent
       this.ctlCompositeBand.height = this.height;
       for (let i = 0, l = this.ctlCompositeBand.bands.length; i < l; ++i) {
         const ctlSubBand = this.ctlCompositeBand.bands[i];
-        // CtlSubBand height needs to exclude heightPadding.
-        ctlSubBand.height = ctlSubBand.heightPadding
-          ? this.height - ctlSubBand.heightPadding
-          : this.height;
+        ctlSubBand.height = this.height;
       }
 
       shouldRedraw = true;
@@ -654,40 +651,6 @@ export class RavenCompositeBandComponent
   }
 
   /**
-   * Event. Called when toggled from overlay mode and go to addTo mode if activity subBand exists.
-   */
-  onSwitchToAddTo() {
-    this.updateOverlay.emit({ bandId: this.id, update: { overlay: false } });
-    const activityBands = this.subBands.filter(
-      band => band.type === 'activity',
-    );
-    if (activityBands && activityBands.length > 0) {
-      this.updateAddTo.emit({
-        bandId: this.id,
-        subBandId: activityBands[0].id,
-        update: { addTo: true },
-      });
-    }
-  }
-
-  /**
-   * Event. Called to exit addTo and return to 'none' mode.
-   */
-  onSwitchToNone() {
-    this.updateOverlay.emit({ bandId: this.id, update: { overlay: false } });
-    const activityBands = this.subBands.filter(
-      band => band.type === 'activity',
-    );
-    if (activityBands && activityBands.length > 0) {
-      this.updateAddTo.emit({
-        bandId: this.id,
-        subBandId: activityBands[0].id,
-        update: { addTo: false },
-      });
-    }
-  }
-
-  /**
    * Event. Called for resource bands when we need to update interpolation.
    * We need this as a separate event because of the `setInterpolation` call.
    */
@@ -774,30 +737,6 @@ export class RavenCompositeBandComponent
   }
 
   /**
-   * Helper. Returns true if this band contains an activity band.
-   */
-  get containActivityBand() {
-    for (let i = 0, l = this.subBands.length; i < l; ++i) {
-      if (this.subBands[i].type === 'activity') {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
-   * Helper. Returns true if a subBand is in addTo mode.
-   */
-  get containAddToBand() {
-    for (let i = 0, l = this.subBands.length; i < l; ++i) {
-      if (this.subBands[i].type === 'activity' && this.subBands[i].addTo) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
    * Helper that returns an auto-scale option for a CTL resource band.
    * VISIBLE_INTERVALS indicates auto-scale of the y-axis ticks.
    * ALL_INTERVALS indicates no auto-scale of the y-axis ticks.
@@ -807,20 +746,6 @@ export class RavenCompositeBandComponent
     return autoScale
       ? ctlResourceBand.VISIBLE_INTERVALS
       : ctlResourceBand.ALL_INTERVALS;
-  }
-
-  /**
-   * Helper. Returns true if this is a divider band.
-   */
-  get isDividerBand() {
-    return this.subBands.length > 0 && this.subBands[0].type === 'divider';
-  }
-
-  /**
-   * Helper. Returns true if band is in overlay or contains a band in addTo mode.
-   */
-  isOverlayAddTo() {
-    return this.overlay || this.containAddToBand;
   }
 
   /**

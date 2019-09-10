@@ -1141,7 +1141,7 @@ Band.getNextLocalID = function() {
 };
 
 Band.prototype.revalidate = function() {
-  var height = this.height + this.heightPadding;
+  var height = this.height;
   var width = this.div.offsetWidth;
 
   // upscale the canvas if the 2 ratios don't match
@@ -1475,7 +1475,7 @@ Band.prototype.repaint = function() {
   // clear out the previous painting
   // don't use the canvas height/width since its may be scaled
   // see revalidate for when scaling occurs
-  var height = this.height + this.heightPadding;
+  var height = this.height;
   var width = this.div.offsetWidth;
   var ctx = this.canvas.getContext('2d');
   ctx.clearRect(0, 0, width, height);
@@ -1913,7 +1913,7 @@ CompositeBand.prototype.repaint = function() {
   // clear out the previous painting
   // don't use the canvas height/width since its may be scaled
   // see revalidate for when scaling occurs
-  var height = this.height + this.heightPadding;
+  var height = this.height;
   var width = this.div.offsetWidth;
   var ctx = this.canvas.getContext('2d');
   ctx.clearRect(0, 0, width, height);
@@ -2027,7 +2027,7 @@ Decorator.prototype.paintGuideTimes = function() {
   var viewStart = viewTimeAxis.start;
   var viewEnd = viewTimeAxis.end;
 
-  var bandHeight = this.band.height + (this.band.heightPadding | 0);
+  var bandHeight = this.band.height;
   var ctx = this.band.canvas.getContext('2d');
   ctx.lineWidth = 2;
   ctx.strokeStyle = Util.rgbaToString(this.guideColor, 0.8);
@@ -2054,7 +2054,7 @@ Decorator.prototype.paintLastClickTime = function() {
   var viewEnd = viewTimeAxis.end;
 
   if(lastClickTime >= viewStart && lastClickTime <= viewEnd) {
-    var bandHeight = this.band.height + this.band.heightPadding;
+    var bandHeight = this.band.height;
     var ctx = this.band.canvas.getContext('2d');
     ctx.lineWidth = 2;
     ctx.strokeStyle = Util.rgbaToString([39, 143, 229], 0.2);
@@ -2075,7 +2075,7 @@ Decorator.prototype.paintTimeTicks = function() {
   var viewEnd = viewTimeAxis.end;
   var tickTimes = viewTimeAxis.tickTimes;
   var labelWidth = viewTimeAxis.x1;
-  var bandHeight = this.band.height + this.band.heightPadding;
+  var bandHeight = this.band.height;
   var bandWidth = this.band.div.offsetWidth;
 
   // we paint the dashed markers for the tick boundary
@@ -2111,7 +2111,7 @@ Decorator.prototype.paintNow = function() {
   var viewEnd = viewTimeAxis.end;
   if(now !== null && now >= viewStart && now < viewEnd) {
     var ctx = this.band.canvas.getContext('2d');
-    var bandHeight = this.band.height + this.band.heightPadding;
+    var bandHeight = this.band.height;
 
     var nowX = viewTimeAxis.getXFromTime(now);
     ctx.lineWidth = this.timeCursorWidth || 4;
@@ -3115,8 +3115,8 @@ ResourceBand.prototype.getYFromValue = function(value) {
   var range = this.maxPaintValue - this.minPaintValue;
   if(range === 0)
     return 0;
-  var scale = this.height / range;
-  return this.height - ((value-this.minPaintValue) * scale) + this.heightPadding;
+  var scale = (this.height - this.heightPadding) / range;
+  return this.height - ((value-this.minPaintValue) * scale);
 };
 
 // compute the min max values based on the all the intervals assigned to the band
@@ -4504,7 +4504,7 @@ StatePainter.prototype.paintUnit = function(unit, lastPaintedTimeX2, lastPainted
   var unitX1 = viewTimeAxis.getXFromTime(unit.start);
   var unitX2 = viewTimeAxis.getXFromTime(unit.end);
   var unitY1 = 0;
-  var unitY2 = this.band.height;
+  var unitY2 = this.showStateChangeTimes ? this.band.height - this.band.heightPadding : this.band.height;
   var unitWidth = unitX2 - unitX1;
   var unitHeight = unitY2 - unitY1;
 
@@ -4573,7 +4573,7 @@ StatePainter.prototype.paintUnit = function(unit, lastPaintedTimeX2, lastPainted
       }
   }
 
-  return {coord: [unitX1, unitX2, 0, this.band.height + this.band.heightPadding], lastPaintedTimeX2, lastPaintedTime};
+  return {coord: [unitX1, unitX2, 0, this.band.height], lastPaintedTimeX2, lastPaintedTime};
 };
 
 StatePainter.prototype.paint = function() {

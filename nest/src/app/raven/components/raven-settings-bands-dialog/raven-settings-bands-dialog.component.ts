@@ -236,20 +236,10 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
    * Event. Change plot type changes the height and heightPadding. Height of CompositeBand needs to include heightPadding for top and bottom tick labels to show in a line plot.
    */
   changePlotType(subBand: RavenSubBand, isNumeric: boolean) {
-    this.updateBand({
-      bandId: this.selectedBandId,
-      subBandId: subBand.id,
-      update: {
-        height: isNumeric ? 100 : 50,
-        heightPadding: isNumeric ? 20 : 0,
-      },
-    });
-
     this.updateSubBand({
       bandId: this.selectedBandId,
       subBandId: subBand.id,
       update: {
-        height: isNumeric ? 100 : 50,
         heightPadding:
           isNumeric || (subBand as RavenStateBand).showStateChangeTimes
             ? 10
@@ -270,7 +260,7 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
       bandId: this.selectedBandId,
       subBandId: subBand.id,
       update: {
-        heightPadding: showStateChangeTimes ? 12 : 0,
+        heightPadding: showStateChangeTimes ? 10 : 0,
         showStateChangeTimes,
       },
     });

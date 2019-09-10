@@ -9,13 +9,13 @@
 
 :host {
   display: flex;
-  padding-left: 18px;
   position: relative;
 }
 
 .raven-band {
   isolation: isolate;
 }
+
 .raven-band--selected {
   background-image: linear-gradient(
     to right,
@@ -24,44 +24,11 @@
     rgba(0, 0, 0, 0) 2px
   );
 }
+
 .raven-band__ctl {
   mix-blend-mode: multiply;
 }
 
-.hovered {
-  z-index: 1;
-}
-
-.icon-div {
-  position: absolute;
-  left: 0px;
-  top: 0px;
-  width: 18px;
-  height: 0px;
-  display: flex;
-  flex-direction: column;
-}
-
-.icons {
-  cursor: pointer;
-  font-size: 18px;
-  height: 18px;
-  margin-bottom: 2px;
-}
-
-.overlay {
-  color: blue;
-}
-
-.addTo {
-  color: orange;
-}
 .row {
   flex: 1 0 auto;
-}
-
-div.hovered {
-  border-style: solid;
-  border-color: grey;
-  border-width: 1px;
 }
