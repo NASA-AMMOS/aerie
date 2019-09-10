@@ -251,24 +251,30 @@ export class SourceExplorerEffects {
                 ...band,
                 id: parentId,
                 subBands: band.subBands.map((subBand: RavenSubBand) => {
-                  const labelPin = subBand.labelPin;
-                  const pin = action.update.pins[labelPin];
-                  const targetSource =
-                    state.raven.sourceExplorer.treeBySourceId[pin.sourceId];
+                  if (subBand.type === 'divider') {
+                    return {
+                      ...subBand,
+                    };
+                  } else {
+                    const labelPin = subBand.labelPin;
+                    const pin = action.update.pins[labelPin];
+                    const targetSource =
+                      state.raven.sourceExplorer.treeBySourceId[pin.sourceId];
 
-                  return {
-                    ...subBand,
-                    id: uniqueId(),
-                    parentUniqueId: parentId,
-                    sourceIds: subBand.sourceIds.map((sourceId: string) =>
-                      updateSourceId(
-                        sourceId,
-                        targetSource.id,
-                        sourceTypes,
-                        targetSource.type,
+                    return {
+                      ...subBand,
+                      id: uniqueId(),
+                      parentUniqueId: parentId,
+                      sourceIds: subBand.sourceIds.map((sourceId: string) =>
+                        updateSourceId(
+                          sourceId,
+                          targetSource.id,
+                          sourceTypes,
+                          targetSource.type,
+                        ),
                       ),
-                    ),
-                  };
+                    };
+                  }
                 }),
               };
             });
@@ -1771,9 +1777,6 @@ export class SourceExplorerEffects {
               );
             }
           });
-
-          // Resize bands when we `open` to make sure they are all resized properly.
-          actions.push(LayoutActions.resize());
         } else {
           // Notify user no bands will be drawn.
           actions.push(

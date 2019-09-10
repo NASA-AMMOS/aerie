@@ -18,6 +18,7 @@ import {
   ViewChild,
 } from '@angular/core';
 
+import { FormControl } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
 import {
   AgGridEvent,
@@ -124,6 +125,8 @@ export class RavenTableComponent implements OnChanges {
 
   private gridApi: any;
   public gridOptions: GridOptions;
+
+  filterControl: FormControl = new FormControl('', [this.validateFilter]);
 
   constructor() {
     this.gridOptions = {
@@ -685,6 +688,20 @@ export class RavenTableComponent implements OnChanges {
       if (!point.selected && event.api.getSelectedNodes()[0].isSelected()) {
         this.selectPoint.emit(point);
       }
+    }
+  }
+
+  /**
+   * Helper that tests if the filter value is a valid RegExp.
+   */
+  validateFilter(filter: FormControl) {
+    try {
+      RegExp(filter.value);
+      return null;
+    } catch (ex) {
+      return {
+        validateFilter: { valid: false },
+      };
     }
   }
 }

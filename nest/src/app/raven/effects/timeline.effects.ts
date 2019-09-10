@@ -249,18 +249,20 @@ export class TimelineEffects {
 
         timeline.bands.forEach(band => {
           band.subBands.forEach(subBand => {
-            actions.push(
-              TimelineActions.updateSubBand({
-                bandId: band.id,
-                subBandId: subBand.id,
-                update: {
-                  labelPin: getPinLabel(
-                    subBand.sourceIds[0],
-                    sourceExplorer.pins,
-                  ),
-                },
-              }),
-            );
+            if (subBand.type !== 'divider') {
+              actions.push(
+                TimelineActions.updateSubBand({
+                  bandId: band.id,
+                  subBandId: subBand.id,
+                  update: {
+                    labelPin: getPinLabel(
+                      subBand.sourceIds[0],
+                      sourceExplorer.pins,
+                    ),
+                  },
+                }),
+              );
+            }
           });
         });
 

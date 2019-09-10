@@ -468,7 +468,7 @@ export class TimelineComponent implements OnDestroy {
           activityInitiallyHidden: this.activityInitiallyHidden,
           bandId: e.bandId,
           filter: e.filter,
-          subBandId: e.subBandById,
+          subBandId: e.subBandId,
         }),
       );
     }

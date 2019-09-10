@@ -11,28 +11,32 @@
       Reset Columns
     </button>
     <ng-container *ngIf="selectedSubBand.type === 'activity'">
-      <input
-        class="flex-filter"
-        matInput
-        placeholder="Filter Activities In Graph By Name (e.g. DSS.*85.*|DSS.*86.*)"
-        [(ngModel)]="displayedFilter"
-      />
-      <span class="filter-message" *ngIf="displayedFilter !== activityFilter"
-        >Click filter icon to apply filter</span
-      >
-      <mat-icon
-        class="filter-icon"
-        matTooltip="Filter Activities"
-        (click)="
-          updateFilterActivityInSubBand.emit({
-            bandId: selectedBandId,
-            subBandId: selectedSubBand.id,
-            filter: displayedFilter
-          })
-        "
-      >
-        filter_list
-      </mat-icon>
+      <mat-form-field class="flex-filter">
+        <input
+          [formControl]="filterControl"
+          matInput
+          placeholder="Filter Activities In Graph By Name (e.g. DSS.*85.*|DSS.*86.*)"
+          [(ngModel)]="displayedFilter"
+        />
+      </mat-form-field>
+      <ng-container *ngIf="filterControl.valid">
+        <span class="filter-message" *ngIf="displayedFilter !== activityFilter">
+          Click filter icon to apply filter
+        </span>
+        <mat-icon
+          class="filter-icon"
+          matTooltip="Filter Activities"
+          (click)="
+            updateFilterActivityInSubBand.emit({
+              bandId: selectedBandId,
+              subBandId: selectedSubBand.id,
+              filter: displayedFilter
+            })
+          "
+        >
+          filter_list
+        </mat-icon>
+      </ng-container>
     </ng-container>
   </div>
 
