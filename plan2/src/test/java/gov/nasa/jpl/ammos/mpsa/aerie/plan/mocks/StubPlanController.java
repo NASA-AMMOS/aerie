@@ -1,6 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.mocks;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.IPlanController;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;

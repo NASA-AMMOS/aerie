@@ -1,14 +1,15 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Map;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.PlanRepository.ActivityTransaction;
-import static gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.PlanRepository.PlanTransaction;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public abstract class PlanRepositoryContractTest {
@@ -22,97 +23,72 @@ public abstract class PlanRepositoryContractTest {
   }
 
   @Test
-  public void testStoredPlanIsIndependent() {
-    // GIVEN
-    final PlanTransaction newTransaction = this.planRepository.newPlan();
-    newTransaction.setName("before");
-    final String planId = newTransaction.save();
-
-    // WHEN
-    newTransaction.setName("after");
-
-    // THEN
-    final PlanTransaction getTransaction = this.planRepository.getPlan(planId).get();
-    assertThat(getTransaction.get().name).isEqualTo("before");
-  }
-
-  @Test
-  public void testUnsavedPlanTransactionHasNoEffect() {
+  public void testCanStorePlan() throws NoSuchPlanException {
     // GIVEN
 
     // WHEN
-    final PlanTransaction newTransaction = this.planRepository.newPlan();
-    newTransaction.setName("test");
+    final NewPlan newPlan = new NewPlan();
+    newPlan.name = "new-plan";
+
+    final String planId = this.planRepository.createPlan(newPlan);
 
     // THEN
-    assertThat(this.planRepository.getAllPlans().collect(Collectors.toList())).isEmpty();
+    final Plan plan = this.planRepository.getPlan(planId);
+    assertThat(plan.name).isEqualTo("new-plan");
   }
 
   @Test
-  public void testUnsavedActivityTransactionHasNoEffect() {
+  public void testUnsavedPlanTransactionHasNoEffect() throws NoSuchPlanException {
     // GIVEN
-    final PlanTransaction planTransaction = this.planRepository.newPlan();
+    final NewPlan newPlan = new NewPlan();
+    newPlan.name = "before";
+    final String planId = this.planRepository.createPlan(newPlan);
 
     // WHEN
-    final ActivityTransaction activityTransaction = planTransaction.newActivity();
-    activityTransaction.setType("abc");
+    this.planRepository
+        .updatePlan(planId)
+        .setName("after");
+        // no .commit()
 
     // THEN
-    final Plan plan = planTransaction.get();
-    assertThat(plan.activityInstances).isEmpty();
+    final Plan plan = this.planRepository.getPlan(planId);
+    assertThat(plan.name).isEqualTo("before");
   }
 
   @Test
-  public void testCreatePlanWithActivity() {
+  public void testCreatePlanWithActivity() throws NoSuchPlanException {
     // GIVEN
 
     // WHEN
-    final PlanTransaction planTransaction = this.planRepository.newPlan();
-    final String activityId = planTransaction.newActivity()
-        .setType("abc")
-        .save();
-    final String planId = planTransaction.save();
+    final ActivityInstance activity = new ActivityInstance();
+    activity.type = "abc";
+    activity.parameters = Map.of();
+
+    final NewPlan newPlan = new NewPlan();
+    newPlan.name = "new-plan";
+    newPlan.activityInstances = List.of();
+
+    final String planId = this.planRepository.createPlan(newPlan);
+    this.planRepository.createActivity(planId, activity);
 
     // THEN
-    ActivityInstance activity = this.planRepository
-        .getPlan(planId).get()
-        .getActivity(activityId).get()
-        .get();
-    assertThat(activity.type).isEqualTo("abc");
+    final Plan plan = this.planRepository.getPlan(planId);
+    assertThat(plan.name).isEqualTo("new-plan");
+    assertThat(plan.activityInstances.values()).containsExactly(activity);
   }
 
   @Test
-  public void testCanDeleteAllPlans() {
+  public void testCanDeletePlan() throws NoSuchPlanException {
     // GIVEN
-    this.planRepository.newPlan().save();
-    this.planRepository.newPlan().save();
-    this.planRepository.newPlan().save();
+    this.planRepository.createPlan(new NewPlan());
+    final String planId = this.planRepository.createPlan(new NewPlan());
+    this.planRepository.createPlan(new NewPlan());
     assertThat(this.planRepository.getAllPlans()).size().isEqualTo(3);
 
     // WHEN
-    this.planRepository.getAllPlans().forEach(PlanTransaction::delete);
+    this.planRepository.deletePlan(planId);
 
     // THEN
-    assertThat(this.planRepository.getAllPlans()).isEmpty();
-  }
-
-  @Test
-  public void testCanDeleteAllActivityInstances() {
-    // GIVEN
-    final PlanTransaction transaction = this.planRepository.newPlan();
-    transaction.newActivity().save();
-    transaction.newActivity().save();
-    transaction.newActivity().save();
-    final String planId = transaction.save();
-
-    assertThat(this.planRepository.getPlan(planId).get().getAllActivities()).size().isEqualTo(3);
-
-    // WHEN
-    final PlanTransaction deleteTransaction = this.planRepository.getPlan(planId).get();
-    deleteTransaction.getAllActivities().forEach(ActivityTransaction::delete);
-    deleteTransaction.save();
-
-    // THEN
-    assertThat(this.planRepository.getPlan(planId).get().getAllActivities()).isEmpty();
+    assertThat(this.planRepository.getAllPlans()).size().isEqualTo(2);
   }
 }

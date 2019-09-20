@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
@@ -13,7 +14,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -31,59 +31,42 @@ public final class PlanController implements IPlanController {
 
   @Override
   public Stream<Pair<String, Plan>> getPlans() {
-    return this.planRepository
-        .getAllPlans()
-        .map(transaction -> Pair.of(transaction.getId(), transaction.get()));
+    return this.planRepository.getAllPlans();
   }
 
   @Override
   public Plan getPlanById(final String id) throws NoSuchPlanException {
-    return this.planRepository
-        .getPlan(id)
-        .orElseThrow(() -> new NoSuchPlanException(id))
-        .get();
+    return this.planRepository.getPlan(id);
   }
 
   @Override
   public String addPlan(final NewPlan plan) throws ValidationException {
-    final PlanTransaction transaction = this.planRepository.newPlan();
-
-    applyNewPlanToTransaction(transaction, plan);
-    validatePlan(transaction.get());
-
-    return transaction.save();
+    validateNewPlan(plan);
+    return this.planRepository.createPlan(plan);
   }
 
   @Override
   public void removePlan(final String id) throws NoSuchPlanException {
-    this.planRepository
-        .getPlan(id)
-        .orElseThrow(() -> new NoSuchPlanException(id))
-        .delete();
+    this.planRepository.deletePlan(id);
   }
 
   @Override
   public void updatePlan(final String id, final Plan patch) throws ValidationException, NoSuchPlanException {
-    final PlanTransaction transaction = this.planRepository
-        .getPlan(id)
-        .orElseThrow(() -> new NoSuchPlanException(id));
+    validatePlanPatch(patch);
 
-    patchPlanToTransaction(transaction, patch);
-    validatePlan(transaction.get());
+    final PlanTransaction transaction = this.planRepository.updatePlan(id);
+    if (patch.name != null) transaction.setName(patch.name);
+    if (patch.startTimestamp != null) transaction.setStartTimestamp(patch.startTimestamp);
+    if (patch.endTimestamp != null) transaction.setEndTimestamp(patch.endTimestamp);
+    if (patch.adaptationId != null) transaction.setAdaptationId(patch.adaptationId);
 
-    transaction.save();
+    transaction.commit();
   }
 
   @Override
   public void replacePlan(final String id, final NewPlan plan) throws ValidationException, NoSuchPlanException {
-    final PlanTransaction transaction = this.planRepository
-        .getPlan(id)
-        .orElseThrow(() -> new NoSuchPlanException(id));
-
-    applyNewPlanToTransaction(transaction, plan);
-    validatePlan(transaction.get());
-
-    transaction.save();
+    validateNewPlan(plan);
+    this.planRepository.replacePlan(id, plan);
   }
 
   private void validatePlan(final Plan plan) throws ValidationException {
@@ -120,44 +103,56 @@ public final class PlanController implements IPlanController {
     }
   }
 
-  private void applyNewPlanToTransaction(final PlanTransaction transaction, final NewPlan newPlan) {
-    transaction
-        .setName(newPlan.name)
-        .setAdaptationId(newPlan.adaptationId)
-        .setStartTimestamp(newPlan.startTimestamp)
-        .setEndTimestamp(newPlan.endTimestamp);
+  private void validateNewPlan(final NewPlan plan) throws ValidationException {
+    final List<String> validationErrors = new ArrayList<>();
 
-    if (newPlan.activityInstances != null) {
-      for (final ActivityInstance activity : newPlan.activityInstances) {
-        transaction.newActivity()
-            .setType(activity.type)
-            .setStartTimestamp(activity.startTimestamp)
-            .setParameters(activity.parameters)
-            .save();
+    if (plan.name == null) {
+      validationErrors.add("name must be non-null");
+    }
+    if (plan.startTimestamp == null) {
+      validationErrors.add("startTimestamp must be non-null");
+    }
+    if (plan.endTimestamp == null) {
+      validationErrors.add("endTimestamp must be non-null");
+    }
+    if (plan.activityInstances == null) {
+      validationErrors.add("activityInstances must be non-null");
+    }
+
+    if (plan.adaptationId == null) {
+      validationErrors.add("adaptationId must be non-null");
+    } else {
+      final Optional<Adaptation> adaptation = adaptationService.getAdaptationById(plan.adaptationId);
+      if (adaptation.isEmpty()) {
+        validationErrors.add("no adaptation with given adaptationId");
+      } else {
+        final Map<String, ActivityType> activityTypes = adaptation.get().getActivityTypes();
+
+        // TODO: Validate the plan's activity instances against the adaptation's activity types.
       }
+    }
+
+    if (validationErrors.size() > 0) {
+      throw new ValidationException("invalid plan", validationErrors);
     }
   }
 
-  private void patchPlanToTransaction(final PlanTransaction transaction, final Plan patch) throws ValidationException {
-    Optional.ofNullable(patch.name).ifPresent(transaction::setName);
-    Optional.ofNullable(patch.adaptationId).ifPresent(transaction::setAdaptationId);
-    Optional.ofNullable(patch.startTimestamp).ifPresent(transaction::setStartTimestamp);
-    Optional.ofNullable(patch.endTimestamp).ifPresent(transaction::setEndTimestamp);
+  private void validatePlanPatch(final Plan patch) throws ValidationException {
+    final List<String> validationErrors = new ArrayList<>();
 
-    final Map<String, ActivityInstance> activities = Objects.requireNonNullElseGet(patch.activityInstances, Map::of);
-    for (final var entry : activities.entrySet()) {
-      final String activityId = entry.getKey();
-      final ActivityInstance activityPatch = entry.getValue();
+    if (patch.adaptationId != null) {
+      final Optional<Adaptation> adaptation = adaptationService.getAdaptationById(patch.adaptationId);
+      if (adaptation.isEmpty()) {
+        validationErrors.add("no adaptation with given adaptationId");
+      }
+    }
 
-      final PlanRepository.ActivityTransaction activityTransaction = transaction
-          .getActivity(activityId)
-          .orElseThrow(() -> new ValidationException("invalid patch", List.of("no activity with id" + activityId)));
+    if (patch.activityInstances != null) {
+      // TODO: Validate the plan's activity instances against the adaptation's activity types.
+    }
 
-      Optional.ofNullable(activityPatch.type).ifPresent(activityTransaction::setType);
-      Optional.ofNullable(activityPatch.startTimestamp).ifPresent(activityTransaction::setStartTimestamp);
-      Optional.ofNullable(activityPatch.parameters).ifPresent(activityTransaction::setParameters);
-
-      activityTransaction.save();
+    if (validationErrors.size() > 0) {
+      throw new ValidationException("invalid plan", validationErrors);
     }
   }
 }

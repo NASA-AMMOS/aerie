@@ -1,14 +1,15 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.mocks;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.PlanRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -20,214 +21,253 @@ public final class MockPlanRepository implements PlanRepository {
   private int nextActivityId = 0;
 
   @Override
-  public PlanTransaction newPlan() {
-    return new MockPlanTransaction();
-  }
-
-  @Override
-  public Optional<PlanTransaction> getPlan(final String id) {
-    return Optional
-        .ofNullable(this.plans.get(id))
-        .map(plan -> new MockPlanTransaction(id, new Plan(plan)));
-  }
-
-  @Override
-  public Stream<PlanTransaction> getAllPlans() {
-    // Fetch all keys up front so we don't incur a ConcurrentModificationException
-    // if an entry is deleted during iteration.
-    final List<String> keys = new ArrayList<>(this.plans.keySet());
-
-    return keys
+  public Stream<Pair<String, Plan>> getAllPlans() {
+    return this.plans
+        .entrySet()
         .stream()
-        .map(key -> Optional
-            .ofNullable(this.plans.get(key))
-            .map(plan -> Pair.of(key, plan)))
-        .filter(Optional::isPresent)
-        .map(Optional::get)
-        .map(MockPlanTransaction::new);
+        .map(entry -> Pair.of(entry.getKey(), new Plan(entry.getValue())));
+  }
+
+  @Override
+  public Plan getPlan(final String planId) throws NoSuchPlanException {
+    final Plan plan = Optional
+        .ofNullable(this.plans.get(planId))
+        .orElseThrow(() -> new NoSuchPlanException(planId));
+
+    return new Plan(plan);
+  }
+
+  @Override
+  public Stream<Pair<String, ActivityInstance>> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
+    final Plan plan = this.plans.get(planId);
+    if (plan == null) {
+      throw new NoSuchPlanException(planId);
+    }
+
+    return plan.activityInstances
+        .entrySet()
+        .stream()
+        .map(entry -> Pair.of(entry.getKey(), new ActivityInstance(entry.getValue())));
+  }
+
+  @Override
+  public ActivityInstance getActivityInPlanById(final String planId, final String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException {
+    final Plan plan = Optional
+        .ofNullable(this.plans.get(planId))
+        .orElseThrow(() -> new NoSuchPlanException(planId));
+
+    final ActivityInstance activityInstance = Optional
+        .ofNullable(plan.activityInstances.get(activityId))
+        .orElseThrow(() -> new NoSuchActivityInstanceException(planId, activityId));
+
+    return new ActivityInstance(activityInstance);
+  }
+
+  @Override
+  public String createPlan(final NewPlan newPlan) {
+    final String planId = Objects.toString(this.nextPlanId++);
+
+    final Plan plan = new Plan();
+    plan.name = newPlan.name;
+    plan.startTimestamp = newPlan.startTimestamp;
+    plan.endTimestamp = newPlan.endTimestamp;
+    plan.adaptationId = newPlan.adaptationId;
+    plan.activityInstances = new HashMap<>();
+
+    if (newPlan.activityInstances != null) {
+      for (final var activity : newPlan.activityInstances) {
+        final String activityId = Objects.toString(this.nextActivityId++);
+        plan.activityInstances.put(activityId, new ActivityInstance(activity));
+      }
+    }
+
+    this.plans.put(planId, plan);
+    return planId;
+  }
+
+  @Override
+  public PlanTransaction updatePlan(final String id) {
+    return new MockPlanTransaction(id);
+  }
+
+  @Override
+  public void replacePlan(final String id, final NewPlan newPlan) throws NoSuchPlanException {
+    if (!this.plans.containsKey(id)) {
+      throw new NoSuchPlanException(id);
+    }
+
+    final Plan plan = new Plan();
+    plan.name = newPlan.name;
+    plan.startTimestamp = newPlan.startTimestamp;
+    plan.endTimestamp = newPlan.endTimestamp;
+    plan.adaptationId = newPlan.adaptationId;
+    plan.activityInstances = new HashMap<>();
+
+    if (newPlan.activityInstances != null) {
+      for (final var activity : newPlan.activityInstances) {
+        final String activityId = Objects.toString(this.nextActivityId++);
+        plan.activityInstances.put(activityId, new ActivityInstance(activity));
+      }
+    }
+
+    this.plans.put(id, plan);
+  }
+
+  @Override
+  public void deletePlan(final String id) throws NoSuchPlanException {
+    if (!this.plans.containsKey(id)) {
+      throw new NoSuchPlanException(id);
+    }
+
+    this.plans.remove(id);
+  }
+
+  @Override
+  public String createActivity(final String planId, final ActivityInstance activity) throws NoSuchPlanException {
+    final Plan plan = this.plans.get(planId);
+    if (plan == null) {
+      throw new NoSuchPlanException(planId);
+    }
+
+    final String activityId = Objects.toString(this.nextActivityId++);
+    plan.activityInstances.put(activityId, new ActivityInstance(activity));
+    return activityId;
+  }
+
+  @Override
+  public ActivityTransaction updateActivity(final String planId, final String activityId) {
+    return new MockActivityTransaction(planId, activityId);
+  }
+
+  @Override
+  public void replaceActivity(final String planId, final String activityId, final ActivityInstance activity) throws NoSuchPlanException, NoSuchActivityInstanceException {
+    final Plan plan = this.plans.get(planId);
+    if (plan == null) {
+      throw new NoSuchPlanException(planId);
+    }
+
+    if (!plan.activityInstances.containsKey(activityId)) {
+      throw new NoSuchActivityInstanceException(planId, activityId);
+    }
+
+    plan.activityInstances.put(activityId, activity);
+  }
+
+  @Override
+  public void deleteActivity(final String planId, final String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException {
+    final Plan plan = this.plans.get(planId);
+    if (plan == null) {
+      throw new NoSuchPlanException(planId);
+    }
+
+    if (!plan.activityInstances.containsKey(activityId)) {
+      throw new NoSuchActivityInstanceException(planId, activityId);
+    }
+
+    plan.activityInstances.remove(activityId);
   }
 
   private class MockPlanTransaction implements PlanTransaction {
-    private final Plan plan;
-    private String id;
+    private final String planId;
 
-    public MockPlanTransaction() {
-      this.id = null;
-      this.plan = new Plan();
-      this.plan.activityInstances = new HashMap<>();
-    }
+    private Optional<String> name = Optional.empty();
+    private Optional<String> startTimestamp = Optional.empty();
+    private Optional<String> endTimestamp = Optional.empty();
+    private Optional<String> adaptationId = Optional.empty();
 
-    public MockPlanTransaction(final Pair<String, Plan> entry) {
-      this.id = entry.getKey();
-      this.plan = entry.getValue();
-    }
-
-    public MockPlanTransaction(final String id, final Plan plan) {
-      this.id = id;
-      this.plan = plan;
+    public MockPlanTransaction(final String planId) {
+      this.planId = planId;
     }
 
     @Override
-    public String getId() {
-      return this.id;
-    }
+    public void commit() throws NoSuchPlanException {
+      final Plan plan = MockPlanRepository.this.plans.get(this.planId);
+      if (plan == null) {
+        throw new NoSuchPlanException(this.planId);
+      }
 
-    @Override
-    public Plan get() {
-      return new Plan(this.plan);
+      this.name.ifPresent(name -> plan.name = name);
+      this.startTimestamp.ifPresent(startTimestamp -> plan.startTimestamp = startTimestamp);
+      this.endTimestamp.ifPresent(endTimestamp -> plan.endTimestamp = endTimestamp);
+      this.adaptationId.ifPresent(adaptationId -> plan.adaptationId = adaptationId);
     }
 
     @Override
     public PlanTransaction setName(final String name) {
-      this.plan.name = name;
+      this.name = Optional.of(name);
       return this;
     }
 
     @Override
     public PlanTransaction setStartTimestamp(final String timestamp) {
-      this.plan.startTimestamp = timestamp;
+      this.startTimestamp = Optional.of(timestamp);
       return this;
     }
 
     @Override
     public PlanTransaction setEndTimestamp(final String timestamp) {
-      this.plan.endTimestamp = timestamp;
+      this.endTimestamp = Optional.of(timestamp);
       return this;
     }
 
     @Override
     public PlanTransaction setAdaptationId(final String adaptationId) {
-      this.plan.adaptationId = adaptationId;
+      this.adaptationId = Optional.of(adaptationId);
       return this;
-    }
-
-    @Override
-    public ActivityTransaction newActivity() {
-      return new MockActivityTransaction(this.plan.activityInstances);
-    }
-
-    @Override
-    public Optional<ActivityTransaction> getActivity(final String activityId) {
-      return Optional
-          .ofNullable(this.plan.activityInstances.get(activityId))
-          .map(ActivityInstance::new)
-          .map(activity -> new MockActivityTransaction(this.plan.activityInstances, activityId, activity));
-    }
-
-    @Override
-    public Stream<ActivityTransaction> getAllActivities() {
-      // Fetch all keys up front so we don't incur a ConcurrentModificationException
-      // if an entry is deleted during iteration.
-      final List<String> keys = new ArrayList<>(this.plan.activityInstances.keySet());
-
-      return keys
-          .stream()
-          .map(key -> Optional
-              .ofNullable(this.plan.activityInstances.get(key))
-              .map(plan -> Pair.of(key, plan)))
-          .filter(Optional::isPresent)
-          .map(Optional::get)
-          .map(entry -> new MockActivityTransaction(this.plan.activityInstances, entry));
-    }
-
-    @Override
-    public String save() {
-      if (this.id == null) {
-        this.id = Objects.toString(MockPlanRepository.this.nextPlanId++);
-      }
-
-      MockPlanRepository.this.plans.put(this.id, new Plan(this.plan));
-      return this.id;
-    }
-
-    @Override
-    public void delete() {
-      if (this.id == null) {
-        return;
-      }
-
-      MockPlanRepository.this.plans.remove(this.id);
-      this.id = null;
     }
   }
 
   private class MockActivityTransaction implements ActivityTransaction {
-    private final Map<String, ActivityInstance> collection;
-    private final ActivityInstance activityInstance;
-    private String id;
+    private final String planId;
+    private final String activityId;
 
-    public MockActivityTransaction(final Map<String, ActivityInstance> collection) {
-      this.collection = collection;
-      this.id = null;
-      this.activityInstance = new ActivityInstance();
-    }
+    private Optional<String> type = Optional.empty();
+    private Optional<String> startTimestamp = Optional.empty();
+    private Optional<Map<String, ActivityParameter>> parameters = Optional.empty();
 
-    public MockActivityTransaction(final Map<String, ActivityInstance> collection, final Pair<String, ActivityInstance> entry) {
-      this.collection = collection;
-      this.id = entry.getKey();
-      this.activityInstance = entry.getValue();
-    }
-
-    public MockActivityTransaction(final Map<String, ActivityInstance> collection, final String id, final ActivityInstance activityInstance) {
-      this.collection = collection;
-      this.id = id;
-      this.activityInstance = activityInstance;
+    public MockActivityTransaction(final String planId, final String activityId) {
+      this.planId = planId;
+      this.activityId = activityId;
     }
 
     @Override
-    public String getId() {
-      return this.id;
-    }
+    public void commit() throws NoSuchPlanException, NoSuchActivityInstanceException {
+      final Plan plan = MockPlanRepository.this.plans.get(this.planId);
+      if (plan == null) {
+        throw new NoSuchPlanException(this.planId);
+      }
 
-    @Override
-    public ActivityInstance get() {
-      return new ActivityInstance(activityInstance);
+      final ActivityInstance activity = plan.activityInstances.get(this.activityId);
+      if (activity == null) {
+        throw new NoSuchActivityInstanceException(this.planId, this.activityId);
+      }
+
+      this.type.ifPresent(type -> activity.type = type);
+      this.startTimestamp.ifPresent(startTimestamp -> activity.startTimestamp = startTimestamp);
+      this.parameters.ifPresent(parameters -> activity.parameters = parameters);
     }
 
     @Override
     public ActivityTransaction setType(final String type) {
-      this.activityInstance.type = type;
+      this.type = Optional.of(type);
       return this;
     }
 
     @Override
     public ActivityTransaction setStartTimestamp(final String timestamp) {
-      this.activityInstance.startTimestamp = timestamp;
+      this.startTimestamp = Optional.of(timestamp);
       return this;
     }
 
     @Override
     public ActivityTransaction setParameters(final Map<String, ActivityParameter> parameters) {
-      if (parameters == null) {
-        this.activityInstance.parameters = null;
-      } else {
-        this.activityInstance.parameters = new HashMap<>();
-        for (final var entry : parameters.entrySet()) {
-          this.activityInstance.parameters.put(entry.getKey(), new ActivityParameter(entry.getValue()));
-        }
+      final Map<String, ActivityParameter> clonedParameters = new HashMap<>();
+      for (final var entry : parameters.entrySet()) {
+        clonedParameters.put(entry.getKey(), new ActivityParameter(entry.getValue()));
       }
 
+      this.parameters = Optional.of(clonedParameters);
       return this;
-    }
-
-    @Override
-    public String save() {
-      if (this.id == null) {
-        this.id = Objects.toString(MockPlanRepository.this.nextActivityId++);
-      }
-
-      this.collection.put(this.id, new ActivityInstance(this.activityInstance));
-      return this.id;
-    }
-
-    @Override
-    public void delete() {
-      if (this.id == null) {
-        return;
-      }
-
-      this.collection.remove(this.id);
-      this.id = null;
     }
   }
 }

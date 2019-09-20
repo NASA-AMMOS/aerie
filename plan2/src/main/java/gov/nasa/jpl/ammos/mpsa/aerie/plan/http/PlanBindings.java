@@ -1,8 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.http;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.IPlanController;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.IPlanController.NoSuchPlanException;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.IPlanController.ValidationException;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import io.javalin.Javalin;
