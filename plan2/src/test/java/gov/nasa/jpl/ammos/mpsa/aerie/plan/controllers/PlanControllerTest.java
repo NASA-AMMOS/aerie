@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.mocks.Fixtures;
@@ -275,5 +276,57 @@ public final class PlanControllerTest {
 
     final String invalidPlanId = ((NoSuchPlanException)thrown).getInvalidPlanId();
     assertThat(invalidPlanId).isEqualTo(planId);
+  }
+
+  @Test
+  public void shouldGetActivityInstanceById() throws NoSuchPlanException, NoSuchActivityInstanceException {
+    // GIVEN
+    final Fixtures fixtures = new Fixtures();
+    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+
+    final String planId = fixtures.EXISTENT_PLAN_ID;
+    final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;
+    final ActivityInstance expectedActivityInstance = fixtures.EXISTENT_ACTIVITY_INSTANCE;
+
+    // WHEN
+    final ActivityInstance activityInstance = controller.getActivityInstanceById(planId, activityInstanceId);
+
+    // THEN
+    assertThat(activityInstance).isEqualTo(expectedActivityInstance);
+  }
+
+  @Test
+  public void shouldNotGetActivityInstanceFromNonexistentPlan() {
+    // GIVEN
+    final Fixtures fixtures = new Fixtures();
+    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+
+    final String planId = fixtures.NONEXISTENT_PLAN_ID;
+    final String activityInstanceId = fixtures.NONEXISTENT_ACTIVITY_INSTANCE_ID;
+
+    // WHEN
+    final Throwable thrown = catchThrowable(() -> controller.getActivityInstanceById(planId, activityInstanceId));
+
+    // THEN
+    assertThat(thrown).isInstanceOf(NoSuchPlanException.class);
+    assertThat(((NoSuchPlanException)thrown).getInvalidPlanId()).isEqualTo(planId);
+  }
+
+  @Test
+  public void shouldNotGetNonexistentActivityInstance() {
+    // GIVEN
+    final Fixtures fixtures = new Fixtures();
+    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+
+    final String planId = fixtures.EXISTENT_PLAN_ID;
+    final String activityInstanceId = fixtures.NONEXISTENT_ACTIVITY_INSTANCE_ID;
+
+    // WHEN
+    final Throwable thrown = catchThrowable(() -> controller.getActivityInstanceById(planId, activityInstanceId));
+
+    // THEN
+    assertThat(thrown).isInstanceOf(NoSuchActivityInstanceException.class);
+    assertThat(((NoSuchActivityInstanceException)thrown).getPlanId()).isEqualTo(planId);
+    assertThat(((NoSuchActivityInstanceException)thrown).getInvalidActivityId()).isEqualTo(activityInstanceId);
   }
 }

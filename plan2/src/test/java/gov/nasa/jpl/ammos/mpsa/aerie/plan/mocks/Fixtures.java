@@ -16,6 +16,7 @@ public final class Fixtures {
   public final String EXISTENT_PLAN_ID;
   public final String EXISTENT_ACTIVITY_TYPE_ID;
   public final String EXISTENT_ACTIVITY_INSTANCE_ID;
+  public final ActivityInstance EXISTENT_ACTIVITY_INSTANCE;
   public final String NONEXISTENT_ADAPTATION_ID;
   public final String NONEXISTENT_PLAN_ID;
   public final String NONEXISTENT_ACTIVITY_TYPE_ID;
@@ -44,6 +45,7 @@ public final class Fixtures {
         final ActivityInstance activity = new ActivityInstance();
         activity.type = this.EXISTENT_ACTIVITY_TYPE_ID;
 
+        this.EXISTENT_ACTIVITY_INSTANCE = activity;
         this.EXISTENT_ACTIVITY_INSTANCE_ID = this.planRepository.createActivity(this.EXISTENT_PLAN_ID, activity);
         this.NONEXISTENT_ACTIVITY_INSTANCE_ID = "nonexistent activity";
       }

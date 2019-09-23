@@ -253,6 +253,49 @@ public final class PlanBindingsTest {
     assertThat(response.statusCode()).isEqualTo(404);
   }
 
+  @Test
+  public void shouldGetActivityInstanceById() throws IOException, InterruptedException {
+    // GIVEN
+    final String planId = StubPlanController.EXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanController.EXISTENT_ACTIVITY_ID;
+    final ActivityInstance expectedActivityInstance = StubPlanController.EXISTENT_ACTIVITY;
+
+    // WHEN
+    final HttpResponse<String> response = sendRequest("GET", "/plans/" + planId + "/activity_instances/" + activityInstanceId);
+
+    // THEN
+    assertThat(response.statusCode()).isEqualTo(200);
+
+    final ActivityInstance activityInstance = JsonbBuilder.create().fromJson(response.body(), ActivityInstance.class);
+    assertThat(activityInstance).isEqualTo(expectedActivityInstance);
+  }
+
+  @Test
+  public void shouldNotGetActivityInstanceFromNonexistentPlan() throws IOException, InterruptedException {
+    // GIVEN
+    final String planId = StubPlanController.NONEXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanController.EXISTENT_ACTIVITY_ID;
+
+    // WHEN
+    final HttpResponse<String> response = sendRequest("GET", "/plans/" + planId + "/activity_instances/" + activityInstanceId);
+
+    // THEN
+    assertThat(response.statusCode()).isEqualTo(404);
+  }
+
+  @Test
+  public void shouldNotGetNonexistentActivityInstance() throws IOException, InterruptedException {
+    // GIVEN
+    final String planId = StubPlanController.EXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanController.NONEXISTENT_ACTIVITY_ID;
+
+    // WHEN
+    final HttpResponse<String> response = sendRequest("GET", "/plans/" + planId + "/activity_instances/" + activityInstanceId);
+
+    // THEN
+    assertThat(response.statusCode()).isEqualTo(404);
+  }
+
   private HttpResponse<String> sendRequest(final String method, final String path)
       throws IOException, InterruptedException
   {

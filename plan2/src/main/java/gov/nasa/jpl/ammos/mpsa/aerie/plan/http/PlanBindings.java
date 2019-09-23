@@ -1,8 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.http;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.IPlanController;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.ValidationException;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import io.javalin.Javalin;
@@ -58,6 +60,8 @@ public final class PlanBindings {
     }).exception(ValidationException.class, (ex, ctx) -> {
       ctx.status(400).result(JsonbBuilder.create().toJson(ex.getValidationErrors()));
     }).exception(NoSuchPlanException.class, (ex, ctx) -> {
+      ctx.status(404);
+    }).exception(NoSuchActivityInstanceException.class, (ex, ctx) -> {
       ctx.status(404);
     });
   }
@@ -120,10 +124,13 @@ public final class PlanBindings {
     ctx.result("postActivityInstances(" + planId + ", body(" + activityInstancesBody.length() + "))");
   }
 
-  private void getActivityInstance(final Context ctx) {
+  private void getActivityInstance(final Context ctx) throws NoSuchPlanException, NoSuchActivityInstanceException {
     final String planId = ctx.pathParam("planId");
     final String activityInstanceId = ctx.pathParam("activityInstanceId");
-    ctx.result("getActivityInstance(" + planId + ", " + activityInstanceId + ")");
+
+    final ActivityInstance activityInstance = this.appController.getActivityInstanceById(planId, activityInstanceId);
+
+    ctx.result(JsonbBuilder.create().toJson(activityInstance)).contentType("application/json");
   }
 
   private void putActivityInstance(final Context ctx) {

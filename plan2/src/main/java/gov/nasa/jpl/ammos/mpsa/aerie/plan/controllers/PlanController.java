@@ -1,7 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.ValidationException;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
@@ -67,6 +69,11 @@ public final class PlanController implements IPlanController {
   public void replacePlan(final String id, final NewPlan plan) throws ValidationException, NoSuchPlanException {
     validateNewPlan(plan);
     this.planRepository.replacePlan(id, plan);
+  }
+
+  @Override
+  public ActivityInstance getActivityInstanceById(final String planId, final String activityInstanceId) throws NoSuchPlanException, NoSuchActivityInstanceException {
+    return this.planRepository.getActivityInPlanById(planId, activityInstanceId);
   }
 
   private void validatePlan(final Plan plan) throws ValidationException {

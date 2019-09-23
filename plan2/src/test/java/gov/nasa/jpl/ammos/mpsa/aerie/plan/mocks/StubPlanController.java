@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.mocks;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.IPlanController;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
@@ -91,5 +92,16 @@ public final class StubPlanController implements IPlanController {
     } else if (plan.equals(INVALID_NEW_PLAN)) {
       throw new ValidationException("invalid new plan", List.of("an error"));
     }
+  }
+
+  @Override
+  public ActivityInstance getActivityInstanceById(final String planId, final String activityInstanceId) throws NoSuchPlanException, NoSuchActivityInstanceException {
+    if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
+      throw new NoSuchPlanException(planId);
+    } else if (!Objects.equals(activityInstanceId, EXISTENT_ACTIVITY_ID)) {
+      throw new NoSuchActivityInstanceException(planId, activityInstanceId);
+    }
+
+    return EXISTENT_ACTIVITY;
   }
 }
