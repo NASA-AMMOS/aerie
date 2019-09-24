@@ -11,6 +11,8 @@ import java.util.ServiceLoader;
 public class AdaptationUtils {
     // TODO: Move this into the Adaptation Runtime Service when it is complete
     // TODO: Allow lookup by adaptation metadata (e.g. name and version).
+    // TODO: This should throw an exception when the JAR does not contain a valid adaptation
+    // TODO: Take a path instead of a string
     public static MerlinAdaptation loadAdaptation(String adaptationLocation) throws IOException {
         // Construct a ClassLoader with access to classes in the adaptation location.
         final URL adaptationURL = new File(adaptationLocation).toURI().toURL();
