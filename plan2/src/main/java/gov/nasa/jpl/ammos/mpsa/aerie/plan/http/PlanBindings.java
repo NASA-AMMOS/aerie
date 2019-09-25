@@ -13,6 +13,8 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.bind.JsonbBuilder;
 import javax.json.bind.JsonbException;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -118,10 +120,15 @@ public final class PlanBindings {
     ctx.result(JsonbBuilder.create().toJson(plan.activityInstances)).contentType("application/json");
   }
 
-  private void postActivityInstances(final Context ctx) {
+  private void postActivityInstances(final Context ctx) throws ValidationException, NoSuchPlanException {
+    final Type ACTIVITY_LIST_TYPE = new ArrayList<ActivityInstance>(){}.getClass().getGenericSuperclass();
+
     final String planId = ctx.pathParam("planId");
-    final String activityInstancesBody = ctx.body();
-    ctx.result("postActivityInstances(" + planId + ", body(" + activityInstancesBody.length() + "))");
+    final List<ActivityInstance> activityInstances = JsonbBuilder.create().fromJson(ctx.body(), ACTIVITY_LIST_TYPE);
+
+    final List<String> activityInstanceIds = this.appController.addActivityInstancesToPlan(planId, activityInstances);
+
+    ctx.result(JsonbBuilder.create().toJson(activityInstanceIds)).contentType("application/json");
   }
 
   private void getActivityInstance(final Context ctx) throws NoSuchPlanException, NoSuchActivityInstanceException {

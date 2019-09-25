@@ -14,6 +14,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.PlanRepository.PlanTransaction
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -76,38 +77,26 @@ public final class PlanController implements IPlanController {
     return this.planRepository.getActivityInPlanById(planId, activityInstanceId);
   }
 
-  private void validatePlan(final Plan plan) throws ValidationException {
-    final List<String> validationErrors = new ArrayList<>();
-
-    if (plan.name == null) {
-      validationErrors.add("name must be non-null");
-    }
-    if (plan.startTimestamp == null) {
-      validationErrors.add("startTimestamp must be non-null");
-    }
-    if (plan.endTimestamp == null) {
-      validationErrors.add("endTimestamp must be non-null");
-    }
-    if (plan.activityInstances == null) {
-      validationErrors.add("activityInstances must be non-null");
+  @Override
+  public List<String> addActivityInstancesToPlan(final String planId, final List<ActivityInstance> activityInstances) throws ValidationException, NoSuchPlanException {
+    {
+      final String adaptationId = this.planRepository.getPlan(planId).adaptationId;
+      final Optional<Adaptation> planAdaptation = adaptationService.getAdaptationById(adaptationId);
+      validateActivities(activityInstances, planAdaptation);
     }
 
-    if (plan.adaptationId == null) {
-      validationErrors.add("adaptationId must be non-null");
-    } else {
-      final Optional<Adaptation> adaptation = adaptationService.getAdaptationById(plan.adaptationId);
-      if (adaptation.isEmpty()) {
-        validationErrors.add("no adaptation with given adaptationId");
-      } else {
-        final Map<String, ActivityType> activityTypes = adaptation.get().getActivityTypes();
-
-        // TODO: Validate the plan's activity instances against the adaptation's activity types.
-      }
+    final List<String> activityInstanceIds = new ArrayList<>(activityInstances.size());
+    for (final ActivityInstance activityInstance : activityInstances) {
+      final String activityInstanceId = this.planRepository.createActivity(planId, activityInstance);
+      activityInstanceIds.add(activityInstanceId);
     }
 
-    if (validationErrors.size() > 0) {
-      throw new ValidationException("invalid plan", validationErrors);
-    }
+    return activityInstanceIds;
+  }
+
+  private void validateActivities(final Collection<ActivityInstance> activityInstances, final Optional<Adaptation> adaptation) throws ValidationException {
+    // TODO: Validate each activity instance against the associated adaptation's activity types.
+    // TODO: Validate that each activity is structurally valid.
   }
 
   private void validateNewPlan(final NewPlan plan) throws ValidationException {
@@ -121,9 +110,6 @@ public final class PlanController implements IPlanController {
     }
     if (plan.endTimestamp == null) {
       validationErrors.add("endTimestamp must be non-null");
-    }
-    if (plan.activityInstances == null) {
-      validationErrors.add("activityInstances must be non-null");
     }
 
     if (plan.adaptationId == null) {

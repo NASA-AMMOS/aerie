@@ -14,9 +14,11 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class PlanControllerTest {
   @Test
@@ -328,5 +330,89 @@ public final class PlanControllerTest {
     assertThat(thrown).isInstanceOf(NoSuchActivityInstanceException.class);
     assertThat(((NoSuchActivityInstanceException)thrown).getPlanId()).isEqualTo(planId);
     assertThat(((NoSuchActivityInstanceException)thrown).getInvalidActivityId()).isEqualTo(activityInstanceId);
+  }
+
+  @Test
+  public void shouldAddActivityInstancesToPlan() throws ValidationException, NoSuchPlanException {
+    // GIVEN
+    final Fixtures fixtures = new Fixtures();
+    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+
+    final NewPlan newPlan = fixtures.createValidNewPlan("new-plan");
+    final String planId = fixtures.planRepository.createPlan(newPlan);
+
+    final List<ActivityInstance> activityInstances = List.of(
+        fixtures.createValidActivityInstance(),
+        fixtures.createValidActivityInstance());
+
+    // WHEN
+    final List<String> activityInstanceIds = controller.addActivityInstancesToPlan(planId, activityInstances);
+
+    // THEN
+    assertThat(activityInstanceIds).size().isEqualTo(activityInstances.size());
+    assertThat(zipToMap(activityInstanceIds, activityInstances))
+        .isEqualTo(pairStreamToMap(fixtures.planRepository.getAllActivitiesInPlan(planId)));
+  }
+
+  @Test
+  public void shouldNotAddActivityInstancesToNonexistentPlan() {
+    // GIVEN
+    final Fixtures fixtures = new Fixtures();
+    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+
+    final String planId = fixtures.NONEXISTENT_PLAN_ID;
+    final List<ActivityInstance> activityInstances = List.of(
+        fixtures.createValidActivityInstance(),
+        fixtures.createValidActivityInstance());
+
+    // WHEN
+    final Throwable thrown = catchThrowable(() -> controller.addActivityInstancesToPlan(planId, activityInstances));
+
+    // THEN
+    assertThat(thrown).isInstanceOf(NoSuchPlanException.class);
+
+    final String invalidPlanId = ((NoSuchPlanException)thrown).getInvalidPlanId();
+    assertThat(invalidPlanId).isEqualTo(planId);
+  }
+
+  @Test
+  @Disabled("disabled until activity validation is implemented")
+  public void shouldNotAddInvalidActivityInstancesToPlan() {
+    // GIVEN
+    final Fixtures fixtures = new Fixtures();
+    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+
+    final ActivityInstance activityInstance = fixtures.createValidActivityInstance();
+    activityInstance.type = null;
+
+    final String planId = fixtures.EXISTENT_PLAN_ID;
+    final List<ActivityInstance> activityInstances = List.of(activityInstance);
+
+    // WHEN
+    final Throwable thrown = catchThrowable(() -> controller.addActivityInstancesToPlan(planId, activityInstances));
+
+    // THEN
+    assertThat(thrown).isInstanceOf(ValidationException.class);
+
+    final List<String> validationErrors = ((ValidationException)thrown).getValidationErrors();
+    assertThat(validationErrors).size().isEqualTo(1);
+  }
+
+  private <K, V> Map<K, V> zipToMap(final List<K> keys, final List<V> values) {
+    final Map<K, V> map = new HashMap<>();
+
+    final var keysIterator = keys.iterator();
+    final var valuesIterator = values.iterator();
+    while (keysIterator.hasNext() && valuesIterator.hasNext()) {
+      map.put(keysIterator.next(), valuesIterator.next());
+    }
+
+    assert !keysIterator.hasNext() && !valuesIterator.hasNext();
+
+    return map;
+  }
+
+  private <K, V> Map<K, V> pairStreamToMap(final Stream<Pair<K, V>> pairs) {
+    return pairs.collect(Collectors.toMap(Pair::getKey, Pair::getValue));
   }
 }

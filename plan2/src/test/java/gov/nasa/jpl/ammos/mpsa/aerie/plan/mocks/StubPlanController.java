@@ -9,6 +9,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -26,10 +27,18 @@ public final class StubPlanController implements IPlanController {
   public static final String EXISTENT_ACTIVITY_ID = "activity";
   public static final String NONEXISTENT_ACTIVITY_ID = "no-activity";
   public static final ActivityInstance EXISTENT_ACTIVITY;
+  public static final ActivityInstance VALID_ACTIVITY;
+  public static final ActivityInstance INVALID_ACTIVITY;
 
   static {
     EXISTENT_ACTIVITY = new ActivityInstance();
-    EXISTENT_ACTIVITY.type = "arbitrary activity";
+    EXISTENT_ACTIVITY.type = "existent activity";
+
+    VALID_ACTIVITY = new ActivityInstance();
+    VALID_ACTIVITY.type = "valid activity";
+
+    INVALID_ACTIVITY = new ActivityInstance();
+    INVALID_ACTIVITY.type = "invalid activity";
 
     VALID_NEW_PLAN = new NewPlan();
     VALID_NEW_PLAN.name = "valid";
@@ -103,5 +112,23 @@ public final class StubPlanController implements IPlanController {
     }
 
     return EXISTENT_ACTIVITY;
+  }
+
+  @Override
+  public List<String> addActivityInstancesToPlan(final String planId, final List<ActivityInstance> activityInstances) throws ValidationException, NoSuchPlanException {
+    if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
+      throw new NoSuchPlanException(planId);
+    }
+
+    final List<String> activityIds = new ArrayList<>();
+    for (final ActivityInstance activityInstance : activityInstances) {
+      if (!Objects.equals(activityInstance, VALID_ACTIVITY)) {
+        throw new ValidationException("invalid new activity instances", List.of("an error"));
+      }
+
+      activityIds.add(EXISTENT_ACTIVITY_ID);
+    }
+
+    return activityIds;
   }
 }

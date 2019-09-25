@@ -20,6 +20,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -294,6 +295,53 @@ public final class PlanBindingsTest {
 
     // THEN
     assertThat(response.statusCode()).isEqualTo(404);
+  }
+
+  @Test
+  public void shouldAddActivityInstancesToPlan() throws IOException, InterruptedException {
+    // GIVEN
+    final String planId = StubPlanController.EXISTENT_PLAN_ID;
+    final ActivityInstance activityInstance = StubPlanController.VALID_ACTIVITY;
+
+    // WHEN
+    final HttpResponse<String> response = sendRequest("POST", "/plans/" + planId + "/activity_instances", List.of(activityInstance));
+
+    // THEN
+    assertThat(response.statusCode()).isEqualTo(200);
+
+    final Type STRING_LIST_TYPE = new ArrayList<String>(){}.getClass().getGenericSuperclass();
+    final List<String> activityIds = JsonbBuilder.create().fromJson(response.body(), STRING_LIST_TYPE);
+
+    assertThat(activityIds).isEqualTo(List.of(StubPlanController.EXISTENT_ACTIVITY_ID));
+  }
+
+  @Test
+  public void shouldNotAddActivityInstancesToNonexistentPlan() throws IOException, InterruptedException {
+    // GIVEN
+    final String planId = StubPlanController.NONEXISTENT_PLAN_ID;
+    final ActivityInstance activityInstance = StubPlanController.VALID_ACTIVITY;
+
+    // WHEN
+    final HttpResponse<String> response = sendRequest("POST", "/plans/" + planId + "/activity_instances", List.of(activityInstance));
+
+    // THEN
+    assertThat(response.statusCode()).isEqualTo(404);
+  }
+
+  @Test
+  public void shouldNotAddInvalidActivityInstancesToPlan() throws IOException, InterruptedException {
+    // GIVEN
+    final String planId = StubPlanController.EXISTENT_PLAN_ID;
+    final ActivityInstance activityInstance = StubPlanController.INVALID_ACTIVITY;
+
+    // WHEN
+    final HttpResponse<String> response = sendRequest("POST", "/plans/" + planId + "/activity_instances", List.of(activityInstance));
+
+    // THEN
+    assertThat(response.statusCode()).isEqualTo(400);
+
+    final Type STRING_LIST_TYPE = new ArrayList<String>(){}.getClass().getGenericSuperclass();
+    JsonbBuilder.create().fromJson(response.body(), STRING_LIST_TYPE);
   }
 
   private HttpResponse<String> sendRequest(final String method, final String path)
