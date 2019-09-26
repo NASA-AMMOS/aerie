@@ -18,4 +18,3 @@ public class NoSuchActivityInstanceException extends Exception {
     return this.planId;
   }
 }
-

@@ -1,14 +1,15 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.UnexpectedMissingAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.AdaptationService;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.AdaptationService.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.PlanRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.PlanRepository.PlanTransaction;
 import org.apache.commons.lang3.tuple.Pair;
@@ -81,8 +82,15 @@ public final class PlanController implements IPlanController {
   public List<String> addActivityInstancesToPlan(final String planId, final List<ActivityInstance> activityInstances) throws ValidationException, NoSuchPlanException {
     {
       final String adaptationId = this.planRepository.getPlan(planId).adaptationId;
-      final Optional<Adaptation> planAdaptation = adaptationService.getAdaptationById(adaptationId);
-      validateActivities(activityInstances, planAdaptation);
+
+      final Map<String, ActivityType> activityTypes;
+      try {
+        activityTypes = this.adaptationService.getActivityTypes(adaptationId);
+      } catch (final NoSuchAdaptationException ex) {
+        throw new UnexpectedMissingAdaptationException(adaptationId, ex);
+      }
+
+      validateActivities(activityInstances, Optional.of(activityTypes));
     }
 
     final List<String> activityInstanceIds = new ArrayList<>(activityInstances.size());
@@ -94,7 +102,7 @@ public final class PlanController implements IPlanController {
     return activityInstanceIds;
   }
 
-  private void validateActivities(final Collection<ActivityInstance> activityInstances, final Optional<Adaptation> adaptation) throws ValidationException {
+  private void validateActivities(final Collection<ActivityInstance> activityInstances, final Optional<Map<String, ActivityType>> activityTypes) throws ValidationException {
     // TODO: Validate each activity instance against the associated adaptation's activity types.
     // TODO: Validate that each activity is structurally valid.
   }
@@ -115,13 +123,12 @@ public final class PlanController implements IPlanController {
     if (plan.adaptationId == null) {
       validationErrors.add("adaptationId must be non-null");
     } else {
-      final Optional<Adaptation> adaptation = adaptationService.getAdaptationById(plan.adaptationId);
-      if (adaptation.isEmpty()) {
-        validationErrors.add("no adaptation with given adaptationId");
-      } else {
-        final Map<String, ActivityType> activityTypes = adaptation.get().getActivityTypes();
+      try {
+        final Map<String, ActivityType> activityTypes = this.adaptationService.getActivityTypes(plan.adaptationId);
 
         // TODO: Validate the plan's activity instances against the adaptation's activity types.
+      } catch (final NoSuchAdaptationException e) {
+        validationErrors.add("no adaptation with given adaptationId");
       }
     }
 
@@ -132,10 +139,14 @@ public final class PlanController implements IPlanController {
 
   private void validatePlanPatch(final Plan patch) throws ValidationException {
     final List<String> validationErrors = new ArrayList<>();
+    final Optional<Map<String, ActivityType>> activityTypes;
 
-    if (patch.adaptationId != null) {
-      final Optional<Adaptation> adaptation = adaptationService.getAdaptationById(patch.adaptationId);
-      if (adaptation.isEmpty()) {
+    if (patch.adaptationId == null) {
+      activityTypes = Optional.empty();
+    } else {
+      try {
+        activityTypes = Optional.of(this.adaptationService.getActivityTypes(patch.adaptationId));
+      } catch (final NoSuchAdaptationException e) {
         validationErrors.add("no adaptation with given adaptationId");
       }
     }
