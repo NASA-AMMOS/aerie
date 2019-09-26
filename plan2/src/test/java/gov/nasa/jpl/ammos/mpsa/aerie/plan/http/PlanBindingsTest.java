@@ -12,6 +12,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import javax.json.JsonObject;
 import javax.json.bind.JsonbBuilder;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -98,6 +99,9 @@ public final class PlanBindingsTest {
 
     // THEN
     assertThat(response.statusCode()).isEqualTo(200);
+
+    final JsonObject responseBody = JsonbBuilder.create().fromJson(response.body(), JsonObject.class);
+    assertThat(responseBody).containsKey("id");
   }
 
   @Test
