@@ -13,6 +13,8 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.bind.JsonbBuilder;
 import javax.json.bind.JsonbException;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -118,10 +120,15 @@ public final class PlanBindings {
     ctx.result(JsonbBuilder.create().toJson(plan.activityInstances)).contentType("application/json");
   }
 
-  private void postActivityInstances(final Context ctx) {
+  private void postActivityInstances(final Context ctx) throws ValidationException, NoSuchPlanException {
+    final Type ACTIVITY_LIST_TYPE = new ArrayList<ActivityInstance>(){}.getClass().getGenericSuperclass();
+
     final String planId = ctx.pathParam("planId");
-    final String activityInstancesBody = ctx.body();
-    ctx.result("postActivityInstances(" + planId + ", body(" + activityInstancesBody.length() + "))");
+    final List<ActivityInstance> activityInstances = JsonbBuilder.create().fromJson(ctx.body(), ACTIVITY_LIST_TYPE);
+
+    final List<String> activityInstanceIds = this.appController.addActivityInstancesToPlan(planId, activityInstances);
+
+    ctx.result(JsonbBuilder.create().toJson(activityInstanceIds)).contentType("application/json");
   }
 
   private void getActivityInstance(final Context ctx) throws NoSuchPlanException, NoSuchActivityInstanceException {
@@ -133,23 +140,26 @@ public final class PlanBindings {
     ctx.result(JsonbBuilder.create().toJson(activityInstance)).contentType("application/json");
   }
 
-  private void putActivityInstance(final Context ctx) {
+  private void putActivityInstance(final Context ctx) throws NoSuchPlanException, ValidationException, NoSuchActivityInstanceException {
     final String planId = ctx.pathParam("planId");
     final String activityInstanceId = ctx.pathParam("activityInstanceId");
-    final String activityInstanceBody = ctx.body();
-    ctx.result("putActivityInstance(" + planId + ", " + activityInstanceId + ", " + activityInstanceBody.length() + ")");
+    final ActivityInstance activityInstance = JsonbBuilder.create().fromJson(ctx.body(), ActivityInstance.class);
+
+    this.appController.replaceActivityInstance(planId, activityInstanceId, activityInstance);
   }
 
-  private void patchActivityInstance(final Context ctx) {
+  private void patchActivityInstance(final Context ctx) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException {
     final String planId = ctx.pathParam("planId");
     final String activityInstanceId = ctx.pathParam("activityInstanceId");
-    final String activityInstanceBody = ctx.body();
-    ctx.result("patchActivityInstance(" + planId + ", " + activityInstanceId + ", " + activityInstanceBody.length() + ")");
+    final ActivityInstance activityInstance = JsonbBuilder.create().fromJson(ctx.body(), ActivityInstance.class);
+
+    this.appController.updateActivityInstance(planId, activityInstanceId, activityInstance);
   }
 
-  private void deleteActivityInstance(final Context ctx) {
+  private void deleteActivityInstance(final Context ctx) throws NoSuchPlanException, NoSuchActivityInstanceException {
     final String planId = ctx.pathParam("planId");
     final String activityInstanceId = ctx.pathParam("activityInstanceId");
-    ctx.result("deleteActivityInstance(" + planId + ", " + activityInstanceId + ")");
+
+    this.appController.removeActivityInstanceById(planId, activityInstanceId);
   }
 }

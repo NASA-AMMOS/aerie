@@ -78,6 +78,17 @@ public abstract class PlanRepositoryContractTest {
   }
 
   @Test
+  public void testCreatePlanWithNullActivitiesList() throws NoSuchPlanException {
+    // GIVEN
+
+    // WHEN
+    final String planId = this.planRepository.createPlan(new NewPlan());
+
+    // THEN
+    assertThat(this.planRepository.getPlan(planId).activityInstances).isNotNull().isEmpty();
+  }
+
+  @Test
   public void testCanDeletePlan() throws NoSuchPlanException {
     // GIVEN
     this.planRepository.createPlan(new NewPlan());

@@ -6,6 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 public final class Fixtures {
@@ -64,5 +65,15 @@ public final class Fixtures {
     plan.activityInstances = new ArrayList<>();
 
     return plan;
+  }
+
+  public ActivityInstance createValidActivityInstance() {
+    final ActivityInstance activityInstance = new ActivityInstance();
+
+    activityInstance.type = "BiteBanana";
+    activityInstance.startTimestamp = "0000-111T22:33:44";
+    activityInstance.parameters = new HashMap<>();
+
+    return activityInstance;
   }
 }
