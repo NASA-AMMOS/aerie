@@ -103,6 +103,11 @@ public final class PlanController implements IPlanController {
   }
 
   @Override
+  public void removeActivityInstanceById(String planId, String activityInstanceId) throws NoSuchPlanException, NoSuchActivityInstanceException {
+    this.planRepository.deleteActivity(planId, activityInstanceId);
+  }
+
+  @Override
   public void replaceActivityInstance(String planId, String activityInstanceId, ActivityInstance activityInstance) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException {
     {
       final String adaptationId = this.planRepository.getPlan(planId).adaptationId;

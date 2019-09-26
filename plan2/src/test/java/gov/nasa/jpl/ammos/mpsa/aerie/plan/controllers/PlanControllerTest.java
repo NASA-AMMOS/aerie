@@ -399,6 +399,60 @@ public final class PlanControllerTest {
   }
 
   @Test
+  public void shouldDeleteActivityInstanceById() throws NoSuchPlanException, NoSuchActivityInstanceException {
+    // GIVEN
+    final Fixtures fixtures = new Fixtures();
+    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+
+    final String planId = fixtures.EXISTENT_PLAN_ID;
+    final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;
+
+    // WHEN
+    controller.removeActivityInstanceById(planId, activityInstanceId);
+
+    // THEN
+    final Throwable thrown = catchThrowable(() -> fixtures.planRepository.getActivityInPlanById(planId, activityInstanceId));
+    assertThat(thrown).isInstanceOf(NoSuchActivityInstanceException.class);
+    assertThat(((NoSuchActivityInstanceException)thrown).getPlanId()).isEqualTo(planId);
+    assertThat(((NoSuchActivityInstanceException)thrown).getInvalidActivityId()).isEqualTo(activityInstanceId);
+  }
+
+  @Test
+  public void shouldNotDeleteActivityInstanceFromNonexistentPlan() {
+    // GIVEN
+    final Fixtures fixtures = new Fixtures();
+    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+
+    final String planId = fixtures.NONEXISTENT_PLAN_ID;
+    final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;
+
+    // WHEN
+    final Throwable thrown = catchThrowable(() -> controller.removeActivityInstanceById(planId, activityInstanceId));
+
+    // THEN
+    assertThat(thrown).isInstanceOf(NoSuchPlanException.class);
+    assertThat(((NoSuchPlanException)thrown).getInvalidPlanId()).isEqualTo(planId);
+  }
+
+  @Test
+  public void shouldNotDeleteNonexistentActivityInstance() {
+    // GIVEN
+    final Fixtures fixtures = new Fixtures();
+    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+
+    final String planId = fixtures.EXISTENT_PLAN_ID;
+    final String activityInstanceId = fixtures.NONEXISTENT_ACTIVITY_INSTANCE_ID;
+
+    // WHEN
+    final Throwable thrown = catchThrowable(() -> controller.removeActivityInstanceById(planId, activityInstanceId));
+
+    // THEN
+    assertThat(thrown).isInstanceOf(NoSuchActivityInstanceException.class);
+    assertThat(((NoSuchActivityInstanceException)thrown).getPlanId()).isEqualTo(planId);
+    assertThat(((NoSuchActivityInstanceException)thrown).getInvalidActivityId()).isEqualTo(activityInstanceId);
+  }
+
+  @Test
   public void shouldReplaceActivityInstance() throws NoSuchPlanException, NoSuchActivityInstanceException, ValidationException {
     // GIVEN
     final Fixtures fixtures = new Fixtures();

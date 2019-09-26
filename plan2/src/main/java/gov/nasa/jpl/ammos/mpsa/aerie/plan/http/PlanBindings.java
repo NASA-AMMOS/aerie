@@ -155,9 +155,10 @@ public final class PlanBindings {
     ctx.result("patchActivityInstance(" + planId + ", " + activityInstanceId + ", " + activityInstanceBody.length() + ")");
   }
 
-  private void deleteActivityInstance(final Context ctx) {
+  private void deleteActivityInstance(final Context ctx) throws NoSuchPlanException, NoSuchActivityInstanceException {
     final String planId = ctx.pathParam("planId");
     final String activityInstanceId = ctx.pathParam("activityInstanceId");
-    ctx.result("deleteActivityInstance(" + planId + ", " + activityInstanceId + ")");
+
+    this.appController.removeActivityInstanceById(planId, activityInstanceId);
   }
 }

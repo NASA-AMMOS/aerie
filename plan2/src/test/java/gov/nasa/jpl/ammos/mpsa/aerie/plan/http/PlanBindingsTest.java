@@ -345,6 +345,45 @@ public final class PlanBindingsTest {
   }
 
   @Test
+  public void shouldDeleteActivityInstance() throws IOException, InterruptedException {
+    // GIVEN
+    final String planId = StubPlanController.EXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanController.EXISTENT_ACTIVITY_ID;
+
+    // WHEN
+    final HttpResponse<String> response = client.sendRequest("DELETE", "/plans/" + planId + "/activity_instances/" + activityInstanceId);
+
+    // THEN
+    assertThat(response.statusCode()).isEqualTo(200);
+  }
+
+  @Test
+  public void shouldNotDeleteActivityInstanceFromNonexistentPlan() throws IOException, InterruptedException {
+    // GIVEN
+    final String planId = StubPlanController.NONEXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanController.EXISTENT_ACTIVITY_ID;
+
+    // WHEN
+    final HttpResponse<String> response = client.sendRequest("DELETE", "/plans/" + planId + "/activity_instances/" + activityInstanceId);
+
+    // THEN
+    assertThat(response.statusCode()).isEqualTo(404);
+  }
+
+  @Test
+  public void shouldNotDeleteNonexistentActivityInstance() throws IOException, InterruptedException {
+    // GIVEN
+    final String planId = StubPlanController.EXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanController.NONEXISTENT_ACTIVITY_ID;
+
+    // WHEN
+    final HttpResponse<String> response = client.sendRequest("DELETE", "/plans/" + planId + "/activity_instances/" + activityInstanceId);
+
+    // THEN
+    assertThat(response.statusCode()).isEqualTo(404);
+  }
+
+  @Test
   public void shouldReplaceActivityInstance() throws IOException, InterruptedException {
     // GIVEN
     final String planId = StubPlanController.EXISTENT_PLAN_ID;
