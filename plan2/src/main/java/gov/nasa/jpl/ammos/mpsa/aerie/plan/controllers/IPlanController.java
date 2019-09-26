@@ -8,6 +8,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 public interface IPlanController {
@@ -18,4 +19,8 @@ public interface IPlanController {
   void updatePlan(String id, Plan patch) throws ValidationException, NoSuchPlanException;
   void replacePlan(String id, NewPlan plan) throws ValidationException, NoSuchPlanException;
   ActivityInstance getActivityInstanceById(String planId, String activityInstanceId) throws NoSuchPlanException, NoSuchActivityInstanceException;
+  List<String> addActivityInstancesToPlan(String planId, List<ActivityInstance> activityInstances) throws ValidationException, NoSuchPlanException;
+  void removeActivityInstanceById(String planId, String activityInstanceId) throws NoSuchPlanException, NoSuchActivityInstanceException;
+  void updateActivityInstance(String planId, String activityInstanceId, ActivityInstance patch) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException;
+  void replaceActivityInstance(String planId, String activityInstanceId, ActivityInstance activityInstance) throws NoSuchPlanException, ValidationException, NoSuchActivityInstanceException;
 }
