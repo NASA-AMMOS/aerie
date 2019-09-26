@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -271,7 +272,7 @@ public class AdaptationController {
   }
 
   private Map<String, ParameterSchema> loadActivities(Adaptation adaptation) throws IOException {
-    final MerlinAdaptation userAdaptation = AdaptationUtils.loadAdaptation(adaptation.getLocation());
+    final MerlinAdaptation userAdaptation = AdaptationUtils.loadAdaptation(Path.of(adaptation.getLocation()));
 
     if (userAdaptation == null) {
       return null;

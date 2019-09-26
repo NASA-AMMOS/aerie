@@ -6,16 +6,16 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
 import java.util.ServiceLoader;
 
 public class AdaptationUtils {
     // TODO: Move this into the Adaptation Runtime Service when it is complete
     // TODO: Allow lookup by adaptation metadata (e.g. name and version).
-    // TODO: This should throw an exception when the JAR does not contain a valid adaptation
-    // TODO: Take a path instead of a string
-    public static MerlinAdaptation loadAdaptation(String adaptationLocation) throws IOException {
+    // TODO: This should throw an additional exception when a valid JAR does not contain a valid adaptation
+    public static MerlinAdaptation loadAdaptation(final Path adaptationPath) throws IOException {
         // Construct a ClassLoader with access to classes in the adaptation location.
-        final URL adaptationURL = new File(adaptationLocation).toURI().toURL();
+        final URL adaptationURL = adaptationPath.toUri().toURL();
         final ClassLoader parentClassLoader = Thread.currentThread().getContextClassLoader();
         final ClassLoader classLoader = new URLClassLoader(new URL[]{adaptationURL}, parentClassLoader);
 

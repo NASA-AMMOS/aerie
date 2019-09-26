@@ -24,7 +24,7 @@ public final class AdaptationLoader {
         final MerlinAdaptation userAdaptation;
         try {
             userAdaptation = Optional
-                    .ofNullable(AdaptationUtils.loadAdaptation(path.toString()))
+                    .ofNullable(AdaptationUtils.loadAdaptation(path))
                     .orElseThrow(() -> new InvalidAdaptationJARException(path));
         } catch (final IOException e) {
             throw new AdaptationAccessException(path, e);
