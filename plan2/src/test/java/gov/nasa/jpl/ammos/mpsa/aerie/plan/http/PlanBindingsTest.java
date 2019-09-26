@@ -98,7 +98,10 @@ public final class PlanBindingsTest {
     final HttpResponse<String> response = client.sendRequest("POST", "/plans", plan);
 
     // THEN
-    assertThat(response.statusCode()).isEqualTo(200);
+    final String expectedPlanId = StubPlanController.EXISTENT_PLAN_ID;
+
+    assertThat(response.statusCode()).isEqualTo(201);
+    assertThat(response.headers().firstValue("Location")).get().isEqualTo("/plans/" + expectedPlanId);
 
     final JsonObject responseBody = JsonbBuilder.create().fromJson(response.body(), JsonObject.class);
     assertThat(responseBody).containsKey("id");
