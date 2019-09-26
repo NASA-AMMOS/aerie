@@ -90,7 +90,10 @@ public final class PlanBindings {
 
     final String planId = this.appController.addPlan(plan);
 
-    ctx.result(JsonbBuilder.create().toJson(new CreatedEntity(planId))).contentType("application/json");
+    ctx
+        .status(201)
+        .header("Location", "/plans/" + planId)
+        .result(JsonbBuilder.create().toJson(new CreatedEntity(planId))).contentType("application/json");
   }
 
   private void putPlan(final Context ctx) throws ValidationException, NoSuchPlanException {
