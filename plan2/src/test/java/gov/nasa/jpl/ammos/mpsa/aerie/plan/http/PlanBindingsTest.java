@@ -384,6 +384,65 @@ public final class PlanBindingsTest {
   }
 
   @Test
+  public void shouldPatchActivityInstanceById() throws IOException, InterruptedException {
+    // GIVEN
+    final String planId = StubPlanController.EXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanController.EXISTENT_ACTIVITY_ID;
+    final ActivityInstance patch = StubPlanController.VALID_ACTIVITY;
+
+    // WHEN
+    final HttpResponse<String> response = client.sendRequest("PATCH", "/plans/" + planId + "/activity_instances/" + activityInstanceId, patch);
+
+    // THEN
+    assertThat(response.statusCode()).isEqualTo(200);
+  }
+
+  @Test
+  public void shouldNotPatchActivityInstanceInNonexistentPlan() throws IOException, InterruptedException {
+    // GIVEN
+    final String planId = StubPlanController.NONEXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanController.EXISTENT_ACTIVITY_ID;
+    final ActivityInstance patch = StubPlanController.VALID_ACTIVITY;
+
+    // WHEN
+    final HttpResponse<String> response = client.sendRequest("PATCH", "/plans/" + planId + "/activity_instances/" + activityInstanceId, patch);
+
+    // THEN
+    assertThat(response.statusCode()).isEqualTo(404);
+  }
+
+  @Test
+  public void shouldNotPatchNonexistentActivityInstance() throws IOException, InterruptedException {
+    // GIVEN
+    final String planId = StubPlanController.EXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanController.NONEXISTENT_ACTIVITY_ID;
+    final ActivityInstance patch = StubPlanController.VALID_ACTIVITY;
+
+    // WHEN
+    final HttpResponse<String> response = client.sendRequest("PATCH", "/plans/" + planId + "/activity_instances/" + activityInstanceId, patch);
+
+    // THEN
+    assertThat(response.statusCode()).isEqualTo(404);
+  }
+
+  @Test
+  public void shouldNotPatchInvalidActivityInstance() throws IOException, InterruptedException {
+    // GIVEN
+    final String planId = StubPlanController.EXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanController.EXISTENT_ACTIVITY_ID;
+    final ActivityInstance patch = StubPlanController.INVALID_ACTIVITY;
+
+    // WHEN
+    final HttpResponse<String> response = client.sendRequest("PATCH", "/plans/" + planId + "/activity_instances/" + activityInstanceId, patch);
+
+    // THEN
+    assertThat(response.statusCode()).isEqualTo(400);
+
+    final Type STRING_LIST_TYPE = new ArrayList<String>(){}.getClass().getGenericSuperclass();
+    JsonbBuilder.create().fromJson(response.body(), STRING_LIST_TYPE);
+  }
+
+  @Test
   public void shouldReplaceActivityInstance() throws IOException, InterruptedException {
     // GIVEN
     final String planId = StubPlanController.EXISTENT_PLAN_ID;

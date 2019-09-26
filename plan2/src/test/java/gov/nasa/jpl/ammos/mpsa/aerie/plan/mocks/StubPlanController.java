@@ -142,6 +142,17 @@ public final class StubPlanController implements IPlanController {
   }
 
   @Override
+  public void updateActivityInstance(String planId, String activityInstanceId, ActivityInstance patch) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException {
+    if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
+      throw new NoSuchPlanException(planId);
+    } else if (!Objects.equals(activityInstanceId, EXISTENT_ACTIVITY_ID)) {
+      throw new NoSuchActivityInstanceException(planId, activityInstanceId);
+    } else if (Objects.equals(patch, INVALID_ACTIVITY)) {
+      throw new ValidationException("invalid patch", List.of("an error"));
+    }
+  }
+
+  @Override
   public void replaceActivityInstance(String planId, String activityInstanceId, ActivityInstance activityInstance) throws NoSuchPlanException, ValidationException, NoSuchActivityInstanceException {
     if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
       throw new NoSuchPlanException(planId);

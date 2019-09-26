@@ -12,6 +12,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.AdaptationService;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.PlanRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.PlanRepository.PlanTransaction;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.PlanRepository.ActivityTransaction;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -108,6 +109,18 @@ public final class PlanController implements IPlanController {
   }
 
   @Override
+  public void updateActivityInstance(String planId, String activityInstanceId, ActivityInstance patch) throws NoSuchPlanException, NoSuchActivityInstanceException {
+    validateActivityPatch(patch);
+
+    final ActivityTransaction transaction = this.planRepository.updateActivity(planId, activityInstanceId);
+    if (patch.type != null) transaction.setType(patch.type);
+    if (patch.startTimestamp != null) transaction.setStartTimestamp(patch.startTimestamp);
+    if (patch.parameters != null) transaction.setParameters(patch.parameters);
+
+    transaction.commit();
+  }
+
+  @Override
   public void replaceActivityInstance(String planId, String activityInstanceId, ActivityInstance activityInstance) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException {
     {
       final String adaptationId = this.planRepository.getPlan(planId).adaptationId;
@@ -123,6 +136,10 @@ public final class PlanController implements IPlanController {
     }
 
     this.planRepository.replaceActivity(planId, activityInstanceId, activityInstance);
+  }
+
+  private void validateActivityPatch(final ActivityInstance activityInstance) {
+    // TODO: Validate an activity patch
   }
 
   private void validateActivities(final Collection<ActivityInstance> activityInstances, final Optional<Map<String, ActivityType>> activityTypes) throws ValidationException {
