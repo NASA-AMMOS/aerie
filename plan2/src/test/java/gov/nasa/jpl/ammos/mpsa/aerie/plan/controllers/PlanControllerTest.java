@@ -398,6 +398,83 @@ public final class PlanControllerTest {
     assertThat(validationErrors).size().isEqualTo(1);
   }
 
+  @Test
+  public void shouldReplaceActivityInstance() throws NoSuchPlanException, NoSuchActivityInstanceException, ValidationException {
+    // GIVEN
+    final Fixtures fixtures = new Fixtures();
+    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+
+    final String planId = fixtures.EXISTENT_PLAN_ID;
+    final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;
+    final ActivityInstance activityInstance = new ActivityInstance(fixtures.EXISTENT_ACTIVITY_INSTANCE);
+    activityInstance.startTimestamp += ".001";
+
+    // WHEN
+    controller.replaceActivityInstance(planId, activityInstanceId, activityInstance);
+
+    // THEN
+    assertThat(fixtures.planRepository.getActivityInPlanById(planId, activityInstanceId)).isEqualTo(activityInstance);
+  }
+
+  @Test
+  public void shouldNotReplaceActivityInstanceOfNonexistentPlan() {
+    // GIVEN
+    final Fixtures fixtures = new Fixtures();
+    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+
+    final String planId = fixtures.NONEXISTENT_PLAN_ID;
+    final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;
+    final ActivityInstance activityInstance = new ActivityInstance(fixtures.EXISTENT_ACTIVITY_INSTANCE);
+    activityInstance.startTimestamp += ".001";
+
+    // WHEN
+    final Throwable thrown = catchThrowable(() -> controller.replaceActivityInstance(planId, activityInstanceId, activityInstance));
+
+    // THEN
+    assertThat(thrown).isInstanceOf(NoSuchPlanException.class);
+    assertThat(((NoSuchPlanException)thrown).getInvalidPlanId()).isEqualTo(planId);
+  }
+
+  @Test
+  public void shouldNotReplaceNonexistentActivityInstance() {
+    // GIVEN
+    final Fixtures fixtures = new Fixtures();
+    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+
+    final String planId = fixtures.EXISTENT_PLAN_ID;
+    final String activityInstanceId = fixtures.NONEXISTENT_ACTIVITY_INSTANCE_ID;
+    final ActivityInstance activityInstance = new ActivityInstance(fixtures.EXISTENT_ACTIVITY_INSTANCE);
+    activityInstance.startTimestamp += ".001";
+
+    // WHEN
+    final Throwable thrown = catchThrowable(() -> controller.replaceActivityInstance(planId, activityInstanceId, activityInstance));
+
+    // THEN
+    assertThat(thrown).isInstanceOf(NoSuchActivityInstanceException.class);
+    assertThat(((NoSuchActivityInstanceException)thrown).getPlanId()).isEqualTo(planId);
+    assertThat(((NoSuchActivityInstanceException)thrown).getInvalidActivityId()).isEqualTo(activityInstanceId);
+  }
+
+  @Test
+  @Disabled("disabled until activity validation is implemented")
+  public void shouldNotReplaceInvalidActivityInstance() {
+    // GIVEN
+    final Fixtures fixtures = new Fixtures();
+    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+
+    final String planId = fixtures.EXISTENT_PLAN_ID;
+    final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;
+    final ActivityInstance activityInstance = new ActivityInstance(fixtures.EXISTENT_ACTIVITY_INSTANCE);
+    activityInstance.startTimestamp = null;
+
+    // WHEN
+    final Throwable thrown = catchThrowable(() -> controller.replaceActivityInstance(planId, activityInstanceId, activityInstance));
+
+    // THEN
+    assertThat(thrown).isInstanceOf(ValidationException.class);
+    assertThat(((ValidationException)thrown).getValidationErrors()).size().isEqualTo(1);
+  }
+
   private <K, V> Map<K, V> zipToMap(final List<K> keys, final List<V> values) {
     final Map<K, V> map = new HashMap<>();
 

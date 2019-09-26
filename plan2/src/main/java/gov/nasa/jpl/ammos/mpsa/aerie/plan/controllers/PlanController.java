@@ -102,6 +102,24 @@ public final class PlanController implements IPlanController {
     return activityInstanceIds;
   }
 
+  @Override
+  public void replaceActivityInstance(String planId, String activityInstanceId, ActivityInstance activityInstance) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException {
+    {
+      final String adaptationId = this.planRepository.getPlan(planId).adaptationId;
+
+      final Map<String, ActivityType> activityTypes;
+      try {
+        activityTypes = this.adaptationService.getActivityTypes(adaptationId);
+      } catch (final NoSuchAdaptationException ex) {
+        throw new UnexpectedMissingAdaptationException(adaptationId, ex);
+      }
+
+      validateActivities(List.of(activityInstance), Optional.of(activityTypes));
+    }
+
+    this.planRepository.replaceActivity(planId, activityInstanceId, activityInstance);
+  }
+
   private void validateActivities(final Collection<ActivityInstance> activityInstances, final Optional<Map<String, ActivityType>> activityTypes) throws ValidationException {
     // TODO: Validate each activity instance against the associated adaptation's activity types.
     // TODO: Validate that each activity is structurally valid.
@@ -109,6 +127,7 @@ public final class PlanController implements IPlanController {
 
   private void validateNewPlan(final NewPlan plan) throws ValidationException {
     final List<String> validationErrors = new ArrayList<>();
+    final Optional<Map<String, ActivityType>> activityTypes;
 
     if (plan.name == null) {
       validationErrors.add("name must be non-null");
@@ -122,13 +141,24 @@ public final class PlanController implements IPlanController {
 
     if (plan.adaptationId == null) {
       validationErrors.add("adaptationId must be non-null");
-    } else {
-      try {
-        final Map<String, ActivityType> activityTypes = this.adaptationService.getActivityTypes(plan.adaptationId);
 
-        // TODO: Validate the plan's activity instances against the adaptation's activity types.
+      activityTypes = Optional.empty();
+    } else {
+      Map<String, ActivityType> adaptationActivityTypes = null;
+      try {
+        adaptationActivityTypes = this.adaptationService.getActivityTypes(plan.adaptationId);
       } catch (final NoSuchAdaptationException e) {
         validationErrors.add("no adaptation with given adaptationId");
+      }
+
+      activityTypes = Optional.ofNullable(adaptationActivityTypes);
+    }
+
+    if (plan.activityInstances != null) {
+      try {
+        validateActivities(plan.activityInstances, activityTypes);
+      } catch (final ValidationException ex) {
+        validationErrors.addAll(ex.getValidationErrors());
       }
     }
 
@@ -144,11 +174,14 @@ public final class PlanController implements IPlanController {
     if (patch.adaptationId == null) {
       activityTypes = Optional.empty();
     } else {
+      Map<String, ActivityType> adaptationActivityTypes = null;
       try {
-        activityTypes = Optional.of(this.adaptationService.getActivityTypes(patch.adaptationId));
+        adaptationActivityTypes = this.adaptationService.getActivityTypes(patch.adaptationId);
       } catch (final NoSuchAdaptationException e) {
         validationErrors.add("no adaptation with given adaptationId");
       }
+
+      activityTypes = Optional.ofNullable(adaptationActivityTypes);
     }
 
     if (patch.activityInstances != null) {

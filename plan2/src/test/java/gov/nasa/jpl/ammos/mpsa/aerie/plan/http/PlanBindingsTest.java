@@ -343,4 +343,63 @@ public final class PlanBindingsTest {
     final Type STRING_LIST_TYPE = new ArrayList<String>(){}.getClass().getGenericSuperclass();
     JsonbBuilder.create().fromJson(response.body(), STRING_LIST_TYPE);
   }
+
+  @Test
+  public void shouldReplaceActivityInstance() throws IOException, InterruptedException {
+    // GIVEN
+    final String planId = StubPlanController.EXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanController.EXISTENT_ACTIVITY_ID;
+    final ActivityInstance activityInstance = StubPlanController.VALID_ACTIVITY;
+
+    // WHEN
+    final HttpResponse<String> response = client.sendRequest("PUT", "/plans/" + planId + "/activity_instances/" + activityInstanceId, activityInstance);
+
+    // THEN
+    assertThat(response.statusCode()).isEqualTo(200);
+  }
+
+  @Test
+  public void shouldNotReplaceActivityInstanceOfNonexistentPlan() throws IOException, InterruptedException {
+    // GIVEN
+    final String planId = StubPlanController.NONEXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanController.EXISTENT_ACTIVITY_ID;
+    final ActivityInstance activityInstance = StubPlanController.VALID_ACTIVITY;
+
+    // WHEN
+    final HttpResponse<String> response = client.sendRequest("PUT", "/plans/" + planId + "/activity_instances/" + activityInstanceId, activityInstance);
+
+    // THEN
+    assertThat(response.statusCode()).isEqualTo(404);
+  }
+
+  @Test
+  public void shouldNotReplaceNonexistentActivityInstance() throws IOException, InterruptedException {
+    // GIVEN
+    final String planId = StubPlanController.EXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanController.NONEXISTENT_ACTIVITY_ID;
+    final ActivityInstance activityInstance = StubPlanController.VALID_ACTIVITY;
+
+    // WHEN
+    final HttpResponse<String> response = client.sendRequest("PUT", "/plans/" + planId + "/activity_instances/" + activityInstanceId, activityInstance);
+
+    // THEN
+    assertThat(response.statusCode()).isEqualTo(404);
+  }
+
+  @Test
+  public void shouldNotReplaceInvalidActivityInstance() throws IOException, InterruptedException {
+    // GIVEN
+    final String planId = StubPlanController.EXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanController.EXISTENT_ACTIVITY_ID;
+    final ActivityInstance activityInstance = StubPlanController.INVALID_ACTIVITY;
+
+    // WHEN
+    final HttpResponse<String> response = client.sendRequest("PUT", "/plans/" + planId + "/activity_instances/" + activityInstanceId, activityInstance);
+
+    // THEN
+    assertThat(response.statusCode()).isEqualTo(400);
+
+    final Type STRING_LIST_TYPE = new ArrayList<String>(){}.getClass().getGenericSuperclass();
+    JsonbBuilder.create().fromJson(response.body(), STRING_LIST_TYPE);
+  }
 }

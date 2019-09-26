@@ -140,11 +140,12 @@ public final class PlanBindings {
     ctx.result(JsonbBuilder.create().toJson(activityInstance)).contentType("application/json");
   }
 
-  private void putActivityInstance(final Context ctx) {
+  private void putActivityInstance(final Context ctx) throws NoSuchPlanException, ValidationException, NoSuchActivityInstanceException {
     final String planId = ctx.pathParam("planId");
     final String activityInstanceId = ctx.pathParam("activityInstanceId");
-    final String activityInstanceBody = ctx.body();
-    ctx.result("putActivityInstance(" + planId + ", " + activityInstanceId + ", " + activityInstanceBody.length() + ")");
+    final ActivityInstance activityInstance = JsonbBuilder.create().fromJson(ctx.body(), ActivityInstance.class);
+
+    this.appController.replaceActivityInstance(planId, activityInstanceId, activityInstance);
   }
 
   private void patchActivityInstance(final Context ctx) {
