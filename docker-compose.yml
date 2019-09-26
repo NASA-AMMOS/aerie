@@ -1,7 +1,7 @@
 version: "3.3"
 services:
   adaptation:
-    image: "${DOCKER_URL}/adaptation:${DOCKER_TAG}"
+    image: "${DOCKER_URL}/adaptation:${ADAPTATION_DOCKER_TAG}"
     ports: ["27182:27182"]
     depends_on: ["adaptation_mongo"]
     volumes:
@@ -13,10 +13,10 @@ services:
     ports: ["27020:27020"]
     volumes: ["adaptation_mongo_data:/data/db"]
   nest:
-    image: "${DOCKER_URL}/nest:${DOCKER_TAG}"
+    image: "${DOCKER_URL}/nest:${NEST_DOCKER_TAG}"
     ports: ["8080:80"]
   plan:
-    image: "${DOCKER_URL}/plan:${DOCKER_TAG}"
+    image: "${DOCKER_URL}/plan:${PLAN_DOCKER_TAG}"
     command: ["--spring.profiles.active=production"]
     depends_on: ["plan_mongo"]
     ports: ["27183:27183"]
