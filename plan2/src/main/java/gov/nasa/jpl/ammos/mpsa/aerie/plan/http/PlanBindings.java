@@ -5,6 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceExcep
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.CreatedEntity;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import io.javalin.Javalin;
@@ -89,7 +90,7 @@ public final class PlanBindings {
 
     final String planId = this.appController.addPlan(plan);
 
-    ctx.result(planId);
+    ctx.result(JsonbBuilder.create().toJson(new CreatedEntity(planId))).contentType("application/json");
   }
 
   private void putPlan(final Context ctx) throws ValidationException, NoSuchPlanException {
