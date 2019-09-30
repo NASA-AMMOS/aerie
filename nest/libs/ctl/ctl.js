@@ -3084,19 +3084,23 @@ ResourceBand.prototype.getYFromValueLog = function(value) {
 
     // Find which ticks the value is within.
     // I.e. minTick <= value <= maxTick.
-    for (let i = 0; i < ticks.length; ++i) {
-      let tick = ticks[i];
-      let nextTick =  ticks[i + 1];
-
-      if (i < ticks.length - 1 && value >= tick && value <= nextTick) {
-        minTick = tick;
-        maxTick = nextTick;
-        break;
-      }
-      else {
-        minTick = ticks[i - 1];
-        maxTick = tick;
-      }
+    if (value < 1) {
+        return this.logTickToCanvasHeight["-1"];
+    } else {
+        for (let i = 0; i < ticks.length; ++i) {
+          let tick = ticks[i];
+          let nextTick =  ticks[i + 1];
+    
+          if (i < ticks.length - 1 && value >= tick && value <= nextTick) {
+            minTick = tick;
+            maxTick = nextTick;
+            break;
+          }
+          else {
+            minTick = ticks[i - 1];
+            maxTick = tick;
+          }
+        }
     }
 
     // Feature scaling.
@@ -3497,6 +3501,9 @@ ResourceDecorator.prototype.paintValueTicks = function(xStart) {
       if (this.band.logTicks) {
 
         if (!this.band.hideTicks) {
+          if (renderedValue === "-1") {
+              renderedValue = "<1";
+          }
           ctx.fillText(renderedValue, axisLabelsXVal, this.band.height - yVal);
         }
         this.band.logTickToCanvasHeight[value] = this.band.height - yVal; // Maps tick values to Canvas positions.
@@ -6462,9 +6469,16 @@ var Util = {
     */
   computeTickValuesLog: function(min, max) {
     let ticks = [];
-    let tick = Util.roundToNearestPowerOf10(min);
 
-    ticks.push(tick.toString());
+    if (min < 1) {
+      let minLogTick = Math.floor(Math.log10(min));
+      ticks.push ("0");
+      ticks.push ("-1");
+      tick = 1;
+    } else {
+        let tick = Util.roundToNearestPowerOf10(min);
+        ticks.push(tick.toString());
+    }
 
     // Compute log ticks. All ticks should be powers of 10.
     while (tick < Util.roundToNearestPowerOf10(max)) {
