@@ -6472,7 +6472,7 @@ var Util = {
 
     if (min < 1) {
       let minLogTick = Math.floor(Math.log10(min));
-      ticks.push ("0");
+      ticks.push ("1");
       ticks.push ("-1");
       tick = 1;
     } else {
