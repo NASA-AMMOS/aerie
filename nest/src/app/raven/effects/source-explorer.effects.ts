@@ -1763,6 +1763,7 @@ export class SourceExplorerEffects {
                   band: toCompositeBand(subBand),
                   sourceId,
                 }),
+                LayoutActions.resize(),
               );
             }
 
