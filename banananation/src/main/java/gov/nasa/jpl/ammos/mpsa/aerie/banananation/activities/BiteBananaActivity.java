@@ -1,10 +1,12 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.IncrementState;
+import gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.OutputState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.SettableState;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,12 +20,9 @@ import java.util.List;
  * @contact John Doe
  */
 @ActivityType("BiteBanana")
-public final class BiteBananaActivity implements Activity {
+public final class BiteBananaActivity implements Activity<BananaStates> {
   @Parameter
   public double biteSize = 1.0;
-
-  @OutputState("fruit")
-  public IncrementState<Double> fruitState = null;
 
   @Override
   public List<String> validateParameters() {
@@ -37,7 +36,8 @@ public final class BiteBananaActivity implements Activity {
   }
 
   @Override
-  public void modelEffects() {
-    fruitState.decrementBy(biteSize);
+  public void modelEffects(SimulationContext<BananaStates> ctx, BananaStates states) {
+    SettableState<Double> fruitState = states.fruitState;
+    fruitState.setValue(fruitState.getValue() - biteSize);
   }
 }

@@ -1,10 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.IncrementState;
+import gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.OutputState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,17 +21,11 @@ import java.util.List;
  * @contact Jane Doe
  */
 @ActivityType("PeelBanana")
-public final class PeelBananaActivity implements Activity {
+public final class PeelBananaActivity implements Activity<BananaStates> {
   private static final double MASHED_BANANA_AMOUNT = 1.0;
 
   @Parameter
   public String peelDirection = "fromStem";
-
-  @OutputState("fruit")
-  public IncrementState<Double> fruitState = null;
-
-  @OutputState("peel")
-  public IncrementState<Double> peelState = null;
 
   @Override
   public List<String> validateParameters() {
@@ -44,11 +39,11 @@ public final class PeelBananaActivity implements Activity {
   }
 
   @Override
-  public void modelEffects() {
+  public void modelEffects(SimulationContext<BananaStates> ctx, BananaStates states) {
     if (peelDirection.equals("fromStem")) {
-      fruitState.decrementBy(MASHED_BANANA_AMOUNT);
+      states.fruitState.setValue(states.fruitState.getValue() - MASHED_BANANA_AMOUNT);
     }
 
-    peelState.decrementBy(1.0);
+    states.peelState.setValue(states.peelState.getValue() - 1.0);
   }
 }

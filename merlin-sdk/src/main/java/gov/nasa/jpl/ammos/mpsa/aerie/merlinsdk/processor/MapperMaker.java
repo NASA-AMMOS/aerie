@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.processor;
 
-import com.squareup.javapoet.AnnotationSpec;
+
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
@@ -8,11 +8,17 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.WildcardTypeName;
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.AnnotationSpec;
+
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 
 import javax.annotation.processing.Generated;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -181,15 +187,17 @@ class MapperMaker {
 
       parameterInjectionBlock = blockBuilder.build();
     }
-
+    
     return MethodSpec
         .methodBuilder("deserializeActivity")
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
         .addParameter(serializedActivitySpec)
-        .returns(TypeName.get(typeUtils.getDeclaredType(
-            elementUtils.getTypeElement(Optional.class.getCanonicalName()),
-            elementUtils.getTypeElement(Activity.class.getCanonicalName()).asType())))
+        .returns(ParameterizedTypeName.get(
+                ClassName.get(Optional.class),
+                ParameterizedTypeName.get(
+                        ClassName.get(Activity.class),
+                        WildcardTypeName.subtypeOf(StateContainer.class))))
         .beginControlFlow("if (!$L.getTypeName().equals($L))", serializedActivitySpec.name, activityTypeNameSpec.name)
         .addStatement("return $T.empty()", Optional.class)
         .endControlFlow()
