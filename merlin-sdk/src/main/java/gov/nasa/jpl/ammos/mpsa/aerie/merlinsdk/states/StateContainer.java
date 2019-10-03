@@ -12,5 +12,5 @@ public interface StateContainer {
      * 
      * @return a list of all states within the structure
      */
-    public List<SettableState<?>> getStateList();
+    public List<State<?>> getStateList();
 }

@@ -12,7 +12,7 @@ import java.util.concurrent.Executors;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityJob;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.SettableState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
@@ -236,8 +236,8 @@ public class SimulationEngine<T extends StateContainer> {
      * 
      * @param stateList the list of states to be registered
      */
-    public void registerStates(List<SettableState<?>> stateList) {
-        for (SettableState<?> state : stateList) {
+    public void registerStates(List<State<?>> stateList) {
+        for (State<?> state : stateList) {
             state.setEngine(this);
         }
     }

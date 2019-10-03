@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +32,7 @@ public class CompositeActivityMapper implements ActivityMapper {
   }
 
   @Override
-  public Optional<Activity> deserializeActivity(final SerializedActivity activity) {
+  public Optional<Activity<? extends StateContainer>> deserializeActivity(final SerializedActivity activity) {
     final String activityType = activity.getTypeName();
     return lookupMapper(activityType).flatMap(m -> m.deserializeActivity(activity));
   }

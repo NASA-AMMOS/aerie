@@ -12,6 +12,10 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.SettableState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityThread;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.SettableState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
@@ -19,12 +23,12 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 public class SimulationEngineTests {
 
     public class DiverseStates implements StateContainer {
-        public final SettableState<Double> floatState = new SettableState<>();
-        public final SettableState<String> stringState = new SettableState<>();
-        public final SettableState<List<Double>> arrayState = new SettableState<>();
-        public final SettableState<Boolean> booleanState = new SettableState<>();
+        public final SettableState<Double> floatState = new SettableState<>("FLOAT_STATE", 0.0);
+        public final SettableState<String> stringState = new SettableState<>("STRING_STATE", "A");
+        public final SettableState<List<Double>> arrayState = new SettableState<>("ARRAY_STATE", List.of(1.0, 0.0, 0.0));
+        public final SettableState<Boolean> booleanState = new SettableState<>("BOOLEAN_STATE", true);
 
-        public List<SettableState<?>> getStateList() {
+        public List<State<?>> getStateList() {
             return List.of(floatState, stringState, arrayState, booleanState);
         }
     }
@@ -90,7 +94,7 @@ public class SimulationEngineTests {
         Time simStart = new Time();
 
         List<ActivityJob<DiverseStates>> actList = new ArrayList<>();
-        for (int i = 0; i < 100000; i++) {
+        for (int i = 0; i < 1000; i++) {
             ParentActivity act = new ParentActivity();
             {
                 act.floatValue = 1.0;
