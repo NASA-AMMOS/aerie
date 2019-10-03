@@ -42,7 +42,7 @@ export class ActivityTypeListComponent implements OnChanges {
 
   filterActivityTypes(text: string): void {
     this.filteredActivityTypes = this.activityTypes.filter(activityType =>
-      activityType.activityClass.toLowerCase().includes(text.toLowerCase()),
+      activityType.name.toLowerCase().includes(text.toLowerCase()),
     );
     this.searchText = text;
   }

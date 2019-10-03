@@ -86,7 +86,12 @@ export class ActivityFormComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     // Editing selectedActivity
-    if (changes.activity && this.activity && !this.isNew) {
+    if (
+      changes.activity &&
+      this.activity &&
+      !this.isNew &&
+      this.activity.start
+    ) {
       this.form.patchValue({
         ...this.activity,
         start: new Date(this.activity.start * 1000),
@@ -98,7 +103,7 @@ export class ActivityFormComponent implements OnInit, OnChanges {
     // Create new activity from selecting activityType from activityType list
     if (changes.selectedActivityType && this.selectedActivityType) {
       this.form.patchValue({
-        activityType: this.selectedActivityType.activityClass,
+        activityType: this.selectedActivityType.name,
       });
     }
 
@@ -128,7 +133,7 @@ export class ActivityFormComponent implements OnInit, OnChanges {
    * @todo revisit this when schema for activity instances is finalized
    */
   onSubmit(value: ActivityInstance) {
-    if (this.form.valid) {
+    if (this.form.valid && value.start) {
       const start = this.transformTime(value.start);
 
       if (!this.isNew && this.activity) {

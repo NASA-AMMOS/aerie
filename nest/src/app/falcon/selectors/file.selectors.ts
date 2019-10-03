@@ -8,9 +8,9 @@
  */
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { SequenceFile } from '../../../../../sequencing/src/models';
 import { StringTMap } from '../../shared/models';
 import { State } from '../falcon-store';
+import { SequenceFile } from '../models';
 import { FileState } from '../reducers/file.reducer';
 
 const featureSelector = createFeatureSelector<State>('falcon');

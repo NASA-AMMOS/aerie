@@ -25,7 +25,11 @@ import {
   RavenSubBand,
   RavenUpdate,
 } from '../../models';
-import { defaultColors, getBandLabel } from '../../util';
+import {
+  defaultColors,
+  getBandLabel,
+  getNumericStateBandsWithUniquePossibleStates,
+} from '../../util';
 
 @Component({
   selector: 'raven-settings-bands-dialog',
@@ -232,20 +236,10 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
    * Event. Change plot type changes the height and heightPadding. Height of CompositeBand needs to include heightPadding for top and bottom tick labels to show in a line plot.
    */
   changePlotType(subBand: RavenSubBand, isNumeric: boolean) {
-    this.updateBand({
-      bandId: this.selectedBandId,
-      subBandId: subBand.id,
-      update: {
-        height: isNumeric ? 100 : 50,
-        heightPadding: isNumeric ? 20 : 0,
-      },
-    });
-
     this.updateSubBand({
       bandId: this.selectedBandId,
       subBandId: subBand.id,
       update: {
-        height: isNumeric ? 100 : 50,
         heightPadding:
           isNumeric || (subBand as RavenStateBand).showStateChangeTimes
             ? 10
@@ -266,7 +260,7 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
       bandId: this.selectedBandId,
       subBandId: subBand.id,
       update: {
-        heightPadding: showStateChangeTimes ? 12 : 0,
+        heightPadding: showStateChangeTimes ? 10 : 0,
         showStateChangeTimes,
       },
     });
@@ -286,15 +280,19 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
   }
 
   /**
-   * Helper. Returns true if the selected band contains more than one resource sub-band. False otherwise.
+   * Helper. Returns true if the selected band contains more than one resource sub-band or multiple state bands with identical possible states.
+   * False otherwise.
    */
-  containsMultipleResourceBands(): boolean {
+  containsMultipleResourceBandsOrIdenticalPossibleValueStateBands(): boolean {
     const subBands = this.bandsById[this.selectedBandId].subBands;
     const resourceCount = subBands.reduce(
       (count, subBand) => (subBand.type === 'resource' ? count + 1 : count),
       0,
     );
-    return resourceCount > 1;
+    return (
+      resourceCount > 1 ||
+      getNumericStateBandsWithUniquePossibleStates(this.subBands).length > 0
+    );
   }
 
   /**

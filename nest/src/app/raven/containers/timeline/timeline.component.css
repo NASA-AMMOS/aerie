@@ -70,7 +70,7 @@ mat-sidenav-container {
 
 .row {
   flex: 1 0 auto;
-  padding-left: 18px;
+  margin-left: 18px;
 }
 
 .north-container {

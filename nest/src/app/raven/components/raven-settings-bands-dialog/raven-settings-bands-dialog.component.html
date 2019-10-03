@@ -159,6 +159,29 @@
               </div>
             </ng-container>
 
+            <!-- Composite Y-axis. -->
+            <div
+              *ngIf="
+                containsMultipleResourceBandsOrIdenticalPossibleValueStateBands()
+              "
+              class="field"
+            >
+              <mat-slide-toggle
+                id="raven-settings-composite-y-axis"
+                color="accent"
+                [checked]="bandsById[selectedBandId].compositeYAxisLabel"
+                (change)="
+                  updateBandAndSubBand({
+                    bandId: selectedBandId,
+                    subBandId: subBand.id,
+                    update: { compositeYAxisLabel: $event.checked }
+                  })
+                "
+              >
+                Composite Y-axis Label
+              </mat-slide-toggle>
+            </div>
+
             <!-- Resource Band Settings for Label Unit and Show Label Unit. -->
             <ng-container *ngIf="subBand.type === 'resource'">
               <!-- Label Unit. -->
@@ -178,24 +201,6 @@
                     "
                   />
                 </mat-form-field>
-              </div>
-
-              <!-- Composite Y-axis. -->
-              <div *ngIf="containsMultipleResourceBands()" class="field">
-                <mat-slide-toggle
-                  id="raven-settings-composite-y-axis"
-                  color="accent"
-                  [checked]="bandsById[selectedBandId].compositeYAxisLabel"
-                  (change)="
-                    updateBandAndSubBand({
-                      bandId: selectedBandId,
-                      subBandId: subBand.id,
-                      update: { compositeYAxisLabel: $event.checked }
-                    })
-                  "
-                >
-                  Composite Y-axis Label
-                </mat-slide-toggle>
               </div>
 
               <!-- Show Label Unit. -->

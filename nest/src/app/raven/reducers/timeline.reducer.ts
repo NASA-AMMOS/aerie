@@ -758,9 +758,13 @@ export const reducer = createReducer(
     };
   }),
   on(TimelineActions.toggleGuide, (state, action) => {
-    const withinFivePixels = (guide: number) =>
-      Math.abs(action.guide.guideTime - guide) / action.guide.timePerPixel <= 5;
-    const existingGuide = state.guides.filter(guide => withinFivePixels(guide));
+    const withinThreePixels = (guide: number) =>
+      (Math.abs(action.guide.guideTime - guide) * 1000) /
+        action.guide.milliSecPerPixel <=
+      3;
+    const existingGuide = state.guides.filter(guide =>
+      withinThreePixels(guide),
+    );
     return {
       ...state,
       currentStateChanged: state.currentState !== null,

@@ -173,7 +173,7 @@ export class RavenGuideBandComponent
   onLeftClick(e: MouseEvent, ctlData: any) {
     this.toggleGuide.emit({
       guideTime: ctlData.time,
-      timePerPixel: this.ctlTimeAxis.getTimePerPixel(),
+      milliSecPerPixel: this.ctlViewTimeAxis.getMilliSecPerPixel(),
     });
   }
 

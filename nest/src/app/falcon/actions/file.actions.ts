@@ -8,7 +8,7 @@
  */
 
 import { createAction, props } from '@ngrx/store';
-import { SequenceFile } from '../../../../../sequencing/src/models';
+import { SequenceFile } from '../models';
 
 export const addEditor = createAction('[falcon-file] add_editor');
 

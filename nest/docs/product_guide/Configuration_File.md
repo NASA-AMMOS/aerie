@@ -23,9 +23,6 @@ export interface ConfigState {
     itarMessage: string;
     shareableLinkStatesUrl: string;
   };
-  sequencing: {
-    // TODO. Add sequencing specific config here.
-  };
 }
 ```
 

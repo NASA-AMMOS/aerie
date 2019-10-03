@@ -15,5 +15,4 @@ export const environment = {
   // baseUrl: 'https://localhost:8443',
   planServiceBaseUrl: `${windowBaseUrl}:27183/api`,
   production: false,
-  sequencingServiceBaseUrl: `${windowBaseUrl}:27186/sequencing`,
 };

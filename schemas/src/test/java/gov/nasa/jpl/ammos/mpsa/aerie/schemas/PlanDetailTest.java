@@ -13,7 +13,7 @@ public class PlanDetailTest {
     public void testValidateValidPlan() throws IOException {
         final PlanDetail plan = new PlanDetail("adaptation-1", "2008-05-11T15:30:00", "id-1", "plan-1", "2007-03-01T13:00:00Z", new ArrayList<>());
 
-        assertThat(Validator.validate(plan)).isTrue();
+        assertThat(Validator.findValidationFailures(plan)).isEmpty();
     }
 
     @Test
@@ -21,6 +21,6 @@ public class PlanDetailTest {
     public void testValidatePlanWithNoId() throws IOException {
         final PlanDetail plan = new PlanDetail("adaptation-1", "2008-05-11T15:30:00", null, "plan-1", "2007-03-01T13:00:00Z", new ArrayList<>());
 
-        assertThat(Validator.validate(plan)).isFalse();
+        assertThat(Validator.findValidationFailures(plan)).isNotEmpty();
     }
 }

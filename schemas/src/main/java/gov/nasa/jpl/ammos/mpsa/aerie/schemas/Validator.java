@@ -11,6 +11,7 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import java.net.URL;
+import java.util.List;
 
 public class Validator {
     private static Schema loadSchema(URL resourceUrl) throws IOException {
@@ -28,87 +29,87 @@ public class Validator {
         }
     }
 
-    private static boolean validate(final Schema schema, final JSONObject object) {
+    private static List<String> findValidationFailures(final Schema schema, final JSONObject object) {
         try {
             schema.validate(object);
-            return true;
+            return List.of();
         } catch (final ValidationException ex) {
-            return false;
+            return ex.getAllMessages();
         }
     }
 
-    public static boolean validate(final ActivityInstance instance) throws IOException {
+    public static List<String> findValidationFailures(final ActivityInstance instance) throws IOException {
         final Schema schema = loadSchema(Validator.class.getResource("activity-instance.json"));
-        return validate(schema, new JSONObject(instance));
+        return findValidationFailures(schema, new JSONObject(instance));
     }
 
-    public static boolean validate(final ActivityInstanceConstraint constraint) throws IOException {
+    public static List<String> findValidationFailures(final ActivityInstanceConstraint constraint) throws IOException {
         final Schema schema = loadSchema(Validator.class.getResource("activity-instance-constraint.json"));
-        return validate(schema, new JSONObject(constraint));
+        return findValidationFailures(schema, new JSONObject(constraint));
     }
 
-    public static boolean validate(final ActivityInstanceParameter parameter) throws IOException {
+    public static List<String> findValidationFailures(final ActivityInstanceParameter parameter) throws IOException {
         final Schema schema = loadSchema(Validator.class.getResource("activity-instance-parameter.json"));
-        return validate(schema, new JSONObject(parameter));
+        return findValidationFailures(schema, new JSONObject(parameter));
     }
 
-    public static boolean validate(final ActivityType type) throws IOException {
+    public static List<String> findValidationFailures(final ActivityType type) throws IOException {
         final Schema schema = loadSchema(Validator.class.getResource("activity-type.json"));
-        return validate(schema, new JSONObject(type));
+        return findValidationFailures(schema, new JSONObject(type));
     }
 
-    public static boolean validate(final ActivityTypeParameter parameter) throws IOException {
+    public static List<String> findValidationFailures(final ActivityTypeParameter parameter) throws IOException {
         final Schema schema = loadSchema(Validator.class.getResource("activity-type-parameter.json"));
-        return validate(schema, new JSONObject(parameter));
+        return findValidationFailures(schema, new JSONObject(parameter));
     }
 
-    public static boolean validate(final Adaptation adaptation) throws IOException {
+    public static List<String> findValidationFailures(final Adaptation adaptation) throws IOException {
         final Schema schema = loadSchema(Validator.class.getResource("adaptation.json"));
-        return validate(schema, new JSONObject(adaptation));
+        return findValidationFailures(schema, new JSONObject(adaptation));
     }
 
-    public static boolean validate(final AmqpMessage adaptation) throws IOException {
+    public static List<String> findValidationFailures(final AmqpMessage adaptation) throws IOException {
         final Schema schema = loadSchema(Validator.class.getResource("amqp-message.json"));
-        return validate(schema, new JSONObject(adaptation));
+        return findValidationFailures(schema, new JSONObject(adaptation));
     }
 
-    public static boolean validate(final AmqpMessageData adaptation) throws IOException {
+    public static List<String> findValidationFailures(final AmqpMessageData adaptation) throws IOException {
         final Schema schema = loadSchema(Validator.class.getResource("amqp-message-data.json"));
-        return validate(schema, new JSONObject(adaptation));
+        return findValidationFailures(schema, new JSONObject(adaptation));
     }
 
-    public static boolean validate(final AmqpMessageTypeEnum adaptation) throws IOException {
+    public static List<String> findValidationFailures(final AmqpMessageTypeEnum adaptation) throws IOException {
         final Schema schema = loadSchema(Validator.class.getResource("amqp-message-type-enum.json"));
-        return validate(schema, new JSONObject(adaptation));
+        return findValidationFailures(schema, new JSONObject(adaptation));
     }
 
-    public static boolean validate(final CommandDictionary dictionary) throws IOException {
+    public static List<String> findValidationFailures(final CommandDictionary dictionary) throws IOException {
         final Schema schema = loadSchema(Validator.class.getResource("command-dictionary.json"));
-        return validate(schema, new JSONObject(dictionary));
+        return findValidationFailures(schema, new JSONObject(dictionary));
     }
 
-    public static boolean validate(final MpsCommand command) throws IOException {
+    public static List<String> findValidationFailures(final MpsCommand command) throws IOException {
         final Schema schema = loadSchema(Validator.class.getResource("mps-command.json"));
-        return validate(schema, new JSONObject(command));
+        return findValidationFailures(schema, new JSONObject(command));
     }
 
-    public static boolean validate(final MpsCommandParameter parameter) throws IOException {
+    public static List<String> findValidationFailures(final MpsCommandParameter parameter) throws IOException {
         final Schema schema = loadSchema(Validator.class.getResource("mps-command-parameter.json"));
-        return validate(schema, new JSONObject(parameter));
+        return findValidationFailures(schema, new JSONObject(parameter));
     }
 
-    public static boolean validate(final Plan plan) throws IOException {
+    public static List<String> findValidationFailures(final Plan plan) throws IOException {
         final Schema schema = loadSchema(Validator.class.getResource("plan.json"));
-        return validate(schema, new JSONObject(plan));
+        return findValidationFailures(schema, new JSONObject(plan));
     }
 
-    public static boolean validate(final PlanDetail plan) throws IOException {
+    public static List<String> findValidationFailures(final PlanDetail plan) throws IOException {
         final Schema schema = loadSchema(Validator.class.getResource("plan-detail.json"));
-        return validate(schema, new JSONObject(plan));
+        return findValidationFailures(schema, new JSONObject(plan));
     }
 
-    public static boolean validate(Schedule schedule) throws IOException {
+    public static List<String> findValidationFailures(Schedule schedule) throws IOException {
         final Schema schema = loadSchema(Validator.class.getResource("schedule.json"));
-        return validate(schema, new JSONObject(schedule));
+        return findValidationFailures(schema, new JSONObject(schedule));
     }
 }

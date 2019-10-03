@@ -49,18 +49,22 @@ export class RouterEffects {
 
         if (shareableName) {
           // If there is an `s` query parameter then use it to load a shareable link.
-          SourceExplorerActions.updateSourceExplorer({
-            update: { shareableName },
-          });
+          actions.push(
+            SourceExplorerActions.updateSourceExplorer({
+              update: { shareableName },
+            }),
+          );
         } else {
           // Otherwise use other query parameters to load an app layout and/or state.
-          SourceExplorerActions.updateSourceExplorer({
-            update: {
-              layoutPath,
-              sourcePath,
-              statePath,
-            },
-          });
+          actions.push(
+            SourceExplorerActions.updateSourceExplorer({
+              update: {
+                layoutPath,
+                sourcePath,
+                statePath,
+              },
+            }),
+          );
         }
 
         return actions;

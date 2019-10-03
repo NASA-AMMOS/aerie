@@ -46,20 +46,6 @@ services:
     ports: ["27185:27185"]
     restart: always
     volumes: ["simulation_logs:/var/log/simulation"]
-  sequencing:
-    build:
-      context: sequencing
-      dockerfile: Dockerfile
-    command: ["npm", "run", "start:dev"]
-    depends_on: ["sequencing_mongo"]
-    ports: ["27186:27186"]
-    restart: always
-    volumes: ["sequencing_logs:/var/log/sequencing"]
-  sequencing_mongo:
-    command: ["mongod", "--port", "27019"]
-    image: mongo:3.2
-    ports: ["27019:27019"]
-    volumes: ["sequencing_mongo_data:/data/db"]
 
   rabbitmq:
     image: rabbitmq:3
@@ -87,11 +73,9 @@ services:
 volumes:
   adaptation_files:
   adaptation_logs:
-  adaptation_mongo:
+  adaptation_mongo_data:
   plan_logs:
   plan_mongo_data:
   rabbitmq_data:
   tyk_redis_data:
   simulation_logs:
-  sequencing_logs:
-  sequencing_mongo_data:

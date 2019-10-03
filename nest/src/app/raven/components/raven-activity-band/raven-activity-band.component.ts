@@ -401,6 +401,7 @@ export class RavenActivityBandComponent
         !intervalsById[point.uniqueId] &&
         point.pointStatus !== 'deleted' &&
         !point.hidden &&
+        point.start > 0 &&
         !this.excludeActivityTypes.includes(point.activityType)
       ) {
         const interval = new (window as any).DrawableInterval({

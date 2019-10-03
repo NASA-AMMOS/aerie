@@ -77,6 +77,7 @@ export class ActivityFormFullComponent implements OnInit, OnChanges {
     if (
       changes.selectedActivity &&
       this.selectedActivity !== null &&
+      this.selectedActivity.start &&
       !this.isNew &&
       this.form
     ) {
@@ -98,13 +99,7 @@ export class ActivityFormFullComponent implements OnInit, OnChanges {
         this.fb.array(
           this.selectedActivity.parameters.map(parameter =>
             this.fb.group({
-              defaultValue: new FormControl(parameter.defaultValue),
               name: new FormControl(parameter.name),
-              range: this.fb.array(
-                parameter.range
-                  ? parameter.range.map(range => new FormControl(range))
-                  : [],
-              ),
               type: new FormControl(parameter.type),
               value: new FormControl(parameter.value),
             }),
@@ -115,7 +110,7 @@ export class ActivityFormFullComponent implements OnInit, OnChanges {
   }
 
   onSubmit(value: ActivityInstance) {
-    if (this.form.valid) {
+    if (this.form.valid && value.start) {
       if (!this.isNew) {
         this.updateActivity.emit({
           ...value,

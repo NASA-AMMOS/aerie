@@ -10,7 +10,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { SequenceFile } from '../../../../../sequencing/src/models';
+import { SequenceFile } from '../models';
 import { FileServiceInterface } from './file-service-interface';
 
 @Injectable({

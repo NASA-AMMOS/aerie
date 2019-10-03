@@ -39,7 +39,26 @@ export class PlanEffects {
       withLatestFrom(this.store),
       map(([action, state]) => ({ action, state })),
       switchMap(({ action, state }) => {
-        const end = action.data.start + action.data.duration;
+        const start = action.data.start as number;
+        const duration = action.data.duration as number;
+        const end = start + duration;
+        const parameters = [];
+
+        // TODO. Add default parameters in a better way.
+        if (action.data.activityType === 'PeelBanana') {
+          parameters.push({
+            name: 'peelDirection',
+            type: 'String',
+            value: 'down',
+          });
+        } else if (action.data.activityType === 'BiteBanana') {
+          parameters.push({
+            name: 'biteSize',
+            type: 'Double',
+            value: '2.0',
+          });
+        }
+
         const activity: ActivityInstance = {
           activityId: action.data.activityId || '',
           activityType: action.data.activityType,
@@ -51,9 +70,9 @@ export class PlanEffects {
           intent: action.data.intent,
           listeners: [],
           name: action.data.name,
-          parameters: [],
+          parameters,
           start: action.data.start,
-          startTimestamp: timestamp(action.data.start),
+          startTimestamp: timestamp(start),
           textColor: action.data.textColor,
           y: 0,
         };
@@ -65,18 +84,20 @@ export class PlanEffects {
             activity,
           )
           .pipe(
-            switchMap((newActivity: ActivityInstance) => [
-              PlanActions.createActivitySuccess({
-                activity: newActivity,
-                planId: action.planId,
-              }),
-              ToastActions.showToast({
-                message:
-                  'New activity has been successfully created and saved.',
-                title: 'Create Activity Success',
-                toastType: 'success',
-              }),
-            ]),
+            switchMap(([activityId]) => {
+              return [
+                PlanActions.createActivitySuccess({
+                  activity: { ...activity, activityId },
+                  planId: action.planId,
+                }),
+                ToastActions.showToast({
+                  message:
+                    'New activity has been successfully created and saved.',
+                  title: 'Create Activity Success',
+                  toastType: 'success',
+                }),
+              ];
+            }),
             catchError((error: Error) => [
               PlanActions.createActivityFailure({ error }),
               ToastActions.showToast({

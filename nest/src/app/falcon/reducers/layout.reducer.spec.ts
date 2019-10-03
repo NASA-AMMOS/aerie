@@ -56,18 +56,6 @@ describe('Layout reducer', () => {
     });
   });
 
-  it('should handle ToggleLeftPanelVisible', () => {
-    const result = reducer(
-      initialState,
-      LayoutActions.toggleLeftPanelVisible(),
-    );
-
-    expect(result).toEqual({
-      ...initialState,
-      leftPanelVisible: false,
-    });
-  });
-
   it('should handle ToggleRightPanelVisible', () => {
     const result = reducer(
       initialState,

@@ -63,7 +63,9 @@ export class LayoutEffects {
         if (action.opened && state.raven.timeline.currentStateId !== '') {
           return this.http
             .get(
-              `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${state.raven.timeline.currentStateId}`,
+              state.raven.sourceExplorer.treeBySourceId[
+                state.raven.timeline.currentStateId
+              ].url,
             )
             .pipe(
               map(res => importState(res[0])),

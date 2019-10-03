@@ -323,12 +323,7 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
       this.updateSubBand.emit({
         prop: 'heightPadding',
         subBandId: this.id,
-        value: this.showStateChangeTimes ? 12 : 0,
-      });
-      this.updateSubBand.emit({
-        prop: 'height',
-        subBandId: this.id,
-        value: this.showStateChangeTimes ? this.height - 12 : this.height,
+        value: this.showStateChangeTimes ? 10 : 0,
       });
     }
 
@@ -378,7 +373,7 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
         baselineLabel: this.baselineLabel,
         borderWidth: this.borderWidth,
         font: `normal ${this.stateLabelFontSize}px Verdana`,
-        height: this.height - this.heightPadding,
+        height: this.height,
         heightPadding: this.heightPadding,
         id: this.id,
         intervals: [],
@@ -524,7 +519,7 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
     for (let i = 0, l = this.points.length; i < l; ++i) {
       const point = this.points[i];
 
-      if (point.pointStatus !== 'deleted') {
+      if (point.pointStatus !== 'deleted' && point.start > 0) {
         const interval = new (window as any).DrawableInterval({
           color: null,
           end: point.end,

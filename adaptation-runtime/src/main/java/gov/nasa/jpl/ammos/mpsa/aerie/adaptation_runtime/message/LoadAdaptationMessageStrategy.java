@@ -12,6 +12,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import java.nio.file.Path;
 import java.util.HashMap;
 
 public class LoadAdaptationMessageStrategy implements MessageStrategy {
@@ -41,7 +42,7 @@ public class LoadAdaptationMessageStrategy implements MessageStrategy {
 
       try {
         MerlinAdaptation userAdaptation =
-            AdaptationUtils.loadAdaptation(adaptation.getLocation());
+            AdaptationUtils.loadAdaptation(Path.of(adaptation.getLocation()));
         if (userAdaptation == null) {
           logger.error("loadAdaptation returned a null value for adaptation " + adaptationId);
           return;

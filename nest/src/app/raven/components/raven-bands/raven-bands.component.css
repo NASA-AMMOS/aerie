@@ -12,10 +12,49 @@
   padding-bottom: 10px;
 }
 
+.addTo {
+  color: orange;
+}
+
+.bands {
+  margin-left: 18px;
+}
+
+.hovered {
+  z-index: 1;
+}
+
+.icon-div {
+  position: relative;
+  left: 0px;
+  top: 0px;
+  width: 18px;
+  height: 0px;
+  display: flex;
+  flex-direction: column;
+}
+
+.icons {
+  cursor: pointer;
+  font-size: 18px;
+  height: 18px;
+  margin-bottom: 2px;
+}
+
+.overlay {
+  color: blue;
+}
+
 .sortable-bands {
   padding-bottom: 20px;
 }
 
 .sortable-placeholder {
   background-color: rgb(230, 230, 250);
+}
+
+div.hovered {
+  border-style: solid;
+  border-color: grey;
+  border-width: 1px;
 }

@@ -30,7 +30,10 @@ import {
   RavenSubBand,
   RavenUpdate,
 } from '../../models';
-import { bandById } from '../../util/bands';
+import {
+  bandById,
+  getNumericStateBandsWithUniquePossibleStates,
+} from '../../util/bands';
 import { colorHexToRgbArray } from '../../util/color';
 
 @Component({
@@ -236,10 +239,7 @@ export class RavenCompositeBandComponent
       this.ctlCompositeBand.height = this.height;
       for (let i = 0, l = this.ctlCompositeBand.bands.length; i < l; ++i) {
         const ctlSubBand = this.ctlCompositeBand.bands[i];
-        // CtlSubBand height needs to exclude heightPadding.
-        ctlSubBand.height = ctlSubBand.heightPadding
-          ? this.height - ctlSubBand.heightPadding
-          : this.height;
+        ctlSubBand.height = this.height;
       }
 
       shouldRedraw = true;
@@ -265,7 +265,10 @@ export class RavenCompositeBandComponent
       this.ctlTimeAxis.lastClickTime = this.showLastClick
         ? this.lastClickTime
         : null;
-      shouldRedraw = true;
+      shouldRedraw =
+        this.lastClickTime && this.lastClickTime > this.ctlViewTimeAxis.start
+          ? true
+          : false;
     }
 
     // Max Time Range.
@@ -450,49 +453,74 @@ export class RavenCompositeBandComponent
    * Only show ticks for one sub-band.
    */
   computeMinMaxTickValuesForCompositeScale() {
-    let resourceBandCounter = 0;
-    let min = null;
-    let max = null;
+    const subBands = this.subBands;
+    const resourceCount = subBands.reduce(
+      (count, subBand) => (subBand.type === 'resource' ? count + 1 : count),
+      0,
+    );
+    if (resourceCount > 1) {
+      let resourceBandCounter = 0;
+      let min = null;
+      let max = null;
 
-    for (
-      let i = 0, length = this.ctlCompositeBand.bands.length;
-      i < length;
-      ++i
-    ) {
-      const band = this.ctlCompositeBand.bands[i];
+      for (
+        let i = 0, length = this.ctlCompositeBand.bands.length;
+        i < length;
+        ++i
+      ) {
+        const band = this.ctlCompositeBand.bands[i];
+        if (band.type === 'resource') {
+          band.autoScale = this.getResourceAutoScale(this.compositeAutoScale);
+          // Clear tickValues here to make sure computeMinMaxValues works properly for logTicks.
+          band.tickValues = [];
+          band.computeMinMaxValues();
+          band.computeMinMaxPaintValues();
+          min = min ? Math.min(min, band.minPaintValue) : band.minPaintValue;
+          max = max ? Math.max(max, band.maxPaintValue) : band.maxPaintValue;
 
-      if (band.type === 'resource') {
-        band.autoScale = this.getResourceAutoScale(this.compositeAutoScale);
-        // Clear tickValues here to make sure computeMinMaxValues works properly for logTicks.
-        band.tickValues = [];
-        band.computeMinMaxValues();
-        band.computeMinMaxPaintValues();
-        min = min ? Math.min(min, band.minPaintValue) : band.minPaintValue;
-        max = max ? Math.max(max, band.maxPaintValue) : band.maxPaintValue;
-
-        if (resourceBandCounter > 0) {
-          // Keep only one axis for the resource bands.
-          band.hideTicks = true;
+          if (resourceBandCounter > 0) {
+            // Keep only one axis for the resource bands.
+            band.hideTicks = true;
+          }
+          resourceBandCounter++;
         }
-
-        resourceBandCounter++;
       }
-    }
+      // Set minPaintValue and maxPaintValue for all resource bands.
+      for (
+        let i = 0, length = this.ctlCompositeBand.bands.length;
+        i < length;
+        ++i
+      ) {
+        const band = this.ctlCompositeBand.bands[i];
 
-    // Set minPaintValue and maxPaintValue for all resource bands.
-    for (
-      let i = 0, length = this.ctlCompositeBand.bands.length;
-      i < length;
-      ++i
-    ) {
-      const band = this.ctlCompositeBand.bands[i];
-
-      if (band.type === 'resource') {
-        band.maxPaintValue = max;
-        band.minPaintValue = min;
-        band.logTicks = this.compositeLogTicks;
-        band.scientificNotation = this.compositeScientificNotation;
-        band.recomputeTickValues();
+        if (band.type === 'resource') {
+          band.maxPaintValue = max;
+          band.minPaintValue = min;
+          band.logTicks = this.compositeLogTicks;
+          band.scientificNotation = this.compositeScientificNotation;
+          band.recomputeTickValues();
+        }
+      }
+    } else {
+      const numericStateBands = getNumericStateBandsWithUniquePossibleStates(
+        this.subBands,
+      );
+      if (numericStateBands.length > 0) {
+        let resourceBandCounter = 0;
+        for (let i = 0, alength = numericStateBands.length; i < alength; ++i) {
+          for (
+            let j = 0, blength = this.ctlCompositeBand.bands.length;
+            j < blength;
+            ++j
+          ) {
+            if (this.ctlCompositeBand.bands[j].id === numericStateBands[i].id) {
+              if (resourceBandCounter > 0) {
+                this.ctlCompositeBand.bands[j].hideTicks = true;
+              }
+              resourceBandCounter++;
+            }
+          }
+        }
       }
     }
   }
@@ -626,40 +654,6 @@ export class RavenCompositeBandComponent
   }
 
   /**
-   * Event. Called when toggled from overlay mode and go to addTo mode if activity subBand exists.
-   */
-  onSwitchToAddTo() {
-    this.updateOverlay.emit({ bandId: this.id, update: { overlay: false } });
-    const activityBands = this.subBands.filter(
-      band => band.type === 'activity',
-    );
-    if (activityBands && activityBands.length > 0) {
-      this.updateAddTo.emit({
-        bandId: this.id,
-        subBandId: activityBands[0].id,
-        update: { addTo: true },
-      });
-    }
-  }
-
-  /**
-   * Event. Called to exit addTo and return to 'none' mode.
-   */
-  onSwitchToNone() {
-    this.updateOverlay.emit({ bandId: this.id, update: { overlay: false } });
-    const activityBands = this.subBands.filter(
-      band => band.type === 'activity',
-    );
-    if (activityBands && activityBands.length > 0) {
-      this.updateAddTo.emit({
-        bandId: this.id,
-        subBandId: activityBands[0].id,
-        update: { addTo: false },
-      });
-    }
-  }
-
-  /**
    * Event. Called for resource bands when we need to update interpolation.
    * We need this as a separate event because of the `setInterpolation` call.
    */
@@ -746,30 +740,6 @@ export class RavenCompositeBandComponent
   }
 
   /**
-   * Helper. Returns true if this band contains an activity band.
-   */
-  get containActivityBand() {
-    for (let i = 0, l = this.subBands.length; i < l; ++i) {
-      if (this.subBands[i].type === 'activity') {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
-   * Helper. Returns true if a subBand is in addTo mode.
-   */
-  get containAddToBand() {
-    for (let i = 0, l = this.subBands.length; i < l; ++i) {
-      if (this.subBands[i].type === 'activity' && this.subBands[i].addTo) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
    * Helper that returns an auto-scale option for a CTL resource band.
    * VISIBLE_INTERVALS indicates auto-scale of the y-axis ticks.
    * ALL_INTERVALS indicates no auto-scale of the y-axis ticks.
@@ -779,20 +749,6 @@ export class RavenCompositeBandComponent
     return autoScale
       ? ctlResourceBand.VISIBLE_INTERVALS
       : ctlResourceBand.ALL_INTERVALS;
-  }
-
-  /**
-   * Helper. Returns true if this is a divider band.
-   */
-  get isDividerBand() {
-    return this.subBands.length > 0 && this.subBands[0].type === 'divider';
-  }
-
-  /**
-   * Helper. Returns true if band is in overlay or contains a band in addTo mode.
-   */
-  isOverlayAddTo() {
-    return this.overlay || this.containAddToBand;
   }
 
   /**
@@ -868,6 +824,9 @@ export class RavenCompositeBandComponent
           ctlBand.hideTicks = false;
           ctlBand.labelColor = ctlBand.painter.color;
         }
+      } else {
+        // unhide Y-axis label
+        ctlBand.hideTicks = false;
       }
     }
   }

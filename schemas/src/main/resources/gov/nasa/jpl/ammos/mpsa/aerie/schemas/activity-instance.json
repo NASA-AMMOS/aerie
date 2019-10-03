@@ -75,20 +75,9 @@
     }
   },
   "required": [
-    "activityId",
     "activityType",
-    "backgroundColor",
-    "constraints",
-    "duration",
-    "end",
-    "endTimestamp",
-    "intent",
-    "name",
     "parameters",
-    "start",
-    "startTimestamp",
-    "textColor",
-    "y"
+    "startTimestamp"
   ],
   "title": "ActivityInstance",
   "type": "object"

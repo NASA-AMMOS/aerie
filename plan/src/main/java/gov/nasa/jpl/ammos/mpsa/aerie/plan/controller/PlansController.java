@@ -76,11 +76,19 @@ public class PlansController {
             }
 
             try {
-                if (!Validator.validate(planDetail)) {
-                    return ResponseEntity.unprocessableEntity().build();
+                final List<String> validationErrors = Validator.findValidationFailures(planDetail);
+                if (!validationErrors.isEmpty()) {
+                    return ResponseEntity.unprocessableEntity().body(validationErrors);
                 }
             } catch (IOException ex) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+
+            // Plan semantic validation (against the adaptation)
+            try {
+                planValidator.validateActivitiesForPlan(planDetail);
+            } catch (PlanValidator.ValidationException e) {
+                return ResponseEntity.unprocessableEntity().body(e.getMessage());
             }
 
             repository.save(planDetail);
@@ -114,11 +122,19 @@ public class PlansController {
         }
 
         try {
-            if (!Validator.validate(existing)) {
-                return ResponseEntity.unprocessableEntity().build();
+            final List<String> validationErrors = Validator.findValidationFailures(existing);
+            if (!validationErrors.isEmpty()) {
+                return ResponseEntity.unprocessableEntity().body(validationErrors);
             }
         } catch (IOException ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+        // Plan semantic validation (against the adaptation)
+        try {
+            planValidator.validateActivitiesForPlan(planDetail);
+        } catch (PlanValidator.ValidationException e) {
+            return ResponseEntity.unprocessableEntity().body(e.getMessage());
         }
 
         repository.save(existing);
@@ -142,8 +158,9 @@ public class PlansController {
 
         // Plan syntax validation
         try {
-            if (!Validator.validate(plan)) {
-                return ResponseEntity.unprocessableEntity().build();
+            final List<String> validationErrors = Validator.findValidationFailures(plan);
+            if (!validationErrors.isEmpty()) {
+                return ResponseEntity.unprocessableEntity().body(validationErrors);
             }
         } catch (IOException ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -181,9 +198,12 @@ public class PlansController {
      * Add a list of activity instances to a plan
      */
     @PostMapping("/{planId}/activity_instances")
-    public ResponseEntity<Object> createActivityInstance(
+    public ResponseEntity<Object> appendActivityInstances(
             @PathVariable("planId") UUID planId,
             @Valid @RequestBody List<ActivityInstance> requestActivityInstanceList) {
+
+        // If the request is valid, we will return a list of IDs for the created instances
+        List<String> createdIDs = new ArrayList<>();
 
         if (!repository.existsById(planId.toString())) {
             return ResponseEntity.notFound().build();
@@ -230,7 +250,9 @@ public class PlansController {
                     }
 
                     activityInstance.setParameters(parameterList);
-                    activityInstance.setActivityId(UUID.randomUUID().toString());
+                    String instanceID = UUID.randomUUID().toString();
+                    activityInstance.setActivityId(instanceID);
+                    createdIDs.add(instanceID);
                 }
             }
         }
@@ -242,8 +264,9 @@ public class PlansController {
 
         // Validate the new activities before adding them to the plan, by validating the entire plan
         try {
-            if (!Validator.validate(planDetail)) {
-                return ResponseEntity.unprocessableEntity().build();
+            final List<String> validationErrors = Validator.findValidationFailures(planDetail);
+            if (!validationErrors.isEmpty()) {
+                return ResponseEntity.unprocessableEntity().body(validationErrors);
             }
         } catch (IOException ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -263,7 +286,7 @@ public class PlansController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
         repository.save(planDetail);
-        return ResponseEntity.created(location).body(planDetail.getActivityInstances());
+        return ResponseEntity.created(location).body(createdIDs);
     }
 
     @GetMapping("/{planId}/activity_instances")
@@ -324,11 +347,19 @@ public class PlansController {
         requestBodyActivityInstance.setActivityId(activityInstance.getActivityId());
 
         try {
-            if (!Validator.validate(requestBodyActivityInstance)) {
-                return ResponseEntity.unprocessableEntity().build();
+            final List<String> validationErrors = Validator.findValidationFailures(requestBodyActivityInstance);
+            if (!validationErrors.isEmpty()) {
+                return ResponseEntity.unprocessableEntity().body(validationErrors);
             }
         } catch (IOException ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+        // Plan semantic validation (against the adaptation)
+        try {
+            planValidator.validateActivitiesForPlan(planDetail);
+        } catch (PlanValidator.ValidationException e) {
+            return ResponseEntity.unprocessableEntity().body(e.getMessage());
         }
 
         planDetail.replaceActivityInstance(activityInstanceId, requestBodyActivityInstance);
@@ -357,11 +388,19 @@ public class PlansController {
         planDetail.updateActivityInstance(activityId, requestBodyActivityInstance);
 
         try {
-            if (!Validator.validate(planDetail)) {
-                return ResponseEntity.unprocessableEntity().build();
+            final List<String> validationErrors = Validator.findValidationFailures(planDetail);
+            if (!validationErrors.isEmpty()) {
+                return ResponseEntity.unprocessableEntity().body(validationErrors);
             }
         } catch (IOException ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+        // Plan semantic validation (against the adaptation)
+        try {
+            planValidator.validateActivitiesForPlan(planDetail);
+        } catch (PlanValidator.ValidationException e) {
+            return ResponseEntity.unprocessableEntity().body(e.getMessage());
         }
 
         repository.save(planDetail);

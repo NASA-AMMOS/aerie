@@ -25,7 +25,25 @@ describe('panels', () => {
     );
   });
 
-  it('[C136494] A user SHOULD be able to toggle the left panel off and on', () => {
+  it('[C136494] A user SHOULD be able to toggle the left panel on and off', () => {
+    expect(page.leftPanel.isDisplayed()).toBe(false);
+
+    page.panelButton.click();
+
+    browser.wait(
+      EC.visibilityOf(page.editorToolbarMenus.get(0)),
+      page.waitTimeout,
+      'Panels menu did not appear',
+    );
+
+    clickHarder('#falcon-panels-left-toggle-button');
+
+    browser.wait(
+      EC.visibilityOf(page.leftPanel),
+      page.waitTimeout,
+      'Left panel is not visible',
+    );
+
     expect(page.leftPanel.isDisplayed()).toBe(true);
 
     page.panelButton.click();
@@ -45,24 +63,6 @@ describe('panels', () => {
     );
 
     expect(page.leftPanel.isDisplayed()).toBe(false);
-
-    page.panelButton.click();
-
-    browser.wait(
-      EC.visibilityOf(page.editorToolbarMenus.get(0)),
-      page.waitTimeout,
-      'Panels is not visible',
-    );
-
-    clickHarder('#falcon-panels-left-toggle-button');
-
-    browser.wait(
-      EC.visibilityOf(page.leftPanel),
-      page.waitTimeout,
-      'Left panel is not visible',
-    );
-
-    expect(page.leftPanel.isDisplayed()).toBe(true);
   });
 
   it('[C136495] A user SHOULD be able to toggle the right panel off and on', () => {

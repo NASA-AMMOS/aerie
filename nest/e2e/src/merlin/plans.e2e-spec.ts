@@ -1,5 +1,4 @@
-import { browser, ExpectedConditions as EC, logging } from 'protractor';
-import { click } from '../utils';
+import { browser, logging } from 'protractor';
 import { MerlinPage } from './merlin.po';
 
 describe('Plans Page (/plans)', () => {
@@ -8,11 +7,11 @@ describe('Plans Page (/plans)', () => {
   beforeEach(() => {
     page = new MerlinPage();
     page.navigateTo('plans');
-    browser.navigate().refresh();
   });
 
   describe('Merlin', () => {
     it('[C136472] WHEN the Merlin is loaded, the browser tab title SHOULD be Merlin', () => {
+      browser.navigate().refresh();
       const pageTitle = browser.getTitle();
       expect(pageTitle).toBe(page.config.title);
     });
@@ -48,38 +47,6 @@ describe('Plans Page (/plans)', () => {
       const numRowsEnd = page.planTableRows.count();
 
       expect(numRowsEnd).toBe(numRowsStart);
-    });
-
-    it('[C134997] WHEN the Create Plan form is submitted THEN a toast SHOULD appear confirming the creation of the plan', () => {
-      page.newPlanButton.click();
-      page.nameInput.sendKeys('Test Plan 1002');
-
-      click(page.planStartInput);
-      click(page.testPlanStart);
-      browser.sleep(2000); // Sleep or se can't click 'Set'.
-      click(page.datetimeSetButton);
-
-      browser.wait(
-        EC.not(EC.visibilityOf(page.datetimeContainer)),
-        5000,
-        'Datetime picker did not go away',
-      );
-
-      click(page.planEndInput);
-      click(page.testPlanEnd);
-      browser.sleep(2000); // Sleep or se can't click 'Set'.
-      click(page.datetimeSetButton);
-
-      browser.wait(
-        EC.not(EC.visibilityOf(page.datetimeContainer)),
-        5000,
-        'Datetime picker did not go away',
-      );
-
-      page.adaptationOptions.first().click();
-      click(page.saveButton);
-
-      expect(page.toastSuccess.isDisplayed()).toBeTruthy();
     });
   });
 

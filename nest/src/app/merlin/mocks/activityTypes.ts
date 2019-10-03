@@ -11,15 +11,11 @@ import { ActivityType } from '../../shared/models';
 
 export const activityTypes: ActivityType[] = [
   {
-    activityClass: 'PeelBanana',
-    listeners: [],
+    name: 'PeelBanana',
     parameters: [],
-    typeName: 'PeelBanana',
   },
   {
-    activityClass: 'EatBanana',
-    listeners: [],
+    name: 'EatBanana',
     parameters: [],
-    typeName: 'EatBanana',
   },
 ];

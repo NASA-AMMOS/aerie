@@ -81,7 +81,7 @@ describe('ActivityFormFullComponent', () => {
         component.selectedActivity.name,
       );
       expect(component.form.controls.start.value).toEqual(
-        new Date(component.selectedActivity.start * 1000),
+        new Date((component.selectedActivity.start as number) * 1000),
       );
       expect(component.form.controls.textColor.value).toEqual(
         component.selectedActivity.textColor,
@@ -126,7 +126,7 @@ describe('ActivityFormFullComponent', () => {
       );
       component.onSubmit({
         ...activity,
-        start: activity.start * 1000,
+        start: (activity.start as number) * 1000,
       });
     });
 

@@ -108,6 +108,19 @@ describe('Plan Reducer', () => {
     });
   });
 
+  describe('CreatePlanSuccess', () => {
+    it('should add a new plan to the plans', () => {
+      const newState = reducer(
+        initialState,
+        PlanActions.createPlanSuccess({ plan }),
+      );
+      expect(newState).toEqual({
+        ...initialState,
+        plans: plansMap,
+      });
+    });
+  });
+
   describe('CreateActivitySuccess', () => {
     it('should add a new activity with the correct time ranges', () => {
       const activityId = '1';
@@ -125,19 +138,6 @@ describe('Plan Reducer', () => {
         },
         maxTimeRange: { end: 0, start: 0 },
         viewTimeRange: { end: 0, start: 0 },
-      });
-    });
-  });
-
-  describe('CreatePlanSuccess', () => {
-    it('should add a new plan to the plans', () => {
-      const newState = reducer(
-        initialState,
-        PlanActions.createPlanSuccess({ plan }),
-      );
-      expect(newState).toEqual({
-        ...initialState,
-        plans: plansMap,
       });
     });
   });

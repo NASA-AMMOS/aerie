@@ -194,7 +194,7 @@ export function toActivityBands(
       editable: editable,
       filterTarget: null,
       height: 50,
-      heightPadding: 10,
+      heightPadding: 0,
       icon: defaultBandSettings.icon,
       id: uniqueId(),
       label: `${legend}`,
@@ -319,7 +319,7 @@ export function toResourceBand(
     fill: false,
     fillColor: defaultBandSettings.resourceFillColor,
     height: 100,
-    heightPadding: 10,
+    heightPadding: 0,
     icon: defaultBandSettings.icon,
     id: uniqueId(),
     interpolation: metadata.hasInterpolatorType || 'linear',
@@ -757,6 +757,28 @@ export function getBandsWithSourceId(
     }
   }
   return bandsWithSourceId;
+}
+
+/**
+ *
+ * Helper. Returns a list of state bands with one identical possible values. [] otherwise.
+ */
+export function getNumericStateBandsWithUniquePossibleStates(
+  subBands: RavenSubBand[],
+): RavenSubBand[] {
+  const numericStateBands = subBands.filter(
+    band => band.type === 'state' && (band as RavenStateBand).isNumeric,
+  );
+  const bandsPossibleStates = numericStateBands.map(band =>
+    (band as RavenStateBand).possibleStates.join(','),
+  );
+  const uniqueStateBands = bandsPossibleStates.filter(
+    (bandPossibleStates, index) =>
+      bandsPossibleStates.indexOf(bandPossibleStates) === index,
+  );
+  return numericStateBands.length > 1 && uniqueStateBands.length === 1
+    ? numericStateBands
+    : [];
 }
 
 /**
