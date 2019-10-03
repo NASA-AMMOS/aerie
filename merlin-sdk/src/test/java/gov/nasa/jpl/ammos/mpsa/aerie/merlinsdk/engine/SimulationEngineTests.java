@@ -9,7 +9,7 @@ import java.util.Map;
 import org.junit.Test;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityThread;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.SettableState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
@@ -89,8 +89,8 @@ public class SimulationEngineTests {
     public void sequentialSimulationBaselineTest() {
         Time simStart = new Time();
 
-        List<ActivityThread<DiverseStates>> actList = new ArrayList<>();
-        for (int i = 0; i < 1000; i++) {
+        List<ActivityJob<DiverseStates>> actList = new ArrayList<>();
+        for (int i = 0; i < 100000; i++) {
             ParentActivity act = new ParentActivity();
             {
                 act.floatValue = 1.0;
@@ -99,10 +99,10 @@ public class SimulationEngineTests {
                 act.booleanValue = false;
                 act.durationValue = new Duration(10 * Duration.ONE_SECOND);
             }
-            ActivityThread<DiverseStates> actThread = new ActivityThread<>(
+            ActivityJob<DiverseStates> actJob = new ActivityJob<>(
                 act, simStart.add(new Duration(i * 1 * Duration.ONE_HOUR))
             );
-            actList.add(actThread);
+            actList.add(actJob);
         }
 
         DiverseStates states = new DiverseStates();
@@ -132,16 +132,16 @@ public class SimulationEngineTests {
     public void timeOrderingTest() {
         Time simStart = new Time();
 
-        List<ActivityThread<DiverseStates>> actList = new ArrayList<>();
+        List<ActivityJob<DiverseStates>> actList = new ArrayList<>();
         for (int i = 1; i <= 3; i++) {
            TimeOrderingTestActivity act = new TimeOrderingTestActivity();
             {
                 act.floatValue = i * 1.0;
             }
-            ActivityThread<DiverseStates> actThread = new ActivityThread<>(
+            ActivityJob<DiverseStates> actJob = new ActivityJob<>(
                 act, simStart.add(new Duration(i * 1 * Duration.ONE_HOUR))
             );
-            actList.add(actThread);
+            actList.add(actJob);
         }
 
         DiverseStates states = new DiverseStates();
@@ -175,13 +175,13 @@ public class SimulationEngineTests {
     public void delayTest() {
         Time simStart = new Time();
 
-        List<ActivityThread<DiverseStates>> actList = new ArrayList<>();
+        List<ActivityJob<DiverseStates>> actList = new ArrayList<>();
         DelayTestActivity act = new DelayTestActivity();
         Time executionTime = simStart.add(new Duration(1 * Duration.ONE_HOUR));
-        ActivityThread<DiverseStates> actThread = new ActivityThread<>(
+        ActivityJob<DiverseStates> actJob = new ActivityJob<>(
             act, executionTime
         );
-        actList.add(actThread);
+        actList.add(actJob);
 
         DiverseStates states = new DiverseStates();
 
@@ -220,13 +220,13 @@ public class SimulationEngineTests {
     public void spawnActivityTimingTest() {
         Time simStart = new Time();
 
-        List<ActivityThread<DiverseStates>> actList = new ArrayList<>();
+        List<ActivityJob<DiverseStates>> actList = new ArrayList<>();
         SpawnTestParentActivity parent = new SpawnTestParentActivity();
         Time parentExecutionTime = simStart.add(new Duration(1 * Duration.ONE_HOUR));
-        ActivityThread<DiverseStates> parentThread = new ActivityThread<>(
+        ActivityJob<DiverseStates> parentJob = new ActivityJob<>(
             parent, parentExecutionTime
         );
-        actList.add(parentThread);
+        actList.add(parentJob);
 
         DiverseStates states = new DiverseStates();
 
@@ -264,13 +264,13 @@ public class SimulationEngineTests {
     public void callActivityTimingTest() {
         Time simStart = new Time();
 
-        List<ActivityThread<DiverseStates>> actList = new ArrayList<>();
+        List<ActivityJob<DiverseStates>> actList = new ArrayList<>();
         CallTestParentActivity parent = new CallTestParentActivity();
         Time parentExecutionTime = simStart.add(new Duration(1 * Duration.ONE_HOUR));
-        ActivityThread<DiverseStates> parentThread = new ActivityThread<>(
+        ActivityJob<DiverseStates> parentJob = new ActivityJob<>(
             parent, parentExecutionTime
         );
-        actList.add(parentThread);
+        actList.add(parentJob);
 
         DiverseStates states = new DiverseStates();
 
@@ -301,13 +301,13 @@ public class SimulationEngineTests {
     public void simpleDurationTest() {
         Time simStart = new Time();
 
-        List<ActivityThread<DiverseStates>> actList = new ArrayList<>();
+        List<ActivityJob<DiverseStates>> actList = new ArrayList<>();
         SimpleDurationTestActivity act = new SimpleDurationTestActivity();
         Time executionTime = simStart.add(new Duration(1 * Duration.ONE_HOUR));
-        ActivityThread<DiverseStates> actThread = new ActivityThread<>(
+        ActivityJob<DiverseStates> actJob = new ActivityJob<>(
             act, executionTime
         );
-        actList.add(actThread);
+        actList.add(actJob);
 
         DiverseStates states = new DiverseStates();
 
@@ -351,12 +351,12 @@ public class SimulationEngineTests {
     public void parentChildDurationTest() {
         Time simStart = new Time();
 
-        List<ActivityThread<DiverseStates>> actList = new ArrayList<>();
+        List<ActivityJob<DiverseStates>> actList = new ArrayList<>();
         DurationTestParentActivity parent = new DurationTestParentActivity();
-        ActivityThread<DiverseStates> parentThread = new ActivityThread<>(
+        ActivityJob<DiverseStates> parentJob = new ActivityJob<>(
             parent, simStart.add(new Duration(1 * Duration.ONE_HOUR))
         );
-        actList.add(parentThread);
+        actList.add(parentJob);
 
         DiverseStates states = new DiverseStates();
 
