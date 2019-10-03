@@ -4,6 +4,14 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.adaptation.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidNumberOfArgsException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidTokenException;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities;
+import gov.nasa.jpl.ammos.mpsa.apgen.exceptions.AdaptationParsingException;
+import gov.nasa.jpl.ammos.mpsa.apgen.exceptions.DirectoryNotFoundException;
+import gov.nasa.jpl.ammos.mpsa.apgen.exceptions.PlanParsingException;
+import gov.nasa.jpl.ammos.mpsa.apgen.model.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.apgen.model.Plan;
+import gov.nasa.jpl.ammos.mpsa.apgen.parser.AdaptationParser;
+import gov.nasa.jpl.ammos.mpsa.apgen.parser.ApfParser;
 import org.apache.commons.cli.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -13,6 +21,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 
 @Service
@@ -72,6 +81,11 @@ public class CommandOptions {
         requiredGroup.addOption(new Option("plans", "list-plans", false, "View a list of available plans"));
         requiredGroup.addOption(new Option("P", "create-plan", true, "Add a new plan passing the name of a PlanDetail JSON"));
 
+        // Add option to convert apf
+        Option apfOpt = new Option("c", "convert-apf", true, "Convert an apf file to JSON: <infile> <outfile> <dir> <tokens>");
+        apfOpt.setArgs(Option.UNLIMITED_VALUES);
+        requiredGroup.addOption(apfOpt);
+
         // Set the request type group as required
         requiredGroup.setRequired(true);
 
@@ -80,7 +94,7 @@ public class CommandOptions {
         // Being in a group makes options mutually exclusive
         planIdRequiredGroup.addOption(new Option("D", "delete-plan",false, "Delete a plan"));
         planIdRequiredGroup.addOption(new Option("U", "update-plan-from-file", true, "Update plan based on values in plan file"));
-        planIdRequiredGroup.addOption(new Option(null, "append-activities", true,"Append new activity instances to a planfrom a json"));
+        planIdRequiredGroup.addOption(new Option(null, "append-activities", true,"Append new activity instances to a plan from a json"));
         planIdRequiredGroup.addOption(new Option("pull", "download-plan", true, "Download a plan into a file"));
         planIdRequiredGroup.addOption(new Option(null, "display-activity", true, "Display an activity from a plan"));
         planIdRequiredGroup.addOption(new Option(null, "delete-activity", true, "Delete an activity from a plan"));
@@ -214,6 +228,15 @@ public class CommandOptions {
                     lastCommandStatus = displayActivityTypeParameterList(adaptationId, activityId);
                     return;
                 }
+            }
+            else if (requiredGroup.getSelected().equals("c")) {
+                String[] args = cmd.getOptionValues("c");
+                if (args.length < 3) {
+                    throw new InvalidNumberOfArgsException("Option 'apf' requires three arguments <infile> <outfile> <dir> <tokens>");
+                }
+                String[] tokens = Arrays.copyOfRange(args, 3, args.length);
+                lastCommandStatus = convertApfFile(args[0], args[1], args[2], tokens);
+                return;
             }
             else {
                 System.out.println("No required argument specified.");
@@ -657,6 +680,43 @@ public class CommandOptions {
         }
 
         System.err.println("Activity type parameter list request failed.");
+        return false;
+    }
+
+    private boolean convertApfFile(String input, String output, String dir, String[] tokens) {
+
+        /* Parse adaptation and plan file */
+        Plan plan;
+        try {
+            Adaptation adaptation = AdaptationParser.parseDirectory(Path.of(dir));
+            plan = ApfParser.parseFile(Path.of(input), adaptation);
+        } catch (AdaptationParsingException | PlanParsingException e) {
+            System.err.println(e.getMessage());
+            return false;
+        } catch (DirectoryNotFoundException e) {
+            System.err.println(String.format("Adaptation directory not found: %s", e.getMessage()));
+            return false;
+        }
+
+        /* Parse tokens for plan metadata */
+        String adaptationId = null, adaptationIdToken = "adaptationId=";
+        String startTimestamp = null, startTimestampToken = "startTimestamp=";
+        String name = null, nameToken = "name=";
+        for (String token : tokens) {
+            if (token.startsWith(adaptationIdToken)) {
+                adaptationId = token.substring(adaptationIdToken.length());
+            } else if (token.startsWith(startTimestampToken)) {
+                startTimestamp = token.substring(startTimestampToken.length());
+            } else if (token.startsWith(nameToken)) {
+                name = token.substring(nameToken.length());
+            }
+        }
+
+        /* Build the plan JSON and write it to the specified output file */
+        if (JSONUtilities.writePlanToJSON(plan, Path.of(output), adaptationId, startTimestamp, name)) {
+            System.out.println(String.format("SUCCESS: Plan file written to %s", output));
+            return true;
+        }
         return false;
     }
 }

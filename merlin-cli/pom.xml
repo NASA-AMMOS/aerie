@@ -144,5 +144,12 @@
       <artifactId>schemas</artifactId>
       <version>1.1-SNAPSHOT</version>
     </dependency>
+
+    <!-- APGen Parsing -->
+    <dependency>
+      <groupId>gov.nasa.jpl.ammos.mpsa.apgen</groupId>
+      <artifactId>APGenParser</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 </project>
