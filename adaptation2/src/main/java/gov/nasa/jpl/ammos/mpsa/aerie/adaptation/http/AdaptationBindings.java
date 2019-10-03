@@ -95,7 +95,10 @@ public final class AdaptationBindings {
 
         final String adaptationId = this.appController.addAdaptation(adaptation);
 
-        ctx.status(201).result(adaptationId);
+        ctx.status(201)
+                .header("Location", "/adaptations/" + adaptationId)
+                .result(JsonbBuilder.create().toJson(new CreatedEntity(adaptationId)))
+                .contentType("application/json");
     }
 
     private void getAdaptation(final Context ctx) throws NoSuchAdaptationException {

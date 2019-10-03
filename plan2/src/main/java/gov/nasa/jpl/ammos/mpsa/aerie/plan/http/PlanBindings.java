@@ -93,7 +93,8 @@ public final class PlanBindings {
     ctx
         .status(201)
         .header("Location", "/plans/" + planId)
-        .result(JsonbBuilder.create().toJson(new CreatedEntity(planId))).contentType("application/json");
+        .result(JsonbBuilder.create().toJson(new CreatedEntity(planId)))
+        .contentType("application/json");
   }
 
   private void putPlan(final Context ctx) throws ValidationException, NoSuchPlanException {
