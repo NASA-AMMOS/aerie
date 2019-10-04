@@ -10,6 +10,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
+import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.MissingAdaptationException;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -77,16 +78,20 @@ public class AdaptationController implements IAdaptationController {
 
         if (adaptation.name == null) validationErrors.add("name must be non-null");
         if (adaptation.version == null) validationErrors.add("version must be non-null");
-        if (adaptation.path == null) validationErrors.add("path must be non-null");
 
-        Map<String, ActivityType> activities = null;
-        try {
-            activities = AdaptationLoader.loadActivities(adaptation.path);
-        } catch (InvalidAdaptationJARException e) {
-            validationErrors.add("Adaptation JAR is corrupted, could not load activities");
+        if (adaptation.path == null) {
+            validationErrors.add("path must be non-null");
+        } else {
+            Map<String, ActivityType> activities = null;
+            try {
+                activities = AdaptationLoader.loadActivities(adaptation.path);
+            } catch (final MissingAdaptationException e) {
+                validationErrors.add("Adaptation JAR does not contain a class implementing the Adaptation interface");
+            }
+
+            if (activities != null && activities.size() < 1) validationErrors.add("No activities found. Must include at least one activity");
         }
 
-        if (activities != null && activities.size() < 1) validationErrors.add("No activities found. Must include at least one activity");
 
         if (validationErrors.size() > 0) {
             throw new ValidationException("invalid adaptation", validationErrors);

@@ -10,6 +10,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.MissingAdaptationException;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -84,7 +85,13 @@ public final class MockAdaptationRepository implements AdaptationRepository {
     @Override
     public Stream<Pair<String, ActivityType>> getAllActivityTypesInAdaptation(final String adaptationId) throws NoSuchAdaptationException, InvalidAdaptationJARException {
         final Adaptation adaptation = getAdaptation(adaptationId);
-        final Map<String, ActivityType> activities = loadActivities(adaptation.path);
+
+        final Map<String, ActivityType> activities;
+        try {
+            activities = loadActivities(adaptation.path);
+        } catch (final MissingAdaptationException ex) {
+            throw new InvalidAdaptationJARException(adaptation.path, ex);
+        }
 
         return activities
                 .entrySet()
@@ -95,7 +102,13 @@ public final class MockAdaptationRepository implements AdaptationRepository {
     @Override
     public ActivityType getActivityTypeInAdaptation(final String adaptationId, final String activityId) throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException {
         final Adaptation adaptation = getAdaptation(adaptationId);
-        final Map<String, ActivityType> activities = loadActivities(adaptation.path);
+
+        final Map<String, ActivityType> activities;
+        try {
+            activities = loadActivities(adaptation.path);
+        } catch (final MissingAdaptationException ex) {
+            throw new InvalidAdaptationJARException(adaptation.path, ex);
+        }
 
         return Optional
                 .ofNullable(activities.get(activityId))

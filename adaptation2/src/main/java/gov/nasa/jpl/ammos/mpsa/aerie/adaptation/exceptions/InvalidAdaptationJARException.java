@@ -9,6 +9,11 @@ public class InvalidAdaptationJARException extends Exception {
         this.path = path;
     }
 
+    public InvalidAdaptationJARException(final Path path, final Throwable cause) {
+        super(cause);
+        this.path = path;
+    }
+
     public Path getPath() {
         return this.path;
     }
