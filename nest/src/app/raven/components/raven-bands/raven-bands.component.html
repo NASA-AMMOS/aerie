@@ -4,109 +4,111 @@
   [sortablejsOptions]="sortablejsOptions"
 >
   <div *ngFor="let band of sortedAndFilteredBands; trackBy: bandsTrackByFn">
-    <div class="icon-div" [ngClass]="{ hovered: band.id === hoveredBandId }">
-      <mat-icon
-        *ngIf="band.id === hoveredBandId"
-        class="icons"
-        matTooltip="Band Settings"
-        [id]="'band-settings-edit'"
-        (click)="settingsBand.emit(band.id)"
-      >
-        edit
-      </mat-icon>
-      <mat-icon
-        *ngIf="
-          band.id === hoveredBandId &&
-          !isOverlayAddTo(band.id) &&
-          !isDividerBand(band.id)
-        "
-        class="icons"
-        matTooltip="Set Overlay"
-        [id]="'band-settings-overlay'"
-        (click)="
-          updateOverlay.emit({ bandId: band.id, update: { overlay: true } })
-        "
-      >
-        layers
-      </mat-icon>
-      <mat-icon
-        *ngIf="
-          (band.id === hoveredBandId || id === selectedBandId) &&
-          isOverlay(band.id) &&
-          containActivityBand(band.id)
-        "
-        [ngClass]="{ overlay: band.overlay }"
-        class="icons"
-        matTooltip="set Add To"
-        [id]="'band-settings-add-to'"
-        (click)="onSwitchToAddTo(band.id)"
-      >
-        layers
-      </mat-icon>
-      <mat-icon
-        *ngIf="
-          (band.id === hoveredBandId || band.id === selectedBandId) &&
-          isOverlay(band.id) &&
-          !isDividerBand(band.id) &&
-          !containActivityBand(band.id)
-        "
-        [ngClass]="{ overlay: band.overlay }"
-        class="icons"
-        matTooltip="set None"
-        [id]="'band-settings-none-1'"
-        (click)="onSwitchToNone(band.id)"
-      >
-        layers
-      </mat-icon>
-      <mat-icon
-        *ngIf="
-          (band.id === hoveredBandId || band.id === selectedBandId) &&
-          containAddToBand(band.id) &&
-          !isDividerBand(band.id)
-        "
-        class="icons addTo"
-        matTooltip="set None"
-        [id]="'band-settings-none-2'"
-        (click)="onSwitchToNone(band.id)"
-      >
-        add_box
-      </mat-icon>
-      <mat-icon
-        *ngIf="band.id === hoveredBandId && !isDividerBand(band.id)"
-        class="icons"
-        matTooltip="Add Divider"
-        [id]="'band-settings-add-divider'"
-        (click)="addDivider.emit(band.id)"
-      >
-        view_day
-      </mat-icon>
-      <mat-icon
-        *ngIf="band.id === hoveredBandId"
-        class="icons"
-        matTooltip="Remove Band"
-        [id]="'band-settings-remove-band'"
-        (click)="deleteBand.emit(band.id)"
-      >
-        delete_forever
-      </mat-icon>
-      <mat-icon
-        *ngIf="band.id === hoveredBandId"
-        class="icons"
-        matTooltip="Increase Band Height"
-        [id]="'band-settings-increase-band-height'"
-        (click)="increaseBandHeight.emit(band.id)"
-      >
-        add_circle
-      </mat-icon>
-      <mat-icon
-        *ngIf="band.id === hoveredBandId"
-        class="icons"
-        matTooltip="Decrease Band Height"
-        [id]="'band-settings-decrease-band-height'"
-        (click)="decreaseBandHeight.emit(band.id)"
-      >
-        remove_circle
-      </mat-icon>
+    <div class="icon-div">
+      <div [ngClass]="{ hovered: band.id === hoveredBandId }">
+        <mat-icon
+          *ngIf="band.id === hoveredBandId"
+          class="icons"
+          matTooltip="Band Settings"
+          [id]="'band-settings-edit'"
+          (click)="settingsBand.emit(band.id)"
+        >
+          edit
+        </mat-icon>
+        <mat-icon
+          *ngIf="
+            band.id === hoveredBandId &&
+            !isOverlayAddTo(band.id) &&
+            !isDividerBand(band.id)
+          "
+          class="icons"
+          matTooltip="Set Overlay"
+          [id]="'band-settings-overlay'"
+          (click)="
+            updateOverlay.emit({ bandId: band.id, update: { overlay: true } })
+          "
+        >
+          layers
+        </mat-icon>
+        <mat-icon
+          *ngIf="
+            (band.id === hoveredBandId || id === selectedBandId) &&
+            isOverlay(band.id) &&
+            containActivityBand(band.id)
+          "
+          [ngClass]="{ overlay: band.overlay }"
+          class="icons"
+          matTooltip="set Add To"
+          [id]="'band-settings-add-to'"
+          (click)="onSwitchToAddTo(band.id)"
+        >
+          layers
+        </mat-icon>
+        <mat-icon
+          *ngIf="
+            (band.id === hoveredBandId || band.id === selectedBandId) &&
+            isOverlay(band.id) &&
+            !isDividerBand(band.id) &&
+            !containActivityBand(band.id)
+          "
+          [ngClass]="{ overlay: band.overlay }"
+          class="icons"
+          matTooltip="set None"
+          [id]="'band-settings-none-1'"
+          (click)="onSwitchToNone(band.id)"
+        >
+          layers
+        </mat-icon>
+        <mat-icon
+          *ngIf="
+            (band.id === hoveredBandId || band.id === selectedBandId) &&
+            containAddToBand(band.id) &&
+            !isDividerBand(band.id)
+          "
+          class="icons addTo"
+          matTooltip="set None"
+          [id]="'band-settings-none-2'"
+          (click)="onSwitchToNone(band.id)"
+        >
+          add_box
+        </mat-icon>
+        <mat-icon
+          *ngIf="band.id === hoveredBandId && !isDividerBand(band.id)"
+          class="icons"
+          matTooltip="Add Divider"
+          [id]="'band-settings-add-divider'"
+          (click)="addDivider.emit(band.id)"
+        >
+          view_day
+        </mat-icon>
+        <mat-icon
+          *ngIf="band.id === hoveredBandId"
+          class="icons"
+          matTooltip="Remove Band"
+          [id]="'band-settings-remove-band'"
+          (click)="deleteBand.emit(band.id)"
+        >
+          delete_forever
+        </mat-icon>
+        <mat-icon
+          *ngIf="band.id === hoveredBandId"
+          class="icons"
+          matTooltip="Increase Band Height"
+          [id]="'band-settings-increase-band-height'"
+          (click)="increaseBandHeight.emit(band.id)"
+        >
+          add_circle
+        </mat-icon>
+        <mat-icon
+          *ngIf="band.id === hoveredBandId"
+          class="icons"
+          matTooltip="Decrease Band Height"
+          [id]="'band-settings-decrease-band-height'"
+          (click)="decreaseBandHeight.emit(band.id)"
+        >
+          remove_circle
+        </mat-icon>
+      </div>
     </div>
     <div class="bands">
       <raven-composite-band
