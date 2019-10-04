@@ -6467,6 +6467,9 @@ var Util = {
       let minLogTick = Math.floor(Math.log10(min));
       for (let i = minLogTick; i <  0; i++) {
           let logTick = Math.pow(10, i);
+          let decimals = 1-i;
+          // rounding decimal
+          logTick = Number(Math.round(logTick+'e'+decimals)+'e-'+decimals);
           ticks.push(logTick.toString());
       }
       ticks.push ("1");
