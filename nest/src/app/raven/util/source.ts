@@ -620,7 +620,9 @@ export function getFormattedSourceUrl(
   if (situAware) {
     sourceUrl = getSituAwareUrl(sourceUrl, startTime, pageDuration);
   } else if (timeRange.start !== 0) {
-    return `${sourceUrl}&start=${timestamp(timeRange.start)}&end=${timestamp(timeRange.end)}`;
+    return `${sourceUrl}&start=${timestamp(timeRange.start)}&end=${timestamp(
+      timeRange.end,
+    )}`;
   }
   return sourceUrl;
 }
@@ -654,7 +656,7 @@ export function getOutputDataUrl(
     false,
     '',
     '',
-    {end: 0, start: 0},
+    { end: 0, start: 0 },
   );
   sourceUrl = sourceUrl.replace(
     'format=TMS',

@@ -928,7 +928,11 @@ export class SourceExplorerEffects {
         ({
           state: {
             config,
-            raven: { sourceExplorer, situationalAwareness, timeline: { viewTimeRange} },
+            raven: {
+              sourceExplorer,
+              situationalAwareness,
+              timeline: { viewTimeRange },
+            },
           },
           action,
         }) =>
@@ -943,7 +947,6 @@ export class SourceExplorerEffects {
               getSituationalAwarenessStartTime(situationalAwareness),
               getSituationalAwarenessPageDuration(situationalAwareness),
               viewTimeRange,
-
             ).pipe(
               withLatestFrom(this.store),
               map(([newSubBands, state]) => ({ newSubBands, state })),
@@ -1585,7 +1588,7 @@ export class SourceExplorerEffects {
                   state.raven.situationalAwareness,
                 ),
                 restoringLayout,
-                { end: 0, start:0 },
+                { end: 0, start: 0 },
               ),
               of(
                 SourceExplorerActions.updateTreeSource({
