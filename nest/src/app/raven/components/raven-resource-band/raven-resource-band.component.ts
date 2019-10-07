@@ -259,6 +259,11 @@ export class RavenResourceBandComponent
 
     // Log Ticks.
     if (changes.logTicks && !changes.logTicks.firstChange) {
+      // Update intervals since 0 and <1 values are removes for log scale.
+      this.updateIntervals.emit({
+        subBandId: this.id,
+        ...this.getIntervals(this.color),
+      });
       this.updateSubBand.emit({
         prop: 'logTicks',
         subBandId: this.id,
@@ -395,7 +400,7 @@ export class RavenResourceBandComponent
     for (let i = 0, l = this.points.length; i < l; ++i) {
       const point = this.points[i];
 
-      if (point.pointStatus !== 'deleted' && point.start > 0) {
+      if ((!this.logTicks ||  point.value > 0) && point.pointStatus !== 'deleted' && point.start > 0) {
         const interval = new (window as any).DrawableInterval({
           color: colorHexToRgbArray(color),
           end: point.start,
