@@ -25,7 +25,7 @@ import {
   withLatestFrom,
 } from 'rxjs/operators';
 import { ConfigActions, ToastActions } from '../../shared/actions';
-import { StringTMap } from '../../shared/models';
+import { StringTMap, TimeRange } from '../../shared/models';
 import {
   getSituationalAwarenessPageDuration,
   getSituationalAwarenessStartTime,
@@ -132,6 +132,7 @@ export class SourceExplorerEffects {
               startTime: getSituationalAwarenessStartTime(situationalAwareness),
               subBandId: timeline.selectedSubBandId,
               treeBySourceId: sourceExplorer.treeBySourceId,
+              viewTimeRange: timeline.viewTimeRange,
             }),
             of(SourceExplorerActions.loadErrorsDisplay()),
             of(
@@ -678,6 +679,7 @@ export class SourceExplorerEffects {
             ),
             subBandId: raven.timeline.selectedSubBandId,
             treeBySourceId: raven.sourceExplorer.treeBySourceId,
+            viewTimeRange: raven.timeline.viewTimeRange,
           }),
         ]).pipe(
           catchError((e: Error) => {
@@ -799,6 +801,7 @@ export class SourceExplorerEffects {
             ),
             subBandId: raven.timeline.selectedSubBandId,
             treeBySourceId: raven.sourceExplorer.treeBySourceId,
+            viewTimeRange: raven.timeline.viewTimeRange,
           }),
           of(
             SourceExplorerActions.updateSourceExplorer({
@@ -925,7 +928,7 @@ export class SourceExplorerEffects {
         ({
           state: {
             config,
-            raven: { sourceExplorer, situationalAwareness },
+            raven: { sourceExplorer, situationalAwareness, timeline: { viewTimeRange} },
           },
           action,
         }) =>
@@ -939,6 +942,8 @@ export class SourceExplorerEffects {
               situationalAwareness.situationalAware,
               getSituationalAwarenessStartTime(situationalAwareness),
               getSituationalAwarenessPageDuration(situationalAwareness),
+              viewTimeRange,
+
             ).pipe(
               withLatestFrom(this.store),
               map(([newSubBands, state]) => ({ newSubBands, state })),
@@ -1012,7 +1017,7 @@ export class SourceExplorerEffects {
             config,
             raven: {
               sourceExplorer,
-              timeline: { bands },
+              timeline: { bands, viewTimeRange },
               situationalAwareness,
             },
           },
@@ -1028,6 +1033,7 @@ export class SourceExplorerEffects {
               situationalAwareness.situationalAware,
               getSituationalAwarenessStartTime(situationalAwareness),
               getSituationalAwarenessPageDuration(situationalAwareness),
+              viewTimeRange,
             ).pipe(
               concatMap((newSubBands: RavenSubBand[]) => {
                 const actions: Action[] = [];
@@ -1273,6 +1279,7 @@ export class SourceExplorerEffects {
     situAware: boolean,
     startTime: string,
     pageDuration: string,
+    viewTimeRange: TimeRange,
   ) {
     const source = treeBySourceId[sourceId];
     return this.http
@@ -1284,6 +1291,7 @@ export class SourceExplorerEffects {
           situAware,
           startTime,
           pageDuration,
+          viewTimeRange,
         ),
         getTargetFilters(
           treeBySourceId,
@@ -1317,6 +1325,7 @@ export class SourceExplorerEffects {
     situAware: boolean,
     startTime: string,
     pageDuration: string,
+    viewTimeRange: TimeRange,
   ) {
     const source = treeBySourceId[sourceId];
     const graphables = ['graphableFilter', 'customFilter', 'customGraphable'];
@@ -1330,6 +1339,7 @@ export class SourceExplorerEffects {
             situAware,
             startTime,
             pageDuration,
+            viewTimeRange,
           ),
         )
         .pipe(
@@ -1575,6 +1585,7 @@ export class SourceExplorerEffects {
                   state.raven.situationalAwareness,
                 ),
                 restoringLayout,
+                { end: 0, start:0 },
               ),
               of(
                 SourceExplorerActions.updateTreeSource({
@@ -1610,6 +1621,7 @@ export class SourceExplorerEffects {
     startTime,
     subBandId,
     treeBySourceId,
+    viewTimeRange,
   }: RavenOpenArgs) {
     return this.fetchSubBands(
       treeBySourceId,
@@ -1619,6 +1631,7 @@ export class SourceExplorerEffects {
       situAware,
       startTime,
       pageDuration,
+      viewTimeRange,
     ).pipe(
       concatMap((newSubBands: RavenSubBand[]) => {
         const actions: Action[] = [];
@@ -1818,6 +1831,7 @@ export class SourceExplorerEffects {
     startTime: string,
     pageDuration: string,
     restoringLayout: boolean,
+    viewTimeRange: TimeRange,
   ): Observable<Action>[] {
     if (customFilters) {
       return customFilters.map(customFilter =>
@@ -1836,6 +1850,7 @@ export class SourceExplorerEffects {
           startTime,
           subBandId: null,
           treeBySourceId,
+          viewTimeRange,
         }),
       );
     }
@@ -1874,6 +1889,7 @@ export class SourceExplorerEffects {
             startTime,
             subBandId: null,
             treeBySourceId,
+            viewTimeRange,
           }),
         ];
       }

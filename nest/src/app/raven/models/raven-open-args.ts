@@ -15,7 +15,7 @@ import {
   RavenSource,
 } from './index';
 
-import { StringTMap } from '../../shared/models/index';
+import { StringTMap, TimeRange } from '../../shared/models/index';
 
 export interface RavenOpenArgs {
   bandId: string | null;
@@ -31,5 +31,6 @@ export interface RavenOpenArgs {
   sourceId: string;
   startTime: string;
   subBandId: string | null;
+  viewTimeRange: TimeRange;
   treeBySourceId: StringTMap<RavenSource>;
 }
