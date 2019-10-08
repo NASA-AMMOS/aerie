@@ -3085,18 +3085,18 @@ ResourceBand.prototype.getYFromValueLog = function(value) {
     // Find which ticks the value is within.
     // I.e. minTick <= value <= maxTick.
     for (let i = 0; i < ticks.length; ++i) {
-      let tick = ticks[i];
-      let nextTick =  ticks[i + 1];
-
-      if (i < ticks.length - 1 && value >= tick && value <= nextTick) {
-        minTick = tick;
-        maxTick = nextTick;
-        break;
-      }
-      else {
-        minTick = ticks[i - 1];
-        maxTick = tick;
-      }
+        let tick = ticks[i];
+        let nextTick =  ticks[i + 1];
+    
+        if (i < ticks.length - 1 && value >= tick && value <= nextTick) {
+          minTick = tick;
+          maxTick = nextTick;
+          break;
+        }
+        else {
+          minTick = ticks[i - 1];
+          maxTick = tick;
+        }
     }
 
     // Feature scaling.
@@ -6462,9 +6462,22 @@ var Util = {
     */
   computeTickValuesLog: function(min, max) {
     let ticks = [];
-    let tick = Util.roundToNearestPowerOf10(min);
 
-    ticks.push(tick.toString());
+    if (min < 1) {
+      let minLogTick = Math.floor(Math.log10(min));
+      for (let i = minLogTick; i <  0; i++) {
+          let logTick = Math.pow(10, i);
+          let decimals = 1-i;
+          // rounding decimal
+          logTick = Number(Math.round(logTick+'e'+decimals)+'e-'+decimals);
+          ticks.push(logTick.toString());
+      }
+      ticks.push ("1");
+      tick = 1;
+    } else {
+        let tick = Util.roundToNearestPowerOf10(min);
+        ticks.push(tick.toString());
+    }
 
     // Compute log ticks. All ticks should be powers of 10.
     while (tick < Util.roundToNearestPowerOf10(max)) {
