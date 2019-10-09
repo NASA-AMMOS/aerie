@@ -118,6 +118,7 @@ export class RavenDividerBandComponent implements OnChanges, OnDestroy, OnInit {
     // Create Divider Band.
     // Note how we use the CTL StateBand since CTL has no DividerBand.
     const ctlDividerBand = new (window as any).StateBand({
+      backgroundColor: this.color,
       borderWidth: this.borderWidth,
       height: this.height,
       id: this.id,
