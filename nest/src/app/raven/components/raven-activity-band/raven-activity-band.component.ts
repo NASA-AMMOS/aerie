@@ -395,10 +395,9 @@ export class RavenActivityBandComponent
 
     for (let i = 0, l = this.points.length; i < l; ++i) {
       const point = this.points[i];
-
       // If we have not seen the unique activity id before and not in excludeActivityTypes, then add it to be drawn.
       if (
-        !intervalsById[point.uniqueId] &&
+        !intervalsById[point.id] &&
         point.pointStatus !== 'deleted' &&
         !point.hidden &&
         point.start > 0 &&
@@ -422,7 +421,7 @@ export class RavenActivityBandComponent
         interval.parameters = point.activityParameters;
 
         intervals.push(interval);
-        intervalsById[interval.uniqueId] = interval;
+        intervalsById[interval.id] = interval;
       }
     }
 
