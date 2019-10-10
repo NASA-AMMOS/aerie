@@ -123,29 +123,110 @@
       <!-- Default Resource Color. -->
       <div class="field">
         <label>Default Resource Color</label>
-        <input
-          type="color"
-          [value]="defaultBandSettings.resourceColor"
-          (input)="
-            updateDefaultBandSettings.emit({
-              update: { resourceColor: $event.target.value }
-            })
-          "
-        />
+        <div class="row-container">
+          <div class="flex-field">
+            <div class="color-container">
+              <ng-container *ngFor="let color of colors">
+                <mat-icon
+                  class="color-button"
+                  [id]="color"
+                  [ngStyle]="{ color: color }"
+                  (click)="
+                    updateDefaultBandSettings.emit({
+                      update: { resourceColor: color }
+                    })
+                  "
+                >
+                  {{
+                    (defaultBandSettings.resourceColor !== color &&
+                      'check_box_outline_blank') ||
+                      'check_box'
+                  }}
+                </mat-icon>
+              </ng-container>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Default Resource Fill Color. -->
       <div class="field">
         <label>Default Resource Fill Color</label>
-        <input
-          type="color"
-          [value]="defaultBandSettings.resourceFillColor"
-          (input)="
-            updateDefaultBandSettings.emit({
-              update: { resourceFillColor: $event.target.value }
-            })
-          "
-        />
+        <div class="row-container">
+          <div class="flex-field">
+            <div class="color-container">
+              <ng-container *ngFor="let color of colors">
+                <mat-icon
+                  class="color-button"
+                  [id]="color"
+                  [ngStyle]="{ color: color }"
+                  (click)="
+                    updateDefaultBandSettings.emit({
+                      update: { resourceFillColor: color }
+                    })
+                  "
+                >
+                  {{
+                    (defaultBandSettings.resourceFillColor !== color &&
+                      'check_box_outline_blank') ||
+                      'check_box'
+                  }}
+                </mat-icon>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Divider Height. -->
+      <div class="field">
+        <mat-form-field>
+          <input
+            matInput
+            id="raven-divider-height"
+            [formControl]="heightControl"
+            [value]="defaultBandSettings.dividerHeight"
+            type="number"
+            placeholder="Default Divider Height"
+            name="height"
+            step="1"
+            min="1"
+            (change)="
+              conditionalUpdateDefaultDividerHeight(!heightControl.invalid, {
+                update: { dividerHeight: $event.target.valueAsNumber }
+              })
+            "
+          />
+        </mat-form-field>
+      </div>
+
+      <!-- Divider color. -->
+      <div class="field">
+        <label>Default Divider Color</label>
+        <div class="row-container">
+          <div class="flex-field">
+            <div class="color-container">
+              <ng-container *ngFor="let color of colors">
+                <mat-icon
+                  class="color-button"
+                  [id]="color"
+                  [ngStyle]="{ color: color }"
+                  (click)="
+                    updateDefaultBandSettings.emit({
+                      update: { dividerColor: color }
+                    })
+                  "
+                >
+                  {{
+                    (defaultBandSettings.dividerColor !== color &&
+                      'check_box_outline_blank') ||
+                      'check_box'
+                  }}
+                </mat-icon>
+              </ng-container>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Default Icon. -->

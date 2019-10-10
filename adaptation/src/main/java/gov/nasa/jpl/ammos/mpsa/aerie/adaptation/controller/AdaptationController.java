@@ -5,6 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.Repositories.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationProjection;
 import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.AdaptationUtils;
+import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.MissingAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ParameterSchema;
@@ -117,28 +118,22 @@ public class AdaptationController {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
 
-    try {
-      Map<String, ParameterSchema> activityList = loadActivities(adaptation);
+    Map<String, ParameterSchema> activityList = loadActivities(adaptation);
 
-      if (activityList == null) return ResponseEntity.unprocessableEntity().build();
+    if (activityList == null) return ResponseEntity.unprocessableEntity().build();
 
-      List<ActivityType> activityTypes = new ArrayList<>();
-      for (String activityTypeName : activityList.keySet()) {
-        ParameterSchema parameterSchema = activityList.get(activityTypeName);
-        List<ActivityTypeParameter> parameters = buildParameterList(parameterSchema);
+    List<ActivityType> activityTypes = new ArrayList<>();
+    for (String activityTypeName : activityList.keySet()) {
+      ParameterSchema parameterSchema = activityList.get(activityTypeName);
+      List<ActivityTypeParameter> parameters = buildParameterList(parameterSchema);
 
-        if (parameters == null) {
-          return ResponseEntity.unprocessableEntity().build();
-        }
-
-        activityTypes.add(new ActivityType(UUID.randomUUID().toString(), activityTypeName, parameters));
+      if (parameters == null) {
+        return ResponseEntity.unprocessableEntity().build();
       }
-      adaptation.setActivityTypes(activityTypes);
 
-
-    } catch (IOException e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+      activityTypes.add(new ActivityType(UUID.randomUUID().toString(), activityTypeName, parameters));
     }
+    adaptation.setActivityTypes(activityTypes);
 
     URI accessLocation = null;
     try {
@@ -271,8 +266,13 @@ public class AdaptationController {
     return filename;
   }
 
-  private Map<String, ParameterSchema> loadActivities(Adaptation adaptation) throws IOException {
-    final MerlinAdaptation userAdaptation = AdaptationUtils.loadAdaptation(Path.of(adaptation.getLocation()));
+  private Map<String, ParameterSchema> loadActivities(Adaptation adaptation) {
+    final MerlinAdaptation userAdaptation;
+    try {
+      userAdaptation = AdaptationUtils.loadAdaptation(Path.of(adaptation.getLocation()));
+    } catch (final MissingAdaptationException ex) {
+      return null;
+    }
 
     if (userAdaptation == null) {
       return null;

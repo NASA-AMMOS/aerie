@@ -2,20 +2,27 @@ package gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 
-import java.io.File;
-import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.ServiceLoader;
 
 public class AdaptationUtils {
-    // TODO: Move this into the Adaptation Runtime Service when it is complete
-    // TODO: Allow lookup by adaptation metadata (e.g. name and version).
-    // TODO: This should throw an additional exception when a valid JAR does not contain a valid adaptation
-    public static MerlinAdaptation loadAdaptation(final Path adaptationPath) throws IOException {
-        // Construct a ClassLoader with access to classes in the adaptation location.
-        final URL adaptationURL = adaptationPath.toUri().toURL();
+    public static MerlinAdaptation loadAdaptation(final Path adaptationPath) throws MissingAdaptationException {
+        Objects.requireNonNull(adaptationPath);
+
+        final URL adaptationURL;
+        try {
+            // Construct a ClassLoader with access to classes in the adaptation location.
+            adaptationURL = adaptationPath.toUri().toURL();
+        } catch (final MalformedURLException ex) {
+            // This exception only happens if there is no URL protocol handler available to represent a Path.
+            // This is highly unexpected, and indicates a fundamental problem with the system environment.
+            throw new Error(ex);
+        }
+
         final ClassLoader parentClassLoader = Thread.currentThread().getContextClassLoader();
         final ClassLoader classLoader = new URLClassLoader(new URL[]{adaptationURL}, parentClassLoader);
 
@@ -25,6 +32,8 @@ public class AdaptationUtils {
 
         // Return the first we come across. (This may not be deterministic, so for correctness
         // we're assuming there's only one MerlinAdaptation in any given location.
-        return serviceLoader.findFirst().orElse(null);
+        return serviceLoader
+            .findFirst()
+            .orElseThrow(() -> new MissingAdaptationException(adaptationPath));
     }
 }

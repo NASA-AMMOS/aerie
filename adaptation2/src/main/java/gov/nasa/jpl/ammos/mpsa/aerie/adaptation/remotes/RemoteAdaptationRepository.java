@@ -7,6 +7,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityTypeParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.FileUtils;
+import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.MissingAdaptationException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -16,6 +17,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -71,20 +73,32 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
     public Stream<Pair<String, ActivityType>> getAllActivityTypesInAdaptation(final String adaptationId) throws NoSuchAdaptationException, InvalidAdaptationJARException {
         final Adaptation adaptation = this.getAdaptation(adaptationId);
 
-        return Optional.ofNullable(loadActivities(adaptation.path))
-                .orElseThrow(() -> new InvalidAdaptationJARException(adaptation.path))
+        final Map<String, ActivityType> activityTypes;
+        try {
+            activityTypes = loadActivities(adaptation.path);
+        } catch (final MissingAdaptationException ex) {
+            throw new InvalidAdaptationJARException(adaptation.path, ex);
+        }
+
+        return activityTypes
                 .entrySet()
                 .stream()
                 .map(entry -> Pair.of(entry.getKey(), entry.getValue()));
-
     }
 
     @Override
     public ActivityType getActivityTypeInAdaptation(final String adaptationId, final String activityId) throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException {
         final Adaptation adaptation = this.getAdaptation(adaptationId);
 
+        final Map<String, ActivityType> activityTypes;
+        try {
+            activityTypes = loadActivities(adaptation.path);
+        } catch (final MissingAdaptationException ex) {
+            throw new InvalidAdaptationJARException(adaptation.path, ex);
+        }
+
         return Optional
-                .ofNullable(loadActivities(adaptation.path).get(activityId))
+                .ofNullable(activityTypes.get(activityId))
                 .orElseThrow(() -> new NoSuchActivityTypeException(adaptationId, activityId));
     }
 

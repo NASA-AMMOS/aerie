@@ -142,12 +142,12 @@
                             updateBandAndSubBand({
                               bandId: selectedBandId,
                               subBandId: selectedSubBand.id,
-                              update: { backgroundColor: color }
+                              update: { color: color, backgroundColor: color }
                             })
                           "
                         >
                           {{
-                            (selectedSubBand.backgroundColor !== color &&
+                            (selectedSubBand.color !== color &&
                               'check_box_outline_blank') ||
                               'check_box'
                           }}

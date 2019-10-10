@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation_runtime.message;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.AdaptationUtils;
+import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.MissingAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.AmqpMessage;
@@ -58,8 +59,8 @@ public class LoadAdaptationMessageStrategy implements MessageStrategy {
             "Successfully loaded adaptation " + adaptationAnnotation.name() +
             ", version " + adaptationAnnotation.version());
 
-      } catch (Exception e) {
-        logger.error("Error loading adaptation " + adaptationId, e);
+      } catch (MissingAdaptationException e) {
+        logger.error("No adaptation found for id `" + adaptationId + "` at path `" + adaptation.getLocation() + "`", e);
       }
     }
   }

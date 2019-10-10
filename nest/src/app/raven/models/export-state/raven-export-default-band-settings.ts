@@ -10,6 +10,8 @@
 export interface RavenExportDefaultBandSettings {
   activityInitiallyHidden?: boolean;
   activityLayout: number;
+  dividerColor: string;
+  dividerHeight: number;
   icon: string;
   iconEnabled: boolean;
   labelFont: string;
