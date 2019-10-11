@@ -6,19 +6,19 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.*;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import io.javalin.Javalin;
 import io.javalin.core.util.FileUtil;
 import io.javalin.http.Context;
 import io.javalin.http.UploadedFile;
 import org.apache.commons.lang3.tuple.Pair;
 
-import javax.json.bind.JsonbBuilder;
-import javax.json.bind.JsonbException;
+import javax.json.Json;
+import javax.json.JsonValue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -55,26 +55,27 @@ public final class AdaptationBindings {
             });
         });
 
-        javalin.exception(JsonbException.class, (ex, ctx) -> {
-            ctx.status(400).result(JsonbBuilder.create().toJson(List.of(ex.getMessage())));
-        }).exception(ValidationException.class, (ex, ctx) -> {
-            ctx.status(400).result(JsonbBuilder.create().toJson(ex.getValidationErrors()));
-        }).exception(NoSuchAdaptationException.class, (ex, ctx) -> {
-            ctx.status(404);
-        }).exception(NoSuchActivityTypeException.class, (ex, ctx) -> {
-            ctx.status(404);
-        }).exception(AdaptationAccessException.class, (ex, ctx) -> {
+        javalin.exception(ValidationException.class, (ex, ctx) -> ctx
+            .status(400)
+            .result(Json.createArrayBuilder(ex.getValidationErrors()).build().toString())
+            .contentType("application/json")
+        ).exception(NoSuchAdaptationException.class, (ex, ctx) -> ctx
+            .status(404)
+        ).exception(NoSuchActivityTypeException.class, (ex, ctx) -> ctx
+            .status(404)
+        ).exception(AdaptationAccessException.class, (ex, ctx) -> {
             System.err.println(ex.getMessage());
             ctx.status(500);
         });
     }
 
     private void getAdaptations(final Context ctx) {
-        final Map<String, ResponseAdaptation> adaptations = this.appController
+        final Map<String, Adaptation> adaptations = this.appController
                 .getAdaptations()
-                .collect(Collectors.toMap(Pair::getKey, p -> new ResponseAdaptation(p.getValue())));
+                .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
 
-        ctx.result(JsonbBuilder.create().toJson(adaptations)).contentType("application/json");
+        final JsonValue response = ResponseSerializers.serializeAdaptations(adaptations);
+        ctx.result(response.toString()).contentType("application/json");
     }
 
     private void postAdaptation(final Context ctx) throws ValidationException, IOException {
@@ -97,16 +98,17 @@ public final class AdaptationBindings {
 
         ctx.status(201)
                 .header("Location", "/adaptations/" + adaptationId)
-                .result(JsonbBuilder.create().toJson(new CreatedEntity(adaptationId)))
+                .result(ResponseSerializers.serializedCreatedId(adaptationId).toString())
                 .contentType("application/json");
     }
 
     private void getAdaptation(final Context ctx) throws NoSuchAdaptationException {
         final String adaptationId = ctx.pathParam("adaptationId");
 
-        final ResponseAdaptation adaptation = new ResponseAdaptation(this.appController.getAdaptationById(adaptationId));
+        final Adaptation adaptation = this.appController.getAdaptationById(adaptationId);
 
-        ctx.result(JsonbBuilder.create().toJson(adaptation)).contentType("application/json");
+        final JsonValue response = ResponseSerializers.serializeAdaptation(adaptation);
+        ctx.result(response.toString()).contentType("application/json");
     }
 
     private void deleteAdaptation(final Context ctx) throws NoSuchAdaptationException {
@@ -122,7 +124,8 @@ public final class AdaptationBindings {
                 .getActivityTypes(adaptationId)
                 .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
 
-        ctx.result(JsonbBuilder.create().toJson(activityTypes)).contentType("application/json");
+        final JsonValue response = ResponseSerializers.serializeActivityTypes(activityTypes);
+        ctx.result(response.toString()).contentType("application/json");
     }
 
     private void getActivityType(final Context ctx) throws NoSuchAdaptationException, NoSuchActivityTypeException {
@@ -132,17 +135,18 @@ public final class AdaptationBindings {
         final ActivityType activityType = this.appController
                 .getActivityType(adaptationId, activityTypeId);
 
-        ctx.result(JsonbBuilder.create().toJson(activityType)).contentType("application/json");
+        final JsonValue response = ResponseSerializers.serializeActivityType(activityType);
+        ctx.result(response.toString()).contentType("application/json");
     }
 
     private void getActivityTypeParameters(final Context ctx) throws NoSuchAdaptationException, NoSuchActivityTypeException {
         final String adaptationId = ctx.pathParam("adaptationId");
         final String activityTypeId = ctx.pathParam("activityTypeId");
 
-        final List<ActivityTypeParameter> activityTypeParameters = this.appController
-                .getActivityTypeParameters(adaptationId, activityTypeId)
-                .collect(Collectors.toList());
+        final Map<String, ParameterSchema> activityTypeParameters = this.appController
+                .getActivityTypeParameters(adaptationId, activityTypeId);
 
-        ctx.result(JsonbBuilder.create().toJson(activityTypeParameters)).contentType("application/json");
+        final JsonValue response = ResponseSerializers.serializeParameterSchemas(activityTypeParameters);
+        ctx.result(response.toString()).contentType("application/json");
     }
 }

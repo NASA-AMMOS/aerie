@@ -5,9 +5,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeExc
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityTypeParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
@@ -22,17 +22,11 @@ public final class StubAdaptationController implements IAdaptationController {
 
     public static final String EXISTENT_ACTIVITY_ID = "activity";
     public static final String NONEXISTENT_ACTIVITY_ID = "no-activity";
-    public static final ActivityType EXISTENT_ACTIVITY = new ActivityType();
+    public static final ActivityType EXISTENT_ACTIVITY = new ActivityType(
+        EXISTENT_ACTIVITY_ID,
+        Map.of("Param", ParameterSchema.ofString()));
 
     static {
-
-        final List<ActivityTypeParameter> parameters = new ArrayList<>();
-        final ActivityTypeParameter parameter = new ActivityTypeParameter();
-        parameter.name = "Param";
-        parameter.type = "String";
-        parameters.add(parameter);
-        EXISTENT_ACTIVITY.parameters = parameters;
-
         VALID_NEW_ADAPTATION = new HashMap<>();
         VALID_NEW_ADAPTATION.put("name", "adaptation");
         VALID_NEW_ADAPTATION.put("version", "1.0");
@@ -106,7 +100,7 @@ public final class StubAdaptationController implements IAdaptationController {
     }
 
     @Override
-    public Stream<ActivityTypeParameter> getActivityTypeParameters(final String adaptationId, final String activityTypeId) throws NoSuchAdaptationException, NoSuchActivityTypeException {
+    public Map<String, ParameterSchema> getActivityTypeParameters(final String adaptationId, final String activityTypeId) throws NoSuchAdaptationException, NoSuchActivityTypeException {
         if (!Objects.equals(adaptationId, EXISTENT_ADAPTATION_ID)) {
             throw new NoSuchAdaptationException(adaptationId);
         }
@@ -115,6 +109,6 @@ public final class StubAdaptationController implements IAdaptationController {
             throw new NoSuchActivityTypeException(adaptationId, activityTypeId);
         }
 
-        return EXISTENT_ACTIVITY.parameters.stream();
+        return new HashMap<>(EXISTENT_ACTIVITY.parameters);
     }
 }

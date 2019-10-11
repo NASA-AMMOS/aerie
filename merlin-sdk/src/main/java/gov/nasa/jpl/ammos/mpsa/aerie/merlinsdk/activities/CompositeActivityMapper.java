@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 
@@ -12,13 +13,11 @@ import static java.util.Collections.unmodifiableMap;
 
 public class CompositeActivityMapper implements ActivityMapper {
   private final Map<String, ActivityMapper> activityMappers;
-  private final Map<String, ParameterSchema> activitySchemas = new HashMap<>();
+  private final Map<String, Map<String, ParameterSchema>> activitySchemas;
 
   public CompositeActivityMapper(final Map<String, ActivityMapper> activityMappers) {
     this.activityMappers = activityMappers;
-    for (final var mapper : this.activityMappers.values()) {
-      this.activitySchemas.putAll(mapper.getActivitySchemas());
-    }
+    this.activitySchemas = immutableActivitySchemas(activityMappers);
   }
 
   private Optional<ActivityMapper> lookupMapper(final String activityType) {
@@ -27,8 +26,8 @@ public class CompositeActivityMapper implements ActivityMapper {
 
 
   @Override
-  public Map<String, ParameterSchema> getActivitySchemas() {
-    return unmodifiableMap(this.activitySchemas);
+  public Map<String, Map<String, ParameterSchema>> getActivitySchemas() {
+    return this.activitySchemas;
   }
 
   @Override
@@ -41,5 +40,20 @@ public class CompositeActivityMapper implements ActivityMapper {
   public Optional<SerializedActivity> serializeActivity(final Activity activity) {
     final String activityType = activity.getClass().getAnnotation(ActivityType.class).value();
     return lookupMapper(activityType).flatMap(m -> m.serializeActivity(activity));
+  }
+
+  private static Map<String, Map<String, ParameterSchema>> immutableActivitySchemas(final Map<String, ActivityMapper> activityMappers) {
+    final Map<String, Map<String, ParameterSchema>> clonedSchemas = new HashMap<>();
+
+    for (final var mapper : activityMappers.values()) {
+      for (final var activityEntry : mapper.getActivitySchemas().entrySet()) {
+        final String activityName = activityEntry.getKey();
+        final Map<String, ParameterSchema> activityParameters = new HashMap<>(activityEntry.getValue());
+
+        clonedSchemas.put(activityName, activityParameters);
+      }
+    }
+
+    return unmodifiableMap(clonedSchemas);
   }
 }

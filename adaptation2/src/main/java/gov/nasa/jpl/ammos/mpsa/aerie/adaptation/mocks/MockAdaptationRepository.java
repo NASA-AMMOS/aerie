@@ -5,12 +5,12 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.InvalidAdaptationJARE
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityTypeParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.MissingAdaptationException;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -23,9 +23,17 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.FileUtils.getUn
 import static gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader.loadActivities;
 
 public final class MockAdaptationRepository implements AdaptationRepository {
-    private final Path ADAPTATION_FILE_PATH = Path.of("mock_adaptation_files").toAbsolutePath();
+    private final Path ADAPTATION_FILE_PATH;
     private final Map<String, Adaptation> adaptations = new HashMap<>();
     private int nextAdaptationId;
+
+    public MockAdaptationRepository() {
+        try {
+            ADAPTATION_FILE_PATH = Files.createTempDirectory("mock_adaptation_files").toAbsolutePath();
+        } catch (final IOException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
 
     @Override
     public String createAdaptation(final NewAdaptation newAdaptation) {
@@ -40,7 +48,6 @@ public final class MockAdaptationRepository implements AdaptationRepository {
         // Store Adaptation JAR
         final Path location = getUniqueFilePath(adaptation, ADAPTATION_FILE_PATH);
         try {
-            Files.createDirectories(location.getParent());
             Files.copy(newAdaptation.path, location);
         } catch (final IOException e) {
             throw new AdaptationAccessException(adaptation.path, e);
@@ -116,9 +123,9 @@ public final class MockAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
-    public Stream<ActivityTypeParameter> getActivityTypeParameters(final String adaptationId, final String activityId) throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException {
+    public Map<String, ParameterSchema> getActivityTypeParameters(final String adaptationId, final String activityId) throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException {
         final ActivityType activityType = getActivityTypeInAdaptation(adaptationId, activityId);
 
-        return activityType.parameters.stream();
+        return activityType.parameters;
     }
 }

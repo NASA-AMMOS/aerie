@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.plan.mocks;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 
 import java.util.ArrayList;
@@ -33,7 +32,7 @@ public final class Fixtures {
 
       this.NONEXISTENT_ADAPTATION_ID = "nonexistent adaptation";
       this.EXISTENT_ADAPTATION_ID = this.adaptationService.addAdaptation(Map.of(
-          EXISTENT_ACTIVITY_TYPE_ID, new ActivityType()
+          EXISTENT_ACTIVITY_TYPE_ID, Map.of()
       ));
 
       this.EXISTENT_PLAN_ID = this.planRepository.createPlan(createValidNewPlan("plan 1"));
@@ -43,8 +42,7 @@ public final class Fixtures {
       this.planRepository.createPlan(createValidNewPlan("plan 3"));
 
       {
-        final ActivityInstance activity = new ActivityInstance();
-        activity.type = this.EXISTENT_ACTIVITY_TYPE_ID;
+        final ActivityInstance activity = createValidActivityInstance();
 
         this.EXISTENT_ACTIVITY_INSTANCE = activity;
         this.EXISTENT_ACTIVITY_INSTANCE_ID = this.planRepository.createActivity(this.EXISTENT_PLAN_ID, activity);
@@ -70,7 +68,7 @@ public final class Fixtures {
   public ActivityInstance createValidActivityInstance() {
     final ActivityInstance activityInstance = new ActivityInstance();
 
-    activityInstance.type = "BiteBanana";
+    activityInstance.type = this.EXISTENT_ACTIVITY_TYPE_ID;
     activityInstance.startTimestamp = "0000-111T22:33:44";
     activityInstance.parameters = new HashMap<>();
 

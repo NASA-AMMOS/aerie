@@ -1,9 +1,11 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ParameterType;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import static java.util.Collections.unmodifiableMap;
@@ -78,6 +80,11 @@ public abstract class ParameterSchema {
       public String toString() {
         return "ParameterSchema.DOUBLE";
       }
+
+      @Override
+      public boolean equals(final Object other) {
+        return ((other instanceof ParameterSchema) && ((ParameterSchema)other).asDouble().isPresent());
+      }
     };
   }
 
@@ -93,6 +100,11 @@ public abstract class ParameterSchema {
       }
       public String toString() {
         return "ParameterSchema.INT";
+      }
+
+      @Override
+      public boolean equals(final Object other) {
+        return ((other instanceof ParameterSchema) && ((ParameterSchema)other).asInt().isPresent());
       }
     };
   }
@@ -110,6 +122,11 @@ public abstract class ParameterSchema {
       public String toString() {
         return "ParameterSchema.BOOLEAN";
       }
+
+      @Override
+      public boolean equals(final Object other) {
+        return ((other instanceof ParameterSchema) && ((ParameterSchema)other).asBoolean().isPresent());
+      }
     };
   }
 
@@ -126,6 +143,11 @@ public abstract class ParameterSchema {
       public String toString() {
         return "ParameterSchema.STRING";
       }
+
+      @Override
+      public boolean equals(final Object other) {
+        return ((other instanceof ParameterSchema) && ((ParameterSchema)other).asString().isPresent());
+      }
     };
   }
 
@@ -137,12 +159,18 @@ public abstract class ParameterSchema {
    * @return A new {@link ParameterSchema} representing a homogeneous list of elements.
    */
   public static ParameterSchema ofList(final ParameterSchema value) {
+    Objects.requireNonNull(value);
     return new ParameterSchema() {
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onList(value);
       }
       public String toString() {
         return "[" + String.valueOf(value) + "]";
+      }
+
+      @Override
+      public boolean equals(final Object other) {
+        return ((other instanceof ParameterSchema) && ((ParameterSchema)other).asList().equals(Optional.of(value)));
       }
     };
   }
@@ -151,16 +179,22 @@ public abstract class ParameterSchema {
    * Creates a {@link ParameterSchema} representing a heterogeneous set of named elements matching
    *   the associated {@link ParameterSchema}s.
    *
-   * @param value Any set of named {@link ParameterSchema}s.
+   * @param map Any set of named {@link ParameterSchema}s.
    * @return A new {@link ParameterSchema} representing a heterogeneous set of named {@link ParameterSchema}s.
    */
-  public static ParameterSchema ofMap(final Map<String, ParameterSchema> value) {
+  public static ParameterSchema ofMap(final Map<String, ParameterSchema> map) {
+    final var value = Map.copyOf(map);
     return new ParameterSchema() {
       public <T> T match(final Visitor<T> visitor) {
-        return visitor.onMap(unmodifiableMap(value));
+        return visitor.onMap(value);
       }
       public String toString() {
         return String.valueOf(value);
+      }
+
+      @Override
+      public boolean equals(final Object other) {
+        return ((other instanceof ParameterSchema) && ((ParameterSchema)other).asMap().equals(Optional.of(value)));
       }
     };
   }

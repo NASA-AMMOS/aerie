@@ -25,6 +25,11 @@
       <artifactId>yasson</artifactId>
       <version>1.0.4</version>
     </dependency>
+    <dependency>
+      <groupId>gov.nasa.jpl.ammos.mpsa.aerie</groupId>
+      <artifactId>merlin-sdk</artifactId>
+      <version>1.1-SNAPSHOT</version>
+    </dependency>
 
     <!-- Database drivers -->
     <dependency>

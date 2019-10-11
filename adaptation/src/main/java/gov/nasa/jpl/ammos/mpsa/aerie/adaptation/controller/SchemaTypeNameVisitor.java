@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controller;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 
 import java.util.Map;
 

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.mocks;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.Breadcrumb;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.IPlanController;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
@@ -30,18 +31,27 @@ public final class StubPlanController implements IPlanController {
   public static final ActivityInstance VALID_ACTIVITY;
   public static final ActivityInstance INVALID_ACTIVITY;
 
+  public static final List<Pair<List<Breadcrumb>, String>> VALIDATION_ERRORS = List.of(
+      Pair.of(List.of(Breadcrumb.of("breadcrumb"), Breadcrumb.of(0)), "an error")
+  );
+
   static {
     EXISTENT_ACTIVITY = new ActivityInstance();
     EXISTENT_ACTIVITY.type = "existent activity";
 
     VALID_ACTIVITY = new ActivityInstance();
     VALID_ACTIVITY.type = "valid activity";
+    VALID_ACTIVITY.startTimestamp = "start timestamp";
+    VALID_ACTIVITY.parameters = Map.of();
 
     INVALID_ACTIVITY = new ActivityInstance();
     INVALID_ACTIVITY.type = "invalid activity";
 
     VALID_NEW_PLAN = new NewPlan();
     VALID_NEW_PLAN.name = "valid";
+    VALID_NEW_PLAN.adaptationId = "adaptation id";
+    VALID_NEW_PLAN.startTimestamp = "start timestamp";
+    VALID_NEW_PLAN.endTimestamp = "end timestamp";
 
     INVALID_NEW_PLAN = new NewPlan();
     INVALID_NEW_PLAN.name = "invalid";
@@ -72,7 +82,7 @@ public final class StubPlanController implements IPlanController {
 
   public String addPlan(final NewPlan plan) throws ValidationException {
     if (plan.equals(INVALID_NEW_PLAN)) {
-      throw new ValidationException("invalid new plan", List.of("an error"));
+      throw new ValidationException(VALIDATION_ERRORS);
     }
 
     return EXISTENT_PLAN_ID;
@@ -90,7 +100,7 @@ public final class StubPlanController implements IPlanController {
     if (!Objects.equals(id, EXISTENT_PLAN_ID)) {
       throw new NoSuchPlanException(id);
     } else if (Objects.equals(patch, INVALID_PATCH)) {
-      throw new ValidationException("invalid patch", List.of("an error"));
+      throw new ValidationException(VALIDATION_ERRORS);
     }
   }
 
@@ -99,7 +109,7 @@ public final class StubPlanController implements IPlanController {
     if (!Objects.equals(id, EXISTENT_PLAN_ID)) {
       throw new NoSuchPlanException(id);
     } else if (plan.equals(INVALID_NEW_PLAN)) {
-      throw new ValidationException("invalid new plan", List.of("an error"));
+      throw new ValidationException(VALIDATION_ERRORS);
     }
   }
 
@@ -123,7 +133,7 @@ public final class StubPlanController implements IPlanController {
     final List<String> activityIds = new ArrayList<>();
     for (final ActivityInstance activityInstance : activityInstances) {
       if (!Objects.equals(activityInstance, VALID_ACTIVITY)) {
-        throw new ValidationException("invalid new activity instances", List.of("an error"));
+        throw new ValidationException(VALIDATION_ERRORS);
       }
 
       activityIds.add(EXISTENT_ACTIVITY_ID);
@@ -148,7 +158,7 @@ public final class StubPlanController implements IPlanController {
     } else if (!Objects.equals(activityInstanceId, EXISTENT_ACTIVITY_ID)) {
       throw new NoSuchActivityInstanceException(planId, activityInstanceId);
     } else if (Objects.equals(patch, INVALID_ACTIVITY)) {
-      throw new ValidationException("invalid patch", List.of("an error"));
+      throw new ValidationException(VALIDATION_ERRORS);
     }
   }
 
@@ -159,7 +169,7 @@ public final class StubPlanController implements IPlanController {
     } else if (!Objects.equals(activityInstanceId, EXISTENT_ACTIVITY_ID)) {
       throw new NoSuchActivityInstanceException(planId, activityInstanceId);
     } else if (Objects.equals(activityInstance, INVALID_ACTIVITY)) {
-      throw new ValidationException("invalid activity instance", List.of("an error"));
+      throw new ValidationException(VALIDATION_ERRORS);
     }
   }
 }

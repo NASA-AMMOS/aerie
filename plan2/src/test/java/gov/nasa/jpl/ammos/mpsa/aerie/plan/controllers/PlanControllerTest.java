@@ -6,12 +6,12 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.ValidationException;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.http.ResponseSerializers;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.mocks.Fixtures;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -102,7 +102,7 @@ public final class PlanControllerTest {
     // THEN
     assertThat(thrown).isInstanceOf(ValidationException.class);
 
-    final List<String> validationErrors = ((ValidationException)thrown).getValidationErrors();
+    final var validationErrors = ((ValidationException)thrown).getValidationErrors();
     assertThat(validationErrors).size().isEqualTo(1);
   }
 
@@ -121,7 +121,7 @@ public final class PlanControllerTest {
     // THEN
     assertThat(thrown).isInstanceOf(ValidationException.class);
 
-    final List<String> validationErrors = ((ValidationException)thrown).getValidationErrors();
+    final var validationErrors = ((ValidationException)thrown).getValidationErrors();
     assertThat(validationErrors).size().isEqualTo(1);
   }
 
@@ -161,7 +161,7 @@ public final class PlanControllerTest {
     // THEN
     assertThat(thrown).isInstanceOf(ValidationException.class);
 
-    final List<String> validationErrors = ((ValidationException)thrown).getValidationErrors();
+    final var validationErrors = ((ValidationException)thrown).getValidationErrors();
     assertThat(validationErrors).size().isEqualTo(1);
   }
 
@@ -185,7 +185,7 @@ public final class PlanControllerTest {
   }
 
   @Test
-  public void shouldPatchPlan() throws ValidationException, NoSuchPlanException {
+  public void shouldPatchPlan() throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
     final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
@@ -225,7 +225,6 @@ public final class PlanControllerTest {
   }
 
   @Test
-  @Disabled("disabled until activity validation is implemented")
   public void shouldNotPatchInvalidPlan() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
@@ -242,8 +241,8 @@ public final class PlanControllerTest {
     // THEN
     assertThat(thrown).isInstanceOf(ValidationException.class);
 
-    final List<String> validationErrors = ((ValidationException)thrown).getValidationErrors();
-    assertThat(validationErrors).size().isEqualTo(1);
+    final var validationErrors = ((ValidationException)thrown).getValidationErrors();
+    assertThat(validationErrors).size().isEqualTo(2);
   }
 
   @Test
@@ -376,7 +375,6 @@ public final class PlanControllerTest {
   }
 
   @Test
-  @Disabled("disabled until activity validation is implemented")
   public void shouldNotAddInvalidActivityInstancesToPlan() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
@@ -394,7 +392,7 @@ public final class PlanControllerTest {
     // THEN
     assertThat(thrown).isInstanceOf(ValidationException.class);
 
-    final List<String> validationErrors = ((ValidationException)thrown).getValidationErrors();
+    final var validationErrors = ((ValidationException)thrown).getValidationErrors();
     assertThat(validationErrors).size().isEqualTo(1);
   }
 
@@ -519,7 +517,6 @@ public final class PlanControllerTest {
   }
 
   @Test
-  @Disabled("disabled until activity validation is implemented")
   public void shouldNotUpdateInvalidActivityInstance() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
@@ -527,12 +524,10 @@ public final class PlanControllerTest {
 
     final String planId = fixtures.EXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;
-    final ActivityInstance expectedActivityInstance = new ActivityInstance(fixtures.EXISTENT_ACTIVITY_INSTANCE);
-    expectedActivityInstance.type = "nonexistent activity type";
 
     // WHEN
     final ActivityInstance patch = new ActivityInstance();
-    patch.startTimestamp = expectedActivityInstance.startTimestamp;
+    patch.type = "nonexistent activity type";
 
     final Throwable thrown = catchThrowable(() -> controller.updateActivityInstance(planId, activityInstanceId, patch));
 
@@ -599,7 +594,6 @@ public final class PlanControllerTest {
   }
 
   @Test
-  @Disabled("disabled until activity validation is implemented")
   public void shouldNotReplaceInvalidActivityInstance() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();

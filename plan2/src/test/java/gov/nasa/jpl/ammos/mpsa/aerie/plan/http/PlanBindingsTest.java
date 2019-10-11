@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import javax.json.JsonObject;
+import javax.json.JsonValue;
 import javax.json.bind.JsonbBuilder;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -118,8 +119,7 @@ public final class PlanBindingsTest {
     // THEN
     assertThat(response.statusCode()).isEqualTo(400);
 
-    final Type STRING_LIST_TYPE = new ArrayList<String>(){}.getClass().getGenericSuperclass();
-    JsonbBuilder.create().fromJson(response.body(), STRING_LIST_TYPE);
+    // TODO: Verify the structure of the error response entity.
   }
 
   @Test
@@ -160,8 +160,7 @@ public final class PlanBindingsTest {
     // THEN
     assertThat(response.statusCode()).isEqualTo(400);
 
-    final Type STRING_LIST_TYPE = new ArrayList<String>(){}.getClass().getGenericSuperclass();
-    JsonbBuilder.create().fromJson(response.body(), STRING_LIST_TYPE);
+    // TODO: Verify the structure of the error response entity.
   }
 
   @Test
@@ -194,16 +193,17 @@ public final class PlanBindingsTest {
   public void shouldNotPatchInvalidPlan() throws IOException, InterruptedException {
     // GIVEN
     final String planId = StubPlanController.EXISTENT_PLAN_ID;
-    final Plan patch= StubPlanController.INVALID_PATCH;
+    final Plan patch = StubPlanController.INVALID_PATCH;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PATCH", "/plans/" + planId, patch);
 
     // THEN
-    assertThat(response.statusCode()).isEqualTo(400);
+    assertThat(response.statusCode()).isEqualTo(422);
 
-    final Type STRING_LIST_TYPE = new ArrayList<String>(){}.getClass().getGenericSuperclass();
-    JsonbBuilder.create().fromJson(response.body(), STRING_LIST_TYPE);
+    final JsonValue responseJson = JsonbBuilder.create().fromJson(response.body(), JsonValue.class);
+    final JsonValue expectedJson = ResponseSerializers.serializeValidationMessages(StubPlanController.VALIDATION_ERRORS);
+    assertThat(responseJson).isEqualTo(expectedJson);
   }
 
   @Test
@@ -316,10 +316,7 @@ public final class PlanBindingsTest {
     // THEN
     assertThat(response.statusCode()).isEqualTo(200);
 
-    final Type STRING_LIST_TYPE = new ArrayList<String>(){}.getClass().getGenericSuperclass();
-    final List<String> activityIds = JsonbBuilder.create().fromJson(response.body(), STRING_LIST_TYPE);
-
-    assertThat(activityIds).isEqualTo(List.of(StubPlanController.EXISTENT_ACTIVITY_ID));
+    // TODO: Verify the structure of the error response entity.
   }
 
   @Test
@@ -443,10 +440,11 @@ public final class PlanBindingsTest {
     final HttpResponse<String> response = client.sendRequest("PATCH", "/plans/" + planId + "/activity_instances/" + activityInstanceId, patch);
 
     // THEN
-    assertThat(response.statusCode()).isEqualTo(400);
+    assertThat(response.statusCode()).isEqualTo(422);
 
-    final Type STRING_LIST_TYPE = new ArrayList<String>(){}.getClass().getGenericSuperclass();
-    JsonbBuilder.create().fromJson(response.body(), STRING_LIST_TYPE);
+    final JsonValue responseJson = JsonbBuilder.create().fromJson(response.body(), JsonValue.class);
+    final JsonValue expectedJson = ResponseSerializers.serializeValidationMessages(StubPlanController.VALIDATION_ERRORS);
+    assertThat(responseJson).isEqualTo(expectedJson);
   }
 
   @Test
@@ -502,9 +500,10 @@ public final class PlanBindingsTest {
     final HttpResponse<String> response = client.sendRequest("PUT", "/plans/" + planId + "/activity_instances/" + activityInstanceId, activityInstance);
 
     // THEN
-    assertThat(response.statusCode()).isEqualTo(400);
+    assertThat(response.statusCode()).isEqualTo(422);
 
-    final Type STRING_LIST_TYPE = new ArrayList<String>(){}.getClass().getGenericSuperclass();
-    JsonbBuilder.create().fromJson(response.body(), STRING_LIST_TYPE);
+    final JsonValue responseJson = JsonbBuilder.create().fromJson(response.body(), JsonValue.class);
+    final JsonValue expectedJson = ResponseSerializers.serializeValidationMessages(StubPlanController.VALIDATION_ERRORS);
+    assertThat(responseJson).isEqualTo(expectedJson);
   }
 }

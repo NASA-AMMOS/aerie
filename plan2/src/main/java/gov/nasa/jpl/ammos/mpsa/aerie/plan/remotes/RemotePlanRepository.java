@@ -6,10 +6,10 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import org.apache.commons.lang3.tuple.Pair;
@@ -18,7 +18,9 @@ import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -193,6 +195,12 @@ public final class RemotePlanRepository implements PlanRepository {
     }
   }
 
+  @Override
+  public void deleteAllActivities(final String planId) throws NoSuchPlanException {
+    ensurePlanExists(planId);
+    this.activityCollection.deleteMany(activityByPlan(planId));
+  }
+
   private Bson activityByPlan(final String planId) {
     return eq("planId", new ObjectId(planId));
   }
@@ -213,22 +221,53 @@ public final class RemotePlanRepository implements PlanRepository {
     }
   }
 
+  private SerializedParameter parameterFromDocument(final Document document) {
+    switch (document.getString("type")) {
+      case "null":
+        return SerializedParameter.NULL;
+      case "string":
+        return SerializedParameter.of(document.getString("value"));
+      case "int":
+        return SerializedParameter.of(document.getInteger("value"));
+      case "double":
+        return SerializedParameter.of(document.getDouble("value"));
+      case "boolean":
+        return SerializedParameter.of(document.getBoolean("value"));
+      case "list":
+        final List<Document> itemDocuments = document.getList("value", Document.class);
+
+        final List<SerializedParameter> items = new ArrayList<>();
+        for (final var itemDocument : itemDocuments) {
+          items.add(parameterFromDocument(itemDocument));
+        }
+
+        return SerializedParameter.of(items);
+      case "map":
+        final Document fieldsDocument = document.get("value", Document.class);
+
+        final Map<String, SerializedParameter> fields = new HashMap<>();
+        for (final var entry : fieldsDocument.entrySet()) {
+          fields.put(entry.getKey(), parameterFromDocument((Document)entry.getValue()));
+        }
+
+        return SerializedParameter.of(fields);
+      default:
+        throw new Error("unexpected bad data in database");
+    }
+  }
+
   private ActivityInstance activityFromDocument(final Document document) {
+    final Document parametersDocument = document.get("parameters", Document.class);
+
+    final Map<String, SerializedParameter> parameters = new HashMap<>();
+    for (final var entry : parametersDocument.entrySet()) {
+      parameters.put(entry.getKey(), parameterFromDocument((Document)entry.getValue()));
+    }
+
     final ActivityInstance activity = new ActivityInstance();
     activity.type = document.getString("type");
     activity.startTimestamp = document.getString("startTimestamp");
-    activity.parameters = new HashMap<>();
-
-    final Document parameters = document.get("parameters", Document.class);
-    for (final String parameterName : parameters.keySet()) {
-      final Document parameterDocument = parameters.get(parameterName, Document.class);
-
-      final ActivityParameter parameter = new ActivityParameter();
-      parameter.type = parameterDocument.getString("type");
-      parameter.value = parameterDocument.getString("value");
-
-      activity.parameters.put(parameterName, parameter);
-    }
+    activity.parameters = parameters;
 
     return activity;
   }
@@ -246,22 +285,80 @@ public final class RemotePlanRepository implements PlanRepository {
     return plan;
   }
 
-  private Document toDocument(final Map<String, ActivityParameter> parameters) {
-    final Document parametersDocument = new Document();
-
-    if (parameters != null) {
-      for (final var entry : parameters.entrySet()) {
-        final String parameterName = entry.getKey();
-        final ActivityParameter parameter = entry.getValue();
-
-        final Document parameterDocument = new Document();
-        parameterDocument.put("type", parameter.type);
-        parameterDocument.put("value", parameter.value);
-
-        parametersDocument.put(parameterName, parameterDocument);
+  private Document toDocument(final SerializedParameter parameter) {
+    return parameter.match(new SerializedParameter.Visitor<>() {
+      @Override
+      public Document onNull() {
+        final Document document = new Document();
+        document.put("type", "null");
+        return document;
       }
-    }
 
+      @Override
+      public Document onDouble(double value) {
+        final Document document = new Document();
+        document.put("type", "double");
+        document.put("value", value);
+        return document;
+      }
+
+      @Override
+      public Document onInt(int value) {
+        final Document document = new Document();
+        document.put("type", "int");
+        document.put("value", value);
+        return document;
+      }
+
+      @Override
+      public Document onBoolean(boolean value) {
+        final Document document = new Document();
+        document.put("type", "boolean");
+        document.put("value", value);
+        return document;
+      }
+
+      @Override
+      public Document onString(String value) {
+        final Document document = new Document();
+        document.put("type", "string");
+        document.put("value", value);
+        return document;
+      }
+
+      @Override
+      public Document onList(List<SerializedParameter> items) {
+        final List<Document> itemDocuments = new ArrayList<>();
+        for (final var item : items) {
+          itemDocuments.add(item.match(this));
+        }
+
+        final Document document = new Document();
+        document.put("type", "list");
+        document.put("value", itemDocuments);
+        return document;
+      }
+
+      @Override
+      public Document onMap(Map<String, SerializedParameter> fields) {
+        final Document fieldsDocument = new Document();
+        for (final var field : fields.entrySet()) {
+          fieldsDocument.put(field.getKey(), field.getValue().match(this));
+        }
+
+        final Document document = new Document();
+        document.put("type", "map");
+        document.put("value", fieldsDocument);
+        return document;
+      }
+    });
+  }
+
+  private Document toDocument(final Map<String, SerializedParameter> parameters) {
+    final Document parametersDocument = new Document();
+    for (final var entry : parameters.entrySet()) {
+      parametersDocument.put(entry.getKey(), toDocument(entry.getValue()));
+    }
     return parametersDocument;
   }
 
@@ -363,7 +460,7 @@ public final class RemotePlanRepository implements PlanRepository {
     }
 
     @Override
-    public ActivityTransaction setParameters(final Map<String, ActivityParameter> parameters) {
+    public ActivityTransaction setParameters(final Map<String, SerializedParameter> parameters) {
       this.patch = combine(this.patch, set("parameters", toDocument(parameters)));
       return this;
     }

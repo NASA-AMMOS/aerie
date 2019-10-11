@@ -5,7 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.AdaptationUtils;
 import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.MissingAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -17,7 +17,7 @@ public final class AdaptationLoader {
     public static Map<String, ActivityType> loadActivities(final Path path) throws MissingAdaptationException {
         final MerlinAdaptation adaptation = AdaptationUtils.loadAdaptation(path);
 
-        final Map<String, ParameterSchema> activitySchemas = Optional
+        final Map<String, Map<String, ParameterSchema>> activitySchemas = Optional
             .of(adaptation)
             .map(MerlinAdaptation::getActivityMapper)
             .map(ActivityMapper::getActivitySchemas)

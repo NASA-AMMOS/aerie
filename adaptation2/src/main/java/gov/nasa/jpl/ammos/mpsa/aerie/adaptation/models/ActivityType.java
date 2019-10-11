@@ -1,24 +1,23 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 
 import java.util.*;
 
 public final class ActivityType {
     public String name;
-    public List<ActivityTypeParameter> parameters;
+    public Map<String, ParameterSchema> parameters;
 
     public ActivityType() {}
 
-    public ActivityType(final String name, final ParameterSchema parameterSchema) {
+    public ActivityType(final String name, final Map<String, ParameterSchema> parameterSchema) {
         this.name = name;
-        this.parameters = buildParameterList(parameterSchema);
+        this.parameters = parameterSchema;
     }
 
     public ActivityType(final ActivityType template) {
         this.name = template.name;
-        this.parameters = new ArrayList<>();
-        template.parameters.forEach(parameter -> parameters.add(new ActivityTypeParameter(parameter)));
+        this.parameters = new HashMap<>(template.parameters);
     }
 
     @Override
@@ -32,25 +31,5 @@ public final class ActivityType {
                 (  Objects.equals(this.name, other.name)
                 && Objects.equals(this.parameters, other.parameters)
                 );
-    }
-
-    private List<ActivityTypeParameter> buildParameterList(final ParameterSchema parameterSchema) {
-        final List<ActivityTypeParameter> parameters = new ArrayList<>();
-
-        final Optional<Map<String, ParameterSchema>> parameterMapOpt = parameterSchema.asMap();
-
-        if (parameterMapOpt.isEmpty()) return null;
-
-        for (final var parameterEntry : parameterMapOpt.get().entrySet()) {
-            final String parameterName = parameterEntry.getKey();
-            final String parameterType = parameterEntry.getValue().match(new SchemaTypeNameVisitor());
-
-            final ActivityTypeParameter typeParam = new ActivityTypeParameter();
-            typeParam.name = parameterName;
-            typeParam.type = parameterType;
-            parameters.add(typeParam);
-        }
-
-        return parameters;
     }
 }

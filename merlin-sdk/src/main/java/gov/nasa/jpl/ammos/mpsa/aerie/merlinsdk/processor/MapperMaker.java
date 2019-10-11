@@ -15,7 +15,7 @@ import com.squareup.javapoet.AnnotationSpec;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
@@ -81,11 +81,14 @@ class MapperMaker {
         .returns(TypeName.get(typeUtils.getDeclaredType(
             elementUtils.getTypeElement(Map.class.getCanonicalName()),
             elementUtils.getTypeElement(String.class.getCanonicalName()).asType(),
-            elementUtils.getTypeElement(ParameterSchema.class.getCanonicalName()).asType())))
+            typeUtils.getDeclaredType(
+                elementUtils.getTypeElement(Map.class.getCanonicalName()),
+                elementUtils.getTypeElement(String.class.getCanonicalName()).asType(),
+                elementUtils.getTypeElement(ParameterSchema.class.getCanonicalName()).asType()))))
         .addStatement("final var $L = new $T<$T, $T>()", parametersVarName, HashMap.class, String.class, ParameterSchema.class)
         .addCode(schemasBlock)
         .addCode("\n")
-        .addStatement("return $T.of($L, $T.ofMap($L))", Map.class, activityTypeNameSpec.name, ParameterSchema.class, parametersVarName)
+        .addStatement("return $T.of($L, $L)", Map.class, activityTypeNameSpec.name, parametersVarName)
         .build();
   }
 

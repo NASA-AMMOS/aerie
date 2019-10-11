@@ -1,9 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.mocks;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.PlanRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
@@ -167,6 +167,16 @@ public final class MockPlanRepository implements PlanRepository {
     plan.activityInstances.remove(activityId);
   }
 
+  @Override
+  public void deleteAllActivities(final String planId) throws NoSuchPlanException {
+    final Plan plan = plans.get(planId);
+    if (plan == null) {
+      throw new NoSuchPlanException(planId);
+    }
+
+    plan.activityInstances.clear();
+  }
+
   private class MockPlanTransaction implements PlanTransaction {
     private final String planId;
 
@@ -223,7 +233,7 @@ public final class MockPlanRepository implements PlanRepository {
 
     private Optional<String> type = Optional.empty();
     private Optional<String> startTimestamp = Optional.empty();
-    private Optional<Map<String, ActivityParameter>> parameters = Optional.empty();
+    private Optional<Map<String, SerializedParameter>> parameters = Optional.empty();
 
     public MockActivityTransaction(final String planId, final String activityId) {
       this.planId = planId;
@@ -260,13 +270,8 @@ public final class MockPlanRepository implements PlanRepository {
     }
 
     @Override
-    public ActivityTransaction setParameters(final Map<String, ActivityParameter> parameters) {
-      final Map<String, ActivityParameter> clonedParameters = new HashMap<>();
-      for (final var entry : parameters.entrySet()) {
-        clonedParameters.put(entry.getKey(), new ActivityParameter(entry.getValue()));
-      }
-
-      this.parameters = Optional.of(clonedParameters);
+    public ActivityTransaction setParameters(final Map<String, SerializedParameter> parameters) {
+      this.parameters = Optional.of(new HashMap<>(parameters));
       return this;
     }
   }

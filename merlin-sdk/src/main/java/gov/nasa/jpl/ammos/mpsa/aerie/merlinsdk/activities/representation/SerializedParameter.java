@@ -2,8 +2,11 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ParameterType;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import static java.util.Collections.unmodifiableList;
@@ -30,6 +33,9 @@ import static java.util.Collections.unmodifiableMap;
  * pattern on a class closed to extension allows us to guarantee that no ambiguity occurs.
  */
 public abstract class SerializedParameter {
+  static public SerializedParameter NULL = SerializedParameter.ofNull();
+
+
   // Closed type family -- the only legal subclasses are those defined within the body of
   // this class definition.
   private SerializedParameter() {}
@@ -58,12 +64,34 @@ public abstract class SerializedParameter {
    * @param <T> The return type of the operation represented by this {@link Visitor }.
    */
   public interface Visitor<T> {
+    T onNull();
     T onDouble(double value);
     T onInt(int value);
     T onBoolean(boolean value);
     T onString(String value);
     T onMap(Map<String, SerializedParameter> value);
     T onList(List<SerializedParameter> value);
+  }
+
+  /**
+   * Creates a {@link SerializedParameter} containing a null value.
+   *
+   * @return A new {@link SerializedParameter} containing a null value.
+   */
+  private static SerializedParameter ofNull() {
+    return new SerializedParameter() {
+      public <T> T match(final Visitor<T> visitor) {
+        return visitor.onNull();
+      }
+      public String toString() {
+        return "null";
+      }
+
+      @Override
+      public boolean equals(final Object other) {
+        return ((other instanceof SerializedParameter) && ((SerializedParameter)other).isNull());
+      }
+    };
   }
 
   /**
@@ -79,6 +107,11 @@ public abstract class SerializedParameter {
       }
       public String toString() {
         return String.valueOf(value);
+      }
+
+      @Override
+      public boolean equals(final Object other) {
+        return ((other instanceof SerializedParameter) && Objects.equals(((SerializedParameter)other).asDouble(), Optional.of(value)));
       }
     };
   }
@@ -97,6 +130,11 @@ public abstract class SerializedParameter {
       public String toString() {
         return String.valueOf(value);
       }
+
+      @Override
+      public boolean equals(final Object other) {
+        return ((other instanceof SerializedParameter) && Objects.equals(((SerializedParameter)other).asInt(), Optional.of(value)));
+      }
     };
   }
 
@@ -114,6 +152,11 @@ public abstract class SerializedParameter {
       public String toString() {
         return String.valueOf(value);
       }
+
+      @Override
+      public boolean equals(final Object other) {
+        return ((other instanceof SerializedParameter) && Objects.equals(((SerializedParameter)other).asBoolean(), Optional.of(value)));
+      }
     };
   }
 
@@ -124,12 +167,18 @@ public abstract class SerializedParameter {
    * @return A new {@link SerializedParameter} containing a {@link String}.
    */
   public static SerializedParameter of(final String value) {
+    Objects.requireNonNull(value);
     return new SerializedParameter() {
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onString(value);
       }
       public String toString() {
-        return String.valueOf(value);
+        return value;
+      }
+
+      @Override
+      public boolean equals(final Object other) {
+        return ((other instanceof SerializedParameter) && Objects.equals(((SerializedParameter)other).asString(), Optional.of(value)));
       }
     };
   }
@@ -137,16 +186,22 @@ public abstract class SerializedParameter {
   /**
    * Creates a {@link SerializedParameter} containing a set of named {@link SerializedParameter}s.
    *
-   * @param value Any set of named {@link SerializedParameter}s.
+   * @param map Any set of named {@link SerializedParameter}s.
    * @return A new {@link SerializedParameter} containing a set of named {@link SerializedParameter}s.
    */
-  public static SerializedParameter of(final Map<String, SerializedParameter> value) {
+  public static SerializedParameter of(final Map<String, SerializedParameter> map) {
+    final var value = Map.copyOf(map);
     return new SerializedParameter() {
       public <T> T match(final Visitor<T> visitor) {
-        return visitor.onMap(unmodifiableMap(value));
+        return visitor.onMap(value);
       }
       public String toString() {
         return String.valueOf(value);
+      }
+
+      @Override
+      public boolean equals(final Object other) {
+        return ((other instanceof SerializedParameter) && Objects.equals(((SerializedParameter)other).asMap(), Optional.of(value)));
       }
     };
   }
@@ -154,16 +209,22 @@ public abstract class SerializedParameter {
   /**
    * Creates a {@link SerializedParameter} containing a list of {@link SerializedParameter}s.
    *
-   * @param value Any list of {@link SerializedParameter}s.
+   * @param list Any list of {@link SerializedParameter}s.
    * @return A new SerializedParameter containing a list of {@link SerializedParameter}s.
    */
-  public static SerializedParameter of(final List<SerializedParameter> value) {
+  public static SerializedParameter of(final List<SerializedParameter> list) {
+    final var value = List.copyOf(list);
     return new SerializedParameter() {
       public <T> T match(final Visitor<T> visitor) {
-        return visitor.onList(unmodifiableList(value));
+        return visitor.onList(value);
       }
       public String toString() {
         return String.valueOf(value);
+      }
+
+      @Override
+      public boolean equals(final Object other) {
+        return ((other instanceof SerializedParameter) && Objects.equals(((SerializedParameter)other).asList(), Optional.of(value)));
       }
     };
   }
@@ -181,6 +242,11 @@ public abstract class SerializedParameter {
   public static abstract class DefaultVisitor<T> implements Visitor<Optional<T>> {
     protected Optional<T> onDefault() {
       return Optional.empty();
+    }
+
+    @Override
+    public Optional<T> onNull() {
+      return onDefault();
     }
 
     @Override
@@ -215,13 +281,29 @@ public abstract class SerializedParameter {
   }
 
   /**
+   * Determines if this object represents a null value.
+   *
+   * @return True if this object represents a null value, and false otherwise.
+   */
+  public boolean isNull() {
+    return this
+        .match(new DefaultVisitor<Boolean>() {
+          @Override
+          public Optional<Boolean> onNull() {
+            return Optional.of(true);
+          }
+        })
+        .orElse(false);
+  }
+
+  /**
    * Attempts to access the data in this object as a {@link double}.
    *
    * @return An {@link Optional} containing a {@link double} if this object contains a {@link double}.
    *   Otherwise, returns an empty {@link Optional}.
    */
   public Optional<Double> asDouble() {
-    return this.match(new DefaultVisitor<Double>() {
+    return this.match(new DefaultVisitor<>() {
       @Override
       public Optional<Double> onDouble(final double value) {
         return Optional.of(value);
@@ -236,7 +318,7 @@ public abstract class SerializedParameter {
    *   Otherwise, returns an empty {@link Optional}.
    */
   public Optional<Integer> asInt() {
-    return this.match(new DefaultVisitor<Integer>() {
+    return this.match(new DefaultVisitor<>() {
       @Override
       public Optional<Integer> onInt(final int value) {
         return Optional.of(value);
@@ -251,7 +333,7 @@ public abstract class SerializedParameter {
    *   Otherwise, returns an empty {@link Optional}.
    */
   public Optional<Boolean> asBoolean() {
-    return this.match(new DefaultVisitor<Boolean>() {
+    return this.match(new DefaultVisitor<>() {
       @Override
       public Optional<Boolean> onBoolean(final boolean value) {
         return Optional.of(value);
@@ -266,7 +348,7 @@ public abstract class SerializedParameter {
    *   Otherwise, returns an empty {@link Optional}.
    */
   public Optional<String> asString() {
-    return this.match(new DefaultVisitor<String>() {
+    return this.match(new DefaultVisitor<>() {
       @Override
       public Optional<String> onString(final String value) {
         return Optional.of(value);
@@ -281,7 +363,7 @@ public abstract class SerializedParameter {
    *   Otherwise, returns an empty {@link Optional}.
    */
   public Optional<Map<String, SerializedParameter>> asMap() {
-    return this.match(new DefaultVisitor<Map<String, SerializedParameter>>() {
+    return this.match(new DefaultVisitor<>() {
       @Override
       public Optional<Map<String, SerializedParameter>> onMap(final Map<String, SerializedParameter> value) {
         return Optional.of(value);
@@ -296,7 +378,7 @@ public abstract class SerializedParameter {
    *   Otherwise, returns an empty {@link Optional}.
    */
   public Optional<List<SerializedParameter>> asList() {
-    return this.match(new DefaultVisitor<List<SerializedParameter>>() {
+    return this.match(new DefaultVisitor<>() {
       @Override
       public Optional<List<SerializedParameter>> onList(final List<SerializedParameter> value) {
         return Optional.of(value);

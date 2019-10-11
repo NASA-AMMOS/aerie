@@ -3,17 +3,18 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.InvalidAdaptationJARException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.Fixtures;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityTypeParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -252,12 +253,11 @@ public final class AdaptationControllerTest {
         // GIVEN
         final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
         final String activityId = Fixtures.EXISTENT_ACTIVITY_TYPE_ID;
-        final List<ActivityTypeParameter> expectedParameters = fixtures.adaptationRepository
-                .getActivityTypeParameters(adaptationId, activityId)
-                .collect(Collectors.toList());
+        final Map<String, ParameterSchema> expectedParameters = fixtures.adaptationRepository
+                .getActivityTypeParameters(adaptationId, activityId);
 
         // WHEN
-        final List<ActivityTypeParameter> parameters = controller.getActivityTypeParameters(adaptationId, activityId).collect(Collectors.toList());
+        final Map<String, ParameterSchema> parameters = controller.getActivityTypeParameters(adaptationId, activityId);
 
         // THEN
         assertThat(parameters).isEqualTo(expectedParameters);

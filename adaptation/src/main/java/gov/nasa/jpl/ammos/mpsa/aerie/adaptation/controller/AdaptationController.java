@@ -8,7 +8,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.AdaptationUtils;
 import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.MissingAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityTypeParameter;
 import org.springframework.http.HttpStatus;
@@ -118,13 +118,13 @@ public class AdaptationController {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
 
-    Map<String, ParameterSchema> activityList = loadActivities(adaptation);
+    Map<String, Map<String, ParameterSchema>> activityList = loadActivities(adaptation);
 
     if (activityList == null) return ResponseEntity.unprocessableEntity().build();
 
     List<ActivityType> activityTypes = new ArrayList<>();
     for (String activityTypeName : activityList.keySet()) {
-      ParameterSchema parameterSchema = activityList.get(activityTypeName);
+      Map<String, ParameterSchema> parameterSchema = activityList.get(activityTypeName);
       List<ActivityTypeParameter> parameters = buildParameterList(parameterSchema);
 
       if (parameters == null) {
@@ -266,7 +266,7 @@ public class AdaptationController {
     return filename;
   }
 
-  private Map<String, ParameterSchema> loadActivities(Adaptation adaptation) {
+  private Map<String, Map<String, ParameterSchema>> loadActivities(Adaptation adaptation) {
     final MerlinAdaptation userAdaptation;
     try {
       userAdaptation = AdaptationUtils.loadAdaptation(Path.of(adaptation.getLocation()));
@@ -279,20 +279,16 @@ public class AdaptationController {
     }
 
     final ActivityMapper activityMapper = userAdaptation.getActivityMapper();
-    final Map<String, ParameterSchema> activitySchemas = activityMapper.getActivitySchemas();
+    final Map<String, Map<String, ParameterSchema>> activitySchemas = activityMapper.getActivitySchemas();
 
     return activitySchemas;
 
   }
 
-  private List<ActivityTypeParameter> buildParameterList(ParameterSchema parameterSchema) {
+  private List<ActivityTypeParameter> buildParameterList(Map<String, ParameterSchema> parameterSchema) {
     List<ActivityTypeParameter> parameters = new ArrayList<>();
 
-    Optional<Map<String, ParameterSchema>> parameterMapOpt = parameterSchema.asMap();
-
-    if (!parameterMapOpt.isPresent()) return null;
-
-    for (var parameterEntry : parameterMapOpt.get().entrySet()) {
+    for (var parameterEntry : parameterSchema.entrySet()) {
       String parameterName = parameterEntry.getKey();
       String parameterType = parameterEntry.getValue().match(new SchemaTypeNameVisitor());
 

@@ -1,4 +1,5 @@
 module gov.nasa.jpl.ammos.mpsa.aerie.plan {
+  requires gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
   requires io.javalin;
   requires java.json;
   requires java.json.bind;

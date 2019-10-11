@@ -3,11 +3,11 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes;
 import com.mongodb.client.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityTypeParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.FileUtils;
 import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.MissingAdaptationException;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -103,10 +103,8 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
-    public Stream<ActivityTypeParameter> getActivityTypeParameters(final String adaptationId, final String activityId) throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException {
-        return getActivityTypeInAdaptation(adaptationId, activityId)
-                .parameters
-                .stream();
+    public Map<String, ParameterSchema> getActivityTypeParameters(final String adaptationId, final String activityId) throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException {
+        return this.getActivityTypeInAdaptation(adaptationId, activityId).parameters;
     }
 
     @Override

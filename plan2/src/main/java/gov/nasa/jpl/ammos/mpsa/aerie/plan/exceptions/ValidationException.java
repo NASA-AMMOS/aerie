@@ -1,17 +1,20 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.Breadcrumb;
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.util.Collections;
 import java.util.List;
 
 public class ValidationException extends Exception {
-  private final List<String> errors;
+  private final List<Pair<List<Breadcrumb>, String>> errors;
 
-  public ValidationException(final String message, final List<String> errors) {
-    super(message + ": " + errors.toString());
+  public ValidationException(final List<Pair<List<Breadcrumb>, String>> errors) {
+    super(errors.toString());
     this.errors = Collections.unmodifiableList(errors);
   }
 
-  public List<String> getValidationErrors() {
+  public List<Pair<List<Breadcrumb>, String>> getValidationErrors() {
     return this.errors;
   }
 }

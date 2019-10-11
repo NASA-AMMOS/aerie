@@ -5,14 +5,13 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeExc
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.Fixtures;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityTypeParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -101,9 +100,8 @@ public abstract class AdaptationRepositoryContractTest {
         final String activityId = Fixtures.EXISTENT_ACTIVITY_TYPE_ID;
 
         // WHEN
-        final List<ActivityTypeParameter> parameters = this.adaptationRepository
-                .getActivityTypeParameters(adaptationId, activityId)
-                .collect(Collectors.toList());
+        final Map<String, ParameterSchema> parameters = this.adaptationRepository
+                .getActivityTypeParameters(adaptationId, activityId);
 
         // THEN
         assertThat(parameters).isNotEmpty();
