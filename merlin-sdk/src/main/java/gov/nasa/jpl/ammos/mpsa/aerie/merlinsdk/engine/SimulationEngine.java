@@ -16,7 +16,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
-
 /**
  * This class contains the core event loop of a simulation in which activities
  * are dequeued from a time-ordered priority queue and have their effect models
@@ -106,6 +105,11 @@ public class SimulationEngine<T extends StateContainer> {
             this.pendingEventQueue.add(job);
             this.activityToJobMap.put(job.getActivity(), job);
         }
+    }
+
+    // TODO: REMOVE. ADDED FOR TESTING PURPOSES (see LazyEvaluationTest)
+    public SimulationEngine() {
+
     }
 
     /**
