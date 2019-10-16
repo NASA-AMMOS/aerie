@@ -3,10 +3,10 @@ package gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities;
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.OutputState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.SettableState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.BasicState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +38,6 @@ public final class BiteBananaActivity implements Activity<BananaStates> {
   @Override
   public void modelEffects(SimulationContext<BananaStates> ctx, BananaStates states) {
     SettableState<Double> fruitState = states.fruitState;
-    fruitState.setValue(fruitState.getValue() - biteSize);
+    fruitState.set(fruitState.get() - biteSize);
   }
 }

@@ -1,14 +1,15 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.state;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.BasicState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
+
 import java.util.List;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.SettableState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
-
 public class BananaStates implements StateContainer {
-    public SettableState<Double> fruitState = new SettableState<>("fruit", 4.0);
-    public SettableState<Double> peelState = new SettableState<>("peel", 4.0);
+    public SettableState<Double> fruitState = new BasicState<>("fruit", 4.0);
+    public SettableState<Double> peelState = new BasicState<>("peel", 4.0);
 
     @Override
     public List<State<?>> getStateList() {

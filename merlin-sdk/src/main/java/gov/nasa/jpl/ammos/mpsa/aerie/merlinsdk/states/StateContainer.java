@@ -1,5 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
+
 import java.util.List;
 
 /**

@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities;
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.OutputState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
 
@@ -41,9 +40,9 @@ public final class PeelBananaActivity implements Activity<BananaStates> {
   @Override
   public void modelEffects(SimulationContext<BananaStates> ctx, BananaStates states) {
     if (peelDirection.equals("fromStem")) {
-      states.fruitState.setValue(states.fruitState.getValue() - MASHED_BANANA_AMOUNT);
+      states.fruitState.set(states.fruitState.get() - MASHED_BANANA_AMOUNT);
     }
 
-    states.peelState.setValue(states.peelState.getValue() - 1.0);
+    states.peelState.set(states.peelState.get() - 1.0);
   }
 }
