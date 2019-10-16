@@ -124,6 +124,7 @@ describe('source.ts', () => {
           false,
           '',
           '',
+          { end: 0, start: 0 },
         ),
       ).toEqual(
         'https://a/b/c?format=TMS&legend=ips&filter=(command=%5B.*IPS.*%5D)&',

@@ -7,7 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { StringTMap } from '../../shared/models';
+import { StringTMap, TimeRange } from '../../shared/models';
+import { timestamp } from '../../shared/util';
 import {
   MpsServerSource,
   MpsServerSourceCategory,
@@ -597,6 +598,7 @@ export function getFormattedSourceUrl(
   situAware: boolean,
   startTime: string,
   pageDuration: string,
+  timeRange: TimeRange,
 ): string {
   let sourceUrl = source.url;
 
@@ -617,6 +619,10 @@ export function getFormattedSourceUrl(
   // If situAware, add query options.
   if (situAware) {
     sourceUrl = getSituAwareUrl(sourceUrl, startTime, pageDuration);
+  } else if (timeRange.start !== 0) {
+    return `${sourceUrl}&start=${timestamp(timeRange.start)}&end=${timestamp(
+      timeRange.end,
+    )}`;
   }
   return sourceUrl;
 }
@@ -650,6 +656,7 @@ export function getOutputDataUrl(
     false,
     '',
     '',
+    { end: 0, start: 0 },
   );
   sourceUrl = sourceUrl.replace(
     'format=TMS',
