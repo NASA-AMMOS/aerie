@@ -89,8 +89,7 @@ public final class MockAdaptationRepository implements AdaptationRepository {
                 .map(entry -> Pair.of(entry.getKey(), new Adaptation(entry.getValue())));
     }
 
-    @Override
-    public ActivityType getActivityTypeInAdaptation(final String adaptationId, final String activityId) throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException {
+    private ActivityType getActivityTypeInAdaptation(final String adaptationId, final String activityId) throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException {
         final Adaptation adaptation = getAdaptation(adaptationId);
 
         final Map<String, ActivityType> activities;
@@ -107,8 +106,6 @@ public final class MockAdaptationRepository implements AdaptationRepository {
 
     @Override
     public Map<String, ParameterSchema> getActivityTypeParameters(final String adaptationId, final String activityId) throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException {
-        final ActivityType activityType = getActivityTypeInAdaptation(adaptationId, activityId);
-
-        return activityType.parameters;
+        return getActivityTypeInAdaptation(adaptationId, activityId).parameters;
     }
 }

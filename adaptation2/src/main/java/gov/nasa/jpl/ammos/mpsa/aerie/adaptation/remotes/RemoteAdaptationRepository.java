@@ -69,8 +69,7 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
         return adaptationFromDocuments(adaptationDocument);
     }
 
-    @Override
-    public ActivityType getActivityTypeInAdaptation(final String adaptationId, final String activityId) throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException {
+    private ActivityType getActivityTypeInAdaptation(final String adaptationId, final String activityId) throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException {
         final Adaptation adaptation = this.getAdaptation(adaptationId);
 
         final Map<String, ActivityType> activityTypes;

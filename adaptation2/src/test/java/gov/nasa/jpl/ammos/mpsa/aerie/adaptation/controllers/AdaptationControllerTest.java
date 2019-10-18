@@ -198,12 +198,11 @@ public final class AdaptationControllerTest {
     }
 
     @Test
-    public void shouldGetActivityType() throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException {
+    public void shouldGetActivityType() throws NoSuchAdaptationException, NoSuchActivityTypeException, MissingAdaptationException {
         // GIVEN
         final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
         final String activityId = Fixtures.EXISTENT_ACTIVITY_TYPE_ID;
-        final ActivityType expectedType = fixtures.adaptationRepository
-                .getActivityTypeInAdaptation(adaptationId, activityId);
+        final ActivityType expectedType = AdaptationLoader.loadActivities(Fixtures.banananation).get(activityId);
 
         // WHEN
         final ActivityType type = controller.getActivityType(adaptationId, activityId);

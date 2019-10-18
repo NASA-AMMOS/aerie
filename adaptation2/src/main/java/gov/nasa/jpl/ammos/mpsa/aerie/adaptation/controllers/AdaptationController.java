@@ -16,6 +16,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public class AdaptationController implements IAdaptationController {
@@ -63,11 +64,11 @@ public class AdaptationController implements IAdaptationController {
 
     @Override
     public ActivityType getActivityType(String adaptationId, String activityTypeId) throws NoSuchAdaptationException, NoSuchActivityTypeException {
-        try {
-            return this.adaptationRepository.getActivityTypeInAdaptation(adaptationId, activityTypeId);
-        } catch (InvalidAdaptationJARException e) {
-            throw new Error(e);
-        }
+        final Map<String, ActivityType> activityTypes = getActivityTypes(adaptationId);
+
+        return Optional
+            .ofNullable(activityTypes.getOrDefault(activityTypeId, null))
+            .orElseThrow(() -> new NoSuchActivityTypeException(adaptationId, activityTypeId));
     }
 
     @Override
