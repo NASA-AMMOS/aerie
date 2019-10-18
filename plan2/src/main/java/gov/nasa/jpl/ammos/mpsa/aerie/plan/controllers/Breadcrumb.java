@@ -27,6 +27,11 @@ public abstract class Breadcrumb {
       public boolean equals(final Object object) {
         return (object instanceof MapBreadcrumb && Objects.equals(((MapBreadcrumb)object).getIndex(), index));
       }
+
+      @Override
+      public String toString() {
+        return "\"" + index + "\"";
+      }
     }
 
     return new MapBreadcrumb();
@@ -46,6 +51,11 @@ public abstract class Breadcrumb {
       @Override
       public boolean equals(final Object object) {
         return (object instanceof ListBreadcrumb && Objects.equals(((ListBreadcrumb)object).getIndex(), index));
+      }
+
+      @Override
+      public String toString() {
+        return String.valueOf(index);
       }
     }
 

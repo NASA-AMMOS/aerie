@@ -242,7 +242,7 @@ public final class PlanControllerTest {
     assertThat(thrown).isInstanceOf(ValidationException.class);
 
     final var validationErrors = ((ValidationException)thrown).getValidationErrors();
-    assertThat(validationErrors).size().isEqualTo(2);
+    assertThat(validationErrors).size().isEqualTo(3);
   }
 
   @Test
