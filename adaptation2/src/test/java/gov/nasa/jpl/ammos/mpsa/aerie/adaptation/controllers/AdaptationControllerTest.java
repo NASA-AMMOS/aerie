@@ -247,12 +247,11 @@ public final class AdaptationControllerTest {
     }
 
     @Test
-    public void shouldGetActivityTypeParameters() throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException {
+    public void shouldGetActivityTypeParameters() throws NoSuchAdaptationException, NoSuchActivityTypeException, MissingAdaptationException {
         // GIVEN
         final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
         final String activityId = Fixtures.EXISTENT_ACTIVITY_TYPE_ID;
-        final Map<String, ParameterSchema> expectedParameters = fixtures.adaptationRepository
-                .getActivityTypeParameters(adaptationId, activityId);
+        final Map<String, ParameterSchema> expectedParameters = AdaptationLoader.loadActivities(Fixtures.banananation).get(activityId).parameters;
 
         // WHEN
         final Map<String, ParameterSchema> parameters = controller.getActivityTypeParameters(adaptationId, activityId);

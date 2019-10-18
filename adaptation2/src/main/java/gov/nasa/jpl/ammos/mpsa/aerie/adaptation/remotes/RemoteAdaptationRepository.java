@@ -7,7 +7,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.FileUtils;
 import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.MissingAdaptationException;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -67,26 +66,6 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
         }
 
         return adaptationFromDocuments(adaptationDocument);
-    }
-
-    private ActivityType getActivityTypeInAdaptation(final String adaptationId, final String activityId) throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException {
-        final Adaptation adaptation = this.getAdaptation(adaptationId);
-
-        final Map<String, ActivityType> activityTypes;
-        try {
-            activityTypes = loadActivities(adaptation.path);
-        } catch (final MissingAdaptationException ex) {
-            throw new InvalidAdaptationJARException(adaptation.path, ex);
-        }
-
-        return Optional
-                .ofNullable(activityTypes.get(activityId))
-                .orElseThrow(() -> new NoSuchActivityTypeException(adaptationId, activityId));
-    }
-
-    @Override
-    public Map<String, ParameterSchema> getActivityTypeParameters(final String adaptationId, final String activityId) throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException {
-        return this.getActivityTypeInAdaptation(adaptationId, activityId).parameters;
     }
 
     @Override

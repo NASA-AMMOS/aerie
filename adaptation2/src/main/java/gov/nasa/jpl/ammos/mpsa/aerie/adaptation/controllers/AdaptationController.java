@@ -73,11 +73,7 @@ public class AdaptationController implements IAdaptationController {
 
     @Override
     public Map<String, ParameterSchema> getActivityTypeParameters(String adaptationId, String activityTypeId) throws NoSuchAdaptationException, NoSuchActivityTypeException {
-        try {
-            return this.adaptationRepository.getActivityTypeParameters(adaptationId, activityTypeId);
-        } catch (InvalidAdaptationJARException e) {
-            throw new Error(e);
-        }
+        return getActivityType(adaptationId, activityTypeId).parameters;
     }
 
     private void validateAdaptation(final NewAdaptation adaptation) throws ValidationException {
