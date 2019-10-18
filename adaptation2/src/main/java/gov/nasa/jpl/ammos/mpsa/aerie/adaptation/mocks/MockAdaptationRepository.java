@@ -1,15 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationAccessException;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.InvalidAdaptationJARException;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.MissingAdaptationException;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -19,7 +15,6 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.FileUtils.getUniqueFilePath;
-import static gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader.loadActivities;
 
 public final class MockAdaptationRepository implements AdaptationRepository {
     private final Path ADAPTATION_FILE_PATH;

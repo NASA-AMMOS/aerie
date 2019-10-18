@@ -2,11 +2,9 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes;
 
 import com.mongodb.client.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.*;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.FileUtils;
-import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.MissingAdaptationException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -16,13 +14,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.mongodb.client.model.Filters.eq;
-import static gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader.loadActivities;
 
 public final class RemoteAdaptationRepository implements AdaptationRepository {
     private final Path ADAPTATION_FILE_PATH = Path.of("adaptation_files").toAbsolutePath();
