@@ -70,23 +70,6 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
-    public Stream<Pair<String, ActivityType>> getAllActivityTypesInAdaptation(final String adaptationId) throws NoSuchAdaptationException, InvalidAdaptationJARException {
-        final Adaptation adaptation = this.getAdaptation(adaptationId);
-
-        final Map<String, ActivityType> activityTypes;
-        try {
-            activityTypes = loadActivities(adaptation.path);
-        } catch (final MissingAdaptationException ex) {
-            throw new InvalidAdaptationJARException(adaptation.path, ex);
-        }
-
-        return activityTypes
-                .entrySet()
-                .stream()
-                .map(entry -> Pair.of(entry.getKey(), entry.getValue()));
-    }
-
-    @Override
     public ActivityType getActivityTypeInAdaptation(final String adaptationId, final String activityId) throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException {
         final Adaptation adaptation = this.getAdaptation(adaptationId);
 

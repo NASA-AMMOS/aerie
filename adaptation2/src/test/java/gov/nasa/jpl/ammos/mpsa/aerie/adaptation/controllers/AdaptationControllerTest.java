@@ -8,6 +8,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
+import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.MissingAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
@@ -168,16 +170,13 @@ public final class AdaptationControllerTest {
     }
 
     @Test
-    public void shouldGetActivityTypeList() throws NoSuchAdaptationException, InvalidAdaptationJARException {
+    public void shouldGetActivityTypeList() throws NoSuchAdaptationException, MissingAdaptationException {
         // GIVEN
         final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
-        final List<Pair<String, ActivityType>> expectedTypes = fixtures
-                .adaptationRepository
-                .getAllActivityTypesInAdaptation(adaptationId)
-                .collect(Collectors.toList());
+        final Map<String, ActivityType> expectedTypes = AdaptationLoader.loadActivities(Fixtures.banananation);
 
         // WHEN
-        final List<Pair<String, ActivityType>> typeList = controller.getActivityTypes(adaptationId).collect(Collectors.toList());
+        final Map<String, ActivityType> typeList = controller.getActivityTypes(adaptationId);
 
         // THEN
         assertThat(typeList).isEqualTo(expectedTypes);

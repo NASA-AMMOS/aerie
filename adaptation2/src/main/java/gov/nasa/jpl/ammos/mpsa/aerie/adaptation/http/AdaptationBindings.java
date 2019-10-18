@@ -120,9 +120,7 @@ public final class AdaptationBindings {
     private void getActivityTypes(final Context ctx) throws NoSuchAdaptationException {
         final String adaptationId = ctx.pathParam("adaptationId");
 
-        final Map<String, ActivityType> activityTypes = this.appController
-                .getActivityTypes(adaptationId)
-                .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
+        final Map<String, ActivityType> activityTypes = this.appController.getActivityTypes(adaptationId);
 
         final JsonValue response = ResponseSerializers.serializeActivityTypes(activityTypes);
         ctx.result(response.toString()).contentType("application/json");

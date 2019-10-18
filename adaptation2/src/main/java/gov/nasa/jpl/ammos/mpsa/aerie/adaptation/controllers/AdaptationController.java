@@ -47,12 +47,18 @@ public class AdaptationController implements IAdaptationController {
     }
 
     @Override
-    public Stream<Pair<String, ActivityType>> getActivityTypes(String adaptationId) throws NoSuchAdaptationException {
+    public Map<String, ActivityType> getActivityTypes(String adaptationId) throws NoSuchAdaptationException {
+        final Adaptation adaptation = this.adaptationRepository.getAdaptation(adaptationId);
+
+        final Map<String, ActivityType> activityTypes;
         try {
-            return this.adaptationRepository.getAllActivityTypesInAdaptation(adaptationId);
-        } catch (InvalidAdaptationJARException e) {
-            throw new Error(e);
+            activityTypes = AdaptationLoader.loadActivities(adaptation.path);
+        } catch (final MissingAdaptationException ex) {
+            // TODO: Report an error in a more useful way.
+            throw new Error(ex);
         }
+
+        return activityTypes;
     }
 
     @Override

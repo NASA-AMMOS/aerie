@@ -14,7 +14,6 @@ public interface AdaptationRepository {
     // Queries
     Stream<Pair<String, Adaptation>> getAllAdaptations();
     Adaptation getAdaptation(String id) throws NoSuchAdaptationException;
-    Stream<Pair<String, ActivityType>> getAllActivityTypesInAdaptation(String adaptationId) throws NoSuchAdaptationException, InvalidAdaptationJARException;
     ActivityType getActivityTypeInAdaptation(String adaptationId, String activityId) throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException;
     Map<String, ParameterSchema> getActivityTypeParameters(String adaptationId, String activityId) throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException;
 

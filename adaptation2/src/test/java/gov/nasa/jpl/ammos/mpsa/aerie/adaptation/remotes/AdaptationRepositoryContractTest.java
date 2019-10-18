@@ -60,22 +60,6 @@ public abstract class AdaptationRepositoryContractTest {
     }
 
     @Test
-    public void testGetAllActivityTypesForAdaptation() throws NoSuchAdaptationException, InvalidAdaptationJARException {
-        // GIVEN
-        final NewAdaptation adaptation = Fixtures.createValidNewAdaptation("test");
-        adaptation.path = Fixtures.banananation;
-        final String id = this.adaptationRepository.createAdaptation(adaptation);
-
-        // WHEN
-        final Map<String, ActivityType> activities = this.adaptationRepository
-                .getAllActivityTypesInAdaptation(id)
-                .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
-
-        // THEN
-        assertThat(activities).isNotEmpty();
-    }
-
-    @Test
     public void testGetActivityTypeForAdaptation() throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException {
         // GIVEN
         final NewAdaptation adaptation = Fixtures.createValidNewAdaptation("test");
