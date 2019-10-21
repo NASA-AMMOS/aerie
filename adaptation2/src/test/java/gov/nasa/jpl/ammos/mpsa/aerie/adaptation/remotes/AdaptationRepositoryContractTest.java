@@ -60,54 +60,6 @@ public abstract class AdaptationRepositoryContractTest {
     }
 
     @Test
-    public void testGetAllActivityTypesForAdaptation() throws NoSuchAdaptationException, InvalidAdaptationJARException {
-        // GIVEN
-        final NewAdaptation adaptation = Fixtures.createValidNewAdaptation("test");
-        adaptation.path = Fixtures.banananation;
-        final String id = this.adaptationRepository.createAdaptation(adaptation);
-
-        // WHEN
-        final Map<String, ActivityType> activities = this.adaptationRepository
-                .getAllActivityTypesInAdaptation(id)
-                .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
-
-        // THEN
-        assertThat(activities).isNotEmpty();
-    }
-
-    @Test
-    public void testGetActivityTypeForAdaptation() throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException {
-        // GIVEN
-        final NewAdaptation adaptation = Fixtures.createValidNewAdaptation("test");
-        adaptation.path = Fixtures.banananation;
-        final String adaptationId = this.adaptationRepository.createAdaptation(adaptation);
-        final String activityId = Fixtures.EXISTENT_ACTIVITY_TYPE_ID;
-
-        // WHEN
-        final ActivityType activityType = this.adaptationRepository
-                .getActivityTypeInAdaptation(adaptationId, activityId);
-
-        // THEN
-        assertThat(activityType).isNotNull();
-    }
-
-    @Test
-    public void testGetActivityTypeParameters() throws NoSuchAdaptationException, NoSuchActivityTypeException, InvalidAdaptationJARException {
-        // GIVEN
-        final NewAdaptation adaptation = Fixtures.createValidNewAdaptation("test");
-        adaptation.path = Fixtures.banananation;
-        final String adaptationId = this.adaptationRepository.createAdaptation(adaptation);
-        final String activityId = Fixtures.EXISTENT_ACTIVITY_TYPE_ID;
-
-        // WHEN
-        final Map<String, ParameterSchema> parameters = this.adaptationRepository
-                .getActivityTypeParameters(adaptationId, activityId);
-
-        // THEN
-        assertThat(parameters).isNotEmpty();
-    }
-
-    @Test
     public void testCanDeleteAllAdaptations() throws NoSuchAdaptationException {
         // GIVEN
         final String id1 = this.adaptationRepository.createAdaptation(Fixtures.createValidNewAdaptation("test1"));

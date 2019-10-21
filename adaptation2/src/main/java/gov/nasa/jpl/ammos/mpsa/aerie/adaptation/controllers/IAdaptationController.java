@@ -17,7 +17,7 @@ public interface IAdaptationController {
     Adaptation getAdaptationById(String adaptationId) throws NoSuchAdaptationException;
     String addAdaptation(NewAdaptation adaptation) throws ValidationException;
     void removeAdaptation(String adaptationId) throws NoSuchAdaptationException;
-    Stream<Pair<String, ActivityType>> getActivityTypes(String adaptationId) throws NoSuchAdaptationException;
+    Map<String, ActivityType> getActivityTypes(String adaptationId) throws NoSuchAdaptationException;
     ActivityType getActivityType(String adaptationId, String activityTypeId) throws NoSuchAdaptationException, NoSuchActivityTypeException;
     Map<String, ParameterSchema> getActivityTypeParameters(String adaptationId, String activityTypeId) throws NoSuchAdaptationException, NoSuchActivityTypeException;
 }

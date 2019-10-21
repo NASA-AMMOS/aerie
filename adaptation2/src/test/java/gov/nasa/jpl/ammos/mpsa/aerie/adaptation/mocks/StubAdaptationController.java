@@ -78,12 +78,12 @@ public final class StubAdaptationController implements IAdaptationController {
     }
 
     @Override
-    public Stream<Pair<String, ActivityType>> getActivityTypes(final String adaptationId) throws NoSuchAdaptationException {
+    public Map<String, ActivityType> getActivityTypes(final String adaptationId) throws NoSuchAdaptationException {
         if (!Objects.equals(adaptationId, EXISTENT_ADAPTATION_ID)) {
             throw new NoSuchAdaptationException(adaptationId);
         }
 
-        return Stream.of(Pair.of(EXISTENT_ACTIVITY_ID, EXISTENT_ACTIVITY));
+        return Map.of(EXISTENT_ACTIVITY_ID, EXISTENT_ACTIVITY);
     }
 
     @Override

@@ -16,6 +16,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public class AdaptationController implements IAdaptationController {
@@ -47,30 +48,32 @@ public class AdaptationController implements IAdaptationController {
     }
 
     @Override
-    public Stream<Pair<String, ActivityType>> getActivityTypes(String adaptationId) throws NoSuchAdaptationException {
+    public Map<String, ActivityType> getActivityTypes(String adaptationId) throws NoSuchAdaptationException {
+        final Adaptation adaptation = this.adaptationRepository.getAdaptation(adaptationId);
+
+        final Map<String, ActivityType> activityTypes;
         try {
-            return this.adaptationRepository.getAllActivityTypesInAdaptation(adaptationId);
-        } catch (InvalidAdaptationJARException e) {
-            throw new Error(e);
+            activityTypes = AdaptationLoader.loadActivities(adaptation.path);
+        } catch (final MissingAdaptationException ex) {
+            // TODO: Report an error in a more useful way.
+            throw new Error(ex);
         }
+
+        return activityTypes;
     }
 
     @Override
     public ActivityType getActivityType(String adaptationId, String activityTypeId) throws NoSuchAdaptationException, NoSuchActivityTypeException {
-        try {
-            return this.adaptationRepository.getActivityTypeInAdaptation(adaptationId, activityTypeId);
-        } catch (InvalidAdaptationJARException e) {
-            throw new Error(e);
-        }
+        final Map<String, ActivityType> activityTypes = getActivityTypes(adaptationId);
+
+        return Optional
+            .ofNullable(activityTypes.getOrDefault(activityTypeId, null))
+            .orElseThrow(() -> new NoSuchActivityTypeException(adaptationId, activityTypeId));
     }
 
     @Override
     public Map<String, ParameterSchema> getActivityTypeParameters(String adaptationId, String activityTypeId) throws NoSuchAdaptationException, NoSuchActivityTypeException {
-        try {
-            return this.adaptationRepository.getActivityTypeParameters(adaptationId, activityTypeId);
-        } catch (InvalidAdaptationJARException e) {
-            throw new Error(e);
-        }
+        return getActivityType(adaptationId, activityTypeId).parameters;
     }
 
     private void validateAdaptation(final NewAdaptation adaptation) throws ValidationException {
