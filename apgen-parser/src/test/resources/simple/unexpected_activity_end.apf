@@ -1,0 +1,10 @@
+apgen version ?
+
+activity instance Banana1 of type Banana id Banana_1
+    begin
+    attributes
+        "Start" = 2019-278T13:16:00;
+    parameters
+        (
+        01:00:00
+     end activity instance Banana1

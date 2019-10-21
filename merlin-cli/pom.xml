@@ -147,8 +147,8 @@
 
     <!-- APGen Parsing -->
     <dependency>
-      <groupId>gov.nasa.jpl.ammos.mpsa.apgen</groupId>
-      <artifactId>APGenParser</artifactId>
+      <groupId>gov.nasa.jpl.ammos.mpsa.aerie</groupId>
+      <artifactId>apgen-parser</artifactId>
       <version>0.0.1-SNAPSHOT</version>
     </dependency>
   </dependencies>
