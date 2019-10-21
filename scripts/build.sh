@@ -117,7 +117,7 @@ printf "\nTop level changes:\n==================\n$changed\n\n"
 # This is because maven figures out the correct build order and handles dependencies
 # between modules more intelligently than the above git command.
 echo "Building all maven modules from the root..."
-mvn -B -f pom.xml -s settings.xml install
+mvn --fail-at-end -B -f pom.xml -s settings.xml install
 [ $? -ne 0 ] && error_exit "mvn install failed"
 
 cd $root
