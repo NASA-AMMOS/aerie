@@ -16,7 +16,9 @@ public final class DevApp {
     final PlanBindings bindings = new PlanBindings(controller);
 
     // Initiate an HTTP server.
-    final Javalin javalin = Javalin.create();
+    final Javalin javalin = Javalin.create(config -> {
+      config.enableCorsForAllOrigins();
+    });
     bindings.registerRoutes(javalin);
 
     // Start the HTTP server.

@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,7 +34,10 @@ public final class PlanBindingsTest {
     final StubPlanController controller = new StubPlanController();
     final PlanBindings bindings = new PlanBindings(controller);
 
-    app = Javalin.create();
+    app = Javalin.create(config -> {
+      config.showJavalinBanner = false;
+      config.enableCorsForAllOrigins();
+    });
     bindings.registerRoutes(app);
     app.start();
   }
@@ -43,9 +47,27 @@ public final class PlanBindingsTest {
     app.stop();
   }
 
-  private final HttpRequester client = new HttpRequester(
-      HttpClient.newHttpClient(),
-      URI.create("http://localhost:" + app.port()));
+  private final URI baseUri = URI.create("http://localhost:" + app.port());
+  private final HttpClient rawHttpClient = HttpClient.newHttpClient();
+  private final HttpRequester client = new HttpRequester(rawHttpClient, baseUri);
+
+  @Test
+  public void shouldEnableCors() throws IOException, InterruptedException {
+    // GIVEN
+    final String origin = "http://localhost";
+
+    // WHEN
+    final HttpRequest request = HttpRequest.newBuilder()
+        .uri(baseUri.resolve("/plans"))
+        .header("Origin", origin)
+        .GET()
+        .build();
+
+    final HttpResponse<String> response = rawHttpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+    // THEN
+    assertThat(response.headers().allValues("Access-Control-Allow-Origin")).isNotEmpty();
+  }
 
   @Test
   public void shouldGetPlans() throws IOException, InterruptedException {
