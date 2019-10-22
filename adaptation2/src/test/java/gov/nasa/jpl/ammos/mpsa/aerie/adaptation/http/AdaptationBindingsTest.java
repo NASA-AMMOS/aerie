@@ -31,7 +31,10 @@ public final class AdaptationBindingsTest {
         final StubAdaptationController controller = new StubAdaptationController();
         final AdaptationBindings bindings = new AdaptationBindings(controller);
 
-        app = Javalin.create();
+        app = Javalin.create(config -> {
+            config.showJavalinBanner = false;
+            config.enableCorsForAllOrigins();
+        });
         bindings.registerRoutes(app);
         app.start();
     }
@@ -41,7 +44,26 @@ public final class AdaptationBindingsTest {
         app.stop();
     }
 
+    private final URI baseUri = URI.create("http://localhost:" + app.port());
     private final HttpClient client = HttpClient.newHttpClient();
+
+    @Test
+    public void shouldEnableCors() throws IOException, InterruptedException {
+        // GIVEN
+        final String origin = "http://localhost";
+
+        // WHEN
+        final HttpRequest request = HttpRequest.newBuilder()
+                .uri(baseUri.resolve("/plans"))
+                .header("Origin", origin)
+                .GET()
+                .build();
+
+        final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        // THEN
+        assertThat(response.headers().allValues("Access-Control-Allow-Origin")).isNotEmpty();
+    }
 
     @Test
     public void shouldGetAdaptations() throws IOException, InterruptedException {
@@ -275,7 +297,7 @@ public final class AdaptationBindingsTest {
             requestBuilder.headers("Content-Type", "multipart/form-data;boundary="+boundary.get());
 
         final HttpRequest request = requestBuilder
-                .uri(URI.create("http://localhost:" + app.port() + path))
+                .uri(baseUri.resolve(path))
                 .method(method, bodyPublisher)
                 .build();
 
