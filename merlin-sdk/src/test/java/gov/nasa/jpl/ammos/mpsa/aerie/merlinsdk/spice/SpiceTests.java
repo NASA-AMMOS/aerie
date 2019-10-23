@@ -1,10 +1,16 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.spice;
 
-import spice.basic.CSPICE;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import java.net.URL;
+import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import spice.basic.CSPICE;
+import spice.basic.SpiceErrorException;
 
 public class SpiceTests {
 
