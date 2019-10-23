@@ -12,7 +12,7 @@ import java.net.URI;
 public class App {
     private static final int HTTP_PORT = 27182;
 
-    private static final URI MONGO_URI = URI.create("mongodb://localhost:27019");
+    private static final URI MONGO_URI = URI.create("mongodb://adaptation_mongo:27020");
     private static final String MONGO_DATABASE = "adaptation-service";
     private static final String MONGO_ADAPTATION_COLLECTION = "adaptations";
 

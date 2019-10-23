@@ -2,13 +2,13 @@ version: "3.3"
 services:
   adaptation:
     build:
-      context: adaptation
+      context: adaptation2
       dockerfile: Dockerfile
     depends_on: ["adaptation_mongo"]
     ports: ["27182:27182"]
+    restart: always
     volumes:
       - adaptation_files:/usr/src/app/adaptation_files
-      - adaptation_logs:/var/log/adaptation
   adaptation_mongo:
     command: ["mongod", "--port", "27020", "--smallfiles"]
     image: mongo:3.2
@@ -16,13 +16,11 @@ services:
     volumes: ["adaptation_mongo_data:/data/db"]
   plan:
     build:
-      context: plan
+      context: plan2
       dockerfile: Dockerfile
-    command: ["--spring.profiles.active=production"]
     depends_on: ["plan_mongo"]
     ports: ["27183:27183"]
     restart: always
-    volumes: ["plan_logs:/var/log/plan"]
   plan_mongo:
     command: ["mongod", "--port", "27018", "--smallfiles"]
     image: mongo:3.2
@@ -31,7 +29,5 @@ services:
 
 volumes:
   adaptation_files:
-  adaptation_logs:
   adaptation_mongo_data:
-  plan_logs:
   plan_mongo_data:

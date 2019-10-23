@@ -10,9 +10,9 @@
 const windowBaseUrl = `http://localhost`;
 
 export const environment = {
-  adaptationServiceBaseUrl: `${windowBaseUrl}:27182/api`,
+  adaptationServiceBaseUrl: `${windowBaseUrl}:27182`,
   baseUrl: 'https://leucadia.jpl.nasa.gov:9443',
   // baseUrl: 'https://localhost:8443',
-  planServiceBaseUrl: `${windowBaseUrl}:27183/api`,
+  planServiceBaseUrl: `${windowBaseUrl}:27183`,
   production: false,
 };

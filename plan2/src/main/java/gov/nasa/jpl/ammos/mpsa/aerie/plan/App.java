@@ -14,9 +14,9 @@ import java.net.URI;
 public final class App {
   private static final int HTTP_PORT = 27183;
 
-  private static final URI ADAPTATION_URI = URI.create("http://localhost:27182");
+  private static final URI ADAPTATION_URI = URI.create("http://adaptation:27182");
 
-  private static final URI MONGO_URI = URI.create("mongodb://localhost:27017");
+  private static final URI MONGO_URI = URI.create("mongodb://plan_mongo:27018");
   private static final String MONGO_DATABASE = "plan-service";
   private static final String MONGO_PLAN_COLLECTION = "plans";
   private static final String MONGO_ACTIVITY_COLLECTION = "activities";
