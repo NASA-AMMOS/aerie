@@ -71,8 +71,7 @@
               >
               </raven-time-scroll-bar>
             </div>
-            <div
-              [contextMenu]="contextMenu">
+            <div [contextMenu]="contextMenu">
               <raven-time-band
                 class="row"
                 [cursorColor]="cursorColor$ | async"
@@ -446,37 +445,37 @@
 </mat-sidenav-container>
 
 <context-menu #contextMenu>
-    <ng-template contextMenuItem (execute)="onContextMenuSelect('Home')">
-        Home
-    </ng-template>
-    <ng-template contextMenuItem>
-        Minute
-    </ng-template>
-    <ng-template contextMenuItem (execute)="zoomTo(TimeUnit.TWO_HOUR)">
-        2 Hour
-    </ng-template>
-    <ng-template contextMenuItem>
-        6 Hour
-    </ng-template>
-    <ng-template contextMenuItem>
-        8 Hour
-    </ng-template>
-    <ng-template contextMenuItem>
-        12 Hour
-    </ng-template>
-    <ng-template contextMenuItem>
-        Day
-    </ng-template>
-    <ng-template contextMenuItem>
-        3 Day
-    </ng-template>
-    <ng-template contextMenuItem>
-        Week
-    </ng-template>
-    <ng-template contextMenuItem>
-        Month
-    </ng-template>
-    <ng-template contextMenuItem>
-        Year
-    </ng-template>
+  <ng-template contextMenuItem (execute)="onContextMenuSelect('Home')">
+    Home
+  </ng-template>
+  <ng-template contextMenuItem>
+    Minute
+  </ng-template>
+  <ng-template contextMenuItem (execute)="zoomTo(TimeUnit.TWO_HOUR)">
+    2 Hour
+  </ng-template>
+  <ng-template contextMenuItem>
+    6 Hour
+  </ng-template>
+  <ng-template contextMenuItem>
+    8 Hour
+  </ng-template>
+  <ng-template contextMenuItem>
+    12 Hour
+  </ng-template>
+  <ng-template contextMenuItem>
+    Day
+  </ng-template>
+  <ng-template contextMenuItem>
+    3 Day
+  </ng-template>
+  <ng-template contextMenuItem>
+    Week
+  </ng-template>
+  <ng-template contextMenuItem>
+    Month
+  </ng-template>
+  <ng-template contextMenuItem>
+    Year
+  </ng-template>
 </context-menu>

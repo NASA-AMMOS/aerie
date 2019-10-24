@@ -1066,7 +1066,5 @@ export class TimelineComponent implements OnDestroy {
     console.log(`selected ${item}`);
   }
 
-  zoomTo() {
-
-  }
+  zoomTo() {}
 }
