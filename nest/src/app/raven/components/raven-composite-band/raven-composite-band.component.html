@@ -150,6 +150,7 @@
 
 <div
   class="row"
+  [contextMenu]="contextMenu"
   [ngClass]="{ 'raven-band': true, 'raven-band--selected': isSelected }"
 >
   <div
@@ -158,3 +159,14 @@
     [ngStyle]="{ 'background-color': backgroundColor }"
   ></div>
 </div>
+
+<context-menu #contextMenu>
+  <ng-template contextMenuItem (execute)=setTimeCursor()>
+    Set Time Cursor
+  </ng-template>
+  <ng-template contextMenuItem divider="true"></ng-template>
+  <ng-template contextMenuItem (execute)=removeTimeCursor()>
+    Remove Time Cursor
+  </ng-template>
+</context-menu>
+

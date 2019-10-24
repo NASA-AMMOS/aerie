@@ -600,8 +600,8 @@ export class RavenCompositeBandComponent
   /**
    * CTL Event. Called when you right-click a composite band.
    */
-  onRightClick(e: MouseEvent) {
-    // TODO.
+  onRightClick(e: MouseEvent, ctlData: any) {
+    console.log('right click time: ' + ctlData.time);
   }
 
   /**
@@ -856,5 +856,13 @@ export class RavenCompositeBandComponent
         subBand.autoScale = this.getResourceAutoScale(this.compositeAutoScale);
       }
     }
+  }
+
+  setTimeCursor() {
+    console.log('in setTimeCursor');
+  }
+
+  removeTimeCursor() {
+    console.log('in removeTimeCursor');
   }
 }

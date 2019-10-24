@@ -1061,4 +1061,12 @@ export class TimelineComponent implements OnDestroy {
   onUpdateCurrentState() {
     this.store.dispatch(DialogActions.openUpdateCurrentStateDialog());
   }
+
+  onContextMenuSelect(item: string) {
+    console.log(`selected ${item}`);
+  }
+
+  zoomTo() {
+
+  }
 }
