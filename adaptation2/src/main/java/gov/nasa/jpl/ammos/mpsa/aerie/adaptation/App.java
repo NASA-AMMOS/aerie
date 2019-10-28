@@ -22,7 +22,10 @@ public class App {
         final IAdaptationController controller = new AdaptationController(adaptationRepository);
         final AdaptationBindings bindings = new AdaptationBindings(controller);
         // Initiate an HTTP server.
-        final Javalin javalin = Javalin.create();
+        final Javalin javalin = Javalin.create(config -> {
+            config.showJavalinBanner = false;
+            config.enableCorsForAllOrigins();
+        });
         bindings.registerRoutes(javalin);
         javalin.start(HTTP_PORT);
     }

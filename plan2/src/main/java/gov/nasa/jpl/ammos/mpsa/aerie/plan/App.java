@@ -29,7 +29,10 @@ public final class App {
     final PlanBindings bindings = new PlanBindings(controller);
 
     // Initiate an HTTP server.
-    final Javalin javalin = Javalin.create();
+    final Javalin javalin = Javalin.create(config -> {
+      config.showJavalinBanner = false;
+      config.enableCorsForAllOrigins();
+    });
     bindings.registerRoutes(javalin);
     javalin.start(HTTP_PORT);
   }
