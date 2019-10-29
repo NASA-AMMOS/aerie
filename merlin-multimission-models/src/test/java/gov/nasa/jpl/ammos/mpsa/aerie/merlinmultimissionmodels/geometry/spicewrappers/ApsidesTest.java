@@ -9,10 +9,7 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ForkJoinPool;
-import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.BeforeClass;

@@ -24,11 +24,6 @@
             <version>3.7</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-math3</artifactId>
-            <version>3.6.1</version>
-        </dependency>
-        <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.6</version>
@@ -68,6 +63,23 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.version}</version>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>gov.nasa.jpl.ammos.mpsa.aerie</groupId>
+                            <artifactId>merlin-sdk</artifactId>
+                            <version>1.1-SNAPSHOT</version>
+                        </path>
+                    </annotationProcessorPaths>
+                    <annotationProcessors>
+                        <processor>gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.processor.ActivityProcessor</processor>
+                    </annotationProcessors>
+                    <compilerArgs>
+                        <arg>-Xlint:unchecked</arg>
+                        <arg>-Amerlin.lastRound=false</arg>
+                    </compilerArgs>
+                </configuration>
             </plugin>
 
             <plugin>

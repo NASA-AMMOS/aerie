@@ -87,7 +87,7 @@ public class LazyEvaluationTest {
 
         state.set(1123.3);
         state.get();
-        
+
         assert("Recalculating".equals(outContent.toString()));
         outContent.reset();
     }
