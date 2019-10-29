@@ -5240,6 +5240,8 @@ TimeBand.prototype.handleDragStop = function(e, ui) {
   this._zoomX2 = null;
 
   if(this.onUpdateView) { this.onUpdateView(start, end); }
+
+  // dispatch click so that Raven component can detect the drag
   this.canvas.click();
 };
 
