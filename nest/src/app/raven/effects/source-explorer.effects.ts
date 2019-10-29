@@ -453,7 +453,7 @@ export class SourceExplorerEffects {
           `application/json`,
         );
         const responseType = 'text';
-        const url = `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${action.folder.url}/${action.folder.name}`;
+        const url = `${action.folder.url}/${action.folder.name}`;
 
         const request = this.http.put(url, '', { headers, responseType }).pipe(
           concatMap(() => {
@@ -711,7 +711,7 @@ export class SourceExplorerEffects {
           'Content-Type',
           `${action.file.type === 'pef' ? 'application/json' : 'text/csv'}`,
         );
-        const url = `${action.source.url}/${action.file.name}?timeline_type=${action.file.type}&time_format=${action.file.timeFormat}`;
+        const url = `${action.source.url}/${action.file.name}?timeline_type=${action.file.type}&time_system=utc&time_format=${action.file.timeFormat}`;
 
         const importFileRequest = this.http
           .put(url, action.file.data, {
@@ -1195,7 +1195,7 @@ export class SourceExplorerEffects {
     const actions: Observable<Action>[] = [];
 
     if (source) {
-      if (!source.childIds.length) {
+      if (source.childIds && !source.childIds.length) {
         if (source.content) {
           actions.push(
             of(

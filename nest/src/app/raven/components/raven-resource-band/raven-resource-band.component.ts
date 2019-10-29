@@ -259,15 +259,15 @@ export class RavenResourceBandComponent
 
     // Log Ticks.
     if (changes.logTicks && !changes.logTicks.firstChange) {
-      // Update intervals since 0 and <1 values are removes for log scale.
-      this.updateIntervals.emit({
-        subBandId: this.id,
-        ...this.getIntervals(this.color),
-      });
       this.updateSubBand.emit({
         prop: 'logTicks',
         subBandId: this.id,
         value: this.logTicks,
+      });
+      // Update intervals since =< 0 values are removes for log scale.
+      this.updateIntervals.emit({
+        subBandId: this.id,
+        ...this.getIntervals(this.color),
       });
       this.updateTickValues.emit();
     }

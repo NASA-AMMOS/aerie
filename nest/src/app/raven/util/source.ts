@@ -251,7 +251,7 @@ export function fromFile(
       : 'FINISHED',
     permissions: mSource.permissions,
     type: 'file',
-    url: mSource.contents_url,
+    url: mSource.contents_url || mSource.file_data_url,
   };
 }
 
