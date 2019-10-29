@@ -5244,6 +5244,7 @@ TimeBand.prototype.handleDragStop = function(e, ui) {
 };
 
 TimeBand.prototype.click = function(e) {
+  // do nothing
 };
 
 function TimeBandContextMenu(obj) {
