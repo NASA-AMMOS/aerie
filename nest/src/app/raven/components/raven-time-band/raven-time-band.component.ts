@@ -321,6 +321,6 @@ export class RavenTimeBandComponent
   }
 
   rightClickZoomTo(duration: number) {
-    this.ctlTimeBand.zoomToLastRightClickPos (duration);
+    this.ctlTimeBand.zoomToLastRightClickPos(duration);
   }
 }

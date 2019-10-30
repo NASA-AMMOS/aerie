@@ -7,7 +7,12 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ChangeDetectionStrategy, Component, OnDestroy, ViewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  ViewChild,
+} from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { combineLatest, Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -166,27 +171,28 @@ export class TimelineComponent implements OnDestroy {
 
   private subscriptions = new Subscription();
 
-  SECOND      = 1;
-  TEN_SECOND  = 10;
-  MINUTE      = 60;
-  TEN_MINUTE  = 600;
-  HOUR        = 3600;
-  TWO_HOUR    = 7200;
-  SIX_HOUR    = 21600;
-  EIGHT_HOUR  = 28800;
+  SECOND = 1;
+  TEN_SECOND = 10;
+  MINUTE = 60;
+  TEN_MINUTE = 600;
+  HOUR = 3600;
+  TWO_HOUR = 7200;
+  SIX_HOUR = 21600;
+  EIGHT_HOUR = 28800;
   TWELVE_HOUR = 43200;
-  DAY         = 86400;
-  TWO_DAY     = 172800;
-  THREE_DAY   = 259200;
-  FIVE_DAY    = 432000;
-  WEEK        = 604800;
-  TEN_DAY     = 864000;
-  FOUR_WEEK   = 2419200;
-  MONTH       = 2592000;   // 30 days
-  THREE_MONTH = 7776000;   // 90 days
-  YEAR        = 31536000;  // 365 days
+  DAY = 86400;
+  TWO_DAY = 172800;
+  THREE_DAY = 259200;
+  FIVE_DAY = 432000;
+  WEEK = 604800;
+  TEN_DAY = 864000;
+  FOUR_WEEK = 2419200;
+  MONTH = 2592000; // 30 days
+  THREE_MONTH = 7776000; // 90 days
+  YEAR = 31536000; // 365 days
 
-  @ViewChild('timeBand', {static: false}) timeBandComponent: RavenTimeBandComponent;
+  @ViewChild('timeBand', { static: false })
+  timeBandComponent: RavenTimeBandComponent;
 
   constructor(
     private store: Store<TimelineState | ConfigState | TimeCursorState>,
@@ -698,9 +704,11 @@ export class TimelineComponent implements OnDestroy {
     }
   }
 
-  onSetTimeCursor(time: number){
+  onSetTimeCursor(time: number) {
     this.store.dispatch(
-      TimeCursorActions.updateTimeCursorSettings({ update: {cursorTime: time, setCursorTime: time} }),
+      TimeCursorActions.updateTimeCursorSettings({
+        update: { cursorTime: time, setCursorTime: time },
+      }),
     );
     this.store.dispatch(TimeCursorActions.showTimeCursor());
   }
@@ -1096,6 +1104,6 @@ export class TimelineComponent implements OnDestroy {
   }
 
   zoomTo(zoom: number) {
-    this.timeBandComponent.rightClickZoomTo (zoom);
+    this.timeBandComponent.rightClickZoomTo(zoom);
   }
 }
