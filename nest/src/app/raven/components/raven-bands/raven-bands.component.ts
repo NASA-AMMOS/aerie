@@ -128,6 +128,12 @@ export class RavenBandsComponent implements OnChanges, OnInit {
   hoverBand: EventEmitter<string> = new EventEmitter<string>();
 
   @Output()
+  removeTimeCursor: EventEmitter<null> = new EventEmitter<null>();
+
+  @Output()
+  setTimeCursor: EventEmitter<number> = new EventEmitter<number>();
+
+  @Output()
   updateAddTo: EventEmitter<RavenUpdate> = new EventEmitter<RavenUpdate>();
 
   @Output()

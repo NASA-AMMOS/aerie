@@ -5155,6 +5155,10 @@ TimeBand.prototype.mousedown = function(e) {
     }
   }
   else {
+    var x = e.pageX - $(e.target).offset().left;
+    if(x >= this.viewTimeAxis.x1) {
+        this.lastRightClickPos = x;
+    }
     $(this._hiddenDragSource).draggable("disable");
   }
   return true;
@@ -5204,6 +5208,15 @@ TimeBand.prototype.zoomTo = function(timeUnit) {
 
   var bandX = this.contextMenu.bandX;
   var time = this.viewTimeAxis.getTimeFromX(bandX);
+  var start = TimeUnit.quantizeUpByTimeUnit(time, 0, timeUnit);
+  var end = TimeUnit.quantizeUpByTimeUnit(time, 1, timeUnit);
+  this.onUpdateView(start, end);
+};
+
+TimeBand.prototype.zoomToLastRightClickPos = function(timeUnit) {
+  if(this.onUpdateView === null) return;
+
+  var time = this.viewTimeAxis.getTimeFromX(this.lastRightClickPos);
   var start = TimeUnit.quantizeUpByTimeUnit(time, 0, timeUnit);
   var end = TimeUnit.quantizeUpByTimeUnit(time, 1, timeUnit);
   this.onUpdateView(start, end);

@@ -158,6 +158,12 @@ export class RavenCompositeBandComponent
   increaseBandHeight: EventEmitter<any> = new EventEmitter<any>();
 
   @Output()
+  removeTimeCursor: EventEmitter<null> = new EventEmitter<null>();
+
+  @Output()
+  setTimeCursor: EventEmitter<number> = new EventEmitter<number>();
+
+  @Output()
   settingsBand: EventEmitter<string> = new EventEmitter<string>();
 
   @Output()
@@ -176,6 +182,7 @@ export class RavenCompositeBandComponent
   ctlTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
   ctlTooltip = new (window as any).Tooltip({});
   ctlViewTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
+  rightClickTime = 0;
   selectedPointColor = [255, 254, 13];
 
   constructor(public elementRef: ElementRef) {}
@@ -601,7 +608,7 @@ export class RavenCompositeBandComponent
    * CTL Event. Called when you right-click a composite band.
    */
   onRightClick(e: MouseEvent, ctlData: any) {
-    console.log('right click time: ' + ctlData.time);
+    this.rightClickTime = ctlData.time;
   }
 
   /**
@@ -856,13 +863,5 @@ export class RavenCompositeBandComponent
         subBand.autoScale = this.getResourceAutoScale(this.compositeAutoScale);
       }
     }
-  }
-
-  setTimeCursor() {
-    console.log('in setTimeCursor');
-  }
-
-  removeTimeCursor() {
-    console.log('in removeTimeCursor');
   }
 }

@@ -319,4 +319,8 @@ export class RavenTimeBandComponent
     this.updateTimeAxisXCoordinates();
     this.redraw();
   }
+
+  rightClickZoomTo(duration: number) {
+    this.ctlTimeBand.zoomToLastRightClickPos (duration);
+  }
 }
