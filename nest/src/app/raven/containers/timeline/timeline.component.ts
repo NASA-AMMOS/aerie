@@ -722,7 +722,11 @@ export class TimelineComponent implements OnDestroy {
    * Event. Called when a `follow-cursor` event is fired from the raven-time-cursor component.
    */
   onFollowTimeCursor(follow: boolean): void {
-    this.store.dispatch(TimeCursorActions.updateTimeCursorSettings({update: {followTimeCursor: follow}}));
+    this.store.dispatch(
+      TimeCursorActions.updateTimeCursorSettings({
+        update: { followTimeCursor: follow },
+      }),
+    );
   }
 
   /**
