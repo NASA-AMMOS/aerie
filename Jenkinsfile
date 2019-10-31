@@ -17,7 +17,7 @@ pipeline {
 	}
 
 	agent {
-		label 'coronado || Pismo || San-clemente || Sugarloaf'
+		label 'Pismo'
 	}
 
 	stages {
