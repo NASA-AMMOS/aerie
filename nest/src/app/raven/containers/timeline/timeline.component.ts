@@ -1099,10 +1099,6 @@ export class TimelineComponent implements OnDestroy {
     this.store.dispatch(DialogActions.openUpdateCurrentStateDialog());
   }
 
-  onContextMenuSelect(item: string) {
-    console.log(`selected ${item}`);
-  }
-
   zoomTo(zoom: number) {
     this.timeBandComponent.rightClickZoomTo(zoom);
   }
