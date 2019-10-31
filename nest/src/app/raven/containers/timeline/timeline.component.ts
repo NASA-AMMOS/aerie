@@ -135,6 +135,7 @@ export class TimelineComponent implements OnDestroy {
   currentTimeDelta$: Observable<number | null>;
   cursorColor$: Observable<string>;
   cursorWidth$: Observable<number>;
+  followTimeCursor$: Observable<boolean>;
   showTimeCursor$: Observable<boolean>;
   setCursorTime$: Observable<number | null>;
 
@@ -322,6 +323,9 @@ export class TimelineComponent implements OnDestroy {
     );
     this.cursorWidth$ = this.store.pipe(
       select(timeCursorSelectors.getCursorWidth),
+    );
+    this.followTimeCursor$ = this.store.pipe(
+      select(timeCursorSelectors.getFollowTimeCursor),
     );
     this.showTimeCursor$ = this.store.pipe(
       select(timeCursorSelectors.getShowTimeCursor),
@@ -714,6 +718,13 @@ export class TimelineComponent implements OnDestroy {
     );
     this.store.dispatch(TimeCursorActions.showTimeCursor());
   }
+  /**
+   * Event. Called when a `follow-cursor` event is fired from the raven-time-cursor component.
+   */
+  onFollowTimeCursor(follow: boolean): void {
+    this.store.dispatch(TimeCursorActions.updateTimeCursorSettings({update: {followTimeCursor: follow}}));
+  }
+
   /**
    * Event. Called when a 'hover' event is fired from ctl.
    */

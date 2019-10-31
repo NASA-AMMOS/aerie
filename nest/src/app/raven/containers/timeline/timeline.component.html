@@ -440,9 +440,11 @@
         [cursorColor]="cursorColor$ | async"
         [cursorTime]="cursorTime$ | async"
         [cursorWidth]="cursorWidth$ | async"
+        [followTimeCursor]="followTimeCursor$ | async"
         [showTimeCursor]="showTimeCursor$ | async"
         [setCursorTime]="setCursorTime$ | async"
         (displayTimeCursor)="onDisplayTimeCursor($event)"
+        (followCursor)="onFollowTimeCursor($event)"
         (updateTimeCursorSettings)="onUpdateTimeCursorSettings($event)"
       >
       </raven-time-cursor>

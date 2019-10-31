@@ -44,6 +44,9 @@ export class RavenTimeCursorComponent implements OnChanges {
   cursorWidth: number;
 
   @Input()
+  followTimeCursor: boolean;
+
+  @Input()
   showTimeCursor: boolean;
 
   @Input()
@@ -51,6 +54,9 @@ export class RavenTimeCursorComponent implements OnChanges {
 
   @Output()
   displayTimeCursor: EventEmitter<boolean> = new EventEmitter<boolean>();
+
+  @Output()
+  followCursor: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   @Output()
   updateTimeCursorSettings: EventEmitter<RavenUpdate> = new EventEmitter<
