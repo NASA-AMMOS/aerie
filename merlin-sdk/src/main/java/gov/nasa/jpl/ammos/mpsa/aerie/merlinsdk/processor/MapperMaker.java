@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.processor;
 
-
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
@@ -55,14 +54,26 @@ class MapperMaker {
         if (parameterTypeReference.isPrimitive) {
           switch (parameterTypeReference.typeName) {
             case "double":
-              blockBuilder.addStatement("$L.put($S, $T.ofDouble())", parametersVarName, parameterName, ParameterSchema.class);
+            case "float":
+              blockBuilder.addStatement("$L.put($S, $T.REAL)", parametersVarName, parameterName, ParameterSchema.class);
               break;
+
+            case "byte":
+            case "short":
             case "int":
-              blockBuilder.addStatement("$L.put($S, $T.ofInt())", parametersVarName, parameterName, ParameterSchema.class);
+            case "long":
+              blockBuilder.addStatement("$L.put($S, $T.INT)", parametersVarName, parameterName, ParameterSchema.class);
               break;
+
+            case "boolean":
+              blockBuilder.addStatement("$L.put($S, $T.BOOLEAN)", parametersVarName, parameterName, ParameterSchema.class);
+              break;
+
+            case "char":
             case "string":
-              blockBuilder.addStatement("$L.put($S, $T.ofString())", parametersVarName, parameterName, ParameterSchema.class);
+              blockBuilder.addStatement("$L.put($S, $T.STRING)", parametersVarName, parameterName, ParameterSchema.class);
               break;
+
             default:
               throw new RuntimeException("Found parameter of unknown primitive type `" + parameterTypeReference.typeName + "`");
           }
@@ -115,12 +126,34 @@ class MapperMaker {
             case "double":
               blockBuilder.addStatement("$T<$T> param_$L = $T.empty()", Optional.class, Double.class, parameterName, Optional.class);
               break;
+            case "float":
+              blockBuilder.addStatement("$T<$T> param_$L = $T.empty()", Optional.class, Float.class, parameterName, Optional.class);
+              break;
+
+            case "byte":
+              blockBuilder.addStatement("$T<$T> param_$L = $T.empty()", Optional.class, Byte.class, parameterName, Optional.class);
+              break;
+            case "short":
+              blockBuilder.addStatement("$T<$T> param_$L = $T.empty()", Optional.class, Short.class, parameterName, Optional.class);
+              break;
             case "int":
               blockBuilder.addStatement("$T<$T> param_$L = $T.empty()", Optional.class, Integer.class, parameterName, Optional.class);
+              break;
+            case "long":
+              blockBuilder.addStatement("$T<$T> param_$L = $T.empty()", Optional.class, Long.class, parameterName, Optional.class);
+              break;
+
+            case "boolean":
+              blockBuilder.addStatement("$T<$T> param_$L = $T.empty()", Optional.class, Boolean.class, parameterName, Optional.class);
+              break;
+
+            case "char":
+              blockBuilder.addStatement("$T<$T> param_$L = $T.empty()", Optional.class, Character.class, parameterName, Optional.class);
               break;
             case "string":
               blockBuilder.addStatement("$T<$T> param_$L = $T.empty()", Optional.class, String.class, parameterName, Optional.class);
               break;
+
             default:
               throw new RuntimeException("Found parameter of unknown primitive type `" + parameterTypeReference.typeName + "`");
           }
@@ -143,20 +176,67 @@ class MapperMaker {
         final var parameterName = entry.getKey();
         final var parameterTypeReference = entry.getValue();
 
-        blockBuilder
-            .add("case $S:\n", parameterName)
-            .indent();
+        blockBuilder.beginControlFlow("case $S:", parameterName);
         if (parameterTypeReference.isPrimitive) {
           switch (parameterTypeReference.typeName) {
             case "double":
-              blockBuilder.addStatement("param_$L = $T.of($L.getValue().asReal().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected double\")))", parameterName, Optional.class, entryVarName);
+              blockBuilder
+                  .addStatement("final var givenValue = $L.getValue().asReal().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected real number\"))", entryVarName)
+                  .addStatement("param_$L = $T.of(givenValue)", parameterName, Optional.class);
+              break;
+            case "float":
+              blockBuilder
+                  .addStatement("final var givenValue = $L.getValue().asReal().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected real number\"))", entryVarName)
+                  .addStatement("final var coercedValue = givenValue.floatValue()")
+                  // TODO: check if value converted losslessly, or at least within a tolerance?
+                  .addStatement("param_$L = $T.of(coercedValue)", parameterName, Optional.class);
+              break;
+
+            case "byte":
+              blockBuilder
+                  .addStatement("final var givenValue = $L.getValue().asInt().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected integral number\"))", entryVarName)
+                  .addStatement("final var coercedValue = givenValue.byteValue()")
+                  .addStatement("if (((long)givenValue) != coercedValue) throw new RuntimeException(\"Invalid parameter; value outside range of `byte`\")")
+                  .addStatement("param_$L = $T.of(coercedValue)", parameterName, Optional.class);
+              break;
+            case "short":
+              blockBuilder
+                  .addStatement("final var givenValue = $L.getValue().asInt().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected integral number\"))", entryVarName)
+                  .addStatement("final var coercedValue = givenValue.shortValue()")
+                  .addStatement("if (((long)givenValue) != coercedValue) throw new RuntimeException(\"Invalid parameter; value outside range of `short`\")")
+                  .addStatement("param_$L = $T.of(coercedValue)", parameterName, Optional.class);
               break;
             case "int":
-              blockBuilder.addStatement("param_$L = $T.of($L.getValue().asInt().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected int\")))", parameterName, Optional.class, entryVarName);
+              blockBuilder
+                  .addStatement("final var givenValue = $L.getValue().asInt().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected integral number\"))", entryVarName)
+                  .addStatement("final var coercedValue = givenValue.intValue()")
+                  .addStatement("if (((long)givenValue) != coercedValue) throw new RuntimeException(\"Invalid parameter; value outside range of `int`\")")
+                  .addStatement("param_$L = $T.of(coercedValue)", parameterName, Optional.class);
+              break;
+            case "long":
+              blockBuilder
+                  .addStatement("final var givenValue = $L.getValue().asInt().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected integral number\"))", entryVarName)
+                  .addStatement("param_$L = $T.of(givenValue)", parameterName, Optional.class);
+              break;
+
+            case "boolean":
+              blockBuilder
+                  .addStatement("final var givenValue = $L.getValue().asBoolean().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected boolean\"))", entryVarName)
+                  .addStatement("param_$L = $T.of(givenValue)", parameterName, Optional.class);
+              break;
+
+            case "char":
+              blockBuilder
+                  .addStatement("final var givenValue = $L.getValue().asString().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected character\"))", entryVarName)
+                  .addStatement("if (givenValue.length() != 1) throw new RuntimeException(\"Invalid parameter; expected single-character string\")")
+                  .addStatement("param_$L = $T.of(givenValue.charAt(0))", parameterName, Optional.class);
               break;
             case "string":
-              blockBuilder.addStatement("param_$L = $T.of($L.getValue().asString().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected string\")))", parameterName, Optional.class, entryVarName);
+              blockBuilder
+                  .addStatement("final var givenValue = $L.getValue().asString().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected string\"))", entryVarName)
+                  .addStatement("param_$L = $T.of(givenValue)", parameterName, Optional.class);
               break;
+
             default:
               throw new RuntimeException("Found parameter of unknown primitive type `" + parameterTypeReference.typeName + "`");
           }
@@ -165,7 +245,7 @@ class MapperMaker {
         }
         blockBuilder
             .addStatement("break")
-            .unindent();
+            .endControlFlow();
       }
       blockBuilder
           .add("default:\n")
