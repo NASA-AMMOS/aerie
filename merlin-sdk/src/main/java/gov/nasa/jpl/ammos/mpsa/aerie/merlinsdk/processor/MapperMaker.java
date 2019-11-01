@@ -149,7 +149,7 @@ class MapperMaker {
         if (parameterTypeReference.isPrimitive) {
           switch (parameterTypeReference.typeName) {
             case "double":
-              blockBuilder.addStatement("param_$L = $T.of($L.getValue().asDouble().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected double\")))", parameterName, Optional.class, entryVarName);
+              blockBuilder.addStatement("param_$L = $T.of($L.getValue().asReal().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected double\")))", parameterName, Optional.class, entryVarName);
               break;
             case "int":
               blockBuilder.addStatement("param_$L = $T.of($L.getValue().asInt().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected int\")))", parameterName, Optional.class, entryVarName);

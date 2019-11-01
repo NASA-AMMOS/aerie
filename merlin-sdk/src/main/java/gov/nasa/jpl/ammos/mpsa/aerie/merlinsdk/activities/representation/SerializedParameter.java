@@ -65,8 +65,8 @@ public abstract class SerializedParameter {
    */
   public interface Visitor<T> {
     T onNull();
-    T onDouble(double value);
-    T onInt(int value);
+    T onReal(double value);
+    T onInt(long value);
     T onBoolean(boolean value);
     T onString(String value);
     T onMap(Map<String, SerializedParameter> value);
@@ -95,15 +95,15 @@ public abstract class SerializedParameter {
   }
 
   /**
-   * Creates a {@link SerializedParameter} containing a {@link double}.
+   * Creates a {@link SerializedParameter} containing a real number.
    *
    * @param value Any {@link double} value.
-   * @return A new {@link SerializedParameter} containing a {@link double}.
+   * @return A new {@link SerializedParameter} containing a real number.
    */
   public static SerializedParameter of(final double value) {
     return new SerializedParameter() {
       public <T> T match(final Visitor<T> visitor) {
-        return visitor.onDouble(value);
+        return visitor.onReal(value);
       }
       public String toString() {
         return String.valueOf(value);
@@ -111,18 +111,18 @@ public abstract class SerializedParameter {
 
       @Override
       public boolean equals(final Object other) {
-        return ((other instanceof SerializedParameter) && Objects.equals(((SerializedParameter)other).asDouble(), Optional.of(value)));
+        return ((other instanceof SerializedParameter) && Objects.equals(((SerializedParameter)other).asReal(), Optional.of(value)));
       }
     };
   }
 
   /**
-   * Creates a {@link SerializedParameter} containing an {@link int}.
+   * Creates a {@link SerializedParameter} containing an integral number.
    *
-   * @param value Any {@link int} value.
-   * @return A new {@link SerializedParameter} containing an {@link int}.
+   * @param value Any {@link long} value.
+   * @return A new {@link SerializedParameter} containing an integral number.
    */
-  public static SerializedParameter of(final int value) {
+  public static SerializedParameter of(final long value) {
     return new SerializedParameter() {
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onInt(value);
@@ -250,12 +250,12 @@ public abstract class SerializedParameter {
     }
 
     @Override
-    public Optional<T> onDouble(final double value) {
+    public Optional<T> onReal(final double value) {
       return onDefault();
     }
 
     @Override
-    public Optional<T> onInt(final int value) {
+    public Optional<T> onInt(final long value) {
       return onDefault();
     }
 
@@ -297,30 +297,30 @@ public abstract class SerializedParameter {
   }
 
   /**
-   * Attempts to access the data in this object as a {@link double}.
+   * Attempts to access the data in this object as a real number.
    *
-   * @return An {@link Optional} containing a {@link double} if this object contains a {@link double}.
+   * @return An {@link Optional} containing a {@link double} if this object contains a real number.
    *   Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<Double> asDouble() {
+  public Optional<Double> asReal() {
     return this.match(new DefaultVisitor<>() {
       @Override
-      public Optional<Double> onDouble(final double value) {
+      public Optional<Double> onReal(final double value) {
         return Optional.of(value);
       }
     });
   }
 
   /**
-   * Attempts to access the data in this object as an {@link int}.
+   * Attempts to access the data in this object as an integral number.
    *
-   * @return An {@link Optional} containing an {@link int} if this object contains an {@link int}.
+   * @return An {@link Optional} containing a {@link long} if this object contains an integral number.
    *   Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<Integer> asInt() {
+  public Optional<Long> asInt() {
     return this.match(new DefaultVisitor<>() {
       @Override
-      public Optional<Integer> onInt(final int value) {
+      public Optional<Long> onInt(final long value) {
         return Optional.of(value);
       }
     });
