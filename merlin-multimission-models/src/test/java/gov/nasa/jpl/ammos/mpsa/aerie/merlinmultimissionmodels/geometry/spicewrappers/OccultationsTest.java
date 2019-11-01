@@ -7,6 +7,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.spice.SpiceLoader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import spice.basic.CSPICE;
 import spice.basic.SpiceErrorException;
@@ -22,6 +23,7 @@ import static org.junit.Assert.fail;
 
 //TODO: Should become an integration tests and kernels should be stored in Artifcatory.
 //      Will require Jenkins configuration.
+@Ignore
 public class OccultationsTest {
 
     @BeforeClass
