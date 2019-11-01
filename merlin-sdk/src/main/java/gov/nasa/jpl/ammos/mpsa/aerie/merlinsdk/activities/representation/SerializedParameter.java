@@ -308,6 +308,11 @@ public abstract class SerializedParameter {
       public Optional<Double> onReal(final double value) {
         return Optional.of(value);
       }
+
+      @Override
+      public Optional<Double> onInt(final long value) {
+        return Optional.of((double)value);
+      }
     });
   }
 
@@ -322,6 +327,13 @@ public abstract class SerializedParameter {
       @Override
       public Optional<Long> onInt(final long value) {
         return Optional.of(value);
+      }
+
+      @Override
+      public Optional<Long> onReal(final double value) {
+        if (!Double.isFinite(value)) return Optional.empty();
+        if (Math.floor(value) != value) return Optional.empty();
+        return Optional.of((long)value);
       }
     });
   }
