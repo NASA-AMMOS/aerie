@@ -7,20 +7,31 @@ that is required to run Aerie with Docker and Docker Compose.
 
 ## Prerequisites
 
-To start the services using Docker Compose you must have [Git](https://git-scm.com/),
-[Docker](https://www.docker.com/), and [Docker Compose](https://docs.docker.com/compose/) installed.
+You need the following software installed before starting:
 
-## Basic Steps
+1. [Git](https://git-scm.com/)
+1. [Docker](https://www.docker.com/)
+1. [Maven](https://maven.apache.org/)
 
-The basic steps are:
+## Steps for Running Services Locally
 
-1. Clone the repository using Git
-2. Log in to Docker Hub
-3. Create an Artifactory settings.xml file for local development
-4. Configure services (if running the full configuration)
-5. Start the services using the appropriate configuration file
+1. Create Artifactory settings.xml
+1. Log in to Docker Artifactory
+1. Build and start the services
 
-## Authentication
+### Create Artifactory Settings.xml
+
+You need an Artifactory settings.xml file with your JPL credentials so you can download and use Artifactory packages locally. Follow these steps to set this file up:
+
+1. Go to https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/artifacts/browse/tree/General/maven-libs-snapshot-local and log in with your JPL credentials
+1. Click "Set Me Up"
+1. Type in your JPL password
+1. Use the settings shown below.
+![](artifactory_maven_setup.png)
+1. Click "Generate Maven Settings" and then "Generate Settings" which will download a `settings.xml` file
+1. Move `settings.xml` into `~/.m2/`, replacing the old `settings.xml` if it exists.
+
+### Log in to Docker Artifactory
 
 Before the local and full configurations can be run, you will need to login to
 Artifactory:
@@ -36,33 +47,19 @@ NOTE: Access is intended for MPSA Aerie Developers. If you have tried to login
 and you get an access denied message, please contact seq.support@jpl.nasa.gov
 to request access.
 
-## Artifactory Settings.xml
+### Build and Start the Services
 
-You need an Artifactory settings.xml file with your JPL credentials so you can download and use Artifactory packages locally. Follow these steps to set this file up:
-
-1. Go to https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/artifacts/browse/tree/General/maven-libs-snapshot-local and log in with your JPL credentials
-2. Click "Set Me Up"
-3. Type in your JPL password
-4. Use the settings shown below.
-![](artifactory_maven_setup.png)
-5. Click "Generate Maven Settings" and then "Generate Settings" which will download a `settings.xml` file
-6. Move `settings.xml` into `~/.m2/`, replacing the old `settings.xml` if it exists.
-
-## Configuration
-
-The basic command that you will use to start services locally with Docker Compose is:
-
-```
+```bash
+git clone git@github.jpl.nasa.gov:MPS/aerie.git
+cd aerie
+mvn install -DskipTests
 docker-compose -f docker-compose-local.yml up --build
 ```
 
 Press `cmd+c` or `ctrl+c` to stop all services if docker-compose is running in
-the foreground. Then to remove all the containers do:
+the foreground. Then to remove all the containers and clean your Maven targets do:
 
-```
+```bash
 docker-compose down
+mvn clean
 ```
-
-## Deployment 
-
-See the deployment documentation [here](./deployment.md).
