@@ -295,7 +295,7 @@ public final class RemotePlanRepository implements PlanRepository {
       }
 
       @Override
-      public Document onDouble(double value) {
+      public Document onReal(double value) {
         final Document document = new Document();
         document.put("type", "double");
         document.put("value", value);
@@ -303,7 +303,7 @@ public final class RemotePlanRepository implements PlanRepository {
       }
 
       @Override
-      public Document onInt(int value) {
+      public Document onInt(long value) {
         final Document document = new Document();
         document.put("type", "int");
         document.put("value", value);

@@ -24,7 +24,7 @@ public final class StubAdaptationController implements IAdaptationController {
     public static final String NONEXISTENT_ACTIVITY_ID = "no-activity";
     public static final ActivityType EXISTENT_ACTIVITY = new ActivityType(
         EXISTENT_ACTIVITY_ID,
-        Map.of("Param", ParameterSchema.ofString()));
+        Map.of("Param", ParameterSchema.STRING));
 
     static {
         VALID_NEW_ADAPTATION = new HashMap<>();

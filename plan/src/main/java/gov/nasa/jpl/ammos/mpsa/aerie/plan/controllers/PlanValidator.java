@@ -39,14 +39,14 @@ public final class PlanValidator {
   private void validateParameter(final SerializedParameter parameter, final ParameterSchema parameterSchema) {
     parameterSchema.match(new ParameterSchema.Visitor<>() {
       @Override
-      public Object onDouble() {
-        if (parameter.asDouble().isEmpty()) addError("Expected double");
+      public Object onReal() {
+        if (parameter.asReal().isEmpty()) addError("Expected real number");
         return null;
       }
 
       @Override
       public Object onInt() {
-        if (parameter.asInt().isEmpty()) addError("Expected integer");
+        if (parameter.asInt().isEmpty()) addError("Expected integral number");
         return null;
       }
 
