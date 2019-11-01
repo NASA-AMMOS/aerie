@@ -395,7 +395,6 @@ export class RavenActivityBandComponent
 
     for (let i = 0, l = this.points.length; i < l; ++i) {
       const point = this.points[i];
-
       // If we have not seen the unique activity id before and not in excludeActivityTypes, then add it to be drawn.
       if (
         !intervalsById[point.uniqueId] &&
@@ -408,7 +407,7 @@ export class RavenActivityBandComponent
           color: colorHexToRgbArray(point.color),
           end: point.end,
           icon: this.activityStyle === 3 ? this.icon : null,
-          id: point.id,
+          id: point.uniqueId,
           label: point.activityName,
           onGetTooltipText: this.onGetTooltipText.bind(this),
           opacity: 0.5,
@@ -422,7 +421,7 @@ export class RavenActivityBandComponent
         interval.parameters = point.activityParameters;
 
         intervals.push(interval);
-        intervalsById[interval.uniqueId] = interval;
+        intervalsById[interval.id] = interval;
       }
     }
 
