@@ -21,7 +21,7 @@
         <module>schedule</module>
         <module>schemas</module>
         <module>simulation</module>
-        <module>merlin-multimission-models</module>
+<!--        <module>merlin-multimission-models</module> -->
     </modules>
 
     <properties>
