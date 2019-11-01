@@ -2,7 +2,7 @@ version: "3.3"
 services:
   adaptation:
     build:
-      context: adaptation2
+      context: adaptation
       dockerfile: Dockerfile
     depends_on: ["adaptation_mongo"]
     ports: ["27182:27182"]
@@ -16,7 +16,7 @@ services:
     volumes: ["adaptation_mongo_data:/data/db"]
   plan:
     build:
-      context: plan2
+      context: plan
       dockerfile: Dockerfile
     depends_on: ["plan_mongo"]
     ports: ["27183:27183"]

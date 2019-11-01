@@ -1,6 +1,11 @@
 FROM adoptopenjdk:11-jre-hotspot
-WORKDIR /usr/src/app
-COPY ./target/plan*.jar /usr/src/app/plan.jar
+
+COPY target/plan-1.0-SNAPSHOT-jar-with-dependencies.jar /usr/src/app/
+
 EXPOSE 27183
-ENTRYPOINT ["java", "-jar", "/usr/src/app/plan.jar"]
-CMD ["--spring.profiles.active=default"] 
+
+WORKDIR /usr/src/app
+ENTRYPOINT [ \
+  "java", \
+  "-jar", "plan-1.0-SNAPSHOT-jar-with-dependencies.jar" \
+  ]
