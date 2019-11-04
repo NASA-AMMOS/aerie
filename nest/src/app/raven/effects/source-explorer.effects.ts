@@ -1342,7 +1342,7 @@ export class SourceExplorerEffects {
             situAware,
             startTime,
             pageDuration,
-            viewTimeRange,
+            source.type === 'resource' ? viewTimeRange : { start: 0, end: 0 },
           ),
         )
         .pipe(
