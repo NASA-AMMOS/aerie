@@ -7,7 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from '../../../../../schemas';
 export * from './base-type';
 export * from './map';
 export * from './nest-module';

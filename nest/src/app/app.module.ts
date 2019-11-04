@@ -24,14 +24,13 @@ import { SortablejsModule } from 'angular-sortablejs/dist';
 import { AngularSplitModule } from 'angular-split';
 import { ContextMenuModule } from 'ngx-contextmenu';
 import { ToastrModule } from 'ngx-toastr';
-import { RouterEffects } from '../../libs/ngrx-router';
 import { environment } from '../environments/environment';
 import { AppRoutingModule } from './app-routing.module';
 import { metaReducers, ROOT_REDUCERS } from './app-store';
 import { AppComponent } from './app.component';
 import { NestAboutDialogModule } from './shared/components/nest-about-dialog/nest-about-dialog.module';
 import { NestAppNavModule } from './shared/components/nest-app-nav/nest-app-nav.module';
-import { ConfigEffects, DialogEffects, NavEffects } from './shared/effects';
+import { ConfigEffects, DialogEffects } from './shared/effects';
 import { ToastEffects } from './shared/effects/toast.effects';
 
 @NgModule({
@@ -41,13 +40,7 @@ import { ToastEffects } from './shared/effects/toast.effects';
     BrowserAnimationsModule,
     HttpClientModule,
     AppRoutingModule,
-    EffectsModule.forRoot([
-      ConfigEffects,
-      DialogEffects,
-      NavEffects,
-      RouterEffects,
-      ToastEffects,
-    ]),
+    EffectsModule.forRoot([ConfigEffects, DialogEffects, ToastEffects]),
     OverlayModule,
     SortablejsModule.forRoot({}),
     AngularSplitModule.forRoot(),

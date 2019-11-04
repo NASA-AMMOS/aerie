@@ -9,10 +9,9 @@
 
 import { Injectable } from '@angular/core';
 import { Observable, Observer } from 'rxjs';
-import { CommandDictionary, MpsCommand } from '../../shared/models';
 import { europaCommands, mpsCommands } from '../mocks';
 
-export const mockCommandDictionaryList: CommandDictionary[] = [
+export const mockCommandDictionaryList: any[] = [
   {
     id: 'TEST_1',
     name: 'Test 1',
@@ -29,15 +28,15 @@ export const mockCommandDictionaryList: CommandDictionary[] = [
   providedIn: 'root',
 })
 export class CommandDictionaryMockService {
-  getCommandDictionaryList(): Observable<CommandDictionary[]> {
-    return new Observable((o: Observer<CommandDictionary[]>) => {
+  getCommandDictionaryList(): Observable<any[]> {
+    return new Observable((o: Observer<any[]>) => {
       o.next(mockCommandDictionaryList);
       o.complete();
     });
   }
 
-  getCommandDictionary(id: string): Observable<MpsCommand[]> {
-    return new Observable((o: Observer<MpsCommand[]>) => {
+  getCommandDictionary(id: string): Observable<any[]> {
+    return new Observable((o: Observer<any[]>) => {
       switch (id) {
         case 'TEST_1':
           o.next(mpsCommands);

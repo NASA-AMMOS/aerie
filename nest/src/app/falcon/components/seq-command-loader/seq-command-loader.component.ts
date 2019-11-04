@@ -14,7 +14,6 @@ import {
   Input,
   Output,
 } from '@angular/core';
-import { CommandDictionary } from '../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,7 +23,7 @@ import { CommandDictionary } from '../../../shared/models';
 })
 export class SeqCommandLoaderComponent {
   @Input()
-  dictionaries: CommandDictionary[] = [];
+  dictionaries: any[] = [];
 
   @Input()
   selectedId: string | null = null;

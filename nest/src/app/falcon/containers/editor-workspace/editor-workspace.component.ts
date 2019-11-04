@@ -15,7 +15,7 @@ import {
 } from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { MpsCommand, StringTMap } from '../../../shared/models';
+import { StringTMap } from '../../../shared/models';
 import { EditorActions, FileActions } from '../../actions';
 import { FalconAppState } from '../../falcon-store';
 import { CurrentLine, Editor, EditorOptions, SequenceTab } from '../../models';
@@ -39,10 +39,10 @@ export class EditorWorkspaceComponent implements AfterViewInit {
   editorOptions: EditorOptions;
 
   activeEditor$: Observable<string>;
-  commands$: Observable<MpsCommand[] | null> = this.store.pipe(
+  commands$: Observable<any[] | null> = this.store.pipe(
     select(CommandDictionarySelectors.getCommands),
   );
-  commandsByName$: Observable<StringTMap<MpsCommand> | null> = this.store.pipe(
+  commandsByName$: Observable<StringTMap<any> | null> = this.store.pipe(
     select(CommandDictionarySelectors.getCommandsByName),
   );
   currentTab$: Observable<string | null>;

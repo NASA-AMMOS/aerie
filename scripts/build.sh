@@ -123,8 +123,7 @@ mvn --fail-at-end -B -f pom.xml -s settings.xml install
 cd $root
 
 # Build nest
-
-if echo "$changed" | grep --quiet "\(nest\|schemas\)"; then
+if echo "$changed" | grep --quiet "\(nest\)"; then
   printf "\nBuilding nest...\n\n"
   cd nest
 
@@ -143,6 +142,20 @@ if echo "$changed" | grep --quiet "\(nest\|schemas\)"; then
 
   npm run test-for-build
   [ $? -ne 0 ] && error_exit "npm run test-for-build failed"
+
+  cd $root
+fi
+
+# Build merlin-ui
+if echo "$changed" | grep --quiet "\(merlin-ui\)"; then
+  printf "\nBuilding merlin-ui...\n\n"
+  cd merlin-ui
+
+  npx yarn
+  [ $? -ne 0 ] && error_exit "yarn"
+
+  npx yarn build --prod
+  [ $? -ne 0 ] && error_exit "yarn build --prod failed"
 
   cd $root
 fi

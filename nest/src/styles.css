@@ -1,8 +1,6 @@
 /* NOTE: external styles should be defined in angular.json and karma.js,
    or you will get 404s on them in the tests. */
 
-@import '~ng-pick-datetime/assets/style/picker.min.css';
-
 /* roboto-300 - latin */
 @font-face {
   font-family: 'Roboto';

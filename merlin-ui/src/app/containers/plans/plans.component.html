@@ -1,0 +1,185 @@
+<mat-toolbar color="primary">
+  <span>Plans</span>
+  <div class="mat-toolbar-right">
+    <button mat-icon-button [matMenuTriggerFor]="menu">
+      <mat-icon>more_vert</mat-icon>
+    </button>
+
+    <mat-menu #menu="matMenu">
+      <button mat-menu-item [matMenuTriggerFor]="views">
+        <mat-icon>library_books</mat-icon>
+        <span>Views</span>
+      </button>
+    </mat-menu>
+
+    <mat-menu #views="matMenu">
+      <button mat-menu-item [routerLink]="['/adaptations']">Adaptations</button>
+    </mat-menu>
+  </div>
+</mat-toolbar>
+
+<mat-progress-bar
+  *ngIf="loading"
+  color="accent"
+  mode="indeterminate"
+></mat-progress-bar>
+
+<as-split [gutterSize]="4">
+  <as-split-area [size]="25">
+    <app-panel-header>
+      Create Plan
+    </app-panel-header>
+    <div class="p-1">
+      <form [formGroup]="createPlanForm" (ngSubmit)="onSubmit()">
+        <div class="pb-4" *ngIf="!adaptations.length">
+          <mat-card>
+            There are no adaptations in the database.<br />
+            You need an adaptation in order to make a plan.<br />
+            Try adding an adaptation
+            <a [routerLink]="['/adaptations']">here</a>.
+          </mat-card>
+        </div>
+
+        <mat-form-field
+          *ngIf="adaptations.length"
+          class="w-100"
+          appearance="fill"
+        >
+          <mat-label>Adaptation</mat-label>
+          <mat-select formControlName="adaptationId" [required]="true">
+            <mat-option
+              *ngFor="let adaptation of adaptations"
+              [value]="adaptation.id"
+            >
+              {{ adaptation.name }} {{ adaptation.version }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field class="w-100" appearance="fill">
+          <mat-label>Name</mat-label>
+          <input
+            [required]="true"
+            autocomplete="off"
+            formControlName="name"
+            matInput
+            type="text"
+          />
+        </mat-form-field>
+
+        <mat-form-field class="w-100" appearance="fill">
+          <mat-label>Start Date</mat-label>
+          <input
+            [required]="true"
+            autocomplete="off"
+            formControlName="startTimestamp"
+            matInput
+            type="text"
+          />
+        </mat-form-field>
+
+        <mat-form-field class="w-100" appearance="fill">
+          <mat-label>End Date</mat-label>
+          <input
+            [required]="true"
+            autocomplete="off"
+            formControlName="endTimestamp"
+            matInput
+            type="text"
+          />
+        </mat-form-field>
+
+        <button
+          class="mr-2"
+          mat-raised-button
+          color="accent"
+          [disabled]="!createPlanForm.valid"
+        >
+          Create
+        </button>
+      </form>
+    </div>
+  </as-split-area>
+
+  <as-split-area [size]="75">
+    <app-panel-header>
+      Plan List
+    </app-panel-header>
+    <div class="p-1">
+      <mat-card *ngIf="!plans.length">
+        There are no plans in the database.
+      </mat-card>
+
+      <table
+        *ngIf="plans.length"
+        [dataSource]="plans"
+        mat-table
+        class="w-100 mat-elevation-z1"
+      >
+        <ng-container matColumnDef="menu">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let element">
+            <button mat-icon-button [matMenuTriggerFor]="menu">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #menu="matMenu">
+              <button mat-menu-item (click)="onOpenPlan(element.id)">
+                <span>Open</span>
+              </button>
+              <button mat-menu-item (click)="onDeletePlan(element.id)">
+                <span>Delete</span>
+              </button>
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Plan Name</th>
+          <td
+            mat-cell
+            *matCellDef="let element"
+            (click)="onOpenPlan(element.id)"
+          >
+            {{ element.name }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="adaptationId">
+          <th mat-header-cell *matHeaderCellDef>Adaptation Id</th>
+          <td
+            mat-cell
+            *matCellDef="let element"
+            (click)="onOpenPlan(element.id)"
+          >
+            {{ element.adaptationId }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="startTimestamp">
+          <th mat-header-cell *matHeaderCellDef>Start Time</th>
+          <td
+            mat-cell
+            *matCellDef="let element"
+            (click)="onOpenPlan(element.id)"
+          >
+            {{ element.startTimestamp }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="endTimestamp">
+          <th mat-header-cell *matHeaderCellDef>End Time</th>
+          <td
+            mat-cell
+            *matCellDef="let element"
+            (click)="onOpenPlan(element.id)"
+          >
+            {{ element.endTimestamp }}
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+  </as-split-area>
+</as-split>

@@ -8,13 +8,13 @@
  */
 
 import * as CodeMirror from 'codemirror';
-import { MpsCommand, StringTMap } from '../../../shared/models';
+import { StringTMap } from '../../../shared/models';
 import { getCommandTemplate } from './helpers';
 /**
  * Register a custom `mps` hinter with Code Mirror.
  * Hinters are used for Code Mirror autocomplete.
  */
-export function buildMpsHint(commandsByName: StringTMap<MpsCommand>): void {
+export function buildMpsHint(commandsByName: StringTMap<any>): void {
   const commandNames = Object.keys(commandsByName);
 
   function commandHint(

@@ -9,7 +9,6 @@ exports.config = {
     './src/falcon/panels.e2e-spec.ts',
     './src/falcon/toolbar.e2e-spec.ts',
     './src/falcon/parameter-editor.e2e-spec.ts',
-    './src/merlin/plans.e2e-spec.ts',
   ],
   capabilities: {
     browserName: 'chrome',

@@ -7,6 +7,4 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { MpsCommand } from '../../shared/models';
-
-export type Command = MpsCommand;
+export type Command = any;

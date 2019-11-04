@@ -7,18 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  MpsCommand,
-  MpsCommandParameter,
-  StringTMap,
-} from '../../../shared/models';
+import { StringTMap } from '../../../shared/models';
 
 /**
  * Returns a template for an mps command used in autocomplete.
  */
 export function getCommandTemplate(
   commandName: string,
-  commandsByName: StringTMap<MpsCommand>,
+  commandsByName: StringTMap<any>,
 ): string {
   const command = commandsByName[commandName];
   let template = '';
@@ -39,7 +35,7 @@ export function getCommandTemplate(
  */
 export function getCommandParameterHelpTemplate(
   commandName: string,
-  commandsByName: StringTMap<MpsCommand>,
+  commandsByName: StringTMap<any>,
 ): string {
   const command = commandsByName[commandName];
 
@@ -48,7 +44,7 @@ export function getCommandParameterHelpTemplate(
       <h3>${commandName}</h3>
       ${command.parameters.length > 0 ? '<h4>Parameters</h4>' : 'No Parameters'}
       ${command.parameters
-        .map(p => {
+        .map((p: any) => {
           return `<p class="parameter-help"><strong class="parameter-name">${p.name}</strong>: ${p.help}</p>`;
         })
         .join(' ')}
@@ -69,7 +65,7 @@ export function getCommandParameterDescriptionTemplate(
   commandName: string,
   parameterName: string,
   lineTokens: CodeMirror.Token[],
-  commandsByName: StringTMap<MpsCommand>,
+  commandsByName: StringTMap<any>,
 ) {
   const commandObject = commandsByName[commandName];
 
@@ -92,7 +88,7 @@ export function getCommandParameterDescriptionTemplate(
 /**
  * Generates the tooltip content for a provided parameter
  */
-export function getParameterTooltip(parameterObject: MpsCommandParameter) {
+export function getParameterTooltip(parameterObject: any) {
   if (parameterObject) {
     return `
     <h3>${parameterObject.name}</h3>

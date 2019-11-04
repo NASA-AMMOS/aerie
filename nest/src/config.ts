@@ -51,12 +51,6 @@ export const config: ConfigState = {
   },
   appModules: [
     {
-      icon: 'event',
-      path: 'plans',
-      title: 'Merlin',
-      version: '0.0.1',
-    },
-    {
       icon: 'dns',
       path: 'falcon',
       title: 'Falcon',

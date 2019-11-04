@@ -8,7 +8,6 @@
  */
 
 import { createAction, props } from '@ngrx/store';
-import { CommandDictionary, MpsCommand } from '../../shared/models';
 
 export const fetchCommandDictionaries = createAction(
   '[falcon-command-dictionary] fetch_command_dictionaries',
@@ -21,7 +20,7 @@ export const fetchCommandDictionariesFailure = createAction(
 
 export const fetchCommandDictionariesSuccess = createAction(
   '[falcon-command-dictionary] fetch_command_dictionaries_success',
-  props<{ data: CommandDictionary[] }>(),
+  props<{ data: any[] }>(),
 );
 
 export const fetchCommandDictionary = createAction(
@@ -36,7 +35,7 @@ export const fetchCommandDictionaryFailure = createAction(
 
 export const fetchCommandDictionarySuccess = createAction(
   '[falcon-command-dictionary] fetch_command_dictionary_success',
-  props<{ data: MpsCommand[] }>(),
+  props<{ data: any[] }>(),
 );
 
 export const selectCommandDictionary = createAction(

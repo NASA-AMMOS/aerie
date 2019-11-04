@@ -9,12 +9,12 @@
 
 import { createReducer, on } from '@ngrx/store';
 import keyBy from 'lodash-es/keyBy';
-import { CommandDictionary, MpsCommand, StringTMap } from '../../shared/models';
+import { StringTMap } from '../../shared/models';
 import { CommandDictionaryActions } from '../actions';
 
 export interface CommandDictionaryState {
-  commandsByName: StringTMap<MpsCommand> | null;
-  dictionaries: CommandDictionary[];
+  commandsByName: StringTMap<any> | null;
+  dictionaries: any[];
   selectedDictionaryId: string | null;
 }
 

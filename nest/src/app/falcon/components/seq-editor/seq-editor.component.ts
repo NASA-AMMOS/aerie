@@ -20,7 +20,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import * as CodeMirror from 'codemirror';
-import { MpsCommand, StringTMap } from '../../../shared/models';
+import { StringTMap } from '../../../shared/models';
 import {
   buildMpsHint,
   buildMpsLint,
@@ -46,10 +46,10 @@ export class SeqEditorComponent implements AfterViewInit, OnChanges {
   autofocus = true;
 
   @Input()
-  commandsByName: StringTMap<MpsCommand> = {};
+  commandsByName: StringTMap<any> = {};
 
   @Input()
-  commands: MpsCommand[] = [];
+  commands: any[] = [];
 
   @Input()
   currentLine: CurrentLine | null;

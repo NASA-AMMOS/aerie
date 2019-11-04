@@ -8,12 +8,12 @@
  */
 
 import * as CodeMirror from 'codemirror';
-import { MpsCommand, StringTMap } from '../../../shared/models';
+import { StringTMap } from '../../../shared/models';
 
 /**
  * Register a custom `mps` mode with Code Mirror.
  */
-export function buildMpsMode(commandsByName: StringTMap<MpsCommand>): void {
+export function buildMpsMode(commandsByName: StringTMap<any>): void {
   const mode = 'mps';
   const commandNames = Object.keys(commandsByName);
   const instructionRegex = `(${commandNames.join('|')})`;

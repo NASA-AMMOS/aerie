@@ -1,0 +1,14 @@
+tr[mat-row]:hover {
+  background: #f5f5f5;
+  cursor: pointer;
+}
+
+mat-toolbar {
+  height: 36px;
+}
+
+.mat-toolbar-right {
+  display: inline-flex;
+  flex: 1 1 auto;
+  justify-content: flex-end;
+}

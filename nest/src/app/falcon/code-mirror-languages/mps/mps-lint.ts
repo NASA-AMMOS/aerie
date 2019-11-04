@@ -8,14 +8,13 @@
  */
 
 import * as CodeMirror from 'codemirror';
-import { MpsCommandParameter } from '../../../../../../schemas';
-import { MpsCommand, StringTMap } from '../../../shared/models';
+import { StringTMap } from '../../../shared/models';
 import { CodeMirrorLintError } from '../../models';
 
 /**
  * Register a custom `mps` linter with Code Mirror.
  */
-export function buildMpsLint(commandsByName: StringTMap<MpsCommand>) {
+export function buildMpsLint(commandsByName: StringTMap<any>) {
   CodeMirror.registerHelper('lint', 'mps', (text: string) => {
     const found: CodeMirror.Annotation[] = [];
 
@@ -73,7 +72,7 @@ export function regexFromRangeString(range: string[]): RegExp {
  * Verify a blob of text line-by-line based on a command dictionary.
  */
 export function verify(
-  commandsByName: StringTMap<MpsCommand>,
+  commandsByName: StringTMap<any>,
   text: string,
 ): CodeMirrorLintError[] {
   let errors: CodeMirrorLintError[] = [];
@@ -92,7 +91,7 @@ export function verify(
  * Verify an individual line based on a command dictionary.
  */
 export function verifyLine(
-  commandsByName: StringTMap<MpsCommand>,
+  commandsByName: StringTMap<any>,
   line: string,
   lineNumber: number,
 ) {
@@ -179,7 +178,7 @@ export function verifyLine(
         ) {
           const [lowerBound, upperBound] = expectedParameter.range
             .split('...')
-            .map(num => parseFloat(num));
+            .map((num: any) => parseFloat(num));
           const curParameter = parseFloat(parameters[i]);
           const start = curCharPos - parameters[i].length;
           const end = curCharPos;
@@ -229,7 +228,7 @@ export function verifyLine(
           if (expectedParameter.range) {
             const enums = expectedParameter.range
               .split(',')
-              .map(e => e.substring(1, e.length - 1));
+              .map((e: any) => e.substring(1, e.length - 1));
 
             if (!enums.includes(curParameter)) {
               const start = curCharPos - parameters[i].length;
@@ -251,7 +250,7 @@ export function verifyLine(
   return lintMessages;
 }
 
-function generateCommandHelp(parameters: MpsCommandParameter[]) {
+function generateCommandHelp(parameters: any[]) {
   return `
       -----
       ${parameters

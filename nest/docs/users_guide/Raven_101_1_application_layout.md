@@ -48,7 +48,6 @@ The following are the modules that NEST provides, with a description of each one
 
 | Icon                                                      | Module        | Description                                                  |
 | --------------------------------------------------------- | ------------- | ------------------------------------------------------------ |
-| <img src="./images/baseline-event-24px.svg" width="23" /> | Merlin      | Allow users to perform all planning related tasks. It is responsible for creating instances of Activity Types, Creating Schedules, Initiating Simulations, Constrain checking and more. |
 | <img src="./images/baseline-dns-24px.svg" width="23" />   | Falcon    | Collaboration syntax editor to create sequences.             |
 | <img src="./images/baseline-poll-24px.svg" width="23" />  | Raven | Allow users to view science planning, spacecraft activities, resource usage and predicted data, and/or any time-based data. |
 

@@ -16,7 +16,7 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-import { MpsCommand, StringTMap } from '../../../shared/models';
+import { StringTMap } from '../../../shared/models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,10 +29,10 @@ export class SeqCommandListComponent implements OnChanges {
   activeEditor: string;
 
   @Input()
-  commands: MpsCommand[] | null;
+  commands: any[] | null;
 
   @Input()
-  commandsByName: StringTMap<MpsCommand> = {};
+  commandsByName: StringTMap<any> = {};
 
   @Input()
   commandFilterQuery: string;
@@ -43,8 +43,8 @@ export class SeqCommandListComponent implements OnChanges {
     editorId: string;
   }> = new EventEmitter<{ commandName: string; editorId: string }>();
 
-  sortedCommands: MpsCommand[] = [];
-  sortedAndFilteredCommands: MpsCommand[] = [];
+  sortedCommands: any[] = [];
+  sortedAndFilteredCommands: any[] = [];
 
   ngOnChanges(changes: SimpleChanges) {
     if (this.commands && changes.commands) {
@@ -65,7 +65,7 @@ export class SeqCommandListComponent implements OnChanges {
     }
   }
 
-  onSelectCommand(event: MouseEvent, command: MpsCommand) {
+  onSelectCommand(event: MouseEvent, command: any) {
     // Prevents the click event from propagating to the mat-expansion-panel so it doesn't open
     // when the user clicks on the add command button
     event.stopPropagation();

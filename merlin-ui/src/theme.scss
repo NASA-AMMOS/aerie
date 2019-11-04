@@ -1,0 +1,84 @@
+@import '~@angular/material/theming';
+@include mat-core();
+
+$mat-slate: (
+  50: #efefef,
+  100: #d8d9d9,
+  200: #bac0c4,
+  300: #9ca7af,
+  400: #85949e,
+  500: #6f818e,
+  600: #62727c,
+  700: #525e66,
+  800: #434b58,
+  900: #313639,
+  A100: #d8d9d9,
+  A200: #bac0c4,
+  A400: #85949e,
+  A700: #525e66,
+  contrast: (
+    50: $dark-primary-text,
+    100: $dark-primary-text,
+    200: $dark-primary-text,
+    300: $light-primary-text,
+    400: $light-primary-text,
+    500: $light-primary-text,
+    600: $light-primary-text,
+    700: $light-primary-text,
+    800: $light-primary-text,
+    900: $light-primary-text,
+    A100: $dark-primary-text,
+    A200: $light-primary-text,
+    A400: $light-primary-text,
+    A700: $light-primary-text,
+  ),
+);
+
+$mat-rust: (
+  50: #f0e5e1,
+  100: #e2ceaf,
+  200: #d39d77,
+  300: #cf793d,
+  400: #b96102,
+  500: #ae4b00,
+  600: #a64600,
+  700: #9b4000,
+  800: #8f3800,
+  900: #7a2b00,
+  A100: #e2ceaf,
+  A200: #d39d77,
+  A400: #b96102,
+  A700: #9b4000,
+  contrast: (
+    50: $dark-primary-text,
+    100: $dark-primary-text,
+    200: $dark-primary-text,
+    300: $light-primary-text,
+    400: $light-primary-text,
+    500: $light-primary-text,
+    600: $light-primary-text,
+    700: $light-primary-text,
+    800: $light-primary-text,
+    900: $light-primary-text,
+    A100: $dark-primary-text,
+    A200: $light-primary-text,
+    A400: $light-primary-text,
+    A700: $light-primary-text,
+  ),
+);
+// Define the palettes for your theme using the Material Design palettes available in palette.scss
+// (imported above). For each palette, you can optionally specify a default, lighter, and darker
+// hue. Available color palettes: https://material.io/design/color/
+$primary: mat-palette($mat-slate);
+$accent: mat-palette($mat-rust);
+
+// The warn palette is optional (defaults to red).
+// $nest-app-warn:    mat-palette($mat-red);
+
+// Create the theme object (a Sass map containing all of the palettes).
+$theme: mat-light-theme($primary, $accent);
+
+// Include theme styles for core and each component used in your app.
+// Alternatively, you can import and @include the theme mixins for each component
+// that you are using.
+@include angular-material-theme($theme);

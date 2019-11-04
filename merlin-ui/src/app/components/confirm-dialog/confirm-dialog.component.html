@@ -1,0 +1,16 @@
+<div mat-dialog-content>
+  <p>{{ data.message }}</p>
+</div>
+<div mat-dialog-actions>
+  <button
+    *ngIf="data.confirmText"
+    (click)="onConfirm()"
+    cdkFocusInitial
+    mat-button
+  >
+    {{ data.confirmText }}
+  </button>
+  <button color="accent" mat-button (click)="onCancel()" matDialogClose>
+    {{ data.cancelText }}
+  </button>
+</div>

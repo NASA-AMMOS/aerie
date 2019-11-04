@@ -8,9 +8,8 @@
  */
 
 import { Observable } from 'rxjs';
-import { CommandDictionary, MpsCommand } from '../../shared/models';
 
 export interface CommandDictionaryService {
-  getCommandDictionaryList(): Observable<CommandDictionary[]>;
-  getCommandDictionary(id: string): Observable<MpsCommand[]>;
+  getCommandDictionaryList(): Observable<any[]>;
+  getCommandDictionary(id: string): Observable<any[]>;
 }

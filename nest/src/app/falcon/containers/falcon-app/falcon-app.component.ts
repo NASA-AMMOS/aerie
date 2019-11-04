@@ -11,11 +11,7 @@ import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { Observable, Subscription } from 'rxjs';
 import { ConfigActions } from '../../../shared/actions';
-import {
-  CommandDictionary,
-  MpsCommand,
-  StringTMap,
-} from '../../../shared/models';
+import { StringTMap } from '../../../shared/models';
 import {
   CommandDictionaryActions,
   EditorActions,
@@ -42,16 +38,16 @@ export class FalconAppComponent implements OnDestroy {
   activeEditor$: Observable<string> = this.store.pipe(
     select(FileSelectors.getActiveEditor),
   );
-  commands$: Observable<MpsCommand[] | null> = this.store.pipe(
+  commands$: Observable<any[] | null> = this.store.pipe(
     select(CommandDictionarySelectors.getCommands),
   );
-  commandsByName$: Observable<StringTMap<MpsCommand> | null> = this.store.pipe(
+  commandsByName$: Observable<StringTMap<any> | null> = this.store.pipe(
     select(CommandDictionarySelectors.getCommandsByName),
   );
   currentLine$: Observable<CurrentLine | null> = this.store.pipe(
     select(EditorSelectors.getCurrentLine),
   );
-  dictionaries$: Observable<CommandDictionary[]> = this.store.pipe(
+  dictionaries$: Observable<any[]> = this.store.pipe(
     select(CommandDictionarySelectors.getDictionaries),
   );
   hasFiles$: Observable<boolean> = this.store.pipe(
@@ -88,7 +84,7 @@ export class FalconAppComponent implements OnDestroy {
     select(LayoutSelectors.getShowLoadingBar),
   );
 
-  commandsByName: StringTMap<MpsCommand>;
+  commandsByName: StringTMap<any>;
   commandFilterQuery = '';
   editorOptions = {
     autocomplete: true,
@@ -100,11 +96,9 @@ export class FalconAppComponent implements OnDestroy {
 
   constructor(private store: Store<FalconAppState>) {
     this.subscriptions.add(
-      this.commandsByName$.subscribe(
-        (commandsByName: StringTMap<MpsCommand>) => {
-          this.commandsByName = commandsByName;
-        },
-      ),
+      this.commandsByName$.subscribe((commandsByName: StringTMap<any>) => {
+        this.commandsByName = commandsByName;
+      }),
     );
 
     this.store.dispatch(FileActions.fetchChildren({ parentId: 'root' }));

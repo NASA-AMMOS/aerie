@@ -11,9 +11,8 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { config } from '../config';
 
-const merlinModule = config.appModules[0];
-const falconModule = config.appModules[1];
-const ravenModule = config.appModules[2];
+const falconModule = config.appModules[0];
+const ravenModule = config.appModules[1];
 
 export const routes: Routes = [
   {
@@ -26,12 +25,6 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./falcon/falcon.module').then(m => m.FalconModule),
     path: falconModule.path,
-  },
-  {
-    data: { title: merlinModule.title },
-    loadChildren: () =>
-      import('./merlin/merlin.module').then(m => m.MerlinModule),
-    path: merlinModule.path,
   },
   {
     data: { title: ravenModule.title },

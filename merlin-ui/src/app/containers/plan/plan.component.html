@@ -1,0 +1,137 @@
+<mat-toolbar color="primary">
+  <span *ngIf="!plan">Planning Cycle</span>
+  <span *ngIf="plan">Planning Cycle: {{ plan.name }}</span>
+
+  <div class="mat-toolbar-right">
+    <button mat-icon-button [matMenuTriggerFor]="menu">
+      <mat-icon>more_vert</mat-icon>
+    </button>
+
+    <mat-menu #menu="matMenu">
+      <button mat-menu-item [matMenuTriggerFor]="views">
+        <mat-icon>library_books</mat-icon>
+        <span>Views</span>
+      </button>
+      <button mat-menu-item [matMenuTriggerFor]="toggleMenu">
+        <mat-icon>remove_red_eye</mat-icon>
+        Toggle Visible Panels
+      </button>
+    </mat-menu>
+
+    <mat-menu #views="matMenu">
+      <button mat-menu-item [routerLink]="['/adaptations']">Adaptations</button>
+      <button mat-menu-item [routerLink]="['/plans']">Plans</button>
+    </mat-menu>
+
+    <mat-menu #toggleMenu="matMenu">
+      <button mat-menu-item (click)="togglePanelVisible('activityTypes')">
+        <span>Activity Types</span>
+      </button>
+      <button
+        mat-menu-item
+        (click)="togglePanelVisible('createActivityInstance')"
+      >
+        <span>Create Activity Instance</span>
+      </button>
+      <button mat-menu-item (click)="togglePanelVisible('activityInstances')">
+        <span> Activity Instances</span>
+      </button>
+    </mat-menu>
+  </div>
+</mat-toolbar>
+
+<mat-progress-bar
+  *ngIf="loading"
+  color="accent"
+  mode="indeterminate"
+></mat-progress-bar>
+
+<as-split [gutterSize]="4">
+  <as-split-area
+    [order]="panels.activityTypes.order"
+    [size]="panels.activityTypes.size"
+    [visible]="panels.activityTypes.visible"
+  >
+    <app-panel-header>
+      Activity Types
+    </app-panel-header>
+    <div class="p-1">
+      <app-activity-type-list
+        [activityTypes]="activityTypes"
+      ></app-activity-type-list>
+    </div>
+  </as-split-area>
+
+  <as-split-area
+    [order]="panels.createActivityInstance.order"
+    [size]="panels.createActivityInstance.size"
+    [visible]="panels.createActivityInstance.visible"
+  >
+    <app-panel-header>
+      Create Activity Instance
+    </app-panel-header>
+    <div class="p-1">
+      <app-create-activity-instance-form></app-create-activity-instance-form>
+    </div>
+  </as-split-area>
+
+  <as-split-area
+    [order]="panels.activityInstances.order"
+    [size]="panels.activityInstances.size"
+    [visible]="panels.activityInstances.visible"
+  >
+    <app-panel-header>
+      Activity Instances
+    </app-panel-header>
+    <div class="p-1">
+      <mat-card *ngIf="!activityInstances.length">
+        This plan has no activity instances.
+      </mat-card>
+
+      <table
+        *ngIf="activityInstances.length"
+        [dataSource]="sortedActivityInstances"
+        (matSortChange)="sortActivityInstances($event)"
+        mat-table
+        matSort
+        class="w-100 mat-elevation-z1"
+      >
+        <ng-container matColumnDef="menu">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let element">
+            <button mat-icon-button [matMenuTriggerFor]="activityInstanceMenu">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #activityInstanceMenu="matMenu">
+              <button
+                mat-menu-item
+                (click)="onDeleteActivityInstance(element.id)"
+              >
+                <span>
+                  Delete
+                </span>
+              </button>
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
+          <td mat-cell *matCellDef="let element">
+            {{ element.type }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="startTimestamp">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Start Time</th>
+          <td mat-cell *matCellDef="let element">
+            {{ element.startTimestamp }}
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+  </as-split-area>
+</as-split>
