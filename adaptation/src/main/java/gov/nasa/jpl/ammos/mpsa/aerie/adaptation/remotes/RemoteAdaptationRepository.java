@@ -54,7 +54,12 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
 
     @Override
     public Adaptation getAdaptation(final String id) throws NoSuchAdaptationException {
-        final Document adaptationDocument = this.adaptationCollection.find(adaptationById(id)).first();
+        final Document adaptationDocument;
+        try {
+            adaptationDocument = this.adaptationCollection.find(adaptationById(id)).first();
+        } catch (IllegalArgumentException e) {
+            throw new NoSuchAdaptationException(id);
+        }
 
         if (adaptationDocument == null) {
             throw new NoSuchAdaptationException(id);
@@ -139,7 +144,7 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
                 .onClose(cursor::close);
     }
 
-    private Bson adaptationById(final String adaptationId) {
+    private Bson adaptationById(final String adaptationId) throws IllegalArgumentException {
         return eq("_id", new ObjectId(adaptationId));
     }
 }
