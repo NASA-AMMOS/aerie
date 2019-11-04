@@ -71,7 +71,7 @@ public class ResponseSerializers {
 
   private static final class ParameterSchemaSerializer implements ParameterSchema.Visitor<JsonValue> {
     @Override
-    public JsonValue onDouble() {
+    public JsonValue onReal() {
       return Json
           .createObjectBuilder()
           .add("type", "double")
