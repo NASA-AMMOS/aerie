@@ -247,7 +247,7 @@ export function getActivityPoint(
 
   // Set the unique activity id with the newly created point object.
   // See `getUniqueActivityId` for why `activityId` by itself does not suffice as a `uniqueId`.
-  point.uniqueId = getUniqueActivityId(point);
+  point.uniqueId = activityId ? activityId : getUniqueActivityId(point);
 
   return point;
 }

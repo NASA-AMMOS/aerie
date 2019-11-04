@@ -1894,7 +1894,6 @@ CompositeBand.prototype.addBand = function(band) {
   if (band) {
     band.setCanvas(this.canvas);
     band.height = this.height;
-    band.heightPadding = this.heightPadding;
     this.bands.push(band);
   }
 };
@@ -2698,7 +2697,7 @@ Painter.prototype.paintStateChangeTime = function (obj) {
               startTimeStr = `${matStart[2]}T${matStart[3]}:${matStart[4]}:${matStart[5]}`;
           }
         }
-        ctx.fillText(startTimeStr, ll.x, ll.y+8);
+        ctx.fillText(startTimeStr, ll.x, ll.y+6);
         return ll.x+ctx.measureText(startTimeStr).width;
       }
   }
@@ -3087,7 +3086,7 @@ ResourceBand.prototype.getYFromValueLog = function(value) {
     for (let i = 0; i < ticks.length; ++i) {
         let tick = ticks[i];
         let nextTick =  ticks[i + 1];
-    
+
         if (i < ticks.length - 1 && value >= tick && value <= nextTick) {
           minTick = tick;
           maxTick = nextTick;
@@ -3142,10 +3141,14 @@ ResourceBand.prototype.computeMinMaxValues = function() {
             var maxIntervalValue = Math.max(startValue, endValue);
             var minIntervalValue = Math.min(startValue, endValue);
             if(maxValue === null || maxIntervalValue > maxValue) {
-                maxValue = maxIntervalValue;
+                if (!this.logTicks || maxIntervalValue > 0) {
+                    maxValue = maxIntervalValue;
+                }
             }
             if(minValue === null || minIntervalValue < minValue) {
-                minValue = minIntervalValue;
+                if (!this.logTicks || minIntervalValue > 0) {
+                    minValue = minIntervalValue;
+                }
             }
         }
     }
@@ -6433,21 +6436,14 @@ var Util = {
     * @memberOf MPSViewerUtils
     */
   roundToNearestPowerOf10: function(x) {
-      // If x < 1, just clamp to 0.1.
-      if (x < 1) {
-        return 0.1;
-      }
-      // Else round to nearest power of 10.
-      // http://stackoverflow.com/questions/15906148/round-up-to-nearest
-      else {
-        x = Math.round(x);
+    // http://stackoverflow.com/questions/15906148/round-up-to-nearest
+    x = Math.round(x);
 
-        let strLen = x.toString().length;
-        let y = x / Math.pow(10, strLen);
-        let rst = Math.pow(10, strLen - 1 + Math.round(y));
+    let strLen = x.toString().length;
+    let y = x / Math.pow(10, strLen);
+    let rst = Math.pow(10, strLen - 1 + Math.round(y));
 
-        return rst < 10 ? 1 : rst;
-      }
+    return rst < 10 ? 1 : rst;
   },
 
   /**
@@ -6462,6 +6458,7 @@ var Util = {
     */
   computeTickValuesLog: function(min, max) {
     let ticks = [];
+    let tick = 1;
 
     if (min < 1) {
       let minLogTick = Math.floor(Math.log10(min));
@@ -6473,9 +6470,8 @@ var Util = {
           ticks.push(logTick.toString());
       }
       ticks.push ("1");
-      tick = 1;
     } else {
-        let tick = Util.roundToNearestPowerOf10(min);
+        tick = Util.roundToNearestPowerOf10(min);
         ticks.push(tick.toString());
     }
 

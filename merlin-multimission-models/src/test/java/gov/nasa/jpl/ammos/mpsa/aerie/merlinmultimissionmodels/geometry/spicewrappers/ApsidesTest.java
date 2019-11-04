@@ -13,6 +13,7 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.blackbird.Duration;
@@ -25,6 +26,7 @@ import spice.basic.SpiceErrorException;
 
 //TODO: Should become an integration tests and kernels should be stored in Artifcatory.
 //      Will require Jenkins configuration.
+@Ignore
 public class ApsidesTest {
 
     @BeforeClass

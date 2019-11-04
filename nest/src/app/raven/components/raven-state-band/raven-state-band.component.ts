@@ -232,7 +232,7 @@ export class RavenStateBandComponent implements OnChanges, OnDestroy, OnInit {
       this.updateSubBand.emit({
         prop: 'height',
         subBandId: this.id,
-        value: this.isNumeric ? this.height : this.height - this.heightPadding,
+        value: this.height,
       });
     }
 

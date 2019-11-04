@@ -12,6 +12,7 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.blackbird.Duration;
@@ -30,6 +31,7 @@ import spice.basic.CSPICE;
 import spice.basic.SpiceErrorException;
 
 
+@Ignore
 public class OccultationsTimesModelTest {
     
     public class MockStateContainer implements StateContainer {

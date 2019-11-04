@@ -585,26 +585,54 @@ export class TimelineComponent implements OnDestroy {
 
   onDecreaseBandHeight(bandId: string): void {
     const band = bandById(this.bands, bandId) as RavenCompositeBand;
+    const newHeight = band.height * (1 - this.heightChangeDelta);
     this.store.dispatch(
       TimelineActions.updateBand({
         bandId,
         update: {
-          height: band.height * (1 - this.heightChangeDelta),
+          height: newHeight,
         },
       }),
     );
+
+    // Decrease all subBand height.
+    for (let i = 0, l = band.subBands.length; i < l; ++i) {
+      this.store.dispatch(
+        TimelineActions.updateSubBand({
+          bandId,
+          subBandId: band.subBands[i].id,
+          update: {
+            height: newHeight,
+          },
+        }),
+      );
+    }
   }
 
   onIncreaseBandHeight(bandId: string): void {
     const band = bandById(this.bands, bandId) as RavenCompositeBand;
+    const newHeight = band.height * (1 + this.heightChangeDelta);
     this.store.dispatch(
       TimelineActions.updateBand({
         bandId,
         update: {
-          height: band.height * (1 + this.heightChangeDelta),
+          height: newHeight,
         },
       }),
     );
+
+    // Increase all subBand height.
+    for (let i = 0, l = band.subBands.length; i < l; ++i) {
+      this.store.dispatch(
+        TimelineActions.updateSubBand({
+          bandId,
+          subBandId: band.subBands[i].id,
+          update: {
+            height: newHeight,
+          },
+        }),
+      );
+    }
   }
 
   /**

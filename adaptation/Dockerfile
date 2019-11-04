@@ -1,7 +1,13 @@
 FROM adoptopenjdk:11-jre-hotspot
-WORKDIR /usr/src/app
-COPY ./target/adaptation*.jar /usr/src/app/adaptation.jar
-RUN mkdir /usr/src/app/adaptation_files 
+
+COPY target/adaptation-1.0-SNAPSHOT-jar-with-dependencies.jar /usr/src/app/
+RUN mkdir /usr/src/app/adaptation_files
+
 EXPOSE 27182
-ENTRYPOINT ["java", "-jar", "/usr/src/app/adaptation.jar"]
-CMD ["--spring.profiles.active=default"]
+VOLUME ["/usr/src/app/adaptation_files"]
+
+WORKDIR /usr/src/app
+ENTRYPOINT [ \
+  "java", \
+  "-jar", "adaptation-1.0-SNAPSHOT-jar-with-dependencies.jar" \
+  ]

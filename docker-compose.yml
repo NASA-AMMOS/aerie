@@ -6,7 +6,6 @@ services:
     depends_on: ["adaptation_mongo"]
     volumes:
       - adaptation_files:/usr/src/app/adaptation_files
-      - adaptation_logs:/var/log/adaptation
   adaptation_mongo:
     command: ["mongod", "--port", "27020", "--smallfiles"]
     image: mongo:3.2
@@ -17,11 +16,9 @@ services:
     ports: ["8080:80"]
   plan:
     image: "${DOCKER_URL}/plan:${PLAN_DOCKER_TAG}"
-    command: ["--spring.profiles.active=production"]
     depends_on: ["plan_mongo"]
     ports: ["27183:27183"]
     restart: always
-    volumes: ["plan_logs:/var/log/plan"]
   plan_mongo:
     command: ["mongod", "--port", "27018", "--smallfiles"]
     image: mongo:3.2
@@ -30,7 +27,5 @@ services:
 
 volumes:
   adaptation_files:
-  adaptation_logs:
   adaptation_mongo_data:
-  plan_logs:
   plan_mongo_data:
