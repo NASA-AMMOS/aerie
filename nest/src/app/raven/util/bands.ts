@@ -247,8 +247,8 @@ export function toCompositeBand(
     compositeScientificNotation: false,
     compositeYAxisLabel: false,
     containerId: containerId || '0',
-    height: subBand.height + subBand.heightPadding,
-    heightPadding: subBand.heightPadding,
+    height: subBand.height,
+    heightPadding: 0,
     id: compositeBandUniqueId,
     name: subBand.name,
     overlay: false, // Composite bands with a single sub-band cannot be overlay by default.

@@ -1894,7 +1894,6 @@ CompositeBand.prototype.addBand = function(band) {
   if (band) {
     band.setCanvas(this.canvas);
     band.height = this.height;
-    band.heightPadding = this.heightPadding;
     this.bands.push(band);
   }
 };
@@ -2698,7 +2697,7 @@ Painter.prototype.paintStateChangeTime = function (obj) {
               startTimeStr = `${matStart[2]}T${matStart[3]}:${matStart[4]}:${matStart[5]}`;
           }
         }
-        ctx.fillText(startTimeStr, ll.x, ll.y+8);
+        ctx.fillText(startTimeStr, ll.x, ll.y+6);
         return ll.x+ctx.measureText(startTimeStr).width;
       }
   }
