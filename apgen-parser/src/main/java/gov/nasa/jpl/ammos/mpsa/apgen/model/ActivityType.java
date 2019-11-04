@@ -20,7 +20,7 @@ public class ActivityType {
     }
 
     public List<Attribute> getAttributes() {
-        return this.attributes;
+        return List.copyOf(this.attributes);
     }
 
     public Attribute getAttribute(final String name) {
@@ -40,7 +40,7 @@ public class ActivityType {
     }
 
     public List<ActivityTypeParameter> getParameters() {
-        return this.parameters;
+        return List.copyOf(this.parameters);
     }
 
     public ActivityTypeParameter getParameter(final String name) {

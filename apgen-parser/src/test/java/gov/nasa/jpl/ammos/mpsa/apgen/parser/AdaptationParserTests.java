@@ -20,9 +20,9 @@ public class AdaptationParserTests {
         Path path = Path.of("src/test/resources/simple/simple_adaptation.aaf");
         Adaptation adaptation = AdaptationParser.parseFile(path);
 
-        assertThat(adaptation.containsActivityType("Banana")).isTrue();
-        assertThat(adaptation.containsActivityType("Apple")).isTrue();
-        assertThat(adaptation.containsActivityType("Avocado")).isTrue();
+        assertThat(adaptation.hasActivityType("Banana")).isTrue();
+        assertThat(adaptation.hasActivityType("Apple")).isTrue();
+        assertThat(adaptation.hasActivityType("Avocado")).isTrue();
 
         /* Verify Banana activity, attributes and parameters were loaded */
         ActivityType bananaType = adaptation.getActivityType("Banana");

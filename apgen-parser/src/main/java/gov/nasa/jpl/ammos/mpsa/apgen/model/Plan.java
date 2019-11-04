@@ -17,7 +17,7 @@ public class Plan {
     }
 
     public List<ActivityInstance> getActivityInstanceList() {
-        return this.activityInstances;
+        return List.copyOf(this.activityInstances);
     }
 
     public ActivityInstance getActivityInstance(String id) {

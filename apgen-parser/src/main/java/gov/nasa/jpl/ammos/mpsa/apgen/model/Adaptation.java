@@ -17,7 +17,7 @@ public class Adaptation {
     }
 
     public List<ActivityType> getActivityTypes() {
-        return this.activityTypes;
+        return List.copyOf(this.activityTypes);
     }
 
     public ActivityType getActivityType(String name) {
@@ -27,7 +27,7 @@ public class Adaptation {
         return null;
     }
 
-    public boolean containsActivityType(String name) {
+    public boolean hasActivityType(String name) {
         return this.getActivityType(name) != null;
     }
 

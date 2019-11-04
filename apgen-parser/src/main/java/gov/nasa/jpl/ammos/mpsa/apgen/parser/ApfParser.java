@@ -15,6 +15,7 @@ import java.util.regex.Matcher;
 public final class ApfParser {
 
     private enum Mode {
+        NONE,
         ACTIVITY,
         ATTRIBUTES,
         BEGIN_PARAMETERS,
@@ -45,16 +46,16 @@ public final class ApfParser {
             throw new PlanParsingException(file, e.getMessage());
         }
 
-        Matcher m = null;
         ActivityInstance activityInstance = null;
         ActivityType activityType = null;
         int parameterIndex = 0;
-        Mode mode = null;
+        Mode mode = Mode.NONE;
         for (int lineNumber = 0; scanner.hasNextLine(); lineNumber++) {
+            Matcher m;
             String line = ParsingUtilities.removeComment(scanner.nextLine());
 
             if ((m = ApgenPatterns.ACTIVITY_INSTANCE_START_PATTERN.matcher(line)).lookingAt()) {
-                if (mode != null) throw new PlanParsingException(file, String.format("Encountered unexpected activity instance start on line %d", lineNumber));
+                if (mode != Mode.NONE) throw new PlanParsingException(file, String.format("Encountered unexpected activity instance start on line %d", lineNumber));
 
                 String name = m.group("name");
                 String type = m.group("type");
@@ -67,10 +68,16 @@ public final class ApfParser {
                     throw new PlanParsingException(file, String.format("Encountered unknown activity type %s on line %d", type, lineNumber));
                 }
 
-            } else if (mode != null && (m = ApgenPatterns.BEGIN_ATTRIBUTES_PATTERN.matcher(line)).lookingAt()) {
+                continue;
+            }
+
+            if (mode != Mode.NONE && (m = ApgenPatterns.BEGIN_ATTRIBUTES_PATTERN.matcher(line)).lookingAt()) {
                 mode = Mode.ATTRIBUTES;
 
-            } else if (mode != null && (m = ApgenPatterns.BEGIN_PARAMETERS_PATTERN.matcher(line)).lookingAt()) {
+                continue;
+            }
+
+            if (mode != Mode.NONE && (m = ApgenPatterns.BEGIN_PARAMETERS_PATTERN.matcher(line)).lookingAt()) {
                 line = line.substring(m.end(1));
                 if (ApgenPatterns.INSTANCE_PARAMETER_LIST_START_PATTERN.matcher(line).lookingAt()) {
                     mode = Mode.PARAMETERS;
@@ -79,11 +86,17 @@ public final class ApfParser {
                     mode = Mode.BEGIN_PARAMETERS;
                 }
 
-            } else if (mode == Mode.BEGIN_PARAMETERS && (m = ApgenPatterns.INSTANCE_PARAMETER_LIST_START_PATTERN.matcher(line)).lookingAt()) {
+                continue;
+            }
+
+            if (mode == Mode.BEGIN_PARAMETERS && (m = ApgenPatterns.INSTANCE_PARAMETER_LIST_START_PATTERN.matcher(line)).lookingAt()) {
                 mode = Mode.PARAMETERS;
                 parameterIndex = 0;
 
-            } else if (mode == Mode.PARAMETERS && (m = ApgenPatterns.INSTANCE_PARAMETER_LIST_END_PATTERN.matcher(line)).lookingAt()) {
+                continue;
+            }
+
+            if (mode == Mode.PARAMETERS && (m = ApgenPatterns.INSTANCE_PARAMETER_LIST_END_PATTERN.matcher(line)).lookingAt()) {
 
                 if (parameterIndex != activityType.getParameters().size()) {
                     throw new PlanParsingException(file, String.format("Activity instance of type %s contains too few parameters on line %d", activityType.getName(), lineNumber));
@@ -92,7 +105,10 @@ public final class ApfParser {
                 mode = Mode.ACTIVITY;
                 parameterIndex = 0;
 
-            } else if ((m = ApgenPatterns.ACTIVITY_INSTANCE_END_PATTERN.matcher(line)).lookingAt()) {
+                continue;
+            }
+
+            if ((m = ApgenPatterns.ACTIVITY_INSTANCE_END_PATTERN.matcher(line)).lookingAt()) {
                 if (activityInstance == null || mode == Mode.PARAMETERS){
                     throw new PlanParsingException(file, String.format("Encountered unexpected activity instance end on line %d", lineNumber));
                 }
@@ -100,15 +116,21 @@ public final class ApfParser {
                 plan.addActivityInstance(activityInstance);
                 activityInstance = null;
                 activityType = null;
-                mode = null;
+                mode = Mode.NONE;
 
-            } else if (mode == Mode.ATTRIBUTES && (m = ApgenPatterns.ATTRIBUTE_PATTERN.matcher(line)).lookingAt()) {
+                continue;
+            }
+
+            if (mode == Mode.ATTRIBUTES && (m = ApgenPatterns.ATTRIBUTE_PATTERN.matcher(line)).lookingAt()) {
                 String name = m.group("name");
                 String value = m.group("value");
 
                 activityInstance.addAttribute(new Attribute(name, value));
 
-            } else if (mode == Mode.PARAMETERS) {
+                continue;
+            }
+
+            if (mode == Mode.PARAMETERS) {
                 String value;
                 String activityTypeName = activityInstance.getType();
                 if (lineNumber > 4780)
@@ -138,9 +160,11 @@ public final class ApfParser {
 
                     activityInstance.addParameter(new ActivityInstanceParameter(name, type, value));
                 }
+
+                continue;
             }
         }
 
-        if (mode != null) throw new PlanParsingException(file, "Unexpected end of file while parsing plan");
+        if (mode != Mode.NONE) throw new PlanParsingException(file, "Unexpected end of file while parsing plan");
     }
 }

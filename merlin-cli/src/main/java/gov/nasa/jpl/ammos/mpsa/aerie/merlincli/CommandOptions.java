@@ -699,16 +699,17 @@ public class CommandOptions {
         }
 
         /* Parse tokens for plan metadata */
-        String adaptationId = null, adaptationIdToken = "adaptationId=";
-        String startTimestamp = null, startTimestampToken = "startTimestamp=";
-        String name = null, nameToken = "name=";
-        for (String token : tokens) {
-            if (token.startsWith(adaptationIdToken)) {
-                adaptationId = token.substring(adaptationIdToken.length());
-            } else if (token.startsWith(startTimestampToken)) {
-                startTimestamp = token.substring(startTimestampToken.length());
-            } else if (token.startsWith(nameToken)) {
-                name = token.substring(nameToken.length());
+        String adaptationId = null;
+        String startTimestamp = null;
+        String name = null;
+        for (final String token : tokens) {
+            final String[] pieces = token.split("=", 2);
+            if (pieces.length != 2) { continue; }  // should really error at the user on this case
+
+            switch (pieces[0]) {
+                case "adaptationId": adaptationId = pieces[1]; break;
+                case "startTimestamp": startTimestamp = pieces[1]; break;
+                case "name": name = pieces[1]; break;
             }
         }
 

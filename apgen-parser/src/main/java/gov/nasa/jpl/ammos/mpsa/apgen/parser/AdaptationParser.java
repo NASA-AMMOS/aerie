@@ -21,6 +21,7 @@ import java.io.IOException;
 public final class AdaptationParser {
 
     private static enum Mode {
+        NONE,
         ACTIVITY,
         ATTRIBUTES,
         PARAMETERS,
@@ -63,37 +64,49 @@ public final class AdaptationParser {
             throw new AdaptationParsingException(file, e.getMessage());
         }
 
-        Matcher m = null;
         ActivityType activityType = null;
-        Mode mode = null;
-        Mode newMode = null;
+        Mode mode = Mode.NONE;
         for (int lineNumber = 0; scanner.hasNextLine(); lineNumber++) {
+            Matcher m;
             String line = ParsingUtilities.removeComment(scanner.nextLine());
 
             if ((m = ApgenPatterns.ACTIVITY_TYPE_START_PATTERN.matcher(line)).lookingAt()) {
-                if (mode != null) throw new AdaptationParsingException(file, String.format("Encountered unexpected activity type definition on line %d", lineNumber));
+                if (mode != Mode.NONE) throw new AdaptationParsingException(file, String.format("Encountered unexpected activity type definition on line %d", lineNumber));
 
                 String type = m.group("type");
                 activityType = new ActivityType(type);
                 mode = Mode.ACTIVITY;
 
-            } else if(mode != null && (newMode = sectionMatch(line)) != null) {
+                continue;
+            }
+
+            Mode newMode = sectionMatch(line);
+            if(mode != Mode.NONE && newMode != null) {
                 if (newMode != null) mode = newMode;
 
-            } else if ((m = ApgenPatterns.ACTIVITY_TYPE_END_PATTERN.matcher(line)).lookingAt()) {
+                continue;
+            }
+
+            if ((m = ApgenPatterns.ACTIVITY_TYPE_END_PATTERN.matcher(line)).lookingAt()) {
                 if (activityType == null) throw new AdaptationParsingException(file, String.format("Unexpected end of activity on line %d", lineNumber));
 
                 adaptation.addActivityType(activityType);
                 activityType = null;
-                mode = null;
+                mode = Mode.NONE;
 
-            } else if (mode == Mode.ATTRIBUTES && (m = ApgenPatterns.ATTRIBUTE_PATTERN.matcher(line)).lookingAt()) {
+                continue;
+            }
+
+            if (mode == Mode.ATTRIBUTES && (m = ApgenPatterns.ATTRIBUTE_PATTERN.matcher(line)).lookingAt()) {
                 String name = m.group("name");
                 String value = m.group("value");
 
                 activityType.addAttribute(new Attribute(name, value));
 
-            } else if (mode == Mode.PARAMETERS && (m = ApgenPatterns.TYPE_PARAMETER_PATTERN.matcher(line)).lookingAt()) {
+                continue;
+            }
+
+            if (mode == Mode.PARAMETERS && (m = ApgenPatterns.TYPE_PARAMETER_PATTERN.matcher(line)).lookingAt()) {
                 String name = m.group("name");
                 String type = m.group("type");
                 String defaultValue = m.group("default");
@@ -112,10 +125,11 @@ public final class AdaptationParser {
 
                 activityType.addParameter(new ActivityTypeParameter(name, type, defaultValue));
 
+                continue;
             }
         }
 
-        if (mode != null) throw new AdaptationParsingException(file, "Unexpected end of file while parsing adaptation");
+        if (mode != Mode.NONE) throw new AdaptationParsingException(file, "Unexpected end of file while parsing adaptation");
     }
 
     private static Mode sectionMatch(String line) {
