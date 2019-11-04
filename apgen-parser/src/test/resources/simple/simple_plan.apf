@@ -1,0 +1,21 @@
+apgen version ?
+
+activity instance Apple1 of type Apple id Apple_1
+    begin
+    attributes
+        "Start" = "2019-278T13:09:00";
+    parameters
+         (
+         ["yellow", 1.0, 3]
+         );
+     end activity instance Apple1
+
+activity instance Banana1 of type Banana id Banana_1
+    begin
+    attributes
+        "Start" = "2019-278T13:11:00";
+    parameters
+        (
+        01:30:00
+        );
+    end activity instance Banana1

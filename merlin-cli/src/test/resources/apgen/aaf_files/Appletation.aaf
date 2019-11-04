@@ -1,0 +1,18 @@
+apgen version "Appletation.aaf"
+
+activity type PickApple
+    begin
+    attributes
+        "Duration" = 00:00:30;
+    parameters
+        height: float default to 3.0 ? "meters";
+        color: string default to "red" range [ "red", "yellow", "green" ];
+    end activity type PickApple
+
+activity type BiteApple
+    begin
+    attributes
+        "Duration" = 00:00:15;
+    parameters
+        biteSize: float default to 1.0;
+    end activity type BiteApple

@@ -1,0 +1,22 @@
+apgen version "Apple.apf"
+
+activity instance Apple_1 of type PickApple id Apple_1
+    begin
+    attributes
+        "Start" = 2018-331T05:50:25.579600;
+    parameters
+        (
+        2.3,
+        "Red",
+        );
+    end activity instance Apple_1
+
+activity instance Apple_2 of type BiteApple id Apple_2
+    begin
+    attributes
+        "Start" = 2018-331T05:52:00;
+    parameters
+        (
+        100
+        );
+    end activity instance Apple_2

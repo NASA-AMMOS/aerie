@@ -11,6 +11,7 @@
     <modules>
         <module>adaptation</module>
         <module>aerie-sdk</module>
+        <module>apgen-parser</module>
         <module>banananation</module>
         <module>merlin-cli</module>
         <module>merlin-sdk</module>
