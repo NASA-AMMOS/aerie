@@ -16,6 +16,10 @@
         <mat-icon>remove_red_eye</mat-icon>
         Toggle Visible Panels
       </button>
+      <button mat-menu-item (click)="onAbout()">
+        <mat-icon>info</mat-icon>
+        <span>About</span>
+      </button>
     </mat-menu>
 
     <mat-menu #views="matMenu">

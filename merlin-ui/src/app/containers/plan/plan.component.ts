@@ -85,6 +85,10 @@ export class PlanComponent implements OnDestroy {
     this.subs.unsubscribe();
   }
 
+  onAbout() {
+    this.store.dispatch(MerlinActions.openAboutDialog());
+  }
+
   onDeleteActivityInstance(activityInstanceId: string) {
     const { id: planId } = this.route.snapshot.params;
     this.store.dispatch(

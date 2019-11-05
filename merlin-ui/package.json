@@ -8,9 +8,12 @@
     "lint": "ng lint",
     "ng": "ng",
     "postinstall": "ngcc --properties es2015 browser module main --first-only --create-ivy-entry-points && npx webdriver-manager update",
+    "prebuild": "yarn run version",
+    "prestart": "yarn run version",
     "protractor": "protractor e2e/protractor.conf.js",
     "start": "ng serve",
-    "test": "ng test"
+    "test": "ng test",
+    "version": "ts-node git.version.ts"
   },
   "dependencies": {
     "@angular/animations": "~9.0.0-next.12",

@@ -10,3 +10,7 @@ body {
   margin: 0;
   overflow: hidden;
 }
+
+.cdk-global-scrollblock {
+  overflow-y: hidden;
+}

@@ -3,8 +3,9 @@ import { MatDialog, MatSnackBar } from '@angular/material';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { concat, forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
+import { version } from '../../environments/version';
 import { MerlinActions } from '../actions';
-import { ConfirmDialogComponent } from '../components';
+import { AboutDialogComponent, ConfirmDialogComponent } from '../components';
 import { ApiService } from '../services';
 
 @Injectable()
@@ -57,8 +58,8 @@ export class MerlinEffects {
     );
   });
 
-  createAdaptation = createEffect(() =>
-    this.actions.pipe(
+  createAdaptation = createEffect(() => {
+    return this.actions.pipe(
       ofType(MerlinActions.createAdaptation),
       switchMap(({ adaptation }) =>
         concat(
@@ -85,11 +86,11 @@ export class MerlinEffects {
           of(MerlinActions.setLoading({ loading: false })),
         ),
       ),
-    ),
-  );
+    );
+  });
 
-  createPlan = createEffect(() =>
-    this.actions.pipe(
+  createPlan = createEffect(() => {
+    return this.actions.pipe(
       ofType(MerlinActions.createPlan),
       switchMap(({ plan }) =>
         concat(
@@ -116,11 +117,11 @@ export class MerlinEffects {
           of(MerlinActions.setLoading({ loading: false })),
         ),
       ),
-    ),
-  );
+    );
+  });
 
-  deleteActivityInstance = createEffect(() =>
-    this.actions.pipe(
+  deleteActivityInstance = createEffect(() => {
+    return this.actions.pipe(
       ofType(MerlinActions.deleteActivityInstance),
       switchMap(({ planId, activityInstanceId }) => {
         const deleteActivityInstanceDialog = this.dialog.open(
@@ -181,11 +182,11 @@ export class MerlinEffects {
         }
         return [];
       }),
-    ),
-  );
+    );
+  });
 
-  deleteAdaptation = createEffect(() =>
-    this.actions.pipe(
+  deleteAdaptation = createEffect(() => {
+    return this.actions.pipe(
       ofType(MerlinActions.deleteAdaptation),
       switchMap(({ id }) => {
         const deleteAdaptationDialog = this.dialog.open(
@@ -233,11 +234,11 @@ export class MerlinEffects {
         }
         return [];
       }),
-    ),
-  );
+    );
+  });
 
-  deletePlan = createEffect(() =>
-    this.actions.pipe(
+  deletePlan = createEffect(() => {
+    return this.actions.pipe(
       ofType(MerlinActions.deletePlan),
       switchMap(({ id }) => {
         const deletePlanDialog = this.dialog.open(ConfirmDialogComponent, {
@@ -279,6 +280,26 @@ export class MerlinEffects {
         }
         return [];
       }),
-    ),
+    );
+  });
+
+  openAboutDialog = createEffect(
+    () => {
+      return this.actions.pipe(
+        ofType(MerlinActions.openAboutDialog),
+        switchMap(() => {
+          const { packageJsonName, packageJsonVersion, version: ver } = version;
+          this.dialog.open(AboutDialogComponent, {
+            data: {
+              version: `${packageJsonName} ${packageJsonVersion} - ${ver}`,
+            },
+            width: `500px`,
+          });
+
+          return [];
+        }),
+      );
+    },
+    { dispatch: false },
   );
 }

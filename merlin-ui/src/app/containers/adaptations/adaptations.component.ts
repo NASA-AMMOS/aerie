@@ -26,7 +26,14 @@ import { CAdaptation, SCreateAdaption } from '../../types';
 export class AdaptationsComponent implements OnDestroy {
   adaptations: CAdaptation[] = [];
   createAdaptationForm: FormGroup;
-  displayedColumns: string[] = ['menu', 'name', 'version', 'mission', 'owner'];
+  displayedColumns: string[] = [
+    'menu',
+    'id',
+    'name',
+    'version',
+    'mission',
+    'owner',
+  ];
   loading = false;
 
   private subs = new SubSink();
@@ -59,6 +66,10 @@ export class AdaptationsComponent implements OnDestroy {
 
   ngOnDestroy() {
     this.subs.unsubscribe();
+  }
+
+  onAbout() {
+    this.store.dispatch(MerlinActions.openAboutDialog());
   }
 
   onDeleteAdaptation(id: string) {

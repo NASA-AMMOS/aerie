@@ -74,6 +74,8 @@ export const deletePlanSuccess = createAction(
   props<{ id: string }>(),
 );
 
+export const openAboutDialog = createAction('[merlin] openAboutDialog');
+
 export const setActivityInstances = createAction(
   '[merlin] setActivityInstances',
   props<{ planId: string; activityInstances: CActivityInstanceMap }>(),
