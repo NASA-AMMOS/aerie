@@ -10,5 +10,4 @@ module gov.nasa.jpl.ammos.mpsa.aerie.adaptation {
     requires gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
     requires gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk;
 
-    exports gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
 }

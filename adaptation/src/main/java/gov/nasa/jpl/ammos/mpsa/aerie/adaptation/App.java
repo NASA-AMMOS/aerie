@@ -7,18 +7,19 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.RemoteAdaptationRepository;
 import io.javalin.Javalin;
 
-import java.net.URI;
-
 public class App {
-    private static final int HTTP_PORT = 27182;
-
-    private static final URI MONGO_URI = URI.create("mongodb://adaptation_mongo:27020");
-    private static final String MONGO_DATABASE = "adaptation-service";
-    private static final String MONGO_ADAPTATION_COLLECTION = "adaptations";
 
     public static void main(final String[] args) {
+
+        // Load the properties
+        AppConfiguration configuration = AppConfiguration.loadProperties();
+        if (configuration == null) {
+            System.err.println("Not all properties loaded. Exiting.");
+            System.exit(1);
+        }
+
         // Assemble the core non-web object graph.
-        final AdaptationRepository adaptationRepository = new RemoteAdaptationRepository(MONGO_URI, MONGO_DATABASE, MONGO_ADAPTATION_COLLECTION);
+        final AdaptationRepository adaptationRepository = new RemoteAdaptationRepository(configuration.MONGO_URI, configuration.MONGO_DATABASE, configuration.MONGO_ADAPTATION_COLLECTION);
         final IAdaptationController controller = new AdaptationController(adaptationRepository);
         final AdaptationBindings bindings = new AdaptationBindings(controller);
         // Initiate an HTTP server.
@@ -27,6 +28,8 @@ public class App {
             config.enableCorsForAllOrigins();
         });
         bindings.registerRoutes(javalin);
-        javalin.start(HTTP_PORT);
+        javalin.start(configuration.HTTP_PORT);
     }
+
+
 }
