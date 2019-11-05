@@ -2,11 +2,11 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
-
-import java.util.Optional;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
 /**
- * A mission-agnostic representation of the parameter types defined by an adaptation.
+ * A mapping between (a) the mission-specific representation of a data type defined by an adaptation (b) to a
+ * mission-agnostic representation of that data type.
  */
 public interface ParameterMapper<T> {
   /**
@@ -20,17 +20,15 @@ public interface ParameterMapper<T> {
    * Produces an adaptation-specific parameter domain object from a mission-agnostic representation.
    *
    * @param serializedParameter A mission-agnostic representation of a parameter instance.
-   * @return An adaptation-specific parameter instance implementing the {@link ActivityParameter} interface,
-   *   or an empty {@link Optional} if this mapper cannot deserialize the provided parameter.
+   * @return Either an adaptation-specific domain object, or a deserialization failure.
    */
-  Optional<T> deserializeParameter(SerializedParameter serializedParameter);
+  Result<T, String> deserializeParameter(SerializedParameter serializedParameter);
 
   /**
    * Produces a mission-agnostic representation of an adaptation-specific parameter domain object.
    *
-   * @param parameter An adaptation-specific domain object implementing the {@link ActivityParameter} interface.
-   * @return A mission-agnostic representation of {@code parameter}, or an empty {@link Optional}
-   *   if this mapper does not understand the provided parameter instance.
+   * @param parameter An adaptation-specific domain object.
+   * @return A mission-agnostic representation of {@code parameter}.
    */
-  Optional<SerializedParameter> serializeParameter(T parameter);
+  SerializedParameter serializeParameter(T parameter);
 }
