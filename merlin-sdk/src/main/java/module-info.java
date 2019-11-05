@@ -25,6 +25,7 @@ module gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk {
   exports gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states;
   exports gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces;
   exports gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time;
+  exports gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers;
   exports gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities;
 
   provides Processor with ActivityProcessor;
