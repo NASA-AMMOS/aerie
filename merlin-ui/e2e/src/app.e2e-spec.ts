@@ -1,15 +1,29 @@
-import { browser, logging } from 'protractor';
-import { AppPage, testAdaptation } from './app.po';
-import { Elements } from './elements.po';
+import { AppPage } from './app.po';
+import { Elements } from './elements';
+import { adaptation } from './mocks';
 
 /**
  * @note These tests assume a clean/empty database.
+ * @note Only run these tests against Firefox for now,
+ * there is a possible Chromium bug that will break some of the tests: https://github.com/angular/components/issues/10140
  */
 describe('merlin-ui App', () => {
   let page: AppPage;
 
   beforeEach(() => {
     page = new AppPage();
+  });
+
+  describe('plans page with no adaptations', () => {
+    it(`should navigate to the plans page`, () => {
+      page.navigateTo('plans');
+    });
+
+    it(`the no adaptations message and no plans message should be present, and the plans table should NOT be present`, () => {
+      expect(Elements.noAdaptationsMessage.isPresent()).toBe(true);
+      expect(Elements.noPlansMessage.isPresent()).toBe(true);
+      expect(Elements.plansTable.isPresent()).toBe(false);
+    });
   });
 
   describe('adaptations page', () => {
@@ -27,11 +41,11 @@ describe('merlin-ui App', () => {
     });
 
     it(`filling all the create adaptation form fields should enable the 'Create' button`, () => {
-      Elements.createAdaptationFormName.sendKeys(testAdaptation.name);
-      Elements.createAdaptationFormVersion.sendKeys(testAdaptation.version);
-      Elements.createAdaptationFormMission.sendKeys(testAdaptation.mission);
-      Elements.createAdaptationFormOwner.sendKeys(testAdaptation.owner);
-      Elements.createAdaptationFormFile.sendKeys(testAdaptation.filePath);
+      Elements.createAdaptationFormName.sendKeys(adaptation.name);
+      Elements.createAdaptationFormVersion.sendKeys(adaptation.version);
+      Elements.createAdaptationFormMission.sendKeys(adaptation.mission);
+      Elements.createAdaptationFormOwner.sendKeys(adaptation.owner);
+      Elements.createAdaptationFormFile.sendKeys(adaptation.filePath);
       expect(Elements.createAdaptationFormCreateButton.isEnabled()).toBe(true);
     });
 
@@ -51,36 +65,22 @@ describe('merlin-ui App', () => {
       expect(Elements.confirmDialogCancelButton.isPresent()).toBe(true);
     });
 
-    it(`after clicking 'No' on the confirm dialog the adaptation table should still be present`, () => {
+    it(`after clicking 'No' on the confirm dialog, the adaptation table should still be present`, () => {
       Elements.confirmDialogCancelButton.click();
       expect(Elements.adaptationsTable.isPresent()).toBe(true);
     });
 
-    it(`after clicking 'Yes' on the confirm dialog the no adaptations message should be present`, () => {
+    it(`after clicking 'Yes' on the confirm dialog, the no adaptations message should be present`, () => {
       Elements.adaptationMenu.click();
-      browser.sleep(1000); // Make sure there are no overlays (snack-bar or dialogs).
       Elements.adaptationMenuDelete.click();
       Elements.confirmDialogConfirmButton.click();
       expect(Elements.noAdaptationsMessage.isPresent()).toBe(true);
     });
   });
 
-  describe('plans page', () => {
+  describe('plans page with adaptations', () => {
     it(`should navigate to the plans page`, () => {
       page.navigateTo('plans');
     });
-  });
-
-  afterEach(async () => {
-    // Assert that there are no errors emitted from the browser
-    const logs = await browser
-      .manage()
-      .logs()
-      .get(logging.Type.BROWSER);
-    expect(logs).not.toContain(
-      jasmine.objectContaining({
-        level: logging.Level.SEVERE,
-      } as logging.Entry),
-    );
   });
 });

@@ -1,10 +1,5 @@
 # Installation
 
-The Aerie project uses Docker Compose to configure and run the entire
-project. Docker Compose utilizes YAML configuration files which are
-located in the root of the project. The YAML configs include everything
-that is required to run Aerie with Docker and Docker Compose.
-
 ## Prerequisites
 
 You need the following software installed before starting:
@@ -16,7 +11,7 @@ You need the following software installed before starting:
 ## Steps for Running Services Locally
 
 1. Create Artifactory settings.xml
-1. Log in to Docker Artifactory
+1. Log in to JPL Docker Artifactory
 1. Build and start the services
 
 ### Create Artifactory Settings.xml
@@ -55,6 +50,7 @@ cd aerie
 mvn install -DskipTests
 docker-compose -f docker-compose-local.yml up --build
 ```
+For more information on the Aerie services, see the [services documentation](./services.md).
 
 Press `cmd+c` or `ctrl+c` to stop all services if docker-compose is running in
 the foreground. Then to remove all the containers and clean your Maven targets do:

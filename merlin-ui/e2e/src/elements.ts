@@ -1,12 +1,12 @@
 import { by, element } from 'protractor';
-import { testAdaptation } from './app.po';
+import { adaptation } from './mocks';
 
 export class Elements {
   static get adaptationMenu() {
-    return element(by.id(`adaptation-menu-${testAdaptation.name}`));
+    return element(by.id(`adaptation-menu-${adaptation.name}`));
   }
   static get adaptationMenuDelete() {
-    return element(by.id(`adaptation-menu-delete-${testAdaptation.name}`));
+    return element(by.id(`adaptation-menu-delete-${adaptation.name}`));
   }
   static get adaptationsTable() {
     return element(by.id('adaptations-table'));
@@ -37,5 +37,11 @@ export class Elements {
   }
   static get noAdaptationsMessage() {
     return element(by.id('no-adaptations-message'));
+  }
+  static get noPlansMessage() {
+    return element(by.id('no-plans-message'));
+  }
+  static get plansTable() {
+    return element(by.id('plans-table'));
   }
 }

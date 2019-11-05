@@ -122,21 +122,13 @@ mvn --fail-at-end -B -f pom.xml -s settings.xml install
 
 cd $root
 
-# Build nest
 if echo "$changed" | grep --quiet "\(nest\)"; then
-  printf "\nBuilding nest...\n\n"
+  printf "\nBuilding nest for mps-server...\n\n"
   cd nest
 
   npm ci
   [ $? -ne 0 ] && error_exit "npm ci failed"
-  
-  npm run license:check
-  [ $? -ne 0 ] && error_exit "npm run license:check failed"
 
-  npm run build-prod
-  [ $? -ne 0 ] && error_exit "npm run build-prod failed"
-
-  # Build MPS Server, this will eventually go away
   npm run build-prod-mpsserver
   [ $? -ne 0 ] && error_exit "npm run build-prod-mpsserver failed"
 
@@ -146,7 +138,6 @@ if echo "$changed" | grep --quiet "\(nest\)"; then
   cd $root
 fi
 
-# Build merlin-ui
 if echo "$changed" | grep --quiet "\(merlin-ui\)"; then
   printf "\nBuilding merlin-ui...\n\n"
   cd merlin-ui
@@ -160,7 +151,6 @@ if echo "$changed" | grep --quiet "\(merlin-ui\)"; then
   cd $root
 fi
 
-# Build Docker containers
 for d in $changed
 do
   if [ -d "$d" ]; then

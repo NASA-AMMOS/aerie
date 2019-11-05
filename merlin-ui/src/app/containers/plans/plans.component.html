@@ -31,7 +31,11 @@
     </app-panel-header>
     <div class="p-1">
       <form [formGroup]="createPlanForm" (ngSubmit)="onSubmit()">
-        <div class="pb-4" *ngIf="!adaptations.length">
+        <div
+          class="pb-4"
+          *ngIf="!adaptations.length"
+          id="no-adaptations-message"
+        >
           <mat-card>
             There are no adaptations in the database.<br />
             You need an adaptation in order to make a plan.<br />
@@ -106,13 +110,14 @@
       Plan List
     </app-panel-header>
     <div class="p-1">
-      <mat-card *ngIf="!plans.length">
+      <mat-card *ngIf="!plans.length" id="no-plans-message">
         There are no plans in the database.
       </mat-card>
 
       <table
         *ngIf="plans.length"
         [dataSource]="plans"
+        id="plans-table"
         mat-table
         class="w-100 mat-elevation-z1"
       >

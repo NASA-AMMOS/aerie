@@ -26,7 +26,7 @@ cd aerie
 docker login cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie
 ```
 
-4. Use [Docker Compose](https://docs.docker.com/compose/reference/) to start the system:
+4. Use [Docker Compose](https://docs.docker.com/compose/reference/) to start the [services](./services.md):
 
 ```bash
 docker-compose -f docker-compose.yml up --build
