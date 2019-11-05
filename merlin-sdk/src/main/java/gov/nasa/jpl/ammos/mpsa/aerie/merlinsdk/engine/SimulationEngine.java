@@ -13,11 +13,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+
 /**
  * This class contains the core event loop of a simulation in which activities
  * are dequeued from a time-ordered priority queue and have their effect models

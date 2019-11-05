@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.gnc;
 
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.gnc.activities.SetScanAxis;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityJob;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;

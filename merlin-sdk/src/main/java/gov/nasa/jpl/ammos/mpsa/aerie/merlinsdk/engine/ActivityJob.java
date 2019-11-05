@@ -1,7 +1,6 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ControlChannel;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.JobContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
