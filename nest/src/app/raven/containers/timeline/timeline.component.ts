@@ -1095,6 +1095,10 @@ export class TimelineComponent implements OnDestroy {
     );
   }
 
+  onHome() {
+    this.timeBandComponent.resetView();
+  }
+
   onUpdateCurrentState() {
     this.store.dispatch(DialogActions.openUpdateCurrentStateDialog());
   }
