@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.gnc.Activities;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.gnc.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.gnc.GNCStates;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
@@ -21,6 +21,12 @@ public class SetScanAxis implements Activity<GNCStates> {
 
     @Parameter
     double z_value = 0.0;
+
+    public SetScanAxis(double x_value, double y_value, double z_value){
+        this.x_value = x_value;
+        this.y_value = y_value;
+        this.z_value = z_value;
+    }
 
     @Override
     public List<String> validateParameters(){
