@@ -73,7 +73,9 @@
             </div>
             <div>
               <raven-time-band
+                #timeBand
                 class="row"
+                [contextMenu]="contextMenu"
                 [cursorColor]="cursorColor$ | async"
                 [cursorTime]="cursorTime$ | async"
                 [cursorWidth]="cursorWidth$ | async"
@@ -122,6 +124,8 @@
               (hoverBand)="onHoverBand($event)"
               (increaseBandHeight)="onIncreaseBandHeight($event)"
               (newSort)="onSort($event)"
+              (removeTimeCursor)="onDisplayTimeCursor(false)"
+              (setTimeCursor)="onSetTimeCursor($event)"
               (settingsBand)="onSettingsBand($event)"
               (updateAddTo)="onUpdateAddTo($event)"
               (updateOverlay)="onUpdateOverlay($event)"
@@ -168,6 +172,8 @@
               (hoverBand)="onHoverBand($event)"
               (increaseBandHeight)="onIncreaseBandHeight($event)"
               (newSort)="onSort($event)"
+              (removeTimeCursor)="onDisplayTimeCursor(false)"
+              (setTimeCursor)="onSetTimeCursor($event)"
               (settingsBand)="onSettingsBand($event)"
               (updateAddTo)="onUpdateAddTo($event)"
               (updateOverlay)="onUpdateOverlay($event)"
@@ -443,3 +449,39 @@
     </div>
   </mat-sidenav>
 </mat-sidenav-container>
+
+<context-menu #contextMenu>
+  <ng-template contextMenuItem (execute)="onHome()">
+    Home
+  </ng-template>
+  <ng-template contextMenuItem (execute)="zoomTo(MINUTE)">
+    Minute
+  </ng-template>
+  <ng-template contextMenuItem (execute)="zoomTo(TWO_HOUR)">
+    2 Hour
+  </ng-template>
+  <ng-template contextMenuItem (execute)="zoomTo(SIX_HOUR)">
+    6 Hour
+  </ng-template>
+  <ng-template contextMenuItem (execute)="zoomTo(EIGHT_HOUR)">
+    8 Hour
+  </ng-template>
+  <ng-template contextMenuItem (execute)="zoomTo(TWELVE_HOUR)">
+    12 Hour
+  </ng-template>
+  <ng-template contextMenuItem (execute)="zoomTo(DAY)">
+    Day
+  </ng-template>
+  <ng-template contextMenuItem (execute)="zoomTo(THREE_DAY)">
+    3 Day
+  </ng-template>
+  <ng-template contextMenuItem (execute)="zoomTo(WEEK)">
+    Week
+  </ng-template>
+  <ng-template contextMenuItem (execute)="zoomTo(MONTH)">
+    Month
+  </ng-template>
+  <ng-template contextMenuItem (execute)="zoomTo(YEAR)">
+    Year
+  </ng-template>
+</context-menu>

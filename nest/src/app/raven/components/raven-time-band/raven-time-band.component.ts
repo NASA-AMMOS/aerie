@@ -311,6 +311,10 @@ export class RavenTimeBandComponent
     this.ctlTimeBand.repaint();
   }
 
+  resetView() {
+    this.ctlTimeBand.resetView();
+  }
+
   /**
    * Helper. Call when a time-band should be resized.
    * Note that this triggers a redraw.
@@ -318,5 +322,9 @@ export class RavenTimeBandComponent
   resize() {
     this.updateTimeAxisXCoordinates();
     this.redraw();
+  }
+
+  rightClickZoomTo(duration: number) {
+    this.ctlTimeBand.zoomToLastRightClickPos(duration);
   }
 }

@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { MatTooltipModule } from '@angular/material';
+import { ContextMenuModule } from 'ngx-contextmenu';
 import { RavenActivityBandModule } from '../raven-activity-band/raven-activity-band.module';
 import { RavenDividerBandModule } from '../raven-divider-band/raven-divider-band.module';
 import { RavenResourceBandModule } from '../raven-resource-band/raven-resource-band.module';
@@ -22,6 +23,7 @@ import { RavenCompositeBandComponent } from './raven-composite-band.component';
   exports: [RavenCompositeBandComponent],
   imports: [
     CommonModule,
+    ContextMenuModule,
     HttpClientModule,
     MatTooltipModule,
     RavenActivityBandModule,

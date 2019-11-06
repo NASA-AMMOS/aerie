@@ -8,6 +8,7 @@
  */
 
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ContextMenuService } from 'ngx-contextmenu';
 import { RavenCompositeBandComponent } from './raven-composite-band.component';
 import { RavenCompositeBandModule } from './raven-composite-band.module';
 
@@ -18,6 +19,7 @@ describe('RavenCompositeBandComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       imports: [RavenCompositeBandModule],
+      providers: [ContextMenuService],
     }).compileComponents();
   }));
 

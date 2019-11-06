@@ -17,6 +17,7 @@ import {
   MatTabsModule,
 } from '@angular/material';
 import { AngularSplitModule } from 'angular-split';
+import { ContextMenuModule } from 'ngx-contextmenu';
 import {
   RavenActivityPointModule,
   RavenBandsModule,
@@ -45,6 +46,7 @@ import { TimelineComponent } from './timeline.component';
   imports: [
     AngularSplitModule.forChild(),
     CommonModule,
+    ContextMenuModule,
     MatButtonModule,
     MatCardModule,
     MatIconModule,
