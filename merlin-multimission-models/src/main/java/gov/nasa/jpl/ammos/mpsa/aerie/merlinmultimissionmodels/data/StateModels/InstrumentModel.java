@@ -138,7 +138,7 @@ public class InstrumentModel implements SettableState<Double> {
         System.out.println("INSTRUMENT NAME : " + this.name);
         System.out.println("times");
         for(Time x : this.stateHistory.keySet()){
-            System.out.println(x.getMS());
+            System.out.println(x.getMilliseconds());
         }
         System.out.println("values");
         for(Double x : this.stateHistory.values()){

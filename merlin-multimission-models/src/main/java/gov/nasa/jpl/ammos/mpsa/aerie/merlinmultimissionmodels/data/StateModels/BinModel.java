@@ -188,7 +188,7 @@ public class BinModel implements State<Double> {
         System.out.println("BIN ID : " + this.binID);
         System.out.println("times");
         for(Time x : this.stateHistory.keySet()){
-            System.out.println(x.getMS());
+            System.out.println(x.getMilliseconds());
         }
         System.out.println("values");
         for(Double x : this.stateHistory.values()){
