@@ -90,6 +90,12 @@ public interface CumulativeState<T extends Number> extends State<T> {
         }
 
         /**
+         * @return String name
+         */
+        @Override
+        public String getName() { return this.name; }
+
+        /**
          * increments state value by a Integer delta
          * @param delta
          */
@@ -148,6 +154,12 @@ public interface CumulativeState<T extends Number> extends State<T> {
         public java.lang.Double get() {
             return this.value;
         }
+
+        /**
+         * @return String name
+         */
+        @Override
+        public String getName() { return this.name; }
 
         /**
          * increments state value by a Double delta

@@ -23,8 +23,19 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.spice.SpiceLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
+import org.apache.commons.io.FileUtils;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 import spice.basic.CSPICE;
 import spice.basic.SpiceErrorException;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 
 @Ignore

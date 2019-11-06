@@ -33,6 +33,11 @@ public class LazyEvaluationTest {
             return evaluator.get();
         }
 
+        @Override
+        public String getName() {
+            return null;
+        }
+
         public void set(Double value) {
             this.value = value;
             evaluator.invalidate();

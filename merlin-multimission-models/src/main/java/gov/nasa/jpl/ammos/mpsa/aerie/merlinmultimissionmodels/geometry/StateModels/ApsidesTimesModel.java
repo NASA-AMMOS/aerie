@@ -1,9 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.StateModels;
 
-import java.lang.annotation.Target;
-import java.util.List;
-import java.util.Map;
-
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.blackbird.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.blackbird.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.Globals.Apsis;
@@ -13,6 +9,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.LazyEvaluator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import spice.basic.SpiceErrorException;
+
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -101,6 +100,11 @@ public class ApsidesTimesModel implements State<List<Time>> {
     @Override
     public List<Time> get() {
         return this.evaluator.get();
+    }
+
+    @Override
+    public String getName() {
+        return null;
     }
 
     @Override

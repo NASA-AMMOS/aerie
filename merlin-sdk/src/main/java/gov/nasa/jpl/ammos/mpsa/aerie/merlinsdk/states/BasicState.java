@@ -1,8 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -88,6 +88,10 @@ public class BasicState<T> implements SettableState<T> {
         this.engine = engine;
     }
 
+
+    @Override
+    public String getName() { return this.getName(); }
+
     /**
      * this is a temporary method in order to integrate w/ the current SimulationEngine
      * unit tests
@@ -106,6 +110,11 @@ public class BasicState<T> implements SettableState<T> {
     private T value;
 
     /**
+     * the name of the state
+     */
+    private String name;
+
+    /**
      * the engine that this state is registered to
      * <p>
      * used temporarily to support the initial implementation of the simulation engine
@@ -117,6 +126,4 @@ public class BasicState<T> implements SettableState<T> {
      * timestamp of each set() call
      */
     private Map<Time, T> stateHistory = new LinkedHashMap<>();
-
-
 }

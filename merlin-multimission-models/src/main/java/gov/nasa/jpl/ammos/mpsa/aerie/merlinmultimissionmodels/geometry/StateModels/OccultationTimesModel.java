@@ -123,6 +123,11 @@ public class OccultationTimesModel implements State {
     }
 
     @Override
+    public String getName() {
+        return null;
+    }
+
+    @Override
     public Map getHistory() {
         return null;
     }

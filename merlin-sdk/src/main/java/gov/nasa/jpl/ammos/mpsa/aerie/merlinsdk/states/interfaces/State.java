@@ -69,6 +69,15 @@ public interface State<T> {
     T get();
 
 
+    /**
+     * All states should have a UID, which is currently its name
+     * This will be used by other states to name dependencies
+     * This String can serve as a key to any values we store and later retrieve regarding this state
+     * @return the name of the state
+     */
+    public String getName();
+
+
     //TODO: Refactor sim engine to no longer require this at this state level
     /**
      * This is a temporary method used to enable the current SimulationEngine unit tests
@@ -88,5 +97,5 @@ public interface State<T> {
      * the unit tests currently need a way to inspect the state history directly
      */
     public Map<Time, T> getHistory();
-
 }
+
