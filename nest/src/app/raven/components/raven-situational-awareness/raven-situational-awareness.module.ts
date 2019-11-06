@@ -10,15 +10,8 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import {
-  MatCardModule,
-  MatFormFieldModule,
-  MatInputModule,
-  MatOptionModule,
-  MatSelectModule,
-  MatSlideToggleModule,
-} from '@angular/material';
 import { AgGridModule } from 'ag-grid-angular';
+import { MaterialModule } from '../../material';
 import { RavenDurationPipeModule, RavenTimestampPipeModule } from '../../pipes';
 import { RavenSituationalAwarenessComponent } from './raven-situational-awareness.component';
 
@@ -28,12 +21,7 @@ import { RavenSituationalAwarenessComponent } from './raven-situational-awarenes
   imports: [
     CommonModule,
     FormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatOptionModule,
-    MatSelectModule,
-    MatSlideToggleModule,
+    MaterialModule,
     AgGridModule.withComponents([]),
     RavenDurationPipeModule,
     RavenTimestampPipeModule,

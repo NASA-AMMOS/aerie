@@ -10,24 +10,12 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import {
-  MatButtonModule,
-  MatExpansionModule,
-  MatFormFieldModule,
-  MatInputModule,
-} from '@angular/material';
+import { MaterialModule } from '../../material';
 import { RavenQuickFilterPanelComponent } from './raven-quick-filter-panel.component';
 
 @NgModule({
   declarations: [RavenQuickFilterPanelComponent],
   exports: [RavenQuickFilterPanelComponent],
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatButtonModule,
-    MatExpansionModule,
-    MatFormFieldModule,
-    MatInputModule,
-  ],
+  imports: [CommonModule, FormsModule, MaterialModule],
 })
 export class RavenQuickFilterPanelModule {}

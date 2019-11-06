@@ -10,11 +10,6 @@
 import { OverlayModule } from '@angular/cdk/overlay';
 import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
-import {
-  MatButtonModule,
-  MatIconModule,
-  MatSidenavModule,
-} from '@angular/material';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreRouterConnectingModule } from '@ngrx/router-store';
@@ -28,6 +23,7 @@ import { environment } from '../environments/environment';
 import { AppRoutingModule } from './app-routing.module';
 import { metaReducers, ROOT_REDUCERS } from './app-store';
 import { AppComponent } from './app.component';
+import { MaterialModule } from './raven/material';
 import { NestAboutDialogModule } from './shared/components/nest-about-dialog/nest-about-dialog.module';
 import { ConfigEffects, DialogEffects } from './shared/effects';
 import { ToastEffects } from './shared/effects/toast.effects';
@@ -62,9 +58,7 @@ import { ToastEffects } from './shared/effects/toast.effects';
       preventDuplicates: true,
       resetTimeoutOnDuplicate: true,
     }),
-    MatButtonModule,
-    MatIconModule,
-    MatSidenavModule,
+    MaterialModule,
     NestAboutDialogModule,
 
     // StoreDevtoolsModule must come AFTER StoreModule.

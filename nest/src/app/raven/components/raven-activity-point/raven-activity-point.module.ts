@@ -9,23 +9,13 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import {
-  MatCardModule,
-  MatExpansionModule,
-  MatSelectModule,
-} from '@angular/material';
+import { MaterialModule } from '../../material';
 import { RavenDhmsPipeModule } from '../../pipes';
 import { RavenActivityPointComponent } from './raven-activity-point.component';
 
 @NgModule({
   declarations: [RavenActivityPointComponent],
   exports: [RavenActivityPointComponent],
-  imports: [
-    CommonModule,
-    MatCardModule,
-    MatExpansionModule,
-    MatSelectModule,
-    RavenDhmsPipeModule,
-  ],
+  imports: [CommonModule, MaterialModule, RavenDhmsPipeModule],
 })
 export class RavenActivityPointModule {}

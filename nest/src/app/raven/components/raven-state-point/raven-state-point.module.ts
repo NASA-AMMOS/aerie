@@ -8,13 +8,13 @@
  */
 
 import { NgModule } from '@angular/core';
-import { MatCardModule } from '@angular/material';
+import { MaterialModule } from '../../material';
 import { RavenTimestampPipeModule } from '../../pipes';
 import { RavenStatePointComponent } from './raven-state-point.component';
 
 @NgModule({
   declarations: [RavenStatePointComponent],
   exports: [RavenStatePointComponent],
-  imports: [MatCardModule, RavenTimestampPipeModule],
+  imports: [MaterialModule, RavenTimestampPipeModule],
 })
 export class RavenStatePointModule {}

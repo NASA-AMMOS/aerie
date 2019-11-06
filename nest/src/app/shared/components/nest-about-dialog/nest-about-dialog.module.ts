@@ -9,13 +9,13 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { MatButtonModule, MatDialogModule } from '@angular/material';
+import { MaterialModule } from '../../../raven/material';
 import { NestAboutDialogComponent } from './nest-about-dialog.component';
 
 @NgModule({
   declarations: [NestAboutDialogComponent],
   entryComponents: [NestAboutDialogComponent],
   exports: [NestAboutDialogComponent],
-  imports: [CommonModule, MatButtonModule, MatDialogModule],
+  imports: [CommonModule, MaterialModule],
 })
 export class NestAboutDialogModule {}

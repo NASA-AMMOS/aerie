@@ -9,24 +9,13 @@
 
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import {
-  MatButtonModule,
-  MatDialogModule,
-  MatFormFieldModule,
-  MatInputModule,
-} from '@angular/material';
+import { MaterialModule } from '../../material';
 import { RavenCustomFilterDialogComponent } from './raven-custom-filter-dialog.component';
 
 @NgModule({
   declarations: [RavenCustomFilterDialogComponent],
   entryComponents: [RavenCustomFilterDialogComponent],
   exports: [RavenCustomFilterDialogComponent],
-  imports: [
-    FormsModule,
-    MatButtonModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-  ],
+  imports: [FormsModule, MaterialModule],
 })
 export class RavenCustomFilterDialogModule {}

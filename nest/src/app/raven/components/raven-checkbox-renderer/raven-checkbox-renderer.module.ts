@@ -8,18 +8,13 @@
  */
 
 import { NgModule } from '@angular/core';
-import {
-  MatButtonModule,
-  MatCheckboxModule,
-  MatInputModule,
-} from '@angular/material';
-
+import { MaterialModule } from '../../material';
 import { RavenCheckboxRendererComponent } from './raven-checkbox-renderer.component';
 
 @NgModule({
   declarations: [RavenCheckboxRendererComponent],
   entryComponents: [RavenCheckboxRendererComponent],
   exports: [RavenCheckboxRendererComponent],
-  imports: [MatButtonModule, MatCheckboxModule, MatInputModule],
+  imports: [MaterialModule],
 })
 export class RavenCheckboxRendererModule {}

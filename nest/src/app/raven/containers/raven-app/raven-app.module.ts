@@ -9,31 +9,14 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import {
-  MatButtonModule,
-  MatIconModule,
-  MatMenuModule,
-  MatProgressBarModule,
-  MatToolbarModule,
-  MatTooltipModule,
-} from '@angular/material';
 import { NestAppHeaderModule } from '../../../shared/components';
+import { MaterialModule } from '../../material';
 import { TimelineModule } from '../timeline/timeline.module';
 import { RavenAppComponent } from './raven-app.component';
 
 @NgModule({
   declarations: [RavenAppComponent],
   exports: [RavenAppComponent],
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule,
-    MatProgressBarModule,
-    MatToolbarModule,
-    MatTooltipModule,
-    NestAppHeaderModule,
-    TimelineModule,
-  ],
+  imports: [CommonModule, MaterialModule, NestAppHeaderModule, TimelineModule],
 })
 export class RavenAppModule {}

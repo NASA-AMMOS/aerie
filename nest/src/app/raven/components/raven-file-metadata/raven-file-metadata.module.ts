@@ -9,13 +9,13 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { MatCardModule } from '@angular/material';
+import { MaterialModule } from '../../material';
 import { RavenCustomMetadataModule } from '../raven-custom-metadata/raven-custom-metadata.module';
 import { RavenFileMetadataComponent } from './raven-file-metadata.component';
 
 @NgModule({
   declarations: [RavenFileMetadataComponent],
   exports: [RavenFileMetadataComponent],
-  imports: [CommonModule, MatCardModule, RavenCustomMetadataModule],
+  imports: [CommonModule, MaterialModule, RavenCustomMetadataModule],
 })
 export class RavenFileMetadataModule {}
