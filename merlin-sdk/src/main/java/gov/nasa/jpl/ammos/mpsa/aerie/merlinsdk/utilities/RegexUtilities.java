@@ -2,6 +2,11 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities;
 
 import java.util.regex.Pattern;
 
+/**
+ * This class originates from work done by Ken Roffo, Forrest Ridenhour, Hector Acosta and Christopher Lawler
+ * on the Blackbird project. Its original source can be found at
+ * https://github.jpl.nasa.gov/Blackbird/Blackbird/blob/master/src/main/java/gov/nasa/jpl/input/RegexUtilities.java
+ */
 public class RegexUtilities {
 
     // because this is a utilities class with just static fields, we never want anyone to instantiate

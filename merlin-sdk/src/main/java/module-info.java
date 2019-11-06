@@ -19,12 +19,8 @@ module gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk {
   exports gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations;
   exports gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation;
   exports gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations;
-  exports gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.builders;
-  exports gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints;
-  exports gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.conditional;
   exports gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
   exports gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.processor;
-  exports gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources;
   exports gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.spice;
   exports gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states;
   exports gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces;
