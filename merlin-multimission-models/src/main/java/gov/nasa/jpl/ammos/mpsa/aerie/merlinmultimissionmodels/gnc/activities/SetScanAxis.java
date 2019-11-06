@@ -4,6 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.gnc.GNCStates;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.BasicState;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 
 import java.util.ArrayList;
@@ -40,8 +41,9 @@ public class SetScanAxis implements Activity<GNCStates> {
 
     @Override
     public void modelEffects(SimulationContext<GNCStates> ctx, GNCStates states){
-        Vector3D gncVector = states.getVectorState(GNCStates.rollAxisName).get();
-        Vector3D axisVector = new Vector3D(this.x_value, this.y_value, this.z_value).normalize();
-        gncVector = axisVector;
+        BasicState<Vector3D> vectorState = states.getVectorState(GNCStates.scanAxisName);
+        Vector3D axisVector = new Vector3D(this.x_value, this.y_value, this.z_value);
+        axisVector.normalize();
+        vectorState.set(axisVector);
     }
 }
