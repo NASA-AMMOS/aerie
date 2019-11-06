@@ -90,7 +90,7 @@ public interface State<T> {
      */
     // TODO: Refactor sim engine to no longer require this at this state level
     @Deprecated(forRemoval = true)
-    void setEngine(SimulationEngine engine);
+    default void setEngine(final SimulationEngine engine) {}
 
     /**
      * this is a temporary method in order to integrate w/ the current SimulationEngine
