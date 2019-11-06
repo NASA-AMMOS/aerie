@@ -20,12 +20,12 @@ public interface PlanRepository {
 
   // Mutations
   String createPlan(NewPlan plan);
-  PlanTransaction updatePlan(String id);
+  PlanTransaction updatePlan(String id) throws NoSuchPlanException;
   void replacePlan(String id, NewPlan plan) throws NoSuchPlanException;
   void deletePlan(String id) throws NoSuchPlanException;
 
   String createActivity(String planId, ActivityInstance activity) throws NoSuchPlanException;
-  ActivityTransaction updateActivity(String planId, String activityId);
+  ActivityTransaction updateActivity(String planId, String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException;
   void replaceActivity(String planId, String activityId, ActivityInstance activity) throws NoSuchPlanException, NoSuchActivityInstanceException;
   void deleteActivity(String planId, String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException;
   void deleteAllActivities(String planId) throws NoSuchPlanException;
