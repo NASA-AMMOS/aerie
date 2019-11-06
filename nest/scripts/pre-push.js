@@ -7,9 +7,9 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-const { exec } = require('child_process');
+const { execSync } = require('child_process');
 
-exec('npm run lint', (error, stdout) => {
+execSync('npm run lint', (error, stdout) => {
   if (error) {
     console.log(stdout);
     process.exit(1);
@@ -18,11 +18,11 @@ exec('npm run lint', (error, stdout) => {
   }
 });
 
-exec('npm run format:write', (error, stdout) => {
+execSync('npm run format', (error, stdout) => {
   if (error) {
     console.log(stdout);
     process.exit(1);
   } else {
-    console.log('pre-push: npm run format:write completed with no errors');
+    console.log('pre-push: npm run format completed with no errors');
   }
 });

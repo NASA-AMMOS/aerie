@@ -10,12 +10,6 @@
 import { createAction, props } from '@ngrx/store';
 import { BaseType, StringTMap } from '../models';
 
-export enum NavigationDrawerStates {
-  Opened = 'opened',
-  Closed = 'closed',
-  Collapsed = 'collapsed',
-}
-
 export const fetchProjectConfig = createAction(
   '[nest-config] fetch_project_config',
   props<{ url: string }>(),
@@ -23,10 +17,6 @@ export const fetchProjectConfig = createAction(
 
 export const fetchProjectConfigSuccess = createAction(
   '[nest-config] fetch_project_config_success',
-);
-
-export const toggleNestNavigationDrawer = createAction(
-  '[nest-config] toggle_nest_navigation_drawer',
 );
 
 export const updateDefaultBandSettings = createAction(

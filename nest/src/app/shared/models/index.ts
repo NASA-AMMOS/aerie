@@ -9,5 +9,4 @@
 
 export * from './base-type';
 export * from './map';
-export * from './nest-module';
 export * from './time-range';

@@ -205,23 +205,4 @@ describe('config reducer', () => {
       },
     });
   });
-
-  it('should toggle the state of the navigation drawer', () => {
-    expect(configState.navigationDrawerState).toBe(
-      ConfigActions.NavigationDrawerStates.Collapsed,
-    );
-
-    let result = reducer(
-      configState,
-      ConfigActions.toggleNestNavigationDrawer(),
-    );
-    expect(result.navigationDrawerState).toBe(
-      ConfigActions.NavigationDrawerStates.Closed,
-    );
-
-    result = reducer(result, ConfigActions.toggleNestNavigationDrawer());
-    expect(result.navigationDrawerState).toBe(
-      ConfigActions.NavigationDrawerStates.Collapsed,
-    );
-  });
 });

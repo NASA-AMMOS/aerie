@@ -39,12 +39,4 @@ export const reducer = createReducer(
       ...action.update,
     },
   })),
-  on(ConfigActions.toggleNestNavigationDrawer, state => ({
-    ...state,
-    navigationDrawerState:
-      state.navigationDrawerState ===
-      ConfigActions.NavigationDrawerStates.Closed
-        ? ConfigActions.NavigationDrawerStates.Collapsed
-        : ConfigActions.NavigationDrawerStates.Closed,
-  })),
 );

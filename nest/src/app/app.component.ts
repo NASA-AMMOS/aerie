@@ -8,63 +8,13 @@
  */
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { select, Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
-import { AppState } from './app-store';
-import { DialogActions } from './shared/actions';
-import { NavigationDrawerStates } from './shared/actions/config.actions';
-import { NestModule } from './shared/models';
-import { getAppModules, getNavigationDrawerState } from './shared/selectors';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-root',
-  styles: [
-    `
-      :host,
-      .container,
-      mat-sidenav-container {
-        display: block;
-        height: 100%;
-      }
-    `,
-  ],
+  styles: [],
   template: `
-    <div class="container">
-      <mat-sidenav-container autosize>
-        <mat-sidenav
-          #sidenav
-          mode="side"
-          [opened]="(navigationDrawerState | async) !== 'closed'"
-        >
-          <nest-app-nav
-            [modules]="appModules | async"
-            [iconsOnly]="(navigationDrawerState | async) === 'collapsed'"
-            (aboutClicked)="onAboutClicked()"
-          >
-          </nest-app-nav>
-        </mat-sidenav>
-        <mat-sidenav-content #sidenavContent class="app-sidenav-content">
-          <main>
-            <router-outlet></router-outlet>
-          </main>
-        </mat-sidenav-content>
-      </mat-sidenav-container>
-    </div>
+    <router-outlet></router-outlet>
   `,
 })
-export class AppComponent {
-  appModules: Observable<NestModule[]>;
-  navigationDrawerState: Observable<NavigationDrawerStates>;
-
-  constructor(private store: Store<AppState>) {
-    this.appModules = this.store.pipe(select(getAppModules));
-    this.navigationDrawerState = this.store.pipe(
-      select(getNavigationDrawerState),
-    );
-  }
-
-  onAboutClicked() {
-    this.store.dispatch(DialogActions.openAboutDialog({ width: '400px' }));
-  }
-}
+export class AppComponent {}

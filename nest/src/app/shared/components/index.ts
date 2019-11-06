@@ -9,5 +9,4 @@
 
 export * from './nest-about-dialog/nest-about-dialog.module';
 export * from './nest-app-header/nest-app-header.module';
-export * from './nest-app-nav/nest-app-nav.module';
 export * from './nest-confirm-dialog/nest-confirm-dialog.module';

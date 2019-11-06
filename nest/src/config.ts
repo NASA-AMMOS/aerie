@@ -8,21 +8,16 @@
  */
 
 import { RavenDefaultBandSettings } from './app/raven/models';
-import { NavigationDrawerStates } from './app/shared/actions/config.actions';
-import { NestModule } from './app/shared/models';
 import { environment } from './environments/environment';
 import { version } from './environments/version';
 
 export interface ConfigState {
   app: {
-    adaptationServiceBaseUrl: string;
     baseUrl: string;
     packageJsonVersion: string;
-    planServiceBaseUrl: string;
     production: boolean;
     version: string;
   };
-  appModules: NestModule[];
   mpsServer: {
     apiUrl: string;
     ravenConfigUrl: string;
@@ -30,7 +25,6 @@ export interface ConfigState {
     ravenUrl: string;
     socketUrl: string;
   };
-  navigationDrawerState: NavigationDrawerStates;
   raven: {
     defaultBandSettings: RavenDefaultBandSettings;
     excludeActivityTypes: string[];
@@ -42,27 +36,11 @@ export interface ConfigState {
 
 export const config: ConfigState = {
   app: {
-    adaptationServiceBaseUrl: environment.adaptationServiceBaseUrl,
     baseUrl: environment.baseUrl,
     packageJsonVersion: version.packageJsonVersion,
-    planServiceBaseUrl: environment.planServiceBaseUrl,
     production: environment.production,
     version: version.version,
   },
-  appModules: [
-    {
-      icon: 'dns',
-      path: 'falcon',
-      title: 'Falcon',
-      version: '0.0.1',
-    },
-    {
-      icon: 'poll',
-      path: 'raven',
-      title: 'RAVEN',
-      version: version.packageJsonVersion,
-    },
-  ],
   mpsServer: {
     apiUrl: 'mpsserver/api/v2/fs',
     epochsUrl: '',
@@ -70,7 +48,6 @@ export const config: ConfigState = {
     ravenUrl: 'mpsserver/raven',
     socketUrl: 'mpsserver/websocket/v1/topic/main',
   },
-  navigationDrawerState: NavigationDrawerStates.Collapsed,
   raven: {
     defaultBandSettings: {
       activityInitiallyHidden: false,

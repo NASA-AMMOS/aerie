@@ -9,18 +9,40 @@
 
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
-import { NestModule } from '../../models';
 
 @Component({
   selector: 'nest-about-dialog',
-  styleUrls: ['./nest-about-dialog.component.css'],
-  templateUrl: './nest-about-dialog.component.html',
+  styles: [],
+  template: `
+    <h1 mat-dialog-title>About</h1>
+
+    <div mat-dialog-content>
+      <div *ngFor="let line of copyright">
+        {{ line }}
+      </div>
+      <p>
+        {{ data.version }}
+      </p>
+    </div>
+
+    <div mat-dialog-actions>
+      <button mat-button color="accent" matDialogClose>
+        Close
+      </button>
+    </div>
+  `,
 })
 export class NestAboutDialogComponent {
-  copyright = `Copyright ${new Date().getFullYear()}, by the California Institute of Technology. ALL RIGHTS RESERVED.\nUnited States Government sponsorship acknowledged. Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.`;
+  copyright = [
+    `Copyright ${new Date().getFullYear()}, by the California Institute of Technology.`,
+    `ALL RIGHTS RESERVED.`,
+    `United States Government sponsorship acknowledged.`,
+    `Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.`,
+  ];
+
   constructor(
     public dialogRef: MatDialogRef<NestAboutDialogComponent>,
     @Inject(MAT_DIALOG_DATA)
-    public data: { modules: NestModule[]; version: string },
+    public data: { version: string },
   ) {}
 }

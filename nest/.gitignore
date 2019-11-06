@@ -1,6 +1,5 @@
 # compiled output
 /dist
-/dist-mpsserver
 /tmp
 /out-tsc
 __pycache__/
@@ -18,11 +17,7 @@ node_modules
 *.sublime-workspace
 
 # IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+.vscode
 
 # misc
 /.sass-cache

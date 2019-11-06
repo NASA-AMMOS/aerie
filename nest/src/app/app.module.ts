@@ -29,7 +29,6 @@ import { AppRoutingModule } from './app-routing.module';
 import { metaReducers, ROOT_REDUCERS } from './app-store';
 import { AppComponent } from './app.component';
 import { NestAboutDialogModule } from './shared/components/nest-about-dialog/nest-about-dialog.module';
-import { NestAppNavModule } from './shared/components/nest-app-nav/nest-app-nav.module';
 import { ConfigEffects, DialogEffects } from './shared/effects';
 import { ToastEffects } from './shared/effects/toast.effects';
 
@@ -67,7 +66,6 @@ import { ToastEffects } from './shared/effects/toast.effects';
     MatIconModule,
     MatSidenavModule,
     NestAboutDialogModule,
-    NestAppNavModule,
 
     // StoreDevtoolsModule must come AFTER StoreModule.
     // To avoid interrupting alphabetical order (and since it's meant for dev only),

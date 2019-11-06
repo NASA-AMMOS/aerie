@@ -52,16 +52,6 @@ export const getUrls = createSelector(
   }),
 );
 
-export const getAppModules = createSelector(
-  getConfigState,
-  (state: ConfigState) => state.appModules,
-);
-
-export const getNavigationDrawerState = createSelector(
-  getConfigState,
-  (state: ConfigState) => state.navigationDrawerState,
-);
-
 export const getProjectEpochsUrl = createSelector(
   getConfigState,
   (state: ConfigState) => state.mpsServer.epochsUrl,

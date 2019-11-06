@@ -1,19 +1,7 @@
-<mat-toolbar color="{{ color }}" class="top-bar">
-  <div class="top-bar-row">
-    <div class="top-bar-row-left">
-      <button
-        mat-icon-button
-        class="top-bar-nav-icon"
-        (click)="menuClicked.emit()"
-        role="button"
-        aria-label="menu"
-      >
-        <mat-icon>{{ icon }}</mat-icon>
-      </button>
-      <span class="top-bar-title">{{ title }}</span>
-    </div>
-    <div class="top-bar-row-right">
-      <ng-content></ng-content>
-    </div>
+<mat-toolbar color="primary">
+  <span>{{ title }}</span>
+
+  <div class="mat-toolbar-right">
+    <ng-content></ng-content>
   </div>
 </mat-toolbar>

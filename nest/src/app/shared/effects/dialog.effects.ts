@@ -35,7 +35,6 @@ export class DialogEffects {
 
           this.dialog.open(NestAboutDialogComponent, {
             data: {
-              modules: state.config.appModules,
               version: `Nest ${version}`,
             },
             width: action.width,

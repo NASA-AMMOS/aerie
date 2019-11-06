@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'nest-app-header',
@@ -15,25 +15,6 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
   templateUrl: './nest-app-header.component.html',
 })
 export class NestAppHeaderComponent {
-  /**
-   * Whether to display the contextual top bar which is typically a different
-   * color than the primary, and usually has a back or X icon instead of the
-   * standard hamburger icon.
-   */
-  @Input()
-  contextual = false;
-
   @Input()
   title = '';
-
-  @Output()
-  menuClicked: EventEmitter<never> = new EventEmitter();
-
-  get color() {
-    return this.contextual ? 'accent' : 'primary';
-  }
-
-  get icon() {
-    return this.contextual ? 'arrow_back' : 'menu';
-  }
 }

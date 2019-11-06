@@ -9,31 +9,20 @@
 
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { config } from '../config';
-
-const falconModule = config.appModules[0];
-const ravenModule = config.appModules[1];
 
 export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: ravenModule.path,
+    redirectTo: 'raven',
   },
   {
-    data: { title: falconModule.title },
-    loadChildren: () =>
-      import('./falcon/falcon.module').then(m => m.FalconModule),
-    path: falconModule.path,
-  },
-  {
-    data: { title: ravenModule.title },
     loadChildren: () => import('./raven/raven.module').then(m => m.RavenModule),
-    path: ravenModule.path,
+    path: 'raven',
   },
   {
     path: '**',
-    redirectTo: ravenModule.path,
+    redirectTo: 'raven',
   },
 ];
 

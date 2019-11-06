@@ -129,11 +129,11 @@ if echo "$changed" | grep --quiet "\(nest\)"; then
   npm ci
   [ $? -ne 0 ] && error_exit "npm ci failed"
 
-  npm run build-prod-mpsserver
-  [ $? -ne 0 ] && error_exit "npm run build-prod-mpsserver failed"
+  npm run build
+  [ $? -ne 0 ] && error_exit "npm run build failed"
 
-  npm run test-for-build
-  [ $? -ne 0 ] && error_exit "npm run test-for-build failed"
+  npm run test
+  [ $? -ne 0 ] && error_exit "npm run test failed"
 
   cd $root
 fi
