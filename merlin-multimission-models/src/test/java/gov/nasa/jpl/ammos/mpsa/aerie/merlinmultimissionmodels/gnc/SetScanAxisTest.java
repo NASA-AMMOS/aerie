@@ -6,10 +6,13 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
-import org.junit.Test;
+import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+
+
 
 
 //an axis on which you scan
@@ -36,9 +39,9 @@ public class SetScanAxisTest {
         temp.normalize();
         System.out.println(temp.getX());
 
-        assert (vector.getX() == temp.getX());
-        assert (vector.getY() == temp.getY());
-        assert (vector.getZ() == temp.getZ());
+        assertTrue(vector.getX() == temp.getX());
+        assertTrue(vector.getY() == temp.getY());
+        assertTrue(vector.getZ() == temp.getZ());
     }
 
 }

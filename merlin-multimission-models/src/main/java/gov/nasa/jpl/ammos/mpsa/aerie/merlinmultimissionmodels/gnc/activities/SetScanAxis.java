@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.gnc.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.gnc.GNCStates;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.BasicState;
@@ -10,8 +11,8 @@ import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import java.util.ArrayList;
 import java.util.List;
 
+@ActivityType("SetScanAxis")
 public class SetScanAxis implements Activity<GNCStates> {
-
 
     //TODO: get annotation processor to accept other objects besides primitives such as Vector3D
     @Parameter
@@ -22,6 +23,8 @@ public class SetScanAxis implements Activity<GNCStates> {
 
     @Parameter
     double z_value = 0.0;
+
+    public SetScanAxis(){}
 
     public SetScanAxis(double x_value, double y_value, double z_value){
         this.x_value = x_value;

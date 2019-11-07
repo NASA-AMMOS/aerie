@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class GNCStates implements StateContainer {
 
-    public static String scanAxisName = "roll axis vector";
+    public static final String scanAxisName = "roll axis vector";
     public static BasicState<Vector3D> scanAxis = new BasicState<>(scanAxisName, new Vector3D(1,0,0));
 
     private static List<State<?>> stateList = new ArrayList<>();
@@ -30,6 +30,6 @@ public class GNCStates implements StateContainer {
 
     @Override
     public List<State<?>> getStateList() {
-        return this.stateList;
+        return List.of(this.stateList);
     }
 }
