@@ -14,13 +14,14 @@ import { Store } from '@ngrx/store';
 import keyBy from 'lodash-es/keyBy';
 import { of, zip } from 'rxjs';
 import { exhaustMap, map, withLatestFrom } from 'rxjs/operators';
-import { NestConfirmDialogComponent } from '../../shared/components/nest-confirm-dialog/nest-confirm-dialog.component';
 import {
   DialogActions,
   EpochsActions,
   SourceExplorerActions,
   TimelineActions,
 } from '../actions';
+import { RavenAboutDialogComponent } from '../components/raven-about-dialog/raven-about-dialog.component';
+import { RavenConfirmDialogComponent } from '../components/raven-confirm-dialog/raven-confirm-dialog.component';
 import { RavenCustomFilterDialogComponent } from '../components/raven-custom-filter-dialog/raven-custom-filter-dialog.component';
 import { RavenCustomGraphDialogComponent } from '../components/raven-custom-graph-dialog/raven-custom-graph-dialog.component';
 import { RavenFileImportDialogComponent } from '../components/raven-file-import-dialog/raven-file-import-dialog.component';
@@ -41,12 +42,34 @@ export class DialogEffects {
     private store: Store<RavenAppState>,
   ) {}
 
+  openAboutDialog = createEffect(
+    () =>
+      this.actions.pipe(
+        ofType(DialogActions.openAboutDialog),
+        withLatestFrom(this.store),
+        map(([action, state]) => ({ action, state })),
+        exhaustMap(({ action, state }) => {
+          const { packageJsonVersion, version } = state.config.app;
+
+          this.dialog.open(RavenAboutDialogComponent, {
+            data: {
+              version: `raven ${packageJsonVersion} - ${version}`,
+            },
+            width: action.width,
+          });
+
+          return [];
+        }),
+      ),
+    { dispatch: false },
+  );
+
   openApplyCurrentStateDialog = createEffect(() =>
     this.actions.pipe(
       ofType(DialogActions.openApplyCurrentStateDialog),
       exhaustMap(() => {
         const applyCurrentStateDialog = this.dialog.open(
-          NestConfirmDialogComponent,
+          RavenConfirmDialogComponent,
           {
             data: {
               cancelText: 'No',
@@ -73,7 +96,7 @@ export class DialogEffects {
       ofType(DialogActions.openRemoveAllBandsDialog),
       exhaustMap(action => {
         const removeAllBandsDialog = this.dialog.open(
-          NestConfirmDialogComponent,
+          RavenConfirmDialogComponent,
           {
             data: {
               cancelText: 'No',
@@ -100,7 +123,7 @@ export class DialogEffects {
       this.actions.pipe(
         ofType(DialogActions.openConfirmDialog),
         exhaustMap(action => {
-          this.dialog.open(NestConfirmDialogComponent, {
+          this.dialog.open(RavenConfirmDialogComponent, {
             data: {
               cancelText: action.cancelText,
               message: action.message,
@@ -182,7 +205,7 @@ export class DialogEffects {
       ofType(DialogActions.openDeleteBandDialog),
       exhaustMap(action => {
         const deleteSubBandDialog = this.dialog.open(
-          NestConfirmDialogComponent,
+          RavenConfirmDialogComponent,
           {
             data: {
               cancelText: 'No',
@@ -221,7 +244,7 @@ export class DialogEffects {
     this.actions.pipe(
       ofType(DialogActions.openDeleteSourceDialog),
       exhaustMap(action => {
-        const deleteDialog = this.dialog.open(NestConfirmDialogComponent, {
+        const deleteDialog = this.dialog.open(RavenConfirmDialogComponent, {
           data: {
             cancelText: 'No',
             confirmText: 'Yes',
@@ -384,7 +407,7 @@ export class DialogEffects {
       ofType(DialogActions.openRemoveAllGuidesDialog),
       exhaustMap(action => {
         const removeAllGuidesDialog = this.dialog.open(
-          NestConfirmDialogComponent,
+          RavenConfirmDialogComponent,
           {
             data: {
               cancelText: 'No',
@@ -478,7 +501,7 @@ export class DialogEffects {
     this.actions.pipe(
       ofType(DialogActions.openStateApplyDialog),
       exhaustMap(action => {
-        const applyStateDialog = this.dialog.open(NestConfirmDialogComponent, {
+        const applyStateDialog = this.dialog.open(RavenConfirmDialogComponent, {
           data: {
             cancelText: 'No',
             confirmText: 'Yes',
@@ -541,7 +564,7 @@ export class DialogEffects {
       ofType(DialogActions.openUpdateCurrentStateDialog),
       exhaustMap(() => {
         const updateCurrentStateDialog = this.dialog.open(
-          NestConfirmDialogComponent,
+          RavenConfirmDialogComponent,
           {
             data: {
               cancelText: 'No',
@@ -578,7 +601,7 @@ export class DialogEffects {
           epochPath = path;
         }
         const updateProjectEpochDialog = this.dialog.open(
-          NestConfirmDialogComponent,
+          RavenConfirmDialogComponent,
           {
             data: {
               cancelText: 'No',

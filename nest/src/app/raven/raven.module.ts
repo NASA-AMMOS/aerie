@@ -10,8 +10,8 @@
 import { NgModule } from '@angular/core';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
-import { NestConfirmDialogModule } from '../shared/components';
 import {
+  RavenConfirmDialogModule,
   RavenCustomFilterDialogModule,
   RavenCustomGraphDialogModule,
   RavenFileImportDialogModule,
@@ -55,7 +55,7 @@ import { reducers } from './raven-store';
       TimelineEffects,
     ]),
     RavenAppModule,
-    NestConfirmDialogModule,
+    RavenConfirmDialogModule,
     RavenCustomFilterDialogModule,
     RavenCustomGraphDialogModule,
     RavenFileImportDialogModule,

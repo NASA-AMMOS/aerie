@@ -11,15 +11,16 @@ import { createReducer, on } from '@ngrx/store';
 import keyBy from 'lodash-es/keyBy';
 import omit from 'lodash-es/omit';
 import without from 'lodash-es/without';
-import { BaseType, StringTMap } from '../../shared/models';
 import { SourceExplorerActions } from '../actions';
 import {
+  BaseType,
   FilterState,
   RavenCustomFilter,
   RavenGraphableFilterSource,
   RavenPin,
   RavenSource,
   RavenSourceAction,
+  StringTMap,
 } from '../models';
 import { getAllChildIds } from '../util';
 

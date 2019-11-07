@@ -8,8 +8,6 @@
  */
 
 import uniqueId from 'lodash-es/uniqueId';
-import { StringTMap } from '../../shared/models';
-import { fromDuration, timestamp, utc } from '../../shared/util/time';
 import {
   MpsServerActivityPoint,
   MpsServerActivityPointMetadata,
@@ -22,7 +20,9 @@ import {
   RavenPoint,
   RavenResourcePoint,
   RavenStatePoint,
+  StringTMap,
 } from '../models';
+import { fromDuration, timestamp, utc } from '../util/time';
 import { colorMap, colorRgbArrayToHex, getRandomColor } from './color';
 
 /**

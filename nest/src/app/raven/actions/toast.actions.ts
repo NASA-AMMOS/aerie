@@ -10,6 +10,6 @@
 import { createAction, props } from '@ngrx/store';
 
 export const showToast = createAction(
-  '[nest-toast] show_toast',
+  '[raven-toast] show_toast',
   props<{ toastType: string; message: string; title: string; config?: any }>(),
 );

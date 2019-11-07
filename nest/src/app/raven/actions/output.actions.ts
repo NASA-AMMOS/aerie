@@ -8,7 +8,7 @@
  */
 
 import { createAction, props } from '@ngrx/store';
-import { BaseType, StringTMap } from '../../shared/models';
+import { BaseType, StringTMap } from '../models';
 
 export const appendData = createAction(
   '[raven-output] append_data',

@@ -8,7 +8,7 @@
  */
 
 import { Pipe, PipeTransform } from '@angular/core';
-import { toDuration } from '../../../shared/util';
+import { toDuration } from '../../util';
 
 @Pipe({
   name: 'duration',

@@ -7,8 +7,10 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { MpsServerSituationalAwarenessPefEntry } from '../models';
-import { RavenSituationalAwarenessPefEntry } from '../models';
+import {
+  MpsServerSituationalAwarenessPefEntry,
+  RavenSituationalAwarenessPefEntry,
+} from '../models';
 
 /**
  * Transform an array of MPS Server situationalAwareness pef entries

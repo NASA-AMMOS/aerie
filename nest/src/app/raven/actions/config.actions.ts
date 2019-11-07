@@ -11,25 +11,25 @@ import { createAction, props } from '@ngrx/store';
 import { BaseType, StringTMap } from '../models';
 
 export const fetchProjectConfig = createAction(
-  '[nest-config] fetch_project_config',
+  '[raven-config] fetch_project_config',
   props<{ url: string }>(),
 );
 
 export const fetchProjectConfigSuccess = createAction(
-  '[nest-config] fetch_project_config_success',
+  '[raven-config] fetch_project_config_success',
 );
 
 export const updateDefaultBandSettings = createAction(
-  '[nest-config] update_default_band_settings',
+  '[raven-config] update_default_band_settings',
   props<{ update: StringTMap<BaseType> }>(),
 );
 
 export const updateMpsServerSettings = createAction(
-  '[nest-config] update_mpsserver_settings',
+  '[raven-config] update_mpsserver_settings',
   props<{ update: StringTMap<BaseType> }>(),
 );
 
 export const updateRavenSettings = createAction(
-  '[nest-config] update_raven_settings',
+  '[raven-config] update_raven_settings',
   props<{ update: StringTMap<BaseType> }>(),
 );

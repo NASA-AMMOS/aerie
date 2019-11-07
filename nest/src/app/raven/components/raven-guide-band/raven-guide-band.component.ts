@@ -19,8 +19,7 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-import { TimeRange } from '../../../shared/models';
-import { RavenGuidePoint } from '../../models';
+import { RavenGuidePoint, TimeRange } from '../../models';
 
 @Component({
   selector: 'raven-guide-band',

@@ -7,4 +7,34 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './config.selectors';
+import { Component, Input } from '@angular/core';
+
+@Component({
+  selector: 'raven-app-header',
+  styles: [
+    `
+      mat-toolbar {
+        height: 36px;
+      }
+
+      .mat-toolbar-right {
+        display: inline-flex;
+        flex: 1 1 auto;
+        justify-content: flex-end;
+      }
+    `,
+  ],
+  template: `
+    <mat-toolbar color="primary">
+      <span>{{ title }}</span>
+
+      <div class="mat-toolbar-right">
+        <ng-content></ng-content>
+      </div>
+    </mat-toolbar>
+  `,
+})
+export class RavenAppHeaderComponent {
+  @Input()
+  title = '';
+}

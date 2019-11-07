@@ -12,14 +12,13 @@ import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AgGridModule } from 'ag-grid-angular';
 import { MaterialModule } from '../../material';
-import { RavenTableDetailComponent } from './raven-table-detail.component';
 import { RavenTableComponent } from './raven-table.component';
 
 @NgModule({
-  declarations: [RavenTableComponent, RavenTableDetailComponent],
+  declarations: [RavenTableComponent],
   exports: [RavenTableComponent],
   imports: [
-    AgGridModule.withComponents([RavenTableDetailComponent]),
+    AgGridModule.withComponents([]),
     CommonModule,
     FormsModule,
     MaterialModule,

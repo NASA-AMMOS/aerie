@@ -7,20 +7,25 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-.full-width-panel {
-  background: #fafafa;
-  border-bottom: 2px solid lightgray;
-  border-left: 2px solid grey;
-  border-right: 2px solid lightgray;
-  box-sizing: border-box;
-  height: 100%;
-  position: relative;
-  width: 100%;
-}
+import { Component, Inject } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
-.full-width-grid {
-  box-sizing: border-box;
-  display: block;
-  height: 100%;
-  padding: 10px;
+@Component({
+  selector: 'raven-confirm-dialog',
+  styleUrls: ['./raven-confirm-dialog.component.css'],
+  templateUrl: './raven-confirm-dialog.component.html',
+})
+export class RavenConfirmDialogComponent {
+  constructor(
+    public dialogRef: MatDialogRef<RavenConfirmDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any,
+  ) {}
+
+  onCancel() {
+    this.dialogRef.close({ confirm: false });
+  }
+
+  onConfirm() {
+    this.dialogRef.close({ confirm: true });
+  }
 }

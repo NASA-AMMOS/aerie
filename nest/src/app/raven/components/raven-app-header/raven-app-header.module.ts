@@ -7,14 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { MaterialModule } from '../../../raven/material';
+import { RavenAppHeaderComponent } from './raven-app-header.component';
 
-@Component({
-  selector: 'nest-app-header',
-  styleUrls: ['./nest-app-header.component.css'],
-  templateUrl: './nest-app-header.component.html',
+@NgModule({
+  declarations: [RavenAppHeaderComponent],
+  exports: [RavenAppHeaderComponent],
+  imports: [CommonModule, MaterialModule],
 })
-export class NestAppHeaderComponent {
-  @Input()
-  title = '';
-}
+export class RavenAppHeaderModule {}

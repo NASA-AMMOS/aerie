@@ -11,7 +11,7 @@ import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
 @Component({
-  selector: 'nest-about-dialog',
+  selector: 'raven-about-dialog',
   styles: [],
   template: `
     <h1 mat-dialog-title>About</h1>
@@ -32,7 +32,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
     </div>
   `,
 })
-export class NestAboutDialogComponent {
+export class RavenAboutDialogComponent {
   copyright = [
     `Copyright ${new Date().getFullYear()}, by the California Institute of Technology.`,
     `ALL RIGHTS RESERVED.`,
@@ -41,7 +41,7 @@ export class NestAboutDialogComponent {
   ];
 
   constructor(
-    public dialogRef: MatDialogRef<NestAboutDialogComponent>,
+    public dialogRef: MatDialogRef<RavenAboutDialogComponent>,
     @Inject(MAT_DIALOG_DATA)
     public data: { version: string },
   ) {}

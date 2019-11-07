@@ -20,12 +20,10 @@ import {
 } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
-import { RavenEpoch, RavenEpochUpdate, RavenUpdate } from '../../models';
-
-import { RavenCheckboxRendererComponent } from '../raven-checkbox-renderer/raven-checkbox-renderer.component';
-
 import { GridOptions, ValueSetterParams } from 'ag-grid-community';
-import { utc } from '../../../shared/util';
+import { RavenEpoch, RavenEpochUpdate, RavenUpdate } from '../../models';
+import { utc } from '../../util';
+import { RavenCheckboxRendererComponent } from '../raven-checkbox-renderer/raven-checkbox-renderer.component';
 
 @Component({
   selector: 'raven-epochs',

@@ -16,8 +16,8 @@ import {
 import { FormControl, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
-import { TimeRange } from '../../../shared/models';
-import { fromDHMString, utc } from '../../../shared/util/time';
+import { TimeRange } from '../../models';
+import { fromDHMString, utc } from '../../util';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

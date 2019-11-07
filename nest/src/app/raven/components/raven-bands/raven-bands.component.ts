@@ -18,7 +18,6 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { SortablejsOptions } from 'angular-sortablejs';
-import { StringTMap, TimeRange } from '../../../shared/models';
 import {
   RavenBandLeftClick,
   RavenCompositeBand,
@@ -26,6 +25,8 @@ import {
   RavenPoint,
   RavenSortMessage,
   RavenUpdate,
+  StringTMap,
+  TimeRange,
 } from '../../models';
 import { bandById } from '../../util';
 

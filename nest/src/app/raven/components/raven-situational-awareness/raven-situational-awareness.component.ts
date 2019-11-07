@@ -20,8 +20,8 @@ import {
 } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
-import { fromDuration, utc } from '../../../shared/util/time';
 import { RavenSituationalAwarenessPefEntry, RavenUpdate } from '../../models';
+import { fromDuration, utc } from '../../util';
 
 @Component({
   selector: 'raven-situational-awareness',

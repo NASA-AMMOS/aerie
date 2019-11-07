@@ -12,8 +12,6 @@ import { select, Store } from '@ngrx/store';
 import { Observable, Subscription } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { WebSocketSubject } from 'rxjs/webSocket';
-import { StringTMap } from '../../../shared/models';
-import { getUrls } from '../../../shared/selectors';
 import {
   DialogActions,
   EpochsActions,
@@ -33,6 +31,7 @@ import {
   RavenSource,
   RavenSourceActionEvent,
   SourceFilter,
+  StringTMap,
 } from '../../models';
 import { SourceExplorerState } from '../../reducers/source-explorer.reducer';
 import {
@@ -43,6 +42,7 @@ import {
   getShowFileMetadataDrawer,
   getSourcesFilter,
   getTreeBySourceId,
+  getUrls,
   treeSortedChildIds,
 } from '../../selectors';
 import * as epochsSelectors from '../../selectors/epochs.selectors';

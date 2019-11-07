@@ -9,7 +9,7 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { NestAppHeaderModule } from '../../../shared/components';
+import { RavenAppHeaderModule } from '../../components';
 import { MaterialModule } from '../../material';
 import { TimelineModule } from '../timeline/timeline.module';
 import { RavenAppComponent } from './raven-app.component';
@@ -17,6 +17,6 @@ import { RavenAppComponent } from './raven-app.component';
 @NgModule({
   declarations: [RavenAppComponent],
   exports: [RavenAppComponent],
-  imports: [CommonModule, MaterialModule, NestAppHeaderModule, TimelineModule],
+  imports: [CommonModule, MaterialModule, RavenAppHeaderModule, TimelineModule],
 })
 export class RavenAppModule {}

@@ -20,13 +20,12 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-import { TimeRange } from '../../../shared/models';
+import { RavenEpoch, TimeRange } from '../../models';
 import {
+  colorHexToRgbArray,
   formatTimeTickTFormat,
   getLocalTimezoneName,
-} from '../../../shared/util/time';
-import { RavenEpoch } from '../../models';
-import { colorHexToRgbArray } from '../../util/color';
+} from '../../util';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

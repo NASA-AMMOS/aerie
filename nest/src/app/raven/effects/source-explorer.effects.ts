@@ -24,19 +24,14 @@ import {
   timeout,
   withLatestFrom,
 } from 'rxjs/operators';
-import { ConfigActions, ToastActions } from '../../shared/actions';
-import { StringTMap, TimeRange } from '../../shared/models';
 import {
-  getSituationalAwarenessPageDuration,
-  getSituationalAwarenessStartTime,
-  utc,
-} from '../../shared/util';
-import {
+  ConfigActions,
   DialogActions,
   EpochsActions,
   LayoutActions,
   SourceExplorerActions,
   TimelineActions,
+  ToastActions,
 } from '../actions';
 import {
   FilterState,
@@ -57,6 +52,8 @@ import {
   RavenStateBand,
   RavenSubBand,
   SourceFilter,
+  StringTMap,
+  TimeRange,
 } from '../models';
 import { RavenAppState } from '../raven-store';
 import { LayoutState } from '../reducers/layout.reducer';
@@ -74,6 +71,8 @@ import {
   getParentSourceIds,
   getPinLabel,
   getRavenState,
+  getSituationalAwarenessPageDuration,
+  getSituationalAwarenessStartTime,
   getSourceIds,
   getSourceNameFromId,
   getState,
@@ -86,6 +85,7 @@ import {
   toRavenBandData,
   toRavenSources,
   updateSourceId,
+  utc,
 } from '../util';
 import { withLoadingBar } from './utils';
 

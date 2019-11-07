@@ -7,12 +7,15 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-mat-toolbar {
-  height: 36px;
-}
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { MaterialModule } from '../../../raven/material';
+import { RavenConfirmDialogComponent } from './raven-confirm-dialog.component';
 
-.mat-toolbar-right {
-  display: inline-flex;
-  flex: 1 1 auto;
-  justify-content: flex-end;
-}
+@NgModule({
+  declarations: [RavenConfirmDialogComponent],
+  entryComponents: [RavenConfirmDialogComponent],
+  exports: [RavenConfirmDialogComponent],
+  imports: [CommonModule, MaterialModule],
+})
+export class RavenConfirmDialogModule {}

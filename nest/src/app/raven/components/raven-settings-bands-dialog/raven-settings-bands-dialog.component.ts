@@ -15,21 +15,21 @@ import keyBy from 'lodash-es/keyBy';
 import { Observable, Subscription } from 'rxjs';
 import { AppState } from '../../../app-store';
 import * as timelineSelectors from '../../../raven/selectors/timeline.selectors';
-import { NestConfirmDialogComponent } from '../../../shared/components/nest-confirm-dialog/nest-confirm-dialog.component';
-import { StringTMap } from '../../../shared/models';
-import { fromDuration } from '../../../shared/util/time';
 import { SourceExplorerActions, TimelineActions } from '../../actions';
 import {
   RavenCompositeBand,
   RavenStateBand,
   RavenSubBand,
   RavenUpdate,
+  StringTMap,
 } from '../../models';
 import {
   defaultColors,
+  fromDuration,
   getBandLabel,
   getNumericStateBandsWithUniquePossibleStates,
 } from '../../util';
+import { RavenConfirmDialogComponent } from '../raven-confirm-dialog/raven-confirm-dialog.component';
 
 @Component({
   selector: 'raven-settings-bands-dialog',
@@ -132,7 +132,7 @@ export class RavenSettingsBandsDialogComponent implements OnDestroy {
    * Event. Called when a subBand delete event is fired from the raven-settings-band-dialog component.
    */
   onDeleteSubBand(subBand: RavenSubBand) {
-    const confirmDialogRef = this.dialog.open(NestConfirmDialogComponent, {
+    const confirmDialogRef = this.dialog.open(RavenConfirmDialogComponent, {
       data: {
         cancelText: 'No',
         confirmText: 'Yes',

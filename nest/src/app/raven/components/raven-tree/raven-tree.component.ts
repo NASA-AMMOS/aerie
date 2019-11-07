@@ -16,14 +16,14 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-import { StringTMap } from '../../../shared/models';
 import {
   FilterState,
   RavenPin,
   RavenSource,
   RavenSourceActionEvent,
+  StringTMap,
 } from '../../models';
-import { getSortedChildIds } from '../../util/source';
+import { getSortedChildIds } from '../../util';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

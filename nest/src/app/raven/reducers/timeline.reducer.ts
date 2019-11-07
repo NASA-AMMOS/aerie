@@ -10,8 +10,6 @@
 import { createReducer, on } from '@ngrx/store';
 import omit from 'lodash-es/omit';
 import without from 'lodash-es/without';
-import { StringTMap, TimeRange } from '../../shared/models';
-import { getMaxTimeRange } from '../../shared/util';
 import { TimelineActions } from '../actions';
 import {
   RavenActivityBand,
@@ -21,11 +19,14 @@ import {
   RavenResourceBand,
   RavenState,
   RavenSubBand,
+  StringTMap,
+  TimeRange,
 } from '../models';
 import {
   bandById,
   changeZoom,
   filterActivityPoints,
+  getMaxTimeRange,
   getParentSourceIds,
   getPoint,
   hasTwoResourceBands,

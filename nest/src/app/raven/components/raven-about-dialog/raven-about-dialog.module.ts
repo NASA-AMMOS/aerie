@@ -7,6 +7,15 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-export * from './config.effects';
-export * from './dialog.effects';
-export * from './toast.effects';
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { MaterialModule } from '../../../raven/material';
+import { RavenAboutDialogComponent } from './raven-about-dialog.component';
+
+@NgModule({
+  declarations: [RavenAboutDialogComponent],
+  entryComponents: [RavenAboutDialogComponent],
+  exports: [RavenAboutDialogComponent],
+  imports: [CommonModule, MaterialModule],
+})
+export class RavenAboutDialogModule {}

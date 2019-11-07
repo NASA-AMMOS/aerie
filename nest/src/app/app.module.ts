@@ -23,10 +23,9 @@ import { environment } from '../environments/environment';
 import { AppRoutingModule } from './app-routing.module';
 import { metaReducers, ROOT_REDUCERS } from './app-store';
 import { AppComponent } from './app.component';
+import { RavenAboutDialogModule } from './raven/components';
+import { ConfigEffects, DialogEffects, ToastEffects } from './raven/effects';
 import { MaterialModule } from './raven/material';
-import { NestAboutDialogModule } from './shared/components/nest-about-dialog/nest-about-dialog.module';
-import { ConfigEffects, DialogEffects } from './shared/effects';
-import { ToastEffects } from './shared/effects/toast.effects';
 
 @NgModule({
   bootstrap: [AppComponent],
@@ -59,7 +58,7 @@ import { ToastEffects } from './shared/effects/toast.effects';
       resetTimeoutOnDuplicate: true,
     }),
     MaterialModule,
-    NestAboutDialogModule,
+    RavenAboutDialogModule,
 
     // StoreDevtoolsModule must come AFTER StoreModule.
     // To avoid interrupting alphabetical order (and since it's meant for dev only),

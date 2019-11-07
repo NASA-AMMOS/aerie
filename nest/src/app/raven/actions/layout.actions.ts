@@ -8,7 +8,7 @@
  */
 
 import { createAction, props } from '@ngrx/store';
-import { BaseType, StringTMap } from '../../shared/models';
+import { BaseType, StringTMap } from '../models';
 
 export const resize = createAction('[raven-layout] resize');
 

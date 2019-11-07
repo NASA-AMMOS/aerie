@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { TimeRange } from '../../shared/models';
+import { TimeRange } from '../models';
 import { RavenActivityPoint } from './index';
 
 export interface RavenActivityBand {

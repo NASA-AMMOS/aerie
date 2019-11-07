@@ -17,7 +17,7 @@ import {
 } from '@ngrx/store';
 import { ConfigState } from '../config';
 import { environment } from '../environments/environment';
-import * as fromConfig from './shared/reducers/config.reducer';
+import * as fromConfig from './raven/reducers/config.reducer';
 
 export interface AppState {
   config: ConfigState;
