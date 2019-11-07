@@ -482,8 +482,14 @@ export class RavenCompositeBandComponent
           band.tickValues = [];
           band.computeMinMaxValues();
           band.computeMinMaxPaintValues();
-          min = min !== null ? Math.min(min, band.minPaintValue) : band.minPaintValue;
-          max = max !== null ? Math.max(max, band.maxPaintValue) : band.maxPaintValue;
+          min =
+            min !== null
+              ? Math.min(min, band.minPaintValue)
+              : band.minPaintValue;
+          max =
+            max !== null
+              ? Math.max(max, band.maxPaintValue)
+              : band.maxPaintValue;
 
           if (resourceBandCounter > 0) {
             // Keep only one axis for the resource bands.
