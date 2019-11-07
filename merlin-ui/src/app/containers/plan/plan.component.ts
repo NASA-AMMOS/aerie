@@ -57,7 +57,6 @@ export class PlanComponent implements OnDestroy {
     private route: ActivatedRoute,
     private store: Store<AppState>,
   ) {
-    this.store.dispatch(MerlinActions.setLoading({ loading: true }));
     this.subs.add(
       this.store
         .pipe(select(getActivityInstancesForSelectedPlan))

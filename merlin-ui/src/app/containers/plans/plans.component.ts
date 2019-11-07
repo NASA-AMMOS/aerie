@@ -45,7 +45,6 @@ export class PlansComponent implements OnDestroy {
     private router: Router,
     private store: Store<AppState>,
   ) {
-    this.store.dispatch(MerlinActions.setLoading({ loading: true }));
     this.createPlanForm = this.fb.group({
       adaptationId: new FormControl('', [Validators.required]),
       endTimestamp: new FormControl('', [Validators.required]),

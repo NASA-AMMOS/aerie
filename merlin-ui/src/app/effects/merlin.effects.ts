@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import { MatDialog, MatSnackBar } from '@angular/material';
+import { MatDialog } from '@angular/material';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { concat, forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { version } from '../../environments/version';
-import { MerlinActions } from '../actions';
+import { MerlinActions, ToastActions } from '../actions';
 import { AboutDialogComponent, ConfirmDialogComponent } from '../components';
 import { ApiService } from '../services';
 
@@ -14,7 +14,6 @@ export class MerlinEffects {
     private actions: Actions,
     private apiService: ApiService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar,
   ) {}
 
   createActivityInstance = createEffect(() => {
@@ -26,30 +25,29 @@ export class MerlinEffects {
           this.apiService
             .createActivityInstances(planId, [activityInstance])
             .pipe(
-              map(([id]) => {
-                this.snackBar.open(
-                  'Activity instance created successfully!',
-                  'Ok',
-                  {
-                    duration: 3000,
-                  },
-                );
-                return MerlinActions.createActivityInstanceSuccess({
-                  planId,
-                  activityInstanceId: id,
-                  activityInstance,
-                });
+              switchMap(([id]) => {
+                return [
+                  ToastActions.showToast({
+                    toastType: 'success',
+                    message: 'Created successfully!',
+                    title: 'Activity Instance',
+                  }),
+                  MerlinActions.createActivityInstanceSuccess({
+                    planId,
+                    activityInstanceId: id,
+                    activityInstance,
+                  }),
+                ];
               }),
               catchError((error: Error) => {
                 console.error(error);
-                this.snackBar.open(
-                  'Oops! Activity instance could not be created. Error logged in console.',
-                  'Ok',
-                  {
-                    duration: 3000,
-                  },
-                );
-                return [];
+                return [
+                  ToastActions.showToast({
+                    toastType: 'error',
+                    message: 'Creation failed. Error logged in console.',
+                    title: 'Activity Instance',
+                  }),
+                ];
               }),
             ),
           of(MerlinActions.setLoading({ loading: false })),
@@ -65,22 +63,25 @@ export class MerlinEffects {
         concat(
           of(MerlinActions.setLoading({ loading: true })),
           this.apiService.createAdaptation(adaptation).pipe(
-            map(({ id }) => {
-              this.snackBar.open('Adaptation created successfully!', 'Ok', {
-                duration: 3000,
-              });
-              return MerlinActions.createAdaptationSuccess({ id, adaptation });
+            switchMap(({ id }) => {
+              return [
+                ToastActions.showToast({
+                  toastType: 'success',
+                  message: 'Created successfully!',
+                  title: 'Adaptation',
+                }),
+                MerlinActions.createAdaptationSuccess({ id, adaptation }),
+              ];
             }),
             catchError((error: Error) => {
               console.error(error);
-              this.snackBar.open(
-                'Oops! Adaptation could not be created. Error logged in console.',
-                'Ok',
-                {
-                  duration: 3000,
-                },
-              );
-              return [];
+              return [
+                ToastActions.showToast({
+                  toastType: 'error',
+                  message: 'Creation failed. Error logged in console.',
+                  title: 'Adaptation',
+                }),
+              ];
             }),
           ),
           of(MerlinActions.setLoading({ loading: false })),
@@ -96,22 +97,25 @@ export class MerlinEffects {
         concat(
           of(MerlinActions.setLoading({ loading: true })),
           this.apiService.createPlan(plan).pipe(
-            map(({ id }) => {
-              this.snackBar.open('Plan created successfully!', 'Ok', {
-                duration: 3000,
-              });
-              return MerlinActions.createPlanSuccess({ id, plan });
+            switchMap(({ id }) => {
+              return [
+                ToastActions.showToast({
+                  toastType: 'success',
+                  message: 'Created successfully!',
+                  title: 'Plan',
+                }),
+                MerlinActions.createPlanSuccess({ id, plan }),
+              ];
             }),
             catchError((error: Error) => {
               console.error(error);
-              this.snackBar.open(
-                'Oops! Plan could not be created. Error logged in console.',
-                'Ok',
-                {
-                  duration: 3000,
-                },
-              );
-              return [];
+              return [
+                ToastActions.showToast({
+                  toastType: 'error',
+                  message: 'Creation failed. Error logged in console.',
+                  title: 'Plan',
+                }),
+              ];
             }),
           ),
           of(MerlinActions.setLoading({ loading: false })),
@@ -153,28 +157,27 @@ export class MerlinEffects {
             this.apiService
               .deleteActivityInstance(planId, activityInstanceId)
               .pipe(
-                map(() => {
-                  this.snackBar.open(
-                    'Activity instance deleted successfully!',
-                    'Ok',
-                    {
-                      duration: 3000,
-                    },
-                  );
-                  return MerlinActions.deleteActivityInstanceSuccess({
-                    activityInstanceId,
-                  });
+                switchMap(() => {
+                  return [
+                    ToastActions.showToast({
+                      toastType: 'success',
+                      message: 'Deleted successfully!',
+                      title: 'Activity Instance',
+                    }),
+                    MerlinActions.deleteActivityInstanceSuccess({
+                      activityInstanceId,
+                    }),
+                  ];
                 }),
                 catchError((error: Error) => {
                   console.error(error);
-                  this.snackBar.open(
-                    'Oops! Activity instance could not be deleted. Error logged in console.',
-                    'Ok',
-                    {
-                      duration: 3000,
-                    },
-                  );
-                  return [];
+                  return [
+                    ToastActions.showToast({
+                      toastType: 'error',
+                      message: 'Deletion failed. Error logged in console.',
+                      title: 'Activity Instance',
+                    }),
+                  ];
                 }),
               ),
             of(MerlinActions.setLoading({ loading: false })),
@@ -211,22 +214,25 @@ export class MerlinEffects {
           return concat(
             of(MerlinActions.setLoading({ loading: true })),
             this.apiService.deleteAdaptation(id).pipe(
-              map(() => {
-                this.snackBar.open('Adaptation deleted successfully!', 'Ok', {
-                  duration: 3000,
-                });
-                return MerlinActions.deleteAdaptationSuccess({ id });
+              switchMap(() => {
+                return [
+                  ToastActions.showToast({
+                    toastType: 'success',
+                    message: 'Deleted successfully!',
+                    title: 'Adaptation',
+                  }),
+                  MerlinActions.deleteAdaptationSuccess({ id }),
+                ];
               }),
               catchError((error: Error) => {
                 console.error(error);
-                this.snackBar.open(
-                  'Oops! Adaptation could not be deleted. Error logged in console.',
-                  'Ok',
-                  {
-                    duration: 3000,
-                  },
-                );
-                return [];
+                return [
+                  ToastActions.showToast({
+                    toastType: 'error',
+                    message: 'Deletion failed. Error logged in console.',
+                    title: 'Adaptation',
+                  }),
+                ];
               }),
             ),
             of(MerlinActions.setLoading({ loading: false })),
@@ -257,22 +263,25 @@ export class MerlinEffects {
           return concat(
             of(MerlinActions.setLoading({ loading: true })),
             this.apiService.deletePlan(id).pipe(
-              map(() => {
-                this.snackBar.open('Plan deleted successfully!', 'Ok', {
-                  duration: 3000,
-                });
-                return MerlinActions.deletePlanSuccess({ id });
+              switchMap(() => {
+                return [
+                  ToastActions.showToast({
+                    toastType: 'success',
+                    message: 'Deleted successfully!',
+                    title: 'Plan',
+                  }),
+                  MerlinActions.deletePlanSuccess({ id }),
+                ];
               }),
               catchError((error: Error) => {
                 console.error(error);
-                this.snackBar.open(
-                  'Oops! Plan could not be deleted. Error logged in console.',
-                  'Ok',
-                  {
-                    duration: 3000,
-                  },
-                );
-                return [];
+                return [
+                  ToastActions.showToast({
+                    toastType: 'error',
+                    message: 'Deletion failed. Error logged in console.',
+                    title: 'Plan',
+                  }),
+                ];
               }),
             ),
             of(MerlinActions.setLoading({ loading: false })),

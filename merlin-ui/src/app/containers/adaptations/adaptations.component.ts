@@ -43,7 +43,6 @@ export class AdaptationsComponent implements OnDestroy {
     private ref: ChangeDetectorRef,
     private store: Store<AppState>,
   ) {
-    this.store.dispatch(MerlinActions.setLoading({ loading: true }));
     this.createAdaptationForm = this.fb.group({
       name: new FormControl('', [Validators.required]),
       version: new FormControl('', [Validators.required]),

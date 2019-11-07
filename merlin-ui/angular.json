@@ -20,7 +20,11 @@
             "tsConfig": "tsconfig.app.json",
             "aot": true,
             "assets": ["src/favicon.ico", "src/assets"],
-            "styles": ["src/theme.scss", "src/styles.css"],
+            "styles": [
+              "src/theme.scss",
+              "node_modules/ngx-toastr/toastr.css",
+              "src/styles.css"
+            ],
             "scripts": []
           },
           "configurations": {
