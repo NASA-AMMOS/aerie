@@ -56,7 +56,7 @@ public class DataModelTest {
         @Override
         public void modelEffects(SimulationContext<DataModelStates> ctx, DataModelStates states){
 
-            ctx.delay(new Duration(1 * Duration.ONE_HOUR));
+            ctx.delay(Duration.fromHours(1));
 
             InstrumentModel some_a_instrument = states.instrument_a_data_rate;
             some_a_instrument.set(10.0);
@@ -68,7 +68,7 @@ public class DataModelTest {
         @Override
         public void modelEffects(SimulationContext<DataModelStates> ctx, DataModelStates states){
 
-            ctx.delay(new Duration(2 * Duration.ONE_HOUR));
+            ctx.delay(Duration.fromHours(2));
 
             states.bin_1.downlink();
 

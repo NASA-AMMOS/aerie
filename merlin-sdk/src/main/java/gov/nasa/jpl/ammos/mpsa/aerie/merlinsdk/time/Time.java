@@ -161,6 +161,8 @@ public class Time implements Comparable<Time>, ConvertableFromString {
      * This private constructor is used by the fromX and valueOf methods to actually
      * assign the backing data.
      */
+    //AERIE-MODIFICATION:    private Time(long tics) {
+    //@Deprecated public Time(long tics) {
     private Time(long tics) {
         this.tics = tics;
     }

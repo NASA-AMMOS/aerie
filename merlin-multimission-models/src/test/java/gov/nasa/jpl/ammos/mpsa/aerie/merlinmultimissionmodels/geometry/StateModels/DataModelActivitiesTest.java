@@ -56,7 +56,7 @@ public class DataModelActivitiesTest {
 
         //0. choose sim start time
         Time simStart = new Time();
-        Time simInstOn  = new Time().add(new Duration(Duration.ONE_HOUR));
+        Time simInstOn  = new Time().add(Duration.fromHours(1));
 
         //1. create activities and add to job list
         InitializeBinDataVolume binInitActivity = new InitializeBinDataVolume();
@@ -104,8 +104,8 @@ public class DataModelActivitiesTest {
         System.out.println("Turn instruments off activity test start\n");
 
         Time simStart = new Time();
-        Time simInstOff = new Time().add(new Duration(Duration.ONE_MINUTE));
-        Time simInstOn  = new Time().add(new Duration(Duration.ONE_HOUR));
+        Time simInstOff = new Time().add(Duration.fromMinutes(1));
+        Time simInstOn  = new Time().add(Duration.fromHours(1));
 
         InitializeBinDataVolume binInitActivity = new InitializeBinDataVolume();
         ActivityJob<OnboardDataModelStates> binInitJob = new ActivityJob<>(binInitActivity, simStart);
@@ -159,9 +159,9 @@ public class DataModelActivitiesTest {
         System.out.println("Downlink activity test start\n");
 
         Time simStart = new Time();
-        Time simInstOff = new Time().add(new Duration(Duration.ONE_MINUTE));
-        Time simInstOn  = new Time().add(new Duration(Duration.ONE_HOUR));
-        Time simDownlink = new Time().add(new Duration(5 * Duration.ONE_HOUR));
+        Time simInstOff = new Time().add(Duration.fromMinutes(1));
+        Time simInstOn  = new Time().add(Duration.fromHours(1));
+        Time simDownlink = new Time().add(Duration.fromHours(5));
 
         InitializeBinDataVolume binInitActivity = new InitializeBinDataVolume();
         ActivityJob<OnboardDataModelStates> binInitJob = new ActivityJob<>(binInitActivity, simStart);
