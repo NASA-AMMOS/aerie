@@ -30,6 +30,6 @@ public class GNCStates implements StateContainer {
 
     @Override
     public List<State<?>> getStateList() {
-        return List.of(this.stateList);
+        return List.of(this.scanAxis);
     }
 }

@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * inspired by SetScanAxisActivity originally developed by Zachary McLaughlin and Christopher Lawler
- * found at https://github.jpl.nasa.gov/Blackbird/MultiMissionModels/blob/master/blackbird-gncmodel/src/main/java/gov/nasa/jpl/gncmodel/activities/SetScanAxisActivity.java "
+ * inspired by SetScanAxisActivity originally developed by Zachary McLaughlin and Christopher Lawler found at:
+ * https://github.jpl.nasa.gov/Blackbird/MultiMissionModels/blob/master/blackbird-gncmodel/src/main/java/gov/nasa/jpl/gncmodel/activities/SetScanAxisActivity.java "
  */
 
 
