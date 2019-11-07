@@ -13,9 +13,6 @@ import java.util.List;
 import java.util.Map;
 
 
-
-
-//an axis on which you scan
 public class SetScanAxisTest {
 
     @Test
