@@ -67,10 +67,6 @@ export class AdaptationsComponent implements OnDestroy {
     this.subs.unsubscribe();
   }
 
-  onAbout() {
-    this.store.dispatch(MerlinActions.openAboutDialog());
-  }
-
   onDeleteAdaptation(id: string) {
     this.store.dispatch(MerlinActions.deleteAdaptation({ id }));
   }

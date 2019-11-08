@@ -29,7 +29,7 @@ export class MerlinEffects {
                 return [
                   ToastActions.showToast({
                     toastType: 'success',
-                    message: 'Activity instance created successfully',
+                    message: 'Activity instance created',
                   }),
                   MerlinActions.createActivityInstanceSuccess({
                     planId,
@@ -65,7 +65,7 @@ export class MerlinEffects {
               return [
                 ToastActions.showToast({
                   toastType: 'success',
-                  message: 'Adaptation created successfully',
+                  message: 'Adaptation created',
                 }),
                 MerlinActions.createAdaptationSuccess({ id, adaptation }),
               ];
@@ -97,7 +97,7 @@ export class MerlinEffects {
               return [
                 ToastActions.showToast({
                   toastType: 'success',
-                  message: 'Plan created successfully',
+                  message: 'Plan created',
                 }),
                 MerlinActions.createPlanSuccess({ id, plan }),
               ];
@@ -155,7 +155,7 @@ export class MerlinEffects {
                   return [
                     ToastActions.showToast({
                       toastType: 'success',
-                      message: 'Activity instance deleted successfully',
+                      message: 'Activity instance deleted',
                     }),
                     MerlinActions.deleteActivityInstanceSuccess({
                       activityInstanceId,
@@ -210,7 +210,7 @@ export class MerlinEffects {
                 return [
                   ToastActions.showToast({
                     toastType: 'success',
-                    message: 'Adaptation deleted successfully',
+                    message: 'Adaptation deleted',
                   }),
                   MerlinActions.deleteAdaptationSuccess({ id }),
                 ];
@@ -257,7 +257,7 @@ export class MerlinEffects {
                 return [
                   ToastActions.showToast({
                     toastType: 'success',
-                    message: 'Plan deleted successfully',
+                    message: 'Plan deleted',
                   }),
                   MerlinActions.deletePlanSuccess({ id }),
                 ];

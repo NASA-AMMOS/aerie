@@ -72,10 +72,6 @@ export class PlansComponent implements OnDestroy {
     this.subs.unsubscribe();
   }
 
-  onAbout() {
-    this.store.dispatch(MerlinActions.openAboutDialog());
-  }
-
   onDeletePlan(id: string) {
     this.store.dispatch(MerlinActions.deletePlan({ id }));
   }

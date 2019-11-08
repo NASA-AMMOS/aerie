@@ -13,6 +13,7 @@ import { metaReducers, ROOT_REDUCERS } from './app-store';
 import { AppComponent } from './app.component';
 import { ContainersModule } from './containers';
 import { MerlinEffects, NavEffects, ToastEffects } from './effects';
+import { MaterialModule } from './material';
 
 @NgModule({
   declarations: [AppComponent],
@@ -45,6 +46,7 @@ import { MerlinEffects, NavEffects, ToastEffects } from './effects';
       name: 'merlin-ui',
     }),
     EffectsModule.forRoot([MerlinEffects, NavEffects, ToastEffects]),
+    MaterialModule,
     ContainersModule,
   ],
   bootstrap: [AppComponent],
