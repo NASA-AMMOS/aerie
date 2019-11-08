@@ -14,7 +14,7 @@ import { select, Store } from '@ngrx/store';
 import { SubSink } from 'subsink';
 import { MerlinActions } from '../../actions';
 import { AppState } from '../../app-store';
-import { getAdaptations, getLoading } from '../../selectors';
+import { getAdaptations } from '../../selectors';
 import { CAdaptation, SCreateAdaption } from '../../types';
 
 @Component({
@@ -34,7 +34,6 @@ export class AdaptationsComponent implements OnDestroy {
     'mission',
     'owner',
   ];
-  loading = false;
 
   private subs = new SubSink();
 
@@ -54,10 +53,6 @@ export class AdaptationsComponent implements OnDestroy {
     this.subs.add(
       this.store.pipe(select(getAdaptations)).subscribe(adaptations => {
         this.adaptations = adaptations;
-        this.ref.markForCheck();
-      }),
-      this.store.pipe(select(getLoading)).subscribe(loading => {
-        this.loading = loading;
         this.ref.markForCheck();
       }),
     );

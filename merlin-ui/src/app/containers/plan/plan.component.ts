@@ -14,7 +14,6 @@ import { compare } from '../../functions';
 import {
   getActivityInstancesForSelectedPlan,
   getActivityTypes,
-  getLoading,
   getSelectedPlan,
 } from '../../selectors';
 import { CActivityInstance, CActivityType, CPlan } from '../../types';
@@ -29,7 +28,6 @@ export class PlanComponent implements OnDestroy {
   activityInstances: CActivityInstance[] = [];
   activityTypes: CActivityType[] = [];
   displayedColumns: string[] = ['menu', 'type', 'startTimestamp'];
-  loading = false;
   panels = {
     activityTypes: {
       order: 0,
@@ -67,10 +65,6 @@ export class PlanComponent implements OnDestroy {
         }),
       this.store.pipe(select(getActivityTypes)).subscribe(activityTypes => {
         this.activityTypes = activityTypes;
-        this.ref.markForCheck();
-      }),
-      this.store.pipe(select(getLoading)).subscribe(loading => {
-        this.loading = loading;
         this.ref.markForCheck();
       }),
       this.store.pipe(select(getSelectedPlan)).subscribe(plan => {
