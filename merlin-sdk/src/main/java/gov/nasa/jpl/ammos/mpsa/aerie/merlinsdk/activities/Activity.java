@@ -4,6 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityTy
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.List;
 
 /**
@@ -15,13 +16,13 @@ import java.util.List;
  * 
  * @param <T> the type of the adapter-provided state index structure
  */
-public interface Activity<T extends StateContainer> {
+public class Activity<T extends StateContainer> {
   /**
    * Checks if this activity instance is valid according to mission-specific criteria.
    *
    * @return A list of validation failures, or an empty list if no failures occurred.
    */
-  default List<String> validateParameters() { return List.of(); }
+  public List<String> validateParameters() { return List.of(); }
 
   /**
    * Performs the effects of simulating this activity.
@@ -29,6 +30,10 @@ public interface Activity<T extends StateContainer> {
    * It is expected that effects are effected upon state acquired from a State Controller,
    * injected into the activity by the Merlin Framework.
    */
-  default void modelEffects(SimulationContext<T> ctx, T states) { }
+  public void modelEffects(SimulationContext ctx, T states) { }
+  
 
+  public Class<?> getStateContainerType() {
+    return (Class<?>) ((ParameterizedType) this.getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+  }
 }
