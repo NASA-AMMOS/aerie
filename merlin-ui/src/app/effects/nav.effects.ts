@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { Actions, createEffect } from '@ngrx/effects';
 import { concat, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
-import { mapToParam, ofRoute } from '../../../libs/ngrx-router';
 import { MerlinActions, ToastActions } from '../actions';
+import { mapToParam, ofRoute } from '../functions';
 import { ApiService } from '../services';
 
 @Injectable()
@@ -12,7 +12,7 @@ export class NavEffects {
 
   navAdaptations = createEffect(() =>
     this.actions.pipe(
-      ofRoute('adaptations'),
+      ofRoute('/adaptations'),
       switchMap(_ =>
         concat(
           of(MerlinActions.setLoading({ loading: true })),
@@ -36,7 +36,7 @@ export class NavEffects {
 
   navPlans = createEffect(() =>
     this.actions.pipe(
-      ofRoute('plans'),
+      ofRoute('/plans'),
       switchMap(_ =>
         concat(
           of(MerlinActions.setLoading({ loading: true })),
@@ -72,7 +72,7 @@ export class NavEffects {
 
   navPlansWithId = createEffect(() =>
     this.actions.pipe(
-      ofRoute('plans/:id'),
+      ofRoute('/plans/:id'),
       mapToParam<string>('id'),
       switchMap(planId =>
         concat(

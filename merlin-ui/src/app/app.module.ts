@@ -3,18 +3,16 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { EffectsModule } from '@ngrx/effects';
-import { RouterState, StoreRouterConnectingModule } from '@ngrx/router-store';
+import { StoreRouterConnectingModule } from '@ngrx/router-store';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { AngularSplitModule } from 'angular-split';
 import { ToastrModule } from 'ngx-toastr';
-import { RouterEffects } from '../../libs/ngrx-router';
-import { AppRoutingModule } from './app-routing.module';
+import { AppRoutingModule, RouterSerializer } from './app-routing.module';
 import { metaReducers, ROOT_REDUCERS } from './app-store';
 import { AppComponent } from './app.component';
 import { ContainersModule } from './containers';
 import { MerlinEffects, NavEffects, ToastEffects } from './effects';
-import { MaterialModule } from './material';
 
 @NgModule({
   declarations: [AppComponent],
@@ -41,19 +39,13 @@ import { MaterialModule } from './material';
       },
     }),
     StoreRouterConnectingModule.forRoot({
-      routerState: RouterState.Minimal,
+      serializer: RouterSerializer,
     }),
     StoreDevtoolsModule.instrument({
       name: 'merlin-ui',
     }),
-    EffectsModule.forRoot([
-      RouterEffects,
-      MerlinEffects,
-      NavEffects,
-      ToastEffects,
-    ]),
+    EffectsModule.forRoot([MerlinEffects, NavEffects, ToastEffects]),
     ContainersModule,
-    MaterialModule,
   ],
   bootstrap: [AppComponent],
 })
