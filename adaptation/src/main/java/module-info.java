@@ -8,7 +8,7 @@ module gov.nasa.jpl.ammos.mpsa.aerie.adaptation {
     requires org.mongodb.driver.sync.client;
     requires slf4j.api;
     requires gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
-    requires aerie.sdk;
+    requires gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk;
 
     exports gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
 }
