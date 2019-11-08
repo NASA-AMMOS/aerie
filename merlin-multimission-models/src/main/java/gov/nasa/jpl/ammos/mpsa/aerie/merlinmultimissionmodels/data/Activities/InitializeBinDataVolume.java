@@ -14,10 +14,10 @@ import java.util.List;
 //so then you won't start recording until that point in time.  You won't get the (0,0) value.
 
 @ActivityType("InitializeBinDataVolume")
-public class InitializeBinDataVolume implements Activity<OnboardDataModelStates> {
+public class InitializeBinDataVolume extends Activity<OnboardDataModelStates> {
     //this activitiy initializes the state history of each bin with the current sim time and total data rate
     @Override
-    public void modelEffects(SimulationContext<OnboardDataModelStates> ctx, OnboardDataModelStates states){
+    public void modelEffects(SimulationContext ctx, OnboardDataModelStates states){
 
         List<BinModel> bins = states.getBinModelList();
         for (BinModel x : bins){

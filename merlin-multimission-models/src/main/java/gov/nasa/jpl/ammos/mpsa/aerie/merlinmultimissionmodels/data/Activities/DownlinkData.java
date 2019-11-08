@@ -18,7 +18,7 @@ import java.util.List;
  */
 
 @ActivityType("DownlinkData")
-public class DownlinkData implements Activity<OnboardDataModelStates> {
+public class DownlinkData extends Activity<OnboardDataModelStates> {
 
     @Parameter
     public String binID = "";
@@ -42,7 +42,7 @@ public class DownlinkData implements Activity<OnboardDataModelStates> {
     }
 
     @Override
-    public void modelEffects(SimulationContext<OnboardDataModelStates> ctx, OnboardDataModelStates states){
+    public void modelEffects(SimulationContext ctx, OnboardDataModelStates states){
         if (downlinkAll){
             states.getBinByName(binID).downlink();
         }

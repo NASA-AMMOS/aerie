@@ -20,7 +20,7 @@ import java.util.List;
  * @contact Jane Doe
  */
 @ActivityType("PeelBanana")
-public final class PeelBananaActivity implements Activity<BananaStates> {
+public final class PeelBananaActivity extends Activity<BananaStates> {
   private static final double MASHED_BANANA_AMOUNT = 1.0;
 
   @Parameter
@@ -38,7 +38,7 @@ public final class PeelBananaActivity implements Activity<BananaStates> {
   }
 
   @Override
-  public void modelEffects(SimulationContext<BananaStates> ctx, BananaStates states) {
+  public void modelEffects(SimulationContext ctx, BananaStates states) {
     if (peelDirection.equals("fromStem")) {
       states.fruitState.set(states.fruitState.get() - MASHED_BANANA_AMOUNT);
     }

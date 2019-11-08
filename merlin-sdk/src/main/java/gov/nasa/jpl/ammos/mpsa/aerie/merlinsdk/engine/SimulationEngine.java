@@ -76,6 +76,10 @@ public class SimulationEngine {
      */
     private Map<Activity<?>, Set<Activity<?>>> activityListenerMap = new HashMap<>();
 
+    /**
+     * A map of state container class types to their instantiated containers; Used with
+     * reflection to give the correct state container to each activity
+     */
     private ContainerMap containerMap = new ContainerMap();
 
     /**
@@ -108,6 +112,11 @@ public class SimulationEngine {
             this.pendingEventQueue.add(job);
             this.activityToJobMap.put(job.getActivity(), job);
         }
+    }
+
+    public SimulationEngine(Time simulationStartTime, List<ActivityJob<?>> activityJobs,
+            StateContainer stateContainer) {
+        this(simulationStartTime, activityJobs, List.of(stateContainer));
     }
 
     // TODO: REMOVE. ADDED FOR TESTING PURPOSES (see LazyEvaluationTest)

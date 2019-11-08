@@ -6,7 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityTy
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 
 @ActivityType("ParameterTest")
-public class ParameterTestActivity implements Activity<BananaStates> {
+public class ParameterTestActivity extends Activity<BananaStates> {
   @Parameter public double a = 3.141;
   @Parameter public float b = 1.618f;
   @Parameter public byte c = 16;

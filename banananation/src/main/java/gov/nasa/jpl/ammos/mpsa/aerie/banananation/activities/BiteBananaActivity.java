@@ -20,7 +20,7 @@ import java.util.List;
  * @contact John Doe
  */
 @ActivityType("BiteBanana")
-public final class BiteBananaActivity implements Activity<BananaStates> {
+public final class BiteBananaActivity extends Activity<BananaStates> {
   @Parameter
   public double biteSize = 1.0;
 
@@ -36,7 +36,7 @@ public final class BiteBananaActivity implements Activity<BananaStates> {
   }
 
   @Override
-  public void modelEffects(SimulationContext<BananaStates> ctx, BananaStates states) {
+  public void modelEffects(SimulationContext ctx, BananaStates states) {
     SettableState<Double> fruitState = states.fruitState;
     fruitState.set(fruitState.get() - biteSize);
   }

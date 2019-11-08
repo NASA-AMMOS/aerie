@@ -22,7 +22,7 @@ public class InstrumentModel implements SettableState<Double> {
     // child and parent class that might not always be what the adapter wants.
     private BinModel bin;
 
-    private SimulationEngine<?> engine;
+    private SimulationEngine engine;
 
     private Map<Time, Double> stateHistory = new LinkedHashMap<>();
 
@@ -117,7 +117,7 @@ public class InstrumentModel implements SettableState<Double> {
     }
 
     @Override
-    public void setEngine(SimulationEngine<?> engine) {
+    public void setEngine(SimulationEngine engine) {
         this.engine = engine;
     }
 

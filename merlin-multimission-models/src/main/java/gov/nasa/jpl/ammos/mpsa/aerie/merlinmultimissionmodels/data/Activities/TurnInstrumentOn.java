@@ -12,7 +12,7 @@ import java.util.List;
 
 
 @ActivityType("TurnInstrumentOn")
-public class TurnInstrumentOn implements Activity<OnboardDataModelStates> {
+public class TurnInstrumentOn extends Activity<OnboardDataModelStates> {
 
     @Parameter
     public String instrumentName = "";
@@ -32,7 +32,7 @@ public class TurnInstrumentOn implements Activity<OnboardDataModelStates> {
     }
 
     @Override
-    public void modelEffects(SimulationContext<OnboardDataModelStates> ctx, OnboardDataModelStates states){
+    public void modelEffects(SimulationContext ctx, OnboardDataModelStates states){
         InstrumentModel instrument = states.getInstrumentByName(instrumentName);
         instrument.turnOn(instrumentRate);
     }
