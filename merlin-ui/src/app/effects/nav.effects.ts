@@ -12,7 +12,7 @@ export class NavEffects {
 
   navAdaptations = createEffect(() =>
     this.actions.pipe(
-      ofRoute('/adaptations'),
+      ofRoute('adaptations'),
       switchMap(_ =>
         concat(
           of(MerlinActions.setLoading({ loading: true })),
@@ -23,7 +23,7 @@ export class NavEffects {
               return [
                 ToastActions.showToast({
                   toastType: 'error',
-                  message: 'Fetch adaptations failed. Error logged in console.',
+                  message: 'Fetch adaptations failed',
                 }),
               ];
             }),
@@ -36,7 +36,7 @@ export class NavEffects {
 
   navPlans = createEffect(() =>
     this.actions.pipe(
-      ofRoute('/plans'),
+      ofRoute('plans'),
       switchMap(_ =>
         concat(
           of(MerlinActions.setLoading({ loading: true })),
@@ -47,7 +47,7 @@ export class NavEffects {
               return [
                 ToastActions.showToast({
                   toastType: 'error',
-                  message: 'Fetch adaptations failed. Error logged in console.',
+                  message: 'Fetch adaptations failed',
                 }),
               ];
             }),
@@ -59,7 +59,7 @@ export class NavEffects {
               return [
                 ToastActions.showToast({
                   toastType: 'error',
-                  message: 'Fetch plans failed. Error logged in console.',
+                  message: 'Fetch plans failed',
                 }),
               ];
             }),
@@ -72,7 +72,7 @@ export class NavEffects {
 
   navPlansWithId = createEffect(() =>
     this.actions.pipe(
-      ofRoute('/plans/:id'),
+      ofRoute('plans/:id'),
       mapToParam<string>('id'),
       switchMap(planId =>
         concat(
@@ -89,8 +89,7 @@ export class NavEffects {
               return [
                 ToastActions.showToast({
                   toastType: 'error',
-                  message:
-                    'Fetch plan and activity types failed. Error logged in console.',
+                  message: 'Fetch plan and activity types failed',
                 }),
               ];
             }),
@@ -104,8 +103,7 @@ export class NavEffects {
               return [
                 ToastActions.showToast({
                   toastType: 'error',
-                  message:
-                    'Fetch activity instances failed. Error logged in console.',
+                  message: 'Fetch activity instances failed',
                 }),
               ];
             }),

@@ -41,7 +41,7 @@
           id="no-adaptations-message"
         >
           <mat-card>
-            There are no adaptations in the database.<br />
+            No adaptations found.<br />
             You need an adaptation in order to make a plan.<br />
             Try adding an adaptation
             <a [routerLink]="['/adaptations']">here</a>.
@@ -115,7 +115,7 @@
     </app-panel-header>
     <div class="p-1">
       <mat-card *ngIf="!plans.length" id="no-plans-message">
-        There are no plans in the database.
+        No plans found.
       </mat-card>
 
       <table

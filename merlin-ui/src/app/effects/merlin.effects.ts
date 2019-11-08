@@ -43,8 +43,7 @@ export class MerlinEffects {
                 return [
                   ToastActions.showToast({
                     toastType: 'error',
-                    message:
-                      'Create activity instance failed. Error logged in console.',
+                    message: 'Create activity instance failed',
                   }),
                 ];
               }),
@@ -76,7 +75,7 @@ export class MerlinEffects {
               return [
                 ToastActions.showToast({
                   toastType: 'error',
-                  message: 'Create adaptation failed. Error logged in console.',
+                  message: 'Create adaptation failed',
                 }),
               ];
             }),
@@ -108,7 +107,7 @@ export class MerlinEffects {
               return [
                 ToastActions.showToast({
                   toastType: 'error',
-                  message: 'Create plan failed. Error logged in console.',
+                  message: 'Create plan failed',
                 }),
               ];
             }),
@@ -168,8 +167,7 @@ export class MerlinEffects {
                   return [
                     ToastActions.showToast({
                       toastType: 'error',
-                      message:
-                        'Delete activity instance failed. Error logged in console.',
+                      message: 'Delete activity instance failed',
                     }),
                   ];
                 }),
@@ -222,8 +220,7 @@ export class MerlinEffects {
                 return [
                   ToastActions.showToast({
                     toastType: 'error',
-                    message:
-                      'Delete adaptation failed. Error logged in console.',
+                    message: 'Delete adaptation failed',
                   }),
                 ];
               }),
@@ -270,7 +267,7 @@ export class MerlinEffects {
                 return [
                   ToastActions.showToast({
                     toastType: 'error',
-                    message: 'Delete plan failed. Error logged in console.',
+                    message: 'Delete plan failed',
                   }),
                 ];
               }),
