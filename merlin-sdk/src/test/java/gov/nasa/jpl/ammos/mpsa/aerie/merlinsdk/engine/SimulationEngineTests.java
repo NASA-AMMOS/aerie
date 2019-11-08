@@ -13,6 +13,7 @@ import org.junit.Test;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityJob;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.BasicState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
@@ -35,8 +36,8 @@ public class SimulationEngineTests {
     }
 
     /* ------------------------ SIMULATION BASELINE TEST ------------------------ */
-
-    public class ParentActivity extends Activity<DiverseStates> {
+    @ActivityType(name="ParentActivity", states=DiverseStates.class)
+    public class ParentActivity implements Activity<DiverseStates> {
 
         @Parameter
         public Double floatValue = 0.0;
@@ -71,8 +72,9 @@ public class SimulationEngineTests {
 
         }
     }
-
-    public class ChildActivity extends Activity<DiverseStates> {
+    
+    @ActivityType(name="ChildActivity", states=DiverseStates.class)
+    public class ChildActivity implements Activity<DiverseStates> {
 
         @Parameter
         public Boolean booleanValue = true;
@@ -117,8 +119,8 @@ public class SimulationEngineTests {
     }
 
     /* --------------------------- TIME-ORDERING TEST --------------------------- */
-
-    public class TimeOrderingTestActivity extends Activity<DiverseStates> {
+    @ActivityType(name="TimeOrderingTestActivity", states=DiverseStates.class)
+    public class TimeOrderingTestActivity implements Activity<DiverseStates> {
 
         @Parameter
         Double floatValue = 0.0;
@@ -163,7 +165,8 @@ public class SimulationEngineTests {
 
     /* ------------------------------- DELAY TEST ------------------------------- */
 
-    public class DelayTestActivity extends Activity<DiverseStates> {
+    @ActivityType(name="DelayTestActivity", states=DiverseStates.class)
+    public class DelayTestActivity implements Activity<DiverseStates> {
 
         @Override
         public void modelEffects(SimulationContext ctx, DiverseStates states) {
@@ -201,7 +204,8 @@ public class SimulationEngineTests {
 
     /* --------------------------- SPAWN ACTIVITY TEST -------------------------- */
 
-    public class SpawnTestParentActivity extends Activity<DiverseStates> {
+    @ActivityType(name="SpawnTestParentActivity", states=DiverseStates.class)
+    public class SpawnTestParentActivity implements Activity<DiverseStates> {
 
         @Override
         public void modelEffects(SimulationContext ctx, DiverseStates states) {
@@ -210,7 +214,8 @@ public class SimulationEngineTests {
         }
     }
 
-    public class SpawnTestChildActivity extends Activity<DiverseStates> {
+    @ActivityType(name="SpawnTestChildActivity", states=DiverseStates.class)
+    public class SpawnTestChildActivity implements Activity<DiverseStates> {
         @Override
         public void modelEffects(SimulationContext ctx, DiverseStates states) {
             states.floatState.set(5.0);
@@ -245,7 +250,8 @@ public class SimulationEngineTests {
 
     /* --------------------------- CALL ACTIVITY TEST --------------------------- */
 
-    public class CallTestParentActivity extends Activity<DiverseStates> {
+    @ActivityType(name="CallTestParentActivity", states=DiverseStates.class)
+    public class CallTestParentActivity implements Activity<DiverseStates> {
 
         @Override
         public void modelEffects(SimulationContext ctx, DiverseStates states) {
@@ -255,7 +261,8 @@ public class SimulationEngineTests {
         }
     }
 
-    public class CallTestChildActivity extends Activity<DiverseStates> {
+    @ActivityType(name="CallTestChildActivity", states=DiverseStates.class)
+    public class CallTestChildActivity implements Activity<DiverseStates> {
         @Override
         public void modelEffects(SimulationContext ctx, DiverseStates states) {
             ctx.delay(Duration.fromHours(2));
@@ -290,7 +297,8 @@ public class SimulationEngineTests {
 
     /* -------------------------- SIMPLE DURATION TEST -------------------------- */
 
-    public class SimpleDurationTestActivity extends Activity<DiverseStates> {
+    @ActivityType(name="SimpleDurationTestActivity", states=DiverseStates.class)
+    public class SimpleDurationTestActivity implements Activity<DiverseStates> {
 
         @Override
         public void modelEffects(SimulationContext ctx, DiverseStates states) {
@@ -324,7 +332,8 @@ public class SimulationEngineTests {
 
     /* ----------------------- PARENT-CHILD DURATION TEST ----------------------- */
 
-    public class DurationTestParentActivity extends Activity<DiverseStates> {
+    @ActivityType(name="DurationTestParentActivity", states=DiverseStates.class)
+    public class DurationTestParentActivity implements Activity<DiverseStates> {
 
         @Override
         public void modelEffects(SimulationContext ctx, DiverseStates states) {
@@ -335,14 +344,16 @@ public class SimulationEngineTests {
         }
     }
 
-    public class DurationTestChildActivity1 extends Activity<DiverseStates> {
+    @ActivityType(name="DurationTestChildActivity1", states=DiverseStates.class)
+    public class DurationTestChildActivity1 implements Activity<DiverseStates> {
         @Override
         public void modelEffects(SimulationContext ctx, DiverseStates states) {
             ctx.delay(Duration.fromSeconds(10));
         }
     }
 
-    public class DurationTestChildActivity2 extends Activity<DiverseStates> {
+    @ActivityType(name="DurationTestChildActivity2", states=DiverseStates.class)
+    public class DurationTestChildActivity2 implements Activity<DiverseStates> {
         @Override
         public void modelEffects(SimulationContext ctx, DiverseStates states) {
             ctx.delay(Duration.fromSeconds(5));
@@ -372,7 +383,7 @@ public class SimulationEngineTests {
     }
 
     /* ----------------------- MULTI-STATE-CONTAINER TEST ----------------------- */
-
+    
     public class SimpleStates implements StateContainer {
         public final SettableState<Integer> intState = new BasicState<>("INT_STATE", 0);
 
@@ -381,14 +392,16 @@ public class SimulationEngineTests {
         }
     }
 
-    public class MultiTestActivity1 extends Activity<DiverseStates> {
+    @ActivityType(name="MultiTestActivity1", states=DiverseStates.class)
+    public class MultiTestActivity1 implements Activity<DiverseStates> {
         @Override
         public void modelEffects(SimulationContext ctx, DiverseStates states) {
             states.floatState.set(5.0);
         }
     }
 
-    public class MultiTestActivity2 extends Activity<SimpleStates> {
+    @ActivityType(name="MultiTestActivity2", states=SimpleStates.class)
+    public class MultiTestActivity2 implements Activity<SimpleStates> {
         @Override
         public void modelEffects(SimulationContext ctx, SimpleStates states) {
             states.intState.set(2);

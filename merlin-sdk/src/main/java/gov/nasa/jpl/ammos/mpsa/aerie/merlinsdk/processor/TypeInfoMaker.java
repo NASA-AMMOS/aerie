@@ -131,7 +131,7 @@ class TypeInfoMaker {
 
     // Gather information from the @ActivityType annotation on this type.
     final ActivityType annotation = typeElement.getAnnotation(ActivityType.class);
-    info.name = annotation.value();
+    info.name = annotation.name();
 
     // Gather information from the Javadoc for this type.
     final DocCommentTree docTree = this.docTrees.getDocCommentTree(typeElement);

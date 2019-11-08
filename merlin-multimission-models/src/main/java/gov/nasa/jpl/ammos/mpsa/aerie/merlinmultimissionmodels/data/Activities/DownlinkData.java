@@ -17,8 +17,8 @@ import java.util.List;
  * @contact mkumar
  */
 
-@ActivityType("DownlinkData")
-public class DownlinkData extends Activity<OnboardDataModelStates> {
+@ActivityType(name="DownlinkData", states=OnboardDataModelStates.class)
+public class DownlinkData implements Activity<OnboardDataModelStates> {
 
     @Parameter
     public String binID = "";

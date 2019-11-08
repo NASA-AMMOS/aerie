@@ -13,8 +13,8 @@ import java.util.List;
 //but this would only occur when the first instrument is turned on or another action which triggers the integratoin
 //so then you won't start recording until that point in time.  You won't get the (0,0) value.
 
-@ActivityType("InitializeBinDataVolume")
-public class InitializeBinDataVolume extends Activity<OnboardDataModelStates> {
+@ActivityType(name="InitializeBinDataVolume", states=OnboardDataModelStates.class)
+public class InitializeBinDataVolume implements Activity<OnboardDataModelStates> {
     //this activitiy initializes the state history of each bin with the current sim time and total data rate
     @Override
     public void modelEffects(SimulationContext ctx, OnboardDataModelStates states){

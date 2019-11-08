@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-@ActivityType("TurnInstrumentOn")
-public class TurnInstrumentOn extends Activity<OnboardDataModelStates> {
+@ActivityType(name="TurnInstrumentOn", states=OnboardDataModelStates.class)
+public class TurnInstrumentOn implements Activity<OnboardDataModelStates> {
 
     @Parameter
     public String instrumentName = "";

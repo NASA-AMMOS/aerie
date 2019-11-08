@@ -7,8 +7,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityTy
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
 
-@ActivityType("TurnInstrumentOff")
-public class TurnInstrumentOff extends Activity<OnboardDataModelStates> {
+@ActivityType(name="TurnInstrumentOff", states=OnboardDataModelStates.class)
+public class TurnInstrumentOff implements Activity<OnboardDataModelStates> {
 
     @Parameter
     public String instrumentName = "";

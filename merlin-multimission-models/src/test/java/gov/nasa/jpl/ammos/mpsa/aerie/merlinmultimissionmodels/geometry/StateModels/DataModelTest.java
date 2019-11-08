@@ -4,6 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.B
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.InstrumentModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityJob;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
@@ -37,8 +38,8 @@ public class DataModelTest {
 
 
     /* --------------------------------- DATA MODEL SAMPLE ACTIVITIES ------------------------------------*/
-
-    public class InitBinDataVolumes extends Activity<DataModelStates>{
+    @ActivityType(name="InitBinDataVolumes", states=DataModelStates.class)
+    public class InitBinDataVolumes implements Activity<DataModelStates>{
 
 
         @Override
@@ -50,8 +51,8 @@ public class DataModelTest {
         }
     }
 
-
-    public class TurnInstrumentAOn extends Activity<DataModelStates> {
+    @ActivityType(name="TurnInstrumentAOn", states=DataModelStates.class)
+    public class TurnInstrumentAOn implements Activity<DataModelStates> {
 
         @Override
         public void modelEffects(SimulationContext ctx, DataModelStates states){
@@ -63,7 +64,8 @@ public class DataModelTest {
         }
     }
 
-    public class DownlinkData extends Activity<DataModelStates>{
+    @ActivityType(name="DownlinkData", states=DataModelStates.class)
+    public class DownlinkData implements Activity<DataModelStates>{
 
         @Override
         public void modelEffects(SimulationContext ctx, DataModelStates states){
