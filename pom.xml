@@ -17,7 +17,6 @@
         <module>merlin-sdk</module>
         <module>plan</module>
         <module>schemas</module>
-        <module>simulation</module>
         <module>merlin-multimission-models</module>
     </modules>
 
