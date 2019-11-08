@@ -4,11 +4,6 @@ import { ToastrService } from 'ngx-toastr';
 import { mergeMap } from 'rxjs/operators';
 import { ToastActions } from '../actions';
 
-const defaultIndividualConfig = {
-  positionClass: 'toast-bottom-center',
-  timeOut: 3500,
-};
-
 @Injectable()
 export class ToastEffects {
   constructor(private actions: Actions, private toastr: ToastrService) {}
@@ -18,9 +13,9 @@ export class ToastEffects {
       this.actions.pipe(
         ofType(ToastActions.showToast),
         mergeMap(action => {
-          this.toastr[action.toastType](action.message, action.title, {
-            ...action.config,
-            ...defaultIndividualConfig,
+          this.toastr[action.toastType](action.message, '', {
+            positionClass: 'toast-bottom-center',
+            timeOut: 3500,
           });
           return [];
         }),

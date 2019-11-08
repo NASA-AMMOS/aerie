@@ -24,7 +24,6 @@ export class NavEffects {
                 ToastActions.showToast({
                   toastType: 'error',
                   message: 'Fetch adaptations failed. Error logged in console.',
-                  title: 'Fetch Adaptations',
                 }),
               ];
             }),
@@ -49,7 +48,6 @@ export class NavEffects {
                 ToastActions.showToast({
                   toastType: 'error',
                   message: 'Fetch adaptations failed. Error logged in console.',
-                  title: 'Fetch Adaptations',
                 }),
               ];
             }),
@@ -62,7 +60,6 @@ export class NavEffects {
                 ToastActions.showToast({
                   toastType: 'error',
                   message: 'Fetch plans failed. Error logged in console.',
-                  title: 'Fetch Plans',
                 }),
               ];
             }),
@@ -92,8 +89,8 @@ export class NavEffects {
               return [
                 ToastActions.showToast({
                   toastType: 'error',
-                  message: 'Fetch plan failed. Error logged in console.',
-                  title: 'Fetch Plan and Activity Types',
+                  message:
+                    'Fetch plan and activity types failed. Error logged in console.',
                 }),
               ];
             }),
@@ -108,8 +105,7 @@ export class NavEffects {
                 ToastActions.showToast({
                   toastType: 'error',
                   message:
-                    'Fetch activity instance failed. Error logged in console.',
-                  title: 'Fetch Activity Instances',
+                    'Fetch activity instances failed. Error logged in console.',
                 }),
               ];
             }),

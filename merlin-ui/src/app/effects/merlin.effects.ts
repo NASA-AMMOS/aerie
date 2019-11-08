@@ -29,8 +29,7 @@ export class MerlinEffects {
                 return [
                   ToastActions.showToast({
                     toastType: 'success',
-                    message: 'Created successfully!',
-                    title: 'Activity Instance',
+                    message: 'Activity instance created successfully',
                   }),
                   MerlinActions.createActivityInstanceSuccess({
                     planId,
@@ -44,8 +43,8 @@ export class MerlinEffects {
                 return [
                   ToastActions.showToast({
                     toastType: 'error',
-                    message: 'Creation failed. Error logged in console.',
-                    title: 'Activity Instance',
+                    message:
+                      'Create activity instance failed. Error logged in console.',
                   }),
                 ];
               }),
@@ -67,8 +66,7 @@ export class MerlinEffects {
               return [
                 ToastActions.showToast({
                   toastType: 'success',
-                  message: 'Created successfully!',
-                  title: 'Adaptation',
+                  message: 'Adaptation created successfully',
                 }),
                 MerlinActions.createAdaptationSuccess({ id, adaptation }),
               ];
@@ -78,8 +76,7 @@ export class MerlinEffects {
               return [
                 ToastActions.showToast({
                   toastType: 'error',
-                  message: 'Creation failed. Error logged in console.',
-                  title: 'Adaptation',
+                  message: 'Create adaptation failed. Error logged in console.',
                 }),
               ];
             }),
@@ -101,8 +98,7 @@ export class MerlinEffects {
               return [
                 ToastActions.showToast({
                   toastType: 'success',
-                  message: 'Created successfully!',
-                  title: 'Plan',
+                  message: 'Plan created successfully',
                 }),
                 MerlinActions.createPlanSuccess({ id, plan }),
               ];
@@ -112,8 +108,7 @@ export class MerlinEffects {
               return [
                 ToastActions.showToast({
                   toastType: 'error',
-                  message: 'Creation failed. Error logged in console.',
-                  title: 'Plan',
+                  message: 'Create plan failed. Error logged in console.',
                 }),
               ];
             }),
@@ -161,8 +156,7 @@ export class MerlinEffects {
                   return [
                     ToastActions.showToast({
                       toastType: 'success',
-                      message: 'Deleted successfully!',
-                      title: 'Activity Instance',
+                      message: 'Activity instance deleted successfully',
                     }),
                     MerlinActions.deleteActivityInstanceSuccess({
                       activityInstanceId,
@@ -174,8 +168,8 @@ export class MerlinEffects {
                   return [
                     ToastActions.showToast({
                       toastType: 'error',
-                      message: 'Deletion failed. Error logged in console.',
-                      title: 'Activity Instance',
+                      message:
+                        'Delete activity instance failed. Error logged in console.',
                     }),
                   ];
                 }),
@@ -218,8 +212,7 @@ export class MerlinEffects {
                 return [
                   ToastActions.showToast({
                     toastType: 'success',
-                    message: 'Deleted successfully!',
-                    title: 'Adaptation',
+                    message: 'Adaptation deleted successfully',
                   }),
                   MerlinActions.deleteAdaptationSuccess({ id }),
                 ];
@@ -229,8 +222,8 @@ export class MerlinEffects {
                 return [
                   ToastActions.showToast({
                     toastType: 'error',
-                    message: 'Deletion failed. Error logged in console.',
-                    title: 'Adaptation',
+                    message:
+                      'Delete adaptation failed. Error logged in console.',
                   }),
                 ];
               }),
@@ -267,8 +260,7 @@ export class MerlinEffects {
                 return [
                   ToastActions.showToast({
                     toastType: 'success',
-                    message: 'Deleted successfully!',
-                    title: 'Plan',
+                    message: 'Plan deleted successfully',
                   }),
                   MerlinActions.deletePlanSuccess({ id }),
                 ];
@@ -278,8 +270,7 @@ export class MerlinEffects {
                 return [
                   ToastActions.showToast({
                     toastType: 'error',
-                    message: 'Deletion failed. Error logged in console.',
-                    title: 'Plan',
+                    message: 'Delete plan failed. Error logged in console.',
                   }),
                 ];
               }),
@@ -297,10 +288,10 @@ export class MerlinEffects {
       return this.actions.pipe(
         ofType(MerlinActions.openAboutDialog),
         switchMap(() => {
-          const { packageJsonName, packageJsonVersion, version: ver } = version;
+          const { packageJsonName, packageJsonVersion, tag } = version;
           this.dialog.open(AboutDialogComponent, {
             data: {
-              version: `${packageJsonName} ${packageJsonVersion} - ${ver}`,
+              version: `${packageJsonName} ${packageJsonVersion} - ${tag}`,
             },
             width: `500px`,
           });
