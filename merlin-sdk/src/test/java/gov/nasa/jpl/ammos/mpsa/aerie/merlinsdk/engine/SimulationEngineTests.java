@@ -114,7 +114,7 @@ public class SimulationEngineTests {
 
         DiverseStates states = new DiverseStates();
 
-        SimulationEngine engine = new SimulationEngine(simStart, actList, List.of(states));
+        SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
     }
 
@@ -153,7 +153,7 @@ public class SimulationEngineTests {
 
         DiverseStates states = new DiverseStates();
 
-        SimulationEngine engine = new SimulationEngine(simStart, actList, List.of(states));
+        SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
 
         Map<Time, Double> floatStateHistory = states.floatState.getHistory();
@@ -193,7 +193,7 @@ public class SimulationEngineTests {
 
         DiverseStates states = new DiverseStates();
 
-        SimulationEngine engine = new SimulationEngine(simStart, actList, List.of(states));
+        SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
 
         Map<Time, Double> floatStateHistory = states.floatState.getHistory();
@@ -240,7 +240,7 @@ public class SimulationEngineTests {
 
         DiverseStates states = new DiverseStates();
 
-        SimulationEngine engine = new SimulationEngine(simStart, actList, List.of(states));
+        SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
 
         Map<Time, Double> floatStateHistory = states.floatState.getHistory();
@@ -286,7 +286,7 @@ public class SimulationEngineTests {
 
         DiverseStates states = new DiverseStates();
 
-        SimulationEngine engine = new SimulationEngine(simStart, actList, List.of(states));
+        SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
 
         Map<Time, Double> floatStateHistory = states.floatState.getHistory();
@@ -324,7 +324,7 @@ public class SimulationEngineTests {
 
         DiverseStates states = new DiverseStates();
 
-        SimulationEngine engine = new SimulationEngine(simStart, actList, List.of(states));
+        SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
 
         assertEquals(Duration.fromSeconds(10), engine.getActivityDuration(act));
@@ -376,69 +376,10 @@ public class SimulationEngineTests {
 
         DiverseStates states = new DiverseStates();
 
-        SimulationEngine engine = new SimulationEngine(simStart, actList, List.of(states));
+        SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
 
         assertEquals(Duration.fromSeconds(10), engine.getActivityDuration(parent));
     }
 
-    /* ----------------------- MULTI-STATE-CONTAINER TEST ----------------------- */
-    
-    public class SimpleStates implements StateContainer {
-        public final SettableState<Integer> intState = new BasicState<>("INT_STATE", 0);
-
-        public List<State<?>> getStateList() {
-            return List.of(intState);
-        }
-    }
-
-    @ActivityType(name="MultiTestActivity1", states=DiverseStates.class)
-    public class MultiTestActivity1 implements Activity<DiverseStates> {
-        @Override
-        public void modelEffects(SimulationContext ctx, DiverseStates states) {
-            states.floatState.set(5.0);
-        }
-    }
-
-    @ActivityType(name="MultiTestActivity2", states=SimpleStates.class)
-    public class MultiTestActivity2 implements Activity<SimpleStates> {
-        @Override
-        public void modelEffects(SimulationContext ctx, SimpleStates states) {
-            states.intState.set(2);
-        }
-    }
-
-    @Test
-    /**
-     * Tests that a simulation will work with activities that use multiple state containers
-     */
-    public void multiStateContainerTest() {
-        Time simStart = new Time();
-
-        List<ActivityJob<?>> actList = new ArrayList<>();
-        MultiTestActivity1 activityOne = new MultiTestActivity1();
-        MultiTestActivity2 activityTwo = new MultiTestActivity2();
-        
-        ActivityJob<DiverseStates> jobOne = new ActivityJob<>(
-            activityOne, simStart.add(Duration.fromHours(1))
-        );
-        actList.add(jobOne);
-
-        ActivityJob<SimpleStates> jobTwo = new ActivityJob<>(
-            activityTwo, simStart.add(Duration.fromHours(2))
-        );
-        actList.add(jobTwo);
-
-        DiverseStates diverseStates = new DiverseStates();
-        SimpleStates simpleStates = new SimpleStates();
-
-        SimulationEngine engine = new SimulationEngine(simStart, actList, List.of(simpleStates, diverseStates));
-        engine.simulate();
-
-        Map<Time, Double> floatStateHistory = diverseStates.floatState.getHistory();
-        Map<Time, Integer> intStateHistory = simpleStates.intState.getHistory();
-
-        assertEquals((Double) 5.0, floatStateHistory.get(simStart.add(Duration.fromHours(1))));
-        assertEquals((Integer) 2, intStateHistory.get(simStart.add(Duration.fromHours(2))));
-    }
 }

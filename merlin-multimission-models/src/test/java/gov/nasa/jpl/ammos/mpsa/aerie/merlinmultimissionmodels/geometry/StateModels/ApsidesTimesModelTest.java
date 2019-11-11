@@ -47,7 +47,7 @@ public class ApsidesTimesModelTest {
         }
     }
     
-    public SimulationEngine mockEngine = new SimulationEngine(new Time(), List.of(),  List.of(new MockStateContainer()));
+    public SimulationEngine mockEngine = new SimulationEngine(new Time(), List.of(),  new MockStateContainer());
 
     @BeforeClass
     public static void loadSpiceAndKernels() {

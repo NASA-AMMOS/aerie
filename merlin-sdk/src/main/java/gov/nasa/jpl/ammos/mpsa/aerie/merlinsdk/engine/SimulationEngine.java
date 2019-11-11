@@ -14,7 +14,6 @@ import java.util.concurrent.Executors;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityJob;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.ContainerMap;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
@@ -76,11 +75,7 @@ public class SimulationEngine {
      */
     private Map<Activity<?>, Set<Activity<?>>> activityListenerMap = new HashMap<>();
 
-    /**
-     * A map of state container class types to their instantiated containers; Used with
-     * reflection to give the correct state container to each activity
-     */
-    private ContainerMap containerMap = new ContainerMap();
+    private StateContainer stateContainer;
 
     /**
      * The thread in which the simulation engine is running
@@ -100,11 +95,10 @@ public class SimulationEngine {
      * @param stateContainers
      */
     public SimulationEngine(Time simulationStartTime, List<ActivityJob<?>> activityJobs,
-            List<StateContainer> stateContainers) {
-        for (StateContainer stateContainer : stateContainers) {
-            containerMap.put(stateContainer.getClass(), stateContainer);
-            registerStates(stateContainer.getStateList());
-        }
+        StateContainer stateContainer) {
+        this.stateContainer = stateContainer;
+        
+        registerStates(stateContainer.getStateList());
 
         this.currentSimulationTime = simulationStartTime;
 
@@ -112,11 +106,6 @@ public class SimulationEngine {
             this.pendingEventQueue.add(job);
             this.activityToJobMap.put(job.getActivity(), job);
         }
-    }
-
-    public SimulationEngine(Time simulationStartTime, List<ActivityJob<?>> activityJobs,
-            StateContainer stateContainer) {
-        this(simulationStartTime, activityJobs, List.of(stateContainer));
     }
 
     // TODO: REMOVE. ADDED FOR TESTING PURPOSES (see LazyEvaluationTest)
@@ -157,8 +146,7 @@ public class SimulationEngine {
      *                    states
      */
     public void dispatchStates(ActivityJob<?> activityJob) {
-        StateContainer stateContainer = getStateContainerForActivity(activityJob.getActivity());
-        activityJob.setStates(stateContainer);
+        activityJob.setStates(this.stateContainer);
     }
 
     /**
@@ -330,10 +318,6 @@ public class SimulationEngine {
      */
     public Duration getActivityDuration(Activity<?> activity) {
         return this.activityDurationMap.get(activity);
-    }
-
-    public StateContainer getStateContainerForActivity(Activity<?> activity) {
-        return containerMap.get(activity.getStateContainerType());
     }
 
 }
