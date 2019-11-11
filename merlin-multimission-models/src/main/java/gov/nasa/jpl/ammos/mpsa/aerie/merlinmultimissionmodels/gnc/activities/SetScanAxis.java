@@ -17,7 +17,7 @@ import java.util.List;
  */
 
 
-@ActivityType("SetScanAxis")
+@ActivityType(name="SetScanAxis", states=GNCStates.class)
 public class SetScanAxis implements Activity<GNCStates> {
 
     //TODO: get annotation processor to accept other objects besides primitives such as Vector3D
@@ -49,7 +49,7 @@ public class SetScanAxis implements Activity<GNCStates> {
     }
 
     @Override
-    public void modelEffects(SimulationContext<GNCStates> ctx, GNCStates states){
+    public void modelEffects(SimulationContext ctx, GNCStates states){
         BasicState<Vector3D> vectorState = states.getVectorState(GNCStates.scanAxisName);
         Vector3D axisVector = new Vector3D(this.x_value, this.y_value, this.z_value);
         axisVector.normalize();

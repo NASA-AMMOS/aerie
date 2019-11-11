@@ -19,8 +19,8 @@ import java.util.List;
  * @subsystem fruit
  * @contact Jane Doe
  */
-@ActivityType("PeelBanana")
-public final class PeelBananaActivity extends Activity<BananaStates> {
+@ActivityType(name="PeelBanana", states=BananaStates.class)
+public final class PeelBananaActivity implements Activity<BananaStates> {
   private static final double MASHED_BANANA_AMOUNT = 1.0;
 
   @Parameter
