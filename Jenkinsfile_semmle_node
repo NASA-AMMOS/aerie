@@ -34,7 +34,7 @@ pipeline {
 						export NODE_PATH="`pwd`/node_modules"
 
 						# setup env for Semmle
-						export SEMMLE_DIR="/home/seqbamboo/semmle/odasa"
+						export SEMMLE_DIR="/home/seqbamboo/semmle/odasa-1.18.0"
 						export SEMMLE_PROJ="aerie_node"
 
 						echo -e "\ncurrent environment variables:\n"
@@ -44,7 +44,6 @@ pipeline {
 						$SEMMLE_DIR/queries/suites/security/run_semmle_javascript.sh "$SEMMLE_PROJ" "`pwd`"
 
 						# copy generated semmle files to current dir
-						cp $SEMMLE_DIR/dashboards/${SEMMLE_PROJ}/deployed/*.war ${SEMMLE_PROJ}-semmle-${SEQBASETAG}.war
 						cp cwe_output/*.csv ${SEMMLE_PROJ}-semmle-cwe_output-${SEQBASETAG}.csv
 						cp JPLTop25_output/*.csv ${SEMMLE_PROJ}-semmle-JPLTop25_output-${SEQBASETAG}.csv
 					'''
@@ -58,7 +57,7 @@ pipeline {
 		stage ('publish') {
 			steps {
 				echo "Archiving artifacts in Jenkins..."
-				archiveArtifacts '*.war,*.csv'
+				archiveArtifacts '*.csv'
 			}
 		}
 
