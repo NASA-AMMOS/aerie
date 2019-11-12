@@ -61,9 +61,9 @@ public final class PlanBindings {
     });
 
     javalin.exception(JsonbException.class, (ex, ctx) -> ctx
-        // TODO: This exception handler captures both request deserialization and response serialization issues.
-        //       This issue should be addressed so that request deserialization errors produce 4xx statuses
-        //       and response serialization errors produce 5xx statuses.
+        // TODO: Use direct JSON-P deserialization instead of inferred JSON-B deserialization.
+        //   This exception covers both JSON syntax errors and object mapping errors.
+        //   This exception should go away in favor of separate exceptions for both types of error.
         .status(400)
         .result(ResponseSerializers.serializeJsonbException(ex).toString())
         .result(ex.getMessage())
@@ -105,8 +105,9 @@ public final class PlanBindings {
         .getPlans()
         .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
 
-    // TODO: Replace JsonbBuilder with our ResponseSerializers
-    ctx.result(JsonbBuilder.create().toJson(plans)).contentType("application/json");
+    ctx
+        .contentType("application/json")
+        .result(ResponseSerializers.serializePlanMap(plans).toString());
   }
 
   private void getPlan(final Context ctx) throws NoSuchPlanException {
@@ -114,8 +115,9 @@ public final class PlanBindings {
 
     final Plan plan = this.appController.getPlanById(planId);
 
-    // TODO: Replace JsonbBuilder with our ResponseSerializers
-    ctx.result(JsonbBuilder.create().toJson(plan)).contentType("application/json");
+    ctx
+        .contentType("application/json")
+        .result(ResponseSerializers.serializePlan(plan).toString());
   }
 
   private void postPlan(final Context ctx) throws ValidationException, InvalidEntityException {
@@ -127,9 +129,8 @@ public final class PlanBindings {
     ctx
         .status(201)
         .header("Location", "/plans/" + planId)
-        // TODO: Replace JsonbBuilder with our ResponseSerializers
-        .result(JsonbBuilder.create().toJson(new CreatedEntity(planId)))
-        .contentType("application/json");
+        .contentType("application/json")
+        .result(ResponseSerializers.serializeCreatedEntity(new CreatedEntity(planId)).toString());
   }
 
   private void putPlan(final Context ctx) throws ValidationException, NoSuchPlanException, InvalidEntityException {
@@ -161,8 +162,9 @@ public final class PlanBindings {
 
     final Plan plan = this.appController.getPlanById(planId);
 
-    // TODO: Replace JsonbBuilder with our ResponseSerializers
-    ctx.result(JsonbBuilder.create().toJson(plan.activityInstances)).contentType("application/json");
+    ctx
+        .contentType("application/json")
+        .result(ResponseSerializers.serializeActivityInstanceMap(plan.activityInstances).toString());
   }
 
   private void postActivityInstances(final Context ctx) throws ValidationException, NoSuchPlanException, InvalidEntityException {
@@ -173,8 +175,9 @@ public final class PlanBindings {
 
     final List<String> activityInstanceIds = this.appController.addActivityInstancesToPlan(planId, activityInstances);
 
-    // TODO: Replace JsonbBuilder with our ResponseSerializers
-    ctx.result(JsonbBuilder.create().toJson(activityInstanceIds)).contentType("application/json");
+    ctx
+        .contentType("application/json")
+        .result(ResponseSerializers.serializeStringList(activityInstanceIds).toString());
   }
 
   private void getActivityInstance(final Context ctx) throws NoSuchPlanException, NoSuchActivityInstanceException {
@@ -183,8 +186,9 @@ public final class PlanBindings {
 
     final ActivityInstance activityInstance = this.appController.getActivityInstanceById(planId, activityInstanceId);
 
-    // TODO: Replace JsonbBuilder with our ResponseSerializers
-    ctx.result(JsonbBuilder.create().toJson(activityInstance)).contentType("application/json");
+    ctx
+        .contentType("application/json")
+        .result(ResponseSerializers.serializeActivityInstance(activityInstance).toString());
   }
 
   private void putActivityInstance(final Context ctx) throws NoSuchPlanException, ValidationException, NoSuchActivityInstanceException {
