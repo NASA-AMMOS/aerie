@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.mocks;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.Breadcrumb;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.IPlanController;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
@@ -38,13 +39,17 @@ public final class StubPlanController implements IPlanController {
   static {
     EXISTENT_ACTIVITY = new ActivityInstance();
     EXISTENT_ACTIVITY.type = "existent activity";
+    EXISTENT_ACTIVITY.startTimestamp = "start timestamp";
+    EXISTENT_ACTIVITY.parameters = Map.of(
+        "abc", SerializedParameter.of("test-param")
+    );
 
     VALID_ACTIVITY = new ActivityInstance();
     VALID_ACTIVITY.type = "valid activity";
     VALID_ACTIVITY.startTimestamp = "start timestamp";
     VALID_ACTIVITY.parameters = Map.of();
 
-    INVALID_ACTIVITY = new ActivityInstance();
+    INVALID_ACTIVITY = new  ActivityInstance();
     INVALID_ACTIVITY.type = "invalid activity";
 
     VALID_NEW_PLAN = new NewPlan();
