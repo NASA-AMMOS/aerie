@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
 import static org.junit.Assert.*;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import org.junit.Test;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityJob;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.BasicState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
@@ -34,7 +36,7 @@ public class SimulationEngineTests {
     }
 
     /* ------------------------ SIMULATION BASELINE TEST ------------------------ */
-
+    @ActivityType(name="ParentActivity", states=DiverseStates.class)
     public class ParentActivity implements Activity<DiverseStates> {
 
         @Parameter
@@ -53,7 +55,7 @@ public class SimulationEngineTests {
         public Duration durationValue = Duration.fromSeconds(10);
 
         @Override
-        public void modelEffects(SimulationContext<DiverseStates> ctx, DiverseStates states) {
+        public void modelEffects(SimulationContext ctx, DiverseStates states) {
             ChildActivity child = new ChildActivity();
             {
                 child.booleanValue = this.booleanValue;
@@ -70,7 +72,8 @@ public class SimulationEngineTests {
 
         }
     }
-
+    
+    @ActivityType(name="ChildActivity", states=DiverseStates.class)
     public class ChildActivity implements Activity<DiverseStates> {
 
         @Parameter
@@ -80,7 +83,7 @@ public class SimulationEngineTests {
         public Duration durationValue = Duration.fromSeconds(10);
 
         @Override
-        public void modelEffects(SimulationContext<DiverseStates> ctx, DiverseStates states) {
+        public void modelEffects(SimulationContext ctx, DiverseStates states) {
             ctx.delay(durationValue);
             states.booleanState.set(booleanValue);
         }
@@ -93,7 +96,7 @@ public class SimulationEngineTests {
     public void sequentialSimulationBaselineTest() {
         Time simStart = new Time();
 
-        List<ActivityJob<DiverseStates>> actList = new ArrayList<>();
+        List<ActivityJob<?>> actList = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
             ParentActivity act = new ParentActivity();
             {
@@ -111,19 +114,19 @@ public class SimulationEngineTests {
 
         DiverseStates states = new DiverseStates();
 
-        SimulationEngine<DiverseStates> engine = new SimulationEngine<>(simStart, actList, states);
+        SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
     }
 
     /* --------------------------- TIME-ORDERING TEST --------------------------- */
-
+    @ActivityType(name="TimeOrderingTestActivity", states=DiverseStates.class)
     public class TimeOrderingTestActivity implements Activity<DiverseStates> {
 
         @Parameter
         Double floatValue = 0.0;
 
         @Override
-        public void modelEffects(SimulationContext<DiverseStates> ctx, DiverseStates states) {
+        public void modelEffects(SimulationContext ctx, DiverseStates states) {
             states.floatState.set(floatValue);
         }
     }
@@ -136,7 +139,7 @@ public class SimulationEngineTests {
     public void timeOrderingTest() {
         Time simStart = new Time();
 
-        List<ActivityJob<DiverseStates>> actList = new ArrayList<>();
+        List<ActivityJob<?>> actList = new ArrayList<>();
         for (int i = 1; i <= 3; i++) {
             TimeOrderingTestActivity act = new TimeOrderingTestActivity();
             {
@@ -150,7 +153,7 @@ public class SimulationEngineTests {
 
         DiverseStates states = new DiverseStates();
 
-        SimulationEngine<DiverseStates> engine = new SimulationEngine<>(simStart, actList, states);
+        SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
 
         Map<Time, Double> floatStateHistory = states.floatState.getHistory();
@@ -162,10 +165,11 @@ public class SimulationEngineTests {
 
     /* ------------------------------- DELAY TEST ------------------------------- */
 
+    @ActivityType(name="DelayTestActivity", states=DiverseStates.class)
     public class DelayTestActivity implements Activity<DiverseStates> {
 
         @Override
-        public void modelEffects(SimulationContext<DiverseStates> ctx, DiverseStates states) {
+        public void modelEffects(SimulationContext ctx, DiverseStates states) {
             states.floatState.set(1.0);
             ctx.delay(Duration.fromHours(1));
             states.floatState.set(2.0);
@@ -179,7 +183,7 @@ public class SimulationEngineTests {
     public void delayTest() {
         Time simStart = new Time();
 
-        List<ActivityJob<DiverseStates>> actList = new ArrayList<>();
+        List<ActivityJob<?>> actList = new ArrayList<>();
         DelayTestActivity act = new DelayTestActivity();
         Time executionTime = simStart.add(Duration.fromHours(1));
         ActivityJob<DiverseStates> actJob = new ActivityJob<>(
@@ -189,7 +193,7 @@ public class SimulationEngineTests {
 
         DiverseStates states = new DiverseStates();
 
-        SimulationEngine<DiverseStates> engine = new SimulationEngine<>(simStart, actList, states);
+        SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
 
         Map<Time, Double> floatStateHistory = states.floatState.getHistory();
@@ -200,18 +204,20 @@ public class SimulationEngineTests {
 
     /* --------------------------- SPAWN ACTIVITY TEST -------------------------- */
 
+    @ActivityType(name="SpawnTestParentActivity", states=DiverseStates.class)
     public class SpawnTestParentActivity implements Activity<DiverseStates> {
 
         @Override
-        public void modelEffects(SimulationContext<DiverseStates> ctx, DiverseStates states) {
+        public void modelEffects(SimulationContext ctx, DiverseStates states) {
             SpawnTestChildActivity child = new SpawnTestChildActivity();
             ctx.spawnActivity(child);
         }
     }
 
+    @ActivityType(name="SpawnTestChildActivity", states=DiverseStates.class)
     public class SpawnTestChildActivity implements Activity<DiverseStates> {
         @Override
-        public void modelEffects(SimulationContext<DiverseStates> ctx, DiverseStates states) {
+        public void modelEffects(SimulationContext ctx, DiverseStates states) {
             states.floatState.set(5.0);
         }
     }
@@ -224,7 +230,7 @@ public class SimulationEngineTests {
     public void spawnActivityTimingTest() {
         Time simStart = new Time();
 
-        List<ActivityJob<DiverseStates>> actList = new ArrayList<>();
+        List<ActivityJob<?>> actList = new ArrayList<>();
         SpawnTestParentActivity parent = new SpawnTestParentActivity();
         Time parentExecutionTime = simStart.add(Duration.fromHours(1));
         ActivityJob<DiverseStates> parentJob = new ActivityJob<>(
@@ -234,7 +240,7 @@ public class SimulationEngineTests {
 
         DiverseStates states = new DiverseStates();
 
-        SimulationEngine<DiverseStates> engine = new SimulationEngine<>(simStart, actList, states);
+        SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
 
         Map<Time, Double> floatStateHistory = states.floatState.getHistory();
@@ -244,19 +250,21 @@ public class SimulationEngineTests {
 
     /* --------------------------- CALL ACTIVITY TEST --------------------------- */
 
+    @ActivityType(name="CallTestParentActivity", states=DiverseStates.class)
     public class CallTestParentActivity implements Activity<DiverseStates> {
 
         @Override
-        public void modelEffects(SimulationContext<DiverseStates> ctx, DiverseStates states) {
+        public void modelEffects(SimulationContext ctx, DiverseStates states) {
             CallTestChildActivity child = new CallTestChildActivity();
             ctx.callActivity(child);
             states.floatState.set(5.0);
         }
     }
 
+    @ActivityType(name="CallTestChildActivity", states=DiverseStates.class)
     public class CallTestChildActivity implements Activity<DiverseStates> {
         @Override
-        public void modelEffects(SimulationContext<DiverseStates> ctx, DiverseStates states) {
+        public void modelEffects(SimulationContext ctx, DiverseStates states) {
             ctx.delay(Duration.fromHours(2));
         }
     }
@@ -268,7 +276,7 @@ public class SimulationEngineTests {
     public void callActivityTimingTest() {
         Time simStart = new Time();
 
-        List<ActivityJob<DiverseStates>> actList = new ArrayList<>();
+        List<ActivityJob<?>> actList = new ArrayList<>();
         CallTestParentActivity parent = new CallTestParentActivity();
         Time parentExecutionTime = simStart.add(Duration.fromHours(1));
         ActivityJob<DiverseStates> parentJob = new ActivityJob<>(
@@ -278,7 +286,7 @@ public class SimulationEngineTests {
 
         DiverseStates states = new DiverseStates();
 
-        SimulationEngine<DiverseStates> engine = new SimulationEngine<>(simStart, actList, states);
+        SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
 
         Map<Time, Double> floatStateHistory = states.floatState.getHistory();
@@ -289,10 +297,11 @@ public class SimulationEngineTests {
 
     /* -------------------------- SIMPLE DURATION TEST -------------------------- */
 
+    @ActivityType(name="SimpleDurationTestActivity", states=DiverseStates.class)
     public class SimpleDurationTestActivity implements Activity<DiverseStates> {
 
         @Override
-        public void modelEffects(SimulationContext<DiverseStates> ctx, DiverseStates states) {
+        public void modelEffects(SimulationContext ctx, DiverseStates states) {
             ctx.delay(Duration.fromSeconds(10));
         }
     }
@@ -305,7 +314,7 @@ public class SimulationEngineTests {
     public void simpleDurationTest() {
         Time simStart = new Time();
 
-        List<ActivityJob<DiverseStates>> actList = new ArrayList<>();
+        List<ActivityJob<?>> actList = new ArrayList<>();
         SimpleDurationTestActivity act = new SimpleDurationTestActivity();
         Time executionTime = simStart.add(Duration.fromHours(1));
         ActivityJob<DiverseStates> actJob = new ActivityJob<>(
@@ -315,7 +324,7 @@ public class SimulationEngineTests {
 
         DiverseStates states = new DiverseStates();
 
-        SimulationEngine<DiverseStates> engine = new SimulationEngine<>(simStart, actList, states);
+        SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
 
         assertEquals(Duration.fromSeconds(10), engine.getActivityDuration(act));
@@ -323,10 +332,11 @@ public class SimulationEngineTests {
 
     /* ----------------------- PARENT-CHILD DURATION TEST ----------------------- */
 
+    @ActivityType(name="DurationTestParentActivity", states=DiverseStates.class)
     public class DurationTestParentActivity implements Activity<DiverseStates> {
 
         @Override
-        public void modelEffects(SimulationContext<DiverseStates> ctx, DiverseStates states) {
+        public void modelEffects(SimulationContext ctx, DiverseStates states) {
             DurationTestChildActivity1 child1 = new DurationTestChildActivity1();
             DurationTestChildActivity2 child2 = new DurationTestChildActivity2();
             ctx.spawnActivity(child1);
@@ -334,16 +344,18 @@ public class SimulationEngineTests {
         }
     }
 
+    @ActivityType(name="DurationTestChildActivity1", states=DiverseStates.class)
     public class DurationTestChildActivity1 implements Activity<DiverseStates> {
         @Override
-        public void modelEffects(SimulationContext<DiverseStates> ctx, DiverseStates states) {
+        public void modelEffects(SimulationContext ctx, DiverseStates states) {
             ctx.delay(Duration.fromSeconds(10));
         }
     }
 
+    @ActivityType(name="DurationTestChildActivity2", states=DiverseStates.class)
     public class DurationTestChildActivity2 implements Activity<DiverseStates> {
         @Override
-        public void modelEffects(SimulationContext<DiverseStates> ctx, DiverseStates states) {
+        public void modelEffects(SimulationContext ctx, DiverseStates states) {
             ctx.delay(Duration.fromSeconds(5));
         }
     }
@@ -355,7 +367,7 @@ public class SimulationEngineTests {
     public void parentChildDurationTest() {
         Time simStart = new Time();
 
-        List<ActivityJob<DiverseStates>> actList = new ArrayList<>();
+        List<ActivityJob<?>> actList = new ArrayList<>();
         DurationTestParentActivity parent = new DurationTestParentActivity();
         ActivityJob<DiverseStates> parentJob = new ActivityJob<>(
                 parent, simStart.add(Duration.fromHours(1))
@@ -364,9 +376,10 @@ public class SimulationEngineTests {
 
         DiverseStates states = new DiverseStates();
 
-        SimulationEngine<DiverseStates> engine = new SimulationEngine<>(simStart, actList, states);
+        SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
 
         assertEquals(Duration.fromSeconds(10), engine.getActivityDuration(parent));
     }
+
 }

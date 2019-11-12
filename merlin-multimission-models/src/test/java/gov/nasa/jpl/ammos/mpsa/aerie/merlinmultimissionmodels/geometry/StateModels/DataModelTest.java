@@ -4,6 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.B
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.InstrumentModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityJob;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
@@ -37,12 +38,12 @@ public class DataModelTest {
 
 
     /* --------------------------------- DATA MODEL SAMPLE ACTIVITIES ------------------------------------*/
-
-    public class InitBinDataVolumes implements Activity<DataModelStates>{
+    @ActivityType(name="InitBinDataVolumes", states=DataModelStates.class)
+    public static class InitBinDataVolumes implements Activity<DataModelStates>{
 
 
         @Override
-        public void modelEffects(SimulationContext<DataModelStates> ctx, DataModelStates states){
+        public void modelEffects(SimulationContext ctx, DataModelStates states){
 
             states.bin_1.initializeBinData();
             states.bin_2.initializeBinData();
@@ -50,11 +51,11 @@ public class DataModelTest {
         }
     }
 
-
-    public class TurnInstrumentAOn implements Activity<DataModelStates> {
+    @ActivityType(name="TurnInstrumentAOn", states=DataModelStates.class)
+    public static class TurnInstrumentAOn implements Activity<DataModelStates> {
 
         @Override
-        public void modelEffects(SimulationContext<DataModelStates> ctx, DataModelStates states){
+        public void modelEffects(SimulationContext ctx, DataModelStates states){
 
             ctx.delay(Duration.fromHours(1));
 
@@ -63,10 +64,11 @@ public class DataModelTest {
         }
     }
 
-    public class DownlinkData implements Activity<DataModelStates>{
+    @ActivityType(name="DownlinkData", states=DataModelStates.class)
+    public static class DownlinkData implements Activity<DataModelStates>{
 
         @Override
-        public void modelEffects(SimulationContext<DataModelStates> ctx, DataModelStates states){
+        public void modelEffects(SimulationContext ctx, DataModelStates states){
 
             ctx.delay(Duration.fromHours(2));
 
@@ -91,14 +93,14 @@ public class DataModelTest {
         ActivityJob<DataModelStates> instrumentOn= new ActivityJob<>(instrumentAOnAct, simStart);
         ActivityJob<DataModelStates> binData = new ActivityJob<>(binDataVolumes, simStart);
 
-        List<ActivityJob<DataModelStates>> activityJobList = new ArrayList<>();
+        List<ActivityJob<?>> activityJobList = new ArrayList<>();
 
         activityJobList.add(instrumentOn);
         activityJobList.add(binData);
 
         DataModelStates states = new DataModelStates();
 
-        SimulationEngine<DataModelStates> engine = new SimulationEngine<>(simStart, activityJobList, states);
+        SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
 
         engine.simulate();
 
@@ -116,13 +118,13 @@ public class DataModelTest {
         InitBinDataVolumes binDataVolumes = new InitBinDataVolumes();
         ActivityJob<DataModelStates> binDataInit = new ActivityJob<>(binDataVolumes, simStart);
 
-        List<ActivityJob<DataModelStates>> activityJobList = new ArrayList<>();
+        List<ActivityJob<?>> activityJobList = new ArrayList<>();
         activityJobList.add(binDataInit);
 
 
         DataModelStates states = new DataModelStates();
 
-        SimulationEngine<DataModelStates> engine = new SimulationEngine<>(simStart, activityJobList, states);
+        SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
         engine.simulate();
 
         states.bin_1.printHistory();
@@ -147,7 +149,7 @@ public class DataModelTest {
         InitBinDataVolumes binDataVolumes = new InitBinDataVolumes();
         ActivityJob<DataModelStates> binDataInit = new ActivityJob<>(binDataVolumes, simStart);
 
-        List<ActivityJob<DataModelStates>> activityJobList = new ArrayList<>();
+        List<ActivityJob<?>> activityJobList = new ArrayList<>();
         activityJobList.add(binDataInit);
 
 
@@ -157,7 +159,7 @@ public class DataModelTest {
         ActivityJob<DataModelStates> instrumentOn= new ActivityJob<>(instrumentAOnAct, simStart);
         activityJobList.add(instrumentOn);
 
-        SimulationEngine<DataModelStates>  engine = new SimulationEngine<>(simStart, activityJobList, states);
+        SimulationEngine  engine = new SimulationEngine(simStart, activityJobList, states);
         engine.simulate();
 
         states.bin_1.printHistory();
@@ -187,14 +189,14 @@ public class DataModelTest {
         ActivityJob<DataModelStates> downlinkAct = new ActivityJob<>(downlinkData, simStart);
 
 
-        List<ActivityJob<DataModelStates>> activityJobList = new ArrayList<>();
+        List<ActivityJob<?>> activityJobList = new ArrayList<>();
         activityJobList.add(binDataInit);
         activityJobList.add(instrumentOn);
         activityJobList.add(downlinkAct);
 
         DataModelStates states = new DataModelStates();
 
-        SimulationEngine<DataModelStates>  engine = new SimulationEngine<>(simStart, activityJobList, states);
+        SimulationEngine  engine = new SimulationEngine(simStart, activityJobList, states);
         engine.simulate();
 
         states.bin_1.printHistory();

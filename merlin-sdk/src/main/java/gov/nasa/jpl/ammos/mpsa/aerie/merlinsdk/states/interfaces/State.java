@@ -87,7 +87,7 @@ public interface State<T> {
      *
      * @param engine the controlling simulation engine
      */
-    public void setEngine(SimulationEngine<?> engine);
+    public void setEngine(SimulationEngine engine);
 
     //TODO: Refactor sim engine to no longer require this at this state level
     /**

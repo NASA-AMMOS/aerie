@@ -19,19 +19,19 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
  * 
  * @param <T> the type of the adapter-provided state index structure
  */
-public class JobContext<T extends StateContainer> implements SimulationContext<T> {
+public class JobContext implements SimulationContext {
     
     /**
      * A reference to the simulation engine that dispatched this context
      */
-    private final SimulationEngine<T> engine;
+    private final SimulationEngine engine;
 
     /**
      * A reference to the activity job to which this context was dispatched
      */
-    private final ActivityJob<T> activityJob;
+    private final ActivityJob<?> activityJob;
 
-    public JobContext(SimulationEngine<T> engine, ActivityJob<T> activityJob) {
+    public JobContext(SimulationEngine engine, ActivityJob<?> activityJob) {
         this.engine = engine;
         this.activityJob = activityJob;
     }
@@ -41,7 +41,7 @@ public class JobContext<T extends StateContainer> implements SimulationContext<T
      * 
      * @return
      */
-    public ActivityJob<T> getActivityJob() {
+    public ActivityJob<?> getActivityJob() {
         return this.activityJob;
     }
 
@@ -91,8 +91,8 @@ public class JobContext<T extends StateContainer> implements SimulationContext<T
      * @param childActivity the child activity that should be spawned in the background at the current simulation time
      * @return the input child activity
      */
-    public Activity<T> spawnActivity(Activity<T> childActivity) {
-        ActivityJob<T> childActivityJob = new ActivityJob<>(childActivity, this.now());
+    public Activity<?> spawnActivity(Activity<?> childActivity) {
+        ActivityJob<?> childActivityJob = new ActivityJob<>(childActivity, this.now());
         this.engine.addParentChildRelationship(this.activityJob.getActivity(), childActivityJob.getActivity());
         this.engine.insertIntoQueue(childActivityJob);
         this.engine.registerActivityAndJob(childActivity, childActivityJob);
@@ -115,8 +115,8 @@ public class JobContext<T extends StateContainer> implements SimulationContext<T
      * @param childActivity the child activity that should be spawned and blocked on
      * @return the input child activity
      */
-    public Activity<T> callActivity(Activity<T> childActivity) {
-        ActivityJob<T> childActivityJob = new ActivityJob<>(childActivity, this.now());
+    public Activity<?> callActivity(Activity<?> childActivity) {
+        ActivityJob<?> childActivityJob = new ActivityJob<>(childActivity, this.now());
         this.engine.addParentChildRelationship(this.activityJob.getActivity(), childActivity);
         this.engine.insertIntoQueue(childActivityJob);
         this.engine.registerActivityAndJob(childActivity, childActivityJob);
@@ -129,8 +129,8 @@ public class JobContext<T extends StateContainer> implements SimulationContext<T
      * 
      * @param childActivity the target activity on which to block
      */
-    public void waitForChild(Activity<T> childActivity) {
-        ActivityJob<T> childActivityJob = engine.getActivityJob(childActivity);
+    public void waitForChild(Activity<?> childActivity) {
+        ActivityJob<?> childActivityJob = engine.getActivityJob(childActivity);
         // handle case where activity is already complete:
         // we don't want to block on it because we will never receive a notification that it is complete
         if (childActivityJob.getStatus() == ActivityStatus.Complete) {
@@ -144,7 +144,7 @@ public class JobContext<T extends StateContainer> implements SimulationContext<T
      * Blocks a parent activity thread on the completion of all of its children
      */
     public void waitForAllChildren() {
-        for (Activity<T> child: this.engine.getActivityChildren(this.activityJob.getActivity())) {
+        for (Activity<?> child: this.engine.getActivityChildren(this.activityJob.getActivity())) {
             this.waitForChild(child);
         }
     }
@@ -157,10 +157,10 @@ public class JobContext<T extends StateContainer> implements SimulationContext<T
      * TODO: we may want to refactor this and allow for generic listener behavior
      */
     public void notifyActivityListeners() {
-        for (Activity<T> listener: this.engine.getActivityListeners(this.activityJob.getActivity())) {
+        for (Activity<?> listener: this.engine.getActivityListeners(this.activityJob.getActivity())) {
             this.engine.removeActivityListener(this.activityJob.getActivity(), listener);
             
-            ActivityJob<T> listenerThread = this.engine.getActivityJob(listener);
+            ActivityJob<?> listenerThread = this.engine.getActivityJob(listener);
             listenerThread.setEventTime(this.now());
             
             ControlChannel channel = listenerThread.getChannel();

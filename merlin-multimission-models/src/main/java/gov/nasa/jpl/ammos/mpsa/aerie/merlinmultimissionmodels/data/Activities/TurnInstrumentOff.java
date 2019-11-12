@@ -7,14 +7,14 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityTy
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
 
-@ActivityType("TurnInstrumentOff")
+@ActivityType(name="TurnInstrumentOff", states=OnboardDataModelStates.class)
 public class TurnInstrumentOff implements Activity<OnboardDataModelStates> {
 
     @Parameter
     public String instrumentName = "";
 
     @Override
-    public void modelEffects(SimulationContext<OnboardDataModelStates> ctx, OnboardDataModelStates states){
+    public void modelEffects(SimulationContext ctx, OnboardDataModelStates states){
         InstrumentModel instrument = states.getInstrumentByName(instrumentName);
         instrument.turnOff();
     }

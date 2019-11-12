@@ -34,7 +34,7 @@ public class BinModel implements State<Double> {
 
     private boolean scienceData = false;
 
-    private SimulationEngine<?> engine;
+    private SimulationEngine engine;
 
     // I do this b/c you can't do a get(index) on a hashmap, and it takes O(n) to get to the last element
     private Time lastUpdatedTime;
@@ -173,7 +173,7 @@ public class BinModel implements State<Double> {
     }
 
     @Override
-    public void setEngine(SimulationEngine<?> engine) {
+    public void setEngine(SimulationEngine engine) {
         this.engine = engine;
     }
 

@@ -46,8 +46,8 @@ public class ApsidesTimesModelTest {
             return List.of();
         }
     }
-    // TODO: fix the dependence upon Blackbird/JPLTime within multimissionmodels vs Merlin time within the simulation core
-    public SimulationEngine<?> mockEngine = new SimulationEngine<StateContainer>(new gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time(), List.of(), new MockStateContainer());
+    
+    public SimulationEngine mockEngine = new SimulationEngine(new Time(), List.of(),  new MockStateContainer());
 
     @BeforeClass
     public static void loadSpiceAndKernels() {
