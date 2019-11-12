@@ -38,8 +38,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
  * - activity instances and their owning jobs - parent activities and their child activities
  * - activities and their durations (in simulation time)
  * - activities and their listeners (other activities blocking on the key's completion)
- *
- * @param <T> the type of the adapter-provided state index structure
  */
 public class SimulationEngine {
 
