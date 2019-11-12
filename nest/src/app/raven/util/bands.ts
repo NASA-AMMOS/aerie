@@ -9,7 +9,6 @@
 
 import sortBy from 'lodash-es/sortBy';
 import uniqueId from 'lodash-es/uniqueId';
-import { StringTMap, TimeRange } from '../../shared/models';
 import {
   MpsServerActivityPoint,
   MpsServerGraphData,
@@ -28,6 +27,8 @@ import {
   RavenSource,
   RavenStateBand,
   RavenSubBand,
+  StringTMap,
+  TimeRange,
 } from '../models';
 import {
   getActivityPointsByLegend,

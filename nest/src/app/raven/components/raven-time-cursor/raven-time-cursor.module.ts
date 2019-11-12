@@ -10,13 +10,7 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import {
-  MatCardModule,
-  MatFormFieldModule,
-  MatIconModule,
-  MatInputModule,
-  MatSlideToggleModule,
-} from '@angular/material';
+import { MaterialModule } from '../../material';
 import { RavenTimestampPipeModule } from '../../pipes';
 import { RavenTimeCursorComponent } from './raven-time-cursor.component';
 
@@ -25,11 +19,7 @@ import { RavenTimeCursorComponent } from './raven-time-cursor.component';
   exports: [RavenTimeCursorComponent],
   imports: [
     CommonModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatSlideToggleModule,
+    MaterialModule,
     RavenTimestampPipeModule,
     ReactiveFormsModule,
   ],

@@ -8,8 +8,8 @@
  */
 
 import { Pipe, PipeTransform } from '@angular/core';
-import { dateToTimestring, toDuration } from '../../../shared/util';
 import { RavenResourcePoint } from '../../models';
+import { dateToTimestring, toDuration } from '../../util';
 
 @Pipe({
   name: 'resourcePointValue',

@@ -19,10 +19,11 @@ import {
   switchMap,
   withLatestFrom,
 } from 'rxjs/operators';
-import { ToastActions } from '../../shared/actions';
-import { StringTMap, TimeRange } from '../../shared/models';
-import { timestamp } from '../../shared/util';
-import { SourceExplorerActions, TimelineActions } from '../actions';
+import {
+  SourceExplorerActions,
+  TimelineActions,
+  ToastActions,
+} from '../actions';
 import {
   MpsServerDocumentId,
   MpsServerGraphData,
@@ -35,6 +36,8 @@ import {
   RavenResourcePoint,
   RavenSource,
   RavenSubBand,
+  StringTMap,
+  TimeRange,
 } from '../models';
 import { RavenAppState } from '../raven-store';
 import {
@@ -42,6 +45,7 @@ import {
   getPinLabel,
   getResourcePoints,
   subBandById,
+  timestamp,
   toCompositeBand,
   toRavenDescendantsData,
 } from '../util';

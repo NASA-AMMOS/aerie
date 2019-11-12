@@ -7,15 +7,18 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  ViewChild,
+} from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { combineLatest, Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ConfigState } from '../../../../config';
-import { ConfigActions, ToastActions } from '../../../shared/actions';
-import { StringTMap, TimeRange } from '../../../shared/models';
-import * as configSelectors from '../../../shared/selectors/config.selectors';
 import {
+  ConfigActions,
   DialogActions,
   EpochsActions,
   LayoutActions,
@@ -24,9 +27,12 @@ import {
   SourceExplorerActions,
   TimeCursorActions,
   TimelineActions,
+  ToastActions,
 } from '../../actions';
+import { RavenTimeBandComponent } from '../../components/raven-time-band/raven-time-band.component';
 import { TimeCursorState } from '../../reducers/time-cursor.reducer';
 import { TimelineState } from '../../reducers/timeline.reducer';
+import * as configSelectors from '../../selectors/config.selectors';
 import * as epochsSelectors from '../../selectors/epochs.selectors';
 import * as layoutSelectors from '../../selectors/layout.selectors';
 import * as outputSelectors from '../../selectors/output.selectors';
@@ -61,6 +67,8 @@ import {
   RavenState,
   RavenSubBand,
   RavenUpdate,
+  StringTMap,
+  TimeRange,
 } from './../../models';
 
 @Component({
@@ -164,6 +172,29 @@ export class TimelineComponent implements OnDestroy {
   treeBySourceId: StringTMap<RavenSource>;
 
   private subscriptions = new Subscription();
+
+  SECOND = 1;
+  TEN_SECOND = 10;
+  MINUTE = 60;
+  TEN_MINUTE = 600;
+  HOUR = 3600;
+  TWO_HOUR = 7200;
+  SIX_HOUR = 21600;
+  EIGHT_HOUR = 28800;
+  TWELVE_HOUR = 43200;
+  DAY = 86400;
+  TWO_DAY = 172800;
+  THREE_DAY = 259200;
+  FIVE_DAY = 432000;
+  WEEK = 604800;
+  TEN_DAY = 864000;
+  FOUR_WEEK = 2419200;
+  MONTH = 2592000; // 30 days
+  THREE_MONTH = 7776000; // 90 days
+  YEAR = 31536000; // 365 days
+
+  @ViewChild('timeBand', { static: false })
+  timeBandComponent: RavenTimeBandComponent;
 
   constructor(
     private store: Store<TimelineState | ConfigState | TimeCursorState>,
@@ -675,6 +706,14 @@ export class TimelineComponent implements OnDestroy {
     }
   }
 
+  onSetTimeCursor(time: number) {
+    this.store.dispatch(
+      TimeCursorActions.updateTimeCursorSettings({
+        update: { cursorTime: time, setCursorTime: time },
+      }),
+    );
+    this.store.dispatch(TimeCursorActions.showTimeCursor());
+  }
   /**
    * Event. Called when a 'hover' event is fired from ctl.
    */
@@ -1058,7 +1097,15 @@ export class TimelineComponent implements OnDestroy {
     );
   }
 
+  onHome() {
+    this.timeBandComponent.resetView();
+  }
+
   onUpdateCurrentState() {
     this.store.dispatch(DialogActions.openUpdateCurrentStateDialog());
+  }
+
+  zoomTo(zoom: number) {
+    this.timeBandComponent.rightClickZoomTo(zoom);
   }
 }

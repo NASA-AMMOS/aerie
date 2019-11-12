@@ -10,30 +10,12 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import {
-  MatButtonModule,
-  MatCardModule,
-  MatFormFieldModule,
-  MatIconModule,
-  MatInputModule,
-  MatSelectModule,
-  MatSlideToggleModule,
-} from '@angular/material';
+import { MaterialModule } from '../../material';
 import { RavenSettingsGlobalComponent } from './raven-settings-global.component';
 
 @NgModule({
   declarations: [RavenSettingsGlobalComponent],
   exports: [RavenSettingsGlobalComponent],
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatSelectModule,
-    MatSlideToggleModule,
-    ReactiveFormsModule,
-  ],
+  imports: [CommonModule, MaterialModule, ReactiveFormsModule],
 })
 export class RavenSettingsGlobalModule {}

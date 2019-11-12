@@ -62,8 +62,6 @@ pipeline {
 						error "Failure setting up node"
 					}
 				}
-				// TODO: Use this instead of the above script once node is installed on the server
-				// sh "./scripts/build.sh --commit ${env.GIT_COMMIT} --tag ${getTag()} ${remoteBranch}"
 				}
 
 				junit allowEmptyResults: true, healthScaleFactor: 10.0, keepLongStdio: true, testResults: '**/karma-test-results.xml'
@@ -84,20 +82,20 @@ pipeline {
 					[ -s "\$NVM_DIR/nvm.sh" ] && . "\$NVM_DIR/nvm.sh"
 					nvm install v10.13.0
 					# tar up entire build directory as deliverable
-					tar -czf aerie-${getTag()}.tar.gz --exclude='.git' --exclude='aerie-src-*.tar.gz' --exclude='nest/node_modules' `ls -A`
+					tar -czf aerie-${getTag()}.tar.gz --exclude='.git' --exclude='aerie-src-*.tar.gz' --exclude='nest/node_modules' --exclude='merlin-ui/node_modules' `ls -A`
 					# create nest tar file
-					if [ -d nest/dist-mpsserver ]; then
+					if [ -d nest/dist ]; then
 						export NEST_PACKAGE_VERSION=`node -p "require('./nest/package.json').version"`
-						cd nest/dist-mpsserver
+						cd nest/dist
 						tar -czf nest-\${NEST_PACKAGE_VERSION}-${getTag()}.tar.gz `ls -A`
 						cd ../../
 					fi
 					"""
 					if (statusCode > 0) {
-						error "Failure compressing mpsserver-dist"
+						error "Failure compressing nest dist"
 					}
 				}
-				archiveArtifacts allowEmptyArchive: true, artifacts: 'nest/dist-mpsserver/*.tar.gz'
+				archiveArtifacts allowEmptyArchive: true, artifacts: 'nest/dist/*.tar.gz'
 			}
 		}
 
@@ -119,7 +117,7 @@ pipeline {
 									"recursive":false
 								},
 								{
-									"pattern": "nest/dist-mpsserver/*.tar.gz",
+									"pattern": "nest/dist/*.tar.gz",
 									"target": "general-develop/gov/nasa/jpl/ammos/mpsa/nest/",
 									"recursive":false
 								}

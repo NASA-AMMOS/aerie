@@ -8,7 +8,7 @@
  */
 
 import { Pipe, PipeTransform } from '@angular/core';
-import { dhms } from '../../../shared/util';
+import { dhms } from '../../util';
 
 @Pipe({
   name: 'dhms',

@@ -10,7 +10,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <groupId>gov.nasa.jpl.ammos.mgss.aerie</groupId>
+    <groupId>gov.nasa.jpl.ammos.mpsa.aerie</groupId>
     <artifactId>simulation</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>simulation</name>

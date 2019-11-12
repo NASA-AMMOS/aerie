@@ -9,6 +9,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.nio.file.Path;
+
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities.writeJson;
 
 /**
@@ -39,7 +41,7 @@ public class DownloadPlanCommand implements Command {
             this.status = response.getStatusCode().value();
 
             if (status == 200) {
-                writeJson(response.getBody().toString(), this.outName);
+                writeJson(response.getBody().toString(), Path.of(this.outName));
             }
         }
         catch (HttpClientErrorException | HttpServerErrorException e) {

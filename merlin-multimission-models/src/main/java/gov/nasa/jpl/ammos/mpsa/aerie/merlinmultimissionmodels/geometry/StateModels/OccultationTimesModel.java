@@ -1,12 +1,12 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.StateModels;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.blackbird.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.blackbird.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.Globals.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.spicewrappers.Occultations;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.LazyEvaluator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 import org.apache.commons.lang3.tuple.Pair;
 import spice.basic.SpiceErrorException;
 
@@ -120,6 +120,11 @@ public class OccultationTimesModel implements State {
     @Override
     public List<Pair<Time, Time>> get() {
         return this.evaluator.get();
+    }
+
+    @Override
+    public String getName() {
+        return null;
     }
 
     @Override

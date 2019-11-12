@@ -38,9 +38,33 @@ class TypeInfoMaker {
         typeReference.isPrimitive = true;
         typeReference.typeName = "double";
         break;
+      case FLOAT:
+        typeReference.isPrimitive = true;
+        typeReference.typeName = "float";
+        break;
+      case BYTE:
+        typeReference.isPrimitive = true;
+        typeReference.typeName = "byte";
+        break;
+      case SHORT:
+        typeReference.isPrimitive = true;
+        typeReference.typeName = "short";
+        break;
       case INT:
         typeReference.isPrimitive = true;
         typeReference.typeName = "int";
+        break;
+      case LONG:
+        typeReference.isPrimitive = true;
+        typeReference.typeName = "long";
+        break;
+      case BOOLEAN:
+        typeReference.isPrimitive = true;
+        typeReference.typeName = "boolean";
+        break;
+      case CHAR:
+        typeReference.isPrimitive = true;
+        typeReference.typeName = "char";
         break;
       case DECLARED:
         if (typeUtils.isSameType(STRING_TYPE, parameterType)) {
@@ -52,6 +76,7 @@ class TypeInfoMaker {
         }
         break;
       default:
+        // TODO: Don't just throw an exception, baka!
         throw new RuntimeException("Unknown parameter type: " + parameterType.toString());
     }
 
@@ -106,7 +131,7 @@ class TypeInfoMaker {
 
     // Gather information from the @ActivityType annotation on this type.
     final ActivityType annotation = typeElement.getAnnotation(ActivityType.class);
-    info.name = annotation.value();
+    info.name = annotation.name();
 
     // Gather information from the Javadoc for this type.
     final DocCommentTree docTree = this.docTrees.getDocCommentTree(typeElement);

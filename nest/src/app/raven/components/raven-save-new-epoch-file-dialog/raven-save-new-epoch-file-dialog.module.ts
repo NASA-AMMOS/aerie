@@ -9,24 +9,13 @@
 
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import {
-  MatButtonModule,
-  MatDialogModule,
-  MatFormFieldModule,
-  MatInputModule,
-} from '@angular/material';
+import { MaterialModule } from '../../material';
 import { RavenSaveNewEpochFileDialogComponent } from './raven-save-new-epoch-file-dialog.component';
 
 @NgModule({
   declarations: [RavenSaveNewEpochFileDialogComponent],
   entryComponents: [RavenSaveNewEpochFileDialogComponent],
   exports: [RavenSaveNewEpochFileDialogComponent],
-  imports: [
-    FormsModule,
-    MatButtonModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-  ],
+  imports: [FormsModule, MaterialModule],
 })
 export class RavenSaveNewEpochFileDialogModule {}

@@ -1,0 +1,16 @@
+@import 'assets/css/bootstrap.css';
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+  margin: 0;
+  overflow: hidden;
+}
+
+.cdk-global-scrollblock {
+  overflow-y: hidden;
+}

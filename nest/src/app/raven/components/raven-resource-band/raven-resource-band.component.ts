@@ -18,10 +18,14 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-import { dateToTimestring, toDuration } from '../../../shared/util/time';
 import { RavenEpoch, RavenResourcePoint } from '../../models';
-import { colorHexToRgbArray } from '../../util';
-import { getInterpolatedTooltipText, getTooltipText } from '../../util/tooltip';
+import {
+  colorHexToRgbArray,
+  dateToTimestring,
+  getInterpolatedTooltipText,
+  getTooltipText,
+  toDuration,
+} from '../../util';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

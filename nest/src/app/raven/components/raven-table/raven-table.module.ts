@@ -10,31 +10,18 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import {
-  MatButtonModule,
-  MatCardModule,
-  MatFormFieldModule,
-  MatIconModule,
-  MatInputModule,
-  MatTooltipModule,
-} from '@angular/material';
 import { AgGridModule } from 'ag-grid-angular';
-import { RavenTableDetailComponent } from './raven-table-detail.component';
+import { MaterialModule } from '../../material';
 import { RavenTableComponent } from './raven-table.component';
 
 @NgModule({
-  declarations: [RavenTableComponent, RavenTableDetailComponent],
+  declarations: [RavenTableComponent],
   exports: [RavenTableComponent],
   imports: [
-    AgGridModule.withComponents([RavenTableDetailComponent]),
+    AgGridModule.withComponents([]),
     CommonModule,
     FormsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatTooltipModule,
+    MaterialModule,
     ReactiveFormsModule,
   ],
 })

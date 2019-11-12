@@ -11,8 +11,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { StringTMap } from '../../shared/models';
-import { MpsServerSource } from '../models';
+import { MpsServerSource, StringTMap } from '../models';
 import { RavenSource, SourceFilter } from '../models';
 import { importState, toRavenSources } from '../util';
 

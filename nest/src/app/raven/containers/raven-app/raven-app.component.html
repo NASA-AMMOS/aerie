@@ -1,4 +1,4 @@
-<nest-app-header title="RAVEN" (menuClicked)="onMenuClicked()">
+<raven-app-header title="RAVEN">
   <button
     mat-icon-button
     matTooltip="Global Band Settings"
@@ -62,6 +62,13 @@
       </mat-icon>
       Situational Awareness
     </button>
+
+    <button mat-menu-item (click)="onAboutClicked()">
+      <mat-icon>
+        info
+      </mat-icon>
+      About RAVEN
+    </button>
   </mat-menu>
 
   <mat-menu #subMenu="matMenu">
@@ -97,7 +104,7 @@
       Toggle Details Panel
     </button>
   </mat-menu>
-</nest-app-header>
+</raven-app-header>
 
 <div class="progress-container">
   <mat-progress-bar

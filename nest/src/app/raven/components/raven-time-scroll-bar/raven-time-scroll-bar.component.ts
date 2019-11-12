@@ -20,7 +20,7 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-import { TimeRange } from '../../../shared/models';
+import { TimeRange } from '../../models';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

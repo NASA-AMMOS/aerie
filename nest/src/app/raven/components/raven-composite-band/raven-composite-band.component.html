@@ -154,7 +154,18 @@
 >
   <div
     #ctlMount
+    [contextMenu]="contextMenu"
     class="raven-band__ctl"
     [ngStyle]="{ 'background-color': backgroundColor }"
   ></div>
 </div>
+
+<context-menu #contextMenu>
+  <ng-template contextMenuItem (execute)="setTimeCursor.emit(rightClickTime)">
+    Set Time Cursor
+  </ng-template>
+  <ng-template contextMenuItem divider="true"></ng-template>
+  <ng-template contextMenuItem (execute)="removeTimeCursor.emit()">
+    Remove Time Cursor
+  </ng-template>
+</context-menu>

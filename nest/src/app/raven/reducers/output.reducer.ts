@@ -8,8 +8,8 @@
  */
 
 import { createReducer, on } from '@ngrx/store';
-import { StringTMap } from '../../shared/models';
 import { OutputActions } from '../actions';
+import { StringTMap } from '../models';
 
 export interface OutputState {
   allInOneFile: boolean;

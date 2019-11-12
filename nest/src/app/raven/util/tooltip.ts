@@ -7,11 +7,8 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import {
-  formatEpochTimeRange,
-  formatTimeRangeTFormat,
-} from '../../shared/util/time';
 import { RavenEpoch } from '../models';
+import { formatEpochTimeRange, formatTimeRangeTFormat } from '../util/time';
 
 /**
  * Linearly interpolate x3 between two points (x1, y1) and (x2, y2).

@@ -15,4 +15,5 @@ export * from './points';
 export * from './situational-awareness';
 export * from './source';
 export * from './state';
+export * from './time';
 export * from './tooltip';

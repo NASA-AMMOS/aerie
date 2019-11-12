@@ -16,8 +16,6 @@ import {
 import { select, Store } from '@ngrx/store';
 import { combineLatest, Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ConfigActions } from '../../../shared/actions';
-import { getVersion } from '../../../shared/selectors';
 import { DialogActions, LayoutActions, TimelineActions } from '../../actions';
 import { SourceExplorerState } from '../../reducers/source-explorer.reducer';
 import {
@@ -36,7 +34,6 @@ import {
   templateUrl: './raven-app.component.html',
 })
 export class RavenAppComponent implements OnDestroy {
-  about$: Observable<string>;
   showProgressBar$: Observable<boolean>;
   mode$: Observable<string>;
   selectedBandId$: Observable<string>;
@@ -48,14 +45,10 @@ export class RavenAppComponent implements OnDestroy {
   private subscriptions = new Subscription();
 
   constructor(private store: Store<SourceExplorerState>) {
-    this.about$ = this.getAbout();
     this.mode$ = this.store.pipe(select(getMode));
     this.showProgressBar$ = this.getShowProgressBar();
     this.selectedBandId$ = this.store.pipe(select(getSelectedBandId));
 
-    this.subscriptions.add(
-      this.about$.subscribe(about => (this.about = about)),
-    );
     this.subscriptions.add(this.mode$.subscribe(mode => (this.mode = mode)));
     this.subscriptions.add(
       this.selectedBandId$.subscribe(
@@ -124,37 +117,8 @@ export class RavenAppComponent implements OnDestroy {
     );
   }
 
-  /**
-   * Get a string for the about dialog.
-   */
-  getAbout(): Observable<string> {
-    return this.store.pipe(select(getVersion)).pipe(
-      map(
-        v => `
-        Raven ${v.version}\n
-        Copyright 2018, by the California Institute of Technology. ALL RIGHTS RESERVED.
-        United States Government sponsorship acknowledged.
-        Any commercial use must be negotiated with the Office of Technology Transfer at the California Institute of Technology.\n
-      `,
-      ),
-    );
-  }
-
-  /**
-   * The hamburger menu was clicked
-   */
-  onMenuClicked() {
-    this.store.dispatch(ConfigActions.toggleNestNavigationDrawer());
-  }
-
-  toggleAboutDialog() {
-    this.store.dispatch(
-      DialogActions.openConfirmDialog({
-        cancelText: 'Close',
-        message: this.about,
-        width: '400px',
-      }),
-    );
+  onAboutClicked() {
+    this.store.dispatch(DialogActions.openAboutDialog({ width: '400px' }));
   }
 
   toggleDetailsPanel() {

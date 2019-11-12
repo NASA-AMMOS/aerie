@@ -8,8 +8,7 @@
  */
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { StringTMap } from '../../shared/models';
-import { FilterState, RavenSource } from '../models';
+import { FilterState, RavenSource, StringTMap } from '../models';
 import { State } from '../raven-store';
 import { SourceExplorerState } from '../reducers/source-explorer.reducer';
 import { getSortedChildIds } from '../util';

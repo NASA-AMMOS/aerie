@@ -15,7 +15,7 @@ public class LazyEvaluationTest {
 
     public class ExampleState implements State<Double> {
 
-        SimulationEngine<?> mockEngine = new SimulationEngine<>();
+        SimulationEngine mockEngine = new SimulationEngine();
         double value;
 
         public ExampleState(double value){
@@ -33,6 +33,11 @@ public class LazyEvaluationTest {
             return evaluator.get();
         }
 
+        @Override
+        public String getName() {
+            return null;
+        }
+
         public void set(Double value) {
             this.value = value;
             evaluator.invalidate();
@@ -40,7 +45,7 @@ public class LazyEvaluationTest {
 
         //merely implemented to satisfy interface
         @Override
-        public void setEngine(SimulationEngine<?> engine) {
+        public void setEngine(SimulationEngine engine) {
         }
 
         //merely implemented to satisfy interface

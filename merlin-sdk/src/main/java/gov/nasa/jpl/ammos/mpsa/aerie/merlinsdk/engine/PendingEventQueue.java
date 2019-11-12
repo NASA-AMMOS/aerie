@@ -11,7 +11,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
  * 
  * @param <T> the type of the adapter-provided state index structure
  */
-public class PendingEventQueue<T extends StateContainer> extends PriorityQueue<ActivityJob<T>> {
+public class PendingEventQueue extends PriorityQueue<ActivityJob<?>> {
     
     /**
      * Returns the event time of the first element in the queue

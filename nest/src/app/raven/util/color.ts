@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { StringTMap } from '../../shared/models';
+import { StringTMap } from '../models';
 
 export const defaultColors = [
   '#000000',

@@ -20,13 +20,13 @@ import {
   switchMap,
   withLatestFrom,
 } from 'rxjs/operators';
-import { StringTMap } from '../../shared/models';
 import { OutputActions } from '../actions';
 import {
   MpsServerGraphData,
   RavenCustomFilter,
   RavenGraphableFilterSource,
   RavenSource,
+  StringTMap,
 } from '../models';
 import { RavenAppState } from '../raven-store';
 import * as fromOutput from '../reducers/output.reducer';
@@ -175,7 +175,7 @@ export class OutputEffects {
 
     Object.keys(output.outputSourceIdsByLabel).forEach(label => {
       const sourceIds = output.outputSourceIdsByLabel[label];
-      sourceIds.forEach(sourceId => {
+      sourceIds.forEach((sourceId: string) => {
         const source = treeBySourceId[sourceId];
         actions.push(
           this.getCsvDataForSource(
@@ -209,7 +209,7 @@ export class OutputEffects {
 
     Object.keys(output.outputSourceIdsByLabel).forEach(label => {
       const sourceIds = output.outputSourceIdsByLabel[label];
-      sourceIds.forEach(sourceId => {
+      sourceIds.forEach((sourceId: string) => {
         const source = treeBySourceId[sourceId];
         actions.push(
           this.createFileForSource(

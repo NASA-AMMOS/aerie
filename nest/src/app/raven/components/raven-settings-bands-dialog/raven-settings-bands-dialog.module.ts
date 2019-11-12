@@ -11,19 +11,9 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import {
-  MatButtonModule,
-  MatCardModule,
-  MatDialogModule,
-  MatFormFieldModule,
-  MatIconModule,
-  MatInputModule,
-  MatSelectModule,
-  MatSlideToggleModule,
-} from '@angular/material';
-import { RavenSettingsBandsDialogComponent } from './raven-settings-bands-dialog.component';
-
+import { MaterialModule } from '../../material';
 import { RavenDurationPipeModule } from '../../pipes';
+import { RavenSettingsBandsDialogComponent } from './raven-settings-bands-dialog.component';
 
 @NgModule({
   declarations: [RavenSettingsBandsDialogComponent],
@@ -32,14 +22,7 @@ import { RavenDurationPipeModule } from '../../pipes';
   imports: [
     CommonModule,
     DragDropModule,
-    MatButtonModule,
-    MatCardModule,
-    MatIconModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatSlideToggleModule,
+    MaterialModule,
     ReactiveFormsModule,
     RavenDurationPipeModule,
   ],

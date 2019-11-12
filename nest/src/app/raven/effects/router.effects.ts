@@ -15,8 +15,7 @@ import {
 } from '@ngrx/router-store';
 import { Action, Store } from '@ngrx/store';
 import { map, mergeMap, withLatestFrom } from 'rxjs/operators';
-import { ConfigActions } from '../../shared/actions';
-import { SourceExplorerActions } from '../actions';
+import { ConfigActions, SourceExplorerActions } from '../actions';
 import { RavenAppState } from '../raven-store';
 
 @Injectable()

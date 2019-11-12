@@ -7,11 +7,12 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-const windowBaseUrl = `${window.location.protocol}//${window.location.hostname}`;
-
 export const environment = {
-  adaptationServiceBaseUrl: `${windowBaseUrl}:27182`,
-  baseUrl: 'https://leucadia.jpl.nasa.gov:9443',
-  planServiceBaseUrl: `${windowBaseUrl}:27183`,
+  baseUrl:
+    window.location.protocol +
+    '//' +
+    window.location.hostname +
+    ':' +
+    window.location.port,
   production: true,
 };

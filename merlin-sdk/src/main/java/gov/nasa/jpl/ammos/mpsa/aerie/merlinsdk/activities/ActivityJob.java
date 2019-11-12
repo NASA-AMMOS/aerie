@@ -32,7 +32,7 @@ public class ActivityJob<T extends StateContainer> implements Comparable<Activit
      * Serves as a bridge between this job and the engine. It is passed down to the activity's effect model as the
      * `SimulationContext` type to prevent adapter access to certain engine-related methods.
      */
-    private JobContext<T> ctx;
+    private JobContext ctx;
 
     /**
      * A means of synchronously passing execution control between this job's thread and others (primarily the engine).
@@ -42,7 +42,7 @@ public class ActivityJob<T extends StateContainer> implements Comparable<Activit
     /**
      * The adapter-provided state index structure
      */
-    private T states;
+    private StateContainer stateContainer;
 
     private ActivityStatus status = ActivityStatus.NotStarted;
 
@@ -65,7 +65,7 @@ public class ActivityJob<T extends StateContainer> implements Comparable<Activit
         this.status = ActivityStatus.InProgress;
         Time startTime = this.ctx.now();
 
-        activity.modelEffects(this.ctx, this.states);
+        activity.modelEffects(this.ctx, (T) this.stateContainer);
         this.ctx.waitForAllChildren();
         this.status = ActivityStatus.Complete;
 
@@ -100,7 +100,7 @@ public class ActivityJob<T extends StateContainer> implements Comparable<Activit
         return this.activity;
     }
 
-    public void setContext(JobContext<T> ctx) {
+    public void setContext(JobContext ctx) {
         this.ctx = ctx;
     }
 
@@ -116,8 +116,8 @@ public class ActivityJob<T extends StateContainer> implements Comparable<Activit
         this.channel = channel;
     }
 
-    public void setStates(T states) {
-        this.states = states;
+    public void setStates(StateContainer stateContainer) {
+        this.stateContainer = stateContainer;
     }
 
     public String toString() {

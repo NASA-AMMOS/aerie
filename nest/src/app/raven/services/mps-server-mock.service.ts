@@ -9,8 +9,12 @@
 
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { StringTMap } from '../../shared/models';
-import { MpsServerSource, RavenSource, SourceFilter } from '../models';
+import {
+  MpsServerSource,
+  RavenSource,
+  SourceFilter,
+  StringTMap,
+} from '../models';
 
 // NOTE: We use `as unknown as MpsServerSource` here because, despite these being
 // legitimate, exact copies of the output from MPS Server, they do not match the

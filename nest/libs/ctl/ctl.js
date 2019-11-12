@@ -3084,18 +3084,18 @@ ResourceBand.prototype.getYFromValueLog = function(value) {
     // Find which ticks the value is within.
     // I.e. minTick <= value <= maxTick.
     for (let i = 0; i < ticks.length; ++i) {
-        let tick = ticks[i];
-        let nextTick =  ticks[i + 1];
+      let tick = ticks[i];
+      let nextTick =  ticks[i + 1];
 
-        if (i < ticks.length - 1 && value >= tick && value <= nextTick) {
-          minTick = tick;
-          maxTick = nextTick;
-          break;
-        }
-        else {
-          minTick = ticks[i - 1];
-          maxTick = tick;
-        }
+      if (i < ticks.length - 1 && value >= tick && value <= nextTick) {
+        minTick = tick;
+        maxTick = nextTick;
+        break;
+      }
+      else {
+        minTick = ticks[i - 1];
+        maxTick = tick;
+      }
     }
 
     // Feature scaling.
@@ -4891,6 +4891,7 @@ function TimeBand(obj) {
   $(this.canvas).mouseup(this.mouseup.bind(this));
   $(this.canvas).mouseout(this.mouseout.bind(this));
   $(this.canvas).mousemove(this.mousemove.bind(this));
+  $(this.canvas).click(this.click.bind(this));
 
   this.contextMenu = new TimeBandContextMenu($.extend({timeBand:this}, obj));
   this.div.appendChild(this.contextMenu.div);
@@ -5154,6 +5155,10 @@ TimeBand.prototype.mousedown = function(e) {
     }
   }
   else {
+    var x = e.pageX - $(e.target).offset().left;
+    if(x >= this.viewTimeAxis.x1) {
+        this.lastRightClickPos = x;
+    }
     $(this._hiddenDragSource).draggable("disable");
   }
   return true;
@@ -5208,6 +5213,15 @@ TimeBand.prototype.zoomTo = function(timeUnit) {
   this.onUpdateView(start, end);
 };
 
+TimeBand.prototype.zoomToLastRightClickPos = function(timeUnit) {
+  if(this.onUpdateView === null) return;
+
+  var time = this.viewTimeAxis.getTimeFromX(this.lastRightClickPos);
+  var start = TimeUnit.quantizeUpByTimeUnit(time, 0, timeUnit);
+  var end = TimeUnit.quantizeUpByTimeUnit(time, 1, timeUnit);
+  this.onUpdateView(start, end);
+};
+
 TimeBand.prototype.handleDragStart = function(e, ui) {
   var x = e.pageX - $(e.target).offset().left;
   this._zoomX1 = x;
@@ -5239,6 +5253,13 @@ TimeBand.prototype.handleDragStop = function(e, ui) {
   this._zoomX2 = null;
 
   if(this.onUpdateView) { this.onUpdateView(start, end); }
+
+  // dispatch click so that Raven component can detect the drag
+  this.canvas.click();
+};
+
+TimeBand.prototype.click = function(e) {
+  // do nothing
 };
 
 function TimeBandContextMenu(obj) {

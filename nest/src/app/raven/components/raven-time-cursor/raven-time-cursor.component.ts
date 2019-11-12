@@ -16,9 +16,8 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
-import { timestamp, utc } from '../../../shared/util';
 import { RavenUpdate } from '../../models';
-import { defaultColors } from '../../util';
+import { defaultColors, timestamp, utc } from '../../util';
 
 @Component({
   selector: 'raven-time-cursor',

@@ -21,7 +21,6 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import { TimeRange } from '../../../shared/models';
 import {
   RavenBandLeftClick,
   RavenEpoch,
@@ -29,12 +28,13 @@ import {
   RavenResourceBand,
   RavenSubBand,
   RavenUpdate,
+  TimeRange,
 } from '../../models';
 import {
   bandById,
+  colorHexToRgbArray,
   getNumericStateBandsWithUniquePossibleStates,
-} from '../../util/bands';
-import { colorHexToRgbArray } from '../../util/color';
+} from '../../util';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -158,6 +158,12 @@ export class RavenCompositeBandComponent
   increaseBandHeight: EventEmitter<any> = new EventEmitter<any>();
 
   @Output()
+  removeTimeCursor: EventEmitter<null> = new EventEmitter<null>();
+
+  @Output()
+  setTimeCursor: EventEmitter<number> = new EventEmitter<number>();
+
+  @Output()
   settingsBand: EventEmitter<string> = new EventEmitter<string>();
 
   @Output()
@@ -176,6 +182,7 @@ export class RavenCompositeBandComponent
   ctlTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
   ctlTooltip = new (window as any).Tooltip({});
   ctlViewTimeAxis = new (window as any).TimeAxis({ end: 0, start: 0 });
+  rightClickTime = 0;
   selectedPointColor = [255, 254, 13];
 
   constructor(public elementRef: ElementRef) {}
@@ -600,8 +607,8 @@ export class RavenCompositeBandComponent
   /**
    * CTL Event. Called when you right-click a composite band.
    */
-  onRightClick(e: MouseEvent) {
-    // TODO.
+  onRightClick(e: MouseEvent, ctlData: any) {
+    this.rightClickTime = ctlData.time;
   }
 
   /**

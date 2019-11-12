@@ -8,7 +8,7 @@
  */
 
 import { createAction, props } from '@ngrx/store';
-import { BaseType, StringTMap, TimeRange } from '../../shared/models';
+import { BaseType, StringTMap, TimeRange } from '../models';
 import {
   AddBandModifiers,
   RavenActivityPoint,

@@ -7,6 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+import { StringTMap, TimeRange } from '../models';
 import {
   RavenCompositeBand,
   RavenCustomFilter,
@@ -14,8 +15,6 @@ import {
   RavenPin,
   RavenSource,
 } from './index';
-
-import { StringTMap, TimeRange } from '../../shared/models/index';
 
 export interface RavenOpenArgs {
   bandId: string | null;

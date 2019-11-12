@@ -3,12 +3,9 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ParameterType;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-
-import static java.util.Collections.unmodifiableMap;
 
 /**
  * A serializable description of the structure of an activity parameter.
@@ -18,7 +15,7 @@ import static java.util.Collections.unmodifiableMap;
  * is an adaptation-agnostic representation of the serialized structure of a parameter.
  *
  * For instance, if an activity accepts two parameters, each of which is a 3D point in space,
- * then the schema for each point will be a sequence of three {@link double} primitives. The schema
+ * then the schema for each point will be a sequence of three real number primitives. The schema
  * for the activity itself will be a sequence of two instances of the schema for points.
  *
  * This is useful for providing information to mission-agnostic front-end applications, which
@@ -59,7 +56,7 @@ public abstract class ParameterSchema {
    * @param <T> The return type of the operation represented by this Visitor.
    */
   public interface Visitor<T> {
-    T onDouble();
+    T onReal();
     T onInt();
     T onBoolean();
     T onString();
@@ -68,30 +65,33 @@ public abstract class ParameterSchema {
   }
 
   /**
-   * Creates a {@link ParameterSchema} representing a {@link double} parameter type.
+   * Creates a {@link ParameterSchema} representing a real number parameter type.
    *
-   * @return A new {@link ParameterSchema} representing a {@link double} parameter type.
+   * @return A new {@link ParameterSchema} representing a real number parameter type.
    */
-  public static ParameterSchema ofDouble() {
+  public static ParameterSchema ofReal() {
     return new ParameterSchema() {
       public <T> T match(final Visitor<T> visitor) {
-        return visitor.onDouble();
+        return visitor.onReal();
       }
       public String toString() {
-        return "ParameterSchema.DOUBLE";
+        return "ParameterSchema.REAL";
       }
 
       @Override
       public boolean equals(final Object other) {
-        return ((other instanceof ParameterSchema) && ((ParameterSchema)other).asDouble().isPresent());
+        return ((other instanceof ParameterSchema) && ((ParameterSchema)other).asReal().isPresent());
       }
     };
   }
 
+  @Deprecated(forRemoval = true)
+  public static ParameterSchema ofDouble() { return ofReal(); }
+
   /**
-   * Creates a {@link ParameterSchema} representing an {@link int} parameter type.
+   * Creates a {@link ParameterSchema} representing an integral number parameter type.
    *
-   * @return A new {@link ParameterSchema} representing an {@link int} parameter type.
+   * @return A new {@link ParameterSchema} representing an integral number parameter type.
    */
   public static ParameterSchema ofInt() {
     return new ParameterSchema() {
@@ -165,7 +165,7 @@ public abstract class ParameterSchema {
         return visitor.onList(value);
       }
       public String toString() {
-        return "[" + String.valueOf(value) + "]";
+        return "[" + value + "]";
       }
 
       @Override
@@ -199,10 +199,13 @@ public abstract class ParameterSchema {
     };
   }
 
-  public static final ParameterSchema DOUBLE = ofDouble();
+  public static final ParameterSchema REAL = ofReal();
   public static final ParameterSchema INT = ofInt();
   public static final ParameterSchema BOOLEAN = ofBoolean();
   public static final ParameterSchema STRING = ofString();
+
+  @Deprecated(forRemoval = true)
+  public static final ParameterSchema DOUBLE = REAL;
 
   /**
    * A helper base class implementing {@code Visitor<Optional<T>>} for any result type {@code T}.
@@ -219,7 +222,7 @@ public abstract class ParameterSchema {
     }
 
     @Override
-    public Optional<T> onDouble() {
+    public Optional<T> onReal() {
       return onDefault();
     }
 
@@ -249,11 +252,7 @@ public abstract class ParameterSchema {
     }
   }
 
-  public static final class Unit {
-    private Unit() {}
-
-    public static Unit UNIT = new Unit();
-  }
+  public enum Unit { UNIT }
 
   /**
    * Asserts that this object represents a double parameter type.
@@ -261,13 +260,18 @@ public abstract class ParameterSchema {
    * @return A non-empty {@link Optional} if this object represents a double parameter type.
    *   Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<Unit> asDouble() {
+  public Optional<Unit> asReal() {
     return this.match(new DefaultVisitor<>() {
       @Override
-      public Optional<Unit> onDouble() {
+      public Optional<Unit> onReal() {
         return Optional.of(Unit.UNIT);
       }
     });
+  }
+
+  @Deprecated(forRemoval = true)
+  public Optional<Unit> asDouble() {
+    return asReal();
   }
 
   /**

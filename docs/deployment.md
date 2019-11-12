@@ -26,7 +26,7 @@ cd aerie
 docker login cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie
 ```
 
-4. Use [Docker Compose](https://docs.docker.com/compose/reference/) to start the system:
+4. Use [Docker Compose](https://docs.docker.com/compose/reference/) to start the [services](./services.md):
 
 ```bash
 docker-compose -f docker-compose.yml up --build
@@ -44,5 +44,5 @@ The `docker-compose` files are parameterized with the [.env](../.env) file in th
 
 | Environment Variable | Description |
 | -------------------- | ----------- |
-| ADAPTATION_DOCKER_TAG, <br/> NEST_DOCKER_TAG, <br/> PLAN_DOCKER_TAG  | A [Docker Tag](https://docs.docker.com/engine/reference/commandline/tag/) of the Aerie version you are deploying. It has the form: `[BRANCH_NAME][+/-]b[BUILD_NUMBER].r[SHORT_GIT_COMMIT_HASH].[yyyyMMdd]`. For example this is a real tag: `develop-b122.rcb8493e.20190529`. For a list of Docker image tags, first [log into Artifactory](https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/login). The complete list of images for each Aerie service can be found [here](https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/artifacts/browse/tree/General/docker-develop-local/gov/nasa/jpl/ammos/mpsa/aerie). Note each service has a tag of a single version. For example the `nest`, `adaptation`, and `plan` services all have a tag of `develop-b122.rcb8493e.20190529`. |
+| ADAPTATION_DOCKER_TAG, <br/> MERLIN_UI_DOCKER_TAG, <br/> PLAN_DOCKER_TAG  | A [Docker Tag](https://docs.docker.com/engine/reference/commandline/tag/) of the Aerie version you are deploying. It has the form: `[BRANCH_NAME][+/-]b[BUILD_NUMBER].r[SHORT_GIT_COMMIT_HASH].[yyyyMMdd]`. For example this is a real tag: `develop-b122.rcb8493e.20190529`. For a list of Docker image tags, first [log into Artifactory](https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/login). The complete list of images for each Aerie service can be found [here](https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/artifacts/browse/tree/General/docker-develop-local/gov/nasa/jpl/ammos/mpsa/aerie). Note each service has a tag of a single version. For example the `nest`, `adaptation`, and `plan` services all have a tag of `develop-b122.rcb8493e.20190529`. |
 | DOCKER_URL | The URL of a Docker repository. Defaults to Artifactories [docker-develop-local](https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/artifacts/browse/tree/General/docker-develop-local) repository. |

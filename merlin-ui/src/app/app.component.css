@@ -1,0 +1,30 @@
+mat-progress-bar {
+  height: 2px;
+  left: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+}
+
+mat-sidenav-container,
+mat-sidenav-content {
+  height: 100%;
+  overflow: hidden;
+}
+
+mat-sidenav {
+  width: 66px;
+}
+
+mat-nav-list {
+  width: 66px;
+}
+
+.mat-nav-list a.active {
+  background-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 1) 3px,
+    rgba(0, 0, 0, 1) 3px,
+    rgba(0, 0, 0, 0) 3px
+  );
+}

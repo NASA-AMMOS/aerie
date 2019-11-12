@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { StringTMap, TimeRange } from '../../shared/models';
+import { StringTMap, TimeRange } from '../models';
 import {
   RavenCompositeBand,
   RavenDefaultBandSettings,

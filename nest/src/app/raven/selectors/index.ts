@@ -7,6 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+export * from './config.selectors';
 export * from './epochs.selectors';
 export * from './layout.selectors';
 export * from './output.selectors';

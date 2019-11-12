@@ -7,11 +7,14 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
+export * from './raven-about-dialog/raven-about-dialog.module';
 export * from './raven-activity-band/raven-activity-band.module';
 export * from './raven-activity-point/raven-activity-point.module';
+export * from './raven-app-header/raven-app-header.module';
 export * from './raven-bands/raven-bands.module';
 export * from './raven-category/raven-category.module';
 export * from './raven-composite-band/raven-composite-band.module';
+export * from './raven-confirm-dialog/raven-confirm-dialog.module';
 export * from './raven-custom-filter/raven-custom-filter.module';
 export * from './raven-custom-filter-dialog/raven-custom-filter-dialog.module';
 export * from './raven-custom-graphable/raven-custom-graphable.module';

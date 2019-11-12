@@ -3,7 +3,7 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>gov.nasa.jpl.ammos.mpsa</groupId>
+  <groupId>gov.nasa.jpl.ammos.mpsa.aerie</groupId>
   <artifactId>adaptation</artifactId>
   <version>1.0-SNAPSHOT</version>
   <name>adaptation</name>
@@ -23,8 +23,8 @@
       <groupId>gov.nasa.jpl.ammos.mpsa.aerie</groupId>
       <artifactId>aerie-sdk</artifactId>
       <version>1.0-SNAPSHOT</version>
-      <scope>compile</scope>
     </dependency>
+
     <!-- Core libraries -->
     <dependency>
       <groupId>org.apache.commons</groupId>

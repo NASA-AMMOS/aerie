@@ -9,14 +9,8 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import {
-  MatButtonModule,
-  MatCardModule,
-  MatIconModule,
-  MatSidenavModule,
-  MatTabsModule,
-} from '@angular/material';
 import { AngularSplitModule } from 'angular-split';
+import { ContextMenuModule } from 'ngx-contextmenu';
 import {
   RavenActivityPointModule,
   RavenBandsModule,
@@ -35,6 +29,7 @@ import {
   RavenTimeCursorModule,
   RavenTimeScrollBarModule,
 } from '../../components';
+import { MaterialModule } from '../../material';
 import { RavenKeyByPipeModule } from '../../pipes';
 import { SourceExplorerModule } from '../source-explorer/source-explorer.module';
 import { TimelineComponent } from './timeline.component';
@@ -45,11 +40,8 @@ import { TimelineComponent } from './timeline.component';
   imports: [
     AngularSplitModule.forChild(),
     CommonModule,
-    MatButtonModule,
-    MatCardModule,
-    MatIconModule,
-    MatTabsModule,
-    MatSidenavModule,
+    MaterialModule,
+    ContextMenuModule,
     RavenActivityPointModule,
     RavenBandsModule,
     RavenCheckboxRendererModule,

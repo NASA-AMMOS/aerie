@@ -10,16 +10,11 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import {
-  MatCardModule,
-  MatIconModule,
-  MatSidenavModule,
-  MatTabsModule,
-} from '@angular/material';
-import {
   RavenFileMetadataModule,
   RavenQuickFilterPanelModule,
   RavenTreeModule,
 } from '../../components';
+import { MaterialModule } from '../../material';
 import { SourceExplorerComponent } from './source-explorer.component';
 
 @NgModule({
@@ -27,10 +22,7 @@ import { SourceExplorerComponent } from './source-explorer.component';
   exports: [SourceExplorerComponent],
   imports: [
     CommonModule,
-    MatCardModule,
-    MatIconModule,
-    MatSidenavModule,
-    MatTabsModule,
+    MaterialModule,
     RavenFileMetadataModule,
     RavenQuickFilterPanelModule,
     RavenTreeModule,

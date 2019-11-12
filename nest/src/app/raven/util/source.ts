@@ -7,8 +7,6 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { StringTMap, TimeRange } from '../../shared/models';
-import { timestamp } from '../../shared/util';
 import {
   MpsServerSource,
   MpsServerSourceCategory,
@@ -30,8 +28,11 @@ import {
   RavenPin,
   RavenSource,
   RavenSubBand,
+  StringTMap,
+  TimeRange,
 } from '../models';
 import { getBandLabel } from './bands';
+import { timestamp } from './time';
 
 /**
  * Replace any slashes in a source name with dashes.

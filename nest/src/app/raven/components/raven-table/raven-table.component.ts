@@ -17,31 +17,16 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-
 import { FormControl } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
 import {
   AgGridEvent,
   IDatasource,
-  RowNode,
   SelectionChangedEvent,
 } from 'ag-grid-community';
+import { GridOptions, ValueSetterParams } from 'ag-grid-community';
 import pickBy from 'lodash-es/pickBy';
 import startsWith from 'lodash-es/startsWith';
-
-import {
-  dateToTimestring,
-  dhms,
-  timestamp,
-  toDuration,
-  utc,
-} from '../../../shared/util';
-import {
-  createNewActivityPoint,
-  createNewResourcePoint,
-  createNewStatePoint,
-} from '../../util';
-
 import {
   RavenActivityPoint,
   RavenPoint,
@@ -50,9 +35,16 @@ import {
   RavenSubBand,
   RavenUpdate,
 } from '../../models';
-import { RavenTableDetailComponent } from './raven-table-detail.component';
-
-import { GridOptions, ValueSetterParams } from 'ag-grid-community';
+import {
+  createNewActivityPoint,
+  createNewResourcePoint,
+  createNewStatePoint,
+  dateToTimestring,
+  dhms,
+  timestamp,
+  toDuration,
+  utc,
+} from '../../util';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -131,6 +123,7 @@ export class RavenTableComponent implements OnChanges {
   constructor() {
     this.gridOptions = {
       infiniteInitialRowCount: 1,
+      rowHeight: 28,
       rowModelType: 'infinite',
     };
     this.dataSource = {
@@ -222,59 +215,6 @@ export class RavenTableComponent implements OnChanges {
   }
 
   /**
-   * Ag Grid. Returns component to be used in the grids detail row.
-   */
-  getFullWidthCellRenderer() {
-    return RavenTableDetailComponent;
-  }
-
-  /**
-   * Ag Grid. Returns the row height for a given row in the grid.
-   * Takes into account the detail row height.
-   */
-  getRowHeight(params: any) {
-    const rowIsDetailRow = params.node.level === 1;
-    return rowIsDetailRow ? 300 : 28;
-  }
-
-  /**
-   * Ag Grid. Helper that gets child records from a row.
-   * Note the Ag Grid quirk of `children` being an array-of-arrays.
-   */
-  getNodeChildDetails(record: any) {
-    if (record.activityParameters || record.metadata) {
-      const children = [];
-
-      // Add activity parameters table only if we have activity parameters.
-      if (record.activityParameters && record.activityParameters.length) {
-        children.push([
-          { type: 'Activity Parameters', rows: record.activityParameters },
-        ]);
-      }
-
-      // Add metadata table only if we have metadata.
-      if (record.metadata && record.metadata.length) {
-        children.push([{ type: 'Metadata', rows: record.metadata }]);
-      }
-
-      return {
-        children,
-        group: true,
-        key: record.id, // The key is used by the default group cellRenderer.
-      };
-    } else {
-      return null;
-    }
-  }
-
-  /**
-   * Ag Grid. Returns if we are a master or detail row.
-   */
-  isFullWidthCell(rowNode: RowNode) {
-    return rowNode.level === 1;
-  }
-
-  /**
    * Calculates and returns `columnDefs` for use in the grid based on a point.
    */
   createColumnDefs(point: RavenPoint) {
@@ -284,18 +224,12 @@ export class RavenTableComponent implements OnChanges {
     const updatePoint = this.updatePoint;
 
     if (point) {
-      // First push the sub-grid menu column for opening/closing the detail panel if it exists.
       children.push({
-        cellRenderer: 'agGroupCellRenderer',
-        cellRendererParams: {
-          suppressCount: true,
-          suppressDoubleClickExpand: true,
-        },
         colId: 'index',
         field: 'index',
         headerName: '',
         hide: false,
-        width: 70,
+        width: 50,
       });
 
       Object.keys(

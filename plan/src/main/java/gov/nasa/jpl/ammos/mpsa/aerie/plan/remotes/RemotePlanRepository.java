@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -60,18 +61,19 @@ public final class RemotePlanRepository implements PlanRepository {
 
     return documentStream(query)
         .map(planDocument -> {
-          final String planId = planDocument.getObjectId("_id").toString();
-          final FindIterable<Document> activityDocuments = this.activityCollection.find(activityByPlan(planId));
+          final ObjectId planId = planDocument.getObjectId("_id");
+          final FindIterable<Document> activityDocuments = this.activityCollection.find(
+              activityByPlan(planId));
           final Plan plan = planFromDocuments(planDocument, activityDocuments);
 
-          return Pair.of(planId, plan);
+          return Pair.of(planId.toString(), plan);
         });
   }
 
   @Override
   public Plan getPlan(final String planId) throws NoSuchPlanException {
     final Document planDocument = this.planCollection
-        .find(planById(planId))
+        .find(planById(makePlanObjectId(planId)))
         .first();
 
     if (planDocument == null) {
@@ -79,7 +81,7 @@ public final class RemotePlanRepository implements PlanRepository {
     }
 
     final FindIterable<Document> activityDocuments = this.activityCollection
-        .find(activityByPlan(planId));
+        .find(activityByPlan(makePlanObjectId(planId)));
 
     return planFromDocuments(planDocument, activityDocuments);
   }
@@ -88,7 +90,7 @@ public final class RemotePlanRepository implements PlanRepository {
   public Stream<Pair<String, ActivityInstance>> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
     ensurePlanExists(planId);
 
-    return documentStream(this.activityCollection.find(activityByPlan("planId")))
+    return documentStream(this.activityCollection.find(activityByPlan(makePlanObjectId(planId))))
         .map(document -> Pair.of(
             document.getObjectId("_id").toString(),
             activityFromDocument(document)));
@@ -99,7 +101,7 @@ public final class RemotePlanRepository implements PlanRepository {
     ensurePlanExists(planId);
 
     final Document document = this.activityCollection
-        .find(activityById(planId, activityId))
+        .find(activityById(makePlanObjectId(planId), makeActivityObjectId(planId, activityId)))
         .first();
 
     if (document == null) {
@@ -128,20 +130,20 @@ public final class RemotePlanRepository implements PlanRepository {
   }
 
   @Override
-  public PlanTransaction updatePlan(final String planId) {
-    return new MongoPlanTransaction(planId);
+  public PlanTransaction updatePlan(final String planId) throws NoSuchPlanException {
+    return new MongoPlanTransaction(makePlanObjectId(planId));
   }
 
   @Override
   public void replacePlan(final String planId, final NewPlan plan) throws NoSuchPlanException {
     {
-      final var result = this.planCollection.replaceOne(planById(planId), toDocument(plan));
+      final var result = this.planCollection.replaceOne(planById(makePlanObjectId(planId)), toDocument(plan));
       if (result.getMatchedCount() <= 0) {
         throw new NoSuchPlanException(planId);
       }
     }
 
-    this.activityCollection.deleteMany(activityByPlan(planId));
+    this.activityCollection.deleteMany(activityByPlan(makePlanObjectId(planId)));
     if (plan.activityInstances != null) {
       for (final var activity : plan.activityInstances) {
         this.activityCollection.insertOne(toDocument(planId, activity));
@@ -151,7 +153,7 @@ public final class RemotePlanRepository implements PlanRepository {
 
   @Override
   public void deletePlan(final String planId) throws NoSuchPlanException {
-    final var result = this.planCollection.deleteOne(eq("_id", new ObjectId(planId)));
+    final var result = this.planCollection.deleteOne(planById(makePlanObjectId(planId)));
     if (result.getDeletedCount() <= 0) {
       throw new NoSuchPlanException(planId);
     }
@@ -169,8 +171,10 @@ public final class RemotePlanRepository implements PlanRepository {
   }
 
   @Override
-  public ActivityTransaction updateActivity(final String planId, final String activityId) {
-    return new MongoActivityTransaction(planId, activityId);
+  public ActivityTransaction updateActivity(final String planId, final String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException {
+    return new MongoActivityTransaction(
+        makePlanObjectId(planId),
+        makeActivityObjectId(planId, activityId));
   }
 
   @Override
@@ -178,7 +182,7 @@ public final class RemotePlanRepository implements PlanRepository {
     ensurePlanExists(planId);
 
     final var result = this.activityCollection.replaceOne(
-        activityById(planId, activityId),
+        activityById(makePlanObjectId(planId), makeActivityObjectId(planId, activityId)),
         toDocument(planId, activity));
     if (result.getMatchedCount() <= 0) {
       throw new NoSuchActivityInstanceException(planId, activityId);
@@ -189,7 +193,9 @@ public final class RemotePlanRepository implements PlanRepository {
   public void deleteActivity(final String planId, final String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException {
     ensurePlanExists(planId);
 
-    final var result = this.activityCollection.deleteOne(activityById(planId, activityId));
+    final var result = this.activityCollection.deleteOne(activityById(
+        makePlanObjectId(planId),
+        makeActivityObjectId(planId, activityId)));
     if (result.getDeletedCount() <= 0) {
       throw new NoSuchActivityInstanceException(planId, activityId);
     }
@@ -198,25 +204,41 @@ public final class RemotePlanRepository implements PlanRepository {
   @Override
   public void deleteAllActivities(final String planId) throws NoSuchPlanException {
     ensurePlanExists(planId);
-    this.activityCollection.deleteMany(activityByPlan(planId));
+    this.activityCollection.deleteMany(activityByPlan(makePlanObjectId(planId)));
   }
 
-  private Bson activityByPlan(final String planId) {
-    return eq("planId", new ObjectId(planId));
+  private Bson activityByPlan(final ObjectId planId) {
+    return eq("planId", planId);
   }
 
-  private Bson activityById(final String planId, final String activityId) {
+  private Bson activityById(final ObjectId planId, ObjectId activityId) {
     return and(
-        eq("_id", new ObjectId(activityId)),
+        eq("_id", activityId),
         activityByPlan(planId));
   }
 
-  private Bson planById(final String planId) {
-    return eq("_id", new ObjectId(planId));
+  private Bson planById(final ObjectId planId) {
+    return eq("_id", planId);
+  }
+
+  private ObjectId makePlanObjectId(final String planId) throws NoSuchPlanException {
+    return objectIdOrElse(planId, () -> new NoSuchPlanException(planId));
+  }
+
+  private ObjectId makeActivityObjectId(final String planId, final String activityId) throws NoSuchActivityInstanceException {
+    return objectIdOrElse(activityId, () -> new NoSuchActivityInstanceException(planId, activityId));
+  }
+
+  private <T extends Throwable> ObjectId objectIdOrElse(final String id, Supplier<T> except) throws T {
+    try {
+      return new ObjectId(id);
+    } catch (final IllegalArgumentException ex) {
+      throw except.get();
+    }
   }
 
   private void ensurePlanExists(final String planId) throws NoSuchPlanException {
-    if (this.planCollection.countDocuments(planById(planId)) == 0) {
+    if (this.planCollection.countDocuments(planById(makePlanObjectId(planId))) == 0) {
       throw new NoSuchPlanException(planId);
     }
   }
@@ -295,7 +317,7 @@ public final class RemotePlanRepository implements PlanRepository {
       }
 
       @Override
-      public Document onDouble(double value) {
+      public Document onReal(double value) {
         final Document document = new Document();
         document.put("type", "double");
         document.put("value", value);
@@ -303,7 +325,7 @@ public final class RemotePlanRepository implements PlanRepository {
       }
 
       @Override
-      public Document onInt(int value) {
+      public Document onInt(long value) {
         final Document document = new Document();
         document.put("type", "int");
         document.put("value", value);
@@ -394,10 +416,10 @@ public final class RemotePlanRepository implements PlanRepository {
   }
 
   private class MongoPlanTransaction implements PlanTransaction {
-    private final String planId;
+    private final ObjectId planId;
     private Bson patch = combine();
 
-    public MongoPlanTransaction(final String planId) {
+    public MongoPlanTransaction(final ObjectId planId) {
       this.planId = planId;
     }
 
@@ -432,11 +454,11 @@ public final class RemotePlanRepository implements PlanRepository {
   }
 
   private class MongoActivityTransaction implements ActivityTransaction {
-    private final String planId;
-    private final String activityId;
+    private final ObjectId planId;
+    private final ObjectId activityId;
     private Bson patch = combine();
 
-    public MongoActivityTransaction(final String planId, final String activityId) {
+    public MongoActivityTransaction(final ObjectId planId, final ObjectId activityId) {
       this.planId = planId;
       this.activityId = activityId;
     }

@@ -10,11 +10,6 @@
 import { OverlayModule } from '@angular/cdk/overlay';
 import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
-import {
-  MatButtonModule,
-  MatIconModule,
-  MatSidenavModule,
-} from '@angular/material';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreRouterConnectingModule } from '@ngrx/router-store';
@@ -24,15 +19,10 @@ import { SortablejsModule } from 'angular-sortablejs/dist';
 import { AngularSplitModule } from 'angular-split';
 import { ContextMenuModule } from 'ngx-contextmenu';
 import { ToastrModule } from 'ngx-toastr';
-import { RouterEffects } from '../../libs/ngrx-router';
 import { environment } from '../environments/environment';
 import { AppRoutingModule } from './app-routing.module';
 import { metaReducers, ROOT_REDUCERS } from './app-store';
 import { AppComponent } from './app.component';
-import { NestAboutDialogModule } from './shared/components/nest-about-dialog/nest-about-dialog.module';
-import { NestAppNavModule } from './shared/components/nest-app-nav/nest-app-nav.module';
-import { ConfigEffects, DialogEffects, NavEffects } from './shared/effects';
-import { ToastEffects } from './shared/effects/toast.effects';
 
 @NgModule({
   bootstrap: [AppComponent],
@@ -41,14 +31,8 @@ import { ToastEffects } from './shared/effects/toast.effects';
     BrowserAnimationsModule,
     HttpClientModule,
     AppRoutingModule,
-    EffectsModule.forRoot([
-      ConfigEffects,
-      DialogEffects,
-      NavEffects,
-      RouterEffects,
-      ToastEffects,
-    ]),
     OverlayModule,
+    EffectsModule.forRoot([]),
     SortablejsModule.forRoot({}),
     AngularSplitModule.forRoot(),
     ContextMenuModule.forRoot(),
@@ -70,15 +54,6 @@ import { ToastEffects } from './shared/effects/toast.effects';
       preventDuplicates: true,
       resetTimeoutOnDuplicate: true,
     }),
-    MatButtonModule,
-    MatIconModule,
-    MatSidenavModule,
-    NestAboutDialogModule,
-    NestAppNavModule,
-
-    // StoreDevtoolsModule must come AFTER StoreModule.
-    // To avoid interrupting alphabetical order (and since it's meant for dev only),
-    // we'll put it in its own section of the imports list.
     StoreDevtoolsModule.instrument({
       logOnly: environment.production,
       maxAge: 10,

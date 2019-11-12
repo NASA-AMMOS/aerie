@@ -10,27 +10,13 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import {
-  MatButtonModule,
-  MatDialogModule,
-  MatFormFieldModule,
-  MatInputModule,
-  MatSelectModule,
-} from '@angular/material';
+import { MaterialModule } from '../../material';
 import { RavenFileImportDialogComponent } from './raven-file-import-dialog.component';
 
 @NgModule({
   declarations: [RavenFileImportDialogComponent],
   entryComponents: [RavenFileImportDialogComponent],
   exports: [RavenFileImportDialogComponent],
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatButtonModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-  ],
+  imports: [CommonModule, FormsModule, MaterialModule],
 })
 export class RavenFileImportDialogModule {}
