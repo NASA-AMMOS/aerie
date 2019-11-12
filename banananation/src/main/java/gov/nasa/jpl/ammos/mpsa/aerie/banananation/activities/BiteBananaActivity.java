@@ -19,7 +19,7 @@ import java.util.List;
  * @subsystem fruit
  * @contact John Doe
  */
-@ActivityType("BiteBanana")
+@ActivityType(name="BiteBanana", states=BananaStates.class)
 public final class BiteBananaActivity implements Activity<BananaStates> {
   @Parameter
   public double biteSize = 1.0;
@@ -36,7 +36,7 @@ public final class BiteBananaActivity implements Activity<BananaStates> {
   }
 
   @Override
-  public void modelEffects(SimulationContext<BananaStates> ctx, BananaStates states) {
+  public void modelEffects(SimulationContext ctx, BananaStates states) {
     SettableState<Double> fruitState = states.fruitState;
     fruitState.set(fruitState.get() - biteSize);
   }

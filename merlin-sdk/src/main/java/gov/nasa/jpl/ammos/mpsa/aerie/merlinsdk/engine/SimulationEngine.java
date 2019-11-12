@@ -1,5 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,7 +41,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
  * 
  * @param <T> the type of the adapter-provided state index structure
  */
-public class SimulationEngine<T extends StateContainer> {
+public class SimulationEngine {
 
     /**
      * The current simulation time of the engine
@@ -49,39 +51,36 @@ public class SimulationEngine<T extends StateContainer> {
     /**
      * The priority queue of time-ordered `ActivityJob`s
      */
-    private PendingEventQueue<T> pendingEventQueue = new PendingEventQueue<>();
+    private PendingEventQueue pendingEventQueue = new PendingEventQueue();
 
     /**
      * A map of activity instances to their owning jobs
      */
-    private Map<Activity<T>, ActivityJob<T>> activityToJobMap = new HashMap<>();
+    private Map<Activity<?>, ActivityJob<?>> activityToJobMap = new HashMap<>();
 
     /**
      * A map of parent activity instances to their children
      */
-    private Map<Activity<T>, List<Activity<T>>> parentChildMap = new HashMap<>();
+    private Map<Activity<?>, List<Activity<?>>> parentChildMap = new HashMap<>();
 
     /**
      * A map of activity instances to their durations (the length of the effect
      * model in simulation time)
      */
-    private Map<Activity<T>, Duration> activityDurationMap = new HashMap<>();
+    private Map<Activity<?>, Duration> activityDurationMap = new HashMap<>();
 
     /**
      * A map of target activity to their listeners (activities that are blocking on
      * the target's completion)
      */
-    private Map<Activity<T>, Set<Activity<T>>> activityListenerMap = new HashMap<>();
+    private Map<Activity<?>, Set<Activity<?>>> activityListenerMap = new HashMap<>();
+
+    private StateContainer stateContainer;
 
     /**
      * The thread in which the simulation engine is running
      */
     private Thread engineThread;
-
-    /**
-     * The adapter-provided state index structure
-     */
-    private T states;
 
     /**
      * A thread pool used for executing `ActivityJob`s
@@ -93,15 +92,17 @@ public class SimulationEngine<T extends StateContainer> {
      * 
      * @param simulationStartTime
      * @param activityJobs
-     * @param states
+     * @param stateContainers
      */
-    public SimulationEngine(Time simulationStartTime, List<ActivityJob<T>> activityJobs, T states) {
-        this.states = states;
-        registerStates(this.states.getStateList());
+    public SimulationEngine(Time simulationStartTime, List<ActivityJob<?>> activityJobs,
+        StateContainer stateContainer) {
+        this.stateContainer = stateContainer;
+        
+        registerStates(stateContainer.getStateList());
 
         this.currentSimulationTime = simulationStartTime;
 
-        for (ActivityJob<T> job : activityJobs) {
+        for (ActivityJob<?> job : activityJobs) {
             this.pendingEventQueue.add(job);
             this.activityToJobMap.put(job.getActivity(), job);
         }
@@ -121,7 +122,7 @@ public class SimulationEngine<T extends StateContainer> {
         this.engineThread = Thread.currentThread();
 
         while (!this.pendingEventQueue.isEmpty()) {
-            ActivityJob<T> job = pendingEventQueue.remove();
+            ActivityJob<?> job = pendingEventQueue.remove();
             this.currentSimulationTime = job.getEventTime();
             this.executeActivity(job);
         }
@@ -133,8 +134,8 @@ public class SimulationEngine<T extends StateContainer> {
      * @param activityJob the activity job to which the engine should dispatch
      *                    a `JobContext`
      */
-    public void dispatchContext(ActivityJob<T> activityJob) {
-        JobContext<T> ctx = new JobContext<>(this, activityJob);
+    public void dispatchContext(ActivityJob<?> activityJob) {
+        JobContext ctx = new JobContext(this, activityJob);
         activityJob.setContext(ctx);
     }
 
@@ -144,8 +145,8 @@ public class SimulationEngine<T extends StateContainer> {
      * @param activityJob the activity job to which the engine should dispatch
      *                    states
      */
-    public void dispatchStates(ActivityJob<T> activityJob) {
-        activityJob.setStates(this.states);
+    public void dispatchStates(ActivityJob<?> activityJob) {
+        activityJob.setStates(this.stateContainer);
     }
 
     /**
@@ -169,7 +170,7 @@ public class SimulationEngine<T extends StateContainer> {
      * 
      * @param activityJob the activity job to start or resume
      */
-    public void executeActivity(ActivityJob<T> activityJob) {
+    public void executeActivity(ActivityJob<?> activityJob) {
         ControlChannel channel;
 
         switch (activityJob.getStatus()) {
@@ -201,7 +202,7 @@ public class SimulationEngine<T extends StateContainer> {
      * @param parent the parent activity that is decomposing into the child
      * @param child  the child activity into which the parent is decomposing
      */
-    public void addParentChildRelationship(Activity<T> parent, Activity<T> child) {
+    public void addParentChildRelationship(Activity<?> parent, Activity<?> child) {
         this.parentChildMap.putIfAbsent(parent, new ArrayList<>());
         this.parentChildMap.get(parent).add(child);
     }
@@ -218,7 +219,7 @@ public class SimulationEngine<T extends StateContainer> {
      * @param listener the activity that is blocked until the target's effect model
      *                 completes
      */
-    public void addActivityListener(Activity<T> target, Activity<T> listener) {
+    public void addActivityListener(Activity<?> target, Activity<?> listener) {
         this.activityListenerMap.putIfAbsent(target, new HashSet<>());
         this.activityListenerMap.get(target).add(listener);
     }
@@ -231,7 +232,7 @@ public class SimulationEngine<T extends StateContainer> {
      * @param listener the activity that is blocked until the target's effect model
      *                 completes
      */
-    public void removeActivityListener(Activity<T> target, Activity<T> listener) {
+    public void removeActivityListener(Activity<?> target, Activity<?> listener) {
         this.activityListenerMap.get(target).remove(listener);
     }
 
@@ -251,7 +252,7 @@ public class SimulationEngine<T extends StateContainer> {
      * 
      * @param activityJob the job to be inserted
      */
-    public void insertIntoQueue(ActivityJob<T> activityJob) {
+    public void insertIntoQueue(ActivityJob<?> activityJob) {
         this.pendingEventQueue.add(activityJob);
     }
 
@@ -262,7 +263,7 @@ public class SimulationEngine<T extends StateContainer> {
      * @param activity    the `Activity` owned by the `ActivityJob`
      * @param activityJob the `ActivityJob` that owns the `Activity`
      */
-    public void registerActivityAndJob(Activity<T> activity, ActivityJob<T> activityJob) {
+    public void registerActivityAndJob(Activity<?> activity, ActivityJob<?> activityJob) {
         this.activityToJobMap.put(activity, activityJob);
     }
 
@@ -272,7 +273,7 @@ public class SimulationEngine<T extends StateContainer> {
      * @param activity the `Activity` whose owning job is desired
      * @return the `ActivityJob` that owns the given activity
      */
-    public ActivityJob<T> getActivityJob(Activity<T> activity) {
+    public ActivityJob<?> getActivityJob(Activity<?> activity) {
         return this.activityToJobMap.get(activity);
     }
 
@@ -282,7 +283,7 @@ public class SimulationEngine<T extends StateContainer> {
      * @param target the target activity whose completion listeners are blocking on
      * @return a set of the listeners that are blocked on the target's completion
      */
-    public Set<Activity<T>> getActivityListeners(Activity<T> target) {
+    public Set<Activity<?>> getActivityListeners(Activity<?> target) {
         return Collections.unmodifiableSet(activityListenerMap.getOrDefault(target, Collections.emptySet()));
     }
 
@@ -293,7 +294,7 @@ public class SimulationEngine<T extends StateContainer> {
      * @param activity the parent activity
      * @return the list of child activities
      */
-    public List<Activity<T>> getActivityChildren(Activity<T> activity) {
+    public List<Activity<?>> getActivityChildren(Activity<?> activity) {
         return Collections.unmodifiableList(parentChildMap.getOrDefault(activity, Collections.emptyList()));
     }
 
@@ -304,7 +305,7 @@ public class SimulationEngine<T extends StateContainer> {
      * @param activity the activity instance modeled in the simulation
      * @param d        the length in simulation time of the activity's effect model
      */
-    public void logActivityDuration(Activity<T> activity, Duration d) {
+    public void logActivityDuration(Activity<?> activity, Duration d) {
         this.activityDurationMap.put(activity, d);
     }
 
@@ -315,7 +316,7 @@ public class SimulationEngine<T extends StateContainer> {
      * @param activity the activity instance whose duration is desired
      * @return the length in simulation time of that activity's effect model
      */
-    public Duration getActivityDuration(Activity<T> activity) {
+    public Duration getActivityDuration(Activity<?> activity) {
         return this.activityDurationMap.get(activity);
     }
 

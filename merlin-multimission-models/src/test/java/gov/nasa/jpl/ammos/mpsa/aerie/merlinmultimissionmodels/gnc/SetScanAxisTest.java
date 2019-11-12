@@ -26,7 +26,7 @@ public class SetScanAxisTest {
         ActivityJob<GNCStates> gncActivities = new ActivityJob<>(setScanAxisActivity, simStart);
         GNCStates gncStates = new GNCStates();
 
-        SimulationEngine<GNCStates> engine = new SimulationEngine<>(simStart, List.of(gncActivities), gncStates);
+        SimulationEngine engine = new SimulationEngine(simStart, List.of(gncActivities), gncStates);
         engine.simulate();
 
         Map<Time, Vector3D> history = gncStates.getVectorState(GNCStates.scanAxisName).getHistory();

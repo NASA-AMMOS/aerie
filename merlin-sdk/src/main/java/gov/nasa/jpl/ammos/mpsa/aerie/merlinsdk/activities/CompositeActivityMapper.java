@@ -38,7 +38,7 @@ public class CompositeActivityMapper implements ActivityMapper {
 
   @Override
   public Optional<SerializedActivity> serializeActivity(final Activity activity) {
-    final String activityType = activity.getClass().getAnnotation(ActivityType.class).value();
+    final String activityType = activity.getClass().getAnnotation(ActivityType.class).name();
     return lookupMapper(activityType).flatMap(m -> m.serializeActivity(activity));
   }
 

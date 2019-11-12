@@ -25,7 +25,7 @@ public class BasicStateTest {
             return List.of();
         }
     }
-    public SimulationEngine<?> mockEngine = new SimulationEngine<StateContainer>(new Time(), List.of(), new MockStateContainer());
+    public SimulationEngine mockEngine = new SimulationEngine(new Time(), List.of(), new MockStateContainer());
 
 
     @Before

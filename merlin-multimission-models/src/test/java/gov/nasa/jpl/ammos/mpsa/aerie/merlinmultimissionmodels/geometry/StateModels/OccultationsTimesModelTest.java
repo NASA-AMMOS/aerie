@@ -15,8 +15,6 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.blackbird.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.blackbird.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.Globals.ABCORR;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.Globals.Body;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.Globals.OccultationType;
@@ -27,6 +25,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.spice.SpiceLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 import spice.basic.CSPICE;
 import spice.basic.SpiceErrorException;
 
@@ -39,8 +39,7 @@ public class OccultationsTimesModelTest {
             return List.of();
         }
     }
-    // TODO: fix the dependence upon Blackbird/JPLTime within multimissionmodels vs Merlin time within the simulation core
-    public SimulationEngine<?> mockEngine = new SimulationEngine<StateContainer>(new gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time(), List.of(), new MockStateContainer());
+    public SimulationEngine mockEngine = new SimulationEngine(new Time(), List.of(), new MockStateContainer());
 
     @BeforeClass
     public static void loadSpiceAndKernels() {

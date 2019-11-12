@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { RouterModule } from '@angular/router';
 import { AngularSplitModule } from 'angular-split';
 import { ActivityTypeListModule, PanelHeaderModule } from '../../components';
 import { MaterialModule } from '../../material';
@@ -13,7 +12,6 @@ import { PlanComponent } from './plan.component';
   imports: [
     CommonModule,
     MaterialModule,
-    RouterModule,
     AngularSplitModule.forChild(),
     ActivityTypeListModule,
     PanelHeaderModule,

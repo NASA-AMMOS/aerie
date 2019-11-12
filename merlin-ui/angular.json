@@ -20,7 +20,11 @@
             "tsConfig": "tsconfig.app.json",
             "aot": true,
             "assets": ["src/favicon.ico", "src/assets"],
-            "styles": ["src/theme.scss", "src/styles.css"],
+            "styles": [
+              "src/theme.scss",
+              "node_modules/ngx-toastr/toastr.css",
+              "src/styles.css"
+            ],
             "scripts": []
           },
           "configurations": {
@@ -75,6 +79,7 @@
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
             "main": "src/test.ts",
+            "codeCoverageExclude": ["src/app/services/api-mock.service.ts"],
             "polyfills": "src/polyfills.ts",
             "tsConfig": "tsconfig.spec.json",
             "karmaConfig": "karma.conf.js",

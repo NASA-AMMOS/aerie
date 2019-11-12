@@ -9,9 +9,9 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.blackbird.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.blackbird.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.Globals;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 import spice.basic.CSPICE;
 import spice.basic.SpiceErrorException;
 

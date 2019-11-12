@@ -19,7 +19,7 @@ import java.util.List;
  * @subsystem fruit
  * @contact Jane Doe
  */
-@ActivityType("PeelBanana")
+@ActivityType(name="PeelBanana", states=BananaStates.class)
 public final class PeelBananaActivity implements Activity<BananaStates> {
   private static final double MASHED_BANANA_AMOUNT = 1.0;
 
@@ -38,7 +38,7 @@ public final class PeelBananaActivity implements Activity<BananaStates> {
   }
 
   @Override
-  public void modelEffects(SimulationContext<BananaStates> ctx, BananaStates states) {
+  public void modelEffects(SimulationContext ctx, BananaStates states) {
     if (peelDirection.equals("fromStem")) {
       states.fruitState.set(states.fruitState.get() - MASHED_BANANA_AMOUNT);
     }

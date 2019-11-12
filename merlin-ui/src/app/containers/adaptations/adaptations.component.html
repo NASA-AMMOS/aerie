@@ -1,33 +1,6 @@
 <mat-toolbar color="primary">
   <span>Adaptations</span>
-
-  <div class="mat-toolbar-right">
-    <button mat-icon-button [matMenuTriggerFor]="menu">
-      <mat-icon>more_vert</mat-icon>
-    </button>
-
-    <mat-menu #menu="matMenu">
-      <button mat-menu-item [matMenuTriggerFor]="views">
-        <mat-icon>library_books</mat-icon>
-        <span>Views</span>
-      </button>
-      <button mat-menu-item (click)="onAbout()">
-        <mat-icon>info</mat-icon>
-        <span>About</span>
-      </button>
-    </mat-menu>
-
-    <mat-menu #views="matMenu">
-      <button mat-menu-item [routerLink]="['/plans']">Plans</button>
-    </mat-menu>
-  </div>
 </mat-toolbar>
-
-<mat-progress-bar
-  *ngIf="loading"
-  color="accent"
-  mode="indeterminate"
-></mat-progress-bar>
 
 <as-split [gutterSize]="4">
   <as-split-area [size]="25">
@@ -36,7 +9,7 @@
     </app-panel-header>
     <div class="p-1">
       <form [formGroup]="createAdaptationForm" (ngSubmit)="onSubmit()">
-        <mat-form-field class="w-100" appearance="fill">
+        <mat-form-field class="w-100" appearance="outline">
           <mat-label>Name</mat-label>
           <input
             [required]="true"
@@ -48,7 +21,7 @@
           />
         </mat-form-field>
 
-        <mat-form-field class="w-100" appearance="fill">
+        <mat-form-field class="w-100" appearance="outline">
           <mat-label>Version</mat-label>
           <input
             [required]="true"
@@ -60,7 +33,7 @@
           />
         </mat-form-field>
 
-        <mat-form-field class="w-100" appearance="fill">
+        <mat-form-field class="w-100" appearance="outline">
           <mat-label>Mission</mat-label>
           <input
             [required]="true"
@@ -72,7 +45,7 @@
           />
         </mat-form-field>
 
-        <mat-form-field class="w-100" appearance="fill">
+        <mat-form-field class="w-100" appearance="outline">
           <mat-label>Owner</mat-label>
           <input
             [required]="true"
@@ -112,7 +85,7 @@
     </app-panel-header>
     <div class="p-1">
       <mat-card *ngIf="!adaptations.length" id="no-adaptations-message">
-        There are no adaptations in the database.
+        No adaptations found.
       </mat-card>
 
       <table

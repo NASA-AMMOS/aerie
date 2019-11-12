@@ -11,6 +11,7 @@ import { NgModule } from '@angular/core';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import {
+  RavenAboutDialogModule,
   RavenConfirmDialogModule,
   RavenCustomFilterDialogModule,
   RavenCustomGraphDialogModule,
@@ -25,6 +26,7 @@ import {
 } from './components';
 import { RavenAppModule } from './containers/raven-app/raven-app.module';
 import {
+  ConfigEffects,
   DialogEffects,
   EpochsEffects,
   LayoutEffects,
@@ -34,6 +36,7 @@ import {
   SourceExplorerEffects,
   TimeCursorEffects,
   TimelineEffects,
+  ToastEffects,
 } from './effects';
 import { RavenGuard } from './guards';
 import { RavenRoutingModule } from './raven-routing.module';
@@ -44,6 +47,7 @@ import { reducers } from './raven-store';
     RavenRoutingModule,
     StoreModule.forFeature('raven', reducers),
     EffectsModule.forFeature([
+      ConfigEffects,
       DialogEffects,
       EpochsEffects,
       LayoutEffects,
@@ -53,8 +57,10 @@ import { reducers } from './raven-store';
       SourceExplorerEffects,
       TimeCursorEffects,
       TimelineEffects,
+      ToastEffects,
     ]),
     RavenAppModule,
+    RavenAboutDialogModule,
     RavenConfirmDialogModule,
     RavenCustomFilterDialogModule,
     RavenCustomGraphDialogModule,

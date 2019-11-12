@@ -30,14 +30,14 @@ public class DataModelActivitiesTest {
         //1. create activities and add to job list
         InitializeBinDataVolume binInitActivity = new InitializeBinDataVolume();
         ActivityJob<OnboardDataModelStates> binInitJob = new ActivityJob<>(binInitActivity, simStart);
-        List<ActivityJob<OnboardDataModelStates>> activityJobList = new ArrayList<>();
+        List<ActivityJob<?>> activityJobList = new ArrayList<>();
         activityJobList.add(binInitJob);
 
         //2. create states
         OnboardDataModelStates states = new OnboardDataModelStates();
 
         //3. create engine and simulate
-        SimulationEngine<OnboardDataModelStates> engine = new SimulationEngine<>(simStart, activityJobList, states);
+        SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
         engine.simulate();
 
         for (BinModel x : states.getBinModelList()){
@@ -56,7 +56,7 @@ public class DataModelActivitiesTest {
 
         //0. choose sim start time
         Time simStart = new Time();
-        Time simInstOn  = new Time().add(new Duration(Duration.ONE_HOUR));
+        Time simInstOn  = new Time().add(Duration.fromHours(1));
 
         //1. create activities and add to job list
         InitializeBinDataVolume binInitActivity = new InitializeBinDataVolume();
@@ -67,13 +67,13 @@ public class DataModelActivitiesTest {
         instrumentOn.instrumentRate = 10.0;
         ActivityJob<OnboardDataModelStates> instrumentOnJob = new ActivityJob<>(instrumentOn, simInstOn);
 
-        List<ActivityJob<OnboardDataModelStates>> activityJobList = List.of(instrumentOnJob, binInitJob);
+        List<ActivityJob<?>> activityJobList = List.of(instrumentOnJob, binInitJob);
 
         //2. create states
         OnboardDataModelStates states = new OnboardDataModelStates();
 
         //3. create engine and simulate
-        SimulationEngine<OnboardDataModelStates> engine = new SimulationEngine<>(simStart, activityJobList, states);
+        SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
         engine.simulate();
 
         Map<Time, Double> binMap = states.getBinByName("Bin 1").getHistory();
@@ -104,8 +104,8 @@ public class DataModelActivitiesTest {
         System.out.println("Turn instruments off activity test start\n");
 
         Time simStart = new Time();
-        Time simInstOff = new Time().add(new Duration(Duration.ONE_MINUTE));
-        Time simInstOn  = new Time().add(new Duration(Duration.ONE_HOUR));
+        Time simInstOff = new Time().add(Duration.fromMinutes(1));
+        Time simInstOn  = new Time().add(Duration.fromHours(1));
 
         InitializeBinDataVolume binInitActivity = new InitializeBinDataVolume();
         ActivityJob<OnboardDataModelStates> binInitJob = new ActivityJob<>(binInitActivity, simStart);
@@ -115,7 +115,7 @@ public class DataModelActivitiesTest {
         instrumentOn.instrumentRate = 10.0;
         ActivityJob<OnboardDataModelStates> instrumentOnJob = new ActivityJob<>(instrumentOn, simInstOn);
 
-        List<ActivityJob<OnboardDataModelStates>> activityJobList = new ArrayList<>();
+        List<ActivityJob<?>> activityJobList = new ArrayList<>();
         activityJobList.add(binInitJob);
         activityJobList.add(instrumentOnJob);
 
@@ -128,7 +128,7 @@ public class DataModelActivitiesTest {
             activityJobList.add(activityJob);
         }
 
-        SimulationEngine<OnboardDataModelStates> engine = new SimulationEngine<>(simStart, activityJobList, states);
+        SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
         engine.simulate();
 
         for (InstrumentModel x : states.getInstrumentModelList()){
@@ -159,9 +159,9 @@ public class DataModelActivitiesTest {
         System.out.println("Downlink activity test start\n");
 
         Time simStart = new Time();
-        Time simInstOff = new Time().add(new Duration(Duration.ONE_MINUTE));
-        Time simInstOn  = new Time().add(new Duration(Duration.ONE_HOUR));
-        Time simDownlink = new Time().add(new Duration(5 * Duration.ONE_HOUR));
+        Time simInstOff = new Time().add(Duration.fromMinutes(1));
+        Time simInstOn  = new Time().add(Duration.fromHours(1));
+        Time simDownlink = new Time().add(Duration.fromHours(5));
 
         InitializeBinDataVolume binInitActivity = new InitializeBinDataVolume();
         ActivityJob<OnboardDataModelStates> binInitJob = new ActivityJob<>(binInitActivity, simStart);
@@ -171,7 +171,7 @@ public class DataModelActivitiesTest {
         instrumentOn.instrumentRate = 10.0;
         ActivityJob<OnboardDataModelStates> instrumentOnJob = new ActivityJob<>(instrumentOn, simInstOn);
 
-        List<ActivityJob<OnboardDataModelStates>> activityJobList = new ArrayList<>();
+        List<ActivityJob<?>> activityJobList = new ArrayList<>();
         activityJobList.add(binInitJob);
         activityJobList.add(instrumentOnJob);
 
@@ -190,7 +190,7 @@ public class DataModelActivitiesTest {
         ActivityJob<OnboardDataModelStates> downlinkJob = new ActivityJob<>(downlinkActivity, simDownlink);
         activityJobList.add(downlinkJob);
 
-        SimulationEngine<OnboardDataModelStates> engine = new SimulationEngine<>(simStart, activityJobList, states);
+        SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
         engine.simulate();
 
         for (InstrumentModel x : states.getInstrumentModelList()){

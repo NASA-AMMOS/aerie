@@ -23,9 +23,6 @@ import { environment } from '../environments/environment';
 import { AppRoutingModule } from './app-routing.module';
 import { metaReducers, ROOT_REDUCERS } from './app-store';
 import { AppComponent } from './app.component';
-import { RavenAboutDialogModule } from './raven/components';
-import { ConfigEffects, DialogEffects, ToastEffects } from './raven/effects';
-import { MaterialModule } from './raven/material';
 
 @NgModule({
   bootstrap: [AppComponent],
@@ -34,8 +31,8 @@ import { MaterialModule } from './raven/material';
     BrowserAnimationsModule,
     HttpClientModule,
     AppRoutingModule,
-    EffectsModule.forRoot([ConfigEffects, DialogEffects, ToastEffects]),
     OverlayModule,
+    EffectsModule.forRoot([]),
     SortablejsModule.forRoot({}),
     AngularSplitModule.forRoot(),
     ContextMenuModule.forRoot(),
@@ -57,12 +54,6 @@ import { MaterialModule } from './raven/material';
       preventDuplicates: true,
       resetTimeoutOnDuplicate: true,
     }),
-    MaterialModule,
-    RavenAboutDialogModule,
-
-    // StoreDevtoolsModule must come AFTER StoreModule.
-    // To avoid interrupting alphabetical order (and since it's meant for dev only),
-    // we'll put it in its own section of the imports list.
     StoreDevtoolsModule.instrument({
       logOnly: environment.production,
       maxAge: 10,

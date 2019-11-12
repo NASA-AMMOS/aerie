@@ -13,5 +13,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface ActivityType {
   /// The serialized name of this activity type.
-  String value();
+  String name();
+  Class<?> states();
 }

@@ -1,10 +1,9 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import omit from 'lodash-es/omit';
 import { Observable } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { MerlinActions } from '../actions';
 import {
   CActivityInstanceMap,
   CActivityInstanceParameterMap,
@@ -74,8 +73,8 @@ export class ApiService {
       switchMap((sPlan: SPlan) => {
         const plan = {
           ...omit(sPlan, 'activityInstances'),
-          id: planId,
           activityInstanceIds: Object.keys(sPlan.activityInstances),
+          id: planId,
         };
 
         return this.http
@@ -192,8 +191,8 @@ export class ApiService {
           (cPlanMap: CPlanMap, id: string) => {
             cPlanMap[id] = {
               ...omit(sPlanMap[id], 'activityInstances'),
-              id,
               activityInstanceIds: Object.keys(sPlanMap[id].activityInstances),
+              id,
             };
             return cPlanMap;
           },
@@ -208,56 +207,9 @@ export class ApiService {
       map((sPlan: SPlan) => {
         return {
           ...omit(sPlan, 'activityInstances'),
-          id: planId,
           activityInstanceIds: Object.keys(sPlan.activityInstances),
+          id: planId,
         };
-      }),
-    );
-  }
-
-  setActivityInstances(planId: string) {
-    return this.getActivityInstances(planId).pipe(
-      map(activityInstances =>
-        MerlinActions.setActivityInstances({ planId, activityInstances }),
-      ),
-      catchError((error: Error) => {
-        console.error(error);
-        return [];
-      }),
-    );
-  }
-
-  setPlanAndActivityTypes(planId: string) {
-    return this.getPlanAndActivityTypes(planId).pipe(
-      map(({ activityTypes, plan }) =>
-        MerlinActions.setSelectedPlanAndActivityTypes({
-          activityTypes,
-          selectedPlan: plan,
-        }),
-      ),
-      catchError((error: Error) => {
-        console.error(error);
-        return [];
-      }),
-    );
-  }
-
-  setAdaptations() {
-    return this.getAdaptations().pipe(
-      map(adaptations => MerlinActions.setAdaptations({ adaptations })),
-      catchError((error: Error) => {
-        console.error(error);
-        return [];
-      }),
-    );
-  }
-
-  setPlans() {
-    return this.getPlans().pipe(
-      map(plans => MerlinActions.setPlans({ plans })),
-      catchError((error: Error) => {
-        console.error(error);
-        return [];
       }),
     );
   }
