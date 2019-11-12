@@ -1,5 +1,5 @@
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <mat-form-field class="w-100 pb-2" appearance="fill">
+  <mat-form-field class="w-100 pb-2" appearance="outline">
     <mat-label>Activity Type</mat-label>
     <mat-select formControlName="type" [required]="true">
       <mat-option *ngFor="let type of activityTypes" [value]="type.name">
@@ -11,7 +11,7 @@
     </mat-error>
   </mat-form-field>
 
-  <mat-form-field class="w-100 pb-2" appearance="fill">
+  <mat-form-field class="w-100 pb-2" appearance="outline">
     <mat-label>Start Date</mat-label>
     <input
       [required]="true"

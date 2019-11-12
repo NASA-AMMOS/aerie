@@ -67,8 +67,8 @@ export const reducer = createReducer(
         ...state.plans,
         [action.id]: {
           ...omit(action.plan, 'activityInstances'),
-          id: action.id,
           activityInstanceIds: [],
+          id: action.id,
         },
       },
     };

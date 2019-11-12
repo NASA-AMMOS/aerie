@@ -14,7 +14,7 @@ import { select, Store } from '@ngrx/store';
 import { SubSink } from 'subsink';
 import { MerlinActions } from '../../actions';
 import { AppState } from '../../app-store';
-import { getAdaptations, getLoading } from '../../selectors';
+import { getAdaptations } from '../../selectors';
 import { CAdaptation, SCreateAdaption } from '../../types';
 
 @Component({
@@ -34,7 +34,6 @@ export class AdaptationsComponent implements OnDestroy {
     'mission',
     'owner',
   ];
-  loading = false;
 
   private subs = new SubSink();
 
@@ -43,13 +42,12 @@ export class AdaptationsComponent implements OnDestroy {
     private ref: ChangeDetectorRef,
     private store: Store<AppState>,
   ) {
-    this.store.dispatch(MerlinActions.setLoading({ loading: true }));
     this.createAdaptationForm = this.fb.group({
-      name: new FormControl('', [Validators.required]),
-      version: new FormControl('', [Validators.required]),
-      mission: new FormControl('', [Validators.required]),
-      owner: new FormControl('', [Validators.required]),
       file: new FormControl(null, [Validators.required]),
+      mission: new FormControl('', [Validators.required]),
+      name: new FormControl('', [Validators.required]),
+      owner: new FormControl('', [Validators.required]),
+      version: new FormControl('', [Validators.required]),
     });
 
     this.subs.add(
@@ -57,19 +55,11 @@ export class AdaptationsComponent implements OnDestroy {
         this.adaptations = adaptations;
         this.ref.markForCheck();
       }),
-      this.store.pipe(select(getLoading)).subscribe(loading => {
-        this.loading = loading;
-        this.ref.markForCheck();
-      }),
     );
   }
 
   ngOnDestroy() {
     this.subs.unsubscribe();
-  }
-
-  onAbout() {
-    this.store.dispatch(MerlinActions.openAboutDialog());
   }
 
   onDeleteAdaptation(id: string) {

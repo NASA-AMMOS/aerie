@@ -4,6 +4,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityTy
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.util.List;
 
 /**
@@ -29,6 +32,14 @@ public interface Activity<T extends StateContainer> {
    * It is expected that effects are effected upon state acquired from a State Controller,
    * injected into the activity by the Merlin Framework.
    */
-  default void modelEffects(SimulationContext<T> ctx, T states) { }
-
+  default void modelEffects(SimulationContext ctx, T states) { }
+  
+  default Class<?> getStateContainerType() {
+    ActivityType type = this.getClass().getAnnotation(ActivityType.class);
+    if (type == null) {
+        throw new Error("Activity `" + this.getClass().getName() + "` is missing or has an improper annotation");
+    }
+    return type.states();
+  }
+  
 }

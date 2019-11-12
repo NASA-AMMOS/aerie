@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-@ActivityType("TurnInstrumentOn")
+@ActivityType(name="TurnInstrumentOn", states=OnboardDataModelStates.class)
 public class TurnInstrumentOn implements Activity<OnboardDataModelStates> {
 
     @Parameter
@@ -32,7 +32,7 @@ public class TurnInstrumentOn implements Activity<OnboardDataModelStates> {
     }
 
     @Override
-    public void modelEffects(SimulationContext<OnboardDataModelStates> ctx, OnboardDataModelStates states){
+    public void modelEffects(SimulationContext ctx, OnboardDataModelStates states){
         InstrumentModel instrument = states.getInstrumentByName(instrumentName);
         instrument.turnOn(instrumentRate);
     }
