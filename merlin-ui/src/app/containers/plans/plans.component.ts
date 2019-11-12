@@ -15,7 +15,7 @@ import { select, Store } from '@ngrx/store';
 import { SubSink } from 'subsink';
 import { MerlinActions } from '../../actions';
 import { AppState } from '../../app-store';
-import { getAdaptations, getLoading, getPlans } from '../../selectors';
+import { getAdaptations, getPlans } from '../../selectors';
 import { CAdaptation, CPlan, SPlan } from '../../types';
 
 @Component({
@@ -34,7 +34,6 @@ export class PlansComponent implements OnDestroy {
     'startTimestamp',
     'endTimestamp',
   ];
-  loading = false;
   plans: CPlan[] = [];
 
   private subs = new SubSink();
@@ -45,7 +44,6 @@ export class PlansComponent implements OnDestroy {
     private router: Router,
     private store: Store<AppState>,
   ) {
-    this.store.dispatch(MerlinActions.setLoading({ loading: true }));
     this.createPlanForm = this.fb.group({
       adaptationId: new FormControl('', [Validators.required]),
       endTimestamp: new FormControl('', [Validators.required]),
@@ -58,10 +56,6 @@ export class PlansComponent implements OnDestroy {
         this.adaptations = adaptations;
         this.ref.markForCheck();
       }),
-      this.store.pipe(select(getLoading)).subscribe(loading => {
-        this.loading = loading;
-        this.ref.markForCheck();
-      }),
       this.store.pipe(select(getPlans)).subscribe(plans => {
         this.plans = plans;
         this.ref.markForCheck();
@@ -71,10 +65,6 @@ export class PlansComponent implements OnDestroy {
 
   ngOnDestroy() {
     this.subs.unsubscribe();
-  }
-
-  onAbout() {
-    this.store.dispatch(MerlinActions.openAboutDialog());
   }
 
   onDeletePlan(id: string) {

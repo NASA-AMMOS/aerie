@@ -10,25 +10,13 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import {
-  MatButtonModule,
-  MatDialogModule,
-  MatFormFieldModule,
-  MatInputModule,
-} from '@angular/material';
+import { MaterialModule } from '../../material';
 import { RavenPinDialogComponent } from './raven-pin-dialog.component';
 
 @NgModule({
   declarations: [RavenPinDialogComponent],
   entryComponents: [RavenPinDialogComponent],
   exports: [RavenPinDialogComponent],
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    ReactiveFormsModule,
-  ],
+  imports: [CommonModule, MaterialModule, ReactiveFormsModule],
 })
 export class RavenPinDialogModule {}

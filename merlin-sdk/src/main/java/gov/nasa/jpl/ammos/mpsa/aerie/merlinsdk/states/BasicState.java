@@ -84,7 +84,7 @@ public class BasicState<T> implements SettableState<T> {
      * @param engine the controlling simulation engine
      */
     @Override
-    public void setEngine(SimulationEngine<?> engine) {
+    public void setEngine(SimulationEngine engine) {
         this.engine = engine;
     }
 
@@ -119,7 +119,7 @@ public class BasicState<T> implements SettableState<T> {
      * <p>
      * used temporarily to support the initial implementation of the simulation engine
      */
-    private SimulationEngine<?> engine;
+    private SimulationEngine engine;
 
     /**
      * history of values that the state has been assigned to, indexec by the simulation

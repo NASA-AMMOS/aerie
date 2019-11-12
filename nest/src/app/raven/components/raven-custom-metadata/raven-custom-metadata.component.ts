@@ -8,7 +8,7 @@
  */
 
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { StringTMap } from '../../../shared/models';
+import { StringTMap } from '../../models';
 import { RavenToKeyValueArrayPipe } from '../../pipes/raven-to-key-value-array/raven-to-key-value-array.pipe';
 
 @Component({

@@ -19,12 +19,12 @@ import {
 import { FormControl } from '@angular/forms';
 import { MatSelect } from '@angular/material';
 import keyBy from 'lodash-es/keyBy';
-import { StringTMap } from '../../../shared/models';
 import {
   RavenApplyLayoutUpdate,
   RavenPin,
   RavenSource,
   RavenState,
+  StringTMap,
 } from '../../models';
 import { getAllSourcesByKinds } from '../../util/source';
 

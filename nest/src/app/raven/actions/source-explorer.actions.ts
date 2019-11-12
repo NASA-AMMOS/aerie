@@ -8,8 +8,8 @@
  */
 
 import { createAction, props } from '@ngrx/store';
-import { BaseType, StringTMap } from '../../shared/models';
 import {
+  BaseType,
   RavenApplyLayoutUpdate,
   RavenCustomFilterSource,
   RavenExpandableSource,
@@ -19,6 +19,7 @@ import {
   RavenPin,
   RavenSource,
   SourceFilter,
+  StringTMap,
 } from '../models';
 
 export const addCustomFilter = createAction(

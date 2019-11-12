@@ -8,7 +8,6 @@
  */
 
 import uniqueId from 'lodash-es/uniqueId';
-import { timestamp } from '../../shared/util/time';
 import {
   RavenCompositeBand,
   RavenDefaultBandSettings,
@@ -29,6 +28,7 @@ import { RavenAppState } from '../raven-store';
 import { toCompositeBand } from './bands';
 import { colorRgbArrayToHex } from './color';
 import { getSourceIdsForSubBand } from './source';
+import { timestamp } from './time';
 
 /**
  * Returns an exported state of the stripped down state for saving.

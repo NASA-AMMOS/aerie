@@ -8,7 +8,7 @@
  */
 
 import { Pipe, PipeTransform } from '@angular/core';
-import { timestamp } from '../../../shared/util';
+import { timestamp } from '../../util';
 
 @Pipe({
   name: 'timestamp',

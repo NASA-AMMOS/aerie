@@ -8,23 +8,10 @@
     </button>
 
     <mat-menu #menu="matMenu">
-      <button mat-menu-item [matMenuTriggerFor]="views">
-        <mat-icon>library_books</mat-icon>
-        <span>Views</span>
-      </button>
       <button mat-menu-item [matMenuTriggerFor]="toggleMenu">
         <mat-icon>remove_red_eye</mat-icon>
         Toggle Visible Panels
       </button>
-      <button mat-menu-item (click)="onAbout()">
-        <mat-icon>info</mat-icon>
-        <span>About</span>
-      </button>
-    </mat-menu>
-
-    <mat-menu #views="matMenu">
-      <button mat-menu-item [routerLink]="['/adaptations']">Adaptations</button>
-      <button mat-menu-item [routerLink]="['/plans']">Plans</button>
     </mat-menu>
 
     <mat-menu #toggleMenu="matMenu">
@@ -43,12 +30,6 @@
     </mat-menu>
   </div>
 </mat-toolbar>
-
-<mat-progress-bar
-  *ngIf="loading"
-  color="accent"
-  mode="indeterminate"
-></mat-progress-bar>
 
 <as-split [gutterSize]="4">
   <as-split-area

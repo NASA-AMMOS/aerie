@@ -9,12 +9,12 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { MatMenuModule } from '@angular/material';
+import { MaterialModule } from '../../material';
 import { RavenHierarchicalMenuComponent } from './raven-hierarchical-menu.component';
 
 @NgModule({
   declarations: [RavenHierarchicalMenuComponent],
   exports: [RavenHierarchicalMenuComponent],
-  imports: [CommonModule, MatMenuModule],
+  imports: [CommonModule, MaterialModule],
 })
 export class RavenHierarchicalMenuModule {}

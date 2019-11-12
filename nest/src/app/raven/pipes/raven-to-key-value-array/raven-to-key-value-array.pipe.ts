@@ -8,7 +8,7 @@
  */
 
 import { Pipe, PipeTransform } from '@angular/core';
-import { StringTMap } from '../../../shared/models';
+import { StringTMap } from '../../models';
 
 @Pipe({
   name: 'toKeyValueArray',

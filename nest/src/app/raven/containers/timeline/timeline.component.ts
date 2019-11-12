@@ -17,10 +17,8 @@ import { select, Store } from '@ngrx/store';
 import { combineLatest, Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ConfigState } from '../../../../config';
-import { ConfigActions, ToastActions } from '../../../shared/actions';
-import { StringTMap, TimeRange } from '../../../shared/models';
-import * as configSelectors from '../../../shared/selectors/config.selectors';
 import {
+  ConfigActions,
   DialogActions,
   EpochsActions,
   LayoutActions,
@@ -29,10 +27,12 @@ import {
   SourceExplorerActions,
   TimeCursorActions,
   TimelineActions,
+  ToastActions,
 } from '../../actions';
 import { RavenTimeBandComponent } from '../../components/raven-time-band/raven-time-band.component';
 import { TimeCursorState } from '../../reducers/time-cursor.reducer';
 import { TimelineState } from '../../reducers/timeline.reducer';
+import * as configSelectors from '../../selectors/config.selectors';
 import * as epochsSelectors from '../../selectors/epochs.selectors';
 import * as layoutSelectors from '../../selectors/layout.selectors';
 import * as outputSelectors from '../../selectors/output.selectors';
@@ -67,6 +67,8 @@ import {
   RavenState,
   RavenSubBand,
   RavenUpdate,
+  StringTMap,
+  TimeRange,
 } from './../../models';
 
 @Component({

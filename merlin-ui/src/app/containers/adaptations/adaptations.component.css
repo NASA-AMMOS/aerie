@@ -1,9 +1,3 @@
 mat-toolbar {
   height: 36px;
 }
-
-.mat-toolbar-right {
-  display: inline-flex;
-  flex: 1 1 auto;
-  justify-content: flex-end;
-}

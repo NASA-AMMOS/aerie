@@ -21,7 +21,6 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import { TimeRange } from '../../../shared/models';
 import {
   RavenBandLeftClick,
   RavenEpoch,
@@ -29,12 +28,13 @@ import {
   RavenResourceBand,
   RavenSubBand,
   RavenUpdate,
+  TimeRange,
 } from '../../models';
 import {
   bandById,
+  colorHexToRgbArray,
   getNumericStateBandsWithUniquePossibleStates,
-} from '../../util/bands';
-import { colorHexToRgbArray } from '../../util/color';
+} from '../../util';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

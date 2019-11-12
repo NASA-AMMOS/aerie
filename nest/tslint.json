@@ -52,18 +52,8 @@
     "triple-equals": [true, "allow-null-check"],
     "unified-signatures": true,
     "variable-name": false,
-    "directive-selector": [
-      true,
-      "attribute",
-      ["app", "raven", "nest"],
-      "camelCase"
-    ],
-    "component-selector": [
-      true,
-      "element",
-      ["app", "raven", "nest"],
-      "kebab-case"
-    ],
+    "directive-selector": [true, "attribute", ["app", "raven"], "camelCase"],
+    "component-selector": [true, "element", ["app", "raven"], "kebab-case"],
     "no-output-on-prefix": true,
     "no-inputs-metadata-property": true,
     "no-outputs-metadata-property": true,

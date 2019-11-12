@@ -14,8 +14,8 @@ import {
   MatMenuModule,
   MatProgressBarModule,
   MatSelectModule,
+  MatSidenavModule,
   MatSlideToggleModule,
-  MatSnackBarModule,
   MatSortModule,
   MatTableModule,
   MatToolbarModule,
@@ -36,8 +36,8 @@ const MODULES = [
   MatMenuModule,
   MatProgressBarModule,
   MatSelectModule,
+  MatSidenavModule,
   MatSlideToggleModule,
-  MatSnackBarModule,
   MatSortModule,
   MatTableModule,
   MatToolbarModule,
@@ -45,7 +45,7 @@ const MODULES = [
 ];
 
 @NgModule({
-  imports: MODULES,
   exports: MODULES,
+  imports: MODULES,
 })
 export class MaterialModule {}

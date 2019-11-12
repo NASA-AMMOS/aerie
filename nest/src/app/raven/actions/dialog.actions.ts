@@ -14,6 +14,11 @@ import {
   RavenSource,
 } from '../models';
 
+export const openAboutDialog = createAction(
+  '[raven-dialog] open_about_dialog',
+  props<{ width: string }>(),
+);
+
 export const openApplyCurrentStateDialog = createAction(
   '[raven-dialog] open_apply_current_state_dialog',
 );

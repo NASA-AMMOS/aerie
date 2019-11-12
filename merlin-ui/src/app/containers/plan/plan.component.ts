@@ -14,7 +14,6 @@ import { compare } from '../../functions';
 import {
   getActivityInstancesForSelectedPlan,
   getActivityTypes,
-  getLoading,
   getSelectedPlan,
 } from '../../selectors';
 import { CActivityInstance, CActivityType, CPlan } from '../../types';
@@ -29,8 +28,12 @@ export class PlanComponent implements OnDestroy {
   activityInstances: CActivityInstance[] = [];
   activityTypes: CActivityType[] = [];
   displayedColumns: string[] = ['menu', 'type', 'startTimestamp'];
-  loading = false;
   panels = {
+    activityInstances: {
+      order: 2,
+      size: 60,
+      visible: true,
+    },
     activityTypes: {
       order: 0,
       size: 20,
@@ -38,11 +41,6 @@ export class PlanComponent implements OnDestroy {
     },
     createActivityInstance: {
       order: 1,
-      size: 20,
-      visible: true,
-    },
-    activityInstances: {
-      order: 2,
       size: 20,
       visible: true,
     },
@@ -57,7 +55,6 @@ export class PlanComponent implements OnDestroy {
     private route: ActivatedRoute,
     private store: Store<AppState>,
   ) {
-    this.store.dispatch(MerlinActions.setLoading({ loading: true }));
     this.subs.add(
       this.store
         .pipe(select(getActivityInstancesForSelectedPlan))
@@ -70,10 +67,6 @@ export class PlanComponent implements OnDestroy {
         this.activityTypes = activityTypes;
         this.ref.markForCheck();
       }),
-      this.store.pipe(select(getLoading)).subscribe(loading => {
-        this.loading = loading;
-        this.ref.markForCheck();
-      }),
       this.store.pipe(select(getSelectedPlan)).subscribe(plan => {
         this.plan = plan;
         this.ref.markForCheck();
@@ -83,10 +76,6 @@ export class PlanComponent implements OnDestroy {
 
   ngOnDestroy() {
     this.subs.unsubscribe();
-  }
-
-  onAbout() {
-    this.store.dispatch(MerlinActions.openAboutDialog());
   }
 
   onDeleteActivityInstance(activityInstanceId: string) {

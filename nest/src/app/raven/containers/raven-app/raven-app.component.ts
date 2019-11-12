@@ -16,8 +16,7 @@ import {
 import { select, Store } from '@ngrx/store';
 import { combineLatest, Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { DialogActions } from '../../../shared/actions';
-import { LayoutActions, TimelineActions } from '../../actions';
+import { DialogActions, LayoutActions, TimelineActions } from '../../actions';
 import { SourceExplorerState } from '../../reducers/source-explorer.reducer';
 import {
   getLayoutPending,

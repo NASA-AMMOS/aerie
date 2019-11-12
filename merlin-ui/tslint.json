@@ -36,7 +36,7 @@
     "no-switch-case-fall-through": true,
     "no-var-requires": false,
     "object-literal-key-quotes": [true, "as-needed"],
-    "object-literal-sort-keys": false,
+    "object-literal-sort-keys": true,
     "ordered-imports": true,
     "quotemark": [true, "single"],
     "trailing-comma": false,

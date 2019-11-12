@@ -10,22 +10,12 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import {
-  MatAutocompleteModule,
-  MatButtonModule,
-  MatIconModule,
-} from '@angular/material';
+import { MaterialModule } from '../../material';
 import { RavenPanToDurationComponent } from './raven-pan-to-duration.component';
 
 @NgModule({
   declarations: [RavenPanToDurationComponent],
   exports: [RavenPanToDurationComponent],
-  imports: [
-    CommonModule,
-    MatAutocompleteModule,
-    MatButtonModule,
-    MatIconModule,
-    ReactiveFormsModule,
-  ],
+  imports: [CommonModule, MaterialModule, ReactiveFormsModule],
 })
 export class RavenPanToDurationModule {}

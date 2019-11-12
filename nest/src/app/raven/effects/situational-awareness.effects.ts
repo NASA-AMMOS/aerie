@@ -19,7 +19,6 @@ import {
   switchMap,
   withLatestFrom,
 } from 'rxjs/operators';
-import { getInitialPageStartEndTime } from '../../shared/util';
 import { SituationalAwarenessActions, TimelineActions } from '../actions';
 import {
   MpsServerGraphData,
@@ -27,7 +26,12 @@ import {
   RavenDefaultBandSettings,
 } from '../models';
 import { RavenAppState } from '../raven-store';
-import { toCompositeBand, toRavenBandData, toRavenPefEntries } from '../util';
+import {
+  getInitialPageStartEndTime,
+  toCompositeBand,
+  toRavenBandData,
+  toRavenPefEntries,
+} from '../util';
 
 @Injectable()
 export class SituationalAwarenessEffects {

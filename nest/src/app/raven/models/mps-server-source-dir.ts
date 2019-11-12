@@ -7,7 +7,7 @@
  * before exporting such information to foreign countries or providing access to foreign persons
  */
 
-import { BaseType, StringTMap } from '../../shared/models';
+import { BaseType, StringTMap } from '../models';
 
 export interface MpsServerSourceDir {
   __db_type: string;

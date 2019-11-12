@@ -1,0 +1,44 @@
+<mat-sidenav-container>
+  <mat-sidenav mode="side" [disableClose]="true" [opened]="true">
+    <mat-nav-list>
+      <a
+        mat-list-item
+        matTooltip="Plans"
+        matTooltipPosition="right"
+        routerLink="/plans"
+        routerLinkActive="active"
+      >
+        <mat-icon mat-list-icon>date_range</mat-icon>
+        <span matLine>Plans</span>
+      </a>
+      <a
+        mat-list-item
+        matTooltip="Adaptations"
+        matTooltipPosition="right"
+        routerLink="/adaptations"
+        routerLinkActive="active"
+      >
+        <mat-icon mat-list-icon>developer_board</mat-icon>
+        <span matLine>Adaptations</span>
+      </a>
+      <a
+        mat-list-item
+        matTooltip="About"
+        matTooltipPosition="right"
+        (click)="onAbout()"
+      >
+        <mat-icon mat-list-icon>info</mat-icon>
+        <span matLine>About</span>
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <mat-progress-bar
+      *ngIf="loading"
+      color="accent"
+      mode="indeterminate"
+    ></mat-progress-bar>
+
+    <router-outlet></router-outlet>
+  </mat-sidenav-content>
+</mat-sidenav-container>

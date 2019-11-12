@@ -1,32 +1,6 @@
 <mat-toolbar color="primary">
   <span>Plans</span>
-  <div class="mat-toolbar-right">
-    <button mat-icon-button [matMenuTriggerFor]="menu">
-      <mat-icon>more_vert</mat-icon>
-    </button>
-
-    <mat-menu #menu="matMenu">
-      <button mat-menu-item [matMenuTriggerFor]="views">
-        <mat-icon>library_books</mat-icon>
-        <span>Views</span>
-      </button>
-      <button mat-menu-item (click)="onAbout()">
-        <mat-icon>info</mat-icon>
-        <span>About</span>
-      </button>
-    </mat-menu>
-
-    <mat-menu #views="matMenu">
-      <button mat-menu-item [routerLink]="['/adaptations']">Adaptations</button>
-    </mat-menu>
-  </div>
 </mat-toolbar>
-
-<mat-progress-bar
-  *ngIf="loading"
-  color="accent"
-  mode="indeterminate"
-></mat-progress-bar>
 
 <as-split [gutterSize]="4">
   <as-split-area [size]="25">
@@ -41,7 +15,7 @@
           id="no-adaptations-message"
         >
           <mat-card>
-            There are no adaptations in the database.<br />
+            No adaptations found.<br />
             You need an adaptation in order to make a plan.<br />
             Try adding an adaptation
             <a [routerLink]="['/adaptations']">here</a>.
@@ -51,7 +25,7 @@
         <mat-form-field
           *ngIf="adaptations.length"
           class="w-100"
-          appearance="fill"
+          appearance="outline"
         >
           <mat-label>Adaptation</mat-label>
           <mat-select formControlName="adaptationId" [required]="true">
@@ -64,7 +38,7 @@
           </mat-select>
         </mat-form-field>
 
-        <mat-form-field class="w-100" appearance="fill">
+        <mat-form-field class="w-100" appearance="outline">
           <mat-label>Name</mat-label>
           <input
             [required]="true"
@@ -75,7 +49,7 @@
           />
         </mat-form-field>
 
-        <mat-form-field class="w-100" appearance="fill">
+        <mat-form-field class="w-100" appearance="outline">
           <mat-label>Start Date</mat-label>
           <input
             [required]="true"
@@ -86,7 +60,7 @@
           />
         </mat-form-field>
 
-        <mat-form-field class="w-100" appearance="fill">
+        <mat-form-field class="w-100" appearance="outline">
           <mat-label>End Date</mat-label>
           <input
             [required]="true"
@@ -115,7 +89,7 @@
     </app-panel-header>
     <div class="p-1">
       <mat-card *ngIf="!plans.length" id="no-plans-message">
-        There are no plans in the database.
+        No plans found.
       </mat-card>
 
       <table
