@@ -45,7 +45,7 @@ const MODULES = [
 ];
 
 @NgModule({
-  imports: MODULES,
   exports: MODULES,
+  imports: MODULES,
 })
 export class MaterialModule {}

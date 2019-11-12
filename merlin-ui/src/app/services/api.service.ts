@@ -73,8 +73,8 @@ export class ApiService {
       switchMap((sPlan: SPlan) => {
         const plan = {
           ...omit(sPlan, 'activityInstances'),
-          id: planId,
           activityInstanceIds: Object.keys(sPlan.activityInstances),
+          id: planId,
         };
 
         return this.http
@@ -191,8 +191,8 @@ export class ApiService {
           (cPlanMap: CPlanMap, id: string) => {
             cPlanMap[id] = {
               ...omit(sPlanMap[id], 'activityInstances'),
-              id,
               activityInstanceIds: Object.keys(sPlanMap[id].activityInstances),
+              id,
             };
             return cPlanMap;
           },
@@ -207,8 +207,8 @@ export class ApiService {
       map((sPlan: SPlan) => {
         return {
           ...omit(sPlan, 'activityInstances'),
-          id: planId,
           activityInstanceIds: Object.keys(sPlan.activityInstances),
+          id: planId,
         };
       }),
     );

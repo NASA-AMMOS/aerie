@@ -43,11 +43,11 @@ export class AdaptationsComponent implements OnDestroy {
     private store: Store<AppState>,
   ) {
     this.createAdaptationForm = this.fb.group({
-      name: new FormControl('', [Validators.required]),
-      version: new FormControl('', [Validators.required]),
-      mission: new FormControl('', [Validators.required]),
-      owner: new FormControl('', [Validators.required]),
       file: new FormControl(null, [Validators.required]),
+      mission: new FormControl('', [Validators.required]),
+      name: new FormControl('', [Validators.required]),
+      owner: new FormControl('', [Validators.required]),
+      version: new FormControl('', [Validators.required]),
     });
 
     this.subs.add(

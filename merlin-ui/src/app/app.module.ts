@@ -16,6 +16,7 @@ import { MerlinEffects, NavEffects, ToastEffects } from './effects';
 import { MaterialModule } from './material';
 
 @NgModule({
+  bootstrap: [AppComponent],
   declarations: [AppComponent],
   imports: [
     BrowserModule,
@@ -32,11 +33,11 @@ import { MaterialModule } from './material';
     StoreModule.forRoot(ROOT_REDUCERS, {
       metaReducers,
       runtimeChecks: {
-        strictStateImmutability: true,
         strictActionImmutability: true,
+        strictActionSerializability: false,
+        strictStateImmutability: true,
         strictStateSerializability: true,
         // False since we are sending a file in the adaptations.component.
-        strictActionSerializability: false,
       },
     }),
     StoreRouterConnectingModule.forRoot({
@@ -49,6 +50,5 @@ import { MaterialModule } from './material';
     MaterialModule,
     ContainersModule,
   ],
-  bootstrap: [AppComponent],
 })
 export class AppModule {}

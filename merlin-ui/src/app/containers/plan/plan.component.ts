@@ -29,6 +29,11 @@ export class PlanComponent implements OnDestroy {
   activityTypes: CActivityType[] = [];
   displayedColumns: string[] = ['menu', 'type', 'startTimestamp'];
   panels = {
+    activityInstances: {
+      order: 2,
+      size: 60,
+      visible: true,
+    },
     activityTypes: {
       order: 0,
       size: 20,
@@ -36,11 +41,6 @@ export class PlanComponent implements OnDestroy {
     },
     createActivityInstance: {
       order: 1,
-      size: 20,
-      visible: true,
-    },
-    activityInstances: {
-      order: 2,
       size: 20,
       visible: true,
     },

@@ -20,8 +20,8 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes, { useHash: true })],
   exports: [RouterModule],
+  imports: [RouterModule.forRoot(routes, { useHash: true })],
 })
 export class AppRoutingModule {}
 
@@ -46,10 +46,10 @@ export class RouterSerializer implements RouterStateSerializer<RouterState> {
     }
 
     const routerState: RouterState = {
-      url,
       params: route.params,
       path: path.join('/'),
       queryParams: root.queryParams,
+      url,
     };
 
     return routerState;

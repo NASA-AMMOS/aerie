@@ -22,8 +22,8 @@ export class NavEffects {
               console.error(error);
               return [
                 ToastActions.showToast({
-                  toastType: 'error',
                   message: 'Fetch adaptations failed',
+                  toastType: 'error',
                 }),
               ];
             }),
@@ -46,8 +46,8 @@ export class NavEffects {
               console.error(error);
               return [
                 ToastActions.showToast({
-                  toastType: 'error',
                   message: 'Fetch adaptations failed',
+                  toastType: 'error',
                 }),
               ];
             }),
@@ -58,8 +58,8 @@ export class NavEffects {
               console.error(error);
               return [
                 ToastActions.showToast({
-                  toastType: 'error',
                   message: 'Fetch plans failed',
+                  toastType: 'error',
                 }),
               ];
             }),
@@ -88,8 +88,8 @@ export class NavEffects {
               console.error(error);
               return [
                 ToastActions.showToast({
-                  toastType: 'error',
                   message: 'Fetch plan and activity types failed',
+                  toastType: 'error',
                 }),
               ];
             }),
@@ -102,8 +102,8 @@ export class NavEffects {
               console.error(error);
               return [
                 ToastActions.showToast({
-                  toastType: 'error',
                   message: 'Fetch activity instances failed',
+                  toastType: 'error',
                 }),
               ];
             }),

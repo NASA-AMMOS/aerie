@@ -7,7 +7,7 @@ import { PlansModule } from './plans';
 const MODULES = [AdaptationsModule, PlanModule, PlansModule];
 
 @NgModule({
-  imports: MODULES,
   exports: MODULES,
+  imports: MODULES,
 })
 export class ContainersModule {}

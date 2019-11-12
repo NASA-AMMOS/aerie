@@ -145,6 +145,9 @@ if echo "$changed" | grep --quiet "\(merlin-ui\)"; then
   npx yarn
   [ $? -ne 0 ] && error_exit "yarn"
 
+  npx yarn test
+  [ $? -ne 0 ] && error_exit "yarn test failed"
+
   npx yarn build --prod
   [ $? -ne 0 ] && error_exit "yarn build --prod failed"
 
