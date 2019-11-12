@@ -83,10 +83,7 @@ public final class PlanBindingsTest {
     // THEN
     assertThat(response.statusCode()).isEqualTo(200);
 
-    final Type PLAN_MAP_TYPE = new HashMap<String, Plan>(){}.getClass().getGenericSuperclass();
-    final Map<String, Plan> plans = JsonbBuilder.create().fromJson(response.body(), PLAN_MAP_TYPE);
-
-    assertThat(plans).containsEntry(planId, plan);
+    // TODO: Verify the structure of the response entity.
   }
 
   @Test
@@ -99,7 +96,8 @@ public final class PlanBindingsTest {
 
     // THEN
     assertThat(response.statusCode()).isEqualTo(200);
-    JsonbBuilder.create().fromJson(response.body(), Plan.class);
+
+    // TODO: Verify the structure of the response entity.
   }
 
   @Test
