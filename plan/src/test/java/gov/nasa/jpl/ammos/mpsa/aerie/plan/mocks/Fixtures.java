@@ -1,5 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.mocks;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
@@ -32,7 +34,7 @@ public final class Fixtures {
 
       this.NONEXISTENT_ADAPTATION_ID = "nonexistent adaptation";
       this.EXISTENT_ADAPTATION_ID = this.adaptationService.addAdaptation(Map.of(
-          EXISTENT_ACTIVITY_TYPE_ID, Map.of()
+          EXISTENT_ACTIVITY_TYPE_ID, Map.of("abc", ParameterSchema.STRING)
       ));
 
       this.EXISTENT_PLAN_ID = this.planRepository.createPlan(createValidNewPlan("plan 1"));
@@ -71,6 +73,7 @@ public final class Fixtures {
     activityInstance.type = this.EXISTENT_ACTIVITY_TYPE_ID;
     activityInstance.startTimestamp = "0000-111T22:33:44";
     activityInstance.parameters = new HashMap<>();
+    activityInstance.parameters.put("abc", SerializedParameter.of("param-value"));
 
     return activityInstance;
   }

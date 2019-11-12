@@ -12,10 +12,12 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import javax.json.bind.JsonbBuilder;
 import java.io.IOException;
+import java.io.StringReader;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -253,7 +255,7 @@ public final class PlanBindingsTest {
   }
 
   @Test
-  public void shouldGetActivityInstances() throws IOException, InterruptedException {
+  public void shouldGetActivityInstances() throws IOException, InterruptedException, InvalidEntityException {
     // GIVEN
     final String planId = StubPlanController.EXISTENT_PLAN_ID;
     final String activityId = StubPlanController.EXISTENT_ACTIVITY_ID;
@@ -265,8 +267,8 @@ public final class PlanBindingsTest {
     // THEN
     assertThat(response.statusCode()).isEqualTo(200);
 
-    final Type ACTIVITY_MAP_TYPE = new HashMap<String, ActivityInstance>(){}.getClass().getGenericSuperclass();
-    final Map<String, ActivityInstance> activities = JsonbBuilder.create().fromJson(response.body(), ACTIVITY_MAP_TYPE);
+    final var responseJson = Json.createReader(new StringReader(response.body())).readValue();
+    final Map<String, ActivityInstance> activities = RequestDeserializers.deserializeActivityInstanceMap(responseJson);
 
     assertThat(activities).containsEntry(activityId, activity);
   }
@@ -284,7 +286,7 @@ public final class PlanBindingsTest {
   }
 
   @Test
-  public void shouldGetActivityInstanceById() throws IOException, InterruptedException {
+  public void shouldGetActivityInstanceById() throws IOException, InterruptedException, InvalidEntityException {
     // GIVEN
     final String planId = StubPlanController.EXISTENT_PLAN_ID;
     final String activityInstanceId = StubPlanController.EXISTENT_ACTIVITY_ID;
@@ -296,7 +298,8 @@ public final class PlanBindingsTest {
     // THEN
     assertThat(response.statusCode()).isEqualTo(200);
 
-    final ActivityInstance activityInstance = JsonbBuilder.create().fromJson(response.body(), ActivityInstance.class);
+    final var responseJson = Json.createReader(new StringReader(response.body())).readValue();
+    final ActivityInstance activityInstance = RequestDeserializers.deserializeActivityInstance(responseJson);
     assertThat(activityInstance).isEqualTo(expectedActivityInstance);
   }
 
@@ -355,7 +358,7 @@ public final class PlanBindingsTest {
   }
 
   @Test
-  public void shouldNotAddInvalidActivityInstancesToPlan() throws IOException, InterruptedException {
+  public void shouldNotAddInvalidActivityInstancesToPlan() throws IOException, InterruptedException, InvalidEntityException {
     // GIVEN
     final String planId = StubPlanController.EXISTENT_PLAN_ID;
     final ActivityInstance activityInstance = StubPlanController.INVALID_ACTIVITY;
@@ -365,9 +368,6 @@ public final class PlanBindingsTest {
 
     // THEN
     assertThat(response.statusCode()).isEqualTo(400);
-
-    final Type STRING_LIST_TYPE = new ArrayList<String>(){}.getClass().getGenericSuperclass();
-    JsonbBuilder.create().fromJson(response.body(), STRING_LIST_TYPE);
   }
 
   @Test

@@ -127,6 +127,18 @@ public final class RequestDeserializers {
     return activityInstances;
   }
 
+  public static Map<String, ActivityInstance> deserializeActivityInstanceMap(final JsonValue jsonValue) throws InvalidEntityException {
+    if (!(jsonValue instanceof JsonObject)) throw new InvalidEntityException();
+    final JsonObject activityInstanceMapJson = (JsonObject)jsonValue;
+
+    final Map<String, ActivityInstance> activityInstances = new HashMap<>();
+    for (final var entry : activityInstanceMapJson.entrySet()) {
+      activityInstances.put(entry.getKey(), deserializeActivityInstance(entry.getValue()));
+    }
+
+    return activityInstances;
+  }
+
   public static Map<String, ActivityInstance> deserializeActivityInstanceMapPatch(final JsonValue jsonValue) throws InvalidEntityException {
     if (!(jsonValue instanceof JsonObject)) throw new InvalidEntityException();
     final JsonObject activityInstanceMapJson = (JsonObject)jsonValue;
