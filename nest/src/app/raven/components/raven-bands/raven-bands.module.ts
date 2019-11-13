@@ -9,7 +9,7 @@
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { SortablejsModule } from 'angular-sortablejs';
+import { SortablejsModule } from 'ngx-sortablejs';
 import { MaterialModule } from '../../material';
 import { RavenCompositeBandModule } from '../raven-composite-band/raven-composite-band.module';
 import { RavenBandsComponent } from './raven-bands.component';
