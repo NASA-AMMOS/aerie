@@ -3,7 +3,7 @@ import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AngularSplitModule } from 'angular-split';
-import { PanelHeaderModule } from '../../components';
+import { PanelHeaderModule, PlaceholderModule } from '../../components';
 import { MaterialModule } from '../../material';
 import { PlansComponent } from './plans.component';
 
@@ -17,6 +17,7 @@ import { PlansComponent } from './plans.component';
     RouterModule,
     AngularSplitModule.forChild(),
     PanelHeaderModule,
+    PlaceholderModule,
   ],
 })
 export class PlansModule {}

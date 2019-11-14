@@ -50,8 +50,8 @@ export class ApiService {
                     name: string,
                   ) => {
                     cActivityInstanceParameterMap[name] = {
-                      ...sActivityInstanceMap[id].parameters[name],
                       name,
+                      value: sActivityInstanceMap[id].parameters[name],
                     };
                     return cActivityInstanceParameterMap;
                   },
@@ -211,6 +211,17 @@ export class ApiService {
           id: planId,
         };
       }),
+    );
+  }
+
+  updateActivityInstance(
+    planId: string,
+    activityInstanceId: string,
+    activityInstance: Partial<SActivityInstance>,
+  ): Observable<{}> {
+    return this.http.patch<{}>(
+      `${planServiceBaseUrl}/plans/${planId}/activity_instances/${activityInstanceId}`,
+      activityInstance,
     );
   }
 }

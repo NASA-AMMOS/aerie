@@ -22,7 +22,7 @@ import java.util.Map;
  *      And the NAIF Spice method gfoclt_c.html
  */
 
-public class OccultationTimesModel implements State {
+public class OccultationTimesModel implements State<List<Pair<Time, Time>>> {
 
     private OccultationType occType = OccultationType.ANY;
     private Body frontBody;
@@ -51,7 +51,7 @@ public class OccultationTimesModel implements State {
 
     OccultationTimesModel(){}
 
-    OccultationTimesModel(Time start, Time end, Duration stepSize){
+    public OccultationTimesModel(Time start, Time end, Duration stepSize){
         this.start = start;
         this.end = end;
         this.stepSize = stepSize;
@@ -134,6 +134,5 @@ public class OccultationTimesModel implements State {
 
     @Override
     public void setEngine(SimulationEngine engine) {
-
     }
 }
