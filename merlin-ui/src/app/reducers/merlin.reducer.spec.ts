@@ -9,6 +9,7 @@ import {
   cPlan,
   cPlanMap,
   planId,
+  sActivityInstance,
   sAdaptation,
   sPlan,
 } from '../mocks';
@@ -69,11 +70,23 @@ describe('merlin reducer', () => {
       );
       state = reducer(
         state,
+        MerlinActions.setSelectedActivityInstanceId({
+          selectedActivityInstanceId: activityInstanceId,
+        }),
+      );
+      expect(state).toEqual({
+        ...initialState,
+        activityInstances: cActivityInstanceMap,
+        selectedActivityInstanceId: activityInstanceId,
+      });
+      state = reducer(
+        state,
         MerlinActions.deleteActivityInstanceSuccess({ activityInstanceId }),
       );
       expect(state).toEqual({
         ...initialState,
         activityInstances: {},
+        selectedActivityInstanceId: null,
       });
     });
   });
@@ -173,6 +186,22 @@ describe('merlin reducer', () => {
     });
   });
 
+  describe('setSelectedActivityInstanceId', () => {
+    it('it should set setSelectedActivityInstanceId', () => {
+      const selectedActivityInstanceId = '42';
+      const state: MerlinState = reducer(
+        { ...initialState },
+        MerlinActions.setSelectedActivityInstanceId({
+          selectedActivityInstanceId,
+        }),
+      );
+      expect(state).toEqual({
+        ...initialState,
+        selectedActivityInstanceId,
+      });
+    });
+  });
+
   describe('setSelectedPlanAndActivityTypes', () => {
     it('it should set plans and activity types', () => {
       const state: MerlinState = reducer(
@@ -186,6 +215,29 @@ describe('merlin reducer', () => {
         ...initialState,
         activityTypes: cActivityTypeMap,
         selectedPlan: cPlan,
+      });
+    });
+  });
+
+  describe('updateActivityInstanceSuccess', () => {
+    it('it should update activity instances', () => {
+      let state: MerlinState = reducer(
+        { ...initialState },
+        MerlinActions.setActivityInstances({
+          activityInstances: cActivityInstanceMap,
+          planId,
+        }),
+      );
+      state = reducer(
+        state,
+        MerlinActions.updateActivityInstanceSuccess({
+          activityInstance: sActivityInstance,
+          activityInstanceId,
+        }),
+      );
+      expect(state).toEqual({
+        ...initialState,
+        activityInstances: cActivityInstanceMap,
       });
     });
   });

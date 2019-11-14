@@ -2,14 +2,14 @@ import { StringTMap } from './string-t-map';
 
 export interface CActivityInstanceParameter {
   name: string;
-  type: string;
+  value: any;
 }
 export type CActivityInstanceParameterMap = StringTMap<
   CActivityInstanceParameter
 >;
 
 export interface SActivityInstanceParameter {
-  type: string;
+  value: any;
 }
 export type SActivityInstanceParameterMap = StringTMap<
   SActivityInstanceParameter
