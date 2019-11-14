@@ -14,8 +14,6 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.JsonValue;
-import javax.json.bind.JsonbBuilder;
-import javax.json.bind.JsonbException;
 import javax.json.stream.JsonParsingException;
 import java.io.StringReader;
 import java.util.List;
@@ -60,14 +58,7 @@ public final class PlanBindings {
       });
     });
 
-    javalin.exception(JsonbException.class, (ex, ctx) -> ctx
-        // TODO: Use direct JSON-P deserialization instead of inferred JSON-B deserialization.
-        //   This exception covers both JSON syntax errors and object mapping errors.
-        //   This exception should go away in favor of separate exceptions for both types of error.
-        .status(400)
-        .result(ResponseSerializers.serializeJsonbException(ex).toString())
-        .result(ex.getMessage())
-    ).exception(JsonParsingException.class, (ex, ctx) -> ctx
+    javalin.exception(JsonParsingException.class, (ex, ctx) -> ctx
         // If the request body entity is not a legal JsonValue, then this exception is expected.
         .status(400)
         .result(ResponseSerializers.serializeJsonParsingException(ex).toString())
@@ -191,20 +182,22 @@ public final class PlanBindings {
         .result(ResponseSerializers.serializeActivityInstance(activityInstance).toString());
   }
 
-  private void putActivityInstance(final Context ctx) throws NoSuchPlanException, ValidationException, NoSuchActivityInstanceException {
+  private void putActivityInstance(final Context ctx) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException, InvalidEntityException {
+    final JsonValue requestJson = Json.createReader(new StringReader(ctx.body())).readValue();
+
     final String planId = ctx.pathParam("planId");
     final String activityInstanceId = ctx.pathParam("activityInstanceId");
-    // TODO: Replace JsonbBuilder with our RequestDeserializers
-    final ActivityInstance activityInstance = JsonbBuilder.create().fromJson(ctx.body(), ActivityInstance.class);
+    final ActivityInstance activityInstance = RequestDeserializers.deserializeActivityInstance(requestJson);
 
     this.appController.replaceActivityInstance(planId, activityInstanceId, activityInstance);
   }
 
-  private void patchActivityInstance(final Context ctx) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException {
+  private void patchActivityInstance(final Context ctx) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException, InvalidEntityException {
+    final JsonValue requestJson = Json.createReader(new StringReader(ctx.body())).readValue();
+
     final String planId = ctx.pathParam("planId");
     final String activityInstanceId = ctx.pathParam("activityInstanceId");
-    // TODO: Replace JsonbBuilder with our RequestDeserializers
-    final ActivityInstance activityInstance = JsonbBuilder.create().fromJson(ctx.body(), ActivityInstance.class);
+    final ActivityInstance activityInstance = RequestDeserializers.deserializeActivityInstancePatch(requestJson);
 
     this.appController.updateActivityInstance(planId, activityInstanceId, activityInstance);
   }
