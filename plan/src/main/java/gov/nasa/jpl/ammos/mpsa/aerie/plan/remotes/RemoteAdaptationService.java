@@ -59,7 +59,7 @@ public final class RemoteAdaptationService implements AdaptationService {
       case "bool":
         return ParameterSchema.BOOLEAN;
       case "double":
-        return ParameterSchema.DOUBLE;
+        return ParameterSchema.REAL;
       case "list":
         if (!(parameterSchemaJson.containsKey("items"))) throw new InvalidServiceResponseException();
 

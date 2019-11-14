@@ -3,6 +3,7 @@ import { NgModule } from '@angular/core';
 import {
   MatButtonModule,
   MatCardModule,
+  MatCheckboxModule,
   MatChipsModule,
   MatDialogModule,
   MatDividerModule,
@@ -16,7 +17,6 @@ import {
   MatSelectModule,
   MatSidenavModule,
   MatSlideToggleModule,
-  MatSortModule,
   MatTableModule,
   MatToolbarModule,
   MatTooltipModule,
@@ -25,6 +25,7 @@ import {
 const MODULES = [
   MatButtonModule,
   MatCardModule,
+  MatCheckboxModule,
   MatChipsModule,
   MatDialogModule,
   MatDividerModule,
@@ -38,7 +39,6 @@ const MODULES = [
   MatSelectModule,
   MatSidenavModule,
   MatSlideToggleModule,
-  MatSortModule,
   MatTableModule,
   MatToolbarModule,
   MatTooltipModule,

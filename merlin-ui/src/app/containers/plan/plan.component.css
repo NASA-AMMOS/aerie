@@ -2,6 +2,10 @@ mat-toolbar {
   height: 36px;
 }
 
+.mat-column-menu {
+  width: 65px;
+}
+
 .mat-toolbar-right {
   display: inline-flex;
   flex: 1 1 auto;

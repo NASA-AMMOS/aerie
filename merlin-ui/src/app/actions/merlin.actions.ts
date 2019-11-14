@@ -96,7 +96,29 @@ export const setPlans = createAction(
   props<{ plans: CPlanMap }>(),
 );
 
+export const setSelectedActivityInstanceId = createAction(
+  '[merlin] setSelectedActivityInstanceId',
+  props<{ selectedActivityInstanceId: string | null }>(),
+);
+
 export const setSelectedPlanAndActivityTypes = createAction(
   '[merlin] setSelectedPlanAndActivityTypes',
   props<{ selectedPlan: CPlan; activityTypes: CActivityTypeMap }>(),
+);
+
+export const updateActivityInstance = createAction(
+  '[merlin] updateActivityInstance',
+  props<{
+    planId: string;
+    activityInstanceId: string;
+    activityInstance: Partial<SActivityInstance>;
+  }>(),
+);
+
+export const updateActivityInstanceSuccess = createAction(
+  '[merlin] updateActivityInstanceSuccess',
+  props<{
+    activityInstanceId: string;
+    activityInstance: Partial<SActivityInstance>;
+  }>(),
 );

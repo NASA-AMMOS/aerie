@@ -1,9 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { AngularSplitModule } from 'angular-split';
-import { ActivityTypeListModule, PanelHeaderModule } from '../../components';
+import {
+  ActivityTypeListModule,
+  CreateActivityInstanceFormModule,
+  PanelHeaderModule,
+  UpdateActivityInstanceFormModule,
+} from '../../components';
 import { MaterialModule } from '../../material';
-import { CreateActivityInstanceFormModule } from '../create-activity-instance-form';
 import { PlanComponent } from './plan.component';
 
 @NgModule({
@@ -14,8 +18,9 @@ import { PlanComponent } from './plan.component';
     MaterialModule,
     AngularSplitModule.forChild(),
     ActivityTypeListModule,
-    PanelHeaderModule,
     CreateActivityInstanceFormModule,
+    PanelHeaderModule,
+    UpdateActivityInstanceFormModule,
   ],
 })
 export class PlanModule {}

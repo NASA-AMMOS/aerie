@@ -3,6 +3,7 @@ import { compare } from '../functions';
 import { MerlinState } from '../reducers';
 import {
   CActivityInstance,
+  CActivityInstanceMap,
   CActivityType,
   CActivityTypeMap,
   CAdaptation,
@@ -10,6 +11,11 @@ import {
 } from '../types';
 
 const getMerlinState = createFeatureSelector<MerlinState>('merlin');
+
+export const getActivityInstancesMap = createSelector(
+  getMerlinState,
+  (state: MerlinState): CActivityInstanceMap => state.activityInstances,
+);
 
 export const getActivityInstancesForSelectedPlan = createSelector(
   getMerlinState,
@@ -62,6 +68,29 @@ export const getPlans = createSelector(
   getMerlinState,
   (state: MerlinState): CPlan[] =>
     state.plans ? Object.values(state.plans) : [],
+);
+
+export const getSelectedActivityInstanceId = createSelector(
+  getMerlinState,
+  (state: MerlinState): string | null => state.selectedActivityInstanceId,
+);
+
+export const getSelectedActivityInstance = createSelector(
+  getActivityInstancesMap,
+  getSelectedActivityInstanceId,
+  (
+    activityInstances: CActivityInstanceMap | null,
+    selectedActivityInstanceId: string | null,
+  ) => {
+    if (
+      activityInstances &&
+      selectedActivityInstanceId &&
+      activityInstances[selectedActivityInstanceId]
+    ) {
+      return activityInstances[selectedActivityInstanceId];
+    }
+    return null;
+  },
 );
 
 export const getSelectedPlan = createSelector(

@@ -1,6 +1,6 @@
 <mat-toolbar color="primary">
-  <span *ngIf="!plan">Planning Cycle</span>
-  <span *ngIf="plan">Planning Cycle: {{ plan.name }}</span>
+  <span *ngIf="!plan">Plan</span>
+  <span *ngIf="plan">Plan: {{ plan.name }}</span>
 
   <div class="mat-toolbar-right">
     <button mat-icon-button [matMenuTriggerFor]="menu">
@@ -26,6 +26,12 @@
       </button>
       <button mat-menu-item (click)="togglePanelVisible('activityInstances')">
         <span> Activity Instances</span>
+      </button>
+      <button
+        mat-menu-item
+        (click)="togglePanelVisible('selectedActivityInstance')"
+      >
+        <span>Selected Activity Instance</span>
       </button>
     </mat-menu>
   </div>
@@ -56,7 +62,11 @@
       Create Activity Instance
     </app-panel-header>
     <div class="p-1">
-      <app-create-activity-instance-form></app-create-activity-instance-form>
+      <app-create-activity-instance-form
+        [activityTypes]="activityTypes"
+        [activityTypesMap]="activityTypesMap"
+        (create)="onCreateActivityInstance($event)"
+      ></app-create-activity-instance-form>
     </div>
   </as-split-area>
 
@@ -75,40 +85,38 @@
 
       <table
         *ngIf="activityInstances.length"
-        [dataSource]="sortedActivityInstances"
-        (matSortChange)="sortActivityInstances($event)"
+        [dataSource]="activityInstances"
         mat-table
-        matSort
         class="w-100 mat-elevation-z1"
       >
         <ng-container matColumnDef="menu">
           <th mat-header-cell *matHeaderCellDef></th>
           <td mat-cell *matCellDef="let element">
-            <button mat-icon-button [matMenuTriggerFor]="activityInstanceMenu">
-              <mat-icon>more_vert</mat-icon>
+            <mat-checkbox
+              matTooltip="Select Activity Instance"
+              [checked]="selection.isSelected(element)"
+              (click)="$event.stopPropagation()"
+              (change)="onSelectActivityInstance(element)"
+            ></mat-checkbox>
+            <button
+              mat-icon-button
+              matTooltip="Delete Activity Instance"
+              (click)="onDeleteActivityInstance(element.id)"
+            >
+              <mat-icon>delete_outline</mat-icon>
             </button>
-            <mat-menu #activityInstanceMenu="matMenu">
-              <button
-                mat-menu-item
-                (click)="onDeleteActivityInstance(element.id)"
-              >
-                <span>
-                  Delete
-                </span>
-              </button>
-            </mat-menu>
           </td>
         </ng-container>
 
         <ng-container matColumnDef="type">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
+          <th mat-header-cell *matHeaderCellDef>Type</th>
           <td mat-cell *matCellDef="let element">
             {{ element.type }}
           </td>
         </ng-container>
 
         <ng-container matColumnDef="startTimestamp">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Start Time</th>
+          <th mat-header-cell *matHeaderCellDef>Start Time</th>
           <td mat-cell *matCellDef="let element">
             {{ element.startTimestamp }}
           </td>
@@ -117,6 +125,29 @@
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
       </table>
+    </div>
+  </as-split-area>
+
+  <as-split-area
+    [order]="panels.selectedActivityInstance.order"
+    [size]="panels.selectedActivityInstance.size"
+    [visible]="panels.selectedActivityInstance.visible"
+  >
+    <app-panel-header>
+      Selected Activity Instance
+    </app-panel-header>
+    <div class="p-1">
+      <mat-card *ngIf="selectedActivityInstance; else elseBlock">
+        <app-update-activity-instance-form
+          [activityInstance]="selectedActivityInstance"
+          [activityTypesMap]="activityTypesMap"
+          (delete)="onDeleteActivityInstance($event)"
+          (update)="onUpdateActivityInstance($event)"
+        ></app-update-activity-instance-form>
+      </mat-card>
+      <ng-template #elseBlock>
+        <mat-card>No Activity Instance Selected.</mat-card>
+      </ng-template>
     </div>
   </as-split-area>
 </as-split>

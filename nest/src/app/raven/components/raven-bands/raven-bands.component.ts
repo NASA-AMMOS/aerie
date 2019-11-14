@@ -17,7 +17,7 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-import { SortablejsOptions } from 'angular-sortablejs';
+import { SortablejsOptions } from 'ngx-sortablejs';
 import {
   RavenBandLeftClick,
   RavenCompositeBand,

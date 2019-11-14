@@ -32,6 +32,7 @@ public final class HttpRequester {
   public <T> HttpResponse<String> sendRequest(final String method, final String path, final Optional<T> body)
       throws IOException, InterruptedException
   {
+    // TODO: Remove JSON-B -- probably just take an `Optional<JsonValue>` instead of an arbitrary `Optional<T>`.
     final HttpRequest.BodyPublisher bodyPublisher = body
         .map(x -> HttpRequest.BodyPublishers.ofString(JsonbBuilder.create().toJson(x)))
         .orElseGet(HttpRequest.BodyPublishers::noBody);
