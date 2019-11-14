@@ -2,8 +2,13 @@ mat-toolbar {
   height: 36px;
 }
 
+tr[mat-row]:hover {
+  background: #f5f5f5;
+  cursor: pointer;
+}
+
 .mat-column-menu {
-  width: 65px;
+  width: 40px;
 }
 
 .mat-toolbar-right {

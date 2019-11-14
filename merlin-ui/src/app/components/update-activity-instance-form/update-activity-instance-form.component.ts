@@ -98,12 +98,10 @@ export class UpdateActivityInstanceFormComponent implements OnChanges {
         },
         {},
       );
-
       const activityInstance: Partial<SActivityInstance> = {
         ...this.form.value,
         parameters,
       };
-
       this.update.emit({
         activityInstance,
         activityInstanceId: this.activityInstance.id,

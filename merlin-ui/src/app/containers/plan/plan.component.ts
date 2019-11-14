@@ -33,8 +33,8 @@ import {
   templateUrl: './plan.component.html',
 })
 export class PlanComponent implements OnDestroy {
-  activityInstances: CActivityInstance[] = [];
-  activityTypes: CActivityType[] = [];
+  activityInstances: CActivityInstance[] | null = null;
+  activityTypes: CActivityType[] | null = null;
   activityTypesMap: CActivityTypeMap | null = null;
   displayedColumns: string[] = ['menu', 'type', 'startTimestamp'];
   panels = {

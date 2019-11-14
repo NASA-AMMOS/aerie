@@ -5,6 +5,7 @@ import {
   ActivityTypeListModule,
   CreateActivityInstanceFormModule,
   PanelHeaderModule,
+  PlaceholderModule,
   UpdateActivityInstanceFormModule,
 } from '../../components';
 import { MaterialModule } from '../../material';
@@ -20,6 +21,7 @@ import { PlanComponent } from './plan.component';
     ActivityTypeListModule,
     CreateActivityInstanceFormModule,
     PanelHeaderModule,
+    PlaceholderModule,
     UpdateActivityInstanceFormModule,
   ],
 })
