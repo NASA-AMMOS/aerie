@@ -4,7 +4,9 @@ import {
   ChangeDetectorRef,
   Component,
   OnDestroy,
+  ViewChild,
 } from '@angular/core';
+import { MatMenuTrigger } from '@angular/material';
 import { ActivatedRoute } from '@angular/router';
 import { select, Store } from '@ngrx/store';
 import { SubSink } from 'subsink';
@@ -33,9 +35,13 @@ import {
   templateUrl: './plan.component.html',
 })
 export class PlanComponent implements OnDestroy {
+  @ViewChild('contextMenuTrigger')
+  contextMenuTrigger: MatMenuTrigger;
+
   activityInstances: CActivityInstance[] | null = null;
   activityTypes: CActivityType[] | null = null;
   activityTypesMap: CActivityTypeMap | null = null;
+  contextMenuPosition = { x: '0px', y: '0px' };
   displayedColumns: string[] = ['menu', 'type', 'startTimestamp'];
   panels = {
     activityInstances: {
@@ -103,6 +109,18 @@ export class PlanComponent implements OnDestroy {
 
   ngOnDestroy() {
     this.subs.unsubscribe();
+  }
+
+  /**
+   * @see https://github.com/angular/components/issues/5007#issuecomment-554124365
+   */
+  onContextMenu(event: MouseEvent, item: CActivityInstance) {
+    event.preventDefault();
+    this.contextMenuPosition.x = event.clientX + 'px';
+    this.contextMenuPosition.y = event.clientY + 'px';
+    this.contextMenuTrigger.menuData = { item };
+    this.contextMenuTrigger._openedBy = 'mouse';
+    this.contextMenuTrigger.openMenu();
   }
 
   onCreateActivityInstance(activityInstance: SActivityInstance): void {

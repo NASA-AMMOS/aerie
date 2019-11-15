@@ -37,7 +37,6 @@ import { MaterialModule } from './material';
         strictActionSerializability: false,
         strictStateImmutability: true,
         strictStateSerializability: true,
-        // False since we are sending a file in the adaptations.component.
       },
     }),
     StoreRouterConnectingModule.forRoot({

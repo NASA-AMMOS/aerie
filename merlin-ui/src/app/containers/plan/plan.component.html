@@ -127,8 +127,25 @@
             mat-row
             *matRowDef="let row; columns: displayedColumns"
             (click)="onSelectActivityInstance(row)"
+            (contextmenu)="onContextMenu($event, row)"
           ></tr>
         </table>
+
+        <div
+          style="visibility: hidden; position: fixed;"
+          [style.left]="contextMenuPosition.x"
+          [style.top]="contextMenuPosition.y"
+          [matMenuTriggerFor]="contextMenu"
+          #contextMenuTrigger="matMenuTrigger"
+        ></div>
+        <mat-menu #contextMenu="matMenu">
+          <ng-template matMenuContent let-item="item">
+            <button mat-menu-item (click)="onDeleteActivityInstance(item.id)">
+              <mat-icon>delete_forever</mat-icon>
+              <span>Delete</span>
+            </button>
+          </ng-template>
+        </mat-menu>
       </ng-container>
     </div>
   </as-split-area>
