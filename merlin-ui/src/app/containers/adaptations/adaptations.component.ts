@@ -4,12 +4,8 @@ import {
   Component,
   OnDestroy,
 } from '@angular/core';
-import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  Validators,
-} from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { select, Store } from '@ngrx/store';
 import { SubSink } from 'subsink';
 import { MerlinActions } from '../../actions';
@@ -24,7 +20,7 @@ import { CAdaptation, SCreateAdaption } from '../../types';
   templateUrl: './adaptations.component.html',
 })
 export class AdaptationsComponent implements OnDestroy {
-  adaptations: CAdaptation[] = [];
+  adaptations: CAdaptation[] | null = null;
   createAdaptationForm: FormGroup;
   displayedColumns: string[] = [
     'menu',
@@ -40,14 +36,15 @@ export class AdaptationsComponent implements OnDestroy {
   constructor(
     private fb: FormBuilder,
     private ref: ChangeDetectorRef,
+    private router: Router,
     private store: Store<AppState>,
   ) {
     this.createAdaptationForm = this.fb.group({
-      file: new FormControl(null, [Validators.required]),
-      mission: new FormControl('', [Validators.required]),
-      name: new FormControl('', [Validators.required]),
-      owner: new FormControl('', [Validators.required]),
-      version: new FormControl('', [Validators.required]),
+      file: [null, Validators.required],
+      mission: ['', Validators.required],
+      name: ['', Validators.required],
+      owner: ['', Validators.required],
+      version: ['', Validators.required],
     });
 
     this.subs.add(
@@ -60,6 +57,10 @@ export class AdaptationsComponent implements OnDestroy {
 
   ngOnDestroy() {
     this.subs.unsubscribe();
+  }
+
+  onCreatePlan(adaptationId: string): void {
+    this.router.navigate(['plans'], { state: { adaptationId } });
   }
 
   onDeleteAdaptation(id: string) {

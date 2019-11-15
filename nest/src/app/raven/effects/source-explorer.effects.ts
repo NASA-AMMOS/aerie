@@ -1921,7 +1921,7 @@ export class SourceExplorerEffects {
             `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${sourceId}`,
           )
           .pipe(
-            timeout(3000), // Timeout long requests since MPS Server returns type information quickly, and long requests probably are not what we are looking for.
+            timeout(60000), // Timeout long requests since MPS Server returns type information quickly, and long requests probably are not what we are looking for.
             map((mpsServerSources: MpsServerSource[]) =>
               toRavenSources('', false, mpsServerSources, null),
             ),

@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { SubSink } from 'subsink';
 import { MerlinActions } from './actions';
@@ -10,8 +10,9 @@ import { getLoading } from './selectors';
   styleUrls: [`./app.component.css`],
   templateUrl: './app.component.html',
 })
-export class AppComponent {
+export class AppComponent implements OnDestroy {
   loading = false;
+
   private subs = new SubSink();
 
   constructor(private ref: ChangeDetectorRef, private store: Store<AppState>) {
@@ -21,6 +22,10 @@ export class AppComponent {
         this.ref.markForCheck();
       }),
     );
+  }
+
+  ngOnDestroy() {
+    this.subs.unsubscribe();
   }
 
   onAbout() {

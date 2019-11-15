@@ -1,16 +1,13 @@
 import {
   ChangeDetectionStrategy,
-  ChangeDetectorRef,
   Component,
+  EventEmitter,
+  Input,
   OnDestroy,
+  Output,
 } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
-import { select, Store } from '@ngrx/store';
 import { SubSink } from 'subsink';
-import { MerlinActions } from '../../actions';
-import { AppState } from '../../app-store';
-import { getActivityTypes, getActivityTypesMap } from '../../selectors';
 import {
   CActivityType,
   CActivityTypeMap,
@@ -24,18 +21,22 @@ import {
   templateUrl: './create-activity-instance-form.component.html',
 })
 export class CreateActivityInstanceFormComponent implements OnDestroy {
+  @Input()
   activityTypes: CActivityType[] = [];
+
+  @Input()
   activityTypesMap: CActivityTypeMap | null = null;
+
+  @Output()
+  create: EventEmitter<SActivityInstance> = new EventEmitter<
+    SActivityInstance
+  >();
+
   form: FormGroup;
 
   private subs = new SubSink();
 
-  constructor(
-    private fb: FormBuilder,
-    private ref: ChangeDetectorRef,
-    private route: ActivatedRoute,
-    private store: Store<AppState>,
-  ) {
+  constructor(private fb: FormBuilder) {
     this.form = this.fb.group({
       parameters: this.fb.array([]),
       startTimestamp: ['', Validators.required],
@@ -59,16 +60,6 @@ export class CreateActivityInstanceFormComponent implements OnDestroy {
           });
         }
       }),
-      this.store.pipe(select(getActivityTypes)).subscribe(activityTypes => {
-        this.activityTypes = activityTypes;
-        this.ref.markForCheck();
-      }),
-      this.store
-        .pipe(select(getActivityTypesMap))
-        .subscribe(activityTypesMap => {
-          this.activityTypesMap = activityTypesMap;
-          this.ref.markForCheck();
-        }),
     );
   }
 
@@ -82,7 +73,6 @@ export class CreateActivityInstanceFormComponent implements OnDestroy {
 
   onSubmit() {
     if (this.form.valid) {
-      const { id: planId } = this.route.snapshot.params;
       const parameters = this.form.value.parameters.reduce(
         (parameterMap, parameter) => {
           if (parameter.value !== '') {
@@ -100,9 +90,7 @@ export class CreateActivityInstanceFormComponent implements OnDestroy {
         ...this.form.value,
         parameters,
       };
-      this.store.dispatch(
-        MerlinActions.createActivityInstance({ planId, activityInstance }),
-      );
+      this.create.emit(activityInstance);
     }
   }
 }

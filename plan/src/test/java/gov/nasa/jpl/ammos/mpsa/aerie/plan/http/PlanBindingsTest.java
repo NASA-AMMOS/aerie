@@ -520,10 +520,8 @@ public final class PlanBindingsTest {
     final HttpResponse<String> response = client.sendRequest("PUT", "/plans/" + planId + "/activity_instances/" + activityInstanceId, activityInstance);
 
     // THEN
-    assertThat(response.statusCode()).isEqualTo(422);
+    assertThat(response.statusCode()).isEqualTo(400);
 
-    final JsonValue responseJson = JsonbBuilder.create().fromJson(response.body(), JsonValue.class);
-    final JsonValue expectedJson = ResponseSerializers.serializeValidationMessages(StubPlanController.VALIDATION_ERRORS);
-    assertThat(responseJson).isEqualTo(expectedJson);
+    // TODO: Verify the structure of the error response entity.
   }
 }

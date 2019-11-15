@@ -299,4 +299,45 @@ export class MerlinEffects {
     },
     { dispatch: false },
   );
+
+  updateActivityInstance = createEffect(() => {
+    return this.actions.pipe(
+      ofType(MerlinActions.updateActivityInstance),
+      switchMap(({ planId, activityInstanceId, activityInstance }) =>
+        concat(
+          of(MerlinActions.setLoading({ loading: true })),
+          this.apiService
+            .updateActivityInstance(
+              planId,
+              activityInstanceId,
+              activityInstance,
+            )
+            .pipe(
+              switchMap(() => {
+                return [
+                  ToastActions.showToast({
+                    message: 'Activity instance updated',
+                    toastType: 'success',
+                  }),
+                  MerlinActions.updateActivityInstanceSuccess({
+                    activityInstance,
+                    activityInstanceId,
+                  }),
+                ];
+              }),
+              catchError((error: Error) => {
+                console.error(error);
+                return [
+                  ToastActions.showToast({
+                    message: 'Update activity instance failed',
+                    toastType: 'error',
+                  }),
+                ];
+              }),
+            ),
+          of(MerlinActions.setLoading({ loading: false })),
+        ),
+      ),
+    );
+  });
 }

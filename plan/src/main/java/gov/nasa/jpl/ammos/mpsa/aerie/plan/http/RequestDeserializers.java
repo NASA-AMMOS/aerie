@@ -114,6 +114,46 @@ public final class RequestDeserializers {
     return activityInstance;
   }
 
+  public static ActivityInstance deserializeActivityInstancePatch(final JsonValue jsonValue) throws InvalidEntityException {
+    if (!(jsonValue instanceof JsonObject)) throw new InvalidEntityException();
+    final JsonObject activityInstanceJson = (JsonObject)jsonValue;
+
+    Optional<String> type = Optional.empty();
+    Optional<String> startTimestamp = Optional.empty();
+    Optional<Map<String, SerializedParameter>> parameters = Optional.empty();
+
+    for (final var entry : activityInstanceJson.entrySet()) {
+      final JsonValue entryValue = entry.getValue();
+
+      switch (entry.getKey()) {
+        case "type":
+          if (entryValue == JsonValue.NULL) throw new InvalidEntityException();
+          type = Optional.of(deserializeString(entryValue));
+          break;
+
+        case "startTimestamp":
+          if (entryValue == JsonValue.NULL) throw new InvalidEntityException();
+          startTimestamp = Optional.of(deserializeString(entryValue));
+          break;
+
+        case "parameters":
+          if (entryValue == JsonValue.NULL) throw new InvalidEntityException();
+          parameters = Optional.of(deserializeActivityParameterMap(entryValue));
+          break;
+
+        default:
+          throw new InvalidEntityException();
+      }
+    }
+
+    final ActivityInstance activityInstance = new ActivityInstance();
+    activityInstance.type = type.orElse(null);
+    activityInstance.startTimestamp = startTimestamp.orElse(null);
+    activityInstance.parameters = parameters.orElse(null);
+
+    return activityInstance;
+  }
+
   public static List<ActivityInstance> deserializeActivityInstanceList(final JsonValue jsonValue) throws InvalidEntityException {
     if (!(jsonValue instanceof JsonArray)) throw new InvalidEntityException();
     final JsonArray activityInstanceListJson = (JsonArray)jsonValue;

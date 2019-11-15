@@ -3,6 +3,7 @@ import { compare } from '../functions';
 import { MerlinState } from '../reducers';
 import {
   CActivityInstance,
+  CActivityInstanceMap,
   CActivityType,
   CActivityTypeMap,
   CAdaptation,
@@ -11,9 +12,14 @@ import {
 
 const getMerlinState = createFeatureSelector<MerlinState>('merlin');
 
+export const getActivityInstancesMap = createSelector(
+  getMerlinState,
+  (state: MerlinState): CActivityInstanceMap => state.activityInstances,
+);
+
 export const getActivityInstancesForSelectedPlan = createSelector(
   getMerlinState,
-  (state: MerlinState): CActivityInstance[] => {
+  (state: MerlinState): CActivityInstance[] | null => {
     if (state.selectedPlan && state.activityInstances) {
       const activityInstances = state.selectedPlan.activityInstanceIds.reduce(
         (instances, id) => {
@@ -32,14 +38,14 @@ export const getActivityInstancesForSelectedPlan = createSelector(
 
       return sortedActivityInstances;
     }
-    return [];
+    return null;
   },
 );
 
 export const getActivityTypes = createSelector(
   getMerlinState,
-  (state: MerlinState): CActivityType[] =>
-    state.activityTypes ? Object.values(state.activityTypes) : [],
+  (state: MerlinState): CActivityType[] | null =>
+    state.activityTypes ? Object.values(state.activityTypes) : null,
 );
 
 export const getActivityTypesMap = createSelector(
@@ -49,8 +55,8 @@ export const getActivityTypesMap = createSelector(
 
 export const getAdaptations = createSelector(
   getMerlinState,
-  (state: MerlinState): CAdaptation[] =>
-    state.adaptations ? Object.values(state.adaptations) : [],
+  (state: MerlinState): CAdaptation[] | null =>
+    state.adaptations ? Object.values(state.adaptations) : null,
 );
 
 export const getLoading = createSelector(
@@ -58,10 +64,31 @@ export const getLoading = createSelector(
   (state: MerlinState): boolean => state.loading,
 );
 
-export const getPlans = createSelector(
+export const getPlans = createSelector(getMerlinState, (state: MerlinState):
+  | CPlan[]
+  | null => (state.plans ? Object.values(state.plans) : null));
+
+export const getSelectedActivityInstanceId = createSelector(
   getMerlinState,
-  (state: MerlinState): CPlan[] =>
-    state.plans ? Object.values(state.plans) : [],
+  (state: MerlinState): string | null => state.selectedActivityInstanceId,
+);
+
+export const getSelectedActivityInstance = createSelector(
+  getActivityInstancesMap,
+  getSelectedActivityInstanceId,
+  (
+    activityInstances: CActivityInstanceMap | null,
+    selectedActivityInstanceId: string | null,
+  ) => {
+    if (
+      activityInstances &&
+      selectedActivityInstanceId &&
+      activityInstances[selectedActivityInstanceId]
+    ) {
+      return activityInstances[selectedActivityInstanceId];
+    }
+    return null;
+  },
 );
 
 export const getSelectedPlan = createSelector(

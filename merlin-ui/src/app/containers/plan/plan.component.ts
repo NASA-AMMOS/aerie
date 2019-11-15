@@ -1,22 +1,30 @@
+import { SelectionModel } from '@angular/cdk/collections';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   OnDestroy,
 } from '@angular/core';
-import { Sort } from '@angular/material/sort';
 import { ActivatedRoute } from '@angular/router';
 import { select, Store } from '@ngrx/store';
 import { SubSink } from 'subsink';
 import { MerlinActions } from '../../actions';
 import { AppState } from '../../app-store';
-import { compare } from '../../functions';
+import { UpdateActivityInstance } from '../../components';
 import {
   getActivityInstancesForSelectedPlan,
   getActivityTypes,
+  getActivityTypesMap,
+  getSelectedActivityInstance,
   getSelectedPlan,
 } from '../../selectors';
-import { CActivityInstance, CActivityType, CPlan } from '../../types';
+import {
+  CActivityInstance,
+  CActivityType,
+  CActivityTypeMap,
+  CPlan,
+  SActivityInstance,
+} from '../../types';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,13 +33,14 @@ import { CActivityInstance, CActivityType, CPlan } from '../../types';
   templateUrl: './plan.component.html',
 })
 export class PlanComponent implements OnDestroy {
-  activityInstances: CActivityInstance[] = [];
-  activityTypes: CActivityType[] = [];
+  activityInstances: CActivityInstance[] | null = null;
+  activityTypes: CActivityType[] | null = null;
+  activityTypesMap: CActivityTypeMap | null = null;
   displayedColumns: string[] = ['menu', 'type', 'startTimestamp'];
   panels = {
     activityInstances: {
       order: 2,
-      size: 60,
+      size: 20,
       visible: true,
     },
     activityTypes: {
@@ -44,9 +53,15 @@ export class PlanComponent implements OnDestroy {
       size: 20,
       visible: true,
     },
+    selectedActivityInstance: {
+      order: 3,
+      size: 20,
+      visible: true,
+    },
   };
   plan: CPlan | null = null;
-  sortedActivityInstances: CActivityInstance[] = [];
+  selectedActivityInstance: CActivityInstance | null = null;
+  selection = new SelectionModel<CActivityInstance>(false, []);
 
   private subs = new SubSink();
 
@@ -60,13 +75,25 @@ export class PlanComponent implements OnDestroy {
         .pipe(select(getActivityInstancesForSelectedPlan))
         .subscribe(activityInstances => {
           this.activityInstances = activityInstances;
-          this.sortedActivityInstances = [...activityInstances];
           this.ref.markForCheck();
         }),
       this.store.pipe(select(getActivityTypes)).subscribe(activityTypes => {
         this.activityTypes = activityTypes;
         this.ref.markForCheck();
       }),
+      this.store
+        .pipe(select(getActivityTypesMap))
+        .subscribe(activityTypesMap => {
+          this.activityTypesMap = activityTypesMap;
+          this.ref.markForCheck();
+        }),
+      this.store
+        .pipe(select(getSelectedActivityInstance))
+        .subscribe(selectedActivityInstance => {
+          this.selectedActivityInstance = selectedActivityInstance;
+          this.selection.select(selectedActivityInstance);
+          this.ref.markForCheck();
+        }),
       this.store.pipe(select(getSelectedPlan)).subscribe(plan => {
         this.plan = plan;
         this.ref.markForCheck();
@@ -78,32 +105,40 @@ export class PlanComponent implements OnDestroy {
     this.subs.unsubscribe();
   }
 
-  onDeleteActivityInstance(activityInstanceId: string) {
+  onCreateActivityInstance(activityInstance: SActivityInstance): void {
+    const { id: planId } = this.route.snapshot.params;
+    this.store.dispatch(
+      MerlinActions.createActivityInstance({ planId, activityInstance }),
+    );
+  }
+
+  onDeleteActivityInstance(activityInstanceId: string): void {
     const { id: planId } = this.route.snapshot.params;
     this.store.dispatch(
       MerlinActions.deleteActivityInstance({ planId, activityInstanceId }),
     );
   }
 
-  sortActivityInstances(sort: Sort): void {
-    const activityInstances = [...this.activityInstances];
+  onSelectActivityInstance(activityInstance: CActivityInstance | null): void {
+    this.selection.toggle(activityInstance);
+    const isSelected = this.selection.isSelected(activityInstance);
+    this.store.dispatch(
+      MerlinActions.setSelectedActivityInstanceId({
+        selectedActivityInstanceId: isSelected ? activityInstance.id : null,
+      }),
+    );
+  }
 
-    if (!sort.active || sort.direction === '') {
-      this.sortedActivityInstances = activityInstances;
-      return;
-    }
-
-    this.sortedActivityInstances = activityInstances.sort((a, b) => {
-      const isAsc = sort.direction === 'asc';
-      switch (sort.active) {
-        case 'type':
-          return compare(a.type, b.type, isAsc);
-        case 'startTimestamp':
-          return compare(a.startTimestamp, b.startTimestamp, isAsc);
-        default:
-          return 0;
-      }
-    });
+  onUpdateActivityInstance(update: UpdateActivityInstance): void {
+    const { id: planId } = this.route.snapshot.params;
+    const { activityInstanceId, activityInstance } = update;
+    this.store.dispatch(
+      MerlinActions.updateActivityInstance({
+        activityInstance,
+        activityInstanceId,
+        planId,
+      }),
+    );
   }
 
   togglePanelVisible(panel: string) {

@@ -1,15 +1,13 @@
 import {
+  AfterViewInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  ElementRef,
   OnDestroy,
+  ViewChild,
 } from '@angular/core';
-import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  Validators,
-} from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { select, Store } from '@ngrx/store';
 import { SubSink } from 'subsink';
@@ -24,8 +22,11 @@ import { CAdaptation, CPlan, SPlan } from '../../types';
   styleUrls: ['./plans.component.css'],
   templateUrl: './plans.component.html',
 })
-export class PlansComponent implements OnDestroy {
-  adaptations: CAdaptation[] = [];
+export class PlansComponent implements AfterViewInit, OnDestroy {
+  @ViewChild('inputCreatePlanName')
+  inputCreatePlanName: ElementRef;
+
+  adaptations: CAdaptation[] | null = null;
   createPlanForm: FormGroup;
   displayedColumns: string[] = [
     'menu',
@@ -34,7 +35,8 @@ export class PlansComponent implements OnDestroy {
     'startTimestamp',
     'endTimestamp',
   ];
-  plans: CPlan[] = [];
+  plans: CPlan[] | null = null;
+  selectedAdaptationId = '';
 
   private subs = new SubSink();
 
@@ -44,11 +46,16 @@ export class PlansComponent implements OnDestroy {
     private router: Router,
     private store: Store<AppState>,
   ) {
+    const { state } = this.router.getCurrentNavigation().extras;
+    if (state && state.adaptationId) {
+      this.selectedAdaptationId = state.adaptationId;
+    }
+
     this.createPlanForm = this.fb.group({
-      adaptationId: new FormControl('', [Validators.required]),
-      endTimestamp: new FormControl('', [Validators.required]),
-      name: new FormControl('', [Validators.required]),
-      startTimestamp: new FormControl('', [Validators.required]),
+      adaptationId: [this.selectedAdaptationId, Validators.required],
+      endTimestamp: ['', Validators.required],
+      name: ['', Validators.required],
+      startTimestamp: ['', Validators.required],
     });
 
     this.subs.add(
@@ -61,6 +68,12 @@ export class PlansComponent implements OnDestroy {
         this.ref.markForCheck();
       }),
     );
+  }
+
+  ngAfterViewInit() {
+    if (this.selectedAdaptationId !== '') {
+      setTimeout(() => this.inputCreatePlanName.nativeElement.focus(), 0);
+    }
   }
 
   ngOnDestroy() {

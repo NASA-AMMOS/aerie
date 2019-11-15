@@ -1,5 +1,5 @@
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <mat-form-field class="w-100 pb-2" appearance="outline">
+  <mat-form-field class="w-100" appearance="outline">
     <mat-label>Activity Type</mat-label>
     <mat-select formControlName="type" [required]="true">
       <mat-option *ngFor="let type of activityTypes" [value]="type.name">
@@ -11,7 +11,7 @@
     </mat-error>
   </mat-form-field>
 
-  <mat-form-field class="w-100 pb-2" appearance="outline">
+  <mat-form-field class="w-100" appearance="outline">
     <mat-label>Start Date</mat-label>
     <input
       [required]="true"
@@ -42,13 +42,14 @@
           formArrayName="parameters"
           *ngFor="let parameter of formParameters?.controls; let i = index"
         >
-          <mat-form-field [formGroupName]="i" class="w-100 pb-2">
+          <mat-form-field [formGroupName]="i" class="w-100">
             <mat-label>{{ parameter.value.name }}</mat-label>
             <input
+              autocomplete="off"
+              formControlName="value"
               matInput
               type="text"
-              formControlName="value"
-              autocomplete="off"
+              [value]="parameter.value.value"
             />
             <mat-hint>type: {{ parameter.value.type }}</mat-hint>
           </mat-form-field>

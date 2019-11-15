@@ -39,7 +39,8 @@ public class Globals {
      */
     public enum ABCORR {
         LTS("LT+S"),
-        LT("LT");
+        LT("LT"),
+        CN("CN");
 
         public final String type;
         ABCORR(final String type) {this.type = type; }
