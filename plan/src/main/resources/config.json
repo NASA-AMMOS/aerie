@@ -1,0 +1,8 @@
+{
+  "HTTP_PORT": 27183,
+  "ADAPTATION_URI": "http://adaptation:27182",
+  "MONGO_URI": "mongodb://plan_mongo:27018",
+  "MONGO_DATABASE": "plan-service",
+  "MONGO_PLAN_COLLECTION": "plans",
+  "MONGO_ACTIVITY_COLLECTION": "activities"
+}
