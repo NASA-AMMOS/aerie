@@ -51,7 +51,9 @@ export class MpsServerService {
    * Import mapping file into MPS Server for a given source URL.
    */
   importMappingFile(sourceUrl: string, name: string, mapping: string) {
-    const url = sourceUrl.replace('fs-mongodb', 'metadata-mongodb');
+    const url = sourceUrl.includes('tes_url=')
+      ? sourceUrl.replace('/fs/', '/metadata/')
+      : sourceUrl.replace('fs-mongodb', 'metadata-mongodb');
     return this.http.post(`${url}/${name}`, mapping, { responseType: 'text' });
   }
 
