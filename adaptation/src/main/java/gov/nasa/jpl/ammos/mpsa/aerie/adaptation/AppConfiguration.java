@@ -3,6 +3,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation;
 import java.io.*;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -21,14 +23,23 @@ public class AppConfiguration {
         this.MONGO_ADAPTATION_COLLECTION = mongoAdaptationCollection;
     }
 
+    public static AppConfiguration loadProperties(Path path) throws IOException {
+        InputStream configStream = Files.newInputStream(path);
+        return ingestProperties(configStream);
+    }
+
     public static AppConfiguration loadProperties() {
+        InputStream configStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.json");
+        return ingestProperties(configStream);
+    }
+
+    private static AppConfiguration ingestProperties(InputStream configStream) {
         int httpPort;
         URI mongoUri;
         String mongoDatabase;
         String mongoAdaptationCollection;
 
         try {
-            InputStream configStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.json");
             JsonObject config = (JsonObject)(Json.createReader(configStream).readValue());
 
             httpPort = config.getInt("HTTP_PORT");

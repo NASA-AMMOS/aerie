@@ -2,8 +2,11 @@ package gov.nasa.jpl.ammos.mpsa.aerie.plan;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 
 public class AppConfiguration {
@@ -24,7 +27,17 @@ public class AppConfiguration {
         this.MONGO_ACTIVITY_COLLECTION = mongoActvityCollection;
     }
 
+    public static AppConfiguration loadProperties(Path path) throws IOException {
+        InputStream configStream = Files.newInputStream(path);
+        return ingestProperties(configStream);
+    }
+
     public static AppConfiguration loadProperties() {
+        InputStream configStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.json");
+        return ingestProperties(configStream);
+    }
+
+    private static AppConfiguration ingestProperties(InputStream configStream) {
         int httpPort;
         URI adaptationUri;
         URI mongoUri;
@@ -33,7 +46,6 @@ public class AppConfiguration {
         String mongoActivityCollection;
 
         try {
-            InputStream configStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.json");
             JsonObject config = (JsonObject)(Json.createReader(configStream).readValue());
 
             httpPort = config.getInt("HTTP_PORT");
