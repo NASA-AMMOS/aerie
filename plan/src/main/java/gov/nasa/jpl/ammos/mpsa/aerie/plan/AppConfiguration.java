@@ -17,7 +17,7 @@ public class AppConfiguration {
     public final String MONGO_PLAN_COLLECTION;
     public final String MONGO_ACTIVITY_COLLECTION;
 
-    private AppConfiguration(int httpPort, URI adaptationUri, URI mongoUri, String mongoDatabase,
+    public AppConfiguration(int httpPort, URI adaptationUri, URI mongoUri, String mongoDatabase,
                              String mongoPlanCollection, String mongoActvityCollection) {
         this.HTTP_PORT = httpPort;
         this.ADAPTATION_URI = adaptationUri;
