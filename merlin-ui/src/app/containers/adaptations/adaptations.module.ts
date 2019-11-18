@@ -2,7 +2,11 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { AngularSplitModule } from 'angular-split';
-import { PanelHeaderModule, PlaceholderModule } from '../../components';
+import {
+  PanelHeaderModule,
+  PlaceholderModule,
+  ToolbarModule,
+} from '../../components';
 import { MaterialModule } from '../../material';
 import { AdaptationsComponent } from './adaptations.component';
 
@@ -16,6 +20,7 @@ import { AdaptationsComponent } from './adaptations.component';
     AngularSplitModule.forChild(),
     PanelHeaderModule,
     PlaceholderModule,
+    ToolbarModule,
   ],
 })
 export class AdaptationsModule {}

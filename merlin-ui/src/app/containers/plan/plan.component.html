@@ -1,8 +1,8 @@
-<mat-toolbar color="primary">
+<app-toolbar>
   <span *ngIf="!plan">Plan</span>
   <span *ngIf="plan">Plan: {{ plan.name }}</span>
 
-  <div class="mat-toolbar-right">
+  <div class="right">
     <button mat-icon-button [matMenuTriggerFor]="menu">
       <mat-icon>more_vert</mat-icon>
     </button>
@@ -35,7 +35,7 @@
       </button>
     </mat-menu>
   </div>
-</mat-toolbar>
+</app-toolbar>
 
 <as-split [gutterSize]="4">
   <as-split-area
