@@ -1,4 +1,5 @@
 export * from './about-dialog';
+export * from './activity-instances-table';
 export * from './activity-type-list';
 export * from './confirm-dialog';
 export * from './create-activity-instance-form';

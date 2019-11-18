@@ -1,12 +1,9 @@
-import { SelectionModel } from '@angular/cdk/collections';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   OnDestroy,
-  ViewChild,
 } from '@angular/core';
-import { MatMenuTrigger } from '@angular/material';
 import { ActivatedRoute } from '@angular/router';
 import { select, Store } from '@ngrx/store';
 import { SubSink } from 'subsink';
@@ -35,14 +32,9 @@ import {
   templateUrl: './plan.component.html',
 })
 export class PlanComponent implements OnDestroy {
-  @ViewChild('contextMenuTrigger')
-  contextMenuTrigger: MatMenuTrigger;
-
   activityInstances: CActivityInstance[] | null = null;
   activityTypes: CActivityType[] | null = null;
   activityTypesMap: CActivityTypeMap | null = null;
-  contextMenuPosition = { x: '0px', y: '0px' };
-  displayedColumns: string[] = ['menu', 'type', 'startTimestamp'];
   panels = {
     activityInstances: {
       order: 2,
@@ -67,7 +59,6 @@ export class PlanComponent implements OnDestroy {
   };
   plan: CPlan | null = null;
   selectedActivityInstance: CActivityInstance | null = null;
-  selection = new SelectionModel<CActivityInstance>(false, []);
 
   private subs = new SubSink();
 
@@ -97,7 +88,6 @@ export class PlanComponent implements OnDestroy {
         .pipe(select(getSelectedActivityInstance))
         .subscribe(selectedActivityInstance => {
           this.selectedActivityInstance = selectedActivityInstance;
-          this.selection.select(selectedActivityInstance);
           this.ref.markForCheck();
         }),
       this.store.pipe(select(getSelectedPlan)).subscribe(plan => {
@@ -109,18 +99,6 @@ export class PlanComponent implements OnDestroy {
 
   ngOnDestroy() {
     this.subs.unsubscribe();
-  }
-
-  /**
-   * @see https://github.com/angular/components/issues/5007#issuecomment-554124365
-   */
-  onContextMenu(event: MouseEvent, item: CActivityInstance) {
-    event.preventDefault();
-    this.contextMenuPosition.x = event.clientX + 'px';
-    this.contextMenuPosition.y = event.clientY + 'px';
-    this.contextMenuTrigger.menuData = { item };
-    this.contextMenuTrigger._openedBy = 'mouse';
-    this.contextMenuTrigger.openMenu();
   }
 
   onCreateActivityInstance(activityInstance: SActivityInstance): void {
@@ -138,11 +116,11 @@ export class PlanComponent implements OnDestroy {
   }
 
   onSelectActivityInstance(activityInstance: CActivityInstance | null): void {
-    this.selection.toggle(activityInstance);
-    const isSelected = this.selection.isSelected(activityInstance);
     this.store.dispatch(
       MerlinActions.setSelectedActivityInstanceId({
-        selectedActivityInstanceId: isSelected ? activityInstance.id : null,
+        selectedActivityInstanceId: activityInstance
+          ? activityInstance.id
+          : null,
       }),
     );
   }

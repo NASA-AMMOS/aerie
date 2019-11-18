@@ -1,0 +1,4 @@
+tr[mat-row]:hover {
+  background: #f5f5f5;
+  cursor: pointer;
+}

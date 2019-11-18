@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { AngularSplitModule } from 'angular-split';
 import {
+  ActivityInstancesTableModule,
   ActivityTypeListModule,
   CreateActivityInstanceFormModule,
   PanelHeaderModule,
@@ -18,6 +19,7 @@ import { PlanComponent } from './plan.component';
     CommonModule,
     MaterialModule,
     AngularSplitModule.forChild(),
+    ActivityInstancesTableModule,
     ActivityTypeListModule,
     CreateActivityInstanceFormModule,
     PanelHeaderModule,
