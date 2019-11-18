@@ -21,7 +21,7 @@ public class App {
                 configuration = AppConfiguration.loadProperties(Path.of(args[0]));
             } catch (IOException e) {
                 System.err.println(String.format("Configuration file \"%s\" could not be loaded.", args[0]));
-                return;
+                configuration = null;
             }
 
         } else {
@@ -30,7 +30,7 @@ public class App {
 
         if (configuration == null) {
             System.err.println("Not all properties loaded. Exiting.");
-            return;
+            System.exit(1);
         }
 
         // Assemble the core non-web object graph.
