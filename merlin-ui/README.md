@@ -4,8 +4,11 @@ This is the UI for the Aerie - Merlin component.
 
 ## Install
 
+First make sure you have [Node.js LTS](https://nodejs.org/) installed, then do:
+
 ```
 npm i yarn -g
+cd aerie/merlin-ui
 yarn
 ```
 

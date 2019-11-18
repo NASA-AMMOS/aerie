@@ -3,6 +3,7 @@ import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { AngularSplitModule } from 'angular-split';
 import {
+  AdaptationsTableModule,
   PanelHeaderModule,
   PlaceholderModule,
   ToolbarModule,
@@ -18,6 +19,7 @@ import { AdaptationsComponent } from './adaptations.component';
     MaterialModule,
     ReactiveFormsModule,
     AngularSplitModule.forChild(),
+    AdaptationsTableModule,
     PanelHeaderModule,
     PlaceholderModule,
     ToolbarModule,

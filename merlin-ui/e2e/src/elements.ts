@@ -2,9 +2,6 @@ import { by, element } from 'protractor';
 import { adaptation } from './mocks';
 
 export class Elements {
-  static get adaptationMenu() {
-    return element(by.id(`adaptation-menu-${adaptation.name}`));
-  }
   static get adaptationMenuDelete() {
     return element(by.id(`adaptation-menu-delete-${adaptation.name}`));
   }
@@ -34,6 +31,9 @@ export class Elements {
   }
   static get createAdaptationFormVersion() {
     return element(by.id('create-adaptation-form-version'));
+  }
+  static get matRow() {
+    return element(by.css('.mat-row'));
   }
   static get noAdaptationsMessage() {
     return element(by.id('no-adaptations-message'));

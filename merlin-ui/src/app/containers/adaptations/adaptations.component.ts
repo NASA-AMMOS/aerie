@@ -22,14 +22,6 @@ import { CAdaptation, SCreateAdaption } from '../../types';
 export class AdaptationsComponent implements OnDestroy {
   adaptations: CAdaptation[] | null = null;
   createAdaptationForm: FormGroup;
-  displayedColumns: string[] = [
-    'menu',
-    'id',
-    'name',
-    'version',
-    'mission',
-    'owner',
-  ];
 
   private subs = new SubSink();
 

@@ -1,3 +1,4 @@
+import { browser } from 'protractor';
 import { AppPage } from './app.po';
 import { Elements } from './elements';
 import { adaptation } from './mocks';
@@ -7,14 +8,14 @@ import { adaptation } from './mocks';
  * @note Only run these tests against Firefox for now,
  * there is a possible Chromium bug that will break some of the tests: https://github.com/angular/components/issues/10140
  */
-describe('merlin-ui App', () => {
+describe('merlin-ui - banananation e2e tests', () => {
   let page: AppPage;
 
   beforeEach(() => {
     page = new AppPage();
   });
 
-  describe('plans page with no adaptations', () => {
+  describe('plans page - 0 adaptations', () => {
     it(`should navigate to the plans page`, () => {
       page.navigateTo('plans');
     });
@@ -26,7 +27,7 @@ describe('merlin-ui App', () => {
     });
   });
 
-  describe('adaptations page', () => {
+  describe('adaptations page - create adaptation', () => {
     it(`should navigate to the adaptations page`, () => {
       page.navigateTo('adaptations');
     });
@@ -57,9 +58,21 @@ describe('merlin-ui App', () => {
       expect(Elements.noAdaptationsMessage.isPresent()).toBe(false);
       expect(Elements.adaptationsTable.isPresent()).toBe(true);
     });
+  });
+
+  describe('plans page - 1 adaptation', () => {
+    it(`should navigate to the plans page`, () => {
+      page.navigateTo('plans');
+    });
+  });
+
+  describe('adaptations page - delete adaptation', () => {
+    it(`should navigate to the adaptations page`, () => {
+      page.navigateTo('adaptations');
+    });
 
     it('trying to delete an adaptation should show a confirm dialog', () => {
-      Elements.adaptationMenu.click();
+      page.rightClick(Elements.matRow);
       Elements.adaptationMenuDelete.click();
       expect(Elements.confirmDialogConfirmButton.isPresent()).toBe(true);
       expect(Elements.confirmDialogCancelButton.isPresent()).toBe(true);
@@ -71,16 +84,10 @@ describe('merlin-ui App', () => {
     });
 
     it(`after clicking 'Yes' on the confirm dialog, the no adaptations message should be present`, () => {
-      Elements.adaptationMenu.click();
+      page.rightClick(Elements.matRow);
       Elements.adaptationMenuDelete.click();
       Elements.confirmDialogConfirmButton.click();
       expect(Elements.noAdaptationsMessage.isPresent()).toBe(true);
-    });
-  });
-
-  describe('plans page with adaptations', () => {
-    it(`should navigate to the plans page`, () => {
-      page.navigateTo('plans');
     });
   });
 });
