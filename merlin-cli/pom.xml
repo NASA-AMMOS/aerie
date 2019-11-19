@@ -139,11 +139,6 @@
       <artifactId>gson</artifactId>
       <version>2.8.2</version>
     </dependency>
-    <dependency>
-      <groupId>gov.nasa.jpl.ammos.mpsa.aerie</groupId>
-      <artifactId>schemas</artifactId>
-      <version>1.1-SNAPSHOT</version>
-    </dependency>
 
     <!-- APGen Parsing -->
     <dependency>

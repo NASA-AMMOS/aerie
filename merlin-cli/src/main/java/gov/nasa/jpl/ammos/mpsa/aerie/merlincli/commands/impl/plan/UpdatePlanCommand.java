@@ -10,8 +10,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.TokenMap.parseToken;
 
 /**
