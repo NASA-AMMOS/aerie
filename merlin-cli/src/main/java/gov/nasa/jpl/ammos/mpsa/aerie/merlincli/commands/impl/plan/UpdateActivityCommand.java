@@ -4,17 +4,16 @@ import com.google.gson.Gson;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidTokenException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.TokenMap;
-import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstance;
-import gov.nasa.jpl.ammos.mpsa.aerie.schemas.ActivityInstanceParameter;
 import org.springframework.http.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.ActivityInstance;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.ActivityInstanceParameter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.TokenMap.getDoubleTokenValue;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.TokenMap.parseToken;
 
 /**
@@ -55,35 +54,11 @@ public class UpdateActivityCommand implements Command {
             else {
                 TokenMap tokenMap = parseToken(token);
                 switch(tokenMap.getName()) {
-                    case "start":
-                        updateInstance.setStart(getDoubleTokenValue(tokenMap));
-                        break;
                     case "startTimestamp":
                         updateInstance.setStartTimestamp(tokenMap.getValue());
                         break;
-                    case "end":
-                        updateInstance.setEnd(getDoubleTokenValue(tokenMap));
-                        break;
-                    case "endTimestamp":
-                        updateInstance.setEndTimestamp(tokenMap.getValue());
-                        break;
-                    case "duration":
-                        updateInstance.setDuration(getDoubleTokenValue(tokenMap));
-                        break;
-                    case "intent":
-                        updateInstance.setIntent(tokenMap.getValue());
-                        break;
                     case "name":
                         updateInstance.setName(tokenMap.getValue());
-                        break;
-                    case "textColor":
-                        updateInstance.setTextColor(tokenMap.getValue());
-                        break;
-                    case "backgroundColor":
-                        updateInstance.setBackgroundColor(tokenMap.getValue());
-                        break;
-                    case "y":
-                        updateInstance.setY(getDoubleTokenValue(tokenMap));
                         break;
                     default:
                         throw new InvalidTokenException(token, String.format("'%s' is not a valid attribute", tokenMap.getName()));

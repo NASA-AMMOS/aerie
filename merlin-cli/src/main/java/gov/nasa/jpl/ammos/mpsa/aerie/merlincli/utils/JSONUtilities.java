@@ -5,10 +5,7 @@ import com.google.gson.stream.MalformedJsonException;
 import gov.nasa.jpl.ammos.mpsa.apgen.model.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.apgen.model.ActivityInstanceParameter;
 import gov.nasa.jpl.ammos.mpsa.apgen.model.Plan;
-import org.json.JSONArray;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;

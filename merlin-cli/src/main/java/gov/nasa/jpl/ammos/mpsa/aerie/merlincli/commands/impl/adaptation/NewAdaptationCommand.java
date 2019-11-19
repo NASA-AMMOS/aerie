@@ -1,10 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.adaptation;
 
-import com.google.gson.Gson;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidTokenException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.TokenMap;
-import gov.nasa.jpl.ammos.mpsa.aerie.schemas.Adaptation;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
@@ -12,6 +10,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.Adaptation;
 
 import java.io.IOException;
 import java.nio.file.Files;

@@ -317,9 +317,7 @@ public class MerlinCLIPlanTests extends AbstractJUnit4SpringContextTests {
         // TODO: Range should be removed from activity instance parameters (it belongs in types only)
         // TODO: It would be better if we didn't send empty lists for constraints and listeners
         String expectedBody = "{" +
-                    "\"start\": 7.23," +
-                    "\"constraints\": []," +
-                    "\"listeners\"  : []," +
+                    "\"startTimestamp\": \"2018-331T04:00:00\"," +
                     "\"parameters\" : [" +
                         "{ \"name\": \"color\", \"value\": \"purple\" }," +
                         "{ \"name\": \"age\"  , \"value\": \"7\"      }"  +
@@ -332,7 +330,7 @@ public class MerlinCLIPlanTests extends AbstractJUnit4SpringContextTests {
                 .andExpect(content().string(new JSONMatcher(expectedBody)))
                 .andRespond(withNoContent());
 
-        String[] args = { "-p", planId, "--update-activity", activityId, "param:color=purple", "start=7.23", "param:age=7" };
+        String[] args = { "-p", planId, "--update-activity", activityId, "param:color=purple", "startTimestamp=2018-331T04:00:00", "param:age=7" };
         commandOptions.consumeArgs(args).parse();
 
         mockServer.verify();
