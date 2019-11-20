@@ -72,4 +72,36 @@ public class AppConfiguration {
     private static void reportConfigurationLoadError(Exception e) {
         System.err.println("Error while parsing configuration properties: " + e.getMessage());
     }
+
+    // SAFETY: When equals is overridden, so too must hashCode
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof AppConfiguration)) return false;
+
+        AppConfiguration other = (AppConfiguration)o;
+
+        return this.HTTP_PORT == other.HTTP_PORT
+                && this.ADAPTATION_URI.equals(other.ADAPTATION_URI)
+                && this.MONGO_URI.equals(other.MONGO_URI)
+                && this.MONGO_DATABASE.equals(other.MONGO_DATABASE)
+                && this.MONGO_PLAN_COLLECTION.equals(other.MONGO_PLAN_COLLECTION)
+                && this.MONGO_ACTIVITY_COLLECTION.equals(other.MONGO_ACTIVITY_COLLECTION);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.HTTP_PORT, this.ADAPTATION_URI, this.MONGO_URI, this.MONGO_DATABASE, this.MONGO_PLAN_COLLECTION, this.MONGO_ACTIVITY_COLLECTION);
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + " {\n" +
+                "  HTTP_PORT = " + this.HTTP_PORT + ",\n" +
+                "  ADAPTATION_URI = " + this.ADAPTATION_URI + ",\n" +
+                "  MONGO_URI = " + this.MONGO_URI + ",\n" +
+                "  MONGO_DATABASE = " + this.MONGO_DATABASE + ",\n" +
+                "  MONGO_PLAN_COLLECTION = " + this.MONGO_PLAN_COLLECTION + ",\n" +
+                "  MONGO_ACTIVITY_COLLECTION = " + this.MONGO_ACTIVITY_COLLECTION + ",\n" +
+                "}";
+    }
 }
