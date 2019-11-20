@@ -113,8 +113,8 @@
         <app-plans-table
           *ngIf="plans.length"
           [plans]="plans"
-          (openPlan)="onOpenPlan($event)"
           (deletePlan)="onDeletePlan($event)"
+          (openPlan)="onOpenPlan($event)"
         ></app-plans-table>
       </ng-container>
     </div>

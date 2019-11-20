@@ -3,6 +3,7 @@ export * from './activity-instances-table';
 export * from './activity-type-list';
 export * from './adaptations-table';
 export * from './confirm-dialog';
+export * from './context-menu-trigger';
 export * from './create-activity-instance-form';
 export * from './panel-header';
 export * from './placeholder';

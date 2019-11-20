@@ -47,13 +47,11 @@
   ></tr>
 </table>
 
-<div
-  style="visibility: hidden; position: fixed;"
-  [style.left]="contextMenuPosition.x"
-  [style.top]="contextMenuPosition.y"
-  [matMenuTriggerFor]="contextMenu"
+<app-context-menu-trigger
   #contextMenuTrigger="matMenuTrigger"
-></div>
+  [matMenuTriggerFor]="contextMenu"
+  [position]="contextMenuPosition"
+></app-context-menu-trigger>
 <mat-menu #contextMenu="matMenu">
   <ng-template matMenuContent let-item="item">
     <button
