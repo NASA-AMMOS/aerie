@@ -59,19 +59,35 @@ public class AppConfiguration {
         return new AppConfiguration(httpPort, mongoUri, mongoDatabase, mongoAdaptationCollection);
     }
 
-    private static File getFileFromResources(String fileName) throws FileNotFoundException {
-        ClassLoader classLoader = AppConfiguration.class.getClassLoader();
-
-        URL resource = classLoader.getResource(fileName);
-        if (resource == null) {
-            throw new FileNotFoundException("File is not found!");
-        } else {
-            return new File(resource.getFile());
-        }
-
-    }
-
     private static void reportConfigurationLoadError(Exception e) {
         System.err.println("Error while parsing configuration properties: " + e.getMessage());
+    }
+
+    // SAFETY: When equals is overridden, so too must hashCode
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof AppConfiguration)) return false;
+
+        AppConfiguration other = (AppConfiguration)o;
+
+        return this.HTTP_PORT == other.HTTP_PORT
+                && this.MONGO_URI.equals(other.MONGO_URI)
+                && this.MONGO_DATABASE.equals(other.MONGO_DATABASE)
+                && this.MONGO_ADAPTATION_COLLECTION.equals(other.MONGO_ADAPTATION_COLLECTION);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.HTTP_PORT, this.MONGO_URI, this.MONGO_DATABASE, this.MONGO_ADAPTATION_COLLECTION);
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + " {\n" +
+                "  HTTP_PORT = " + this.HTTP_PORT + ",\n" +
+                "  MONGO_URI = " + this.MONGO_URI + ",\n" +
+                "  MONGO_DATABASE = " + this.MONGO_DATABASE + ",\n" +
+                "  MONGO_ADAPTATION_COLLECTION = " + this.MONGO_ADAPTATION_COLLECTION + ",\n" +
+                "}";
     }
 }
