@@ -28,13 +28,6 @@ export class PlansComponent implements AfterViewInit, OnDestroy {
 
   adaptations: CAdaptation[] | null = null;
   createPlanForm: FormGroup;
-  displayedColumns: string[] = [
-    'menu',
-    'name',
-    'adaptationId',
-    'startTimestamp',
-    'endTimestamp',
-  ];
   plans: CPlan[] | null = null;
   selectedAdaptationId = '';
 

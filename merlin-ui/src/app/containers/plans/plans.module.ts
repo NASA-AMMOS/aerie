@@ -6,6 +6,7 @@ import { AngularSplitModule } from 'angular-split';
 import {
   PanelHeaderModule,
   PlaceholderModule,
+  PlansTableModule,
   ToolbarModule,
 } from '../../components';
 import { MaterialModule } from '../../material';
@@ -22,6 +23,7 @@ import { PlansComponent } from './plans.component';
     AngularSplitModule.forChild(),
     PanelHeaderModule,
     PlaceholderModule,
+    PlansTableModule,
     ToolbarModule,
   ],
 })

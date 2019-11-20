@@ -52,7 +52,7 @@ export function getDoyTimestamp(
 
 /**
  * Get a unix epoch time in seconds given a day-of-year timestamp.
- * @example getTime('2019-365T08:00:00.000') -> 1577779200
+ * @example getUnixEpochTime('2019-365T08:00:00.000') -> 1577779200
  * @note inverse of getDoyTimestamp
  */
 export function getUnixEpochTime(doyTimestamp: string): number {

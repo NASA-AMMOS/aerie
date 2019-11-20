@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { MaterialModule } from '../../material';
 import { ActivityInstancesTableComponent } from './activity-instances-table.component';
@@ -6,6 +5,6 @@ import { ActivityInstancesTableComponent } from './activity-instances-table.comp
 @NgModule({
   declarations: [ActivityInstancesTableComponent],
   exports: [ActivityInstancesTableComponent],
-  imports: [CommonModule, MaterialModule],
+  imports: [MaterialModule],
 })
 export class ActivityInstancesTableModule {}

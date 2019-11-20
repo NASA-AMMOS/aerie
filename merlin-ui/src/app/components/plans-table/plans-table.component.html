@@ -1,0 +1,62 @@
+<table
+  [dataSource]="plans"
+  id="plans-table"
+  mat-table
+  class="w-100 mat-elevation-z1"
+>
+  <ng-container matColumnDef="name">
+    <th mat-header-cell *matHeaderCellDef>Plan Name</th>
+    <td mat-cell *matCellDef="let element">
+      {{ element.name }}
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="adaptationId">
+    <th mat-header-cell *matHeaderCellDef>Adaptation Id</th>
+    <td mat-cell *matCellDef="let element">
+      {{ element.adaptationId }}
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="startTimestamp">
+    <th mat-header-cell *matHeaderCellDef>Start Time</th>
+    <td mat-cell *matCellDef="let element">
+      {{ element.startTimestamp }}
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="endTimestamp">
+    <th mat-header-cell *matHeaderCellDef>End Time</th>
+    <td mat-cell *matCellDef="let element">
+      {{ element.endTimestamp }}
+    </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr
+    mat-row
+    *matRowDef="let row; columns: displayedColumns"
+    (click)="openPlan.emit(row.id)"
+    (contextmenu)="onContextMenu($event, contextMenuTrigger, row)"
+  ></tr>
+</table>
+
+<div
+  style="visibility: hidden; position: fixed;"
+  [style.left]="contextMenuPosition.x"
+  [style.top]="contextMenuPosition.y"
+  [matMenuTriggerFor]="contextMenu"
+  #contextMenuTrigger="matMenuTrigger"
+></div>
+<mat-menu #contextMenu="matMenu">
+  <ng-template matMenuContent let-item="item">
+    <button mat-menu-item (click)="openPlan.emit(item.id)">
+      <mat-icon>open_in_browser</mat-icon>
+      <span>Open</span>
+    </button>
+    <button mat-menu-item (click)="deletePlan.emit(item.id)">
+      <mat-icon>delete_forever</mat-icon>
+      <span>Delete</span>
+    </button>
+  </ng-template>
+</mat-menu>
