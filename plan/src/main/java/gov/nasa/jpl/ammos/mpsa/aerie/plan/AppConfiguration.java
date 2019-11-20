@@ -49,7 +49,7 @@ public class AppConfiguration {
             JsonObject config = (JsonObject)(Json.createReader(configStream).readValue());
 
             httpPort = config.getInt("HTTP_PORT");
-            adaptationUri = URI.create("ADAPTATION_URI");
+            adaptationUri = URI.create(config.getString("ADAPTATION_URI"));
             mongoUri = URI.create(config.getString("MONGO_URI"));
             mongoDatabase = config.getString("MONGO_DATABASE");
             mongoPlanCollection = config.getString("MONGO_PLAN_COLLECTION");
