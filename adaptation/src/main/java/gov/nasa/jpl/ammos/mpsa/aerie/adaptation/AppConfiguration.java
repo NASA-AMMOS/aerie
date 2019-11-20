@@ -25,23 +25,23 @@ public class AppConfiguration {
 
     public static AppConfiguration loadProperties(Path path) throws IOException {
         InputStream configStream = Files.newInputStream(path);
-        return ingestProperties(configStream);
+        JsonObject config = (JsonObject)(Json.createReader(configStream).readValue());
+        return parseProperties(config);
     }
 
     public static AppConfiguration loadProperties() {
         InputStream configStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.json");
-        return ingestProperties(configStream);
+        JsonObject config = (JsonObject)(Json.createReader(configStream).readValue());
+        return parseProperties(config);
     }
 
-    private static AppConfiguration ingestProperties(InputStream configStream) {
+    public static AppConfiguration parseProperties(JsonObject config) {
         int httpPort;
         URI mongoUri;
         String mongoDatabase;
         String mongoAdaptationCollection;
 
         try {
-            JsonObject config = (JsonObject)(Json.createReader(configStream).readValue());
-
             httpPort = config.getInt("HTTP_PORT");
             mongoUri = URI.create(config.getString("MONGO_URI"));
             mongoDatabase = config.getString("MONGO_DATABASE");
