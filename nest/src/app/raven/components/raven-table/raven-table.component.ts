@@ -316,6 +316,14 @@ export class RavenTableComponent implements OnChanges {
                         },
                       });
                     }
+
+                    // Unselect and reselect point to highlight selected point after edit.
+                    if (this.selectedPoint) {
+                      // Toggle to unselect point.
+                      this.selectPoint.emit(this.selectedPoint);
+                      // Toggle to reselect point.
+                      this.selectPoint.emit(this.selectedPoint);
+                    }
                     return true;
                   }
                 : null,
@@ -478,7 +486,9 @@ export class RavenTableComponent implements OnChanges {
             node.data &&
             node.data.uniqueId === this.selectedPoint.uniqueId
           ) {
-            this.agGrid.api.ensureIndexVisible(node.rowIndex);
+            if (this.gridOptions && this.gridOptions.api) {
+              this.gridOptions.api.ensureIndexVisible(node.rowIndex);
+            }
             node.data.selected = true;
             node.setSelected(true);
           } else {
@@ -603,6 +613,9 @@ export class RavenTableComponent implements OnChanges {
           : this.gridApi.getDisplayedRowCount(),
       point: newPoint,
     });
+
+    // Select the newly added point.
+    this.selectPoint.emit(newPoint);
   }
 
   /**
