@@ -11,6 +11,7 @@ import { ToastrModule } from 'ngx-toastr';
 import { AppRoutingModule, RouterSerializer } from './app-routing.module';
 import { metaReducers, ROOT_REDUCERS } from './app-store';
 import { AppComponent } from './app.component';
+import { TooltipModule } from './components/tooltip';
 import { ContainersModule } from './containers';
 import { MerlinEffects, NavEffects, ToastEffects } from './effects';
 import { MaterialModule } from './material';
@@ -48,6 +49,7 @@ import { MaterialModule } from './material';
     EffectsModule.forRoot([MerlinEffects, NavEffects, ToastEffects]),
     MaterialModule,
     ContainersModule,
+    TooltipModule,
   ],
 })
 export class AppModule {}

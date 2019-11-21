@@ -1,4 +1,5 @@
 import {
+  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
   ElementRef,
@@ -20,7 +21,7 @@ import { TimeRange } from '../../types';
   styleUrls: ['./time-axis.component.css'],
   templateUrl: `./time-axis.component.html`,
 })
-export class TimeAxisComponent implements OnChanges {
+export class TimeAxisComponent implements AfterViewInit, OnChanges {
   @Input()
   height = 60;
 
@@ -46,10 +47,10 @@ export class TimeAxisComponent implements OnChanges {
   updateViewTimeRange: EventEmitter<TimeRange> = new EventEmitter<TimeRange>();
 
   @ViewChild('axisX', { static: true })
-  axisXTarget: ElementRef;
+  axisX: ElementRef;
 
   @ViewChild('brush', { static: true })
-  brushTarget: ElementRef;
+  brush: ElementRef;
 
   public drawHeight: number = this.height;
   public drawWidth: number;
@@ -66,20 +67,19 @@ export class TimeAxisComponent implements OnChanges {
     }
   }
 
+  ngAfterViewInit(): void {
+    d3.select(this.brush.nativeElement).on('mousemove', () => {
+      this.showTooltip(d3.event);
+    });
+
+    d3.select(this.brush.nativeElement).on('mouseleave', () => {
+      this.hideTooltip();
+    });
+  }
+
   @HostListener('window:resize', ['$event'])
   onResize(): void {
     this.resize();
-  }
-
-  getDomain(): Date[] {
-    return [new Date(this.maxTimeRange.start), new Date(this.maxTimeRange.end)];
-  }
-
-  getXScale(): d3.ScaleTime<number, number> {
-    return d3
-      .scaleTime()
-      .domain(this.getDomain())
-      .rangeRound([0, this.drawWidth]);
   }
 
   drawXAxis(): void {
@@ -88,14 +88,11 @@ export class TimeAxisComponent implements OnChanges {
     const xAxis = d3
       .axisBottom(x.nice())
       .ticks(5)
-      .tickFormat((date: Date) => {
-        const unixEpochTime = date.getTime();
-        return getDoyTimestamp(unixEpochTime, false);
-      })
+      .tickFormat((date: Date) => getDoyTimestamp(date.getTime(), false))
       .tickSizeInner(-this.drawHeight)
       .tickPadding(10);
 
-    d3.select(this.axisXTarget.nativeElement)
+    d3.select(this.axisX.nativeElement)
       .call(xAxis)
       .selectAll('text')
       .style('font-size', '12px');
@@ -110,14 +107,48 @@ export class TimeAxisComponent implements OnChanges {
         [0, 0],
         [this.drawWidth, this.drawHeight],
       ])
-      .on('end', () => this.xBrushEnd());
+      .on('start', () => {
+        this.showTooltip(d3.event.sourceEvent);
+      })
+      .on('brush', () => {
+        this.showTooltip(d3.event.sourceEvent);
+      })
+      .on('end', () => {
+        this.xBrushEnd();
+      });
 
-    const brush = d3.select(this.brushTarget.nativeElement).call(xBrush);
+    const brush = d3.select(this.brush.nativeElement).call(xBrush);
     const range = [
       new Date(this.viewTimeRange.start),
       new Date(this.viewTimeRange.end),
     ];
     brush.call(xBrush.move, range.map(x));
+  }
+
+  getDomain(): Date[] {
+    return [new Date(this.maxTimeRange.start), new Date(this.maxTimeRange.end)];
+  }
+
+  getMousePosition(svg: SVGGElement, event: MouseEvent) {
+    const CTM: DOMMatrix = svg.getScreenCTM();
+    return {
+      x: (event.clientX - CTM.e) / CTM.a,
+      y: (event.clientY - CTM.f) / CTM.d,
+    };
+  }
+
+  getXScale(): d3.ScaleTime<number, number> {
+    return d3
+      .scaleTime()
+      .domain(this.getDomain())
+      .rangeRound([0, this.drawWidth]);
+  }
+
+  hideTooltip() {
+    d3.select('app-tooltip')
+      .style('opacity', 0)
+      .style('z-index', -1)
+      .html('');
   }
 
   resize(): void {
@@ -134,6 +165,33 @@ export class TimeAxisComponent implements OnChanges {
     this.drawHeight = this.height - this.marginTop - this.marginBottom;
     this.drawWidth =
       this.ref.nativeElement.clientWidth - this.marginLeft - this.marginRight;
+  }
+
+  showTooltip(event: MouseEvent | null): void {
+    if (event) {
+      const { clientX, clientY } = event;
+      const { x } = this.getMousePosition(this.brush.nativeElement, event);
+
+      const xScale = this.getXScale();
+      const unixEpochTime = xScale.invert(x).getTime();
+      const doyTimestamp = getDoyTimestamp(unixEpochTime);
+
+      const appTooltip = d3.select('app-tooltip');
+      appTooltip.html(`${doyTimestamp}`); // Set html first so we can calculate the true width.
+
+      const node = appTooltip.node() as HTMLElement;
+      const { width } = node.getBoundingClientRect();
+      let xPosition = clientX;
+      if (this.drawWidth - xPosition < 0) {
+        xPosition = clientX - width;
+      }
+
+      appTooltip
+        .style('opacity', 0.9)
+        .style('left', `${xPosition}px`)
+        .style('top', `${clientY}px`)
+        .style('z-index', 5);
+    }
   }
 
   xBrushEnd(): void {

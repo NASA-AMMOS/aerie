@@ -11,3 +11,7 @@ svg {
   height: inherit;
   width: inherit;
 }
+
+.axis-x {
+  pointer-events: none;
+}
