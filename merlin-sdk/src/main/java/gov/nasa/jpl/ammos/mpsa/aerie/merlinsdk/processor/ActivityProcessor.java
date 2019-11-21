@@ -13,9 +13,11 @@ import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.Element;
+import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Set;
 
 @SupportedAnnotationTypes({
@@ -28,6 +30,9 @@ public final class ActivityProcessor extends AbstractProcessor {
   private TypeInfoMaker infoMaker = null;
   private MapperMaker mapperMaker = null;
   private final JsonFactory jsonFactory = new JsonFactory();
+
+  // The set of the names of all activity types seen so far.
+  private final Set<String> activityTypesFound = new HashSet<>();
 
   @Override
   public void init(final ProcessingEnvironment processingEnv) {
@@ -94,6 +99,17 @@ public final class ActivityProcessor extends AbstractProcessor {
     for (final Element element : roundEnv.getElementsAnnotatedWith(ActivityType.class)) {
       // Extract information about this activity type.
       final ActivityTypeInfo activityTypeInfo = this.infoMaker.getActivityInfo(element);
+
+      // If this activity type's name collides with another's, report that and bail.
+      if (this.activityTypesFound.contains(activityTypeInfo.name)) {
+        this.processingEnv.getMessager().printMessage(
+            Diagnostic.Kind.ERROR,
+            "Multiple activity types found with name `" + activityTypeInfo.name + "`",
+            activityTypeInfo.javaType.asElement());
+        continue;
+      } else {
+        this.activityTypesFound.add(activityTypeInfo.name);
+      }
 
       // Synthesize a class for serializing and de-serializing this activity type.
       {
