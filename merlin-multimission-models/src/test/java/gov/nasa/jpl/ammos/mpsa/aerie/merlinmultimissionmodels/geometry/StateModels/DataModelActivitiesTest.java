@@ -7,7 +7,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.Activities.Tu
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.BinModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.InstrumentModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.OnboardDataModelStates;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityJob;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;

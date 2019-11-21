@@ -3,8 +3,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.StateMod
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.BinModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.InstrumentModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;

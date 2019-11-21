@@ -39,7 +39,6 @@ import java.util.Map;
  *            immutable
  */
 public interface State<T> {
-
     /**
      * Fetch the value of the state at the current simulation time point
      * <p>
@@ -68,17 +67,19 @@ public interface State<T> {
      */
     T get();
 
-
     /**
      * All states should have a UID, which is currently its name
      * This will be used by other states to name dependencies
      * This String can serve as a key to any values we store and later retrieve regarding this state
      * @return the name of the state
      */
-    public String getName();
+    // Names must be unique per simulation context (and probably wider than that), but state models have no
+    // means of coordinating to avoid collisions. A state's "name" is probably something better associated with
+    // it from the outside, not by the state model.
+    // TODO: Refactor sim engine to no longer require this at this state level
+    @Deprecated(forRemoval = true)
+    String getName();
 
-
-    //TODO: Refactor sim engine to no longer require this at this state level
     /**
      * This is a temporary method used to enable the current SimulationEngine unit tests
      * to compile and run without modification (yet). It is used to time-tag state
@@ -87,15 +88,18 @@ public interface State<T> {
      *
      * @param engine the controlling simulation engine
      */
-    public void setEngine(SimulationEngine engine);
+    // TODO: Refactor sim engine to no longer require this at this state level
+    @Deprecated(forRemoval = true)
+    default void setEngine(final SimulationEngine engine) {}
 
-    //TODO: Refactor sim engine to no longer require this at this state level
     /**
      * this is a temporary method in order to integrate w/ the current SimulationEngine
      * unit tests
      * <p>
      * the unit tests currently need a way to inspect the state history directly
      */
-    public Map<Time, T> getHistory();
+    // TODO: Refactor sim engine to no longer require this at this state level
+    @Deprecated(forRemoval = true)
+    Map<Time, T> getHistory();
 }
 
