@@ -1,6 +1,6 @@
 {
   "name": "raven",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "private": true,
   "scripts": {
     "build": "ng build --configuration=prod --base-href /mpsserver/raven/ --deploy-url /mpsserver/raven/",
