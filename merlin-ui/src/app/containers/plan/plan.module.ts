@@ -11,6 +11,7 @@ import {
   UpdateActivityInstanceFormModule,
 } from '../../components';
 import { MaterialModule } from '../../material';
+import { TimelineModule } from '../timeline';
 import { PlanComponent } from './plan.component';
 
 @NgModule({
@@ -25,6 +26,7 @@ import { PlanComponent } from './plan.component';
     CreateActivityInstanceFormModule,
     PanelHeaderModule,
     PlaceholderModule,
+    TimelineModule,
     ToolbarModule,
     UpdateActivityInstanceFormModule,
   ],

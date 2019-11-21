@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   ElementRef,
   Input,
@@ -7,6 +8,7 @@ import {
 } from '@angular/core';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-toolbar',
   styleUrls: ['./toolbar.component.css'],
   templateUrl: './toolbar.component.html',

@@ -215,6 +215,7 @@ describe('merlin reducer', () => {
         ...initialState,
         activityTypes: cActivityTypeMap,
         selectedPlan: cPlan,
+        viewTimeRange: { start: 1577750400000, end: 1577750410000 },
       });
     });
   });
@@ -238,6 +239,22 @@ describe('merlin reducer', () => {
       expect(state).toEqual({
         ...initialState,
         activityInstances: cActivityInstanceMap,
+      });
+    });
+  });
+
+  describe('updateViewTimeRange', () => {
+    it('it should update the view time range', () => {
+      const viewTimeRange = { start: 217, end: 314 };
+      const state: MerlinState = reducer(
+        { ...initialState },
+        MerlinActions.updateViewTimeRange({
+          viewTimeRange,
+        }),
+      );
+      expect(state).toEqual({
+        ...initialState,
+        viewTimeRange,
       });
     });
   });

@@ -1,8 +1,15 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+} from '@angular/core';
 import { ContextMenu } from '../../classes';
 import { CAdaptation } from '../../types';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-adaptations-table',
   styleUrls: ['./adaptations-table.component.css'],
   templateUrl: './adaptations-table.component.html',

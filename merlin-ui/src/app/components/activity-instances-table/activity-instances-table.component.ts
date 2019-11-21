@@ -1,5 +1,6 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import {
+  ChangeDetectionStrategy,
   Component,
   EventEmitter,
   Input,
@@ -11,6 +12,7 @@ import { ContextMenu } from '../../classes';
 import { CActivityInstance } from '../../types';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-activity-instances-table',
   styleUrls: ['./activity-instances-table.component.css'],
   templateUrl: './activity-instances-table.component.html',

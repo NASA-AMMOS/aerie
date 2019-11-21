@@ -8,6 +8,7 @@ import {
   SActivityInstance,
   SCreateAdaption,
   SPlan,
+  TimeRange,
 } from '../types';
 
 export const createActivityInstance = createAction(
@@ -76,6 +77,8 @@ export const deletePlanSuccess = createAction(
 
 export const openAboutDialog = createAction('[merlin] openAboutDialog');
 
+export const resize = createAction('[merlin] resize');
+
 export const setActivityInstances = createAction(
   '[merlin] setActivityInstances',
   props<{ planId: string; activityInstances: CActivityInstanceMap }>(),
@@ -121,4 +124,9 @@ export const updateActivityInstanceSuccess = createAction(
     activityInstanceId: string;
     activityInstance: Partial<SActivityInstance>;
   }>(),
+);
+
+export const updateViewTimeRange = createAction(
+  '[merlin] updateViewTimeRange',
+  props<{ viewTimeRange: TimeRange }>(),
 );

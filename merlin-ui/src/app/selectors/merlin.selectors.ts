@@ -1,5 +1,5 @@
 import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { compare } from '../functions';
+import { compare, getUnixEpochTime } from '../functions';
 import { MerlinState } from '../reducers';
 import {
   CActivityInstance,
@@ -8,6 +8,7 @@ import {
   CActivityTypeMap,
   CAdaptation,
   CPlan,
+  TimeRange,
 } from '../types';
 
 const getMerlinState = createFeatureSelector<MerlinState>('merlin');
@@ -94,4 +95,22 @@ export const getSelectedActivityInstance = createSelector(
 export const getSelectedPlan = createSelector(
   getMerlinState,
   (state: MerlinState): CPlan | null => state.selectedPlan,
+);
+
+export const getMaxTimeRange = createSelector(
+  getSelectedPlan,
+  (plan: CPlan | null): TimeRange => {
+    if (plan) {
+      return {
+        end: getUnixEpochTime(plan.endTimestamp),
+        start: getUnixEpochTime(plan.startTimestamp),
+      };
+    }
+    return { start: 0, end: 0 };
+  },
+);
+
+export const getViewTimeRange = createSelector(
+  getMerlinState,
+  (state: MerlinState): TimeRange => state.viewTimeRange,
 );

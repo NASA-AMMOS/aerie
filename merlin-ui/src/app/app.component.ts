@@ -1,4 +1,9 @@
-import { ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+} from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { SubSink } from 'subsink';
 import { MerlinActions } from './actions';
@@ -6,6 +11,7 @@ import { AppState } from './app-store';
 import { getLoading } from './selectors';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-root',
   styleUrls: [`./app.component.css`],
   templateUrl: './app.component.html',
@@ -24,11 +30,11 @@ export class AppComponent implements OnDestroy {
     );
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.subs.unsubscribe();
   }
 
-  onAbout() {
+  onAbout(): void {
     this.store.dispatch(MerlinActions.openAboutDialog());
   }
 }

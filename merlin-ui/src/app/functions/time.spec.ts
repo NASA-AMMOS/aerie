@@ -15,13 +15,13 @@ describe('time', () => {
 
   describe('getDoyTimestamp', () => {
     it('should properly calculate the first day of the year', () => {
-      const time = new Date('1/1/2019').getTime() / 1000;
+      const time = new Date('1/1/2019').getTime();
       const doyTimestamp = getDoyTimestamp(time);
       expect(doyTimestamp).toEqual('2019-001T08:00:00.000');
     });
 
     it('should properly calculate the last day of the year', () => {
-      const time = new Date('12/31/2019').getTime() / 1000;
+      const time = new Date('12/31/2019').getTime();
       const doyTimestamp = getDoyTimestamp(time);
       expect(doyTimestamp).toEqual('2019-365T08:00:00.000');
     });
@@ -29,13 +29,13 @@ describe('time', () => {
 
   describe('getUnixEpochTime', () => {
     it('should properly calculate the first day of the year', () => {
-      const time = new Date('1/1/2019').getTime() / 1000;
+      const time = new Date('1/1/2019').getTime();
       const unixEpochTime = getUnixEpochTime('2019-001T08:00:00.000');
       expect(unixEpochTime).toEqual(time);
     });
 
     it('should properly calculate the last day of the year', () => {
-      const time = new Date('12/31/2019').getTime() / 1000;
+      const time = new Date('12/31/2019').getTime();
       const unixEpochTime = getUnixEpochTime('2019-365T08:00:00.000');
       expect(unixEpochTime).toEqual(time);
     });

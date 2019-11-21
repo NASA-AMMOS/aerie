@@ -38,12 +38,17 @@ export class PlanComponent implements OnDestroy {
   panels = {
     activityInstances: {
       order: 2,
-      size: 20,
+      size: 50,
       visible: true,
     },
     activityTypes: {
       order: 0,
       size: 20,
+      visible: true,
+    },
+    bottom: {
+      order: 1,
+      size: 40,
       visible: true,
     },
     createActivityInstance: {
@@ -54,6 +59,11 @@ export class PlanComponent implements OnDestroy {
     selectedActivityInstance: {
       order: 3,
       size: 20,
+      visible: true,
+    },
+    top: {
+      order: 0,
+      size: 60,
       visible: true,
     },
   };
@@ -97,7 +107,7 @@ export class PlanComponent implements OnDestroy {
     );
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.subs.unsubscribe();
   }
 
@@ -113,6 +123,10 @@ export class PlanComponent implements OnDestroy {
     this.store.dispatch(
       MerlinActions.deleteActivityInstance({ planId, activityInstanceId }),
     );
+  }
+
+  onResize(): void {
+    this.store.dispatch(MerlinActions.resize());
   }
 
   onSelectActivityInstance(activityInstance: CActivityInstance | null): void {
@@ -137,7 +151,7 @@ export class PlanComponent implements OnDestroy {
     );
   }
 
-  togglePanelVisible(panel: string) {
+  togglePanelVisible(panel: string): void {
     this.panels[panel].visible = !this.panels[panel].visible;
   }
 }

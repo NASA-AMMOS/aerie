@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   EventEmitter,
   Input,
@@ -9,6 +10,7 @@ import {
 import { CActivityType } from '../../types';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-activity-type-list',
   styles: [''],
   templateUrl: './activity-type-list.component.html',

@@ -11,15 +11,15 @@ export function getDoy(date: Date): number {
 }
 
 /**
- * Get a day-of-year timestamp from a given unix epoch time in seconds.
- * @example getDoyTimestamp(1577779200) -> 2019-365T08:00:00.000
+ * Get a day-of-year timestamp from a given unix epoch time in milliseconds.
+ * @example getDoyTimestamp(1577779200000) -> 2019-365T08:00:00.000
  * @note inverse of getUnixEpochTime
  */
 export function getDoyTimestamp(
   unixEpochTime: number,
   includeMsecs: boolean = true,
 ): string {
-  const date = new Date(unixEpochTime * 1000);
+  const date = new Date(unixEpochTime);
   const year = date.getUTCFullYear();
   const doy = getDoy(date)
     .toString()
@@ -51,8 +51,8 @@ export function getDoyTimestamp(
 }
 
 /**
- * Get a unix epoch time in seconds given a day-of-year timestamp.
- * @example getUnixEpochTime('2019-365T08:00:00.000') -> 1577779200
+ * Get a unix epoch time in milliseconds given a day-of-year timestamp.
+ * @example getUnixEpochTime('2019-365T08:00:00.000') -> 1577779200000
  * @note inverse of getDoyTimestamp
  */
 export function getUnixEpochTime(doyTimestamp: string): number {
@@ -61,7 +61,7 @@ export function getUnixEpochTime(doyTimestamp: string): number {
 
   if (match) {
     const [, year, doy, hours, mins, secs, msecs = '0'] = match;
-    return Date.UTC(+year, 0, +doy, +hours, +mins, +secs, +msecs) / 1000;
+    return Date.UTC(+year, 0, +doy, +hours, +mins, +secs, +msecs);
   }
 
   return 0;

@@ -1,6 +1,7 @@
 import { createReducer, on } from '@ngrx/store';
 import omit from 'lodash-es/omit';
 import { MerlinActions } from '../actions';
+import { getUnixEpochTime } from '../functions';
 import {
   CActivityInstanceMap,
   CActivityInstanceParameterMap,
@@ -9,6 +10,7 @@ import {
   CPlan,
   CPlanMap,
   StringTMap,
+  TimeRange,
 } from '../types';
 
 export interface MerlinState {
@@ -19,6 +21,7 @@ export interface MerlinState {
   plans: CPlanMap | null;
   selectedActivityInstanceId: string | null;
   selectedPlan: CPlan | null;
+  viewTimeRange: TimeRange;
 }
 
 export const initialState: MerlinState = {
@@ -29,6 +32,7 @@ export const initialState: MerlinState = {
   plans: null,
   selectedActivityInstanceId: null,
   selectedPlan: null,
+  viewTimeRange: { start: 0, end: 0 },
 };
 
 export const reducer = createReducer(
@@ -118,6 +122,10 @@ export const reducer = createReducer(
       ...state,
       activityTypes,
       selectedPlan,
+      viewTimeRange: {
+        end: getUnixEpochTime(selectedPlan.endTimestamp),
+        start: getUnixEpochTime(selectedPlan.startTimestamp),
+      },
     }),
   ),
   on(MerlinActions.updateActivityInstanceSuccess, (state, action) => ({
@@ -132,6 +140,10 @@ export const reducer = createReducer(
         ),
       },
     },
+  })),
+  on(MerlinActions.updateViewTimeRange, (state, { viewTimeRange }) => ({
+    ...state,
+    viewTimeRange,
   })),
 );
 

@@ -37,90 +37,110 @@
   </div>
 </app-toolbar>
 
-<as-split [gutterSize]="4">
+<as-split direction="vertical" [gutterSize]="4" (dragEnd)="onResize()">
   <as-split-area
-    [order]="panels.activityTypes.order"
-    [size]="panels.activityTypes.size"
-    [visible]="panels.activityTypes.visible"
+    [order]="panels.top.order"
+    [size]="panels.top.size"
+    [visible]="panels.top.visible"
   >
-    <app-panel-header>
-      Activity Types
-    </app-panel-header>
-    <div class="p-1">
-      <app-placeholder *ngIf="activityTypes === null"></app-placeholder>
-      <app-activity-type-list
-        *ngIf="activityTypes !== null"
-        [activityTypes]="activityTypes"
-      ></app-activity-type-list>
-    </div>
+    <as-split direction="horizontal" [gutterSize]="4" (dragEnd)="onResize()">
+      <as-split-area
+        [order]="panels.activityTypes.order"
+        [size]="panels.activityTypes.size"
+        [visible]="panels.activityTypes.visible"
+      >
+        <app-panel-header>
+          Activity Types
+        </app-panel-header>
+        <div class="p-1">
+          <app-placeholder *ngIf="activityTypes === null"></app-placeholder>
+          <app-activity-type-list
+            *ngIf="activityTypes !== null"
+            [activityTypes]="activityTypes"
+          ></app-activity-type-list>
+        </div>
+      </as-split-area>
+
+      <as-split-area
+        [order]="panels.createActivityInstance.order"
+        [size]="panels.createActivityInstance.size"
+        [visible]="panels.createActivityInstance.visible"
+      >
+        <app-panel-header>
+          Create Activity Instance
+        </app-panel-header>
+        <div class="p-1">
+          <app-placeholder *ngIf="activityTypes === null"></app-placeholder>
+          <mat-card *ngIf="activityTypes !== null">
+            <app-create-activity-instance-form
+              [activityTypes]="activityTypes"
+              [activityTypesMap]="activityTypesMap"
+              (create)="onCreateActivityInstance($event)"
+            ></app-create-activity-instance-form>
+          </mat-card>
+        </div>
+      </as-split-area>
+
+      <as-split-area
+        [order]="panels.activityInstances.order"
+        [size]="panels.activityInstances.size"
+        [visible]="panels.activityInstances.visible"
+      >
+        <app-panel-header>
+          Activity Instances
+        </app-panel-header>
+        <div class="p-1">
+          <app-placeholder *ngIf="activityInstances === null"></app-placeholder>
+          <ng-container *ngIf="activityInstances !== null">
+            <mat-card *ngIf="!activityInstances.length">
+              This plan has no activity instances.
+            </mat-card>
+
+            <app-activity-instances-table
+              *ngIf="activityInstances.length"
+              [activityInstances]="activityInstances"
+              [selectedActivityInstance]="selectedActivityInstance"
+              (deleteActivityInstance)="onDeleteActivityInstance($event)"
+              (selectActivityInstance)="onSelectActivityInstance($event)"
+            ></app-activity-instances-table>
+          </ng-container>
+        </div>
+      </as-split-area>
+
+      <as-split-area
+        [order]="panels.selectedActivityInstance.order"
+        [size]="panels.selectedActivityInstance.size"
+        [visible]="panels.selectedActivityInstance.visible"
+      >
+        <app-panel-header>
+          Selected Activity Instance
+        </app-panel-header>
+        <div class="p-1">
+          <mat-card *ngIf="selectedActivityInstance; else elseBlock">
+            <app-update-activity-instance-form
+              [activityInstance]="selectedActivityInstance"
+              [activityTypesMap]="activityTypesMap"
+              (delete)="onDeleteActivityInstance($event)"
+              (update)="onUpdateActivityInstance($event)"
+            ></app-update-activity-instance-form>
+          </mat-card>
+          <ng-template #elseBlock>
+            <mat-card>No Activity Instance Selected.</mat-card>
+          </ng-template>
+        </div>
+      </as-split-area>
+    </as-split>
   </as-split-area>
-
   <as-split-area
-    [order]="panels.createActivityInstance.order"
-    [size]="panels.createActivityInstance.size"
-    [visible]="panels.createActivityInstance.visible"
+    [order]="panels.bottom.order"
+    [size]="panels.bottom.size"
+    [visible]="panels.bottom.visible"
   >
     <app-panel-header>
-      Create Activity Instance
+      Timeline
     </app-panel-header>
     <div class="p-1">
-      <app-placeholder *ngIf="activityTypes === null"></app-placeholder>
-      <mat-card *ngIf="activityTypes !== null">
-        <app-create-activity-instance-form
-          [activityTypes]="activityTypes"
-          [activityTypesMap]="activityTypesMap"
-          (create)="onCreateActivityInstance($event)"
-        ></app-create-activity-instance-form>
-      </mat-card>
-    </div>
-  </as-split-area>
-
-  <as-split-area
-    [order]="panels.activityInstances.order"
-    [size]="panels.activityInstances.size"
-    [visible]="panels.activityInstances.visible"
-  >
-    <app-panel-header>
-      Activity Instances
-    </app-panel-header>
-    <div class="p-1">
-      <app-placeholder *ngIf="activityInstances === null"></app-placeholder>
-      <ng-container *ngIf="activityInstances !== null">
-        <mat-card *ngIf="!activityInstances.length">
-          This plan has no activity instances.
-        </mat-card>
-
-        <app-activity-instances-table
-          *ngIf="activityInstances.length"
-          [activityInstances]="activityInstances"
-          [selectedActivityInstance]="selectedActivityInstance"
-          (deleteActivityInstance)="onDeleteActivityInstance($event)"
-          (selectActivityInstance)="onSelectActivityInstance($event)"
-        ></app-activity-instances-table>
-      </ng-container>
-    </div>
-  </as-split-area>
-
-  <as-split-area
-    [order]="panels.selectedActivityInstance.order"
-    [size]="panels.selectedActivityInstance.size"
-    [visible]="panels.selectedActivityInstance.visible"
-  >
-    <app-panel-header>
-      Selected Activity Instance
-    </app-panel-header>
-    <div class="p-1">
-      <mat-card *ngIf="selectedActivityInstance; else elseBlock">
-        <app-update-activity-instance-form
-          [activityInstance]="selectedActivityInstance"
-          [activityTypesMap]="activityTypesMap"
-          (delete)="onDeleteActivityInstance($event)"
-          (update)="onUpdateActivityInstance($event)"
-        ></app-update-activity-instance-form>
-      </mat-card>
-      <ng-template #elseBlock>
-        <mat-card>No Activity Instance Selected.</mat-card>
-      </ng-template>
+      <app-timeline></app-timeline>
     </div>
   </as-split-area>
 </as-split>
