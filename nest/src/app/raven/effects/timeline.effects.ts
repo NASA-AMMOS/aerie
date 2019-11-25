@@ -392,7 +392,10 @@ export class TimelineEffects {
       if (!dataSourceUrl.includes('tes_url=')) {
         url = `${url}?__document_id=${point.id}`;
       } else {
-        const queryOptions = dataSourceUrl.substring(dataSourceUrl.indexOf('?')+1, dataSourceUrl.length);
+        const queryOptions = dataSourceUrl.substring(
+          dataSourceUrl.indexOf('?') + 1,
+          dataSourceUrl.length,
+        );
         url = `${url}?${queryOptions}__document_id=${point.id}`;
       }
       console.log('url: ' + url);
