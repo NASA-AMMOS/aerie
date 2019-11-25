@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+>
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>gov.nasa.jpl.ammos.mpsa.aerie</groupId>
-  <artifactId>adaptation</artifactId>
-  <version>1.0-SNAPSHOT</version>
-  <name>adaptation</name>
+  <groupId>gov.nasa.jpl.ammos.mpsa</groupId>
+  <artifactId>services</artifactId>
+  <version>1.1-SNAPSHOT</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -14,6 +16,12 @@
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>gov.nasa.jpl.ammos.mpsa.aerie</groupId>
+      <artifactId>merlin-sdk</artifactId>
+      <version>1.1-SNAPSHOT</version>
+    </dependency>
+
     <!-- Core libraries -->
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -25,16 +33,18 @@
       <artifactId>yasson</artifactId>
       <version>1.0.4</version>
     </dependency>
+    <!-- TODO: Use the Glassfish reference JSON-P implementation instead of
+       - Yasson once JSON-B is no longer in use. Yasson includes an
+       - implementation of both specs.
+      -->
+    <!--
     <dependency>
-      <groupId>gov.nasa.jpl.ammos.mpsa.aerie</groupId>
-      <artifactId>merlin-sdk</artifactId>
-      <version>1.1-SNAPSHOT</version>
+      <groupId>org.glassfish</groupId>
+      <artifactId>javax.json</artifactId>
+      <version>1.1</version>
     </dependency>
-    <dependency>
-      <groupId>gov.nasa.jpl.ammos.mpsa.aerie</groupId>
-      <artifactId>aerie-sdk</artifactId>
-      <version>1.0-SNAPSHOT</version>
-    </dependency>
+    -->
+
     <!-- Database drivers -->
     <dependency>
       <groupId>org.mongodb</groupId>
@@ -75,6 +85,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.8.0</version>
+
         <configuration>
           <source>11</source>
           <target>11</target>
@@ -89,6 +100,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.0.0-M3</version>
+
         <configuration>
           <excludedGroups>integration</excludedGroups>
         </configuration>
@@ -99,24 +111,65 @@
         <artifactId>maven-assembly-plugin</artifactId>
         <version>3.1.1</version>
 
-        <configuration>
-          <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
-          </descriptorRefs>
-          <archive>
-            <manifest>
-              <mainClass>gov.nasa.jpl.ammos.mpsa.aerie.adaptation.App</mainClass>
-            </manifest>
-          </archive>
-        </configuration>
-
         <executions>
           <execution>
-            <id>make-assembly</id>
+            <id>make-simulation-assembly</id>
             <phase>package</phase>
             <goals>
               <goal>single</goal>
             </goals>
+
+            <configuration>
+              <finalName>simulation-service</finalName>
+              <descriptorRefs>
+                <descriptorRef>jar-with-dependencies</descriptorRef>
+              </descriptorRefs>
+              <archive>
+                <manifest>
+                  <mainClass>gov.nasa.jpl.ammos.mpsa.aerie.simulation.App</mainClass>
+                </manifest>
+              </archive>
+            </configuration>
+          </execution>
+
+          <execution>
+            <id>make-adaptation-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+
+            <configuration>
+              <finalName>adaptation-service</finalName>
+              <descriptorRefs>
+                <descriptorRef>jar-with-dependencies</descriptorRef>
+              </descriptorRefs>
+              <archive>
+                <manifest>
+                  <mainClass>gov.nasa.jpl.ammos.mpsa.aerie.adaptation.App</mainClass>
+                </manifest>
+              </archive>
+            </configuration>
+          </execution>
+
+          <execution>
+            <id>make-plan-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+
+            <configuration>
+              <finalName>plan-service</finalName>
+              <descriptorRefs>
+                <descriptorRef>jar-with-dependencies</descriptorRef>
+              </descriptorRefs>
+              <archive>
+                <manifest>
+                  <mainClass>gov.nasa.jpl.ammos.mpsa.aerie.plan.App</mainClass>
+                </manifest>
+              </archive>
+            </configuration>
           </execution>
         </executions>
       </plugin>
