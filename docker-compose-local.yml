@@ -2,8 +2,8 @@ version: "3.3"
 services:
   adaptation:
     build:
-      context: adaptation
-      dockerfile: Dockerfile
+      context: services
+      dockerfile: deploy/adaptation.Dockerfile
     depends_on: ["adaptation_mongo"]
     ports: ["27182:27182"]
     restart: always
@@ -16,8 +16,8 @@ services:
     volumes: ["adaptation_mongo_data:/data/db"]
   plan:
     build:
-      context: plan
-      dockerfile: Dockerfile
+      context: services
+      dockerfile: deploy/plan.Dockerfile
     depends_on: ["plan_mongo"]
     ports: ["27183:27183"]
     restart: always
