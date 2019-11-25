@@ -163,7 +163,7 @@ public final class PlanValidator {
       }
     }
 
-    if (plan.activityInstances != null) {
+    if (plan.activityInstances != null && activityTypes != null) {
       final var finalActivityTypes = activityTypes;
       with("activityInstances", () -> validateActivityList(plan.activityInstances, finalActivityTypes));
     }
@@ -186,7 +186,7 @@ public final class PlanValidator {
       }
     }
 
-    if (patch.activityInstances != null) {
+    if (patch.activityInstances != null && activityTypes != null) {
       final Set<String> validActivityIds = this.planRepository
           .getAllActivitiesInPlan(planId)
           .map(Pair::getKey)
