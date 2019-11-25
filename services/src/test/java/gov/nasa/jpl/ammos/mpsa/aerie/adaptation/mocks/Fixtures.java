@@ -6,7 +6,7 @@ import java.nio.file.Path;
 
 public final class Fixtures {
     public static final Path resourcesRoot = Path.of("src/test/resources");
-    public static final Path banananation = resourcesRoot.resolve("banananation-1.0-SNAPSHOT.jar");
+    public static final Path banananation = resourcesRoot.resolve("gov/nasa/jpl/ammos/mpsa/aerie/banananation-1.0-SNAPSHOT.jar");
     public final MockAdaptationRepository adaptationRepository;
 
     public final String EXISTENT_ADAPTATION_ID;
