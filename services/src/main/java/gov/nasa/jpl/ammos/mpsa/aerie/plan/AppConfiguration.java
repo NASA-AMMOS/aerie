@@ -34,7 +34,7 @@ public class AppConfiguration {
     }
 
     public static AppConfiguration loadProperties() {
-        InputStream configStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.json");
+        InputStream configStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("gov/nasa/jpl/ammos/mpsa/aerie/plan/config.json");
         JsonObject config = (JsonObject)(Json.createReader(configStream).readValue());
         return parseProperties(config);
     }
