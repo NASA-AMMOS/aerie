@@ -138,22 +138,6 @@ if echo "$changed" | grep --quiet "\(nest\)"; then
   cd $root
 fi
 
-if echo "$changed" | grep --quiet "\(merlin-ui\)"; then
-  printf "\nBuilding merlin-ui...\n\n"
-  cd merlin-ui
-
-  npx yarn
-  [ $? -ne 0 ] && error_exit "yarn"
-
-  npx yarn test
-  [ $? -ne 0 ] && error_exit "yarn test failed"
-
-  npx yarn build --prod
-  [ $? -ne 0 ] && error_exit "yarn build --prod failed"
-
-  cd $root
-fi
-
 for d in $changed
 do
   if [ -d "$d" ]; then

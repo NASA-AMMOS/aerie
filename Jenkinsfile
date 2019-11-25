@@ -82,7 +82,7 @@ pipeline {
 					[ -s "\$NVM_DIR/nvm.sh" ] && . "\$NVM_DIR/nvm.sh"
 					nvm install v10.13.0
 					# tar up entire build directory as deliverable
-					tar -czf aerie-${getTag()}.tar.gz --exclude='.git' --exclude='aerie-src-*.tar.gz' --exclude='nest/node_modules' --exclude='merlin-ui/node_modules' `ls -A`
+					tar -czf aerie-${getTag()}.tar.gz --exclude='.git' --exclude='aerie-src-*.tar.gz' --exclude='nest/node_modules' `ls -A`
 					# create nest tar file
 					if [ -d nest/dist ]; then
 						export NEST_PACKAGE_VERSION=`node -p "require('./nest/package.json').version"`

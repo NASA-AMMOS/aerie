@@ -11,9 +11,6 @@ services:
     image: mongo:3.2
     ports: ["27020:27020"]
     volumes: ["adaptation_mongo_data:/data/db"]
-  merlin_ui:
-    image: "${DOCKER_URL}/merlin-ui:${MERLIN_UI_DOCKER_TAG}"
-    ports: ["8080:80"]
   plan:
     image: "${DOCKER_URL}/plan:${PLAN_DOCKER_TAG}"
     depends_on: ["plan_mongo"]
