@@ -153,6 +153,8 @@ public final class RemotePlanRepository implements PlanRepository {
 
   @Override
   public void deletePlan(final String planId) throws NoSuchPlanException {
+    this.deleteAllActivities(planId);
+
     final var result = this.planCollection.deleteOne(planById(makePlanObjectId(planId)));
     if (result.getDeletedCount() <= 0) {
       throw new NoSuchPlanException(planId);
