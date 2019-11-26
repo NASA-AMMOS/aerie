@@ -119,6 +119,7 @@ public final class MockPlanRepository implements PlanRepository {
       throw new NoSuchPlanException(id);
     }
 
+    this.deleteAllActivities(id);
     this.plans.remove(id);
   }
 
