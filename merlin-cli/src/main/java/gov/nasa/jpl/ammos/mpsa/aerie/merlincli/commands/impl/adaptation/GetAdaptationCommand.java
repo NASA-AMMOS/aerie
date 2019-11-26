@@ -1,13 +1,12 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.adaptation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+
+import java.io.IOException;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities.prettify;
 
@@ -16,33 +15,31 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities.pretti
  */
 public class GetAdaptationCommand implements Command {
 
-    private RestTemplate restTemplate;
     private String adaptationId;
     private String responseBody;
     private int status;
 
-    public GetAdaptationCommand(RestTemplate restTemplate, String adaptationId) {
-        this.restTemplate = restTemplate;
+    public GetAdaptationCommand(String adaptationId) {
         this.adaptationId = adaptationId;
         this.status = -1;
     }
 
     @Override
     public void execute() {
-        HttpHeaders headers = new HttpHeaders();
-        HttpEntity requestBody = new HttpEntity(null, headers);
+        HttpGet request = new HttpGet(String.format("http://localhost:27182/api/adaptations/%s", this.adaptationId));
+
         try {
-            String url = String.format("http://localhost:27182/api/adaptations/%s", this.adaptationId);
-            ResponseEntity response = restTemplate.exchange(url, HttpMethod.GET, requestBody, String.class);
-            this.status = response.getStatusCodeValue();
+            CloseableHttpClient httpClient = HttpClients.createDefault();
+            CloseableHttpResponse response = httpClient.execute(request);
+
+            this.status = response.getStatusLine().getStatusCode();
 
             if (status == 200) {
-                this.responseBody = prettify(response.getBody().toString());
+                this.responseBody = prettify(response.getEntity().toString());
             }
 
-        }
-        catch (HttpClientErrorException | HttpServerErrorException e) {
-            this.status = e.getStatusCode().value();
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
         }
     }
 

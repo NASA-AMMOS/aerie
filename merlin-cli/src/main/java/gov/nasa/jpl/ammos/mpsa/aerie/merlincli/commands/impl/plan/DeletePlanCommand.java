@@ -1,40 +1,38 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+
+import java.io.IOException;
 
 /**
  * Command to delete a plan
  */
 public class DeletePlanCommand implements Command {
 
-    private RestTemplate restTemplate;
     private String planId;
     private int status;
 
-    public DeletePlanCommand(RestTemplate restTemplate, String planId) {
-        this.restTemplate = restTemplate;
+    public DeletePlanCommand(String planId) {
         this.planId = planId;
         this.status = -1;
     }
 
     @Override
     public void execute() {
-        HttpHeaders headers = new HttpHeaders();
-        HttpEntity requestBody = new HttpEntity(null, headers);
+        HttpDelete request = new HttpDelete(String.format("http://localhost:27183/api/plans/%s", this.planId));
+
         try {
-            String url = String.format("http://localhost:27183/api/plans/%s", this.planId);
-            ResponseEntity response = restTemplate.exchange(url, HttpMethod.DELETE, requestBody, String.class);
-            this.status = response.getStatusCodeValue();
-        }
-        catch (HttpClientErrorException | HttpServerErrorException e) {
-            this.status = e.getStatusCode().value();
+            CloseableHttpClient httpClient = HttpClients.createDefault();
+            CloseableHttpResponse response = httpClient.execute(request);
+
+            this.status = response.getStatusLine().getStatusCode();
+
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
         }
     }
 

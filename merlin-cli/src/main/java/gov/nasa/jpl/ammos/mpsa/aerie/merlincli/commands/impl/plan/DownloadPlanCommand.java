@@ -1,14 +1,12 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities.writeJson;
@@ -18,14 +16,11 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities.writeJ
  */
 public class DownloadPlanCommand implements Command {
 
-    private RestTemplate restTemplate;
-
     private String planId;
     private String outName;
     private int status;
 
-    public DownloadPlanCommand(RestTemplate restTemplate, String planId, String outName) {
-        this.restTemplate = restTemplate;
+    public DownloadPlanCommand(String planId, String outName) {
         this.planId = planId;
         this.outName = outName;
         this.status = -1;
@@ -33,19 +28,21 @@ public class DownloadPlanCommand implements Command {
 
     @Override
     public void execute() {
-        HttpHeaders headers = new HttpHeaders();
-        HttpEntity requestBody = new HttpEntity(null, headers);
+        HttpGet request = new HttpGet(String.format("http://localhost:27183/api/plans/%s", this.planId));
+
         try {
-            String url = String.format("http://localhost:27183/api/plans/%s", this.planId);
-            ResponseEntity response = restTemplate.exchange(url, HttpMethod.GET, requestBody, String.class);
-            this.status = response.getStatusCode().value();
+
+            CloseableHttpClient httpClient = HttpClients.createDefault();
+            CloseableHttpResponse response = httpClient.execute(request);
+
+            this.status = response.getStatusLine().getStatusCode();
 
             if (status == 200) {
-                writeJson(response.getBody().toString(), Path.of(this.outName));
+                writeJson(response.getEntity().toString(), Path.of(this.outName));
             }
-        }
-        catch (HttpClientErrorException | HttpServerErrorException e) {
-            this.status = e.getStatusCode().value();
+
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
         }
     }
 

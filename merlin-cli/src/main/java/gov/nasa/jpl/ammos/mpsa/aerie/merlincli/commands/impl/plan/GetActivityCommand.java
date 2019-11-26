@@ -1,10 +1,13 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
-import org.springframework.http.*;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.apache.http.HttpHeaders;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+
+import java.io.IOException;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities.prettify;
 
@@ -13,14 +16,12 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities.pretti
  */
 public class GetActivityCommand implements Command {
 
-    private RestTemplate restTemplate;
     private String planId;
     private String activityId;
     private String responseBody;
     private int status;
 
-    public GetActivityCommand(RestTemplate restTemplate, String planId, String activityId) {
-        this.restTemplate = restTemplate;
+    public GetActivityCommand(String planId, String activityId) {
         this.planId = planId;
         this.activityId = activityId;
         this.status = -1;
@@ -28,20 +29,21 @@ public class GetActivityCommand implements Command {
 
     @Override
     public void execute() {
-        HttpHeaders headers = new HttpHeaders();
-        HttpEntity requestBody = new HttpEntity(null, headers);
+        HttpGet request = new HttpGet(String.format("http://localhost:27183/api/plans/%s/activity_instances/%s", this.planId, this.activityId));
+
         try {
-            String url = String.format("http://localhost:27183/api/plans/%s/activity_instances/%s", this.planId, this.activityId);
-            ResponseEntity response = restTemplate.exchange(url, HttpMethod.GET, requestBody, String.class);
-            this.status = response.getStatusCodeValue();
+
+            CloseableHttpClient httpClient = HttpClients.createDefault();
+            CloseableHttpResponse response = httpClient.execute(request);
+
+            this.status = response.getStatusLine().getStatusCode();
 
             if (status == 200) {
-                this.responseBody = prettify(response.getBody().toString());
+                this.responseBody = prettify(response.getEntity().toString());
             }
 
-        }
-        catch (HttpClientErrorException | HttpServerErrorException e) {
-            this.status = e.getStatusCode().value();
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
         }
     }
 

@@ -1,10 +1,12 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
-import org.springframework.http.*;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.apache.http.HttpHeaders;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,14 +17,12 @@ import java.nio.file.Paths;
  */
 public class NewPlanCommand implements Command {
 
-    private RestTemplate restTemplate;
     private String path;
     private String body;
     private int status;
     private String id;
 
-    public NewPlanCommand(RestTemplate restTemplate, String path) throws IOException {
-        this.restTemplate = restTemplate;
+    public NewPlanCommand(String path) throws IOException {
         this.path = path;
         this.status = -1;
 
@@ -31,17 +31,23 @@ public class NewPlanCommand implements Command {
 
     @Override
     public void execute() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity requestBody = new HttpEntity(this.body, headers);
-        try {
-            ResponseEntity response = restTemplate.exchange("http://localhost:27183/api/plans", HttpMethod.POST, requestBody, String.class);
-            this.status = response.getStatusCodeValue();
-            this.id = response.getHeaders().getFirst("location");
+        HttpPost request = new HttpPost("http://localhost:27183/api/plans");
+        request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 
-        }
-        catch (HttpClientErrorException | HttpServerErrorException e) {
-            this.status = e.getStatusCode().value();
+        try {
+            request.setEntity(new StringEntity(this.body));
+
+            CloseableHttpClient httpClient = HttpClients.createDefault();
+            CloseableHttpResponse response = httpClient.execute(request);
+
+            this.status = response.getStatusLine().getStatusCode();
+
+            if (status == 201) {
+                this.id = response.getFirstHeader("location").toString();
+            }
+
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
         }
     }
 

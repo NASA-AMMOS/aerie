@@ -1,14 +1,12 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
-import org.springframework.http.*;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.apache.http.HttpHeaders;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,13 +17,11 @@ import java.nio.file.Paths;
  */
 public class AppendActivitiesCommand implements Command {
 
-    private RestTemplate restTemplate;
     private String planId;
     private String body;
     private int status;
 
-    public AppendActivitiesCommand(RestTemplate restTemplate, String planId, String path) throws IOException {
-        this.restTemplate = restTemplate;
+    public AppendActivitiesCommand(String planId, String path) throws IOException {
         this.planId = planId;
         this.status = -1;
 
@@ -34,16 +30,19 @@ public class AppendActivitiesCommand implements Command {
 
     @Override
     public void execute() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity requestBody = new HttpEntity(this.body, headers);
+        HttpPost request = new HttpPost(String.format("http://localhost:27183/api/plans/%s/activity_instances", this.planId));
+        request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+
         try {
-            String url = String.format("http://localhost:27183/api/plans/%s/activity_instances", this.planId);
-            ResponseEntity response = restTemplate.exchange(url, HttpMethod.POST, requestBody, String.class);
-            this.status = response.getStatusCodeValue();
-        }
-        catch (HttpClientErrorException | HttpServerErrorException e) {
-            this.status = e.getStatusCode().value();
+            request.setEntity(new StringEntity(this.body));
+
+            CloseableHttpClient httpClient = HttpClients.createDefault();
+            CloseableHttpResponse response = httpClient.execute(request);
+
+            this.status = response.getStatusLine().getStatusCode();
+
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
         }
     }
 

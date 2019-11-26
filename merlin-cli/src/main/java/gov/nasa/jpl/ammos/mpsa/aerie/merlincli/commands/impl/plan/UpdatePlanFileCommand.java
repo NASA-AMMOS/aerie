@@ -1,10 +1,12 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
-import org.springframework.http.*;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.apache.http.HttpHeaders;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPatch;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,13 +18,11 @@ import java.nio.file.Paths;
  */
 public class UpdatePlanFileCommand implements Command {
 
-    private RestTemplate restTemplate;
     private String planId;
     private String body;
     private int status;
 
-    public UpdatePlanFileCommand(RestTemplate restTemplate, String planId, String path) throws IOException {
-        this.restTemplate = restTemplate;
+    public UpdatePlanFileCommand(String planId, String path) throws IOException {
         this.planId = planId;
         this.status = -1;
 
@@ -31,16 +31,19 @@ public class UpdatePlanFileCommand implements Command {
 
     @Override
     public void execute() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity requestBody = new HttpEntity(this.body, headers);
+        HttpPatch request = new HttpPatch(String.format("http://localhost:27183/api/plans/%s", this.planId));
+        request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+
         try {
-            String url = String.format("http://localhost:27183/api/plans/%s", this.planId);
-            ResponseEntity response = restTemplate.exchange(url, HttpMethod.PATCH, requestBody, String.class);
-            this.status = response.getStatusCodeValue();
-        }
-        catch (HttpServerErrorException | HttpClientErrorException e) {
-            this.status = e.getStatusCode().value();
+            request.setEntity(new StringEntity(this.body));
+
+            CloseableHttpClient httpClient = HttpClients.createDefault();
+            CloseableHttpResponse response = httpClient.execute(request);
+
+            this.status = response.getStatusLine().getStatusCode();
+
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
         }
     }
 
