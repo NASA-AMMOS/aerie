@@ -59,15 +59,16 @@ export class UpdateActivityInstanceFormComponent implements OnChanges {
       });
 
       if (this.activityTypesMap) {
-        const { type } = this.activityInstance;
-        const { parameters } = this.activityTypesMap[type];
+        const { type: activityType } = this.activityInstance;
+        const { parameters } = this.activityTypesMap[activityType];
         this.formParameters.clear();
-        parameters.forEach(parameter => {
+        parameters.forEach(({ name, type }) => {
+          const value = this.getParameterValue(this.activityInstance, name);
           this.formParameters.push(
             this.fb.group({
-              name: parameter.name,
-              type: parameter.type,
-              value: this.activityInstance.parameters[parameter.name].value,
+              name,
+              type,
+              value,
             }),
           );
         });
@@ -77,6 +78,15 @@ export class UpdateActivityInstanceFormComponent implements OnChanges {
 
   get formParameters() {
     return this.form.get('parameters') as FormArray;
+  }
+
+  getParameterValue(
+    activityInstance: CActivityInstance,
+    parameterName: string,
+  ): string {
+    const { parameters } = activityInstance;
+    const parameter = parameters[parameterName];
+    return parameter ? parameter.value : '';
   }
 
   onDelete() {
