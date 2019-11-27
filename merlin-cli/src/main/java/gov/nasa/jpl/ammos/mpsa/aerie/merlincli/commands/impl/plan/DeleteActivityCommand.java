@@ -1,10 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
-import org.apache.http.client.methods.CloseableHttpResponse;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpHandler;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 
 import java.io.IOException;
 
@@ -13,11 +12,13 @@ import java.io.IOException;
  */
 public class DeleteActivityCommand implements Command {
 
+    private HttpHandler httpClient;
     private String planId;
     private String activityId;
     private int status;
 
-    public DeleteActivityCommand(String planId, String outName) {
+    public DeleteActivityCommand(HttpHandler httpClient, String planId, String outName) {
+        this.httpClient = httpClient;
         this.planId = planId;
         this.activityId = outName;
         this.status = -1;
@@ -29,8 +30,7 @@ public class DeleteActivityCommand implements Command {
         HttpDelete request = new HttpDelete(url);
 
         try {
-            CloseableHttpClient httpClient = HttpClients.createDefault();
-            CloseableHttpResponse response = httpClient.execute(request);
+            HttpResponse response = this.httpClient.execute(request);
 
             this.status = response.getStatusLine().getStatusCode();
 

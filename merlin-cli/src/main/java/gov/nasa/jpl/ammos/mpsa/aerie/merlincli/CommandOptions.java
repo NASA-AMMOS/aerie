@@ -4,6 +4,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.adaptation.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidNumberOfArgsException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidTokenException;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpClientHandler;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpHandler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities;
 import gov.nasa.jpl.ammos.mpsa.apgen.exceptions.AdaptationParsingException;
 import gov.nasa.jpl.ammos.mpsa.apgen.exceptions.DirectoryNotFoundException;
@@ -13,6 +15,7 @@ import gov.nasa.jpl.ammos.mpsa.apgen.model.Plan;
 import gov.nasa.jpl.ammos.mpsa.apgen.parser.AdaptationParser;
 import gov.nasa.jpl.ammos.mpsa.apgen.parser.ApfParser;
 import org.apache.commons.cli.*;
+import org.apache.http.impl.client.HttpClients;
 
 
 import java.io.File;
@@ -21,7 +24,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 public class CommandOptions {
-
+    private HttpHandler httpClient;
     private Options options = new Options();
     private OptionGroup requiredGroup = new OptionGroup();
     private OptionGroup planIdRequiredGroup = new OptionGroup();
@@ -29,14 +32,14 @@ public class CommandOptions {
     private String[] args = null;
     private boolean lastCommandStatus;
 
-    // Empty constructor for use by Spring
-    public CommandOptions() {
+    public CommandOptions(String[] args, HttpHandler httpClient) {
         buildArguments();
+        consumeArgs(args);
+        this.httpClient = httpClient;
     }
 
     public CommandOptions(String[] args) {
-        buildArguments();
-        consumeArgs(args);
+        this(args, new HttpClientHandler(HttpClients.createDefault()));
     }
 
     public CommandOptions consumeArgs(String[] args) {
@@ -240,7 +243,7 @@ public class CommandOptions {
 
     private boolean createPlan(String path) {
         try {
-            NewPlanCommand command = new NewPlanCommand(path);
+            NewPlanCommand command = new NewPlanCommand(this.httpClient, path);
             command.execute();
             int status = command.getStatus();
 
@@ -271,7 +274,7 @@ public class CommandOptions {
 
     private boolean updatePlanFromFile(String planId, String path) {
         try {
-            UpdatePlanFileCommand command = new UpdatePlanFileCommand(planId, path);
+            UpdatePlanFileCommand command = new UpdatePlanFileCommand(this.httpClient, planId, path);
             command.execute();
             int status = command.getStatus();
 
@@ -302,7 +305,7 @@ public class CommandOptions {
 
     private boolean updatePlan(String planId, String[] tokens) {
         try {
-            UpdatePlanCommand command = new UpdatePlanCommand(planId, tokens);
+            UpdatePlanCommand command = new UpdatePlanCommand(this.httpClient, planId, tokens);
             command.execute();
             int status = command.getStatus();
 
@@ -329,7 +332,7 @@ public class CommandOptions {
     }
 
     private boolean deletePlan(String planId) {
-        DeletePlanCommand command = new DeletePlanCommand(planId);
+        DeletePlanCommand command = new DeletePlanCommand(this.httpClient, planId);
         command.execute();
         int status = command.getStatus();
 
@@ -357,7 +360,7 @@ public class CommandOptions {
             return false;
         }
 
-        DownloadPlanCommand command = new DownloadPlanCommand(planId, outName);
+        DownloadPlanCommand command = new DownloadPlanCommand(this.httpClient, planId, outName);
         command.execute();
         int status = command.getStatus();
 
@@ -380,7 +383,7 @@ public class CommandOptions {
 
     private boolean appendActivityInstances(String planId, String path) {
         try {
-            AppendActivitiesCommand command = new AppendActivitiesCommand(planId, path);
+            AppendActivitiesCommand command = new AppendActivitiesCommand(this.httpClient, planId, path);
             command.execute();
             int status = command.getStatus();
             switch(status) {
@@ -404,7 +407,7 @@ public class CommandOptions {
     }
 
     private boolean displayActivityInstance(String planId, String activityId) {
-        GetActivityCommand command = new GetActivityCommand(planId, activityId);
+        GetActivityCommand command = new GetActivityCommand(this.httpClient, planId, activityId);
         command.execute();
         int status = command.getStatus();
 
@@ -428,7 +431,7 @@ public class CommandOptions {
 
     private boolean updateActivityInstance(String planId, String activityId, String[] tokens) {
         try {
-            UpdateActivityCommand command = new UpdateActivityCommand(planId, activityId, tokens);
+            UpdateActivityCommand command = new UpdateActivityCommand(this.httpClient, planId, activityId, tokens);
 
             command.execute();
             int status = command.getStatus();
@@ -456,7 +459,7 @@ public class CommandOptions {
     }
 
     private boolean deleteActivityInstance(String planId, String activityId) {
-        DeleteActivityCommand command = new DeleteActivityCommand(planId, activityId);
+        DeleteActivityCommand command = new DeleteActivityCommand(this.httpClient, planId, activityId);
         command.execute();
         int status = command.getStatus();
 
@@ -479,7 +482,7 @@ public class CommandOptions {
     }
 
     private boolean listPlans() {
-        GetPlanListCommand command = new GetPlanListCommand();
+        GetPlanListCommand command = new GetPlanListCommand(this.httpClient);
         command.execute();
         int status = command.getStatus();
 
@@ -499,7 +502,7 @@ public class CommandOptions {
 
     private boolean createAdaptation(String path, String[] tokens) {
         try {
-            NewAdaptationCommand command = new NewAdaptationCommand(path, tokens);
+            NewAdaptationCommand command = new NewAdaptationCommand(this.httpClient, path, tokens);
             command.execute();
             int status = command.getStatus();
 
@@ -530,7 +533,7 @@ public class CommandOptions {
     }
 
     private boolean deleteAdaptation(String adaptationId) {
-        DeleteAdaptationCommand command = new DeleteAdaptationCommand(adaptationId);
+        DeleteAdaptationCommand command = new DeleteAdaptationCommand(this.httpClient, adaptationId);
         command.execute();
         int status = command.getStatus();
 
@@ -553,7 +556,7 @@ public class CommandOptions {
     }
 
     private boolean displayAdaptation(String adaptationId) {
-        GetAdaptationCommand command = new GetAdaptationCommand(adaptationId);
+        GetAdaptationCommand command = new GetAdaptationCommand(this.httpClient, adaptationId);
         command.execute();
         int status = command.getStatus();
 
@@ -576,7 +579,7 @@ public class CommandOptions {
     }
 
     private boolean listAdaptations() {
-        GetAdaptationListCommand command = new GetAdaptationListCommand();
+        GetAdaptationListCommand command = new GetAdaptationListCommand(this.httpClient);
         command.execute();
         int status = command.getStatus();
 
@@ -595,7 +598,7 @@ public class CommandOptions {
     }
 
     private boolean listActivityTypes(String adaptationId) {
-        GetActivityTypeListCommand command = new GetActivityTypeListCommand(adaptationId);
+        GetActivityTypeListCommand command = new GetActivityTypeListCommand(this.httpClient, adaptationId);
         command.execute();
         int status = command.getStatus();
 
@@ -618,7 +621,7 @@ public class CommandOptions {
     }
 
     private boolean displayActivityType(String adaptationId, String activityTypeId) {
-        GetActivityTypeCommand command = new GetActivityTypeCommand(adaptationId, activityTypeId);
+        GetActivityTypeCommand command = new GetActivityTypeCommand(this.httpClient, adaptationId, activityTypeId);
         command.execute();
         int status = command.getStatus();
 
@@ -641,7 +644,7 @@ public class CommandOptions {
     }
 
     private boolean displayActivityTypeParameterList(String adaptationId, String activityTypeId) {
-        GetActivityTypeParameterListCommand command = new GetActivityTypeParameterListCommand(adaptationId, activityTypeId);
+        GetActivityTypeParameterListCommand command = new GetActivityTypeParameterListCommand(this.httpClient, adaptationId, activityTypeId);
         command.execute();
         int status = command.getStatus();
 

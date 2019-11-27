@@ -3,14 +3,13 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 import com.google.gson.Gson;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidTokenException;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpHandler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.PlanDetail;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.TokenMap;
 import org.apache.http.HttpHeaders;
-import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 
 import java.io.IOException;
 
@@ -21,13 +20,15 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.TokenMap.parseToken
   */
 public class UpdatePlanCommand implements Command {
 
+    private HttpHandler httpClient;
     private String planId;
     private int status;
 
     /* Plan detail to push */
     PlanDetail planDetail;
 
-    public UpdatePlanCommand(String planId, String[] tokens) throws InvalidTokenException {
+    public UpdatePlanCommand(HttpHandler httpClient, String planId, String[] tokens) throws InvalidTokenException {
+        this.httpClient = httpClient;
         this.planId = planId;
 
         planDetail = new PlanDetail();
@@ -61,8 +62,7 @@ public class UpdatePlanCommand implements Command {
         try {
             request.setEntity(new StringEntity(body));
 
-            CloseableHttpClient httpClient = HttpClients.createDefault();
-            CloseableHttpResponse response = httpClient.execute(request);
+            HttpResponse response = this.httpClient.execute(request);
 
             this.status = response.getStatusLine().getStatusCode();
 

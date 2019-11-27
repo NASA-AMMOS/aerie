@@ -2,16 +2,15 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.adaptation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidTokenException;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpHandler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.TokenMap;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.Adaptation;
 import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.EntityBuilder;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.FileEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 
 import java.io.File;
@@ -23,12 +22,14 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.TokenMap.parseToken
 
 public class NewAdaptationCommand implements Command {
 
+    private HttpHandler httpClient;
     private String path;
     private Adaptation adaptation;
     private int status;
     private String id;
 
-    public NewAdaptationCommand(String path, String[] tokens) throws InvalidTokenException {
+    public NewAdaptationCommand(HttpHandler httpClient, String path, String[] tokens) throws InvalidTokenException {
+        this.httpClient = httpClient;
         this.path = path;
         this.status = -1;
         this.adaptation = new Adaptation();
@@ -72,8 +73,7 @@ public class NewAdaptationCommand implements Command {
                     .build());
             request.setEntity(new FileEntity(new File(this.path)));
 
-            CloseableHttpClient httpClient = HttpClients.createDefault();
-            CloseableHttpResponse response = httpClient.execute(request);
+            HttpResponse response = this.httpClient.execute(request);
 
             this.status = response.getStatusLine().getStatusCode();
 

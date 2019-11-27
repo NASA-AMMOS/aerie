@@ -1,11 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
-import org.apache.http.HttpHeaders;
-import org.apache.http.client.methods.CloseableHttpResponse;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpHandler;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 
 import java.io.IOException;
 
@@ -16,12 +14,14 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities.pretti
  */
 public class GetActivityCommand implements Command {
 
+    private HttpHandler httpClient;
     private String planId;
     private String activityId;
     private String responseBody;
     private int status;
 
-    public GetActivityCommand(String planId, String activityId) {
+    public GetActivityCommand(HttpHandler httpClient, String planId, String activityId) {
+        this.httpClient = httpClient;
         this.planId = planId;
         this.activityId = activityId;
         this.status = -1;
@@ -32,9 +32,7 @@ public class GetActivityCommand implements Command {
         HttpGet request = new HttpGet(String.format("http://localhost:27183/api/plans/%s/activity_instances/%s", this.planId, this.activityId));
 
         try {
-
-            CloseableHttpClient httpClient = HttpClients.createDefault();
-            CloseableHttpResponse response = httpClient.execute(request);
+            HttpResponse response = this.httpClient.execute(request);
 
             this.status = response.getStatusLine().getStatusCode();
 

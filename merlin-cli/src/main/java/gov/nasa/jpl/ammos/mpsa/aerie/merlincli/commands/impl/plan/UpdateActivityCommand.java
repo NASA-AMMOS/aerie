@@ -3,17 +3,15 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 import com.google.gson.Gson;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidTokenException;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpHandler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.TokenMap;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.ActivityInstanceParameter;
 import org.apache.http.HttpHeaders;
-import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 
-import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +25,7 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.TokenMap.parseToken
  */
 public class UpdateActivityCommand implements Command {
 
+    private HttpHandler httpClient;
     private String planId;
     private String activityId;
     private int status;
@@ -34,7 +33,8 @@ public class UpdateActivityCommand implements Command {
     /* Activity instance to be pushed */
     ActivityInstance updateInstance;
 
-    public UpdateActivityCommand(String planId, String activityId, String[] tokens) throws InvalidTokenException {
+    public UpdateActivityCommand(HttpHandler httpClient, String planId, String activityId, String[] tokens) throws InvalidTokenException {
+        this.httpClient = httpClient;
         this.planId = planId;
         this.activityId = activityId;
 
@@ -79,8 +79,7 @@ public class UpdateActivityCommand implements Command {
         try {
             request.setEntity(new StringEntity(body));
 
-            CloseableHttpClient httpClient = HttpClients.createDefault();
-            CloseableHttpResponse response = httpClient.execute(request);
+            HttpResponse response = this.httpClient.execute(request);
 
             this.status = response.getStatusLine().getStatusCode();
 

@@ -1,11 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.adaptation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
-import org.apache.http.HttpHeaders;
-import org.apache.http.client.methods.CloseableHttpResponse;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpHandler;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 
 import java.io.IOException;
 
@@ -13,11 +11,13 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities.pretti
 
 public class GetActivityTypeListCommand implements Command {
 
+    private HttpHandler httpClient;
     private String adaptationId;
     private String responseBody;
     private int status;
 
-    public GetActivityTypeListCommand(String adaptationId) {
+    public GetActivityTypeListCommand(HttpHandler httpClient, String adaptationId) {
+        this.httpClient = httpClient;
         this.adaptationId = adaptationId;
         this.status = -1;
     }
@@ -27,8 +27,7 @@ public class GetActivityTypeListCommand implements Command {
         HttpGet request = new HttpGet(url);
 
         try {
-            CloseableHttpClient httpClient = HttpClients.createDefault();
-            CloseableHttpResponse response = httpClient.execute(request);
+            HttpResponse response = this.httpClient.execute(request);
 
             this.status = response.getStatusLine().getStatusCode();
 

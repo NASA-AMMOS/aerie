@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpHandler;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPatch;
@@ -18,11 +19,13 @@ import java.nio.file.Paths;
  */
 public class UpdatePlanFileCommand implements Command {
 
+    private HttpHandler httpClient;
     private String planId;
     private String body;
     private int status;
 
-    public UpdatePlanFileCommand(String planId, String path) throws IOException {
+    public UpdatePlanFileCommand(HttpHandler httpClient, String planId, String path) throws IOException {
+        this.httpClient = httpClient;
         this.planId = planId;
         this.status = -1;
 
