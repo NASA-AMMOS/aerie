@@ -3,11 +3,9 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpHandler;
 import org.apache.http.HttpHeaders;
-import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -40,8 +38,7 @@ public class UpdatePlanFileCommand implements Command {
         try {
             request.setEntity(new StringEntity(this.body));
 
-            CloseableHttpClient httpClient = HttpClients.createDefault();
-            CloseableHttpResponse response = httpClient.execute(request);
+            HttpResponse response = httpClient.execute(request);
 
             this.status = response.getStatusLine().getStatusCode();
 

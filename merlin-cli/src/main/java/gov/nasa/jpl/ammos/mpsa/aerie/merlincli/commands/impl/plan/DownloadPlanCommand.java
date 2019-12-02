@@ -36,8 +36,9 @@ public class DownloadPlanCommand implements Command {
 
             this.status = response.getStatusLine().getStatusCode();
 
-            if (status == 200) {
-                writeJson(response.getEntity().toString(), Path.of(this.outName));
+            if (status == 200 && response.getEntity() != null) {
+                String responseString = new String(response.getEntity().getContent().readAllBytes());
+                writeJson(responseString, Path.of(this.outName));
             }
 
         } catch (IOException e) {

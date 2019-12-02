@@ -10,8 +10,8 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class MerlinCLIApfConversionTests {
 
@@ -43,8 +43,8 @@ public class MerlinCLIApfConversionTests {
         assertFalse(Files.exists(testPath));
 
         String[] args = { "--convert-apf", "src/test/resources/apgen/apf_files/Banana.apf", testPath.toString(),  "src/test/resources/apgen/aaf_files"};
-        CommandOptions commandOptions = new CommandOptions();
-        commandOptions.consumeArgs(args).parse();
+        CommandOptions commandOptions = new CommandOptions(args);
+        commandOptions.parse();
 
         assertTrue(commandOptions.lastCommandSuccessful());
 

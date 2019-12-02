@@ -34,8 +34,9 @@ public class GetPlanListCommand implements Command {
 
             this.status = response.getStatusLine().getStatusCode();
 
-            if (status == 200) {
-                this.responseBody = prettify(response.getEntity().toString());
+            if (status == 200 && response.getEntity() != null) {
+                String responseString = new String(response.getEntity().getContent().readAllBytes());
+                this.responseBody = prettify(responseString);
             }
 
         } catch (IOException e) {
