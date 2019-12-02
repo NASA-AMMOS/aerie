@@ -42,11 +42,27 @@
 
   <div class="flex-container">
     <ag-grid-angular
+      *ngIf="!infiniteScroll"
       #agGrid
       class="ag-theme-fresh"
       [columnDefs]="columnDefs"
-      [enableColResize]="true"
-      [enableSorting]="true"
+      [enableFilter]="true"
+      [gridOptions]="gridOptions"
+      [rowData]="rowData"
+      [rowSelection]="rowSelection"
+      (columnVisible)="emitUpdateTableColumns()"
+      (columnMoved)="emitUpdateTableColumns()"
+      (columnResized)="emitUpdateTableColumns()"
+      (gridReady)="onGridReady($event)"
+      (selectionChanged)="onSelectionChanged($event)"
+      (sortChanged)="emitUpdateTableColumns()"
+    >
+    </ag-grid-angular>
+    <ag-grid-angular
+      *ngIf="infiniteScroll"
+      #agGrid
+      class="ag-theme-fresh"
+      [columnDefs]="columnDefs"
       [enableFilter]="true"
       [gridOptions]="gridOptions"
       [rowSelection]="rowSelection"
@@ -60,7 +76,7 @@
     </ag-grid-angular>
     <div
       class="edit-button-container"
-      *ngIf="selectedSubBand.editable && mode !== 'minimal'"
+      *ngIf="!infiniteScroll && selectedSubBand.editable && mode !== 'minimal'"
     >
       <button mat-raised-button class="edit-button" (click)="onAdd()">
         Add
