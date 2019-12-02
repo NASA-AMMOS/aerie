@@ -332,7 +332,6 @@ export class RavenTableComponent implements OnChanges {
                         },
                       });
                     }
-                    this.highlightRowForSelectedPoint();
                     return true;
                   }
                 : null,
