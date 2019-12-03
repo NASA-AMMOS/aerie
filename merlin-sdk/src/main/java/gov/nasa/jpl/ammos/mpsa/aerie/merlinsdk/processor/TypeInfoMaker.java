@@ -17,6 +17,19 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
 import java.util.List;
 
+class ParameterTypeException extends Exception {
+  private final Element relatedElement;
+
+  public ParameterTypeException(final String message, final Element relatedElement) {
+    super(message);
+    this.relatedElement = relatedElement;
+  }
+
+  public Element getRelatedElement() {
+    return this.relatedElement;
+  }
+}
+
 class TypeInfoMaker {
   private final TypeMirror STRING_TYPE;
 
@@ -30,9 +43,10 @@ class TypeInfoMaker {
     this.STRING_TYPE = processingEnv.getElementUtils().getTypeElement(String.class.getCanonicalName()).asType();
   }
 
-  public ParameterTypeReference getParameterReferenceInfo(final TypeMirror parameterType) {
+  public ParameterTypeReference getParameterReferenceInfo(final Element parameterElement) throws ParameterTypeException {
     final ParameterTypeReference typeReference = new ParameterTypeReference();
 
+    final TypeMirror parameterType = parameterElement.asType();
     switch (parameterType.getKind()) {
       case DOUBLE:
         typeReference.isPrimitive = true;
@@ -76,16 +90,15 @@ class TypeInfoMaker {
         }
         break;
       default:
-        // TODO: Don't just throw an exception, baka!
-        throw new RuntimeException("Unknown parameter type: " + parameterType.toString());
+        throw new ParameterTypeException("Unknown parameter type: " + parameterType.toString(), parameterElement);
     }
 
     return typeReference;
   }
 
-  public ParameterTypeInfo getParameterInfo(final Element typeElement) {
+  public ParameterTypeInfo getParameterInfo(final Element typeElement) throws ParameterTypeException {
     if (!List.of(ElementKind.CLASS, ElementKind.ENUM).contains(typeElement.getKind())) {
-      throw new RuntimeException("A parameter type must be either a class or an enum");
+      throw new ParameterTypeException("A parameter type must be either a class or an enum", typeElement);
     }
 
     // TODO: Check that this parameter type has a default constructor.
@@ -111,7 +124,7 @@ class TypeInfoMaker {
       // TODO: Check that @Parameter fields are public.
 
       final String parameterName = element.getSimpleName().toString();
-      final ParameterTypeReference parameterTypeRef = this.getParameterReferenceInfo(element.asType());
+      final ParameterTypeReference parameterTypeRef = this.getParameterReferenceInfo(element);
 
       info.parameters.add(Pair.of(parameterName, parameterTypeRef));
     }
@@ -119,9 +132,9 @@ class TypeInfoMaker {
     return info;
   }
 
-  public ActivityTypeInfo getActivityInfo(final Element typeElement) {
+  public ActivityTypeInfo getActivityInfo(final Element typeElement) throws ParameterTypeException {
     if (typeElement.getKind() != ElementKind.CLASS) {
-      throw new RuntimeException("An activity type must be a class");
+      throw new ParameterTypeException("An activity type must be a class", typeElement);
     }
 
     // TODO: Check that this activity type has a default constructor.
@@ -167,7 +180,7 @@ class TypeInfoMaker {
       // TODO: Check that @Parameter fields are public.
 
       final String parameterName = element.getSimpleName().toString();
-      final ParameterTypeReference parameterTypeRef = this.getParameterReferenceInfo(element.asType());
+      final ParameterTypeReference parameterTypeRef = this.getParameterReferenceInfo(element);
 
       info.parameters.add(Pair.of(parameterName, parameterTypeRef));
     }
