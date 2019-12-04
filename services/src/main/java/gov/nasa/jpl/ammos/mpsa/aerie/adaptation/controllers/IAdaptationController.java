@@ -15,10 +15,16 @@ import java.util.stream.Stream;
 
 public interface IAdaptationController {
     Stream<Pair<String, Adaptation>> getAdaptations();
-    Adaptation getAdaptationById(String adaptationId) throws NoSuchAdaptationException;
-    String addAdaptation(NewAdaptation adaptation) throws ValidationException;
-    void removeAdaptation(String adaptationId) throws NoSuchAdaptationException;
-    Map<String, ActivityType> getActivityTypes(String adaptationId) throws NoSuchAdaptationException, AdaptationContractException;
-    ActivityType getActivityType(String adaptationId, String activityTypeId) throws NoSuchAdaptationException, AdaptationContractException, NoSuchActivityTypeException;
-    Map<String, ParameterSchema> getActivityTypeParameters(String adaptationId, String activityTypeId) throws NoSuchAdaptationException, AdaptationContractException, NoSuchActivityTypeException;
+    Adaptation getAdaptationById(String adaptationId)
+        throws NoSuchAdaptationException;
+    String addAdaptation(NewAdaptation adaptation)
+        throws ValidationException;
+    void removeAdaptation(String adaptationId)
+        throws NoSuchAdaptationException;
+    Map<String, ActivityType> getActivityTypes(String adaptationId)
+        throws NoSuchAdaptationException, AdaptationContractException;
+    ActivityType getActivityType(String adaptationId, String activityTypeId)
+        throws NoSuchAdaptationException, AdaptationContractException, NoSuchActivityTypeException;
+    Map<String, ParameterSchema> getActivityTypeParameters(String adaptationId, String activityTypeId)
+        throws NoSuchAdaptationException, AdaptationContractException, NoSuchActivityTypeException;
 }
