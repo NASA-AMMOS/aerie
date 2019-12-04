@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.InvalidAdaptationJARException;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationContractException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
@@ -9,7 +9,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
-import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.MissingAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -48,22 +47,14 @@ public class AdaptationController implements IAdaptationController {
     }
 
     @Override
-    public Map<String, ActivityType> getActivityTypes(String adaptationId) throws NoSuchAdaptationException {
+    public Map<String, ActivityType> getActivityTypes(String adaptationId) throws NoSuchAdaptationException, AdaptationContractException {
         final Adaptation adaptation = this.adaptationRepository.getAdaptation(adaptationId);
 
-        final Map<String, ActivityType> activityTypes;
-        try {
-            activityTypes = AdaptationLoader.loadActivities(adaptation.path);
-        } catch (final MissingAdaptationException ex) {
-            // TODO: Report an error in a more useful way.
-            throw new Error(ex);
-        }
-
-        return activityTypes;
+        return AdaptationLoader.loadActivities(adaptation.path);
     }
 
     @Override
-    public ActivityType getActivityType(String adaptationId, String activityTypeId) throws NoSuchAdaptationException, NoSuchActivityTypeException {
+    public ActivityType getActivityType(String adaptationId, String activityTypeId) throws NoSuchAdaptationException, NoSuchActivityTypeException, AdaptationContractException {
         final Map<String, ActivityType> activityTypes = getActivityTypes(adaptationId);
 
         return Optional
@@ -72,7 +63,7 @@ public class AdaptationController implements IAdaptationController {
     }
 
     @Override
-    public Map<String, ParameterSchema> getActivityTypeParameters(String adaptationId, String activityTypeId) throws NoSuchAdaptationException, NoSuchActivityTypeException {
+    public Map<String, ParameterSchema> getActivityTypeParameters(String adaptationId, String activityTypeId) throws NoSuchAdaptationException, NoSuchActivityTypeException, AdaptationContractException {
         return getActivityType(adaptationId, activityTypeId).parameters;
     }
 
@@ -88,13 +79,12 @@ public class AdaptationController implements IAdaptationController {
             Map<String, ActivityType> activities = null;
             try {
                 activities = AdaptationLoader.loadActivities(adaptation.path);
-            } catch (final MissingAdaptationException e) {
-                validationErrors.add("Adaptation JAR does not contain a class implementing the Adaptation interface");
+            } catch (final AdaptationContractException e) {
+                validationErrors.add("Adaptation JAR does not meet contract: " + e.getMessage());
             }
 
             if (activities != null && activities.size() < 1) validationErrors.add("No activities found. Must include at least one activity");
         }
-
 
         if (validationErrors.size() > 0) {
             throw new ValidationException("invalid adaptation", validationErrors);

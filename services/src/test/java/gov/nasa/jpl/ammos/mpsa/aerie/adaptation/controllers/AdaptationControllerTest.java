@@ -7,7 +7,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.MissingAdaptationException;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationContractException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
@@ -168,7 +168,7 @@ public final class AdaptationControllerTest {
     }
 
     @Test
-    public void shouldGetActivityTypeList() throws NoSuchAdaptationException, MissingAdaptationException {
+    public void shouldGetActivityTypeList() throws NoSuchAdaptationException, AdaptationContractException {
         // GIVEN
         final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
         final Map<String, ActivityType> expectedTypes = fixtures.ACTIVITY_TYPES;
@@ -196,7 +196,7 @@ public final class AdaptationControllerTest {
     }
 
     @Test
-    public void shouldGetActivityType() throws NoSuchAdaptationException, NoSuchActivityTypeException, MissingAdaptationException {
+    public void shouldGetActivityType() throws NoSuchAdaptationException, NoSuchActivityTypeException, AdaptationContractException {
         // GIVEN
         final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
         final String activityId = Fixtures.EXISTENT_ACTIVITY_TYPE_ID;
@@ -245,7 +245,7 @@ public final class AdaptationControllerTest {
     }
 
     @Test
-    public void shouldGetActivityTypeParameters() throws NoSuchAdaptationException, NoSuchActivityTypeException, MissingAdaptationException {
+    public void shouldGetActivityTypeParameters() throws NoSuchAdaptationException, NoSuchActivityTypeException, AdaptationContractException {
         // GIVEN
         final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
         final String activityId = Fixtures.EXISTENT_ACTIVITY_TYPE_ID;
