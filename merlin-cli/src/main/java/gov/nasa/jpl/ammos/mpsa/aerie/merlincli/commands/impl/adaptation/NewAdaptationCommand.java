@@ -77,7 +77,7 @@ public class NewAdaptationCommand implements Command {
 
             this.status = response.getStatusLine().getStatusCode();
 
-            if (status == 201) {
+            if (status == 201 && response.containsHeader("location")) {
                 this.id = response.getFirstHeader("location").toString();
             }
 
