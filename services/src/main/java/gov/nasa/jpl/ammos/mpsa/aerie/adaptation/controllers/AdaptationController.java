@@ -55,18 +55,62 @@ public class AdaptationController implements IAdaptationController {
 
     @Override
     public Map<String, ActivityType> getActivityTypes(String adaptationId) throws NoSuchAdaptationException, AdaptationContractException {
-        final Adaptation adaptation = this.adaptationRepository.getAdaptation(adaptationId);
+        final Adaptation adaptationDescriptor = this.adaptationRepository.getAdaptation(adaptationId);
 
-        return AdaptationLoader.loadActivities(adaptation.path);
+        final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationDescriptor.path);
+        final ActivityMapper activityMapper = adaptation.getActivityMapper();
+        if (activityMapper == null) throw new AdaptationContractException(adaptation.getClass().getCanonicalName() + ".getActivityMapper() returned null");
+
+        final Map<String, Map<String, ParameterSchema>> activitySchemas = activityMapper.getActivitySchemas();
+        if (activitySchemas == null) throw new AdaptationContractException(activityMapper.getClass().getCanonicalName() + ".getActivitySchemas() returned null");
+
+        final Map<String, ActivityType> activityTypes = new HashMap<>();
+        for (final var schema : activitySchemas.entrySet()) {
+            final Activity<?> activity;
+            try {
+                activity = deserializeActivity(adaptationId, activityMapper, new SerializedActivity(schema.getKey(), Collections.emptyMap()));
+            } catch (final NoSuchActivityTypeException ex) {
+                throw new AdaptationContractException(activityMapper.getClass().getCanonicalName() + ".deserializeActivity() returned an empty Optional for an activity type it has a schema for", ex);
+            } catch (final UnconstructableActivityInstanceException ex) {
+                throw new AdaptationContractException(activityMapper.getClass().getCanonicalName() + ".deserializeActivity() could not instantiate an activity with only default parameters", ex);
+            }
+
+            final Optional<SerializedActivity> defaultActivity = activityMapper.serializeActivity(activity);
+            if (defaultActivity.isEmpty()) throw new AdaptationContractException(activityMapper.getClass().getCanonicalName() + ".serializeActivity() returned an empty Optional for an activity type it previously deserialized");
+
+            activityTypes.put(schema.getKey(), new ActivityType(schema.getKey(), schema.getValue(), defaultActivity.get().getParameters()));
+        }
+
+        return activityTypes;
     }
 
     @Override
     public ActivityType getActivityType(String adaptationId, String activityTypeId) throws NoSuchAdaptationException, NoSuchActivityTypeException, AdaptationContractException {
-        final Map<String, ActivityType> activityTypes = getActivityTypes(adaptationId);
+        final Adaptation adaptationDescriptor = this.adaptationRepository.getAdaptation(adaptationId);
+        final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationDescriptor.path);
 
-        return Optional
-            .ofNullable(activityTypes.getOrDefault(activityTypeId, null))
-            .orElseThrow(() -> new NoSuchActivityTypeException(adaptationId, activityTypeId));
+        final ActivityMapper activityMapper = adaptation.getActivityMapper();
+        if (activityMapper == null) throw new AdaptationContractException(adaptation.getClass().getCanonicalName() + ".getActivityMapper() returned null");
+
+        final Map<String, Map<String, ParameterSchema>> activitySchemas = activityMapper.getActivitySchemas();
+        if (activitySchemas == null) throw new AdaptationContractException(activityMapper.getClass().getCanonicalName() + ".getActivitySchemas() returned null");
+
+        final Map<String, ParameterSchema> activitySchema = activitySchemas.getOrDefault(activityTypeId, null);
+        if (activitySchema == null) throw new NoSuchActivityTypeException(adaptationId, activityTypeId);
+
+        final Activity<?> activity;
+        try {
+            activity = deserializeActivity(adaptationId, activityMapper, new SerializedActivity(activityTypeId, Collections.emptyMap()));
+        } catch (final NoSuchActivityTypeException ex) {
+            throw new AdaptationContractException(activityMapper.getClass().getCanonicalName() + ".deserializeActivity() returned an empty Optional for an activity type it has a schema for", ex);
+        } catch (final UnconstructableActivityInstanceException ex) {
+            throw new AdaptationContractException(activityMapper.getClass().getCanonicalName() + ".deserializeActivity() could not instantiate an activity with only default parameters", ex);
+        }
+
+        final Optional<SerializedActivity> defaultActivity = activityMapper.serializeActivity(activity);
+        if (defaultActivity.isEmpty()) throw new AdaptationContractException(activityMapper.getClass().getCanonicalName() + ".serializeActivity() returned an empty Optional for an activity type it previously deserialized");
+
+        return new ActivityType(activityTypeId, activitySchemas.get(activityTypeId), defaultActivity.get().getParameters());
     }
 
     @Override

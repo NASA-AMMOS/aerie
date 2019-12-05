@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -20,9 +21,13 @@ public final class Fixtures {
     public final Map<String, ActivityType> ACTIVITY_TYPES = Map.of(
         "BiteBanana", new ActivityType("BiteBanana", Map.of(
             "biteSize", ParameterSchema.REAL
+        ), Map.of(
+            "biteSize", SerializedParameter.of(1.0)
         )),
         "PeelBanana", new ActivityType("PeelBanana", Map.of(
             "peelDirection", ParameterSchema.STRING
+        ), Map.of(
+            "peelDirection", SerializedParameter.of("fromStem")
         )),
         "ParameterTest", new ActivityType("ParameterTest", Map.of(
             "a", ParameterSchema.REAL,
@@ -33,6 +38,15 @@ public final class Fixtures {
             "f", ParameterSchema.INT,
             "g", ParameterSchema.STRING,
             "h", ParameterSchema.STRING
+        ), Map.of(
+            "a", SerializedParameter.of(3.141),
+            "b", SerializedParameter.of(1.618f),
+            "c", SerializedParameter.of(16),
+            "d", SerializedParameter.of(32),
+            "e", SerializedParameter.of(64),
+            "f", SerializedParameter.of(128),
+            "g", SerializedParameter.of("g"),
+            "h", SerializedParameter.of("h")
         ))
     );
 
