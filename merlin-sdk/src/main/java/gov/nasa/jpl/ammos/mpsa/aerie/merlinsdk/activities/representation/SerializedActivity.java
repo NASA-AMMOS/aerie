@@ -4,6 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityTy
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ParameterType;
 
 import java.util.Map;
+import java.util.Objects;
 
 import static java.util.Collections.unmodifiableMap;
 
@@ -29,8 +30,8 @@ public final class SerializedActivity {
   private final Map<String, SerializedParameter> parameters;
 
   public SerializedActivity(final String typeName, final Map<String, SerializedParameter> parameters) {
-    this.typeName = typeName;
-    this.parameters = parameters;
+    this.typeName = Objects.requireNonNull(typeName);
+    this.parameters = Objects.requireNonNull(parameters);
   }
 
   /**
