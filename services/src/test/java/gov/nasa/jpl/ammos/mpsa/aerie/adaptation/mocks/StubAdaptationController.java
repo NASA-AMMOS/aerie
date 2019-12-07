@@ -98,17 +98,4 @@ public final class StubAdaptationController implements IAdaptationController {
 
         return EXISTENT_ACTIVITY;
     }
-
-    @Override
-    public Map<String, ParameterSchema> getActivityTypeParameters(final String adaptationId, final String activityTypeId) throws NoSuchAdaptationException, NoSuchActivityTypeException {
-        if (!Objects.equals(adaptationId, EXISTENT_ADAPTATION_ID)) {
-            throw new NoSuchAdaptationException(adaptationId);
-        }
-
-        if (!Objects.equals(activityTypeId, EXISTENT_ACTIVITY_ID)) {
-            throw new NoSuchActivityTypeException(adaptationId, activityTypeId);
-        }
-
-        return new HashMap<>(EXISTENT_ACTIVITY.parameters);
-    }
 }

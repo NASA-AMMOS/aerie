@@ -9,7 +9,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationExcep
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationContractException;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
@@ -237,55 +236,6 @@ public final class AdaptationControllerTest {
 
         // WHEN
         final Throwable thrown = catchThrowable(() -> controller.getActivityType(adaptationId, activityId));
-
-        // THEN
-        assertThat(thrown).isInstanceOf(NoSuchActivityTypeException.class);
-
-        final String exceptionAdaptationId = ((NoSuchActivityTypeException)thrown).getAdaptationId();
-        assertThat(exceptionAdaptationId).isEqualTo(adaptationId);
-
-        final String invalidActivityId = ((NoSuchActivityTypeException)thrown).getInvalidActivityTypeId();
-        assertThat(invalidActivityId).isEqualTo(activityId);
-    }
-
-    @Test
-    public void shouldGetActivityTypeParameters() throws NoSuchAdaptationException, NoSuchActivityTypeException, AdaptationContractException {
-        // GIVEN
-        final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
-        final String activityId = Fixtures.EXISTENT_ACTIVITY_TYPE_ID;
-        final Map<String, ParameterSchema> expectedParameters = fixtures.ACTIVITY_TYPES.get(activityId).parameters;
-
-        // WHEN
-        final Map<String, ParameterSchema> parameters = controller.getActivityTypeParameters(adaptationId, activityId);
-
-        // THEN
-        assertThat(parameters).isEqualTo(expectedParameters);
-    }
-
-    @Test
-    public void shouldNotGetActivityTypeParametersForNonexistentAdaptation() {
-        // GIVEN
-        final String adaptationId = Fixtures.NONEXISTENT_ADAPTATION_ID;
-        final String activityId = Fixtures.EXISTENT_ACTIVITY_TYPE_ID;
-
-        // WHEN
-        final Throwable thrown = catchThrowable(() -> controller.getActivityTypeParameters(adaptationId, activityId));
-
-        // THEN
-        assertThat(thrown).isInstanceOf(NoSuchAdaptationException.class);
-
-        final String invalidAdaptationId = ((NoSuchAdaptationException)thrown).getInvalidAdaptationId();
-        assertThat(invalidAdaptationId).isEqualTo(adaptationId);
-    }
-
-    @Test
-    public void shouldNotGetActivityTypeParametersForNonexistentActivityType() {
-        // GIVEN
-        final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
-        final String activityId = Fixtures.NONEXISTENT_ACTIVITY_TYPE_ID;
-
-        // WHEN
-        final Throwable thrown = catchThrowable(() -> controller.getActivityTypeParameters(adaptationId, activityId));
 
         // THEN
         assertThat(thrown).isInstanceOf(NoSuchActivityTypeException.class);

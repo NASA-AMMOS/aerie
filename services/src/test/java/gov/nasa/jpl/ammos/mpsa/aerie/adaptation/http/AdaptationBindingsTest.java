@@ -230,48 +230,6 @@ public final class AdaptationBindingsTest {
         assertThat(response.statusCode()).isEqualTo(HttpURLConnection.HTTP_NOT_FOUND);
     }
 
-    @Test
-    public void shouldGetActivityTypeParameters() throws IOException, InterruptedException {
-        // GIVEN
-        final String adaptationId = StubAdaptationController.EXISTENT_ADAPTATION_ID;
-        final String activityId = StubAdaptationController.EXISTENT_ACTIVITY_ID;
-        final JsonValue expectedResponse = ResponseSerializers.serializeParameterSchemas(StubAdaptationController.EXISTENT_ACTIVITY.parameters);
-
-        // WHEN
-        final HttpResponse<String> response = sendRequest("GET", "/adaptations/" + adaptationId + "/activities/" + activityId + "/parameters");
-
-        // THEN
-        assertThat(response.statusCode()).isEqualTo(HttpURLConnection.HTTP_OK);
-
-        final JsonValue responseJson = Json.createReader(new StringReader(response.body())).readValue();
-        assertThat(responseJson).isEqualTo(expectedResponse);
-    }
-
-    @Test
-    public void shouldNotGetActivityTypeParametersForNonexistentAdaptation() throws IOException, InterruptedException {
-        // GIVEN
-        final String adaptationId = StubAdaptationController.NONEXISTENT_ADAPTATION_ID;
-        final String activityId = StubAdaptationController.EXISTENT_ACTIVITY_ID;
-
-        // WHEN
-        final HttpResponse<String> response = sendRequest("GET", "/adaptations/" + adaptationId + "/activities/" + activityId + "/parameters");
-
-        // THEN
-        assertThat(response.statusCode()).isEqualTo(HttpURLConnection.HTTP_NOT_FOUND);
-    }
-
-    @Test
-    public void shouldNotGetActivityTypeParametersForNonexistentActivity() throws IOException, InterruptedException {
-        // GIVEN
-        final String adaptationId = StubAdaptationController.EXISTENT_ADAPTATION_ID;
-        final String activityId = StubAdaptationController.NONEXISTENT_ACTIVITY_ID;
-
-        // WHEN
-        final HttpResponse<String> response = sendRequest("GET", "/adaptations/" + adaptationId + "/activities/" + activityId + "/parameters");
-
-        // THEN
-        assertThat(response.statusCode()).isEqualTo(HttpURLConnection.HTTP_NOT_FOUND);
-    }
 
     private HttpResponse<String> sendRequest(final String method, final String path)
             throws IOException, InterruptedException

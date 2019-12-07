@@ -113,10 +113,6 @@ public class AdaptationController implements IAdaptationController {
         return new ActivityType(activityTypeId, activitySchemas.get(activityTypeId), defaultActivity.get().getParameters());
     }
 
-    @Override
-    public Map<String, ParameterSchema> getActivityTypeParameters(String adaptationId, String activityTypeId) throws NoSuchAdaptationException, NoSuchActivityTypeException, AdaptationContractException {
-        return getActivityType(adaptationId, activityTypeId).parameters;
-    }
 
     @Override
     public Activity<?> instantiateActivity(final String adaptationId, final SerializedActivity activityParameters)

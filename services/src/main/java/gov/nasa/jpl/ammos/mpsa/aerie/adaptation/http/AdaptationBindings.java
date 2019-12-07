@@ -47,9 +47,6 @@ public final class AdaptationBindings {
                         get(this::getActivityTypes);
                         path(":activityTypeId", () -> {
                             get(this::getActivityType);
-                            path("parameters", () -> {
-                               get(this::getActivityTypeParameters);
-                            });
                         });
                     });
                 });
@@ -133,23 +130,10 @@ public final class AdaptationBindings {
         final String adaptationId = ctx.pathParam("adaptationId");
         final String activityTypeId = ctx.pathParam("activityTypeId");
 
-        final ActivityType activityType = this.appController
-                .getActivityType(adaptationId, activityTypeId);
+        final ActivityType activityType = this.appController.getActivityType(adaptationId, activityTypeId);
 
         final JsonValue response = ResponseSerializers.serializeActivityType(activityType);
         ctx.result(response.toString()).contentType("application/json");
     }
 
-    private void getActivityTypeParameters(final Context ctx)
-        throws NoSuchAdaptationException, AdaptationContractException, NoSuchActivityTypeException
-    {
-        final String adaptationId = ctx.pathParam("adaptationId");
-        final String activityTypeId = ctx.pathParam("activityTypeId");
-
-        final Map<String, ParameterSchema> activityTypeParameters = this.appController
-                .getActivityTypeParameters(adaptationId, activityTypeId);
-
-        final JsonValue response = ResponseSerializers.serializeParameterSchemas(activityTypeParameters);
-        ctx.result(response.toString()).contentType("application/json");
-    }
 }
