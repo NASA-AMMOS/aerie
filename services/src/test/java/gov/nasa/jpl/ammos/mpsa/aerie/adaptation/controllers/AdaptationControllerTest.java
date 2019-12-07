@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.Fixtures;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
@@ -9,6 +10,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeExc
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationContractException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -291,5 +295,53 @@ public final class AdaptationControllerTest {
 
         final String invalidActivityId = ((NoSuchActivityTypeException)thrown).getInvalidActivityTypeId();
         assertThat(invalidActivityId).isEqualTo(activityId);
+    }
+
+    @Test
+    public void shouldInstantiateActivityInstance()
+        throws NoSuchActivityTypeException, NoSuchAdaptationException,
+        AdaptationContractException, UnconstructableActivityInstanceException
+    {
+        // GIVEN
+        final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
+        final SerializedActivity serializedActivity = new SerializedActivity(
+            "BiteBanana",
+            Map.of("biteSize", SerializedParameter.of(1.0)));
+
+        // WHEN
+        final Activity<?> activityInstance = controller.instantiateActivity(adaptationId, serializedActivity);
+
+        // THEN
+        assertThat(activityInstance).isNotNull();
+    }
+
+    @Test
+    public void shouldNotInstantiateActivityInstanceWithIncorrectParameterType() {
+        // GIVEN
+        final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
+        final SerializedActivity serializedActivity = new SerializedActivity(
+            "BiteBanana",
+            Map.of("biteSize", SerializedParameter.of("a string!?")));
+
+        // WHEN
+        final Throwable thrown = catchThrowable(() -> controller.instantiateActivity(adaptationId, serializedActivity));
+
+        // THEN
+        assertThat(thrown).isInstanceOf(UnconstructableActivityInstanceException.class);
+    }
+
+    @Test
+    public void shouldNotInstantiateActivityInstanceWithExtraParameter() {
+        // GIVEN
+        final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
+        final SerializedActivity serializedActivity = new SerializedActivity(
+            "BiteBanana",
+            Map.of("Nonexistent", SerializedParameter.of("")));
+
+        // WHEN
+        final Throwable thrown = catchThrowable(() -> controller.instantiateActivity(adaptationId, serializedActivity));
+
+        // THEN
+        assertThat(thrown).isInstanceOf(UnconstructableActivityInstanceException.class);
     }
 }
