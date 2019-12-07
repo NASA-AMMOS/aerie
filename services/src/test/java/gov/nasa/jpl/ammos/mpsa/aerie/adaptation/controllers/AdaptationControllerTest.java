@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.InvalidAdaptationJARException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.Fixtures;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
@@ -8,7 +7,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.MissingAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import org.apache.commons.lang3.tuple.Pair;
@@ -173,7 +171,7 @@ public final class AdaptationControllerTest {
     public void shouldGetActivityTypeList() throws NoSuchAdaptationException, MissingAdaptationException {
         // GIVEN
         final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
-        final Map<String, ActivityType> expectedTypes = AdaptationLoader.loadActivities(Fixtures.banananation);
+        final Map<String, ActivityType> expectedTypes = fixtures.ACTIVITY_TYPES;
 
         // WHEN
         final Map<String, ActivityType> typeList = controller.getActivityTypes(adaptationId);
@@ -202,7 +200,7 @@ public final class AdaptationControllerTest {
         // GIVEN
         final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
         final String activityId = Fixtures.EXISTENT_ACTIVITY_TYPE_ID;
-        final ActivityType expectedType = AdaptationLoader.loadActivities(Fixtures.banananation).get(activityId);
+        final ActivityType expectedType = fixtures.ACTIVITY_TYPES.get(activityId);
 
         // WHEN
         final ActivityType type = controller.getActivityType(adaptationId, activityId);
@@ -251,7 +249,7 @@ public final class AdaptationControllerTest {
         // GIVEN
         final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
         final String activityId = Fixtures.EXISTENT_ACTIVITY_TYPE_ID;
-        final Map<String, ParameterSchema> expectedParameters = AdaptationLoader.loadActivities(Fixtures.banananation).get(activityId).parameters;
+        final Map<String, ParameterSchema> expectedParameters = fixtures.ACTIVITY_TYPES.get(activityId).parameters;
 
         // WHEN
         final Map<String, ParameterSchema> parameters = controller.getActivityTypeParameters(adaptationId, activityId);

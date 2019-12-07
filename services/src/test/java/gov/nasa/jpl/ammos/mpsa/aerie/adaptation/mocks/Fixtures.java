@@ -1,8 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 
 import java.nio.file.Path;
+import java.util.Map;
 
 public final class Fixtures {
     public static final Path resourcesRoot = Path.of("src/test/resources");
@@ -13,6 +16,25 @@ public final class Fixtures {
     public static final String EXISTENT_ACTIVITY_TYPE_ID = "PeelBanana";
     public static final String NONEXISTENT_ADAPTATION_ID = "nonexistent adaptation";
     public static final String NONEXISTENT_ACTIVITY_TYPE_ID = "nonexistent activity type";
+
+    public final Map<String, ActivityType> ACTIVITY_TYPES = Map.of(
+        "BiteBanana", new ActivityType("BiteBanana", Map.of(
+            "biteSize", ParameterSchema.REAL
+        )),
+        "PeelBanana", new ActivityType("PeelBanana", Map.of(
+            "peelDirection", ParameterSchema.STRING
+        )),
+        "ParameterTest", new ActivityType("ParameterTest", Map.of(
+            "a", ParameterSchema.REAL,
+            "b", ParameterSchema.REAL,
+            "c", ParameterSchema.INT,
+            "d", ParameterSchema.INT,
+            "e", ParameterSchema.INT,
+            "f", ParameterSchema.INT,
+            "g", ParameterSchema.STRING,
+            "h", ParameterSchema.STRING
+        ))
+    );
 
     public Fixtures() {
         this.adaptationRepository = new MockAdaptationRepository();
