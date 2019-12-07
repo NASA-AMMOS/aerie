@@ -51,6 +51,23 @@ public final class SerializedActivity {
     return unmodifiableMap(this.parameters);
   }
 
+  // SAFETY: If equals is overridden, then hashCode must also be overridden.
+  @Override
+  public boolean equals(final Object o) {
+    if (!(o instanceof SerializedActivity)) return false;
+
+    final SerializedActivity other = (SerializedActivity)o;
+    return
+        (  Objects.equals(this.typeName, other.typeName)
+        && Objects.equals(this.parameters, other.parameters)
+        );
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.typeName, this.parameters);
+  }
+
   @Override
   public String toString() {
     return "SerializedActivity { typeName = " + this.typeName + ", parameters = " + this.parameters.toString() + " }";
