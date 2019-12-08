@@ -3,11 +3,14 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers.IAdaptationController;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationAccessException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationContractException;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.*;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import io.javalin.Javalin;
 import io.javalin.core.util.FileUtil;
 import io.javalin.http.Context;
@@ -17,9 +20,11 @@ import org.apache.commons.lang3.tuple.Pair;
 import javax.json.Json;
 import javax.json.JsonValue;
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -47,6 +52,9 @@ public final class AdaptationBindings {
                         get(this::getActivityTypes);
                         path(":activityTypeId", () -> {
                             get(this::getActivityType);
+                            path("validate", () -> {
+                                post(this::validateActivityParameters);
+                            });
                         });
                     });
                 });
@@ -55,15 +63,24 @@ public final class AdaptationBindings {
 
         javalin.exception(ValidationException.class, (ex, ctx) -> ctx
             .status(400)
-            .result(Json.createArrayBuilder(ex.getValidationErrors()).build().toString())
+            .result(ResponseSerializers.serializeValidationException(ex).toString())
+            .contentType("application/json")
+        ).exception(InvalidEntityException.class, (ex, ctx) -> ctx
+            .status(400)
+            .result(ResponseSerializers.serializeInvalidEntityException(ex).toString())
+            .contentType("application/json")
+        ).exception(UnconstructableActivityInstanceException.class, (ex, ctx) -> ctx
+            .status(400)
+            .result(ResponseSerializers.serializeUnconstructableActivityInstanceException(ex).toString())
             .contentType("application/json")
         ).exception(NoSuchAdaptationException.class, (ex, ctx) -> ctx
             .status(404)
         ).exception(NoSuchActivityTypeException.class, (ex, ctx) -> ctx
             .status(404)
         ).exception(AdaptationContractException.class, (ex, ctx) -> ctx
-            .result(Json.createObjectBuilder().add("message", ex.getMessage()).build().toString())
             .status(500)
+            .result(ResponseSerializers.serializeAdaptationContractException(ex).toString())
+            .contentType("application/json")
         ).exception(AdaptationAccessException.class, (ex, ctx) -> {
             System.err.println(ex.getMessage());
             ctx.status(500);
@@ -136,4 +153,28 @@ public final class AdaptationBindings {
         ctx.result(response.toString()).contentType("application/json");
     }
 
+    private void validateActivityParameters(final Context ctx)
+        throws InvalidEntityException, NoSuchAdaptationException, AdaptationContractException, NoSuchActivityTypeException,
+        UnconstructableActivityInstanceException
+    {
+        final String adaptationId = ctx.pathParam("adaptationId");
+        final String activityTypeId = ctx.pathParam("activityTypeId");
+
+        final JsonValue requestJson = Json.createReader(new StringReader(ctx.body())).readValue();
+        final Map<String, SerializedParameter> activityParameters = RequestDeserializers.deserializeActivityParameterMap(requestJson);
+        final SerializedActivity serializedActivity = new SerializedActivity(activityTypeId, activityParameters);
+
+        final Activity<?> activity = this.appController.instantiateActivity(adaptationId, serializedActivity);
+
+        final List<String> failures = activity.validateParameters();
+        if (failures == null) {
+            // TODO: The HTTP binding layer is a poor place to put knowledge about the adaptation contract.
+            //   Move this logic somewhere better.
+            throw new AdaptationContractException(activity.getClass().getName() + ".validateParameters() returned null");
+        }
+
+        final JsonValue response = ResponseSerializers.serializeFailureList(failures);
+
+        ctx.result(response.toString()).contentType("application/json");
+    }
 }

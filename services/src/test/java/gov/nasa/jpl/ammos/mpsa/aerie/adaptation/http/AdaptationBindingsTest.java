@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.StubAdaptationController;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import io.javalin.Javalin;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -162,7 +163,7 @@ public final class AdaptationBindingsTest {
     public void shouldGetActivityTypeList() throws IOException, InterruptedException {
         // GIVEN
         final String adaptationId = StubAdaptationController.EXISTENT_ADAPTATION_ID;
-        final String activityId = StubAdaptationController.EXISTENT_ACTIVITY_ID;
+        final String activityId = StubAdaptationController.EXISTENT_ACTIVITY_TYPE;
         final JsonValue expectedResponse = ResponseSerializers.serializeActivityTypes(Map.of(activityId, StubAdaptationController.EXISTENT_ACTIVITY));
 
         // WHEN
@@ -191,7 +192,7 @@ public final class AdaptationBindingsTest {
     public void shouldGetActivityTypeById() throws IOException, InterruptedException {
         // GIVEN
         final String adaptationId = StubAdaptationController.EXISTENT_ADAPTATION_ID;
-        final String activityId = StubAdaptationController.EXISTENT_ACTIVITY_ID;
+        final String activityId = StubAdaptationController.EXISTENT_ACTIVITY_TYPE;
         final JsonValue expectedResponse = ResponseSerializers.serializeActivityType(StubAdaptationController.EXISTENT_ACTIVITY);
 
         // WHEN
@@ -208,7 +209,7 @@ public final class AdaptationBindingsTest {
     public void shouldNotGetActivityTypeByIdForNonexistentAdaptation() throws IOException, InterruptedException {
         // GIVEN
         final String adaptationId = StubAdaptationController.NONEXISTENT_ADAPTATION_ID;
-        final String activityId = StubAdaptationController.EXISTENT_ACTIVITY_ID;
+        final String activityId = StubAdaptationController.EXISTENT_ACTIVITY_TYPE;
 
         // WHEN
         final HttpResponse<String> response = sendRequest("GET", "/adaptations/" + adaptationId + "/activities/" + activityId);
@@ -221,7 +222,7 @@ public final class AdaptationBindingsTest {
     public void shouldNotGetActivityTypeByIdForNonexistentActivityType() throws IOException, InterruptedException {
         // GIVEN
         final String adaptationId = StubAdaptationController.EXISTENT_ADAPTATION_ID;
-        final String activityId = StubAdaptationController.NONEXISTENT_ACTIVITY_ID;
+        final String activityId = StubAdaptationController.NONEXISTENT_ACTIVITY_TYPE;
 
         // WHEN
         final HttpResponse<String> response = sendRequest("GET", "/adaptations/" + adaptationId + "/activities/" + activityId);
@@ -230,6 +231,66 @@ public final class AdaptationBindingsTest {
         assertThat(response.statusCode()).isEqualTo(HttpURLConnection.HTTP_NOT_FOUND);
     }
 
+    @Test
+    public void shouldValidateValidActivityParameters() throws IOException, InterruptedException {
+        // GIVEN
+        final String adaptationId = StubAdaptationController.EXISTENT_ADAPTATION_ID;
+        final String activityId = StubAdaptationController.EXISTENT_ACTIVITY_TYPE;
+        final SerializedActivity activityParameters = StubAdaptationController.VALID_ACTIVITY_INSTANCE;
+
+        final JsonValue expectedResponse = ResponseSerializers.serializeFailureList(List.of());
+
+        // WHEN
+        final HttpResponse<String> response = sendRequest(
+            "POST",
+            "/adaptations/" + adaptationId + "/activities/" + activityId + "/validate",
+            ResponseSerializers.serializeActivityParameters(activityParameters.getParameters()));
+
+        // THEN
+        assertThat(response.statusCode()).isEqualTo(200);
+
+        final JsonValue responseJson = Json.createReader(new StringReader(response.body())).readValue();
+        assertThat(responseJson).isEqualTo(expectedResponse);
+    }
+
+    @Test
+    public void shouldRejectInvalidActivityParameters() throws IOException, InterruptedException {
+        // GIVEN
+        final String adaptationId = StubAdaptationController.EXISTENT_ADAPTATION_ID;
+        final String activityId = StubAdaptationController.EXISTENT_ACTIVITY_TYPE;
+        final SerializedActivity activityParameters = StubAdaptationController.INVALID_ACTIVITY_INSTANCE;
+
+        final JsonValue expectedResponse = ResponseSerializers.serializeFailureList(StubAdaptationController.INVALID_ACTIVITY_INSTANCE_FAILURES);
+
+        // WHEN
+        final HttpResponse<String> response = sendRequest(
+            "POST",
+            "/adaptations/" + adaptationId + "/activities/" + activityId + "/validate",
+            ResponseSerializers.serializeActivityParameters(activityParameters.getParameters()));
+
+        // THEN
+        assertThat(response.statusCode()).isEqualTo(200);
+
+        final JsonValue responseJson = Json.createReader(new StringReader(response.body())).readValue();
+        assertThat(responseJson).isEqualTo(expectedResponse);
+    }
+
+    @Test
+    public void shouldRejectUnconstructableActivityParameters() throws IOException, InterruptedException {
+        // GIVEN
+        final String adaptationId = StubAdaptationController.EXISTENT_ADAPTATION_ID;
+        final String activityId = StubAdaptationController.EXISTENT_ACTIVITY_TYPE;
+        final SerializedActivity activityParameters = StubAdaptationController.UNCONSTRUCTABLE_ACTIVITY_INSTANCE;
+
+        // WHEN
+        final HttpResponse<String> response = sendRequest(
+            "POST",
+            "/adaptations/" + adaptationId + "/activities/" + activityId + "/validate",
+            ResponseSerializers.serializeActivityParameters(activityParameters.getParameters()));
+
+        // THEN
+        assertThat(response.statusCode()).isEqualTo(400);
+    }
 
     private HttpResponse<String> sendRequest(final String method, final String path)
             throws IOException, InterruptedException
@@ -244,6 +305,14 @@ public final class AdaptationBindingsTest {
         final HttpRequest.BodyPublisher bodyPublisher = ofMimeMultipartData(body, boundary);
 
         return sendRequest(method, path, bodyPublisher, Optional.of(boundary));
+    }
+
+    private HttpResponse<String> sendRequest(final String method, final String path, final JsonValue body)
+            throws IOException, InterruptedException
+    {
+        final HttpRequest.BodyPublisher bodyPublisher = HttpRequest.BodyPublishers.ofString(body.toString());
+
+        return sendRequest(method, path, bodyPublisher, Optional.empty());
     }
 
     private HttpResponse<String> sendRequest(final String method, final String path, final HttpRequest.BodyPublisher bodyPublisher, final Optional<String> boundary)

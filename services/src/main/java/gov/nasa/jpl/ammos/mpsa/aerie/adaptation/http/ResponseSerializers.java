@@ -1,5 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationContractException;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
@@ -86,9 +89,42 @@ public class ResponseSerializers {
     return builder.build();
   }
 
+  public static JsonValue serializeFailureList(final List<String> failures) {
+    return Json.createArrayBuilder(failures).build();
+  }
+
   public static JsonValue serializedCreatedId(final String entityId) {
     return Json.createObjectBuilder()
         .add("id", entityId)
+        .build();
+  }
+
+  public static JsonValue serializeInvalidEntityException(final InvalidEntityException ex) {
+    // TODO: Improve diagnostic information
+    return Json.createObjectBuilder()
+        .add("message", "invalid json")
+        .build();
+  }
+
+  public static JsonValue serializeValidationException(final ValidationException ex) {
+    // TODO: Improve diagnostic information
+    return Json.createObjectBuilder()
+        .add("message", "invalid entity")
+        .add("failures", Json.createArrayBuilder(ex.getValidationErrors()))
+        .build();
+  }
+
+  public static JsonValue serializeAdaptationContractException(final AdaptationContractException ex) {
+    // TODO: Improve diagnostic information
+    return Json.createObjectBuilder()
+        .add("message", ex.getMessage())
+        .build();
+  }
+
+  public static JsonValue serializeUnconstructableActivityInstanceException(final UnconstructableActivityInstanceException ex) {
+    // TODO: Improve diagnostic information
+    return Json.createObjectBuilder()
+        .add("message", ex.getMessage())
         .build();
   }
 

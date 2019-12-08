@@ -3,11 +3,15 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers.IAdaptationController;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
@@ -20,11 +24,27 @@ public final class StubAdaptationController implements IAdaptationController {
     public static final Map<Object, Object> VALID_NEW_ADAPTATION;
     public static final Map<Object, Object> INVALID_NEW_ADAPTATION;
 
-    public static final String EXISTENT_ACTIVITY_ID = "activity";
-    public static final String NONEXISTENT_ACTIVITY_ID = "no-activity";
+    public static final String EXISTENT_ACTIVITY_TYPE = "activity";
+    public static final String NONEXISTENT_ACTIVITY_TYPE = "no-activity";
     public static final ActivityType EXISTENT_ACTIVITY = new ActivityType(
-        EXISTENT_ACTIVITY_ID,
-        Map.of("Param", ParameterSchema.STRING));
+        EXISTENT_ACTIVITY_TYPE,
+        Map.of("Param", ParameterSchema.STRING),
+        Map.of("Param", SerializedParameter.of("Default")));
+
+    public static final SerializedActivity VALID_ACTIVITY_INSTANCE = new SerializedActivity(
+        EXISTENT_ACTIVITY_TYPE,
+        Map.of("Param", SerializedParameter.of("Value")));
+    public static final SerializedActivity INVALID_ACTIVITY_INSTANCE = new SerializedActivity(
+        EXISTENT_ACTIVITY_TYPE,
+        Map.of("Param", SerializedParameter.of("")));
+    public static final SerializedActivity UNCONSTRUCTABLE_ACTIVITY_INSTANCE = new SerializedActivity(
+        EXISTENT_ACTIVITY_TYPE,
+        Map.of("Nonexistent", SerializedParameter.of("Value")));
+    public static final SerializedActivity NONEXISTENT_ACTIVITY_INSTANCE = new SerializedActivity(
+        NONEXISTENT_ACTIVITY_TYPE,
+        Map.of());
+
+    public static final List<String> INVALID_ACTIVITY_INSTANCE_FAILURES = List.of("just wrong");
 
     static {
         VALID_NEW_ADAPTATION = new HashMap<>();
@@ -83,19 +103,43 @@ public final class StubAdaptationController implements IAdaptationController {
             throw new NoSuchAdaptationException(adaptationId);
         }
 
-        return Map.of(EXISTENT_ACTIVITY_ID, EXISTENT_ACTIVITY);
+        return Map.of(EXISTENT_ACTIVITY_TYPE, EXISTENT_ACTIVITY);
     }
 
     @Override
-    public ActivityType getActivityType(final String adaptationId, final String activityTypeId) throws NoSuchAdaptationException, NoSuchActivityTypeException {
+    public ActivityType getActivityType(final String adaptationId, final String activityType) throws NoSuchAdaptationException, NoSuchActivityTypeException {
         if (!Objects.equals(adaptationId, EXISTENT_ADAPTATION_ID)) {
             throw new NoSuchAdaptationException(adaptationId);
         }
 
-        if (!Objects.equals(activityTypeId, EXISTENT_ACTIVITY_ID)) {
-            throw new NoSuchActivityTypeException(adaptationId, activityTypeId);
+        if (!Objects.equals(activityType, EXISTENT_ACTIVITY_TYPE)) {
+            throw new NoSuchActivityTypeException(adaptationId, activityType);
         }
 
         return EXISTENT_ACTIVITY;
+    }
+
+    @Override
+    public Activity<?> instantiateActivity(final String adaptationId, final SerializedActivity activityParameters)
+        throws NoSuchAdaptationException, NoSuchActivityTypeException, UnconstructableActivityInstanceException
+    {
+        if (!Objects.equals(adaptationId, EXISTENT_ADAPTATION_ID)) {
+            throw new NoSuchAdaptationException(adaptationId);
+        }
+
+        if (Objects.equals(activityParameters, NONEXISTENT_ACTIVITY_INSTANCE)) {
+            throw new NoSuchActivityTypeException(adaptationId, activityParameters.getTypeName());
+        } else if (Objects.equals(activityParameters, UNCONSTRUCTABLE_ACTIVITY_INSTANCE)) {
+            throw new UnconstructableActivityInstanceException("Unconstructable activity instance");
+        } else if (Objects.equals(activityParameters, INVALID_ACTIVITY_INSTANCE)) {
+            return new Activity<>() {
+                @Override
+                public List<String> validateParameters() {
+                    return INVALID_ACTIVITY_INSTANCE_FAILURES;
+                }
+            };
+        }
+
+        return new Activity<>() {};
     }
 }
