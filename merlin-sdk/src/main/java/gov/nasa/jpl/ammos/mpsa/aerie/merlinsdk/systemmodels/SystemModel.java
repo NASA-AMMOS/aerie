@@ -3,7 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 
-public class SystemModel {
+public interface SystemModel {
 
     /**
      * This method should be implemented by the System Modeler, who is an expert in this system
