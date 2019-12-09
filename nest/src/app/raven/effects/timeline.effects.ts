@@ -390,13 +390,10 @@ export class TimelineEffects {
       let url = dataSourceUrl.substring(0, dataSourceUrl.indexOf('?'));
 
       if (!dataSourceUrl.includes('tes_url=')) {
+        url = url.replace('generic-mongodb', 'fs');
         url = `${url}?__document_id=${point.id}`;
       } else {
-        const queryOptions = dataSourceUrl.substring(
-          dataSourceUrl.indexOf('?') + 1,
-          dataSourceUrl.length,
-        );
-        url = `${url}?${queryOptions}__document_id=${point.id}`;
+        url = `${dataSourceUrl}__document_id=${encodeURI(point.id)}`;
       }
       console.log('url: ' + url);
 
@@ -455,7 +452,6 @@ export class TimelineEffects {
           data = JSON.stringify(serverData);
         }
         if (point.pointStatus === 'added') {
-          url = url.substring(0, url.indexOf('?'));
           actions.push(
             this.http
               .post(url, data, {
