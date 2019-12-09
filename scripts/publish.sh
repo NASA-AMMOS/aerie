@@ -7,7 +7,7 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -52,7 +52,7 @@ usage() {
 help_message() {
   cat <<- _EOF_
   $PROGNAME ver. $VERSION
-  Build projects which were changed 
+  Build projects which were changed
 
   $(usage)
 
@@ -60,9 +60,9 @@ help_message() {
   -h, --help  Display this help message and exit.
   -b, --branch name  Branch name
     Where 'name' is the name of the branch to use when cloning.
-  -c, --commit hash Commit hash 
+  -c, --commit hash Commit hash
     Where 'hash' the commit hash to check.
-  -t, --tag name Tag name 
+  -t, --tag name Tag name
     Where 'name' is a Docker tag.
 
 _EOF_
@@ -126,24 +126,36 @@ mvn -B -s settings.xml deploy -DskipTests
 [ $? -ne 0 ] && error_exit "mvn deploy failed"
 cd $root
 
-for d in $changed
-do
-  if [ -d $d ]; then
-    cd $d
-    tag_name_base="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie"
+# Publish Docker images for the Aerie services.
+# We don't check $changed here because these images bundle their dependencies,
+# and we don't have a way from this script to check if any of the dependencies
+# changed even if the codebase of the services didn't.
+(
+  export tag_name_base="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie"
 
-    if [ -f Dockerfile ]; then
-      tag_name="$tag_name_base/$d:$tag_docker"
-      echo "Publishing $tag_name to Artifactory"
-      docker push "$tag_name"
-      [ $? -ne 0 ] && error_exit "docker push failed for $tag_name"
-    fi
-    cd $root
+  (
+    cd services/
 
-  fi
-done
+    d=adaptation
+    tag_name="$tag_name_base/$d:$tag_docker"
+
+    echo "Publishing $tag_name to Artifactory"
+    docker push "$tag_name"
+    [ $? -ne 0 ] && error_exit "docker push failed for $tag_name"
+  )
+
+  (
+    cd services/
+
+    d=plan
+    tag_name="$tag_name_base/$d:$tag_docker"
+
+    echo "Publishing $tag_name to Artifactory"
+    docker push "$tag_name"
+    [ $? -ne 0 ] && error_exit "docker push failed for $tag_name"
+  )
+)
 
 docker logout cae-artifactory.jpl.nasa.gov:16001
 
 graceful_exit
-

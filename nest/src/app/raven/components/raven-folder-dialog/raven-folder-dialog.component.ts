@@ -65,7 +65,7 @@ export class RavenFolderDialogComponent implements OnDestroy {
     this.dialogRef.close({
       folder: {
         name: this.name.value,
-        url: this.data.source.id,
+        url: this.data.source.url,
       } as RavenExpandableSource,
       folderAdd: true,
     });

@@ -7,7 +7,7 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -30,7 +30,7 @@ error_exit() {
 
 graceful_exit() {
   clean_up
-  exit
+  exit 0
 }
 
 signal_exit() { # Handle trapped signals
@@ -52,7 +52,7 @@ usage() {
 help_message() {
   cat <<- _EOF_
   $PROGNAME ver. $VERSION
-  Build projects which were changed 
+  Build projects which were changed
 
   $(usage)
 
@@ -60,9 +60,9 @@ help_message() {
   -h, --help  Display this help message and exit.
   -b, --branch name  Branch name
     Where 'name' is the name of the branch to use when cloning.
-  -c, --commit hash Commit hash 
+  -c, --commit hash Commit hash
     Where 'hash' the commit hash to check.
-  -t, --tag name Tag name 
+  -t, --tag name Tag name
     Where 'name' is a Docker tag.
 
 _EOF_
@@ -138,35 +138,32 @@ if echo "$changed" | grep --quiet "\(nest\)"; then
   cd $root
 fi
 
-if echo "$changed" | grep --quiet "\(merlin-ui\)"; then
-  printf "\nBuilding merlin-ui...\n\n"
-  cd merlin-ui
+# Build Docker images for the Aerie services.
+# We don't check $changed here because these images bundle their dependencies,
+# and we don't have a way from this script to check if any of the dependencies
+# changed even if the codebase of the services didn't.
+{
+  (
+    cd services/
 
-  npx yarn
-  [ $? -ne 0 ] && error_exit "yarn"
-
-  npx yarn test
-  [ $? -ne 0 ] && error_exit "yarn test failed"
-
-  npx yarn build --prod
-  [ $? -ne 0 ] && error_exit "yarn build --prod failed"
-
-  cd $root
-fi
-
-for d in $changed
-do
-  if [ -d "$d" ]; then
+    d=adaptation
     tag_name="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/$d:$tag_docker"
-    cd $d
-    if [ -f Dockerfile ]; then
-        printf "\nBuilding $d Docker container: $tag_name...\n\n"
-        docker build -t "$tag_name" --rm .
-        [ $? -ne 0 ] && error_exit "Docker build failed for $tag_name"
-    fi
-    cd $root
-  fi
-done
+
+    printf "\nBuilding $d Docker container: $tag_name...\n\n"
+    docker build -t "$tag_name" -f deploy/$d.Dockerfile --rm .
+    [ $? -ne 0 ] && error_exit "Docker build failed for $tag_name"
+  )
+
+  (
+    cd services/
+
+    d=plan
+    tag_name="cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie/$d:$tag_docker"
+
+    printf "\nBuilding $d Docker container: $tag_name...\n\n"
+    docker build -t "$tag_name" -f deploy/$d.Dockerfile --rm .
+    [ $? -ne 0 ] && error_exit "Docker build failed for $tag_name"
+  )
+}
 
 graceful_exit
-

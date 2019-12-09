@@ -13,9 +13,11 @@ import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.Element;
+import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Set;
 
 @SupportedAnnotationTypes({
@@ -28,6 +30,9 @@ public final class ActivityProcessor extends AbstractProcessor {
   private TypeInfoMaker infoMaker = null;
   private MapperMaker mapperMaker = null;
   private final JsonFactory jsonFactory = new JsonFactory();
+
+  // The set of the names of all activity types seen so far.
+  private final Set<String> activityTypesFound = new HashSet<>();
 
   @Override
   public void init(final ProcessingEnvironment processingEnv) {
@@ -85,7 +90,13 @@ public final class ActivityProcessor extends AbstractProcessor {
     // Collect any parameter types produced in the previous round.
     for (final Element element : roundEnv.getElementsAnnotatedWith(ParameterType.class)) {
       // Extract information about this parameter type.
-      final ParameterTypeInfo parameterTypeInfo = this.infoMaker.getParameterInfo(element);
+      final ParameterTypeInfo parameterTypeInfo;
+      try {
+        parameterTypeInfo = this.infoMaker.getParameterInfo(element);
+      } catch (final ParameterTypeException ex) {
+        this.processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, ex.getMessage(), ex.getRelatedElement());
+        continue;
+      }
 
       // TODO: Generate a mapper for this parameter type.
     }
@@ -93,7 +104,24 @@ public final class ActivityProcessor extends AbstractProcessor {
     // Collect any activity types produced in the previous round.
     for (final Element element : roundEnv.getElementsAnnotatedWith(ActivityType.class)) {
       // Extract information about this activity type.
-      final ActivityTypeInfo activityTypeInfo = this.infoMaker.getActivityInfo(element);
+      final ActivityTypeInfo activityTypeInfo;
+      try {
+        activityTypeInfo = this.infoMaker.getActivityInfo(element);
+      } catch (final ParameterTypeException ex) {
+        this.processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, ex.getMessage(), ex.getRelatedElement());
+        continue;
+      }
+
+      // If this activity type's name collides with another's, report that and bail.
+      if (this.activityTypesFound.contains(activityTypeInfo.name)) {
+        this.processingEnv.getMessager().printMessage(
+            Diagnostic.Kind.ERROR,
+            "Multiple activity types found with name `" + activityTypeInfo.name + "`",
+            activityTypeInfo.javaType.asElement());
+        continue;
+      } else {
+        this.activityTypesFound.add(activityTypeInfo.name);
+      }
 
       // Synthesize a class for serializing and de-serializing this activity type.
       {
@@ -101,7 +129,11 @@ public final class ActivityProcessor extends AbstractProcessor {
         try {
           file.writeTo(this.processingEnv.getFiler());
         } catch (final IOException e) {
-          throw new RuntimeException("Unable to open file to generate class `" + file.packageName + "." + file.typeSpec.name + "`");
+          this.processingEnv.getMessager().printMessage(
+            Diagnostic.Kind.ERROR,
+            "Unable to open file to generate class `" + file.packageName + "." + file.typeSpec.name + "` -- does it already exist?",
+            activityTypeInfo.javaType.asElement());
+          continue;
         }
       }
 
@@ -115,7 +147,11 @@ public final class ActivityProcessor extends AbstractProcessor {
         );
         writeActivityMetadata(resourceFile, activityTypeInfo);
       } catch (final IOException e) {
-        throw new RuntimeException("Unable to write activity metadata for activity `" + activityTypeInfo.name + "`");
+        this.processingEnv.getMessager().printMessage(
+            Diagnostic.Kind.ERROR,
+            "Unable to write activity metadata for activity `" + activityTypeInfo.name + "` -- does it already exist?",
+            activityTypeInfo.javaType.asElement());
+        continue;
       }
     }
 

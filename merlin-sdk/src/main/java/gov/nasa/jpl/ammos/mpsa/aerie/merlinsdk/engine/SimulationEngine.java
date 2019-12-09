@@ -13,11 +13,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+
 /**
  * This class contains the core event loop of a simulation in which activities
  * are dequeued from a time-ordered priority queue and have their effect models
@@ -38,8 +38,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
  * - activity instances and their owning jobs - parent activities and their child activities
  * - activities and their durations (in simulation time)
  * - activities and their listeners (other activities blocking on the key's completion)
- * 
- * @param <T> the type of the adapter-provided state index structure
  */
 public class SimulationEngine {
 
@@ -88,6 +86,20 @@ public class SimulationEngine {
     private ExecutorService threadPool = Executors.newCachedThreadPool();
 
     /**
+     * How often to call the sampling hook during simulation
+     *
+     * Defaults to never.
+     */
+    private Duration samplingPeriod = Duration.fromSeconds(0);
+
+    /**
+     * The sampling hook to call every sampling period
+     *
+     * Defaults to a no-op hook.
+     */
+    private Runnable samplingHook = () -> {};
+
+    /**
      * Initializes the simulation engine
      * 
      * @param simulationStartTime
@@ -97,7 +109,7 @@ public class SimulationEngine {
     public SimulationEngine(Time simulationStartTime, List<ActivityJob<?>> activityJobs,
         StateContainer stateContainer) {
         this.stateContainer = stateContainer;
-        
+
         registerStates(stateContainer.getStateList());
 
         this.currentSimulationTime = simulationStartTime;
@@ -113,6 +125,19 @@ public class SimulationEngine {
 
     }
 
+    public void setSamplingHook(final Duration d, final Runnable samplingHook) {
+        if (samplingHook == null || d.lessThanOrEqualTo(Duration.fromSeconds(0))) {
+            this.samplingPeriod = Duration.fromSeconds(0);
+            this.samplingHook = () -> {};
+        } else {
+            if (this.samplingPeriod.greaterThan(Duration.fromSeconds(0))) {
+                System.err.println("[WARNING] Overriding existing sampling hook");
+            }
+            this.samplingPeriod = d;
+            this.samplingHook = samplingHook;
+        }
+    }
+
     /**
      * Performs the main event-loop of linear simulation.
      * 
@@ -121,9 +146,24 @@ public class SimulationEngine {
     public void simulate() {
         this.engineThread = Thread.currentThread();
 
+        Time nextSampleTime = this.currentSimulationTime;
+
+        // Run until we've handled all outstanding activity events.
         while (!this.pendingEventQueue.isEmpty()) {
-            ActivityJob<?> job = pendingEventQueue.remove();
-            this.currentSimulationTime = job.getEventTime();
+            final ActivityJob<?> job = pendingEventQueue.remove();
+            final Time eventTime = job.getEventTime();
+
+            // Handle all of the sampling events that occur before the next activity event.
+            if (this.samplingPeriod.greaterThan(Duration.fromSeconds(0))) {
+                while (nextSampleTime.lessThan(eventTime)) {
+                    this.currentSimulationTime = nextSampleTime;
+                    nextSampleTime = nextSampleTime.add(this.samplingPeriod);
+
+                    this.samplingHook.run();
+                }
+            }
+
+            this.currentSimulationTime = eventTime;
             this.executeActivity(job);
         }
     }

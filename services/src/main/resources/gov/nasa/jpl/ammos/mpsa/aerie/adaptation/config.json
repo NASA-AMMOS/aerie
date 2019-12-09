@@ -1,0 +1,6 @@
+{
+    "HTTP_PORT": 27182,
+    "MONGO_URI": "mongodb://adaptation_mongo:27020",
+    "MONGO_DATABASE": "adaptation-service",
+    "MONGO_ADAPTATION_COLLECTION": "adaptations"
+}

@@ -9,14 +9,12 @@
     <version>1.0-SNAPSHOT</version>
 
     <modules>
-        <module>adaptation</module>
-        <module>aerie-sdk</module>
         <module>apgen-parser</module>
         <module>banananation</module>
         <module>merlin-cli</module>
         <module>merlin-sdk</module>
-        <module>plan</module>
         <module>schemas</module>
+        <module>services</module>
         <module>merlin-multimission-models</module>
     </modules>
 

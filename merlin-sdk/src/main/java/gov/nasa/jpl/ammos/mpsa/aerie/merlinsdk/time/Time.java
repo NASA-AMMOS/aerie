@@ -79,6 +79,12 @@ public class Time implements Comparable<Time>, ConvertableFromString {
     private static final int NANOSECONDS_PER_TIC = 10;
 
     public static final Time MAX_TIME = new Time(Long.MAX_VALUE);
+    //AERIE-MODIFICATION:
+    /**
+     * the minimum representable time; compares less than all other times
+     */
+    public static final Time MIN_TIME = new Time(Long.MIN_VALUE);
+
 
     // Time regex
     public static final String TIME_REGEX = "(?<year>\\d+)-(?<DOY>\\d+)T(?<hours>\\d+):(?<minutes>\\d+):(?<seconds>\\d+)\\.?(?<subseconds>\\d+)?";
