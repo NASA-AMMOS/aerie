@@ -395,7 +395,6 @@ export class TimelineEffects {
       } else {
         url = `${dataSourceUrl}__document_id=${encodeURI(point.id)}`;
       }
-      console.log('url: ' + url);
 
       if (point.pointStatus === 'deleted') {
         actions.push(
