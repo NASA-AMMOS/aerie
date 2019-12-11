@@ -26,6 +26,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 class MapperMaker {
@@ -316,7 +317,11 @@ class MapperMaker {
         final var parameterTypeReference = entry.getValue();
 
         if (parameterTypeReference.isPrimitive) {
-          blockBuilder.addStatement("$L.put($S, $T.of($L.$L))", parametersVarName, parameterName, SerializedParameter.class, activityVarName, parameterName);
+          if (Objects.equals(parameterTypeReference.typeName, "char")) {
+            blockBuilder.addStatement("$L.put($S, $T.of(Character.toString($L.$L)))", parametersVarName, parameterName, SerializedParameter.class, activityVarName, parameterName);
+          } else {
+            blockBuilder.addStatement("$L.put($S, $T.of($L.$L))", parametersVarName, parameterName, SerializedParameter.class, activityVarName, parameterName);
+          }
         } else {
           // TODO: handle non-primitive parameters
           throw new RuntimeException("Can't handle non-primitive parameters yet");

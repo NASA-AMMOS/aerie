@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.InvalidAdaptationJARException;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.Fixtures;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
@@ -8,9 +8,10 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
-import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.MissingAdaptationException;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationContractException;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -170,10 +171,10 @@ public final class AdaptationControllerTest {
     }
 
     @Test
-    public void shouldGetActivityTypeList() throws NoSuchAdaptationException, MissingAdaptationException {
+    public void shouldGetActivityTypeList() throws NoSuchAdaptationException, AdaptationContractException {
         // GIVEN
         final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
-        final Map<String, ActivityType> expectedTypes = AdaptationLoader.loadActivities(Fixtures.banananation);
+        final Map<String, ActivityType> expectedTypes = fixtures.ACTIVITY_TYPES;
 
         // WHEN
         final Map<String, ActivityType> typeList = controller.getActivityTypes(adaptationId);
@@ -198,11 +199,11 @@ public final class AdaptationControllerTest {
     }
 
     @Test
-    public void shouldGetActivityType() throws NoSuchAdaptationException, NoSuchActivityTypeException, MissingAdaptationException {
+    public void shouldGetActivityType() throws NoSuchAdaptationException, NoSuchActivityTypeException, AdaptationContractException {
         // GIVEN
         final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
         final String activityId = Fixtures.EXISTENT_ACTIVITY_TYPE_ID;
-        final ActivityType expectedType = AdaptationLoader.loadActivities(Fixtures.banananation).get(activityId);
+        final ActivityType expectedType = fixtures.ACTIVITY_TYPES.get(activityId);
 
         // WHEN
         final ActivityType type = controller.getActivityType(adaptationId, activityId);
@@ -247,51 +248,50 @@ public final class AdaptationControllerTest {
     }
 
     @Test
-    public void shouldGetActivityTypeParameters() throws NoSuchAdaptationException, NoSuchActivityTypeException, MissingAdaptationException {
+    public void shouldInstantiateActivityInstance()
+        throws NoSuchActivityTypeException, NoSuchAdaptationException,
+        AdaptationContractException, UnconstructableActivityInstanceException
+    {
         // GIVEN
         final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
-        final String activityId = Fixtures.EXISTENT_ACTIVITY_TYPE_ID;
-        final Map<String, ParameterSchema> expectedParameters = AdaptationLoader.loadActivities(Fixtures.banananation).get(activityId).parameters;
+        final SerializedActivity serializedActivity = new SerializedActivity(
+            "BiteBanana",
+            Map.of("biteSize", SerializedParameter.of(1.0)));
 
         // WHEN
-        final Map<String, ParameterSchema> parameters = controller.getActivityTypeParameters(adaptationId, activityId);
+        final Activity<?> activityInstance = controller.instantiateActivity(adaptationId, serializedActivity);
 
         // THEN
-        assertThat(parameters).isEqualTo(expectedParameters);
+        assertThat(activityInstance).isNotNull();
     }
 
     @Test
-    public void shouldNotGetActivityTypeParametersForNonexistentAdaptation() {
+    public void shouldNotInstantiateActivityInstanceWithIncorrectParameterType() {
         // GIVEN
-        final String adaptationId = Fixtures.NONEXISTENT_ADAPTATION_ID;
-        final String activityId = Fixtures.EXISTENT_ACTIVITY_TYPE_ID;
+        final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
+        final SerializedActivity serializedActivity = new SerializedActivity(
+            "BiteBanana",
+            Map.of("biteSize", SerializedParameter.of("a string!?")));
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> controller.getActivityTypeParameters(adaptationId, activityId));
+        final Throwable thrown = catchThrowable(() -> controller.instantiateActivity(adaptationId, serializedActivity));
 
         // THEN
-        assertThat(thrown).isInstanceOf(NoSuchAdaptationException.class);
-
-        final String invalidAdaptationId = ((NoSuchAdaptationException)thrown).getInvalidAdaptationId();
-        assertThat(invalidAdaptationId).isEqualTo(adaptationId);
+        assertThat(thrown).isInstanceOf(UnconstructableActivityInstanceException.class);
     }
 
     @Test
-    public void shouldNotGetActivityTypeParametersForNonexistentActivityType() {
+    public void shouldNotInstantiateActivityInstanceWithExtraParameter() {
         // GIVEN
         final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
-        final String activityId = Fixtures.NONEXISTENT_ACTIVITY_TYPE_ID;
+        final SerializedActivity serializedActivity = new SerializedActivity(
+            "BiteBanana",
+            Map.of("Nonexistent", SerializedParameter.of("")));
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> controller.getActivityTypeParameters(adaptationId, activityId));
+        final Throwable thrown = catchThrowable(() -> controller.instantiateActivity(adaptationId, serializedActivity));
 
         // THEN
-        assertThat(thrown).isInstanceOf(NoSuchActivityTypeException.class);
-
-        final String exceptionAdaptationId = ((NoSuchActivityTypeException)thrown).getAdaptationId();
-        assertThat(exceptionAdaptationId).isEqualTo(adaptationId);
-
-        final String invalidActivityId = ((NoSuchActivityTypeException)thrown).getInvalidActivityTypeId();
-        assertThat(invalidActivityId).isEqualTo(activityId);
+        assertThat(thrown).isInstanceOf(UnconstructableActivityInstanceException.class);
     }
 }
