@@ -77,6 +77,7 @@ export function toSource(
     name: mSource.name,
     openable: false,
     parentId,
+    pathInFile: '',
     permissions: '',
     pinnable: true,
     pinned: false,
@@ -120,11 +121,20 @@ export function toRavenSources(
   sources: MpsServerSource[],
   tree: StringTMap<RavenSource> | null,
 ): RavenSource[] {
+  console.log('in toRavenSources');
   if (sources) {
     return sources.map((source: MpsServerSource) => {
       const ravenSource = toSource(parentId, isServer, source);
 
       if (tree) {
+        const parentPathInFile = tree[parentId].pathInFile;
+        ravenSource.pathInFile =
+          tree[parentId].type === 'file'
+            ? ravenSource.name
+            : parentPathInFile.length > 0
+            ? `${parentPathInFile}/${ravenSource.name}`
+            : '';
+console.log('ravenSource.pathInFile: ' + ravenSource.pathInFile);
         const currentSource = tree[ravenSource.id];
         // Use current source if source is the same.
         if (
