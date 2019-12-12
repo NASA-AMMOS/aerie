@@ -121,7 +121,6 @@ export function toRavenSources(
   sources: MpsServerSource[],
   tree: StringTMap<RavenSource> | null,
 ): RavenSource[] {
-  console.log('in toRavenSources');
   if (sources) {
     return sources.map((source: MpsServerSource) => {
       const ravenSource = toSource(parentId, isServer, source);

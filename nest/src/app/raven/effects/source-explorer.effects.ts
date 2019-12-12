@@ -486,13 +486,12 @@ export class SourceExplorerEffects {
     this.actions.pipe(
       ofType(SourceExplorerActions.expandEvent),
       withLatestFrom(this.store),
-      map(
-        ([action, state]) =>
-          state.raven.sourceExplorer.treeBySourceId[action.sourceId],
-      ),
-      switchMap(source =>
-        concat(
-          ...this.expand(source),
+      map(([action, state]) => ({ action, state })),
+      switchMap(({ action, state }) => {
+        const source =
+          state.raven.sourceExplorer.treeBySourceId[action.sourceId];
+        return concat(
+          ...this.expand(source, state.raven.sourceExplorer.treeBySourceId),
           of(
             SourceExplorerActions.updateSourceExplorer({
               update: { fetchPending: false },
@@ -523,8 +522,8 @@ export class SourceExplorerEffects {
               }),
             ];
           }),
-        ),
-      ),
+        );
+      }),
     ),
   );
 
@@ -1191,9 +1190,11 @@ export class SourceExplorerEffects {
   /**
    * Helper. Returns a stream of actions that need to occur when expanding a source explorer source.
    */
-  expand(source: RavenSource): Observable<Action>[] {
+  expand(
+    source: RavenSource,
+    treeBySourceId: StringTMap<RavenSource> | null,
+  ): Observable<Action>[] {
     const actions: Observable<Action>[] = [];
-
     if (source) {
       if (source.childIds && !source.childIds.length) {
         if (source.content) {
@@ -1201,14 +1202,19 @@ export class SourceExplorerEffects {
             of(
               SourceExplorerActions.newSources({
                 sourceId: source.id,
-                sources: toRavenSources(source.id, false, source.content, null),
+                sources: toRavenSources(
+                  source.id,
+                  false,
+                  source.content,
+                  treeBySourceId,
+                ),
               }),
             ),
           );
         } else {
           actions.push(
             this.mpsServerService
-              .fetchNewSources(source.url, source.id, false, null)
+              .fetchNewSources(source.url, source.id, false, treeBySourceId)
               .pipe(
                 concatMap((sources: RavenSource[]) => [
                   SourceExplorerActions.newSources({
@@ -1236,14 +1242,15 @@ export class SourceExplorerEffects {
         ...getParentSourceIds(sourcePath).map((sourceId: string) =>
           combineLatest([this.store]).pipe(
             take(1),
-            map(
-              (state: RavenAppState[]) =>
-                state[0].raven.sourceExplorer.treeBySourceId[sourceId],
-            ),
-            concatMap(source => {
+            concatMap(state => {
+              const source =
+                state[0].raven.sourceExplorer.treeBySourceId[sourceId];
               if (source) {
                 return concat(
-                  ...this.expand(source),
+                  ...this.expand(
+                    source,
+                    state[0].raven.sourceExplorer.treeBySourceId,
+                  ),
                   of(
                     SourceExplorerActions.updateTreeSource({
                       sourceId: source.id,
@@ -1512,7 +1519,7 @@ export class SourceExplorerEffects {
           concatMap(source => {
             if (source) {
               return concat(
-                ...this.expand(source),
+                ...this.expand(source, null),
                 of(
                   SourceExplorerActions.updateTreeSource({
                     sourceId: source.id,
