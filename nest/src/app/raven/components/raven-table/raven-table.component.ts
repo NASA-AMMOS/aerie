@@ -292,30 +292,20 @@ export class RavenTableComponent implements OnChanges {
                         )
                           ? utc(value)
                           : value,
+                        duration:
+                          this.selectedSubBand.type !== 'resource' &&
+                          timeIds.includes(params.column.getId()) &&
+                          params.node.data.duration !== undefined
+                            ? (params.column.getId() === 'start'
+                              ? utc(params.node.data.end) - utc(value)
+                              : utc(value) - utc(params.node.data.start))
+                            : null,
                         pointStatus:
                           params.node.data.pointStatus === 'added'
                             ? 'added'
                             : 'updated',
                       },
                     });
-
-                    // Recalculate duration when either start or end changed.
-                    if (
-                      timeIds.includes(params.column.getId()) &&
-                      params.node.data.duration !== undefined
-                    ) {
-                      updatePoint.emit({
-                        bandId,
-                        pointId: params.node.data.id,
-                        subBandId,
-                        update: {
-                          duration:
-                            params.column.getId() === 'start'
-                              ? utc(params.node.data.end) - utc(value)
-                              : utc(value) - utc(params.node.data.start),
-                        },
-                      });
-                    }
                     return true;
                   }
                 : null,
