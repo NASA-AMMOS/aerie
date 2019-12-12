@@ -296,9 +296,9 @@ export class RavenTableComponent implements OnChanges {
                           this.selectedSubBand.type !== 'resource' &&
                           timeIds.includes(params.column.getId()) &&
                           params.node.data.duration !== undefined
-                            ? (params.column.getId() === 'start'
+                            ? params.column.getId() === 'start'
                               ? utc(params.node.data.end) - utc(value)
-                              : utc(value) - utc(params.node.data.start))
+                              : utc(value) - utc(params.node.data.start)
                             : null,
                         pointStatus:
                           params.node.data.pointStatus === 'added'
