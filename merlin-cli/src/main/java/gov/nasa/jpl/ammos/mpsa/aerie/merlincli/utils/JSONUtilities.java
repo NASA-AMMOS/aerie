@@ -2,9 +2,9 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils;
 
 import com.google.gson.*;
 import com.google.gson.stream.MalformedJsonException;
-import gov.nasa.jpl.ammos.mpsa.apgen.model.ActivityInstance;
-import gov.nasa.jpl.ammos.mpsa.apgen.model.ActivityInstanceParameter;
-import gov.nasa.jpl.ammos.mpsa.apgen.model.Plan;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.PlanDetail;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.ActivityInstance;
+import gov.nasa.jpl.ammos.mpsa.apgen.model.*;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -69,7 +69,7 @@ public class JSONUtilities {
         jsonPlan.addProperty("name", name);
 
         JsonArray activities = new JsonArray();
-        for (ActivityInstance act : plan.getActivityInstanceList()) {
+        for (gov.nasa.jpl.ammos.mpsa.apgen.model.ActivityInstance act : plan.getActivityInstanceList()) {
             JsonObject jsonAct = new JsonObject();
             jsonAct.addProperty("activityType", act.getType());
             jsonAct.addProperty("name", act.getName());
@@ -94,5 +94,12 @@ public class JSONUtilities {
         jsonPlan.add("activityInstances", activities);
 
         return jsonPlan;
+    }
+
+    public static String convertPlanToJSON(PlanDetail plan) {
+        return new Gson().toJson(plan, PlanDetail.class);
+    }
+    public static String convertActivityInstanceToJSON(ActivityInstance activityInstance) {
+        return new Gson().toJson(activityInstance, ActivityInstance.class);
     }
 }

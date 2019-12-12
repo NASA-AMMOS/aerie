@@ -1,11 +1,15 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.adaptation.*;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidNumberOfArgsException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidTokenException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpClientHandler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpHandler;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.*;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.ActivityInstance;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.PlanDetail;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.PlanRepository;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.RemotePlanRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities;
 import gov.nasa.jpl.ammos.mpsa.apgen.exceptions.AdaptationParsingException;
 import gov.nasa.jpl.ammos.mpsa.apgen.exceptions.DirectoryNotFoundException;
@@ -17,14 +21,16 @@ import gov.nasa.jpl.ammos.mpsa.apgen.parser.ApfParser;
 import org.apache.commons.cli.*;
 import org.apache.http.impl.client.HttpClients;
 
-
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class CommandOptions {
     private HttpHandler httpClient;
+    private PlanRepository planRepository;
     private Options options = new Options();
     private OptionGroup requiredGroup = new OptionGroup();
     private OptionGroup planIdRequiredGroup = new OptionGroup();
@@ -32,19 +38,23 @@ public class CommandOptions {
     private String[] args = null;
     private boolean lastCommandStatus;
 
-    public CommandOptions(String[] args, HttpHandler httpClient) {
+    public CommandOptions(String[] args, PlanRepository planRepository) {
         buildArguments();
         consumeArgs(args);
-        this.httpClient = httpClient;
-    }
-
-    public CommandOptions(String[] args) {
-        this(args, new HttpClientHandler(HttpClients.createDefault()));
+        this.planRepository = planRepository;
+        this.httpClient = new HttpClientHandler(HttpClients.createDefault());
     }
 
     public CommandOptions consumeArgs(String[] args) {
         this.args = args;
         return this;
+    }
+
+    // TODO: REMOVE THIS WHEN DONE
+    @Deprecated
+    public CommandOptions(String[] args, HttpHandler httpClient) {
+        this(args, new RemotePlanRepository(httpClient));
+        this.httpClient = httpClient;
     }
 
     public void buildArguments() {
@@ -72,18 +82,17 @@ public class CommandOptions {
         // Set the request type group as required
         requiredGroup.setRequired(true);
 
-
         // TODO: Figure out how to resolve the names for arguments so they make sense without being obnoxious
         // Being in a group makes options mutually exclusive
-        planIdRequiredGroup.addOption(new Option("D", "delete-plan",false, "Delete a plan"));
+        planIdRequiredGroup.addOption(new Option("D", "delete-plan", false, "Delete a plan"));
         planIdRequiredGroup.addOption(new Option("U", "update-plan-from-file", true, "Update plan based on values in plan file"));
-        planIdRequiredGroup.addOption(new Option(null, "append-activities", true,"Append new activity instances to a plan from a json"));
+        planIdRequiredGroup.addOption(new Option(null, "append-activities", true, "Append new activity instances to a plan from a json"));
         planIdRequiredGroup.addOption(new Option("pull", "download-plan", true, "Download a plan into a file"));
         planIdRequiredGroup.addOption(new Option(null, "display-activity", true, "Display an activity from a plan"));
         planIdRequiredGroup.addOption(new Option(null, "delete-activity", true, "Delete an activity from a plan"));
 
         // Options that take more than one arg must be made separately
-        opt = new Option(null, "update-plan", true,"Update the plan metadata");
+        opt = new Option(null, "update-plan", true, "Update the plan metadata");
         opt.setArgs(Option.UNLIMITED_VALUES);
         planIdRequiredGroup.addOption(opt);
 
@@ -152,7 +161,7 @@ public class CommandOptions {
                 }
                 else if (cmd.hasOption("update-plan")) {
                     String[] tokens = cmd.getOptionValues("update-plan");
-                    lastCommandStatus = updatePlan(planId, tokens);
+                    lastCommandStatus = updatePlanFromTokens(planId, tokens);
                     return;
                 }
                 else if (cmd.hasOption("delete-plan")) {
@@ -224,7 +233,8 @@ public class CommandOptions {
             else {
                 System.out.println("No required argument specified.");
             }
-        } catch (ParseException | InvalidNumberOfArgsException e) {
+        }
+        catch (ParseException | InvalidNumberOfArgsException e) {
             System.err.println("Failed to parse command line properties: " + e);
         }
         lastCommandStatus = false;
@@ -242,116 +252,79 @@ public class CommandOptions {
     }
 
     private boolean createPlan(String path) {
+        String planJson;
         try {
-            NewPlanCommand command = new NewPlanCommand(this.httpClient, path);
-            command.execute();
-            int status = command.getStatus();
-
-            switch(status) {
-                case 201:
-                    String planId = command.getId();
-                    System.out.println(String.format("CREATED: Plan successfully created at: %s.", planId));
-                    return true;
-
-                case 409:
-                    System.err.println("CONFLICT: Plan already exists.");
-                    break;
-
-                case 422:
-                    System.err.println("BAD REQUEST: Check validity of Plan JSON.");
-                    break;
-
-                default:
-                    System.err.println(String.format("Unexpected status: %s", status));
-            }
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
+            planJson = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
+        }
+        catch (IOException e) {
+            System.err.println(e);
+            return false;
         }
 
-        System.err.println("Plan upload failed.");
-        return false;
+        String id;
+        try {
+            id = this.planRepository.createPlan(planJson);
+        }
+        catch (ActionFailureException e) {
+            System.err.println(e);
+            return false;
+        }
+
+        System.out.println(String.format("CREATED: Plan successfully created at: %s.", id));
+        return true;
     }
 
     private boolean updatePlanFromFile(String planId, String path) {
+        String planUpdateJson;
         try {
-            UpdatePlanFileCommand command = new UpdatePlanFileCommand(this.httpClient, planId, path);
-            command.execute();
-            int status = command.getStatus();
-
-            switch(status) {
-                case 200:
-                case 204:
-                    System.out.println("SUCCESS: Plan successfully updated.");
-                    return true;
-
-                case 404:
-                    System.err.println(String.format("NOT FOUND: Plan with id %s does not exist.", planId));
-                    break;
-
-                case 422:
-                    System.err.println("BAD REQUEST: Check validity of Plan JSON.");
-                    break;
-
-                default:
-                    System.err.println(String.format("Unexpected status: %s", status));
-            }
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
+            planUpdateJson = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
+        }
+        catch (IOException e) {
+            System.err.println(e);
+            return false;
         }
 
-        System.err.println("Plan update failed.");
-        return false;
+        return updatePlan(planId, planUpdateJson);
     }
 
-    private boolean updatePlan(String planId, String[] tokens) {
+    private boolean updatePlanFromTokens(String planId, String[] tokens) {
+        PlanDetail plan;
         try {
-            UpdatePlanCommand command = new UpdatePlanCommand(this.httpClient, planId, tokens);
-            command.execute();
-            int status = command.getStatus();
-
-            switch(status) {
-                case 200:
-                case 204:
-                    System.out.println("SUCCESS: Plan successfully updated.");
-                    return true;
-
-                case 404:
-                    System.err.println(String.format("NOT FOUND: Plan with id %s does not exist.", planId));
-                    break;
-
-                default:
-                    System.err.println(String.format("Unexpected status: %s", status));
-            }
-
-            System.err.println("Plan update failed.");
-            return false;
-        } catch (InvalidTokenException e) {
+            plan = PlanDetail.fromTokens(tokens);
+        }
+        catch (InvalidTokenException e) {
             System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
             return false;
         }
+
+        String planUpdateJson = JSONUtilities.convertPlanToJSON(plan);
+
+        return updatePlan(planId, planUpdateJson);
+    }
+
+
+    public boolean updatePlan(String planId, String planUpdateJson) {
+        try {
+            this.planRepository.updatePlan(planId, planUpdateJson);
+        } catch(ActionFailureException e) {
+            System.err.println(e);
+            return false;
+        }
+
+        System.out.println("SUCCESS: Plan successfully updated.");
+        return true;
     }
 
     private boolean deletePlan(String planId) {
-        DeletePlanCommand command = new DeletePlanCommand(this.httpClient, planId);
-        command.execute();
-        int status = command.getStatus();
-
-        switch(status) {
-            case 200:
-            case 204:
-                System.out.println("SUCCESS: Plan successfully deleted.");
-                return true;
-
-            case 404:
-                System.err.println(String.format("NOT FOUND: Plan with id %s does not exist.", planId));
-                break;
-
-            default:
-                System.err.println(String.format("Unexpected status: %s", status));
+        try {
+            this.planRepository.deletePlan(planId);
+        } catch (PlanDeleteFailureException e) {
+            System.err.println(e);
+            return false;
         }
 
-        System.err.println("Plan delete failed.");
-        return false;
+        System.out.println("SUCCESS: Plan successfully deleted.");
+        return true;
     }
 
     private boolean downloadPlan(String planId, String outName) {
@@ -360,144 +333,99 @@ public class CommandOptions {
             return false;
         }
 
-        DownloadPlanCommand command = new DownloadPlanCommand(this.httpClient, planId, outName);
-        command.execute();
-        int status = command.getStatus();
-
-        switch(status) {
-            case 200:
-                System.out.println("SUCCESS: Plan successfully downloaded.");
-                return true;
-
-            case 404:
-                System.err.println(String.format("NOT FOUND: Plan with id %s does not exist.", planId));
-                break;
-
-            default:
-                System.err.println(String.format("Unexpected status: %s", status));
+        try {
+            this.planRepository.downloadPlan(planId, outName);
+        } catch (PlanDownloadFailureException e) {
+            System.err.println(e);
+            return false;
         }
 
-        System.err.println("Plan download failed.");
-        return false;
+        System.out.println("SUCCESS: Plan successfully downloaded.");
+        return true;
     }
 
     private boolean appendActivityInstances(String planId, String path) {
+        String instanceListJson;
         try {
-            AppendActivitiesCommand command = new AppendActivitiesCommand(this.httpClient, planId, path);
-            command.execute();
-            int status = command.getStatus();
-            switch(status) {
-                case 201:
-                    System.out.println(String.format("CREATED: Activities successfully created."));
-                    return true;
-
-                case 422:
-                    System.err.println("BAD REQUEST: Check validity of Activity JSON.");
-                    break;
-
-                default:
-                    System.err.println(String.format("Unexpected status: %s", status));
-            }
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
+            instanceListJson = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
+        }
+        catch (IOException e) {
+            System.err.println(e);
+            return false;
         }
 
-        System.err.println("Activity creation failed.");
-        return false;
+        try {
+            this.planRepository.appendActivityInstances(planId, instanceListJson);
+        } catch (AppendActivityInstancesFailureException e) {
+            System.err.println(e);
+            return false;
+        }
+
+        System.out.println("CREATED: Activities successfully created.");
+        return true;
     }
 
     private boolean displayActivityInstance(String planId, String activityId) {
-        GetActivityCommand command = new GetActivityCommand(this.httpClient, planId, activityId);
-        command.execute();
-        int status = command.getStatus();
-
-        switch(status) {
-            case 200:
-                System.out.println("OK: Activity retrieval successful.");
-                System.out.println(command.getResponseBody());
-                return true;
-
-            case 404:
-                System.err.println("NOT FOUND: The requested activity could not be found");
-                break;
-
-            default:
-                System.err.println(String.format("Unexpected status: %s", status));
+        String activityInstanceJson;
+        try {
+            activityInstanceJson = this.planRepository.getActivityInstance(planId, activityId);
+        } catch (GetActivityInstanceFailureException e) {
+            System.err.println(e);
+            return false;
         }
 
-        System.err.println("Activity request failed.");
-        return false;
+        System.out.printf("SUCCESS: Activity retrieval successful.");
+        System.out.println(activityInstanceJson);
+        return true;
     }
 
     private boolean updateActivityInstance(String planId, String activityId, String[] tokens) {
+        ActivityInstance activityInstance;
         try {
-            UpdateActivityCommand command = new UpdateActivityCommand(this.httpClient, planId, activityId, tokens);
-
-            command.execute();
-            int status = command.getStatus();
-
-            switch(status) {
-                case 200:
-                case 204:
-                    System.out.println("SUCCESS: Activity successfully updated.");
-                    return true;
-
-                case 404:
-                    System.err.println(String.format("NOT FOUND: Activity with id %s in plan with id %s does not exist.", activityId, planId));
-                    break;
-
-                default:
-                    System.err.println(String.format("Unexpected status: %s", status));
-            }
-
-            System.err.println("Activity update failed.");
-            return false;
-        } catch (InvalidTokenException e) {
+            activityInstance = ActivityInstance.fromTokens(tokens);
+        }
+        catch (InvalidTokenException e) {
             System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
             return false;
         }
+
+        String activityUpdateJson = JSONUtilities.convertActivityInstanceToJSON(activityInstance);
+
+        try {
+            this.planRepository.updateActivityInstance(planId, activityId, activityUpdateJson);
+        } catch (UpdateActivityInstanceFailureException e) {
+            System.err.println(e);
+            return false;
+        }
+
+        System.out.println("SUCCESS: Activity successfully updated.");
+        return true;
     }
 
     private boolean deleteActivityInstance(String planId, String activityId) {
-        DeleteActivityCommand command = new DeleteActivityCommand(this.httpClient, planId, activityId);
-        command.execute();
-        int status = command.getStatus();
-
-        switch(status) {
-            case 200:
-            case 204:
-                System.out.println("SUCCESS: Activity successfully deleted.");
-                return true;
-
-            case 404:
-                System.err.println("NOT FOUND: The requested activity could not be found.");
-                break;
-
-            default:
-                System.err.println(String.format("Unexpected status: %s", status));
+        try {
+            this.planRepository.deleteActivityInstance(planId, activityId);
+        } catch (DeleteActivityInstanceFailureException e) {
+            System.err.println(e);
+            return false;
         }
 
-        System.err.println("Plan delete failed.");
-        return false;
+        System.out.println("SUCCESS: Activity successfully deleted.");
+        return true;
     }
 
     private boolean listPlans() {
-        GetPlanListCommand command = new GetPlanListCommand(this.httpClient);
-        command.execute();
-        int status = command.getStatus();
-
-        switch(status) {
-            case 200:
-                System.out.println("OK: Plan list retrieval successful.");
-                System.out.println(command.getResponseBody());
-                return true;
-
-            default:
-                System.err.println(String.format("Unexpected status: %s", status));
+        String planListJson;
+        try {
+            planListJson = this.planRepository.getPlanList();
+        } catch (GetPlanListFailureException e) {
+            System.err.println(e);
+            return false;
         }
 
-        System.err.println("Plan request failed.");
-        return false;
+        System.out.println("SUCCESS: Plan list retrieval successful.");
+        System.out.println(planListJson);
+        return true;
     }
 
     private boolean createAdaptation(String path, String[] tokens) {

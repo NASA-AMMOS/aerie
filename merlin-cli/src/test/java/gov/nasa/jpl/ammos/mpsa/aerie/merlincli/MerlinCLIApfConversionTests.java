@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.PlanRepository;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,7 +44,7 @@ public class MerlinCLIApfConversionTests {
         assertFalse(Files.exists(testPath));
 
         String[] args = { "--convert-apf", "src/test/resources/apgen/apf_files/Banana.apf", testPath.toString(),  "src/test/resources/apgen/aaf_files"};
-        CommandOptions commandOptions = new CommandOptions(args);
+        CommandOptions commandOptions = new CommandOptions(args, (PlanRepository)null);
         commandOptions.parse();
 
         assertTrue(commandOptions.lastCommandSuccessful());
