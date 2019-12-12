@@ -415,18 +415,24 @@ export function getMaxTimeRange(arr: any[]) {
 
   for (let i = 0, l = arr.length; i < l; ++i) {
     const value = arr[i];
-    const start = value.start;
-    let end = value.end;
+    if (value.pointStatus!== 'deleted' ) {
+      const start = value.start;
+      let end = value.start;
 
-    if (!value.duration) {
-      end = start;
-    }
+      if (value.end) {
+        end = value.end;
+      }
 
-    if (start < minTime) {
-      minTime = start;
-    }
-    if (end > maxTime) {
-      maxTime = end;
+      if (!value.duration) {
+        end = start;
+      }
+
+      if (start < minTime) {
+        minTime = start;
+      }
+      if (end > maxTime) {
+        maxTime = end;
+      }
     }
   }
 
