@@ -3,7 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.Fixtures;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
@@ -37,12 +37,12 @@ public final class LocalAppTest {
     @Test
     public void shouldGetAllAdaptations() {
         // GIVEN
-        final List<Pair<String, Adaptation>> expectedAdaptations = fixtures.adaptationRepository
+        final List<Pair<String, AdaptationJar>> expectedAdaptations = fixtures.adaptationRepository
                 .getAllAdaptations()
                 .collect(Collectors.toUnmodifiableList());
 
         // WHEN
-        final List<Pair<String, Adaptation>> adaptations = app.getAdaptations().collect(Collectors.toUnmodifiableList());
+        final List<Pair<String, AdaptationJar>> adaptations = app.getAdaptations().collect(Collectors.toUnmodifiableList());
 
         // THEN
         assertThat(adaptations).isEqualTo(expectedAdaptations);
@@ -52,10 +52,10 @@ public final class LocalAppTest {
     public void shouldGetAdaptationById() throws NoSuchAdaptationException {
         // GIVEN
         final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
-        final Adaptation expectedAdaptation = fixtures.adaptationRepository.getAdaptation(adaptationId);
+        final AdaptationJar expectedAdaptation = fixtures.adaptationRepository.getAdaptation(adaptationId);
 
         // WHEN
-        final Adaptation adaptation = app.getAdaptationById(adaptationId);
+        final AdaptationJar adaptation = app.getAdaptationById(adaptationId);
 
         // THEN
         assertThat(adaptation).isEqualTo(expectedAdaptation);

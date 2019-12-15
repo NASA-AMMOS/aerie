@@ -88,7 +88,7 @@ public final class AdaptationBindings {
     }
 
     private void getAdaptations(final Context ctx) {
-        final Map<String, Adaptation> adaptations = this.app
+        final Map<String, AdaptationJar> adaptations = this.app
                 .getAdaptations()
                 .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
 
@@ -122,9 +122,9 @@ public final class AdaptationBindings {
     private void getAdaptation(final Context ctx) throws NoSuchAdaptationException {
         final String adaptationId = ctx.pathParam("adaptationId");
 
-        final Adaptation adaptation = this.app.getAdaptationById(adaptationId);
+        final AdaptationJar adaptationJar = this.app.getAdaptationById(adaptationId);
 
-        final JsonValue response = ResponseSerializers.serializeAdaptation(adaptation);
+        final JsonValue response = ResponseSerializers.serializeAdaptation(adaptationJar);
         ctx.result(response.toString()).contentType("application/json");
     }
 

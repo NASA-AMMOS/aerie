@@ -6,7 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationExcep
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 public final class StubAdaptationController implements App {
     public static final String EXISTENT_ADAPTATION_ID = "abc";
     public static final String NONEXISTENT_ADAPTATION_ID = "def";
-    public static final Adaptation EXISTENT_ADAPTATION;
+    public static final AdaptationJar EXISTENT_ADAPTATION;
     public static final Map<Object, Object> VALID_NEW_ADAPTATION;
     public static final Map<Object, Object> INVALID_NEW_ADAPTATION;
 
@@ -58,7 +58,7 @@ public final class StubAdaptationController implements App {
         INVALID_NEW_ADAPTATION.put("mission","mission");
         INVALID_NEW_ADAPTATION.put("file", Fixtures.banananation);
 
-        EXISTENT_ADAPTATION = new Adaptation();
+        EXISTENT_ADAPTATION = new AdaptationJar();
         EXISTENT_ADAPTATION.name = "adaptation";
         EXISTENT_ADAPTATION.version = "1.0a";
         EXISTENT_ADAPTATION.mission = "mission";
@@ -67,13 +67,13 @@ public final class StubAdaptationController implements App {
     }
 
     @Override
-    public Stream<Pair<String, Adaptation>> getAdaptations() {
+    public Stream<Pair<String, AdaptationJar>> getAdaptations() {
         return Stream.of(Pair.of(EXISTENT_ADAPTATION_ID, EXISTENT_ADAPTATION));
 
     }
 
     @Override
-    public Adaptation getAdaptationById(final String adaptationId) throws NoSuchAdaptationException {
+    public AdaptationJar getAdaptationById(final String adaptationId) throws NoSuchAdaptationException {
         if (!Objects.equals(adaptationId, EXISTENT_ADAPTATION_ID)) {
             throw new NoSuchAdaptationException(adaptationId);
         }

@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.Fixtures;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +30,7 @@ public abstract class AdaptationRepositoryContractTest {
         final String id = this.adaptationRepository.createAdaptation(newAdaptation);
 
         // WHEN
-        final Adaptation adaptation = this.adaptationRepository.getAdaptation(id);
+        final AdaptationJar adaptation = this.adaptationRepository.getAdaptation(id);
 
         // THEN
         assertThat(adaptation.name).isEqualTo(newAdaptation.name);
@@ -44,7 +44,7 @@ public abstract class AdaptationRepositoryContractTest {
         final String id3 = this.adaptationRepository.createAdaptation(Fixtures.createValidNewAdaptation("test3"));
 
         // WHEN
-        final Map<String, Adaptation> adaptations = this.adaptationRepository
+        final Map<String, AdaptationJar> adaptations = this.adaptationRepository
                 .getAllAdaptations()
                 .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
 

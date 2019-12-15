@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes;
 
 import com.mongodb.client.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.*;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -40,20 +40,20 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
-    public Stream<Pair<String, Adaptation>> getAllAdaptations() {
+    public Stream<Pair<String, AdaptationJar>> getAllAdaptations() {
         final var query = this.adaptationCollection.find();
 
         return documentStream(query)
                 .map(adaptationDocument -> {
                     final String adaptationId = adaptationDocument.getObjectId("_id").toString();
-                    final Adaptation adaptation = adaptationFromDocuments(adaptationDocument);
+                    final AdaptationJar adaptationJar = adaptationFromDocuments(adaptationDocument);
 
-                    return Pair.of(adaptationId, adaptation);
+                    return Pair.of(adaptationId, adaptationJar);
                 });
     }
 
     @Override
-    public Adaptation getAdaptation(final String id) throws NoSuchAdaptationException {
+    public AdaptationJar getAdaptation(final String id) throws NoSuchAdaptationException {
         final Document adaptationDocument;
         try {
             adaptationDocument = this.adaptationCollection.find(adaptationById(id)).first();
@@ -72,24 +72,24 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
     public String createAdaptation(final NewAdaptation newAdaptation) {
         final String adaptationId;
 
-        final Adaptation adaptation = new Adaptation();
-        adaptation.name = newAdaptation.name;
-        adaptation.version = newAdaptation.version;
-        adaptation.mission = newAdaptation.mission;
-        adaptation.owner = newAdaptation.owner;
+        final AdaptationJar adaptationJar = new AdaptationJar();
+        adaptationJar.name = newAdaptation.name;
+        adaptationJar.version = newAdaptation.version;
+        adaptationJar.mission = newAdaptation.mission;
+        adaptationJar.owner = newAdaptation.owner;
 
         // Store Adaptation JAR
-        final Path location = FileUtils.getUniqueFilePath(adaptation, ADAPTATION_FILE_PATH);
+        final Path location = FileUtils.getUniqueFilePath(adaptationJar, ADAPTATION_FILE_PATH);
         try {
             Files.createDirectories(location.getParent());
             Files.copy(newAdaptation.path, location);
         } catch (final IOException e) {
-            throw new AdaptationAccessException(adaptation.path, e);
+            throw new AdaptationAccessException(adaptationJar.path, e);
         }
-        adaptation.path = location;
+        adaptationJar.path = location;
 
         {
-            final Document adaptationDocument = this.toDocument(adaptation);
+            final Document adaptationDocument = this.toDocument(adaptationJar);
             this.adaptationCollection.insertOne(adaptationDocument);
             adaptationId = adaptationDocument.getObjectId("_id").toString();
         }
@@ -99,36 +99,36 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
 
     @Override
     public void deleteAdaptation(final String adaptationId) throws NoSuchAdaptationException {
-        final Adaptation adaptation = this.getAdaptation(adaptationId);
+        final AdaptationJar adaptationJar = this.getAdaptation(adaptationId);
 
         // Delete adaptation JAR
         try {
-            Files.deleteIfExists(adaptation.path);
+            Files.deleteIfExists(adaptationJar.path);
         } catch (final IOException e) {
-            throw new AdaptationAccessException(adaptation.path, e);
+            throw new AdaptationAccessException(adaptationJar.path, e);
         }
 
         this.adaptationCollection.deleteOne(eq("_id", new ObjectId(adaptationId)));
     }
 
-    private Adaptation adaptationFromDocuments(final Document adaptationDocument) {
-        final Adaptation adaptation = new Adaptation();
-        adaptation.name = adaptationDocument.getString("name");
-        adaptation.version = adaptationDocument.getString("version");
-        adaptation.mission = adaptationDocument.getString("mission");
-        adaptation.owner = adaptationDocument.getString("owner");
-        adaptation.path = Path.of(adaptationDocument.getString("path"));
+    private AdaptationJar adaptationFromDocuments(final Document adaptationDocument) {
+        final AdaptationJar adaptationJar = new AdaptationJar();
+        adaptationJar.name = adaptationDocument.getString("name");
+        adaptationJar.version = adaptationDocument.getString("version");
+        adaptationJar.mission = adaptationDocument.getString("mission");
+        adaptationJar.owner = adaptationDocument.getString("owner");
+        adaptationJar.path = Path.of(adaptationDocument.getString("path"));
 
-        return adaptation;
+        return adaptationJar;
     }
 
-    private Document toDocument(final Adaptation adaptation) {
+    private Document toDocument(final AdaptationJar adaptationJar) {
         final Document adaptationDocument = new Document();
-        adaptationDocument.put("name", adaptation.name);
-        adaptationDocument.put("version", adaptation.version);
-        adaptationDocument.put("mission", adaptation.mission);
-        adaptationDocument.put("owner", adaptation.owner);
-        adaptationDocument.put("path", adaptation.path.toString());
+        adaptationDocument.put("name", adaptationJar.name);
+        adaptationDocument.put("version", adaptationJar.version);
+        adaptationDocument.put("mission", adaptationJar.mission);
+        adaptationDocument.put("owner", adaptationJar.owner);
+        adaptationDocument.put("path", adaptationJar.path.toString());
 
         return adaptationDocument;
     }

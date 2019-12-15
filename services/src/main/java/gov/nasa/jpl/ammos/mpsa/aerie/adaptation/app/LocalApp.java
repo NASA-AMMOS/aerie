@@ -6,7 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationExcep
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
@@ -33,12 +33,12 @@ public class LocalApp implements App {
     }
 
     @Override
-    public Stream<Pair<String, Adaptation>> getAdaptations() {
+    public Stream<Pair<String, AdaptationJar>> getAdaptations() {
         return this.adaptationRepository.getAllAdaptations();
     }
 
     @Override
-    public Adaptation getAdaptationById(String id) throws NoSuchAdaptationException {
+    public AdaptationJar getAdaptationById(String id) throws NoSuchAdaptationException {
         return this.adaptationRepository.getAdaptation(id);
     }
 
@@ -55,9 +55,9 @@ public class LocalApp implements App {
 
     @Override
     public Map<String, ActivityType> getActivityTypes(String adaptationId) throws NoSuchAdaptationException, AdaptationContractException {
-        final Adaptation adaptationDescriptor = this.adaptationRepository.getAdaptation(adaptationId);
+        final AdaptationJar adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
 
-        final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationDescriptor.path);
+        final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
         final ActivityMapper activityMapper = adaptation.getActivityMapper();
         if (activityMapper == null) throw new AdaptationContractException(adaptation.getClass().getCanonicalName() + ".getActivityMapper() returned null");
 
@@ -86,8 +86,8 @@ public class LocalApp implements App {
 
     @Override
     public ActivityType getActivityType(String adaptationId, String activityTypeId) throws NoSuchAdaptationException, NoSuchActivityTypeException, AdaptationContractException {
-        final Adaptation adaptationDescriptor = this.adaptationRepository.getAdaptation(adaptationId);
-        final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationDescriptor.path);
+        final AdaptationJar adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
+        final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
 
         final ActivityMapper activityMapper = adaptation.getActivityMapper();
         if (activityMapper == null) throw new AdaptationContractException(adaptation.getClass().getCanonicalName() + ".getActivityMapper() returned null");
@@ -119,8 +119,8 @@ public class LocalApp implements App {
         throws NoSuchAdaptationException, AdaptationContractException, NoSuchActivityTypeException,
         UnconstructableActivityInstanceException
     {
-        final Adaptation adaptationInfo = this.adaptationRepository.getAdaptation(adaptationId);
-        final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationInfo.path);
+        final AdaptationJar adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
+        final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
 
         return deserializeActivity(adaptationId, adaptation.getActivityMapper(), activityParameters);
     }

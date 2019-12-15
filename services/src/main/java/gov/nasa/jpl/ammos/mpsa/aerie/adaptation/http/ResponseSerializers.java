@@ -4,7 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationContractExc
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 
@@ -69,17 +69,17 @@ public class ResponseSerializers {
     return builder.build();
   }
 
-  public static JsonValue serializeAdaptation(final Adaptation adaptation) {
+  public static JsonValue serializeAdaptation(final AdaptationJar adaptationJar) {
     return Json
         .createObjectBuilder()
-        .add("name", adaptation.name == null ? JsonValue.NULL : Json.createValue(adaptation.name))
-        .add("version", adaptation.version == null ? JsonValue.NULL : Json.createValue(adaptation.version))
-        .add("mission", adaptation.mission == null ? JsonValue.NULL : Json.createValue(adaptation.mission))
-        .add("owner", adaptation.owner == null ? JsonValue.NULL : Json.createValue(adaptation.owner))
+        .add("name", adaptationJar.name == null ? JsonValue.NULL : Json.createValue(adaptationJar.name))
+        .add("version", adaptationJar.version == null ? JsonValue.NULL : Json.createValue(adaptationJar.version))
+        .add("mission", adaptationJar.mission == null ? JsonValue.NULL : Json.createValue(adaptationJar.mission))
+        .add("owner", adaptationJar.owner == null ? JsonValue.NULL : Json.createValue(adaptationJar.owner))
         .build();
   }
 
-  public static JsonValue serializeAdaptations(final Map<String, Adaptation> activityTypes) {
+  public static JsonValue serializeAdaptations(final Map<String, AdaptationJar> activityTypes) {
     if (activityTypes == null) return JsonValue.NULL;
 
     final JsonObjectBuilder builder = Json.createObjectBuilder();

@@ -3,7 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
 import java.nio.file.Path;
 import java.util.Objects;
 
-public final class Adaptation {
+public final class AdaptationJar {
     public String name;
     public String version;
     public String mission;
@@ -17,9 +17,9 @@ public final class Adaptation {
      */
     public Path path;
 
-    public Adaptation() {}
+    public AdaptationJar() {}
 
-    public Adaptation(final Adaptation other) {
+    public AdaptationJar(final AdaptationJar other) {
         this.name = other.name;
         this.version = other.version;
         this.mission = other.mission;
@@ -29,11 +29,11 @@ public final class Adaptation {
 
     @Override
     public boolean equals(final Object object) {
-        if (object.getClass() != Adaptation.class) {
+        if (object.getClass() != AdaptationJar.class) {
             return false;
         }
 
-        final Adaptation other = (Adaptation)object;
+        final AdaptationJar other = (AdaptationJar)object;
         return
                 (  Objects.equals(this.name, other.name)
                 && Objects.equals(this.version, other.version)
