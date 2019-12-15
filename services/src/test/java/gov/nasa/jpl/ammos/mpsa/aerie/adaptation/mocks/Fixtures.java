@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 
@@ -53,18 +53,18 @@ public final class Fixtures {
     public Fixtures() {
         this.adaptationRepository = new MockAdaptationRepository();
 
-        final NewAdaptation newAdaptation = new NewAdaptation();
-        newAdaptation.name = "adaptation1";
-        newAdaptation.version = "3";
-        newAdaptation.mission = "Motherland";
-        newAdaptation.owner = "Deris";
-        newAdaptation.path = banananation;
+        final AdaptationJar adaptationJar = new AdaptationJar();
+        adaptationJar.name = "adaptation1";
+        adaptationJar.version = "3";
+        adaptationJar.mission = "Motherland";
+        adaptationJar.owner = "Deris";
+        adaptationJar.path = banananation;
 
-        this.EXISTENT_ADAPTATION_ID = adaptationRepository.createAdaptation(newAdaptation);
+        this.EXISTENT_ADAPTATION_ID = adaptationRepository.createAdaptation(adaptationJar);
     }
 
-    public static NewAdaptation createValidNewAdaptation(final String name) {
-        final NewAdaptation adaptation = new NewAdaptation();
+    public static AdaptationJar createValidAdaptationJar(final String name) {
+        final AdaptationJar adaptation = new AdaptationJar();
         adaptation.name = name;
         adaptation.version = "1.0";
         adaptation.mission = "Merlin";

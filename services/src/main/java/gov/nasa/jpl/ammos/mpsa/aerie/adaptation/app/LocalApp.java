@@ -41,8 +41,16 @@ public final class LocalApp implements App {
 
     @Override
     public String addAdaptation(NewAdaptation adaptation) throws ValidationException {
-        validateAdaptation(adaptation);
-        return this.adaptationRepository.createAdaptation(adaptation);
+        final AdaptationJar adaptationJar = new AdaptationJar();
+        adaptationJar.name = adaptation.name;
+        adaptationJar.version = adaptation.version;
+        adaptationJar.mission = adaptation.mission;
+        adaptationJar.owner = adaptation.owner;
+        adaptationJar.path = adaptation.path;
+
+        validateAdaptation(adaptationJar);
+
+        return this.adaptationRepository.createAdaptation(adaptationJar);
     }
 
     @Override
@@ -91,17 +99,17 @@ public final class LocalApp implements App {
         return new Adaptation(adaptationId, adaptation);
     }
 
-    private void validateAdaptation(final NewAdaptation adaptationDescriptor) throws ValidationException {
+    private void validateAdaptation(final AdaptationJar adaptationJar) throws ValidationException {
         final List<String> validationErrors = new ArrayList<>();
 
-        if (adaptationDescriptor.name == null) validationErrors.add("name must be non-null");
-        if (adaptationDescriptor.version == null) validationErrors.add("version must be non-null");
+        if (adaptationJar.name == null) validationErrors.add("name must be non-null");
+        if (adaptationJar.version == null) validationErrors.add("version must be non-null");
 
-        if (adaptationDescriptor.path == null) {
+        if (adaptationJar.path == null) {
             validationErrors.add("path must be non-null");
         } else {
             try {
-                final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationDescriptor.path);
+                final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
 
                 final ActivityMapper activityMapper = adaptation.getActivityMapper();
                 if (activityMapper == null) throw new Adaptation.AdaptationContractException(adaptation.getClass().getCanonicalName() + ".getActivityMapper() returned null");

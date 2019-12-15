@@ -30,25 +30,21 @@ public final class MockAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
-    public String createAdaptation(final NewAdaptation newAdaptation) {
-        final String adaptationId = Objects.toString(this.nextAdaptationId++);
-
-        final AdaptationJar adaptationJar = new AdaptationJar();
-        adaptationJar.name = newAdaptation.name;
-        adaptationJar.version = newAdaptation.version;
-        adaptationJar.mission = newAdaptation.mission;
-        adaptationJar.owner = newAdaptation.owner;
-
+    public String createAdaptation(final AdaptationJar adaptationJar) {
         // Store Adaptation JAR
         final Path location = getUniqueFilePath(adaptationJar, ADAPTATION_FILE_PATH);
         try {
-            Files.copy(newAdaptation.path, location);
+            Files.copy(adaptationJar.path, location);
         } catch (final IOException e) {
             throw new AdaptationAccessException(adaptationJar.path, e);
         }
-        adaptationJar.path = location;
 
-        this.adaptations.put(adaptationId, adaptationJar);
+        final AdaptationJar newJar = new AdaptationJar(adaptationJar);
+        newJar.path = location;
+
+        final String adaptationId = Objects.toString(this.nextAdaptationId++);
+        this.adaptations.put(adaptationId, newJar);
+
         return adaptationId;
     }
 

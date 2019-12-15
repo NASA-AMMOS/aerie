@@ -69,32 +69,24 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
-    public String createAdaptation(final NewAdaptation newAdaptation) {
-        final String adaptationId;
-
-        final AdaptationJar adaptationJar = new AdaptationJar();
-        adaptationJar.name = newAdaptation.name;
-        adaptationJar.version = newAdaptation.version;
-        adaptationJar.mission = newAdaptation.mission;
-        adaptationJar.owner = newAdaptation.owner;
-
+    public String createAdaptation(final AdaptationJar adaptationJar) {
         // Store Adaptation JAR
         final Path location = FileUtils.getUniqueFilePath(adaptationJar, ADAPTATION_FILE_PATH);
         try {
             Files.createDirectories(location.getParent());
-            Files.copy(newAdaptation.path, location);
+            Files.copy(adaptationJar.path, location);
         } catch (final IOException e) {
             throw new AdaptationAccessException(adaptationJar.path, e);
         }
-        adaptationJar.path = location;
 
-        {
-            final Document adaptationDocument = this.toDocument(adaptationJar);
-            this.adaptationCollection.insertOne(adaptationDocument);
-            adaptationId = adaptationDocument.getObjectId("_id").toString();
-        }
+        final AdaptationJar newJar = new AdaptationJar(adaptationJar);
+        newJar.path = location;
 
-        return adaptationId;
+        final Document adaptationDocument = this.toDocument(newJar);
+
+        this.adaptationCollection.insertOne(adaptationDocument);
+
+        return adaptationDocument.getObjectId("_id").toString();
     }
 
     @Override

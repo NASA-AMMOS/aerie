@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.Fixtures;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +25,7 @@ public abstract class AdaptationRepositoryContractTest {
     @Test
     public void testGetAdaptation() throws NoSuchAdaptationException {
         // GIVEN
-        final NewAdaptation newAdaptation = Fixtures.createValidNewAdaptation("new-adaptation");
+        final AdaptationJar newAdaptation = Fixtures.createValidAdaptationJar("new-adaptation");
         final String id = this.adaptationRepository.createAdaptation(newAdaptation);
 
         // WHEN
@@ -39,9 +38,9 @@ public abstract class AdaptationRepositoryContractTest {
     @Test
     public void testRetrieveAllAdaptations() {
         // GIVEN
-        final String id1 = this.adaptationRepository.createAdaptation(Fixtures.createValidNewAdaptation("test1"));
-        final String id2 = this.adaptationRepository.createAdaptation(Fixtures.createValidNewAdaptation("test2"));
-        final String id3 = this.adaptationRepository.createAdaptation(Fixtures.createValidNewAdaptation("test3"));
+        final String id1 = this.adaptationRepository.createAdaptation(Fixtures.createValidAdaptationJar("test1"));
+        final String id2 = this.adaptationRepository.createAdaptation(Fixtures.createValidAdaptationJar("test2"));
+        final String id3 = this.adaptationRepository.createAdaptation(Fixtures.createValidAdaptationJar("test3"));
 
         // WHEN
         final Map<String, AdaptationJar> adaptations = this.adaptationRepository
@@ -58,9 +57,9 @@ public abstract class AdaptationRepositoryContractTest {
     @Test
     public void testCanDeleteAllAdaptations() throws NoSuchAdaptationException {
         // GIVEN
-        final String id1 = this.adaptationRepository.createAdaptation(Fixtures.createValidNewAdaptation("test1"));
-        final String id2 = this.adaptationRepository.createAdaptation(Fixtures.createValidNewAdaptation("test2"));
-        final String id3 = this.adaptationRepository.createAdaptation(Fixtures.createValidNewAdaptation("test3"));
+        final String id1 = this.adaptationRepository.createAdaptation(Fixtures.createValidAdaptationJar("test1"));
+        final String id2 = this.adaptationRepository.createAdaptation(Fixtures.createValidAdaptationJar("test2"));
+        final String id3 = this.adaptationRepository.createAdaptation(Fixtures.createValidAdaptationJar("test3"));
 
         // WHEN
         this.adaptationRepository.deleteAdaptation(id1);
