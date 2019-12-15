@@ -1,9 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationContractException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
@@ -114,7 +114,7 @@ public final class ResponseSerializers {
         .build();
   }
 
-  public static JsonValue serializeAdaptationContractException(final AdaptationContractException ex) {
+  public static JsonValue serializeAdaptationContractException(final Adaptation.AdaptationContractException ex) {
     // TODO: Improve diagnostic information
     return Json.createObjectBuilder()
         .add("message", ex.getMessage())

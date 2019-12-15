@@ -5,9 +5,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationExcep
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationContractException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 
@@ -22,10 +22,10 @@ public interface App {
     void removeAdaptation(String adaptationId)
         throws NoSuchAdaptationException;
     Map<String, ActivityType> getActivityTypes(String adaptationId)
-        throws NoSuchAdaptationException, AdaptationContractException;
+        throws NoSuchAdaptationException, Adaptation.AdaptationContractException;
     ActivityType getActivityType(String adaptationId, String activityTypeId)
-        throws NoSuchAdaptationException, AdaptationContractException, NoSuchActivityTypeException;
+        throws NoSuchAdaptationException, Adaptation.AdaptationContractException, NoSuchActivityTypeException;
     Activity<?> instantiateActivity(final String adaptationId, final SerializedActivity activityParameters)
-        throws NoSuchAdaptationException, AdaptationContractException, NoSuchActivityTypeException,
+        throws NoSuchAdaptationException, Adaptation.AdaptationContractException, NoSuchActivityTypeException,
         UnconstructableActivityInstanceException;
 }

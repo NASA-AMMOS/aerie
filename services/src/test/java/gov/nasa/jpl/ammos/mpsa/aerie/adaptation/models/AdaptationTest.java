@@ -4,7 +4,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivi
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.Fixtures;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationContractException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
@@ -23,7 +22,7 @@ public final class AdaptationTest {
     private Adaptation adaptation;
 
     @BeforeEach
-    public void initialize() throws NoSuchAdaptationException, AdaptationContractException {
+    public void initialize() throws NoSuchAdaptationException, Adaptation.AdaptationContractException {
         final AdaptationJar adaptationJar = fixtures.adaptationRepository.getAdaptation(fixtures.EXISTENT_ADAPTATION_ID);
         final MerlinAdaptation<?> rawAdaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
 
@@ -31,7 +30,7 @@ public final class AdaptationTest {
     }
 
     @Test
-    public void shouldGetActivityTypeList() throws AdaptationContractException {
+    public void shouldGetActivityTypeList() throws Adaptation.AdaptationContractException {
         // GIVEN
         final Map<String, ActivityType> expectedTypes = fixtures.ACTIVITY_TYPES;
 
@@ -43,7 +42,7 @@ public final class AdaptationTest {
     }
 
     @Test
-    public void shouldGetActivityType() throws NoSuchActivityTypeException, AdaptationContractException {
+    public void shouldGetActivityType() throws NoSuchActivityTypeException, Adaptation.AdaptationContractException {
         // GIVEN
         final String activityId = Fixtures.EXISTENT_ACTIVITY_TYPE_ID;
         final ActivityType expectedType = fixtures.ACTIVITY_TYPES.get(activityId);
@@ -76,7 +75,7 @@ public final class AdaptationTest {
 
     @Test
     public void shouldInstantiateActivityInstance()
-        throws NoSuchActivityTypeException, AdaptationContractException, UnconstructableActivityInstanceException
+        throws NoSuchActivityTypeException, Adaptation.AdaptationContractException, UnconstructableActivityInstanceException
     {
         // GIVEN
         final SerializedActivity serializedActivity = new SerializedActivity(

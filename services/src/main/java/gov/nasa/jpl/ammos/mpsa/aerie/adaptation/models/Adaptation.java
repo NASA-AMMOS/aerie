@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationContractException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
@@ -95,5 +94,15 @@ public final class Adaptation {
 
         return mapperResult
             .orElseThrow(() -> new NoSuchActivityTypeException(this.adaptationId, activityParameters.getTypeName()));
+    }
+
+    public static class AdaptationContractException extends Exception {
+        public AdaptationContractException(final String message) {
+            super(message);
+        }
+
+        public AdaptationContractException(final String message, final Throwable cause) {
+            super(message, cause);
+        }
     }
 }

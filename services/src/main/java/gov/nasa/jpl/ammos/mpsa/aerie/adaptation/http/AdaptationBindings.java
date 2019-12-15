@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationAccessException;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationContractException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
@@ -75,7 +74,7 @@ public final class AdaptationBindings {
             .status(404)
         ).exception(NoSuchActivityTypeException.class, (ex, ctx) -> ctx
             .status(404)
-        ).exception(AdaptationContractException.class, (ex, ctx) -> ctx
+        ).exception(Adaptation.AdaptationContractException.class, (ex, ctx) -> ctx
             .status(500)
             .result(ResponseSerializers.serializeAdaptationContractException(ex).toString())
             .contentType("application/json")
@@ -130,7 +129,7 @@ public final class AdaptationBindings {
         this.app.removeAdaptation(adaptationId);
     }
 
-    private void getActivityTypes(final Context ctx) throws NoSuchAdaptationException, AdaptationContractException {
+    private void getActivityTypes(final Context ctx) throws NoSuchAdaptationException, Adaptation.AdaptationContractException {
         final String adaptationId = ctx.pathParam("adaptationId");
 
         final Map<String, ActivityType> activityTypes = this.app.getActivityTypes(adaptationId);
@@ -139,7 +138,7 @@ public final class AdaptationBindings {
         ctx.result(response.toString()).contentType("application/json");
     }
 
-    private void getActivityType(final Context ctx) throws NoSuchAdaptationException, NoSuchActivityTypeException, AdaptationContractException {
+    private void getActivityType(final Context ctx) throws NoSuchAdaptationException, NoSuchActivityTypeException, Adaptation.AdaptationContractException {
         final String adaptationId = ctx.pathParam("adaptationId");
         final String activityTypeId = ctx.pathParam("activityTypeId");
 
@@ -150,7 +149,7 @@ public final class AdaptationBindings {
     }
 
     private void validateActivityParameters(final Context ctx)
-        throws InvalidEntityException, NoSuchAdaptationException, AdaptationContractException, NoSuchActivityTypeException,
+        throws InvalidEntityException, NoSuchAdaptationException, Adaptation.AdaptationContractException, NoSuchActivityTypeException,
         UnconstructableActivityInstanceException
     {
         final String adaptationId = ctx.pathParam("adaptationId");
@@ -166,7 +165,7 @@ public final class AdaptationBindings {
         if (failures == null) {
             // TODO: The HTTP binding layer is a poor place to put knowledge about the adaptation contract.
             //   Move this logic somewhere better.
-            throw new AdaptationContractException(activity.getClass().getName() + ".validateParameters() returned null");
+            throw new Adaptation.AdaptationContractException(activity.getClass().getName() + ".validateParameters() returned null");
         }
 
         final JsonValue response = ResponseSerializers.serializeFailureList(failures);

@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationContractException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
@@ -53,7 +52,7 @@ public final class LocalApp implements App {
 
     @Override
     public Map<String, ActivityType> getActivityTypes(String adaptationId)
-        throws NoSuchAdaptationException, AdaptationContractException
+        throws NoSuchAdaptationException, Adaptation.AdaptationContractException
     {
         return loadAdaptation(adaptationId)
             .getActivityTypes();
@@ -61,7 +60,7 @@ public final class LocalApp implements App {
 
     @Override
     public ActivityType getActivityType(String adaptationId, String activityTypeId)
-        throws NoSuchAdaptationException, NoSuchActivityTypeException, AdaptationContractException
+        throws NoSuchAdaptationException, NoSuchActivityTypeException, Adaptation.AdaptationContractException
     {
         return loadAdaptation(adaptationId)
             .getActivityType(activityTypeId);
@@ -69,14 +68,14 @@ public final class LocalApp implements App {
 
     @Override
     public Activity<?> instantiateActivity(final String adaptationId, final SerializedActivity activityParameters)
-        throws NoSuchAdaptationException, AdaptationContractException, NoSuchActivityTypeException,
+        throws NoSuchAdaptationException, Adaptation.AdaptationContractException, NoSuchActivityTypeException,
         UnconstructableActivityInstanceException
     {
         return loadAdaptation(adaptationId)
             .instantiateActivity(activityParameters);
     }
 
-    private Adaptation loadAdaptation(final String adaptationId) throws NoSuchAdaptationException, AdaptationContractException {
+    private Adaptation loadAdaptation(final String adaptationId) throws NoSuchAdaptationException, Adaptation.AdaptationContractException {
         final AdaptationJar adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
         final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
         return new Adaptation(adaptationId, adaptation);
@@ -95,13 +94,13 @@ public final class LocalApp implements App {
                 final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationDescriptor.path);
 
                 final ActivityMapper activityMapper = adaptation.getActivityMapper();
-                if (activityMapper == null) throw new AdaptationContractException(adaptation.getClass().getCanonicalName() + ".getActivityMapper() returned null");
+                if (activityMapper == null) throw new Adaptation.AdaptationContractException(adaptation.getClass().getCanonicalName() + ".getActivityMapper() returned null");
 
                 final Map<String, Map<String, ParameterSchema>> activitySchemas = activityMapper.getActivitySchemas();
-                if (activitySchemas == null) throw new AdaptationContractException(activityMapper.getClass().getCanonicalName() + ".getActivitySchemas() returned null");
+                if (activitySchemas == null) throw new Adaptation.AdaptationContractException(activityMapper.getClass().getCanonicalName() + ".getActivitySchemas() returned null");
 
                 if (activitySchemas.size() < 1) validationErrors.add("No activities found. Must include at least one activity");
-            } catch (final AdaptationContractException ex) {
+            } catch (final Adaptation.AdaptationContractException ex) {
                 validationErrors.add("Adaptation JAR does not meet contract: " + ex.getMessage());
             }
         }
