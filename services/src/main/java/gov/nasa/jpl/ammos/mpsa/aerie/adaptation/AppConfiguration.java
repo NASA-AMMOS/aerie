@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation;
 
 import java.io.*;
 import java.net.URI;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -10,7 +9,6 @@ import javax.json.Json;
 import javax.json.JsonObject;
 
 public class AppConfiguration {
-
     public final int HTTP_PORT;
     public final URI MONGO_URI;
     public final String MONGO_DATABASE;

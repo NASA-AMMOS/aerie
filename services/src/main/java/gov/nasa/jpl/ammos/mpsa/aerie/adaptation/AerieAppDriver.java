@@ -11,9 +11,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public class AerieAppDriver {
-
     public static void main(final String[] args) {
-
         // Load the properties
         AppConfiguration configuration;
         if (args.length > 0) {
@@ -45,6 +43,4 @@ public class AerieAppDriver {
         bindings.registerRoutes(javalin);
         javalin.start(configuration.HTTP_PORT);
     }
-
-
 }
