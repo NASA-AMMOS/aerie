@@ -120,7 +120,7 @@ public final class StubAdaptationController implements App {
     }
 
     @Override
-    public Activity<?> instantiateActivity(final String adaptationId, final SerializedActivity activityParameters)
+    public List<String> validateActivityParameters(final String adaptationId, final SerializedActivity activityParameters)
         throws NoSuchAdaptationException, NoSuchActivityTypeException, UnconstructableActivityInstanceException
     {
         if (!Objects.equals(adaptationId, EXISTENT_ADAPTATION_ID)) {
@@ -131,15 +131,12 @@ public final class StubAdaptationController implements App {
             throw new NoSuchActivityTypeException(adaptationId, activityParameters.getTypeName());
         } else if (Objects.equals(activityParameters, UNCONSTRUCTABLE_ACTIVITY_INSTANCE)) {
             throw new UnconstructableActivityInstanceException("Unconstructable activity instance");
-        } else if (Objects.equals(activityParameters, INVALID_ACTIVITY_INSTANCE)) {
-            return new Activity<>() {
-                @Override
-                public List<String> validateParameters() {
-                    return INVALID_ACTIVITY_INSTANCE_FAILURES;
-                }
-            };
         }
 
-        return new Activity<>() {};
+        if (Objects.equals(activityParameters, INVALID_ACTIVITY_INSTANCE)) {
+            return INVALID_ACTIVITY_INSTANCE_FAILURES;
+        } else {
+            return Collections.emptyList();
+        }
     }
 }

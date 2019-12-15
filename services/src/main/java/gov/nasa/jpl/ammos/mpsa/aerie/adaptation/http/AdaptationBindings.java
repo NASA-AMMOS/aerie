@@ -8,7 +8,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationExcep
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import io.javalin.Javalin;
@@ -160,17 +159,9 @@ public final class AdaptationBindings {
         final Map<String, SerializedParameter> activityParameters = RequestDeserializers.deserializeActivityParameterMap(requestJson);
         final SerializedActivity serializedActivity = new SerializedActivity(activityTypeId, activityParameters);
 
-        final Activity<?> activity = this.app.instantiateActivity(adaptationId, serializedActivity);
-
-        final List<String> failures = activity.validateParameters();
-        if (failures == null) {
-            // TODO: The HTTP binding layer is a poor place to put knowledge about the adaptation contract.
-            //   Move this logic somewhere better.
-            throw new Adaptation.AdaptationContractException(activity.getClass().getName() + ".validateParameters() returned null");
-        }
+        final List<String> failures = this.app.validateActivityParameters(adaptationId, serializedActivity);
 
         final JsonValue response = ResponseSerializers.serializeFailureList(failures);
-
         ctx.result(response.toString()).contentType("application/json");
     }
 }

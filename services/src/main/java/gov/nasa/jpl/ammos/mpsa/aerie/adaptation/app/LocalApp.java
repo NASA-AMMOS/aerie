@@ -68,12 +68,21 @@ public final class LocalApp implements App {
     }
 
     @Override
-    public Activity<?> instantiateActivity(final String adaptationId, final SerializedActivity activityParameters)
+    public List<String> validateActivityParameters(final String adaptationId, final SerializedActivity activityParameters)
         throws NoSuchAdaptationException, AdaptationLoader.AdaptationLoadException, Adaptation.AdaptationContractException,
         NoSuchActivityTypeException, UnconstructableActivityInstanceException
     {
-        return loadAdaptation(adaptationId)
+        final Activity<?> activity = loadAdaptation(adaptationId)
             .instantiateActivity(activityParameters);
+
+        final List<String> failures = activity.validateParameters();
+        if (failures == null) {
+            // TODO: The top-level application layer is a poor place to put knowledge about the adaptation contract.
+            //   Move this logic somewhere better.
+            throw new Adaptation.AdaptationContractException(activity.getClass().getName() + ".validateParameters() returned null");
+        }
+
+        return failures;
     }
 
     private Adaptation loadAdaptation(final String adaptationId) throws NoSuchAdaptationException, AdaptationLoader.AdaptationLoadException, Adaptation.AdaptationContractException {
