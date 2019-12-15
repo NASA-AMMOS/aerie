@@ -8,7 +8,7 @@ import java.util.Objects;
 import javax.json.Json;
 import javax.json.JsonObject;
 
-public class AppConfiguration {
+public final class AppConfiguration {
     public final int HTTP_PORT;
     public final URI MONGO_URI;
     public final String MONGO_DATABASE;

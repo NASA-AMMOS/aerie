@@ -6,7 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.AdaptationBindings;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.Fixtures;
 import io.javalin.Javalin;
 
-public class DevAppDriver {
+public final class DevAppDriver {
     private static final int HTTP_PORT = 27182;
 
     public static void main(final String[] args) {

@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class RequestDeserializers {
+public final class RequestDeserializers {
   public static String deserializeString(final JsonValue jsonValue) throws InvalidEntityException {
     if (!(jsonValue instanceof JsonString)) throw new InvalidEntityException();
     final JsonString stringJson = (JsonString)jsonValue;

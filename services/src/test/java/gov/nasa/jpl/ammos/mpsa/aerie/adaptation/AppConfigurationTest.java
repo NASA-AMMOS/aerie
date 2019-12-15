@@ -8,8 +8,7 @@ import java.net.URI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class AppConfigurationTest {
-
+public final class AppConfigurationTest {
     @Test
     public void testParseProperties() {
         // Create JsonObject with expected properties

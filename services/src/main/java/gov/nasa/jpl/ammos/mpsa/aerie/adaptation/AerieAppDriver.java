@@ -10,7 +10,7 @@ import io.javalin.Javalin;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class AerieAppDriver {
+public final class AerieAppDriver {
     public static void main(final String[] args) {
         // Load the properties
         AppConfiguration configuration;

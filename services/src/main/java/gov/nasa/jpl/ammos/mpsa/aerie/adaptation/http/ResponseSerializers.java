@@ -15,7 +15,7 @@ import javax.json.JsonValue;
 import java.util.List;
 import java.util.Map;
 
-public class ResponseSerializers {
+public final class ResponseSerializers {
   public static JsonValue serializeParameterSchema(final ParameterSchema schema) {
     if (schema == null) return JsonValue.NULL;
 

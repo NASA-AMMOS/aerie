@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public class LocalApp implements App {
+public final class LocalApp implements App {
     private final AdaptationRepository adaptationRepository;
 
     public LocalApp(final AdaptationRepository adaptationRepository) {
