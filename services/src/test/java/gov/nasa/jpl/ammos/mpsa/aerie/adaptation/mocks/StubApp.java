@@ -17,7 +17,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.*;
 import java.util.stream.Stream;
 
-public final class StubAdaptationController implements App {
+public final class StubApp implements App {
     public static final String EXISTENT_ADAPTATION_ID = "abc";
     public static final String NONEXISTENT_ADAPTATION_ID = "def";
     public static final AdaptationJar EXISTENT_ADAPTATION;

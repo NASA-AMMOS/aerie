@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.StubAdaptationController;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.StubApp;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import io.javalin.Javalin;
 import org.junit.jupiter.api.AfterAll;
@@ -29,7 +29,7 @@ public final class AdaptationBindingsTest {
 
     @BeforeAll
     public static void setupServer() {
-        final StubAdaptationController controller = new StubAdaptationController();
+        final StubApp controller = new StubApp();
         final AdaptationBindings bindings = new AdaptationBindings(controller);
 
         app = Javalin.create(config -> {
@@ -70,7 +70,7 @@ public final class AdaptationBindingsTest {
     public void shouldGetAdaptations() throws IOException, InterruptedException {
         // GIVEN
         final JsonValue expectedResponse = ResponseSerializers.serializeAdaptations(Map.of(
-            StubAdaptationController.EXISTENT_ADAPTATION_ID, StubAdaptationController.EXISTENT_ADAPTATION
+            StubApp.EXISTENT_ADAPTATION_ID, StubApp.EXISTENT_ADAPTATION
         ));
 
         // WHEN
@@ -86,8 +86,8 @@ public final class AdaptationBindingsTest {
     @Test
     public void shouldGetAdaptationById() throws IOException, InterruptedException {
         // GIVEN
-        final String adaptationId = StubAdaptationController.EXISTENT_ADAPTATION_ID;
-        final JsonValue expectedResponse = ResponseSerializers.serializeAdaptation(StubAdaptationController.EXISTENT_ADAPTATION);
+        final String adaptationId = StubApp.EXISTENT_ADAPTATION_ID;
+        final JsonValue expectedResponse = ResponseSerializers.serializeAdaptation(StubApp.EXISTENT_ADAPTATION);
 
         // WHEN
         final HttpResponse<String> response = sendRequest("GET", "/adaptations/" + adaptationId);
@@ -102,7 +102,7 @@ public final class AdaptationBindingsTest {
     @Test
     public void shouldReturn404OnNonexistentAdaptationById() throws IOException, InterruptedException {
         // GIVEN
-        final String adaptationId = StubAdaptationController.NONEXISTENT_ADAPTATION_ID;
+        final String adaptationId = StubApp.NONEXISTENT_ADAPTATION_ID;
 
         // WHEN
         final HttpResponse<String> response = sendRequest("GET", "/adaptations/" + adaptationId);
@@ -114,7 +114,7 @@ public final class AdaptationBindingsTest {
     @Test
     public void shouldAddValidAdaptation() throws IOException, InterruptedException {
         // GIVEN
-        final Map<Object, Object> adaptationRequest = StubAdaptationController.VALID_NEW_ADAPTATION;
+        final Map<Object, Object> adaptationRequest = StubApp.VALID_NEW_ADAPTATION;
 
         // WHEN
         final HttpResponse<String> response = sendRequest("POST", "/adaptations", adaptationRequest);
@@ -126,7 +126,7 @@ public final class AdaptationBindingsTest {
     @Test
     public void shouldNotAddInvalidAdaptation() throws IOException, InterruptedException {
         // GIVEN
-        final Map<Object, Object> adaptationRequest = StubAdaptationController.INVALID_NEW_ADAPTATION;
+        final Map<Object, Object> adaptationRequest = StubApp.INVALID_NEW_ADAPTATION;
 
         // WHEN
         final HttpResponse<String> response = sendRequest("POST", "/adaptations", adaptationRequest);
@@ -138,7 +138,7 @@ public final class AdaptationBindingsTest {
     @Test
     public void shouldRemoveExistentAdaptation() throws IOException, InterruptedException {
         // GIVEN
-        final String adaptationId = StubAdaptationController.EXISTENT_ADAPTATION_ID;
+        final String adaptationId = StubApp.EXISTENT_ADAPTATION_ID;
 
         // WHEN
         final HttpResponse<String> response = sendRequest("DELETE", "/adaptations/" + adaptationId);
@@ -150,7 +150,7 @@ public final class AdaptationBindingsTest {
     @Test
     public void shouldNotRemoveNonexistentAdaptation() throws IOException, InterruptedException {
         // GIVEN
-        final String adaptationId = StubAdaptationController.NONEXISTENT_ADAPTATION_ID;
+        final String adaptationId = StubApp.NONEXISTENT_ADAPTATION_ID;
 
         // WHEN
         final HttpResponse<String> response = sendRequest("DELETE", "/adaptations/" + adaptationId);
@@ -162,9 +162,9 @@ public final class AdaptationBindingsTest {
     @Test
     public void shouldGetActivityTypeList() throws IOException, InterruptedException {
         // GIVEN
-        final String adaptationId = StubAdaptationController.EXISTENT_ADAPTATION_ID;
-        final String activityId = StubAdaptationController.EXISTENT_ACTIVITY_TYPE;
-        final JsonValue expectedResponse = ResponseSerializers.serializeActivityTypes(Map.of(activityId, StubAdaptationController.EXISTENT_ACTIVITY));
+        final String adaptationId = StubApp.EXISTENT_ADAPTATION_ID;
+        final String activityId = StubApp.EXISTENT_ACTIVITY_TYPE;
+        final JsonValue expectedResponse = ResponseSerializers.serializeActivityTypes(Map.of(activityId, StubApp.EXISTENT_ACTIVITY));
 
         // WHEN
         final HttpResponse<String> response = sendRequest("GET", "/adaptations/" + adaptationId + "/activities");
@@ -179,7 +179,7 @@ public final class AdaptationBindingsTest {
     @Test
     public void shouldNotGetActivityTypeListForNonexistentAdaptation() throws IOException, InterruptedException {
         // GIVEN
-        final String adaptationId = StubAdaptationController.NONEXISTENT_ADAPTATION_ID;
+        final String adaptationId = StubApp.NONEXISTENT_ADAPTATION_ID;
 
         // WHEN
         final HttpResponse<String> response = sendRequest("GET", "/adaptations/" + adaptationId + "/activities");
@@ -191,9 +191,9 @@ public final class AdaptationBindingsTest {
     @Test
     public void shouldGetActivityTypeById() throws IOException, InterruptedException {
         // GIVEN
-        final String adaptationId = StubAdaptationController.EXISTENT_ADAPTATION_ID;
-        final String activityId = StubAdaptationController.EXISTENT_ACTIVITY_TYPE;
-        final JsonValue expectedResponse = ResponseSerializers.serializeActivityType(StubAdaptationController.EXISTENT_ACTIVITY);
+        final String adaptationId = StubApp.EXISTENT_ADAPTATION_ID;
+        final String activityId = StubApp.EXISTENT_ACTIVITY_TYPE;
+        final JsonValue expectedResponse = ResponseSerializers.serializeActivityType(StubApp.EXISTENT_ACTIVITY);
 
         // WHEN
         final HttpResponse<String> response = sendRequest("GET", "/adaptations/" + adaptationId + "/activities/" + activityId);
@@ -208,8 +208,8 @@ public final class AdaptationBindingsTest {
     @Test
     public void shouldNotGetActivityTypeByIdForNonexistentAdaptation() throws IOException, InterruptedException {
         // GIVEN
-        final String adaptationId = StubAdaptationController.NONEXISTENT_ADAPTATION_ID;
-        final String activityId = StubAdaptationController.EXISTENT_ACTIVITY_TYPE;
+        final String adaptationId = StubApp.NONEXISTENT_ADAPTATION_ID;
+        final String activityId = StubApp.EXISTENT_ACTIVITY_TYPE;
 
         // WHEN
         final HttpResponse<String> response = sendRequest("GET", "/adaptations/" + adaptationId + "/activities/" + activityId);
@@ -221,8 +221,8 @@ public final class AdaptationBindingsTest {
     @Test
     public void shouldNotGetActivityTypeByIdForNonexistentActivityType() throws IOException, InterruptedException {
         // GIVEN
-        final String adaptationId = StubAdaptationController.EXISTENT_ADAPTATION_ID;
-        final String activityId = StubAdaptationController.NONEXISTENT_ACTIVITY_TYPE;
+        final String adaptationId = StubApp.EXISTENT_ADAPTATION_ID;
+        final String activityId = StubApp.NONEXISTENT_ACTIVITY_TYPE;
 
         // WHEN
         final HttpResponse<String> response = sendRequest("GET", "/adaptations/" + adaptationId + "/activities/" + activityId);
@@ -234,9 +234,9 @@ public final class AdaptationBindingsTest {
     @Test
     public void shouldValidateValidActivityParameters() throws IOException, InterruptedException {
         // GIVEN
-        final String adaptationId = StubAdaptationController.EXISTENT_ADAPTATION_ID;
-        final String activityId = StubAdaptationController.EXISTENT_ACTIVITY_TYPE;
-        final SerializedActivity activityParameters = StubAdaptationController.VALID_ACTIVITY_INSTANCE;
+        final String adaptationId = StubApp.EXISTENT_ADAPTATION_ID;
+        final String activityId = StubApp.EXISTENT_ACTIVITY_TYPE;
+        final SerializedActivity activityParameters = StubApp.VALID_ACTIVITY_INSTANCE;
 
         final JsonValue expectedResponse = ResponseSerializers.serializeFailureList(List.of());
 
@@ -256,11 +256,11 @@ public final class AdaptationBindingsTest {
     @Test
     public void shouldRejectInvalidActivityParameters() throws IOException, InterruptedException {
         // GIVEN
-        final String adaptationId = StubAdaptationController.EXISTENT_ADAPTATION_ID;
-        final String activityId = StubAdaptationController.EXISTENT_ACTIVITY_TYPE;
-        final SerializedActivity activityParameters = StubAdaptationController.INVALID_ACTIVITY_INSTANCE;
+        final String adaptationId = StubApp.EXISTENT_ADAPTATION_ID;
+        final String activityId = StubApp.EXISTENT_ACTIVITY_TYPE;
+        final SerializedActivity activityParameters = StubApp.INVALID_ACTIVITY_INSTANCE;
 
-        final JsonValue expectedResponse = ResponseSerializers.serializeFailureList(StubAdaptationController.INVALID_ACTIVITY_INSTANCE_FAILURES);
+        final JsonValue expectedResponse = ResponseSerializers.serializeFailureList(StubApp.INVALID_ACTIVITY_INSTANCE_FAILURES);
 
         // WHEN
         final HttpResponse<String> response = sendRequest(
@@ -278,9 +278,9 @@ public final class AdaptationBindingsTest {
     @Test
     public void shouldRejectUnconstructableActivityParameters() throws IOException, InterruptedException {
         // GIVEN
-        final String adaptationId = StubAdaptationController.EXISTENT_ADAPTATION_ID;
-        final String activityId = StubAdaptationController.EXISTENT_ACTIVITY_TYPE;
-        final SerializedActivity activityParameters = StubAdaptationController.UNCONSTRUCTABLE_ACTIVITY_INSTANCE;
+        final String adaptationId = StubApp.EXISTENT_ADAPTATION_ID;
+        final String activityId = StubApp.EXISTENT_ACTIVITY_TYPE;
+        final SerializedActivity activityParameters = StubApp.UNCONSTRUCTABLE_ACTIVITY_INSTANCE;
 
         // WHEN
         final HttpResponse<String> response = sendRequest(
