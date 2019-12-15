@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers.LocalApp;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers.App;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.LocalApp;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.AdaptationBindings;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.RemoteAdaptationRepository;

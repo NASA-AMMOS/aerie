@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers;
+package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.Fixtures;

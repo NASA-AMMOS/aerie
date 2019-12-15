@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers.App;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;

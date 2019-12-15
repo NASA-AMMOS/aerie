@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers.App;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationAccessException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationContractException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
