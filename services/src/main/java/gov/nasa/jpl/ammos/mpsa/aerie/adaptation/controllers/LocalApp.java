@@ -25,10 +25,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class AdaptationController implements IAdaptationController {
+public class LocalApp implements App {
     private final AdaptationRepository adaptationRepository;
 
-    public AdaptationController(final AdaptationRepository adaptationRepository) {
+    public LocalApp(final AdaptationRepository adaptationRepository) {
         this.adaptationRepository = adaptationRepository;
     }
 

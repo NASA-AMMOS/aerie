@@ -23,15 +23,15 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-public final class AdaptationControllerTest {
+public final class LocalAppTest {
 
     private Fixtures fixtures;
-    private IAdaptationController controller;
+    private App app;
 
     @BeforeEach
     public void initialize() {
         fixtures = new Fixtures();
-        controller = new AdaptationController(fixtures.adaptationRepository);
+        app = new LocalApp(fixtures.adaptationRepository);
     }
 
     @Test
@@ -42,7 +42,7 @@ public final class AdaptationControllerTest {
                 .collect(Collectors.toUnmodifiableList());
 
         // WHEN
-        final List<Pair<String, Adaptation>> adaptations = controller.getAdaptations().collect(Collectors.toUnmodifiableList());
+        final List<Pair<String, Adaptation>> adaptations = app.getAdaptations().collect(Collectors.toUnmodifiableList());
 
         // THEN
         assertThat(adaptations).isEqualTo(expectedAdaptations);
@@ -55,7 +55,7 @@ public final class AdaptationControllerTest {
         final Adaptation expectedAdaptation = fixtures.adaptationRepository.getAdaptation(adaptationId);
 
         // WHEN
-        final Adaptation adaptation = controller.getAdaptationById(adaptationId);
+        final Adaptation adaptation = app.getAdaptationById(adaptationId);
 
         // THEN
         assertThat(adaptation).isEqualTo(expectedAdaptation);
@@ -67,7 +67,7 @@ public final class AdaptationControllerTest {
         final String adaptationId = Fixtures.NONEXISTENT_ADAPTATION_ID;
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> controller.getAdaptationById(adaptationId));
+        final Throwable thrown = catchThrowable(() -> app.getAdaptationById(adaptationId));
 
         // THEN
         assertThat(thrown).isInstanceOf(NoSuchAdaptationException.class);
@@ -82,7 +82,7 @@ public final class AdaptationControllerTest {
         final NewAdaptation adaptation = Fixtures.createValidNewAdaptation("test");
 
         // WHEN
-        final String adaptationId = controller.addAdaptation(adaptation);
+        final String adaptationId = app.addAdaptation(adaptation);
 
         // THEN
         assertThat(fixtures.adaptationRepository.getAdaptation(adaptationId)).isNotNull();
@@ -95,7 +95,7 @@ public final class AdaptationControllerTest {
         adaptation.name = null;
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> controller.addAdaptation(adaptation));
+        final Throwable thrown = catchThrowable(() -> app.addAdaptation(adaptation));
 
         // THEN
         assertThat(thrown).isInstanceOf(ValidationException.class);
@@ -112,7 +112,7 @@ public final class AdaptationControllerTest {
         adaptation.version = null;
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> controller.addAdaptation(adaptation));
+        final Throwable thrown = catchThrowable(() -> app.addAdaptation(adaptation));
 
         // THEN
         assertThat(thrown).isInstanceOf(ValidationException.class);
@@ -129,7 +129,7 @@ public final class AdaptationControllerTest {
         adaptation.path = null;
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> controller.addAdaptation(adaptation));
+        final Throwable thrown = catchThrowable(() -> app.addAdaptation(adaptation));
 
         // THEN
         assertThat(thrown).isInstanceOf(ValidationException.class);
@@ -145,10 +145,10 @@ public final class AdaptationControllerTest {
         final String id = fixtures.EXISTENT_ADAPTATION_ID;
 
         // WHEN
-        controller.removeAdaptation(id);
+        app.removeAdaptation(id);
 
         // THEN
-        final Throwable thrown = catchThrowable(() -> controller.getAdaptationById(id));
+        final Throwable thrown = catchThrowable(() -> app.getAdaptationById(id));
         assertThat(thrown).isInstanceOf(NoSuchAdaptationException.class);
 
         final String invalidAdaptationId = ((NoSuchAdaptationException)thrown).getInvalidAdaptationId();
@@ -161,7 +161,7 @@ public final class AdaptationControllerTest {
         final String id = Fixtures.NONEXISTENT_ADAPTATION_ID;
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> controller.removeAdaptation(id));
+        final Throwable thrown = catchThrowable(() -> app.removeAdaptation(id));
 
         // THEN
         assertThat(thrown).isInstanceOf(NoSuchAdaptationException.class);
@@ -177,7 +177,7 @@ public final class AdaptationControllerTest {
         final Map<String, ActivityType> expectedTypes = fixtures.ACTIVITY_TYPES;
 
         // WHEN
-        final Map<String, ActivityType> typeList = controller.getActivityTypes(adaptationId);
+        final Map<String, ActivityType> typeList = app.getActivityTypes(adaptationId);
 
         // THEN
         assertThat(typeList).isEqualTo(expectedTypes);
@@ -189,7 +189,7 @@ public final class AdaptationControllerTest {
         final String adaptationId = Fixtures.NONEXISTENT_ADAPTATION_ID;
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> controller.getActivityTypes(adaptationId));
+        final Throwable thrown = catchThrowable(() -> app.getActivityTypes(adaptationId));
 
         // THEN
         assertThat(thrown).isInstanceOf(NoSuchAdaptationException.class);
@@ -206,7 +206,7 @@ public final class AdaptationControllerTest {
         final ActivityType expectedType = fixtures.ACTIVITY_TYPES.get(activityId);
 
         // WHEN
-        final ActivityType type = controller.getActivityType(adaptationId, activityId);
+        final ActivityType type = app.getActivityType(adaptationId, activityId);
 
         // THEN
         assertThat(type).isEqualTo(expectedType);
@@ -219,7 +219,7 @@ public final class AdaptationControllerTest {
         final String activityId = Fixtures.EXISTENT_ACTIVITY_TYPE_ID;
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> controller.getActivityType(adaptationId, activityId));
+        final Throwable thrown = catchThrowable(() -> app.getActivityType(adaptationId, activityId));
 
         // THEN
         assertThat(thrown).isInstanceOf(NoSuchAdaptationException.class);
@@ -235,7 +235,7 @@ public final class AdaptationControllerTest {
         final String activityId = Fixtures.NONEXISTENT_ACTIVITY_TYPE_ID;
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> controller.getActivityType(adaptationId, activityId));
+        final Throwable thrown = catchThrowable(() -> app.getActivityType(adaptationId, activityId));
 
         // THEN
         assertThat(thrown).isInstanceOf(NoSuchActivityTypeException.class);
@@ -259,7 +259,7 @@ public final class AdaptationControllerTest {
             Map.of("biteSize", SerializedParameter.of(1.0)));
 
         // WHEN
-        final Activity<?> activityInstance = controller.instantiateActivity(adaptationId, serializedActivity);
+        final Activity<?> activityInstance = app.instantiateActivity(adaptationId, serializedActivity);
 
         // THEN
         assertThat(activityInstance).isNotNull();
@@ -274,7 +274,7 @@ public final class AdaptationControllerTest {
             Map.of("biteSize", SerializedParameter.of("a string!?")));
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> controller.instantiateActivity(adaptationId, serializedActivity));
+        final Throwable thrown = catchThrowable(() -> app.instantiateActivity(adaptationId, serializedActivity));
 
         // THEN
         assertThat(thrown).isInstanceOf(UnconstructableActivityInstanceException.class);
@@ -289,7 +289,7 @@ public final class AdaptationControllerTest {
             Map.of("Nonexistent", SerializedParameter.of("")));
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> controller.instantiateActivity(adaptationId, serializedActivity));
+        final Throwable thrown = catchThrowable(() -> app.instantiateActivity(adaptationId, serializedActivity));
 
         // THEN
         assertThat(thrown).isInstanceOf(UnconstructableActivityInstanceException.class);

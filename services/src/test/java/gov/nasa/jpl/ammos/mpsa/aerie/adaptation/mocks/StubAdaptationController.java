@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers.IAdaptationController;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
@@ -17,7 +17,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.*;
 import java.util.stream.Stream;
 
-public final class StubAdaptationController implements IAdaptationController {
+public final class StubAdaptationController implements App {
     public static final String EXISTENT_ADAPTATION_ID = "abc";
     public static final String NONEXISTENT_ADAPTATION_ID = "def";
     public static final Adaptation EXISTENT_ADAPTATION;

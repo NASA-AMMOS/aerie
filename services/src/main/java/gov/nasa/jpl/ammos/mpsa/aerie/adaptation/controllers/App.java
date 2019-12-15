@@ -15,7 +15,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public interface IAdaptationController {
+public interface App {
     Stream<Pair<String, Adaptation>> getAdaptations();
     Adaptation getAdaptationById(String adaptationId)
         throws NoSuchAdaptationException;

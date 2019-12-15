@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers.IAdaptationController;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationAccessException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationContractException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
@@ -34,10 +34,10 @@ import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
 
 public final class AdaptationBindings {
-    private final IAdaptationController appController;
+    private final App app;
 
-    public AdaptationBindings(final IAdaptationController appController) {
-        this.appController = appController;
+    public AdaptationBindings(final App app) {
+        this.app = app;
     }
 
     public void registerRoutes(final Javalin javalin) {
@@ -88,7 +88,7 @@ public final class AdaptationBindings {
     }
 
     private void getAdaptations(final Context ctx) {
-        final Map<String, Adaptation> adaptations = this.appController
+        final Map<String, Adaptation> adaptations = this.app
                 .getAdaptations()
                 .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
 
@@ -111,7 +111,7 @@ public final class AdaptationBindings {
         FileUtil.streamToFile(uploadedFile.getContent(), path.toString());
         adaptation.path = path;
 
-        final String adaptationId = this.appController.addAdaptation(adaptation);
+        final String adaptationId = this.app.addAdaptation(adaptation);
 
         ctx.status(201)
                 .header("Location", "/adaptations/" + adaptationId)
@@ -122,7 +122,7 @@ public final class AdaptationBindings {
     private void getAdaptation(final Context ctx) throws NoSuchAdaptationException {
         final String adaptationId = ctx.pathParam("adaptationId");
 
-        final Adaptation adaptation = this.appController.getAdaptationById(adaptationId);
+        final Adaptation adaptation = this.app.getAdaptationById(adaptationId);
 
         final JsonValue response = ResponseSerializers.serializeAdaptation(adaptation);
         ctx.result(response.toString()).contentType("application/json");
@@ -131,13 +131,13 @@ public final class AdaptationBindings {
     private void deleteAdaptation(final Context ctx) throws NoSuchAdaptationException {
         final String adaptationId = ctx.pathParam("adaptationId");
 
-        this.appController.removeAdaptation(adaptationId);
+        this.app.removeAdaptation(adaptationId);
     }
 
     private void getActivityTypes(final Context ctx) throws NoSuchAdaptationException, AdaptationContractException {
         final String adaptationId = ctx.pathParam("adaptationId");
 
-        final Map<String, ActivityType> activityTypes = this.appController.getActivityTypes(adaptationId);
+        final Map<String, ActivityType> activityTypes = this.app.getActivityTypes(adaptationId);
 
         final JsonValue response = ResponseSerializers.serializeActivityTypes(activityTypes);
         ctx.result(response.toString()).contentType("application/json");
@@ -147,7 +147,7 @@ public final class AdaptationBindings {
         final String adaptationId = ctx.pathParam("adaptationId");
         final String activityTypeId = ctx.pathParam("activityTypeId");
 
-        final ActivityType activityType = this.appController.getActivityType(adaptationId, activityTypeId);
+        final ActivityType activityType = this.app.getActivityType(adaptationId, activityTypeId);
 
         final JsonValue response = ResponseSerializers.serializeActivityType(activityType);
         ctx.result(response.toString()).contentType("application/json");
@@ -164,7 +164,7 @@ public final class AdaptationBindings {
         final Map<String, SerializedParameter> activityParameters = RequestDeserializers.deserializeActivityParameterMap(requestJson);
         final SerializedActivity serializedActivity = new SerializedActivity(activityTypeId, activityParameters);
 
-        final Activity<?> activity = this.appController.instantiateActivity(adaptationId, serializedActivity);
+        final Activity<?> activity = this.app.instantiateActivity(adaptationId, serializedActivity);
 
         final List<String> failures = activity.validateParameters();
         if (failures == null) {

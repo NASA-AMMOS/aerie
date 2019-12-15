@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers.AdaptationController;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers.IAdaptationController;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers.LocalApp;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.AdaptationBindings;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.RemoteAdaptationRepository;
@@ -35,8 +35,8 @@ public class AerieAppDriver {
 
         // Assemble the core non-web object graph.
         final AdaptationRepository adaptationRepository = new RemoteAdaptationRepository(configuration.MONGO_URI, configuration.MONGO_DATABASE, configuration.MONGO_ADAPTATION_COLLECTION);
-        final IAdaptationController controller = new AdaptationController(adaptationRepository);
-        final AdaptationBindings bindings = new AdaptationBindings(controller);
+        final App app = new LocalApp(adaptationRepository);
+        final AdaptationBindings bindings = new AdaptationBindings(app);
         // Initiate an HTTP server.
         final Javalin javalin = Javalin.create(config -> {
             config.showJavalinBanner = false;
