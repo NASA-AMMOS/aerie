@@ -22,7 +22,7 @@ public final class AdaptationTest {
     private Adaptation adaptation;
 
     @BeforeEach
-    public void initialize() throws NoSuchAdaptationException, Adaptation.AdaptationContractException {
+    public void initialize() throws NoSuchAdaptationException, Adaptation.AdaptationContractException, AdaptationLoader.AdaptationLoadException {
         final AdaptationJar adaptationJar = fixtures.adaptationRepository.getAdaptation(fixtures.EXISTENT_ADAPTATION_ID);
         final MerlinAdaptation<?> rawAdaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
 

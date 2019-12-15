@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 
 import java.net.MalformedURLException;
@@ -11,7 +10,7 @@ import java.util.Objects;
 import java.util.ServiceLoader;
 
 public final class AdaptationLoader {
-    public static MerlinAdaptation<?> loadAdaptation(final Path adaptationPath) throws Adaptation.AdaptationContractException {
+    public static MerlinAdaptation<?> loadAdaptation(final Path adaptationPath) throws AdaptationLoadException {
         Objects.requireNonNull(adaptationPath);
 
         final URL adaptationURL;
@@ -35,6 +34,12 @@ public final class AdaptationLoader {
         // we're assuming there's only one MerlinAdaptation in any given location.
         return serviceLoader
             .findFirst()
-            .orElseThrow(() -> new Adaptation.AdaptationContractException("No implementation found for `" + MerlinAdaptation.class.getSimpleName() + "`"));
+            .orElseThrow(() -> new AdaptationLoadException("No implementation found for `" + MerlinAdaptation.class.getSimpleName() + "`"));
+    }
+
+    public static class AdaptationLoadException extends Exception {
+        public AdaptationLoadException(final String message) {
+            super(message);
+        }
     }
 }
