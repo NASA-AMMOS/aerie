@@ -67,8 +67,8 @@ public final class StubAdaptationController implements App {
     }
 
     @Override
-    public Stream<Pair<String, AdaptationJar>> getAdaptations() {
-        return Stream.of(Pair.of(EXISTENT_ADAPTATION_ID, EXISTENT_ADAPTATION));
+    public Map<String, AdaptationJar> getAdaptations() {
+        return Map.of(EXISTENT_ADAPTATION_ID, EXISTENT_ADAPTATION);
 
     }
 

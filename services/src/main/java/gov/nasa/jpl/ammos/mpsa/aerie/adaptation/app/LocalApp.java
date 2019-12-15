@@ -21,7 +21,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 public final class LocalApp implements App {
     private final AdaptationRepository adaptationRepository;
@@ -31,8 +31,8 @@ public final class LocalApp implements App {
     }
 
     @Override
-    public Stream<Pair<String, AdaptationJar>> getAdaptations() {
-        return this.adaptationRepository.getAllAdaptations();
+    public Map<String, AdaptationJar> getAdaptations() {
+        return this.adaptationRepository.getAllAdaptations().collect(Collectors.toMap(Pair::getKey, Pair::getValue));
     }
 
     @Override

@@ -10,13 +10,11 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationContractException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;
-import java.util.stream.Stream;
 
 public interface App {
-    Stream<Pair<String, AdaptationJar>> getAdaptations();
+    Map<String, AdaptationJar> getAdaptations();
     AdaptationJar getAdaptationById(String adaptationId)
         throws NoSuchAdaptationException;
     String addAdaptation(NewAdaptation adaptation)

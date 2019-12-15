@@ -15,7 +15,6 @@ import io.javalin.Javalin;
 import io.javalin.core.util.FileUtil;
 import io.javalin.http.Context;
 import io.javalin.http.UploadedFile;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.JsonValue;
@@ -26,7 +25,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static io.javalin.apibuilder.ApiBuilder.delete;
 import static io.javalin.apibuilder.ApiBuilder.get;
@@ -88,9 +86,7 @@ public final class AdaptationBindings {
     }
 
     private void getAdaptations(final Context ctx) {
-        final Map<String, AdaptationJar> adaptations = this.app
-                .getAdaptations()
-                .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+        final Map<String, AdaptationJar> adaptations = this.app.getAdaptations();
 
         final JsonValue response = ResponseSerializers.serializeAdaptations(adaptations);
         ctx.result(response.toString()).contentType("application/json");
