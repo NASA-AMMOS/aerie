@@ -9,7 +9,7 @@ import io.javalin.Javalin;
 
 import java.io.IOException;
 
-public class DevApp {
+public class DevAppDriver {
     private static final int HTTP_PORT = 27182;
 
     public static void main(final String[] args) {

@@ -10,7 +10,7 @@ import io.javalin.Javalin;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class App {
+public class AerieAppDriver {
 
     public static void main(final String[] args) {
 
