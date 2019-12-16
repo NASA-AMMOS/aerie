@@ -15,8 +15,12 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
+import io.javalin.core.util.FileUtil;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -41,12 +45,20 @@ public final class LocalApp implements App {
 
     @Override
     public String addAdaptation(NewAdaptation adaptation) throws ValidationException {
+        final Path path;
+        try {
+            path = Files.createTempFile("adaptation", ".jar");
+        } catch (final IOException ex) {
+            throw new Error(ex);
+        }
+        FileUtil.streamToFile(adaptation.jarSource, path.toString());
+
         final AdaptationJar adaptationJar = new AdaptationJar();
         adaptationJar.name = adaptation.name;
         adaptationJar.version = adaptation.version;
         adaptationJar.mission = adaptation.mission;
         adaptationJar.owner = adaptation.owner;
-        adaptationJar.path = adaptation.path;
+        adaptationJar.path = path;
 
         validateAdaptation(adaptationJar);
 

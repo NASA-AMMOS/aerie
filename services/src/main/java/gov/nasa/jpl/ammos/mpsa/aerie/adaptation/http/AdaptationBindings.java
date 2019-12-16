@@ -11,16 +11,12 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import io.javalin.Javalin;
-import io.javalin.core.util.FileUtil;
 import io.javalin.http.Context;
 import io.javalin.http.UploadedFile;
 
 import javax.json.Json;
 import javax.json.JsonValue;
-import java.io.IOException;
 import java.io.StringReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -93,18 +89,16 @@ public final class AdaptationBindings {
 
     private void postAdaptation(final Context ctx) throws ValidationException, IOException {
         final UploadedFile uploadedFile = ctx.uploadedFile("file");
-        if (uploadedFile == null)
+        if (uploadedFile == null) {
             throw new ValidationException("No adaptation JAR provided", new ArrayList<>());
+        }
 
         final NewAdaptation adaptation = new NewAdaptation();
         adaptation.name = ctx.formParam("name");
         adaptation.version = ctx.formParam("version");
         adaptation.mission = ctx.formParam("mission");
         adaptation.owner = ctx.formParam("owner");
-
-        final Path path = Files.createTempFile(uploadedFile.getFilename(), "");
-        FileUtil.streamToFile(uploadedFile.getContent(), path.toString());
-        adaptation.path = path;
+        adaptation.jarSource = uploadedFile.getContent();
 
         final String adaptationId = this.app.addAdaptation(adaptation);
 
