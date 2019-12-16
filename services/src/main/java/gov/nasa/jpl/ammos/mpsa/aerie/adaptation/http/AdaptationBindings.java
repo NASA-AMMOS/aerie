@@ -26,6 +26,19 @@ import static io.javalin.apibuilder.ApiBuilder.get;
 import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
 
+/**
+ * Lift native Java agents into an HTTP-oriented service.
+ *
+ * The role of an {@code AdaptationBindings} object is to faithfully translate between the request/response protocol
+ * of HTTP and the call/return/throw protocol of a Java method. Put differently, {@code AdaptationBindings} <i>lifts</i>
+ * an object with native Java endpoints (methods) into an HTTP service with HTTP-oriented endpoints. This entails
+ * translating HTTP request bodies into native Java domain objects, and translating native Java domain objects
+ * (including thrown exceptions) into HTTP response bodies.
+ *
+ * The object to be lifted must implement the {@link App} interface. Formally, it is
+ * this interface that the {@code AdaptationBindings} class lifts into the domain of HTTP; an object implementing
+ * this interface defines the action to take for each HTTP request in an HTTP-independent way.
+ */
 public final class AdaptationBindings {
     private final App app;
 
