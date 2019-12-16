@@ -228,7 +228,7 @@ export class TimelineEffects {
             state,
             action.bandId,
             action.subBandId,
-            action.sourceId,
+            state.raven.sourceExplorer.treeBySourceId[action.sourceId].url,
             action.points,
             action.csvHeaderMap,
           ),
@@ -387,11 +387,15 @@ export class TimelineEffects {
     const actions: Observable<Action>[] = [];
 
     points.forEach(point => {
-      const fileUrl = dataSourceUrl.substring(
-        0,
-        dataSourceUrl.lastIndexOf('/'),
-      );
-      let url = `${state.config.app.baseUrl}/${state.config.mpsServer.apiUrl}${fileUrl}?__document_id=${point.id}`;
+      let url = dataSourceUrl.substring(0, dataSourceUrl.indexOf('?'));
+
+      if (!dataSourceUrl.includes('tes_url=')) {
+        url = url.replace('generic-mongodb', 'fs');
+        url = `${url}?__document_id=${point.id}`;
+      } else {
+        url = `${dataSourceUrl}__document_id=${encodeURI(point.id)}`;
+      }
+
       if (point.pointStatus === 'deleted') {
         actions.push(
           this.http.delete(url, { responseType: 'text' }).pipe(
@@ -447,7 +451,6 @@ export class TimelineEffects {
           data = JSON.stringify(serverData);
         }
         if (point.pointStatus === 'added') {
-          url = url.substring(0, url.indexOf('?'));
           actions.push(
             this.http
               .post(url, data, {

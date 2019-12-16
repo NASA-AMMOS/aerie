@@ -52,9 +52,26 @@ export class MpsServerService {
    */
   importMappingFile(sourceUrl: string, name: string, mapping: string) {
     const url = sourceUrl.includes('tes_url=')
-      ? sourceUrl.replace('/fs/', '/metadata/')
+      ? this.adjustTesUrl(sourceUrl)
       : sourceUrl.replace('fs-mongodb', 'metadata-mongodb');
     return this.http.post(`${url}/${name}`, mapping, { responseType: 'text' });
+  }
+
+  /**
+   *
+   * Change the TES proxy URL within the sourceUrl.
+   */
+  adjustTesUrl(sourceUrl: string) {
+    const hasTesUrl = sourceUrl.match(new RegExp('(.*)tes_url=(.*)'));
+    if (hasTesUrl) {
+      const [, serverUrl, tesUrl] = hasTesUrl;
+      const decodedTesUrl = decodeURIComponent(tesUrl);
+      return `${serverUrl}tes_url=${encodeURIComponent(
+        decodedTesUrl.replace('/fs/', '/metadata/'),
+      )}`;
+    } else {
+      return sourceUrl;
+    }
   }
 
   /**
