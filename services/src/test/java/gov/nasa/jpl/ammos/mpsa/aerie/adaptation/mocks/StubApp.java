@@ -123,7 +123,7 @@ public final class StubApp implements App {
         }
 
         if (!Objects.equals(activityType, EXISTENT_ACTIVITY_TYPE)) {
-            throw new NoSuchActivityTypeException(adaptationId, activityType);
+            throw new NoSuchActivityTypeException(activityType);
         }
 
         return EXISTENT_ACTIVITY;
@@ -138,7 +138,7 @@ public final class StubApp implements App {
         }
 
         if (Objects.equals(activityParameters, NONEXISTENT_ACTIVITY_INSTANCE)) {
-            throw new NoSuchActivityTypeException(adaptationId, activityParameters.getTypeName());
+            throw new NoSuchActivityTypeException(activityParameters.getTypeName());
         } else if (Objects.equals(activityParameters, UNCONSTRUCTABLE_ACTIVITY_INSTANCE)) {
             throw new UnconstructableActivityInstanceException("Unconstructable activity instance");
         }

@@ -14,12 +14,10 @@ import java.util.Map;
 import java.util.Optional;
 
 public final class Adaptation {
-    private final String adaptationId;
     private final MerlinAdaptation<?> adaptation;
     private final ActivityMapper activityMapper;
 
-    public Adaptation(final String adaptationId, final MerlinAdaptation<?> adaptation) throws AdaptationContractException {
-      this.adaptationId = adaptationId;
+    public Adaptation(final MerlinAdaptation<?> adaptation) throws AdaptationContractException {
       this.adaptation = adaptation;
       this.activityMapper = this.adaptation.getActivityMapper();
 
@@ -57,7 +55,7 @@ public final class Adaptation {
         if (activitySchemas == null) throw new AdaptationContractException(this.activityMapper.getClass().getCanonicalName() + ".getActivitySchemas() returned null");
 
         final Map<String, ParameterSchema> activitySchema = activitySchemas.getOrDefault(activityTypeId, null);
-        if (activitySchema == null) throw new NoSuchActivityTypeException(this.adaptationId, activityTypeId);
+        if (activitySchema == null) throw new NoSuchActivityTypeException(activityTypeId);
 
         final Activity<?> activity;
         try {
@@ -93,7 +91,7 @@ public final class Adaptation {
         }
 
         return mapperResult
-            .orElseThrow(() -> new NoSuchActivityTypeException(this.adaptationId, activityParameters.getTypeName()));
+            .orElseThrow(() -> new NoSuchActivityTypeException(activityParameters.getTypeName()));
     }
 
     public static class AdaptationContractException extends Exception {

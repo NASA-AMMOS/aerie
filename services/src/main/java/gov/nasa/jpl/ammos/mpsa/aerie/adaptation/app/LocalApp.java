@@ -108,6 +108,6 @@ public final class LocalApp implements App {
     private Adaptation loadAdaptation(final String adaptationId) throws NoSuchAdaptationException, AdaptationLoader.AdaptationLoadException, Adaptation.AdaptationContractException {
         final AdaptationJar adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
         final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
-        return new Adaptation(adaptationId, adaptation);
+        return new Adaptation(adaptation);
     }
 }

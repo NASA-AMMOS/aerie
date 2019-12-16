@@ -26,7 +26,7 @@ public final class AdaptationTest {
         final AdaptationJar adaptationJar = fixtures.adaptationRepository.getAdaptation(fixtures.EXISTENT_ADAPTATION_ID);
         final MerlinAdaptation<?> rawAdaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
 
-        this.adaptation = new Adaptation(fixtures.EXISTENT_ADAPTATION_ID, rawAdaptation);
+        this.adaptation = new Adaptation(rawAdaptation);
     }
 
     @Test
@@ -65,9 +65,6 @@ public final class AdaptationTest {
 
         // THEN
         assertThat(thrown).isInstanceOf(NoSuchActivityTypeException.class);
-
-        final String exceptionAdaptationId = ((NoSuchActivityTypeException)thrown).getAdaptationId();
-        assertThat(exceptionAdaptationId).isEqualTo(adaptationId);
 
         final String invalidActivityId = ((NoSuchActivityTypeException)thrown).getInvalidActivityTypeId();
         assertThat(invalidActivityId).isEqualTo(activityId);
