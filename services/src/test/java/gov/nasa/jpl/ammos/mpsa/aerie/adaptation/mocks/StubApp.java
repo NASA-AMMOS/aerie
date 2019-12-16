@@ -4,27 +4,26 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
-import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.*;
-import java.util.stream.Stream;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public final class StubApp implements App {
     public static final String EXISTENT_ADAPTATION_ID = "abc";
     public static final String NONEXISTENT_ADAPTATION_ID = "def";
     public static final AdaptationJar EXISTENT_ADAPTATION;
-    public static final Map<Object, Object> VALID_NEW_ADAPTATION;
-    public static final Map<Object, Object> INVALID_NEW_ADAPTATION;
+    public static final Map<String, Object> VALID_NEW_ADAPTATION;
+    public static final Map<String, Object> INVALID_NEW_ADAPTATION;
 
     public static final String EXISTENT_ACTIVITY_TYPE = "activity";
     public static final String NONEXISTENT_ACTIVITY_TYPE = "no-activity";
@@ -54,21 +53,27 @@ public final class StubApp implements App {
         VALID_NEW_ADAPTATION.put("version", "1.0");
         VALID_NEW_ADAPTATION.put("mission","mission");
         VALID_NEW_ADAPTATION.put("owner","owner");
-        VALID_NEW_ADAPTATION.put("file", Fixtures.banananation);
+        VALID_NEW_ADAPTATION.put("file", new FakeFile(
+            "adaptation.jar",
+            "application/java-archive",
+            "valid-adaptation-file"));
 
         INVALID_NEW_ADAPTATION = new HashMap<>();
         INVALID_NEW_ADAPTATION.put("name", "adaptation");
         INVALID_NEW_ADAPTATION.put("version", "FAILFAILFAILFAILFAIL");
         INVALID_NEW_ADAPTATION.put("mission","mission");
         INVALID_NEW_ADAPTATION.put("owner","owner");
-        INVALID_NEW_ADAPTATION.put("file", Fixtures.banananation);
+        INVALID_NEW_ADAPTATION.put("file", new FakeFile(
+            "adaptation.jar",
+            "application/java-archive",
+            "invalid-adaptation-file"));
 
         EXISTENT_ADAPTATION = new AdaptationJar();
         EXISTENT_ADAPTATION.name = "adaptation";
         EXISTENT_ADAPTATION.version = "1.0a";
         EXISTENT_ADAPTATION.mission = "mission";
         EXISTENT_ADAPTATION.owner = "Tester";
-        EXISTENT_ADAPTATION.path = Fixtures.banananation;
+        EXISTENT_ADAPTATION.path = Path.of("existent-adaptation");
     }
 
     @Override

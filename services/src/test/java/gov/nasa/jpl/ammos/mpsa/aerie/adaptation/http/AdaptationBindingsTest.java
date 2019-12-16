@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.FakeFile;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.StubApp;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import io.javalin.Javalin;
@@ -18,9 +19,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -114,7 +116,7 @@ public final class AdaptationBindingsTest {
     @Test
     public void shouldAddValidAdaptation() throws IOException, InterruptedException {
         // GIVEN
-        final Map<Object, Object> adaptationRequest = StubApp.VALID_NEW_ADAPTATION;
+        final Map<String, Object> adaptationRequest = StubApp.VALID_NEW_ADAPTATION;
 
         // WHEN
         final HttpResponse<String> response = sendRequest("POST", "/adaptations", adaptationRequest);
@@ -126,7 +128,7 @@ public final class AdaptationBindingsTest {
     @Test
     public void shouldNotAddInvalidAdaptation() throws IOException, InterruptedException {
         // GIVEN
-        final Map<Object, Object> adaptationRequest = StubApp.INVALID_NEW_ADAPTATION;
+        final Map<String, Object> adaptationRequest = StubApp.INVALID_NEW_ADAPTATION;
 
         // WHEN
         final HttpResponse<String> response = sendRequest("POST", "/adaptations", adaptationRequest);
@@ -298,7 +300,7 @@ public final class AdaptationBindingsTest {
         return sendRequest(method, path, HttpRequest.BodyPublishers.noBody(), Optional.empty());
     }
 
-    private HttpResponse<String> sendRequest(final String method, final String path, final Map<Object, Object> body)
+    private HttpResponse<String> sendRequest(final String method, final String path, final Map<String, Object> body)
             throws IOException, InterruptedException
     {
         final String boundary = new BigInteger(256, new Random()).toString();
@@ -320,8 +322,9 @@ public final class AdaptationBindingsTest {
     {
         final HttpRequest.Builder requestBuilder = HttpRequest.newBuilder();
 
-        if (boundary.isPresent())
-            requestBuilder.headers("Content-Type", "multipart/form-data;boundary="+boundary.get());
+        if (boundary.isPresent()) {
+            requestBuilder.headers("Content-Type", "multipart/form-data;boundary=" + boundary.get());
+        }
 
         final HttpRequest request = requestBuilder
                 .uri(baseUri.resolve(path))
@@ -331,27 +334,28 @@ public final class AdaptationBindingsTest {
         return this.client.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
-    private static HttpRequest.BodyPublisher ofMimeMultipartData(final Map<Object, Object> data, final String boundary) throws IOException {
-        final List<byte[]> byteArrays = new ArrayList<>();
-        final byte[] separator = ("--" + boundary + "\r\nContent-Disposition: form-data; name=")
-                .getBytes(StandardCharsets.UTF_8);
-        for (final Map.Entry<Object, Object> entry : data.entrySet()) {
-            byteArrays.add(separator);
+    private static HttpRequest.BodyPublisher ofMimeMultipartData(final Map<String, Object> data, final String boundary) {
+        final StringBuilder bodyBuilder = new StringBuilder();
+        for (final var entry : data.entrySet()) {
+            if (entry.getValue() instanceof FakeFile) {
+                final FakeFile file = (FakeFile) entry.getValue();
 
-            if (entry.getValue() instanceof Path) {
-                final Path path = (Path) entry.getValue();
-                final String mimeType = Files.probeContentType(path);
-                byteArrays.add(("\"" + entry.getKey() + "\"; filename=\"" + path.getFileName()
-                        + "\"\r\nContent-Type: " + mimeType + "\r\n\r\n").getBytes(StandardCharsets.UTF_8));
-                byteArrays.add(Files.readAllBytes(path));
-                byteArrays.add("\r\n".getBytes(StandardCharsets.UTF_8));
-            }
-            else {
-                byteArrays.add(("\"" + entry.getKey() + "\"\r\n\r\n" + entry.getValue() + "\r\n")
-                        .getBytes(StandardCharsets.UTF_8));
+                bodyBuilder.append("--" + boundary + "\r\n"
+                    + "Content-Disposition: form-data; name=\"" + entry.getKey() + "\"; filename=\"" + file.filename + "\"\r\n"
+                    + "Content-Type: " + file.contentType + "\r\n"
+                    + "\r\n"
+                    + file.contents + "\r\n"
+                );
+            } else {
+                bodyBuilder.append("--" + boundary + "\r\n"
+                    + "Content-Disposition: form-data; name=\"" + entry.getKey() + "\"\r\n"
+                    + "\r\n"
+                    + entry.getValue() + "\r\n"
+                );
             }
         }
-        byteArrays.add(("--" + boundary + "--").getBytes(StandardCharsets.UTF_8));
-        return HttpRequest.BodyPublishers.ofByteArrays(byteArrays);
+        bodyBuilder.append("--" + boundary + "--");
+
+        return HttpRequest.BodyPublishers.ofString(bodyBuilder.toString(), StandardCharsets.UTF_8);
     }
 }
