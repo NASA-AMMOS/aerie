@@ -93,12 +93,13 @@ public final class AdaptationBindings {
             throw new ValidationException("No adaptation JAR provided", new ArrayList<>());
         }
 
-        final NewAdaptation adaptation = new NewAdaptation();
-        adaptation.name = ctx.formParam("name");
-        adaptation.version = ctx.formParam("version");
-        adaptation.mission = ctx.formParam("mission");
-        adaptation.owner = ctx.formParam("owner");
-        adaptation.jarSource = uploadedFile.getContent();
+        final NewAdaptation adaptation = NewAdaptation.builder()
+            .setName(ctx.formParam("name"))
+            .setVersion(ctx.formParam("version"))
+            .setMission(ctx.formParam("mission"))
+            .setOwner(ctx.formParam("owner"))
+            .setJarSource(uploadedFile.getContent())
+            .build();
 
         final String adaptationId = this.app.addAdaptation(adaptation);
 

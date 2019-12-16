@@ -114,25 +114,18 @@ public final class LocalApp implements App {
     private void validateAdaptation(final AdaptationJar adaptationJar) throws ValidationException {
         final List<String> validationErrors = new ArrayList<>();
 
-        if (adaptationJar.name == null) validationErrors.add("name must be non-null");
-        if (adaptationJar.version == null) validationErrors.add("version must be non-null");
+        try {
+            final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
 
-        if (adaptationJar.path == null) {
-            validationErrors.add("path must be non-null");
-        } else {
-            try {
-                final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
+            final ActivityMapper activityMapper = adaptation.getActivityMapper();
+            if (activityMapper == null) throw new Adaptation.AdaptationContractException(adaptation.getClass().getCanonicalName() + ".getActivityMapper() returned null");
 
-                final ActivityMapper activityMapper = adaptation.getActivityMapper();
-                if (activityMapper == null) throw new Adaptation.AdaptationContractException(adaptation.getClass().getCanonicalName() + ".getActivityMapper() returned null");
+            final Map<String, Map<String, ParameterSchema>> activitySchemas = activityMapper.getActivitySchemas();
+            if (activitySchemas == null) throw new Adaptation.AdaptationContractException(activityMapper.getClass().getCanonicalName() + ".getActivitySchemas() returned null");
 
-                final Map<String, Map<String, ParameterSchema>> activitySchemas = activityMapper.getActivitySchemas();
-                if (activitySchemas == null) throw new Adaptation.AdaptationContractException(activityMapper.getClass().getCanonicalName() + ".getActivitySchemas() returned null");
-
-                if (activitySchemas.size() < 1) validationErrors.add("No activities found. Must include at least one activity");
-            } catch (final AdaptationLoader.AdaptationLoadException | Adaptation.AdaptationContractException ex) {
-                validationErrors.add("Adaptation JAR does not meet contract: " + ex.getMessage());
-            }
+            if (activitySchemas.size() < 1) validationErrors.add("No activities found. Must include at least one activity");
+        } catch (final AdaptationLoader.AdaptationLoadException | Adaptation.AdaptationContractException ex) {
+            validationErrors.add("Adaptation JAR does not meet contract: " + ex.getMessage());
         }
 
         if (validationErrors.size() > 0) {
