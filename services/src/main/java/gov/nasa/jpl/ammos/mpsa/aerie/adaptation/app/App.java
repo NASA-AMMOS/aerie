@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
@@ -18,7 +17,7 @@ public interface App {
     Map<String, AdaptationJar> getAdaptations();
 
     String addAdaptation(NewAdaptation adaptation)
-        throws ValidationException;
+        throws AdaptationLoader.AdaptationLoadException;
     AdaptationJar getAdaptationById(String adaptationId)
         throws NoSuchAdaptationException;
     void removeAdaptation(String adaptationId)

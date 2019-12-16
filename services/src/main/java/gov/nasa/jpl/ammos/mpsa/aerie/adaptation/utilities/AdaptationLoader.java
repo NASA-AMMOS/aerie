@@ -11,6 +11,10 @@ import java.util.ServiceLoader;
 
 public final class AdaptationLoader {
     public static MerlinAdaptation<?> loadAdaptation(final Path adaptationPath) throws AdaptationLoadException {
+        return loadAdaptationProvider(adaptationPath).get();
+    }
+
+    public static ServiceLoader.Provider<MerlinAdaptation> loadAdaptationProvider(final Path adaptationPath) throws AdaptationLoadException {
         Objects.requireNonNull(adaptationPath);
 
         final URL adaptationURL;
@@ -33,6 +37,7 @@ public final class AdaptationLoader {
         // Return the first we come across. (This may not be deterministic, so for correctness
         // we're assuming there's only one MerlinAdaptation in any given location.
         return serviceLoader
+            .stream()
             .findFirst()
             .orElseThrow(() -> new AdaptationLoadException("No implementation found for `" + MerlinAdaptation.class.getSimpleName() + "`"));
     }

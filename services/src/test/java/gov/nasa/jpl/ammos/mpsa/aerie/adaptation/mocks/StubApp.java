@@ -8,6 +8,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
@@ -82,9 +83,9 @@ public final class StubApp implements App {
     }
 
     @Override
-    public String addAdaptation(final NewAdaptation adaptation) throws ValidationException {
+    public String addAdaptation(final NewAdaptation adaptation) throws AdaptationLoader.AdaptationLoadException {
         if (adaptation.version.equals("FAILFAILFAILFAILFAIL")) {
-            throw new ValidationException("invalid new adaptation", List.of("an error"));
+            throw new AdaptationLoader.AdaptationLoadException("unable to load adaptation");
         }
 
         return EXISTENT_ADAPTATION_ID;

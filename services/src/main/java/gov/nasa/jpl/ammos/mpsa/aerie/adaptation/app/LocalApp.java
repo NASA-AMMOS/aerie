@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
@@ -12,8 +11,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import io.javalin.core.util.FileUtil;
 import org.apache.commons.lang3.tuple.Pair;
@@ -21,7 +18,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -44,7 +40,7 @@ public final class LocalApp implements App {
     }
 
     @Override
-    public String addAdaptation(NewAdaptation adaptation) throws ValidationException {
+    public String addAdaptation(NewAdaptation adaptation) throws AdaptationLoader.AdaptationLoadException {
         final Path path;
         try {
             path = Files.createTempFile("adaptation", ".jar");
@@ -53,14 +49,14 @@ public final class LocalApp implements App {
         }
         FileUtil.streamToFile(adaptation.jarSource, path.toString());
 
+        AdaptationLoader.loadAdaptationProvider(path);
+
         final AdaptationJar adaptationJar = new AdaptationJar();
         adaptationJar.name = adaptation.name;
         adaptationJar.version = adaptation.version;
         adaptationJar.mission = adaptation.mission;
         adaptationJar.owner = adaptation.owner;
         adaptationJar.path = path;
-
-        validateAdaptation(adaptationJar);
 
         return this.adaptationRepository.createAdaptation(adaptationJar);
     }
@@ -109,27 +105,5 @@ public final class LocalApp implements App {
         final AdaptationJar adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
         final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
         return new Adaptation(adaptationId, adaptation);
-    }
-
-    private void validateAdaptation(final AdaptationJar adaptationJar) throws ValidationException {
-        final List<String> validationErrors = new ArrayList<>();
-
-        try {
-            final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
-
-            final ActivityMapper activityMapper = adaptation.getActivityMapper();
-            if (activityMapper == null) throw new Adaptation.AdaptationContractException(adaptation.getClass().getCanonicalName() + ".getActivityMapper() returned null");
-
-            final Map<String, Map<String, ParameterSchema>> activitySchemas = activityMapper.getActivitySchemas();
-            if (activitySchemas == null) throw new Adaptation.AdaptationContractException(activityMapper.getClass().getCanonicalName() + ".getActivitySchemas() returned null");
-
-            if (activitySchemas.size() < 1) validationErrors.add("No activities found. Must include at least one activity");
-        } catch (final AdaptationLoader.AdaptationLoadException | Adaptation.AdaptationContractException ex) {
-            validationErrors.add("Adaptation JAR does not meet contract: " + ex.getMessage());
-        }
-
-        if (validationErrors.size() > 0) {
-            throw new ValidationException("invalid adaptation", validationErrors);
-        }
     }
 }
