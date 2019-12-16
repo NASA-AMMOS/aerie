@@ -17,7 +17,7 @@ public interface App {
     Map<String, AdaptationJar> getAdaptations();
 
     String addAdaptation(NewAdaptation adaptation)
-        throws AdaptationLoader.AdaptationLoadException;
+        throws AdaptationRejectedException;
     AdaptationJar getAdaptationById(String adaptationId)
         throws NoSuchAdaptationException;
     void removeAdaptation(String adaptationId)
@@ -31,4 +31,9 @@ public interface App {
     List<String> validateActivityParameters(String adaptationId, SerializedActivity activityParameters)
         throws NoSuchAdaptationException, AdaptationLoader.AdaptationLoadException, Adaptation.AdaptationContractException,
         NoSuchActivityTypeException, UnconstructableActivityInstanceException;
+
+    class AdaptationRejectedException extends Exception {
+        public AdaptationRejectedException(final String message) { super(message); }
+        public AdaptationRejectedException(final Throwable cause) { super(cause); }
+    }
 }

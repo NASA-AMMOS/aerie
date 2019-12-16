@@ -40,7 +40,7 @@ public final class LocalApp implements App {
     }
 
     @Override
-    public String addAdaptation(NewAdaptation adaptation) throws AdaptationLoader.AdaptationLoadException {
+    public String addAdaptation(NewAdaptation adaptation) throws AdaptationRejectedException {
         final Path path;
         try {
             path = Files.createTempFile("adaptation", ".jar");
@@ -49,7 +49,11 @@ public final class LocalApp implements App {
         }
         FileUtil.streamToFile(adaptation.jarSource, path.toString());
 
-        AdaptationLoader.loadAdaptationProvider(path);
+        try {
+            AdaptationLoader.loadAdaptationProvider(path);
+        } catch (final AdaptationLoader.AdaptationLoadException ex) {
+            throw new AdaptationRejectedException(ex);
+        }
 
         final AdaptationJar adaptationJar = new AdaptationJar();
         adaptationJar.name = adaptation.name;

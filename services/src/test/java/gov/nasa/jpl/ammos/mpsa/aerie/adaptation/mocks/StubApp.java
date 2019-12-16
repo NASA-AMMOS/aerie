@@ -6,6 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationExcep
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
@@ -51,12 +52,15 @@ public final class StubApp implements App {
         VALID_NEW_ADAPTATION = new HashMap<>();
         VALID_NEW_ADAPTATION.put("name", "adaptation");
         VALID_NEW_ADAPTATION.put("version", "1.0");
+        VALID_NEW_ADAPTATION.put("mission","mission");
+        VALID_NEW_ADAPTATION.put("owner","owner");
         VALID_NEW_ADAPTATION.put("file", Fixtures.banananation);
 
         INVALID_NEW_ADAPTATION = new HashMap<>();
         INVALID_NEW_ADAPTATION.put("name", "adaptation");
         INVALID_NEW_ADAPTATION.put("version", "FAILFAILFAILFAILFAIL");
         INVALID_NEW_ADAPTATION.put("mission","mission");
+        INVALID_NEW_ADAPTATION.put("owner","owner");
         INVALID_NEW_ADAPTATION.put("file", Fixtures.banananation);
 
         EXISTENT_ADAPTATION = new AdaptationJar();
@@ -83,9 +87,9 @@ public final class StubApp implements App {
     }
 
     @Override
-    public String addAdaptation(final NewAdaptation adaptation) throws AdaptationLoader.AdaptationLoadException {
+    public String addAdaptation(final NewAdaptation adaptation) throws AdaptationRejectedException {
         if (adaptation.version.equals("FAILFAILFAILFAILFAIL")) {
-            throw new AdaptationLoader.AdaptationLoadException("unable to load adaptation");
+            throw new AdaptationRejectedException("could not load adaptation");
         }
 
         return EXISTENT_ADAPTATION_ID;

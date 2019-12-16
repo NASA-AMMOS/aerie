@@ -87,10 +87,15 @@ public final class AdaptationBindings {
         ctx.result(response.toString()).contentType("application/json");
     }
 
-    private void postAdaptation(final Context ctx) throws ValidationException, AdaptationLoader.AdaptationLoadException {
+    private void postAdaptation(final Context ctx) throws ValidationException {
         final NewAdaptation newAdaptation = readNewAdaptation(ctx);
 
-        final String adaptationId = this.app.addAdaptation(newAdaptation);
+        final String adaptationId;
+        try {
+            adaptationId = this.app.addAdaptation(newAdaptation);
+        } catch (final App.AdaptationRejectedException ex) {
+            throw new ValidationException("adaptation rejected", List.of(ex.getMessage()));
+        }
 
         ctx.status(201)
                 .header("Location", "/adaptations/" + adaptationId)
