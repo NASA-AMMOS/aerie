@@ -48,7 +48,7 @@ public class Globals {
 
 
     public enum Body {
-        EUROPA, GANYMEDE, EARTH, SUN, CLIPPER, MOON;
+        EUROPA, GANYMEDE, EARTH, SUN, CLIPPER, MOON, JUNO, JUPITER_BARYCENTER;
     }
 
     public enum Apsis {
@@ -58,7 +58,8 @@ public class Globals {
     public enum NAIFID{
         EUROPA("159"),
         GANYMEDE("503"),
-        MOON("301");
+        MOON("301"),
+        JUNO("-61");
 
         public final String naifId;
         NAIFID(final String naifId) { this.naifId = naifId; }
