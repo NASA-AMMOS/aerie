@@ -157,7 +157,10 @@ export function importSubBand(
       labelColor,
       parentUniqueId,
       pointsChanged: false,
-      sourcePathsInFile: subBand.sourcePathsInFile === undefined ? [] : subBand.sourcePathsInFile,
+      sourcePathsInFile:
+        subBand.sourcePathsInFile === undefined
+          ? []
+          : subBand.sourcePathsInFile,
       timeDelta: subBand.timeDelta === undefined ? 0 : subBand.timeDelta,
     };
   } else if (isExportResourceSubBand(subBand)) {
@@ -168,7 +171,10 @@ export function importSubBand(
       labelColor,
       parentUniqueId,
       pointsChanged: false,
-      sourcePathsInFile: subBand.sourcePathsInFile === undefined ? [] : subBand.sourcePathsInFile,
+      sourcePathsInFile:
+        subBand.sourcePathsInFile === undefined
+          ? []
+          : subBand.sourcePathsInFile,
       timeDelta: subBand.timeDelta === undefined ? 0 : subBand.timeDelta,
     };
   } else if (isExportStateSubBand(subBand)) {
@@ -179,7 +185,10 @@ export function importSubBand(
       labelColor,
       parentUniqueId,
       pointsChanged: false,
-      sourcePathsInFile: subBand.sourcePathsInFile === undefined ? [] : subBand.sourcePathsInFile,
+      sourcePathsInFile:
+        subBand.sourcePathsInFile === undefined
+          ? []
+          : subBand.sourcePathsInFile,
       timeDelta: subBand.timeDelta === undefined ? 0 : subBand.timeDelta,
     };
   } else {
@@ -189,7 +198,10 @@ export function importSubBand(
       id: uniqueId(),
       labelColor,
       parentUniqueId,
-      sourcePathsInFile: subBand.sourcePathsInFile === undefined ? [] : subBand.sourcePathsInFile,
+      sourcePathsInFile:
+        subBand.sourcePathsInFile === undefined
+          ? []
+          : subBand.sourcePathsInFile,
     };
   }
 }

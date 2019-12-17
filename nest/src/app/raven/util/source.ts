@@ -913,4 +913,3 @@ export function updateSourceId(
 
   return sourceIds.join('/');
 }
-

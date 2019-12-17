@@ -310,14 +310,13 @@ export class SourceExplorerEffects {
                     parentUniqueId: parentId,
                     sourceIds:
                       Object.keys(sourceTypes).length > 0
-                        ? subBand.sourceIds.map(
-                            (sourceId: string) =>
-                              updateSourceId(
-                                sourceId,
-                                targetSourceId,
-                                sourceTypes,
-                                targetSource.type,
-                              ),
+                        ? subBand.sourceIds.map((sourceId: string) =>
+                            updateSourceId(
+                              sourceId,
+                              targetSourceId,
+                              sourceTypes,
+                              targetSource.type,
+                            ),
                           )
                         : subBand.sourcePathsInFile.map(
                             (sourcePathInFile: string, index) =>

@@ -224,7 +224,7 @@ export const updateCurrentState = createAction(
 
 export const updateGraphAfterFilterAdd = createAction(
   '[raven-source-explorer] update_graph_after_filter_add',
-  props<{ sourceId: string; sourcePathInFile: string}>(),
+  props<{ sourceId: string; sourcePathInFile: string }>(),
 );
 
 export const updateGraphAfterFilterRemove = createAction(
