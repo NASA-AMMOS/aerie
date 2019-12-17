@@ -638,14 +638,18 @@ export function getFormattedSourceUrl(
 }
 
 /**
- * Helper. Returns situationalAware url.
+ *
+ * Helper that returns new source id when applying layout.
  */
-export function getSituAwareUrl(
-  sourceUrl: string,
-  startTime: string,
-  pageDuration: string,
-) {
-  return `${sourceUrl}&situAware=true&start=${startTime}&pageDuration=${pageDuration}`;
+export function getLayoutSourceId(
+  sourceId: string,
+  pathInFile: string,
+  baseId: string,
+): string {
+  const match = sourceId.match(new RegExp('(.*)\\?(.*)'));
+  return match
+    ? `${baseId}/${pathInFile}?${match[2]}`
+    : `${baseId}/${pathInFile}`;
 }
 
 /**
@@ -727,6 +731,17 @@ export function getPin(sourceId: string, pins: RavenPin[]): RavenPin | null {
 export function getPinLabel(sourceId: string, pins: RavenPin[]): string {
   const pin = getPin(sourceId, pins);
   return pin ? pin.name : '';
+}
+
+/**
+ * Helper. Returns situationalAware url.
+ */
+export function getSituAwareUrl(
+  sourceUrl: string,
+  startTime: string,
+  pageDuration: string,
+) {
+  return `${sourceUrl}&situAware=true&start=${startTime}&pageDuration=${pageDuration}`;
 }
 
 /**
@@ -898,3 +913,4 @@ export function updateSourceId(
 
   return sourceIds.join('/');
 }
+

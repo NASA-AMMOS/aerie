@@ -41,6 +41,7 @@ export interface RavenExportResourceSubBand {
   showLabelUnit: boolean;
   showTooltip: boolean;
   sourceIds: string[];
+  sourcePathsInFile?: string[];
   tableColumns: any[];
   timeDelta?: number;
   type: string;

@@ -39,6 +39,7 @@ export interface RavenExportActivitySubBand {
   showLabelPin: boolean;
   showTooltip: boolean;
   sourceIds: string[];
+  sourcePathsInFile?: string[];
   tableColumns: any[];
   timeDelta?: number;
   trimLabel: boolean;

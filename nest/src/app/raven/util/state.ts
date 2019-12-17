@@ -71,7 +71,7 @@ export function getRavenState(name: string, state: RavenAppState): RavenState {
     showLeftPanel: state.raven.layout.showLeftPanel,
     showRightPanel: state.raven.layout.showRightPanel,
     showSouthBandsPanel: state.raven.layout.showSouthBandsPanel,
-    version: '1.0.0',
+    version: '1.1.0',
     viewTimeRange: {
       end: timestamp(state.raven.timeline.viewTimeRange.end, true),
       start: timestamp(state.raven.timeline.viewTimeRange.start, true),
@@ -157,6 +157,7 @@ export function importSubBand(
       labelColor,
       parentUniqueId,
       pointsChanged: false,
+      sourcePathsInFile: subBand.sourcePathsInFile === undefined ? [] : subBand.sourcePathsInFile,
       timeDelta: subBand.timeDelta === undefined ? 0 : subBand.timeDelta,
     };
   } else if (isExportResourceSubBand(subBand)) {
@@ -167,6 +168,7 @@ export function importSubBand(
       labelColor,
       parentUniqueId,
       pointsChanged: false,
+      sourcePathsInFile: subBand.sourcePathsInFile === undefined ? [] : subBand.sourcePathsInFile,
       timeDelta: subBand.timeDelta === undefined ? 0 : subBand.timeDelta,
     };
   } else if (isExportStateSubBand(subBand)) {
@@ -177,6 +179,7 @@ export function importSubBand(
       labelColor,
       parentUniqueId,
       pointsChanged: false,
+      sourcePathsInFile: subBand.sourcePathsInFile === undefined ? [] : subBand.sourcePathsInFile,
       timeDelta: subBand.timeDelta === undefined ? 0 : subBand.timeDelta,
     };
   } else {
@@ -186,6 +189,7 @@ export function importSubBand(
       id: uniqueId(),
       labelColor,
       parentUniqueId,
+      sourcePathsInFile: subBand.sourcePathsInFile === undefined ? [] : subBand.sourcePathsInFile,
     };
   }
 }

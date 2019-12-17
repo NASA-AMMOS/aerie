@@ -23,6 +23,7 @@ export interface RavenExportDividerSubBand {
   points: never[]; // empty array
   showTooltip: boolean;
   sourceIds: string[];
+  sourcePathsInFile?: string[];
   tableColumns: any[];
   type: string;
 }
