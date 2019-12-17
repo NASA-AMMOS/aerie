@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -14,4 +13,6 @@ public interface AdaptationRepository {
     // Mutations
     String createAdaptation(AdaptationJar adaptationJar);
     void deleteAdaptation(String adaptationId) throws NoSuchAdaptationException;
+
+    class NoSuchAdaptationException extends Exception {}
 }

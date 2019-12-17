@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.Fixtures;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import org.apache.commons.lang3.tuple.Pair;
@@ -23,7 +22,7 @@ public abstract class AdaptationRepositoryContractTest {
     }
 
     @Test
-    public void testGetAdaptation() throws NoSuchAdaptationException {
+    public void testGetAdaptation() throws AdaptationRepository.NoSuchAdaptationException {
         // GIVEN
         final AdaptationJar newAdaptation = Fixtures.createValidAdaptationJar("new-adaptation");
         final String id = this.adaptationRepository.createAdaptation(newAdaptation);
@@ -55,7 +54,7 @@ public abstract class AdaptationRepositoryContractTest {
     }
 
     @Test
-    public void testCanDeleteAllAdaptations() throws NoSuchAdaptationException {
+    public void testCanDeleteAllAdaptations() throws AdaptationRepository.NoSuchAdaptationException {
         // GIVEN
         final String id1 = this.adaptationRepository.createAdaptation(Fixtures.createValidAdaptationJar("test1"));
         final String id2 = this.adaptationRepository.createAdaptation(Fixtures.createValidAdaptationJar("test2"));

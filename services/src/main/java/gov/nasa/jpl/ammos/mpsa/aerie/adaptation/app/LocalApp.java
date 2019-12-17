@@ -36,7 +36,11 @@ public final class LocalApp implements App {
 
     @Override
     public AdaptationJar getAdaptationById(String id) throws NoSuchAdaptationException {
-        return this.adaptationRepository.getAdaptation(id);
+        try {
+            return this.adaptationRepository.getAdaptation(id);
+        } catch (AdaptationRepository.NoSuchAdaptationException ex) {
+            throw new NoSuchAdaptationException(id, ex);
+        }
     }
 
     @Override
@@ -67,7 +71,11 @@ public final class LocalApp implements App {
 
     @Override
     public void removeAdaptation(String id) throws NoSuchAdaptationException {
-        this.adaptationRepository.deleteAdaptation(id);
+        try {
+            this.adaptationRepository.deleteAdaptation(id);
+        } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
+            throw new NoSuchAdaptationException(id, ex);
+        }
     }
 
     @Override
@@ -106,8 +114,12 @@ public final class LocalApp implements App {
     }
 
     private Adaptation loadAdaptation(final String adaptationId) throws NoSuchAdaptationException, AdaptationLoader.AdaptationLoadException, Adaptation.AdaptationContractException {
-        final AdaptationJar adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
-        final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
-        return new Adaptation(adaptation);
+        try {
+            final AdaptationJar adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
+            final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
+            return new Adaptation(adaptation);
+        } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
+            throw new NoSuchAdaptationException(adaptationId, ex);
+        }
     }
 }

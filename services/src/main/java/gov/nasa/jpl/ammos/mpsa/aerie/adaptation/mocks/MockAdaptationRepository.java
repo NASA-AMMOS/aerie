@@ -1,9 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationAccessException;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -66,7 +64,7 @@ public final class MockAdaptationRepository implements AdaptationRepository {
     public AdaptationJar getAdaptation(final String adaptationId) throws NoSuchAdaptationException {
         final AdaptationJar adaptation = Optional
                 .ofNullable(this.adaptations.get(adaptationId))
-                .orElseThrow(() -> new NoSuchAdaptationException(adaptationId));
+                .orElseThrow(NoSuchAdaptationException::new);
 
         return new AdaptationJar(adaptation);
     }

@@ -1,9 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes;
 
 import com.mongodb.client.*;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.*;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationAccessException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.Document;
@@ -58,11 +57,11 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
         try {
             adaptationDocument = this.adaptationCollection.find(adaptationById(id)).first();
         } catch (IllegalArgumentException e) {
-            throw new NoSuchAdaptationException(id);
+            throw new NoSuchAdaptationException();
         }
 
         if (adaptationDocument == null) {
-            throw new NoSuchAdaptationException(id);
+            throw new NoSuchAdaptationException();
         }
 
         return adaptationFromDocuments(adaptationDocument);
