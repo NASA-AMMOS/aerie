@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.LocalApp;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
@@ -123,6 +124,13 @@ public final class ResponseSerializers {
 
   public static JsonValue serializeUnconstructableActivityInstanceException(final UnconstructableActivityInstanceException ex) {
     // TODO: Improve diagnostic information
+    return Json.createObjectBuilder()
+        .add("message", ex.getMessage())
+        .build();
+  }
+
+  public static JsonValue serializeAdaptationLoadException(final LocalApp.AdaptationLoadException ex) {
+    // TODO: Improve diagnostic information?
     return Json.createObjectBuilder()
         .add("message", ex.getMessage())
         .build();

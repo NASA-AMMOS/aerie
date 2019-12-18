@@ -6,7 +6,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 
 import java.util.List;
@@ -23,12 +22,11 @@ public interface App {
         throws NoSuchAdaptationException;
 
     Map<String, ActivityType> getActivityTypes(String adaptationId)
-        throws NoSuchAdaptationException, AdaptationLoader.AdaptationLoadException, Adaptation.AdaptationContractException;
+        throws NoSuchAdaptationException, Adaptation.AdaptationContractException;
     ActivityType getActivityType(String adaptationId, String activityTypeId)
-        throws NoSuchAdaptationException, AdaptationLoader.AdaptationLoadException, Adaptation.AdaptationContractException,
-        NoSuchActivityTypeException;
+        throws NoSuchAdaptationException, Adaptation.AdaptationContractException, NoSuchActivityTypeException;
     List<String> validateActivityParameters(String adaptationId, SerializedActivity activityParameters)
-        throws NoSuchAdaptationException, AdaptationLoader.AdaptationLoadException, Adaptation.AdaptationContractException,
+        throws NoSuchAdaptationException, Adaptation.AdaptationContractException,
         NoSuchActivityTypeException, UnconstructableActivityInstanceException;
 
     class AdaptationRejectedException extends Exception {

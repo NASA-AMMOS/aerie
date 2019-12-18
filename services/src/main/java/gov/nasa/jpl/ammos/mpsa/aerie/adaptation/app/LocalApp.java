@@ -21,6 +21,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Implements the plan service {@link App} interface on a set of local domain objects.
+ *
+ * May throw unchecked exceptions:
+ * * {@link LocalApp.AdaptationLoadException}: When an adaptation cannot be loaded from the JAR provided by the connected
+ *   adaptation repository.
+ */
 public final class LocalApp implements App {
     private final AdaptationRepository adaptationRepository;
 
@@ -77,27 +84,61 @@ public final class LocalApp implements App {
         }
     }
 
+    /**
+     * Get information about all activity types in the named adaptation.
+     *
+     * @param adaptationId The ID of the adaptation to load.
+     * @return The set of all activity types in the named adaptation, indexed by name.
+     * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
+     * @throws Adaptation.AdaptationContractException If the named adaptation does not abide by the expected contract.
+     * @throws AdaptationLoadException If the adaptation cannot be loaded -- the JAR may be invalid, or the adaptation
+     *         it contains may not abide by the expected contract at load time.
+     */
     @Override
     public Map<String, ActivityType> getActivityTypes(String adaptationId)
-        throws NoSuchAdaptationException, AdaptationLoader.AdaptationLoadException, Adaptation.AdaptationContractException
+        throws NoSuchAdaptationException, Adaptation.AdaptationContractException, AdaptationLoadException
     {
         return loadAdaptation(adaptationId)
             .getActivityTypes();
     }
 
+    /**
+     * Get information about the named activity type in the named adaptation.
+     *
+     * @param adaptationId The ID of the adaptation to load.
+     * @param activityTypeId The ID of the activity type to query in the named adaptation.
+     * @return Information about the named activity type.
+     * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
+     * @throws NoSuchActivityTypeException If no activity type exists for the given serialized activity.
+     * @throws Adaptation.AdaptationContractException If the named adaptation does not abide by the expected contract.
+     * @throws AdaptationLoadException If the adaptation cannot be loaded -- the JAR may be invalid, or the adaptation
+     *         it contains may not abide by the expected contract at load time.
+     */
     @Override
     public ActivityType getActivityType(String adaptationId, String activityTypeId)
-        throws NoSuchAdaptationException, AdaptationLoader.AdaptationLoadException, Adaptation.AdaptationContractException,
-        NoSuchActivityTypeException
+        throws NoSuchAdaptationException, Adaptation.AdaptationContractException, NoSuchActivityTypeException, AdaptationLoadException
     {
         return loadAdaptation(adaptationId)
             .getActivityType(activityTypeId);
     }
 
+    /**
+     * Validate that a serialized activity conforms to the expectations of a named adaptation.
+     *
+     * @param adaptationId The ID of the adaptation to load.
+     * @param activityParameters The serialized activity to validate against the named adaptation.
+     * @return A list of validation errors that is empty if validation succeeds.
+     * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
+     * @throws NoSuchActivityTypeException If no activity type exists for the given serialized activity.
+     * @throws UnconstructableActivityInstanceException If the activity type cannot be constructed from the given parameters.
+     * @throws Adaptation.AdaptationContractException If the named adaptation does not abide by the expected contract.
+     * @throws AdaptationLoadException If the adaptation cannot be loaded -- the JAR may be invalid, or the adaptation
+     *         it contains may not abide by the expected contract at load time.
+     */
     @Override
     public List<String> validateActivityParameters(final String adaptationId, final SerializedActivity activityParameters)
-        throws NoSuchAdaptationException, AdaptationLoader.AdaptationLoadException, Adaptation.AdaptationContractException,
-        NoSuchActivityTypeException, UnconstructableActivityInstanceException
+        throws NoSuchAdaptationException, Adaptation.AdaptationContractException,
+        NoSuchActivityTypeException, UnconstructableActivityInstanceException, AdaptationLoadException
     {
         final Activity<?> activity = loadAdaptation(adaptationId)
             .instantiateActivity(activityParameters);
@@ -112,13 +153,28 @@ public final class LocalApp implements App {
         return failures;
     }
 
-    private Adaptation loadAdaptation(final String adaptationId) throws NoSuchAdaptationException, AdaptationLoader.AdaptationLoadException, Adaptation.AdaptationContractException {
+    /**
+     * Load a {@link MerlinAdaptation} from the adaptation repository, and wrap it in an {@link Adaptation} domain object.
+     *
+     * @param adaptationId The ID of the adaptation in the adaptation repository to load.
+     * @return An {@link Adaptation} domain object allowing use of the loaded adaptation.
+     * @throws AdaptationLoadException If the adaptation cannot be loaded -- the JAR may be invalid, or the adaptation
+     *         it contains may not abide by the expected contract at load time.
+     * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
+     */
+    private Adaptation loadAdaptation(final String adaptationId) throws NoSuchAdaptationException, AdaptationLoadException {
         try {
             final AdaptationJar adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
             final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
             return new Adaptation(adaptation);
         } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
             throw new NoSuchAdaptationException(adaptationId, ex);
+        } catch (final AdaptationLoader.AdaptationLoadException | Adaptation.AdaptationContractException ex) {
+            throw new AdaptationLoadException(ex);
         }
+    }
+
+    public static class AdaptationLoadException extends RuntimeException {
+        public AdaptationLoadException(final Throwable cause) { super(cause); }
     }
 }
