@@ -4,7 +4,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationAccessException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
@@ -79,7 +78,7 @@ public final class AdaptationBindings {
             .status(400)
             .result(ResponseSerializers.serializeUnconstructableActivityInstanceException(ex).toString())
             .contentType("application/json")
-        ).exception(NoSuchAdaptationException.class, (ex, ctx) -> ctx
+        ).exception(App.NoSuchAdaptationException.class, (ex, ctx) -> ctx
             .status(404)
         ).exception(NoSuchActivityTypeException.class, (ex, ctx) -> ctx
             .status(404)
@@ -116,7 +115,7 @@ public final class AdaptationBindings {
                 .contentType("application/json");
     }
 
-    private void getAdaptation(final Context ctx) throws NoSuchAdaptationException {
+    private void getAdaptation(final Context ctx) throws App.NoSuchAdaptationException {
         final String adaptationId = ctx.pathParam("adaptationId");
 
         final AdaptationJar adaptationJar = this.app.getAdaptationById(adaptationId);
@@ -125,13 +124,13 @@ public final class AdaptationBindings {
         ctx.result(response.toString()).contentType("application/json");
     }
 
-    private void deleteAdaptation(final Context ctx) throws NoSuchAdaptationException {
+    private void deleteAdaptation(final Context ctx) throws App.NoSuchAdaptationException {
         final String adaptationId = ctx.pathParam("adaptationId");
 
         this.app.removeAdaptation(adaptationId);
     }
 
-    private void getActivityTypes(final Context ctx) throws NoSuchAdaptationException, Adaptation.AdaptationContractException, AdaptationLoader.AdaptationLoadException {
+    private void getActivityTypes(final Context ctx) throws App.NoSuchAdaptationException, Adaptation.AdaptationContractException, AdaptationLoader.AdaptationLoadException {
         final String adaptationId = ctx.pathParam("adaptationId");
 
         final Map<String, ActivityType> activityTypes = this.app.getActivityTypes(adaptationId);
@@ -140,7 +139,7 @@ public final class AdaptationBindings {
         ctx.result(response.toString()).contentType("application/json");
     }
 
-    private void getActivityType(final Context ctx) throws NoSuchAdaptationException, NoSuchActivityTypeException, Adaptation.AdaptationContractException, AdaptationLoader.AdaptationLoadException {
+    private void getActivityType(final Context ctx) throws App.NoSuchAdaptationException, NoSuchActivityTypeException, Adaptation.AdaptationContractException, AdaptationLoader.AdaptationLoadException {
         final String adaptationId = ctx.pathParam("adaptationId");
         final String activityTypeId = ctx.pathParam("activityTypeId");
 
@@ -151,7 +150,7 @@ public final class AdaptationBindings {
     }
 
     private void validateActivityParameters(final Context ctx)
-        throws InvalidEntityException, NoSuchAdaptationException, Adaptation.AdaptationContractException, NoSuchActivityTypeException,
+        throws InvalidEntityException, App.NoSuchAdaptationException, Adaptation.AdaptationContractException, NoSuchActivityTypeException,
         UnconstructableActivityInstanceException, AdaptationLoader.AdaptationLoadException
     {
         final String adaptationId = ctx.pathParam("adaptationId");

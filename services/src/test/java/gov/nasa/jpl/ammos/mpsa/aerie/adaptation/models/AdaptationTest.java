@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.Fixtures;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;

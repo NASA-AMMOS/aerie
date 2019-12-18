@@ -1,7 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
@@ -35,5 +34,18 @@ public interface App {
     class AdaptationRejectedException extends Exception {
         public AdaptationRejectedException(final String message) { super(message); }
         public AdaptationRejectedException(final Throwable cause) { super(cause); }
+    }
+
+    class NoSuchAdaptationException extends Exception {
+        private final String id;
+
+        public NoSuchAdaptationException(final String id, final Throwable cause) {
+            super("No adaptation exists with id `" + id + "`", cause);
+            this.id = id;
+        }
+
+        public NoSuchAdaptationException(final String id) { this(id, null); }
+
+        public String getInvalidAdaptationId() { return this.id; }
     }
 }
