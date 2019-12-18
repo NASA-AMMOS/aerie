@@ -1220,6 +1220,7 @@ export class SourceExplorerEffects {
     treeBySourceId: StringTMap<RavenSource> | null,
   ): Observable<Action>[] {
     const actions: Observable<Action>[] = [];
+
     if (source) {
       if (source.childIds && !source.childIds.length) {
         if (source.content) {

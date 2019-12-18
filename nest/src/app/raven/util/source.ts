@@ -133,7 +133,6 @@ export function toRavenSources(
             : parentPathInFile.length > 0
             ? `${parentPathInFile}/${ravenSource.name}`
             : '';
-        console.log('ravenSource.pathInFile: ' + ravenSource.pathInFile);
         const currentSource = tree[ravenSource.id];
         // Use current source if source is the same.
         if (
