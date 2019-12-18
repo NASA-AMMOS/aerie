@@ -13,13 +13,12 @@ public final class DevAppDriver {
         // Assemble the core non-web object graph.
         final Fixtures fixtures = new Fixtures();
         final App app = new LocalApp(fixtures.adaptationRepository);
-        final AdaptationBindings bindings = new AdaptationBindings(app);
 
-        // Initiate an HTTP server.
+        // Configure an HTTP server.
         final Javalin javalin = Javalin.create(config -> {
             config.enableCorsForAllOrigins();
+            config.registerPlugin(new AdaptationBindings(app));
         });
-        bindings.registerRoutes(javalin);
 
         // Start the HTTP server.
         javalin.start(HTTP_PORT);

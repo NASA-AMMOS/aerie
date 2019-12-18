@@ -10,6 +10,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import io.javalin.Javalin;
+import io.javalin.core.plugin.Plugin;
 import io.javalin.http.Context;
 import io.javalin.http.UploadedFile;
 
@@ -38,14 +39,15 @@ import static io.javalin.apibuilder.ApiBuilder.post;
  * this interface that the {@code AdaptationBindings} class lifts into the domain of HTTP; an object implementing
  * this interface defines the action to take for each HTTP request in an HTTP-independent way.
  */
-public final class AdaptationBindings {
+public final class AdaptationBindings implements Plugin {
     private final App app;
 
     public AdaptationBindings(final App app) {
         this.app = app;
     }
 
-    public void registerRoutes(final Javalin javalin) {
+    @Override
+    public void apply(final Javalin javalin) {
         javalin.routes(() -> {
             path("adaptations", () -> {
                 get(this::getAdaptations);

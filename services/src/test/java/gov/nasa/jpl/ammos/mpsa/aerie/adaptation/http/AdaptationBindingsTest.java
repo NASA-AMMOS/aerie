@@ -27,27 +27,26 @@ import java.util.Random;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public final class AdaptationBindingsTest {
-    private static Javalin app = null;
+    private static Javalin SERVER = null;
 
     @BeforeAll
     public static void setupServer() {
-        final StubApp controller = new StubApp();
-        final AdaptationBindings bindings = new AdaptationBindings(controller);
+        final StubApp app = new StubApp();
 
-        app = Javalin.create(config -> {
+        SERVER = Javalin.create(config -> {
             config.showJavalinBanner = false;
             config.enableCorsForAllOrigins();
+            config.registerPlugin(new AdaptationBindings(app));
         });
-        bindings.registerRoutes(app);
-        app.start();
+        SERVER.start();
     }
 
     @AfterAll
     public static void shutdownServer() {
-        app.stop();
+        SERVER.stop();
     }
 
-    private final URI baseUri = URI.create("http://localhost:" + app.port());
+    private final URI baseUri = URI.create("http://localhost:" + SERVER.port());
     private final HttpClient client = HttpClient.newHttpClient();
 
     @Test

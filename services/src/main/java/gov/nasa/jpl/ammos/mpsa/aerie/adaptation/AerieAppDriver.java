@@ -19,20 +19,19 @@ public final class AerieAppDriver {
         // Fetch application configuration properties.
         final AppConfiguration configuration = loadConfiguration(args);
 
-        // Assemble the core non-web object graph.
+        // Assemble the core domain object graph.
         final AdaptationRepository adaptationRepository = new RemoteAdaptationRepository(
             configuration.MONGO_URI,
             configuration.MONGO_DATABASE,
             configuration.MONGO_ADAPTATION_COLLECTION);
         final App app = new LocalApp(adaptationRepository);
-        final AdaptationBindings bindings = new AdaptationBindings(app);
 
-        // Initiate an HTTP server.
+        // Configure an HTTP server.
         final Javalin javalin = Javalin.create(config -> {
             config.showJavalinBanner = false;
             config.enableCorsForAllOrigins();
+            config.registerPlugin(new AdaptationBindings(app));
         });
-        bindings.registerRoutes(javalin);
 
         // Start the HTTP server.
         javalin.start(configuration.HTTP_PORT);
