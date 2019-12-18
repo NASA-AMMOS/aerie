@@ -58,6 +58,7 @@ function ActivityBand(obj) {
 ActivityBand.DRAG_MOVE       = 1;
 ActivityBand.DRAG_START_TIME = 2;
 ActivityBand.DRAG_END_TIME   = 3;
+ActivityBand.TOP_MARGIN = 3;
 
 ActivityBand.prototype.setIntervals = function(intervals, index) {
   Band.prototype.setIntervals.call(this, intervals, index);
@@ -638,7 +639,7 @@ ActivityPainter.prototype.computeAutoFit = function() {
     return this.band.height;
   }
 
-  var rowHeight = (this.band.height - this.activityHeight - 1*this.rowPadding) / (numRows - 1);
+  var rowHeight = (this.band.height - ActivityBand.TOP_MARGIN - this.activityHeight) / (numRows - 1);
   return Math.max(0, rowHeight);
 };
 
@@ -887,11 +888,11 @@ ActivityPainter.prototype.paintActivitiesWaterfallLayout = function(acts) {
   // 0,0 corresponds to the upper left hand corner.
   this.trimLabel = false;
   // set min row height to 5
-  this.rowHeight = Math.max(5,Math.floor(this.band.height/acts.length));
+  this.rowHeight = Math.max(5,Math.floor((this.band.height - ActivityBand.TOP_MARGIN)/acts.length));
   this.rowPadding = Math.ceil(this.rowHeight/3);
   this.activityHeight = Math.min (20, this.rowHeight - this.rowPadding);
   this.rowPadding = this.rowHeight - this.activityHeight;
-  var rowY = this.rowHeight;
+  var rowY = this.rowHeight + ActivityBand.TOP_MARGIN;
   var actCoords = [];
   for(var i=0, ilength=acts.length; i<ilength; ++i) {
     var act = acts[i];

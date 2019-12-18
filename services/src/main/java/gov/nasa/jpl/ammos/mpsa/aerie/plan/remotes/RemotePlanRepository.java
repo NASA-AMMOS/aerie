@@ -252,7 +252,7 @@ public final class RemotePlanRepository implements PlanRepository {
       case "string":
         return SerializedParameter.of(document.getString("value"));
       case "int":
-        return SerializedParameter.of(document.getInteger("value"));
+        return SerializedParameter.of(document.getLong("value"));
       case "double":
         return SerializedParameter.of(document.getDouble("value"));
       case "boolean":

@@ -16,6 +16,7 @@
         <module>schemas</module>
         <module>services</module>
         <module>merlin-multimission-models</module>
+        <module>sample-adaptation</module>
     </modules>
 
     <properties>
