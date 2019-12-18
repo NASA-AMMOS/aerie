@@ -137,8 +137,10 @@ export const reducer = createReducer(
             if (action.subBandId === subBand.id) {
               const points = [...(subBand as any).points];
               points.splice(action.index, 0, action.point);
+              const maxTimeRange = getMaxTimeRange(points);
               return {
                 ...subBand,
+                maxTimeRange,
                 points,
               };
             }
@@ -155,6 +157,7 @@ export const reducer = createReducer(
       ...state,
       bands,
       currentStateChanged: state.currentState !== null,
+      ...updateTimeRanges(bands, state.viewTimeRange),
     };
   }),
   on(TimelineActions.addPointsToSubBand, (state, action) => {
@@ -319,14 +322,17 @@ export const reducer = createReducer(
           ...band,
           subBands: band.subBands.map(subBand => {
             if (action.subBandId === subBand.id) {
+              const points = (subBand as any).points.map(
+                (point: RavenActivityPoint) =>
+                  deletePoints.includes(point.uniqueId)
+                    ? { ...point, pointStatus: 'deleted' }
+                    : point,
+              );
+              const maxTimeRange = getMaxTimeRange(points);
               return {
                 ...subBand,
-                points: (subBand as any).points.map(
-                  (point: RavenActivityPoint) =>
-                    deletePoints.includes(point.uniqueId)
-                      ? { ...point, pointStatus: 'deleted' }
-                      : point,
-                ),
+                maxTimeRange,
+                points,
                 pointsChanged: true,
               };
             }

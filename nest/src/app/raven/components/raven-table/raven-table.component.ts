@@ -110,6 +110,8 @@ export class RavenTableComponent implements OnChanges {
   displayedFilter: string;
 
   columnDefs: any[] = [];
+  infiniteScroll = false;
+  infiniteScrollThreshold = 10000;
   rowData: any[] = [];
   rowSelection = 'multiple';
 
@@ -122,22 +124,8 @@ export class RavenTableComponent implements OnChanges {
 
   constructor() {
     this.gridOptions = {
-      infiniteInitialRowCount: 1,
       rowHeight: 28,
-      rowModelType: 'infinite',
     };
-    this.dataSource = {
-      getRows: (params: any) => {
-        const data = this.rowData.slice(params.startRow, params.endRow);
-        let lastRow = -1;
-        if (this.rowData.length <= params.endRow) {
-          lastRow = this.rowData.length;
-        }
-        params.successCallback(data, lastRow);
-      },
-    };
-
-    this.gridOptions.datasource = this.dataSource;
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -146,7 +134,7 @@ export class RavenTableComponent implements OnChanges {
     }
     if (changes.activityFilter) {
       const selectedPoint = this.selectedPoint;
-      if (this.activityFilter !== '') {
+      if (this.activityFilter !== undefined && this.activityFilter !== '') {
         this.gridOptions.getRowStyle = function(params: any) {
           if (
             selectedPoint &&
@@ -181,8 +169,33 @@ export class RavenTableComponent implements OnChanges {
     // Points (any length).
     if (changes.points) {
       this.rowData = this.createRowData(this.points);
-      if (this.gridOptions.api) {
-        this.gridOptions.api.setDatasource(this.dataSource);
+      this.infiniteScroll =
+        this.points && this.points.length > this.infiniteScrollThreshold;
+
+      if (this.infiniteScroll) {
+        this.gridOptions.infiniteInitialRowCount = 1;
+        this.gridOptions.rowModelType = 'infinite';
+        this.dataSource = {
+          getRows: (params: any) => {
+            const data = this.rowData.slice(params.startRow, params.endRow);
+            let lastRow = -1;
+            if (this.rowData.length <= params.endRow) {
+              lastRow = this.rowData.length;
+            }
+            params.successCallback(data, lastRow);
+          },
+        };
+
+        if (this.gridOptions.api) {
+          console.log('dataSource set');
+          this.gridOptions.api.setDatasource(this.dataSource);
+        }
+        this.gridOptions.infiniteInitialRowCount = 1;
+        this.gridOptions.rowModelType = 'infinite';
+        this.gridOptions.datasource = this.dataSource;
+      } else {
+        this.gridOptions.rowModelType = undefined;
+        this.gridOptions.datasource = undefined;
       }
     }
     // Points (length > 0).
@@ -229,6 +242,7 @@ export class RavenTableComponent implements OnChanges {
         field: 'index',
         headerName: '',
         hide: false,
+        resizable: true,
         width: 50,
       });
 
@@ -277,6 +291,8 @@ export class RavenTableComponent implements OnChanges {
             field: prop,
             headerName: prop.charAt(0).toUpperCase() + prop.slice(1), // Capitalize header.
             hide: false,
+            resizable: true,
+            sortable: true,
             valueSetter:
               this.selectedSubBand.editable && this.colEditable(prop)
                 ? (params: ValueSetterParams) => {
@@ -292,30 +308,20 @@ export class RavenTableComponent implements OnChanges {
                         )
                           ? utc(value)
                           : value,
+                        duration:
+                          this.selectedSubBand.type !== 'resource' &&
+                          timeIds.includes(params.column.getId()) &&
+                          params.node.data.duration !== undefined
+                            ? params.column.getId() === 'start'
+                              ? utc(params.node.data.end) - utc(value)
+                              : utc(value) - utc(params.node.data.start)
+                            : null,
                         pointStatus:
                           params.node.data.pointStatus === 'added'
                             ? 'added'
                             : 'updated',
                       },
                     });
-
-                    // Recalculate duration when either start or end changed.
-                    if (
-                      timeIds.includes(params.column.getId()) &&
-                      params.node.data.duration !== undefined
-                    ) {
-                      updatePoint.emit({
-                        bandId,
-                        pointId: params.node.data.id,
-                        subBandId,
-                        update: {
-                          duration:
-                            params.column.getId() === 'start'
-                              ? utc(params.node.data.end) - utc(value)
-                              : utc(value) - utc(params.node.data.start),
-                        },
-                      });
-                    }
                     return true;
                   }
                 : null,
@@ -478,7 +484,9 @@ export class RavenTableComponent implements OnChanges {
             node.data &&
             node.data.uniqueId === this.selectedPoint.uniqueId
           ) {
-            this.agGrid.api.ensureIndexVisible(node.rowIndex);
+            if (this.gridOptions !== undefined && this.gridOptions.api) {
+              this.gridOptions.api.ensureIndexVisible(node.rowIndex);
+            }
             node.data.selected = true;
             node.setSelected(true);
           } else {
@@ -603,6 +611,9 @@ export class RavenTableComponent implements OnChanges {
           : this.gridApi.getDisplayedRowCount(),
       point: newPoint,
     });
+
+    // Select the newly added point.
+    this.selectPoint.emit(newPoint);
   }
 
   /**
