@@ -151,7 +151,9 @@ describe('source.ts', () => {
           'Resource/AACS/AACS_Mode',
           'leucadia/folder1/subFolder/pef2',
         ),
-      ).toEqual('leucadia/folder1/subFolder/pef2/Resource/AACS/AACS_Mode?filter=.*');
+      ).toEqual(
+        'leucadia/folder1/subFolder/pef2/Resource/AACS/AACS_Mode?filter=.*',
+      );
     });
   });
 
