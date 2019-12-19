@@ -1,8 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.Fixtures;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
@@ -42,7 +42,7 @@ public final class AdaptationTest {
     }
 
     @Test
-    public void shouldGetActivityType() throws NoSuchActivityTypeException, Adaptation.AdaptationContractException {
+    public void shouldGetActivityType() throws Adaptation.NoSuchActivityTypeException, Adaptation.AdaptationContractException {
         // GIVEN
         final String activityId = Fixtures.EXISTENT_ACTIVITY_TYPE_ID;
         final ActivityType expectedType = fixtures.ACTIVITY_TYPES.get(activityId);
@@ -57,22 +57,18 @@ public final class AdaptationTest {
     @Test
     public void shouldNotGetActivityTypeForNonexistentActivityType() {
         // GIVEN
-        final String adaptationId = fixtures.EXISTENT_ADAPTATION_ID;
         final String activityId = Fixtures.NONEXISTENT_ACTIVITY_TYPE_ID;
 
         // WHEN
         final Throwable thrown = catchThrowable(() -> adaptation.getActivityType(activityId));
 
         // THEN
-        assertThat(thrown).isInstanceOf(NoSuchActivityTypeException.class);
-
-        final String invalidActivityId = ((NoSuchActivityTypeException)thrown).getInvalidActivityTypeId();
-        assertThat(invalidActivityId).isEqualTo(activityId);
+        assertThat(thrown).isInstanceOf(Adaptation.NoSuchActivityTypeException.class);
     }
 
     @Test
     public void shouldInstantiateActivityInstance()
-        throws NoSuchActivityTypeException, Adaptation.AdaptationContractException, UnconstructableActivityInstanceException
+        throws Adaptation.NoSuchActivityTypeException, Adaptation.AdaptationContractException, UnconstructableActivityInstanceException
     {
         // GIVEN
         final SerializedActivity serializedActivity = new SerializedActivity(

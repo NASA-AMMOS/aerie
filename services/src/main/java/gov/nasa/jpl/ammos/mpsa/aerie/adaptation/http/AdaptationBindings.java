@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
@@ -80,7 +79,7 @@ public final class AdaptationBindings implements Plugin {
             .contentType("application/json")
         ).exception(App.NoSuchAdaptationException.class, (ex, ctx) -> ctx
             .status(404)
-        ).exception(NoSuchActivityTypeException.class, (ex, ctx) -> ctx
+        ).exception(App.NoSuchActivityTypeException.class, (ex, ctx) -> ctx
             .status(404)
         ).exception(Adaptation.AdaptationContractException.class, (ex, ctx) -> ctx
             .status(500)
@@ -136,7 +135,7 @@ public final class AdaptationBindings implements Plugin {
         ctx.result(response.toString()).contentType("application/json");
     }
 
-    private void getActivityType(final Context ctx) throws App.NoSuchAdaptationException, NoSuchActivityTypeException, Adaptation.AdaptationContractException {
+    private void getActivityType(final Context ctx) throws App.NoSuchAdaptationException, App.NoSuchActivityTypeException, Adaptation.AdaptationContractException {
         final String adaptationId = ctx.pathParam("adaptationId");
         final String activityTypeId = ctx.pathParam("activityTypeId");
 
@@ -147,7 +146,7 @@ public final class AdaptationBindings implements Plugin {
     }
 
     private void validateActivityParameters(final Context ctx)
-        throws InvalidEntityException, App.NoSuchAdaptationException, Adaptation.AdaptationContractException, NoSuchActivityTypeException,
+        throws InvalidEntityException, App.NoSuchAdaptationException, Adaptation.AdaptationContractException, App.NoSuchActivityTypeException,
         UnconstructableActivityInstanceException
     {
         final String adaptationId = ctx.pathParam("adaptationId");
