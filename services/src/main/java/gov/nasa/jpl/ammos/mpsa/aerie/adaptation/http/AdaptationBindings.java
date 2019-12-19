@@ -68,6 +68,10 @@ public final class AdaptationBindings implements Plugin {
             .status(400)
             .result(ResponseSerializers.serializeValidationException(ex).toString())
             .contentType("application/json")
+        ).exception(App.AdaptationRejectedException.class, (ex, ctx) -> ctx
+            .status(400)
+            .result(ResponseSerializers.serializeAdaptationRejectedException(ex).toString())
+            .contentType("application/json")
         ).exception(InvalidEntityException.class, (ex, ctx) -> ctx
             .status(400)
             .result(ResponseSerializers.serializeInvalidEntityException(ex).toString())
@@ -94,15 +98,10 @@ public final class AdaptationBindings implements Plugin {
         ctx.result(response.toString()).contentType("application/json");
     }
 
-    private void postAdaptation(final Context ctx) throws ValidationException {
+    private void postAdaptation(final Context ctx) throws App.AdaptationRejectedException, ValidationException {
         final NewAdaptation newAdaptation = readNewAdaptation(ctx);
 
-        final String adaptationId;
-        try {
-            adaptationId = this.app.addAdaptation(newAdaptation);
-        } catch (final App.AdaptationRejectedException ex) {
-            throw new ValidationException("adaptation rejected", List.of(ex.getMessage()));
-        }
+        final String adaptationId = this.app.addAdaptation(newAdaptation);
 
         ctx.status(201)
                 .header("Location", "/adaptations/" + adaptationId)
@@ -215,6 +214,8 @@ public final class AdaptationBindings implements Plugin {
             if (owner == null) validationErrors.add("No value provided for key `owner`");
             if (uploadedFile == null) validationErrors.add("No upload file provided for key `file`");
 
+            // TODO: Throw an InvalidEntityException instead, once it supports capturing fine-grained information
+            //   about where in the entity body the failures occur.
             if (!validationErrors.isEmpty()) throw new ValidationException("Validation failed", validationErrors);
         }
 

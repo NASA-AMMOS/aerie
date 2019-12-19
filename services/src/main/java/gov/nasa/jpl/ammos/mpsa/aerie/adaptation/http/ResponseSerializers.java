@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.LocalApp;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
@@ -112,6 +113,13 @@ public final class ResponseSerializers {
     return Json.createObjectBuilder()
         .add("message", "invalid entity")
         .add("failures", Json.createArrayBuilder(ex.getValidationErrors()))
+        .build();
+  }
+
+  public static JsonValue serializeAdaptationRejectedException(final App.AdaptationRejectedException ex) {
+    // TODO: Improve diagnostic information?
+    return Json.createObjectBuilder()
+        .add("message", "adaptation rejected: " + ex.getMessage())
         .build();
   }
 
