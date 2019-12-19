@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions;
+package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
 import java.util.List;
 
