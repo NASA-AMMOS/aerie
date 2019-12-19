@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
@@ -104,4 +103,12 @@ public final class Adaptation {
     }
 
     public static class NoSuchActivityTypeException extends Exception {}
+
+    public static class UnconstructableActivityInstanceException extends Exception {
+        public UnconstructableActivityInstanceException(final String message) {
+            super(message);
+        }
+
+        public UnconstructableActivityInstanceException(final String message, final Throwable cause) { super(message, cause); }
+    }
 }

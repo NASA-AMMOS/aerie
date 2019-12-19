@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.LocalApp;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
@@ -92,7 +91,16 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeFailureList(final List<String> failures) {
-    return Json.createArrayBuilder(failures).build();
+    if (failures.size() > 0) {
+      return Json.createObjectBuilder()
+          .add("instantiable", JsonValue.FALSE)
+          .add("failures", Json.createArrayBuilder(failures))
+          .build();
+    } else {
+      return Json.createObjectBuilder()
+          .add("instantiable", JsonValue.TRUE)
+          .build();
+    }
   }
 
   public static JsonValue serializedCreatedId(final String entityId) {
@@ -124,13 +132,6 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeAdaptationContractException(final Adaptation.AdaptationContractException ex) {
-    // TODO: Improve diagnostic information
-    return Json.createObjectBuilder()
-        .add("message", ex.getMessage())
-        .build();
-  }
-
-  public static JsonValue serializeUnconstructableActivityInstanceException(final UnconstructableActivityInstanceException ex) {
     // TODO: Improve diagnostic information
     return Json.createObjectBuilder()
         .add("message", ex.getMessage())

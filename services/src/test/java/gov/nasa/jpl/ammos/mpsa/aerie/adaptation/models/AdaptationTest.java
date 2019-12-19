@@ -1,7 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.Fixtures;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
@@ -68,7 +66,7 @@ public final class AdaptationTest {
 
     @Test
     public void shouldInstantiateActivityInstance()
-        throws Adaptation.NoSuchActivityTypeException, Adaptation.AdaptationContractException, UnconstructableActivityInstanceException
+        throws Adaptation.NoSuchActivityTypeException, Adaptation.AdaptationContractException, Adaptation.UnconstructableActivityInstanceException
     {
         // GIVEN
         final SerializedActivity serializedActivity = new SerializedActivity(
@@ -93,7 +91,7 @@ public final class AdaptationTest {
         final Throwable thrown = catchThrowable(() -> adaptation.instantiateActivity(serializedActivity));
 
         // THEN
-        assertThat(thrown).isInstanceOf(UnconstructableActivityInstanceException.class);
+        assertThat(thrown).isInstanceOf(Adaptation.UnconstructableActivityInstanceException.class);
     }
 
     @Test
@@ -107,6 +105,6 @@ public final class AdaptationTest {
         final Throwable thrown = catchThrowable(() -> adaptation.instantiateActivity(serializedActivity));
 
         // THEN
-        assertThat(thrown).isInstanceOf(UnconstructableActivityInstanceException.class);
+        assertThat(thrown).isInstanceOf(Adaptation.UnconstructableActivityInstanceException.class);
     }
 }

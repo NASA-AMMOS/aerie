@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
@@ -24,9 +23,9 @@ public interface App {
         throws NoSuchAdaptationException, Adaptation.AdaptationContractException;
     ActivityType getActivityType(String adaptationId, String activityTypeId)
         throws NoSuchAdaptationException, Adaptation.AdaptationContractException, NoSuchActivityTypeException;
+    // TODO: Provide a finer-scoped validation return type. Mere strings make all validations equally severe.
     List<String> validateActivityParameters(String adaptationId, SerializedActivity activityParameters)
-        throws NoSuchAdaptationException, Adaptation.AdaptationContractException,
-        NoSuchActivityTypeException, UnconstructableActivityInstanceException;
+        throws NoSuchAdaptationException, Adaptation.AdaptationContractException, NoSuchActivityTypeException;
 
     class AdaptationRejectedException extends Exception {
         public AdaptationRejectedException(final String message) { super(message); }

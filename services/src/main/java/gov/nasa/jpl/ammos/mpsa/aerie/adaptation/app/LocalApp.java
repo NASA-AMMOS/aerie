@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
@@ -132,30 +131,31 @@ public final class LocalApp implements App {
      * @return A list of validation errors that is empty if validation succeeds.
      * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
      * @throws NoSuchActivityTypeException If no activity type exists for the given serialized activity.
-     * @throws UnconstructableActivityInstanceException If the activity type cannot be constructed from the given parameters.
      * @throws Adaptation.AdaptationContractException If the named adaptation does not abide by the expected contract.
      * @throws AdaptationLoadException If the adaptation cannot be loaded -- the JAR may be invalid, or the adaptation
      *         it contains may not abide by the expected contract at load time.
      */
     @Override
     public List<String> validateActivityParameters(final String adaptationId, final SerializedActivity activityParameters)
-        throws NoSuchAdaptationException, Adaptation.AdaptationContractException,
-        NoSuchActivityTypeException, UnconstructableActivityInstanceException, AdaptationLoadException
+        throws NoSuchAdaptationException, Adaptation.AdaptationContractException, NoSuchActivityTypeException, AdaptationLoadException
     {
+        final Activity<?> activity;
         try {
-            final Activity<?> activity = loadAdaptation(adaptationId).instantiateActivity(activityParameters);
-
-            final List<String> failures = activity.validateParameters();
-            if (failures == null) {
-                // TODO: The top-level application layer is a poor place to put knowledge about the adaptation contract.
-                //   Move this logic somewhere better.
-                throw new Adaptation.AdaptationContractException(activity.getClass().getName() + ".validateParameters() returned null");
-            }
-
-            return failures;
+            activity = this.loadAdaptation(adaptationId).instantiateActivity(activityParameters);
         } catch (final Adaptation.NoSuchActivityTypeException ex) {
             throw new NoSuchActivityTypeException(activityParameters.getTypeName(), ex);
+        } catch (final Adaptation.UnconstructableActivityInstanceException ex) {
+            return List.of(ex.getMessage());
         }
+
+        final List<String> failures = activity.validateParameters();
+        if (failures == null) {
+            // TODO: The top-level application layer is a poor place to put knowledge about the adaptation contract.
+            //   Move this logic somewhere better.
+            throw new Adaptation.AdaptationContractException(activity.getClass().getName() + ".validateParameters() returned null");
+        }
+
+        return failures;
     }
 
     /**

@@ -283,6 +283,8 @@ public final class AdaptationBindingsTest {
         final String activityId = StubApp.EXISTENT_ACTIVITY_TYPE;
         final SerializedActivity activityParameters = StubApp.UNCONSTRUCTABLE_ACTIVITY_INSTANCE;
 
+        final JsonValue expectedResponse = ResponseSerializers.serializeFailureList(StubApp.UNCONSTRUCTABLE_ACTIVITY_INSTANCE_FAILURES);
+
         // WHEN
         final HttpResponse<String> response = sendRequest(
             "POST",
@@ -290,7 +292,10 @@ public final class AdaptationBindingsTest {
             ResponseSerializers.serializeActivityParameters(activityParameters.getParameters()));
 
         // THEN
-        assertThat(response.statusCode()).isEqualTo(400);
+        assertThat(response.statusCode()).isEqualTo(200);
+
+        final JsonValue responseJson = Json.createReader(new StringReader(response.body())).readValue();
+        assertThat(responseJson).isEqualTo(expectedResponse);
     }
 
     private HttpResponse<String> sendRequest(final String method, final String path)

@@ -1,7 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
@@ -76,10 +75,6 @@ public final class AdaptationBindings implements Plugin {
             .status(400)
             .result(ResponseSerializers.serializeInvalidEntityException(ex).toString())
             .contentType("application/json")
-        ).exception(UnconstructableActivityInstanceException.class, (ex, ctx) -> ctx
-            .status(400)
-            .result(ResponseSerializers.serializeUnconstructableActivityInstanceException(ex).toString())
-            .contentType("application/json")
         ).exception(App.NoSuchAdaptationException.class, (ex, ctx) -> ctx
             .status(404)
         ).exception(App.NoSuchActivityTypeException.class, (ex, ctx) -> ctx
@@ -144,8 +139,7 @@ public final class AdaptationBindings implements Plugin {
     }
 
     private void validateActivityParameters(final Context ctx)
-        throws InvalidEntityException, App.NoSuchAdaptationException, Adaptation.AdaptationContractException, App.NoSuchActivityTypeException,
-        UnconstructableActivityInstanceException
+        throws InvalidEntityException, App.NoSuchAdaptationException, Adaptation.AdaptationContractException, App.NoSuchActivityTypeException
     {
         final String adaptationId = ctx.pathParam("adaptationId");
         final String activityTypeId = ctx.pathParam("activityTypeId");

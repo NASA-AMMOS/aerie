@@ -1,7 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
@@ -44,6 +43,7 @@ public final class StubApp implements App {
         Map.of());
 
     public static final List<String> INVALID_ACTIVITY_INSTANCE_FAILURES = List.of("just wrong");
+    public static final List<String> UNCONSTRUCTABLE_ACTIVITY_INSTANCE_FAILURES = List.of("Unconstructable activity instance");
 
     static {
         VALID_NEW_ADAPTATION = new HashMap<>();
@@ -129,7 +129,7 @@ public final class StubApp implements App {
 
     @Override
     public List<String> validateActivityParameters(final String adaptationId, final SerializedActivity activityParameters)
-        throws NoSuchAdaptationException, NoSuchActivityTypeException, UnconstructableActivityInstanceException
+        throws NoSuchAdaptationException, NoSuchActivityTypeException
     {
         if (!Objects.equals(adaptationId, EXISTENT_ADAPTATION_ID)) {
             throw new NoSuchAdaptationException(adaptationId);
@@ -137,11 +137,11 @@ public final class StubApp implements App {
 
         if (Objects.equals(activityParameters, NONEXISTENT_ACTIVITY_INSTANCE)) {
             throw new NoSuchActivityTypeException(activityParameters.getTypeName());
-        } else if (Objects.equals(activityParameters, UNCONSTRUCTABLE_ACTIVITY_INSTANCE)) {
-            throw new UnconstructableActivityInstanceException("Unconstructable activity instance");
         }
 
-        if (Objects.equals(activityParameters, INVALID_ACTIVITY_INSTANCE)) {
+        if (Objects.equals(activityParameters, UNCONSTRUCTABLE_ACTIVITY_INSTANCE)) {
+            return UNCONSTRUCTABLE_ACTIVITY_INSTANCE_FAILURES;
+        } else if (Objects.equals(activityParameters, INVALID_ACTIVITY_INSTANCE)) {
             return INVALID_ACTIVITY_INSTANCE_FAILURES;
         } else {
             return Collections.emptyList();
