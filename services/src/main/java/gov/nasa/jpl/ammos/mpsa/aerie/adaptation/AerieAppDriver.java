@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.LocalApp;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.AdaptationBindings;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.AdaptationRepositoryExceptionBindings;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.LocalAppExceptionBindings;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.RemoteAdaptationRepository;
@@ -33,6 +34,7 @@ public final class AerieAppDriver {
             config.enableCorsForAllOrigins();
             config.registerPlugin(new AdaptationBindings(app));
             config.registerPlugin(new LocalAppExceptionBindings());
+            config.registerPlugin(new AdaptationRepositoryExceptionBindings());
         });
 
         // Start the HTTP server.

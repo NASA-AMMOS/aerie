@@ -6,6 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.RemoteAdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 
@@ -130,6 +131,13 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeAdaptationLoadException(final LocalApp.AdaptationLoadException ex) {
+    // TODO: Improve diagnostic information?
+    return Json.createObjectBuilder()
+        .add("message", ex.getMessage())
+        .build();
+  }
+
+  public static JsonValue serializeAdaptationAccessException(final RemoteAdaptationRepository.AdaptationAccessException ex) {
     // TODO: Improve diagnostic information?
     return Json.createObjectBuilder()
         .add("message", ex.getMessage())

@@ -1,9 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationAccessException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.RemoteAdaptationRepository;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -34,7 +34,7 @@ public final class MockAdaptationRepository implements AdaptationRepository {
         try {
             Files.copy(adaptationJar.path, location);
         } catch (final IOException e) {
-            throw new AdaptationAccessException(adaptationJar.path, e);
+            throw new RemoteAdaptationRepository.AdaptationAccessException(adaptationJar.path, e);
         }
 
         final AdaptationJar newJar = new AdaptationJar(adaptationJar);
@@ -54,7 +54,7 @@ public final class MockAdaptationRepository implements AdaptationRepository {
         try {
             Files.deleteIfExists(adaptationJar.path);
         } catch (final IOException e) {
-            throw new AdaptationAccessException(adaptationJar.path, e);
+            throw new RemoteAdaptationRepository.AdaptationAccessException(adaptationJar.path, e);
         }
 
         this.adaptations.remove(adaptationId);

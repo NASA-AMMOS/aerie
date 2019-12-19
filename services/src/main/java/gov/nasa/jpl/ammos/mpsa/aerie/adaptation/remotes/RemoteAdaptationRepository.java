@@ -1,7 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes;
 
 import com.mongodb.client.*;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationAccessException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -137,5 +136,18 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
 
     private Bson adaptationById(final String adaptationId) throws IllegalArgumentException {
         return eq("_id", new ObjectId(adaptationId));
+    }
+
+    public static class AdaptationAccessException extends RuntimeException {
+        private final Path path;
+
+        public AdaptationAccessException(final Path path, final Throwable cause) {
+            super(cause);
+            this.path = path;
+        }
+
+        public Path getPath() {
+            return this.path;
+        }
     }
 }

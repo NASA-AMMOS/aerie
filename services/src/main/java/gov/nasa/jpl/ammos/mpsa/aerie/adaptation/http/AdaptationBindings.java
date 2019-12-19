@@ -1,7 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationAccessException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
@@ -87,10 +86,7 @@ public final class AdaptationBindings implements Plugin {
             .status(500)
             .result(ResponseSerializers.serializeAdaptationContractException(ex).toString())
             .contentType("application/json")
-        ).exception(AdaptationAccessException.class, (ex, ctx) -> {
-            System.err.println(ex.getMessage());
-            ctx.status(500);
-        });
+        );
     }
 
     private void getAdaptations(final Context ctx) {
