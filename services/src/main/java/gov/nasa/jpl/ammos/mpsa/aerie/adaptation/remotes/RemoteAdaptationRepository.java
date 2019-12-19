@@ -1,6 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes;
 
-import com.mongodb.client.*;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoIterable;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
