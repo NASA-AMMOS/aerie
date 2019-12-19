@@ -1,7 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.*;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import io.javalin.Javalin;
@@ -79,10 +81,6 @@ public final class AdaptationBindings implements Plugin {
             .status(404)
         ).exception(App.NoSuchActivityTypeException.class, (ex, ctx) -> ctx
             .status(404)
-        ).exception(Adaptation.AdaptationContractException.class, (ex, ctx) -> ctx
-            .status(500)
-            .result(ResponseSerializers.serializeAdaptationContractException(ex).toString())
-            .contentType("application/json")
         );
     }
 
@@ -119,7 +117,7 @@ public final class AdaptationBindings implements Plugin {
         this.app.removeAdaptation(adaptationId);
     }
 
-    private void getActivityTypes(final Context ctx) throws App.NoSuchAdaptationException, Adaptation.AdaptationContractException {
+    private void getActivityTypes(final Context ctx) throws App.NoSuchAdaptationException {
         final String adaptationId = ctx.pathParam("adaptationId");
 
         final Map<String, ActivityType> activityTypes = this.app.getActivityTypes(adaptationId);
@@ -128,7 +126,7 @@ public final class AdaptationBindings implements Plugin {
         ctx.result(response.toString()).contentType("application/json");
     }
 
-    private void getActivityType(final Context ctx) throws App.NoSuchAdaptationException, App.NoSuchActivityTypeException, Adaptation.AdaptationContractException {
+    private void getActivityType(final Context ctx) throws App.NoSuchAdaptationException, App.NoSuchActivityTypeException {
         final String adaptationId = ctx.pathParam("adaptationId");
         final String activityTypeId = ctx.pathParam("activityTypeId");
 
@@ -139,7 +137,7 @@ public final class AdaptationBindings implements Plugin {
     }
 
     private void validateActivityParameters(final Context ctx)
-        throws InvalidEntityException, App.NoSuchAdaptationException, Adaptation.AdaptationContractException, App.NoSuchActivityTypeException
+        throws InvalidEntityException, App.NoSuchAdaptationException, App.NoSuchActivityTypeException
     {
         final String adaptationId = ctx.pathParam("adaptationId");
         final String activityTypeId = ctx.pathParam("activityTypeId");

@@ -92,7 +92,7 @@ public final class Adaptation {
             .orElseThrow(NoSuchActivityTypeException::new);
     }
 
-    public static class AdaptationContractException extends Exception {
+    public static class AdaptationContractException extends RuntimeException {
         public AdaptationContractException(final String message) {
             super(message);
         }

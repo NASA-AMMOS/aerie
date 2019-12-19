@@ -88,13 +88,12 @@ public final class LocalApp implements App {
      * @param adaptationId The ID of the adaptation to load.
      * @return The set of all activity types in the named adaptation, indexed by name.
      * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
-     * @throws Adaptation.AdaptationContractException If the named adaptation does not abide by the expected contract.
      * @throws AdaptationLoadException If the adaptation cannot be loaded -- the JAR may be invalid, or the adaptation
      *         it contains may not abide by the expected contract at load time.
      */
     @Override
     public Map<String, ActivityType> getActivityTypes(String adaptationId)
-        throws NoSuchAdaptationException, Adaptation.AdaptationContractException, AdaptationLoadException
+        throws NoSuchAdaptationException, AdaptationLoadException
     {
         return loadAdaptation(adaptationId)
             .getActivityTypes();
@@ -108,13 +107,12 @@ public final class LocalApp implements App {
      * @return Information about the named activity type.
      * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
      * @throws NoSuchActivityTypeException If no activity type exists for the given serialized activity.
-     * @throws Adaptation.AdaptationContractException If the named adaptation does not abide by the expected contract.
      * @throws AdaptationLoadException If the adaptation cannot be loaded -- the JAR may be invalid, or the adaptation
      *         it contains may not abide by the expected contract at load time.
      */
     @Override
     public ActivityType getActivityType(String adaptationId, String activityTypeId)
-        throws NoSuchAdaptationException, Adaptation.AdaptationContractException, NoSuchActivityTypeException, AdaptationLoadException
+        throws NoSuchAdaptationException, NoSuchActivityTypeException, AdaptationLoadException
     {
         try {
             return loadAdaptation(adaptationId).getActivityType(activityTypeId);
@@ -174,7 +172,7 @@ public final class LocalApp implements App {
             return new Adaptation(adaptation);
         } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
             throw new NoSuchAdaptationException(adaptationId, ex);
-        } catch (final AdaptationLoader.AdaptationLoadException | Adaptation.AdaptationContractException ex) {
+        } catch (final AdaptationLoader.AdaptationLoadException ex) {
             throw new AdaptationLoadException(ex);
         }
     }

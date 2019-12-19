@@ -1,7 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
@@ -20,12 +19,12 @@ public interface App {
         throws NoSuchAdaptationException;
 
     Map<String, ActivityType> getActivityTypes(String adaptationId)
-        throws NoSuchAdaptationException, Adaptation.AdaptationContractException;
+        throws NoSuchAdaptationException;
     ActivityType getActivityType(String adaptationId, String activityTypeId)
-        throws NoSuchAdaptationException, Adaptation.AdaptationContractException, NoSuchActivityTypeException;
+        throws NoSuchAdaptationException, NoSuchActivityTypeException;
     // TODO: Provide a finer-scoped validation return type. Mere strings make all validations equally severe.
     List<String> validateActivityParameters(String adaptationId, SerializedActivity activityParameters)
-        throws NoSuchAdaptationException, Adaptation.AdaptationContractException, NoSuchActivityTypeException;
+        throws NoSuchAdaptationException, NoSuchActivityTypeException;
 
     class AdaptationRejectedException extends Exception {
         public AdaptationRejectedException(final String message) { super(message); }

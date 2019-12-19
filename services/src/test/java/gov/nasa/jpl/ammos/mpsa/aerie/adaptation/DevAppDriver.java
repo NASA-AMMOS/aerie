@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.LocalApp;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.AdaptationBindings;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.AdaptationExceptionBindings;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.AdaptationRepositoryExceptionBindings;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.LocalAppExceptionBindings;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.Fixtures;
@@ -21,7 +22,8 @@ public final class DevAppDriver {
             .enableCorsForAllOrigins()
             .registerPlugin(new AdaptationBindings(app))
             .registerPlugin(new LocalAppExceptionBindings())
-            .registerPlugin(new AdaptationRepositoryExceptionBindings()));
+            .registerPlugin(new AdaptationRepositoryExceptionBindings())
+            .registerPlugin(new AdaptationExceptionBindings()));
 
         // Start the HTTP server.
         javalin.start(HTTP_PORT);
