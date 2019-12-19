@@ -31,10 +31,11 @@ public final class AerieAppDriver {
         // Configure an HTTP server.
         final Javalin javalin = Javalin.create(config -> {
             config.showJavalinBanner = false;
-            config.enableCorsForAllOrigins();
-            config.registerPlugin(new AdaptationBindings(app));
-            config.registerPlugin(new LocalAppExceptionBindings());
-            config.registerPlugin(new AdaptationRepositoryExceptionBindings());
+            config
+                .enableCorsForAllOrigins()
+                .registerPlugin(new AdaptationBindings(app))
+                .registerPlugin(new LocalAppExceptionBindings())
+                .registerPlugin(new AdaptationRepositoryExceptionBindings());
         });
 
         // Start the HTTP server.

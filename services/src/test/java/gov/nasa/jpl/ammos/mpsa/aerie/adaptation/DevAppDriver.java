@@ -17,12 +17,11 @@ public final class DevAppDriver {
         final App app = new LocalApp(fixtures.adaptationRepository);
 
         // Configure an HTTP server.
-        final Javalin javalin = Javalin.create(config -> {
-            config.enableCorsForAllOrigins();
-            config.registerPlugin(new AdaptationBindings(app));
-            config.registerPlugin(new LocalAppExceptionBindings());
-            config.registerPlugin(new AdaptationRepositoryExceptionBindings());
-        });
+        final Javalin javalin = Javalin.create(config -> config
+            .enableCorsForAllOrigins()
+            .registerPlugin(new AdaptationBindings(app))
+            .registerPlugin(new LocalAppExceptionBindings())
+            .registerPlugin(new AdaptationRepositoryExceptionBindings()));
 
         // Start the HTTP server.
         javalin.start(HTTP_PORT);
