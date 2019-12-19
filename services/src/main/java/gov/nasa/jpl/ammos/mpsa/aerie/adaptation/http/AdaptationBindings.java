@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static io.javalin.apibuilder.ApiBuilder.before;
 import static io.javalin.apibuilder.ApiBuilder.delete;
 import static io.javalin.apibuilder.ApiBuilder.get;
 import static io.javalin.apibuilder.ApiBuilder.path;
@@ -47,6 +48,8 @@ public final class AdaptationBindings implements Plugin {
     public void apply(final Javalin javalin) {
         javalin.routes(() -> {
             path("adaptations", () -> {
+                before(ctx -> ctx.contentType("application/json"));
+
                 get(this::getAdaptations);
                 post(this::postAdaptation);
                 path(":adaptationId", () -> {
@@ -64,92 +67,94 @@ public final class AdaptationBindings implements Plugin {
                 });
             });
         });
-
-        javalin.exception(ValidationException.class, (ex, ctx) -> ctx
-            .status(400)
-            .result(ResponseSerializers.serializeValidationException(ex).toString())
-            .contentType("application/json")
-        ).exception(App.AdaptationRejectedException.class, (ex, ctx) -> ctx
-            .status(400)
-            .result(ResponseSerializers.serializeAdaptationRejectedException(ex).toString())
-            .contentType("application/json")
-        ).exception(InvalidEntityException.class, (ex, ctx) -> ctx
-            .status(400)
-            .result(ResponseSerializers.serializeInvalidEntityException(ex).toString())
-            .contentType("application/json")
-        ).exception(App.NoSuchAdaptationException.class, (ex, ctx) -> ctx
-            .status(404)
-        ).exception(App.NoSuchActivityTypeException.class, (ex, ctx) -> ctx
-            .status(404)
-        );
     }
 
     private void getAdaptations(final Context ctx) {
         final Map<String, AdaptationJar> adaptations = this.app.getAdaptations();
 
-        final JsonValue response = ResponseSerializers.serializeAdaptations(adaptations);
-        ctx.result(response.toString()).contentType("application/json");
+        ctx.result(ResponseSerializers.serializeAdaptations(adaptations).toString());
     }
 
-    private void postAdaptation(final Context ctx) throws App.AdaptationRejectedException, ValidationException {
-        final NewAdaptation newAdaptation = readNewAdaptation(ctx);
+    private void postAdaptation(final Context ctx) {
+        try {
+            final NewAdaptation newAdaptation = readNewAdaptation(ctx);
 
-        final String adaptationId = this.app.addAdaptation(newAdaptation);
+            final String adaptationId = this.app.addAdaptation(newAdaptation);
 
-        ctx.status(201)
+            ctx.status(201)
                 .header("Location", "/adaptations/" + adaptationId)
-                .result(ResponseSerializers.serializedCreatedId(adaptationId).toString())
-                .contentType("application/json");
+                .result(ResponseSerializers.serializedCreatedId(adaptationId).toString());
+        } catch (final App.AdaptationRejectedException ex) {
+            ctx.status(400).result(ResponseSerializers.serializeAdaptationRejectedException(ex).toString());
+        } catch (final ValidationException ex) {
+            ctx.status(400).result(ResponseSerializers.serializeValidationException(ex).toString());
+        }
     }
 
-    private void getAdaptation(final Context ctx) throws App.NoSuchAdaptationException {
-        final String adaptationId = ctx.pathParam("adaptationId");
+    private void getAdaptation(final Context ctx) {
+        try {
+            final String adaptationId = ctx.pathParam("adaptationId");
 
-        final AdaptationJar adaptationJar = this.app.getAdaptationById(adaptationId);
+            final AdaptationJar adaptationJar = this.app.getAdaptationById(adaptationId);
 
-        final JsonValue response = ResponseSerializers.serializeAdaptation(adaptationJar);
-        ctx.result(response.toString()).contentType("application/json");
+            ctx.result(ResponseSerializers.serializeAdaptation(adaptationJar).toString());
+        } catch (final App.NoSuchAdaptationException ex) {
+            ctx.status(404);
+        }
     }
 
-    private void deleteAdaptation(final Context ctx) throws App.NoSuchAdaptationException {
-        final String adaptationId = ctx.pathParam("adaptationId");
+    private void deleteAdaptation(final Context ctx) {
+        try {
+            final String adaptationId = ctx.pathParam("adaptationId");
 
-        this.app.removeAdaptation(adaptationId);
+            this.app.removeAdaptation(adaptationId);
+        } catch (final App.NoSuchAdaptationException ex) {
+            ctx.status(404);
+        }
     }
 
-    private void getActivityTypes(final Context ctx) throws App.NoSuchAdaptationException {
-        final String adaptationId = ctx.pathParam("adaptationId");
+    private void getActivityTypes(final Context ctx) {
+        try {
+            final String adaptationId = ctx.pathParam("adaptationId");
 
-        final Map<String, ActivityType> activityTypes = this.app.getActivityTypes(adaptationId);
+            final Map<String, ActivityType> activityTypes = this.app.getActivityTypes(adaptationId);
 
-        final JsonValue response = ResponseSerializers.serializeActivityTypes(activityTypes);
-        ctx.result(response.toString()).contentType("application/json");
+            ctx.result(ResponseSerializers.serializeActivityTypes(activityTypes).toString());
+        } catch (final App.NoSuchAdaptationException ex) {
+            ctx.status(404);
+        }
     }
 
-    private void getActivityType(final Context ctx) throws App.NoSuchAdaptationException, App.NoSuchActivityTypeException {
-        final String adaptationId = ctx.pathParam("adaptationId");
-        final String activityTypeId = ctx.pathParam("activityTypeId");
+    private void getActivityType(final Context ctx) {
+        try {
+            final String adaptationId = ctx.pathParam("adaptationId");
+            final String activityTypeId = ctx.pathParam("activityTypeId");
 
-        final ActivityType activityType = this.app.getActivityType(adaptationId, activityTypeId);
+            final ActivityType activityType = this.app.getActivityType(adaptationId, activityTypeId);
 
-        final JsonValue response = ResponseSerializers.serializeActivityType(activityType);
-        ctx.result(response.toString()).contentType("application/json");
+            ctx.result(ResponseSerializers.serializeActivityType(activityType).toString());
+        } catch (final App.NoSuchAdaptationException | App.NoSuchActivityTypeException ex) {
+            ctx.status(404);
+        }
     }
 
-    private void validateActivityParameters(final Context ctx)
-        throws InvalidEntityException, App.NoSuchAdaptationException, App.NoSuchActivityTypeException
-    {
-        final String adaptationId = ctx.pathParam("adaptationId");
-        final String activityTypeId = ctx.pathParam("activityTypeId");
+    private void validateActivityParameters(final Context ctx) {
+        try {
+            final String adaptationId = ctx.pathParam("adaptationId");
+            final String activityTypeId = ctx.pathParam("activityTypeId");
 
-        final JsonValue requestJson = Json.createReader(new StringReader(ctx.body())).readValue();
-        final Map<String, SerializedParameter> activityParameters = RequestDeserializers.deserializeActivityParameterMap(requestJson);
-        final SerializedActivity serializedActivity = new SerializedActivity(activityTypeId, activityParameters);
+            final JsonValue requestJson = Json.createReader(new StringReader(ctx.body())).readValue();
+            final Map<String, SerializedParameter> activityParameters = RequestDeserializers.deserializeActivityParameterMap(requestJson);
+            final SerializedActivity serializedActivity = new SerializedActivity(activityTypeId, activityParameters);
 
-        final List<String> failures = this.app.validateActivityParameters(adaptationId, serializedActivity);
+            final List<String> failures = this.app.validateActivityParameters(adaptationId, serializedActivity);
 
-        final JsonValue response = ResponseSerializers.serializeFailureList(failures);
-        ctx.result(response.toString()).contentType("application/json");
+            ctx.result(ResponseSerializers.serializeFailureList(failures).toString());
+        } catch (final App.NoSuchAdaptationException | App.NoSuchActivityTypeException ex) {
+            ctx.status(404);
+        } catch (final InvalidEntityException ex) {
+            ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+        }
     }
 
     private NewAdaptation readNewAdaptation(final Context ctx) throws ValidationException {
