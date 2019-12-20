@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static io.javalin.apibuilder.ApiBuilder.before;
 import static io.javalin.apibuilder.ApiBuilder.delete;
 import static io.javalin.apibuilder.ApiBuilder.get;
 import static io.javalin.apibuilder.ApiBuilder.patch;
@@ -39,6 +40,8 @@ public final class PlanBindings implements Plugin {
   public void apply(final Javalin javalin) {
     javalin.routes(() -> {
       path("plans", () -> {
+        before(ctx -> ctx.contentType("application/json"));
+
         get(this::getPlans);
         post(this::postPlan);
         path(":planId", () -> {
@@ -64,32 +67,27 @@ public final class PlanBindings implements Plugin {
         // If the request body entity is not a legal JsonValue, then this exception is expected.
         .status(400)
         .result(ResponseSerializers.serializeJsonParsingException(ex).toString())
-        .contentType("application/json")
     ).exception(InvalidEntityException.class, (ex, ctx) -> ctx
         // If the request body entity is a legal JsonValue but not a legal object of the type we expect, then this exception
         // is expected.
         .status(400)
         .result(ResponseSerializers.serializeInvalidEntityException(ex).toString())
-        .contentType("application/json")
     ).exception(ValidationException.class, (ex, ctx) -> ctx
         // If the request body entity is a legal JsonNValue and can be successfully converted into a legal object of
         // the type we expect, but that object itself is not appropriate for the context in which it is applied, then
         // this exception is expected.
         .status(422)
         .result(ResponseSerializers.serializeValidationException(ex).toString())
-        .contentType("application/json")
     ).exception(NoSuchPlanException.class, (ex, ctx) -> ctx
         // If a request is made to an entity that doesn't exist (and hence cannot serve the request), then this exception
         // is expected.
         .status(404)
         .result(ResponseSerializers.serializeNoSuchPlanException(ex).toString())
-        .contentType("application/json")
     ).exception(NoSuchActivityInstanceException.class, (ex, ctx) -> ctx
         // If a request is made to an entity that doesn't exist (and hence cannot serve the request), then this exception
         // is expected.
         .status(404)
         .result(ResponseSerializers.serializeNoSuchActivityInstanceException(ex).toString())
-        .contentType("application/json")
     );
   }
 
@@ -98,9 +96,7 @@ public final class PlanBindings implements Plugin {
         .getPlans()
         .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
 
-    ctx
-        .contentType("application/json")
-        .result(ResponseSerializers.serializePlanMap(plans).toString());
+    ctx.result(ResponseSerializers.serializePlanMap(plans).toString());
   }
 
   private void getPlan(final Context ctx) throws NoSuchPlanException {
@@ -108,9 +104,7 @@ public final class PlanBindings implements Plugin {
 
     final Plan plan = this.appController.getPlanById(planId);
 
-    ctx
-        .contentType("application/json")
-        .result(ResponseSerializers.serializePlan(plan).toString());
+    ctx.result(ResponseSerializers.serializePlan(plan).toString());
   }
 
   private void postPlan(final Context ctx) throws ValidationException, InvalidEntityException {
@@ -122,7 +116,6 @@ public final class PlanBindings implements Plugin {
     ctx
         .status(201)
         .header("Location", "/plans/" + planId)
-        .contentType("application/json")
         .result(ResponseSerializers.serializeCreatedEntity(new CreatedEntity(planId)).toString());
   }
 
@@ -155,9 +148,7 @@ public final class PlanBindings implements Plugin {
 
     final Plan plan = this.appController.getPlanById(planId);
 
-    ctx
-        .contentType("application/json")
-        .result(ResponseSerializers.serializeActivityInstanceMap(plan.activityInstances).toString());
+    ctx.result(ResponseSerializers.serializeActivityInstanceMap(plan.activityInstances).toString());
   }
 
   private void postActivityInstances(final Context ctx) throws ValidationException, NoSuchPlanException, InvalidEntityException {
@@ -168,9 +159,7 @@ public final class PlanBindings implements Plugin {
 
     final List<String> activityInstanceIds = this.appController.addActivityInstancesToPlan(planId, activityInstances);
 
-    ctx
-        .contentType("application/json")
-        .result(ResponseSerializers.serializeStringList(activityInstanceIds).toString());
+    ctx.result(ResponseSerializers.serializeStringList(activityInstanceIds).toString());
   }
 
   private void getActivityInstance(final Context ctx) throws NoSuchPlanException, NoSuchActivityInstanceException {
@@ -179,9 +168,7 @@ public final class PlanBindings implements Plugin {
 
     final ActivityInstance activityInstance = this.appController.getActivityInstanceById(planId, activityInstanceId);
 
-    ctx
-        .contentType("application/json")
-        .result(ResponseSerializers.serializeActivityInstance(activityInstance).toString());
+    ctx.result(ResponseSerializers.serializeActivityInstance(activityInstance).toString());
   }
 
   private void putActivityInstance(final Context ctx) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException, InvalidEntityException {
