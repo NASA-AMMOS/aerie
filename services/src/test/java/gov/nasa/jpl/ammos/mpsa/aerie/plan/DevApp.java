@@ -13,13 +13,11 @@ public final class DevApp {
     // Assemble the core non-web object graph.
     final Fixtures fixtures = new Fixtures();
     final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
-    final PlanBindings bindings = new PlanBindings(controller);
 
-    // Initiate an HTTP server.
-    final Javalin javalin = Javalin.create(config -> {
-      config.enableCorsForAllOrigins();
-    });
-    bindings.registerRoutes(javalin);
+    // Configure an HTTP server.
+    final Javalin javalin = Javalin.create(config -> config
+        .enableCorsForAllOrigins()
+        .registerPlugin(new PlanBindings(controller)));
 
     // Start the HTTP server.
     javalin.start(HTTP_PORT);

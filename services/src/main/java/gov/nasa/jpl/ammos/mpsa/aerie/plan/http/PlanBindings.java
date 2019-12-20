@@ -9,6 +9,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.CreatedEntity;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import io.javalin.Javalin;
+import io.javalin.core.plugin.Plugin;
 import io.javalin.http.Context;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -27,14 +28,15 @@ import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
 import static io.javalin.apibuilder.ApiBuilder.put;
 
-public final class PlanBindings {
+public final class PlanBindings implements Plugin {
   private final IPlanController appController;
 
   public PlanBindings(final IPlanController appController) {
     this.appController = appController;
   }
 
-  public void registerRoutes(final Javalin javalin) {
+  @Override
+  public void apply(final Javalin javalin) {
     javalin.routes(() -> {
       path("plans", () -> {
         get(this::getPlans);

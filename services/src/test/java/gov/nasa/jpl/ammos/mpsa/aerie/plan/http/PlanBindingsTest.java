@@ -18,38 +18,36 @@ import javax.json.JsonValue;
 import javax.json.bind.JsonbBuilder;
 import java.io.IOException;
 import java.io.StringReader;
-import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public final class PlanBindingsTest {
-  private static Javalin app = null;
+  private static Javalin SERVER = null;
 
   @BeforeAll
   public static void setupServer() {
     final StubPlanController controller = new StubPlanController();
-    final PlanBindings bindings = new PlanBindings(controller);
 
-    app = Javalin.create(config -> {
+    SERVER = Javalin.create(config -> {
       config.showJavalinBanner = false;
-      config.enableCorsForAllOrigins();
+      config
+          .enableCorsForAllOrigins()
+          .registerPlugin(new PlanBindings(controller));
     });
-    bindings.registerRoutes(app);
-    app.start();
+
+    SERVER.start();
   }
 
   @AfterAll
   public static void shutdownServer() {
-    app.stop();
+    SERVER.stop();
   }
 
-  private final URI baseUri = URI.create("http://localhost:" + app.port());
+  private final URI baseUri = URI.create("http://localhost:" + SERVER.port());
   private final HttpClient rawHttpClient = HttpClient.newHttpClient();
   private final HttpRequester client = new HttpRequester(rawHttpClient, baseUri);
 

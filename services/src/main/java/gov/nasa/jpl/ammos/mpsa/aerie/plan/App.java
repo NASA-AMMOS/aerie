@@ -23,17 +23,23 @@ public final class App {
     final AppConfiguration configuration = loadConfiguration(args);
 
     // Assemble the core non-web object graph.
-    final PlanRepository planRepository = new RemotePlanRepository(configuration.MONGO_URI, configuration.MONGO_DATABASE, configuration.MONGO_PLAN_COLLECTION, configuration.MONGO_ACTIVITY_COLLECTION);
+    final PlanRepository planRepository = new RemotePlanRepository(
+        configuration.MONGO_URI,
+        configuration.MONGO_DATABASE,
+        configuration.MONGO_PLAN_COLLECTION,
+        configuration.MONGO_ACTIVITY_COLLECTION);
     final AdaptationService adaptationService = new RemoteAdaptationService(configuration.ADAPTATION_URI);
     final IPlanController controller = new PlanController(planRepository, adaptationService);
-    final PlanBindings bindings = new PlanBindings(controller);
 
-    // Initiate an HTTP server.
+    // Configure an HTTP server.
     final Javalin javalin = Javalin.create(config -> {
       config.showJavalinBanner = false;
-      config.enableCorsForAllOrigins();
+      config
+          .enableCorsForAllOrigins()
+          .registerPlugin(new PlanBindings(controller));
     });
-    bindings.registerRoutes(javalin);
+
+    // Start the HTTP server.
     javalin.start(configuration.HTTP_PORT);
   }
 
