@@ -17,7 +17,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public final class App {
+public final class AerieAppDriver {
   public static void main(final String[] args) {
     // Fetch application configuration properties.
     final AppConfiguration configuration = loadConfiguration(args);

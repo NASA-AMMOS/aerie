@@ -166,7 +166,7 @@
               </descriptorRefs>
               <archive>
                 <manifest>
-                  <mainClass>gov.nasa.jpl.ammos.mpsa.aerie.plan.App</mainClass>
+                  <mainClass>gov.nasa.jpl.ammos.mpsa.aerie.plan.AerieAppDriver</mainClass>
                 </manifest>
               </archive>
             </configuration>
