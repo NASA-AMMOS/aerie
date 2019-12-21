@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan;
 
+import com.mongodb.client.MongoClients;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.IPlanController;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.PlanController;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.http.PlanBindings;
@@ -13,7 +14,6 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -23,11 +23,18 @@ public final class AerieAppDriver {
     final AppConfiguration configuration = loadConfiguration(args);
 
     // Assemble the core non-web object graph.
-    final PlanRepository planRepository = new RemotePlanRepository(
-        configuration.MONGO_URI,
-        configuration.MONGO_DATABASE,
-        configuration.MONGO_PLAN_COLLECTION,
-        configuration.MONGO_ACTIVITY_COLLECTION);
+    final PlanRepository planRepository;
+    {
+      final var mongoDatabase = MongoClients
+          .create(configuration.MONGO_URI.toString())
+          .getDatabase(configuration.MONGO_DATABASE);
+
+      planRepository = new RemotePlanRepository(
+          mongoDatabase,
+          configuration.MONGO_PLAN_COLLECTION,
+          configuration.MONGO_ACTIVITY_COLLECTION);
+    }
+
     final AdaptationService adaptationService = new RemoteAdaptationService(configuration.ADAPTATION_URI);
     final IPlanController controller = new PlanController(planRepository, adaptationService);
 

@@ -1,7 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes;
 
 import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
@@ -17,7 +16,6 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,16 +34,7 @@ public final class RemotePlanRepository implements PlanRepository {
   private final MongoCollection<Document> planCollection;
   private final MongoCollection<Document> activityCollection;
 
-  public RemotePlanRepository(
-      final URI serverAddress,
-      final String databaseName,
-      final String planCollectionName,
-      final String activityCollectionName
-  ) {
-    final MongoDatabase database = MongoClients
-        .create(serverAddress.toString())
-        .getDatabase(databaseName);
-
+  public RemotePlanRepository(final MongoDatabase database, final String planCollectionName, final String activityCollectionName) {
     this.planCollection = database.getCollection(planCollectionName);
     this.activityCollection = database.getCollection(activityCollectionName);
   }
