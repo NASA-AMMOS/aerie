@@ -30,6 +30,18 @@ import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.combine;
 import static com.mongodb.client.model.Updates.set;
 
+/**
+ * An owned {@link PlanRepository} view on a shared MongoDB instance.
+ *
+ * Per the {@link PlanRepository} contract, no more than a single concurrent agent may own a reference to a given
+ * {@code RemotePlanRepository} at any time. If multiple agents need access to the same MongoDB instance, they must each
+ * be provided with distinct instances of this class.
+ */
+// TODO: implement proper concurrency control.
+//   Because the RemotePlanRepository is merely a view on a shared MongoDB instance, we must recognize that there will
+//   be views in potentially independent processes that must be accounted for. Therefore, concurrency control must
+//   necessarily involve the shared MongoDB instance. (We may implement additional control locally, if we wish to
+//   optimize the case of multiple local views, but such a scheme alone is not sufficient.)
 public final class RemotePlanRepository implements PlanRepository {
   private final MongoCollection<Document> planCollection;
   private final MongoCollection<Document> activityCollection;
