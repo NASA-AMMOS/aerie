@@ -22,7 +22,6 @@ import java.util.stream.Stream;
 public final class PlanController implements IPlanController {
   private final PlanRepository planRepository;
   private final AdaptationService adaptationService;
-  private final PlanValidator validator;
 
   public PlanController(
       final PlanRepository planRepository,
@@ -30,7 +29,6 @@ public final class PlanController implements IPlanController {
   ) {
     this.planRepository = planRepository;
     this.adaptationService = adaptationService;
-    this.validator = new PlanValidator(planRepository, adaptationService);
   }
 
   @Override
