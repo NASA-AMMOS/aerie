@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 @Tag("integration")
-public class RemotePlanRepositoryTest extends PlanRepositoryContractTest {
+public final class RemotePlanRepositoryTest extends PlanRepositoryContractTest {
   private static final URI MONGO_URI = URI.create("mongodb://localhost:27017");
   private static final String MONGO_DATABASE = "plan-service";
   private static final String MONGO_PLAN_COLLECTION = "plans";
