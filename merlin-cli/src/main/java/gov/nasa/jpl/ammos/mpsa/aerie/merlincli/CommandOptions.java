@@ -6,15 +6,11 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidTokenException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpClientHandler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpHandler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.*;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.ActivityInstance;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.PlanDetail;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.PlanRepository;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.RemotePlanRepository;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities;
 import gov.nasa.jpl.ammos.mpsa.apgen.exceptions.AdaptationParsingException;
 import gov.nasa.jpl.ammos.mpsa.apgen.exceptions.DirectoryNotFoundException;
 import gov.nasa.jpl.ammos.mpsa.apgen.exceptions.PlanParsingException;
-import gov.nasa.jpl.ammos.mpsa.apgen.model.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.apgen.model.Plan;
 import gov.nasa.jpl.ammos.mpsa.apgen.parser.AdaptationParser;
 import gov.nasa.jpl.ammos.mpsa.apgen.parser.ApfParser;
@@ -31,6 +27,7 @@ import java.util.*;
 public class CommandOptions {
     private HttpHandler httpClient;
     private PlanRepository planRepository;
+    private AdaptationRepository adaptationRepository;
     private Options options = new Options();
     private OptionGroup requiredGroup = new OptionGroup();
     private OptionGroup planIdRequiredGroup = new OptionGroup();
@@ -38,10 +35,11 @@ public class CommandOptions {
     private String[] args = null;
     private boolean lastCommandStatus;
 
-    public CommandOptions(String[] args, PlanRepository planRepository) {
+    public CommandOptions(String[] args, PlanRepository planRepository, AdaptationRepository adaptationRepository) {
         buildArguments();
         consumeArgs(args);
         this.planRepository = planRepository;
+        this.adaptationRepository = adaptationRepository;
         this.httpClient = new HttpClientHandler(HttpClients.createDefault());
     }
 
@@ -53,7 +51,7 @@ public class CommandOptions {
     // TODO: REMOVE THIS WHEN DONE
     @Deprecated
     public CommandOptions(String[] args, HttpHandler httpClient) {
-        this(args, new RemotePlanRepository(httpClient));
+        this(args, new RemotePlanRepository(httpClient), new RemoteAdaptationRepository(httpClient));
         this.httpClient = httpClient;
     }
 
@@ -429,35 +427,32 @@ public class CommandOptions {
     }
 
     private boolean createAdaptation(String path, String[] tokens) {
+
+        Adaptation adaptation;
         try {
-            NewAdaptationCommand command = new NewAdaptationCommand(this.httpClient, path, tokens);
-            command.execute();
-            int status = command.getStatus();
-
-            switch(status) {
-                case 201:
-                    String planId = command.getId();
-                    System.out.println(String.format("CREATED: Adaptation successfully created at: %s.", planId));
-                    return true;
-
-                case 409:
-                    System.err.println("CONFLICT: Adaptation already exists.");
-                    break;
-
-                case 422:
-                    System.err.println("BAD REQUEST: Check validity of Adaptation JAR.");
-                    break;
-
-                default:
-                    System.err.println(String.format("Unexpected status: %s", status));
-            }
-
-            System.err.println("Adaptation creation failed.");
-            return false;
-        } catch (InvalidTokenException e) {
+            adaptation = Adaptation.fromTokens(tokens);
+        } catch(InvalidTokenException e) {
             System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
             return false;
         }
+
+        File jarFile = new File(path);
+        if (!jarFile.exists()) {
+            System.err.println(String.format("File not found: %s", path));
+            return false;
+        }
+
+        String id;
+        try {
+            id = this.adaptationRepository.createAdaptation(adaptation, jarFile);
+        }
+        catch (ActionFailureException e) {
+            System.err.println(e);
+            return false;
+        }
+
+        System.out.println(String.format("CREATED: Adaptation successfully created at: %s.", id));
+        return true;
     }
 
     private boolean deleteAdaptation(String adaptationId) {
@@ -599,7 +594,7 @@ public class CommandOptions {
         /* Parse adaptation and plan file */
         Plan plan;
         try {
-            Adaptation adaptation = AdaptationParser.parseDirectory(Path.of(dir));
+            gov.nasa.jpl.ammos.mpsa.apgen.model.Adaptation adaptation = AdaptationParser.parseDirectory(Path.of(dir));
             plan = ApfParser.parseFile(Path.of(input), adaptation);
         } catch (AdaptationParsingException | PlanParsingException e) {
             System.err.println(e.getMessage());
