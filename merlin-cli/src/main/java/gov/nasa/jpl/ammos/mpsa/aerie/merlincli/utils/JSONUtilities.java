@@ -2,14 +2,14 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils;
 
 import com.google.gson.*;
 import com.google.gson.stream.MalformedJsonException;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.PlanDetail;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.ActivityInstance;
-import gov.nasa.jpl.ammos.mpsa.apgen.model.*;
+import gov.nasa.jpl.ammos.mpsa.apgen.model.Plan;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -85,7 +85,7 @@ public class JSONUtilities {
             }
 
             JsonArray parameters = new JsonArray();
-            for (ActivityInstanceParameter param : act.getParameters()) {
+            for (gov.nasa.jpl.ammos.mpsa.apgen.model.ActivityInstanceParameter param : act.getParameters()) {
                 JsonObject jsonParam = new JsonObject();
                 jsonParam.addProperty("name", param.getName());
                 jsonParam.addProperty("type", param.getType());
@@ -102,10 +102,39 @@ public class JSONUtilities {
         return jsonPlan;
     }
 
-    public static String convertPlanToJSON(PlanDetail plan) {
-        return new Gson().toJson(plan, PlanDetail.class);
+    public static String convertPlanToJson(PlanDetail plan) {
+        return prettify(new Gson().toJson(plan, PlanDetail.class));
     }
-    public static String convertActivityInstanceToJSON(ActivityInstance activityInstance) {
-        return new Gson().toJson(activityInstance, ActivityInstance.class);
+
+    public static PlanDetail parsePlanJson(String planJson) {
+        return new Gson().fromJson(planJson, PlanDetail.class);
+    }
+
+    public static PlanDetail parsePlanJson(InputStream jsonStream) throws IOException {
+        return parsePlanJson(new String(jsonStream.readAllBytes()));
+    }
+
+    public static String convertActivityInstanceToJson(ActivityInstance activityInstance) {
+        return prettify(new Gson().toJson(activityInstance, ActivityInstance.class));
+    }
+
+    public static ActivityInstance parseActivityInstanceJson(String instanceJson) {
+        return new Gson().fromJson(instanceJson, ActivityInstance.class);
+    }
+
+    public static ActivityInstance parseActivityInstanceJson(InputStream jsonStream) throws IOException {
+        return parseActivityInstanceJson(new String(jsonStream.readAllBytes()));
+    }
+
+    public static String convertAdaptationToJson(Adaptation adaptation) {
+        return prettify(new Gson().toJson(adaptation, Adaptation.class));
+    }
+
+    public static Adaptation parseAdaptationJson(String adaptationJson) {
+        return new Gson().fromJson(adaptationJson, Adaptation.class);
+    }
+
+    public static Adaptation parseAdaptationJson(InputStream jsonStream) throws IOException {
+        return parseAdaptationJson(new String(jsonStream.readAllBytes()));
     }
 }

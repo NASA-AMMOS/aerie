@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.ApiContractViolationException;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHeaders;
@@ -8,6 +9,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.EntityBuilder;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicNameValuePair;
@@ -22,6 +25,7 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
 
     private final String baseURL = "http://localhost:27182/adaptations";
     private final String activityPath = "activities";
+    private final String parameterPath = "parameters";
     private HttpHandler httpClient;
 
     public RemoteAdaptationRepository(HttpHandler httpClient) {
@@ -66,6 +70,141 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
             case HttpStatus.SC_UNPROCESSABLE_ENTITY:
                 // TODO: Add information about what was wrong from the response
                 throw new InvalidAdaptationException();
+
+            default:
+                // TODO: Make this a more specific Error
+                // Should never happen because we don't have any other status codes from the service
+                throw new Error("Unexpected status code returned from plan service");
+        }
+    }
+
+    @Override
+    public void deleteAdaptation(String adaptationId) throws AdaptationNotFoundException {
+        HttpResponse response;
+        try {
+            HttpDelete request = new HttpDelete(String.format("%s/%s", baseURL, adaptationId));
+            response = this.httpClient.execute(request);
+        } catch (IOException e) {
+            throw new Error(e);
+        }
+
+        switch (response.getStatusLine().getStatusCode()) {
+            case HttpStatus.SC_OK:
+                break;
+
+            case HttpStatus.SC_NOT_FOUND:
+                throw new AdaptationNotFoundException();
+
+            default:
+                // TODO: Make this a more specific Error
+                // Should never happen because we don't have any other status codes from the service
+                throw new Error("Unexpected status code returned from plan service");
+        }
+    }
+
+    @Override
+    public Adaptation getAdaptation(String adaptationId) throws AdaptationNotFoundException {
+        HttpResponse response;
+        try {
+            HttpGet request = new HttpGet(String.format("%s/%s", baseURL, adaptationId));
+            response = this.httpClient.execute(request);
+        } catch (IOException e) {
+            throw new Error(e);
+        }
+
+        switch (response.getStatusLine().getStatusCode()) {
+            case HttpStatus.SC_OK:
+                try {
+                    return JSONUtilities.parseAdaptationJson(response.getEntity().getContent());
+                } catch (IOException e) {
+                    throw new Error(e);
+                }
+
+            case HttpStatus.SC_NOT_FOUND:
+                throw new AdaptationNotFoundException();
+
+            default:
+                // TODO: Make this a more specific Error
+                // Should never happen because we don't have any other status codes from the service
+                throw new Error("Unexpected status code returned from plan service");
+        }
+    }
+
+    @Override
+    public String getAdaptationList() {
+        HttpResponse response;
+        try {
+            HttpGet request = new HttpGet(baseURL);
+            response = this.httpClient.execute(request);
+        } catch (IOException e) {
+            throw new Error(e);
+        }
+
+        switch (response.getStatusLine().getStatusCode()) {
+            case HttpStatus.SC_OK:
+                try {
+                    return new String(response.getEntity().getContent().readAllBytes());
+                } catch (IOException e) {
+                    throw new Error(e);
+                }
+
+            default:
+                // TODO: Make this a more specific Error
+                // Should never happen because we don't have any other status codes from the service
+                throw new Error("Unexpected status code returned from plan service");
+        }
+    }
+
+    @Override
+    public String getActivityTypes(String adaptationId) throws AdaptationNotFoundException {
+        HttpResponse response;
+        try {
+            HttpGet request = new HttpGet(String.format("%s/%s/%s", baseURL, adaptationId, activityPath));
+            response = this.httpClient.execute(request);
+        } catch (IOException e) {
+            throw new Error(e);
+        }
+
+        switch (response.getStatusLine().getStatusCode()) {
+                case HttpStatus.SC_OK:
+                try {
+                    return JSONUtilities.prettify(new String(response.getEntity().getContent().readAllBytes()));
+                } catch (IOException e) {
+                    throw new Error(e);
+                }
+
+            case HttpStatus.SC_NOT_FOUND:
+                throw new AdaptationNotFoundException();
+
+            default:
+                // TODO: Make this a more specific Error
+                // Should never happen because we don't have any other status codes from the service
+                throw new Error("Unexpected status code returned from plan service");
+        }
+    }
+
+    @Override
+    public String getActivityType(String adaptationId, String activityType) throws ActivityTypeNotDefinedException {
+        HttpResponse response;
+        try {
+            HttpGet request = new HttpGet(String.format("%s/%s/%s/%s", baseURL, adaptationId, activityPath, activityType));
+            response = this.httpClient.execute(request);
+        } catch (IOException e) {
+            throw new Error(e);
+        }
+
+        switch (response.getStatusLine().getStatusCode()) {
+            case HttpStatus.SC_OK:
+                try {
+                    return JSONUtilities.prettify(new String(response.getEntity().getContent().readAllBytes()));
+                } catch (IOException e) {
+                    throw new Error(e);
+                }
+
+            case HttpStatus.SC_NOT_FOUND:
+                // TODO: When the adaptation service is updated to distinguish between
+                //       AdaptationNotFound or ActivityTypeNotFound errors, update this
+                throw new ActivityTypeNotDefinedException();
 
             default:
                 // TODO: Make this a more specific Error

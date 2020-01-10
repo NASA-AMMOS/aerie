@@ -1,11 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.adaptation.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidNumberOfArgsException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidTokenException;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpClientHandler;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpHandler;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities;
 import gov.nasa.jpl.ammos.mpsa.apgen.exceptions.AdaptationParsingException;
@@ -104,7 +100,6 @@ public class CommandOptions {
         adaptationIdRequiredGroup.addOption(new Option("display", "view-adaptation", false, "View an adaptation's metadata"));
         adaptationIdRequiredGroup.addOption(new Option("activities", "activity-types", false, "View an adaptation's activity types"));
         adaptationIdRequiredGroup.addOption(new Option("activity", "activity-type", true, "View an activity type from the specified adaptation"));
-        adaptationIdRequiredGroup.addOption(new Option("parameters", "activity-type-parameters", true, "View parameters of an activity type from the specified adaptation"));
 
         options.addOptionGroup(adaptationIdRequiredGroup);
         options.addOptionGroup(requiredGroup);
@@ -213,11 +208,6 @@ public class CommandOptions {
                     lastCommandStatus = displayActivityType(adaptationId, activityId);
                     return;
                 }
-                else if (cmd.hasOption("parameters")) {
-                    String activityId = cmd.getOptionValue("parameters");
-                    lastCommandStatus = displayActivityTypeParameterList(adaptationId, activityId);
-                    return;
-                }
             }
             else if (requiredGroup.getSelected().equals("c")) {
                 String[] args = cmd.getOptionValues("c");
@@ -290,7 +280,7 @@ public class CommandOptions {
             return false;
         }
 
-        String planUpdateJson = JSONUtilities.convertPlanToJSON(plan);
+        String planUpdateJson = JSONUtilities.convertPlanToJson(plan);
         return updatePlan(planId, planUpdateJson);
     }
 
@@ -378,7 +368,7 @@ public class CommandOptions {
             return false;
         }
 
-        String activityUpdateJson = JSONUtilities.convertActivityInstanceToJSON(activityInstance);
+        String activityUpdateJson = JSONUtilities.convertActivityInstanceToJson(activityInstance);
 
         try {
             this.planRepository.updateActivityInstance(planId, activityId, activityUpdateJson);
@@ -439,137 +429,65 @@ public class CommandOptions {
     }
 
     private boolean deleteAdaptation(String adaptationId) {
-        DeleteAdaptationCommand command = new DeleteAdaptationCommand(this.httpClient, adaptationId);
-        command.execute();
-        int status = command.getStatus();
-
-        switch(status) {
-            case 200:
-            case 204:
-                System.out.println("SUCCESS: Adaptation successfully deleted.");
-                return true;
-
-            case 404:
-                System.err.println(String.format("NOT FOUND: Adaptation with id %s does not exist.", adaptationId));
-                break;
-
-            default:
-                System.err.println(String.format("Unexpected status: %s", status));
+        try {
+            this.adaptationRepository.deleteAdaptation(adaptationId);
+        } catch (AdaptationRepository.AdaptationNotFoundException e) {
+            System.err.println(e);
+            return false;
         }
 
-        System.err.println("Adaptation delete failed.");
-        return false;
+        System.out.println("SUCCESS: Adaptation successfully deleted.");
+        return true;
     }
 
     private boolean displayAdaptation(String adaptationId) {
-        GetAdaptationCommand command = new GetAdaptationCommand(this.httpClient, adaptationId);
-        command.execute();
-        int status = command.getStatus();
-
-        switch(status) {
-            case 200:
-                System.out.println("OK: Adaptation retrieval successful.");
-                System.out.println(command.getResponseBody());
-                return true;
-
-            case 404:
-                System.err.println("NOT FOUND: The requested adaptation could not be found");
-                break;
-
-            default:
-                System.err.println(String.format("Unexpected status: %s", status));
+        Adaptation adaptation;
+        try {
+            adaptation = this.adaptationRepository.getAdaptation(adaptationId);
+        } catch (AdaptationRepository.AdaptationNotFoundException e) {
+            System.err.println(e);
+            return false;
         }
 
-        System.err.println("Adaptation request failed.");
-        return false;
+        System.out.println("SUCCESS: Adaptation retrieval successful.");
+        System.out.println(JSONUtilities.convertAdaptationToJson(adaptation));
+        return true;
     }
 
     private boolean listAdaptations() {
-        GetAdaptationListCommand command = new GetAdaptationListCommand(this.httpClient);
-        command.execute();
-        int status = command.getStatus();
+        String adaptationListJson = this.adaptationRepository.getAdaptationList();
 
-        switch(status) {
-            case 200:
-                System.out.println("OK: Adaptation list retrieval successful.");
-                System.out.println(command.getResponseBody());
-                return true;
-
-            default:
-                System.err.println(String.format("Unexpected status: %s", status));
-        }
-
-        System.err.println("Adaptation request failed.");
-        return false;
+        System.out.println("SUCCESS: Adaptation list retrieval successful.");
+        System.out.println(adaptationListJson);
+        return true;
     }
 
     private boolean listActivityTypes(String adaptationId) {
-        GetActivityTypeListCommand command = new GetActivityTypeListCommand(this.httpClient, adaptationId);
-        command.execute();
-        int status = command.getStatus();
-
-        switch(status) {
-            case 200:
-                System.out.println("OK: Activity type list retrieval successful.");
-                System.out.println(command.getResponseBody());
-                return true;
-
-            case 404:
-                System.err.println("NOT FOUND: The requested adaptation could not be found");
-                break;
-
-            default:
-                System.err.println(String.format("Unexpected status: %s", status));
+        String activityTypeListJson;
+        try {
+            activityTypeListJson = this.adaptationRepository.getActivityTypes(adaptationId);
+        } catch (AdaptationRepository.AdaptationNotFoundException e) {
+            System.err.println(e);
+            return false;
         }
 
-        System.err.println("Activity type list request failed.");
-        return false;
+        System.out.println("SUCCESS: Activity type list retrieval successful.");
+        System.out.println(activityTypeListJson);
+        return true;
     }
 
-    private boolean displayActivityType(String adaptationId, String activityTypeId) {
-        GetActivityTypeCommand command = new GetActivityTypeCommand(this.httpClient, adaptationId, activityTypeId);
-        command.execute();
-        int status = command.getStatus();
-
-        switch(status) {
-            case 200:
-                System.out.println("OK: Activity type retrieval successful.");
-                System.out.println(command.getResponseBody());
-                return true;
-
-            case 404:
-                System.err.println("NOT FOUND: The requested adaptation could not be found");
-                break;
-
-            default:
-                System.err.println(String.format("Unexpected status: %s", status));
+    private boolean displayActivityType(String adaptationId, String activityType) {
+        String activityTypeJson;
+        try {
+            activityTypeJson = this.adaptationRepository.getActivityType(adaptationId, activityType);
+        } catch (AdaptationRepository.AdaptationNotFoundException | AdaptationRepository.ActivityTypeNotDefinedException e) {
+            System.err.println(e);
+            return false;
         }
 
-        System.err.println("Activity type request failed.");
-        return false;
-    }
-
-    private boolean displayActivityTypeParameterList(String adaptationId, String activityTypeId) {
-        GetActivityTypeParameterListCommand command = new GetActivityTypeParameterListCommand(this.httpClient, adaptationId, activityTypeId);
-        command.execute();
-        int status = command.getStatus();
-
-        switch(status) {
-            case 200:
-                System.out.println("OK: Activity type parameter list retrieval successful.");
-                System.out.println(command.getResponseBody());
-                return true;
-
-            case 404:
-                System.err.println("NOT FOUND: The requested adaptation could not be found");
-                break;
-
-            default:
-                System.err.println(String.format("Unexpected status: %s", status));
-        }
-
-        System.err.println("Activity type parameter list request failed.");
-        return false;
+        System.out.println("SUCCESS: Activity type retrieval successful.");
+        System.out.println(activityTypeJson);
+        return true;
     }
 
     private boolean convertApfFile(String input, String output, String dir, String[] tokens) {
