@@ -294,7 +294,6 @@ public class CommandOptions {
         return updatePlan(planId, planUpdateJson);
     }
 
-
     public boolean updatePlan(String planId, String planUpdateJson) {
         try {
             this.planRepository.updatePlan(planId, planUpdateJson);
@@ -413,11 +412,10 @@ public class CommandOptions {
     }
 
     private boolean createAdaptation(String path, String[] tokens) {
-
         Adaptation adaptation;
         try {
             adaptation = Adaptation.fromTokens(tokens);
-        } catch(InvalidTokenException e) {
+        } catch (InvalidTokenException e) {
             System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
             return false;
         }
@@ -431,8 +429,7 @@ public class CommandOptions {
         String id;
         try {
             id = this.adaptationRepository.createAdaptation(adaptation, jarFile);
-        }
-        catch (ActionFailureException e) {
+        } catch (AdaptationRepository.InvalidAdaptationException e) {
             System.err.println(e);
             return false;
         }

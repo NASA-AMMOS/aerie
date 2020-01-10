@@ -1,9 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.*;
-
 public interface PlanRepository {
-
     String createPlan(String planJson) throws InvalidJsonException, InvalidPlanException;
     void updatePlan(String planId, String planJson) throws PlanNotFoundException, InvalidJsonException, InvalidPlanException;
     void deletePlan(String planId) throws PlanNotFoundException;
