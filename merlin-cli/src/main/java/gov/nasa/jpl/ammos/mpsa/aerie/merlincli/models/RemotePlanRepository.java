@@ -23,275 +23,269 @@ public class RemotePlanRepository implements PlanRepository {
     }
 
     @Override
-    public String createPlan(String planJson) throws PlanCreateFailureException {
-        HttpPost request = new HttpPost(baseURL);
-
+    public String createPlan(String planJson) throws InvalidJsonException, InvalidPlanException {
+        HttpResponse response;
         try {
+            HttpPost request = new HttpPost(baseURL);
             addJsonToRequest(request, planJson);
-        } catch (UnsupportedEncodingException e) {
-            throw new Error(e);
-        }
-
-        HttpResponse response;
-        try {
             response = this.httpClient.execute(request);
         } catch (IOException e) {
             throw new Error(e);
         }
 
-        int status = response.getStatusLine().getStatusCode();
+        switch (response.getStatusLine().getStatusCode()) {
+            case HttpStatus.SC_CREATED:
+                if (!response.containsHeader("location")) throw new ApiContractViolationException("Plan created but location header not found.");
 
-        if (status == HttpStatus.SC_CREATED) {
-            if (response.containsHeader("location")) {
-                String id = response.getFirstHeader("location").toString();
-                return id;
-            } else {
-                throw new ApiContractViolationException("Plan created but location header not found.");
-            }
-        } else {
-            // TODO: The message will be JSON, should be parsed and the actual reason extracted
-            String message;
-            try {
-                message = new String(response.getEntity().getContent().readAllBytes());
-            } catch (IOException e) {
-                throw new Error(e);
-            }
-            throw new PlanCreateFailureException(message);
+                // ID for the created entity is in the location header
+                return response.getFirstHeader("location").toString();
+
+            case HttpStatus.SC_BAD_REQUEST:
+                // TODO: Add information about what was wrong from the response
+                throw new InvalidJsonException();
+
+            case HttpStatus.SC_UNPROCESSABLE_ENTITY:
+                // TODO: Add information about what was wrong from the response
+                throw new InvalidPlanException();
+
+            default:
+                // TODO: Make this a more specific Error
+                // Should never happen because we don't have any other status codes from the service
+                throw new Error("Unexpected status code returned from plan service");
         }
     }
 
     @Override
-    public void updatePlan(String planId, String planUpdateJson) throws PlanUpdateFailureException {
-        HttpPatch request = new HttpPatch(String.format("%s/%s", baseURL, planId));
-
+    public void updatePlan(String planId, String planUpdateJson) throws PlanNotFoundException, InvalidJsonException, InvalidPlanException {
+        HttpResponse response;
         try {
+            HttpPatch request = new HttpPatch(String.format("%s/%s", baseURL, planId));
             addJsonToRequest(request, planUpdateJson);
-        } catch (UnsupportedEncodingException e) {
-            throw new Error(e);
-        }
-
-        HttpResponse response;
-        try {
-            response = this.httpClient.execute(request);
-        } catch(IOException e) {
-            throw new Error(e);
-        }
-
-        int status = response.getStatusLine().getStatusCode();
-
-        if (status == HttpStatus.SC_NOT_FOUND) {
-            throw new PlanUpdateFailureException(String.format("Plan with id %s not found.", planId));
-        }
-        else if (status != HttpStatus.SC_NO_CONTENT && status != HttpStatus.SC_OK) {
-            // TODO: The message will be JSON, should be parsed and the actual reason extracted
-            String message;
-            try {
-                message = new String(response.getEntity().getContent().readAllBytes());
-            } catch (IOException e) {
-                throw new Error(e);
-            }
-            throw new PlanUpdateFailureException(message);
-        }
-    }
-
-    @Override
-    public void deletePlan(String planId) throws PlanDeleteFailureException {
-        HttpDelete request = new HttpDelete(String.format("%s/%s", baseURL, planId));
-
-        HttpResponse response;
-        try {
-            response = this.httpClient.execute(request);
-        } catch(IOException e) {
-            throw new Error(e);
-        }
-
-        int status = response.getStatusLine().getStatusCode();
-
-        if (status != HttpStatus.SC_OK) {
-            String message;
-            try {
-                message = new String(response.getEntity().getContent().readAllBytes());
-            } catch(IOException e) {
-                throw new Error(e);
-            }
-            throw new PlanDeleteFailureException(message);
-        }
-    }
-
-    @Override
-    public void downloadPlan(String planId, String outName) throws PlanDownloadFailureException {
-        HttpGet request = new HttpGet(String.format("%s/%s", baseURL, planId));
-
-        HttpResponse response;
-        try {
             response = this.httpClient.execute(request);
         } catch (IOException e) {
             throw new Error(e);
         }
 
-        int status = response.getStatusLine().getStatusCode();
+        switch (response.getStatusLine().getStatusCode()) {
+            case HttpStatus.SC_OK:
+                break;
 
-        if (status == HttpStatus.SC_OK) {
-            try {
-                String responseString = new String(response.getEntity().getContent().readAllBytes());
-                writeJson(responseString, Path.of(outName));
-            } catch(IOException e) {
-                throw new Error(e);
-            }
+            case HttpStatus.SC_NOT_FOUND:
+                throw new PlanNotFoundException();
 
-        } else {
-            String message;
-            try {
-                message = new String(response.getEntity().getContent().readAllBytes());
-            } catch(IOException e) {
-                throw new Error(e);
-            }
-            throw new PlanDownloadFailureException(message);
+            case HttpStatus.SC_BAD_REQUEST:
+                // TODO: Add information about what was wrong from the response
+                throw new InvalidJsonException();
+
+            case HttpStatus.SC_UNPROCESSABLE_ENTITY:
+                // TODO: Add information about what was wrong from the response
+                throw new InvalidPlanException();
+
+            default:
+                // TODO: Make this a more specific Error
+                // Should never happen because we don't have any other status codes from the service
+                throw new Error("Unexpected status code returned from plan service");
         }
     }
 
     @Override
-    public String getPlanList() throws GetPlanListFailureException {
-        HttpGet request = new HttpGet(baseURL);
-
+    public void deletePlan(String planId) throws PlanNotFoundException {
         HttpResponse response;
         try {
+            HttpDelete request = new HttpDelete(String.format("%s/%s", baseURL, planId));
             response = this.httpClient.execute(request);
         } catch (IOException e) {
             throw new Error(e);
         }
 
-        int status = response.getStatusLine().getStatusCode();
+        switch (response.getStatusLine().getStatusCode()) {
+            case HttpStatus.SC_OK:
+                break;
 
-        if (status == HttpStatus.SC_OK) {
-            try {
-                return new String(response.getEntity().getContent().readAllBytes());
-            } catch (IOException e) {
-                throw new Error(e);
-            }
-        } else {
-            String message;
-            try {
-                message = new String(response.getEntity().getContent().readAllBytes());
-            } catch(IOException e) {
-                throw new Error(e);
-            }
-            throw new GetPlanListFailureException(message);
+            case HttpStatus.SC_NOT_FOUND:
+                throw new PlanNotFoundException();
+
+            default:
+                // TODO: Make this a more specific Error
+                // Should never happen because we don't have any other status codes from the service
+                throw new Error("Unexpected status code returned from plan service");
         }
     }
 
     @Override
-    public void appendActivityInstances(String planId, String instanceListJson) throws AppendActivityInstancesFailureException {
-        HttpPost request = new HttpPost(String.format("%s/%s", baseURL, planId));
-
+    public void downloadPlan(String planId, String outName) throws PlanNotFoundException {
+        HttpResponse response;
         try {
+            HttpGet request = new HttpGet(String.format("%s/%s", baseURL, planId));
+            response = this.httpClient.execute(request);
+        } catch (IOException e) {
+            throw new Error(e);
+        }
+
+        switch (response.getStatusLine().getStatusCode()) {
+            case HttpStatus.SC_OK:
+                try {
+                    writeJson(response.getEntity().getContent(), Path.of(outName));
+                } catch (IOException e) {
+                    throw new Error(e);
+                }
+
+            case HttpStatus.SC_NOT_FOUND:
+                throw new PlanNotFoundException();
+
+            default:
+                // TODO: Make this a more specific Error
+                // Should never happen because we don't have any other status codes from the service
+                throw new Error("Unexpected status code returned from plan service");
+        }
+    }
+
+    @Override
+    public String getPlanList() {
+        HttpResponse response;
+        try {
+            HttpGet request = new HttpGet(baseURL);
+            response = this.httpClient.execute(request);
+        } catch (IOException e) {
+            throw new Error(e);
+        }
+
+        switch (response.getStatusLine().getStatusCode()) {
+            case HttpStatus.SC_OK:
+                try {
+                    return new String(response.getEntity().getContent().readAllBytes());
+                } catch (IOException e) {
+                    throw new Error(e);
+                }
+
+            default:
+                // TODO: Make this a more specific Error
+                // Should never happen because we don't have any other status codes from the service
+                throw new Error("Unexpected status code returned from plan service");
+        }
+    }
+
+    @Override
+    public void appendActivityInstances(String planId, String instanceListJson) throws PlanNotFoundException, InvalidJsonException, InvalidPlanException {
+        HttpResponse response;
+        try {
+            HttpPost request = new HttpPost(String.format("%s/%s", baseURL, planId));
             addJsonToRequest(request, instanceListJson);
-        } catch (UnsupportedEncodingException e) {
-            throw new Error(e);
-        }
-
-        HttpResponse response;
-        try {
             response = this.httpClient.execute(request);
         } catch (IOException e) {
             throw new Error(e);
         }
 
-        int status = response.getStatusLine().getStatusCode();
+        switch (response.getStatusLine().getStatusCode()) {
+            case HttpStatus.SC_OK:
+                break;
 
-        if (status != HttpStatus.SC_CREATED) {
-            String message;
-            try {
-                message = new String(response.getEntity().getContent().readAllBytes());
-            } catch(IOException e) {
-                throw new Error(e);
-            }
-            throw new AppendActivityInstancesFailureException(message);
+            case HttpStatus.SC_NOT_FOUND:
+                throw new PlanNotFoundException();
+
+            case HttpStatus.SC_BAD_REQUEST:
+                // TODO: Add information about what was wrong from the response
+                throw new InvalidJsonException();
+
+            case HttpStatus.SC_UNPROCESSABLE_ENTITY:
+                // TODO: Add information about what was wrong from the response
+                throw new InvalidPlanException();
+
+            default:
+                // TODO: Make this a more specific Error
+                // Should never happen because we don't have any other status codes from the service
+                throw new Error("Unexpected status code returned from plan service");
         }
     }
 
     @Override
-    public String getActivityInstance(String planId, String activityId) throws GetActivityInstanceFailureException {
-        HttpGet request = new HttpGet(String.format("%s/%s/%s/%s", baseURL, planId, instancePath, activityId));
-
+    public String getActivityInstance(String planId, String activityId) throws ActivityInstanceNotFoundException {
         HttpResponse response;
         try {
+            HttpGet request = new HttpGet(String.format("%s/%s/%s/%s", baseURL, planId, instancePath, activityId));
             response = this.httpClient.execute(request);
         } catch (IOException e) {
             throw new Error(e);
         }
 
-        int status = response.getStatusLine().getStatusCode();
+        switch (response.getStatusLine().getStatusCode()) {
+            case HttpStatus.SC_OK:
+                try {
+                    return new String(response.getEntity().getContent().readAllBytes());
+                } catch (IOException e) {
+                    throw new Error(e);
+                }
 
-        if (status == HttpStatus.SC_OK) {
-            try {
-                return new String(response.getEntity().getContent().readAllBytes());
-            } catch (IOException e) {
-                throw new Error(e);
-            }
+            case HttpStatus.SC_NOT_FOUND:
+                // TODO: When the plan service is updated to distinguish between
+                //       PlanNotFound or ActivityInstanceNotFound errors, update this
+                throw new ActivityInstanceNotFoundException();
 
-        } else {
-            String message;
-            try {
-                message = prettify(new String(response.getEntity().getContent().readAllBytes()));
-            } catch(IOException e) {
-                throw new Error(e);
-            }
-            throw new GetActivityInstanceFailureException(message);
+            default:
+                // TODO: Make this a more specific Error
+                // Should never happen because we don't have any other status codes from the service
+                throw new Error("Unexpected status code returned from plan service");
         }
     }
 
     @Override
-    public void updateActivityInstance(String planId, String activityId, String activityInstanceJson) throws UpdateActivityInstanceFailureException {
-        HttpPatch request = new HttpPatch(String.format("%s/%s/%s/%s", baseURL, planId, instancePath, activityId));
-
+    public void updateActivityInstance(String planId, String activityId, String activityInstanceJson) throws ActivityInstanceNotFoundException, InvalidJsonException, InvalidPlanException {
+        HttpResponse response;
         try {
+            HttpPatch request = new HttpPatch(String.format("%s/%s/%s/%s", baseURL, planId, instancePath, activityId));
             addJsonToRequest(request, activityInstanceJson);
-        } catch (UnsupportedEncodingException e) {
-            throw new Error(e);
-        }
-
-        HttpResponse response;
-        try {
             response = this.httpClient.execute(request);
-        } catch(IOException e) {
+        } catch (IOException e) {
             throw new Error(e);
         }
 
-        int status = response.getStatusLine().getStatusCode();
+        switch (response.getStatusLine().getStatusCode()) {
+            case HttpStatus.SC_NO_CONTENT:
+                break;
 
-        if (status != HttpStatus.SC_NO_CONTENT) {
-            String message;
-            try {
-                message = prettify(new String(response.getEntity().getContent().readAllBytes()));
-            } catch(IOException e) {
-                throw new Error(e);
-            }
-            throw new UpdateActivityInstanceFailureException(message);
+            case HttpStatus.SC_NOT_FOUND:
+                // TODO: When the plan service is updated to distinguish between
+                //       PlanNotFound or ActivityInstanceNotFound errors, update this
+                throw new ActivityInstanceNotFoundException();
+
+            case HttpStatus.SC_BAD_REQUEST:
+                // TODO: Add information about what was wrong from the response
+                throw new InvalidJsonException();
+
+            case HttpStatus.SC_UNPROCESSABLE_ENTITY:
+                // TODO: Add information about what was wrong from the response
+                throw new InvalidPlanException();
+
+            default:
+                // TODO: Make this a more specific Error
+                // Should never happen because we don't have any other status codes from the service
+                throw new Error("Unexpected status code returned from plan service");
         }
     }
 
     @Override
-    public void deleteActivityInstance(String planId, String activityId) throws DeleteActivityInstanceFailureException {
-        HttpDelete request = new HttpDelete(String.format("%s/%s/%s/%s", baseURL, planId, instancePath, activityId));
-
+    public void deleteActivityInstance(String planId, String activityId) throws ActivityInstanceNotFoundException {
         HttpResponse response;
         try {
+            HttpDelete request = new HttpDelete(String.format("%s/%s/%s/%s", baseURL, planId, instancePath, activityId));
             response = this.httpClient.execute(request);
-        } catch(IOException e) {
+        } catch (IOException e) {
             throw new Error(e);
         }
 
-        int status = response.getStatusLine().getStatusCode();
+        switch (response.getStatusLine().getStatusCode()) {
+            case HttpStatus.SC_OK:
+                break;
 
-        if (status != HttpStatus.SC_OK) {
-            String message;
-            try {
-                message = prettify(new String(response.getEntity().getContent().readAllBytes()));
-            } catch(IOException e) {
-                throw new Error(e);
-            }
-            throw new DeleteActivityInstanceFailureException(message);
+            case HttpStatus.SC_NOT_FOUND:
+                // TODO: When the plan service is updated to distinguish between
+                //       PlanNotFound or ActivityInstanceNotFound errors, update this
+                throw new ActivityInstanceNotFoundException();
+
+            default:
+                // TODO: Make this a more specific Error
+                // Should never happen because we don't have any other status codes from the service
+                throw new Error("Unexpected status code returned from plan service");
         }
     }
 

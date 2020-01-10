@@ -244,7 +244,6 @@ public class CommandOptions {
     }
 
     private void printUsage() {
-
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("Merlin Adaptation", options);
     }
@@ -253,8 +252,7 @@ public class CommandOptions {
         String planJson;
         try {
             planJson = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             System.err.println(e);
             return false;
         }
@@ -262,8 +260,7 @@ public class CommandOptions {
         String id;
         try {
             id = this.planRepository.createPlan(planJson);
-        }
-        catch (ActionFailureException e) {
+        } catch (PlanRepository.InvalidPlanException | PlanRepository.InvalidJsonException e) {
             System.err.println(e);
             return false;
         }
@@ -276,8 +273,7 @@ public class CommandOptions {
         String planUpdateJson;
         try {
             planUpdateJson = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             System.err.println(e);
             return false;
         }
@@ -289,14 +285,12 @@ public class CommandOptions {
         PlanDetail plan;
         try {
             plan = PlanDetail.fromTokens(tokens);
-        }
-        catch (InvalidTokenException e) {
+        } catch (InvalidTokenException e) {
             System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
             return false;
         }
 
         String planUpdateJson = JSONUtilities.convertPlanToJSON(plan);
-
         return updatePlan(planId, planUpdateJson);
     }
 
@@ -304,7 +298,7 @@ public class CommandOptions {
     public boolean updatePlan(String planId, String planUpdateJson) {
         try {
             this.planRepository.updatePlan(planId, planUpdateJson);
-        } catch(ActionFailureException e) {
+        } catch (PlanRepository.InvalidPlanException | PlanRepository.PlanNotFoundException | PlanRepository.InvalidJsonException e) {
             System.err.println(e);
             return false;
         }
@@ -316,7 +310,7 @@ public class CommandOptions {
     private boolean deletePlan(String planId) {
         try {
             this.planRepository.deletePlan(planId);
-        } catch (PlanDeleteFailureException e) {
+        } catch (PlanRepository.PlanNotFoundException e) {
             System.err.println(e);
             return false;
         }
@@ -326,14 +320,14 @@ public class CommandOptions {
     }
 
     private boolean downloadPlan(String planId, String outName) {
-        if (new File(outName).exists()) {
+        if (Files.exists(Path.of(outName))) {
             System.err.println(String.format("File %s already exists.", outName));
             return false;
         }
 
         try {
             this.planRepository.downloadPlan(planId, outName);
-        } catch (PlanDownloadFailureException e) {
+        } catch (PlanRepository.PlanNotFoundException e) {
             System.err.println(e);
             return false;
         }
@@ -346,15 +340,14 @@ public class CommandOptions {
         String instanceListJson;
         try {
             instanceListJson = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             System.err.println(e);
             return false;
         }
 
         try {
             this.planRepository.appendActivityInstances(planId, instanceListJson);
-        } catch (AppendActivityInstancesFailureException e) {
+        } catch (PlanRepository.PlanNotFoundException | PlanRepository.InvalidJsonException | PlanRepository.InvalidPlanException e) {
             System.err.println(e);
             return false;
         }
@@ -367,12 +360,12 @@ public class CommandOptions {
         String activityInstanceJson;
         try {
             activityInstanceJson = this.planRepository.getActivityInstance(planId, activityId);
-        } catch (GetActivityInstanceFailureException e) {
+        } catch (PlanRepository.PlanNotFoundException | PlanRepository.ActivityInstanceNotFoundException e) {
             System.err.println(e);
             return false;
         }
 
-        System.out.printf("SUCCESS: Activity retrieval successful.");
+        System.out.println("SUCCESS: Activity retrieval successful.");
         System.out.println(activityInstanceJson);
         return true;
     }
@@ -381,8 +374,7 @@ public class CommandOptions {
         ActivityInstance activityInstance;
         try {
             activityInstance = ActivityInstance.fromTokens(tokens);
-        }
-        catch (InvalidTokenException e) {
+        } catch (InvalidTokenException e) {
             System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
             return false;
         }
@@ -391,7 +383,7 @@ public class CommandOptions {
 
         try {
             this.planRepository.updateActivityInstance(planId, activityId, activityUpdateJson);
-        } catch (UpdateActivityInstanceFailureException e) {
+        } catch (PlanRepository.PlanNotFoundException | PlanRepository.ActivityInstanceNotFoundException | PlanRepository.InvalidJsonException | PlanRepository.InvalidPlanException e) {
             System.err.println(e);
             return false;
         }
@@ -403,7 +395,7 @@ public class CommandOptions {
     private boolean deleteActivityInstance(String planId, String activityId) {
         try {
             this.planRepository.deleteActivityInstance(planId, activityId);
-        } catch (DeleteActivityInstanceFailureException e) {
+        } catch (PlanRepository.PlanNotFoundException | PlanRepository.ActivityInstanceNotFoundException e) {
             System.err.println(e);
             return false;
         }
@@ -413,13 +405,7 @@ public class CommandOptions {
     }
 
     private boolean listPlans() {
-        String planListJson;
-        try {
-            planListJson = this.planRepository.getPlanList();
-        } catch (GetPlanListFailureException e) {
-            System.err.println(e);
-            return false;
-        }
+        String planListJson = this.planRepository.getPlanList();
 
         System.out.println("SUCCESS: Plan list retrieval successful.");
         System.out.println(planListJson);

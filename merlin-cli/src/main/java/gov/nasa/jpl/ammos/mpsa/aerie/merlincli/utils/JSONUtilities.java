@@ -8,6 +8,8 @@ import gov.nasa.jpl.ammos.mpsa.apgen.model.*;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,13 +28,13 @@ public class JSONUtilities {
         return gson.toJson(je);
     }
 
-    // TODO: Take a path for the file name instead of a string
     /**
      * Writes out a formatted JSON file
      * @param body - The JSON to write out
      * @param path - The path to which the output should be written (should not already exist)
      * @return boolean whether write was successful
      */
+    // TODO: Throw IOException instead of handling it here
     public static boolean writeJson(String body, Path path) {
         try {
             String json = prettify(body);
@@ -53,6 +55,10 @@ public class JSONUtilities {
             System.err.println(e.getMessage());
         }
         return true;
+    }
+
+    public static boolean writeJson(InputStream source, Path path) throws IOException {
+        return writeJson(new String(source.readAllBytes()), path);
     }
 
     public static boolean writePlanToJSON(Plan plan, Path output, String adaptationId, String startTimestamp, String name) {
