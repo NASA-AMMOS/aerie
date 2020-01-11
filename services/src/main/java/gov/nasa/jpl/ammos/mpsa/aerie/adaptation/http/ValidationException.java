@@ -1,6 +1,5 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions;
+package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
-import java.util.Collections;
 import java.util.List;
 
 public class ValidationException extends Exception {
@@ -8,7 +7,7 @@ public class ValidationException extends Exception {
 
     public ValidationException(final String message, final List<String> errors) {
         super(message + ": " + errors.toString());
-        this.errors = Collections.unmodifiableList(errors);
+        this.errors = List.copyOf(errors);
     }
 
     public List<String> getValidationErrors() {
