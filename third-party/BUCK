@@ -41,6 +41,12 @@ prebuilt_jar(
     visibility = ['PUBLIC']
 )
 
+prebuilt_jar(
+    name = 'httpcore',
+    binary_jar = 'httpcore-4.4.12.jar',
+    visibility = ['PUBLIC']
+)
+
 prebuilt_jar( 
     name = 'httpclient',
     binary_jar = 'httpclient-4.5.10.jar',
