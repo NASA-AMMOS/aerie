@@ -1,8 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan;
 
 import com.mongodb.client.MongoClients;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.IPlanController;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.PlanController;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.App;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.LocalApp;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.http.PlanBindings;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.AdaptationService;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.PlanRepository;
@@ -25,7 +25,7 @@ public final class AerieAppDriver {
     // Assemble the core non-web object graph.
     final PlanRepository planRepository = loadPlanRepository(configuration);
     final AdaptationService adaptationService = new RemoteAdaptationService(configuration.ADAPTATION_URI);
-    final IPlanController controller = new PlanController(planRepository, adaptationService);
+    final App controller = new LocalApp(planRepository, adaptationService);
 
     // Configure an HTTP server.
     final Javalin javalin = Javalin.create(config -> {

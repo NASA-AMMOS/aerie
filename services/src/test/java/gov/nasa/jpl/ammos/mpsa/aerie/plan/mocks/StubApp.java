@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.plan.mocks;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.Breadcrumb;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.IPlanController;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.ValidationException;
@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public final class StubPlanController implements IPlanController {
+public final class StubApp implements App {
   public static final String EXISTENT_PLAN_ID = "abc";
   public static final String NONEXISTENT_PLAN_ID = "def";
   public static final Plan EXISTENT_PLAN;

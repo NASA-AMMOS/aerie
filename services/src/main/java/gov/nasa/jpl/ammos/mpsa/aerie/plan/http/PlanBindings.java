@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.http;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.IPlanController;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.ValidationException;
@@ -30,10 +30,10 @@ import static io.javalin.apibuilder.ApiBuilder.post;
 import static io.javalin.apibuilder.ApiBuilder.put;
 
 public final class PlanBindings implements Plugin {
-  private final IPlanController appController;
+  private final App app;
 
-  public PlanBindings(final IPlanController appController) {
-    this.appController = appController;
+  public PlanBindings(final App app) {
+    this.app = app;
   }
 
   @Override
@@ -70,7 +70,7 @@ public final class PlanBindings implements Plugin {
   }
 
   private void getPlans(final Context ctx) {
-    final Map<String, Plan> plans = this.appController
+    final Map<String, Plan> plans = this.app
         .getPlans()
         .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
 
@@ -81,7 +81,7 @@ public final class PlanBindings implements Plugin {
     try {
       final String planId = ctx.pathParam("planId");
 
-      final Plan plan = this.appController.getPlanById(planId);
+      final Plan plan = this.app.getPlanById(planId);
 
       ctx.result(ResponseSerializers.serializePlan(plan).toString());
     } catch (final NoSuchPlanException ex) {
@@ -94,7 +94,7 @@ public final class PlanBindings implements Plugin {
       final JsonValue requestJson = Json.createReader(new StringReader(ctx.body())).readValue();
       final NewPlan plan = RequestDeserializers.deserializeNewPlan(requestJson);
 
-      final String planId = this.appController.addPlan(plan);
+      final String planId = this.app.addPlan(plan);
 
       ctx
           .status(201)
@@ -114,7 +114,7 @@ public final class PlanBindings implements Plugin {
       final String planId = ctx.pathParam("planId");
       final NewPlan plan = RequestDeserializers.deserializeNewPlan(requestJson);
 
-      this.appController.replacePlan(planId, plan);
+      this.app.replacePlan(planId, plan);
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
     } catch (final NoSuchPlanException ex) {
@@ -131,7 +131,7 @@ public final class PlanBindings implements Plugin {
       final String planId = ctx.pathParam("planId");
       final Plan patch = RequestDeserializers.deserializePlanPatch(requestJson);
 
-      this.appController.updatePlan(planId, patch);
+      this.app.updatePlan(planId, patch);
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
     } catch (final NoSuchPlanException ex) {
@@ -147,7 +147,7 @@ public final class PlanBindings implements Plugin {
     try {
       final String planId = ctx.pathParam("planId");
 
-      this.appController.removePlan(planId);
+      this.app.removePlan(planId);
     } catch (final NoSuchPlanException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
     }
@@ -157,7 +157,7 @@ public final class PlanBindings implements Plugin {
     try {
       final String planId = ctx.pathParam("planId");
 
-      final Plan plan = this.appController.getPlanById(planId);
+      final Plan plan = this.app.getPlanById(planId);
 
       ctx.result(ResponseSerializers.serializeActivityInstanceMap(plan.activityInstances).toString());
     } catch (final NoSuchPlanException ex) {
@@ -172,7 +172,7 @@ public final class PlanBindings implements Plugin {
       final String planId = ctx.pathParam("planId");
       final List<ActivityInstance> activityInstances = RequestDeserializers.deserializeActivityInstanceList(requestJson);
 
-      final List<String> activityInstanceIds = this.appController.addActivityInstancesToPlan(planId, activityInstances);
+      final List<String> activityInstanceIds = this.app.addActivityInstancesToPlan(planId, activityInstances);
 
       ctx.result(ResponseSerializers.serializeStringList(activityInstanceIds).toString());
     } catch (final InvalidEntityException ex) {
@@ -189,7 +189,7 @@ public final class PlanBindings implements Plugin {
       final String planId = ctx.pathParam("planId");
       final String activityInstanceId = ctx.pathParam("activityInstanceId");
 
-      final ActivityInstance activityInstance = this.appController.getActivityInstanceById(planId, activityInstanceId);
+      final ActivityInstance activityInstance = this.app.getActivityInstanceById(planId, activityInstanceId);
 
       ctx.result(ResponseSerializers.serializeActivityInstance(activityInstance).toString());
     } catch (final NoSuchPlanException ex) {
@@ -207,7 +207,7 @@ public final class PlanBindings implements Plugin {
       final String activityInstanceId = ctx.pathParam("activityInstanceId");
       final ActivityInstance activityInstance = RequestDeserializers.deserializeActivityInstance(requestJson);
 
-      this.appController.replaceActivityInstance(planId, activityInstanceId, activityInstance);
+      this.app.replaceActivityInstance(planId, activityInstanceId, activityInstance);
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
     } catch (final NoSuchPlanException ex) {
@@ -227,7 +227,7 @@ public final class PlanBindings implements Plugin {
       final String activityInstanceId = ctx.pathParam("activityInstanceId");
       final ActivityInstance activityInstance = RequestDeserializers.deserializeActivityInstancePatch(requestJson);
 
-      this.appController.updateActivityInstance(planId, activityInstanceId, activityInstance);
+      this.app.updateActivityInstance(planId, activityInstanceId, activityInstance);
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
     } catch (final NoSuchPlanException ex) {
@@ -244,7 +244,7 @@ public final class PlanBindings implements Plugin {
       final String planId = ctx.pathParam("planId");
       final String activityInstanceId = ctx.pathParam("activityInstanceId");
 
-      this.appController.removeActivityInstanceById(planId, activityInstanceId);
+      this.app.removeActivityInstanceById(planId, activityInstanceId);
     } catch (final NoSuchPlanException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
     } catch (final NoSuchActivityInstanceException ex) {

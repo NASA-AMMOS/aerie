@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.IPlanController;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.PlanController;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.App;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.LocalApp;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.mocks.Fixtures;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.http.PlanBindings;
 import io.javalin.Javalin;
@@ -12,7 +12,7 @@ public final class DevAppDriver {
   public static void main(final String[] args) {
     // Assemble the core non-web object graph.
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     // Configure an HTTP server.
     final Javalin javalin = Javalin.create(config -> config
