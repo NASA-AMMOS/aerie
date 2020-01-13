@@ -11,7 +11,6 @@ import gov.nasa.jpl.ammos.mpsa.apgen.model.Plan;
 import gov.nasa.jpl.ammos.mpsa.apgen.parser.AdaptationParser;
 import gov.nasa.jpl.ammos.mpsa.apgen.parser.ApfParser;
 import org.apache.commons.cli.*;
-import org.apache.http.impl.client.HttpClients;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +20,6 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public class CommandOptions {
-    private HttpHandler httpClient;
     private PlanRepository planRepository;
     private AdaptationRepository adaptationRepository;
     private Options options = new Options();
@@ -36,19 +34,11 @@ public class CommandOptions {
         consumeArgs(args);
         this.planRepository = planRepository;
         this.adaptationRepository = adaptationRepository;
-        this.httpClient = new HttpClientHandler(HttpClients.createDefault());
     }
 
     public CommandOptions consumeArgs(String[] args) {
         this.args = args;
         return this;
-    }
-
-    // TODO: REMOVE THIS WHEN DONE
-    @Deprecated
-    public CommandOptions(String[] args, HttpHandler httpClient) {
-        this(args, new RemotePlanRepository(httpClient), new RemoteAdaptationRepository(httpClient));
-        this.httpClient = httpClient;
     }
 
     public void buildArguments() {
