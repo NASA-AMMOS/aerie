@@ -23,18 +23,7 @@ public final class AerieAppDriver {
     final AppConfiguration configuration = loadConfiguration(args);
 
     // Assemble the core non-web object graph.
-    final PlanRepository planRepository;
-    {
-      final var mongoDatabase = MongoClients
-          .create(configuration.MONGO_URI.toString())
-          .getDatabase(configuration.MONGO_DATABASE);
-
-      planRepository = new RemotePlanRepository(
-          mongoDatabase,
-          configuration.MONGO_PLAN_COLLECTION,
-          configuration.MONGO_ACTIVITY_COLLECTION);
-    }
-
+    final PlanRepository planRepository = loadPlanRepository(configuration);
     final AdaptationService adaptationService = new RemoteAdaptationService(configuration.ADAPTATION_URI);
     final IPlanController controller = new PlanController(planRepository, adaptationService);
 
@@ -69,5 +58,16 @@ public final class AerieAppDriver {
     // Read and process the configuration source.
     final JsonObject config = (JsonObject)(Json.createReader(configStream).readValue());
     return AppConfiguration.parseProperties(config);
+  }
+
+  private static PlanRepository loadPlanRepository(final AppConfiguration configuration) {
+    final var mongoDatabase = MongoClients
+        .create(configuration.MONGO_URI.toString())
+        .getDatabase(configuration.MONGO_DATABASE);
+
+    return new RemotePlanRepository(
+        mongoDatabase,
+        configuration.MONGO_PLAN_COLLECTION,
+        configuration.MONGO_ACTIVITY_COLLECTION);
   }
 }
