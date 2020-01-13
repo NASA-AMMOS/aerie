@@ -1,6 +1,6 @@
 java_library(
     name = "merlin-cli",
-    srcs = glob(["src/main/java/**/*.java"]),
+    srcs = glob(["src/main/**"]),
     extra_arguments = [
         "--source-path", "merlin-cli/src/",
         "--module-path", "third-party/"
@@ -10,6 +10,7 @@ java_library(
         "//third-party:commons-lang3",
         "//third-party:gson",
         "//third-party:httpclient",
+        "//third-party:httpcore",
         "//third-party:junit",
         "//third-party:spring-beans",
         "//third-party:spring-context",

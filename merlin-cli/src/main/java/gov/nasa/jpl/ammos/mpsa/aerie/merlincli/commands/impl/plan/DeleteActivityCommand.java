@@ -1,26 +1,24 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpHandler;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+
+import java.io.IOException;
 
 /**
  * Command to delete an activity from a plan
  */
 public class DeleteActivityCommand implements Command {
 
-    private RestTemplate restTemplate;
+    private HttpHandler httpClient;
     private String planId;
     private String activityId;
     private int status;
 
-    public DeleteActivityCommand(RestTemplate restTemplate, String planId, String outName) {
-        this.restTemplate = restTemplate;
+    public DeleteActivityCommand(HttpHandler httpClient, String planId, String outName) {
+        this.httpClient = httpClient;
         this.planId = planId;
         this.activityId = outName;
         this.status = -1;
@@ -28,15 +26,16 @@ public class DeleteActivityCommand implements Command {
 
     @Override
     public void execute() {
-        HttpHeaders headers = new HttpHeaders();
-        HttpEntity requestBody = new HttpEntity(null, headers);
+        String url = String.format("http://localhost:27183/api/plans/%s/activity_instances/%s", this.planId, this.activityId);
+        HttpDelete request = new HttpDelete(url);
+
         try {
-            String url = String.format("http://localhost:27183/api/plans/%s/activity_instances/%s", this.planId, this.activityId);
-            ResponseEntity response = restTemplate.exchange(url, HttpMethod.DELETE, requestBody, String.class);
-            this.status = response.getStatusCodeValue();
-        }
-        catch (HttpClientErrorException | HttpServerErrorException e) {
-            this.status = e.getStatusCode().value();
+            HttpResponse response = this.httpClient.execute(request);
+
+            this.status = response.getStatusLine().getStatusCode();
+
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
         }
     }
 

@@ -3,14 +3,16 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 import com.google.gson.Gson;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidTokenException;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpHandler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.TokenMap;
-import org.springframework.http.*;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.ActivityInstanceParameter;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPatch;
+import org.apache.http.entity.StringEntity;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +25,7 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.TokenMap.parseToken
  */
 public class UpdateActivityCommand implements Command {
 
-    private RestTemplate restTemplate;
+    private HttpHandler httpClient;
     private String planId;
     private String activityId;
     private int status;
@@ -31,8 +33,8 @@ public class UpdateActivityCommand implements Command {
     /* Activity instance to be pushed */
     ActivityInstance updateInstance;
 
-    public UpdateActivityCommand(RestTemplate restTemplate, String planId, String activityId, String[] tokens) throws InvalidTokenException {
-        this.restTemplate = restTemplate;
+    public UpdateActivityCommand(HttpHandler httpClient, String planId, String activityId, String[] tokens) throws InvalidTokenException {
+        this.httpClient = httpClient;
         this.planId = planId;
         this.activityId = activityId;
 
@@ -70,16 +72,19 @@ public class UpdateActivityCommand implements Command {
     public void execute() {
         String body = new Gson().toJson(this.updateInstance, ActivityInstance.class);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity requestBody = new HttpEntity(body, headers);
+        String url = String.format("http://localhost:27183/api/plans/%s/activity_instances/%s", this.planId, activityId);
+        HttpPatch request = new HttpPatch(url);
+        request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+
         try {
-            String url = String.format("http://localhost:27183/api/plans/%s/activity_instances/%s", this.planId, activityId);
-            ResponseEntity response = restTemplate.exchange(url, HttpMethod.PATCH, requestBody, String.class);
-            this.status = response.getStatusCodeValue();
-        }
-        catch (HttpClientErrorException | HttpServerErrorException e) {
-            this.status = e.getStatusCode().value();
+            request.setEntity(new StringEntity(body));
+
+            HttpResponse response = this.httpClient.execute(request);
+
+            this.status = response.getStatusLine().getStatusCode();
+
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
         }
     }
 

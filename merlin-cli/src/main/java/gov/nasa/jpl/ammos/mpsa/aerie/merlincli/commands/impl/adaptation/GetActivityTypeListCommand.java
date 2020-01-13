@@ -1,44 +1,43 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.adaptation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpHandler;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+
+import java.io.IOException;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities.prettify;
 
 public class GetActivityTypeListCommand implements Command {
 
-    private RestTemplate restTemplate;
+    private HttpHandler httpClient;
     private String adaptationId;
     private String responseBody;
     private int status;
 
-    public GetActivityTypeListCommand(RestTemplate restTemplate, String adaptationId) {
-        this.restTemplate = restTemplate;
+    public GetActivityTypeListCommand(HttpHandler httpClient, String adaptationId) {
+        this.httpClient = httpClient;
         this.adaptationId = adaptationId;
         this.status = -1;
     }
 
     public void execute() {
-        HttpHeaders headers = new HttpHeaders();
-        HttpEntity requestBody = new HttpEntity(null, headers);
-        try {
-            String url = String.format("http://localhost:27182/api/adaptations/%s/activities", this.adaptationId);
-            ResponseEntity response = restTemplate.exchange(url, HttpMethod.GET, requestBody, String.class);
-            this.status = response.getStatusCodeValue();
+        String url = String.format("http://localhost:27182/api/adaptations/%s/activities", this.adaptationId);
+        HttpGet request = new HttpGet(url);
 
-            if (status == 200) {
-                this.responseBody = prettify(response.getBody().toString());
+        try {
+            HttpResponse response = this.httpClient.execute(request);
+
+            this.status = response.getStatusLine().getStatusCode();
+
+            if (status == 200 && response.getEntity() != null) {
+                String responseString = new String(response.getEntity().getContent().readAllBytes());
+                this.responseBody = prettify(responseString);
             }
 
-        }
-        catch (HttpClientErrorException | HttpServerErrorException e) {
-            this.status = e.getStatusCode().value();
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
         }
     }
 

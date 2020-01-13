@@ -1,37 +1,30 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.matchers.CreateAdaptationRequestMatcher;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.matchers.JSONMatcher;
-import org.hamcrest.core.StringContains;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.mocks.MockHttpHandler;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.message.BasicHttpResponse;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import static junit.framework.TestCase.fail;
-import static junit.framework.TestCase.assertTrue;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withCreatedEntity;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-@ContextConfiguration(locations = {"classpath:/applicationContext-test.xml"})
-public class MerlinCLIAdaptationTests extends AbstractJUnit4SpringContextTests {
+public class MerlinCLIAdaptationTests {
     private String resourcesRoot = "src/test/resources";
-        private final String baseURL = "http://localhost:27182/api/adaptations";
-        private MockRestServiceServer mockServer;
+    private final String baseURL = "http://localhost:27182/api/adaptations";
+    private final String activityPath = "activities";
+    private final String parameterPath = "parameters";
+    private final MockHttpHandler mockHttpHandler = new MockHttpHandler();
 
     // Used to intercept System.out and System.err
     private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
@@ -39,27 +32,24 @@ public class MerlinCLIAdaptationTests extends AbstractJUnit4SpringContextTests {
     private final PrintStream originalOut = System.out;
     private final PrintStream originalErr = System.err;
 
-    @Before
     public void setUpStreams() {
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
     }
 
-    @After
     public void restoreStreams() {
         System.setOut(originalOut);
         System.setErr(originalErr);
     }
 
-    @Autowired
-    private CommandOptions commandOptions;
-
-    @Autowired
-    private RestTemplate restTemplate;
-
     @Before
     public void setUp() {
-        mockServer = MockRestServiceServer.createServer(restTemplate);
+        setUpStreams();
+    }
+
+    @After
+    public void cleanUp() {
+        restoreStreams();
     }
 
     /**
@@ -67,31 +57,35 @@ public class MerlinCLIAdaptationTests extends AbstractJUnit4SpringContextTests {
      * when asked to create an adaptation.
      */
     @Test
-    public void testAdaptationCreation() {
+    public void testAdaptationCreation() throws URISyntaxException, IOException {
         String path = String.format("%s/bananatation.jar", resourcesRoot);
         String name = "testName";
         String version = "1.0a.3";
-        URI location = null;
-        CreateAdaptationRequestMatcher matcher = new CreateAdaptationRequestMatcher(path, name, version, null, null);
+        String location = "427";
 
-        try {
-            location = new URI("427");
-        } catch (URISyntaxException e) {
-            fail(e.getMessage());
-        }
+        // 1. Create a new response
+        BasicHttpResponse response = new BasicHttpResponse(null, HttpStatus.SC_CREATED, "");
+        response.addHeader("location", location);
 
-        // TODO: We should increase the rigor of this test, but it's not clear how to do that. Leaving it as a
-        // TODO, since we are probably going to pull out the use of the Spring framework anyway
-        mockServer.expect(requestTo(baseURL))
-                .andExpect(method(HttpMethod.POST))
-                .andExpect(content().string(StringContains.containsString("filename=\"bananatation.jar\"")))
-                .andRespond(withCreatedEntity(location));
+        // 2. Register the response with the Mock Client
+        this.mockHttpHandler.setNextResponse(response);
 
+        // 3. Make the request
         String[] args = { "--create-adaptation", path, "name="+name, "version="+version };
-        commandOptions.consumeArgs(args).parse();
+        CommandOptions commandOptions = new CommandOptions(args, mockHttpHandler);
+        commandOptions.parse();
 
-        mockServer.verify();
-        assertTrue(commandOptions.lastCommandSuccessful());
+        // 4. Get the request
+        HttpUriRequest request = this.mockHttpHandler.getLastRequest();
+
+        // 5. Validate the request contained the expected information
+        assertThat(commandOptions.lastCommandSuccessful()).isTrue();
+
+        URI uri = new URI(baseURL);
+        assertThat(request.getURI()).isEqualTo(uri);
+
+        String method = request.getMethod();
+        assertThat(method).isEqualTo(HttpPost.METHOD_NAME);
     }
 
     /**
@@ -101,8 +95,7 @@ public class MerlinCLIAdaptationTests extends AbstractJUnit4SpringContextTests {
      * Checks that the response is printed to standard out
      */
     @Test
-    public void testReadAdaptationList() {
-
+    public void testReadAdaptationList() throws IOException, URISyntaxException {
         String body = "[" +
                   "{" +
                     "\"name\": \"Test1\"," +
@@ -116,19 +109,35 @@ public class MerlinCLIAdaptationTests extends AbstractJUnit4SpringContextTests {
                   "}" +
                 "]";
 
-        mockServer.expect(requestTo(baseURL))
-                .andExpect(method(HttpMethod.GET))
-                .andRespond(withSuccess(body, MediaType.APPLICATION_JSON));
+        // 1. Create a new response
+        BasicHttpResponse response = new BasicHttpResponse(null, HttpStatus.SC_OK, "");
+        response.setEntity(new StringEntity(body));
 
+        // 2. Register the response with the Mock Client
+        this.mockHttpHandler.setNextResponse(response);
+
+        // 3. Make the request
         String[] args = { "--list-adaptations" };
-        commandOptions.consumeArgs(args).parse();
+        CommandOptions commandOptions = new CommandOptions(args, mockHttpHandler);
+        commandOptions.parse();
 
-        mockServer.verify();
-        assertTrue(commandOptions.lastCommandSuccessful());
+        // 4. Get the request
+        HttpUriRequest request = this.mockHttpHandler.getLastRequest();
 
-        String output = outContent.toString();
+        // 5. Validate the request contained the expected information
+        assertThat(commandOptions.lastCommandSuccessful()).isTrue();
+
+        URI uri = new URI(baseURL);
+        assertThat(request.getURI()).isEqualTo(uri);
+
+        String method = request.getMethod();
+        assertThat(method).isEqualTo(HttpGet.METHOD_NAME);
+
+        String output = new String(response.getEntity().getContent().readAllBytes());
+        assertThat(output.indexOf('[')).isGreaterThanOrEqualTo(0);
+
         String result = output.substring(output.indexOf('['));
-        assertTrue(new JSONMatcher(body).matches(result));
+        assertThat(new JSONMatcher(body).matches(result)).isTrue();
     }
 
     /**
@@ -138,7 +147,7 @@ public class MerlinCLIAdaptationTests extends AbstractJUnit4SpringContextTests {
      * Checks that the response is printed to standard out
      */
     @Test
-    public void testReadAdaptation() {
+    public void testReadAdaptation() throws IOException, URISyntaxException {
         String adaptationId = "0123-4567-89ab-cdef";
         String body = "{" +
                   "\"name\": \"Test\"," +
@@ -147,20 +156,35 @@ public class MerlinCLIAdaptationTests extends AbstractJUnit4SpringContextTests {
                   "\"owner\": \"Tom Cruise\"" +
                 "}";
 
-        String url = String.format("%s/%s", baseURL, adaptationId);
-        mockServer.expect(requestTo(url))
-                .andExpect(method(HttpMethod.GET))
-                .andRespond(withSuccess(body, MediaType.APPLICATION_JSON));
+        // 1. Create a new response
+        BasicHttpResponse response = new BasicHttpResponse(null, HttpStatus.SC_OK, "");
+        response.setEntity(new StringEntity(body));
 
+        // 2. Register the response with the Mock Client
+        this.mockHttpHandler.setNextResponse(response);
+
+        // 3. Make the request
         String[] args = { "-a", adaptationId, "--view-adaptation" };
-        commandOptions.consumeArgs(args).parse();
+        CommandOptions commandOptions = new CommandOptions(args, mockHttpHandler);
+        commandOptions.parse();
 
-        mockServer.verify();
-        assertTrue(commandOptions.lastCommandSuccessful());
+        // 4. Get the request
+        HttpUriRequest request = this.mockHttpHandler.getLastRequest();
 
-        String output = outContent.toString();
+        // 5. Validate the request contained the expected information
+        assertThat(commandOptions.lastCommandSuccessful()).isTrue();
+
+        URI uri = new URI(String.format("%s/%s", baseURL, adaptationId));
+        assertThat(request.getURI()).isEqualTo(uri);
+
+        String method = request.getMethod();
+        assertThat(method).isEqualTo(HttpGet.METHOD_NAME);
+
+        String output = new String(response.getEntity().getContent().readAllBytes());
+        assertThat(output.indexOf('{')).isGreaterThanOrEqualTo(0);
+
         String result = output.substring(output.indexOf('{'));
-        assertTrue(new JSONMatcher(body).matches(result));
+        assertThat(new JSONMatcher(body).matches(result)).isTrue();
     }
 
     /**
@@ -170,7 +194,7 @@ public class MerlinCLIAdaptationTests extends AbstractJUnit4SpringContextTests {
      * Checks that the response is printed to standard out
      */
     @Test
-    public void testReadActivityTypes() {
+    public void testReadActivityTypes() throws IOException, URISyntaxException {
         String adaptationId = "0123-4567-89ab-cdea";
         String body = "[" +
                   "{" +
@@ -203,20 +227,35 @@ public class MerlinCLIAdaptationTests extends AbstractJUnit4SpringContextTests {
                   "}" +
                 "]";
 
-        String url = String.format("%s/%s/activities", baseURL, adaptationId);
-        mockServer.expect(requestTo(url))
-                .andExpect(method(HttpMethod.GET))
-                .andRespond(withSuccess(body, MediaType.APPLICATION_JSON));
+        // 1. Create a new response
+        BasicHttpResponse response = new BasicHttpResponse(null, HttpStatus.SC_OK, "");
+        response.setEntity(new StringEntity(body));
 
+        // 2. Register the response with the Mock Client
+        this.mockHttpHandler.setNextResponse(response);
+
+        // 3. Make the request
         String[] args = { "-a", adaptationId, "--activity-types" };
-        commandOptions.consumeArgs(args).parse();
+        CommandOptions commandOptions = new CommandOptions(args, mockHttpHandler);
+        commandOptions.parse();
 
-        mockServer.verify();
-        assertTrue(commandOptions.lastCommandSuccessful());
+        // 4. Get the request
+        HttpUriRequest request = this.mockHttpHandler.getLastRequest();
 
-        String output = outContent.toString();
+        // 5. Validate the request contained the expected information
+        assertThat(commandOptions.lastCommandSuccessful()).isTrue();
+
+        URI uri = new URI(String.format("%s/%s/%s", baseURL, adaptationId, activityPath));
+        assertThat(request.getURI()).isEqualTo(uri);
+
+        String method = request.getMethod();
+        assertThat(method).isEqualTo(HttpGet.METHOD_NAME);
+
+        String output = new String(response.getEntity().getContent().readAllBytes());
+        assertThat(output.indexOf('[')).isGreaterThanOrEqualTo(0);
+
         String result = output.substring(output.indexOf('['));
-        assertTrue(new JSONMatcher(body).matches(result));
+        assertThat(new JSONMatcher(body).matches(result)).isTrue();
     }
 
     /**
@@ -226,7 +265,7 @@ public class MerlinCLIAdaptationTests extends AbstractJUnit4SpringContextTests {
      * Checks that the response is printed to standard out
      */
     @Test
-    public void testReadActivityType() {
+    public void testReadActivityType() throws IOException, URISyntaxException {
         String adaptationId = "0123-4567-89ab-cdea";
         String activityId = "3911-5a5e-f6d6-ea2c";
         String body = "{" +
@@ -242,20 +281,35 @@ public class MerlinCLIAdaptationTests extends AbstractJUnit4SpringContextTests {
                   "]" +
                 "}";
 
-        String url = String.format("%s/%s/activities/%s", baseURL, adaptationId, activityId);
-        mockServer.expect(requestTo(url))
-                .andExpect(method(HttpMethod.GET))
-                .andRespond(withSuccess(body, MediaType.APPLICATION_JSON));
+        // 1. Create a new response
+        BasicHttpResponse response = new BasicHttpResponse(null, HttpStatus.SC_OK, "");
+        response.setEntity(new StringEntity(body));
 
+        // 2. Register the response with the Mock Client
+        this.mockHttpHandler.setNextResponse(response);
+
+        // 3. Make the request
         String[] args = { "-a", adaptationId, "--activity-type", activityId };
-        commandOptions.consumeArgs(args).parse();
+        CommandOptions commandOptions = new CommandOptions(args, mockHttpHandler);
+        commandOptions.parse();
 
-        mockServer.verify();
-        assertTrue(commandOptions.lastCommandSuccessful());
+        // 4. Get the request
+        HttpUriRequest request = this.mockHttpHandler.getLastRequest();
 
-        String output = outContent.toString();
+        // 5. Validate the request contained the expected information
+        assertThat(commandOptions.lastCommandSuccessful()).isTrue();
+
+        URI uri = new URI(String.format("%s/%s/%s/%s", baseURL, adaptationId, activityPath, activityId));
+        assertThat(request.getURI()).isEqualTo(uri);
+
+        String method = request.getMethod();
+        assertThat(method).isEqualTo(HttpGet.METHOD_NAME);
+
+        String output = new String(response.getEntity().getContent().readAllBytes());
+        assertThat(output.indexOf('{')).isGreaterThanOrEqualTo(0);
+
         String result = output.substring(output.indexOf('{'));
-        assertTrue(new JSONMatcher(body).matches(result));
+        assertThat(new JSONMatcher(body).matches(result)).isTrue();
     }
 
     /**
@@ -265,7 +319,7 @@ public class MerlinCLIAdaptationTests extends AbstractJUnit4SpringContextTests {
      * Checks that the response is printed to standard out
      */
     @Test
-    public void testReadActivityTypeParameters() {
+    public void testReadActivityTypeParameters() throws IOException, URISyntaxException {
         String adaptationId = "0123-4567-89ab-cdea";
         String activityId = "3911-5a5e-f6d6-ea2f";
         String body = "[" +
@@ -282,20 +336,35 @@ public class MerlinCLIAdaptationTests extends AbstractJUnit4SpringContextTests {
                   "}" +
                 "]";
 
-        String url = String.format("%s/%s/activities/%s/parameters", baseURL, adaptationId, activityId);
-        mockServer.expect(requestTo(url))
-                .andExpect(method(HttpMethod.GET))
-                .andRespond(withSuccess(body, MediaType.APPLICATION_JSON));
+        // 1. Create a new response
+        BasicHttpResponse response = new BasicHttpResponse(null, HttpStatus.SC_OK, "");
+        response.setEntity(new StringEntity(body));
 
+        // 2. Register the response with the Mock Client
+        this.mockHttpHandler.setNextResponse(response);
+
+        // 3. Make the request
         String[] args = { "-a", adaptationId, "--activity-type-parameters", activityId };
-        commandOptions.consumeArgs(args).parse();
+        CommandOptions commandOptions = new CommandOptions(args, mockHttpHandler);
+        commandOptions.parse();
 
-        mockServer.verify();
-        assertTrue(commandOptions.lastCommandSuccessful());
+        // 4. Get the request
+        HttpUriRequest request = this.mockHttpHandler.getLastRequest();
 
-        String output = outContent.toString();
+        // 5. Validate the request contained the expected information
+        assertThat(commandOptions.lastCommandSuccessful()).isTrue();
+
+        URI uri = new URI(String.format("%s/%s/%s/%s/%s", baseURL, adaptationId, activityPath, activityId, parameterPath));
+        assertThat(request.getURI()).isEqualTo(uri);
+
+        String method = request.getMethod();
+        assertThat(method).isEqualTo(HttpGet.METHOD_NAME);
+
+        String output = new String(response.getEntity().getContent().readAllBytes());
+        assertThat(output.indexOf('[')).isGreaterThanOrEqualTo(0);
+
         String result = output.substring(output.indexOf('['));
-        assertTrue(new JSONMatcher(body).matches(result));
+        assertThat(new JSONMatcher(body).matches(result)).isTrue();
     }
 
     /**
@@ -303,18 +372,30 @@ public class MerlinCLIAdaptationTests extends AbstractJUnit4SpringContextTests {
      * when asked to delete an adaptation
      */
     @Test
-    public void testDeleteAdaptation() {
+    public void testDeleteAdaptation() throws URISyntaxException {
         String adaptationId = "485a-36a9=bc7e-7fec";
 
-        String url = String.format("%s/%s", baseURL, adaptationId);
-        mockServer.expect(requestTo(url))
-                .andExpect(method(HttpMethod.DELETE))
-                .andRespond(withSuccess());
+        // 1. Create a new response
+        BasicHttpResponse response = new BasicHttpResponse(null, HttpStatus.SC_OK, "");
 
+        // 2. Register the response with the Mock Client
+        this.mockHttpHandler.setNextResponse(response);
+
+        // 3. Make the request
         String[] args = { "-a", adaptationId, "--delete-adaptation" };
-        commandOptions.consumeArgs(args).parse();
-        assertTrue(commandOptions.lastCommandSuccessful());
+        CommandOptions commandOptions = new CommandOptions(args, mockHttpHandler);
+        commandOptions.parse();
 
-        mockServer.verify();
+        // 4. Get the request
+        HttpUriRequest request = this.mockHttpHandler.getLastRequest();
+
+        // 5. Validate the request contained the expected information
+        assertThat(commandOptions.lastCommandSuccessful()).isTrue();
+
+        URI uri = new URI(String.format("%s/%s", baseURL, adaptationId));
+        assertThat(request.getURI()).isEqualTo(uri);
+
+        String method = request.getMethod();
+        assertThat(method).isEqualTo(HttpDelete.METHOD_NAME);
     }
 }

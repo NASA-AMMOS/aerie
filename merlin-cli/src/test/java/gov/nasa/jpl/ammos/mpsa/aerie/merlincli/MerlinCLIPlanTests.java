@@ -1,16 +1,14 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.matchers.JSONMatcher;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.mocks.MockHttpHandler;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.*;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.message.BasicHttpResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.*;
 import java.net.URI;
@@ -18,23 +16,15 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import static junit.framework.TestCase.fail;
-import static junit.framework.TestCase.assertTrue;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withCreatedEntity;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withNoContent;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-@ContextConfiguration(locations = {"classpath:/applicationContext-test.xml"})
-public class MerlinCLIPlanTests extends AbstractJUnit4SpringContextTests {
+public class MerlinCLIPlanTests {
 
     private String resourcesRoot = "src/test/resources";
-    private final String test_file_name = "test38294582.json";
+    private final String test_file_name = "test143.json";
     private final String baseURL = "http://localhost:27183/api/plans";
     private final String activityPath = "activity_instances";
-    private MockRestServiceServer mockServer;
+    private final MockHttpHandler mockHttpHandler = new MockHttpHandler();
 
     // Used to intercept System.out and System.err
     private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
@@ -42,53 +32,66 @@ public class MerlinCLIPlanTests extends AbstractJUnit4SpringContextTests {
     private final PrintStream originalOut = System.out;
     private final PrintStream originalErr = System.err;
 
-    @Before
     public void setUpStreams() {
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
     }
 
-    @After
     public void restoreStreams() {
         System.setOut(originalOut);
         System.setErr(originalErr);
     }
 
-    @Autowired
-    private CommandOptions commandOptions;
-
-    @Autowired
-    private RestTemplate restTemplate;
-
     @Before
     public void setUp() {
-        mockServer = MockRestServiceServer.createServer(restTemplate);
+        setUpStreams();
+    }
+
+    @After
+    public void cleanUp() {
+        restoreStreams();
     }
 
     @Test
-    public void testReadPlanList() {
+    public void testReadPlanList() throws IOException, URISyntaxException {
         String body = "[" +
                   "{" +
-                    "\"name\": \"testPlan\"," +
-                    "\"adaptationId\": \"1234-5678-9abc-def0\"," +
-                    "\"version\": \"0.4\"," +
-                    "\"startTimestamp\": \"2018-331T11:00:00\"" +
+                    "\"name\": \"Dragon and Bunny\"," +
+                    "\"adaptationId\": \"0143-0143-0143-0143\"," +
+                    "\"version\": \"143\"," +
+                    "\"startTimestamp\": \"2006-356T20:53:00\"" +
                   "}" +
                 "]";
 
-        mockServer.expect(requestTo(baseURL))
-                .andExpect(method(HttpMethod.GET))
-                .andRespond(withSuccess(body, MediaType.APPLICATION_JSON));
+        // 1. Create a new response
+        BasicHttpResponse response = new BasicHttpResponse(null, HttpStatus.SC_OK, "");
+        response.setEntity(new StringEntity(body));
 
+        // 2. Register the response with the Mock Client
+        this.mockHttpHandler.setNextResponse(response);
+
+        // 3. Make the request
         String[] args = { "--list-plans" };
-        commandOptions.consumeArgs(args).parse();
+        CommandOptions commandOptions = new CommandOptions(args, mockHttpHandler);
+        commandOptions.parse();
 
-        mockServer.verify();
-        assertTrue(commandOptions.lastCommandSuccessful());
+        // 4. Get the request
+        HttpUriRequest request = this.mockHttpHandler.getLastRequest();
 
-        String output = outContent.toString();
+        // 5. Validate the request contained the expected information
+        assertThat(commandOptions.lastCommandSuccessful()).isTrue();
+
+        URI uri = new URI(baseURL);
+        assertThat(request.getURI()).isEqualTo(uri);
+
+        String method = request.getMethod();
+        assertThat(method).isEqualTo(HttpGet.METHOD_NAME);
+
+        String output = new String(response.getEntity().getContent().readAllBytes());
+        assertThat(output.indexOf('[')).isGreaterThanOrEqualTo(0);
+
         String result = output.substring(output.indexOf('['));
-        assertTrue(new JSONMatcher(body).matches(result));
+        assertThat(new JSONMatcher(body).matches(result)).isTrue();
     }
 
     /**
@@ -96,36 +99,44 @@ public class MerlinCLIPlanTests extends AbstractJUnit4SpringContextTests {
      * the response from the server, when issued -pull
      */
     @Test
-    public void testPlanPull() {
+    public void testPlanPull() throws IOException, URISyntaxException {
 
         // Ensure test file doesn't exist before performing the test
         removeFile(test_file_name);
-        String planId = "234";
+        String planId = "143";
         String body = "{" +
                     "\"status\": \"success\"" +
                 "}";
 
-        String url = String.format("%s/%s", baseURL, planId);
-        mockServer.expect(requestTo(url))
-                .andExpect(method(HttpMethod.GET))
-                .andRespond(withSuccess(body, MediaType.APPLICATION_JSON));
+        // 1. Create a new response
+        BasicHttpResponse response = new BasicHttpResponse(null, HttpStatus.SC_OK, "");
+        response.setEntity(new StringEntity(body));
 
+        // 2. Register the response with the Mock Client
+        this.mockHttpHandler.setNextResponse(response);
+
+        // 3. Make the request
         String[] args = { "-p", planId, "--download-plan", test_file_name};
-        commandOptions.consumeArgs(args).parse();
+        CommandOptions commandOptions = new CommandOptions(args, mockHttpHandler);
+        commandOptions.parse();
 
-        mockServer.verify();
-        assertTrue(commandOptions.lastCommandSuccessful());
+        // 4. Get the request
+        HttpUriRequest request = this.mockHttpHandler.getLastRequest();
 
-        try {
-            String contents = readFile(test_file_name);
+        // 5. Validate the request contained the expected information
+        assertThat(commandOptions.lastCommandSuccessful()).isTrue();
 
-            assertTrue(new JSONMatcher(body).matches(contents));
+        URI uri = new URI(String.format("%s/%s", baseURL, planId));
+        assertThat(request.getURI()).isEqualTo(uri);
 
-            // Cleanup
-            removeFile(test_file_name);
-        } catch (IOException e) {
-            fail("Plan pull failed.");
-        }
+        String method = request.getMethod();
+        assertThat(method).isEqualTo(HttpGet.METHOD_NAME);
+
+        String contents = readFile(test_file_name);
+        assertThat(new JSONMatcher(body).matches(contents));
+
+        // Cleanup
+        removeFile(test_file_name);
     }
 
     /**
@@ -136,26 +147,39 @@ public class MerlinCLIPlanTests extends AbstractJUnit4SpringContextTests {
      * specified file.
      */
     @Test
-    public void testPlanCreation() {
+    public void testPlanCreation() throws IOException, URISyntaxException {
         String path = String.format("%s/red_apple_plan.json", resourcesRoot);
         String expectedBody = null;
-        URI location = null;
-        try {
-            location = new URI("453");
-            expectedBody = readFile(path);
-        } catch (URISyntaxException | IOException e) {
-            fail(e.getMessage());
-        }
-        mockServer.expect(requestTo(baseURL))
-                .andExpect(method(HttpMethod.POST))
-                .andExpect(content().string(new JSONMatcher(expectedBody)))
-                .andRespond(withCreatedEntity(location));
+        String location = "143";
 
+        expectedBody = readFile(path);
+
+        // 1. Create a new response
+        BasicHttpResponse response = new BasicHttpResponse(null, HttpStatus.SC_CREATED, "");
+        response.setHeader("location", location);
+
+        // 2. Register the response with the Mock Client
+        this.mockHttpHandler.setNextResponse(response);
+
+        // 3. Make the request
         String[] args = { "-P", path };
-        commandOptions.consumeArgs(args).parse();
+        CommandOptions commandOptions = new CommandOptions(args, mockHttpHandler);
+        commandOptions.parse();
 
-        mockServer.verify();
-        assertTrue(commandOptions.lastCommandSuccessful());
+        // 4. Get the request
+        HttpUriRequest request = this.mockHttpHandler.getLastRequest();
+
+        // 5. Validate the request contained the expected information
+        assertThat(commandOptions.lastCommandSuccessful()).isTrue();
+
+        URI uri = new URI(baseURL);
+        assertThat(request.getURI()).isEqualTo(uri);
+
+        String method = request.getMethod();
+        assertThat(method).isEqualTo(HttpPost.METHOD_NAME);
+
+        String requestBody = new String(((HttpPost)request).getEntity().getContent().readAllBytes());
+        assertThat(requestBody).isEqualTo(expectedBody);
     }
 
     /**
@@ -166,28 +190,36 @@ public class MerlinCLIPlanTests extends AbstractJUnit4SpringContextTests {
      * the CLI
      */
     @Test
-    public void testPlanFileUpdate() {
-
+    public void testPlanFileUpdate() throws IOException, URISyntaxException {
         String planId = "137";
         String path = String.format("%s/green_apple_plan.json", resourcesRoot);
-        String expectedBody = null;
-        try {
-            expectedBody = readFile(path);
-        } catch (IOException e) {
-            fail(e.getMessage());
-        }
+        String expectedBody = readFile(path);
 
-        String url = String.format("%s/%s", baseURL, planId);
-        mockServer.expect(requestTo(url))
-                .andExpect(method(HttpMethod.PATCH))
-                .andExpect(content().string(new JSONMatcher(expectedBody)))
-                .andRespond(withNoContent());
+        // 1. Create a new response
+        BasicHttpResponse response = new BasicHttpResponse(null, HttpStatus.SC_OK, "");
 
+        // 2. Register the response with the Mock Client
+        this.mockHttpHandler.setNextResponse(response);
+
+        // 3. Make the request
         String[] args = { "-p", planId, "--update-plan-from-file", path };
-        commandOptions.consumeArgs(args).parse();
+        CommandOptions commandOptions = new CommandOptions(args, mockHttpHandler);
+        commandOptions.parse();
 
-        mockServer.verify();
-        assertTrue(commandOptions.lastCommandSuccessful());
+        // 4. Get the request
+        HttpUriRequest request = this.mockHttpHandler.getLastRequest();
+
+        // 5. Validate the request contained the expected information
+        assertThat(commandOptions.lastCommandSuccessful()).isTrue();
+
+        URI uri = new URI(String.format("%s/%s", baseURL, planId));
+        assertThat(request.getURI()).isEqualTo(uri);
+
+        String method = request.getMethod();
+        assertThat(method).isEqualTo(HttpPatch.METHOD_NAME);
+
+        String requestBody = new String(((HttpPatch)request).getEntity().getContent().readAllBytes());
+        assertThat(requestBody).isEqualTo(expectedBody);
     }
 
     /**
@@ -198,24 +230,38 @@ public class MerlinCLIPlanTests extends AbstractJUnit4SpringContextTests {
      * JSON based on the command issued.
      */
     @Test
-    public void testPlanUpdate() {
+    public void testPlanUpdate() throws URISyntaxException, IOException {
         String planId = "23598";
         String expectedBody = "{" +
                     "adaptationId: \"2\"," +
                     "startTimestamp: \"2018-331T12:00:00\"" +
                 "}";
 
-        String url = String.format("%s/%s", baseURL, planId);
-        mockServer.expect(requestTo(url))
-                .andExpect(method(HttpMethod.PATCH))
-                .andExpect(content().string(new JSONMatcher(expectedBody)))
-                .andRespond(withNoContent());
+        // 1. Create a new response
+        BasicHttpResponse response = new BasicHttpResponse(null, HttpStatus.SC_OK, "");
 
+        // 2. Register the response with the Mock Client
+        this.mockHttpHandler.setNextResponse(response);
+
+        // 3. Make the request
         String[] args = { "-p", planId, "--update-plan", "adaptationId=2", "startTimestamp=2018-331T12:00:00" };
-        commandOptions.consumeArgs(args).parse();
+        CommandOptions commandOptions = new CommandOptions(args, mockHttpHandler);
+        commandOptions.parse();
 
-        mockServer.verify();
-        assertTrue(commandOptions.lastCommandSuccessful());
+        // 4. Get the request
+        HttpUriRequest request = this.mockHttpHandler.getLastRequest();
+
+        // 5. Validate the request contained the expected information
+        assertThat(commandOptions.lastCommandSuccessful()).isTrue();
+
+        URI uri = new URI(String.format("%s/%s", baseURL, planId));
+        assertThat(request.getURI()).isEqualTo(uri);
+
+        String method = request.getMethod();
+        assertThat(method).isEqualTo(HttpPatch.METHOD_NAME);
+
+        String requestBody = new String(((HttpPatch)request).getEntity().getContent().readAllBytes());
+        assertThat(new JSONMatcher(expectedBody).matches(requestBody)).isTrue();
     }
 
     /**
@@ -223,19 +269,31 @@ public class MerlinCLIPlanTests extends AbstractJUnit4SpringContextTests {
      * when asked to delete a plan.
      */
     @Test
-    public void testPlanDelete() {
+    public void testPlanDelete() throws URISyntaxException {
         String planId = "485";
 
-        String url = String.format("%s/%s", baseURL, planId);
-        mockServer.expect(requestTo(url))
-                .andExpect(method(HttpMethod.DELETE))
-                .andRespond(withSuccess());
+        // 1. Create a new response
+        BasicHttpResponse response = new BasicHttpResponse(null, HttpStatus.SC_OK, "");
 
+        // 2. Register the response with the Mock Client
+        this.mockHttpHandler.setNextResponse(response);
+
+        // 3. Make the request
         String[] args = { "-p", planId, "--delete-plan" };
-        commandOptions.consumeArgs(args).parse();
-        assertTrue(commandOptions.lastCommandSuccessful());
+        CommandOptions commandOptions = new CommandOptions(args, mockHttpHandler);
+        commandOptions.parse();
 
-        mockServer.verify();
+        // 4. Get the request
+        HttpUriRequest request = this.mockHttpHandler.getLastRequest();
+
+        // 5. Validate the request contained the expected information
+        assertThat(commandOptions.lastCommandSuccessful()).isTrue();
+
+        URI uri = new URI(String.format("%s/%s", baseURL, planId));
+        assertThat(request.getURI()).isEqualTo(uri);
+
+        String method = request.getMethod();
+        assertThat(method).isEqualTo(HttpDelete.METHOD_NAME);
     }
 
     /**
@@ -246,27 +304,42 @@ public class MerlinCLIPlanTests extends AbstractJUnit4SpringContextTests {
      * JSON (Assumes first '{' is start of JSON)
      */
     @Test
-    public void testActivityRead() {
+    public void testActivityRead() throws URISyntaxException, IOException {
         String planId = "242f1a";
         String activityId = "38fshg7g5";
         String body = "{" +
                     "\"status\": \"success\"" +
                 "}";
 
-        String url = String.format("%s/%s/%s/%s", baseURL, planId, activityPath, activityId);
-        mockServer.expect(requestTo(url))
-                .andExpect(method(HttpMethod.GET))
-                .andRespond(withSuccess(body, MediaType.APPLICATION_JSON));
+        // 1. Create a new response
+        BasicHttpResponse response = new BasicHttpResponse(null, HttpStatus.SC_OK, "");
+        response.setEntity(new StringEntity(body));
 
+        // 2. Register the response with the Mock Client
+        this.mockHttpHandler.setNextResponse(response);
+
+        // 3. Make the request
         String[] args = { "-p", planId, "--display-activity", activityId };
-        commandOptions.consumeArgs(args).parse();
+        CommandOptions commandOptions = new CommandOptions(args, mockHttpHandler);
+        commandOptions.parse();
 
-        mockServer.verify();
-        assertTrue(commandOptions.lastCommandSuccessful());
+        // 4. Get the request
+        HttpUriRequest request = this.mockHttpHandler.getLastRequest();
+
+        // 5. Validate the request contained the expected information
+        assertThat(commandOptions.lastCommandSuccessful()).isTrue();
+
+        URI uri = new URI(String.format("%s/%s/%s/%s", baseURL, planId, activityPath, activityId));
+        assertThat(request.getURI()).isEqualTo(uri);
+
+        String method = request.getMethod();
+        assertThat(method).isEqualTo(HttpGet.METHOD_NAME);
 
         String output = outContent.toString();
+        assertThat(output.indexOf('{')).isGreaterThanOrEqualTo(0);
+
         String result = output.substring(output.indexOf('{'));
-        assertTrue(new JSONMatcher(body).matches(result));
+        assertThat(new JSONMatcher(body).matches(result)).isTrue();
     }
 
     /**
@@ -277,29 +350,38 @@ public class MerlinCLIPlanTests extends AbstractJUnit4SpringContextTests {
      * specified file.
      */
     @Test
-    public void testAppendActivities() {
+    public void testAppendActivities() throws URISyntaxException, IOException {
         String planId = "s38j2";
         String path = String.format("%s/rotten_apple_activity.json", resourcesRoot);
         String expectedBody = null;
-        URI location = null;
-        try {
-            location = new URI("2xcv0x");
-            expectedBody = readFile(path);
-        } catch (URISyntaxException | IOException e) {
-            fail(e.getMessage());
-        }
+        URI location = new URI("2xcv0x");
+        expectedBody = readFile(path);
 
-        String url = String.format("%s/%s/%s", baseURL, planId, activityPath);
-        mockServer.expect(requestTo(url))
-                .andExpect(method(HttpMethod.POST))
-                .andExpect(content().string(new JSONMatcher(expectedBody)))
-                .andRespond(withCreatedEntity(location));
+        // 1. Create a new response
+        BasicHttpResponse response = new BasicHttpResponse(null, HttpStatus.SC_CREATED, "");
 
+        // 2. Register the response with the Mock Client
+        this.mockHttpHandler.setNextResponse(response);
+
+        // 3. Make the request
         String[] args = { "-p", planId, "--append-activities", path };
-        commandOptions.consumeArgs(args).parse();
+        CommandOptions commandOptions = new CommandOptions(args, mockHttpHandler);
+        commandOptions.parse();
 
-        mockServer.verify();
-        assertTrue(commandOptions.lastCommandSuccessful());
+        // 4. Get the request
+        HttpUriRequest request = this.mockHttpHandler.getLastRequest();
+
+        // 5. Validate the request contained the expected information
+        assertThat(commandOptions.lastCommandSuccessful()).isTrue();
+
+        URI uri = new URI(String.format("%s/%s/%s", baseURL, planId, activityPath));
+        assertThat(request.getURI()).isEqualTo(uri);
+
+        String method = request.getMethod();
+        assertThat(method).isEqualTo(HttpPost.METHOD_NAME);
+
+        String requestBody = new String(((HttpPost)request).getEntity().getContent().readAllBytes());
+        assertThat(new JSONMatcher(expectedBody).matches(requestBody)).isTrue();
     }
 
     /**
@@ -310,12 +392,10 @@ public class MerlinCLIPlanTests extends AbstractJUnit4SpringContextTests {
      * JSON based on the command issued
      */
     @Test
-    public void testActivityUpdate() {
+    public void testActivityUpdate() throws URISyntaxException, IOException {
         String planId = "2j24j";
         String activityId = "65erg";
 
-        // TODO: Range should be removed from activity instance parameters (it belongs in types only)
-        // TODO: It would be better if we didn't send empty lists for constraints and listeners
         String expectedBody = "{" +
                     "\"startTimestamp\": \"2018-331T04:00:00\"," +
                     "\"parameters\" : [" +
@@ -324,34 +404,60 @@ public class MerlinCLIPlanTests extends AbstractJUnit4SpringContextTests {
                     "]" +
                 "}";
 
-        String url = String.format("%s/%s/%s/%s", baseURL, planId, activityPath, activityId);
-        mockServer.expect(requestTo(url))
-                .andExpect(method(HttpMethod.PATCH))
-                .andExpect(content().string(new JSONMatcher(expectedBody)))
-                .andRespond(withNoContent());
+        // 1. Create a new response
+        BasicHttpResponse response = new BasicHttpResponse(null, HttpStatus.SC_OK, "");
 
+        // 2. Register the response with the Mock Client
+        this.mockHttpHandler.setNextResponse(response);
+
+        // 3. Make the request
         String[] args = { "-p", planId, "--update-activity", activityId, "param:color=purple", "startTimestamp=2018-331T04:00:00", "param:age=7" };
-        commandOptions.consumeArgs(args).parse();
+        CommandOptions commandOptions = new CommandOptions(args, mockHttpHandler);
+        commandOptions.parse();
 
-        mockServer.verify();
-        assertTrue(commandOptions.lastCommandSuccessful());
+        // 4. Get the request
+        HttpUriRequest request = this.mockHttpHandler.getLastRequest();
+
+        // 5. Validate the request contained the expected information
+        assertThat(commandOptions.lastCommandSuccessful()).isTrue();
+
+        URI uri = new URI(String.format("%s/%s/%s/%s", baseURL, planId, activityPath, activityId));
+        assertThat(request.getURI()).isEqualTo(uri);
+
+        String method = request.getMethod();
+        assertThat(method).isEqualTo(HttpPatch.METHOD_NAME);
+
+        String requestBody = new String(((HttpPatch)request).getEntity().getContent().readAllBytes());
+        assertThat(new JSONMatcher(expectedBody).matches(requestBody)).isTrue();
     }
 
     @Test
-    public void testActivityDelete() {
+    public void testActivityDelete() throws URISyntaxException {
         String planId = "4ob3w";
         String activityId = "b4e89";
 
-        String url = String.format("%s/%s/%s/%s", baseURL, planId, activityPath, activityId);
-        mockServer.expect(requestTo(url))
-                .andExpect(method(HttpMethod.DELETE))
-                .andRespond(withSuccess());
+        // 1. Create a new response
+        BasicHttpResponse response = new BasicHttpResponse(null, HttpStatus.SC_OK, "");
 
+        // 2. Register the response with the Mock Client
+        this.mockHttpHandler.setNextResponse(response);
+
+        // 3. Make the request
         String[] args = { "-p", planId, "--delete-activity", activityId };
-        commandOptions.consumeArgs(args).parse();
+        CommandOptions commandOptions = new CommandOptions(args, mockHttpHandler);
+        commandOptions.parse();
 
-        mockServer.verify();
-        assertTrue(commandOptions.lastCommandSuccessful());
+        // 4. Get the request
+        HttpUriRequest request = this.mockHttpHandler.getLastRequest();
+
+        // 5. Validate the request contained the expected information
+        assertThat(commandOptions.lastCommandSuccessful()).isTrue();
+
+        URI uri = new URI(String.format("%s/%s/%s/%s", baseURL, planId, activityPath, activityId));
+        assertThat(request.getURI()).isEqualTo(uri);
+
+        String method = request.getMethod();
+        assertThat(method).isEqualTo(HttpDelete.METHOD_NAME);
     }
 
     /**

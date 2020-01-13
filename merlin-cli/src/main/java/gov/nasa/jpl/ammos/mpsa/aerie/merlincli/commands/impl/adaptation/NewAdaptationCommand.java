@@ -2,32 +2,34 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.adaptation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidTokenException;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpHandler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.TokenMap;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.*;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.Adaptation;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.EntityBuilder;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.FileEntity;
+import org.apache.http.message.BasicNameValuePair;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.TokenMap.parseToken;
 
 public class NewAdaptationCommand implements Command {
 
-    private RestTemplate restTemplate;
+    private HttpHandler httpClient;
     private String path;
     private Adaptation adaptation;
     private int status;
     private String id;
 
-    public NewAdaptationCommand(RestTemplate restTemplate, String path, String[] tokens) throws InvalidTokenException {
-        this.restTemplate = restTemplate;
+    public NewAdaptationCommand(HttpHandler httpClient, String path, String[] tokens) throws InvalidTokenException {
+        this.httpClient = httpClient;
         this.path = path;
         this.status = -1;
         this.adaptation = new Adaptation();
@@ -55,26 +57,32 @@ public class NewAdaptationCommand implements Command {
 
     @Override
     public void execute() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        HttpPost request = new HttpPost("http://localhost:27182/api/adaptations");
+        request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("file", new FileSystemResource(path));
-        body.add("name", adaptation.getName());
-        body.add("version", adaptation.getVersion());
-        if (adaptation.getMission() != null) body.add("mission", adaptation.getMission());
-        if (adaptation.getOwner() != null) body.add("owner", adaptation.getOwner());
+        List<NameValuePair> parameters = new ArrayList<>();
+        parameters.add(new BasicNameValuePair("name", adaptation.getName()));
+        parameters.add(new BasicNameValuePair("version", adaptation.getVersion()));
+        if (adaptation.getMission() != null) parameters.add(new BasicNameValuePair("mission", adaptation.getMission()));
+        if (adaptation.getOwner() != null) parameters.add(new BasicNameValuePair("owner", adaptation.getOwner()));
 
-        HttpEntity<MultiValueMap<String, Object>> requestBody = new HttpEntity(body, headers);
-        
         try {
-            ResponseEntity response = restTemplate.exchange("http://localhost:27182/api/adaptations", HttpMethod.POST, requestBody, String.class);
-            this.status = response.getStatusCodeValue();
-            this.id = response.getHeaders().getFirst("location");
+            request.setEntity(EntityBuilder.create()
+                    .setFile(new File(this.path))
+                    .setParameters(parameters)
+                    .build());
+            request.setEntity(new FileEntity(new File(this.path)));
 
-        }
-        catch (HttpClientErrorException | HttpServerErrorException e) {
-            this.status = e.getStatusCode().value();
+            HttpResponse response = this.httpClient.execute(request);
+
+            this.status = response.getStatusLine().getStatusCode();
+
+            if (status == 201 && response.containsHeader("location")) {
+                this.id = response.getFirstHeader("location").toString();
+            }
+
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
         }
     }
 

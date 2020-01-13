@@ -1,13 +1,12 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpHandler;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+
+import java.io.IOException;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities.prettify;
 
@@ -16,31 +15,32 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities.pretti
  */
 public class GetPlanListCommand implements Command {
 
-    private RestTemplate restTemplate;
+    private HttpHandler httpClient;
     private String responseBody;
     private int status;
 
-    public GetPlanListCommand(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public GetPlanListCommand(HttpHandler httpClient) {
+        this.httpClient = httpClient;
         this.status = -1;
     }
 
     @Override
     public void execute() {
-        HttpHeaders headers = new HttpHeaders();
-        HttpEntity requestBody = new HttpEntity(null, headers);
-        try {
-            String url = String.format("http://localhost:27183/api/plans");
-            ResponseEntity response = restTemplate.exchange(url, HttpMethod.GET, requestBody, String.class);
-            this.status = response.getStatusCodeValue();
+        HttpGet request = new HttpGet("http://localhost:27183/api/plans");
+        request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 
-            if (status == 200) {
-                this.responseBody = prettify(response.getBody().toString());
+        try {
+            HttpResponse response = this.httpClient.execute(request);
+
+            this.status = response.getStatusLine().getStatusCode();
+
+            if (status == 200 && response.getEntity() != null) {
+                String responseString = new String(response.getEntity().getContent().readAllBytes());
+                this.responseBody = prettify(responseString);
             }
 
-        }
-        catch (HttpClientErrorException | HttpServerErrorException e) {
-            this.status = e.getStatusCode().value();
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
         }
     }
 

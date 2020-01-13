@@ -1,14 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.impl.plan;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.commands.Command;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.HttpHandler;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities.writeJson;
@@ -18,14 +15,13 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities.writeJ
  */
 public class DownloadPlanCommand implements Command {
 
-    private RestTemplate restTemplate;
-
+    private HttpHandler httpClient;
     private String planId;
     private String outName;
     private int status;
 
-    public DownloadPlanCommand(RestTemplate restTemplate, String planId, String outName) {
-        this.restTemplate = restTemplate;
+    public DownloadPlanCommand(HttpHandler httpClient, String planId, String outName) {
+        this.httpClient = httpClient;
         this.planId = planId;
         this.outName = outName;
         this.status = -1;
@@ -33,19 +29,20 @@ public class DownloadPlanCommand implements Command {
 
     @Override
     public void execute() {
-        HttpHeaders headers = new HttpHeaders();
-        HttpEntity requestBody = new HttpEntity(null, headers);
-        try {
-            String url = String.format("http://localhost:27183/api/plans/%s", this.planId);
-            ResponseEntity response = restTemplate.exchange(url, HttpMethod.GET, requestBody, String.class);
-            this.status = response.getStatusCode().value();
+        HttpGet request = new HttpGet(String.format("http://localhost:27183/api/plans/%s", this.planId));
 
-            if (status == 200) {
-                writeJson(response.getBody().toString(), Path.of(this.outName));
+        try {
+            HttpResponse response = this.httpClient.execute(request);
+
+            this.status = response.getStatusLine().getStatusCode();
+
+            if (status == 200 && response.getEntity() != null) {
+                String responseString = new String(response.getEntity().getContent().readAllBytes());
+                writeJson(responseString, Path.of(this.outName));
             }
-        }
-        catch (HttpClientErrorException | HttpServerErrorException e) {
-            this.status = e.getStatusCode().value();
+
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
         }
     }
 
