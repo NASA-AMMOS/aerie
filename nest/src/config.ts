@@ -66,7 +66,7 @@ export const config: ConfigState = {
     },
     excludeActivityTypes: [],
     ignoreShareableLinkTimes: false,
-    itarMessage: '',
+    itarMessage: ' ',
     shareableLinkStatesUrl: 'TEST_ATS/STATES',
   },
 };
