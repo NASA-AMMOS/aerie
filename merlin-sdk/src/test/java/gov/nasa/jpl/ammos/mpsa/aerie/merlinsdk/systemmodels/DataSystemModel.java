@@ -7,6 +7,7 @@ public class DataSystemModel implements SystemModel, MissionModelGlue {
 
     //this shouldn't be here
     //cache these elsewhere
+    //who owns list of cached slices?
     private DataModelSlice latestSlice = new DataModelSlice(dataRate, dataVolume);
 
     @Override

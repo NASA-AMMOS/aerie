@@ -12,21 +12,41 @@ public interface MissionModelGlue {
 
     public static class Registry{
 
-        private List<Event> eventLog = new ArrayList<>();
-        private Map<Pair<SystemModel, String>, Supplier> modelMap = new HashMap<>();
+        //in the future we can have multiple event logs
 
-        public void provide(SystemModel model, String stateName, Supplier supplier) {
-            Pair<SystemModel, String> key = new Pair<>(model, stateName);
-            modelMap.put(key, supplier);
+        private static final Map<Pair<SystemModel, String>, Supplier> modelToSupplierMap = new HashMap<>();
+        private static final Map<SystemModel, List<Event>> modelToEventLog = new HashMap<>();
+
+        public static void addEvent(SystemModel model,  Event event){
+            if(modelToEventLog.containsKey(model)){
+                modelToEventLog.get(model).add(event);
+            }
+            else {
+                List<Event> eventList = new ArrayList<>();
+                eventList.add(event);
+                modelToEventLog.put(model, eventList);
+            }
         }
 
-        public Supplier getSupplier(SystemModel model, String stateName){
+        public static void provide(SystemModel model, String stateName, Supplier supplier) {
             Pair<SystemModel, String> key = new Pair<>(model, stateName);
-            return modelMap.get(key);
+            modelToSupplierMap.put(key, supplier);
+
+        }
+
+        public static Supplier getSupplier(SystemModel model, String stateName){
+            Pair<SystemModel, String> key = new Pair<>(model, stateName);
+            return modelToSupplierMap.get(key);
+        }
+
+        public static List<Event> getEventLog(SystemModel model){
+            return modelToEventLog.get(model);
         }
     }
 
-    public static class EventApplier
+    public static class EventApplier{
+
+    }
 
 
 }
