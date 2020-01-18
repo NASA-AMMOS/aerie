@@ -4,6 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 public class SettableState<T> implements State<T> {
 
@@ -15,15 +16,15 @@ public class SettableState<T> implements State<T> {
         this.dependentSystemModel = dependentSystemModel;
     }
 
-    public void set(Time t, T value){
+    public void set(T value, Time t){
         SettableEvent<T> event = new SettableEvent<>(this.name, value, t);
         MissionModelGlue.Registry.addEvent(dependentSystemModel, event);
     }
 
     @Override
     public T get() {
-
-        return null;
+        Supplier<?> supplier = MissionModelGlue.Registry.getSupplier(dependentSystemModel, this.name);
+        return (T) supplier.get();
     }
 
     @Override

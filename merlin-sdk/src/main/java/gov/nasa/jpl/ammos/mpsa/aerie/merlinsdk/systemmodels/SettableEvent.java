@@ -14,4 +14,18 @@ public class SettableEvent<T> implements Event<T> {
         this.time = time;
     }
 
+    @Override
+    public String name(){
+        return this.name;
+    }
+
+    @Override
+    public T value() {
+        return this.value;
+    }
+
+    @Override
+    public Time time(){
+        return this.time;
+    }
 }
