@@ -26,6 +26,7 @@ public class SettableState<T> implements State<T> {
     public T get() {
         Supplier<?> supplier = MissionModelGlue.Registry.getSupplier(dependentSystemModel, this.name);
         List<Event> eventLog = MissionModelGlue.Registry.getEventLog(dependentSystemModel);
+        MissionModelGlue.EventApplier.applyEvents(dependentSystemModel, eventLog);
         return (T) supplier.get();
     }
 

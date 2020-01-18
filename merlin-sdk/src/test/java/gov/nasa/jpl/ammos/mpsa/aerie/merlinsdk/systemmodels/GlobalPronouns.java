@@ -6,5 +6,6 @@ public class GlobalPronouns {
     public static final String dataVolume = "data volume";
     public static final String UART = "UART";
     public static final String spacewire = "spacewire";
+    public static final String dataProtocol = "data protocol";
 
 }

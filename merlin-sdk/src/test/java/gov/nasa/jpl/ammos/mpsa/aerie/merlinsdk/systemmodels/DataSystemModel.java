@@ -22,28 +22,34 @@ public class DataSystemModel implements SystemModel, MissionModelGlue {
     private List<DataModelSlice> slices = new ArrayList<>();
 
     @Override
-    public void step(Slice slice, Duration dt) {
-        applySlice(slice);
+    public void step(Duration dt) {
         dataVolume = dataRate*dt.totalSeconds();
         if (dataRate > 100){
             dataProtocol = GlobalPronouns.spacewire;
         }
-        saveToSlice();
     }
 
 
     @Override
     public void registerSelf() {
         Registry.provide(this, GlobalPronouns.dataRate, this::getDataRate);
-        Registry.provide(this, GlobalPronouns.dataVolume, this::getDataRate);
+        Registry.provide(this, GlobalPronouns.dataVolume, this::getDataVolume);
+        Registry.provide(this, GlobalPronouns.dataProtocol, this::getDataProtocol);
+
+        Registry.provideDouble(this, GlobalPronouns.dataRate, this::setDataRate);
+        Registry.provideDouble(this, GlobalPronouns.dataVolume, this::setDataVolume);
+        Registry.provideString(this, GlobalPronouns.dataProtocol, this::setDataProtocol);
     }
 
-    public void saveToSlice(){
+    @Override
+    public Slice saveToSlice(){
         DataModelSlice slice = new DataModelSlice(this.dataRate, this.dataVolume, this.dataProtocol);
         slices.add(slice);
+        return slice;
     }
 
     //probably should move this into Slice interface but then we need to probably also implement a DataModelSlice interface
+    @Override
     public void applySlice(Slice slice){
         DataModelSlice temp = (DataModelSlice) slice;
         this.dataRate = temp.dataRate;
@@ -66,6 +72,18 @@ public class DataSystemModel implements SystemModel, MissionModelGlue {
 
     public String getDataProtocol(){
         return this.latestSlice().dataProtocol;
+    }
+
+    public void setDataRate(Double dataRate){
+        this.dataRate = dataRate;
+    }
+
+    public void setDataVolume(Double dataVolume){
+        this.dataVolume = dataVolume;
+    }
+
+    public void setDataProtocol(String dataProtocol){
+        this.dataProtocol = dataProtocol;
     }
 
     //using public modifiers on variables b/c it may be a pain to reimplement another set of getters and setters

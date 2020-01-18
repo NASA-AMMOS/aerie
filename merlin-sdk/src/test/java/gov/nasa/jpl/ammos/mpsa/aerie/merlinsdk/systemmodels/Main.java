@@ -1,5 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+
 import java.util.List;
 
 public class Main {
@@ -16,7 +19,7 @@ public class Main {
 
         /*----------------------------- SAMPLE SIM ---------------------------------------*/
 
-      /*  Time simStartTime = new Time();
+        Time simStartTime = new Time();
         Time event1 = simStartTime.add(Duration.fromSeconds(10));
         Time event2 = event1.add(Duration.fromSeconds(10));
         Time event3 = event2.add(Duration.fromSeconds(20));
@@ -27,6 +30,7 @@ public class Main {
         dataRate.set(10.0, event2);
         dataRate.set(15.0, event3);
 
+        /*
         List<Event> eventLog = MissionModelGlue.Registry.getEventLog(dataSystemModel);
         printEventLog(eventLog);*/
 
