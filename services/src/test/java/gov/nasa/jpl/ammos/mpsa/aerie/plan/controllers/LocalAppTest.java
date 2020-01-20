@@ -106,6 +106,25 @@ public final class LocalAppTest {
   }
 
   @Test
+  public void shouldNotAddPlanWithNonexistantAdaptation() {
+    // GIVEN
+    final Fixtures fixtures = new Fixtures();
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
+
+    final NewPlan plan = fixtures.createValidNewPlan("new-plan");
+    plan.adaptationId = "this adaptation does not exist";
+
+    // WHEN
+    final Throwable thrown = catchThrowable(() -> controller.addPlan(plan));
+
+    // THEN
+    assertThat(thrown).isInstanceOf(ValidationException.class);
+
+    final var validationErrors = ((ValidationException)thrown).getValidationErrors();
+    assertThat(validationErrors).size().isEqualTo(1);
+  }
+
+  @Test
   public void shouldNotAddPlanWithNoName() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
