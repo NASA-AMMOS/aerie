@@ -1,17 +1,13 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.utils.HttpRequester;
 
 import javax.json.JsonObject;
 import javax.json.JsonString;
 import javax.json.JsonValue;
-import javax.json.bind.JsonbBuilder;
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,28 +16,6 @@ public final class RemoteAdaptationService implements AdaptationService {
 
   public RemoteAdaptationService(final URI serviceBaseUri) {
     this.client = new HttpRequester(HttpClient.newHttpClient(), serviceBaseUri);
-  }
-
-  @Override
-  public Map<String, Map<String, ParameterSchema>> getActivityTypes(final String adaptationId) throws NoSuchAdaptationException {
-    final HttpResponse<String> response;
-    try {
-      response = this.client.sendRequest("GET", "/adaptations/" + adaptationId + "/activities");
-    } catch (final IOException | InterruptedException ex) {
-      throw new AdaptationAccessException(ex);
-    }
-
-    switch (response.statusCode()) {
-      case 200:
-        final JsonValue responseJson = JsonbBuilder.create().fromJson(response.body(), JsonValue.class);
-        return deserializeActivityTypes(responseJson);
-
-      case 404:
-        throw new NoSuchAdaptationException(adaptationId);
-
-      default:
-        throw new AdaptationAccessException("unexpected status code `" + response.statusCode() + "`");
-    }
   }
 
   private static ParameterSchema deserializeParameterSchema(final JsonValue parameterSchemaJsonValue) {
