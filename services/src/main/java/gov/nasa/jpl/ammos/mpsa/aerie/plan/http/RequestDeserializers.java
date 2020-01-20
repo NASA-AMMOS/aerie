@@ -200,7 +200,6 @@ public final class RequestDeserializers {
     final JsonObject newPlanJson = (JsonObject)jsonValue;
 
     Optional<String> name = Optional.empty();
-    Optional<String> adaptationId = Optional.empty();
     Optional<String> startTimestamp = Optional.empty();
     Optional<String> endTimestamp = Optional.empty();
     Optional<Map<String, ActivityInstance>> activityInstances = Optional.empty();
@@ -212,11 +211,6 @@ public final class RequestDeserializers {
         case "name":
           if (entryValue == JsonValue.NULL) throw new InvalidEntityException();
           name = Optional.of(deserializeString(entryValue));
-          break;
-
-        case "adaptationId":
-          if (entryValue == JsonValue.NULL) throw new InvalidEntityException();
-          adaptationId = Optional.of(deserializeString(entryValue));
           break;
 
         case "startTimestamp":
@@ -241,7 +235,6 @@ public final class RequestDeserializers {
 
     final Plan plan = new Plan();
     plan.name = name.orElse(null);
-    plan.adaptationId = adaptationId.orElse(null);
     plan.startTimestamp = startTimestamp.orElse(null);
     plan.endTimestamp = endTimestamp.orElse(null);
     plan.activityInstances = activityInstances.orElse(null);

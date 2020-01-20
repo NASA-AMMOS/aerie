@@ -243,6 +243,28 @@ public final class LocalAppTest {
   }
 
   @Test
+  public void shouldNotChangeAdaptationOfPlan() throws NoSuchPlanException {
+    // GIVEN
+    final Fixtures fixtures = new Fixtures();
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
+
+    final String planId = fixtures.EXISTENT_PLAN_ID;
+    final Plan plan = fixtures.planRepository.getPlan(planId);
+
+    // WHEN
+    final Plan patch = new Plan();
+    patch.adaptationId = "something";
+
+    final Throwable thrown = catchThrowable(() -> controller.updatePlan(planId, patch));
+
+    // THEN
+    assertThat(thrown).isInstanceOf(ValidationException.class);
+
+    final var validationErrors = ((ValidationException)thrown).getValidationErrors();
+    assertThat(validationErrors).size().isEqualTo(1);
+  }
+
+  @Test
   public void shouldNotPatchInvalidPlan() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();

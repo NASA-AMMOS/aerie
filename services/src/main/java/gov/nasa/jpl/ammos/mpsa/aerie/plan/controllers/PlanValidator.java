@@ -59,6 +59,8 @@ public final class PlanValidator {
   }
 
   public void validatePlanPatch(final String planId, final Plan patch) throws NoSuchPlanException {
+    if (patch.adaptationId != null) with("adaptationId", () -> addError("cannot be changed after creation"));
+
     if (patch.activityInstances != null) {
       final Set<String> validActivityIds = this.planRepository
           .getAllActivitiesInPlan(planId)

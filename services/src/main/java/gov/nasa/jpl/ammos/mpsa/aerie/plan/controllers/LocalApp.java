@@ -56,7 +56,6 @@ public final class LocalApp implements App {
     if (patch.name != null) transaction.setName(patch.name);
     if (patch.startTimestamp != null) transaction.setStartTimestamp(patch.startTimestamp);
     if (patch.endTimestamp != null) transaction.setEndTimestamp(patch.endTimestamp);
-    if (patch.adaptationId != null) transaction.setAdaptationId(patch.adaptationId);
     transaction.commit();
 
     if (patch.activityInstances != null) {
