@@ -1,10 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.UnexpectedMissingAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
@@ -16,7 +13,6 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 public final class LocalApp implements App {
@@ -88,18 +84,7 @@ public final class LocalApp implements App {
 
   @Override
   public List<String> addActivityInstancesToPlan(final String planId, final List<ActivityInstance> activityInstances) throws ValidationException, NoSuchPlanException {
-    {
-      final String adaptationId = this.planRepository.getPlan(planId).adaptationId;
-
-      final Map<String, Map<String, ParameterSchema>> activityTypes;
-      try {
-        activityTypes = this.adaptationService.getActivityTypes(adaptationId);
-      } catch (final NoSuchAdaptationException ex) {
-        throw new UnexpectedMissingAdaptationException(adaptationId, ex);
-      }
-
-      withValidator(validator -> validator.validateActivityList(activityInstances, activityTypes));
-    }
+    withValidator(validator -> validator.validateActivityList(activityInstances));
 
     final List<String> activityInstanceIds = new ArrayList<>(activityInstances.size());
     for (final ActivityInstance activityInstance : activityInstances) {
@@ -123,36 +108,14 @@ public final class LocalApp implements App {
     if (patch.startTimestamp != null) activityInstance.startTimestamp = patch.startTimestamp;
     if (patch.parameters != null) activityInstance.parameters = patch.parameters;
 
-    {
-      final String adaptationId = this.planRepository.getPlan(planId).adaptationId;
-
-      final Map<String, Map<String, ParameterSchema>> activityTypes;
-      try {
-        activityTypes = this.adaptationService.getActivityTypes(adaptationId);
-      } catch (final NoSuchAdaptationException ex) {
-        throw new UnexpectedMissingAdaptationException(adaptationId, ex);
-      }
-
-      withValidator(validator -> validator.validateActivity(activityInstance, activityTypes));
-    }
+    withValidator(validator -> validator.validateActivity(activityInstance));
 
     this.planRepository.replaceActivity(planId, activityInstanceId, activityInstance);
   }
 
   @Override
   public void replaceActivityInstance(final String planId, final String activityInstanceId, final ActivityInstance activityInstance) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException {
-    {
-      final String adaptationId = this.planRepository.getPlan(planId).adaptationId;
-
-      final Map<String, Map<String, ParameterSchema>> activityTypes;
-      try {
-        activityTypes = this.adaptationService.getActivityTypes(adaptationId);
-      } catch (final NoSuchAdaptationException ex) {
-        throw new UnexpectedMissingAdaptationException(adaptationId, ex);
-      }
-
-      withValidator(validator -> validator.validateActivity(activityInstance, activityTypes));
-    }
+    withValidator(validator -> validator.validateActivity(activityInstance));
 
     this.planRepository.replaceActivity(planId, activityInstanceId, activityInstance);
   }
