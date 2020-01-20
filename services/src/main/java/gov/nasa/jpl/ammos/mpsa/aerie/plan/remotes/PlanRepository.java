@@ -11,6 +11,14 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.Map;
 import java.util.stream.Stream;
 
+/**
+ * An owned interface to a concurrency-safe store of plans.
+ *
+ * A {@code PlanRepository} provides access to a shared store of plans, each indexed by a unique ID.
+ * To support concurrent access, updates to the store must be concurrency-controlled. Every concurrent agent must have its
+ * own {@code PlanRepository} reference, so that the reads and writes of each agent may be tracked analogously to
+ * <a href="https://en.wikipedia.org/wiki/Load-link/store-conditional">load-link/store-conditional</a> semantics.
+ */
 public interface PlanRepository {
   // Queries
   Stream<Pair<String, Plan>> getAllPlans();

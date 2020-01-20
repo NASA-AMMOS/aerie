@@ -35,7 +35,7 @@ java_binary(
     deps = [
         ':services'
     ],
-    main_class = "gov.nasa.jpl.ammos.mpsa.aerie.plan.App"
+    main_class = "gov.nasa.jpl.ammos.mpsa.aerie.plan.AerieAppDriver"
 )
 
 java_binary(

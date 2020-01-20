@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.ValidationException;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.http.ResponseSerializers;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.mocks.Fixtures;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
@@ -20,12 +19,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public final class PlanControllerTest {
+public final class LocalAppTest {
   @Test
   public void shouldGetAllPlans() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final List<Pair<String, Plan>> expectedPlans = fixtures.planRepository
         .getAllPlans()
@@ -42,7 +41,7 @@ public final class PlanControllerTest {
   public void shouldGetPlanById() throws NoSuchPlanException {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.EXISTENT_PLAN_ID;
     final Plan expectedPlan = fixtures.planRepository.getPlan(planId);
@@ -58,7 +57,7 @@ public final class PlanControllerTest {
   public void shouldGetNonexistentPlanById() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.NONEXISTENT_PLAN_ID;
 
@@ -76,7 +75,7 @@ public final class PlanControllerTest {
   public void shouldAddPlan() throws ValidationException, NoSuchPlanException {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final NewPlan plan = fixtures.createValidNewPlan("new-plan");
 
@@ -91,7 +90,7 @@ public final class PlanControllerTest {
   public void shouldNotAddPlanWithNoAdaptationId() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final NewPlan plan = fixtures.createValidNewPlan("new-plan");
     plan.adaptationId = null;
@@ -110,7 +109,7 @@ public final class PlanControllerTest {
   public void shouldNotAddPlanWithNoName() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final NewPlan plan = fixtures.createValidNewPlan("new-plan");
     plan.name = null;
@@ -129,7 +128,7 @@ public final class PlanControllerTest {
   public void shouldReplacePlan() throws ValidationException, NoSuchPlanException {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.EXISTENT_PLAN_ID;
 
@@ -148,7 +147,7 @@ public final class PlanControllerTest {
   public void shouldNotReplaceInvalidPlan() throws NoSuchPlanException {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.EXISTENT_PLAN_ID;
     final Plan plan = fixtures.planRepository.getPlan(planId);
@@ -169,7 +168,7 @@ public final class PlanControllerTest {
   public void shouldNotReplaceNonexistentPlan() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.NONEXISTENT_PLAN_ID;
     final NewPlan plan = fixtures.createValidNewPlan("new-plan");
@@ -188,7 +187,7 @@ public final class PlanControllerTest {
   public void shouldPatchPlan() throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.EXISTENT_PLAN_ID;
     final Plan plan = fixtures.planRepository.getPlan(planId);
@@ -207,7 +206,7 @@ public final class PlanControllerTest {
   public void shouldNotPatchNonexistentPlan() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.NONEXISTENT_PLAN_ID;
 
@@ -228,7 +227,7 @@ public final class PlanControllerTest {
   public void shouldNotPatchInvalidPlan() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.EXISTENT_PLAN_ID;
 
@@ -249,7 +248,7 @@ public final class PlanControllerTest {
   public void shouldRemovePlan() throws NoSuchPlanException {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.EXISTENT_PLAN_ID;
 
@@ -265,7 +264,7 @@ public final class PlanControllerTest {
   public void shouldNotRemoveNonexistentPlan() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.NONEXISTENT_PLAN_ID;
 
@@ -283,7 +282,7 @@ public final class PlanControllerTest {
   public void shouldGetActivityInstanceById() throws NoSuchPlanException, NoSuchActivityInstanceException {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.EXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;
@@ -300,7 +299,7 @@ public final class PlanControllerTest {
   public void shouldNotGetActivityInstanceFromNonexistentPlan() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.NONEXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.NONEXISTENT_ACTIVITY_INSTANCE_ID;
@@ -317,7 +316,7 @@ public final class PlanControllerTest {
   public void shouldNotGetNonexistentActivityInstance() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.EXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.NONEXISTENT_ACTIVITY_INSTANCE_ID;
@@ -335,7 +334,7 @@ public final class PlanControllerTest {
   public void shouldAddActivityInstancesToPlan() throws ValidationException, NoSuchPlanException {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final NewPlan newPlan = fixtures.createValidNewPlan("new-plan");
     final String planId = fixtures.planRepository.createPlan(newPlan);
@@ -357,7 +356,7 @@ public final class PlanControllerTest {
   public void shouldNotAddActivityInstancesToNonexistentPlan() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.NONEXISTENT_PLAN_ID;
     final List<ActivityInstance> activityInstances = List.of(
@@ -378,7 +377,7 @@ public final class PlanControllerTest {
   public void shouldNotAddInvalidActivityInstancesToPlan() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final ActivityInstance activityInstance = fixtures.createValidActivityInstance();
     activityInstance.type = null;
@@ -400,7 +399,7 @@ public final class PlanControllerTest {
   public void shouldDeleteActivityInstanceById() throws NoSuchPlanException, NoSuchActivityInstanceException {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.EXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;
@@ -419,7 +418,7 @@ public final class PlanControllerTest {
   public void shouldNotDeleteActivityInstanceFromNonexistentPlan() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.NONEXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;
@@ -436,7 +435,7 @@ public final class PlanControllerTest {
   public void shouldNotDeleteNonexistentActivityInstance() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.EXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.NONEXISTENT_ACTIVITY_INSTANCE_ID;
@@ -454,7 +453,7 @@ public final class PlanControllerTest {
   public void shouldUpdateActivityInstanceById() throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.EXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;
@@ -475,7 +474,7 @@ public final class PlanControllerTest {
   public void shouldNotUpdateActivityInstanceInNonexistentPlan() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.NONEXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;
@@ -497,7 +496,7 @@ public final class PlanControllerTest {
   public void shouldNotUpdateNonexistentActivityInstance() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.EXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.NONEXISTENT_ACTIVITY_INSTANCE_ID;
@@ -520,7 +519,7 @@ public final class PlanControllerTest {
   public void shouldNotUpdateInvalidActivityInstance() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.EXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;
@@ -540,7 +539,7 @@ public final class PlanControllerTest {
   public void shouldReplaceActivityInstance() throws NoSuchPlanException, NoSuchActivityInstanceException, ValidationException {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.EXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;
@@ -558,7 +557,7 @@ public final class PlanControllerTest {
   public void shouldNotReplaceActivityInstanceOfNonexistentPlan() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.NONEXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;
@@ -577,7 +576,7 @@ public final class PlanControllerTest {
   public void shouldNotReplaceNonexistentActivityInstance() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.EXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.NONEXISTENT_ACTIVITY_INSTANCE_ID;
@@ -597,7 +596,7 @@ public final class PlanControllerTest {
   public void shouldNotReplaceInvalidActivityInstance() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
-    final IPlanController controller = new PlanController(fixtures.planRepository, fixtures.adaptationService);
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final String planId = fixtures.EXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;

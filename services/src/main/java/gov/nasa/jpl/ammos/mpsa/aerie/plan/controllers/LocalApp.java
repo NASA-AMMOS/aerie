@@ -19,18 +19,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public final class PlanController implements IPlanController {
+public final class LocalApp implements App {
   private final PlanRepository planRepository;
   private final AdaptationService adaptationService;
-  private final PlanValidator validator;
 
-  public PlanController(
+  public LocalApp(
       final PlanRepository planRepository,
       final AdaptationService adaptationService
   ) {
     this.planRepository = planRepository;
     this.adaptationService = adaptationService;
-    this.validator = new PlanValidator(planRepository, adaptationService);
   }
 
   @Override

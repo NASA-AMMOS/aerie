@@ -1,7 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes;
 
 import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
@@ -17,7 +16,6 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,20 +30,23 @@ import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.combine;
 import static com.mongodb.client.model.Updates.set;
 
+/**
+ * An owned {@link PlanRepository} view on a shared MongoDB instance.
+ *
+ * Per the {@link PlanRepository} contract, no more than a single concurrent agent may own a reference to a given
+ * {@code RemotePlanRepository} at any time. If multiple agents need access to the same MongoDB instance, they must each
+ * be provided with distinct instances of this class.
+ */
+// TODO: implement proper concurrency control.
+//   Because the RemotePlanRepository is merely a view on a shared MongoDB instance, we must recognize that there will
+//   be views in potentially independent processes that must be accounted for. Therefore, concurrency control must
+//   necessarily involve the shared MongoDB instance. (We may implement additional control locally, if we wish to
+//   optimize the case of multiple local views, but such a scheme alone is not sufficient.)
 public final class RemotePlanRepository implements PlanRepository {
   private final MongoCollection<Document> planCollection;
   private final MongoCollection<Document> activityCollection;
 
-  public RemotePlanRepository(
-      final URI serverAddress,
-      final String databaseName,
-      final String planCollectionName,
-      final String activityCollectionName
-  ) {
-    final MongoDatabase database = MongoClients
-        .create(serverAddress.toString())
-        .getDatabase(databaseName);
-
+  public RemotePlanRepository(final MongoDatabase database, final String planCollectionName, final String activityCollectionName) {
     this.planCollection = database.getCollection(planCollectionName);
     this.activityCollection = database.getCollection(activityCollectionName);
   }
