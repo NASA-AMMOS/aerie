@@ -45,21 +45,13 @@ pipeline {
 					export PATH=\$JAVA_HOME/bin:\$MAVEN_HOME/bin:/usr/local/bin:/usr/bin
 					export LD_LIBRARY_PATH=/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib
 
-					# setup nvm/node
-					export NVM_DIR="\$HOME/.nvm"
-					if [ ! -d \$NVM_DIR ]; then
-						curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
-					fi
-					[ -s "\$NVM_DIR/nvm.sh" ] && . "\$NVM_DIR/nvm.sh"
-					nvm install v10.13.0
-
 					echo -e "\ncurrent environment variables:\n"
 					env | sort
 
 					./scripts/build.sh --commit ${env.GIT_COMMIT} --tag ${getTag()} ${remoteBranch}
 					"""
 					if (statusCode > 0) {
-						error "Failure setting up node"
+						error "Failure build"
 					}
 				}
 				}
@@ -74,28 +66,12 @@ pipeline {
 				script {
 					def statusCode = sh returnStatus: true, script:
 					"""
-					# setup nvm/node
-					export NVM_DIR="\$HOME/.nvm"
-					if [ ! -d \$NVM_DIR ]; then
-						curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
-					fi
-					[ -s "\$NVM_DIR/nvm.sh" ] && . "\$NVM_DIR/nvm.sh"
-					nvm install v10.13.0
-					# tar up entire build directory as deliverable
-					tar -czf aerie-${getTag()}.tar.gz --exclude='.git' --exclude='aerie-src-*.tar.gz' --exclude='nest/node_modules' `ls -A`
-					# create nest tar file
-					if [ -d nest/dist ]; then
-						export NEST_PACKAGE_VERSION=`node -p "require('./nest/package.json').version"`
-						cd nest/dist
-						tar -czf nest-\${NEST_PACKAGE_VERSION}-${getTag()}.tar.gz `ls -A`
-						cd ../../
-					fi
+					tar -czf aerie-${getTag()}.tar.gz --exclude='.git' --exclude='aerie-src-*.tar.gz'  `ls -A`
 					"""
 					if (statusCode > 0) {
-						error "Failure compressing nest dist"
+						error "Failure build archive"
 					}
 				}
-				archiveArtifacts allowEmptyArchive: true, artifacts: 'nest/dist/*.tar.gz'
 			}
 		}
 
@@ -114,11 +90,6 @@ pipeline {
 								{
 									"pattern": "aerie-*.tar.gz",
 									"target": "general-develop/gov/nasa/jpl/ammos/mpsa/aerie/",
-									"recursive":false
-								},
-								{
-									"pattern": "nest/dist/*.tar.gz",
-									"target": "general-develop/gov/nasa/jpl/ammos/mpsa/nest/",
 									"recursive":false
 								}
 							]
@@ -142,7 +113,7 @@ pipeline {
 						./scripts/publish.sh --commit ${env.GIT_COMMIT} --tag ${getTag()} ${remoteBranch}
 						"""
 						if (statusCode > 0) {
-							error "Failure publishing aerie"
+							error "Failure publish"
 						}
 					}
 				}

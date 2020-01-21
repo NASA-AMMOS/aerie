@@ -20,8 +20,7 @@ There are several steps involved in contributing to the system:
        After making changes, it is important to test that the code performs as expected. If tests do not already exist for
        the feature worked on, create them both to test behavior now, and in the future when the code may be modified.
   6. Perform tests
-       Once all coding is complete, it is time to test that your changes do not break the system. Run the unit tests, as
-       well as the e2e tests for nest. If anything fails, determine if the issue is real, and if so fix it. If any issues
+       Once all coding is complete, it is time to test that your changes do not break the system. Run the unit tests. If anything fails, determine if the issue is real, and if so fix it. If any issues
        appear to not be a result of your changes, run the same tests on the develop branch to check if they are failing
        there as well. If they are, then inform the developer in charge of the test.
   7. Open a pull request
