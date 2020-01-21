@@ -65,8 +65,11 @@ public final class PlanValidator {
     if (plan.name == null) with("name", () -> addError("must be non-null"));
     if (plan.startTimestamp == null) with("startTimestamp", () -> addError("must be non-null"));
     if (plan.endTimestamp == null) with("endTimestamp", () -> addError("must be non-null"));
-    if (plan.adaptationId == null) with("adaptationId", () -> addError("must be non-null"));
-    if (plan.activityInstances != null && plan.adaptationId != null) {
+    if (plan.adaptationId == null) {
+      with("adaptationId", () -> addError("must be non-null"));
+    } else if (!this.adaptationService.isMissionModelDefined(plan.adaptationId)) {
+      with("adaptationId", () -> addError("is not a defined mission model"));
+    } else if (plan.activityInstances != null) {
       with("activityInstances", () -> validateActivityList(plan.adaptationId, plan.activityInstances));
     }
   }
