@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
@@ -29,24 +30,34 @@ public final class PlanValidator {
     this.adaptationService = adaptationService;
   }
 
-  public void validateActivity(final ActivityInstance activityInstance) {
+  public void validateActivity(final String adaptationId, final ActivityInstance activityInstance) {
+    final List<String> validationFailures;
+    try {
+      validationFailures = this.adaptationService
+          .areActivityParametersValid(adaptationId, new SerializedActivity(activityInstance.type, activityInstance.parameters));
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+      throw new Error("Unexpectedly nonexistent adaptation, when this should have been validated earlier.", ex);
+    }
+
+    for (final var failure : validationFailures) addError(failure);
+
     if (activityInstance.startTimestamp == null) with("startTimestamp", () -> addError("must be non-null"));
     if (activityInstance.type == null) with("type", () -> addError("must be non-null"));
   }
 
-  public void validateActivityList(final Collection<ActivityInstance> activityInstances) {
+  public void validateActivityList(final String adaptationId, final Collection<ActivityInstance> activityInstances) {
     int index = 0;
     for (final ActivityInstance activityInstance : activityInstances) {
-      with(index++, () -> validateActivity(activityInstance));
+      with(index++, () -> validateActivity(adaptationId, activityInstance));
     }
   }
 
-  public void validateActivityMap(final Map<String, ActivityInstance> activityInstances) {
+  public void validateActivityMap(final String adaptationId, final Map<String, ActivityInstance> activityInstances) {
     for (final var entry : activityInstances.entrySet()) {
       final String activityId = entry.getKey();
       final ActivityInstance activityInstance = entry.getValue();
 
-      with(activityId, () -> validateActivity(activityInstance));
+      with(activityId, () -> validateActivity(adaptationId, activityInstance));
     }
   }
 
@@ -55,10 +66,12 @@ public final class PlanValidator {
     if (plan.startTimestamp == null) with("startTimestamp", () -> addError("must be non-null"));
     if (plan.endTimestamp == null) with("endTimestamp", () -> addError("must be non-null"));
     if (plan.adaptationId == null) with("adaptationId", () -> addError("must be non-null"));
-    if (plan.activityInstances != null) with("activityInstances", () -> validateActivityList(plan.activityInstances));
+    if (plan.activityInstances != null && plan.adaptationId != null) {
+      with("activityInstances", () -> validateActivityList(plan.adaptationId, plan.activityInstances));
+    }
   }
 
-  public void validatePlanPatch(final String planId, final Plan patch) throws NoSuchPlanException {
+  public void validatePlanPatch(final String adaptationId, final String planId, final Plan patch) throws NoSuchPlanException {
     if (patch.adaptationId != null) with("adaptationId", () -> addError("cannot be changed after creation"));
 
     if (patch.activityInstances != null) {
@@ -74,7 +87,7 @@ public final class PlanValidator {
           }
         }
 
-        validateActivityMap(patch.activityInstances);
+        validateActivityMap(adaptationId, patch.activityInstances);
       });
     }
   }

@@ -13,6 +13,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public final class LocalApp implements App {
@@ -50,7 +51,8 @@ public final class LocalApp implements App {
 
   @Override
   public void updatePlan(final String planId, final Plan patch) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException {
-    withValidator(validator -> validator.validatePlanPatch(planId, patch));
+    final String adaptationId = this.planRepository.getPlan(planId).adaptationId;
+    withValidator(validator -> validator.validatePlanPatch(adaptationId, planId, patch));
 
     final PlanTransaction transaction = this.planRepository.updatePlan(planId);
     if (patch.name != null) transaction.setName(patch.name);
@@ -83,7 +85,8 @@ public final class LocalApp implements App {
 
   @Override
   public List<String> addActivityInstancesToPlan(final String planId, final List<ActivityInstance> activityInstances) throws ValidationException, NoSuchPlanException {
-    withValidator(validator -> validator.validateActivityList(activityInstances));
+    final String adaptationId = this.planRepository.getPlan(planId).adaptationId;
+    withValidator(validator -> validator.validateActivityList(adaptationId, activityInstances));
 
     final List<String> activityInstanceIds = new ArrayList<>(activityInstances.size());
     for (final ActivityInstance activityInstance : activityInstances) {
@@ -101,20 +104,25 @@ public final class LocalApp implements App {
 
   @Override
   public void updateActivityInstance(final String planId, final String activityInstanceId, final ActivityInstance patch) throws NoSuchPlanException, NoSuchActivityInstanceException, ValidationException {
-    final ActivityInstance activityInstance = this.planRepository.getActivityInPlanById(planId, activityInstanceId);
+    final Plan plan = this.planRepository.getPlan(planId);
+
+    final ActivityInstance activityInstance = Optional
+        .ofNullable(plan.activityInstances.getOrDefault(activityInstanceId, null))
+        .orElseThrow(() -> new NoSuchActivityInstanceException(planId, activityInstanceId));
 
     if (patch.type != null) activityInstance.type = patch.type;
     if (patch.startTimestamp != null) activityInstance.startTimestamp = patch.startTimestamp;
     if (patch.parameters != null) activityInstance.parameters = patch.parameters;
 
-    withValidator(validator -> validator.validateActivity(activityInstance));
+    withValidator(validator -> validator.validateActivity(plan.adaptationId, activityInstance));
 
     this.planRepository.replaceActivity(planId, activityInstanceId, activityInstance);
   }
 
   @Override
   public void replaceActivityInstance(final String planId, final String activityInstanceId, final ActivityInstance activityInstance) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException {
-    withValidator(validator -> validator.validateActivity(activityInstance));
+    final String adaptationId = this.planRepository.getPlan(planId).adaptationId;
+    withValidator(validator -> validator.validateActivity(adaptationId, activityInstance));
 
     this.planRepository.replaceActivity(planId, activityInstanceId, activityInstance);
   }

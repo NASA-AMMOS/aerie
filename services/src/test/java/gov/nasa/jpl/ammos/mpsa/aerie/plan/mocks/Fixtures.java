@@ -68,8 +68,7 @@ public final class Fixtures {
 
     activityInstance.type = this.EXISTENT_ACTIVITY_TYPE_ID;
     activityInstance.startTimestamp = "0000-111T22:33:44";
-    activityInstance.parameters = new HashMap<>();
-    activityInstance.parameters.put("abc", SerializedParameter.of("param-value"));
+    activityInstance.parameters = StubAdaptationService.VALID_ACTIVITY_PARAMETERS.getParameters();
 
     return activityInstance;
   }
