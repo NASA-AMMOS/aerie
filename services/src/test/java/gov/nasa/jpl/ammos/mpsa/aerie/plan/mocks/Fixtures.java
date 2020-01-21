@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.mocks;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
@@ -8,11 +7,10 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 public final class Fixtures {
   public final MockPlanRepository planRepository;
-  public final MockAdaptationService adaptationService;
+  public final StubAdaptationService adaptationService;
 
   public final String EXISTENT_ADAPTATION_ID;
   public final String EXISTENT_PLAN_ID;
@@ -27,15 +25,13 @@ public final class Fixtures {
   public Fixtures() {
     try {
       this.planRepository = new MockPlanRepository();
-      this.adaptationService = new MockAdaptationService();
+      this.adaptationService = new StubAdaptationService();
 
-      this.NONEXISTENT_ACTIVITY_TYPE_ID = "nonexistent activity type";
-      this.EXISTENT_ACTIVITY_TYPE_ID = "existent activity type";
+      this.NONEXISTENT_ACTIVITY_TYPE_ID = StubAdaptationService.NONEXISTENT_ACTIVITY_TYPE_ID;
+      this.EXISTENT_ACTIVITY_TYPE_ID = StubAdaptationService.EXISTENT_ACTIVITY_TYPE_ID;
 
-      this.NONEXISTENT_ADAPTATION_ID = "nonexistent adaptation";
-      this.EXISTENT_ADAPTATION_ID = this.adaptationService.addAdaptation(Map.of(
-          EXISTENT_ACTIVITY_TYPE_ID, Map.of("abc", ParameterSchema.STRING)
-      ));
+      this.NONEXISTENT_ADAPTATION_ID = StubAdaptationService.NONEXISTENT_ADAPTATION_ID;
+      this.EXISTENT_ADAPTATION_ID = StubAdaptationService.EXISTENT_ADAPTATION_ID;
 
       this.EXISTENT_PLAN_ID = this.planRepository.createPlan(createValidNewPlan("plan 1"));
       this.NONEXISTENT_PLAN_ID = "nonexistent plan";
