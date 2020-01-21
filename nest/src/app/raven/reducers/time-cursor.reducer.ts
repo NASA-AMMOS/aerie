@@ -18,6 +18,7 @@ export interface TimeCursorState {
   cursorColor: string;
   cursorTime: number | null;
   cursorWidth: number;
+  followTimeCursor: boolean;
   setCursorTime: number | null;
   showTimeCursor: boolean;
 }
@@ -30,6 +31,7 @@ export const initialState: TimeCursorState = {
   cursorColor: '#ff0000',
   cursorTime: null,
   cursorWidth: 1,
+  followTimeCursor: true,
   setCursorTime: null,
   showTimeCursor: false,
 };

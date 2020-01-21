@@ -47,6 +47,11 @@ export const getCursorWidth = createSelector(
   (state: TimeCursorState) => state.cursorWidth,
 );
 
+export const getFollowTimeCursor = createSelector(
+  getTimeCursorState,
+  (state: TimeCursorState) => state.followTimeCursor,
+);
+
 export const getShowTimeCursor = createSelector(
   getTimeCursorState,
   (state: TimeCursorState) => state.showTimeCursor,

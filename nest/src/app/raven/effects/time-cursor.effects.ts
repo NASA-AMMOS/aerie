@@ -61,10 +61,14 @@ export class TimeCursorEffects {
       switchMap(({ timeCursor, timeline: { viewTimeRange } }) => {
         const actions = [];
 
-        const { autoPage, clockRate, cursorTime } = timeCursor;
-        const newCursorTime = cursorTime
-          ? cursorTime + clockRate * clockUpdateIntervalInSecs
-          : null;
+        const {
+          autoPage,
+          clockRate,
+          cursorTime,
+          followTimeCursor,
+        } = timeCursor;
+        const delta = clockRate * clockUpdateIntervalInSecs;
+        const newCursorTime = cursorTime ? cursorTime + delta : null;
 
         actions.push(
           TimeCursorActions.updateTimeCursorSettings({
@@ -72,8 +76,22 @@ export class TimeCursorEffects {
           }),
         );
 
+        if (followTimeCursor) {
+          actions.push(
+            TimelineActions.updateViewTimeRange({
+              viewTimeRange: {
+                end: viewTimeRange.end + delta,
+                start: viewTimeRange.start + delta,
+              },
+            }),
+          );
+        }
         // If we are auto-paging and our time cursor goes outside the view window, then pan the view window right.
-        if (autoPage && newCursorTime && newCursorTime > viewTimeRange.end) {
+        else if (
+          autoPage &&
+          newCursorTime &&
+          newCursorTime > viewTimeRange.end
+        ) {
           actions.push(TimelineActions.panRightViewTimeRange());
         }
 

@@ -16,6 +16,17 @@
         </mat-slide-toggle>
       </div>
 
+      <!-- Follow Time Cursor. -->
+      <div class="field">
+        <mat-slide-toggle
+          color="accent"
+          [checked]="followTimeCursor"
+          (change)="followCursor.emit($event.checked)"
+        >
+          Follow Time Cursor
+        </mat-slide-toggle>
+      </div>
+
       <!-- Current Cursor Time. -->
       <div class="field">
         <mat-form-field>
