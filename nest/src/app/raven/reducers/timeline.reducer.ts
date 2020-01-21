@@ -752,6 +752,13 @@ export const reducer = createReducer(
                     action.sourceId,
                   )
                 : subBand.sourceIds,
+            sourcePathsInFile:
+              subBand.id === action.subBandId
+                ? without(
+                    subBand.sourcePathsInFile,
+                    action.sourcePathInFile,
+                  ).concat(action.sourcePathInFile)
+                : subBand.sourcePathsInFile,
           });
           return subBands;
         },

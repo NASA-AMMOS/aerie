@@ -29,6 +29,7 @@ export interface RavenDividerBand {
   parentUniqueId: string | null;
   points: any[]; // A divider bands should never actually have points.
   showTooltip: boolean;
+  sourcePathsInFile: string[];
   sourceIds: string[];
   tableColumns: any[]; // TODO: Remove `any`.
   type: string;

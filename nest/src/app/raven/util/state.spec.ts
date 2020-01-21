@@ -71,6 +71,7 @@ export const preExportBands: RavenCompositeBand[] = [
         id: '0',
         name: 'test-resource-sub-band-0',
         parentUniqueId: '100',
+        sourcePathsInFile: [],
       },
     ],
   },
@@ -87,12 +88,14 @@ export const preExportBands: RavenCompositeBand[] = [
         id: '0',
         name: 'test-resource-sub-band-1',
         parentUniqueId: '101',
+        sourcePathsInFile: [],
       },
       {
         ...commonResourceProperties,
         id: '1',
         name: 'test-resource-sub-band-2',
         parentUniqueId: '101',
+        sourcePathsInFile: [],
       },
     ],
   },
@@ -109,6 +112,7 @@ export const preExportBands: RavenCompositeBand[] = [
         id: '0',
         name: 'test-resource-sub-band-3',
         parentUniqueId: '102',
+        sourcePathsInFile: [],
       },
     ],
   },
@@ -121,6 +125,7 @@ export const postExportBands: RavenExportBand[] = [
     containerId: '0',
     name: 'test-resource-sub-band-0',
     sortOrder: 0,
+    sourcePathsInFile: [],
   },
   {
     ...commonCompositeProperties,
@@ -132,10 +137,12 @@ export const postExportBands: RavenExportBand[] = [
       {
         ...commonResourceProperties,
         name: 'test-resource-sub-band-1',
+        sourcePathsInFile: [],
       },
       {
         ...commonResourceProperties,
         name: 'test-resource-sub-band-2',
+        sourcePathsInFile: [],
       },
     ],
   },
@@ -145,6 +152,7 @@ export const postExportBands: RavenExportBand[] = [
     containerId: '1',
     name: 'test-resource-sub-band-3',
     sortOrder: 0,
+    sourcePathsInFile: [],
   },
 ];
 

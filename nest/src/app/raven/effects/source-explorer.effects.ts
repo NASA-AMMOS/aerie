@@ -67,6 +67,7 @@ import {
   getCustomFilterForLabel,
   getCustomFiltersBySourceId,
   getFormattedSourceUrl,
+  getLayoutSourceId,
   getMpsPathForSource,
   getParentSourceIds,
   getPinLabel,
@@ -154,6 +155,7 @@ export class SourceExplorerEffects {
           of(
             SourceExplorerActions.updateGraphAfterFilterAdd({
               sourceId: source.id,
+              sourcePathInFile: source.pathInFile,
             }),
           ),
         ),
@@ -227,10 +229,12 @@ export class SourceExplorerEffects {
           of(state),
           of(savedState),
           of(initialSources),
-          this.fetchSourcesByType(
-            state,
-            getSourceIds(savedState.bands).parentSourceIds,
-          ),
+          savedState.version === '1.0.0'
+            ? this.fetchSourcesByType(
+                state,
+                getSourceIds(savedState.bands).parentSourceIds,
+              )
+            : of([]),
         ]);
       }),
       map(([action, state, savedState, initialSources, sourceTypes]) => ({
@@ -266,14 +270,24 @@ export class SourceExplorerEffects {
                       ...subBand,
                       id: uniqueId(),
                       parentUniqueId: parentId,
-                      sourceIds: subBand.sourceIds.map((sourceId: string) =>
-                        updateSourceId(
-                          sourceId,
-                          targetSource.id,
-                          sourceTypes,
-                          targetSource.type,
-                        ),
-                      ),
+                      sourceIds:
+                        Object.keys(sourceTypes).length > 0
+                          ? subBand.sourceIds.map((sourceId: string) =>
+                              updateSourceId(
+                                sourceId,
+                                targetSource.id,
+                                sourceTypes,
+                                targetSource.type,
+                              ),
+                            )
+                          : subBand.sourcePathsInFile.map(
+                              (sourcePathInFile: string, index) =>
+                                getLayoutSourceId(
+                                  subBand.sourceIds[index],
+                                  sourcePathInFile,
+                                  targetSource.id,
+                                ),
+                            ),
                     };
                   }
                 }),
@@ -294,14 +308,24 @@ export class SourceExplorerEffects {
                     ...subBand,
                     id: uniqueId(),
                     parentUniqueId: parentId,
-                    sourceIds: subBand.sourceIds.map((sourceId: string) =>
-                      updateSourceId(
-                        sourceId,
-                        targetSourceId,
-                        sourceTypes,
-                        targetSource.type,
-                      ),
-                    ),
+                    sourceIds:
+                      Object.keys(sourceTypes).length > 0
+                        ? subBand.sourceIds.map((sourceId: string) =>
+                            updateSourceId(
+                              sourceId,
+                              targetSourceId,
+                              sourceTypes,
+                              targetSource.type,
+                            ),
+                          )
+                        : subBand.sourcePathsInFile.map(
+                            (sourcePathInFile: string, index) =>
+                              getLayoutSourceId(
+                                subBand.sourceIds[index],
+                                sourcePathInFile,
+                                targetSourceId,
+                              ),
+                          ),
                   })),
                 };
               });
@@ -486,13 +510,12 @@ export class SourceExplorerEffects {
     this.actions.pipe(
       ofType(SourceExplorerActions.expandEvent),
       withLatestFrom(this.store),
-      map(
-        ([action, state]) =>
-          state.raven.sourceExplorer.treeBySourceId[action.sourceId],
-      ),
-      switchMap(source =>
-        concat(
-          ...this.expand(source),
+      map(([action, state]) => ({ action, state })),
+      switchMap(({ action, state }) => {
+        const source =
+          state.raven.sourceExplorer.treeBySourceId[action.sourceId];
+        return concat(
+          ...this.expand(source, state.raven.sourceExplorer.treeBySourceId),
           of(
             SourceExplorerActions.updateSourceExplorer({
               update: { fetchPending: false },
@@ -523,8 +546,8 @@ export class SourceExplorerEffects {
               }),
             ];
           }),
-        ),
-      ),
+        );
+      }),
     ),
   );
 
@@ -966,6 +989,7 @@ export class SourceExplorerEffects {
                       // Add filterSource id to existing band.
                       TimelineActions.sourceIdAdd({
                         sourceId: action.sourceId,
+                        sourcePathInFile: action.sourcePathInFile,
                         subBandId: activityBand.subBandId,
                       }),
                       // Replace points in band.
@@ -1191,7 +1215,10 @@ export class SourceExplorerEffects {
   /**
    * Helper. Returns a stream of actions that need to occur when expanding a source explorer source.
    */
-  expand(source: RavenSource): Observable<Action>[] {
+  expand(
+    source: RavenSource,
+    treeBySourceId: StringTMap<RavenSource> | null,
+  ): Observable<Action>[] {
     const actions: Observable<Action>[] = [];
 
     if (source) {
@@ -1201,14 +1228,19 @@ export class SourceExplorerEffects {
             of(
               SourceExplorerActions.newSources({
                 sourceId: source.id,
-                sources: toRavenSources(source.id, false, source.content, null),
+                sources: toRavenSources(
+                  source.id,
+                  false,
+                  source.content,
+                  treeBySourceId,
+                ),
               }),
             ),
           );
         } else {
           actions.push(
             this.mpsServerService
-              .fetchNewSources(source.url, source.id, false, null)
+              .fetchNewSources(source.url, source.id, false, treeBySourceId)
               .pipe(
                 concatMap((sources: RavenSource[]) => [
                   SourceExplorerActions.newSources({
@@ -1236,14 +1268,15 @@ export class SourceExplorerEffects {
         ...getParentSourceIds(sourcePath).map((sourceId: string) =>
           combineLatest([this.store]).pipe(
             take(1),
-            map(
-              (state: RavenAppState[]) =>
-                state[0].raven.sourceExplorer.treeBySourceId[sourceId],
-            ),
-            concatMap(source => {
+            concatMap(state => {
+              const source =
+                state[0].raven.sourceExplorer.treeBySourceId[sourceId];
               if (source) {
                 return concat(
-                  ...this.expand(source),
+                  ...this.expand(
+                    source,
+                    state[0].raven.sourceExplorer.treeBySourceId,
+                  ),
                   of(
                     SourceExplorerActions.updateTreeSource({
                       sourceId: source.id,
@@ -1312,6 +1345,7 @@ export class SourceExplorerEffects {
             defaultBandSettings,
             customFilter,
             treeBySourceId,
+            source.pathInFile,
           ),
         ),
       );
@@ -1354,6 +1388,7 @@ export class SourceExplorerEffects {
               defaultBandSettings,
               customFilter,
               treeBySourceId,
+              source.pathInFile,
             ),
           ),
         );
@@ -1512,7 +1547,7 @@ export class SourceExplorerEffects {
           concatMap(source => {
             if (source) {
               return concat(
-                ...this.expand(source),
+                ...this.expand(source, null),
                 of(
                   SourceExplorerActions.updateTreeSource({
                     sourceId: source.id,
@@ -1704,6 +1739,7 @@ export class SourceExplorerEffects {
                     // Add source id to existing band.
                     TimelineActions.sourceIdAdd({
                       sourceId,
+                      sourcePathInFile: treeBySourceId[sourceId].pathInFile,
                       subBandId: existingBand.subBandId,
                     }),
 

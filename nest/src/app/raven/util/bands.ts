@@ -48,6 +48,7 @@ export function toRavenBandData(
   defaultBandSettings: RavenDefaultBandSettings,
   customFilter: RavenCustomFilter | null,
   treeBySourceId: StringTMap<RavenSource>,
+  pathInFile: string,
 ): RavenSubBand[] {
   const metadata = graphData['Timeline Metadata'];
   const timelineData = graphData['Timeline Data'];
@@ -63,6 +64,7 @@ export function toRavenBandData(
       timelineData as MpsServerStatePoint[],
       defaultBandSettings,
       treeBySourceId,
+      pathInFile,
     );
     return [stateBand];
   } else if (
@@ -76,6 +78,7 @@ export function toRavenBandData(
       timelineData as MpsServerResourcePoint[],
       defaultBandSettings,
       treeBySourceId,
+      pathInFile,
     );
     return [resourceBand];
   } else if (metadata.hasTimelineType === 'activity') {
@@ -89,6 +92,7 @@ export function toRavenBandData(
       customFilter,
       treeBySourceId,
       metadata.editable,
+      pathInFile,
     );
     return activityBands;
   } else {
@@ -140,6 +144,7 @@ export function toRavenDescendantsData(
       customFilter,
       treeBySourceId,
       false,
+      '',
     );
     return activityBands;
   } else {
@@ -168,6 +173,7 @@ export function toActivityBands(
   customFilter: RavenCustomFilter | null,
   treeBySourceId: StringTMap<RavenSource>,
   editable: boolean,
+  pathInFile: string,
 ): RavenActivityBand[] {
   const { legends, maxTimeRange } = getActivityPointsByLegend(
     sourceId,
@@ -218,6 +224,7 @@ export function toActivityBands(
       showLabelPin: true,
       showTooltip: true,
       sourceIds: [sourceId],
+      sourcePathsInFile: [pathInFile],
       tableColumns: [],
       timeDelta: 0,
       trimLabel: true,
@@ -291,6 +298,7 @@ export function toDividerBand(
     points: [],
     showTooltip: true,
     sourceIds: [],
+    sourcePathsInFile: [],
     tableColumns: [],
     type: 'divider',
   };
@@ -307,6 +315,7 @@ export function toResourceBand(
   timelineData: MpsServerResourcePoint[],
   defaultBandSettings: RavenDefaultBandSettings,
   treeBySourceId: StringTMap<RavenSource>,
+  pathInFile: string,
 ): RavenResourceBand {
   const { maxTimeRange, points } = getResourcePoints(
     sourceId,
@@ -346,6 +355,7 @@ export function toResourceBand(
     showLabelUnit: true,
     showTooltip: true,
     sourceIds: [sourceId],
+    sourcePathsInFile: [pathInFile],
     tableColumns: [],
     timeDelta: 0,
     type: 'resource',
@@ -369,6 +379,7 @@ export function toStateBand(
   timelineData: MpsServerStatePoint[],
   defaultBandSettings: RavenDefaultBandSettings,
   treeBySourceId: StringTMap<RavenSource>,
+  pathInFile: string,
 ): RavenStateBand {
   const { maxTimeRange, points } = getStatePoints(sourceId, timelineData);
 
@@ -403,6 +414,7 @@ export function toStateBand(
     showStateChangeTimes: false,
     showTooltip: true,
     sourceIds: [sourceId],
+    sourcePathsInFile: [pathInFile],
     stateLabelFontSize: 9,
     tableColumns: [],
     timeDelta: 0,

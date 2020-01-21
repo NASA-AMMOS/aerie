@@ -152,6 +152,7 @@ export class SituationalAwarenessEffects {
           defaultBandSettings,
           null,
           {},
+          '',
         ),
       ),
       switchMap(subBands =>

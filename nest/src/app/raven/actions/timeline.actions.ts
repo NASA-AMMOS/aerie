@@ -203,7 +203,7 @@ export const setPointsForSubBand = createAction(
 
 export const sourceIdAdd = createAction(
   '[raven-timeline] source_id_add',
-  props<{ sourceId: string; subBandId: string }>(),
+  props<{ sourceId: string; sourcePathInFile: string; subBandId: string }>(),
 );
 
 export const sortBands = createAction(

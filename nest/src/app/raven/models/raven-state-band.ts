@@ -50,6 +50,7 @@ export interface RavenStateBand {
   showLabelPin: boolean;
   showStateChangeTimes: boolean;
   showTooltip: boolean;
+  sourcePathsInFile: string[];
   sourceIds: string[];
   stateLabelFontSize: number;
   tableColumns: any[]; // TODO: Remove `any`.

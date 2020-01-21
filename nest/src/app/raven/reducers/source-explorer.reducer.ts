@@ -83,6 +83,7 @@ export const initialState: SourceExplorerState = {
       openable: false,
       opened: false,
       parentId: '',
+      pathInFile: '',
       permissions: '',
       pinnable: false,
       pinned: false,

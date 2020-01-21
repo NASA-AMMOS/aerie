@@ -48,6 +48,7 @@ export interface RavenExportStateSubBand {
   showStateChangeTimes: boolean;
   showTooltip: boolean;
   sourceIds: string[];
+  sourcePathsInFile?: string[];
   stateLabelFontSize: number;
   tableColumns: any[];
   timeDelta?: number;

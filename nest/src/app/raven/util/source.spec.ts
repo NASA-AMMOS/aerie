@@ -21,6 +21,7 @@ import {
   getAllSourcesByKinds,
   getCustomFilterForLabel,
   getFormattedSourceUrl,
+  getLayoutSourceId,
   getOutputDataUrl,
   getParentSourceIds,
   getPin,
@@ -128,6 +129,30 @@ describe('source.ts', () => {
         ),
       ).toEqual(
         'https://a/b/c?format=TMS&legend=ips&filter=(command=%5B.*IPS.*%5D)&',
+      );
+    });
+  });
+
+  describe('getLayoutSourceId', () => {
+    it(`should return the new source Id for applying layout`, () => {
+      expect(
+        getLayoutSourceId(
+          'leucadia/folder1/pef1/Resource/AACS/AACS_Mode',
+          'Resource/AACS/AACS_Mode',
+          'leucadia/folder1/subFolder/pef2',
+        ),
+      ).toEqual('leucadia/folder1/subFolder/pef2/Resource/AACS/AACS_Mode');
+    });
+
+    it(`should return the new source Id with filter for applying layout`, () => {
+      expect(
+        getLayoutSourceId(
+          'leucadia/folder1/pef1/Resource/AACS/AACS_Mode?filter=.*',
+          'Resource/AACS/AACS_Mode',
+          'leucadia/folder1/subFolder/pef2',
+        ),
+      ).toEqual(
+        'leucadia/folder1/subFolder/pef2/Resource/AACS/AACS_Mode?filter=.*',
       );
     });
   });

@@ -31,6 +31,7 @@ export interface RavenBaseSource {
   name: string;
   openable: boolean;
   parentId: string;
+  pathInFile: string;
   permissions: string;
   pinnable: boolean;
   pinned: boolean;

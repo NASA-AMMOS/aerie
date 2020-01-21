@@ -41,6 +41,7 @@ export interface RavenActivityBand {
   showLabel: boolean;
   showLabelPin: boolean;
   showTooltip: boolean;
+  sourcePathsInFile: string[];
   sourceIds: string[];
   tableColumns: any[]; // TODO: Remove `any`.
   timeDelta: number;
