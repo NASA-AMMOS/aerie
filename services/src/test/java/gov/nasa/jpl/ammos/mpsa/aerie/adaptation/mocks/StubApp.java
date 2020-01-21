@@ -42,6 +42,7 @@ public final class StubApp implements App {
         NONEXISTENT_ACTIVITY_TYPE,
         Map.of());
 
+    public static final List<String> NO_SUCH_ACTIVITY_TYPE_FAILURES = List.of("no such activity type");
     public static final List<String> INVALID_ACTIVITY_INSTANCE_FAILURES = List.of("just wrong");
     public static final List<String> UNCONSTRUCTABLE_ACTIVITY_INSTANCE_FAILURES = List.of("Unconstructable activity instance");
 
@@ -129,17 +130,15 @@ public final class StubApp implements App {
 
     @Override
     public List<String> validateActivityParameters(final String adaptationId, final SerializedActivity activityParameters)
-        throws NoSuchAdaptationException, NoSuchActivityTypeException
+        throws NoSuchAdaptationException
     {
         if (!Objects.equals(adaptationId, EXISTENT_ADAPTATION_ID)) {
             throw new NoSuchAdaptationException(adaptationId);
         }
 
         if (Objects.equals(activityParameters, NONEXISTENT_ACTIVITY_INSTANCE)) {
-            throw new NoSuchActivityTypeException(activityParameters.getTypeName());
-        }
-
-        if (Objects.equals(activityParameters, UNCONSTRUCTABLE_ACTIVITY_INSTANCE)) {
+            return NO_SUCH_ACTIVITY_TYPE_FAILURES;
+        } else if (Objects.equals(activityParameters, UNCONSTRUCTABLE_ACTIVITY_INSTANCE)) {
             return UNCONSTRUCTABLE_ACTIVITY_INSTANCE_FAILURES;
         } else if (Objects.equals(activityParameters, INVALID_ACTIVITY_INSTANCE)) {
             return INVALID_ACTIVITY_INSTANCE_FAILURES;

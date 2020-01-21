@@ -255,6 +255,28 @@ public final class AdaptationBindingsTest {
     }
 
     @Test
+    public void shouldRejectActivityParametersForNonexistentActivityType() throws IOException, InterruptedException {
+        // GIVEN
+        final String adaptationId = StubApp.EXISTENT_ADAPTATION_ID;
+        final String activityId = StubApp.NONEXISTENT_ACTIVITY_TYPE;
+        final SerializedActivity activityParameters = StubApp.NONEXISTENT_ACTIVITY_INSTANCE;
+
+        final JsonValue expectedResponse = ResponseSerializers.serializeFailureList(StubApp.NO_SUCH_ACTIVITY_TYPE_FAILURES);
+
+        // WHEN
+        final HttpResponse<String> response = sendRequest(
+            "POST",
+            "/adaptations/" + adaptationId + "/activities/" + activityId + "/validate",
+            ResponseSerializers.serializeActivityParameters(activityParameters.getParameters()));
+
+        // THEN
+        assertThat(response.statusCode()).isEqualTo(200);
+
+        final JsonValue responseJson = Json.createReader(new StringReader(response.body())).readValue();
+        assertThat(responseJson).isEqualTo(expectedResponse);
+    }
+
+    @Test
     public void shouldRejectInvalidActivityParameters() throws IOException, InterruptedException {
         // GIVEN
         final String adaptationId = StubApp.EXISTENT_ADAPTATION_ID;

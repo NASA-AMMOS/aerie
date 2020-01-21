@@ -24,7 +24,7 @@ public interface App {
         throws NoSuchAdaptationException, NoSuchActivityTypeException;
     // TODO: Provide a finer-scoped validation return type. Mere strings make all validations equally severe.
     List<String> validateActivityParameters(String adaptationId, SerializedActivity activityParameters)
-        throws NoSuchAdaptationException, NoSuchActivityTypeException;
+        throws NoSuchAdaptationException;
 
     class AdaptationRejectedException extends Exception {
         public AdaptationRejectedException(final String message) { super(message); }

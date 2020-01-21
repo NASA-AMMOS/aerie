@@ -150,7 +150,7 @@ public final class AdaptationBindings implements Plugin {
             final List<String> failures = this.app.validateActivityParameters(adaptationId, serializedActivity);
 
             ctx.result(ResponseSerializers.serializeFailureList(failures).toString());
-        } catch (final App.NoSuchAdaptationException | App.NoSuchActivityTypeException ex) {
+        } catch (final App.NoSuchAdaptationException ex) {
             ctx.status(404);
         } catch (final InvalidEntityException ex) {
             ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
