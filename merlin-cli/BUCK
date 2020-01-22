@@ -47,3 +47,31 @@ java_binary(
     deps = [":tests-lib"],
     main_class = "gov.nasa.jpl.ammos.mpsa.aerie.merlincli.TestMain",
 )
+
+
+java_test(
+    name = "test_merlin-cli",
+    srcs = glob(["src/test/**/*.java"]),
+    extra_arguments = [
+        "--source-path", "merlin-cli/src/",
+        "--module-path", "third-party/"
+        ],
+    deps = [
+        "//third-party:assertj-core",
+        "//third-party:gson",
+        "//third-party:hamcrest-all",
+        "//third-party:hamcrest-all",
+        "//third-party:httpclient",
+        "//third-party:httpcore",
+        "//third-party:JNISpice",
+        "//third-party:junit",
+        "//third-party:spring-beans",
+        "//third-party:spring-context",
+        "//third-party:spring-core",
+        "//third-party:spring-test",
+        "//third-party:spring-web",
+        
+        "//merlin-cli:merlin-cli",
+        "//merlin-sdk:merlin-sdk"
+    ]
+)
