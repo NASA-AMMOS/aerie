@@ -45,3 +45,30 @@ java_binary(
     ],
     main_class = "gov.nasa.jpl.ammos.mpsa.aerie.simulation.App"
 )
+
+java_test(
+    name = "test_services",
+    srcs = glob(["src/**/*.java"]),
+    extra_arguments = [
+        "--source-path", "services/src/",
+        "--module-path", "third-party/"
+        ],
+    deps = [
+        # Third Party
+        "//third-party:assertj-core",
+        "//third-party:commons-lang3",
+        "//third-party:hamcrest-all",
+        "//third-party:javalin",
+        "//third-party:javax.json.bind-api",
+        "//third-party:javax.json",
+        "//third-party:junit-jupiter-api",
+        "//third-party:junit-jupiter-engine",
+        "//third-party:mongo-java-driver",
+        "//third-party:slf4j-simple",
+        "//third-party:yasson",
+
+        # Aerie
+        "//merlin-sdk:merlin-sdk"
+    ],
+    visibility = ['PUBLIC']
+)
