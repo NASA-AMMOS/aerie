@@ -122,26 +122,25 @@ public final class LocalApp implements App {
     }
 
     /**
-     * Validate that a serialized activity conforms to the expectations of a named adaptation.
+     * Validate that a set of activity parameters conforms to the expectations of a named adaptation.
      *
      * @param adaptationId The ID of the adaptation to load.
      * @param activityParameters The serialized activity to validate against the named adaptation.
      * @return A list of validation errors that is empty if validation succeeds.
      * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
-     * @throws NoSuchActivityTypeException If no activity type exists for the given serialized activity.
      * @throws Adaptation.AdaptationContractException If the named adaptation does not abide by the expected contract.
      * @throws AdaptationLoadException If the adaptation cannot be loaded -- the JAR may be invalid, or the adaptation
      *         it contains may not abide by the expected contract at load time.
      */
     @Override
     public List<String> validateActivityParameters(final String adaptationId, final SerializedActivity activityParameters)
-        throws NoSuchAdaptationException, Adaptation.AdaptationContractException, NoSuchActivityTypeException, AdaptationLoadException
+        throws NoSuchAdaptationException, Adaptation.AdaptationContractException, AdaptationLoadException
     {
         final Activity<?> activity;
         try {
             activity = this.loadAdaptation(adaptationId).instantiateActivity(activityParameters);
         } catch (final Adaptation.NoSuchActivityTypeException ex) {
-            throw new NoSuchActivityTypeException(activityParameters.getTypeName(), ex);
+            return List.of("unknown activity type");
         } catch (final Adaptation.UnconstructableActivityInstanceException ex) {
             return List.of(ex.getMessage());
         }

@@ -106,6 +106,25 @@ public final class LocalAppTest {
   }
 
   @Test
+  public void shouldNotAddPlanWithNonexistantAdaptation() {
+    // GIVEN
+    final Fixtures fixtures = new Fixtures();
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
+
+    final NewPlan plan = fixtures.createValidNewPlan("new-plan");
+    plan.adaptationId = fixtures.NONEXISTENT_ADAPTATION_ID;
+
+    // WHEN
+    final Throwable thrown = catchThrowable(() -> controller.addPlan(plan));
+
+    // THEN
+    assertThat(thrown).isInstanceOf(ValidationException.class);
+
+    final var validationErrors = ((ValidationException)thrown).getValidationErrors();
+    assertThat(validationErrors).size().isEqualTo(1);
+  }
+
+  @Test
   public void shouldNotAddPlanWithNoName() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
@@ -224,6 +243,28 @@ public final class LocalAppTest {
   }
 
   @Test
+  public void shouldNotChangeAdaptationOfPlan() throws NoSuchPlanException {
+    // GIVEN
+    final Fixtures fixtures = new Fixtures();
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
+
+    final String planId = fixtures.EXISTENT_PLAN_ID;
+    final Plan plan = fixtures.planRepository.getPlan(planId);
+
+    // WHEN
+    final Plan patch = new Plan();
+    patch.adaptationId = "something";
+
+    final Throwable thrown = catchThrowable(() -> controller.updatePlan(planId, patch));
+
+    // THEN
+    assertThat(thrown).isInstanceOf(ValidationException.class);
+
+    final var validationErrors = ((ValidationException)thrown).getValidationErrors();
+    assertThat(validationErrors).size().isEqualTo(1);
+  }
+
+  @Test
   public void shouldNotPatchInvalidPlan() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
@@ -232,8 +273,12 @@ public final class LocalAppTest {
     final String planId = fixtures.EXISTENT_PLAN_ID;
 
     // WHEN
+    final ActivityInstance activityInstance = new ActivityInstance();
+    activityInstance.type = fixtures.NONEXISTENT_ACTIVITY_TYPE_ID;
+    activityInstance.parameters = Map.of();
+
     final Plan patch = new Plan();
-    patch.activityInstances = Map.of(fixtures.NONEXISTENT_ACTIVITY_INSTANCE_ID, new ActivityInstance());
+    patch.activityInstances = Map.of(fixtures.NONEXISTENT_ACTIVITY_INSTANCE_ID, activityInstance);
 
     final Throwable thrown = catchThrowable(() -> controller.updatePlan(planId, patch));
 
@@ -380,7 +425,7 @@ public final class LocalAppTest {
     final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
 
     final ActivityInstance activityInstance = fixtures.createValidActivityInstance();
-    activityInstance.type = null;
+    activityInstance.type = fixtures.NONEXISTENT_ACTIVITY_TYPE_ID;
 
     final String planId = fixtures.EXISTENT_PLAN_ID;
     final List<ActivityInstance> activityInstances = List.of(activityInstance);
@@ -526,7 +571,7 @@ public final class LocalAppTest {
 
     // WHEN
     final ActivityInstance patch = new ActivityInstance();
-    patch.type = "nonexistent activity type";
+    patch.type = fixtures.NONEXISTENT_ACTIVITY_TYPE_ID;
 
     final Throwable thrown = catchThrowable(() -> controller.updateActivityInstance(planId, activityInstanceId, patch));
 
