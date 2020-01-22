@@ -57,6 +57,7 @@ java_test(
         "--module-path", "third-party/"
         ],
     deps = [
+        # Third Party
         "//third-party:assertj-core",
         "//third-party:gson",
         "//third-party:hamcrest-all",
@@ -71,6 +72,7 @@ java_test(
         "//third-party:spring-test",
         "//third-party:spring-web",
         
+        # Aerie
         "//merlin-cli:merlin-cli",
         "//merlin-sdk:merlin-sdk"
     ]

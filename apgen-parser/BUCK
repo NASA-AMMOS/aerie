@@ -12,10 +12,13 @@ java_test(
         "--module-path", "third-party/"
         ],
     deps = [
+        # Third Party
         "//third-party:assertj-core",
         "//third-party:hamcrest-all",
         "//third-party:junit-jupiter-api",
         "//third-party:junit",
+        
+        # Aerie
         "//apgen-parser:apgen-parser"
     ]
 )
