@@ -3,3 +3,19 @@ java_library(
     srcs = glob(["src/main/**/*"]),
     visibility = ['PUBLIC'],
 )
+
+java_test(
+    name = "test_apgen-parser",
+    srcs = glob(["src/test/**/*.java"]),
+    extra_arguments = [
+        "--source-path", "apgen-parser/src/",
+        "--module-path", "third-party/"
+        ],
+    deps = [
+        "//third-party:assertj-core",
+        "//third-party:hamcrest-all",
+        "//third-party:junit-jupiter-api",
+        "//third-party:junit",
+        "//apgen-parser:apgen-parser"
+    ]
+)

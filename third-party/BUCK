@@ -108,6 +108,12 @@ prebuilt_jar(
 )
 
 prebuilt_jar( 
+    name = 'junit-jupiter-api',
+    binary_jar = 'junit-jupiter-api-5.6.0.jar',
+    visibility = ['PUBLIC']
+)
+
+prebuilt_jar( 
     name = 'junit-jupiter-engine',
     binary_jar = 'junit-jupiter-engine-5.5.2.jar',
     visibility = ['PUBLIC']
