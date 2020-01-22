@@ -16,3 +16,28 @@ java_library(
     ],
     visibility = ['PUBLIC']
 )
+
+
+java_test(
+    name = "test_merlin-multimission-models",
+    srcs = glob(["src/test/**/*.java"]),
+    extra_arguments = [
+        "--source-path", "merlin-multimission-models/src/",
+        "--module-path", "third-party/"
+        ],
+    deps = [
+        # Third Party
+        "//third-party:assertj-core",
+        "//third-party:commons-io",
+        "//third-party:commons-lang3",
+        "//third-party:commons-math3",
+        "//third-party:hamcrest-all",
+        "//third-party:JNISpice",
+        "//third-party:junit-jupiter-api",
+        "//third-party:junit",
+
+        # Aerie
+        "//merlin-multimission-models:merlin-multimission-models",
+        "//merlin-sdk:merlin-sdk"
+    ]
+)
