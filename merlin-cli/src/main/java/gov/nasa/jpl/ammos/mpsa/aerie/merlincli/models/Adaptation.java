@@ -82,4 +82,17 @@ public class Adaptation {
     public void setOwner(String owner) {
         this.owner = owner;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Adaptation) {
+            Adaptation other = (Adaptation)o;
+            return other.getName().equals(this.name)
+                    && other.getVersion().equals(this.version)
+                    && other.getMission().equals(this.mission)
+                    && other.getOwner().equals(this.owner);
+        }
+
+        return false;
+    }
 }

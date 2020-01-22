@@ -8,11 +8,12 @@ public interface PlanRepository {
     String getPlanList();
     void appendActivityInstances(String planId, String instanceListJson) throws PlanNotFoundException, InvalidJsonException, InvalidPlanException;
     String getActivityInstance(String planId, String activityId) throws PlanNotFoundException, ActivityInstanceNotFoundException;
-    void updateActivityInstance(String planId, String activityId, String activityInstanceJson) throws PlanNotFoundException, ActivityInstanceNotFoundException, InvalidJsonException, InvalidPlanException;
+    void updateActivityInstance(String planId, String activityId, String activityInstanceJson) throws PlanNotFoundException, ActivityInstanceNotFoundException, InvalidJsonException, InvalidActivityInstanceException;
     void deleteActivityInstance(String planId, String activityId) throws PlanNotFoundException, ActivityInstanceNotFoundException;
 
     class InvalidJsonException extends Exception {}
     class InvalidPlanException extends Exception {}
     class PlanNotFoundException extends Exception {}
     class ActivityInstanceNotFoundException extends Exception {}
+    class InvalidActivityInstanceException extends Exception {}
 }

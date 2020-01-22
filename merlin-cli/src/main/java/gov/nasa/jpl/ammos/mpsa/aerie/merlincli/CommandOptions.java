@@ -3,7 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlincli;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidNumberOfArgsException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidTokenException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.*;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JsonUtilities;
 import gov.nasa.jpl.ammos.mpsa.apgen.exceptions.AdaptationParsingException;
 import gov.nasa.jpl.ammos.mpsa.apgen.exceptions.DirectoryNotFoundException;
 import gov.nasa.jpl.ammos.mpsa.apgen.exceptions.PlanParsingException;
@@ -270,7 +270,7 @@ public class CommandOptions {
             return false;
         }
 
-        String planUpdateJson = JSONUtilities.convertPlanToJson(plan);
+        String planUpdateJson = JsonUtilities.convertPlanToJson(plan);
         return updatePlan(planId, planUpdateJson);
     }
 
@@ -358,11 +358,11 @@ public class CommandOptions {
             return false;
         }
 
-        String activityUpdateJson = JSONUtilities.convertActivityInstanceToJson(activityInstance);
+        String activityUpdateJson = JsonUtilities.convertActivityInstanceToJson(activityInstance);
 
         try {
             this.planRepository.updateActivityInstance(planId, activityId, activityUpdateJson);
-        } catch (PlanRepository.PlanNotFoundException | PlanRepository.ActivityInstanceNotFoundException | PlanRepository.InvalidJsonException | PlanRepository.InvalidPlanException e) {
+        } catch (PlanRepository.PlanNotFoundException | PlanRepository.ActivityInstanceNotFoundException | PlanRepository.InvalidJsonException | PlanRepository.InvalidActivityInstanceException e) {
             System.err.println(e);
             return false;
         }
@@ -440,7 +440,7 @@ public class CommandOptions {
         }
 
         System.out.println("SUCCESS: Adaptation retrieval successful.");
-        System.out.println(JSONUtilities.convertAdaptationToJson(adaptation));
+        System.out.println(JsonUtilities.convertAdaptationToJson(adaptation));
         return true;
     }
 
@@ -511,7 +511,7 @@ public class CommandOptions {
         }
 
         /* Build the plan JSON and write it to the specified output file */
-        if (JSONUtilities.writePlanToJSON(plan, Path.of(output), adaptationId, startTimestamp, name)) {
+        if (JsonUtilities.writePlanToJSON(plan, Path.of(output), adaptationId, startTimestamp, name)) {
             System.out.println(String.format("SUCCESS: Plan file written to %s", output));
             return true;
         }

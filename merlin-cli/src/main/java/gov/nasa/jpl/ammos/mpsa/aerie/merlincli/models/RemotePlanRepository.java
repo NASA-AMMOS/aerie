@@ -9,8 +9,8 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Path;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities.prettify;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities.writeJson;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JsonUtilities.prettify;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JsonUtilities.writeJson;
 
 public class RemotePlanRepository implements PlanRepository {
 
@@ -38,7 +38,7 @@ public class RemotePlanRepository implements PlanRepository {
                 if (!response.containsHeader("location")) throw new ApiContractViolationException("Plan created but location header not found.");
 
                 // ID for the created entity is in the location header
-                return response.getFirstHeader("location").toString();
+                return response.getFirstHeader("location").getValue();
 
             case HttpStatus.SC_BAD_REQUEST:
                 // TODO: Add information about what was wrong from the response
@@ -126,6 +126,7 @@ public class RemotePlanRepository implements PlanRepository {
             case HttpStatus.SC_OK:
                 try {
                     writeJson(response.getEntity().getContent(), Path.of(outName));
+                    return;
                 } catch (IOException e) {
                     throw new Error(e);
                 }
@@ -153,7 +154,7 @@ public class RemotePlanRepository implements PlanRepository {
         switch (response.getStatusLine().getStatusCode()) {
             case HttpStatus.SC_OK:
                 try {
-                    return new String(response.getEntity().getContent().readAllBytes());
+                    return prettify(new String(response.getEntity().getContent().readAllBytes()));
                 } catch (IOException e) {
                     throw new Error(e);
                 }
@@ -229,7 +230,7 @@ public class RemotePlanRepository implements PlanRepository {
     }
 
     @Override
-    public void updateActivityInstance(String planId, String activityId, String activityInstanceJson) throws ActivityInstanceNotFoundException, InvalidJsonException, InvalidPlanException {
+    public void updateActivityInstance(String planId, String activityId, String activityInstanceJson) throws ActivityInstanceNotFoundException, InvalidJsonException, InvalidActivityInstanceException {
         HttpResponse response;
         try {
             HttpPatch request = new HttpPatch(String.format("%s/%s/%s/%s", baseURL, planId, instancePath, activityId));
@@ -254,7 +255,7 @@ public class RemotePlanRepository implements PlanRepository {
 
             case HttpStatus.SC_UNPROCESSABLE_ENTITY:
                 // TODO: Add information about what was wrong from the response
-                throw new InvalidPlanException();
+                throw new InvalidActivityInstanceException();
 
             default:
                 // TODO: Make this a more specific Error

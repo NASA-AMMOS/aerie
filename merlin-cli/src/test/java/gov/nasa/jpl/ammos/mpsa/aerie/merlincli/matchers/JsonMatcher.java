@@ -7,12 +7,12 @@ import com.google.gson.JsonParser;
  * Used to match JSON strings based on their content
  * as opposed to matching each character in a string
  */
-public class JSONMatcher {
+public class JsonMatcher {
 
     private JsonParser parser;
     private JsonElement json;
 
-    public JSONMatcher(String body) {
+    public JsonMatcher(String body) {
         parser = new JsonParser();
         json = parser.parse(body);
     }

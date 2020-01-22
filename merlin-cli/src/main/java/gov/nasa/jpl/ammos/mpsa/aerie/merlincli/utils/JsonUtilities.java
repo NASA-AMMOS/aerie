@@ -14,7 +14,7 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class JSONUtilities {
+public class JsonUtilities {
 
     /**
      * Formats a string to pretty-printed JSON

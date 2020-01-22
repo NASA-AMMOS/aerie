@@ -1,10 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.ApiContractViolationException;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JSONUtilities;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JsonUtilities;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -12,12 +10,10 @@ import org.apache.http.client.entity.EntityBuilder;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicNameValuePair;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +21,6 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
 
     private final String baseURL = "http://localhost:27182/adaptations";
     private final String activityPath = "activities";
-    private final String parameterPath = "parameters";
     private HttpHandler httpClient;
 
     public RemoteAdaptationRepository(HttpHandler httpClient) {
@@ -58,10 +53,10 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
 
         switch (response.getStatusLine().getStatusCode()) {
             case HttpStatus.SC_CREATED:
-                if (response.containsHeader("location")) throw new ApiContractViolationException("No ID found for created adaptation");
+                if (!response.containsHeader("location")) throw new ApiContractViolationException("No ID found for created adaptation");
 
                 // ID for the created entity is in the location header
-                return response.getFirstHeader("location").toString();
+                return response.getFirstHeader("location").getValue();
 
             case HttpStatus.SC_BAD_REQUEST:
                 // This should not have happened; this method was responsible for serializing the adaptation.
@@ -115,7 +110,7 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
         switch (response.getStatusLine().getStatusCode()) {
             case HttpStatus.SC_OK:
                 try {
-                    return JSONUtilities.parseAdaptationJson(response.getEntity().getContent());
+                    return JsonUtilities.parseAdaptationJson(response.getEntity().getContent());
                 } catch (IOException e) {
                     throw new Error(e);
                 }
@@ -168,7 +163,7 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
         switch (response.getStatusLine().getStatusCode()) {
                 case HttpStatus.SC_OK:
                 try {
-                    return JSONUtilities.prettify(new String(response.getEntity().getContent().readAllBytes()));
+                    return JsonUtilities.prettify(new String(response.getEntity().getContent().readAllBytes()));
                 } catch (IOException e) {
                     throw new Error(e);
                 }
@@ -196,7 +191,7 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
         switch (response.getStatusLine().getStatusCode()) {
             case HttpStatus.SC_OK:
                 try {
-                    return JSONUtilities.prettify(new String(response.getEntity().getContent().readAllBytes()));
+                    return JsonUtilities.prettify(new String(response.getEntity().getContent().readAllBytes()));
                 } catch (IOException e) {
                     throw new Error(e);
                 }
@@ -211,11 +206,5 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
                 // Should never happen because we don't have any other status codes from the service
                 throw new Error("Unexpected status code returned from plan service");
         }
-    }
-
-    // TODO: Pull this method into a utility class, it is used by both RemotePlanRepository and RemoteAdaptationRepository
-    private void addJsonToRequest(HttpEntityEnclosingRequest request, String json) throws UnsupportedEncodingException {
-        request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-        request.setEntity(new StringEntity(json));
     }
 }
