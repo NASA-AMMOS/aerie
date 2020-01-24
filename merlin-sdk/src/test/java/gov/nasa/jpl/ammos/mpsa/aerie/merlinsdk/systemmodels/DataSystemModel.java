@@ -4,6 +4,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.RegexUtilities;
 
+import java.util.function.Function;
+
 
 public class DataSystemModel implements SystemModel, MissionModelGlue {
 
@@ -50,6 +52,7 @@ public class DataSystemModel implements SystemModel, MissionModelGlue {
 
 
 
+    @Override
     public DataModelSlice step(DataModelSlice slice, Duration dt) {
         slice.dataVolume = slice.dataRate * dt.totalSeconds();
         if (slice.dataRate > 100){
@@ -60,6 +63,11 @@ public class DataSystemModel implements SystemModel, MissionModelGlue {
 
     @Override
     public void registerSelf() {
+       registry.registerGetter(this, GlobalPronouns.dataRate, Double.class, this::getDataRate);
+       registry.registerSetter(this, GlobalPronouns.dataRate, this::setDataRate);
+
+
+
         /*
         Registry.provide(this, GlobalPronouns.dataRate, this::getDataRate);
         Registry.provide(this, GlobalPronouns.dataVolume, this::getDataVolume);

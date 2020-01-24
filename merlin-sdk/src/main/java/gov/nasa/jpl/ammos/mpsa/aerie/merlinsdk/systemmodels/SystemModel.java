@@ -4,7 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 public interface SystemModel {
 
-    public void step(Slice slice, Duration dt);
+    public Slice step(Slice slice, Duration dt);
 
     public void registerSelf();
 

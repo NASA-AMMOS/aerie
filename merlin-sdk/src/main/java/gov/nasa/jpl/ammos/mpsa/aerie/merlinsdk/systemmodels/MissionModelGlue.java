@@ -12,34 +12,60 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public interface MissionModelGlue {
+
+class Getter<T> {
+    public final Class<T> klass;
+    public final Function<Slice, T> getter;
+
+    public Getter(Class<T> klass, Function<Slice, T> getter) {
+        this.klass = klass;
+        this.getter = getter;
+    }
+}
+
+class Setter<T> {
+    public final Class<T> klass;
+    public final BiConsumer<Slice, T> setter;
+
+    public Getter(Class<T> klass, BiConsumer<Slice, T> setter) {
+        this.klass = klass;
+        this.setter = setter;
+    }
+
+    public void accept(Slice slice, Object x) {
+        if (!klass.isInstance(x)) {
+            throw VeryBadThing("Type mismatch!");
+        }
+
+        setter.accept(slice, klass.cast(x));
+    }
+}
+
+public class MissionModelGlue {
 
     public class Registry{
 
-        //in the future we can have multiple event logs
 
-        private static final Map<Pair<SystemModel, String>, Supplier<?>> modelToSupplierMap = new HashMap<>();
-        private static final Map<Pair<SystemModel, String>, Consumer<?>> modelToConsumerMap = new HashMap<>();
-        private static final Map<SystemModel, List<Event>> modelToEventLog = new HashMap<>();
+        private Map<SystemModel, List<Event>> modelToEventLog = new HashMap<>();
 
-        //returns one value takes in one value
-        private Map<Pair<SystemModel, String>, Function<?,?>> modelToGetter = new HashMap<>();
-        //returns no value takes in two values
-        private Map<Pair<SystemModel, String>, BiConsumer<?,?>> modelToSetter = new HashMap<>();
+        //returns one value takes in one value (getter)
+        private Map<Pair<SystemModel, String>, Getter<?>> modelToGetter = new HashMap<>();
+//        private Map<Pair<SystemModel, String>, Function<Slice,?>> modelToGetter = new HashMap<>();
 
-        public Function<?,?> getGetter(SystemModel model,  String stateName){
+        //returns no value takes in two values (setter)
+        private Map<Pair<SystemModel, String>, BiConsumer<Slice,?>> modelToSetter = new HashMap<>();
+
+        public Getter getGetter(SystemModel model,  String stateName){
             Pair<SystemModel, String> key = new Pair<>(model, stateName);
             return modelToGetter.get(key);
         }
 
-        public BiConsumer<?,?> getSetter(SystemModel model,  String stateName){
+        public BiConsumer<Slice,?> getSetter(SystemModel model,  String stateName){
             Pair<SystemModel, String> key = new Pair<>(model, stateName);
             return modelToSetter.get(key);
         }
 
-
-
-        public static void addEvent(SystemModel model,  Event<?> event){
+        public void addEvent(SystemModel model,  Event<?> event){
             if(modelToEventLog.containsKey(model)){
                 modelToEventLog.get(model).add(event);
             }
@@ -50,17 +76,27 @@ public interface MissionModelGlue {
             }
         }
 
-
-
-        public void registerGetter(SystemModel model,  String stateName, Function<?,?> getter){
+        public <T> void registerGetter(SystemModel model,  String stateName, Class<T> resourceType, Function<Slice, T> getter){
             Pair<SystemModel, String> key = new Pair<>(model, stateName);
-            modelToGetter.put(key, getter);
+            modelToGetter.put(key, new Getter<>(resourceType, getter));
         }
 
-        public void registerSetter(){
-
+        public void registerSetter(SystemModel model,  String stateName, BiConsumer<Slice,?> setter){
+            Pair<SystemModel, String> key = new Pair<>(model, stateName);
+            modelToSetter.put(key, setter);
         }
 
+
+        public List<Event> getEventLog(SystemModel model){
+            return modelToEventLog.get(model);
+        }
+
+
+        //private static final Map<Pair<SystemModel, String>, Supplier<?>> modelToSupplierMap = new HashMap<>();
+        //private static final Map<Pair<SystemModel, String>, Consumer<?>> modelToConsumerMap = new HashMap<>();
+
+
+/*
 
         public static void provide(SystemModel model, String stateName, Supplier supplier) {
             Pair<SystemModel, String> key = new Pair<>(model, stateName);
@@ -86,15 +122,32 @@ public interface MissionModelGlue {
         public static Consumer<?> getConsumer(SystemModel model,  String stateName){
             Pair<SystemModel, String> key = new Pair<>(model, stateName);
             return modelToConsumerMap.get(key);
+        }*/
+    }
+
+
+    public void applyEvents(Slice slice, SystemModel model, List<Event> eventLog){
+        Registry registry = new Registry();
+
+        if (eventLog.size()<=0){
+            return;
         }
 
 
-        public static List<Event> getEventLog(SystemModel model){
-            return modelToEventLog.get(model);
+        for (Event<?> x : eventLog){
+            Duration dt = x.time().subtract(slice.time());
+            slice = model.step(slice, dt);
+            //BiConsumer<Slice, ?> setter = registry.getSetter(model, x.name());
+            //setter.accept(slice, x.value());
+
+            registry.getSetter(model, x.name()).accept(slice, x.value());
+
+
+            //registry.modelToSetter.get(model, x.name()).accept(slice, x.value());
         }
     }
 
-    public static class EventApplier{
+    /*public static class EventApplier{
 
         //take slice instead of a system model
         //slice can be cloned and then create a new slice
@@ -118,25 +171,6 @@ public interface MissionModelGlue {
        //         model.step(dt);
             }
         }
-    }
-
-
-    public static void applyEvents(Slice slice, SystemModel model, List<Event> eventLog){
-        Registry registry = new Registry();
-
-        if (eventLog.size()<=0){
-            return;
-        }
-
-
-        for (Event x : eventLog){
-            Duration dt = x.time().subtract(slice.time());
-            slice = model.step(slice, dt);
-            registry.modelToSetter.get(model, x.name()).accept(slice, x.value());
-        }
-    }
-
-
-
+    }*/
 
 }
