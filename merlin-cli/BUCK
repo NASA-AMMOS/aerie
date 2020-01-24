@@ -59,6 +59,7 @@ java_test(
     deps = [
         # Third Party
         "//third-party:assertj-core",
+        "//third-party:commons-logging",
         "//third-party:gson",
         "//third-party:hamcrest-all",
         "//third-party:hamcrest-all",
