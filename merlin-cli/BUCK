@@ -3,6 +3,7 @@ java_library(
     srcs = glob(["src/main/**"]),
     deps = [
         "//third-party:commons-cli",
+        "//third-party:commons-logging",
         "//third-party:gson",
         "//third-party:httpclient",
         "//third-party:httpcore",

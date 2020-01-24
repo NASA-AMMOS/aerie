@@ -23,6 +23,12 @@ prebuilt_jar(
     visibility = ['PUBLIC']
 )
 
+prebuilt_jar(
+    name = 'commons-logging',
+    binary_jar = 'commons-logging-1.2.jar',
+    visibility = ['PUBLIC']
+)
+
 prebuilt_jar( 
     name = 'commons-math3',
     binary_jar = 'commons-math3-3.6.1.jar',
