@@ -2,20 +2,15 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.ApiContractViolationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JsonUtilities;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.EntityBuilder;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.message.BasicNameValuePair;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class RemoteAdaptationRepository implements AdaptationRepository {
 
@@ -29,22 +24,18 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
 
     @Override
     public String createAdaptation(Adaptation adaptation, File adaptationJar) throws InvalidAdaptationException {
-        List<NameValuePair> parameters = new ArrayList<>();
-        parameters.add(new BasicNameValuePair("name", adaptation.getName()));
-        parameters.add(new BasicNameValuePair("version", adaptation.getVersion()));
-        if (adaptation.getMission() != null) parameters.add(new BasicNameValuePair("mission", adaptation.getMission()));
-        if (adaptation.getOwner() != null) parameters.add(new BasicNameValuePair("owner", adaptation.getOwner()));
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
+                .addBinaryBody("file", adaptationJar)
+                .addTextBody("name", adaptation.getName())
+                .addTextBody("version", adaptation.getVersion());
 
-        HttpEntity entity = EntityBuilder.create()
-            .setFile(adaptationJar)
-            .setParameters(parameters)
-            .build();
+        if (adaptation.getMission() != null) entityBuilder.addTextBody("mission", adaptation.getMission());
+        if (adaptation.getOwner() != null) entityBuilder.addTextBody("owner", adaptation.getOwner());
 
         HttpResponse response;
         try {
             HttpPost request = new HttpPost(baseURL);
-            request.setHeader(entity.getContentType());
-            request.setEntity(entity);
+            request.setEntity(entityBuilder.build());
 
             response = this.httpClient.execute(request);
         } catch (IOException e) {
