@@ -3,100 +3,134 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 
-import java.util.ArrayList;
-import java.util.List;
 
 public class DataSystemModel implements SystemModel, MissionModelGlue {
 
-    private double dataRate = 10.0;
-    private double dataVolume = 0.0;
-    private String dataProtocol = GlobalPronouns.UART;
-
     public DataSystemModel(){
         registerSelf();
-        slices.add(new DataModelSlice(dataRate, dataVolume, dataProtocol));
+        latestSlice = new DataModelSlice();
     }
-    //this shouldn't be here
-    //cache these elsewhere
-    //who owns list of cached slices?
-    private List<DataModelSlice> slices = new ArrayList<>();
 
-    @Override
-    public void step(Duration dt) {
-        dataVolume = dataRate*dt.totalSeconds();
-        if (dataRate > 100){
+    private DataModelSlice latestSlice;
+
+
+
+
+    //this modifies a slice given to is, so we don't have to return a slice necessarily
+    //we can return the same slice passed in as a parameter if that makes more ergonomic sense
+
+    public DataModelSlice step2(DataModelSlice slice, Duration dt) {
+        double dataVolume = slice.dataRate * dt.totalSeconds();
+        String dataProtocol = slice.dataProtocol;
+        if (slice.dataRate > 100){
             dataProtocol = GlobalPronouns.spacewire;
         }
+        DataModelSlice nextSlice = slice.newSlice(slice.dataRate, dataVolume, dataProtocol);
+        this.latestSlice = nextSlice;
+        return this.latestSlice;
     }
 
+    public DataModelSlice latestSlice(){
+        return this.latestSlice;
+    }
+
+
+
+    public DataModelSlice step(DataModelSlice slice, Duration dt) {
+        slice.dataVolume = slice.dataRate * dt.totalSeconds();
+        if (slice.dataRate > 100){
+            slice.dataProtocol = GlobalPronouns.spacewire;
+        }
+        return slice.clone();
+    }
 
     @Override
     public void registerSelf() {
+        /*
         Registry.provide(this, GlobalPronouns.dataRate, this::getDataRate);
         Registry.provide(this, GlobalPronouns.dataVolume, this::getDataVolume);
         Registry.provide(this, GlobalPronouns.dataProtocol, this::getDataProtocol);
 
         Registry.provideDouble(this, GlobalPronouns.dataRate, this::setDataRate);
         Registry.provideDouble(this, GlobalPronouns.dataVolume, this::setDataVolume);
-        Registry.provideString(this, GlobalPronouns.dataProtocol, this::setDataProtocol);
+        Registry.provideString(this, GlobalPronouns.dataProtocol, this::setDataProtocol);*/
+
+        //provideSettable, provideCumulative
+        //Registry.provideCumulative(this::incrementDataRate);
+        //mission modeler only needs to look at one place to make sure that the provide related to the state they want is here
+        //getters and setters should have a slice parameter
+
     }
 
     @Override
-    public Slice saveToSlice(){
-        DataModelSlice slice = new DataModelSlice(this.dataRate, this.dataVolume, this.dataProtocol);
-        slices.add(slice);
-        return slice;
+    public void applySlice(Slice slice) {
+
     }
 
-    //probably should move this into Slice interface but then we need to probably also implement a DataModelSlice interface
     @Override
-    public void applySlice(Slice slice){
-        DataModelSlice temp = (DataModelSlice) slice;
-        this.dataRate = temp.dataRate;
-        this.dataVolume = temp.dataVolume;
-        this.dataRate = temp.dataRate;
-    }
-
-    public DataModelSlice latestSlice(){
-        return slices.get(slices.size()-1);
+    public Slice saveToSlice() {
+        return null;
     }
 
     //not sure if this is the best way to get something
-    public double getDataRate(){
-        return this.latestSlice().dataRate;
+    public double getDataRate(DataModelSlice slice){
+        return slice.dataRate;
     }
 
-    public double getDataVolume(){
-        return this.latestSlice().dataVolume;
+    public double getDataVolume(DataModelSlice slice){
+        return slice.dataVolume;
     }
 
-    public String getDataProtocol(){
-        return this.latestSlice().dataProtocol;
+    public String getDataProtocol(DataModelSlice slice){
+        return slice.dataProtocol;
     }
 
-    public void setDataRate(Double dataRate){
-        this.dataRate = dataRate;
+    public void setDataRate(DataModelSlice slice, Double dataRate){
+        slice.dataRate = dataRate;
     }
 
-    public void setDataVolume(Double dataVolume){
-        this.dataVolume = dataVolume;
+    public void setDataVolume(DataModelSlice slice,  Double dataVolume){
+        slice.dataVolume = dataVolume;
     }
 
-    public void setDataProtocol(String dataProtocol){
-        this.dataProtocol = dataProtocol;
+    public void setDataProtocol(DataModelSlice slice,  String dataProtocol){
+        slice.dataProtocol = dataProtocol;
     }
 
-    //using public modifiers on variables b/c it may be a pain to reimplement another set of getters and setters
+    public void incrementDataRate(DataModelSlice slice, double delta){
+        slice.dataRate += delta;
+    }
+
+    public void decrementDataRate(DataModelSlice slice,  double delta){
+        slice.dataRate -= delta;
+    }
+
     private static class DataModelSlice implements Slice{
-        public double dataRate = 0.0;
-        public double dataVolume = 0.0;
-        public String dataProtocol = GlobalPronouns.UART;
-        public Time time;
+        private double dataRate = 0.0;
+        private double dataVolume = 0.0;
+        private String dataProtocol = GlobalPronouns.UART;
+        private Time time;
+
+        public DataModelSlice(){}
 
         public DataModelSlice(double dataRate, double dataVolume, String dataProtocol){
             this.dataRate = dataRate;
             this.dataVolume = dataVolume;
             this.dataProtocol = dataProtocol;
         }
+
+        public DataModelSlice newSlice(double dataRate, double dataVolume, String dataProtocol){
+            return new DataModelSlice(dataRate, dataVolume, dataProtocol);
+        }
+
+        public DataModelSlice clone(){
+            return new DataModelSlice(this.dataRate, this.dataVolume, this.dataProtocol);
+        }
+
+        public Time time(){
+            return this.time;
+        }
+
+
     }
 }

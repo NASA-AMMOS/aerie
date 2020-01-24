@@ -9,6 +9,11 @@ public class Main {
 
     public static void main(String[] args) {
 
+
+
+
+        DataSystemModel model = new DataSystemModel();
+
         /*----------------------------- SAMPLE ADAPTOR WORK -------------------------------*/
 
         DataSystemModel dataSystemModel = new DataSystemModel();

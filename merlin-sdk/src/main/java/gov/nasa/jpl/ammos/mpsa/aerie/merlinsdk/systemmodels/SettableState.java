@@ -28,6 +28,7 @@ public class SettableState<T> implements State<T> {
         List<Event> eventLog = MissionModelGlue.Registry.getEventLog(dependentSystemModel);
         MissionModelGlue.EventApplier.applyEvents(dependentSystemModel, eventLog);
         return (T) supplier.get();
+        //generic cast acts as a check
     }
 
     @Override
