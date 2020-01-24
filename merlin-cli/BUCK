@@ -48,6 +48,10 @@ java_binary(
     main_class = "gov.nasa.jpl.ammos.mpsa.aerie.merlincli.TestMain",
 )
 
+filegroup(
+    name = "test-resources",
+    srcs = glob(["src/test/resources/**/*"])
+)
 
 java_test(
     name = "test_merlin-cli",
@@ -56,6 +60,9 @@ java_test(
         "--source-path", "merlin-cli/src/",
         "--module-path", "third-party/"
         ],
+    vm_args = [
+        "-Duser.dir=$(location //merlin-cli:test-resources)"
+    ],
     deps = [
         # Third Party
         "//third-party:assertj-core",
