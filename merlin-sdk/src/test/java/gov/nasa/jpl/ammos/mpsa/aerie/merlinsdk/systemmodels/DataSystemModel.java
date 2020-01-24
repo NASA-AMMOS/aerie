@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.RegexUtilities;
 
 
 public class DataSystemModel implements SystemModel, MissionModelGlue {
@@ -13,6 +14,19 @@ public class DataSystemModel implements SystemModel, MissionModelGlue {
 
     private DataModelSlice latestSlice;
 
+    public Registry registry;
+
+    public Registry getRegistry(){
+        return this.registry;
+    }
+
+    public void setRegistry(Registry registry){
+        this.registry = registry;
+    }
+
+    public Slice getSlice(){
+        return this.latestSlice;
+    }
 
 
 

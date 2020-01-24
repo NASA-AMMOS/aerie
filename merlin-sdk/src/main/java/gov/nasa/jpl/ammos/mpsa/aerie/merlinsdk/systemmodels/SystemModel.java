@@ -12,4 +12,8 @@ public interface SystemModel {
 
     public Slice saveToSlice();
 
+    public MissionModelGlue.Registry getRegistry();
+
+    public Slice getSlice();
+
 }

@@ -27,11 +27,15 @@ public interface MissionModelGlue {
         //returns no value takes in two values
         private Map<Pair<SystemModel, String>, BiConsumer<?,?>> modelToSetter = new HashMap<>();
 
-        public Function<?,?> getSetter(SystemModel model,  String stateName){
+        public Function<?,?> getGetter(SystemModel model,  String stateName){
             Pair<SystemModel, String> key = new Pair<>(model, stateName);
             return modelToGetter.get(key);
         }
 
+        public BiConsumer<?,?> getSetter(SystemModel model,  String stateName){
+            Pair<SystemModel, String> key = new Pair<>(model, stateName);
+            return modelToSetter.get(key);
+        }
 
 
 
