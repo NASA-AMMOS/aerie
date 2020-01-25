@@ -11,6 +11,7 @@ java_library(
         "//third-party:gson",
         "//third-party:httpclient",
         "//third-party:httpcore",
+        "//third-party:httpmime",
         "//third-party:junit",
         "//third-party:spring-beans",
         "//third-party:spring-context",

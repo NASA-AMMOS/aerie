@@ -1,7 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidTokenException;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.TokenMap.parseToken;
 
 public class PlanDetail {
     private String _id;
@@ -22,6 +26,32 @@ public class PlanDetail {
         this.name = name;
         this.endTimestamp = endTimestamp;
         this.setActivityInstances(activityInstances);
+    }
+
+    public static PlanDetail fromTokens(String[] tokens) throws InvalidTokenException {
+        PlanDetail plan = new PlanDetail();
+
+        for (String token : tokens) {
+            TokenMap tokenMap = parseToken(token);
+            switch(tokenMap.getName()) {
+                case "adaptationId":
+                    plan.setAdaptationId(tokenMap.getValue());
+                    break;
+                case "startTimestamp":
+                    plan.setStartTimestamp(tokenMap.getValue());
+                    break;
+                case "endTimestamp":
+                    plan.setEndTimestamp(tokenMap.getValue());
+                    break;
+                case "name":
+                    plan.setName(tokenMap.getValue());
+                    break;
+                default:
+                    throw new InvalidTokenException(token, String.format("'%s' is not a valid token key", tokenMap.getName()));
+            }
+        }
+
+        return plan;
     }
 
     public List<ActivityInstance> getActivityInstances() {
