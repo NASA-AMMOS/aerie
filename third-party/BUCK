@@ -54,6 +54,12 @@ prebuilt_jar(
 )
 
 prebuilt_jar( 
+    name = 'httpmime',
+    binary_jar = 'httpmime-4.5.3.jar',
+    visibility = ['PUBLIC']
+)
+
+prebuilt_jar( 
     name = 'jackson-core',
     binary_jar = 'jackson-core-2.10.0.jar',
     visibility = ['PUBLIC']
