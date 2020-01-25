@@ -10,7 +10,7 @@ java_library(
         "//third-party:httpmime",
 
         # Modules
-        "//apgen-parser:apgen-parser"
+        "//apgen-parser:lib"
     ],
 )
 
