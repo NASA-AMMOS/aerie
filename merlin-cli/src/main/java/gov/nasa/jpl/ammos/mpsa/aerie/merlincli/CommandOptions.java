@@ -26,19 +26,12 @@ public class CommandOptions {
     private OptionGroup requiredGroup = new OptionGroup();
     private OptionGroup planIdRequiredGroup = new OptionGroup();
     private OptionGroup adaptationIdRequiredGroup = new OptionGroup();
-    private String[] args = null;
     private boolean lastCommandStatus;
 
-    public CommandOptions(String[] args, PlanRepository planRepository, AdaptationRepository adaptationRepository) {
+    public CommandOptions(PlanRepository planRepository, AdaptationRepository adaptationRepository) {
         buildArguments();
-        consumeArgs(args);
         this.planRepository = planRepository;
         this.adaptationRepository = adaptationRepository;
-    }
-
-    public CommandOptions consumeArgs(String[] args) {
-        this.args = args;
-        return this;
     }
 
     public void buildArguments() {
@@ -95,7 +88,7 @@ public class CommandOptions {
         options.addOptionGroup(requiredGroup);
     }
 
-    public void parse() {
+    public void parse(final String[] args) {
 
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = null;
@@ -125,11 +118,11 @@ public class CommandOptions {
                 return;
             }
             else if (requiredGroup.getSelected().equals("A")) {
-                String[] args = cmd.getOptionValues("A");
-                if (args.length < 3) {
+                String[] params = cmd.getOptionValues("A");
+                if (params.length < 3) {
                     throw new InvalidNumberOfArgsException("Option 'A' requires at least three arguments");
                 }
-                String path = args[0];
+                String path = params[0];
                 String[] tokens = Arrays.copyOfRange(args, 1, args.length);
                 lastCommandStatus = createAdaptation(path, tokens);
                 return;
@@ -167,9 +160,9 @@ public class CommandOptions {
                     return;
                 }
                 else if (cmd.hasOption("update-activity")) {
-                    String[] args = cmd.getOptionValues("update-activity");
-                    String activityId = args[0];
-                    String[] tokens = Arrays.copyOfRange(args, 1, args.length);
+                    String[] params = cmd.getOptionValues("update-activity");
+                    String activityId = params[0];
+                    String[] tokens = Arrays.copyOfRange(params, 1, params.length);
                     lastCommandStatus = updateActivityInstance(planId, activityId, tokens);
                     return;
                 }
@@ -200,12 +193,12 @@ public class CommandOptions {
                 }
             }
             else if (requiredGroup.getSelected().equals("c")) {
-                String[] args = cmd.getOptionValues("c");
-                if (args.length < 3) {
+                String[] params = cmd.getOptionValues("c");
+                if (params.length < 3) {
                     throw new InvalidNumberOfArgsException("Option 'apf' requires three arguments <infile> <outfile> <dir> <tokens>");
                 }
-                String[] tokens = Arrays.copyOfRange(args, 3, args.length);
-                lastCommandStatus = convertApfFile(args[0], args[1], args[2], tokens);
+                String[] tokens = Arrays.copyOfRange(params, 3, params.length);
+                lastCommandStatus = convertApfFile(params[0], params[1], params[2], tokens);
                 return;
             }
             else {

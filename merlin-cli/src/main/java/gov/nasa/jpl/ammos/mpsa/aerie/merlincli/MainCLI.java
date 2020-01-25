@@ -12,7 +12,8 @@ public class MainCLI {
     public static void main(String args[]) {
         final PlanRepository planRepository = new RemotePlanRepository(new HttpClientHandler(HttpClients.createDefault()));
         final AdaptationRepository adaptationRepository = new RemoteAdaptationRepository(new HttpClientHandler(HttpClients.createDefault()));
-        CommandOptions commandOptions = new CommandOptions(args, planRepository, adaptationRepository);
-        commandOptions.parse();
+        final CommandOptions commandOptions = new CommandOptions(planRepository, adaptationRepository);
+
+        commandOptions.parse(args);
     }
 }
