@@ -19,7 +19,28 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-public class CommandOptions {
+interface MerlinCommandReceiver {
+    boolean createPlan(String path);
+    boolean updatePlanFromFile(String planId, String path);
+    boolean updatePlanFromTokens(String planId, String[] tokens);
+    boolean updatePlan(String planId, String planUpdateJson);
+    boolean deletePlan(String planId);
+    boolean downloadPlan(String planId, String outName);
+    boolean appendActivityInstances(String planId, String path);
+    boolean displayActivityInstance(String planId, String activityId);
+    boolean updateActivityInstance(String planId, String activityId, String[] tokens);
+    boolean deleteActivityInstance(String planId, String activityId);
+    boolean listPlans();
+    boolean createAdaptation(String path, String[] tokens);
+    boolean deleteAdaptation(String adaptationId);
+    boolean displayAdaptation(String adaptationId);
+    boolean listAdaptations();
+    boolean listActivityTypes(String adaptationId);
+    boolean displayActivityType(String adaptationId, String activityType);
+    boolean convertApfFile(String input, String output, String dir, String[] tokens);
+}
+
+public class CommandOptions implements MerlinCommandReceiver {
     private PlanRepository planRepository;
     private AdaptationRepository adaptationRepository;
     private Options options = new Options();
@@ -221,7 +242,8 @@ public class CommandOptions {
         formatter.printHelp("Merlin Adaptation", options);
     }
 
-    private boolean createPlan(String path) {
+    @Override
+    public boolean createPlan(String path) {
         String planJson;
         try {
             planJson = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
@@ -242,7 +264,8 @@ public class CommandOptions {
         return true;
     }
 
-    private boolean updatePlanFromFile(String planId, String path) {
+    @Override
+    public boolean updatePlanFromFile(String planId, String path) {
         String planUpdateJson;
         try {
             planUpdateJson = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
@@ -254,7 +277,8 @@ public class CommandOptions {
         return updatePlan(planId, planUpdateJson);
     }
 
-    private boolean updatePlanFromTokens(String planId, String[] tokens) {
+    @Override
+    public boolean updatePlanFromTokens(String planId, String[] tokens) {
         PlanDetail plan;
         try {
             plan = PlanDetail.fromTokens(tokens);
@@ -267,6 +291,7 @@ public class CommandOptions {
         return updatePlan(planId, planUpdateJson);
     }
 
+    @Override
     public boolean updatePlan(String planId, String planUpdateJson) {
         try {
             this.planRepository.updatePlan(planId, planUpdateJson);
@@ -279,7 +304,8 @@ public class CommandOptions {
         return true;
     }
 
-    private boolean deletePlan(String planId) {
+    @Override
+    public boolean deletePlan(String planId) {
         try {
             this.planRepository.deletePlan(planId);
         } catch (PlanRepository.PlanNotFoundException e) {
@@ -291,7 +317,8 @@ public class CommandOptions {
         return true;
     }
 
-    private boolean downloadPlan(String planId, String outName) {
+    @Override
+    public boolean downloadPlan(String planId, String outName) {
         if (Files.exists(Path.of(outName))) {
             System.err.println(String.format("File %s already exists.", outName));
             return false;
@@ -308,7 +335,8 @@ public class CommandOptions {
         return true;
     }
 
-    private boolean appendActivityInstances(String planId, String path) {
+    @Override
+    public boolean appendActivityInstances(String planId, String path) {
         String instanceListJson;
         try {
             instanceListJson = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
@@ -328,7 +356,8 @@ public class CommandOptions {
         return true;
     }
 
-    private boolean displayActivityInstance(String planId, String activityId) {
+    @Override
+    public boolean displayActivityInstance(String planId, String activityId) {
         String activityInstanceJson;
         try {
             activityInstanceJson = this.planRepository.getActivityInstance(planId, activityId);
@@ -342,7 +371,8 @@ public class CommandOptions {
         return true;
     }
 
-    private boolean updateActivityInstance(String planId, String activityId, String[] tokens) {
+    @Override
+    public boolean updateActivityInstance(String planId, String activityId, String[] tokens) {
         ActivityInstance activityInstance;
         try {
             activityInstance = ActivityInstance.fromTokens(tokens);
@@ -364,7 +394,8 @@ public class CommandOptions {
         return true;
     }
 
-    private boolean deleteActivityInstance(String planId, String activityId) {
+    @Override
+    public boolean deleteActivityInstance(String planId, String activityId) {
         try {
             this.planRepository.deleteActivityInstance(planId, activityId);
         } catch (PlanRepository.PlanNotFoundException | PlanRepository.ActivityInstanceNotFoundException e) {
@@ -376,7 +407,8 @@ public class CommandOptions {
         return true;
     }
 
-    private boolean listPlans() {
+    @Override
+    public boolean listPlans() {
         String planListJson = this.planRepository.getPlanList();
 
         System.out.println("SUCCESS: Plan list retrieval successful.");
@@ -384,7 +416,8 @@ public class CommandOptions {
         return true;
     }
 
-    private boolean createAdaptation(String path, String[] tokens) {
+    @Override
+    public boolean createAdaptation(String path, String[] tokens) {
         Adaptation adaptation;
         try {
             adaptation = Adaptation.fromTokens(tokens);
@@ -411,7 +444,8 @@ public class CommandOptions {
         return true;
     }
 
-    private boolean deleteAdaptation(String adaptationId) {
+    @Override
+    public boolean deleteAdaptation(String adaptationId) {
         try {
             this.adaptationRepository.deleteAdaptation(adaptationId);
         } catch (AdaptationRepository.AdaptationNotFoundException e) {
@@ -423,7 +457,8 @@ public class CommandOptions {
         return true;
     }
 
-    private boolean displayAdaptation(String adaptationId) {
+    @Override
+    public boolean displayAdaptation(String adaptationId) {
         Adaptation adaptation;
         try {
             adaptation = this.adaptationRepository.getAdaptation(adaptationId);
@@ -437,7 +472,8 @@ public class CommandOptions {
         return true;
     }
 
-    private boolean listAdaptations() {
+    @Override
+    public boolean listAdaptations() {
         String adaptationListJson = this.adaptationRepository.getAdaptationList();
 
         System.out.println("SUCCESS: Adaptation list retrieval successful.");
@@ -445,7 +481,8 @@ public class CommandOptions {
         return true;
     }
 
-    private boolean listActivityTypes(String adaptationId) {
+    @Override
+    public boolean listActivityTypes(String adaptationId) {
         String activityTypeListJson;
         try {
             activityTypeListJson = this.adaptationRepository.getActivityTypes(adaptationId);
@@ -459,7 +496,8 @@ public class CommandOptions {
         return true;
     }
 
-    private boolean displayActivityType(String adaptationId, String activityType) {
+    @Override
+    public boolean displayActivityType(String adaptationId, String activityType) {
         String activityTypeJson;
         try {
             activityTypeJson = this.adaptationRepository.getActivityType(adaptationId, activityType);
@@ -473,7 +511,8 @@ public class CommandOptions {
         return true;
     }
 
-    private boolean convertApfFile(String input, String output, String dir, String[] tokens) {
+    @Override
+    public boolean convertApfFile(String input, String output, String dir, String[] tokens) {
 
         /* Parse adaptation and plan file */
         Plan plan;
