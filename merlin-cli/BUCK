@@ -1,6 +1,7 @@
 java_library(
     name = "lib",
-    srcs = glob(["src/main/**"]),
+    srcs = glob(["src/main/**/*"]),
+    extra_arguments = ["-Xlint:all"],
     deps = [
         "//third-party:commons-cli",
         "//third-party:commons-logging",
@@ -10,7 +11,7 @@ java_library(
         "//third-party:httpmime",
 
         # Modules
-        "//apgen-parser:lib"
+        "//apgen-parser:lib",
     ],
 )
 
@@ -18,5 +19,25 @@ java_binary(
     name = "merlin-cli",
     deps = [":lib"],
     main_class = "gov.nasa.jpl.ammos.mpsa.aerie.merlincli.MainCLI",
-    visibility = ['PUBLIC'],
+)
+
+java_library(
+    name = "tests-lib",
+    srcs = glob(["src/test/**/*"]),
+    extra_arguments = ["-Xlint:all"],
+    deps = [
+        ":lib",
+
+        "//third-party:assertj-core",
+        "//third-party:gson",
+        "//third-party:httpclient",
+        "//third-party:httpcore",
+        "//third-party:junit-jupiter",
+    ],
+)
+
+java_binary(
+    name = "unit-tests",
+    deps = [":tests-lib"],
+    main_class = "gov.nasa.jpl.ammos.mpsa.aerie.merlincli.TestMain",
 )
