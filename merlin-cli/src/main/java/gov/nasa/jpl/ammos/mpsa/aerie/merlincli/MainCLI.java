@@ -9,7 +9,7 @@ import org.apache.http.impl.client.HttpClients;
 
 public class MainCLI {
 
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         final PlanRepository planRepository = new RemotePlanRepository(new HttpClientHandler(HttpClients.createDefault()));
         final AdaptationRepository adaptationRepository = new RemoteAdaptationRepository(new HttpClientHandler(HttpClients.createDefault()));
         final AerieCommandReceiver commandReceiver = new AerieCommandReceiver(planRepository, adaptationRepository);
