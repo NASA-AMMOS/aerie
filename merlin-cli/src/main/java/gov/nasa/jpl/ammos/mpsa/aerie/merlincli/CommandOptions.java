@@ -17,7 +17,6 @@ public class CommandOptions {
     private OptionGroup requiredGroup = new OptionGroup();
     private OptionGroup planIdRequiredGroup = new OptionGroup();
     private OptionGroup adaptationIdRequiredGroup = new OptionGroup();
-    private boolean lastCommandStatus;
 
     public CommandOptions() {
         buildArguments();
@@ -77,7 +76,7 @@ public class CommandOptions {
         options.addOptionGroup(requiredGroup);
     }
 
-    public void parse(final MerlinCommandReceiver commandReceiver, final String[] args) {
+    public boolean parse(final MerlinCommandReceiver commandReceiver, final String[] args) {
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = null;
 
@@ -86,24 +85,23 @@ public class CommandOptions {
 
             if (cmd.hasOption("h")) {
                 printUsage();
-                lastCommandStatus = true;
-                return;
+                return true;
             }
 
             // TODO: Eventually, we should probably check that other options aren't specified, or at least point out
             //       that we ignore them if they are
             if (requiredGroup.getSelected().equals("plans")) {
-                lastCommandStatus = commandReceiver.listPlans();
-                return;
+                commandReceiver.listPlans();
+                return true;
             }
             else if (requiredGroup.getSelected().equals("adaptations")) {
-                lastCommandStatus = commandReceiver.listAdaptations();
-                return;
+                commandReceiver.listAdaptations();
+                return true;
             }
             else if (requiredGroup.getSelected().equals("P")) {
                 String path = cmd.getOptionValue("P");
-                lastCommandStatus = commandReceiver.createPlan(path);
-                return;
+                commandReceiver.createPlan(path);
+                return true;
             }
             else if (requiredGroup.getSelected().equals("A")) {
                 String[] params = cmd.getOptionValues("A");
@@ -112,72 +110,78 @@ public class CommandOptions {
                 }
                 String path = params[0];
                 String[] tokens = Arrays.copyOfRange(args, 1, args.length);
-                lastCommandStatus = commandReceiver.createAdaptation(path, tokens);
-                return;
+                commandReceiver.createAdaptation(path, tokens);
+                return true;
             }
             else if (requiredGroup.getSelected().equals("p")) {
                 String planId = cmd.getOptionValue("p");
 
                 if (cmd.hasOption("U")) {
                     String path = cmd.getOptionValue("U");
-                    lastCommandStatus = commandReceiver.updatePlanFromFile(planId, path);
-                    return;
+                    commandReceiver.updatePlanFromFile(planId, path);
+                    return true;
                 }
                 else if (cmd.hasOption("update-plan")) {
                     String[] tokens = cmd.getOptionValues("update-plan");
-                    lastCommandStatus = commandReceiver.updatePlanFromTokens(planId, tokens);
-                    return;
+                    commandReceiver.updatePlanFromTokens(planId, tokens);
+                    return true;
                 }
                 else if (cmd.hasOption("delete-plan")) {
-                    lastCommandStatus = commandReceiver.deletePlan(planId);
-                    return;
+                    commandReceiver.deletePlan(planId);
+                    return true;
                 }
                 else if (cmd.hasOption("pull")) {
                     String outName = cmd.getOptionValue("pull");
-                    lastCommandStatus = commandReceiver.downloadPlan(planId, outName);
-                    return;
+                    commandReceiver.downloadPlan(planId, outName);
+                    return true;
                 }
                 else if (cmd.hasOption("append-activities")) {
                     String path = cmd.getOptionValue("append-activities");
-                    lastCommandStatus = commandReceiver.appendActivityInstances(planId, path);
-                    return;
+                    commandReceiver.appendActivityInstances(planId, path);
+                    return true;
                 }
                 else if (cmd.hasOption("display-activity")) {
                     String activityId = cmd.getOptionValue("display-activity");
-                    lastCommandStatus = commandReceiver.displayActivityInstance(planId, activityId);
-                    return;
+                    commandReceiver.displayActivityInstance(planId, activityId);
+                    return true;
                 }
                 else if (cmd.hasOption("update-activity")) {
                     String[] params = cmd.getOptionValues("update-activity");
                     String activityId = params[0];
                     String[] tokens = Arrays.copyOfRange(params, 1, params.length);
-                    lastCommandStatus = commandReceiver.updateActivityInstance(planId, activityId, tokens);
-                    return;
+                    commandReceiver.updateActivityInstance(planId, activityId, tokens);
+                    return true;
                 }
                 else if (cmd.hasOption("delete-activity")) {
                     String activityId = cmd.getOptionValue("delete-activity");
-                    lastCommandStatus = commandReceiver.deleteActivityInstance(planId, activityId);
-                    return;
+                    commandReceiver.deleteActivityInstance(planId, activityId);
+                    return true;
+                }
+                else {
+                    return false;
                 }
             }
             else if (requiredGroup.getSelected().equals("a")) {
                 String adaptationId = cmd.getOptionValue("a");
                 if (cmd.hasOption("delete-adaptation")) {
-                    lastCommandStatus = commandReceiver.deleteAdaptation(adaptationId);
-                    return;
+                    commandReceiver.deleteAdaptation(adaptationId);
+                    return true;
                 }
                 else if (cmd.hasOption("display")) {
-                    lastCommandStatus = commandReceiver.displayAdaptation(adaptationId);
-                    return;
+                    commandReceiver.displayAdaptation(adaptationId);
+                    return true;
                 }
                 else if (cmd.hasOption("activities")) {
-                    lastCommandStatus = commandReceiver.listActivityTypes(adaptationId);
-                    return;
+                    commandReceiver.listActivityTypes(adaptationId);
+                    return true;
                 }
                 else if (cmd.hasOption("activity")) {
                     String activityId = cmd.getOptionValue("activity");
-                    lastCommandStatus = commandReceiver.displayActivityType(adaptationId, activityId);
-                    return;
+                    commandReceiver.displayActivityType(adaptationId, activityId);
+                    return true;
+                }
+                else {
+                    return false;
                 }
             }
             else if (requiredGroup.getSelected().equals("c")) {
@@ -186,22 +190,20 @@ public class CommandOptions {
                     throw new InvalidNumberOfArgsException("Option 'apf' requires three arguments <infile> <outfile> <dir> <tokens>");
                 }
                 String[] tokens = Arrays.copyOfRange(params, 3, params.length);
-                lastCommandStatus = commandReceiver.convertApfFile(params[0], params[1], params[2], tokens);
-                return;
+                commandReceiver.convertApfFile(params[0], params[1], params[2], tokens);
+                return true;
             }
             else {
                 System.out.println("No required argument specified.");
+                printUsage();
+                return false;
             }
         }
         catch (ParseException | InvalidNumberOfArgsException e) {
             System.err.println("Failed to parse command line properties: " + e);
+            printUsage();
+            return false;
         }
-        lastCommandStatus = false;
-        printUsage();
-    }
-
-    public boolean lastCommandSuccessful() {
-        return this.lastCommandStatus;
     }
 
     private void printUsage() {
