@@ -36,13 +36,13 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
     }
 
     @Override
-    public boolean createPlan(String path) {
+    public void createPlan(String path) {
         String planJson;
         try {
             planJson = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
         } catch (IOException e) {
             System.err.println(e);
-            return false;
+            return;
         }
 
         String id;
@@ -50,128 +50,121 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
             id = this.planRepository.createPlan(planJson);
         } catch (PlanRepository.InvalidPlanException | PlanRepository.InvalidJsonException e) {
             System.err.println(e);
-            return false;
+            return;
         }
 
         System.out.println(String.format("CREATED: Plan successfully created at: %s.", id));
-        return true;
     }
 
     @Override
-    public boolean updatePlanFromFile(String planId, String path) {
+    public void updatePlanFromFile(String planId, String path) {
         String planUpdateJson;
         try {
             planUpdateJson = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
         } catch (IOException e) {
             System.err.println(e);
-            return false;
+            return;
         }
 
-        return updatePlan(planId, planUpdateJson);
+        updatePlan(planId, planUpdateJson);
     }
 
     @Override
-    public boolean updatePlanFromTokens(String planId, String[] tokens) {
+    public void updatePlanFromTokens(String planId, String[] tokens) {
         PlanDetail plan;
         try {
             plan = PlanDetail.fromTokens(tokens);
         } catch (InvalidTokenException e) {
             System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
-            return false;
+            return;
         }
 
         String planUpdateJson = JsonUtilities.convertPlanToJson(plan);
-        return updatePlan(planId, planUpdateJson);
+        updatePlan(planId, planUpdateJson);
     }
 
-    @Override
-    public boolean updatePlan(String planId, String planUpdateJson) {
+    private void updatePlan(String planId, String planUpdateJson) {
         try {
             this.planRepository.updatePlan(planId, planUpdateJson);
         } catch (PlanRepository.InvalidPlanException | PlanRepository.PlanNotFoundException | PlanRepository.InvalidJsonException e) {
             System.err.println(e);
-            return false;
+            return;
         }
 
         System.out.println("SUCCESS: Plan successfully updated.");
-        return true;
     }
 
     @Override
-    public boolean deletePlan(String planId) {
+    public void deletePlan(String planId) {
         try {
             this.planRepository.deletePlan(planId);
         } catch (PlanRepository.PlanNotFoundException e) {
             System.err.println(e);
-            return false;
+            return;
         }
 
         System.out.println("SUCCESS: Plan successfully deleted.");
-        return true;
     }
 
     @Override
-    public boolean downloadPlan(String planId, String outName) {
+    public void downloadPlan(String planId, String outName) {
         if (Files.exists(Path.of(outName))) {
             System.err.println(String.format("File %s already exists.", outName));
-            return false;
+            return;
         }
 
         try {
             this.planRepository.downloadPlan(planId, outName);
         } catch (PlanRepository.PlanNotFoundException e) {
             System.err.println(e);
-            return false;
+            return;
         }
 
         System.out.println("SUCCESS: Plan successfully downloaded.");
-        return true;
     }
 
     @Override
-    public boolean appendActivityInstances(String planId, String path) {
+    public void appendActivityInstances(String planId, String path) {
         String instanceListJson;
         try {
             instanceListJson = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
         } catch (IOException e) {
             System.err.println(e);
-            return false;
+            return;
         }
 
         try {
             this.planRepository.appendActivityInstances(planId, instanceListJson);
         } catch (PlanRepository.PlanNotFoundException | PlanRepository.InvalidJsonException | PlanRepository.InvalidPlanException e) {
             System.err.println(e);
-            return false;
+            return;
         }
 
         System.out.println("CREATED: Activities successfully created.");
-        return true;
     }
 
     @Override
-    public boolean displayActivityInstance(String planId, String activityId) {
+    public void displayActivityInstance(String planId, String activityId) {
         String activityInstanceJson;
         try {
             activityInstanceJson = this.planRepository.getActivityInstance(planId, activityId);
         } catch (PlanRepository.PlanNotFoundException | PlanRepository.ActivityInstanceNotFoundException e) {
             System.err.println(e);
-            return false;
+            return;
         }
 
         System.out.println("SUCCESS: Activity retrieval successful.");
         System.out.println(activityInstanceJson);
-        return true;
     }
 
     @Override
-    public boolean updateActivityInstance(String planId, String activityId, String[] tokens) {
+    public void updateActivityInstance(String planId, String activityId, String[] tokens) {
         ActivityInstance activityInstance;
         try {
             activityInstance = ActivityInstance.fromTokens(tokens);
         } catch (InvalidTokenException e) {
             System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
-            return false;
+            return;
         }
 
         String activityUpdateJson = JsonUtilities.convertActivityInstanceToJson(activityInstance);
@@ -180,49 +173,46 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
             this.planRepository.updateActivityInstance(planId, activityId, activityUpdateJson);
         } catch (PlanRepository.PlanNotFoundException | PlanRepository.ActivityInstanceNotFoundException | PlanRepository.InvalidJsonException | PlanRepository.InvalidActivityInstanceException e) {
             System.err.println(e);
-            return false;
+            return;
         }
 
         System.out.println("SUCCESS: Activity successfully updated.");
-        return true;
     }
 
     @Override
-    public boolean deleteActivityInstance(String planId, String activityId) {
+    public void deleteActivityInstance(String planId, String activityId) {
         try {
             this.planRepository.deleteActivityInstance(planId, activityId);
         } catch (PlanRepository.PlanNotFoundException | PlanRepository.ActivityInstanceNotFoundException e) {
             System.err.println(e);
-            return false;
+            return;
         }
 
         System.out.println("SUCCESS: Activity successfully deleted.");
-        return true;
     }
 
     @Override
-    public boolean listPlans() {
+    public void listPlans() {
         String planListJson = this.planRepository.getPlanList();
 
         System.out.println("SUCCESS: Plan list retrieval successful.");
         System.out.println(planListJson);
-        return true;
     }
 
     @Override
-    public boolean createAdaptation(String path, String[] tokens) {
+    public void createAdaptation(String path, String[] tokens) {
         Adaptation adaptation;
         try {
             adaptation = Adaptation.fromTokens(tokens);
         } catch (InvalidTokenException e) {
             System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
-            return false;
+            return;
         }
 
         File jarFile = new File(path);
         if (!jarFile.exists()) {
             System.err.println(String.format("File not found: %s", path));
-            return false;
+            return;
         }
 
         String id;
@@ -230,82 +220,76 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
             id = this.adaptationRepository.createAdaptation(adaptation, jarFile);
         } catch (AdaptationRepository.InvalidAdaptationException e) {
             System.err.println(e);
-            return false;
+            return;
         }
 
         System.out.println(String.format("CREATED: Adaptation successfully created at: %s.", id));
-        return true;
     }
 
     @Override
-    public boolean deleteAdaptation(String adaptationId) {
+    public void deleteAdaptation(String adaptationId) {
         try {
             this.adaptationRepository.deleteAdaptation(adaptationId);
         } catch (AdaptationRepository.AdaptationNotFoundException e) {
             System.err.println(e);
-            return false;
+            return;
         }
 
         System.out.println("SUCCESS: Adaptation successfully deleted.");
-        return true;
     }
 
     @Override
-    public boolean displayAdaptation(String adaptationId) {
+    public void displayAdaptation(String adaptationId) {
         Adaptation adaptation;
         try {
             adaptation = this.adaptationRepository.getAdaptation(adaptationId);
         } catch (AdaptationRepository.AdaptationNotFoundException e) {
             System.err.println(e);
-            return false;
+            return;
         }
 
         System.out.println("SUCCESS: Adaptation retrieval successful.");
         System.out.println(JsonUtilities.convertAdaptationToJson(adaptation));
-        return true;
     }
 
     @Override
-    public boolean listAdaptations() {
+    public void listAdaptations() {
         String adaptationListJson = this.adaptationRepository.getAdaptationList();
 
         System.out.println("SUCCESS: Adaptation list retrieval successful.");
         System.out.println(adaptationListJson);
-        return true;
     }
 
     @Override
-    public boolean listActivityTypes(String adaptationId) {
+    public void listActivityTypes(String adaptationId) {
         String activityTypeListJson;
         try {
             activityTypeListJson = this.adaptationRepository.getActivityTypes(adaptationId);
         } catch (AdaptationRepository.AdaptationNotFoundException e) {
             System.err.println(e);
-            return false;
+            return;
         }
 
         System.out.println("SUCCESS: Activity type list retrieval successful.");
         System.out.println(activityTypeListJson);
-        return true;
     }
 
     @Override
-    public boolean displayActivityType(String adaptationId, String activityType) {
+    public void displayActivityType(String adaptationId, String activityType) {
         String activityTypeJson;
         try {
             activityTypeJson = this.adaptationRepository.getActivityType(adaptationId, activityType);
         } catch (AdaptationRepository.AdaptationNotFoundException | AdaptationRepository.ActivityTypeNotDefinedException e) {
             System.err.println(e);
-            return false;
+            return;
         }
 
         System.out.println("SUCCESS: Activity type retrieval successful.");
         System.out.println(activityTypeJson);
-        return true;
     }
 
     @Override
-    public boolean convertApfFile(String input, String output, String dir, String[] tokens) {
+    public void convertApfFile(String input, String output, String dir, String[] tokens) {
 
         /* Parse adaptation and plan file */
         Plan plan;
@@ -314,10 +298,10 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
             plan = ApfParser.parseFile(Path.of(input), adaptation);
         } catch (AdaptationParsingException | PlanParsingException e) {
             System.err.println(e.getMessage());
-            return false;
+            return;
         } catch (DirectoryNotFoundException e) {
             System.err.println(String.format("Adaptation directory not found: %s", e.getMessage()));
-            return false;
+            return;
         }
 
         /* Parse tokens for plan metadata */
@@ -338,8 +322,6 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
         /* Build the plan JSON and write it to the specified output file */
         if (JsonUtilities.writePlanToJSON(plan, Path.of(output), adaptationId, startTimestamp, name)) {
             System.out.println(String.format("SUCCESS: Plan file written to %s", output));
-            return true;
         }
-        return false;
     }
 }
