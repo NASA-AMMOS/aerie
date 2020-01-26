@@ -40,19 +40,15 @@ interface MerlinCommandReceiver {
     boolean convertApfFile(String input, String output, String dir, String[] tokens);
 }
 
-public class CommandOptions implements MerlinCommandReceiver {
-    private PlanRepository planRepository;
-    private AdaptationRepository adaptationRepository;
+public class CommandOptions {
     private Options options = new Options();
     private OptionGroup requiredGroup = new OptionGroup();
     private OptionGroup planIdRequiredGroup = new OptionGroup();
     private OptionGroup adaptationIdRequiredGroup = new OptionGroup();
     private boolean lastCommandStatus;
 
-    public CommandOptions(PlanRepository planRepository, AdaptationRepository adaptationRepository) {
+    public CommandOptions() {
         buildArguments();
-        this.planRepository = planRepository;
-        this.adaptationRepository = adaptationRepository;
     }
 
     public void buildArguments() {
@@ -109,7 +105,7 @@ public class CommandOptions implements MerlinCommandReceiver {
         options.addOptionGroup(requiredGroup);
     }
 
-    public void parse(final String[] args) {
+    public void parse(final MerlinCommandReceiver commandReceiver, final String[] args) {
 
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = null;
@@ -126,16 +122,16 @@ public class CommandOptions implements MerlinCommandReceiver {
             // TODO: Eventually, we should probably check that other options aren't specified, or at least point out
             //       that we ignore them if they are
             if (requiredGroup.getSelected().equals("plans")) {
-                lastCommandStatus = listPlans();
+                lastCommandStatus = commandReceiver.listPlans();
                 return;
             }
             else if (requiredGroup.getSelected().equals("adaptations")) {
-                lastCommandStatus = listAdaptations();
+                lastCommandStatus = commandReceiver.listAdaptations();
                 return;
             }
             else if (requiredGroup.getSelected().equals("P")) {
                 String path = cmd.getOptionValue("P");
-                lastCommandStatus = createPlan(path);
+                lastCommandStatus = commandReceiver.createPlan(path);
                 return;
             }
             else if (requiredGroup.getSelected().equals("A")) {
@@ -145,7 +141,7 @@ public class CommandOptions implements MerlinCommandReceiver {
                 }
                 String path = params[0];
                 String[] tokens = Arrays.copyOfRange(args, 1, args.length);
-                lastCommandStatus = createAdaptation(path, tokens);
+                lastCommandStatus = commandReceiver.createAdaptation(path, tokens);
                 return;
             }
             else if (requiredGroup.getSelected().equals("p")) {
@@ -153,63 +149,63 @@ public class CommandOptions implements MerlinCommandReceiver {
 
                 if (cmd.hasOption("U")) {
                     String path = cmd.getOptionValue("U");
-                    lastCommandStatus = updatePlanFromFile(planId, path);
+                    lastCommandStatus = commandReceiver.updatePlanFromFile(planId, path);
                     return;
                 }
                 else if (cmd.hasOption("update-plan")) {
                     String[] tokens = cmd.getOptionValues("update-plan");
-                    lastCommandStatus = updatePlanFromTokens(planId, tokens);
+                    lastCommandStatus = commandReceiver.updatePlanFromTokens(planId, tokens);
                     return;
                 }
                 else if (cmd.hasOption("delete-plan")) {
-                    lastCommandStatus = deletePlan(planId);
+                    lastCommandStatus = commandReceiver.deletePlan(planId);
                     return;
                 }
                 else if (cmd.hasOption("pull")) {
                     String outName = cmd.getOptionValue("pull");
-                    lastCommandStatus = downloadPlan(planId, outName);
+                    lastCommandStatus = commandReceiver.downloadPlan(planId, outName);
                     return;
                 }
                 else if (cmd.hasOption("append-activities")) {
                     String path = cmd.getOptionValue("append-activities");
-                    lastCommandStatus = appendActivityInstances(planId, path);
+                    lastCommandStatus = commandReceiver.appendActivityInstances(planId, path);
                     return;
                 }
                 else if (cmd.hasOption("display-activity")) {
                     String activityId = cmd.getOptionValue("display-activity");
-                    lastCommandStatus = displayActivityInstance(planId, activityId);
+                    lastCommandStatus = commandReceiver.displayActivityInstance(planId, activityId);
                     return;
                 }
                 else if (cmd.hasOption("update-activity")) {
                     String[] params = cmd.getOptionValues("update-activity");
                     String activityId = params[0];
                     String[] tokens = Arrays.copyOfRange(params, 1, params.length);
-                    lastCommandStatus = updateActivityInstance(planId, activityId, tokens);
+                    lastCommandStatus = commandReceiver.updateActivityInstance(planId, activityId, tokens);
                     return;
                 }
                 else if (cmd.hasOption("delete-activity")) {
                     String activityId = cmd.getOptionValue("delete-activity");
-                    lastCommandStatus = deleteActivityInstance(planId, activityId);
+                    lastCommandStatus = commandReceiver.deleteActivityInstance(planId, activityId);
                     return;
                 }
             }
             else if (requiredGroup.getSelected().equals("a")) {
                 String adaptationId = cmd.getOptionValue("a");
                 if (cmd.hasOption("delete-adaptation")) {
-                    lastCommandStatus = deleteAdaptation(adaptationId);
+                    lastCommandStatus = commandReceiver.deleteAdaptation(adaptationId);
                     return;
                 }
                 else if (cmd.hasOption("display")) {
-                    lastCommandStatus = displayAdaptation(adaptationId);
+                    lastCommandStatus = commandReceiver.displayAdaptation(adaptationId);
                     return;
                 }
                 else if (cmd.hasOption("activities")) {
-                    lastCommandStatus = listActivityTypes(adaptationId);
+                    lastCommandStatus = commandReceiver.listActivityTypes(adaptationId);
                     return;
                 }
                 else if (cmd.hasOption("activity")) {
                     String activityId = cmd.getOptionValue("activity");
-                    lastCommandStatus = displayActivityType(adaptationId, activityId);
+                    lastCommandStatus = commandReceiver.displayActivityType(adaptationId, activityId);
                     return;
                 }
             }
@@ -219,7 +215,7 @@ public class CommandOptions implements MerlinCommandReceiver {
                     throw new InvalidNumberOfArgsException("Option 'apf' requires three arguments <infile> <outfile> <dir> <tokens>");
                 }
                 String[] tokens = Arrays.copyOfRange(params, 3, params.length);
-                lastCommandStatus = convertApfFile(params[0], params[1], params[2], tokens);
+                lastCommandStatus = commandReceiver.convertApfFile(params[0], params[1], params[2], tokens);
                 return;
             }
             else {
@@ -240,6 +236,17 @@ public class CommandOptions implements MerlinCommandReceiver {
     private void printUsage() {
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("Merlin Adaptation", options);
+    }
+}
+
+
+class AerieCommandReceiver implements MerlinCommandReceiver {
+    private final PlanRepository planRepository;
+    private final AdaptationRepository adaptationRepository;
+
+    public AerieCommandReceiver(final PlanRepository planRepository, final AdaptationRepository adaptationRepository) {
+        this.planRepository = planRepository;
+        this.adaptationRepository = adaptationRepository;
     }
 
     @Override
