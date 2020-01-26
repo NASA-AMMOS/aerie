@@ -12,9 +12,9 @@ public class MainCLI {
     public static void main(String args[]) {
         final PlanRepository planRepository = new RemotePlanRepository(new HttpClientHandler(HttpClients.createDefault()));
         final AdaptationRepository adaptationRepository = new RemoteAdaptationRepository(new HttpClientHandler(HttpClients.createDefault()));
-        final AerieCommandReceiver interpreter = new AerieCommandReceiver(planRepository, adaptationRepository);
+        final AerieCommandReceiver commandReceiver = new AerieCommandReceiver(planRepository, adaptationRepository);
 
         final CommandOptions commandOptions = new CommandOptions();
-        commandOptions.parse(interpreter, args);
+        commandOptions.parse(commandReceiver, args);
     }
 }
