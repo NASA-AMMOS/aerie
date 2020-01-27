@@ -64,7 +64,7 @@ public class DataSystemModel implements SystemModel, MissionModelGlue {
     @Override
     public void registerSelf() {
        registry.registerGetter(this, GlobalPronouns.dataRate, Double.class, this::getDataRate);
-       registry.registerSetter(this, GlobalPronouns.dataRate, this::setDataRate);
+       registry.registerSetter(this, GlobalPronouns.dataRate, Double.class, this::setDataRate);
 
 
 

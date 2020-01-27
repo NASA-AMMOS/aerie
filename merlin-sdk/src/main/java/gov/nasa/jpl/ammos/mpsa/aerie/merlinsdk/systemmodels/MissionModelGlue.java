@@ -8,9 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 
 class Getter<T> {
@@ -27,14 +25,14 @@ class Setter<T> {
     public final Class<T> klass;
     public final BiConsumer<Slice, T> setter;
 
-    public Getter(Class<T> klass, BiConsumer<Slice, T> setter) {
+    public Setter(Class<T> klass, BiConsumer<Slice, T> setter) {
         this.klass = klass;
         this.setter = setter;
     }
 
     public void accept(Slice slice, Object x) {
         if (!klass.isInstance(x)) {
-            throw VeryBadThing("Type mismatch!");
+            throw new ClassCastException("Type mismatch!");
         }
 
         setter.accept(slice, klass.cast(x));
@@ -53,16 +51,21 @@ public class MissionModelGlue {
 //        private Map<Pair<SystemModel, String>, Function<Slice,?>> modelToGetter = new HashMap<>();
 
         //returns no value takes in two values (setter)
-        private Map<Pair<SystemModel, String>, BiConsumer<Slice,?>> modelToSetter = new HashMap<>();
+        private Map<Pair<SystemModel, String>, Setter<?>> modelToSetter = new HashMap<>();
 
         public Getter getGetter(SystemModel model,  String stateName){
             Pair<SystemModel, String> key = new Pair<>(model, stateName);
             return modelToGetter.get(key);
         }
 
-        public BiConsumer<Slice,?> getSetter(SystemModel model,  String stateName){
+        public Setter getSetter(SystemModel model,  String stateName){
             Pair<SystemModel, String> key = new Pair<>(model, stateName);
             return modelToSetter.get(key);
+        }
+
+        public <T> BiConsumer<Slice,T> getSetter2(SystemModel model,  Class<T> resourceType, String stateName){
+            Pair<SystemModel, String> key = new Pair<>(model, stateName);
+            return (BiConsumer<Slice, T>) modelToSetter.get(key);
         }
 
         public void addEvent(SystemModel model,  Event<?> event){
@@ -81,10 +84,22 @@ public class MissionModelGlue {
             modelToGetter.put(key, new Getter<>(resourceType, getter));
         }
 
+        public <T> void registerSetter(SystemModel model, String stateName, Class<T> resourceType, BiConsumer<Slice,T> setter){
+            Pair<SystemModel, String> key = new Pair<>(model, stateName);
+            modelToSetter.put(key, new Setter<>(resourceType, setter));
+        }
+
+        /*public void setterAccept(SystemModel model,  String name, Slice slice, ? value){
+            getSetter(model, name).accept(slice, value);
+        }*/
+
+        /*
         public void registerSetter(SystemModel model,  String stateName, BiConsumer<Slice,?> setter){
             Pair<SystemModel, String> key = new Pair<>(model, stateName);
             modelToSetter.put(key, setter);
-        }
+        }*/
+
+
 
 
         public List<Event> getEventLog(SystemModel model){
@@ -140,7 +155,10 @@ public class MissionModelGlue {
             //BiConsumer<Slice, ?> setter = registry.getSetter(model, x.name());
             //setter.accept(slice, x.value());
 
-            registry.getSetter(model, x.name()).accept(slice, x.value());
+             registry.getSetter(model, x.name()).accept(slice, x.value());
+
+             //registry.getSetter2(model, Double.class, x.name()).accept(slice, x.value());
+
 
 
             //registry.modelToSetter.get(model, x.name()).accept(slice, x.value());
