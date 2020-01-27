@@ -43,14 +43,10 @@ public class MissionModelGlue {
 
     public class Registry{
 
-
         private Map<SystemModel, List<Event>> modelToEventLog = new HashMap<>();
 
-        //returns one value takes in one value (getter)
         private Map<Pair<SystemModel, String>, Getter<?>> modelToGetter = new HashMap<>();
-//        private Map<Pair<SystemModel, String>, Function<Slice,?>> modelToGetter = new HashMap<>();
 
-        //returns no value takes in two values (setter)
         private Map<Pair<SystemModel, String>, Setter<?>> modelToSetter = new HashMap<>();
 
         public Getter getGetter(SystemModel model,  String stateName){
@@ -61,11 +57,6 @@ public class MissionModelGlue {
         public Setter getSetter(SystemModel model,  String stateName){
             Pair<SystemModel, String> key = new Pair<>(model, stateName);
             return modelToSetter.get(key);
-        }
-
-        public <T> BiConsumer<Slice,T> getSetter2(SystemModel model,  Class<T> resourceType, String stateName){
-            Pair<SystemModel, String> key = new Pair<>(model, stateName);
-            return (BiConsumer<Slice, T>) modelToSetter.get(key);
         }
 
         public void addEvent(SystemModel model,  Event<?> event){
@@ -79,116 +70,43 @@ public class MissionModelGlue {
             }
         }
 
-        public <T> void registerGetter(SystemModel model,  String stateName, Class<T> resourceType, Function<Slice, T> getter){
+        public <T> void registerGetter(SystemModel model,  String stateName, Class<T> resourceType,
+                                       Function<Slice, T> getter){
             Pair<SystemModel, String> key = new Pair<>(model, stateName);
             modelToGetter.put(key, new Getter<>(resourceType, getter));
         }
 
-        public <T> void registerSetter(SystemModel model, String stateName, Class<T> resourceType, BiConsumer<Slice,T> setter){
+        public <T> void registerSetter(SystemModel model, String stateName, Class<T> resourceType,
+                                       BiConsumer<Slice,T> setter){
             Pair<SystemModel, String> key = new Pair<>(model, stateName);
             modelToSetter.put(key, new Setter<>(resourceType, setter));
         }
 
-        /*public void setterAccept(SystemModel model,  String name, Slice slice, ? value){
-            getSetter(model, name).accept(slice, value);
-        }*/
-
-        /*
-        public void registerSetter(SystemModel model,  String stateName, BiConsumer<Slice,?> setter){
-            Pair<SystemModel, String> key = new Pair<>(model, stateName);
-            modelToSetter.put(key, setter);
-        }*/
-
-
-
+        public <T> void provideSettable(SystemModel model, String stateName, Class<T> resourceType,
+                                        BiConsumer<Slice,T> setter, Function<Slice,T> getter){
+            registerGetter(model, stateName, resourceType, getter);
+            registerSetter(model, stateName, resourceType, setter);
+        }
 
         public List<Event> getEventLog(SystemModel model){
             return modelToEventLog.get(model);
         }
-
-
-        //private static final Map<Pair<SystemModel, String>, Supplier<?>> modelToSupplierMap = new HashMap<>();
-        //private static final Map<Pair<SystemModel, String>, Consumer<?>> modelToConsumerMap = new HashMap<>();
-
-
-/*
-
-        public static void provide(SystemModel model, String stateName, Supplier supplier) {
-            Pair<SystemModel, String> key = new Pair<>(model, stateName);
-            modelToSupplierMap.put(key, supplier);
-
-        }
-
-        public static void provideDouble(SystemModel model,  String stateName, Consumer<Double> consumer){
-            Pair<SystemModel, String> key = new Pair<>(model, stateName);
-            modelToConsumerMap.put(key, consumer);
-        }
-
-        public static void provideString(SystemModel model,  String stateName, Consumer<String> consumer){
-            Pair<SystemModel, String> key = new Pair<>(model, stateName);
-            modelToConsumerMap.put(key, consumer);
-        }
-
-        public static Supplier<?> getSupplier(SystemModel model, String stateName){
-            Pair<SystemModel, String> key = new Pair<>(model, stateName);
-            return modelToSupplierMap.get(key);
-        }
-
-        public static Consumer<?> getConsumer(SystemModel model,  String stateName){
-            Pair<SystemModel, String> key = new Pair<>(model, stateName);
-            return modelToConsumerMap.get(key);
-        }*/
     }
 
+    public class EventApplier{
 
-    public void applyEvents(Slice slice, SystemModel model, List<Event> eventLog){
-        Registry registry = new Registry();
-
-        if (eventLog.size()<=0){
-            return;
-        }
-
-
-        for (Event<?> x : eventLog){
-            Duration dt = x.time().subtract(slice.time());
-            slice = model.step(slice, dt);
-            //BiConsumer<Slice, ?> setter = registry.getSetter(model, x.name());
-            //setter.accept(slice, x.value());
-
-             registry.getSetter(model, x.name()).accept(slice, x.value());
-
-             //registry.getSetter2(model, Double.class, x.name()).accept(slice, x.value());
-
-
-
-            //registry.modelToSetter.get(model, x.name()).accept(slice, x.value());
-        }
-    }
-
-    /*public static class EventApplier{
-
-        //take slice instead of a system model
-        //slice can be cloned and then create a new slice
-        //system model takes slice and applies to the system model
-        //we can have a slice that knows who it's parent is eventually
-        //make custom provider and consumer interfaces
-        //system model is only a lookup key for now
-        public static void applyEvents(SystemModel model,  List<Event> eventLog){
-            if (eventLog.size()<=0){
+        public void applyEvents(Slice slice, SystemModel model, List<Event> eventLog){
+            Registry registry = model.getRegistry();
+            if (eventLog.size() <= 0){
                 return;
             }
 
-            for (int i = 1; i < eventLog.size()-1; i++){
-                Event eventLeft = eventLog.get(i-1);
-                Event eventRight = eventLog.get(i);
-                Duration dt = eventRight.time().subtract(eventLeft.time());
-
-                Consumer consumer = Registry.getConsumer(model, eventLeft.name());
-                consumer.accept(eventLeft.value());
-                model.saveToSlice();
-       //         model.step(dt);
+            for (Event<?> event : eventLog){
+                Duration dt = event.time().subtract(slice.time());
+                slice = model.step(slice, dt);
+                registry.getSetter(model, event.name()).accept(slice, event.value());
+                eventLog.remove(event);
             }
         }
-    }*/
-
+    }
 }

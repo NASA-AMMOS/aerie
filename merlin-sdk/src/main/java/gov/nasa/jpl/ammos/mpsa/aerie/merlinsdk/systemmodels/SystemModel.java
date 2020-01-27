@@ -8,11 +8,12 @@ public interface SystemModel {
 
     public void registerSelf();
 
-    public void applySlice(Slice slice);
-
     public Slice saveToSlice();
 
     public MissionModelGlue.Registry getRegistry();
+
+    public MissionModelGlue.EventApplier getEventAplier();
+
 
     public Slice getSlice();
 

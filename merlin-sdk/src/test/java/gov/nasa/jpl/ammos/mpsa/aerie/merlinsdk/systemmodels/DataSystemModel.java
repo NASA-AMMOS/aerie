@@ -2,39 +2,49 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.RegexUtilities;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.MissionModelGlue.*;
 
-import java.util.function.Function;
+public class DataSystemModel implements SystemModel{
 
-
-public class DataSystemModel implements SystemModel, MissionModelGlue {
-
-    public DataSystemModel(){
+    public DataSystemModel(MissionModelGlue glue){
+        this.glue = glue;
+        setRegistry();
+        setEventApplier();
         registerSelf();
         latestSlice = new DataModelSlice();
     }
 
-    private DataModelSlice latestSlice;
+    public void setRegistry(){
+        this.registry = this.glue.Registry;
+    }
 
-    public Registry registry;
+    public void setEventApplier(){
+        this.eventApplier = this.glue.EventApplier;
+    }
+
+    private DataModelSlice latestSlice;
+    private MissionModelGlue glue;
+    private Registry registry;
+    public EventApplier eventApplier;
+
+    public MissionModelGlue getGlue() {
+        return this.glue;
+    }
 
     public Registry getRegistry(){
         return this.registry;
     }
 
-    public void setRegistry(Registry registry){
-        this.registry = registry;
+    public EventApplier getEventApplier(){
+        return this.
     }
 
     public Slice getSlice(){
         return this.latestSlice;
     }
 
-
-
     //this modifies a slice given to is, so we don't have to return a slice necessarily
     //we can return the same slice passed in as a parameter if that makes more ergonomic sense
-
     public DataModelSlice step2(DataModelSlice slice, Duration dt) {
         double dataVolume = slice.dataRate * dt.totalSeconds();
         String dataProtocol = slice.dataProtocol;
@@ -51,8 +61,6 @@ public class DataSystemModel implements SystemModel, MissionModelGlue {
     }
 
 
-
-    @Override
     public DataModelSlice step(DataModelSlice slice, Duration dt) {
         slice.dataVolume = slice.dataRate * dt.totalSeconds();
         if (slice.dataRate > 100){
@@ -65,29 +73,8 @@ public class DataSystemModel implements SystemModel, MissionModelGlue {
     public void registerSelf() {
        registry.registerGetter(this, GlobalPronouns.dataRate, Double.class, this::getDataRate);
        registry.registerSetter(this, GlobalPronouns.dataRate, Double.class, this::setDataRate);
-
-
-
-        /*
-        Registry.provide(this, GlobalPronouns.dataRate, this::getDataRate);
-        Registry.provide(this, GlobalPronouns.dataVolume, this::getDataVolume);
-        Registry.provide(this, GlobalPronouns.dataProtocol, this::getDataProtocol);
-
-        Registry.provideDouble(this, GlobalPronouns.dataRate, this::setDataRate);
-        Registry.provideDouble(this, GlobalPronouns.dataVolume, this::setDataVolume);
-        Registry.provideString(this, GlobalPronouns.dataProtocol, this::setDataProtocol);*/
-
-        //provideSettable, provideCumulative
-        //Registry.provideCumulative(this::incrementDataRate);
-        //mission modeler only needs to look at one place to make sure that the provide related to the state they want is here
-        //getters and setters should have a slice parameter
-
     }
 
-    @Override
-    public void applySlice(Slice slice) {
-
-    }
 
     @Override
     public Slice saveToSlice() {

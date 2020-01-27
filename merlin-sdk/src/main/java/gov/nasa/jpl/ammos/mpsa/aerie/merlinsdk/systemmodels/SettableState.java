@@ -5,8 +5,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class SettableState<T> implements State<T> {
     private String name;
@@ -19,22 +17,15 @@ public class SettableState<T> implements State<T> {
 
     public void set(T value, Time t){
         SettableEvent<T> event = new SettableEvent<>(this.name, value, t);
-        MissionModelGlue.Registry.addEvent(dependentSystemModel, event);
+        dependentSystemModel.getRegistry().addEvent(dependentSystemModel, event);
     }
 
     @Override
     public T get() {
-        Function<?,?> getter = dependentSystemModel.getRegistry().getGetter(dependentSystemModel, name);
-        List<Event> eventLog = MissionModelGlue.Registry.getEventLog(dependentSystemModel);
-        MissionModelGlue.applyEvents(dependentSystemModel.getSlice(), dependentSystemModel, eventLog);
-        return (T) getter.apply(dependentSystemModel.getSlice());
-
-        /*
-        Supplier<?> supplier = MissionModelGlue.Registry.getSupplier(dependentSystemModel, this.name);
-        List<Event> eventLog = MissionModelGlue.Registry.getEventLog(dependentSystemModel);
-        MissionModelGlue.EventApplier.applyEvents(dependentSystemModel, eventLog);
-        return (T) supplier.get();*/
-        //generic cast acts as a check
+        Getter getter = dependentSystemModel.getRegistry().getGetter(dependentSystemModel, name);
+        List<Event> eventLog = dependentSystemModel.getRegistry().getEventLog(dependentSystemModel);
+        dependentSystemModel.getEventAplier().applyEvents(dependentSystemModel.getSlice(), dependentSystemModel, eventLog);
+        return (T) getter.getter.apply(dependentSystemModel.getSlice());
     }
 
     @Override
