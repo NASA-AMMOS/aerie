@@ -122,22 +122,6 @@ mvn --fail-at-end -B -f pom.xml -s settings.xml install
 
 cd $root
 
-if echo "$changed" | grep --quiet "\(nest\)"; then
-  printf "\nBuilding nest for mps-server...\n\n"
-  cd nest
-
-  npm ci
-  [ $? -ne 0 ] && error_exit "npm ci failed"
-
-  npm run build
-  [ $? -ne 0 ] && error_exit "npm run build failed"
-
-  npm run test
-  [ $? -ne 0 ] && error_exit "npm run test failed"
-
-  cd $root
-fi
-
 # Build Docker images for the Aerie services.
 # We don't check $changed here because these images bundle their dependencies,
 # and we don't have a way from this script to check if any of the dependencies

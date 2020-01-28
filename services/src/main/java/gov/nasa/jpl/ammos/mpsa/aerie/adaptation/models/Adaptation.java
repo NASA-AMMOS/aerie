@@ -1,45 +1,114 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
 
-import java.nio.file.Path;
-import java.util.Objects;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 public final class Adaptation {
-    public String name;
-    public String version;
-    public String mission;
-    public String owner;
+    private final MerlinAdaptation<?> adaptation;
+    private final ActivityMapper activityMapper;
 
-    /**
-     * The path to the Adaptation JAR
-     *
-     * File at this location should not
-     * be deleted except by its owner
-     */
-    public Path path;
+    public Adaptation(final MerlinAdaptation<?> adaptation) throws AdaptationContractException {
+      this.adaptation = adaptation;
+      this.activityMapper = this.adaptation.getActivityMapper();
 
-    public Adaptation() {}
-
-    public Adaptation(final Adaptation other) {
-        this.name = other.name;
-        this.version = other.version;
-        this.mission = other.mission;
-        this.owner = other.owner;
-        this.path = other.path;
+      if (this.activityMapper == null) {
+        throw new AdaptationContractException(this.adaptation.getClass().getCanonicalName() + ".getActivityMapper() returned null");
+      }
     }
 
-    @Override
-    public boolean equals(final Object object) {
-        if (object.getClass() != Adaptation.class) {
-            return false;
+    public Map<String, ActivityType> getActivityTypes() throws AdaptationContractException {
+        final Map<String, Map<String, ParameterSchema>> activitySchemas = this.activityMapper.getActivitySchemas();
+        if (activitySchemas == null) throw new AdaptationContractException(this.activityMapper.getClass().getCanonicalName() + ".getActivitySchemas() returned null");
+
+        final Map<String, ActivityType> activityTypes = new HashMap<>();
+        for (final var schema : activitySchemas.entrySet()) {
+            final Activity<?> activity;
+            try {
+                activity = instantiateActivity(new SerializedActivity(schema.getKey(), Collections.emptyMap()));
+            } catch (final NoSuchActivityTypeException ex) {
+                throw new AdaptationContractException(this.activityMapper.getClass().getCanonicalName() + ".deserializeActivity() returned an empty Optional for an activity type it has a schema for", ex);
+            } catch (final UnconstructableActivityInstanceException ex) {
+                throw new AdaptationContractException(this.activityMapper.getClass().getCanonicalName() + ".deserializeActivity() could not instantiate an activity with only default parameters", ex);
+            }
+
+            final Optional<SerializedActivity> defaultActivity = this.activityMapper.serializeActivity(activity);
+            if (defaultActivity.isEmpty()) throw new AdaptationContractException(this.activityMapper.getClass().getCanonicalName() + ".serializeActivity() returned an empty Optional for an activity type it previously deserialized");
+
+            activityTypes.put(schema.getKey(), new ActivityType(schema.getKey(), schema.getValue(), defaultActivity.get().getParameters()));
         }
 
-        final Adaptation other = (Adaptation)object;
-        return
-                (  Objects.equals(this.name, other.name)
-                && Objects.equals(this.version, other.version)
-                && Objects.equals(this.mission, other.mission)
-                && Objects.equals(this.owner, other.owner)
-                && Objects.equals(this.path, other.path)
-                );
+        return activityTypes;
+    }
+
+    public ActivityType getActivityType(final String activityTypeId) throws NoSuchActivityTypeException, AdaptationContractException {
+        final Map<String, Map<String, ParameterSchema>> activitySchemas = this.activityMapper.getActivitySchemas();
+        if (activitySchemas == null) throw new AdaptationContractException(this.activityMapper.getClass().getCanonicalName() + ".getActivitySchemas() returned null");
+
+        final Map<String, ParameterSchema> activitySchema = activitySchemas.getOrDefault(activityTypeId, null);
+        if (activitySchema == null) throw new NoSuchActivityTypeException();
+
+        final Activity<?> activity;
+        try {
+            activity = instantiateActivity(new SerializedActivity(activityTypeId, Collections.emptyMap()));
+        } catch (final NoSuchActivityTypeException ex) {
+            throw new AdaptationContractException(this.activityMapper.getClass().getCanonicalName() + ".deserializeActivity() returned an empty Optional for an activity type it has a schema for", ex);
+        } catch (final UnconstructableActivityInstanceException ex) {
+            throw new AdaptationContractException(this.activityMapper.getClass().getCanonicalName() + ".deserializeActivity() could not instantiate an activity with only default parameters", ex);
+        }
+
+        final Optional<SerializedActivity> defaultActivity = this.activityMapper.serializeActivity(activity);
+        if (defaultActivity.isEmpty()) throw new AdaptationContractException(this.activityMapper.getClass().getCanonicalName() + ".serializeActivity() returned an empty Optional for an activity type it previously deserialized");
+
+        return new ActivityType(activityTypeId, activitySchemas.get(activityTypeId), defaultActivity.get().getParameters());
+    }
+
+    public Activity<?> instantiateActivity(final SerializedActivity activityParameters)
+        throws AdaptationContractException, NoSuchActivityTypeException, UnconstructableActivityInstanceException
+    {
+        Optional<Activity<?>> mapperResult;
+        try {
+            mapperResult = this.activityMapper.deserializeActivity(activityParameters);
+        } catch (final RuntimeException ex) {
+            // It's a serious code smell that failures of `deserializeActivity`
+            // have no outlet other than as unchecked exceptions.
+            throw new UnconstructableActivityInstanceException(
+                "Unknown failure when deserializing activity -- do the parameters match the schema?",
+                ex);
+        }
+
+        if (mapperResult == null) {
+            throw new AdaptationContractException(this.activityMapper.getClass().getName() + ".deserializeActivity() returned null");
+        }
+
+        return mapperResult
+            .orElseThrow(NoSuchActivityTypeException::new);
+    }
+
+    public static class AdaptationContractException extends RuntimeException {
+        public AdaptationContractException(final String message) {
+            super(message);
+        }
+
+        public AdaptationContractException(final String message, final Throwable cause) {
+            super(message, cause);
+        }
+    }
+
+    public static class NoSuchActivityTypeException extends Exception {}
+
+    public static class UnconstructableActivityInstanceException extends Exception {
+        public UnconstructableActivityInstanceException(final String message) {
+            super(message);
+        }
+
+        public UnconstructableActivityInstanceException(final String message, final Throwable cause) { super(message, cause); }
     }
 }

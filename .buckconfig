@@ -1,0 +1,11 @@
+[parser]
+  default_build_file_syntax = skylark
+
+[java]
+  source_level = 11
+  target_level = 11
+  unused_dependencies_action = warn
+
+[tools]
+  javac = "/usr/lib/jvm/java-11-openjdk/bin/javac"
+  java_for_tests = "/usr/lib/jvm/java-11-openjdk/bin/java"

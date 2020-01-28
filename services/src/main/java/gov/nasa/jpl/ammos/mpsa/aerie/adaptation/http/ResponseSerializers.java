@@ -1,10 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationContractException;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.UnconstructableActivityInstanceException;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.LocalApp;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.RemoteAdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 
@@ -15,7 +16,7 @@ import javax.json.JsonValue;
 import java.util.List;
 import java.util.Map;
 
-public class ResponseSerializers {
+public final class ResponseSerializers {
   public static JsonValue serializeParameterSchema(final ParameterSchema schema) {
     if (schema == null) return JsonValue.NULL;
 
@@ -69,17 +70,17 @@ public class ResponseSerializers {
     return builder.build();
   }
 
-  public static JsonValue serializeAdaptation(final Adaptation adaptation) {
+  public static JsonValue serializeAdaptation(final AdaptationJar adaptationJar) {
     return Json
         .createObjectBuilder()
-        .add("name", adaptation.name == null ? JsonValue.NULL : Json.createValue(adaptation.name))
-        .add("version", adaptation.version == null ? JsonValue.NULL : Json.createValue(adaptation.version))
-        .add("mission", adaptation.mission == null ? JsonValue.NULL : Json.createValue(adaptation.mission))
-        .add("owner", adaptation.owner == null ? JsonValue.NULL : Json.createValue(adaptation.owner))
+        .add("name", adaptationJar.name == null ? JsonValue.NULL : Json.createValue(adaptationJar.name))
+        .add("version", adaptationJar.version == null ? JsonValue.NULL : Json.createValue(adaptationJar.version))
+        .add("mission", adaptationJar.mission == null ? JsonValue.NULL : Json.createValue(adaptationJar.mission))
+        .add("owner", adaptationJar.owner == null ? JsonValue.NULL : Json.createValue(adaptationJar.owner))
         .build();
   }
 
-  public static JsonValue serializeAdaptations(final Map<String, Adaptation> activityTypes) {
+  public static JsonValue serializeAdaptations(final Map<String, AdaptationJar> activityTypes) {
     if (activityTypes == null) return JsonValue.NULL;
 
     final JsonObjectBuilder builder = Json.createObjectBuilder();
@@ -90,7 +91,16 @@ public class ResponseSerializers {
   }
 
   public static JsonValue serializeFailureList(final List<String> failures) {
-    return Json.createArrayBuilder(failures).build();
+    if (failures.size() > 0) {
+      return Json.createObjectBuilder()
+          .add("instantiable", JsonValue.FALSE)
+          .add("failures", Json.createArrayBuilder(failures))
+          .build();
+    } else {
+      return Json.createObjectBuilder()
+          .add("instantiable", JsonValue.TRUE)
+          .build();
+    }
   }
 
   public static JsonValue serializedCreatedId(final String entityId) {
@@ -114,15 +124,29 @@ public class ResponseSerializers {
         .build();
   }
 
-  public static JsonValue serializeAdaptationContractException(final AdaptationContractException ex) {
+  public static JsonValue serializeAdaptationRejectedException(final App.AdaptationRejectedException ex) {
+    // TODO: Improve diagnostic information?
+    return Json.createObjectBuilder()
+        .add("message", "adaptation rejected: " + ex.getMessage())
+        .build();
+  }
+
+  public static JsonValue serializeAdaptationContractException(final Adaptation.AdaptationContractException ex) {
     // TODO: Improve diagnostic information
     return Json.createObjectBuilder()
         .add("message", ex.getMessage())
         .build();
   }
 
-  public static JsonValue serializeUnconstructableActivityInstanceException(final UnconstructableActivityInstanceException ex) {
-    // TODO: Improve diagnostic information
+  public static JsonValue serializeAdaptationLoadException(final LocalApp.AdaptationLoadException ex) {
+    // TODO: Improve diagnostic information?
+    return Json.createObjectBuilder()
+        .add("message", ex.getMessage())
+        .build();
+  }
+
+  public static JsonValue serializeAdaptationAccessException(final RemoteAdaptationRepository.AdaptationAccessException ex) {
+    // TODO: Improve diagnostic information?
     return Json.createObjectBuilder()
         .add("message", ex.getMessage())
         .build();

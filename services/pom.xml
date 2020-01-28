@@ -146,7 +146,7 @@
               </descriptorRefs>
               <archive>
                 <manifest>
-                  <mainClass>gov.nasa.jpl.ammos.mpsa.aerie.adaptation.App</mainClass>
+                  <mainClass>gov.nasa.jpl.ammos.mpsa.aerie.adaptation.AerieAppDriver</mainClass>
                 </manifest>
               </archive>
             </configuration>
@@ -166,7 +166,7 @@
               </descriptorRefs>
               <archive>
                 <manifest>
-                  <mainClass>gov.nasa.jpl.ammos.mpsa.aerie.plan.App</mainClass>
+                  <mainClass>gov.nasa.jpl.ammos.mpsa.aerie.plan.AerieAppDriver</mainClass>
                 </manifest>
               </archive>
             </configuration>

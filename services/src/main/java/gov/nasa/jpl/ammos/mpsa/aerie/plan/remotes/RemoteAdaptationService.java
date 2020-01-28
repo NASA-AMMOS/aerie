@@ -1,18 +1,21 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchAdaptationException;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.utils.HttpRequester;
 
+import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonString;
 import javax.json.JsonValue;
-import javax.json.bind.JsonbBuilder;
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public final class RemoteAdaptationService implements AdaptationService {
@@ -23,7 +26,7 @@ public final class RemoteAdaptationService implements AdaptationService {
   }
 
   @Override
-  public Map<String, Map<String, ParameterSchema>> getActivityTypes(final String adaptationId) throws NoSuchAdaptationException {
+  public boolean isMissionModelDefined(final String adaptationId) {
     final HttpResponse<String> response;
     try {
       response = this.client.sendRequest("GET", "/adaptations/" + adaptationId + "/activities");
@@ -33,75 +36,125 @@ public final class RemoteAdaptationService implements AdaptationService {
 
     switch (response.statusCode()) {
       case 200:
-        final JsonValue responseJson = JsonbBuilder.create().fromJson(response.body(), JsonValue.class);
-        return deserializeActivityTypes(responseJson);
+        return true;
 
       case 404:
-        throw new NoSuchAdaptationException(adaptationId);
+        return false;
 
       default:
         throw new AdaptationAccessException("unexpected status code `" + response.statusCode() + "`");
     }
   }
 
-  private static ParameterSchema deserializeParameterSchema(final JsonValue parameterSchemaJsonValue) {
-    if (!(parameterSchemaJsonValue instanceof JsonObject)) throw new InvalidServiceResponseException();
-    final JsonObject parameterSchemaJson = parameterSchemaJsonValue.asJsonObject();
+  @Override
+  public List<String> areActivityParametersValid(final String adaptationId, final SerializedActivity activityParameters) throws NoSuchAdaptationException {
+    final HttpResponse<String> response;
+    try {
+      final var requestPath = String.format("/adaptations/%s/activities/%s/validate", adaptationId, activityParameters.getTypeName());
+      final var parameters = serializeActivityParameterMap(activityParameters.getParameters());
 
-    if (!(parameterSchemaJson.get("type") instanceof JsonString)) throw new InvalidServiceResponseException();
-    final String parameterType = parameterSchemaJson.getString("type");
+      response = this.client.sendRequest("POST", requestPath, parameters);
+    } catch (final IOException | InterruptedException ex) {
+      throw new AdaptationAccessException(ex);
+    }
 
-    switch (parameterType) {
-      case "string":
-        return ParameterSchema.STRING;
-      case "int":
-        return ParameterSchema.INT;
-      case "bool":
-        return ParameterSchema.BOOLEAN;
-      case "double":
-        return ParameterSchema.REAL;
-      case "list":
-        if (!(parameterSchemaJson.containsKey("items"))) throw new InvalidServiceResponseException();
+    switch (response.statusCode()) {
+      case 200:
+        final JsonValue responseJson = Json.createReader(new StringReader(response.body())).readValue();
+        return deserializeActivityValidation(responseJson);
 
-        return ParameterSchema.ofList(deserializeParameterSchema(parameterSchemaJson.get("items")));
-      case "map":
-        if (!(parameterSchemaJson.containsKey("items"))) throw new InvalidServiceResponseException();
-        if (!(parameterSchemaJson.get("items") instanceof JsonObject)) throw new InvalidServiceResponseException();
+      case 404:
+        throw new NoSuchAdaptationException();
 
-        final Map<String, ParameterSchema> fieldSchemas = new HashMap<>();
-        for (final var entry : parameterSchemaJson.get("items").asJsonObject().entrySet()) {
-          fieldSchemas.put(entry.getKey(), deserializeParameterSchema(entry.getValue()));
-        }
-
-        return ParameterSchema.ofMap(fieldSchemas);
       default:
-        throw new InvalidServiceResponseException();
+        throw new AdaptationAccessException("unexpected status code `" + response.statusCode() + "`: " + response.body());
     }
   }
 
-  private static Map<String, Map<String, ParameterSchema>> deserializeActivityTypes(final JsonValue activityTypesJson) {
-    if (!(activityTypesJson instanceof JsonObject)) throw new InvalidServiceResponseException();
+  private static List<String> deserializeActivityValidation(final JsonValue json) {
+    if (!(json instanceof JsonObject)) throw new InvalidServiceResponseException();
 
-    final Map<String, Map<String, ParameterSchema>> activityTypes = new HashMap<>();
-    for (final var activityTypeEntry : activityTypesJson.asJsonObject().entrySet()) {
-      final String activityTypeName = activityTypeEntry.getKey();
-
-      if (!(activityTypeEntry.getValue() instanceof JsonObject)) throw new InvalidServiceResponseException();
-      final JsonObject activityTypeJson = activityTypeEntry.getValue().asJsonObject();
-
-      if (!activityTypeJson.containsKey("parameters")) throw new InvalidServiceResponseException();
-      if (!(activityTypeJson.get("parameters") instanceof JsonObject)) throw new InvalidServiceResponseException();
-      final JsonObject parameterSchemasJson = activityTypeJson.get("parameters").asJsonObject();
-
-      final Map<String, ParameterSchema> parameterSchemas = new HashMap<>();
-      for (final var parameterSchemaEntry : parameterSchemasJson.entrySet()) {
-        parameterSchemas.put(parameterSchemaEntry.getKey(), deserializeParameterSchema(parameterSchemaEntry.getValue()));
+    List<String> failures = List.of();
+    for (final var entry : ((JsonObject)json).entrySet()) {
+      switch (entry.getKey()) {
+        case "instantiable":
+          break;
+        case "failures":
+          failures = deserializeParameterFailures(entry.getValue());
+          break;
+        default:
+          throw new InvalidServiceResponseException();
       }
-
-      activityTypes.put(activityTypeName, parameterSchemas);
     }
 
-    return activityTypes;
+    return failures;
+  }
+
+  private static List<String> deserializeParameterFailures(final JsonValue json) {
+    if (!(json instanceof JsonArray)) throw new InvalidServiceResponseException();
+
+    final var parameterFailures = new ArrayList<String>();
+    for (final var parameterFailureJson : (JsonArray)json) {
+      if (!(parameterFailureJson instanceof JsonString)) throw new InvalidServiceResponseException();
+      parameterFailures.add(((JsonString)parameterFailureJson).getString());
+    }
+
+    return parameterFailures;
+  }
+
+  private JsonValue serializeActivityParameter(final SerializedParameter parameter) {
+    return parameter.match(new SerializedParameter.Visitor<>() {
+      @Override
+      public JsonValue onNull() {
+        return JsonValue.NULL;
+      }
+
+      @Override
+      public JsonValue onReal(final double value) {
+        return Json.createValue(value);
+      }
+
+      @Override
+      public JsonValue onInt(final long value) {
+        return Json.createValue(value);
+      }
+
+      @Override
+      public JsonValue onBoolean(final boolean value) {
+        return (value) ? JsonValue.TRUE : JsonValue.FALSE;
+      }
+
+      @Override
+      public JsonValue onString(final String value) {
+        return Json.createValue(value);
+      }
+
+      @Override
+      public JsonValue onMap(final Map<String, SerializedParameter> value) {
+        return serializeActivityParameterMap(value);
+      }
+
+      @Override
+      public JsonValue onList(final List<SerializedParameter> value) {
+        return serializeActivityParameterList(value);
+      }
+    });
+  }
+
+  private JsonValue serializeActivityParameterMap(final Map<String, SerializedParameter> parameterMap) {
+    final var parameters = Json.createObjectBuilder();
+    for (final var entry : parameterMap.entrySet()) {
+      parameters.add(entry.getKey(), serializeActivityParameter(entry.getValue()));
+    }
+    return parameters.build();
+  }
+
+  private JsonValue serializeActivityParameterList(final List<SerializedParameter> parameterList) {
+    final var parameters = Json.createArrayBuilder();
+    for (final var parameter : parameterList) {
+      parameters.add(serializeActivityParameter(parameter));
+    }
+    return parameters.build();
   }
 
   public static class InvalidServiceResponseException extends RuntimeException {
