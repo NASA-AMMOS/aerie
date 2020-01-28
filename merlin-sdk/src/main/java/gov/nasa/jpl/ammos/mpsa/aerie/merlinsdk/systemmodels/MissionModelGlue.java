@@ -41,6 +41,22 @@ class Setter<T> {
 
 public class MissionModelGlue {
 
+    private Registry registry;
+    private EventApplier eventApplier;
+
+    public MissionModelGlue(){
+        registry = this.new Registry();
+        eventApplier = this.new EventApplier();
+    }
+
+    public Registry registry(){
+        return this.registry;
+    }
+
+    public EventApplier eventApplier(){
+        return this.eventApplier;
+    }
+
     public class Registry{
 
         private Map<SystemModel, List<Event>> modelToEventLog = new HashMap<>();
@@ -97,15 +113,12 @@ public class MissionModelGlue {
 
         public void applyEvents(Slice slice, SystemModel model, List<Event> eventLog){
             Registry registry = model.getRegistry();
-            if (eventLog.size() <= 0){
-                return;
-            }
 
             for (Event<?> event : eventLog){
                 Duration dt = event.time().subtract(slice.time());
-                slice = model.step(slice, dt);
+                model.step(slice, dt);
                 registry.getSetter(model, event.name()).accept(slice, event.value());
-                eventLog.remove(event);
+                //slice.time() =
             }
         }
     }
