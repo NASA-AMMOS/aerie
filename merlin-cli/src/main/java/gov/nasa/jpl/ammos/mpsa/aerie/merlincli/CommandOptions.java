@@ -11,6 +11,7 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 
 public class CommandOptions {
@@ -125,7 +126,7 @@ public class CommandOptions {
                         return false;
                     }
 
-                    commandReceiver.createAdaptation(path, adaptation);
+                    commandReceiver.createAdaptation(Path.of(path), adaptation);
                     return true;
                 }
 

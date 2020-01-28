@@ -14,7 +14,6 @@ import gov.nasa.jpl.ammos.mpsa.apgen.model.Plan;
 import gov.nasa.jpl.ammos.mpsa.apgen.parser.AdaptationParser;
 import gov.nasa.jpl.ammos.mpsa.apgen.parser.ApfParser;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -200,16 +199,15 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
     }
 
     @Override
-    public void createAdaptation(String path, Adaptation adaptation) {
-        File jarFile = new File(path);
-        if (!jarFile.exists()) {
+    public void createAdaptation(Path path, Adaptation adaptation) {
+        if (!Files.exists(path)) {
             System.err.println(String.format("File not found: %s", path));
             return;
         }
 
         String id;
         try {
-            id = this.adaptationRepository.createAdaptation(adaptation, jarFile);
+            id = this.adaptationRepository.createAdaptation(adaptation, path.toFile());
         } catch (AdaptationRepository.InvalidAdaptationException e) {
             System.err.println(e);
             return;

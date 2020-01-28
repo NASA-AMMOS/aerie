@@ -2,6 +2,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlincli;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.Adaptation;
 
+import java.nio.file.Path;
+
 /**
  * A receiver for Merlin commands.
  *
@@ -18,7 +20,7 @@ public interface MerlinCommandReceiver {
     void updateActivityInstance(String planId, String activityId, String[] tokens);
     void deleteActivityInstance(String planId, String activityId);
     void listPlans();
-    void createAdaptation(String path, Adaptation adaptation);
+    void createAdaptation(Path path, Adaptation adaptation);
     void deleteAdaptation(String adaptationId);
     void displayAdaptation(String adaptationId);
     void listAdaptations();
