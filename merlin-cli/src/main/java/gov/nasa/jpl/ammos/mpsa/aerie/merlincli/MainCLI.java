@@ -25,7 +25,9 @@ public class MainCLI {
     }
 
     private static void runOne(CommandOptions commandOptions, AerieCommandReceiver commandReceiver, String[] args) {
-        commandOptions.parse(commandReceiver, args);
+        if (!commandOptions.parse(commandReceiver, args)) {
+            commandOptions.printUsage();
+        }
     }
 
     private static void runRepl(CommandOptions commandOptions, AerieCommandReceiver commandReceiver) {

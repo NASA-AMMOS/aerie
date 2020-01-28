@@ -16,6 +16,9 @@ public class CommandOptions {
     private final OptionGroup requiredGroup = new OptionGroup();
 
     public CommandOptions() {
+        // Add option to request help
+        requiredGroup.addOption(new Option("h", "help", false, "Print help message"));
+
         // Add option to specify plan ID
         requiredGroup.addOption(new Option("p", "plan-id", true, "Specify the plan ID to use"));
 
@@ -77,7 +80,6 @@ public class CommandOptions {
             cmd = (new DefaultParser()).parse(options, args);
         } catch (ParseException e) {
             System.err.println("Failed to parse command line properties: " + e.getMessage());
-            printUsage();
             return false;
         }
 
@@ -186,17 +188,15 @@ public class CommandOptions {
 
                 default:
                     System.out.println("No required argument specified.");
-                    printUsage();
                     return false;
             }
         } catch (InvalidNumberOfArgsException e) {
             System.err.println("Failed to parse command line properties: " + e);
-            printUsage();
             return false;
         }
     }
 
-    private void printUsage() {
+    public void printUsage() {
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("Merlin Adaptation", options);
     }
