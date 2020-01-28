@@ -4,6 +4,7 @@ java_library(
     extra_arguments = ["-Xlint:all"],
     deps = [
         "//third-party:commons-cli",
+        "//third-party:commons-lang3",
         "//third-party:commons-logging",
         "//third-party:gson",
         "//third-party:httpclient",

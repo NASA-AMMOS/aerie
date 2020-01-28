@@ -5,7 +5,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlincli;
  *
  * A Merlin command is a command regarding plans, mission models, and simulation thereof.
  */
-interface MerlinCommandReceiver {
+public interface MerlinCommandReceiver {
     void createPlan(String path);
     void updatePlanFromFile(String planId, String path);
     void updatePlanFromTokens(String planId, String[] tokens);
