@@ -200,15 +200,7 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
     }
 
     @Override
-    public void createAdaptation(String path, String[] tokens) {
-        Adaptation adaptation;
-        try {
-            adaptation = Adaptation.fromTokens(tokens);
-        } catch (InvalidTokenException e) {
-            System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
-            return;
-        }
-
+    public void createAdaptation(String path, Adaptation adaptation) {
         File jarFile = new File(path);
         if (!jarFile.exists()) {
             System.err.println(String.format("File not found: %s", path));

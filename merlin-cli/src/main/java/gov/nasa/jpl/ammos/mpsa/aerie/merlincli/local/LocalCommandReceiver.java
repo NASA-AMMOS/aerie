@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.local;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.MerlinCommandReceiver;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.Adaptation;
 import org.apache.commons.lang3.NotImplementedException;
 
 public class LocalCommandReceiver implements MerlinCommandReceiver {
@@ -55,7 +56,7 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
   }
 
   @Override
-  public void createAdaptation(String path, String[] tokens) {
+  public void createAdaptation(String path, Adaptation adaptation) {
     throw new NotImplementedException("TODO: implement");
   }
 
