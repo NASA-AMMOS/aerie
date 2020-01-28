@@ -1,47 +1,21 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidNumberOfArgsException;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidTokenException;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.*;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JsonUtilities;
-import gov.nasa.jpl.ammos.mpsa.apgen.exceptions.AdaptationParsingException;
-import gov.nasa.jpl.ammos.mpsa.apgen.exceptions.DirectoryNotFoundException;
-import gov.nasa.jpl.ammos.mpsa.apgen.exceptions.PlanParsingException;
-import gov.nasa.jpl.ammos.mpsa.apgen.model.Plan;
-import gov.nasa.jpl.ammos.mpsa.apgen.parser.AdaptationParser;
-import gov.nasa.jpl.ammos.mpsa.apgen.parser.ApfParser;
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionGroup;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
+import java.util.Arrays;
 
 public class CommandOptions {
-    private PlanRepository planRepository;
-    private AdaptationRepository adaptationRepository;
-    private Options options = new Options();
-    private OptionGroup requiredGroup = new OptionGroup();
-    private OptionGroup planIdRequiredGroup = new OptionGroup();
-    private OptionGroup adaptationIdRequiredGroup = new OptionGroup();
-    private String[] args = null;
-    private boolean lastCommandStatus;
+    private final Options options = new Options();
+    private final OptionGroup requiredGroup = new OptionGroup();
 
-    public CommandOptions(String[] args, PlanRepository planRepository, AdaptationRepository adaptationRepository) {
-        buildArguments();
-        consumeArgs(args);
-        this.planRepository = planRepository;
-        this.adaptationRepository = adaptationRepository;
-    }
-
-    public CommandOptions consumeArgs(String[] args) {
-        this.args = args;
-        return this;
-    }
-
-    public void buildArguments() {
+    public CommandOptions() {
         // Add option to specify plan ID
         requiredGroup.addOption(new Option("p", "plan-id", true, "Specify the plan ID to use"));
 
@@ -68,6 +42,7 @@ public class CommandOptions {
 
         // TODO: Figure out how to resolve the names for arguments so they make sense without being obnoxious
         // Being in a group makes options mutually exclusive
+        final OptionGroup planIdRequiredGroup = new OptionGroup();
         planIdRequiredGroup.addOption(new Option("D", "delete-plan", false, "Delete a plan"));
         planIdRequiredGroup.addOption(new Option("U", "update-plan-from-file", true, "Update plan based on values in plan file"));
         planIdRequiredGroup.addOption(new Option(null, "append-activities", true, "Append new activity instances to a plan from a json"));
@@ -86,6 +61,7 @@ public class CommandOptions {
 
         options.addOptionGroup(planIdRequiredGroup);
 
+        final OptionGroup adaptationIdRequiredGroup = new OptionGroup();
         adaptationIdRequiredGroup.addOption(new Option(null, "delete-adaptation", false, "Delete an adaptation"));
         adaptationIdRequiredGroup.addOption(new Option("display", "view-adaptation", false, "View an adaptation's metadata"));
         adaptationIdRequiredGroup.addOption(new Option("activities", "activity-types", false, "View an adaptation's activity types"));
@@ -95,426 +71,133 @@ public class CommandOptions {
         options.addOptionGroup(requiredGroup);
     }
 
-    public void parse() {
+    public boolean parse(final MerlinCommandReceiver commandReceiver, final String[] args) {
+        final CommandLine cmd;
+        try {
+            cmd = (new DefaultParser()).parse(options, args);
+        } catch (ParseException e) {
+            System.err.println("Failed to parse command line properties: " + e.getMessage());
+            printUsage();
+            return false;
+        }
 
-        CommandLineParser parser = new DefaultParser();
-        CommandLine cmd = null;
+        if (cmd.hasOption("h")) {
+            printUsage();
+            return true;
+        }
 
         try {
-            cmd = parser.parse(options, args);
-
-            if (cmd.hasOption("h")) {
-                printUsage();
-                lastCommandStatus = true;
-                return;
-            }
-
             // TODO: Eventually, we should probably check that other options aren't specified, or at least point out
             //       that we ignore them if they are
-            if (requiredGroup.getSelected().equals("plans")) {
-                lastCommandStatus = listPlans();
-                return;
-            }
-            else if (requiredGroup.getSelected().equals("adaptations")) {
-                lastCommandStatus = listAdaptations();
-                return;
-            }
-            else if (requiredGroup.getSelected().equals("P")) {
-                String path = cmd.getOptionValue("P");
-                lastCommandStatus = createPlan(path);
-                return;
-            }
-            else if (requiredGroup.getSelected().equals("A")) {
-                String[] args = cmd.getOptionValues("A");
-                if (args.length < 3) {
-                    throw new InvalidNumberOfArgsException("Option 'A' requires at least three arguments");
-                }
-                String path = args[0];
-                String[] tokens = Arrays.copyOfRange(args, 1, args.length);
-                lastCommandStatus = createAdaptation(path, tokens);
-                return;
-            }
-            else if (requiredGroup.getSelected().equals("p")) {
-                String planId = cmd.getOptionValue("p");
+            switch (requiredGroup.getSelected()) {
+                case "plans":
+                    commandReceiver.listPlans();
+                    return true;
 
-                if (cmd.hasOption("U")) {
-                    String path = cmd.getOptionValue("U");
-                    lastCommandStatus = updatePlanFromFile(planId, path);
-                    return;
+                case "adaptations":
+                    commandReceiver.listAdaptations();
+                    return true;
+
+                case "P": {
+                    String path = cmd.getOptionValue("P");
+                    commandReceiver.createPlan(path);
+                    return true;
                 }
-                else if (cmd.hasOption("update-plan")) {
-                    String[] tokens = cmd.getOptionValues("update-plan");
-                    lastCommandStatus = updatePlanFromTokens(planId, tokens);
-                    return;
-                }
-                else if (cmd.hasOption("delete-plan")) {
-                    lastCommandStatus = deletePlan(planId);
-                    return;
-                }
-                else if (cmd.hasOption("pull")) {
-                    String outName = cmd.getOptionValue("pull");
-                    lastCommandStatus = downloadPlan(planId, outName);
-                    return;
-                }
-                else if (cmd.hasOption("append-activities")) {
-                    String path = cmd.getOptionValue("append-activities");
-                    lastCommandStatus = appendActivityInstances(planId, path);
-                    return;
-                }
-                else if (cmd.hasOption("display-activity")) {
-                    String activityId = cmd.getOptionValue("display-activity");
-                    lastCommandStatus = displayActivityInstance(planId, activityId);
-                    return;
-                }
-                else if (cmd.hasOption("update-activity")) {
-                    String[] args = cmd.getOptionValues("update-activity");
-                    String activityId = args[0];
+
+                case "A": {
+                    String[] params = cmd.getOptionValues("A");
+                    if (params.length < 3) {
+                        throw new InvalidNumberOfArgsException("Option 'A' requires at least three arguments");
+                    }
+                    String path = params[0];
                     String[] tokens = Arrays.copyOfRange(args, 1, args.length);
-                    lastCommandStatus = updateActivityInstance(planId, activityId, tokens);
-                    return;
+                    commandReceiver.createAdaptation(path, tokens);
+                    return true;
                 }
-                else if (cmd.hasOption("delete-activity")) {
-                    String activityId = cmd.getOptionValue("delete-activity");
-                    lastCommandStatus = deleteActivityInstance(planId, activityId);
-                    return;
-                }
-            }
-            else if (requiredGroup.getSelected().equals("a")) {
-                String adaptationId = cmd.getOptionValue("a");
-                if (cmd.hasOption("delete-adaptation")) {
-                    lastCommandStatus = deleteAdaptation(adaptationId);
-                    return;
-                }
-                else if (cmd.hasOption("display")) {
-                    lastCommandStatus = displayAdaptation(adaptationId);
-                    return;
-                }
-                else if (cmd.hasOption("activities")) {
-                    lastCommandStatus = listActivityTypes(adaptationId);
-                    return;
-                }
-                else if (cmd.hasOption("activity")) {
-                    String activityId = cmd.getOptionValue("activity");
-                    lastCommandStatus = displayActivityType(adaptationId, activityId);
-                    return;
-                }
-            }
-            else if (requiredGroup.getSelected().equals("c")) {
-                String[] args = cmd.getOptionValues("c");
-                if (args.length < 3) {
-                    throw new InvalidNumberOfArgsException("Option 'apf' requires three arguments <infile> <outfile> <dir> <tokens>");
-                }
-                String[] tokens = Arrays.copyOfRange(args, 3, args.length);
-                lastCommandStatus = convertApfFile(args[0], args[1], args[2], tokens);
-                return;
-            }
-            else {
-                System.out.println("No required argument specified.");
-            }
-        }
-        catch (ParseException | InvalidNumberOfArgsException e) {
-            System.err.println("Failed to parse command line properties: " + e);
-        }
-        lastCommandStatus = false;
-        printUsage();
-    }
 
-    public boolean lastCommandSuccessful() {
-        return this.lastCommandStatus;
+                case "p":
+                    String planId = cmd.getOptionValue("p");
+
+                    if (cmd.hasOption("U")) {
+                        String path = cmd.getOptionValue("U");
+                        commandReceiver.updatePlanFromFile(planId, path);
+                        return true;
+                    } else if (cmd.hasOption("update-plan")) {
+                        String[] tokens = cmd.getOptionValues("update-plan");
+                        commandReceiver.updatePlanFromTokens(planId, tokens);
+                        return true;
+                    } else if (cmd.hasOption("delete-plan")) {
+                        commandReceiver.deletePlan(planId);
+                        return true;
+                    } else if (cmd.hasOption("pull")) {
+                        String outName = cmd.getOptionValue("pull");
+                        commandReceiver.downloadPlan(planId, outName);
+                        return true;
+                    } else if (cmd.hasOption("append-activities")) {
+                        String path = cmd.getOptionValue("append-activities");
+                        commandReceiver.appendActivityInstances(planId, path);
+                        return true;
+                    } else if (cmd.hasOption("display-activity")) {
+                        String activityId = cmd.getOptionValue("display-activity");
+                        commandReceiver.displayActivityInstance(planId, activityId);
+                        return true;
+                    } else if (cmd.hasOption("update-activity")) {
+                        String[] params = cmd.getOptionValues("update-activity");
+                        String activityId = params[0];
+                        String[] tokens = Arrays.copyOfRange(params, 1, params.length);
+                        commandReceiver.updateActivityInstance(planId, activityId, tokens);
+                        return true;
+                    } else if (cmd.hasOption("delete-activity")) {
+                        String activityId = cmd.getOptionValue("delete-activity");
+                        commandReceiver.deleteActivityInstance(planId, activityId);
+                        return true;
+                    } else {
+                        return false;
+                    }
+
+                case "a":
+                    String adaptationId = cmd.getOptionValue("a");
+                    if (cmd.hasOption("delete-adaptation")) {
+                        commandReceiver.deleteAdaptation(adaptationId);
+                        return true;
+                    } else if (cmd.hasOption("display")) {
+                        commandReceiver.displayAdaptation(adaptationId);
+                        return true;
+                    } else if (cmd.hasOption("activities")) {
+                        commandReceiver.listActivityTypes(adaptationId);
+                        return true;
+                    } else if (cmd.hasOption("activity")) {
+                        String activityId = cmd.getOptionValue("activity");
+                        commandReceiver.displayActivityType(adaptationId, activityId);
+                        return true;
+                    } else {
+                        return false;
+                    }
+
+                case "c": {
+                    String[] params = cmd.getOptionValues("c");
+                    if (params.length < 3) {
+                        throw new InvalidNumberOfArgsException("Option 'apf' requires three arguments <infile> <outfile> <dir> <tokens>");
+                    }
+                    String[] tokens = Arrays.copyOfRange(params, 3, params.length);
+                    commandReceiver.convertApfFile(params[0], params[1], params[2], tokens);
+                    return true;
+                }
+
+                default:
+                    System.out.println("No required argument specified.");
+                    printUsage();
+                    return false;
+            }
+        } catch (InvalidNumberOfArgsException e) {
+            System.err.println("Failed to parse command line properties: " + e);
+            printUsage();
+            return false;
+        }
     }
 
     private void printUsage() {
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("Merlin Adaptation", options);
-    }
-
-    private boolean createPlan(String path) {
-        String planJson;
-        try {
-            planJson = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
-        } catch (IOException e) {
-            System.err.println(e);
-            return false;
-        }
-
-        String id;
-        try {
-            id = this.planRepository.createPlan(planJson);
-        } catch (PlanRepository.InvalidPlanException | PlanRepository.InvalidJsonException e) {
-            System.err.println(e);
-            return false;
-        }
-
-        System.out.println(String.format("CREATED: Plan successfully created at: %s.", id));
-        return true;
-    }
-
-    private boolean updatePlanFromFile(String planId, String path) {
-        String planUpdateJson;
-        try {
-            planUpdateJson = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
-        } catch (IOException e) {
-            System.err.println(e);
-            return false;
-        }
-
-        return updatePlan(planId, planUpdateJson);
-    }
-
-    private boolean updatePlanFromTokens(String planId, String[] tokens) {
-        PlanDetail plan;
-        try {
-            plan = PlanDetail.fromTokens(tokens);
-        } catch (InvalidTokenException e) {
-            System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
-            return false;
-        }
-
-        String planUpdateJson = JsonUtilities.convertPlanToJson(plan);
-        return updatePlan(planId, planUpdateJson);
-    }
-
-    public boolean updatePlan(String planId, String planUpdateJson) {
-        try {
-            this.planRepository.updatePlan(planId, planUpdateJson);
-        } catch (PlanRepository.InvalidPlanException | PlanRepository.PlanNotFoundException | PlanRepository.InvalidJsonException e) {
-            System.err.println(e);
-            return false;
-        }
-
-        System.out.println("SUCCESS: Plan successfully updated.");
-        return true;
-    }
-
-    private boolean deletePlan(String planId) {
-        try {
-            this.planRepository.deletePlan(planId);
-        } catch (PlanRepository.PlanNotFoundException e) {
-            System.err.println(e);
-            return false;
-        }
-
-        System.out.println("SUCCESS: Plan successfully deleted.");
-        return true;
-    }
-
-    private boolean downloadPlan(String planId, String outName) {
-        if (Files.exists(Path.of(outName))) {
-            System.err.println(String.format("File %s already exists.", outName));
-            return false;
-        }
-
-        try {
-            this.planRepository.downloadPlan(planId, outName);
-        } catch (PlanRepository.PlanNotFoundException e) {
-            System.err.println(e);
-            return false;
-        }
-
-        System.out.println("SUCCESS: Plan successfully downloaded.");
-        return true;
-    }
-
-    private boolean appendActivityInstances(String planId, String path) {
-        String instanceListJson;
-        try {
-            instanceListJson = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
-        } catch (IOException e) {
-            System.err.println(e);
-            return false;
-        }
-
-        try {
-            this.planRepository.appendActivityInstances(planId, instanceListJson);
-        } catch (PlanRepository.PlanNotFoundException | PlanRepository.InvalidJsonException | PlanRepository.InvalidPlanException e) {
-            System.err.println(e);
-            return false;
-        }
-
-        System.out.println("CREATED: Activities successfully created.");
-        return true;
-    }
-
-    private boolean displayActivityInstance(String planId, String activityId) {
-        String activityInstanceJson;
-        try {
-            activityInstanceJson = this.planRepository.getActivityInstance(planId, activityId);
-        } catch (PlanRepository.PlanNotFoundException | PlanRepository.ActivityInstanceNotFoundException e) {
-            System.err.println(e);
-            return false;
-        }
-
-        System.out.println("SUCCESS: Activity retrieval successful.");
-        System.out.println(activityInstanceJson);
-        return true;
-    }
-
-    private boolean updateActivityInstance(String planId, String activityId, String[] tokens) {
-        ActivityInstance activityInstance;
-        try {
-            activityInstance = ActivityInstance.fromTokens(tokens);
-        } catch (InvalidTokenException e) {
-            System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
-            return false;
-        }
-
-        String activityUpdateJson = JsonUtilities.convertActivityInstanceToJson(activityInstance);
-
-        try {
-            this.planRepository.updateActivityInstance(planId, activityId, activityUpdateJson);
-        } catch (PlanRepository.PlanNotFoundException | PlanRepository.ActivityInstanceNotFoundException | PlanRepository.InvalidJsonException | PlanRepository.InvalidActivityInstanceException e) {
-            System.err.println(e);
-            return false;
-        }
-
-        System.out.println("SUCCESS: Activity successfully updated.");
-        return true;
-    }
-
-    private boolean deleteActivityInstance(String planId, String activityId) {
-        try {
-            this.planRepository.deleteActivityInstance(planId, activityId);
-        } catch (PlanRepository.PlanNotFoundException | PlanRepository.ActivityInstanceNotFoundException e) {
-            System.err.println(e);
-            return false;
-        }
-
-        System.out.println("SUCCESS: Activity successfully deleted.");
-        return true;
-    }
-
-    private boolean listPlans() {
-        String planListJson = this.planRepository.getPlanList();
-
-        System.out.println("SUCCESS: Plan list retrieval successful.");
-        System.out.println(planListJson);
-        return true;
-    }
-
-    private boolean createAdaptation(String path, String[] tokens) {
-        Adaptation adaptation;
-        try {
-            adaptation = Adaptation.fromTokens(tokens);
-        } catch (InvalidTokenException e) {
-            System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
-            return false;
-        }
-
-        File jarFile = new File(path);
-        if (!jarFile.exists()) {
-            System.err.println(String.format("File not found: %s", path));
-            return false;
-        }
-
-        String id;
-        try {
-            id = this.adaptationRepository.createAdaptation(adaptation, jarFile);
-        } catch (AdaptationRepository.InvalidAdaptationException e) {
-            System.err.println(e);
-            return false;
-        }
-
-        System.out.println(String.format("CREATED: Adaptation successfully created at: %s.", id));
-        return true;
-    }
-
-    private boolean deleteAdaptation(String adaptationId) {
-        try {
-            this.adaptationRepository.deleteAdaptation(adaptationId);
-        } catch (AdaptationRepository.AdaptationNotFoundException e) {
-            System.err.println(e);
-            return false;
-        }
-
-        System.out.println("SUCCESS: Adaptation successfully deleted.");
-        return true;
-    }
-
-    private boolean displayAdaptation(String adaptationId) {
-        Adaptation adaptation;
-        try {
-            adaptation = this.adaptationRepository.getAdaptation(adaptationId);
-        } catch (AdaptationRepository.AdaptationNotFoundException e) {
-            System.err.println(e);
-            return false;
-        }
-
-        System.out.println("SUCCESS: Adaptation retrieval successful.");
-        System.out.println(JsonUtilities.convertAdaptationToJson(adaptation));
-        return true;
-    }
-
-    private boolean listAdaptations() {
-        String adaptationListJson = this.adaptationRepository.getAdaptationList();
-
-        System.out.println("SUCCESS: Adaptation list retrieval successful.");
-        System.out.println(adaptationListJson);
-        return true;
-    }
-
-    private boolean listActivityTypes(String adaptationId) {
-        String activityTypeListJson;
-        try {
-            activityTypeListJson = this.adaptationRepository.getActivityTypes(adaptationId);
-        } catch (AdaptationRepository.AdaptationNotFoundException e) {
-            System.err.println(e);
-            return false;
-        }
-
-        System.out.println("SUCCESS: Activity type list retrieval successful.");
-        System.out.println(activityTypeListJson);
-        return true;
-    }
-
-    private boolean displayActivityType(String adaptationId, String activityType) {
-        String activityTypeJson;
-        try {
-            activityTypeJson = this.adaptationRepository.getActivityType(adaptationId, activityType);
-        } catch (AdaptationRepository.AdaptationNotFoundException | AdaptationRepository.ActivityTypeNotDefinedException e) {
-            System.err.println(e);
-            return false;
-        }
-
-        System.out.println("SUCCESS: Activity type retrieval successful.");
-        System.out.println(activityTypeJson);
-        return true;
-    }
-
-    private boolean convertApfFile(String input, String output, String dir, String[] tokens) {
-
-        /* Parse adaptation and plan file */
-        Plan plan;
-        try {
-            gov.nasa.jpl.ammos.mpsa.apgen.model.Adaptation adaptation = AdaptationParser.parseDirectory(Path.of(dir));
-            plan = ApfParser.parseFile(Path.of(input), adaptation);
-        } catch (AdaptationParsingException | PlanParsingException e) {
-            System.err.println(e.getMessage());
-            return false;
-        } catch (DirectoryNotFoundException e) {
-            System.err.println(String.format("Adaptation directory not found: %s", e.getMessage()));
-            return false;
-        }
-
-        /* Parse tokens for plan metadata */
-        String adaptationId = null;
-        String startTimestamp = null;
-        String name = null;
-        for (final String token : tokens) {
-            final String[] pieces = token.split("=", 2);
-            if (pieces.length != 2) { continue; }  // should really error at the user on this case
-
-            switch (pieces[0]) {
-                case "adaptationId": adaptationId = pieces[1]; break;
-                case "startTimestamp": startTimestamp = pieces[1]; break;
-                case "name": name = pieces[1]; break;
-            }
-        }
-
-        /* Build the plan JSON and write it to the specified output file */
-        if (JsonUtilities.writePlanToJSON(plan, Path.of(output), adaptationId, startTimestamp, name)) {
-            System.out.println(String.format("SUCCESS: Plan file written to %s", output));
-            return true;
-        }
-        return false;
     }
 }

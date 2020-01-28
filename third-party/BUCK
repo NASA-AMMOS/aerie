@@ -23,6 +23,12 @@ prebuilt_jar(
     visibility = ['PUBLIC']
 )
 
+prebuilt_jar(
+    name = 'commons-logging',
+    binary_jar = 'commons-logging-1.2.jar',
+    visibility = ['PUBLIC']
+)
+
 prebuilt_jar( 
     name = 'commons-math3',
     binary_jar = 'commons-math3-3.6.1.jar',
@@ -107,10 +113,46 @@ prebuilt_jar(
     visibility = ['PUBLIC']
 )
 
+prebuilt_jar(
+    name = 'junit-jupiter-api',
+    binary_jar = 'junit-jupiter-api-5.5.2.jar',
+    visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
+    name = 'junit-jupiter-params',
+    binary_jar = 'junit-jupiter-params-5.5.2.jar',
+    visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
+    name = 'junit-platform-commons',
+    binary_jar = 'junit-platform-commons-1.5.2.jar',
+    visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
+    name = 'junit-platform-engine',
+    binary_jar = 'junit-platform-engine-1.5.2.jar',
+    visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
+    name = 'junit-platform-launcher',
+    binary_jar = 'junit-platform-launcher-1.5.2.jar',
+    visibility = ['PUBLIC']
+)
+
 prebuilt_jar( 
     name = 'mongo-java-driver',
     binary_jar = 'mongo-java-driver-3.11.2.jar',
     visibility = ['//services:']
+)
+
+prebuilt_jar(
+    name = 'opentest4j',
+    binary_jar = 'opentest4j-1.2.0.jar',
+    visibility = ['PUBLIC']
 )
 
 prebuilt_jar( 
@@ -153,4 +195,19 @@ prebuilt_jar(
     name = 'yasson',
     binary_jar = 'yasson-1.0.5.jar',
     visibility = ['PUBLIC']
+)
+
+
+java_library(
+    name = 'junit-jupiter',
+    exported_deps = [
+        ":junit-jupiter-api",
+        ":junit-jupiter-engine",
+        ":junit-jupiter-params",
+        ":junit-platform-commons",
+        ":junit-platform-engine",
+        ":junit-platform-launcher",
+        ":opentest4j",
+    ],
+    visibility = ['PUBLIC'],
 )

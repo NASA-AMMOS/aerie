@@ -1,27 +1,43 @@
 java_library(
-    name = "merlin-cli",
-    srcs = glob(["src/main/**"]),
-    extra_arguments = [
-        "--source-path", "merlin-cli/src/",
-        "--module-path", "third-party/"
-        ],
+    name = "lib",
+    srcs = glob(["src/main/**/*"]),
+    extra_arguments = ["-Xlint:all"],
     deps = [
         "//third-party:commons-cli",
-        "//third-party:commons-lang3",
+        "//third-party:commons-logging",
         "//third-party:gson",
         "//third-party:httpclient",
         "//third-party:httpcore",
         "//third-party:httpmime",
-        "//third-party:junit",
-        "//third-party:spring-beans",
-        "//third-party:spring-context",
-        "//third-party:spring-core",
-        "//third-party:spring-test",
-        "//third-party:spring-web",
 
         # Modules
-        "//apgen-parser:apgen-parser",
-        "//merlin-sdk:merlin-sdk"
+        "//apgen-parser:lib",
     ],
-    visibility = ['PUBLIC']
+)
+
+java_binary(
+    name = "merlin-cli",
+    deps = [":lib"],
+    main_class = "gov.nasa.jpl.ammos.mpsa.aerie.merlincli.MainCLI",
+)
+
+java_library(
+    name = "tests-lib",
+    srcs = glob(["src/test/**/*"]),
+    extra_arguments = ["-Xlint:all"],
+    deps = [
+        ":lib",
+
+        "//third-party:assertj-core",
+        "//third-party:gson",
+        "//third-party:httpclient",
+        "//third-party:httpcore",
+        "//third-party:junit-jupiter",
+    ],
+)
+
+java_binary(
+    name = "unit-tests",
+    deps = [":tests-lib"],
+    main_class = "gov.nasa.jpl.ammos.mpsa.aerie.merlincli.TestMain",
 )
