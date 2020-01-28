@@ -1,8 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.MissionModelGlue.EventApplier;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.MissionModelGlue.Registry;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.MissionModelGlue.*;
 
 
 public class DataSystemModel implements SystemModel{
@@ -18,19 +19,24 @@ public class DataSystemModel implements SystemModel{
         initialSlice = new DataModelSlice();
     }
 
+    @Override
     public Registry getRegistry(){
         return this.glue.registry();
     }
 
-    public EventApplier getEventApplier(){
+    @Override
+    public EventApplier getEventAplier() {
         return this.glue.eventApplier();
     }
 
+    @Override
     public Slice getInitialSlice(){
         return this.initialSlice;
     }
 
-    public void step(DataModelSlice slice, Duration dt) {
+    @Override
+    public void step(Slice aSlice, Duration dt) {
+        DataModelSlice slice = (DataModelSlice) aSlice;
         slice.dataVolume = slice.dataRate * dt.totalSeconds();
         if (slice.dataRate > 100){
             slice.dataProtocol = GlobalPronouns.spacewire;
@@ -59,20 +65,20 @@ public class DataSystemModel implements SystemModel{
         ((DataModelSlice)slice).dataRate = dataRate;
     }
 
-    public void setDataVolume(DataModelSlice slice,  Double dataVolume){
-        slice.dataVolume = dataVolume;
+    public void setDataVolume(Slice slice,  Double dataVolume){
+        ((DataModelSlice)slice).dataVolume = dataVolume;
     }
 
-    public void setDataProtocol(DataModelSlice slice,  String dataProtocol){
-        slice.dataProtocol = dataProtocol;
+    public void setDataProtocol(Slice slice,  String dataProtocol){
+        ((DataModelSlice)slice).dataProtocol = dataProtocol;
     }
 
-    public void incrementDataRate(DataModelSlice slice, double delta){
-        slice.dataRate += delta;
+    public void incrementDataRate(Slice slice, double delta){
+        ((DataModelSlice)slice).dataRate += delta;
     }
 
-    public void decrementDataRate(DataModelSlice slice,  double delta){
-        slice.dataRate -= delta;
+    public void decrementDataRate(Slice slice,  double delta){
+        ((DataModelSlice)slice).dataRate -= delta;
     }
 
     private static class DataModelSlice implements Slice{
@@ -83,24 +89,20 @@ public class DataSystemModel implements SystemModel{
 
         public DataModelSlice(){}
 
-        public DataModelSlice(double dataRate, double dataVolume, String dataProtocol){
+        //for now, time in constructor, will remove later
+        public DataModelSlice(double dataRate, double dataVolume, String dataProtocol, Time time){
             this.dataRate = dataRate;
             this.dataVolume = dataVolume;
             this.dataProtocol = dataProtocol;
+            this.time = time;
         }
 
-        public DataModelSlice newSlice(double dataRate, double dataVolume, String dataProtocol){
-            return new DataModelSlice(dataRate, dataVolume, dataProtocol);
-        }
-
-        public DataModelSlice clone(){
-            return new DataModelSlice(this.dataRate, this.dataVolume, this.dataProtocol);
+        public DataModelSlice newSlice(double dataRate, double dataVolume, String dataProtocol, Time time){
+            return new DataModelSlice(dataRate, dataVolume, dataProtocol, time);
         }
 
         public Time time(){
             return this.time;
         }
-
-
     }
 }
