@@ -105,4 +105,9 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
   public void convertApfFile(String input, String output, String dir, String[] tokens) {
     throw new NotImplementedException("TODO: implement");
   }
+
+  @Override
+  public void performSimulation(String planId) {
+    throw new NotImplementedException("TODO: implement");
+  }
 }

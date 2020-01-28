@@ -13,6 +13,7 @@ import gov.nasa.jpl.ammos.mpsa.apgen.exceptions.PlanParsingException;
 import gov.nasa.jpl.ammos.mpsa.apgen.model.Plan;
 import gov.nasa.jpl.ammos.mpsa.apgen.parser.AdaptationParser;
 import gov.nasa.jpl.ammos.mpsa.apgen.parser.ApfParser;
+import org.apache.commons.lang3.NotImplementedException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -314,5 +315,10 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
         if (JsonUtilities.writePlanToJSON(plan, Path.of(output), adaptationId, startTimestamp, name)) {
             System.out.println(String.format("SUCCESS: Plan file written to %s", output));
         }
+    }
+
+    @Override
+    public void performSimulation(String planId) {
+        throw new NotImplementedException("Simulation within an Aerie deployment is not yet supported.");
     }
 }
