@@ -51,7 +51,7 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
 
             case HttpStatus.SC_BAD_REQUEST:
                 // This should not have happened; this method was responsible for serializing the adaptation.
-                throw new Error("Adaptation serivce rejected the request body when posting an adaptation");
+                throw new Error("Adaptation service rejected the request body when posting an adaptation");
 
             case HttpStatus.SC_UNPROCESSABLE_ENTITY:
                 // TODO: Add information about what was wrong from the response

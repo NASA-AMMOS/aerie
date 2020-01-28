@@ -112,7 +112,7 @@ public class CommandOptions {
                         throw new InvalidNumberOfArgsException("Option 'A' requires at least three arguments");
                     }
                     String path = params[0];
-                    String[] tokens = Arrays.copyOfRange(args, 1, args.length);
+                    String[] tokens = Arrays.copyOfRange(params, 1, params.length);
                     commandReceiver.createAdaptation(path, tokens);
                     return true;
                 }
