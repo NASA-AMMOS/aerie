@@ -19,6 +19,10 @@ class Getter<T> {
         this.klass = klass;
         this.getter = getter;
     }
+
+    public T apply(Slice slice) {
+        return (T) this.getter.apply(slice);
+    }
 }
 
 class Setter<T> {
@@ -111,15 +115,19 @@ public class MissionModelGlue {
 
     public class EventApplier{
 
-        public void applyEvents(Slice slice, SystemModel model, List<Event> eventLog){
+        public Slice applyEvents(Slice initialSlice, SystemModel model, List<Event> eventLog){
             Registry registry = model.getRegistry();
+            Slice slice = initialSlice.cloneSlice();
 
             for (Event<?> event : eventLog){
                 Duration dt = event.time().subtract(slice.time());
                 model.step(slice, dt);
                 registry.getSetter(model, event.name()).accept(slice, event.value());
-                //slice.time() =
+                slice.setTime(event.time());
+                slice.printSlice();
             }
+
+            return slice;
         }
     }
 }

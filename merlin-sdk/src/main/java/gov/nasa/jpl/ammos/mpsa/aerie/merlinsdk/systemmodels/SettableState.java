@@ -24,8 +24,9 @@ public class SettableState<T> implements State<T> {
     public T get() {
         Getter getter = dependentSystemModel.getRegistry().getGetter(dependentSystemModel, name);
         List<Event> eventLog = dependentSystemModel.getRegistry().getEventLog(dependentSystemModel);
-        dependentSystemModel.getEventAplier().applyEvents(dependentSystemModel.getSlice(), dependentSystemModel, eventLog);
-        return (T) getter.getter.apply(dependentSystemModel.getSlice());
+        Slice slice = dependentSystemModel.getEventAplier().
+                applyEvents(dependentSystemModel.getInitialSlice(), dependentSystemModel, eventLog);
+        return (T) getter.apply(slice);
     }
 
     @Override

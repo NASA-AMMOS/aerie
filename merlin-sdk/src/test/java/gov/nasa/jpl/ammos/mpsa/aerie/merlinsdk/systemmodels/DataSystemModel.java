@@ -13,10 +13,12 @@ public class DataSystemModel implements SystemModel{
     private Registry registry;
     public EventApplier eventApplier;
 
-    public DataSystemModel(MissionModelGlue glue){
+    public DataSystemModel(MissionModelGlue glue, Time initialTime){
         this.glue = glue;
+        registry = glue.registry();
+        eventApplier = glue.eventApplier();
         registerSelf();
-        initialSlice = new DataModelSlice();
+        initialSlice = new DataModelSlice(initialTime);
     }
 
     @Override
@@ -37,7 +39,7 @@ public class DataSystemModel implements SystemModel{
     @Override
     public void step(Slice aSlice, Duration dt) {
         DataModelSlice slice = (DataModelSlice) aSlice;
-        slice.dataVolume = slice.dataRate * dt.totalSeconds();
+        slice.dataVolume += slice.dataRate * dt.totalSeconds();
         if (slice.dataRate > 100){
             slice.dataProtocol = GlobalPronouns.spacewire;
         }
@@ -45,8 +47,9 @@ public class DataSystemModel implements SystemModel{
 
     @Override
     public void registerSelf() {
-        registry.registerGetter(this, GlobalPronouns.dataRate, Double.class, this::getDataRate);
-        registry.registerSetter(this, GlobalPronouns.dataRate, Double.class, this::setDataRate);
+        registry.provideSettable(this, GlobalPronouns.dataRate, Double.class, this::setDataRate, this::getDataRate);
+        registry.provideSettable(this, GlobalPronouns.dataProtocol, String.class, this::setDataProtocol, this::getDataProtocol);
+        registry.provideSettable(this, GlobalPronouns.dataVolume, Double.class, this::setDataVolume, this::getDataVolume);
     }
 
     public double getDataRate(Slice slice){
@@ -73,13 +76,14 @@ public class DataSystemModel implements SystemModel{
         ((DataModelSlice)slice).dataProtocol = dataProtocol;
     }
 
+    /* Need to create a cumulative event interface
     public void incrementDataRate(Slice slice, double delta){
         ((DataModelSlice)slice).dataRate += delta;
     }
 
     public void decrementDataRate(Slice slice,  double delta){
         ((DataModelSlice)slice).dataRate -= delta;
-    }
+    }*/
 
     private static class DataModelSlice implements Slice{
         private double dataRate = 0.0;
@@ -87,7 +91,9 @@ public class DataSystemModel implements SystemModel{
         private String dataProtocol = GlobalPronouns.UART;
         private Time time;
 
-        public DataModelSlice(){}
+        public DataModelSlice(Time time){
+            this.time = time;
+        }
 
         //for now, time in constructor, will remove later
         public DataModelSlice(double dataRate, double dataVolume, String dataProtocol, Time time){
@@ -103,6 +109,20 @@ public class DataSystemModel implements SystemModel{
 
         public Time time(){
             return this.time;
+        }
+
+        @Override
+        public void setTime(Time time){
+            this.time = time;
+        }
+
+        public DataModelSlice cloneSlice(){
+            return new DataModelSlice(dataRate, dataVolume, dataProtocol, time);
+        }
+
+        //will be used for review meeting then removed
+        public void printSlice(){
+            System.out.println("dataRate: " + dataRate + "\t" + " dataVolume: " + dataVolume + "\t" + " time: " + time);
         }
     }
 }
