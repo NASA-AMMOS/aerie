@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class LocalCommandReceiver implements MerlinCommandReceiver {
+  private final Map<String, Schedule> schedules = new HashMap<>();
   private final Map<String, AdaptationJar> adaptations = new HashMap<>();
 
   @Override
@@ -104,6 +105,15 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
   @Override
   public void convertApfFile(String input, String output, String dir, String[] tokens) {
     throw new NotImplementedException("TODO: implement");
+  }
+
+  /**
+   * @deprecated This method is used for development scaffolding, and will be removed in the future.
+   *   Use the {@code createPlan} method instead.
+   */
+  @Deprecated
+  public void addSchedule(String scheduleName, Schedule schedule) {
+    this.schedules.put(scheduleName, schedule);
   }
 
   @Override
