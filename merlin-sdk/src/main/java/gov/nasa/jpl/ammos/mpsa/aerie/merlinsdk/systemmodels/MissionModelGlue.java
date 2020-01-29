@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration2;
 import org.apache.commons.math3.util.Pair;
 
 import java.util.ArrayList;
@@ -120,7 +120,7 @@ public class MissionModelGlue {
             Slice slice = initialSlice.cloneSlice();
 
             for (Event<?> event : eventLog){
-                Duration dt = event.time().subtract(slice.time());
+                Duration2 dt = event.time().durationFrom(slice.time());
                 model.step(slice, dt);
                 registry.getSetter(model, event.name()).accept(slice, event.value());
                 slice.setTime(event.time());

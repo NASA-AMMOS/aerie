@@ -2,9 +2,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob.ActivityStatus;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration2;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 /**
  * Functions as a bridge between the simulation engine and an activity job
@@ -15,8 +14,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
  * activity's effect model but under the `SimulationContext` interface. This is to ensure that certain job/thread and
  * engine behaviors (like adding listeners) are exposed to the `ActivityJob` class but NOT to adapters in their
  * effect models.
- * 
- * @param <T> the type of the adapter-provided state index structure
  */
 public class JobContext implements SimulationContext {
     
@@ -51,11 +48,12 @@ public class JobContext implements SimulationContext {
      * queue, and suspends the job's thread. The thread blocks until the engine de-queues it in future simulation time
      * and resumes it.
      */
-    public void delay(Duration d) {
-        if (d.totalSeconds() < 0.0) {
+    @Override
+    public void delay(Duration2 d) {
+        if (d.isNegative()) {
             throw new IllegalArgumentException("Duration `d` must be non-negative");
         }
-        this.activityJob.setEventTime(this.activityJob.getEventTime().add(d));
+        this.activityJob.setEventTime(this.activityJob.getEventTime().plus(d));
         this.engine.insertIntoQueue(this.activityJob);
         this.activityJob.suspend();
     }
@@ -67,8 +65,9 @@ public class JobContext implements SimulationContext {
      * queue, and suspends the job's thread. The thread blocks until the engine de-queues it in future simulation time
      * and resumes it.
      */
-    public void delayUntil(Time t) {
-        if (t.lessThan(this.now())) {
+    @Override
+    public void delayUntil(Instant t) {
+        if (t.isBefore(this.now())) {
             throw new IllegalArgumentException("Time `t` must occur in the future");
         }
         this.activityJob.setEventTime(t);
@@ -90,6 +89,7 @@ public class JobContext implements SimulationContext {
      * @param childActivity the child activity that should be spawned in the background at the current simulation time
      * @return the input child activity
      */
+    @Override
     public Activity<?> spawnActivity(Activity<?> childActivity) {
         ActivityJob<?> childActivityJob = new ActivityJob<>(childActivity, this.now());
         this.engine.addParentChildRelationship(this.activityJob.getActivity(), childActivityJob.getActivity());
@@ -114,6 +114,7 @@ public class JobContext implements SimulationContext {
      * @param childActivity the child activity that should be spawned and blocked on
      * @return the input child activity
      */
+    @Override
     public Activity<?> callActivity(Activity<?> childActivity) {
         ActivityJob<?> childActivityJob = new ActivityJob<>(childActivity, this.now());
         this.engine.addParentChildRelationship(this.activityJob.getActivity(), childActivity);
@@ -128,6 +129,7 @@ public class JobContext implements SimulationContext {
      * 
      * @param childActivity the target activity on which to block
      */
+    @Override
     public void waitForChild(Activity<?> childActivity) {
         ActivityJob<?> childActivityJob = engine.getActivityJob(childActivity);
         // handle case where activity is already complete:
@@ -142,6 +144,7 @@ public class JobContext implements SimulationContext {
     /**
      * Blocks a parent activity thread on the completion of all of its children
      */
+    @Override
     public void waitForAllChildren() {
         for (Activity<?> child: this.engine.getActivityChildren(this.activityJob.getActivity())) {
             this.waitForChild(child);
@@ -173,7 +176,8 @@ public class JobContext implements SimulationContext {
      * 
      * @return current simulation time
      */
-    public Time now() {
+    @Override
+    public Instant now() {
         return this.engine.getCurrentSimulationTime();
     }
 
@@ -182,7 +186,7 @@ public class JobContext implements SimulationContext {
      * 
      * @param d the length in simulation time of the activity's effect model
      */
-    public void logActivityDuration(Duration d) {
+    public void logActivityDuration(Duration2 d) {
         this.engine.logActivityDuration(this.activityJob.getActivity(), d);
     }
 

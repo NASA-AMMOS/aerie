@@ -7,12 +7,12 @@ import org.apache.commons.lang3.NotImplementedException;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 public abstract class DerivedState<T> implements State<T> {
     
     protected SimulationEngine engine;
-    protected Map<Time, T> stateHistory = new LinkedHashMap<>();
+    protected Map<Instant, T> stateHistory = new LinkedHashMap<>();
 
     @Override
     public T get() {
@@ -20,7 +20,7 @@ public abstract class DerivedState<T> implements State<T> {
     }
 
     @Override
-    public Map<Time, T> getHistory() {
+    public Map<Instant, T> getHistory() {
         return stateHistory;
     }
 

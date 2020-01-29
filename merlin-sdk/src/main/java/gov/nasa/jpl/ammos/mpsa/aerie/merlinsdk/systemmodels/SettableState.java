@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 import java.util.List;
 import java.util.Map;
@@ -15,7 +15,7 @@ public class SettableState<T> implements State<T> {
         this.dependentSystemModel = dependentSystemModel;
     }
 
-    public void set(T value, Time t){
+    public void set(T value, Instant t){
         SettableEvent<T> event = new SettableEvent<>(this.name, value, t);
         dependentSystemModel.getRegistry().addEvent(dependentSystemModel, event);
     }
@@ -35,7 +35,7 @@ public class SettableState<T> implements State<T> {
     }
 
     @Override
-    public Map<Time, T> getHistory() {
+    public Map<Instant, T> getHistory() {
         return null;
     }
 }

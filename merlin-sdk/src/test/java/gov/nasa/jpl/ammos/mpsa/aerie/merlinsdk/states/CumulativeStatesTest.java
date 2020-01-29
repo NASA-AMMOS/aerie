@@ -2,7 +2,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,7 +27,10 @@ public class CumulativeStatesTest {
             return List.of();
         }
     }
-    public SimulationEngine mockEngine = new SimulationEngine(new Time(), List.of(), new MockStateContainer());
+    public SimulationEngine mockEngine = new SimulationEngine(
+        SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS),
+        List.of(),
+        new MockStateContainer());
 
 
     @Before

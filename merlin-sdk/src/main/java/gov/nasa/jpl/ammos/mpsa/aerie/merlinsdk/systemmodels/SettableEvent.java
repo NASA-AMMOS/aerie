@@ -1,15 +1,14 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
-
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 public class SettableEvent<T> implements Event<T> {
 
     private T value;
-    private Time time;
+    private Instant time;
     private String name;
 
-    public SettableEvent(String name, T value, Time time){
+    public SettableEvent(String name, T value, Instant time){
         this.name = name;
         this.value = value;
         this.time = time;
@@ -26,7 +25,7 @@ public class SettableEvent<T> implements Event<T> {
     }
 
     @Override
-    public Time time(){
+    public Instant time(){
         return this.time;
     }
 }

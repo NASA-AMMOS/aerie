@@ -1,14 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
-import java.util.PriorityQueue;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import java.util.PriorityQueue;
 
 /**
  * A priority queue of activity jobs organized by event time
- * 
- * @param <T> the type of the adapter-provided state index structure
  */
 public class PendingEventQueue extends PriorityQueue<ActivityJob<?>> {
     
@@ -17,7 +14,7 @@ public class PendingEventQueue extends PriorityQueue<ActivityJob<?>> {
      *
      * @return the event time of the first element in the queue
      */
-    public Time getNextEventTime() {
+    public Instant getNextEventTime() {
         return this.peek().getEventTime();
     }
     

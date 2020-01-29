@@ -6,7 +6,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.validation.ValidationR
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.classes.Vector3D;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.simulation.Context;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.simulation.annotations.SimulationContext;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration2;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
 import gov.nasa.jpl.ammos.mpsa.merlin.multimissionmodels.gnc.classes.Attitude;
 
@@ -43,7 +44,7 @@ public class SomeInstrumentCalibrationActivity implements Activity {
     /* ------------------------------- PARAMETERS ------------------------------- */
 
     @Parameter
-    Duration instrumentWarmupDuration = Duration(2, Time.Hour);
+    Duration2 instrumentWarmupDuration = Duration2.fromQuantity(2, TimeUnit.HOURS);
 
     @Parameter
     Attitude scanStartAttitude = new Attitude();
@@ -66,8 +67,8 @@ public class SomeInstrumentCalibrationActivity implements Activity {
             results.add(ActivityValidation.failure("The scan rate '" + scanRate + "' must be non-negative."));
         }
 
-        if (instrumentWarmupDuration.lessThan(Duration(1, Time.Hour))
-                || instrumentWarmupDuration.moreThan(Duration(3, Time.Hour))) {
+        if (instrumentWarmupDuration.shorterThan(Duration2.fromQuantity(1, TimeUnit.HOURS))
+                || instrumentWarmupDuration.longerThan(Duration2.fromQuantity(3, TimeUnit.HOURS))) {
             results.add(ActivityValidation.failure("The instrument warmup duration '" + instrumentWarmupDuration
                     + "' is not within the range [1, 3] hours."));
         }

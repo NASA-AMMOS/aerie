@@ -1,7 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,8 +13,9 @@ import java.util.concurrent.Executors;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration2;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
 /**
  * This class contains the core event loop of a simulation in which activities
@@ -44,7 +43,7 @@ public class SimulationEngine {
     /**
      * The current simulation time of the engine
      */
-    private Time currentSimulationTime;
+    private Instant currentSimulationTime;
 
     /**
      * The priority queue of time-ordered `ActivityJob`s
@@ -65,7 +64,7 @@ public class SimulationEngine {
      * A map of activity instances to their durations (the length of the effect
      * model in simulation time)
      */
-    private Map<Activity<?>, Duration> activityDurationMap = new HashMap<>();
+    private Map<Activity<?>, Duration2> activityDurationMap = new HashMap<>();
 
     /**
      * A map of target activity to their listeners (activities that are blocking on
@@ -90,7 +89,7 @@ public class SimulationEngine {
      *
      * Defaults to never.
      */
-    private Duration samplingPeriod = Duration.fromSeconds(0);
+    private Duration2 samplingPeriod = Duration2.fromQuantity(0, TimeUnit.MICROSECONDS);
 
     /**
      * The sampling hook to call every sampling period
@@ -104,10 +103,10 @@ public class SimulationEngine {
      * 
      * @param simulationStartTime
      * @param activityJobs
-     * @param stateContainers
+     * @param stateContainer
      */
-    public SimulationEngine(Time simulationStartTime, List<ActivityJob<?>> activityJobs,
-        StateContainer stateContainer) {
+    public SimulationEngine(Instant simulationStartTime, List<ActivityJob<?>> activityJobs,
+                            StateContainer stateContainer) {
         this.stateContainer = stateContainer;
 
         registerStates(stateContainer.getStateList());
@@ -125,12 +124,12 @@ public class SimulationEngine {
 
     }
 
-    public void setSamplingHook(final Duration d, final Runnable samplingHook) {
-        if (samplingHook == null || d.lessThanOrEqualTo(Duration.fromSeconds(0))) {
-            this.samplingPeriod = Duration.fromSeconds(0);
+    public void setSamplingHook(final Duration2 d, final Runnable samplingHook) {
+        if (samplingHook == null || !d.isPositive()) {
+            this.samplingPeriod = Duration2.fromQuantity(0, TimeUnit.MICROSECONDS);
             this.samplingHook = () -> {};
         } else {
-            if (this.samplingPeriod.greaterThan(Duration.fromSeconds(0))) {
+            if (this.samplingPeriod.isPositive()) {
                 System.err.println("[WARNING] Overriding existing sampling hook");
             }
             this.samplingPeriod = d;
@@ -146,18 +145,18 @@ public class SimulationEngine {
     public void simulate() {
         this.engineThread = Thread.currentThread();
 
-        Time nextSampleTime = this.currentSimulationTime;
+        var nextSampleTime = this.currentSimulationTime;
 
         // Run until we've handled all outstanding activity events.
         while (!this.pendingEventQueue.isEmpty()) {
             final ActivityJob<?> job = pendingEventQueue.remove();
-            final Time eventTime = job.getEventTime();
+            final var eventTime = job.getEventTime();
 
             // Handle all of the sampling events that occur before the next activity event.
-            if (this.samplingPeriod.greaterThan(Duration.fromSeconds(0))) {
-                while (nextSampleTime.lessThan(eventTime)) {
+            if (this.samplingPeriod.isPositive()) {
+                while (nextSampleTime.isBefore(eventTime)) {
                     this.currentSimulationTime = nextSampleTime;
-                    nextSampleTime = nextSampleTime.add(this.samplingPeriod);
+                    nextSampleTime = nextSampleTime.plus(this.samplingPeriod);
 
                     this.samplingHook.run();
                 }
@@ -194,7 +193,7 @@ public class SimulationEngine {
      * 
      * @return the current simulation time
      */
-    public Time getCurrentSimulationTime() {
+    public Instant getCurrentSimulationTime() {
         return this.currentSimulationTime;
     }
 
@@ -345,7 +344,7 @@ public class SimulationEngine {
      * @param activity the activity instance modeled in the simulation
      * @param d        the length in simulation time of the activity's effect model
      */
-    public void logActivityDuration(Activity<?> activity, Duration d) {
+    public void logActivityDuration(Activity<?> activity, Duration2 d) {
         this.activityDurationMap.put(activity, d);
     }
 
@@ -356,7 +355,7 @@ public class SimulationEngine {
      * @param activity the activity instance whose duration is desired
      * @return the length in simulation time of that activity's effect model
      */
-    public Duration getActivityDuration(Activity<?> activity) {
+    public Duration2 getActivityDuration(Activity<?> activity) {
         return this.activityDurationMap.get(activity);
     }
 

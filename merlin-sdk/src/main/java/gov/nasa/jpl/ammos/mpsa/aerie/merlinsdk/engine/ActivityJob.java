@@ -2,8 +2,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration2;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 public class ActivityJob<T extends StateContainer> implements Comparable<ActivityJob<T>> {
 
@@ -20,7 +20,7 @@ public class ActivityJob<T extends StateContainer> implements Comparable<Activit
      * time so that it may be re-inserted into the engine's pending event queue at the appropriate wake-up time. This 
      * value is the index by which the engine's priority queue orders activities.
      */
-    private Time eventTime;
+    private Instant eventTime;
 
     /**
      * The activity instance that this job "owns"
@@ -45,7 +45,7 @@ public class ActivityJob<T extends StateContainer> implements Comparable<Activit
 
     private ActivityStatus status = ActivityStatus.NotStarted;
 
-    public ActivityJob(Activity<T> activityInstance, Time startTime) {
+    public ActivityJob(Activity<T> activityInstance, Instant startTime) {
         this.activity = activityInstance;
         this.eventTime = startTime;
     }
@@ -62,13 +62,13 @@ public class ActivityJob<T extends StateContainer> implements Comparable<Activit
         this.channel.takeControl();
 
         this.status = ActivityStatus.InProgress;
-        Time startTime = this.ctx.now();
+        Instant startTime = this.ctx.now();
 
         activity.modelEffects(this.ctx, (T) this.stateContainer);
         this.ctx.waitForAllChildren();
         this.status = ActivityStatus.Complete;
 
-        Duration activityDuration = this.ctx.now().subtract(startTime);
+        Duration2 activityDuration = this.ctx.now().durationFrom(startTime);
         this.ctx.logActivityDuration(activityDuration);
         this.ctx.notifyActivityListeners();
         
@@ -91,7 +91,7 @@ public class ActivityJob<T extends StateContainer> implements Comparable<Activit
         return this.eventTime.compareTo(other.eventTime);
     }
 
-    public Time getEventTime() {
+    public Instant getEventTime() {
         return this.eventTime;
     }
 
@@ -103,7 +103,7 @@ public class ActivityJob<T extends StateContainer> implements Comparable<Activit
         this.ctx = ctx;
     }
 
-    public void setEventTime(Time t) {
+    public void setEventTime(Instant t) {
         this.eventTime = t;
     }
 
