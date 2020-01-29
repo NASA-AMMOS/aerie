@@ -10,13 +10,12 @@ import org.apache.http.impl.client.HttpClients;
 import java.util.Scanner;
 
 public class MainCLI {
-
     public static void main(String[] args) {
         final PlanRepository planRepository = new RemotePlanRepository(new HttpClientHandler(HttpClients.createDefault()));
         final AdaptationRepository adaptationRepository = new RemoteAdaptationRepository(new HttpClientHandler(HttpClients.createDefault()));
-        final AerieCommandReceiver commandReceiver = new AerieCommandReceiver(planRepository, adaptationRepository);
-        final CommandOptions commandOptions = new CommandOptions();
+        final MerlinCommandReceiver commandReceiver = new AerieCommandReceiver(planRepository, adaptationRepository);
 
+        final CommandOptions commandOptions = new CommandOptions();
         if (args.length > 0) {
             runOne(commandOptions, commandReceiver, args);
         } else {
@@ -24,13 +23,13 @@ public class MainCLI {
         }
     }
 
-    private static void runOne(CommandOptions commandOptions, AerieCommandReceiver commandReceiver, String[] args) {
+    private static void runOne(CommandOptions commandOptions, MerlinCommandReceiver commandReceiver, String[] args) {
         if (!commandOptions.parse(commandReceiver, args)) {
             commandOptions.printUsage();
         }
     }
 
-    private static void runRepl(CommandOptions commandOptions, AerieCommandReceiver commandReceiver) {
+    private static void runRepl(CommandOptions commandOptions, MerlinCommandReceiver commandReceiver) {
         Scanner sc = new Scanner(System.in);
         while (true) {
             System.out.print("\nEnter command: ");
