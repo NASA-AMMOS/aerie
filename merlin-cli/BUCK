@@ -13,6 +13,7 @@ java_library(
 
         # Modules
         "//apgen-parser:lib",
+        "//merlin-sdk:merlin-sdk",
     ],
 )
 
