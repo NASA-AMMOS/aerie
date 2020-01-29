@@ -199,10 +199,10 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
     }
 
     @Override
-    public void createAdaptation(Path path, Adaptation adaptation) {
+    public String createAdaptation(Path path, Adaptation adaptation) {
         if (!Files.exists(path)) {
             System.err.println(String.format("File not found: %s", path));
-            return;
+            return null;
         }
 
         String id;
@@ -210,10 +210,11 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
             id = this.adaptationRepository.createAdaptation(adaptation, path.toFile());
         } catch (AdaptationRepository.InvalidAdaptationException e) {
             System.err.println(e);
-            return;
+            return null;
         }
 
         System.out.println(String.format("CREATED: Adaptation successfully created at: %s.", id));
+        return id;
     }
 
     @Override

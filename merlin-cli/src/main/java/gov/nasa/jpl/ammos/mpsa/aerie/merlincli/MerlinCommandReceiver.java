@@ -20,7 +20,7 @@ public interface MerlinCommandReceiver {
     void updateActivityInstance(String planId, String activityId, String[] tokens);
     void deleteActivityInstance(String planId, String activityId);
     void listPlans();
-    void createAdaptation(Path path, Adaptation adaptation);
+    String createAdaptation(Path path, Adaptation adaptation);
     void deleteAdaptation(String adaptationId);
     void displayAdaptation(String adaptationId);
     void listAdaptations();

@@ -58,7 +58,7 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
   }
 
   @Override
-  public void createAdaptation(Path path, Adaptation adaptation) {
+  public String createAdaptation(Path path, Adaptation adaptation) {
     throw new NotImplementedException("TODO: implement");
   }
 
