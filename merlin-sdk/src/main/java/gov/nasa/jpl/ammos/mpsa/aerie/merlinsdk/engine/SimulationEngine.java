@@ -165,6 +165,8 @@ public class SimulationEngine {
             this.currentSimulationTime = eventTime;
             this.executeActivity(job);
         }
+
+        this.threadPool.shutdown();
     }
 
     /**
