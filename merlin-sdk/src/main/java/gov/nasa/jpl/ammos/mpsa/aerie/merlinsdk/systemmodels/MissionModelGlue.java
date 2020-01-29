@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import org.apache.commons.math3.util.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,13 +70,11 @@ public class MissionModelGlue {
         private Map<Pair<SystemModel, String>, Setter<?>> modelToSetter = new HashMap<>();
 
         public Getter getGetter(SystemModel model,  String stateName){
-            Pair<SystemModel, String> key = new Pair<>(model, stateName);
-            return modelToGetter.get(key);
+            return modelToGetter.get(Pair.of(model, stateName));
         }
 
         public Setter getSetter(SystemModel model,  String stateName){
-            Pair<SystemModel, String> key = new Pair<>(model, stateName);
-            return modelToSetter.get(key);
+            return modelToSetter.get(Pair.of(model, stateName));
         }
 
         public void addEvent(SystemModel model,  Event<?> event){
@@ -92,14 +90,16 @@ public class MissionModelGlue {
 
         public <T> void registerGetter(SystemModel model,  String stateName, Class<T> resourceType,
                                        Function<Slice, T> getter){
-            Pair<SystemModel, String> key = new Pair<>(model, stateName);
-            modelToGetter.put(key, new Getter<>(resourceType, getter));
+            modelToGetter.put(
+                    Pair.of(model, stateName),
+                    new Getter<>(resourceType, getter));
         }
 
         public <T> void registerSetter(SystemModel model, String stateName, Class<T> resourceType,
                                        BiConsumer<Slice,T> setter){
-            Pair<SystemModel, String> key = new Pair<>(model, stateName);
-            modelToSetter.put(key, new Setter<>(resourceType, setter));
+            modelToSetter.put(
+                    Pair.of(model, stateName),
+                    new Setter<>(resourceType, setter));
         }
 
         public <T> void provideSettable(SystemModel model, String stateName, Class<T> resourceType,
@@ -110,6 +110,19 @@ public class MissionModelGlue {
 
         public List<Event> getEventLog(SystemModel model){
             return modelToEventLog.get(model);
+        }
+
+        public Map<String, Getter<?>> getStateGetters(){
+            var stateGetters = new HashMap<String, Getter<?>>();
+
+            for (var entry : modelToGetter.entrySet()){
+                String name = entry.getKey().getRight();
+                Getter<?> getter = entry.getValue();
+
+                stateGetters.put(name, getter);
+            }
+
+            return stateGetters;
         }
     }
 
