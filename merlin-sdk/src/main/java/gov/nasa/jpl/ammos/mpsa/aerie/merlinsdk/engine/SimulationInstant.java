@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration2;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
@@ -28,18 +28,18 @@ public final class SimulationInstant implements Instant {
   }
 
   @Override
-  public SimulationInstant plus(final Duration2 duration) {
+  public SimulationInstant plus(final Duration duration) {
     return new SimulationInstant(Math.addExact(this.microsecondsFromStart, duration.durationInMicroseconds));
   }
 
   @Override
-  public SimulationInstant minus(final Duration2 duration) {
+  public SimulationInstant minus(final Duration duration) {
     return new SimulationInstant(Math.subtractExact(this.microsecondsFromStart, duration.durationInMicroseconds));
   }
 
   @Override
-  public Duration2 durationFrom(final Instant other) {
-    return Duration2.fromQuantity(
+  public Duration durationFrom(final Instant other) {
+    return Duration.fromQuantity(
         Math.subtractExact(this.microsecondsFromStart, ((SimulationInstant)other).microsecondsFromStart),
         TimeUnit.MICROSECONDS);
   }

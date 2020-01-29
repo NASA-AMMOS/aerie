@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.MissionModelGlue.EventApplier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.MissionModelGlue.Registry;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration2;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 public class DataSystemModel implements SystemModel{
@@ -36,7 +36,7 @@ public class DataSystemModel implements SystemModel{
     }
 
     @Override
-    public void step(Slice aSlice, Duration2 dt) {
+    public void step(Slice aSlice, Duration dt) {
         DataModelSlice slice = (DataModelSlice) aSlice;
         slice.dataVolume += slice.dataRate * (double)(dt.durationInMicroseconds / 1000000L);
         if (slice.dataRate > 100){

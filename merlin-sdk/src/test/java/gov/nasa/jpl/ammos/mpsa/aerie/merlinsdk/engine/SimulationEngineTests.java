@@ -13,7 +13,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.BasicState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration2;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
@@ -49,7 +49,7 @@ public class SimulationEngineTests {
         public Boolean booleanValue = true;
 
         @Parameter
-        public Duration2 durationValue = Duration2.fromQuantity(10, TimeUnit.SECONDS);
+        public Duration durationValue = Duration.fromQuantity(10, TimeUnit.SECONDS);
 
         @Override
         public void modelEffects(SimulationContext ctx, DiverseStates states) {
@@ -77,7 +77,7 @@ public class SimulationEngineTests {
         public Boolean booleanValue = true;
 
         @Parameter
-        public Duration2 durationValue = Duration2.fromQuantity(10, TimeUnit.SECONDS);
+        public Duration durationValue = Duration.fromQuantity(10, TimeUnit.SECONDS);
 
         @Override
         public void modelEffects(SimulationContext ctx, DiverseStates states) {
@@ -101,7 +101,7 @@ public class SimulationEngineTests {
                 act.stringValue = "B";
                 act.arrayValue = List.of(0.0, 1.0, 0.0);
                 act.booleanValue = false;
-                act.durationValue = Duration2.fromQuantity(10, TimeUnit.SECONDS);
+                act.durationValue = Duration.fromQuantity(10, TimeUnit.SECONDS);
             }
             ActivityJob<DiverseStates> actJob = new ActivityJob<>(
                     act, simStart.plus(i, TimeUnit.HOURS)
@@ -324,7 +324,7 @@ public class SimulationEngineTests {
         SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
 
-        assertEquals(Duration2.fromQuantity(10, TimeUnit.SECONDS), engine.getActivityDuration(act));
+        assertEquals(Duration.fromQuantity(10, TimeUnit.SECONDS), engine.getActivityDuration(act));
     }
 
     /* ----------------------- PARENT-CHILD DURATION TEST ----------------------- */
@@ -376,7 +376,7 @@ public class SimulationEngineTests {
         SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
 
-        assertEquals(Duration2.fromQuantity(10, TimeUnit.SECONDS), engine.getActivityDuration(parent));
+        assertEquals(Duration.fromQuantity(10, TimeUnit.SECONDS), engine.getActivityDuration(parent));
     }
 
 }

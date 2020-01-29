@@ -13,7 +13,7 @@ import java.util.concurrent.Executors;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration2;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
@@ -64,7 +64,7 @@ public class SimulationEngine {
      * A map of activity instances to their durations (the length of the effect
      * model in simulation time)
      */
-    private Map<Activity<?>, Duration2> activityDurationMap = new HashMap<>();
+    private Map<Activity<?>, Duration> activityDurationMap = new HashMap<>();
 
     /**
      * A map of target activity to their listeners (activities that are blocking on
@@ -89,7 +89,7 @@ public class SimulationEngine {
      *
      * Defaults to never.
      */
-    private Duration2 samplingPeriod = Duration2.fromQuantity(0, TimeUnit.MICROSECONDS);
+    private Duration samplingPeriod = Duration.fromQuantity(0, TimeUnit.MICROSECONDS);
 
     /**
      * The sampling hook to call every sampling period
@@ -124,9 +124,9 @@ public class SimulationEngine {
 
     }
 
-    public void setSamplingHook(final Duration2 d, final Runnable samplingHook) {
+    public void setSamplingHook(final Duration d, final Runnable samplingHook) {
         if (samplingHook == null || !d.isPositive()) {
-            this.samplingPeriod = Duration2.fromQuantity(0, TimeUnit.MICROSECONDS);
+            this.samplingPeriod = Duration.fromQuantity(0, TimeUnit.MICROSECONDS);
             this.samplingHook = () -> {};
         } else {
             if (this.samplingPeriod.isPositive()) {
@@ -344,7 +344,7 @@ public class SimulationEngine {
      * @param activity the activity instance modeled in the simulation
      * @param d        the length in simulation time of the activity's effect model
      */
-    public void logActivityDuration(Activity<?> activity, Duration2 d) {
+    public void logActivityDuration(Activity<?> activity, Duration d) {
         this.activityDurationMap.put(activity, d);
     }
 
@@ -355,7 +355,7 @@ public class SimulationEngine {
      * @param activity the activity instance whose duration is desired
      * @return the length in simulation time of that activity's effect model
      */
-    public Duration2 getActivityDuration(Activity<?> activity) {
+    public Duration getActivityDuration(Activity<?> activity) {
         return this.activityDurationMap.get(activity);
     }
 

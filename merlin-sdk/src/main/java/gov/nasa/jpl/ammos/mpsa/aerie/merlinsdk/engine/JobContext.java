@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob.ActivityStatus;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration2;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 /**
@@ -49,7 +49,7 @@ public class JobContext implements SimulationContext {
      * and resumes it.
      */
     @Override
-    public void delay(Duration2 d) {
+    public void delay(Duration d) {
         if (d.isNegative()) {
             throw new IllegalArgumentException("Duration `d` must be non-negative");
         }
@@ -186,7 +186,7 @@ public class JobContext implements SimulationContext {
      * 
      * @param d the length in simulation time of the activity's effect model
      */
-    public void logActivityDuration(Duration2 d) {
+    public void logActivityDuration(Duration d) {
         this.engine.logActivityDuration(this.activityJob.getActivity(), d);
     }
 

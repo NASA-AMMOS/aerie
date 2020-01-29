@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration2;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 public class ActivityJob<T extends StateContainer> implements Comparable<ActivityJob<T>> {
@@ -68,7 +68,7 @@ public class ActivityJob<T extends StateContainer> implements Comparable<Activit
         this.ctx.waitForAllChildren();
         this.status = ActivityStatus.Complete;
 
-        Duration2 activityDuration = this.ctx.now().durationFrom(startTime);
+        Duration activityDuration = this.ctx.now().durationFrom(startTime);
         this.ctx.logActivityDuration(activityDuration);
         this.ctx.notifyActivityListeners();
         

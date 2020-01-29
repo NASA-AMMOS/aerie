@@ -4,7 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.simulation.Context;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.simulation.annotations.SimulationContext;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration2;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
@@ -45,7 +45,7 @@ public class ModelPartialEclipseActivity implements Activity {
     Body occultingBody = Body.EUROPA;
 
     @Parameter
-    Duration2 eclipseDuration = Duration2.fromQuantity(10, TimeUnit.MINUTES);
+    Duration eclipseDuration = Duration.fromQuantity(10, TimeUnit.MINUTES);
 
     /* --------------------- EFFECT MODELING & DECOMPOSITION -------------------- */
 
@@ -57,7 +57,7 @@ public class ModelPartialEclipseActivity implements Activity {
         Instant eclipseEnd = ctx.now().plus(eclipseDuration);
 
         int segments = 10;
-        Duration2 stepTime = Duration2.fromQuantity(eclipseDuration.durationInMicroseconds / segments, TimeUnit.MICROSECONDS);
+        Duration stepTime = Duration.fromQuantity(eclipseDuration.durationInMicroseconds / segments, TimeUnit.MICROSECONDS);
 
         for (int i = 0; i < segments; i++) {
 
@@ -88,7 +88,7 @@ public class ModelPartialEclipseActivity implements Activity {
             clipper.geometry.eclipseFactor.set(fracSunNotBlocked);
 
             // wait for step size OR until the end of the eclipse
-            ctx.wait(Duration2.min(stepTime, eclipseEnd.durationFrom(ctx.now())));
+            ctx.wait(Duration.min(stepTime, eclipseEnd.durationFrom(ctx.now())));
         }
     }
 

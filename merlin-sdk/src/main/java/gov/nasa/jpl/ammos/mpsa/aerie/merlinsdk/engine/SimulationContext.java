@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration2;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
@@ -20,7 +20,7 @@ public interface SimulationContext {
     /**
      * delays the simulation for some specified amount of time
      */
-    public void delay(Duration2 duration);
+    public void delay(Duration duration);
 
     /**
      * blocks until the specified child activity is complete
@@ -46,6 +46,6 @@ public interface SimulationContext {
 
 
     default void delay(long quantity, TimeUnit units) {
-        this.delay(Duration2.fromQuantity(quantity, units));
+        this.delay(Duration.fromQuantity(quantity, units));
     }
 }

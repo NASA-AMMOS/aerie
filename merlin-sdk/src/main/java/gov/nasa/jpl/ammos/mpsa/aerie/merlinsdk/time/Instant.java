@@ -11,17 +11,17 @@ import java.util.List;
  * a pair of correlated base points to use as a basis of conversion, such comparison is impossible.
  */
 public interface Instant extends Comparable<Instant> {
-  Instant plus(Duration2 duration);
-  Instant minus(Duration2 duration);
-  Duration2 durationFrom(Instant other);
+  Instant plus(Duration duration);
+  Instant minus(Duration duration);
+  Duration durationFrom(Instant other);
 
 
   default Instant plus(final long quantity, final TimeUnit units) {
-    return this.plus(Duration2.fromQuantity(quantity, units));
+    return this.plus(Duration.fromQuantity(quantity, units));
   }
 
   default Instant minus(final long quantity, final TimeUnit units) {
-    return this.minus(Duration2.fromQuantity(quantity, units));
+    return this.minus(Duration.fromQuantity(quantity, units));
   }
 
   default boolean isBefore(final Instant other) {
@@ -41,15 +41,15 @@ public interface Instant extends Comparable<Instant> {
   }
 
 
-  static Instant add(final Instant base, final Duration2 duration) {
+  static Instant add(final Instant base, final Duration duration) {
     return base.plus(duration);
   }
 
-  static Instant subtract(final Instant base, final Duration2 duration) {
+  static Instant subtract(final Instant base, final Duration duration) {
     return base.minus(duration);
   }
 
-  static Duration2 durationBetween(final Instant head, final Instant base) {
+  static Duration durationBetween(final Instant head, final Instant base) {
     return head.durationFrom(base);
   }
 
