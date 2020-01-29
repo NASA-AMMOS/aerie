@@ -156,14 +156,18 @@ public class SimulationEngine {
             if (this.samplingPeriod.isPositive()) {
                 while (nextSampleTime.isBefore(eventTime)) {
                     this.currentSimulationTime = nextSampleTime;
-                    nextSampleTime = nextSampleTime.plus(this.samplingPeriod);
 
                     this.samplingHook.run();
+                    nextSampleTime = nextSampleTime.plus(this.samplingPeriod);
                 }
             }
 
             this.currentSimulationTime = eventTime;
             this.executeActivity(job);
+        }
+
+        if (!nextSampleTime.isAfter(this.currentSimulationTime)) {
+            this.samplingHook.run();
         }
 
         this.threadPool.shutdown();
