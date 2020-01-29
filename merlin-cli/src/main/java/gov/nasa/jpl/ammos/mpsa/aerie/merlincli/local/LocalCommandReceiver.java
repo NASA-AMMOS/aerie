@@ -4,9 +4,14 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.MerlinCommandReceiver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.Adaptation;
 import org.apache.commons.lang3.NotImplementedException;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 public class LocalCommandReceiver implements MerlinCommandReceiver {
+  private final Map<String, AdaptationJar> adaptations = new HashMap<>();
+
   @Override
   public void createPlan(String path) {
     throw new NotImplementedException("TODO: implement");
@@ -59,7 +64,16 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
 
   @Override
   public String createAdaptation(Path path, Adaptation adaptation) {
-    throw new NotImplementedException("TODO: implement");
+    if (!Files.isReadable(path)) {
+      throw new RuntimeException("Path is not readable");
+    } else if (!Files.isRegularFile(path)) {
+      throw new RuntimeException("Path is not a file");
+    } else if (this.adaptations.containsKey(adaptation.getName())) {
+      throw new RuntimeException("An adaptation already exists with that name");
+    }
+
+    this.adaptations.put(adaptation.getName(), new AdaptationJar(path));
+    return adaptation.getName();
   }
 
   @Override
