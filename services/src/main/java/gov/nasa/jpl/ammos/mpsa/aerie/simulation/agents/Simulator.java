@@ -1,5 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.simulation.agents;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import gov.nasa.jpl.ammos.mpsa.aerie.simulation.models.Plan;
 import gov.nasa.jpl.ammos.mpsa.aerie.simulation.models.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
@@ -10,7 +12,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.BooleanParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ByteParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.CharacterParameterMapper;
@@ -47,7 +49,7 @@ public final class Simulator<States extends StateContainer> {
     //   type will look like, meaning we have to account for type parameters.
   }
 
-  static private Duration SAMPLING_PERIOD_MS = Duration.fromSeconds(0.5);
+  static private Duration SAMPLING_PERIOD_MS = Duration.fromQuantity(500, TimeUnit.MILLISECONDS);
 
   private final Plan<States> plan;
   private final MerlinAdaptation<States> adaptation;
@@ -74,17 +76,16 @@ public final class Simulator<States extends StateContainer> {
   }
 
   public SimulationResults run() {
-    Time.setUseSpiceForMath(true);
-
     // Get all of the activities from the plan
     final List<Pair<Milliseconds, Activity<States>>> plannedActivities = this.plan.getActivities();
     // TODO: Be notified when the plan changes.
 
     // TODO: Load planned activities into the scheduler for scheduling.
     // TODO: Be notified when the schedule changes.
+    final Instant simulationStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
     final List<ActivityJob<?>> scheduledActivities = new ArrayList<>();
     for (final var entry : plannedActivities) {
-      scheduledActivities.add(new ActivityJob<>(entry.getValue(), Time.fromTAI(0.001 * entry.getKey().value)));
+      scheduledActivities.add(new ActivityJob<>(entry.getValue(), simulationStartTime.plus(entry.getKey().value, TimeUnit.MILLISECONDS)));
     }
 
     // TODO: Initialize the requested state models from the adaptation.
@@ -93,11 +94,11 @@ public final class Simulator<States extends StateContainer> {
 
     // Initialize the simulation engine with a set of initial states.
     final SimulationEngine engine =
-        new SimulationEngine(Time.fromTAI(0.0), scheduledActivities, stateContainer);
+        new SimulationEngine(simulationStartTime, scheduledActivities, stateContainer);
 
     // Initialize a set of tables into which to store state samples periodically.
     // TODO: Work with state models instead of individual states.
-    final List<Time> timestamps = new ArrayList<>();
+    final List<Instant> timestamps = new ArrayList<>();
 
     final List<SerializingState<?>> serializingStates = new ArrayList<>();
     for (final State<?> state : stateContainer.getStateList()) serializingStates.add(serializing(state));
