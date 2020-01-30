@@ -2,8 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power.RandomAccessState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 import java.util.Map;
 
@@ -56,7 +55,7 @@ public class MockState<T> implements RandomAccessState<T> {
      * @return the previously stored value
      */
     @Override
-    public T get( Time queryTime ) {
+    public T get( Instant queryTime ) {
         return value;
     }
 
@@ -75,7 +74,7 @@ public class MockState<T> implements RandomAccessState<T> {
      * @return null
      */
     @Override
-    public Map<Time, T> getHistory() { return null; }
+    public Map<Instant, T> getHistory() { return null; }
 
     /**
      * required by api but not used by the mock

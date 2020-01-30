@@ -1,8 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -97,7 +96,7 @@ public class SolarArrayPower implements RandomAccessState<Double> {
      * @return the instantaneous power output of the solar panels, measured in Watts
      */
     @Override
-    public Double get( Time queryTime ) {
+    public Double get( Instant queryTime ) {
         //replicates functionality of get() but uses interrogates input state at the
         //queryTime rather than the shared simulation context time
         assert this.referenceSolarDistance_m > 0.0
@@ -183,8 +182,8 @@ public class SolarArrayPower implements RandomAccessState<Double> {
      * since this is a stopgap, this method is non-functional: just returns an empty map
      */
     @Override
-    public Map<Time, Double> getHistory() {
-        return new LinkedHashMap<Time,Double>();
+    public Map<Instant, Double> getHistory() {
+        return new LinkedHashMap<Instant,Double>();
     }
 
     /**

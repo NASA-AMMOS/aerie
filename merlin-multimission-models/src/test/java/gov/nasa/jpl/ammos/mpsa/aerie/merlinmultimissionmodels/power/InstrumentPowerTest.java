@@ -1,13 +1,13 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks.MockTimeEmptySimulationEngine;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.withinPercentage;
-import static org.assertj.core.api.Assertions.catchThrowable;
 
 /**
  * exercises the basic (non-random access) functionality of the instrument power state
@@ -38,7 +38,7 @@ public class InstrumentPowerTest {
     public void setWorks() {
         //configure the instrument power model (it starts at zero)
         SettableState<Double> instPower_W = new InstrumentPower();
-        instPower_W.setEngine( new MockTimeEmptySimulationEngine( new Time() ) );
+        instPower_W.setEngine( new MockTimeEmptySimulationEngine( SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS) ) );
 
         //set the power to some test value
         final double testValue_W = 330.0;
@@ -49,7 +49,7 @@ public class InstrumentPowerTest {
     public void getWorksAfterSet() {
         //configure the instrument power model (it starts at zero)
         SettableState<Double> instPower_W = new InstrumentPower();
-        instPower_W.setEngine( new MockTimeEmptySimulationEngine( new Time() ) );
+        instPower_W.setEngine( new MockTimeEmptySimulationEngine( SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS) ) );
 
         //set the power to some test value
         final double testValue_W = 330.0;

@@ -1,11 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power.*;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -115,7 +114,7 @@ public class DemoPowerModel {
          */
         public final BatteryEnergy batteryEnergyState_J = new BatteryEnergy(
                 startBatteryCharge_pct / 100.0 * startBatteryCapacity_J,
-                startTime, netPowerState_W, batteryCapacityState_J);
+                netPowerState_W, batteryCapacityState_J);
 
         /**
          * calculated percentage charge of the battery

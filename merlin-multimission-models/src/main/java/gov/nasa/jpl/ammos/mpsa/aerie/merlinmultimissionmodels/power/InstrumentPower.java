@@ -2,9 +2,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -61,10 +60,10 @@ public class InstrumentPower implements SettableState<Double>, RandomAccessState
      *         measured in Watts
      */
     @Override
-    public Double get( Time queryTime ) {
+    public Double get( Instant queryTime ) {
         assert ! powerHistory_W.isEmpty() : "history is empty";
         assert simEngine != null : "simulation engine is null";
-        if( queryTime.greaterThan( simEngine.getCurrentSimulationTime() ) ) {
+        if( queryTime.isAfter( simEngine.getCurrentSimulationTime() ) ) {
             throw new IllegalArgumentException( "query for state value in future" ); }
 
         //note that history initializer ensures that there is always a lowest key,
@@ -92,8 +91,8 @@ public class InstrumentPower implements SettableState<Double>, RandomAccessState
         //TODO: the temporal context of the set should probably be passed to the state
         //      model rather than requiring us to inspect basically global time state
         assert simEngine != null : "simulation engine reference is null";
-        final Time setTime = simEngine.getCurrentSimulationTime();
-        assert setTime.greaterThanOrEqualTo( powerHistory_W.lastKey() )
+        final Instant setTime = simEngine.getCurrentSimulationTime();
+        assert !setTime.isBefore( powerHistory_W.lastKey() )
                 : "set occurs at simulation time prior to last set call";
         powerHistory_W.put( setTime, value_W ); //discard prior value if any
     }
@@ -114,8 +113,7 @@ public class InstrumentPower implements SettableState<Double>, RandomAccessState
      * TODO: could obviate power_W since last key will be equivalent, but keeping
      *       separate for now until we figure out our approach to state cross-queries
      */
-    private TreeMap< Time, Double > powerHistory_W = new TreeMap<>( Map.of(
-            Time.MIN_TIME, power_W ) );
+    private TreeMap< Instant, Double > powerHistory_W = new TreeMap<>();
 
     //----- temporary members/methods to appease old simulation engine -----
 
@@ -136,6 +134,8 @@ public class InstrumentPower implements SettableState<Double>, RandomAccessState
      */
     @Override
     public void setEngine(SimulationEngine engine) {
+        // Insert the initial power value as soon as we know the earliest simulation time.
+        powerHistory_W.put(engine.getCurrentSimulationTime(), power_W);
         this.simEngine = engine;
     }
 
@@ -143,7 +143,7 @@ public class InstrumentPower implements SettableState<Double>, RandomAccessState
      * {@inheritDoc}
      */
     @Override
-    public Map<Time, Double> getHistory() {
+    public Map<Instant, Double> getHistory() {
         return powerHistory_W;
     }
 

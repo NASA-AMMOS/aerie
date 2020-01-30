@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -108,8 +108,8 @@ public class BatteryPercentCharge implements State<Double> {
      * since this is a stopgap, this method is non-functional: just returns an empty map
      */
     @Override
-    public Map<Time, Double> getHistory() {
-        return new LinkedHashMap<Time,Double>();
+    public Map<Instant, Double> getHistory() {
+        return new LinkedHashMap<Instant,Double>();
     }
 
     /**

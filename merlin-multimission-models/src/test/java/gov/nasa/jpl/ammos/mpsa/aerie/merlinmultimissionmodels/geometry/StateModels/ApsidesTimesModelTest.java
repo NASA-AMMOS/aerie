@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -21,21 +23,10 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.spice.SpiceLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
-import org.apache.commons.io.FileUtils;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Time;
 import spice.basic.CSPICE;
 import spice.basic.SpiceErrorException;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.List;
-
-import static org.junit.Assert.*;
 
 
 @Ignore
@@ -47,7 +38,10 @@ public class ApsidesTimesModelTest {
         }
     }
     
-    public SimulationEngine mockEngine = new SimulationEngine(new Time(), List.of(),  new MockStateContainer());
+    public SimulationEngine mockEngine = new SimulationEngine(
+        SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS),
+        List.of(),
+        new MockStateContainer());
 
     @BeforeClass
     public static void loadSpiceAndKernels() {

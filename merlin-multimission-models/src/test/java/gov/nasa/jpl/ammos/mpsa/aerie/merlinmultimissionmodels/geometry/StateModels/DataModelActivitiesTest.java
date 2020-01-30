@@ -9,8 +9,10 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.I
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.OnboardDataModelStates;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -25,7 +27,7 @@ public class DataModelActivitiesTest {
         System.out.println("\nBin activity init test start");
 
         //0. choose sim start time
-        Time simStart = new Time();
+        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
         //1. create activities and add to job list
         InitializeBinDataVolume binInitActivity = new InitializeBinDataVolume();
@@ -55,8 +57,8 @@ public class DataModelActivitiesTest {
         System.out.println("\nTurn instruments on activity init test start");
 
         //0. choose sim start time
-        Time simStart = new Time();
-        Time simInstOn  = new Time().add(Duration.fromHours(1));
+        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simInstOn  = simStart.plus(1, TimeUnit.HOURS);
 
         //1. create activities and add to job list
         InitializeBinDataVolume binInitActivity = new InitializeBinDataVolume();
@@ -76,13 +78,13 @@ public class DataModelActivitiesTest {
         SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
         engine.simulate();
 
-        Map<Time, Double> binMap = states.getBinByName("Bin 1").getHistory();
+        Map<Instant, Double> binMap = states.getBinByName("Bin 1").getHistory();
         assert(binMap.size() == 2);
         for (Double value : binMap.values()){
             assert(value == 0.0);
         }
 
-        Map<Time, Double> instrumentMap = states.getInstrumentByName("instrument 1").getHistory();
+        Map<Instant, Double> instrumentMap = states.getInstrumentByName("instrument 1").getHistory();
         assert(instrumentMap.size() == 1);
         assert(instrumentMap.containsValue(10.0));
         assert(states.getInstrumentByName("instrument 1").onStatus());
@@ -103,9 +105,9 @@ public class DataModelActivitiesTest {
     public void turnInstrumentsOffActivity(){
         System.out.println("Turn instruments off activity test start\n");
 
-        Time simStart = new Time();
-        Time simInstOff = new Time().add(Duration.fromMinutes(1));
-        Time simInstOn  = new Time().add(Duration.fromHours(1));
+        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simInstOff = simStart.plus(1, TimeUnit.MINUTES);
+        Instant simInstOn  = simStart.plus(1, TimeUnit.HOURS);
 
         InitializeBinDataVolume binInitActivity = new InitializeBinDataVolume();
         ActivityJob<OnboardDataModelStates> binInitJob = new ActivityJob<>(binInitActivity, simStart);
@@ -139,9 +141,9 @@ public class DataModelActivitiesTest {
             x.printHistory();
         }
 
-        Map<Time, Double> binMap = states.getBinByName("Bin 1").getHistory();
+        Map<Instant, Double> binMap = states.getBinByName("Bin 1").getHistory();
 
-        Map<Time, Double> instrumentMap = states.getInstrumentByName("instrument 1").getHistory();
+        Map<Instant, Double> instrumentMap = states.getInstrumentByName("instrument 1").getHistory();
 
         assert(instrumentMap.size() == 2);
         assert(instrumentMap.containsValue(0.0));
@@ -158,10 +160,10 @@ public class DataModelActivitiesTest {
     public void downlinkActivity(){
         System.out.println("Downlink activity test start\n");
 
-        Time simStart = new Time();
-        Time simInstOff = new Time().add(Duration.fromMinutes(1));
-        Time simInstOn  = new Time().add(Duration.fromHours(1));
-        Time simDownlink = new Time().add(Duration.fromHours(5));
+        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simInstOff = simStart.plus(1, TimeUnit.MINUTES);
+        Instant simInstOn  = simStart.plus(1, TimeUnit.HOURS);
+        Instant simDownlink = simStart.plus(5, TimeUnit.HOURS);
 
         InitializeBinDataVolume binInitActivity = new InitializeBinDataVolume();
         ActivityJob<OnboardDataModelStates> binInitJob = new ActivityJob<>(binInitActivity, simStart);
@@ -201,15 +203,15 @@ public class DataModelActivitiesTest {
             x.printHistoryGraphFormat();
         }
 
-        Map<Time, Double> binMap = states.getBinByName("Bin 1").getHistory();
+        Map<Instant, Double> binMap = states.getBinByName("Bin 1").getHistory();
 
 
-        Duration delta = simDownlink.subtract(simInstOn);
+        Duration delta = simDownlink.durationFrom(simInstOn);
         System.out.println("DELTA IS " + delta);
-        System.out.println("Volume collected " + delta.totalSeconds() * 10.0);
-        assert(delta.totalSeconds() * 10 == (10.0 * 4 * 60 * 60));
+        System.out.println("Volume collected " + (delta.durationInMicroseconds / 1000000.0) * 10.0);
+        assert((delta.durationInMicroseconds / 1000000.0) * 10 == (10.0 * 4 * 60 * 60));
 
-        Map<Time, Double> instrumentMap = states.getInstrumentByName("instrument 1").getHistory();
+        Map<Instant, Double> instrumentMap = states.getInstrumentByName("instrument 1").getHistory();
 
         System.out.println("Downlink activity test end\n");
     }
