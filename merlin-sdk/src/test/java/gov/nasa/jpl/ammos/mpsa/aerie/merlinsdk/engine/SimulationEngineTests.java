@@ -2,23 +2,22 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
 import static org.junit.Assert.*;
 
-import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import org.junit.Test;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.BasicState;
-
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+
+import org.junit.Test;
 
 public class SimulationEngineTests {
 
@@ -50,7 +49,7 @@ public class SimulationEngineTests {
         public Boolean booleanValue = true;
 
         @Parameter
-        public Duration durationValue = Duration.fromSeconds(10);
+        public Duration durationValue = Duration.fromQuantity(10, TimeUnit.SECONDS);
 
         @Override
         public void modelEffects(SimulationContext ctx, DiverseStates states) {
@@ -64,7 +63,7 @@ public class SimulationEngineTests {
             SettableState<Double> floatState = states.floatState;
             Double currentFloatValue = floatState.get();
             floatState.set(floatValue);
-            ctx.delay(Duration.fromSeconds(5));
+            ctx.delay(5L, TimeUnit.SECONDS);
             states.stringState.set(stringValue);
             states.arrayState.set(arrayValue);
 
@@ -78,7 +77,7 @@ public class SimulationEngineTests {
         public Boolean booleanValue = true;
 
         @Parameter
-        public Duration durationValue = Duration.fromSeconds(10);
+        public Duration durationValue = Duration.fromQuantity(10, TimeUnit.SECONDS);
 
         @Override
         public void modelEffects(SimulationContext ctx, DiverseStates states) {
@@ -92,7 +91,7 @@ public class SimulationEngineTests {
      */
     @Test
     public void sequentialSimulationBaselineTest() {
-        Time simStart = new Time();
+        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
         List<ActivityJob<?>> actList = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
@@ -102,10 +101,10 @@ public class SimulationEngineTests {
                 act.stringValue = "B";
                 act.arrayValue = List.of(0.0, 1.0, 0.0);
                 act.booleanValue = false;
-                act.durationValue = Duration.fromSeconds(10);
+                act.durationValue = Duration.fromQuantity(10, TimeUnit.SECONDS);
             }
             ActivityJob<DiverseStates> actJob = new ActivityJob<>(
-                    act, simStart.add(Duration.fromHours(i))
+                    act, simStart.plus(i, TimeUnit.HOURS)
             );
             actList.add(actJob);
         }
@@ -135,7 +134,7 @@ public class SimulationEngineTests {
      */
     @Test
     public void timeOrderingTest() {
-        Time simStart = new Time();
+        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
         List<ActivityJob<?>> actList = new ArrayList<>();
         for (int i = 1; i <= 3; i++) {
@@ -144,7 +143,7 @@ public class SimulationEngineTests {
                 act.floatValue = i * 1.0;
             }
             ActivityJob<DiverseStates> actJob = new ActivityJob<>(
-                    act, simStart.add(Duration.fromHours(i))
+                    act, simStart.plus(i, TimeUnit.HOURS)
             );
             actList.add(actJob);
         }
@@ -154,11 +153,11 @@ public class SimulationEngineTests {
         SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
 
-        Map<Time, Double> floatStateHistory = states.floatState.getHistory();
+        Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
 
-        assertEquals((Double) 1.0, floatStateHistory.get(simStart.add(Duration.fromHours(1))));
-        assertEquals((Double) 2.0, floatStateHistory.get(simStart.add(Duration.fromHours(2))));
-        assertEquals((Double) 3.0, floatStateHistory.get(simStart.add(Duration.fromHours(3))));
+        assertEquals((Double) 1.0, floatStateHistory.get(simStart.plus(1, TimeUnit.HOURS)));
+        assertEquals((Double) 2.0, floatStateHistory.get(simStart.plus(2, TimeUnit.HOURS)));
+        assertEquals((Double) 3.0, floatStateHistory.get(simStart.plus(3, TimeUnit.HOURS)));
     }
 
     /* ------------------------------- DELAY TEST ------------------------------- */
@@ -169,7 +168,7 @@ public class SimulationEngineTests {
         @Override
         public void modelEffects(SimulationContext ctx, DiverseStates states) {
             states.floatState.set(1.0);
-            ctx.delay(Duration.fromHours(1));
+            ctx.delay(1, TimeUnit.HOURS);
             states.floatState.set(2.0);
         }
     }
@@ -179,11 +178,11 @@ public class SimulationEngineTests {
      */
     @Test
     public void delayTest() {
-        Time simStart = new Time();
+        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
         List<ActivityJob<?>> actList = new ArrayList<>();
         DelayTestActivity act = new DelayTestActivity();
-        Time executionTime = simStart.add(Duration.fromHours(1));
+        Instant executionTime = simStart.plus(1, TimeUnit.HOURS);
         ActivityJob<DiverseStates> actJob = new ActivityJob<>(
                 act, executionTime
         );
@@ -194,10 +193,10 @@ public class SimulationEngineTests {
         SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
 
-        Map<Time, Double> floatStateHistory = states.floatState.getHistory();
+        Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
 
-        assertEquals((Double) 1.0, floatStateHistory.get(simStart.add(Duration.fromHours(1))));
-        assertEquals((Double) 2.0, floatStateHistory.get(simStart.add(Duration.fromHours(2))));
+        assertEquals((Double) 1.0, floatStateHistory.get(simStart.plus(1, TimeUnit.HOURS)));
+        assertEquals((Double) 2.0, floatStateHistory.get(simStart.plus(2, TimeUnit.HOURS)));
     }
 
     /* --------------------------- SPAWN ACTIVITY TEST -------------------------- */
@@ -226,11 +225,11 @@ public class SimulationEngineTests {
      */
     @Test
     public void spawnActivityTimingTest() {
-        Time simStart = new Time();
+        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
         List<ActivityJob<?>> actList = new ArrayList<>();
         SpawnTestParentActivity parent = new SpawnTestParentActivity();
-        Time parentExecutionTime = simStart.add(Duration.fromHours(1));
+        Instant parentExecutionTime = simStart.plus(1, TimeUnit.HOURS);
         ActivityJob<DiverseStates> parentJob = new ActivityJob<>(
                 parent, parentExecutionTime
         );
@@ -241,7 +240,7 @@ public class SimulationEngineTests {
         SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
 
-        Map<Time, Double> floatStateHistory = states.floatState.getHistory();
+        Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
 
         assertEquals((Double) 5.0, floatStateHistory.get(parentExecutionTime));
     }
@@ -263,7 +262,7 @@ public class SimulationEngineTests {
     public class CallTestChildActivity implements Activity<DiverseStates> {
         @Override
         public void modelEffects(SimulationContext ctx, DiverseStates states) {
-            ctx.delay(Duration.fromHours(2));
+            ctx.delay(2, TimeUnit.HOURS);
         }
     }
 
@@ -272,11 +271,11 @@ public class SimulationEngineTests {
      */
     @Test
     public void callActivityTimingTest() {
-        Time simStart = new Time();
+        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
         List<ActivityJob<?>> actList = new ArrayList<>();
         CallTestParentActivity parent = new CallTestParentActivity();
-        Time parentExecutionTime = simStart.add(Duration.fromHours(1));
+        Instant parentExecutionTime = simStart.plus(1, TimeUnit.HOURS);
         ActivityJob<DiverseStates> parentJob = new ActivityJob<>(
                 parent, parentExecutionTime
         );
@@ -287,8 +286,8 @@ public class SimulationEngineTests {
         SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
 
-        Map<Time, Double> floatStateHistory = states.floatState.getHistory();
-        Time queryTime = parentExecutionTime.add(Duration.fromHours(2));
+        Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
+        Instant queryTime = parentExecutionTime.plus(2, TimeUnit.HOURS);
 
         assertEquals((Double) 5.0, floatStateHistory.get(queryTime));
     }
@@ -300,7 +299,7 @@ public class SimulationEngineTests {
 
         @Override
         public void modelEffects(SimulationContext ctx, DiverseStates states) {
-            ctx.delay(Duration.fromSeconds(10));
+            ctx.delay(10, TimeUnit.SECONDS);
         }
     }
 
@@ -310,11 +309,11 @@ public class SimulationEngineTests {
      */
     @Test
     public void simpleDurationTest() {
-        Time simStart = new Time();
+        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
         List<ActivityJob<?>> actList = new ArrayList<>();
         SimpleDurationTestActivity act = new SimpleDurationTestActivity();
-        Time executionTime = simStart.add(Duration.fromHours(1));
+        Instant executionTime = simStart.plus(1, TimeUnit.HOURS);
         ActivityJob<DiverseStates> actJob = new ActivityJob<>(
                 act, executionTime
         );
@@ -325,7 +324,7 @@ public class SimulationEngineTests {
         SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
 
-        assertEquals(Duration.fromSeconds(10), engine.getActivityDuration(act));
+        assertEquals(Duration.fromQuantity(10, TimeUnit.SECONDS), engine.getActivityDuration(act));
     }
 
     /* ----------------------- PARENT-CHILD DURATION TEST ----------------------- */
@@ -346,7 +345,7 @@ public class SimulationEngineTests {
     public class DurationTestChildActivity1 implements Activity<DiverseStates> {
         @Override
         public void modelEffects(SimulationContext ctx, DiverseStates states) {
-            ctx.delay(Duration.fromSeconds(10));
+            ctx.delay(10, TimeUnit.SECONDS);
         }
     }
 
@@ -354,7 +353,7 @@ public class SimulationEngineTests {
     public class DurationTestChildActivity2 implements Activity<DiverseStates> {
         @Override
         public void modelEffects(SimulationContext ctx, DiverseStates states) {
-            ctx.delay(Duration.fromSeconds(5));
+            ctx.delay(5, TimeUnit.SECONDS);
         }
     }
 
@@ -363,12 +362,12 @@ public class SimulationEngineTests {
      */
     @Test
     public void parentChildDurationTest() {
-        Time simStart = new Time();
+        SimulationInstant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
         List<ActivityJob<?>> actList = new ArrayList<>();
         DurationTestParentActivity parent = new DurationTestParentActivity();
         ActivityJob<DiverseStates> parentJob = new ActivityJob<>(
-                parent, simStart.add(Duration.fromHours(1))
+                parent, simStart.plus(1, TimeUnit.HOURS)
         );
         actList.add(parentJob);
 
@@ -377,7 +376,7 @@ public class SimulationEngineTests {
         SimulationEngine engine = new SimulationEngine(simStart, actList, states);
         engine.simulate();
 
-        assertEquals(Duration.fromSeconds(10), engine.getActivityDuration(parent));
+        assertEquals(Duration.fromQuantity(10, TimeUnit.SECONDS), engine.getActivityDuration(parent));
     }
 
 }

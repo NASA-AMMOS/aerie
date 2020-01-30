@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Time;
 
 public class Config {
 

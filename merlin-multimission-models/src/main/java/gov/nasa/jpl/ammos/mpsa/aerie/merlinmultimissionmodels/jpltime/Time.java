@@ -4,7 +4,7 @@
 //ref: https://github.jpl.nasa.gov/M20-Surface-Ops-Tools/jplTime/blob/master/src/main/java/gov/nasa/jpl/serialization/ConvertableFromString.java
 
 //AERIE-MODIFICATION: package gov.nasa.jpl.time;
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime;
 
 
 import java.time.*;
@@ -25,7 +25,7 @@ import spice.basic.KernelVarNotFoundException;
 import spice.basic.SpiceErrorException;
 
 //AERIE-MODIFICATION; import static gov.nasa.jpl.time.Duration.*;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.*;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Duration.*;
 
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.ConvertableFromString;

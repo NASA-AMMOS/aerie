@@ -1,10 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
-
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks.MockSimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks.MockTimeSimulationEngine;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
 
 import java.util.Map;
@@ -12,7 +11,6 @@ import java.util.TreeMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.withinPercentage;
-import static org.assertj.core.api.Assertions.catchThrowable;
 
 /**
  * exercises the random-access functionality of the instrument power state
@@ -22,13 +20,9 @@ public class InstrumentPowerRandomAccessTest {
     /**
      * reusable time points
      */
-    //TODO: would be grand if Time's valueOf returned an object instead of mutating one
-    private final Time t2020 = new Time();
-    { t2020.valueOf( "2020-001T00:00:00.000"); }
-    private final Time t2020_10s = new Time();
-    { t2020_10s.valueOf( "2020-001T00:00:10.000"); }
-    private final Time t2020_20s = new Time();
-    { t2020_20s.valueOf( "2020-001T00:00:20.000"); }
+    private final Instant t2020 = SimulationInstant.fromQuantity(0, TimeUnit.SECONDS);
+    private final Instant t2020_10s = SimulationInstant.fromQuantity(10, TimeUnit.SECONDS);
+    private final Instant t2020_20s = SimulationInstant.fromQuantity(20, TimeUnit.SECONDS);
 
     /**
      * reusable simulation engine mocks
@@ -109,39 +103,35 @@ public class InstrumentPowerRandomAccessTest {
     @Test
     public void getAtTimeSeesSeriesOfPastSets() {
         final InstrumentPower instPower_W = new InstrumentPower();
-        final Map<String,Double> sets = new TreeMap<>( Map.of(
-                "2020-001T00:00:10.000", 110.0,
-                "2020-001T00:00:20.000", 120.0,
-                "2020-001T00:00:30.000", 130.0 ) );
-        final Map<String,Double> expecteds =  Map.of(
-                "2020-001T00:00:00.000", 0.0,
-                "2020-001T00:00:10.000", 110.0,
-                "2020-001T00:00:15.000", 110.0,
-                "2020-001T00:00:20.000", 120.0,
-                "2020-001T00:00:29.000", 120.0,
-                "2020-001T00:00:30.000", 130.0,
-                "2020-001T00:00:31.000", 130.0 );
-        final Time finalTime = new Time();
-        finalTime.valueOf( "2020-001T00:01:00.000" );
-        final MockTimeSimulationEngine finalEngine = new MockTimeSimulationEngine( finalTime );
+        final Map<Instant,Double> sets = new TreeMap<>( Map.of(
+                SimulationInstant.fromQuantity(10, TimeUnit.SECONDS), 110.0,
+                SimulationInstant.fromQuantity(20, TimeUnit.SECONDS), 120.0,
+                SimulationInstant.fromQuantity(30, TimeUnit.SECONDS), 130.0 ) );
+        final Map<Instant,Double> expecteds =  Map.of(
+                SimulationInstant.fromQuantity(0, TimeUnit.SECONDS), 0.0,
+                SimulationInstant.fromQuantity(10, TimeUnit.SECONDS), 110.0,
+                SimulationInstant.fromQuantity(15, TimeUnit.SECONDS), 110.0,
+                SimulationInstant.fromQuantity(20, TimeUnit.SECONDS), 120.0,
+                SimulationInstant.fromQuantity(25, TimeUnit.SECONDS), 120.0,
+                SimulationInstant.fromQuantity(30, TimeUnit.SECONDS), 130.0,
+                SimulationInstant.fromQuantity(31, TimeUnit.SECONDS), 130.0 );
+        final Instant finalTime = SimulationInstant.fromQuantity(1, TimeUnit.MINUTES);
+        final MockTimeSimulationEngine engine = new MockTimeSimulationEngine( SimulationInstant.fromQuantity(0, TimeUnit.SECONDS) );
+
+        instPower_W.setEngine( engine );
 
         //run all sets in test vector sequentially (thanks to TreeMap being sorted)
-        for( Map.Entry<String,Double> set : sets.entrySet() ) {
-            final Time setT = new Time(); setT.valueOf( set.getKey() );
-            final MockTimeSimulationEngine engineT = new MockTimeSimulationEngine( setT );
-
-            instPower_W.setEngine( engineT );
+        for( Map.Entry<Instant,Double> set : sets.entrySet() ) {
+            engine.setCurrentSimulationTime(set.getKey());
             instPower_W.set( set.getValue() );
         }
 
         //jump past end of simulation steps
-        instPower_W.setEngine( finalEngine );
+        engine.setCurrentSimulationTime(finalTime);
 
         //now test each expected point in random access pattern (thanks HashMap...)
-        for( Map.Entry<String,Double> expected : expecteds.entrySet() ) {
-            final Time expectedT = new Time(); expectedT.valueOf( expected.getKey() );
-
-            final double resultValue_W = instPower_W.get( expectedT );
+        for( Map.Entry<Instant,Double> expected : expecteds.entrySet() ) {
+            final double resultValue_W = instPower_W.get( expected.getKey() );
 
             assertThat( resultValue_W ).isCloseTo( expected.getValue(), withinPercentage( 0.01 ) );
         }

@@ -3,8 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.MissionModelGlue.EventApplier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.MissionModelGlue.Registry;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
-
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 public class DataSystemModel implements SystemModel{
 
@@ -13,7 +12,7 @@ public class DataSystemModel implements SystemModel{
     private Registry registry;
     public EventApplier eventApplier;
 
-    public DataSystemModel(MissionModelGlue glue, Time initialTime){
+    public DataSystemModel(MissionModelGlue glue, Instant initialTime){
         this.glue = glue;
         registry = glue.registry();
         eventApplier = glue.eventApplier();
@@ -39,7 +38,7 @@ public class DataSystemModel implements SystemModel{
     @Override
     public void step(Slice aSlice, Duration dt) {
         DataModelSlice slice = (DataModelSlice) aSlice;
-        slice.dataVolume += slice.dataRate * dt.totalSeconds();
+        slice.dataVolume += slice.dataRate * (double)(dt.durationInMicroseconds / 1000000L);
         if (slice.dataRate > 100){
             slice.dataProtocol = GlobalPronouns.spacewire;
         }
@@ -89,30 +88,31 @@ public class DataSystemModel implements SystemModel{
         private double dataRate = 0.0;
         private double dataVolume = 0.0;
         private String dataProtocol = GlobalPronouns.UART;
-        private Time time;
+        private Instant time;
 
-        public DataModelSlice(Time time){
+        public DataModelSlice(Instant time){
             this.time = time;
         }
 
         //for now, time in constructor, will remove later
-        public DataModelSlice(double dataRate, double dataVolume, String dataProtocol, Time time){
+        public DataModelSlice(double dataRate, double dataVolume, String dataProtocol, Instant time){
             this.dataRate = dataRate;
             this.dataVolume = dataVolume;
             this.dataProtocol = dataProtocol;
             this.time = time;
         }
 
-        public DataModelSlice newSlice(double dataRate, double dataVolume, String dataProtocol, Time time){
+        public DataModelSlice newSlice(double dataRate, double dataVolume, String dataProtocol, Instant time){
             return new DataModelSlice(dataRate, dataVolume, dataProtocol, time);
         }
 
-        public Time time(){
+        @Override
+        public Instant time(){
             return this.time;
         }
 
         @Override
-        public void setTime(Time time){
+        public void setTime(Instant time){
             this.time = time;
         }
 

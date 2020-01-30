@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 /**
  * allows access to a state value at any query time (not just current sim time)
@@ -29,6 +29,6 @@ public interface RandomAccessState<T> extends State<T> {
      *
      * @return the value of the state at the queried time point
      */
-    T get( Time queryTime );
+    T get( Instant queryTime );
 
 }

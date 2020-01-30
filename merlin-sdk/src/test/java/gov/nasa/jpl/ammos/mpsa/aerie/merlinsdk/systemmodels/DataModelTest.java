@@ -1,7 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
@@ -11,7 +12,7 @@ public class DataModelTest {
 
     /*----------------------------- SAMPLE ADAPTOR WORK -------------------------------*/
     MissionModelGlue glue = new MissionModelGlue();
-    Time simStartTime = new Time();
+    Instant simStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
     DataSystemModel dataSystemModel = new DataSystemModel(glue, simStartTime);
 
     SettableState<Double> dataRate = new SettableState<>(GlobalPronouns.dataRate, dataSystemModel);
@@ -19,11 +20,11 @@ public class DataModelTest {
     SettableState<String> dataProtocol = new SettableState<>(GlobalPronouns.UART, dataSystemModel);
 
     /*----------------------------- SAMPLE SIM ---------------------------------------*/
-    Time event1 = simStartTime.add(Duration.fromSeconds(10));
-    Time event2 = event1.add(Duration.fromSeconds(10));
-    Time event3 = event2.add(Duration.fromSeconds(20));
-    Time event4 = event3.add(Duration.fromSeconds(1));
-    Time event5 = event4.add(Duration.fromSeconds(5));
+    Instant event1 = simStartTime.plus(10, TimeUnit.SECONDS);
+    Instant event2 = event1.plus(10, TimeUnit.SECONDS);
+    Instant event3 = event2.plus(20, TimeUnit.SECONDS);
+    Instant event4 = event3.plus(1, TimeUnit.SECONDS);
+    Instant event5 = event4.plus(5, TimeUnit.SECONDS);
 
     @Test
     public void dataVolumeTest() {

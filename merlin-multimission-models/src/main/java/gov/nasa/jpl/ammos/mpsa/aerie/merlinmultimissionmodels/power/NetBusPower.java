@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -94,7 +94,7 @@ public class NetBusPower implements RandomAccessState<Double>{
      * @return the net power of all specified sources minus all sinks, in Watts
      */
     @Override
-    public Double get( Time queryTime ) {
+    public Double get( Instant queryTime ) {
         //mostly duplicates functionality of get() except that it makes explicit time
         //calls to the sub-states instead of relying on shared sim context (requires
         //the inputs to random access states too!)
@@ -157,8 +157,8 @@ public class NetBusPower implements RandomAccessState<Double>{
      * since this is a stopgap, this method is non-functional: just returns an empty map
      */
     @Override
-    public Map<Time, Double> getHistory() {
-        return new LinkedHashMap<Time,Double>();
+    public Map<Instant, Double> getHistory() {
+        return new LinkedHashMap<Instant,Double>();
     }
 
     /**

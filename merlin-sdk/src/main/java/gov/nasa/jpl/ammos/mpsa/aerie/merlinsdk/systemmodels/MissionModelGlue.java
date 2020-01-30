@@ -120,7 +120,7 @@ public class MissionModelGlue {
             Slice slice = initialSlice.cloneSlice();
 
             for (Event<?> event : eventLog){
-                Duration dt = event.time().subtract(slice.time());
+                Duration dt = event.time().durationFrom(slice.time());
                 model.step(slice, dt);
                 registry.getSetter(model, event.name()).accept(slice, event.value());
                 slice.setTime(event.time());

@@ -1,6 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidNumberOfArgsException;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidTokenException;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.Adaptation;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -9,6 +11,7 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 
 public class CommandOptions {
@@ -111,9 +114,19 @@ public class CommandOptions {
                     if (params.length < 3) {
                         throw new InvalidNumberOfArgsException("Option 'A' requires at least three arguments");
                     }
+
                     String path = params[0];
                     String[] tokens = Arrays.copyOfRange(params, 1, params.length);
-                    commandReceiver.createAdaptation(path, tokens);
+
+                    Adaptation adaptation;
+                    try {
+                        adaptation = Adaptation.fromTokens(tokens);
+                    } catch (InvalidTokenException e) {
+                        System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
+                        return false;
+                    }
+
+                    commandReceiver.createAdaptation(Path.of(path), adaptation);
                     return true;
                 }
 

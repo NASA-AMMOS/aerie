@@ -1,9 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
 public interface SimulationContext {
 
@@ -35,13 +35,17 @@ public interface SimulationContext {
     /**
      * delays the effect model until the specified point in time
      */
-    public void delayUntil(Time time);
+    public void delayUntil(Instant time);
 
     /**
      * Returns the engine's current simulation time
      * 
      * @return current simulation time
      */
-    public Time now();
+    public Instant now();
 
+
+    default void delay(long quantity, TimeUnit units) {
+        this.delay(Duration.fromQuantity(quantity, units));
+    }
 }

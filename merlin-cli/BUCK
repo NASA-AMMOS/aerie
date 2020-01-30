@@ -1,9 +1,12 @@
 java_library(
     name = "lib",
-    srcs = glob(["src/main/**/*"]),
+    srcs = glob(["src/main/java/**/*"]),
+    resources = glob(["src/main/resources/**/*"]),
+    resources_root = "src/test/resources/",
     extra_arguments = ["-Xlint:all"],
     deps = [
         "//third-party:commons-cli",
+        "//third-party:commons-lang3",
         "//third-party:commons-logging",
         "//third-party:gson",
         "//third-party:httpclient",
@@ -12,6 +15,7 @@ java_library(
 
         # Modules
         "//apgen-parser:lib",
+        "//merlin-sdk:merlin-sdk",
     ],
 )
 
@@ -23,7 +27,9 @@ java_binary(
 
 java_library(
     name = "tests-lib",
-    srcs = glob(["src/test/**/*"]),
+    srcs = glob(["src/test/java/**/*"]),
+    resources = glob(["src/test/resources/**/*"]),
+    resources_root = "src/test/resources/",
     extra_arguments = ["-Xlint:all"],
     deps = [
         ":lib",

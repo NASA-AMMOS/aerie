@@ -13,8 +13,8 @@ import gov.nasa.jpl.ammos.mpsa.apgen.exceptions.PlanParsingException;
 import gov.nasa.jpl.ammos.mpsa.apgen.model.Plan;
 import gov.nasa.jpl.ammos.mpsa.apgen.parser.AdaptationParser;
 import gov.nasa.jpl.ammos.mpsa.apgen.parser.ApfParser;
+import org.apache.commons.lang3.NotImplementedException;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -200,30 +200,22 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
     }
 
     @Override
-    public void createAdaptation(String path, String[] tokens) {
-        Adaptation adaptation;
-        try {
-            adaptation = Adaptation.fromTokens(tokens);
-        } catch (InvalidTokenException e) {
-            System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
-            return;
-        }
-
-        File jarFile = new File(path);
-        if (!jarFile.exists()) {
+    public String createAdaptation(Path path, Adaptation adaptation) {
+        if (!Files.exists(path)) {
             System.err.println(String.format("File not found: %s", path));
-            return;
+            return null;
         }
 
         String id;
         try {
-            id = this.adaptationRepository.createAdaptation(adaptation, jarFile);
+            id = this.adaptationRepository.createAdaptation(adaptation, path.toFile());
         } catch (AdaptationRepository.InvalidAdaptationException e) {
             System.err.println(e);
-            return;
+            return null;
         }
 
         System.out.println(String.format("CREATED: Adaptation successfully created at: %s.", id));
+        return id;
     }
 
     @Override
@@ -323,5 +315,10 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
         if (JsonUtilities.writePlanToJSON(plan, Path.of(output), adaptationId, startTimestamp, name)) {
             System.out.println(String.format("SUCCESS: Plan file written to %s", output));
         }
+    }
+
+    @Override
+    public void performSimulation(String planId) {
+        throw new NotImplementedException("Simulation within an Aerie deployment is not yet supported.");
     }
 }

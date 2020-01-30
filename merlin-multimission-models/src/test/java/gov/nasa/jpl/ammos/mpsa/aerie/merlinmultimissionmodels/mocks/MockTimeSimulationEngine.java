@@ -6,7 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 import java.util.*;
 
@@ -29,7 +29,7 @@ public class MockTimeSimulationEngine<StatesT extends StateContainer>
      *
      * @param mockTime the initial mock simulation time to report to requestors
      */
-    public MockTimeSimulationEngine( Time mockTime ) {
+    public MockTimeSimulationEngine( Instant mockTime ) {
         super(); //default ctor builds a non-functional SimEngine... (why?)
         this.mockSimTime = mockTime;
     }
@@ -40,7 +40,7 @@ public class MockTimeSimulationEngine<StatesT extends StateContainer>
      * @param newTime the new time to return to any getCurrentSimulationTime calls until
      *                reset again
      */
-    public void setCurrentSimulationTime( Time newTime ) {
+    public void setCurrentSimulationTime( Instant newTime ) {
         this.mockSimTime = newTime;
     }
 
@@ -50,7 +50,7 @@ public class MockTimeSimulationEngine<StatesT extends StateContainer>
      * @return a mock simulation time set by the test drivers for states to observe
      */
     @Override
-    public Time getCurrentSimulationTime() {
+    public Instant getCurrentSimulationTime() {
         return this.mockSimTime;
     }
 
@@ -59,7 +59,7 @@ public class MockTimeSimulationEngine<StatesT extends StateContainer>
      *
      * set by call to setCurrentSimulationTime() by test drivers
      */
-    private Time mockSimTime;
+    private Instant mockSimTime;
 
     // override all other methods with exceptions to detect units tests that go off the rails
     @Override public void simulate() {

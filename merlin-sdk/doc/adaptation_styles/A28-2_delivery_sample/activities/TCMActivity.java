@@ -7,6 +7,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.classes.Vector3D;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.simulation.Context;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.simulation.annotations.SimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
 import gov.nasa.jpl.ammos.mpsa.merlin.multimissionmodels.gnc.classes.Attitude;
 
@@ -62,7 +63,7 @@ public class TCMActivity implements Activity {
     Boolean preFireHeatersRequired = false;
 
     @Parameter
-    Duration burnDuration = Duration(1, Time.Minute);
+    Duration burnDuration = Duration.fromQuantity(1, TimeUnit.MINUTES);
 
     @Parameter
     Vector3D burnDirection = new Vector3D(1.0, 0.0, 0.0);

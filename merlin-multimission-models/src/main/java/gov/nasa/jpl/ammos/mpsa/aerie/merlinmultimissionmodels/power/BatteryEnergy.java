@@ -3,16 +3,12 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
-import org.apache.commons.math3.analysis.integration.TrapezoidIntegrator;
-import org.apache.commons.math3.exception.DimensionMismatchException;
-import org.apache.commons.math3.exception.MaxCountExceededException;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.math3.ode.FirstOrderDifferentialEquations;
 import org.apache.commons.math3.ode.FirstOrderIntegrator;
 import org.apache.commons.math3.ode.events.EventHandler;
 import org.apache.commons.math3.ode.nonstiff.ClassicalRungeKuttaIntegrator;
-import org.apache.commons.math3.ode.nonstiff.DormandPrince853Integrator;
-import org.apache.commons.math3.ode.nonstiff.RungeKuttaIntegrator;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -52,7 +48,6 @@ public class BatteryEnergy implements State<Double> {
      *
      * @param initialCharge_J the initial energy level stored in the battery, measured
      *                        in Joules
-     * @param initialTime the time at which the initial charge was measured
      * @param netPower_W state representing the net power input/draw on the battery,
      *                   with positive values recharging the battery and negative values
      *                   discharging it, measured in Watts
@@ -60,7 +55,7 @@ public class BatteryEnergy implements State<Double> {
      *                    can be stored in the battery, after which any excess recharged
      *                    energy is shunted away, measured in Joules
      */
-    public BatteryEnergy( double initialCharge_J, Time initialTime,
+    public BatteryEnergy( double initialCharge_J,
                           RandomAccessState<Double> netPower_W,
                           RandomAccessState<Double> maxCharge_J ) {
 
@@ -68,13 +63,10 @@ public class BatteryEnergy implements State<Double> {
                 "provided net power state is null" ); }
         if( maxCharge_J == null ) { throw new IllegalArgumentException(
                 "provided net power state is null" ); }
-        if( initialTime == null ) { throw new IllegalArgumentException(
-                "provided initial time is null" ); }
 
         //TODO: would be good to ensure right dimensionality/units too
 
         this.lastCharge_J = initialCharge_J;
-        this.lastCalculationT = initialTime;
         this.netPowerState_W = netPower_W;
         this.maxChargeState_J = maxCharge_J;
     }
@@ -106,8 +98,8 @@ public class BatteryEnergy implements State<Double> {
 
         //TODO: this critically assumes that the simulation is driven forward in time only
         //(though only really to save itself from re-integrating the entire timeline each query)
-        Time curT = this.simEngine.getCurrentSimulationTime();
-        assert curT.greaterThanOrEqualTo( this.lastCalculationT )
+        Instant curT = this.simEngine.getCurrentSimulationTime();
+        assert !curT.isBefore( this.lastCalculationT )
                 : "query for value in past, but only implemented for forward simulation";
 
         //short circuit on already-calculated value
@@ -116,8 +108,8 @@ public class BatteryEnergy implements State<Double> {
         }
 
         //calculate the duration of forward integration in seconds
-        final Duration integrationDur = curT.subtract( lastCalculationT );
-        final double integrationDur_s = integrationDur.totalSeconds();
+        final Duration integrationDur = curT.durationFrom( lastCalculationT );
+        final double integrationDur_s = integrationDur.durationInMicroseconds / 1000000.0;
 
         //set up integration of the net power state to arrive at net energy delta
         //
@@ -149,7 +141,7 @@ public class BatteryEnergy implements State<Double> {
                 //calculate query time based on integration starting at last calc
                 //(to avoid conflating integrators/merlin's time representations)
                 //TODO: the duration/time api needs some work to avoid exposed representation
-                final Time queryTime = lastCalculationT.add( Duration.fromSeconds(t) );
+                final Instant queryTime = lastCalculationT.plus( Duration.fromQuantity((long)t, TimeUnit.SECONDS) );
 
                 //query the input states for their values at requested time point
                 final double maxCharge_J = maxChargeState_J.get(queryTime);
@@ -163,7 +155,7 @@ public class BatteryEnergy implements State<Double> {
                     energyDerivative_W = 0.0;
                     //NB: don't need to turn derivative negative to shed excess since
                     //    that clamping occurs in the event handler below
-                    //TODO: could reframe to be event-less by modifying derivitive to
+                    //TODO: could reframe to be event-less by modifying derivative to
                     //      shed any excess charge over maximum
                 }
 
@@ -178,7 +170,7 @@ public class BatteryEnergy implements State<Double> {
             //provides g()==0 clues to integrator about when discontinuities occur;
             //must be continuous near roots and must change sign after each!
             @Override public double g(double t, double[] y) {
-                final Time queryTime = lastCalculationT.add( Duration.fromSeconds(t) );
+                final Instant queryTime = lastCalculationT.plus( Duration.fromQuantity((long)t, TimeUnit.SECONDS) );
 
                 //an overcharge event occurs when the current charge exceeds max
                 final double energy_J = y[0];
@@ -193,7 +185,7 @@ public class BatteryEnergy implements State<Double> {
             }
             //modifies the state vector after a g()==0 event and RESET_STATE occur
             @Override public void resetState(double t, double[] y) {
-                final Time queryTime = lastCalculationT.add( Duration.fromSeconds(t) );
+                final Instant queryTime = lastCalculationT.plus( Duration.fromQuantity((long)t, TimeUnit.SECONDS) );
 
                 //reset to maximum charge
                 final double maxCharge_J = maxChargeState_J.get(queryTime);
@@ -231,7 +223,7 @@ public class BatteryEnergy implements State<Double> {
      *
      * TODO: this assumes a forward simulation!
      */
-    private Time lastCalculationT;
+    private Instant lastCalculationT;
 
     /**
      * state representing the net power input/draw on the battery, with positive values
@@ -273,6 +265,7 @@ public class BatteryEnergy implements State<Double> {
      */
     @Override
     public void setEngine(SimulationEngine engine) {
+        this.lastCalculationT = engine.getCurrentSimulationTime();
         this.simEngine = engine;
     }
 
@@ -282,8 +275,8 @@ public class BatteryEnergy implements State<Double> {
      * since this is a stopgap, this method is non-functional: just returns an empty map
      */
     @Override
-    public Map<Time, Double> getHistory() {
-        return new LinkedHashMap<Time,Double>();
+    public Map<Instant, Double> getHistory() {
+        return new LinkedHashMap<Instant,Double>();
     }
 
     /**

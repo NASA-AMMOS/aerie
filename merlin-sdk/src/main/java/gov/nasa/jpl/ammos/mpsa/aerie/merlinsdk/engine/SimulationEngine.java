@@ -1,7 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -16,7 +14,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
 /**
  * This class contains the core event loop of a simulation in which activities
@@ -44,7 +43,7 @@ public class SimulationEngine {
     /**
      * The current simulation time of the engine
      */
-    private Time currentSimulationTime;
+    private Instant currentSimulationTime;
 
     /**
      * The priority queue of time-ordered `ActivityJob`s
@@ -90,7 +89,7 @@ public class SimulationEngine {
      *
      * Defaults to never.
      */
-    private Duration samplingPeriod = Duration.fromSeconds(0);
+    private Duration samplingPeriod = Duration.fromQuantity(0, TimeUnit.MICROSECONDS);
 
     /**
      * The sampling hook to call every sampling period
@@ -104,15 +103,14 @@ public class SimulationEngine {
      * 
      * @param simulationStartTime
      * @param activityJobs
-     * @param stateContainers
+     * @param stateContainer
      */
-    public SimulationEngine(Time simulationStartTime, List<ActivityJob<?>> activityJobs,
-        StateContainer stateContainer) {
+    public SimulationEngine(Instant simulationStartTime, List<ActivityJob<?>> activityJobs,
+                            StateContainer stateContainer) {
         this.stateContainer = stateContainer;
+        this.currentSimulationTime = simulationStartTime;
 
         registerStates(stateContainer.getStateList());
-
-        this.currentSimulationTime = simulationStartTime;
 
         for (ActivityJob<?> job : activityJobs) {
             this.pendingEventQueue.add(job);
@@ -126,11 +124,11 @@ public class SimulationEngine {
     }
 
     public void setSamplingHook(final Duration d, final Runnable samplingHook) {
-        if (samplingHook == null || d.lessThanOrEqualTo(Duration.fromSeconds(0))) {
-            this.samplingPeriod = Duration.fromSeconds(0);
+        if (samplingHook == null || !d.isPositive()) {
+            this.samplingPeriod = Duration.fromQuantity(0, TimeUnit.MICROSECONDS);
             this.samplingHook = () -> {};
         } else {
-            if (this.samplingPeriod.greaterThan(Duration.fromSeconds(0))) {
+            if (this.samplingPeriod.isPositive()) {
                 System.err.println("[WARNING] Overriding existing sampling hook");
             }
             this.samplingPeriod = d;
@@ -146,26 +144,32 @@ public class SimulationEngine {
     public void simulate() {
         this.engineThread = Thread.currentThread();
 
-        Time nextSampleTime = this.currentSimulationTime;
+        var nextSampleTime = this.currentSimulationTime;
 
         // Run until we've handled all outstanding activity events.
         while (!this.pendingEventQueue.isEmpty()) {
             final ActivityJob<?> job = pendingEventQueue.remove();
-            final Time eventTime = job.getEventTime();
+            final var eventTime = job.getEventTime();
 
             // Handle all of the sampling events that occur before the next activity event.
-            if (this.samplingPeriod.greaterThan(Duration.fromSeconds(0))) {
-                while (nextSampleTime.lessThan(eventTime)) {
+            if (this.samplingPeriod.isPositive()) {
+                while (nextSampleTime.isBefore(eventTime)) {
                     this.currentSimulationTime = nextSampleTime;
-                    nextSampleTime = nextSampleTime.add(this.samplingPeriod);
 
                     this.samplingHook.run();
+                    nextSampleTime = nextSampleTime.plus(this.samplingPeriod);
                 }
             }
 
             this.currentSimulationTime = eventTime;
             this.executeActivity(job);
         }
+
+        if (!nextSampleTime.isAfter(this.currentSimulationTime)) {
+            this.samplingHook.run();
+        }
+
+        this.threadPool.shutdown();
     }
 
     /**
@@ -194,7 +198,7 @@ public class SimulationEngine {
      * 
      * @return the current simulation time
      */
-    public Time getCurrentSimulationTime() {
+    public Instant getCurrentSimulationTime() {
         return this.currentSimulationTime;
     }
 
