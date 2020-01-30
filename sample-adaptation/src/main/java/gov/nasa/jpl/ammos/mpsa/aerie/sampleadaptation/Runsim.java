@@ -5,22 +5,26 @@ import java.util.Map;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.classes.CustomEnums.InstrumentMode;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates;
 
 public class Runsim {
     public static void runSimulation(Config config) {
-        List<ActivityJob<?>> plan = Plan.createPlan(config);
+        final Instant simStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+
+        List<ActivityJob<?>> plan = Plan.createPlan(config, simStartTime);
         SampleMissionStates sampleMissionStates = new SampleMissionStates(config);
 
-        SimulationEngine engine = new SimulationEngine(config.missionStartTime, plan, sampleMissionStates);
+        SimulationEngine engine = new SimulationEngine(simStartTime, plan, sampleMissionStates);
         engine.simulate();
 
         // note that this currently doesn't have the initial value since that isn't stored in the history
-        Map<Time, InstrumentMode> modeHistory = sampleMissionStates.instrumentMode.getHistory();
+        Map<Instant, InstrumentMode> modeHistory = sampleMissionStates.instrumentMode.getHistory();
         
-        for (Map.Entry<Time, InstrumentMode> entry : modeHistory.entrySet()) {
+        for (Map.Entry<Instant, InstrumentMode> entry : modeHistory.entrySet()) {
             System.out.println("Time: " + entry.getKey() + " | Mode: " + entry.getValue());
         }
     }

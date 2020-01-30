@@ -4,15 +4,12 @@ import java.util.List;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.Config;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.classes.CustomEnums.InstrumentMode;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.statemodels.data.BinModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.statemodels.data.InstrumentDataRateModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.geometry.AtApojoveState;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.geometry.AtPerijoveState;
-import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.instrument.InstrumentModeState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.DerivedState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.FunctionalState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
@@ -62,7 +59,7 @@ public class SampleMissionStates implements StateContainer {
         //set up battery energy to start at designated initial charge at mission start
         this.batteryEnergy_J = new BatteryEnergy(
                 config.startBatteryCharge_pct / 100.0 * config.startBatteryCapacity_J,
-                config.missionStartTime, netBusPower_W, batteryCapacity_J );
+                netBusPower_W, batteryCapacity_J );
 
         //battery state of charge from changing stored energy and capacity
         this.batterySOC_pct = new BatteryPercentCharge(
