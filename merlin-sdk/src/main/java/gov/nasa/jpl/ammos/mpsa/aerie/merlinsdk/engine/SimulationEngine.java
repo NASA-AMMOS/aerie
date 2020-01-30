@@ -108,10 +108,9 @@ public class SimulationEngine {
     public SimulationEngine(Instant simulationStartTime, List<ActivityJob<?>> activityJobs,
                             StateContainer stateContainer) {
         this.stateContainer = stateContainer;
+        this.currentSimulationTime = simulationStartTime;
 
         registerStates(stateContainer.getStateList());
-
-        this.currentSimulationTime = simulationStartTime;
 
         for (ActivityJob<?> job : activityJobs) {
             this.pendingEventQueue.add(job);
