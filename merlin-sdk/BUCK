@@ -1,6 +1,8 @@
 java_library(
     name = "merlin-sdk",
-    srcs = glob(["src/main/**/*"]),
+    srcs = glob(["src/main/java/**/*"]),
+    resources = glob(["src/main/resources/**/*"]),
+    resources_root = "src/main/resources/",
     extra_arguments = [
         "--source-path", "merlin-sdk/src/",
         "--module-path", "third-party/"
@@ -18,7 +20,9 @@ java_library(
 
 java_test(
     name = "test_merlin-sdk",
-    srcs = glob(["src/test/**/*.java"]),
+    srcs = glob(["src/test/java/**/*"]),
+    resources = glob(["src/test/resources/**/*"]),
+    resources_root = "src/test/resources/",
     extra_arguments = [
         "--source-path", "merlin-sdk/src/",
         "--module-path", "third-party/"
