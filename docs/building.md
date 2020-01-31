@@ -20,6 +20,7 @@
             java_for_tests = "C:/Program Files/AdoptOpenJDK/jdk-11.0.4.11-hotspot/bin/java.exe"   
 
 5. Replace the `javac` and `java_for_tests` values with your respective paths 
+   1. This should be the location of your Java installation. If you're unsure where this might be, try `which java` or your OS's equivalent. If you're still unsure, re-download OpenJDK and note the path to which it installs.   
 
 ### Building
 1. Run `buck build //...` from the Aerie Root Directory
