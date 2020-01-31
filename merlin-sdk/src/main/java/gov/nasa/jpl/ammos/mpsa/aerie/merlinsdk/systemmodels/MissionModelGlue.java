@@ -128,9 +128,8 @@ public class MissionModelGlue {
 
     public class EventApplier{
 
-        public Slice applyEvents(Slice initialSlice, SystemModel model, List<Event> eventLog){
+        public Slice applyEvents(Slice slice, SystemModel model, List<Event> eventLog){
             Registry registry = model.getRegistry();
-            Slice slice = initialSlice.cloneSlice();
 
             for (Event<?> event : eventLog){
                 Duration dt = event.time().durationFrom(slice.time());

@@ -32,7 +32,7 @@ public class DataSystemModel implements SystemModel{
 
     @Override
     public Slice getInitialSlice(){
-        return this.initialSlice;
+        return this.initialSlice.cloneSlice();
     }
 
     @Override
