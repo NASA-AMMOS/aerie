@@ -136,7 +136,6 @@ public class MissionModelGlue {
                 model.step(slice, dt);
                 registry.getSetter(model, event.name()).accept(slice, event.value());
                 slice.setTime(event.time());
-                slice.printSlice();
             }
 
             return slice;

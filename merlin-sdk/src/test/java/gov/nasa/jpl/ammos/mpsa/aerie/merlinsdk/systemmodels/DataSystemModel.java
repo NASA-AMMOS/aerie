@@ -121,8 +121,8 @@ public class DataSystemModel implements SystemModel{
         }
 
         //will be used for review meeting then removed
-        public void printSlice(){
+        /*public void printSlice(){
             System.out.println("dataRate: " + dataRate + "\t" + " dataVolume: " + dataVolume + "\t" + " time: " + time);
-        }
+        }*/
     }
 }
