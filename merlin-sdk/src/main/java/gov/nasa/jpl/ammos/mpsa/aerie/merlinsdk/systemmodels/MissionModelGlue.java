@@ -1,243 +1,201 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.*;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+class Getter<ResourceType> {
+    public final Class<ResourceType> resourceClass;
+    public final Function<Slice, ResourceType> getter;
 
-class Getter<T> {
-    public final Class<T> klass;
-    public final Function<Slice, T> getter;
-
-    public Getter(Class<T> klass, Function<Slice, T> getter) {
-        this.klass = klass;
+    public Getter(final Class<ResourceType> resourceClass, final Function<Slice, ResourceType> getter) {
+        this.resourceClass = resourceClass;
         this.getter = getter;
     }
 
-    public T apply(Slice slice) {
-        return (T) this.getter.apply(slice);
+    public ResourceType apply(final Slice slice) {
+        return this.getter.apply(slice);
     }
 }
 
-class Setter<T> {
-    public final Class<T> klass;
-    public final BiConsumer<Slice, T> setter;
+class Setter<StimulusType> {
+    public final Class<StimulusType> stimulusClass;
+    public final BiConsumer<Slice, StimulusType> setter;
 
-    public Setter(Class<T> klass, BiConsumer<Slice, T> setter) {
-        this.klass = klass;
+    public Setter(final Class<StimulusType> stimulusClass, final BiConsumer<Slice, StimulusType> setter) {
+        this.stimulusClass = stimulusClass;
         this.setter = setter;
     }
 
-    public void accept(Slice slice, Object x) {
-        if (!klass.isInstance(x)) {
+    public void accept(final Slice slice, final Stimulus stimulus) {
+        if (!stimulusClass.isInstance(stimulus)) {
             throw new ClassCastException("Type mismatch!");
         }
 
-        setter.accept(slice, klass.cast(x));
+        setter.accept(slice, stimulusClass.cast(stimulus));
     }
 }
 
-public class MissionModelGlue {
+interface ResourceRegistrar<SliceType extends Slice> {
+    <ResourceType>
+    void provideSettable(
+        final String stateName, final Class<ResourceType> resourceType,
+        final Function<SliceType, ResourceType> getter,
+        final BiConsumer<SliceType, ResourceType> setter);
 
-    private Registry registry;
-    private MasterSystemModel masterSystemModel;
+    <ResourceType, DeltaType>
+    void provideCumulable(
+        final String stateName, final Class<ResourceType> resourceClass,
+        final Class<DeltaType> deltaClass,
+        final Function<SliceType, ResourceType> getter,
+        final BiConsumer<SliceType, DeltaType> setter);
+}
 
-    public MissionModelGlue(){
-        registry = this.new Registry();
+final class Event {
+    public final Instant time;
+    public final String resourceName;
+    public final Stimulus stimulus;
+
+    public Event(final Instant time, final String resourceName, final Stimulus stimulus) {
+        this.time = time;
+        this.resourceName = resourceName;
+        this.stimulus = stimulus;
+    }
+}
+
+final class Registry {
+
+    private final Map<SystemModel<?>, List<Event>> modelToEventLog = new HashMap<>();
+
+    private final Map<String, Pair<Class<? extends Slice>, Getter<?>>> modelToGetter = new HashMap<>();
+    private final Map<Pair<Class<? extends Slice>, String>, Setter<?>> modelToSetter = new HashMap<>();
+    private final Map<String, SystemModel<?>> stateToModel = new HashMap<>();
+    private final Map<SystemModel<?>, Class<? extends Slice>> modelToSliceClass = new HashMap<>();
+
+    private static final Instant startTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+
+    public Instant getStartTime() {
+        return startTime;
     }
 
-    private Map<String, String> stateNameToSystemModelName = new HashMap<>();
-
-    public void mapStateNameToSystemModelName(String stateName, String systemModelname){
-        stateNameToSystemModelName.put(stateName, systemModelname);
+    public SystemModel<?> getModelForResource(final String resourceName) {
+        return this.stateToModel.get(resourceName);
     }
 
-    public String getSystemModelNameFromStateName(String stateName){
-        return stateNameToSystemModelName.get(stateName);
+    public List<Event> getEventLog(final SystemModel<?> model) {
+        return List.copyOf(modelToEventLog.get(model));
     }
 
-    public Registry registry(){
-        return this.registry;
+    public <SliceType extends Slice, ResourceType> Getter<ResourceType> getGetter(
+        final SliceType slice, final String stateName, final Class<ResourceType> resourceClass
+    ) {
+        final var entry = modelToGetter.get(stateName);
+
+        if (!entry.getLeft().isInstance(slice)) return null;
+
+        // TODO: Use `resourceClass` to check that the Getter provides the expected type of resource.
+        return (Getter<ResourceType>) entry.getRight();
     }
 
-    public void createMasterSystemModel(Instant time, SystemModel... models){
-        masterSystemModel = this.new MasterSystemModel(time, models);
+    public <SliceType extends Slice> Setter<?> getSetter(final SliceType slice, final String stateName) {
+        final Class<? extends Slice> sliceClass = slice.getClass();
+        return modelToSetter.get(Pair.of(sliceClass, stateName));
     }
 
-    public MasterSystemModel MasterSystemModel() { return this.masterSystemModel; }
-
-    public class MasterSystemModel{
-
-        private List<SystemModel> systemModels = new ArrayList<>();
-
-        private MasterSlice initialMasterSlice;
-
-        MasterSystemModel(Instant initialTime, SystemModel... models){
-
-            List<Pair<String,Slice>> initialSlices = new ArrayList<>();
-
-            for (var model : models){
-                systemModels.add(model);
-                initialSlices.add(Pair.of(model.getName(), model.getInitialSlice()));
-            }
-
-            initialMasterSlice = new MasterSlice(initialTime,  initialSlices.toArray(new Pair[initialSlices.size()]));
-        }
-
-        //each get() on a state returns a cloned initial slice, compuation begins from initial slice by construction
-        public MasterSlice getInitialMasterSlice(){
-            return this.initialMasterSlice.cloneSlice();
-        }
-
-        public SystemModel getSystemModel(String systemModelName){
-            for(var x : this.systemModels){
-                if (x.getName().equals(systemModelName)){
-                    return x;
-                }
-            }
-            throw new RuntimeException("system model does not exist");
-        }
-
-        public void step(Slice aSlice, Duration dt){
-            MasterSlice masterSlice = (MasterSlice) aSlice;
-
-            //slice is stored in a map and modified in place
-            for (var model : systemModels){
-                Slice slice = masterSlice.systemModelNameToSlice.get(model.getName());
-                model.step(slice, dt);
-                masterSlice.time = slice.time();
-            }
-
-        }
-
-        public class MasterSlice implements Slice{
-            private Instant time;
-            private Map<String, Slice> systemModelNameToSlice = new HashMap<>();
-
-            public MasterSlice(Instant time, Pair<String, Slice>... namedSlices){
-                this.time = time;
-
-                for (var pair : namedSlices){
-                    this.systemModelNameToSlice.put(pair.getKey(), pair.getValue());
-                }
-            }
-
-            public String getSystemModelName(String stateName){
-                return MissionModelGlue.this.getSystemModelNameFromStateName(stateName);
-            }
-
-            public <T> T getState(String stateName){
-                String systemModelName = getSystemModelName(stateName);
-
-                Slice slice = systemModelNameToSlice.get(systemModelName);
-                SystemModel model = getSystemModel(systemModelName);
-
-                Getter<T> getter = registry.getGetter(model, stateName);
-                return getter.apply(slice);
-            }
-
-            public Slice getSlice(String name){
-                return systemModelNameToSlice.get(name);
-            }
-
-            @Override
-            public Instant time() {
-                return this.time;
-            }
-
-            @Override
-            public void setTime(Instant time) {
-                this.time = time;
-            }
-
-            public MasterSlice cloneSlice() {
-                List<Pair<String, Slice>> clonedMasterSlice = new ArrayList<>();
-
-                for (Map.Entry<String, Slice> entry : this.systemModelNameToSlice.entrySet()){
-                    clonedMasterSlice.add(Pair.of(entry.getKey(), entry.getValue().cloneSlice()));
-                }
-
-                return new MasterSlice(time, clonedMasterSlice.toArray(new Pair[clonedMasterSlice.size()]));
-            }
-
-        }
+    public void addEvent(final Instant time, final String resourceName, final Stimulus stimulus) {
+        modelToEventLog
+            .computeIfAbsent(getModelForResource(resourceName), k -> new ArrayList<>())
+            .add(new Event(time, resourceName, stimulus));
     }
 
-    public class Registry{
+    public <SliceType extends Slice> void registerModel(final SystemModel<SliceType> model, final Class<SliceType> sliceClass) {
+        this.modelToSliceClass.put(model, sliceClass);
+        model.registerResources(new Registrar<>(model, sliceClass));
+    }
 
-        private Map<Pair<SystemModel, String>, Getter<?>> modelToGetter = new HashMap<>();
-
-        private Map<Pair<SystemModel, String>, Setter<?>> modelToSetter = new HashMap<>();
-
-        private List<Event> completeEventLog = new ArrayList<>();
-
-        public Getter getGetter(SystemModel model,  String stateName){
-            return modelToGetter.get(Pair.of(model, stateName));
+    public <ResourceType>
+    SettableState<ResourceType> getSettable(final String stateName, final Class<ResourceType> resourceClass) {
+        final var actualResourceClass = modelToGetter.get(stateName).getRight().resourceClass;
+        if (!Objects.equals(resourceClass, actualResourceClass)) {
+            // TODO: Throw a finer-grained type of exception.
+            throw new RuntimeException(
+                "`" + stateName + "` has resource type `" + actualResourceClass.getSimpleName()
+                    + "`, not `" + resourceClass.getSimpleName() + "`");
         }
 
-        public Setter getSetter(SystemModel model,  String stateName){
-            return modelToSetter.get(Pair.of(model, stateName));
+        return new SettableState<>(this, stateName, resourceClass, stateToModel.get(stateName));
+    }
+
+    public <ResourceType, DeltaType>
+    CumulableState<ResourceType, DeltaType> getCumulable(
+        final String stateName,
+        final Class<ResourceType> resourceClass,
+        final Class<DeltaType> deltaClass
+    ) {
+        final var actualResourceClass = modelToGetter.get(stateName).getRight().resourceClass;
+        if (!Objects.equals(resourceClass, actualResourceClass)) {
+            // TODO: Throw a finer-grained type of exception.
+            throw new RuntimeException(
+                "`" + stateName + "` has resource type `" + actualResourceClass.getSimpleName()
+                    + "`, not `" + resourceClass.getSimpleName() + "`");
         }
 
-        public <T> void registerGetter(SystemModel model,  String stateName, Class<T> resourceType,
-                                       Function<Slice, T> getter){
+        // TODO: Verify that the deltaClass is acceptable for the stimulus the resource was defined against.
+
+        return new CumulableState<>(this, stateName, resourceClass, deltaClass, stateToModel.get(stateName));
+    }
+
+    private final class Registrar<SliceType extends Slice> implements ResourceRegistrar<SliceType> {
+        private final SystemModel<SliceType> systemModel;
+        private final Class<SliceType> sliceClass;
+
+        public Registrar(final SystemModel<SliceType> systemModel, final Class<SliceType> sliceClass) {
+            this.systemModel = systemModel;
+            this.sliceClass = sliceClass;
+        }
+
+        @Override
+        public <ResourceType> void provideSettable(
+            final String stateName, final Class<ResourceType> resourceClass,
+            final Function<SliceType, ResourceType> getter,
+            final BiConsumer<SliceType, ResourceType> setter
+        ) {
+            stateToModel.put(stateName, this.systemModel);
             modelToGetter.put(
-                    Pair.of(model, stateName),
-                    new Getter<>(resourceType, getter));
-        }
-
-        public <T> void registerSetter(SystemModel model, String stateName, Class<T> resourceType,
-                                       BiConsumer<Slice,T> setter){
+                stateName,
+                Pair.of(sliceClass, new Getter<>(resourceClass, s -> getter.apply(sliceClass.cast(s)))));
             modelToSetter.put(
-                    Pair.of(model, stateName),
-                    new Setter<>(resourceType, setter));
+                Pair.of(sliceClass, stateName),
+                new Setter<>(SetStimulus.class,
+                    (s, v) -> setter.accept(sliceClass.cast(s), v.getNewValue(resourceClass))));
         }
 
-        public <T> void provideSettable(SystemModel model, String stateName, Class<T> resourceType,
-                                        BiConsumer<Slice,T> setter, Function<Slice,T> getter){
-            registerGetter(model, stateName, resourceType, getter);
-            registerSetter(model, stateName, resourceType, setter);
-        }
+        @Override
+        public <ResourceType, DeltaType> void provideCumulable(
+            final String stateName, final Class<ResourceType> resourceClass,
+            final Class<DeltaType> deltaClass,
+            final Function<SliceType, ResourceType> getter,
+            final BiConsumer<SliceType, DeltaType> setter
+        ) {
+            stateToModel.put(stateName, this.systemModel);
+            modelToGetter.put(
+                stateName,
+                Pair.of(sliceClass, new Getter<>(resourceClass, s -> getter.apply(sliceClass.cast(s)))));
+            modelToSetter.put(
+                Pair.of(sliceClass, stateName),
+                new Setter<>(AccumulateStimulus.class,
+                    (s, v) -> setter.accept(sliceClass.cast(s), v.getDelta(deltaClass))));
 
-        public Map<String, Getter<?>> getStateGetters(){
-            var stateGetters = new HashMap<String, Getter<?>>();
-
-            for (var entry : modelToGetter.entrySet()){
-                String name = entry.getKey().getRight();
-                Getter<?> getter = entry.getValue();
-
-                stateGetters.put(name, getter);
-            }
-            return stateGetters;
-        }
-
-        public void addEvent(Event<?> event){
-            completeEventLog.add(event);
-        }
-
-        public void applyEvents(SystemModel model,  Slice aMasterSlice){
-
-            MasterSystemModel.MasterSlice  masterSlice = (MasterSystemModel.MasterSlice) aMasterSlice;
-
-            //this can be taken out of the for loop b/c their should only be one master system model for a set of models
-            MasterSystemModel masterSystemModel = model.getMasterSystemModel();
-
-            for(Event<?> event : this.completeEventLog){
-                //step the model up
-                Duration dt = event.time().durationFrom(masterSlice.time());
-                masterSystemModel.step(masterSlice, dt);
-
-                //now apply event
-                String systemModelName = MissionModelGlue.this.getSystemModelNameFromStateName(event.name());
-                Setter<?> setter = registry.getSetter(model, event.name());
-
-                Slice slice = masterSlice.getSlice(systemModelName);
-                setter.accept(slice, event.value());
-            }
         }
     }
 }

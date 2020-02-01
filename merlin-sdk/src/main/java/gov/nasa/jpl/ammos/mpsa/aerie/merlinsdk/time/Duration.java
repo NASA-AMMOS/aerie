@@ -24,6 +24,19 @@ public final class Duration implements Comparable<Duration> {
     }
   }
 
+  public long asIntegerQuantity(final TimeUnit units) {
+    switch (units) {
+      case MICROSECONDS: return this.durationInMicroseconds;
+      case MILLISECONDS: return this.durationInMicroseconds / 1000L;
+      case SECONDS:      return this.durationInMicroseconds / 1000000L;
+      case MINUTES:      return this.durationInMicroseconds / 1000000L / 60L;
+      case HOURS:        return this.durationInMicroseconds / 1000000L / 60L / 60L;
+      case DAYS:         return this.durationInMicroseconds / 1000000L / 60L / 60L / 24L;
+      case WEEKS:        return this.durationInMicroseconds / 1000000L / 60L / 60L / 24L / 7L;
+      default: throw new Error("Unknown TimeUnit value: " + units);
+    }
+  }
+
   public static Duration add(final Duration left, final Duration right) throws ArithmeticException {
     return new Duration(Math.addExact(left.durationInMicroseconds, right.durationInMicroseconds));
   }

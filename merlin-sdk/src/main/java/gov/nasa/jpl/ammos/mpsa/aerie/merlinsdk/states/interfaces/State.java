@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -78,7 +79,7 @@ public interface State<T> {
     // it from the outside, not by the state model.
     // TODO: Refactor sim engine to no longer require this at this state level
     @Deprecated(forRemoval = true)
-    String getName();
+    default String getName() { return null; }
 
     /**
      * This is a temporary method used to enable the current SimulationEngine unit tests
@@ -100,6 +101,6 @@ public interface State<T> {
      */
     // TODO: Refactor sim engine to no longer require this at this state level
     @Deprecated(forRemoval = true)
-    Map<Instant, T> getHistory();
+    default Map<Instant, T> getHistory() { return Collections.emptyMap(); }
 }
 

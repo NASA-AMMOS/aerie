@@ -1,13 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 public interface Slice {
-    //for now, this is the only method we need to make
-    //system models work in this configuration
-    public Instant time();
-
-    public void setTime(Instant time);
-
-    public Slice cloneSlice();
+    void step(Duration dt);
+    Slice duplicate();
 }
