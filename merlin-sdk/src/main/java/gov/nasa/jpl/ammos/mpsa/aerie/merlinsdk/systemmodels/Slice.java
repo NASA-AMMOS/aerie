@@ -9,7 +9,5 @@ public interface Slice {
 
     public void setTime(Instant time);
 
-    public void printSlice();
-
     public Slice cloneSlice();
 }
