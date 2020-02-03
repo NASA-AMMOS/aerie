@@ -48,17 +48,16 @@ class Setter<StimulusType> {
 
 interface ResourceRegistrar<SliceType extends Slice> {
     <ResourceType>
-    void provideSettable(
-        final String stateName, final Class<ResourceType> resourceType,
-        final Function<SliceType, ResourceType> getter,
-        final BiConsumer<SliceType, ResourceType> setter);
+    void provideResource(
+        final String resourceName,
+        final Class<ResourceType> resourceClass,
+        final Function<SliceType, ResourceType> getter);
 
-    <ResourceType, DeltaType>
-    void provideCumulable(
-        final String stateName, final Class<ResourceType> resourceClass,
-        final Class<DeltaType> deltaClass,
-        final Function<SliceType, ResourceType> getter,
-        final BiConsumer<SliceType, DeltaType> setter);
+    <StimulusType>
+    void subscribe(
+        final String resourceName,
+        final Class<StimulusType> stimulusClass,
+        final BiConsumer<SliceType, StimulusType> setter);
 }
 
 final class Event {
@@ -164,38 +163,26 @@ final class Registry {
             this.sliceClass = sliceClass;
         }
 
-        @Override
-        public <ResourceType> void provideSettable(
-            final String stateName, final Class<ResourceType> resourceClass,
-            final Function<SliceType, ResourceType> getter,
-            final BiConsumer<SliceType, ResourceType> setter
+        public <ResourceType> void provideResource(
+            final String resourceName,
+            final Class<ResourceType> resourceClass,
+            final Function<SliceType, ResourceType> getter
         ) {
-            stateToModel.put(stateName, this.systemModel);
+            stateToModel.put(resourceName, this.systemModel);
             modelToGetter.put(
-                stateName,
+                resourceName,
                 Pair.of(sliceClass, new Getter<>(resourceClass, s -> getter.apply(sliceClass.cast(s)))));
-            modelToSetter.put(
-                Pair.of(sliceClass, stateName),
-                new Setter<>(SetStimulus.class,
-                    (s, v) -> setter.accept(sliceClass.cast(s), v.getNewValue(resourceClass))));
         }
 
-        @Override
-        public <ResourceType, DeltaType> void provideCumulable(
-            final String stateName, final Class<ResourceType> resourceClass,
-            final Class<DeltaType> deltaClass,
-            final Function<SliceType, ResourceType> getter,
-            final BiConsumer<SliceType, DeltaType> setter
+        public <StimulusType> void subscribe(
+            final String resourceName,
+            final Class<StimulusType> stimulusClass,
+            final BiConsumer<SliceType, StimulusType> setter
         ) {
-            stateToModel.put(stateName, this.systemModel);
-            modelToGetter.put(
-                stateName,
-                Pair.of(sliceClass, new Getter<>(resourceClass, s -> getter.apply(sliceClass.cast(s)))));
             modelToSetter.put(
-                Pair.of(sliceClass, stateName),
-                new Setter<>(AccumulateStimulus.class,
-                    (s, v) -> setter.accept(sliceClass.cast(s), v.getDelta(deltaClass))));
-
+                Pair.of(sliceClass, resourceName),
+                new Setter<>(stimulusClass,
+                    (s, v) -> setter.accept(sliceClass.cast(s), stimulusClass.cast(v))));
         }
     }
 }

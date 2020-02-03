@@ -13,10 +13,19 @@ public class DataSystemModel implements SystemModel<DataSystemModel.DataModelSli
 
     @Override
     public void registerResources(final ResourceRegistrar<DataModelSlice> registrar){
-        registrar.provideCumulable(GlobalPronouns.dataRate, Double.class, Double.class, DataModelSlice::getDataRate, DataModelSlice::accumulateDataRate);
-        registrar.provideSettable(GlobalPronouns.dataVolume, Double.class, DataModelSlice::getDataVolume, DataModelSlice::setDataVolume);
-        registrar.provideSettable(GlobalPronouns.dataProtocol, String.class, DataModelSlice::getDataProtocol, DataModelSlice::setDataProtocol);
+        registrar.subscribe(GlobalPronouns.dataRate, AccumulateStimulus.class, (slice, stimulus) -> {
+            slice.accumulateDataRate(stimulus.getDelta(Double.class));
+        });
+        registrar.subscribe(GlobalPronouns.dataVolume, SetStimulus.class, (slice, stimulus) -> {
+            slice.setDataVolume(stimulus.getNewValue(Double.class));
+        });
+        registrar.subscribe(GlobalPronouns.dataProtocol, SetStimulus.class, (slice, stimulus) -> {
+            slice.setDataProtocol(stimulus.getNewValue(String.class));
+        });
 
+        registrar.provideResource(GlobalPronouns.dataRate, Double.class, DataModelSlice::getDataRate);
+        registrar.provideResource(GlobalPronouns.dataVolume, Double.class, DataModelSlice::getDataVolume);
+        registrar.provideResource(GlobalPronouns.dataProtocol, String.class, DataModelSlice::getDataProtocol);
     }
 
     public static class DataModelSlice implements Slice{
