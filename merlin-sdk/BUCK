@@ -13,7 +13,6 @@ java_library(
         "//third-party:jackson-core",
         "//third-party:javapoet",
         "//third-party:JNISpice",
-        "//third-party:junit"
     ],
     visibility = ['PUBLIC']
 )
@@ -23,10 +22,6 @@ java_test(
     srcs = glob(["src/test/java/**/*"]),
     resources = glob(["src/test/resources/**/*"]),
     resources_root = "src/test/resources/",
-    extra_arguments = [
-        "--source-path", "merlin-sdk/src/",
-        "--module-path", "third-party/"
-        ],
     deps = [
         "//third-party:JNISpice",
         "//third-party:junit",
