@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -99,7 +99,7 @@ public class BasicState<T> implements SettableState<T> {
      * the unit tests currently need a way to inspect the state history directly
      */
     @Override
-    public Map<Time, T> getHistory() {
+    public Map<Instant, T> getHistory() {
         return stateHistory;
     }
 
@@ -125,5 +125,5 @@ public class BasicState<T> implements SettableState<T> {
      * history of values that the state has been assigned to, indexec by the simulation
      * timestamp of each set() call
      */
-    private Map<Time, T> stateHistory = new LinkedHashMap<>();
+    private Map<Instant, T> stateHistory = new LinkedHashMap<>();
 }

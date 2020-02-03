@@ -1,0 +1,49 @@
+java_library(
+    name = "lib",
+    srcs = glob(["src/main/java/**/*"]),
+    resources = glob(["src/main/resources/**/*"]),
+    resources_root = "src/test/resources/",
+    extra_arguments = ["-Xlint:all"],
+    deps = [
+        "//third-party:commons-cli",
+        "//third-party:commons-lang3",
+        "//third-party:commons-logging",
+        "//third-party:gson",
+        "//third-party:httpclient",
+        "//third-party:httpcore",
+        "//third-party:httpmime",
+
+        # Modules
+        "//apgen-parser:lib",
+        "//merlin-sdk:merlin-sdk",
+    ],
+)
+
+java_binary(
+    name = "merlin-cli",
+    deps = [":lib"],
+    main_class = "gov.nasa.jpl.ammos.mpsa.aerie.merlincli.MainCLI",
+)
+
+java_library(
+    name = "tests-lib",
+    srcs = glob(["src/test/java/**/*"]),
+    resources = glob(["src/test/resources/**/*"]),
+    resources_root = "src/test/resources/",
+    extra_arguments = ["-Xlint:all"],
+    deps = [
+        ":lib",
+
+        "//third-party:assertj-core",
+        "//third-party:gson",
+        "//third-party:httpclient",
+        "//third-party:httpcore",
+        "//third-party:junit-jupiter",
+    ],
+)
+
+java_binary(
+    name = "unit-tests",
+    deps = [":tests-lib"],
+    main_class = "gov.nasa.jpl.ammos.mpsa.aerie.merlincli.TestMain",
+)

@@ -1,0 +1,5 @@
+java_library(
+    name = "lib",
+    srcs = glob(["src/main/**/*"]),
+    visibility = ['PUBLIC'],
+)

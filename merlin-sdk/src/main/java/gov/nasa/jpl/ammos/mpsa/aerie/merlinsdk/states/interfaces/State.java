@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 import java.util.Map;
 
@@ -100,6 +100,6 @@ public interface State<T> {
      */
     // TODO: Refactor sim engine to no longer require this at this state level
     @Deprecated(forRemoval = true)
-    Map<Time, T> getHistory();
+    Map<Instant, T> getHistory();
 }
 

@@ -6,8 +6,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.spicewrap
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.LazyEvaluator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import spice.basic.SpiceErrorException;
 
 import java.util.List;
@@ -108,7 +109,7 @@ public class ApsidesTimesModel implements State<List<Time>> {
     }
 
     @Override
-    public Map<gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time, List<Time>> getHistory() {
+    public Map<Instant, List<Time>> getHistory() {
         return null;
     }
 

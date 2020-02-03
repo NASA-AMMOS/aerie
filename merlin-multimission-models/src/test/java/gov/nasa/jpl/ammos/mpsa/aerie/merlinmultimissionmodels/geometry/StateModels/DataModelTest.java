@@ -7,10 +7,11 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityTy
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -57,7 +58,7 @@ public class DataModelTest {
         @Override
         public void modelEffects(SimulationContext ctx, DataModelStates states){
 
-            ctx.delay(Duration.fromHours(1));
+            ctx.delay(1, TimeUnit.HOURS);
 
             InstrumentModel some_a_instrument = states.instrument_a_data_rate;
             some_a_instrument.set(10.0);
@@ -70,7 +71,7 @@ public class DataModelTest {
         @Override
         public void modelEffects(SimulationContext ctx, DataModelStates states){
 
-            ctx.delay(Duration.fromHours(2));
+            ctx.delay(2, TimeUnit.HOURS);
 
             states.bin_1.downlink();
 
@@ -84,7 +85,7 @@ public class DataModelTest {
     @Test
     public void basic_sim_test(){
 
-        Time simStart = new Time();
+        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
         InitBinDataVolumes binDataVolumes = new InitBinDataVolumes();
         TurnInstrumentAOn instrumentAOnAct = new TurnInstrumentAOn();
@@ -113,7 +114,7 @@ public class DataModelTest {
 
         System.out.println("\nBin Initialization test start");
 
-        Time simStart = new Time();
+        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
         InitBinDataVolumes binDataVolumes = new InitBinDataVolumes();
         ActivityJob<DataModelStates> binDataInit = new ActivityJob<>(binDataVolumes, simStart);
@@ -144,7 +145,7 @@ public class DataModelTest {
 
         System.out.println("\nTurn instrument on test start");
 
-        Time simStart = new Time();
+        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
         InitBinDataVolumes binDataVolumes = new InitBinDataVolumes();
         ActivityJob<DataModelStates> binDataInit = new ActivityJob<>(binDataVolumes, simStart);
@@ -176,7 +177,7 @@ public class DataModelTest {
 
         System.out.println("\nTurn instrument on test start");
 
-        Time simStart = new Time();
+        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
         //Create activities
         InitBinDataVolumes binDataVolumes = new InitBinDataVolumes();

@@ -3,19 +3,12 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks.MockSimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks.MockTimeSimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
-import org.assertj.core.api.Assertions;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
-
-import java.util.LinkedList;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.withinPercentage;
-import static org.assertj.core.api.Assertions.catchThrowable;
 
 public class DemoPowerModelTest {
 
@@ -25,7 +18,7 @@ public class DemoPowerModelTest {
 
         DemoPowerModel demo = new DemoPowerModel();
         MockTimeSimulationEngine<DemoPowerModel.States> engine
-                = new MockTimeSimulationEngine<>( demo.startTime );
+                = new MockTimeSimulationEngine<>(SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS));
         MockSimulationContext<DemoPowerModel.States> context
                 = new MockSimulationContext<>();
         demo.states.setEngine( engine );
@@ -46,8 +39,7 @@ public class DemoPowerModelTest {
                 .isCloseTo( demo.startBatteryCharge_pct, withinPercentage(0.01 ) );
 
         //nothing on for 1000s, just solar power accumulation approx 1000W*1000s=+1MJ
-        engine.setCurrentSimulationTime( engine.getCurrentSimulationTime().add(
-                Duration.fromSeconds(1000) ) );
+        engine.setCurrentSimulationTime( engine.getCurrentSimulationTime().plus(1000, TimeUnit.SECONDS));
         final double battery_pct_t1000
                 = ( demo.startBatteryCharge_pct / 100.0 * demo.startBatteryCapacity_J
                 + 1000.0 * demo.referenceSolarPower_W )
@@ -69,8 +61,7 @@ public class DemoPowerModelTest {
                 .isCloseTo( demo.instrumentBPower_W, withinPercentage(0.01 ) );
 
         //leave them on for 1000s, so net (1000W-800W-500W)*1000s=-0.3MJ
-        engine.setCurrentSimulationTime( engine.getCurrentSimulationTime().add(
-                Duration.fromSeconds( 1000 ) ) );
+        engine.setCurrentSimulationTime( engine.getCurrentSimulationTime().plus(1000, TimeUnit.SECONDS ) );
         final double battery_pct_t2000
                 = ( battery_pct_t1000 / 100.0 * demo.startBatteryCapacity_J
                     + 1000.0 * ( demo.referenceSolarPower_W
@@ -93,8 +84,7 @@ public class DemoPowerModelTest {
                 .isCloseTo( 0.0, withinPercentage(0.01 ) );
 
         //leave it to charge for a day to hit max battery
-        engine.setCurrentSimulationTime( engine.getCurrentSimulationTime().add(
-                Duration.fromDays( 1 ) ) );
+        engine.setCurrentSimulationTime( engine.getCurrentSimulationTime().plus(1, TimeUnit.DAYS) );
         assertThat(demo.states.batterStateOfChargeState_pct.get())
                 .isCloseTo( 100.0, withinPercentage( 1.0 ) );
 

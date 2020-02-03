@@ -1,12 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan;
 
-import javax.json.Json;
 import javax.json.JsonObject;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Objects;
 
 public class AppConfiguration {
@@ -20,57 +15,22 @@ public class AppConfiguration {
     public AppConfiguration(int httpPort, URI adaptationUri, URI mongoUri, String mongoDatabase,
                              String mongoPlanCollection, String mongoActvityCollection) {
         this.HTTP_PORT = httpPort;
-        this.ADAPTATION_URI = adaptationUri;
-        this.MONGO_URI = mongoUri;
-        this.MONGO_DATABASE = mongoDatabase;
-        this.MONGO_PLAN_COLLECTION = mongoPlanCollection;
-        this.MONGO_ACTIVITY_COLLECTION = mongoActvityCollection;
-    }
-
-    public static AppConfiguration loadProperties(Path path) throws IOException {
-        InputStream configStream = Files.newInputStream(path);
-        JsonObject config = (JsonObject)(Json.createReader(configStream).readValue());
-        return parseProperties(config);
-    }
-
-    public static AppConfiguration loadProperties() {
-        InputStream configStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("gov/nasa/jpl/ammos/mpsa/aerie/plan/config.json");
-        JsonObject config = (JsonObject)(Json.createReader(configStream).readValue());
-        return parseProperties(config);
+        this.ADAPTATION_URI = Objects.requireNonNull(adaptationUri);
+        this.MONGO_URI = Objects.requireNonNull(mongoUri);
+        this.MONGO_DATABASE = Objects.requireNonNull(mongoDatabase);
+        this.MONGO_PLAN_COLLECTION = Objects.requireNonNull(mongoPlanCollection);
+        this.MONGO_ACTIVITY_COLLECTION = Objects.requireNonNull(mongoActvityCollection);
     }
 
     public static AppConfiguration parseProperties(JsonObject config) {
-        int httpPort;
-        URI adaptationUri;
-        URI mongoUri;
-        String mongoDatabase;
-        String mongoPlanCollection;
-        String mongoActivityCollection;
-
-        try {
-            httpPort = config.getInt("HTTP_PORT");
-            adaptationUri = URI.create(config.getString("ADAPTATION_URI"));
-            mongoUri = URI.create(config.getString("MONGO_URI"));
-            mongoDatabase = config.getString("MONGO_DATABASE");
-            mongoPlanCollection = config.getString("MONGO_PLAN_COLLECTION");
-            mongoActivityCollection = config.getString("MONGO_ACTIVITY_COLLECTION");
-
-            Objects.requireNonNull(adaptationUri);
-            Objects.requireNonNull(mongoUri);
-            Objects.requireNonNull(mongoDatabase);
-            Objects.requireNonNull(mongoPlanCollection);
-            Objects.requireNonNull(mongoActivityCollection);
-
-        } catch (NullPointerException e) {
-            reportConfigurationLoadError(e);
-            return null;
-        }
+        final int httpPort = config.getInt("HTTP_PORT");
+        final URI adaptationUri = URI.create(config.getString("ADAPTATION_URI"));
+        final URI mongoUri = URI.create(config.getString("MONGO_URI"));
+        final String mongoDatabase = config.getString("MONGO_DATABASE");
+        final String mongoPlanCollection = config.getString("MONGO_PLAN_COLLECTION");
+        final String mongoActivityCollection = config.getString("MONGO_ACTIVITY_COLLECTION");
 
         return new AppConfiguration(httpPort, adaptationUri, mongoUri, mongoDatabase, mongoPlanCollection, mongoActivityCollection);
-    }
-
-    private static void reportConfigurationLoadError(Exception e) {
-        System.err.println("Error while parsing configuration properties: " + e.getMessage());
     }
 
     // SAFETY: When equals is overridden, so too must hashCode
@@ -81,11 +41,11 @@ public class AppConfiguration {
         AppConfiguration other = (AppConfiguration)o;
 
         return this.HTTP_PORT == other.HTTP_PORT
-                && this.ADAPTATION_URI.equals(other.ADAPTATION_URI)
-                && this.MONGO_URI.equals(other.MONGO_URI)
-                && this.MONGO_DATABASE.equals(other.MONGO_DATABASE)
-                && this.MONGO_PLAN_COLLECTION.equals(other.MONGO_PLAN_COLLECTION)
-                && this.MONGO_ACTIVITY_COLLECTION.equals(other.MONGO_ACTIVITY_COLLECTION);
+                && Objects.equals(this.ADAPTATION_URI, other.ADAPTATION_URI)
+                && Objects.equals(this.MONGO_URI, other.MONGO_URI)
+                && Objects.equals(this.MONGO_DATABASE, other.MONGO_DATABASE)
+                && Objects.equals(this.MONGO_PLAN_COLLECTION, other.MONGO_PLAN_COLLECTION)
+                && Objects.equals(this.MONGO_ACTIVITY_COLLECTION, other.MONGO_ACTIVITY_COLLECTION);
     }
 
     @Override

@@ -1,42 +1,55 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.controllers.IAdaptationController;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.AdaptationAccessException;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.ValidationException;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchAdaptationException;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.exceptions.NoSuchActivityTypeException;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.*;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import io.javalin.Javalin;
-import io.javalin.core.util.FileUtil;
+import io.javalin.core.plugin.Plugin;
 import io.javalin.http.Context;
 import io.javalin.http.UploadedFile;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.JsonValue;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
+import static io.javalin.apibuilder.ApiBuilder.before;
 import static io.javalin.apibuilder.ApiBuilder.delete;
 import static io.javalin.apibuilder.ApiBuilder.get;
 import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
 
-public final class AdaptationBindings {
-    private final IAdaptationController appController;
+/**
+ * Lift native Java agents into an HTTP-oriented service.
+ *
+ * The role of an {@code AdaptationBindings} object is to faithfully translate between the request/response protocol
+ * of HTTP and the call/return/throw protocol of a Java method. Put differently, {@code AdaptationBindings} <i>lifts</i>
+ * an object with native Java endpoints (methods) into an HTTP service with HTTP-oriented endpoints. This entails
+ * translating HTTP request bodies into native Java domain objects, and translating native Java domain objects
+ * (including thrown exceptions) into HTTP response bodies.
+ *
+ * The object to be lifted must implement the {@link App} interface. Formally, it is
+ * this interface that the {@code AdaptationBindings} class lifts into the domain of HTTP; an object implementing
+ * this interface defines the action to take for each HTTP request in an HTTP-independent way.
+ */
+public final class AdaptationBindings implements Plugin {
+    private final App app;
 
-    public AdaptationBindings(final IAdaptationController appController) {
-        this.appController = appController;
+    public AdaptationBindings(final App app) {
+        this.app = app;
     }
 
-    public void registerRoutes(final Javalin javalin) {
+    @Override
+    public void apply(final Javalin javalin) {
         javalin.routes(() -> {
             path("adaptations", () -> {
+                before(ctx -> ctx.contentType("application/json"));
+
                 get(this::getAdaptations);
                 post(this::postAdaptation);
                 path(":adaptationId", () -> {
@@ -46,105 +59,169 @@ public final class AdaptationBindings {
                         get(this::getActivityTypes);
                         path(":activityTypeId", () -> {
                             get(this::getActivityType);
-                            path("parameters", () -> {
-                               get(this::getActivityTypeParameters);
+                            path("validate", () -> {
+                                post(this::validateActivityParameters);
                             });
                         });
                     });
                 });
             });
         });
-
-        javalin.exception(ValidationException.class, (ex, ctx) -> ctx
-            .status(400)
-            .result(Json.createArrayBuilder(ex.getValidationErrors()).build().toString())
-            .contentType("application/json")
-        ).exception(NoSuchAdaptationException.class, (ex, ctx) -> ctx
-            .status(404)
-        ).exception(NoSuchActivityTypeException.class, (ex, ctx) -> ctx
-            .status(404)
-        ).exception(AdaptationAccessException.class, (ex, ctx) -> {
-            System.err.println(ex.getMessage());
-            ctx.status(500);
-        });
     }
 
     private void getAdaptations(final Context ctx) {
-        final Map<String, Adaptation> adaptations = this.appController
-                .getAdaptations()
-                .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+        final Map<String, AdaptationJar> adaptations = this.app.getAdaptations();
 
-        final JsonValue response = ResponseSerializers.serializeAdaptations(adaptations);
-        ctx.result(response.toString()).contentType("application/json");
+        ctx.result(ResponseSerializers.serializeAdaptations(adaptations).toString());
     }
 
-    private void postAdaptation(final Context ctx) throws ValidationException, IOException {
-        final UploadedFile uploadedFile = ctx.uploadedFile("file");
-        if (uploadedFile == null)
-            throw new ValidationException("No adaptation JAR provided", new ArrayList<>());
+    private void postAdaptation(final Context ctx) {
+        try {
+            final NewAdaptation newAdaptation = readNewAdaptation(ctx);
 
+            final String adaptationId = this.app.addAdaptation(newAdaptation);
 
-        final NewAdaptation adaptation = new NewAdaptation();
-        adaptation.name = ctx.formParam("name");
-        adaptation.version = ctx.formParam("version");
-        adaptation.mission = ctx.formParam("mission");
-        adaptation.owner = ctx.formParam("owner");
-
-        final Path path = Files.createTempFile(uploadedFile.getFilename(), "");
-        FileUtil.streamToFile(uploadedFile.getContent(), path.toString());
-        adaptation.path = path;
-
-        final String adaptationId = this.appController.addAdaptation(adaptation);
-
-        ctx.status(201)
+            ctx.status(201)
                 .header("Location", "/adaptations/" + adaptationId)
-                .result(ResponseSerializers.serializedCreatedId(adaptationId).toString())
-                .contentType("application/json");
+                .result(ResponseSerializers.serializedCreatedId(adaptationId).toString());
+        } catch (final App.AdaptationRejectedException ex) {
+            ctx.status(400).result(ResponseSerializers.serializeAdaptationRejectedException(ex).toString());
+        } catch (final ValidationException ex) {
+            ctx.status(400).result(ResponseSerializers.serializeValidationException(ex).toString());
+        }
     }
 
-    private void getAdaptation(final Context ctx) throws NoSuchAdaptationException {
-        final String adaptationId = ctx.pathParam("adaptationId");
+    private void getAdaptation(final Context ctx) {
+        try {
+            final String adaptationId = ctx.pathParam("adaptationId");
 
-        final Adaptation adaptation = this.appController.getAdaptationById(adaptationId);
+            final AdaptationJar adaptationJar = this.app.getAdaptationById(adaptationId);
 
-        final JsonValue response = ResponseSerializers.serializeAdaptation(adaptation);
-        ctx.result(response.toString()).contentType("application/json");
+            ctx.result(ResponseSerializers.serializeAdaptation(adaptationJar).toString());
+        } catch (final App.NoSuchAdaptationException ex) {
+            ctx.status(404);
+        }
     }
 
-    private void deleteAdaptation(final Context ctx) throws NoSuchAdaptationException {
-        final String adaptationId = ctx.pathParam("adaptationId");
+    private void deleteAdaptation(final Context ctx) {
+        try {
+            final String adaptationId = ctx.pathParam("adaptationId");
 
-        this.appController.removeAdaptation(adaptationId);
+            this.app.removeAdaptation(adaptationId);
+        } catch (final App.NoSuchAdaptationException ex) {
+            ctx.status(404);
+        }
     }
 
-    private void getActivityTypes(final Context ctx) throws NoSuchAdaptationException {
-        final String adaptationId = ctx.pathParam("adaptationId");
+    private void getActivityTypes(final Context ctx) {
+        try {
+            final String adaptationId = ctx.pathParam("adaptationId");
 
-        final Map<String, ActivityType> activityTypes = this.appController.getActivityTypes(adaptationId);
+            final Map<String, ActivityType> activityTypes = this.app.getActivityTypes(adaptationId);
 
-        final JsonValue response = ResponseSerializers.serializeActivityTypes(activityTypes);
-        ctx.result(response.toString()).contentType("application/json");
+            ctx.result(ResponseSerializers.serializeActivityTypes(activityTypes).toString());
+        } catch (final App.NoSuchAdaptationException ex) {
+            ctx.status(404);
+        }
     }
 
-    private void getActivityType(final Context ctx) throws NoSuchAdaptationException, NoSuchActivityTypeException {
-        final String adaptationId = ctx.pathParam("adaptationId");
-        final String activityTypeId = ctx.pathParam("activityTypeId");
+    private void getActivityType(final Context ctx) {
+        try {
+            final String adaptationId = ctx.pathParam("adaptationId");
+            final String activityTypeId = ctx.pathParam("activityTypeId");
 
-        final ActivityType activityType = this.appController
-                .getActivityType(adaptationId, activityTypeId);
+            final ActivityType activityType = this.app.getActivityType(adaptationId, activityTypeId);
 
-        final JsonValue response = ResponseSerializers.serializeActivityType(activityType);
-        ctx.result(response.toString()).contentType("application/json");
+            ctx.result(ResponseSerializers.serializeActivityType(activityType).toString());
+        } catch (final App.NoSuchAdaptationException | App.NoSuchActivityTypeException ex) {
+            ctx.status(404);
+        }
     }
 
-    private void getActivityTypeParameters(final Context ctx) throws NoSuchAdaptationException, NoSuchActivityTypeException {
-        final String adaptationId = ctx.pathParam("adaptationId");
-        final String activityTypeId = ctx.pathParam("activityTypeId");
+    private void validateActivityParameters(final Context ctx) {
+        try {
+            final String adaptationId = ctx.pathParam("adaptationId");
+            final String activityTypeId = ctx.pathParam("activityTypeId");
 
-        final Map<String, ParameterSchema> activityTypeParameters = this.appController
-                .getActivityTypeParameters(adaptationId, activityTypeId);
+            final JsonValue requestJson = Json.createReader(new StringReader(ctx.body())).readValue();
+            final Map<String, SerializedParameter> activityParameters = RequestDeserializers.deserializeActivityParameterMap(requestJson);
+            final SerializedActivity serializedActivity = new SerializedActivity(activityTypeId, activityParameters);
 
-        final JsonValue response = ResponseSerializers.serializeParameterSchemas(activityTypeParameters);
-        ctx.result(response.toString()).contentType("application/json");
+            final List<String> failures = this.app.validateActivityParameters(adaptationId, serializedActivity);
+
+            ctx.result(ResponseSerializers.serializeFailureList(failures).toString());
+        } catch (final App.NoSuchAdaptationException ex) {
+            ctx.status(404);
+        } catch (final InvalidEntityException ex) {
+            ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+        }
+    }
+
+    private NewAdaptation readNewAdaptation(final Context ctx) throws ValidationException {
+        final List<String> validationErrors = new ArrayList<>();
+
+        String name = null;
+        String version = null;
+        String mission = null;
+        String owner = null;
+        UploadedFile uploadedFile = null;
+        {
+            for (final var formParam : ctx.formParamMap().entrySet()) {
+                final String key = formParam.getKey();
+                final List<String> values = formParam.getValue();
+
+                switch (key) {
+                    case "name":
+                        if (values.isEmpty()) validationErrors.add("Zero values provided for key `" + key + "`; expected one.");
+                        else if (values.size() > 1) validationErrors.add("Multiple values provided for key `" + key + "`; expected one.");
+                        else name = values.get(0);
+                        break;
+                    case "version":
+                        if (values.isEmpty()) validationErrors.add("Zero values provided for key `" + key + "`; expected one.");
+                        else if (values.size() > 1) validationErrors.add("Multiple values provided for key `" + key + "`; expected one.");
+                        else version = values.get(0);
+                        break;
+                    case "mission":
+                        if (values.isEmpty()) validationErrors.add("Zero values provided for key `" + key + "`; expected one.");
+                        else if (values.size() > 1) validationErrors.add("Multiple values provided for key `" + key + "`; expected one.");
+                        else mission = values.get(0);
+                        break;
+                    case "owner":
+                        if (values.isEmpty()) validationErrors.add("Zero values provided for key `" + key + "`; expected one.");
+                        else if (values.size() > 1) validationErrors.add("Multiple values provided for key `" + key + "`; expected one.");
+                        else owner = values.get(0);
+                        break;
+                    case "file":
+                        if (values.size() > 0) {
+                            validationErrors.add("Key `" + key + "` does not contain an upload file (needs HTTP multipart `file` parameter).");
+                        } else {
+                            uploadedFile = ctx.uploadedFile("file");
+                            if (uploadedFile == null) validationErrors.add("Key `" + key + "` does not contain an upload file.");
+                        }
+                        break;
+                    default:
+                        validationErrors.add("Unknown key `" + key + "`");
+                        break;
+                }
+            }
+
+            if (name == null) validationErrors.add("No value provided for key `name`");
+            if (version == null) validationErrors.add("No value provided for key `version`");
+            if (mission == null) validationErrors.add("No value provided for key `mission`");
+            if (owner == null) validationErrors.add("No value provided for key `owner`");
+            if (uploadedFile == null) validationErrors.add("No upload file provided for key `file`");
+
+            // TODO: Throw an InvalidEntityException instead, once it supports capturing fine-grained information
+            //   about where in the entity body the failures occur.
+            if (!validationErrors.isEmpty()) throw new ValidationException("Validation failed", validationErrors);
+        }
+
+        return NewAdaptation.builder()
+            .setName(ctx.formParam("name"))
+            .setVersion(ctx.formParam("version"))
+            .setMission(ctx.formParam("mission"))
+            .setOwner(ctx.formParam("owner"))
+            .setJarSource(uploadedFile.getContent())
+            .build();
     }
 }

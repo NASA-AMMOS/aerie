@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.simulation.mocks;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 import java.util.Map;
 
@@ -19,7 +19,7 @@ public final class DevState implements SettableState<Integer> {
   }
 
   @Override
-  public Map<Time, Integer> getHistory() {
+  public Map<Instant, Integer> getHistory() {
     return Map.of();
   }
 

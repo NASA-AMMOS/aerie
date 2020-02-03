@@ -1,10 +1,12 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.simulation.http;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import gov.nasa.jpl.ammos.mpsa.aerie.simulation.models.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.simulation.utils.Breadcrumb;
 import gov.nasa.jpl.ammos.mpsa.aerie.simulation.utils.InvalidEntityFailure;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
@@ -58,11 +60,12 @@ public final class ResponseSerializers {
     return serializeBreadcrumbMessages(visitor.failures);
   }
 
-  static public JsonValue serializeTimestamp(final Time timestamp) {
-    return Json.createValue(timestamp.toTAI());
+  static public JsonValue serializeTimestamp(final Instant timestamp) {
+    final var duration = ((SimulationInstant)timestamp).durationFrom(SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS));
+    return Json.createValue(duration.durationInMicroseconds / 1000);
   }
 
-  static public JsonValue serializeTimestamps(final List<Time> elements) {
+  static public JsonValue serializeTimestamps(final List<Instant> elements) {
     final var builder = Json.createArrayBuilder();
     for (final var element : elements) {
       builder.add(serializeTimestamp(element));

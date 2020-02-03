@@ -1,11 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power.*;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -33,27 +32,100 @@ public class DemoPowerModel {
      */
     public class States implements StateContainer {
 
-        //Merlin connected dem dry states, dem dry states
+        /**
+         * calculated state that tracks the spacecraft distance from the sun
+         *
+         * measured in meters
+         *
+         * activities may not modify this state directly
+         *
+         * the spacecraft solar distance is currently just a linearly increasing function
+         * of time (it disregards the actual trajectory information and spice calls)
+         */
         public final RandomAccessState<Double> solarDistanceState_m = new LinearInterpolatedState(
                 startTime, startSolarDistance_m, endTime, endSolarDistance_m);
-        //solarDistance state connected to the solarPower state
+
+        /**
+         * calculated state that tracks the maximum battery energy storage capacity
+         *
+         * measured in Joules
+         *
+         * activities may not modify this state directly
+         *
+         * the maximum battery capacity is currently just a linearly decreasing function
+         * (as an approximation of fade due to charge cycles or environmental exposure)
+         */
         public final RandomAccessState<Double> batteryCapacityState_J = new LinearInterpolatedState(
                 startTime, startBatteryCapacity_J, endTime, endBatteryCapacity_J);
-        //batteryCapacity state connected to the solarPower state
+
+        /**
+         * calculated state that tracks the power generation by the solar array panels
+         *
+         * measured in Watts
+         *
+         * activities may not modify this state directly
+         *
+         * the solar array power is currently calculated as an 1/r^2 decrease based on the
+         * spacecraft solar distance and neglects details such as panel degredation,
+         * eclipses, array tracking modes, self-shading, etc
+         */
         public final SolarArrayPower solarPowerState_W = new SolarArrayPower(
                 solarDistanceState_m, referenceSolarPower_W, startSolarDistance_m );
-        //solarPower state connected to the netPower state
+
+        /**
+         * settable state that tracks the power consumption of the instrument
+         *
+         * measured in Watts
+         *
+         * instrument control activities may set this state directly
+         *
+         * the instrument power consumption is accounted for in the downstream net power
+         * rollup and battery state of charge states
+         */
         public final InstrumentPower instrumentAPowerState_W = new InstrumentPower();
         public final InstrumentPower instrumentBPowerState_W = new InstrumentPower();
-        //instrumentPower states connected to the netPower state
+
+        /**
+         * calculated state that tracks the net power on the spacecraft bus
+         *
+         * measured in Watts
+         *
+         * activities may not modify this state directly (instead, turn on or off one of
+         * the constituent loads)
+         *
+         * the net power is calculated from all the power generation sources (solar arrays)
+         * minus all the power loads (subsystems, instruments, heaters, etc)
+         */
         public final NetBusPower netPowerState_W = new NetBusPower(
                 List.of(solarPowerState_W),
                 List.of(instrumentAPowerState_W, instrumentBPowerState_W));
-        //netPower state connected to batteryEnergy state
+
+        /**
+         * calculated state that tracks the energy stored in the battery
+         *
+         * measured in Joules
+         *
+         * activities may not modify this state directly (instead, turn on or off one of the
+         * power sources or loads)
+         *
+         * the battery energy is calculated as the integral of the net power on the bus
+         * starting from some initial charge, but clamped at the maximum capacity of
+         * the battery (itself a time-varying quantity)
+         */
         public final BatteryEnergy batteryEnergyState_J = new BatteryEnergy(
                 startBatteryCharge_pct / 100.0 * startBatteryCapacity_J,
-                startTime, netPowerState_W, batteryCapacityState_J);
-        //batteryEnergy state connected to the SOC state
+                netPowerState_W, batteryCapacityState_J);
+
+        /**
+         * calculated percentage charge of the battery
+         *
+         * measured in percentage of then-current maximum battery capacity
+         *
+         * activities may not modify this state directly
+         *
+         * the battery percentage charge is calculated as 100x the ratio of current energy
+         * stored to maximum energy storage capacity at the same instant
+         */
         public final BatteryPercentCharge batterStateOfChargeState_pct = new BatteryPercentCharge(
                 batteryEnergyState_J, batteryCapacityState_J);
         //now hear the word of the Lord

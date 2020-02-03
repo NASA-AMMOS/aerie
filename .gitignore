@@ -1,8 +1,8 @@
+## Aerie ##
 /adaptation_files/
 
+## Cache ##
 .DS_Store
-*.tar.gz
-.m2
 
 ### STS ###
 .apt_generated
@@ -13,20 +13,23 @@
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
+### IDE's ###
 .idea
-*.iws
+.vscode
 *.iml
 *.ipr
+*.iws
 **/target/*
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
+### Build ###
+.m2
+*.local
+*.tar.gz
+/.buckd/
 /.nb-gradle/
+/buck-out/
 /build/
-
-### VS Code ###
-.vscode
+/dist/
+/nbbuild/
+/nbdist/
+/nbproject/private/

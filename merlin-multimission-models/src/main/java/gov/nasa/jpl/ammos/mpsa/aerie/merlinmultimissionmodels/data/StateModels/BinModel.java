@@ -3,7 +3,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -37,7 +38,7 @@ public class BinModel implements State<Double> {
     private SimulationEngine engine;
 
     // I do this b/c you can't do a get(index) on a hashmap, and it takes O(n) to get to the last element
-    private Time lastUpdatedTime;
+    private Instant lastUpdatedTime;
 
     // It would be nice if this auto-initialized to the current sim time when the sim first starts, e.g.:
     //  private Map<Time, java.lang.Double> stateHistory = new LinkedHashMap<>(){{
@@ -48,22 +49,22 @@ public class BinModel implements State<Double> {
     // that is why we have an initializeBinData() method that was created specificially for the effect model of
     // an initialize bin data activity to call. (See InitializeBinDataVolume activity for a continuation of these comments).
     // let me know if you have any ideas on how I can better do this.
-    private Map<Time, Double> stateHistory = new LinkedHashMap<>();
+    private Map<Instant, Double> stateHistory = new LinkedHashMap<>();
 
     public void initializeBinData(){
-        Time t = engine.getCurrentSimulationTime();
+        Instant t = engine.getCurrentSimulationTime();
         stateHistory.put(t, this.currentDataRate);
         lastUpdatedTime = t;
     }
 
 
-    public void updateVolumeAndHistory(Time updateVolumeTime){
+    public void updateVolumeAndHistory(Instant updateVolumeTime){
 
         //get the amount of time that has passed since the last time volume was updated
-        Duration delta = updateVolumeTime.subtract(this.lastUpdatedTime);
+        Duration delta = updateVolumeTime.durationFrom(this.lastUpdatedTime);
 
         //the data rate is constant in this interval
-        this.currentDataVolume += delta.totalSeconds() * this.currentDataRate;
+        this.currentDataVolume += (double)(delta.durationInMicroseconds / 1000000L) * this.currentDataRate;
 
         //record this new data volume
         this.stateHistory.put(updateVolumeTime, currentDataVolume);
@@ -115,7 +116,7 @@ public class BinModel implements State<Double> {
 
     public void downlink(){
 
-        Time curTime = engine.getCurrentSimulationTime();
+        Instant curTime = engine.getCurrentSimulationTime();
 
         //calculate all the volume that has been accumulated up until this point
         //this is stored in the history with the key as the current time
@@ -126,7 +127,7 @@ public class BinModel implements State<Double> {
 
         //increase the current time by the smallest step possible (1ms)
         //otherwise the time key will be the same as the previous entry (with max volume)
-        Time curTimePlusDeltaT = curTime.add(new Duration());
+        Instant curTimePlusDeltaT = curTime.plus(Duration.fromQuantity(1, TimeUnit.MICROSECONDS));
 
         //update the history
         stateHistory.put(curTimePlusDeltaT, this.currentDataVolume);
@@ -134,7 +135,7 @@ public class BinModel implements State<Double> {
 
     public void downlink(double amount){
 
-        Time curTime = engine.getCurrentSimulationTime();
+        Instant curTime = engine.getCurrentSimulationTime();
 
         //calculate all the volume that has been accumulated up until this point
         //this is stored in the history with the key as the current time
@@ -146,7 +147,7 @@ public class BinModel implements State<Double> {
 
         //increase the current time by the smallest step possible (1ms)
         //otherwise the time key will be the same as the previous entry (with max volume)
-        Time curTimePlusDeltaT = curTime.add(new Duration());
+        Instant curTimePlusDeltaT = curTime.plus(Duration.fromQuantity(1, TimeUnit.MICROSECONDS));
 
         //update the history
         stateHistory.put(curTimePlusDeltaT, this.currentDataVolume);
@@ -154,7 +155,7 @@ public class BinModel implements State<Double> {
 
     //whenever an instrument that writes data this this bin changes its data rate, this method should be called!
     //as a result, our data volume computation will always record at what point there is a slope change, and no slope changes will go unaccounted for
-    public void updateRate(Time timeRateUpdated, Double deltaRate){
+    public void updateRate(Instant timeRateUpdated, Double deltaRate){
 
         //integrate the volume up until when the rate was changed
         //we use the time the rate was updated as a parameter b/c I am not sure if the sim time will move forward or not as of yet
@@ -180,15 +181,15 @@ public class BinModel implements State<Double> {
 
     //just for me to graph data for now in excel
     @Override
-    public Map<Time, Double> getHistory() {
+    public Map<Instant, Double> getHistory() {
         return this.stateHistory;
     }
 
     public void printHistoryGraphFormat(){
         System.out.println("BIN ID : " + this.binID);
         System.out.println("times");
-        for(Time x : this.stateHistory.keySet()){
-            System.out.println(x.getMilliseconds());
+        for(Instant x : this.stateHistory.keySet()){
+            System.out.println(x);
         }
         System.out.println("values");
         for(Double x : this.stateHistory.values()){

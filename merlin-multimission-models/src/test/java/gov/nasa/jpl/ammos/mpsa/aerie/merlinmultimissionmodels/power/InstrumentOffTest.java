@@ -3,7 +3,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks.MockEmptyStateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks.MockSimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks.MockTimeEmptySimulationEngine;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
 
 import java.util.List;
@@ -62,7 +63,7 @@ public class InstrumentOffTest {
     @Test public void modelEffectsWorks() {
         final double powerLoad_W = 10.0;
         final InstrumentPower powerState_W = new InstrumentPower();
-        powerState_W.setEngine( new MockTimeEmptySimulationEngine( new Time() ) );
+        powerState_W.setEngine( new MockTimeEmptySimulationEngine(SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS)) );
         //TODO: use a mock state class, except right now it would be identical!
 
         final InstrumentOff<MockEmptyStateContainer> onAct =

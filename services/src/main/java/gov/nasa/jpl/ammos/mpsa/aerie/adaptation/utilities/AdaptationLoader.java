@@ -1,33 +1,50 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.AdaptationUtils;
-import gov.nasa.jpl.ammos.mpsa.aerie.aeriesdk.MissingAdaptationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Objects;
+import java.util.ServiceLoader;
 
 public final class AdaptationLoader {
-    public static Map<String, ActivityType> loadActivities(final Path path) throws MissingAdaptationException {
-        final MerlinAdaptation adaptation = AdaptationUtils.loadAdaptation(path);
+    public static MerlinAdaptation<?> loadAdaptation(final Path adaptationPath) throws AdaptationLoadException {
+        return loadAdaptationProvider(adaptationPath).get();
+    }
 
-        final Map<String, Map<String, ParameterSchema>> activitySchemas = Optional
-            .of(adaptation)
-            .map(MerlinAdaptation::getActivityMapper)
-            .map(ActivityMapper::getActivitySchemas)
-            .orElseGet(HashMap::new);
+    public static ServiceLoader.Provider<MerlinAdaptation> loadAdaptationProvider(final Path adaptationPath) throws AdaptationLoadException {
+        Objects.requireNonNull(adaptationPath);
 
-        return activitySchemas
-            .entrySet()
+        final URL adaptationURL;
+        try {
+            // Construct a ClassLoader with access to classes in the adaptation location.
+            adaptationURL = adaptationPath.toUri().toURL();
+        } catch (final MalformedURLException ex) {
+            // This exception only happens if there is no URL protocol handler available to represent a Path.
+            // This is highly unexpected, and indicates a fundamental problem with the system environment.
+            throw new Error(ex);
+        }
+
+        final ClassLoader parentClassLoader = Thread.currentThread().getContextClassLoader();
+        final ClassLoader classLoader = new URLClassLoader(new URL[]{adaptationURL}, parentClassLoader);
+
+        // Look for MerlinAdaptation implementors in the adaptation.
+        final ServiceLoader<MerlinAdaptation> serviceLoader =
+            ServiceLoader.load(MerlinAdaptation.class, classLoader);
+
+        // Return the first we come across. (This may not be deterministic, so for correctness
+        // we're assuming there's only one MerlinAdaptation in any given location.
+        return serviceLoader
             .stream()
-            .collect(Collectors.toMap(
-                p -> p.getKey(),
-                p -> new ActivityType(p.getKey(), p.getValue())));
+            .findFirst()
+            .orElseThrow(() -> new AdaptationLoadException("No implementation found for `" + MerlinAdaptation.class.getSimpleName() + "`"));
+    }
+
+    public static class AdaptationLoadException extends Exception {
+        public AdaptationLoadException(final String message) {
+            super(message);
+        }
     }
 }

@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -24,7 +24,7 @@ public class InstrumentModel implements SettableState<Double> {
 
     private SimulationEngine engine;
 
-    private Map<Time, Double> stateHistory = new LinkedHashMap<>();
+    private Map<Instant, Double> stateHistory = new LinkedHashMap<>();
 
     //a planner may only care when an instrument is on or off
     //this would be a good derived state to make later
@@ -104,7 +104,7 @@ public class InstrumentModel implements SettableState<Double> {
 
     @Override
     public void set(Double newRate){
-        Time curTime = engine.getCurrentSimulationTime();
+        Instant curTime = engine.getCurrentSimulationTime();
         bin.updateRate(curTime, newRate - this.rate);
         this.rate = newRate;
         if (this.rate > 0.0){
@@ -122,7 +122,7 @@ public class InstrumentModel implements SettableState<Double> {
     }
 
     @Override
-    public Map<Time, Double> getHistory() {
+    public Map<Instant, Double> getHistory() {
         return stateHistory;
     }
 
@@ -137,8 +137,8 @@ public class InstrumentModel implements SettableState<Double> {
     public void printHistoryGraphFormat(){
         System.out.println("INSTRUMENT NAME : " + this.name);
         System.out.println("times");
-        for(Time x : this.stateHistory.keySet()){
-            System.out.println(x.getMilliseconds());
+        for(Instant x : this.stateHistory.keySet()){
+            System.out.println(x);
         }
         System.out.println("values");
         for(Double x : this.stateHistory.values()){

@@ -19,9 +19,9 @@ public class OnboardDataModelStates implements StateContainer {
     public final InstrumentModel instrument_b_data_rate = new InstrumentModel("instrument 2", 0.0);
     public final InstrumentModel instrument_c_data_rate = new InstrumentModel("instrument 3", 0.0);
     public final InstrumentModel instrument_d_data_rate = new InstrumentModel("instrument 4", 0.0);
-    public final InstrumentModel instrument_e_data_rate = new InstrumentModel("instrument 4", 0.0);
-    public final InstrumentModel instrument_f_data_rate = new InstrumentModel("instrument 4", 0.0);
-    public final InstrumentModel instrument_g_data_rate = new InstrumentModel("instrument 4", 0.0);
+    public final InstrumentModel instrument_e_data_rate = new InstrumentModel("instrument 5", 0.0);
+    public final InstrumentModel instrument_f_data_rate = new InstrumentModel("instrument 6", 0.0);
+    public final InstrumentModel instrument_g_data_rate = new InstrumentModel("instrument 7", 0.0);
     public final BinModel bin_1 = new BinModel("Bin 1", instrument_a_data_rate, instrument_b_data_rate);
     public final BinModel bin_2 = new BinModel("Bin 2", instrument_c_data_rate, instrument_d_data_rate);
     public final BinModel bin_3 = new BinModel("Bin 3", instrument_e_data_rate, instrument_f_data_rate, instrument_g_data_rate);

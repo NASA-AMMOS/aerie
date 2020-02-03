@@ -5,7 +5,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityTy
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.simulation.Context;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.simulation.annotations.SimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 import gov.nasa.jpl.ammos.mpsa.merlin.multimissionmodels.geometry.classes.GeometryEnums.Body;
 
@@ -44,7 +45,7 @@ public class ModelPartialEclipseActivity implements Activity {
     Body occultingBody = Body.EUROPA;
 
     @Parameter
-    Duration eclipseDuration = new Duration(10, Time.Minute);
+    Duration eclipseDuration = Duration.fromQuantity(10, TimeUnit.MINUTES);
 
     /* --------------------- EFFECT MODELING & DECOMPOSITION -------------------- */
 
@@ -53,10 +54,10 @@ public class ModelPartialEclipseActivity implements Activity {
 
     public void modelEffects() {
         ClipperStates clipper = ctx.getStates();
-        Time eclipseEnd = ctx.now().plus(eclipseDuration);
+        Instant eclipseEnd = ctx.now().plus(eclipseDuration);
 
         int segments = 10;
-        Duration stepTime = eclipseDuration.dividedBy(segments);
+        Duration stepTime = Duration.fromQuantity(eclipseDuration.durationInMicroseconds / segments, TimeUnit.MICROSECONDS);
 
         for (int i = 0; i < segments; i++) {
 
@@ -87,11 +88,7 @@ public class ModelPartialEclipseActivity implements Activity {
             clipper.geometry.eclipseFactor.set(fracSunNotBlocked);
 
             // wait for step size OR until the end of the eclipse
-            if (ctx.now().plus(stepTime).isBefore(eclipseEnd)) {
-                ctx.wait(stepTime);
-            } else {
-                ctx.wait(eclipseEnd.minus(ctx.now()));
-            }
+            ctx.wait(Duration.min(stepTime, eclipseEnd.durationFrom(ctx.now())));
         }
     }
 

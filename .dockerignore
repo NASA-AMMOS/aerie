@@ -1,0 +1,43 @@
+## Aerie Modules ##
+/adaptation_files/
+apgen-parser/
+banananation/
+docs/
+merlin-cli/
+merlin-multimission-models/
+merlin-sdk/
+sample-adaptation/
+schemas/
+third-party/
+
+## Cache ##
+.DS_Store
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IDE's ###
+.idea
+.vscode
+*.iml
+*.ipr
+*.iws
+**/target/*
+
+### Build ###
+.m2
+*.local
+*.tar.gz
+/.buckd/
+/.nb-gradle/
+/build/
+/dist/
+/nbbuild/
+/nbdist/
+/nbproject/private/

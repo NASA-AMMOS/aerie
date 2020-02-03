@@ -1,8 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power.RandomAccessState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -17,14 +18,14 @@ public class LinearInterpolatedState implements RandomAccessState<Double> {
      *
      * the two sample points must be at sufficiently distinct times
      *
-     * @param t0 the time that the state takes on the initial reference value
+     * @param t0 the time that the state takes on the initial reference value; assumed to be the simulation start time.
      * @param y0 the initial reference state value, valid at t0
      * @param t1 the time that the state takes on y1 value, more than 1ms away from t0
      * @param y1 the second state value, valid at t1, in same units as y0
      */
-    public LinearInterpolatedState( Time t0, double y0, Time t1, double y1 ) {
+    public LinearInterpolatedState(Time t0, double y0, Time t1, double y1 ) {
 
-        final double deltaTime_s = t1.subtract(t0).totalSeconds();
+        final double deltaTime_s = t1.subtract(t0).getSeconds();
         if( deltaTime_s > -0.001 && deltaTime_s < 0.001 ) {
             throw new IllegalArgumentException(
                     "temporal distance between samples is zero or too small (less than 1ms)");
@@ -39,6 +40,11 @@ public class LinearInterpolatedState implements RandomAccessState<Double> {
      * time at which the state has the reference value, used to calculate further values
      */
     private final Time referenceTime;
+
+    /**
+     * time at which the simulation started; assumed to be coincident with referenceTime
+     */
+    private Instant initialSimTime;
 
     /**
      * the value of the state at the reference time, used to calculate further values
@@ -62,23 +68,16 @@ public class LinearInterpolatedState implements RandomAccessState<Double> {
      *
      * measured in same units as the provided sample points
      *
-     * @param queryTime the simulation time stamp at which to query the value
+     * @param queryInstant the simulation time stamp at which to query the value
      * @return the linearly interpolated value of the state at the specified query
      *         time based on sample points provided at construction
      */
     @Override
-    public Double get( Time queryTime ) {
-        //TODO: this is all to work around the fact that negative Duration is not allowed,
-        //      but maybe it should be!
-        //      double deltaTime_s = queryTime.subtract( referenceTime ).totalSeconds();
-        double deltaTime_s = 0.0;
-        if( queryTime.greaterThanOrEqualTo(referenceTime) ) {
-            deltaTime_s = queryTime.subtract(referenceTime).totalSeconds();
-        } else {
-            deltaTime_s = -1.0 * referenceTime.subtract(queryTime).totalSeconds();
-        }
+    public Double get( Instant queryInstant ) {
+        Duration deltaDuration = Duration.fromSeconds(queryInstant.durationFrom(initialSimTime).durationInMicroseconds / 1000000.0);
+        Time queryTime = referenceTime.plus(deltaDuration);
 
-        final double resultValue = referenceValue + deltaTime_s * slope_u_per_s;
+        final double resultValue = referenceValue + queryTime.subtract(referenceTime).getSeconds() * slope_u_per_s;
         return resultValue;
     }
 
@@ -88,14 +87,13 @@ public class LinearInterpolatedState implements RandomAccessState<Double> {
      * uses the simulation engine provided by previous call to setEngine() to determine
      * the query time and then returns a linearly interpolated value as above for get(t)
      *
-     * @return linearly interpoalted value of the state at current simulation time
+     * @return linearly interpolated value of the state at current simulation time
      *         based on the sample points provided at construction
      */
     @Override
     public Double get() {
         assert simEngine != null : "simulation engine is null";
-        final Time queryTime = simEngine.getCurrentSimulationTime();
-        return get(queryTime);
+        return get(simEngine.getCurrentSimulationTime());
     }
 
     //----- temporary members/methods to appease old simulation engine -----
@@ -117,6 +115,7 @@ public class LinearInterpolatedState implements RandomAccessState<Double> {
      */
     @Override
     public void setEngine(SimulationEngine engine) {
+        this.initialSimTime = engine.getCurrentSimulationTime();
         this.simEngine = engine;
     }
 
@@ -126,8 +125,8 @@ public class LinearInterpolatedState implements RandomAccessState<Double> {
      * since this is a stopgap, this method is non-functional: just returns an empty map
      */
     @Override
-    public Map<Time, Double> getHistory() {
-        return new LinkedHashMap<Time,Double>();
+    public Map<Instant, Double> getHistory() {
+        return new LinkedHashMap<Instant,Double>();
     }
 
     /**

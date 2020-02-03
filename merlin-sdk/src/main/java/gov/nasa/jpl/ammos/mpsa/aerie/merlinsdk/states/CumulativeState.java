@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -67,7 +67,7 @@ public interface CumulativeState<T extends Number> extends State<T> {
         private int value;
         private String name;
         private SimulationEngine engine;
-        private Map<Time, java.lang.Integer> stateHistory = new LinkedHashMap<>();
+        private Map<Instant, java.lang.Integer> stateHistory = new LinkedHashMap<>();
 
         /**
          * Only public constructor
@@ -121,7 +121,7 @@ public interface CumulativeState<T extends Number> extends State<T> {
 
         //this is a temporary method in order to integrate w/ the current SimulationEngine
         @Override
-        public Map<Time, java.lang.Integer> getHistory() {
+        public Map<Instant, java.lang.Integer> getHistory() {
             return stateHistory;
         }
     }
@@ -133,7 +133,7 @@ public interface CumulativeState<T extends Number> extends State<T> {
         private String name;
         //will need to be set when using syntactic sugar or derived states
         private SimulationEngine engine;
-        private Map<Time, java.lang.Double> stateHistory = new LinkedHashMap<>();
+        private Map<Instant, java.lang.Double> stateHistory = new LinkedHashMap<>();
 
         /**
          * Only public constructor
@@ -187,7 +187,7 @@ public interface CumulativeState<T extends Number> extends State<T> {
 
         //this is a temporary method in order to integrate w/ the current SimulationEngine
         @Override
-        public Map<Time, java.lang.Double> getHistory() {
+        public Map<Instant, java.lang.Double> getHistory() {
             return stateHistory;
         }
 

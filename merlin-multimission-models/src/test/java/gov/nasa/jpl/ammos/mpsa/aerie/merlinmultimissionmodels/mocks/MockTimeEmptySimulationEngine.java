@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 /**
  * specialization of the mock time simulation engine dedicated to MockEmptyStateContainer
@@ -16,7 +16,7 @@ public class MockTimeEmptySimulationEngine
      *
      * @param mockTime the initial mock simulation time to report to requestors
      */
-    public MockTimeEmptySimulationEngine(Time mockTime) {
+    public MockTimeEmptySimulationEngine(Instant mockTime) {
         super(mockTime);
     }
 

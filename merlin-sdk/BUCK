@@ -1,0 +1,37 @@
+java_library(
+    name = "merlin-sdk",
+    srcs = glob(["src/main/java/**/*"]),
+    resources = glob(["src/main/resources/**/*"]),
+    resources_root = "src/main/resources/",
+    extra_arguments = [
+        "--source-path", "merlin-sdk/src/",
+        "--module-path", "third-party/"
+        ],
+    deps = [
+        "//third-party:commons-lang3",
+        "//third-party:commons-math3",
+        "//third-party:jackson-core",
+        "//third-party:javapoet",
+        "//third-party:JNISpice",
+        "//third-party:junit"
+    ],
+    visibility = ['PUBLIC']
+)
+
+java_test(
+    name = "test_merlin-sdk",
+    srcs = glob(["src/test/java/**/*"]),
+    resources = glob(["src/test/resources/**/*"]),
+    resources_root = "src/test/resources/",
+    extra_arguments = [
+        "--source-path", "merlin-sdk/src/",
+        "--module-path", "third-party/"
+        ],
+    deps = [
+        "//third-party:JNISpice",
+        "//third-party:junit",
+        "//third-party:hamcrest-all",
+        
+        "//merlin-sdk:merlin-sdk"
+    ]
+)
