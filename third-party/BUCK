@@ -120,12 +120,6 @@ prebuilt_jar(
 )
 
 prebuilt_jar(
-    name = 'junit-jupiter-api',
-    binary_jar = 'junit-jupiter-api-5.5.2.jar',
-    visibility = ['PUBLIC']
-)
-
-prebuilt_jar(
     name = 'junit-jupiter-params',
     binary_jar = 'junit-jupiter-params-5.5.2.jar',
     visibility = ['PUBLIC']

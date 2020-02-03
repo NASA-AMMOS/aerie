@@ -1,10 +1,6 @@
 java_library(
     name = "services",
     srcs = glob(["src/main/java/**/*.java"]),
-    extra_arguments = [
-        "--source-path", "services/src/",
-        "--module-path", "third-party/"
-        ],
     deps = [
         "//third-party:assertj-core",
         "//third-party:commons-lang3",
@@ -49,10 +45,6 @@ java_binary(
 java_test(
     name = "test_services",
     srcs = glob(["src/**/*.java"]),
-    extra_arguments = [
-        "--source-path", "services/src/",
-        "--module-path", "third-party/"
-        ],
     deps = [
         # Third Party
         "//third-party:assertj-core",
@@ -61,8 +53,7 @@ java_test(
         "//third-party:javalin",
         "//third-party:javax.json.bind-api",
         "//third-party:javax.json",
-        "//third-party:junit-jupiter-api",
-        "//third-party:junit-jupiter-engine",
+        "//third-party:junit-jupiter",
         "//third-party:mongo-java-driver",
         "//third-party:slf4j-simple",
         "//third-party:yasson",

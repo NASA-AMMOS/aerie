@@ -5,20 +5,16 @@ java_library(
 )
 
 java_test(
-    name = "test_apgen-parser",
+    name = "test",
     srcs = glob(["src/test/**/*.java"]),
-    extra_arguments = [
-        "--source-path", "apgen-parser/src/",
-        "--module-path", "third-party/"
-        ],
     deps = [
         # Third Party
         "//third-party:assertj-core",
         "//third-party:hamcrest-all",
-        "//third-party:junit-jupiter-api",
+        "//third-party:junit-jupiter",
         "//third-party:junit",
-        
+
         # Aerie
-        "//apgen-parser:apgen-parser"
+        ":lib"
     ]
 )
