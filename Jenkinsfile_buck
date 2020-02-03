@@ -31,7 +31,7 @@ def getArtifactoryPort() {
 pipeline {
 	
 	agent {
-		label 'coronado'
+		label 'coronado || Pismo || San-clemente || Sugarloaf'
 	}
 
 	environment {

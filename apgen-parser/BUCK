@@ -3,3 +3,18 @@ java_library(
     srcs = glob(["src/main/**/*"]),
     visibility = ['PUBLIC'],
 )
+
+java_test(
+    name = "test",
+    srcs = glob(["src/test/**/*.java"]),
+    deps = [
+        # Third Party
+        "//third-party:assertj-core",
+        "//third-party:hamcrest-all",
+        "//third-party:junit-jupiter",
+        "//third-party:junit",
+
+        # Aerie
+        ":lib"
+    ]
+)
