@@ -14,13 +14,13 @@ public class DataSystemModel implements SystemModel<DataSystemModel.DataModelSli
     @Override
     public void registerResources(final ResourceRegistrar<DataModelSlice> registrar){
         registrar.subscribe(GlobalPronouns.dataRate, AccumulateStimulus.class, (slice, stimulus) -> {
-            slice.accumulateDataRate(stimulus.getDelta(Double.class));
+            slice.react(GlobalPronouns.dataRate, stimulus);
         });
         registrar.subscribe(GlobalPronouns.dataVolume, SetStimulus.class, (slice, stimulus) -> {
-            slice.setDataVolume(stimulus.getNewValue(Double.class));
+            slice.react(GlobalPronouns.dataVolume, stimulus);
         });
         registrar.subscribe(GlobalPronouns.dataProtocol, SetStimulus.class, (slice, stimulus) -> {
-            slice.setDataProtocol(stimulus.getNewValue(String.class));
+            slice.react(GlobalPronouns.dataProtocol, stimulus);
         });
 
         registrar.provideResource(GlobalPronouns.dataRate, Double.class, DataModelSlice::getDataRate);
@@ -51,6 +51,26 @@ public class DataSystemModel implements SystemModel<DataSystemModel.DataModelSli
             this.dataVolume += this.dataRate * delta.asIntegerQuantity(TimeUnit.SECONDS);
             if (this.dataRate > 100){
                 this.dataProtocol = GlobalPronouns.spacewire;
+            }
+        }
+
+        @Override
+        public void react(final String resourceName, final Stimulus stimulus){
+            switch (resourceName){
+                case GlobalPronouns.dataRate: {
+                    this.dataRate += ((AccumulateStimulus)stimulus).getDelta(Double.class);
+                    break;
+                }
+
+                case GlobalPronouns.dataVolume: {
+                    this.dataVolume = ((SetStimulus)stimulus).getNewValue(Double.class);
+                    break;
+                }
+
+                case GlobalPronouns.dataProtocol: {
+                    this.dataProtocol = ((SetStimulus)stimulus).getNewValue(String.class);
+                    break;
+                }
             }
         }
 

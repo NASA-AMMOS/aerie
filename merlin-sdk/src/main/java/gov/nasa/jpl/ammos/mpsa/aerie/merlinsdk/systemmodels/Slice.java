@@ -4,5 +4,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 public interface Slice {
     void step(Duration dt);
+    void react(String resourceName, Stimulus stimulus);
     Slice duplicate();
 }
