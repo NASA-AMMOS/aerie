@@ -3,7 +3,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 public interface Slice {
-    void step(Duration dt);
-    void react(String resourceName, Stimulus stimulus);
     Slice duplicate();
+
+    default void step(final Duration dt) {}
+    default void react(final String resourceName, final Stimulus stimulus) {}
 }
